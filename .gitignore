@@ -1,0 +1,13 @@
+log
+build/
+
+.DS_Store      
+*.coverprofile
+/vendor/*/
+
+cmd/cache/cache
+cmd/notifier/notifier
+
+.vscode
+.idea
+.exe
