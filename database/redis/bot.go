@@ -23,7 +23,7 @@ func (connector *DbConnector) GetIDByUsername(messenger, username string) (strin
 		return result, nil
 	}
 
-	c := connector.Pool.Get()
+	c := connector.pool.Get()
 	defer c.Close()
 
 	result, err := redis.String(c.Do("GET", fmt.Sprintf("moira-%s-users:%s", messenger, username)))
@@ -33,7 +33,7 @@ func (connector *DbConnector) GetIDByUsername(messenger, username string) (strin
 
 // SetUsernameID store id of username
 func (connector *DbConnector) SetUsernameID(messenger, username, id string) error {
-	c := connector.Pool.Get()
+	c := connector.pool.Get()
 	defer c.Close()
 	if _, err := c.Do("SET", usernameKey(messenger, username), id); err != nil {
 		return err
@@ -45,7 +45,7 @@ func (connector *DbConnector) SetUsernameID(messenger, username, id string) erro
 func (connector *DbConnector) RegisterBotIfAlreadyNot(messenger string) bool {
 	host, _ := os.Hostname()
 	redisKey := usernameKey(messenger, botUsername)
-	c := connector.Pool.Get()
+	c := connector.pool.Get()
 	defer c.Close()
 
 	c.Send("WATCH", redisKey)

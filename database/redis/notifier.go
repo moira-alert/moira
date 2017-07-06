@@ -12,13 +12,13 @@ import (
 
 //DbConnector contains redis pool
 type DbConnector struct {
-	Pool   *redis.Pool
+	pool   *redis.Pool
 	logger moira_alert.Logger
 }
 
 // FetchEvent waiting for event from Db
 func (connector *DbConnector) FetchEvent() (*moira_alert.EventData, error) {
-	c := connector.Pool.Get()
+	c := connector.pool.Get()
 	defer c.Close()
 
 	var event moira_alert.EventData
@@ -51,7 +51,7 @@ func (connector *DbConnector) FetchEvent() (*moira_alert.EventData, error) {
 
 // GetTrigger returns trigger data
 func (connector *DbConnector) GetTrigger(id string) (moira_alert.TriggerData, error) {
-	c := connector.Pool.Get()
+	c := connector.pool.Get()
 	defer c.Close()
 
 	var trigger moira_alert.TriggerData
@@ -69,7 +69,7 @@ func (connector *DbConnector) GetTrigger(id string) (moira_alert.TriggerData, er
 
 // GetTriggerTags returns trigger tags
 func (connector *DbConnector) GetTriggerTags(triggerID string) ([]string, error) {
-	c := connector.Pool.Get()
+	c := connector.pool.Get()
 	defer c.Close()
 
 	var tags []string
@@ -89,7 +89,7 @@ func (connector *DbConnector) GetTriggerTags(triggerID string) ([]string, error)
 
 // GetTagsSubscriptions returns all subscriptions for given tags list
 func (connector *DbConnector) GetTagsSubscriptions(tags []string) ([]moira_alert.SubscriptionData, error) {
-	c := connector.Pool.Get()
+	c := connector.pool.Get()
 	defer c.Close()
 
 	connector.logger.Debugf("Getting tags %v subscriptions", tags)
@@ -124,7 +124,7 @@ func (connector *DbConnector) GetTagsSubscriptions(tags []string) ([]moira_alert
 
 // GetSubscription returns subscription data by given id
 func (connector *DbConnector) GetSubscription(id string) (moira_alert.SubscriptionData, error) {
-	c := connector.Pool.Get()
+	c := connector.pool.Get()
 	defer c.Close()
 
 	sub := moira_alert.SubscriptionData{
@@ -145,7 +145,7 @@ func (connector *DbConnector) GetSubscription(id string) (moira_alert.Subscripti
 
 // GetContact returns contact data by given id
 func (connector *DbConnector) GetContact(id string) (moira_alert.ContactData, error) {
-	c := connector.Pool.Get()
+	c := connector.pool.Get()
 	defer c.Close()
 
 	var contact moira_alert.ContactData
@@ -163,7 +163,7 @@ func (connector *DbConnector) GetContact(id string) (moira_alert.ContactData, er
 
 // GetContacts returns full contact list
 func (connector *DbConnector) GetContacts() ([]moira_alert.ContactData, error) {
-	c := connector.Pool.Get()
+	c := connector.pool.Get()
 	defer c.Close()
 
 	var result []moira_alert.ContactData
@@ -187,7 +187,7 @@ func (connector *DbConnector) SetContact(contact *moira_alert.ContactData) error
 		return err
 	}
 
-	c := connector.Pool.Get()
+	c := connector.pool.Get()
 	defer c.Close()
 	if _, err := c.Do("SET", fmt.Sprintf("moira-contact:%s", id), contactString); err != nil {
 		return err
@@ -203,7 +203,7 @@ func (connector *DbConnector) AddNotification(notification *moira_alert.Schedule
 		return err
 	}
 
-	c := connector.Pool.Get()
+	c := connector.pool.Get()
 	defer c.Close()
 
 	if _, err := c.Do("ZADD", "moira-notifier-notifications", notification.Timestamp, notificationString); err != nil {
@@ -215,7 +215,7 @@ func (connector *DbConnector) AddNotification(notification *moira_alert.Schedule
 
 // GetTriggerThrottlingTimestamps get throttling or scheduled notifications delay for given triggerID
 func (connector *DbConnector) GetTriggerThrottlingTimestamps(triggerID string) (time.Time, time.Time) {
-	c := connector.Pool.Get()
+	c := connector.pool.Get()
 	defer c.Close()
 
 	next, _ := redis.Int64(c.Do("GET", fmt.Sprintf("moira-notifier-next:%s", triggerID)))
@@ -226,7 +226,7 @@ func (connector *DbConnector) GetTriggerThrottlingTimestamps(triggerID string) (
 
 // GetTriggerEventsCount retuns planned notifications count from given timestamp
 func (connector *DbConnector) GetTriggerEventsCount(triggerID string, from int64) int64 {
-	c := connector.Pool.Get()
+	c := connector.pool.Get()
 	defer c.Close()
 
 	eventsKey := fmt.Sprintf("moira-trigger-events:%s", triggerID)
@@ -236,7 +236,7 @@ func (connector *DbConnector) GetTriggerEventsCount(triggerID string, from int64
 
 // SetTriggerThrottlingTimestamp store throttling or scheduled notifications delay for given triggerID
 func (connector *DbConnector) SetTriggerThrottlingTimestamp(triggerID string, next time.Time) error {
-	c := connector.Pool.Get()
+	c := connector.pool.Get()
 	defer c.Close()
 	if _, err := c.Do("SET", fmt.Sprintf("moira-notifier-next:%s", triggerID), next.Unix()); err != nil {
 		return err
@@ -246,7 +246,7 @@ func (connector *DbConnector) SetTriggerThrottlingTimestamp(triggerID string, ne
 
 // GetNotifications fetch notifications by given timestamp
 func (connector *DbConnector) GetNotifications(to int64) ([]*moira_alert.ScheduledNotification, error) {
-	c := connector.Pool.Get()
+	c := connector.pool.Get()
 	defer c.Close()
 
 	c.Send("MULTI")
@@ -267,7 +267,7 @@ func (connector *DbConnector) GetNotifications(to int64) ([]*moira_alert.Schedul
 
 // GetMetricsCount - return metrics count received by Moira-Cache
 func (connector *DbConnector) GetMetricsCount() (int64, error) {
-	c := connector.Pool.Get()
+	c := connector.pool.Get()
 	defer c.Close()
 	ts, err := redis.Int64(c.Do("GET", "moira-selfstate:metrics-heartbeat"))
 	if err == redis.ErrNil {
@@ -278,7 +278,7 @@ func (connector *DbConnector) GetMetricsCount() (int64, error) {
 
 // GetChecksCount - return checks count by Moira-Checker
 func (connector *DbConnector) GetChecksCount() (int64, error) {
-	c := connector.Pool.Get()
+	c := connector.pool.Get()
 	defer c.Close()
 	ts, err := redis.Int64(c.Do("GET", "moira-selfstate:checks-counter"))
 	if err == redis.ErrNil {

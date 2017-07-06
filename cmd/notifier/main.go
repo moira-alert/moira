@@ -47,7 +47,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	connector := redis.Init(&logger, config.Redis.GetSettings())
+	connector := redis.Init(logger, config.Redis.GetSettings())
 	if *convertDb {
 		convertDatabase(connector)
 	}

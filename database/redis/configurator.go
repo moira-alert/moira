@@ -8,15 +8,14 @@ import (
 )
 
 // Init creates Redis pool based on config
-func Init(logger *moira_alert.Logger, config Config) *DbConnector {
+func Init(logger moira_alert.Logger, config Config) *DbConnector {
 	db := DbConnector{
-		Pool:   newRedisPool(fmt.Sprintf("%s:%s", config.Host, config.Port), config.DBID),
-		logger: *logger,
+		pool:   newRedisPool(fmt.Sprintf("%s:%s", config.Host, config.Port), config.DBID),
+		logger: logger,
 	}
 	return &db
 }
 
-// NewRedisPool creates Redis pool
 func newRedisPool(redisURI string, dbID ...int) *redis.Pool {
 	return &redis.Pool{
 		MaxIdle:     3,
