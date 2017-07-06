@@ -72,7 +72,7 @@ func (worker *FetchEventsWorker) processEvent(event moira_alert.EventData) error
 			return err
 		}
 		trigger.Tags = tags
-		tags = append(tags, event.GetPseudoTags()...)
+		tags = append(tags, event.GetEventTags()...)
 
 		worker.logger.Debugf("Getting subscriptions for tags %v", tags)
 		subscriptions, err = worker.database.GetTagsSubscriptions(tags)

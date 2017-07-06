@@ -2,7 +2,6 @@ package selfstate
 
 import (
 	"fmt"
-	"strings"
 )
 
 type Config struct {
@@ -31,12 +30,4 @@ func (config *Config) Check(senders map[string]bool) error {
 		}
 	}
 	return nil
-}
-
-func toBool(str string) bool {
-	switch strings.ToLower(str) {
-	case "1", "true", "t", "yes", "y":
-		return true
-	}
-	return false
 }

@@ -37,7 +37,7 @@ type templateRow struct {
 
 // Init read yaml config
 func (sender *Sender) Init(senderSettings map[string]string, logger moira_alert.Logger) error {
-	sender.SetLogger(logger)
+	sender.setLogger(logger)
 	sender.From = senderSettings["mail_from"]
 	sender.SMTPhost = senderSettings["smtp_host"]
 	sender.SMTPport, _ = strconv.ParseInt(senderSettings["smtp_port"], 10, 64)
@@ -73,13 +73,31 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira_alert.
 	return nil
 }
 
-// SetLogger for test purposes
-func (sender *Sender) SetLogger(logger moira_alert.Logger) {
-	sender.log = logger
+//SendEvents implements Sender interface Send
+func (sender *Sender) SendEvents(events moira_alert.EventsData, contact moira_alert.ContactData, trigger moira_alert.TriggerData, throttled bool) error {
+
+	m := sender.makeMessage(events, contact, trigger, throttled)
+
+	d := gomail.Dialer{
+		Host: sender.SMTPhost,
+		Port: int(sender.SMTPport),
+		TLSConfig: &tls.Config{
+			InsecureSkipVerify: sender.InsecureTLS,
+			ServerName:         sender.SMTPhost,
+		},
+	}
+
+	if sender.Password != "" {
+		d.Auth = smtp.PlainAuth("", sender.Username, sender.Password, sender.SMTPhost)
+	}
+
+	if err := d.DialAndSend(m); err != nil {
+		return err
+	}
+	return nil
 }
 
-// MakeMessage prepare message to send
-func (sender *Sender) MakeMessage(events moira_alert.EventsData, contact moira_alert.ContactData, trigger moira_alert.TriggerData, throttled bool) *gomail.Message {
+func (sender *Sender) makeMessage(events moira_alert.EventsData, contact moira_alert.ContactData, trigger moira_alert.TriggerData, throttled bool) *gomail.Message {
 	state := events.GetSubjectState()
 	tags := trigger.GetTags()
 
@@ -121,26 +139,6 @@ func (sender *Sender) MakeMessage(events moira_alert.EventsData, contact moira_a
 	return m
 }
 
-//SendEvents implements Sender interface Send
-func (sender *Sender) SendEvents(events moira_alert.EventsData, contact moira_alert.ContactData, trigger moira_alert.TriggerData, throttled bool) error {
-
-	m := sender.MakeMessage(events, contact, trigger, throttled)
-
-	d := gomail.Dialer{
-		Host: sender.SMTPhost,
-		Port: int(sender.SMTPport),
-		TLSConfig: &tls.Config{
-			InsecureSkipVerify: sender.InsecureTLS,
-			ServerName:         sender.SMTPhost,
-		},
-	}
-
-	if sender.Password != "" {
-		d.Auth = smtp.PlainAuth("", sender.Username, sender.Password, sender.SMTPhost)
-	}
-
-	if err := d.DialAndSend(m); err != nil {
-		return err
-	}
-	return nil
+func (sender *Sender) setLogger(logger moira_alert.Logger) {
+	sender.log = logger
 }
