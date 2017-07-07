@@ -6,14 +6,14 @@ import (
 	"fmt"
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira-alert"
-	"github.com/moira-alert/moira-alert/mock"
+	"github.com/moira-alert/moira-alert/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
 	"os"
 )
 
 func TestMail(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
-	logger := mock.NewMockLogger(mockCtrl)
+	logger := mock_moira_alert.NewMockLogger(mockCtrl)
 
 	contact := moira_alert.ContactData{
 		ID:    "ContactID-000000000000001",
