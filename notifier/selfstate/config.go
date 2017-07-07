@@ -13,8 +13,7 @@ type Config struct {
 	NoticeInterval          int64
 }
 
-// Check - validate contact types
-func (config *Config) Check(senders map[string]bool) error {
+func (config *Config) checkConfig(senders map[string]bool) error {
 	if !config.Enabled {
 		return nil
 	}

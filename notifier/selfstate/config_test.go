@@ -23,18 +23,18 @@ func TestConfigCheck(testing *testing.T) {
 		}
 
 		Convey("all data valid, should return nil error", func() {
-			actual := config.Check(contactTypes)
+			actual := config.checkConfig(contactTypes)
 			So(actual, ShouldBeNil)
 		})
 
 		Convey("contacts empty, should return nil error", func() {
 			config.Contacts = []map[string]string{}
-			actual := config.Check(contactTypes)
+			actual := config.checkConfig(contactTypes)
 			So(actual, ShouldBeNil)
 		})
 
 		Convey("admin sending type not registered, should return nil error", func() {
-			actual := config.Check(make(map[string]bool))
+			actual := config.checkConfig(make(map[string]bool))
 			So(actual, ShouldBeNil)
 		})
 
@@ -44,7 +44,7 @@ func TestConfigCheck(testing *testing.T) {
 					"type":  "admin-mail",
 					"value": "",
 				}}
-			actual := config.Check(make(map[string]bool))
+			actual := config.checkConfig(make(map[string]bool))
 			So(actual, ShouldBeNil)
 		})
 	})
@@ -53,7 +53,7 @@ func TestConfigCheck(testing *testing.T) {
 		config := Config{
 			Enabled: true,
 		}
-		actual := config.Check(make(map[string]bool))
+		actual := config.checkConfig(make(map[string]bool))
 		So(actual, ShouldResemble, fmt.Errorf("contacts must be specified"))
 	})
 
@@ -68,7 +68,7 @@ func TestConfigCheck(testing *testing.T) {
 			},
 		}
 
-		actual := config.Check(make(map[string]bool))
+		actual := config.checkConfig(make(map[string]bool))
 		So(actual, ShouldResemble, fmt.Errorf("Unknown contact type [admin-mail]"))
 	})
 
@@ -87,7 +87,7 @@ func TestConfigCheck(testing *testing.T) {
 			"admin-mail": true,
 		}
 
-		actual := config.Check(contactTypes)
+		actual := config.checkConfig(contactTypes)
 		So(actual, ShouldResemble, fmt.Errorf("Value for [admin-mail] must be present"))
 	})
 
@@ -106,7 +106,7 @@ func TestConfigCheck(testing *testing.T) {
 			"admin-mail": true,
 		}
 
-		actual := config.Check(contactTypes)
+		actual := config.checkConfig(contactTypes)
 		So(actual, ShouldBeNil)
 	})
 }
