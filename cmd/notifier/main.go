@@ -61,10 +61,10 @@ func main() {
 	graphite.NotifierMetric = graphite.ConfigureNotifierMetrics(config.Graphite.GetSettings())
 	graphite.NotifierMetric.Init(logger)
 
-	initWorkers(&notifier2, config)
+	initWorkers(notifier2, config)
 }
 
-func initWorkers(notifier2 *notifier.Notifier, config *Config) {
+func initWorkers(notifier2 notifier.Notifier, config *Config) {
 	shutdown := make(chan bool)
 	var waitGroup sync.WaitGroup
 
@@ -85,7 +85,7 @@ func initWorkers(notifier2 *notifier.Notifier, config *Config) {
 	logger.Infof("Moira Notifier Stopped. Version: %s", Version)
 }
 
-func runSelfStateMonitorIfNeed(notifier2 *notifier.Notifier, config SelfStateConfig, shutdown chan bool, waitGroup *sync.WaitGroup) {
+func runSelfStateMonitorIfNeed(notifier2 notifier.Notifier, config SelfStateConfig, shutdown chan bool, waitGroup *sync.WaitGroup) {
 	selfStateConfiguration := config.GetSettings()
 	worker, needRun := selfstate.Init(connector, logger, selfStateConfiguration, notifier2)
 	if needRun {

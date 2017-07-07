@@ -11,10 +11,10 @@ import (
 type FetchNotificationsWorker struct {
 	logger   moira_alert.Logger
 	database moira_alert.Database
-	notifier *notifier.Notifier
+	notifier notifier.Notifier
 }
 
-func Init(database moira_alert.Database, logger moira_alert.Logger, sender *notifier.Notifier) FetchNotificationsWorker {
+func Init(database moira_alert.Database, logger moira_alert.Logger, sender notifier.Notifier) FetchNotificationsWorker {
 	return FetchNotificationsWorker{
 		logger:   logger,
 		database: database,

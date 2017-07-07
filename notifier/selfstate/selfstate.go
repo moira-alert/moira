@@ -10,15 +10,15 @@ import (
 type SelfCheckWorker struct {
 	logger            moira_alert.Logger
 	database          moira_alert.Database
-	notifier          *notifier.Notifier
+	notifier          notifier.Notifier
 	config            Config
 	SelfCheckInterval time.Duration
 }
 
 var DefaultCheckInterval = time.Second * 10
 
-func Init(database moira_alert.Database, logger moira_alert.Logger, config Config, notifier2 *notifier.Notifier) (worker *SelfCheckWorker, needRun bool) {
-	if err := config.Check(notifier2.GetSendersHash()); err != nil {
+func Init(database moira_alert.Database, logger moira_alert.Logger, config Config, notifier2 notifier.Notifier) (worker *SelfCheckWorker, needRun bool) {
+	if err := config.Check(notifier2.GetSenders()); err != nil {
 		logger.Fatalf("Can't configure self state monitor: %s", err.Error())
 	}
 	if config.Enabled {

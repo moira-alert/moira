@@ -9,7 +9,14 @@ import (
 	"time"
 )
 
-type Notifier struct {
+type Notifier interface {
+	Send(pkg *NotificationPackage, waitGroup *sync.WaitGroup)
+	RegisterSender(senderSettings map[string]string, sender moira_alert.Sender) error
+	StopSenders()
+	GetSenders() map[string]bool
+}
+
+type StandardNotifier struct {
 	waitGroup sync.WaitGroup
 	senders   map[string]chan NotificationPackage
 	logger    moira_alert.Logger
@@ -18,8 +25,8 @@ type Notifier struct {
 	config    Config
 }
 
-func Init(database moira_alert.Database, logger moira_alert.Logger, config Config) Notifier {
-	return Notifier{
+func Init(database moira_alert.Database, logger moira_alert.Logger, config Config) *StandardNotifier {
+	return &StandardNotifier{
 		senders:   make(map[string]chan NotificationPackage),
 		logger:    logger,
 		database:  database,
@@ -28,7 +35,7 @@ func Init(database moira_alert.Database, logger moira_alert.Logger, config Confi
 	}
 }
 
-func (notifier *Notifier) Send(pkg *NotificationPackage, waitGroup *sync.WaitGroup) {
+func (notifier *StandardNotifier) Send(pkg *NotificationPackage, waitGroup *sync.WaitGroup) {
 	ch, found := notifier.senders[pkg.Contact.Type]
 	if !found {
 		notifier.resend(pkg, fmt.Sprintf("Unknown contact type [%s]", pkg))
@@ -48,7 +55,7 @@ func (notifier *Notifier) Send(pkg *NotificationPackage, waitGroup *sync.WaitGro
 	}(pkg)
 }
 
-func (notifier *Notifier) GetSendersHash() map[string]bool {
+func (notifier *StandardNotifier) GetSenders() map[string]bool {
 	hash := make(map[string]bool)
 	for key, _ := range notifier.senders {
 		hash[key] = true
@@ -56,7 +63,7 @@ func (notifier *Notifier) GetSendersHash() map[string]bool {
 	return hash
 }
 
-func (notifier *Notifier) resend(pkg *NotificationPackage, reason string) {
+func (notifier *StandardNotifier) resend(pkg *NotificationPackage, reason string) {
 	if pkg.DontResend {
 		return
 	}
@@ -77,7 +84,7 @@ func (notifier *Notifier) resend(pkg *NotificationPackage, reason string) {
 	}
 }
 
-func (notifier *Notifier) run(sender moira_alert.Sender, ch chan NotificationPackage) {
+func (notifier *StandardNotifier) run(sender moira_alert.Sender, ch chan NotificationPackage) {
 	defer notifier.waitGroup.Done()
 	for pkg := range ch {
 		err := sender.SendEvents(pkg.Events, pkg.Contact, pkg.Trigger, pkg.Throttled)

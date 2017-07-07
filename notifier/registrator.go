@@ -16,7 +16,7 @@ import (
 	"github.com/moira-alert/moira-alert/senders/twilio"
 )
 
-func (notifier *Notifier) RegisterSenders(connector *redis.DbConnector, frontURI string) error {
+func (notifier *StandardNotifier) RegisterSenders(connector *redis.DbConnector, frontURI string) error {
 	for _, senderSettings := range notifier.config.Senders {
 		senderSettings["front_uri"] = frontURI
 		switch senderSettings["type"] {
@@ -61,7 +61,7 @@ func (notifier *Notifier) RegisterSenders(connector *redis.DbConnector, frontURI
 	return nil
 }
 
-func (notifier *Notifier) RegisterSender(senderSettings map[string]string, sender moira_alert.Sender) error {
+func (notifier *StandardNotifier) RegisterSender(senderSettings map[string]string, sender moira_alert.Sender) error {
 	var senderIdent string
 	if senderSettings["type"] == "script" {
 		senderIdent = senderSettings["name"]
@@ -83,7 +83,7 @@ func (notifier *Notifier) RegisterSender(senderSettings map[string]string, sende
 }
 
 // StopSenders close all sending channels
-func (notifier *Notifier) StopSenders() {
+func (notifier *StandardNotifier) StopSenders() {
 	for _, ch := range notifier.senders {
 		close(ch)
 	}
