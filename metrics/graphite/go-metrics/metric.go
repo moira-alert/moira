@@ -9,27 +9,27 @@ type Metric struct {
 }
 
 func (metric *Metric) Count() int64 {
-	return metric.Count()
+	return metric.meter.Count()
 }
 
 func (metric *Metric) Mark(value int64) {
-	metric.Mark(value)
+	metric.meter.Mark(value)
 }
 
 func (metric *Metric) Rate1() float64 {
-	return metric.Rate1()
+	return metric.meter.Rate1()
 }
 
 func (metric *Metric) Rate5() float64 {
-	return metric.Rate5()
+	return metric.meter.Rate5()
 
 }
 
 func (metric *Metric) Rate15() float64 {
-	return metric.Rate15()
+	return metric.meter.Rate15()
 
 }
 
 func (metric *Metric) RateMean() float64 {
-	return metric.RateMean()
+	return metric.meter.RateMean()
 }

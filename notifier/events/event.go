@@ -2,7 +2,7 @@ package events
 
 import (
 	"github.com/moira-alert/moira-alert"
-	graphite "github.com/moira-alert/moira-alert/metrics/graphite/go-metrics"
+	"github.com/moira-alert/moira-alert/metrics/graphite"
 	"github.com/moira-alert/moira-alert/notifier"
 	"sync"
 	"time"

@@ -13,41 +13,12 @@ import (
 	goMetricsGraphite "github.com/cyberdelia/go-metrics-graphite"
 )
 
-var NotifierMetric NotifierMetrics
+func Init(metric *graphite.NotifierMetrics, logger moira_alert.Logger) {
+	config := (*metric).Config
 
-type MetricsHash map[string]graphite.Meter
-
-type NotifierMetrics struct {
-	config                 graphite.Config
-	registry               metrics.Registry
-	EventsReceived         graphite.Meter
-	EventsMalformed        graphite.Meter
-	EventsProcessingFailed graphite.Meter
-	SubsMalformed          graphite.Meter
-	SendingFailed          graphite.Meter
-	SendersOkMetrics       MetricsHash
-	SendersFailedMetrics   MetricsHash
-}
-
-func ConfigureNotifierMetrics(config graphite.Config) NotifierMetrics {
-	registry := metrics.NewRegistry()
-	return NotifierMetrics{
-		config:                 config,
-		registry:               registry,
-		EventsReceived:         metrics.NewRegisteredMeter("events.received", registry),
-		EventsMalformed:        metrics.NewRegisteredMeter("events.malformed", registry),
-		EventsProcessingFailed: metrics.NewRegisteredMeter("events.failed", registry),
-		SubsMalformed:          metrics.NewRegisteredMeter("subs.malformed", registry),
-		SendingFailed:          metrics.NewRegisteredMeter("sending.failed", registry),
-		SendersOkMetrics:       make(map[string]graphite.Meter),
-		SendersFailedMetrics:   make(map[string]graphite.Meter),
-	}
-}
-
-func (metric *NotifierMetrics) Init(logger moira_alert.Logger) {
-	uri := metric.config.URI
-	prefix := metric.config.Prefix
-	interval := metric.config.Interval
+	uri := config.URI
+	prefix := config.Prefix
+	interval := config.Interval
 
 	if uri != "" {
 		address, err := net.ResolveTCPAddr("tcp", uri)
@@ -61,6 +32,23 @@ func (metric *NotifierMetrics) Init(logger moira_alert.Logger) {
 			return
 		}
 		shortName := strings.Split(hostname, ".")[0]
-		go goMetricsGraphite.Graphite(metric.registry, time.Duration(interval)*time.Second, fmt.Sprintf("%s.notifier.%s", prefix, shortName), address)
+		go goMetricsGraphite.Graphite(metrics.DefaultRegistry, time.Duration(interval)*time.Second, fmt.Sprintf("%s.notifier.%s", prefix, shortName), address)
+	}
+}
+
+func NewRegisteredMeter(name string) metrics.Meter {
+	return metrics.NewRegisteredMeter("events.received", metrics.DefaultRegistry)
+}
+
+func ConfigureNotifierMetrics(config graphite.Config) graphite.NotifierMetrics {
+	return graphite.NotifierMetrics{
+		Config:                 config,
+		EventsReceived:         NewRegisteredMeter("events.received"),
+		EventsMalformed:        NewRegisteredMeter("events.malformed"),
+		EventsProcessingFailed: NewRegisteredMeter("events.failed"),
+		SubsMalformed:          NewRegisteredMeter("subs.malformed"),
+		SendingFailed:          NewRegisteredMeter("sending.failed"),
+		SendersOkMetrics:       &MetricsMap{make(map[string]metrics.Meter)},
+		SendersFailedMetrics:   &MetricsMap{make(map[string]metrics.Meter)},
 	}
 }

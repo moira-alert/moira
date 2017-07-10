@@ -7,7 +7,7 @@ import (
 
 	"github.com/garyburd/redigo/redis"
 	"github.com/moira-alert/moira-alert"
-	graphite "github.com/moira-alert/moira-alert/metrics/graphite/go-metrics"
+	"github.com/moira-alert/moira-alert/metrics/graphite"
 )
 
 //DbConnector contains redis pool

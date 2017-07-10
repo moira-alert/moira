@@ -3,7 +3,7 @@ package notifier
 import (
 	"fmt"
 	"github.com/moira-alert/moira-alert"
-	graphite "github.com/moira-alert/moira-alert/metrics/graphite/go-metrics"
+	"github.com/moira-alert/moira-alert/metrics/graphite"
 	"sync"
 	"time"
 )
@@ -67,7 +67,7 @@ func (notifier *StandardNotifier) resend(pkg *NotificationPackage, reason string
 		return
 	}
 	graphite.NotifierMetric.SendingFailed.Mark(1)
-	if metric, found := graphite.NotifierMetric.SendersFailedMetrics[pkg.Contact.Type]; found {
+	if metric, found := graphite.NotifierMetric.SendersFailedMetrics.GetMetric(pkg.Contact.Type); found {
 		metric.Mark(1)
 	}
 	notifier.logger.Warningf("Can't send message after %d try: %s. Retry again after 1 min", pkg.FailCount, reason)
@@ -88,7 +88,9 @@ func (notifier *StandardNotifier) run(sender moira_alert.Sender, ch chan Notific
 	for pkg := range ch {
 		err := sender.SendEvents(pkg.Events, pkg.Contact, pkg.Trigger, pkg.Throttled)
 		if err == nil {
-			graphite.NotifierMetric.SendersOkMetrics[pkg.Contact.Type].Mark(1)
+			if metric, found := graphite.NotifierMetric.SendersOkMetrics.GetMetric(pkg.Contact.Type); found {
+				metric.Mark(1)
+			}
 		} else {
 			notifier.resend(&pkg, err.Error())
 		}

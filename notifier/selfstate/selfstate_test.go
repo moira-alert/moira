@@ -195,7 +195,7 @@ func TestRunGoRoutine(t *testing.T) {
 		notif.EXPECT().Send(gomock.Any(), gomock.Any())
 		runWG.Add(1)
 		go selfStateWorker.Run(shutdown, &runWG)
-		time.Sleep(time.Second * 11)
+		time.Sleep(time.Second*11 + time.Millisecond*500)
 		close(shutdown)
 		runWG.Wait()
 	})

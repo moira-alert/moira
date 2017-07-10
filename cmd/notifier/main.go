@@ -10,7 +10,8 @@ import (
 
 	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/database/redis"
-	graphite "github.com/moira-alert/moira-alert/metrics/graphite/go-metrics"
+	"github.com/moira-alert/moira-alert/metrics/graphite"
+	"github.com/moira-alert/moira-alert/metrics/graphite/go-metrics"
 	"github.com/moira-alert/moira-alert/notifier"
 	"github.com/moira-alert/moira-alert/notifier/events"
 	"github.com/moira-alert/moira-alert/notifier/notifications"
@@ -58,8 +59,8 @@ func main() {
 		logger.Fatalf("Can not configure senders: %s", err.Error())
 	}
 
-	graphite.NotifierMetric = graphite.ConfigureNotifierMetrics(config.Graphite.GetSettings())
-	graphite.NotifierMetric.Init(logger)
+	graphite.NotifierMetric = go_metrics.ConfigureNotifierMetrics(config.Graphite.GetSettings())
+	go_metrics.Init(&graphite.NotifierMetric, logger)
 
 	initWorkers(notifier2, config)
 }
