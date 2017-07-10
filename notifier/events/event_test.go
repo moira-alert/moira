@@ -5,7 +5,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/mock/moira-alert"
-	"github.com/moira-alert/moira-alert/mock/notifier"
+	"github.com/moira-alert/moira-alert/mock/scheduler"
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
@@ -135,7 +135,7 @@ func TestAddNotification(t *testing.T) {
 		defer mockCtrl.Finish()
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger, _ := logging.GetLogger("Events")
-		scheduler := mock_notifier.NewMockScheduler(mockCtrl)
+		scheduler := mock_scheduler.NewMockScheduler(mockCtrl)
 		worker := Init(dataBase, logger)
 		worker.scheduler = scheduler
 
@@ -167,7 +167,7 @@ func TestAddNotification2(t *testing.T) {
 		defer mockCtrl.Finish()
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger, _ := logging.GetLogger("Events")
-		scheduler := mock_notifier.NewMockScheduler(mockCtrl)
+		scheduler := mock_scheduler.NewMockScheduler(mockCtrl)
 		worker := Init(dataBase, logger)
 		worker.scheduler = scheduler
 
