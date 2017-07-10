@@ -56,7 +56,13 @@ func TestNotifierDataBase(t *testing.T) {
 			_, err := db.GetContacts()
 			So(err, ShouldBeNil)
 		})
+	})
 
+	Convey("Try get trigger by empty id, should be error", t, func() {
+		db := Init(logger, config)
+		db.pool = fakeDataBase.pool
+		_, err := db.GetTrigger("")
+		So(err, ShouldNotBeEmpty)
 	})
 }
 
