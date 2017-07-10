@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/moira-alert/moira-alert"
 	graphite "github.com/moira-alert/moira-alert/metrics/graphite/go-metrics"
-	"github.com/moira-alert/moira-alert/notifier/scheduler"
 	"sync"
 	"time"
 )
@@ -21,7 +20,7 @@ type StandardNotifier struct {
 	senders   map[string]chan NotificationPackage
 	logger    moira_alert.Logger
 	database  moira_alert.Database
-	scheduler scheduler.Schedule
+	scheduler Scheduler
 	config    Config
 }
 
@@ -30,7 +29,7 @@ func Init(database moira_alert.Database, logger moira_alert.Logger, config Confi
 		senders:   make(map[string]chan NotificationPackage),
 		logger:    logger,
 		database:  database,
-		scheduler: scheduler.Init(database, logger),
+		scheduler: InitScheduler(database, logger),
 		config:    config,
 	}
 }
@@ -76,7 +75,7 @@ func (notifier *StandardNotifier) resend(pkg *NotificationPackage, reason string
 		notifier.logger.Error("Stop resending. Notification interval is timed out")
 	} else {
 		for _, event := range pkg.Events {
-			notification := notifier.scheduler.ScheduleNotification(event, pkg.Trigger, pkg.Contact, pkg.Throttled, pkg.FailCount+1)
+			notification := notifier.scheduler.ScheduleNotification(time.Now(), event, pkg.Trigger, pkg.Contact, pkg.Throttled, pkg.FailCount+1)
 			if err := notifier.database.AddNotification(notification); err != nil {
 				notifier.logger.Errorf("Failed to save scheduled notification: %s", err)
 			}

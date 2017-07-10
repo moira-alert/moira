@@ -3,21 +3,22 @@ package events
 import (
 	"github.com/moira-alert/moira-alert"
 	graphite "github.com/moira-alert/moira-alert/metrics/graphite/go-metrics"
-	"github.com/moira-alert/moira-alert/notifier/scheduler"
+	"github.com/moira-alert/moira-alert/notifier"
 	"sync"
+	"time"
 )
 
 type FetchEventsWorker struct {
 	logger    moira_alert.Logger
 	database  moira_alert.Database
-	scheduler scheduler.Schedule
+	scheduler notifier.Scheduler
 }
 
 func Init(database moira_alert.Database, logger moira_alert.Logger) FetchEventsWorker {
 	return FetchEventsWorker{
 		logger:    logger,
 		database:  database,
-		scheduler: scheduler.Init(database, logger),
+		scheduler: notifier.InitScheduler(database, logger),
 	}
 }
 
@@ -99,7 +100,7 @@ func (worker *FetchEventsWorker) processEvent(event moira_alert.EventData) error
 					continue
 				}
 				event.SubscriptionID = subscription.ID
-				var notification *moira_alert.ScheduledNotification = worker.scheduler.ScheduleNotification(event, trigger, contact, false, 0)
+				notification := worker.scheduler.ScheduleNotification(time.Now(), event, trigger, contact, false, 0)
 				key := notification.GetKey()
 				if _, exist := duplications[key]; !exist {
 					if err := worker.database.AddNotification(notification); err != nil {
