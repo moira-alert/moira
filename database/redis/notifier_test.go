@@ -67,6 +67,31 @@ func TestNotifierDataBase(t *testing.T) {
 		_, err := db.GetTrigger("")
 		So(err, ShouldNotBeEmpty)
 	})
+
+	Convey("Test get notification", t, func() {
+		db := Init(logger, config, metrics)
+		db.pool = fakeDataBase.pool
+
+		now := time.Now()
+		notif := moira_alert.ScheduledNotification{
+			Timestamp: now.Add(-time.Minute).Unix(),
+		}
+
+		db.AddNotification(&notif)
+		actual, err := db.GetNotifications(now.Unix())
+		So(actual, ShouldResemble, []*moira_alert.ScheduledNotification{&notif})
+		So(err, ShouldBeEmpty)
+	})
+
+	Convey("Test get notification if empty", t, func() {
+		db := Init(logger, config, metrics)
+		db.pool = fakeDataBase.pool
+
+		now := time.Now()
+		actual, err := db.GetNotifications(now.Unix())
+		So(actual, ShouldResemble, []*moira_alert.ScheduledNotification{})
+		So(err, ShouldBeEmpty)
+	})
 }
 
 func (connector *DbConnector) fillDataBase() {

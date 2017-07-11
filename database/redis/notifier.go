@@ -262,6 +262,9 @@ func (connector *DbConnector) GetNotifications(to int64) ([]*moira_alert.Schedul
 	if err != nil {
 		return nil, err
 	}
+	if len(redisResponse) == 0 {
+		return make([]*moira_alert.ScheduledNotification, 0, 0), nil
+	}
 
 	return connector.convertNotifications(redisResponse[0])
 }
