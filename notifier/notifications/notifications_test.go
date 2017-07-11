@@ -8,7 +8,9 @@ import (
 	notifier2 "github.com/moira-alert/moira-alert/notifier"
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
+	"sync"
 	"testing"
+	"time"
 )
 
 func TestProcessScheduledEvent(t *testing.T) {
@@ -106,6 +108,51 @@ func TestProcessScheduledEvent(t *testing.T) {
 		So(err, ShouldBeEmpty)
 		mockCtrl.Finish()
 	})
+}
+
+func TestGoRoutine(t *testing.T) {
+	notification1 := moira_alert.ScheduledNotification{
+		Event: moira_alert.EventData{
+			SubscriptionID: "subscriptionID-00000000000005",
+			State:          "TEST",
+		},
+		Contact:   contact1,
+		Throttled: false,
+		Timestamp: 1441188915,
+	}
+
+	pkg := notifier2.NotificationPackage{
+		Trigger:    notification1.Trigger,
+		Throttled:  notification1.Throttled,
+		Contact:    notification1.Contact,
+		DontResend: false,
+		FailCount:  0,
+		Events: []moira_alert.EventData{
+			notification1.Event,
+		},
+	}
+
+	mockCtrl := gomock.NewController(t)
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	notifier := mock_notifier.NewMockNotifier(mockCtrl)
+	logger, _ := logging.GetLogger("Notification")
+
+	worker := Init(dataBase, logger, notifier)
+
+	dataBase.EXPECT().GetNotifications(gomock.Any()).Return([]*moira_alert.ScheduledNotification{
+		&notification1,
+	}, nil)
+	notifier.EXPECT().Send(&pkg, gomock.Any())
+
+	shutdown := make(chan bool)
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go worker.Run(shutdown, &wg)
+	time.Sleep(1)
+	notifier.EXPECT().StopSenders()
+	close(shutdown)
+	wg.Wait()
+	mockCtrl.Finish()
 }
 
 var contact1 = moira_alert.ContactData{

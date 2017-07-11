@@ -4,10 +4,13 @@ import (
 	"fmt"
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira-alert/metrics/graphite"
+	"github.com/moira-alert/moira-alert/metrics/graphite/go-metrics"
 	"github.com/moira-alert/moira-alert/mock/moira-alert"
 	"github.com/moira-alert/moira-alert/mock/scheduler"
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
+	"sync"
 	"testing"
 	"time"
 )
@@ -228,6 +231,46 @@ func TestFailReadContact(t *testing.T) {
 
 		err := worker.processEvent(event)
 		So(err, ShouldBeEmpty)
+	})
+}
+
+func TestGoRoutine(t *testing.T) {
+	go_metrics.ConfigureNotifierMetrics(graphite.Config{})
+	Convey("When good subscription, should add new notification", t, func() {
+		mockCtrl := gomock.NewController(t)
+		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+		logger, _ := logging.GetLogger("Events")
+		scheduler := mock_scheduler.NewMockScheduler(mockCtrl)
+		worker := Init(dataBase, logger)
+		worker.scheduler = scheduler
+
+		event := moira_alert.EventData{
+			Metric:         "generate.event.1",
+			State:          "OK",
+			OldState:       "WARN",
+			TriggerID:      trigger.ID,
+			SubscriptionID: subscription.ID,
+		}
+		emptyNotification := moira_alert.ScheduledNotification{}
+
+		dataBase.EXPECT().FetchEvent().Return(&event, nil)
+		dataBase.EXPECT().FetchEvent().AnyTimes().Return(nil, nil)
+		dataBase.EXPECT().GetTrigger(event.TriggerID).Times(1).Return(trigger, nil)
+		dataBase.EXPECT().GetTriggerTags(event.TriggerID).Times(1).Return(trigger.Tags, nil)
+		tags := append(trigger.Tags, event.GetEventTags()...)
+		dataBase.EXPECT().GetTagsSubscriptions(tags).Times(1).Return([]moira_alert.SubscriptionData{subscription}, nil)
+		dataBase.EXPECT().GetContact(contact.ID).Times(1).Return(contact, nil)
+		scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, trigger, contact, false, 0).Times(1).Return(&emptyNotification)
+		dataBase.EXPECT().AddNotification(&emptyNotification).Times(1).Return(nil)
+
+		shutdown := make(chan bool)
+		wg := sync.WaitGroup{}
+		wg.Add(1)
+		go worker.Run(shutdown, &wg)
+		time.Sleep(1)
+		close(shutdown)
+		wg.Wait()
+		mockCtrl.Finish()
 	})
 }
 

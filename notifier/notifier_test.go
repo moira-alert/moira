@@ -96,7 +96,7 @@ func TestTimeout(t *testing.T) {
 	notif.Send(&pkg, &wg)
 	notif.Send(&pkg2, &wg)
 	wg.Wait()
-	time.Sleep(time.Second * 2)
+	time.Sleep(time.Second * 5)
 }
 
 func configureNotifier(t *testing.T) {
