@@ -12,8 +12,9 @@ import (
 
 //DbConnector contains redis pool
 type DbConnector struct {
-	pool   *redis.Pool
-	logger moira_alert.Logger
+	pool    *redis.Pool
+	logger  moira_alert.Logger
+	metrics *graphite.NotifierMetrics
 }
 
 // FetchEvent waiting for event from Db
@@ -132,11 +133,11 @@ func (connector *DbConnector) GetSubscription(id string) (moira_alert.Subscripti
 	}
 	subscriptionString, err := redis.Bytes(c.Do("GET", fmt.Sprintf("moira-subscription:%s", id)))
 	if err != nil {
-		graphite.NotifierMetric.SubsMalformed.Mark(1)
+		connector.metrics.SubsMalformed.Mark(1)
 		return sub, fmt.Errorf("Failed to get subscription data for id %s: %s", id, err.Error())
 	}
 	if err := json.Unmarshal(subscriptionString, &sub); err != nil {
-		graphite.NotifierMetric.SubsMalformed.Mark(1)
+		connector.metrics.SubsMalformed.Mark(1)
 		return sub, fmt.Errorf("Failed to parse subscription json %s: %s", subscriptionString, err.Error())
 	}
 	sub.ID = id

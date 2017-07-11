@@ -6,7 +6,6 @@ import (
 
 	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/database/redis"
-	"github.com/moira-alert/moira-alert/metrics/graphite"
 	"github.com/moira-alert/moira-alert/senders/mail"
 	"github.com/moira-alert/moira-alert/senders/pushover"
 	"github.com/moira-alert/moira-alert/senders/script"
@@ -73,8 +72,8 @@ func (notifier *StandardNotifier) RegisterSender(senderSettings map[string]strin
 	}
 	ch := make(chan NotificationPackage)
 	notifier.senders[senderIdent] = ch
-	graphite.NotifierMetric.SendersOkMetrics.AddMetric(senderIdent, fmt.Sprintf("%s.sends_ok", getGraphiteSenderIdent(senderIdent)))
-	graphite.NotifierMetric.SendersFailedMetrics.AddMetric(senderIdent, fmt.Sprintf("%s.sends_failed", getGraphiteSenderIdent(senderIdent)))
+	notifier.metrics.SendersOkMetrics.AddMetric(senderIdent, fmt.Sprintf("%s.sends_ok", getGraphiteSenderIdent(senderIdent)))
+	notifier.metrics.SendersFailedMetrics.AddMetric(senderIdent, fmt.Sprintf("%s.sends_failed", getGraphiteSenderIdent(senderIdent)))
 	notifier.waitGroup.Add(1)
 	go notifier.run(sender, ch)
 	notifier.logger.Debugf("Sender %s registered", senderIdent)

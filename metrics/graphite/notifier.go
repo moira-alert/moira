@@ -1,7 +1,5 @@
 package graphite
 
-var NotifierMetric NotifierMetrics
-
 type NotifierMetrics struct {
 	Config                 Config
 	EventsReceived         Meter

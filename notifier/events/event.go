@@ -12,13 +12,15 @@ type FetchEventsWorker struct {
 	logger    moira_alert.Logger
 	database  moira_alert.Database
 	scheduler notifier.Scheduler
+	metrics   *graphite.NotifierMetrics
 }
 
-func Init(database moira_alert.Database, logger moira_alert.Logger) FetchEventsWorker {
+func Init(database moira_alert.Database, logger moira_alert.Logger, metrics *graphite.NotifierMetrics) FetchEventsWorker {
 	return FetchEventsWorker{
 		logger:    logger,
 		database:  database,
 		scheduler: notifier.InitScheduler(database, logger),
+		metrics:   metrics,
 	}
 }
 
@@ -37,13 +39,13 @@ func (worker FetchEventsWorker) Run(shutdown chan bool, wg *sync.WaitGroup) {
 			{
 				event, err := worker.database.FetchEvent()
 				if err != nil {
-					graphite.NotifierMetric.EventsMalformed.Mark(1)
+					worker.metrics.EventsMalformed.Mark(1)
 					continue
 				}
 				if event != nil {
-					graphite.NotifierMetric.EventsReceived.Mark(1)
+					worker.metrics.EventsReceived.Mark(1)
 					if err := worker.processEvent(*event); err != nil {
-						graphite.NotifierMetric.EventsProcessingFailed.Mark(1)
+						worker.metrics.EventsProcessingFailed.Mark(1)
 						worker.logger.Errorf("Failed processEvent. %s", err)
 					}
 				}

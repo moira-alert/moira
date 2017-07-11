@@ -40,6 +40,9 @@ func main() {
 		os.Exit(1)
 	}
 
+	metrics := go_metrics.ConfigureNotifierMetrics()
+	go_metrics.Init(metrics, config.Graphite.GetSettings(), logger)
+
 	notifierConfig := config.Notifier.GetSettings()
 
 	logger, err := configureLog(&notifierConfig)
@@ -48,28 +51,25 @@ func main() {
 		os.Exit(1)
 	}
 
-	connector := redis.Init(logger, config.Redis.GetSettings())
+	connector := redis.Init(logger, config.Redis.GetSettings(), metrics)
 	if *convertDb {
 		convertDatabase(connector)
 	}
 
-	notifier2 := notifier.Init(connector, logger, notifierConfig)
+	notifier2 := notifier.Init(connector, logger, notifierConfig, metrics)
 
 	if err := notifier2.RegisterSenders(connector, config.Front.URI); err != nil {
 		logger.Fatalf("Can not configure senders: %s", err.Error())
 	}
 
-	graphite.NotifierMetric = go_metrics.ConfigureNotifierMetrics(config.Graphite.GetSettings())
-	go_metrics.Init(&graphite.NotifierMetric, logger)
-
-	initWorkers(notifier2, config)
+	initWorkers(notifier2, config, metrics)
 }
 
-func initWorkers(notifier2 notifier.Notifier, config *Config) {
+func initWorkers(notifier2 notifier.Notifier, config *Config, metrics *graphite.NotifierMetrics) {
 	shutdown := make(chan bool)
 	var waitGroup sync.WaitGroup
 
-	fetchEventsWorker := events.Init(connector, logger)
+	fetchEventsWorker := events.Init(connector, logger, metrics)
 	fetchNotificationsWorker := notifications.Init(connector, logger, notifier2)
 
 	runSelfStateMonitorIfNeed(notifier2, config.Notifier.SelfState, shutdown, &waitGroup)

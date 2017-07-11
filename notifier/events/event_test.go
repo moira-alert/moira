@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira-alert"
-	"github.com/moira-alert/moira-alert/metrics/graphite"
 	"github.com/moira-alert/moira-alert/metrics/graphite/go-metrics"
 	"github.com/moira-alert/moira-alert/mock/moira-alert"
 	"github.com/moira-alert/moira-alert/mock/scheduler"
@@ -15,13 +14,15 @@ import (
 	"time"
 )
 
+var metrics = go_metrics.ConfigureNotifierMetrics()
+
 func TestEvent(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Events")
 
-	worker := Init(dataBase, logger)
+	worker := Init(dataBase, logger, metrics)
 
 	Convey("When event is TEST and subscription is disabled, should add new notification", t, func() {
 		event := moira_alert.EventData{
@@ -56,7 +57,7 @@ func TestNoSubscription(t *testing.T) {
 		defer mockCtrl.Finish()
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger, _ := logging.GetLogger("Events")
-		worker := Init(dataBase, logger)
+		worker := Init(dataBase, logger, metrics)
 
 		event := moira_alert.EventData{
 			Metric:    "generate.event.1",
@@ -80,7 +81,7 @@ func TestDisabledNotification(t *testing.T) {
 		defer mockCtrl.Finish()
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger := mock_moira_alert.NewMockLogger(mockCtrl)
-		worker := Init(dataBase, logger)
+		worker := Init(dataBase, logger, metrics)
 
 		event := moira_alert.EventData{
 			Metric:    "generate.event.1",
@@ -109,7 +110,7 @@ func TestExtraTags(t *testing.T) {
 		defer mockCtrl.Finish()
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger := mock_moira_alert.NewMockLogger(mockCtrl)
-		worker := Init(dataBase, logger)
+		worker := Init(dataBase, logger, metrics)
 
 		event := moira_alert.EventData{
 			Metric:    "generate.event.1",
@@ -139,7 +140,7 @@ func TestAddNotification(t *testing.T) {
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger, _ := logging.GetLogger("Events")
 		scheduler := mock_scheduler.NewMockScheduler(mockCtrl)
-		worker := Init(dataBase, logger)
+		worker := Init(dataBase, logger, metrics)
 		worker.scheduler = scheduler
 
 		event := moira_alert.EventData{
@@ -171,7 +172,7 @@ func TestAddOneNotificationByTwoSubscriptionsWithSame(t *testing.T) {
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger, _ := logging.GetLogger("Events")
 		scheduler := mock_scheduler.NewMockScheduler(mockCtrl)
-		worker := Init(dataBase, logger)
+		worker := Init(dataBase, logger, metrics)
 		worker.scheduler = scheduler
 
 		event := moira_alert.EventData{
@@ -208,7 +209,7 @@ func TestFailReadContact(t *testing.T) {
 		defer mockCtrl.Finish()
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger := mock_moira_alert.NewMockLogger(mockCtrl)
-		worker := Init(dataBase, logger)
+		worker := Init(dataBase, logger, metrics)
 
 		event := moira_alert.EventData{
 			Metric:    "generate.event.1",
@@ -235,13 +236,12 @@ func TestFailReadContact(t *testing.T) {
 }
 
 func TestGoRoutine(t *testing.T) {
-	go_metrics.ConfigureNotifierMetrics(graphite.Config{})
 	Convey("When good subscription, should add new notification", t, func() {
 		mockCtrl := gomock.NewController(t)
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger, _ := logging.GetLogger("Events")
 		scheduler := mock_scheduler.NewMockScheduler(mockCtrl)
-		worker := Init(dataBase, logger)
+		worker := Init(dataBase, logger, metrics)
 		worker.scheduler = scheduler
 
 		event := moira_alert.EventData{

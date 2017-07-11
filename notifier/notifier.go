@@ -22,15 +22,17 @@ type StandardNotifier struct {
 	database  moira_alert.Database
 	scheduler Scheduler
 	config    Config
+	metrics   *graphite.NotifierMetrics
 }
 
-func Init(database moira_alert.Database, logger moira_alert.Logger, config Config) *StandardNotifier {
+func Init(database moira_alert.Database, logger moira_alert.Logger, config Config, metrics *graphite.NotifierMetrics) *StandardNotifier {
 	return &StandardNotifier{
 		senders:   make(map[string]chan NotificationPackage),
 		logger:    logger,
 		database:  database,
 		scheduler: InitScheduler(database, logger),
 		config:    config,
+		metrics:   metrics,
 	}
 }
 
@@ -66,8 +68,8 @@ func (notifier *StandardNotifier) resend(pkg *NotificationPackage, reason string
 	if pkg.DontResend {
 		return
 	}
-	graphite.NotifierMetric.SendingFailed.Mark(1)
-	if metric, found := graphite.NotifierMetric.SendersFailedMetrics.GetMetric(pkg.Contact.Type); found {
+	notifier.metrics.SendingFailed.Mark(1)
+	if metric, found := notifier.metrics.SendersFailedMetrics.GetMetric(pkg.Contact.Type); found {
 		metric.Mark(1)
 	}
 	notifier.logger.Warningf("Can't send message after %d try: %s. Retry again after 1 min", pkg.FailCount, reason)
@@ -88,7 +90,7 @@ func (notifier *StandardNotifier) run(sender moira_alert.Sender, ch chan Notific
 	for pkg := range ch {
 		err := sender.SendEvents(pkg.Events, pkg.Contact, pkg.Trigger, pkg.Throttled)
 		if err == nil {
-			if metric, found := graphite.NotifierMetric.SendersOkMetrics.GetMetric(pkg.Contact.Type); found {
+			if metric, found := notifier.metrics.SendersOkMetrics.GetMetric(pkg.Contact.Type); found {
 				metric.Mark(1)
 			}
 		} else {

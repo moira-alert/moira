@@ -4,14 +4,16 @@ import (
 	"fmt"
 	"github.com/garyburd/redigo/redis"
 	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira-alert/metrics/graphite"
 	"time"
 )
 
 // Init creates Redis pool based on config
-func Init(logger moira_alert.Logger, config Config) *DbConnector {
+func Init(logger moira_alert.Logger, config Config, metrics *graphite.NotifierMetrics) *DbConnector {
 	db := DbConnector{
-		pool:   newRedisPool(fmt.Sprintf("%s:%s", config.Host, config.Port), config.DBID),
-		logger: logger,
+		pool:    newRedisPool(fmt.Sprintf("%s:%s", config.Host, config.Port), config.DBID),
+		logger:  logger,
+		metrics: metrics,
 	}
 	return &db
 }

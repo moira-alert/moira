@@ -13,9 +13,7 @@ import (
 	goMetricsGraphite "github.com/cyberdelia/go-metrics-graphite"
 )
 
-func Init(metric *graphite.NotifierMetrics, logger moira_alert.Logger) {
-	config := (*metric).Config
-
+func Init(metric *graphite.NotifierMetrics, config graphite.Config, logger moira_alert.Logger) {
 	uri := config.URI
 	prefix := config.Prefix
 	interval := config.Interval
@@ -37,12 +35,11 @@ func Init(metric *graphite.NotifierMetrics, logger moira_alert.Logger) {
 }
 
 func NewRegisteredMeter(name string) metrics.Meter {
-	return metrics.NewRegisteredMeter("events.received", metrics.DefaultRegistry)
+	return metrics.NewRegisteredMeter(name, metrics.DefaultRegistry)
 }
 
-func ConfigureNotifierMetrics(config graphite.Config) graphite.NotifierMetrics {
-	graphite.NotifierMetric = graphite.NotifierMetrics{
-		Config:                 config,
+func ConfigureNotifierMetrics() *graphite.NotifierMetrics {
+	return &graphite.NotifierMetrics{
 		EventsReceived:         NewRegisteredMeter("events.received"),
 		EventsMalformed:        NewRegisteredMeter("events.malformed"),
 		EventsProcessingFailed: NewRegisteredMeter("events.failed"),
@@ -51,5 +48,4 @@ func ConfigureNotifierMetrics(config graphite.Config) graphite.NotifierMetrics {
 		SendersOkMetrics:       &MetricsMap{make(map[string]metrics.Meter)},
 		SendersFailedMetrics:   &MetricsMap{make(map[string]metrics.Meter)},
 	}
-	return graphite.NotifierMetric
 }

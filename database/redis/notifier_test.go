@@ -6,11 +6,14 @@ import (
 	"github.com/garyburd/redigo/redis"
 	"github.com/gmlexx/redigomock"
 	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira-alert/metrics/graphite/go-metrics"
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 	"time"
 )
+
+var metrics = go_metrics.ConfigureNotifierMetrics()
 
 func TestNotifierDataBase(t *testing.T) {
 	config := Config{}
@@ -32,14 +35,14 @@ func TestNotifierDataBase(t *testing.T) {
 
 	Convey("Contact manipulation", t, func() {
 		Convey("should throw error when no connection", func() {
-			dataBase := Init(logger, config)
+			dataBase := Init(logger, config, metrics)
 			dataBase.pool.TestOnBorrow(fakeDataBase.pool.Get(), time.Now())
 			_, err := dataBase.GetContacts()
 			So(err, ShouldNotBeNil)
 		})
 
 		Convey("should save contact", func() {
-			db := Init(logger, config)
+			db := Init(logger, config, metrics)
 			db.pool = fakeDataBase.pool
 			contact := moira_alert.ContactData{
 				ID:    "id",
@@ -51,7 +54,7 @@ func TestNotifierDataBase(t *testing.T) {
 		})
 
 		Convey("shouldn't throw error when connection exists", func() {
-			db := Init(logger, config)
+			db := Init(logger, config, metrics)
 			db.pool = fakeDataBase.pool
 			_, err := db.GetContacts()
 			So(err, ShouldBeNil)
@@ -59,7 +62,7 @@ func TestNotifierDataBase(t *testing.T) {
 	})
 
 	Convey("Try get trigger by empty id, should be error", t, func() {
-		db := Init(logger, config)
+		db := Init(logger, config, metrics)
 		db.pool = fakeDataBase.pool
 		_, err := db.GetTrigger("")
 		So(err, ShouldNotBeEmpty)

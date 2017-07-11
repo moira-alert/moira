@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira-alert"
-	"github.com/moira-alert/moira-alert/metrics/graphite"
 	"github.com/moira-alert/moira-alert/metrics/graphite/go-metrics"
 	"github.com/moira-alert/moira-alert/mock/moira-alert"
 	"github.com/moira-alert/moira-alert/mock/scheduler"
@@ -100,7 +99,7 @@ func TestTimeout(t *testing.T) {
 }
 
 func configureNotifier(t *testing.T) {
-	go_metrics.ConfigureNotifierMetrics(graphite.Config{})
+	metrics := go_metrics.ConfigureNotifierMetrics()
 	config := Config{
 		SendingTimeout:   time.Millisecond * 10,
 		ResendingTimeout: time.Hour * 24,
@@ -112,7 +111,7 @@ func configureNotifier(t *testing.T) {
 	scheduler = mock_scheduler.NewMockScheduler(mockCtrl)
 	sender = mock_moira_alert.NewMockSender(mockCtrl)
 
-	notif = Init(dataBase, logger, config)
+	notif = Init(dataBase, logger, config, metrics)
 	notif.scheduler = scheduler
 	senderSettings := map[string]string{
 		"type": "test",
