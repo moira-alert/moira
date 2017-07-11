@@ -132,6 +132,7 @@ func TestSubscriptionSchedule(t *testing.T) {
 			next, throttled := scheduler.calculateNextDelivery(now, &event)
 			So(next, ShouldResemble, now)
 			So(throttled, ShouldBeFalse)
+			mockCtrl.Finish()
 		})
 
 		Convey("When allowed time is today, should send notification at the beginning of allowed interval", func() {
@@ -142,6 +143,7 @@ func TestSubscriptionSchedule(t *testing.T) {
 			next, throttled := scheduler.calculateNextDelivery(now, &event)
 			So(next, ShouldResemble, time.Unix(1441191600, 0))
 			So(throttled, ShouldBeFalse)
+			mockCtrl.Finish()
 		})
 
 		Convey("When allowed time is in a future day, should send notification at the beginning of allowed interval", func() {
@@ -149,15 +151,76 @@ func TestSubscriptionSchedule(t *testing.T) {
 			subscription.Schedule = schedule1
 			dataBase.EXPECT().GetTriggerThrottlingTimestamps(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
 			dataBase.EXPECT().GetSubscription(event.SubscriptionID).Return(subscription, nil)
-			dataBase.EXPECT().GetSubscription(event.SubscriptionID).Return(subscription, nil)
 
 			next, throttled := scheduler.calculateNextDelivery(now, &event)
 			So(next, ShouldResemble, time.Unix(1441134000, 0))
 			So(throttled, ShouldBeFalse)
+			mockCtrl.Finish()
+		})
+
+		Convey("Trigger already alarm fatigue, but now throttling disabled, should send notification now", func() {
+			subscription.Schedule = schedule1
+			dataBase.EXPECT().GetTriggerThrottlingTimestamps(event.TriggerID).Return(time.Unix(1441187215, 0), time.Unix(0, 0))
+			dataBase.EXPECT().GetSubscription(event.SubscriptionID).Return(subscription, nil)
+
+			next, throttled := scheduler.calculateNextDelivery(now, &event)
+			So(next, ShouldResemble, now)
+			So(throttled, ShouldBeTrue)
+			mockCtrl.Finish()
 		})
 	})
 
-	//todo throttling tests
+	Convey("Throttling enabled", t, func() {
+		now := time.Unix(1441134000, 0)
+		subscription.ThrottlingEnabled = true
+
+		Convey("Has trigger events count slightly less than low throttling level, should next timestamp now minutes, but throttling", func() {
+			dataBase.EXPECT().GetTriggerThrottlingTimestamps(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
+			dataBase.EXPECT().GetSubscription(event.SubscriptionID).Return(subscription, nil)
+			dataBase.EXPECT().GetTriggerEventsCount(event.TriggerID, now.Add(-time.Hour*3).Unix()).Return(int64(13))
+			dataBase.EXPECT().GetTriggerEventsCount(event.TriggerID, now.Add(-time.Hour).Unix()).Return(int64(9))
+
+			next, throttled := scheduler.calculateNextDelivery(now, &event)
+			So(next, ShouldResemble, now)
+			So(throttled, ShouldBeTrue)
+			mockCtrl.Finish()
+		})
+
+		Convey("Has trigger events count event more than low throttling level, should next timestamp in 30 minutes", func() {
+			dataBase.EXPECT().GetTriggerThrottlingTimestamps(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
+			dataBase.EXPECT().GetSubscription(event.SubscriptionID).Return(subscription, nil)
+			dataBase.EXPECT().GetTriggerEventsCount(event.TriggerID, now.Add(-time.Hour*3).Unix()).Return(int64(10))
+			dataBase.EXPECT().GetTriggerEventsCount(event.TriggerID, now.Add(-time.Hour).Unix()).Return(int64(10))
+			dataBase.EXPECT().SetTriggerThrottlingTimestamp(event.TriggerID, now.Add(time.Hour/2)).Return(nil)
+
+			next, throttled := scheduler.calculateNextDelivery(now, &event)
+			So(next, ShouldResemble, time.Unix(1441135800, 0))
+			So(throttled, ShouldBeTrue)
+			mockCtrl.Finish()
+		})
+
+		Convey("Has trigger event more than high throttling level, should next timestamp in 1 hour", func() {
+			dataBase.EXPECT().GetTriggerThrottlingTimestamps(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
+			dataBase.EXPECT().GetSubscription(event.SubscriptionID).Return(subscription, nil)
+			dataBase.EXPECT().GetTriggerEventsCount(event.TriggerID, now.Add(-time.Hour*3).Unix()).Return(int64(20))
+			dataBase.EXPECT().SetTriggerThrottlingTimestamp(event.TriggerID, now.Add(time.Hour)).Return(nil)
+
+			next, throttled := scheduler.calculateNextDelivery(now, &event)
+			So(next, ShouldResemble, now.Add(time.Hour))
+			So(throttled, ShouldBeTrue)
+			mockCtrl.Finish()
+		})
+
+		Convey("Trigger already alarm fatigue, should has old throttled value", func() {
+			dataBase.EXPECT().GetTriggerThrottlingTimestamps(event.TriggerID).Return(time.Unix(1441148000, 0), time.Unix(0, 0))
+			dataBase.EXPECT().GetSubscription(event.SubscriptionID).Return(subscription, nil)
+
+			next, throttled := scheduler.calculateNextDelivery(now, &event)
+			So(next, ShouldResemble, time.Unix(1441148000, 0))
+			So(throttled, ShouldBeTrue)
+			mockCtrl.Finish()
+		})
+	})
 }
 
 var schedule1 = moira_alert.ScheduleData{

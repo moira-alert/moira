@@ -161,7 +161,7 @@ func TestAddNotification(t *testing.T) {
 	})
 }
 
-func TestAddNotification2(t *testing.T) {
+func TestAddOneNotificationByTwoSubscriptionsWithSame(t *testing.T) {
 	Convey("When good subscription and create 2 same scheduled notifications, should add one new notification", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
