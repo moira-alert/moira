@@ -41,7 +41,7 @@ func NewRegisteredMeter(name string) metrics.Meter {
 }
 
 func ConfigureNotifierMetrics(config graphite.Config) graphite.NotifierMetrics {
-	return graphite.NotifierMetrics{
+	graphite.NotifierMetric = graphite.NotifierMetrics{
 		Config:                 config,
 		EventsReceived:         NewRegisteredMeter("events.received"),
 		EventsMalformed:        NewRegisteredMeter("events.malformed"),
@@ -51,4 +51,5 @@ func ConfigureNotifierMetrics(config graphite.Config) graphite.NotifierMetrics {
 		SendersOkMetrics:       &MetricsMap{make(map[string]metrics.Meter)},
 		SendersFailedMetrics:   &MetricsMap{make(map[string]metrics.Meter)},
 	}
+	return graphite.NotifierMetric
 }
