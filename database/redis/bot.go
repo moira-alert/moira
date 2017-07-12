@@ -35,10 +35,8 @@ func (connector *DbConnector) GetIDByUsername(messenger, username string) (strin
 func (connector *DbConnector) SetUsernameID(messenger, username, id string) error {
 	c := connector.pool.Get()
 	defer c.Close()
-	if _, err := c.Do("SET", usernameKey(messenger, username), id); err != nil {
-		return err
-	}
-	return nil
+	_, err := c.Do("SET", usernameKey(messenger, username), id)
+	return err
 }
 
 // RegisterBotIfAlreadyNot creates registration of bot instance in redis

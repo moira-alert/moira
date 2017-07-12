@@ -45,13 +45,13 @@ func main() {
 
 	notifierConfig := config.Notifier.getSettings()
 
-	logger, err := configureLog(&notifierConfig)
+	logger, err = configureLog(&notifierConfig)
 	if err != nil {
 		fmt.Printf("Can not configure log: %s \n", err.Error())
 		os.Exit(1)
 	}
 
-	connector := redis.Init(logger, config.Redis.getSettings(), metric)
+	connector = redis.Init(logger, config.Redis.getSettings(), metric)
 	if *convertDb {
 		convertDatabase(connector)
 	}

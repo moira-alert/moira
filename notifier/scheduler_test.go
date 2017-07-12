@@ -147,7 +147,7 @@ func TestSubscriptionSchedule(t *testing.T) {
 		})
 
 		Convey("When allowed time is in a future day, should send notification at the beginning of allowed interval", func() {
-			now := time.Unix(1441101600, 0)
+			now = time.Unix(1441101600, 0)
 			subscription.Schedule = schedule1
 			dataBase.EXPECT().GetTriggerThrottlingTimestamps(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
 			dataBase.EXPECT().GetSubscription(event.SubscriptionID).Return(subscription, nil)

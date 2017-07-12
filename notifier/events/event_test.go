@@ -267,7 +267,7 @@ func TestGoRoutine(t *testing.T) {
 		wg := sync.WaitGroup{}
 		wg.Add(1)
 		go worker.Run(shutdown, &wg)
-		time.Sleep(1)
+		time.Sleep(time.Second * 5)
 		close(shutdown)
 		wg.Wait()
 		mockCtrl.Finish()

@@ -109,7 +109,7 @@ func (connector *DbConnector) GetTagsSubscriptions(tags []string) ([]moira.Subsc
 	}
 	if len(subscriptions) == 0 {
 		connector.logger.Debugf("No subscriptions found for tag set %v", tags)
-		return make([]moira.SubscriptionData, 0, 0), nil
+		return make([]moira.SubscriptionData, 0), nil
 	}
 
 	var subscriptionsData []moira.SubscriptionData
@@ -190,10 +190,8 @@ func (connector *DbConnector) SetContact(contact *moira.ContactData) error {
 
 	c := connector.pool.Get()
 	defer c.Close()
-	if _, err := c.Do("SET", fmt.Sprintf("moira-contact:%s", id), contactString); err != nil {
-		return err
-	}
-	return nil
+	_, err = c.Do("SET", fmt.Sprintf("moira-contact:%s", id), contactString)
+	return err
 }
 
 // AddNotification store notification at given timestamp
@@ -207,11 +205,8 @@ func (connector *DbConnector) AddNotification(notification *moira.ScheduledNotif
 	c := connector.pool.Get()
 	defer c.Close()
 
-	if _, err := c.Do("ZADD", "moira-notifier-notifications", notification.Timestamp, notificationString); err != nil {
-		return err
-	}
-
-	return nil
+	_, err = c.Do("ZADD", "moira-notifier-notifications", notification.Timestamp, notificationString)
+	return err
 }
 
 // GetTriggerThrottlingTimestamps get throttling or scheduled notifications delay for given triggerID
@@ -239,10 +234,8 @@ func (connector *DbConnector) GetTriggerEventsCount(triggerID string, from int64
 func (connector *DbConnector) SetTriggerThrottlingTimestamp(triggerID string, next time.Time) error {
 	c := connector.pool.Get()
 	defer c.Close()
-	if _, err := c.Do("SET", fmt.Sprintf("moira-notifier-next:%s", triggerID), next.Unix()); err != nil {
-		return err
-	}
-	return nil
+	_, err := c.Do("SET", fmt.Sprintf("moira-notifier-next:%s", triggerID), next.Unix())
+	return err
 }
 
 // GetNotifications fetch notifications by given timestamp
@@ -262,8 +255,9 @@ func (connector *DbConnector) GetNotifications(to int64) ([]*moira.ScheduledNoti
 	if err != nil {
 		return nil, err
 	}
+
 	if len(redisResponse) == 0 {
-		return make([]*moira.ScheduledNotification, 0, 0), nil
+		return make([]*moira.ScheduledNotification, 0), nil
 	}
 
 	return connector.convertNotifications(redisResponse[0])

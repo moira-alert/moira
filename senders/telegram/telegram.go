@@ -13,7 +13,6 @@ import (
 
 var (
 	api                  bot.Bot
-	log                  moira.Logger
 	telegramMessageLimit = 4096
 	emojiStates          = map[string]string{
 		"OK":     "\xe2\x9c\x85",
@@ -38,13 +37,13 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 	if sender.APIToken == "" {
 		return fmt.Errorf("Can not read telegram api_token from config")
 	}
-	log = logger
+	sender.log = logger
 	sender.FrontURI = senderSettings["front_uri"]
 
 	var err error
 	api, err = bot.StartTelebot(sender.APIToken, sender.DB)
 	if err != nil {
-		log.Errorf("Error starting bot: %s", err)
+		sender.log.Errorf("Error starting bot: %s", err)
 	}
 	return nil
 }
@@ -87,7 +86,7 @@ func (sender *Sender) SendEvents(events moira.EventsData, contact moira.ContactD
 		message.WriteString("\nPlease, fix your system or tune this trigger to generate less events.")
 	}
 
-	log.Debugf("Calling telegram api with chat_id %s and message body %s", contact.Value, message.String())
+	sender.log.Debugf("Calling telegram api with chat_id %s and message body %s", contact.Value, message.String())
 
 	if err := api.Talk(contact.Value, message.String()); err != nil {
 		return fmt.Errorf("Failed to send message to telegram contact %s: %s. ", contact.Value, err)

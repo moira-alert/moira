@@ -3,10 +3,10 @@ package main
 import (
 	"fmt"
 	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira-alert/notifier"
 	"github.com/op/go-logging"
 	"os"
 	"path/filepath"
-	"github.com/moira-alert/moira-alert/notifier"
 )
 
 func configureLog(config *notifier.Config) (moira.Logger, error) {
@@ -26,7 +26,7 @@ func configureLog(config *notifier.Config) (moira.Logger, error) {
 		logBackend = logging.NewLogBackend(os.Stdout, "", 0)
 	} else {
 		logDir := filepath.Dir(logFileName)
-		if err := os.MkdirAll(logDir, 755); err != nil {
+		if err := os.MkdirAll(logDir, 0755); err != nil {
 			return nil, fmt.Errorf("Can't create log directories %s: %s", logDir, err.Error())
 		}
 		logFile, err := os.OpenFile(logFileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
