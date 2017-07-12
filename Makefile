@@ -11,10 +11,10 @@ default: test build
 prepare:
 	go get github.com/kardianos/govendor
 	govendor sync
-
-lint:
 	go get github.com/alecthomas/gometalinter
 	gometalinter --install
+
+lint:
 	gometalinter ./... --vendor --skip mock --disable=errcheck --disable=gocyclo
 
 test: prepare
