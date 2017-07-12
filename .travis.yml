@@ -1,8 +1,11 @@
 language: go
-dist: trusty
-sudo: required
+sudo: false
 go:
   - 1.8.3
+addons:
+  apt:
+    packages:
+      rpm
 notifications:
   webhooks:
     urls:
@@ -11,7 +14,6 @@ notifications:
     on_failure: always
     on_start: never
 before_install:
-  - sudo apt-get install -y rpm
   - gem install fpm
   - go get -v github.com/modocache/gover
   - go get -v golang.org/x/tools/cmd/cover

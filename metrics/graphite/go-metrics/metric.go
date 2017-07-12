@@ -1,3 +1,4 @@
+//nolint
 package metrics
 
 import (
@@ -5,6 +6,7 @@ import (
 )
 
 //Metric is facade for go-metrics package Meter struct
+
 type Metric struct {
 	meter goMetrics.Meter
 }

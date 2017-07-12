@@ -14,6 +14,7 @@ import (
 	"github.com/moira-alert/moira-alert/senders/twilio"
 )
 
+//RegisterSenders watch on senders config and register all configured senders
 func (notifier *StandardNotifier) RegisterSenders(connector *redis.DbConnector, frontURI string) error {
 	for _, senderSettings := range notifier.config.Senders {
 		senderSettings["front_uri"] = frontURI
@@ -59,6 +60,7 @@ func (notifier *StandardNotifier) RegisterSenders(connector *redis.DbConnector, 
 	return nil
 }
 
+// RegisterSender adds sender for notification type and registers metrics
 func (notifier *StandardNotifier) RegisterSender(senderSettings map[string]string, sender moira.Sender) error {
 	var senderIdent string
 	if senderSettings["type"] == "script" {

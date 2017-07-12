@@ -57,7 +57,7 @@ func (sender *Sender) SendEvents(events moira.EventsData, contact moira.ContactD
 	tags := trigger.GetTags()
 
 	emoji := emojiStates[state]
-	message.WriteString(fmt.Sprintf("%s%s %s %s (%d)\n", string(emoji), state, trigger.Name, tags, len(events)))
+	message.WriteString(fmt.Sprintf("%s%s %s %s (%d)\n", emoji, state, trigger.Name, tags, len(events)))
 
 	messageLimitReached := false
 	lineCount := 0

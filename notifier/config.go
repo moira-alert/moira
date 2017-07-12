@@ -2,6 +2,7 @@ package notifier
 
 import "time"
 
+//Config is sending settings including log settings
 type Config struct {
 	LogFile          string
 	LogLevel         string

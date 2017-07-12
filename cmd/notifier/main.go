@@ -24,7 +24,8 @@ var (
 	configFileName = flag.String("config", "/etc/moira/config.yml", "path to config file")
 	printVersion   = flag.Bool("version", false, "Print current version and exit")
 	convertDb      = flag.Bool("convert", false, "Convert telegram contacts and exit")
-	Version        = "latest"
+	//Version - sets build version during build
+	Version = "latest"
 )
 
 func main() {
@@ -77,7 +78,7 @@ func initWorkers(notifier2 notifier.Notifier, config *config, metric *graphite.N
 	run(fetchNotificationsWorker, shutdown, &waitGroup)
 
 	logger.Infof("Moira Notifier Started. Version: %s", Version)
-	ch := make(chan os.Signal)
+	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 	logger.Info(fmt.Sprint(<-ch))
 	close(shutdown)

@@ -127,7 +127,7 @@ func readSettings(configFileName string) (*config, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Can't read file [%s] [%s]", configFileName, err.Error())
 	}
-	err = yaml.Unmarshal([]byte(configYaml), &c)
+	err = yaml.Unmarshal(configYaml, &c)
 	if err != nil {
 		return nil, fmt.Errorf("Can't parse config file [%s] [%s]", configFileName, err.Error())
 	}

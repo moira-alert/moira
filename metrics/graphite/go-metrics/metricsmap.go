@@ -1,3 +1,4 @@
+//nolint
 package metrics
 
 import (
@@ -6,6 +7,7 @@ import (
 )
 
 //MetricMap is realization of MetricsMap
+//nolint
 type MetricMap struct {
 	metrics map[string]metrics.Meter
 }

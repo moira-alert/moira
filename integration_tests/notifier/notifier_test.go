@@ -1,4 +1,4 @@
-package test_notifier
+package notifier
 
 import (
 	"github.com/golang/mock/gomock"

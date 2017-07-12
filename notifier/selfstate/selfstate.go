@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+//SelfCheckWorker - check what all notifier services works correctly and send message when moira don't work
 type SelfCheckWorker struct {
 	logger            moira.Logger
 	database          moira.Database
@@ -17,6 +18,7 @@ type SelfCheckWorker struct {
 
 var defaultCheckInterval = time.Second * 10
 
+//Init - initialize notifier self check worker
 func Init(database moira.Database, logger moira.Logger, config Config, notifier2 notifier.Notifier) (worker *SelfCheckWorker, needRun bool) {
 	senders := notifier2.GetSenders()
 	if err := config.checkConfig(senders); err != nil {
@@ -36,7 +38,7 @@ func Init(database moira.Database, logger moira.Logger, config Config, notifier2
 	return nil, false
 }
 
-// Send message when moira don't work
+//Run self check worker
 func (selfCheck SelfCheckWorker) Run(shutdown chan bool, wg *sync.WaitGroup) {
 	defer wg.Done()
 

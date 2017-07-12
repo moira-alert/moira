@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+//FetchEventsWorker - check for new events and new notifications based on it
 type FetchEventsWorker struct {
 	logger    moira.Logger
 	database  moira.Database
@@ -15,6 +16,7 @@ type FetchEventsWorker struct {
 	metrics   *graphite.NotifierMetrics
 }
 
+//Init new worker
 func Init(database moira.Database, logger moira.Logger, metrics *graphite.NotifierMetrics) FetchEventsWorker {
 	return FetchEventsWorker{
 		logger:    logger,
@@ -24,7 +26,7 @@ func Init(database moira.Database, logger moira.Logger, metrics *graphite.Notifi
 	}
 }
 
-// FetchEvents is a cycle that fetches events from database
+// Run is a cycle that fetches events from database
 func (worker FetchEventsWorker) Run(shutdown chan bool, wg *sync.WaitGroup) {
 	defer wg.Done()
 	worker.logger.Debug("Start Fetching Events")

@@ -6,10 +6,12 @@ import (
 	"time"
 )
 
+//Scheduler implements event scheduling functionality
 type Scheduler interface {
 	ScheduleNotification(now time.Time, event moira.EventData, trigger moira.TriggerData, contact moira.ContactData, throttledOld bool, sendfail int) *moira.ScheduledNotification
 }
 
+//StandardScheduler represents standard event scheduling
 type StandardScheduler struct {
 	logger   moira.Logger
 	database moira.Database
@@ -21,6 +23,7 @@ type throttlingLevel struct {
 	count    int64
 }
 
+//InitScheduler is initializer for StandardScheduler
 func InitScheduler(database moira.Database, logger moira.Logger) *StandardScheduler {
 	return &StandardScheduler{
 		database: database,
@@ -28,6 +31,7 @@ func InitScheduler(database moira.Database, logger moira.Logger) *StandardSchedu
 	}
 }
 
+//ScheduleNotification is realization of scheduling event, based on trigger and subscription time intervals and triggers settings
 func (scheduler *StandardScheduler) ScheduleNotification(now time.Time, event moira.EventData, trigger moira.TriggerData, contact moira.ContactData, throttledOld bool, sendfail int) *moira.ScheduledNotification {
 	var (
 		next      time.Time
