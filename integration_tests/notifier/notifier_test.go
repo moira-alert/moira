@@ -29,10 +29,10 @@ var waitGroup sync.WaitGroup
 
 var metrics2 = metrics.ConfigureNotifierMetrics()
 var logger, _ = logging.GetLogger("Notifier_Test")
-var mockCtrl gomock.Controller
+var mockCtrl *gomock.Controller
 
 func TestNotifier(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
+	mockCtrl = gomock.NewController(t)
 	defer afterTest()
 	fakeDataBase := redis.InitFake(logger)
 	notifier2 := notifier.Init(fakeDataBase, logger, notifierConfig, metrics2)
