@@ -14,7 +14,7 @@ prepare:
 	go get github.com/alecthomas/gometalinter
 	gometalinter --install
 
-lint:
+lint: prepare
 	gometalinter ./... --vendor --skip mock --disable=errcheck --disable=gocyclo
 
 test: prepare
