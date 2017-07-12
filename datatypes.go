@@ -46,10 +46,10 @@ type ContactData struct {
 //SubscriptionData represent user subscription
 type SubscriptionData struct {
 	Contacts          []string     `json:"contacts"`
-	Enabled           bool         `json:"enabled"`
 	Tags              []string     `json:"tags"`
 	Schedule          ScheduleData `json:"sched"`
 	ID                string       `json:"id"`
+	Enabled           bool         `json:"enabled"`
 	ThrottlingEnabled bool         `json:"throttling"`
 }
 

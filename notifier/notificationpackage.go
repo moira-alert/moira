@@ -9,8 +9,8 @@ type NotificationPackage struct {
 	Events     []moira.EventData
 	Trigger    moira.TriggerData
 	Contact    moira.ContactData
-	Throttled  bool
 	FailCount  int
+	Throttled  bool
 	DontResend bool
 }
 
