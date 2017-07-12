@@ -137,22 +137,29 @@ func TestGoRoutine(t *testing.T) {
 	notifier := mock_notifier.NewMockNotifier(mockCtrl)
 	logger, _ := logging.GetLogger("Notification")
 
+	shutdown := make(chan bool)
 	worker := Init(dataBase, logger, notifier)
 
-	dataBase.EXPECT().GetNotifications(gomock.Any()).Return([]*moira_alert.ScheduledNotification{
-		&notification1,
-	}, nil)
-	notifier.EXPECT().Send(&pkg, gomock.Any())
+	dataBase.EXPECT().GetNotifications(gomock.Any()).Return([]*moira_alert.ScheduledNotification{&notification1}, nil)
+	notifier.EXPECT().Send(&pkg, gomock.Any()).Do(func(f ...interface{}) { close(shutdown) })
 
-	shutdown := make(chan bool)
 	wg := sync.WaitGroup{}
 	wg.Add(1)
-	go worker.Run(shutdown, &wg)
-	time.Sleep(1)
 	notifier.EXPECT().StopSenders()
-	close(shutdown)
+	go worker.Run(shutdown, &wg)
+	waitTestEnd(shutdown)
 	wg.Wait()
 	mockCtrl.Finish()
+}
+
+func waitTestEnd(shutdown chan bool) {
+	select {
+	case <-shutdown:
+		break
+	case <-time.After(time.Second * 5):
+		close(shutdown)
+		break
+	}
 }
 
 var contact1 = moira_alert.ContactData{

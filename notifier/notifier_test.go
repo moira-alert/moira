@@ -14,12 +14,15 @@ import (
 	"time"
 )
 
+var shutdown = make(chan bool)
+
 var (
 	mockCtrl  *gomock.Controller
 	sender    *mock_moira_alert.MockSender
 	notif     *StandardNotifier
 	scheduler *mock_scheduler.MockScheduler
 	dataBase  *mock_moira_alert.MockDatabase
+	logger    moira_alert.Logger
 )
 
 func TestUnknownContactType(t *testing.T) {
@@ -87,15 +90,28 @@ func TestTimeout(t *testing.T) {
 		},
 	}
 	notification := moira_alert.ScheduledNotification{}
-	sender.EXPECT().SendEvents(eventsData, pkg.Contact, pkg.Trigger, pkg.Throttled).Do(func(f ...interface{}) { time.Sleep(time.Second * 10) }).Return(nil)
+	sender.EXPECT().SendEvents(eventsData, pkg.Contact, pkg.Trigger, pkg.Throttled).Return(nil).Do(func(f ...interface{}) {
+		logger.Debugf("Trying to send for 10 second")
+		time.Sleep(time.Second * 10)
+	})
 	scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, pkg2.Trigger, pkg2.Contact, pkg2.Throttled, pkg2.FailCount+1).Return(&notification)
-	dataBase.EXPECT().AddNotification(&notification).Return(nil)
+	dataBase.EXPECT().AddNotification(&notification).Return(nil).Do(func(f ...interface{}) { close(shutdown) })
 
 	var wg sync.WaitGroup
 	notif.Send(&pkg, &wg)
 	notif.Send(&pkg2, &wg)
 	wg.Wait()
-	time.Sleep(time.Second * 5)
+	waitTestEnd()
+}
+
+func waitTestEnd() {
+	select {
+	case <-shutdown:
+		break
+	case <-time.After(time.Second * 30):
+		close(shutdown)
+		break
+	}
 }
 
 func configureNotifier(t *testing.T) {
@@ -107,7 +123,7 @@ func configureNotifier(t *testing.T) {
 
 	mockCtrl = gomock.NewController(t)
 	dataBase = mock_moira_alert.NewMockDatabase(mockCtrl)
-	logger, _ := logging.GetLogger("Scheduler")
+	logger, _ = logging.GetLogger("Scheduler")
 	scheduler = mock_scheduler.NewMockScheduler(mockCtrl)
 	sender = mock_moira_alert.NewMockSender(mockCtrl)
 
