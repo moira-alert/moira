@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-var metrics = go_metrics.ConfigureNotifierMetrics()
+var metrics2 = metrics.ConfigureNotifierMetrics()
 
 func TestNotifierDataBase(t *testing.T) {
 	config := Config{}
@@ -35,16 +35,16 @@ func TestNotifierDataBase(t *testing.T) {
 
 	Convey("Contact manipulation", t, func() {
 		Convey("should throw error when no connection", func() {
-			dataBase := Init(logger, config, metrics)
+			dataBase := Init(logger, config, metrics2)
 			dataBase.pool.TestOnBorrow(fakeDataBase.pool.Get(), time.Now())
 			_, err := dataBase.GetContacts()
 			So(err, ShouldNotBeNil)
 		})
 
 		Convey("should save contact", func() {
-			db := Init(logger, config, metrics)
+			db := Init(logger, config, metrics2)
 			db.pool = fakeDataBase.pool
-			contact := moira_alert.ContactData{
+			contact := moira.ContactData{
 				ID:    "id",
 				Type:  "telegram",
 				Value: "contact",
@@ -54,7 +54,7 @@ func TestNotifierDataBase(t *testing.T) {
 		})
 
 		Convey("shouldn't throw error when connection exists", func() {
-			db := Init(logger, config, metrics)
+			db := Init(logger, config, metrics2)
 			db.pool = fakeDataBase.pool
 			_, err := db.GetContacts()
 			So(err, ShouldBeNil)
@@ -62,34 +62,34 @@ func TestNotifierDataBase(t *testing.T) {
 	})
 
 	Convey("Try get trigger by empty id, should be error", t, func() {
-		db := Init(logger, config, metrics)
+		db := Init(logger, config, metrics2)
 		db.pool = fakeDataBase.pool
 		_, err := db.GetTrigger("")
 		So(err, ShouldNotBeEmpty)
 	})
 
 	Convey("Test get notification", t, func() {
-		db := Init(logger, config, metrics)
+		db := Init(logger, config, metrics2)
 		db.pool = fakeDataBase.pool
 
 		now := time.Now()
-		notif := moira_alert.ScheduledNotification{
+		notif := moira.ScheduledNotification{
 			Timestamp: now.Add(-time.Minute).Unix(),
 		}
 
 		db.AddNotification(&notif)
 		actual, err := db.GetNotifications(now.Unix())
-		So(actual, ShouldResemble, []*moira_alert.ScheduledNotification{&notif})
+		So(actual, ShouldResemble, []*moira.ScheduledNotification{&notif})
 		So(err, ShouldBeEmpty)
 	})
 
 	Convey("Test get notification if empty", t, func() {
-		db := Init(logger, config, metrics)
+		db := Init(logger, config, metrics2)
 		db.pool = fakeDataBase.pool
 
 		now := time.Now()
 		actual, err := db.GetNotifications(now.Unix())
-		So(actual, ShouldResemble, []*moira_alert.ScheduledNotification{})
+		So(actual, ShouldResemble, []*moira.ScheduledNotification{})
 		So(err, ShouldBeEmpty)
 	})
 }
@@ -116,7 +116,7 @@ func (connector *DbConnector) fillDataBase() {
 	}
 }
 
-var contacts = []moira_alert.ContactData{
+var contacts = []moira.ContactData{
 	{
 		ID:    "ContactID-000000000000001",
 		Type:  "email",
@@ -159,7 +159,7 @@ var contacts = []moira_alert.ContactData{
 	},
 }
 
-var triggers = []moira_alert.TriggerData{
+var triggers = []moira.TriggerData{
 	{
 		ID:         "triggerID-0000000000001",
 		Name:       "test trigger 1",
@@ -234,7 +234,7 @@ var triggers = []moira_alert.TriggerData{
 	},
 }
 
-var subscriptions = []moira_alert.SubscriptionData{
+var subscriptions = []moira.SubscriptionData{
 	{
 		ID:                "subscriptionID-00000000000001",
 		Enabled:           true,
@@ -247,11 +247,11 @@ var subscriptions = []moira_alert.SubscriptionData{
 		Enabled:  true,
 		Tags:     []string{"test-tag-2"},
 		Contacts: []string{contacts[1].ID},
-		Schedule: moira_alert.ScheduleData{
+		Schedule: moira.ScheduleData{
 			StartOffset:    10,
 			EndOffset:      20,
 			TimezoneOffset: 0,
-			Days: []moira_alert.ScheduleDataDay{
+			Days: []moira.ScheduleDataDay{
 				{Enabled: false},
 				{Enabled: true}, // Tuesday 00:10 - 00:20
 				{Enabled: false},
@@ -268,11 +268,11 @@ var subscriptions = []moira_alert.SubscriptionData{
 		Enabled:  true,
 		Tags:     []string{"test-tag-3"},
 		Contacts: []string{contacts[2].ID},
-		Schedule: moira_alert.ScheduleData{
+		Schedule: moira.ScheduleData{
 			StartOffset:    0,   // 0:00 (GMT +5) after
 			EndOffset:      900, // 15:00 (GMT +5)
 			TimezoneOffset: -300,
-			Days: []moira_alert.ScheduleDataDay{
+			Days: []moira.ScheduleDataDay{
 				{Enabled: false},
 				{Enabled: false},
 				{Enabled: true},
@@ -289,11 +289,11 @@ var subscriptions = []moira_alert.SubscriptionData{
 		Enabled:  true,
 		Tags:     []string{"test-tag-4"},
 		Contacts: []string{contacts[3].ID},
-		Schedule: moira_alert.ScheduleData{
+		Schedule: moira.ScheduleData{
 			StartOffset:    660, // 16:00 (GMT +5) before
 			EndOffset:      900, // 20:00 (GMT +5)
 			TimezoneOffset: 0,
-			Days: []moira_alert.ScheduleDataDay{
+			Days: []moira.ScheduleDataDay{
 				{Enabled: false},
 				{Enabled: false},
 				{Enabled: true},
@@ -338,11 +338,11 @@ var subscriptions = []moira_alert.SubscriptionData{
 		Enabled:  true,
 		Tags:     []string{"test-tag-multiple-subs"},
 		Contacts: []string{contacts[2].ID},
-		Schedule: moira_alert.ScheduleData{
+		Schedule: moira.ScheduleData{
 			StartOffset:    0,   // 0:00 (GMT +5) after
 			EndOffset:      900, // 15:00 (GMT +5)
 			TimezoneOffset: -300,
-			Days: []moira_alert.ScheduleDataDay{
+			Days: []moira.ScheduleDataDay{
 				{Enabled: false},
 				{Enabled: false},
 				{Enabled: true},

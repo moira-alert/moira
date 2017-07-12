@@ -10,7 +10,7 @@ import (
 
 type Notifier interface {
 	Send(pkg *NotificationPackage, waitGroup *sync.WaitGroup)
-	RegisterSender(senderSettings map[string]string, sender moira_alert.Sender) error
+	RegisterSender(senderSettings map[string]string, sender moira.Sender) error
 	StopSenders()
 	GetSenders() map[string]bool
 }
@@ -18,14 +18,14 @@ type Notifier interface {
 type StandardNotifier struct {
 	waitGroup sync.WaitGroup
 	senders   map[string]chan NotificationPackage
-	logger    moira_alert.Logger
-	database  moira_alert.Database
+	logger    moira.Logger
+	database  moira.Database
 	scheduler Scheduler
 	config    Config
 	metrics   *graphite.NotifierMetrics
 }
 
-func Init(database moira_alert.Database, logger moira_alert.Logger, config Config, metrics *graphite.NotifierMetrics) *StandardNotifier {
+func Init(database moira.Database, logger moira.Logger, config Config, metrics *graphite.NotifierMetrics) *StandardNotifier {
 	return &StandardNotifier{
 		senders:   make(map[string]chan NotificationPackage),
 		logger:    logger,
@@ -85,7 +85,7 @@ func (notifier *StandardNotifier) resend(pkg *NotificationPackage, reason string
 	}
 }
 
-func (notifier *StandardNotifier) run(sender moira_alert.Sender, ch chan NotificationPackage) {
+func (notifier *StandardNotifier) run(sender moira.Sender, ch chan NotificationPackage) {
 	defer notifier.waitGroup.Done()
 	for pkg := range ch {
 		err := sender.SendEvents(pkg.Events, pkg.Contact, pkg.Trigger, pkg.Throttled)

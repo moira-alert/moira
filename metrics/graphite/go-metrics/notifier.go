@@ -1,4 +1,4 @@
-package go_metrics
+package metrics
 
 import (
 	"fmt"
@@ -13,7 +13,8 @@ import (
 	goMetricsGraphite "github.com/cyberdelia/go-metrics-graphite"
 )
 
-func Init(metric *graphite.NotifierMetrics, config graphite.Config, logger moira_alert.Logger) {
+//Init is initializer for notifier graphite metrics worker based on go-metrics and go-metrics-graphite
+func Init(config graphite.Config, logger moira.Logger) {
 	uri := config.URI
 	prefix := config.Prefix
 	interval := config.Interval
@@ -34,18 +35,19 @@ func Init(metric *graphite.NotifierMetrics, config graphite.Config, logger moira
 	}
 }
 
-func NewRegisteredMeter(name string) metrics.Meter {
-	return metrics.NewRegisteredMeter(name, metrics.DefaultRegistry)
-}
-
+//ConfigureNotifierMetrics is notifier metrics configurator
 func ConfigureNotifierMetrics() *graphite.NotifierMetrics {
 	return &graphite.NotifierMetrics{
-		EventsReceived:         NewRegisteredMeter("events.received"),
-		EventsMalformed:        NewRegisteredMeter("events.malformed"),
-		EventsProcessingFailed: NewRegisteredMeter("events.failed"),
-		SubsMalformed:          NewRegisteredMeter("subs.malformed"),
-		SendingFailed:          NewRegisteredMeter("sending.failed"),
-		SendersOkMetrics:       &MetricsMap{make(map[string]metrics.Meter)},
-		SendersFailedMetrics:   &MetricsMap{make(map[string]metrics.Meter)},
+		EventsReceived:         newRegisteredMeter("events.received"),
+		EventsMalformed:        newRegisteredMeter("events.malformed"),
+		EventsProcessingFailed: newRegisteredMeter("events.failed"),
+		SubsMalformed:          newRegisteredMeter("subs.malformed"),
+		SendingFailed:          newRegisteredMeter("sending.failed"),
+		SendersOkMetrics:       &MetricMap{make(map[string]metrics.Meter)},
+		SendersFailedMetrics:   &MetricMap{make(map[string]metrics.Meter)},
 	}
+}
+
+func newRegisteredMeter(name string) metrics.Meter {
+	return metrics.NewRegisteredMeter(name, metrics.DefaultRegistry)
 }

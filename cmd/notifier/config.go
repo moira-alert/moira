@@ -3,49 +3,49 @@ package main
 import (
 	"fmt"
 	"github.com/gosexy/to"
+	"github.com/moira-alert/moira-alert/database/redis"
 	"github.com/moira-alert/moira-alert/metrics/graphite"
 	"github.com/moira-alert/moira-alert/notifier"
 	"github.com/moira-alert/moira-alert/notifier/selfstate"
-	"github.com/moira-alert/moira-alert/database/redis"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"strings"
 )
 
-type Config struct {
-	Redis    RedisConfig    `yaml:"redis"`
-	Front    FrontConfig    `yaml:"front"`
-	Graphite GraphiteConfig `yaml:"graphite"`
-	Notifier NotifierConfig `yaml:"notifier"`
+type config struct {
+	Redis    redisConfig    `yaml:"redis"`
+	Front    frontConfig    `yaml:"front"`
+	Graphite graphiteConfig `yaml:"graphite"`
+	Notifier notifierConfig `yaml:"notifier"`
 }
 
-type NotifierConfig struct {
+type notifierConfig struct {
 	LogFile          string              `yaml:"log_file"`
 	LogLevel         string              `yaml:"log_level"`
 	LogColor         string              `yaml:"log_color"`
 	SenderTimeout    string              `yaml:"sender_timeout"`
 	ResendingTimeout string              `yaml:"resending_timeout"`
 	Senders          []map[string]string `yaml:"senders"`
-	SelfState        SelfStateConfig     `yaml:"moira_selfstate"`
+	SelfState        selfStateConfig     `yaml:"moira_selfstate"`
 }
 
-type RedisConfig struct {
+type redisConfig struct {
 	Host string `yaml:"host"`
 	Port string `yaml:"port"`
 	DBID int    `yaml:"dbid"`
 }
 
-type FrontConfig struct {
+type frontConfig struct {
 	URI string `yaml:"uri"`
 }
 
-type GraphiteConfig struct {
+type graphiteConfig struct {
 	URI      string `yaml:"uri"`
 	Prefix   string `yaml:"prefix"`
 	Interval int64  `yaml:"interval"`
 }
 
-type SelfStateConfig struct {
+type selfStateConfig struct {
 	Enabled                 string              `yaml:"enabled"`
 	RedisDisconnectDelay    int64               `yaml:"redis_disconect_delay"`
 	LastMetricReceivedDelay int64               `yaml:"last_metric_received_delay"`
@@ -54,25 +54,25 @@ type SelfStateConfig struct {
 	NoticeInterval          int64               `yaml:"notice_interval"`
 }
 
-func getDefault() Config {
-	return Config{
-		Redis: RedisConfig{
+func getDefault() config {
+	return config{
+		Redis: redisConfig{
 			Host: "localhost",
 			Port: "6379",
 		},
-		Front: FrontConfig{
+		Front: frontConfig{
 			URI: "http://localhost",
 		},
-		Graphite: GraphiteConfig{
+		Graphite: graphiteConfig{
 			URI:      "localhost:2003",
 			Prefix:   "DevOps.Moira",
 			Interval: 60,
 		},
-		Notifier: NotifierConfig{
+		Notifier: notifierConfig{
 			LogFile:          "stdout",
 			SenderTimeout:    "10s0ms",
 			ResendingTimeout: "24:00",
-			SelfState: SelfStateConfig{
+			SelfState: selfStateConfig{
 				Enabled:                 "false",
 				RedisDisconnectDelay:    30,
 				LastMetricReceivedDelay: 60,
@@ -83,7 +83,7 @@ func getDefault() Config {
 	}
 }
 
-func (graphiteConfig *GraphiteConfig) GetSettings() graphite.Config {
+func (graphiteConfig *graphiteConfig) getSettings() graphite.Config {
 	return graphite.Config{
 		URI:      graphiteConfig.URI,
 		Prefix:   graphiteConfig.Prefix,
@@ -91,7 +91,7 @@ func (graphiteConfig *GraphiteConfig) GetSettings() graphite.Config {
 	}
 }
 
-func (config *RedisConfig) GetSettings() redis.Config {
+func (config *redisConfig) getSettings() redis.Config {
 	return redis.Config{
 		Host: config.Host,
 		Port: config.Port,
@@ -99,7 +99,7 @@ func (config *RedisConfig) GetSettings() redis.Config {
 	}
 }
 
-func (config *NotifierConfig) GetSettings() notifier.Config {
+func (config *notifierConfig) getSettings() notifier.Config {
 	return notifier.Config{
 		LogFile:          config.LogFile,
 		LogLevel:         config.LogLevel,
@@ -110,7 +110,7 @@ func (config *NotifierConfig) GetSettings() notifier.Config {
 	}
 }
 
-func (config *SelfStateConfig) GetSettings() selfstate.Config {
+func (config *selfStateConfig) getSettings() selfstate.Config {
 	return selfstate.Config{
 		Enabled:                 toBool(config.Enabled),
 		RedisDisconnectDelay:    config.RedisDisconnectDelay,
@@ -121,7 +121,7 @@ func (config *SelfStateConfig) GetSettings() selfstate.Config {
 	}
 }
 
-func readSettings(configFileName string) (*Config, error) {
+func readSettings(configFileName string) (*config, error) {
 	c := getDefault()
 	configYaml, err := ioutil.ReadFile(configFileName)
 	if err != nil {

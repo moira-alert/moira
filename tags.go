@@ -1,4 +1,4 @@
-package moira_alert
+package moira
 
 var (
 	eventStateWeight = map[string]int{

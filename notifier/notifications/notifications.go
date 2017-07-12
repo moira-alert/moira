@@ -9,12 +9,12 @@ import (
 )
 
 type FetchNotificationsWorker struct {
-	logger   moira_alert.Logger
-	database moira_alert.Database
+	logger   moira.Logger
+	database moira.Database
 	notifier notifier.Notifier
 }
 
-func Init(database moira_alert.Database, logger moira_alert.Logger, sender notifier.Notifier) FetchNotificationsWorker {
+func Init(database moira.Database, logger moira.Logger, sender notifier.Notifier) FetchNotificationsWorker {
 	return FetchNotificationsWorker{
 		logger:   logger,
 		database: database,
@@ -57,7 +57,7 @@ func (worker *FetchNotificationsWorker) processScheduledNotifications() error {
 		p, found := notificationPackages[packageKey]
 		if !found {
 			p = &notifier.NotificationPackage{
-				Events:    make([]moira_alert.EventData, 0, len(notifications)),
+				Events:    make([]moira.EventData, 0, len(notifications)),
 				Trigger:   notification.Trigger,
 				Contact:   notification.Contact,
 				Throttled: notification.Throttled,

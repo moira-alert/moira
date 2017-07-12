@@ -9,7 +9,7 @@ import (
 	"github.com/moira-alert/moira-alert/notifier"
 )
 
-func configureLog(config *notifier.Config) (moira_alert.Logger, error) {
+func configureLog(config *notifier.Config) (moira.Logger, error) {
 	var err error
 	log, err := logging.GetLogger("notifier")
 	if err != nil {

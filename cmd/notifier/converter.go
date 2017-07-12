@@ -9,7 +9,7 @@ import (
 	"github.com/moira-alert/moira-alert"
 )
 
-func convertDatabase(db moira_alert.Database) {
+func convertDatabase(db moira.Database) {
 	fmt.Println("This will convert all telegram contacts from @ notation to #.")
 	fmt.Print("Continue? [y/N]: ")
 	reader := bufio.NewReader(os.Stdin)

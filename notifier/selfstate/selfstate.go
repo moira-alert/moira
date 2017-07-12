@@ -8,8 +8,8 @@ import (
 )
 
 type SelfCheckWorker struct {
-	logger            moira_alert.Logger
-	database          moira_alert.Database
+	logger            moira.Logger
+	database          moira.Database
 	notifier          notifier.Notifier
 	config            Config
 	selfCheckInterval time.Duration
@@ -17,7 +17,7 @@ type SelfCheckWorker struct {
 
 var defaultCheckInterval = time.Second * 10
 
-func Init(database moira_alert.Database, logger moira_alert.Logger, config Config, notifier2 notifier.Notifier) (worker *SelfCheckWorker, needRun bool) {
+func Init(database moira.Database, logger moira.Logger, config Config, notifier2 notifier.Notifier) (worker *SelfCheckWorker, needRun bool) {
 	senders := notifier2.GetSenders()
 	if err := config.checkConfig(senders); err != nil {
 		logger.Fatalf("Can't configure self state monitor: %s", err.Error())
@@ -102,15 +102,15 @@ func (selfCheck *SelfCheckWorker) sendErrorMessages(message string, currentValue
 	var sendingWG sync.WaitGroup
 	for _, adminContact := range selfCheck.config.Contacts {
 		pkg := notifier.NotificationPackage{
-			Contact: moira_alert.ContactData{
+			Contact: moira.ContactData{
 				Type:  adminContact["type"],
 				Value: adminContact["value"],
 			},
-			Trigger: moira_alert.TriggerData{
+			Trigger: moira.TriggerData{
 				Name:       message,
 				ErrorValue: float64(errValue),
 			},
-			Events: []moira_alert.EventData{
+			Events: []moira.EventData{
 				{
 					Timestamp: time.Now().Unix(),
 					State:     "ERROR",

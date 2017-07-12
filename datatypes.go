@@ -1,4 +1,4 @@
-package moira_alert
+package moira
 
 import (
 	"bytes"
@@ -9,6 +9,7 @@ var (
 	eventStates = [...]string{"OK", "WARN", "ERROR", "NODATA", "TEST"}
 )
 
+// EventData represents trigger state changes event
 type EventData struct {
 	Timestamp      int64   `json:"timestamp"`
 	Metric         string  `json:"metric"`
@@ -99,6 +100,7 @@ func (trigger *TriggerData) GetTags() string {
 	return buffer.String()
 }
 
+// GetKey return notification key to prevent duplication to the same contact
 func (notification *ScheduledNotification) GetKey() string {
 	return fmt.Sprintf("%s:%s:%s:%s:%s:%d:%f:%d:%t:%d",
 		notification.Contact.Type,

@@ -7,12 +7,12 @@ import (
 )
 
 type Scheduler interface {
-	ScheduleNotification(now time.Time, event moira_alert.EventData, trigger moira_alert.TriggerData, contact moira_alert.ContactData, throttledOld bool, sendfail int) *moira_alert.ScheduledNotification
+	ScheduleNotification(now time.Time, event moira.EventData, trigger moira.TriggerData, contact moira.ContactData, throttledOld bool, sendfail int) *moira.ScheduledNotification
 }
 
 type StandardScheduler struct {
-	logger   moira_alert.Logger
-	database moira_alert.Database
+	logger   moira.Logger
+	database moira.Database
 }
 
 type throttlingLevel struct {
@@ -21,14 +21,14 @@ type throttlingLevel struct {
 	count    int64
 }
 
-func InitScheduler(database moira_alert.Database, logger moira_alert.Logger) *StandardScheduler {
+func InitScheduler(database moira.Database, logger moira.Logger) *StandardScheduler {
 	return &StandardScheduler{
 		database: database,
 		logger:   logger,
 	}
 }
 
-func (scheduler *StandardScheduler) ScheduleNotification(now time.Time, event moira_alert.EventData, trigger moira_alert.TriggerData, contact moira_alert.ContactData, throttledOld bool, sendfail int) *moira_alert.ScheduledNotification {
+func (scheduler *StandardScheduler) ScheduleNotification(now time.Time, event moira.EventData, trigger moira.TriggerData, contact moira.ContactData, throttledOld bool, sendfail int) *moira.ScheduledNotification {
 	var (
 		next      time.Time
 		throttled bool
@@ -44,7 +44,7 @@ func (scheduler *StandardScheduler) ScheduleNotification(now time.Time, event mo
 			next, throttled = scheduler.calculateNextDelivery(now, &event)
 		}
 	}
-	notification := &moira_alert.ScheduledNotification{
+	notification := &moira.ScheduledNotification{
 		Event:     event,
 		Trigger:   trigger,
 		Contact:   contact,
@@ -60,7 +60,7 @@ func (scheduler *StandardScheduler) ScheduleNotification(now time.Time, event mo
 	return notification
 }
 
-func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *moira_alert.EventData) (time.Time, bool) {
+func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *moira.EventData) (time.Time, bool) {
 	// if trigger switches more than .count times in .length seconds, delay next delivery for .delay seconds
 	// processing stops after first condition matches
 	throttlingLevels := []throttlingLevel{
@@ -117,7 +117,7 @@ func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *
 	return next, alarmFatigue
 }
 
-func calculateNextDelivery(schedule *moira_alert.ScheduleData, nextTime time.Time) (time.Time, error) {
+func calculateNextDelivery(schedule *moira.ScheduleData, nextTime time.Time) (time.Time, error) {
 
 	if len(schedule.Days) != 0 && len(schedule.Days) != 7 {
 		return nextTime, fmt.Errorf("Invalid scheduled settings: %d days defined", len(schedule.Days))

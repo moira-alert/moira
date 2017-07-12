@@ -21,7 +21,7 @@ type Sender struct {
 	InsecureTLS bool
 	Password    string
 	Username    string
-	log         moira_alert.Logger
+	log         moira.Logger
 }
 
 type templateRow struct {
@@ -36,7 +36,7 @@ type templateRow struct {
 }
 
 // Init read yaml config
-func (sender *Sender) Init(senderSettings map[string]string, logger moira_alert.Logger) error {
+func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger) error {
 	sender.setLogger(logger)
 	sender.From = senderSettings["mail_from"]
 	sender.SMTPhost = senderSettings["smtp_host"]
@@ -74,7 +74,7 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira_alert.
 }
 
 //SendEvents implements Sender interface Send
-func (sender *Sender) SendEvents(events moira_alert.EventsData, contact moira_alert.ContactData, trigger moira_alert.TriggerData, throttled bool) error {
+func (sender *Sender) SendEvents(events moira.EventsData, contact moira.ContactData, trigger moira.TriggerData, throttled bool) error {
 
 	m := sender.makeMessage(events, contact, trigger, throttled)
 
@@ -97,7 +97,7 @@ func (sender *Sender) SendEvents(events moira_alert.EventsData, contact moira_al
 	return nil
 }
 
-func (sender *Sender) makeMessage(events moira_alert.EventsData, contact moira_alert.ContactData, trigger moira_alert.TriggerData, throttled bool) *gomail.Message {
+func (sender *Sender) makeMessage(events moira.EventsData, contact moira.ContactData, trigger moira.TriggerData, throttled bool) *gomail.Message {
 	state := events.GetSubjectState()
 	tags := trigger.GetTags()
 
@@ -139,6 +139,6 @@ func (sender *Sender) makeMessage(events moira_alert.EventsData, contact moira_a
 	return m
 }
 
-func (sender *Sender) setLogger(logger moira_alert.Logger) {
+func (sender *Sender) setLogger(logger moira.Logger) {
 	sender.log = logger
 }

@@ -15,13 +15,13 @@ func TestMail(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	logger := mock_moira_alert.NewMockLogger(mockCtrl)
 
-	contact := moira_alert.ContactData{
+	contact := moira.ContactData{
 		ID:    "ContactID-000000000000001",
 		Type:  "email",
 		Value: "mail1@example.com",
 	}
 
-	trigger := moira_alert.TriggerData{
+	trigger := moira.TriggerData{
 		ID:         "triggerID-0000000000001",
 		Name:       "test trigger 1",
 		Targets:    []string{"test.target.1"},
@@ -37,7 +37,7 @@ func TestMail(t *testing.T) {
 		SMTPport: 25,
 	}
 	sender.setLogger(logger)
-	events := make([]moira_alert.EventData, 0, 10)
+	events := make([]moira.EventData, 0, 10)
 	for event := range generateTestEvents(10, trigger.ID) {
 		events = append(events, *event)
 	}
@@ -50,11 +50,11 @@ func TestMail(t *testing.T) {
 	})
 }
 
-func generateTestEvents(n int, subscriptionID string) chan *moira_alert.EventData {
-	ch := make(chan *moira_alert.EventData)
+func generateTestEvents(n int, subscriptionID string) chan *moira.EventData {
+	ch := make(chan *moira.EventData)
 	go func() {
 		for i := 0; i < n; i++ {
-			event := &moira_alert.EventData{
+			event := &moira.EventData{
 				Metric:         fmt.Sprintf("Metric number #%d", i),
 				SubscriptionID: subscriptionID,
 				State:          "TEST",

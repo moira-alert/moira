@@ -6,9 +6,9 @@ import (
 )
 
 type NotificationPackage struct {
-	Events     []moira_alert.EventData
-	Trigger    moira_alert.TriggerData
-	Contact    moira_alert.ContactData
+	Events     []moira.EventData
+	Trigger    moira.TriggerData
+	Contact    moira.ContactData
 	Throttled  bool
 	FailCount  int
 	DontResend bool

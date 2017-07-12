@@ -9,14 +9,14 @@ import (
 	"time"
 )
 
-var event = moira_alert.EventData{
+var event = moira.EventData{
 	Metric:    "generate.event.1",
 	State:     "OK",
 	OldState:  "WARN",
 	TriggerID: trigger.ID,
 }
 
-var trigger = moira_alert.TriggerData{
+var trigger = moira.TriggerData{
 	ID:         "triggerID-0000000000001",
 	Name:       "test trigger 1",
 	Targets:    []string{"test.target.1"},
@@ -25,7 +25,7 @@ var trigger = moira_alert.TriggerData{
 	Tags:       []string{"test-tag-1"},
 }
 
-var subscription = moira_alert.SubscriptionData{
+var subscription = moira.SubscriptionData{
 	ID:                "subscriptionID-00000000000001",
 	Enabled:           true,
 	Tags:              []string{"test-tag-1"},
@@ -33,13 +33,14 @@ var subscription = moira_alert.SubscriptionData{
 	ThrottlingEnabled: true,
 }
 
-var contact = moira_alert.ContactData{
+var contact = moira.ContactData{
 	ID:    "ContactID-000000000000001",
 	Type:  "mega-sender",
 	Value: "mail1@example.com",
 }
 
-func InitFake(logger moira_alert.Logger) *DbConnector {
+//InitFake initialize fake redis database from redigomock package and fill fake data for integration tests
+func InitFake(logger moira.Logger) *DbConnector {
 	fakeRedis := redigomock.NewFakeRedis()
 	expectEvent(fakeRedis)
 	pool := redis.Pool{

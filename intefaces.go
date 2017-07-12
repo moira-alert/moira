@@ -1,4 +1,4 @@
-package moira_alert
+package moira
 
 import (
 	"sync"
@@ -38,6 +38,7 @@ type Logger interface {
 	Warningf(format string, args ...interface{})
 }
 
+// Worker interface for implementing specified parallel workers
 type Worker interface {
 	Run(shutdown chan bool, wg *sync.WaitGroup)
 }

@@ -27,7 +27,7 @@ var notifierConfig = notifier.Config{
 var shutdown = make(chan bool)
 var waitGroup sync.WaitGroup
 
-var metrics = go_metrics.ConfigureNotifierMetrics()
+var metrics2 = metrics.ConfigureNotifierMetrics()
 var logger, _ = logging.GetLogger("Notifier_Test")
 var mockCtrl gomock.Controller
 
@@ -35,11 +35,11 @@ func TestNotifier(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer afterTest()
 	fakeDataBase := redis.InitFake(logger)
-	notifier2 := notifier.Init(fakeDataBase, logger, notifierConfig, metrics)
+	notifier2 := notifier.Init(fakeDataBase, logger, notifierConfig, metrics2)
 	sender := mock_moira_alert.NewMockSender(mockCtrl)
 	sender.EXPECT().Init(senderSettings, logger).Return(nil)
 	notifier2.RegisterSender(senderSettings, sender)
-	var eventsData moira_alert.EventsData = []moira_alert.EventData{event}
+	var eventsData moira.EventsData = []moira.EventData{event}
 	sender.EXPECT().SendEvents(eventsData, contact, trigger, false).Return(nil).Do(func(f ...interface{}) {
 		logger.Debugf("SendEvents called. End test")
 		close(shutdown)
@@ -65,20 +65,20 @@ func afterTest() {
 	mockCtrl.Finish()
 }
 
-func initWorkers(notifier2 notifier.Notifier, logger moira_alert.Logger, connector *redis.DbConnector) {
-	fetchEventsWorker := events.Init(connector, logger, metrics)
+func initWorkers(notifier2 notifier.Notifier, logger moira.Logger, connector *redis.DbConnector) {
+	fetchEventsWorker := events.Init(connector, logger, metrics2)
 	fetchNotificationsWorker := notifications.Init(connector, logger, notifier2)
 
 	run(fetchEventsWorker, shutdown, &waitGroup)
 	run(fetchNotificationsWorker, shutdown, &waitGroup)
 }
 
-func run(worker moira_alert.Worker, shutdown chan bool, wg *sync.WaitGroup) {
+func run(worker moira.Worker, shutdown chan bool, wg *sync.WaitGroup) {
 	wg.Add(1)
 	go worker.Run(shutdown, wg)
 }
 
-var event = moira_alert.EventData{
+var event = moira.EventData{
 	Metric:         "generate.event.1",
 	State:          "OK",
 	OldState:       "WARN",
@@ -86,7 +86,7 @@ var event = moira_alert.EventData{
 	SubscriptionID: "subscriptionID-00000000000001",
 }
 
-var trigger = moira_alert.TriggerData{
+var trigger = moira.TriggerData{
 	ID:         "triggerID-0000000000001",
 	Name:       "test trigger 1",
 	Targets:    []string{"test.target.1"},
@@ -95,7 +95,7 @@ var trigger = moira_alert.TriggerData{
 	Tags:       []string{"test-tag-1"},
 }
 
-var contact = moira_alert.ContactData{
+var contact = moira.ContactData{
 	ID:    "ContactID-000000000000001",
 	Type:  "mega-sender",
 	Value: "mail1@example.com",

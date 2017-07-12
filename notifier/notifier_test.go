@@ -22,22 +22,22 @@ var (
 	notif     *StandardNotifier
 	scheduler *mock_scheduler.MockScheduler
 	dataBase  *mock_moira_alert.MockDatabase
-	logger    moira_alert.Logger
+	logger    moira.Logger
 )
 
 func TestUnknownContactType(t *testing.T) {
 	configureNotifier(t)
 	defer afterTest()
 
-	var eventsData moira_alert.EventsData = []moira_alert.EventData{event}
+	var eventsData moira.EventsData = []moira.EventData{event}
 
 	pkg := NotificationPackage{
 		Events: eventsData,
-		Contact: moira_alert.ContactData{
+		Contact: moira.ContactData{
 			Type: "unknown contact",
 		},
 	}
-	notification := moira_alert.ScheduledNotification{}
+	notification := moira.ScheduledNotification{}
 	scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, pkg.Trigger, pkg.Contact, pkg.Throttled, pkg.FailCount+1).Return(&notification)
 	dataBase.EXPECT().AddNotification(&notification).Return(nil)
 
@@ -50,15 +50,15 @@ func TestFailSendEvent(t *testing.T) {
 	configureNotifier(t)
 	defer afterTest()
 
-	var eventsData moira_alert.EventsData = []moira_alert.EventData{event}
+	var eventsData moira.EventsData = []moira.EventData{event}
 
 	pkg := NotificationPackage{
 		Events: eventsData,
-		Contact: moira_alert.ContactData{
+		Contact: moira.ContactData{
 			Type: "test",
 		},
 	}
-	notification := moira_alert.ScheduledNotification{}
+	notification := moira.ScheduledNotification{}
 	sender.EXPECT().SendEvents(eventsData, pkg.Contact, pkg.Trigger, pkg.Throttled).Return(fmt.Errorf("Cant't send"))
 	scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, pkg.Trigger, pkg.Contact, pkg.Throttled, pkg.FailCount+1).Return(&notification)
 	dataBase.EXPECT().AddNotification(&notification).Return(nil)
@@ -73,23 +73,23 @@ func TestTimeout(t *testing.T) {
 	configureNotifier(t)
 	defer afterTest()
 
-	var eventsData moira_alert.EventsData = []moira_alert.EventData{event}
+	var eventsData moira.EventsData = []moira.EventData{event}
 
 	pkg := NotificationPackage{
 		Events: eventsData,
-		Contact: moira_alert.ContactData{
+		Contact: moira.ContactData{
 			Type: "test",
 		},
 	}
 
 	pkg2 := NotificationPackage{
 		Events: eventsData,
-		Contact: moira_alert.ContactData{
+		Contact: moira.ContactData{
 			Type:  "test",
 			Value: "fail contact",
 		},
 	}
-	notification := moira_alert.ScheduledNotification{}
+	notification := moira.ScheduledNotification{}
 	sender.EXPECT().SendEvents(eventsData, pkg.Contact, pkg.Trigger, pkg.Throttled).Return(nil).Do(func(f ...interface{}) {
 		logger.Debugf("Trying to send for 10 second")
 		time.Sleep(time.Second * 10)
@@ -99,6 +99,7 @@ func TestTimeout(t *testing.T) {
 
 	var wg sync.WaitGroup
 	notif.Send(&pkg, &wg)
+	wg.Wait()
 	notif.Send(&pkg2, &wg)
 	wg.Wait()
 	waitTestEnd()
@@ -115,7 +116,7 @@ func waitTestEnd() {
 }
 
 func configureNotifier(t *testing.T) {
-	metrics := go_metrics.ConfigureNotifierMetrics()
+	metrics := metrics.ConfigureNotifierMetrics()
 	config := Config{
 		SendingTimeout:   time.Millisecond * 10,
 		ResendingTimeout: time.Hour * 24,
@@ -147,7 +148,7 @@ func afterTest() {
 	notif.StopSenders()
 }
 
-var event = moira_alert.EventData{
+var event = moira.EventData{
 	Metric:         "generate.event.1",
 	State:          "OK",
 	OldState:       "WARN",

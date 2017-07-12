@@ -1,9 +1,10 @@
-package go_metrics
+package metrics
 
 import (
 	goMetrics "github.com/rcrowley/go-metrics"
 )
 
+//Metric is facade for go-metrics package Meter struct
 type Metric struct {
 	meter goMetrics.Meter
 }

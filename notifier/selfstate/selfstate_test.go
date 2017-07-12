@@ -234,15 +234,15 @@ func configureWorker(t *testing.T) (needRun bool, selfStateWorker SelfCheckWorke
 
 func configureNotificationPackage(adminContact map[string]string, errorValue int64, currentValue int64, message string) notifier.NotificationPackage {
 	return notifier.NotificationPackage{
-		Contact: moira_alert.ContactData{
+		Contact: moira.ContactData{
 			Type:  adminContact["type"],
 			Value: adminContact["value"],
 		},
-		Trigger: moira_alert.TriggerData{
+		Trigger: moira.TriggerData{
 			Name:       message,
 			ErrorValue: float64(errorValue),
 		},
-		Events: []moira_alert.EventData{
+		Events: []moira.EventData{
 			{
 				Timestamp: time.Now().Unix(),
 				State:     "ERROR",

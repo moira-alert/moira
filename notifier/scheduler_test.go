@@ -12,7 +12,7 @@ import (
 )
 
 func TestThrottling(t *testing.T) {
-	var trigger = moira_alert.TriggerData{
+	var trigger = moira.TriggerData{
 		ID:         "triggerID-0000000000001",
 		Name:       "test trigger",
 		Targets:    []string{"test.target.5"},
@@ -21,13 +21,13 @@ func TestThrottling(t *testing.T) {
 		Tags:       []string{"test-tag"},
 	}
 
-	var contact = moira_alert.ContactData{
+	var contact = moira.ContactData{
 		ID:    "ContactID-000000000000001",
 		Type:  "email",
 		Value: "mail1@example.com",
 	}
 
-	var event = moira_alert.EventData{
+	var event = moira.EventData{
 		Metric:         "generate.event.1",
 		State:          "OK",
 		OldState:       "WARN",
@@ -42,7 +42,7 @@ func TestThrottling(t *testing.T) {
 
 	now := time.Now()
 
-	expected := moira_alert.ScheduledNotification{
+	expected := moira.ScheduledNotification{
 		Event:     event,
 		Trigger:   trigger,
 		Contact:   contact,
@@ -73,7 +73,7 @@ func TestThrottling(t *testing.T) {
 	})
 
 	Convey("Test event state is TEST and no send fails, should return now notification time", t, func() {
-		testEvent := moira_alert.EventData{
+		testEvent := moira.EventData{
 			Metric:         "generate.event.1",
 			State:          "TEST",
 			OldState:       "WARN",
@@ -91,7 +91,7 @@ func TestThrottling(t *testing.T) {
 
 	Convey("Test no throttling and no subscription, should return now notification time", t, func() {
 		dataBase.EXPECT().GetTriggerThrottlingTimestamps(trigger.ID).Times(1).Return(time.Unix(0, 0), time.Unix(0, 0))
-		dataBase.EXPECT().GetSubscription(event.SubscriptionID).Times(1).Return(moira_alert.SubscriptionData{}, fmt.Errorf("Error while read subscription"))
+		dataBase.EXPECT().GetSubscription(event.SubscriptionID).Times(1).Return(moira.SubscriptionData{}, fmt.Errorf("Error while read subscription"))
 
 		notification := scheduler.ScheduleNotification(now, event, trigger, contact, false, 0)
 		So(notification, ShouldResemble, &expected)
@@ -100,7 +100,7 @@ func TestThrottling(t *testing.T) {
 }
 
 func TestSubscriptionSchedule(t *testing.T) {
-	var subscription = moira_alert.SubscriptionData{
+	var subscription = moira.SubscriptionData{
 		ID:                "SubscriptionID-000000000000001",
 		Enabled:           true,
 		Tags:              []string{"test-tag"},
@@ -108,7 +108,7 @@ func TestSubscriptionSchedule(t *testing.T) {
 		ThrottlingEnabled: true,
 	}
 
-	var event = moira_alert.EventData{
+	var event = moira.EventData{
 		Metric:         "generate.event.1",
 		State:          "OK",
 		OldState:       "WARN",
@@ -223,11 +223,11 @@ func TestSubscriptionSchedule(t *testing.T) {
 	})
 }
 
-var schedule1 = moira_alert.ScheduleData{
+var schedule1 = moira.ScheduleData{
 	StartOffset:    0,   // 0:00 (GMT +5) after
 	EndOffset:      900, // 15:00 (GMT +5)
 	TimezoneOffset: -300,
-	Days: []moira_alert.ScheduleDataDay{
+	Days: []moira.ScheduleDataDay{
 		{Enabled: false},
 		{Enabled: false},
 		{Enabled: true},
@@ -238,11 +238,11 @@ var schedule1 = moira_alert.ScheduleData{
 	},
 }
 
-var schedule2 = moira_alert.ScheduleData{
+var schedule2 = moira.ScheduleData{
 	StartOffset:    660, // 16:00 (GMT +5) before
 	EndOffset:      900, // 20:00 (GMT +5)
 	TimezoneOffset: 0,
-	Days: []moira_alert.ScheduleDataDay{
+	Days: []moira.ScheduleDataDay{
 		{Enabled: false},
 		{Enabled: false},
 		{Enabled: true},

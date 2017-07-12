@@ -59,7 +59,7 @@ func (notifier *StandardNotifier) RegisterSenders(connector *redis.DbConnector, 
 	return nil
 }
 
-func (notifier *StandardNotifier) RegisterSender(senderSettings map[string]string, sender moira_alert.Sender) error {
+func (notifier *StandardNotifier) RegisterSender(senderSettings map[string]string, sender moira.Sender) error {
 	var senderIdent string
 	if senderSettings["type"] == "script" {
 		senderIdent = senderSettings["name"]

@@ -13,7 +13,7 @@ import (
 
 var (
 	api                  bot.Bot
-	log                  moira_alert.Logger
+	log                  moira.Logger
 	telegramMessageLimit = 4096
 	emojiStates          = map[string]string{
 		"OK":     "\xe2\x9c\x85",
@@ -29,11 +29,11 @@ type Sender struct {
 	DB       bot.Database
 	APIToken string
 	FrontURI string
-	log      moira_alert.Logger
+	log      moira.Logger
 }
 
 //Init read yaml config
-func (sender *Sender) Init(senderSettings map[string]string, logger moira_alert.Logger) error {
+func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger) error {
 	sender.APIToken = senderSettings["api_token"]
 	if sender.APIToken == "" {
 		return fmt.Errorf("Can not read telegram api_token from config")
@@ -50,7 +50,7 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira_alert.
 }
 
 //SendEvents implements Sender interface Send
-func (sender *Sender) SendEvents(events moira_alert.EventsData, contact moira_alert.ContactData, trigger moira_alert.TriggerData, throttled bool) error {
+func (sender *Sender) SendEvents(events moira.EventsData, contact moira.ContactData, trigger moira.TriggerData, throttled bool) error {
 
 	var message bytes.Buffer
 

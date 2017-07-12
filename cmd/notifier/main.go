@@ -19,7 +19,7 @@ import (
 )
 
 var (
-	logger         moira_alert.Logger
+	logger         moira.Logger
 	connector      *redis.DbConnector
 	configFileName = flag.String("config", "/etc/moira/config.yml", "path to config file")
 	printVersion   = flag.Bool("version", false, "Print current version and exit")
@@ -40,10 +40,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	metrics := go_metrics.ConfigureNotifierMetrics()
-	go_metrics.Init(metrics, config.Graphite.GetSettings(), logger)
+	metric := metrics.ConfigureNotifierMetrics()
+	metrics.Init(config.Graphite.getSettings(), logger)
 
-	notifierConfig := config.Notifier.GetSettings()
+	notifierConfig := config.Notifier.getSettings()
 
 	logger, err := configureLog(&notifierConfig)
 	if err != nil {
@@ -51,25 +51,25 @@ func main() {
 		os.Exit(1)
 	}
 
-	connector := redis.Init(logger, config.Redis.GetSettings(), metrics)
+	connector := redis.Init(logger, config.Redis.getSettings(), metric)
 	if *convertDb {
 		convertDatabase(connector)
 	}
 
-	notifier2 := notifier.Init(connector, logger, notifierConfig, metrics)
+	notifier2 := notifier.Init(connector, logger, notifierConfig, metric)
 
 	if err := notifier2.RegisterSenders(connector, config.Front.URI); err != nil {
 		logger.Fatalf("Can not configure senders: %s", err.Error())
 	}
 
-	initWorkers(notifier2, config, metrics)
+	initWorkers(notifier2, config, metric)
 }
 
-func initWorkers(notifier2 notifier.Notifier, config *Config, metrics *graphite.NotifierMetrics) {
+func initWorkers(notifier2 notifier.Notifier, config *config, metric *graphite.NotifierMetrics) {
 	shutdown := make(chan bool)
 	var waitGroup sync.WaitGroup
 
-	fetchEventsWorker := events.Init(connector, logger, metrics)
+	fetchEventsWorker := events.Init(connector, logger, metric)
 	fetchNotificationsWorker := notifications.Init(connector, logger, notifier2)
 
 	runSelfStateMonitorIfNeed(notifier2, config.Notifier.SelfState, shutdown, &waitGroup)
@@ -86,8 +86,8 @@ func initWorkers(notifier2 notifier.Notifier, config *Config, metrics *graphite.
 	logger.Infof("Moira Notifier Stopped. Version: %s", Version)
 }
 
-func runSelfStateMonitorIfNeed(notifier2 notifier.Notifier, config SelfStateConfig, shutdown chan bool, waitGroup *sync.WaitGroup) {
-	selfStateConfiguration := config.GetSettings()
+func runSelfStateMonitorIfNeed(notifier2 notifier.Notifier, config selfStateConfig, shutdown chan bool, waitGroup *sync.WaitGroup) {
+	selfStateConfiguration := config.getSettings()
 	worker, needRun := selfstate.Init(connector, logger, selfStateConfiguration, notifier2)
 	if needRun {
 		run(worker, shutdown, waitGroup)
@@ -96,7 +96,7 @@ func runSelfStateMonitorIfNeed(notifier2 notifier.Notifier, config SelfStateConf
 	}
 }
 
-func run(worker moira_alert.Worker, shutdown chan bool, wg *sync.WaitGroup) {
+func run(worker moira.Worker, shutdown chan bool, wg *sync.WaitGroup) {
 	wg.Add(1)
 	go worker.Run(shutdown, wg)
 }

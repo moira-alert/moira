@@ -9,13 +9,13 @@ import (
 )
 
 type FetchEventsWorker struct {
-	logger    moira_alert.Logger
-	database  moira_alert.Database
+	logger    moira.Logger
+	database  moira.Database
 	scheduler notifier.Scheduler
 	metrics   *graphite.NotifierMetrics
 }
 
-func Init(database moira_alert.Database, logger moira_alert.Logger, metrics *graphite.NotifierMetrics) FetchEventsWorker {
+func Init(database moira.Database, logger moira.Logger, metrics *graphite.NotifierMetrics) FetchEventsWorker {
 	return FetchEventsWorker{
 		logger:    logger,
 		database:  database,
@@ -54,11 +54,11 @@ func (worker FetchEventsWorker) Run(shutdown chan bool, wg *sync.WaitGroup) {
 	}
 }
 
-func (worker *FetchEventsWorker) processEvent(event moira_alert.EventData) error {
+func (worker *FetchEventsWorker) processEvent(event moira.EventData) error {
 	var (
-		subscriptions []moira_alert.SubscriptionData
+		subscriptions []moira.SubscriptionData
 		tags          []string
-		trigger       moira_alert.TriggerData
+		trigger       moira.TriggerData
 		err           error
 	)
 
@@ -88,7 +88,7 @@ func (worker *FetchEventsWorker) processEvent(event moira_alert.EventData) error
 		if err != nil {
 			return err
 		}
-		subscriptions = []moira_alert.SubscriptionData{sub}
+		subscriptions = []moira.SubscriptionData{sub}
 	}
 
 	duplications := make(map[string]bool)

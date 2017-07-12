@@ -1,4 +1,4 @@
-package moira_alert
+package moira
 
 import (
 	. "github.com/smartystreets/goconvey/convey"

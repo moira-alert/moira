@@ -12,13 +12,13 @@ import (
 )
 
 type sendEventsTwilio interface {
-	SendEvents(events moira_alert.EventsData, contact moira_alert.ContactData, trigger moira_alert.TriggerData, throttled bool) error
+	SendEvents(events moira.EventsData, contact moira.ContactData, trigger moira.TriggerData, throttled bool) error
 }
 
 type twilioSender struct {
 	client       *twilio.TwilioClient
 	APIFromPhone string
-	log          moira_alert.Logger
+	log          moira.Logger
 }
 
 type twilioSenderSms struct {
@@ -31,7 +31,7 @@ type twilioSenderVoice struct {
 	appendMessage bool
 }
 
-func (smsSender *twilioSenderSms) SendEvents(events moira_alert.EventsData, contact moira_alert.ContactData, trigger moira_alert.TriggerData, throttled bool) error {
+func (smsSender *twilioSenderSms) SendEvents(events moira.EventsData, contact moira.ContactData, trigger moira.TriggerData, throttled bool) error {
 	var message bytes.Buffer
 
 	state := events.GetSubjectState()
@@ -67,7 +67,7 @@ func (smsSender *twilioSenderSms) SendEvents(events moira_alert.EventsData, cont
 	return nil
 }
 
-func (voiceSender *twilioSenderVoice) SendEvents(events moira_alert.EventsData, contact moira_alert.ContactData, trigger moira_alert.TriggerData, throttled bool) error {
+func (voiceSender *twilioSenderVoice) SendEvents(events moira.EventsData, contact moira.ContactData, trigger moira.TriggerData, throttled bool) error {
 	voiceURL := voiceSender.voiceURL
 	if voiceSender.appendMessage {
 		voiceURL += url.QueryEscape(fmt.Sprintf("Hi! This is a notification for Moira trigger %s. Please, visit Moira web interface for details.", trigger.Name))
@@ -90,7 +90,7 @@ type Sender struct {
 }
 
 //Init read yaml config
-func (sender *Sender) Init(senderSettings map[string]string, logger moira_alert.Logger) error {
+func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger) error {
 	apiType := senderSettings["type"]
 
 	apiASID := senderSettings["api_asid"]
@@ -136,6 +136,6 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira_alert.
 }
 
 //SendEvents implements Sender interface Send
-func (sender *Sender) SendEvents(events moira_alert.EventsData, contact moira_alert.ContactData, trigger moira_alert.TriggerData, throttled bool) error {
+func (sender *Sender) SendEvents(events moira.EventsData, contact moira.ContactData, trigger moira.TriggerData, throttled bool) error {
 	return sender.sender.SendEvents(events, contact, trigger, throttled)
 }

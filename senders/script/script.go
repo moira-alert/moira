@@ -14,19 +14,19 @@ import (
 // Sender implements moira sender interface via script execution
 type Sender struct {
 	Exec string
-	log  moira_alert.Logger
+	log  moira.Logger
 }
 
 type scriptNotification struct {
-	Events    []moira_alert.EventData `json:"events"`
-	Trigger   moira_alert.TriggerData `json:"trigger"`
-	Contact   moira_alert.ContactData `json:"contact"`
-	Throttled bool                    `json:"throttled"`
-	Timestamp int64                   `json:"timestamp"`
+	Events    []moira.EventData `json:"events"`
+	Trigger   moira.TriggerData `json:"trigger"`
+	Contact   moira.ContactData `json:"contact"`
+	Throttled bool              `json:"throttled"`
+	Timestamp int64             `json:"timestamp"`
 }
 
 //Init read yaml config
-func (sender *Sender) Init(senderSettings map[string]string, logger moira_alert.Logger) error {
+func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger) error {
 	if senderSettings["name"] == "" {
 		return fmt.Errorf("Required name for sender type script")
 	}
@@ -45,7 +45,7 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira_alert.
 }
 
 //SendEvents implements Sender interface Send
-func (sender *Sender) SendEvents(events moira_alert.EventsData, contact moira_alert.ContactData, trigger moira_alert.TriggerData, throttled bool) error {
+func (sender *Sender) SendEvents(events moira.EventsData, contact moira.ContactData, trigger moira.TriggerData, throttled bool) error {
 
 	execString := strings.Replace(sender.Exec, "${trigger_name}", trigger.Name, -1)
 	execString = strings.Replace(execString, "${contact_value}", contact.Value, -1)

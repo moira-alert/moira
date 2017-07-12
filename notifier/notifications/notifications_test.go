@@ -14,8 +14,8 @@ import (
 )
 
 func TestProcessScheduledEvent(t *testing.T) {
-	notification1 := moira_alert.ScheduledNotification{
-		Event: moira_alert.EventData{
+	notification1 := moira.ScheduledNotification{
+		Event: moira.EventData{
 			SubscriptionID: "subscriptionID-00000000000005",
 			State:          "TEST",
 		},
@@ -23,8 +23,8 @@ func TestProcessScheduledEvent(t *testing.T) {
 		Throttled: false,
 		Timestamp: 1441188915,
 	}
-	notification2 := moira_alert.ScheduledNotification{
-		Event: moira_alert.EventData{
+	notification2 := moira.ScheduledNotification{
+		Event: moira.EventData{
 			SubscriptionID: "subscriptionID-00000000000007",
 			State:          "TEST",
 			TriggerID:      "triggerID-00000000000001",
@@ -34,8 +34,8 @@ func TestProcessScheduledEvent(t *testing.T) {
 		SendFail:  0,
 		Timestamp: 1441188915,
 	}
-	notification3 := moira_alert.ScheduledNotification{
-		Event: moira_alert.EventData{
+	notification3 := moira.ScheduledNotification{
+		Event: moira.EventData{
 			SubscriptionID: "subscriptionID-00000000000002",
 			State:          "TEST",
 			TriggerID:      "triggerID-00000000000001",
@@ -53,7 +53,7 @@ func TestProcessScheduledEvent(t *testing.T) {
 
 	worker := Init(dataBase, logger, notifier)
 	Convey("Two different notifications, should send two packages", t, func() {
-		dataBase.EXPECT().GetNotifications(gomock.Any()).Return([]*moira_alert.ScheduledNotification{
+		dataBase.EXPECT().GetNotifications(gomock.Any()).Return([]*moira.ScheduledNotification{
 			&notification1,
 			&notification2,
 		}, nil)
@@ -64,7 +64,7 @@ func TestProcessScheduledEvent(t *testing.T) {
 			Contact:    notification1.Contact,
 			DontResend: false,
 			FailCount:  0,
-			Events: []moira_alert.EventData{
+			Events: []moira.EventData{
 				notification1.Event,
 			},
 		}
@@ -74,7 +74,7 @@ func TestProcessScheduledEvent(t *testing.T) {
 			Contact:    notification2.Contact,
 			DontResend: false,
 			FailCount:  0,
-			Events: []moira_alert.EventData{
+			Events: []moira.EventData{
 				notification2.Event,
 			},
 		}
@@ -86,7 +86,7 @@ func TestProcessScheduledEvent(t *testing.T) {
 	})
 
 	Convey("Two same notifications, should send one package", t, func() {
-		dataBase.EXPECT().GetNotifications(gomock.Any()).Return([]*moira_alert.ScheduledNotification{
+		dataBase.EXPECT().GetNotifications(gomock.Any()).Return([]*moira.ScheduledNotification{
 			&notification2,
 			&notification3,
 		}, nil)
@@ -97,7 +97,7 @@ func TestProcessScheduledEvent(t *testing.T) {
 			Contact:    notification2.Contact,
 			DontResend: false,
 			FailCount:  0,
-			Events: []moira_alert.EventData{
+			Events: []moira.EventData{
 				notification2.Event,
 				notification3.Event,
 			},
@@ -111,8 +111,8 @@ func TestProcessScheduledEvent(t *testing.T) {
 }
 
 func TestGoRoutine(t *testing.T) {
-	notification1 := moira_alert.ScheduledNotification{
-		Event: moira_alert.EventData{
+	notification1 := moira.ScheduledNotification{
+		Event: moira.EventData{
 			SubscriptionID: "subscriptionID-00000000000005",
 			State:          "TEST",
 		},
@@ -127,7 +127,7 @@ func TestGoRoutine(t *testing.T) {
 		Contact:    notification1.Contact,
 		DontResend: false,
 		FailCount:  0,
-		Events: []moira_alert.EventData{
+		Events: []moira.EventData{
 			notification1.Event,
 		},
 	}
@@ -140,7 +140,7 @@ func TestGoRoutine(t *testing.T) {
 	shutdown := make(chan bool)
 	worker := Init(dataBase, logger, notifier)
 
-	dataBase.EXPECT().GetNotifications(gomock.Any()).Return([]*moira_alert.ScheduledNotification{&notification1}, nil)
+	dataBase.EXPECT().GetNotifications(gomock.Any()).Return([]*moira.ScheduledNotification{&notification1}, nil)
 	notifier.EXPECT().Send(&pkg, gomock.Any()).Do(func(f ...interface{}) { close(shutdown) })
 
 	wg := sync.WaitGroup{}
@@ -162,13 +162,13 @@ func waitTestEnd(shutdown chan bool) {
 	}
 }
 
-var contact1 = moira_alert.ContactData{
+var contact1 = moira.ContactData{
 	ID:    "ContactID-000000000000001",
 	Type:  "email",
 	Value: "mail1@example.com",
 }
 
-var contact2 = moira_alert.ContactData{
+var contact2 = moira.ContactData{
 	ID:    "ContactID-000000000000006",
 	Type:  "unknown",
 	Value: "no matter",
