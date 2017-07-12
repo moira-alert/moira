@@ -5,9 +5,6 @@ build/
 *.coverprofile
 /vendor/*/
 
-cmd/cache/cache
-cmd/notifier/notifier
-
-.vscode
-.idea
-.exe
+.vscode/
+.idea/
+*.exe
