@@ -11,11 +11,11 @@ default: test build
 prepare:
 	go get github.com/kardianos/govendor
 	govendor sync
-	go get github.com/golang/lint/golint
+	go get github.com/alecthomas/gometalinter
+	gometalinter --install
 
 lint: prepare
-	go vet -x ./...
-	golint ./...
+	gometalinter ./... --vendor --disable=errcheck
 
 test: prepare
 	go test . -cover
