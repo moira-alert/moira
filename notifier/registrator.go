@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	//	"moira/notifier/kontur"
+
 	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/senders/mail"
 	"github.com/moira-alert/moira-alert/senders/pushover"
