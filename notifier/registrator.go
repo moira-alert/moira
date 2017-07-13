@@ -5,17 +5,17 @@ import (
 	"strings"
 
 	"github.com/moira-alert/moira-alert"
-	"github.com/moira-alert/moira-alert/database/redis"
 	"github.com/moira-alert/moira-alert/senders/mail"
 	"github.com/moira-alert/moira-alert/senders/pushover"
 	"github.com/moira-alert/moira-alert/senders/script"
 	"github.com/moira-alert/moira-alert/senders/slack"
 	"github.com/moira-alert/moira-alert/senders/telegram"
 	"github.com/moira-alert/moira-alert/senders/twilio"
+	"github.com/skbkontur/bot"
 )
 
 //RegisterSenders watch on senders config and register all configured senders
-func (notifier *StandardNotifier) RegisterSenders(connector *redis.DbConnector, frontURI string) error {
+func (notifier *StandardNotifier) RegisterSenders(connector bot.Database, frontURI string) error {
 	for _, senderSettings := range notifier.config.Senders {
 		senderSettings["front_uri"] = frontURI
 		switch senderSettings["type"] {
