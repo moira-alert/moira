@@ -15,14 +15,12 @@ notifications:
     on_start: never
 before_install:
   - gem install fpm
-  - go get -v github.com/modocache/gover
   - go get -v golang.org/x/tools/cmd/cover
   - go get -v github.com/mattn/goveralls
 install:
   - make lint
   - make test
-  - gover
-  - goveralls -coverprofile=gover.coverprofile -service=travis-ci
+  - goveralls -coverprofile=coverage.txt -service=travis-ci
 script:
   - make packages
 before_deploy:

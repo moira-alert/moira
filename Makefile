@@ -18,13 +18,7 @@ lint: prepare
 	gometalinter ./... --vendor --skip mock --disable=errcheck --disable=gocyclo
 
 test: prepare
-	go test . -coverprofile cover.coverprofile
-	go test ./integration_tests/notifier
-	go test ./database/redis -coverprofile cover.coverprofile
-	go test ./notifier -coverprofile cover.coverprofile
-	go test ./notifier/selfstate -coverprofile cover.coverprofile
-	go test ./notifier/events -coverprofile cover.coverprofile
-	go test ./notifier/notifications -coverprofile cover.coverprofile
+	echo 'mode: atomic' > coverage.txt && go list ./... | xargs -n1 -I{} sh -c 'go test -covermode=atomic -coverprofile=coverage.tmp {} && tail -n +2 coverage.tmp >> coverage.txt' && rm coverage.tmp
 
 build:
 	go build -ldflags "-X main.Version=$(VERSION)-$(RELEASE)" -o build/moira-notifier github.com/moira-alert/moira-alert/cmd/notifier
