@@ -1,0 +1,10 @@
+/var/log/moira/notifier/*log {
+    copytruncate
+    daily
+    rotate 10
+    missingok
+    notifempty
+    compress
+    delaycompress
+}
+
