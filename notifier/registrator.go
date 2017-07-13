@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	//	"moira/notifier/kontur"
+	// "git.skbkontur.ru/devops/kontur"
 
 	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/senders/mail"
@@ -49,12 +49,12 @@ func (notifier *StandardNotifier) RegisterSenders(connector bot.Database, frontU
 			if err := notifier.RegisterSender(senderSettings, &twilio.Sender{}); err != nil {
 				notifier.logger.Fatalf("Can not register sender %s: %s", senderSettings["type"], err)
 			}
-			//		case "email":
-			//			if err := notifier.RegisterSender(senderSettings, &kontur.MailSender{}); err != nil {
-			//			}
-			//		case "phone":
-			//			if err := notifier.RegisterSender(senderSettings, &kontur.SmsSender{}); err != nil {
-			//			}
+		// case "email":
+		// 	if err := notifier.RegisterSender(senderSettings, &kontur.MailSender{}); err != nil {
+		// 	}
+		// case "phone":
+		// 	if err := notifier.RegisterSender(senderSettings, &kontur.SmsSender{}); err != nil {
+		// 	}
 		default:
 			return fmt.Errorf("Unknown sender type [%s]", senderSettings["type"])
 		}
