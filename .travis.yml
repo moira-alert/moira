@@ -1,41 +1,40 @@
 language: go
 sudo: false
 go:
-  - 1.8.3
+- 1.8.3
 addons:
   apt:
-    packages:
-      rpm
+    packages: rpm
 notifications:
   webhooks:
     urls:
-      - https://webhooks.gitter.im/e/9992cd0d36a6ba9bb40b
+    - https://webhooks.gitter.im/e/9992cd0d36a6ba9bb40b
     on_success: change
     on_failure: always
     on_start: never
 before_install:
-  - gem install fpm
-  - go get -v golang.org/x/tools/cmd/cover
-  - go get -v github.com/mattn/goveralls
+- gem install fpm
+- go get -v golang.org/x/tools/cmd/cover
+- go get -v github.com/mattn/goveralls
 install:
-  - make lint
-  - make test
-  - goveralls -coverprofile=coverage.txt -service=travis-ci
+- make lint
+- make test
+- goveralls -coverprofile=coverage.txt -service=travis-ci
 script:
-  - make packages
+- make packages
 before_deploy:
-  - export RELEASE_PKG_TAR=$(ls build/moira*.tar.gz)
-  - export RELEASE_PKG_RPM=$(ls build/moira*.rpm)
-  - export RELEASE_PKG_DEB=$(ls build/moira*.deb)
+- export RELEASE_PKG_TAR=$(ls build/moira*.tar.gz)
+- export RELEASE_PKG_RPM=$(ls build/moira*.rpm)
+- export RELEASE_PKG_DEB=$(ls build/moira*.deb)
 deploy:
   provider: releases
   api_key:
-    secure: kuNhaWPMfrzfLblZShTW6qD8K88l2Gmwc1AcmW74LqpqIgzjAP33DVvRP2vHLpRE1tDWB+79k1Z6sKEij+tbQfJ+KI31dzcLxB3TtCqnaxX3wa6oTlgvv3lVWJavKIZ4I9W8EJqQUa+FTIoAuTPpr8hNh5STCIztPmVX0uAJ+RpcNhiP/rJGL+Q7CFUmkJSc9i4wztULMVb1W/zBDYKFc8c49yb9ZkrqbCLLXr9itlMRSx5Dhpq/ad6rIXcrcpTL5Qf2Bs0TluSjl0dow2wbQuQci/DcG0gSDZIsaT3FOtBjDK1oc5hkQfzkMumZIBj4AHue0rtag61OfdDzvQUJe6WwCLfhtCYyqi1I7VE2wPK5WoroRB9S8aBn0UOWbnef3gXnXZhJisMhsXOaElKddKs1Sz1OvzVwe1vRWDAThjQmG59iQaTql9W26qhPc4ATr87PTWrFJZVe3Ty8++pU9yAxGCiGoNG1SVAwz382b0GtkOkrGDCLNukek+pI/MZEAc4eMbejIFoX5WgR2k34ANBOry1gBB/TMPvEhSzxogzg4YHjeuz1Y04g/O8PHJudlMe1BtX3b7ZdBEAY/4fC5oCz0sVi08uEiC/CG5CcpVHmXgWNPipJDvr9EnFnM5HLujxyDSM/WvHUx2VtPigQKG8aUILt05McO9FCHEESkIE=
+    secure: MrD5ER9P/vJoXB5eNbjMI/rKz8TGS9fannjO+K5/wkFxZhLI0JeaRIxjXv30kk9Da6Blkk7AE9dz3tkkLOl82oXS6bKZy4ZCZrTG2NAV9EYzM+LQQTnVzkpUiane4GMKhj4e3Gu1YzJulA/Emec9Ba5TOxp2i5+K3PVkwZcSkMaleIJjzrJWFDaeq6HGiE/43puCVszCFg8vPSTR6zUZhus7qBixpFOmHpD4Kx5wZKUmsSm/iiFIaMYZjVGj3xBIUjfwDKqJkuIJOD8wPFeRhV8hCVuu7uN45lIwUTrzGbzOPPt7/zTpfJodwIS3FmgGF+pMRp2u2ny6xZmdRUwk/dR43ou7hSLb9FHNr6ZWl2cB5VT9p5lAe5wlrRRH6USUF7/Y1tgJrCtEHWPJZPfK4nQ+q0Zx7hs2QNCKmW6TO09JdtZuD09RksoEiG5RCpVZUBJW3Fn7aUkCUUFnXyvRc1IgxcBdVo6DjNTR9LLwwq1iEIXe5ultiMhjbVI2+tawSQbl8vEphOcz5xUebIqK7Yl46txHXHzzYCC0WqGaxOGviHPM6yqvvWGmonj/B57ebKJkKGN3bfZeZ+vn66FrRuEif81zBgnje/va+gQTLckNnYCudZxnezMSF5bk+zYOwDtsyxSO7QEPLTP8zdCQoSvaoAH+4BVU+wcleSNF7zU=
   file:
-    - "${RELEASE_PKG_TAR}"
-    - "${RELEASE_PKG_RPM}"
-    - "${RELEASE_PKG_DEB}"
+  - "${RELEASE_PKG_TAR}"
+  - "${RELEASE_PKG_RPM}"
+  - "${RELEASE_PKG_DEB}"
   skip_cleanup: true
   on:
     tags: true
-    condition: $TRAVIS_GO_VERSION = 1.8.3
+    condition: "$TRAVIS_GO_VERSION = 1.8.3"
