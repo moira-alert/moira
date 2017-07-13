@@ -18,13 +18,13 @@ lint: prepare
 	gometalinter ./... --vendor --skip mock --disable=errcheck --disable=gocyclo
 
 test: prepare
-	go test . -cover
+	go test . -coverprofile cover.coverprofile
 	go test ./integration_tests/notifier
-	go test ./database/redis -cover
-	go test ./notifier -cover
-	go test ./notifier/selfstate -cover
-	go test ./notifier/events -cover
-	go test ./notifier/notifications -cover
+	go test ./database/redis -coverprofile cover.coverprofile
+	go test ./notifier -coverprofile cover.coverprofile
+	go test ./notifier/selfstate -coverprofile cover.coverprofile
+	go test ./notifier/events -coverprofile cover.coverprofile
+	go test ./notifier/notifications -coverprofile cover.coverprofile
 
 build:
 	go build -ldflags "-X main.Version=$(VERSION)-$(RELEASE)" -o build/moira-notifier github.com/moira-alert/moira-alert/cmd/notifier
