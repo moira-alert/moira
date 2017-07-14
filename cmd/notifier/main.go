@@ -41,9 +41,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	metric := metrics.ConfigureNotifierMetrics()
-	metrics.Init(config.Graphite.getSettings(), logger)
-
 	notifierConfig := config.Notifier.getSettings()
 
 	logger, err = configureLog(&notifierConfig)
@@ -51,6 +48,9 @@ func main() {
 		fmt.Printf("Can not configure log: %s \n", err.Error())
 		os.Exit(1)
 	}
+
+	metric := metrics.ConfigureNotifierMetrics()
+	metrics.Init(config.Graphite.getSettings(), logger)
 
 	connector = redis.Init(logger, config.Redis.getSettings(), metric)
 	if *convertDb {
