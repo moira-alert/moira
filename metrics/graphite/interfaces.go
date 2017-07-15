@@ -2,6 +2,11 @@ package graphite
 
 import "time"
 
+//AtomicMetrics - collection of metrics with which to perform atomic operations
+type AtomicMetrics interface {
+	UpdateMetrics()
+}
+
 //MetricsMap implements meter collection abstraction
 type MetricsMap interface {
 	AddMetric(name, path string)

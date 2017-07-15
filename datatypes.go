@@ -115,3 +115,13 @@ func (notification *ScheduledNotification) GetKey() string {
 		notification.Timestamp,
 	)
 }
+
+// MatchedMetric represent parsed and matched metric data
+type MatchedMetric struct {
+	Metric             string
+	Patterns           []string
+	Value              float64
+	Timestamp          int64
+	RetentionTimestamp int64
+	Retention          int
+}

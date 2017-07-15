@@ -22,6 +22,10 @@ type Database interface {
 	GetNotifications(to int64) ([]*ScheduledNotification, error)
 	GetMetricsCount() (int64, error)
 	GetChecksCount() (int64, error)
+
+	UpdateMetricsHeartbeat() error
+	GetPatterns() ([]string, error)
+	SaveMetrics(buffer map[string]*MatchedMetric) error
 }
 
 // Logger implements logger abstraction

@@ -122,6 +122,19 @@ func (_mr *MockDatabaseMockRecorder) GetNotifications(arg0 interface{}) *gomock.
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetNotifications", arg0)
 }
 
+// GetPatterns mocks base method
+func (_m *MockDatabase) GetPatterns() ([]string, error) {
+	ret := _m.ctrl.Call(_m, "GetPatterns")
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPatterns indicates an expected call of GetPatterns
+func (_mr *MockDatabaseMockRecorder) GetPatterns() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetPatterns")
+}
+
 // GetSubscription mocks base method
 func (_m *MockDatabase) GetSubscription(_param0 string) (moira_alert.SubscriptionData, error) {
 	ret := _m.ctrl.Call(_m, "GetSubscription", _param0)
@@ -199,6 +212,18 @@ func (_mr *MockDatabaseMockRecorder) GetTriggerThrottlingTimestamps(arg0 interfa
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetTriggerThrottlingTimestamps", arg0)
 }
 
+// SaveMetrics mocks base method
+func (_m *MockDatabase) SaveMetrics(_param0 map[string]*moira_alert.MatchedMetric) error {
+	ret := _m.ctrl.Call(_m, "SaveMetrics", _param0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SaveMetrics indicates an expected call of SaveMetrics
+func (_mr *MockDatabaseMockRecorder) SaveMetrics(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "SaveMetrics", arg0)
+}
+
 // SetContact mocks base method
 func (_m *MockDatabase) SetContact(_param0 *moira_alert.ContactData) error {
 	ret := _m.ctrl.Call(_m, "SetContact", _param0)
@@ -221,4 +246,16 @@ func (_m *MockDatabase) SetTriggerThrottlingTimestamp(_param0 string, _param1 ti
 // SetTriggerThrottlingTimestamp indicates an expected call of SetTriggerThrottlingTimestamp
 func (_mr *MockDatabaseMockRecorder) SetTriggerThrottlingTimestamp(arg0, arg1 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetTriggerThrottlingTimestamp", arg0, arg1)
+}
+
+// UpdateMetricsHeartbeat mocks base method
+func (_m *MockDatabase) UpdateMetricsHeartbeat() error {
+	ret := _m.ctrl.Call(_m, "UpdateMetricsHeartbeat")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateMetricsHeartbeat indicates an expected call of UpdateMetricsHeartbeat
+func (_mr *MockDatabaseMockRecorder) UpdateMetricsHeartbeat() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "UpdateMetricsHeartbeat")
 }
