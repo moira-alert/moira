@@ -91,8 +91,14 @@ func main() {
 		logger.Fatalf("Failed to start listen: %s", err.Error())
 	}
 
+	metricsChan := make(chan *moira.MatchedMetric, 10)
+	matchedMetricsProcessor := matchedmetrics.NewMatchedMetricsProcessor(metrics2, logger, database, cacheStorage)
+
 	waitGroup.Add(1)
-	go serve()
+	go matchedMetricsProcessor.Run(metricsChan, &waitGroup)
+
+	waitGroup.Add(1)
+	go handleConnections(metricsChan)
 
 	logger.Infof("Moira Cache started. Version: %s", Version)
 	ch := make(chan os.Signal, 1)
@@ -102,18 +108,6 @@ func main() {
 	close(shutdown)
 	waitGroup.Wait()
 	logger.Infof("Moira Cache stopped. Version: %s", Version)
-}
-
-func serve() {
-	defer waitGroup.Done()
-	metricsChan := make(chan *moira.MatchedMetric, 10)
-	matchedMetricsProcessor := matchedmetrics.NewMatchedMetricsProcessor(metrics2, logger, database, cacheStorage)
-
-	waitGroup.Add(1)
-	go matchedMetricsProcessor.Run(metricsChan, &waitGroup)
-
-	handleConnections(metricsChan)
-	close(metricsChan)
 }
 
 func createListener(config *config) (net.Listener, error) {
@@ -126,6 +120,7 @@ func createListener(config *config) (net.Listener, error) {
 }
 
 func handleConnections(metricsChan chan *moira.MatchedMetric) {
+	defer waitGroup.Done()
 	connectionHandler := connection.NewConnectionHandler(logger, patternStorage)
 	var handlerWG sync.WaitGroup
 
@@ -149,6 +144,7 @@ func handleConnections(metricsChan chan *moira.MatchedMetric) {
 		}
 	}
 	handlerWG.Wait()
+	close(metricsChan)
 }
 
 func run(worker moira.Worker, shutdown chan bool, wg *sync.WaitGroup) {
