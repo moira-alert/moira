@@ -2,10 +2,12 @@ package main
 
 import (
 	"fmt"
+	"github.com/moira-alert/moira-alert/cache"
 	"github.com/moira-alert/moira-alert/database/redis"
 	"github.com/moira-alert/moira-alert/metrics/graphite"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
+	"strings"
 )
 
 type config struct {
@@ -18,7 +20,6 @@ type cacheConfig struct {
 	LogLevel        string `yaml:"log_level"`
 	LogColor        string `yaml:"log_color"`
 	LogFile         string `yaml:"log_file"`
-	PidFile         string `yaml:"pid"`
 	Listen          string `yaml:"listen"`
 	RetentionConfig string `yaml:"retention-config"`
 }
@@ -51,6 +52,16 @@ func (config *redisConfig) getSettings() redis.Config {
 	}
 }
 
+func (config *cacheConfig) getSettings() cache.Config {
+	return cache.Config{
+		LogFile:         config.LogFile,
+		LogLevel:        config.LogLevel,
+		LogColor:        toBool(config.LogColor),
+		Listen:          config.Listen,
+		RetentionConfig: config.RetentionConfig,
+	}
+}
+
 func getDefault() config {
 	return config{
 		Redis: redisConfig{
@@ -58,7 +69,6 @@ func getDefault() config {
 			Port: "6379",
 		},
 		Cache: cacheConfig{
-			PidFile:         "",
 			LogFile:         "stdout",
 			Listen:          "",
 			RetentionConfig: "",
@@ -82,4 +92,12 @@ func readSettings(configFileName string) (*config, error) {
 		return nil, fmt.Errorf("Can't parse config file [%s] [%s]", configFileName, err.Error())
 	}
 	return &c, nil
+}
+
+func toBool(str string) bool {
+	switch strings.ToLower(str) {
+	case "1", "true", "t", "yes", "y":
+		return true
+	}
+	return false
 }

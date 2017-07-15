@@ -40,7 +40,6 @@ func (handler *ConnectionHandler) HandleConnection(connection net.Conn, matchedM
 		wg.Add(1)
 		go handler.handleLine(lineBytes, matchedMetricsChan, wg)
 	}
-
 }
 
 func (handler *ConnectionHandler) handleLine(lineBytes []byte, matchedMetricsChan chan *moira.MatchedMetric, wg *sync.WaitGroup) {

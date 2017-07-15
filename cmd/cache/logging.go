@@ -3,12 +3,13 @@ package main
 import (
 	"fmt"
 	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira-alert/cache"
 	"github.com/op/go-logging"
 	"os"
 	"path/filepath"
 )
 
-func configureLog(config *cacheConfig) (moira.Logger, error) {
+func configureLog(config *cache.Config) (moira.Logger, error) {
 	var err error
 	log, err := logging.GetLogger("notifier")
 	if err != nil {
