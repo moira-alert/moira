@@ -129,7 +129,7 @@ func (storage *PatternStorage) matchPattern(metric []byte) []string {
 
 // parseMetricFromString parses metric from string
 // supported format: "<metricString> <valueFloat64> <timestampInt64>"
-func (storage *PatternStorage) parseMetricFromString(line []byte) ([]byte, float64, int64, error) {
+func (*PatternStorage) parseMetricFromString(line []byte) ([]byte, float64, int64, error) {
 	var parts [3][]byte
 	partIndex := 0
 	partOffset := 0
