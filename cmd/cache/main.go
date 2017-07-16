@@ -35,7 +35,7 @@ var (
 
 var (
 	configFileName = flag.String("config", "/etc/moira/config.yml", "path config file")
-	logParseErrors = flag.Bool("logParseErrors", false, "enable logging metrics2 parse errors")
+	logParseErrors = flag.Bool("logParseErrors", false, "enable logging metrics parse errors")
 	printVersion   = flag.Bool("version", false, "Print version and exit")
 	//Version - sets build version during build
 	Version = "latest"

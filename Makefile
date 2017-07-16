@@ -22,6 +22,7 @@ test: prepare
 
 build:
 	go build -ldflags "-X main.Version=$(VERSION)-$(RELEASE)" -o build/moira-notifier github.com/moira-alert/moira-alert/cmd/notifier
+	go build -ldflags "-X main.Version=$(VERSION)-$(RELEASE)" -o build/moira-cache github.com/moira-alert/moira-alert/cmd/cache
 
 clean:
 	rm -rf build
@@ -30,10 +31,19 @@ tar:
 	mkdir -p build/root/usr/local/bin
 	mkdir -p build/root/usr/lib/systemd/system
 	mkdir -p build/root/etc/logrotate.d/
+	mkdir -p build/root/etc/moira
+	mkdir -p build/root/usr/lib/tmpfiles.d
 
 	mv build/moira-notifier build/root/usr/local/bin/
-	cp pkg/moira-notifier.service build/root/usr/lib/systemd/system/moira-notifier.service
-	cp pkg/logrotate build/root/etc/logrotate.d/moira-notifier
+	cp pkg/notifier/moira-notifier.service build/root/usr/lib/systemd/system/moira-notifier.service
+	cp pkg/notifier/logrotate build/root/etc/logrotate.d/moira-notifier
+
+	mv build/moira-cache build/root/usr/local/bin/
+	cp pkg/cache/moira-cache.service build/root/usr/lib/systemd/system/moira-cache.service
+	cp pkg/cache/logrotate build/root/etc/logrotate.d/moira-cache
+	cp pkg/cache/storage-schemas.conf build/root/etc/moira/storage-schemas.conf
+	cp pkg/cache/cache.yml build/root/etc/moira/cache.yml
+	cp pkg/cache/tmpfiles build/root/usr/lib/tmpfiles.d/moira.conf
 
 	tar -czvPf build/moira-$(VERSION)-$(RELEASE).tar.gz -C build/root .
 

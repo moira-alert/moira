@@ -1,0 +1,9 @@
+/var/log/moira/cache/cache.log {
+    copytruncate
+    daily
+    rotate 10
+    missingok
+    notifempty
+    compress
+    delaycompress
+}

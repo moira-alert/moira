@@ -1,0 +1,14 @@
+redis:
+  host: localhost
+  port: 6379
+
+graphite:
+  uri: localhost:2003
+  prefix: DevOps.moira
+  interval: 60
+
+cache:
+  log_file: /var/log/cache/cache.log
+  listen: ':2003'
+  retention-config: /etc/moira/storage-schemas.conf
+  pid: /var/run/moira/moira-cache.pid
