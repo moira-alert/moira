@@ -13,7 +13,7 @@ type MetricsMap interface {
 	GetMetric(name string) (Meter, bool)
 }
 
-// Meters count events to produce exponentially-weighted moving average rates
+// Meter count events to produce exponentially-weighted moving average rates
 // at one-, five-, and fifteen-minutes and a mean rate.
 type Meter interface {
 	Count() int64
@@ -24,7 +24,7 @@ type Meter interface {
 	RateMean() float64
 }
 
-// Timers capture the duration and rate of events.
+// Timer capture the duration and rate of events.
 type Timer interface {
 	Count() int64
 	Max() int64

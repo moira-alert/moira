@@ -6,15 +6,18 @@ import (
 	"time"
 )
 
-type AtomicMetricsWorker struct {
+//MetricsWorker process atomic metrics data
+type MetricsWorker struct {
 	metrics graphite.AtomicMetrics
 }
 
-func NewAtomicMetricsWorker(metrics graphite.AtomicMetrics) *AtomicMetricsWorker {
-	return &AtomicMetricsWorker{metrics}
+//NewAtomicMetricsWorker creates new MetricsWorker
+func NewAtomicMetricsWorker(metrics graphite.AtomicMetrics) *MetricsWorker {
+	return &MetricsWorker{metrics}
 }
 
-func (worker *AtomicMetricsWorker) Run(shutdown chan bool, wg *sync.WaitGroup) {
+//Run every second updates atomic metrics
+func (worker *MetricsWorker) Run(shutdown chan bool, wg *sync.WaitGroup) {
 	defer wg.Done()
 	for {
 		select {

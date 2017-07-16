@@ -21,8 +21,8 @@ type PatternStorage struct {
 	database       moira.Database
 	metrics        *graphite.CacheMetrics
 	logger         moira.Logger
-	PatternTree    *patternNode
 	logParseErrors bool
+	PatternTree    *patternNode
 }
 
 // patternNode contains pattern node
@@ -77,7 +77,14 @@ func (storage *PatternStorage) ProcessIncomingMetric(lineBytes []byte) *moira.Ma
 	}
 	if len(matched) > 0 {
 		atomic.AddInt64(&storage.metrics.MatchedReceived, 1)
-		return &moira.MatchedMetric{string(metric), matched, value, timestamp, timestamp, 60}
+		return &moira.MatchedMetric{
+			Metric:             string(metric),
+			Patterns:           matched,
+			Value:              value,
+			Timestamp:          timestamp,
+			RetentionTimestamp: timestamp,
+			Retention:          60,
+		}
 	}
 	return nil
 }
@@ -104,7 +111,7 @@ func (storage *PatternStorage) matchPattern(metric []byte) []string {
 		}
 	}
 
-	part := metric[index:len(metric)]
+	part := metric[index:]
 	currentLevel, found = findPart(part, currentLevel)
 	if found == 0 {
 		return []string{}

@@ -25,7 +25,7 @@ var (
 	logger         moira.Logger
 	database       moira.Database
 	metrics2       *graphite.CacheMetrics
-	cacheStorage   *cache.CacheStorage
+	cacheStorage   *cache.Storage
 	patternStorage *cache.PatternStorage
 	listener       net.Listener
 
@@ -113,11 +113,11 @@ func main() {
 
 func createListener(config *config) (net.Listener, error) {
 	listen := config.Cache.Listen
-	listener, err := net.Listen("tcp", listen)
+	newListener, err := net.Listen("tcp", listen)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to listen on [%s]: %s", listen, err.Error())
 	}
-	return listener, nil
+	return newListener, nil
 }
 
 func handleConnections(metricsChan chan *moira.MatchedMetric) {
@@ -130,6 +130,8 @@ func handleConnections(metricsChan chan *moira.MatchedMetric) {
 		case <-shutdown:
 			{
 				logger.Info("Stop listen connection")
+				handlerWG.Wait()
+				close(metricsChan)
 				break
 			}
 		default:
@@ -144,8 +146,6 @@ func handleConnections(metricsChan chan *moira.MatchedMetric) {
 			}
 		}
 	}
-	handlerWG.Wait()
-	close(metricsChan)
 }
 
 func run(worker moira.Worker, shutdown chan bool, wg *sync.WaitGroup) {

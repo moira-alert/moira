@@ -8,21 +8,24 @@ import (
 	"time"
 )
 
-type HeartbeatWorker struct {
+//Worker is heartbeat worker realization
+type Worker struct {
 	database moira.Database
 	metrics  *graphite.CacheMetrics
 	logger   moira.Logger
 }
 
-func NewHeartbeatWorker(database moira.Database, metrics *graphite.CacheMetrics, logger moira.Logger) *HeartbeatWorker {
-	return &HeartbeatWorker{
+//NewHeartbeatWorker creates new worker
+func NewHeartbeatWorker(database moira.Database, metrics *graphite.CacheMetrics, logger moira.Logger) *Worker {
+	return &Worker{
 		database: database,
 		metrics:  metrics,
 		logger:   logger,
 	}
 }
 
-func (worker *HeartbeatWorker) Run(shutdown chan bool, wg *sync.WaitGroup) {
+//Run every 5 second takes TotalMetricsReceived metrics and save it to database, for self-checking
+func (worker *Worker) Run(shutdown chan bool, wg *sync.WaitGroup) {
 	defer wg.Done()
 	count := worker.metrics.TotalMetricsReceived.Count()
 

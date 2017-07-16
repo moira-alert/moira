@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+//RefreshPatternWorker realization
 type RefreshPatternWorker struct {
 	database       moira.Database
 	logger         moira.Logger
@@ -15,6 +16,7 @@ type RefreshPatternWorker struct {
 	patternStorage *cache.PatternStorage
 }
 
+//NewRefreshPatternWorker creates new RefreshPatternWorker
 func NewRefreshPatternWorker(database moira.Database, metrics *graphite.CacheMetrics, logger moira.Logger, patternStorage *cache.PatternStorage) *RefreshPatternWorker {
 	return &RefreshPatternWorker{
 		database:       database,
@@ -24,6 +26,7 @@ func NewRefreshPatternWorker(database moira.Database, metrics *graphite.CacheMet
 	}
 }
 
+//Run process to refresh pattern tree every second
 func (worker *RefreshPatternWorker) Run(shutdown chan bool, wg *sync.WaitGroup) {
 	defer wg.Done()
 	worker.logger.Infof("Start Moira Cache pattern updater")

@@ -8,17 +8,17 @@ import (
 	"time"
 )
 
-//MatchedMetricsProcessor make buffer of metrics and save it
-type MatchedMetricsProcessor struct {
+//MetricsMatcherProcessor make buffer of metrics and save it
+type MetricsMatcherProcessor struct {
 	logger       moira.Logger
 	metrics      *graphite.CacheMetrics
 	database     moira.Database
-	cacheStorage *cache.CacheStorage
+	cacheStorage *cache.Storage
 }
 
-//NewMatchedMetricsProcessor creates new MatchedMetricsProcessor
-func NewMatchedMetricsProcessor(metrics *graphite.CacheMetrics, logger moira.Logger, database moira.Database, cacheStorage *cache.CacheStorage) *MatchedMetricsProcessor {
-	return &MatchedMetricsProcessor{
+//NewMatchedMetricsProcessor creates new MetricsMatcherProcessor
+func NewMatchedMetricsProcessor(metrics *graphite.CacheMetrics, logger moira.Logger, database moira.Database, cacheStorage *cache.Storage) *MetricsMatcherProcessor {
+	return &MetricsMatcherProcessor{
 		metrics:      metrics,
 		logger:       logger,
 		database:     database,
@@ -26,8 +26,8 @@ func NewMatchedMetricsProcessor(metrics *graphite.CacheMetrics, logger moira.Log
 	}
 }
 
-//Run process matched metrics
-func (processor *MatchedMetricsProcessor) Run(channel chan *moira.MatchedMetric, wg *sync.WaitGroup) {
+//Run process matched metrics from channel and save it in cache
+func (processor *MetricsMatcherProcessor) Run(channel chan *moira.MatchedMetric, wg *sync.WaitGroup) {
 	defer wg.Done()
 	buffer := make(map[string]*moira.MatchedMetric)
 	for {
@@ -42,9 +42,7 @@ func (processor *MatchedMetricsProcessor) Run(channel chan *moira.MatchedMetric,
 			if len(buffer) < 10 {
 				continue
 			}
-			break
 		case <-time.After(time.Second):
-			break
 		}
 		if len(buffer) == 0 {
 			continue
@@ -56,7 +54,7 @@ func (processor *MatchedMetricsProcessor) Run(channel chan *moira.MatchedMetric,
 	}
 }
 
-func (processor *MatchedMetricsProcessor) save(buffer map[string]*moira.MatchedMetric) {
+func (processor *MetricsMatcherProcessor) save(buffer map[string]*moira.MatchedMetric) {
 	if err := processor.database.SaveMetrics(buffer); err != nil {
 		processor.logger.Infof("Failed to save value in cache: %s", err.Error())
 	}

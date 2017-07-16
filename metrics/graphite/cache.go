@@ -15,6 +15,7 @@ type CacheMetrics struct {
 	MatchedReceived         int64
 }
 
+//UpdateMetrics is AtomicMetrics realization for atomic updating metrics
 func (metrics *CacheMetrics) UpdateMetrics() {
 	metrics.TotalMetricsReceived.Mark(atomic.SwapInt64(&metrics.TotalReceived, int64(0)))
 	metrics.ValidMetricsReceived.Mark(atomic.SwapInt64(&metrics.ValidReceived, int64(0)))

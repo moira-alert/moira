@@ -27,12 +27,14 @@ func (connector *DbConnector) UpdateMetricsHeartbeat() error {
 	return err
 }
 
+// GetPatterns gets updated patterns array
 func (connector *DbConnector) GetPatterns() ([]string, error) {
 	c := connector.pool.Get()
 	defer c.Close()
 	return redis.Strings(c.Do("SMEMBERS", "moira-pattern-list"))
 }
 
+//SaveMetrics saves new metrics
 func (connector *DbConnector) SaveMetrics(buffer map[string]*moira.MatchedMetric) error {
 
 	c := connector.pool.Get()

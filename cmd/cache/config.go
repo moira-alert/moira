@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/moira-alert/moira-alert/cache"
 	"github.com/moira-alert/moira-alert/database/redis"
 	"github.com/moira-alert/moira-alert/logging"
 	"github.com/moira-alert/moira-alert/metrics/graphite"
@@ -50,13 +49,6 @@ func (config *redisConfig) getSettings() redis.Config {
 		Host: config.Host,
 		Port: config.Port,
 		DBID: config.DBID,
-	}
-}
-
-func (config *cacheConfig) getSettings() cache.Config {
-	return cache.Config{
-		Listen:          config.Listen,
-		RetentionConfig: config.RetentionConfig,
 	}
 }
 

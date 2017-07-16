@@ -9,7 +9,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 )
 
 var defaultRetention = 60
@@ -24,8 +23,8 @@ type retentionCacheItem struct {
 	timestamp int64
 }
 
-// CacheStorage struct to store retention matchers
-type CacheStorage struct {
+// Storage struct to store retention matchers
+type Storage struct {
 	database        moira.Database
 	metrics         *graphite.CacheMetrics
 	retentions      []retentionMatcher
@@ -33,14 +32,14 @@ type CacheStorage struct {
 	metricsCache    map[string]*moira.MatchedMetric
 }
 
-// NewCacheStorage create new CacheStorage
-func NewCacheStorage(database moira.Database, metrics *graphite.CacheMetrics, retentionConfigFileName string) (*CacheStorage, error) {
+// NewCacheStorage create new Storage
+func NewCacheStorage(database moira.Database, metrics *graphite.CacheMetrics, retentionConfigFileName string) (*Storage, error) {
 	retentionConfigFile, err := os.Open(retentionConfigFileName)
 	if err != nil {
 		return nil, fmt.Errorf("Error open retentions file [%s]: %s", retentionConfigFileName, err.Error())
 	}
 
-	storage := &CacheStorage{
+	storage := &Storage{
 		retentionsCache: make(map[string]*retentionCacheItem),
 		metricsCache:    make(map[string]*moira.MatchedMetric),
 		database:        database,
@@ -53,37 +52,8 @@ func NewCacheStorage(database moira.Database, metrics *graphite.CacheMetrics, re
 	return storage, nil
 }
 
-// ProcessMatchedMetrics make buffer of metrics and save it
-func (storage *CacheStorage) ProcessMatchedMetrics(ch chan *moira.MatchedMetric, save func(map[string]*moira.MatchedMetric)) {
-	buffer := make(map[string]*moira.MatchedMetric)
-	for {
-		select {
-		case m, ok := <-ch:
-			if !ok {
-				return
-			}
-
-			storage.EnrichMatchedMetric(buffer, m)
-
-			if len(buffer) < 10 {
-				continue
-			}
-			break
-		case <-time.After(time.Second):
-			break
-		}
-		if len(buffer) == 0 {
-			continue
-		}
-		timer := time.Now()
-		save(buffer)
-		storage.metrics.SavingTimer.UpdateSince(timer)
-		buffer = make(map[string]*moira.MatchedMetric)
-	}
-}
-
 // EnrichMatchedMetric calculate retention and filter cached values
-func (storage *CacheStorage) EnrichMatchedMetric(buffer map[string]*moira.MatchedMetric, m *moira.MatchedMetric) {
+func (storage *Storage) EnrichMatchedMetric(buffer map[string]*moira.MatchedMetric, m *moira.MatchedMetric) {
 	m.Retention = storage.GetRetention(m)
 	m.RetentionTimestamp = roundToNearestRetention(m.Timestamp, int64(m.Retention))
 	if ex, ok := storage.metricsCache[m.Metric]; ok && ex.RetentionTimestamp == m.RetentionTimestamp && ex.Value == m.Value {
@@ -93,18 +63,8 @@ func (storage *CacheStorage) EnrichMatchedMetric(buffer map[string]*moira.Matche
 	buffer[m.Metric] = m
 }
 
-// SavePoints saving matched metrics to DB
-func (storage *CacheStorage) SavePoints(buffer map[string]*moira.MatchedMetric) error {
-
-	if err := storage.database.SaveMetrics(buffer); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // GetRetention returns first matched retention for metric
-func (storage *CacheStorage) GetRetention(m *moira.MatchedMetric) int {
+func (storage *Storage) GetRetention(m *moira.MatchedMetric) int {
 	if item, ok := storage.retentionsCache[m.Metric]; ok && item.timestamp+60 > m.Timestamp {
 		return item.value
 	}
@@ -120,7 +80,7 @@ func (storage *CacheStorage) GetRetention(m *moira.MatchedMetric) int {
 	return defaultRetention
 }
 
-func (storage *CacheStorage) buildRetentions(retentionScanner *bufio.Scanner) error {
+func (storage *Storage) buildRetentions(retentionScanner *bufio.Scanner) error {
 	storage.retentions = make([]retentionMatcher, 0, 100)
 
 	for retentionScanner.Scan() {
