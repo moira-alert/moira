@@ -10,6 +10,7 @@ import (
 	"github.com/moira-alert/moira-alert/cache/matched_metrics"
 	"github.com/moira-alert/moira-alert/cache/patterns"
 	"github.com/moira-alert/moira-alert/database/redis"
+	"github.com/moira-alert/moira-alert/logging/go-logging"
 	"github.com/moira-alert/moira-alert/metrics/graphite"
 	"github.com/moira-alert/moira-alert/metrics/graphite/atomic"
 	"github.com/moira-alert/moira-alert/metrics/graphite/go-metrics"
@@ -53,9 +54,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	cacheConfig := config.Cache.getSettings()
+	loggerSettings := config.Cache.getLoggerSettings()
 
-	logger, err = configureLog(&cacheConfig)
+	logger, err = logging.ConfigureLog(&loggerSettings)
 	if err != nil {
 		fmt.Printf("Can not configure log: %s \n", err.Error())
 		os.Exit(1)

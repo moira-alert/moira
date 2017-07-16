@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gosexy/to"
 	"github.com/moira-alert/moira-alert/database/redis"
+	"github.com/moira-alert/moira-alert/logging"
 	"github.com/moira-alert/moira-alert/metrics/graphite"
 	"github.com/moira-alert/moira-alert/notifier"
 	"github.com/moira-alert/moira-alert/notifier/selfstate"
@@ -101,12 +102,17 @@ func (config *redisConfig) getSettings() redis.Config {
 
 func (config *notifierConfig) getSettings() notifier.Config {
 	return notifier.Config{
-		LogFile:          config.LogFile,
-		LogLevel:         config.LogLevel,
-		LogColor:         toBool(config.LogColor),
 		SendingTimeout:   to.Duration(config.SenderTimeout),
 		ResendingTimeout: to.Duration(config.ResendingTimeout),
 		Senders:          config.Senders,
+	}
+}
+
+func (config *notifierConfig) getLoggerSettings() logging.Config {
+	return logging.Config{
+		LogFile:  config.LogFile,
+		LogColor: toBool(config.LogColor),
+		LogLevel: config.LogLevel,
 	}
 }
 

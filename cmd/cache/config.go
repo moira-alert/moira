@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/moira-alert/moira-alert/cache"
 	"github.com/moira-alert/moira-alert/database/redis"
+	"github.com/moira-alert/moira-alert/logging"
 	"github.com/moira-alert/moira-alert/metrics/graphite"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
@@ -54,11 +55,16 @@ func (config *redisConfig) getSettings() redis.Config {
 
 func (config *cacheConfig) getSettings() cache.Config {
 	return cache.Config{
-		LogFile:         config.LogFile,
-		LogLevel:        config.LogLevel,
-		LogColor:        toBool(config.LogColor),
 		Listen:          config.Listen,
 		RetentionConfig: config.RetentionConfig,
+	}
+}
+
+func (config *cacheConfig) getLoggerSettings() logging.Config {
+	return logging.Config{
+		LogFile:  config.LogFile,
+		LogColor: toBool(config.LogColor),
+		LogLevel: config.LogLevel,
 	}
 }
 

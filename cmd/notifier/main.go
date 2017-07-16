@@ -10,6 +10,7 @@ import (
 
 	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/database/redis"
+	"github.com/moira-alert/moira-alert/logging/go-logging"
 	"github.com/moira-alert/moira-alert/metrics/graphite"
 	"github.com/moira-alert/moira-alert/metrics/graphite/go-metrics"
 	"github.com/moira-alert/moira-alert/notifier"
@@ -42,8 +43,9 @@ func main() {
 	}
 
 	notifierConfig := config.Notifier.getSettings()
+	loggerSettings := config.Notifier.getLoggerSettings()
 
-	logger, err = configureLog(&notifierConfig)
+	logger, err = logging.ConfigureLog(&loggerSettings)
 	if err != nil {
 		fmt.Printf("Can not configure log: %s \n", err.Error())
 		os.Exit(1)
