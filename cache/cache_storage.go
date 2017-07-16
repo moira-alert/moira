@@ -2,10 +2,9 @@ package cache
 
 import (
 	"bufio"
-	"fmt"
 	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/metrics/graphite"
-	"os"
+	"io"
 	"regexp"
 	"strconv"
 	"strings"
@@ -25,7 +24,6 @@ type retentionCacheItem struct {
 
 // Storage struct to store retention matchers
 type Storage struct {
-	database        moira.Database
 	metrics         *graphite.CacheMetrics
 	retentions      []retentionMatcher
 	retentionsCache map[string]*retentionCacheItem
@@ -33,20 +31,14 @@ type Storage struct {
 }
 
 // NewCacheStorage create new Storage
-func NewCacheStorage(database moira.Database, metrics *graphite.CacheMetrics, retentionConfigFileName string) (*Storage, error) {
-	retentionConfigFile, err := os.Open(retentionConfigFileName)
-	if err != nil {
-		return nil, fmt.Errorf("Error open retentions file [%s]: %s", retentionConfigFileName, err.Error())
-	}
-
+func NewCacheStorage(metrics *graphite.CacheMetrics, reader io.Reader) (*Storage, error) {
 	storage := &Storage{
 		retentionsCache: make(map[string]*retentionCacheItem),
 		metricsCache:    make(map[string]*moira.MatchedMetric),
-		database:        database,
 		metrics:         metrics,
 	}
 
-	if err := storage.buildRetentions(bufio.NewScanner(retentionConfigFile)); err != nil {
+	if err := storage.buildRetentions(bufio.NewScanner(reader)); err != nil {
 		return nil, err
 	}
 	return storage, nil
@@ -54,7 +46,7 @@ func NewCacheStorage(database moira.Database, metrics *graphite.CacheMetrics, re
 
 // EnrichMatchedMetric calculate retention and filter cached values
 func (storage *Storage) EnrichMatchedMetric(buffer map[string]*moira.MatchedMetric, m *moira.MatchedMetric) {
-	m.Retention = storage.GetRetention(m)
+	m.Retention = storage.getRetention(m)
 	m.RetentionTimestamp = roundToNearestRetention(m.Timestamp, int64(m.Retention))
 	if ex, ok := storage.metricsCache[m.Metric]; ok && ex.RetentionTimestamp == m.RetentionTimestamp && ex.Value == m.Value {
 		return
@@ -63,8 +55,8 @@ func (storage *Storage) EnrichMatchedMetric(buffer map[string]*moira.MatchedMetr
 	buffer[m.Metric] = m
 }
 
-// GetRetention returns first matched retention for metric
-func (storage *Storage) GetRetention(m *moira.MatchedMetric) int {
+// getRetention returns first matched retention for metric
+func (storage *Storage) getRetention(m *moira.MatchedMetric) int {
 	if item, ok := storage.retentionsCache[m.Metric]; ok && item.timestamp+60 > m.Timestamp {
 		return item.value
 	}

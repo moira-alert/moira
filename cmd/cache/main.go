@@ -67,7 +67,12 @@ func main() {
 
 	database = redis.Init(logger, config.Redis.getSettings(), &graphite.NotifierMetrics{}) //todo duty hack
 
-	cacheStorage, err = cache.NewCacheStorage(database, metrics2, config.Cache.RetentionConfig)
+	retentionConfigFile, err := os.Open(config.Cache.RetentionConfig)
+	if err != nil {
+		logger.Fatalf("Error open retentions file [%s]: %s", config.Cache.RetentionConfig, err.Error())
+	}
+
+	cacheStorage, err = cache.NewCacheStorage(metrics2, retentionConfigFile)
 	if err != nil {
 		logger.Fatalf("Failed to initialize cache with config [%s]: %s", config.Cache.RetentionConfig, err.Error())
 	}
