@@ -168,6 +168,12 @@
 			"revisionTime": "2016-11-10T20:04:50Z"
 		},
 		{
+			"checksumSHA1": "tsuv2oy9wMYxdV5YtgIHONPUiv0=",
+			"path": "github.com/vova616/xxhash",
+			"revision": "f0a9a8b74d487f9563a527daf3bd6b4fbd3f5d00",
+			"revisionTime": "2013-03-13T23:02:33Z"
+		},
+		{
 			"checksumSHA1": "7EZyXN0EmZLgGxZxK01IJua4c8o=",
 			"path": "golang.org/x/net/websocket",
 			"revision": "1f9224279e98554b6a6432d4dd998a739f8b2b7c",
