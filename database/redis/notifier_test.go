@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-var metrics2 = metrics.ConfigureNotifierMetrics()
+var metrics2 = metrics.ConfigureDatabaseMetrics()
 
 func TestNotifierDataBase(t *testing.T) {
 	config := Config{}

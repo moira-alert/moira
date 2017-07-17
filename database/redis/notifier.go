@@ -14,7 +14,7 @@ import (
 type DbConnector struct {
 	pool    *redis.Pool
 	logger  moira.Logger
-	metrics *graphite.NotifierMetrics
+	metrics *graphite.DatabaseMetrics
 }
 
 // FetchEvent waiting for event from Db

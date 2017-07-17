@@ -5,7 +5,6 @@ type NotifierMetrics struct {
 	EventsReceived         Meter
 	EventsMalformed        Meter
 	EventsProcessingFailed Meter
-	SubsMalformed          Meter
 	SendingFailed          Meter
 	SendersOkMetrics       MetricsMap
 	SendersFailedMetrics   MetricsMap

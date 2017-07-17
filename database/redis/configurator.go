@@ -9,7 +9,7 @@ import (
 )
 
 // Init creates Redis pool based on config
-func Init(logger moira.Logger, config Config, metrics *graphite.NotifierMetrics) *DbConnector {
+func Init(logger moira.Logger, config Config, metrics *graphite.DatabaseMetrics) *DbConnector {
 	db := DbConnector{
 		pool:    newRedisPool(fmt.Sprintf("%s:%s", config.Host, config.Port), config.DBID),
 		logger:  logger,

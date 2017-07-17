@@ -51,21 +51,22 @@ func main() {
 		os.Exit(1)
 	}
 
-	metric := metrics.ConfigureNotifierMetrics()
-	metrics.Init(config.Graphite.getSettings(), logger)
+	notifierMetrics := metrics.ConfigureNotifierMetrics()
+	databaseMetrics := metrics.ConfigureDatabaseMetrics()
+	metrics.Init(config.Graphite.getSettings(), logger, "notifier")
 
-	connector = redis.Init(logger, config.Redis.getSettings(), metric)
+	connector = redis.Init(logger, config.Redis.getSettings(), databaseMetrics)
 	if *convertDb {
 		convertDatabase(connector)
 	}
 
-	notifier2 := notifier.Init(connector, logger, notifierConfig, metric)
+	notifier2 := notifier.Init(connector, logger, notifierConfig, notifierMetrics)
 
 	if err := notifier2.RegisterSenders(connector, config.Front.URI); err != nil {
 		logger.Fatalf("Can not configure senders: %s", err.Error())
 	}
 
-	initWorkers(notifier2, config, metric)
+	initWorkers(notifier2, config, notifierMetrics)
 }
 
 func initWorkers(notifier2 notifier.Notifier, config *config, metric *graphite.NotifierMetrics) {

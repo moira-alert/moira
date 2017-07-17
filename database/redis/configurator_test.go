@@ -2,10 +2,10 @@ package redis
 
 import (
 	"github.com/golang/mock/gomock"
+	"github.com/moira-alert/moira-alert/metrics/graphite"
 	"github.com/moira-alert/moira-alert/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
-	"github.com/moira-alert/moira-alert/metrics/graphite"
 )
 
 func TestInitialization(t *testing.T) {
@@ -13,7 +13,7 @@ func TestInitialization(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		logger := mock_moira_alert.NewMockLogger(mockCtrl)
 		config := Config{}
-		database := Init(logger, config, &graphite.NotifierMetrics{})
+		database := Init(logger, config, &graphite.DatabaseMetrics{})
 		So(database, ShouldNotBeEmpty)
 		_, err := database.pool.Dial()
 		So(err, ShouldNotBeNil)

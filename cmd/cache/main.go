@@ -23,7 +23,7 @@ import (
 var (
 	logger         moira.Logger
 	database       moira.Database
-	metrics2       *graphite.CacheMetrics
+	cacheMetrics   *graphite.CacheMetrics
 	cacheStorage   *cache.Storage
 	patternStorage *cache.PatternStorage
 
@@ -60,31 +60,32 @@ func main() {
 		os.Exit(1)
 	}
 
-	metrics2 = metrics.ConfigureCacheMetrics()
-	metrics.Init(config.Graphite.getSettings(), logger)
+	cacheMetrics = metrics.ConfigureCacheMetrics()
+	databaseMetrics := metrics.ConfigureDatabaseMetrics()
+	metrics.Init(config.Graphite.getSettings(), logger, "cache")
 
-	database = redis.Init(logger, config.Redis.getSettings(), &graphite.NotifierMetrics{}) //todo duty hack
+	database = redis.Init(logger, config.Redis.getSettings(), databaseMetrics)
 
 	retentionConfigFile, err := os.Open(config.Cache.RetentionConfig)
 	if err != nil {
 		logger.Fatalf("Error open retentions file [%s]: %s", config.Cache.RetentionConfig, err.Error())
 	}
 
-	cacheStorage, err = cache.NewCacheStorage(metrics2, retentionConfigFile)
+	cacheStorage, err = cache.NewCacheStorage(cacheMetrics, retentionConfigFile)
 	if err != nil {
 		logger.Fatalf("Failed to initialize cache with config [%s]: %s", config.Cache.RetentionConfig, err.Error())
 	}
 
-	patternStorage, err = cache.NewPatternStorage(database, metrics2, logger, *logParseErrors)
+	patternStorage, err = cache.NewPatternStorage(database, cacheMetrics, logger, *logParseErrors)
 	if err != nil {
 		logger.Fatalf("Failed to refresh pattern storage: %s", err.Error())
 	}
 
 	shutdown = make(chan bool)
 
-	refreshPatternWorker := patterns.NewRefreshPatternWorker(database, metrics2, logger, patternStorage)
-	heartbeatWorker := heartbeat.NewHeartbeatWorker(database, metrics2, logger)
-	atomicMetricsWorker := atomic.NewAtomicMetricsWorker(metrics2)
+	refreshPatternWorker := patterns.NewRefreshPatternWorker(database, cacheMetrics, logger, patternStorage)
+	heartbeatWorker := heartbeat.NewHeartbeatWorker(database, cacheMetrics, logger)
+	atomicMetricsWorker := atomic.NewAtomicMetricsWorker(cacheMetrics)
 
 	run(refreshPatternWorker, shutdown, &waitGroup)
 	run(heartbeatWorker, shutdown, &waitGroup)
@@ -96,7 +97,7 @@ func main() {
 	}
 
 	metricsChan := make(chan *moira.MatchedMetric, 10)
-	matchedMetricsProcessor := matchedmetrics.NewMatchedMetricsProcessor(metrics2, logger, database, cacheStorage)
+	matchedMetricsProcessor := matchedmetrics.NewMatchedMetricsProcessor(cacheMetrics, logger, database, cacheStorage)
 
 	waitGroup.Add(1)
 	go matchedMetricsProcessor.Run(metricsChan, &waitGroup)
