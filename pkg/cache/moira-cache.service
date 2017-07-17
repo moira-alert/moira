@@ -3,7 +3,7 @@ Description=moira-cache - metric stream filtering and caching for Moira
 After=network-online.target
 
 [Service]
-ExecStart=/usr/local/bin/moira-cache --config=/etc/moira/cache.yml
+ExecStart=/usr/bin/moira-cache --config=/etc/moira/cache.yml
 User=moira
 Group=moira
 PIDFile=/var/run/moira/moira-cache.pid

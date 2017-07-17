@@ -4,7 +4,7 @@ Wants=network-online.target
 After=network-online.target
 
 [Service]
-ExecStart=/usr/local/bin/moira-notifier --config=/etc/moira/config.yml
+ExecStart=/usr/bin/moira-notifier --config=/etc/moira/config.yml
 User=moira
 Group=moira
 Restart=always
