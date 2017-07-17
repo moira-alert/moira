@@ -18,8 +18,8 @@ type SelfCheckWorker struct {
 
 var defaultCheckInterval = time.Second * 10
 
-//Init - initialize notifier self check worker
-func Init(database moira.Database, logger moira.Logger, config Config, notifier2 notifier.Notifier) (worker *SelfCheckWorker, needRun bool) {
+//NewSelfCheckWorker - initialize notifier self check worker
+func NewSelfCheckWorker(database moira.Database, logger moira.Logger, config Config, notifier2 notifier.Notifier) (worker *SelfCheckWorker, needRun bool) {
 	senders := notifier2.GetSenders()
 	if err := config.checkConfig(senders); err != nil {
 		logger.Fatalf("Can't configure self state monitor: %s", err.Error())

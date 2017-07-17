@@ -39,8 +39,8 @@ var contact = moira.ContactData{
 	Value: "mail1@example.com",
 }
 
-//InitFake initialize fake redis database from redigomock package and fill fake data for integration tests
-func InitFake(logger moira.Logger) *DbConnector {
+//NewFakeDatabase initialize fake redis database from redigomock package and fill fake data for integration tests
+func NewFakeDatabase(logger moira.Logger) *DbConnector {
 	fakeRedis := redigomock.NewFakeRedis()
 	expectEvent(fakeRedis)
 	pool := redis.Pool{

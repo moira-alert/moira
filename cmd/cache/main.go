@@ -64,7 +64,7 @@ func main() {
 	databaseMetrics := metrics.ConfigureDatabaseMetrics()
 	metrics.Init(config.Graphite.getSettings(), logger, "cache")
 
-	database = redis.Init(logger, config.Redis.getSettings(), databaseMetrics)
+	database = redis.NewDatabase(logger, config.Redis.getSettings(), databaseMetrics)
 
 	retentionConfigFile, err := os.Open(config.Cache.RetentionConfig)
 	if err != nil {

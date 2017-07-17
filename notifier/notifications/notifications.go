@@ -15,9 +15,9 @@ type FetchNotificationsWorker struct {
 	notifier notifier.Notifier
 }
 
-//Init new worker
-func Init(database moira.Database, logger moira.Logger, sender notifier.Notifier) FetchNotificationsWorker {
-	return FetchNotificationsWorker{
+//NewFetchNotificationsWorker new worker
+func NewFetchNotificationsWorker(database moira.Database, logger moira.Logger, sender notifier.Notifier) *FetchNotificationsWorker {
+	return &FetchNotificationsWorker{
 		logger:   logger,
 		database: database,
 		notifier: sender,
@@ -25,7 +25,7 @@ func Init(database moira.Database, logger moira.Logger, sender notifier.Notifier
 }
 
 // Run is a cycle that fetches scheduled notifications from database
-func (worker FetchNotificationsWorker) Run(shutdown chan bool, wg *sync.WaitGroup) {
+func (worker *FetchNotificationsWorker) Run(shutdown chan bool, wg *sync.WaitGroup) {
 	defer wg.Done()
 	worker.logger.Debug("Start Fetch Sheduled Notifications")
 	for {

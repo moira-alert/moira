@@ -183,7 +183,7 @@ func TestRunGoRoutine(t *testing.T) {
 	}
 	notif.EXPECT().GetSenders().Return(senders)
 
-	selfStateWorker, _ := Init(database, logger, conf, notif)
+	selfStateWorker, _ := NewSelfCheckWorker(database, logger, conf, notif)
 
 	Convey("Go routine run before first send, should send after 10 seconds next time", t, func() {
 		err := fmt.Errorf("DataBase doesn't work")
@@ -227,7 +227,7 @@ func configureWorker(t *testing.T) (needRun bool, selfStateWorker SelfCheckWorke
 	}
 	notif.EXPECT().GetSenders().Return(senders)
 
-	selfState1, needRun := Init(database, logger, conf, notif)
+	selfState1, needRun := NewSelfCheckWorker(database, logger, conf, notif)
 	selfStateWorker = *selfState1
 	return
 }

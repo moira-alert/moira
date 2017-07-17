@@ -13,7 +13,7 @@ func TestInitialization(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		logger := mock_moira_alert.NewMockLogger(mockCtrl)
 		config := Config{}
-		database := Init(logger, config, &graphite.DatabaseMetrics{})
+		database := NewDatabase(logger, config, &graphite.DatabaseMetrics{})
 		So(database, ShouldNotBeEmpty)
 		_, err := database.pool.Dial()
 		So(err, ShouldNotBeNil)

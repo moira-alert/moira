@@ -35,14 +35,14 @@ func TestNotifierDataBase(t *testing.T) {
 
 	Convey("Contact manipulation", t, func() {
 		Convey("should throw error when no connection", func() {
-			dataBase := Init(logger, config, metrics2)
+			dataBase := NewDatabase(logger, config, metrics2)
 			dataBase.pool.TestOnBorrow(fakeDataBase.pool.Get(), time.Now())
 			_, err := dataBase.GetContacts()
 			So(err, ShouldNotBeNil)
 		})
 
 		Convey("should save contact", func() {
-			db := Init(logger, config, metrics2)
+			db := NewDatabase(logger, config, metrics2)
 			db.pool = fakeDataBase.pool
 			contact := moira.ContactData{
 				ID:    "id",
@@ -54,7 +54,7 @@ func TestNotifierDataBase(t *testing.T) {
 		})
 
 		Convey("shouldn't throw error when connection exists", func() {
-			db := Init(logger, config, metrics2)
+			db := NewDatabase(logger, config, metrics2)
 			db.pool = fakeDataBase.pool
 			_, err := db.GetContacts()
 			So(err, ShouldBeNil)
@@ -62,14 +62,14 @@ func TestNotifierDataBase(t *testing.T) {
 	})
 
 	Convey("Try get trigger by empty id, should be error", t, func() {
-		db := Init(logger, config, metrics2)
+		db := NewDatabase(logger, config, metrics2)
 		db.pool = fakeDataBase.pool
 		_, err := db.GetTrigger("")
 		So(err, ShouldNotBeEmpty)
 	})
 
 	Convey("Test get notification", t, func() {
-		db := Init(logger, config, metrics2)
+		db := NewDatabase(logger, config, metrics2)
 		db.pool = fakeDataBase.pool
 
 		now := time.Now()
@@ -84,7 +84,7 @@ func TestNotifierDataBase(t *testing.T) {
 	})
 
 	Convey("Test get notification if empty", t, func() {
-		db := Init(logger, config, metrics2)
+		db := NewDatabase(logger, config, metrics2)
 		db.pool = fakeDataBase.pool
 
 		now := time.Now()

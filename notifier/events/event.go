@@ -16,18 +16,18 @@ type FetchEventsWorker struct {
 	metrics   *graphite.NotifierMetrics
 }
 
-//Init new worker
-func Init(database moira.Database, logger moira.Logger, metrics *graphite.NotifierMetrics) FetchEventsWorker {
-	return FetchEventsWorker{
+//NewFetchEventWorker new worker
+func NewFetchEventWorker(database moira.Database, logger moira.Logger, metrics *graphite.NotifierMetrics) *FetchEventsWorker {
+	return &FetchEventsWorker{
 		logger:    logger,
 		database:  database,
-		scheduler: notifier.InitScheduler(database, logger),
+		scheduler: notifier.NewScheduler(database, logger),
 		metrics:   metrics,
 	}
 }
 
 // Run is a cycle that fetches events from database
-func (worker FetchEventsWorker) Run(shutdown chan bool, wg *sync.WaitGroup) {
+func (worker *FetchEventsWorker) Run(shutdown chan bool, wg *sync.WaitGroup) {
 	defer wg.Done()
 	worker.logger.Debug("Start Fetching Events")
 	for {

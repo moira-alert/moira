@@ -128,7 +128,7 @@ func configureNotifier(t *testing.T) {
 	scheduler = mock_scheduler.NewMockScheduler(mockCtrl)
 	sender = mock_moira_alert.NewMockSender(mockCtrl)
 
-	notif = Init(dataBase, logger, config, metrics)
+	notif = NewNotifier(dataBase, logger, config, metrics)
 	notif.scheduler = scheduler
 	senderSettings := map[string]string{
 		"type": "test",

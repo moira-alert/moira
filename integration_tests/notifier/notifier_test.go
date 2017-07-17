@@ -34,8 +34,8 @@ var mockCtrl *gomock.Controller
 func TestNotifier(t *testing.T) {
 	mockCtrl = gomock.NewController(t)
 	defer afterTest()
-	fakeDataBase := redis.InitFake(logger)
-	notifier2 := notifier.Init(fakeDataBase, logger, notifierConfig, metrics2)
+	fakeDataBase := redis.NewFakeDatabase(logger)
+	notifier2 := notifier.NewNotifier(fakeDataBase, logger, notifierConfig, metrics2)
 	sender := mock_moira_alert.NewMockSender(mockCtrl)
 	sender.EXPECT().Init(senderSettings, logger).Return(nil)
 	notifier2.RegisterSender(senderSettings, sender)
@@ -66,8 +66,8 @@ func afterTest() {
 }
 
 func initWorkers(notifier2 notifier.Notifier, logger moira.Logger, connector *redis.DbConnector) {
-	fetchEventsWorker := events.Init(connector, logger, metrics2)
-	fetchNotificationsWorker := notifications.Init(connector, logger, notifier2)
+	fetchEventsWorker := events.NewFetchEventWorker(connector, logger, metrics2)
+	fetchNotificationsWorker := notifications.NewFetchNotificationsWorker(connector, logger, notifier2)
 
 	run(fetchEventsWorker, shutdown, &waitGroup)
 	run(fetchNotificationsWorker, shutdown, &waitGroup)

@@ -27,13 +27,13 @@ type StandardNotifier struct {
 	metrics   *graphite.NotifierMetrics
 }
 
-//Init is initializer for StandardNotifier
-func Init(database moira.Database, logger moira.Logger, config Config, metrics *graphite.NotifierMetrics) *StandardNotifier {
+//NewNotifier is initializer for StandardNotifier
+func NewNotifier(database moira.Database, logger moira.Logger, config Config, metrics *graphite.NotifierMetrics) *StandardNotifier {
 	return &StandardNotifier{
 		senders:   make(map[string]chan NotificationPackage),
 		logger:    logger,
 		database:  database,
-		scheduler: InitScheduler(database, logger),
+		scheduler: NewScheduler(database, logger),
 		config:    config,
 		metrics:   metrics,
 	}

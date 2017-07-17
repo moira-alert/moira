@@ -23,8 +23,8 @@ type throttlingLevel struct {
 	count    int64
 }
 
-//InitScheduler is initializer for StandardScheduler
-func InitScheduler(database moira.Database, logger moira.Logger) *StandardScheduler {
+//NewScheduler is initializer for StandardScheduler
+func NewScheduler(database moira.Database, logger moira.Logger) *StandardScheduler {
 	return &StandardScheduler{
 		database: database,
 		logger:   logger,

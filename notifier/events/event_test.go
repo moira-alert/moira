@@ -22,7 +22,7 @@ func TestEvent(t *testing.T) {
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Events")
 
-	worker := Init(dataBase, logger, metrics2)
+	worker := NewFetchEventWorker(dataBase, logger, metrics2)
 
 	Convey("When event is TEST and subscription is disabled, should add new notification", t, func() {
 		event := moira.EventData{
@@ -57,7 +57,7 @@ func TestNoSubscription(t *testing.T) {
 		defer mockCtrl.Finish()
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger, _ := logging.GetLogger("Events")
-		worker := Init(dataBase, logger, metrics2)
+		worker := NewFetchEventWorker(dataBase, logger, metrics2)
 
 		event := moira.EventData{
 			Metric:    "generate.event.1",
@@ -81,7 +81,7 @@ func TestDisabledNotification(t *testing.T) {
 		defer mockCtrl.Finish()
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger := mock_moira_alert.NewMockLogger(mockCtrl)
-		worker := Init(dataBase, logger, metrics2)
+		worker := NewFetchEventWorker(dataBase, logger, metrics2)
 
 		event := moira.EventData{
 			Metric:    "generate.event.1",
@@ -110,7 +110,7 @@ func TestExtraTags(t *testing.T) {
 		defer mockCtrl.Finish()
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger := mock_moira_alert.NewMockLogger(mockCtrl)
-		worker := Init(dataBase, logger, metrics2)
+		worker := NewFetchEventWorker(dataBase, logger, metrics2)
 
 		event := moira.EventData{
 			Metric:    "generate.event.1",
@@ -140,7 +140,7 @@ func TestAddNotification(t *testing.T) {
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger, _ := logging.GetLogger("Events")
 		scheduler := mock_scheduler.NewMockScheduler(mockCtrl)
-		worker := Init(dataBase, logger, metrics2)
+		worker := NewFetchEventWorker(dataBase, logger, metrics2)
 		worker.scheduler = scheduler
 
 		event := moira.EventData{
@@ -172,7 +172,7 @@ func TestAddOneNotificationByTwoSubscriptionsWithSame(t *testing.T) {
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger, _ := logging.GetLogger("Events")
 		scheduler := mock_scheduler.NewMockScheduler(mockCtrl)
-		worker := Init(dataBase, logger, metrics2)
+		worker := NewFetchEventWorker(dataBase, logger, metrics2)
 		worker.scheduler = scheduler
 
 		event := moira.EventData{
@@ -209,7 +209,7 @@ func TestFailReadContact(t *testing.T) {
 		defer mockCtrl.Finish()
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger := mock_moira_alert.NewMockLogger(mockCtrl)
-		worker := Init(dataBase, logger, metrics2)
+		worker := NewFetchEventWorker(dataBase, logger, metrics2)
 
 		event := moira.EventData{
 			Metric:    "generate.event.1",
@@ -241,7 +241,7 @@ func TestGoRoutine(t *testing.T) {
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger, _ := logging.GetLogger("Events")
 		scheduler := mock_scheduler.NewMockScheduler(mockCtrl)
-		worker := Init(dataBase, logger, metrics2)
+		worker := NewFetchEventWorker(dataBase, logger, metrics2)
 		worker.scheduler = scheduler
 
 		event := moira.EventData{

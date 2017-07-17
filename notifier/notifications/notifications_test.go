@@ -51,7 +51,7 @@ func TestProcessScheduledEvent(t *testing.T) {
 	notifier := mock_notifier.NewMockNotifier(mockCtrl)
 	logger, _ := logging.GetLogger("Notification")
 
-	worker := Init(dataBase, logger, notifier)
+	worker := NewFetchNotificationsWorker(dataBase, logger, notifier)
 	Convey("Two different notifications, should send two packages", t, func() {
 		dataBase.EXPECT().GetNotifications(gomock.Any()).Return([]*moira.ScheduledNotification{
 			&notification1,
@@ -138,7 +138,7 @@ func TestGoRoutine(t *testing.T) {
 	logger, _ := logging.GetLogger("Notification")
 
 	shutdown := make(chan bool)
-	worker := Init(dataBase, logger, notifier)
+	worker := NewFetchNotificationsWorker(dataBase, logger, notifier)
 
 	dataBase.EXPECT().GetNotifications(gomock.Any()).Return([]*moira.ScheduledNotification{&notification1}, nil)
 	notifier.EXPECT().Send(&pkg, gomock.Any()).Do(func(f ...interface{}) { close(shutdown) })
