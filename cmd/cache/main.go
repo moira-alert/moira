@@ -14,7 +14,6 @@ import (
 	"github.com/moira-alert/moira-alert/metrics/graphite"
 	"github.com/moira-alert/moira-alert/metrics/graphite/atomic"
 	"github.com/moira-alert/moira-alert/metrics/graphite/go-metrics"
-	"net"
 	"os"
 	"os/signal"
 	"sync"
@@ -27,7 +26,6 @@ var (
 	metrics2       *graphite.CacheMetrics
 	cacheStorage   *cache.Storage
 	patternStorage *cache.PatternStorage
-	listener       net.Listener
 
 	shutdown  chan bool
 	waitGroup sync.WaitGroup
@@ -92,7 +90,7 @@ func main() {
 	run(heartbeatWorker, shutdown, &waitGroup)
 	run(atomicMetricsWorker, shutdown, &waitGroup)
 
-	listener, err = createListener(config)
+	listener, err := connection.NewListener(config.Cache.Listen, logger, patternStorage)
 	if err != nil {
 		logger.Fatalf("Failed to start listen: %s", err.Error())
 	}
@@ -104,7 +102,7 @@ func main() {
 	go matchedMetricsProcessor.Run(metricsChan, &waitGroup)
 
 	waitGroup.Add(1)
-	go handleConnections(metricsChan)
+	go listener.Listen(metricsChan, &waitGroup, shutdown)
 
 	logger.Infof("Moira Cache started. Version: %s", Version)
 	ch := make(chan os.Signal, 1)
@@ -114,43 +112,6 @@ func main() {
 	close(shutdown)
 	waitGroup.Wait()
 	logger.Infof("Moira Cache stopped. Version: %s", Version)
-}
-
-func createListener(config *config) (net.Listener, error) {
-	listen := config.Cache.Listen
-	newListener, err := net.Listen("tcp", listen)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to listen on [%s]: %s", listen, err.Error())
-	}
-	return newListener, nil
-}
-
-func handleConnections(metricsChan chan *moira.MatchedMetric) {
-	defer waitGroup.Done()
-	connectionHandler := connection.NewConnectionHandler(logger, patternStorage)
-	var handlerWG sync.WaitGroup
-
-	for {
-		select {
-		case <-shutdown:
-			{
-				logger.Info("Stop listen connection")
-				handlerWG.Wait()
-				close(metricsChan)
-				break
-			}
-		default:
-			{
-				conn, err := listener.Accept()
-				if err != nil {
-					logger.Infof("Failed to accept connection: %s", err.Error())
-					continue
-				}
-				handlerWG.Add(1)
-				go connectionHandler.HandleConnection(conn, metricsChan, shutdown, &handlerWG)
-			}
-		}
-	}
 }
 
 func run(worker moira.Worker, shutdown chan bool, wg *sync.WaitGroup) {
