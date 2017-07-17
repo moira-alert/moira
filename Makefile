@@ -19,7 +19,7 @@ lint: prepare
 
 test: prepare
 	echo 'mode: atomic' > coverage.txt && go list ./... | grep -v "/vendor/" | xargs -n1 -I{} sh -c 'go test -bench=. -covermode=atomic -coverprofile=coverage.tmp {} && tail -n +2 coverage.tmp >> coverage.txt' && rm coverage.tmp
-W
+
 build:
 	go build -ldflags "-X main.Version=$(VERSION)-$(RELEASE)" -o build/moira-notifier github.com/moira-alert/moira-alert/cmd/notifier
 	go build -ldflags "-X main.Version=$(VERSION)-$(RELEASE)" -o build/moira-cache github.com/moira-alert/moira-alert/cmd/cache
