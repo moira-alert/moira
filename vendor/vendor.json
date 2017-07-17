@@ -119,6 +119,12 @@
 			"revisionTime": "2017-06-07T22:27:57Z"
 		},
 		{
+			"checksumSHA1": "DJkKC9Fsa49QQI+HKwof4La2tec=",
+			"path": "github.com/smartystreets/assertions/should",
+			"revision": "4ea54c1f28ad3ae597e76607dea3871fa177e263",
+			"revisionTime": "2017-06-07T22:27:57Z"
+		},
+		{
 			"checksumSHA1": "f4m09DHEetaanti/GqUJzyCBTaI=",
 			"path": "github.com/smartystreets/goconvey/convey",
 			"revision": "9e8dc3f972df6c8fcc0375ef492c24d0bb204857",
