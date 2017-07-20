@@ -9,9 +9,11 @@ import (
 )
 
 var database moira.Database
+var logger moira.Logger
 
-func NewHandler(db moira.Database) http.Handler {
+func NewHandler(db moira.Database, logger moira.Logger) http.Handler {
 	database = db
+	logger = logger
 	router := chi.NewRouter()
 	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)

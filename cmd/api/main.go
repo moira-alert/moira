@@ -53,7 +53,7 @@ func main() {
 		}
 	}()
 
-	httpHandler := handler.NewHandler(database)
+	httpHandler := handler.NewHandler(database, logger)
 
 	listeningAddress := fmt.Sprintf("%s:%s", config.Api.Address, config.Api.Port)
 	logger.Infof("Start listening by address: [%s]", listeningAddress)

@@ -1,12 +1,11 @@
 package handler
 
 import (
-	"fmt"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
+	"github.com/moira-alert/moira-alert/api/controller"
 	"github.com/moira-alert/moira-alert/api/dto"
 	"net/http"
-	"os"
 )
 
 func tag(router chi.Router) {
@@ -19,26 +18,18 @@ func tag(router chi.Router) {
 }
 
 func getAllTags(writer http.ResponseWriter, request *http.Request) {
-	tagsNames, err := database.GetTagNames()
+	tagData, err := controller.GetAllTags(database)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s", err.Error())
-		http.Error(writer, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		logger.Error(err.Err)
+		if err := render.Render(writer, request, err); err != nil {
+			render.Render(writer, request, dto.ErrorRender(err))
+			return
+		}
 		return
 	}
 
-	tagsMap, err := database.GetTags(tagsNames)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s", err.Error())
-		http.Error(writer, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return
-	}
-
-	tagsData := dto.TagsData{
-		TagNames: tagsNames,
-		TagsMap:  tagsMap,
-	}
-
-	if err := render.Render(writer, request, &tagsData); err != nil {
+	if err := render.Render(writer, request, tagData); err != nil {
+		render.Render(writer, request, dto.ErrorRender(err))
 		return
 	}
 }
