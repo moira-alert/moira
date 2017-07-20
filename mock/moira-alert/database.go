@@ -96,6 +96,20 @@ func (_mr *MockDatabaseMockRecorder) GetContacts() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetContacts")
 }
 
+// GetFilteredTriggersIds mocks base method
+func (_m *MockDatabase) GetFilteredTriggersIds(_param0 []string, _param1 bool) ([]string, int64, error) {
+	ret := _m.ctrl.Call(_m, "GetFilteredTriggersIds", _param0, _param1)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(int64)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetFilteredTriggersIds indicates an expected call of GetFilteredTriggersIds
+func (_mr *MockDatabaseMockRecorder) GetFilteredTriggersIds(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetFilteredTriggersIds", arg0, arg1)
+}
+
 // GetMetricsCount mocks base method
 func (_m *MockDatabase) GetMetricsCount() (int64, error) {
 	ret := _m.ctrl.Call(_m, "GetMetricsCount")
@@ -148,6 +162,45 @@ func (_mr *MockDatabaseMockRecorder) GetSubscription(arg0 interface{}) *gomock.C
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetSubscription", arg0)
 }
 
+// GetTag mocks base method
+func (_m *MockDatabase) GetTag(_param0 string) (moira_alert.TagData, error) {
+	ret := _m.ctrl.Call(_m, "GetTag", _param0)
+	ret0, _ := ret[0].(moira_alert.TagData)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTag indicates an expected call of GetTag
+func (_mr *MockDatabaseMockRecorder) GetTag(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetTag", arg0)
+}
+
+// GetTagNames mocks base method
+func (_m *MockDatabase) GetTagNames() ([]string, error) {
+	ret := _m.ctrl.Call(_m, "GetTagNames")
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTagNames indicates an expected call of GetTagNames
+func (_mr *MockDatabaseMockRecorder) GetTagNames() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetTagNames")
+}
+
+// GetTags mocks base method
+func (_m *MockDatabase) GetTags(_param0 []string) (map[string]moira_alert.TagData, error) {
+	ret := _m.ctrl.Call(_m, "GetTags", _param0)
+	ret0, _ := ret[0].(map[string]moira_alert.TagData)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTags indicates an expected call of GetTags
+func (_mr *MockDatabaseMockRecorder) GetTags(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetTags", arg0)
+}
+
 // GetTagsSubscriptions mocks base method
 func (_m *MockDatabase) GetTagsSubscriptions(_param0 []string) ([]moira_alert.SubscriptionData, error) {
 	ret := _m.ctrl.Call(_m, "GetTagsSubscriptions", _param0)
@@ -186,6 +239,20 @@ func (_mr *MockDatabaseMockRecorder) GetTriggerEventsCount(arg0, arg1 interface{
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetTriggerEventsCount", arg0, arg1)
 }
 
+// GetTriggerIds mocks base method
+func (_m *MockDatabase) GetTriggerIds() ([]string, int64, error) {
+	ret := _m.ctrl.Call(_m, "GetTriggerIds")
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(int64)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetTriggerIds indicates an expected call of GetTriggerIds
+func (_mr *MockDatabaseMockRecorder) GetTriggerIds() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetTriggerIds")
+}
+
 // GetTriggerTags mocks base method
 func (_m *MockDatabase) GetTriggerTags(_param0 string) ([]string, error) {
 	ret := _m.ctrl.Call(_m, "GetTriggerTags", _param0)
@@ -210,6 +277,45 @@ func (_m *MockDatabase) GetTriggerThrottlingTimestamps(_param0 string) (time.Tim
 // GetTriggerThrottlingTimestamps indicates an expected call of GetTriggerThrottlingTimestamps
 func (_mr *MockDatabaseMockRecorder) GetTriggerThrottlingTimestamps(arg0 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetTriggerThrottlingTimestamps", arg0)
+}
+
+// GetTriggersChecks mocks base method
+func (_m *MockDatabase) GetTriggersChecks(_param0 []string) ([]moira_alert.TriggerChecksData, error) {
+	ret := _m.ctrl.Call(_m, "GetTriggersChecks", _param0)
+	ret0, _ := ret[0].([]moira_alert.TriggerChecksData)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTriggersChecks indicates an expected call of GetTriggersChecks
+func (_mr *MockDatabaseMockRecorder) GetTriggersChecks(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetTriggersChecks", arg0)
+}
+
+// GetUserContacts mocks base method
+func (_m *MockDatabase) GetUserContacts(_param0 string) ([]string, error) {
+	ret := _m.ctrl.Call(_m, "GetUserContacts", _param0)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserContacts indicates an expected call of GetUserContacts
+func (_mr *MockDatabaseMockRecorder) GetUserContacts(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetUserContacts", arg0)
+}
+
+// GetUserSubscriptions mocks base method
+func (_m *MockDatabase) GetUserSubscriptions(_param0 string) ([]string, error) {
+	ret := _m.ctrl.Call(_m, "GetUserSubscriptions", _param0)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserSubscriptions indicates an expected call of GetUserSubscriptions
+func (_mr *MockDatabaseMockRecorder) GetUserSubscriptions(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetUserSubscriptions", arg0)
 }
 
 // SaveMetrics mocks base method

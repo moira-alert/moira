@@ -63,7 +63,8 @@ type ScheduleData struct {
 
 // ScheduleDataDay represent week day of schedule
 type ScheduleDataDay struct {
-	Enabled bool `json:"enabled"`
+	Enabled bool   `json:"enabled"`
+	Name    string `json:"name,omitempty"`
 }
 
 // ScheduledNotification represent notification object
@@ -74,6 +75,11 @@ type ScheduledNotification struct {
 	Throttled bool        `json:"throttled"`
 	SendFail  int         `json:"send_fail"`
 	Timestamp int64       `json:"timestamp"`
+}
+
+// TagData represent tag object
+type TagData struct {
+	Maintenance *int64 `json:"maintenance,omitempty"`
 }
 
 // GetSubjectState returns the most critical state of events

@@ -26,6 +26,17 @@ type Database interface {
 	UpdateMetricsHeartbeat() error
 	GetPatterns() ([]string, error)
 	SaveMetrics(buffer map[string]*MatchedMetric) error
+
+	GetUserSubscriptions(string) ([]string, error)
+	GetUserContacts(string) ([]string, error)
+
+	GetTagNames() ([]string, error)
+	GetTags([]string) (map[string]TagData, error)
+	GetTag(string) (TagData, error)
+
+	GetTriggerIds() ([]string, int64, error)
+	GetFilteredTriggersIds([]string, bool) ([]string, int64, error)
+	GetTriggersChecks([]string) ([]TriggerChecksData, error)
 }
 
 // Logger implements logger abstraction
