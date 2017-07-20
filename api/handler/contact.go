@@ -6,16 +6,20 @@ import (
 )
 
 func contact(router chi.Router) {
-	router.Get("/", func(writer http.ResponseWriter, request *http.Request) {
-		//Дергает абсолютно все контакты
-	})
+	router.Get("/", getAllContacts)
+	router.Put("/", createNewContact)
+	router.Delete("/{ContactId}", deleteContact)
+}
 
-	router.Put("/", func(writer http.ResponseWriter, request *http.Request) {
-		//todo какой-то check_json
-		//Создает новый контакт в админке пользователя
-	})
+func getAllContacts(writer http.ResponseWriter, request *http.Request) {
+	//Дергает абсолютно все контакты
+}
 
-	router.Delete("/{ContactId}", func(writer http.ResponseWriter, request *http.Request) {
-		//удалить контакт
-	})
+func createNewContact(writer http.ResponseWriter, request *http.Request) {
+	//todo какой-то check_json
+	//Создает новый контакт в админке пользователя
+}
+
+func deleteContact(writer http.ResponseWriter, request *http.Request) {
+	//удалить контакт
 }

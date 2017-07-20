@@ -6,11 +6,14 @@ import (
 )
 
 func notification(router chi.Router) {
-	router.Get("/", func(writer http.ResponseWriter, request *http.Request) {
-		//todo хрен знает, что делает, очень похоже на то, что получает нотификаю, которую уже нужно отправить
-	})
+	router.Get("/", getNotification)
+	router.Delete("/", deleteNotification)
+}
 
-	router.Delete("/", func(writer http.ResponseWriter, request *http.Request) {
-		//todo хрен знает, что делает, очень похоже на то, что удаляет нотификаю, которую уже нужно отправить
-	})
+func getNotification(writer http.ResponseWriter, request *http.Request) {
+	//todo хрен знает, что делает, очень похоже на то, что получает нотификаю, которую уже нужно отправить
+}
+
+func deleteNotification(writer http.ResponseWriter, request *http.Request) {
+	//todo хрен знает, что делает, очень похоже на то, что удаляет нотификаю, которую уже нужно отправить
 }
