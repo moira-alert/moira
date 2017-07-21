@@ -9,21 +9,19 @@ import (
 )
 
 func event(router chi.Router) {
-	router.Get("/{triggerId}", func(writer http.ResponseWriter, request *http.Request) {
-		if triggerId := chi.URLParam(request, "triggerId"); triggerId != "" {
-			page, size := getPageAndSize(request, 0, 100)
-			eventsList, err := controller.GetEvents(database, triggerId, page, size)
-			if err != nil {
-				logger.Error(err.Err)
-				render.Render(writer, request, err)
-				return
-			}
-			if err := render.Render(writer, request, eventsList); err != nil {
-				render.Render(writer, request, dto.ErrorRender(err))
-			}
-		} else {
-			render.Render(writer, request, dto.ErrorNotFound)
+	router.With(triggerContext, paginate(0, 100)).Get("/{triggerId}", func(writer http.ResponseWriter, request *http.Request) {
+		context := request.Context()
+		triggerId := context.Value("triggerId").(string)
+		size := context.Value("size").(int64)
+		page := context.Value("page").(int64)
+		eventsList, err := controller.GetEvents(database, triggerId, page, size)
+		if err != nil {
+			logger.Error(err.Err)
+			render.Render(writer, request, err)
 			return
+		}
+		if err := render.Render(writer, request, eventsList); err != nil {
+			render.Render(writer, request, dto.ErrorRender(err))
 		}
 	})
 }

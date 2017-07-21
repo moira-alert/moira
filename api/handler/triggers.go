@@ -12,7 +12,7 @@ import (
 func triggers(router chi.Router) {
 	router.Get("/", getAllTriggers)
 	router.Put("/", saveTrigger)
-	router.Get("/page", getTriggersPage)
+	router.With(paginate(0, 10)).Get("/page", getTriggersPage)
 	router.Route("/{triggerId}", trigger)
 }
 
@@ -47,7 +47,8 @@ func getTriggersPage(writer http.ResponseWriter, request *http.Request) {
 		}
 	}
 
-	page, size := getPageAndSize(request, 0, 10)
+	page := request.Context().Value("page").(int64)
+	size := request.Context().Value("size").(int64)
 
 	triggersList, errorResponse := controller.GetTriggerPage(database, page, size, onlyErrors, filterTags)
 	if errorResponse != nil {

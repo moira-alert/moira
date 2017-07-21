@@ -9,6 +9,7 @@ import (
 )
 
 func trigger(router chi.Router) {
+	router.Use(triggerContext)
 	router.Get("/", getTrigger)
 	router.Get("/state", getTriggerState)
 	router.Route("/throttling", func(router chi.Router) {
@@ -23,36 +24,26 @@ func trigger(router chi.Router) {
 }
 
 func getTrigger(writer http.ResponseWriter, request *http.Request) {
-	if triggerId := chi.URLParam(request, "triggerId"); triggerId != "" {
-		trigger, err := controller.GetTrigger(database, triggerId)
-		if err != nil {
-			render.Render(writer, request, err)
-			return
-		}
-		if err := render.Render(writer, request, trigger); err != nil {
-			render.Render(writer, request, dto.ErrorRender(err))
-		}
+	triggerId := request.Context().Value("triggerId").(string)
+	trigger, err := controller.GetTrigger(database, triggerId)
+	if err != nil {
+		render.Render(writer, request, err)
 		return
-	} else {
-		render.Render(writer, request, dto.ErrorNotFound)
-		return
+	}
+	if err := render.Render(writer, request, trigger); err != nil {
+		render.Render(writer, request, dto.ErrorRender(err))
 	}
 }
 
 func getTriggerState(writer http.ResponseWriter, request *http.Request) {
-	if triggerId := chi.URLParam(request, "triggerId"); triggerId != "" {
-		triggerState, err := controller.GetTriggerState(database, triggerId)
-		if err != nil {
-			render.Render(writer, request, err)
-			return
-		}
-		if err := render.Render(writer, request, triggerState); err != nil {
-			render.Render(writer, request, dto.ErrorRender(err))
-		}
+	triggerId := request.Context().Value("triggerId").(string)
+	triggerState, err := controller.GetTriggerState(database, triggerId)
+	if err != nil {
+		render.Render(writer, request, err)
 		return
-	} else {
-		render.Render(writer, request, dto.ErrorNotFound)
-		return
+	}
+	if err := render.Render(writer, request, triggerState); err != nil {
+		render.Render(writer, request, dto.ErrorRender(err))
 	}
 }
 
