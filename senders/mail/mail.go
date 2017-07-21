@@ -121,10 +121,10 @@ func (sender *Sender) makeMessage(events moira.EventsData, contact moira.Contact
 			Timestamp:  time.Unix(event.Timestamp, 0).Format("15:04 02.01.2006"),
 			Oldstate:   event.OldState,
 			State:      event.State,
-			Value:      strconv.FormatFloat(event.Value, 'f', -1, 64),
+			Value:      strconv.FormatFloat(moira.UseFloat64(event.Value), 'f', -1, 64),
 			WarnValue:  strconv.FormatFloat(trigger.WarnValue, 'f', -1, 64),
 			ErrorValue: strconv.FormatFloat(trigger.ErrorValue, 'f', -1, 64),
-			Message:    event.Message,
+			Message:    moira.UseString(event.Message),
 		})
 	}
 

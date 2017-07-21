@@ -40,7 +40,20 @@ func getTrigger(writer http.ResponseWriter, request *http.Request) {
 }
 
 func getTriggerState(writer http.ResponseWriter, request *http.Request) {
-	//дать состояние триггера
+	if triggerId := chi.URLParam(request, "triggerId"); triggerId != "" {
+		triggerState, err := controller.GetTriggerState(database, triggerId)
+		if err != nil {
+			render.Render(writer, request, err)
+			return
+		}
+		if err := render.Render(writer, request, triggerState); err != nil {
+			render.Render(writer, request, dto.ErrorRender(err))
+		}
+		return
+	} else {
+		render.Render(writer, request, dto.ErrorNotFound)
+		return
+	}
 }
 
 func getTriggerThrottling(writer http.ResponseWriter, request *http.Request) {

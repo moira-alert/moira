@@ -24,3 +24,12 @@ type Trigger struct {
 func (*Trigger) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
+
+type TriggerCheck struct {
+	moira.CheckData
+	TriggerId string `json:"trigger_id"`
+}
+
+func (*TriggerCheck) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}

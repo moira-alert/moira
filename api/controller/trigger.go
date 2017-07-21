@@ -22,3 +22,17 @@ func GetTrigger(database moira.Database, triggerId string) (*dto.Trigger, *dto.E
 
 	return &triggerResponse, nil
 }
+
+func GetTriggerState(database moira.Database, triggerId string) (*dto.TriggerCheck, *dto.ErrorResponse) {
+	lastCheck, err := database.GetTriggerLastCheck(triggerId)
+	if err != nil {
+		return nil, dto.ErrorInternalServer(err)
+	}
+
+	triggerCheck := dto.TriggerCheck{
+		CheckData: *lastCheck,
+		TriggerId: triggerId,
+	}
+
+	return &triggerCheck, nil
+}

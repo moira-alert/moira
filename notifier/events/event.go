@@ -65,7 +65,7 @@ func (worker *FetchEventsWorker) processEvent(event moira.EventData) error {
 	)
 
 	if event.State != "TEST" {
-		worker.logger.Debugf("Processing trigger id %s for metric %s == %f, %s -> %s", event.TriggerID, event.Metric, event.Value, event.OldState, event.State)
+		worker.logger.Debugf("Processing trigger id %s for metric %s == %f, %s -> %s", event.TriggerID, event.Metric, moira.UseFloat64(event.Value), event.OldState, event.State)
 
 		trigger, err = worker.database.GetNotificationTrigger(event.TriggerID)
 		if err != nil {
@@ -85,8 +85,8 @@ func (worker *FetchEventsWorker) processEvent(event moira.EventData) error {
 			return err
 		}
 	} else {
-		worker.logger.Debugf("Getting subscription id %s for test message", event.SubscriptionID)
-		sub, err := worker.database.GetSubscription(event.SubscriptionID)
+		worker.logger.Debugf("Getting subscription id %s for test message", *event.SubscriptionID)
+		sub, err := worker.database.GetSubscription(*event.SubscriptionID)
 		if err != nil {
 			return err
 		}
@@ -103,7 +103,7 @@ func (worker *FetchEventsWorker) processEvent(event moira.EventData) error {
 					worker.logger.Warning(err.Error())
 					continue
 				}
-				event.SubscriptionID = subscription.ID
+				event.SubscriptionID = &subscription.ID
 				notification := worker.scheduler.ScheduleNotification(time.Now(), event, trigger, contact, false, 0)
 				key := notification.GetKey()
 				if _, exist := duplications[key]; !exist {

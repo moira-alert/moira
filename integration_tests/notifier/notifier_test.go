@@ -39,8 +39,7 @@ func TestNotifier(t *testing.T) {
 	sender := mock_moira_alert.NewMockSender(mockCtrl)
 	sender.EXPECT().Init(senderSettings, logger).Return(nil)
 	notifier2.RegisterSender(senderSettings, sender)
-	var eventsData moira.EventsData = []moira.EventData{event}
-	sender.EXPECT().SendEvents(eventsData, contact, trigger, false).Return(nil).Do(func(f ...interface{}) {
+	sender.EXPECT().SendEvents(gomock.Any(), contact, trigger, false).Return(nil).Do(func(f ...interface{}) {
 		logger.Debugf("SendEvents called. End test")
 		close(shutdown)
 	})
@@ -76,14 +75,6 @@ func initWorkers(notifier2 notifier.Notifier, logger moira.Logger, connector *re
 func run(worker moira.Worker, shutdown chan bool, wg *sync.WaitGroup) {
 	wg.Add(1)
 	go worker.Run(shutdown, wg)
-}
-
-var event = moira.EventData{
-	Metric:         "generate.event.1",
-	State:          "OK",
-	OldState:       "WARN",
-	TriggerID:      trigger.ID,
-	SubscriptionID: "subscriptionID-00000000000001",
 }
 
 var trigger = moira.TriggerData{

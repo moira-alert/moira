@@ -6,7 +6,6 @@ import (
 	"github.com/moira-alert/moira-alert/api/controller"
 	"github.com/moira-alert/moira-alert/api/dto"
 	"net/http"
-	"strconv"
 	"strings"
 )
 
@@ -48,22 +47,12 @@ func getTriggersPage(writer http.ResponseWriter, request *http.Request) {
 		}
 	}
 
-	page, err := strconv.ParseInt(request.URL.Query().Get("p"), 10, 64)
-	if err != nil {
-		page = 0
-	}
-	size, err := strconv.ParseInt(request.URL.Query().Get("size"), 10, 64)
-	if err != nil {
-		size = 10
-	}
+	page, size := getPageAndSize(request, 0, 10)
 
 	triggersList, errorResponse := controller.GetTriggerPage(database, page, size, onlyErrors, filterTags)
 	if errorResponse != nil {
 		logger.Error(errorResponse.Err)
-		if err := render.Render(writer, request, errorResponse); err != nil {
-			render.Render(writer, request, dto.ErrorRender(err))
-			return
-		}
+		render.Render(writer, request, errorResponse)
 		return
 	}
 

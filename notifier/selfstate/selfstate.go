@@ -103,6 +103,7 @@ func (selfCheck *SelfCheckWorker) check(nowTS int64, lastMetricReceivedTS, redis
 func (selfCheck *SelfCheckWorker) sendErrorMessages(message string, currentValue int64, errValue int64) {
 	var sendingWG sync.WaitGroup
 	for _, adminContact := range selfCheck.config.Contacts {
+		val := float64(currentValue)
 		pkg := notifier.NotificationPackage{
 			Contact: moira.ContactData{
 				Type:  adminContact["type"],
@@ -117,7 +118,7 @@ func (selfCheck *SelfCheckWorker) sendErrorMessages(message string, currentValue
 					Timestamp: time.Now().Unix(),
 					State:     "ERROR",
 					Metric:    message,
-					Value:     float64(currentValue),
+					Value:     &val,
 				},
 			},
 			DontResend: true,

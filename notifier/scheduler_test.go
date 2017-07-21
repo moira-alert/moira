@@ -27,12 +27,14 @@ func TestThrottling(t *testing.T) {
 		Value: "mail1@example.com",
 	}
 
+	subId := "SubscriptionID-000000000000001"
+
 	var event = moira.EventData{
 		Metric:         "generate.event.1",
 		State:          "OK",
 		OldState:       "WARN",
 		TriggerID:      trigger.ID,
-		SubscriptionID: "SubscriptionID-000000000000001",
+		SubscriptionID: &subId,
 	}
 
 	mockCtrl := gomock.NewController(t)
@@ -73,12 +75,13 @@ func TestThrottling(t *testing.T) {
 	})
 
 	Convey("Test event state is TEST and no send fails, should return now notification time", t, func() {
+		subId := "SubscriptionID-000000000000001"
 		testEvent := moira.EventData{
 			Metric:         "generate.event.1",
 			State:          "TEST",
 			OldState:       "WARN",
 			TriggerID:      trigger.ID,
-			SubscriptionID: "SubscriptionID-000000000000001",
+			SubscriptionID: &subId,
 		}
 
 		expected3 := expected
@@ -91,7 +94,7 @@ func TestThrottling(t *testing.T) {
 
 	Convey("Test no throttling and no subscription, should return now notification time", t, func() {
 		dataBase.EXPECT().GetTriggerThrottlingTimestamps(trigger.ID).Times(1).Return(time.Unix(0, 0), time.Unix(0, 0))
-		dataBase.EXPECT().GetSubscription(event.SubscriptionID).Times(1).Return(moira.SubscriptionData{}, fmt.Errorf("Error while read subscription"))
+		dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Times(1).Return(moira.SubscriptionData{}, fmt.Errorf("Error while read subscription"))
 
 		notification := scheduler.ScheduleNotification(now, event, trigger, contact, false, 0)
 		So(notification, ShouldResemble, &expected)
@@ -100,6 +103,7 @@ func TestThrottling(t *testing.T) {
 }
 
 func TestSubscriptionSchedule(t *testing.T) {
+	subId := "SubscriptionID-000000000000001"
 	var subscription = moira.SubscriptionData{
 		ID:                "SubscriptionID-000000000000001",
 		Enabled:           true,
@@ -113,7 +117,7 @@ func TestSubscriptionSchedule(t *testing.T) {
 		State:          "OK",
 		OldState:       "WARN",
 		TriggerID:      "triggerID-0000000000001",
-		SubscriptionID: "SubscriptionID-000000000000001",
+		SubscriptionID: &subId,
 	}
 
 	mockCtrl := gomock.NewController(t)
@@ -127,7 +131,7 @@ func TestSubscriptionSchedule(t *testing.T) {
 		Convey("When current time is allowed, should send notification now", func() {
 			subscription.Schedule = schedule1
 			dataBase.EXPECT().GetTriggerThrottlingTimestamps(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
-			dataBase.EXPECT().GetSubscription(event.SubscriptionID).Return(subscription, nil)
+			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 
 			next, throttled := scheduler.calculateNextDelivery(now, &event)
 			So(next, ShouldResemble, now)
@@ -138,7 +142,7 @@ func TestSubscriptionSchedule(t *testing.T) {
 		Convey("When allowed time is today, should send notification at the beginning of allowed interval", func() {
 			subscription.Schedule = schedule2
 			dataBase.EXPECT().GetTriggerThrottlingTimestamps(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
-			dataBase.EXPECT().GetSubscription(event.SubscriptionID).Return(subscription, nil)
+			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 
 			next, throttled := scheduler.calculateNextDelivery(now, &event)
 			So(next, ShouldResemble, time.Unix(1441191600, 0))
@@ -150,7 +154,7 @@ func TestSubscriptionSchedule(t *testing.T) {
 			now = time.Unix(1441101600, 0)
 			subscription.Schedule = schedule1
 			dataBase.EXPECT().GetTriggerThrottlingTimestamps(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
-			dataBase.EXPECT().GetSubscription(event.SubscriptionID).Return(subscription, nil)
+			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 
 			next, throttled := scheduler.calculateNextDelivery(now, &event)
 			So(next, ShouldResemble, time.Unix(1441134000, 0))
@@ -161,7 +165,7 @@ func TestSubscriptionSchedule(t *testing.T) {
 		Convey("Trigger already alarm fatigue, but now throttling disabled, should send notification now", func() {
 			subscription.Schedule = schedule1
 			dataBase.EXPECT().GetTriggerThrottlingTimestamps(event.TriggerID).Return(time.Unix(1441187215, 0), time.Unix(0, 0))
-			dataBase.EXPECT().GetSubscription(event.SubscriptionID).Return(subscription, nil)
+			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 
 			next, throttled := scheduler.calculateNextDelivery(now, &event)
 			So(next, ShouldResemble, now)
@@ -176,7 +180,7 @@ func TestSubscriptionSchedule(t *testing.T) {
 
 		Convey("Has trigger events count slightly less than low throttling level, should next timestamp now minutes, but throttling", func() {
 			dataBase.EXPECT().GetTriggerThrottlingTimestamps(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
-			dataBase.EXPECT().GetSubscription(event.SubscriptionID).Return(subscription, nil)
+			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 			dataBase.EXPECT().GetTriggerEventsCount(event.TriggerID, now.Add(-time.Hour*3).Unix()).Return(int64(13))
 			dataBase.EXPECT().GetTriggerEventsCount(event.TriggerID, now.Add(-time.Hour).Unix()).Return(int64(9))
 
@@ -188,7 +192,7 @@ func TestSubscriptionSchedule(t *testing.T) {
 
 		Convey("Has trigger events count event more than low throttling level, should next timestamp in 30 minutes", func() {
 			dataBase.EXPECT().GetTriggerThrottlingTimestamps(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
-			dataBase.EXPECT().GetSubscription(event.SubscriptionID).Return(subscription, nil)
+			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 			dataBase.EXPECT().GetTriggerEventsCount(event.TriggerID, now.Add(-time.Hour*3).Unix()).Return(int64(10))
 			dataBase.EXPECT().GetTriggerEventsCount(event.TriggerID, now.Add(-time.Hour).Unix()).Return(int64(10))
 			dataBase.EXPECT().SetTriggerThrottlingTimestamp(event.TriggerID, now.Add(time.Hour/2)).Return(nil)
@@ -201,7 +205,7 @@ func TestSubscriptionSchedule(t *testing.T) {
 
 		Convey("Has trigger event more than high throttling level, should next timestamp in 1 hour", func() {
 			dataBase.EXPECT().GetTriggerThrottlingTimestamps(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
-			dataBase.EXPECT().GetSubscription(event.SubscriptionID).Return(subscription, nil)
+			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 			dataBase.EXPECT().GetTriggerEventsCount(event.TriggerID, now.Add(-time.Hour*3).Unix()).Return(int64(20))
 			dataBase.EXPECT().SetTriggerThrottlingTimestamp(event.TriggerID, now.Add(time.Hour)).Return(nil)
 
@@ -213,7 +217,7 @@ func TestSubscriptionSchedule(t *testing.T) {
 
 		Convey("Trigger already alarm fatigue, should has old throttled value", func() {
 			dataBase.EXPECT().GetTriggerThrottlingTimestamps(event.TriggerID).Return(time.Unix(1441148000, 0), time.Unix(0, 0))
-			dataBase.EXPECT().GetSubscription(event.SubscriptionID).Return(subscription, nil)
+			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 
 			next, throttled := scheduler.calculateNextDelivery(now, &event)
 			So(next, ShouldResemble, time.Unix(1441148000, 0))

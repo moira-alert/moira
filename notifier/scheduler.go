@@ -82,9 +82,9 @@ func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *
 		next = now
 	}
 
-	subscription, err := scheduler.database.GetSubscription(event.SubscriptionID)
+	subscription, err := scheduler.database.GetSubscription(moira.UseString(event.SubscriptionID))
 	if err != nil {
-		scheduler.logger.Debugf("Failed get subscription by id: %s. %s", event.SubscriptionID, err.Error())
+		scheduler.logger.Debugf("Failed get subscription by id: %s. %s", moira.UseString(event.SubscriptionID), err.Error())
 		return next, alarmFatigue
 	}
 
@@ -116,7 +116,7 @@ func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *
 	}
 	next, err = calculateNextDelivery(&subscription.Schedule, next)
 	if err != nil {
-		scheduler.logger.Errorf("Failed to aply schedule for subscriptionID: %s. %s.", event.SubscriptionID, err)
+		scheduler.logger.Errorf("Failed to aply schedule for subscriptionID: %s. %s.", moira.UseString(event.SubscriptionID), err)
 	}
 	return next, alarmFatigue
 }

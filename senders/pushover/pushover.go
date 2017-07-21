@@ -50,10 +50,10 @@ func (sender *Sender) SendEvents(events moira.EventsData, contact moira.ContactD
 		if priority != pushover.PriorityEmergency && (event.State == "WARN" || event.State == "NODATA") {
 			priority = pushover.PriorityHigh
 		}
-		value := strconv.FormatFloat(event.Value, 'f', -1, 64)
+		value := strconv.FormatFloat(moira.UseFloat64(event.Value), 'f', -1, 64)
 		message.WriteString(fmt.Sprintf("%s: %s = %s (%s to %s)", time.Unix(event.Timestamp, 0).Format("15:04"), event.Metric, value, event.OldState, event.State))
-		if len(event.Message) > 0 {
-			message.WriteString(fmt.Sprintf(". %s\n", event.Message))
+		if len(moira.UseString(event.Message)) > 0 {
+			message.WriteString(fmt.Sprintf(". %s\n", moira.UseString(event.Message)))
 		} else {
 			message.WriteString("\n")
 		}

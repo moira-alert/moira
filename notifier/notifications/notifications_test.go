@@ -14,9 +14,13 @@ import (
 )
 
 func TestProcessScheduledEvent(t *testing.T) {
+	subId2 := "subscriptionID-00000000000002"
+	subId5 := "subscriptionID-00000000000005"
+	subId7 := "subscriptionID-00000000000007"
+
 	notification1 := moira.ScheduledNotification{
 		Event: moira.EventData{
-			SubscriptionID: "subscriptionID-00000000000005",
+			SubscriptionID: &subId5,
 			State:          "TEST",
 		},
 		Contact:   contact1,
@@ -25,7 +29,7 @@ func TestProcessScheduledEvent(t *testing.T) {
 	}
 	notification2 := moira.ScheduledNotification{
 		Event: moira.EventData{
-			SubscriptionID: "subscriptionID-00000000000007",
+			SubscriptionID: &subId7,
 			State:          "TEST",
 			TriggerID:      "triggerID-00000000000001",
 		},
@@ -36,7 +40,7 @@ func TestProcessScheduledEvent(t *testing.T) {
 	}
 	notification3 := moira.ScheduledNotification{
 		Event: moira.EventData{
-			SubscriptionID: "subscriptionID-00000000000002",
+			SubscriptionID: &subId2,
 			State:          "TEST",
 			TriggerID:      "triggerID-00000000000001",
 		},
@@ -111,9 +115,11 @@ func TestProcessScheduledEvent(t *testing.T) {
 }
 
 func TestGoRoutine(t *testing.T) {
+	subId5 := "subscriptionID-00000000000005"
+
 	notification1 := moira.ScheduledNotification{
 		Event: moira.EventData{
-			SubscriptionID: "subscriptionID-00000000000005",
+			SubscriptionID: &subId5,
 			State:          "TEST",
 		},
 		Contact:   contact1,

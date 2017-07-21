@@ -56,7 +56,7 @@ func generateTestEvents(n int, subscriptionID string) chan *moira.EventData {
 		for i := 0; i < n; i++ {
 			event := &moira.EventData{
 				Metric:         fmt.Sprintf("Metric number #%d", i),
-				SubscriptionID: subscriptionID,
+				SubscriptionID: &subscriptionID,
 				State:          "TEST",
 			}
 

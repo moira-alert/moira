@@ -27,9 +27,9 @@ func TestEvent(t *testing.T) {
 	Convey("When event is TEST and subscription is disabled, should add new notification", t, func() {
 		event := moira.EventData{
 			State:          "TEST",
-			SubscriptionID: subscription.ID,
+			SubscriptionID: &subscription.ID,
 		}
-		dataBase.EXPECT().GetSubscription(event.SubscriptionID).Times(1).Return(subscription, nil)
+		dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Times(1).Return(subscription, nil)
 		dataBase.EXPECT().GetContact(contact.ID).Times(1).Return(contact, nil)
 		notification := moira.ScheduledNotification{
 			Event: moira.EventData{
@@ -95,7 +95,7 @@ func TestDisabledNotification(t *testing.T) {
 		tags := append(trigger.Tags, event.GetEventTags()...)
 		dataBase.EXPECT().GetTagsSubscriptions(tags).Times(1).Return([]moira.SubscriptionData{disabledSubscription}, nil)
 
-		logger.EXPECT().Debugf("Processing trigger id %s for metric %s == %f, %s -> %s", event.TriggerID, event.Metric, event.Value, event.OldState, event.State)
+		logger.EXPECT().Debugf("Processing trigger id %s for metric %s == %f, %s -> %s", event.TriggerID, event.Metric, moira.UseFloat64(event.Value), event.OldState, event.State)
 		logger.EXPECT().Debugf("Getting subscriptions for tags %v", tags)
 		logger.EXPECT().Debugf("Subscription %s is disabled", disabledSubscription.ID)
 
@@ -124,7 +124,7 @@ func TestExtraTags(t *testing.T) {
 		tags := append(trigger.Tags, event.GetEventTags()...)
 		dataBase.EXPECT().GetTagsSubscriptions(tags).Times(1).Return([]moira.SubscriptionData{multipleTagsSubscription}, nil)
 
-		logger.EXPECT().Debugf("Processing trigger id %s for metric %s == %f, %s -> %s", event.TriggerID, event.Metric, event.Value, event.OldState, event.State)
+		logger.EXPECT().Debugf("Processing trigger id %s for metric %s == %f, %s -> %s", event.TriggerID, event.Metric, moira.UseFloat64(event.Value), event.OldState, event.State)
 		logger.EXPECT().Debugf("Getting subscriptions for tags %v", tags)
 		logger.EXPECT().Debugf("Subscription %s has extra tags", multipleTagsSubscription.ID)
 
@@ -148,7 +148,7 @@ func TestAddNotification(t *testing.T) {
 			State:          "OK",
 			OldState:       "WARN",
 			TriggerID:      trigger.ID,
-			SubscriptionID: subscription.ID,
+			SubscriptionID: &subscription.ID,
 		}
 		emptyNotification := moira.ScheduledNotification{}
 
@@ -180,10 +180,10 @@ func TestAddOneNotificationByTwoSubscriptionsWithSame(t *testing.T) {
 			State:          "OK",
 			OldState:       "WARN",
 			TriggerID:      trigger.ID,
-			SubscriptionID: subscription.ID,
+			SubscriptionID: &subscription.ID,
 		}
 		event2 := event
-		event2.SubscriptionID = subscription4.ID
+		event2.SubscriptionID = &subscription4.ID
 
 		notification2 := moira.ScheduledNotification{}
 
@@ -225,7 +225,7 @@ func TestFailReadContact(t *testing.T) {
 		getContactError := fmt.Errorf("Can not get contact")
 		dataBase.EXPECT().GetContact(contact.ID).Times(1).Return(moira.ContactData{}, getContactError)
 
-		logger.EXPECT().Debugf("Processing trigger id %s for metric %s == %f, %s -> %s", event.TriggerID, event.Metric, event.Value, event.OldState, event.State)
+		logger.EXPECT().Debugf("Processing trigger id %s for metric %s == %f, %s -> %s", event.TriggerID, event.Metric, moira.UseFloat64(event.Value), event.OldState, event.State)
 		logger.EXPECT().Debugf("Getting subscriptions for tags %v", tags)
 		logger.EXPECT().Debugf("Processing contact ids %v for subscription %s", subscription.Contacts, subscription.ID)
 		logger.EXPECT().Warning(getContactError.Error())
@@ -249,7 +249,7 @@ func TestGoRoutine(t *testing.T) {
 			State:          "OK",
 			OldState:       "WARN",
 			TriggerID:      trigger.ID,
-			SubscriptionID: subscription.ID,
+			SubscriptionID: &subscription.ID,
 		}
 		emptyNotification := moira.ScheduledNotification{}
 

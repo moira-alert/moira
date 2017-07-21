@@ -11,14 +11,14 @@ var (
 
 // EventData represents trigger state changes event
 type EventData struct {
-	Timestamp      int64   `json:"timestamp"`
-	Metric         string  `json:"metric"`
-	Value          float64 `json:"value"`
-	State          string  `json:"state"`
-	TriggerID      string  `json:"trigger_id"`
-	SubscriptionID string  `json:"sub_id"`
-	OldState       string  `json:"old_state"`
-	Message        string  `json:"msg"`
+	Timestamp      int64    `json:"timestamp"`
+	Metric         string   `json:"metric"`
+	Value          *float64 `json:"value,omitempty"`
+	State          string   `json:"state"`
+	TriggerID      string   `json:"trigger_id"`
+	SubscriptionID *string  `json:"sub_id,omitempty"`
+	OldState       string   `json:"old_state"`
+	Message        *string  `json:"msg,omitempty"`
 }
 
 // EventsData represents slice of EventData
@@ -115,7 +115,7 @@ func (notification *ScheduledNotification) GetKey() string {
 		notification.Event.Metric,
 		notification.Event.State,
 		notification.Event.Timestamp,
-		notification.Event.Value,
+		UseFloat64(notification.Event.Value),
 		notification.SendFail,
 		notification.Throttled,
 		notification.Timestamp,

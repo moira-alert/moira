@@ -38,6 +38,9 @@ type Database interface {
 	GetFilteredTriggersIds([]string, bool) ([]string, int64, error)
 	GetTrigger(string) (*Trigger, error)
 	GetTriggersChecks([]string) ([]TriggerChecks, error)
+	GetTriggerLastCheck(string) (*CheckData, error)
+
+	GetEvents(string, int64, int64) ([]*EventData, error)
 }
 
 // Logger implements logger abstraction

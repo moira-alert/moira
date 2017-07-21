@@ -96,6 +96,19 @@ func (_mr *MockDatabaseMockRecorder) GetContacts() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetContacts")
 }
 
+// GetEvents mocks base method
+func (_m *MockDatabase) GetEvents(_param0 string, _param1 int64, _param2 int64) ([]*moira_alert.EventData, error) {
+	ret := _m.ctrl.Call(_m, "GetEvents", _param0, _param1, _param2)
+	ret0, _ := ret[0].([]*moira_alert.EventData)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetEvents indicates an expected call of GetEvents
+func (_mr *MockDatabaseMockRecorder) GetEvents(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetEvents", arg0, arg1, arg2)
+}
+
 // GetFilteredTriggersIds mocks base method
 func (_m *MockDatabase) GetFilteredTriggersIds(_param0 []string, _param1 bool) ([]string, int64, error) {
 	ret := _m.ctrl.Call(_m, "GetFilteredTriggersIds", _param0, _param1)
@@ -264,6 +277,19 @@ func (_m *MockDatabase) GetTriggerIds() ([]string, int64, error) {
 // GetTriggerIds indicates an expected call of GetTriggerIds
 func (_mr *MockDatabaseMockRecorder) GetTriggerIds() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetTriggerIds")
+}
+
+// GetTriggerLastCheck mocks base method
+func (_m *MockDatabase) GetTriggerLastCheck(_param0 string) (*moira_alert.CheckData, error) {
+	ret := _m.ctrl.Call(_m, "GetTriggerLastCheck", _param0)
+	ret0, _ := ret[0].(*moira_alert.CheckData)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTriggerLastCheck indicates an expected call of GetTriggerLastCheck
+func (_mr *MockDatabaseMockRecorder) GetTriggerLastCheck(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetTriggerLastCheck", arg0)
 }
 
 // GetTriggerTags mocks base method

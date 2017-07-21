@@ -30,8 +30,9 @@ type CheckData struct {
 }
 
 type MetricData struct {
-	EventTimestamp int64  `json:"event_timestamp"`
-	State          string `json:"state"`
-	Suppressed     bool   `json:"suppressed"`
-	Timestamp      int64  `json:"timestamp"`
+	EventTimestamp int64   `json:"event_timestamp"`
+	State          string  `json:"state"`
+	Suppressed     bool    `json:"suppressed"`
+	Timestamp      int64   `json:"timestamp"`
+	Value          float64 `json:"value"`
 }

@@ -171,24 +171,6 @@ func (connector *DbConnector) GetTriggerIds() ([]string, int64, error) {
 	return triggerIds, int64(total), nil
 }
 
-type TriggerChecksDataStorageElement struct {
-	ID              string             `json:"id"`
-	Name            string             `json:"name"`
-	Desc            string             `json:"desc"`
-	Targets         []string           `json:"targets"`
-	WarnValue       float64            `json:"warn_value"`
-	ErrorValue      float64            `json:"error_value"`
-	Tags            []string           `json:"tags"`
-	TtlState        string             `json:"ttl_state"`
-	Schedule        moira.ScheduleData `json:"sched"`
-	Expression      string             `json:"expression"`
-	Patterns        []string           `json:"patterns"`
-	IsSimpleTrigger bool               `json:"is_simple_trigger"`
-	Ttl             string             `json:"ttl"`
-	Throttling      int64              `json:"throttling"`
-	LastCheck       moira.CheckData    `json:"last_check"`
-}
-
 func (connector *DbConnector) GetTriggersChecks(triggerIds []string) ([]moira.TriggerChecks, error) {
 	c := connector.pool.Get()
 	defer c.Close()
@@ -236,13 +218,13 @@ func (connector *DbConnector) GetTriggersChecks(triggerIds []string) ([]moira.Tr
 
 		lastCheckBytes, err := redis.Bytes(slice[3], nil)
 		if err != nil {
-			connector.logger.Errorf("Error getting moira-metric-last-check, id: %s, error: %s", triggerId, err.Error())
+			connector.logger.Errorf("Error getting metric-last-check, id: %s, error: %s", triggerId, err.Error())
 		}
 
-		var lastCheck = &moira.CheckData{}
+		var lastCheck = moira.CheckData{}
 		err = json.Unmarshal(lastCheckBytes, &lastCheck)
 		if err != nil {
-			connector.logger.Errorf("Failed to parse lastCheck json %s: %s", triggerBytes, err.Error())
+			connector.logger.Errorf("Failed to parse lastCheck json %s: %s", lastCheckBytes, err.Error())
 		}
 
 		throttling, err := redis.Int64(slice[4], nil)
@@ -251,7 +233,7 @@ func (connector *DbConnector) GetTriggersChecks(triggerIds []string) ([]moira.Tr
 		}
 
 		trigger.ID = triggerId.(string)
-		trigger.LastCheck = *lastCheck
+		trigger.LastCheck = lastCheck
 		if throttling > time.Now().Unix() {
 			trigger.Throttling = throttling
 		}
@@ -282,7 +264,7 @@ func (connector *DbConnector) GetTags(tagNames []string) (map[string]moira.TagDa
 	for i, tagBytes := range rawResponse {
 		var tag moira.TagData
 		if err := json.Unmarshal(tagBytes, &tag); err != nil {
-			connector.logger.Infof("Failed to parse tag json %s: %s", tagBytes, err.Error())
+			connector.logger.Warningf("Failed to parse tag json %s: %s", tagBytes, err.Error())
 			allTags[tagNames[i]] = moira.TagData{}
 			continue
 		}
@@ -324,6 +306,72 @@ func (connector *DbConnector) GetTrigger(triggerId string) (*moira.Trigger, erro
 		trigger.Tags = triggerTags
 	}
 	return toTrigger(trigger), nil
+}
+
+func (connector *DbConnector) GetTriggerLastCheck(triggerId string) (*moira.CheckData, error) {
+	c := connector.pool.Get()
+	defer c.Close()
+
+	lastCheckBytes, err := redis.Bytes(c.Do("GET", fmt.Sprintf("moira-metric-last-check:%s", triggerId)))
+	if err != nil {
+		if err == redis.ErrNil {
+			return nil, nil
+		}
+
+		return nil, fmt.Errorf("Error getting metric-last-check, id: %s, error: %s", triggerId, err.Error())
+	}
+
+	var lastCheck = moira.CheckData{}
+	err = json.Unmarshal(lastCheckBytes, &lastCheck)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to parse lastCheck json %s: %s", lastCheckBytes, err.Error())
+	}
+
+	return &lastCheck, nil
+}
+
+func (connector *DbConnector) GetEvents(triggerId string, start int64, size int64) ([]*moira.EventData, error) {
+	c := connector.pool.Get()
+	defer c.Close()
+
+	eventsDataString, err := redis.Strings(c.Do("ZREVRANGE", fmt.Sprintf("moira-trigger-events:%s", triggerId), start, start+size))
+	if err != nil {
+		if err == redis.ErrNil {
+			return make([]*moira.EventData, 0), nil
+		}
+		return nil, fmt.Errorf("Failed to get range for moira-trigger-events, triggerId: %s, error: %s", triggerId, err.Error())
+	}
+
+	eventDatas := make([]*moira.EventData, 0, len(eventsDataString))
+
+	for _, eventDataString := range eventsDataString {
+		eventData := &moira.EventData{}
+		if err := json.Unmarshal([]byte(eventDataString), eventData); err != nil {
+			connector.logger.Warningf("Failed to parse scheduled json notification %s: %s", eventDataString, err.Error())
+			continue
+		}
+		eventDatas = append(eventDatas, eventData)
+	}
+
+	return eventDatas, nil
+}
+
+type TriggerChecksDataStorageElement struct {
+	ID              string             `json:"id"`
+	Name            string             `json:"name"`
+	Desc            string             `json:"desc"`
+	Targets         []string           `json:"targets"`
+	WarnValue       float64            `json:"warn_value"`
+	ErrorValue      float64            `json:"error_value"`
+	Tags            []string           `json:"tags"`
+	TtlState        string             `json:"ttl_state"`
+	Schedule        moira.ScheduleData `json:"sched"`
+	Expression      string             `json:"expression"`
+	Patterns        []string           `json:"patterns"`
+	IsSimpleTrigger bool               `json:"is_simple_trigger"`
+	Ttl             string             `json:"ttl"`
+	Throttling      int64              `json:"throttling"`
+	LastCheck       moira.CheckData    `json:"last_check"`
 }
 
 func toTriggerCheckData(storageElement *TriggerChecksDataStorageElement) *moira.TriggerChecks {
