@@ -66,7 +66,7 @@ func TestNoSubscription(t *testing.T) {
 			TriggerID: trigger.ID,
 		}
 
-		dataBase.EXPECT().GetTrigger(event.TriggerID).Times(1).Return(trigger, nil)
+		dataBase.EXPECT().GetNotificationTrigger(event.TriggerID).Times(1).Return(trigger, nil)
 		dataBase.EXPECT().GetTriggerTags(event.TriggerID).Times(1).Return(trigger.Tags, nil)
 		dataBase.EXPECT().GetTagsSubscriptions(append(trigger.Tags, event.GetEventTags()...)).Times(1).Return(make([]moira.SubscriptionData, 0), nil)
 
@@ -90,7 +90,7 @@ func TestDisabledNotification(t *testing.T) {
 			TriggerID: trigger.ID,
 		}
 
-		dataBase.EXPECT().GetTrigger(event.TriggerID).Times(1).Return(trigger, nil)
+		dataBase.EXPECT().GetNotificationTrigger(event.TriggerID).Times(1).Return(trigger, nil)
 		dataBase.EXPECT().GetTriggerTags(event.TriggerID).Times(1).Return(trigger.Tags, nil)
 		tags := append(trigger.Tags, event.GetEventTags()...)
 		dataBase.EXPECT().GetTagsSubscriptions(tags).Times(1).Return([]moira.SubscriptionData{disabledSubscription}, nil)
@@ -119,7 +119,7 @@ func TestExtraTags(t *testing.T) {
 			TriggerID: trigger.ID,
 		}
 
-		dataBase.EXPECT().GetTrigger(event.TriggerID).Times(1).Return(trigger, nil)
+		dataBase.EXPECT().GetNotificationTrigger(event.TriggerID).Times(1).Return(trigger, nil)
 		dataBase.EXPECT().GetTriggerTags(event.TriggerID).Times(1).Return(trigger.Tags, nil)
 		tags := append(trigger.Tags, event.GetEventTags()...)
 		dataBase.EXPECT().GetTagsSubscriptions(tags).Times(1).Return([]moira.SubscriptionData{multipleTagsSubscription}, nil)
@@ -152,7 +152,7 @@ func TestAddNotification(t *testing.T) {
 		}
 		emptyNotification := moira.ScheduledNotification{}
 
-		dataBase.EXPECT().GetTrigger(event.TriggerID).Times(1).Return(trigger, nil)
+		dataBase.EXPECT().GetNotificationTrigger(event.TriggerID).Times(1).Return(trigger, nil)
 		dataBase.EXPECT().GetTriggerTags(event.TriggerID).Times(1).Return(trigger.Tags, nil)
 		tags := append(trigger.Tags, event.GetEventTags()...)
 		dataBase.EXPECT().GetTagsSubscriptions(tags).Times(1).Return([]moira.SubscriptionData{subscription}, nil)
@@ -187,7 +187,7 @@ func TestAddOneNotificationByTwoSubscriptionsWithSame(t *testing.T) {
 
 		notification2 := moira.ScheduledNotification{}
 
-		dataBase.EXPECT().GetTrigger(event.TriggerID).Times(1).Return(trigger, nil)
+		dataBase.EXPECT().GetNotificationTrigger(event.TriggerID).Times(1).Return(trigger, nil)
 		dataBase.EXPECT().GetTriggerTags(event.TriggerID).Times(1).Return(trigger.Tags, nil)
 		tags := append(trigger.Tags, event.GetEventTags()...)
 		dataBase.EXPECT().GetTagsSubscriptions(tags).Times(1).Return([]moira.SubscriptionData{subscription, subscription4}, nil)
@@ -218,7 +218,7 @@ func TestFailReadContact(t *testing.T) {
 			TriggerID: trigger.ID,
 		}
 
-		dataBase.EXPECT().GetTrigger(event.TriggerID).Times(1).Return(trigger, nil)
+		dataBase.EXPECT().GetNotificationTrigger(event.TriggerID).Times(1).Return(trigger, nil)
 		dataBase.EXPECT().GetTriggerTags(event.TriggerID).Times(1).Return(trigger.Tags, nil)
 		tags := append(trigger.Tags, event.GetEventTags()...)
 		dataBase.EXPECT().GetTagsSubscriptions(tags).Times(1).Return([]moira.SubscriptionData{subscription}, nil)
@@ -255,7 +255,7 @@ func TestGoRoutine(t *testing.T) {
 
 		dataBase.EXPECT().FetchEvent().Return(&event, nil)
 		dataBase.EXPECT().FetchEvent().AnyTimes().Return(nil, nil)
-		dataBase.EXPECT().GetTrigger(event.TriggerID).Times(1).Return(trigger, nil)
+		dataBase.EXPECT().GetNotificationTrigger(event.TriggerID).Times(1).Return(trigger, nil)
 		dataBase.EXPECT().GetTriggerTags(event.TriggerID).Times(1).Return(trigger.Tags, nil)
 		tags := append(trigger.Tags, event.GetEventTags()...)
 		dataBase.EXPECT().GetTagsSubscriptions(tags).Times(1).Return([]moira.SubscriptionData{subscription}, nil)

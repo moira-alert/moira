@@ -67,7 +67,7 @@ func (worker *FetchEventsWorker) processEvent(event moira.EventData) error {
 	if event.State != "TEST" {
 		worker.logger.Debugf("Processing trigger id %s for metric %s == %f, %s -> %s", event.TriggerID, event.Metric, event.Value, event.OldState, event.State)
 
-		trigger, err = worker.database.GetTrigger(event.TriggerID)
+		trigger, err = worker.database.GetNotificationTrigger(event.TriggerID)
 		if err != nil {
 			return err
 		}

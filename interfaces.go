@@ -8,7 +8,7 @@ import (
 // Database implements DB functionality
 type Database interface {
 	FetchEvent() (*EventData, error)
-	GetTrigger(id string) (TriggerData, error)
+	GetNotificationTrigger(id string) (TriggerData, error)
 	GetTriggerTags(id string) ([]string, error)
 	GetTagsSubscriptions(tags []string) ([]SubscriptionData, error)
 	GetSubscription(id string) (SubscriptionData, error)
@@ -36,7 +36,8 @@ type Database interface {
 
 	GetTriggerIds() ([]string, int64, error)
 	GetFilteredTriggersIds([]string, bool) ([]string, int64, error)
-	GetTriggersChecks([]string) ([]TriggerChecksData, error)
+	GetTrigger(string) (*Trigger, error)
+	GetTriggersChecks([]string) ([]TriggerChecks, error)
 }
 
 // Logger implements logger abstraction

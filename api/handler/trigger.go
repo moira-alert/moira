@@ -2,6 +2,9 @@ package handler
 
 import (
 	"github.com/go-chi/chi"
+	"github.com/go-chi/render"
+	"github.com/moira-alert/moira-alert/api/controller"
+	"github.com/moira-alert/moira-alert/api/dto"
 	"net/http"
 )
 
@@ -20,7 +23,20 @@ func trigger(router chi.Router) {
 }
 
 func getTrigger(writer http.ResponseWriter, request *http.Request) {
-	//дать триггер
+	if triggerId := chi.URLParam(request, "triggerId"); triggerId != "" {
+		trigger, err := controller.GetTrigger(database, triggerId)
+		if err != nil {
+			render.Render(writer, request, err)
+			return
+		}
+		if err := render.Render(writer, request, trigger); err != nil {
+			render.Render(writer, request, dto.ErrorRender(err))
+		}
+		return
+	} else {
+		render.Render(writer, request, dto.ErrorNotFound)
+		return
+	}
 }
 
 func getTriggerState(writer http.ResponseWriter, request *http.Request) {

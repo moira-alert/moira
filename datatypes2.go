@@ -1,15 +1,25 @@
 package moira
 
-type TriggerChecksData struct {
-	TriggerData
-	Ttl             int64        `json:"ttl"`
+type Trigger struct {
+	ID              string       `json:"id"`
+	Name            string       `json:"name"`
+	Desc            string       `json:"desc"`
+	Targets         []string     `json:"targets"`
+	WarnValue       float64      `json:"warn_value"`
+	ErrorValue      float64      `json:"error_value"`
+	Tags            []string     `json:"tags"`
 	TtlState        string       `json:"ttl_state"`
-	Throttling      int64        `json:"throttling"`
-	IsSimpleTrigger bool         `json:"is_simple_trigger"`
-	LastCheck       CheckData    `json:"last_check"`
-	Patterns        []string     `json:"patterns"`
+	Ttl             int64        `json:"ttl"`
 	Schedule        ScheduleData `json:"sched"`
-	TagsData        []string     `json:"tags"`
+	Expression      string       `json:"expression"`
+	Patterns        []string     `json:"patterns"`
+	IsSimpleTrigger bool         `json:"is_simple_trigger"`
+}
+
+type TriggerChecks struct {
+	Trigger
+	Throttling int64     `json:"throttling"`
+	LastCheck  CheckData `json:"last_check"`
 }
 
 type CheckData struct {

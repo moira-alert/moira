@@ -50,8 +50,8 @@ func (connector *DbConnector) FetchEvent() (*moira.EventData, error) {
 	return nil, nil
 }
 
-// GetTrigger returns trigger data
-func (connector *DbConnector) GetTrigger(id string) (moira.TriggerData, error) {
+// GetNotificationTrigger returns trigger data
+func (connector *DbConnector) GetNotificationTrigger(id string) (moira.TriggerData, error) {
 	c := connector.pool.Get()
 	defer c.Close()
 

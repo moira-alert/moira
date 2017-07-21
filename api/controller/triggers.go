@@ -6,7 +6,7 @@ import (
 )
 
 func GetTriggerPage(database moira.Database, page int64, size int64, onlyErrors bool, filterTags []string) (*dto.TriggersList, *dto.ErrorResponse) {
-	var triggersChecks []moira.TriggerChecksData
+	var triggersChecks []moira.TriggerChecks
 	var total int64
 	var err error
 
@@ -28,7 +28,7 @@ func GetTriggerPage(database moira.Database, page int64, size int64, onlyErrors 
 	return &triggersList, nil
 }
 
-func getNotFilteredTriggers(database moira.Database, page int64, size int64) ([]moira.TriggerChecksData, int64, error) {
+func getNotFilteredTriggers(database moira.Database, page int64, size int64) ([]moira.TriggerChecks, int64, error) {
 	triggerIds, total, err := database.GetTriggerIds()
 	if err != nil {
 		return nil, 0, err
@@ -41,7 +41,7 @@ func getNotFilteredTriggers(database moira.Database, page int64, size int64) ([]
 	return triggersChecks, total, nil
 }
 
-func getFilteredTriggers(database moira.Database, page int64, size int64, onlyErrors bool, filterTags []string) ([]moira.TriggerChecksData, int64, error) {
+func getFilteredTriggers(database moira.Database, page int64, size int64, onlyErrors bool, filterTags []string) ([]moira.TriggerChecks, int64, error) {
 	triggerIds, total, err := database.GetFilteredTriggersIds(filterTags, onlyErrors)
 	if err != nil {
 		return nil, 0, err

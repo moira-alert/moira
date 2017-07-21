@@ -21,10 +21,7 @@ func getAllTags(writer http.ResponseWriter, request *http.Request) {
 	tagData, err := controller.GetAllTags(database)
 	if err != nil {
 		logger.Error(err.Err)
-		if err := render.Render(writer, request, err); err != nil {
-			render.Render(writer, request, dto.ErrorRender(err))
-			return
-		}
+		render.Render(writer, request, err)
 		return
 	}
 

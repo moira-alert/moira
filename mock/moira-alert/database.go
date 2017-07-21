@@ -123,6 +123,19 @@ func (_mr *MockDatabaseMockRecorder) GetMetricsCount() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetMetricsCount")
 }
 
+// GetNotificationTrigger mocks base method
+func (_m *MockDatabase) GetNotificationTrigger(_param0 string) (moira_alert.TriggerData, error) {
+	ret := _m.ctrl.Call(_m, "GetNotificationTrigger", _param0)
+	ret0, _ := ret[0].(moira_alert.TriggerData)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetNotificationTrigger indicates an expected call of GetNotificationTrigger
+func (_mr *MockDatabaseMockRecorder) GetNotificationTrigger(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetNotificationTrigger", arg0)
+}
+
 // GetNotifications mocks base method
 func (_m *MockDatabase) GetNotifications(_param0 int64) ([]*moira_alert.ScheduledNotification, error) {
 	ret := _m.ctrl.Call(_m, "GetNotifications", _param0)
@@ -215,9 +228,9 @@ func (_mr *MockDatabaseMockRecorder) GetTagsSubscriptions(arg0 interface{}) *gom
 }
 
 // GetTrigger mocks base method
-func (_m *MockDatabase) GetTrigger(_param0 string) (moira_alert.TriggerData, error) {
+func (_m *MockDatabase) GetTrigger(_param0 string) (*moira_alert.Trigger, error) {
 	ret := _m.ctrl.Call(_m, "GetTrigger", _param0)
-	ret0, _ := ret[0].(moira_alert.TriggerData)
+	ret0, _ := ret[0].(*moira_alert.Trigger)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -280,9 +293,9 @@ func (_mr *MockDatabaseMockRecorder) GetTriggerThrottlingTimestamps(arg0 interfa
 }
 
 // GetTriggersChecks mocks base method
-func (_m *MockDatabase) GetTriggersChecks(_param0 []string) ([]moira_alert.TriggerChecksData, error) {
+func (_m *MockDatabase) GetTriggersChecks(_param0 []string) ([]moira_alert.TriggerChecks, error) {
 	ret := _m.ctrl.Call(_m, "GetTriggersChecks", _param0)
-	ret0, _ := ret[0].([]moira_alert.TriggerChecksData)
+	ret0, _ := ret[0].([]moira_alert.TriggerChecks)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
