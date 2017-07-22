@@ -128,19 +128,28 @@ func (connector *DbConnector) GetSubscription(id string) (moira.SubscriptionData
 	c := connector.pool.Get()
 	defer c.Close()
 
-	sub := moira.SubscriptionData{
-		ThrottlingEnabled: true,
-	}
 	subscriptionString, err := redis.Bytes(c.Do("GET", fmt.Sprintf("moira-subscription:%s", id)))
 	if err != nil {
 		connector.metrics.SubsMalformed.Mark(1)
-		return sub, fmt.Errorf("Failed to get subscription data for id %s: %s", id, err.Error())
+		return moira.SubscriptionData{ThrottlingEnabled: true}, fmt.Errorf("Failed to get subscription data for id %s: %s", id, err.Error())
 	}
-	if err := json.Unmarshal(subscriptionString, &sub); err != nil {
+
+	sub, err := connector.convertSubscription(subscriptionString)
+	if err != nil {
 		connector.metrics.SubsMalformed.Mark(1)
-		return sub, fmt.Errorf("Failed to parse subscription json %s: %s", subscriptionString, err.Error())
+		return sub, err
 	}
 	sub.ID = id
+	return sub, nil
+}
+
+func (*DbConnector) convertSubscription(subscriptionBytes []byte) (moira.SubscriptionData, error) {
+	sub := moira.SubscriptionData{
+		ThrottlingEnabled: true,
+	}
+	if err := json.Unmarshal(subscriptionBytes, &sub); err != nil {
+		return sub, fmt.Errorf("Failed to parse subscription json %s: %s", subscriptionBytes, err.Error())
+	}
 	return sub, nil
 }
 

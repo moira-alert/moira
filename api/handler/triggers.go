@@ -52,7 +52,6 @@ func getTriggersPage(writer http.ResponseWriter, request *http.Request) {
 
 	triggersList, errorResponse := controller.GetTriggerPage(database, page, size, onlyErrors, filterTags)
 	if errorResponse != nil {
-		logger.Error(errorResponse.Err)
 		render.Render(writer, request, errorResponse)
 		return
 	}

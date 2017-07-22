@@ -16,8 +16,8 @@ func NewHandler(db moira.Database, logger moira.Logger) http.Handler {
 	logger = logger
 	router := chi.NewRouter()
 	router.Use(middleware.Logger)
-	router.Use(middleware.Recoverer)
 	router.Use(middleware.NoCache) //todo неадекватно много всего проставляет, разобраться
+	router.Use(middleware.Recoverer)
 	router.Use(render.SetContentType(render.ContentTypeJSON))
 
 	router.Route("/api", func(router chi.Router) {

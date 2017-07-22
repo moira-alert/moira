@@ -27,7 +27,7 @@ type Database interface {
 	GetPatterns() ([]string, error)
 	SaveMetrics(buffer map[string]*MatchedMetric) error
 
-	GetUserSubscriptions(string) ([]string, error)
+	GetUserSubscriptionIds(string) ([]string, error)
 	GetUserContacts(string) ([]string, error)
 
 	GetTagNames() ([]string, error)
@@ -41,6 +41,12 @@ type Database interface {
 	GetTriggerLastCheck(string) (*CheckData, error)
 
 	GetEvents(string, int64, int64) ([]*EventData, error)
+
+	DeleteContact(string, string) error
+	WriteContact(contact *ContactData) error
+
+	GetSubscriptions(subscriptionIds []string) ([]SubscriptionData, error)
+	WriteSubscriptions([]SubscriptionData) error
 }
 
 // Logger implements logger abstraction

@@ -1,25 +1,74 @@
 package handler
 
 import (
+	"fmt"
 	"github.com/go-chi/chi"
+	"github.com/go-chi/render"
+	"github.com/moira-alert/moira-alert/api/controller"
+	"github.com/moira-alert/moira-alert/api/dto"
 	"net/http"
 )
 
 func contact(router chi.Router) {
 	router.Get("/", getAllContacts)
 	router.Put("/", createNewContact)
-	router.Delete("/{ContactId}", deleteContact)
+	router.Delete("/{contactId}", deleteContact)
 }
 
 func getAllContacts(writer http.ResponseWriter, request *http.Request) {
-	//Дергает абсолютно все контакты
+	contacts, err := controller.GetAllContacts(database)
+	if err != nil {
+		render.Render(writer, request, err)
+		return
+	}
+
+	if err := render.Render(writer, request, contacts); err != nil {
+		render.Render(writer, request, dto.ErrorRender(err))
+		return
+	}
 }
 
 func createNewContact(writer http.ResponseWriter, request *http.Request) {
-	//todo какой-то check_json
-	//Создает новый контакт в админке пользователя
+	contact := &dto.Contact{}
+	if err := render.Bind(request, contact); err != nil {
+		render.Render(writer, request, dto.ErrorInvalidRequest(err))
+		return
+	}
+	userLogin := request.Header.Get("login")
+	if userLogin == "" {
+		if err := render.Render(writer, request, dto.ErrorUserCanNotBeEmpty); err != nil {
+			render.Render(writer, request, dto.ErrorRender(err))
+		}
+		return
+	}
+
+	if err := controller.CreateContact(database, contact, userLogin); err != nil {
+		render.Render(writer, request, err)
+		return
+	}
+
+	if err := render.Render(writer, request, contact); err != nil {
+		render.Render(writer, request, dto.ErrorRender(err))
+		return
+	}
 }
 
 func deleteContact(writer http.ResponseWriter, request *http.Request) {
-	//удалить контакт
+	contactId := chi.URLParam(request, "contactId")
+	if contactId == "" {
+		render.Render(writer, request, dto.ErrorInvalidRequest(fmt.Errorf("ContactId must be set")))
+		return
+	}
+	userLogin := request.Header.Get("login")
+	if userLogin == "" {
+		if err := render.Render(writer, request, dto.ErrorUserCanNotBeEmpty); err != nil {
+			render.Render(writer, request, dto.ErrorRender(err))
+		}
+		return
+	}
+
+	err := controller.DeleteContact(database, contactId, userLogin)
+	if err != nil {
+		render.Render(writer, request, err)
+	}
 }

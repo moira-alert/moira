@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/api/dto"
 )
@@ -35,4 +36,15 @@ func GetTriggerState(database moira.Database, triggerId string) (*dto.TriggerChe
 	}
 
 	return &triggerCheck, nil
+}
+
+func DeleteTriggerMetric(database moira.Database, metricName string, triggerId string) *dto.ErrorResponse {
+	trigger, err := database.GetTrigger(triggerId)
+	if err != nil {
+		return dto.ErrorInternalServer(err)
+	}
+	if trigger == nil {
+		return dto.ErrorInvalidRequest(fmt.Errorf("Trigger check not found"))
+	}
+	return nil
 }

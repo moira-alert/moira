@@ -27,8 +27,8 @@ func (connector *DbConnector) GetUserContacts(login string) ([]string, error) {
 	return subscriptions, nil
 }
 
-//GetUserSubscriptions - Returns subscriptions ids by given login from set {0}
-func (connector *DbConnector) GetUserSubscriptions(login string) ([]string, error) {
+//GetUserSubscriptionIds - Returns subscriptions ids by given login from set {0}
+func (connector *DbConnector) GetUserSubscriptionIds(login string) ([]string, error) {
 	c := connector.pool.Get()
 	defer c.Close()
 
@@ -354,6 +354,90 @@ func (connector *DbConnector) GetEvents(triggerId string, start int64, size int6
 	}
 
 	return eventDatas, nil
+}
+
+func (connector *DbConnector) GetSubscriptions(subscriptionIds []string) ([]moira.SubscriptionData, error) {
+	c := connector.pool.Get()
+	defer c.Close()
+
+	c.Send("MULTI")
+	for _, id := range subscriptionIds {
+		c.Send("GET", fmt.Sprintf("moira-subscription:%s", id))
+	}
+	subscriptionsBytes, err := redis.ByteSlices(c.Do("EXEC"))
+	if err != nil {
+		return nil, fmt.Errorf("Failed to EXEC: %s", err.Error())
+	}
+
+	subscriptions := make([]moira.SubscriptionData, 0, len(subscriptionIds))
+
+	for i, bytes := range subscriptionsBytes {
+		sub, err := connector.convertSubscription(bytes)
+		if err != nil {
+			connector.logger.Warningf(err.Error())
+			continue
+		}
+		sub.ID = subscriptionIds[i]
+		subscriptions = append(subscriptions, sub)
+	}
+	return subscriptions, nil
+}
+
+func (connector *DbConnector) WriteSubscriptions(subscriptions []moira.SubscriptionData) error {
+	subscriptionsBytes := make([][]byte, 0, len(subscriptions))
+	for _, subscription := range subscriptions {
+		bytes, err := json.Marshal(subscription)
+		if err != nil {
+			return err
+		}
+		subscriptionsBytes = append(subscriptionsBytes, bytes)
+	}
+
+	c := connector.pool.Get()
+	defer c.Close()
+
+	c.Send("MULTI")
+	for i, bytes := range subscriptionsBytes {
+		c.Send("SET", fmt.Sprintf("moira-subscription:%s", subscriptions[i]), bytes)
+	}
+	_, err := c.Do("EXEC")
+	if err != nil {
+		return fmt.Errorf("Failed to EXEC: %s", err.Error())
+	}
+	return nil
+}
+
+func (connector *DbConnector) DeleteContact(contactId string, userLogin string) error {
+	c := connector.pool.Get()
+	defer c.Close()
+
+	c.Send("MULTI")
+	c.Send("DEL", fmt.Sprintf("moira-contact:%s", contactId))
+	c.Send("SREM", fmt.Sprintf("moira-user-contacts:%s", userLogin), contactId)
+	_, err := c.Do("EXEC")
+	if err != nil {
+		return fmt.Errorf("Failed to EXEC: %s", err.Error())
+	}
+	return nil
+}
+
+func (connector *DbConnector) WriteContact(contact *moira.ContactData) error {
+	contactString, err := json.Marshal(contact)
+	if err != nil {
+		return err
+	}
+
+	c := connector.pool.Get()
+	defer c.Close()
+
+	c.Send("MULTI")
+	c.Send("SET", fmt.Sprintf("moira-contact:%s", contact.ID), contactString)
+	c.Send("SADD", fmt.Sprintf("moira-user-contacts:%s", contact.User), contact.ID)
+	_, err = c.Do("EXEC")
+	if err != nil {
+		return fmt.Errorf("Failed to EXEC: %s", err.Error())
+	}
+	return nil
 }
 
 type TriggerChecksDataStorageElement struct {

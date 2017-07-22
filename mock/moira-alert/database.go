@@ -44,6 +44,18 @@ func (_mr *MockDatabaseMockRecorder) AddNotification(arg0 interface{}) *gomock.C
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "AddNotification", arg0)
 }
 
+// DeleteContact mocks base method
+func (_m *MockDatabase) DeleteContact(_param0 string, _param1 string) error {
+	ret := _m.ctrl.Call(_m, "DeleteContact", _param0, _param1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteContact indicates an expected call of DeleteContact
+func (_mr *MockDatabaseMockRecorder) DeleteContact(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "DeleteContact", arg0, arg1)
+}
+
 // FetchEvent mocks base method
 func (_m *MockDatabase) FetchEvent() (*moira_alert.EventData, error) {
 	ret := _m.ctrl.Call(_m, "FetchEvent")
@@ -186,6 +198,19 @@ func (_m *MockDatabase) GetSubscription(_param0 string) (moira_alert.Subscriptio
 // GetSubscription indicates an expected call of GetSubscription
 func (_mr *MockDatabaseMockRecorder) GetSubscription(arg0 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetSubscription", arg0)
+}
+
+// GetSubscriptions mocks base method
+func (_m *MockDatabase) GetSubscriptions(_param0 []string) ([]moira_alert.SubscriptionData, error) {
+	ret := _m.ctrl.Call(_m, "GetSubscriptions", _param0)
+	ret0, _ := ret[0].([]moira_alert.SubscriptionData)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSubscriptions indicates an expected call of GetSubscriptions
+func (_mr *MockDatabaseMockRecorder) GetSubscriptions(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetSubscriptions", arg0)
 }
 
 // GetTag mocks base method
@@ -344,17 +369,17 @@ func (_mr *MockDatabaseMockRecorder) GetUserContacts(arg0 interface{}) *gomock.C
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetUserContacts", arg0)
 }
 
-// GetUserSubscriptions mocks base method
-func (_m *MockDatabase) GetUserSubscriptions(_param0 string) ([]string, error) {
-	ret := _m.ctrl.Call(_m, "GetUserSubscriptions", _param0)
+// GetUserSubscriptionIds mocks base method
+func (_m *MockDatabase) GetUserSubscriptionIds(_param0 string) ([]string, error) {
+	ret := _m.ctrl.Call(_m, "GetUserSubscriptionIds", _param0)
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetUserSubscriptions indicates an expected call of GetUserSubscriptions
-func (_mr *MockDatabaseMockRecorder) GetUserSubscriptions(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetUserSubscriptions", arg0)
+// GetUserSubscriptionIds indicates an expected call of GetUserSubscriptionIds
+func (_mr *MockDatabaseMockRecorder) GetUserSubscriptionIds(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetUserSubscriptionIds", arg0)
 }
 
 // SaveMetrics mocks base method
@@ -403,4 +428,28 @@ func (_m *MockDatabase) UpdateMetricsHeartbeat() error {
 // UpdateMetricsHeartbeat indicates an expected call of UpdateMetricsHeartbeat
 func (_mr *MockDatabaseMockRecorder) UpdateMetricsHeartbeat() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "UpdateMetricsHeartbeat")
+}
+
+// WriteContact mocks base method
+func (_m *MockDatabase) WriteContact(_param0 *moira_alert.ContactData) error {
+	ret := _m.ctrl.Call(_m, "WriteContact", _param0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// WriteContact indicates an expected call of WriteContact
+func (_mr *MockDatabaseMockRecorder) WriteContact(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "WriteContact", arg0)
+}
+
+// WriteSubscriptions mocks base method
+func (_m *MockDatabase) WriteSubscriptions(_param0 []moira_alert.SubscriptionData) error {
+	ret := _m.ctrl.Call(_m, "WriteSubscriptions", _param0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// WriteSubscriptions indicates an expected call of WriteSubscriptions
+func (_mr *MockDatabaseMockRecorder) WriteSubscriptions(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "WriteSubscriptions", arg0)
 }

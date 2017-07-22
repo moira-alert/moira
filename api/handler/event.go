@@ -16,7 +16,6 @@ func event(router chi.Router) {
 		page := context.Value("page").(int64)
 		eventsList, err := controller.GetEvents(database, triggerId, page, size)
 		if err != nil {
-			logger.Error(err.Err)
 			render.Render(writer, request, err)
 			return
 		}

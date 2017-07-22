@@ -20,7 +20,6 @@ func tag(router chi.Router) {
 func getAllTags(writer http.ResponseWriter, request *http.Request) {
 	tagData, err := controller.GetAllTags(database)
 	if err != nil {
-		logger.Error(err.Err)
 		render.Render(writer, request, err)
 		return
 	}
