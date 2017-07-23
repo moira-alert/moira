@@ -11,9 +11,9 @@ import (
 var database moira.Database
 var logger moira.Logger
 
-func NewHandler(db moira.Database, logger moira.Logger) http.Handler {
+func NewHandler(db moira.Database, log moira.Logger) http.Handler {
 	database = db
-	logger = logger
+	logger = log
 	router := chi.NewRouter()
 	router.Use(middleware.Logger)
 	router.Use(middleware.NoCache) //todo неадекватно много всего проставляет, разобраться
