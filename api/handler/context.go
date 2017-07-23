@@ -10,6 +10,14 @@ import (
 	"strconv"
 )
 
+func userContext(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		userLogin := request.Header.Get("login")
+		ctx := context.WithValue(request.Context(), "login", userLogin)
+		next.ServeHTTP(writer, request.WithContext(ctx))
+	})
+}
+
 func triggerContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		triggerId := chi.URLParam(request, "triggerId")

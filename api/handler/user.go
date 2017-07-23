@@ -14,34 +14,20 @@ func user(router chi.Router) {
 }
 
 func getUserName(writer http.ResponseWriter, request *http.Request) {
-	userLogin := request.Header.Get("login")
-	if userLogin == "" {
-		if err := render.Render(writer, request, dto.ErrorUserCanNotBeEmpty); err != nil {
-			render.Render(writer, request, dto.ErrorRender(err))
-		}
-		return
-	}
-
-	if err := render.Render(writer, request, &dto.User{Login: request.Header.Get("login")}); err != nil {
+	userLogin := request.Context().Value("login").(string)
+	if err := render.Render(writer, request, &dto.User{Login: userLogin}); err != nil {
 		render.Render(writer, request, dto.ErrorRender(err))
 		return
 	}
 }
 
 func getUserSettings(writer http.ResponseWriter, request *http.Request) {
-	userLogin := request.Header.Get("login")
-	if userLogin == "" {
-		if err := render.Render(writer, request, dto.ErrorUserCanNotBeEmpty); err != nil {
-			render.Render(writer, request, dto.ErrorRender(err))
-		}
-		return
-	}
-
+	userLogin := request.Context().Value("login").(string)
 	userSettings, err := controller.GetUserSettings(database, userLogin)
 	if err != nil {
+		logger.Error(err.Err)
 		if err := render.Render(writer, request, err); err != nil {
 			render.Render(writer, request, dto.ErrorRender(err))
-			return
 		}
 		return
 	}

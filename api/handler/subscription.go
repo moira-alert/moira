@@ -19,14 +19,7 @@ func subscription(router chi.Router) {
 }
 
 func getUserSubscriptions(writer http.ResponseWriter, request *http.Request) {
-	userLogin := request.Header.Get("login")
-	if userLogin == "" {
-		if err := render.Render(writer, request, dto.ErrorUserCanNotBeEmpty); err != nil {
-			render.Render(writer, request, dto.ErrorRender(err))
-		}
-		return
-	}
-
+	userLogin := request.Context().Value("login").(string)
 	contacts, err := controller.GetUserSubscriptions(database, userLogin)
 	if err != nil {
 		render.Render(writer, request, err)
@@ -45,11 +38,7 @@ func createSubscription(writer http.ResponseWriter, request *http.Request) {
 		render.Render(writer, request, dto.ErrorInvalidRequest(err))
 		return
 	}
-	userLogin := request.Header.Get("login")
-	if userLogin == "" {
-		render.Render(writer, request, dto.ErrorUserCanNotBeEmpty)
-		return
-	}
+	userLogin := request.Context().Value("login").(string)
 
 	if err := controller.WriteSubscription(database, userLogin, subscription); err != nil {
 		render.Render(writer, request, err)
@@ -63,11 +52,7 @@ func createSubscription(writer http.ResponseWriter, request *http.Request) {
 }
 
 func deleteSubscription(writer http.ResponseWriter, request *http.Request) {
-	userLogin := request.Header.Get("login")
-	if userLogin == "" {
-		render.Render(writer, request, dto.ErrorUserCanNotBeEmpty)
-		return
-	}
+	userLogin := request.Context().Value("login").(string)
 	subscriptionId := request.Context().Value("subscriptionId").(string)
 	if err := controller.DeleteSubscription(database, subscriptionId, userLogin); err != nil {
 		render.Render(writer, request, err)

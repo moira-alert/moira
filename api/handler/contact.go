@@ -34,13 +34,7 @@ func createNewContact(writer http.ResponseWriter, request *http.Request) {
 		render.Render(writer, request, dto.ErrorInvalidRequest(err))
 		return
 	}
-	userLogin := request.Header.Get("login")
-	if userLogin == "" {
-		if err := render.Render(writer, request, dto.ErrorUserCanNotBeEmpty); err != nil {
-			render.Render(writer, request, dto.ErrorRender(err))
-		}
-		return
-	}
+	userLogin := request.Context().Value("login").(string)
 
 	if err := controller.CreateContact(database, contact, userLogin); err != nil {
 		render.Render(writer, request, err)
@@ -59,13 +53,7 @@ func deleteContact(writer http.ResponseWriter, request *http.Request) {
 		render.Render(writer, request, dto.ErrorInvalidRequest(fmt.Errorf("ContactId must be set")))
 		return
 	}
-	userLogin := request.Header.Get("login")
-	if userLogin == "" {
-		if err := render.Render(writer, request, dto.ErrorUserCanNotBeEmpty); err != nil {
-			render.Render(writer, request, dto.ErrorRender(err))
-		}
-		return
-	}
+	userLogin := request.Context().Value("login").(string)
 
 	err := controller.DeleteContact(database, contactId, userLogin)
 	if err != nil {
