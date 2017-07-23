@@ -550,6 +550,36 @@ func (connector *DbConnector) SetTagMaintenance(name string, data moira.TagData)
 	return err
 }
 
+func (connector *DbConnector) GetTagTriggerIds(tagName string) ([]string, error) {
+	c := connector.pool.Get()
+	defer c.Close()
+
+	triggerIds, err := redis.Strings(c.Do("SMEMBERS", fmt.Sprintf("moira-tag-triggers:%s", tagName)))
+	if err != nil {
+		if err == redis.ErrNil {
+			return make([]string, 0), nil
+		}
+		return nil, fmt.Errorf("Failed to moira-tag-triggers:%s, err: %s", tagName, err.Error())
+	}
+	return triggerIds, nil
+}
+
+func (connector *DbConnector) DeleteTag(tagName string) error {
+	c := connector.pool.Get()
+	defer c.Close()
+
+	c.Send("MULTI")
+	c.Send("SREM", "moira-tags", tagName)
+	c.Send("DEL", fmt.Sprintf("moira-tag-subscriptions:%s", tagName))
+	c.Send("DEL", fmt.Sprintf("moira-tag-triggers:%s", tagName))
+	c.Send("DEL", fmt.Sprintf("moira-tag:%s", tagName))
+	_, err := c.Do("EXEC")
+	if err != nil {
+		return fmt.Errorf("Failed to EXEC: %s", err.Error())
+	}
+	return nil
+}
+
 type TriggerChecksDataStorageElement struct {
 	ID              string             `json:"id"`
 	Name            string             `json:"name"`

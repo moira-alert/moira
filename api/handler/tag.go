@@ -32,13 +32,27 @@ func getAllTags(writer http.ResponseWriter, request *http.Request) {
 }
 
 func getAllTagsAndSubscriptions(writer http.ResponseWriter, request *http.Request) {
-	//вытащить все подписки по всем тегам
-	//todo не используется
+	data, err := controller.GetAllTagsAndSubscriptions(database)
+	if err != nil {
+		render.Render(writer, request, err)
+		return
+	}
+	if err := render.Render(writer, request, data); err != nil {
+		render.Render(writer, request, dto.ErrorRender(err))
+		return
+	}
 }
 
 func deleteTag(writer http.ResponseWriter, request *http.Request) {
-	//удалить tag к хуям
-	//todo не используется
+	tagName := request.Context().Value("tag").(string)
+	response, err := controller.DeleteTag(database, tagName)
+	if err != nil {
+		render.Render(writer, request, err)
+	}
+	if err := render.Render(writer, request, response); err != nil {
+		render.Render(writer, request, dto.ErrorRender(err))
+		return
+	}
 }
 
 func setTagMaintenance(writer http.ResponseWriter, request *http.Request) {
