@@ -41,12 +41,16 @@ type Database interface {
 	GetTriggerLastCheck(string) (*CheckData, error)
 
 	GetEvents(string, int64, int64) ([]*EventData, error)
+	PushEvent(event *EventData, ui bool) error
 
 	DeleteContact(string, string) error
 	WriteContact(contact *ContactData) error
 
 	GetSubscriptions(subscriptionIds []string) ([]SubscriptionData, error)
-	WriteSubscriptions([]SubscriptionData) error
+	WriteSubscriptions(subscriptions []*SubscriptionData) error
+	UpdateSubscription(subscription *SubscriptionData) error
+	CreateSubscription(subscription *SubscriptionData) error
+	DeleteSubscription(subscriptionId string, userLogin string) error
 }
 
 // Logger implements logger abstraction

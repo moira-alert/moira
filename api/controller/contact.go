@@ -46,13 +46,13 @@ func DeleteContact(database moira.Database, contactId string, userLogin string) 
 		return dto.ErrorInternalServer(err)
 	}
 
-	subscriptionsWithDeletingContact := make([]moira.SubscriptionData, 0)
+	subscriptionsWithDeletingContact := make([]*moira.SubscriptionData, 0)
 
 	for _, subscription := range subscriptions {
 		for i, contact := range subscription.Contacts {
 			if contact == contactId {
 				subscription.Contacts = append(subscription.Contacts[:i], subscription.Contacts[i+1:]...)
-				subscriptionsWithDeletingContact = append(subscriptionsWithDeletingContact, subscription)
+				subscriptionsWithDeletingContact = append(subscriptionsWithDeletingContact, &subscription)
 				break
 			}
 		}

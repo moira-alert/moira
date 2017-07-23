@@ -22,6 +22,18 @@ func triggerContext(next http.Handler) http.Handler {
 	})
 }
 
+func subscriptionContext(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		triggerId := chi.URLParam(request, "subscriptionId")
+		if triggerId == "" {
+			render.Render(writer, request, dto.ErrorInvalidRequest(fmt.Errorf("SubscriptionId must be set")))
+			return
+		}
+		ctx := context.WithValue(request.Context(), "subscriptionId", triggerId)
+		next.ServeHTTP(writer, request.WithContext(ctx))
+	})
+}
+
 func paginate(defaultPage, defaultSize int64) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {

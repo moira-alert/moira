@@ -383,7 +383,57 @@ func (connector *DbConnector) GetSubscriptions(subscriptionIds []string) ([]moir
 	return subscriptions, nil
 }
 
-func (connector *DbConnector) WriteSubscriptions(subscriptions []moira.SubscriptionData) error {
+func (connector *DbConnector) UpdateSubscription(subscription *moira.SubscriptionData) error {
+	oldSubscription, err := connector.GetSubscription(subscription.ID)
+	if err != nil {
+		return err
+	}
+	bytes, err := json.Marshal(subscription)
+	if err != nil {
+		return err
+	}
+	subscriptionId := subscription.ID
+
+	c := connector.pool.Get()
+	defer c.Close()
+	c.Send("MULTI")
+	for _, tag := range oldSubscription.Tags {
+		c.Send("SREM", fmt.Sprintf("moira-tag-subscriptions:%s", tag), subscriptionId)
+	}
+	for _, tag := range subscription.Tags {
+		c.Send("SADD", fmt.Sprintf("moira-tag-subscriptions:%s", tag), subscriptionId)
+	}
+	c.Send("SADD", fmt.Sprintf("moira-user-subscriptions:%s", subscription.User), subscriptionId)
+	c.Send("SET", fmt.Sprintf("moira-subscription:%s", subscriptionId), bytes)
+	_, err = c.Do("EXEC")
+	if err != nil {
+		return fmt.Errorf("Failed to EXEC: %s", err.Error())
+	}
+	return nil
+}
+
+func (connector *DbConnector) CreateSubscription(subscription *moira.SubscriptionData) error {
+	bytes, err := json.Marshal(subscription)
+	if err != nil {
+		return err
+	}
+	subscriptionId := subscription.ID
+	c := connector.pool.Get()
+	defer c.Close()
+	c.Send("MULTI")
+	for _, tag := range subscription.Tags {
+		c.Send("SADD", fmt.Sprintf("moira-tag-subscriptions:%s", tag), subscriptionId)
+	}
+	c.Send("SADD", fmt.Sprintf("moira-user-subscriptions:%s", subscription.User), subscriptionId)
+	c.Send("SET", fmt.Sprintf("moira-subscription:%s", subscriptionId), bytes)
+	_, err = c.Do("EXEC")
+	if err != nil {
+		return fmt.Errorf("Failed to EXEC: %s", err.Error())
+	}
+	return nil
+}
+
+func (connector *DbConnector) WriteSubscriptions(subscriptions []*moira.SubscriptionData) error {
 	subscriptionsBytes := make([][]byte, 0, len(subscriptions))
 	for _, subscription := range subscriptions {
 		bytes, err := json.Marshal(subscription)
@@ -398,9 +448,29 @@ func (connector *DbConnector) WriteSubscriptions(subscriptions []moira.Subscript
 
 	c.Send("MULTI")
 	for i, bytes := range subscriptionsBytes {
-		c.Send("SET", fmt.Sprintf("moira-subscription:%s", subscriptions[i]), bytes)
+		c.Send("SET", fmt.Sprintf("moira-subscription:%s", subscriptions[i].ID), bytes)
 	}
 	_, err := c.Do("EXEC")
+	if err != nil {
+		return fmt.Errorf("Failed to EXEC: %s", err.Error())
+	}
+	return nil
+}
+
+func (connector *DbConnector) DeleteSubscription(subscriptionId string, userLogin string) error {
+	subscription, err := connector.GetSubscription(subscriptionId)
+	if err != nil {
+		return nil
+	}
+	c := connector.pool.Get()
+	defer c.Close()
+	c.Send("MULTI")
+	c.Send("SREM", fmt.Sprintf("moira-user-subscriptions:%s", userLogin), subscriptionId)
+	for _, tag := range subscription.Tags {
+		c.Send("SREM", fmt.Sprintf("moira-tag-subscriptions:%s", tag), subscriptionId)
+	}
+	c.Send("DEL", fmt.Sprintf("moira-subscription:%s", subscriptionId))
+	_, err = c.Do("EXEC")
 	if err != nil {
 		return fmt.Errorf("Failed to EXEC: %s", err.Error())
 	}
@@ -433,6 +503,32 @@ func (connector *DbConnector) WriteContact(contact *moira.ContactData) error {
 	c.Send("MULTI")
 	c.Send("SET", fmt.Sprintf("moira-contact:%s", contact.ID), contactString)
 	c.Send("SADD", fmt.Sprintf("moira-user-contacts:%s", contact.User), contact.ID)
+	_, err = c.Do("EXEC")
+	if err != nil {
+		return fmt.Errorf("Failed to EXEC: %s", err.Error())
+	}
+	return nil
+}
+
+func (connector *DbConnector) PushEvent(event *moira.EventData, ui bool) error {
+	eventBytes, err := json.Marshal(event)
+	if err != nil {
+		return err
+	}
+
+	c := connector.pool.Get()
+	defer c.Close()
+	c.Send("MULTI")
+	c.Send("LPUSH", "moira-trigger-events", eventBytes)
+	//todo легально? может указатель правильнее?
+	if event.TriggerID != "" {
+		c.Send("ZADD", fmt.Sprintf("moira-trigger-events:%s", event.TriggerID), event.Timestamp, eventBytes)
+		c.Send("ZREMRANGEBYSCORE", fmt.Sprintf("moira-trigger-events:%s", event.TriggerID), "-inf", time.Now().Unix()-3600*24*30)
+	}
+	if ui {
+		c.Send("LPUSH", "moira-trigger-events-ui", eventBytes)
+		c.Send("LTRIM", 0, 100)
+	}
 	_, err = c.Do("EXEC")
 	if err != nil {
 		return fmt.Errorf("Failed to EXEC: %s", err.Error())

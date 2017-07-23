@@ -9,38 +9,31 @@ import (
 	"time"
 )
 
-var event = moira.EventData{
-	Metric:    "generate.event.1",
-	State:     "OK",
-	OldState:  "WARN",
-	TriggerID: trigger.ID,
-}
-
-var trigger = moira.TriggerData{
-	ID:         "triggerID-0000000000001",
-	Name:       "test trigger 1",
-	Targets:    []string{"test.target.1"},
-	WarnValue:  10,
-	ErrorValue: 20,
-	Tags:       []string{"test-tag-1"},
-}
-
-var subscription = moira.SubscriptionData{
-	ID:                "subscriptionID-00000000000001",
-	Enabled:           true,
-	Tags:              []string{"test-tag-1"},
-	Contacts:          []string{contact.ID},
-	ThrottlingEnabled: true,
-}
-
-var contact = moira.ContactData{
-	ID:    "ContactID-000000000000001",
-	Type:  "mega-sender",
-	Value: "mail1@example.com",
-}
-
 //NewFakeDatabase initialize fake redis database from redigomock package and fill fake data for integration tests
 func NewFakeDatabase(logger moira.Logger) *DbConnector {
+	var trigger = moira.TriggerData{
+		ID:         "triggerID-0000000000001",
+		Name:       "test trigger 1",
+		Targets:    []string{"test.target.1"},
+		WarnValue:  10,
+		ErrorValue: 20,
+		Tags:       []string{"test-tag-1"},
+	}
+
+	var contact = moira.ContactData{
+		ID:    "ContactID-000000000000001",
+		Type:  "mega-sender",
+		Value: "mail1@example.com",
+	}
+
+	var subscription = moira.SubscriptionData{
+		ID:                "subscriptionID-00000000000001",
+		Enabled:           true,
+		Tags:              []string{"test-tag-1"},
+		Contacts:          []string{contact.ID},
+		ThrottlingEnabled: true,
+	}
+
 	fakeRedis := redigomock.NewFakeRedis()
 	expectEvent(fakeRedis)
 	pool := redis.Pool{
@@ -77,6 +70,13 @@ func NewFakeDatabase(logger moira.Logger) *DbConnector {
 
 //Duty hack. Need to realize BRPOP command in redigomock
 func expectEvent(fakeRedis *redigomock.Conn) {
+	var event = moira.EventData{
+		Metric:    "generate.event.1",
+		State:     "OK",
+		OldState:  "WARN",
+		TriggerID: "triggerID-0000000000001",
+	}
+
 	eventString, _ := json.Marshal(event)
 	alreadyGet := false
 	fakeRedis.Command("BRPOP", "moira-trigger-events", 1).ExpectCallback(func(args []interface{}) (interface{}, error) {
