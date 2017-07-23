@@ -536,6 +536,20 @@ func (connector *DbConnector) PushEvent(event *moira.EventData, ui bool) error {
 	return nil
 }
 
+func (connector *DbConnector) SetTagMaintenance(name string, data moira.TagData) error {
+	bytes, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+	c := connector.pool.Get()
+	defer c.Close()
+	_, err = c.Do("SET", fmt.Sprintf("moira-tag:%s", name), bytes)
+	if err != nil {
+		return fmt.Errorf("Failed to set moira-tag:%s, err: %s", name, err.Error())
+	}
+	return err
+}
+
 type TriggerChecksDataStorageElement struct {
 	ID              string             `json:"id"`
 	Name            string             `json:"name"`

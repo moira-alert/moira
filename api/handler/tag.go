@@ -12,6 +12,7 @@ func tag(router chi.Router) {
 	router.Get("/", getAllTags)
 	router.Get("/stats", getAllTagsAndSubscriptions)
 	router.Route("/{tag}", func(router chi.Router) {
+		router.Use(tagContext)
 		router.Delete("/", deleteTag)
 		router.Put("/data", setTagMaintenance)
 	})
@@ -41,6 +42,14 @@ func deleteTag(writer http.ResponseWriter, request *http.Request) {
 }
 
 func setTagMaintenance(writer http.ResponseWriter, request *http.Request) {
-	//todo какой-то check_json
-	//Постим майтейнс для тега
+	tag := &dto.Tag{}
+	if err := render.Bind(request, tag); err != nil {
+		render.Render(writer, request, dto.ErrorInvalidRequest(err))
+		return
+	}
+	tagName := request.Context().Value("tag").(string)
+
+	if err := controller.SetTagMaintenance(database, tagName, tag); err != nil {
+		render.Render(writer, request, err)
+	}
 }

@@ -33,6 +33,7 @@ type Database interface {
 	GetTagNames() ([]string, error)
 	GetTags([]string) (map[string]TagData, error)
 	GetTag(string) (TagData, error)
+	SetTagMaintenance(name string, data TagData) error
 
 	GetTriggerIds() ([]string, int64, error)
 	GetFilteredTriggersIds([]string, bool) ([]string, int64, error)

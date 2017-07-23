@@ -23,3 +23,13 @@ func GetAllTags(database moira.Database) (*dto.TagsData, *dto.ErrorResponse) {
 
 	return tagsData, nil
 }
+
+func SetTagMaintenance(database moira.Database, tagName string, tag *dto.Tag) *dto.ErrorResponse {
+	data := moira.TagData(*tag)
+
+	if err := database.SetTagMaintenance(tagName, data); err != nil {
+		return dto.ErrorInternalServer(err)
+	}
+
+	return nil
+}
