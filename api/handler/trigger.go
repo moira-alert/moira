@@ -10,6 +10,7 @@ import (
 
 func trigger(router chi.Router) {
 	router.Use(triggerContext)
+	router.Put("/", saveTrigger)
 	router.Get("/", getTrigger)
 	router.Get("/state", getTriggerState)
 	router.Route("/throttling", func(router chi.Router) {
@@ -21,6 +22,10 @@ func trigger(router chi.Router) {
 		router.Delete("/", deleteTriggerMetric)
 	})
 	router.Put("/maintenance", setMetricMaintenance)
+}
+
+func saveTrigger(writer http.ResponseWriter, request *http.Request) {
+
 }
 
 func getTrigger(writer http.ResponseWriter, request *http.Request) {

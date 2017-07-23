@@ -11,7 +11,7 @@ import (
 
 func triggers(router chi.Router) {
 	router.Get("/", getAllTriggers)
-	router.Put("/", saveTrigger)
+	router.Put("/", createTrigger)
 	router.With(paginate(0, 10)).Get("/page", getTriggersPage)
 	router.Route("/{triggerId}", trigger)
 }
@@ -20,7 +20,7 @@ func getAllTriggers(writer http.ResponseWriter, request *http.Request) {
 	//todo очень странная параша, отдает все триггреры
 }
 
-func saveTrigger(writer http.ResponseWriter, request *http.Request) {
+func createTrigger(writer http.ResponseWriter, request *http.Request) {
 	//Сохранение триггреа при его создании
 }
 
