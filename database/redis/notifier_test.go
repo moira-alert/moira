@@ -37,7 +37,7 @@ func TestNotifierDataBase(t *testing.T) {
 		Convey("should throw error when no connection", func() {
 			dataBase := NewDatabase(logger, config, metrics2)
 			dataBase.pool.TestOnBorrow(fakeDataBase.pool.Get(), time.Now())
-			_, err := dataBase.GetContacts()
+			_, err := dataBase.GetAllContacts()
 			So(err, ShouldNotBeNil)
 		})
 
@@ -56,7 +56,7 @@ func TestNotifierDataBase(t *testing.T) {
 		Convey("shouldn't throw error when connection exists", func() {
 			db := NewDatabase(logger, config, metrics2)
 			db.pool = fakeDataBase.pool
-			_, err := db.GetContacts()
+			_, err := db.GetAllContacts()
 			So(err, ShouldBeNil)
 		})
 	})

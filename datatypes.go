@@ -51,6 +51,7 @@ type SubscriptionData struct {
 	ID                string       `json:"id"`
 	Enabled           bool         `json:"enabled"`
 	ThrottlingEnabled bool         `json:"throttling"`
+	User              string       `json:"user"`
 }
 
 // ScheduleData represent subscription schedule

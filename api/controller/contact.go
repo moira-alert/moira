@@ -7,7 +7,7 @@ import (
 )
 
 func GetAllContacts(database moira.Database) (*dto.ContactList, *dto.ErrorResponse) {
-	contacts, err := database.GetContacts()
+	contacts, err := database.GetAllContacts()
 	if err != nil {
 		return nil, dto.ErrorInternalServer(err)
 	}

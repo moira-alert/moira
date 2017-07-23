@@ -171,8 +171,8 @@ func (connector *DbConnector) GetContact(id string) (moira.ContactData, error) {
 	return contact, nil
 }
 
-// GetContacts returns full contact list
-func (connector *DbConnector) GetContacts() ([]moira.ContactData, error) {
+// GetAllContacts returns full contact list
+func (connector *DbConnector) GetAllContacts() ([]moira.ContactData, error) {
 	c := connector.pool.Get()
 	defer c.Close()
 

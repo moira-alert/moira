@@ -13,7 +13,7 @@ type Database interface {
 	GetTagsSubscriptions(tags []string) ([]SubscriptionData, error)
 	GetSubscription(id string) (SubscriptionData, error)
 	GetContact(id string) (ContactData, error)
-	GetContacts() ([]ContactData, error)
+	GetAllContacts() ([]ContactData, error)
 	SetContact(contact *ContactData) error
 	AddNotification(notification *ScheduledNotification) error
 	GetTriggerThrottlingTimestamps(id string) (time.Time, time.Time)

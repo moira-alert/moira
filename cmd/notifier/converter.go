@@ -19,7 +19,7 @@ func convertDatabase(db moira.Database) {
 		os.Exit(0)
 	}
 
-	res, _ := db.GetContacts()
+	res, _ := db.GetAllContacts()
 	for _, contact := range res {
 		if contact.Type == "telegram" && strings.HasPrefix(contact.Value, "@") {
 			contact.Value = fmt.Sprintf("#%v", contact.Value[1:])
