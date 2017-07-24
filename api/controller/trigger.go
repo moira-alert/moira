@@ -31,7 +31,7 @@ func GetTriggerState(database moira.Database, triggerId string) (*dto.TriggerChe
 	}
 
 	triggerCheck := dto.TriggerCheck{
-		CheckData: *lastCheck,
+		CheckData: lastCheck,
 		TriggerId: triggerId,
 	}
 
@@ -45,6 +45,13 @@ func DeleteTriggerMetric(database moira.Database, metricName string, triggerId s
 	}
 	if trigger == nil {
 		return dto.ErrorInvalidRequest(fmt.Errorf("Trigger check not found"))
+	}
+	return nil
+}
+
+func SetMetricsMaintenance(database moira.Database, triggerId string, metricsMaintenance *dto.MetricsMaintenance) *dto.ErrorResponse {
+	if err := database.SetTriggerMetricsMaintenance(triggerId, map[string]int64(*metricsMaintenance)); err != nil {
+		return dto.ErrorInternalServer(err)
 	}
 	return nil
 }

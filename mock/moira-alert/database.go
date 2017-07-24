@@ -479,6 +479,18 @@ func (_mr *MockDatabaseMockRecorder) SetTagMaintenance(arg0, arg1 interface{}) *
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetTagMaintenance", arg0, arg1)
 }
 
+// SetTriggerMetricsMaintenance mocks base method
+func (_m *MockDatabase) SetTriggerMetricsMaintenance(_param0 string, _param1 map[string]int64) error {
+	ret := _m.ctrl.Call(_m, "SetTriggerMetricsMaintenance", _param0, _param1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetTriggerMetricsMaintenance indicates an expected call of SetTriggerMetricsMaintenance
+func (_mr *MockDatabaseMockRecorder) SetTriggerMetricsMaintenance(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetTriggerMetricsMaintenance", arg0, arg1)
+}
+
 // SetTriggerThrottlingTimestamp mocks base method
 func (_m *MockDatabase) SetTriggerThrottlingTimestamp(_param0 string, _param1 time.Time) error {
 	ret := _m.ctrl.Call(_m, "SetTriggerThrottlingTimestamp", _param0, _param1)

@@ -580,6 +580,59 @@ func (connector *DbConnector) DeleteTag(tagName string) error {
 	return nil
 }
 
+func (connector *DbConnector) SetTriggerMetricsMaintenance(triggerId string, metrics map[string]int64) error {
+	c := connector.pool.Get()
+	defer c.Close()
+
+	var readingErr error
+
+	key := fmt.Sprintf("moira-metric-last-check:%s", triggerId)
+	lastCheckString, readingErr := redis.String(c.Do("GET", key))
+	if readingErr != nil {
+		if readingErr != redis.ErrNil {
+			return nil
+		}
+	}
+
+	//todo кажется, здесь есть баг, связанный с конкурентностью запросов
+	for readingErr != redis.ErrNil {
+		var lastCheck = moira.CheckData{}
+		err := json.Unmarshal([]byte(lastCheckString), &lastCheck)
+		if err != nil {
+			return fmt.Errorf("Failed to parse lastCheck json %s: %s", lastCheckString, err.Error())
+		}
+		metricsCheck := lastCheck.Metrics
+		if metricsCheck != nil && len(metricsCheck) > 0 {
+			for metric, value := range metrics {
+				data, ok := metricsCheck[metric]
+				if !ok {
+					data = moira.MetricData{}
+				}
+				data.Maintenance = &value
+				metricsCheck[metric] = data
+			}
+		}
+		newLastCheck, err := json.Marshal(lastCheck)
+		if err != nil {
+			return err
+		}
+
+		prev, readingErr := redis.String(c.Do("GETSET", key, newLastCheck))
+		if readingErr != nil {
+			if readingErr != redis.ErrNil {
+				return readingErr
+			}
+		}
+		if prev == lastCheckString {
+			break
+		}
+		lastCheckString = prev
+	}
+
+	return nil
+
+}
+
 type TriggerChecksDataStorageElement struct {
 	ID              string             `json:"id"`
 	Name            string             `json:"name"`

@@ -21,7 +21,7 @@ func trigger(router chi.Router) {
 		router.Get("/", getTriggerMetrics)
 		router.Delete("/", deleteTriggerMetric)
 	})
-	router.Put("/maintenance", setMetricMaintenance)
+	router.Put("/maintenance", setMetricsMaintenance)
 }
 
 func saveTrigger(writer http.ResponseWriter, request *http.Request) {
@@ -68,7 +68,19 @@ func deleteTriggerMetric(writer http.ResponseWriter, request *http.Request) {
 	//?name=EG-FRONT-03.UserSettings.Read
 }
 
-func setMetricMaintenance(writer http.ResponseWriter, request *http.Request) {
+func setMetricsMaintenance(writer http.ResponseWriter, request *http.Request) {
+	triggerId := request.Context().Value("triggerId").(string)
+	metricsMaintenance := &dto.MetricsMaintenance{}
+	if err := render.Bind(request, metricsMaintenance); err != nil {
+		render.Render(writer, request, dto.ErrorInvalidRequest(err))
+		return
+	}
+
+	err := controller.SetMetricsMaintenance(database, triggerId, metricsMaintenance)
+	if err != nil {
+		render.Render(writer, request, err)
+	}
+
 	//Установить maintenance
 	//в body - время, до которого будет maintenance
 	//Умеет в массив треггеров

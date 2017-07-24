@@ -35,4 +35,5 @@ type MetricData struct {
 	Suppressed     bool    `json:"suppressed"`
 	Timestamp      int64   `json:"timestamp"`
 	Value          float64 `json:"value"`
+	Maintenance    *int64  `json:"maintenance,omitempty"`
 }

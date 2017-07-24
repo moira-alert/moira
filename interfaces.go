@@ -42,6 +42,7 @@ type Database interface {
 	GetTrigger(string) (*Trigger, error)
 	GetTriggersChecks([]string) ([]TriggerChecks, error)
 	GetTriggerLastCheck(string) (*CheckData, error)
+	SetTriggerMetricsMaintenance(triggerId string, metrics map[string]int64) error
 
 	GetEvents(string, int64, int64) ([]*EventData, error)
 	PushEvent(event *EventData, ui bool) error

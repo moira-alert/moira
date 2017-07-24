@@ -26,10 +26,16 @@ func (*Trigger) Render(w http.ResponseWriter, r *http.Request) error {
 }
 
 type TriggerCheck struct {
-	moira.CheckData
+	*moira.CheckData
 	TriggerId string `json:"trigger_id"`
 }
 
 func (*TriggerCheck) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
+
+type MetricsMaintenance map[string]int64
+
+func (*MetricsMaintenance) Bind(r *http.Request) error {
 	return nil
 }
