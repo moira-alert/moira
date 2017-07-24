@@ -3,7 +3,6 @@ package dto
 import (
 	"github.com/go-chi/render"
 	"net/http"
-	"fmt"
 )
 
 type ErrorResponse struct {
@@ -48,4 +47,3 @@ func ErrorRender(err error) *ErrorResponse {
 }
 
 var ErrorNotFound = &ErrorResponse{HTTPStatusCode: 404, StatusText: "Resource not found."}
-var ErrorUserCanNotBeEmpty = ErrorInvalidRequest(fmt.Errorf("User login can not be empty"))

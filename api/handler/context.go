@@ -12,7 +12,7 @@ import (
 
 func userContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		userLogin := request.Header.Get("login")
+		userLogin := request.Header.Get("x-webauth-user")
 		ctx := context.WithValue(request.Context(), "login", userLogin)
 		next.ServeHTTP(writer, request.WithContext(ctx))
 	})
