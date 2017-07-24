@@ -224,6 +224,32 @@ func (_mr *MockDatabaseMockRecorder) GetNotificationsAndDelete(arg0 interface{})
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetNotificationsAndDelete", arg0)
 }
 
+// GetPatternMetrics mocks base method
+func (_m *MockDatabase) GetPatternMetrics(_param0 string) ([]string, error) {
+	ret := _m.ctrl.Call(_m, "GetPatternMetrics", _param0)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPatternMetrics indicates an expected call of GetPatternMetrics
+func (_mr *MockDatabaseMockRecorder) GetPatternMetrics(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetPatternMetrics", arg0)
+}
+
+// GetPatternTriggerIds mocks base method
+func (_m *MockDatabase) GetPatternTriggerIds(_param0 string) ([]string, error) {
+	ret := _m.ctrl.Call(_m, "GetPatternTriggerIds", _param0)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPatternTriggerIds indicates an expected call of GetPatternTriggerIds
+func (_mr *MockDatabaseMockRecorder) GetPatternTriggerIds(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetPatternTriggerIds", arg0)
+}
+
 // GetPatterns mocks base method
 func (_m *MockDatabase) GetPatterns() ([]string, error) {
 	ret := _m.ctrl.Call(_m, "GetPatterns")
@@ -406,6 +432,19 @@ func (_mr *MockDatabaseMockRecorder) GetTriggerThrottlingTimestamps(arg0 interfa
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetTriggerThrottlingTimestamps", arg0)
 }
 
+// GetTriggers mocks base method
+func (_m *MockDatabase) GetTriggers(_param0 []string) ([]*moira_alert.Trigger, error) {
+	ret := _m.ctrl.Call(_m, "GetTriggers", _param0)
+	ret0, _ := ret[0].([]*moira_alert.Trigger)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTriggers indicates an expected call of GetTriggers
+func (_mr *MockDatabaseMockRecorder) GetTriggers(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetTriggers", arg0)
+}
+
 // GetTriggersChecks mocks base method
 func (_m *MockDatabase) GetTriggersChecks(_param0 []string) ([]moira_alert.TriggerChecks, error) {
 	ret := _m.ctrl.Call(_m, "GetTriggersChecks", _param0)
@@ -468,6 +507,18 @@ func (_m *MockDatabase) RemoveNotification(_param0 string) (int64, error) {
 // RemoveNotification indicates an expected call of RemoveNotification
 func (_mr *MockDatabaseMockRecorder) RemoveNotification(arg0 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "RemoveNotification", arg0)
+}
+
+// RemovePattern mocks base method
+func (_m *MockDatabase) RemovePattern(_param0 string) error {
+	ret := _m.ctrl.Call(_m, "RemovePattern", _param0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemovePattern indicates an expected call of RemovePattern
+func (_mr *MockDatabaseMockRecorder) RemovePattern(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "RemovePattern", arg0)
 }
 
 // SaveMetrics mocks base method

@@ -286,27 +286,14 @@ func (connector *DbConnector) GetTrigger(triggerId string) (*moira.Trigger, erro
 	if err != nil {
 		return nil, fmt.Errorf("Failed to EXEC: %s", err.Error())
 	}
-	var trigger = &TriggerChecksDataStorageElement{}
-	triggerBytes, err := redis.Bytes(rawResponse[0], nil)
+	triggerSE, err := connector.convertTriggerWithTags(rawResponse[0], rawResponse[1], triggerId)
 	if err != nil {
-		if err == redis.ErrNil {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("Error getting trigger bytes, id: %s, error: %s", triggerId, err.Error())
+		return nil, err
 	}
-	if err := json.Unmarshal(triggerBytes, &trigger); err != nil {
-		return nil, fmt.Errorf("Failed to parse trigger json %s: %s", triggerBytes, err.Error())
+	if triggerSE == nil {
+		return nil, nil
 	}
-
-	triggerTags, err := redis.Strings(rawResponse[1], nil)
-	if err != nil {
-		connector.logger.Errorf("Error getting trigger-tags, id: %s, error: %s", triggerId, err.Error())
-	}
-
-	if triggerTags != nil && len(triggerTags) > 0 {
-		trigger.Tags = triggerTags
-	}
-	return toTrigger(trigger), nil
+	return toTrigger(triggerSE), nil
 }
 
 func (connector *DbConnector) GetTriggerLastCheck(triggerId string) (*moira.CheckData, error) {
@@ -728,4 +715,26 @@ func toTrigger(storageElement *TriggerChecksDataStorageElement) *moira.Trigger {
 		IsSimpleTrigger: storageElement.IsSimpleTrigger,
 		Ttl:             ttl,
 	}
+}
+
+func (connector *DbConnector) convertTriggerWithTags(triggerInterface interface{}, triggerTagsInterface interface{}, triggerId string) (*TriggerChecksDataStorageElement, error) {
+	trigger := &TriggerChecksDataStorageElement{}
+	triggerBytes, err := redis.Bytes(triggerInterface, nil)
+	if err != nil {
+		if err == redis.ErrNil {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("Error getting trigger bytes, id: %s, error: %s", triggerId, err.Error())
+	}
+	if err := json.Unmarshal(triggerBytes, trigger); err != nil {
+		return nil, fmt.Errorf("Failed to parse trigger json %s: %s", triggerBytes, err.Error())
+	}
+	triggerTags, err := redis.Strings(triggerTagsInterface, nil)
+	if err != nil {
+		connector.logger.Errorf("Error getting trigger-tags, id: %s, error: %s", triggerId, err.Error())
+	}
+	if triggerTags != nil && len(triggerTags) > 0 {
+		trigger.Tags = triggerTags
+	}
+	return trigger, nil
 }

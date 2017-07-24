@@ -43,6 +43,8 @@ type Database interface {
 	GetTriggersChecks([]string) ([]TriggerChecks, error)
 	GetTriggerLastCheck(string) (*CheckData, error)
 	SetTriggerMetricsMaintenance(triggerId string, metrics map[string]int64) error
+	GetPatternTriggerIds(pattern string) ([]string, error)
+	GetTriggers(triggerIds []string) ([]*Trigger, error)
 
 	GetEvents(string, int64, int64) ([]*EventData, error)
 	PushEvent(event *EventData, ui bool) error
@@ -58,6 +60,9 @@ type Database interface {
 
 	GetNotifications(start, end int64) ([]*ScheduledNotification, int64, error)
 	RemoveNotification(notificationKey string) (int64, error)
+
+	GetPatternMetrics(pattern string) ([]string, error)
+	RemovePattern(pattern string) error
 }
 
 // Logger implements logger abstraction
