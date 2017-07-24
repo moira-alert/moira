@@ -688,7 +688,7 @@ func (connector *DbConnector) RemoveNotification(notificationKey string) (int64,
 type TriggerChecksDataStorageElement struct {
 	ID              string             `json:"id"`
 	Name            string             `json:"name"`
-	Desc            string             `json:"desc"`
+	Desc            *string            `json:"desc,omitempty"`
 	Targets         []string           `json:"targets"`
 	WarnValue       float64            `json:"warn_value"`
 	ErrorValue      float64            `json:"error_value"`
