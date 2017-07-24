@@ -7,6 +7,7 @@ import (
 	"github.com/garyburd/redigo/redis"
 	"github.com/moira-alert/moira-alert"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -630,7 +631,58 @@ func (connector *DbConnector) SetTriggerMetricsMaintenance(triggerId string, met
 	}
 
 	return nil
+}
 
+func (connector *DbConnector) GetNotifications(start, end int64) ([]*moira.ScheduledNotification, int64, error) {
+	c := connector.pool.Get()
+	defer c.Close()
+	c.Send("MULTI")
+	c.Send("ZRANGE", "moira-notifier-notifications", start, end)
+	c.Send("ZCARD", "moira-notifier-notifications")
+	rawResponse, err := redis.Values(c.Do("EXEC"))
+	if err != nil {
+		return nil, 0, fmt.Errorf("Failed to EXEC: %s", err.Error())
+	}
+	if len(rawResponse) == 0 {
+		return make([]*moira.ScheduledNotification, 0), 0, nil
+	}
+	total, err := redis.Int(rawResponse[1], nil)
+	if err != nil {
+		return nil, 0, err
+	}
+	notifications, err := connector.convertNotifications(rawResponse[0])
+	if err != nil {
+		return nil, 0, err
+	}
+	return notifications, int64(total), nil
+}
+
+func (connector *DbConnector) RemoveNotification(notificationKey string) (int64, error) {
+	c := connector.pool.Get()
+	defer c.Close()
+
+	notifications, _, err := connector.GetNotifications(0, -1)
+	if err != nil {
+		return 0, err
+	}
+	for _, notification := range notifications {
+		timestamp := strconv.FormatInt(notification.Timestamp, 10)
+		contactId := notification.Contact.ID
+		subId := moira.UseString(notification.Event.SubscriptionID)
+		idstr := strings.Join([]string{timestamp, contactId, subId}, "")
+		if idstr == notificationKey {
+			notificationString, err := json.Marshal(notification)
+			if err != nil {
+				return 0, err
+			}
+			result, err := redis.Int64(c.Do("ZREM", "moira-notifier-notifications", notificationString))
+			if err != nil {
+				return 0, fmt.Errorf("Failed to remove notifier-notification: %s", err.Error())
+			}
+			return result, nil
+		}
+	}
+	return 0, nil
 }
 
 type TriggerChecksDataStorageElement struct {

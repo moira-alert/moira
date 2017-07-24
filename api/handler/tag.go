@@ -48,6 +48,7 @@ func deleteTag(writer http.ResponseWriter, request *http.Request) {
 	response, err := controller.DeleteTag(database, tagName)
 	if err != nil {
 		render.Render(writer, request, err)
+		return
 	}
 	if err := render.Render(writer, request, response); err != nil {
 		render.Render(writer, request, dto.ErrorRender(err))

@@ -1,8 +1,13 @@
 package handler
 
 import (
+	"fmt"
 	"github.com/go-chi/chi"
+	"github.com/go-chi/render"
+	"github.com/moira-alert/moira-alert/api/controller"
+	"github.com/moira-alert/moira-alert/api/dto"
 	"net/http"
+	"strconv"
 )
 
 func notification(router chi.Router) {
@@ -11,9 +16,38 @@ func notification(router chi.Router) {
 }
 
 func getNotification(writer http.ResponseWriter, request *http.Request) {
-	//todo хрен знает, что делает, очень похоже на то, что получает нотификаю, которую уже нужно отправить
+	start, err := strconv.ParseInt(request.URL.Query().Get("start"), 10, 64)
+	if err != nil {
+		start = 0
+	}
+	end, err := strconv.ParseInt(request.URL.Query().Get("end"), 10, 64)
+	if err != nil {
+		end = -1
+	}
+
+	notifications, errorResponse := controller.GetNotifications(database, start, end)
+	if errorResponse != nil {
+		render.Render(writer, request, errorResponse)
+		return
+	}
+	if err := render.Render(writer, request, notifications); err != nil {
+		render.Render(writer, request, dto.ErrorRender(err))
+	}
 }
 
 func deleteNotification(writer http.ResponseWriter, request *http.Request) {
-	//todo хрен знает, что делает, очень похоже на то, что удаляет нотификаю, которую уже нужно отправить
+	notificationKey := request.URL.Query().Get("id")
+	if notificationKey == "" {
+		render.Render(writer, request, dto.ErrorInvalidRequest(fmt.Errorf("Notification id can not be empty")))
+		return
+	}
+
+	notifications, errorResponse := controller.DeleteNotification(database, notificationKey)
+	if errorResponse != nil {
+		render.Render(writer, request, errorResponse)
+		return
+	}
+	if err := render.Render(writer, request, notifications); err != nil {
+		render.Render(writer, request, dto.ErrorRender(err))
+	}
 }

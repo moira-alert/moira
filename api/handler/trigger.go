@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 	"github.com/moira-alert/moira-alert/api/controller"
@@ -65,7 +66,16 @@ func getTriggerMetrics(writer http.ResponseWriter, request *http.Request) {
 }
 
 func deleteTriggerMetric(writer http.ResponseWriter, request *http.Request) {
-	//?name=EG-FRONT-03.UserSettings.Read
+	triggerId := request.Context().Value("triggerId").(string)
+	metricName := request.URL.Query().Get("name")
+	if metricName == "" {
+		render.Render(writer, request, dto.ErrorInvalidRequest(fmt.Errorf("Metric name can not be empty")))
+		return
+	}
+
+	if err := controller.DeleteTriggerMetric(database, metricName, triggerId); err != nil {
+		render.Render(writer, request, err)
+	}
 }
 
 func setMetricsMaintenance(writer http.ResponseWriter, request *http.Request) {

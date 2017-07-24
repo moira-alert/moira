@@ -198,16 +198,30 @@ func (_mr *MockDatabaseMockRecorder) GetNotificationTrigger(arg0 interface{}) *g
 }
 
 // GetNotifications mocks base method
-func (_m *MockDatabase) GetNotifications(_param0 int64) ([]*moira_alert.ScheduledNotification, error) {
-	ret := _m.ctrl.Call(_m, "GetNotifications", _param0)
+func (_m *MockDatabase) GetNotifications(_param0 int64, _param1 int64) ([]*moira_alert.ScheduledNotification, int64, error) {
+	ret := _m.ctrl.Call(_m, "GetNotifications", _param0, _param1)
+	ret0, _ := ret[0].([]*moira_alert.ScheduledNotification)
+	ret1, _ := ret[1].(int64)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetNotifications indicates an expected call of GetNotifications
+func (_mr *MockDatabaseMockRecorder) GetNotifications(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetNotifications", arg0, arg1)
+}
+
+// GetNotificationsAndDelete mocks base method
+func (_m *MockDatabase) GetNotificationsAndDelete(_param0 int64) ([]*moira_alert.ScheduledNotification, error) {
+	ret := _m.ctrl.Call(_m, "GetNotificationsAndDelete", _param0)
 	ret0, _ := ret[0].([]*moira_alert.ScheduledNotification)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetNotifications indicates an expected call of GetNotifications
-func (_mr *MockDatabaseMockRecorder) GetNotifications(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetNotifications", arg0)
+// GetNotificationsAndDelete indicates an expected call of GetNotificationsAndDelete
+func (_mr *MockDatabaseMockRecorder) GetNotificationsAndDelete(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetNotificationsAndDelete", arg0)
 }
 
 // GetPatterns mocks base method
@@ -441,6 +455,19 @@ func (_m *MockDatabase) PushEvent(_param0 *moira_alert.EventData, _param1 bool) 
 // PushEvent indicates an expected call of PushEvent
 func (_mr *MockDatabaseMockRecorder) PushEvent(arg0, arg1 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "PushEvent", arg0, arg1)
+}
+
+// RemoveNotification mocks base method
+func (_m *MockDatabase) RemoveNotification(_param0 string) (int64, error) {
+	ret := _m.ctrl.Call(_m, "RemoveNotification", _param0)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RemoveNotification indicates an expected call of RemoveNotification
+func (_mr *MockDatabaseMockRecorder) RemoveNotification(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "RemoveNotification", arg0)
 }
 
 // SaveMetrics mocks base method

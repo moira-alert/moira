@@ -247,8 +247,8 @@ func (connector *DbConnector) SetTriggerThrottlingTimestamp(triggerID string, ne
 	return err
 }
 
-// GetNotifications fetch notifications by given timestamp
-func (connector *DbConnector) GetNotifications(to int64) ([]*moira.ScheduledNotification, error) {
+// GetNotificationsAndDelete fetch notifications by given timestamp
+func (connector *DbConnector) GetNotificationsAndDelete(to int64) ([]*moira.ScheduledNotification, error) {
 	c := connector.pool.Get()
 	defer c.Close()
 

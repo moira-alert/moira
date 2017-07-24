@@ -49,7 +49,7 @@ func (worker *FetchNotificationsWorker) Run(shutdown chan bool, wg *sync.WaitGro
 
 func (worker *FetchNotificationsWorker) processScheduledNotifications() error {
 	ts := time.Now()
-	notifications, err := worker.database.GetNotifications(ts.Unix())
+	notifications, err := worker.database.GetNotificationsAndDelete(ts.Unix())
 	if err != nil {
 		return err
 	}

@@ -19,7 +19,7 @@ type Database interface {
 	GetTriggerThrottlingTimestamps(id string) (time.Time, time.Time)
 	GetTriggerEventsCount(id string, from int64) int64
 	SetTriggerThrottlingTimestamp(id string, next time.Time) error
-	GetNotifications(to int64) ([]*ScheduledNotification, error)
+	GetNotificationsAndDelete(to int64) ([]*ScheduledNotification, error)
 	GetMetricsCount() (int64, error)
 	GetChecksCount() (int64, error)
 
@@ -55,6 +55,9 @@ type Database interface {
 	UpdateSubscription(subscription *SubscriptionData) error
 	CreateSubscription(subscription *SubscriptionData) error
 	DeleteSubscription(subscriptionId string, userLogin string) error
+
+	GetNotifications(start, end int64) ([]*ScheduledNotification, int64, error)
+	RemoveNotification(notificationKey string) (int64, error)
 }
 
 // Logger implements logger abstraction
