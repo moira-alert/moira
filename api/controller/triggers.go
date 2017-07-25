@@ -5,6 +5,22 @@ import (
 	"github.com/moira-alert/moira-alert/api/dto"
 )
 
+func GetAllTriggers(database moira.Database) (*dto.TriggersList, *dto.ErrorResponse) {
+	//todo разница в 8 строк, разобраться
+	triggersIds, err := database.GetTriggerIds()
+	if err != nil {
+		return nil, dto.ErrorInternalServer(err)
+	}
+	triggerChecks, err := database.GetTriggerChecks(triggersIds)
+	if err != nil {
+		return nil, dto.ErrorInternalServer(err)
+	}
+	triggersList := dto.TriggersList{
+		List: triggerChecks,
+	}
+	return &triggersList, nil
+}
+
 func GetTriggerPage(database moira.Database, page int64, size int64, onlyErrors bool, filterTags []string) (*dto.TriggersList, *dto.ErrorResponse) {
 	var triggersChecks []moira.TriggerChecks
 	var total int64
@@ -21,20 +37,20 @@ func GetTriggerPage(database moira.Database, page int64, size int64, onlyErrors 
 	//todo Выпилить лишние поля из JSON'a
 	triggersList := dto.TriggersList{
 		List:  triggersChecks,
-		Total: total,
-		Page:  page,
-		Size:  size,
+		Total: &total,
+		Page:  &page,
+		Size:  &size,
 	}
 	return &triggersList, nil
 }
 
 func getNotFilteredTriggers(database moira.Database, page int64, size int64) ([]moira.TriggerChecks, int64, error) {
-	triggerIds, total, err := database.GetTriggerIds()
+	triggerIds, total, err := database.GetTriggerCheckIds()
 	if err != nil {
 		return nil, 0, err
 	}
 	triggerIds = triggerIds[page*size : (page+1)*size]
-	triggersChecks, err := database.GetTriggersChecks(triggerIds)
+	triggersChecks, err := database.GetTriggerChecks(triggerIds)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -42,7 +58,7 @@ func getNotFilteredTriggers(database moira.Database, page int64, size int64) ([]
 }
 
 func getFilteredTriggers(database moira.Database, page int64, size int64, onlyErrors bool, filterTags []string) ([]moira.TriggerChecks, int64, error) {
-	triggerIds, total, err := database.GetFilteredTriggersIds(filterTags, onlyErrors)
+	triggerIds, total, err := database.GetFilteredTriggerCheckIds(filterTags, onlyErrors)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -59,7 +75,7 @@ func getFilteredTriggers(database moira.Database, page int64, size int64, onlyEr
 	}
 
 	triggerIds = triggerIds[from:to]
-	triggersChecks, err := database.GetTriggersChecks(triggerIds)
+	triggersChecks, err := database.GetTriggerChecks(triggerIds)
 	if err != nil {
 		return nil, 0, err
 	}

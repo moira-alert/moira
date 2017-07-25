@@ -17,7 +17,16 @@ func triggers(router chi.Router) {
 }
 
 func getAllTriggers(writer http.ResponseWriter, request *http.Request) {
-	//todo очень странная параша, отдает все триггреры
+	triggersList, errorResponse := controller.GetAllTriggers(database)
+	if errorResponse != nil {
+		render.Render(writer, request, errorResponse)
+		return
+	}
+
+	if err := render.Render(writer, request, triggersList); err != nil {
+		render.Render(writer, request, dto.ErrorRender(err))
+		return
+	}
 }
 
 func createTrigger(writer http.ResponseWriter, request *http.Request) {

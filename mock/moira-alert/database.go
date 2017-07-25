@@ -157,18 +157,18 @@ func (_mr *MockDatabaseMockRecorder) GetEvents(arg0, arg1, arg2 interface{}) *go
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetEvents", arg0, arg1, arg2)
 }
 
-// GetFilteredTriggersIds mocks base method
-func (_m *MockDatabase) GetFilteredTriggersIds(_param0 []string, _param1 bool) ([]string, int64, error) {
-	ret := _m.ctrl.Call(_m, "GetFilteredTriggersIds", _param0, _param1)
+// GetFilteredTriggerCheckIds mocks base method
+func (_m *MockDatabase) GetFilteredTriggerCheckIds(_param0 []string, _param1 bool) ([]string, int64, error) {
+	ret := _m.ctrl.Call(_m, "GetFilteredTriggerCheckIds", _param0, _param1)
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(int64)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
 
-// GetFilteredTriggersIds indicates an expected call of GetFilteredTriggersIds
-func (_mr *MockDatabaseMockRecorder) GetFilteredTriggersIds(arg0, arg1 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetFilteredTriggersIds", arg0, arg1)
+// GetFilteredTriggerCheckIds indicates an expected call of GetFilteredTriggerCheckIds
+func (_mr *MockDatabaseMockRecorder) GetFilteredTriggerCheckIds(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetFilteredTriggerCheckIds", arg0, arg1)
 }
 
 // GetMetricsCount mocks base method
@@ -367,6 +367,33 @@ func (_mr *MockDatabaseMockRecorder) GetTrigger(arg0 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetTrigger", arg0)
 }
 
+// GetTriggerCheckIds mocks base method
+func (_m *MockDatabase) GetTriggerCheckIds() ([]string, int64, error) {
+	ret := _m.ctrl.Call(_m, "GetTriggerCheckIds")
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(int64)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetTriggerCheckIds indicates an expected call of GetTriggerCheckIds
+func (_mr *MockDatabaseMockRecorder) GetTriggerCheckIds() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetTriggerCheckIds")
+}
+
+// GetTriggerChecks mocks base method
+func (_m *MockDatabase) GetTriggerChecks(_param0 []string) ([]moira_alert.TriggerChecks, error) {
+	ret := _m.ctrl.Call(_m, "GetTriggerChecks", _param0)
+	ret0, _ := ret[0].([]moira_alert.TriggerChecks)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTriggerChecks indicates an expected call of GetTriggerChecks
+func (_mr *MockDatabaseMockRecorder) GetTriggerChecks(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetTriggerChecks", arg0)
+}
+
 // GetTriggerEventsCount mocks base method
 func (_m *MockDatabase) GetTriggerEventsCount(_param0 string, _param1 int64) int64 {
 	ret := _m.ctrl.Call(_m, "GetTriggerEventsCount", _param0, _param1)
@@ -380,12 +407,11 @@ func (_mr *MockDatabaseMockRecorder) GetTriggerEventsCount(arg0, arg1 interface{
 }
 
 // GetTriggerIds mocks base method
-func (_m *MockDatabase) GetTriggerIds() ([]string, int64, error) {
+func (_m *MockDatabase) GetTriggerIds() ([]string, error) {
 	ret := _m.ctrl.Call(_m, "GetTriggerIds")
 	ret0, _ := ret[0].([]string)
-	ret1, _ := ret[1].(int64)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // GetTriggerIds indicates an expected call of GetTriggerIds
@@ -443,19 +469,6 @@ func (_m *MockDatabase) GetTriggers(_param0 []string) ([]*moira_alert.Trigger, e
 // GetTriggers indicates an expected call of GetTriggers
 func (_mr *MockDatabaseMockRecorder) GetTriggers(arg0 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetTriggers", arg0)
-}
-
-// GetTriggersChecks mocks base method
-func (_m *MockDatabase) GetTriggersChecks(_param0 []string) ([]moira_alert.TriggerChecks, error) {
-	ret := _m.ctrl.Call(_m, "GetTriggersChecks", _param0)
-	ret0, _ := ret[0].([]moira_alert.TriggerChecks)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetTriggersChecks indicates an expected call of GetTriggersChecks
-func (_mr *MockDatabaseMockRecorder) GetTriggersChecks(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetTriggersChecks", arg0)
 }
 
 // GetUserContacts mocks base method

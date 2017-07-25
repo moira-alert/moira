@@ -83,7 +83,7 @@ func (connector *DbConnector) GetTag(tagName string) (moira.TagData, error) {
 	return tag, nil
 }
 
-func (connector *DbConnector) GetFilteredTriggersIds(tagNames []string, onlyErrors bool) ([]string, int64, error) {
+func (connector *DbConnector) GetFilteredTriggerCheckIds(tagNames []string, onlyErrors bool) ([]string, int64, error) {
 	c := connector.pool.Get()
 	defer c.Close()
 
@@ -150,7 +150,7 @@ func (connector *DbConnector) GetFilteredTriggersIds(tagNames []string, onlyErro
 	return total, int64(len(total)), nil
 }
 
-func (connector *DbConnector) GetTriggerIds() ([]string, int64, error) {
+func (connector *DbConnector) GetTriggerCheckIds() ([]string, int64, error) {
 	c := connector.pool.Get()
 	defer c.Close()
 
@@ -172,13 +172,13 @@ func (connector *DbConnector) GetTriggerIds() ([]string, int64, error) {
 	return triggerIds, int64(total), nil
 }
 
-func (connector *DbConnector) GetTriggersChecks(triggerIds []string) ([]moira.TriggerChecks, error) {
+func (connector *DbConnector) GetTriggerChecks(triggerCheckIds []string) ([]moira.TriggerChecks, error) {
 	c := connector.pool.Get()
 	defer c.Close()
 	var triggerChecks []moira.TriggerChecks
 
 	c.Send("MULTI")
-	for _, triggerCheckId := range triggerIds {
+	for _, triggerCheckId := range triggerCheckIds {
 		c.Send("GET", fmt.Sprintf("moira-trigger:%s", triggerCheckId))
 		c.Send("SMEMBERS", fmt.Sprintf("moira-trigger-tags:%s", triggerCheckId))
 		c.Send("GET", fmt.Sprintf("moira-metric-last-check:%s", triggerCheckId))
@@ -192,7 +192,7 @@ func (connector *DbConnector) GetTriggersChecks(triggerIds []string) ([]moira.Tr
 	var slices [][]interface{}
 	for i := 0; i < len(rawResponce); i += 4 {
 		arr := make([]interface{}, 0, 5)
-		arr = append(arr, triggerIds[i/4])
+		arr = append(arr, triggerCheckIds[i/4])
 		arr = append(arr, rawResponce[i:i+4]...)
 		slices = append(slices, arr)
 	}

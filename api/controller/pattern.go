@@ -6,7 +6,7 @@ import (
 )
 
 func GetAllPatterns(database moira.Database) (*dto.PatternList, *dto.ErrorResponse) {
-	//todo разница в 7 строк, разобраться
+	//todo разница в 5 строк, разобраться
 	//todo работает медлено
 	patterns, err := database.GetPatterns()
 	pattersList := dto.PatternList{

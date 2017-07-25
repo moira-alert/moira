@@ -66,3 +66,13 @@ func (connector *DbConnector) RemovePattern(pattern string) error {
 	}
 	return nil
 }
+
+func (connector *DbConnector) GetTriggerIds() ([]string, error) {
+	c := connector.pool.Get()
+	defer c.Close()
+	triggerIds, err := redis.Strings(c.Do("SMEMBERS", "moira-triggers-list"))
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get triggers-list: %s", err.Error())
+	}
+	return triggerIds, nil
+}

@@ -37,10 +37,11 @@ type Database interface {
 	GetTagTriggerIds(tagName string) ([]string, error)
 	DeleteTag(tagName string) error
 
-	GetTriggerIds() ([]string, int64, error)
-	GetFilteredTriggersIds([]string, bool) ([]string, int64, error)
+	GetTriggerIds() ([]string, error)
+	GetTriggerCheckIds() ([]string, int64, error)
+	GetFilteredTriggerCheckIds([]string, bool) ([]string, int64, error)
 	GetTrigger(string) (*Trigger, error)
-	GetTriggersChecks([]string) ([]TriggerChecks, error)
+	GetTriggerChecks(triggerCheckIds []string) ([]TriggerChecks, error)
 	GetTriggerLastCheck(string) (*CheckData, error)
 	SetTriggerMetricsMaintenance(triggerId string, metrics map[string]int64) error
 	GetPatternTriggerIds(pattern string) ([]string, error)
