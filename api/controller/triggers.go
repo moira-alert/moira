@@ -6,7 +6,6 @@ import (
 )
 
 func GetAllTriggers(database moira.Database) (*dto.TriggersList, *dto.ErrorResponse) {
-	//todo разница в 8 строк, разобраться
 	triggersIds, err := database.GetTriggerIds()
 	if err != nil {
 		return nil, dto.ErrorInternalServer(err)

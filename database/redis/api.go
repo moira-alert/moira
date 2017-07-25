@@ -197,7 +197,7 @@ func (connector *DbConnector) GetTriggerChecks(triggerCheckIds []string) ([]moir
 		slices = append(slices, arr)
 	}
 	for _, slice := range slices {
-		triggerId := slice[0]
+		triggerId := slice[0].(string)
 		var trigger = &TriggerChecksDataStorageElement{}
 
 		triggerBytes, err := redis.Bytes(slice[1], nil)
@@ -233,7 +233,6 @@ func (connector *DbConnector) GetTriggerChecks(triggerCheckIds []string) ([]moir
 			connector.logger.Errorf("Error getting moira-notifier-next, id: %s, error: %s", triggerId, err.Error())
 		}
 
-		trigger.ID = triggerId.(string)
 		trigger.LastCheck = lastCheck
 		if throttling > time.Now().Unix() {
 			trigger.Throttling = throttling
@@ -242,7 +241,7 @@ func (connector *DbConnector) GetTriggerChecks(triggerCheckIds []string) ([]moir
 			trigger.Tags = triggerTags
 		}
 
-		triggerChecks = append(triggerChecks, *toTriggerCheckData(trigger))
+		triggerChecks = append(triggerChecks, *toTriggerCheckData(trigger, triggerId))
 	}
 
 	return triggerChecks, nil
@@ -293,7 +292,7 @@ func (connector *DbConnector) GetTrigger(triggerId string) (*moira.Trigger, erro
 	if triggerSE == nil {
 		return nil, nil
 	}
-	return toTrigger(triggerSE), nil
+	return toTrigger(triggerSE, triggerId), nil
 }
 
 func (connector *DbConnector) GetTriggerLastCheck(triggerId string) (*moira.CheckData, error) {
@@ -673,35 +672,34 @@ func (connector *DbConnector) RemoveNotification(notificationKey string) (int64,
 }
 
 type TriggerChecksDataStorageElement struct {
-	ID              string             `json:"id"`
-	Name            string             `json:"name"`
-	Desc            *string            `json:"desc,omitempty"`
-	Targets         []string           `json:"targets"`
-	WarnValue       float64            `json:"warn_value"`
-	ErrorValue      float64            `json:"error_value"`
-	Tags            []string           `json:"tags"`
-	TtlState        string             `json:"ttl_state"`
-	Schedule        moira.ScheduleData `json:"sched"`
-	Expression      string             `json:"expression"`
-	Patterns        []string           `json:"patterns"`
-	IsSimpleTrigger bool               `json:"is_simple_trigger"`
-	Ttl             string             `json:"ttl"`
-	Throttling      int64              `json:"throttling"`
-	LastCheck       moira.CheckData    `json:"last_check"`
+	ID              string              `json:"id"`
+	Name            string              `json:"name"`
+	Desc            *string             `json:"desc,omitempty"`
+	Targets         []string            `json:"targets"`
+	WarnValue       *float64            `json:"warn_value"`
+	ErrorValue      *float64            `json:"error_value"`
+	Tags            []string            `json:"tags"`
+	TtlState        *string             `json:"ttl_state,omitempty"`
+	Schedule        *moira.ScheduleData `json:"sched,omitempty"`
+	Expression      *string             `json:"expression,omitempty"`
+	Patterns        []string            `json:"patterns"`
+	IsSimpleTrigger bool                `json:"is_simple_trigger"`
+	Ttl             *string             `json:"ttl"`
+	Throttling      int64               `json:"throttling"`
+	LastCheck       moira.CheckData     `json:"last_check"`
 }
 
-func toTriggerCheckData(storageElement *TriggerChecksDataStorageElement) *moira.TriggerChecks {
+func toTriggerCheckData(storageElement *TriggerChecksDataStorageElement, triggerId string) *moira.TriggerChecks {
 	return &moira.TriggerChecks{
-		Trigger:    *toTrigger(storageElement),
+		Trigger:    *toTrigger(storageElement, triggerId),
 		Throttling: storageElement.Throttling,
 		LastCheck:  storageElement.LastCheck,
 	}
 }
 
-func toTrigger(storageElement *TriggerChecksDataStorageElement) *moira.Trigger {
-	ttl, _ := strconv.ParseInt(storageElement.Ttl, 10, 64)
+func toTrigger(storageElement *TriggerChecksDataStorageElement, triggerId string) *moira.Trigger {
 	return &moira.Trigger{
-		ID:              storageElement.ID,
+		ID:              triggerId,
 		Name:            storageElement.Name,
 		Desc:            storageElement.Desc,
 		Targets:         storageElement.Targets,
@@ -713,8 +711,16 @@ func toTrigger(storageElement *TriggerChecksDataStorageElement) *moira.Trigger {
 		Expression:      storageElement.Expression,
 		Patterns:        storageElement.Patterns,
 		IsSimpleTrigger: storageElement.IsSimpleTrigger,
-		Ttl:             ttl,
+		Ttl:             getTriggerTtl(storageElement.Ttl),
 	}
+}
+
+func getTriggerTtl(ttlstr *string) *int64 {
+	if ttlstr == nil {
+		return nil
+	}
+	ttl, _ := strconv.ParseInt(*ttlstr, 10, 64)
+	return &ttl
 }
 
 func (connector *DbConnector) convertTriggerWithTags(triggerInterface interface{}, triggerTagsInterface interface{}, triggerId string) (*TriggerChecksDataStorageElement, error) {

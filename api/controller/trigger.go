@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/api/dto"
+	"time"
 )
 
 func GetTrigger(database moira.Database, triggerId string) (*dto.Trigger, *dto.ErrorResponse) {
@@ -15,10 +16,15 @@ func GetTrigger(database moira.Database, triggerId string) (*dto.Trigger, *dto.E
 		return nil, dto.ErrorNotFound
 	}
 	throttling, _ := database.GetTriggerThrottlingTimestamps(triggerId)
+	throttlingUnix := throttling.Unix()
+
+	if throttlingUnix < time.Now().Unix() {
+		throttlingUnix = 0
+	}
 
 	triggerResponse := dto.Trigger{
 		Trigger:    *trigger,
-		Throttling: throttling.Unix(),
+		Throttling: throttlingUnix,
 	}
 
 	return &triggerResponse, nil

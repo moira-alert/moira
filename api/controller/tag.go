@@ -7,7 +7,6 @@ import (
 )
 
 func GetAllTagsAndSubscriptions(database moira.Database) (*dto.TagsStatistics, *dto.ErrorResponse) {
-	//todo разница в 1 строку, разобраться
 	//todo работает медлено
 	tagsNames, err := database.GetTagNames()
 	if err != nil {

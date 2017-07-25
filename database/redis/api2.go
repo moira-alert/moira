@@ -40,7 +40,7 @@ func (connector *DbConnector) GetTriggers(triggerIds []string) ([]*moira.Trigger
 		if triggerSE == nil {
 			continue
 		}
-		triggers = append(triggers, toTrigger(triggerSE))
+		triggers = append(triggers, toTrigger(triggerSE, triggerIds[i/2]))
 	}
 
 	return triggers, nil
