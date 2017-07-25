@@ -78,7 +78,7 @@ func TestNotifierDataBase(t *testing.T) {
 		}
 
 		db.AddNotification(&notif)
-		actual, err := db.GetNotifications(now.Unix())
+		actual, err := db.GetNotificationsAndDelete(now.Unix())
 		So(actual, ShouldResemble, []*moira.ScheduledNotification{&notif})
 		So(err, ShouldBeEmpty)
 	})
@@ -88,7 +88,7 @@ func TestNotifierDataBase(t *testing.T) {
 		db.pool = fakeDataBase.pool
 
 		now := time.Now()
-		actual, err := db.GetNotifications(now.Unix())
+		actual, err := db.GetNotificationsAndDelete(now.Unix())
 		So(actual, ShouldResemble, []*moira.ScheduledNotification{})
 		So(err, ShouldBeEmpty)
 	})
