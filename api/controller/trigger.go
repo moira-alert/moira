@@ -30,6 +30,15 @@ func GetTrigger(database moira.Database, triggerId string) (*dto.Trigger, *dto.E
 	return &triggerResponse, nil
 }
 
+func GetTriggerThrottling(database moira.Database, triggerId string) (*dto.ThrottlingResponse, *dto.ErrorResponse) {
+	throttling, _ := database.GetTriggerThrottlingTimestamps(triggerId)
+	throttlingUnix := throttling.Unix()
+	if throttlingUnix < time.Now().Unix() {
+		throttlingUnix = 0
+	}
+	return &dto.ThrottlingResponse{Throttling: throttlingUnix}, nil
+}
+
 func GetTriggerState(database moira.Database, triggerId string) (*dto.TriggerCheck, *dto.ErrorResponse) {
 	lastCheck, err := database.GetTriggerLastCheck(triggerId)
 	if err != nil {
@@ -44,7 +53,15 @@ func GetTriggerState(database moira.Database, triggerId string) (*dto.TriggerChe
 	return &triggerCheck, nil
 }
 
+func DeleteTriggerThrottling(database moira.Database, triggerId string) *dto.ErrorResponse {
+	if err := database.DeleteTriggerThrottling(triggerId); err != nil {
+		return dto.ErrorInternalServer(err)
+	}
+	return nil
+}
+
 func DeleteTriggerMetric(database moira.Database, metricName string, triggerId string) *dto.ErrorResponse {
+	//todo
 	trigger, err := database.GetTrigger(triggerId)
 	if err != nil {
 		return dto.ErrorInternalServer(err)

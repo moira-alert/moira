@@ -46,6 +46,7 @@ type Database interface {
 	SetTriggerMetricsMaintenance(triggerId string, metrics map[string]int64) error
 	GetPatternTriggerIds(pattern string) ([]string, error)
 	GetTriggers(triggerIds []string) ([]*Trigger, error)
+	DeleteTriggerThrottling(triggerId string) error
 
 	GetEvents(string, int64, int64) ([]*EventData, error)
 	PushEvent(event *EventData, ui bool) error

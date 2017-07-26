@@ -54,11 +54,23 @@ func getTriggerState(writer http.ResponseWriter, request *http.Request) {
 }
 
 func getTriggerThrottling(writer http.ResponseWriter, request *http.Request) {
-	//not found
+	triggerId := request.Context().Value("triggerId").(string)
+	triggerState, err := controller.GetTriggerThrottling(database, triggerId)
+	if err != nil {
+		render.Render(writer, request, err)
+		return
+	}
+	if err := render.Render(writer, request, triggerState); err != nil {
+		render.Render(writer, request, dto.ErrorRender(err))
+	}
 }
 
 func deleteThrottling(writer http.ResponseWriter, request *http.Request) {
-	//удалить throttling
+	triggerId := request.Context().Value("triggerId").(string)
+	err := controller.DeleteTriggerThrottling(database, triggerId)
+	if err != nil {
+		render.Render(writer, request, err)
+	}
 }
 
 func getTriggerMetrics(writer http.ResponseWriter, request *http.Request) {
@@ -72,7 +84,6 @@ func deleteTriggerMetric(writer http.ResponseWriter, request *http.Request) {
 		render.Render(writer, request, dto.ErrorInvalidRequest(fmt.Errorf("Metric name can not be empty")))
 		return
 	}
-
 	if err := controller.DeleteTriggerMetric(database, metricName, triggerId); err != nil {
 		render.Render(writer, request, err)
 	}
@@ -85,13 +96,8 @@ func setMetricsMaintenance(writer http.ResponseWriter, request *http.Request) {
 		render.Render(writer, request, dto.ErrorInvalidRequest(err))
 		return
 	}
-
 	err := controller.SetMetricsMaintenance(database, triggerId, metricsMaintenance)
 	if err != nil {
 		render.Render(writer, request, err)
 	}
-
-	//Установить maintenance
-	//в body - время, до которого будет maintenance
-	//Умеет в массив треггеров
 }

@@ -39,3 +39,11 @@ type MetricsMaintenance map[string]int64
 func (*MetricsMaintenance) Bind(r *http.Request) error {
 	return nil
 }
+
+type ThrottlingResponse struct {
+	Throttling int64 `json:"throttling"`
+}
+
+func (*ThrottlingResponse) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
