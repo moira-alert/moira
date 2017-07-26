@@ -47,6 +47,7 @@ type Database interface {
 	GetPatternTriggerIds(pattern string) ([]string, error)
 	GetTriggers(triggerIds []string) ([]*Trigger, error)
 	DeleteTriggerThrottling(triggerId string) error
+	DeleteTrigger(triggerId string) error
 
 	GetEvents(string, int64, int64) ([]*EventData, error)
 	PushEvent(event *EventData, ui bool) error
@@ -65,6 +66,7 @@ type Database interface {
 
 	GetPatternMetrics(pattern string) ([]string, error)
 	RemovePattern(pattern string) error
+	RemovePatternWithMetrics(pattern string) error
 }
 
 // Logger implements logger abstraction

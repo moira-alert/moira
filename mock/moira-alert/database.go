@@ -92,6 +92,30 @@ func (_mr *MockDatabaseMockRecorder) DeleteTag(arg0 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "DeleteTag", arg0)
 }
 
+// DeleteTrigger mocks base method
+func (_m *MockDatabase) DeleteTrigger(_param0 string) error {
+	ret := _m.ctrl.Call(_m, "DeleteTrigger", _param0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteTrigger indicates an expected call of DeleteTrigger
+func (_mr *MockDatabaseMockRecorder) DeleteTrigger(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "DeleteTrigger", arg0)
+}
+
+// DeleteTriggerThrottling mocks base method
+func (_m *MockDatabase) DeleteTriggerThrottling(_param0 string) error {
+	ret := _m.ctrl.Call(_m, "DeleteTriggerThrottling", _param0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteTriggerThrottling indicates an expected call of DeleteTriggerThrottling
+func (_mr *MockDatabaseMockRecorder) DeleteTriggerThrottling(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "DeleteTriggerThrottling", arg0)
+}
+
 // FetchEvent mocks base method
 func (_m *MockDatabase) FetchEvent() (*moira_alert.EventData, error) {
 	ret := _m.ctrl.Call(_m, "FetchEvent")
@@ -532,6 +556,18 @@ func (_m *MockDatabase) RemovePattern(_param0 string) error {
 // RemovePattern indicates an expected call of RemovePattern
 func (_mr *MockDatabaseMockRecorder) RemovePattern(arg0 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "RemovePattern", arg0)
+}
+
+// RemovePatternWithMetrics mocks base method
+func (_m *MockDatabase) RemovePatternWithMetrics(_param0 string) error {
+	ret := _m.ctrl.Call(_m, "RemovePatternWithMetrics", _param0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemovePatternWithMetrics indicates an expected call of RemovePatternWithMetrics
+func (_mr *MockDatabaseMockRecorder) RemovePatternWithMetrics(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "RemovePatternWithMetrics", arg0)
 }
 
 // SaveMetrics mocks base method

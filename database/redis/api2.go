@@ -53,6 +53,9 @@ func (connector *DbConnector) GetPatternMetrics(pattern string) ([]string, error
 
 	metrics, err := redis.Strings(c.Do("SMEMBERS", fmt.Sprintf("moira-pattern-metrics:%s", pattern)))
 	if err != nil {
+		if err == redis.ErrNil {
+			return make([]string, 0), nil
+		}
 		return nil, fmt.Errorf("Failed to retrieve pattern-metrics for pattern %s: %s", pattern, err.Error())
 	}
 	return metrics, nil
@@ -107,6 +110,68 @@ func (connector *DbConnector) DeleteTriggerThrottling(triggerId string) error {
 			c.Send("ZADD", "moira-notifier-notifications", now, notificationStrings[i])
 		}
 	}
+	_, err = c.Do("EXEC")
+	if err != nil {
+		return fmt.Errorf("Failed to EXEC: %s", err.Error())
+	}
+	return nil
+}
+
+func (connector *DbConnector) DeleteTrigger(triggerId string) error {
+	trigger, err := connector.GetTrigger(triggerId)
+	if err != nil {
+		return nil
+	}
+	if trigger == nil {
+		return nil
+	}
+
+	c := connector.pool.Get()
+	defer c.Close()
+
+	c.Send("MULTI")
+	c.Send("DEL", fmt.Sprintf("moira-trigger:%s", triggerId))
+	c.Send("DEL", fmt.Sprintf("moira-trigger-tags:%s", triggerId))
+	c.Send("SREM", "moira-triggers-list", triggerId)
+	for _, tag := range trigger.Tags {
+		c.Send("SREM", fmt.Sprintf("moira-tag-triggers:%s", tag), triggerId)
+	}
+	for _, pattern := range trigger.Patterns {
+		c.Send("SREM", fmt.Sprintf("moira-pattern-triggers:%s", pattern), triggerId)
+	}
+	_, err = c.Do("EXEC")
+	if err != nil {
+		return fmt.Errorf("Failed to EXEC: %s", err.Error())
+	}
+
+	for _, pattern := range trigger.Patterns {
+		count, err := redis.Int64(c.Do("SCARD", fmt.Sprintf("moira-pattern-triggers:%s", pattern)))
+		if err != nil {
+			return fmt.Errorf("Failed to SCARD pattern-triggers: %s", err.Error())
+		}
+		if count == 0 {
+			if err := connector.RemovePatternWithMetrics(pattern); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (connector *DbConnector) RemovePatternWithMetrics(pattern string) error {
+	metrics, err := connector.GetPatternMetrics(pattern)
+	if err != nil {
+		return err
+	}
+
+	c := connector.pool.Get()
+	defer c.Close()
+	c.Send("MULTI")
+	c.Send("SREM", "moira-pattern-list", pattern)
+	for _, metric := range metrics {
+		c.Send("DEL", fmt.Sprintf("moira-metric-data:%s", metric))
+	}
+	c.Send("DEL", fmt.Sprintf("moira-pattern-metrics:%s", pattern))
 	_, err = c.Do("EXEC")
 	if err != nil {
 		return fmt.Errorf("Failed to EXEC: %s", err.Error())

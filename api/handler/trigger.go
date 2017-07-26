@@ -13,6 +13,7 @@ func trigger(router chi.Router) {
 	router.Use(triggerContext)
 	router.Put("/", saveTrigger)
 	router.Get("/", getTrigger)
+	router.Delete("/", deleteTrigger)
 	router.Get("/state", getTriggerState)
 	router.Route("/throttling", func(router chi.Router) {
 		router.Get("/", getTriggerThrottling)
@@ -27,6 +28,16 @@ func trigger(router chi.Router) {
 
 func saveTrigger(writer http.ResponseWriter, request *http.Request) {
 
+}
+
+func deleteTrigger(writer http.ResponseWriter, request *http.Request) {
+
+	triggerId := request.Context().Value("triggerId").(string)
+
+	err := controller.DeleteTrigger(database, triggerId)
+	if err != nil {
+		render.Render(writer, request, err)
+	}
 }
 
 func getTrigger(writer http.ResponseWriter, request *http.Request) {
