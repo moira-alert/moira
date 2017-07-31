@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/garyburd/redigo/redis"
 	"github.com/moira-alert/moira-alert"
@@ -173,6 +174,84 @@ func (connector *DbConnector) RemovePatternWithMetrics(pattern string) error {
 	}
 	c.Send("DEL", fmt.Sprintf("moira-pattern-metrics:%s", pattern))
 	_, err = c.Do("EXEC")
+	if err != nil {
+		return fmt.Errorf("Failed to EXEC: %s", err.Error())
+	}
+	return nil
+}
+
+func (connector *DbConnector) SetTriggerCheckLock(triggerId string) (*string, error) {
+	c := connector.pool.Get()
+	defer c.Close()
+	okString, err := redis.String(c.Do("SET", fmt.Sprintf("moira-metric-check-lock:%s", triggerId), time.Now().Unix(), "EX", 30, "NX"))
+	if err != nil {
+		return nil, fmt.Errorf("Failed to set metric-check-lock:%s : %s", triggerId, err.Error())
+	}
+	return &okString, nil
+}
+
+func (connector *DbConnector) DeleteTriggerCheckLock(triggerId string) error {
+	c := connector.pool.Get()
+	defer c.Close()
+	_, err := c.Do("DEL", fmt.Sprintf("moira-metric-check-lock:%s", triggerId))
+	if err != nil {
+		return fmt.Errorf("Failed to delete metric-check-lock:%s : %s", triggerId, err.Error())
+	}
+	return nil
+}
+
+func (connector *DbConnector) AcquireTriggerCheckLock(triggerId string, timeout int) error {
+	var acquired *string
+	var err error
+	count := 0
+	for acquired == nil && count < timeout {
+		select {
+		case <-time.After(time.Millisecond * 500):
+			acquired, err = connector.SetTriggerCheckLock(triggerId)
+			if err != nil {
+				return err
+			}
+			count += 1
+		}
+	}
+	if acquired == nil {
+		return fmt.Errorf("Can not acquire trigger lock in %v seconds", timeout)
+	}
+	return nil
+}
+
+func (connector *DbConnector) SetTriggerLastCheck(triggerId string, checkData *moira.CheckData) error {
+	bytes, err := json.Marshal(checkData)
+	if err != nil {
+		return err
+	}
+	c := connector.pool.Get()
+	defer c.Close()
+	c.Send("MULTI")
+	c.Send("SET", fmt.Sprintf("moira-metric-last-check:%s", triggerId), bytes)
+	c.Send("ZADD", "moira-triggers-checks", checkData.Score, triggerId)
+	c.Send("INCR", "moira-selfstate:checks-counter")
+	if checkData.Score > 0 {
+		c.Send("ZADD", "moira-bad-state-triggers", triggerId)
+	} else {
+		c.Send("SREM", "moira-bad-state-triggers", triggerId)
+	}
+	_, err = c.Do("EXEC")
+	if err != nil {
+		return fmt.Errorf("Failed to EXEC: %s", err.Error())
+	}
+	return nil
+
+}
+
+func (connector *DbConnector) RemovePatternsMetrics(patterns []string) error {
+	c := connector.pool.Get()
+	defer c.Close()
+	c.Send("MULTI")
+	for _, pattern := range patterns {
+		c.Send("DEL", fmt.Sprintf("moira-pattern-metrics:%s", pattern))
+	}
+	_, err := c.Do("EXEC")
 	if err != nil {
 		return fmt.Errorf("Failed to EXEC: %s", err.Error())
 	}

@@ -68,14 +68,34 @@ func DeleteTriggerThrottling(database moira.Database, triggerId string) *dto.Err
 }
 
 func DeleteTriggerMetric(database moira.Database, metricName string, triggerId string) *dto.ErrorResponse {
-	//todo
 	trigger, err := database.GetTrigger(triggerId)
 	if err != nil {
 		return dto.ErrorInternalServer(err)
 	}
 	if trigger == nil {
+		return dto.ErrorInvalidRequest(fmt.Errorf("Trigger not found"))
+	}
+
+	if err = database.AcquireTriggerCheckLock(triggerId, 10); err != nil {
+		return dto.ErrorInternalServer(err)
+	}
+	defer database.DeleteTriggerCheckLock(triggerId)
+
+	lastCheck, err := database.GetTriggerLastCheck(triggerId)
+	if err != nil {
+		return dto.ErrorInternalServer(err)
+	}
+	if lastCheck == nil {
 		return dto.ErrorInvalidRequest(fmt.Errorf("Trigger check not found"))
 	}
+	_, ok := lastCheck.Metrics[metricName]
+	if ok {
+		delete(lastCheck.Metrics, metricName)
+	}
+	if err = database.RemovePatternsMetrics(trigger.Patterns); err != nil {
+		return dto.ErrorInternalServer(err)
+	}
+	database.SetTriggerLastCheck(triggerId, lastCheck)
 	return nil
 }
 

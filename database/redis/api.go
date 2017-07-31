@@ -651,6 +651,7 @@ func (connector *DbConnector) RemoveNotification(notificationKey string) (int64,
 	if err != nil {
 		return 0, err
 	}
+	//todo кажется, что здесь баг, потомучто удаляется не все нотификации, а только первая попавшаяся
 	for _, notification := range notifications {
 		timestamp := strconv.FormatInt(notification.Timestamp, 10)
 		contactId := notification.Contact.ID

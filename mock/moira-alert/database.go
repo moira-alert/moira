@@ -32,6 +32,18 @@ func (_m *MockDatabase) EXPECT() *MockDatabaseMockRecorder {
 	return _m.recorder
 }
 
+// AcquireTriggerCheckLock mocks base method
+func (_m *MockDatabase) AcquireTriggerCheckLock(_param0 string, _param1 int) error {
+	ret := _m.ctrl.Call(_m, "AcquireTriggerCheckLock", _param0, _param1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AcquireTriggerCheckLock indicates an expected call of AcquireTriggerCheckLock
+func (_mr *MockDatabaseMockRecorder) AcquireTriggerCheckLock(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "AcquireTriggerCheckLock", arg0, arg1)
+}
+
 // AddNotification mocks base method
 func (_m *MockDatabase) AddNotification(_param0 *moira_alert.ScheduledNotification) error {
 	ret := _m.ctrl.Call(_m, "AddNotification", _param0)
@@ -102,6 +114,18 @@ func (_m *MockDatabase) DeleteTrigger(_param0 string) error {
 // DeleteTrigger indicates an expected call of DeleteTrigger
 func (_mr *MockDatabaseMockRecorder) DeleteTrigger(arg0 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "DeleteTrigger", arg0)
+}
+
+// DeleteTriggerCheckLock mocks base method
+func (_m *MockDatabase) DeleteTriggerCheckLock(_param0 string) error {
+	ret := _m.ctrl.Call(_m, "DeleteTriggerCheckLock", _param0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteTriggerCheckLock indicates an expected call of DeleteTriggerCheckLock
+func (_mr *MockDatabaseMockRecorder) DeleteTriggerCheckLock(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "DeleteTriggerCheckLock", arg0)
 }
 
 // DeleteTriggerThrottling mocks base method
@@ -570,6 +594,18 @@ func (_mr *MockDatabaseMockRecorder) RemovePatternWithMetrics(arg0 interface{}) 
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "RemovePatternWithMetrics", arg0)
 }
 
+// RemovePatternsMetrics mocks base method
+func (_m *MockDatabase) RemovePatternsMetrics(_param0 []string) error {
+	ret := _m.ctrl.Call(_m, "RemovePatternsMetrics", _param0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemovePatternsMetrics indicates an expected call of RemovePatternsMetrics
+func (_mr *MockDatabaseMockRecorder) RemovePatternsMetrics(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "RemovePatternsMetrics", arg0)
+}
+
 // SaveMetrics mocks base method
 func (_m *MockDatabase) SaveMetrics(_param0 map[string]*moira_alert.MatchedMetric) error {
 	ret := _m.ctrl.Call(_m, "SaveMetrics", _param0)
@@ -604,6 +640,31 @@ func (_m *MockDatabase) SetTagMaintenance(_param0 string, _param1 moira_alert.Ta
 // SetTagMaintenance indicates an expected call of SetTagMaintenance
 func (_mr *MockDatabaseMockRecorder) SetTagMaintenance(arg0, arg1 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetTagMaintenance", arg0, arg1)
+}
+
+// SetTriggerCheckLock mocks base method
+func (_m *MockDatabase) SetTriggerCheckLock(_param0 string) (*string, error) {
+	ret := _m.ctrl.Call(_m, "SetTriggerCheckLock", _param0)
+	ret0, _ := ret[0].(*string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SetTriggerCheckLock indicates an expected call of SetTriggerCheckLock
+func (_mr *MockDatabaseMockRecorder) SetTriggerCheckLock(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetTriggerCheckLock", arg0)
+}
+
+// SetTriggerLastCheck mocks base method
+func (_m *MockDatabase) SetTriggerLastCheck(_param0 string, _param1 *moira_alert.CheckData) error {
+	ret := _m.ctrl.Call(_m, "SetTriggerLastCheck", _param0, _param1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetTriggerLastCheck indicates an expected call of SetTriggerLastCheck
+func (_mr *MockDatabaseMockRecorder) SetTriggerLastCheck(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetTriggerLastCheck", arg0, arg1)
 }
 
 // SetTriggerMetricsMaintenance mocks base method

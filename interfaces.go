@@ -42,7 +42,8 @@ type Database interface {
 	GetFilteredTriggerCheckIds([]string, bool) ([]string, int64, error)
 	GetTrigger(string) (*Trigger, error)
 	GetTriggerChecks(triggerCheckIds []string) ([]TriggerChecks, error)
-	GetTriggerLastCheck(string) (*CheckData, error)
+	GetTriggerLastCheck(triggerId string) (*CheckData, error)
+	SetTriggerLastCheck(triggerId string, checkData *CheckData) error
 	SetTriggerMetricsMaintenance(triggerId string, metrics map[string]int64) error
 	GetPatternTriggerIds(pattern string) ([]string, error)
 	GetTriggers(triggerIds []string) ([]*Trigger, error)
@@ -66,7 +67,12 @@ type Database interface {
 
 	GetPatternMetrics(pattern string) ([]string, error)
 	RemovePattern(pattern string) error
+	RemovePatternsMetrics(pattern []string) error
 	RemovePatternWithMetrics(pattern string) error
+
+	AcquireTriggerCheckLock(triggerId string, timeout int) error
+	DeleteTriggerCheckLock(triggerId string) error
+	SetTriggerCheckLock(triggerId string) (*string, error)
 }
 
 // Logger implements logger abstraction
