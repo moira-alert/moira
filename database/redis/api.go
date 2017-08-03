@@ -511,7 +511,6 @@ func (connector *DbConnector) PushEvent(event *moira.EventData, ui bool) error {
 	defer c.Close()
 	c.Send("MULTI")
 	c.Send("LPUSH", "moira-trigger-events", eventBytes)
-	//todo легально? может указатель правильнее?
 	if event.TriggerID != "" {
 		c.Send("ZADD", fmt.Sprintf("moira-trigger-events:%s", event.TriggerID), event.Timestamp, eventBytes)
 		c.Send("ZREMRANGEBYSCORE", fmt.Sprintf("moira-trigger-events:%s", event.TriggerID), "-inf", time.Now().Unix()-3600*24*30)

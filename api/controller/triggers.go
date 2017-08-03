@@ -43,7 +43,6 @@ func GetTriggerPage(database moira.Database, page int64, size int64, onlyErrors 
 	if err != nil {
 		return nil, dto.ErrorInternalServer(err)
 	}
-	//todo Выпилить лишние поля из JSON'a
 	triggersList := dto.TriggersList{
 		List:  triggersChecks,
 		Total: &total,

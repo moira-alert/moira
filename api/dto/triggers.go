@@ -45,7 +45,7 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 		return fmt.Errorf("Invalid graphite targets")
 	}
 	if err := getExpression(trigger); err != nil {
-		fmt.Printf("Invalid expression %s: %s\n", trigger.Expression, err.Error()) //todo
+		fmt.Printf("Invalid expression %s: %s\n", trigger.Expression, err.Error()) //todo right logger
 		return fmt.Errorf("Invalid expression")
 	}
 	return nil
