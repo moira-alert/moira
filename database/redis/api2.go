@@ -205,14 +205,12 @@ func (connector *DbConnector) AcquireTriggerCheckLock(triggerId string, timeout 
 	var err error
 	count := 0
 	for acquired == nil && count < timeout {
-		select {
-		case <-time.After(time.Millisecond * 500):
-			acquired, err = connector.SetTriggerCheckLock(triggerId)
-			if err != nil {
-				return err
-			}
-			count += 1
+		<-time.After(time.Millisecond * 500)
+		acquired, err = connector.SetTriggerCheckLock(triggerId)
+		if err != nil {
+			return err
 		}
+		count += 1
 	}
 	if acquired == nil {
 		return fmt.Errorf("Can not acquire trigger lock in %v seconds", timeout)
@@ -332,7 +330,7 @@ func (connector *DbConnector) GetMetricRetention(metric string) (int, error) {
 }
 
 func leftJoin(left, right []string) []string {
-	rightValues := make(map[string]bool, 0)
+	rightValues := make(map[string]bool)
 	for _, value := range right {
 		rightValues[value] = true
 	}

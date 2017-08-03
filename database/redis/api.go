@@ -205,7 +205,7 @@ func (connector *DbConnector) GetTriggerChecks(triggerCheckIds []string) ([]moir
 			connector.logger.Errorf("Error getting trigger bytes, id: %s, error: %s", triggerId, err.Error())
 			continue
 		}
-		if err := json.Unmarshal(triggerBytes, &triggerSE); err != nil {
+		if err = json.Unmarshal(triggerBytes, &triggerSE); err != nil {
 			connector.logger.Errorf("Failed to parse trigger json %s: %s", triggerBytes, err.Error())
 			continue
 		}
@@ -241,7 +241,7 @@ func (connector *DbConnector) GetTriggerChecks(triggerCheckIds []string) ([]moir
 		if throttling > time.Now().Unix() {
 			triggerCheck.Throttling = throttling
 		}
-		if triggerTags != nil && len(triggerTags) > 0 {
+		if len(triggerTags) > 0 {
 			triggerCheck.Tags = triggerTags
 		}
 
@@ -592,7 +592,7 @@ func (connector *DbConnector) SetTriggerMetricsMaintenance(triggerId string, met
 			return fmt.Errorf("Failed to parse lastCheck json %s: %s", lastCheckString, err.Error())
 		}
 		metricsCheck := lastCheck.Metrics
-		if metricsCheck != nil && len(metricsCheck) > 0 {
+		if len(metricsCheck) > 0 {
 			for metric, value := range metrics {
 				data, ok := metricsCheck[metric]
 				if !ok {
@@ -752,14 +752,14 @@ func (connector *DbConnector) convertTriggerWithTags(triggerInterface interface{
 		}
 		return nil, fmt.Errorf("Error getting trigger bytes, id: %s, error: %s", triggerId, err.Error())
 	}
-	if err := json.Unmarshal(triggerBytes, trigger); err != nil {
+	if err = json.Unmarshal(triggerBytes, trigger); err != nil {
 		return nil, fmt.Errorf("Failed to parse trigger json %s: %s", triggerBytes, err.Error())
 	}
 	triggerTags, err := redis.Strings(triggerTagsInterface, nil)
 	if err != nil {
 		connector.logger.Errorf("Error getting trigger-tags, id: %s, error: %s", triggerId, err.Error())
 	}
-	if triggerTags != nil && len(triggerTags) > 0 {
+	if len(triggerTags) > 0 {
 		trigger.Tags = triggerTags
 	}
 	return trigger, nil

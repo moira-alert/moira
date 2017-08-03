@@ -45,7 +45,7 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 		return fmt.Errorf("Invalid graphite targets")
 	}
 	if err := getExpression(trigger); err != nil {
-		fmt.Printf("Invalid expression %s: %s\n", trigger.Expression, err.Error()) //todo right logger
+		fmt.Printf("Invalid expression %s: %s\n", moira.UseString(trigger.Expression), err.Error()) //todo right logger
 		return fmt.Errorf("Invalid expression")
 	}
 	return nil
@@ -57,7 +57,6 @@ func resolvePatterns(request *http.Request, trigger *Trigger, expressionValues m
 		isSimpleTrigger = false
 	}
 	targetNum := 1
-	timeSeriesNames := make([]string, 0)
 	triggerPatterns := make(map[string]bool)
 
 	for _, target := range trigger.Targets {
@@ -71,12 +70,6 @@ func resolvePatterns(request *http.Request, trigger *Trigger, expressionValues m
 		}
 		targetName := fmt.Sprintf("t%v", targetNum)
 		for _, pattern := range patterns {
-			database := request.Context().Value("database").(moira.Database)
-			metrics, err := database.GetPatternMetrics(pattern.Metric)
-			if err != nil {
-				return err
-			}
-			timeSeriesNames = append(timeSeriesNames, metrics...)
 			triggerPatterns[pattern.Metric] = true
 		}
 		val := float64(42)

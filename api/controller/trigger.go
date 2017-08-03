@@ -17,8 +17,8 @@ func SaveTrigger(database moira.Database, trigger *moira.Trigger, triggerId stri
 	timeSeriesNamesHash := make(map[string]bool)
 
 	for _, pattern := range trigger.Patterns {
-		metrics, err := database.GetPatternMetrics(pattern)
-		if err != nil {
+		metrics, er := database.GetPatternMetrics(pattern)
+		if er != nil {
 			return nil, dto.ErrorInternalServer(err)
 		}
 		for _, metric := range metrics {
@@ -40,7 +40,7 @@ func SaveTrigger(database moira.Database, trigger *moira.Trigger, triggerId stri
 		}
 	}
 
-	if err := database.SetTriggerLastCheck(triggerId, lastCheck); err != nil {
+	if err = database.SetTriggerLastCheck(triggerId, lastCheck); err != nil {
 		return nil, dto.ErrorInternalServer(err)
 	}
 
