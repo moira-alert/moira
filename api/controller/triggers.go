@@ -57,7 +57,7 @@ func getNotFilteredTriggers(database moira.Database, page int64, size int64) ([]
 	if err != nil {
 		return nil, 0, err
 	}
-	triggerIds = triggerIds[page*size : (page+1)*size]
+	triggerIds = getTriggerIdsRange(triggerIds, total, page, size)
 	triggersChecks, err := database.GetTriggerChecks(triggerIds)
 	if err != nil {
 		return nil, 0, err
@@ -70,7 +70,15 @@ func getFilteredTriggers(database moira.Database, page int64, size int64, onlyEr
 	if err != nil {
 		return nil, 0, err
 	}
+	triggerIds = getTriggerIdsRange(triggerIds, total, page, size)
+	triggersChecks, err := database.GetTriggerChecks(triggerIds)
+	if err != nil {
+		return nil, 0, err
+	}
+	return triggersChecks, total, nil
+}
 
+func getTriggerIdsRange(triggerIds []string, total int64, page int64, size int64) []string {
 	from := page * size
 	to := (page + 1) * size
 
@@ -82,10 +90,5 @@ func getFilteredTriggers(database moira.Database, page int64, size int64, onlyEr
 		to = total
 	}
 
-	triggerIds = triggerIds[from:to]
-	triggersChecks, err := database.GetTriggerChecks(triggerIds)
-	if err != nil {
-		return nil, 0, err
-	}
-	return triggersChecks, total, nil
+	return triggerIds[from:to]
 }
