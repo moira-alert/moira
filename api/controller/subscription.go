@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"github.com/go-graphite/carbonapi/date"
 	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/api/dto"
 	"github.com/satori/go.uuid"
@@ -54,7 +55,7 @@ func SendTestNotification(database moira.Database, subscriptionId string) *dto.E
 		Value:          &value,
 		OldState:       "TEST",
 		State:          "TEST",
-		Timestamp:      time.Now().Unix(), //todo неправильное время, берется какое-то хитрое графитовское
+		Timestamp:      int64(date.DateParamToEpoch("now", "", time.Now().Add(-24*time.Hour).Unix(), time.UTC)),
 	}
 
 	if err := database.PushEvent(eventData, false); err != nil {
