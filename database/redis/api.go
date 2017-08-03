@@ -198,7 +198,7 @@ func (connector *DbConnector) GetTriggerChecks(triggerCheckIds []string) ([]moir
 	}
 	for _, slice := range slices {
 		triggerId := slice[0].(string)
-		var triggerSE = &TriggerStorageElement{}
+		var triggerSE = &triggerStorageElement{}
 
 		triggerBytes, err := redis.Bytes(slice[1], nil)
 		if err != nil {
@@ -675,76 +675,8 @@ func (connector *DbConnector) RemoveNotification(notificationKey string) (int64,
 	return 0, nil
 }
 
-type TriggerStorageElement struct {
-	ID              string              `json:"id"`
-	Name            string              `json:"name"`
-	Desc            *string             `json:"desc,omitempty"`
-	Targets         []string            `json:"targets"`
-	WarnValue       *float64            `json:"warn_value"`
-	ErrorValue      *float64            `json:"error_value"`
-	Tags            []string            `json:"tags"`
-	TtlState        *string             `json:"ttl_state,omitempty"`
-	Schedule        *moira.ScheduleData `json:"sched,omitempty"`
-	Expression      *string             `json:"expression,omitempty"`
-	Patterns        []string            `json:"patterns"`
-	IsSimpleTrigger bool                `json:"is_simple_trigger"`
-	Ttl             *string             `json:"ttl"`
-}
-
-func toTrigger(storageElement *TriggerStorageElement, triggerId string) *moira.Trigger {
-	return &moira.Trigger{
-		ID:              triggerId,
-		Name:            storageElement.Name,
-		Desc:            storageElement.Desc,
-		Targets:         storageElement.Targets,
-		WarnValue:       storageElement.WarnValue,
-		ErrorValue:      storageElement.ErrorValue,
-		Tags:            storageElement.Tags,
-		TtlState:        storageElement.TtlState,
-		Schedule:        storageElement.Schedule,
-		Expression:      storageElement.Expression,
-		Patterns:        storageElement.Patterns,
-		IsSimpleTrigger: storageElement.IsSimpleTrigger,
-		Ttl:             getTriggerTtl(storageElement.Ttl),
-	}
-}
-
-func toTriggerStorageElement(trigger *moira.Trigger, triggerId string) *TriggerStorageElement {
-	return &TriggerStorageElement{
-		ID:              triggerId,
-		Name:            trigger.Name,
-		Desc:            trigger.Desc,
-		Targets:         trigger.Targets,
-		WarnValue:       trigger.WarnValue,
-		ErrorValue:      trigger.ErrorValue,
-		Tags:            trigger.Tags,
-		TtlState:        trigger.TtlState,
-		Schedule:        trigger.Schedule,
-		Expression:      trigger.Expression,
-		Patterns:        trigger.Patterns,
-		IsSimpleTrigger: trigger.IsSimpleTrigger,
-		Ttl:             getTriggerTtlString(trigger.Ttl),
-	}
-}
-
-func getTriggerTtl(ttlstr *string) *int64 {
-	if ttlstr == nil {
-		return nil
-	}
-	ttl, _ := strconv.ParseInt(*ttlstr, 10, 64)
-	return &ttl
-}
-
-func getTriggerTtlString(ttl *int64) *string {
-	if ttl == nil {
-		return nil
-	}
-	ttlString := fmt.Sprintf("%v", *ttl)
-	return &ttlString
-}
-
-func (connector *DbConnector) convertTriggerWithTags(triggerInterface interface{}, triggerTagsInterface interface{}, triggerId string) (*TriggerStorageElement, error) {
-	trigger := &TriggerStorageElement{}
+func (connector *DbConnector) convertTriggerWithTags(triggerInterface interface{}, triggerTagsInterface interface{}, triggerId string) (*triggerStorageElement, error) {
+	trigger := &triggerStorageElement{}
 	triggerBytes, err := redis.Bytes(triggerInterface, nil)
 	if err != nil {
 		if err == redis.ErrNil {
