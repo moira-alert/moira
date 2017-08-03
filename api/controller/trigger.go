@@ -65,7 +65,7 @@ func GetTrigger(database moira.Database, triggerId string) (*dto.Trigger, *dto.E
 		return nil, dto.ErrorInternalServer(err)
 	}
 	if trigger == nil {
-		return nil, dto.ErrorNotFound
+		return nil, dto.ErrorNotFound("Trigger not found")
 	}
 	throttling, _ := database.GetTriggerThrottlingTimestamps(triggerId)
 	throttlingUnix := throttling.Unix()

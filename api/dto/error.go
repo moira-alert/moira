@@ -45,4 +45,10 @@ func ErrorRender(err error) *ErrorResponse {
 	}
 }
 
-var ErrorNotFound = &ErrorResponse{HTTPStatusCode: 404, StatusText: "Resource not found."}
+func ErrorNotFound(errorText string) *ErrorResponse{
+	return &ErrorResponse{
+		HTTPStatusCode: 404,
+		StatusText: "Resource not found.",
+		ErrorText: errorText,
+	}
+}
