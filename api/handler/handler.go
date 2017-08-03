@@ -21,6 +21,7 @@ func NewHandler(db moira.Database, log moira.Logger) http.Handler {
 	router.Use(render.SetContentType(render.ContentTypeJSON))
 
 	router.Route("/api", func(router chi.Router) {
+		router.Use(databaseContext)
 		router.Use(userContext)
 		router.Route("/user", user)
 		router.Route("/trigger", triggers)

@@ -10,6 +10,13 @@ import (
 	"strconv"
 )
 
+func databaseContext(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		ctx := context.WithValue(request.Context(), "database", database)
+		next.ServeHTTP(writer, request.WithContext(ctx))
+	})
+}
+
 func userContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		userLogin := request.Header.Get("x-webauth-user")

@@ -26,7 +26,7 @@ type CheckData struct {
 	Metrics   map[string]MetricData `json:"metrics"`
 	Score     int64                 `json:"score"`
 	State     string                `json:"state"`
-	Timestamp int64                 `json:"timestamp"`
+	Timestamp *int64                `json:"timestamp,omitempty"`
 }
 
 type MetricData struct {

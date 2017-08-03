@@ -7,6 +7,58 @@ import (
 	"time"
 )
 
+func SaveTrigger(database moira.Database, trigger *moira.Trigger, triggerId string) (*dto.SaveTriggerResponse, *dto.ErrorResponse) {
+	database.AcquireTriggerCheckLock(triggerId, 10)
+	lastCheck, err := database.GetTriggerLastCheck(triggerId)
+	if err != nil {
+		return nil, dto.ErrorInternalServer(err)
+	}
+
+	timeSeriesNamesHash := make(map[string]bool)
+
+	for _, pattern := range trigger.Patterns {
+		metrics, err := database.GetPatternMetrics(pattern)
+		if err != nil {
+			return nil, dto.ErrorInternalServer(err)
+		}
+		for _, metric := range metrics {
+			timeSeriesNamesHash[metric] = true
+		}
+	}
+
+	if lastCheck != nil {
+		for metric, _ := range lastCheck.Metrics {
+			if _, ok := timeSeriesNamesHash[metric]; !ok {
+				delete(lastCheck.Metrics, metric)
+			}
+		}
+	} else {
+		lastCheck = &moira.CheckData{
+			Metrics: make(map[string]moira.MetricData),
+			Score:   0,
+			State:   "NODATA",
+		}
+	}
+
+	if err := database.SetTriggerLastCheck(triggerId, lastCheck); err != nil {
+		return nil, dto.ErrorInternalServer(err)
+	}
+
+	if database.DeleteTriggerCheckLock(triggerId); err != nil {
+		return nil, dto.ErrorInternalServer(err)
+	}
+
+	if database.SaveTrigger(triggerId, trigger); err != nil {
+		return nil, dto.ErrorInternalServer(err)
+	}
+
+	resp := dto.SaveTriggerResponse{
+		Id:      triggerId,
+		Message: "trigger updated",
+	}
+	return &resp, nil
+}
+
 func GetTrigger(database moira.Database, triggerId string) (*dto.Trigger, *dto.ErrorResponse) {
 	trigger, err := database.GetTrigger(triggerId)
 	if err != nil {

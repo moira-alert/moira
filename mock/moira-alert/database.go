@@ -219,6 +219,19 @@ func (_mr *MockDatabaseMockRecorder) GetFilteredTriggerCheckIds(arg0, arg1 inter
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetFilteredTriggerCheckIds", arg0, arg1)
 }
 
+// GetMetricRetention mocks base method
+func (_m *MockDatabase) GetMetricRetention(_param0 string) (int, error) {
+	ret := _m.ctrl.Call(_m, "GetMetricRetention", _param0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetMetricRetention indicates an expected call of GetMetricRetention
+func (_mr *MockDatabaseMockRecorder) GetMetricRetention(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetMetricRetention", arg0)
+}
+
 // GetMetricsCount mocks base method
 func (_m *MockDatabase) GetMetricsCount() (int64, error) {
 	ret := _m.ctrl.Call(_m, "GetMetricsCount")
@@ -582,6 +595,18 @@ func (_mr *MockDatabaseMockRecorder) RemovePattern(arg0 interface{}) *gomock.Cal
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "RemovePattern", arg0)
 }
 
+// RemovePatternTriggers mocks base method
+func (_m *MockDatabase) RemovePatternTriggers(_param0 string) error {
+	ret := _m.ctrl.Call(_m, "RemovePatternTriggers", _param0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemovePatternTriggers indicates an expected call of RemovePatternTriggers
+func (_mr *MockDatabaseMockRecorder) RemovePatternTriggers(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "RemovePatternTriggers", arg0)
+}
+
 // RemovePatternWithMetrics mocks base method
 func (_m *MockDatabase) RemovePatternWithMetrics(_param0 string) error {
 	ret := _m.ctrl.Call(_m, "RemovePatternWithMetrics", _param0)
@@ -616,6 +641,18 @@ func (_m *MockDatabase) SaveMetrics(_param0 map[string]*moira_alert.MatchedMetri
 // SaveMetrics indicates an expected call of SaveMetrics
 func (_mr *MockDatabaseMockRecorder) SaveMetrics(arg0 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "SaveMetrics", arg0)
+}
+
+// SaveTrigger mocks base method
+func (_m *MockDatabase) SaveTrigger(_param0 string, _param1 *moira_alert.Trigger) error {
+	ret := _m.ctrl.Call(_m, "SaveTrigger", _param0, _param1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SaveTrigger indicates an expected call of SaveTrigger
+func (_mr *MockDatabaseMockRecorder) SaveTrigger(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "SaveTrigger", arg0, arg1)
 }
 
 // SetContact mocks base method

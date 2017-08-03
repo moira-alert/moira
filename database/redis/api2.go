@@ -232,7 +232,7 @@ func (connector *DbConnector) SetTriggerLastCheck(triggerId string, checkData *m
 	c.Send("ZADD", "moira-triggers-checks", checkData.Score, triggerId)
 	c.Send("INCR", "moira-selfstate:checks-counter")
 	if checkData.Score > 0 {
-		c.Send("ZADD", "moira-bad-state-triggers", triggerId)
+		c.Send("SADD", "moira-bad-state-triggers", triggerId)
 	} else {
 		c.Send("SREM", "moira-bad-state-triggers", triggerId)
 	}
@@ -241,7 +241,6 @@ func (connector *DbConnector) SetTriggerLastCheck(triggerId string, checkData *m
 		return fmt.Errorf("Failed to EXEC: %s", err.Error())
 	}
 	return nil
-
 }
 
 func (connector *DbConnector) RemovePatternsMetrics(patterns []string) error {
@@ -256,4 +255,92 @@ func (connector *DbConnector) RemovePatternsMetrics(patterns []string) error {
 		return fmt.Errorf("Failed to EXEC: %s", err.Error())
 	}
 	return nil
+}
+
+func (connector *DbConnector) SaveTrigger(triggerId string, trigger *moira.Trigger) error {
+	existing, err := connector.GetTrigger(triggerId)
+	if err != nil {
+		return err
+	}
+
+	triggerSE := toTriggerStorageElement(trigger, triggerId)
+	bytes, err := json.Marshal(triggerSE)
+	if err != nil {
+		return nil
+	}
+
+	c := connector.pool.Get()
+	defer c.Close()
+	c.Send("MULTI")
+	cleanupPatterns := make([]string, 0)
+	if existing != nil {
+		for _, pattern := range leftJoin(existing.Patterns, trigger.Patterns) {
+			c.Send("SREM", fmt.Sprintf("moira-pattern-triggers:%s", pattern), triggerId)
+			cleanupPatterns = append(cleanupPatterns, pattern)
+		}
+		for _, tag := range leftJoin(existing.Tags, trigger.Tags) {
+			c.Send("SREM", fmt.Sprintf("moira-trigger-tags:%s", triggerId), tag)
+			c.Send("SREM", fmt.Sprintf("moira-tag-triggers:%s", tag), triggerId)
+		}
+	}
+	c.Do("SET", fmt.Sprintf("moira-trigger:%s", triggerId), bytes)
+	c.Do("SADD", "moira-triggers-list", triggerId)
+	for _, pattern := range trigger.Patterns {
+		c.Do("SADD", "moira-pattern-list", pattern)
+		c.Do("SADD", fmt.Sprintf("moira-pattern-triggers:%s", pattern), triggerId)
+	}
+	for _, tag := range trigger.Tags {
+		c.Send("SADD", fmt.Sprintf("moira-trigger-tags:%s", triggerId), tag)
+		c.Send("SADD", fmt.Sprintf("moira-tag-triggers:%s", tag), triggerId)
+		c.Send("SADD", "moira-tags", tag)
+	}
+	_, err = c.Do("EXEC")
+	if err != nil {
+		return fmt.Errorf("Failed to EXEC: %s", err.Error())
+	}
+	for _, pattern := range cleanupPatterns {
+		connector.RemovePatternTriggers(pattern)
+		connector.RemovePattern(pattern)
+		connector.RemovePatternsMetrics([]string{pattern})
+	}
+	return nil
+}
+
+func (connector *DbConnector) RemovePatternTriggers(pattern string) error {
+	c := connector.pool.Get()
+	defer c.Close()
+	_, err := c.Do("DEL", fmt.Sprintf("moira-pattern-triggers:%s", pattern))
+	if err != nil {
+		return fmt.Errorf("Failed delete pattern-triggers: %s, error: %s", pattern, err)
+	}
+	return nil
+}
+
+func (connector *DbConnector) GetMetricRetention(metric string) (int, error) {
+	c := connector.pool.Get()
+	defer c.Close()
+
+	key := getMetricRetentionDbKey(metric)
+	retention, err := redis.Int(c.Do("GET", key))
+	if err != nil {
+		if err != redis.ErrNil {
+			return 60, nil
+		}
+		return 0, fmt.Errorf("Failed get metric-retention:%s, error: %s", metric, err.Error())
+	}
+	return retention, nil
+}
+
+func leftJoin(left, right []string) []string {
+	rightValues := make(map[string]bool, 0)
+	for _, value := range right {
+		rightValues[value] = true
+	}
+	arr := make([]string, 0)
+	for _, leftValue := range left {
+		if _, ok := rightValues[leftValue]; !ok {
+			arr = append(arr, leftValue)
+		}
+	}
+	return arr
 }

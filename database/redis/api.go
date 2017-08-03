@@ -198,18 +198,18 @@ func (connector *DbConnector) GetTriggerChecks(triggerCheckIds []string) ([]moir
 	}
 	for _, slice := range slices {
 		triggerId := slice[0].(string)
-		var trigger = &TriggerChecksDataStorageElement{}
+		var triggerSE = &TriggerStorageElement{}
 
 		triggerBytes, err := redis.Bytes(slice[1], nil)
 		if err != nil {
 			connector.logger.Errorf("Error getting trigger bytes, id: %s, error: %s", triggerId, err.Error())
 			continue
 		}
-		if err := json.Unmarshal(triggerBytes, &trigger); err != nil {
+		if err := json.Unmarshal(triggerBytes, &triggerSE); err != nil {
 			connector.logger.Errorf("Failed to parse trigger json %s: %s", triggerBytes, err.Error())
 			continue
 		}
-		if trigger == nil {
+		if triggerSE == nil {
 			continue
 		}
 		triggerTags, err := redis.Strings(slice[2], nil)
@@ -233,15 +233,19 @@ func (connector *DbConnector) GetTriggerChecks(triggerCheckIds []string) ([]moir
 			connector.logger.Errorf("Error getting moira-notifier-next, id: %s, error: %s", triggerId, err.Error())
 		}
 
-		trigger.LastCheck = lastCheck
-		if throttling > time.Now().Unix() {
-			trigger.Throttling = throttling
-		}
-		if triggerTags != nil && len(triggerTags) > 0 {
-			trigger.Tags = triggerTags
+		triggerCheck := moira.TriggerChecks{
+			Trigger: *toTrigger(triggerSE, triggerId),
 		}
 
-		triggerChecks = append(triggerChecks, *toTriggerCheckData(trigger, triggerId))
+		triggerCheck.LastCheck = lastCheck
+		if throttling > time.Now().Unix() {
+			triggerCheck.Throttling = throttling
+		}
+		if triggerTags != nil && len(triggerTags) > 0 {
+			triggerCheck.Tags = triggerTags
+		}
+
+		triggerChecks = append(triggerChecks, triggerCheck)
 	}
 
 	return triggerChecks, nil
@@ -672,7 +676,7 @@ func (connector *DbConnector) RemoveNotification(notificationKey string) (int64,
 	return 0, nil
 }
 
-type TriggerChecksDataStorageElement struct {
+type TriggerStorageElement struct {
 	ID              string              `json:"id"`
 	Name            string              `json:"name"`
 	Desc            *string             `json:"desc,omitempty"`
@@ -686,19 +690,9 @@ type TriggerChecksDataStorageElement struct {
 	Patterns        []string            `json:"patterns"`
 	IsSimpleTrigger bool                `json:"is_simple_trigger"`
 	Ttl             *string             `json:"ttl"`
-	Throttling      int64               `json:"throttling"`
-	LastCheck       moira.CheckData     `json:"last_check"`
 }
 
-func toTriggerCheckData(storageElement *TriggerChecksDataStorageElement, triggerId string) *moira.TriggerChecks {
-	return &moira.TriggerChecks{
-		Trigger:    *toTrigger(storageElement, triggerId),
-		Throttling: storageElement.Throttling,
-		LastCheck:  storageElement.LastCheck,
-	}
-}
-
-func toTrigger(storageElement *TriggerChecksDataStorageElement, triggerId string) *moira.Trigger {
+func toTrigger(storageElement *TriggerStorageElement, triggerId string) *moira.Trigger {
 	return &moira.Trigger{
 		ID:              triggerId,
 		Name:            storageElement.Name,
@@ -716,6 +710,24 @@ func toTrigger(storageElement *TriggerChecksDataStorageElement, triggerId string
 	}
 }
 
+func toTriggerStorageElement(trigger *moira.Trigger, triggerId string) *TriggerStorageElement {
+	return &TriggerStorageElement{
+		ID:              triggerId,
+		Name:            trigger.Name,
+		Desc:            trigger.Desc,
+		Targets:         trigger.Targets,
+		WarnValue:       trigger.WarnValue,
+		ErrorValue:      trigger.ErrorValue,
+		Tags:            trigger.Tags,
+		TtlState:        trigger.TtlState,
+		Schedule:        trigger.Schedule,
+		Expression:      trigger.Expression,
+		Patterns:        trigger.Patterns,
+		IsSimpleTrigger: trigger.IsSimpleTrigger,
+		Ttl:             getTriggerTtlString(trigger.Ttl),
+	}
+}
+
 func getTriggerTtl(ttlstr *string) *int64 {
 	if ttlstr == nil {
 		return nil
@@ -724,8 +736,16 @@ func getTriggerTtl(ttlstr *string) *int64 {
 	return &ttl
 }
 
-func (connector *DbConnector) convertTriggerWithTags(triggerInterface interface{}, triggerTagsInterface interface{}, triggerId string) (*TriggerChecksDataStorageElement, error) {
-	trigger := &TriggerChecksDataStorageElement{}
+func getTriggerTtlString(ttl *int64) *string {
+	if ttl == nil {
+		return nil
+	}
+	ttlString := fmt.Sprintf("%v", *ttl)
+	return &ttlString
+}
+
+func (connector *DbConnector) convertTriggerWithTags(triggerInterface interface{}, triggerTagsInterface interface{}, triggerId string) (*TriggerStorageElement, error) {
+	trigger := &TriggerStorageElement{}
 	triggerBytes, err := redis.Bytes(triggerInterface, nil)
 	if err != nil {
 		if err == redis.ErrNil {

@@ -3,7 +3,17 @@ package controller
 import (
 	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/api/dto"
+	"github.com/satori/go.uuid"
 )
+
+func CreateTrigger(database moira.Database, trigger *moira.Trigger) (*dto.SaveTriggerResponse, *dto.ErrorResponse) {
+	triggerId := uuid.NewV4().String()
+	resp, err := SaveTrigger(database, trigger, triggerId)
+	if resp != nil {
+		resp.Message = "trigger created"
+	}
+	return resp, err
+}
 
 func GetAllTriggers(database moira.Database) (*dto.TriggersList, *dto.ErrorResponse) {
 	triggersIds, err := database.GetTriggerIds()

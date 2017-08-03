@@ -30,7 +30,21 @@ func getAllTriggers(writer http.ResponseWriter, request *http.Request) {
 }
 
 func createTrigger(writer http.ResponseWriter, request *http.Request) {
-	//Сохранение триггреа при его создании
+	trigger := &dto.Trigger{}
+	if err := render.Bind(request, trigger); err != nil {
+		render.Render(writer, request, dto.ErrorInvalidRequest(err))
+		return
+	}
+	response, err := controller.CreateTrigger(database, &trigger.Trigger)
+	if err != nil {
+		render.Render(writer, request, err)
+		return
+	}
+
+	if err := render.Render(writer, request, response); err != nil {
+		render.Render(writer, request, dto.ErrorRender(err))
+		return
+	}
 }
 
 func getTriggersPage(writer http.ResponseWriter, request *http.Request) {

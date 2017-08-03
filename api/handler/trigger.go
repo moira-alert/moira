@@ -27,13 +27,26 @@ func trigger(router chi.Router) {
 }
 
 func saveTrigger(writer http.ResponseWriter, request *http.Request) {
+	triggerId := request.Context().Value("triggerId").(string)
+	trigger := &dto.Trigger{}
+	if err := render.Bind(request, trigger); err != nil {
+		render.Render(writer, request, dto.ErrorInvalidRequest(err))
+		return
+	}
+	response, err := controller.SaveTrigger(database, &trigger.Trigger, triggerId)
+	if err != nil {
+		render.Render(writer, request, err)
+		return
+	}
 
+	if err := render.Render(writer, request, response); err != nil {
+		render.Render(writer, request, dto.ErrorRender(err))
+		return
+	}
 }
 
 func deleteTrigger(writer http.ResponseWriter, request *http.Request) {
-
 	triggerId := request.Context().Value("triggerId").(string)
-
 	err := controller.DeleteTrigger(database, triggerId)
 	if err != nil {
 		render.Render(writer, request, err)
