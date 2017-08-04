@@ -8,6 +8,7 @@ import (
 	"github.com/moira-alert/moira-alert/checker/master"
 	moiraLogging "github.com/moira-alert/moira-alert/logging"
 	"github.com/moira-alert/moira-alert/logging/go-logging"
+	"github.com/moira-alert/moira-alert/metrics/graphite/go-metrics"
 	"os"
 	"os/signal"
 	"runtime"
@@ -86,7 +87,7 @@ func runCheckers(database moira.Database, loggerSettings moiraLogging.Config, sh
 			fmt.Printf("Can not configure log: %s \n", err.Error())
 			os.Exit(1)
 		}
-		checkerWorker := checker.NewChecker(i, logger, database)
+		checkerWorker := checker.NewChecker(i, logger, database, metrics.ConfigureCheckerMetrics(i))
 		run(checkerWorker, shutdown, waitGroup)
 	}
 }

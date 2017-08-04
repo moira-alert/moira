@@ -43,3 +43,9 @@ type Timer interface {
 	UpdateSince(time.Time)
 	Variance() float64
 }
+
+// Gauges hold an int64 value that can be set arbitrarily.
+type Gauge interface {
+	Update(int64)
+	Value() int64
+}
