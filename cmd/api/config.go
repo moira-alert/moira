@@ -13,7 +13,6 @@ type config struct {
 	Redis    redisConfig    `yaml:"redis"`
 	Api      apiConfig      `yaml:"api"`
 	Graphite graphiteConfig `yaml:"graphite"`
-	Front    frontConfig    `yaml:"front"`
 }
 
 type redisConfig struct {
@@ -34,10 +33,6 @@ type graphiteConfig struct {
 	URI      string `yaml:"uri"`
 	Prefix   string `yaml:"prefix"`
 	Interval int64  `yaml:"interval"`
-}
-
-type frontConfig struct {
-	URI string `yaml:"uri"`
 }
 
 func (config *redisConfig) getSettings() redis.Config {
