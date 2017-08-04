@@ -57,12 +57,9 @@ func main() {
 	var waitGroup sync.WaitGroup
 
 	masterWorker := master.NewMaster(logger, database)
-	checkerWorker := checker.NewChecker(0, logger, database)
 
 	run(masterWorker, shutdown, &waitGroup)
 	runCheckers(database, loggerSettings, shutdown, &waitGroup)
-
-	run(checkerWorker, shutdown, &waitGroup)
 
 	logger.Infof("Moira Checker started. Version: %s", Version)
 	ch := make(chan os.Signal, 1)
@@ -80,8 +77,7 @@ func runCheckers(database moira.Database, loggerSettings moiraLogging.Config, sh
 		cpuCount = 1
 	}
 	for i := 0; i <= cpuCount; i++ {
-		loggerFileName := strings.Split(loggerSettings.LogFile, ".")[0]
-		loggerSettings.LogFile = fmt.Sprintf("%s-{%v}", loggerFileName, i)
+		loggerSettings.LogFile = getCheckerLogFile(loggerSettings.LogFile, i)
 		logger, err := logging.ConfigureLog(&loggerSettings, fmt.Sprintf("checker-{%v}", i))
 		if err != nil {
 			fmt.Printf("Can not configure log: %s \n", err.Error())
@@ -90,6 +86,14 @@ func runCheckers(database moira.Database, loggerSettings moiraLogging.Config, sh
 		checkerWorker := checker.NewChecker(i, logger, database, metrics.ConfigureCheckerMetrics(i))
 		run(checkerWorker, shutdown, waitGroup)
 	}
+}
+
+func getCheckerLogFile(configLogFile string, checkerNumber int) string {
+	if configLogFile == "" || configLogFile == "stdout" {
+		return "stdout"
+	}
+	loggerFileName := strings.Split(configLogFile, ".")[0]
+	return fmt.Sprintf("%s-{%v}.log", loggerFileName, checkerNumber)
 }
 
 func run(worker moira.Worker, shutdown chan bool, wg *sync.WaitGroup) {
