@@ -2,7 +2,6 @@ package logging
 
 import (
 	"fmt"
-	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/logging"
 	goLogging "github.com/op/go-logging"
 	"os"
@@ -10,8 +9,8 @@ import (
 )
 
 //ConfigureLog creates new logger based on github.com/op/go-logging package
-func ConfigureLog(config *logging.Config) (moira.Logger, error) {
-	log, err := goLogging.GetLogger("cache")
+func ConfigureLog(config *logging.Config, module string) (*goLogging.Logger, error) {
+	log, err := goLogging.GetLogger(module)
 	if err != nil {
 		return nil, fmt.Errorf("Can't initialize logger: %s", err.Error())
 	}

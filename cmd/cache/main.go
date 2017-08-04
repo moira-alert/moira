@@ -54,7 +54,7 @@ func main() {
 
 	loggerSettings := config.Cache.getLoggerSettings()
 
-	logger, err = logging.ConfigureLog(&loggerSettings)
+	logger, err = logging.ConfigureLog(&loggerSettings, "cache")
 	if err != nil {
 		fmt.Printf("Can not configure log: %s \n", err.Error())
 		os.Exit(1)

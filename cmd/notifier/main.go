@@ -45,7 +45,7 @@ func main() {
 	notifierConfig := config.Notifier.getSettings()
 	loggerSettings := config.Notifier.getLoggerSettings()
 
-	logger, err = logging.ConfigureLog(&loggerSettings)
+	logger, err = logging.ConfigureLog(&loggerSettings, "notifier")
 	if err != nil {
 		fmt.Printf("Can not configure log: %s \n", err.Error())
 		os.Exit(1)
