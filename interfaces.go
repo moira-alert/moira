@@ -26,6 +26,7 @@ type Database interface {
 	UpdateMetricsHeartbeat() error
 	GetPatterns() ([]string, error)
 	SaveMetrics(buffer map[string]*MatchedMetric) error
+	SubscribeMetricEvents(shutdown chan bool) <-chan *MetricEvent
 	GetMetricRetention(metric string) (int, error)
 
 	GetUserSubscriptionIds(string) ([]string, error)
@@ -52,6 +53,8 @@ type Database interface {
 	DeleteTrigger(triggerId string) error
 	SaveTrigger(triggerId string, trigger *Trigger) error
 
+	AddTriggerCheck(triggerId string) error
+
 	GetEvents(string, int64, int64) ([]*EventData, error)
 	PushEvent(event *EventData, ui bool) error
 
@@ -67,6 +70,7 @@ type Database interface {
 	GetNotifications(start, end int64) ([]*ScheduledNotification, int64, error)
 	RemoveNotification(notificationKey string) (int64, error)
 
+	AddPatternMetric(pattern, metric string) error
 	GetPatternMetrics(pattern string) ([]string, error)
 	RemovePattern(pattern string) error
 	RemovePatternsMetrics(pattern []string) error

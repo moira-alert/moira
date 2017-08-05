@@ -329,6 +329,84 @@ func (connector *DbConnector) GetMetricRetention(metric string) (int, error) {
 	return retention, nil
 }
 
+func (connector *DbConnector) AddTriggerCheck(triggerId string) error {
+	c := connector.pool.Get()
+	defer c.Close()
+	_, err := c.Do("SADD", "moira-triggers-tocheck", triggerId)
+	if err != nil {
+		return fmt.Errorf("Failed to SADD triggers-tocheck triggerID: %s, error: %s", triggerId, err.Error())
+	}
+	return nil
+}
+
+func (connector *DbConnector) AddPatternMetric(pattern, metric string) error {
+	c := connector.pool.Get()
+	defer c.Close()
+	_, err := c.Do("SADD", fmt.Sprintf("moira-pattern-metrics:%s", pattern), metric)
+	if err != nil {
+		return fmt.Errorf("Failed to SADD pattern-metrics, pattern: %s, metric: %s, error: %s", pattern, metric, err.Error())
+	}
+	return err
+}
+
+func (connector *DbConnector) SubscribeMetricEvents(shutdown chan bool) <-chan *moira.MetricEvent {
+	c := connector.pool.Get()
+	psc := redis.PubSubConn{c}
+	psc.Subscribe("moira-event")
+
+	metricsChannel := make(chan *moira.MetricEvent)
+	dataChannel := connector.manageSubscriptions(psc)
+
+	go func() {
+		<-shutdown
+		connector.logger.Infof("Calling shutdown, unsubscribe from 'moira-event' redis channel...")
+		psc.Unsubscribe()
+	}()
+
+	go func() {
+		defer c.Close()
+		for {
+			data, ok := <-dataChannel
+			if !ok {
+				connector.logger.Info("No more subscriptions, channel is closed. Stop process data...")
+				close(metricsChannel)
+				return
+			}
+			metricEvent := moira.MetricEvent{}
+			if err := json.Unmarshal(data, metricEvent); err != nil {
+				connector.logger.Errorf("Failed to parse MetricEvent: %s, error : %s", string(data), err.Error())
+				continue
+			}
+			metricsChannel <- &metricEvent
+		}
+	}()
+
+	return metricsChannel
+}
+
+func (connector *DbConnector) manageSubscriptions(psc redis.PubSubConn) <-chan []byte {
+	dataChan := make(chan []byte)
+	go func() {
+		for {
+			switch n := psc.Receive().(type) {
+			case redis.Message:
+				dataChan <- n.Data
+			case redis.Subscription:
+				if n.Kind == "subscribe" {
+					connector.logger.Infof("Subscribe to %s channel, current subscriptions is %v", n.Channel, n.Count)
+				} else if n.Kind == "unsubscribe" {
+					connector.logger.Infof("Unsubscribe from %s channel, current subscriptions is %v", n.Channel, n.Count)
+					if n.Count == 0 {
+						connector.logger.Infof("No more subscriptions, exit...")
+						close(dataChan)
+					}
+				}
+			}
+		}
+	}()
+	return dataChan
+}
+
 func leftJoin(left, right []string) []string {
 	rightValues := make(map[string]bool)
 	for _, value := range right {

@@ -2,10 +2,12 @@ package main
 
 import (
 	"fmt"
+	"github.com/moira-alert/moira-alert/checker"
 	"github.com/moira-alert/moira-alert/database/redis"
 	"github.com/moira-alert/moira-alert/logging"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
+	"menteslibres.net/gosexy/to"
 	"strings"
 )
 
@@ -26,7 +28,7 @@ type checkerConfig struct {
 	LogFile              string `yaml:"log_file"`
 	LogLevel             string `yaml:"log_level"`
 	LogColor             string `yaml:"log_color"`
-	NoDataCheckInterval  int64  `yaml:"nodata_check_interval"`
+	NoDataCheckInterval  string `yaml:"nodata_check_interval"`
 	CheckInterval        int64  `yaml:"check_interval"`
 	MetricsTTL           int64  `yaml:"metrics_ttl"`
 	StopCheckingInterval int64  `yaml:"stop_checking_interval"`
@@ -50,6 +52,15 @@ func (config *redisConfig) getSettings() redis.Config {
 	}
 }
 
+func (config *checkerConfig) getSettings() *checker.Config {
+	return &checker.Config{
+		MetricsTTL:           config.MetricsTTL,
+		CheckInterval:        config.CheckInterval,
+		NoDataCheckInterval:  to.Duration(config.NoDataCheckInterval),
+		StopCheckingInterval: config.StopCheckingInterval,
+	}
+}
+
 func (config *checkerConfig) getLoggerSettings(verbosityLog *bool) logging.Config {
 	conf := logging.Config{
 		LogFile:  config.LogFile,
@@ -70,7 +81,7 @@ func getDefault() config {
 		},
 		Checker: checkerConfig{
 			LogFile:              "stdout",
-			NoDataCheckInterval:  60,
+			NoDataCheckInterval:  "60s0ms",
 			CheckInterval:        5,
 			MetricsTTL:           3600,
 			StopCheckingInterval: 30,

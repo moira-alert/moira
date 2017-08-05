@@ -56,7 +56,8 @@ func main() {
 	shutdown := make(chan bool)
 	var waitGroup sync.WaitGroup
 
-	masterWorker := master.NewMaster(logger, database)
+	checkerSettings := config.Checker.getSettings()
+	masterWorker := master.NewMaster(logger, database, checkerSettings)
 
 	run(masterWorker, shutdown, &waitGroup)
 	runCheckers(database, loggerSettings, shutdown, &waitGroup)

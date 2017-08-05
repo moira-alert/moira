@@ -27,12 +27,12 @@ func NewFetchNotificationsWorker(database moira.Database, logger moira.Logger, s
 // Run is a cycle that fetches scheduled notifications from database
 func (worker *FetchNotificationsWorker) Run(shutdown chan bool, wg *sync.WaitGroup) {
 	defer wg.Done()
-	worker.logger.Debug("Start Fetch Sheduled Notifications")
+	worker.logger.Debug("Start Fetch Scheduled Notifications")
 	for {
 		select {
 		case <-shutdown:
 			{
-				worker.logger.Debug("Stop Fetch Sheduled Notifications")
+				worker.logger.Debug("Stop Fetch Scheduled Notifications")
 				worker.notifier.StopSenders()
 				return
 			}

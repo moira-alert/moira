@@ -37,3 +37,8 @@ type MetricData struct {
 	Value          *float64 `json:"value,omitempty"`
 	Maintenance    *int64   `json:"maintenance,omitempty"`
 }
+
+type MetricEvent struct {
+	Metric  string `json:"metric"`
+	Pattern string `json:"pattern"`
+}

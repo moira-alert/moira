@@ -7,13 +7,8 @@ import (
 	"github.com/moira-alert/moira-alert"
 )
 
-type eventMessage struct {
-	Metric  string `json:"metric"`
-	Pattern string `json:"pattern"`
-}
-
 func makeEvent(pattern string, metric string) ([]byte, error) {
-	return json.Marshal(&eventMessage{
+	return json.Marshal(&moira.MetricEvent{
 		Metric:  metric,
 		Pattern: pattern,
 	})
