@@ -71,12 +71,12 @@ func (worker *Worker) handleMetricEvent(metricEvent *moira.MetricEvent) error {
 		go func() {
 			defer waitGroup.Done()
 			if worker.noCache {
-				if err = worker.database.AddTriggerCheck(triggerId); err != nil {
+				if err = worker.database.AddTriggerToCheck(triggerId); err != nil {
 					worker.logger.Info(err.Error())
 				}
 			} else {
 				//todo triggerId add check cache worker.config.CheckInterval
-				if err = worker.database.AddTriggerCheck(triggerId); err != nil {
+				if err = worker.database.AddTriggerToCheck(triggerId); err != nil {
 					worker.logger.Info(err.Error())
 				}
 			}
@@ -115,7 +115,7 @@ func (worker *Worker) checkNoData() error {
 		}
 		for _, triggerId := range triggerIds {
 			//todo triggerId add check cache 60 seconds
-			if err = worker.database.AddTriggerCheck(triggerId); err != nil {
+			if err = worker.database.AddTriggerToCheck(triggerId); err != nil {
 				return err
 			}
 		}

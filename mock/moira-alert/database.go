@@ -56,6 +56,30 @@ func (_mr *MockDatabaseMockRecorder) AddNotification(arg0 interface{}) *gomock.C
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "AddNotification", arg0)
 }
 
+// AddPatternMetric mocks base method
+func (_m *MockDatabase) AddPatternMetric(_param0 string, _param1 string) error {
+	ret := _m.ctrl.Call(_m, "AddPatternMetric", _param0, _param1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddPatternMetric indicates an expected call of AddPatternMetric
+func (_mr *MockDatabaseMockRecorder) AddPatternMetric(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "AddPatternMetric", arg0, arg1)
+}
+
+// AddTriggerToCheck mocks base method
+func (_m *MockDatabase) AddTriggerToCheck(_param0 string) error {
+	ret := _m.ctrl.Call(_m, "AddTriggerToCheck", _param0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddTriggerToCheck indicates an expected call of AddTriggerToCheck
+func (_mr *MockDatabaseMockRecorder) AddTriggerToCheck(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "AddTriggerToCheck", arg0)
+}
+
 // CreateSubscription mocks base method
 func (_m *MockDatabase) CreateSubscription(_param0 *moira_alert.SubscriptionData) error {
 	ret := _m.ctrl.Call(_m, "CreateSubscription", _param0)
@@ -519,6 +543,19 @@ func (_mr *MockDatabaseMockRecorder) GetTriggerThrottlingTimestamps(arg0 interfa
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetTriggerThrottlingTimestamps", arg0)
 }
 
+// GetTriggerToCheck mocks base method
+func (_m *MockDatabase) GetTriggerToCheck() (*string, error) {
+	ret := _m.ctrl.Call(_m, "GetTriggerToCheck")
+	ret0, _ := ret[0].(*string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTriggerToCheck indicates an expected call of GetTriggerToCheck
+func (_mr *MockDatabaseMockRecorder) GetTriggerToCheck() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetTriggerToCheck")
+}
+
 // GetTriggers mocks base method
 func (_m *MockDatabase) GetTriggers(_param0 []string) ([]*moira_alert.Trigger, error) {
 	ret := _m.ctrl.Call(_m, "GetTriggers", _param0)
@@ -680,9 +717,9 @@ func (_mr *MockDatabaseMockRecorder) SetTagMaintenance(arg0, arg1 interface{}) *
 }
 
 // SetTriggerCheckLock mocks base method
-func (_m *MockDatabase) SetTriggerCheckLock(_param0 string) (*string, error) {
+func (_m *MockDatabase) SetTriggerCheckLock(_param0 string) (bool, error) {
 	ret := _m.ctrl.Call(_m, "SetTriggerCheckLock", _param0)
-	ret0, _ := ret[0].(*string)
+	ret0, _ := ret[0].(bool)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -726,6 +763,18 @@ func (_m *MockDatabase) SetTriggerThrottlingTimestamp(_param0 string, _param1 ti
 // SetTriggerThrottlingTimestamp indicates an expected call of SetTriggerThrottlingTimestamp
 func (_mr *MockDatabaseMockRecorder) SetTriggerThrottlingTimestamp(arg0, arg1 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetTriggerThrottlingTimestamp", arg0, arg1)
+}
+
+// SubscribeMetricEvents mocks base method
+func (_m *MockDatabase) SubscribeMetricEvents(_param0 chan bool) <-chan *moira_alert.MetricEvent {
+	ret := _m.ctrl.Call(_m, "SubscribeMetricEvents", _param0)
+	ret0, _ := ret[0].(<-chan *moira_alert.MetricEvent)
+	return ret0
+}
+
+// SubscribeMetricEvents indicates an expected call of SubscribeMetricEvents
+func (_mr *MockDatabaseMockRecorder) SubscribeMetricEvents(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "SubscribeMetricEvents", arg0)
 }
 
 // UpdateMetricsHeartbeat mocks base method

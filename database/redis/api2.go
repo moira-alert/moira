@@ -180,14 +180,17 @@ func (connector *DbConnector) RemovePatternWithMetrics(pattern string) error {
 	return nil
 }
 
-func (connector *DbConnector) SetTriggerCheckLock(triggerId string) (*string, error) {
+func (connector *DbConnector) SetTriggerCheckLock(triggerId string) (bool, error) {
 	c := connector.pool.Get()
 	defer c.Close()
-	okString, err := redis.String(c.Do("SET", fmt.Sprintf("moira-metric-check-lock:%s", triggerId), time.Now().Unix(), "EX", 30, "NX"))
+	_, err := redis.String(c.Do("SET", fmt.Sprintf("moira-metric-check-lock:%s", triggerId), time.Now().Unix(), "EX", 30, "NX"))
 	if err != nil {
-		return nil, fmt.Errorf("Failed to set metric-check-lock:%s : %s", triggerId, err.Error())
+		if err == redis.ErrNil {
+			return false, nil
+		}
+		return false, fmt.Errorf("Failed to set metric-check-lock:%s : %s", triggerId, err.Error())
 	}
-	return &okString, nil
+	return true, nil
 }
 
 func (connector *DbConnector) DeleteTriggerCheckLock(triggerId string) error {
@@ -201,18 +204,20 @@ func (connector *DbConnector) DeleteTriggerCheckLock(triggerId string) error {
 }
 
 func (connector *DbConnector) AcquireTriggerCheckLock(triggerId string, timeout int) error {
-	var acquired *string
-	var err error
+	acquired, err := connector.SetTriggerCheckLock(triggerId)
+	if err != nil {
+		return err
+	}
 	count := 0
-	for acquired == nil && count < timeout {
+	for !acquired && count < timeout {
+		count += 1
 		<-time.After(time.Millisecond * 500)
 		acquired, err = connector.SetTriggerCheckLock(triggerId)
 		if err != nil {
 			return err
 		}
-		count += 1
 	}
-	if acquired == nil {
+	if !acquired {
 		return fmt.Errorf("Can not acquire trigger lock in %v seconds", timeout)
 	}
 	return nil
@@ -329,7 +334,7 @@ func (connector *DbConnector) GetMetricRetention(metric string) (int, error) {
 	return retention, nil
 }
 
-func (connector *DbConnector) AddTriggerCheck(triggerId string) error {
+func (connector *DbConnector) AddTriggerToCheck(triggerId string) error {
 	c := connector.pool.Get()
 	defer c.Close()
 	_, err := c.Do("SADD", "moira-triggers-tocheck", triggerId)
@@ -337,6 +342,19 @@ func (connector *DbConnector) AddTriggerCheck(triggerId string) error {
 		return fmt.Errorf("Failed to SADD triggers-tocheck triggerID: %s, error: %s", triggerId, err.Error())
 	}
 	return nil
+}
+
+func (connector *DbConnector) GetTriggerToCheck() (*string, error) {
+	c := connector.pool.Get()
+	defer c.Close()
+	triggerId, err := redis.String(c.Do("SPOP", "moira-triggers-tocheck"))
+	if err != nil {
+		if err == redis.ErrNil {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("Failed to SPOP triggers-tocheck, error: %s", err.Error())
+	}
+	return &triggerId, nil
 }
 
 func (connector *DbConnector) AddPatternMetric(pattern, metric string) error {

@@ -53,7 +53,8 @@ type Database interface {
 	DeleteTrigger(triggerId string) error
 	SaveTrigger(triggerId string, trigger *Trigger) error
 
-	AddTriggerCheck(triggerId string) error
+	AddTriggerToCheck(triggerId string) error
+	GetTriggerToCheck() (*string, error)
 
 	GetEvents(string, int64, int64) ([]*EventData, error)
 	PushEvent(event *EventData, ui bool) error
@@ -79,7 +80,7 @@ type Database interface {
 
 	AcquireTriggerCheckLock(triggerId string, timeout int) error
 	DeleteTriggerCheckLock(triggerId string) error
-	SetTriggerCheckLock(triggerId string) (*string, error)
+	SetTriggerCheckLock(triggerId string) (bool, error)
 }
 
 // Logger implements logger abstraction
