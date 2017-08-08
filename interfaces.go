@@ -26,8 +26,9 @@ type Database interface {
 	UpdateMetricsHeartbeat() error
 	GetPatterns() ([]string, error)
 	SaveMetrics(buffer map[string]*MatchedMetric) error
+	GetMetricsValues(metrics []string, from int64, until int64) (map[string][]*MetricValue, error)
 	SubscribeMetricEvents(shutdown chan bool) <-chan *MetricEvent
-	GetMetricRetention(metric string) (int, error)
+	GetMetricRetention(metric string) (int32, error)
 
 	GetUserSubscriptionIds(string) ([]string, error)
 	GetUserContacts(string) ([]string, error)

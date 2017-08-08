@@ -268,7 +268,7 @@ func (connector *DbConnector) GetTags(tagNames []string) (map[string]moira.TagDa
 	for i, tagBytes := range rawResponse {
 		var tag moira.TagData
 		if err := json.Unmarshal(tagBytes, &tag); err != nil {
-			connector.logger.Warningf("Failed to parse tag json %s: %s", tagBytes, err.Error())
+			connector.logger.Errorf("Failed to parse tag json %s: %s", tagBytes, err.Error())
 			allTags[tagNames[i]] = moira.TagData{}
 			continue
 		}

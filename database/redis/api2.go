@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github.com/garyburd/redigo/redis"
 	"github.com/moira-alert/moira-alert"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -319,7 +321,7 @@ func (connector *DbConnector) RemovePatternTriggers(pattern string) error {
 	return nil
 }
 
-func (connector *DbConnector) GetMetricRetention(metric string) (int, error) {
+func (connector *DbConnector) GetMetricRetention(metric string) (int32, error) {
 	c := connector.pool.Get()
 	defer c.Close()
 
@@ -329,9 +331,9 @@ func (connector *DbConnector) GetMetricRetention(metric string) (int, error) {
 		if err != redis.ErrNil {
 			return 60, nil
 		}
-		return 0, fmt.Errorf("Failed get metric-retention:%s, error: %s", metric, err.Error())
+		return 0, fmt.Errorf("Failed GET metric-retention:%s, error: %s", metric, err.Error())
 	}
-	return retention, nil
+	return int32(retention), nil
 }
 
 func (connector *DbConnector) AddTriggerToCheck(triggerId string) error {
@@ -372,7 +374,7 @@ func (connector *DbConnector) SubscribeMetricEvents(shutdown chan bool) <-chan *
 	psc := redis.PubSubConn{c}
 	psc.Subscribe("moira-event")
 
-	metricsChannel := make(chan *moira.MetricEvent)
+	metricsChannel := make(chan *moira.MetricEvent, 100)
 	dataChannel := connector.manageSubscriptions(psc)
 
 	go func() {
@@ -400,6 +402,70 @@ func (connector *DbConnector) SubscribeMetricEvents(shutdown chan bool) <-chan *
 	}()
 
 	return metricsChannel
+}
+
+func (connector *DbConnector) GetMetricsValues(metrics []string, from int64, until int64) (map[string][]*moira.MetricValue, error) {
+	c := connector.pool.Get()
+	defer c.Close()
+
+	c.Send("MULTI")
+	for _, metric := range metrics {
+		c.Send("ZRANGEBYSCORE", getMetricDbKey(metric), from, until, "WITHSCORES")
+	}
+	resultByMetrics, err := redis.Values(c.Do("EXEC"))
+	if err != nil {
+		return nil, fmt.Errorf("Failed to EXEC: %s", err.Error())
+	}
+
+	res := make(map[string][]*moira.MetricValue, 0)
+
+	for i, resultByMetric := range resultByMetrics {
+		metric := metrics[i]
+		resultByMetricArr, err := redis.Values(resultByMetric, nil)
+		if err != nil {
+			return nil, err
+		}
+		metricsValues := make([]*moira.MetricValue, 0, len(resultByMetricArr)/2)
+
+		for i := 0; i < len(resultByMetricArr); i += 2 {
+			val, err := redis.String(resultByMetricArr[i], nil)
+			if err != nil {
+				return nil, err
+			}
+			valuesArr := strings.Split(val, " ")
+			if len(valuesArr) != 2 {
+				return nil, fmt.Errorf("Value format is not valid: %s", val)
+			}
+			timestampStr, err := redis.String(valuesArr[0], nil)
+			if err != nil {
+				return nil, err
+			}
+			timestamp, err := strconv.ParseInt(timestampStr, 10, 64)
+			if err != nil {
+				return nil, err
+			}
+			valueStr, err := redis.String(valuesArr[1], nil)
+			if err != nil {
+				return nil, err
+			}
+			value, err := strconv.ParseFloat(valueStr, 64)
+			if err != nil {
+				return nil, err
+			}
+			retentionTimestamp, err := redis.Int64(resultByMetricArr[i+1], nil)
+			if err != nil {
+				return nil, err
+			}
+			metricValue := moira.MetricValue{
+				RetentionTimestamp: retentionTimestamp,
+				Timestamp:          timestamp,
+				Value:              value,
+			}
+			metricsValues = append(metricsValues, &metricValue)
+		}
+		res[metric] = metricsValues
+	}
+	return res, nil
 }
 
 func (connector *DbConnector) manageSubscriptions(psc redis.PubSubConn) <-chan []byte {

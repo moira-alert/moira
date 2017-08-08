@@ -27,6 +27,13 @@ type CheckData struct {
 	Score     int64                 `json:"score"`
 	State     string                `json:"state"`
 	Timestamp *int64                `json:"timestamp,omitempty"`
+	Message   string                `json:"msg,omitempty"`
+}
+
+type MetricValue struct {
+	RetentionTimestamp int64
+	Timestamp          int64
+	Value              float64
 }
 
 type MetricData struct {

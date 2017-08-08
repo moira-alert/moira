@@ -2,6 +2,7 @@ package checker
 
 import (
 	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira-alert/checker"
 	"github.com/moira-alert/moira-alert/metrics/graphite"
 	"math/rand"
 	"sync"
@@ -80,6 +81,12 @@ func (worker *Worker) handleTriggerToCheck(triggerId string) error {
 
 func (worker *Worker) checkTrigger(triggerId string) error {
 	defer worker.database.DeleteTriggerCheckLock(triggerId)
-	//todo check
-	return nil
+	triggerChecker := checker.TriggerChecker{
+		TriggerId: triggerId,
+		Database:  worker.database,
+		Logger:    worker.logger,
+	}
+	//todo cacheTTL
+	err := triggerChecker.Check(nil, nil)
+	return err
 }
