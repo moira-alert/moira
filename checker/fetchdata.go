@@ -50,18 +50,21 @@ func FetchData(database moira.Database, pattern expr.MetricRequest, allowRealTim
 }
 
 func unpackMetricsValues(metricsData map[string][]*moira.MetricValue, retention int32, from int64, until int64, allowRealTimeAlerting bool) map[string][]float64 {
+	retentionFrom := roundToMinimalHighestRetention(from, retention)
+	retentionUntil := roundToMinimalHighestRetention(until, retention)
 	getTimeSlot := func(timestamp int64) int64 {
-		return (timestamp - from) / int64(retention)
+		return (timestamp - retentionFrom) / int64(retention)
 	}
 
 	valuesMap := make(map[string][]float64)
 	for metric, metricData := range metricsData {
 		points := make(map[int64]float64)
 		for _, metricValue := range metricData {
-			points[getTimeSlot(metricValue.Timestamp)] = metricValue.Value
+			timeSlot := getTimeSlot(metricValue.RetentionTimestamp)
+			points[timeSlot] = metricValue.Value
 		}
 
-		lastTimeSlot := getTimeSlot(until)
+		lastTimeSlot := getTimeSlot(retentionUntil - int64(retention))
 
 		values := make([]float64, 0)
 		//note that right boundary is exclusive
@@ -80,4 +83,9 @@ func unpackMetricsValues(metricsData map[string][]*moira.MetricValue, retention 
 		valuesMap[metric] = values
 	}
 	return valuesMap
+}
+
+func roundToMinimalHighestRetention(ts int64, retention int32) int64 {
+	ret := int64(retention)
+	return (ts + ret) / ret * ret
 }
