@@ -4,6 +4,7 @@ import (
 	"github.com/go-graphite/carbonapi/expr"
 	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
 	"github.com/moira-alert/moira-alert"
+	"math"
 )
 
 func FetchData(database moira.Database, pattern expr.MetricRequest, allowRealTimeAlerting bool) ([]*expr.MetricData, error) {
@@ -51,7 +52,6 @@ func FetchData(database moira.Database, pattern expr.MetricRequest, allowRealTim
 
 func unpackMetricsValues(metricsData map[string][]*moira.MetricValue, retention int32, from int64, until int64, allowRealTimeAlerting bool) map[string][]float64 {
 	retentionFrom := roundToMinimalHighestRetention(from, retention)
-	retentionUntil := roundToMinimalHighestRetention(until, retention)
 	getTimeSlot := func(timestamp int64) int64 {
 		return (timestamp - retentionFrom) / int64(retention)
 	}
@@ -60,24 +60,21 @@ func unpackMetricsValues(metricsData map[string][]*moira.MetricValue, retention 
 	for metric, metricData := range metricsData {
 		points := make(map[int64]float64)
 		for _, metricValue := range metricData {
-			timeSlot := getTimeSlot(metricValue.RetentionTimestamp)
-			points[timeSlot] = metricValue.Value
+			points[getTimeSlot(metricValue.RetentionTimestamp)] = metricValue.Value
 		}
 
-		lastTimeSlot := getTimeSlot(retentionUntil - int64(retention))
+		lastTimeSlot := getTimeSlot(until)
 
 		values := make([]float64, 0)
 		//note that right boundary is exclusive
 		for timeSlot := int64(0); timeSlot < lastTimeSlot; timeSlot++ {
 			val, ok := points[timeSlot]
-			if ok {
-				values = append(values, val)
-			}
+			values = append(values, getMathFloat64(val, ok))
 		}
 
 		lastPoint, ok := points[lastTimeSlot]
 		if allowRealTimeAlerting && ok {
-			values = append(values, lastPoint)
+			values = append(values, getMathFloat64(lastPoint, ok))
 		}
 
 		valuesMap[metric] = values
@@ -85,7 +82,18 @@ func unpackMetricsValues(metricsData map[string][]*moira.MetricValue, retention 
 	return valuesMap
 }
 
+func getMathFloat64(val float64, ok bool) float64 {
+	if ok {
+		return val
+	} else {
+		return math.NaN()
+	}
+}
+
 func roundToMinimalHighestRetention(ts int64, retention int32) int64 {
 	ret := int64(retention)
+	if (ts % ret) == 0 {
+		return ts
+	}
 	return (ts + ret) / ret * ret
 }
