@@ -3,6 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
+
 	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/cache"
 	"github.com/moira-alert/moira-alert/cache/connection"
@@ -14,10 +19,6 @@ import (
 	"github.com/moira-alert/moira-alert/metrics/graphite"
 	"github.com/moira-alert/moira-alert/metrics/graphite/atomic"
 	"github.com/moira-alert/moira-alert/metrics/graphite/go-metrics"
-	"os"
-	"os/signal"
-	"sync"
-	"syscall"
 )
 
 var (
@@ -29,26 +30,33 @@ var (
 
 	shutdown  chan bool
 	waitGroup sync.WaitGroup
-)
 
-var (
-	configFileName = flag.String("config", "/etc/moira/config.yml", "path config file")
-	logParseErrors = flag.Bool("logParseErrors", false, "enable logging metrics parse errors")
-	printVersion   = flag.Bool("version", false, "Print version and exit")
-	//Version - sets build version during build
-	Version = "latest"
+	configFileName         = flag.String("config", "/etc/moira/config.yml", "path config file")
+	printDefaultConfigFlag = flag.Bool("default-config", false, "Print default config and exit")
+	printVersion           = flag.Bool("version", false, "Print version and exit")
+
+	MoiraVersion = "unknown"
+	GitCommit    = "unknown"
+	GoVersion    = "unknown"
 )
 
 func main() {
 	flag.Parse()
 	if *printVersion {
-		fmt.Printf("Moira Cache version: %s\n", Version)
+		fmt.Println("Moira Cache")
+		fmt.Println("Version:", MoiraVersion)
+		fmt.Println("Git Commit:", GitCommit)
+		fmt.Println("Go Version:", GoVersion)
+		os.Exit(0)
+	}
+	if *printDefaultConfigFlag {
+		printDefaultConfig()
 		os.Exit(0)
 	}
 
 	config, err := readSettings(*configFileName)
 	if err != nil {
-		fmt.Printf("Can not read settings: %s \n", err.Error())
+		fmt.Fprintf(os.Stderr, "Can not read settings: %s\n", err.Error())
 		os.Exit(1)
 	}
 
@@ -56,7 +64,7 @@ func main() {
 
 	logger, err = logging.ConfigureLog(&loggerSettings, "cache")
 	if err != nil {
-		fmt.Printf("Can not configure log: %s \n", err.Error())
+		fmt.Fprintf(os.Stderr, "Can not configure log: %s\n", err.Error())
 		os.Exit(1)
 	}
 
@@ -76,7 +84,7 @@ func main() {
 		logger.Fatalf("Failed to initialize cache with config [%s]: %s", config.Cache.RetentionConfig, err.Error())
 	}
 
-	patternStorage, err = cache.NewPatternStorage(database, cacheMetrics, logger, *logParseErrors)
+	patternStorage, err = cache.NewPatternStorage(database, cacheMetrics, logger)
 	if err != nil {
 		logger.Fatalf("Failed to refresh pattern storage: %s", err.Error())
 	}
@@ -105,14 +113,14 @@ func main() {
 	waitGroup.Add(1)
 	go listener.Listen(metricsChan, &waitGroup, shutdown)
 
-	logger.Infof("Moira Cache started. Version: %s", Version)
+	logger.Infof("Moira Cache started. Version: %s", MoiraVersion)
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 	logger.Info(fmt.Sprint(<-ch))
 	logger.Infof("Moira Cache shutting down.")
 	close(shutdown)
 	waitGroup.Wait()
-	logger.Infof("Moira Cache stopped. Version: %s", Version)
+	logger.Infof("Moira Cache stopped. Version: %s", MoiraVersion)
 }
 
 func run(worker moira.Worker, shutdown chan bool, wg *sync.WaitGroup) {

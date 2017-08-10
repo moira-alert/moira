@@ -20,11 +20,12 @@ import (
 )
 
 var (
-	logger         moira.Logger
-	connector      *redis.DbConnector
-	configFileName = flag.String("config", "/etc/moira/config.yml", "path to config file")
-	printVersion   = flag.Bool("version", false, "Print current version and exit")
-	convertDb      = flag.Bool("convert", false, "Convert telegram contacts and exit")
+	logger                 moira.Logger
+	connector              *redis.DbConnector
+	configFileName         = flag.String("config", "/etc/moira/config.yml", "path to config file")
+	printDefaultConfigFlag = flag.Bool("default-config", false, "Print default config and exit")
+	printVersion           = flag.Bool("version", false, "Print current version and exit")
+	convertDb              = flag.Bool("convert", false, "Convert telegram contacts and exit")
 	//Version - sets build version during build
 	Version = "latest"
 )
@@ -36,9 +37,14 @@ func main() {
 		os.Exit(0)
 	}
 
+	if *printDefaultConfigFlag {
+		printDefaultConfig()
+		os.Exit(0)
+	}
+
 	config, err := readSettings(*configFileName)
 	if err != nil {
-		fmt.Printf("Can not read settings: %s \n", err.Error())
+		fmt.Fprintf(os.Stderr, "Can not read settings: %s \n", err.Error())
 		os.Exit(1)
 	}
 
@@ -47,7 +53,7 @@ func main() {
 
 	logger, err = logging.ConfigureLog(&loggerSettings, "notifier")
 	if err != nil {
-		fmt.Printf("Can not configure log: %s \n", err.Error())
+		fmt.Fprintf(os.Stderr, "Can not configure log: %s \n", err.Error())
 		os.Exit(1)
 	}
 

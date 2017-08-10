@@ -5,7 +5,6 @@ import (
 	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/metrics/graphite"
 	"github.com/vova616/xxhash"
-	"log"
 	"path"
 	"strconv"
 	"strings"
@@ -21,7 +20,6 @@ type PatternStorage struct {
 	database       moira.Database
 	metrics        *graphite.CacheMetrics
 	logger         moira.Logger
-	logParseErrors bool
 	PatternTree    *patternNode
 }
 
@@ -35,12 +33,11 @@ type patternNode struct {
 }
 
 // NewPatternStorage creates new PatternStorage struct
-func NewPatternStorage(database moira.Database, metrics *graphite.CacheMetrics, logger moira.Logger, logParseErrors bool) (*PatternStorage, error) {
+func NewPatternStorage(database moira.Database, metrics *graphite.CacheMetrics, logger moira.Logger) (*PatternStorage, error) {
 	storage := &PatternStorage{
 		database:       database,
 		metrics:        metrics,
 		logger:         logger,
-		logParseErrors: logParseErrors,
 	}
 	err := storage.RefreshTree()
 	return storage, err
@@ -61,10 +58,7 @@ func (storage *PatternStorage) ProcessIncomingMetric(lineBytes []byte) *moira.Ma
 
 	metric, value, timestamp, err := storage.parseMetricFromString(lineBytes)
 	if err != nil {
-		if storage.logParseErrors {
-			log.Printf("cannot parse input: %s", err)
-		}
-
+		storage.logger.Debugf("cannot parse input: %v", err)
 		return nil
 	}
 

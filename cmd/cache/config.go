@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
+	"strings"
+
 	"github.com/moira-alert/moira-alert/database/redis"
 	"github.com/moira-alert/moira-alert/logging"
 	"github.com/moira-alert/moira-alert/metrics/graphite"
 	"gopkg.in/yaml.v2"
-	"io/ioutil"
-	"strings"
 )
 
 type config struct {
@@ -65,11 +66,13 @@ func getDefault() config {
 		Redis: redisConfig{
 			Host: "localhost",
 			Port: "6379",
+			DBID: 0,
 		},
 		Cache: cacheConfig{
+			LogLevel:        "debug",
 			LogFile:         "stdout",
-			Listen:          "",
-			RetentionConfig: "",
+			Listen:          ":2003",
+			RetentionConfig: "storage-schemas.conf",
 		},
 		Graphite: graphiteConfig{
 			URI:      "localhost:2003",
@@ -77,6 +80,12 @@ func getDefault() config {
 			Interval: 60,
 		},
 	}
+}
+
+func printDefaultConfig() {
+	c := getDefault()
+	d, _ := yaml.Marshal(&c)
+	fmt.Println(string(d))
 }
 
 func readSettings(configFileName string) (*config, error) {

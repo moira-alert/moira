@@ -116,12 +116,12 @@ func TestProcessIncomingMetric(t *testing.T) {
 
 	Convey("Create new pattern storage, GetPatterns returns error, should error", t, func() {
 		database.EXPECT().GetPatterns().Return(nil, fmt.Errorf("Some error here"))
-		_, err := NewPatternStorage(database, metrics2, logger, true)
+		_, err := NewPatternStorage(database, metrics2, logger)
 		So(err, ShouldBeError, fmt.Errorf("Some error here"))
 	})
 
 	database.EXPECT().GetPatterns().Return(testPatterns, nil)
-	patternsStorage, err := NewPatternStorage(database, metrics2, logger, true)
+	patternsStorage, err := NewPatternStorage(database, metrics2, logger)
 
 	Convey("Create new pattern storage, should no error", t, func() {
 		So(err, ShouldBeEmpty)

@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
+	"strings"
+
 	"github.com/gosexy/to"
 	"github.com/moira-alert/moira-alert/database/redis"
 	"github.com/moira-alert/moira-alert/logging"
@@ -9,8 +12,6 @@ import (
 	"github.com/moira-alert/moira-alert/notifier"
 	"github.com/moira-alert/moira-alert/notifier/selfstate"
 	"gopkg.in/yaml.v2"
-	"io/ioutil"
-	"strings"
 )
 
 type config struct {
@@ -60,6 +61,7 @@ func getDefault() config {
 		Redis: redisConfig{
 			Host: "localhost",
 			Port: "6379",
+			DBID: 0,
 		},
 		Front: frontConfig{
 			URI: "http://localhost",
@@ -71,6 +73,7 @@ func getDefault() config {
 		},
 		Notifier: notifierConfig{
 			LogFile:          "stdout",
+			LogLevel:         "debug",
 			SenderTimeout:    "10s0ms",
 			ResendingTimeout: "24:00",
 			SelfState: selfStateConfig{
@@ -82,6 +85,12 @@ func getDefault() config {
 			},
 		},
 	}
+}
+
+func printDefaultConfig() {
+	c := getDefault()
+	d, _ := yaml.Marshal(&c)
+	fmt.Println(string(d))
 }
 
 func (graphiteConfig *graphiteConfig) getSettings() graphite.Config {
