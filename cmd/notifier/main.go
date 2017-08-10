@@ -82,7 +82,16 @@ func initWorkers(notifier2 notifier.Notifier, config *config, metric *graphite.N
 	fetchEventsWorker := events.NewFetchEventWorker(connector, logger, metric)
 	fetchNotificationsWorker := notifications.NewFetchNotificationsWorker(connector, logger, notifier2)
 
-	runSelfStateMonitorIfNeed(notifier2, config.Notifier.SelfState, shutdown, &waitGroup)
+	selfState := &selfstate.SelfCheckWorker{
+		Log:      logger,
+		DB:       connector,
+		Config:   config.Notifier.SelfState.getSettings(),
+		Notifier: notifier2,
+	}
+	if err := selfState.Start(); err != nil {
+		logger.Fatalf("SelfState failed: %v", err)
+	}
+
 	run(fetchEventsWorker, shutdown, &waitGroup)
 	run(fetchNotificationsWorker, shutdown, &waitGroup)
 
@@ -91,19 +100,12 @@ func initWorkers(notifier2 notifier.Notifier, config *config, metric *graphite.N
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 	logger.Info(fmt.Sprint(<-ch))
 	close(shutdown)
+
+	selfState.Stop()
+
 	waitGroup.Wait()
 	connector.DeregisterBots()
 	logger.Infof("Moira Notifier Stopped. Version: %s", Version)
-}
-
-func runSelfStateMonitorIfNeed(notifier2 notifier.Notifier, config selfStateConfig, shutdown chan bool, waitGroup *sync.WaitGroup) {
-	selfStateConfiguration := config.getSettings()
-	worker, needRun := selfstate.NewSelfCheckWorker(connector, logger, selfStateConfiguration, notifier2)
-	if needRun {
-		run(worker, shutdown, waitGroup)
-	} else {
-		logger.Debugf("Moira Self State Monitoring disabled")
-	}
 }
 
 func run(worker moira.Worker, shutdown chan bool, wg *sync.WaitGroup) {

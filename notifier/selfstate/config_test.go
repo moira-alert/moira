@@ -2,8 +2,9 @@ package selfstate
 
 import (
 	"fmt"
-	. "github.com/smartystreets/goconvey/convey"
 	"testing"
+
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestConfigCheck(testing *testing.T) {

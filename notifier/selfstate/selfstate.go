@@ -1,70 +1,72 @@
 package selfstate
 
 import (
-	"github.com/moira-alert/moira-alert"
-	"github.com/moira-alert/moira-alert/notifier"
+	"fmt"
 	"sync"
 	"time"
-)
 
-//SelfCheckWorker - check what all notifier services works correctly and send message when moira don't work
-type SelfCheckWorker struct {
-	logger            moira.Logger
-	database          moira.Database
-	notifier          notifier.Notifier
-	config            Config
-	selfCheckInterval time.Duration
-}
+	"gopkg.in/tomb.v2"
+
+	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira-alert/notifier"
+)
 
 var defaultCheckInterval = time.Second * 10
 
-//NewSelfCheckWorker - initialize notifier self check worker
-func NewSelfCheckWorker(database moira.Database, logger moira.Logger, config Config, notifier2 notifier.Notifier) (worker *SelfCheckWorker, needRun bool) {
-	senders := notifier2.GetSenders()
-	if err := config.checkConfig(senders); err != nil {
-		logger.Fatalf("Can't configure self state monitor: %s", err.Error())
-	}
-	if config.Enabled {
-		worker = &SelfCheckWorker{
-			logger:            logger,
-			database:          database,
-			selfCheckInterval: defaultCheckInterval,
-			notifier:          notifier2,
-			config:            config,
-		}
-		needRun = true
-		return worker, needRun
-	}
-	return nil, false
+//SelfCheckWorker - check what all notifier services works correctly and send message when moira don't work
+type SelfCheckWorker struct {
+	Log      moira.Logger
+	DB       moira.Database
+	Notifier notifier.Notifier
+	Config   Config
+	tomb     tomb.Tomb
 }
 
-//Run self check worker
-func (selfCheck SelfCheckWorker) Run(shutdown chan bool, wg *sync.WaitGroup) {
-	defer wg.Done()
-
+//Start self check worker
+func (selfCheck *SelfCheckWorker) Start() error {
+	if !selfCheck.Config.Enabled {
+		selfCheck.Log.Debugf("Moira Self State Monitoring disabled")
+		return nil
+	}
+	senders := selfCheck.Notifier.GetSenders()
+	if err := selfCheck.Config.checkConfig(senders); err != nil {
+		return fmt.Errorf("Can't configure self state monitor: %s", err.Error())
+	}
 	var metricsCount, checksCount int64
-	checkTicker := time.NewTicker(selfCheck.selfCheckInterval)
 	lastMetricReceivedTS := time.Now().Unix()
 	redisLastCheckTS := time.Now().Unix()
 	lastCheckTS := time.Now().Unix()
 	nextSendErrorMessage := time.Now().Unix()
 
-	selfCheck.logger.Debugf("Start Moira Self State Monitor")
-	for {
-		select {
-		case <-shutdown:
-			checkTicker.Stop()
-			selfCheck.logger.Debugf("Stop Self State Monitor")
-			return
-		case <-checkTicker.C:
-			selfCheck.check(time.Now().Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount)
+	selfCheck.tomb.Go(func() error {
+		checkTicker := time.NewTicker(defaultCheckInterval)
+		for {
+			select {
+			case <-selfCheck.tomb.Dying(): // Shutdown
+				checkTicker.Stop()
+				selfCheck.Log.Debugf("Self State Monitor Stopped")
+				return nil
+			case <-checkTicker.C:
+				selfCheck.check(time.Now().Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount)
+			}
 		}
+	})
+
+	selfCheck.Log.Debugf("Self State Monitor Started")
+	return nil
+}
+
+func (selfCheck *SelfCheckWorker) Stop() error {
+	if !selfCheck.Config.Enabled {
+		return nil
 	}
+	selfCheck.tomb.Kill(nil)
+	return selfCheck.tomb.Wait()
 }
 
 func (selfCheck *SelfCheckWorker) check(nowTS int64, lastMetricReceivedTS, redisLastCheckTS, lastCheckTS, nextSendErrorMessage, metricsCount, checksCount *int64) {
-	mc, _ := selfCheck.database.GetMetricsCount()
-	cc, err := selfCheck.database.GetChecksCount()
+	mc, _ := selfCheck.DB.GetMetricsCount()
+	cc, err := selfCheck.DB.GetChecksCount()
 	if err == nil {
 		*redisLastCheckTS = nowTS
 		if *metricsCount != mc {
@@ -77,32 +79,32 @@ func (selfCheck *SelfCheckWorker) check(nowTS int64, lastMetricReceivedTS, redis
 		}
 	}
 	if *nextSendErrorMessage < nowTS {
-		if *redisLastCheckTS < nowTS-selfCheck.config.RedisDisconnectDelay {
+		if *redisLastCheckTS < nowTS-selfCheck.Config.RedisDisconnectDelay {
 			interval := nowTS - *redisLastCheckTS
-			selfCheck.logger.Errorf("Redis disconnected more %ds. Send message.", interval)
-			selfCheck.sendErrorMessages("Redis disconnected", interval, selfCheck.config.RedisDisconnectDelay)
-			*nextSendErrorMessage = nowTS + selfCheck.config.NoticeInterval
+			selfCheck.Log.Errorf("Redis disconnected more %ds. Send message.", interval)
+			selfCheck.sendErrorMessages("Redis disconnected", interval, selfCheck.Config.RedisDisconnectDelay)
+			*nextSendErrorMessage = nowTS + selfCheck.Config.NoticeInterval
 			return
 		}
-		if *lastMetricReceivedTS < nowTS-selfCheck.config.LastMetricReceivedDelay && err == nil {
+		if *lastMetricReceivedTS < nowTS-selfCheck.Config.LastMetricReceivedDelay && err == nil {
 			interval := nowTS - *lastMetricReceivedTS
-			selfCheck.logger.Errorf("Moira-Cache does not received new metrics more %ds. Send message.", interval)
-			selfCheck.sendErrorMessages("Moira-Cache does not received new metrics", interval, selfCheck.config.LastMetricReceivedDelay)
-			*nextSendErrorMessage = nowTS + selfCheck.config.NoticeInterval
+			selfCheck.Log.Errorf("Moira-Cache does not received new metrics more %ds. Send message.", interval)
+			selfCheck.sendErrorMessages("Moira-Cache does not received new metrics", interval, selfCheck.Config.LastMetricReceivedDelay)
+			*nextSendErrorMessage = nowTS + selfCheck.Config.NoticeInterval
 			return
 		}
-		if *lastCheckTS < nowTS-selfCheck.config.LastCheckDelay && err == nil {
+		if *lastCheckTS < nowTS-selfCheck.Config.LastCheckDelay && err == nil {
 			interval := nowTS - *lastCheckTS
-			selfCheck.logger.Errorf("Moira-Checker does not checks triggers more %ds. Send message.", interval)
-			selfCheck.sendErrorMessages("Moira-Checker does not checks triggers", interval, selfCheck.config.LastCheckDelay)
-			*nextSendErrorMessage = nowTS + selfCheck.config.NoticeInterval
+			selfCheck.Log.Errorf("Moira-Checker does not checks triggers more %ds. Send message.", interval)
+			selfCheck.sendErrorMessages("Moira-Checker does not checks triggers", interval, selfCheck.Config.LastCheckDelay)
+			*nextSendErrorMessage = nowTS + selfCheck.Config.NoticeInterval
 		}
 	}
 }
 
 func (selfCheck *SelfCheckWorker) sendErrorMessages(message string, currentValue int64, errValue int64) {
 	var sendingWG sync.WaitGroup
-	for _, adminContact := range selfCheck.config.Contacts {
+	for _, adminContact := range selfCheck.Config.Contacts {
 		val := float64(currentValue)
 		pkg := notifier.NotificationPackage{
 			Contact: moira.ContactData{
@@ -123,7 +125,7 @@ func (selfCheck *SelfCheckWorker) sendErrorMessages(message string, currentValue
 			},
 			DontResend: true,
 		}
-		selfCheck.notifier.Send(&pkg, &sendingWG)
+		selfCheck.Notifier.Send(&pkg, &sendingWG)
 		sendingWG.Wait()
 	}
 }
