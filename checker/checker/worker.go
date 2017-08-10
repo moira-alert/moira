@@ -1,4 +1,4 @@
-package checker
+package checker_worker
 
 import (
 	"github.com/moira-alert/moira-alert"
@@ -17,14 +17,16 @@ type Worker struct {
 	logger        moira.Logger
 	database      moira.Database
 	metrics       *graphite.CheckerMetrics
+	config        *checker.Config
 }
 
-func NewChecker(checkerNumber int, logger moira.Logger, database moira.Database, metrics *graphite.CheckerMetrics) *Worker {
+func NewChecker(checkerNumber int, logger moira.Logger, database moira.Database, metrics *graphite.CheckerMetrics, config *checker.Config) *Worker {
 	return &Worker{
 		checkerNumber: checkerNumber,
 		logger:        logger,
 		database:      database,
 		metrics:       metrics,
+		config:        config,
 	}
 }
 
@@ -85,6 +87,7 @@ func (worker *Worker) checkTrigger(triggerId string) error {
 		TriggerId: triggerId,
 		Database:  worker.database,
 		Logger:    worker.logger,
+		Config:    worker.config,
 	}
 	//todo cacheTTL
 	err := triggerChecker.Check(nil, nil)

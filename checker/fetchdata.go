@@ -7,47 +7,42 @@ import (
 	"math"
 )
 
-func FetchData(database moira.Database, pattern expr.MetricRequest, allowRealTimeAlerting bool) ([]*expr.MetricData, error) {
+func FetchData(database moira.Database, pattern expr.MetricRequest, allowRealTimeAlerting bool) ([]*expr.MetricData, []string, error) {
 	metrics, err := database.GetPatternMetrics(pattern.Metric)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-
 	metricDatas := make([]*expr.MetricData, 0)
 
-	if len(metrics) == 0 {
-		t := pb.FetchResponse{
-			Name:      pattern.Metric,
-			StartTime: pattern.From,
-			StopTime:  pattern.Until,
-			StepTime:  60,
-			Values:    make([]float64, 0),
-		}
-		metricData := expr.MetricData{FetchResponse: t}
-		metricDatas = append(metricDatas, &metricData)
-
-	} else {
+	if len(metrics) > 0 {
 		firstMetric := metrics[0]
 		retention, err := database.GetMetricRetention(firstMetric)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		datalist, err := database.GetMetricsValues(metrics, int64(pattern.From), int64(pattern.Until))
-		valuesMap := unpackMetricsValues(datalist, retention, int64(pattern.From), int64(pattern.Until), allowRealTimeAlerting)
+		dataList, err := database.GetMetricsValues(metrics, int64(pattern.From), int64(pattern.Until))
+		if err != nil {
+			return nil, nil, err
+		}
+		valuesMap := unpackMetricsValues(dataList, retention, int64(pattern.From), int64(pattern.Until), allowRealTimeAlerting)
 		for _, metric := range metrics {
-			fetchResponse := pb.FetchResponse{
-				Name:      metric,
-				StartTime: pattern.From,
-				StopTime:  pattern.Until,
-				StepTime:  int32(retention),
-				Values:    valuesMap[metric],
-				IsAbsent:  make([]bool, len(valuesMap[metric]), len(valuesMap[metric])),
-			}
-			metricData := expr.MetricData{FetchResponse: fetchResponse}
-			metricDatas = append(metricDatas, &metricData)
+			metricDatas = append(metricDatas, createMetricData(metric, pattern.From, pattern.Until, int32(retention), valuesMap[metric]))
 		}
 	}
-	return metricDatas, nil
+
+	return metricDatas, metrics, nil
+}
+
+func createMetricData(metric string, from int32, until int32, retention int32, values []float64) *expr.MetricData {
+	fetchResponse := pb.FetchResponse{
+		Name:      metric,
+		StartTime: from,
+		StopTime:  until,
+		StepTime:  retention,
+		Values:    values,
+		IsAbsent:  make([]bool, len(values), len(values)),
+	}
+	return &expr.MetricData{FetchResponse: fetchResponse}
 }
 
 func unpackMetricsValues(metricsData map[string][]*moira.MetricValue, retention int32, from int64, until int64, allowRealTimeAlerting bool) map[string][]float64 {

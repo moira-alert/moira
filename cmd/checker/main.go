@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira-alert/checker"
 	"github.com/moira-alert/moira-alert/checker/checker"
 	"github.com/moira-alert/moira-alert/checker/master"
 	moiraLogging "github.com/moira-alert/moira-alert/logging"
@@ -60,7 +61,7 @@ func main() {
 	masterWorker := master.NewMaster(logger, database, checkerSettings)
 
 	run(masterWorker, shutdown, &waitGroup)
-	runCheckers(database, loggerSettings, shutdown, &waitGroup)
+	runCheckers(database, loggerSettings, checkerSettings, shutdown, &waitGroup)
 
 	logger.Infof("Moira Checker started. Version: %s", Version)
 	ch := make(chan os.Signal, 1)
@@ -72,7 +73,7 @@ func main() {
 	logger.Infof("Moira Checker stopped. Version: %s", Version)
 }
 
-func runCheckers(database moira.Database, loggerSettings moiraLogging.Config, shutdown chan bool, waitGroup *sync.WaitGroup) {
+func runCheckers(database moira.Database, loggerSettings moiraLogging.Config, checkerSettings *checker.Config, shutdown chan bool, waitGroup *sync.WaitGroup) {
 	cpuCount := runtime.NumCPU() - 1
 	if cpuCount < 1 {
 		cpuCount = 1
@@ -84,7 +85,7 @@ func runCheckers(database moira.Database, loggerSettings moiraLogging.Config, sh
 			fmt.Printf("Can not configure log: %s \n", err.Error())
 			os.Exit(1)
 		}
-		checkerWorker := checker.NewChecker(i, logger, database, metrics.ConfigureCheckerMetrics(i))
+		checkerWorker := checker_worker.NewChecker(i, logger, database, metrics.ConfigureCheckerMetrics(i), checkerSettings)
 		run(checkerWorker, shutdown, waitGroup)
 	}
 }

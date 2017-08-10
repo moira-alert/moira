@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/api/dto"
+	"github.com/moira-alert/moira-alert/checker"
 	"time"
 )
 
@@ -13,16 +14,19 @@ func SaveTrigger(database moira.Database, trigger *moira.Trigger, triggerId stri
 	if err != nil {
 		return nil, dto.ErrorInternalServer(err)
 	}
-
+	now := time.Now().Unix()
 	timeSeriesNamesHash := make(map[string]bool)
 
-	for _, pattern := range trigger.Patterns {
-		metrics, er := database.GetPatternMetrics(pattern)
+	for _, target := range trigger.Targets {
+		metricsDatas, _, er := checker.EvaluateTarget(database, target, now-600, now, true)
 		if er != nil {
+			if er == checker.ErrEvaluateTarget {
+				return nil, dto.ErrorInvalidRequest(er)
+			}
 			return nil, dto.ErrorInternalServer(err)
 		}
-		for _, metric := range metrics {
-			timeSeriesNamesHash[metric] = true
+		for _, metricsData := range metricsDatas {
+			timeSeriesNamesHash[metricsData.Name] = true
 		}
 	}
 

@@ -468,6 +468,17 @@ func (connector *DbConnector) GetMetricsValues(metrics []string, from int64, unt
 	return res, nil
 }
 
+func (connector *DbConnector) CleanupMetricValues(metric string, toTime int64) error {
+	c := connector.pool.Get()
+	defer c.Close()
+
+	_, err := c.Do("ZREMRANGEBYSCORE", getMetricDbKey(metric), "-inf", toTime)
+	if err != nil {
+		return fmt.Errorf("Failed to ZREMRANGEBYSCORE: %s", err.Error())
+	}
+	return nil
+}
+
 func (connector *DbConnector) manageSubscriptions(psc redis.PubSubConn) <-chan []byte {
 	dataChan := make(chan []byte)
 	go func() {

@@ -80,6 +80,18 @@ func (_mr *MockDatabaseMockRecorder) AddTriggerToCheck(arg0 interface{}) *gomock
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "AddTriggerToCheck", arg0)
 }
 
+// CleanupMetricValues mocks base method
+func (_m *MockDatabase) CleanupMetricValues(_param0 string, _param1 int64) error {
+	ret := _m.ctrl.Call(_m, "CleanupMetricValues", _param0, _param1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CleanupMetricValues indicates an expected call of CleanupMetricValues
+func (_mr *MockDatabaseMockRecorder) CleanupMetricValues(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "CleanupMetricValues", arg0, arg1)
+}
+
 // CreateSubscription mocks base method
 func (_m *MockDatabase) CreateSubscription(_param0 *moira_alert.SubscriptionData) error {
 	ret := _m.ctrl.Call(_m, "CreateSubscription", _param0)
@@ -244,9 +256,9 @@ func (_mr *MockDatabaseMockRecorder) GetFilteredTriggerCheckIds(arg0, arg1 inter
 }
 
 // GetMetricRetention mocks base method
-func (_m *MockDatabase) GetMetricRetention(_param0 string) (int, error) {
+func (_m *MockDatabase) GetMetricRetention(_param0 string) (int32, error) {
 	ret := _m.ctrl.Call(_m, "GetMetricRetention", _param0)
-	ret0, _ := ret[0].(int)
+	ret0, _ := ret[0].(int32)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -267,6 +279,19 @@ func (_m *MockDatabase) GetMetricsCount() (int64, error) {
 // GetMetricsCount indicates an expected call of GetMetricsCount
 func (_mr *MockDatabaseMockRecorder) GetMetricsCount() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetMetricsCount")
+}
+
+// GetMetricsValues mocks base method
+func (_m *MockDatabase) GetMetricsValues(_param0 []string, _param1 int64, _param2 int64) (map[string][]*moira_alert.MetricValue, error) {
+	ret := _m.ctrl.Call(_m, "GetMetricsValues", _param0, _param1, _param2)
+	ret0, _ := ret[0].(map[string][]*moira_alert.MetricValue)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetMetricsValues indicates an expected call of GetMetricsValues
+func (_mr *MockDatabaseMockRecorder) GetMetricsValues(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetMetricsValues", arg0, arg1, arg2)
 }
 
 // GetNotificationTrigger mocks base method
