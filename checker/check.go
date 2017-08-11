@@ -83,7 +83,7 @@ func (triggerChecker *TriggerChecker) handleTrigger(from, until int64) (*moira.C
 	triggerChecker.cleanupMetricsValues(metrics, until)
 
 	if len(triggerTimeSeries.Main) == 0 {
-		if triggerChecker.ttl != nil {
+		if triggerChecker.ttl != nil && len(triggerChecker.lastCheck.Metrics) != 0 {
 			checkData.State = triggerChecker.ttlState
 			checkData.Message = "Trigger has no metrics"
 			//todo compare states

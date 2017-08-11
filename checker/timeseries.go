@@ -30,7 +30,7 @@ func (targetTimeSeries triggerTimeSeries) getExpressionValues(firstTargetTimeSer
 	}
 	expressionValues[targetTimeSeries.getMainTargetName()] = firstTargetValue
 
-	for targetNumber := 0; targetNumber <= len(targetTimeSeries.Additional); targetNumber++ {
+	for targetNumber := 0; targetNumber < len(targetTimeSeries.Additional); targetNumber++ {
 		additionalTimeSeries := targetTimeSeries.Additional[targetNumber]
 		if additionalTimeSeries == nil {
 			return expressionValues, false
