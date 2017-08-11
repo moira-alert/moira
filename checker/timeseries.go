@@ -9,31 +9,42 @@ import (
 
 type TimeSeries expr.MetricData
 
-type triggerTimeSeries map[int][]*TimeSeries
+type triggerTimeSeries struct {
+	Main       []*TimeSeries
+	Additional []*TimeSeries
+}
 
-func (targetTimeSeries triggerTimeSeries) getExpressionValues(firstTargetTimeSeries *TimeSeries, checkPoint int64) (map[string]float64, bool) {
+func (*triggerTimeSeries) getMainTargetName() string {
+	return "t1"
+}
+
+func (*triggerTimeSeries) getAdditionalTargetName(targetNumber int) string {
+	return fmt.Sprintf("t%v", targetNumber+2)
+}
+
+func (targetTimeSeries triggerTimeSeries) getExpressionValues(firstTargetTimeSeries *TimeSeries, checkPoint int64) (ExpressionValues, bool) {
 	expressionValues := make(map[string]float64)
 	firstTargetValue := firstTargetTimeSeries.getTimeSeriesCheckPointValue(checkPoint)
 	if math.IsNaN(firstTargetValue) {
 		return expressionValues, false
 	}
+	expressionValues[targetTimeSeries.getMainTargetName()] = firstTargetValue
 
-	for targetNumber := 2; targetNumber <= len(targetTimeSeries); targetNumber++ {
-		if len(targetTimeSeries[targetNumber]) == 0 {
+	for targetNumber := 0; targetNumber <= len(targetTimeSeries.Additional); targetNumber++ {
+		additionalTimeSeries := targetTimeSeries.Additional[targetNumber]
+		if additionalTimeSeries == nil {
 			return expressionValues, false
 		}
-		tN := targetTimeSeries[targetNumber][0]
-		tnValue := tN.getTimeSeriesCheckPointValue(checkPoint)
+		tnValue := additionalTimeSeries.getTimeSeriesCheckPointValue(checkPoint)
 		if math.IsNaN(tnValue) {
-			break
+			return expressionValues, false
 		}
-		targetName := fmt.Sprintf("t%v", targetNumber)
-		expressionValues[targetName] = tnValue
+		expressionValues[targetTimeSeries.getAdditionalTargetName(targetNumber)] = tnValue
 	}
 	return expressionValues, true
 }
 
-func (targetTimeSeries *triggerTimeSeries) updateCheckData(firstTargetTimeSeries *TimeSeries, checkData *moira.CheckData, expressionState string, expressionValues map[string]float64, valueTimestamp int64) {
+func (targetTimeSeries *triggerTimeSeries) updateCheckData(firstTargetTimeSeries *TimeSeries, checkData *moira.CheckData, expressionState string, expressionValues ExpressionValues, valueTimestamp int64) {
 	metricState := checkData.Metrics[firstTargetTimeSeries.Name]
 	metricState.State = expressionState
 	metricState.Timestamp = valueTimestamp
@@ -43,7 +54,7 @@ func (targetTimeSeries *triggerTimeSeries) updateCheckData(firstTargetTimeSeries
 			metricState.Value = nil
 		}
 	} else {
-		val := expressionValues["t1"]
+		val := expressionValues[targetTimeSeries.getMainTargetName()]
 		metricState.Value = &val
 	}
 

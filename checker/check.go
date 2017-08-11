@@ -82,13 +82,16 @@ func (triggerChecker *TriggerChecker) handleTrigger(from, until int64) (*moira.C
 
 	triggerChecker.cleanupMetricsValues(metrics, until)
 
-	if len(triggerTimeSeries) == 0 && triggerChecker.ttl != nil {
-		checkData.State = triggerChecker.ttlState
-		checkData.Message = "Trigger has no metrics"
+	if len(triggerTimeSeries.Main) == 0 {
+		if triggerChecker.ttl != nil {
+			checkData.State = triggerChecker.ttlState
+			checkData.Message = "Trigger has no metrics"
+			//todo compare states
+		}
 		return checkData, nil
 	}
 
-	for _, timeSeries := range triggerTimeSeries[1] {
+	for _, timeSeries := range triggerTimeSeries.Main {
 		startTime := int64(timeSeries.StartTime)
 		stopTime := int64(timeSeries.StopTime)
 		stepTime := int64(timeSeries.StepTime)
@@ -161,31 +164,33 @@ func (triggerChecker *TriggerChecker) cleanupMetricsValues(metrics []string, unt
 	}
 }
 
-func (triggerChecker *TriggerChecker) getTimeSeries(from, until int64) (triggerTimeSeries, []string, error) {
+func (triggerChecker *TriggerChecker) getTimeSeries(from, until int64) (*triggerTimeSeries, []string, error) {
 	targets := triggerChecker.trigger.Targets
-	var targetTimeSeries triggerTimeSeries = make(map[int][]*TimeSeries)
-	targetNumber := 1
+	triggerTimeSeries := &triggerTimeSeries{
+		Main:       make([]*TimeSeries, 0),
+		Additional: make([]*TimeSeries, 0),
+	}
 	metricsArr := make([]string, 0)
 
-	for _, target := range targets {
+	for targetIndex, target := range targets {
 		metricDatas, metrics, err := EvaluateTarget(triggerChecker.Database, target, from, until, triggerChecker.isSimple)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		if targetNumber > 1 {
+		if targetIndex == 0 {
+			triggerTimeSeries.Main = metricDatas
+		} else {
 			if len(metricDatas) == 0 {
-				return nil, nil, fmt.Errorf("Target #%v has no timeseries", targetNumber)
+				return nil, nil, fmt.Errorf("Target #%v has no timeseries", targetIndex+1)
 			} else if len(metricDatas) > 1 {
-				return nil, nil, fmt.Errorf("Target #%v has more than one timeseries", targetNumber)
+				return nil, nil, fmt.Errorf("Target #%v has more than one timeseries", targetIndex+1)
 			}
+			triggerTimeSeries.Additional = append(triggerTimeSeries.Additional, metricDatas[0])
 		}
-
-		targetTimeSeries[targetNumber] = metricDatas
 		metricsArr = append(metricsArr, metrics...)
-		targetNumber += 1
 	}
-	return targetTimeSeries, metricsArr, nil
+	return triggerTimeSeries, metricsArr, nil
 }
 
 func (triggerChecker *TriggerChecker) initTrigger(fromTime *int64, now int64) (bool, error) {
