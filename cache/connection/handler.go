@@ -5,7 +5,6 @@ import (
 	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/cache"
 	"io"
-	"log"
 	"net"
 	"sync"
 )
@@ -35,7 +34,7 @@ func (handler *Handler) HandleConnection(connection net.Conn, matchedMetricsChan
 		if err != nil {
 			connection.Close()
 			if err != io.EOF {
-				log.Printf("read failed: %s", err)
+				handler.logger.Errorf("read failed: %s", err)
 			}
 			break
 		}

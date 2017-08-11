@@ -3,7 +3,6 @@ package heartbeat
 import (
 	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/metrics/graphite"
-	"log"
 	"sync"
 	"time"
 )
@@ -39,7 +38,7 @@ func (worker *Worker) Run(shutdown chan bool, wg *sync.WaitGroup) {
 			newCount := worker.metrics.TotalMetricsReceived.Count()
 			if newCount != count {
 				if err := worker.database.UpdateMetricsHeartbeat(); err != nil {
-					log.Printf("Save state failed: %s", err.Error())
+					worker.logger.Infof("Save state failed: %s", err.Error())
 				} else {
 					count = newCount
 				}
