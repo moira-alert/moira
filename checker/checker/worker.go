@@ -89,6 +89,11 @@ func (worker *Worker) checkTrigger(triggerId string) error {
 		Logger:    worker.logger,
 		Config:    worker.config,
 	}
+
+	initialized, err := triggerChecker.InitTriggerChecker()
+	if err != nil || !initialized {
+		return err
+	}
 	//todo cacheTTL
-	return triggerChecker.Check(nil, nil)
+	return triggerChecker.Check()
 }
