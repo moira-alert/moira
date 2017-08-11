@@ -41,7 +41,7 @@ func BenchmarkProcessIncomingMetric(b *testing.B) {
 	logger, _ := logging.GetLogger("Benchmark")
 
 	database.EXPECT().GetPatterns().Return(patterns, nil)
-	patternsStorage, err := cache.NewPatternStorage(database, metrics2, logger, true)
+	patternsStorage, err := cache.NewPatternStorage(database, metrics2, logger)
 	if err != nil {
 		b.Errorf("Can not create new cache storage %s", err)
 	}

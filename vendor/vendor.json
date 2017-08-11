@@ -3,10 +3,6 @@
 	"ignore": "test",
 	"package": [
 		{
-			"path": "bitbucket.org/tebeka/strftime",
-			"revision": ""
-		},
-		{
 			"checksumSHA1": "OvdGsHBw7e++ai6DWtaoOKBIXTo=",
 			"path": "github.com/JaderDias/movingmedian",
 			"revision": "de8c410559fa1fc13a278ae774bd2ab251e8b8c1",
@@ -48,10 +44,6 @@
 			"path": "github.com/dustin/go-humanize",
 			"revision": "259d2a102b871d17f30e3cd9881a642961a1e486",
 			"revisionTime": "2017-02-28T07:34:54Z"
-		},
-		{
-			"path": "github.com/evmar/gocairo/cairo",
-			"revision": ""
 		},
 		{
 			"checksumSHA1": "6X3O3mfvOyiwV2iAb5GjxARs08c=",
@@ -194,10 +186,6 @@
 			"path": "github.com/gonum/matrix/mat64",
 			"revision": "dd6034299e4242c9f0ea36735e6d4264dfcb3f9f",
 			"revisionTime": "2017-07-31T00:40:40Z"
-		},
-		{
-			"path": "github.com/gopherjs/gopherjs/js",
-			"revision": ""
 		},
 		{
 			"checksumSHA1": "6yZPgam3qkc58aiJKy8eH/Sdfgc=",
@@ -368,10 +356,6 @@
 			"path": "golang.org/x/net/websocket",
 			"revision": "1f9224279e98554b6a6432d4dd998a739f8b2b7c",
 			"revisionTime": "2017-06-29T16:46:45Z"
-		},
-		{
-			"path": "gopkg.in/alexcesaro/quotedprintable.v3",
-			"revision": ""
 		},
 		{
 			"checksumSHA1": "Q24+t5ryUvt5JJPtPKim1q8hwmI=",

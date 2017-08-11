@@ -2,7 +2,6 @@ package checker
 
 import (
 	"fmt"
-	"github.com/go-graphite/carbonapi/expr"
 	"github.com/moira-alert/moira-alert"
 	"math"
 	"time"
