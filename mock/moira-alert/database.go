@@ -256,9 +256,9 @@ func (_mr *MockDatabaseMockRecorder) GetFilteredTriggerCheckIds(arg0, arg1 inter
 }
 
 // GetMetricRetention mocks base method
-func (_m *MockDatabase) GetMetricRetention(_param0 string) (int32, error) {
+func (_m *MockDatabase) GetMetricRetention(_param0 string) (int64, error) {
 	ret := _m.ctrl.Call(_m, "GetMetricRetention", _param0)
-	ret0, _ := ret[0].(int32)
+	ret0, _ := ret[0].(int64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

@@ -70,7 +70,7 @@ func TestAllowRealTimeAlerting(t *testing.T) {
 }
 
 func TestConservativeAlignedSeries(t *testing.T) {
-	var retention int32 = 10
+	var retention int64 = 10
 	var from int64 = 0
 	metricData := map[string][]*moira.MetricValue{"metric": make([]*moira.MetricValue, 0)}
 
@@ -129,7 +129,7 @@ func TestConservativeAlignedSeries(t *testing.T) {
 }
 
 func TestRealTimeAlignedSeries(t *testing.T) {
-	var retention int32 = 10
+	var retention int64 = 10
 	var from int64 = 0
 	metricData := map[string][]*moira.MetricValue{"metric": make([]*moira.MetricValue, 0)}
 
@@ -187,7 +187,7 @@ func TestRealTimeAlignedSeries(t *testing.T) {
 }
 
 func TestNoDataSeries(t *testing.T) {
-	var retention int32 = 10
+	var retention int64 = 10
 	var from int64 = 0
 	metricData := map[string][]*moira.MetricValue{"metric": make([]*moira.MetricValue, 0)}
 
@@ -257,7 +257,7 @@ func TestNoDataSeries(t *testing.T) {
 }
 
 func TestConservativeMultipleSeries(t *testing.T) {
-	var retention int32 = 10
+	var retention int64 = 10
 	var from int64 = 0
 	metricData := map[string][]*moira.MetricValue{
 		"metric1": make([]*moira.MetricValue, 0),
@@ -354,7 +354,7 @@ func TestConservativeMultipleSeries(t *testing.T) {
 }
 
 func TestNonZeroStartTimeSeries(t *testing.T) {
-	var retention int32 = 10
+	var retention int64 = 10
 	var from int64 = 2
 	metricData := map[string][]*moira.MetricValue{"metric": make([]*moira.MetricValue, 0)}
 
@@ -382,7 +382,7 @@ func TestNonZeroStartTimeSeries(t *testing.T) {
 }
 
 func TestConservativeShiftedSeries(t *testing.T) {
-	var retention int32 = 10
+	var retention int64 = 10
 	var from int64 = 0
 	metricData := map[string][]*moira.MetricValue{"metric": make([]*moira.MetricValue, 0)}
 
@@ -433,7 +433,7 @@ func TestConservativeShiftedSeries(t *testing.T) {
 }
 
 func TestRealTimeShiftedSeries(t *testing.T) {
-	var retention int32 = 10
+	var retention int64 = 10
 	var from int64 = 0
 	metricData := map[string][]*moira.MetricValue{"metric": make([]*moira.MetricValue, 0)}
 

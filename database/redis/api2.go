@@ -321,19 +321,19 @@ func (connector *DbConnector) RemovePatternTriggers(pattern string) error {
 	return nil
 }
 
-func (connector *DbConnector) GetMetricRetention(metric string) (int32, error) {
+func (connector *DbConnector) GetMetricRetention(metric string) (int64, error) {
 	c := connector.pool.Get()
 	defer c.Close()
 
 	key := getMetricRetentionDbKey(metric)
-	retention, err := redis.Int(c.Do("GET", key))
+	retention, err := redis.Int64(c.Do("GET", key))
 	if err != nil {
 		if err != redis.ErrNil {
 			return 60, nil
 		}
 		return 0, fmt.Errorf("Failed GET metric-retention:%s, error: %s", metric, err.Error())
 	}
-	return int32(retention), nil
+	return retention, nil
 }
 
 func (connector *DbConnector) AddTriggerToCheck(triggerId string) error {

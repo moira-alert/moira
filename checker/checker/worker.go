@@ -90,6 +90,5 @@ func (worker *Worker) checkTrigger(triggerId string) error {
 		Config:    worker.config,
 	}
 	//todo cacheTTL
-	err := triggerChecker.Check(nil, nil)
-	return err
+	return triggerChecker.Check(nil, nil)
 }

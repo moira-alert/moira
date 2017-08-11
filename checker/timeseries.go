@@ -11,7 +11,7 @@ type TimeSeries expr.MetricData
 
 type triggerTimeSeries map[int][]*TimeSeries
 
-func (targetTimeSeries triggerTimeSeries) getExpressionValues(firstTargetTimeSeries *TimeSeries, checkPoint int32) (map[string]float64, bool) {
+func (targetTimeSeries triggerTimeSeries) getExpressionValues(firstTargetTimeSeries *TimeSeries, checkPoint int64) (map[string]float64, bool) {
 	expressionValues := make(map[string]float64)
 	firstTargetValue := firstTargetTimeSeries.getTimeSeriesCheckPointValue(checkPoint)
 	if math.IsNaN(firstTargetValue) {
@@ -33,10 +33,10 @@ func (targetTimeSeries triggerTimeSeries) getExpressionValues(firstTargetTimeSer
 	return expressionValues, true
 }
 
-func (targetTimeSeries *triggerTimeSeries) updateCheckData(firstTargetTimeSeries *TimeSeries, checkData *moira.CheckData, expressionState string, expressionValues map[string]float64, valueTimestamp int32) {
+func (targetTimeSeries *triggerTimeSeries) updateCheckData(firstTargetTimeSeries *TimeSeries, checkData *moira.CheckData, expressionState string, expressionValues map[string]float64, valueTimestamp int64) {
 	metricState := checkData.Metrics[firstTargetTimeSeries.Name]
 	metricState.State = expressionState
-	metricState.Timestamp = int64(valueTimestamp)
+	metricState.Timestamp = valueTimestamp
 
 	if len(expressionValues) == 0 {
 		if metricState.Value != nil {
@@ -50,8 +50,8 @@ func (targetTimeSeries *triggerTimeSeries) updateCheckData(firstTargetTimeSeries
 	checkData.Metrics[firstTargetTimeSeries.Name] = metricState
 }
 
-func (timeSeries *TimeSeries) getTimeSeriesCheckPointValue(checkPoint int32) float64 {
-	valueIndex := (checkPoint - timeSeries.StartTime) / timeSeries.StepTime
+func (timeSeries *TimeSeries) getTimeSeriesCheckPointValue(checkPoint int64) float64 {
+	valueIndex := (checkPoint - int64(timeSeries.StartTime)) / int64(timeSeries.StepTime)
 	var value float64
 	if len(timeSeries.Values) > int(valueIndex) {
 		value = timeSeries.Values[valueIndex]

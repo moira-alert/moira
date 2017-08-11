@@ -7,8 +7,8 @@ import (
 	"math"
 )
 
-func FetchData(database moira.Database, pattern expr.MetricRequest, allowRealTimeAlerting bool) ([]*expr.MetricData, []string, error) {
-	metrics, err := database.GetPatternMetrics(pattern.Metric)
+func FetchData(database moira.Database, pattern string, from int64, until int64, allowRealTimeAlerting bool) ([]*expr.MetricData, []string, error) {
+	metrics, err := database.GetPatternMetrics(pattern)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -20,32 +20,32 @@ func FetchData(database moira.Database, pattern expr.MetricRequest, allowRealTim
 		if err != nil {
 			return nil, nil, err
 		}
-		dataList, err := database.GetMetricsValues(metrics, int64(pattern.From), int64(pattern.Until))
+		dataList, err := database.GetMetricsValues(metrics, from, until)
 		if err != nil {
 			return nil, nil, err
 		}
-		valuesMap := unpackMetricsValues(dataList, retention, int64(pattern.From), int64(pattern.Until), allowRealTimeAlerting)
+		valuesMap := unpackMetricsValues(dataList, retention, from, until, allowRealTimeAlerting)
 		for _, metric := range metrics {
-			metricDatas = append(metricDatas, createMetricData(metric, pattern.From, pattern.Until, int32(retention), valuesMap[metric]))
+			metricDatas = append(metricDatas, createMetricData(metric, from, until, retention, valuesMap[metric]))
 		}
 	}
 
 	return metricDatas, metrics, nil
 }
 
-func createMetricData(metric string, from int32, until int32, retention int32, values []float64) *expr.MetricData {
+func createMetricData(metric string, from int64, until int64, retention int64, values []float64) *expr.MetricData {
 	fetchResponse := pb.FetchResponse{
 		Name:      metric,
-		StartTime: from,
-		StopTime:  until,
-		StepTime:  retention,
+		StartTime: int32(from),
+		StopTime:  int32(until),
+		StepTime:  int32(retention),
 		Values:    values,
 		IsAbsent:  make([]bool, len(values), len(values)),
 	}
 	return &expr.MetricData{FetchResponse: fetchResponse}
 }
 
-func unpackMetricsValues(metricsData map[string][]*moira.MetricValue, retention int32, from int64, until int64, allowRealTimeAlerting bool) map[string][]float64 {
+func unpackMetricsValues(metricsData map[string][]*moira.MetricValue, retention int64, from int64, until int64, allowRealTimeAlerting bool) map[string][]float64 {
 	retentionFrom := roundToMinimalHighestRetention(from, retention)
 	getTimeSlot := func(timestamp int64) int64 {
 		return (timestamp - retentionFrom) / int64(retention)
@@ -85,10 +85,9 @@ func getMathFloat64(val float64, ok bool) float64 {
 	}
 }
 
-func roundToMinimalHighestRetention(ts int64, retention int32) int64 {
-	ret := int64(retention)
-	if (ts % ret) == 0 {
+func roundToMinimalHighestRetention(ts, retention int64) int64 {
+	if (ts % retention) == 0 {
 		return ts
 	}
-	return (ts + ret) / ret * ret
+	return (ts + retention) / retention * retention
 }

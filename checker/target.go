@@ -49,9 +49,9 @@ func getPatternsMetricData(database moira.Database, patterns []expr.MetricReques
 	metrics := make([]string, 0)
 	metricsMap := make(map[expr.MetricRequest][]*expr.MetricData, 0)
 	for _, pattern := range patterns {
-		pattern.From += int32(from)
-		pattern.Until += int32(until)
-		metricDatas, patternMetrics, err := FetchData(database, pattern, allowRealTimeAlerting)
+		from += int64(pattern.From)
+		until += int64(pattern.Until)
+		metricDatas, patternMetrics, err := FetchData(database, pattern.Metric, from, until, allowRealTimeAlerting)
 		if err != nil {
 			return nil, nil, err
 		}

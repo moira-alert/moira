@@ -60,7 +60,7 @@ func (triggerChecker *TriggerChecker) Check(from *int64, now *int64) error {
 	}
 
 	checkData.Score = scores[checkData.State]
-	for _, metricData := range checkData.Metrics{
+	for _, metricData := range checkData.Metrics {
 		checkData.Score += scores[metricData.State]
 	}
 	triggerChecker.Database.SetTriggerLastCheck(triggerChecker.TriggerId, checkData)
@@ -89,25 +89,28 @@ func (triggerChecker *TriggerChecker) handleTrigger(from, until int64) (*moira.C
 	}
 
 	for _, timeSeries := range triggerTimeSeries[1] {
+		startTime := int64(timeSeries.StartTime)
+		stopTime := int64(timeSeries.StopTime)
+		stepTime := int64(timeSeries.StepTime)
+
 		triggerChecker.Logger.Debugf("Checking timeSeries %s: %v", timeSeries.Name, timeSeries.Values)
-		triggerChecker.Logger.Debugf("Checking interval: %v - %v (%vs), step: %v", timeSeries.StartTime, timeSeries.StopTime, timeSeries.StepTime, timeSeries.StopTime-timeSeries.StartTime)
+		triggerChecker.Logger.Debugf("Checking interval: %v - %v (%vs), step: %v", startTime, stopTime, stepTime, stopTime-startTime)
 		metricState, ok := checkData.Metrics[timeSeries.Name]
 		if !ok {
-			triggerChecker.Logger.Debugf("No metric state for %s", timeSeries.Name)
 			metricState = moira.MetricData{
 				State:     NODATA,
-				Timestamp: int64(timeSeries.StartTime - 3600),
+				Timestamp: startTime - 3600,
 			}
 		}
-		checkPoint := math.Max(float64(metricState.Timestamp-checkPointGap), float64(metricState.EventTimestamp))
+
+		checkPoint := getCheckPoint(metricState, checkPointGap)
 		triggerChecker.Logger.Debugf("Checkpoint for %s: %v", timeSeries.Name, checkPoint)
 
-		for valueTimestamp := timeSeries.StartTime; valueTimestamp < int32(until)+timeSeries.StepTime; valueTimestamp += timeSeries.StepTime {
-			cp := int32(checkPoint)
-			if valueTimestamp < cp {
+		for valueTimestamp := startTime; valueTimestamp < until+stepTime; valueTimestamp += stepTime {
+			if valueTimestamp < checkPoint {
 				continue
 			}
-			expressionValues, noEmptyValues := triggerTimeSeries.getExpressionValues(timeSeries, cp)
+			expressionValues, noEmptyValues := triggerTimeSeries.getExpressionValues(timeSeries, checkPoint)
 			triggerChecker.Logger.Debugf("values for ts %s: %v", valueTimestamp, expressionValues)
 			if noEmptyValues {
 				continue
@@ -136,11 +139,15 @@ func (triggerChecker *TriggerChecker) handleTrigger(from, until int64) (*moira.C
 				}
 				continue
 			}
-			triggerTimeSeries.updateCheckData(timeSeries, checkData, toMetricState(triggerChecker.ttlState), nil, int32(*triggerChecker.lastCheck.Timestamp-*triggerChecker.ttl))
+			triggerTimeSeries.updateCheckData(timeSeries, checkData, toMetricState(triggerChecker.ttlState), nil, *lastCheckTimeStamp-*ttl)
 			//todo compareStates
 		}
 	}
 	return checkData, nil
+}
+
+func getCheckPoint(metricData moira.MetricData, checkPointGap int64) int64 {
+	return int64(math.Max(float64(metricData.Timestamp-checkPointGap), float64(metricData.EventTimestamp)))
 }
 
 func (triggerChecker *TriggerChecker) cleanupMetricsValues(metrics []string, until int64) {
