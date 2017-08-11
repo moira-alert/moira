@@ -24,7 +24,7 @@ func (*triggerTimeSeries) getAdditionalTargetName(targetNumber int) string {
 
 func (targetTimeSeries triggerTimeSeries) getExpressionValues(firstTargetTimeSeries *TimeSeries, checkPoint int64) (ExpressionValues, bool) {
 	expressionValues := make(map[string]float64)
-	firstTargetValue := firstTargetTimeSeries.getTimeSeriesCheckPointValue(checkPoint)
+	firstTargetValue := firstTargetTimeSeries.getCheckPointValue(checkPoint)
 	if math.IsNaN(firstTargetValue) {
 		return expressionValues, false
 	}
@@ -35,7 +35,7 @@ func (targetTimeSeries triggerTimeSeries) getExpressionValues(firstTargetTimeSer
 		if additionalTimeSeries == nil {
 			return expressionValues, false
 		}
-		tnValue := additionalTimeSeries.getTimeSeriesCheckPointValue(checkPoint)
+		tnValue := additionalTimeSeries.getCheckPointValue(checkPoint)
 		if math.IsNaN(tnValue) {
 			return expressionValues, false
 		}
@@ -61,13 +61,11 @@ func (targetTimeSeries *triggerTimeSeries) updateCheckData(firstTargetTimeSeries
 	checkData.Metrics[firstTargetTimeSeries.Name] = metricState
 }
 
-func (timeSeries *TimeSeries) getTimeSeriesCheckPointValue(checkPoint int64) float64 {
-	valueIndex := (checkPoint - int64(timeSeries.StartTime)) / int64(timeSeries.StepTime)
-	var value float64
-	if len(timeSeries.Values) > int(valueIndex) {
-		value = timeSeries.Values[valueIndex]
+func (timeSeries *TimeSeries) getCheckPointValue(checkPoint int64) float64 {
+	valueIndex := int((checkPoint - int64(timeSeries.StartTime)) / int64(timeSeries.StepTime))
+	if len(timeSeries.Values) <= valueIndex || (len(timeSeries.IsAbsent) > valueIndex && timeSeries.IsAbsent[valueIndex]) {
+		return math.NaN()
 	} else {
-		value = math.NaN()
+		return timeSeries.Values[valueIndex]
 	}
-	return value
 }
