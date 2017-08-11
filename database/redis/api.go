@@ -596,7 +596,7 @@ func (connector *DbConnector) SetTriggerMetricsMaintenance(triggerId string, met
 			for metric, value := range metrics {
 				data, ok := metricsCheck[metric]
 				if !ok {
-					data = moira.MetricData{}
+					data = moira.MetricState{}
 				}
 				data.Maintenance = &value
 				metricsCheck[metric] = data

@@ -23,11 +23,11 @@ type TriggerChecks struct {
 }
 
 type CheckData struct {
-	Metrics   map[string]MetricData `json:"metrics"`
-	Score     int64                 `json:"score"`
-	State     string                `json:"state"`
-	Timestamp *int64                `json:"timestamp,omitempty"`
-	Message   string                `json:"msg,omitempty"`
+	Metrics   map[string]MetricState `json:"metrics"`
+	Score     int64                  `json:"score"`
+	State     string                 `json:"state"`
+	Timestamp *int64                 `json:"timestamp,omitempty"`
+	Message   string                 `json:"msg,omitempty"`
 }
 
 type MetricValue struct {
@@ -36,7 +36,7 @@ type MetricValue struct {
 	Value              float64
 }
 
-type MetricData struct {
+type MetricState struct {
 	EventTimestamp int64    `json:"event_timestamp"`
 	State          string   `json:"state"`
 	Suppressed     bool     `json:"suppressed"`

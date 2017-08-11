@@ -100,7 +100,7 @@ func (triggerChecker *TriggerChecker) handleTrigger(from, until int64) (*moira.C
 		triggerChecker.Logger.Debugf("Checking interval: %v - %v (%vs), step: %v", startTime, stopTime, stepTime, stopTime-startTime)
 		metricState, ok := checkData.Metrics[timeSeries.Name]
 		if !ok {
-			metricState = moira.MetricData{
+			metricState = moira.MetricState{
 				State:     NODATA,
 				Timestamp: startTime - 3600,
 			}
