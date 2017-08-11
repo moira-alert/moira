@@ -50,13 +50,18 @@ func (triggerChecker *TriggerChecker) Check(from *int64, now *int64) error {
 		triggerChecker.Logger.Errorf("Trigger check failed: %s", err.Error())
 		checkData = &moira.CheckData{
 			Metrics:   triggerChecker.lastCheck.Metrics,
-			State:     "EXCEPTION",
+			State:     EXCEPTION,
 			Timestamp: now,
 			Score:     triggerChecker.lastCheck.Score,
 			Message:   "Trigger evaluation exception",
 		}
 		//todo compare_states
 		return nil //todo is it right?
+	}
+
+	checkData.Score = scores[checkData.State]
+	for _, metricData := range checkData.Metrics{
+		checkData.Score += scores[metricData.State]
 	}
 	triggerChecker.Database.SetTriggerLastCheck(triggerChecker.TriggerId, checkData)
 	return nil
@@ -65,7 +70,7 @@ func (triggerChecker *TriggerChecker) Check(from *int64, now *int64) error {
 func (triggerChecker *TriggerChecker) handleTrigger(from, until int64) (*moira.CheckData, error) {
 	checkData := &moira.CheckData{
 		Metrics:   triggerChecker.lastCheck.Metrics,
-		State:     "OK",
+		State:     OK,
 		Timestamp: &until,
 		Score:     triggerChecker.lastCheck.Score,
 	}
@@ -90,7 +95,7 @@ func (triggerChecker *TriggerChecker) handleTrigger(from, until int64) (*moira.C
 		if !ok {
 			triggerChecker.Logger.Debugf("No metric state for %s", timeSeries.Name)
 			metricState = moira.MetricData{
-				State:     "NODATA",
+				State:     NODATA,
 				Timestamp: int64(timeSeries.StartTime - 3600),
 			}
 		}
@@ -117,11 +122,23 @@ func (triggerChecker *TriggerChecker) handleTrigger(from, until int64) (*moira.C
 			//todo compare_states
 		}
 
+		lastCheckTimeStamp := triggerChecker.lastCheck.Timestamp
+		ttl := triggerChecker.ttl
+
 		//compare with last_check timestamp in case if we have not run checker for a long time
-		if triggerChecker.ttl != nil && metricState.Timestamp+*triggerChecker.ttl < moira.UseInt64(triggerChecker.lastCheck.Timestamp) {
-
+		if ttl != nil && metricState.Timestamp+*triggerChecker.ttl < moira.UseInt64(lastCheckTimeStamp) {
+			triggerChecker.Logger.Infof("Metric %s TTL expired for state %v", timeSeries.Name, metricState)
+			if triggerChecker.ttlState == DEL && metricState.EventTimestamp != 0 {
+				triggerChecker.Logger.Infof("Remove metric %s", timeSeries.Name)
+				delete(checkData.Metrics, timeSeries.Name)
+				if err := triggerChecker.Database.RemovePatternsMetrics(triggerChecker.trigger.Patterns); err != nil {
+					return checkData, err
+				}
+				continue
+			}
+			triggerTimeSeries.updateCheckData(timeSeries, checkData, toMetricState(triggerChecker.ttlState), nil, int32(*triggerChecker.lastCheck.Timestamp-*triggerChecker.ttl))
+			//todo compareStates
 		}
-
 	}
 	return checkData, nil
 }
@@ -192,7 +209,7 @@ func (triggerChecker *TriggerChecker) initTrigger(fromTime *int64, now int64) (b
 	if trigger.TtlState != nil {
 		triggerChecker.ttlState = *trigger.TtlState
 	} else {
-		triggerChecker.ttlState = "NODATA"
+		triggerChecker.ttlState = NODATA
 	}
 
 	triggerChecker.lastCheck, err = triggerChecker.Database.GetTriggerLastCheck(triggerChecker.TriggerId)
@@ -209,7 +226,7 @@ func (triggerChecker *TriggerChecker) initTrigger(fromTime *int64, now int64) (b
 	if triggerChecker.lastCheck == nil {
 		triggerChecker.lastCheck = &moira.CheckData{
 			Metrics:   make(map[string]moira.MetricData),
-			State:     "NODATA",
+			State:     NODATA,
 			Timestamp: &begin,
 		}
 	}

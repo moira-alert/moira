@@ -59,7 +59,6 @@ func (worker *Worker) handleMetricEvent(metricEvent *moira.MetricEvent) error {
 		return err
 	}
 	if len(triggerIds) == 0 {
-		worker.database.RemovePattern(pattern)
 		if err := worker.database.RemovePatternWithMetrics(pattern); err != nil {
 			return err
 		}

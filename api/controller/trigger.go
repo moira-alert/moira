@@ -40,7 +40,7 @@ func SaveTrigger(database moira.Database, trigger *moira.Trigger, triggerId stri
 		lastCheck = &moira.CheckData{
 			Metrics: make(map[string]moira.MetricData),
 			Score:   0,
-			State:   "NODATA",
+			State:   checker.NODATA,
 		}
 	}
 
