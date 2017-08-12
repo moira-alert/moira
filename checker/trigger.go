@@ -60,7 +60,7 @@ func (triggerChecker *TriggerChecker) InitTriggerChecker() (bool, error) {
 		return false, err
 	}
 
-	triggerChecker.From = *triggerChecker.lastCheck.Timestamp
+	triggerChecker.From = triggerChecker.lastCheck.Timestamp
 	if triggerChecker.ttl != nil {
 		triggerChecker.From = triggerChecker.From - *triggerChecker.ttl
 	} else {
@@ -80,12 +80,12 @@ func getLastCheck(database moira.Database, triggerId string, emptyLastCheckTimes
 		lastCheck = &moira.CheckData{
 			Metrics:   make(map[string]moira.MetricState),
 			State:     NODATA,
-			Timestamp: &emptyLastCheckTimestamp,
+			Timestamp: emptyLastCheckTimestamp,
 		}
 	}
 
-	if lastCheck.Timestamp == nil {
-		lastCheck.Timestamp = &emptyLastCheckTimestamp
+	if lastCheck.Timestamp == 0 {
+		lastCheck.Timestamp = emptyLastCheckTimestamp
 	}
 
 	return lastCheck, nil

@@ -15,7 +15,7 @@ func (triggerChecker *TriggerChecker) compareChecks(currentCheck *moira.CheckDat
 	currentStateValue := currentCheck.State
 	lastStateValue := triggerChecker.lastCheck.State
 	triggerChecker.lastCheck.State = currentStateValue
-	timestamp := *currentCheck.Timestamp
+	timestamp := currentCheck.Timestamp
 
 	if currentCheck.EventTimestamp == 0 {
 		currentCheck.EventTimestamp = timestamp
@@ -40,7 +40,7 @@ func (triggerChecker *TriggerChecker) compareChecks(currentCheck *moira.CheckDat
 	currentCheck.Suppressed = false
 	triggerChecker.lastCheck.Suppressed = false
 
-	if triggerChecker.isTriggerSuppressed(&event, timestamp, 0) {
+	if triggerChecker.isTriggerSuppressed(&event, timestamp, 0, "") {
 		return nil
 	}
 	triggerChecker.Logger.Infof("Writing new event: %v", event)
@@ -75,14 +75,14 @@ func (triggerChecker *TriggerChecker) compareStates(metric string, currentState 
 	currentState.Suppressed = false
 	lastState.Suppressed = false
 
-	if triggerChecker.isTriggerSuppressed(&event, currentState.Timestamp, currentState.Maintenance) {
+	if triggerChecker.isTriggerSuppressed(&event, currentState.Timestamp, currentState.Maintenance, metric) {
 		return nil
 	}
 	triggerChecker.Logger.Infof("Writing new event: %v", event)
 	return triggerChecker.Database.PushEvent(&event, false)
 }
 
-func (triggerChecker *TriggerChecker) isTriggerSuppressed(event *moira.EventData, timestamp int64, stateMaintenance int64) bool {
+func (triggerChecker *TriggerChecker) isTriggerSuppressed(event *moira.EventData, timestamp int64, stateMaintenance int64, metric string) bool {
 	if !triggerChecker.trigger.Schedule.IsScheduleAllows(timestamp) {
 		triggerChecker.Logger.Infof("Event %v suppressed due to trigger schedule", event)
 		return true

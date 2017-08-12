@@ -15,14 +15,13 @@ func (triggerChecker *TriggerChecker) Check() error {
 		checkData = &moira.CheckData{
 			Metrics:   triggerChecker.lastCheck.Metrics,
 			State:     EXCEPTION,
-			Timestamp: &triggerChecker.Until,
+			Timestamp: triggerChecker.Until,
 			Score:     triggerChecker.lastCheck.Score,
 			Message:   "Trigger evaluation exception",
 		}
 		if err := triggerChecker.compareChecks(checkData); err != nil {
 			return err
 		}
-		return nil
 	}
 
 	checkData.Score = scores[checkData.State]
@@ -37,7 +36,7 @@ func (triggerChecker *TriggerChecker) handleTrigger() (*moira.CheckData, error) 
 	checkData := moira.CheckData{
 		Metrics:   triggerChecker.lastCheck.Metrics,
 		State:     OK,
-		Timestamp: &triggerChecker.Until,
+		Timestamp: triggerChecker.Until,
 		Score:     triggerChecker.lastCheck.Score,
 	}
 
@@ -108,7 +107,7 @@ func (triggerChecker *TriggerChecker) handleTrigger() (*moira.CheckData, error) 
 		ttl := triggerChecker.ttl
 
 		//compare with last_check timestamp in case if we have not run checker for a long time
-		if ttl != nil && metricLastState.Timestamp+*triggerChecker.ttl < moira.UseInt64(lastCheckTimeStamp) {
+		if ttl != nil && metricLastState.Timestamp+*triggerChecker.ttl < lastCheckTimeStamp {
 			triggerChecker.Logger.Infof("Metric %s TTL expired for state %v", timeSeries.Name, metricLastState)
 			if triggerChecker.ttlState == DEL && metricLastState.EventTimestamp != 0 {
 				triggerChecker.Logger.Infof("Remove metric %s", timeSeries.Name)
@@ -120,7 +119,7 @@ func (triggerChecker *TriggerChecker) handleTrigger() (*moira.CheckData, error) 
 			}
 			metricNewState := moira.MetricState{
 				State:          toMetricState(triggerChecker.ttlState),
-				Timestamp:      *lastCheckTimeStamp - *ttl,
+				Timestamp:      lastCheckTimeStamp - *ttl,
 				Value:          nil,
 				EventTimestamp: 0,
 				Maintenance:    metricLastState.Maintenance,

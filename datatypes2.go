@@ -28,7 +28,7 @@ type CheckData struct {
 	Metrics        map[string]MetricState `json:"metrics"`
 	Score          int64                  `json:"score"`
 	State          string                 `json:"state"`
-	Timestamp      *int64                 `json:"timestamp,omitempty"`
+	Timestamp      int64                  `json:"timestamp,omitempty"`
 	EventTimestamp int64                  `json:"timestamp,omitempty"`
 	Message        string                 `json:"msg,omitempty"`
 	Suppressed     bool                   `json:"suppressed,omitempty"`
@@ -78,7 +78,7 @@ func (metricState MetricState) GetEventTimestamp() int64 {
 
 func (metricState CheckData) GetEventTimestamp() int64 {
 	if metricState.EventTimestamp == 0 {
-		return *metricState.Timestamp
+		return metricState.Timestamp
 	}
 	return metricState.EventTimestamp
 }
