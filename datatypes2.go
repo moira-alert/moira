@@ -1,5 +1,7 @@
 package moira
 
+import "math"
+
 type Trigger struct {
 	ID              string        `json:"id"`
 	Name            string        `json:"name"`
@@ -48,4 +50,19 @@ type MetricState struct {
 type MetricEvent struct {
 	Metric  string `json:"metric"`
 	Pattern string `json:"pattern"`
+}
+
+func (checkData *CheckData) GetMetricState(metric string, emptyTimestampValue int64) MetricState {
+	metricState, ok := checkData.Metrics[metric]
+	if !ok {
+		metricState = MetricState{
+			State:     "NODATA",
+			Timestamp: emptyTimestampValue,
+		}
+	}
+	return metricState
+}
+
+func (metricState *MetricState) GetCheckPoint(checkPointGap int64) int64 {
+	return int64(math.Max(float64(metricState.Timestamp-checkPointGap), float64(metricState.EventTimestamp)))
 }
