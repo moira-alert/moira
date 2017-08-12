@@ -1,6 +1,7 @@
 package checker
 
 import (
+	"errors"
 	"github.com/moira-alert/moira-alert"
 	"time"
 )
@@ -23,14 +24,16 @@ type TriggerChecker struct {
 	ttlState    string
 }
 
-func (triggerChecker *TriggerChecker) InitTriggerChecker() (bool, error) {
+var ErrTriggerNotExists = errors.New("trigger does not exists")
+
+func (triggerChecker *TriggerChecker) InitTriggerChecker() error {
 	triggerChecker.Until = time.Now().Unix()
 	trigger, err := triggerChecker.Database.GetTrigger(triggerChecker.TriggerId)
 	if err != nil {
-		return false, err
+		return err
 	}
 	if trigger == nil {
-		return false, nil
+		return ErrTriggerNotExists
 	}
 
 	triggerChecker.trigger = trigger
@@ -38,7 +41,7 @@ func (triggerChecker *TriggerChecker) InitTriggerChecker() (bool, error) {
 
 	tagDatas, err := triggerChecker.Database.GetTags(trigger.Tags)
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	for _, tagData := range tagDatas {
@@ -55,9 +58,9 @@ func (triggerChecker *TriggerChecker) InitTriggerChecker() (bool, error) {
 		triggerChecker.ttlState = NODATA
 	}
 
-	triggerChecker.lastCheck, err = getLastCheck(triggerChecker.Database, triggerChecker.TriggerId, triggerChecker.Until)
+	triggerChecker.lastCheck, err = getLastCheck(triggerChecker.Database, triggerChecker.TriggerId, triggerChecker.Until-3600)
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	triggerChecker.From = triggerChecker.lastCheck.Timestamp
@@ -67,7 +70,7 @@ func (triggerChecker *TriggerChecker) InitTriggerChecker() (bool, error) {
 		triggerChecker.From = triggerChecker.From - 600
 	}
 
-	return true, nil
+	return nil
 }
 
 func getLastCheck(database moira.Database, triggerId string, emptyLastCheckTimestamp int64) (*moira.CheckData, error) {

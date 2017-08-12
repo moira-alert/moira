@@ -7,6 +7,7 @@ import (
 	"github.com/moira-alert/moira-alert/checker"
 	"github.com/moira-alert/moira-alert/checker/checker"
 	"github.com/moira-alert/moira-alert/checker/master"
+	"github.com/moira-alert/moira-alert/database/redis"
 	moiraLogging "github.com/moira-alert/moira-alert/logging"
 	"github.com/moira-alert/moira-alert/logging/go-logging"
 	"github.com/moira-alert/moira-alert/metrics/graphite/go-metrics"
@@ -24,8 +25,7 @@ var (
 	verbosityLog   = flag.Bool("-v", false, "Verbosity log")
 	triggerId      = flag.String("t", "", "Check single trigger by id and exit")
 	//Version - sets build version during build
-	Version  = "latest"
-	database moira.Database
+	Version = "latest"
 )
 
 func main() {
@@ -49,15 +49,18 @@ func main() {
 		os.Exit(1)
 	}
 
+	databaseSettings := config.Redis.getSettings()
+	databaseMetrics := metrics.ConfigureDatabaseMetrics()
+	database := redis.NewDatabase(logger, databaseSettings, databaseMetrics)
+
+	checkerSettings := config.Checker.getSettings()
 	if triggerId != nil && *triggerId != "" {
-		//todo check single trigger here
-		os.Exit(0)
+		checkSingleTrigger(database, logger, checkerSettings)
 	}
 
 	shutdown := make(chan bool)
 	var waitGroup sync.WaitGroup
 
-	checkerSettings := config.Checker.getSettings()
 	masterWorker := master.NewMaster(logger, database, checkerSettings)
 
 	run(masterWorker, shutdown, &waitGroup)
@@ -71,6 +74,26 @@ func main() {
 	close(shutdown)
 	waitGroup.Wait()
 	logger.Infof("Moira Checker stopped. Version: %s", Version)
+}
+
+func checkSingleTrigger(database moira.Database, logger moira.Logger, settings *checker.Config) {
+	triggerChecker := checker.TriggerChecker{
+		TriggerId: *triggerId,
+		Database:  database,
+		Logger:    logger,
+		Config:    settings,
+	}
+
+	err := triggerChecker.InitTriggerChecker()
+	if err != nil {
+		logger.Errorf("Failed initialize trigger checker: %s", err.Error())
+		os.Exit(1)
+	}
+	if err = triggerChecker.Check(); err != nil {
+		logger.Errorf("Failed check trigger: %s", err)
+		os.Exit(1)
+	}
+	os.Exit(0)
 }
 
 func runCheckers(database moira.Database, loggerSettings moiraLogging.Config, checkerSettings *checker.Config, shutdown chan bool, waitGroup *sync.WaitGroup) {

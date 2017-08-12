@@ -75,9 +75,9 @@ func (triggerChecker *TriggerChecker) handleTrigger() (*moira.CheckData, error) 
 			if valueTimestamp <= checkPoint {
 				continue
 			}
-			expressionValues, noEmptyValues := triggerTimeSeries.getExpressionValues(timeSeries, checkPoint)
+			expressionValues, noEmptyValues := triggerTimeSeries.getExpressionValues(timeSeries, valueTimestamp)
 			triggerChecker.Logger.Debugf("values for ts %s: %v", valueTimestamp, expressionValues)
-			if noEmptyValues {
+			if !noEmptyValues {
 				continue
 			}
 
