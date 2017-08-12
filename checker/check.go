@@ -19,11 +19,10 @@ func (triggerChecker *TriggerChecker) Check() error {
 			Score:     triggerChecker.lastCheck.Score,
 			Message:   "Trigger evaluation exception",
 		}
-		/*if err := triggerChecker.compareStates(metricState, *now, nil, nil); err != nil {
+		if err := triggerChecker.compareChecks(checkData); err != nil {
 			return err
-		}*/
-		//todo compare_states
-		return nil //todo is it right?
+		}
+		return nil
 	}
 
 	checkData.Score = scores[checkData.State]
@@ -53,9 +52,9 @@ func (triggerChecker *TriggerChecker) handleTrigger() (*moira.CheckData, error) 
 		if triggerChecker.ttl != nil && len(triggerChecker.lastCheck.Metrics) != 0 {
 			checkData.State = triggerChecker.ttlState
 			checkData.Message = "Trigger has no metrics"
-			/*if err := triggerChecker.compareStates(metricState, until, nil, nil); err != nil {
-				return checkData, err
-			}*/
+			if err := triggerChecker.compareChecks(&checkData); err != nil {
+				return &checkData, err
+			}
 		}
 		return &checkData, nil
 	}

@@ -25,11 +25,13 @@ type TriggerChecks struct {
 }
 
 type CheckData struct {
-	Metrics   map[string]MetricState `json:"metrics"`
-	Score     int64                  `json:"score"`
-	State     string                 `json:"state"`
-	Timestamp *int64                 `json:"timestamp,omitempty"`
-	Message   string                 `json:"msg,omitempty"`
+	Metrics        map[string]MetricState `json:"metrics"`
+	Score          int64                  `json:"score"`
+	State          string                 `json:"state"`
+	Timestamp      *int64                 `json:"timestamp,omitempty"`
+	EventTimestamp int64                  `json:"timestamp,omitempty"`
+	Message        string                 `json:"msg,omitempty"`
+	Suppressed     bool                   `json:"suppressed,omitempty"`
 }
 
 type MetricValue struct {
@@ -70,6 +72,13 @@ func (metricState *MetricState) GetCheckPoint(checkPointGap int64) int64 {
 func (metricState MetricState) GetEventTimestamp() int64 {
 	if metricState.EventTimestamp == 0 {
 		return metricState.Timestamp
+	}
+	return metricState.EventTimestamp
+}
+
+func (metricState CheckData) GetEventTimestamp() int64 {
+	if metricState.EventTimestamp == 0 {
+		return *metricState.Timestamp
 	}
 	return metricState.EventTimestamp
 }
