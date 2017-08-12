@@ -44,7 +44,7 @@ type MetricState struct {
 	Suppressed     bool     `json:"suppressed"`
 	Timestamp      int64    `json:"timestamp"`
 	Value          *float64 `json:"value,omitempty"`
-	Maintenance    *int64   `json:"maintenance,omitempty"`
+	Maintenance    int64    `json:"maintenance,omitempty"`
 }
 
 type MetricEvent struct {
@@ -65,4 +65,11 @@ func (checkData *CheckData) GetMetricState(metric string, emptyTimestampValue in
 
 func (metricState *MetricState) GetCheckPoint(checkPointGap int64) int64 {
 	return int64(math.Max(float64(metricState.Timestamp-checkPointGap), float64(metricState.EventTimestamp)))
+}
+
+func (metricState MetricState) GetEventTimestamp() int64 {
+	if metricState.EventTimestamp == 0 {
+		return metricState.Timestamp
+	}
+	return metricState.EventTimestamp
 }

@@ -3,6 +3,7 @@ package moira
 import (
 	"bytes"
 	"fmt"
+	"time"
 )
 
 var (
@@ -83,6 +84,16 @@ type TagData struct {
 	Maintenance *int64 `json:"maintenance,omitempty"`
 }
 
+// MatchedMetric represent parsed and matched metric data
+type MatchedMetric struct {
+	Metric             string
+	Patterns           []string
+	Value              float64
+	Timestamp          int64
+	RetentionTimestamp int64
+	Retention          int
+}
+
 // GetSubjectState returns the most critical state of events
 func (events EventsData) GetSubjectState() string {
 	result := ""
@@ -123,12 +134,20 @@ func (notification *ScheduledNotification) GetKey() string {
 	)
 }
 
-// MatchedMetric represent parsed and matched metric data
-type MatchedMetric struct {
-	Metric             string
-	Patterns           []string
-	Value              float64
-	Timestamp          int64
-	RetentionTimestamp int64
-	Retention          int
+func (schedule *ScheduleData) IsScheduleAllows(ts int64) bool {
+	timestamp := ts - ts%60 - schedule.TimezoneOffset*60
+	date := time.Unix(timestamp, 0)
+	if schedule.Days[date.Weekday()].Enabled {
+		return false
+	}
+	dayStart := time.Unix(timestamp-timestamp%(24*3600), 0)
+	startDayTime := dayStart.Add(time.Duration(schedule.StartOffset) * time.Minute)
+	endDayTime := dayStart.Add(time.Duration(schedule.EndOffset) * time.Minute)
+	if date.After(startDayTime) {
+		return false
+	}
+	if date.Before(endDayTime) {
+		return false
+	}
+	return true
 }

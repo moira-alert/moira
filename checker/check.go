@@ -74,7 +74,7 @@ func (triggerChecker *TriggerChecker) handleTrigger() (*moira.CheckData, error) 
 		triggerChecker.Logger.Debugf("Checkpoint for %s: %v", timeSeries.Name, checkPoint)
 
 		for valueTimestamp := startTime; valueTimestamp < triggerChecker.Until+stepTime; valueTimestamp += stepTime {
-			if valueTimestamp < checkPoint {
+			if valueTimestamp <= checkPoint {
 				continue
 			}
 			expressionValues, noEmptyValues := triggerTimeSeries.getExpressionValues(timeSeries, checkPoint)
@@ -97,7 +97,9 @@ func (triggerChecker *TriggerChecker) handleTrigger() (*moira.CheckData, error) 
 				Maintenance:    metricLastState.Maintenance,
 				Suppressed:     metricLastState.Suppressed,
 			}
-			checkData.Metrics[timeSeries.Name], err = triggerChecker.compareStates(timeSeries.Name, metricNewState, metricLastState)
+			err = triggerChecker.compareStates(timeSeries.Name, &metricNewState, &metricLastState)
+			triggerChecker.lastCheck.Metrics[timeSeries.Name] = metricLastState
+			checkData.Metrics[timeSeries.Name] = metricNewState
 			if err != nil {
 				return &checkData, err
 			}
@@ -125,7 +127,9 @@ func (triggerChecker *TriggerChecker) handleTrigger() (*moira.CheckData, error) 
 				Maintenance:    metricLastState.Maintenance,
 				Suppressed:     metricLastState.Suppressed,
 			}
-			checkData.Metrics[timeSeries.Name], err = triggerChecker.compareStates(timeSeries.Name, metricNewState, metricLastState)
+			err = triggerChecker.compareStates(timeSeries.Name, &metricNewState, &metricLastState)
+			triggerChecker.lastCheck.Metrics[timeSeries.Name] = metricLastState
+			checkData.Metrics[timeSeries.Name] = metricNewState
 			if err != nil {
 				return &checkData, err
 			}

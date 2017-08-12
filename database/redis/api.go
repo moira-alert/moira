@@ -584,7 +584,6 @@ func (connector *DbConnector) SetTriggerMetricsMaintenance(triggerId string, met
 		}
 	}
 
-	//todo кажется, здесь есть баг, связанный с конкурентностью запросов
 	for readingErr != redis.ErrNil {
 		var lastCheck = moira.CheckData{}
 		err := json.Unmarshal([]byte(lastCheckString), &lastCheck)
@@ -598,7 +597,7 @@ func (connector *DbConnector) SetTriggerMetricsMaintenance(triggerId string, met
 				if !ok {
 					data = moira.MetricState{}
 				}
-				data.Maintenance = &value
+				data.Maintenance = value
 				metricsCheck[metric] = data
 			}
 		}
@@ -607,18 +606,16 @@ func (connector *DbConnector) SetTriggerMetricsMaintenance(triggerId string, met
 			return err
 		}
 
-		prev, readingErr := redis.String(c.Do("GETSET", key, newLastCheck))
-		if readingErr != nil {
-			if readingErr != redis.ErrNil {
-				return readingErr
-			}
+		var prev string
+		prev, readingErr = redis.String(c.Do("GETSET", key, newLastCheck))
+		if readingErr != nil && readingErr != redis.ErrNil {
+			return readingErr
 		}
 		if prev == lastCheckString {
 			break
 		}
 		lastCheckString = prev
 	}
-
 	return nil
 }
 
