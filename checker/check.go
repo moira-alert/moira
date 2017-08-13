@@ -1,7 +1,6 @@
 package checker
 
 import (
-	"fmt"
 	"github.com/moira-alert/moira-alert"
 	"math"
 )
@@ -145,35 +144,6 @@ func (triggerChecker *TriggerChecker) cleanupMetricsValues(metrics []string, unt
 			}
 		}(metric)
 	}
-}
-
-func (triggerChecker *TriggerChecker) getTimeSeries(from, until int64) (*triggerTimeSeries, []string, error) {
-	targets := triggerChecker.trigger.Targets
-	triggerTimeSeries := &triggerTimeSeries{
-		Main:       make([]*TimeSeries, 0),
-		Additional: make([]*TimeSeries, 0),
-	}
-	metricsArr := make([]string, 0)
-
-	for targetIndex, target := range targets {
-		metricDatas, metrics, err := EvaluateTarget(triggerChecker.Database, target, from, until, triggerChecker.isSimple)
-		if err != nil {
-			return nil, nil, err
-		}
-
-		if targetIndex == 0 {
-			triggerTimeSeries.Main = metricDatas
-		} else {
-			if len(metricDatas) == 0 {
-				return nil, nil, fmt.Errorf("Target #%v has no timeseries", targetIndex+1)
-			} else if len(metricDatas) > 1 {
-				return nil, nil, fmt.Errorf("Target #%v has more than one timeseries", targetIndex+1)
-			}
-			triggerTimeSeries.Additional = append(triggerTimeSeries.Additional, metricDatas[0])
-		}
-		metricsArr = append(metricsArr, metrics...)
-	}
-	return triggerTimeSeries, metricsArr, nil
 }
 
 func getMathFloat64Pointer(val *float64) float64 {

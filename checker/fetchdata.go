@@ -29,7 +29,6 @@ func FetchData(database moira.Database, pattern string, from int64, until int64,
 			metricDatas = append(metricDatas, createMetricData(metric, from, until, retention, valuesMap[metric]))
 		}
 	}
-
 	return metricDatas, metrics, nil
 }
 

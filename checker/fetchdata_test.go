@@ -1,13 +1,184 @@
 package checker
 
 import (
-	"github.com/moira-alert/moira-alert"
-	. "github.com/smartystreets/goconvey/convey"
-	"testing"
-	//"math"
 	"fmt"
+	"github.com/go-graphite/carbonapi/expr"
+	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
+	"github.com/golang/mock/gomock"
+	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira-alert/mock/moira-alert"
+	. "github.com/smartystreets/goconvey/convey"
 	"math"
+	"testing"
 )
+
+func TestFetchData(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	pattern := "super-puper-pattern"
+	metric := "super-puper-metric"
+	dataList := map[string][]*moira.MetricValue{
+		metric: {
+			{
+				RetentionTimestamp: 20,
+				Timestamp:          23,
+				Value:              0,
+			},
+			{
+				RetentionTimestamp: 30,
+				Timestamp:          33,
+				Value:              1,
+			},
+			{
+				RetentionTimestamp: 40,
+				Timestamp:          43,
+				Value:              2,
+			},
+			{
+				RetentionTimestamp: 50,
+				Timestamp:          53,
+				Value:              3,
+			},
+			{
+				RetentionTimestamp: 60,
+				Timestamp:          63,
+				Value:              4,
+			},
+		},
+	}
+
+	var from int64 = 17
+	var until int64 = 67
+	var retention int64 = 10
+	retentionErr := fmt.Errorf("Ooops, retention error")
+	patternErr := fmt.Errorf("Ooops, pattern error")
+	metricErr := fmt.Errorf("Ooops, metric error")
+
+	Convey("Errors Test", t, func() {
+		Convey("GetPatternMetricsError", func() {
+			dataBase.EXPECT().GetPatternMetrics(pattern).Return(nil, patternErr)
+			metricData, metrics, err := FetchData(dataBase, pattern, from, until, true)
+			So(metricData, ShouldBeNil)
+			So(metrics, ShouldBeNil)
+			So(err, ShouldResemble, patternErr)
+		})
+		Convey("GetMetricRetentionError", func() {
+			dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
+			dataBase.EXPECT().GetMetricRetention(metric).Return(int64(0), retentionErr)
+			metricData, metrics, err := FetchData(dataBase, pattern, from, until, true)
+			So(metricData, ShouldBeNil)
+			So(metrics, ShouldBeNil)
+			So(err, ShouldResemble, retentionErr)
+		})
+		Convey("GetMetricsValuesError", func() {
+			dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
+			dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
+			dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(nil, metricErr)
+			metricData, metrics, err := FetchData(dataBase, pattern, from, until, true)
+			So(metricData, ShouldBeNil)
+			So(metrics, ShouldBeNil)
+			So(err, ShouldResemble, metricErr)
+		})
+	})
+
+	Convey("Test no metrics", t, func() {
+		dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{}, nil)
+		metricData, metrics, err := FetchData(dataBase, pattern, from, until, false)
+		So(metricData, ShouldBeEmpty)
+		So(metrics, ShouldBeEmpty)
+		So(err, ShouldBeNil)
+	})
+
+	Convey("Test allowRealTimeAlerting=true", t, func() {
+		dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
+		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
+		dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
+		metricData, metrics, err := FetchData(dataBase, pattern, from, until, false)
+		fetchResponse := pb.FetchResponse{
+			Name:      metric,
+			StartTime: int32(from),
+			StopTime:  int32(until),
+			StepTime:  int32(retention),
+			Values:    []float64{0, 1, 2, 3},
+			IsAbsent:  make([]bool, 4, 4),
+		}
+		expected := &expr.MetricData{FetchResponse: fetchResponse}
+		So(metricData, ShouldResemble, []*expr.MetricData{expected})
+		So(metrics, ShouldResemble, []string{metric})
+		So(err, ShouldBeNil)
+	})
+
+	Convey("Test allowRealTimeAlerting=true", t, func() {
+		dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
+		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
+		dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
+		metricData, metrics, err := FetchData(dataBase, pattern, from, until, true)
+		fetchResponse := pb.FetchResponse{
+			Name:      metric,
+			StartTime: int32(from),
+			StopTime:  int32(until),
+			StepTime:  int32(retention),
+			Values:    []float64{0, 1, 2, 3, 4},
+			IsAbsent:  make([]bool, 5, 5),
+		}
+		expected := &expr.MetricData{FetchResponse: fetchResponse}
+		So(metricData, ShouldResemble, []*expr.MetricData{expected})
+		So(metrics, ShouldResemble, []string{metric})
+		So(err, ShouldBeNil)
+	})
+
+	metric2 := "super-puper-mega-metric"
+	dataList[metric2] = []*moira.MetricValue{
+		{
+			RetentionTimestamp: 20,
+			Timestamp:          23,
+			Value:              0,
+		},
+		{
+			RetentionTimestamp: 30,
+			Timestamp:          33,
+			Value:              1,
+		},
+		{
+			RetentionTimestamp: 40,
+			Timestamp:          43,
+			Value:              2,
+		},
+		{
+			RetentionTimestamp: 50,
+			Timestamp:          53,
+			Value:              3,
+		},
+		{
+			RetentionTimestamp: 60,
+			Timestamp:          63,
+			Value:              4,
+		},
+	}
+
+	Convey("Test multiple metrics", t, func() {
+		dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric, metric2}, nil)
+		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
+		dataBase.EXPECT().GetMetricsValues([]string{metric, metric2}, from, until).Return(dataList, nil)
+		metricData, metrics, err := FetchData(dataBase, pattern, from, until, true)
+		fetchResponse := pb.FetchResponse{
+			Name:      metric,
+			StartTime: int32(from),
+			StopTime:  int32(until),
+			StepTime:  int32(retention),
+			Values:    []float64{0, 1, 2, 3, 4},
+			IsAbsent:  make([]bool, 5, 5),
+		}
+		expected := expr.MetricData{FetchResponse: fetchResponse}
+		expected2 := expected
+		expected2.Name = metric2
+		So(metricData, ShouldResemble, []*expr.MetricData{&expected, &expected2})
+		So(metrics, ShouldResemble, []string{metric, metric2})
+		So(err, ShouldBeNil)
+	})
+
+	mockCtrl.Finish()
+}
 
 func TestAllowRealTimeAlerting(t *testing.T) {
 	metricsValues := []*moira.MetricValue{

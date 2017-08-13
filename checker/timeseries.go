@@ -13,6 +13,34 @@ type triggerTimeSeries struct {
 	Additional []*TimeSeries
 }
 
+func (triggerChecker *TriggerChecker) getTimeSeries(from, until int64) (*triggerTimeSeries, []string, error) {
+	triggerTimeSeries := &triggerTimeSeries{
+		Main:       make([]*TimeSeries, 0),
+		Additional: make([]*TimeSeries, 0),
+	}
+	metricsArr := make([]string, 0)
+
+	for targetIndex, target := range triggerChecker.trigger.Targets {
+		metricDatas, metrics, err := EvaluateTarget(triggerChecker.Database, target, from, until, triggerChecker.isSimple)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		if targetIndex == 0 {
+			triggerTimeSeries.Main = metricDatas
+		} else {
+			if len(metricDatas) == 0 {
+				return nil, nil, fmt.Errorf("Target #%v has no timeseries", targetIndex+1)
+			} else if len(metricDatas) > 1 {
+				return nil, nil, fmt.Errorf("Target #%v has more than one timeseries", targetIndex+1)
+			}
+			triggerTimeSeries.Additional = append(triggerTimeSeries.Additional, metricDatas[0])
+		}
+		metricsArr = append(metricsArr, metrics...)
+	}
+	return triggerTimeSeries, metricsArr, nil
+}
+
 func (*triggerTimeSeries) getMainTargetName() string {
 	return "t1"
 }
@@ -44,10 +72,15 @@ func (triggerTimeSeries *triggerTimeSeries) getExpressionValues(firstTargetTimeS
 }
 
 func (timeSeries *TimeSeries) getTimestampValue(valueTimestamp int64) float64 {
-	valueIndex := int((valueTimestamp - int64(timeSeries.StartTime)) / int64(timeSeries.StepTime))
-	if len(timeSeries.Values) <= valueIndex || (len(timeSeries.IsAbsent) > valueIndex && timeSeries.IsAbsent[valueIndex]) {
+	if valueTimestamp < int64(timeSeries.StartTime) {
 		return math.NaN()
-	} else {
-		return timeSeries.Values[valueIndex]
 	}
+	valueIndex := int((valueTimestamp - int64(timeSeries.StartTime)) / int64(timeSeries.StepTime))
+	if len(timeSeries.IsAbsent) > valueIndex && timeSeries.IsAbsent[valueIndex] {
+		return math.NaN()
+	}
+	if len(timeSeries.Values) <= valueIndex {
+		return math.NaN()
+	}
+	return timeSeries.Values[valueIndex]
 }
