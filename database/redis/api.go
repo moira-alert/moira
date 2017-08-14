@@ -62,27 +62,6 @@ func (connector *DbConnector) GetTagNames() ([]string, error) {
 	return tagNames, nil
 }
 
-//GetTag returns tag data by key
-func (connector *DbConnector) GetTag(tagName string) (moira.TagData, error) {
-	c := connector.pool.Get()
-	defer c.Close()
-
-	var tag moira.TagData
-
-	tagString, err := redis.Bytes(c.Do("GET", fmt.Sprintf("moira-tag:%s", tagName)))
-	if err != nil {
-		if err == redis.ErrNil {
-			return tag, nil
-		}
-		return tag, fmt.Errorf("Failed to get tag data for id %s: %s", tagName, err.Error())
-	}
-	if err := json.Unmarshal(tagString, &tag); err != nil {
-		return tag, fmt.Errorf("Failed to parse tag json %s: %s", tagString, err.Error())
-	}
-
-	return tag, nil
-}
-
 func (connector *DbConnector) GetFilteredTriggerCheckIds(tagNames []string, onlyErrors bool) ([]string, int64, error) {
 	c := connector.pool.Get()
 	defer c.Close()
@@ -249,33 +228,6 @@ func (connector *DbConnector) GetTriggerChecks(triggerCheckIds []string) ([]moir
 	}
 
 	return triggerChecks, nil
-}
-
-func (connector *DbConnector) GetTags(tagNames []string) (map[string]moira.TagData, error) {
-	c := connector.pool.Get()
-	defer c.Close()
-
-	c.Send("MULTI")
-	for _, tagName := range tagNames {
-		c.Send("GET", fmt.Sprintf("moira-tag:%s", tagName))
-	}
-	rawResponse, err := redis.ByteSlices(c.Do("EXEC"))
-	if err != nil {
-		return nil, fmt.Errorf("Failed to EXEC: %s", err.Error())
-	}
-
-	allTags := make(map[string]moira.TagData)
-	for i, tagBytes := range rawResponse {
-		var tag moira.TagData
-		if err := json.Unmarshal(tagBytes, &tag); err != nil {
-			connector.logger.Errorf("Failed to parse tag json %s: %s", tagBytes, err.Error())
-			allTags[tagNames[i]] = moira.TagData{}
-			continue
-		}
-		allTags[tagNames[i]] = tag
-	}
-
-	return allTags, nil
 }
 
 func (connector *DbConnector) GetTrigger(triggerId string) (*moira.Trigger, error) {
@@ -524,20 +476,6 @@ func (connector *DbConnector) PushEvent(event *moira.EventData, ui bool) error {
 		return fmt.Errorf("Failed to EXEC: %s", err.Error())
 	}
 	return nil
-}
-
-func (connector *DbConnector) SetTagMaintenance(name string, data moira.TagData) error {
-	bytes, err := json.Marshal(data)
-	if err != nil {
-		return err
-	}
-	c := connector.pool.Get()
-	defer c.Close()
-	_, err = c.Do("SET", fmt.Sprintf("moira-tag:%s", name), bytes)
-	if err != nil {
-		return fmt.Errorf("Failed to set moira-tag:%s, err: %s", name, err.Error())
-	}
-	return err
 }
 
 func (connector *DbConnector) GetTagTriggerIds(tagName string) ([]string, error) {

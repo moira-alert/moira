@@ -14,7 +14,6 @@ func tag(router chi.Router) {
 	router.Route("/{tag}", func(router chi.Router) {
 		router.Use(tagContext)
 		router.Delete("/", deleteTag)
-		router.Put("/data", setTagMaintenance)
 	})
 }
 
@@ -53,18 +52,5 @@ func deleteTag(writer http.ResponseWriter, request *http.Request) {
 	if err := render.Render(writer, request, response); err != nil {
 		render.Render(writer, request, dto.ErrorRender(err))
 		return
-	}
-}
-
-func setTagMaintenance(writer http.ResponseWriter, request *http.Request) {
-	tag := &dto.Tag{}
-	if err := render.Bind(request, tag); err != nil {
-		render.Render(writer, request, dto.ErrorInvalidRequest(err))
-		return
-	}
-	tagName := request.Context().Value("tag").(string)
-
-	if err := controller.SetTagMaintenance(database, tagName, tag); err != nil {
-		render.Render(writer, request, err)
 	}
 }

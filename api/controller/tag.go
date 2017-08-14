@@ -28,10 +28,6 @@ func GetAllTagsAndSubscriptions(database moira.Database) (*dto.TagsStatistics, *
 		if err != nil {
 			return nil, dto.ErrorInternalServer(err)
 		}
-		tagStat.Data, err = database.GetTag(tagName)
-		if err != nil {
-			return nil, dto.ErrorInternalServer(err)
-		}
 		tagsStatistics.List = append(tagsStatistics.List, tagStat)
 	}
 	return &tagsStatistics, nil
@@ -43,14 +39,8 @@ func GetAllTags(database moira.Database) (*dto.TagsData, *dto.ErrorResponse) {
 		return nil, dto.ErrorInternalServer(err)
 	}
 
-	tagsMap, err := database.GetTags(tagsNames)
-	if err != nil {
-		return nil, dto.ErrorInternalServer(err)
-	}
-
 	tagsData := &dto.TagsData{
 		TagNames: tagsNames,
-		TagsMap:  tagsMap,
 	}
 
 	return tagsData, nil
@@ -70,14 +60,4 @@ func DeleteTag(database moira.Database, tagName string) (*dto.MessageResponse, *
 		}
 	}
 	return &dto.MessageResponse{Message: "tag deleted"}, nil
-}
-
-func SetTagMaintenance(database moira.Database, tagName string, tag *dto.Tag) *dto.ErrorResponse {
-	data := moira.TagData(*tag)
-
-	if err := database.SetTagMaintenance(tagName, data); err != nil {
-		return dto.ErrorInternalServer(err)
-	}
-
-	return nil
 }

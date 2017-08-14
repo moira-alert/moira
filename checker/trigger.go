@@ -18,7 +18,6 @@ type TriggerChecker struct {
 	trigger   *moira.Trigger
 	lastCheck *moira.CheckData
 
-	maintenance int64
 	isSimple    bool
 	ttl         *int64
 	ttlState    string
@@ -38,20 +37,8 @@ func (triggerChecker *TriggerChecker) InitTriggerChecker() error {
 
 	triggerChecker.trigger = trigger
 	triggerChecker.isSimple = trigger.IsSimpleTrigger
-
-	tagDatas, err := triggerChecker.Database.GetTags(trigger.Tags)
-	if err != nil {
-		return err
-	}
-
-	for _, tagData := range tagDatas {
-		if tagData.Maintenance != nil && *tagData.Maintenance > triggerChecker.maintenance {
-			triggerChecker.maintenance = *tagData.Maintenance
-			break
-		}
-	}
-
 	triggerChecker.ttl = trigger.Ttl
+
 	if trigger.TtlState != nil {
 		triggerChecker.ttlState = *trigger.TtlState
 	} else {

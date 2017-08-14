@@ -399,19 +399,6 @@ func (_mr *MockDatabaseMockRecorder) GetSubscriptions(arg0 interface{}) *gomock.
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetSubscriptions", arg0)
 }
 
-// GetTag mocks base method
-func (_m *MockDatabase) GetTag(_param0 string) (moira_alert.TagData, error) {
-	ret := _m.ctrl.Call(_m, "GetTag", _param0)
-	ret0, _ := ret[0].(moira_alert.TagData)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetTag indicates an expected call of GetTag
-func (_mr *MockDatabaseMockRecorder) GetTag(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetTag", arg0)
-}
-
 // GetTagNames mocks base method
 func (_m *MockDatabase) GetTagNames() ([]string, error) {
 	ret := _m.ctrl.Call(_m, "GetTagNames")
@@ -436,19 +423,6 @@ func (_m *MockDatabase) GetTagTriggerIds(_param0 string) ([]string, error) {
 // GetTagTriggerIds indicates an expected call of GetTagTriggerIds
 func (_mr *MockDatabaseMockRecorder) GetTagTriggerIds(arg0 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetTagTriggerIds", arg0)
-}
-
-// GetTags mocks base method
-func (_m *MockDatabase) GetTags(_param0 []string) (map[string]moira_alert.TagData, error) {
-	ret := _m.ctrl.Call(_m, "GetTags", _param0)
-	ret0, _ := ret[0].(map[string]moira_alert.TagData)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetTags indicates an expected call of GetTags
-func (_mr *MockDatabaseMockRecorder) GetTags(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetTags", arg0)
 }
 
 // GetTagsSubscriptions mocks base method
@@ -727,18 +701,6 @@ func (_m *MockDatabase) SetContact(_param0 *moira_alert.ContactData) error {
 // SetContact indicates an expected call of SetContact
 func (_mr *MockDatabaseMockRecorder) SetContact(arg0 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetContact", arg0)
-}
-
-// SetTagMaintenance mocks base method
-func (_m *MockDatabase) SetTagMaintenance(_param0 string, _param1 moira_alert.TagData) error {
-	ret := _m.ctrl.Call(_m, "SetTagMaintenance", _param0, _param1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SetTagMaintenance indicates an expected call of SetTagMaintenance
-func (_mr *MockDatabaseMockRecorder) SetTagMaintenance(arg0, arg1 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetTagMaintenance", arg0, arg1)
 }
 
 // SetTriggerCheckLock mocks base method

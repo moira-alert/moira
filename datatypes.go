@@ -79,11 +79,6 @@ type ScheduledNotification struct {
 	Timestamp int64       `json:"timestamp"`
 }
 
-// TagData represent tag object
-type TagData struct {
-	Maintenance *int64 `json:"maintenance,omitempty"`
-}
-
 // MatchedMetric represent parsed and matched metric data
 type MatchedMetric struct {
 	Metric             string

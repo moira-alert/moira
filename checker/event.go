@@ -87,10 +87,6 @@ func (triggerChecker *TriggerChecker) isTriggerSuppressed(event *moira.EventData
 		triggerChecker.Logger.Infof("Event %v suppressed due to trigger schedule", event)
 		return true
 	}
-	if triggerChecker.maintenance >= timestamp {
-		triggerChecker.Logger.Infof("Event %v suppressed due to maintenance until %v.", event, time.Unix(triggerChecker.maintenance, 0))
-		return true
-	}
 	if stateMaintenance >= timestamp {
 		triggerChecker.Logger.Infof("Event %v suppressed due to metric %s maintenance until %v.", event, metric, time.Unix(stateMaintenance, 0))
 		return true
