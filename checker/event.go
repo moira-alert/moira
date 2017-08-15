@@ -41,6 +41,7 @@ func (triggerChecker *TriggerChecker) compareChecks(currentCheck *moira.CheckDat
 	triggerChecker.lastCheck.Suppressed = false
 
 	if triggerChecker.isTriggerSuppressed(&event, timestamp, 0, "") {
+		currentCheck.Suppressed = true
 		return nil
 	}
 	triggerChecker.Logger.Infof("Writing new event: %v", event)
@@ -68,6 +69,7 @@ func (triggerChecker *TriggerChecker) compareStates(metric string, currentState 
 		Timestamp: currentState.Timestamp,
 		Metric:    metric,
 		Message:   message,
+		Value:     currentState.Value,
 	}
 
 	currentState.EventTimestamp = currentState.Timestamp
@@ -76,6 +78,7 @@ func (triggerChecker *TriggerChecker) compareStates(metric string, currentState 
 	lastState.Suppressed = false
 
 	if triggerChecker.isTriggerSuppressed(&event, currentState.Timestamp, currentState.Maintenance, metric) {
+		currentState.Suppressed = true
 		return nil
 	}
 	triggerChecker.Logger.Infof("Writing new event: %v", event)

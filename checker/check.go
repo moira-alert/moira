@@ -90,7 +90,6 @@ func (triggerChecker *TriggerChecker) handleTrigger() (*moira.CheckData, error) 
 				State:          expressionState,
 				Timestamp:      valueTimestamp,
 				Value:          expressionValues.GetTargetValue(triggerTimeSeries.getMainTargetName()),
-				EventTimestamp: 0,
 				Maintenance:    metricLastState.Maintenance,
 				Suppressed:     metricLastState.Suppressed,
 			}
@@ -120,7 +119,6 @@ func (triggerChecker *TriggerChecker) handleTrigger() (*moira.CheckData, error) 
 				State:          toMetricState(triggerChecker.ttlState),
 				Timestamp:      lastCheckTimeStamp - *ttl,
 				Value:          nil,
-				EventTimestamp: 0,
 				Maintenance:    metricLastState.Maintenance,
 				Suppressed:     metricLastState.Suppressed,
 			}
