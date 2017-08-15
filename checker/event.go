@@ -11,10 +11,9 @@ var badStateReminder = map[string]int64{
 	NODATA: 86400,
 }
 
-func (triggerChecker *TriggerChecker) compareChecks(currentCheck *moira.CheckData) error {
+func (triggerChecker *TriggerChecker) compareChecks(currentCheck moira.CheckData) (moira.CheckData, error) {
 	currentStateValue := currentCheck.State
 	lastStateValue := triggerChecker.lastCheck.State
-	triggerChecker.lastCheck.State = currentStateValue
 	timestamp := currentCheck.Timestamp
 
 	if currentCheck.EventTimestamp == 0 {
@@ -23,7 +22,7 @@ func (triggerChecker *TriggerChecker) compareChecks(currentCheck *moira.CheckDat
 
 	needSend, message := needSendEvent(currentStateValue, lastStateValue, timestamp, triggerChecker.lastCheck.GetEventTimestamp(), triggerChecker.lastCheck.Suppressed)
 	if !needSend {
-		return nil
+		return currentCheck, nil
 	}
 
 	event := moira.EventData{
@@ -36,36 +35,33 @@ func (triggerChecker *TriggerChecker) compareChecks(currentCheck *moira.CheckDat
 	}
 
 	currentCheck.EventTimestamp = timestamp
-	triggerChecker.lastCheck.EventTimestamp = timestamp
 	currentCheck.Suppressed = false
-	triggerChecker.lastCheck.Suppressed = false
 
 	if triggerChecker.isTriggerSuppressed(&event, timestamp, 0, "") {
 		currentCheck.Suppressed = true
-		return nil
+		return currentCheck, nil
 	}
 	triggerChecker.Logger.Infof("Writing new event: %v", event)
-	return triggerChecker.Database.PushEvent(&event, false)
+	err := triggerChecker.Database.PushEvent(&event, false)
+	return currentCheck, err
 }
 
-func (triggerChecker *TriggerChecker) compareStates(metric string, currentState *moira.MetricState, lastState *moira.MetricState) error {
+func (triggerChecker *TriggerChecker) compareStates(metric string, currentState moira.MetricState, lastState moira.MetricState) (moira.MetricState, error) {
 	currentStateValue := currentState.State
-	lastStateValue := lastState.State
-	lastState.State = currentState.State
 
 	if currentState.EventTimestamp == 0 {
 		currentState.EventTimestamp = currentState.Timestamp
 	}
 
-	needSend, message := needSendEvent(currentStateValue, lastStateValue, currentState.Timestamp, lastState.GetEventTimestamp(), lastState.Suppressed)
+	needSend, message := needSendEvent(currentStateValue, lastState.State, currentState.Timestamp, lastState.GetEventTimestamp(), lastState.Suppressed)
 	if !needSend {
-		return nil
+		return currentState, nil
 	}
 
 	event := moira.EventData{
 		TriggerID: triggerChecker.TriggerId,
 		State:     currentStateValue,
-		OldState:  lastStateValue,
+		OldState:  lastState.State,
 		Timestamp: currentState.Timestamp,
 		Metric:    metric,
 		Message:   message,
@@ -73,16 +69,15 @@ func (triggerChecker *TriggerChecker) compareStates(metric string, currentState 
 	}
 
 	currentState.EventTimestamp = currentState.Timestamp
-	lastState.EventTimestamp = currentState.Timestamp
 	currentState.Suppressed = false
-	lastState.Suppressed = false
 
 	if triggerChecker.isTriggerSuppressed(&event, currentState.Timestamp, currentState.Maintenance, metric) {
 		currentState.Suppressed = true
-		return nil
+		return currentState, nil
 	}
 	triggerChecker.Logger.Infof("Writing new event: %v", event)
-	return triggerChecker.Database.PushEvent(&event, false)
+	err := triggerChecker.Database.PushEvent(&event, false)
+	return currentState, err
 }
 
 func (triggerChecker *TriggerChecker) isTriggerSuppressed(event *moira.EventData, timestamp int64, stateMaintenance int64, metric string) bool {

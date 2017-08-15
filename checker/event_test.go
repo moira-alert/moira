@@ -40,15 +40,12 @@ func TestCompareStates(t *testing.T) {
 			currentState := currentStateExample
 			lastState.State = OK
 			currentState.State = OK
-			lastStateCopy := lastState
-			currentStateCopy := currentState
 
-			err := triggerChecker.compareStates("m1", &currentState, &lastState)
+			actual, err := triggerChecker.compareStates("m1", currentState, lastState)
 			So(err, ShouldBeNil)
-			currentStateCopy.EventTimestamp = currentStateCopy.Timestamp
-			currentStateCopy.Suppressed = false
-			So(currentState, ShouldResemble, currentStateCopy)
-			So(lastState, ShouldResemble, lastStateCopy)
+			currentState.EventTimestamp = currentState.Timestamp
+			currentState.Suppressed = false
+			So(actual, ShouldResemble, currentState)
 		})
 
 		Convey("Status NODATA and no remind interval, no need to send", func() {
@@ -56,15 +53,12 @@ func TestCompareStates(t *testing.T) {
 			currentState := currentStateExample
 			lastState.State = NODATA
 			currentState.State = NODATA
-			lastStateCopy := lastState
-			currentStateCopy := currentState
 
-			err := triggerChecker.compareStates("m1", &currentState, &lastState)
+			actual, err := triggerChecker.compareStates("m1", currentState, lastState)
 			So(err, ShouldBeNil)
-			currentStateCopy.EventTimestamp = currentStateCopy.Timestamp
-			currentStateCopy.Suppressed = false
-			So(currentState, ShouldResemble, currentStateCopy)
-			So(lastState, ShouldResemble, lastStateCopy)
+			currentState.EventTimestamp = currentState.Timestamp
+			currentState.Suppressed = false
+			So(actual, ShouldResemble, currentState)
 		})
 
 		Convey("Status ERROR and no remind interval, no need to send", func() {
@@ -72,15 +66,12 @@ func TestCompareStates(t *testing.T) {
 			currentState := currentStateExample
 			lastState.State = ERROR
 			currentState.State = ERROR
-			lastStateCopy := lastState
-			currentStateCopy := currentState
 
-			err := triggerChecker.compareStates("m1", &currentState, &lastState)
+			actual, err := triggerChecker.compareStates("m1", currentState, lastState)
 			So(err, ShouldBeNil)
-			currentStateCopy.EventTimestamp = currentStateCopy.Timestamp
-			currentStateCopy.Suppressed = false
-			So(currentState, ShouldResemble, currentStateCopy)
-			So(lastState, ShouldResemble, lastStateCopy)
+			currentState.EventTimestamp = currentState.Timestamp
+			currentState.Suppressed = false
+			So(actual, ShouldResemble, currentState)
 		})
 
 		Convey("Status NODATA and remind interval, need to send", func() {
@@ -89,8 +80,6 @@ func TestCompareStates(t *testing.T) {
 			lastState.State = NODATA
 			currentState.State = NODATA
 			currentState.Timestamp = 1502809200
-			lastStateCopy := lastState
-			currentStateCopy := currentState
 
 			message := fmt.Sprintf("This metric has been in bad state for more than 24 hours - please, fix.")
 			dataBase.EXPECT().PushEvent(&moira.EventData{
@@ -102,14 +91,11 @@ func TestCompareStates(t *testing.T) {
 				Value:     currentState.Value,
 				Message:   &message,
 			}, false).Return(nil)
-			err := triggerChecker.compareStates("m1", &currentState, &lastState)
+			actual, err := triggerChecker.compareStates("m1", currentState, lastState)
 			So(err, ShouldBeNil)
-			currentStateCopy.EventTimestamp = currentStateCopy.Timestamp
-			currentStateCopy.Suppressed = false
-			lastStateCopy.EventTimestamp = currentStateCopy.Timestamp
-			lastStateCopy.Suppressed = false
-			So(currentState, ShouldResemble, currentStateCopy)
-			So(lastState, ShouldResemble, lastStateCopy)
+			currentState.EventTimestamp = currentState.Timestamp
+			currentState.Suppressed = false
+			So(actual, ShouldResemble, currentState)
 		})
 
 		Convey("Status ERROR and remind interval, need to send", func() {
@@ -118,8 +104,6 @@ func TestCompareStates(t *testing.T) {
 			lastState.State = ERROR
 			currentState.State = ERROR
 			currentState.Timestamp = 1502809200
-			lastStateCopy := lastState
-			currentStateCopy := currentState
 
 			message := fmt.Sprintf("This metric has been in bad state for more than 24 hours - please, fix.")
 			dataBase.EXPECT().PushEvent(&moira.EventData{
@@ -131,14 +115,11 @@ func TestCompareStates(t *testing.T) {
 				Value:     currentState.Value,
 				Message:   &message,
 			}, false).Return(nil)
-			err := triggerChecker.compareStates("m1", &currentState, &lastState)
+			actual, err := triggerChecker.compareStates("m1", currentState, lastState)
 			So(err, ShouldBeNil)
-			currentStateCopy.EventTimestamp = currentStateCopy.Timestamp
-			currentStateCopy.Suppressed = false
-			lastStateCopy.EventTimestamp = currentStateCopy.Timestamp
-			lastStateCopy.Suppressed = false
-			So(currentState, ShouldResemble, currentStateCopy)
-			So(lastState, ShouldResemble, lastStateCopy)
+			currentState.EventTimestamp = currentState.Timestamp
+			currentState.Suppressed = false
+			So(actual, ShouldResemble, currentState)
 		})
 
 		Convey("Status EXCEPTION and lastState.Suppressed=false", func() {
@@ -146,15 +127,12 @@ func TestCompareStates(t *testing.T) {
 			currentState := currentStateExample
 			lastState.State = EXCEPTION
 			currentState.State = EXCEPTION
-			lastStateCopy := lastState
-			currentStateCopy := currentState
 
-			err := triggerChecker.compareStates("m1", &currentState, &lastState)
+			actual, err := triggerChecker.compareStates("m1", currentState, lastState)
 			So(err, ShouldBeNil)
-			currentStateCopy.EventTimestamp = currentStateCopy.Timestamp
-			currentStateCopy.Suppressed = false
-			So(currentState, ShouldResemble, currentStateCopy)
-			So(lastState, ShouldResemble, lastStateCopy)
+			currentState.EventTimestamp = currentState.Timestamp
+			currentState.Suppressed = false
+			So(actual, ShouldResemble, currentState)
 		})
 
 		Convey("Status EXCEPTION and lastState.Suppressed=true", func() {
@@ -163,8 +141,6 @@ func TestCompareStates(t *testing.T) {
 			lastState.State = EXCEPTION
 			lastState.Suppressed = true
 			currentState.State = EXCEPTION
-			lastStateCopy := lastState
-			currentStateCopy := currentState
 
 			dataBase.EXPECT().PushEvent(&moira.EventData{
 				TriggerID: triggerChecker.TriggerId,
@@ -176,14 +152,11 @@ func TestCompareStates(t *testing.T) {
 				Message:   nil,
 			}, false).Return(nil)
 
-			err := triggerChecker.compareStates("m1", &currentState, &lastState)
+			actual, err := triggerChecker.compareStates("m1", currentState, lastState)
 			So(err, ShouldBeNil)
-			currentStateCopy.EventTimestamp = currentStateCopy.Timestamp
-			currentStateCopy.Suppressed = false
-			lastStateCopy.EventTimestamp = currentStateCopy.Timestamp
-			lastStateCopy.Suppressed = false
-			So(currentState, ShouldResemble, currentStateCopy)
-			So(lastState, ShouldResemble, lastStateCopy)
+			currentState.EventTimestamp = currentState.Timestamp
+			currentState.Suppressed = false
+			So(actual, ShouldResemble, currentState)
 		})
 	})
 
@@ -194,18 +167,12 @@ func TestCompareStates(t *testing.T) {
 			lastState.State = EXCEPTION
 			currentState.State = OK
 			currentState.Maintenance = 1502719222
-			lastStateCopy := lastState
-			currentStateCopy := currentState
 
-			err := triggerChecker.compareStates("m1", &currentState, &lastState)
+			actual, err := triggerChecker.compareStates("m1", currentState, lastState)
 			So(err, ShouldBeNil)
-			currentStateCopy.EventTimestamp = currentStateCopy.Timestamp
-			currentStateCopy.Suppressed = true
-			lastStateCopy.EventTimestamp = currentStateCopy.Timestamp
-			lastStateCopy.Suppressed = false
-			lastStateCopy.State = OK
-			So(currentState, ShouldResemble, currentStateCopy)
-			So(lastState, ShouldResemble, lastStateCopy)
+			currentState.EventTimestamp = currentState.Timestamp
+			currentState.Suppressed = true
+			So(actual, ShouldResemble, currentState)
 		})
 	})
 }
@@ -239,14 +206,11 @@ func TestCompareChecks(t *testing.T) {
 			triggerChecker.lastCheck = &lastCheck
 			lastCheck.State = OK
 			currentCheck.State = OK
-			lastCheckExpected := lastCheck
-			currentCheckExpected := currentCheck
-			err := triggerChecker.compareChecks(&currentCheck)
+			actual, err := triggerChecker.compareChecks(currentCheck)
 
 			So(err, ShouldBeNil)
-			currentCheckExpected.EventTimestamp = currentCheck.Timestamp
-			So(currentCheck, ShouldResemble, currentCheckExpected)
-			So(lastCheck, ShouldResemble, lastCheckExpected)
+			currentCheck.EventTimestamp = currentCheck.Timestamp
+			So(actual, ShouldResemble, currentCheck)
 		})
 
 		Convey("Need send", func() {
@@ -256,8 +220,6 @@ func TestCompareChecks(t *testing.T) {
 			lastCheck.State = EXCEPTION
 			lastCheck.Suppressed = true
 			currentCheck.State = EXCEPTION
-			lastCheckExpected := lastCheck
-			currentCheckExpected := currentCheck
 
 			dataBase.EXPECT().PushEvent(&moira.EventData{
 				TriggerID: triggerChecker.TriggerId,
@@ -268,14 +230,11 @@ func TestCompareChecks(t *testing.T) {
 				Value:     nil,
 				Message:   nil,
 			}, false).Return(nil)
-			err := triggerChecker.compareChecks(&currentCheck)
 
+			actual, err := triggerChecker.compareChecks(currentCheck)
 			So(err, ShouldBeNil)
-			currentCheckExpected.EventTimestamp = currentCheck.Timestamp
-			lastCheckExpected.EventTimestamp = currentCheck.Timestamp
-			lastCheckExpected.Suppressed = false
-			So(currentCheck, ShouldResemble, currentCheckExpected)
-			So(lastCheck, ShouldResemble, lastCheckExpected)
+			currentCheck.EventTimestamp = currentCheck.Timestamp
+			So(actual, ShouldResemble, currentCheck)
 		})
 	})
 
@@ -322,18 +281,12 @@ func TestCompareChecks(t *testing.T) {
 			triggerChecker.lastCheck = &lastCheck
 			lastCheck.State = OK
 			currentCheck.State = NODATA
-			lastCheckExpected := lastCheck
-			currentCheckExpected := currentCheck
-			err := triggerChecker.compareChecks(&currentCheck)
+			actual, err := triggerChecker.compareChecks(currentCheck)
 
 			So(err, ShouldBeNil)
-			currentCheckExpected.EventTimestamp = currentCheck.Timestamp
-			currentCheckExpected.Suppressed = true
-			lastCheckExpected.EventTimestamp = currentCheck.Timestamp
-			lastCheckExpected.State = NODATA
-			So(currentCheck, ShouldResemble, currentCheckExpected)
-			So(lastCheck, ShouldResemble, lastCheckExpected)
+			currentCheck.EventTimestamp = currentCheck.Timestamp
+			currentCheck.Suppressed = true
+			So(actual, ShouldResemble, currentCheck)
 		})
 	})
-
 }

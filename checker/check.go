@@ -11,14 +11,10 @@ func (triggerChecker *TriggerChecker) Check() error {
 	checkData, err := triggerChecker.handleTrigger()
 	if err != nil {
 		triggerChecker.Logger.Errorf("Trigger check failed: %s", err.Error())
-		checkData = &moira.CheckData{
-			Metrics:   triggerChecker.lastCheck.Metrics,
-			State:     EXCEPTION,
-			Timestamp: triggerChecker.Until,
-			Score:     triggerChecker.lastCheck.Score,
-			Message:   "Trigger evaluation exception",
-		}
-		if err := triggerChecker.compareChecks(checkData); err != nil {
+		checkData.State = EXCEPTION
+		checkData.Message = "Trigger evaluation exception"
+		checkData, err = triggerChecker.compareChecks(checkData)
+		if err != nil {
 			return err
 		}
 	}
@@ -27,11 +23,10 @@ func (triggerChecker *TriggerChecker) Check() error {
 	for _, metricData := range checkData.Metrics {
 		checkData.Score += scores[metricData.State]
 	}
-	triggerChecker.Database.SetTriggerLastCheck(triggerChecker.TriggerId, checkData)
-	return nil
+	return triggerChecker.Database.SetTriggerLastCheck(triggerChecker.TriggerId, &checkData)
 }
 
-func (triggerChecker *TriggerChecker) handleTrigger() (*moira.CheckData, error) {
+func (triggerChecker *TriggerChecker) handleTrigger() (moira.CheckData, error) {
 	checkData := moira.CheckData{
 		Metrics:   triggerChecker.lastCheck.Metrics,
 		State:     OK,
@@ -41,7 +36,7 @@ func (triggerChecker *TriggerChecker) handleTrigger() (*moira.CheckData, error) 
 
 	triggerTimeSeries, metrics, err := triggerChecker.getTimeSeries(triggerChecker.From, triggerChecker.Until)
 	if err != nil {
-		return &checkData, err
+		return checkData, err
 	}
 
 	triggerChecker.cleanupMetricsValues(metrics, triggerChecker.Until)
@@ -50,87 +45,115 @@ func (triggerChecker *TriggerChecker) handleTrigger() (*moira.CheckData, error) 
 		if triggerChecker.ttl != nil && len(triggerChecker.lastCheck.Metrics) != 0 {
 			checkData.State = triggerChecker.ttlState
 			checkData.Message = "Trigger has no metrics"
-			if err := triggerChecker.compareChecks(&checkData); err != nil {
-				return &checkData, err
-			}
+			checkData, err := triggerChecker.compareChecks(checkData)
+			return checkData, err
 		}
-		return &checkData, nil
+		return checkData, nil
 	}
 
 	for _, timeSeries := range triggerTimeSeries.Main {
-		startTime := int64(timeSeries.StartTime)
-		stopTime := int64(timeSeries.StopTime)
-		stepTime := int64(timeSeries.StepTime)
-
 		triggerChecker.Logger.Debugf("Checking timeSeries %s: %v", timeSeries.Name, timeSeries.Values)
-		triggerChecker.Logger.Debugf("Checking interval: %v - %v (%vs), step: %v", startTime, stopTime, stepTime, stopTime-startTime)
+		triggerChecker.Logger.Debugf("Checking interval: %v - %v (%vs), step: %v", timeSeries.StartTime, timeSeries.StopTime, timeSeries.StepTime, timeSeries.StopTime-timeSeries.StartTime)
+		metricLastState := triggerChecker.lastCheck.GetOrCreateMetricState(timeSeries.Name, int64(timeSeries.StartTime-3600))
 
-		metricLastState := triggerChecker.lastCheck.GetMetricState(timeSeries.Name, startTime-3600)
-		checkData.Metrics[timeSeries.Name] = metricLastState
-		checkPoint := metricLastState.GetCheckPoint(checkPointGap)
-		triggerChecker.Logger.Debugf("Checkpoint for %s: %v", timeSeries.Name, checkPoint)
-
-		for valueTimestamp := startTime; valueTimestamp < triggerChecker.Until+stepTime; valueTimestamp += stepTime {
-			if valueTimestamp <= checkPoint {
-				continue
-			}
-			expressionValues, noEmptyValues := triggerTimeSeries.getExpressionValues(timeSeries, valueTimestamp)
-			triggerChecker.Logger.Debugf("values for ts %s: %v", valueTimestamp, expressionValues)
-			if !noEmptyValues {
-				continue
-			}
-
-			expressionValues["warn_value"] = getMathFloat64Pointer(triggerChecker.trigger.WarnValue)
-			expressionValues["error_value"] = getMathFloat64Pointer(triggerChecker.trigger.ErrorValue)
-			expressionValues["PREV_STATE"] = 1000 //todo NODATA
-
-			expressionState := GetExpression(triggerChecker.trigger.Expression, expressionValues)
-
-			metricNewState := moira.MetricState{
-				State:          expressionState,
-				Timestamp:      valueTimestamp,
-				Value:          expressionValues.GetTargetValue(triggerTimeSeries.getMainTargetName()),
-				Maintenance:    metricLastState.Maintenance,
-				Suppressed:     metricLastState.Suppressed,
-			}
-			err = triggerChecker.compareStates(timeSeries.Name, &metricNewState, &metricLastState)
-			triggerChecker.lastCheck.Metrics[timeSeries.Name] = metricLastState
-			checkData.Metrics[timeSeries.Name] = metricNewState
+		metricStates := triggerChecker.getTimeSeriesStepsStates(triggerTimeSeries, timeSeries, metricLastState)
+		for _, metricState := range metricStates {
+			currentState, err := triggerChecker.compareStates(timeSeries.Name, metricState, metricLastState)
+			metricLastState = currentState
+			checkData.Metrics[timeSeries.Name] = currentState
 			if err != nil {
-				return &checkData, err
+				return checkData, err
 			}
 		}
 
-		lastCheckTimeStamp := triggerChecker.lastCheck.Timestamp
-		ttl := triggerChecker.ttl
-
-		//compare with last_check timestamp in case if we have not run checker for a long time
-		if ttl != nil && metricLastState.Timestamp+*triggerChecker.ttl < lastCheckTimeStamp {
-			triggerChecker.Logger.Infof("Metric %s TTL expired for state %v", timeSeries.Name, metricLastState)
-			if triggerChecker.ttlState == DEL && metricLastState.EventTimestamp != 0 {
-				triggerChecker.Logger.Infof("Remove metric %s", timeSeries.Name)
-				delete(checkData.Metrics, timeSeries.Name)
-				if err := triggerChecker.Database.RemovePatternsMetrics(triggerChecker.trigger.Patterns); err != nil {
-					return &checkData, err
-				}
-				continue
+		needToDeleteMetric, currentState := triggerChecker.checkForNoData(timeSeries, metricLastState)
+		if needToDeleteMetric {
+			triggerChecker.Logger.Infof("Remove metric %s", timeSeries.Name)
+			delete(checkData.Metrics, timeSeries.Name)
+			if err := triggerChecker.Database.RemovePatternsMetrics(triggerChecker.trigger.Patterns); err != nil {
+				return checkData, err
 			}
-			metricNewState := moira.MetricState{
-				State:          toMetricState(triggerChecker.ttlState),
-				Timestamp:      lastCheckTimeStamp - *ttl,
-				Value:          nil,
-				Maintenance:    metricLastState.Maintenance,
-				Suppressed:     metricLastState.Suppressed,
-			}
-			err = triggerChecker.compareStates(timeSeries.Name, &metricNewState, &metricLastState)
-			triggerChecker.lastCheck.Metrics[timeSeries.Name] = metricLastState
-			checkData.Metrics[timeSeries.Name] = metricNewState
+			continue
+		}
+		if currentState != nil {
+			currentState, err := triggerChecker.compareStates(timeSeries.Name, *currentState, metricLastState)
+			metricLastState = currentState
+			checkData.Metrics[timeSeries.Name] = currentState
 			if err != nil {
-				return &checkData, err
+				return checkData, err
 			}
 		}
 	}
-	return &checkData, nil
+	return checkData, nil
+}
+
+func (triggerChecker *TriggerChecker) checkForNoData(timeSeries *TimeSeries, metricLastState moira.MetricState) (bool, *moira.MetricState) {
+	if triggerChecker.ttl == nil {
+		return false, nil
+	}
+	lastCheckTimeStamp := triggerChecker.lastCheck.Timestamp
+	ttl := *triggerChecker.ttl
+
+	if metricLastState.Timestamp+ttl >= lastCheckTimeStamp {
+		return false, nil
+	}
+	triggerChecker.Logger.Infof("Metric %s TTL expired for state %v", timeSeries.Name, metricLastState)
+	if triggerChecker.ttlState == DEL && metricLastState.EventTimestamp != 0 {
+		return true, nil
+	}
+	return false, &moira.MetricState{
+		State:       toMetricState(triggerChecker.ttlState),
+		Timestamp:   lastCheckTimeStamp - ttl,
+		Value:       nil,
+		Maintenance: metricLastState.Maintenance,
+		Suppressed:  metricLastState.Suppressed,
+	}
+}
+
+func (triggerChecker *TriggerChecker) getTimeSeriesStepsStates(triggerTimeSeries *triggerTimeSeries, timeSeries *TimeSeries, metricLastState moira.MetricState) []moira.MetricState {
+	startTime := int64(timeSeries.StartTime)
+	stepTime := int64(timeSeries.StepTime)
+
+	checkPoint := metricLastState.GetCheckPoint(checkPointGap)
+	triggerChecker.Logger.Debugf("Checkpoint for %s: %v", timeSeries.Name, checkPoint)
+
+	metricStates := make([]moira.MetricState, 0)
+
+	for valueTimestamp := startTime; valueTimestamp < triggerChecker.Until+stepTime; valueTimestamp += stepTime {
+		metricNewState := triggerChecker.getTimeSeriesState(triggerTimeSeries, timeSeries, metricLastState, valueTimestamp, checkPoint)
+		if metricNewState == nil {
+			continue
+		}
+		metricStates = append(metricStates, *metricNewState)
+	}
+	return metricStates
+}
+
+func (triggerChecker *TriggerChecker) getTimeSeriesState(triggerTimeSeries *triggerTimeSeries, timeSeries *TimeSeries, lastState moira.MetricState, valueTimestamp, checkPoint int64) *moira.MetricState {
+	if valueTimestamp <= checkPoint {
+		return nil
+	}
+	expressionValues, noEmptyValues := triggerTimeSeries.getExpressionValues(timeSeries, valueTimestamp)
+	triggerChecker.Logger.Debugf("values for ts %s: %v", valueTimestamp, expressionValues)
+	if !noEmptyValues {
+		return nil
+	}
+
+	expressionValues["warn_value"] = getMathFloat64Pointer(triggerChecker.trigger.WarnValue)
+	expressionValues["error_value"] = getMathFloat64Pointer(triggerChecker.trigger.ErrorValue)
+	expressionValues["PREV_STATE"] = 1000 //todo NODATA
+
+	expressionState := GetExpression(triggerChecker.trigger.Expression, expressionValues)
+
+	value := expressionValues.GetTargetValue(triggerTimeSeries.getMainTargetName())
+
+	return &moira.MetricState{
+		State:       expressionState,
+		Timestamp:   valueTimestamp,
+		Value:       value,
+		Maintenance: lastState.Maintenance,
+		Suppressed:  lastState.Suppressed,
+	}
 }
 
 func (triggerChecker *TriggerChecker) cleanupMetricsValues(metrics []string, until int64) {

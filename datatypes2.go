@@ -54,15 +54,15 @@ type MetricEvent struct {
 	Pattern string `json:"pattern"`
 }
 
-func (checkData *CheckData) GetMetricState(metric string, emptyTimestampValue int64) MetricState {
-	metricState, ok := checkData.Metrics[metric]
+func (checkData *CheckData) GetOrCreateMetricState(metric string, emptyTimestampValue int64) MetricState {
+	_, ok := checkData.Metrics[metric]
 	if !ok {
-		metricState = MetricState{
+		checkData.Metrics[metric] = MetricState{
 			State:     "NODATA",
 			Timestamp: emptyTimestampValue,
 		}
 	}
-	return metricState
+	return checkData.Metrics[metric]
 }
 
 func (metricState *MetricState) GetCheckPoint(checkPointGap int64) int64 {
