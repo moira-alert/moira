@@ -130,19 +130,26 @@ func (notification *ScheduledNotification) GetKey() string {
 }
 
 func (schedule *ScheduleData) IsScheduleAllows(ts int64) bool {
+	if schedule == nil {
+		return true
+	}
 	timestamp := ts - ts%60 - schedule.TimezoneOffset*60
-	date := time.Unix(timestamp, 0)
-	if schedule.Days[date.Weekday()].Enabled {
+	date := time.Unix(timestamp, 0).UTC()
+	if !schedule.Days[int(date.Weekday()+6)%7].Enabled {
 		return false
 	}
-	dayStart := time.Unix(timestamp-timestamp%(24*3600), 0)
+	dayStart := time.Unix(timestamp-timestamp%(24*3600), 0).UTC()
 	startDayTime := dayStart.Add(time.Duration(schedule.StartOffset) * time.Minute)
 	endDayTime := dayStart.Add(time.Duration(schedule.EndOffset) * time.Minute)
-	if date.After(startDayTime) {
-		return false
+	if schedule.EndOffset < 24*60 {
+		if date.After(startDayTime) && date.Before(endDayTime) {
+			return true
+		}
+	} else {
+		endDayTime = endDayTime.Add(-time.Hour * 24)
+		if date.Before(endDayTime) || date.After(startDayTime) {
+			return true
+		}
 	}
-	if date.Before(endDayTime) {
-		return false
-	}
-	return true
+	return false
 }
