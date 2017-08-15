@@ -26,7 +26,7 @@ func ConfigureLog(config *logging.Config, module string) (*goLogging.Logger, err
 	}
 	logBackend.Color = config.LogColor
 	goLogging.SetBackend(logBackend)
-	goLogging.SetLevel(logLevel, "cache")
+	goLogging.SetLevel(logLevel, module)
 	return log, nil
 }
 

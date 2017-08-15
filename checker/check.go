@@ -1,18 +1,25 @@
 package checker
 
 import (
+	"github.com/go-errors/errors"
 	"github.com/moira-alert/moira-alert"
 	"math"
 )
 
 var checkPointGap int64 = 120
 
+var ErrTriggerHasNoMetrics = errors.New("Trigger has no metrics")
+
 func (triggerChecker *TriggerChecker) Check() error {
 	checkData, err := triggerChecker.handleTrigger()
 	if err != nil {
-		triggerChecker.Logger.Errorf("Trigger check failed: %s", err.Error())
-		checkData.State = EXCEPTION
-		checkData.Message = "Trigger evaluation exception"
+		if err == ErrTriggerHasNoMetrics {
+			checkData.State = triggerChecker.ttlState
+			checkData.Message = "Trigger has no metrics"
+		} else {
+			checkData.State = EXCEPTION
+			checkData.Message = "Trigger evaluation exception"
+		}
 		checkData, err = triggerChecker.compareChecks(checkData)
 		if err != nil {
 			return err
@@ -41,14 +48,12 @@ func (triggerChecker *TriggerChecker) handleTrigger() (moira.CheckData, error) {
 
 	triggerChecker.cleanupMetricsValues(metrics, triggerChecker.Until)
 
-	if len(triggerTimeSeries.Main) == 0 {
-		if triggerChecker.ttl != nil && len(triggerChecker.lastCheck.Metrics) != 0 {
-			checkData.State = triggerChecker.ttlState
-			checkData.Message = "Trigger has no metrics"
-			checkData, err := triggerChecker.compareChecks(checkData)
-			return checkData, err
+	hasMetrics, sendEvent := triggerChecker.hasMetrics(triggerTimeSeries)
+	if !hasMetrics {
+		if sendEvent {
+			err = ErrTriggerHasNoMetrics
 		}
-		return checkData, nil
+		return checkData, err
 	}
 
 	for _, timeSeries := range triggerTimeSeries.Main {
@@ -85,6 +90,19 @@ func (triggerChecker *TriggerChecker) handleTrigger() (moira.CheckData, error) {
 		}
 	}
 	return checkData, nil
+}
+
+func (triggerChecker *TriggerChecker) hasMetrics(tts *triggerTimeSeries) (hasMetrics, sendEvent bool) {
+	hasMetrics = true
+	sendEvent = false
+
+	if len(tts.Main) == 0 {
+		hasMetrics = false
+		if triggerChecker.ttl != nil && len(triggerChecker.lastCheck.Metrics) != 0 {
+			sendEvent = true
+		}
+	}
+	return hasMetrics, sendEvent
 }
 
 func (triggerChecker *TriggerChecker) checkForNoData(timeSeries *TimeSeries, metricLastState moira.MetricState) (bool, *moira.MetricState) {
@@ -134,7 +152,7 @@ func (triggerChecker *TriggerChecker) getTimeSeriesState(triggerTimeSeries *trig
 		return nil
 	}
 	expressionValues, noEmptyValues := triggerTimeSeries.getExpressionValues(timeSeries, valueTimestamp)
-	triggerChecker.Logger.Debugf("values for ts %s: %v", valueTimestamp, expressionValues)
+	triggerChecker.Logger.Debugf("values for ts %v: %v", valueTimestamp, expressionValues)
 	if !noEmptyValues {
 		return nil
 	}
