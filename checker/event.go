@@ -47,20 +47,20 @@ func (triggerChecker *TriggerChecker) compareChecks(currentCheck moira.CheckData
 }
 
 func (triggerChecker *TriggerChecker) compareStates(metric string, currentState moira.MetricState, lastState moira.MetricState) (moira.MetricState, error) {
-	currentStateValue := currentState.State
-
-	if currentState.EventTimestamp == 0 {
+	if lastState.EventTimestamp != 0 {
+		currentState.EventTimestamp = lastState.EventTimestamp
+	} else {
 		currentState.EventTimestamp = currentState.Timestamp
 	}
 
-	needSend, message := needSendEvent(currentStateValue, lastState.State, currentState.Timestamp, lastState.GetEventTimestamp(), lastState.Suppressed)
+	needSend, message := needSendEvent(currentState.State, lastState.State, currentState.Timestamp, lastState.GetEventTimestamp(), lastState.Suppressed)
 	if !needSend {
 		return currentState, nil
 	}
 
 	event := moira.EventData{
 		TriggerID: triggerChecker.TriggerId,
-		State:     currentStateValue,
+		State:     currentState.State,
 		OldState:  lastState.State,
 		Timestamp: currentState.Timestamp,
 		Metric:    metric,

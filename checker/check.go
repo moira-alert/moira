@@ -34,8 +34,12 @@ func (triggerChecker *TriggerChecker) Check() error {
 }
 
 func (triggerChecker *TriggerChecker) handleTrigger() (moira.CheckData, error) {
+	lastMetrics := make(map[string]moira.MetricState)
+	for k, v := range triggerChecker.lastCheck.Metrics {
+		lastMetrics[k] = v
+	}
 	checkData := moira.CheckData{
-		Metrics:   triggerChecker.lastCheck.Metrics,
+		Metrics:   lastMetrics,
 		State:     OK,
 		Timestamp: triggerChecker.Until,
 		Score:     triggerChecker.lastCheck.Score,
@@ -59,8 +63,8 @@ func (triggerChecker *TriggerChecker) handleTrigger() (moira.CheckData, error) {
 	for _, timeSeries := range triggerTimeSeries.Main {
 		triggerChecker.Logger.Debugf("Checking timeSeries %s: %v", timeSeries.Name, timeSeries.Values)
 		triggerChecker.Logger.Debugf("Checking interval: %v - %v (%vs), step: %v", timeSeries.StartTime, timeSeries.StopTime, timeSeries.StepTime, timeSeries.StopTime-timeSeries.StartTime)
-		metricLastState := triggerChecker.lastCheck.GetOrCreateMetricState(timeSeries.Name, int64(timeSeries.StartTime-3600))
 
+		metricLastState := triggerChecker.lastCheck.GetOrCreateMetricState(timeSeries.Name, int64(timeSeries.StartTime-3600))
 		metricStates := triggerChecker.getTimeSeriesStepsStates(triggerTimeSeries, timeSeries, metricLastState)
 		for _, metricState := range metricStates {
 			currentState, err := triggerChecker.compareStates(timeSeries.Name, metricState, metricLastState)
@@ -142,6 +146,7 @@ func (triggerChecker *TriggerChecker) getTimeSeriesStepsStates(triggerTimeSeries
 		if metricNewState == nil {
 			continue
 		}
+		metricLastState = *metricNewState
 		metricStates = append(metricStates, *metricNewState)
 	}
 	return metricStates
@@ -159,7 +164,7 @@ func (triggerChecker *TriggerChecker) getTimeSeriesState(triggerTimeSeries *trig
 
 	expressionValues["warn_value"] = getMathFloat64Pointer(triggerChecker.trigger.WarnValue)
 	expressionValues["error_value"] = getMathFloat64Pointer(triggerChecker.trigger.ErrorValue)
-	expressionValues["PREV_STATE"] = 1000 //todo NODATA
+	expressionValues["PREV_STATE"] = getMathFloat64Pointer(lastState.Value) //todo State
 
 	expressionState := GetExpression(triggerChecker.trigger.Expression, expressionValues)
 
@@ -176,12 +181,10 @@ func (triggerChecker *TriggerChecker) getTimeSeriesState(triggerTimeSeries *trig
 
 func (triggerChecker *TriggerChecker) cleanupMetricsValues(metrics []string, until int64) {
 	for _, metric := range metrics {
-		go func(metric string) {
-			//todo cache cache_ttl
-			if err := triggerChecker.Database.CleanupMetricValues(metric, until-triggerChecker.Config.MetricsTTL); err != nil {
-				triggerChecker.Logger.Error(err.Error())
-			}
-		}(metric)
+		//todo cache cache_ttl
+		if err := triggerChecker.Database.CleanupMetricValues(metric, until-triggerChecker.Config.MetricsTTL); err != nil {
+			triggerChecker.Logger.Error(err.Error())
+		}
 	}
 }
 

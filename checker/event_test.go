@@ -43,7 +43,7 @@ func TestCompareStates(t *testing.T) {
 
 			actual, err := triggerChecker.compareStates("m1", currentState, lastState)
 			So(err, ShouldBeNil)
-			currentState.EventTimestamp = currentState.Timestamp
+			currentState.EventTimestamp = lastState.EventTimestamp
 			currentState.Suppressed = false
 			So(actual, ShouldResemble, currentState)
 		})
@@ -56,7 +56,7 @@ func TestCompareStates(t *testing.T) {
 
 			actual, err := triggerChecker.compareStates("m1", currentState, lastState)
 			So(err, ShouldBeNil)
-			currentState.EventTimestamp = currentState.Timestamp
+			currentState.EventTimestamp = lastState.EventTimestamp
 			currentState.Suppressed = false
 			So(actual, ShouldResemble, currentState)
 		})
@@ -69,7 +69,7 @@ func TestCompareStates(t *testing.T) {
 
 			actual, err := triggerChecker.compareStates("m1", currentState, lastState)
 			So(err, ShouldBeNil)
-			currentState.EventTimestamp = currentState.Timestamp
+			currentState.EventTimestamp = lastState.EventTimestamp
 			currentState.Suppressed = false
 			So(actual, ShouldResemble, currentState)
 		})
@@ -130,7 +130,7 @@ func TestCompareStates(t *testing.T) {
 
 			actual, err := triggerChecker.compareStates("m1", currentState, lastState)
 			So(err, ShouldBeNil)
-			currentState.EventTimestamp = currentState.Timestamp
+			currentState.EventTimestamp = lastState.EventTimestamp
 			currentState.Suppressed = false
 			So(actual, ShouldResemble, currentState)
 		})
