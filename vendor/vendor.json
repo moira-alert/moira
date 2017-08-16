@@ -82,8 +82,10 @@
 			"revisionTime": "2017-07-06T22:11:03Z"
 		},
 		{
+			"checksumSHA1": "SUYEFYVLIO7x9+EBKlDv0QPe4CU=",
 			"path": "github.com/go-errors/errors",
-			"revision": ""
+			"revision": "8fa88b06e5974e97fbf9899a7f86a344bfd1f105",
+			"revisionTime": "2016-12-05T22:32:45Z"
 		},
 		{
 			"checksumSHA1": "5CKyJe+PxJrOQcO9yL9jDzQr/Ic=",
@@ -382,8 +384,10 @@
 			"revisionTime": "2017-04-07T17:21:22Z"
 		},
 		{
+			"checksumSHA1": "NHNmSR5DggsQ15Ms7tlbgTOjHo8=",
 			"path": "menteslibres.net/gosexy/to",
-			"revision": ""
+			"revision": "c20e083e31230b84ffa23c5d2fb0bc55f5292681",
+			"revisionTime": "2014-12-21T20:36:44Z"
 		}
 	],
 	"rootPath": "github.com/moira-alert/moira-alert"
