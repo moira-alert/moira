@@ -181,7 +181,9 @@ func (connector *DbConnector) GetTriggerChecks(triggerCheckIds []string) ([]moir
 
 		triggerBytes, err := redis.Bytes(slice[1], nil)
 		if err != nil {
-			connector.logger.Errorf("Error getting trigger bytes, id: %s, error: %s", triggerId, err.Error())
+			if err != redis.ErrNil {
+				connector.logger.Errorf("Error getting trigger bytes, id: %s, error: %s", triggerId, err.Error())
+			}
 			continue
 		}
 		if err = json.Unmarshal(triggerBytes, &triggerSE); err != nil {
@@ -193,7 +195,9 @@ func (connector *DbConnector) GetTriggerChecks(triggerCheckIds []string) ([]moir
 		}
 		triggerTags, err := redis.Strings(slice[2], nil)
 		if err != nil {
-			connector.logger.Errorf("Error getting trigger-tags, id: %s, error: %s", triggerId, err.Error())
+			if err != redis.ErrNil {
+				connector.logger.Errorf("Error getting trigger-tags, id: %s, error: %s", triggerId, err.Error())
+			}
 		}
 
 		lastCheckBytes, err := redis.Bytes(slice[3], nil)
@@ -209,7 +213,9 @@ func (connector *DbConnector) GetTriggerChecks(triggerCheckIds []string) ([]moir
 
 		throttling, err := redis.Int64(slice[4], nil)
 		if err != nil {
-			connector.logger.Errorf("Error getting moira-notifier-next, id: %s, error: %s", triggerId, err.Error())
+			if err != redis.ErrNil {
+				connector.logger.Errorf("Error getting moira-notifier-next, id: %s, error: %s", triggerId, err.Error())
+			}
 		}
 
 		triggerCheck := moira.TriggerChecks{
