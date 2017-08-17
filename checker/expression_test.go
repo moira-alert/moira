@@ -6,6 +6,13 @@ import (
 	"testing"
 )
 
+type getExpressionValuesTest struct {
+	values        ExpressionValues
+	name          string
+	expectedError error
+	expectedValue interface{}
+}
+
 func TestExpression(t *testing.T) {
 	Convey("Test Default", t, func() {
 		var warnValue float64 = 60.0
@@ -52,4 +59,104 @@ func TestExpression(t *testing.T) {
 		So(err, ShouldResemble, fmt.Errorf("Functions is forbidden"))
 		So(result, ShouldBeEmpty)
 	})
+}
+
+func TestGetExpressionValue(t *testing.T) {
+	var floatVal float64 = 10
+
+	Convey("Test basic strings", t, func() {
+		getExpressionValuesTests := []getExpressionValuesTest{
+			{
+				name:          "OK",
+				expectedValue: OK,
+			},
+			{
+				name:          "WARN",
+				expectedValue: WARN,
+			},
+			{
+				name:          "WARNING",
+				expectedValue: WARN,
+			},
+			{
+				name:          "ERROR",
+				expectedValue: ERROR,
+			},
+			{
+				name:          "NODATA",
+				expectedValue: NODATA,
+			},
+		}
+		runGetExpressionValuesTest(getExpressionValuesTests)
+	})
+
+	Convey("Test no errors", t, func() {
+		{
+			getExpressionValuesTests := []getExpressionValuesTest{
+				{
+					values:        ExpressionValues{WarnValue: &floatVal},
+					name:          "WARN_VALUE",
+					expectedValue: floatVal,
+				},
+				{
+					values:        ExpressionValues{ErrorValue: &floatVal},
+					name:          "ERROR_VALUE",
+					expectedValue: floatVal,
+				},
+				{
+					values:        ExpressionValues{MainTargetValue: 11.0},
+					name:          "t1",
+					expectedValue: 11.0,
+				},
+				{
+					values:        ExpressionValues{AdditionalTargetsValues: map[string]float64{"t2": 1.0}},
+					name:          "t2",
+					expectedValue: 1.0,
+				},
+				{
+					values:        ExpressionValues{AdditionalTargetsValues: map[string]float64{"t3": 4.0, "t2": 6.0}},
+					name:          "t3",
+					expectedValue: 4.0,
+				},
+				{
+					values:        ExpressionValues{PreviousState: NODATA},
+					name:          "PREV_STATE",
+					expectedValue: NODATA,
+				},
+			}
+			runGetExpressionValuesTest(getExpressionValuesTests)
+		}
+	})
+
+	Convey("Test errors", t, func() {
+		{
+			getExpressionValuesTests := []getExpressionValuesTest{
+				{
+					name:          "WARN_VALUE",
+					expectedValue: nil,
+					expectedError: fmt.Errorf("No value with name WARN_VALUE"),
+				},
+				{
+					name:          "ERROR_VALUE",
+					expectedValue: nil,
+					expectedError: fmt.Errorf("No value with name ERROR_VALUE"),
+				},
+				{
+					values:        ExpressionValues{AdditionalTargetsValues: map[string]float64{"t3": 4.0, "t2": 6.0}},
+					name:          "t4",
+					expectedValue: nil,
+					expectedError: fmt.Errorf("No value with name t4"),
+				},
+			}
+			runGetExpressionValuesTest(getExpressionValuesTests)
+		}
+	})
+}
+
+func runGetExpressionValuesTest(getExpressionValuesTests []getExpressionValuesTest) {
+	for _, getExpressionValuesTest := range getExpressionValuesTests {
+		result, err := getExpressionValuesTest.values.Get(getExpressionValuesTest.name)
+		So(err, ShouldResemble, getExpressionValuesTest.expectedError)
+		So(result, ShouldResemble, getExpressionValuesTest.expectedValue)
+	}
 }

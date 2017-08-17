@@ -52,13 +52,15 @@ func TestGetTimeSeriesState(t *testing.T) {
 	}
 
 	Convey("Checkpoint more than valueTimestamp", t, func() {
-		metricState := triggerChecker.getTimeSeriesState(tts, tts.Main[0], metricLastState, 37, 47)
+		metricState, err := triggerChecker.getTimeSeriesState(tts, tts.Main[0], metricLastState, 37, 47)
+		So(err, ShouldBeNil)
 		So(metricState, ShouldBeNil)
 	})
 
 	Convey("Checkpoint lover than valueTimestamp", t, func() {
 		Convey("Has all value by eventTimestamp step", func() {
-			metricState := triggerChecker.getTimeSeriesState(tts, tts.Main[0], metricLastState, 42, 27)
+			metricState, err := triggerChecker.getTimeSeriesState(tts, tts.Main[0], metricLastState, 42, 27)
+			So(err, ShouldBeNil)
 			So(metricState, ShouldResemble, &moira.MetricState{
 				State:          OK,
 				Timestamp:      42,
@@ -70,19 +72,30 @@ func TestGetTimeSeriesState(t *testing.T) {
 		})
 
 		Convey("No value in main timeSeries by eventTimestamp step", func() {
-			metricState := triggerChecker.getTimeSeriesState(tts, tts.Main[0], metricLastState, 66, 11)
+			metricState, err := triggerChecker.getTimeSeriesState(tts, tts.Main[0], metricLastState, 66, 11)
+			So(err, ShouldBeNil)
 			So(metricState, ShouldBeNil)
 		})
 
 		Convey("IsAbsent in main timeSeries by eventTimestamp step", func() {
-			metricState := triggerChecker.getTimeSeriesState(tts, tts.Main[0], metricLastState, 29, 11)
+			metricState, err := triggerChecker.getTimeSeriesState(tts, tts.Main[0], metricLastState, 29, 11)
+			So(err, ShouldBeNil)
 			So(metricState, ShouldBeNil)
 		})
 
 		Convey("No value in additional timeSeries by eventTimestamp step", func() {
-			metricState := triggerChecker.getTimeSeriesState(tts, tts.Main[0], metricLastState, 26, 11)
+			metricState, err := triggerChecker.getTimeSeriesState(tts, tts.Main[0], metricLastState, 26, 11)
+			So(err, ShouldBeNil)
 			So(metricState, ShouldBeNil)
 		})
+	})
+
+	Convey("No warn and error value with default expression", t, func(){
+		triggerChecker.trigger.WarnValue = nil
+		triggerChecker.trigger.ErrorValue = nil
+		metricState, err := triggerChecker.getTimeSeriesState(tts, tts.Main[0], metricLastState, 42, 27)
+		So(err, ShouldResemble, fmt.Errorf("Error value and Warning value can not be empty"))
+		So(metricState, ShouldBeNil)
 	})
 }
 
@@ -183,18 +196,21 @@ func TestGetTimeSeriesStepsStates(t *testing.T) {
 	Convey("ValueTimestamp covers all TimeSeries range", t, func() {
 		metricLastState.EventTimestamp = 11
 		Convey("TimeSeries has all valid values", func() {
-			metricStates := triggerChecker.getTimeSeriesStepsStates(tts, tts.Main[1], metricLastState)
+			metricStates, err := triggerChecker.getTimeSeriesStepsStates(tts, tts.Main[1], metricLastState)
+			So(err, ShouldBeNil)
 			So(metricStates, ShouldResemble, []moira.MetricState{metricsState1, metricsState2, metricsState3, metricsState4, metricsState5})
 		})
 
 		Convey("TimeSeries has invalid values", func() {
-			metricStates := triggerChecker.getTimeSeriesStepsStates(tts, tts.Main[0], metricLastState)
+			metricStates, err := triggerChecker.getTimeSeriesStepsStates(tts, tts.Main[0], metricLastState)
+			So(err, ShouldBeNil)
 			So(metricStates, ShouldResemble, []moira.MetricState{metricsState1, metricsState3, metricsState4})
 		})
 
 		Convey("Until + stepTime covers last value", func() {
 			triggerChecker.Until = 56
-			metricStates := triggerChecker.getTimeSeriesStepsStates(tts, tts.Main[1], metricLastState)
+			metricStates, err := triggerChecker.getTimeSeriesStepsStates(tts, tts.Main[1], metricLastState)
+			So(err, ShouldBeNil)
 			So(metricStates, ShouldResemble, []moira.MetricState{metricsState1, metricsState2, metricsState3, metricsState4, metricsState5})
 		})
 	})
@@ -204,22 +220,35 @@ func TestGetTimeSeriesStepsStates(t *testing.T) {
 	Convey("ValueTimestamp don't covers begin of TimeSeries", t, func() {
 		Convey("Exclude 1 first element", func() {
 			metricLastState.EventTimestamp = 22
-			metricStates := triggerChecker.getTimeSeriesStepsStates(tts, tts.Main[1], metricLastState)
+			metricStates, err := triggerChecker.getTimeSeriesStepsStates(tts, tts.Main[1], metricLastState)
+			So(err, ShouldBeNil)
 			So(metricStates, ShouldResemble, []moira.MetricState{metricsState2, metricsState3, metricsState4, metricsState5})
 		})
 
 		Convey("Exclude 2 first elements", func() {
 			metricLastState.EventTimestamp = 27
-			metricStates := triggerChecker.getTimeSeriesStepsStates(tts, tts.Main[1], metricLastState)
+			metricStates, err := triggerChecker.getTimeSeriesStepsStates(tts, tts.Main[1], metricLastState)
+			So(err, ShouldBeNil)
 			So(metricStates, ShouldResemble, []moira.MetricState{metricsState3, metricsState4, metricsState5})
 		})
 
 		Convey("Exclude last element", func() {
 			metricLastState.EventTimestamp = 11
 			triggerChecker.Until = 47
-			metricStates := triggerChecker.getTimeSeriesStepsStates(tts, tts.Main[1], metricLastState)
+			metricStates, err := triggerChecker.getTimeSeriesStepsStates(tts, tts.Main[1], metricLastState)
+			So(err, ShouldBeNil)
 			So(metricStates, ShouldResemble, []moira.MetricState{metricsState1, metricsState2, metricsState3, metricsState4})
 		})
+	})
+
+	Convey("No warn and error value with default expression", t, func(){
+		metricLastState.EventTimestamp = 11
+		triggerChecker.Until = 47
+		triggerChecker.trigger.WarnValue = nil
+		triggerChecker.trigger.ErrorValue = nil
+		metricState, err := triggerChecker.getTimeSeriesStepsStates(tts, tts.Main[1], metricLastState)
+		So(err, ShouldResemble, fmt.Errorf("Error value and Warning value can not be empty"))
+		So(metricState, ShouldBeNil)
 	})
 }
 
