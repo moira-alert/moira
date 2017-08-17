@@ -58,7 +58,6 @@ func TestGetTimeSeriesState(t *testing.T) {
 
 	Convey("Checkpoint lover than valueTimestamp", t, func() {
 		Convey("Has all value by eventTimestamp step", func() {
-			triggerChecker.trigger.WarnValue = nil
 			metricState := triggerChecker.getTimeSeriesState(tts, tts.Main[0], metricLastState, 42, 27)
 			So(metricState, ShouldResemble, &moira.MetricState{
 				State:          OK,
@@ -465,6 +464,8 @@ func TestHandleTrigger(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	var retention int64 = 10
+	var warnValue float64 = 10
+	var errValue float64 = 20
 	pattern := "super.puper.pattern"
 	metric := "super.puper.metric"
 	var ttl int64 = 600
@@ -516,8 +517,10 @@ func TestHandleTrigger(t *testing.T) {
 		ttl:      &ttl,
 		ttlState: NODATA,
 		trigger: &moira.Trigger{
-			Targets: []string{pattern},
-			Patterns: []string{pattern},
+			ErrorValue: &errValue,
+			WarnValue:  &warnValue,
+			Targets:    []string{pattern},
+			Patterns:   []string{pattern},
 		},
 		lastCheck: &lastCheck,
 	}

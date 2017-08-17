@@ -3,7 +3,6 @@ package checker
 import (
 	"github.com/go-errors/errors"
 	"github.com/moira-alert/moira-alert"
-	"math"
 )
 
 var checkPointGap int64 = 120
@@ -162,18 +161,16 @@ func (triggerChecker *TriggerChecker) getTimeSeriesState(triggerTimeSeries *trig
 		return nil
 	}
 
-	expressionValues["warn_value"] = getMathFloat64Pointer(triggerChecker.trigger.WarnValue)
-	expressionValues["error_value"] = getMathFloat64Pointer(triggerChecker.trigger.ErrorValue)
-	expressionValues["PREV_STATE"] = getMathFloat64Pointer(lastState.Value) //todo State
+	expressionValues.WarnValue = triggerChecker.trigger.WarnValue
+	expressionValues.ErrorValue = triggerChecker.trigger.ErrorValue
+	expressionValues.PreviousState = lastState.State
 
-	expressionState := GetExpression(triggerChecker.trigger.Expression, expressionValues)
-
-	value := expressionValues.GetTargetValue(triggerTimeSeries.getMainTargetName())
+	expressionState, _ := EvaluateExpression(triggerChecker.trigger.Expression, expressionValues)
 
 	return &moira.MetricState{
 		State:       expressionState,
 		Timestamp:   valueTimestamp,
-		Value:       value,
+		Value:       &expressionValues.MainTargetValue,
 		Maintenance: lastState.Maintenance,
 		Suppressed:  lastState.Suppressed,
 	}
@@ -185,13 +182,5 @@ func (triggerChecker *TriggerChecker) cleanupMetricsValues(metrics []string, unt
 		if err := triggerChecker.Database.CleanupMetricValues(metric, until-triggerChecker.Config.MetricsTTL); err != nil {
 			triggerChecker.Logger.Error(err.Error())
 		}
-	}
-}
-
-func getMathFloat64Pointer(val *float64) float64 {
-	if val != nil {
-		return *val
-	} else {
-		return math.NaN()
 	}
 }

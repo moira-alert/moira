@@ -9,6 +9,12 @@
 			"revisionTime": "2017-06-11T14:03:16Z"
 		},
 		{
+			"checksumSHA1": "60mJ5p/W8CHWQEp8sYpDusWex4U=",
+			"path": "github.com/Knetic/govaluate",
+			"revision": "89a078c30383b31e1b72bec86907910914227d9f",
+			"revisionTime": "2017-08-15T16:40:41Z"
+		},
+		{
 			"checksumSHA1": "Lo8KxGQ8hLAxid1ynZLLyfVy6uY=",
 			"path": "github.com/aclements/go-moremath/mathx",
 			"revision": "033754ab1fee508c9f98f2785eec2365964e0b05",

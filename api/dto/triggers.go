@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/go-graphite/carbonapi/expr"
 	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira-alert/checker"
 	"net/http"
 	"strings"
 )
@@ -34,24 +35,26 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 	if trigger.ErrorValue == nil && trigger.Expression == nil {
 		return fmt.Errorf("error_value is required")
 	}
-	val := float64(1000)
-	expressionValues := map[string]*float64{
-		"warn_value":  trigger.WarnValue,
-		"error_value": trigger.ErrorValue,
-		"PREV_STATE":  &val,
+
+	expressionValues := checker.ExpressionValues{
+		AdditionalTargetsValues: make(map[string]float64),
+		WarnValue:               trigger.WarnValue,
+		ErrorValue:              trigger.ErrorValue,
+		PreviousState:           checker.NODATA,
 	}
-	if err := resolvePatterns(request, trigger, expressionValues); err != nil {
+
+	if err := resolvePatterns(request, trigger, &expressionValues); err != nil {
 		fmt.Printf("Invalid graphite targets %s: %s\n", trigger.Targets, err.Error())
 		return fmt.Errorf("Invalid graphite targets")
 	}
-	if err := getExpression(trigger); err != nil {
+	if _, err := checker.EvaluateExpression(trigger.Expression, expressionValues); err != nil {
 		fmt.Printf("Invalid expression %s: %s\n", moira.UseString(trigger.Expression), err.Error()) //todo right logger
-		return fmt.Errorf("Invalid expression")
+		return fmt.Errorf("Invalid expression: %s", err.Error())
 	}
 	return nil
 }
 
-func resolvePatterns(request *http.Request, trigger *Trigger, expressionValues map[string]*float64) error {
+func resolvePatterns(request *http.Request, trigger *Trigger, expressionValues *checker.ExpressionValues) error {
 	isSimpleTrigger := true
 	if len(trigger.Targets) > 1 {
 		isSimpleTrigger = false
@@ -72,8 +75,11 @@ func resolvePatterns(request *http.Request, trigger *Trigger, expressionValues m
 		for _, pattern := range patterns {
 			triggerPatterns[pattern.Metric] = true
 		}
-		val := float64(42)
-		expressionValues[targetName] = &val
+		if targetNum == 1 {
+			expressionValues.MainTargetValue = 42
+		} else {
+			expressionValues.AdditionalTargetsValues[targetName] = 42
+		}
 		targetNum += 1
 	}
 

@@ -263,33 +263,37 @@ func TestGetExpressionValues(t *testing.T) {
 			StartTime: int32(17),
 			StopTime:  int32(67),
 			StepTime:  int32(10),
-			Values:    []float64{0, 1, 2, 3, 4},
+			Values:    []float64{0.0, 1.0, 2.0, 3.0, 4.0},
 			IsAbsent:  []bool{false, true, true, false, true},
 		}
 		timeSeries := TimeSeries{FetchResponse: fetchResponse}
 		tts := &triggerTimeSeries{
 			Main: []*TimeSeries{&timeSeries},
 		}
+		expectedExpressionValues := ExpressionValues{
+			AdditionalTargetsValues: make(map[string]float64),
+		}
 
 		values, noEmptyValues := tts.getExpressionValues(&timeSeries, 17)
 		So(noEmptyValues, ShouldBeTrue)
-		So(values, ShouldResemble, ExpressionValues(map[string]float64{"t1": 0}))
+		So(values, ShouldResemble, expectedExpressionValues)
 
 		values, noEmptyValues = tts.getExpressionValues(&timeSeries, 67)
 		So(noEmptyValues, ShouldBeFalse)
-		So(values, ShouldResemble, ExpressionValues(make(map[string]float64)))
+		So(values, ShouldResemble, expectedExpressionValues)
 
 		values, noEmptyValues = tts.getExpressionValues(&timeSeries, 11)
 		So(noEmptyValues, ShouldBeFalse)
-		So(values, ShouldResemble, ExpressionValues(make(map[string]float64)))
+		So(values, ShouldResemble, expectedExpressionValues)
 
 		values, noEmptyValues = tts.getExpressionValues(&timeSeries, 44)
 		So(noEmptyValues, ShouldBeFalse)
-		So(values, ShouldResemble, ExpressionValues(make(map[string]float64)))
+		So(values, ShouldResemble, expectedExpressionValues)
 
+		expectedExpressionValues.MainTargetValue = 3
 		values, noEmptyValues = tts.getExpressionValues(&timeSeries, 53)
 		So(noEmptyValues, ShouldBeTrue)
-		So(values, ShouldResemble, ExpressionValues(map[string]float64{"t1": 3}))
+		So(values, ShouldResemble, expectedExpressionValues)
 	})
 
 	Convey("Has additional series", t, func() {
@@ -298,7 +302,7 @@ func TestGetExpressionValues(t *testing.T) {
 			StartTime: int32(17),
 			StopTime:  int32(67),
 			StepTime:  int32(10),
-			Values:    []float64{0, 1, 2, 3, 4},
+			Values:    []float64{0.0, 1.0, 2.0, 3.0, 4.0},
 			IsAbsent:  []bool{false, true, true, false, true},
 		}
 		timeSeries := TimeSeries{FetchResponse: fetchResponse}
@@ -307,7 +311,7 @@ func TestGetExpressionValues(t *testing.T) {
 			StartTime: int32(17),
 			StopTime:  int32(67),
 			StepTime:  int32(10),
-			Values:    []float64{4, 3, 2, 1, 0},
+			Values:    []float64{4.0, 3.0, 2.0, 1.0, 0.0},
 			IsAbsent:  []bool{false, false, true, true, false},
 		}
 		timeSeriesAdd := TimeSeries{FetchResponse: fetchResponseAdd}
@@ -316,24 +320,31 @@ func TestGetExpressionValues(t *testing.T) {
 			Additional: []*TimeSeries{&timeSeriesAdd},
 		}
 
-		values, noEmptyValues := tts.getExpressionValues(&timeSeries, 17)
-		So(noEmptyValues, ShouldBeTrue)
-		So(values, ShouldResemble, ExpressionValues(map[string]float64{"t1": 0, "t2": 4}))
+		expectedExpressionValues := ExpressionValues{
+			AdditionalTargetsValues: make(map[string]float64),
+		}
 
-		values, noEmptyValues = tts.getExpressionValues(&timeSeries, 29)
+		values, noEmptyValues := tts.getExpressionValues(&timeSeries, 29)
 		So(noEmptyValues, ShouldBeFalse)
-		So(values, ShouldResemble, ExpressionValues(make(map[string]float64)))
+		So(values, ShouldResemble, expectedExpressionValues)
 
 		values, noEmptyValues = tts.getExpressionValues(&timeSeries, 42)
 		So(noEmptyValues, ShouldBeFalse)
-		So(values, ShouldResemble, ExpressionValues(make(map[string]float64)))
-
-		values, noEmptyValues = tts.getExpressionValues(&timeSeries, 50)
-		So(noEmptyValues, ShouldBeFalse)
-		So(values, ShouldResemble, ExpressionValues(map[string]float64{"t1": 3}))
+		So(values, ShouldResemble, expectedExpressionValues)
 
 		values, noEmptyValues = tts.getExpressionValues(&timeSeries, 65)
 		So(noEmptyValues, ShouldBeFalse)
-		So(values, ShouldResemble, ExpressionValues(make(map[string]float64)))
+		So(values, ShouldResemble, expectedExpressionValues)
+
+		expectedExpressionValues.MainTargetValue = 3
+		values, noEmptyValues = tts.getExpressionValues(&timeSeries, 50)
+		So(noEmptyValues, ShouldBeFalse)
+		So(values, ShouldResemble, expectedExpressionValues)
+
+		expectedExpressionValues.MainTargetValue = 0
+		expectedExpressionValues.AdditionalTargetsValues["t2"] = 4
+		values, noEmptyValues = tts.getExpressionValues(&timeSeries, 17)
+		So(noEmptyValues, ShouldBeTrue)
+		So(values, ShouldResemble, expectedExpressionValues)
 	})
 }

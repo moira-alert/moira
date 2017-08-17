@@ -50,12 +50,14 @@ func (*triggerTimeSeries) getAdditionalTargetName(targetNumber int) string {
 }
 
 func (triggerTimeSeries *triggerTimeSeries) getExpressionValues(firstTargetTimeSeries *TimeSeries, valueTimestamp int64) (ExpressionValues, bool) {
-	expressionValues := make(map[string]float64)
+	expressionValues := ExpressionValues{
+		AdditionalTargetsValues: make(map[string]float64),
+	}
 	firstTargetValue := firstTargetTimeSeries.getTimestampValue(valueTimestamp)
 	if math.IsNaN(firstTargetValue) {
 		return expressionValues, false
 	}
-	expressionValues[triggerTimeSeries.getMainTargetName()] = firstTargetValue
+	expressionValues.MainTargetValue = firstTargetValue
 
 	for targetNumber := 0; targetNumber < len(triggerTimeSeries.Additional); targetNumber++ {
 		additionalTimeSeries := triggerTimeSeries.Additional[targetNumber]
@@ -66,7 +68,7 @@ func (triggerTimeSeries *triggerTimeSeries) getExpressionValues(firstTargetTimeS
 		if math.IsNaN(tnValue) {
 			return expressionValues, false
 		}
-		expressionValues[triggerTimeSeries.getAdditionalTargetName(targetNumber)] = tnValue
+		expressionValues.AdditionalTargetsValues[triggerTimeSeries.getAdditionalTargetName(targetNumber)] = tnValue
 	}
 	return expressionValues, true
 }
