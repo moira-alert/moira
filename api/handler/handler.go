@@ -5,19 +5,18 @@ import (
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
 	"github.com/moira-alert/moira-alert"
+	moira_middle "github.com/moira-alert/moira-alert/api/middleware"
 	"net/http"
 )
 
 var database moira.Database
-var logger moira.Logger
 
 func NewHandler(db moira.Database, log moira.Logger) http.Handler {
 	database = db
-	logger = log
 	router := chi.NewRouter()
-	router.Use(middleware.Logger)
-	router.Use(middleware.NoCache) //todo неадекватно много всего проставляет, разобраться
-	router.Use(middleware.Recoverer)
+	router.Use(moira_middle.Logger(log))
+	router.Use(middleware.NoCache)
+	router.Use(moira_middle.Recoverer)
 	router.Use(render.SetContentType(render.ContentTypeJSON))
 
 	router.Route("/api", func(router chi.Router) {

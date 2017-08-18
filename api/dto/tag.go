@@ -6,7 +6,7 @@ import (
 )
 
 type TagsData struct {
-	TagNames []string                 `json:"list"`
+	TagNames []string `json:"list"`
 }
 
 func (*TagsData) Render(w http.ResponseWriter, r *http.Request) error {

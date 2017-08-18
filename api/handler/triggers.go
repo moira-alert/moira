@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
+	"github.com/moira-alert/moira-alert/api"
 	"github.com/moira-alert/moira-alert/api/controller"
 	"github.com/moira-alert/moira-alert/api/dto"
 	"github.com/moira-alert/moira-alert/checker"
@@ -27,7 +28,7 @@ func getAllTriggers(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	if err := render.Render(writer, request, triggersList); err != nil {
-		render.Render(writer, request, dto.ErrorRender(err))
+		render.Render(writer, request, api.ErrorRender(err))
 		return
 	}
 }
@@ -36,9 +37,9 @@ func createTrigger(writer http.ResponseWriter, request *http.Request) {
 	trigger := &dto.Trigger{}
 	if err := render.Bind(request, trigger); err != nil {
 		if _, ok := err.(checker.ErrInvalidExpression); ok || err == checker.ErrEvaluateTarget {
-			render.Render(writer, request, dto.ErrorInvalidRequest(err))
+			render.Render(writer, request, api.ErrorInvalidRequest(err))
 		} else {
-			render.Render(writer, request, dto.ErrorInternalServer(err))
+			render.Render(writer, request, api.ErrorInternalServer(err))
 		}
 		return
 	}
@@ -50,7 +51,7 @@ func createTrigger(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	if err := render.Render(writer, request, response); err != nil {
-		render.Render(writer, request, dto.ErrorRender(err))
+		render.Render(writer, request, api.ErrorRender(err))
 		return
 	}
 }
@@ -69,7 +70,7 @@ func getTriggersPage(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	if err := render.Render(writer, request, triggersList); err != nil {
-		render.Render(writer, request, dto.ErrorRender(err))
+		render.Render(writer, request, api.ErrorRender(err))
 		return
 	}
 }

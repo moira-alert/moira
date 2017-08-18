@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
+	"github.com/moira-alert/moira-alert/api"
 	"github.com/moira-alert/moira-alert/api/controller"
 	"github.com/moira-alert/moira-alert/api/dto"
 	"net/http"
@@ -27,7 +28,7 @@ func getUserSubscriptions(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	if err := render.Render(writer, request, contacts); err != nil {
-		render.Render(writer, request, dto.ErrorRender(err))
+		render.Render(writer, request, api.ErrorRender(err))
 		return
 	}
 }
@@ -35,7 +36,7 @@ func getUserSubscriptions(writer http.ResponseWriter, request *http.Request) {
 func createSubscription(writer http.ResponseWriter, request *http.Request) {
 	subscription := &dto.Subscription{}
 	if err := render.Bind(request, subscription); err != nil {
-		render.Render(writer, request, dto.ErrorInvalidRequest(err))
+		render.Render(writer, request, api.ErrorInvalidRequest(err))
 		return
 	}
 	userLogin := request.Context().Value("login").(string)
@@ -46,7 +47,7 @@ func createSubscription(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	if err := render.Render(writer, request, subscription); err != nil {
-		render.Render(writer, request, dto.ErrorRender(err))
+		render.Render(writer, request, api.ErrorRender(err))
 		return
 	}
 }

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
+	"github.com/moira-alert/moira-alert/api"
 	"github.com/moira-alert/moira-alert/api/controller"
-	"github.com/moira-alert/moira-alert/api/dto"
 	"net/http"
 	"strconv"
 )
@@ -31,14 +31,14 @@ func getNotification(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 	if err := render.Render(writer, request, notifications); err != nil {
-		render.Render(writer, request, dto.ErrorRender(err))
+		render.Render(writer, request, api.ErrorRender(err))
 	}
 }
 
 func deleteNotification(writer http.ResponseWriter, request *http.Request) {
 	notificationKey := request.URL.Query().Get("id")
 	if notificationKey == "" {
-		render.Render(writer, request, dto.ErrorInvalidRequest(fmt.Errorf("Notification id can not be empty")))
+		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("Notification id can not be empty")))
 		return
 	}
 
@@ -48,6 +48,6 @@ func deleteNotification(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 	if err := render.Render(writer, request, notifications); err != nil {
-		render.Render(writer, request, dto.ErrorRender(err))
+		render.Render(writer, request, api.ErrorRender(err))
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira-alert/api/middleware"
 	"github.com/moira-alert/moira-alert/checker"
 	"net/http"
 	"strings"
@@ -44,12 +45,14 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 		PreviousState:           checker.NODATA,
 	}
 
+	logger := middleware.GetLoggerEntry(request)
+
 	if err := resolvePatterns(request, trigger, &expressionValues); err != nil {
-		fmt.Printf("Invalid graphite targets %s: %s\n", trigger.Targets, err.Error())
+		logger.Infof("Invalid graphite targets %s: %s\n", trigger.Targets, err.Error())
 		return err
 	}
 	if _, err := checker.EvaluateExpression(trigger.Expression, expressionValues); err != nil {
-		fmt.Printf("Invalid expression %s: %s\n", moira.UseString(trigger.Expression), err.Error()) //todo right logger
+		logger.Infof("Invalid expression %s: %s\n", moira.UseString(trigger.Expression), err.Error())
 		return err
 	}
 	return nil

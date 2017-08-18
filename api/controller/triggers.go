@@ -2,11 +2,12 @@ package controller
 
 import (
 	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira-alert/api"
 	"github.com/moira-alert/moira-alert/api/dto"
 	"github.com/satori/go.uuid"
 )
 
-func CreateTrigger(database moira.Database, trigger *moira.Trigger, timeSeriesNames map[string]bool) (*dto.SaveTriggerResponse, *dto.ErrorResponse) {
+func CreateTrigger(database moira.Database, trigger *moira.Trigger, timeSeriesNames map[string]bool) (*dto.SaveTriggerResponse, *api.ErrorResponse) {
 	triggerId := uuid.NewV4().String()
 	resp, err := SaveTrigger(database, trigger, triggerId, timeSeriesNames)
 	if resp != nil {
@@ -15,14 +16,14 @@ func CreateTrigger(database moira.Database, trigger *moira.Trigger, timeSeriesNa
 	return resp, err
 }
 
-func GetAllTriggers(database moira.Database) (*dto.TriggersList, *dto.ErrorResponse) {
+func GetAllTriggers(database moira.Database) (*dto.TriggersList, *api.ErrorResponse) {
 	triggersIds, err := database.GetTriggerIds()
 	if err != nil {
-		return nil, dto.ErrorInternalServer(err)
+		return nil, api.ErrorInternalServer(err)
 	}
 	triggerChecks, err := database.GetTriggerChecks(triggersIds)
 	if err != nil {
-		return nil, dto.ErrorInternalServer(err)
+		return nil, api.ErrorInternalServer(err)
 	}
 	triggersList := dto.TriggersList{
 		List: triggerChecks,
@@ -30,7 +31,7 @@ func GetAllTriggers(database moira.Database) (*dto.TriggersList, *dto.ErrorRespo
 	return &triggersList, nil
 }
 
-func GetTriggerPage(database moira.Database, page int64, size int64, onlyErrors bool, filterTags []string) (*dto.TriggersList, *dto.ErrorResponse) {
+func GetTriggerPage(database moira.Database, page int64, size int64, onlyErrors bool, filterTags []string) (*dto.TriggersList, *api.ErrorResponse) {
 	var triggersChecks []moira.TriggerChecks
 	var total int64
 	var err error
@@ -41,7 +42,7 @@ func GetTriggerPage(database moira.Database, page int64, size int64, onlyErrors 
 		triggersChecks, total, err = getFilteredTriggers(database, page, size, onlyErrors, filterTags)
 	}
 	if err != nil {
-		return nil, dto.ErrorInternalServer(err)
+		return nil, api.ErrorInternalServer(err)
 	}
 	triggersList := dto.TriggersList{
 		List:  triggersChecks,

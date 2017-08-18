@@ -2,31 +2,32 @@ package controller
 
 import (
 	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira-alert/api"
 	"github.com/moira-alert/moira-alert/api/dto"
 )
 
-func GetAllPatterns(database moira.Database) (*dto.PatternList, *dto.ErrorResponse) {
+func GetAllPatterns(database moira.Database) (*dto.PatternList, *api.ErrorResponse) {
 	//todo работает медлено
 	patterns, err := database.GetPatterns()
 	pattersList := dto.PatternList{
 		List: make([]dto.Pattern, 0, len(patterns)),
 	}
 	if err != nil {
-		return nil, dto.ErrorInternalServer(err)
+		return nil, api.ErrorInternalServer(err)
 	}
 
 	for _, pattern := range patterns {
 		triggerIds, err := database.GetPatternTriggerIds(pattern)
 		if err != nil {
-			return nil, dto.ErrorInternalServer(err)
+			return nil, api.ErrorInternalServer(err)
 		}
 		triggersList, err := database.GetTriggers(triggerIds)
 		if err != nil {
-			return nil, dto.ErrorInternalServer(err)
+			return nil, api.ErrorInternalServer(err)
 		}
 		metrics, err := database.GetPatternMetrics(pattern)
 		if err != nil {
-			return nil, dto.ErrorInternalServer(err)
+			return nil, api.ErrorInternalServer(err)
 		}
 		pattersList.List = append(pattersList.List, dto.Pattern{Pattern: pattern, Triggers: triggersList, Metrics: metrics})
 
@@ -34,9 +35,9 @@ func GetAllPatterns(database moira.Database) (*dto.PatternList, *dto.ErrorRespon
 	return &pattersList, nil
 }
 
-func DeletePattern(database moira.Database, pattern string) *dto.ErrorResponse {
+func DeletePattern(database moira.Database, pattern string) *api.ErrorResponse {
 	if err := database.RemovePattern(pattern); err != nil {
-		return dto.ErrorInternalServer(err)
+		return api.ErrorInternalServer(err)
 	}
 	return nil
 }

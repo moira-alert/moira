@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
+	"github.com/moira-alert/moira-alert/api"
 	"github.com/moira-alert/moira-alert/api/controller"
 	"github.com/moira-alert/moira-alert/api/dto"
 	"github.com/moira-alert/moira-alert/checker"
@@ -32,9 +33,9 @@ func saveTrigger(writer http.ResponseWriter, request *http.Request) {
 	trigger := &dto.Trigger{}
 	if err := render.Bind(request, trigger); err != nil {
 		if _, ok := err.(checker.ErrInvalidExpression); ok || err == checker.ErrEvaluateTarget {
-			render.Render(writer, request, dto.ErrorInvalidRequest(err))
+			render.Render(writer, request, api.ErrorInvalidRequest(err))
 		} else {
-			render.Render(writer, request, dto.ErrorInternalServer(err))
+			render.Render(writer, request, api.ErrorInternalServer(err))
 		}
 		return
 	}
@@ -47,7 +48,7 @@ func saveTrigger(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	if err := render.Render(writer, request, response); err != nil {
-		render.Render(writer, request, dto.ErrorRender(err))
+		render.Render(writer, request, api.ErrorRender(err))
 		return
 	}
 }
@@ -68,7 +69,7 @@ func getTrigger(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 	if err := render.Render(writer, request, trigger); err != nil {
-		render.Render(writer, request, dto.ErrorRender(err))
+		render.Render(writer, request, api.ErrorRender(err))
 	}
 }
 
@@ -80,7 +81,7 @@ func getTriggerState(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 	if err := render.Render(writer, request, triggerState); err != nil {
-		render.Render(writer, request, dto.ErrorRender(err))
+		render.Render(writer, request, api.ErrorRender(err))
 	}
 }
 
@@ -92,7 +93,7 @@ func getTriggerThrottling(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 	if err := render.Render(writer, request, triggerState); err != nil {
-		render.Render(writer, request, dto.ErrorRender(err))
+		render.Render(writer, request, api.ErrorRender(err))
 	}
 }
 
@@ -112,7 +113,7 @@ func deleteTriggerMetric(writer http.ResponseWriter, request *http.Request) {
 	triggerId := request.Context().Value("triggerId").(string)
 	metricName := request.URL.Query().Get("name")
 	if metricName == "" {
-		render.Render(writer, request, dto.ErrorInvalidRequest(fmt.Errorf("Metric name can not be empty")))
+		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("Metric name can not be empty")))
 		return
 	}
 	if err := controller.DeleteTriggerMetric(database, metricName, triggerId); err != nil {
@@ -124,7 +125,7 @@ func setMetricsMaintenance(writer http.ResponseWriter, request *http.Request) {
 	triggerId := request.Context().Value("triggerId").(string)
 	metricsMaintenance := &dto.MetricsMaintenance{}
 	if err := render.Bind(request, metricsMaintenance); err != nil {
-		render.Render(writer, request, dto.ErrorInvalidRequest(err))
+		render.Render(writer, request, api.ErrorInvalidRequest(err))
 		return
 	}
 	err := controller.SetMetricsMaintenance(database, triggerId, metricsMaintenance)

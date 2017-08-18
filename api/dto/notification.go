@@ -21,4 +21,3 @@ type NotificationDeleteResponse struct {
 func (*NotificationDeleteResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
-

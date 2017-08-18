@@ -3,8 +3,8 @@ package handler
 import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
+	"github.com/moira-alert/moira-alert/api"
 	"github.com/moira-alert/moira-alert/api/controller"
-	"github.com/moira-alert/moira-alert/api/dto"
 	"net/http"
 )
 
@@ -20,7 +20,7 @@ func event(router chi.Router) {
 			return
 		}
 		if err := render.Render(writer, request, eventsList); err != nil {
-			render.Render(writer, request, dto.ErrorRender(err))
+			render.Render(writer, request, api.ErrorRender(err))
 		}
 	})
 }

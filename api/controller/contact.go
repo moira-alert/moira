@@ -2,14 +2,15 @@ package controller
 
 import (
 	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira-alert/api"
 	"github.com/moira-alert/moira-alert/api/dto"
 	"github.com/satori/go.uuid"
 )
 
-func GetAllContacts(database moira.Database) (*dto.ContactList, *dto.ErrorResponse) {
+func GetAllContacts(database moira.Database) (*dto.ContactList, *api.ErrorResponse) {
 	contacts, err := database.GetAllContacts()
 	if err != nil {
-		return nil, dto.ErrorInternalServer(err)
+		return nil, api.ErrorInternalServer(err)
 	}
 	contactsList := dto.ContactList{
 		List: contacts,
@@ -17,7 +18,7 @@ func GetAllContacts(database moira.Database) (*dto.ContactList, *dto.ErrorRespon
 	return &contactsList, nil
 }
 
-func CreateContact(database moira.Database, contact *dto.Contact, userLogin string) *dto.ErrorResponse {
+func CreateContact(database moira.Database, contact *dto.Contact, userLogin string) *api.ErrorResponse {
 	id := uuid.NewV4().String()
 	contactData := &moira.ContactData{
 		ID:    id,
@@ -27,7 +28,7 @@ func CreateContact(database moira.Database, contact *dto.Contact, userLogin stri
 	}
 
 	if err := database.WriteContact(contactData); err != nil {
-		return dto.ErrorInternalServer(err)
+		return api.ErrorInternalServer(err)
 	}
 
 	contact.ID = &id
@@ -35,15 +36,15 @@ func CreateContact(database moira.Database, contact *dto.Contact, userLogin stri
 	return nil
 }
 
-func DeleteContact(database moira.Database, contactId string, userLogin string) *dto.ErrorResponse {
+func DeleteContact(database moira.Database, contactId string, userLogin string) *api.ErrorResponse {
 	subscriptionIds, err := database.GetUserSubscriptionIds(userLogin)
 	if err != nil {
-		return dto.ErrorInternalServer(err)
+		return api.ErrorInternalServer(err)
 	}
 
 	subscriptions, err := database.GetSubscriptions(subscriptionIds)
 	if err != nil {
-		return dto.ErrorInternalServer(err)
+		return api.ErrorInternalServer(err)
 	}
 
 	subscriptionsWithDeletingContact := make([]*moira.SubscriptionData, 0)
@@ -59,11 +60,11 @@ func DeleteContact(database moira.Database, contactId string, userLogin string) 
 	}
 
 	if err := database.DeleteContact(contactId, userLogin); err != nil {
-		return dto.ErrorInternalServer(err)
+		return api.ErrorInternalServer(err)
 	}
 
 	if err := database.WriteSubscriptions(subscriptionsWithDeletingContact); err != nil {
-		return dto.ErrorInternalServer(err)
+		return api.ErrorInternalServer(err)
 	}
 
 	return nil

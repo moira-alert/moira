@@ -3,8 +3,8 @@ package handler
 import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
+	"github.com/moira-alert/moira-alert/api"
 	"github.com/moira-alert/moira-alert/api/controller"
-	"github.com/moira-alert/moira-alert/api/dto"
 	"net/http"
 )
 
@@ -25,7 +25,7 @@ func getAllTags(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	if err := render.Render(writer, request, tagData); err != nil {
-		render.Render(writer, request, dto.ErrorRender(err))
+		render.Render(writer, request, api.ErrorRender(err))
 		return
 	}
 }
@@ -37,7 +37,7 @@ func getAllTagsAndSubscriptions(writer http.ResponseWriter, request *http.Reques
 		return
 	}
 	if err := render.Render(writer, request, data); err != nil {
-		render.Render(writer, request, dto.ErrorRender(err))
+		render.Render(writer, request, api.ErrorRender(err))
 		return
 	}
 }
@@ -50,7 +50,7 @@ func deleteTag(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 	if err := render.Render(writer, request, response); err != nil {
-		render.Render(writer, request, dto.ErrorRender(err))
+		render.Render(writer, request, api.ErrorRender(err))
 		return
 	}
 }

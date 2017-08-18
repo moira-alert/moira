@@ -2,13 +2,14 @@ package controller
 
 import (
 	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira-alert/api"
 	"github.com/moira-alert/moira-alert/api/dto"
 )
 
-func GetEvents(database moira.Database, triggerId string, page int64, size int64) (*dto.EventsList, *dto.ErrorResponse) {
+func GetEvents(database moira.Database, triggerId string, page int64, size int64) (*dto.EventsList, *api.ErrorResponse) {
 	events, err := database.GetEvents(triggerId, page*size, size-1)
 	if err != nil {
-		return nil, dto.ErrorInternalServer(err)
+		return nil, api.ErrorInternalServer(err)
 	}
 	eventCount := database.GetTriggerEventsCount(triggerId, -1)
 
