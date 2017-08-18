@@ -1,12 +1,13 @@
 package dto
 
 import (
+	"context"
 	"fmt"
-	"github.com/go-graphite/carbonapi/expr"
 	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/checker"
 	"net/http"
 	"strings"
+	"time"
 )
 
 type TriggersList struct {
@@ -45,68 +46,61 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 
 	if err := resolvePatterns(request, trigger, &expressionValues); err != nil {
 		fmt.Printf("Invalid graphite targets %s: %s\n", trigger.Targets, err.Error())
-		return fmt.Errorf("Invalid graphite targets")
+		return err
 	}
 	if _, err := checker.EvaluateExpression(trigger.Expression, expressionValues); err != nil {
 		fmt.Printf("Invalid expression %s: %s\n", moira.UseString(trigger.Expression), err.Error()) //todo right logger
-		return fmt.Errorf("Invalid expression: %s", err.Error())
+		return err
 	}
 	return nil
 }
 
 func resolvePatterns(request *http.Request, trigger *Trigger, expressionValues *checker.ExpressionValues) error {
-	isSimpleTrigger := true
+	trigger.IsSimpleTrigger = true
 	if len(trigger.Targets) > 1 {
-		isSimpleTrigger = false
+		trigger.IsSimpleTrigger = false
 	}
+	now := time.Now().Unix()
 	targetNum := 1
-	triggerPatterns := make(map[string]bool)
+	trigger.Patterns = make([]string, 0)
+	timeSeriesNames := make(map[string]bool, 0)
 
 	for _, target := range trigger.Targets {
-		expr2, _, err := expr.ParseExpr(target)
+		database := request.Context().Value("database").(moira.Database)
+		result, err := checker.EvaluateTarget(database, target, now-600, now, true)
 		if err != nil {
-			return nil
+			return err
 		}
-		patterns := expr2.Metrics()
-		if isSimpleTrigger && !isSimpleTarget(patterns) {
-			isSimpleTrigger = false
+		trigger.Patterns = append(trigger.Patterns, result.Patterns...)
+		if trigger.IsSimpleTrigger && !isSimpleTarget(result.Patterns) {
+			trigger.IsSimpleTrigger = false
 		}
-		targetName := fmt.Sprintf("t%v", targetNum)
-		for _, pattern := range patterns {
-			triggerPatterns[pattern.Metric] = true
+		for _, timeSeries := range result.TimeSeries {
+			timeSeriesNames[timeSeries.Name] = true
 		}
 		if targetNum == 1 {
 			expressionValues.MainTargetValue = 42
 		} else {
+			targetName := fmt.Sprintf("t%v", targetNum)
 			expressionValues.AdditionalTargetsValues[targetName] = 42
 		}
 		targetNum += 1
 	}
-
-	trigger.Patterns = make([]string, 0, len(triggerPatterns))
-	trigger.IsSimpleTrigger = isSimpleTrigger
-	for key, _ := range triggerPatterns {
-		trigger.Patterns = append(trigger.Patterns, key)
-	}
+	*request = *request.WithContext(context.WithValue(request.Context(), "timeSeriesNames", timeSeriesNames))
 	return nil
 }
 
-func isSimpleTarget(metrics []expr.MetricRequest) bool {
-	if len(metrics) > 1 {
+func isSimpleTarget(patterns []string) bool {
+	if len(patterns) > 1 {
 		return false
 	}
 
-	for _, metric := range metrics {
-		if strings.ContainsAny(metric.Metric, "*{") {
+	for _, pattern := range patterns {
+		if strings.ContainsAny(pattern, "*{") {
 			return false
 		}
 	}
 	return true
-}
-
-func getExpression(trigger *Trigger) error {
-	//todo Функция, которая преобразует WarnValue, ErrorValue и Expression в функцию питона для графита
-	return nil
 }
 
 func (*Trigger) Render(w http.ResponseWriter, r *http.Request) error {

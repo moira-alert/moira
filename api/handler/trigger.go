@@ -6,6 +6,7 @@ import (
 	"github.com/go-chi/render"
 	"github.com/moira-alert/moira-alert/api/controller"
 	"github.com/moira-alert/moira-alert/api/dto"
+	"github.com/moira-alert/moira-alert/checker"
 	"net/http"
 )
 
@@ -30,10 +31,16 @@ func saveTrigger(writer http.ResponseWriter, request *http.Request) {
 	triggerId := request.Context().Value("triggerId").(string)
 	trigger := &dto.Trigger{}
 	if err := render.Bind(request, trigger); err != nil {
-		render.Render(writer, request, dto.ErrorInvalidRequest(err))
+		if _, ok := err.(checker.ErrInvalidExpression); ok || err == checker.ErrEvaluateTarget {
+			render.Render(writer, request, dto.ErrorInvalidRequest(err))
+		} else {
+			render.Render(writer, request, dto.ErrorInternalServer(err))
+		}
 		return
 	}
-	response, err := controller.SaveTrigger(database, &trigger.Trigger, triggerId)
+
+	timeSeriesNames := request.Context().Value("timeSeriesNames").(map[string]bool)
+	response, err := controller.SaveTrigger(database, &trigger.Trigger, triggerId, timeSeriesNames)
 	if err != nil {
 		render.Render(writer, request, err)
 		return

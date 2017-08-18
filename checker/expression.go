@@ -11,6 +11,14 @@ var default2, _ = govaluate.NewEvaluableExpression("t1 <= ERROR_VALUE ? ERROR : 
 
 var cache map[string]*govaluate.EvaluableExpression = make(map[string]*govaluate.EvaluableExpression, 0)
 
+type ErrInvalidExpression struct {
+	internalError error
+}
+
+func (err ErrInvalidExpression) Error() string {
+	return fmt.Sprintf("Invalid expression: %s", err.internalError.Error())
+}
+
 type ExpressionValues struct {
 	WarnValue  *float64
 	ErrorValue *float64
@@ -58,17 +66,17 @@ func (values ExpressionValues) Get(name string) (interface{}, error) {
 func EvaluateExpression(triggerExpression *string, expressionValues ExpressionValues) (string, error) {
 	expression, err := getExpression(triggerExpression, expressionValues)
 	if err != nil {
-		return "", err
+		return "", ErrInvalidExpression{internalError: err}
 	}
 	result, err := expression.Eval(expressionValues)
 	if err != nil {
-		return "", err
+		return "", ErrInvalidExpression{internalError: err}
 	}
 	switch res := result.(type) {
 	case string:
 		return res, nil
 	default:
-		return "", fmt.Errorf("Expression result must be state value")
+		return "", ErrInvalidExpression{internalError: fmt.Errorf("Expression result must be state value")}
 	}
 }
 

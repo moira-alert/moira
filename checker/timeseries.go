@@ -21,22 +21,22 @@ func (triggerChecker *TriggerChecker) getTimeSeries(from, until int64) (*trigger
 	metricsArr := make([]string, 0)
 
 	for targetIndex, target := range triggerChecker.trigger.Targets {
-		metricDatas, metrics, err := EvaluateTarget(triggerChecker.Database, target, from, until, triggerChecker.isSimple)
+		result, err := EvaluateTarget(triggerChecker.Database, target, from, until, triggerChecker.isSimple)
 		if err != nil {
 			return nil, nil, err
 		}
 
 		if targetIndex == 0 {
-			triggerTimeSeries.Main = metricDatas
+			triggerTimeSeries.Main = result.TimeSeries
 		} else {
-			if len(metricDatas) == 0 {
+			if len(result.TimeSeries) == 0 {
 				return nil, nil, fmt.Errorf("Target #%v has no timeseries", targetIndex+1)
-			} else if len(metricDatas) > 1 {
+			} else if len(result.TimeSeries) > 1 {
 				return nil, nil, fmt.Errorf("Target #%v has more than one timeseries", targetIndex+1)
 			}
-			triggerTimeSeries.Additional = append(triggerTimeSeries.Additional, metricDatas[0])
+			triggerTimeSeries.Additional = append(triggerTimeSeries.Additional, result.TimeSeries[0])
 		}
-		metricsArr = append(metricsArr, metrics...)
+		metricsArr = append(metricsArr, result.Metrics...)
 	}
 	return triggerTimeSeries, metricsArr, nil
 }

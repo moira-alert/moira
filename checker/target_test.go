@@ -55,46 +55,46 @@ func TestEvaluateTarget(t *testing.T) {
 
 	Convey("Errors tests", t, func() {
 		Convey("Error while ParseExpr", func() {
-			timeSeries, metrics, err := EvaluateTarget(dataBase, "", from, until, true)
-			So(timeSeries, ShouldBeNil)
-			So(metrics, ShouldBeNil)
+			result, err := EvaluateTarget(dataBase, "", from, until, true)
 			So(err, ShouldResemble, expr.ErrMissingExpr)
+			So(result, ShouldBeNil)
 		})
 
 		Convey("Error in fetch data", func() {
 			dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
 			dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 			dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(nil, metricErr)
-			timeSeries, metrics, err := EvaluateTarget(dataBase, "super.puper.pattern", from, until, true)
-			So(timeSeries, ShouldBeNil)
-			So(metrics, ShouldBeNil)
+			result, err := EvaluateTarget(dataBase, "super.puper.pattern", from, until, true)
 			So(err, ShouldResemble, metricErr)
+			So(result, ShouldBeNil)
 		})
 
 		Convey("Error evaluate target", func() {
 			dataBase.EXPECT().GetPatternMetrics("super.puper.pattern").Return([]string{metric}, nil)
 			dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 			dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
-			timeSeries, metrics, err := EvaluateTarget(dataBase, "aliasByNoe(super.puper.pattern, 2)", from, until, true)
-			So(timeSeries, ShouldBeNil)
-			So(metrics, ShouldBeNil)
+			result, err := EvaluateTarget(dataBase, "aliasByNoe(super.puper.pattern, 2)", from, until, true)
 			So(err, ShouldResemble, ErrEvaluateTarget)
+			So(result, ShouldBeNil)
 		})
 	})
 
 	Convey("Test no metrics", t, func() {
 		dataBase.EXPECT().GetPatternMetrics("super.puper.pattern").Return([]string{}, nil)
-		timeSeries, metrics, err := EvaluateTarget(dataBase, "aliasByNode(super.puper.pattern, 2)", from, until, true)
-		So(timeSeries, ShouldBeEmpty)
-		So(metrics, ShouldBeEmpty)
+		result, err := EvaluateTarget(dataBase, "aliasByNode(super.puper.pattern, 2)", from, until, true)
 		So(err, ShouldBeNil)
+		So(result, ShouldResemble, &targetEvaluationResult{
+			TimeSeries: make([]*TimeSeries, 0),
+			Metrics:    make([]string, 0),
+			Patterns:   []string{"super.puper.pattern"},
+		})
 	})
 
 	Convey("Test success evaluate", t, func() {
 		dataBase.EXPECT().GetPatternMetrics("super.puper.pattern").Return([]string{metric}, nil)
 		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 		dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
-		timeSeries, metrics, err := EvaluateTarget(dataBase, "aliasByNode(super.puper.pattern, 2)", from, until, true)
+		result, err := EvaluateTarget(dataBase, "aliasByNode(super.puper.pattern, 2)", from, until, true)
 		fetchResponse := pb.FetchResponse{
 			Name:      "metric",
 			StartTime: int32(from),
@@ -103,9 +103,11 @@ func TestEvaluateTarget(t *testing.T) {
 			Values:    []float64{0, 1, 2, 3, 4},
 			IsAbsent:  make([]bool, 5, 5),
 		}
-		expectedTimeSeries := &TimeSeries{FetchResponse: fetchResponse}
-		So(timeSeries, ShouldResemble, []*TimeSeries{expectedTimeSeries})
-		So(metrics, ShouldResemble, []string{metric})
 		So(err, ShouldBeNil)
+		So(result, ShouldResemble, &targetEvaluationResult{
+			TimeSeries: []*TimeSeries{&TimeSeries{FetchResponse: fetchResponse}},
+			Metrics:    []string{metric},
+			Patterns:   []string{"super.puper.pattern"},
+		})
 	})
 }

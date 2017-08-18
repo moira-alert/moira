@@ -8,31 +8,16 @@ import (
 	"time"
 )
 
-func SaveTrigger(database moira.Database, trigger *moira.Trigger, triggerId string) (*dto.SaveTriggerResponse, *dto.ErrorResponse) {
+func SaveTrigger(database moira.Database, trigger *moira.Trigger, triggerId string, timeSeriesNames map[string]bool) (*dto.SaveTriggerResponse, *dto.ErrorResponse) {
 	database.AcquireTriggerCheckLock(triggerId, 10)
 	lastCheck, err := database.GetTriggerLastCheck(triggerId)
 	if err != nil {
 		return nil, dto.ErrorInternalServer(err)
 	}
-	now := time.Now().Unix()
-	timeSeriesNamesHash := make(map[string]bool)
-
-	for _, target := range trigger.Targets {
-		metricsDatas, _, er := checker.EvaluateTarget(database, target, now-600, now, true)
-		if er != nil {
-			if er == checker.ErrEvaluateTarget {
-				return nil, dto.ErrorInvalidRequest(er)
-			}
-			return nil, dto.ErrorInternalServer(err)
-		}
-		for _, metricsData := range metricsDatas {
-			timeSeriesNamesHash[metricsData.Name] = true
-		}
-	}
 
 	if lastCheck != nil {
 		for metric, _ := range lastCheck.Metrics {
-			if _, ok := timeSeriesNamesHash[metric]; !ok {
+			if _, ok := timeSeriesNames[metric]; !ok {
 				delete(lastCheck.Metrics, metric)
 			}
 		}

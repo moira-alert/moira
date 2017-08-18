@@ -6,9 +6,9 @@ import (
 	"github.com/satori/go.uuid"
 )
 
-func CreateTrigger(database moira.Database, trigger *moira.Trigger) (*dto.SaveTriggerResponse, *dto.ErrorResponse) {
+func CreateTrigger(database moira.Database, trigger *moira.Trigger, timeSeriesNames map[string]bool) (*dto.SaveTriggerResponse, *dto.ErrorResponse) {
 	triggerId := uuid.NewV4().String()
-	resp, err := SaveTrigger(database, trigger, triggerId)
+	resp, err := SaveTrigger(database, trigger, triggerId, timeSeriesNames)
 	if resp != nil {
 		resp.Message = "trigger created"
 	}

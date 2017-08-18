@@ -44,7 +44,7 @@ func TestExpression(t *testing.T) {
 		So(result, ShouldResemble, ERROR)
 
 		result, err = EvaluateExpression(nil, ExpressionValues{MainTargetValue: 10.0, WarnValue: &warnValue})
-		So(err, ShouldResemble, fmt.Errorf("Error value and Warning value can not be empty"))
+		So(err, ShouldResemble, ErrInvalidExpression{fmt.Errorf("Error value and Warning value can not be empty")})
 		So(result, ShouldBeEmpty)
 	})
 
@@ -56,7 +56,7 @@ func TestExpression(t *testing.T) {
 
 		expression = "min(t1, t2) > 10 ? ERROR : OK"
 		result, err = EvaluateExpression(&expression, ExpressionValues{MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{"t2": 4.0}})
-		So(err, ShouldResemble, fmt.Errorf("Functions is forbidden"))
+		So(err, ShouldResemble, ErrInvalidExpression{fmt.Errorf("Functions is forbidden")})
 		So(result, ShouldBeEmpty)
 	})
 }
