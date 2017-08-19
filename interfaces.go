@@ -60,7 +60,7 @@ type Database interface {
 	PushEvent(event *EventData, ui bool) error
 
 	DeleteContact(string, string) error
-	WriteContact(contact *ContactData) error //todo audit
+	WriteContact(contact *ContactData) error
 
 	GetSubscriptions(subscriptionIds []string) ([]SubscriptionData, error)
 	WriteSubscriptions(subscriptions []*SubscriptionData) error

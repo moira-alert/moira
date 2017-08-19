@@ -13,26 +13,26 @@ func GetUserSettings(database moira.Database, userLogin string) (*dto.UserSettin
 		Subscriptions: make([]moira.SubscriptionData, 0),
 	}
 
-	subscriptionIds, err := database.GetUserSubscriptionIDs(userLogin)
+	subscriptionIDs, err := database.GetUserSubscriptionIDs(userLogin)
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
 
-	userSettings.Subscriptions, err = database.GetSubscriptions(subscriptionIds)
+	userSettings.Subscriptions, err = database.GetSubscriptions(subscriptionIDs)
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
 
-	contactIds, err := database.GetUserContacts(userLogin)
+	contactIDs, err := database.GetUserContacts(userLogin)
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
 
 	//todo это нихрена не быстро работает
-	for _, id := range contactIds {
+	for _, id := range contactIDs {
 		contact, err := database.GetContact(id)
 		if err != nil {
-			continue
+			return nil, api.ErrorInternalServer(err)
 		}
 		userSettings.Contacts = append(userSettings.Contacts, contact)
 	}

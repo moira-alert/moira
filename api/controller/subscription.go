@@ -9,12 +9,13 @@ import (
 	"time"
 )
 
+//GetUserSubscriptions get all user subscriptions
 func GetUserSubscriptions(database moira.Database, userLogin string) (*dto.SubscriptionList, *api.ErrorResponse) {
-	subscriptionIds, err := database.GetUserSubscriptionIDs(userLogin)
+	subscriptionIDs, err := database.GetUserSubscriptionIDs(userLogin)
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
-	subscriptions, err := database.GetSubscriptions(subscriptionIds)
+	subscriptions, err := database.GetSubscriptions(subscriptionIDs)
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
@@ -24,6 +25,7 @@ func GetUserSubscriptions(database moira.Database, userLogin string) (*dto.Subsc
 	return subscriptionsList, nil
 }
 
+//WriteSubscription create or update subscription
 func WriteSubscription(database moira.Database, userLogin string, subscription *dto.Subscription) *api.ErrorResponse {
 	subscription.User = userLogin
 	if subscription.ID != "" {
@@ -41,17 +43,19 @@ func WriteSubscription(database moira.Database, userLogin string, subscription *
 	return nil
 }
 
-func DeleteSubscription(database moira.Database, subscriptionId string, userLogin string) *api.ErrorResponse {
-	if err := database.DeleteSubscription(subscriptionId, userLogin); err != nil {
+//DeleteSubscription deletes subscription
+func DeleteSubscription(database moira.Database, subscriptionID string, userLogin string) *api.ErrorResponse {
+	if err := database.DeleteSubscription(subscriptionID, userLogin); err != nil {
 		return api.ErrorInternalServer(err)
 	}
 	return nil
 }
 
-func SendTestNotification(database moira.Database, subscriptionId string) *api.ErrorResponse {
+//SendTestNotification push test notification to verify the correct notification settings
+func SendTestNotification(database moira.Database, subscriptionID string) *api.ErrorResponse {
 	var value float64 = 1
 	eventData := &moira.EventData{
-		SubscriptionID: &subscriptionId,
+		SubscriptionID: &subscriptionID,
 		Metric:         "Test.metric.value",
 		Value:          &value,
 		OldState:       "TEST",

@@ -48,13 +48,13 @@ func GetAllTags(database moira.Database) (*dto.TagsData, *api.ErrorResponse) {
 }
 
 func DeleteTag(database moira.Database, tagName string) (*dto.MessageResponse, *api.ErrorResponse) {
-	triggerIds, err := database.GetTagTriggerIds(tagName)
+	triggerIDs, err := database.GetTagTriggerIds(tagName)
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
 
-	if len(triggerIds) > 0 {
-		return nil, api.ErrorInvalidRequest(fmt.Errorf("This tag is assigned to %v triggers. Remove tag from triggers first", len(triggerIds)))
+	if len(triggerIDs) > 0 {
+		return nil, api.ErrorInvalidRequest(fmt.Errorf("This tag is assigned to %v triggers. Remove tag from triggers first", len(triggerIDs)))
 	} else {
 		if err = database.DeleteTag(tagName); err != nil {
 			return nil, api.ErrorInternalServer(err)

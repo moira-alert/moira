@@ -470,7 +470,7 @@ func TestCheckErrors(t *testing.T) {
 			OldState:  EXCEPTION,
 			Metric:    "",
 			Value:     nil,
-			Message:   nil}, false).Return(nil)
+			Message:   nil}, true).Return(nil)
 
 		dataBase.EXPECT().SetTriggerLastCheck(triggerChecker.TriggerId, &moira.CheckData{
 			Metrics:        triggerChecker.lastCheck.Metrics,
@@ -568,7 +568,7 @@ func TestHandleTrigger(t *testing.T) {
 			OldState:  NODATA,
 			Metric:    metric,
 			Value:     &val,
-			Message:   nil}, false).Return(nil)
+			Message:   nil}, true).Return(nil)
 		checkData, err := triggerChecker.handleTrigger()
 		So(err, ShouldBeNil)
 		So(checkData, ShouldResemble, moira.CheckData{
@@ -640,7 +640,7 @@ func TestHandleTrigger(t *testing.T) {
 			OldState:  OK,
 			Metric:    metric,
 			Value:     nil,
-			Message:   nil}, false).Return(nil)
+			Message:   nil}, true).Return(nil)
 		checkData, err := triggerChecker.handleTrigger()
 		So(err, ShouldBeNil)
 		So(checkData, ShouldResemble, moira.CheckData{

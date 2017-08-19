@@ -90,7 +90,7 @@ func TestCompareStates(t *testing.T) {
 				Metric:    "m1",
 				Value:     currentState.Value,
 				Message:   &message,
-			}, false).Return(nil)
+			}, true).Return(nil)
 			actual, err := triggerChecker.compareStates("m1", currentState, lastState)
 			So(err, ShouldBeNil)
 			currentState.EventTimestamp = currentState.Timestamp
@@ -114,7 +114,7 @@ func TestCompareStates(t *testing.T) {
 				Metric:    "m1",
 				Value:     currentState.Value,
 				Message:   &message,
-			}, false).Return(nil)
+			}, true).Return(nil)
 			actual, err := triggerChecker.compareStates("m1", currentState, lastState)
 			So(err, ShouldBeNil)
 			currentState.EventTimestamp = currentState.Timestamp
@@ -150,7 +150,7 @@ func TestCompareStates(t *testing.T) {
 				Metric:    "m1",
 				Value:     currentState.Value,
 				Message:   nil,
-			}, false).Return(nil)
+			}, true).Return(nil)
 
 			actual, err := triggerChecker.compareStates("m1", currentState, lastState)
 			So(err, ShouldBeNil)
@@ -229,7 +229,7 @@ func TestCompareChecks(t *testing.T) {
 				Metric:    "",
 				Value:     nil,
 				Message:   nil,
-			}, false).Return(nil)
+			}, true).Return(nil)
 
 			actual, err := triggerChecker.compareChecks(currentCheck)
 			So(err, ShouldBeNil)
