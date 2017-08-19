@@ -14,7 +14,7 @@ func event(router chi.Router) {
 		triggerId := context.Value("triggerId").(string)
 		size := context.Value("size").(int64)
 		page := context.Value("page").(int64)
-		eventsList, err := controller.GetEvents(database, triggerId, page, size)
+		eventsList, err := controller.GetTriggerEvents(database, triggerId, page, size)
 		if err != nil {
 			render.Render(writer, request, err)
 			return

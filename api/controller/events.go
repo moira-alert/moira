@@ -6,12 +6,13 @@ import (
 	"github.com/moira-alert/moira-alert/api/dto"
 )
 
-func GetEvents(database moira.Database, triggerId string, page int64, size int64) (*dto.EventsList, *api.ErrorResponse) {
-	events, err := database.GetEvents(triggerId, page*size, size-1)
+//GetTriggerEvents gets trigger event from current page and all trigger event count
+func GetTriggerEvents(database moira.Database, triggerID string, page int64, size int64) (*dto.EventsList, *api.ErrorResponse) {
+	events, err := database.GetEvents(triggerID, page*size, size-1)
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
-	eventCount := database.GetTriggerEventsCount(triggerId, -1)
+	eventCount := database.GetTriggerEventsCount(triggerID, -1)
 
 	eventsList := &dto.EventsList{
 		Size:  size,

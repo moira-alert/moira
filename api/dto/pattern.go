@@ -6,14 +6,14 @@ import (
 )
 
 type PatternList struct {
-	List []Pattern `json:"list"`
+	List []PatternData `json:"list"`
 }
 
 func (*PatternList) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-type Pattern struct {
+type PatternData struct {
 	Metrics  []string         `json:"metrics"`
 	Pattern  string           `json:"pattern"`
 	Triggers []*moira.Trigger `json:"triggers"`
