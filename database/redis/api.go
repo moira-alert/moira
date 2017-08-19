@@ -28,8 +28,8 @@ func (connector *DbConnector) GetUserContacts(login string) ([]string, error) {
 	return subscriptions, nil
 }
 
-//GetUserSubscriptionIds - Returns subscriptions ids by given login from set {0}
-func (connector *DbConnector) GetUserSubscriptionIds(login string) ([]string, error) {
+//GetUserSubscriptionIDs - Returns subscriptions ids by given login from set {0}
+func (connector *DbConnector) GetUserSubscriptionIDs(login string) ([]string, error) {
 	c := connector.pool.Get()
 	defer c.Close()
 

@@ -7,6 +7,7 @@ import (
 	"github.com/satori/go.uuid"
 )
 
+//GetAllContacts gets all moira contacts
 func GetAllContacts(database moira.Database) (*dto.ContactList, *api.ErrorResponse) {
 	contacts, err := database.GetAllContacts()
 	if err != nil {
@@ -18,6 +19,7 @@ func GetAllContacts(database moira.Database) (*dto.ContactList, *api.ErrorRespon
 	return &contactsList, nil
 }
 
+//CreateContact creates new notification contact for current user
 func CreateContact(database moira.Database, contact *dto.Contact, userLogin string) *api.ErrorResponse {
 	id := uuid.NewV4().String()
 	contactData := &moira.ContactData{
@@ -30,19 +32,17 @@ func CreateContact(database moira.Database, contact *dto.Contact, userLogin stri
 	if err := database.WriteContact(contactData); err != nil {
 		return api.ErrorInternalServer(err)
 	}
-
-	contact.ID = &id
-	contact.User = &userLogin
 	return nil
 }
 
-func DeleteContact(database moira.Database, contactId string, userLogin string) *api.ErrorResponse {
-	subscriptionIds, err := database.GetUserSubscriptionIds(userLogin)
+//DeleteContact deletes notification contact for current user and remove contactID from all subscriptions
+func DeleteContact(database moira.Database, contactID string, userLogin string) *api.ErrorResponse {
+	subscriptionIDs, err := database.GetUserSubscriptionIDs(userLogin)
 	if err != nil {
 		return api.ErrorInternalServer(err)
 	}
 
-	subscriptions, err := database.GetSubscriptions(subscriptionIds)
+	subscriptions, err := database.GetSubscriptions(subscriptionIDs)
 	if err != nil {
 		return api.ErrorInternalServer(err)
 	}
@@ -51,7 +51,7 @@ func DeleteContact(database moira.Database, contactId string, userLogin string) 
 
 	for _, subscription := range subscriptions {
 		for i, contact := range subscription.Contacts {
-			if contact == contactId {
+			if contact == contactID {
 				subscription.Contacts = append(subscription.Contacts[:i], subscription.Contacts[i+1:]...)
 				subscriptionsWithDeletingContact = append(subscriptionsWithDeletingContact, &subscription)
 				break
@@ -59,7 +59,8 @@ func DeleteContact(database moira.Database, contactId string, userLogin string) 
 		}
 	}
 
-	if err := database.DeleteContact(contactId, userLogin); err != nil {
+	//todo 1 request, not 2
+	if err := database.DeleteContact(contactID, userLogin); err != nil {
 		return api.ErrorInternalServer(err)
 	}
 

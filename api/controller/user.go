@@ -13,7 +13,7 @@ func GetUserSettings(database moira.Database, userLogin string) (*dto.UserSettin
 		Subscriptions: make([]moira.SubscriptionData, 0),
 	}
 
-	subscriptionIds, err := database.GetUserSubscriptionIds(userLogin)
+	subscriptionIds, err := database.GetUserSubscriptionIDs(userLogin)
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}

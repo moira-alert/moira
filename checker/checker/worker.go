@@ -76,7 +76,7 @@ func (worker *Worker) handleTriggerToCheck(triggerId string) error {
 		}
 		end := time.Now()
 		worker.metrics.TriggerCheckTime.UpdateSince(start)
-		worker.metrics.TriggerCheckGauge.Update(worker.metrics.TriggerCheckGauge.Value() + int64(start.Sub(end)))
+		worker.metrics.TriggerCheckGauge.Update(worker.metrics.TriggerCheckGauge.Value() + int64(end.Sub(start)))
 	}
 	return nil
 }

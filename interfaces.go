@@ -32,7 +32,7 @@ type Database interface {
 	GetMetricsValues(metrics []string, from int64, until int64) (map[string][]*MetricValue, error)
 	CleanupMetricValues(metric string, toTime int64) error
 
-	GetUserSubscriptionIds(string) ([]string, error)
+	GetUserSubscriptionIDs(string) ([]string, error)
 	GetUserContacts(string) ([]string, error)
 
 	GetTagNames() ([]string, error)
@@ -60,7 +60,7 @@ type Database interface {
 	PushEvent(event *EventData, ui bool) error
 
 	DeleteContact(string, string) error
-	WriteContact(contact *ContactData) error
+	WriteContact(contact *ContactData) error //todo audit
 
 	GetSubscriptions(subscriptionIds []string) ([]SubscriptionData, error)
 	WriteSubscriptions(subscriptions []*SubscriptionData) error

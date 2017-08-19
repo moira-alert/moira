@@ -581,17 +581,17 @@ func (_mr *MockDatabaseMockRecorder) GetUserContacts(arg0 interface{}) *gomock.C
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetUserContacts", arg0)
 }
 
-// GetUserSubscriptionIds mocks base method
-func (_m *MockDatabase) GetUserSubscriptionIds(_param0 string) ([]string, error) {
-	ret := _m.ctrl.Call(_m, "GetUserSubscriptionIds", _param0)
+// GetUserSubscriptionIDs mocks base method
+func (_m *MockDatabase) GetUserSubscriptionIDs(_param0 string) ([]string, error) {
+	ret := _m.ctrl.Call(_m, "GetUserSubscriptionIDs", _param0)
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetUserSubscriptionIds indicates an expected call of GetUserSubscriptionIds
-func (_mr *MockDatabaseMockRecorder) GetUserSubscriptionIds(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetUserSubscriptionIds", arg0)
+// GetUserSubscriptionIDs indicates an expected call of GetUserSubscriptionIDs
+func (_mr *MockDatabaseMockRecorder) GetUserSubscriptionIDs(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetUserSubscriptionIDs", arg0)
 }
 
 // PushEvent mocks base method
