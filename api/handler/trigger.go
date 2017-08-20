@@ -75,7 +75,7 @@ func getTrigger(writer http.ResponseWriter, request *http.Request) {
 
 func getTriggerState(writer http.ResponseWriter, request *http.Request) {
 	triggerId := request.Context().Value("triggerId").(string)
-	triggerState, err := controller.GetTriggerState(database, triggerId)
+	triggerState, err := controller.GetTriggerLastCheck(database, triggerId)
 	if err != nil {
 		render.Render(writer, request, err)
 		return
@@ -123,8 +123,8 @@ func deleteTriggerMetric(writer http.ResponseWriter, request *http.Request) {
 
 func setMetricsMaintenance(writer http.ResponseWriter, request *http.Request) {
 	triggerId := request.Context().Value("triggerId").(string)
-	metricsMaintenance := &dto.MetricsMaintenance{}
-	if err := render.Bind(request, metricsMaintenance); err != nil {
+	metricsMaintenance := dto.MetricsMaintenance{}
+	if err := render.Bind(request, &metricsMaintenance); err != nil {
 		render.Render(writer, request, api.ErrorInvalidRequest(err))
 		return
 	}

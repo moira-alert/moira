@@ -112,7 +112,7 @@ func (*Trigger) Render(w http.ResponseWriter, r *http.Request) error {
 
 type TriggerCheck struct {
 	*moira.CheckData
-	TriggerId string `json:"trigger_id"`
+	TriggerID string `json:"trigger_id"`
 }
 
 func (*TriggerCheck) Render(w http.ResponseWriter, r *http.Request) error {
@@ -134,7 +134,7 @@ func (*ThrottlingResponse) Render(w http.ResponseWriter, r *http.Request) error 
 }
 
 type SaveTriggerResponse struct {
-	Id      string `json:"id"`
+	ID      string `json:"id"`
 	Message string `json:"message"`
 }
 

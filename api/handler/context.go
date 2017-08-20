@@ -29,7 +29,7 @@ func triggerContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		triggerId := chi.URLParam(request, "triggerId")
 		if triggerId == "" {
-			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("TriggerId must be set")))
+			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("TriggerID must be set")))
 			return
 		}
 		ctx := context.WithValue(request.Context(), "triggerId", triggerId)
