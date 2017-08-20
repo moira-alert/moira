@@ -29,14 +29,11 @@ func GetUserSettings(database moira.Database, userLogin string) (*dto.UserSettin
 		return nil, api.ErrorInternalServer(err)
 	}
 
-	//todo это нихрена не быстро работает
-	for _, id := range contactIDs {
-		contact, err := database.GetContact(id)
-		if err != nil {
-			return nil, api.ErrorInternalServer(err)
-		}
-		userSettings.Contacts = append(userSettings.Contacts, contact)
+	contacts, err := database.GetContacts(contactIDs)
+	if err != nil {
+		return nil, api.ErrorInternalServer(err)
 	}
 
+	userSettings.Contacts = contacts
 	return userSettings, nil
 }

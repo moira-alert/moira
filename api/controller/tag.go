@@ -8,8 +8,7 @@ import (
 )
 
 //GetAllTagsAndSubscriptions get tags subscriptions and triggerIDs
-func GetAllTagsAndSubscriptions(database moira.Database) (*dto.TagsStatistics, *api.ErrorResponse) {
-	//todo работает медлено
+func GetAllTagsAndSubscriptions(database moira.Database, logger moira.Logger) (*dto.TagsStatistics, *api.ErrorResponse) {
 	tagsNames, err := database.GetTagNames()
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
@@ -18,19 +17,30 @@ func GetAllTagsAndSubscriptions(database moira.Database) (*dto.TagsStatistics, *
 	tagsStatistics := dto.TagsStatistics{
 		List: make([]dto.TagStatistics, 0, len(tagsNames)),
 	}
+	rch := make(chan *dto.TagStatistics, len(tagsNames))
 
 	for _, tagName := range tagsNames {
-		tagStat := dto.TagStatistics{}
-		tagStat.TagName = tagName
-		tagStat.Subscriptions, err = database.GetTagsSubscriptions([]string{tagName})
-		if err != nil {
-			return nil, api.ErrorInternalServer(err)
+		go func(tagName string) {
+			tagStat := &dto.TagStatistics{}
+			tagStat.TagName = tagName
+			tagStat.Subscriptions, err = database.GetTagsSubscriptions([]string{tagName})
+			if err != nil {
+				logger.Error(err.Error())
+				rch <- nil
+			}
+			tagStat.Triggers, err = database.GetTagTriggerIds(tagName)
+			if err != nil {
+				logger.Error(err.Error())
+				rch <- nil
+			}
+			rch <- tagStat
+		}(tagName)
+	}
+
+	for i := 0; i < len(tagsNames); i++ {
+		if r := <-rch; r != nil {
+			tagsStatistics.List = append(tagsStatistics.List, *r)
 		}
-		tagStat.Triggers, err = database.GetTagTriggerIds(tagName)
-		if err != nil {
-			return nil, api.ErrorInternalServer(err)
-		}
-		tagsStatistics.List = append(tagsStatistics.List, tagStat)
 	}
 	return &tagsStatistics, nil
 }

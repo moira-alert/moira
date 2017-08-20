@@ -228,6 +228,19 @@ func (_mr *MockDatabaseMockRecorder) GetContact(arg0 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetContact", arg0)
 }
 
+// GetContacts mocks base method
+func (_m *MockDatabase) GetContacts(_param0 []string) ([]moira_alert.ContactData, error) {
+	ret := _m.ctrl.Call(_m, "GetContacts", _param0)
+	ret0, _ := ret[0].([]moira_alert.ContactData)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetContacts indicates an expected call of GetContacts
+func (_mr *MockDatabaseMockRecorder) GetContacts(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetContacts", arg0)
+}
+
 // GetEvents mocks base method
 func (_m *MockDatabase) GetEvents(_param0 string, _param1 int64, _param2 int64) ([]*moira_alert.EventData, error) {
 	ret := _m.ctrl.Call(_m, "GetEvents", _param0, _param1, _param2)

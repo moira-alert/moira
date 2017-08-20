@@ -6,6 +6,7 @@ import (
 	"github.com/go-chi/render"
 	"github.com/moira-alert/moira-alert/api"
 	"github.com/moira-alert/moira-alert/api/controller"
+	"github.com/moira-alert/moira-alert/api/middleware"
 	"net/http"
 )
 
@@ -15,7 +16,8 @@ func pattern(router chi.Router) {
 }
 
 func getAllPatterns(writer http.ResponseWriter, request *http.Request) {
-	patternsList, err := controller.GetAllPatterns(database)
+	logger := middleware.GetLoggerEntry(request)
+	patternsList, err := controller.GetAllPatterns(database, logger)
 	if err != nil {
 		render.Render(writer, request, err)
 		return

@@ -6,6 +6,7 @@ import (
 	"github.com/moira-alert/moira-alert/api"
 	"github.com/moira-alert/moira-alert/api/controller"
 	"net/http"
+	"github.com/moira-alert/moira-alert/api/middleware"
 )
 
 func tag(router chi.Router) {
@@ -31,7 +32,8 @@ func getAllTags(writer http.ResponseWriter, request *http.Request) {
 }
 
 func getAllTagsAndSubscriptions(writer http.ResponseWriter, request *http.Request) {
-	data, err := controller.GetAllTagsAndSubscriptions(database)
+	logger := middleware.GetLoggerEntry(request)
+	data, err := controller.GetAllTagsAndSubscriptions(database, logger)
 	if err != nil {
 		render.Render(writer, request, err)
 		return

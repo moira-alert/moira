@@ -9,7 +9,6 @@ import (
 
 //GetAllContacts gets all moira contacts
 func GetAllContacts(database moira.Database) (*dto.ContactList, *api.ErrorResponse) {
-	//todo работает медленно
 	contacts, err := database.GetAllContacts()
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)

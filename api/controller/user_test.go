@@ -26,8 +26,7 @@ func TestGetUserSettings(t *testing.T) {
 		database.EXPECT().GetUserSubscriptionIDs(login).Return(subscriptionIDs, nil)
 		database.EXPECT().GetSubscriptions(subscriptionIDs).Return(subscriptions, nil)
 		database.EXPECT().GetUserContacts(login).Return(contactIDs, nil)
-		database.EXPECT().GetContact(contactIDs[0]).Return(contacts[0], nil)
-		database.EXPECT().GetContact(contactIDs[1]).Return(contacts[1], nil)
+		database.EXPECT().GetContacts(contactIDs).Return(contacts, nil)
 		settings, err := GetUserSettings(database, login)
 		So(err, ShouldBeNil)
 		So(settings, ShouldResemble, &dto.UserSettings{
@@ -41,6 +40,7 @@ func TestGetUserSettings(t *testing.T) {
 		database.EXPECT().GetUserSubscriptionIDs(login).Return(make([]string, 0), nil)
 		database.EXPECT().GetSubscriptions(make([]string, 0)).Return(make([]moira.SubscriptionData, 0), nil)
 		database.EXPECT().GetUserContacts(login).Return(make([]string, 0), nil)
+		database.EXPECT().GetContacts(make([]string, 0)).Return(make([]moira.ContactData, 0), nil)
 		settings, err := GetUserSettings(database, login)
 		So(err, ShouldBeNil)
 		So(settings, ShouldResemble, &dto.UserSettings{
@@ -75,15 +75,15 @@ func TestGetUserSettings(t *testing.T) {
 			So(err, ShouldResemble, api.ErrorInternalServer(expected))
 			So(settings, ShouldBeNil)
 		})
-		Convey("GetContact", func() {
-			expected := fmt.Errorf("Can not read contact")
+		Convey("GetContacts", func() {
+			expected := fmt.Errorf("Can not read contacts")
 			subscriptionIDs := []string{uuid.NewV4().String(), uuid.NewV4().String()}
 			subscriptions := []moira.SubscriptionData{{ID: subscriptionIDs[0]}, {ID: subscriptionIDs[1]}}
 			contactIDs := []string{uuid.NewV4().String(), uuid.NewV4().String()}
 			database.EXPECT().GetUserSubscriptionIDs(login).Return(subscriptionIDs, nil)
 			database.EXPECT().GetSubscriptions(subscriptionIDs).Return(subscriptions, nil)
 			database.EXPECT().GetUserContacts(login).Return(contactIDs, nil)
-			database.EXPECT().GetContact(contactIDs[0]).Return(moira.ContactData{}, expected)
+			database.EXPECT().GetContacts(contactIDs).Return(nil, expected)
 			settings, err := GetUserSettings(database, login)
 			So(err, ShouldResemble, api.ErrorInternalServer(expected))
 			So(settings, ShouldBeNil)

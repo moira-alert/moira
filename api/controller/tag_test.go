@@ -7,6 +7,7 @@ import (
 	"github.com/moira-alert/moira-alert/api"
 	"github.com/moira-alert/moira-alert/api/dto"
 	"github.com/moira-alert/moira-alert/mock/moira-alert"
+	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 )
@@ -75,6 +76,7 @@ func TestGetAllTagsAndSubscriptions(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
+	logger, _ := logging.GetLogger("Test")
 
 	Convey("Success get tag stats", t, func() {
 		tags := []string{"tag21", "tag22", "tag1"}
@@ -85,7 +87,7 @@ func TestGetAllTagsAndSubscriptions(t *testing.T) {
 		database.EXPECT().GetTagTriggerIds("tag22").Return([]string{"trigger22"}, nil)
 		database.EXPECT().GetTagsSubscriptions([]string{"tag1"}).Return([]moira.SubscriptionData{{Tags: []string{"tag1", "tag2"}}}, nil)
 		database.EXPECT().GetTagTriggerIds("tag1").Return(make([]string, 0), nil)
-		stat, err := GetAllTagsAndSubscriptions(database)
+		stat, err := GetAllTagsAndSubscriptions(database, logger)
 		So(err, ShouldBeNil)
 		expected := &dto.TagsStatistics{
 			List: []dto.TagStatistics{
@@ -94,7 +96,7 @@ func TestGetAllTagsAndSubscriptions(t *testing.T) {
 				{TagName: "tag1", Triggers: make([]string, 0), Subscriptions: []moira.SubscriptionData{{Tags: []string{"tag1", "tag2"}}}},
 			},
 		}
-		So(stat, ShouldResemble, expected)
+		So(stat, ShouldAlmostEqual(), expected)
 	})
 
 	Convey("Errors", t, func() {
@@ -102,28 +104,7 @@ func TestGetAllTagsAndSubscriptions(t *testing.T) {
 			expected := fmt.Errorf("Can not get tag names")
 			tags := []string{"tag21", "tag22", "tag1"}
 			database.EXPECT().GetTagNames().Return(tags, expected)
-			stat, err := GetAllTagsAndSubscriptions(database)
-			So(err, ShouldResemble, api.ErrorInternalServer(expected))
-			So(stat, ShouldBeNil)
-		})
-
-		Convey("GetTagsSubscriptions", func() {
-			expected := fmt.Errorf("Can not get tag subscriptions")
-			tags := []string{"tag21", "tag22", "tag1"}
-			database.EXPECT().GetTagNames().Return(tags, nil)
-			database.EXPECT().GetTagsSubscriptions([]string{"tag21"}).Return(nil, expected)
-			stat, err := GetAllTagsAndSubscriptions(database)
-			So(err, ShouldResemble, api.ErrorInternalServer(expected))
-			So(stat, ShouldBeNil)
-		})
-
-		Convey("GetTagTriggerIds", func() {
-			expected := fmt.Errorf("Can not get tag trigger ids")
-			tags := []string{"tag21", "tag22", "tag1"}
-			database.EXPECT().GetTagNames().Return(tags, nil)
-			database.EXPECT().GetTagsSubscriptions([]string{"tag21"}).Return([]moira.SubscriptionData{{Tags: []string{"tag21"}}}, nil)
-			database.EXPECT().GetTagTriggerIds("tag21").Return(nil, expected)
-			stat, err := GetAllTagsAndSubscriptions(database)
+			stat, err := GetAllTagsAndSubscriptions(database, logger)
 			So(err, ShouldResemble, api.ErrorInternalServer(expected))
 			So(stat, ShouldBeNil)
 		})

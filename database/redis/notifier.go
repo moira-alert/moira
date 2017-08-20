@@ -93,8 +93,6 @@ func (connector *DbConnector) GetTagsSubscriptions(tags []string) ([]moira.Subsc
 	c := connector.pool.Get()
 	defer c.Close()
 
-	connector.logger.Debugf("Getting tags %v subscriptions", tags)
-
 	tagKeys := make([]interface{}, 0, len(tags))
 	for _, tag := range tags {
 		tagKeys = append(tagKeys, fmt.Sprintf("moira-tag-subscriptions:%s", tag))
@@ -171,6 +169,30 @@ func (connector *DbConnector) GetContact(id string) (moira.ContactData, error) {
 	return contact, nil
 }
 
+// GetContacts returns contacts data by given ids
+func (connector *DbConnector) GetContacts(contactIDs []string) ([]moira.ContactData, error) {
+	c := connector.pool.Get()
+	defer c.Close()
+	c.Send("MULTI")
+	for _, id := range contactIDs {
+		c.Send("GET", fmt.Sprintf("moira-contact:%s", id))
+	}
+	contactsBytes, err := redis.ByteSlices(c.Do("EXEC"))
+	if err != nil {
+		return nil, fmt.Errorf("Failed to EXEC: %s", err.Error())
+	}
+	contacts := make([]moira.ContactData, 0, len(contactIDs))
+	for i, bytes := range contactsBytes {
+		var contact moira.ContactData
+		if err := json.Unmarshal(bytes, &contact); err != nil {
+			connector.logger.Warningf("Failed to parse contact json %s: %s", bytes, err.Error())
+		}
+		contact.ID = contactIDs[i]
+		contacts = append(contacts, contact)
+	}
+	return contacts, nil
+}
+
 // GetAllContacts returns full contact list
 func (connector *DbConnector) GetAllContacts() ([]moira.ContactData, error) {
 	c := connector.pool.Get()
@@ -181,12 +203,14 @@ func (connector *DbConnector) GetAllContacts() ([]moira.ContactData, error) {
 	if err != nil {
 		return result, err
 	}
+	contactIds := make([]string, 0, len(keys))
+
 	for _, key := range keys {
 		key = key[14:]
-		contact, _ := connector.GetContact(key)
-		result = append(result, contact)
+		contactIds = append(contactIds, key)
 	}
-	return result, err
+
+	return connector.GetContacts(contactIds)
 }
 
 // SetContact store contact information
