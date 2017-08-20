@@ -141,3 +141,9 @@ type SaveTriggerResponse struct {
 func (*SaveTriggerResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
+
+type TriggerMetrics map[string][]moira.MetricValue
+
+func (*TriggerMetrics) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}

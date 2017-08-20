@@ -35,9 +35,9 @@ type CheckData struct {
 }
 
 type MetricValue struct {
-	RetentionTimestamp int64
-	Timestamp          int64
-	Value              float64
+	RetentionTimestamp int64   `json:"step,omitempty"`
+	Timestamp          int64   `json:"ts"`
+	Value              float64 `json:"value"`
 }
 
 type MetricState struct {

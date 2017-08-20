@@ -385,3 +385,82 @@ func TestSetMetricsMaintenance(t *testing.T) {
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 	})
 }
+
+func TestGetTriggerMetrics(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	database := mock_moira_alert.NewMockDatabase(mockCtrl)
+	triggerID := uuid.NewV4().String()
+	pattern := "super.puper.pattern"
+	metric := "super.puper.metric"
+	dataList := map[string][]*moira.MetricValue{
+		metric: {
+			{
+				RetentionTimestamp: 20,
+				Timestamp:          23,
+				Value:              0,
+			},
+			{
+				RetentionTimestamp: 30,
+				Timestamp:          33,
+				Value:              1,
+			},
+			{
+				RetentionTimestamp: 40,
+				Timestamp:          43,
+				Value:              2,
+			},
+			{
+				RetentionTimestamp: 50,
+				Timestamp:          53,
+				Value:              3,
+			},
+			{
+				RetentionTimestamp: 60,
+				Timestamp:          63,
+				Value:              4,
+			},
+		},
+	}
+
+	var from int64 = 17
+	var until int64 = 67
+	var retention int64 = 10
+
+	Convey("Has metrics", t, func() {
+		database.EXPECT().GetTrigger(triggerID).Return(&moira.Trigger{ID: triggerID, Targets: []string{pattern}}, nil)
+		database.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
+		database.EXPECT().GetMetricRetention(metric).Return(retention, nil)
+		database.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
+		triggerMetrics, err := GetTriggerMetrics(database, from, until, triggerID)
+		So(err, ShouldBeNil)
+		So(triggerMetrics, ShouldResemble, dto.TriggerMetrics(map[string][]moira.MetricValue{metric: {{Value: 0, Timestamp: 17}, {Value: 1, Timestamp: 27}, {Value: 2, Timestamp: 37}, {Value: 3, Timestamp: 47}, {Value: 4, Timestamp: 57}}}))
+	})
+
+	Convey("GetTrigger error", t, func() {
+		expected := fmt.Errorf("Get trigger error")
+		database.EXPECT().GetTrigger(triggerID).Return(nil, expected)
+		triggerMetrics, err := GetTriggerMetrics(database, from, until, triggerID)
+		So(err, ShouldResemble, api.ErrorInternalServer(expected))
+		So(triggerMetrics, ShouldBeNil)
+	})
+
+	Convey("No trigger", t, func() {
+		database.EXPECT().GetTrigger(triggerID).Return(nil, nil)
+		triggerMetrics, err := GetTriggerMetrics(database, from, until, triggerID)
+		So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("Trigger not found")))
+		So(triggerMetrics, ShouldBeNil)
+	})
+
+	Convey("GetMetricsValues error", t, func() {
+		expected := fmt.Errorf("GetMetricsValues error")
+		database.EXPECT().GetTrigger(triggerID).Return(&moira.Trigger{ID: triggerID, Targets: []string{pattern}}, nil)
+		database.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
+		database.EXPECT().GetMetricRetention(metric).Return(retention, nil)
+		database.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(nil, expected)
+		triggerMetrics, err := GetTriggerMetrics(database, from, until, triggerID)
+		So(err, ShouldResemble, api.ErrorInternalServer(expected))
+		So(triggerMetrics, ShouldBeNil)
+	})
+
+}

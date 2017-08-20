@@ -53,7 +53,7 @@ func (triggerTimeSeries *triggerTimeSeries) getExpressionValues(firstTargetTimeS
 	expressionValues := ExpressionValues{
 		AdditionalTargetsValues: make(map[string]float64),
 	}
-	firstTargetValue := firstTargetTimeSeries.getTimestampValue(valueTimestamp)
+	firstTargetValue := firstTargetTimeSeries.GetTimestampValue(valueTimestamp)
 	if math.IsNaN(firstTargetValue) {
 		return expressionValues, false
 	}
@@ -64,7 +64,7 @@ func (triggerTimeSeries *triggerTimeSeries) getExpressionValues(firstTargetTimeS
 		if additionalTimeSeries == nil {
 			return expressionValues, false
 		}
-		tnValue := additionalTimeSeries.getTimestampValue(valueTimestamp)
+		tnValue := additionalTimeSeries.GetTimestampValue(valueTimestamp)
 		if math.IsNaN(tnValue) {
 			return expressionValues, false
 		}
@@ -73,7 +73,7 @@ func (triggerTimeSeries *triggerTimeSeries) getExpressionValues(firstTargetTimeS
 	return expressionValues, true
 }
 
-func (timeSeries *TimeSeries) getTimestampValue(valueTimestamp int64) float64 {
+func (timeSeries *TimeSeries) GetTimestampValue(valueTimestamp int64) float64 {
 	if valueTimestamp < int64(timeSeries.StartTime) {
 		return math.NaN()
 	}

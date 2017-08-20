@@ -6,6 +6,7 @@ import (
 	"github.com/moira-alert/moira-alert/api"
 	"github.com/moira-alert/moira-alert/api/dto"
 	"github.com/moira-alert/moira-alert/checker"
+	"math"
 	"time"
 )
 
@@ -155,4 +156,35 @@ func SetMetricsMaintenance(database moira.Database, triggerID string, metricsMai
 		return api.ErrorInternalServer(err)
 	}
 	return nil
+}
+
+//GetTriggerMetrics gets all trigger metrics values
+func GetTriggerMetrics(database moira.Database, from, to int64, triggerID string) (dto.TriggerMetrics, *api.ErrorResponse) {
+	trigger, err := database.GetTrigger(triggerID)
+	if err != nil {
+		return nil, api.ErrorInternalServer(err)
+	}
+	if trigger == nil {
+		return nil, api.ErrorInvalidRequest(fmt.Errorf("Trigger not found"))
+	}
+
+	triggerMetrics := make(map[string][]moira.MetricValue)
+	for _, target := range trigger.Targets {
+		result, err := checker.EvaluateTarget(database, target, from, to, true)
+		if err != nil {
+			return nil, api.ErrorInternalServer(err)
+		}
+		for _, timeSeries := range result.TimeSeries {
+			values := make([]moira.MetricValue, 0)
+			for i := 0; i < len(timeSeries.Values); i++ {
+				timestamp := int64(timeSeries.StartTime + int32(i)*timeSeries.StepTime)
+				value := timeSeries.GetTimestampValue(timestamp)
+				if !math.IsNaN(value) {
+					values = append(values, moira.MetricValue{Value: value, Timestamp: timestamp})
+				}
+			}
+			triggerMetrics[timeSeries.Name] = values
+		}
+	}
+	return triggerMetrics, nil
 }

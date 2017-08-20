@@ -79,3 +79,22 @@ func paginate(defaultPage, defaultSize int64) func(next http.Handler) http.Handl
 		})
 	}
 }
+
+func dateRange(defaultFrom, defaultTo string) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+			from := request.URL.Query().Get("from")
+			if from == "" {
+				from = defaultFrom
+			}
+			to := request.URL.Query().Get("to")
+			if to == "" {
+				to = defaultTo
+			}
+
+			ctxPage := context.WithValue(request.Context(), "from", from)
+			ctxSize := context.WithValue(ctxPage, "to", to)
+			next.ServeHTTP(writer, request.WithContext(ctxSize))
+		})
+	}
+}

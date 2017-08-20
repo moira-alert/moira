@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
+	"github.com/go-graphite/carbonapi/date"
 	"github.com/moira-alert/moira-alert/api"
 	"github.com/moira-alert/moira-alert/api/controller"
 	"github.com/moira-alert/moira-alert/api/dto"
 	"github.com/moira-alert/moira-alert/checker"
 	"net/http"
+	"time"
 )
 
 func trigger(router chi.Router) {
@@ -22,7 +24,7 @@ func trigger(router chi.Router) {
 		router.Delete("/", deleteThrottling)
 	})
 	router.Route("/metrics", func(router chi.Router) {
-		router.Get("/", getTriggerMetrics)
+		router.With(dateRange("-10minutes", "now")).Get("/", getTriggerMetrics)
 		router.Delete("/", deleteTriggerMetric)
 	})
 	router.Put("/maintenance", setMetricsMaintenance)
@@ -106,7 +108,28 @@ func deleteThrottling(writer http.ResponseWriter, request *http.Request) {
 }
 
 func getTriggerMetrics(writer http.ResponseWriter, request *http.Request) {
-	//not found
+	context := request.Context()
+	triggerId := request.Context().Value("triggerId").(string)
+	fromStr := context.Value("from").(string)
+	toStr := context.Value("to").(string)
+	from := date.DateParamToEpoch(fromStr, "UTC", 0, time.UTC)
+	if from == 0 {
+		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("Can not parse from: %s", fromStr)))
+		return
+	}
+	to := date.DateParamToEpoch(toStr, "UTC", 0, time.UTC)
+	if to == 0 {
+		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("Can not parse to: %s", to)))
+		return
+	}
+	triggerMetrics, err := controller.GetTriggerMetrics(database, int64(from), int64(to), triggerId)
+	if err != nil {
+		render.Render(writer, request, err)
+		return
+	}
+	if err := render.Render(writer, request, &triggerMetrics); err != nil {
+		render.Render(writer, request, api.ErrorRender(err))
+	}
 }
 
 func deleteTriggerMetric(writer http.ResponseWriter, request *http.Request) {
