@@ -35,7 +35,8 @@ func GetAllPatterns(database moira.Database, logger moira.Logger) (*dto.PatternL
 				logger.Error(err.Error())
 				rch <- nil
 			}
-			rch <- &dto.PatternData{Pattern: pattern, Triggers: triggersList, Metrics: metrics}
+			patternData := dto.PatternData{Pattern: pattern, Triggers: triggersList, Metrics: metrics}
+			rch <- &patternData
 		}(pattern)
 	}
 

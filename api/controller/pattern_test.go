@@ -8,7 +8,6 @@ import (
 	"github.com/moira-alert/moira-alert/api/dto"
 	"github.com/moira-alert/moira-alert/mock/moira-alert"
 	"github.com/op/go-logging"
-	"github.com/satori/go.uuid"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 )
@@ -52,8 +51,8 @@ func TestGetAllPatterns(t *testing.T) {
 	})
 
 	Convey("Many patterns one trigger", t, func() {
-		triggers1 := []*moira.Trigger{{ID: uuid.NewV4().String()}, {ID: uuid.NewV4().String()}}
-		triggers2 := []*moira.Trigger{{ID: uuid.NewV4().String()}}
+		triggers1 := []*moira.Trigger{{ID: "1111"}, {ID: "111111"}}
+		triggers2 := []*moira.Trigger{{ID: "22222"}}
 		metrics1 := []string{"my.first.metric"}
 		metrics2 := []string{"my.second.metric"}
 		dataBase.EXPECT().GetPatterns().Return([]string{pattern1, pattern2}, nil)
@@ -61,9 +60,15 @@ func TestGetAllPatterns(t *testing.T) {
 		expectGettingPatternList(dataBase, pattern2, triggers2, metrics2)
 		list, err := GetAllPatterns(dataBase, logger)
 		So(err, ShouldBeNil)
-		So(list, ShouldResemble, &dto.PatternList{
-			List: []dto.PatternData{{Metrics: metrics1, Pattern: pattern1, Triggers: triggers1}, {Metrics: metrics2, Pattern: pattern2, Triggers: triggers2}},
-		})
+		So(list.List, ShouldHaveLength, 2)
+		for _, patternStat := range list.List {
+			if patternStat.Pattern == pattern1 {
+				So(patternStat, ShouldResemble, dto.PatternData{Metrics: metrics1, Pattern: pattern1, Triggers: triggers1})
+			}
+			if patternStat.Pattern == pattern2 {
+				So(patternStat, ShouldResemble, dto.PatternData{Metrics: metrics2, Pattern: pattern2, Triggers: triggers2})
+			}
+		}
 	})
 
 	Convey("Test errors", t, func() {
@@ -78,7 +83,7 @@ func TestGetAllPatterns(t *testing.T) {
 }
 
 func expectGettingPatternList(database *mock_moira_alert.MockDatabase, pattern string, triggers []*moira.Trigger, metrics []string) {
-	database.EXPECT().GetPatternTriggerIds(pattern).Return([]string{"123"}, nil)
-	database.EXPECT().GetTriggers([]string{"123"}).Return(triggers, nil)
+	database.EXPECT().GetPatternTriggerIds(pattern).Return([]string{pattern}, nil)
+	database.EXPECT().GetTriggers([]string{pattern}).Return(triggers, nil)
 	database.EXPECT().GetPatternMetrics(pattern).Return(metrics, nil)
 }
