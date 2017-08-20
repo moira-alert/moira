@@ -8,6 +8,7 @@ import (
 	"github.com/moira-alert/moira-alert/api/dto"
 	"github.com/moira-alert/moira-alert/mock/moira-alert"
 	"github.com/op/go-logging"
+	"github.com/satori/go.uuid"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 )
