@@ -1,4 +1,4 @@
-package checker
+package expression
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 )
 
 type getExpressionValuesTest struct {
-	values        ExpressionValues
+	values        TriggerExpression
 	name          string
 	expectedError error
 	expectedValue interface{}
@@ -17,45 +17,45 @@ func TestExpression(t *testing.T) {
 	Convey("Test Default", t, func() {
 		var warnValue float64 = 60.0
 		var errorValue float64 = 90.0
-		result, err := EvaluateExpression(nil, ExpressionValues{MainTargetValue: 10.0, WarnValue: &warnValue, ErrorValue: &errorValue})
+		result, err := (&TriggerExpression{MainTargetValue: 10.0, WarnValue: &warnValue, ErrorValue: &errorValue}).Evaluate()
 		So(err, ShouldBeNil)
-		So(result, ShouldResemble, OK)
+		So(result, ShouldResemble, "OK")
 
-		result, err = EvaluateExpression(nil, ExpressionValues{MainTargetValue: 60.0, WarnValue: &warnValue, ErrorValue: &errorValue})
+		result, err = (&TriggerExpression{MainTargetValue: 60.0, WarnValue: &warnValue, ErrorValue: &errorValue}).Evaluate()
 		So(err, ShouldBeNil)
-		So(result, ShouldResemble, WARN)
+		So(result, ShouldResemble, "WARN")
 
-		result, err = EvaluateExpression(nil, ExpressionValues{MainTargetValue: 90.0, WarnValue: &warnValue, ErrorValue: &errorValue})
+		result, err = (&TriggerExpression{MainTargetValue: 90.0, WarnValue: &warnValue, ErrorValue: &errorValue}).Evaluate()
 		So(err, ShouldBeNil)
-		So(result, ShouldResemble, ERROR)
+		So(result, ShouldResemble, "ERROR")
 
 		warnValue = 30.0
 		errorValue = 10.0
-		result, err = EvaluateExpression(nil, ExpressionValues{MainTargetValue: 40.0, WarnValue: &warnValue, ErrorValue: &errorValue})
+		result, err = (&TriggerExpression{MainTargetValue: 40.0, WarnValue: &warnValue, ErrorValue: &errorValue}).Evaluate()
 		So(err, ShouldBeNil)
-		So(result, ShouldResemble, OK)
+		So(result, ShouldResemble, "OK")
 
-		result, err = EvaluateExpression(nil, ExpressionValues{MainTargetValue: 20.0, WarnValue: &warnValue, ErrorValue: &errorValue})
+		result, err = (&TriggerExpression{MainTargetValue: 20.0, WarnValue: &warnValue, ErrorValue: &errorValue}).Evaluate()
 		So(err, ShouldBeNil)
-		So(result, ShouldResemble, WARN)
+		So(result, ShouldResemble, "WARN")
 
-		result, err = EvaluateExpression(nil, ExpressionValues{MainTargetValue: 10.0, WarnValue: &warnValue, ErrorValue: &errorValue})
+		result, err = (&TriggerExpression{MainTargetValue: 10.0, WarnValue: &warnValue, ErrorValue: &errorValue}).Evaluate()
 		So(err, ShouldBeNil)
-		So(result, ShouldResemble, ERROR)
+		So(result, ShouldResemble, "ERROR")
 
-		result, err = EvaluateExpression(nil, ExpressionValues{MainTargetValue: 10.0, WarnValue: &warnValue})
+		result, err = (&TriggerExpression{MainTargetValue: 10.0, WarnValue: &warnValue}).Evaluate()
 		So(err, ShouldResemble, ErrInvalidExpression{fmt.Errorf("Error value and Warning value can not be empty")})
 		So(result, ShouldBeEmpty)
 	})
 
 	Convey("Test Custom", t, func() {
 		expression := "t1 > 10 && t2 > 3 ? ERROR : OK"
-		result, err := EvaluateExpression(&expression, ExpressionValues{MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{"t2": 4.0}})
+		result, err := (&TriggerExpression{Expression: &expression, MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{"t2": 4.0}}).Evaluate()
 		So(err, ShouldBeNil)
-		So(result, ShouldResemble, ERROR)
+		So(result, ShouldResemble, "ERROR")
 
 		expression = "min(t1, t2) > 10 ? ERROR : OK"
-		result, err = EvaluateExpression(&expression, ExpressionValues{MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{"t2": 4.0}})
+		result, err = (&TriggerExpression{Expression: &expression, MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{"t2": 4.0}}).Evaluate()
 		So(err, ShouldResemble, ErrInvalidExpression{fmt.Errorf("Functions is forbidden")})
 		So(result, ShouldBeEmpty)
 	})
@@ -68,23 +68,23 @@ func TestGetExpressionValue(t *testing.T) {
 		getExpressionValuesTests := []getExpressionValuesTest{
 			{
 				name:          "OK",
-				expectedValue: OK,
+				expectedValue: "OK",
 			},
 			{
 				name:          "WARN",
-				expectedValue: WARN,
+				expectedValue: "WARN",
 			},
 			{
 				name:          "WARNING",
-				expectedValue: WARN,
+				expectedValue: "WARN",
 			},
 			{
 				name:          "ERROR",
-				expectedValue: ERROR,
+				expectedValue: "ERROR",
 			},
 			{
 				name:          "NODATA",
-				expectedValue: NODATA,
+				expectedValue: "NODATA",
 			},
 		}
 		runGetExpressionValuesTest(getExpressionValuesTests)
@@ -94,34 +94,34 @@ func TestGetExpressionValue(t *testing.T) {
 		{
 			getExpressionValuesTests := []getExpressionValuesTest{
 				{
-					values:        ExpressionValues{WarnValue: &floatVal},
+					values:        TriggerExpression{WarnValue: &floatVal},
 					name:          "WARN_VALUE",
 					expectedValue: floatVal,
 				},
 				{
-					values:        ExpressionValues{ErrorValue: &floatVal},
+					values:        TriggerExpression{ErrorValue: &floatVal},
 					name:          "ERROR_VALUE",
 					expectedValue: floatVal,
 				},
 				{
-					values:        ExpressionValues{MainTargetValue: 11.0},
+					values:        TriggerExpression{MainTargetValue: 11.0},
 					name:          "t1",
 					expectedValue: 11.0,
 				},
 				{
-					values:        ExpressionValues{AdditionalTargetsValues: map[string]float64{"t2": 1.0}},
+					values:        TriggerExpression{AdditionalTargetsValues: map[string]float64{"t2": 1.0}},
 					name:          "t2",
 					expectedValue: 1.0,
 				},
 				{
-					values:        ExpressionValues{AdditionalTargetsValues: map[string]float64{"t3": 4.0, "t2": 6.0}},
+					values:        TriggerExpression{AdditionalTargetsValues: map[string]float64{"t3": 4.0, "t2": 6.0}},
 					name:          "t3",
 					expectedValue: 4.0,
 				},
 				{
-					values:        ExpressionValues{PreviousState: NODATA},
+					values:        TriggerExpression{PreviousState: "NODATA"},
 					name:          "PREV_STATE",
-					expectedValue: NODATA,
+					expectedValue: "NODATA",
 				},
 			}
 			runGetExpressionValuesTest(getExpressionValuesTests)
@@ -142,7 +142,7 @@ func TestGetExpressionValue(t *testing.T) {
 					expectedError: fmt.Errorf("No value with name ERROR_VALUE"),
 				},
 				{
-					values:        ExpressionValues{AdditionalTargetsValues: map[string]float64{"t3": 4.0, "t2": 6.0}},
+					values:        TriggerExpression{AdditionalTargetsValues: map[string]float64{"t3": 4.0, "t2": 6.0}},
 					name:          "t4",
 					expectedValue: nil,
 					expectedError: fmt.Errorf("No value with name t4"),

@@ -6,6 +6,7 @@ import (
 	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/api/middleware"
 	"github.com/moira-alert/moira-alert/checker"
+	"github.com/moira-alert/moira-alert/expression"
 	"net/http"
 	"strings"
 	"time"
@@ -38,27 +39,28 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 		return fmt.Errorf("error_value is required")
 	}
 
-	expressionValues := checker.ExpressionValues{
+	triggerExpression := expression.TriggerExpression{
 		AdditionalTargetsValues: make(map[string]float64),
 		WarnValue:               trigger.WarnValue,
 		ErrorValue:              trigger.ErrorValue,
 		PreviousState:           checker.NODATA,
+		Expression:              trigger.Expression,
 	}
 
 	logger := middleware.GetLoggerEntry(request)
 
-	if err := resolvePatterns(request, trigger, &expressionValues); err != nil {
+	if err := resolvePatterns(request, trigger, &triggerExpression); err != nil {
 		logger.Infof("Invalid graphite targets %s: %s\n", trigger.Targets, err.Error())
 		return err
 	}
-	if _, err := checker.EvaluateExpression(trigger.Expression, expressionValues); err != nil {
+	if _, err := triggerExpression.Evaluate(); err != nil {
 		logger.Infof("Invalid expression %s: %s\n", moira.UseString(trigger.Expression), err.Error())
 		return err
 	}
 	return nil
 }
 
-func resolvePatterns(request *http.Request, trigger *Trigger, expressionValues *checker.ExpressionValues) error {
+func resolvePatterns(request *http.Request, trigger *Trigger, expressionValues *expression.TriggerExpression) error {
 	trigger.IsSimpleTrigger = true
 	if len(trigger.Targets) > 1 {
 		trigger.IsSimpleTrigger = false

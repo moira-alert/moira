@@ -94,7 +94,7 @@ func TestGetTimeSeriesState(t *testing.T) {
 		triggerChecker.trigger.WarnValue = nil
 		triggerChecker.trigger.ErrorValue = nil
 		metricState, err := triggerChecker.getTimeSeriesState(tts, tts.Main[0], metricLastState, 42, 27)
-		So(err, ShouldResemble, ErrInvalidExpression{internalError: fmt.Errorf("Error value and Warning value can not be empty")})
+		So(err.Error(), ShouldResemble, "Invalid expression: Error value and Warning value can not be empty")
 		So(metricState, ShouldBeNil)
 	})
 }
@@ -247,7 +247,7 @@ func TestGetTimeSeriesStepsStates(t *testing.T) {
 		triggerChecker.trigger.WarnValue = nil
 		triggerChecker.trigger.ErrorValue = nil
 		metricState, err := triggerChecker.getTimeSeriesStepsStates(tts, tts.Main[1], metricLastState)
-		So(err, ShouldResemble, ErrInvalidExpression{internalError: fmt.Errorf("Error value and Warning value can not be empty")})
+		So(err.Error(), ShouldResemble, "Invalid expression: Error value and Warning value can not be empty")
 		So(metricState, ShouldBeNil)
 	})
 }

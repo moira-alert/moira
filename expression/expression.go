@@ -1,4 +1,4 @@
-package checker
+package expression
 
 import (
 	"fmt"
@@ -19,7 +19,9 @@ func (err ErrInvalidExpression) Error() string {
 	return fmt.Sprintf("Invalid expression: %s", err.internalError.Error())
 }
 
-type ExpressionValues struct {
+type TriggerExpression struct {
+	Expression *string
+
 	WarnValue  *float64
 	ErrorValue *float64
 
@@ -28,18 +30,18 @@ type ExpressionValues struct {
 	PreviousState           string
 }
 
-func (values ExpressionValues) Get(name string) (interface{}, error) {
+func (values TriggerExpression) Get(name string) (interface{}, error) {
 	switch name {
 	case "OK":
-		return OK, nil
+		return "OK", nil
 	case "WARN":
-		return WARN, nil
+		return "WARN", nil
 	case "WARNING":
-		return WARN, nil
+		return "WARN", nil
 	case "ERROR":
-		return ERROR, nil
+		return "ERROR", nil
 	case "NODATA":
-		return NODATA, nil
+		return "NODATA", nil
 	case "WARN_VALUE":
 		if values.WarnValue == nil {
 			return nil, fmt.Errorf("No value with name WARN_VALUE")
@@ -63,12 +65,12 @@ func (values ExpressionValues) Get(name string) (interface{}, error) {
 	}
 }
 
-func EvaluateExpression(triggerExpression *string, expressionValues ExpressionValues) (string, error) {
-	expression, err := getExpression(triggerExpression, expressionValues)
+func (triggerExpression *TriggerExpression) Evaluate() (string, error) {
+	expr, err := getExpression(triggerExpression)
 	if err != nil {
 		return "", ErrInvalidExpression{internalError: err}
 	}
-	result, err := expression.Eval(expressionValues)
+	result, err := expr.Eval(triggerExpression)
 	if err != nil {
 		return "", ErrInvalidExpression{internalError: err}
 	}
@@ -80,19 +82,19 @@ func EvaluateExpression(triggerExpression *string, expressionValues ExpressionVa
 	}
 }
 
-func getExpression(triggerExpression *string, values ExpressionValues) (*govaluate.EvaluableExpression, error) {
-	if triggerExpression != nil && *triggerExpression != "" {
-		return getUserExpression(*triggerExpression)
+func getExpression(triggerExpression *TriggerExpression) (*govaluate.EvaluableExpression, error) {
+	if triggerExpression.Expression != nil && *triggerExpression.Expression != "" {
+		return getUserExpression(*triggerExpression.Expression)
 	} else {
-		return getSimpleExpression(values)
+		return getSimpleExpression(triggerExpression)
 	}
 }
 
-func getSimpleExpression(values ExpressionValues) (*govaluate.EvaluableExpression, error) {
-	if values.ErrorValue == nil || values.WarnValue == nil {
+func getSimpleExpression(triggerExpression *TriggerExpression) (*govaluate.EvaluableExpression, error) {
+	if triggerExpression.ErrorValue == nil || triggerExpression.WarnValue == nil {
 		return nil, fmt.Errorf("Error value and Warning value can not be empty")
 	}
-	if *values.ErrorValue > *values.WarnValue {
+	if *triggerExpression.ErrorValue > *triggerExpression.WarnValue {
 		return default1, nil
 	} else {
 		return default2, nil
@@ -104,13 +106,13 @@ func getUserExpression(triggerExpression string) (*govaluate.EvaluableExpression
 	if ok {
 		return cached, nil
 	}
-	expression, err := govaluate.NewEvaluableExpression(triggerExpression)
+	expr, err := govaluate.NewEvaluableExpression(triggerExpression)
 	if err != nil {
 		if strings.Contains(err.Error(), "Undefined function") {
 			return nil, fmt.Errorf("Functions is forbidden")
 		}
 		return nil, err
 	}
-	cache[triggerExpression] = expression
-	return expression, nil
+	cache[triggerExpression] = expr
+	return expr, nil
 }

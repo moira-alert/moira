@@ -65,7 +65,7 @@ func (triggerChecker *TriggerChecker) handleTrigger() (moira.CheckData, error) {
 
 		metricLastState := triggerChecker.lastCheck.GetOrCreateMetricState(timeSeries.Name, int64(timeSeries.StartTime-3600))
 		metricStates, err := triggerChecker.getTimeSeriesStepsStates(triggerTimeSeries, timeSeries, metricLastState)
-		if err != nil{
+		if err != nil {
 			return checkData, nil
 		}
 		for _, metricState := range metricStates {
@@ -145,7 +145,7 @@ func (triggerChecker *TriggerChecker) getTimeSeriesStepsStates(triggerTimeSeries
 
 	for valueTimestamp := startTime; valueTimestamp < triggerChecker.Until+stepTime; valueTimestamp += stepTime {
 		metricNewState, err := triggerChecker.getTimeSeriesState(triggerTimeSeries, timeSeries, metricLastState, valueTimestamp, checkPoint)
-		if err != nil{
+		if err != nil {
 			return nil, err
 		}
 		if metricNewState == nil {
@@ -161,25 +161,26 @@ func (triggerChecker *TriggerChecker) getTimeSeriesState(triggerTimeSeries *trig
 	if valueTimestamp <= checkPoint {
 		return nil, nil
 	}
-	expressionValues, noEmptyValues := triggerTimeSeries.getExpressionValues(timeSeries, valueTimestamp)
-	triggerChecker.Logger.Debugf("values for ts %v: %v", valueTimestamp, expressionValues)
+	triggerExpression, noEmptyValues := triggerTimeSeries.getExpressionValues(timeSeries, valueTimestamp)
+	triggerChecker.Logger.Debugf("values for ts %v: %v", valueTimestamp, triggerExpression)
 	if !noEmptyValues {
 		return nil, nil
 	}
 
-	expressionValues.WarnValue = triggerChecker.trigger.WarnValue
-	expressionValues.ErrorValue = triggerChecker.trigger.ErrorValue
-	expressionValues.PreviousState = lastState.State
+	triggerExpression.WarnValue = triggerChecker.trigger.WarnValue
+	triggerExpression.ErrorValue = triggerChecker.trigger.ErrorValue
+	triggerExpression.PreviousState = lastState.State
+	triggerExpression.Expression = triggerChecker.trigger.Expression
 
-	expressionState, err := EvaluateExpression(triggerChecker.trigger.Expression, expressionValues)
-	if err != nil{
+	expressionState, err := triggerExpression.Evaluate()
+	if err != nil {
 		return nil, err
 	}
 
 	return &moira.MetricState{
 		State:       expressionState,
 		Timestamp:   valueTimestamp,
-		Value:       &expressionValues.MainTargetValue,
+		Value:       &triggerExpression.MainTargetValue,
 		Maintenance: lastState.Maintenance,
 		Suppressed:  lastState.Suppressed,
 	}, nil

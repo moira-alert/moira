@@ -5,6 +5,7 @@ import (
 	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira-alert/expression"
 	"github.com/moira-alert/moira-alert/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
 	"math"
@@ -270,7 +271,7 @@ func TestGetExpressionValues(t *testing.T) {
 		tts := &triggerTimeSeries{
 			Main: []*TimeSeries{&timeSeries},
 		}
-		expectedExpressionValues := ExpressionValues{
+		expectedExpressionValues := expression.TriggerExpression{
 			AdditionalTargetsValues: make(map[string]float64),
 		}
 
@@ -320,7 +321,7 @@ func TestGetExpressionValues(t *testing.T) {
 			Additional: []*TimeSeries{&timeSeriesAdd},
 		}
 
-		expectedExpressionValues := ExpressionValues{
+		expectedExpressionValues := expression.TriggerExpression{
 			AdditionalTargetsValues: make(map[string]float64),
 		}
 

@@ -3,6 +3,7 @@ package checker
 import (
 	"fmt"
 	"github.com/go-graphite/carbonapi/expr"
+	"github.com/moira-alert/moira-alert/expression"
 	"math"
 )
 
@@ -49,8 +50,8 @@ func (*triggerTimeSeries) getAdditionalTargetName(targetNumber int) string {
 	return fmt.Sprintf("t%v", targetNumber+2)
 }
 
-func (triggerTimeSeries *triggerTimeSeries) getExpressionValues(firstTargetTimeSeries *TimeSeries, valueTimestamp int64) (ExpressionValues, bool) {
-	expressionValues := ExpressionValues{
+func (triggerTimeSeries *triggerTimeSeries) getExpressionValues(firstTargetTimeSeries *TimeSeries, valueTimestamp int64) (expression.TriggerExpression, bool) {
+	expressionValues := expression.TriggerExpression{
 		AdditionalTargetsValues: make(map[string]float64),
 	}
 	firstTargetValue := firstTargetTimeSeries.GetTimestampValue(valueTimestamp)

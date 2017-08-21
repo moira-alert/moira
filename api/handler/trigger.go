@@ -9,6 +9,7 @@ import (
 	"github.com/moira-alert/moira-alert/api/controller"
 	"github.com/moira-alert/moira-alert/api/dto"
 	"github.com/moira-alert/moira-alert/checker"
+	"github.com/moira-alert/moira-alert/expression"
 	"net/http"
 	"time"
 )
@@ -34,7 +35,7 @@ func saveTrigger(writer http.ResponseWriter, request *http.Request) {
 	triggerId := request.Context().Value("triggerId").(string)
 	trigger := &dto.Trigger{}
 	if err := render.Bind(request, trigger); err != nil {
-		if _, ok := err.(checker.ErrInvalidExpression); ok || err == checker.ErrEvaluateTarget {
+		if _, ok := err.(expression.ErrInvalidExpression); ok || err == checker.ErrEvaluateTarget {
 			render.Render(writer, request, api.ErrorInvalidRequest(err))
 		} else {
 			render.Render(writer, request, api.ErrorInternalServer(err))
