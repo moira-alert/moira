@@ -7,6 +7,7 @@ import (
 	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/api"
 	moira_middle "github.com/moira-alert/moira-alert/api/middleware"
+	"github.com/rs/cors"
 	"net/http"
 )
 
@@ -35,7 +36,7 @@ func NewHandler(db moira.Database, log moira.Logger) http.Handler {
 		router.Route("/subscription", subscription)
 		router.Route("/notification", notification)
 	})
-	return router
+	return cors.AllowAll().Handler(router)
 }
 
 func notFoundHandler(writer http.ResponseWriter, request *http.Request) {
