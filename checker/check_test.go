@@ -6,6 +6,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/mock/moira-alert"
+	"github.com/moira-alert/moira-alert/target"
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
 	"math"
@@ -43,8 +44,8 @@ func TestGetTimeSeriesState(t *testing.T) {
 	}
 	addFetchResponse.Name = "additional.metric"
 	tts := &triggerTimeSeries{
-		Main:       []*TimeSeries{{FetchResponse: fetchResponse}},
-		Additional: []*TimeSeries{{FetchResponse: addFetchResponse}},
+		Main:       []*target.TimeSeries{{FetchResponse: fetchResponse}},
+		Additional: []*target.TimeSeries{{FetchResponse: addFetchResponse}},
 	}
 	metricLastState := moira.MetricState{
 		Maintenance: 11111,
@@ -139,8 +140,8 @@ func TestGetTimeSeriesStepsStates(t *testing.T) {
 	}
 	addFetchResponse.Name = "additional.metric"
 	tts := &triggerTimeSeries{
-		Main:       []*TimeSeries{{FetchResponse: fetchResponse1}, {FetchResponse: fetchResponse2}},
-		Additional: []*TimeSeries{{FetchResponse: addFetchResponse}},
+		Main:       []*target.TimeSeries{{FetchResponse: fetchResponse1}, {FetchResponse: fetchResponse2}},
+		Additional: []*target.TimeSeries{{FetchResponse: addFetchResponse}},
 	}
 	metricLastState := moira.MetricState{
 		Maintenance:    11111,
@@ -263,7 +264,7 @@ func TestCheckForNODATA(t *testing.T) {
 	fetchResponse1 := pb.FetchResponse{
 		Name: "main.metric",
 	}
-	timeSeries := &TimeSeries{FetchResponse: fetchResponse1}
+	timeSeries := &target.TimeSeries{FetchResponse: fetchResponse1}
 	Convey("No TTL", t, func() {
 		triggerChecker := TriggerChecker{}
 		needToDeleteMetric, currentState := triggerChecker.checkForNoData(timeSeries, metricLastState)
@@ -358,8 +359,8 @@ func TestHasMetrics(t *testing.T) {
 		},
 	}
 	tts := &triggerTimeSeries{
-		Main:       []*TimeSeries{{}, {}},
-		Additional: []*TimeSeries{{}},
+		Main:       []*target.TimeSeries{{}, {}},
+		Additional: []*target.TimeSeries{{}},
 	}
 
 	Convey("TriggerTimeSeries has metrics", t, func() {
@@ -377,8 +378,8 @@ func TestHasMetrics(t *testing.T) {
 	})
 
 	tts = &triggerTimeSeries{
-		Main:       make([]*TimeSeries, 0),
-		Additional: make([]*TimeSeries, 0),
+		Main:       make([]*target.TimeSeries, 0),
+		Additional: make([]*target.TimeSeries, 0),
 	}
 
 	Convey("TriggerTimeSeries no metrics", t, func() {

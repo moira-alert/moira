@@ -1,4 +1,4 @@
-package checker
+package target
 
 import (
 	"github.com/go-graphite/carbonapi/expr"

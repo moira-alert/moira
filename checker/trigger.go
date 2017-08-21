@@ -18,9 +18,9 @@ type TriggerChecker struct {
 	trigger   *moira.Trigger
 	lastCheck *moira.CheckData
 
-	isSimple    bool
-	ttl         *int64
-	ttlState    string
+	isSimple bool
+	ttl      *int64
+	ttlState string
 }
 
 var ErrTriggerNotExists = errors.New("trigger does not exists")

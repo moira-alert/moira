@@ -1,4 +1,4 @@
-package checker
+package target
 
 import (
 	"fmt"
@@ -9,14 +9,14 @@ import (
 
 var ErrEvaluateTarget = errors.New("Invalid graphite targets")
 
-type targetEvaluationResult struct {
+type EvaluationResult struct {
 	TimeSeries []*TimeSeries
 	Patterns   []string
 	Metrics    []string
 }
 
-func EvaluateTarget(database moira.Database, target string, from int64, until int64, allowRealTimeAlerting bool) (*targetEvaluationResult, error) {
-	result := targetEvaluationResult{
+func EvaluateTarget(database moira.Database, target string, from int64, until int64, allowRealTimeAlerting bool) (*EvaluationResult, error) {
+	result := EvaluationResult{
 		TimeSeries: make([]*TimeSeries, 0),
 		Patterns:   make([]string, 0),
 		Metrics:    make([]string, 0),

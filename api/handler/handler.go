@@ -22,7 +22,7 @@ func NewHandler(db moira.Database, log moira.Logger) http.Handler {
 	router.Use(moira_middle.Recoverer)
 
 	router.NotFound(notFoundHandler)
-	router.MethodNotAllowed(methodNotAllowed)
+	router.MethodNotAllowed(methodNotAllowedHandler)
 
 	router.Route("/api", func(router chi.Router) {
 		router.Use(databaseContext)
@@ -46,7 +46,7 @@ func notFoundHandler(writer http.ResponseWriter, request *http.Request) {
 	render.Render(writer, request, api.ErrNotFound)
 }
 
-func methodNotAllowed(writer http.ResponseWriter, request *http.Request) {
+func methodNotAllowedHandler(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "application/json")
 	writer.WriteHeader(405)
 	render.Render(writer, request, api.ErrMethodNotAllowed)

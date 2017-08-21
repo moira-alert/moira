@@ -6,6 +6,7 @@ import (
 	"github.com/moira-alert/moira-alert/api"
 	"github.com/moira-alert/moira-alert/api/dto"
 	"github.com/moira-alert/moira-alert/checker"
+	"github.com/moira-alert/moira-alert/target"
 	"math"
 	"time"
 )
@@ -169,8 +170,8 @@ func GetTriggerMetrics(database moira.Database, from, to int64, triggerID string
 	}
 
 	triggerMetrics := make(map[string][]moira.MetricValue)
-	for _, target := range trigger.Targets {
-		result, err := checker.EvaluateTarget(database, target, from, to, true)
+	for _, tar := range trigger.Targets {
+		result, err := target.EvaluateTarget(database, tar, from, to, true)
 		if err != nil {
 			return nil, api.ErrorInternalServer(err)
 		}

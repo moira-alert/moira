@@ -7,6 +7,7 @@ import (
 	"github.com/moira-alert/moira-alert/api/middleware"
 	"github.com/moira-alert/moira-alert/checker"
 	"github.com/moira-alert/moira-alert/expression"
+	"github.com/moira-alert/moira-alert/target"
 	"net/http"
 	"strings"
 	"time"
@@ -70,9 +71,9 @@ func resolvePatterns(request *http.Request, trigger *Trigger, expressionValues *
 	trigger.Patterns = make([]string, 0)
 	timeSeriesNames := make(map[string]bool, 0)
 
-	for _, target := range trigger.Targets {
+	for _, tar := range trigger.Targets {
 		database := request.Context().Value("database").(moira.Database)
-		result, err := checker.EvaluateTarget(database, target, now-600, now, true)
+		result, err := target.EvaluateTarget(database, tar, now-600, now, true)
 		if err != nil {
 			return err
 		}

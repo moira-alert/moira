@@ -1,4 +1,4 @@
-package checker
+package target
 
 import (
 	"fmt"
@@ -83,7 +83,7 @@ func TestEvaluateTarget(t *testing.T) {
 		dataBase.EXPECT().GetPatternMetrics("super.puper.pattern").Return([]string{}, nil)
 		result, err := EvaluateTarget(dataBase, "aliasByNode(super.puper.pattern, 2)", from, until, true)
 		So(err, ShouldBeNil)
-		So(result, ShouldResemble, &targetEvaluationResult{
+		So(result, ShouldResemble, &EvaluationResult{
 			TimeSeries: make([]*TimeSeries, 0),
 			Metrics:    make([]string, 0),
 			Patterns:   []string{"super.puper.pattern"},
@@ -104,7 +104,7 @@ func TestEvaluateTarget(t *testing.T) {
 			IsAbsent:  make([]bool, 5, 5),
 		}
 		So(err, ShouldBeNil)
-		So(result, ShouldResemble, &targetEvaluationResult{
+		So(result, ShouldResemble, &EvaluationResult{
 			TimeSeries: []*TimeSeries{&TimeSeries{FetchResponse: fetchResponse}},
 			Metrics:    []string{metric},
 			Patterns:   []string{"super.puper.pattern"},

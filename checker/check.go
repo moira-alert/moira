@@ -3,6 +3,7 @@ package checker
 import (
 	"github.com/go-errors/errors"
 	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira-alert/target"
 )
 
 var checkPointGap int64 = 120
@@ -111,7 +112,7 @@ func (triggerChecker *TriggerChecker) hasMetrics(tts *triggerTimeSeries) (hasMet
 	return hasMetrics, sendEvent
 }
 
-func (triggerChecker *TriggerChecker) checkForNoData(timeSeries *TimeSeries, metricLastState moira.MetricState) (bool, *moira.MetricState) {
+func (triggerChecker *TriggerChecker) checkForNoData(timeSeries *target.TimeSeries, metricLastState moira.MetricState) (bool, *moira.MetricState) {
 	if triggerChecker.ttl == nil {
 		return false, nil
 	}
@@ -134,7 +135,7 @@ func (triggerChecker *TriggerChecker) checkForNoData(timeSeries *TimeSeries, met
 	}
 }
 
-func (triggerChecker *TriggerChecker) getTimeSeriesStepsStates(triggerTimeSeries *triggerTimeSeries, timeSeries *TimeSeries, metricLastState moira.MetricState) ([]moira.MetricState, error) {
+func (triggerChecker *TriggerChecker) getTimeSeriesStepsStates(triggerTimeSeries *triggerTimeSeries, timeSeries *target.TimeSeries, metricLastState moira.MetricState) ([]moira.MetricState, error) {
 	startTime := int64(timeSeries.StartTime)
 	stepTime := int64(timeSeries.StepTime)
 
@@ -157,7 +158,7 @@ func (triggerChecker *TriggerChecker) getTimeSeriesStepsStates(triggerTimeSeries
 	return metricStates, nil
 }
 
-func (triggerChecker *TriggerChecker) getTimeSeriesState(triggerTimeSeries *triggerTimeSeries, timeSeries *TimeSeries, lastState moira.MetricState, valueTimestamp, checkPoint int64) (*moira.MetricState, error) {
+func (triggerChecker *TriggerChecker) getTimeSeriesState(triggerTimeSeries *triggerTimeSeries, timeSeries *target.TimeSeries, lastState moira.MetricState, valueTimestamp, checkPoint int64) (*moira.MetricState, error) {
 	if valueTimestamp <= checkPoint {
 		return nil, nil
 	}

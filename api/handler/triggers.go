@@ -7,8 +7,8 @@ import (
 	"github.com/moira-alert/moira-alert/api"
 	"github.com/moira-alert/moira-alert/api/controller"
 	"github.com/moira-alert/moira-alert/api/dto"
-	"github.com/moira-alert/moira-alert/checker"
 	"github.com/moira-alert/moira-alert/expression"
+	"github.com/moira-alert/moira-alert/target"
 	"net/http"
 	"strconv"
 	"strings"
@@ -37,7 +37,7 @@ func getAllTriggers(writer http.ResponseWriter, request *http.Request) {
 func createTrigger(writer http.ResponseWriter, request *http.Request) {
 	trigger := &dto.Trigger{}
 	if err := render.Bind(request, trigger); err != nil {
-		if _, ok := err.(expression.ErrInvalidExpression); ok || err == checker.ErrEvaluateTarget {
+		if _, ok := err.(expression.ErrInvalidExpression); ok || err == target.ErrEvaluateTarget {
 			render.Render(writer, request, api.ErrorInvalidRequest(err))
 		} else {
 			render.Render(writer, request, api.ErrorInternalServer(err))

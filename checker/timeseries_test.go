@@ -7,8 +7,8 @@ import (
 	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/expression"
 	"github.com/moira-alert/moira-alert/mock/moira-alert"
+	"github.com/moira-alert/moira-alert/target"
 	. "github.com/smartystreets/goconvey/convey"
-	"math"
 	"testing"
 )
 
@@ -82,8 +82,8 @@ func TestGetTimeSeries(t *testing.T) {
 			dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{}, nil)
 			actual, metrics, err := triggerChecker.getTimeSeries(from, until)
 			expected := &triggerTimeSeries{
-				Main:       make([]*TimeSeries, 0),
-				Additional: make([]*TimeSeries, 0),
+				Main:       make([]*target.TimeSeries, 0),
+				Additional: make([]*target.TimeSeries, 0),
 			}
 			So(actual, ShouldResemble, expected)
 			So(metrics, ShouldBeEmpty)
@@ -120,8 +120,8 @@ func TestGetTimeSeries(t *testing.T) {
 				IsAbsent:  make([]bool, 5, 5),
 			}
 			expected := &triggerTimeSeries{
-				Main:       []*TimeSeries{{FetchResponse: fetchResponse}},
-				Additional: make([]*TimeSeries, 0),
+				Main:       []*target.TimeSeries{{FetchResponse: fetchResponse}},
+				Additional: make([]*target.TimeSeries, 0),
 			}
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, expected)
@@ -152,8 +152,8 @@ func TestGetTimeSeries(t *testing.T) {
 			addFetchResponse := fetchResponse
 			addFetchResponse.Name = addMetric
 			expected := &triggerTimeSeries{
-				Main:       []*TimeSeries{{FetchResponse: fetchResponse}},
-				Additional: []*TimeSeries{{FetchResponse: addFetchResponse}},
+				Main:       []*target.TimeSeries{{FetchResponse: fetchResponse}},
+				Additional: []*target.TimeSeries{{FetchResponse: addFetchResponse}},
 			}
 
 			So(err, ShouldBeNil)
@@ -195,68 +195,6 @@ func TestGetTargetName(t *testing.T) {
 	})
 }
 
-func TestGetTimestampValue(t *testing.T) {
-	Convey("IsAbsent only false", t, func() {
-		fetchResponse := pb.FetchResponse{
-			Name:      "m",
-			StartTime: 17,
-			StopTime:  67,
-			StepTime:  10,
-			Values:    []float64{0, 1, 2, 3, 4},
-			IsAbsent:  []bool{false, false, false, false, false},
-		}
-		timeSeries := TimeSeries{FetchResponse: fetchResponse}
-		Convey("Has value", func() {
-			actual := timeSeries.GetTimestampValue(18)
-			So(actual, ShouldEqual, 0)
-			actual = timeSeries.GetTimestampValue(17)
-			So(actual, ShouldEqual, 0)
-			actual = timeSeries.GetTimestampValue(24)
-			So(actual, ShouldEqual, 0)
-			actual = timeSeries.GetTimestampValue(36)
-			So(actual, ShouldEqual, 1)
-			actual = timeSeries.GetTimestampValue(37)
-			So(actual, ShouldEqual, 2)
-			actual = timeSeries.GetTimestampValue(66)
-			So(actual, ShouldEqual, 4)
-		})
-
-		Convey("No value", func() {
-			actual := timeSeries.GetTimestampValue(16)
-			So(math.IsNaN(actual), ShouldBeTrue)
-			actual = timeSeries.GetTimestampValue(67)
-			So(math.IsNaN(actual), ShouldBeTrue)
-		})
-	})
-
-	Convey("IsAbsent has true", t, func() {
-		fetchResponse := pb.FetchResponse{
-			Name:      "m",
-			StartTime: 17,
-			StopTime:  67,
-			StepTime:  10,
-			Values:    []float64{0, 1, 2, 3, 4},
-			IsAbsent:  []bool{false, true, true, false, true},
-		}
-		timeSeries := TimeSeries{FetchResponse: fetchResponse}
-
-		actual := timeSeries.GetTimestampValue(18)
-		So(actual, ShouldEqual, 0)
-		actual = timeSeries.GetTimestampValue(27)
-		So(math.IsNaN(actual), ShouldBeTrue)
-		actual = timeSeries.GetTimestampValue(30)
-		So(math.IsNaN(actual), ShouldBeTrue)
-		actual = timeSeries.GetTimestampValue(39)
-		So(math.IsNaN(actual), ShouldBeTrue)
-		actual = timeSeries.GetTimestampValue(49)
-		So(actual, ShouldEqual, 3)
-		actual = timeSeries.GetTimestampValue(57)
-		So(math.IsNaN(actual), ShouldBeTrue)
-		actual = timeSeries.GetTimestampValue(66)
-		So(math.IsNaN(actual), ShouldBeTrue)
-	})
-}
-
 func TestGetExpressionValues(t *testing.T) {
 	Convey("Has only main timeSeries", t, func() {
 		fetchResponse := pb.FetchResponse{
@@ -267,9 +205,9 @@ func TestGetExpressionValues(t *testing.T) {
 			Values:    []float64{0.0, 1.0, 2.0, 3.0, 4.0},
 			IsAbsent:  []bool{false, true, true, false, true},
 		}
-		timeSeries := TimeSeries{FetchResponse: fetchResponse}
+		timeSeries := target.TimeSeries{FetchResponse: fetchResponse}
 		tts := &triggerTimeSeries{
-			Main: []*TimeSeries{&timeSeries},
+			Main: []*target.TimeSeries{&timeSeries},
 		}
 		expectedExpressionValues := expression.TriggerExpression{
 			AdditionalTargetsValues: make(map[string]float64),
@@ -306,7 +244,7 @@ func TestGetExpressionValues(t *testing.T) {
 			Values:    []float64{0.0, 1.0, 2.0, 3.0, 4.0},
 			IsAbsent:  []bool{false, true, true, false, true},
 		}
-		timeSeries := TimeSeries{FetchResponse: fetchResponse}
+		timeSeries := target.TimeSeries{FetchResponse: fetchResponse}
 		fetchResponseAdd := pb.FetchResponse{
 			Name:      "main",
 			StartTime: int32(17),
@@ -315,10 +253,10 @@ func TestGetExpressionValues(t *testing.T) {
 			Values:    []float64{4.0, 3.0, 2.0, 1.0, 0.0},
 			IsAbsent:  []bool{false, false, true, true, false},
 		}
-		timeSeriesAdd := TimeSeries{FetchResponse: fetchResponseAdd}
+		timeSeriesAdd := target.TimeSeries{FetchResponse: fetchResponseAdd}
 		tts := &triggerTimeSeries{
-			Main:       []*TimeSeries{&timeSeries},
-			Additional: []*TimeSeries{&timeSeriesAdd},
+			Main:       []*target.TimeSeries{&timeSeries},
+			Additional: []*target.TimeSeries{&timeSeriesAdd},
 		}
 
 		expectedExpressionValues := expression.TriggerExpression{

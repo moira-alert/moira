@@ -2,27 +2,25 @@ package checker
 
 import (
 	"fmt"
-	"github.com/go-graphite/carbonapi/expr"
 	"github.com/moira-alert/moira-alert/expression"
+	"github.com/moira-alert/moira-alert/target"
 	"math"
 )
 
-type TimeSeries expr.MetricData
-
 type triggerTimeSeries struct {
-	Main       []*TimeSeries
-	Additional []*TimeSeries
+	Main       []*target.TimeSeries
+	Additional []*target.TimeSeries
 }
 
 func (triggerChecker *TriggerChecker) getTimeSeries(from, until int64) (*triggerTimeSeries, []string, error) {
 	triggerTimeSeries := &triggerTimeSeries{
-		Main:       make([]*TimeSeries, 0),
-		Additional: make([]*TimeSeries, 0),
+		Main:       make([]*target.TimeSeries, 0),
+		Additional: make([]*target.TimeSeries, 0),
 	}
 	metricsArr := make([]string, 0)
 
-	for targetIndex, target := range triggerChecker.trigger.Targets {
-		result, err := EvaluateTarget(triggerChecker.Database, target, from, until, triggerChecker.isSimple)
+	for targetIndex, tar := range triggerChecker.trigger.Targets {
+		result, err := target.EvaluateTarget(triggerChecker.Database, tar, from, until, triggerChecker.isSimple)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -50,7 +48,7 @@ func (*triggerTimeSeries) getAdditionalTargetName(targetNumber int) string {
 	return fmt.Sprintf("t%v", targetNumber+2)
 }
 
-func (triggerTimeSeries *triggerTimeSeries) getExpressionValues(firstTargetTimeSeries *TimeSeries, valueTimestamp int64) (expression.TriggerExpression, bool) {
+func (triggerTimeSeries *triggerTimeSeries) getExpressionValues(firstTargetTimeSeries *target.TimeSeries, valueTimestamp int64) (expression.TriggerExpression, bool) {
 	expressionValues := expression.TriggerExpression{
 		AdditionalTargetsValues: make(map[string]float64),
 	}
@@ -72,18 +70,4 @@ func (triggerTimeSeries *triggerTimeSeries) getExpressionValues(firstTargetTimeS
 		expressionValues.AdditionalTargetsValues[triggerTimeSeries.getAdditionalTargetName(targetNumber)] = tnValue
 	}
 	return expressionValues, true
-}
-
-func (timeSeries *TimeSeries) GetTimestampValue(valueTimestamp int64) float64 {
-	if valueTimestamp < int64(timeSeries.StartTime) {
-		return math.NaN()
-	}
-	valueIndex := int((valueTimestamp - int64(timeSeries.StartTime)) / int64(timeSeries.StepTime))
-	if len(timeSeries.IsAbsent) > valueIndex && timeSeries.IsAbsent[valueIndex] {
-		return math.NaN()
-	}
-	if len(timeSeries.Values) <= valueIndex {
-		return math.NaN()
-	}
-	return timeSeries.Values[valueIndex]
 }
