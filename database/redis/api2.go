@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/garyburd/redigo/redis"
 	"github.com/moira-alert/moira-alert"
+	"gopkg.in/tomb.v2"
 	"strconv"
 	"strings"
 	"time"
@@ -369,7 +370,7 @@ func (connector *DbConnector) AddPatternMetric(pattern, metric string) error {
 	return err
 }
 
-func (connector *DbConnector) SubscribeMetricEvents(shutdown chan bool) <-chan *moira.MetricEvent {
+func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb) <-chan *moira.MetricEvent {
 	c := connector.pool.Get()
 	psc := redis.PubSubConn{c}
 	psc.Subscribe("moira-event")
@@ -378,7 +379,7 @@ func (connector *DbConnector) SubscribeMetricEvents(shutdown chan bool) <-chan *
 	dataChannel := connector.manageSubscriptions(psc)
 
 	go func() {
-		<-shutdown
+		<-tomb.Dying()
 		connector.logger.Infof("Calling shutdown, unsubscribe from 'moira-event' redis channel...")
 		psc.Unsubscribe()
 	}()

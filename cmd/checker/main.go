@@ -5,15 +5,12 @@ import (
 	"fmt"
 	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/checker"
-	"github.com/moira-alert/moira-alert/checker/checker"
-	"github.com/moira-alert/moira-alert/checker/master"
+	"github.com/moira-alert/moira-alert/checker/worker"
 	"github.com/moira-alert/moira-alert/database/redis"
-	moiraLogging "github.com/moira-alert/moira-alert/logging"
 	"github.com/moira-alert/moira-alert/logging/go-logging"
 	"github.com/moira-alert/moira-alert/metrics/graphite/go-metrics"
 	"os"
 	"os/signal"
-	"runtime"
 	"strings"
 	"sync"
 	"syscall"
@@ -58,21 +55,22 @@ func main() {
 		checkSingleTrigger(database, logger, checkerSettings)
 	}
 
-	shutdown := make(chan bool)
-	var waitGroup sync.WaitGroup
+	checkerMetrics := metrics.ConfigureCheckerMetrics()
+	masterWorker := &worker.Worker{
+		Logger:   logger,
+		Database: database,
+		Config:   checkerSettings,
+		Metrics:  checkerMetrics,
+	}
 
-	masterWorker := master.NewMaster(logger, database, checkerSettings)
-
-	run(masterWorker, shutdown, &waitGroup)
-	runCheckers(database, loggerSettings, checkerSettings, shutdown, &waitGroup)
+	masterWorker.Start()
 
 	logger.Infof("Moira Checker started. Version: %s", Version)
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 	logger.Info(fmt.Sprint(<-ch))
 	logger.Infof("Moira Checker shutting down.")
-	close(shutdown)
-	waitGroup.Wait()
+	masterWorker.Stop()
 	logger.Infof("Moira Checker stopped. Version: %s", Version)
 }
 
@@ -94,23 +92,6 @@ func checkSingleTrigger(database moira.Database, logger moira.Logger, settings *
 		os.Exit(1)
 	}
 	os.Exit(0)
-}
-
-func runCheckers(database moira.Database, loggerSettings moiraLogging.Config, checkerSettings *checker.Config, shutdown chan bool, waitGroup *sync.WaitGroup) {
-	cpuCount := runtime.NumCPU() - 1
-	if cpuCount < 1 {
-		cpuCount = 1
-	}
-	for i := 0; i <= cpuCount; i++ {
-		loggerSettings.LogFile = getCheckerLogFile(loggerSettings.LogFile, i)
-		logger, err := logging.ConfigureLog(&loggerSettings, fmt.Sprintf("checker-{%v}", i))
-		if err != nil {
-			fmt.Printf("Can not configure log: %s \n", err.Error())
-			os.Exit(1)
-		}
-		checkerWorker := checker_worker.NewChecker(i, logger, database, metrics.ConfigureCheckerMetrics(i), checkerSettings)
-		run(checkerWorker, shutdown, waitGroup)
-	}
 }
 
 func getCheckerLogFile(configLogFile string, checkerNumber int) string {

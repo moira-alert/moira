@@ -6,6 +6,7 @@ package mock_moira_alert
 import (
 	gomock "github.com/golang/mock/gomock"
 	moira_alert "github.com/moira-alert/moira-alert"
+	"gopkg.in/tomb.v2"
 	time "time"
 )
 
@@ -766,7 +767,7 @@ func (_mr *MockDatabaseMockRecorder) SetTriggerThrottlingTimestamp(arg0, arg1 in
 }
 
 // SubscribeMetricEvents mocks base method
-func (_m *MockDatabase) SubscribeMetricEvents(_param0 chan bool) <-chan *moira_alert.MetricEvent {
+func (_m *MockDatabase) SubscribeMetricEvents(_param0 *tomb.Tomb) <-chan *moira_alert.MetricEvent {
 	ret := _m.ctrl.Call(_m, "SubscribeMetricEvents", _param0)
 	ret0, _ := ret[0].(<-chan *moira_alert.MetricEvent)
 	return ret0

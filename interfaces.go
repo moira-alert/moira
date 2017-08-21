@@ -1,6 +1,7 @@
 package moira
 
 import (
+	"gopkg.in/tomb.v2"
 	"sync"
 	"time"
 )
@@ -26,7 +27,7 @@ type Database interface {
 
 	UpdateMetricsHeartbeat() error
 	GetPatterns() ([]string, error)
-	SubscribeMetricEvents(shutdown chan bool) <-chan *MetricEvent
+	SubscribeMetricEvents(tomb *tomb.Tomb) <-chan *MetricEvent
 	GetMetricRetention(metric string) (int64, error)
 
 	SaveMetrics(buffer map[string]*MatchedMetric) error

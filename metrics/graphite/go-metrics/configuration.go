@@ -1,7 +1,6 @@
 package metrics
 
 import (
-	"fmt"
 	"github.com/moira-alert/moira-alert/metrics/graphite"
 )
 
@@ -40,10 +39,10 @@ func ConfigureDatabaseMetrics() *graphite.DatabaseMetrics {
 }
 
 //ConfigureCheckerMetrics is checker metrics configurator
-func ConfigureCheckerMetrics(checkerNumber int) *graphite.CheckerMetrics {
+func ConfigureCheckerMetrics() *graphite.CheckerMetrics {
 	return &graphite.CheckerMetrics{
-		CheckerError:      newRegisteredMeter(fmt.Sprintf("checker.errors.%v", checkerNumber)),
-		TriggerCheckTime:  newRegisteredTimer(fmt.Sprintf("checker.triggers.%v", checkerNumber)),
-		TriggerCheckGauge: newRegisteredGauge(fmt.Sprintf("checker.triggers.%v.sum", checkerNumber)),
+		CheckerError:      newRegisteredMeter("checker.errors"),
+		TriggerCheckTime:  newRegisteredTimer("checker.triggers"),
+		TriggerCheckGauge: newRegisteredGauge("checker.triggers.sum"),
 	}
 }
