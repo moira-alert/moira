@@ -2,49 +2,35 @@ package reply
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/garyburd/redigo/redis"
 	"github.com/moira-alert/moira-alert"
 )
 
-func Event(rep interface{}, err error) (moira.EventData, error) {
-	event := moira.EventData{}
-	if err != nil {
-		return event, err
-	}
-	switch rep := rep.(type) {
-	case []byte:
-		err = json.Unmarshal(rep, &event)
-		return event, err
-	case nil:
-		return event, redis.ErrNil
-	case redis.Error:
-		return event, rep
-	}
-	return event, fmt.Errorf("reply: unexpected type for moira.EventData, got type %T", rep)
-}
-
-func Events(rep interface{}, err error) ([]*moira.EventData, error) {
+func Event(rep interface{}, err error) (*moira.EventData, error) {
+	bytes, err := redis.Bytes(rep, err)
 	if err != nil {
 		return nil, err
 	}
-	switch rep := rep.(type) {
-	case []interface{}:
-		events := make([]*moira.EventData, len(rep))
-		for i := range rep {
-			if rep[i] == nil {
-				continue
-			}
-			err = json.Unmarshal(rep[i].([]byte), events[i])
-			if err != nil {
-				return nil, fmt.Errorf("reply: unexpected element type for []moira.EventData, got type %T", rep[i])
-			}
-		}
-		return events, nil
-	case nil:
-		return nil, redis.ErrNil
-	case redis.Error:
-		return nil, rep
+	event := &moira.EventData{}
+	err = json.Unmarshal(bytes, event)
+	if err != nil {
+		return nil, err
 	}
-	return nil, fmt.Errorf("reply: unexpected type for []moira.EventData, got type %T", rep)
+	return event, nil
+}
+
+func Events(rep interface{}, err error) ([]*moira.EventData, error) {
+	values, err := redis.Values(rep, err)
+	if err != nil {
+		return nil, err
+	}
+	events := make([]*moira.EventData, len(values))
+	for i, kk := range values {
+		event, err := Event(kk, err)
+		if err != nil {
+			return nil, err
+		}
+		events[i] = event
+	}
+	return events, nil
 }
