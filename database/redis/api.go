@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"github.com/moira-alert/moira-alert/database/redis/reply"
 )
 
 // GetUserContacts - Returns contacts ids by given login from set {0}
@@ -283,7 +284,8 @@ func (connector *DbConnector) GetEvents(triggerId string, start int64, size int6
 	c := connector.pool.Get()
 	defer c.Close()
 
-	eventsDataString, err := redis.Strings(c.Do("ZREVRANGE", fmt.Sprintf("moira-trigger-events:%s", triggerId), start, start+size))
+	eventsData, err := reply.Events(c.Do("ZREVRANGE", fmt.Sprintf("moira-trigger-events:%s", triggerId), start, start+size))
+
 	if err != nil {
 		if err == redis.ErrNil {
 			return make([]*moira.EventData, 0), nil
@@ -291,18 +293,7 @@ func (connector *DbConnector) GetEvents(triggerId string, start int64, size int6
 		return nil, fmt.Errorf("Failed to get range for moira-trigger-events, triggerId: %s, error: %s", triggerId, err.Error())
 	}
 
-	eventDatas := make([]*moira.EventData, 0, len(eventsDataString))
-
-	for _, eventDataString := range eventsDataString {
-		eventData := &moira.EventData{}
-		if err := json.Unmarshal([]byte(eventDataString), eventData); err != nil {
-			connector.logger.Warningf("Failed to parse scheduled json notification %s: %s", eventDataString, err.Error())
-			continue
-		}
-		eventDatas = append(eventDatas, eventData)
-	}
-
-	return eventDatas, nil
+	return eventsData, nil
 }
 
 func (connector *DbConnector) GetSubscriptions(subscriptionIds []string) ([]moira.SubscriptionData, error) {
