@@ -2,49 +2,32 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"strings"
 
-	"github.com/gosexy/to"
-	"github.com/moira-alert/moira-alert/database/redis"
-	"github.com/moira-alert/moira-alert/logging"
-	"github.com/moira-alert/moira-alert/metrics/graphite"
+	"github.com/moira-alert/moira-alert/cmd"
 	"github.com/moira-alert/moira-alert/notifier"
 	"github.com/moira-alert/moira-alert/notifier/selfstate"
 	"gopkg.in/yaml.v2"
+	"menteslibres.net/gosexy/to"
 )
 
 type config struct {
-	Redis    redisConfig    `yaml:"redis"`
-	Front    frontConfig    `yaml:"front"`
-	Graphite graphiteConfig `yaml:"graphite"`
-	Notifier notifierConfig `yaml:"notifier"`
+	Redis    cmd.RedisConfig    `yaml:"redis"`
+	Graphite cmd.GraphiteConfig `yaml:"graphite"`
+	Front    frontConfig        `yaml:"front"`
+	Logger   cmd.LoggerConfig   `yaml:"log"`
+	Notifier notifierConfig     `yaml:"notifier"`
 }
 
 type notifierConfig struct {
-	LogFile          string              `yaml:"log_file"`
-	LogLevel         string              `yaml:"log_level"`
-	LogColor         string              `yaml:"log_color"`
 	SenderTimeout    string              `yaml:"sender_timeout"`
 	ResendingTimeout string              `yaml:"resending_timeout"`
 	Senders          []map[string]string `yaml:"senders"`
 	SelfState        selfStateConfig     `yaml:"moira_selfstate"`
 }
 
-type redisConfig struct {
-	Host string `yaml:"host"`
-	Port string `yaml:"port"`
-	DBID int    `yaml:"dbid"`
-}
-
 type frontConfig struct {
 	URI string `yaml:"uri"`
-}
-
-type graphiteConfig struct {
-	URI      string `yaml:"uri"`
-	Prefix   string `yaml:"prefix"`
-	Interval int64  `yaml:"interval"`
 }
 
 type selfStateConfig struct {
@@ -58,7 +41,7 @@ type selfStateConfig struct {
 
 func getDefault() config {
 	return config{
-		Redis: redisConfig{
+		Redis: cmd.RedisConfig{
 			Host: "localhost",
 			Port: "6379",
 			DBID: 0,
@@ -66,14 +49,16 @@ func getDefault() config {
 		Front: frontConfig{
 			URI: "http://localhost",
 		},
-		Graphite: graphiteConfig{
+		Graphite: cmd.GraphiteConfig{
 			URI:      "localhost:2003",
 			Prefix:   "DevOps.Moira",
-			Interval: 60,
+			Interval: "60s0ms",
+		},
+		Logger: cmd.LoggerConfig{
+			LogFile:  "stdout",
+			LogLevel: "debug",
 		},
 		Notifier: notifierConfig{
-			LogFile:          "stdout",
-			LogLevel:         "debug",
 			SenderTimeout:    "10s0ms",
 			ResendingTimeout: "24:00",
 			SelfState: selfStateConfig{
@@ -87,41 +72,11 @@ func getDefault() config {
 	}
 }
 
-func printDefaultConfig() {
-	c := getDefault()
-	d, _ := yaml.Marshal(&c)
-	fmt.Println(string(d))
-}
-
-func (graphiteConfig *graphiteConfig) getSettings() graphite.Config {
-	return graphite.Config{
-		URI:      graphiteConfig.URI,
-		Prefix:   graphiteConfig.Prefix,
-		Interval: graphiteConfig.Interval,
-	}
-}
-
-func (config *redisConfig) getSettings() redis.Config {
-	return redis.Config{
-		Host: config.Host,
-		Port: config.Port,
-		DBID: config.DBID,
-	}
-}
-
 func (config *notifierConfig) getSettings() notifier.Config {
 	return notifier.Config{
 		SendingTimeout:   to.Duration(config.SenderTimeout),
 		ResendingTimeout: to.Duration(config.ResendingTimeout),
 		Senders:          config.Senders,
-	}
-}
-
-func (config *notifierConfig) getLoggerSettings() logging.Config {
-	return logging.Config{
-		LogFile:  config.LogFile,
-		LogColor: toBool(config.LogColor),
-		LogLevel: config.LogLevel,
 	}
 }
 
@@ -134,19 +89,6 @@ func (config *selfStateConfig) getSettings() selfstate.Config {
 		Contacts:                config.Contacts,
 		NoticeInterval:          config.NoticeInterval,
 	}
-}
-
-func readSettings(configFileName string) (*config, error) {
-	c := getDefault()
-	configYaml, err := ioutil.ReadFile(configFileName)
-	if err != nil {
-		return nil, fmt.Errorf("Can't read file [%s] [%s]", configFileName, err.Error())
-	}
-	err = yaml.Unmarshal(configYaml, &c)
-	if err != nil {
-		return nil, fmt.Errorf("Can't parse config file [%s] [%s]", configFileName, err.Error())
-	}
-	return &c, nil
 }
 
 func toBool(str string) bool {

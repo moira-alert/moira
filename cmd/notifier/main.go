@@ -9,6 +9,7 @@ import (
 	"syscall"
 
 	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira-alert/cmd"
 	"github.com/moira-alert/moira-alert/database/redis"
 	"github.com/moira-alert/moira-alert/logging/go-logging"
 	"github.com/moira-alert/moira-alert/metrics/graphite"
@@ -23,8 +24,8 @@ var (
 	logger                 moira.Logger
 	connector              *redis.DbConnector
 	configFileName         = flag.String("config", "/etc/moira/config.yml", "path to config file")
-	printDefaultConfigFlag = flag.Bool("default-config", false, "Print default config and exit")
 	printVersion           = flag.Bool("version", false, "Print current version and exit")
+	printDefaultConfigFlag = flag.Bool("default-config", false, "Print default config and exit")
 	convertDb              = flag.Bool("convert", false, "Convert telegram contacts and exit")
 	//Version - sets build version during build
 	Version = "latest"
@@ -37,19 +38,20 @@ func main() {
 		os.Exit(0)
 	}
 
+	config := getDefault()
 	if *printDefaultConfigFlag {
-		printDefaultConfig()
+		cmd.PrintConfig(config)
 		os.Exit(0)
 	}
 
-	config, err := readSettings(*configFileName)
+	err := cmd.ReadConfig(*configFileName, &config)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Can not read settings: %s \n", err.Error())
 		os.Exit(1)
 	}
 
 	notifierConfig := config.Notifier.getSettings()
-	loggerSettings := config.Notifier.getLoggerSettings()
+	loggerSettings := config.Logger.GetSettings(false)
 
 	logger, err = logging.ConfigureLog(&loggerSettings, "notifier")
 	if err != nil {
@@ -59,9 +61,9 @@ func main() {
 
 	notifierMetrics := metrics.ConfigureNotifierMetrics()
 	databaseMetrics := metrics.ConfigureDatabaseMetrics()
-	metrics.Init(config.Graphite.getSettings(), logger, "notifier")
+	metrics.Init(config.Graphite.GetSettings(), logger, "notifier")
 
-	connector = redis.NewDatabase(logger, config.Redis.getSettings(), databaseMetrics)
+	connector = redis.NewDatabase(logger, config.Redis.GetSettings(), databaseMetrics)
 	if *convertDb {
 		convertDatabase(connector)
 	}

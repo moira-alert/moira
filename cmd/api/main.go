@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/api/handler"
+	"github.com/moira-alert/moira-alert/cmd"
 	"github.com/moira-alert/moira-alert/database/redis"
 	"github.com/moira-alert/moira-alert/logging/go-logging"
 	"github.com/moira-alert/moira-alert/metrics/graphite/go-metrics"
@@ -14,9 +15,10 @@ import (
 )
 
 var (
-	configFileName = flag.String("config", "/etc/moira/config.yml", "Path to configuration file")
-	printVersion   = flag.Bool("version", false, "Print version and exit")
-	verbosityLog   = flag.Bool("-v", false, "Verbosity log")
+	configFileName         = flag.String("config", "/etc/moira/config.yml", "Path to configuration file")
+	printVersion           = flag.Bool("version", false, "Print version and exit")
+	printDefaultConfigFlag = flag.Bool("default-config", false, "Print default config and exit")
+	verbosityLog           = flag.Bool("-v", false, "Verbosity log")
 	//Version - sets build version during build
 	Version  = "latest"
 	database moira.Database
@@ -29,13 +31,19 @@ func main() {
 		os.Exit(0)
 	}
 
-	config, err := readSettings(*configFileName)
+	config := getDefault()
+	if *printDefaultConfigFlag {
+		cmd.PrintConfig(config)
+		os.Exit(0)
+	}
+
+	err := cmd.ReadConfig(*configFileName, &config)
 	if err != nil {
 		fmt.Printf("Can not read settings: %s \n", err.Error())
 		os.Exit(1)
 	}
 
-	loggerSettings := config.Api.getLoggerSettings(verbosityLog)
+	loggerSettings := config.Logger.GetSettings(*verbosityLog)
 
 	logger, err := logging.ConfigureLog(&loggerSettings, "api")
 	if err != nil {
@@ -43,7 +51,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	databaseSettings := config.Redis.getSettings()
+	databaseSettings := config.Redis.GetSettings()
 	databaseMetrics := metrics.ConfigureDatabaseMetrics()
 	database = redis.NewDatabase(logger, databaseSettings, databaseMetrics)
 

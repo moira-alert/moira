@@ -1,8 +1,10 @@
 package graphite
 
+import "time"
+
 //Config for graphite connection settings
 type Config struct {
 	URI      string
 	Prefix   string
-	Interval int64
+	Interval time.Duration
 }

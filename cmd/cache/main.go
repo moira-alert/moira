@@ -14,6 +14,7 @@ import (
 	"github.com/moira-alert/moira-alert/cache/heartbeat"
 	"github.com/moira-alert/moira-alert/cache/matched_metrics"
 	"github.com/moira-alert/moira-alert/cache/patterns"
+	"github.com/moira-alert/moira-alert/cmd"
 	"github.com/moira-alert/moira-alert/database/redis"
 	"github.com/moira-alert/moira-alert/logging/go-logging"
 	"github.com/moira-alert/moira-alert/metrics/graphite"
@@ -32,8 +33,8 @@ var (
 	waitGroup sync.WaitGroup
 
 	configFileName         = flag.String("config", "/etc/moira/config.yml", "path config file")
-	printDefaultConfigFlag = flag.Bool("default-config", false, "Print default config and exit")
 	printVersion           = flag.Bool("version", false, "Print version and exit")
+	printDefaultConfigFlag = flag.Bool("default-config", false, "Print default config and exit")
 
 	MoiraVersion = "unknown"
 	GitCommit    = "unknown"
@@ -49,18 +50,20 @@ func main() {
 		fmt.Println("Go Version:", GoVersion)
 		os.Exit(0)
 	}
+
+	config := getDefault()
 	if *printDefaultConfigFlag {
-		printDefaultConfig()
+		cmd.PrintConfig(config)
 		os.Exit(0)
 	}
 
-	config, err := readSettings(*configFileName)
+	err := cmd.ReadConfig(*configFileName, &config)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Can not read settings: %s\n", err.Error())
 		os.Exit(1)
 	}
 
-	loggerSettings := config.Cache.getLoggerSettings()
+	loggerSettings := config.Logger.GetSettings(false)
 
 	logger, err = logging.ConfigureLog(&loggerSettings, "cache")
 	if err != nil {
@@ -70,9 +73,9 @@ func main() {
 
 	cacheMetrics = metrics.ConfigureCacheMetrics()
 	databaseMetrics := metrics.ConfigureDatabaseMetrics()
-	metrics.Init(config.Graphite.getSettings(), logger, "cache")
+	metrics.Init(config.Graphite.GetSettings(), logger, "cache")
 
-	database = redis.NewDatabase(logger, config.Redis.getSettings(), databaseMetrics)
+	database = redis.NewDatabase(logger, config.Redis.GetSettings(), databaseMetrics)
 
 	retentionConfigFile, err := os.Open(config.Cache.RetentionConfig)
 	if err != nil {

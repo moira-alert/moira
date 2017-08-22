@@ -8,7 +8,6 @@ import (
 	"net"
 	"os"
 	"strings"
-	"time"
 
 	goMetricsGraphite "github.com/cyberdelia/go-metrics-graphite"
 )
@@ -31,6 +30,6 @@ func Init(config graphite.Config, logger moira.Logger, serviceName string) {
 			return
 		}
 		shortName := strings.Split(hostname, ".")[0]
-		go goMetricsGraphite.Graphite(metrics.DefaultRegistry, time.Duration(interval)*time.Second, fmt.Sprintf("%s.%s.%s", prefix, serviceName, shortName), address)
+		go goMetricsGraphite.Graphite(metrics.DefaultRegistry, interval, fmt.Sprintf("%s.%s.%s", prefix, serviceName, shortName), address)
 	}
 }
