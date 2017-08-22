@@ -466,7 +466,7 @@ func (connector *DbConnector) PushEvent(event *moira.EventData, ui bool) error {
 	}
 	if ui {
 		c.Send("LPUSH", "moira-trigger-events-ui", eventBytes)
-		c.Send("LTRIM", 0, 100)
+		c.Send("LTRIM", "moira-trigger-events-ui", 0, 100)
 	}
 	_, err = c.Do("EXEC")
 	if err != nil {

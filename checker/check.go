@@ -163,10 +163,10 @@ func (triggerChecker *TriggerChecker) getTimeSeriesState(triggerTimeSeries *trig
 		return nil, nil
 	}
 	triggerExpression, noEmptyValues := triggerTimeSeries.getExpressionValues(timeSeries, valueTimestamp)
-	triggerChecker.Logger.Debugf("values for ts %v: %v", valueTimestamp, triggerExpression)
 	if !noEmptyValues {
 		return nil, nil
 	}
+	triggerChecker.Logger.Debugf("values for ts %v: MainTargetValue: %v, additionalTargetValues: %v", valueTimestamp, triggerExpression.MainTargetValue, triggerExpression.AdditionalTargetsValues)
 
 	triggerExpression.WarnValue = triggerChecker.trigger.WarnValue
 	triggerExpression.ErrorValue = triggerChecker.trigger.ErrorValue

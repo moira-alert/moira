@@ -1,25 +1,22 @@
 package worker
 
 import (
-	"gopkg.in/tomb.v2"
+	"sync"
 	"time"
 )
 
 func (worker *Worker) noDataChecker() error {
 	checkTicker := time.NewTicker(worker.Config.NoDataCheckInterval)
-	var tomb2 tomb.Tomb
+	var wg sync.WaitGroup
 	for {
 		select {
 		case <-worker.tomb.Dying():
 			checkTicker.Stop()
-			tomb2.Wait()
+			wg.Wait()
 			worker.Logger.Debugf("NoData checker stopped")
 			return nil
 		case <-checkTicker.C:
-			if !tomb2.Alive() {
-				tomb2 = tomb.Tomb{}
-			}
-			if err := worker.checkNoData(&tomb2); err != nil {
+			if err := worker.checkNoData(&wg); err != nil {
 				worker.Logger.Errorf("NoData check failed: %s", err.Error())
 			}
 		}
@@ -27,7 +24,7 @@ func (worker *Worker) noDataChecker() error {
 	return nil
 }
 
-func (worker *Worker) checkNoData(tomb *tomb.Tomb) error {
+func (worker *Worker) checkNoData(wg *sync.WaitGroup) error {
 	now := time.Now().UTC().Unix()
 	if worker.lastData+worker.Config.StopCheckingInterval < now {
 		worker.Logger.Infof("Checking NoData disabled. No metrics for %v seconds", now-worker.lastData)
@@ -37,7 +34,7 @@ func (worker *Worker) checkNoData(tomb *tomb.Tomb) error {
 		if err != nil {
 			return err
 		}
-		worker.perform(triggerIds, false, 60, tomb)
+		worker.perform(triggerIds, false, 60, wg)
 	}
 	return nil
 }

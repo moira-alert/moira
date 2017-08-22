@@ -2,35 +2,33 @@ package worker
 
 import (
 	"github.com/moira-alert/moira-alert/checker"
-	"gopkg.in/tomb.v2"
+	"sync"
 	"time"
 )
 
-func (worker *Worker) perform(triggerIDs []string, noCache bool, cacheTTL int64, tomb *tomb.Tomb) {
+func (worker *Worker) perform(triggerIDs []string, noCache bool, cacheTTL int64, wg *sync.WaitGroup) {
 	if noCache {
 		for _, id := range triggerIDs {
-			tomb.Go(func() error { return worker.checkTriggerWithoutCache(id) })
+			wg.Add(1)
+			go func(triggerID string) {
+				defer wg.Done()
+				if err := worker.handleTriggerToCheck(triggerID); err != nil {
+					worker.Logger.Errorf("Failed to perform trigger: %s error: %s", err.Error())
+				}
+			}(id)
 		}
 	} else {
 		for _, id := range triggerIDs {
-			tomb.Go(func() error { return worker.checkTriggerWithCache(id, cacheTTL) })
+			wg.Add(1)
+			go func(triggerID string) {
+				defer wg.Done()
+				//todo triggerId add check cache cacheTTL seconds
+				if err := worker.handleTriggerToCheck(triggerID); err != nil {
+					worker.Logger.Errorf("Failed to perform trigger: %s error: %s", err.Error())
+				}
+			}(id)
 		}
 	}
-}
-
-func (worker *Worker) checkTriggerWithoutCache(triggerID string) error {
-	if err := worker.handleTriggerToCheck(triggerID); err != nil {
-		worker.Logger.Error("Failed to perform trigger: %s error: %s", err.Error())
-	}
-	return nil
-}
-
-func (worker *Worker) checkTriggerWithCache(triggerID string, cacheTTL int64) error {
-	//todo triggerId add check cache cacheTTL seconds
-	if err := worker.handleTriggerToCheck(triggerID); err != nil {
-		worker.Logger.Error("Failed to perform trigger: %s error: %s", err.Error())
-	}
-	return nil
 }
 
 func (worker *Worker) handleTriggerToCheck(triggerId string) error {

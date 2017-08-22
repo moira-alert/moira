@@ -373,19 +373,19 @@ func (connector *DbConnector) AddPatternMetric(pattern, metric string) error {
 func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb) <-chan *moira.MetricEvent {
 	c := connector.pool.Get()
 	psc := redis.PubSubConn{c}
-	psc.Subscribe("moira-event")
+	psc.Subscribe("metric-event")
 
 	metricsChannel := make(chan *moira.MetricEvent, 100)
 	dataChannel := connector.manageSubscriptions(psc)
 
 	go func() {
+		defer c.Close()
 		<-tomb.Dying()
 		connector.logger.Infof("Calling shutdown, unsubscribe from 'moira-event' redis channel...")
 		psc.Unsubscribe()
 	}()
 
 	go func() {
-		defer c.Close()
 		for {
 			data, ok := <-dataChannel
 			if !ok {
@@ -393,12 +393,12 @@ func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb) <-chan *moi
 				close(metricsChannel)
 				return
 			}
-			metricEvent := moira.MetricEvent{}
+			metricEvent := &moira.MetricEvent{}
 			if err := json.Unmarshal(data, metricEvent); err != nil {
 				connector.logger.Errorf("Failed to parse MetricEvent: %s, error : %s", string(data), err.Error())
 				continue
 			}
-			metricsChannel <- &metricEvent
+			metricsChannel <- metricEvent
 		}
 	}()
 
@@ -495,6 +495,7 @@ func (connector *DbConnector) manageSubscriptions(psc redis.PubSubConn) <-chan [
 					if n.Count == 0 {
 						connector.logger.Infof("No more subscriptions, exit...")
 						close(dataChan)
+						return
 					}
 				}
 			}
