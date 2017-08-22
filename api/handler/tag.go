@@ -5,8 +5,8 @@ import (
 	"github.com/go-chi/render"
 	"github.com/moira-alert/moira-alert/api"
 	"github.com/moira-alert/moira-alert/api/controller"
-	"net/http"
 	"github.com/moira-alert/moira-alert/api/middleware"
+	"net/http"
 )
 
 func tag(router chi.Router) {

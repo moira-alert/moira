@@ -17,10 +17,10 @@ var asteriskHash = xxhash.Checksum32([]byte("*"))
 
 // PatternStorage contains pattern tree
 type PatternStorage struct {
-	database       moira.Database
-	metrics        *graphite.CacheMetrics
-	logger         moira.Logger
-	PatternTree    *patternNode
+	database    moira.Database
+	metrics     *graphite.CacheMetrics
+	logger      moira.Logger
+	PatternTree *patternNode
 }
 
 // patternNode contains pattern node
@@ -35,9 +35,9 @@ type patternNode struct {
 // NewPatternStorage creates new PatternStorage struct
 func NewPatternStorage(database moira.Database, metrics *graphite.CacheMetrics, logger moira.Logger) (*PatternStorage, error) {
 	storage := &PatternStorage{
-		database:       database,
-		metrics:        metrics,
-		logger:         logger,
+		database: database,
+		metrics:  metrics,
+		logger:   logger,
 	}
 	err := storage.RefreshTree()
 	return storage, err

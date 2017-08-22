@@ -1,15 +1,15 @@
 package controller
 
 import (
+	"fmt"
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira-alert/api"
 	"github.com/moira-alert/moira-alert/api/dto"
 	"github.com/moira-alert/moira-alert/mock/moira-alert"
 	"github.com/satori/go.uuid"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
-	"fmt"
-	"github.com/moira-alert/moira-alert/api"
 )
 
 func TestGetEvents(t *testing.T) {

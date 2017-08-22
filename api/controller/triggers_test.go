@@ -18,7 +18,7 @@ func TestCreateTrigger(t *testing.T) {
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
 	trigger := moira.Trigger{ID: uuid.NewV4().String()}
 
-	Convey("Success", t, func(){
+	Convey("Success", t, func() {
 		database.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 10)
 		database.EXPECT().DeleteTriggerCheckLock(gomock.Any())
 		database.EXPECT().GetTriggerLastCheck(gomock.Any()).Return(nil, nil)
@@ -29,7 +29,7 @@ func TestCreateTrigger(t *testing.T) {
 		So(resp.Message, ShouldResemble, "trigger created")
 	})
 
-	Convey("Error", t, func(){
+	Convey("Error", t, func() {
 		expected := fmt.Errorf("Soo bad trigger")
 		database.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 10)
 		database.EXPECT().DeleteTriggerCheckLock(gomock.Any())
