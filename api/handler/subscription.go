@@ -6,6 +6,7 @@ import (
 	"github.com/moira-alert/moira-alert/api"
 	"github.com/moira-alert/moira-alert/api/controller"
 	"github.com/moira-alert/moira-alert/api/dto"
+	"github.com/moira-alert/moira-alert/api/middleware"
 	"net/http"
 )
 
@@ -13,14 +14,14 @@ func subscription(router chi.Router) {
 	router.Get("/", getUserSubscriptions)
 	router.Put("/", createSubscription)
 	router.Route("/{subscriptionId}", func(router chi.Router) {
-		router.Use(subscriptionContext)
+		router.Use(middleware.SubscriptionContext)
 		router.Delete("/", deleteSubscription)
 		router.Put("/test", sendTestNotification)
 	})
 }
 
 func getUserSubscriptions(writer http.ResponseWriter, request *http.Request) {
-	userLogin := request.Context().Value("login").(string)
+	userLogin := middleware.GetLogin(request)
 	contacts, err := controller.GetUserSubscriptions(database, userLogin)
 	if err != nil {
 		render.Render(writer, request, err)
@@ -39,7 +40,7 @@ func createSubscription(writer http.ResponseWriter, request *http.Request) {
 		render.Render(writer, request, api.ErrorInvalidRequest(err))
 		return
 	}
-	userLogin := request.Context().Value("login").(string)
+	userLogin := middleware.GetLogin(request)
 
 	if err := controller.WriteSubscription(database, userLogin, subscription); err != nil {
 		render.Render(writer, request, err)
@@ -53,16 +54,16 @@ func createSubscription(writer http.ResponseWriter, request *http.Request) {
 }
 
 func deleteSubscription(writer http.ResponseWriter, request *http.Request) {
-	userLogin := request.Context().Value("login").(string)
-	subscriptionId := request.Context().Value("subscriptionId").(string)
-	if err := controller.DeleteSubscription(database, subscriptionId, userLogin); err != nil {
+	userLogin := middleware.GetLogin(request)
+	subscriptionID := middleware.GetSubscriptionID(request)
+	if err := controller.DeleteSubscription(database, subscriptionID, userLogin); err != nil {
 		render.Render(writer, request, err)
 	}
 }
 
 func sendTestNotification(writer http.ResponseWriter, request *http.Request) {
-	subscriptionId := request.Context().Value("subscriptionId").(string)
-	if err := controller.SendTestNotification(database, subscriptionId); err != nil {
+	subscriptionID := middleware.GetSubscriptionID(request)
+	if err := controller.SendTestNotification(database, subscriptionID); err != nil {
 		render.Render(writer, request, err)
 	}
 }

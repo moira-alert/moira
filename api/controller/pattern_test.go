@@ -74,7 +74,7 @@ func TestGetAllPatterns(t *testing.T) {
 
 	Convey("Test errors", t, func() {
 		Convey("GetPatterns error", func() {
-			expected := fmt.Errorf("Oh no!!!11 Cant get patterns!")
+			expected := fmt.Errorf("Oh no!!!11 Cant get patterns")
 			dataBase.EXPECT().GetPatterns().Return(nil, expected)
 			list, err := GetAllPatterns(dataBase, logger)
 			So(err, ShouldResemble, api.ErrorInternalServer(expected))

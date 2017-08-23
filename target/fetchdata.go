@@ -80,9 +80,8 @@ func unpackMetricsValues(metricsData map[string][]*moira.MetricValue, retention 
 func getMathFloat64(val float64, ok bool) float64 {
 	if ok {
 		return val
-	} else {
-		return math.NaN()
 	}
+	return math.NaN()
 }
 
 func roundToMinimalHighestRetention(ts, retention int64) int64 {

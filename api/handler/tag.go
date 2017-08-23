@@ -13,7 +13,7 @@ func tag(router chi.Router) {
 	router.Get("/", getAllTags)
 	router.Get("/stats", getAllTagsAndSubscriptions)
 	router.Route("/{tag}", func(router chi.Router) {
-		router.Use(tagContext)
+		router.Use(middleware.TagContext)
 		router.Delete("/", deleteTag)
 	})
 }
@@ -45,7 +45,7 @@ func getAllTagsAndSubscriptions(writer http.ResponseWriter, request *http.Reques
 }
 
 func deleteTag(writer http.ResponseWriter, request *http.Request) {
-	tagName := request.Context().Value("tag").(string)
+	tagName := middleware.GetTag(request)
 	response, err := controller.DeleteTag(database, tagName)
 	if err != nil {
 		render.Render(writer, request, err)

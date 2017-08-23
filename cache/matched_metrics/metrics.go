@@ -26,7 +26,7 @@ func NewMetricsMatcher(metrics *graphite.CacheMetrics, logger moira.Logger, data
 	}
 }
 
-//Run process matched metrics from channel and save it in cache
+//Start process matched metrics from channel and save it in cache
 func (matcher *MetricsMatcher) Start(channel chan *moira.MatchedMetric, wg *sync.WaitGroup) {
 	go func() {
 		defer wg.Done()

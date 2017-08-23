@@ -17,7 +17,7 @@ func TestCompareStates(t *testing.T) {
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 	triggerChecker := TriggerChecker{
-		TriggerId: "SuperId",
+		TriggerID: "SuperId",
 		Database:  dataBase,
 		Logger:    logger,
 		trigger:   &moira.Trigger{},
@@ -83,7 +83,7 @@ func TestCompareStates(t *testing.T) {
 
 			message := fmt.Sprintf("This metric has been in bad state for more than 24 hours - please, fix.")
 			dataBase.EXPECT().PushEvent(&moira.EventData{
-				TriggerID: triggerChecker.TriggerId,
+				TriggerID: triggerChecker.TriggerID,
 				Timestamp: currentState.Timestamp,
 				State:     NODATA,
 				OldState:  NODATA,
@@ -107,7 +107,7 @@ func TestCompareStates(t *testing.T) {
 
 			message := fmt.Sprintf("This metric has been in bad state for more than 24 hours - please, fix.")
 			dataBase.EXPECT().PushEvent(&moira.EventData{
-				TriggerID: triggerChecker.TriggerId,
+				TriggerID: triggerChecker.TriggerID,
 				Timestamp: currentState.Timestamp,
 				State:     ERROR,
 				OldState:  ERROR,
@@ -143,7 +143,7 @@ func TestCompareStates(t *testing.T) {
 			currentState.State = EXCEPTION
 
 			dataBase.EXPECT().PushEvent(&moira.EventData{
-				TriggerID: triggerChecker.TriggerId,
+				TriggerID: triggerChecker.TriggerID,
 				Timestamp: currentState.Timestamp,
 				State:     EXCEPTION,
 				OldState:  EXCEPTION,
@@ -183,7 +183,7 @@ func TestCompareChecks(t *testing.T) {
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 	triggerChecker := TriggerChecker{
-		TriggerId: "SuperId",
+		TriggerID: "SuperId",
 		Database:  dataBase,
 		Logger:    logger,
 		trigger:   &moira.Trigger{},
@@ -222,7 +222,7 @@ func TestCompareChecks(t *testing.T) {
 			currentCheck.State = EXCEPTION
 
 			dataBase.EXPECT().PushEvent(&moira.EventData{
-				TriggerID: triggerChecker.TriggerId,
+				TriggerID: triggerChecker.TriggerID,
 				Timestamp: currentCheck.Timestamp,
 				State:     EXCEPTION,
 				OldState:  EXCEPTION,

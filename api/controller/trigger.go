@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-//Save triggers create or update trigger data and update trigger metrics in last state
+//SaveTrigger create or update trigger data and update trigger metrics in last state
 func SaveTrigger(database moira.Database, trigger *moira.Trigger, triggerID string, timeSeriesNames map[string]bool) (*dto.SaveTriggerResponse, *api.ErrorResponse) {
 	if err := database.AcquireTriggerCheckLock(triggerID, 10); err != nil {
 		return nil, api.ErrorInternalServer(err)
@@ -23,7 +23,7 @@ func SaveTrigger(database moira.Database, trigger *moira.Trigger, triggerID stri
 	}
 
 	if lastCheck != nil {
-		for metric, _ := range lastCheck.Metrics {
+		for metric := range lastCheck.Metrics {
 			if _, ok := timeSeriesNames[metric]; !ok {
 				delete(lastCheck.Metrics, metric)
 			}

@@ -420,7 +420,7 @@ func TestCheckErrors(t *testing.T) {
 	var ttl int64 = 30
 
 	triggerChecker := TriggerChecker{
-		TriggerId: "SuperId",
+		TriggerID: "SuperId",
 		Database:  dataBase,
 		Logger:    logger,
 		Config: &Config{
@@ -450,7 +450,7 @@ func TestCheckErrors(t *testing.T) {
 		dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
 		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 		dataBase.EXPECT().GetMetricsValues([]string{metric}, triggerChecker.From, triggerChecker.Until).Return(nil, metricErr)
-		dataBase.EXPECT().SetTriggerLastCheck(triggerChecker.TriggerId, &moira.CheckData{
+		dataBase.EXPECT().SetTriggerLastCheck(triggerChecker.TriggerID, &moira.CheckData{
 			Metrics:        triggerChecker.lastCheck.Metrics,
 			State:          EXCEPTION,
 			Timestamp:      triggerChecker.Until,
@@ -465,7 +465,7 @@ func TestCheckErrors(t *testing.T) {
 	Convey("Trigger has no metrics error", t, func() {
 		dataBase.EXPECT().GetPatternMetrics(pattern).Return(nil, nil)
 		dataBase.EXPECT().PushEvent(&moira.EventData{
-			TriggerID: triggerChecker.TriggerId,
+			TriggerID: triggerChecker.TriggerID,
 			Timestamp: triggerChecker.Until,
 			State:     triggerChecker.ttlState,
 			OldState:  EXCEPTION,
@@ -473,7 +473,7 @@ func TestCheckErrors(t *testing.T) {
 			Value:     nil,
 			Message:   nil}, true).Return(nil)
 
-		dataBase.EXPECT().SetTriggerLastCheck(triggerChecker.TriggerId, &moira.CheckData{
+		dataBase.EXPECT().SetTriggerLastCheck(triggerChecker.TriggerID, &moira.CheckData{
 			Metrics:        triggerChecker.lastCheck.Metrics,
 			State:          triggerChecker.ttlState,
 			Timestamp:      triggerChecker.Until,
@@ -535,7 +535,7 @@ func TestHandleTrigger(t *testing.T) {
 		metric: metricValues,
 	}
 	triggerChecker := TriggerChecker{
-		TriggerId: "SuperId",
+		TriggerID: "SuperId",
 		Database:  dataBase,
 		Logger:    logger,
 		Config: &Config{
@@ -559,11 +559,11 @@ func TestHandleTrigger(t *testing.T) {
 		dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
 		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 		dataBase.EXPECT().GetMetricsValues([]string{metric}, triggerChecker.From, triggerChecker.Until).Return(dataList, nil)
-		var val float64 = 0
+		var val float64
 		var val1 float64 = 4
 		dataBase.EXPECT().CleanupMetricValues(metric, triggerChecker.Until-triggerChecker.Config.MetricsTTL)
 		dataBase.EXPECT().PushEvent(&moira.EventData{
-			TriggerID: triggerChecker.TriggerId,
+			TriggerID: triggerChecker.TriggerID,
 			Timestamp: 3617,
 			State:     OK,
 			OldState:  NODATA,
@@ -635,7 +635,7 @@ func TestHandleTrigger(t *testing.T) {
 		dataBase.EXPECT().GetMetricsValues([]string{metric}, triggerChecker.From, triggerChecker.Until).Return(dataList, nil)
 		dataBase.EXPECT().CleanupMetricValues(metric, triggerChecker.Until-triggerChecker.Config.MetricsTTL)
 		dataBase.EXPECT().PushEvent(&moira.EventData{
-			TriggerID: triggerChecker.TriggerId,
+			TriggerID: triggerChecker.TriggerID,
 			Timestamp: lastCheck.Timestamp - *triggerChecker.ttl,
 			State:     NODATA,
 			OldState:  OK,

@@ -40,7 +40,7 @@ func TestGetUserSubscriptions(t *testing.T) {
 
 	Convey("Errors", t, func() {
 		Convey("GetUserSubscriptionIDs", func() {
-			expected := fmt.Errorf("Oh no!!!11 Cant get subscription ids!")
+			expected := fmt.Errorf("Oh no!!!11 Cant get subscription ids")
 			database.EXPECT().GetUserSubscriptionIDs(login).Return(nil, expected)
 			list, err := GetUserSubscriptions(database, login)
 			So(err, ShouldResemble, api.ErrorInternalServer(expected))
@@ -48,7 +48,7 @@ func TestGetUserSubscriptions(t *testing.T) {
 		})
 
 		Convey("GetSubscriptions", func() {
-			expected := fmt.Errorf("Oh no!!!11 Cant get subscriptions!")
+			expected := fmt.Errorf("Oh no!!!11 Cant get subscriptions")
 			subscriptionIDs := []string{uuid.NewV4().String(), uuid.NewV4().String()}
 			database.EXPECT().GetUserSubscriptionIDs(login).Return(subscriptionIDs, nil)
 			database.EXPECT().GetSubscriptions(subscriptionIDs).Return(nil, expected)

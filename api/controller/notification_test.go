@@ -51,7 +51,7 @@ func TestDeleteNotification(t *testing.T) {
 
 	Convey("Error delete", t, func() {
 		key := "123"
-		var result int64 = 0
+		var result int64
 		expected := fmt.Errorf("Oooops! Can not get notifications")
 		dataBase.EXPECT().RemoveNotification(key).Return(result, expected)
 		actual, err := DeleteNotification(dataBase, key)

@@ -85,7 +85,7 @@ func TestGetAllTriggers(t *testing.T) {
 
 func TestGetTriggerIdsRange(t *testing.T) {
 	triggers := make([]string, 20)
-	for i, _ := range triggers {
+	for i := range triggers {
 		triggers[i] = uuid.NewV4().String()
 	}
 	Convey("Has triggers in range", t, func() {
@@ -124,7 +124,7 @@ func TestGetNotFilteredTriggers(t *testing.T) {
 	defer mockCtrl.Finish()
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
 	triggers := make([]string, 20)
-	for i, _ := range triggers {
+	for i := range triggers {
 		triggers[i] = uuid.NewV4().String()
 	}
 
@@ -149,7 +149,7 @@ func TestGetNotFilteredTriggers(t *testing.T) {
 	})
 
 	Convey("GetTriggerCheckIds error", t, func() {
-		var exp int64 = 0
+		var exp int64
 		expected := fmt.Errorf("GetTriggerCheckIds error")
 		database.EXPECT().GetTriggerCheckIds().Return(nil, exp, expected)
 		triggersChecks, total, err := getNotFilteredTriggers(database, 0, 20)
@@ -175,7 +175,7 @@ func TestGetFilteredTriggers(t *testing.T) {
 	defer mockCtrl.Finish()
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
 	triggers := make([]string, 20)
-	for i, _ := range triggers {
+	for i := range triggers {
 		triggers[i] = uuid.NewV4().String()
 	}
 	tags := []string{"tag1", "tag2"}
@@ -201,7 +201,7 @@ func TestGetFilteredTriggers(t *testing.T) {
 	})
 
 	Convey("GetFilteredTriggerCheckIds error", t, func() {
-		var exp int64 = 0
+		var exp int64
 		expected := fmt.Errorf("GetFilteredTriggerCheckIds error")
 		database.EXPECT().GetFilteredTriggerCheckIds(tags, true).Return(nil, exp, expected)
 		triggersChecks, total, err := getFilteredTriggers(database, 0, 20, true, tags)
@@ -226,10 +226,10 @@ func TestGetTriggerPage(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
-	var page int64 = 0
+	var page int64
 	var size int64 = 10
 	triggers := make([]string, 20)
-	for i, _ := range triggers {
+	for i := range triggers {
 		triggers[i] = uuid.NewV4().String()
 	}
 
@@ -263,7 +263,7 @@ func TestGetTriggerPage(t *testing.T) {
 	})
 
 	Convey("No tags only errors and error GetFilteredTriggerCheckIds", t, func() {
-		var exp int64 = 0
+		var exp int64
 		expected := fmt.Errorf("GetFilteredTriggerCheckIds error")
 		database.EXPECT().GetFilteredTriggerCheckIds(make([]string, 0), true).Return(nil, exp, expected)
 		list, err := GetTriggerPage(database, 0, 20, true, make([]string, 0))

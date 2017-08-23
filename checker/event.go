@@ -26,7 +26,7 @@ func (triggerChecker *TriggerChecker) compareChecks(currentCheck moira.CheckData
 	}
 
 	event := moira.EventData{
-		TriggerID: triggerChecker.TriggerId,
+		TriggerID: triggerChecker.TriggerID,
 		State:     currentStateValue,
 		OldState:  lastStateValue,
 		Timestamp: timestamp,
@@ -59,7 +59,7 @@ func (triggerChecker *TriggerChecker) compareStates(metric string, currentState 
 	}
 
 	event := moira.EventData{
-		TriggerID: triggerChecker.TriggerId,
+		TriggerID: triggerChecker.TriggerID,
 		State:     currentState.State,
 		OldState:  lastState.State,
 		Timestamp: currentState.Timestamp,

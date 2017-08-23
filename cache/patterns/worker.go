@@ -29,7 +29,7 @@ func NewRefreshPatternWorker(database moira.Database, metrics *graphite.CacheMet
 	}
 }
 
-//Run process to refresh pattern tree every second
+//Start process to refresh pattern tree every second
 func (worker *RefreshPatternWorker) Start() {
 	worker.tomb.Go(func() error {
 		for {

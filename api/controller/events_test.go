@@ -35,7 +35,7 @@ func TestGetEvents(t *testing.T) {
 	})
 
 	Convey("Test no events", t, func() {
-		var total int64 = 0
+		var total int64
 		dataBase.EXPECT().GetEvents(triggerID, page*size, size-1).Return(make([]*moira.EventData, 0), nil)
 		dataBase.EXPECT().GetTriggerEventsCount(triggerID, int64(-1)).Return(total)
 		list, err := GetTriggerEvents(dataBase, triggerID, page, size)

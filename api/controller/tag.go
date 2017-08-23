@@ -68,10 +68,9 @@ func DeleteTag(database moira.Database, tagName string) (*dto.MessageResponse, *
 
 	if len(triggerIDs) > 0 {
 		return nil, api.ErrorInvalidRequest(fmt.Errorf("This tag is assigned to %v triggers. Remove tag from triggers first", len(triggerIDs)))
-	} else {
-		if err = database.DeleteTag(tagName); err != nil {
-			return nil, api.ErrorInternalServer(err)
-		}
+	}
+	if err = database.DeleteTag(tagName); err != nil {
+		return nil, api.ErrorInternalServer(err)
 	}
 	return &dto.MessageResponse{Message: "tag deleted"}, nil
 }

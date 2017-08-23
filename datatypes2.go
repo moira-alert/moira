@@ -76,9 +76,9 @@ func (metricState MetricState) GetEventTimestamp() int64 {
 	return metricState.EventTimestamp
 }
 
-func (metricState CheckData) GetEventTimestamp() int64 {
-	if metricState.EventTimestamp == 0 {
-		return metricState.Timestamp
+func (checkData CheckData) GetEventTimestamp() int64 {
+	if checkData.EventTimestamp == 0 {
+		return checkData.Timestamp
 	}
-	return metricState.EventTimestamp
+	return checkData.EventTimestamp
 }

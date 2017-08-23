@@ -30,7 +30,7 @@ func (triggerChecker *TriggerChecker) Check() error {
 	for _, metricData := range checkData.Metrics {
 		checkData.Score += scores[metricData.State]
 	}
-	return triggerChecker.Database.SetTriggerLastCheck(triggerChecker.TriggerId, &checkData)
+	return triggerChecker.Database.SetTriggerLastCheck(triggerChecker.TriggerID, &checkData)
 }
 
 func (triggerChecker *TriggerChecker) handleTrigger() (moira.CheckData, error) {

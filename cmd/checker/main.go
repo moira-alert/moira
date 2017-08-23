@@ -20,8 +20,11 @@ var (
 	configFileName         = flag.String("config", "/etc/moira/config.yml", "Path to configuration file")
 	printVersion           = flag.Bool("version", false, "Print version and exit")
 	printDefaultConfigFlag = flag.Bool("default-config", false, "Print default config and exit")
-	triggerId              = flag.String("t", "", "Check single trigger by id and exit")
+	triggerID              = flag.String("t", "", "Check single trigger by id and exit")
+)
 
+//Moira checker bin version
+var (
 	MoiraVersion = "unknown"
 	GitCommit    = "unknown"
 	Version      = "unknown"
@@ -62,7 +65,7 @@ func main() {
 	database := redis.NewDatabase(logger, databaseSettings, databaseMetrics)
 
 	checkerSettings := config.Checker.getSettings()
-	if triggerId != nil && *triggerId != "" {
+	if triggerID != nil && *triggerID != "" {
 		checkSingleTrigger(database, logger, checkerSettings)
 	}
 
@@ -88,7 +91,7 @@ func main() {
 
 func checkSingleTrigger(database moira.Database, logger moira.Logger, settings *checker.Config) {
 	triggerChecker := checker.TriggerChecker{
-		TriggerId: *triggerId,
+		TriggerID: *triggerID,
 		Database:  database,
 		Logger:    logger,
 		Config:    settings,

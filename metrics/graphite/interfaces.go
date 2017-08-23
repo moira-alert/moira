@@ -39,7 +39,7 @@ type Timer interface {
 	Variance() float64
 }
 
-// Gauges hold an int64 value that can be set arbitrarily.
+// Gauge hold an int64 value that can be set arbitrarily.
 type Gauge interface {
 	Update(int64)
 	Value() int64

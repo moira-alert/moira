@@ -26,7 +26,7 @@ func NewHeartbeatWorker(database moira.Database, metrics *graphite.CacheMetrics,
 	}
 }
 
-//Run every 5 second takes TotalMetricsReceived metrics and save it to database, for self-checking
+//Start every 5 second takes TotalMetricsReceived metrics and save it to database, for self-checking
 func (worker *Worker) Start() {
 	count := worker.metrics.TotalMetricsReceived.Count()
 	worker.tomb.Go(func() error {

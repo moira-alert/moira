@@ -148,12 +148,12 @@ func afterTest() {
 	notif.StopSenders()
 }
 
-var subId = "SubscriptionID-000000000000001"
+var subID = "SubscriptionID-000000000000001"
 
 var event = moira.EventData{
 	Metric:         "generate.event.1",
 	State:          "OK",
 	OldState:       "WARN",
 	TriggerID:      "triggerID-0000000000001",
-	SubscriptionID: &subId,
+	SubscriptionID: &subID,
 }

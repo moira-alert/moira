@@ -1,7 +1,6 @@
 package dto
 
 import (
-	"context"
 	"fmt"
 	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/api/middleware"
@@ -72,7 +71,7 @@ func resolvePatterns(request *http.Request, trigger *Trigger, expressionValues *
 	timeSeriesNames := make(map[string]bool)
 
 	for _, tar := range trigger.Targets {
-		database := request.Context().Value("database").(moira.Database)
+		database := middleware.GetDatabase(request)
 		result, err := target.EvaluateTarget(database, tar, now-600, now, true)
 		if err != nil {
 			return err
@@ -90,9 +89,9 @@ func resolvePatterns(request *http.Request, trigger *Trigger, expressionValues *
 			targetName := fmt.Sprintf("t%v", targetNum)
 			expressionValues.AdditionalTargetsValues[targetName] = 42
 		}
-		targetNum += 1
+		targetNum++
 	}
-	*request = *request.WithContext(context.WithValue(request.Context(), "timeSeriesNames", timeSeriesNames))
+	middleware.SetTimeSeriesNames(request, timeSeriesNames)
 	return nil
 }
 

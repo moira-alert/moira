@@ -27,14 +27,14 @@ func TestThrottling(t *testing.T) {
 		Value: "mail1@example.com",
 	}
 
-	subId := "SubscriptionID-000000000000001"
+	subID := "SubscriptionID-000000000000001"
 
 	var event = moira.EventData{
 		Metric:         "generate.event.1",
 		State:          "OK",
 		OldState:       "WARN",
 		TriggerID:      trigger.ID,
-		SubscriptionID: &subId,
+		SubscriptionID: &subID,
 	}
 
 	mockCtrl := gomock.NewController(t)
@@ -75,13 +75,13 @@ func TestThrottling(t *testing.T) {
 	})
 
 	Convey("Test event state is TEST and no send fails, should return now notification time", t, func() {
-		subId := "SubscriptionID-000000000000001"
+		subID := "SubscriptionID-000000000000001"
 		testEvent := moira.EventData{
 			Metric:         "generate.event.1",
 			State:          "TEST",
 			OldState:       "WARN",
 			TriggerID:      trigger.ID,
-			SubscriptionID: &subId,
+			SubscriptionID: &subID,
 		}
 
 		expected3 := expected
@@ -103,7 +103,7 @@ func TestThrottling(t *testing.T) {
 }
 
 func TestSubscriptionSchedule(t *testing.T) {
-	subId := "SubscriptionID-000000000000001"
+	subID := "SubscriptionID-000000000000001"
 	var subscription = moira.SubscriptionData{
 		ID:                "SubscriptionID-000000000000001",
 		Enabled:           true,
@@ -117,7 +117,7 @@ func TestSubscriptionSchedule(t *testing.T) {
 		State:          "OK",
 		OldState:       "WARN",
 		TriggerID:      "triggerID-0000000000001",
-		SubscriptionID: &subId,
+		SubscriptionID: &subID,
 	}
 
 	mockCtrl := gomock.NewController(t)

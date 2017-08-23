@@ -22,7 +22,10 @@ var (
 	printVersion           = flag.Bool("version", false, "Print current version and exit")
 	printDefaultConfigFlag = flag.Bool("default-config", false, "Print default config and exit")
 	convertDb              = flag.Bool("convert", false, "Convert telegram contacts and exit")
+)
 
+//Moira notifier bin version
+var (
 	MoiraVersion = "unknown"
 	GitCommit    = "unknown"
 	Version      = "unknown"

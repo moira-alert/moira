@@ -23,7 +23,10 @@ var (
 	configFileName         = flag.String("config", "/etc/moira/config.yml", "path config file")
 	printVersion           = flag.Bool("version", false, "Print version and exit")
 	printDefaultConfigFlag = flag.Bool("default-config", false, "Print default config and exit")
+)
 
+//Moira cache bin version
+var (
 	MoiraVersion = "unknown"
 	GitCommit    = "unknown"
 	Version      = "unknown"

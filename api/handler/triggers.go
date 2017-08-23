@@ -7,6 +7,7 @@ import (
 	"github.com/moira-alert/moira-alert/api"
 	"github.com/moira-alert/moira-alert/api/controller"
 	"github.com/moira-alert/moira-alert/api/dto"
+	"github.com/moira-alert/moira-alert/api/middleware"
 	"github.com/moira-alert/moira-alert/expression"
 	"github.com/moira-alert/moira-alert/target"
 	"net/http"
@@ -17,7 +18,7 @@ import (
 func triggers(router chi.Router) {
 	router.Get("/", getAllTriggers)
 	router.Put("/", createTrigger)
-	router.With(paginate(0, 10)).Get("/page", getTriggersPage)
+	router.With(middleware.Paginate(0, 10)).Get("/page", getTriggersPage)
 	router.Route("/{triggerId}", trigger)
 }
 
@@ -44,7 +45,7 @@ func createTrigger(writer http.ResponseWriter, request *http.Request) {
 		}
 		return
 	}
-	timeSeriesNames := request.Context().Value("timeSeriesNames").(map[string]bool)
+	timeSeriesNames := middleware.GetTimeSeriesNames(request)
 	response, err := controller.CreateTrigger(database, &trigger.Trigger, timeSeriesNames)
 	if err != nil {
 		render.Render(writer, request, err)
@@ -61,8 +62,8 @@ func getTriggersPage(writer http.ResponseWriter, request *http.Request) {
 	onlyErrors := getFilterOkFlag(request)
 	filterTags := getRequestTags(request)
 
-	page := request.Context().Value("page").(int64)
-	size := request.Context().Value("size").(int64)
+	page := middleware.GetPage(request)
+	size := middleware.GetSize(request)
 
 	triggersList, errorResponse := controller.GetTriggerPage(database, page, size, onlyErrors, filterTags)
 	if errorResponse != nil {
@@ -117,7 +118,6 @@ func getFilterOkFlag(request *http.Request) bool {
 	filterOkCookie, err := request.Cookie("moira_filter_ok")
 	if err == http.ErrNoCookie {
 		return false
-	} else {
-		return filterOkCookie.Value == "true"
 	}
+	return filterOkCookie.Value == "true"
 }

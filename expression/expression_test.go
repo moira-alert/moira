@@ -15,8 +15,8 @@ type getExpressionValuesTest struct {
 
 func TestExpression(t *testing.T) {
 	Convey("Test Default", t, func() {
-		var warnValue float64 = 60.0
-		var errorValue float64 = 90.0
+		warnValue := 60.0
+		errorValue := 90.0
 		result, err := (&TriggerExpression{MainTargetValue: 10.0, WarnValue: &warnValue, ErrorValue: &errorValue}).Evaluate()
 		So(err, ShouldBeNil)
 		So(result, ShouldResemble, "OK")
@@ -62,8 +62,7 @@ func TestExpression(t *testing.T) {
 }
 
 func TestGetExpressionValue(t *testing.T) {
-	var floatVal float64 = 10
-
+	floatVal := 10.0
 	Convey("Test basic strings", t, func() {
 		getExpressionValuesTests := []getExpressionValuesTest{
 			{

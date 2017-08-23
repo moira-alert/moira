@@ -8,6 +8,7 @@ import (
 	"github.com/moira-alert/moira-alert/api/controller"
 	"github.com/moira-alert/moira-alert/api/dto"
 	"net/http"
+	"github.com/moira-alert/moira-alert/api/middleware"
 )
 
 func contact(router chi.Router) {
@@ -35,7 +36,7 @@ func createNewContact(writer http.ResponseWriter, request *http.Request) {
 		render.Render(writer, request, api.ErrorInvalidRequest(err))
 		return
 	}
-	userLogin := request.Context().Value("login").(string)
+	userLogin := middleware.GetLogin(request)
 
 	if err := controller.CreateContact(database, contact, userLogin); err != nil {
 		render.Render(writer, request, err)
@@ -49,14 +50,14 @@ func createNewContact(writer http.ResponseWriter, request *http.Request) {
 }
 
 func deleteContact(writer http.ResponseWriter, request *http.Request) {
-	contactId := chi.URLParam(request, "contactId")
-	if contactId == "" {
+	contactID := chi.URLParam(request, "contactId")
+	if contactID == "" {
 		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("ContactId must be set")))
 		return
 	}
-	userLogin := request.Context().Value("login").(string)
+	userLogin := middleware.GetLogin(request)
 
-	err := controller.DeleteContact(database, contactId, userLogin)
+	err := controller.DeleteContact(database, contactID, userLogin)
 	if err != nil {
 		render.Render(writer, request, err)
 	}

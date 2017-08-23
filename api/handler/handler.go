@@ -25,8 +25,8 @@ func NewHandler(db moira.Database, log moira.Logger) http.Handler {
 	router.MethodNotAllowed(methodNotAllowedHandler)
 
 	router.Route("/api", func(router chi.Router) {
-		router.Use(databaseContext)
-		router.Use(userContext)
+		router.Use(moira_middle.DatabaseContext(database))
+		router.Use(moira_middle.UserContext)
 		router.Route("/user", user)
 		router.Route("/trigger", triggers)
 		router.Route("/tag", tag)

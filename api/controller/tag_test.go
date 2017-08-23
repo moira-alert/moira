@@ -25,7 +25,7 @@ func TestGetAllTags(t *testing.T) {
 	})
 
 	Convey("Error", t, func() {
-		expected := fmt.Errorf("Nooooooooooooooooooooo!")
+		expected := fmt.Errorf("Nooooooooooooooooooooo")
 		database.EXPECT().GetTagNames().Return(nil, expected)
 		data, err := GetAllTags(database)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))

@@ -18,7 +18,10 @@ var (
 	configFileName         = flag.String("config", "/etc/moira/config.yml", "Path to configuration file")
 	printVersion           = flag.Bool("version", false, "Print version and exit")
 	printDefaultConfigFlag = flag.Bool("default-config", false, "Print default config and exit")
+)
 
+//Moira api bin version
+var (
 	MoiraVersion = "unknown"
 	GitCommit    = "unknown"
 	Version      = "unknown"
@@ -60,9 +63,9 @@ func main() {
 
 	httpHandler := handler.NewHandler(database, logger)
 
-	logger.Infof("Start listening by port: [%s]", config.Api.Port)
+	logger.Infof("Start listening by port: [%s]", config.API.Port)
 	server := &http.Server{
-		Addr:    ":" + config.Api.Port,
+		Addr:    ":" + config.API.Port,
 		Handler: httpHandler,
 	}
 	/*if err = gracehttp.Serve(server); err != nil {

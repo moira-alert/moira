@@ -46,7 +46,7 @@ func TestIsScheduleAllows(t *testing.T) {
 	//454380 - 01/06/1970 6:13am (UTC) Tue
 
 	Convey("No schedule", t, func() {
-		var noSchedule *ScheduleData = nil
+		var noSchedule *ScheduleData
 		So(noSchedule.IsScheduleAllows(367980), ShouldBeTrue)
 	})
 

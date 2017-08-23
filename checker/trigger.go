@@ -7,7 +7,7 @@ import (
 )
 
 type TriggerChecker struct {
-	TriggerId string
+	TriggerID string
 	Database  moira.Database
 	Logger    moira.Logger
 	Config    *Config
@@ -27,7 +27,7 @@ var ErrTriggerNotExists = errors.New("trigger does not exists")
 
 func (triggerChecker *TriggerChecker) InitTriggerChecker() error {
 	triggerChecker.Until = time.Now().Unix()
-	trigger, err := triggerChecker.Database.GetTrigger(triggerChecker.TriggerId)
+	trigger, err := triggerChecker.Database.GetTrigger(triggerChecker.TriggerID)
 	if err != nil {
 		return err
 	}
@@ -45,7 +45,7 @@ func (triggerChecker *TriggerChecker) InitTriggerChecker() error {
 		triggerChecker.ttlState = NODATA
 	}
 
-	triggerChecker.lastCheck, err = getLastCheck(triggerChecker.Database, triggerChecker.TriggerId, triggerChecker.Until-3600)
+	triggerChecker.lastCheck, err = getLastCheck(triggerChecker.Database, triggerChecker.TriggerID, triggerChecker.Until-3600)
 	if err != nil {
 		return err
 	}
@@ -60,8 +60,8 @@ func (triggerChecker *TriggerChecker) InitTriggerChecker() error {
 	return nil
 }
 
-func getLastCheck(database moira.Database, triggerId string, emptyLastCheckTimestamp int64) (*moira.CheckData, error) {
-	lastCheck, err := database.GetTriggerLastCheck(triggerId)
+func getLastCheck(database moira.Database, triggerID string, emptyLastCheckTimestamp int64) (*moira.CheckData, error) {
+	lastCheck, err := database.GetTriggerLastCheck(triggerID)
 	if err != nil {
 		return lastCheck, err
 	}

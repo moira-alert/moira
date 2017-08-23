@@ -6,7 +6,7 @@ import (
 	"github.com/moira-alert/moira-alert/api/dto"
 )
 
-//GetNotification gets all notifications from current page, if end==-1 && start==0 gets all notifications
+//GetNotifications gets all notifications from current page, if end==-1 && start==0 gets all notifications
 func GetNotifications(database moira.Database, start int64, end int64) (*dto.NotificationsList, *api.ErrorResponse) {
 	notifications, total, err := database.GetNotifications(start, end)
 	if err != nil {

@@ -1,67 +1,70 @@
-package handler
+package middleware
 
 import (
 	"context"
 	"fmt"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
+	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/api"
 	"net/http"
 	"strconv"
 )
 
-func databaseContext(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		ctx := context.WithValue(request.Context(), "database", database)
-		next.ServeHTTP(writer, request.WithContext(ctx))
-	})
+func DatabaseContext(database moira.Database) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+			ctx := context.WithValue(request.Context(), databaseKey, database)
+			next.ServeHTTP(writer, request.WithContext(ctx))
+		})
+	}
 }
 
-func userContext(next http.Handler) http.Handler {
+func UserContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		userLogin := request.Header.Get("x-webauth-user")
-		ctx := context.WithValue(request.Context(), "login", userLogin)
+		ctx := context.WithValue(request.Context(), loginKey, userLogin)
 		next.ServeHTTP(writer, request.WithContext(ctx))
 	})
 }
 
-func triggerContext(next http.Handler) http.Handler {
+func TriggerContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		triggerId := chi.URLParam(request, "triggerId")
-		if triggerId == "" {
+		triggerID := chi.URLParam(request, "triggerId")
+		if triggerID == "" {
 			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("TriggerID must be set")))
 			return
 		}
-		ctx := context.WithValue(request.Context(), "triggerId", triggerId)
+		ctx := context.WithValue(request.Context(), triggerIDKey, triggerID)
 		next.ServeHTTP(writer, request.WithContext(ctx))
 	})
 }
 
-func tagContext(next http.Handler) http.Handler {
+func TagContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		tag := chi.URLParam(request, "tag")
 		if tag == "" {
 			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("Tag must be set")))
 			return
 		}
-		ctx := context.WithValue(request.Context(), "tag", tag)
+		ctx := context.WithValue(request.Context(), tagKey, tag)
 		next.ServeHTTP(writer, request.WithContext(ctx))
 	})
 }
 
-func subscriptionContext(next http.Handler) http.Handler {
+func SubscriptionContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		triggerId := chi.URLParam(request, "subscriptionId")
-		if triggerId == "" {
+		triggerID := chi.URLParam(request, "subscriptionId")
+		if triggerID == "" {
 			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("SubscriptionId must be set")))
 			return
 		}
-		ctx := context.WithValue(request.Context(), "subscriptionId", triggerId)
+		ctx := context.WithValue(request.Context(), subscriptionIDKey, triggerID)
 		next.ServeHTTP(writer, request.WithContext(ctx))
 	})
 }
 
-func paginate(defaultPage, defaultSize int64) func(next http.Handler) http.Handler {
+func Paginate(defaultPage, defaultSize int64) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 			page, err := strconv.ParseInt(request.URL.Query().Get("p"), 10, 64)
@@ -73,14 +76,14 @@ func paginate(defaultPage, defaultSize int64) func(next http.Handler) http.Handl
 				size = defaultSize
 			}
 
-			ctxPage := context.WithValue(request.Context(), "page", page)
-			ctxSize := context.WithValue(ctxPage, "size", size)
+			ctxPage := context.WithValue(request.Context(), pageKey, page)
+			ctxSize := context.WithValue(ctxPage, sizeKey, size)
 			next.ServeHTTP(writer, request.WithContext(ctxSize))
 		})
 	}
 }
 
-func dateRange(defaultFrom, defaultTo string) func(next http.Handler) http.Handler {
+func DateRange(defaultFrom, defaultTo string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 			from := request.URL.Query().Get("from")
@@ -92,8 +95,8 @@ func dateRange(defaultFrom, defaultTo string) func(next http.Handler) http.Handl
 				to = defaultTo
 			}
 
-			ctxPage := context.WithValue(request.Context(), "from", from)
-			ctxSize := context.WithValue(ctxPage, "to", to)
+			ctxPage := context.WithValue(request.Context(), fromKey, from)
+			ctxSize := context.WithValue(ctxPage, toKey, to)
 			next.ServeHTTP(writer, request.WithContext(ctxSize))
 		})
 	}

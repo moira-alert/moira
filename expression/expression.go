@@ -30,7 +30,7 @@ type TriggerExpression struct {
 	PreviousState           string
 }
 
-func (values TriggerExpression) Get(name string) (interface{}, error) {
+func (triggerExpression TriggerExpression) Get(name string) (interface{}, error) {
 	switch name {
 	case "OK":
 		return "OK", nil
@@ -41,21 +41,21 @@ func (values TriggerExpression) Get(name string) (interface{}, error) {
 	case "NODATA":
 		return "NODATA", nil
 	case "WARN_VALUE":
-		if values.WarnValue == nil {
+		if triggerExpression.WarnValue == nil {
 			return nil, fmt.Errorf("No value with name WARN_VALUE")
 		}
-		return *values.WarnValue, nil
+		return *triggerExpression.WarnValue, nil
 	case "ERROR_VALUE":
-		if values.ErrorValue == nil {
+		if triggerExpression.ErrorValue == nil {
 			return nil, fmt.Errorf("No value with name ERROR_VALUE")
 		}
-		return *values.ErrorValue, nil
+		return *triggerExpression.ErrorValue, nil
 	case "t1":
-		return values.MainTargetValue, nil
+		return triggerExpression.MainTargetValue, nil
 	case "PREV_STATE":
-		return values.PreviousState, nil
+		return triggerExpression.PreviousState, nil
 	default:
-		value, ok := values.AdditionalTargetsValues[name]
+		value, ok := triggerExpression.AdditionalTargetsValues[name]
 		if !ok {
 			return nil, fmt.Errorf("No value with name %s", name)
 		}
@@ -83,9 +83,8 @@ func (triggerExpression *TriggerExpression) Evaluate() (string, error) {
 func getExpression(triggerExpression *TriggerExpression) (*govaluate.EvaluableExpression, error) {
 	if triggerExpression.Expression != nil && *triggerExpression.Expression != "" {
 		return getUserExpression(*triggerExpression.Expression)
-	} else {
-		return getSimpleExpression(triggerExpression)
 	}
+	return getSimpleExpression(triggerExpression)
 }
 
 func getSimpleExpression(triggerExpression *TriggerExpression) (*govaluate.EvaluableExpression, error) {
@@ -94,9 +93,8 @@ func getSimpleExpression(triggerExpression *TriggerExpression) (*govaluate.Evalu
 	}
 	if *triggerExpression.ErrorValue > *triggerExpression.WarnValue {
 		return default1, nil
-	} else {
-		return default2, nil
 	}
+	return default2, nil
 }
 
 func getUserExpression(triggerExpression string) (*govaluate.EvaluableExpression, error) {

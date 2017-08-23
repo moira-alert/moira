@@ -7,7 +7,7 @@ import (
 type config struct {
 	Redis  cmd.RedisConfig  `yaml:"redis"`
 	Logger cmd.LoggerConfig `yaml:"log"`
-	Api    apiConfig        `yaml:"api"`
+	API    apiConfig        `yaml:"api"`
 }
 
 type apiConfig struct {
@@ -24,7 +24,7 @@ func getDefault() config {
 			LogFile:  "stdout",
 			LogLevel: "debug",
 		},
-		Api: apiConfig{
+		API: apiConfig{
 			Port: "8081",
 		},
 	}

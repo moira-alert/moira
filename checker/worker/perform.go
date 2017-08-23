@@ -31,14 +31,14 @@ func (worker *Worker) perform(triggerIDs []string, noCache bool, cacheTTL int64,
 	}
 }
 
-func (worker *Worker) handleTriggerToCheck(triggerId string) error {
-	acquired, err := worker.Database.SetTriggerCheckLock(triggerId)
+func (worker *Worker) handleTriggerToCheck(triggerID string) error {
+	acquired, err := worker.Database.SetTriggerCheckLock(triggerID)
 	if err != nil {
 		return err
 	}
 	if acquired {
 		start := time.Now()
-		if err := worker.checkTrigger(triggerId); err != nil {
+		if err := worker.checkTrigger(triggerID); err != nil {
 			return err
 		}
 		end := time.Now()
@@ -48,10 +48,10 @@ func (worker *Worker) handleTriggerToCheck(triggerId string) error {
 	return nil
 }
 
-func (worker *Worker) checkTrigger(triggerId string) error {
-	defer worker.Database.DeleteTriggerCheckLock(triggerId)
+func (worker *Worker) checkTrigger(triggerID string) error {
+	defer worker.Database.DeleteTriggerCheckLock(triggerID)
 	triggerChecker := checker.TriggerChecker{
-		TriggerId: triggerId,
+		TriggerID: triggerID,
 		Database:  worker.Database,
 		Logger:    worker.Logger,
 		Config:    worker.Config,
