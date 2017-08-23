@@ -74,7 +74,7 @@ func main() {
 		logger.Fatalf("Can not configure senders: %s", err.Error())
 	}
 
-	initWorkers(notifier2, config, notifierMetrics)
+	initWorkers(notifier2, &config, notifierMetrics)
 }
 
 func initWorkers(notifier2 notifier.Notifier, config *config, metric *graphite.NotifierMetrics) {

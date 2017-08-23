@@ -1,13 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/moira-alert/moira-alert/cmd"
 	"github.com/moira-alert/moira-alert/notifier"
 	"github.com/moira-alert/moira-alert/notifier/selfstate"
-	"gopkg.in/yaml.v2"
 	"menteslibres.net/gosexy/to"
 )
 
