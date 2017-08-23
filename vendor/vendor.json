@@ -52,6 +52,36 @@
 			"revisionTime": "2017-02-28T07:34:54Z"
 		},
 		{
+			"checksumSHA1": "imR2wF388/0fBU6RRWx8RvTi8Q8=",
+			"path": "github.com/facebookgo/clock",
+			"revision": "600d898af40aa09a7a93ecb9265d87b0504b6f03",
+			"revisionTime": "2015-04-10T01:09:13Z"
+		},
+		{
+			"checksumSHA1": "2Jy8ibzL8kHuenZI0LAvCLI1e98=",
+			"path": "github.com/facebookgo/grace/gracehttp",
+			"revision": "4afe952a37a495ae4ac0c1d4ce5f66e91058d149",
+			"revisionTime": "2017-02-18T22:52:39Z"
+		},
+		{
+			"checksumSHA1": "nj3ykV8Em7WOfvHNIo/XNTT9LOM=",
+			"path": "github.com/facebookgo/grace/gracenet",
+			"revision": "4afe952a37a495ae4ac0c1d4ce5f66e91058d149",
+			"revisionTime": "2017-02-18T22:52:39Z"
+		},
+		{
+			"checksumSHA1": "8SgB/r3Cf+OvXmg8bIPnlEq03Bs=",
+			"path": "github.com/facebookgo/httpdown",
+			"revision": "a3b1354551a26449fbe05f5d855937f6e7acbd71",
+			"revisionTime": "2016-03-23T22:10:27Z"
+		},
+		{
+			"checksumSHA1": "SzXvrWxavFo8HD/2hnbdu17C3VE=",
+			"path": "github.com/facebookgo/stats",
+			"revision": "1b76add642e42c6ffba7211ad7b3939ce654526e",
+			"revisionTime": "2015-10-06T22:16:25Z"
+		},
+		{
 			"checksumSHA1": "6X3O3mfvOyiwV2iAb5GjxARs08c=",
 			"path": "github.com/garyburd/redigo/internal",
 			"revision": "57f1cd7de6175c96b423e7ac2534ff2b39e2ef79",

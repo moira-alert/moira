@@ -11,8 +11,7 @@ type config struct {
 }
 
 type apiConfig struct {
-	Port    string `yaml:"port"`
-	Address string `yaml:"listen"`
+	Port string `yaml:"port"`
 }
 
 func getDefault() config {
@@ -26,8 +25,7 @@ func getDefault() config {
 			LogLevel: "debug",
 		},
 		Api: apiConfig{
-			Port:    "8081",
-			Address: "0.0.0.0",
+			Port: "8081",
 		},
 	}
 }

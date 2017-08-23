@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/facebookgo/grace/gracehttp"
 	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/api/handler"
 	"github.com/moira-alert/moira-alert/cmd"
@@ -55,16 +56,16 @@ func main() {
 	databaseMetrics := metrics.ConfigureDatabaseMetrics()
 	database = redis.NewDatabase(logger, databaseSettings, databaseMetrics)
 
-	go func() {
-		if err := http.ListenAndServe(":6060", nil); err != nil {
-			logger.Error("msg", "Error starting profiling", "error", err)
-		}
-	}()
-
 	httpHandler := handler.NewHandler(database, logger)
 
-	listeningAddress := fmt.Sprintf("%s:%s", config.Api.Address, config.Api.Port)
-	logger.Infof("Start listening by address: [%s]", listeningAddress)
-	http.ListenAndServe(listeningAddress, httpHandler)
+	logger.Infof("Start listening by port: [%s]", config.Api.Port)
+	server := &http.Server{
+		Addr:    config.Api.Port,
+		Handler: httpHandler,
+	}
+	if err = gracehttp.Serve(server); err != nil {
+		logger.Fatalf("gracehttp failed", err.Error())
+	}
+	//server.ListenAndServe() //for windows developers =)
 	logger.Infof("Stop Moira api")
 }
