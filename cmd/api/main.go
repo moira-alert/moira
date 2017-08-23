@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"github.com/facebookgo/grace/gracehttp"
-	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/api/handler"
 	"github.com/moira-alert/moira-alert/cmd"
 	"github.com/moira-alert/moira-alert/database/redis"
@@ -19,15 +18,19 @@ var (
 	printVersion           = flag.Bool("version", false, "Print version and exit")
 	printDefaultConfigFlag = flag.Bool("default-config", false, "Print default config and exit")
 	verbosityLog           = flag.Bool("-v", false, "Verbosity log")
-	//Version - sets build version during build
-	Version  = "latest"
-	database moira.Database
+
+	MoiraVersion = "unknown"
+	GitCommit    = "unknown"
+	Version      = "unknown"
 )
 
 func main() {
 	flag.Parse()
 	if *printVersion {
-		fmt.Printf("Moira Cache version: %s\n", Version)
+		fmt.Println("Moira Cache")
+		fmt.Println("Version:", MoiraVersion)
+		fmt.Println("Git Commit:", GitCommit)
+		fmt.Println("Go Version:", Version)
 		os.Exit(0)
 	}
 
@@ -39,21 +42,21 @@ func main() {
 
 	err := cmd.ReadConfig(*configFileName, &config)
 	if err != nil {
-		fmt.Printf("Can not read settings: %s \n", err.Error())
+		fmt.Fprintf(os.Stderr, "Can not read settings: %s\n", err.Error())
 		os.Exit(1)
 	}
 
-	loggerSettings := config.Logger.GetSettings(*verbosityLog)
+	loggerSettings := config.Logger.GetSettings()
 
 	logger, err := logging.ConfigureLog(&loggerSettings, "api")
 	if err != nil {
-		fmt.Printf("Can not configure log: %s \n", err.Error())
+		fmt.Fprintf(os.Stderr, "Can not configure log: %s\n", err.Error())
 		os.Exit(1)
 	}
 
 	databaseSettings := config.Redis.GetSettings()
 	databaseMetrics := metrics.ConfigureDatabaseMetrics()
-	database = redis.NewDatabase(logger, databaseSettings, databaseMetrics)
+	database := redis.NewDatabase(logger, databaseSettings, databaseMetrics)
 
 	httpHandler := handler.NewHandler(database, logger)
 

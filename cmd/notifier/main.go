@@ -27,14 +27,19 @@ var (
 	printVersion           = flag.Bool("version", false, "Print current version and exit")
 	printDefaultConfigFlag = flag.Bool("default-config", false, "Print default config and exit")
 	convertDb              = flag.Bool("convert", false, "Convert telegram contacts and exit")
-	//Version - sets build version during build
-	Version = "latest"
+
+	MoiraVersion = "unknown"
+	GitCommit    = "unknown"
+	Version      = "unknown"
 )
 
 func main() {
 	flag.Parse()
 	if *printVersion {
-		fmt.Printf("Moira notifier version: %s\n", Version)
+		fmt.Println("Moira Cache")
+		fmt.Println("Version:", MoiraVersion)
+		fmt.Println("Git Commit:", GitCommit)
+		fmt.Println("Go Version:", Version)
 		os.Exit(0)
 	}
 
@@ -46,16 +51,15 @@ func main() {
 
 	err := cmd.ReadConfig(*configFileName, &config)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Can not read settings: %s \n", err.Error())
+		fmt.Fprintf(os.Stderr, "Can not read settings: %s\n", err.Error())
 		os.Exit(1)
 	}
 
-	notifierConfig := config.Notifier.getSettings()
-	loggerSettings := config.Logger.GetSettings(false)
+	loggerSettings := config.Logger.GetSettings()
 
-	logger, err = logging.ConfigureLog(&loggerSettings, "notifier")
+	logger, err := logging.ConfigureLog(&loggerSettings, "notifier")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Can not configure log: %s \n", err.Error())
+		fmt.Fprintf(os.Stderr, "Can not configure log: %s\n", err.Error())
 		os.Exit(1)
 	}
 
@@ -68,6 +72,7 @@ func main() {
 		convertDatabase(connector)
 	}
 
+	notifierConfig := config.Notifier.getSettings()
 	notifier2 := notifier.NewNotifier(connector, logger, notifierConfig, notifierMetrics)
 
 	if err := notifier2.RegisterSenders(connector, config.Front.URI); err != nil {

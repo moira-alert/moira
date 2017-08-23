@@ -20,16 +20,20 @@ var (
 	configFileName         = flag.String("config", "/etc/moira/config.yml", "Path to configuration file")
 	printVersion           = flag.Bool("version", false, "Print version and exit")
 	printDefaultConfigFlag = flag.Bool("default-config", false, "Print default config and exit")
-	verbosityLog           = flag.Bool("-v", false, "Verbosity log")
 	triggerId              = flag.String("t", "", "Check single trigger by id and exit")
-	//Version - sets build version during build
-	Version = "latest"
+
+	MoiraVersion = "unknown"
+	GitCommit    = "unknown"
+	Version      = "unknown"
 )
 
 func main() {
 	flag.Parse()
 	if *printVersion {
-		fmt.Printf("Moira Cache version: %s\n", Version)
+		fmt.Println("Moira Cache")
+		fmt.Println("Version:", MoiraVersion)
+		fmt.Println("Git Commit:", GitCommit)
+		fmt.Println("Go Version:", Version)
 		os.Exit(0)
 	}
 
@@ -41,15 +45,15 @@ func main() {
 
 	err := cmd.ReadConfig(*configFileName, &config)
 	if err != nil {
-		fmt.Printf("Can not read settings: %s \n", err.Error())
+		fmt.Fprintf(os.Stderr, "Can not read settings: %s\n", err.Error())
 		os.Exit(1)
 	}
 
-	loggerSettings := config.Logger.GetSettings(*verbosityLog)
+	loggerSettings := config.Logger.GetSettings()
 
 	logger, err := logging.ConfigureLog(&loggerSettings, "checker")
 	if err != nil {
-		fmt.Printf("Can not configure log: %s \n", err.Error())
+		fmt.Fprintf(os.Stderr, "Can not configure log: %s\n", err.Error())
 		os.Exit(1)
 	}
 

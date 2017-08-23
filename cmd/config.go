@@ -45,16 +45,12 @@ type LoggerConfig struct {
 	LogColor string `yaml:"log_color"`
 }
 
-func (loggerConfig *LoggerConfig) GetSettings(verbosityLog bool) logging.Config {
-	cfg := logging.Config{
+func (loggerConfig *LoggerConfig) GetSettings() logging.Config {
+	return logging.Config{
 		LogFile:  loggerConfig.LogFile,
 		LogLevel: loggerConfig.LogLevel,
 		LogColor: toBool(loggerConfig.LogColor),
 	}
-	if verbosityLog {
-		cfg.LogLevel = "debug"
-	}
-	return cfg
 }
 
 func ReadConfig(configFileName string, config interface{}) error {

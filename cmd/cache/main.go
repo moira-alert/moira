@@ -23,22 +23,13 @@ import (
 )
 
 var (
-	logger         moira.Logger
-	database       moira.Database
-	cacheMetrics   *graphite.CacheMetrics
-	cacheStorage   *cache.Storage
-	patternStorage *cache.PatternStorage
-
-	shutdown  chan bool
-	waitGroup sync.WaitGroup
-
 	configFileName         = flag.String("config", "/etc/moira/config.yml", "path config file")
 	printVersion           = flag.Bool("version", false, "Print version and exit")
 	printDefaultConfigFlag = flag.Bool("default-config", false, "Print default config and exit")
 
 	MoiraVersion = "unknown"
 	GitCommit    = "unknown"
-	GoVersion    = "unknown"
+	Version      = "unknown"
 )
 
 func main() {
@@ -47,7 +38,7 @@ func main() {
 		fmt.Println("Moira Cache")
 		fmt.Println("Version:", MoiraVersion)
 		fmt.Println("Git Commit:", GitCommit)
-		fmt.Println("Go Version:", GoVersion)
+		fmt.Println("Go Version:", Version)
 		os.Exit(0)
 	}
 
@@ -63,36 +54,37 @@ func main() {
 		os.Exit(1)
 	}
 
-	loggerSettings := config.Logger.GetSettings(false)
+	loggerSettings := config.Logger.GetSettings()
 
-	logger, err = logging.ConfigureLog(&loggerSettings, "cache")
+	logger, err := logging.ConfigureLog(&loggerSettings, "cache")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Can not configure log: %s\n", err.Error())
 		os.Exit(1)
 	}
 
-	cacheMetrics = metrics.ConfigureCacheMetrics()
+	cacheMetrics := metrics.ConfigureCacheMetrics()
 	databaseMetrics := metrics.ConfigureDatabaseMetrics()
 	metrics.Init(config.Graphite.GetSettings(), logger, "cache")
 
-	database = redis.NewDatabase(logger, config.Redis.GetSettings(), databaseMetrics)
+	database := redis.NewDatabase(logger, config.Redis.GetSettings(), databaseMetrics)
 
 	retentionConfigFile, err := os.Open(config.Cache.RetentionConfig)
 	if err != nil {
 		logger.Fatalf("Error open retentions file [%s]: %s", config.Cache.RetentionConfig, err.Error())
 	}
 
-	cacheStorage, err = cache.NewCacheStorage(cacheMetrics, retentionConfigFile)
+	cacheStorage, err := cache.NewCacheStorage(cacheMetrics, retentionConfigFile)
 	if err != nil {
 		logger.Fatalf("Failed to initialize cache with config [%s]: %s", config.Cache.RetentionConfig, err.Error())
 	}
 
-	patternStorage, err = cache.NewPatternStorage(database, cacheMetrics, logger)
+	patternStorage, err := cache.NewPatternStorage(database, cacheMetrics, logger)
 	if err != nil {
 		logger.Fatalf("Failed to refresh pattern storage: %s", err.Error())
 	}
 
-	shutdown = make(chan bool)
+	shutdown := make(chan bool)
+	var waitGroup sync.WaitGroup
 
 	refreshPatternWorker := patterns.NewRefreshPatternWorker(database, cacheMetrics, logger, patternStorage)
 	heartbeatWorker := heartbeat.NewHeartbeatWorker(database, cacheMetrics, logger)
