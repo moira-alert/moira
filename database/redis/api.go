@@ -6,10 +6,10 @@ import (
 	"encoding/json"
 	"github.com/garyburd/redigo/redis"
 	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira-alert/database/redis/reply"
 	"strconv"
 	"strings"
 	"time"
-	"github.com/moira-alert/moira-alert/database/redis/reply"
 )
 
 // GetUserContacts - Returns contacts ids by given login from set {0}
@@ -17,13 +17,8 @@ func (connector *DbConnector) GetUserContacts(login string) ([]string, error) {
 	c := connector.pool.Get()
 	defer c.Close()
 
-	var subscriptions []string
-
-	values, err := redis.Values(c.Do("SMEMBERS", fmt.Sprintf("moira-user-contacts:%s", login)))
+	subscriptions, err := redis.Strings(c.Do("SMEMBERS", fmt.Sprintf("moira-user-contacts:%s", login)))
 	if err != nil {
-		return nil, fmt.Errorf("Failed to retrieve subscriptions for user login %s: %s", login, err.Error())
-	}
-	if err := redis.ScanSlice(values, &subscriptions); err != nil {
 		return nil, fmt.Errorf("Failed to retrieve subscriptions for user login %s: %s", login, err.Error())
 	}
 	return subscriptions, nil
@@ -34,13 +29,8 @@ func (connector *DbConnector) GetUserSubscriptionIDs(login string) ([]string, er
 	c := connector.pool.Get()
 	defer c.Close()
 
-	var subscriptions []string
-
-	values, err := redis.Values(c.Do("SMEMBERS", fmt.Sprintf("moira-user-subscriptions:%s", login)))
+	subscriptions, err := redis.Strings(c.Do("SMEMBERS", fmt.Sprintf("moira-user-subscriptions:%s", login)))
 	if err != nil {
-		return nil, fmt.Errorf("Failed to retrieve subscriptions for user login %s: %s", login, err.Error())
-	}
-	if err := redis.ScanSlice(values, &subscriptions); err != nil {
 		return nil, fmt.Errorf("Failed to retrieve subscriptions for user login %s: %s", login, err.Error())
 	}
 	return subscriptions, nil
@@ -51,13 +41,8 @@ func (connector *DbConnector) GetTagNames() ([]string, error) {
 	c := connector.pool.Get()
 	defer c.Close()
 
-	var tagNames []string
-
-	values, err := redis.Values(c.Do("SMEMBERS", "moira-tags"))
+	tagNames, err := redis.Strings(c.Do("SMEMBERS", "moira-tags"))
 	if err != nil {
-		return nil, fmt.Errorf("Failed to retrieve moira-tags: %s", err.Error())
-	}
-	if err := redis.ScanSlice(values, &tagNames); err != nil {
 		return nil, fmt.Errorf("Failed to retrieve moira-tags: %s", err.Error())
 	}
 	return tagNames, nil
@@ -262,7 +247,7 @@ func (connector *DbConnector) GetTriggerLastCheck(triggerId string) (*moira.Chec
 	c := connector.pool.Get()
 	defer c.Close()
 
-	lastCheckBytes, err := redis.Bytes(c.Do("GET", fmt.Sprintf("moira-metric-last-check:%s", triggerId)))
+	lastCheck, err := reply.Check(c.Do("GET", fmt.Sprintf("moira-metric-last-check:%s", triggerId)))
 	if err != nil {
 		if err == redis.ErrNil {
 			return nil, nil
@@ -271,13 +256,7 @@ func (connector *DbConnector) GetTriggerLastCheck(triggerId string) (*moira.Chec
 		return nil, fmt.Errorf("Error getting metric-last-check, id: %s, error: %s", triggerId, err.Error())
 	}
 
-	var lastCheck = moira.CheckData{}
-	err = json.Unmarshal(lastCheckBytes, &lastCheck)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to parse lastCheck json %s: %s", lastCheckBytes, err.Error())
-	}
-
-	return &lastCheck, nil
+	return lastCheck, nil
 }
 
 func (connector *DbConnector) GetEvents(triggerId string, start int64, size int64) ([]*moira.EventData, error) {
