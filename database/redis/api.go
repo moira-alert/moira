@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"reflect"
 )
 
 // GetUserContacts - Returns contacts ids by given login from set {0}
@@ -186,15 +187,9 @@ func (connector *DbConnector) GetTriggerChecks(triggerCheckIds []string) ([]moir
 			}
 		}
 
-		lastCheckBytes, err := redis.Bytes(slice[3], nil)
+		lastCheck, err := reply.Check(slice[3], nil)
 		if err != nil {
 			connector.logger.Errorf("Error getting metric-last-check, id: %s, error: %s", triggerId, err.Error())
-		}
-
-		var lastCheck = moira.CheckData{}
-		err = json.Unmarshal(lastCheckBytes, &lastCheck)
-		if err != nil {
-			connector.logger.Errorf("Failed to parse lastCheck json %s: %s", lastCheckBytes, err.Error())
 		}
 
 		throttling, err := redis.Int64(slice[4], nil)
@@ -208,7 +203,7 @@ func (connector *DbConnector) GetTriggerChecks(triggerCheckIds []string) ([]moir
 			Trigger: *toTrigger(triggerSE, triggerId),
 		}
 
-		triggerCheck.LastCheck = lastCheck
+		triggerCheck.LastCheck = *lastCheck
 		if throttling > time.Now().Unix() {
 			triggerCheck.Throttling = throttling
 		}
@@ -483,21 +478,17 @@ func (connector *DbConnector) SetTriggerMetricsMaintenance(triggerId string, met
 	c := connector.pool.Get()
 	defer c.Close()
 
-	var readingErr error
-
 	key := fmt.Sprintf("moira-metric-last-check:%s", triggerId)
-	lastCheckString, readingErr := redis.String(c.Do("GET", key))
-	if readingErr != nil {
-		if readingErr != redis.ErrNil {
+	lastCheck, err := reply.Check(c.Do("GET", key))
+	if err != nil {
+		if err != redis.ErrNil {
 			return nil
 		}
 	}
 
-	for readingErr != redis.ErrNil {
-		var lastCheck = moira.CheckData{}
-		err := json.Unmarshal([]byte(lastCheckString), &lastCheck)
+	for err != redis.ErrNil {
 		if err != nil {
-			return fmt.Errorf("Failed to parse lastCheck json %s: %s", lastCheckString, err.Error())
+			return fmt.Errorf("Failed to parse lastCheck json: %s", err.Error())
 		}
 		metricsCheck := lastCheck.Metrics
 		if len(metricsCheck) > 0 {
@@ -515,15 +506,14 @@ func (connector *DbConnector) SetTriggerMetricsMaintenance(triggerId string, met
 			return err
 		}
 
-		var prev string
-		prev, readingErr = redis.String(c.Do("GETSET", key, newLastCheck))
-		if readingErr != nil && readingErr != redis.ErrNil {
-			return readingErr
+		prev, err := reply.Check(c.Do("GETSET", key, newLastCheck))
+		if err != nil && err != redis.ErrNil {
+			return err
 		}
-		if prev == lastCheckString {
+		if reflect.DeepEqual(prev, lastCheck) {
 			break
 		}
-		lastCheckString = prev
+		lastCheck = prev
 	}
 	return nil
 }
