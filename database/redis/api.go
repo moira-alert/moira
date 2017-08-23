@@ -275,7 +275,7 @@ func (connector *DbConnector) GetEvents(triggerId string, start int64, size int6
 	return eventsData, nil
 }
 
-func (connector *DbConnector) GetSubscriptions(subscriptionIds []string) ([]moira.SubscriptionData, error) {
+func (connector *DbConnector) GetSubscriptions(subscriptionIds []string) ([]*moira.SubscriptionData, error) {
 	c := connector.pool.Get()
 	defer c.Close()
 
@@ -283,21 +283,16 @@ func (connector *DbConnector) GetSubscriptions(subscriptionIds []string) ([]moir
 	for _, id := range subscriptionIds {
 		c.Send("GET", fmt.Sprintf("moira-subscription:%s", id))
 	}
-	subscriptionsBytes, err := redis.ByteSlices(c.Do("EXEC"))
+	subscriptions, err := reply.Subscriptions(c.Do("EXEC"))
 	if err != nil {
+		if err == redis.ErrNil {
+			return make([]*moira.SubscriptionData, 0), nil
+		}
 		return nil, fmt.Errorf("Failed to EXEC: %s", err.Error())
 	}
 
-	subscriptions := make([]moira.SubscriptionData, 0, len(subscriptionIds))
-
-	for i, bytes := range subscriptionsBytes {
-		sub, err := connector.convertSubscription(bytes)
-		if err != nil {
-			connector.logger.Warningf(err.Error())
-			continue
-		}
-		sub.ID = subscriptionIds[i]
-		subscriptions = append(subscriptions, sub)
+	for i := range subscriptions {
+		subscriptions[i].ID = subscriptionIds[i]
 	}
 	return subscriptions, nil
 }
@@ -550,8 +545,11 @@ func (connector *DbConnector) GetNotifications(start, end int64) ([]*moira.Sched
 	if err != nil {
 		return nil, 0, err
 	}
-	notifications, err := connector.convertNotifications(rawResponse[0])
+	notifications, err := reply.Notifications(rawResponse[0], nil)
 	if err != nil {
+		if err == redis.ErrNil {
+			return make([]*moira.ScheduledNotification, 0), 0, nil
+		}
 		return nil, 0, err
 	}
 	return notifications, int64(total), nil

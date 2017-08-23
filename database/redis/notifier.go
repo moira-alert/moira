@@ -8,6 +8,7 @@ import (
 	"github.com/garyburd/redigo/redis"
 	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/metrics/graphite"
+	"github.com/moira-alert/moira-alert/database/redis/reply"
 )
 
 //DbConnector contains redis pool
@@ -22,32 +23,14 @@ func (connector *DbConnector) FetchEvent() (*moira.EventData, error) {
 	c := connector.pool.Get()
 	defer c.Close()
 
-	var event moira.EventData
-
-	rawRes, err := c.Do("BRPOP", "moira-trigger-events", 1)
+	event, err := reply.Event(c.Do("BRPOP", "moira-trigger-events", 1))
 	if err != nil {
 		connector.logger.Warningf("Failed to wait for event: %s", err.Error())
 		time.Sleep(time.Second * 5)
 		return nil, nil
 	}
-	if rawRes != nil {
-		var (
-			eventBytes []byte
-			key        []byte
-		)
-		res, _ := redis.Values(rawRes, nil)
-		if _, err = redis.Scan(res, &key, &eventBytes); err != nil {
-			connector.logger.Warningf("Failed to parse event: %s", err.Error())
-			return nil, err
-		}
-		if err := json.Unmarshal(eventBytes, &event); err != nil {
-			connector.logger.Error(fmt.Sprintf("Failed to parse event json %s: %s", eventBytes, err.Error()))
-			return nil, err
-		}
-		return &event, nil
-	}
 
-	return nil, nil
+	return event, nil
 }
 
 // GetNotificationTrigger returns trigger data
@@ -89,7 +72,7 @@ func (connector *DbConnector) GetTriggerTags(triggerID string) ([]string, error)
 }
 
 // GetTagsSubscriptions returns all subscriptions for given tags list
-func (connector *DbConnector) GetTagsSubscriptions(tags []string) ([]moira.SubscriptionData, error) {
+func (connector *DbConnector) GetTagsSubscriptions(tags []string) ([]*moira.SubscriptionData, error) {
 	c := connector.pool.Get()
 	defer c.Close()
 
@@ -107,10 +90,10 @@ func (connector *DbConnector) GetTagsSubscriptions(tags []string) ([]moira.Subsc
 	}
 	if len(subscriptions) == 0 {
 		connector.logger.Debugf("No subscriptions found for tag set %v", tags)
-		return make([]moira.SubscriptionData, 0), nil
+		return make([]*moira.SubscriptionData, 0), nil
 	}
 
-	var subscriptionsData []moira.SubscriptionData
+	var subscriptionsData []*moira.SubscriptionData
 	for _, id := range subscriptions {
 		sub, err := connector.GetSubscription(id)
 		if err != nil {
@@ -122,33 +105,17 @@ func (connector *DbConnector) GetTagsSubscriptions(tags []string) ([]moira.Subsc
 }
 
 // GetSubscription returns subscription data by given id
-func (connector *DbConnector) GetSubscription(id string) (moira.SubscriptionData, error) {
+func (connector *DbConnector) GetSubscription(id string) (*moira.SubscriptionData, error) {
 	c := connector.pool.Get()
 	defer c.Close()
 
-	subscriptionString, err := redis.Bytes(c.Do("GET", fmt.Sprintf("moira-subscription:%s", id)))
+	subscription, err := reply.Subscription(c.Do("GET", fmt.Sprintf("moira-subscription:%s", id)))
 	if err != nil {
 		connector.metrics.SubsMalformed.Mark(1)
-		return moira.SubscriptionData{ThrottlingEnabled: true}, fmt.Errorf("Failed to get subscription data for id %s: %s", id, err.Error())
+		return &moira.SubscriptionData{ThrottlingEnabled: true}, fmt.Errorf("Failed to get subscription data for id %s: %s", id, err.Error())
 	}
-
-	sub, err := connector.convertSubscription(subscriptionString)
-	if err != nil {
-		connector.metrics.SubsMalformed.Mark(1)
-		return sub, err
-	}
-	sub.ID = id
-	return sub, nil
-}
-
-func (*DbConnector) convertSubscription(subscriptionBytes []byte) (moira.SubscriptionData, error) {
-	sub := moira.SubscriptionData{
-		ThrottlingEnabled: true,
-	}
-	if err := json.Unmarshal(subscriptionBytes, &sub); err != nil {
-		return sub, fmt.Errorf("Failed to parse subscription json %s: %s", subscriptionBytes, err.Error())
-	}
-	return sub, nil
+	subscription.ID = id
+	return subscription, nil
 }
 
 // GetContact returns contact data by given id
@@ -279,21 +246,15 @@ func (connector *DbConnector) GetNotificationsAndDelete(to int64) ([]*moira.Sche
 	c.Send("MULTI")
 	c.Send("ZRANGEBYSCORE", "moira-notifier-notifications", "-inf", to)
 	c.Send("ZREMRANGEBYSCORE", "moira-notifier-notifications", "-inf", to)
-	redisRawResponse, err := c.Do("EXEC")
+	notifications, err := reply.Notifications(c.Do("EXEC"))
 	if err != nil {
+		if err == redis.ErrNil {
+			return make([]*moira.ScheduledNotification, 0), nil
+		}
 		return nil, err
 	}
 
-	redisResponse, err := redis.Values(redisRawResponse, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(redisResponse) == 0 {
-		return make([]*moira.ScheduledNotification, 0), nil
-	}
-
-	return connector.convertNotifications(redisResponse[0])
+	return notifications, nil
 }
 
 // GetMetricsCount - return metrics count received by Moira-Cache
@@ -316,26 +277,4 @@ func (connector *DbConnector) GetChecksCount() (int64, error) {
 		return 0, nil
 	}
 	return ts, err
-}
-
-// ConvertNotifications extracts ScheduledNotification from redis response
-func (connector *DbConnector) convertNotifications(redisResponse interface{}) ([]*moira.ScheduledNotification, error) {
-
-	notificationStrings, err := redis.Strings(redisResponse, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	notifications := make([]*moira.ScheduledNotification, 0, len(notificationStrings))
-
-	for _, notificationString := range notificationStrings {
-		notification := &moira.ScheduledNotification{}
-		if err := json.Unmarshal([]byte(notificationString), notification); err != nil {
-			connector.logger.Warningf("Failed to parse scheduled json notification %s: %s", notificationString, err.Error())
-			continue
-		}
-		notifications = append(notifications, notification)
-	}
-
-	return notifications, nil
 }
