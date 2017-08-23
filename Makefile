@@ -23,8 +23,8 @@ test: prepare
 build:
 	go build -ldflags "-X main.Version=$(VERSION)-$(RELEASE)" -o build/moira-notifier github.com/moira-alert/moira-alert/cmd/notifier
 	go build -ldflags "-X main.Version=$(VERSION)-$(RELEASE)" -o build/moira-cache github.com/moira-alert/moira-alert/cmd/cache
-	go build -ldflags "-X main.Version=$(VERSION)-$(RELEASE)" -o build/moira-api github.com/moira-alert/moira-alert/cmd/api
 	go build -ldflags "-X main.Version=$(VERSION)-$(RELEASE)" -o build/moira-checker github.com/moira-alert/moira-alert/cmd/checker
+	go build -ldflags "-X main.Version=$(VERSION)-$(RELEASE)" -o build/moira-api github.com/moira-alert/moira-alert/cmd/api
 
 clean:
 	rm -rf build

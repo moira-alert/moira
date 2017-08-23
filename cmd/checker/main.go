@@ -3,6 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
+
 	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/checker"
 	"github.com/moira-alert/moira-alert/checker/worker"
@@ -10,10 +15,6 @@ import (
 	"github.com/moira-alert/moira-alert/database/redis"
 	"github.com/moira-alert/moira-alert/logging/go-logging"
 	"github.com/moira-alert/moira-alert/metrics/graphite/go-metrics"
-	"os"
-	"os/signal"
-	"sync"
-	"syscall"
 )
 
 var (

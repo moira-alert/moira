@@ -17,7 +17,6 @@ import (
 	"github.com/moira-alert/moira-alert/cmd"
 	"github.com/moira-alert/moira-alert/database/redis"
 	"github.com/moira-alert/moira-alert/logging/go-logging"
-	"github.com/moira-alert/moira-alert/metrics/graphite"
 	"github.com/moira-alert/moira-alert/metrics/graphite/atomic"
 	"github.com/moira-alert/moira-alert/metrics/graphite/go-metrics"
 )

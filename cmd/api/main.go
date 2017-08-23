@@ -3,21 +3,21 @@ package main
 import (
 	"flag"
 	"fmt"
+	"net/http"
+	"os"
+
 	"github.com/facebookgo/grace/gracehttp"
 	"github.com/moira-alert/moira-alert/api/handler"
 	"github.com/moira-alert/moira-alert/cmd"
 	"github.com/moira-alert/moira-alert/database/redis"
 	"github.com/moira-alert/moira-alert/logging/go-logging"
 	"github.com/moira-alert/moira-alert/metrics/graphite/go-metrics"
-	"net/http"
-	"os"
 )
 
 var (
 	configFileName         = flag.String("config", "/etc/moira/config.yml", "Path to configuration file")
 	printVersion           = flag.Bool("version", false, "Print version and exit")
 	printDefaultConfigFlag = flag.Bool("default-config", false, "Print default config and exit")
-	verbosityLog           = flag.Bool("-v", false, "Verbosity log")
 
 	MoiraVersion = "unknown"
 	GitCommit    = "unknown"
