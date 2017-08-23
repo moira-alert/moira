@@ -34,18 +34,13 @@ func (connector *DbConnector) FetchEvent() (*moira.EventData, error) {
 }
 
 // GetNotificationTrigger returns trigger data
-func (connector *DbConnector) GetNotificationTrigger(id string) (moira.TriggerData, error) {
+func (connector *DbConnector) GetNotificationTrigger(id string) (*moira.TriggerData, error) {
 	c := connector.pool.Get()
 	defer c.Close()
 
-	var trigger moira.TriggerData
-
-	triggerString, err := redis.Bytes(c.Do("GET", fmt.Sprintf("moira-trigger:%s", id)))
+	trigger, err := reply.Trigger(c.Do("GET", fmt.Sprintf("moira-trigger:%s", id)))
 	if err != nil {
 		return trigger, fmt.Errorf("Failed to get trigger data for id %s: %s", id, err.Error())
-	}
-	if err := json.Unmarshal(triggerString, &trigger); err != nil {
-		return trigger, fmt.Errorf("Failed to parse trigger json %s: %s", triggerString, err.Error())
 	}
 
 	return trigger, nil
@@ -119,43 +114,35 @@ func (connector *DbConnector) GetSubscription(id string) (*moira.SubscriptionDat
 }
 
 // GetContact returns contact data by given id
-func (connector *DbConnector) GetContact(id string) (moira.ContactData, error) {
+func (connector *DbConnector) GetContact(id string) (*moira.ContactData, error) {
 	c := connector.pool.Get()
 	defer c.Close()
 
-	var contact moira.ContactData
-
-	contactString, err := redis.Bytes(c.Do("GET", fmt.Sprintf("moira-contact:%s", id)))
+	contact, err := reply.Contact(c.Do("GET", fmt.Sprintf("moira-contact:%s", id)))
 	if err != nil {
 		return contact, fmt.Errorf("Failed to get contact data for id %s: %s", id, err.Error())
-	}
-	if err := json.Unmarshal(contactString, &contact); err != nil {
-		return contact, fmt.Errorf("Failed to parse contact json %s: %s", contactString, err.Error())
 	}
 	contact.ID = id
 	return contact, nil
 }
 
 // GetContacts returns contacts data by given ids
-func (connector *DbConnector) GetContacts(contactIDs []string) ([]moira.ContactData, error) {
+func (connector *DbConnector) GetContacts(contactIDs []string) ([]*moira.ContactData, error) {
 	c := connector.pool.Get()
 	defer c.Close()
 	c.Send("MULTI")
 	for _, id := range contactIDs {
 		c.Send("GET", fmt.Sprintf("moira-contact:%s", id))
 	}
-	contactsBytes, err := redis.ByteSlices(c.Do("EXEC"))
+	contacts, err := reply.Contacts(c.Do("EXEC"))
 	if err != nil {
+		if err == redis.ErrNil {
+			return make([]*moira.ContactData, 0), nil
+		}
 		return nil, fmt.Errorf("Failed to EXEC: %s", err.Error())
 	}
-	contacts := make([]moira.ContactData, 0, len(contactIDs))
-	for i, bytes := range contactsBytes {
-		var contact moira.ContactData
-		if err := json.Unmarshal(bytes, &contact); err != nil {
-			connector.logger.Warningf("Failed to parse contact json %s: %s", bytes, err.Error())
-		}
-		contact.ID = contactIDs[i]
-		contacts = append(contacts, contact)
+	for i := range contacts {
+		contacts[i].ID = contactIDs[i]
 	}
 	return contacts, nil
 }
