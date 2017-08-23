@@ -148,11 +148,11 @@ func (connector *DbConnector) GetContacts(contactIDs []string) ([]*moira.Contact
 }
 
 // GetAllContacts returns full contact list
-func (connector *DbConnector) GetAllContacts() ([]moira.ContactData, error) {
+func (connector *DbConnector) GetAllContacts() ([]*moira.ContactData, error) {
 	c := connector.pool.Get()
 	defer c.Close()
 
-	var result []moira.ContactData
+	var result []*moira.ContactData
 	keys, err := redis.Strings(c.Do("KEYS", "moira-contact:*"))
 	if err != nil {
 		return result, err
