@@ -11,7 +11,6 @@ import (
 	"github.com/moira-alert/moira-alert/logging/go-logging"
 	"github.com/moira-alert/moira-alert/metrics/graphite/go-metrics"
 	"net/http"
-	_ "net/http/pprof"
 	"os"
 )
 
@@ -60,7 +59,7 @@ func main() {
 
 	logger.Infof("Start listening by port: [%s]", config.Api.Port)
 	server := &http.Server{
-		Addr:    config.Api.Port,
+		Addr:    ":" + config.Api.Port,
 		Handler: httpHandler,
 	}
 	if err = gracehttp.Serve(server); err != nil {
