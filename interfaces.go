@@ -2,7 +2,6 @@ package moira
 
 import (
 	"gopkg.in/tomb.v2"
-	"sync"
 	"time"
 )
 
@@ -97,11 +96,6 @@ type Logger interface {
 	Fatalf(format string, args ...interface{})
 	Warning(args ...interface{})
 	Warningf(format string, args ...interface{})
-}
-
-// Worker interface for implementing specified parallel workers
-type Worker interface {
-	Run(shutdown chan bool, wg *sync.WaitGroup)
 }
 
 // Sender interface for implementing specified contact type sender

@@ -130,9 +130,9 @@ func TestProcessIncomingMetric(t *testing.T) {
 	Convey("When invalid metric arrives, should be properly counted", t, func() {
 		matchedMetrics := patternsStorage.ProcessIncomingMetric([]byte("Invalid.metric"))
 		So(matchedMetrics, ShouldBeNil)
-		So(metrics2.TotalReceived, ShouldEqual, 1)
-		So(metrics2.ValidReceived, ShouldEqual, 0)
-		So(metrics2.MatchedReceived, ShouldEqual, 0)
+		So(metrics2.TotalMetricsReceived.Count(), ShouldEqual, 1)
+		So(metrics2.ValidMetricsReceived.Count(), ShouldEqual, 0)
+		So(metrics2.MatchingMetricsReceived.Count(), ShouldEqual, 0)
 	})
 
 	patternsStorage.metrics = metrics.ConfigureCacheMetrics()
@@ -143,9 +143,9 @@ func TestProcessIncomingMetric(t *testing.T) {
 				matchedMetrics := patternsStorage.ProcessIncomingMetric([]byte(metric + " 12 1234567890"))
 				So(matchedMetrics, ShouldBeNil)
 			}
-			So(patternsStorage.metrics.TotalReceived, ShouldEqual, len(nonMatchingMetrics))
-			So(patternsStorage.metrics.ValidReceived, ShouldEqual, len(nonMatchingMetrics))
-			So(patternsStorage.metrics.MatchedReceived, ShouldEqual, 0)
+			So(patternsStorage.metrics.TotalMetricsReceived.Count(), ShouldEqual, len(nonMatchingMetrics))
+			So(patternsStorage.metrics.ValidMetricsReceived.Count(), ShouldEqual, len(nonMatchingMetrics))
+			So(patternsStorage.metrics.MatchingMetricsReceived.Count(), ShouldEqual, 0)
 		})
 	})
 
@@ -156,9 +156,9 @@ func TestProcessIncomingMetric(t *testing.T) {
 				matchedMetrics := patternsStorage.ProcessIncomingMetric([]byte(metric + " 12 1234567890"))
 				So(matchedMetrics, ShouldNotBeNil)
 			}
-			So(patternsStorage.metrics.TotalReceived, ShouldEqual, len(matchingMetrics))
-			So(patternsStorage.metrics.ValidReceived, ShouldEqual, len(matchingMetrics))
-			So(patternsStorage.metrics.MatchedReceived, ShouldEqual, len(matchingMetrics))
+			So(patternsStorage.metrics.TotalMetricsReceived.Count(), ShouldEqual, len(matchingMetrics))
+			So(patternsStorage.metrics.ValidMetricsReceived.Count(), ShouldEqual, len(matchingMetrics))
+			So(patternsStorage.metrics.MatchingMetricsReceived.Count(), ShouldEqual, len(matchingMetrics))
 		})
 
 		patternsStorage.metrics = metrics.ConfigureCacheMetrics()
@@ -167,9 +167,9 @@ func TestProcessIncomingMetric(t *testing.T) {
 				matchedMetrics := patternsStorage.ProcessIncomingMetric([]byte(metric + " 12.000000 1234567890"))
 				So(matchedMetrics, ShouldNotBeNil)
 			}
-			So(patternsStorage.metrics.TotalReceived, ShouldEqual, len(matchingMetrics))
-			So(patternsStorage.metrics.ValidReceived, ShouldEqual, len(matchingMetrics))
-			So(patternsStorage.metrics.MatchedReceived, ShouldEqual, len(matchingMetrics))
+			So(patternsStorage.metrics.TotalMetricsReceived.Count(), ShouldEqual, len(matchingMetrics))
+			So(patternsStorage.metrics.ValidMetricsReceived.Count(), ShouldEqual, len(matchingMetrics))
+			So(patternsStorage.metrics.MatchingMetricsReceived.Count(), ShouldEqual, len(matchingMetrics))
 		})
 	})
 

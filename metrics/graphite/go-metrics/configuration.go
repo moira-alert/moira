@@ -13,9 +13,6 @@ func ConfigureCacheMetrics() *graphite.CacheMetrics {
 		MatchingTimer:           newRegisteredTimer("time.match"),
 		SavingTimer:             newRegisteredTimer("time.save"),
 		BuildTreeTimer:          newRegisteredTimer("time.buildtree"),
-		TotalReceived:           0,
-		ValidReceived:           0,
-		MatchedReceived:         0,
 	}
 }
 

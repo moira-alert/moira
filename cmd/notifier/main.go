@@ -31,7 +31,7 @@ var (
 func main() {
 	flag.Parse()
 	if *printVersion {
-		fmt.Println("Moira Cache")
+		fmt.Println("Moira Notifier")
 		fmt.Println("Version:", MoiraVersion)
 		fmt.Println("Git Commit:", GitCommit)
 		fmt.Println("Go Version:", Version)
@@ -103,6 +103,7 @@ func main() {
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 	logger.Info(fmt.Sprint(<-ch))
+	logger.Infof("Moira Notifier shutting down.")
 
 	selfState.Stop()
 	fetchEventsWorker.Stop()

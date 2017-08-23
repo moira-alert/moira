@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/facebookgo/grace/gracehttp"
+	//"github.com/facebookgo/grace/gracehttp"
 	"github.com/moira-alert/moira-alert/api/handler"
 	"github.com/moira-alert/moira-alert/cmd"
 	"github.com/moira-alert/moira-alert/database/redis"
@@ -27,7 +27,7 @@ var (
 func main() {
 	flag.Parse()
 	if *printVersion {
-		fmt.Println("Moira Cache")
+		fmt.Println("Moira Api")
 		fmt.Println("Version:", MoiraVersion)
 		fmt.Println("Git Commit:", GitCommit)
 		fmt.Println("Go Version:", Version)
@@ -65,9 +65,9 @@ func main() {
 		Addr:    ":" + config.Api.Port,
 		Handler: httpHandler,
 	}
-	if err = gracehttp.Serve(server); err != nil {
+	/*if err = gracehttp.Serve(server); err != nil {
 		logger.Fatalf("gracehttp failed", err.Error())
-	}
-	//server.ListenAndServe() //for windows developers =)
+	}*/
+	server.ListenAndServe() //for windows developers =)
 	logger.Infof("Stop Moira api")
 }

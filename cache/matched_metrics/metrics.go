@@ -8,17 +8,17 @@ import (
 	"time"
 )
 
-//MetricsMatcherProcessor make buffer of metrics and save it
-type MetricsMatcherProcessor struct {
+//MetricsMatcher make buffer of metrics and save it
+type MetricsMatcher struct {
 	logger       moira.Logger
 	metrics      *graphite.CacheMetrics
 	database     moira.Database
 	cacheStorage *cache.Storage
 }
 
-//NewMatchedMetricsProcessor creates new MetricsMatcherProcessor
-func NewMatchedMetricsProcessor(metrics *graphite.CacheMetrics, logger moira.Logger, database moira.Database, cacheStorage *cache.Storage) *MetricsMatcherProcessor {
-	return &MetricsMatcherProcessor{
+//NewMetricsMatcher creates new MetricsMatcher
+func NewMetricsMatcher(metrics *graphite.CacheMetrics, logger moira.Logger, database moira.Database, cacheStorage *cache.Storage) *MetricsMatcher {
+	return &MetricsMatcher{
 		metrics:      metrics,
 		logger:       logger,
 		database:     database,
@@ -27,35 +27,37 @@ func NewMatchedMetricsProcessor(metrics *graphite.CacheMetrics, logger moira.Log
 }
 
 //Run process matched metrics from channel and save it in cache
-func (processor *MetricsMatcherProcessor) Run(channel chan *moira.MatchedMetric, wg *sync.WaitGroup) {
-	defer wg.Done()
-	buffer := make(map[string]*moira.MatchedMetric)
-	for {
-		select {
-		case metric, ok := <-channel:
-			if !ok {
-				return
+func (matcher *MetricsMatcher) Start(channel chan *moira.MatchedMetric, wg *sync.WaitGroup) {
+	go func() {
+		defer wg.Done()
+		buffer := make(map[string]*moira.MatchedMetric)
+		for {
+			select {
+			case metric, ok := <-channel:
+				if !ok {
+					matcher.logger.Info("Channel was closed, stop Metrics Matcher")
+					return
+				}
+				matcher.cacheStorage.EnrichMatchedMetric(buffer, metric)
+				if len(buffer) < 10 {
+					continue
+				}
+			case <-time.After(time.Second):
 			}
-
-			processor.cacheStorage.EnrichMatchedMetric(buffer, metric)
-
-			if len(buffer) < 10 {
+			if len(buffer) == 0 {
 				continue
 			}
-		case <-time.After(time.Second):
+			timer := time.Now()
+			matcher.save(buffer)
+			matcher.metrics.SavingTimer.UpdateSince(timer)
+			buffer = make(map[string]*moira.MatchedMetric)
 		}
-		if len(buffer) == 0 {
-			continue
-		}
-		timer := time.Now()
-		processor.save(buffer)
-		processor.metrics.SavingTimer.UpdateSince(timer)
-		buffer = make(map[string]*moira.MatchedMetric)
-	}
+	}()
+	matcher.logger.Info("Metrics Matcher started")
 }
 
-func (processor *MetricsMatcherProcessor) save(buffer map[string]*moira.MatchedMetric) {
-	if err := processor.database.SaveMetrics(buffer); err != nil {
-		processor.logger.Infof("Failed to save value in cache: %s", err.Error())
+func (matcher *MetricsMatcher) save(buffer map[string]*moira.MatchedMetric) {
+	if err := matcher.database.SaveMetrics(buffer); err != nil {
+		matcher.logger.Infof("Failed to save value in cache: %s", err.Error())
 	}
 }

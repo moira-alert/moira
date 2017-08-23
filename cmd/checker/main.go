@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
 
 	"github.com/moira-alert/moira-alert"
@@ -31,7 +30,7 @@ var (
 func main() {
 	flag.Parse()
 	if *printVersion {
-		fmt.Println("Moira Cache")
+		fmt.Println("Moira Checker")
 		fmt.Println("Version:", MoiraVersion)
 		fmt.Println("Git Commit:", GitCommit)
 		fmt.Println("Go Version:", Version)
@@ -105,9 +104,4 @@ func checkSingleTrigger(database moira.Database, logger moira.Logger, settings *
 		os.Exit(1)
 	}
 	os.Exit(0)
-}
-
-func run(worker moira.Worker, shutdown chan bool, wg *sync.WaitGroup) {
-	wg.Add(1)
-	go worker.Run(shutdown, wg)
 }

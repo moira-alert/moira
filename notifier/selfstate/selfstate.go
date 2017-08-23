@@ -56,7 +56,7 @@ func (selfCheck *SelfCheckWorker) Start() error {
 	return nil
 }
 
-//Start self check worker and wait for finish
+//Stop self check worker and wait for finish
 func (selfCheck *SelfCheckWorker) Stop() error {
 	if !selfCheck.Config.Enabled {
 		return nil

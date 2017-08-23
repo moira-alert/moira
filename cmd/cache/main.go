@@ -8,7 +8,6 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/cache"
 	"github.com/moira-alert/moira-alert/cache/connection"
 	"github.com/moira-alert/moira-alert/cache/heartbeat"
@@ -17,7 +16,6 @@ import (
 	"github.com/moira-alert/moira-alert/cmd"
 	"github.com/moira-alert/moira-alert/database/redis"
 	"github.com/moira-alert/moira-alert/logging/go-logging"
-	"github.com/moira-alert/moira-alert/metrics/graphite/atomic"
 	"github.com/moira-alert/moira-alert/metrics/graphite/go-metrics"
 )
 
@@ -82,42 +80,32 @@ func main() {
 		logger.Fatalf("Failed to refresh pattern storage: %s", err.Error())
 	}
 
-	shutdown := make(chan bool)
-	var waitGroup sync.WaitGroup
-
 	refreshPatternWorker := patterns.NewRefreshPatternWorker(database, cacheMetrics, logger, patternStorage)
 	heartbeatWorker := heartbeat.NewHeartbeatWorker(database, cacheMetrics, logger)
-	atomicMetricsWorker := atomic.NewAtomicMetricsWorker(cacheMetrics)
 
-	run(refreshPatternWorker, shutdown, &waitGroup)
-	run(heartbeatWorker, shutdown, &waitGroup)
-	run(atomicMetricsWorker, shutdown, &waitGroup)
+	refreshPatternWorker.Start()
+	heartbeatWorker.Start()
 
 	listener, err := connection.NewListener(config.Cache.Listen, logger, patternStorage)
 	if err != nil {
 		logger.Fatalf("Failed to start listen: %s", err.Error())
 	}
+	metricsMatcher := matchedmetrics.NewMetricsMatcher(cacheMetrics, logger, database, cacheStorage)
 
-	metricsChan := make(chan *moira.MatchedMetric, 10)
-	matchedMetricsProcessor := matchedmetrics.NewMatchedMetricsProcessor(cacheMetrics, logger, database, cacheStorage)
-
-	waitGroup.Add(1)
-	go matchedMetricsProcessor.Run(metricsChan, &waitGroup)
-
-	waitGroup.Add(1)
-	go listener.Listen(metricsChan, &waitGroup, shutdown)
+	metricsChan := listener.Listen()
+	var matcherWG sync.WaitGroup
+	metricsMatcher.Start(metricsChan, &matcherWG)
 
 	logger.Infof("Moira Cache started. Version: %s", MoiraVersion)
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 	logger.Info(fmt.Sprint(<-ch))
 	logger.Infof("Moira Cache shutting down.")
-	close(shutdown)
-	waitGroup.Wait()
-	logger.Infof("Moira Cache stopped. Version: %s", MoiraVersion)
-}
 
-func run(worker moira.Worker, shutdown chan bool, wg *sync.WaitGroup) {
-	wg.Add(1)
-	go worker.Run(shutdown, wg)
+	listener.Stop()
+	matcherWG.Wait()
+	refreshPatternWorker.Stop()
+	heartbeatWorker.Stop()
+
+	logger.Infof("Moira Cache stopped. Version: %s", MoiraVersion)
 }
