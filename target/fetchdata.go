@@ -40,7 +40,7 @@ func createMetricData(metric string, from int64, until int64, retention int64, v
 		StopTime:  int32(until),
 		StepTime:  int32(retention),
 		Values:    values,
-		IsAbsent:  make([]bool, len(values), len(values)),
+		IsAbsent:  make([]bool, len(values)),
 	}
 	return &expr.MetricData{FetchResponse: fetchResponse}
 }
@@ -48,7 +48,7 @@ func createMetricData(metric string, from int64, until int64, retention int64, v
 func unpackMetricsValues(metricsData map[string][]*moira.MetricValue, retention int64, from int64, until int64, allowRealTimeAlerting bool) map[string][]float64 {
 	retentionFrom := roundToMinimalHighestRetention(from, retention)
 	getTimeSlot := func(timestamp int64) int64 {
-		return (timestamp - retentionFrom) / int64(retention)
+		return (timestamp - retentionFrom) / retention
 	}
 
 	valuesMap := make(map[string][]float64)

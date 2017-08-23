@@ -9,7 +9,7 @@ import (
 var default1, _ = govaluate.NewEvaluableExpression("t1 >= ERROR_VALUE ? ERROR : (t1 >= WARN_VALUE ? WARN : OK)")
 var default2, _ = govaluate.NewEvaluableExpression("t1 <= ERROR_VALUE ? ERROR : (t1 <= WARN_VALUE ? WARN : OK)")
 
-var cache map[string]*govaluate.EvaluableExpression = make(map[string]*govaluate.EvaluableExpression, 0)
+var cache map[string]*govaluate.EvaluableExpression = make(map[string]*govaluate.EvaluableExpression)
 
 type ErrInvalidExpression struct {
 	internalError error
@@ -34,9 +34,7 @@ func (values TriggerExpression) Get(name string) (interface{}, error) {
 	switch name {
 	case "OK":
 		return "OK", nil
-	case "WARN":
-		return "WARN", nil
-	case "WARNING":
+	case "WARN", "WARNING":
 		return "WARN", nil
 	case "ERROR":
 		return "ERROR", nil

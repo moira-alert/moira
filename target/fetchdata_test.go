@@ -100,7 +100,7 @@ func TestFetchData(t *testing.T) {
 			StopTime:  int32(until),
 			StepTime:  int32(retention),
 			Values:    []float64{0, 1, 2, 3},
-			IsAbsent:  make([]bool, 4, 4),
+			IsAbsent:  make([]bool, 4),
 		}
 		expected := &expr.MetricData{FetchResponse: fetchResponse}
 		So(metricData, ShouldResemble, []*expr.MetricData{expected})
@@ -119,7 +119,7 @@ func TestFetchData(t *testing.T) {
 			StopTime:  int32(until),
 			StepTime:  int32(retention),
 			Values:    []float64{0, 1, 2, 3, 4},
-			IsAbsent:  make([]bool, 5, 5),
+			IsAbsent:  make([]bool, 5),
 		}
 		expected := &expr.MetricData{FetchResponse: fetchResponse}
 		So(metricData, ShouldResemble, []*expr.MetricData{expected})
@@ -167,7 +167,7 @@ func TestFetchData(t *testing.T) {
 			StopTime:  int32(until),
 			StepTime:  int32(retention),
 			Values:    []float64{0, 1, 2, 3, 4},
-			IsAbsent:  make([]bool, 5, 5),
+			IsAbsent:  make([]bool, 5),
 		}
 		expected := expr.MetricData{FetchResponse: fetchResponse}
 		expected2 := expected

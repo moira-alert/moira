@@ -13,7 +13,7 @@ func (worker *Worker) perform(triggerIDs []string, noCache bool, cacheTTL int64,
 			go func(triggerID string) {
 				defer wg.Done()
 				if err := worker.handleTriggerToCheck(triggerID); err != nil {
-					worker.Logger.Errorf("Failed to perform trigger: %s error: %s", err.Error())
+					worker.Logger.Errorf("Failed to perform trigger: %s error: %s", triggerID, err.Error())
 				}
 			}(id)
 		}
@@ -24,7 +24,7 @@ func (worker *Worker) perform(triggerIDs []string, noCache bool, cacheTTL int64,
 				defer wg.Done()
 				//todo triggerId add check cache cacheTTL seconds
 				if err := worker.handleTriggerToCheck(triggerID); err != nil {
-					worker.Logger.Errorf("Failed to perform trigger: %s error: %s", err.Error())
+					worker.Logger.Errorf("Failed to perform trigger: %s error: %s", triggerID, err.Error())
 				}
 			}(id)
 		}

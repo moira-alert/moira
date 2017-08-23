@@ -26,7 +26,7 @@ func TestSaveTrigger(t *testing.T) {
 		},
 	}
 	emptyLastCheck := moira.CheckData{
-		Metrics: make(map[string]moira.MetricState, 0),
+		Metrics: make(map[string]moira.MetricState),
 	}
 
 	Convey("No timeSeries", t, func() {
@@ -272,7 +272,7 @@ func TestDeleteTriggerMetric(t *testing.T) {
 		},
 	}
 	emptyLastCheck := moira.CheckData{
-		Metrics: make(map[string]moira.MetricState, 0),
+		Metrics: make(map[string]moira.MetricState),
 	}
 
 	Convey("Success delete from last check", t, func() {

@@ -26,9 +26,9 @@ func Events(rep interface{}, err error) ([]*moira.EventData, error) {
 	}
 	events := make([]*moira.EventData, len(values))
 	for i, kk := range values {
-		event, err := Event(kk, err)
-		if err != nil {
-			return nil, err
+		event, err2 := Event(kk, err)
+		if err2 != nil {
+			return nil, err2
 		}
 		events[i] = event
 	}

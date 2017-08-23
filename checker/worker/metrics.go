@@ -20,11 +20,10 @@ func (worker *Worker) metricsChecker() error {
 		go func(event *moira.MetricEvent) {
 			defer handleWaitGroup.Done()
 			if err := worker.handleMetricEvent(metricEvent); err != nil {
-				worker.Logger.Errorf("Failed to handle metricEvent", err.Error())
+				worker.Logger.Errorf("Failed to handle metricEvent: %s", err.Error())
 			}
 		}(metricEvent)
 	}
-	return nil
 }
 
 func (worker *Worker) handleMetricEvent(metricEvent *moira.MetricEvent) error {

@@ -117,7 +117,7 @@ func TestGetTimeSeries(t *testing.T) {
 				StopTime:  int32(until),
 				StepTime:  int32(retention),
 				Values:    []float64{0, 1, 2, 3, 4},
-				IsAbsent:  make([]bool, 5, 5),
+				IsAbsent:  make([]bool, 5),
 			}
 			expected := &triggerTimeSeries{
 				Main:       []*target.TimeSeries{{FetchResponse: fetchResponse}},
@@ -147,7 +147,7 @@ func TestGetTimeSeries(t *testing.T) {
 				StopTime:  int32(until),
 				StepTime:  int32(retention),
 				Values:    []float64{0, 1, 2, 3, 4},
-				IsAbsent:  make([]bool, 5, 5),
+				IsAbsent:  make([]bool, 5),
 			}
 			addFetchResponse := fetchResponse
 			addFetchResponse.Name = addMetric

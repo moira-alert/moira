@@ -372,7 +372,7 @@ func (connector *DbConnector) AddPatternMetric(pattern, metric string) error {
 
 func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb) <-chan *moira.MetricEvent {
 	c := connector.pool.Get()
-	psc := redis.PubSubConn{c}
+	psc := redis.PubSubConn{Conn: c}
 	psc.Subscribe("metric-event")
 
 	metricsChannel := make(chan *moira.MetricEvent, 100)
@@ -418,7 +418,7 @@ func (connector *DbConnector) GetMetricsValues(metrics []string, from int64, unt
 		return nil, fmt.Errorf("Failed to EXEC: %s", err.Error())
 	}
 
-	res := make(map[string][]*moira.MetricValue, 0)
+	res := make(map[string][]*moira.MetricValue)
 
 	for i, resultByMetric := range resultByMetrics {
 		metric := metrics[i]

@@ -21,7 +21,6 @@ func (worker *Worker) noDataChecker() error {
 			}
 		}
 	}
-	return nil
 }
 
 func (worker *Worker) checkNoData(wg *sync.WaitGroup) error {

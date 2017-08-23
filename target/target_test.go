@@ -101,7 +101,7 @@ func TestEvaluateTarget(t *testing.T) {
 			StopTime:  int32(until),
 			StepTime:  int32(retention),
 			Values:    []float64{0, 1, 2, 3, 4},
-			IsAbsent:  make([]bool, 5, 5),
+			IsAbsent:  make([]bool, 5),
 		}
 		So(err, ShouldBeNil)
 		So(result, ShouldResemble, &EvaluationResult{

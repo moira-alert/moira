@@ -120,7 +120,7 @@ func getTriggerMetrics(writer http.ResponseWriter, request *http.Request) {
 	}
 	to := date.DateParamToEpoch(toStr, "UTC", 0, time.UTC)
 	if to == 0 {
-		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("Can not parse to: %s", to)))
+		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("Can not parse to: %v", to)))
 		return
 	}
 	triggerMetrics, err := controller.GetTriggerMetrics(database, int64(from), int64(to), triggerId)

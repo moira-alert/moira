@@ -61,7 +61,7 @@ func EvaluateTarget(database moira.Database, target string, from int64, until in
 
 func getPatternsMetricData(database moira.Database, patterns []expr.MetricRequest, from int64, until int64, allowRealTimeAlerting bool) (map[expr.MetricRequest][]*expr.MetricData, []string, error) {
 	metrics := make([]string, 0)
-	metricsMap := make(map[expr.MetricRequest][]*expr.MetricData, 0)
+	metricsMap := make(map[expr.MetricRequest][]*expr.MetricData)
 	for _, pattern := range patterns {
 		pattern.From += int32(from)
 		pattern.Until += int32(until)

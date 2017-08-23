@@ -69,7 +69,7 @@ func resolvePatterns(request *http.Request, trigger *Trigger, expressionValues *
 	now := time.Now().Unix()
 	targetNum := 1
 	trigger.Patterns = make([]string, 0)
-	timeSeriesNames := make(map[string]bool, 0)
+	timeSeriesNames := make(map[string]bool)
 
 	for _, tar := range trigger.Targets {
 		database := request.Context().Value("database").(moira.Database)
