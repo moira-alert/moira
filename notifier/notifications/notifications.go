@@ -2,54 +2,52 @@ package notifications
 
 import (
 	"fmt"
-	"github.com/moira-alert/moira-alert"
-	"github.com/moira-alert/moira-alert/notifier"
 	"sync"
 	"time"
+
+	"gopkg.in/tomb.v2"
+
+	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira-alert/notifier"
 )
 
 //FetchNotificationsWorker - check for new notifications and send it using notifier
 type FetchNotificationsWorker struct {
-	logger   moira.Logger
-	database moira.Database
-	notifier notifier.Notifier
+	Logger   moira.Logger
+	Database moira.Database
+	Notifier notifier.Notifier
+	tomb     tomb.Tomb
 }
 
-//NewFetchNotificationsWorker new worker
-func NewFetchNotificationsWorker(database moira.Database, logger moira.Logger, sender notifier.Notifier) *FetchNotificationsWorker {
-	return &FetchNotificationsWorker{
-		logger:   logger,
-		database: database,
-		notifier: sender,
-	}
-}
-
-// Run is a cycle that fetches scheduled notifications from database
-func (worker *FetchNotificationsWorker) Run(shutdown chan bool, wg *sync.WaitGroup) {
-	defer wg.Done()
-	worker.logger.Debug("Start Fetch Scheduled Notifications")
-	for {
-		select {
-		case <-shutdown:
-			{
-				worker.logger.Debug("Stop Fetch Scheduled Notifications")
-				worker.notifier.StopSenders()
-				return
-			}
-		default:
-			{
+// Start is a cycle that fetches scheduled notifications from database
+func (worker *FetchNotificationsWorker) Start() {
+	worker.tomb.Go(func() error {
+		checkTicker := time.NewTicker(time.Second)
+		for {
+			select {
+			case <-worker.tomb.Dying():
+				worker.Logger.Info("Fetching scheduled notifications stopped")
+				worker.Notifier.StopSenders()
+				return nil
+			case <-checkTicker.C:
 				if err := worker.processScheduledNotifications(); err != nil {
-					worker.logger.Warningf("Failed to fetch scheduled notifications: %s", err.Error())
+					worker.Logger.Warningf("Failed to fetch scheduled notifications: %s", err.Error())
 				}
-				time.Sleep(time.Second)
 			}
 		}
-	}
+	})
+	worker.Logger.Info("Fetching scheduled notifications started")
+}
+
+// Stop stops new notifications fetching and wait for finish
+func (worker *FetchNotificationsWorker) Stop() error {
+	worker.tomb.Kill(nil)
+	return worker.tomb.Wait()
 }
 
 func (worker *FetchNotificationsWorker) processScheduledNotifications() error {
 	ts := time.Now()
-	notifications, err := worker.database.GetNotificationsAndDelete(ts.Unix())
+	notifications, err := worker.Database.GetNotificationsAndDelete(ts.Unix())
 	if err != nil {
 		return err
 	}
@@ -71,7 +69,7 @@ func (worker *FetchNotificationsWorker) processScheduledNotifications() error {
 	}
 	var sendingWG sync.WaitGroup
 	for _, pkg := range notificationPackages {
-		worker.notifier.Send(pkg, &sendingWG)
+		worker.Notifier.Send(pkg, &sendingWG)
 	}
 	sendingWG.Wait()
 	return nil

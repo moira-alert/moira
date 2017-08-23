@@ -44,8 +44,26 @@ func TestNotifier(t *testing.T) {
 		close(shutdown)
 	})
 
-	initWorkers(notifier2, logger, fakeDataBase)
+	fetchEventsWorker := events.FetchEventsWorker{
+		Database:  fakeDataBase,
+		Logger:    logger,
+		Metrics:   metrics2,
+		Scheduler: notifier.NewScheduler(fakeDataBase, logger),
+	}
+
+	fetchNotificationsWorker := notifications.FetchNotificationsWorker{
+		Database: fakeDataBase,
+		Logger:   logger,
+		Notifier: notifier2,
+	}
+
+	fetchEventsWorker.Start()
+	fetchNotificationsWorker.Start()
+
 	waitTestEnd()
+
+	fetchEventsWorker.Stop()
+	fetchNotificationsWorker.Stop()
 }
 
 func waitTestEnd() {
@@ -62,19 +80,6 @@ func waitTestEnd() {
 func afterTest() {
 	waitGroup.Wait()
 	mockCtrl.Finish()
-}
-
-func initWorkers(notifier2 notifier.Notifier, logger moira.Logger, connector *redis.DbConnector) {
-	fetchEventsWorker := events.NewFetchEventWorker(connector, logger, metrics2)
-	fetchNotificationsWorker := notifications.NewFetchNotificationsWorker(connector, logger, notifier2)
-
-	run(fetchEventsWorker, shutdown, &waitGroup)
-	run(fetchNotificationsWorker, shutdown, &waitGroup)
-}
-
-func run(worker moira.Worker, shutdown chan bool, wg *sync.WaitGroup) {
-	wg.Add(1)
-	go worker.Run(shutdown, wg)
 }
 
 var trigger = moira.TriggerData{

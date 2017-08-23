@@ -5,14 +5,11 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
 
-	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/cmd"
 	"github.com/moira-alert/moira-alert/database/redis"
 	"github.com/moira-alert/moira-alert/logging/go-logging"
-	"github.com/moira-alert/moira-alert/metrics/graphite"
 	"github.com/moira-alert/moira-alert/metrics/graphite/go-metrics"
 	"github.com/moira-alert/moira-alert/notifier"
 	"github.com/moira-alert/moira-alert/notifier/events"
@@ -21,8 +18,6 @@ import (
 )
 
 var (
-	logger                 moira.Logger
-	connector              *redis.DbConnector
 	configFileName         = flag.String("config", "/etc/moira/config.yml", "path to config file")
 	printVersion           = flag.Bool("version", false, "Print current version and exit")
 	printDefaultConfigFlag = flag.Bool("default-config", false, "Print default config and exit")
@@ -67,55 +62,52 @@ func main() {
 	databaseMetrics := metrics.ConfigureDatabaseMetrics()
 	metrics.Init(config.Graphite.GetSettings(), logger, "notifier")
 
-	connector = redis.NewDatabase(logger, config.Redis.GetSettings(), databaseMetrics)
+	database := redis.NewDatabase(logger, config.Redis.GetSettings(), databaseMetrics)
 	if *convertDb {
-		convertDatabase(connector)
+		convertDatabase(database)
 	}
 
 	notifierConfig := config.Notifier.getSettings()
-	notifier2 := notifier.NewNotifier(connector, logger, notifierConfig, notifierMetrics)
+	sender := notifier.NewNotifier(database, logger, notifierConfig, notifierMetrics)
 
-	if err := notifier2.RegisterSenders(connector, config.Front.URI); err != nil {
+	if err := sender.RegisterSenders(database, config.Front.URI); err != nil {
 		logger.Fatalf("Can not configure senders: %s", err.Error())
 	}
 
-	initWorkers(notifier2, &config, notifierMetrics)
-}
-
-func initWorkers(notifier2 notifier.Notifier, config *config, metric *graphite.NotifierMetrics) {
-	shutdown := make(chan bool)
-	var waitGroup sync.WaitGroup
-
-	fetchEventsWorker := events.NewFetchEventWorker(connector, logger, metric)
-	fetchNotificationsWorker := notifications.NewFetchNotificationsWorker(connector, logger, notifier2)
-
 	selfState := &selfstate.SelfCheckWorker{
 		Log:      logger,
-		DB:       connector,
+		DB:       database,
 		Config:   config.Notifier.SelfState.getSettings(),
-		Notifier: notifier2,
+		Notifier: sender,
 	}
 	if err := selfState.Start(); err != nil {
 		logger.Fatalf("SelfState failed: %v", err)
 	}
 
-	run(fetchEventsWorker, shutdown, &waitGroup)
-	run(fetchNotificationsWorker, shutdown, &waitGroup)
+	fetchEventsWorker := events.FetchEventsWorker{
+		Logger:    logger,
+		Database:  database,
+		Scheduler: notifier.NewScheduler(database, logger),
+		Metrics:   notifierMetrics,
+	}
+	fetchEventsWorker.Start()
+
+	fetchNotificationsWorker := &notifications.FetchNotificationsWorker{
+		Logger:   logger,
+		Database: database,
+		Notifier: sender,
+	}
+	fetchNotificationsWorker.Start()
 
 	logger.Infof("Moira Notifier Started. Version: %s", Version)
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 	logger.Info(fmt.Sprint(<-ch))
-	close(shutdown)
 
 	selfState.Stop()
+	fetchEventsWorker.Stop()
+	fetchNotificationsWorker.Stop()
 
-	waitGroup.Wait()
-	connector.DeregisterBots()
+	database.DeregisterBots()
 	logger.Infof("Moira Notifier Stopped. Version: %s", Version)
-}
-
-func run(worker moira.Worker, shutdown chan bool, wg *sync.WaitGroup) {
-	wg.Add(1)
-	go worker.Run(shutdown, wg)
 }

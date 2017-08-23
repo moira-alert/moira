@@ -13,7 +13,7 @@ import (
 
 var defaultCheckInterval = time.Second * 10
 
-//SelfCheckWorker - check what all notifier services works correctly and send message when moira don't work
+//SelfCheckWorker checks what all notifier services works correctly and send message when moira don't work
 type SelfCheckWorker struct {
 	Log      moira.Logger
 	DB       moira.Database
@@ -42,7 +42,7 @@ func (selfCheck *SelfCheckWorker) Start() error {
 		checkTicker := time.NewTicker(defaultCheckInterval)
 		for {
 			select {
-			case <-selfCheck.tomb.Dying(): // Shutdown
+			case <-selfCheck.tomb.Dying():
 				checkTicker.Stop()
 				selfCheck.Log.Debugf("Self State Monitor Stopped")
 				return nil
@@ -56,6 +56,7 @@ func (selfCheck *SelfCheckWorker) Start() error {
 	return nil
 }
 
+//Start self check worker and wait for finish
 func (selfCheck *SelfCheckWorker) Stop() error {
 	if !selfCheck.Config.Enabled {
 		return nil

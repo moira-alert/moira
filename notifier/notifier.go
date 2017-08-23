@@ -2,10 +2,11 @@ package notifier
 
 import (
 	"fmt"
-	"github.com/moira-alert/moira-alert"
-	"github.com/moira-alert/moira-alert/metrics/graphite"
 	"sync"
 	"time"
+
+	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira-alert/metrics/graphite"
 )
 
 //Notifier implements notification functionality

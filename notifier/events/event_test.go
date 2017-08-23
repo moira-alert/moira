@@ -7,9 +7,9 @@ import (
 	"github.com/moira-alert/moira-alert/metrics/graphite/go-metrics"
 	"github.com/moira-alert/moira-alert/mock/moira-alert"
 	"github.com/moira-alert/moira-alert/mock/scheduler"
+	"github.com/moira-alert/moira-alert/notifier"
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
-	"sync"
 	"testing"
 	"time"
 )
@@ -22,7 +22,12 @@ func TestEvent(t *testing.T) {
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Events")
 
-	worker := NewFetchEventWorker(dataBase, logger, metrics2)
+	worker := FetchEventsWorker{
+		Database:  dataBase,
+		Logger:    logger,
+		Metrics:   metrics2,
+		Scheduler: notifier.NewScheduler(dataBase, logger),
+	}
 
 	Convey("When event is TEST and subscription is disabled, should add new notification", t, func() {
 		event := moira.EventData{
@@ -57,7 +62,13 @@ func TestNoSubscription(t *testing.T) {
 		defer mockCtrl.Finish()
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger, _ := logging.GetLogger("Events")
-		worker := NewFetchEventWorker(dataBase, logger, metrics2)
+
+		worker := FetchEventsWorker{
+			Database:  dataBase,
+			Logger:    logger,
+			Metrics:   metrics2,
+			Scheduler: notifier.NewScheduler(dataBase, logger),
+		}
 
 		event := moira.EventData{
 			Metric:    "generate.event.1",
@@ -81,7 +92,13 @@ func TestDisabledNotification(t *testing.T) {
 		defer mockCtrl.Finish()
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger := mock_moira_alert.NewMockLogger(mockCtrl)
-		worker := NewFetchEventWorker(dataBase, logger, metrics2)
+
+		worker := FetchEventsWorker{
+			Database:  dataBase,
+			Logger:    logger,
+			Metrics:   metrics2,
+			Scheduler: notifier.NewScheduler(dataBase, logger),
+		}
 
 		event := moira.EventData{
 			Metric:    "generate.event.1",
@@ -110,7 +127,13 @@ func TestExtraTags(t *testing.T) {
 		defer mockCtrl.Finish()
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger := mock_moira_alert.NewMockLogger(mockCtrl)
-		worker := NewFetchEventWorker(dataBase, logger, metrics2)
+
+		worker := FetchEventsWorker{
+			Database:  dataBase,
+			Logger:    logger,
+			Metrics:   metrics2,
+			Scheduler: notifier.NewScheduler(dataBase, logger),
+		}
 
 		event := moira.EventData{
 			Metric:    "generate.event.1",
@@ -140,8 +163,12 @@ func TestAddNotification(t *testing.T) {
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger, _ := logging.GetLogger("Events")
 		scheduler := mock_scheduler.NewMockScheduler(mockCtrl)
-		worker := NewFetchEventWorker(dataBase, logger, metrics2)
-		worker.scheduler = scheduler
+		worker := FetchEventsWorker{
+			Database:  dataBase,
+			Logger:    logger,
+			Metrics:   metrics2,
+			Scheduler: scheduler,
+		}
 
 		event := moira.EventData{
 			Metric:         "generate.event.1",
@@ -172,8 +199,12 @@ func TestAddOneNotificationByTwoSubscriptionsWithSame(t *testing.T) {
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger, _ := logging.GetLogger("Events")
 		scheduler := mock_scheduler.NewMockScheduler(mockCtrl)
-		worker := NewFetchEventWorker(dataBase, logger, metrics2)
-		worker.scheduler = scheduler
+		worker := FetchEventsWorker{
+			Database:  dataBase,
+			Logger:    logger,
+			Metrics:   metrics2,
+			Scheduler: scheduler,
+		}
 
 		event := moira.EventData{
 			Metric:         "generate.event.1",
@@ -209,7 +240,12 @@ func TestFailReadContact(t *testing.T) {
 		defer mockCtrl.Finish()
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger := mock_moira_alert.NewMockLogger(mockCtrl)
-		worker := NewFetchEventWorker(dataBase, logger, metrics2)
+		worker := FetchEventsWorker{
+			Database:  dataBase,
+			Logger:    logger,
+			Metrics:   metrics2,
+			Scheduler: notifier.NewScheduler(dataBase, logger),
+		}
 
 		event := moira.EventData{
 			Metric:    "generate.event.1",
@@ -241,8 +277,13 @@ func TestGoRoutine(t *testing.T) {
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger, _ := logging.GetLogger("Events")
 		scheduler := mock_scheduler.NewMockScheduler(mockCtrl)
-		worker := NewFetchEventWorker(dataBase, logger, metrics2)
-		worker.scheduler = scheduler
+
+		worker := &FetchEventsWorker{
+			Database:  dataBase,
+			Logger:    logger,
+			Metrics:   metrics2,
+			Scheduler: scheduler,
+		}
 
 		event := moira.EventData{
 			Metric:         "generate.event.1",
@@ -252,6 +293,7 @@ func TestGoRoutine(t *testing.T) {
 			SubscriptionID: &subscription.ID,
 		}
 		emptyNotification := moira.ScheduledNotification{}
+		shutdown := make(chan bool)
 
 		dataBase.EXPECT().FetchEvent().Return(&event, nil)
 		dataBase.EXPECT().FetchEvent().AnyTimes().Return(nil, nil)
@@ -261,17 +303,23 @@ func TestGoRoutine(t *testing.T) {
 		dataBase.EXPECT().GetTagsSubscriptions(tags).Times(1).Return([]moira.SubscriptionData{subscription}, nil)
 		dataBase.EXPECT().GetContact(contact.ID).Times(1).Return(contact, nil)
 		scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, trigger, contact, false, 0).Times(1).Return(&emptyNotification)
-		dataBase.EXPECT().AddNotification(&emptyNotification).Times(1).Return(nil)
+		dataBase.EXPECT().AddNotification(&emptyNotification).Times(1).Return(nil).Do(func(f ...interface{}) { close(shutdown) })
 
-		shutdown := make(chan bool)
-		wg := sync.WaitGroup{}
-		wg.Add(1)
-		go worker.Run(shutdown, &wg)
-		time.Sleep(time.Second * 5)
-		close(shutdown)
-		wg.Wait()
+		go worker.Start()
+		waitTestEnd(shutdown, worker)
 		mockCtrl.Finish()
 	})
+}
+
+func waitTestEnd(shutdown chan bool, worker *FetchEventsWorker) {
+	select {
+	case <-shutdown:
+		worker.Stop()
+		break
+	case <-time.After(time.Second * 10):
+		close(shutdown)
+		break
+	}
 }
 
 var trigger = moira.TriggerData{

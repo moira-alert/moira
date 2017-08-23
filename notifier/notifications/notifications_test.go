@@ -8,7 +8,6 @@ import (
 	notifier2 "github.com/moira-alert/moira-alert/notifier"
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
-	"sync"
 	"testing"
 	"time"
 )
@@ -54,8 +53,12 @@ func TestProcessScheduledEvent(t *testing.T) {
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	notifier := mock_notifier.NewMockNotifier(mockCtrl)
 	logger, _ := logging.GetLogger("Notification")
+	worker := &FetchNotificationsWorker{
+		Database: dataBase,
+		Logger:   logger,
+		Notifier: notifier,
+	}
 
-	worker := NewFetchNotificationsWorker(dataBase, logger, notifier)
 	Convey("Two different notifications, should send two packages", t, func() {
 		dataBase.EXPECT().GetNotificationsAndDelete(gomock.Any()).Return([]*moira.ScheduledNotification{
 			&notification1,
@@ -143,26 +146,28 @@ func TestGoRoutine(t *testing.T) {
 	notifier := mock_notifier.NewMockNotifier(mockCtrl)
 	logger, _ := logging.GetLogger("Notification")
 
-	shutdown := make(chan bool)
-	worker := NewFetchNotificationsWorker(dataBase, logger, notifier)
+	worker := &FetchNotificationsWorker{
+		Database: dataBase,
+		Logger:   logger,
+		Notifier: notifier,
+	}
 
+	shutdown := make(chan bool)
 	dataBase.EXPECT().GetNotificationsAndDelete(gomock.Any()).Return([]*moira.ScheduledNotification{&notification1}, nil)
 	notifier.EXPECT().Send(&pkg, gomock.Any()).Do(func(f ...interface{}) { close(shutdown) })
-
-	wg := sync.WaitGroup{}
-	wg.Add(1)
 	notifier.EXPECT().StopSenders()
-	go worker.Run(shutdown, &wg)
-	waitTestEnd(shutdown)
-	wg.Wait()
+
+	worker.Start()
+	waitTestEnd(shutdown, worker)
 	mockCtrl.Finish()
 }
 
-func waitTestEnd(shutdown chan bool) {
+func waitTestEnd(shutdown chan bool, worker *FetchNotificationsWorker) {
 	select {
 	case <-shutdown:
+		worker.Stop()
 		break
-	case <-time.After(time.Second * 5):
+	case <-time.After(time.Second * 10):
 		close(shutdown)
 		break
 	}
