@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func (worker *Worker) noDataChecker() error {
+func (worker *Checker) noDataChecker() error {
 	checkTicker := time.NewTicker(worker.Config.NoDataCheckInterval)
 	var wg sync.WaitGroup
 	for {
@@ -23,7 +23,7 @@ func (worker *Worker) noDataChecker() error {
 	}
 }
 
-func (worker *Worker) checkNoData(wg *sync.WaitGroup) error {
+func (worker *Checker) checkNoData(wg *sync.WaitGroup) error {
 	now := time.Now().UTC().Unix()
 	if worker.lastData+worker.Config.StopCheckingInterval < now {
 		worker.Logger.Infof("Checking NoData disabled. No metrics for %v seconds", now-worker.lastData)

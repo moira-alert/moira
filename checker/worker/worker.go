@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-type Worker struct {
+type Checker struct {
 	Logger   moira.Logger
 	Database moira.Database
 	Config   *checker.Config
@@ -18,7 +18,7 @@ type Worker struct {
 	tomb     tomb.Tomb
 }
 
-func (worker *Worker) Start() {
+func (worker *Checker) Start() {
 	worker.lastData = time.Now().UTC().Unix()
 
 	worker.tomb.Go(worker.noDataChecker)
@@ -28,7 +28,7 @@ func (worker *Worker) Start() {
 	worker.Logger.Infof("Checking new events started")
 }
 
-func (worker *Worker) Stop() error {
+func (worker *Checker) Stop() error {
 	worker.tomb.Kill(nil)
 	return worker.tomb.Wait()
 }

@@ -71,21 +71,21 @@ func main() {
 
 	checkerMetrics := metrics.ConfigureCheckerMetrics()
 	metrics.Init(config.Graphite.GetSettings(), logger, "checker")
-	masterWorker := &worker.Worker{
+	checkerWorker := &worker.Checker{
 		Logger:   logger,
 		Database: database,
 		Config:   checkerSettings,
 		Metrics:  checkerMetrics,
 	}
 
-	masterWorker.Start()
+	checkerWorker.Start()
 
 	logger.Infof("Moira Checker started. Version: %s", Version)
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 	logger.Info(fmt.Sprint(<-ch))
 	logger.Infof("Moira Checker shutting down.")
-	masterWorker.Stop()
+	checkerWorker.Stop()
 	logger.Infof("Moira Checker stopped. Version: %s", Version)
 }
 

@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func (worker *Worker) perform(triggerIDs []string, noCache bool, cacheTTL int64, wg *sync.WaitGroup) {
+func (worker *Checker) perform(triggerIDs []string, noCache bool, cacheTTL int64, wg *sync.WaitGroup) {
 	if noCache {
 		for _, id := range triggerIDs {
 			wg.Add(1)
@@ -31,7 +31,7 @@ func (worker *Worker) perform(triggerIDs []string, noCache bool, cacheTTL int64,
 	}
 }
 
-func (worker *Worker) handleTriggerToCheck(triggerID string) error {
+func (worker *Checker) handleTriggerToCheck(triggerID string) error {
 	acquired, err := worker.Database.SetTriggerCheckLock(triggerID)
 	if err != nil {
 		return err
@@ -48,7 +48,7 @@ func (worker *Worker) handleTriggerToCheck(triggerID string) error {
 	return nil
 }
 
-func (worker *Worker) checkTrigger(triggerID string) error {
+func (worker *Checker) checkTrigger(triggerID string) error {
 	defer worker.Database.DeleteTriggerCheckLock(triggerID)
 	triggerChecker := checker.TriggerChecker{
 		TriggerID: triggerID,

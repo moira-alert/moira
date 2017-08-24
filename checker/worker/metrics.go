@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func (worker *Worker) metricsChecker() error {
+func (worker *Checker) metricsChecker() error {
 	metricEventsChannel := worker.Database.SubscribeMetricEvents(&worker.tomb)
 	var handleWaitGroup sync.WaitGroup
 	for {
@@ -26,7 +26,7 @@ func (worker *Worker) metricsChecker() error {
 	}
 }
 
-func (worker *Worker) handleMetricEvent(metricEvent *moira.MetricEvent) error {
+func (worker *Checker) handleMetricEvent(metricEvent *moira.MetricEvent) error {
 	worker.lastData = time.Now().UTC().Unix()
 	pattern := metricEvent.Pattern
 	metric := metricEvent.Metric
