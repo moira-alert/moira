@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"reflect"
 )
 
 // GetUserContacts - Returns contacts ids by given login from set {0}
@@ -187,9 +186,15 @@ func (connector *DbConnector) GetTriggerChecks(triggerCheckIds []string) ([]moir
 			}
 		}
 
-		lastCheck, err := reply.Check(slice[3], nil)
+		lastCheckBytes, err := redis.Bytes(slice[3], nil)
 		if err != nil {
 			connector.logger.Errorf("Error getting metric-last-check, id: %s, error: %s", triggerId, err.Error())
+		}
+
+		var lastCheck = moira.CheckData{}
+		err = json.Unmarshal(lastCheckBytes, &lastCheck)
+		if err != nil {
+			connector.logger.Errorf("Failed to parse lastCheck json %s: %s", lastCheckBytes, err.Error())
 		}
 
 		throttling, err := redis.Int64(slice[4], nil)
@@ -203,7 +208,7 @@ func (connector *DbConnector) GetTriggerChecks(triggerCheckIds []string) ([]moir
 			Trigger: *toTrigger(triggerSE, triggerId),
 		}
 
-		triggerCheck.LastCheck = *lastCheck
+		triggerCheck.LastCheck = lastCheck
 		if throttling > time.Now().Unix() {
 			triggerCheck.Throttling = throttling
 		}
@@ -270,7 +275,7 @@ func (connector *DbConnector) GetEvents(triggerId string, start int64, size int6
 	return eventsData, nil
 }
 
-func (connector *DbConnector) GetSubscriptions(subscriptionIds []string) ([]*moira.SubscriptionData, error) {
+func (connector *DbConnector) GetSubscriptions(subscriptionIds []string) ([]moira.SubscriptionData, error) {
 	c := connector.pool.Get()
 	defer c.Close()
 
@@ -278,16 +283,21 @@ func (connector *DbConnector) GetSubscriptions(subscriptionIds []string) ([]*moi
 	for _, id := range subscriptionIds {
 		c.Send("GET", fmt.Sprintf("moira-subscription:%s", id))
 	}
-	subscriptions, err := reply.Subscriptions(c.Do("EXEC"))
+	subscriptionsBytes, err := redis.ByteSlices(c.Do("EXEC"))
 	if err != nil {
-		if err == redis.ErrNil {
-			return make([]*moira.SubscriptionData, 0), nil
-		}
 		return nil, fmt.Errorf("Failed to EXEC: %s", err.Error())
 	}
 
-	for i := range subscriptions {
-		subscriptions[i].ID = subscriptionIds[i]
+	subscriptions := make([]moira.SubscriptionData, 0, len(subscriptionIds))
+
+	for i, bytes := range subscriptionsBytes {
+		sub, err := connector.convertSubscription(bytes)
+		if err != nil {
+			connector.logger.Warningf(err.Error())
+			continue
+		}
+		sub.ID = subscriptionIds[i]
+		subscriptions = append(subscriptions, sub)
 	}
 	return subscriptions, nil
 }
@@ -478,17 +488,21 @@ func (connector *DbConnector) SetTriggerMetricsMaintenance(triggerId string, met
 	c := connector.pool.Get()
 	defer c.Close()
 
+	var readingErr error
+
 	key := fmt.Sprintf("moira-metric-last-check:%s", triggerId)
-	lastCheck, err := reply.Check(c.Do("GET", key))
-	if err != nil {
-		if err != redis.ErrNil {
+	lastCheckString, readingErr := redis.String(c.Do("GET", key))
+	if readingErr != nil {
+		if readingErr != redis.ErrNil {
 			return nil
 		}
 	}
 
-	for err != redis.ErrNil {
+	for readingErr != redis.ErrNil {
+		var lastCheck = moira.CheckData{}
+		err := json.Unmarshal([]byte(lastCheckString), &lastCheck)
 		if err != nil {
-			return fmt.Errorf("Failed to parse lastCheck json: %s", err.Error())
+			return fmt.Errorf("Failed to parse lastCheck json %s: %s", lastCheckString, err.Error())
 		}
 		metricsCheck := lastCheck.Metrics
 		if len(metricsCheck) > 0 {
@@ -506,14 +520,15 @@ func (connector *DbConnector) SetTriggerMetricsMaintenance(triggerId string, met
 			return err
 		}
 
-		prev, err := reply.Check(c.Do("GETSET", key, newLastCheck))
-		if err != nil && err != redis.ErrNil {
-			return err
+		var prev string
+		prev, readingErr = redis.String(c.Do("GETSET", key, newLastCheck))
+		if readingErr != nil && readingErr != redis.ErrNil {
+			return readingErr
 		}
-		if reflect.DeepEqual(prev, lastCheck) {
+		if prev == lastCheckString {
 			break
 		}
-		lastCheck = prev
+		lastCheckString = prev
 	}
 	return nil
 }
@@ -535,11 +550,8 @@ func (connector *DbConnector) GetNotifications(start, end int64) ([]*moira.Sched
 	if err != nil {
 		return nil, 0, err
 	}
-	notifications, err := reply.Notifications(rawResponse[0], nil)
+	notifications, err := connector.convertNotifications(rawResponse[0])
 	if err != nil {
-		if err == redis.ErrNil {
-			return make([]*moira.ScheduledNotification, 0), 0, nil
-		}
 		return nil, 0, err
 	}
 	return notifications, int64(total), nil

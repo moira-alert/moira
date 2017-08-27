@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"github.com/moira-alert/moira-alert/database/redis/reply"
 )
 
 func (connector *DbConnector) GetPatternTriggerIds(pattern string) ([]string, error) {
@@ -101,11 +100,11 @@ func (connector *DbConnector) DeleteTriggerThrottling(triggerId string) error {
 	if err != nil {
 		return fmt.Errorf("Failed to EXEC: %s", err.Error())
 	}
-	notificationStrings, err := reply.Notifications(rawResponse[2], nil)
+	notificationStrings, err := redis.ByteSlices(rawResponse[2], nil)
 	if err != nil {
 		return err
 	}
-	notifications, err := reply.Notifications(rawResponse[2], nil)
+	notifications, err := connector.convertNotifications(rawResponse[2])
 	if err != nil {
 		return err
 	}
