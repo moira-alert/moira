@@ -8,14 +8,11 @@ import (
 // Database implements DB functionality
 type Database interface {
 	FetchEvent() (*EventData, error)
-	GetNotificationTrigger(id string) (TriggerData, error)
 	GetTriggerTags(id string) ([]string, error)
 	GetTagsSubscriptions(tags []string) ([]SubscriptionData, error)
-	AddNotification(notification *ScheduledNotification) error
 	GetTriggerThrottlingTimestamps(id string) (time.Time, time.Time)
 	GetTriggerEventsCount(id string, from int64) int64
 	SetTriggerThrottlingTimestamp(id string, next time.Time) error
-	GetNotificationsAndDelete(to int64) ([]*ScheduledNotification, error)
 	GetMetricsCount() (int64, error)
 	GetChecksCount() (int64, error)
 
@@ -36,6 +33,7 @@ type Database interface {
 	GetTriggerCheckIds() ([]string, int64, error)
 	GetFilteredTriggerCheckIds([]string, bool) ([]string, int64, error)
 	GetTrigger(string) (*Trigger, error)
+	GetNotificationTrigger(id string) (TriggerData, error)
 	GetTriggerChecks(triggerCheckIds []string) ([]TriggerChecks, error)
 	GetTriggerLastCheck(triggerId string) (*CheckData, error)
 	SetTriggerLastCheck(triggerId string, checkData *CheckData) error
@@ -69,8 +67,12 @@ type Database interface {
 	RemoveSubscription(subscriptionId string, userLogin string) error
 	GetUserSubscriptionIDs(userLogin string) ([]string, error)
 
+	//ScheduledNotification storing
 	GetNotifications(start, end int64) ([]*ScheduledNotification, int64, error)
 	RemoveNotification(notificationKey string) (int64, error)
+	GetNotificationsAndDelete(to int64) ([]*ScheduledNotification, error)
+	AddNotification(notification *ScheduledNotification) error
+	AddNotifications(notification []*ScheduledNotification, timestamp int64) error
 
 	AddPatternMetric(pattern, metric string) error
 	GetPatternMetrics(pattern string) ([]string, error)

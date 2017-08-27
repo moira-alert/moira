@@ -248,6 +248,10 @@ func TestDeleteTriggerThrottling(t *testing.T) {
 
 	Convey("Success", t, func() {
 		database.EXPECT().DeleteTriggerThrottling(triggerID).Return(nil)
+		var total int64
+		var to int64 = -1
+		database.EXPECT().GetNotifications(total, to).Return(make([]*moira.ScheduledNotification, 0), total, nil)
+		database.EXPECT().AddNotifications(make([]*moira.ScheduledNotification, 0), gomock.Any()).Return(nil)
 		err := DeleteTriggerThrottling(database, triggerID)
 		So(err, ShouldBeNil)
 	})

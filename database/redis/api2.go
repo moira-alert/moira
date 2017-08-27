@@ -86,35 +86,13 @@ func (connector *DbConnector) GetTriggerIds() ([]string, error) {
 }
 
 func (connector *DbConnector) DeleteTriggerThrottling(triggerId string) error {
-	//todo прибраmься/разбить на 2 метода
-	now := time.Now().Unix()
-
 	c := connector.pool.Get()
 	defer c.Close()
 
 	c.Send("MULTI")
-	c.Send("SET", fmt.Sprintf("moira-notifier-throttling-beginning:%s", triggerId), now)
+	c.Send("SET", fmt.Sprintf("moira-notifier-throttling-beginning:%s", triggerId), time.Now().Unix())
 	c.Send("DEL", fmt.Sprintf("moira-notifier-next:%s", triggerId))
-	c.Send("ZRANGEBYSCORE", "moira-notifier-notifications", "-inf", "+inf")
-	rawResponse, err := redis.Values(c.Do("EXEC"))
-	if err != nil {
-		return fmt.Errorf("Failed to EXEC: %s", err.Error())
-	}
-	notificationStrings, err := redis.ByteSlices(rawResponse[2], nil)
-	if err != nil {
-		return err
-	}
-	notifications, err := connector.convertNotifications(rawResponse[2])
-	if err != nil {
-		return err
-	}
-	c.Send("MULTI")
-	for i, notification := range notifications {
-		if notification.Event.TriggerID == triggerId {
-			c.Send("ZADD", "moira-notifier-notifications", now, notificationStrings[i])
-		}
-	}
-	_, err = c.Do("EXEC")
+	_, err := c.Do("EXEC")
 	if err != nil {
 		return fmt.Errorf("Failed to EXEC: %s", err.Error())
 	}

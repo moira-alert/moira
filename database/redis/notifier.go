@@ -121,21 +121,6 @@ func (connector *DbConnector) GetTagsSubscriptions(tags []string) ([]moira.Subsc
 	return subscriptionsData, nil
 }
 
-// AddNotification store notification at given timestamp
-func (connector *DbConnector) AddNotification(notification *moira.ScheduledNotification) error {
-
-	notificationString, err := json.Marshal(notification)
-	if err != nil {
-		return err
-	}
-
-	c := connector.pool.Get()
-	defer c.Close()
-
-	_, err = c.Do("ZADD", "moira-notifier-notifications", notification.Timestamp, notificationString)
-	return err
-}
-
 // GetTriggerThrottlingTimestamps get throttling or scheduled notifications delay for given triggerID
 func (connector *DbConnector) GetTriggerThrottlingTimestamps(triggerID string) (time.Time, time.Time) {
 	c := connector.pool.Get()
@@ -165,31 +150,6 @@ func (connector *DbConnector) SetTriggerThrottlingTimestamp(triggerID string, ne
 	return err
 }
 
-// GetNotificationsAndDelete fetch notifications by given timestamp
-func (connector *DbConnector) GetNotificationsAndDelete(to int64) ([]*moira.ScheduledNotification, error) {
-	c := connector.pool.Get()
-	defer c.Close()
-
-	c.Send("MULTI")
-	c.Send("ZRANGEBYSCORE", "moira-notifier-notifications", "-inf", to)
-	c.Send("ZREMRANGEBYSCORE", "moira-notifier-notifications", "-inf", to)
-	redisRawResponse, err := c.Do("EXEC")
-	if err != nil {
-		return nil, err
-	}
-
-	redisResponse, err := redis.Values(redisRawResponse, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(redisResponse) == 0 {
-		return make([]*moira.ScheduledNotification, 0), nil
-	}
-
-	return connector.convertNotifications(redisResponse[0])
-}
-
 // GetMetricsCount - return metrics count received by Moira-Cache
 func (connector *DbConnector) GetMetricsCount() (int64, error) {
 	c := connector.pool.Get()
@@ -210,26 +170,4 @@ func (connector *DbConnector) GetChecksCount() (int64, error) {
 		return 0, nil
 	}
 	return ts, err
-}
-
-// ConvertNotifications extracts ScheduledNotification from redis response
-func (connector *DbConnector) convertNotifications(redisResponse interface{}) ([]*moira.ScheduledNotification, error) {
-
-	notificationStrings, err := redis.Strings(redisResponse, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	notifications := make([]*moira.ScheduledNotification, 0, len(notificationStrings))
-
-	for _, notificationString := range notificationStrings {
-		notification := &moira.ScheduledNotification{}
-		if err := json.Unmarshal([]byte(notificationString), notification); err != nil {
-			connector.logger.Warningf("Failed to parse scheduled json notification %s: %s", notificationString, err.Error())
-			continue
-		}
-		notifications = append(notifications, notification)
-	}
-
-	return notifications, nil
 }

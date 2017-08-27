@@ -1,20 +1,22 @@
 package reply
 
 import (
-	"github.com/moira-alert/moira-alert"
 	"encoding/json"
+	"fmt"
 	"github.com/garyburd/redigo/redis"
+	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira-alert/database"
 )
 
-func Notification(rep interface{}, err error) (*moira.ScheduledNotification, error) {
+func Notification(rep interface{}, err error) (moira.ScheduledNotification, error) {
+	notification := moira.ScheduledNotification{}
 	bytes, err := redis.Bytes(rep, err)
 	if err != nil {
-		return nil, err
+		return notification, err
 	}
-	notification := &moira.ScheduledNotification{}
-	err = json.Unmarshal(bytes, notification)
+	err = json.Unmarshal(bytes, &notification)
 	if err != nil {
-		return nil, err
+		return notification, fmt.Errorf("Failed to parse notification json %s: %s", string(bytes), err.Error())
 	}
 	return notification, nil
 }
@@ -22,15 +24,21 @@ func Notification(rep interface{}, err error) (*moira.ScheduledNotification, err
 func Notifications(rep interface{}, err error) ([]*moira.ScheduledNotification, error) {
 	values, err := redis.Values(rep, err)
 	if err != nil {
+		if err == redis.ErrNil {
+			return make([]*moira.ScheduledNotification, 0), nil
+		}
 		return nil, err
 	}
 	notifications := make([]*moira.ScheduledNotification, len(values))
-	for i, kk := range values {
-		notification, err2 := Notification(kk, err)
-		if err2 != nil {
+	for i, value := range values {
+		notification, err2 := Notification(value, err)
+		if err2 != nil && err2 != database.ErrNil {
 			return nil, err2
+		} else if err2 == database.ErrNil {
+			notifications[i] = nil
+		} else {
+			notifications[i] = &notification
 		}
-		notifications[i] = notification
 	}
 	return notifications, nil
 }

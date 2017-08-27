@@ -57,6 +57,18 @@ func (_mr *MockDatabaseMockRecorder) AddNotification(arg0 interface{}) *gomock.C
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "AddNotification", arg0)
 }
 
+// AddNotifications mocks base method
+func (_m *MockDatabase) AddNotifications(_param0 []*moira_alert.ScheduledNotification, _param1 int64) error {
+	ret := _m.ctrl.Call(_m, "AddNotifications", _param0, _param1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddNotifications indicates an expected call of AddNotifications
+func (_mr *MockDatabaseMockRecorder) AddNotifications(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "AddNotifications", arg0, arg1)
+}
+
 // AddPatternMetric mocks base method
 func (_m *MockDatabase) AddPatternMetric(_param0 string, _param1 string) error {
 	ret := _m.ctrl.Call(_m, "AddPatternMetric", _param0, _param1)

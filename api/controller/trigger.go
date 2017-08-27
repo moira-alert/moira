@@ -113,6 +113,21 @@ func DeleteTriggerThrottling(database moira.Database, triggerID string) *api.Err
 	if err := database.DeleteTriggerThrottling(triggerID); err != nil {
 		return api.ErrorInternalServer(err)
 	}
+
+	now := time.Now().Unix()
+	notifications, _, err := database.GetNotifications(0, -1)
+	if err != nil {
+		return api.ErrorInternalServer(err)
+	}
+	notificationsForRewrite := make([]*moira.ScheduledNotification, 0)
+	for _, notification := range notifications {
+		if notification != nil && notification.Event.TriggerID == triggerID {
+			notificationsForRewrite = append(notificationsForRewrite, notification)
+		}
+	}
+	if err = database.AddNotifications(notificationsForRewrite, now); err != nil {
+		return api.ErrorInternalServer(err)
+	}
 	return nil
 }
 
