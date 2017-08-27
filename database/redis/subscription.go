@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/garyburd/redigo/redis"
+
 	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/database"
 	"github.com/moira-alert/moira-alert/database/redis/reply"
@@ -115,6 +117,18 @@ func (connector *DbConnector) RemoveSubscription(subscriptionId string, userLogi
 		return fmt.Errorf("Failed to EXEC: %s", err.Error())
 	}
 	return nil
+}
+
+//GetUserSubscriptionIDs returns subscriptions ids by given login
+func (connector *DbConnector) GetUserSubscriptionIDs(login string) ([]string, error) {
+	c := connector.pool.Get()
+	defer c.Close()
+
+	subscriptions, err := redis.Strings(c.Do("SMEMBERS", moiraUserSubscriptions(login)))
+	if err != nil {
+		return nil, fmt.Errorf("Failed to retrieve subscriptions for user login %s: %s", login, err.Error())
+	}
+	return subscriptions, nil
 }
 
 func moiraSubscription(id string) string {

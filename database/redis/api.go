@@ -12,18 +12,6 @@ import (
 	"time"
 )
 
-//GetUserSubscriptionIDs - Returns subscriptions ids by given login from set {0}
-func (connector *DbConnector) GetUserSubscriptionIDs(login string) ([]string, error) {
-	c := connector.pool.Get()
-	defer c.Close()
-
-	subscriptions, err := redis.Strings(c.Do("SMEMBERS", fmt.Sprintf("moira-user-subscriptions:%s", login)))
-	if err != nil {
-		return nil, fmt.Errorf("Failed to retrieve subscriptions for user login %s: %s", login, err.Error())
-	}
-	return subscriptions, nil
-}
-
 //GetTags returns all tags from set with tag data
 func (connector *DbConnector) GetTagNames() ([]string, error) {
 	c := connector.pool.Get()
