@@ -55,12 +55,12 @@ func (connector *DbConnector) GetAllContacts() ([]*moira.ContactData, error) {
 		return nil, err
 	}
 
-	contactIds := make([]string, 0, len(keys))
+	contactIDs := make([]string, 0, len(keys))
 	for _, key := range keys {
 		key = key[14:]
-		contactIds = append(contactIds, key)
+		contactIDs = append(contactIDs, key)
 	}
-	return connector.GetContacts(contactIds)
+	return connector.GetContacts(contactIDs)
 }
 
 //SaveContact writes contact data and updates user contacts
@@ -83,7 +83,7 @@ func (connector *DbConnector) SaveContact(contact *moira.ContactData) error {
 	return nil
 }
 
-//RemoveContact deletes contact data and contactId from user contacts
+//RemoveContact deletes contact data and contactID from user contacts
 func (connector *DbConnector) RemoveContact(contactID string, userLogin string) error {
 	c := connector.pool.Get()
 	defer c.Close()

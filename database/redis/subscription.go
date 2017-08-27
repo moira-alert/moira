@@ -99,17 +99,17 @@ func (connector *DbConnector) SaveSubscription(subscription *moira.SubscriptionD
 }
 
 //RemoveSubscription deletes subscription data and removes subscriptionID from users and tags subscriptions
-func (connector *DbConnector) RemoveSubscription(subscriptionId string, userLogin string) error {
-	subscription, err := connector.GetSubscription(subscriptionId)
+func (connector *DbConnector) RemoveSubscription(subscriptionID string, userLogin string) error {
+	subscription, err := connector.GetSubscription(subscriptionID)
 	if err != nil {
 		return nil
 	}
 	c := connector.pool.Get()
 	defer c.Close()
 	c.Send("MULTI")
-	c.Send("SREM", moiraUserSubscriptions(userLogin), subscriptionId)
+	c.Send("SREM", moiraUserSubscriptions(userLogin), subscriptionID)
 	for _, tag := range subscription.Tags {
-		c.Send("SREM", moiraTagSubscription(tag), subscriptionId)
+		c.Send("SREM", moiraTagSubscription(tag), subscriptionID)
 	}
 	c.Send("DEL", moiraSubscription(subscription.ID))
 	_, err = c.Do("EXEC")
