@@ -7,7 +7,7 @@ import (
 )
 
 type SubscriptionList struct {
-	List []moira.SubscriptionData `json:"list"`
+	List []*moira.SubscriptionData `json:"list"`
 }
 
 func (*SubscriptionList) Render(w http.ResponseWriter, r *http.Request) error {

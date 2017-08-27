@@ -20,7 +20,7 @@ func TestGetUserSubscriptions(t *testing.T) {
 
 	Convey("Two subscriptions", t, func() {
 		subscriptionIDs := []string{uuid.NewV4().String(), uuid.NewV4().String()}
-		subscriptions := []moira.SubscriptionData{{ID: subscriptionIDs[0]}, {ID: subscriptionIDs[1]}}
+		subscriptions := []*moira.SubscriptionData{{ID: subscriptionIDs[0]}, {ID: subscriptionIDs[1]}}
 		database.EXPECT().GetUserSubscriptionIDs(login).Return(subscriptionIDs, nil)
 		database.EXPECT().GetSubscriptions(subscriptionIDs).Return(subscriptions, nil)
 		list, err := GetUserSubscriptions(database, login)
@@ -30,7 +30,7 @@ func TestGetUserSubscriptions(t *testing.T) {
 
 	Convey("Two ids, one subscription", t, func() {
 		subscriptionIDs := []string{uuid.NewV4().String(), uuid.NewV4().String()}
-		subscriptions := []moira.SubscriptionData{{ID: subscriptionIDs[1]}}
+		subscriptions := []*moira.SubscriptionData{{ID: subscriptionIDs[1]}}
 		database.EXPECT().GetUserSubscriptionIDs(login).Return(subscriptionIDs, nil)
 		database.EXPECT().GetSubscriptions(subscriptionIDs).Return(subscriptions, nil)
 		list, err := GetUserSubscriptions(database, login)
@@ -59,7 +59,7 @@ func TestGetUserSubscriptions(t *testing.T) {
 	})
 }
 
-func TestDeleteSubscription(t *testing.T) {
+func TestRemoveSubscription(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
@@ -67,15 +67,15 @@ func TestDeleteSubscription(t *testing.T) {
 	id := uuid.NewV4().String()
 
 	Convey("Success", t, func() {
-		database.EXPECT().DeleteSubscription(id, login).Return(nil)
-		err := DeleteSubscription(database, id, login)
+		database.EXPECT().RemoveSubscription(id, login).Return(nil)
+		err := RemoveSubscription(database, id, login)
 		So(err, ShouldBeNil)
 	})
 
 	Convey("Error", t, func() {
 		expected := fmt.Errorf("Oooops! Can not remove subscription")
-		database.EXPECT().DeleteSubscription(id, login).Return(expected)
-		err := DeleteSubscription(database, id, login)
+		database.EXPECT().RemoveSubscription(id, login).Return(expected)
+		err := RemoveSubscription(database, id, login)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 	})
 }
@@ -106,36 +106,17 @@ func TestWriteSubscription(t *testing.T) {
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
 	login := "user"
 
-	Convey("Create subscription", t, func() {
-		subscription := dto.Subscription{ID: ""}
-		Convey("Success", func() {
-			database.EXPECT().CreateSubscription(gomock.Any()).Return(nil)
-			err := WriteSubscription(database, login, &subscription)
-			So(err, ShouldBeNil)
-		})
-
-		Convey("Error", func() {
-			expected := fmt.Errorf("Oooops! Can not create subscription")
-			database.EXPECT().CreateSubscription(gomock.Any()).Return(expected)
-			err := WriteSubscription(database, login, &subscription)
-			So(err, ShouldResemble, api.ErrorInternalServer(expected))
-		})
+	subscription := dto.Subscription{ID: ""}
+	Convey("Success", t, func() {
+		database.EXPECT().SaveSubscription(gomock.Any()).Return(nil)
+		err := WriteSubscription(database, login, &subscription)
+		So(err, ShouldBeNil)
 	})
 
-	Convey("Update subscription", t, func() {
-		subscription := dto.Subscription{ID: uuid.NewV4().String()}
-		Convey("Success", func() {
-			database.EXPECT().UpdateSubscription(gomock.Any()).Return(nil)
-			err := WriteSubscription(database, login, &subscription)
-			So(err, ShouldBeNil)
-		})
-
-		Convey("Error", func() {
-			expected := fmt.Errorf("Oooops! Can not update subscription")
-			database.EXPECT().UpdateSubscription(gomock.Any()).Return(expected)
-			err := WriteSubscription(database, login, &subscription)
-			So(err, ShouldResemble, api.ErrorInternalServer(expected))
-		})
+	Convey("Error", t, func() {
+		expected := fmt.Errorf("Oooops! Can not create subscription")
+		database.EXPECT().SaveSubscription(gomock.Any()).Return(expected)
+		err := WriteSubscription(database, login, &subscription)
+		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 	})
-
 }

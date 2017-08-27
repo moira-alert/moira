@@ -6,7 +6,7 @@ package mock_moira_alert
 import (
 	gomock "github.com/golang/mock/gomock"
 	moira_alert "github.com/moira-alert/moira-alert"
-	"gopkg.in/tomb.v2"
+	tomb_v2 "gopkg.in/tomb.v2"
 	time "time"
 )
 
@@ -93,18 +93,6 @@ func (_mr *MockDatabaseMockRecorder) CleanupMetricValues(arg0, arg1 interface{})
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "CleanupMetricValues", arg0, arg1)
 }
 
-// CreateSubscription mocks base method
-func (_m *MockDatabase) CreateSubscription(_param0 *moira_alert.SubscriptionData) error {
-	ret := _m.ctrl.Call(_m, "CreateSubscription", _param0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// CreateSubscription indicates an expected call of CreateSubscription
-func (_mr *MockDatabaseMockRecorder) CreateSubscription(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "CreateSubscription", arg0)
-}
-
 // DeleteContact mocks base method
 func (_m *MockDatabase) DeleteContact(_param0 string, _param1 string) error {
 	ret := _m.ctrl.Call(_m, "DeleteContact", _param0, _param1)
@@ -117,16 +105,16 @@ func (_mr *MockDatabaseMockRecorder) DeleteContact(arg0, arg1 interface{}) *gomo
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "DeleteContact", arg0, arg1)
 }
 
-// DeleteSubscription mocks base method
-func (_m *MockDatabase) DeleteSubscription(_param0 string, _param1 string) error {
-	ret := _m.ctrl.Call(_m, "DeleteSubscription", _param0, _param1)
+// RemoveSubscription mocks base method
+func (_m *MockDatabase) RemoveSubscription(_param0 string, _param1 string) error {
+	ret := _m.ctrl.Call(_m, "RemoveSubscription", _param0, _param1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// DeleteSubscription indicates an expected call of DeleteSubscription
-func (_mr *MockDatabaseMockRecorder) DeleteSubscription(arg0, arg1 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "DeleteSubscription", arg0, arg1)
+// RemoveSubscription indicates an expected call of RemoveSubscription
+func (_mr *MockDatabaseMockRecorder) RemoveSubscription(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "RemoveSubscription", arg0, arg1)
 }
 
 // DeleteTag mocks base method
@@ -401,9 +389,9 @@ func (_mr *MockDatabaseMockRecorder) GetSubscription(arg0 interface{}) *gomock.C
 }
 
 // GetSubscriptions mocks base method
-func (_m *MockDatabase) GetSubscriptions(_param0 []string) ([]moira_alert.SubscriptionData, error) {
+func (_m *MockDatabase) GetSubscriptions(_param0 []string) ([]*moira_alert.SubscriptionData, error) {
 	ret := _m.ctrl.Call(_m, "GetSubscriptions", _param0)
-	ret0, _ := ret[0].([]moira_alert.SubscriptionData)
+	ret0, _ := ret[0].([]*moira_alert.SubscriptionData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -693,6 +681,18 @@ func (_mr *MockDatabaseMockRecorder) SaveMetrics(arg0 interface{}) *gomock.Call 
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "SaveMetrics", arg0)
 }
 
+// SaveSubscription mocks base method
+func (_m *MockDatabase) SaveSubscription(_param0 *moira_alert.SubscriptionData) error {
+	ret := _m.ctrl.Call(_m, "SaveSubscription", _param0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SaveSubscription indicates an expected call of SaveSubscription
+func (_mr *MockDatabaseMockRecorder) SaveSubscription(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "SaveSubscription", arg0)
+}
+
 // SaveTrigger mocks base method
 func (_m *MockDatabase) SaveTrigger(_param0 string, _param1 *moira_alert.Trigger) error {
 	ret := _m.ctrl.Call(_m, "SaveTrigger", _param0, _param1)
@@ -767,7 +767,7 @@ func (_mr *MockDatabaseMockRecorder) SetTriggerThrottlingTimestamp(arg0, arg1 in
 }
 
 // SubscribeMetricEvents mocks base method
-func (_m *MockDatabase) SubscribeMetricEvents(_param0 *tomb.Tomb) <-chan *moira_alert.MetricEvent {
+func (_m *MockDatabase) SubscribeMetricEvents(_param0 *tomb_v2.Tomb) <-chan *moira_alert.MetricEvent {
 	ret := _m.ctrl.Call(_m, "SubscribeMetricEvents", _param0)
 	ret0, _ := ret[0].(<-chan *moira_alert.MetricEvent)
 	return ret0
@@ -788,18 +788,6 @@ func (_m *MockDatabase) UpdateMetricsHeartbeat() error {
 // UpdateMetricsHeartbeat indicates an expected call of UpdateMetricsHeartbeat
 func (_mr *MockDatabaseMockRecorder) UpdateMetricsHeartbeat() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "UpdateMetricsHeartbeat")
-}
-
-// UpdateSubscription mocks base method
-func (_m *MockDatabase) UpdateSubscription(_param0 *moira_alert.SubscriptionData) error {
-	ret := _m.ctrl.Call(_m, "UpdateSubscription", _param0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateSubscription indicates an expected call of UpdateSubscription
-func (_mr *MockDatabaseMockRecorder) UpdateSubscription(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "UpdateSubscription", arg0)
 }
 
 // WriteContact mocks base method

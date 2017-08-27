@@ -11,7 +11,6 @@ type Database interface {
 	GetNotificationTrigger(id string) (TriggerData, error)
 	GetTriggerTags(id string) ([]string, error)
 	GetTagsSubscriptions(tags []string) ([]SubscriptionData, error)
-	GetSubscription(id string) (SubscriptionData, error)
 	GetContact(id string) (ContactData, error)
 	GetContacts(ids []string) ([]ContactData, error)
 	GetAllContacts() ([]ContactData, error)
@@ -63,11 +62,11 @@ type Database interface {
 	DeleteContact(string, string) error
 	WriteContact(contact *ContactData) error
 
-	GetSubscriptions(subscriptionIds []string) ([]SubscriptionData, error)
+	GetSubscription(id string) (SubscriptionData, error)
+	GetSubscriptions(subscriptionIds []string) ([]*SubscriptionData, error)
 	WriteSubscriptions(subscriptions []*SubscriptionData) error
-	UpdateSubscription(subscription *SubscriptionData) error
-	CreateSubscription(subscription *SubscriptionData) error
-	DeleteSubscription(subscriptionId string, userLogin string) error
+	SaveSubscription(subscription *SubscriptionData) error
+	RemoveSubscription(subscriptionId string, userLogin string) error
 
 	GetNotifications(start, end int64) ([]*ScheduledNotification, int64, error)
 	RemoveNotification(notificationKey string) (int64, error)

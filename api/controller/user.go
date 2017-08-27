@@ -11,7 +11,7 @@ func GetUserSettings(database moira.Database, userLogin string) (*dto.UserSettin
 	userSettings := &dto.UserSettings{
 		User:          dto.User{Login: userLogin},
 		Contacts:      make([]moira.ContactData, 0),
-		Subscriptions: make([]moira.SubscriptionData, 0),
+		Subscriptions: make([]*moira.SubscriptionData, 0),
 	}
 
 	subscriptionIDs, err := database.GetUserSubscriptionIDs(userLogin)

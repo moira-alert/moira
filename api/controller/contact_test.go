@@ -90,7 +90,7 @@ func TestDeleteContact(t *testing.T) {
 
 	Convey("Delete contact without user subscriptions", t, func() {
 		dataBase.EXPECT().GetUserSubscriptionIDs(userLogin).Return(make([]string, 0), nil)
-		dataBase.EXPECT().GetSubscriptions(make([]string, 0)).Return(make([]moira.SubscriptionData, 0), nil)
+		dataBase.EXPECT().GetSubscriptions(make([]string, 0)).Return(make([]*moira.SubscriptionData, 0), nil)
 		dataBase.EXPECT().DeleteContact(contactID, userLogin).Return(nil)
 		dataBase.EXPECT().WriteSubscriptions(make([]*moira.SubscriptionData, 0)).Return(nil)
 		err := DeleteContact(dataBase, contactID, userLogin)
@@ -98,13 +98,13 @@ func TestDeleteContact(t *testing.T) {
 	})
 
 	Convey("Delete contact without contact subscriptions", t, func() {
-		subscription := moira.SubscriptionData{
+		subscription := &moira.SubscriptionData{
 			Contacts: []string{uuid.NewV4().String()},
 			ID:       uuid.NewV4().String(),
 		}
 
 		dataBase.EXPECT().GetUserSubscriptionIDs(userLogin).Return([]string{subscription.ID}, nil)
-		dataBase.EXPECT().GetSubscriptions([]string{subscription.ID}).Return([]moira.SubscriptionData{subscription}, nil)
+		dataBase.EXPECT().GetSubscriptions([]string{subscription.ID}).Return([]*moira.SubscriptionData{subscription}, nil)
 		dataBase.EXPECT().DeleteContact(contactID, userLogin).Return(nil)
 		dataBase.EXPECT().WriteSubscriptions(make([]*moira.SubscriptionData, 0)).Return(nil)
 		err := DeleteContact(dataBase, contactID, userLogin)
@@ -120,7 +120,7 @@ func TestDeleteContact(t *testing.T) {
 		expectedSub.Contacts = make([]string, 0)
 
 		dataBase.EXPECT().GetUserSubscriptionIDs(userLogin).Return([]string{subscription.ID}, nil)
-		dataBase.EXPECT().GetSubscriptions([]string{subscription.ID}).Return([]moira.SubscriptionData{subscription}, nil)
+		dataBase.EXPECT().GetSubscriptions([]string{subscription.ID}).Return([]*moira.SubscriptionData{&subscription}, nil)
 		dataBase.EXPECT().DeleteContact(contactID, userLogin).Return(nil)
 		dataBase.EXPECT().WriteSubscriptions([]*moira.SubscriptionData{&expectedSub}).Return(nil)
 		err := DeleteContact(dataBase, contactID, userLogin)
@@ -144,7 +144,7 @@ func TestDeleteContact(t *testing.T) {
 		Convey("DeleteContact", func() {
 			expectedError := fmt.Errorf("Oooops! Can not delete contact")
 			dataBase.EXPECT().GetUserSubscriptionIDs(userLogin).Return(make([]string, 0), nil)
-			dataBase.EXPECT().GetSubscriptions(make([]string, 0)).Return(make([]moira.SubscriptionData, 0), nil)
+			dataBase.EXPECT().GetSubscriptions(make([]string, 0)).Return(make([]*moira.SubscriptionData, 0), nil)
 			dataBase.EXPECT().DeleteContact(contactID, userLogin).Return(expectedError)
 			err := DeleteContact(dataBase, contactID, userLogin)
 			So(err, ShouldResemble, api.ErrorInternalServer(expectedError))
@@ -152,7 +152,7 @@ func TestDeleteContact(t *testing.T) {
 		Convey("WriteSubscriptions", func() {
 			expectedError := fmt.Errorf("Oooops! Can not write subscriptions")
 			dataBase.EXPECT().GetUserSubscriptionIDs(userLogin).Return(make([]string, 0), nil)
-			dataBase.EXPECT().GetSubscriptions(make([]string, 0)).Return(make([]moira.SubscriptionData, 0), nil)
+			dataBase.EXPECT().GetSubscriptions(make([]string, 0)).Return(make([]*moira.SubscriptionData, 0), nil)
 			dataBase.EXPECT().DeleteContact(contactID, userLogin).Return(nil)
 			dataBase.EXPECT().WriteSubscriptions(make([]*moira.SubscriptionData, 0)).Return(expectedError)
 			err := DeleteContact(dataBase, contactID, userLogin)

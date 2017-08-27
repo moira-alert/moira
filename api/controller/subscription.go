@@ -1,12 +1,14 @@
 package controller
 
 import (
+	"time"
+
 	"github.com/go-graphite/carbonapi/date"
+	"github.com/satori/go.uuid"
+
 	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/api"
 	"github.com/moira-alert/moira-alert/api/dto"
-	"github.com/satori/go.uuid"
-	"time"
 )
 
 //GetUserSubscriptions get all user subscriptions
@@ -28,24 +30,19 @@ func GetUserSubscriptions(database moira.Database, userLogin string) (*dto.Subsc
 //WriteSubscription create or update subscription
 func WriteSubscription(database moira.Database, userLogin string, subscription *dto.Subscription) *api.ErrorResponse {
 	subscription.User = userLogin
-	if subscription.ID != "" {
-		data := moira.SubscriptionData(*subscription)
-		if err := database.UpdateSubscription(&data); err != nil {
-			return api.ErrorInternalServer(err)
-		}
-	} else {
+	if subscription.ID == "" {
 		subscription.ID = uuid.NewV4().String()
-		data := moira.SubscriptionData(*subscription)
-		if err := database.CreateSubscription(&data); err != nil {
-			return api.ErrorInternalServer(err)
-		}
+	}
+	data := moira.SubscriptionData(*subscription)
+	if err := database.SaveSubscription(&data); err != nil {
+		return api.ErrorInternalServer(err)
 	}
 	return nil
 }
 
-//DeleteSubscription deletes subscription
-func DeleteSubscription(database moira.Database, subscriptionID string, userLogin string) *api.ErrorResponse {
-	if err := database.DeleteSubscription(subscriptionID, userLogin); err != nil {
+//RemoveSubscription deletes subscription
+func RemoveSubscription(database moira.Database, subscriptionID string, userLogin string) *api.ErrorResponse {
+	if err := database.RemoveSubscription(subscriptionID, userLogin); err != nil {
 		return api.ErrorInternalServer(err)
 	}
 	return nil

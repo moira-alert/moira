@@ -56,7 +56,7 @@ func createSubscription(writer http.ResponseWriter, request *http.Request) {
 func deleteSubscription(writer http.ResponseWriter, request *http.Request) {
 	userLogin := middleware.GetLogin(request)
 	subscriptionID := middleware.GetSubscriptionID(request)
-	if err := controller.DeleteSubscription(database, subscriptionID, userLogin); err != nil {
+	if err := controller.RemoveSubscription(database, subscriptionID, userLogin); err != nil {
 		render.Render(writer, request, err)
 	}
 }
