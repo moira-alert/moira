@@ -14,7 +14,7 @@ import (
 func contact(router chi.Router) {
 	router.Get("/", getAllContacts)
 	router.Put("/", createNewContact)
-	router.Delete("/{contactId}", deleteContact)
+	router.Delete("/{contactId}", removeContact)
 }
 
 func getAllContacts(writer http.ResponseWriter, request *http.Request) {
@@ -49,7 +49,7 @@ func createNewContact(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func deleteContact(writer http.ResponseWriter, request *http.Request) {
+func removeContact(writer http.ResponseWriter, request *http.Request) {
 	contactID := chi.URLParam(request, "contactId")
 	if contactID == "" {
 		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("ContactId must be set")))
@@ -57,7 +57,7 @@ func deleteContact(writer http.ResponseWriter, request *http.Request) {
 	}
 	userLogin := middleware.GetLogin(request)
 
-	err := controller.DeleteContact(database, contactID, userLogin)
+	err := controller.RemoveContact(database, contactID, userLogin)
 	if err != nil {
 		render.Render(writer, request, err)
 	}

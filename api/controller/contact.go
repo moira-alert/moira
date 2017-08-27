@@ -29,14 +29,14 @@ func CreateContact(database moira.Database, contact *dto.Contact, userLogin stri
 		Value: contact.Value,
 	}
 
-	if err := database.WriteContact(contactData); err != nil {
+	if err := database.SaveContact(contactData); err != nil {
 		return api.ErrorInternalServer(err)
 	}
 	return nil
 }
 
-//DeleteContact deletes notification contact for current user and remove contactID from all subscriptions
-func DeleteContact(database moira.Database, contactID string, userLogin string) *api.ErrorResponse {
+//RemoveContact deletes notification contact for current user and remove contactID from all subscriptions
+func RemoveContact(database moira.Database, contactID string, userLogin string) *api.ErrorResponse {
 	subscriptionIDs, err := database.GetUserSubscriptionIDs(userLogin)
 	if err != nil {
 		return api.ErrorInternalServer(err)
@@ -60,7 +60,7 @@ func DeleteContact(database moira.Database, contactID string, userLogin string) 
 	}
 
 	//todo 1 request, not 2
-	if err := database.DeleteContact(contactID, userLogin); err != nil {
+	if err := database.RemoveContact(contactID, userLogin); err != nil {
 		return api.ErrorInternalServer(err)
 	}
 

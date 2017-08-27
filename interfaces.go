@@ -11,10 +11,6 @@ type Database interface {
 	GetNotificationTrigger(id string) (TriggerData, error)
 	GetTriggerTags(id string) ([]string, error)
 	GetTagsSubscriptions(tags []string) ([]SubscriptionData, error)
-	GetContact(id string) (ContactData, error)
-	GetContacts(ids []string) ([]ContactData, error)
-	GetAllContacts() ([]ContactData, error)
-	SetContact(contact *ContactData) error
 	AddNotification(notification *ScheduledNotification) error
 	GetTriggerThrottlingTimestamps(id string) (time.Time, time.Time)
 	GetTriggerEventsCount(id string, from int64) int64
@@ -31,9 +27,6 @@ type Database interface {
 	SaveMetrics(buffer map[string]*MatchedMetric) error
 	GetMetricsValues(metrics []string, from int64, until int64) (map[string][]*MetricValue, error)
 	CleanupMetricValues(metric string, toTime int64) error
-
-	GetUserSubscriptionIDs(string) ([]string, error)
-	GetUserContacts(string) ([]string, error)
 
 	GetTagNames() ([]string, error)
 	GetTagTriggerIds(tagName string) ([]string, error)
@@ -59,14 +52,22 @@ type Database interface {
 	GetEvents(string, int64, int64) ([]*EventData, error)
 	PushEvent(event *EventData, ui bool) error
 
-	DeleteContact(string, string) error
+	//ContactData storing
+	GetContact(contactID string) (ContactData, error)
+	GetContacts(contactIDs []string) ([]*ContactData, error)
+	GetAllContacts() ([]*ContactData, error)
 	WriteContact(contact *ContactData) error
+	RemoveContact(string, string) error
+	SaveContact(contact *ContactData) error
+	GetUserContactIDs(userLogin string) ([]string, error)
 
+	//SubscriptionData storing
 	GetSubscription(id string) (SubscriptionData, error)
 	GetSubscriptions(subscriptionIds []string) ([]*SubscriptionData, error)
 	WriteSubscriptions(subscriptions []*SubscriptionData) error
 	SaveSubscription(subscription *SubscriptionData) error
 	RemoveSubscription(subscriptionId string, userLogin string) error
+	GetUserSubscriptionIDs(userLogin string) ([]string, error)
 
 	GetNotifications(start, end int64) ([]*ScheduledNotification, int64, error)
 	RemoveNotification(notificationKey string) (int64, error)

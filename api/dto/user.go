@@ -7,7 +7,7 @@ import (
 
 type UserSettings struct {
 	User
-	Contacts      []moira.ContactData       `json:"contacts"`
+	Contacts      []*moira.ContactData      `json:"contacts"`
 	Subscriptions []*moira.SubscriptionData `json:"subscriptions"`
 }
 

@@ -93,30 +93,6 @@ func (_mr *MockDatabaseMockRecorder) CleanupMetricValues(arg0, arg1 interface{})
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "CleanupMetricValues", arg0, arg1)
 }
 
-// DeleteContact mocks base method
-func (_m *MockDatabase) DeleteContact(_param0 string, _param1 string) error {
-	ret := _m.ctrl.Call(_m, "DeleteContact", _param0, _param1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DeleteContact indicates an expected call of DeleteContact
-func (_mr *MockDatabaseMockRecorder) DeleteContact(arg0, arg1 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "DeleteContact", arg0, arg1)
-}
-
-// RemoveSubscription mocks base method
-func (_m *MockDatabase) RemoveSubscription(_param0 string, _param1 string) error {
-	ret := _m.ctrl.Call(_m, "RemoveSubscription", _param0, _param1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// RemoveSubscription indicates an expected call of RemoveSubscription
-func (_mr *MockDatabaseMockRecorder) RemoveSubscription(arg0, arg1 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "RemoveSubscription", arg0, arg1)
-}
-
 // DeleteTag mocks base method
 func (_m *MockDatabase) DeleteTag(_param0 string) error {
 	ret := _m.ctrl.Call(_m, "DeleteTag", _param0)
@@ -179,9 +155,9 @@ func (_mr *MockDatabaseMockRecorder) FetchEvent() *gomock.Call {
 }
 
 // GetAllContacts mocks base method
-func (_m *MockDatabase) GetAllContacts() ([]moira_alert.ContactData, error) {
+func (_m *MockDatabase) GetAllContacts() ([]*moira_alert.ContactData, error) {
 	ret := _m.ctrl.Call(_m, "GetAllContacts")
-	ret0, _ := ret[0].([]moira_alert.ContactData)
+	ret0, _ := ret[0].([]*moira_alert.ContactData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -218,9 +194,9 @@ func (_mr *MockDatabaseMockRecorder) GetContact(arg0 interface{}) *gomock.Call {
 }
 
 // GetContacts mocks base method
-func (_m *MockDatabase) GetContacts(_param0 []string) ([]moira_alert.ContactData, error) {
+func (_m *MockDatabase) GetContacts(_param0 []string) ([]*moira_alert.ContactData, error) {
 	ret := _m.ctrl.Call(_m, "GetContacts", _param0)
-	ret0, _ := ret[0].([]moira_alert.ContactData)
+	ret0, _ := ret[0].([]*moira_alert.ContactData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -570,17 +546,17 @@ func (_mr *MockDatabaseMockRecorder) GetTriggers(arg0 interface{}) *gomock.Call 
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetTriggers", arg0)
 }
 
-// GetUserContacts mocks base method
-func (_m *MockDatabase) GetUserContacts(_param0 string) ([]string, error) {
-	ret := _m.ctrl.Call(_m, "GetUserContacts", _param0)
+// GetUserContactIDs mocks base method
+func (_m *MockDatabase) GetUserContactIDs(_param0 string) ([]string, error) {
+	ret := _m.ctrl.Call(_m, "GetUserContactIDs", _param0)
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetUserContacts indicates an expected call of GetUserContacts
-func (_mr *MockDatabaseMockRecorder) GetUserContacts(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetUserContacts", arg0)
+// GetUserContactIDs indicates an expected call of GetUserContactIDs
+func (_mr *MockDatabaseMockRecorder) GetUserContactIDs(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetUserContactIDs", arg0)
 }
 
 // GetUserSubscriptionIDs mocks base method
@@ -606,6 +582,18 @@ func (_m *MockDatabase) PushEvent(_param0 *moira_alert.EventData, _param1 bool) 
 // PushEvent indicates an expected call of PushEvent
 func (_mr *MockDatabaseMockRecorder) PushEvent(arg0, arg1 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "PushEvent", arg0, arg1)
+}
+
+// RemoveContact mocks base method
+func (_m *MockDatabase) RemoveContact(_param0 string, _param1 string) error {
+	ret := _m.ctrl.Call(_m, "RemoveContact", _param0, _param1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveContact indicates an expected call of RemoveContact
+func (_mr *MockDatabaseMockRecorder) RemoveContact(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "RemoveContact", arg0, arg1)
 }
 
 // RemoveNotification mocks base method
@@ -669,6 +657,30 @@ func (_mr *MockDatabaseMockRecorder) RemovePatternsMetrics(arg0 interface{}) *go
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "RemovePatternsMetrics", arg0)
 }
 
+// RemoveSubscription mocks base method
+func (_m *MockDatabase) RemoveSubscription(_param0 string, _param1 string) error {
+	ret := _m.ctrl.Call(_m, "RemoveSubscription", _param0, _param1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveSubscription indicates an expected call of RemoveSubscription
+func (_mr *MockDatabaseMockRecorder) RemoveSubscription(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "RemoveSubscription", arg0, arg1)
+}
+
+// SaveContact mocks base method
+func (_m *MockDatabase) SaveContact(_param0 *moira_alert.ContactData) error {
+	ret := _m.ctrl.Call(_m, "SaveContact", _param0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SaveContact indicates an expected call of SaveContact
+func (_mr *MockDatabaseMockRecorder) SaveContact(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "SaveContact", arg0)
+}
+
 // SaveMetrics mocks base method
 func (_m *MockDatabase) SaveMetrics(_param0 map[string]*moira_alert.MatchedMetric) error {
 	ret := _m.ctrl.Call(_m, "SaveMetrics", _param0)
@@ -703,18 +715,6 @@ func (_m *MockDatabase) SaveTrigger(_param0 string, _param1 *moira_alert.Trigger
 // SaveTrigger indicates an expected call of SaveTrigger
 func (_mr *MockDatabaseMockRecorder) SaveTrigger(arg0, arg1 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "SaveTrigger", arg0, arg1)
-}
-
-// SetContact mocks base method
-func (_m *MockDatabase) SetContact(_param0 *moira_alert.ContactData) error {
-	ret := _m.ctrl.Call(_m, "SetContact", _param0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SetContact indicates an expected call of SetContact
-func (_mr *MockDatabaseMockRecorder) SetContact(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetContact", arg0)
 }
 
 // SetTriggerCheckLock mocks base method

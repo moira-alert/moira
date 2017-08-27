@@ -7,7 +7,7 @@ import (
 )
 
 type ContactList struct {
-	List []moira.ContactData `json:"list"`
+	List []*moira.ContactData `json:"list"`
 }
 
 func (*ContactList) Render(w http.ResponseWriter, r *http.Request) error {

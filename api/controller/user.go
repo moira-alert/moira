@@ -10,7 +10,7 @@ import (
 func GetUserSettings(database moira.Database, userLogin string) (*dto.UserSettings, *api.ErrorResponse) {
 	userSettings := &dto.UserSettings{
 		User:          dto.User{Login: userLogin},
-		Contacts:      make([]moira.ContactData, 0),
+		Contacts:      make([]*moira.ContactData, 0),
 		Subscriptions: make([]*moira.SubscriptionData, 0),
 	}
 
@@ -24,7 +24,7 @@ func GetUserSettings(database moira.Database, userLogin string) (*dto.UserSettin
 		return nil, api.ErrorInternalServer(err)
 	}
 
-	contactIDs, err := database.GetUserContacts(userLogin)
+	contactIDs, err := database.GetUserContactIDs(userLogin)
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}

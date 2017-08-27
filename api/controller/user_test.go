@@ -22,10 +22,10 @@ func TestGetUserSettings(t *testing.T) {
 		subscriptionIDs := []string{uuid.NewV4().String(), uuid.NewV4().String()}
 		subscriptions := []*moira.SubscriptionData{{ID: subscriptionIDs[0]}, {ID: subscriptionIDs[1]}}
 		contactIDs := []string{uuid.NewV4().String(), uuid.NewV4().String()}
-		contacts := []moira.ContactData{{ID: contactIDs[0]}, {ID: contactIDs[1]}}
+		contacts := []*moira.ContactData{{ID: contactIDs[0]}, {ID: contactIDs[1]}}
 		database.EXPECT().GetUserSubscriptionIDs(login).Return(subscriptionIDs, nil)
 		database.EXPECT().GetSubscriptions(subscriptionIDs).Return(subscriptions, nil)
-		database.EXPECT().GetUserContacts(login).Return(contactIDs, nil)
+		database.EXPECT().GetUserContactIDs(login).Return(contactIDs, nil)
 		database.EXPECT().GetContacts(contactIDs).Return(contacts, nil)
 		settings, err := GetUserSettings(database, login)
 		So(err, ShouldBeNil)
@@ -39,13 +39,13 @@ func TestGetUserSettings(t *testing.T) {
 	Convey("No contacts and subscriptions", t, func() {
 		database.EXPECT().GetUserSubscriptionIDs(login).Return(make([]string, 0), nil)
 		database.EXPECT().GetSubscriptions(make([]string, 0)).Return(make([]*moira.SubscriptionData, 0), nil)
-		database.EXPECT().GetUserContacts(login).Return(make([]string, 0), nil)
-		database.EXPECT().GetContacts(make([]string, 0)).Return(make([]moira.ContactData, 0), nil)
+		database.EXPECT().GetUserContactIDs(login).Return(make([]string, 0), nil)
+		database.EXPECT().GetContacts(make([]string, 0)).Return(make([]*moira.ContactData, 0), nil)
 		settings, err := GetUserSettings(database, login)
 		So(err, ShouldBeNil)
 		So(settings, ShouldResemble, &dto.UserSettings{
 			User:          dto.User{Login: login},
-			Contacts:      make([]moira.ContactData, 0),
+			Contacts:      make([]*moira.ContactData, 0),
 			Subscriptions: make([]*moira.SubscriptionData, 0),
 		})
 	})
@@ -66,11 +66,11 @@ func TestGetUserSettings(t *testing.T) {
 			So(err, ShouldResemble, api.ErrorInternalServer(expected))
 			So(settings, ShouldBeNil)
 		})
-		Convey("GetUserContacts", func() {
+		Convey("GetUserContactIDs", func() {
 			expected := fmt.Errorf("Can not read contact ids")
 			database.EXPECT().GetUserSubscriptionIDs(login).Return(make([]string, 0), nil)
 			database.EXPECT().GetSubscriptions(make([]string, 0)).Return(make([]*moira.SubscriptionData, 0), nil)
-			database.EXPECT().GetUserContacts(login).Return(nil, expected)
+			database.EXPECT().GetUserContactIDs(login).Return(nil, expected)
 			settings, err := GetUserSettings(database, login)
 			So(err, ShouldResemble, api.ErrorInternalServer(expected))
 			So(settings, ShouldBeNil)
@@ -82,7 +82,7 @@ func TestGetUserSettings(t *testing.T) {
 			contactIDs := []string{uuid.NewV4().String(), uuid.NewV4().String()}
 			database.EXPECT().GetUserSubscriptionIDs(login).Return(subscriptionIDs, nil)
 			database.EXPECT().GetSubscriptions(subscriptionIDs).Return(subscriptions, nil)
-			database.EXPECT().GetUserContacts(login).Return(contactIDs, nil)
+			database.EXPECT().GetUserContactIDs(login).Return(contactIDs, nil)
 			database.EXPECT().GetContacts(contactIDs).Return(nil, expected)
 			settings, err := GetUserSettings(database, login)
 			So(err, ShouldResemble, api.ErrorInternalServer(expected))

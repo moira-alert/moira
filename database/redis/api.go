@@ -12,18 +12,6 @@ import (
 	"time"
 )
 
-// GetUserContacts - Returns contacts ids by given login from set {0}
-func (connector *DbConnector) GetUserContacts(login string) ([]string, error) {
-	c := connector.pool.Get()
-	defer c.Close()
-
-	subscriptions, err := redis.Strings(c.Do("SMEMBERS", fmt.Sprintf("moira-user-contacts:%s", login)))
-	if err != nil {
-		return nil, fmt.Errorf("Failed to retrieve subscriptions for user login %s: %s", login, err.Error())
-	}
-	return subscriptions, nil
-}
-
 //GetUserSubscriptionIDs - Returns subscriptions ids by given login from set {0}
 func (connector *DbConnector) GetUserSubscriptionIDs(login string) ([]string, error) {
 	c := connector.pool.Get()
@@ -273,39 +261,6 @@ func (connector *DbConnector) GetEvents(triggerId string, start int64, size int6
 	}
 
 	return eventsData, nil
-}
-
-func (connector *DbConnector) DeleteContact(contactId string, userLogin string) error {
-	c := connector.pool.Get()
-	defer c.Close()
-
-	c.Send("MULTI")
-	c.Send("DEL", fmt.Sprintf("moira-contact:%s", contactId))
-	c.Send("SREM", fmt.Sprintf("moira-user-contacts:%s", userLogin), contactId)
-	_, err := c.Do("EXEC")
-	if err != nil {
-		return fmt.Errorf("Failed to EXEC: %s", err.Error())
-	}
-	return nil
-}
-
-func (connector *DbConnector) WriteContact(contact *moira.ContactData) error {
-	contactString, err := json.Marshal(contact)
-	if err != nil {
-		return err
-	}
-
-	c := connector.pool.Get()
-	defer c.Close()
-
-	c.Send("MULTI")
-	c.Send("SET", fmt.Sprintf("moira-contact:%s", contact.ID), contactString)
-	c.Send("SADD", fmt.Sprintf("moira-user-contacts:%s", contact.User), contact.ID)
-	_, err = c.Do("EXEC")
-	if err != nil {
-		return fmt.Errorf("Failed to EXEC: %s", err.Error())
-	}
-	return nil
 }
 
 func (connector *DbConnector) PushEvent(event *moira.EventData, ui bool) error {

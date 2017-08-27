@@ -49,7 +49,7 @@ func TestNotifierDataBase(t *testing.T) {
 				Type:  "telegram",
 				Value: "contact",
 			}
-			err := db.SetContact(&contact)
+			err := db.WriteContact(&contact)
 			So(err, ShouldBeNil)
 		})
 

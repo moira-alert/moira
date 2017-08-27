@@ -1,20 +1,25 @@
 package reply
 
 import (
-	"github.com/moira-alert/moira-alert"
 	"encoding/json"
+	"fmt"
 	"github.com/garyburd/redigo/redis"
+	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira-alert/database"
 )
 
-func Contact(rep interface{}, err error) (*moira.ContactData, error) {
+func Contact(rep interface{}, err error) (moira.ContactData, error) {
+	contact := moira.ContactData{}
 	bytes, err := redis.Bytes(rep, err)
 	if err != nil {
-		return nil, err
+		if err == redis.ErrNil {
+			return contact, database.ErrNil
+		}
+		return contact, err
 	}
-	contact := &moira.ContactData{}
-	err = json.Unmarshal(bytes, contact)
+	err = json.Unmarshal(bytes, &contact)
 	if err != nil {
-		return nil, err
+		return contact, fmt.Errorf("Failed to parse contact json %s: %s", string(bytes), err.Error())
 	}
 	return contact, nil
 }
@@ -22,15 +27,21 @@ func Contact(rep interface{}, err error) (*moira.ContactData, error) {
 func Contacts(rep interface{}, err error) ([]*moira.ContactData, error) {
 	values, err := redis.Values(rep, err)
 	if err != nil {
+		if err == redis.ErrNil {
+			return make([]*moira.ContactData, 0), nil
+		}
 		return nil, err
 	}
 	contacts := make([]*moira.ContactData, len(values))
-	for i, kk := range values {
-		contact, err2 := Contact(kk, err)
-		if err2 != nil {
+	for i, value := range values {
+		contact, err2 := Contact(value, err)
+		if err2 != nil && err2 != database.ErrNil {
 			return nil, err2
+		} else if err2 == database.ErrNil {
+			contacts[i] = nil
+		} else {
+			contacts[i] = &contact
 		}
-		contacts[i] = contact
 	}
 	return contacts, nil
 }

@@ -2,6 +2,7 @@ package reply
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/garyburd/redigo/redis"
 	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/database"
@@ -21,7 +22,7 @@ func Subscription(rep interface{}, err error) (moira.SubscriptionData, error) {
 	}
 	err = json.Unmarshal(bytes, &subscription)
 	if err != nil {
-		return subscription, err
+		return subscription, fmt.Errorf("Failed to parse subscription json %s: %s", string(bytes), err.Error())
 	}
 	return subscription, nil
 }
