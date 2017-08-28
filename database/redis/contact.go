@@ -40,7 +40,9 @@ func (connector *DbConnector) GetContacts(contactIDs []string) ([]*moira.Contact
 		return nil, err
 	}
 	for i := range contacts {
-		contacts[i].ID = contactIDs[i]
+		if contacts[i] != nil {
+			contacts[i].ID = contactIDs[i]
+		}
 	}
 	return contacts, nil
 }
