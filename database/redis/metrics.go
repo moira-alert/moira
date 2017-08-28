@@ -100,7 +100,7 @@ func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb) <-chan *moi
 	go func() {
 		defer c.Close()
 		<-tomb.Dying()
-		connector.logger.Infof("Calling shutdown, unsubscribe from 'moira-event' redis channel...")
+		connector.logger.Infof("Calling shutdown, unsubscribe from '%s' redis channel...", metricEvent)
 		psc.Unsubscribe()
 	}()
 
@@ -204,7 +204,7 @@ func (connector *DbConnector) RemoveMetricValues(metric string, toTime int64) er
 
 	_, err := c.Do("ZREMRANGEBYSCORE", moiraMetricData(metric), "-inf", toTime)
 	if err != nil {
-		return fmt.Errorf("Failed to ZREMRANGEBYSCORE: %s", err.Error())
+		return fmt.Errorf("Failed to remove metrics from -inf to %v, error: %s", toTime, err.Error())
 	}
 	return nil
 }
