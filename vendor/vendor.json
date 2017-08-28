@@ -112,12 +112,6 @@
 			"revisionTime": "2017-07-06T22:11:03Z"
 		},
 		{
-			"checksumSHA1": "SUYEFYVLIO7x9+EBKlDv0QPe4CU=",
-			"path": "github.com/go-errors/errors",
-			"revision": "8fa88b06e5974e97fbf9899a7f86a344bfd1f105",
-			"revisionTime": "2016-12-05T22:32:45Z"
-		},
-		{
 			"checksumSHA1": "5CKyJe+PxJrOQcO9yL9jDzQr/Ic=",
 			"path": "github.com/go-graphite/carbonapi/date",
 			"revision": "a1bda46c5b9bf91c98b6c8971db5c001daa1a30e",

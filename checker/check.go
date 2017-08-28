@@ -1,14 +1,14 @@
 package checker
 
 import (
-	"github.com/go-errors/errors"
+	"fmt"
 	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/target"
 )
 
 var checkPointGap int64 = 120
 
-var ErrTriggerHasNoMetrics = errors.New("Trigger has no metrics")
+var ErrTriggerHasNoMetrics = fmt.Errorf("Trigger has no metrics")
 
 func (triggerChecker *TriggerChecker) Check() error {
 	checkData, err := triggerChecker.handleTrigger()

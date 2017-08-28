@@ -2,12 +2,11 @@ package target
 
 import (
 	"fmt"
-	"github.com/go-errors/errors"
 	"github.com/go-graphite/carbonapi/expr"
 	"github.com/moira-alert/moira-alert"
 )
 
-var ErrEvaluateTarget = errors.New("Invalid graphite targets")
+var ErrEvaluateTarget = fmt.Errorf("Invalid graphite targets")
 
 type EvaluationResult struct {
 	TimeSeries []*TimeSeries
