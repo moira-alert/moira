@@ -94,12 +94,6 @@
 			"revisionTime": "2017-06-15T18:53:09Z"
 		},
 		{
-			"checksumSHA1": "V41+QJIU1gh2NIrJ6Bpa75C7DaY=",
-			"path": "github.com/gmlexx/redigomock",
-			"revision": "9fe6b7bb620ec54d42d9827f2167b6831714eb96",
-			"revisionTime": "2016-01-27T10:17:10Z"
-		},
-		{
 			"checksumSHA1": "VBlYjWdqyxJPUMpxuVeeg/BBlAo=",
 			"path": "github.com/go-chi/chi",
 			"revision": "4c5a584b324b74af3e9cfeaf6265d14ae2fdfc99",

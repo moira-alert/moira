@@ -7,15 +7,7 @@ import (
 
 	"github.com/garyburd/redigo/redis"
 	"github.com/moira-alert/moira-alert"
-	"github.com/moira-alert/moira-alert/metrics/graphite"
 )
-
-//DbConnector contains redis pool
-type DbConnector struct {
-	pool    *redis.Pool
-	logger  moira.Logger
-	metrics *graphite.DatabaseMetrics
-}
 
 // FetchEvent waiting for event from Db
 func (connector *DbConnector) FetchEvent() (*moira.EventData, error) {

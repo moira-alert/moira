@@ -8,6 +8,13 @@ import (
 	"time"
 )
 
+//DbConnector contains redis pool
+type DbConnector struct {
+	pool    *redis.Pool
+	logger  moira.Logger
+	metrics *graphite.DatabaseMetrics
+}
+
 // NewDatabase creates Redis pool based on config
 func NewDatabase(logger moira.Logger, config Config, metrics *graphite.DatabaseMetrics) *DbConnector {
 	db := DbConnector{

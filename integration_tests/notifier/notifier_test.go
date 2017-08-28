@@ -27,32 +27,72 @@ var notifierConfig = notifier.Config{
 var shutdown = make(chan bool)
 var waitGroup sync.WaitGroup
 
-var metrics2 = metrics.ConfigureNotifierMetrics()
+var notifierMetrics = metrics.ConfigureNotifierMetrics()
+var databaseMetrics = metrics.ConfigureDatabaseMetrics()
 var logger, _ = logging.GetLogger("Notifier_Test")
 var mockCtrl *gomock.Controller
+
+var contact = moira.ContactData{
+	ID:    "ContactID-000000000000001",
+	Type:  "mega-sender",
+	Value: "mail1@example.com",
+}
+
+var subscription = moira.SubscriptionData{
+	ID:                "subscriptionID-00000000000001",
+	Enabled:           true,
+	Tags:              []string{"test-tag-1"},
+	Contacts:          []string{contact.ID},
+	ThrottlingEnabled: true,
+}
+
+var trigger = moira.Trigger{
+	ID:      "triggerID-0000000000001",
+	Name:    "test trigger 1",
+	Targets: []string{"test.target.1"},
+	Tags:    []string{"test-tag-1"},
+}
+
+var triggerData = moira.TriggerData{
+	ID:      "triggerID-0000000000001",
+	Name:    "test trigger 1",
+	Targets: []string{"test.target.1"},
+	Tags:    []string{"test-tag-1"},
+}
+
+var event = moira.EventData{
+	Metric:    "generate.event.1",
+	State:     "OK",
+	OldState:  "WARN",
+	TriggerID: "triggerID-0000000000001",
+}
 
 func TestNotifier(t *testing.T) {
 	mockCtrl = gomock.NewController(t)
 	defer afterTest()
-	fakeDataBase := redis.NewFakeDatabase(logger)
-	notifier2 := notifier.NewNotifier(fakeDataBase, logger, notifierConfig, metrics2)
+	database := redis.NewDatabase(logger, redis.Config{Port: "6379", Host: "localhost"}, databaseMetrics)
+	database.WriteContact(&contact)
+	database.SaveSubscription(&subscription)
+	database.SaveTrigger(trigger.ID, &trigger)
+	database.PushEvent(&event, true)
+	notifier2 := notifier.NewNotifier(database, logger, notifierConfig, notifierMetrics)
 	sender := mock_moira_alert.NewMockSender(mockCtrl)
 	sender.EXPECT().Init(senderSettings, logger).Return(nil)
 	notifier2.RegisterSender(senderSettings, sender)
-	sender.EXPECT().SendEvents(gomock.Any(), contact, trigger, false).Return(nil).Do(func(f ...interface{}) {
+	sender.EXPECT().SendEvents(gomock.Any(), contact, triggerData, false).Return(nil).Do(func(f ...interface{}) {
 		logger.Debugf("SendEvents called. End test")
 		close(shutdown)
 	})
 
 	fetchEventsWorker := events.FetchEventsWorker{
-		Database:  fakeDataBase,
+		Database:  database,
 		Logger:    logger,
-		Metrics:   metrics2,
-		Scheduler: notifier.NewScheduler(fakeDataBase, logger),
+		Metrics:   notifierMetrics,
+		Scheduler: notifier.NewScheduler(database, logger),
 	}
 
 	fetchNotificationsWorker := notifications.FetchNotificationsWorker{
-		Database: fakeDataBase,
+		Database: database,
 		Logger:   logger,
 		Notifier: notifier2,
 	}
@@ -80,19 +120,4 @@ func waitTestEnd() {
 func afterTest() {
 	waitGroup.Wait()
 	mockCtrl.Finish()
-}
-
-var trigger = moira.TriggerData{
-	ID:         "triggerID-0000000000001",
-	Name:       "test trigger 1",
-	Targets:    []string{"test.target.1"},
-	WarnValue:  10,
-	ErrorValue: 20,
-	Tags:       []string{"test-tag-1"},
-}
-
-var contact = moira.ContactData{
-	ID:    "ContactID-000000000000001",
-	Type:  "mega-sender",
-	Value: "mail1@example.com",
 }
