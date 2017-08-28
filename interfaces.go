@@ -17,13 +17,6 @@ type Database interface {
 	GetChecksCount() (int64, error)
 
 	UpdateMetricsHeartbeat() error
-	GetPatterns() ([]string, error)
-	SubscribeMetricEvents(tomb *tomb.Tomb) <-chan *MetricEvent
-	GetMetricRetention(metric string) (int64, error)
-
-	SaveMetrics(buffer map[string]*MatchedMetric) error
-	GetMetricsValues(metrics []string, from int64, until int64) (map[string][]*MetricValue, error)
-	CleanupMetricValues(metric string, toTime int64) error
 
 	GetTagNames() ([]string, error)
 	GetTagTriggerIds(tagName string) ([]string, error)
@@ -43,6 +36,7 @@ type Database interface {
 	DeleteTriggerThrottling(triggerId string) error
 	DeleteTrigger(triggerId string) error
 	SaveTrigger(triggerId string, trigger *Trigger) error
+	RemovePatternTriggers(pattern string) error
 
 	AddTriggerToCheck(triggerId string) error
 	GetTriggerToCheck() (*string, error)
@@ -74,12 +68,18 @@ type Database interface {
 	AddNotification(notification *ScheduledNotification) error
 	AddNotifications(notification []*ScheduledNotification, timestamp int64) error
 
+	//Patterns and metrics storing
+	GetPatterns() ([]string, error)
+	GetMetricsValues(metrics []string, from int64, until int64) (map[string][]*MetricValue, error)
+	SaveMetrics(buffer map[string]*MatchedMetric) error
+	SubscribeMetricEvents(tomb *tomb.Tomb) <-chan *MetricEvent
+	GetMetricRetention(metric string) (int64, error)
 	AddPatternMetric(pattern, metric string) error
 	GetPatternMetrics(pattern string) ([]string, error)
 	RemovePattern(pattern string) error
 	RemovePatternsMetrics(pattern []string) error
 	RemovePatternWithMetrics(pattern string) error
-	RemovePatternTriggers(pattern string) error
+	RemoveMetricValues(metric string, toTime int64) error
 
 	AcquireTriggerCheckLock(triggerId string, timeout int) error
 	DeleteTriggerCheckLock(triggerId string) error

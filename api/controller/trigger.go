@@ -174,7 +174,7 @@ func SetMetricsMaintenance(database moira.Database, triggerID string, metricsMai
 	return nil
 }
 
-//GetTriggerMetrics gets all trigger metrics values
+//GetTriggerMetrics gets all trigger metrics values, default values from: now - 10min, to: now
 func GetTriggerMetrics(database moira.Database, from, to int64, triggerID string) (dto.TriggerMetrics, *api.ErrorResponse) {
 	trigger, err := database.GetTrigger(triggerID)
 	if err != nil {

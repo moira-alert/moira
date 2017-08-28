@@ -34,12 +34,6 @@ type CheckData struct {
 	Message        string                 `json:"msg,omitempty"`
 }
 
-type MetricValue struct {
-	RetentionTimestamp int64   `json:"step,omitempty"`
-	Timestamp          int64   `json:"ts"`
-	Value              float64 `json:"value"`
-}
-
 type MetricState struct {
 	EventTimestamp int64    `json:"event_timestamp"`
 	State          string   `json:"state"`

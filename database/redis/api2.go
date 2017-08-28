@@ -5,9 +5,6 @@ import (
 	"fmt"
 	"github.com/garyburd/redigo/redis"
 	"github.com/moira-alert/moira-alert"
-	"gopkg.in/tomb.v2"
-	"strconv"
-	"strings"
 	"time"
 )
 
@@ -49,30 +46,6 @@ func (connector *DbConnector) GetTriggers(triggerIds []string) ([]*moira.Trigger
 	}
 
 	return triggers, nil
-}
-
-func (connector *DbConnector) GetPatternMetrics(pattern string) ([]string, error) {
-	c := connector.pool.Get()
-	defer c.Close()
-
-	metrics, err := redis.Strings(c.Do("SMEMBERS", fmt.Sprintf("moira-pattern-metrics:%s", pattern)))
-	if err != nil {
-		if err == redis.ErrNil {
-			return make([]string, 0), nil
-		}
-		return nil, fmt.Errorf("Failed to retrieve pattern-metrics for pattern %s: %s", pattern, err.Error())
-	}
-	return metrics, nil
-}
-
-func (connector *DbConnector) RemovePattern(pattern string) error {
-	c := connector.pool.Get()
-	defer c.Close()
-	_, err := c.Do("SREM", "moira-pattern-list", pattern)
-	if err != nil {
-		return fmt.Errorf("Failed to remove pattern: %s, error: %s", pattern, err.Error())
-	}
-	return nil
 }
 
 func (connector *DbConnector) GetTriggerIds() ([]string, error) {
@@ -136,27 +109,6 @@ func (connector *DbConnector) DeleteTrigger(triggerId string) error {
 				return err
 			}
 		}
-	}
-	return nil
-}
-
-func (connector *DbConnector) RemovePatternWithMetrics(pattern string) error {
-	metrics, err := connector.GetPatternMetrics(pattern)
-	if err != nil {
-		return err
-	}
-
-	c := connector.pool.Get()
-	defer c.Close()
-	c.Send("MULTI")
-	c.Send("SREM", "moira-pattern-list", pattern)
-	for _, metric := range metrics {
-		c.Send("DEL", fmt.Sprintf("moira-metric-data:%s", metric))
-	}
-	c.Send("DEL", fmt.Sprintf("moira-pattern-metrics:%s", pattern))
-	_, err = c.Do("EXEC")
-	if err != nil {
-		return fmt.Errorf("Failed to EXEC: %s", err.Error())
 	}
 	return nil
 }
@@ -227,20 +179,6 @@ func (connector *DbConnector) SetTriggerLastCheck(triggerId string, checkData *m
 	return nil
 }
 
-func (connector *DbConnector) RemovePatternsMetrics(patterns []string) error {
-	c := connector.pool.Get()
-	defer c.Close()
-	c.Send("MULTI")
-	for _, pattern := range patterns {
-		c.Send("DEL", fmt.Sprintf("moira-pattern-metrics:%s", pattern))
-	}
-	_, err := c.Do("EXEC")
-	if err != nil {
-		return fmt.Errorf("Failed to EXEC: %s", err.Error())
-	}
-	return nil
-}
-
 func (connector *DbConnector) SaveTrigger(triggerId string, trigger *moira.Trigger) error {
 	existing, err := connector.GetTrigger(triggerId)
 	if err != nil {
@@ -270,7 +208,7 @@ func (connector *DbConnector) SaveTrigger(triggerId string, trigger *moira.Trigg
 	c.Do("SET", fmt.Sprintf("moira-trigger:%s", triggerId), bytes)
 	c.Do("SADD", "moira-triggers-list", triggerId)
 	for _, pattern := range trigger.Patterns {
-		c.Do("SADD", "moira-pattern-list", pattern)
+		c.Do("SADD", moiraPatternsList, pattern)
 		c.Do("SADD", fmt.Sprintf("moira-pattern-triggers:%s", pattern), triggerId)
 	}
 	for _, tag := range trigger.Tags {
@@ -300,21 +238,6 @@ func (connector *DbConnector) RemovePatternTriggers(pattern string) error {
 	return nil
 }
 
-func (connector *DbConnector) GetMetricRetention(metric string) (int64, error) {
-	c := connector.pool.Get()
-	defer c.Close()
-
-	key := getMetricRetentionDbKey(metric)
-	retention, err := redis.Int64(c.Do("GET", key))
-	if err != nil {
-		if err != redis.ErrNil {
-			return 60, nil
-		}
-		return 0, fmt.Errorf("Failed GET metric-retention:%s, error: %s", metric, err.Error())
-	}
-	return retention, nil
-}
-
 func (connector *DbConnector) AddTriggerToCheck(triggerId string) error {
 	c := connector.pool.Get()
 	defer c.Close()
@@ -336,150 +259,6 @@ func (connector *DbConnector) GetTriggerToCheck() (*string, error) {
 		return nil, fmt.Errorf("Failed to SPOP triggers-tocheck, error: %s", err.Error())
 	}
 	return &triggerId, nil
-}
-
-func (connector *DbConnector) AddPatternMetric(pattern, metric string) error {
-	c := connector.pool.Get()
-	defer c.Close()
-	_, err := c.Do("SADD", fmt.Sprintf("moira-pattern-metrics:%s", pattern), metric)
-	if err != nil {
-		return fmt.Errorf("Failed to SADD pattern-metrics, pattern: %s, metric: %s, error: %s", pattern, metric, err.Error())
-	}
-	return err
-}
-
-func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb) <-chan *moira.MetricEvent {
-	c := connector.pool.Get()
-	psc := redis.PubSubConn{Conn: c}
-	psc.Subscribe("metric-event")
-
-	metricsChannel := make(chan *moira.MetricEvent, 100)
-	dataChannel := connector.manageSubscriptions(psc)
-
-	go func() {
-		defer c.Close()
-		<-tomb.Dying()
-		connector.logger.Infof("Calling shutdown, unsubscribe from 'moira-event' redis channel...")
-		psc.Unsubscribe()
-	}()
-
-	go func() {
-		for {
-			data, ok := <-dataChannel
-			if !ok {
-				connector.logger.Info("No more subscriptions, channel is closed. Stop process data...")
-				close(metricsChannel)
-				return
-			}
-			metricEvent := &moira.MetricEvent{}
-			if err := json.Unmarshal(data, metricEvent); err != nil {
-				connector.logger.Errorf("Failed to parse MetricEvent: %s, error : %s", string(data), err.Error())
-				continue
-			}
-			metricsChannel <- metricEvent
-		}
-	}()
-
-	return metricsChannel
-}
-
-func (connector *DbConnector) GetMetricsValues(metrics []string, from int64, until int64) (map[string][]*moira.MetricValue, error) {
-	c := connector.pool.Get()
-	defer c.Close()
-
-	c.Send("MULTI")
-	for _, metric := range metrics {
-		c.Send("ZRANGEBYSCORE", getMetricDbKey(metric), from, until, "WITHSCORES")
-	}
-	resultByMetrics, err := redis.Values(c.Do("EXEC"))
-	if err != nil {
-		return nil, fmt.Errorf("Failed to EXEC: %s", err.Error())
-	}
-
-	res := make(map[string][]*moira.MetricValue)
-
-	for i, resultByMetric := range resultByMetrics {
-		metric := metrics[i]
-		resultByMetricArr, err := redis.Values(resultByMetric, nil)
-		if err != nil {
-			return nil, err
-		}
-		metricsValues := make([]*moira.MetricValue, 0, len(resultByMetricArr)/2)
-
-		for i := 0; i < len(resultByMetricArr); i += 2 {
-			val, err := redis.String(resultByMetricArr[i], nil)
-			if err != nil {
-				return nil, err
-			}
-			valuesArr := strings.Split(val, " ")
-			if len(valuesArr) != 2 {
-				return nil, fmt.Errorf("Value format is not valid: %s", val)
-			}
-			timestampStr, err := redis.String(valuesArr[0], nil)
-			if err != nil {
-				return nil, err
-			}
-			timestamp, err := strconv.ParseInt(timestampStr, 10, 64)
-			if err != nil {
-				return nil, err
-			}
-			valueStr, err := redis.String(valuesArr[1], nil)
-			if err != nil {
-				return nil, err
-			}
-			value, err := strconv.ParseFloat(valueStr, 64)
-			if err != nil {
-				return nil, err
-			}
-			retentionTimestamp, err := redis.Int64(resultByMetricArr[i+1], nil)
-			if err != nil {
-				return nil, err
-			}
-			metricValue := moira.MetricValue{
-				RetentionTimestamp: retentionTimestamp,
-				Timestamp:          timestamp,
-				Value:              value,
-			}
-			metricsValues = append(metricsValues, &metricValue)
-		}
-		res[metric] = metricsValues
-	}
-	return res, nil
-}
-
-func (connector *DbConnector) CleanupMetricValues(metric string, toTime int64) error {
-	c := connector.pool.Get()
-	defer c.Close()
-
-	_, err := c.Do("ZREMRANGEBYSCORE", getMetricDbKey(metric), "-inf", toTime)
-	if err != nil {
-		return fmt.Errorf("Failed to ZREMRANGEBYSCORE: %s", err.Error())
-	}
-	return nil
-}
-
-func (connector *DbConnector) manageSubscriptions(psc redis.PubSubConn) <-chan []byte {
-	dataChan := make(chan []byte)
-	go func() {
-		for {
-			switch n := psc.Receive().(type) {
-			case redis.Message:
-				dataChan <- n.Data
-			case redis.Subscription:
-				if n.Kind == "subscribe" {
-					connector.logger.Infof("Subscribe to %s channel, current subscriptions is %v", n.Channel, n.Count)
-				} else if n.Kind == "unsubscribe" {
-					connector.logger.Infof("Unsubscribe from %s channel, current subscriptions is %v", n.Channel, n.Count)
-					if n.Count == 0 {
-						connector.logger.Infof("No more subscriptions, exit...")
-						close(dataChan)
-						return
-					}
-				}
-			}
-		}
-	}()
-	return dataChan
 }
 
 func leftJoin(left, right []string) []string {

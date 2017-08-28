@@ -89,6 +89,13 @@ type MatchedMetric struct {
 	Retention          int
 }
 
+//MetricValue represent metric data
+type MetricValue struct {
+	RetentionTimestamp int64   `json:"step,omitempty"`
+	Timestamp          int64   `json:"ts"`
+	Value              float64 `json:"value"`
+}
+
 // GetSubjectState returns the most critical state of events
 func (events EventsData) GetSubjectState() string {
 	result := ""

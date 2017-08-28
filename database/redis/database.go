@@ -45,3 +45,27 @@ func newRedisPool(redisURI string, dbID ...int) *redis.Pool {
 		},
 	}
 }
+
+func (connector *DbConnector) manageSubscriptions(psc redis.PubSubConn) <-chan []byte {
+	dataChan := make(chan []byte)
+	go func() {
+		for {
+			switch n := psc.Receive().(type) {
+			case redis.Message:
+				dataChan <- n.Data
+			case redis.Subscription:
+				if n.Kind == "subscribe" {
+					connector.logger.Infof("Subscribe to %s channel, current subscriptions is %v", n.Channel, n.Count)
+				} else if n.Kind == "unsubscribe" {
+					connector.logger.Infof("Unsubscribe from %s channel, current subscriptions is %v", n.Channel, n.Count)
+					if n.Count == 0 {
+						connector.logger.Infof("No more subscriptions, exit...")
+						close(dataChan)
+						return
+					}
+				}
+			}
+		}
+	}()
+	return dataChan
+}

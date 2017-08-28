@@ -190,7 +190,7 @@ func (triggerChecker *TriggerChecker) getTimeSeriesState(triggerTimeSeries *trig
 func (triggerChecker *TriggerChecker) cleanupMetricsValues(metrics []string, until int64) {
 	for _, metric := range metrics {
 		//todo cache cache_ttl
-		if err := triggerChecker.Database.CleanupMetricValues(metric, until-triggerChecker.Config.MetricsTTL); err != nil {
+		if err := triggerChecker.Database.RemoveMetricValues(metric, until-triggerChecker.Config.MetricsTTL); err != nil {
 			triggerChecker.Logger.Error(err.Error())
 		}
 	}

@@ -93,16 +93,16 @@ func (_mr *MockDatabaseMockRecorder) AddTriggerToCheck(arg0 interface{}) *gomock
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "AddTriggerToCheck", arg0)
 }
 
-// CleanupMetricValues mocks base method
-func (_m *MockDatabase) CleanupMetricValues(_param0 string, _param1 int64) error {
-	ret := _m.ctrl.Call(_m, "CleanupMetricValues", _param0, _param1)
+// RemoveMetricValues mocks base method
+func (_m *MockDatabase) RemoveMetricValues(_param0 string, _param1 int64) error {
+	ret := _m.ctrl.Call(_m, "RemoveMetricValues", _param0, _param1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// CleanupMetricValues indicates an expected call of CleanupMetricValues
-func (_mr *MockDatabaseMockRecorder) CleanupMetricValues(arg0, arg1 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "CleanupMetricValues", arg0, arg1)
+// RemoveMetricValues indicates an expected call of RemoveMetricValues
+func (_mr *MockDatabaseMockRecorder) RemoveMetricValues(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "RemoveMetricValues", arg0, arg1)
 }
 
 // DeleteTag mocks base method
