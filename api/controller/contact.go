@@ -50,6 +50,9 @@ func RemoveContact(database moira.Database, contactID string, userLogin string) 
 	subscriptionsWithDeletingContact := make([]*moira.SubscriptionData, 0)
 
 	for _, subscription := range subscriptions {
+		if subscription == nil {
+			continue
+		}
 		for i, contact := range subscription.Contacts {
 			if contact == contactID {
 				subscription.Contacts = append(subscription.Contacts[:i], subscription.Contacts[i+1:]...)

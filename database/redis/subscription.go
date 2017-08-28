@@ -42,7 +42,9 @@ func (connector *DbConnector) GetSubscriptions(subscriptionIDs []string) ([]*moi
 		return nil, fmt.Errorf("Failed to EXEC: %s", err.Error())
 	}
 	for i := range subscriptions {
-		subscriptions[i].ID = subscriptionIDs[i]
+		if subscriptions[i] != nil {
+			subscriptions[i].ID = subscriptionIDs[i]
+		}
 	}
 	return subscriptions, nil
 }
