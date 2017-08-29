@@ -24,9 +24,9 @@ func (connector *DbConnector) GetTriggers(triggerIds []string) ([]*moira.Trigger
 	defer c.Close()
 
 	c.Send("MULTI")
-	for _, triggerId := range triggerIds {
-		c.Send("GET", fmt.Sprintf("moira-trigger:%s", triggerId))
-		c.Send("SMEMBERS", fmt.Sprintf("moira-trigger-tags:%s", triggerId))
+	for _, triggerID := range triggerIds {
+		c.Send("GET", fmt.Sprintf("moira-trigger:%s", triggerID))
+		c.Send("SMEMBERS", fmt.Sprintf("moira-trigger-tags:%s", triggerID))
 	}
 	rawResponse, err := redis.Values(c.Do("EXEC"))
 	if err != nil {
@@ -58,13 +58,13 @@ func (connector *DbConnector) GetTriggerIds() ([]string, error) {
 	return triggerIds, nil
 }
 
-func (connector *DbConnector) DeleteTriggerThrottling(triggerId string) error {
+func (connector *DbConnector) DeleteTriggerThrottling(triggerID string) error {
 	c := connector.pool.Get()
 	defer c.Close()
 
 	c.Send("MULTI")
-	c.Send("SET", fmt.Sprintf("moira-notifier-throttling-beginning:%s", triggerId), time.Now().Unix())
-	c.Send("DEL", fmt.Sprintf("moira-notifier-next:%s", triggerId))
+	c.Send("SET", fmt.Sprintf("moira-notifier-throttling-beginning:%s", triggerID), time.Now().Unix())
+	c.Send("DEL", fmt.Sprintf("moira-notifier-next:%s", triggerID))
 	_, err := c.Do("EXEC")
 	if err != nil {
 		return fmt.Errorf("Failed to EXEC: %s", err.Error())
@@ -72,8 +72,8 @@ func (connector *DbConnector) DeleteTriggerThrottling(triggerId string) error {
 	return nil
 }
 
-func (connector *DbConnector) DeleteTrigger(triggerId string) error {
-	trigger, err := connector.GetTrigger(triggerId)
+func (connector *DbConnector) DeleteTrigger(triggerID string) error {
+	trigger, err := connector.GetTrigger(triggerID)
 	if err != nil {
 		return nil
 	}
@@ -85,14 +85,14 @@ func (connector *DbConnector) DeleteTrigger(triggerId string) error {
 	defer c.Close()
 
 	c.Send("MULTI")
-	c.Send("DEL", fmt.Sprintf("moira-trigger:%s", triggerId))
-	c.Send("DEL", fmt.Sprintf("moira-trigger-tags:%s", triggerId))
-	c.Send("SREM", "moira-triggers-list", triggerId)
+	c.Send("DEL", fmt.Sprintf("moira-trigger:%s", triggerID))
+	c.Send("DEL", fmt.Sprintf("moira-trigger-tags:%s", triggerID))
+	c.Send("SREM", "moira-triggers-list", triggerID)
 	for _, tag := range trigger.Tags {
-		c.Send("SREM", fmt.Sprintf("moira-tag-triggers:%s", tag), triggerId)
+		c.Send("SREM", fmt.Sprintf("moira-tag-triggers:%s", tag), triggerID)
 	}
 	for _, pattern := range trigger.Patterns {
-		c.Send("SREM", fmt.Sprintf("moira-pattern-triggers:%s", pattern), triggerId)
+		c.Send("SREM", fmt.Sprintf("moira-pattern-triggers:%s", pattern), triggerID)
 	}
 	_, err = c.Do("EXEC")
 	if err != nil {
@@ -113,13 +113,13 @@ func (connector *DbConnector) DeleteTrigger(triggerId string) error {
 	return nil
 }
 
-func (connector *DbConnector) SaveTrigger(triggerId string, trigger *moira.Trigger) error {
-	existing, err := connector.GetTrigger(triggerId)
+func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigger) error {
+	existing, err := connector.GetTrigger(triggerID)
 	if err != nil {
 		return err
 	}
 
-	triggerSE := toTriggerStorageElement(trigger, triggerId)
+	triggerSE := toTriggerStorageElement(trigger, triggerID)
 	bytes, err := json.Marshal(triggerSE)
 	if err != nil {
 		return nil
@@ -131,23 +131,23 @@ func (connector *DbConnector) SaveTrigger(triggerId string, trigger *moira.Trigg
 	cleanupPatterns := make([]string, 0)
 	if existing != nil {
 		for _, pattern := range leftJoin(existing.Patterns, trigger.Patterns) {
-			c.Send("SREM", fmt.Sprintf("moira-pattern-triggers:%s", pattern), triggerId)
+			c.Send("SREM", fmt.Sprintf("moira-pattern-triggers:%s", pattern), triggerID)
 			cleanupPatterns = append(cleanupPatterns, pattern)
 		}
 		for _, tag := range leftJoin(existing.Tags, trigger.Tags) {
-			c.Send("SREM", fmt.Sprintf("moira-trigger-tags:%s", triggerId), tag)
-			c.Send("SREM", fmt.Sprintf("moira-tag-triggers:%s", tag), triggerId)
+			c.Send("SREM", fmt.Sprintf("moira-trigger-tags:%s", triggerID), tag)
+			c.Send("SREM", fmt.Sprintf("moira-tag-triggers:%s", tag), triggerID)
 		}
 	}
-	c.Do("SET", fmt.Sprintf("moira-trigger:%s", triggerId), bytes)
-	c.Do("SADD", "moira-triggers-list", triggerId)
+	c.Do("SET", fmt.Sprintf("moira-trigger:%s", triggerID), bytes)
+	c.Do("SADD", "moira-triggers-list", triggerID)
 	for _, pattern := range trigger.Patterns {
 		c.Do("SADD", moiraPatternsList, pattern)
-		c.Do("SADD", fmt.Sprintf("moira-pattern-triggers:%s", pattern), triggerId)
+		c.Do("SADD", fmt.Sprintf("moira-pattern-triggers:%s", pattern), triggerID)
 	}
 	for _, tag := range trigger.Tags {
-		c.Send("SADD", fmt.Sprintf("moira-trigger-tags:%s", triggerId), tag)
-		c.Send("SADD", fmt.Sprintf("moira-tag-triggers:%s", tag), triggerId)
+		c.Send("SADD", fmt.Sprintf("moira-trigger-tags:%s", triggerID), tag)
+		c.Send("SADD", fmt.Sprintf("moira-tag-triggers:%s", tag), triggerID)
 		c.Send("SADD", "moira-tags", tag)
 	}
 	_, err = c.Do("EXEC")
@@ -172,12 +172,12 @@ func (connector *DbConnector) RemovePatternTriggers(pattern string) error {
 	return nil
 }
 
-func (connector *DbConnector) AddTriggerToCheck(triggerId string) error {
+func (connector *DbConnector) AddTriggerToCheck(triggerID string) error {
 	c := connector.pool.Get()
 	defer c.Close()
-	_, err := c.Do("SADD", "moira-triggers-tocheck", triggerId)
+	_, err := c.Do("SADD", "moira-triggers-tocheck", triggerID)
 	if err != nil {
-		return fmt.Errorf("Failed to SADD triggers-tocheck triggerID: %s, error: %s", triggerId, err.Error())
+		return fmt.Errorf("Failed to SADD triggers-tocheck triggerID: %s, error: %s", triggerID, err.Error())
 	}
 	return nil
 }
@@ -185,14 +185,14 @@ func (connector *DbConnector) AddTriggerToCheck(triggerId string) error {
 func (connector *DbConnector) GetTriggerToCheck() (*string, error) {
 	c := connector.pool.Get()
 	defer c.Close()
-	triggerId, err := redis.String(c.Do("SPOP", "moira-triggers-tocheck"))
+	triggerID, err := redis.String(c.Do("SPOP", "moira-triggers-tocheck"))
 	if err != nil {
 		if err == redis.ErrNil {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("Failed to SPOP triggers-tocheck, error: %s", err.Error())
 	}
-	return &triggerId, nil
+	return &triggerID, nil
 }
 
 func leftJoin(left, right []string) []string {

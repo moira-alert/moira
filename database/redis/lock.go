@@ -15,7 +15,7 @@ func (connector *DbConnector) AcquireTriggerCheckLock(triggerID string, timeout 
 	}
 	count := 0
 	for !acquired && count < timeout {
-		count += 1
+		count++
 		<-time.After(time.Millisecond * 500)
 		acquired, err = connector.SetTriggerCheckLock(triggerID)
 		if err != nil {
@@ -29,15 +29,15 @@ func (connector *DbConnector) AcquireTriggerCheckLock(triggerID string, timeout 
 }
 
 //SetTriggerCheckLock create to database lock object with 30sec TTL and return true if object successfully created, or false if object already exists
-func (connector *DbConnector) SetTriggerCheckLock(triggerId string) (bool, error) {
+func (connector *DbConnector) SetTriggerCheckLock(triggerID string) (bool, error) {
 	c := connector.pool.Get()
 	defer c.Close()
-	_, err := redis.String(c.Do("SET", fmt.Sprintf("moira-metric-check-lock:%s", triggerId), time.Now().Unix(), "EX", 30, "NX"))
+	_, err := redis.String(c.Do("SET", fmt.Sprintf("moira-metric-check-lock:%s", triggerID), time.Now().Unix(), "EX", 30, "NX"))
 	if err != nil {
 		if err == redis.ErrNil {
 			return false, nil
 		}
-		return false, fmt.Errorf("Failed to set metric-check-lock:%s : %s", triggerId, err.Error())
+		return false, fmt.Errorf("Failed to set metric-check-lock:%s : %s", triggerID, err.Error())
 	}
 	return true, nil
 }

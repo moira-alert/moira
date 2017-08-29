@@ -53,40 +53,40 @@ func (connector *DbConnector) GetFilteredTriggerCheckIds(tagNames []string, only
 		}
 
 		triggerIdsMap := make(map[string]bool)
-		for _, triggerId := range triggerIds {
-			triggerIdsMap[triggerId] = true
+		for _, triggerID := range triggerIds {
+			triggerIdsMap[triggerID] = true
 		}
 
 		triggerIdsByTags = append(triggerIdsByTags, triggerIdsMap)
 	}
 
 	total := make([]string, 0)
-	for _, triggerId := range triggerIdsChecks {
+	for _, triggerID := range triggerIdsChecks {
 		valid := true
 		for _, triggerIdsByTag := range triggerIdsByTags {
-			if _, ok := triggerIdsByTag[triggerId]; !ok {
+			if _, ok := triggerIdsByTag[triggerID]; !ok {
 				valid = false
 				break
 			}
 		}
 		if valid {
-			total = append(total, triggerId)
+			total = append(total, triggerID)
 		}
 	}
 	return total, int64(len(total)), nil
 }
 
-func (connector *DbConnector) GetTriggerChecks(triggerCheckIds []string) ([]moira.TriggerChecks, error) {
+func (connector *DbConnector) GetTriggerChecks(triggerCheckIDs []string) ([]moira.TriggerChecks, error) {
 	c := connector.pool.Get()
 	defer c.Close()
 	var triggerChecks []moira.TriggerChecks
 
 	c.Send("MULTI")
-	for _, triggerCheckId := range triggerCheckIds {
-		c.Send("GET", fmt.Sprintf("moira-trigger:%s", triggerCheckId))
-		c.Send("SMEMBERS", fmt.Sprintf("moira-trigger-tags:%s", triggerCheckId))
-		c.Send("GET", fmt.Sprintf("moira-metric-last-check:%s", triggerCheckId))
-		c.Send("GET", fmt.Sprintf("moira-notifier-next:%s", triggerCheckId))
+	for _, triggerCheckID := range triggerCheckIDs {
+		c.Send("GET", fmt.Sprintf("moira-trigger:%s", triggerCheckID))
+		c.Send("SMEMBERS", fmt.Sprintf("moira-trigger-tags:%s", triggerCheckID))
+		c.Send("GET", fmt.Sprintf("moira-metric-last-check:%s", triggerCheckID))
+		c.Send("GET", fmt.Sprintf("moira-notifier-next:%s", triggerCheckID))
 	}
 	rawResponce, err := redis.Values(c.Do("EXEC"))
 	if err != nil {
@@ -96,18 +96,18 @@ func (connector *DbConnector) GetTriggerChecks(triggerCheckIds []string) ([]moir
 	var slices [][]interface{}
 	for i := 0; i < len(rawResponce); i += 4 {
 		arr := make([]interface{}, 0, 5)
-		arr = append(arr, triggerCheckIds[i/4])
+		arr = append(arr, triggerCheckIDs[i/4])
 		arr = append(arr, rawResponce[i:i+4]...)
 		slices = append(slices, arr)
 	}
 	for _, slice := range slices {
-		triggerId := slice[0].(string)
+		triggerID := slice[0].(string)
 		var triggerSE = &triggerStorageElement{}
 
 		triggerBytes, err := redis.Bytes(slice[1], nil)
 		if err != nil {
 			if err != redis.ErrNil {
-				connector.logger.Errorf("Error getting trigger bytes, id: %s, error: %s", triggerId, err.Error())
+				connector.logger.Errorf("Error getting trigger bytes, id: %s, error: %s", triggerID, err.Error())
 			}
 			continue
 		}
@@ -121,13 +121,13 @@ func (connector *DbConnector) GetTriggerChecks(triggerCheckIds []string) ([]moir
 		triggerTags, err := redis.Strings(slice[2], nil)
 		if err != nil {
 			if err != redis.ErrNil {
-				connector.logger.Errorf("Error getting trigger-tags, id: %s, error: %s", triggerId, err.Error())
+				connector.logger.Errorf("Error getting trigger-tags, id: %s, error: %s", triggerID, err.Error())
 			}
 		}
 
 		lastCheckBytes, err := redis.Bytes(slice[3], nil)
 		if err != nil {
-			connector.logger.Errorf("Error getting metric-last-check, id: %s, error: %s", triggerId, err.Error())
+			connector.logger.Errorf("Error getting metric-last-check, id: %s, error: %s", triggerID, err.Error())
 		}
 
 		var lastCheck = moira.CheckData{}
@@ -139,12 +139,12 @@ func (connector *DbConnector) GetTriggerChecks(triggerCheckIds []string) ([]moir
 		throttling, err := redis.Int64(slice[4], nil)
 		if err != nil {
 			if err != redis.ErrNil {
-				connector.logger.Errorf("Error getting moira-notifier-next, id: %s, error: %s", triggerId, err.Error())
+				connector.logger.Errorf("Error getting moira-notifier-next, id: %s, error: %s", triggerID, err.Error())
 			}
 		}
 
 		triggerCheck := moira.TriggerChecks{
-			Trigger: *toTrigger(triggerSE, triggerId),
+			Trigger: *toTrigger(triggerSE, triggerID),
 		}
 
 		triggerCheck.LastCheck = lastCheck
@@ -161,34 +161,34 @@ func (connector *DbConnector) GetTriggerChecks(triggerCheckIds []string) ([]moir
 	return triggerChecks, nil
 }
 
-func (connector *DbConnector) GetTrigger(triggerId string) (*moira.Trigger, error) {
+func (connector *DbConnector) GetTrigger(triggerID string) (*moira.Trigger, error) {
 	c := connector.pool.Get()
 	defer c.Close()
 
 	c.Send("MULTI")
-	c.Send("GET", fmt.Sprintf("moira-trigger:%s", triggerId))
-	c.Send("SMEMBERS", fmt.Sprintf("moira-trigger-tags:%s", triggerId))
+	c.Send("GET", fmt.Sprintf("moira-trigger:%s", triggerID))
+	c.Send("SMEMBERS", fmt.Sprintf("moira-trigger-tags:%s", triggerID))
 	rawResponse, err := redis.Values(c.Do("EXEC"))
 	if err != nil {
 		return nil, fmt.Errorf("Failed to EXEC: %s", err.Error())
 	}
-	triggerSE, err := connector.convertTriggerWithTags(rawResponse[0], rawResponse[1], triggerId)
+	triggerSE, err := connector.convertTriggerWithTags(rawResponse[0], rawResponse[1], triggerID)
 	if err != nil {
 		return nil, err
 	}
 	if triggerSE == nil {
 		return nil, nil
 	}
-	return toTrigger(triggerSE, triggerId), nil
+	return toTrigger(triggerSE, triggerID), nil
 }
 
-func (connector *DbConnector) SetTriggerMetricsMaintenance(triggerId string, metrics map[string]int64) error {
+func (connector *DbConnector) SetTriggerMetricsMaintenance(triggerID string, metrics map[string]int64) error {
 	c := connector.pool.Get()
 	defer c.Close()
 
 	var readingErr error
 
-	key := fmt.Sprintf("moira-metric-last-check:%s", triggerId)
+	key := fmt.Sprintf("moira-metric-last-check:%s", triggerID)
 	lastCheckString, readingErr := redis.String(c.Do("GET", key))
 	if readingErr != nil {
 		if readingErr != redis.ErrNil {
@@ -231,21 +231,21 @@ func (connector *DbConnector) SetTriggerMetricsMaintenance(triggerId string, met
 	return nil
 }
 
-func (connector *DbConnector) convertTriggerWithTags(triggerInterface interface{}, triggerTagsInterface interface{}, triggerId string) (*triggerStorageElement, error) {
+func (connector *DbConnector) convertTriggerWithTags(triggerInterface interface{}, triggerTagsInterface interface{}, triggerID string) (*triggerStorageElement, error) {
 	trigger := &triggerStorageElement{}
 	triggerBytes, err := redis.Bytes(triggerInterface, nil)
 	if err != nil {
 		if err == redis.ErrNil {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("Error getting trigger bytes, id: %s, error: %s", triggerId, err.Error())
+		return nil, fmt.Errorf("Error getting trigger bytes, id: %s, error: %s", triggerID, err.Error())
 	}
 	if err = json.Unmarshal(triggerBytes, trigger); err != nil {
 		return nil, fmt.Errorf("Failed to parse trigger json %s: %s", triggerBytes, err.Error())
 	}
 	triggerTags, err := redis.Strings(triggerTagsInterface, nil)
 	if err != nil {
-		connector.logger.Errorf("Error getting trigger-tags, id: %s, error: %s", triggerId, err.Error())
+		connector.logger.Errorf("Error getting trigger-tags, id: %s, error: %s", triggerID, err.Error())
 	}
 	if len(triggerTags) > 0 {
 		trigger.Tags = triggerTags

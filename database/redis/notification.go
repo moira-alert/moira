@@ -14,6 +14,7 @@ import (
 
 var moiraNotificationsKey = "moira-notifier-notifications"
 
+//GetNotifications gets ScheduledNotifications in given range and full range
 func (connector *DbConnector) GetNotifications(start, end int64) ([]*moira.ScheduledNotification, int64, error) {
 	c := connector.pool.Get()
 	defer c.Close()
@@ -56,9 +57,9 @@ func (connector *DbConnector) RemoveNotification(notificationKey string) (int64,
 		subID := moira.UseString(notification.Event.SubscriptionID)
 		idstr := strings.Join([]string{timestamp, contactID, subID}, "")
 		if idstr == notificationKey {
-			notificationString, err := json.Marshal(notification)
-			if err != nil {
-				return 0, err
+			notificationString, err2 := json.Marshal(notification)
+			if err2 != nil {
+				return 0, err2
 			}
 			c.Send("ZREM", moiraNotificationsKey, notificationString)
 		}

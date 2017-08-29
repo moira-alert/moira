@@ -52,13 +52,11 @@ func (connector *DbConnector) WriteSubscriptions(subscriptions []*moira.Subscrip
 	defer c.Close()
 
 	c.Send("MULTI")
-	subscriptionsBytes := make([][]byte, 0, len(subscriptions))
 	for _, subscription := range subscriptions {
 		bytes, err := json.Marshal(subscription)
 		if err != nil {
 			return err
 		}
-		subscriptionsBytes = append(subscriptionsBytes, bytes)
 		c.Send("SET", moiraSubscription(subscription.ID), bytes)
 	}
 	_, err := c.Do("EXEC")
@@ -145,7 +143,7 @@ func (connector *DbConnector) GetTagsSubscriptions(tags []string) ([]*moira.Subs
 		return nil, fmt.Errorf("Failed to retrieve subscriptions for tags %v: %s", tags, err.Error())
 	}
 	var subscriptionsIDs []string
-	if err := redis.ScanSlice(values, &subscriptionsIDs); err != nil {
+	if err = redis.ScanSlice(values, &subscriptionsIDs); err != nil {
 		return nil, fmt.Errorf("Failed to retrieve subscriptions for tags %v: %s", tags, err.Error())
 	}
 	if len(subscriptionsIDs) == 0 {
