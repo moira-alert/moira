@@ -26,19 +26,19 @@ type Database interface {
 	GetFilteredTriggerCheckIds([]string, bool) ([]string, int64, error)
 	GetTrigger(string) (*Trigger, error)
 	GetNotificationTrigger(id string) (TriggerData, error)
-	GetTriggerChecks(triggerCheckIds []string) ([]TriggerChecks, error)
-	SetTriggerMetricsMaintenance(triggerId string, metrics map[string]int64) error
+	GetTriggerChecks(triggerCheckIDs []string) ([]TriggerChecks, error)
+	SetTriggerMetricsMaintenance(triggerID string, metrics map[string]int64) error
 	GetPatternTriggerIds(pattern string) ([]string, error)
-	GetTriggers(triggerIds []string) ([]*Trigger, error)
-	DeleteTriggerThrottling(triggerId string) error
-	DeleteTrigger(triggerId string) error
-	SaveTrigger(triggerId string, trigger *Trigger) error
+	GetTriggers(triggerIDs []string) ([]*Trigger, error)
+	DeleteTriggerThrottling(triggerID string) error
+	DeleteTrigger(triggerID string) error
+	SaveTrigger(triggerID string, trigger *Trigger) error
 	RemovePatternTriggers(pattern string) error
-	GetTriggerTags(id string) ([]string, error)
-	GetTriggerThrottlingTimestamps(id string) (time.Time, time.Time)
-	SetTriggerThrottlingTimestamp(id string, next time.Time) error
+	GetTriggerTags(triggerID string) ([]string, error)
+	GetTriggerThrottlingTimestamps(triggerID string) (time.Time, time.Time)
+	SetTriggerThrottlingTimestamp(triggerID string, next time.Time) error
 
-	AddTriggerToCheck(triggerId string) error
+	AddTriggerToCheck(triggerID string) error
 	GetTriggerToCheck() (*string, error)
 
 	//NotificationEvent storing
@@ -58,10 +58,10 @@ type Database interface {
 
 	//SubscriptionData storing
 	GetSubscription(id string) (SubscriptionData, error)
-	GetSubscriptions(subscriptionIds []string) ([]*SubscriptionData, error)
+	GetSubscriptions(subscriptionIDs []string) ([]*SubscriptionData, error)
 	WriteSubscriptions(subscriptions []*SubscriptionData) error
 	SaveSubscription(subscription *SubscriptionData) error
-	RemoveSubscription(subscriptionId string, userLogin string) error
+	RemoveSubscription(subscriptionID string, userLogin string) error
 	GetUserSubscriptionIDs(userLogin string) ([]string, error)
 	GetTagsSubscriptions(tags []string) ([]*SubscriptionData, error)
 

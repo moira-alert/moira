@@ -61,9 +61,9 @@ func TestInitTriggerChecker(t *testing.T) {
 		WarnValue:       &warnWalue,
 		ErrorValue:      &errorWalue,
 		Tags:            []string{"tag1", "tag2"},
-		TtlState:        &ttlStateOk,
+		TTLState:        &ttlStateOk,
 		Patterns:        []string{"Egais.elasticsearch.*.*.jvm.gc.collection.time"},
-		Ttl:             &ttl,
+		TTL:             &ttl,
 		IsSimpleTrigger: false,
 	}
 
@@ -111,8 +111,8 @@ func TestInitTriggerChecker(t *testing.T) {
 		expectedTriggerChecker := triggerChecker
 		expectedTriggerChecker.trigger = &trigger
 		expectedTriggerChecker.isSimple = trigger.IsSimpleTrigger
-		expectedTriggerChecker.ttl = trigger.Ttl
-		expectedTriggerChecker.ttlState = *trigger.TtlState
+		expectedTriggerChecker.ttl = trigger.TTL
+		expectedTriggerChecker.ttlState = *trigger.TTLState
 		expectedTriggerChecker.lastCheck = &lastCheck
 		expectedTriggerChecker.From = lastCheck.Timestamp - ttl
 		So(triggerChecker, ShouldResemble, expectedTriggerChecker)
@@ -127,8 +127,8 @@ func TestInitTriggerChecker(t *testing.T) {
 		expectedTriggerChecker := triggerChecker
 		expectedTriggerChecker.trigger = &trigger
 		expectedTriggerChecker.isSimple = trigger.IsSimpleTrigger
-		expectedTriggerChecker.ttl = trigger.Ttl
-		expectedTriggerChecker.ttlState = *trigger.TtlState
+		expectedTriggerChecker.ttl = trigger.TTL
+		expectedTriggerChecker.ttlState = *trigger.TTLState
 		expectedTriggerChecker.lastCheck = &moira.CheckData{
 			Metrics:   make(map[string]moira.MetricState),
 			State:     NODATA,
@@ -138,8 +138,8 @@ func TestInitTriggerChecker(t *testing.T) {
 		So(triggerChecker, ShouldResemble, expectedTriggerChecker)
 	})
 
-	trigger.Ttl = nil
-	trigger.TtlState = nil
+	trigger.TTL = nil
+	trigger.TTLState = nil
 
 	Convey("Test trigger checker without lastCheck and ttl", t, func() {
 		dataBase.EXPECT().GetTrigger(triggerChecker.TriggerID).Return(&trigger, nil)

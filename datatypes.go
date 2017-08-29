@@ -136,6 +136,7 @@ func (notification *ScheduledNotification) GetKey() string {
 	)
 }
 
+// IsScheduleAllows check if the time is in the allowed schedule interval
 func (schedule *ScheduleData) IsScheduleAllows(ts int64) bool {
 	if schedule == nil {
 		return true

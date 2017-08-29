@@ -31,12 +31,12 @@ func toTrigger(storageElement *triggerStorageElement, triggerId string) *moira.T
 		WarnValue:       storageElement.WarnValue,
 		ErrorValue:      storageElement.ErrorValue,
 		Tags:            storageElement.Tags,
-		TtlState:        storageElement.TtlState,
+		TTLState:        storageElement.TtlState,
 		Schedule:        storageElement.Schedule,
 		Expression:      storageElement.Expression,
 		Patterns:        storageElement.Patterns,
 		IsSimpleTrigger: storageElement.IsSimpleTrigger,
-		Ttl:             getTriggerTtl(storageElement.Ttl),
+		TTL:             getTriggerTtl(storageElement.Ttl),
 	}
 }
 
@@ -49,12 +49,12 @@ func toTriggerStorageElement(trigger *moira.Trigger, triggerId string) *triggerS
 		WarnValue:       trigger.WarnValue,
 		ErrorValue:      trigger.ErrorValue,
 		Tags:            trigger.Tags,
-		TtlState:        trigger.TtlState,
+		TtlState:        trigger.TTLState,
 		Schedule:        trigger.Schedule,
 		Expression:      trigger.Expression,
 		Patterns:        trigger.Patterns,
 		IsSimpleTrigger: trigger.IsSimpleTrigger,
-		Ttl:             getTriggerTtlString(trigger.Ttl),
+		Ttl:             getTriggerTtlString(trigger.TTL),
 	}
 }
 

@@ -37,10 +37,10 @@ func (triggerChecker *TriggerChecker) InitTriggerChecker() error {
 
 	triggerChecker.trigger = trigger
 	triggerChecker.isSimple = trigger.IsSimpleTrigger
-	triggerChecker.ttl = trigger.Ttl
+	triggerChecker.ttl = trigger.TTL
 
-	if trigger.TtlState != nil {
-		triggerChecker.ttlState = *trigger.TtlState
+	if trigger.TTLState != nil {
+		triggerChecker.ttlState = *trigger.TTLState
 	} else {
 		triggerChecker.ttlState = NODATA
 	}
