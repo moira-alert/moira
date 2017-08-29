@@ -86,7 +86,9 @@ func main() {
 	refreshPatternWorker := patterns.NewRefreshPatternWorker(database, cacheMetrics, logger, patternStorage)
 	heartbeatWorker := heartbeat.NewHeartbeatWorker(database, cacheMetrics, logger)
 
-	refreshPatternWorker.Start()
+	if err = refreshPatternWorker.Start(); err != nil {
+		logger.Fatalf("Failed to refresh pattern storage: %s", err.Error())
+	}
 	heartbeatWorker.Start()
 
 	listener, err := connection.NewListener(config.Cache.Listen, logger, patternStorage)
