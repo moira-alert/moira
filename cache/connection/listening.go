@@ -28,6 +28,7 @@ func NewListener(port string, logger moira.Logger, patternStorage *cache.Pattern
 	}
 	listener := MetricsListener{
 		listener: newListener,
+		logger:   logger,
 		handler:  NewConnectionHandler(logger, patternStorage),
 	}
 	return &listener, nil
