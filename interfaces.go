@@ -9,7 +9,6 @@ import (
 type Database interface {
 	FetchEvent() (*EventData, error)
 	GetTriggerTags(id string) ([]string, error)
-	GetTagsSubscriptions(tags []string) ([]SubscriptionData, error)
 	GetTriggerThrottlingTimestamps(id string) (time.Time, time.Time)
 	GetTriggerEventsCount(id string, from int64) int64
 	SetTriggerThrottlingTimestamp(id string, next time.Time) error
@@ -60,6 +59,7 @@ type Database interface {
 	SaveSubscription(subscription *SubscriptionData) error
 	RemoveSubscription(subscriptionId string, userLogin string) error
 	GetUserSubscriptionIDs(userLogin string) ([]string, error)
+	GetTagsSubscriptions(tags []string) ([]*SubscriptionData, error)
 
 	//ScheduledNotification storing
 	GetNotifications(start, end int64) ([]*ScheduledNotification, int64, error)

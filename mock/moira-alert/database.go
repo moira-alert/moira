@@ -93,18 +93,6 @@ func (_mr *MockDatabaseMockRecorder) AddTriggerToCheck(arg0 interface{}) *gomock
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "AddTriggerToCheck", arg0)
 }
 
-// RemoveMetricValues mocks base method
-func (_m *MockDatabase) RemoveMetricValues(_param0 string, _param1 int64) error {
-	ret := _m.ctrl.Call(_m, "RemoveMetricValues", _param0, _param1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// RemoveMetricValues indicates an expected call of RemoveMetricValues
-func (_mr *MockDatabaseMockRecorder) RemoveMetricValues(arg0, arg1 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "RemoveMetricValues", arg0, arg1)
-}
-
 // DeleteTag mocks base method
 func (_m *MockDatabase) DeleteTag(_param0 string) error {
 	ret := _m.ctrl.Call(_m, "DeleteTag", _param0)
@@ -416,9 +404,9 @@ func (_mr *MockDatabaseMockRecorder) GetTagTriggerIds(arg0 interface{}) *gomock.
 }
 
 // GetTagsSubscriptions mocks base method
-func (_m *MockDatabase) GetTagsSubscriptions(_param0 []string) ([]moira_alert.SubscriptionData, error) {
+func (_m *MockDatabase) GetTagsSubscriptions(_param0 []string) ([]*moira_alert.SubscriptionData, error) {
 	ret := _m.ctrl.Call(_m, "GetTagsSubscriptions", _param0)
-	ret0, _ := ret[0].([]moira_alert.SubscriptionData)
+	ret0, _ := ret[0].([]*moira_alert.SubscriptionData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -606,6 +594,18 @@ func (_m *MockDatabase) RemoveContact(_param0 string, _param1 string) error {
 // RemoveContact indicates an expected call of RemoveContact
 func (_mr *MockDatabaseMockRecorder) RemoveContact(arg0, arg1 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "RemoveContact", arg0, arg1)
+}
+
+// RemoveMetricValues mocks base method
+func (_m *MockDatabase) RemoveMetricValues(_param0 string, _param1 int64) error {
+	ret := _m.ctrl.Call(_m, "RemoveMetricValues", _param0, _param1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveMetricValues indicates an expected call of RemoveMetricValues
+func (_mr *MockDatabaseMockRecorder) RemoveMetricValues(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "RemoveMetricValues", arg0, arg1)
 }
 
 // RemoveNotification mocks base method

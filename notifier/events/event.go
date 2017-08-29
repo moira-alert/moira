@@ -58,7 +58,7 @@ func (worker *FetchEventsWorker) Stop() error {
 
 func (worker *FetchEventsWorker) processEvent(event moira.EventData) error {
 	var (
-		subscriptions []moira.SubscriptionData
+		subscriptions []*moira.SubscriptionData
 		tags          []string
 		trigger       moira.TriggerData
 		err           error
@@ -90,12 +90,12 @@ func (worker *FetchEventsWorker) processEvent(event moira.EventData) error {
 		if err != nil {
 			return err
 		}
-		subscriptions = []moira.SubscriptionData{sub}
+		subscriptions = []*moira.SubscriptionData{&sub}
 	}
 
 	duplications := make(map[string]bool)
 	for _, subscription := range subscriptions {
-		if event.State == "TEST" || (subscription.Enabled && subset(subscription.Tags, tags)) {
+		if subscription != nil && (event.State == "TEST" || (subscription.Enabled && subset(subscription.Tags, tags))) {
 			worker.Logger.Debugf("Processing contact ids %v for subscription %s", subscription.Contacts, subscription.ID)
 			for _, contactID := range subscription.Contacts {
 				contact, err := worker.Database.GetContact(contactID)
@@ -115,6 +115,9 @@ func (worker *FetchEventsWorker) processEvent(event moira.EventData) error {
 					worker.Logger.Debugf("Skip duplicated notification for contact %s", notification.Contact)
 				}
 			}
+
+		} else if subscription == nil {
+			worker.Logger.Debugf("Subscription is nil")
 		} else if !subscription.Enabled {
 			worker.Logger.Debugf("Subscription %s is disabled", subscription.ID)
 		} else {

@@ -80,39 +80,6 @@ func (connector *DbConnector) GetTriggerTags(triggerID string) ([]string, error)
 	return tags, nil
 }
 
-// GetTagsSubscriptions returns all subscriptions for given tags list
-func (connector *DbConnector) GetTagsSubscriptions(tags []string) ([]moira.SubscriptionData, error) {
-	c := connector.pool.Get()
-	defer c.Close()
-
-	tagKeys := make([]interface{}, 0, len(tags))
-	for _, tag := range tags {
-		tagKeys = append(tagKeys, fmt.Sprintf("moira-tag-subscriptions:%s", tag))
-	}
-	values, err := redis.Values(c.Do("SUNION", tagKeys...))
-	if err != nil {
-		return nil, fmt.Errorf("Failed to retrieve subscriptions for tags %v: %s", tags, err.Error())
-	}
-	var subscriptions []string
-	if err := redis.ScanSlice(values, &subscriptions); err != nil {
-		return nil, fmt.Errorf("Failed to retrieve subscriptions for tags %v: %s", tags, err.Error())
-	}
-	if len(subscriptions) == 0 {
-		connector.logger.Debugf("No subscriptions found for tag set %v", tags)
-		return make([]moira.SubscriptionData, 0), nil
-	}
-
-	var subscriptionsData []moira.SubscriptionData
-	for _, id := range subscriptions {
-		sub, err := connector.GetSubscription(id)
-		if err != nil {
-			continue
-		}
-		subscriptionsData = append(subscriptionsData, sub)
-	}
-	return subscriptionsData, nil
-}
-
 // GetTriggerThrottlingTimestamps get throttling or scheduled notifications delay for given triggerID
 func (connector *DbConnector) GetTriggerThrottlingTimestamps(triggerID string) (time.Time, time.Time) {
 	c := connector.pool.Get()

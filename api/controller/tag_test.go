@@ -81,24 +81,24 @@ func TestGetAllTagsAndSubscriptions(t *testing.T) {
 	Convey("Success get tag stats", t, func() {
 		tags := []string{"tag21", "tag22", "tag1"}
 		database.EXPECT().GetTagNames().Return(tags, nil)
-		database.EXPECT().GetTagsSubscriptions([]string{"tag21"}).Return([]moira.SubscriptionData{{Tags: []string{"tag21"}}}, nil)
+		database.EXPECT().GetTagsSubscriptions([]string{"tag21"}).Return([]*moira.SubscriptionData{{Tags: []string{"tag21"}}}, nil)
 		database.EXPECT().GetTagTriggerIds("tag21").Return([]string{"trigger21"}, nil)
-		database.EXPECT().GetTagsSubscriptions([]string{"tag22"}).Return(make([]moira.SubscriptionData, 0), nil)
+		database.EXPECT().GetTagsSubscriptions([]string{"tag22"}).Return(make([]*moira.SubscriptionData, 0), nil)
 		database.EXPECT().GetTagTriggerIds("tag22").Return([]string{"trigger22"}, nil)
-		database.EXPECT().GetTagsSubscriptions([]string{"tag1"}).Return([]moira.SubscriptionData{{Tags: []string{"tag1", "tag2"}}}, nil)
+		database.EXPECT().GetTagsSubscriptions([]string{"tag1"}).Return([]*moira.SubscriptionData{{Tags: []string{"tag1", "tag2"}}}, nil)
 		database.EXPECT().GetTagTriggerIds("tag1").Return(make([]string, 0), nil)
 		stat, err := GetAllTagsAndSubscriptions(database, logger)
 		So(err, ShouldBeNil)
 		So(stat.List, ShouldHaveLength, 3)
 		for _, stat := range stat.List {
 			if stat.TagName == "tag21" {
-				So(stat, ShouldResemble, dto.TagStatistics{TagName: "tag21", Triggers: []string{"trigger21"}, Subscriptions: []moira.SubscriptionData{{Tags: []string{"tag21"}}}})
+				So(stat, ShouldResemble, dto.TagStatistics{TagName: "tag21", Triggers: []string{"trigger21"}, Subscriptions: []*moira.SubscriptionData{{Tags: []string{"tag21"}}}})
 			}
 			if stat.TagName == "tag22" {
-				So(stat, ShouldResemble, dto.TagStatistics{TagName: "tag22", Triggers: []string{"trigger22"}, Subscriptions: make([]moira.SubscriptionData, 0)})
+				So(stat, ShouldResemble, dto.TagStatistics{TagName: "tag22", Triggers: []string{"trigger22"}, Subscriptions: make([]*moira.SubscriptionData, 0)})
 			}
 			if stat.TagName == "tag1" {
-				So(stat, ShouldResemble, dto.TagStatistics{TagName: "tag1", Triggers: make([]string, 0), Subscriptions: []moira.SubscriptionData{{Tags: []string{"tag1", "tag2"}}}})
+				So(stat, ShouldResemble, dto.TagStatistics{TagName: "tag1", Triggers: make([]string, 0), Subscriptions: []*moira.SubscriptionData{{Tags: []string{"tag1", "tag2"}}}})
 			}
 		}
 	})

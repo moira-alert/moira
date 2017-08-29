@@ -7,7 +7,6 @@ import (
 	"github.com/garyburd/redigo/redis"
 
 	"github.com/moira-alert/moira-alert"
-	"github.com/moira-alert/moira-alert/database"
 	"github.com/moira-alert/moira-alert/database/redis/reply"
 )
 
@@ -19,9 +18,7 @@ func (connector *DbConnector) GetSubscription(id string) (moira.SubscriptionData
 	subscription, err := reply.Subscription(c.Do("GET", moiraSubscription(id)))
 	if err != nil {
 		connector.metrics.SubsMalformed.Mark(1)
-		if err != database.ErrNil {
-			return subscription, fmt.Errorf("Failed to get subscription data for id %s: %s", id, err.Error())
-		}
+		return subscription, fmt.Errorf("Failed to get subscription data for id %s: %s", id, err.Error())
 	}
 	subscription.ID = id
 	return subscription, nil
@@ -131,6 +128,35 @@ func (connector *DbConnector) GetUserSubscriptionIDs(login string) ([]string, er
 		return nil, fmt.Errorf("Failed to retrieve subscriptions for user login %s: %s", login, err.Error())
 	}
 	return subscriptions, nil
+}
+
+//GetTagsSubscriptions gets all subscriptionsIDs by given tag list and read subscriptions.
+//Len of subscriptionIDs is equal to len of returned values array. If there is no object by current ID, then nil is returned
+func (connector *DbConnector) GetTagsSubscriptions(tags []string) ([]*moira.SubscriptionData, error) {
+	c := connector.pool.Get()
+	defer c.Close()
+
+	tagKeys := make([]interface{}, 0, len(tags))
+	for _, tag := range tags {
+		tagKeys = append(tagKeys, fmt.Sprintf("moira-tag-subscriptions:%s", tag))
+	}
+	values, err := redis.Values(c.Do("SUNION", tagKeys...))
+	if err != nil {
+		return nil, fmt.Errorf("Failed to retrieve subscriptions for tags %v: %s", tags, err.Error())
+	}
+	var subscriptionsIDs []string
+	if err := redis.ScanSlice(values, &subscriptionsIDs); err != nil {
+		return nil, fmt.Errorf("Failed to retrieve subscriptions for tags %v: %s", tags, err.Error())
+	}
+	if len(subscriptionsIDs) == 0 {
+		return make([]*moira.SubscriptionData, 0), nil
+	}
+
+	subscriptionsData, err := connector.GetSubscriptions(subscriptionsIDs)
+	if err != nil {
+		return nil, err
+	}
+	return subscriptionsData, nil
 }
 
 func moiraSubscription(id string) string {
