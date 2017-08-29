@@ -16,7 +16,7 @@ func Init(config graphite.Config, logger moira.Logger, serviceName string) {
 	prefix := config.Prefix
 	interval := config.Interval
 
-	if uri != "" {
+	if config.Enabled {
 		address, err := net.ResolveTCPAddr("tcp", uri)
 		if err != nil {
 			logger.Errorf("Can not resolve graphiteURI %s: %s", uri, err)

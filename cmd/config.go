@@ -2,13 +2,14 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/moira-alert/moira-alert/database/redis"
-	"github.com/moira-alert/moira-alert/logging"
-	"github.com/moira-alert/moira-alert/metrics/graphite"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
-	"menteslibres.net/gosexy/to"
 	"strings"
+
+	"gopkg.in/yaml.v2"
+	"menteslibres.net/gosexy/to"
+
+	"github.com/moira-alert/moira-alert/database/redis"
+	"github.com/moira-alert/moira-alert/metrics/graphite"
 )
 
 type RedisConfig struct {
@@ -26,6 +27,7 @@ func (config *RedisConfig) GetSettings() redis.Config {
 }
 
 type GraphiteConfig struct {
+	Enabled  string `yaml:"enabled"`
 	URI      string `yaml:"uri"`
 	Prefix   string `yaml:"prefix"`
 	Interval string `yaml:"interval"`
@@ -33,6 +35,7 @@ type GraphiteConfig struct {
 
 func (graphiteConfig *GraphiteConfig) GetSettings() graphite.Config {
 	return graphite.Config{
+		Enabled:  ToBool(graphiteConfig.Enabled),
 		URI:      graphiteConfig.URI,
 		Prefix:   graphiteConfig.Prefix,
 		Interval: to.Duration(graphiteConfig.Interval),
@@ -42,17 +45,7 @@ func (graphiteConfig *GraphiteConfig) GetSettings() graphite.Config {
 type LoggerConfig struct {
 	LogFile  string `yaml:"log_file"`
 	LogLevel string `yaml:"log_level"`
-	LogColor string `yaml:"log_color"`
 }
-
-func (loggerConfig *LoggerConfig) GetSettings() logging.Config {
-	return logging.Config{
-		LogFile:  loggerConfig.LogFile,
-		LogLevel: loggerConfig.LogLevel,
-		LogColor: ToBool(loggerConfig.LogColor),
-	}
-}
-
 func ReadConfig(configFileName string, config interface{}) error {
 	configYaml, err := ioutil.ReadFile(configFileName)
 	if err != nil {

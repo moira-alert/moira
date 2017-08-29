@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	configFileName         = flag.String("config", "/etc/moira/config.yml", "Path to configuration file")
+	configFileName         = flag.String("config", "moira.yml", "Path to configuration file")
 	printVersion           = flag.Bool("version", false, "Print version and exit")
 	printDefaultConfigFlag = flag.Bool("default-config", false, "Print default config and exit")
 )
@@ -36,7 +36,6 @@ func main() {
 		os.Exit(0)
 	}
 
-	// Config
 	config := getDefault()
 	if *printDefaultConfigFlag {
 		cmd.PrintConfig(config)
@@ -49,57 +48,61 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Logger
-	loggerSettings := config.Logger.GetSettings()
-
-	logger, err := logging.ConfigureLog(&loggerSettings, "moira")
+	log, err := logging.ConfigureLog(config.LogFile, config.LogLevel, "main")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Can't configure log: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Can't configure main logger: %v\n", err)
 		os.Exit(1)
 	}
 
-	// Database
 	databaseSettings := config.Redis.GetSettings()
 	databaseMetrics := metrics.ConfigureDatabaseMetrics()
-	database := redis.NewDatabase(logger, databaseSettings, databaseMetrics)
-
-	// Metrics
-	metrics.Init(config.Graphite.GetSettings(), logger, "moira")
 
 	// API
+	apiLog, err := logging.ConfigureLog(config.API.LogFile, config.API.LogLevel, "api")
+	if err != nil {
+		log.Fatalf("Can't configure logger for API: %v\n", err)
+	}
+
 	apiServer := &APIServer{
 		Config: config.API.getSettings(),
-		DB:     database,
-		Log:    logger,
+		DB:     redis.NewDatabase(apiLog, databaseSettings, databaseMetrics),
+		Log:    apiLog,
 	}
 
 	if err := apiServer.Start(); err != nil {
-		logger.Fatalf("Can't start API: %v", err)
+		log.Fatalf("Can't start API: %v", err)
 	}
 
 	// Filter
+	filterLog, err := logging.ConfigureLog(config.Filter.LogFile, config.Filter.LogLevel, "filter")
+	if err != nil {
+		log.Fatalf("Can't configure logger for Filter: %v\n", err)
+	}
+
 	filterServer := &Filter{
-		Config: config.Cache.getSettings(),
-		DB: database,
-		Log: logger,
+		Config: config.Filter.getSettings(),
+		DB:     redis.NewDatabase(filterLog, databaseSettings, databaseMetrics),
+		Log:    filterLog,
 	}
 
 	if err := filterServer.Start(); err != nil {
-		logger.Fatalf("Can't start Filter: %v", err)
+		log.Fatalf("Can't start Filter: %v", err)
 	}
 
-	logger.Infof("Moira Started (version: %s)", Version)
+	metrics.Init(config.Graphite.GetSettings(), log, "moira")
+
+	log.Infof("Moira Started (version: %s)", Version)
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
-	logger.Info(<-ch)
+	log.Info(<-ch)
 
 	if err := apiServer.Stop(); err != nil {
-		logger.Errorf("Can't stop API: %v", err)
+		log.Errorf("Can't stop API: %v", err)
 	}
 
 	if err := filterServer.Stop(); err != nil {
-		logger.Errorf("Can't stop Filer: %v", err)
+		log.Errorf("Can't stop Filer: %v", err)
 	}
 
-	logger.Infof("Moira Stopped (version: %s)", Version)
+	log.Infof("Moira Stopped (version: %s)", Version)
 }

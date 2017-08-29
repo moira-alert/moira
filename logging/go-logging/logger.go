@@ -2,31 +2,30 @@ package logging
 
 import (
 	"fmt"
-	"github.com/moira-alert/moira-alert/logging"
 	goLogging "github.com/op/go-logging"
 	"os"
 	"path/filepath"
 )
 
 //ConfigureLog creates new logger based on github.com/op/go-logging package
-func ConfigureLog(config *logging.Config, module string) (*goLogging.Logger, error) {
+func ConfigureLog(logFile, logLevel, module string) (*goLogging.Logger, error) {
 	log, err := goLogging.GetLogger(module)
 	if err != nil {
 		return nil, fmt.Errorf("Can't initialize logger: %s", err.Error())
 	}
-	logLevel, err := goLogging.LogLevel(config.LogLevel)
+	level, err := goLogging.LogLevel(logLevel)
 	if err != nil {
-		logLevel = goLogging.DEBUG
+		level = goLogging.DEBUG
 	}
 
-	goLogging.SetFormatter(goLogging.MustStringFormatter("%{time:2006-01-02 15:04:05}\t%{level}\t%{message}"))
-	logBackend, err := getLogBackend(config.LogFile)
+	goLogging.SetFormatter(goLogging.MustStringFormatter("%{time:2006-01-02 15:04:05}\t%{module}\t%{level}\t%{message}"))
+	logBackend, err := getLogBackend(logFile)
 	if err != nil {
 		return nil, err
 	}
-	logBackend.Color = config.LogColor
+	logBackend.Color = false
 	goLogging.SetBackend(logBackend)
-	goLogging.SetLevel(logLevel, module)
+	goLogging.SetLevel(level, module)
 	return log, nil
 }
 

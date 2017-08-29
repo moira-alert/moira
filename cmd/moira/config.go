@@ -12,18 +12,21 @@ import (
 type config struct {
 	Redis    cmd.RedisConfig    `yaml:"redis"`
 	Graphite cmd.GraphiteConfig `yaml:"graphite"`
-	Logger   cmd.LoggerConfig   `yaml:"log"`
 	Checker  checkerConfig      `yaml:"checker"`
 	API      apiConfig          `yaml:"api"`
-	Cache    cacheConfig        `yaml:"cache"`
+	Filter   filterConfig       `yaml:"filter"`
 	Notifier notifierConfig     `yaml:"notifier"`
+	LogFile  string             `yaml:"log_file"`
+	LogLevel string             `yaml:"log_level"`
 }
 
 // API Config
 
 type apiConfig struct {
-	Enabled string `yaml:"enabled"`
-	Listen  string `yaml:"listen"`
+	Enabled  string `yaml:"enabled"`
+	Listen   string `yaml:"listen"`
+	LogFile  string `yaml:"log_file"`
+	LogLevel string `yaml:"log_level"`
 }
 
 func (config *apiConfig) getSettings() *api.Config {
@@ -33,15 +36,17 @@ func (config *apiConfig) getSettings() *api.Config {
 	}
 }
 
-// Cahce Config
+// Filter Config
 
-type cacheConfig struct {
+type filterConfig struct {
 	Enabled         string `yaml:"enabled"`
 	Listen          string `yaml:"listen"`
 	RetentionConfig string `yaml:"retention-config"`
+	LogFile         string `yaml:"log_file"`
+	LogLevel        string `yaml:"log_level"`
 }
 
-func (config *cacheConfig) getSettings() *cache.Config {
+func (config *filterConfig) getSettings() *cache.Config {
 	return &cache.Config{
 		Enabled:         cmd.ToBool(config.Enabled),
 		Listen:          config.Listen,
@@ -57,6 +62,8 @@ type checkerConfig struct {
 	CheckInterval        int64  `yaml:"check_interval"`
 	MetricsTTL           int64  `yaml:"metrics_ttl"`
 	StopCheckingInterval int64  `yaml:"stop_checking_interval"`
+	LogFile              string `yaml:"log_file"`
+	LogLevel             string `yaml:"log_level"`
 }
 
 func (config *checkerConfig) getSettings() *checker.Config {
@@ -76,6 +83,8 @@ type notifierConfig struct {
 	ResendingTimeout string              `yaml:"resending_timeout"`
 	Senders          []map[string]string `yaml:"senders"`
 	SelfState        selfStateConfig     `yaml:"moira_selfstate"`
+	LogFile          string              `yaml:"log_file"`
+	LogLevel         string              `yaml:"log_level"`
 }
 
 type frontConfig struct {
@@ -93,23 +102,25 @@ type selfStateConfig struct {
 
 func getDefault() config {
 	return config{
+		LogFile:  "stdout",
+		LogLevel: "debug",
 		Redis: cmd.RedisConfig{
 			Host: "localhost",
 			Port: "6379",
 			DBID: 0,
 		},
-		Logger: cmd.LoggerConfig{
+		API: apiConfig{
+			Enabled:  "true",
+			Listen:   ":8081",
 			LogFile:  "stdout",
 			LogLevel: "debug",
 		},
-		API: apiConfig{
-			Enabled: "true",
-			Listen:  ":8081",
-		},
-		Cache: cacheConfig{
+		Filter: filterConfig{
 			Enabled:         "true",
 			Listen:          ":2003",
 			RetentionConfig: "storage-schemas.conf",
+			LogFile:         "stdout",
+			LogLevel:        "debug",
 		},
 		Checker: checkerConfig{
 			Enabled:              "true",
@@ -117,6 +128,8 @@ func getDefault() config {
 			CheckInterval:        5,
 			MetricsTTL:           3600,
 			StopCheckingInterval: 30,
+			LogFile:              "stdout",
+			LogLevel:             "debug",
 		},
 		Notifier: notifierConfig{
 			Enabled:          "true",
@@ -129,8 +142,11 @@ func getDefault() config {
 				LastCheckDelay:          60,
 				NoticeInterval:          300,
 			},
+			LogFile:  "stdout",
+			LogLevel: "debug",
 		},
 		Graphite: cmd.GraphiteConfig{
+			Enabled:  "false",
 			URI:      "localhost:2003",
 			Prefix:   "DevOps.Moira",
 			Interval: "60s0ms",

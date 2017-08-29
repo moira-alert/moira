@@ -53,9 +53,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	loggerSettings := config.Logger.GetSettings()
-
-	logger, err := logging.ConfigureLog(&loggerSettings, "notifier")
+	logger, err := logging.ConfigureLog(config.Logger.LogFile, config.Logger.LogLevel, "notifier")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Can not configure log: %s\n", err.Error())
 		os.Exit(1)
