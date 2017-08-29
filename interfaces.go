@@ -7,10 +7,6 @@ import (
 
 // Database implements DB functionality
 type Database interface {
-	GetTriggerTags(id string) ([]string, error)
-	GetTriggerThrottlingTimestamps(id string) (time.Time, time.Time)
-	SetTriggerThrottlingTimestamp(id string, next time.Time) error
-
 	//SelfState
 	UpdateMetricsHeartbeat() error
 	GetMetricsCount() (int64, error)
@@ -21,14 +17,16 @@ type Database interface {
 	RemoveTag(tagName string) error
 	GetTagTriggerIDs(tagName string) ([]string, error)
 
+	//LastCheck storing
+	GetTriggerLastCheck(triggerID string) (*CheckData, error)
+	SetTriggerLastCheck(triggerID string, checkData *CheckData) error
+	GetTriggerCheckIDs() ([]string, int64, error)
+
 	GetTriggerIds() ([]string, error)
-	GetTriggerCheckIds() ([]string, int64, error)
 	GetFilteredTriggerCheckIds([]string, bool) ([]string, int64, error)
 	GetTrigger(string) (*Trigger, error)
 	GetNotificationTrigger(id string) (TriggerData, error)
 	GetTriggerChecks(triggerCheckIds []string) ([]TriggerChecks, error)
-	GetTriggerLastCheck(triggerId string) (*CheckData, error)
-	SetTriggerLastCheck(triggerId string, checkData *CheckData) error
 	SetTriggerMetricsMaintenance(triggerId string, metrics map[string]int64) error
 	GetPatternTriggerIds(pattern string) ([]string, error)
 	GetTriggers(triggerIds []string) ([]*Trigger, error)
@@ -36,6 +34,9 @@ type Database interface {
 	DeleteTrigger(triggerId string) error
 	SaveTrigger(triggerId string, trigger *Trigger) error
 	RemovePatternTriggers(pattern string) error
+	GetTriggerTags(id string) ([]string, error)
+	GetTriggerThrottlingTimestamps(id string) (time.Time, time.Time)
+	SetTriggerThrottlingTimestamp(id string, next time.Time) error
 
 	AddTriggerToCheck(triggerId string) error
 	GetTriggerToCheck() (*string, error)

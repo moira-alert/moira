@@ -429,18 +429,18 @@ func (_mr *MockDatabaseMockRecorder) GetTrigger(arg0 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetTrigger", arg0)
 }
 
-// GetTriggerCheckIds mocks base method
-func (_m *MockDatabase) GetTriggerCheckIds() ([]string, int64, error) {
-	ret := _m.ctrl.Call(_m, "GetTriggerCheckIds")
+// GetTriggerCheckIDs mocks base method
+func (_m *MockDatabase) GetTriggerCheckIDs() ([]string, int64, error) {
+	ret := _m.ctrl.Call(_m, "GetTriggerCheckIDs")
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(int64)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
 
-// GetTriggerCheckIds indicates an expected call of GetTriggerCheckIds
-func (_mr *MockDatabaseMockRecorder) GetTriggerCheckIds() *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetTriggerCheckIds")
+// GetTriggerCheckIDs indicates an expected call of GetTriggerCheckIDs
+func (_mr *MockDatabaseMockRecorder) GetTriggerCheckIDs() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetTriggerCheckIDs")
 }
 
 // GetTriggerChecks mocks base method

@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"github.com/garyburd/redigo/redis"
 	"github.com/moira-alert/moira-alert"
-	"github.com/moira-alert/moira-alert/database/redis/reply"
 	"time"
 )
 
@@ -75,28 +74,6 @@ func (connector *DbConnector) GetFilteredTriggerCheckIds(tagNames []string, only
 		}
 	}
 	return total, int64(len(total)), nil
-}
-
-func (connector *DbConnector) GetTriggerCheckIds() ([]string, int64, error) {
-	c := connector.pool.Get()
-	defer c.Close()
-
-	c.Send("MULTI")
-	c.Send("ZREVRANGE", "moira-triggers-checks", 0, -1)
-	c.Send("ZCARD", "moira-triggers-checks")
-	rawResponse, err := redis.Values(c.Do("EXEC"))
-	if err != nil {
-		return nil, 0, err
-	}
-	triggerIds, err := redis.Strings(rawResponse[0], nil)
-	if err != nil {
-		return nil, 0, err
-	}
-	total, err := redis.Int(rawResponse[1], nil)
-	if err != nil {
-		return nil, 0, err
-	}
-	return triggerIds, int64(total), nil
 }
 
 func (connector *DbConnector) GetTriggerChecks(triggerCheckIds []string) ([]moira.TriggerChecks, error) {
@@ -203,22 +180,6 @@ func (connector *DbConnector) GetTrigger(triggerId string) (*moira.Trigger, erro
 		return nil, nil
 	}
 	return toTrigger(triggerSE, triggerId), nil
-}
-
-func (connector *DbConnector) GetTriggerLastCheck(triggerId string) (*moira.CheckData, error) {
-	c := connector.pool.Get()
-	defer c.Close()
-
-	lastCheck, err := reply.Check(c.Do("GET", fmt.Sprintf("moira-metric-last-check:%s", triggerId)))
-	if err != nil {
-		if err == redis.ErrNil {
-			return nil, nil
-		}
-
-		return nil, fmt.Errorf("Error getting metric-last-check, id: %s, error: %s", triggerId, err.Error())
-	}
-
-	return lastCheck, nil
 }
 
 func (connector *DbConnector) SetTriggerMetricsMaintenance(triggerId string, metrics map[string]int64) error {

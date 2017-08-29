@@ -130,7 +130,7 @@ func TestGetNotFilteredTriggers(t *testing.T) {
 
 	Convey("Get all triggers", t, func() {
 		var exp int64 = 20
-		database.EXPECT().GetTriggerCheckIds().Return(triggers, exp, nil)
+		database.EXPECT().GetTriggerCheckIDs().Return(triggers, exp, nil)
 		database.EXPECT().GetTriggerChecks(triggers).Return(make([]moira.TriggerChecks, 20), nil)
 		triggersChecks, total, err := getNotFilteredTriggers(database, 0, 30)
 		So(err, ShouldBeNil)
@@ -140,7 +140,7 @@ func TestGetNotFilteredTriggers(t *testing.T) {
 
 	Convey("Get only page", t, func() {
 		var exp int64 = 20
-		database.EXPECT().GetTriggerCheckIds().Return(triggers, exp, nil)
+		database.EXPECT().GetTriggerCheckIDs().Return(triggers, exp, nil)
 		database.EXPECT().GetTriggerChecks(triggers[0:10]).Return(make([]moira.TriggerChecks, 10), nil)
 		triggersChecks, total, err := getNotFilteredTriggers(database, 0, 10)
 		So(err, ShouldBeNil)
@@ -148,10 +148,10 @@ func TestGetNotFilteredTriggers(t *testing.T) {
 		So(triggersChecks, ShouldResemble, make([]moira.TriggerChecks, 10))
 	})
 
-	Convey("GetTriggerCheckIds error", t, func() {
+	Convey("GetTriggerCheckIDs error", t, func() {
 		var exp int64
-		expected := fmt.Errorf("GetTriggerCheckIds error")
-		database.EXPECT().GetTriggerCheckIds().Return(nil, exp, expected)
+		expected := fmt.Errorf("GetTriggerCheckIDs error")
+		database.EXPECT().GetTriggerCheckIDs().Return(nil, exp, expected)
 		triggersChecks, total, err := getNotFilteredTriggers(database, 0, 20)
 		So(err, ShouldResemble, expected)
 		So(total, ShouldEqual, exp)
@@ -161,7 +161,7 @@ func TestGetNotFilteredTriggers(t *testing.T) {
 	Convey("GetTriggerChecks error", t, func() {
 		var exp int64 = 20
 		expected := fmt.Errorf("GetTriggerChecks error")
-		database.EXPECT().GetTriggerCheckIds().Return(triggers, exp, nil)
+		database.EXPECT().GetTriggerCheckIDs().Return(triggers, exp, nil)
 		database.EXPECT().GetTriggerChecks(triggers[0:10]).Return(nil, expected)
 		triggersChecks, total, err := getNotFilteredTriggers(database, 0, 10)
 		So(err, ShouldResemble, expected)
@@ -250,7 +250,7 @@ func TestGetTriggerPage(t *testing.T) {
 
 	Convey("All triggers", t, func() {
 		var exp int64 = 20
-		database.EXPECT().GetTriggerCheckIds().Return(triggers, exp, nil)
+		database.EXPECT().GetTriggerCheckIDs().Return(triggers, exp, nil)
 		database.EXPECT().GetTriggerChecks(triggers[0:10]).Return(make([]moira.TriggerChecks, 10), nil)
 		list, err := GetTriggerPage(database, page, size, false, make([]string, 0))
 		So(err, ShouldBeNil)

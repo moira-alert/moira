@@ -113,29 +113,6 @@ func (connector *DbConnector) DeleteTrigger(triggerId string) error {
 	return nil
 }
 
-func (connector *DbConnector) SetTriggerLastCheck(triggerID string, checkData *moira.CheckData) error {
-	bytes, err := json.Marshal(checkData)
-	if err != nil {
-		return err
-	}
-	c := connector.pool.Get()
-	defer c.Close()
-	c.Send("MULTI")
-	c.Send("SET", fmt.Sprintf("moira-metric-last-check:%s", triggerID), bytes)
-	c.Send("ZADD", "moira-triggers-checks", checkData.Score, triggerID)
-	c.Send("INCR", moiraSelfStateChecksCounter)
-	if checkData.Score > 0 {
-		c.Send("SADD", "moira-bad-state-triggers", triggerID)
-	} else {
-		c.Send("SREM", "moira-bad-state-triggers", triggerID)
-	}
-	_, err = c.Do("EXEC")
-	if err != nil {
-		return fmt.Errorf("Failed to EXEC: %s", err.Error())
-	}
-	return nil
-}
-
 func (connector *DbConnector) SaveTrigger(triggerId string, trigger *moira.Trigger) error {
 	existing, err := connector.GetTrigger(triggerId)
 	if err != nil {

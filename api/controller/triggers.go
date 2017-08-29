@@ -57,7 +57,7 @@ func GetTriggerPage(database moira.Database, page int64, size int64, onlyErrors 
 }
 
 func getNotFilteredTriggers(database moira.Database, page int64, size int64) ([]moira.TriggerChecks, int64, error) {
-	triggerIDs, total, err := database.GetTriggerCheckIds()
+	triggerIDs, total, err := database.GetTriggerCheckIDs()
 	if err != nil {
 		return nil, 0, err
 	}
