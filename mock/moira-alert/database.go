@@ -93,16 +93,16 @@ func (_mr *MockDatabaseMockRecorder) AddTriggerToCheck(arg0 interface{}) *gomock
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "AddTriggerToCheck", arg0)
 }
 
-// DeleteTag mocks base method
-func (_m *MockDatabase) DeleteTag(_param0 string) error {
-	ret := _m.ctrl.Call(_m, "DeleteTag", _param0)
+// RemoveTag mocks base method
+func (_m *MockDatabase) RemoveTag(_param0 string) error {
+	ret := _m.ctrl.Call(_m, "RemoveTag", _param0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// DeleteTag indicates an expected call of DeleteTag
-func (_mr *MockDatabaseMockRecorder) DeleteTag(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "DeleteTag", arg0)
+// RemoveTag indicates an expected call of RemoveTag
+func (_mr *MockDatabaseMockRecorder) RemoveTag(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "RemoveTag", arg0)
 }
 
 // DeleteTrigger mocks base method
@@ -390,17 +390,17 @@ func (_mr *MockDatabaseMockRecorder) GetTagNames() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetTagNames")
 }
 
-// GetTagTriggerIds mocks base method
-func (_m *MockDatabase) GetTagTriggerIds(_param0 string) ([]string, error) {
-	ret := _m.ctrl.Call(_m, "GetTagTriggerIds", _param0)
+// GetTagTriggerIDs mocks base method
+func (_m *MockDatabase) GetTagTriggerIDs(_param0 string) ([]string, error) {
+	ret := _m.ctrl.Call(_m, "GetTagTriggerIDs", _param0)
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetTagTriggerIds indicates an expected call of GetTagTriggerIds
-func (_mr *MockDatabaseMockRecorder) GetTagTriggerIds(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetTagTriggerIds", arg0)
+// GetTagTriggerIDs indicates an expected call of GetTagTriggerIDs
+func (_mr *MockDatabaseMockRecorder) GetTagTriggerIDs(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetTagTriggerIDs", arg0)
 }
 
 // GetTagsSubscriptions mocks base method

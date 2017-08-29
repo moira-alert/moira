@@ -10,18 +10,6 @@ import (
 	"time"
 )
 
-//GetTags returns all tags from set with tag data
-func (connector *DbConnector) GetTagNames() ([]string, error) {
-	c := connector.pool.Get()
-	defer c.Close()
-
-	tagNames, err := redis.Strings(c.Do("SMEMBERS", "moira-tags"))
-	if err != nil {
-		return nil, fmt.Errorf("Failed to retrieve moira-tags: %s", err.Error())
-	}
-	return tagNames, nil
-}
-
 func (connector *DbConnector) GetFilteredTriggerCheckIds(tagNames []string, onlyErrors bool) ([]string, int64, error) {
 	c := connector.pool.Get()
 	defer c.Close()
@@ -268,36 +256,6 @@ func (connector *DbConnector) PushEvent(event *moira.EventData, ui bool) error {
 		c.Send("LTRIM", "moira-trigger-events-ui", 0, 100)
 	}
 	_, err = c.Do("EXEC")
-	if err != nil {
-		return fmt.Errorf("Failed to EXEC: %s", err.Error())
-	}
-	return nil
-}
-
-func (connector *DbConnector) GetTagTriggerIds(tagName string) ([]string, error) {
-	c := connector.pool.Get()
-	defer c.Close()
-
-	triggerIds, err := redis.Strings(c.Do("SMEMBERS", fmt.Sprintf("moira-tag-triggers:%s", tagName)))
-	if err != nil {
-		if err == redis.ErrNil {
-			return make([]string, 0), nil
-		}
-		return nil, fmt.Errorf("Failed to moira-tag-triggers:%s, err: %s", tagName, err.Error())
-	}
-	return triggerIds, nil
-}
-
-func (connector *DbConnector) DeleteTag(tagName string) error {
-	c := connector.pool.Get()
-	defer c.Close()
-
-	c.Send("MULTI")
-	c.Send("SREM", "moira-tags", tagName)
-	c.Send("DEL", fmt.Sprintf("moira-tag-subscriptions:%s", tagName))
-	c.Send("DEL", fmt.Sprintf("moira-tag-triggers:%s", tagName))
-	c.Send("DEL", fmt.Sprintf("moira-tag:%s", tagName))
-	_, err := c.Do("EXEC")
 	if err != nil {
 		return fmt.Errorf("Failed to EXEC: %s", err.Error())
 	}

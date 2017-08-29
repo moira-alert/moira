@@ -17,9 +17,10 @@ type Database interface {
 
 	UpdateMetricsHeartbeat() error
 
+	//Tag storing
 	GetTagNames() ([]string, error)
-	GetTagTriggerIds(tagName string) ([]string, error)
-	DeleteTag(tagName string) error
+	RemoveTag(tagName string) error
+	GetTagTriggerIDs(tagName string) ([]string, error)
 
 	GetTriggerIds() ([]string, error)
 	GetTriggerCheckIds() ([]string, int64, error)

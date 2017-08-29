@@ -28,7 +28,7 @@ func GetAllTagsAndSubscriptions(database moira.Database, logger moira.Logger) (*
 				logger.Error(err.Error())
 				rch <- nil
 			}
-			tagStat.Triggers, err = database.GetTagTriggerIds(tagName)
+			tagStat.Triggers, err = database.GetTagTriggerIDs(tagName)
 			if err != nil {
 				logger.Error(err.Error())
 				rch <- nil
@@ -59,9 +59,9 @@ func GetAllTags(database moira.Database) (*dto.TagsData, *api.ErrorResponse) {
 	return tagsData, nil
 }
 
-//DeleteTag deletes tag by name
-func DeleteTag(database moira.Database, tagName string) (*dto.MessageResponse, *api.ErrorResponse) {
-	triggerIDs, err := database.GetTagTriggerIds(tagName)
+//RemoveTag deletes tag by name
+func RemoveTag(database moira.Database, tagName string) (*dto.MessageResponse, *api.ErrorResponse) {
+	triggerIDs, err := database.GetTagTriggerIDs(tagName)
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
@@ -69,7 +69,7 @@ func DeleteTag(database moira.Database, tagName string) (*dto.MessageResponse, *
 	if len(triggerIDs) > 0 {
 		return nil, api.ErrorInvalidRequest(fmt.Errorf("This tag is assigned to %v triggers. Remove tag from triggers first", len(triggerIDs)))
 	}
-	if err = database.DeleteTag(tagName); err != nil {
+	if err = database.RemoveTag(tagName); err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
 	return &dto.MessageResponse{Message: "tag deleted"}, nil

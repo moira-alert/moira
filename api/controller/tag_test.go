@@ -40,33 +40,33 @@ func TestDeleteTag(t *testing.T) {
 	tag := "MyTag"
 
 	Convey("Test no trigger ids by tag", t, func() {
-		database.EXPECT().GetTagTriggerIds(tag).Return(nil, nil)
-		database.EXPECT().DeleteTag(tag).Return(nil)
-		resp, err := DeleteTag(database, tag)
+		database.EXPECT().GetTagTriggerIDs(tag).Return(nil, nil)
+		database.EXPECT().RemoveTag(tag).Return(nil)
+		resp, err := RemoveTag(database, tag)
 		So(err, ShouldBeNil)
 		So(resp, ShouldResemble, &dto.MessageResponse{Message: "tag deleted"})
 	})
 
 	Convey("Test has trigger ids by tag", t, func() {
-		database.EXPECT().GetTagTriggerIds(tag).Return([]string{"123"}, nil)
-		resp, err := DeleteTag(database, tag)
+		database.EXPECT().GetTagTriggerIDs(tag).Return([]string{"123"}, nil)
+		resp, err := RemoveTag(database, tag)
 		So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("This tag is assigned to %v triggers. Remove tag from triggers first", 1)))
 		So(resp, ShouldBeNil)
 	})
 
-	Convey("GetTagTriggerIds error", t, func() {
+	Convey("GetTagTriggerIDs error", t, func() {
 		expected := fmt.Errorf("Can not read trigger ids")
-		database.EXPECT().GetTagTriggerIds(tag).Return(nil, expected)
-		resp, err := DeleteTag(database, tag)
+		database.EXPECT().GetTagTriggerIDs(tag).Return(nil, expected)
+		resp, err := RemoveTag(database, tag)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 		So(resp, ShouldBeNil)
 	})
 
 	Convey("Error delete tag", t, func() {
 		expected := fmt.Errorf("Can not delete tag")
-		database.EXPECT().GetTagTriggerIds(tag).Return(nil, nil)
-		database.EXPECT().DeleteTag(tag).Return(expected)
-		resp, err := DeleteTag(database, tag)
+		database.EXPECT().GetTagTriggerIDs(tag).Return(nil, nil)
+		database.EXPECT().RemoveTag(tag).Return(expected)
+		resp, err := RemoveTag(database, tag)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 		So(resp, ShouldBeNil)
 	})
@@ -82,11 +82,11 @@ func TestGetAllTagsAndSubscriptions(t *testing.T) {
 		tags := []string{"tag21", "tag22", "tag1"}
 		database.EXPECT().GetTagNames().Return(tags, nil)
 		database.EXPECT().GetTagsSubscriptions([]string{"tag21"}).Return([]*moira.SubscriptionData{{Tags: []string{"tag21"}}}, nil)
-		database.EXPECT().GetTagTriggerIds("tag21").Return([]string{"trigger21"}, nil)
+		database.EXPECT().GetTagTriggerIDs("tag21").Return([]string{"trigger21"}, nil)
 		database.EXPECT().GetTagsSubscriptions([]string{"tag22"}).Return(make([]*moira.SubscriptionData, 0), nil)
-		database.EXPECT().GetTagTriggerIds("tag22").Return([]string{"trigger22"}, nil)
+		database.EXPECT().GetTagTriggerIDs("tag22").Return([]string{"trigger22"}, nil)
 		database.EXPECT().GetTagsSubscriptions([]string{"tag1"}).Return([]*moira.SubscriptionData{{Tags: []string{"tag1", "tag2"}}}, nil)
-		database.EXPECT().GetTagTriggerIds("tag1").Return(make([]string, 0), nil)
+		database.EXPECT().GetTagTriggerIDs("tag1").Return(make([]string, 0), nil)
 		stat, err := GetAllTagsAndSubscriptions(database, logger)
 		So(err, ShouldBeNil)
 		So(stat.List, ShouldHaveLength, 3)

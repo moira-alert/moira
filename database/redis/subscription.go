@@ -163,10 +163,6 @@ func moiraSubscription(id string) string {
 	return fmt.Sprintf("moira-subscription:%s", id)
 }
 
-func moiraTagSubscription(tag string) string {
-	return fmt.Sprintf("moira-tag-subscriptions:%s", tag)
-}
-
 func moiraUserSubscriptions(userName string) string {
 	return fmt.Sprintf("moira-user-subscriptions:%s", userName)
 }
