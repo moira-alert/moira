@@ -142,9 +142,9 @@ func (_mr *MockDatabaseMockRecorder) DeleteTriggerThrottling(arg0 interface{}) *
 }
 
 // FetchEvent mocks base method
-func (_m *MockDatabase) FetchEvent() (*moira_alert.EventData, error) {
+func (_m *MockDatabase) FetchEvent() (*moira_alert.NotificationEvent, error) {
 	ret := _m.ctrl.Call(_m, "FetchEvent")
-	ret0, _ := ret[0].(*moira_alert.EventData)
+	ret0, _ := ret[0].(*moira_alert.NotificationEvent)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -207,9 +207,9 @@ func (_mr *MockDatabaseMockRecorder) GetContacts(arg0 interface{}) *gomock.Call 
 }
 
 // GetEvents mocks base method
-func (_m *MockDatabase) GetEvents(_param0 string, _param1 int64, _param2 int64) ([]*moira_alert.EventData, error) {
+func (_m *MockDatabase) GetEvents(_param0 string, _param1 int64, _param2 int64) ([]*moira_alert.NotificationEvent, error) {
 	ret := _m.ctrl.Call(_m, "GetEvents", _param0, _param1, _param2)
-	ret0, _ := ret[0].([]*moira_alert.EventData)
+	ret0, _ := ret[0].([]*moira_alert.NotificationEvent)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -573,7 +573,7 @@ func (_mr *MockDatabaseMockRecorder) GetUserSubscriptionIDs(arg0 interface{}) *g
 }
 
 // PushEvent mocks base method
-func (_m *MockDatabase) PushEvent(_param0 *moira_alert.EventData, _param1 bool) error {
+func (_m *MockDatabase) PushEvent(_param0 *moira_alert.NotificationEvent, _param1 bool) error {
 	ret := _m.ctrl.Call(_m, "PushEvent", _param0, _param1)
 	ret0, _ := ret[0].(error)
 	return ret0

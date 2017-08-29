@@ -116,7 +116,7 @@ func (selfCheck *SelfCheckWorker) sendErrorMessages(message string, currentValue
 				Name:       message,
 				ErrorValue: float64(errValue),
 			},
-			Events: []moira.EventData{
+			Events: []moira.NotificationEvent{
 				{
 					Timestamp: time.Now().Unix(),
 					State:     "ERROR",

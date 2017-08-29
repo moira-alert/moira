@@ -221,7 +221,7 @@ func (connector *DbConnector) GetTriggerLastCheck(triggerId string) (*moira.Chec
 	return lastCheck, nil
 }
 
-func (connector *DbConnector) GetEvents(triggerId string, start int64, size int64) ([]*moira.EventData, error) {
+func (connector *DbConnector) GetEvents(triggerId string, start int64, size int64) ([]*moira.NotificationEvent, error) {
 	c := connector.pool.Get()
 	defer c.Close()
 
@@ -229,7 +229,7 @@ func (connector *DbConnector) GetEvents(triggerId string, start int64, size int6
 
 	if err != nil {
 		if err == redis.ErrNil {
-			return make([]*moira.EventData, 0), nil
+			return make([]*moira.NotificationEvent, 0), nil
 		}
 		return nil, fmt.Errorf("Failed to get range for moira-trigger-events, triggerId: %s, error: %s", triggerId, err.Error())
 	}
@@ -237,7 +237,7 @@ func (connector *DbConnector) GetEvents(triggerId string, start int64, size int6
 	return eventsData, nil
 }
 
-func (connector *DbConnector) PushEvent(event *moira.EventData, ui bool) error {
+func (connector *DbConnector) PushEvent(event *moira.NotificationEvent, ui bool) error {
 	eventBytes, err := json.Marshal(event)
 	if err != nil {
 		return err

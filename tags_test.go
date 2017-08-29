@@ -7,7 +7,7 @@ import (
 
 func TestGetEventTags(testing *testing.T) {
 	Convey("Progress should contains progress tag", testing, func() {
-		event := EventData{
+		event := NotificationEvent{
 			State:    "OK",
 			OldState: "WARN",
 		}
@@ -18,7 +18,7 @@ func TestGetEventTags(testing *testing.T) {
 
 	Convey("Degradation should contains degradation tag", testing, func() {
 		Convey("WARN -> OK", func() {
-			event := EventData{
+			event := NotificationEvent{
 				State:    "WARN",
 				OldState: "OK",
 			}
@@ -28,7 +28,7 @@ func TestGetEventTags(testing *testing.T) {
 		})
 
 		Convey("ERROR -> WARN", func() {
-			event := EventData{
+			event := NotificationEvent{
 				State:    "ERROR",
 				OldState: "WARN",
 			}
@@ -40,7 +40,7 @@ func TestGetEventTags(testing *testing.T) {
 
 	Convey("High degradation should contains HIGH DEGRADATION tag", testing, func() {
 		Convey("ERROR -> OK", func() {
-			event := EventData{
+			event := NotificationEvent{
 				State:    "ERROR",
 				OldState: "OK",
 			}
@@ -50,7 +50,7 @@ func TestGetEventTags(testing *testing.T) {
 		})
 
 		Convey("NODATA -> ERROR", func() {
-			event := EventData{
+			event := NotificationEvent{
 				State:    "NODATA",
 				OldState: "ERROR",
 			}
@@ -61,7 +61,7 @@ func TestGetEventTags(testing *testing.T) {
 	})
 
 	Convey("Non-weighted test tag should contains test tag", testing, func() {
-		event := EventData{
+		event := NotificationEvent{
 			State:    "TEST",
 			OldState: "TEST",
 		}

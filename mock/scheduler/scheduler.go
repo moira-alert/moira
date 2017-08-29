@@ -33,7 +33,7 @@ func (_m *MockScheduler) EXPECT() *MockSchedulerMockRecorder {
 }
 
 // ScheduleNotification mocks base method
-func (_m *MockScheduler) ScheduleNotification(_param0 time.Time, _param1 moira_alert.EventData, _param2 moira_alert.TriggerData, _param3 moira_alert.ContactData, _param4 bool, _param5 int) *moira_alert.ScheduledNotification {
+func (_m *MockScheduler) ScheduleNotification(_param0 time.Time, _param1 moira_alert.NotificationEvent, _param2 moira_alert.TriggerData, _param3 moira_alert.ContactData, _param4 bool, _param5 int) *moira_alert.ScheduledNotification {
 	ret := _m.ctrl.Call(_m, "ScheduleNotification", _param0, _param1, _param2, _param3, _param4, _param5)
 	ret0, _ := ret[0].(*moira_alert.ScheduledNotification)
 	return ret0

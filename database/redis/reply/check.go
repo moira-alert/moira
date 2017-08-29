@@ -1,9 +1,9 @@
 package reply
 
 import (
-	"github.com/moira-alert/moira-alert"
 	"encoding/json"
 	"github.com/garyburd/redigo/redis"
+	"github.com/moira-alert/moira-alert"
 )
 
 func Check(rep interface{}, err error) (*moira.CheckData, error) {

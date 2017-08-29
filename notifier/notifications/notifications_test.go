@@ -18,7 +18,7 @@ func TestProcessScheduledEvent(t *testing.T) {
 	subID7 := "subscriptionID-00000000000007"
 
 	notification1 := moira.ScheduledNotification{
-		Event: moira.EventData{
+		Event: moira.NotificationEvent{
 			SubscriptionID: &subID5,
 			State:          "TEST",
 		},
@@ -27,7 +27,7 @@ func TestProcessScheduledEvent(t *testing.T) {
 		Timestamp: 1441188915,
 	}
 	notification2 := moira.ScheduledNotification{
-		Event: moira.EventData{
+		Event: moira.NotificationEvent{
 			SubscriptionID: &subID7,
 			State:          "TEST",
 			TriggerID:      "triggerID-00000000000001",
@@ -38,7 +38,7 @@ func TestProcessScheduledEvent(t *testing.T) {
 		Timestamp: 1441188915,
 	}
 	notification3 := moira.ScheduledNotification{
-		Event: moira.EventData{
+		Event: moira.NotificationEvent{
 			SubscriptionID: &subID2,
 			State:          "TEST",
 			TriggerID:      "triggerID-00000000000001",
@@ -71,7 +71,7 @@ func TestProcessScheduledEvent(t *testing.T) {
 			Contact:    notification1.Contact,
 			DontResend: false,
 			FailCount:  0,
-			Events: []moira.EventData{
+			Events: []moira.NotificationEvent{
 				notification1.Event,
 			},
 		}
@@ -81,7 +81,7 @@ func TestProcessScheduledEvent(t *testing.T) {
 			Contact:    notification2.Contact,
 			DontResend: false,
 			FailCount:  0,
-			Events: []moira.EventData{
+			Events: []moira.NotificationEvent{
 				notification2.Event,
 			},
 		}
@@ -104,7 +104,7 @@ func TestProcessScheduledEvent(t *testing.T) {
 			Contact:    notification2.Contact,
 			DontResend: false,
 			FailCount:  0,
-			Events: []moira.EventData{
+			Events: []moira.NotificationEvent{
 				notification2.Event,
 				notification3.Event,
 			},
@@ -121,7 +121,7 @@ func TestGoRoutine(t *testing.T) {
 	subID5 := "subscriptionID-00000000000005"
 
 	notification1 := moira.ScheduledNotification{
-		Event: moira.EventData{
+		Event: moira.NotificationEvent{
 			SubscriptionID: &subID5,
 			State:          "TEST",
 		},
@@ -136,7 +136,7 @@ func TestGoRoutine(t *testing.T) {
 		Contact:    notification1.Contact,
 		DontResend: false,
 		FailCount:  0,
-		Events: []moira.EventData{
+		Events: []moira.NotificationEvent{
 			notification1.Event,
 		},
 	}

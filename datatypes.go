@@ -10,8 +10,8 @@ var (
 	eventStates = [...]string{"OK", "WARN", "ERROR", "NODATA", "TEST"}
 )
 
-// EventData represents trigger state changes event
-type EventData struct {
+// NotificationEvent represents trigger state changes event
+type NotificationEvent struct {
 	Timestamp      int64    `json:"timestamp"`
 	Metric         string   `json:"metric"`
 	Value          *float64 `json:"value,omitempty"`
@@ -22,8 +22,8 @@ type EventData struct {
 	Message        *string  `json:"msg,omitempty"`
 }
 
-// EventsData represents slice of EventData
-type EventsData []EventData
+// EventsData represents slice of NotificationEvent
+type EventsData []NotificationEvent
 
 // TriggerData represents trigger object
 type TriggerData struct {
@@ -71,12 +71,12 @@ type ScheduleDataDay struct {
 
 // ScheduledNotification represent notification object
 type ScheduledNotification struct {
-	Event     EventData   `json:"event"`
-	Trigger   TriggerData `json:"trigger"`
-	Contact   ContactData `json:"contact"`
-	Throttled bool        `json:"throttled"`
-	SendFail  int         `json:"send_fail"`
-	Timestamp int64       `json:"timestamp"`
+	Event     NotificationEvent `json:"event"`
+	Trigger   TriggerData       `json:"trigger"`
+	Contact   ContactData       `json:"contact"`
+	Throttled bool              `json:"throttled"`
+	SendFail  int               `json:"send_fail"`
+	Timestamp int64             `json:"timestamp"`
 }
 
 // MatchedMetric represent parsed and matched metric data
@@ -161,6 +161,6 @@ func (schedule *ScheduleData) IsScheduleAllows(ts int64) bool {
 	return false
 }
 
-func (eventData EventData) String() string {
+func (eventData NotificationEvent) String() string {
 	return fmt.Sprintf("TriggerId: %s, Metric: %s, Value: %v, OldState: %s, State: %s, Message: %s, Timestamp: %v", eventData.TriggerID, eventData.Metric, UseFloat64(eventData.Value), eventData.OldState, eventData.State, UseString(eventData.Message), eventData.Timestamp)
 }

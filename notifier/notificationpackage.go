@@ -7,7 +7,7 @@ import (
 
 //NotificationPackage represent sending data
 type NotificationPackage struct {
-	Events     []moira.EventData
+	Events     []moira.NotificationEvent
 	Trigger    moira.TriggerData
 	Contact    moira.ContactData
 	FailCount  int

@@ -12,7 +12,7 @@ import (
 func TestEvents(t *testing.T) {
 	logger, _ := logging.GetLogger("123")
 	database := NewDatabase(logger, Config{Port: "6379", Host: "localhost"}, &graphite.DatabaseMetrics{})
-	eventData := moira.EventData{
+	eventData := moira.NotificationEvent{
 		Timestamp: time.Now().Unix(),
 		State:     "NODATA",
 		OldState:  "NODATA",

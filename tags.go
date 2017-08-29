@@ -13,7 +13,7 @@ var (
 )
 
 //GetEventTags returns additional subscription tags based on trigger state
-func (event *EventData) GetEventTags() []string {
+func (event *NotificationEvent) GetEventTags() []string {
 	tags := []string{event.State, event.OldState}
 	if oldStateWeight, ok := eventStateWeight[event.OldState]; ok {
 		if newStateWeight, ok := eventStateWeight[event.State]; ok {

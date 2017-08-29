@@ -18,11 +18,11 @@ type Sender struct {
 }
 
 type scriptNotification struct {
-	Events    []moira.EventData `json:"events"`
-	Trigger   moira.TriggerData `json:"trigger"`
-	Contact   moira.ContactData `json:"contact"`
-	Throttled bool              `json:"throttled"`
-	Timestamp int64             `json:"timestamp"`
+	Events    []moira.NotificationEvent `json:"events"`
+	Trigger   moira.TriggerData         `json:"trigger"`
+	Contact   moira.ContactData         `json:"contact"`
+	Throttled bool                      `json:"throttled"`
+	Timestamp int64                     `json:"timestamp"`
 }
 
 //Init read yaml config

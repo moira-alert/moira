@@ -60,7 +60,7 @@ var triggerData = moira.TriggerData{
 	Tags:    []string{"test-tag-1"},
 }
 
-var event = moira.EventData{
+var event = moira.NotificationEvent{
 	Metric:    "generate.event.1",
 	State:     "OK",
 	OldState:  "WARN",

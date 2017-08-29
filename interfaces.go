@@ -7,10 +7,8 @@ import (
 
 // Database implements DB functionality
 type Database interface {
-	FetchEvent() (*EventData, error)
 	GetTriggerTags(id string) ([]string, error)
 	GetTriggerThrottlingTimestamps(id string) (time.Time, time.Time)
-	GetTriggerEventsCount(id string, from int64) int64
 	SetTriggerThrottlingTimestamp(id string, next time.Time) error
 	GetMetricsCount() (int64, error)
 	GetChecksCount() (int64, error)
@@ -41,8 +39,11 @@ type Database interface {
 	AddTriggerToCheck(triggerId string) error
 	GetTriggerToCheck() (*string, error)
 
-	GetEvents(string, int64, int64) ([]*EventData, error)
-	PushEvent(event *EventData, ui bool) error
+	//NotificationEvent storing
+	GetEvents(string, int64, int64) ([]*NotificationEvent, error)
+	PushEvent(event *NotificationEvent, ui bool) error
+	GetTriggerEventsCount(id string, from int64) int64
+	FetchEvent() (*NotificationEvent, error)
 
 	//ContactData storing
 	GetContact(contactID string) (ContactData, error)

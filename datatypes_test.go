@@ -125,7 +125,7 @@ func TestScheduledNotification_GetKey(t *testing.T) {
 	Convey("Get key", t, func() {
 		notification := ScheduledNotification{
 			Contact:   ContactData{Type: "email", Value: "my@mail.com"},
-			Event:     EventData{Value: nil, State: "NODATA", Metric: "my.metric"},
+			Event:     NotificationEvent{Value: nil, State: "NODATA", Metric: "my.metric"},
 			Timestamp: 123456789,
 		}
 		So(notification.GetKey(), ShouldResemble, "email:my@mail.com::my.metric:NODATA:0:0.000000:0:false:123456789")

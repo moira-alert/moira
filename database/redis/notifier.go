@@ -10,11 +10,11 @@ import (
 )
 
 // FetchEvent waiting for event from Db
-func (connector *DbConnector) FetchEvent() (*moira.EventData, error) {
+func (connector *DbConnector) FetchEvent() (*moira.NotificationEvent, error) {
 	c := connector.pool.Get()
 	defer c.Close()
 
-	var event moira.EventData
+	var event moira.NotificationEvent
 
 	rawRes, err := c.Do("BRPOP", "moira-trigger-events", 1)
 	if err != nil {

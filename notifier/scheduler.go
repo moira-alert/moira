@@ -8,7 +8,7 @@ import (
 
 //Scheduler implements event scheduling functionality
 type Scheduler interface {
-	ScheduleNotification(now time.Time, event moira.EventData, trigger moira.TriggerData, contact moira.ContactData, throttledOld bool, sendfail int) *moira.ScheduledNotification
+	ScheduleNotification(now time.Time, event moira.NotificationEvent, trigger moira.TriggerData, contact moira.ContactData, throttledOld bool, sendfail int) *moira.ScheduledNotification
 }
 
 //StandardScheduler represents standard event scheduling
@@ -32,7 +32,7 @@ func NewScheduler(database moira.Database, logger moira.Logger) *StandardSchedul
 }
 
 //ScheduleNotification is realization of scheduling event, based on trigger and subscription time intervals and triggers settings
-func (scheduler *StandardScheduler) ScheduleNotification(now time.Time, event moira.EventData, trigger moira.TriggerData, contact moira.ContactData, throttledOld bool, sendfail int) *moira.ScheduledNotification {
+func (scheduler *StandardScheduler) ScheduleNotification(now time.Time, event moira.NotificationEvent, trigger moira.TriggerData, contact moira.ContactData, throttledOld bool, sendfail int) *moira.ScheduledNotification {
 	var (
 		next      time.Time
 		throttled bool
@@ -64,7 +64,7 @@ func (scheduler *StandardScheduler) ScheduleNotification(now time.Time, event mo
 	return notification
 }
 
-func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *moira.EventData) (time.Time, bool) {
+func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *moira.NotificationEvent) (time.Time, bool) {
 	// if trigger switches more than .count times in .length seconds, delay next delivery for .delay seconds
 	// processing stops after first condition matches
 	throttlingLevels := []throttlingLevel{

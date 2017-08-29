@@ -29,7 +29,7 @@ func TestThrottling(t *testing.T) {
 
 	subID := "SubscriptionID-000000000000001"
 
-	var event = moira.EventData{
+	var event = moira.NotificationEvent{
 		Metric:         "generate.event.1",
 		State:          "OK",
 		OldState:       "WARN",
@@ -76,7 +76,7 @@ func TestThrottling(t *testing.T) {
 
 	Convey("Test event state is TEST and no send fails, should return now notification time", t, func() {
 		subID := "SubscriptionID-000000000000001"
-		testEvent := moira.EventData{
+		testEvent := moira.NotificationEvent{
 			Metric:         "generate.event.1",
 			State:          "TEST",
 			OldState:       "WARN",
@@ -112,7 +112,7 @@ func TestSubscriptionSchedule(t *testing.T) {
 		ThrottlingEnabled: true,
 	}
 
-	var event = moira.EventData{
+	var event = moira.NotificationEvent{
 		Metric:         "generate.event.1",
 		State:          "OK",
 		OldState:       "WARN",

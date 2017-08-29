@@ -25,7 +25,7 @@ func (triggerChecker *TriggerChecker) compareChecks(currentCheck moira.CheckData
 		return currentCheck, nil
 	}
 
-	event := moira.EventData{
+	event := moira.NotificationEvent{
 		TriggerID: triggerChecker.TriggerID,
 		State:     currentStateValue,
 		OldState:  lastStateValue,
@@ -58,7 +58,7 @@ func (triggerChecker *TriggerChecker) compareStates(metric string, currentState 
 		return currentState, nil
 	}
 
-	event := moira.EventData{
+	event := moira.NotificationEvent{
 		TriggerID: triggerChecker.TriggerID,
 		State:     currentState.State,
 		OldState:  lastState.State,
@@ -80,7 +80,7 @@ func (triggerChecker *TriggerChecker) compareStates(metric string, currentState 
 	return currentState, err
 }
 
-func (triggerChecker *TriggerChecker) isTriggerSuppressed(event *moira.EventData, timestamp int64, stateMaintenance int64, metric string) bool {
+func (triggerChecker *TriggerChecker) isTriggerSuppressed(event *moira.NotificationEvent, timestamp int64, stateMaintenance int64, metric string) bool {
 	if !triggerChecker.trigger.Schedule.IsScheduleAllows(timestamp) {
 		triggerChecker.Logger.Infof("Event %v suppressed due to trigger schedule", event)
 		return true

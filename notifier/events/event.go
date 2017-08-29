@@ -56,7 +56,7 @@ func (worker *FetchEventsWorker) Stop() error {
 	return worker.tomb.Wait()
 }
 
-func (worker *FetchEventsWorker) processEvent(event moira.EventData) error {
+func (worker *FetchEventsWorker) processEvent(event moira.NotificationEvent) error {
 	var (
 		subscriptions []*moira.SubscriptionData
 		tags          []string

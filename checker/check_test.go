@@ -464,7 +464,7 @@ func TestCheckErrors(t *testing.T) {
 
 	Convey("Trigger has no metrics error", t, func() {
 		dataBase.EXPECT().GetPatternMetrics(pattern).Return(nil, nil)
-		dataBase.EXPECT().PushEvent(&moira.EventData{
+		dataBase.EXPECT().PushEvent(&moira.NotificationEvent{
 			TriggerID: triggerChecker.TriggerID,
 			Timestamp: triggerChecker.Until,
 			State:     triggerChecker.ttlState,
@@ -562,7 +562,7 @@ func TestHandleTrigger(t *testing.T) {
 		var val float64
 		var val1 float64 = 4
 		dataBase.EXPECT().RemoveMetricValues(metric, triggerChecker.Until-triggerChecker.Config.MetricsTTL)
-		dataBase.EXPECT().PushEvent(&moira.EventData{
+		dataBase.EXPECT().PushEvent(&moira.NotificationEvent{
 			TriggerID: triggerChecker.TriggerID,
 			Timestamp: 3617,
 			State:     OK,
@@ -634,7 +634,7 @@ func TestHandleTrigger(t *testing.T) {
 		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 		dataBase.EXPECT().GetMetricsValues([]string{metric}, triggerChecker.From, triggerChecker.Until).Return(dataList, nil)
 		dataBase.EXPECT().RemoveMetricValues(metric, triggerChecker.Until-triggerChecker.Config.MetricsTTL)
-		dataBase.EXPECT().PushEvent(&moira.EventData{
+		dataBase.EXPECT().PushEvent(&moira.NotificationEvent{
 			TriggerID: triggerChecker.TriggerID,
 			Timestamp: lastCheck.Timestamp - *triggerChecker.ttl,
 			State:     NODATA,

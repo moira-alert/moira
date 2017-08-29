@@ -37,7 +37,7 @@ func TestMail(t *testing.T) {
 		SMTPport: 25,
 	}
 	sender.setLogger(logger)
-	events := make([]moira.EventData, 0, 10)
+	events := make([]moira.NotificationEvent, 0, 10)
 	for event := range generateTestEvents(10, trigger.ID) {
 		events = append(events, *event)
 	}
@@ -50,11 +50,11 @@ func TestMail(t *testing.T) {
 	})
 }
 
-func generateTestEvents(n int, subscriptionID string) chan *moira.EventData {
-	ch := make(chan *moira.EventData)
+func generateTestEvents(n int, subscriptionID string) chan *moira.NotificationEvent {
+	ch := make(chan *moira.NotificationEvent)
 	go func() {
 		for i := 0; i < n; i++ {
-			event := &moira.EventData{
+			event := &moira.NotificationEvent{
 				Metric:         fmt.Sprintf("Metric number #%d", i),
 				SubscriptionID: &subscriptionID,
 				State:          "TEST",

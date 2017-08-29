@@ -252,7 +252,7 @@ func configureNotificationPackage(adminContact map[string]string, errorValue int
 			Name:       message,
 			ErrorValue: float64(errorValue),
 		},
-		Events: []moira.EventData{
+		Events: []moira.NotificationEvent{
 			{
 				Timestamp: time.Now().Unix(),
 				State:     "ERROR",

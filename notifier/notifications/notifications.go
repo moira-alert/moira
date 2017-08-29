@@ -57,7 +57,7 @@ func (worker *FetchNotificationsWorker) processScheduledNotifications() error {
 		p, found := notificationPackages[packageKey]
 		if !found {
 			p = &notifier.NotificationPackage{
-				Events:    make([]moira.EventData, 0, len(notifications)),
+				Events:    make([]moira.NotificationEvent, 0, len(notifications)),
 				Trigger:   notification.Trigger,
 				Contact:   notification.Contact,
 				Throttled: notification.Throttled,

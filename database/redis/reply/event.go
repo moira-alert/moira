@@ -6,12 +6,12 @@ import (
 	"github.com/moira-alert/moira-alert"
 )
 
-func Event(rep interface{}, err error) (*moira.EventData, error) {
+func Event(rep interface{}, err error) (*moira.NotificationEvent, error) {
 	bytes, err := redis.Bytes(rep, err)
 	if err != nil {
 		return nil, err
 	}
-	event := &moira.EventData{}
+	event := &moira.NotificationEvent{}
 	err = json.Unmarshal(bytes, event)
 	if err != nil {
 		return nil, err
@@ -19,12 +19,12 @@ func Event(rep interface{}, err error) (*moira.EventData, error) {
 	return event, nil
 }
 
-func Events(rep interface{}, err error) ([]*moira.EventData, error) {
+func Events(rep interface{}, err error) ([]*moira.NotificationEvent, error) {
 	values, err := redis.Values(rep, err)
 	if err != nil {
 		return nil, err
 	}
-	events := make([]*moira.EventData, len(values))
+	events := make([]*moira.NotificationEvent, len(values))
 	for i, kk := range values {
 		event, err2 := Event(kk, err)
 		if err2 != nil {

@@ -30,14 +30,14 @@ func TestEvent(t *testing.T) {
 	}
 
 	Convey("When event is TEST and subscription is disabled, should add new notification", t, func() {
-		event := moira.EventData{
+		event := moira.NotificationEvent{
 			State:          "TEST",
 			SubscriptionID: &subscription.ID,
 		}
 		dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Times(1).Return(subscription, nil)
 		dataBase.EXPECT().GetContact(contact.ID).Times(1).Return(contact, nil)
 		notification := moira.ScheduledNotification{
-			Event: moira.EventData{
+			Event: moira.NotificationEvent{
 				TriggerID:      event.TriggerID,
 				State:          event.State,
 				OldState:       event.OldState,
@@ -70,7 +70,7 @@ func TestNoSubscription(t *testing.T) {
 			Scheduler: notifier.NewScheduler(dataBase, logger),
 		}
 
-		event := moira.EventData{
+		event := moira.NotificationEvent{
 			Metric:    "generate.event.1",
 			State:     "OK",
 			OldState:  "WARN",
@@ -100,7 +100,7 @@ func TestDisabledNotification(t *testing.T) {
 			Scheduler: notifier.NewScheduler(dataBase, logger),
 		}
 
-		event := moira.EventData{
+		event := moira.NotificationEvent{
 			Metric:    "generate.event.1",
 			State:     "OK",
 			OldState:  "WARN",
@@ -135,7 +135,7 @@ func TestExtraTags(t *testing.T) {
 			Scheduler: notifier.NewScheduler(dataBase, logger),
 		}
 
-		event := moira.EventData{
+		event := moira.NotificationEvent{
 			Metric:    "generate.event.1",
 			State:     "OK",
 			OldState:  "WARN",
@@ -170,7 +170,7 @@ func TestAddNotification(t *testing.T) {
 			Scheduler: scheduler,
 		}
 
-		event := moira.EventData{
+		event := moira.NotificationEvent{
 			Metric:         "generate.event.1",
 			State:          "OK",
 			OldState:       "WARN",
@@ -206,7 +206,7 @@ func TestAddOneNotificationByTwoSubscriptionsWithSame(t *testing.T) {
 			Scheduler: scheduler,
 		}
 
-		event := moira.EventData{
+		event := moira.NotificationEvent{
 			Metric:         "generate.event.1",
 			State:          "OK",
 			OldState:       "WARN",
@@ -247,7 +247,7 @@ func TestFailReadContact(t *testing.T) {
 			Scheduler: notifier.NewScheduler(dataBase, logger),
 		}
 
-		event := moira.EventData{
+		event := moira.NotificationEvent{
 			Metric:    "generate.event.1",
 			State:     "OK",
 			OldState:  "WARN",
@@ -284,7 +284,7 @@ func TestEmptySubscriptions(t *testing.T) {
 			Scheduler: notifier.NewScheduler(dataBase, logger),
 		}
 
-		event := moira.EventData{
+		event := moira.NotificationEvent{
 			Metric:    "generate.event.1",
 			State:     "OK",
 			OldState:  "WARN",
@@ -316,7 +316,7 @@ func TestEmptySubscriptions(t *testing.T) {
 			Scheduler: notifier.NewScheduler(dataBase, logger),
 		}
 
-		event := moira.EventData{
+		event := moira.NotificationEvent{
 			Metric:    "generate.event.1",
 			State:     "OK",
 			OldState:  "WARN",
@@ -351,7 +351,7 @@ func TestGoRoutine(t *testing.T) {
 			Scheduler: scheduler,
 		}
 
-		event := moira.EventData{
+		event := moira.NotificationEvent{
 			Metric:         "generate.event.1",
 			State:          "OK",
 			OldState:       "WARN",

@@ -51,7 +51,7 @@ func RemoveSubscription(database moira.Database, subscriptionID string, userLogi
 //SendTestNotification push test notification to verify the correct notification settings
 func SendTestNotification(database moira.Database, subscriptionID string) *api.ErrorResponse {
 	var value float64 = 1
-	eventData := &moira.EventData{
+	eventData := &moira.NotificationEvent{
 		SubscriptionID: &subscriptionID,
 		Metric:         "Test.metric.value",
 		Value:          &value,

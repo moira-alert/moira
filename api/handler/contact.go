@@ -7,8 +7,8 @@ import (
 	"github.com/moira-alert/moira-alert/api"
 	"github.com/moira-alert/moira-alert/api/controller"
 	"github.com/moira-alert/moira-alert/api/dto"
-	"net/http"
 	"github.com/moira-alert/moira-alert/api/middleware"
+	"net/http"
 )
 
 func contact(router chi.Router) {
