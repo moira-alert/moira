@@ -20,7 +20,7 @@ func TestNotifierDataBase(t *testing.T) {
 	database := NewDatabase(logger, Config{Port: "6379", Host: "localhost"}, &graphite.DatabaseMetrics{})
 
 	Convey("Event manipulation", t, func() {
-		_, err := database.FetchEvent()
+		_, err := database.FetchNotificationEvent()
 		So(err, ShouldBeNil)
 	})
 

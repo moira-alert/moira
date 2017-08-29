@@ -20,9 +20,9 @@ func TestEvents(t *testing.T) {
 		Metric:    "my.metric",
 	}
 	Convey("123", t, func() {
-		err := database.PushEvent(&eventData, true)
+		err := database.PushNotificationEvent(&eventData, true)
 		So(err, ShouldBeNil)
-		events, err := database.GetEvents(eventData.TriggerID, 0, 0)
+		events, err := database.GetNotificationEvents(eventData.TriggerID, 0, 0)
 		So(err, ShouldBeNil)
 		So(events, ShouldHaveLength, 1)
 		So(events[0], ShouldResemble, &eventData)

@@ -9,39 +9,6 @@ import (
 	"github.com/moira-alert/moira-alert"
 )
 
-// FetchEvent waiting for event from Db
-func (connector *DbConnector) FetchEvent() (*moira.NotificationEvent, error) {
-	c := connector.pool.Get()
-	defer c.Close()
-
-	var event moira.NotificationEvent
-
-	rawRes, err := c.Do("BRPOP", "moira-trigger-events", 1)
-	if err != nil {
-		connector.logger.Warningf("Failed to wait for event: %s", err.Error())
-		time.Sleep(time.Second * 5)
-		return nil, nil
-	}
-	if rawRes != nil {
-		var (
-			eventBytes []byte
-			key        []byte
-		)
-		res, _ := redis.Values(rawRes, nil)
-		if _, err = redis.Scan(res, &key, &eventBytes); err != nil {
-			connector.logger.Warningf("Failed to parse event: %s", err.Error())
-			return nil, err
-		}
-		if err := json.Unmarshal(eventBytes, &event); err != nil {
-			connector.logger.Error(fmt.Sprintf("Failed to parse event json %s: %s", eventBytes, err.Error()))
-			return nil, err
-		}
-		return &event, nil
-	}
-
-	return nil, nil
-}
-
 // GetNotificationTrigger returns trigger data
 func (connector *DbConnector) GetNotificationTrigger(id string) (moira.TriggerData, error) {
 	c := connector.pool.Get()
@@ -89,16 +56,6 @@ func (connector *DbConnector) GetTriggerThrottlingTimestamps(triggerID string) (
 	beginning, _ := redis.Int64(c.Do("GET", fmt.Sprintf("moira-notifier-throttling-beginning:%s", triggerID)))
 
 	return time.Unix(next, 0), time.Unix(beginning, 0)
-}
-
-// GetTriggerEventsCount retuns planned notifications count from given timestamp
-func (connector *DbConnector) GetTriggerEventsCount(triggerID string, from int64) int64 {
-	c := connector.pool.Get()
-	defer c.Close()
-
-	eventsKey := fmt.Sprintf("moira-trigger-events:%s", triggerID)
-	count, _ := redis.Int64(c.Do("ZCOUNT", eventsKey, from, "+inf"))
-	return count
 }
 
 // SetTriggerThrottlingTimestamp store throttling or scheduled notifications delay for given triggerID

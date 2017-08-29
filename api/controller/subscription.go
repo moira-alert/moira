@@ -60,7 +60,7 @@ func SendTestNotification(database moira.Database, subscriptionID string) *api.E
 		Timestamp:      int64(date.DateParamToEpoch("now", "", time.Now().Add(-24*time.Hour).Unix(), time.UTC)),
 	}
 
-	if err := database.PushEvent(eventData, false); err != nil {
+	if err := database.PushNotificationEvent(eventData, false); err != nil {
 		return api.ErrorInternalServer(err)
 	}
 

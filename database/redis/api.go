@@ -221,47 +221,6 @@ func (connector *DbConnector) GetTriggerLastCheck(triggerId string) (*moira.Chec
 	return lastCheck, nil
 }
 
-func (connector *DbConnector) GetEvents(triggerId string, start int64, size int64) ([]*moira.NotificationEvent, error) {
-	c := connector.pool.Get()
-	defer c.Close()
-
-	eventsData, err := reply.Events(c.Do("ZREVRANGE", fmt.Sprintf("moira-trigger-events:%s", triggerId), start, start+size))
-
-	if err != nil {
-		if err == redis.ErrNil {
-			return make([]*moira.NotificationEvent, 0), nil
-		}
-		return nil, fmt.Errorf("Failed to get range for moira-trigger-events, triggerId: %s, error: %s", triggerId, err.Error())
-	}
-
-	return eventsData, nil
-}
-
-func (connector *DbConnector) PushEvent(event *moira.NotificationEvent, ui bool) error {
-	eventBytes, err := json.Marshal(event)
-	if err != nil {
-		return err
-	}
-
-	c := connector.pool.Get()
-	defer c.Close()
-	c.Send("MULTI")
-	c.Send("LPUSH", "moira-trigger-events", eventBytes)
-	if event.TriggerID != "" {
-		c.Send("ZADD", fmt.Sprintf("moira-trigger-events:%s", event.TriggerID), event.Timestamp, eventBytes)
-		c.Send("ZREMRANGEBYSCORE", fmt.Sprintf("moira-trigger-events:%s", event.TriggerID), "-inf", time.Now().Unix()-3600*24*30)
-	}
-	if ui {
-		c.Send("LPUSH", "moira-trigger-events-ui", eventBytes)
-		c.Send("LTRIM", "moira-trigger-events-ui", 0, 100)
-	}
-	_, err = c.Do("EXEC")
-	if err != nil {
-		return fmt.Errorf("Failed to EXEC: %s", err.Error())
-	}
-	return nil
-}
-
 func (connector *DbConnector) SetTriggerMetricsMaintenance(triggerId string, metrics map[string]int64) error {
 	c := connector.pool.Get()
 	defer c.Close()

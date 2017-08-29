@@ -42,7 +42,7 @@ func (triggerChecker *TriggerChecker) compareChecks(currentCheck moira.CheckData
 		return currentCheck, nil
 	}
 	triggerChecker.Logger.Infof("Writing new event: %v", event)
-	err := triggerChecker.Database.PushEvent(&event, true)
+	err := triggerChecker.Database.PushNotificationEvent(&event, true)
 	return currentCheck, err
 }
 
@@ -76,7 +76,7 @@ func (triggerChecker *TriggerChecker) compareStates(metric string, currentState 
 		return currentState, nil
 	}
 	triggerChecker.Logger.Infof("Writing new event: %v", event)
-	err := triggerChecker.Database.PushEvent(&event, true)
+	err := triggerChecker.Database.PushNotificationEvent(&event, true)
 	return currentState, err
 }
 

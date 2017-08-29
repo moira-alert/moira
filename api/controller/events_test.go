@@ -22,8 +22,8 @@ func TestGetEvents(t *testing.T) {
 
 	Convey("Test has events", t, func() {
 		var total int64 = 6000000
-		dataBase.EXPECT().GetEvents(triggerID, page*size, size-1).Return([]*moira.NotificationEvent{{State: "NODATA", OldState: "OK"}, {State: "OK", OldState: "NODATA"}}, nil)
-		dataBase.EXPECT().GetTriggerEventsCount(triggerID, int64(-1)).Return(total)
+		dataBase.EXPECT().GetNotificationEvents(triggerID, page*size, size-1).Return([]*moira.NotificationEvent{{State: "NODATA", OldState: "OK"}, {State: "OK", OldState: "NODATA"}}, nil)
+		dataBase.EXPECT().GetNotificationEventCount(triggerID, int64(-1)).Return(total)
 		list, err := GetTriggerEvents(dataBase, triggerID, page, size)
 		So(err, ShouldBeNil)
 		So(list, ShouldResemble, &dto.EventsList{
@@ -36,8 +36,8 @@ func TestGetEvents(t *testing.T) {
 
 	Convey("Test no events", t, func() {
 		var total int64
-		dataBase.EXPECT().GetEvents(triggerID, page*size, size-1).Return(make([]*moira.NotificationEvent, 0), nil)
-		dataBase.EXPECT().GetTriggerEventsCount(triggerID, int64(-1)).Return(total)
+		dataBase.EXPECT().GetNotificationEvents(triggerID, page*size, size-1).Return(make([]*moira.NotificationEvent, 0), nil)
+		dataBase.EXPECT().GetNotificationEventCount(triggerID, int64(-1)).Return(total)
 		list, err := GetTriggerEvents(dataBase, triggerID, page, size)
 		So(err, ShouldBeNil)
 		So(list, ShouldResemble, &dto.EventsList{
@@ -50,7 +50,7 @@ func TestGetEvents(t *testing.T) {
 
 	Convey("Test error", t, func() {
 		expected := fmt.Errorf("Oooops! Can not get all contacts")
-		dataBase.EXPECT().GetEvents(triggerID, page*size, size-1).Return(nil, expected)
+		dataBase.EXPECT().GetNotificationEvents(triggerID, page*size, size-1).Return(nil, expected)
 		list, err := GetTriggerEvents(dataBase, triggerID, page, size)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 		So(list, ShouldBeNil)

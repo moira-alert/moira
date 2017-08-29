@@ -181,8 +181,8 @@ func TestSubscriptionSchedule(t *testing.T) {
 		Convey("Has trigger events count slightly less than low throttling level, should next timestamp now minutes, but throttling", func() {
 			dataBase.EXPECT().GetTriggerThrottlingTimestamps(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
 			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
-			dataBase.EXPECT().GetTriggerEventsCount(event.TriggerID, now.Add(-time.Hour*3).Unix()).Return(int64(13))
-			dataBase.EXPECT().GetTriggerEventsCount(event.TriggerID, now.Add(-time.Hour).Unix()).Return(int64(9))
+			dataBase.EXPECT().GetNotificationEventCount(event.TriggerID, now.Add(-time.Hour*3).Unix()).Return(int64(13))
+			dataBase.EXPECT().GetNotificationEventCount(event.TriggerID, now.Add(-time.Hour).Unix()).Return(int64(9))
 
 			next, throttled := scheduler.calculateNextDelivery(now, &event)
 			So(next, ShouldResemble, now)
@@ -193,8 +193,8 @@ func TestSubscriptionSchedule(t *testing.T) {
 		Convey("Has trigger events count event more than low throttling level, should next timestamp in 30 minutes", func() {
 			dataBase.EXPECT().GetTriggerThrottlingTimestamps(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
 			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
-			dataBase.EXPECT().GetTriggerEventsCount(event.TriggerID, now.Add(-time.Hour*3).Unix()).Return(int64(10))
-			dataBase.EXPECT().GetTriggerEventsCount(event.TriggerID, now.Add(-time.Hour).Unix()).Return(int64(10))
+			dataBase.EXPECT().GetNotificationEventCount(event.TriggerID, now.Add(-time.Hour*3).Unix()).Return(int64(10))
+			dataBase.EXPECT().GetNotificationEventCount(event.TriggerID, now.Add(-time.Hour).Unix()).Return(int64(10))
 			dataBase.EXPECT().SetTriggerThrottlingTimestamp(event.TriggerID, now.Add(time.Hour/2)).Return(nil)
 
 			next, throttled := scheduler.calculateNextDelivery(now, &event)
@@ -206,7 +206,7 @@ func TestSubscriptionSchedule(t *testing.T) {
 		Convey("Has trigger event more than high throttling level, should next timestamp in 1 hour", func() {
 			dataBase.EXPECT().GetTriggerThrottlingTimestamps(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
 			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
-			dataBase.EXPECT().GetTriggerEventsCount(event.TriggerID, now.Add(-time.Hour*3).Unix()).Return(int64(20))
+			dataBase.EXPECT().GetNotificationEventCount(event.TriggerID, now.Add(-time.Hour*3).Unix()).Return(int64(20))
 			dataBase.EXPECT().SetTriggerThrottlingTimestamp(event.TriggerID, now.Add(time.Hour)).Return(nil)
 
 			next, throttled := scheduler.calculateNextDelivery(now, &event)

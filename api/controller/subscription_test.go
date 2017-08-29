@@ -87,14 +87,14 @@ func TestSendTestNotification(t *testing.T) {
 	id := uuid.NewV4().String()
 
 	Convey("Success", t, func() {
-		database.EXPECT().PushEvent(gomock.Any(), false).Return(nil)
+		database.EXPECT().PushNotificationEvent(gomock.Any(), false).Return(nil)
 		err := SendTestNotification(database, id)
 		So(err, ShouldBeNil)
 	})
 
 	Convey("Error", t, func() {
 		expected := fmt.Errorf("Oooops! Can not push event")
-		database.EXPECT().PushEvent(gomock.Any(), false).Return(expected)
+		database.EXPECT().PushNotificationEvent(gomock.Any(), false).Return(expected)
 		err := SendTestNotification(database, id)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 	})

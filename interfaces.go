@@ -40,10 +40,10 @@ type Database interface {
 	GetTriggerToCheck() (*string, error)
 
 	//NotificationEvent storing
-	GetEvents(string, int64, int64) ([]*NotificationEvent, error)
-	PushEvent(event *NotificationEvent, ui bool) error
-	GetTriggerEventsCount(id string, from int64) int64
-	FetchEvent() (*NotificationEvent, error)
+	GetNotificationEvents(triggerID string, start, size int64) ([]*NotificationEvent, error)
+	PushNotificationEvent(event *NotificationEvent, ui bool) error
+	GetNotificationEventCount(triggerID string, from int64) int64
+	FetchNotificationEvent() (NotificationEvent, error)
 
 	//ContactData storing
 	GetContact(contactID string) (ContactData, error)

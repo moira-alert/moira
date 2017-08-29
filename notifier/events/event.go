@@ -6,6 +6,7 @@ import (
 	"gopkg.in/tomb.v2"
 
 	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira-alert/database"
 	"github.com/moira-alert/moira-alert/metrics/graphite"
 	"github.com/moira-alert/moira-alert/notifier"
 )
@@ -31,17 +32,19 @@ func (worker *FetchEventsWorker) Start() {
 				}
 			default:
 				{
-					event, err := worker.Database.FetchEvent()
+					event, err := worker.Database.FetchNotificationEvent()
 					if err != nil {
-						worker.Metrics.EventsMalformed.Mark(1)
+						if err != database.ErrNil {
+							worker.Metrics.EventsMalformed.Mark(1)
+							worker.Logger.Warning(err)
+							time.Sleep(time.Second * 5)
+						}
 						continue
 					}
-					if event != nil {
-						worker.Metrics.EventsReceived.Mark(1)
-						if err := worker.processEvent(*event); err != nil {
-							worker.Metrics.EventsProcessingFailed.Mark(1)
-							worker.Logger.Errorf("Failed processEvent. %s", err)
-						}
+					worker.Metrics.EventsReceived.Mark(1)
+					if err := worker.processEvent(event); err != nil {
+						worker.Metrics.EventsProcessingFailed.Mark(1)
+						worker.Logger.Errorf("Failed processEvent. %s", err)
 					}
 				}
 			}

@@ -4,17 +4,21 @@ import (
 	"encoding/json"
 	"github.com/garyburd/redigo/redis"
 	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira-alert/database"
 )
 
-func Event(rep interface{}, err error) (*moira.NotificationEvent, error) {
+func Event(rep interface{}, err error) (moira.NotificationEvent, error) {
+	event := moira.NotificationEvent{}
 	bytes, err := redis.Bytes(rep, err)
 	if err != nil {
-		return nil, err
+		if err == redis.ErrNil {
+			return event, database.ErrNil
+		}
+		return event, err
 	}
-	event := &moira.NotificationEvent{}
-	err = json.Unmarshal(bytes, event)
+	err = json.Unmarshal(bytes, &event)
 	if err != nil {
-		return nil, err
+		return event, err
 	}
 	return event, nil
 }
@@ -25,12 +29,15 @@ func Events(rep interface{}, err error) ([]*moira.NotificationEvent, error) {
 		return nil, err
 	}
 	events := make([]*moira.NotificationEvent, len(values))
-	for i, kk := range values {
-		event, err2 := Event(kk, err)
-		if err2 != nil {
+	for i, value := range values {
+		event, err2 := Event(value, err)
+		if err2 != nil && err2 != database.ErrNil {
 			return nil, err2
+		} else if err2 == database.ErrNil {
+			events[i] = nil
+		} else {
+			events[i] = &event
 		}
-		events[i] = event
 	}
 	return events, nil
 }

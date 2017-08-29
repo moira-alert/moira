@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira-alert/database"
 	"github.com/moira-alert/moira-alert/metrics/graphite/go-metrics"
 	"github.com/moira-alert/moira-alert/mock/moira-alert"
 	"github.com/moira-alert/moira-alert/mock/scheduler"
@@ -340,6 +341,7 @@ func TestEmptySubscriptions(t *testing.T) {
 func TestGoRoutine(t *testing.T) {
 	Convey("When good subscription, should add new notification", t, func() {
 		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger, _ := logging.GetLogger("Events")
 		scheduler := mock_scheduler.NewMockScheduler(mockCtrl)
@@ -361,8 +363,11 @@ func TestGoRoutine(t *testing.T) {
 		emptyNotification := moira.ScheduledNotification{}
 		shutdown := make(chan bool)
 
-		dataBase.EXPECT().FetchEvent().Return(&event, nil)
-		dataBase.EXPECT().FetchEvent().AnyTimes().Return(nil, nil)
+		dataBase.EXPECT().FetchNotificationEvent().Return(moira.NotificationEvent{}, fmt.Errorf("3433434")).Do(func(f ...interface{}) {
+			dataBase.EXPECT().FetchNotificationEvent().Return(event, nil).Do(func(f ...interface{}) {
+				dataBase.EXPECT().FetchNotificationEvent().AnyTimes().Return(moira.NotificationEvent{}, database.ErrNil)
+			})
+		})
 		dataBase.EXPECT().GetNotificationTrigger(event.TriggerID).Times(1).Return(trigger, nil)
 		dataBase.EXPECT().GetTriggerTags(event.TriggerID).Times(1).Return(trigger.Tags, nil)
 		tags := append(trigger.Tags, event.GetEventTags()...)
@@ -371,9 +376,8 @@ func TestGoRoutine(t *testing.T) {
 		scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, trigger, contact, false, 0).Times(1).Return(&emptyNotification)
 		dataBase.EXPECT().AddNotification(&emptyNotification).Times(1).Return(nil).Do(func(f ...interface{}) { close(shutdown) })
 
-		go worker.Start()
+		worker.Start()
 		waitTestEnd(shutdown, worker)
-		mockCtrl.Finish()
 	})
 }
 

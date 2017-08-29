@@ -82,7 +82,7 @@ func TestCompareStates(t *testing.T) {
 			currentState.Timestamp = 1502809200
 
 			message := fmt.Sprintf("This metric has been in bad state for more than 24 hours - please, fix.")
-			dataBase.EXPECT().PushEvent(&moira.NotificationEvent{
+			dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
 				TriggerID: triggerChecker.TriggerID,
 				Timestamp: currentState.Timestamp,
 				State:     NODATA,
@@ -106,7 +106,7 @@ func TestCompareStates(t *testing.T) {
 			currentState.Timestamp = 1502809200
 
 			message := fmt.Sprintf("This metric has been in bad state for more than 24 hours - please, fix.")
-			dataBase.EXPECT().PushEvent(&moira.NotificationEvent{
+			dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
 				TriggerID: triggerChecker.TriggerID,
 				Timestamp: currentState.Timestamp,
 				State:     ERROR,
@@ -142,7 +142,7 @@ func TestCompareStates(t *testing.T) {
 			lastState.Suppressed = true
 			currentState.State = EXCEPTION
 
-			dataBase.EXPECT().PushEvent(&moira.NotificationEvent{
+			dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
 				TriggerID: triggerChecker.TriggerID,
 				Timestamp: currentState.Timestamp,
 				State:     EXCEPTION,
@@ -221,7 +221,7 @@ func TestCompareChecks(t *testing.T) {
 			lastCheck.Suppressed = true
 			currentCheck.State = EXCEPTION
 
-			dataBase.EXPECT().PushEvent(&moira.NotificationEvent{
+			dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
 				TriggerID: triggerChecker.TriggerID,
 				Timestamp: currentCheck.Timestamp,
 				State:     EXCEPTION,

@@ -8,11 +8,11 @@ import (
 
 //GetTriggerEvents gets trigger event from current page and all trigger event count
 func GetTriggerEvents(database moira.Database, triggerID string, page int64, size int64) (*dto.EventsList, *api.ErrorResponse) {
-	events, err := database.GetEvents(triggerID, page*size, size-1)
+	events, err := database.GetNotificationEvents(triggerID, page*size, size-1)
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
-	eventCount := database.GetTriggerEventsCount(triggerID, -1)
+	eventCount := database.GetNotificationEventCount(triggerID, -1)
 
 	eventsList := &dto.EventsList{
 		Size:  size,

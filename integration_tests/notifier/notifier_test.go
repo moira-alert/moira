@@ -74,7 +74,7 @@ func TestNotifier(t *testing.T) {
 	database.WriteContact(&contact)
 	database.SaveSubscription(&subscription)
 	database.SaveTrigger(trigger.ID, &trigger)
-	database.PushEvent(&event, true)
+	database.PushNotificationEvent(&event, true)
 	notifier2 := notifier.NewNotifier(database, logger, notifierConfig, notifierMetrics)
 	sender := mock_moira_alert.NewMockSender(mockCtrl)
 	sender.EXPECT().Init(senderSettings, logger).Return(nil)

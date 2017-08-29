@@ -97,7 +97,7 @@ func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *
 				if from.Before(beginning) {
 					from = beginning
 				}
-				count := scheduler.database.GetTriggerEventsCount(event.TriggerID, from.Unix())
+				count := scheduler.database.GetNotificationEventCount(event.TriggerID, from.Unix())
 				if count >= level.count {
 					next = now.Add(level.delay)
 					scheduler.logger.Debugf("Trigger %s switched %d times in last %s, delaying next notification for %s", event.TriggerID, count, level.duration, level.delay)
