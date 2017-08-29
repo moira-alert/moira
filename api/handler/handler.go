@@ -13,6 +13,7 @@ import (
 
 var database moira.Database
 
+//NewHandler creates new api handler request uris based on github.com/go-chi/chi
 func NewHandler(db moira.Database, log moira.Logger) http.Handler {
 	database = db
 	router := chi.NewRouter()

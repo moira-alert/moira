@@ -9,10 +9,13 @@ import (
 	"time"
 )
 
+//GetLoggerEntry gets logger entry with configured logger and current request
 func GetLoggerEntry(request *http.Request) moira.Logger {
 	return middleware.GetLogEntry(request).(*apiLoggerEntry).Logger
 }
 
+//Logger is custom api middleware logger realization use given moira.Logger interface and logs api requests
+//Based on https://github.com/go-chi/chi/blob/master/middleware/logger.go
 func Logger(logger moira.Logger) func(next http.Handler) http.Handler {
 	return middleware.RequestLogger(&apiLogger{logger})
 }
