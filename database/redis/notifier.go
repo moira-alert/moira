@@ -65,25 +65,3 @@ func (connector *DbConnector) SetTriggerThrottlingTimestamp(triggerID string, ne
 	_, err := c.Do("SET", fmt.Sprintf("moira-notifier-next:%s", triggerID), next.Unix())
 	return err
 }
-
-// GetMetricsCount - return metrics count received by Moira-Cache
-func (connector *DbConnector) GetMetricsCount() (int64, error) {
-	c := connector.pool.Get()
-	defer c.Close()
-	ts, err := redis.Int64(c.Do("GET", "moira-selfstate:metrics-heartbeat"))
-	if err == redis.ErrNil {
-		return 0, nil
-	}
-	return ts, err
-}
-
-// GetChecksCount - return checks count by Moira-Checker
-func (connector *DbConnector) GetChecksCount() (int64, error) {
-	c := connector.pool.Get()
-	defer c.Close()
-	ts, err := redis.Int64(c.Do("GET", "moira-selfstate:checks-counter"))
-	if err == redis.ErrNil {
-		return 0, nil
-	}
-	return ts, err
-}

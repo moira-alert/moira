@@ -10,10 +10,11 @@ type Database interface {
 	GetTriggerTags(id string) ([]string, error)
 	GetTriggerThrottlingTimestamps(id string) (time.Time, time.Time)
 	SetTriggerThrottlingTimestamp(id string, next time.Time) error
+
+	//SelfState
+	UpdateMetricsHeartbeat() error
 	GetMetricsCount() (int64, error)
 	GetChecksCount() (int64, error)
-
-	UpdateMetricsHeartbeat() error
 
 	//Tag storing
 	GetTagNames() ([]string, error)

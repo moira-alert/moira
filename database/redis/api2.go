@@ -166,7 +166,7 @@ func (connector *DbConnector) SetTriggerLastCheck(triggerId string, checkData *m
 	c.Send("MULTI")
 	c.Send("SET", fmt.Sprintf("moira-metric-last-check:%s", triggerId), bytes)
 	c.Send("ZADD", "moira-triggers-checks", checkData.Score, triggerId)
-	c.Send("INCR", "moira-selfstate:checks-counter")
+	c.Send("INCR", moiraSelfStateChecksCounter)
 	if checkData.Score > 0 {
 		c.Send("SADD", "moira-bad-state-triggers", triggerId)
 	} else {
