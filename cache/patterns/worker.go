@@ -30,7 +30,13 @@ func NewRefreshPatternWorker(database moira.Database, metrics *graphite.CacheMet
 }
 
 //Start process to refresh pattern tree every second
-func (worker *RefreshPatternWorker) Start() {
+func (worker *RefreshPatternWorker) Start() error {
+	err := worker.patternStorage.RefreshTree()
+	if err != nil {
+		worker.logger.Errorf("pattern refresh failed: %s", err.Error())
+		return err
+	}
+
 	worker.tomb.Go(func() error {
 		for {
 			checkTicker := time.NewTicker(time.Second)
@@ -49,6 +55,7 @@ func (worker *RefreshPatternWorker) Start() {
 		}
 	})
 	worker.logger.Infof("Moira Cache pattern updater started")
+	return nil
 }
 
 //Stop stops update pattern tree
