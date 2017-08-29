@@ -84,9 +84,10 @@ type Database interface {
 	RemovePatternWithMetrics(pattern string) error
 	RemoveMetricValues(metric string, toTime int64) error
 
-	AcquireTriggerCheckLock(triggerId string, timeout int) error
-	DeleteTriggerCheckLock(triggerId string) error
-	SetTriggerCheckLock(triggerId string) (bool, error)
+	//TriggerCheckLock storing
+	AcquireTriggerCheckLock(triggerID string, timeout int) error
+	DeleteTriggerCheckLock(triggerID string) error
+	SetTriggerCheckLock(triggerID string) (bool, error)
 }
 
 // Logger implements logger abstraction

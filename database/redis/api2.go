@@ -113,50 +113,7 @@ func (connector *DbConnector) DeleteTrigger(triggerId string) error {
 	return nil
 }
 
-func (connector *DbConnector) SetTriggerCheckLock(triggerId string) (bool, error) {
-	c := connector.pool.Get()
-	defer c.Close()
-	_, err := redis.String(c.Do("SET", fmt.Sprintf("moira-metric-check-lock:%s", triggerId), time.Now().Unix(), "EX", 30, "NX"))
-	if err != nil {
-		if err == redis.ErrNil {
-			return false, nil
-		}
-		return false, fmt.Errorf("Failed to set metric-check-lock:%s : %s", triggerId, err.Error())
-	}
-	return true, nil
-}
-
-func (connector *DbConnector) DeleteTriggerCheckLock(triggerId string) error {
-	c := connector.pool.Get()
-	defer c.Close()
-	_, err := c.Do("DEL", fmt.Sprintf("moira-metric-check-lock:%s", triggerId))
-	if err != nil {
-		return fmt.Errorf("Failed to delete metric-check-lock:%s : %s", triggerId, err.Error())
-	}
-	return nil
-}
-
-func (connector *DbConnector) AcquireTriggerCheckLock(triggerId string, timeout int) error {
-	acquired, err := connector.SetTriggerCheckLock(triggerId)
-	if err != nil {
-		return err
-	}
-	count := 0
-	for !acquired && count < timeout {
-		count += 1
-		<-time.After(time.Millisecond * 500)
-		acquired, err = connector.SetTriggerCheckLock(triggerId)
-		if err != nil {
-			return err
-		}
-	}
-	if !acquired {
-		return fmt.Errorf("Can not acquire trigger lock in %v seconds", timeout)
-	}
-	return nil
-}
-
-func (connector *DbConnector) SetTriggerLastCheck(triggerId string, checkData *moira.CheckData) error {
+func (connector *DbConnector) SetTriggerLastCheck(triggerID string, checkData *moira.CheckData) error {
 	bytes, err := json.Marshal(checkData)
 	if err != nil {
 		return err
@@ -164,13 +121,13 @@ func (connector *DbConnector) SetTriggerLastCheck(triggerId string, checkData *m
 	c := connector.pool.Get()
 	defer c.Close()
 	c.Send("MULTI")
-	c.Send("SET", fmt.Sprintf("moira-metric-last-check:%s", triggerId), bytes)
-	c.Send("ZADD", "moira-triggers-checks", checkData.Score, triggerId)
+	c.Send("SET", fmt.Sprintf("moira-metric-last-check:%s", triggerID), bytes)
+	c.Send("ZADD", "moira-triggers-checks", checkData.Score, triggerID)
 	c.Send("INCR", moiraSelfStateChecksCounter)
 	if checkData.Score > 0 {
-		c.Send("SADD", "moira-bad-state-triggers", triggerId)
+		c.Send("SADD", "moira-bad-state-triggers", triggerID)
 	} else {
-		c.Send("SREM", "moira-bad-state-triggers", triggerId)
+		c.Send("SREM", "moira-bad-state-triggers", triggerID)
 	}
 	_, err = c.Do("EXEC")
 	if err != nil {
