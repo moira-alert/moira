@@ -49,7 +49,7 @@ func (loggerConfig *LoggerConfig) GetSettings() logging.Config {
 	return logging.Config{
 		LogFile:  loggerConfig.LogFile,
 		LogLevel: loggerConfig.LogLevel,
-		LogColor: toBool(loggerConfig.LogColor),
+		LogColor: ToBool(loggerConfig.LogColor),
 	}
 }
 
@@ -70,7 +70,7 @@ func PrintConfig(config interface{}) {
 	fmt.Println(string(d))
 }
 
-func toBool(str string) bool {
+func ToBool(str string) bool {
 	switch strings.ToLower(str) {
 	case "1", "true", "t", "yes", "y":
 		return true

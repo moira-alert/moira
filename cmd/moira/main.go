@@ -3,11 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 
-	//"github.com/facebookgo/grace/gracehttp"
-	"github.com/moira-alert/moira-alert/api/handler"
 	"github.com/moira-alert/moira-alert/cmd"
 	"github.com/moira-alert/moira-alert/database/redis"
 	"github.com/moira-alert/moira-alert/logging/go-logging"
@@ -20,7 +19,7 @@ var (
 	printDefaultConfigFlag = flag.Bool("default-config", false, "Print default config and exit")
 )
 
-// Moira api bin version
+// Moira version
 var (
 	MoiraVersion = "unknown"
 	GitCommit    = "unknown"
@@ -37,6 +36,7 @@ func main() {
 		os.Exit(0)
 	}
 
+	// Config
 	config := getDefault()
 	if *printDefaultConfigFlag {
 		cmd.PrintConfig(config)
@@ -45,32 +45,61 @@ func main() {
 
 	err := cmd.ReadConfig(*configFileName, &config)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Can not read settings: %s\n", err.Error())
+		fmt.Fprintf(os.Stderr, "Can't read settings: %v\n", err)
 		os.Exit(1)
 	}
 
+	// Logger
 	loggerSettings := config.Logger.GetSettings()
 
-	logger, err := logging.ConfigureLog(&loggerSettings, "api")
+	logger, err := logging.ConfigureLog(&loggerSettings, "moira")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Can not configure log: %s\n", err.Error())
+		fmt.Fprintf(os.Stderr, "Can't configure log: %v\n", err)
 		os.Exit(1)
 	}
 
+	// Database
 	databaseSettings := config.Redis.GetSettings()
 	databaseMetrics := metrics.ConfigureDatabaseMetrics()
 	database := redis.NewDatabase(logger, databaseSettings, databaseMetrics)
 
-	httpHandler := handler.NewHandler(database, logger)
+	// Metrics
+	metrics.Init(config.Graphite.GetSettings(), logger, "moira")
 
-	logger.Infof("Start listening by port: [%s]", config.API.Port)
-	server := &http.Server{
-		Addr:    ":" + config.API.Port,
-		Handler: httpHandler,
+	// API
+	apiServer := &APIServer{
+		Config: config.API.getSettings(),
+		DB:     database,
+		Log:    logger,
 	}
-	/*if err = gracehttp.Serve(server); err != nil {
-		logger.Fatalf("gracehttp failed", err.Error())
-	}*/
-	server.ListenAndServe() //for windows developers =)
-	logger.Infof("Stop Moira api")
+
+	if err := apiServer.Start(); err != nil {
+		logger.Fatalf("Can't start API: %v", err)
+	}
+
+	// Filter
+	filterServer := &Filter{
+		Config: config.Cache.getSettings(),
+		DB: database,
+		Log: logger,
+	}
+
+	if err := filterServer.Start(); err != nil {
+		logger.Fatalf("Can't start Filter: %v", err)
+	}
+
+	logger.Infof("Moira Started (version: %s)", Version)
+	ch := make(chan os.Signal, 1)
+	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
+	logger.Info(<-ch)
+
+	if err := apiServer.Stop(); err != nil {
+		logger.Errorf("Can't stop API: %v", err)
+	}
+
+	if err := filterServer.Stop(); err != nil {
+		logger.Errorf("Can't stop Filer: %v", err)
+	}
+
+	logger.Infof("Moira Stopped (version: %s)", Version)
 }
