@@ -86,7 +86,8 @@ func main() {
 	refreshPatternWorker := patterns.NewRefreshPatternWorker(database, cacheMetrics, logger, patternStorage)
 	heartbeatWorker := heartbeat.NewHeartbeatWorker(database, cacheMetrics, logger)
 
-	if err = refreshPatternWorker.Start(); err != nil {
+	err = refreshPatternWorker.Start()
+	if err != nil {
 		logger.Fatalf("Failed to refresh pattern storage: %s", err.Error())
 	}
 	heartbeatWorker.Start()
