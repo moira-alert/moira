@@ -59,7 +59,8 @@ func createTrigger(writer http.ResponseWriter, request *http.Request) {
 }
 
 func getTriggersPage(writer http.ResponseWriter, request *http.Request) {
-	onlyErrors := getFilterOkFlag(request)
+	request.ParseForm()
+	onlyErrors := getOnlyProblemsFlag(request)
 	filterTags := getRequestTags(request)
 
 	page := middleware.GetPage(request)
@@ -79,7 +80,6 @@ func getTriggersPage(writer http.ResponseWriter, request *http.Request) {
 
 func getRequestTags(request *http.Request) []string {
 	var filterTags []string
-	request.ParseForm()
 	i := 0
 	for {
 		tag := request.FormValue(fmt.Sprintf("tags[%v]", i))
@@ -108,7 +108,7 @@ func getRequestTags(request *http.Request) []string {
 	return filterTags
 }
 
-func getFilterOkFlag(request *http.Request) bool {
+func getOnlyProblemsFlag(request *http.Request) bool {
 	onlyProblemsStr := request.FormValue("onlyProblems")
 	if onlyProblemsStr != "" {
 		onlyProblems, _ := strconv.ParseBool(onlyProblemsStr)
