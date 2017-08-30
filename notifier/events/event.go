@@ -5,6 +5,7 @@ import (
 
 	"gopkg.in/tomb.v2"
 
+	"fmt"
 	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/database"
 	"github.com/moira-alert/moira-alert/metrics/graphite"
@@ -63,25 +64,31 @@ func (worker *FetchEventsWorker) processEvent(event moira.NotificationEvent) err
 	var (
 		subscriptions []*moira.SubscriptionData
 		tags          []string
-		trigger       moira.TriggerData
-		err           error
+		triggerData   moira.TriggerData
 	)
 
 	if event.State != "TEST" {
 		worker.Logger.Debugf("Processing trigger id %s for metric %s == %f, %s -> %s", event.TriggerID, event.Metric, moira.UseFloat64(event.Value), event.OldState, event.State)
 
-		trigger, err = worker.Database.GetNotificationTrigger(event.TriggerID)
+		trigger, err := worker.Database.GetTrigger(event.TriggerID)
 		if err != nil {
 			return err
 		}
-
-		tags, err = worker.Database.GetTriggerTags(event.TriggerID)
-		if err != nil {
-			return err
+		if len(trigger.Tags) == 0 {
+			return fmt.Errorf("No tags found for trigger id %s", event.TriggerID)
 		}
-		trigger.Tags = tags
-		tags = append(tags, event.GetEventTags()...)
 
+		triggerData = moira.TriggerData{
+			ID:         trigger.ID,
+			Name:       trigger.Name,
+			Desc:       moira.UseString(trigger.Desc),
+			Targets:    trigger.Targets,
+			WarnValue:  moira.UseFloat64(trigger.WarnValue),
+			ErrorValue: moira.UseFloat64(trigger.ErrorValue),
+			Tags:       trigger.Tags,
+		}
+
+		tags = append(trigger.Tags, event.GetEventTags()...)
 		worker.Logger.Debugf("Getting subscriptions for tags %v", tags)
 		subscriptions, err = worker.Database.GetTagsSubscriptions(tags)
 		if err != nil {
@@ -107,7 +114,7 @@ func (worker *FetchEventsWorker) processEvent(event moira.NotificationEvent) err
 					continue
 				}
 				event.SubscriptionID = &subscription.ID
-				notification := worker.Scheduler.ScheduleNotification(time.Now(), event, trigger, contact, false, 0)
+				notification := worker.Scheduler.ScheduleNotification(time.Now(), event, triggerData, contact, false, 0)
 				key := notification.GetKey()
 				if _, exist := duplications[key]; !exist {
 					if err := worker.Database.AddNotification(notification); err != nil {
