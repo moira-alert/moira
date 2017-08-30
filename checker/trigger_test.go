@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira-alert/database"
 	"github.com/moira-alert/moira-alert/mock/moira-alert"
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
@@ -24,14 +25,14 @@ func TestInitTriggerChecker(t *testing.T) {
 	Convey("Test errors", t, func() {
 		Convey("Get trigger error", func() {
 			getTriggerError := fmt.Errorf("Oppps! Can't read trigger")
-			dataBase.EXPECT().GetTrigger(triggerChecker.TriggerID).Return(nil, getTriggerError)
+			dataBase.EXPECT().GetTrigger(triggerChecker.TriggerID).Return(moira.Trigger{}, getTriggerError)
 			err := triggerChecker.InitTriggerChecker()
 			So(err, ShouldBeError)
 			So(err, ShouldResemble, getTriggerError)
 		})
 
 		Convey("No trigger error", func() {
-			dataBase.EXPECT().GetTrigger(triggerChecker.TriggerID).Return(nil, nil)
+			dataBase.EXPECT().GetTrigger(triggerChecker.TriggerID).Return(moira.Trigger{}, database.ErrNil)
 			err := triggerChecker.InitTriggerChecker()
 			So(err, ShouldBeError)
 			So(err, ShouldResemble, ErrTriggerNotExists)
@@ -39,7 +40,7 @@ func TestInitTriggerChecker(t *testing.T) {
 
 		Convey("Get lastCheck error", func() {
 			readLastCheckError := fmt.Errorf("Oppps! Can't read last check")
-			dataBase.EXPECT().GetTrigger(triggerChecker.TriggerID).Return(&moira.Trigger{}, nil)
+			dataBase.EXPECT().GetTrigger(triggerChecker.TriggerID).Return(moira.Trigger{}, nil)
 			dataBase.EXPECT().GetTriggerLastCheck(triggerChecker.TriggerID).Return(nil, readLastCheckError)
 			err := triggerChecker.InitTriggerChecker()
 			So(err, ShouldBeError)
@@ -103,7 +104,7 @@ func TestInitTriggerChecker(t *testing.T) {
 	}
 
 	Convey("Test trigger checker with lastCheck", t, func() {
-		dataBase.EXPECT().GetTrigger(triggerChecker.TriggerID).Return(&trigger, nil)
+		dataBase.EXPECT().GetTrigger(triggerChecker.TriggerID).Return(trigger, nil)
 		dataBase.EXPECT().GetTriggerLastCheck(triggerChecker.TriggerID).Return(&lastCheck, nil)
 		err := triggerChecker.InitTriggerChecker()
 		So(err, ShouldBeNil)
@@ -119,7 +120,7 @@ func TestInitTriggerChecker(t *testing.T) {
 	})
 
 	Convey("Test trigger checker without lastCheck", t, func() {
-		dataBase.EXPECT().GetTrigger(triggerChecker.TriggerID).Return(&trigger, nil)
+		dataBase.EXPECT().GetTrigger(triggerChecker.TriggerID).Return(trigger, nil)
 		dataBase.EXPECT().GetTriggerLastCheck(triggerChecker.TriggerID).Return(nil, nil)
 		err := triggerChecker.InitTriggerChecker()
 		So(err, ShouldBeNil)
@@ -142,7 +143,7 @@ func TestInitTriggerChecker(t *testing.T) {
 	trigger.TTLState = nil
 
 	Convey("Test trigger checker without lastCheck and ttl", t, func() {
-		dataBase.EXPECT().GetTrigger(triggerChecker.TriggerID).Return(&trigger, nil)
+		dataBase.EXPECT().GetTrigger(triggerChecker.TriggerID).Return(trigger, nil)
 		dataBase.EXPECT().GetTriggerLastCheck(triggerChecker.TriggerID).Return(nil, nil)
 		err := triggerChecker.InitTriggerChecker()
 		So(err, ShouldBeNil)
@@ -162,7 +163,7 @@ func TestInitTriggerChecker(t *testing.T) {
 	})
 
 	Convey("Test trigger checker with lastCheck and without ttl", t, func() {
-		dataBase.EXPECT().GetTrigger(triggerChecker.TriggerID).Return(&trigger, nil)
+		dataBase.EXPECT().GetTrigger(triggerChecker.TriggerID).Return(trigger, nil)
 		dataBase.EXPECT().GetTriggerLastCheck(triggerChecker.TriggerID).Return(&lastCheck, nil)
 		err := triggerChecker.InitTriggerChecker()
 		So(err, ShouldBeNil)

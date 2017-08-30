@@ -29,7 +29,7 @@ func (worker *Checker) checkNoData(wg *sync.WaitGroup) error {
 		worker.Logger.Infof("Checking NoData disabled. No metrics for %v seconds", now-worker.lastData)
 	} else {
 		worker.Logger.Info("Checking NoData")
-		triggerIds, err := worker.Database.GetTriggerIds()
+		triggerIds, err := worker.Database.GetTriggerIDs()
 		if err != nil {
 			return err
 		}

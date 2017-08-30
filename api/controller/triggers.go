@@ -19,7 +19,7 @@ func CreateTrigger(database moira.Database, trigger *moira.Trigger, timeSeriesNa
 
 //GetAllTriggers gets all moira triggers
 func GetAllTriggers(database moira.Database) (*dto.TriggersList, *api.ErrorResponse) {
-	triggerIDs, err := database.GetTriggerIds()
+	triggerIDs, err := database.GetTriggerIDs()
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}

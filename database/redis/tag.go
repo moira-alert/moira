@@ -13,7 +13,7 @@ func (connector *DbConnector) GetTagNames() ([]string, error) {
 
 	tagNames, err := redis.Strings(c.Do("SMEMBERS", moiraTags))
 	if err != nil {
-		return nil, fmt.Errorf("Failed to retrieve moira-tags: %s", err.Error())
+		return nil, fmt.Errorf("Failed to retrieve tags: %s", err.Error())
 	}
 	return tagNames, nil
 }
@@ -24,7 +24,7 @@ func (connector *DbConnector) RemoveTag(tagName string) error {
 	defer c.Close()
 
 	c.Send("MULTI")
-	c.Send("SREM", "moira-tags", tagName)
+	c.Send("SREM", moiraTags, tagName)
 	c.Send("DEL", moiraTagSubscription(tagName))
 	c.Send("DEL", moiraTagTriggers(tagName))
 	c.Send("DEL", moiraTag(tagName))
@@ -45,7 +45,7 @@ func (connector *DbConnector) GetTagTriggerIDs(tagName string) ([]string, error)
 		if err == redis.ErrNil {
 			return make([]string, 0), nil
 		}
-		return nil, fmt.Errorf("Failed to moira-tag-triggers:%s, err: %s", tagName, err.Error())
+		return nil, fmt.Errorf("Failed to retrieve tag triggers:%s, err: %s", tagName, err.Error())
 	}
 	return triggerIDs, nil
 }

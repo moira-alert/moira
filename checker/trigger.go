@@ -3,6 +3,7 @@ package checker
 import (
 	"errors"
 	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira-alert/database"
 	"time"
 )
 
@@ -29,13 +30,13 @@ func (triggerChecker *TriggerChecker) InitTriggerChecker() error {
 	triggerChecker.Until = time.Now().Unix()
 	trigger, err := triggerChecker.Database.GetTrigger(triggerChecker.TriggerID)
 	if err != nil {
+		if err == database.ErrNil {
+			return ErrTriggerNotExists
+		}
 		return err
 	}
-	if trigger == nil {
-		return ErrTriggerNotExists
-	}
 
-	triggerChecker.trigger = trigger
+	triggerChecker.trigger = &trigger
 	triggerChecker.isSimple = trigger.IsSimpleTrigger
 	triggerChecker.ttl = trigger.TTL
 

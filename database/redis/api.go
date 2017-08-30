@@ -161,27 +161,6 @@ func (connector *DbConnector) GetTriggerChecks(triggerCheckIDs []string) ([]moir
 	return triggerChecks, nil
 }
 
-func (connector *DbConnector) GetTrigger(triggerID string) (*moira.Trigger, error) {
-	c := connector.pool.Get()
-	defer c.Close()
-
-	c.Send("MULTI")
-	c.Send("GET", fmt.Sprintf("moira-trigger:%s", triggerID))
-	c.Send("SMEMBERS", fmt.Sprintf("moira-trigger-tags:%s", triggerID))
-	rawResponse, err := redis.Values(c.Do("EXEC"))
-	if err != nil {
-		return nil, fmt.Errorf("Failed to EXEC: %s", err.Error())
-	}
-	triggerSE, err := connector.convertTriggerWithTags(rawResponse[0], rawResponse[1], triggerID)
-	if err != nil {
-		return nil, err
-	}
-	if triggerSE == nil {
-		return nil, nil
-	}
-	return toTrigger(triggerSE, triggerID), nil
-}
-
 func (connector *DbConnector) SetTriggerMetricsMaintenance(triggerID string, metrics map[string]int64) error {
 	c := connector.pool.Get()
 	defer c.Close()

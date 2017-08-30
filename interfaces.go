@@ -22,14 +22,15 @@ type Database interface {
 	SetTriggerLastCheck(triggerID string, checkData *CheckData) error
 	GetTriggerCheckIDs() ([]string, int64, error)
 
-	GetTriggerIds() ([]string, error)
+	GetTriggerIDs() ([]string, error)
+	GetTrigger(string) (Trigger, error)
+	GetTriggers(triggerIDs []string) ([]*Trigger, error)
+
 	GetFilteredTriggerCheckIds([]string, bool) ([]string, int64, error)
-	GetTrigger(string) (*Trigger, error)
 	GetNotificationTrigger(id string) (TriggerData, error)
 	GetTriggerChecks(triggerCheckIDs []string) ([]TriggerChecks, error)
 	SetTriggerMetricsMaintenance(triggerID string, metrics map[string]int64) error
 	GetPatternTriggerIds(pattern string) ([]string, error)
-	GetTriggers(triggerIDs []string) ([]*Trigger, error)
 	DeleteTriggerThrottling(triggerID string) error
 	DeleteTrigger(triggerID string) error
 	SaveTrigger(triggerID string, trigger *Trigger) error

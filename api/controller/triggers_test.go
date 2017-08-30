@@ -50,7 +50,7 @@ func TestGetAllTriggers(t *testing.T) {
 	Convey("Has triggers", t, func() {
 		triggerIDs := []string{uuid.NewV4().String(), uuid.NewV4().String()}
 		triggers := []moira.TriggerChecks{{Trigger: moira.Trigger{ID: triggerIDs[0]}}, {Trigger: moira.Trigger{ID: triggerIDs[1]}}}
-		database.EXPECT().GetTriggerIds().Return(triggerIDs, nil)
+		database.EXPECT().GetTriggerIDs().Return(triggerIDs, nil)
 		database.EXPECT().GetTriggerChecks(triggerIDs).Return(triggers, nil)
 		list, err := GetAllTriggers(database)
 		So(err, ShouldBeNil)
@@ -58,16 +58,16 @@ func TestGetAllTriggers(t *testing.T) {
 	})
 
 	Convey("No triggers", t, func() {
-		database.EXPECT().GetTriggerIds().Return(make([]string, 0), nil)
+		database.EXPECT().GetTriggerIDs().Return(make([]string, 0), nil)
 		database.EXPECT().GetTriggerChecks(make([]string, 0)).Return(make([]moira.TriggerChecks, 0), nil)
 		list, err := GetAllTriggers(database)
 		So(err, ShouldBeNil)
 		So(list, ShouldResemble, &dto.TriggersList{List: make([]moira.TriggerChecks, 0)})
 	})
 
-	Convey("GetTriggerIds error", t, func() {
-		expected := fmt.Errorf("GetTriggerIds error")
-		database.EXPECT().GetTriggerIds().Return(nil, expected)
+	Convey("GetTriggerIDs error", t, func() {
+		expected := fmt.Errorf("GetTriggerIDs error")
+		database.EXPECT().GetTriggerIDs().Return(nil, expected)
 		list, err := GetAllTriggers(database)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 		So(list, ShouldBeNil)
@@ -75,7 +75,7 @@ func TestGetAllTriggers(t *testing.T) {
 
 	Convey("GetTriggerChecks error", t, func() {
 		expected := fmt.Errorf("GetTriggerChecks error")
-		database.EXPECT().GetTriggerIds().Return(make([]string, 0), nil)
+		database.EXPECT().GetTriggerIDs().Return(make([]string, 0), nil)
 		database.EXPECT().GetTriggerChecks(make([]string, 0)).Return(nil, expected)
 		list, err := GetAllTriggers(database)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))

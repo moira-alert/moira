@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/garyburd/redigo/redis"
 	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira-alert/database"
 	"time"
 )
 
@@ -15,45 +16,6 @@ func (connector *DbConnector) GetPatternTriggerIds(pattern string) ([]string, er
 	triggerIds, err := redis.Strings(c.Do("SMEMBERS", fmt.Sprintf("moira-pattern-triggers:%s", pattern)))
 	if err != nil {
 		return nil, fmt.Errorf("Failed to retrieve pattern-triggers for pattern %s: %s", pattern, err.Error())
-	}
-	return triggerIds, nil
-}
-
-func (connector *DbConnector) GetTriggers(triggerIds []string) ([]*moira.Trigger, error) {
-	c := connector.pool.Get()
-	defer c.Close()
-
-	c.Send("MULTI")
-	for _, triggerID := range triggerIds {
-		c.Send("GET", fmt.Sprintf("moira-trigger:%s", triggerID))
-		c.Send("SMEMBERS", fmt.Sprintf("moira-trigger-tags:%s", triggerID))
-	}
-	rawResponse, err := redis.Values(c.Do("EXEC"))
-	if err != nil {
-		return nil, fmt.Errorf("Failed to EXEC: %s", err.Error())
-	}
-
-	triggers := make([]*moira.Trigger, 0)
-	for i := 0; i < len(rawResponse); i += 2 {
-		triggerSE, err := connector.convertTriggerWithTags(rawResponse[i], rawResponse[i+1], triggerIds[i/2])
-		if err != nil {
-			return nil, err
-		}
-		if triggerSE == nil {
-			continue
-		}
-		triggers = append(triggers, toTrigger(triggerSE, triggerIds[i/2]))
-	}
-
-	return triggers, nil
-}
-
-func (connector *DbConnector) GetTriggerIds() ([]string, error) {
-	c := connector.pool.Get()
-	defer c.Close()
-	triggerIds, err := redis.Strings(c.Do("SMEMBERS", "moira-triggers-list"))
-	if err != nil {
-		return nil, fmt.Errorf("Failed to get triggers-list: %s", err.Error())
 	}
 	return triggerIds, nil
 }
@@ -75,9 +37,6 @@ func (connector *DbConnector) DeleteTriggerThrottling(triggerID string) error {
 func (connector *DbConnector) DeleteTrigger(triggerID string) error {
 	trigger, err := connector.GetTrigger(triggerID)
 	if err != nil {
-		return nil
-	}
-	if trigger == nil {
 		return nil
 	}
 
@@ -114,9 +73,9 @@ func (connector *DbConnector) DeleteTrigger(triggerID string) error {
 }
 
 func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigger) error {
-	existing, err := connector.GetTrigger(triggerID)
-	if err != nil {
-		return err
+	existing, errGetTrigger := connector.GetTrigger(triggerID)
+	if errGetTrigger != nil && errGetTrigger != database.ErrNil {
+		return errGetTrigger
 	}
 
 	triggerSE := toTriggerStorageElement(trigger, triggerID)
@@ -129,7 +88,7 @@ func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigg
 	defer c.Close()
 	c.Send("MULTI")
 	cleanupPatterns := make([]string, 0)
-	if existing != nil {
+	if errGetTrigger != database.ErrNil {
 		for _, pattern := range leftJoin(existing.Patterns, trigger.Patterns) {
 			c.Send("SREM", fmt.Sprintf("moira-pattern-triggers:%s", pattern), triggerID)
 			cleanupPatterns = append(cleanupPatterns, pattern)

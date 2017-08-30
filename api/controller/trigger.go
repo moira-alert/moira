@@ -6,6 +6,7 @@ import (
 	"github.com/moira-alert/moira-alert/api"
 	"github.com/moira-alert/moira-alert/api/dto"
 	"github.com/moira-alert/moira-alert/checker"
+	"github.com/moira-alert/moira-alert/database"
 	"github.com/moira-alert/moira-alert/target"
 	"math"
 	"time"
@@ -52,15 +53,15 @@ func SaveTrigger(database moira.Database, trigger *moira.Trigger, triggerID stri
 }
 
 //GetTrigger gets trigger with his throttling - next allowed message time
-func GetTrigger(database moira.Database, triggerID string) (*dto.Trigger, *api.ErrorResponse) {
-	trigger, err := database.GetTrigger(triggerID)
+func GetTrigger(dataBase moira.Database, triggerID string) (*dto.Trigger, *api.ErrorResponse) {
+	trigger, err := dataBase.GetTrigger(triggerID)
 	if err != nil {
+		if err == database.ErrNil {
+			return nil, api.ErrorNotFound("Trigger not found")
+		}
 		return nil, api.ErrorInternalServer(err)
 	}
-	if trigger == nil {
-		return nil, api.ErrorNotFound("Trigger not found")
-	}
-	throttling, _ := database.GetTriggerThrottlingTimestamps(triggerID)
+	throttling, _ := dataBase.GetTriggerThrottlingTimestamps(triggerID)
 	throttlingUnix := throttling.Unix()
 
 	if throttlingUnix < time.Now().Unix() {
@@ -68,7 +69,7 @@ func GetTrigger(database moira.Database, triggerID string) (*dto.Trigger, *api.E
 	}
 
 	triggerResponse := dto.Trigger{
-		Trigger:    *trigger,
+		Trigger:    trigger,
 		Throttling: throttlingUnix,
 	}
 
@@ -132,21 +133,21 @@ func DeleteTriggerThrottling(database moira.Database, triggerID string) *api.Err
 }
 
 //DeleteTriggerMetric deletes metric from last check and all trigger patterns metrics
-func DeleteTriggerMetric(database moira.Database, metricName string, triggerID string) *api.ErrorResponse {
-	trigger, err := database.GetTrigger(triggerID)
+func DeleteTriggerMetric(dataBase moira.Database, metricName string, triggerID string) *api.ErrorResponse {
+	trigger, err := dataBase.GetTrigger(triggerID)
 	if err != nil {
+		if err == database.ErrNil {
+			return api.ErrorInvalidRequest(fmt.Errorf("Trigger not found"))
+		}
 		return api.ErrorInternalServer(err)
 	}
-	if trigger == nil {
-		return api.ErrorInvalidRequest(fmt.Errorf("Trigger not found"))
-	}
 
-	if err = database.AcquireTriggerCheckLock(triggerID, 10); err != nil {
+	if err = dataBase.AcquireTriggerCheckLock(triggerID, 10); err != nil {
 		return api.ErrorInternalServer(err)
 	}
-	defer database.DeleteTriggerCheckLock(triggerID)
+	defer dataBase.DeleteTriggerCheckLock(triggerID)
 
-	lastCheck, err := database.GetTriggerLastCheck(triggerID)
+	lastCheck, err := dataBase.GetTriggerLastCheck(triggerID)
 	if err != nil {
 		return api.ErrorInternalServer(err)
 	}
@@ -157,10 +158,10 @@ func DeleteTriggerMetric(database moira.Database, metricName string, triggerID s
 	if ok {
 		delete(lastCheck.Metrics, metricName)
 	}
-	if err = database.RemovePatternsMetrics(trigger.Patterns); err != nil {
+	if err = dataBase.RemovePatternsMetrics(trigger.Patterns); err != nil {
 		return api.ErrorInternalServer(err)
 	}
-	if err = database.SetTriggerLastCheck(triggerID, lastCheck); err != nil {
+	if err = dataBase.SetTriggerLastCheck(triggerID, lastCheck); err != nil {
 		return api.ErrorInternalServer(err)
 	}
 	return nil
@@ -175,18 +176,18 @@ func SetMetricsMaintenance(database moira.Database, triggerID string, metricsMai
 }
 
 //GetTriggerMetrics gets all trigger metrics values, default values from: now - 10min, to: now
-func GetTriggerMetrics(database moira.Database, from, to int64, triggerID string) (dto.TriggerMetrics, *api.ErrorResponse) {
-	trigger, err := database.GetTrigger(triggerID)
+func GetTriggerMetrics(dataBase moira.Database, from, to int64, triggerID string) (dto.TriggerMetrics, *api.ErrorResponse) {
+	trigger, err := dataBase.GetTrigger(triggerID)
 	if err != nil {
+		if err == database.ErrNil {
+			return nil, api.ErrorInvalidRequest(fmt.Errorf("Trigger not found"))
+		}
 		return nil, api.ErrorInternalServer(err)
-	}
-	if trigger == nil {
-		return nil, api.ErrorInvalidRequest(fmt.Errorf("Trigger not found"))
 	}
 
 	triggerMetrics := make(map[string][]moira.MetricValue)
 	for _, tar := range trigger.Targets {
-		result, err := target.EvaluateTarget(database, tar, from, to, true)
+		result, err := target.EvaluateTarget(dataBase, tar, from, to, true)
 		if err != nil {
 			return nil, api.ErrorInternalServer(err)
 		}
