@@ -17,7 +17,7 @@ func Check(rep interface{}, err error) (moira.CheckData, error) {
 		}
 		return check, fmt.Errorf("Failed to read lastCheck: %s", err.Error())
 	}
-	err = json.Unmarshal(bytes, check)
+	err = json.Unmarshal(bytes, &check)
 	if err != nil {
 		return check, fmt.Errorf("Failed to parse lastCheck json %s: %s", string(bytes), err.Error())
 	}

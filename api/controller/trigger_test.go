@@ -125,7 +125,7 @@ func TestGetTrigger(t *testing.T) {
 
 	Convey("Has trigger no throttling", t, func() {
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
-		dataBase.EXPECT().GetTriggerThrottlingTimestamps(triggerID).Return(begging, begging)
+		dataBase.EXPECT().GetTriggerThrottling(triggerID).Return(begging, begging)
 		actual, err := GetTrigger(dataBase, triggerID)
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, &dto.Trigger{Trigger: trigger, Throttling: 0})
@@ -133,7 +133,7 @@ func TestGetTrigger(t *testing.T) {
 
 	Convey("Has trigger has throttling", t, func() {
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
-		dataBase.EXPECT().GetTriggerThrottlingTimestamps(triggerID).Return(tomorrow, begging)
+		dataBase.EXPECT().GetTriggerThrottling(triggerID).Return(tomorrow, begging)
 		actual, err := GetTrigger(dataBase, triggerID)
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, &dto.Trigger{Trigger: trigger, Throttling: tomorrow.Unix()})
@@ -141,7 +141,7 @@ func TestGetTrigger(t *testing.T) {
 
 	Convey("Has trigger has old throttling", t, func() {
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
-		dataBase.EXPECT().GetTriggerThrottlingTimestamps(triggerID).Return(yesterday, begging)
+		dataBase.EXPECT().GetTriggerThrottling(triggerID).Return(yesterday, begging)
 		actual, err := GetTrigger(dataBase, triggerID)
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, &dto.Trigger{Trigger: trigger, Throttling: 0})
@@ -194,21 +194,21 @@ func TestGetTriggerThrottling(t *testing.T) {
 	yesterday := now.Add(-time.Hour * 24)
 
 	Convey("no throttling", t, func() {
-		database.EXPECT().GetTriggerThrottlingTimestamps(triggerID).Return(begging, begging)
+		database.EXPECT().GetTriggerThrottling(triggerID).Return(begging, begging)
 		actual, err := GetTriggerThrottling(database, triggerID)
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, &dto.ThrottlingResponse{Throttling: 0})
 	})
 
 	Convey("has throttling", t, func() {
-		database.EXPECT().GetTriggerThrottlingTimestamps(triggerID).Return(tomorrow, begging)
+		database.EXPECT().GetTriggerThrottling(triggerID).Return(tomorrow, begging)
 		actual, err := GetTriggerThrottling(database, triggerID)
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, &dto.ThrottlingResponse{Throttling: tomorrow.Unix()})
 	})
 
 	Convey("has old throttling", t, func() {
-		database.EXPECT().GetTriggerThrottlingTimestamps(triggerID).Return(yesterday, begging)
+		database.EXPECT().GetTriggerThrottling(triggerID).Return(yesterday, begging)
 		actual, err := GetTriggerThrottling(database, triggerID)
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, &dto.ThrottlingResponse{Throttling: 0})
@@ -378,14 +378,14 @@ func TestSetMetricsMaintenance(t *testing.T) {
 	maintenance := make(map[string]int64)
 
 	Convey("Success", t, func() {
-		database.EXPECT().SetTriggerMetricsMaintenance(triggerID, maintenance).Return(nil)
+		database.EXPECT().SetTriggerCheckMetricsMaintenance(triggerID, maintenance).Return(nil)
 		err := SetMetricsMaintenance(database, triggerID, maintenance)
 		So(err, ShouldBeNil)
 	})
 
 	Convey("Error", t, func() {
 		expected := fmt.Errorf("Oooops! Error set")
-		database.EXPECT().SetTriggerMetricsMaintenance(triggerID, maintenance).Return(expected)
+		database.EXPECT().SetTriggerCheckMetricsMaintenance(triggerID, maintenance).Return(expected)
 		err := SetMetricsMaintenance(database, triggerID, maintenance)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 	})

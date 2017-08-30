@@ -6,33 +6,7 @@ import (
 	"github.com/garyburd/redigo/redis"
 	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/database"
-	"time"
 )
-
-func (connector *DbConnector) GetPatternTriggerIds(pattern string) ([]string, error) {
-	c := connector.pool.Get()
-	defer c.Close()
-
-	triggerIds, err := redis.Strings(c.Do("SMEMBERS", fmt.Sprintf("moira-pattern-triggers:%s", pattern)))
-	if err != nil {
-		return nil, fmt.Errorf("Failed to retrieve pattern-triggers for pattern %s: %s", pattern, err.Error())
-	}
-	return triggerIds, nil
-}
-
-func (connector *DbConnector) DeleteTriggerThrottling(triggerID string) error {
-	c := connector.pool.Get()
-	defer c.Close()
-
-	c.Send("MULTI")
-	c.Send("SET", fmt.Sprintf("moira-notifier-throttling-beginning:%s", triggerID), time.Now().Unix())
-	c.Send("DEL", fmt.Sprintf("moira-notifier-next:%s", triggerID))
-	_, err := c.Do("EXEC")
-	if err != nil {
-		return fmt.Errorf("Failed to EXEC: %s", err.Error())
-	}
-	return nil
-}
 
 func (connector *DbConnector) DeleteTrigger(triggerID string) error {
 	trigger, err := connector.GetTrigger(triggerID)
@@ -114,19 +88,15 @@ func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigg
 		return fmt.Errorf("Failed to EXEC: %s", err.Error())
 	}
 	for _, pattern := range cleanupPatterns {
-		connector.RemovePatternTriggers(pattern)
-		connector.RemovePattern(pattern)
-		connector.RemovePatternsMetrics([]string{pattern})
-	}
-	return nil
-}
-
-func (connector *DbConnector) RemovePatternTriggers(pattern string) error {
-	c := connector.pool.Get()
-	defer c.Close()
-	_, err := c.Do("DEL", fmt.Sprintf("moira-pattern-triggers:%s", pattern))
-	if err != nil {
-		return fmt.Errorf("Failed delete pattern-triggers: %s, error: %s", pattern, err)
+		triggerIDs, err := connector.GetPatternTriggerIDs(pattern)
+		if err != nil {
+			return err
+		}
+		if len(triggerIDs) == 0 {
+			connector.RemovePatternTriggerIDs(pattern)
+			connector.RemovePattern(pattern)
+			connector.RemovePatternsMetrics([]string{pattern})
+		}
 	}
 	return nil
 }

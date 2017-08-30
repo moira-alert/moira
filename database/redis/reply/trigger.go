@@ -35,7 +35,7 @@ func (storageElement *triggerStorageElement) toTrigger() moira.Trigger {
 		WarnValue:       storageElement.WarnValue,
 		ErrorValue:      storageElement.ErrorValue,
 		Tags:            storageElement.Tags,
-		TTLState:        storageElement.TTL,
+		TTLState:        storageElement.TTLState,
 		Schedule:        storageElement.Schedule,
 		Expression:      storageElement.Expression,
 		Patterns:        storageElement.Patterns,

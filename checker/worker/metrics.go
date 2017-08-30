@@ -34,7 +34,7 @@ func (worker *Checker) handleMetricEvent(metricEvent *moira.MetricEvent) error {
 	if err := worker.Database.AddPatternMetric(pattern, metric); err != nil {
 		return err
 	}
-	triggerIds, err := worker.Database.GetPatternTriggerIds(pattern)
+	triggerIds, err := worker.Database.GetPatternTriggerIDs(pattern)
 	if err != nil {
 		return err
 	}

@@ -84,7 +84,7 @@ func TestGetAllPatterns(t *testing.T) {
 }
 
 func expectGettingPatternList(database *mock_moira_alert.MockDatabase, pattern string, triggers []*moira.Trigger, metrics []string) {
-	database.EXPECT().GetPatternTriggerIds(pattern).Return([]string{pattern}, nil)
+	database.EXPECT().GetPatternTriggerIDs(pattern).Return([]string{pattern}, nil)
 	database.EXPECT().GetTriggers([]string{pattern}).Return(triggers, nil)
 	database.EXPECT().GetPatternMetrics(pattern).Return(metrics, nil)
 }

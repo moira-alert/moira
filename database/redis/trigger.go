@@ -2,7 +2,9 @@ package redis
 
 import (
 	"fmt"
+
 	"github.com/garyburd/redigo/redis"
+
 	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/database"
 	"github.com/moira-alert/moira-alert/database/redis/reply"
@@ -85,6 +87,29 @@ func (connector *DbConnector) GetTriggers(triggerIDs []string) ([]*moira.Trigger
 	return triggers, nil
 }
 
+//GetPatternTriggerIDs gets trigger list by given pattern
+func (connector *DbConnector) GetPatternTriggerIDs(pattern string) ([]string, error) {
+	c := connector.pool.Get()
+	defer c.Close()
+
+	triggerIds, err := redis.Strings(c.Do("SMEMBERS", patternTriggersKey(pattern)))
+	if err != nil {
+		return nil, fmt.Errorf("Failed to retrieve pattern triggers for pattern: %s, error: %s", pattern, err.Error())
+	}
+	return triggerIds, nil
+}
+
+//RemovePatternTriggerIDs removes all triggerIDs list accepted to given pattern
+func (connector *DbConnector) RemovePatternTriggerIDs(pattern string) error {
+	c := connector.pool.Get()
+	defer c.Close()
+	_, err := c.Do("DEL", patternTriggersKey(pattern))
+	if err != nil {
+		return fmt.Errorf("Failed delete pattern-triggers: %s, error: %s", pattern, err)
+	}
+	return nil
+}
+
 var triggersListKey = "moira-triggers-list"
 
 func triggerKey(triggerID string) string {
@@ -93,4 +118,8 @@ func triggerKey(triggerID string) string {
 
 func triggerTagsKey(triggerID string) string {
 	return fmt.Sprintf("moira-trigger-tags:%s", triggerID)
+}
+
+func patternTriggersKey(pattern string) string {
+	return fmt.Sprintf("moira-pattern-triggers:%s", pattern)
 }

@@ -312,17 +312,17 @@ func (_mr *MockDatabaseMockRecorder) GetPatternMetrics(arg0 interface{}) *gomock
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetPatternMetrics", arg0)
 }
 
-// GetPatternTriggerIds mocks base method
-func (_m *MockDatabase) GetPatternTriggerIds(_param0 string) ([]string, error) {
-	ret := _m.ctrl.Call(_m, "GetPatternTriggerIds", _param0)
+// GetPatternTriggerIDs mocks base method
+func (_m *MockDatabase) GetPatternTriggerIDs(_param0 string) ([]string, error) {
+	ret := _m.ctrl.Call(_m, "GetPatternTriggerIDs", _param0)
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetPatternTriggerIds indicates an expected call of GetPatternTriggerIds
-func (_mr *MockDatabaseMockRecorder) GetPatternTriggerIds(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetPatternTriggerIds", arg0)
+// GetPatternTriggerIDs indicates an expected call of GetPatternTriggerIDs
+func (_mr *MockDatabaseMockRecorder) GetPatternTriggerIDs(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetPatternTriggerIDs", arg0)
 }
 
 // GetPatterns mocks base method
@@ -469,17 +469,17 @@ func (_mr *MockDatabaseMockRecorder) GetTriggerLastCheck(arg0 interface{}) *gomo
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetTriggerLastCheck", arg0)
 }
 
-// GetTriggerThrottlingTimestamps mocks base method
-func (_m *MockDatabase) GetTriggerThrottlingTimestamps(_param0 string) (time.Time, time.Time) {
-	ret := _m.ctrl.Call(_m, "GetTriggerThrottlingTimestamps", _param0)
+// GetTriggerThrottling mocks base method
+func (_m *MockDatabase) GetTriggerThrottling(_param0 string) (time.Time, time.Time) {
+	ret := _m.ctrl.Call(_m, "GetTriggerThrottling", _param0)
 	ret0, _ := ret[0].(time.Time)
 	ret1, _ := ret[1].(time.Time)
 	return ret0, ret1
 }
 
-// GetTriggerThrottlingTimestamps indicates an expected call of GetTriggerThrottlingTimestamps
-func (_mr *MockDatabaseMockRecorder) GetTriggerThrottlingTimestamps(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetTriggerThrottlingTimestamps", arg0)
+// GetTriggerThrottling indicates an expected call of GetTriggerThrottling
+func (_mr *MockDatabaseMockRecorder) GetTriggerThrottling(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetTriggerThrottling", arg0)
 }
 
 // GetTriggerToCheck mocks base method
@@ -595,16 +595,16 @@ func (_mr *MockDatabaseMockRecorder) RemovePattern(arg0 interface{}) *gomock.Cal
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "RemovePattern", arg0)
 }
 
-// RemovePatternTriggers mocks base method
-func (_m *MockDatabase) RemovePatternTriggers(_param0 string) error {
-	ret := _m.ctrl.Call(_m, "RemovePatternTriggers", _param0)
+// RemovePatternTriggerIDs mocks base method
+func (_m *MockDatabase) RemovePatternTriggerIDs(_param0 string) error {
+	ret := _m.ctrl.Call(_m, "RemovePatternTriggerIDs", _param0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// RemovePatternTriggers indicates an expected call of RemovePatternTriggers
-func (_mr *MockDatabaseMockRecorder) RemovePatternTriggers(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "RemovePatternTriggers", arg0)
+// RemovePatternTriggerIDs indicates an expected call of RemovePatternTriggerIDs
+func (_mr *MockDatabaseMockRecorder) RemovePatternTriggerIDs(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "RemovePatternTriggerIDs", arg0)
 }
 
 // RemovePatternWithMetrics mocks base method
@@ -728,28 +728,28 @@ func (_mr *MockDatabaseMockRecorder) SetTriggerLastCheck(arg0, arg1 interface{})
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetTriggerLastCheck", arg0, arg1)
 }
 
-// SetTriggerMetricsMaintenance mocks base method
-func (_m *MockDatabase) SetTriggerMetricsMaintenance(_param0 string, _param1 map[string]int64) error {
-	ret := _m.ctrl.Call(_m, "SetTriggerMetricsMaintenance", _param0, _param1)
+// SetTriggerCheckMetricsMaintenance mocks base method
+func (_m *MockDatabase) SetTriggerCheckMetricsMaintenance(_param0 string, _param1 map[string]int64) error {
+	ret := _m.ctrl.Call(_m, "SetTriggerCheckMetricsMaintenance", _param0, _param1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// SetTriggerMetricsMaintenance indicates an expected call of SetTriggerMetricsMaintenance
-func (_mr *MockDatabaseMockRecorder) SetTriggerMetricsMaintenance(arg0, arg1 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetTriggerMetricsMaintenance", arg0, arg1)
+// SetTriggerCheckMetricsMaintenance indicates an expected call of SetTriggerCheckMetricsMaintenance
+func (_mr *MockDatabaseMockRecorder) SetTriggerCheckMetricsMaintenance(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetTriggerCheckMetricsMaintenance", arg0, arg1)
 }
 
-// SetTriggerThrottlingTimestamp mocks base method
-func (_m *MockDatabase) SetTriggerThrottlingTimestamp(_param0 string, _param1 time.Time) error {
-	ret := _m.ctrl.Call(_m, "SetTriggerThrottlingTimestamp", _param0, _param1)
+// SetTriggerThrottling mocks base method
+func (_m *MockDatabase) SetTriggerThrottling(_param0 string, _param1 time.Time) error {
+	ret := _m.ctrl.Call(_m, "SetTriggerThrottling", _param0, _param1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// SetTriggerThrottlingTimestamp indicates an expected call of SetTriggerThrottlingTimestamp
-func (_mr *MockDatabaseMockRecorder) SetTriggerThrottlingTimestamp(arg0, arg1 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetTriggerThrottlingTimestamp", arg0, arg1)
+// SetTriggerThrottling indicates an expected call of SetTriggerThrottling
+func (_mr *MockDatabaseMockRecorder) SetTriggerThrottling(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetTriggerThrottling", arg0, arg1)
 }
 
 // SubscribeMetricEvents mocks base method

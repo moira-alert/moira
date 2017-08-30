@@ -61,7 +61,7 @@ func GetTrigger(dataBase moira.Database, triggerID string) (*dto.Trigger, *api.E
 		}
 		return nil, api.ErrorInternalServer(err)
 	}
-	throttling, _ := dataBase.GetTriggerThrottlingTimestamps(triggerID)
+	throttling, _ := dataBase.GetTriggerThrottling(triggerID)
 	throttlingUnix := throttling.Unix()
 
 	if throttlingUnix < time.Now().Unix() {
@@ -86,7 +86,7 @@ func DeleteTrigger(database moira.Database, triggerID string) *api.ErrorResponse
 
 //GetTriggerThrottling gets trigger throttling timestamp
 func GetTriggerThrottling(database moira.Database, triggerID string) (*dto.ThrottlingResponse, *api.ErrorResponse) {
-	throttling, _ := database.GetTriggerThrottlingTimestamps(triggerID)
+	throttling, _ := database.GetTriggerThrottling(triggerID)
 	throttlingUnix := throttling.Unix()
 	if throttlingUnix < time.Now().Unix() {
 		throttlingUnix = 0
@@ -175,7 +175,7 @@ func DeleteTriggerMetric(dataBase moira.Database, metricName string, triggerID s
 
 //SetMetricsMaintenance sets metrics maintenance for current trigger
 func SetMetricsMaintenance(database moira.Database, triggerID string, metricsMaintenance dto.MetricsMaintenance) *api.ErrorResponse {
-	if err := database.SetTriggerMetricsMaintenance(triggerID, map[string]int64(metricsMaintenance)); err != nil {
+	if err := database.SetTriggerCheckMetricsMaintenance(triggerID, map[string]int64(metricsMaintenance)); err != nil {
 		return api.ErrorInternalServer(err)
 	}
 	return nil

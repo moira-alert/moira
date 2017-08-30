@@ -7,6 +7,7 @@ import (
 	"github.com/garyburd/redigo/redis"
 
 	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira-alert/database"
 	"github.com/moira-alert/moira-alert/database/redis/reply"
 )
 
@@ -17,8 +18,7 @@ func (connector *DbConnector) GetSubscription(id string) (moira.SubscriptionData
 
 	subscription, err := reply.Subscription(c.Do("GET", moiraSubscription(id)))
 	if err != nil {
-		connector.metrics.SubsMalformed.Mark(1)
-		return subscription, fmt.Errorf("Failed to get subscription data for id %s: %s", id, err.Error())
+		return subscription, err
 	}
 	subscription.ID = id
 	return subscription, nil
@@ -69,7 +69,7 @@ func (connector *DbConnector) WriteSubscriptions(subscriptions []*moira.Subscrip
 //SaveSubscription writes subscription data, updates tags subscriptions and user subscriptions
 func (connector *DbConnector) SaveSubscription(subscription *moira.SubscriptionData) error {
 	oldSubscription, err := connector.GetSubscription(subscription.ID)
-	if err != nil {
+	if err != nil && err != database.ErrNil {
 		return err
 	}
 	bytes, err := json.Marshal(subscription)

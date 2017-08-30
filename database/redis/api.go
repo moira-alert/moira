@@ -161,55 +161,6 @@ func (connector *DbConnector) GetTriggerChecks(triggerCheckIDs []string) ([]moir
 	return triggerChecks, nil
 }
 
-func (connector *DbConnector) SetTriggerMetricsMaintenance(triggerID string, metrics map[string]int64) error {
-	c := connector.pool.Get()
-	defer c.Close()
-
-	var readingErr error
-
-	key := fmt.Sprintf("moira-metric-last-check:%s", triggerID)
-	lastCheckString, readingErr := redis.String(c.Do("GET", key))
-	if readingErr != nil {
-		if readingErr != redis.ErrNil {
-			return nil
-		}
-	}
-
-	for readingErr != redis.ErrNil {
-		var lastCheck = moira.CheckData{}
-		err := json.Unmarshal([]byte(lastCheckString), &lastCheck)
-		if err != nil {
-			return fmt.Errorf("Failed to parse lastCheck json %s: %s", lastCheckString, err.Error())
-		}
-		metricsCheck := lastCheck.Metrics
-		if len(metricsCheck) > 0 {
-			for metric, value := range metrics {
-				data, ok := metricsCheck[metric]
-				if !ok {
-					data = moira.MetricState{}
-				}
-				data.Maintenance = value
-				metricsCheck[metric] = data
-			}
-		}
-		newLastCheck, err := json.Marshal(lastCheck)
-		if err != nil {
-			return err
-		}
-
-		var prev string
-		prev, readingErr = redis.String(c.Do("GETSET", key, newLastCheck))
-		if readingErr != nil && readingErr != redis.ErrNil {
-			return readingErr
-		}
-		if prev == lastCheckString {
-			break
-		}
-		lastCheckString = prev
-	}
-	return nil
-}
-
 func (connector *DbConnector) convertTriggerWithTags(triggerInterface interface{}, triggerTagsInterface interface{}, triggerID string) (*triggerStorageElement, error) {
 	trigger := &triggerStorageElement{}
 	triggerBytes, err := redis.Bytes(triggerInterface, nil)

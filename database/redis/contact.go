@@ -18,9 +18,8 @@ func (connector *DbConnector) GetContact(id string) (moira.ContactData, error) {
 
 	contact, err := reply.Contact(c.Do("GET", moiraContact(id)))
 	if err != nil {
-		return contact, fmt.Errorf("Failed to get contact data for id %s: %s", id, err.Error())
+		return contact, err
 	}
-
 	contact.ID = id
 	return contact, nil
 }

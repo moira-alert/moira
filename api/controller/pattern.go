@@ -20,7 +20,7 @@ func GetAllPatterns(database moira.Database, logger moira.Logger) (*dto.PatternL
 
 	for _, pattern := range patterns {
 		go func(pattern string) {
-			triggerIDs, err := database.GetPatternTriggerIds(pattern)
+			triggerIDs, err := database.GetPatternTriggerIDs(pattern)
 			if err != nil {
 				logger.Error(err.Error())
 				rch <- nil

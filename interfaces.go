@@ -21,23 +21,24 @@ type Database interface {
 	GetTriggerLastCheck(triggerID string) (CheckData, error)
 	SetTriggerLastCheck(triggerID string, checkData *CheckData) error
 	GetTriggerCheckIDs() ([]string, int64, error)
+	SetTriggerCheckMetricsMaintenance(triggerID string, metrics map[string]int64) error
 
 	//Trigger storing
 	GetTriggerIDs() ([]string, error)
 	GetTrigger(triggerID string) (Trigger, error)
 	GetTriggers(triggerIDs []string) ([]*Trigger, error)
 
+	GetPatternTriggerIDs(pattern string) ([]string, error)
+	RemovePatternTriggerIDs(pattern string) error
+
+	GetTriggerThrottling(triggerID string) (time.Time, time.Time)
+	SetTriggerThrottling(triggerID string, next time.Time) error
+	DeleteTriggerThrottling(triggerID string) error
+
 	GetFilteredTriggerCheckIds([]string, bool) ([]string, int64, error)
 	GetTriggerChecks(triggerCheckIDs []string) ([]TriggerChecks, error)
-	SetTriggerMetricsMaintenance(triggerID string, metrics map[string]int64) error
-	GetPatternTriggerIds(pattern string) ([]string, error)
-	DeleteTriggerThrottling(triggerID string) error
 	DeleteTrigger(triggerID string) error
 	SaveTrigger(triggerID string, trigger *Trigger) error
-	RemovePatternTriggers(pattern string) error
-
-	GetTriggerThrottlingTimestamps(triggerID string) (time.Time, time.Time)
-	SetTriggerThrottlingTimestamp(triggerID string, next time.Time) error
 
 	AddTriggerToCheck(triggerID string) error
 	GetTriggerToCheck() (*string, error)
