@@ -7,6 +7,8 @@ import (
 	"github.com/moira-alert/moira-alert/cache"
 	"github.com/moira-alert/moira-alert/checker"
 	"github.com/moira-alert/moira-alert/cmd"
+	"github.com/moira-alert/moira-alert/notifier"
+	"github.com/moira-alert/moira-alert/notifier/selfstate"
 )
 
 type config struct {
@@ -68,10 +70,13 @@ type checkerConfig struct {
 
 func (config *checkerConfig) getSettings() *checker.Config {
 	return &checker.Config{
+		Enabled:              cmd.ToBool(config.Enabled),
 		MetricsTTL:           config.MetricsTTL,
 		CheckInterval:        config.CheckInterval,
 		NoDataCheckInterval:  to.Duration(config.NoDataCheckInterval),
 		StopCheckingInterval: config.StopCheckingInterval,
+		LogFile:              config.LogFile,
+		LogLevel:             config.LogLevel,
 	}
 }
 
@@ -85,10 +90,19 @@ type notifierConfig struct {
 	SelfState        selfStateConfig     `yaml:"moira_selfstate"`
 	LogFile          string              `yaml:"log_file"`
 	LogLevel         string              `yaml:"log_level"`
+	FrontURL         string              `yaml:"front_uri"`
 }
 
-type frontConfig struct {
-	URI string `yaml:"uri"`
+func (config *notifierConfig) getSettings() *notifier.Config {
+	return &notifier.Config{
+		Enabled:          cmd.ToBool(config.Enabled),
+		SendingTimeout:   to.Duration(config.SenderTimeout),
+		ResendingTimeout: to.Duration(config.ResendingTimeout),
+		Senders:          config.Senders,
+		LogFile:          config.LogFile,
+		LogLevel:         config.LogLevel,
+		FrontURL:         config.FrontURL,
+	}
 }
 
 type selfStateConfig struct {
@@ -98,6 +112,17 @@ type selfStateConfig struct {
 	LastCheckDelay          int64               `yaml:"last_check_delay"`
 	Contacts                []map[string]string `yaml:"contacts"`
 	NoticeInterval          int64               `yaml:"notice_interval"`
+}
+
+func (config *selfStateConfig) getSettings() *selfstate.Config {
+	return &selfstate.Config{
+		Enabled:                 cmd.ToBool(config.Enabled),
+		RedisDisconnectDelay:    config.RedisDisconnectDelay,
+		LastMetricReceivedDelay: config.LastMetricReceivedDelay,
+		LastCheckDelay:          config.LastCheckDelay,
+		Contacts:                config.Contacts,
+		NoticeInterval:          config.NoticeInterval,
+	}
 }
 
 func getDefault() config {
@@ -142,6 +167,7 @@ func getDefault() config {
 				LastCheckDelay:          60,
 				NoticeInterval:          300,
 			},
+			FrontURL: "https://moira.example.com",
 			LogFile:  "stdout",
 			LogLevel: "debug",
 		},

@@ -1,8 +1,6 @@
 package main
 
 import (
-	"strings"
-
 	"github.com/moira-alert/moira-alert/cmd"
 	"github.com/moira-alert/moira-alert/notifier"
 	"github.com/moira-alert/moira-alert/notifier/selfstate"
@@ -80,19 +78,11 @@ func (config *notifierConfig) getSettings() notifier.Config {
 
 func (config *selfStateConfig) getSettings() selfstate.Config {
 	return selfstate.Config{
-		Enabled:                 toBool(config.Enabled),
+		Enabled:                 cmd.ToBool(config.Enabled),
 		RedisDisconnectDelay:    config.RedisDisconnectDelay,
 		LastMetricReceivedDelay: config.LastMetricReceivedDelay,
 		LastCheckDelay:          config.LastCheckDelay,
 		Contacts:                config.Contacts,
 		NoticeInterval:          config.NoticeInterval,
 	}
-}
-
-func toBool(str string) bool {
-	switch strings.ToLower(str) {
-	case "1", "true", "t", "yes", "y":
-		return true
-	}
-	return false
 }

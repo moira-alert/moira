@@ -18,7 +18,11 @@ type Checker struct {
 	tomb     tomb.Tomb
 }
 
-func (worker *Checker) Start() {
+func (worker *Checker) Start() error {
+	if !worker.Config.Enabled {
+		worker.Logger.Debug("Checker Disabled")
+		return nil
+	}
 	worker.lastData = time.Now().UTC().Unix()
 
 	worker.tomb.Go(worker.noDataChecker)
@@ -26,9 +30,13 @@ func (worker *Checker) Start() {
 
 	worker.tomb.Go(worker.metricsChecker)
 	worker.Logger.Infof("Checking new events started")
+	return nil
 }
 
 func (worker *Checker) Stop() error {
+	if !worker.Config.Enabled {
+		return nil
+	}
 	worker.tomb.Kill(nil)
 	return worker.tomb.Wait()
 }

@@ -11,6 +11,13 @@ import (
 	"github.com/moira-alert/moira-alert/database/redis"
 	"github.com/moira-alert/moira-alert/logging/go-logging"
 	"github.com/moira-alert/moira-alert/metrics/graphite/go-metrics"
+
+	"github.com/moira-alert/moira-alert/notifier"
+	"github.com/moira-alert/moira-alert/notifier/events"
+	"github.com/moira-alert/moira-alert/notifier/notifications"
+	"github.com/moira-alert/moira-alert/notifier/selfstate"
+
+	"github.com/moira-alert/moira-alert/checker/worker"
 )
 
 var (
@@ -89,6 +96,66 @@ func main() {
 		log.Fatalf("Can't start Filter: %v", err)
 	}
 
+	// Notifier
+
+	notifierLog, err := logging.ConfigureLog(config.Notifier.LogFile, config.Notifier.LogLevel, "notifier")
+	if err != nil {
+		log.Fatalf("Can't configure logger for Filter: %v\n", err)
+	}
+
+	notifierMetrics := metrics.ConfigureNotifierMetrics()
+
+	notifierDB := redis.NewDatabase(notifierLog, config.Redis.GetSettings(), databaseMetrics)
+
+	notifierConfig := config.Notifier.getSettings()
+	sender := notifier.NewNotifier(notifierDB, notifierLog, *notifierConfig, notifierMetrics)
+
+	if err := sender.RegisterSenders(notifierDB, notifierConfig.FrontURL); err != nil {
+		log.Fatalf("Can't configure senders: %s", err.Error())
+	}
+
+	selfState := &selfstate.SelfCheckWorker{
+		Log:      notifierLog,
+		DB:       notifierDB,
+		Config:   *config.Notifier.SelfState.getSettings(),
+		Notifier: sender,
+	}
+	if err := selfState.Start(); err != nil {
+		log.Fatalf("SelfState failed: %v", err)
+	}
+
+	fetchEventsWorker := events.FetchEventsWorker{
+		Logger:    notifierLog,
+		Database:  notifierDB,
+		Scheduler: notifier.NewScheduler(notifierDB, notifierLog),
+		Metrics:   notifierMetrics,
+	}
+	fetchEventsWorker.Start()
+
+	fetchNotificationsWorker := &notifications.FetchNotificationsWorker{
+		Logger:   notifierLog,
+		Database: notifierDB,
+		Notifier: sender,
+	}
+	fetchNotificationsWorker.Start()
+
+	// Checker
+	checkerLog, err := logging.ConfigureLog(config.Checker.LogFile, config.Filter.LogLevel, "checker")
+	if err != nil {
+		log.Fatalf("Can't configure logger for Checker: %v\n", err)
+	}
+	checkerMetrics := metrics.ConfigureCheckerMetrics()
+	checkerWorker := &worker.Checker{
+		Logger:   checkerLog,
+		Database: redis.NewDatabase(filterLog, databaseSettings, databaseMetrics),
+		Config:   config.Checker.getSettings(),
+		Metrics:  checkerMetrics,
+	}
+
+	if err := checkerWorker.Start(); err != nil {
+		log.Fatalf("Start Checker failed: %v", err)
+	}
+
 	metrics.Init(config.Graphite.GetSettings(), log, "moira")
 
 	log.Infof("Moira Started (version: %s)", Version)
@@ -102,6 +169,17 @@ func main() {
 
 	if err := filterServer.Stop(); err != nil {
 		log.Errorf("Can't stop Filer: %v", err)
+	}
+
+	// Stop Notifier
+	selfState.Stop()
+	fetchEventsWorker.Stop()
+	fetchNotificationsWorker.Stop()
+	notifierDB.DeregisterBots()
+
+	// Stop Checker
+	if err :=  checkerWorker.Stop(); err != nil {
+		log.Errorf("Stop Checker Failed: %v", err)
 	}
 
 	log.Infof("Moira Stopped (version: %s)", Version)
