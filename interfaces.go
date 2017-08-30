@@ -18,7 +18,7 @@ type Database interface {
 	GetTagTriggerIDs(tagName string) ([]string, error)
 
 	//LastCheck storing
-	GetTriggerLastCheck(triggerID string) (*CheckData, error)
+	GetTriggerLastCheck(triggerID string) (CheckData, error)
 	SetTriggerLastCheck(triggerID string, checkData *CheckData) error
 	GetTriggerCheckIDs() ([]string, int64, error)
 

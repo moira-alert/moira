@@ -12,7 +12,10 @@ func Notification(rep interface{}, err error) (moira.ScheduledNotification, erro
 	notification := moira.ScheduledNotification{}
 	bytes, err := redis.Bytes(rep, err)
 	if err != nil {
-		return notification, err
+		if err == redis.ErrNil {
+			return notification, database.ErrNil
+		}
+		return notification, fmt.Errorf("Failed to read scheduledNotification: %s", err.Error())
 	}
 	err = json.Unmarshal(bytes, &notification)
 	if err != nil {
@@ -27,7 +30,7 @@ func Notifications(rep interface{}, err error) ([]*moira.ScheduledNotification, 
 		if err == redis.ErrNil {
 			return make([]*moira.ScheduledNotification, 0), nil
 		}
-		return nil, err
+		return nil, fmt.Errorf("Failed to read ScheduledNotifications: %s", err.Error())
 	}
 	notifications := make([]*moira.ScheduledNotification, len(values))
 	for i, value := range values {

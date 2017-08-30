@@ -11,7 +11,10 @@ import (
 func MetricValues(values interface{}) ([]*moira.MetricValue, error) {
 	resultByMetricArr, err := redis.Values(values, nil)
 	if err != nil {
-		return nil, err
+		if err == redis.ErrNil {
+			return make([]*moira.MetricValue, 0), nil
+		}
+		return nil, fmt.Errorf("Failed to read metricValues: %s", err.Error())
 	}
 	metricsValues := make([]*moira.MetricValue, 0, len(resultByMetricArr)/2)
 	for i := 0; i < len(resultByMetricArr); i += 2 {

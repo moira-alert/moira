@@ -10,7 +10,7 @@ import (
 	"github.com/moira-alert/moira-alert/database/redis/reply"
 )
 
-// GetSubscription returns subscription data by given id
+// GetSubscription returns subscription data by given id, if no value, return database.ErrNil error
 func (connector *DbConnector) GetSubscription(id string) (moira.SubscriptionData, error) {
 	c := connector.pool.Get()
 	defer c.Close()

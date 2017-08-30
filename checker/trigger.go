@@ -61,14 +61,14 @@ func (triggerChecker *TriggerChecker) InitTriggerChecker() error {
 	return nil
 }
 
-func getLastCheck(database moira.Database, triggerID string, emptyLastCheckTimestamp int64) (*moira.CheckData, error) {
-	lastCheck, err := database.GetTriggerLastCheck(triggerID)
-	if err != nil {
-		return lastCheck, err
+func getLastCheck(dataBase moira.Database, triggerID string, emptyLastCheckTimestamp int64) (*moira.CheckData, error) {
+	lastCheck, err := dataBase.GetTriggerLastCheck(triggerID)
+	if err != nil && err != database.ErrNil {
+		return nil, err
 	}
 
-	if lastCheck == nil {
-		lastCheck = &moira.CheckData{
+	if err == database.ErrNil {
+		lastCheck = moira.CheckData{
 			Metrics:   make(map[string]moira.MetricState),
 			State:     NODATA,
 			Timestamp: emptyLastCheckTimestamp,
@@ -79,5 +79,5 @@ func getLastCheck(database moira.Database, triggerID string, emptyLastCheckTimes
 		lastCheck.Timestamp = emptyLastCheckTimestamp
 	}
 
-	return lastCheck, nil
+	return &lastCheck, nil
 }

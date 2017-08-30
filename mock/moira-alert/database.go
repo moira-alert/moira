@@ -470,9 +470,9 @@ func (_mr *MockDatabaseMockRecorder) GetTriggerIDs() *gomock.Call {
 }
 
 // GetTriggerLastCheck mocks base method
-func (_m *MockDatabase) GetTriggerLastCheck(_param0 string) (*moira_alert.CheckData, error) {
+func (_m *MockDatabase) GetTriggerLastCheck(_param0 string) (moira_alert.CheckData, error) {
 	ret := _m.ctrl.Call(_m, "GetTriggerLastCheck", _param0)
-	ret0, _ := ret[0].(*moira_alert.CheckData)
+	ret0, _ := ret[0].(moira_alert.CheckData)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

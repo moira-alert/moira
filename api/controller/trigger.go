@@ -13,35 +13,35 @@ import (
 )
 
 //SaveTrigger create or update trigger data and update trigger metrics in last state
-func SaveTrigger(database moira.Database, trigger *moira.Trigger, triggerID string, timeSeriesNames map[string]bool) (*dto.SaveTriggerResponse, *api.ErrorResponse) {
-	if err := database.AcquireTriggerCheckLock(triggerID, 10); err != nil {
+func SaveTrigger(dataBase moira.Database, trigger *moira.Trigger, triggerID string, timeSeriesNames map[string]bool) (*dto.SaveTriggerResponse, *api.ErrorResponse) {
+	if err := dataBase.AcquireTriggerCheckLock(triggerID, 10); err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
-	defer database.DeleteTriggerCheckLock(triggerID)
-	lastCheck, err := database.GetTriggerLastCheck(triggerID)
-	if err != nil {
+	defer dataBase.DeleteTriggerCheckLock(triggerID)
+	lastCheck, err := dataBase.GetTriggerLastCheck(triggerID)
+	if err != nil && err != database.ErrNil {
 		return nil, api.ErrorInternalServer(err)
 	}
 
-	if lastCheck != nil {
+	if err != database.ErrNil {
 		for metric := range lastCheck.Metrics {
 			if _, ok := timeSeriesNames[metric]; !ok {
 				delete(lastCheck.Metrics, metric)
 			}
 		}
 	} else {
-		lastCheck = &moira.CheckData{
+		lastCheck = moira.CheckData{
 			Metrics: make(map[string]moira.MetricState),
 			Score:   0,
 			State:   checker.NODATA,
 		}
 	}
 
-	if err = database.SetTriggerLastCheck(triggerID, lastCheck); err != nil {
+	if err = dataBase.SetTriggerLastCheck(triggerID, &lastCheck); err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
 
-	if err = database.SaveTrigger(triggerID, trigger); err != nil {
+	if err = dataBase.SaveTrigger(triggerID, trigger); err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
 
@@ -95,10 +95,16 @@ func GetTriggerThrottling(database moira.Database, triggerID string) (*dto.Throt
 }
 
 //GetTriggerLastCheck gets trigger last check data
-func GetTriggerLastCheck(database moira.Database, triggerID string) (*dto.TriggerCheck, *api.ErrorResponse) {
-	lastCheck, err := database.GetTriggerLastCheck(triggerID)
+func GetTriggerLastCheck(dataBase moira.Database, triggerID string) (*dto.TriggerCheck, *api.ErrorResponse) {
+	lastCheck := &moira.CheckData{}
+	var err error
+
+	*lastCheck, err = dataBase.GetTriggerLastCheck(triggerID)
 	if err != nil {
-		return nil, api.ErrorInternalServer(err)
+		if err != database.ErrNil {
+			return nil, api.ErrorInternalServer(err)
+		}
+		lastCheck = nil
 	}
 
 	triggerCheck := dto.TriggerCheck{
@@ -149,10 +155,10 @@ func DeleteTriggerMetric(dataBase moira.Database, metricName string, triggerID s
 
 	lastCheck, err := dataBase.GetTriggerLastCheck(triggerID)
 	if err != nil {
+		if err == database.ErrNil {
+			return api.ErrorInvalidRequest(fmt.Errorf("Trigger check not found"))
+		}
 		return api.ErrorInternalServer(err)
-	}
-	if lastCheck == nil {
-		return api.ErrorInvalidRequest(fmt.Errorf("Trigger check not found"))
 	}
 	_, ok := lastCheck.Metrics[metricName]
 	if ok {
@@ -161,7 +167,7 @@ func DeleteTriggerMetric(dataBase moira.Database, metricName string, triggerID s
 	if err = dataBase.RemovePatternsMetrics(trigger.Patterns); err != nil {
 		return api.ErrorInternalServer(err)
 	}
-	if err = dataBase.SetTriggerLastCheck(triggerID, lastCheck); err != nil {
+	if err = dataBase.SetTriggerLastCheck(triggerID, &lastCheck); err != nil {
 		return api.ErrorInternalServer(err)
 	}
 	return nil

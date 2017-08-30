@@ -58,7 +58,7 @@ func Trigger(rep interface{}, err error) (moira.Trigger, error) {
 		if err == redis.ErrNil {
 			return moira.Trigger{}, database.ErrNil
 		}
-		return moira.Trigger{}, err
+		return moira.Trigger{}, fmt.Errorf("Failed to read trigger: %s", err.Error())
 	}
 	triggerSE := &triggerStorageElement{}
 	err = json.Unmarshal(bytes, triggerSE)

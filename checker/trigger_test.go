@@ -41,7 +41,7 @@ func TestInitTriggerChecker(t *testing.T) {
 		Convey("Get lastCheck error", func() {
 			readLastCheckError := fmt.Errorf("Oppps! Can't read last check")
 			dataBase.EXPECT().GetTrigger(triggerChecker.TriggerID).Return(moira.Trigger{}, nil)
-			dataBase.EXPECT().GetTriggerLastCheck(triggerChecker.TriggerID).Return(nil, readLastCheckError)
+			dataBase.EXPECT().GetTriggerLastCheck(triggerChecker.TriggerID).Return(moira.CheckData{}, readLastCheckError)
 			err := triggerChecker.InitTriggerChecker()
 			So(err, ShouldBeError)
 			So(err, ShouldResemble, readLastCheckError)
@@ -105,7 +105,7 @@ func TestInitTriggerChecker(t *testing.T) {
 
 	Convey("Test trigger checker with lastCheck", t, func() {
 		dataBase.EXPECT().GetTrigger(triggerChecker.TriggerID).Return(trigger, nil)
-		dataBase.EXPECT().GetTriggerLastCheck(triggerChecker.TriggerID).Return(&lastCheck, nil)
+		dataBase.EXPECT().GetTriggerLastCheck(triggerChecker.TriggerID).Return(lastCheck, nil)
 		err := triggerChecker.InitTriggerChecker()
 		So(err, ShouldBeNil)
 
@@ -121,7 +121,7 @@ func TestInitTriggerChecker(t *testing.T) {
 
 	Convey("Test trigger checker without lastCheck", t, func() {
 		dataBase.EXPECT().GetTrigger(triggerChecker.TriggerID).Return(trigger, nil)
-		dataBase.EXPECT().GetTriggerLastCheck(triggerChecker.TriggerID).Return(nil, nil)
+		dataBase.EXPECT().GetTriggerLastCheck(triggerChecker.TriggerID).Return(moira.CheckData{}, database.ErrNil)
 		err := triggerChecker.InitTriggerChecker()
 		So(err, ShouldBeNil)
 
@@ -144,7 +144,7 @@ func TestInitTriggerChecker(t *testing.T) {
 
 	Convey("Test trigger checker without lastCheck and ttl", t, func() {
 		dataBase.EXPECT().GetTrigger(triggerChecker.TriggerID).Return(trigger, nil)
-		dataBase.EXPECT().GetTriggerLastCheck(triggerChecker.TriggerID).Return(nil, nil)
+		dataBase.EXPECT().GetTriggerLastCheck(triggerChecker.TriggerID).Return(moira.CheckData{}, database.ErrNil)
 		err := triggerChecker.InitTriggerChecker()
 		So(err, ShouldBeNil)
 
@@ -164,7 +164,7 @@ func TestInitTriggerChecker(t *testing.T) {
 
 	Convey("Test trigger checker with lastCheck and without ttl", t, func() {
 		dataBase.EXPECT().GetTrigger(triggerChecker.TriggerID).Return(trigger, nil)
-		dataBase.EXPECT().GetTriggerLastCheck(triggerChecker.TriggerID).Return(&lastCheck, nil)
+		dataBase.EXPECT().GetTriggerLastCheck(triggerChecker.TriggerID).Return(lastCheck, nil)
 		err := triggerChecker.InitTriggerChecker()
 		So(err, ShouldBeNil)
 

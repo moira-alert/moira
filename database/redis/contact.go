@@ -9,7 +9,7 @@ import (
 	"github.com/moira-alert/moira-alert/database/redis/reply"
 )
 
-//GetContact returns contact data by given id
+//GetContact returns contact data by given id, if no value, return database.ErrNil error
 func (connector *DbConnector) GetContact(id string) (moira.ContactData, error) {
 	c := connector.pool.Get()
 	defer c.Close()

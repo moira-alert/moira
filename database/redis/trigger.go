@@ -8,7 +8,7 @@ import (
 	"github.com/moira-alert/moira-alert/database/redis/reply"
 )
 
-//GetTriggerIDs gets all moira triggerIDs
+//GetTriggerIDs gets all moira triggerIDs, if no value, return database.ErrNil error
 func (connector *DbConnector) GetTriggerIDs() ([]string, error) {
 	c := connector.pool.Get()
 	defer c.Close()

@@ -6,6 +6,7 @@ import (
 	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/api"
 	"github.com/moira-alert/moira-alert/api/dto"
+	"github.com/moira-alert/moira-alert/database"
 	"github.com/moira-alert/moira-alert/mock/moira-alert"
 	"github.com/satori/go.uuid"
 	. "github.com/smartystreets/goconvey/convey"
@@ -15,28 +16,28 @@ import (
 func TestCreateTrigger(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
-	database := mock_moira_alert.NewMockDatabase(mockCtrl)
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	trigger := moira.Trigger{ID: uuid.NewV4().String()}
 
 	Convey("Success", t, func() {
-		database.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 10)
-		database.EXPECT().DeleteTriggerCheckLock(gomock.Any())
-		database.EXPECT().GetTriggerLastCheck(gomock.Any()).Return(nil, nil)
-		database.EXPECT().SetTriggerLastCheck(gomock.Any(), gomock.Any()).Return(nil)
-		database.EXPECT().SaveTrigger(gomock.Any(), &trigger).Return(nil)
-		resp, err := CreateTrigger(database, &trigger, make(map[string]bool))
+		dataBase.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 10)
+		dataBase.EXPECT().DeleteTriggerCheckLock(gomock.Any())
+		dataBase.EXPECT().GetTriggerLastCheck(gomock.Any()).Return(moira.CheckData{}, database.ErrNil)
+		dataBase.EXPECT().SetTriggerLastCheck(gomock.Any(), gomock.Any()).Return(nil)
+		dataBase.EXPECT().SaveTrigger(gomock.Any(), &trigger).Return(nil)
+		resp, err := CreateTrigger(dataBase, &trigger, make(map[string]bool))
 		So(err, ShouldBeNil)
 		So(resp.Message, ShouldResemble, "trigger created")
 	})
 
 	Convey("Error", t, func() {
 		expected := fmt.Errorf("Soo bad trigger")
-		database.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 10)
-		database.EXPECT().DeleteTriggerCheckLock(gomock.Any())
-		database.EXPECT().GetTriggerLastCheck(gomock.Any()).Return(nil, nil)
-		database.EXPECT().SetTriggerLastCheck(gomock.Any(), gomock.Any()).Return(nil)
-		database.EXPECT().SaveTrigger(gomock.Any(), &trigger).Return(expected)
-		resp, err := CreateTrigger(database, &trigger, make(map[string]bool))
+		dataBase.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 10)
+		dataBase.EXPECT().DeleteTriggerCheckLock(gomock.Any())
+		dataBase.EXPECT().GetTriggerLastCheck(gomock.Any()).Return(moira.CheckData{}, database.ErrNil)
+		dataBase.EXPECT().SetTriggerLastCheck(gomock.Any(), gomock.Any()).Return(nil)
+		dataBase.EXPECT().SaveTrigger(gomock.Any(), &trigger).Return(expected)
+		resp, err := CreateTrigger(dataBase, &trigger, make(map[string]bool))
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 		So(resp, ShouldBeNil)
 	})

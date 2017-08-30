@@ -10,18 +10,11 @@ import (
 	"github.com/moira-alert/moira-alert/database/redis/reply"
 )
 
-//GetTriggerLastCheck gets trigger last check data by given triggerID
-func (connector *DbConnector) GetTriggerLastCheck(triggerID string) (*moira.CheckData, error) {
+//GetTriggerLastCheck gets trigger last check data by given triggerID, if no value, return database.ErrNil error
+func (connector *DbConnector) GetTriggerLastCheck(triggerID string) (moira.CheckData, error) {
 	c := connector.pool.Get()
 	defer c.Close()
-	lastCheck, err := reply.Check(c.Do("GET", moiraMetricLastCheck(triggerID)))
-	if err != nil {
-		if err == redis.ErrNil {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("Error getting last check, id: %s, error: %s", triggerID, err.Error())
-	}
-	return lastCheck, nil
+	return reply.Check(c.Do("GET", moiraMetricLastCheck(triggerID)))
 }
 
 //SetTriggerLastCheck sets trigger last check data
