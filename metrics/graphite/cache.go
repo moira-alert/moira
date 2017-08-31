@@ -1,6 +1,6 @@
 package graphite
 
-//CacheMetrics is a collection of metrics used in cache
+// CacheMetrics is a collection of metrics used in cache
 type CacheMetrics struct {
 	TotalMetricsReceived    Meter // TotalMetricsReceived metrics counter
 	ValidMetricsReceived    Meter // ValidMetricsReceived metrics counter

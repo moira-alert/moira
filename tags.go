@@ -12,7 +12,7 @@ var (
 	eventProgressTag        = "PROGRESS"
 )
 
-//GetEventTags returns additional subscription tags based on trigger state
+// GetEventTags returns additional subscription tags based on trigger state
 func (event *NotificationEvent) GetEventTags() []string {
 	tags := []string{event.State, event.OldState}
 	if oldStateWeight, ok := eventStateWeight[event.OldState]; ok {

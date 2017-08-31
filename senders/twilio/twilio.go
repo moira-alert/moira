@@ -89,7 +89,7 @@ type Sender struct {
 	sender sendEventsTwilio
 }
 
-//Init read yaml config
+// Init read yaml config
 func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger) error {
 	apiType := senderSettings["type"]
 
@@ -135,7 +135,7 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 	return nil
 }
 
-//SendEvents implements Sender interface Send
+// SendEvents implements Sender interface Send
 func (sender *Sender) SendEvents(events moira.EventsData, contact moira.ContactData, trigger moira.TriggerData, throttled bool) error {
 	return sender.sender.SendEvents(events, contact, trigger, throttled)
 }

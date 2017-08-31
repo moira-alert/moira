@@ -16,7 +16,7 @@ import (
 	"github.com/skbkontur/bot"
 )
 
-//RegisterSenders watch on senders config and register all configured senders
+// RegisterSenders watch on senders config and register all configured senders
 func (notifier *StandardNotifier) RegisterSenders(connector bot.Database, frontURI string) error {
 	for _, senderSettings := range notifier.config.Senders {
 		senderSettings["front_uri"] = frontURI

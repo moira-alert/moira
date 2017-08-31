@@ -1,11 +1,11 @@
-//nolint
+// nolint
 package metrics
 
 import (
 	goMetrics "github.com/rcrowley/go-metrics"
 )
 
-//Meter is facade for go-metrics package Meter struct
+// Meter is facade for go-metrics package Meter struct
 type Meter struct {
 	meter goMetrics.Meter
 }

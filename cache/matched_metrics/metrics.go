@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-//MetricsMatcher make buffer of metrics and save it
+// MetricsMatcher make buffer of metrics and save it
 type MetricsMatcher struct {
 	logger       moira.Logger
 	metrics      *graphite.CacheMetrics
@@ -16,7 +16,7 @@ type MetricsMatcher struct {
 	cacheStorage *cache.Storage
 }
 
-//NewMetricsMatcher creates new MetricsMatcher
+// NewMetricsMatcher creates new MetricsMatcher
 func NewMetricsMatcher(metrics *graphite.CacheMetrics, logger moira.Logger, database moira.Database, cacheStorage *cache.Storage) *MetricsMatcher {
 	return &MetricsMatcher{
 		metrics:      metrics,
@@ -26,7 +26,7 @@ func NewMetricsMatcher(metrics *graphite.CacheMetrics, logger moira.Logger, data
 	}
 }
 
-//Start process matched metrics from channel and save it in cache
+// Start process matched metrics from channel and save it in cache
 func (matcher *MetricsMatcher) Start(channel chan *moira.MatchedMetric, wg *sync.WaitGroup) {
 	go func() {
 		defer wg.Done()

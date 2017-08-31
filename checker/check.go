@@ -8,10 +8,10 @@ import (
 
 var checkPointGap int64 = 120
 
-//ErrTriggerHasNoMetrics used if trigger no metrics
+// ErrTriggerHasNoMetrics used if trigger no metrics
 var ErrTriggerHasNoMetrics = fmt.Errorf("Trigger has no metrics")
 
-//Check handle trigger and last check and write new state of trigger, if state were change then write new NotificationEvent
+// Check handle trigger and last check and write new state of trigger, if state were change then write new NotificationEvent
 func (triggerChecker *TriggerChecker) Check() error {
 	checkData, err := triggerChecker.handleTrigger()
 	if err != nil {
@@ -191,7 +191,7 @@ func (triggerChecker *TriggerChecker) getTimeSeriesState(triggerTimeSeries *trig
 
 func (triggerChecker *TriggerChecker) cleanupMetricsValues(metrics []string, until int64) {
 	for _, metric := range metrics {
-		//todo cache cache_ttl
+		// todo cache cache_ttl
 		if err := triggerChecker.Database.RemoveMetricValues(metric, until-triggerChecker.Config.MetricsTTL); err != nil {
 			triggerChecker.Logger.Error(err.Error())
 		}

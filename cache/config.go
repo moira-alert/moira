@@ -1,6 +1,6 @@
 package cache
 
-//Config is cache configuration settings
+// Config is cache configuration settings
 type Config struct {
 	Enabled         bool
 	Listen          string

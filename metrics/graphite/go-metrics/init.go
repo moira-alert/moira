@@ -10,7 +10,7 @@ import (
 	goMetricsGraphite "github.com/cyberdelia/go-metrics-graphite"
 )
 
-//Init is initializer for notifier graphite metrics worker based on go-metrics and go-metrics-graphite
+// Init is initializer for notifier graphite metrics worker based on go-metrics and go-metrics-graphite
 func Init(config graphite.Config, logger moira.Logger, serviceName string) {
 	uri := config.URI
 	prefix := config.Prefix

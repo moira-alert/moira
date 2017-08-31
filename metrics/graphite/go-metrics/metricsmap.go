@@ -1,11 +1,11 @@
-//nolint
+// nolint
 package metrics
 
 import (
 	"github.com/moira-alert/moira-alert/metrics/graphite"
 )
 
-//MetricMap is realization of MetricsMap
+// MetricMap is realization of MetricsMap
 type MetricMap struct {
 	metrics map[string]Meter
 }

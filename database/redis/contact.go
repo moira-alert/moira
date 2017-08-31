@@ -9,7 +9,7 @@ import (
 	"github.com/moira-alert/moira-alert/database/redis/reply"
 )
 
-//GetContact returns contact data by given id, if no value, return database.ErrNil error
+// GetContact returns contact data by given id, if no value, return database.ErrNil error
 func (connector *DbConnector) GetContact(id string) (moira.ContactData, error) {
 	c := connector.pool.Get()
 	defer c.Close()
@@ -24,8 +24,8 @@ func (connector *DbConnector) GetContact(id string) (moira.ContactData, error) {
 	return contact, nil
 }
 
-//GetContacts returns contacts data by given ids, len of contactIDs is equal to len of returned values array.
-//If there is no object by current ID, then nil is returned
+// GetContacts returns contacts data by given ids, len of contactIDs is equal to len of returned values array.
+// If there is no object by current ID, then nil is returned
 func (connector *DbConnector) GetContacts(contactIDs []string) ([]*moira.ContactData, error) {
 	c := connector.pool.Get()
 	defer c.Close()
@@ -46,7 +46,7 @@ func (connector *DbConnector) GetContacts(contactIDs []string) ([]*moira.Contact
 	return contacts, nil
 }
 
-//GetAllContacts returns full contact list
+// GetAllContacts returns full contact list
 func (connector *DbConnector) GetAllContacts() ([]*moira.ContactData, error) {
 	c := connector.pool.Get()
 	defer c.Close()
@@ -64,7 +64,7 @@ func (connector *DbConnector) GetAllContacts() ([]*moira.ContactData, error) {
 	return connector.GetContacts(contactIDs)
 }
 
-//SaveContact writes contact data and updates user contacts
+// SaveContact writes contact data and updates user contacts
 func (connector *DbConnector) SaveContact(contact *moira.ContactData) error {
 	contactString, err := json.Marshal(contact)
 	if err != nil {
@@ -84,7 +84,7 @@ func (connector *DbConnector) SaveContact(contact *moira.ContactData) error {
 	return nil
 }
 
-//RemoveContact deletes contact data and contactID from user contacts
+// RemoveContact deletes contact data and contactID from user contacts
 func (connector *DbConnector) RemoveContact(contactID string, userLogin string) error {
 	c := connector.pool.Get()
 	defer c.Close()
@@ -99,7 +99,7 @@ func (connector *DbConnector) RemoveContact(contactID string, userLogin string) 
 	return nil
 }
 
-//WriteContact writes contact data
+// WriteContact writes contact data
 func (connector *DbConnector) WriteContact(contact *moira.ContactData) error {
 	bytes, err := json.Marshal(contact)
 	if err != nil {

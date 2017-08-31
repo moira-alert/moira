@@ -11,7 +11,7 @@ import (
 	"github.com/moira-alert/moira-alert/notifier"
 )
 
-//FetchNotificationsWorker - check for new notifications and send it using notifier
+// FetchNotificationsWorker - check for new notifications and send it using notifier
 type FetchNotificationsWorker struct {
 	Logger   moira.Logger
 	Database moira.Database

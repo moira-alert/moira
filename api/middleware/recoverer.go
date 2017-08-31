@@ -1,7 +1,7 @@
 package middleware
 
 // The original work was derived from Goji's middleware, source:
-// https://github.com/zenazn/goji/tree/master/web/middleware
+// https:// github.com/zenazn/goji/tree/master/web/middleware
 
 import (
 	"fmt"
@@ -17,7 +17,7 @@ import (
 // backtrace), and returns a HTTP 500 (Internal Server Error) status if
 // possible. Recoverer prints a request ID if one is provided.
 //
-// Alternatively, look at https://github.com/pressly/lg middleware pkgs.
+// Alternatively, look at https:// github.com/pressly/lg middleware pkgs.
 func Recoverer(next http.Handler) http.Handler {
 	fn := func(writer http.ResponseWriter, request *http.Request) {
 		defer func() {

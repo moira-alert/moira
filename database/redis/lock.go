@@ -7,7 +7,7 @@ import (
 	"github.com/garyburd/redigo/redis"
 )
 
-//AcquireTriggerCheckLock sets trigger lock by given id. If lock does not take, try again and repeat it for given attempts
+// AcquireTriggerCheckLock sets trigger lock by given id. If lock does not take, try again and repeat it for given attempts
 func (connector *DbConnector) AcquireTriggerCheckLock(triggerID string, timeout int) error {
 	acquired, err := connector.SetTriggerCheckLock(triggerID)
 	if err != nil {
@@ -28,7 +28,7 @@ func (connector *DbConnector) AcquireTriggerCheckLock(triggerID string, timeout 
 	return nil
 }
 
-//SetTriggerCheckLock create to database lock object with 30sec TTL and return true if object successfully created, or false if object already exists
+// SetTriggerCheckLock create to database lock object with 30sec TTL and return true if object successfully created, or false if object already exists
 func (connector *DbConnector) SetTriggerCheckLock(triggerID string) (bool, error) {
 	c := connector.pool.Get()
 	defer c.Close()
@@ -42,7 +42,7 @@ func (connector *DbConnector) SetTriggerCheckLock(triggerID string) (bool, error
 	return true, nil
 }
 
-//DeleteTriggerCheckLock deletes trigger check lock for given triggerID
+// DeleteTriggerCheckLock deletes trigger check lock for given triggerID
 func (connector *DbConnector) DeleteTriggerCheckLock(triggerID string) error {
 	c := connector.pool.Get()
 	defer c.Close()

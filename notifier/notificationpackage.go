@@ -5,7 +5,7 @@ import (
 	"github.com/moira-alert/moira-alert"
 )
 
-//NotificationPackage represent sending data
+// NotificationPackage represent sending data
 type NotificationPackage struct {
 	Events     []moira.NotificationEvent
 	Trigger    moira.TriggerData

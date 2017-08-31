@@ -1,6 +1,6 @@
 package checker
 
-//Default moira triggers states
+// Default moira triggers states
 const (
 	OK        = "OK"
 	WARN      = "WARN"

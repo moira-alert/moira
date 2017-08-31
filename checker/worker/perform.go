@@ -22,7 +22,7 @@ func (worker *Checker) perform(triggerIDs []string, noCache bool, cacheTTL int64
 			wg.Add(1)
 			go func(triggerID string) {
 				defer wg.Done()
-				//todo triggerId add check cache cacheTTL seconds
+				// todo triggerId add check cache cacheTTL seconds
 				if err := worker.handleTriggerToCheck(triggerID); err != nil {
 					worker.Logger.Errorf("Failed to perform trigger: %s error: %s", triggerID, err.Error())
 				}
@@ -64,6 +64,6 @@ func (worker *Checker) checkTrigger(triggerID string) error {
 		}
 		return err
 	}
-	//todo cacheTTL
+	// todo cacheTTL
 	return triggerChecker.Check()
 }

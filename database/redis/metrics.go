@@ -11,7 +11,7 @@ import (
 	"github.com/moira-alert/moira-alert/database/redis/reply"
 )
 
-//GetPatterns gets updated patterns array
+// GetPatterns gets updated patterns array
 func (connector *DbConnector) GetPatterns() ([]string, error) {
 	c := connector.pool.Get()
 	defer c.Close()
@@ -22,7 +22,7 @@ func (connector *DbConnector) GetPatterns() ([]string, error) {
 	return patterns, nil
 }
 
-//GetMetricsValues gets metrics values for given interval
+// GetMetricsValues gets metrics values for given interval
 func (connector *DbConnector) GetMetricsValues(metrics []string, from int64, until int64) (map[string][]*moira.MetricValue, error) {
 	c := connector.pool.Get()
 	defer c.Close()
@@ -49,7 +49,7 @@ func (connector *DbConnector) GetMetricsValues(metrics []string, from int64, unt
 	return res, nil
 }
 
-//GetMetricRetention gets given metric retention, if retention is empty then return default retention value(60)
+// GetMetricRetention gets given metric retention, if retention is empty then return default retention value(60)
 func (connector *DbConnector) GetMetricRetention(metric string) (int64, error) {
 	c := connector.pool.Get()
 	defer c.Close()
@@ -64,7 +64,7 @@ func (connector *DbConnector) GetMetricRetention(metric string) (int64, error) {
 	return retention, nil
 }
 
-//SaveMetrics saves new metrics
+// SaveMetrics saves new metrics
 func (connector *DbConnector) SaveMetrics(metrics map[string]*moira.MatchedMetric) error {
 	c := connector.pool.Get()
 	defer c.Close()
@@ -88,7 +88,7 @@ func (connector *DbConnector) SaveMetrics(metrics map[string]*moira.MatchedMetri
 	return c.Flush()
 }
 
-//SubscribeMetricEvents creates subscription for new metrics and return channel for this events
+// SubscribeMetricEvents creates subscription for new metrics and return channel for this events
 func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb) <-chan *moira.MetricEvent {
 	c := connector.pool.Get()
 	psc := redis.PubSubConn{Conn: c}
@@ -124,7 +124,7 @@ func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb) <-chan *moi
 	return metricsChannel
 }
 
-//AddPatternMetric adds new metrics by given pattern
+// AddPatternMetric adds new metrics by given pattern
 func (connector *DbConnector) AddPatternMetric(pattern, metric string) error {
 	c := connector.pool.Get()
 	defer c.Close()
@@ -135,7 +135,7 @@ func (connector *DbConnector) AddPatternMetric(pattern, metric string) error {
 	return err
 }
 
-//GetPatternMetrics gets all metrics by given pattern
+// GetPatternMetrics gets all metrics by given pattern
 func (connector *DbConnector) GetPatternMetrics(pattern string) ([]string, error) {
 	c := connector.pool.Get()
 	defer c.Close()
@@ -150,7 +150,7 @@ func (connector *DbConnector) GetPatternMetrics(pattern string) ([]string, error
 	return metrics, nil
 }
 
-//RemovePattern removes pattern from patterns list
+// RemovePattern removes pattern from patterns list
 func (connector *DbConnector) RemovePattern(pattern string) error {
 	c := connector.pool.Get()
 	defer c.Close()
@@ -161,7 +161,7 @@ func (connector *DbConnector) RemovePattern(pattern string) error {
 	return nil
 }
 
-//RemovePatternsMetrics removes metrics by given patterns
+// RemovePatternsMetrics removes metrics by given patterns
 func (connector *DbConnector) RemovePatternsMetrics(patterns []string) error {
 	c := connector.pool.Get()
 	defer c.Close()
@@ -176,7 +176,7 @@ func (connector *DbConnector) RemovePatternsMetrics(patterns []string) error {
 	return nil
 }
 
-//RemovePatternWithMetrics removes pattern metrics with data and given pattern
+// RemovePatternWithMetrics removes pattern metrics with data and given pattern
 func (connector *DbConnector) RemovePatternWithMetrics(pattern string) error {
 	metrics, err := connector.GetPatternMetrics(pattern)
 	if err != nil {
@@ -197,7 +197,7 @@ func (connector *DbConnector) RemovePatternWithMetrics(pattern string) error {
 	return nil
 }
 
-//RemoveMetricValues remove metrics timestamps values from 0 to given time
+// RemoveMetricValues remove metrics timestamps values from 0 to given time
 func (connector *DbConnector) RemoveMetricValues(metric string, toTime int64) error {
 	c := connector.pool.Get()
 	defer c.Close()

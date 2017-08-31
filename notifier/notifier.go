@@ -9,7 +9,7 @@ import (
 	"github.com/moira-alert/moira-alert/metrics/graphite"
 )
 
-//Notifier implements notification functionality
+// Notifier implements notification functionality
 type Notifier interface {
 	Send(pkg *NotificationPackage, waitGroup *sync.WaitGroup)
 	RegisterSender(senderSettings map[string]string, sender moira.Sender) error
@@ -17,7 +17,7 @@ type Notifier interface {
 	GetSenders() map[string]bool
 }
 
-//StandardNotifier represent notification functionality
+// StandardNotifier represent notification functionality
 type StandardNotifier struct {
 	waitGroup sync.WaitGroup
 	senders   map[string]chan NotificationPackage
@@ -28,7 +28,7 @@ type StandardNotifier struct {
 	metrics   *graphite.NotifierMetrics
 }
 
-//NewNotifier is initializer for StandardNotifier
+// NewNotifier is initializer for StandardNotifier
 func NewNotifier(database moira.Database, logger moira.Logger, config Config, metrics *graphite.NotifierMetrics) *StandardNotifier {
 	return &StandardNotifier{
 		senders:   make(map[string]chan NotificationPackage),
@@ -40,7 +40,7 @@ func NewNotifier(database moira.Database, logger moira.Logger, config Config, me
 	}
 }
 
-//Send is realization of StandardNotifier Send functionality
+// Send is realization of StandardNotifier Send functionality
 func (notifier *StandardNotifier) Send(pkg *NotificationPackage, waitGroup *sync.WaitGroup) {
 	ch, found := notifier.senders[pkg.Contact.Type]
 	if !found {
@@ -61,7 +61,7 @@ func (notifier *StandardNotifier) Send(pkg *NotificationPackage, waitGroup *sync
 	}(pkg)
 }
 
-//GetSenders get hash of registered notifier senders
+// GetSenders get hash of registered notifier senders
 func (notifier *StandardNotifier) GetSenders() map[string]bool {
 	hash := make(map[string]bool)
 	for key := range notifier.senders {

@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-//ErrorResponse represents custom error response with statusText and error description
+// ErrorResponse represents custom error response with statusText and error description
 type ErrorResponse struct {
 	Err            error `json:"-"` // low-level runtime error
 	HTTPStatusCode int   `json:"-"` // http response status code
@@ -14,13 +14,13 @@ type ErrorResponse struct {
 	ErrorText  string `json:"error,omitempty"` // application-level error message, for debugging
 }
 
-//Render realization method for render.renderer
+// Render realization method for render.renderer
 func (e *ErrorResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	render.Status(r, e.HTTPStatusCode)
 	return nil
 }
 
-//ErrorInternalServer returns error response with status=500 and given error
+// ErrorInternalServer returns error response with status=500 and given error
 func ErrorInternalServer(err error) *ErrorResponse {
 	return &ErrorResponse{
 		Err:            err,
@@ -30,7 +30,7 @@ func ErrorInternalServer(err error) *ErrorResponse {
 	}
 }
 
-//ErrorInvalidRequest return error response with status = 400 and given error
+// ErrorInvalidRequest return error response with status = 400 and given error
 func ErrorInvalidRequest(err error) *ErrorResponse {
 	return &ErrorResponse{
 		Err:            err,
@@ -40,7 +40,7 @@ func ErrorInvalidRequest(err error) *ErrorResponse {
 	}
 }
 
-//ErrorRender return 422 render error and used for response rendering erros
+// ErrorRender return 422 render error and used for response rendering erros
 func ErrorRender(err error) *ErrorResponse {
 	return &ErrorResponse{
 		Err:            err,
@@ -50,7 +50,7 @@ func ErrorRender(err error) *ErrorResponse {
 	}
 }
 
-//ErrorNotFound return 404 with given error text
+// ErrorNotFound return 404 with given error text
 func ErrorNotFound(errorText string) *ErrorResponse {
 	return &ErrorResponse{
 		HTTPStatusCode: 404,
@@ -59,8 +59,8 @@ func ErrorNotFound(errorText string) *ErrorResponse {
 	}
 }
 
-//ErrNotFound is default router page not found
+// ErrNotFound is default router page not found
 var ErrNotFound = &ErrorResponse{HTTPStatusCode: 404, StatusText: "Page not found."}
 
-//ErrMethodNotAllowed is default 405 router method not allowed
+// ErrMethodNotAllowed is default 405 router method not allowed
 var ErrMethodNotAllowed = &ErrorResponse{HTTPStatusCode: 405, StatusText: "Method not allowed."}

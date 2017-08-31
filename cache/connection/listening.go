@@ -11,7 +11,7 @@ import (
 	"github.com/moira-alert/moira-alert/cache"
 )
 
-//MetricsListener is facade for standard net.MetricsListener and accept connection for handling it
+// MetricsListener is facade for standard net.MetricsListener and accept connection for handling it
 type MetricsListener struct {
 	listener net.Listener
 	handler  *Handler
@@ -19,7 +19,7 @@ type MetricsListener struct {
 	tomb     tomb.Tomb
 }
 
-//NewListener creates new listener
+// NewListener creates new listener
 func NewListener(port string, logger moira.Logger, patternStorage *cache.PatternStorage) (*MetricsListener, error) {
 	listen := port
 	newListener, err := net.Listen("tcp", listen)
@@ -34,8 +34,8 @@ func NewListener(port string, logger moira.Logger, patternStorage *cache.Pattern
 	return &listener, nil
 }
 
-//Listen waits for new data in connection and handles it in ConnectionHandler
-//All handled data sets to metricsChan
+// Listen waits for new data in connection and handles it in ConnectionHandler
+// All handled data sets to metricsChan
 func (listener *MetricsListener) Listen() chan *moira.MatchedMetric {
 	metricsChan := make(chan *moira.MatchedMetric, 10)
 	listener.tomb.Go(func() error {
@@ -66,7 +66,7 @@ func (listener *MetricsListener) Listen() chan *moira.MatchedMetric {
 	return metricsChan
 }
 
-//Stop stops listening connection
+// Stop stops listening connection
 func (listener *MetricsListener) Stop() error {
 	listener.tomb.Kill(nil)
 	return listener.tomb.Wait()

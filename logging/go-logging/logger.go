@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 )
 
-//ConfigureLog creates new logger based on github.com/op/go-logging package
+// ConfigureLog creates new logger based on github.com/op/go-logging package
 func ConfigureLog(logFile, logLevel, module string) (*goLogging.Logger, error) {
 	log, err := goLogging.GetLogger(module)
 	if err != nil {

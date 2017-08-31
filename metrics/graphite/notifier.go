@@ -1,6 +1,6 @@
 package graphite
 
-//NotifierMetrics is a collection of metrics used in notifier
+// NotifierMetrics is a collection of metrics used in notifier
 type NotifierMetrics struct {
 	EventsReceived         Meter
 	EventsMalformed        Meter

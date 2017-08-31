@@ -31,7 +31,7 @@ type Sender struct {
 	log      moira.Logger
 }
 
-//Init read yaml config
+// Init read yaml config
 func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger) error {
 	sender.APIToken = senderSettings["api_token"]
 	if sender.APIToken == "" {
@@ -48,7 +48,7 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 	return nil
 }
 
-//SendEvents implements Sender interface Send
+// SendEvents implements Sender interface Send
 func (sender *Sender) SendEvents(events moira.EventsData, contact moira.ContactData, trigger moira.TriggerData, throttled bool) error {
 
 	var message bytes.Buffer

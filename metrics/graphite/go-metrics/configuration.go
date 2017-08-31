@@ -16,7 +16,7 @@ func ConfigureCacheMetrics() *graphite.CacheMetrics {
 	}
 }
 
-//ConfigureNotifierMetrics is notifier metrics configurator
+// ConfigureNotifierMetrics is notifier metrics configurator
 func ConfigureNotifierMetrics() *graphite.NotifierMetrics {
 	return &graphite.NotifierMetrics{
 		EventsReceived:         newRegisteredMeter("events.received"),
@@ -28,14 +28,14 @@ func ConfigureNotifierMetrics() *graphite.NotifierMetrics {
 	}
 }
 
-//ConfigureDatabaseMetrics is database metrics configurator
+// ConfigureDatabaseMetrics is database metrics configurator
 func ConfigureDatabaseMetrics() *graphite.DatabaseMetrics {
 	return &graphite.DatabaseMetrics{
 		SubsMalformed: newRegisteredMeter("subs.malformed"),
 	}
 }
 
-//ConfigureCheckerMetrics is checker metrics configurator
+// ConfigureCheckerMetrics is checker metrics configurator
 func ConfigureCheckerMetrics() *graphite.CheckerMetrics {
 	return &graphite.CheckerMetrics{
 		CheckerError:      newRegisteredMeter("checker.errors"),

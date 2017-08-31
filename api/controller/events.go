@@ -6,7 +6,7 @@ import (
 	"github.com/moira-alert/moira-alert/api/dto"
 )
 
-//GetTriggerEvents gets trigger event from current page and all trigger event count
+// GetTriggerEvents gets trigger event from current page and all trigger event count
 func GetTriggerEvents(database moira.Database, triggerID string, page int64, size int64) (*dto.EventsList, *api.ErrorResponse) {
 	events, err := database.GetNotificationEvents(triggerID, page*size, size-1)
 	if err != nil {

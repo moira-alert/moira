@@ -2,7 +2,7 @@ package graphite
 
 import "time"
 
-//MetricsMap implements meter collection abstraction
+// MetricsMap implements meter collection abstraction
 type MetricsMap interface {
 	AddMetric(name, path string)
 	GetMetric(name string) (Meter, bool)

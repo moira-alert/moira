@@ -7,7 +7,7 @@ import (
 	"github.com/satori/go.uuid"
 )
 
-//GetAllContacts gets all moira contacts
+// GetAllContacts gets all moira contacts
 func GetAllContacts(database moira.Database) (*dto.ContactList, *api.ErrorResponse) {
 	contacts, err := database.GetAllContacts()
 	if err != nil {
@@ -19,7 +19,7 @@ func GetAllContacts(database moira.Database) (*dto.ContactList, *api.ErrorRespon
 	return &contactsList, nil
 }
 
-//CreateContact creates new notification contact for current user
+// CreateContact creates new notification contact for current user
 func CreateContact(database moira.Database, contact *dto.Contact, userLogin string) *api.ErrorResponse {
 	id := uuid.NewV4().String()
 	contactData := &moira.ContactData{
@@ -35,7 +35,7 @@ func CreateContact(database moira.Database, contact *dto.Contact, userLogin stri
 	return nil
 }
 
-//RemoveContact deletes notification contact for current user and remove contactID from all subscriptions
+// RemoveContact deletes notification contact for current user and remove contactID from all subscriptions
 func RemoveContact(database moira.Database, contactID string, userLogin string) *api.ErrorResponse {
 	subscriptionIDs, err := database.GetUserSubscriptionIDs(userLogin)
 	if err != nil {
@@ -62,7 +62,7 @@ func RemoveContact(database moira.Database, contactID string, userLogin string) 
 		}
 	}
 
-	//todo 1 request, not 2
+	// todo 1 request, not 2
 	if err := database.RemoveContact(contactID, userLogin); err != nil {
 		return api.ErrorInternalServer(err)
 	}

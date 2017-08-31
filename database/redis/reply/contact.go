@@ -8,7 +8,7 @@ import (
 	"github.com/moira-alert/moira-alert/database"
 )
 
-//Contact converts redis DB reply to moira.ContactData object
+// Contact converts redis DB reply to moira.ContactData object
 func Contact(rep interface{}, err error) (moira.ContactData, error) {
 	contact := moira.ContactData{}
 	bytes, err := redis.Bytes(rep, err)
@@ -25,7 +25,7 @@ func Contact(rep interface{}, err error) (moira.ContactData, error) {
 	return contact, nil
 }
 
-//Contacts converts redis DB reply to moira.ContactData objects array
+// Contacts converts redis DB reply to moira.ContactData objects array
 func Contacts(rep interface{}, err error) ([]*moira.ContactData, error) {
 	values, err := redis.Values(rep, err)
 	if err != nil {

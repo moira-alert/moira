@@ -8,7 +8,7 @@ import (
 	"github.com/moira-alert/moira-alert/database"
 )
 
-//Event converts redis DB reply to moira.NotificationEvent object
+// Event converts redis DB reply to moira.NotificationEvent object
 func Event(rep interface{}, err error) (moira.NotificationEvent, error) {
 	event := moira.NotificationEvent{}
 	bytes, err := redis.Bytes(rep, err)
@@ -25,7 +25,7 @@ func Event(rep interface{}, err error) (moira.NotificationEvent, error) {
 	return event, nil
 }
 
-//Events converts redis DB reply to moira.NotificationEvent objects array
+// Events converts redis DB reply to moira.NotificationEvent objects array
 func Events(rep interface{}, err error) ([]*moira.NotificationEvent, error) {
 	values, err := redis.Values(rep, err)
 	if err != nil {

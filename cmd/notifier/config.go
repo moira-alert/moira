@@ -43,7 +43,7 @@ func getDefault() config {
 			DBID: 0,
 		},
 		Front: frontConfig{
-			URI: "http://localhost",
+			URI: "http:// localhost",
 		},
 		Graphite: cmd.GraphiteConfig{
 			URI:      "localhost:2003",

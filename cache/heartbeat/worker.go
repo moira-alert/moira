@@ -9,7 +9,7 @@ import (
 	"github.com/moira-alert/moira-alert/metrics/graphite"
 )
 
-//Worker is heartbeat worker realization
+// Worker is heartbeat worker realization
 type Worker struct {
 	database moira.Database
 	metrics  *graphite.CacheMetrics
@@ -17,7 +17,7 @@ type Worker struct {
 	tomb     tomb.Tomb
 }
 
-//NewHeartbeatWorker creates new worker
+// NewHeartbeatWorker creates new worker
 func NewHeartbeatWorker(database moira.Database, metrics *graphite.CacheMetrics, logger moira.Logger) *Worker {
 	return &Worker{
 		database: database,
@@ -26,7 +26,7 @@ func NewHeartbeatWorker(database moira.Database, metrics *graphite.CacheMetrics,
 	}
 }
 
-//Start every 5 second takes TotalMetricsReceived metrics and save it to database, for self-checking
+// Start every 5 second takes TotalMetricsReceived metrics and save it to database, for self-checking
 func (worker *Worker) Start() {
 	count := worker.metrics.TotalMetricsReceived.Count()
 	worker.tomb.Go(func() error {
@@ -51,7 +51,7 @@ func (worker *Worker) Start() {
 	worker.logger.Infof("Moira Cache heartbeat started")
 }
 
-//Stop heartbeat worker
+// Stop heartbeat worker
 func (worker *Worker) Stop() error {
 	worker.tomb.Kill(nil)
 	return worker.tomb.Wait()

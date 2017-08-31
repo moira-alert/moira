@@ -167,7 +167,7 @@ func getDefault() config {
 				LastCheckDelay:          60,
 				NoticeInterval:          300,
 			},
-			FrontURL: "https://moira.example.com",
+			FrontURL: "https:// moira.example.com",
 			LogFile:  "stdout",
 			LogLevel: "debug",
 		},

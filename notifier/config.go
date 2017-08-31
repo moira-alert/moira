@@ -2,7 +2,7 @@ package notifier
 
 import "time"
 
-//Config is sending settings including log settings
+// Config is sending settings including log settings
 type Config struct {
 	Enabled          bool
 	SendingTimeout   time.Duration

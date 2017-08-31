@@ -25,7 +25,7 @@ type scriptNotification struct {
 	Timestamp int64                     `json:"timestamp"`
 }
 
-//Init read yaml config
+// Init read yaml config
 func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger) error {
 	if senderSettings["name"] == "" {
 		return fmt.Errorf("Required name for sender type script")
@@ -44,7 +44,7 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 	return nil
 }
 
-//SendEvents implements Sender interface Send
+// SendEvents implements Sender interface Send
 func (sender *Sender) SendEvents(events moira.EventsData, contact moira.ContactData, trigger moira.TriggerData, throttled bool) error {
 
 	execString := strings.Replace(sender.Exec, "${trigger_name}", trigger.Name, -1)

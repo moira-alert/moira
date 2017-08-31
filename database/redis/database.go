@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-//DbConnector contains redis pool
+// DbConnector contains redis pool
 type DbConnector struct {
 	pool    *redis.Pool
 	logger  moira.Logger

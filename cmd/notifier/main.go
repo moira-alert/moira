@@ -24,7 +24,7 @@ var (
 	convertDb              = flag.Bool("convert", false, "Convert telegram contacts and exit")
 )
 
-//Moira notifier bin version
+// Moira notifier bin version
 var (
 	MoiraVersion = "unknown"
 	GitCommit    = "unknown"

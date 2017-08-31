@@ -42,8 +42,8 @@ func TestIsScheduleAllows(t *testing.T) {
 		},
 	}
 
-	//367980 - 01/05/1970 6:13am (UTC) Mon
-	//454380 - 01/06/1970 6:13am (UTC) Tue
+	// 367980 - 01/05/1970 6:13am (UTC) Mon
+	// 454380 - 01/06/1970 6:13am (UTC) Tue
 
 	Convey("No schedule", t, func() {
 		var noSchedule *ScheduleData

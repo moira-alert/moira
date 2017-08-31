@@ -11,7 +11,7 @@ import (
 	"github.com/moira-alert/moira-alert/api/dto"
 )
 
-//GetUserSubscriptions get all user subscriptions
+// GetUserSubscriptions get all user subscriptions
 func GetUserSubscriptions(database moira.Database, userLogin string) (*dto.SubscriptionList, *api.ErrorResponse) {
 	subscriptionIDs, err := database.GetUserSubscriptionIDs(userLogin)
 	if err != nil {
@@ -27,7 +27,7 @@ func GetUserSubscriptions(database moira.Database, userLogin string) (*dto.Subsc
 	return subscriptionsList, nil
 }
 
-//WriteSubscription create or update subscription
+// WriteSubscription create or update subscription
 func WriteSubscription(database moira.Database, userLogin string, subscription *dto.Subscription) *api.ErrorResponse {
 	subscription.User = userLogin
 	if subscription.ID == "" {
@@ -40,7 +40,7 @@ func WriteSubscription(database moira.Database, userLogin string, subscription *
 	return nil
 }
 
-//RemoveSubscription deletes subscription
+// RemoveSubscription deletes subscription
 func RemoveSubscription(database moira.Database, subscriptionID string, userLogin string) *api.ErrorResponse {
 	if err := database.RemoveSubscription(subscriptionID, userLogin); err != nil {
 		return api.ErrorInternalServer(err)
@@ -48,7 +48,7 @@ func RemoveSubscription(database moira.Database, subscriptionID string, userLogi
 	return nil
 }
 
-//SendTestNotification push test notification to verify the correct notification settings
+// SendTestNotification push test notification to verify the correct notification settings
 func SendTestNotification(database moira.Database, subscriptionID string) *api.ErrorResponse {
 	var value float64 = 1
 	eventData := &moira.NotificationEvent{

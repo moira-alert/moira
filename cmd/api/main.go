@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"os"
 
-	//"github.com/facebookgo/grace/gracehttp"
+	// "github.com/facebookgo/grace/gracehttp"
 	"github.com/moira-alert/moira-alert/api/handler"
 	"github.com/moira-alert/moira-alert/cmd"
 	"github.com/moira-alert/moira-alert/database/redis"
@@ -69,6 +69,6 @@ func main() {
 	/*if err = gracehttp.Serve(server); err != nil {
 		logger.Fatalf("gracehttp failed", err.Error())
 	}*/
-	server.ListenAndServe() //for windows developers =)
+	server.ListenAndServe() // for windows developers =)
 	logger.Infof("Stop Moira api")
 }

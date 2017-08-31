@@ -12,7 +12,7 @@ import (
 	"github.com/moira-alert/moira-alert/notifier"
 )
 
-//FetchEventsWorker checks for new events and new notifications based on it
+// FetchEventsWorker checks for new events and new notifications based on it
 type FetchEventsWorker struct {
 	Logger    moira.Logger
 	Database  moira.Database

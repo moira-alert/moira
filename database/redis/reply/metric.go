@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-//MetricValues converts redis DB reply struct "RetentionTimestamp Value" "Timestamp" to moira.MetricValue object
+// MetricValues converts redis DB reply struct "RetentionTimestamp Value" "Timestamp" to moira.MetricValue object
 func MetricValues(values interface{}) ([]*moira.MetricValue, error) {
 	resultByMetricArr, err := redis.Values(values, nil)
 	if err != nil {

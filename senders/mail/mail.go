@@ -73,7 +73,7 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 	return nil
 }
 
-//SendEvents implements Sender interface Send
+// SendEvents implements Sender interface Send
 func (sender *Sender) SendEvents(events moira.EventsData, contact moira.ContactData, trigger moira.TriggerData, throttled bool) error {
 
 	m := sender.makeMessage(events, contact, trigger, throttled)

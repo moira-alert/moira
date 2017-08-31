@@ -31,7 +31,7 @@ func TestMail(t *testing.T) {
 	}
 
 	sender := Sender{
-		FrontURI: "http://localhost",
+		FrontURI: "http:// localhost",
 		From:     "test@notifier",
 		SMTPhost: "localhost",
 		SMTPport: 25,

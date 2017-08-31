@@ -9,7 +9,7 @@ import (
 	"strconv"
 )
 
-//Duty hack for moira.Trigger TTL int64 and stored trigger TTL string compatibility
+// Duty hack for moira.Trigger TTL int64 and stored trigger TTL string compatibility
 type triggerStorageElement struct {
 	ID              string              `json:"id"`
 	Name            string              `json:"name"`
@@ -78,7 +78,7 @@ func getTriggerTTLString(ttl *int64) *string {
 	return &ttlString
 }
 
-//Trigger converts redis DB reply to moira.Trigger object
+// Trigger converts redis DB reply to moira.Trigger object
 func Trigger(rep interface{}, err error) (moira.Trigger, error) {
 	bytes, err := redis.Bytes(rep, err)
 	if err != nil {
@@ -96,7 +96,7 @@ func Trigger(rep interface{}, err error) (moira.Trigger, error) {
 	return triggerSE.toTrigger(), nil
 }
 
-//GetTriggerBytes marshal moira.Trigger to bytes array
+// GetTriggerBytes marshal moira.Trigger to bytes array
 func GetTriggerBytes(triggerID string, trigger *moira.Trigger) ([]byte, error) {
 	triggerSE := toTriggerStorageElement(trigger, triggerID)
 	bytes, err := json.Marshal(triggerSE)

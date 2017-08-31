@@ -7,7 +7,7 @@ import (
 	"github.com/moira-alert/moira-alert/api/dto"
 )
 
-//GetAllTagsAndSubscriptions get tags subscriptions and triggerIDs
+// GetAllTagsAndSubscriptions get tags subscriptions and triggerIDs
 func GetAllTagsAndSubscriptions(database moira.Database, logger moira.Logger) (*dto.TagsStatistics, *api.ErrorResponse) {
 	tagsNames, err := database.GetTagNames()
 	if err != nil {
@@ -45,7 +45,7 @@ func GetAllTagsAndSubscriptions(database moira.Database, logger moira.Logger) (*
 	return &tagsStatistics, nil
 }
 
-//GetAllTags gets all tag names
+// GetAllTags gets all tag names
 func GetAllTags(database moira.Database) (*dto.TagsData, *api.ErrorResponse) {
 	tagsNames, err := database.GetTagNames()
 	if err != nil {
@@ -59,7 +59,7 @@ func GetAllTags(database moira.Database) (*dto.TagsData, *api.ErrorResponse) {
 	return tagsData, nil
 }
 
-//RemoveTag deletes tag by name
+// RemoveTag deletes tag by name
 func RemoveTag(database moira.Database, tagName string) (*dto.MessageResponse, *api.ErrorResponse) {
 	triggerIDs, err := database.GetTagTriggerIDs(tagName)
 	if err != nil {

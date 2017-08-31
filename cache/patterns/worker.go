@@ -10,7 +10,7 @@ import (
 	"github.com/moira-alert/moira-alert/metrics/graphite"
 )
 
-//RefreshPatternWorker realization
+// RefreshPatternWorker realization
 type RefreshPatternWorker struct {
 	database       moira.Database
 	logger         moira.Logger
@@ -19,7 +19,7 @@ type RefreshPatternWorker struct {
 	tomb           tomb.Tomb
 }
 
-//NewRefreshPatternWorker creates new RefreshPatternWorker
+// NewRefreshPatternWorker creates new RefreshPatternWorker
 func NewRefreshPatternWorker(database moira.Database, metrics *graphite.CacheMetrics, logger moira.Logger, patternStorage *cache.PatternStorage) *RefreshPatternWorker {
 	return &RefreshPatternWorker{
 		database:       database,
@@ -29,7 +29,7 @@ func NewRefreshPatternWorker(database moira.Database, metrics *graphite.CacheMet
 	}
 }
 
-//Start process to refresh pattern tree every second
+// Start process to refresh pattern tree every second
 func (worker *RefreshPatternWorker) Start() error {
 	err := worker.patternStorage.RefreshTree()
 	if err != nil {
@@ -58,7 +58,7 @@ func (worker *RefreshPatternWorker) Start() error {
 	return nil
 }
 
-//Stop stops update pattern tree
+// Stop stops update pattern tree
 func (worker *RefreshPatternWorker) Stop() error {
 	worker.tomb.Kill(nil)
 	return worker.tomb.Wait()

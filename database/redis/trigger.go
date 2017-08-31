@@ -11,7 +11,7 @@ import (
 	"github.com/moira-alert/moira-alert/database/redis/reply"
 )
 
-//GetTriggerIDs gets all moira triggerIDs, if no value, return database.ErrNil error
+// GetTriggerIDs gets all moira triggerIDs, if no value, return database.ErrNil error
 func (connector *DbConnector) GetTriggerIDs() ([]string, error) {
 	c := connector.pool.Get()
 	defer c.Close()
@@ -22,7 +22,7 @@ func (connector *DbConnector) GetTriggerIDs() ([]string, error) {
 	return triggerIds, nil
 }
 
-//GetTrigger gets trigger and trigger tags by given ID and return it in merged object
+// GetTrigger gets trigger and trigger tags by given ID and return it in merged object
 func (connector *DbConnector) GetTrigger(triggerID string) (moira.Trigger, error) {
 	c := connector.pool.Get()
 	defer c.Close()
@@ -68,7 +68,7 @@ func (connector *DbConnector) GetTriggers(triggerIDs []string) ([]*moira.Trigger
 	return triggers, nil
 }
 
-//GetPatternTriggerIDs gets trigger list by given pattern
+// GetPatternTriggerIDs gets trigger list by given pattern
 func (connector *DbConnector) GetPatternTriggerIDs(pattern string) ([]string, error) {
 	c := connector.pool.Get()
 	defer c.Close()
@@ -80,7 +80,7 @@ func (connector *DbConnector) GetPatternTriggerIDs(pattern string) ([]string, er
 	return triggerIds, nil
 }
 
-//RemovePatternTriggerIDs removes all triggerIDs list accepted to given pattern
+// RemovePatternTriggerIDs removes all triggerIDs list accepted to given pattern
 func (connector *DbConnector) RemovePatternTriggerIDs(pattern string) error {
 	c := connector.pool.Get()
 	defer c.Close()
@@ -91,10 +91,10 @@ func (connector *DbConnector) RemovePatternTriggerIDs(pattern string) error {
 	return nil
 }
 
-//SaveTrigger sets trigger data by given trigger and triggerID
-//If trigger already exists, then merge old and new trigger patterns and tags list
-//and cleanup not used tags and patterns from lists
-//If given trigger contains new tags then create it
+// SaveTrigger sets trigger data by given trigger and triggerID
+// If trigger already exists, then merge old and new trigger patterns and tags list
+// and cleanup not used tags and patterns from lists
+// If given trigger contains new tags then create it
 func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigger) error {
 	existing, errGetTrigger := connector.GetTrigger(triggerID)
 	if errGetTrigger != nil && errGetTrigger != database.ErrNil {
@@ -147,9 +147,9 @@ func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigg
 	return nil
 }
 
-//RemoveTrigger deletes trigger data by given triggerID, delete trigger tag list,
-//Deletes triggerID from containing tags triggers list and from containing patterns triggers list
-//If containing patterns doesn't used in another triggers, then delete this patterns with metrics data
+// RemoveTrigger deletes trigger data by given triggerID, delete trigger tag list,
+// Deletes triggerID from containing tags triggers list and from containing patterns triggers list
+// If containing patterns doesn't used in another triggers, then delete this patterns with metrics data
 func (connector *DbConnector) RemoveTrigger(triggerID string) error {
 	trigger, err := connector.GetTrigger(triggerID)
 	if err != nil {
@@ -191,7 +191,7 @@ func (connector *DbConnector) RemoveTrigger(triggerID string) error {
 	return nil
 }
 
-//GetTriggerChecks gets triggers data with tags, lastCheck data and throttling by given triggersIDs
+// GetTriggerChecks gets triggers data with tags, lastCheck data and throttling by given triggersIDs
 // Len of triggerIDs is equal to len of returned values array.
 // If there is no object by current ID, then nil is returned
 func (connector *DbConnector) GetTriggerChecks(triggerIDs []string) ([]*moira.TriggerCheck, error) {

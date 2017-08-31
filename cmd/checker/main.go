@@ -23,7 +23,7 @@ var (
 	triggerID              = flag.String("t", "", "Check single trigger by id and exit")
 )
 
-//Moira checker bin version
+// Moira checker bin version
 var (
 	MoiraVersion = "unknown"
 	GitCommit    = "unknown"

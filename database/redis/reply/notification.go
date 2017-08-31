@@ -8,7 +8,7 @@ import (
 	"github.com/moira-alert/moira-alert/database"
 )
 
-//Notification converts redis DB reply to moira.ScheduledNotification object
+// Notification converts redis DB reply to moira.ScheduledNotification object
 func Notification(rep interface{}, err error) (moira.ScheduledNotification, error) {
 	notification := moira.ScheduledNotification{}
 	bytes, err := redis.Bytes(rep, err)
@@ -25,7 +25,7 @@ func Notification(rep interface{}, err error) (moira.ScheduledNotification, erro
 	return notification, nil
 }
 
-//Notifications converts redis DB reply to moira.ScheduledNotification objects array
+// Notifications converts redis DB reply to moira.ScheduledNotification objects array
 func Notifications(rep interface{}, err error) ([]*moira.ScheduledNotification, error) {
 	values, err := redis.Values(rep, err)
 	if err != nil {

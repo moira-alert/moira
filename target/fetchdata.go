@@ -7,7 +7,7 @@ import (
 	"math"
 )
 
-//FetchData gets values of given pattern metrics from given interval and returns values and all found pattern metrics
+// FetchData gets values of given pattern metrics from given interval and returns values and all found pattern metrics
 func FetchData(database moira.Database, pattern string, from int64, until int64, allowRealTimeAlerting bool) ([]*expr.MetricData, []string, error) {
 	metrics, err := database.GetPatternMetrics(pattern)
 	if err != nil {
@@ -17,7 +17,7 @@ func FetchData(database moira.Database, pattern string, from int64, until int64,
 
 	if len(metrics) > 0 {
 		firstMetric := metrics[0]
-		//todo cache 60s
+		// todo cache 60s
 		retention, err := database.GetMetricRetention(firstMetric)
 		if err != nil {
 			return nil, nil, err
@@ -62,7 +62,7 @@ func unpackMetricsValues(metricsData map[string][]*moira.MetricValue, retention 
 		lastTimeSlot := getTimeSlot(until)
 
 		values := make([]float64, 0)
-		//note that right boundary is exclusive
+		// note that right boundary is exclusive
 		for timeSlot := int64(0); timeSlot < lastTimeSlot; timeSlot++ {
 			val, ok := points[timeSlot]
 			values = append(values, getMathFloat64(val, ok))

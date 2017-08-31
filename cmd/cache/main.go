@@ -25,7 +25,7 @@ var (
 	printDefaultConfigFlag = flag.Bool("default-config", false, "Print default config and exit")
 )
 
-//Moira cache bin version
+// Moira cache bin version
 var (
 	MoiraVersion = "unknown"
 	GitCommit    = "unknown"

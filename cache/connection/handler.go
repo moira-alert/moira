@@ -10,13 +10,13 @@ import (
 	"github.com/moira-alert/moira-alert/cache"
 )
 
-//Handler handling connection data and shift it to MatchedMetrics channel
+// Handler handling connection data and shift it to MatchedMetrics channel
 type Handler struct {
 	logger          moira.Logger
 	patternsStorage *cache.PatternStorage
 }
 
-//NewConnectionHandler creates new Handler
+// NewConnectionHandler creates new Handler
 func NewConnectionHandler(logger moira.Logger, patternsStorage *cache.PatternStorage) *Handler {
 	return &Handler{
 		logger:          logger,
@@ -24,7 +24,7 @@ func NewConnectionHandler(logger moira.Logger, patternsStorage *cache.PatternSto
 	}
 }
 
-//HandleConnection convert every line from connection to metric and send it to MatchedMetric channel
+// HandleConnection convert every line from connection to metric and send it to MatchedMetric channel
 func (handler *Handler) HandleConnection(connection net.Conn, matchedMetricsChan chan *moira.MatchedMetric, wg *sync.WaitGroup) {
 	buffer := bufio.NewReader(connection)
 	defer func() {

@@ -7,7 +7,7 @@ import (
 	"github.com/satori/go.uuid"
 )
 
-//CreateTrigger creates new trigger
+// CreateTrigger creates new trigger
 func CreateTrigger(database moira.Database, trigger *moira.Trigger, timeSeriesNames map[string]bool) (*dto.SaveTriggerResponse, *api.ErrorResponse) {
 	triggerID := uuid.NewV4().String()
 	resp, err := SaveTrigger(database, trigger, triggerID, timeSeriesNames)
@@ -17,7 +17,7 @@ func CreateTrigger(database moira.Database, trigger *moira.Trigger, timeSeriesNa
 	return resp, err
 }
 
-//GetAllTriggers gets all moira triggers
+// GetAllTriggers gets all moira triggers
 func GetAllTriggers(database moira.Database) (*dto.TriggersList, *api.ErrorResponse) {
 	triggerIDs, err := database.GetTriggerIDs()
 	if err != nil {
@@ -38,7 +38,7 @@ func GetAllTriggers(database moira.Database) (*dto.TriggersList, *api.ErrorRespo
 	return &triggersList, nil
 }
 
-//GetTriggerPage gets trigger page and filter trigger by tags and errors
+// GetTriggerPage gets trigger page and filter trigger by tags and errors
 func GetTriggerPage(database moira.Database, page int64, size int64, onlyErrors bool, filterTags []string) (*dto.TriggersList, *api.ErrorResponse) {
 	triggerIDs, total, err := database.GetTriggerCheckIDs(filterTags, onlyErrors)
 	if err != nil {

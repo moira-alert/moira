@@ -46,7 +46,7 @@ func (connector *DbConnector) GetSubscriptions(subscriptionIDs []string) ([]*moi
 	return subscriptions, nil
 }
 
-//WriteSubscriptions writes subscriptions data
+// WriteSubscriptions writes subscriptions data
 func (connector *DbConnector) WriteSubscriptions(subscriptions []*moira.SubscriptionData) error {
 	c := connector.pool.Get()
 	defer c.Close()
@@ -66,7 +66,7 @@ func (connector *DbConnector) WriteSubscriptions(subscriptions []*moira.Subscrip
 	return nil
 }
 
-//SaveSubscription writes subscription data, updates tags subscriptions and user subscriptions
+// SaveSubscription writes subscription data, updates tags subscriptions and user subscriptions
 func (connector *DbConnector) SaveSubscription(subscription *moira.SubscriptionData) error {
 	oldSubscription, err := connector.GetSubscription(subscription.ID)
 	if err != nil && err != database.ErrNil {
@@ -95,7 +95,7 @@ func (connector *DbConnector) SaveSubscription(subscription *moira.SubscriptionD
 	return nil
 }
 
-//RemoveSubscription deletes subscription data and removes subscriptionID from users and tags subscriptions
+// RemoveSubscription deletes subscription data and removes subscriptionID from users and tags subscriptions
 func (connector *DbConnector) RemoveSubscription(subscriptionID string, userLogin string) error {
 	subscription, err := connector.GetSubscription(subscriptionID)
 	if err != nil {
@@ -116,7 +116,7 @@ func (connector *DbConnector) RemoveSubscription(subscriptionID string, userLogi
 	return nil
 }
 
-//GetUserSubscriptionIDs returns subscriptions ids by given login
+// GetUserSubscriptionIDs returns subscriptions ids by given login
 func (connector *DbConnector) GetUserSubscriptionIDs(login string) ([]string, error) {
 	c := connector.pool.Get()
 	defer c.Close()
@@ -128,8 +128,8 @@ func (connector *DbConnector) GetUserSubscriptionIDs(login string) ([]string, er
 	return subscriptions, nil
 }
 
-//GetTagsSubscriptions gets all subscriptionsIDs by given tag list and read subscriptions.
-//Len of subscriptionIDs is equal to len of returned values array. If there is no object by current ID, then nil is returned
+// GetTagsSubscriptions gets all subscriptionsIDs by given tag list and read subscriptions.
+// Len of subscriptionIDs is equal to len of returned values array. If there is no object by current ID, then nil is returned
 func (connector *DbConnector) GetTagsSubscriptions(tags []string) ([]*moira.SubscriptionData, error) {
 	c := connector.pool.Get()
 	defer c.Close()

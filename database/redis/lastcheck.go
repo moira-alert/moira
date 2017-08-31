@@ -11,14 +11,14 @@ import (
 	"github.com/moira-alert/moira-alert/database/redis/reply"
 )
 
-//GetTriggerLastCheck gets trigger last check data by given triggerID, if no value, return database.ErrNil error
+// GetTriggerLastCheck gets trigger last check data by given triggerID, if no value, return database.ErrNil error
 func (connector *DbConnector) GetTriggerLastCheck(triggerID string) (moira.CheckData, error) {
 	c := connector.pool.Get()
 	defer c.Close()
 	return reply.Check(c.Do("GET", moiraMetricLastCheck(triggerID)))
 }
 
-//SetTriggerLastCheck sets trigger last check data
+// SetTriggerLastCheck sets trigger last check data
 func (connector *DbConnector) SetTriggerLastCheck(triggerID string, checkData *moira.CheckData) error {
 	bytes, err := json.Marshal(checkData)
 	if err != nil {
@@ -42,7 +42,7 @@ func (connector *DbConnector) SetTriggerLastCheck(triggerID string, checkData *m
 	return nil
 }
 
-//SetTriggerCheckMetricsMaintenance sets to given metrics throttling timestamps, if during the update lastCheck was updated, try update again
+// SetTriggerCheckMetricsMaintenance sets to given metrics throttling timestamps, if during the update lastCheck was updated, try update again
 func (connector *DbConnector) SetTriggerCheckMetricsMaintenance(triggerID string, metrics map[string]int64) error {
 	c := connector.pool.Get()
 	defer c.Close()
@@ -87,8 +87,8 @@ func (connector *DbConnector) SetTriggerCheckMetricsMaintenance(triggerID string
 	return nil
 }
 
-//GetTriggerCheckIDs gets checked triggerIDs, sorted from max to min check score and filtered by given tags
-//If onlyErrors return only triggerIDs with score > 0
+// GetTriggerCheckIDs gets checked triggerIDs, sorted from max to min check score and filtered by given tags
+// If onlyErrors return only triggerIDs with score > 0
 func (connector *DbConnector) GetTriggerCheckIDs(tagNames []string, onlyErrors bool) ([]string, int64, error) {
 	c := connector.pool.Get()
 	defer c.Close()

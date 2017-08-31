@@ -44,7 +44,7 @@ type ContactData struct {
 	User  string `json:"user"`
 }
 
-//SubscriptionData represent user subscription
+// SubscriptionData represent user subscription
 type SubscriptionData struct {
 	Contacts          []string     `json:"contacts"`
 	Tags              []string     `json:"tags"`
@@ -89,7 +89,7 @@ type MatchedMetric struct {
 	Retention          int
 }
 
-//MetricValue represent metric data
+// MetricValue represent metric data
 type MetricValue struct {
 	RetentionTimestamp int64   `json:"step,omitempty"`
 	Timestamp          int64   `json:"ts"`

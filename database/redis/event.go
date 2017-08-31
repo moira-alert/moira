@@ -14,7 +14,7 @@ import (
 
 var eventsTTL int64 = 3600 * 24 * 30
 
-//GetNotificationEvents gets NotificationEvents by given triggerID and interval
+// GetNotificationEvents gets NotificationEvents by given triggerID and interval
 func (connector *DbConnector) GetNotificationEvents(triggerID string, start int64, size int64) ([]*moira.NotificationEvent, error) {
 	c := connector.pool.Get()
 	defer c.Close()
@@ -31,8 +31,8 @@ func (connector *DbConnector) GetNotificationEvents(triggerID string, start int6
 	return eventsData, nil
 }
 
-//PushNotificationEvent adds new NotificationEvent to events list and to given triggerID events list and deletes events who are older than 30 days
-//If ui=true, then add to ui events list
+// PushNotificationEvent adds new NotificationEvent to events list and to given triggerID events list and deletes events who are older than 30 days
+// If ui=true, then add to ui events list
 func (connector *DbConnector) PushNotificationEvent(event *moira.NotificationEvent, ui bool) error {
 	eventBytes, err := json.Marshal(event)
 	if err != nil {

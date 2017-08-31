@@ -11,7 +11,7 @@ import (
 	"strconv"
 )
 
-//DatabaseContext sets to requests context configured database
+// DatabaseContext sets to requests context configured database
 func DatabaseContext(database moira.Database) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
@@ -21,7 +21,7 @@ func DatabaseContext(database moira.Database) func(next http.Handler) http.Handl
 	}
 }
 
-//UserContext get x-webauth-user header and sets it in request context, if header is empty sets empty string
+// UserContext get x-webauth-user header and sets it in request context, if header is empty sets empty string
 func UserContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		userLogin := request.Header.Get("x-webauth-user")
@@ -30,7 +30,7 @@ func UserContext(next http.Handler) http.Handler {
 	})
 }
 
-//TriggerContext gets triggerId from parsed URI corresponding to trigger routes and set it to request context
+// TriggerContext gets triggerId from parsed URI corresponding to trigger routes and set it to request context
 func TriggerContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		triggerID := chi.URLParam(request, "triggerId")
@@ -43,7 +43,7 @@ func TriggerContext(next http.Handler) http.Handler {
 	})
 }
 
-//TagContext gets tagName from parsed URI corresponding to tag routes and set it to request context
+// TagContext gets tagName from parsed URI corresponding to tag routes and set it to request context
 func TagContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		tag := chi.URLParam(request, "tag")
@@ -56,7 +56,7 @@ func TagContext(next http.Handler) http.Handler {
 	})
 }
 
-//SubscriptionContext gets subscriptionId from parsed URI corresponding to subscription routes and set it to request context
+// SubscriptionContext gets subscriptionId from parsed URI corresponding to subscription routes and set it to request context
 func SubscriptionContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		triggerID := chi.URLParam(request, "subscriptionId")
@@ -69,7 +69,7 @@ func SubscriptionContext(next http.Handler) http.Handler {
 	})
 }
 
-//Paginate gets page and size values from URI query and set it to request context. If query has not values sets given values
+// Paginate gets page and size values from URI query and set it to request context. If query has not values sets given values
 func Paginate(defaultPage, defaultSize int64) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
@@ -89,7 +89,7 @@ func Paginate(defaultPage, defaultSize int64) func(next http.Handler) http.Handl
 	}
 }
 
-//DateRange gets from and to values from URI query and set it to request context. If query has not values sets given values
+// DateRange gets from and to values from URI query and set it to request context. If query has not values sets given values
 func DateRange(defaultFrom, defaultTo string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {

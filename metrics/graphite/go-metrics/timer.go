@@ -1,4 +1,4 @@
-//nolint
+// nolint
 package metrics
 
 import (
@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-//Timer is facade for go-metrics package Meter struct
+// Timer is facade for go-metrics package Meter struct
 type Timer struct {
 	timer goMetrics.Timer
 }

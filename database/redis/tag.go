@@ -6,7 +6,7 @@ import (
 	"github.com/garyburd/redigo/redis"
 )
 
-//GetTagNames returns all tags from set with tag data
+// GetTagNames returns all tags from set with tag data
 func (connector *DbConnector) GetTagNames() ([]string, error) {
 	c := connector.pool.Get()
 	defer c.Close()
@@ -18,7 +18,7 @@ func (connector *DbConnector) GetTagNames() ([]string, error) {
 	return tagNames, nil
 }
 
-//RemoveTag deletes tag from tags list, deletes triggerIDs and subscriptionsIDs lists by given tag
+// RemoveTag deletes tag from tags list, deletes triggerIDs and subscriptionsIDs lists by given tag
 func (connector *DbConnector) RemoveTag(tagName string) error {
 	c := connector.pool.Get()
 	defer c.Close()
@@ -35,7 +35,7 @@ func (connector *DbConnector) RemoveTag(tagName string) error {
 	return nil
 }
 
-//GetTagTriggerIDs gets all triggersIDs by given tagName
+// GetTagTriggerIDs gets all triggersIDs by given tagName
 func (connector *DbConnector) GetTagTriggerIDs(tagName string) ([]string, error) {
 	c := connector.pool.Get()
 	defer c.Close()

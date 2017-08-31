@@ -14,7 +14,7 @@ import (
 
 var moiraNotificationsKey = "moira-notifier-notifications"
 
-//GetNotifications gets ScheduledNotifications in given range and full range
+// GetNotifications gets ScheduledNotifications in given range and full range
 func (connector *DbConnector) GetNotifications(start, end int64) ([]*moira.ScheduledNotification, int64, error) {
 	c := connector.pool.Get()
 	defer c.Close()
@@ -39,7 +39,7 @@ func (connector *DbConnector) GetNotifications(start, end int64) ([]*moira.Sched
 	return notifications, total, nil
 }
 
-//RemoveNotification delete notifications by key = timestamp + contactID + subID
+// RemoveNotification delete notifications by key = timestamp + contactID + subID
 func (connector *DbConnector) RemoveNotification(notificationKey string) (int64, error) {
 	c := connector.pool.Get()
 	defer c.Close()
@@ -75,7 +75,7 @@ func (connector *DbConnector) RemoveNotification(notificationKey string) (int64,
 	return int64(total), nil
 }
 
-//GetNotificationsAndDelete fetch notifications by given timestamp and delete it
+// GetNotificationsAndDelete fetch notifications by given timestamp and delete it
 func (connector *DbConnector) GetNotificationsAndDelete(to int64) ([]*moira.ScheduledNotification, error) {
 	c := connector.pool.Get()
 	defer c.Close()
@@ -93,7 +93,7 @@ func (connector *DbConnector) GetNotificationsAndDelete(to int64) ([]*moira.Sche
 	return reply.Notifications(response[0], nil)
 }
 
-//AddNotification store notification at given timestamp
+// AddNotification store notification at given timestamp
 func (connector *DbConnector) AddNotification(notification *moira.ScheduledNotification) error {
 	bytes, err := json.Marshal(notification)
 	if err != nil {
@@ -108,7 +108,7 @@ func (connector *DbConnector) AddNotification(notification *moira.ScheduledNotif
 	return err
 }
 
-//AddNotifications store notification at given timestamp
+// AddNotifications store notification at given timestamp
 func (connector *DbConnector) AddNotifications(notifications []*moira.ScheduledNotification, timestamp int64) error {
 	c := connector.pool.Get()
 	defer c.Close()

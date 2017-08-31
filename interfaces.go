@@ -7,23 +7,23 @@ import (
 
 // Database implements DB functionality
 type Database interface {
-	//SelfState
+	// SelfState
 	UpdateMetricsHeartbeat() error
 	GetMetricsCount() (int64, error)
 	GetChecksCount() (int64, error)
 
-	//Tag storing
+	// Tag storing
 	GetTagNames() ([]string, error)
 	RemoveTag(tagName string) error
 	GetTagTriggerIDs(tagName string) ([]string, error)
 
-	//LastCheck storing
+	// LastCheck storing
 	GetTriggerLastCheck(triggerID string) (CheckData, error)
 	SetTriggerLastCheck(triggerID string, checkData *CheckData) error
 	GetTriggerCheckIDs(tags []string, onlyErrors bool) ([]string, int64, error)
 	SetTriggerCheckMetricsMaintenance(triggerID string, metrics map[string]int64) error
 
-	//Trigger storing
+	// Trigger storing
 	GetTriggerIDs() ([]string, error)
 	GetTrigger(triggerID string) (Trigger, error)
 	GetTriggers(triggerIDs []string) ([]*Trigger, error)
@@ -36,13 +36,13 @@ type Database interface {
 	SetTriggerThrottling(triggerID string, next time.Time) error
 	DeleteTriggerThrottling(triggerID string) error
 
-	//NotificationEvent storing
+	// NotificationEvent storing
 	GetNotificationEvents(triggerID string, start, size int64) ([]*NotificationEvent, error)
 	PushNotificationEvent(event *NotificationEvent, ui bool) error
 	GetNotificationEventCount(triggerID string, from int64) int64
 	FetchNotificationEvent() (NotificationEvent, error)
 
-	//ContactData storing
+	// ContactData storing
 	GetContact(contactID string) (ContactData, error)
 	GetContacts(contactIDs []string) ([]*ContactData, error)
 	GetAllContacts() ([]*ContactData, error)
@@ -51,7 +51,7 @@ type Database interface {
 	SaveContact(contact *ContactData) error
 	GetUserContactIDs(userLogin string) ([]string, error)
 
-	//SubscriptionData storing
+	// SubscriptionData storing
 	GetSubscription(id string) (SubscriptionData, error)
 	GetSubscriptions(subscriptionIDs []string) ([]*SubscriptionData, error)
 	WriteSubscriptions(subscriptions []*SubscriptionData) error
@@ -60,14 +60,14 @@ type Database interface {
 	GetUserSubscriptionIDs(userLogin string) ([]string, error)
 	GetTagsSubscriptions(tags []string) ([]*SubscriptionData, error)
 
-	//ScheduledNotification storing
+	// ScheduledNotification storing
 	GetNotifications(start, end int64) ([]*ScheduledNotification, int64, error)
 	RemoveNotification(notificationKey string) (int64, error)
 	GetNotificationsAndDelete(to int64) ([]*ScheduledNotification, error)
 	AddNotification(notification *ScheduledNotification) error
 	AddNotifications(notification []*ScheduledNotification, timestamp int64) error
 
-	//Patterns and metrics storing
+	// Patterns and metrics storing
 	GetPatterns() ([]string, error)
 	GetMetricsValues(metrics []string, from int64, until int64) (map[string][]*MetricValue, error)
 	SaveMetrics(buffer map[string]*MatchedMetric) error
@@ -80,7 +80,7 @@ type Database interface {
 	RemovePatternWithMetrics(pattern string) error
 	RemoveMetricValues(metric string, toTime int64) error
 
-	//TriggerCheckLock storing
+	// TriggerCheckLock storing
 	AcquireTriggerCheckLock(triggerID string, timeout int) error
 	DeleteTriggerCheckLock(triggerID string) error
 	SetTriggerCheckLock(triggerID string) (bool, error)

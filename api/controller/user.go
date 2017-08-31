@@ -6,7 +6,7 @@ import (
 	"github.com/moira-alert/moira-alert/api/dto"
 )
 
-//GetUserSettings gets user contacts and subscriptions
+// GetUserSettings gets user contacts and subscriptions
 func GetUserSettings(database moira.Database, userLogin string) (*dto.UserSettings, *api.ErrorResponse) {
 	userSettings := &dto.UserSettings{
 		User:          dto.User{Login: userLogin},
