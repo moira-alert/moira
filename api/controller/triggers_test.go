@@ -120,109 +120,6 @@ func TestGetTriggerIdsRange(t *testing.T) {
 	})
 }
 
-func TestGetNotFilteredTriggers(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-	database := mock_moira_alert.NewMockDatabase(mockCtrl)
-	triggers := make([]string, 20)
-	for i := range triggers {
-		triggers[i] = uuid.NewV4().String()
-	}
-
-	Convey("Get all triggers", t, func() {
-		var exp int64 = 20
-		database.EXPECT().GetTriggerCheckIDs().Return(triggers, exp, nil)
-		database.EXPECT().GetTriggerChecks(triggers).Return(make([]moira.TriggerChecks, 20), nil)
-		triggersChecks, total, err := getNotFilteredTriggers(database, 0, 30)
-		So(err, ShouldBeNil)
-		So(total, ShouldEqual, exp)
-		So(triggersChecks, ShouldResemble, make([]moira.TriggerChecks, 20))
-	})
-
-	Convey("Get only page", t, func() {
-		var exp int64 = 20
-		database.EXPECT().GetTriggerCheckIDs().Return(triggers, exp, nil)
-		database.EXPECT().GetTriggerChecks(triggers[0:10]).Return(make([]moira.TriggerChecks, 10), nil)
-		triggersChecks, total, err := getNotFilteredTriggers(database, 0, 10)
-		So(err, ShouldBeNil)
-		So(total, ShouldEqual, exp)
-		So(triggersChecks, ShouldResemble, make([]moira.TriggerChecks, 10))
-	})
-
-	Convey("GetTriggerCheckIDs error", t, func() {
-		var exp int64
-		expected := fmt.Errorf("GetTriggerCheckIDs error")
-		database.EXPECT().GetTriggerCheckIDs().Return(nil, exp, expected)
-		triggersChecks, total, err := getNotFilteredTriggers(database, 0, 20)
-		So(err, ShouldResemble, expected)
-		So(total, ShouldEqual, exp)
-		So(triggersChecks, ShouldBeNil)
-	})
-
-	Convey("GetTriggerChecks error", t, func() {
-		var exp int64 = 20
-		expected := fmt.Errorf("GetTriggerChecks error")
-		database.EXPECT().GetTriggerCheckIDs().Return(triggers, exp, nil)
-		database.EXPECT().GetTriggerChecks(triggers[0:10]).Return(nil, expected)
-		triggersChecks, total, err := getNotFilteredTriggers(database, 0, 10)
-		So(err, ShouldResemble, expected)
-		So(total, ShouldEqual, 0)
-		So(triggersChecks, ShouldBeNil)
-	})
-}
-
-func TestGetFilteredTriggers(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-	database := mock_moira_alert.NewMockDatabase(mockCtrl)
-	triggers := make([]string, 20)
-	for i := range triggers {
-		triggers[i] = uuid.NewV4().String()
-	}
-	tags := []string{"tag1", "tag2"}
-
-	Convey("Get all triggers", t, func() {
-		var exp int64 = 20
-		database.EXPECT().GetFilteredTriggerCheckIds(tags, false).Return(triggers, exp, nil)
-		database.EXPECT().GetTriggerChecks(triggers).Return(make([]moira.TriggerChecks, 20), nil)
-		triggersChecks, total, err := getFilteredTriggers(database, 0, 30, false, tags)
-		So(err, ShouldBeNil)
-		So(total, ShouldEqual, exp)
-		So(triggersChecks, ShouldResemble, make([]moira.TriggerChecks, 20))
-	})
-
-	Convey("Get only page", t, func() {
-		var exp int64 = 20
-		database.EXPECT().GetFilteredTriggerCheckIds(tags, false).Return(triggers, exp, nil)
-		database.EXPECT().GetTriggerChecks(triggers[0:10]).Return(make([]moira.TriggerChecks, 10), nil)
-		triggersChecks, total, err := getFilteredTriggers(database, 0, 10, false, tags)
-		So(err, ShouldBeNil)
-		So(total, ShouldEqual, exp)
-		So(triggersChecks, ShouldResemble, make([]moira.TriggerChecks, 10))
-	})
-
-	Convey("GetFilteredTriggerCheckIds error", t, func() {
-		var exp int64
-		expected := fmt.Errorf("GetFilteredTriggerCheckIds error")
-		database.EXPECT().GetFilteredTriggerCheckIds(tags, true).Return(nil, exp, expected)
-		triggersChecks, total, err := getFilteredTriggers(database, 0, 20, true, tags)
-		So(err, ShouldResemble, expected)
-		So(total, ShouldEqual, exp)
-		So(triggersChecks, ShouldBeNil)
-	})
-
-	Convey("GetTriggerChecks error", t, func() {
-		var exp int64 = 20
-		expected := fmt.Errorf("GetTriggerChecks error")
-		database.EXPECT().GetFilteredTriggerCheckIds(tags, true).Return(triggers, exp, nil)
-		database.EXPECT().GetTriggerChecks(triggers[0:10]).Return(nil, expected)
-		triggersChecks, total, err := getFilteredTriggers(database, 0, 10, true, tags)
-		So(err, ShouldResemble, expected)
-		So(total, ShouldEqual, 0)
-		So(triggersChecks, ShouldBeNil)
-	})
-}
-
 func TestGetTriggerPage(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -237,7 +134,7 @@ func TestGetTriggerPage(t *testing.T) {
 	Convey("Has tags and only errors", t, func() {
 		tags := []string{"tag1", "tag2"}
 		var exp int64 = 20
-		database.EXPECT().GetFilteredTriggerCheckIds(tags, true).Return(triggers, exp, nil)
+		database.EXPECT().GetTriggerCheckIDs(tags, true).Return(triggers, exp, nil)
 		database.EXPECT().GetTriggerChecks(triggers[0:10]).Return(make([]moira.TriggerChecks, 10), nil)
 		list, err := GetTriggerPage(database, page, size, true, tags)
 		So(err, ShouldBeNil)
@@ -251,7 +148,7 @@ func TestGetTriggerPage(t *testing.T) {
 
 	Convey("All triggers", t, func() {
 		var exp int64 = 20
-		database.EXPECT().GetTriggerCheckIDs().Return(triggers, exp, nil)
+		database.EXPECT().GetTriggerCheckIDs(make([]string, 0), false).Return(triggers, exp, nil)
 		database.EXPECT().GetTriggerChecks(triggers[0:10]).Return(make([]moira.TriggerChecks, 10), nil)
 		list, err := GetTriggerPage(database, page, size, false, make([]string, 0))
 		So(err, ShouldBeNil)
@@ -263,11 +160,21 @@ func TestGetTriggerPage(t *testing.T) {
 		})
 	})
 
-	Convey("No tags only errors and error GetFilteredTriggerCheckIds", t, func() {
+	Convey("Error GetFilteredTriggerCheckIDs", t, func() {
 		var exp int64
-		expected := fmt.Errorf("GetFilteredTriggerCheckIds error")
-		database.EXPECT().GetFilteredTriggerCheckIds(make([]string, 0), true).Return(nil, exp, expected)
+		expected := fmt.Errorf("GetFilteredTriggerCheckIDs error")
+		database.EXPECT().GetTriggerCheckIDs(make([]string, 0), true).Return(nil, exp, expected)
 		list, err := GetTriggerPage(database, 0, 20, true, make([]string, 0))
+		So(err, ShouldResemble, api.ErrorInternalServer(expected))
+		So(list, ShouldBeNil)
+	})
+
+	Convey("Error GetTriggerChecks", t, func() {
+		var exp int64 = 20
+		expected := fmt.Errorf("GetTriggerChecks error")
+		database.EXPECT().GetTriggerCheckIDs(make([]string, 0), false).Return(triggers, exp, nil)
+		database.EXPECT().GetTriggerChecks(triggers[0:10]).Return(nil, expected)
+		list, err := GetTriggerPage(database, page, size, false, make([]string, 0))
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 		So(list, ShouldBeNil)
 	})

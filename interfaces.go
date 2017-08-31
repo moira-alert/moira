@@ -20,7 +20,7 @@ type Database interface {
 	//LastCheck storing
 	GetTriggerLastCheck(triggerID string) (CheckData, error)
 	SetTriggerLastCheck(triggerID string, checkData *CheckData) error
-	GetTriggerCheckIDs() ([]string, int64, error)
+	GetTriggerCheckIDs(tags []string, onlyErrors bool) ([]string, int64, error)
 	SetTriggerCheckMetricsMaintenance(triggerID string, metrics map[string]int64) error
 
 	//Trigger storing
@@ -37,7 +37,6 @@ type Database interface {
 	SetTriggerThrottling(triggerID string, next time.Time) error
 	DeleteTriggerThrottling(triggerID string) error
 
-	GetFilteredTriggerCheckIds([]string, bool) ([]string, int64, error)
 	GetTriggerChecks(triggerCheckIDs []string) ([]TriggerChecks, error)
 
 	AddTriggerToCheck(triggerID string) error

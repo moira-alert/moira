@@ -9,77 +9,10 @@ import (
 	"time"
 )
 
-func (connector *DbConnector) GetFilteredTriggerCheckIds(tagNames []string, onlyErrors bool) ([]string, int64, error) {
-	c := connector.pool.Get()
-	defer c.Close()
-
-	c.Send("MULTI")
-	c.Send("ZREVRANGE", "moira-triggers-checks", 0, -1)
-	commandsArray := make([]string, 0)
-	for _, tagName := range tagNames {
-		commandsArray = append(commandsArray, fmt.Sprintf("moira-tag-triggers:%s", tagName))
-	}
-	if onlyErrors {
-		commandsArray = append(commandsArray, "moira-bad-state-triggers")
-	}
-	for _, command := range commandsArray {
-		c.Send("SMEMBERS", command)
-	}
-	rawResponse, err := redis.Values(c.Do("EXEC"))
-	if err != nil {
-		return nil, 0, err
-	}
-
-	triggerIdsByTags := make([]map[string]bool, 0)
-	var triggerIdsChecks []string
-
-	values, err := redis.Values(rawResponse[0], nil)
-	if err != nil {
-		return nil, 0, err
-	}
-	if err := redis.ScanSlice(values, &triggerIdsChecks); err != nil {
-		return nil, 0, fmt.Errorf("Failed to retrieve moira-triggers-checks: %s", err.Error())
-	}
-	for _, triggersArray := range rawResponse[1:] {
-		var triggerIds []string
-		values, err := redis.Values(triggersArray, nil)
-		if err != nil {
-			connector.logger.Error(err.Error())
-			continue
-		}
-		if err := redis.ScanSlice(values, &triggerIds); err != nil {
-			connector.logger.Errorf("Failed to retrieve moira-tags-triggers: %s", err.Error())
-			continue
-		}
-
-		triggerIdsMap := make(map[string]bool)
-		for _, triggerID := range triggerIds {
-			triggerIdsMap[triggerID] = true
-		}
-
-		triggerIdsByTags = append(triggerIdsByTags, triggerIdsMap)
-	}
-
-	total := make([]string, 0)
-	for _, triggerID := range triggerIdsChecks {
-		valid := true
-		for _, triggerIdsByTag := range triggerIdsByTags {
-			if _, ok := triggerIdsByTag[triggerID]; !ok {
-				valid = false
-				break
-			}
-		}
-		if valid {
-			total = append(total, triggerID)
-		}
-	}
-	return total, int64(len(total)), nil
-}
-
 func (connector *DbConnector) GetTriggerChecks(triggerCheckIDs []string) ([]moira.TriggerChecks, error) {
 	c := connector.pool.Get()
 	defer c.Close()
-	var triggerChecks []moira.TriggerChecks
+	triggerChecks := make([]moira.TriggerChecks, 0)
 
 	c.Send("MULTI")
 	for _, triggerCheckID := range triggerCheckIDs {

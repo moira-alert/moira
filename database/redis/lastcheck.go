@@ -7,6 +7,7 @@ import (
 	"github.com/garyburd/redigo/redis"
 
 	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira-alert/database"
 	"github.com/moira-alert/moira-alert/database/redis/reply"
 )
 
@@ -39,29 +40,6 @@ func (connector *DbConnector) SetTriggerLastCheck(triggerID string, checkData *m
 		return fmt.Errorf("Failed to EXEC: %s", err.Error())
 	}
 	return nil
-}
-
-//GetTriggerCheckIDs gets checked triggerIDs, sorted from max to min check score
-func (connector *DbConnector) GetTriggerCheckIDs() ([]string, int64, error) {
-	c := connector.pool.Get()
-	defer c.Close()
-
-	c.Send("MULTI")
-	c.Send("ZREVRANGE", moiraTriggersChecks, 0, -1)
-	c.Send("ZCARD", moiraTriggersChecks)
-	rawResponse, err := redis.Values(c.Do("EXEC"))
-	if err != nil {
-		return nil, 0, err
-	}
-	triggerIds, err := redis.Strings(rawResponse[0], nil)
-	if err != nil {
-		return nil, 0, err
-	}
-	total, err := redis.Int64(rawResponse[1], nil)
-	if err != nil {
-		return nil, 0, err
-	}
-	return triggerIds, total, nil
 }
 
 //SetTriggerCheckMetricsMaintenance sets to given metrics throttling timestamps, if during the update lastCheck was updated, try update again
@@ -107,6 +85,62 @@ func (connector *DbConnector) SetTriggerCheckMetricsMaintenance(triggerID string
 		lastCheckString = prev
 	}
 	return nil
+}
+
+//GetTriggerCheckIDs gets checked triggerIDs, sorted from max to min check score and filtered by given tags
+//If onlyErrors return only triggerIDs with score > 0
+func (connector *DbConnector) GetTriggerCheckIDs(tagNames []string, onlyErrors bool) ([]string, int64, error) {
+	c := connector.pool.Get()
+	defer c.Close()
+	c.Send("MULTI")
+	c.Send("ZREVRANGE", moiraTriggersChecks, 0, -1)
+	for _, tagName := range tagNames {
+		c.Send("SMEMBERS", moiraTagTriggers(tagName))
+	}
+	if onlyErrors {
+		c.Send("SMEMBERS", moiraBadStateTriggers)
+	}
+	rawResponse, err := redis.Values(c.Do("EXEC"))
+	if err != nil {
+		return nil, 0, err
+	}
+	triggerIDs, err := redis.Strings(rawResponse[0], nil)
+	if err != nil {
+		return nil, 0, fmt.Errorf("Failed to retrieve triggers: %s", err.Error())
+	}
+
+	triggerIDsByTags := make([]map[string]bool, 0)
+	for _, triggersArray := range rawResponse[1:] {
+		var triggerIDs []string
+		triggerIDs, err := redis.Strings(triggersArray, nil)
+		if err != nil {
+			if err == database.ErrNil {
+				continue
+			}
+			return nil, 0, fmt.Errorf("Failed to retrieve tags triggers: %s", err.Error())
+		}
+
+		triggerIDsMap := make(map[string]bool)
+		for _, triggerID := range triggerIDs {
+			triggerIDsMap[triggerID] = true
+		}
+		triggerIDsByTags = append(triggerIDsByTags, triggerIDsMap)
+	}
+
+	total := make([]string, 0)
+	for _, triggerID := range triggerIDs {
+		valid := true
+		for _, triggerIDsByTag := range triggerIDsByTags {
+			if _, ok := triggerIDsByTag[triggerID]; !ok {
+				valid = false
+				break
+			}
+		}
+		if valid {
+			total = append(total, triggerID)
+		}
+	}
+	return total, int64(len(total)), nil
 }
 
 var moiraBadStateTriggers = "moira-bad-state-triggers"

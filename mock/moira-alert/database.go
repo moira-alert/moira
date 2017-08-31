@@ -93,18 +93,6 @@ func (_mr *MockDatabaseMockRecorder) AddTriggerToCheck(arg0 interface{}) *gomock
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "AddTriggerToCheck", arg0)
 }
 
-// RemoveTrigger mocks base method
-func (_m *MockDatabase) RemoveTrigger(_param0 string) error {
-	ret := _m.ctrl.Call(_m, "RemoveTrigger", _param0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// RemoveTrigger indicates an expected call of RemoveTrigger
-func (_mr *MockDatabaseMockRecorder) RemoveTrigger(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "RemoveTrigger", arg0)
-}
-
 // DeleteTriggerCheckLock mocks base method
 func (_m *MockDatabase) DeleteTriggerCheckLock(_param0 string) error {
 	ret := _m.ctrl.Call(_m, "DeleteTriggerCheckLock", _param0)
@@ -192,20 +180,6 @@ func (_m *MockDatabase) GetContacts(_param0 []string) ([]*moira_alert.ContactDat
 // GetContacts indicates an expected call of GetContacts
 func (_mr *MockDatabaseMockRecorder) GetContacts(arg0 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetContacts", arg0)
-}
-
-// GetFilteredTriggerCheckIds mocks base method
-func (_m *MockDatabase) GetFilteredTriggerCheckIds(_param0 []string, _param1 bool) ([]string, int64, error) {
-	ret := _m.ctrl.Call(_m, "GetFilteredTriggerCheckIds", _param0, _param1)
-	ret0, _ := ret[0].([]string)
-	ret1, _ := ret[1].(int64)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
-}
-
-// GetFilteredTriggerCheckIds indicates an expected call of GetFilteredTriggerCheckIds
-func (_mr *MockDatabaseMockRecorder) GetFilteredTriggerCheckIds(arg0, arg1 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetFilteredTriggerCheckIds", arg0, arg1)
 }
 
 // GetMetricRetention mocks base method
@@ -417,8 +391,8 @@ func (_mr *MockDatabaseMockRecorder) GetTrigger(arg0 interface{}) *gomock.Call {
 }
 
 // GetTriggerCheckIDs mocks base method
-func (_m *MockDatabase) GetTriggerCheckIDs() ([]string, int64, error) {
-	ret := _m.ctrl.Call(_m, "GetTriggerCheckIDs")
+func (_m *MockDatabase) GetTriggerCheckIDs(_param0 []string, _param1 bool) ([]string, int64, error) {
+	ret := _m.ctrl.Call(_m, "GetTriggerCheckIDs", _param0, _param1)
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(int64)
 	ret2, _ := ret[2].(error)
@@ -426,8 +400,8 @@ func (_m *MockDatabase) GetTriggerCheckIDs() ([]string, int64, error) {
 }
 
 // GetTriggerCheckIDs indicates an expected call of GetTriggerCheckIDs
-func (_mr *MockDatabaseMockRecorder) GetTriggerCheckIDs() *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetTriggerCheckIDs")
+func (_mr *MockDatabaseMockRecorder) GetTriggerCheckIDs(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetTriggerCheckIDs", arg0, arg1)
 }
 
 // GetTriggerChecks mocks base method
@@ -655,6 +629,18 @@ func (_mr *MockDatabaseMockRecorder) RemoveTag(arg0 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "RemoveTag", arg0)
 }
 
+// RemoveTrigger mocks base method
+func (_m *MockDatabase) RemoveTrigger(_param0 string) error {
+	ret := _m.ctrl.Call(_m, "RemoveTrigger", _param0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveTrigger indicates an expected call of RemoveTrigger
+func (_mr *MockDatabaseMockRecorder) RemoveTrigger(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "RemoveTrigger", arg0)
+}
+
 // SaveContact mocks base method
 func (_m *MockDatabase) SaveContact(_param0 *moira_alert.ContactData) error {
 	ret := _m.ctrl.Call(_m, "SaveContact", _param0)
@@ -716,18 +702,6 @@ func (_mr *MockDatabaseMockRecorder) SetTriggerCheckLock(arg0 interface{}) *gomo
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetTriggerCheckLock", arg0)
 }
 
-// SetTriggerLastCheck mocks base method
-func (_m *MockDatabase) SetTriggerLastCheck(_param0 string, _param1 *moira_alert.CheckData) error {
-	ret := _m.ctrl.Call(_m, "SetTriggerLastCheck", _param0, _param1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SetTriggerLastCheck indicates an expected call of SetTriggerLastCheck
-func (_mr *MockDatabaseMockRecorder) SetTriggerLastCheck(arg0, arg1 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetTriggerLastCheck", arg0, arg1)
-}
-
 // SetTriggerCheckMetricsMaintenance mocks base method
 func (_m *MockDatabase) SetTriggerCheckMetricsMaintenance(_param0 string, _param1 map[string]int64) error {
 	ret := _m.ctrl.Call(_m, "SetTriggerCheckMetricsMaintenance", _param0, _param1)
@@ -738,6 +712,18 @@ func (_m *MockDatabase) SetTriggerCheckMetricsMaintenance(_param0 string, _param
 // SetTriggerCheckMetricsMaintenance indicates an expected call of SetTriggerCheckMetricsMaintenance
 func (_mr *MockDatabaseMockRecorder) SetTriggerCheckMetricsMaintenance(arg0, arg1 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetTriggerCheckMetricsMaintenance", arg0, arg1)
+}
+
+// SetTriggerLastCheck mocks base method
+func (_m *MockDatabase) SetTriggerLastCheck(_param0 string, _param1 *moira_alert.CheckData) error {
+	ret := _m.ctrl.Call(_m, "SetTriggerLastCheck", _param0, _param1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetTriggerLastCheck indicates an expected call of SetTriggerLastCheck
+func (_mr *MockDatabaseMockRecorder) SetTriggerLastCheck(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetTriggerLastCheck", arg0, arg1)
 }
 
 // SetTriggerThrottling mocks base method
