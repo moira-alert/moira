@@ -2,6 +2,7 @@ package redis
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/garyburd/redigo/redis"
 
@@ -33,19 +34,7 @@ func (connector *DbConnector) GetTrigger(triggerID string) (moira.Trigger, error
 	if err != nil {
 		return moira.Trigger{}, fmt.Errorf("Failed to EXEC: %s", err.Error())
 	}
-	trigger, err := reply.Trigger(rawResponse[0], nil)
-	if err != nil {
-		return trigger, err
-	}
-	triggerTags, err := redis.Strings(rawResponse[1], nil)
-	if err != nil {
-		connector.logger.Errorf("Error getting trigger tags, id: %s, error: %s", triggerID, err.Error())
-	}
-	trigger.ID = triggerID
-	if len(triggerTags) > 0 {
-		trigger.Tags = triggerTags
-	}
-	return trigger, err
+	return connector.getTriggerWithTags(rawResponse[0], rawResponse[1], triggerID)
 }
 
 // GetTriggers returns triggers data by given ids, len of triggerIDs is equal to len of returned values array.
@@ -67,22 +56,14 @@ func (connector *DbConnector) GetTriggers(triggerIDs []string) ([]*moira.Trigger
 	triggers := make([]*moira.Trigger, len(triggerIDs))
 	for i := 0; i < len(rawResponse); i += 2 {
 		triggerID := triggerIDs[i/2]
-		trigger, err := reply.Trigger(rawResponse[i], nil)
+		trigger, err := connector.getTriggerWithTags(rawResponse[0], rawResponse[1], triggerID)
 		if err != nil {
 			if err == database.ErrNil {
 				continue
 			}
 			return nil, err
 		}
-		triggerTags, err := redis.Strings(rawResponse[i+1], nil)
-		if err != nil {
-			connector.logger.Errorf("Error getting trigger tags, id: %s, error: %s", triggerID, err.Error())
-		}
-		trigger.ID = triggerID
-		if len(triggerTags) > 0 {
-			trigger.Tags = triggerTags
-		}
-		triggers = append(triggers, &trigger)
+		triggers[i/2] = &trigger
 	}
 	return triggers, nil
 }
@@ -208,6 +189,88 @@ func (connector *DbConnector) RemoveTrigger(triggerID string) error {
 		}
 	}
 	return nil
+}
+
+//GetTriggerChecks gets triggers data with tags, lastCheck data and throttling by given triggersIDs
+// Len of triggerIDs is equal to len of returned values array.
+// If there is no object by current ID, then nil is returned
+func (connector *DbConnector) GetTriggerChecks(triggerIDs []string) ([]*moira.TriggerChecks, error) {
+	c := connector.pool.Get()
+	defer c.Close()
+
+	c.Send("MULTI")
+	for _, triggerID := range triggerIDs {
+		c.Send("GET", triggerKey(triggerID))
+		c.Send("SMEMBERS", triggerTagsKey(triggerID))
+		c.Send("GET", moiraMetricLastCheck(triggerID))
+		c.Send("GET", notifierNextKey(triggerID))
+	}
+	rawResponse, err := redis.Values(c.Do("EXEC"))
+	if err != nil {
+		return nil, fmt.Errorf("Failed to EXEC: %s", err)
+	}
+	var slices [][]interface{}
+	for i := 0; i < len(rawResponse); i += 4 {
+		arr := make([]interface{}, 0, 5)
+		arr = append(arr, triggerIDs[i/4])
+		arr = append(arr, rawResponse[i:i+4]...)
+		slices = append(slices, arr)
+	}
+	triggerChecks := make([]*moira.TriggerChecks, len(slices))
+	for i, slice := range slices {
+		triggerID := slice[0].(string)
+		trigger, err := connector.getTriggerWithTags(slice[1], slice[2], triggerID)
+		if err != nil {
+			if err == database.ErrNil {
+				continue
+			}
+			return nil, err
+		}
+		lastCheck, err := reply.Check(slice[3], nil)
+		if err != nil && err != database.ErrNil {
+			return nil, err
+		}
+		throttling, _ := redis.Int64(slice[4], nil)
+		if time.Now().Unix() >= throttling {
+			throttling = 0
+		}
+		triggerChecks[i] = &moira.TriggerChecks{
+			Trigger:    trigger,
+			LastCheck:  lastCheck,
+			Throttling: throttling,
+		}
+	}
+	return triggerChecks, nil
+}
+
+func (connector *DbConnector) getTriggerWithTags(triggerRaw interface{}, tagsRaw interface{}, triggerID string) (moira.Trigger, error) {
+	trigger, err := reply.Trigger(triggerRaw, nil)
+	if err != nil {
+		return trigger, err
+	}
+	triggerTags, err := redis.Strings(tagsRaw, nil)
+	if err != nil {
+		connector.logger.Errorf("Error getting trigger tags, id: %s, error: %s", triggerID, err.Error())
+	}
+	if len(triggerTags) > 0 {
+		trigger.Tags = triggerTags
+	}
+	trigger.ID = triggerID
+	return trigger, nil
+}
+
+func leftJoin(left, right []string) []string {
+	rightValues := make(map[string]bool)
+	for _, value := range right {
+		rightValues[value] = true
+	}
+	arr := make([]string, 0)
+	for _, leftValue := range left {
+		if _, ok := rightValues[leftValue]; !ok {
+			arr = append(arr, leftValue)
+		}
+	}
+	return arr
 }
 
 var triggersListKey = "moira-triggers-list"

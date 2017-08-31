@@ -81,18 +81,6 @@ func (_mr *MockDatabaseMockRecorder) AddPatternMetric(arg0, arg1 interface{}) *g
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "AddPatternMetric", arg0, arg1)
 }
 
-// AddTriggerToCheck mocks base method
-func (_m *MockDatabase) AddTriggerToCheck(_param0 string) error {
-	ret := _m.ctrl.Call(_m, "AddTriggerToCheck", _param0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// AddTriggerToCheck indicates an expected call of AddTriggerToCheck
-func (_mr *MockDatabaseMockRecorder) AddTriggerToCheck(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "AddTriggerToCheck", arg0)
-}
-
 // DeleteTriggerCheckLock mocks base method
 func (_m *MockDatabase) DeleteTriggerCheckLock(_param0 string) error {
 	ret := _m.ctrl.Call(_m, "DeleteTriggerCheckLock", _param0)
@@ -405,9 +393,9 @@ func (_mr *MockDatabaseMockRecorder) GetTriggerCheckIDs(arg0, arg1 interface{}) 
 }
 
 // GetTriggerChecks mocks base method
-func (_m *MockDatabase) GetTriggerChecks(_param0 []string) ([]moira_alert.TriggerChecks, error) {
+func (_m *MockDatabase) GetTriggerChecks(_param0 []string) ([]*moira_alert.TriggerChecks, error) {
 	ret := _m.ctrl.Call(_m, "GetTriggerChecks", _param0)
-	ret0, _ := ret[0].([]moira_alert.TriggerChecks)
+	ret0, _ := ret[0].([]*moira_alert.TriggerChecks)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -454,19 +442,6 @@ func (_m *MockDatabase) GetTriggerThrottling(_param0 string) (time.Time, time.Ti
 // GetTriggerThrottling indicates an expected call of GetTriggerThrottling
 func (_mr *MockDatabaseMockRecorder) GetTriggerThrottling(arg0 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetTriggerThrottling", arg0)
-}
-
-// GetTriggerToCheck mocks base method
-func (_m *MockDatabase) GetTriggerToCheck() (*string, error) {
-	ret := _m.ctrl.Call(_m, "GetTriggerToCheck")
-	ret0, _ := ret[0].(*string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetTriggerToCheck indicates an expected call of GetTriggerToCheck
-func (_mr *MockDatabaseMockRecorder) GetTriggerToCheck() *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetTriggerToCheck")
 }
 
 // GetTriggers mocks base method

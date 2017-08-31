@@ -27,20 +27,14 @@ type Database interface {
 	GetTriggerIDs() ([]string, error)
 	GetTrigger(triggerID string) (Trigger, error)
 	GetTriggers(triggerIDs []string) ([]*Trigger, error)
+	GetTriggerChecks(triggerIDs []string) ([]*TriggerChecks, error)
 	SaveTrigger(triggerID string, trigger *Trigger) error
 	RemoveTrigger(triggerID string) error
-
 	GetPatternTriggerIDs(pattern string) ([]string, error)
 	RemovePatternTriggerIDs(pattern string) error
-
 	GetTriggerThrottling(triggerID string) (time.Time, time.Time)
 	SetTriggerThrottling(triggerID string, next time.Time) error
 	DeleteTriggerThrottling(triggerID string) error
-
-	GetTriggerChecks(triggerCheckIDs []string) ([]TriggerChecks, error)
-
-	AddTriggerToCheck(triggerID string) error
-	GetTriggerToCheck() (*string, error)
 
 	//NotificationEvent storing
 	GetNotificationEvents(triggerID string, start, size int64) ([]*NotificationEvent, error)
@@ -53,7 +47,7 @@ type Database interface {
 	GetContacts(contactIDs []string) ([]*ContactData, error)
 	GetAllContacts() ([]*ContactData, error)
 	WriteContact(contact *ContactData) error
-	RemoveContact(string, string) error
+	RemoveContact(contactID string, userLogin string) error
 	SaveContact(contact *ContactData) error
 	GetUserContactIDs(userLogin string) ([]string, error)
 

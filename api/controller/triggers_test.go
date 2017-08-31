@@ -50,7 +50,7 @@ func TestGetAllTriggers(t *testing.T) {
 
 	Convey("Has triggers", t, func() {
 		triggerIDs := []string{uuid.NewV4().String(), uuid.NewV4().String()}
-		triggers := []moira.TriggerChecks{{Trigger: moira.Trigger{ID: triggerIDs[0]}}, {Trigger: moira.Trigger{ID: triggerIDs[1]}}}
+		triggers := []*moira.TriggerChecks{{Trigger: moira.Trigger{ID: triggerIDs[0]}}, {Trigger: moira.Trigger{ID: triggerIDs[1]}}}
 		database.EXPECT().GetTriggerIDs().Return(triggerIDs, nil)
 		database.EXPECT().GetTriggerChecks(triggerIDs).Return(triggers, nil)
 		list, err := GetAllTriggers(database)
@@ -60,10 +60,10 @@ func TestGetAllTriggers(t *testing.T) {
 
 	Convey("No triggers", t, func() {
 		database.EXPECT().GetTriggerIDs().Return(make([]string, 0), nil)
-		database.EXPECT().GetTriggerChecks(make([]string, 0)).Return(make([]moira.TriggerChecks, 0), nil)
+		database.EXPECT().GetTriggerChecks(make([]string, 0)).Return(make([]*moira.TriggerChecks, 0), nil)
 		list, err := GetAllTriggers(database)
 		So(err, ShouldBeNil)
-		So(list, ShouldResemble, &dto.TriggersList{List: make([]moira.TriggerChecks, 0)})
+		So(list, ShouldResemble, &dto.TriggersList{List: make([]*moira.TriggerChecks, 0)})
 	})
 
 	Convey("GetTriggerIDs error", t, func() {
@@ -135,11 +135,11 @@ func TestGetTriggerPage(t *testing.T) {
 		tags := []string{"tag1", "tag2"}
 		var exp int64 = 20
 		database.EXPECT().GetTriggerCheckIDs(tags, true).Return(triggers, exp, nil)
-		database.EXPECT().GetTriggerChecks(triggers[0:10]).Return(make([]moira.TriggerChecks, 10), nil)
+		database.EXPECT().GetTriggerChecks(triggers[0:10]).Return(make([]*moira.TriggerChecks, 10), nil)
 		list, err := GetTriggerPage(database, page, size, true, tags)
 		So(err, ShouldBeNil)
 		So(list, ShouldResemble, &dto.TriggersList{
-			List:  make([]moira.TriggerChecks, 10),
+			List:  make([]*moira.TriggerChecks, 10),
 			Total: &exp,
 			Page:  &page,
 			Size:  &size,
@@ -149,11 +149,11 @@ func TestGetTriggerPage(t *testing.T) {
 	Convey("All triggers", t, func() {
 		var exp int64 = 20
 		database.EXPECT().GetTriggerCheckIDs(make([]string, 0), false).Return(triggers, exp, nil)
-		database.EXPECT().GetTriggerChecks(triggers[0:10]).Return(make([]moira.TriggerChecks, 10), nil)
+		database.EXPECT().GetTriggerChecks(triggers[0:10]).Return(make([]*moira.TriggerChecks, 10), nil)
 		list, err := GetTriggerPage(database, page, size, false, make([]string, 0))
 		So(err, ShouldBeNil)
 		So(list, ShouldResemble, &dto.TriggersList{
-			List:  make([]moira.TriggerChecks, 10),
+			List:  make([]*moira.TriggerChecks, 10),
 			Total: &exp,
 			Page:  &page,
 			Size:  &size,

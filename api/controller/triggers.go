@@ -28,7 +28,12 @@ func GetAllTriggers(database moira.Database) (*dto.TriggersList, *api.ErrorRespo
 		return nil, api.ErrorInternalServer(err)
 	}
 	triggersList := dto.TriggersList{
-		List: triggerChecks,
+		List: make([]moira.TriggerChecks, 0),
+	}
+	for _, triggerCheck := range triggerChecks {
+		if triggerCheck != nil {
+			triggersList.List = append(triggersList.List, *triggerCheck)
+		}
 	}
 	return &triggersList, nil
 }
@@ -40,15 +45,21 @@ func GetTriggerPage(database moira.Database, page int64, size int64, onlyErrors 
 		return nil, api.ErrorInternalServer(err)
 	}
 	triggerIDs = getTriggerIdsRange(triggerIDs, total, page, size)
-	triggersChecks, err := database.GetTriggerChecks(triggerIDs)
+	triggerChecks, err := database.GetTriggerChecks(triggerIDs)
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
 	triggersList := dto.TriggersList{
-		List:  triggersChecks,
+		List:  make([]moira.TriggerChecks, 0),
 		Total: &total,
 		Page:  &page,
 		Size:  &size,
+	}
+
+	for _, triggerCheck := range triggerChecks {
+		if triggerCheck != nil {
+			triggersList.List = append(triggersList.List, *triggerCheck)
+		}
 	}
 	return &triggersList, nil
 }
