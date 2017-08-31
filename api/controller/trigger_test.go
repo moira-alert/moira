@@ -163,22 +163,22 @@ func TestGetTrigger(t *testing.T) {
 	})
 }
 
-func TestDeleteTrigger(t *testing.T) {
+func TestRemoveTrigger(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
 	triggerID := uuid.NewV4().String()
 
 	Convey("Success", t, func() {
-		database.EXPECT().DeleteTrigger(triggerID).Return(nil)
-		err := DeleteTrigger(database, triggerID)
+		database.EXPECT().RemoveTrigger(triggerID).Return(nil)
+		err := RemoveTrigger(database, triggerID)
 		So(err, ShouldBeNil)
 	})
 
 	Convey("Error", t, func() {
 		expected := fmt.Errorf("Oooops! Error delete")
-		database.EXPECT().DeleteTrigger(triggerID).Return(expected)
-		err := DeleteTrigger(database, triggerID)
+		database.EXPECT().RemoveTrigger(triggerID).Return(expected)
+		err := RemoveTrigger(database, triggerID)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 	})
 }

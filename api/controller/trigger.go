@@ -76,9 +76,9 @@ func GetTrigger(dataBase moira.Database, triggerID string) (*dto.Trigger, *api.E
 	return &triggerResponse, nil
 }
 
-//DeleteTrigger deletes triggers
-func DeleteTrigger(database moira.Database, triggerID string) *api.ErrorResponse {
-	if err := database.DeleteTrigger(triggerID); err != nil {
+//RemoveTrigger deletes trigger by given triggerID
+func RemoveTrigger(database moira.Database, triggerID string) *api.ErrorResponse {
+	if err := database.RemoveTrigger(triggerID); err != nil {
 		return api.ErrorInternalServer(err)
 	}
 	return nil

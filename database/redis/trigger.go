@@ -110,6 +110,106 @@ func (connector *DbConnector) RemovePatternTriggerIDs(pattern string) error {
 	return nil
 }
 
+//SaveTrigger sets trigger data by given trigger and triggerID
+//If trigger already exists, then merge old and new trigger patterns and tags list
+//and cleanup not used tags and patterns from lists
+//If given trigger contains new tags then create it
+func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigger) error {
+	existing, errGetTrigger := connector.GetTrigger(triggerID)
+	if errGetTrigger != nil && errGetTrigger != database.ErrNil {
+		return errGetTrigger
+	}
+	bytes, err := reply.GetTriggerBytes(triggerID, trigger)
+	if err != nil {
+		return err
+	}
+	c := connector.pool.Get()
+	defer c.Close()
+	c.Send("MULTI")
+	cleanupPatterns := make([]string, 0)
+	if errGetTrigger != database.ErrNil {
+		for _, pattern := range leftJoin(existing.Patterns, trigger.Patterns) {
+			c.Send("SREM", patternTriggersKey(pattern), triggerID)
+			cleanupPatterns = append(cleanupPatterns, pattern)
+		}
+		for _, tag := range leftJoin(existing.Tags, trigger.Tags) {
+			c.Send("SREM", triggerTagsKey(triggerID), tag)
+			c.Send("SREM", moiraTagTriggers(tag), triggerID)
+		}
+	}
+	c.Do("SET", triggerKey(triggerID), bytes)
+	c.Do("SADD", triggersListKey, triggerID)
+	for _, pattern := range trigger.Patterns {
+		c.Do("SADD", moiraPatternsList, pattern)
+		c.Do("SADD", patternTriggersKey(pattern), triggerID)
+	}
+	for _, tag := range trigger.Tags {
+		c.Send("SADD", triggerTagsKey(triggerID), tag)
+		c.Send("SADD", moiraTagTriggers(tag), triggerID)
+		c.Send("SADD", moiraTags, tag)
+	}
+	_, err = c.Do("EXEC")
+	if err != nil {
+		return fmt.Errorf("Failed to EXEC: %s", err.Error())
+	}
+	for _, pattern := range cleanupPatterns {
+		triggerIDs, err := connector.GetPatternTriggerIDs(pattern)
+		if err != nil {
+			return err
+		}
+		if len(triggerIDs) == 0 {
+			connector.RemovePatternTriggerIDs(pattern)
+			connector.RemovePattern(pattern)
+			connector.RemovePatternsMetrics([]string{pattern})
+		}
+	}
+	return nil
+}
+
+//RemoveTrigger deletes trigger data by given triggerID, delete trigger tag list,
+//Deletes triggerID from containing tags triggers list and from containing patterns triggers list
+//If containing patterns doesn't used in another triggers, then delete this patterns with metrics data
+func (connector *DbConnector) RemoveTrigger(triggerID string) error {
+	trigger, err := connector.GetTrigger(triggerID)
+	if err != nil {
+		if err == database.ErrNil {
+			return nil
+		}
+		return err
+	}
+
+	c := connector.pool.Get()
+	defer c.Close()
+
+	c.Send("MULTI")
+	c.Send("DEL", triggerKey(triggerID))
+	c.Send("DEL", triggerTagsKey(triggerID))
+	c.Send("SREM", triggersListKey, triggerID)
+	for _, tag := range trigger.Tags {
+		c.Send("SREM", moiraTagTriggers(tag), triggerID)
+	}
+	for _, pattern := range trigger.Patterns {
+		c.Send("SREM", patternTriggersKey(pattern), triggerID)
+	}
+	_, err = c.Do("EXEC")
+	if err != nil {
+		return fmt.Errorf("Failed to EXEC: %s", err.Error())
+	}
+
+	for _, pattern := range trigger.Patterns {
+		count, err := redis.Int64(c.Do("SCARD", patternTriggersKey(pattern)))
+		if err != nil {
+			return fmt.Errorf("Failed to SCARD pattern triggers: %s", err.Error())
+		}
+		if count == 0 {
+			if err := connector.RemovePatternWithMetrics(pattern); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 var triggersListKey = "moira-triggers-list"
 
 func triggerKey(triggerID string) string {

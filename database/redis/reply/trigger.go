@@ -44,12 +44,38 @@ func (storageElement *triggerStorageElement) toTrigger() moira.Trigger {
 	}
 }
 
+func toTriggerStorageElement(trigger *moira.Trigger, triggerId string) *triggerStorageElement {
+	return &triggerStorageElement{
+		ID:              triggerId,
+		Name:            trigger.Name,
+		Desc:            trigger.Desc,
+		Targets:         trigger.Targets,
+		WarnValue:       trigger.WarnValue,
+		ErrorValue:      trigger.ErrorValue,
+		Tags:            trigger.Tags,
+		TTLState:        trigger.TTLState,
+		Schedule:        trigger.Schedule,
+		Expression:      trigger.Expression,
+		Patterns:        trigger.Patterns,
+		IsSimpleTrigger: trigger.IsSimpleTrigger,
+		TTL:             getTriggerTtlString(trigger.TTL),
+	}
+}
+
 func getTriggerTtl(ttlString *string) *int64 {
 	if ttlString == nil {
 		return nil
 	}
 	ttl, _ := strconv.ParseInt(*ttlString, 10, 64)
 	return &ttl
+}
+
+func getTriggerTtlString(ttl *int64) *string {
+	if ttl == nil {
+		return nil
+	}
+	ttlString := fmt.Sprintf("%v", *ttl)
+	return &ttlString
 }
 
 func Trigger(rep interface{}, err error) (moira.Trigger, error) {
@@ -67,4 +93,13 @@ func Trigger(rep interface{}, err error) (moira.Trigger, error) {
 	}
 
 	return triggerSE.toTrigger(), nil
+}
+
+func GetTriggerBytes(triggerID string, trigger *moira.Trigger) ([]byte, error) {
+	triggerSE := toTriggerStorageElement(trigger, triggerID)
+	bytes, err := json.Marshal(triggerSE)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to marshal trigger: %s", err.Error())
+	}
+	return bytes, nil
 }

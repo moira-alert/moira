@@ -27,6 +27,8 @@ type Database interface {
 	GetTriggerIDs() ([]string, error)
 	GetTrigger(triggerID string) (Trigger, error)
 	GetTriggers(triggerIDs []string) ([]*Trigger, error)
+	SaveTrigger(triggerID string, trigger *Trigger) error
+	RemoveTrigger(triggerID string) error
 
 	GetPatternTriggerIDs(pattern string) ([]string, error)
 	RemovePatternTriggerIDs(pattern string) error
@@ -37,8 +39,6 @@ type Database interface {
 
 	GetFilteredTriggerCheckIds([]string, bool) ([]string, int64, error)
 	GetTriggerChecks(triggerCheckIDs []string) ([]TriggerChecks, error)
-	DeleteTrigger(triggerID string) error
-	SaveTrigger(triggerID string, trigger *Trigger) error
 
 	AddTriggerToCheck(triggerID string) error
 	GetTriggerToCheck() (*string, error)

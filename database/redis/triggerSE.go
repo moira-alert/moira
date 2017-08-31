@@ -40,24 +40,6 @@ func toTrigger(storageElement *triggerStorageElement, triggerId string) *moira.T
 	}
 }
 
-func toTriggerStorageElement(trigger *moira.Trigger, triggerId string) *triggerStorageElement {
-	return &triggerStorageElement{
-		ID:              triggerId,
-		Name:            trigger.Name,
-		Desc:            trigger.Desc,
-		Targets:         trigger.Targets,
-		WarnValue:       trigger.WarnValue,
-		ErrorValue:      trigger.ErrorValue,
-		Tags:            trigger.Tags,
-		TtlState:        trigger.TTLState,
-		Schedule:        trigger.Schedule,
-		Expression:      trigger.Expression,
-		Patterns:        trigger.Patterns,
-		IsSimpleTrigger: trigger.IsSimpleTrigger,
-		Ttl:             getTriggerTtlString(trigger.TTL),
-	}
-}
-
 func getTriggerTtl(ttlString *string) *int64 {
 	if ttlString == nil {
 		return nil

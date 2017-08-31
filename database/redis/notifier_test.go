@@ -10,6 +10,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 	"time"
+	"github.com/moira-alert/moira-alert/database"
 )
 
 var metrics2 = metrics.ConfigureDatabaseMetrics()
@@ -17,24 +18,25 @@ var metrics2 = metrics.ConfigureDatabaseMetrics()
 func TestNotifierDataBase(t *testing.T) {
 	config := Config{}
 	logger, _ := logging.GetLogger("dataBase")
-	database := NewDatabase(logger, Config{Port: "6379", Host: "localhost"}, &graphite.DatabaseMetrics{})
+	dataBase := NewDatabase(logger, Config{Port: "6379", Host: "localhost"}, &graphite.DatabaseMetrics{})
 
 	Convey("Event manipulation", t, func() {
-		_, err := database.FetchNotificationEvent()
-		So(err, ShouldBeNil)
+		_, err := dataBase.FetchNotificationEvent()
+		So(err, ShouldBeError)
+		So(err, ShouldResemble, database.ErrNil)
 	})
 
 	Convey("Contact manipulation", t, func() {
 		Convey("should throw error when no connection", func() {
 			dataBase := NewDatabase(logger, config, metrics2)
-			dataBase.pool.TestOnBorrow(database.pool.Get(), time.Now())
+			dataBase.pool.TestOnBorrow(dataBase.pool.Get(), time.Now())
 			_, err := dataBase.GetAllContacts()
 			So(err, ShouldNotBeNil)
 		})
 
 		Convey("should save contact", func() {
 			db := NewDatabase(logger, config, metrics2)
-			db.pool = database.pool
+			db.pool = dataBase.pool
 			contact := moira.ContactData{
 				ID:    "id",
 				Type:  "telegram",
@@ -46,7 +48,7 @@ func TestNotifierDataBase(t *testing.T) {
 
 		Convey("shouldn't throw error when connection exists", func() {
 			db := NewDatabase(logger, config, metrics2)
-			db.pool = database.pool
+			db.pool = dataBase.pool
 			_, err := db.GetAllContacts()
 			So(err, ShouldBeNil)
 		})
@@ -54,14 +56,14 @@ func TestNotifierDataBase(t *testing.T) {
 
 	Convey("Try get trigger by empty id, should be error", t, func() {
 		db := NewDatabase(logger, config, metrics2)
-		db.pool = database.pool
-		_, err := db.GetNotificationTrigger("")
+		db.pool = dataBase.pool
+		_, err := db.GetTrigger("")
 		So(err, ShouldNotBeEmpty)
 	})
 
 	Convey("Test get notification", t, func() {
 		db := NewDatabase(logger, config, metrics2)
-		db.pool = database.pool
+		db.pool = dataBase.pool
 
 		now := time.Now()
 		notif := moira.ScheduledNotification{
@@ -76,7 +78,7 @@ func TestNotifierDataBase(t *testing.T) {
 
 	Convey("Test get notification if empty", t, func() {
 		db := NewDatabase(logger, config, metrics2)
-		db.pool = database.pool
+		db.pool = dataBase.pool
 
 		now := time.Now()
 		actual, err := db.GetNotificationsAndDelete(now.Unix())

@@ -93,16 +93,16 @@ func (_mr *MockDatabaseMockRecorder) AddTriggerToCheck(arg0 interface{}) *gomock
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "AddTriggerToCheck", arg0)
 }
 
-// DeleteTrigger mocks base method
-func (_m *MockDatabase) DeleteTrigger(_param0 string) error {
-	ret := _m.ctrl.Call(_m, "DeleteTrigger", _param0)
+// RemoveTrigger mocks base method
+func (_m *MockDatabase) RemoveTrigger(_param0 string) error {
+	ret := _m.ctrl.Call(_m, "RemoveTrigger", _param0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// DeleteTrigger indicates an expected call of DeleteTrigger
-func (_mr *MockDatabaseMockRecorder) DeleteTrigger(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "DeleteTrigger", arg0)
+// RemoveTrigger indicates an expected call of RemoveTrigger
+func (_mr *MockDatabaseMockRecorder) RemoveTrigger(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "RemoveTrigger", arg0)
 }
 
 // DeleteTriggerCheckLock mocks base method
