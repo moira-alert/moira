@@ -8,6 +8,7 @@ import (
 	"github.com/moira-alert/moira-alert/database"
 )
 
+//Subscription converts redis DB reply to moira.SubscriptionData object
 func Subscription(rep interface{}, err error) (moira.SubscriptionData, error) {
 	subscription := moira.SubscriptionData{
 		// TODO not sure if this is still necessary, maybe we should just convert database and forget about it
@@ -27,6 +28,7 @@ func Subscription(rep interface{}, err error) (moira.SubscriptionData, error) {
 	return subscription, nil
 }
 
+//Subscriptions converts redis DB reply to moira.SubscriptionData objects array
 func Subscriptions(rep interface{}, err error) ([]*moira.SubscriptionData, error) {
 	values, err := redis.Values(rep, err)
 	if err != nil {

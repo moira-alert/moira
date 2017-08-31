@@ -7,6 +7,7 @@ import (
 	"math"
 )
 
+//FetchData gets values of given pattern metrics from given interval and returns values and all found pattern metrics
 func FetchData(database moira.Database, pattern string, from int64, until int64, allowRealTimeAlerting bool) ([]*expr.MetricData, []string, error) {
 	metrics, err := database.GetPatternMetrics(pattern)
 	if err != nil {

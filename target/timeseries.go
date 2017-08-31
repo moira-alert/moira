@@ -5,8 +5,10 @@ import (
 	"math"
 )
 
+//TimeSeries is abstraction over carbon-api expr.MetricData type
 type TimeSeries expr.MetricData
 
+//GetTimestampValue gets value of given timestamp index, if value is Nil, then return NaN
 func (timeSeries *TimeSeries) GetTimestampValue(valueTimestamp int64) float64 {
 	if valueTimestamp < int64(timeSeries.StartTime) {
 		return math.NaN()

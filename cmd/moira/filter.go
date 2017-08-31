@@ -14,16 +14,16 @@ import (
 	"github.com/moira-alert/moira-alert/metrics/graphite/go-metrics"
 )
 
-// Filter
+// Filter represents filter functionality of moira
 type Filter struct {
 	Config *cache.Config
-	Log moira.Logger
-	DB moira.Database
+	Log    moira.Logger
+	DB     moira.Database
 
-	listener *connection.MetricsListener
-	matcherWG *sync.WaitGroup
+	listener             *connection.MetricsListener
+	matcherWG            *sync.WaitGroup
 	refreshPatternWorker *patterns.RefreshPatternWorker
-	heartbeatWorker *heartbeat.Worker
+	heartbeatWorker      *heartbeat.Worker
 }
 
 // Start Moira Filter
@@ -54,7 +54,7 @@ func (filter *Filter) Start() error {
 
 	filter.heartbeatWorker = heartbeat.NewHeartbeatWorker(filter.DB, cacheMetrics, filter.Log)
 
-	if err := filter.refreshPatternWorker.Start(); err != nil {
+	if err = filter.refreshPatternWorker.Start(); err != nil {
 		return fmt.Errorf("Failed to start refresh pattern storage: %s", err.Error())
 	}
 
@@ -86,4 +86,3 @@ func (filter *Filter) Stop() error {
 	}
 	return nil
 }
-

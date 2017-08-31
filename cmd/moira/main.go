@@ -76,7 +76,7 @@ func main() {
 		Log:    apiLog,
 	}
 
-	if err := apiServer.Start(); err != nil {
+	if err = apiServer.Start(); err != nil {
 		log.Fatalf("Can't start API: %v", err)
 	}
 
@@ -92,7 +92,7 @@ func main() {
 		Log:    filterLog,
 	}
 
-	if err := filterServer.Start(); err != nil {
+	if err = filterServer.Start(); err != nil {
 		log.Fatalf("Can't start Filter: %v", err)
 	}
 
@@ -110,7 +110,7 @@ func main() {
 	notifierConfig := config.Notifier.getSettings()
 	sender := notifier.NewNotifier(notifierDB, notifierLog, *notifierConfig, notifierMetrics)
 
-	if err := sender.RegisterSenders(notifierDB, notifierConfig.FrontURL); err != nil {
+	if err = sender.RegisterSenders(notifierDB, notifierConfig.FrontURL); err != nil {
 		log.Fatalf("Can't configure senders: %s", err.Error())
 	}
 
@@ -120,7 +120,7 @@ func main() {
 		Config:   *config.Notifier.SelfState.getSettings(),
 		Notifier: sender,
 	}
-	if err := selfState.Start(); err != nil {
+	if err = selfState.Start(); err != nil {
 		log.Fatalf("SelfState failed: %v", err)
 	}
 

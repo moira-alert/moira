@@ -40,13 +40,13 @@ func (storageElement *triggerStorageElement) toTrigger() moira.Trigger {
 		Expression:      storageElement.Expression,
 		Patterns:        storageElement.Patterns,
 		IsSimpleTrigger: storageElement.IsSimpleTrigger,
-		TTL:             getTriggerTtl(storageElement.TTL),
+		TTL:             getTriggerTTL(storageElement.TTL),
 	}
 }
 
-func toTriggerStorageElement(trigger *moira.Trigger, triggerId string) *triggerStorageElement {
+func toTriggerStorageElement(trigger *moira.Trigger, triggerID string) *triggerStorageElement {
 	return &triggerStorageElement{
-		ID:              triggerId,
+		ID:              triggerID,
 		Name:            trigger.Name,
 		Desc:            trigger.Desc,
 		Targets:         trigger.Targets,
@@ -58,11 +58,11 @@ func toTriggerStorageElement(trigger *moira.Trigger, triggerId string) *triggerS
 		Expression:      trigger.Expression,
 		Patterns:        trigger.Patterns,
 		IsSimpleTrigger: trigger.IsSimpleTrigger,
-		TTL:             getTriggerTtlString(trigger.TTL),
+		TTL:             getTriggerTTLString(trigger.TTL),
 	}
 }
 
-func getTriggerTtl(ttlString *string) *int64 {
+func getTriggerTTL(ttlString *string) *int64 {
 	if ttlString == nil {
 		return nil
 	}
@@ -70,7 +70,7 @@ func getTriggerTtl(ttlString *string) *int64 {
 	return &ttl
 }
 
-func getTriggerTtlString(ttl *int64) *string {
+func getTriggerTTLString(ttl *int64) *string {
 	if ttl == nil {
 		return nil
 	}
@@ -78,6 +78,7 @@ func getTriggerTtlString(ttl *int64) *string {
 	return &ttlString
 }
 
+//Trigger converts redis DB reply to moira.Trigger object
 func Trigger(rep interface{}, err error) (moira.Trigger, error) {
 	bytes, err := redis.Bytes(rep, err)
 	if err != nil {
@@ -95,6 +96,7 @@ func Trigger(rep interface{}, err error) (moira.Trigger, error) {
 	return triggerSE.toTrigger(), nil
 }
 
+//GetTriggerBytes marshal moira.Trigger to bytes array
 func GetTriggerBytes(triggerID string, trigger *moira.Trigger) ([]byte, error) {
 	triggerSE := toTriggerStorageElement(trigger, triggerID)
 	bytes, err := json.Marshal(triggerSE)

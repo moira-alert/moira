@@ -8,6 +8,7 @@ import (
 	"github.com/moira-alert/moira-alert/database"
 )
 
+// Check converts redis DB reply to moira.CheckData
 func Check(rep interface{}, err error) (moira.CheckData, error) {
 	check := moira.CheckData{}
 	bytes, err := redis.Bytes(rep, err)

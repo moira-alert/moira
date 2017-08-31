@@ -2,6 +2,7 @@ package checker
 
 import "time"
 
+//Config represent checker config
 type Config struct {
 	Enabled              bool
 	NoDataCheckInterval  time.Duration

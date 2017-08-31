@@ -10,7 +10,6 @@ import (
 	"github.com/moira-alert/moira-alert/notifier/events"
 	"github.com/moira-alert/moira-alert/notifier/notifications"
 	"github.com/op/go-logging"
-	"sync"
 	"testing"
 	"time"
 )
@@ -25,7 +24,6 @@ var notifierConfig = notifier.Config{
 }
 
 var shutdown = make(chan bool)
-var waitGroup sync.WaitGroup
 
 var notifierMetrics = metrics.ConfigureNotifierMetrics()
 var databaseMetrics = metrics.ConfigureDatabaseMetrics()

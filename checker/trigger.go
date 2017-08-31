@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+//TriggerChecker represents data, used for handling new trigger state
 type TriggerChecker struct {
 	TriggerID string
 	Database  moira.Database
@@ -24,8 +25,10 @@ type TriggerChecker struct {
 	ttlState string
 }
 
+//ErrTriggerNotExists used if trigger to check does not exists
 var ErrTriggerNotExists = errors.New("trigger does not exists")
 
+//InitTriggerChecker initialize new triggerChecker data, if trigger does not exists then return ErrTriggerNotExists error
 func (triggerChecker *TriggerChecker) InitTriggerChecker() error {
 	triggerChecker.Until = time.Now().Unix()
 	trigger, err := triggerChecker.Database.GetTrigger(triggerChecker.TriggerID)

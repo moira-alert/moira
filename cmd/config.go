@@ -12,12 +12,14 @@ import (
 	"github.com/moira-alert/moira-alert/metrics/graphite"
 )
 
+//RedisConfig is redis config structure, which are taken on the start of moira
 type RedisConfig struct {
 	Host string `yaml:"host"`
 	Port string `yaml:"port"`
 	DBID int    `yaml:"dbid"`
 }
 
+//GetSettings return redis config parsed from moira config files
 func (config *RedisConfig) GetSettings() redis.Config {
 	return redis.Config{
 		Host: config.Host,
@@ -26,6 +28,7 @@ func (config *RedisConfig) GetSettings() redis.Config {
 	}
 }
 
+//GraphiteConfig is graphite metrics config, which are taken on the start of moira
 type GraphiteConfig struct {
 	Enabled  string `yaml:"enabled"`
 	URI      string `yaml:"uri"`
@@ -33,6 +36,7 @@ type GraphiteConfig struct {
 	Interval string `yaml:"interval"`
 }
 
+//GetSettings return graphite metrics config parsed from moira config files
 func (graphiteConfig *GraphiteConfig) GetSettings() graphite.Config {
 	return graphite.Config{
 		Enabled:  ToBool(graphiteConfig.Enabled),
@@ -42,10 +46,13 @@ func (graphiteConfig *GraphiteConfig) GetSettings() graphite.Config {
 	}
 }
 
+//LoggerConfig is logger settings, which are taken on the start of moira
 type LoggerConfig struct {
 	LogFile  string `yaml:"log_file"`
 	LogLevel string `yaml:"log_level"`
 }
+
+//ReadConfig gets config file by given file and marshal it to moira-used type
 func ReadConfig(configFileName string, config interface{}) error {
 	configYaml, err := ioutil.ReadFile(configFileName)
 	if err != nil {
@@ -58,11 +65,13 @@ func ReadConfig(configFileName string, config interface{}) error {
 	return nil
 }
 
+//PrintConfig prints config to std
 func PrintConfig(config interface{}) {
 	d, _ := yaml.Marshal(&config)
 	fmt.Println(string(d))
 }
 
+//ToBool is simple func witch parse popular bool interpretation to golang bool value
 func ToBool(str string) bool {
 	switch strings.ToLower(str) {
 	case "1", "true", "t", "yes", "y":

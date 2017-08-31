@@ -6,14 +6,17 @@ import (
 	"github.com/moira-alert/moira-alert"
 )
 
+//ErrEvaluateTarget represent evaluation error by carbon-api eval method
 var ErrEvaluateTarget = fmt.Errorf("Invalid graphite targets")
 
+//EvaluationResult represents evaluation target result and contains TimeSeries list, Pattern list and metric lists appropriate to given target
 type EvaluationResult struct {
 	TimeSeries []*TimeSeries
 	Patterns   []string
 	Metrics    []string
 }
 
+//EvaluateTarget is analogue of evaluateTarget method in graphite-web, that gets target metrics value from DB and Evaluate it using carbon-api eval package
 func EvaluateTarget(database moira.Database, target string, from int64, until int64, allowRealTimeAlerting bool) (*EvaluationResult, error) {
 	result := EvaluationResult{
 		TimeSeries: make([]*TimeSeries, 0),

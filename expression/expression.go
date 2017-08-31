@@ -11,6 +11,7 @@ var default2, _ = govaluate.NewEvaluableExpression("t1 <= ERROR_VALUE ? ERROR : 
 
 var cache map[string]*govaluate.EvaluableExpression = make(map[string]*govaluate.EvaluableExpression)
 
+//ErrInvalidExpression represents bad expression or its state error
 type ErrInvalidExpression struct {
 	internalError error
 }
@@ -19,6 +20,7 @@ func (err ErrInvalidExpression) Error() string {
 	return fmt.Sprintf("Invalid expression: %s", err.internalError.Error())
 }
 
+//TriggerExpression represents trigger expression handler parameters, what can be used for trigger expression handling
 type TriggerExpression struct {
 	Expression *string
 
@@ -30,6 +32,7 @@ type TriggerExpression struct {
 	PreviousState           string
 }
 
+//Get realizing govaluate.Parameters interface used in evaluable expression
 func (triggerExpression TriggerExpression) Get(name string) (interface{}, error) {
 	switch name {
 	case "OK":
@@ -63,6 +66,7 @@ func (triggerExpression TriggerExpression) Get(name string) (interface{}, error)
 	}
 }
 
+//Evaluate gets trigger expression and eveluates it for given parameters using govaluate
 func (triggerExpression *TriggerExpression) Evaluate() (string, error) {
 	expr, err := getExpression(triggerExpression)
 	if err != nil {

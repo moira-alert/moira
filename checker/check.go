@@ -8,8 +8,10 @@ import (
 
 var checkPointGap int64 = 120
 
+//ErrTriggerHasNoMetrics used if trigger no metrics
 var ErrTriggerHasNoMetrics = fmt.Errorf("Trigger has no metrics")
 
+//Check handle trigger and last check and write new state of trigger, if state were change then write new NotificationEvent
 func (triggerChecker *TriggerChecker) Check() error {
 	checkData, err := triggerChecker.handleTrigger()
 	if err != nil {

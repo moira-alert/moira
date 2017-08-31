@@ -111,8 +111,7 @@ func (connector *DbConnector) GetTriggerCheckIDs(tagNames []string, onlyErrors b
 
 	triggerIDsByTags := make([]map[string]bool, 0)
 	for _, triggersArray := range rawResponse[1:] {
-		var triggerIDs []string
-		triggerIDs, err := redis.Strings(triggersArray, nil)
+		tagTriggerIDs, err := redis.Strings(triggersArray, nil)
 		if err != nil {
 			if err == database.ErrNil {
 				continue
@@ -121,7 +120,7 @@ func (connector *DbConnector) GetTriggerCheckIDs(tagNames []string, onlyErrors b
 		}
 
 		triggerIDsMap := make(map[string]bool)
-		for _, triggerID := range triggerIDs {
+		for _, triggerID := range tagTriggerIDs {
 			triggerIDsMap[triggerID] = true
 		}
 		triggerIDsByTags = append(triggerIDsByTags, triggerIDsMap)

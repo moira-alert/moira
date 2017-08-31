@@ -14,9 +14,9 @@ import (
 )
 
 type TriggersList struct {
-	Page  *int64                 `json:"page,omitempty"`
-	Size  *int64                 `json:"size,omitempty"`
-	Total *int64                 `json:"total,omitempty"`
+	Page  *int64               `json:"page,omitempty"`
+	Size  *int64               `json:"size,omitempty"`
+	Total *int64               `json:"total,omitempty"`
 	List  []moira.TriggerCheck `json:"list"`
 }
 

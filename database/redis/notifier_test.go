@@ -1,3 +1,4 @@
+//nolint
 package redis
 
 import (
@@ -27,9 +28,9 @@ func TestNotifierDataBase(t *testing.T) {
 
 	Convey("Contact manipulation", t, func() {
 		Convey("should throw error when no connection", func() {
-			dataBase := NewDatabase(logger, config, metrics2)
+			db := NewDatabase(logger, config, metrics2)
 			dataBase.pool.TestOnBorrow(dataBase.pool.Get(), time.Now())
-			_, err := dataBase.GetAllContacts()
+			_, err := db.GetAllContacts()
 			So(err, ShouldNotBeNil)
 		})
 

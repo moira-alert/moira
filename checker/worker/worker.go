@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+//Checker represents workers for periodically triggers checking based by new events
 type Checker struct {
 	Logger   moira.Logger
 	Database moira.Database
@@ -18,6 +19,7 @@ type Checker struct {
 	tomb     tomb.Tomb
 }
 
+//Start start schedule new MetricEvents and check for NODATA triggers
 func (worker *Checker) Start() error {
 	if !worker.Config.Enabled {
 		worker.Logger.Debug("Checker Disabled")
@@ -33,6 +35,7 @@ func (worker *Checker) Start() error {
 	return nil
 }
 
+//Stop stops checks triggers
 func (worker *Checker) Stop() error {
 	if !worker.Config.Enabled {
 		return nil
