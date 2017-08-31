@@ -4,6 +4,8 @@ services:
 language: go
 go:
   - 1.8.3
+git:
+  depth: 1000
 addons:
   apt:
     packages: rpm
