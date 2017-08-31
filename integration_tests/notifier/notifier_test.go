@@ -69,7 +69,7 @@ var event = moira.NotificationEvent{
 
 func TestNotifier(t *testing.T) {
 	mockCtrl = gomock.NewController(t)
-	defer afterTest()
+	defer mockCtrl.Finish()
 	database := redis.NewDatabase(logger, redis.Config{Port: "6379", Host: "localhost"}, databaseMetrics)
 	database.WriteContact(&contact)
 	database.SaveSubscription(&subscription)
@@ -115,9 +115,4 @@ func waitTestEnd() {
 		close(shutdown)
 		break
 	}
-}
-
-func afterTest() {
-	waitGroup.Wait()
-	mockCtrl.Finish()
 }
