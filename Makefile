@@ -1,14 +1,15 @@
 GIT_HASH := $(shell git log --pretty=format:%H -n 1)
-GIT_COMMIT := $(shell git describe --always --tags | cut -d'-' -f2)
 GIT_TAG := $(shell git describe --always --tags --abbrev=0 | tail -c +2)
+GIT_COMMIT := $(shell git rev-list v${GIT_TAG}..HEAD --count)
 GO_VERSION := $(shell go version | cut -d' ' -f3)
 VERSION := ${GIT_TAG}.${GIT_COMMIT}
+IMAGE_NAME := kontur/moira
 RELEASE := 1
 VENDOR := "SKB Kontur"
 URL := "https://github.com/moira-alert"
 LICENSE := "GPLv3"
 
-.PHONY: test prepare build tar rpm deb
+.PHONY: test prepare build tar rpm deb docker_image docker_push
 
 default: test build
 
@@ -79,8 +80,13 @@ deb: tar
 		-p build \
 		build/moira-${VERSION}-${RELEASE}.tar.gz
 
-docker_build:
-	docker build -t kontur/moira .
+docker_image:
+	docker build -t ${IMAGE_NAME}:${VERSION} -t ${IMAGE_NAME}:latest .
 
+docker_push:
+	docker push ${IMAGE_NAME}:latest
+	@if [[ ${GIT_COMMIT} -eq "0" ]]; then \
+		docker push ${IMAGE_NAME}:${VERSION}; \
+	fi
 
 packages: clean build tar rpm deb
