@@ -85,7 +85,7 @@ docker_image:
 
 docker_push:
 	docker push ${IMAGE_NAME}:latest
-	@if [[ ${GIT_COMMIT} -eq "0" ]]; then \
+	@if [[ "${GIT_COMMIT}" -eq "0" ]]; then \
 		docker push ${IMAGE_NAME}:${VERSION}; \
 	fi
 

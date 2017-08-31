@@ -48,6 +48,7 @@ deploy:
       condition: "$TRAVIS_GO_VERSION = 1.8.3"
   - provider: script
     script: make docker_push
+    skip_cleanup: true
     on:
       branch: master
       condition: "$TRAVIS_GO_VERSION = 1.8.3"
