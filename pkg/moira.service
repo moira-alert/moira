@@ -1,10 +1,10 @@
 [Unit]
-Description=moira-notifier - event notifications for Moira
+Description=Moira is alerting system based on graphite data
 Wants=network-online.target
 After=network-online.target
 
 [Service]
-ExecStart=/usr/bin/moira-notifier --config=/etc/moira/config.yml
+ExecStart=/usr/bin/moira -config=/etc/moira/moira.yml
 User=moira
 Group=moira
 Restart=always

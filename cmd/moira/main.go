@@ -28,18 +28,18 @@ var (
 
 // Moira version
 var (
-	MoiraVersion = "unknown"
-	GitCommit    = "unknown"
-	Version      = "unknown"
+	Version   = "unknown"
+	GitHash   = "unknown"
+	GoVersion = "unknown"
 )
 
 func main() {
 	flag.Parse()
 	if *printVersion {
-		fmt.Println("Moira Api")
-		fmt.Println("Version:", MoiraVersion)
-		fmt.Println("Git Commit:", GitCommit)
-		fmt.Println("Go Version:", Version)
+		fmt.Println("Moira - alerting system based on graphite data")
+		fmt.Println("Version:", Version)
+		fmt.Println("Git Commit:", GitHash)
+		fmt.Println("Go Version:", GoVersion)
 		os.Exit(0)
 	}
 
@@ -178,7 +178,7 @@ func main() {
 	notifierDB.DeregisterBots()
 
 	// Stop Checker
-	if err :=  checkerWorker.Stop(); err != nil {
+	if err := checkerWorker.Stop(); err != nil {
 		log.Errorf("Stop Checker Failed: %v", err)
 	}
 

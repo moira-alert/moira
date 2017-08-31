@@ -13,17 +13,14 @@ set -e
       -c "Moira user" moira
   fi
 
-  mkdir -p /var/log/moira/cache /var/run/moira /var/log/moira/notifier
-  chown -R moira:moira /var/log/moira/cache /var/run/moira
-  chown -R moira:moira /var/log/moira/notifier
-  chmod 755 /var/log/moira/cache
-  chmod 755 /var/log/moira/notifier
+  mkdir -p /var/log/moira /etc/moira
+  chown -R moira:moira /var/log/moira
+  chmod 755 /var/log/moira
 
   if [ -x /bin/systemctl ] ; then
     /bin/systemctl daemon-reload
-    /bin/systemctl enable moira-cache.service
-    /bin/systemctl enable moira-notifier.service
+    /bin/systemctl enable moira.service
   elif [ -x /sbin/chkconfig ] ; then
-    /sbin/chkconfig --add moira-cache
+    /sbin/chkconfig --add moira
   fi
 #fi
