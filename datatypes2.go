@@ -19,8 +19,8 @@ type Trigger struct {
 	IsSimpleTrigger bool          `json:"is_simple_trigger"`
 }
 
-//TriggerChecks represent trigger data with last check data and check timestamp
-type TriggerChecks struct {
+//TriggerCheck represent trigger data with last check data and check timestamp
+type TriggerCheck struct {
 	Trigger
 	Throttling int64     `json:"throttling"`
 	LastCheck  CheckData `json:"last_check"`

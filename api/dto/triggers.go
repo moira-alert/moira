@@ -17,7 +17,7 @@ type TriggersList struct {
 	Page  *int64                 `json:"page,omitempty"`
 	Size  *int64                 `json:"size,omitempty"`
 	Total *int64                 `json:"total,omitempty"`
-	List  []moira.TriggerChecks `json:"list"`
+	List  []moira.TriggerCheck `json:"list"`
 }
 
 func (*TriggersList) Render(w http.ResponseWriter, r *http.Request) error {

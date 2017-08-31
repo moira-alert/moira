@@ -194,7 +194,7 @@ func (connector *DbConnector) RemoveTrigger(triggerID string) error {
 //GetTriggerChecks gets triggers data with tags, lastCheck data and throttling by given triggersIDs
 // Len of triggerIDs is equal to len of returned values array.
 // If there is no object by current ID, then nil is returned
-func (connector *DbConnector) GetTriggerChecks(triggerIDs []string) ([]*moira.TriggerChecks, error) {
+func (connector *DbConnector) GetTriggerChecks(triggerIDs []string) ([]*moira.TriggerCheck, error) {
 	c := connector.pool.Get()
 	defer c.Close()
 
@@ -216,7 +216,7 @@ func (connector *DbConnector) GetTriggerChecks(triggerIDs []string) ([]*moira.Tr
 		arr = append(arr, rawResponse[i:i+4]...)
 		slices = append(slices, arr)
 	}
-	triggerChecks := make([]*moira.TriggerChecks, len(slices))
+	triggerChecks := make([]*moira.TriggerCheck, len(slices))
 	for i, slice := range slices {
 		triggerID := slice[0].(string)
 		trigger, err := connector.getTriggerWithTags(slice[1], slice[2], triggerID)
@@ -234,7 +234,7 @@ func (connector *DbConnector) GetTriggerChecks(triggerIDs []string) ([]*moira.Tr
 		if time.Now().Unix() >= throttling {
 			throttling = 0
 		}
-		triggerChecks[i] = &moira.TriggerChecks{
+		triggerChecks[i] = &moira.TriggerCheck{
 			Trigger:    trigger,
 			LastCheck:  lastCheck,
 			Throttling: throttling,

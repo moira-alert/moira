@@ -393,9 +393,9 @@ func (_mr *MockDatabaseMockRecorder) GetTriggerCheckIDs(arg0, arg1 interface{}) 
 }
 
 // GetTriggerChecks mocks base method
-func (_m *MockDatabase) GetTriggerChecks(_param0 []string) ([]*moira_alert.TriggerChecks, error) {
+func (_m *MockDatabase) GetTriggerChecks(_param0 []string) ([]*moira_alert.TriggerCheck, error) {
 	ret := _m.ctrl.Call(_m, "GetTriggerChecks", _param0)
-	ret0, _ := ret[0].([]*moira_alert.TriggerChecks)
+	ret0, _ := ret[0].([]*moira_alert.TriggerCheck)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

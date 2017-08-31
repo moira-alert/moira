@@ -28,7 +28,7 @@ func GetAllTriggers(database moira.Database) (*dto.TriggersList, *api.ErrorRespo
 		return nil, api.ErrorInternalServer(err)
 	}
 	triggersList := dto.TriggersList{
-		List: make([]moira.TriggerChecks, 0),
+		List: make([]moira.TriggerCheck, 0),
 	}
 	for _, triggerCheck := range triggerChecks {
 		if triggerCheck != nil {
@@ -50,7 +50,7 @@ func GetTriggerPage(database moira.Database, page int64, size int64, onlyErrors 
 		return nil, api.ErrorInternalServer(err)
 	}
 	triggersList := dto.TriggersList{
-		List:  make([]moira.TriggerChecks, 0),
+		List:  make([]moira.TriggerCheck, 0),
 		Total: &total,
 		Page:  &page,
 		Size:  &size,
