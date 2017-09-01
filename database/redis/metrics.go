@@ -213,14 +213,25 @@ func (connector *DbConnector) RemovePatternWithMetrics(pattern string) error {
 
 // RemoveMetricValues remove metrics timestamps values from 0 to given time
 func (connector *DbConnector) RemoveMetricValues(metric string, toTime int64) error {
+	if !connector.needRemoveMetrics(metric) {
+		return nil
+	}
 	c := connector.pool.Get()
 	defer c.Close()
-
 	_, err := c.Do("ZREMRANGEBYSCORE", moiraMetricData(metric), "-inf", toTime)
 	if err != nil {
 		return fmt.Errorf("Failed to remove metrics from -inf to %v, error: %s", toTime, err.Error())
 	}
 	return nil
+}
+
+func (connector *DbConnector) needRemoveMetrics(metric string) bool {
+	_, ok := connector.metricsCache.Get(metric)
+	if ok {
+		return false
+	}
+	err := connector.metricsCache.Add(metric, true, 0)
+	return err == nil
 }
 
 var moiraPatternsList = "moira-pattern-list"

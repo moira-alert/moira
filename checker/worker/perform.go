@@ -76,6 +76,5 @@ func (worker *Checker) checkTrigger(triggerID string) error {
 		}
 		return err
 	}
-	// todo cacheTTL
 	return triggerChecker.Check()
 }

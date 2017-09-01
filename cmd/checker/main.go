@@ -6,6 +6,9 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
+
+	"github.com/patrickmn/go-cache"
 
 	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/checker"
@@ -14,8 +17,6 @@ import (
 	"github.com/moira-alert/moira-alert/database/redis"
 	"github.com/moira-alert/moira-alert/logging/go-logging"
 	"github.com/moira-alert/moira-alert/metrics/graphite/go-metrics"
-	"github.com/patrickmn/go-cache"
-	"time"
 )
 
 var (
@@ -76,7 +77,7 @@ func main() {
 		Database: database,
 		Config:   checkerSettings,
 		Metrics:  checkerMetrics,
-		Cache:    cache.New(time.Minute, time.Minute*5),
+		Cache:    cache.New(time.Minute, time.Minute*60),
 	}
 
 	checkerWorker.Start()

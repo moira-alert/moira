@@ -15,6 +15,7 @@ type DbConnector struct {
 	logger         moira.Logger
 	metrics        *graphite.DatabaseMetrics
 	retentionCache *cache.Cache
+	metricsCache   *cache.Cache
 }
 
 // NewDatabase creates Redis pool based on config
@@ -23,7 +24,8 @@ func NewDatabase(logger moira.Logger, config Config, metrics *graphite.DatabaseM
 		pool:           newRedisPool(fmt.Sprintf("%s:%s", config.Host, config.Port), config.DBID),
 		logger:         logger,
 		metrics:        metrics,
-		retentionCache: cache.New(time.Minute, time.Minute*30),
+		retentionCache: cache.New(time.Minute, time.Minute*60),
+		metricsCache:   cache.New(time.Minute, time.Minute*60),
 	}
 	return &db
 }

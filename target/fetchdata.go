@@ -17,7 +17,6 @@ func FetchData(database moira.Database, pattern string, from int64, until int64,
 
 	if len(metrics) > 0 {
 		firstMetric := metrics[0]
-		// todo cache 60s
 		retention, err := database.GetMetricRetention(firstMetric)
 		if err != nil {
 			return nil, nil, err

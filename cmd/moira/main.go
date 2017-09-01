@@ -6,6 +6,9 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
+
+	"github.com/patrickmn/go-cache"
 
 	"github.com/moira-alert/moira-alert/cmd"
 	"github.com/moira-alert/moira-alert/database/redis"
@@ -150,6 +153,7 @@ func main() {
 		Database: redis.NewDatabase(filterLog, databaseSettings, databaseMetrics),
 		Config:   config.Checker.getSettings(),
 		Metrics:  checkerMetrics,
+		Cache:    cache.New(time.Minute, time.Minute*60),
 	}
 
 	if err := checkerWorker.Start(); err != nil {
