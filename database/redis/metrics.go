@@ -51,12 +51,26 @@ func (connector *DbConnector) GetMetricsValues(metrics []string, from int64, unt
 
 // GetMetricRetention gets given metric retention, if retention is empty then return default retention value(60)
 func (connector *DbConnector) GetMetricRetention(metric string) (int64, error) {
+	value, ok := connector.retentionCache.Get(metric)
+	retention, ok := value.(int64)
+	if ok {
+		return retention, nil
+	}
+	retention, err := connector.readMetricRetention(metric)
+	if err != nil {
+		return retention, err
+	}
+	connector.retentionCache.Set(metric, retention, 0)
+	return retention, nil
+}
+
+func (connector *DbConnector) readMetricRetention(metric string) (int64, error) {
 	c := connector.pool.Get()
 	defer c.Close()
 
 	retention, err := redis.Int64(c.Do("GET", moiraMetricRetention(metric)))
 	if err != nil {
-		if err != redis.ErrNil {
+		if err == redis.ErrNil {
 			return 60, nil
 		}
 		return 0, fmt.Errorf("Failed GET metric-retention:%s, error: %s", metric, err.Error())
