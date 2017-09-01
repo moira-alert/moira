@@ -9,7 +9,7 @@ VENDOR := "SKB Kontur"
 URL := "https://github.com/moira-alert"
 LICENSE := "GPLv3"
 
-.PHONY: test prepare build tar rpm deb docker_image docker_push
+.PHONY: test prepare build tar rpm deb docker_image docker_push docker_push_release
 
 default: test build
 
@@ -80,13 +80,14 @@ deb: tar
 		-p build \
 		build/moira-${VERSION}-${RELEASE}.tar.gz
 
+packages: clean build tar rpm deb
+
 docker_image:
 	docker build -t ${IMAGE_NAME}:${VERSION} -t ${IMAGE_NAME}:latest .
 
 docker_push:
 	docker push ${IMAGE_NAME}:latest
-	@if [ "${GIT_COMMIT}" == "0" ]; then \
-		docker push ${IMAGE_NAME}:${VERSION}; \
-	fi
 
-packages: clean build tar rpm deb
+docker_push_release:
+	docker push ${IMAGE_NAME}:latest
+	docker push ${IMAGE_NAME}:${VERSION}
