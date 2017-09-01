@@ -28,10 +28,6 @@ func (worker *Checker) perform(triggerIDs []string, noCache bool, cacheTTL time.
 }
 
 func (worker *Checker) needHandleTrigger(triggerID string, cacheTTL time.Duration) bool {
-	_, ok := worker.Cache.Get(triggerID)
-	if ok {
-		return false
-	}
 	err := worker.Cache.Add(triggerID, true, cacheTTL)
 	return err == nil
 }

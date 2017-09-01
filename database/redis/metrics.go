@@ -226,10 +226,6 @@ func (connector *DbConnector) RemoveMetricValues(metric string, toTime int64) er
 }
 
 func (connector *DbConnector) needRemoveMetrics(metric string) bool {
-	_, ok := connector.metricsCache.Get(metric)
-	if ok {
-		return false
-	}
 	err := connector.metricsCache.Add(metric, true, 0)
 	return err == nil
 }
