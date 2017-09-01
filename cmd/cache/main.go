@@ -60,9 +60,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	cacheMetrics := metrics.ConfigureCacheMetrics()
+	cacheMetrics := metrics.ConfigureCacheMetrics("cache")
 	databaseMetrics := metrics.ConfigureDatabaseMetrics()
-	metrics.Init(config.Graphite.GetSettings(), logger, "cache")
+	metrics.Init(config.Graphite.GetSettings(), logger)
 
 	database := redis.NewDatabase(logger, config.Redis.GetSettings(), databaseMetrics)
 

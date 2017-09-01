@@ -108,7 +108,7 @@ func TestProcessIncomingMetric(t *testing.T) {
 		"Question.at_the_end2",
 	}
 
-	metrics2 := metrics.ConfigureCacheMetrics()
+	metrics2 := metrics.ConfigureCacheMetrics("test")
 
 	mockCtrl := gomock.NewController(t)
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
@@ -135,7 +135,7 @@ func TestProcessIncomingMetric(t *testing.T) {
 		So(metrics2.MatchingMetricsReceived.Count(), ShouldEqual, 0)
 	})
 
-	patternsStorage.metrics = metrics.ConfigureCacheMetrics()
+	patternsStorage.metrics = metrics.ConfigureCacheMetrics("test")
 
 	Convey("When valid non-matching metric arrives", t, func() {
 		Convey("When metric arrives with timestamp", func() {
@@ -150,7 +150,7 @@ func TestProcessIncomingMetric(t *testing.T) {
 	})
 
 	Convey("When valid matching metric arrives", t, func() {
-		patternsStorage.metrics = metrics.ConfigureCacheMetrics()
+		patternsStorage.metrics = metrics.ConfigureCacheMetrics("test")
 		Convey("When metric name is pure", func() {
 			for _, metric := range matchingMetrics {
 				matchedMetrics := patternsStorage.ProcessIncomingMetric([]byte(metric + " 12 1234567890"))
@@ -161,7 +161,7 @@ func TestProcessIncomingMetric(t *testing.T) {
 			So(patternsStorage.metrics.MatchingMetricsReceived.Count(), ShouldEqual, len(matchingMetrics))
 		})
 
-		patternsStorage.metrics = metrics.ConfigureCacheMetrics()
+		patternsStorage.metrics = metrics.ConfigureCacheMetrics("test")
 		Convey("When value has dot", func() {
 			for _, metric := range matchingMetrics {
 				matchedMetrics := patternsStorage.ProcessIncomingMetric([]byte(metric + " 12.000000 1234567890"))

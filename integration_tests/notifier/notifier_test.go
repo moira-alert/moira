@@ -25,7 +25,7 @@ var notifierConfig = notifier.Config{
 
 var shutdown = make(chan bool)
 
-var notifierMetrics = metrics.ConfigureNotifierMetrics()
+var notifierMetrics = metrics.ConfigureNotifierMetrics("notifier")
 var databaseMetrics = metrics.ConfigureDatabaseMetrics()
 var logger, _ = logging.GetLogger("Notifier_Test")
 var mockCtrl *gomock.Controller

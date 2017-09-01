@@ -51,8 +51,7 @@ func (connector *DbConnector) GetMetricsValues(metrics []string, from int64, unt
 
 // GetMetricRetention gets given metric retention, if retention is empty then return default retention value(60)
 func (connector *DbConnector) GetMetricRetention(metric string) (int64, error) {
-	value, ok := connector.retentionCache.Get(metric)
-	retention, ok := value.(int64)
+	retention, ok := connector.getCachedRetention(metric)
 	if ok {
 		return retention, nil
 	}
@@ -62,6 +61,15 @@ func (connector *DbConnector) GetMetricRetention(metric string) (int64, error) {
 	}
 	connector.retentionCache.Set(metric, retention, 0)
 	return retention, nil
+}
+
+func (connector *DbConnector) getCachedRetention(metric string) (int64, bool) {
+	value, ok := connector.retentionCache.Get(metric)
+	if !ok {
+		return 0, false
+	}
+	retention, ok := value.(int64)
+	return retention, ok
 }
 
 func (connector *DbConnector) readMetricRetention(metric string) (int64, error) {

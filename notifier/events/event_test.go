@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-var metrics2 = metrics.ConfigureNotifierMetrics()
+var metrics2 = metrics.ConfigureNotifierMetrics("notifier")
 
 func TestEvent(t *testing.T) {
 	mockCtrl := gomock.NewController(t)

@@ -106,7 +106,7 @@ func main() {
 		log.Fatalf("Can't configure logger for Filter: %v\n", err)
 	}
 
-	notifierMetrics := metrics.ConfigureNotifierMetrics()
+	notifierMetrics := metrics.ConfigureNotifierMetrics("notifier")
 
 	notifierDB := redis.NewDatabase(notifierLog, config.Redis.GetSettings(), databaseMetrics)
 
@@ -147,7 +147,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Can't configure logger for Checker: %v\n", err)
 	}
-	checkerMetrics := metrics.ConfigureCheckerMetrics()
+	checkerMetrics := metrics.ConfigureCheckerMetrics("checker")
 	checkerWorker := &worker.Checker{
 		Logger:   checkerLog,
 		Database: redis.NewDatabase(filterLog, databaseSettings, databaseMetrics),
@@ -160,7 +160,7 @@ func main() {
 		log.Fatalf("Start Checker failed: %v", err)
 	}
 
-	metrics.Init(config.Graphite.GetSettings(), log, "moira")
+	metrics.Init(config.Graphite.GetSettings(), log)
 
 	log.Infof("Moira Started (version: %s)", Version)
 	ch := make(chan os.Signal, 1)

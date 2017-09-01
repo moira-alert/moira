@@ -33,7 +33,7 @@ func (filter *Filter) Start() error {
 		return nil
 	}
 
-	cacheMetrics := metrics.ConfigureCacheMetrics()
+	cacheMetrics := metrics.ConfigureCacheMetrics("cache")
 
 	retentionConfigFile, err := os.Open(filter.Config.RetentionConfig)
 	if err != nil {

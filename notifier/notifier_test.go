@@ -116,7 +116,7 @@ func waitTestEnd() {
 }
 
 func configureNotifier(t *testing.T) {
-	metrics := metrics.ConfigureNotifierMetrics()
+	metrics := metrics.ConfigureNotifierMetrics("notifier")
 	config := Config{
 		SendingTimeout:   time.Millisecond * 10,
 		ResendingTimeout: time.Hour * 24,

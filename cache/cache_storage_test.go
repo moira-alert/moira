@@ -166,7 +166,7 @@ var matchedMetrics = []moira.MatchedMetric{
 }
 
 func TestCacheStorage(t *testing.T) {
-	metrics2 := metrics.ConfigureCacheMetrics()
+	metrics2 := metrics.ConfigureCacheMetrics("test")
 	storage, err := NewCacheStorage(metrics2, strings.NewReader(testRetentions))
 
 	Convey("Test good retentions", t, func() {
@@ -197,7 +197,7 @@ func TestCacheStorage(t *testing.T) {
 }
 
 func TestRetentions(t *testing.T) {
-	metrics2 := metrics.ConfigureCacheMetrics()
+	metrics2 := metrics.ConfigureCacheMetrics("test")
 	storage, _ := NewCacheStorage(metrics2, strings.NewReader(testRetentions))
 
 	Convey("Simple metric, should 60sec", t, func() {

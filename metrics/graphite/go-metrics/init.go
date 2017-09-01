@@ -1,7 +1,6 @@
 package metrics
 
 import (
-	"fmt"
 	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/metrics/graphite"
 	"github.com/rcrowley/go-metrics"
@@ -11,7 +10,7 @@ import (
 )
 
 // Init is initializer for notifier graphite metrics worker based on go-metrics and go-metrics-graphite
-func Init(config graphite.Config, logger moira.Logger, serviceName string) {
+func Init(config graphite.Config, logger moira.Logger) {
 	uri := config.URI
 	prefix := config.Prefix
 	interval := config.Interval
@@ -22,6 +21,6 @@ func Init(config graphite.Config, logger moira.Logger, serviceName string) {
 			logger.Errorf("Can not resolve graphiteURI %s: %s", uri, err)
 			return
 		}
-		go goMetricsGraphite.Graphite(metrics.DefaultRegistry, interval, fmt.Sprintf("%s.%s", prefix, serviceName), address)
+		go goMetricsGraphite.Graphite(metrics.DefaultRegistry, interval, prefix, address)
 	}
 }

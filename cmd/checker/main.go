@@ -70,8 +70,8 @@ func main() {
 		checkSingleTrigger(database, logger, checkerSettings)
 	}
 
-	checkerMetrics := metrics.ConfigureCheckerMetrics()
-	metrics.Init(config.Graphite.GetSettings(), logger, "checker")
+	checkerMetrics := metrics.ConfigureCheckerMetrics("checker")
+	metrics.Init(config.Graphite.GetSettings(), logger)
 	checkerWorker := &worker.Checker{
 		Logger:   logger,
 		Database: database,
