@@ -6,7 +6,7 @@ import "time"
 type Config struct {
 	Enabled              bool
 	NoDataCheckInterval  time.Duration
-	CheckInterval        int64
+	CheckInterval        time.Duration
 	MetricsTTL           int64
 	StopCheckingInterval int64
 	LogFile              string

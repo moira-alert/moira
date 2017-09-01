@@ -33,7 +33,7 @@ func (worker *Checker) checkNoData(wg *sync.WaitGroup) error {
 		if err != nil {
 			return err
 		}
-		worker.perform(triggerIds, false, 60, wg)
+		worker.perform(triggerIds, false, time.Minute, wg)
 	}
 	return nil
 }

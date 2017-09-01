@@ -61,7 +61,7 @@ func (config *filterConfig) getSettings() *cache.Config {
 type checkerConfig struct {
 	Enabled              string `yaml:"enabled"`
 	NoDataCheckInterval  string `yaml:"nodata_check_interval"`
-	CheckInterval        int64  `yaml:"check_interval"`
+	CheckInterval        string `yaml:"check_interval"`
 	MetricsTTL           int64  `yaml:"metrics_ttl"`
 	StopCheckingInterval int64  `yaml:"stop_checking_interval"`
 	LogFile              string `yaml:"log_file"`
@@ -72,7 +72,7 @@ func (config *checkerConfig) getSettings() *checker.Config {
 	return &checker.Config{
 		Enabled:              cmd.ToBool(config.Enabled),
 		MetricsTTL:           config.MetricsTTL,
-		CheckInterval:        config.CheckInterval,
+		CheckInterval:        to.Duration(config.CheckInterval),
 		NoDataCheckInterval:  to.Duration(config.NoDataCheckInterval),
 		StopCheckingInterval: config.StopCheckingInterval,
 		LogFile:              config.LogFile,
@@ -150,7 +150,7 @@ func getDefault() config {
 		Checker: checkerConfig{
 			Enabled:              "true",
 			NoDataCheckInterval:  "60s0ms",
-			CheckInterval:        5,
+			CheckInterval:        "5s0ms",
 			MetricsTTL:           3600,
 			StopCheckingInterval: 30,
 			LogFile:              "stdout",

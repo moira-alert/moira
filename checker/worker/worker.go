@@ -1,11 +1,14 @@
 package worker
 
 import (
+	"time"
+
+	"github.com/patrickmn/go-cache"
+	"gopkg.in/tomb.v2"
+
 	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/checker"
 	"github.com/moira-alert/moira-alert/metrics/graphite"
-	"gopkg.in/tomb.v2"
-	"time"
 )
 
 // Checker represents workers for periodically triggers checking based by new events
@@ -14,6 +17,7 @@ type Checker struct {
 	Database moira.Database
 	Config   *checker.Config
 	Metrics  *graphite.CheckerMetrics
+	Cache    *cache.Cache
 	lastData int64
 	noCache  bool
 	tomb     tomb.Tomb

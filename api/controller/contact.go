@@ -62,7 +62,6 @@ func RemoveContact(database moira.Database, contactID string, userLogin string) 
 		}
 	}
 
-	// todo 1 request, not 2
 	if err := database.RemoveContact(contactID, userLogin); err != nil {
 		return api.ErrorInternalServer(err)
 	}

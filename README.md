@@ -51,7 +51,7 @@ graphite:
 checker:
   enabled: "true"
   nodata_check_interval: 60s0ms
-  check_interval: 5
+  check_interval: 5s0ms
   metrics_ttl: 3600
   stop_checking_interval: 30
   log_file: stdout

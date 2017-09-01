@@ -15,7 +15,7 @@ type config struct {
 
 type checkerConfig struct {
 	NoDataCheckInterval  string `yaml:"nodata_check_interval"`
-	CheckInterval        int64  `yaml:"check_interval"`
+	CheckInterval        string `yaml:"check_interval"`
 	MetricsTTL           int64  `yaml:"metrics_ttl"`
 	StopCheckingInterval int64  `yaml:"stop_checking_interval"`
 }
@@ -23,7 +23,7 @@ type checkerConfig struct {
 func (config *checkerConfig) getSettings() *checker.Config {
 	return &checker.Config{
 		MetricsTTL:           config.MetricsTTL,
-		CheckInterval:        config.CheckInterval,
+		CheckInterval:        to.Duration(config.CheckInterval),
 		NoDataCheckInterval:  to.Duration(config.NoDataCheckInterval),
 		StopCheckingInterval: config.StopCheckingInterval,
 	}
@@ -41,7 +41,7 @@ func getDefault() config {
 		},
 		Checker: checkerConfig{
 			NoDataCheckInterval:  "60s0ms",
-			CheckInterval:        5,
+			CheckInterval:        "5s0ms",
 			MetricsTTL:           3600,
 			StopCheckingInterval: 30,
 		},

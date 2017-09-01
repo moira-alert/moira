@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func (worker *Checker) perform(triggerIDs []string, noCache bool, cacheTTL int64, wg *sync.WaitGroup) {
+func (worker *Checker) perform(triggerIDs []string, noCache bool, cacheTTL time.Duration, wg *sync.WaitGroup) {
 	if noCache {
 		for _, id := range triggerIDs {
 			wg.Add(1)
@@ -18,16 +18,28 @@ func (worker *Checker) perform(triggerIDs []string, noCache bool, cacheTTL int64
 			}(id)
 		}
 	} else {
-		for _, id := range triggerIDs {
+		for _, triggerID := range triggerIDs {
 			wg.Add(1)
-			go func(triggerID string) {
-				defer wg.Done()
-				// todo triggerId add check cache cacheTTL seconds
-				if err := worker.handleTriggerToCheck(triggerID); err != nil {
-					worker.Logger.Errorf("Failed to perform trigger: %s error: %s", triggerID, err.Error())
-				}
-			}(id)
+			if worker.needHandleTrigger(triggerID, cacheTTL) {
+				go worker.handle(triggerID, wg)
+			}
 		}
+	}
+}
+
+func (worker *Checker) needHandleTrigger(triggerID string, cacheTTL time.Duration) bool {
+	_, ok := worker.Cache.Get(triggerID)
+	if ok {
+		return false
+	}
+	err := worker.Cache.Add(triggerID, true, cacheTTL)
+	return err == nil
+}
+
+func (worker *Checker) handle(triggerID string, wg *sync.WaitGroup) {
+	defer wg.Done()
+	if err := worker.handleTriggerToCheck(triggerID); err != nil {
+		worker.Logger.Errorf("Failed to perform trigger: %s error: %s", triggerID, err.Error())
 	}
 }
 
