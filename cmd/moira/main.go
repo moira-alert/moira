@@ -171,21 +171,24 @@ func main() {
 	if err := apiServer.Stop(); err != nil {
 		log.Errorf("Can't stop API: %v", err)
 	}
+	log.Info("API stopped")
 
 	if err := filterServer.Stop(); err != nil {
 		log.Errorf("Can't stop Filer: %v", err)
 	}
+	log.Info("Filter stopped")
 
 	// Stop Notifier
 	selfState.Stop()
 	fetchEventsWorker.Stop()
 	fetchNotificationsWorker.Stop()
 	notifierDB.DeregisterBots()
+	log.Info("Notifier stopped")
 
 	// Stop Checker
 	if err := checkerWorker.Stop(); err != nil {
 		log.Errorf("Stop Checker Failed: %v", err)
 	}
-
+	log.Info("Checker stopped")
 	log.Infof("Moira Stopped (version: %s)", Version)
 }
