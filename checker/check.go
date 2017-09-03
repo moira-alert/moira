@@ -13,6 +13,7 @@ var ErrTriggerHasNoMetrics = fmt.Errorf("Trigger has no metrics")
 
 // Check handle trigger and last check and write new state of trigger, if state were change then write new NotificationEvent
 func (triggerChecker *TriggerChecker) Check() error {
+	triggerChecker.Logger.Info("Checking trigger %s", triggerChecker.TriggerID)
 	checkData, err := triggerChecker.handleTrigger()
 	if err != nil {
 		if err == ErrTriggerHasNoMetrics {

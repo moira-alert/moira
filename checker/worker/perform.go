@@ -47,6 +47,7 @@ func (worker *Checker) handleTriggerToCheck(triggerID string) error {
 	if acquired {
 		start := time.Now()
 		if err := worker.checkTrigger(triggerID); err != nil {
+			worker.Metrics.CheckerError.Mark(1)
 			return err
 		}
 		end := time.Now()
