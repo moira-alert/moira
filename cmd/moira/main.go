@@ -65,7 +65,6 @@ func main() {
 	}
 
 	databaseSettings := config.Redis.GetSettings()
-	databaseMetrics := metrics.ConfigureDatabaseMetrics()
 
 	// API
 	apiLog, err := logging.ConfigureLog(config.API.LogFile, config.API.LogLevel, "api")
@@ -75,7 +74,7 @@ func main() {
 
 	apiServer := &APIServer{
 		Config: config.API.getSettings(),
-		DB:     redis.NewDatabase(apiLog, databaseSettings, databaseMetrics),
+		DB:     redis.NewDatabase(apiLog, databaseSettings),
 		Log:    apiLog,
 	}
 
@@ -91,7 +90,7 @@ func main() {
 
 	filterServer := &Filter{
 		Config: config.Filter.getSettings(),
-		DB:     redis.NewDatabase(filterLog, databaseSettings, databaseMetrics),
+		DB:     redis.NewDatabase(filterLog, databaseSettings),
 		Log:    filterLog,
 	}
 
@@ -108,7 +107,7 @@ func main() {
 
 	notifierMetrics := metrics.ConfigureNotifierMetrics("notifier")
 
-	notifierDB := redis.NewDatabase(notifierLog, config.Redis.GetSettings(), databaseMetrics)
+	notifierDB := redis.NewDatabase(notifierLog, config.Redis.GetSettings())
 
 	notifierConfig := config.Notifier.getSettings()
 	sender := notifier.NewNotifier(notifierDB, notifierLog, *notifierConfig, notifierMetrics)
@@ -130,7 +129,7 @@ func main() {
 	fetchEventsWorker := events.FetchEventsWorker{
 		Logger:    notifierLog,
 		Database:  notifierDB,
-		Scheduler: notifier.NewScheduler(notifierDB, notifierLog),
+		Scheduler: notifier.NewScheduler(notifierDB, notifierLog, notifierMetrics),
 		Metrics:   notifierMetrics,
 	}
 	fetchEventsWorker.Start()
@@ -150,7 +149,7 @@ func main() {
 	checkerMetrics := metrics.ConfigureCheckerMetrics("checker")
 	checkerWorker := &worker.Checker{
 		Logger:   checkerLog,
-		Database: redis.NewDatabase(filterLog, databaseSettings, databaseMetrics),
+		Database: redis.NewDatabase(filterLog, databaseSettings),
 		Config:   config.Checker.getSettings(),
 		Metrics:  checkerMetrics,
 		Cache:    cache.New(time.Minute, time.Minute*60),

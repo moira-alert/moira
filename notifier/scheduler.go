@@ -3,6 +3,7 @@ package notifier
 import (
 	"fmt"
 	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira-alert/metrics/graphite"
 	"time"
 )
 
@@ -15,6 +16,7 @@ type Scheduler interface {
 type StandardScheduler struct {
 	logger   moira.Logger
 	database moira.Database
+	metrics  *graphite.NotifierMetrics
 }
 
 type throttlingLevel struct {
@@ -24,10 +26,11 @@ type throttlingLevel struct {
 }
 
 // NewScheduler is initializer for StandardScheduler
-func NewScheduler(database moira.Database, logger moira.Logger) *StandardScheduler {
+func NewScheduler(database moira.Database, logger moira.Logger, metrics *graphite.NotifierMetrics) *StandardScheduler {
 	return &StandardScheduler{
 		database: database,
 		logger:   logger,
+		metrics:  metrics,
 	}
 }
 
@@ -84,6 +87,7 @@ func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *
 
 	subscription, err := scheduler.database.GetSubscription(moira.UseString(event.SubscriptionID))
 	if err != nil {
+		scheduler.metrics.SubsMalformed.Mark(1)
 		scheduler.logger.Debugf("Failed get subscription by id: %s. %s", moira.UseString(event.SubscriptionID), err.Error())
 		return next, alarmFatigue
 	}

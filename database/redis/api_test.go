@@ -2,7 +2,6 @@ package redis
 
 import (
 	"github.com/moira-alert/moira-alert"
-	"github.com/moira-alert/moira-alert/metrics/graphite"
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
@@ -11,7 +10,7 @@ import (
 
 func TestEvents(t *testing.T) {
 	logger, _ := logging.GetLogger("123")
-	database := NewDatabase(logger, Config{Port: "6379", Host: "localhost"}, &graphite.DatabaseMetrics{})
+	database := NewDatabase(logger, Config{Port: "6379", Host: "localhost"})
 	eventData := moira.NotificationEvent{
 		Timestamp: time.Now().Unix(),
 		State:     "NODATA",

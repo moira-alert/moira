@@ -62,8 +62,7 @@ func main() {
 	}
 
 	databaseSettings := config.Redis.GetSettings()
-	databaseMetrics := metrics.ConfigureDatabaseMetrics()
-	database := redis.NewDatabase(logger, databaseSettings, databaseMetrics)
+	database := redis.NewDatabase(logger, databaseSettings)
 
 	checkerSettings := config.Checker.getSettings()
 	if triggerID != nil && *triggerID != "" {

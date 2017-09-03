@@ -34,7 +34,7 @@ func NewNotifier(database moira.Database, logger moira.Logger, config Config, me
 		senders:   make(map[string]chan NotificationPackage),
 		logger:    logger,
 		database:  database,
-		scheduler: NewScheduler(database, logger),
+		scheduler: NewScheduler(database, logger, metrics),
 		config:    config,
 		metrics:   metrics,
 	}

@@ -27,7 +27,7 @@ func TestEvent(t *testing.T) {
 		Database:  dataBase,
 		Logger:    logger,
 		Metrics:   metrics2,
-		Scheduler: notifier.NewScheduler(dataBase, logger),
+		Scheduler: notifier.NewScheduler(dataBase, logger, metrics2),
 	}
 
 	Convey("When event is TEST and subscription is disabled, should add new notification", t, func() {
@@ -68,7 +68,7 @@ func TestNoSubscription(t *testing.T) {
 			Database:  dataBase,
 			Logger:    logger,
 			Metrics:   metrics2,
-			Scheduler: notifier.NewScheduler(dataBase, logger),
+			Scheduler: notifier.NewScheduler(dataBase, logger, metrics2),
 		}
 
 		event := moira.NotificationEvent{
@@ -97,7 +97,7 @@ func TestDisabledNotification(t *testing.T) {
 			Database:  dataBase,
 			Logger:    logger,
 			Metrics:   metrics2,
-			Scheduler: notifier.NewScheduler(dataBase, logger),
+			Scheduler: notifier.NewScheduler(dataBase, logger, metrics2),
 		}
 
 		event := moira.NotificationEvent{
@@ -131,7 +131,7 @@ func TestExtraTags(t *testing.T) {
 			Database:  dataBase,
 			Logger:    logger,
 			Metrics:   metrics2,
-			Scheduler: notifier.NewScheduler(dataBase, logger),
+			Scheduler: notifier.NewScheduler(dataBase, logger, metrics2),
 		}
 
 		event := moira.NotificationEvent{
@@ -240,7 +240,7 @@ func TestFailReadContact(t *testing.T) {
 			Database:  dataBase,
 			Logger:    logger,
 			Metrics:   metrics2,
-			Scheduler: notifier.NewScheduler(dataBase, logger),
+			Scheduler: notifier.NewScheduler(dataBase, logger, metrics2),
 		}
 
 		event := moira.NotificationEvent{
@@ -276,7 +276,7 @@ func TestEmptySubscriptions(t *testing.T) {
 			Database:  dataBase,
 			Logger:    logger,
 			Metrics:   metrics2,
-			Scheduler: notifier.NewScheduler(dataBase, logger),
+			Scheduler: notifier.NewScheduler(dataBase, logger, metrics2),
 		}
 
 		event := moira.NotificationEvent{
@@ -307,7 +307,7 @@ func TestEmptySubscriptions(t *testing.T) {
 			Database:  dataBase,
 			Logger:    logger,
 			Metrics:   metrics2,
-			Scheduler: notifier.NewScheduler(dataBase, logger),
+			Scheduler: notifier.NewScheduler(dataBase, logger, metrics2),
 		}
 
 		event := moira.NotificationEvent{

@@ -61,10 +61,9 @@ func main() {
 	}
 
 	cacheMetrics := metrics.ConfigureCacheMetrics("cache")
-	databaseMetrics := metrics.ConfigureDatabaseMetrics()
 	metrics.Init(config.Graphite.GetSettings(), logger)
 
-	database := redis.NewDatabase(logger, config.Redis.GetSettings(), databaseMetrics)
+	database := redis.NewDatabase(logger, config.Redis.GetSettings())
 
 	retentionConfigFile, err := os.Open(config.Cache.RetentionConfig)
 	if err != nil {

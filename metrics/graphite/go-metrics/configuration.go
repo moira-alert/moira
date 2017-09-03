@@ -20,19 +20,13 @@ func ConfigureCacheMetrics(prefix string) *graphite.CacheMetrics {
 // ConfigureNotifierMetrics is notifier metrics configurator
 func ConfigureNotifierMetrics(prefix string) *graphite.NotifierMetrics {
 	return &graphite.NotifierMetrics{
+		SubsMalformed:          newRegisteredMeter(metricNameWithPrefix(prefix, "subs.malformed")),
 		EventsReceived:         newRegisteredMeter(metricNameWithPrefix(prefix, "events.received")),
 		EventsMalformed:        newRegisteredMeter(metricNameWithPrefix(prefix, "events.malformed")),
 		EventsProcessingFailed: newRegisteredMeter(metricNameWithPrefix(prefix, "events.failed")),
 		SendingFailed:          newRegisteredMeter(metricNameWithPrefix(prefix, "sending.failed")),
 		SendersOkMetrics:       newMetricsMap(),
 		SendersFailedMetrics:   newMetricsMap(),
-	}
-}
-
-// ConfigureDatabaseMetrics is database metrics configurator
-func ConfigureDatabaseMetrics() *graphite.DatabaseMetrics {
-	return &graphite.DatabaseMetrics{
-		SubsMalformed: newRegisteredMeter(metricNameWithPrefix("notifier", "subs.malformed")),
 	}
 }
 

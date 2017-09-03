@@ -26,7 +26,6 @@ var notifierConfig = notifier.Config{
 var shutdown = make(chan bool)
 
 var notifierMetrics = metrics.ConfigureNotifierMetrics("notifier")
-var databaseMetrics = metrics.ConfigureDatabaseMetrics()
 var logger, _ = logging.GetLogger("Notifier_Test")
 var mockCtrl *gomock.Controller
 
@@ -68,7 +67,7 @@ var event = moira.NotificationEvent{
 func TestNotifier(t *testing.T) {
 	mockCtrl = gomock.NewController(t)
 	defer mockCtrl.Finish()
-	database := redis.NewDatabase(logger, redis.Config{Port: "6379", Host: "localhost"}, databaseMetrics)
+	database := redis.NewDatabase(logger, redis.Config{Port: "6379", Host: "localhost"})
 	database.WriteContact(&contact)
 	database.SaveSubscription(&subscription)
 	database.SaveTrigger(trigger.ID, &trigger)
@@ -86,7 +85,7 @@ func TestNotifier(t *testing.T) {
 		Database:  database,
 		Logger:    logger,
 		Metrics:   notifierMetrics,
-		Scheduler: notifier.NewScheduler(database, logger),
+		Scheduler: notifier.NewScheduler(database, logger, notifierMetrics),
 	}
 
 	fetchNotificationsWorker := notifications.FetchNotificationsWorker{

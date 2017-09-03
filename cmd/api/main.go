@@ -11,7 +11,6 @@ import (
 	"github.com/moira-alert/moira-alert/cmd"
 	"github.com/moira-alert/moira-alert/database/redis"
 	"github.com/moira-alert/moira-alert/logging/go-logging"
-	"github.com/moira-alert/moira-alert/metrics/graphite/go-metrics"
 )
 
 var (
@@ -56,8 +55,7 @@ func main() {
 	}
 
 	databaseSettings := config.Redis.GetSettings()
-	databaseMetrics := metrics.ConfigureDatabaseMetrics()
-	database := redis.NewDatabase(logger, databaseSettings, databaseMetrics)
+	database := redis.NewDatabase(logger, databaseSettings)
 
 	httpHandler := handler.NewHandler(database, logger)
 

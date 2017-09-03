@@ -60,10 +60,9 @@ func main() {
 	}
 
 	notifierMetrics := metrics.ConfigureNotifierMetrics("notifier")
-	databaseMetrics := metrics.ConfigureDatabaseMetrics()
 	metrics.Init(config.Graphite.GetSettings(), logger)
 
-	database := redis.NewDatabase(logger, config.Redis.GetSettings(), databaseMetrics)
+	database := redis.NewDatabase(logger, config.Redis.GetSettings())
 	if *convertDb {
 		convertDatabase(database)
 	}
@@ -88,7 +87,7 @@ func main() {
 	fetchEventsWorker := events.FetchEventsWorker{
 		Logger:    logger,
 		Database:  database,
-		Scheduler: notifier.NewScheduler(database, logger),
+		Scheduler: notifier.NewScheduler(database, logger, notifierMetrics),
 		Metrics:   notifierMetrics,
 	}
 	fetchEventsWorker.Start()

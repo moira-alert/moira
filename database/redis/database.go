@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/garyburd/redigo/redis"
 	"github.com/moira-alert/moira-alert"
-	"github.com/moira-alert/moira-alert/metrics/graphite"
 	"github.com/patrickmn/go-cache"
 	"time"
 )
@@ -13,17 +12,15 @@ import (
 type DbConnector struct {
 	pool           *redis.Pool
 	logger         moira.Logger
-	metrics        *graphite.DatabaseMetrics
 	retentionCache *cache.Cache
 	metricsCache   *cache.Cache
 }
 
 // NewDatabase creates Redis pool based on config
-func NewDatabase(logger moira.Logger, config Config, metrics *graphite.DatabaseMetrics) *DbConnector {
+func NewDatabase(logger moira.Logger, config Config) *DbConnector {
 	db := DbConnector{
 		pool:           newRedisPool(fmt.Sprintf("%s:%s", config.Host, config.Port), config.DBID),
 		logger:         logger,
-		metrics:        metrics,
 		retentionCache: cache.New(time.Minute, time.Minute*60),
 		metricsCache:   cache.New(time.Minute, time.Minute*60),
 	}

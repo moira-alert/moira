@@ -98,6 +98,7 @@ func (worker *FetchEventsWorker) processEvent(event moira.NotificationEvent) err
 		worker.Logger.Debugf("Getting subscription id %s for test message", *event.SubscriptionID)
 		sub, err := worker.Database.GetSubscription(*event.SubscriptionID)
 		if err != nil {
+			worker.Metrics.SubsMalformed.Mark(1)
 			return err
 		}
 		subscriptions = []*moira.SubscriptionData{&sub}
