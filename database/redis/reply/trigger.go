@@ -20,7 +20,7 @@ type triggerStorageElement struct {
 	Tags            []string            `json:"tags"`
 	TTLState        *string             `json:"ttl_state,omitempty"`
 	Schedule        *moira.ScheduleData `json:"sched,omitempty"`
-	Expression      *string             `json:"expression,omitempty"`
+	Expression      *string             `json:"expr,omitempty"`
 	Patterns        []string            `json:"patterns"`
 	IsSimpleTrigger bool                `json:"is_simple_trigger"`
 	TTL             *string             `json:"ttl"`
