@@ -47,7 +47,7 @@ type MetricState struct {
 	Maintenance    int64    `json:"maintenance,omitempty"`
 }
 
-// MetricEvent represent cache metric new event
+// MetricEvent represent filter metric event
 type MetricEvent struct {
 	Metric  string `json:"metric"`
 	Pattern string `json:"pattern"`

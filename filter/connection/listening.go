@@ -8,7 +8,7 @@ import (
 	"gopkg.in/tomb.v2"
 
 	"github.com/moira-alert/moira-alert"
-	"github.com/moira-alert/moira-alert/cache"
+	"github.com/moira-alert/moira-alert/filter"
 )
 
 // MetricsListener is facade for standard net.MetricsListener and accept connection for handling it
@@ -20,7 +20,7 @@ type MetricsListener struct {
 }
 
 // NewListener creates new listener
-func NewListener(port string, logger moira.Logger, patternStorage *cache.PatternStorage) (*MetricsListener, error) {
+func NewListener(port string, logger moira.Logger, patternStorage *filter.PatternStorage) (*MetricsListener, error) {
 	listen := port
 	newListener, err := net.Listen("tcp", listen)
 	if err != nil {

@@ -8,11 +8,11 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/moira-alert/moira-alert/cache"
-	"github.com/moira-alert/moira-alert/cache/connection"
-	"github.com/moira-alert/moira-alert/cache/heartbeat"
-	"github.com/moira-alert/moira-alert/cache/matched_metrics"
-	"github.com/moira-alert/moira-alert/cache/patterns"
+	"github.com/moira-alert/moira-alert/filter"
+	"github.com/moira-alert/moira-alert/filter/connection"
+	"github.com/moira-alert/moira-alert/filter/heartbeat"
+	"github.com/moira-alert/moira-alert/filter/matched_metrics"
+	"github.com/moira-alert/moira-alert/filter/patterns"
 	"github.com/moira-alert/moira-alert/cmd"
 	"github.com/moira-alert/moira-alert/database/redis"
 	"github.com/moira-alert/moira-alert/logging/go-logging"
@@ -25,7 +25,7 @@ var (
 	printDefaultConfigFlag = flag.Bool("default-config", false, "Print default config and exit")
 )
 
-// Moira cache bin version
+// Moira filter bin version
 var (
 	MoiraVersion = "unknown"
 	GitCommit    = "unknown"
@@ -35,7 +35,7 @@ var (
 func main() {
 	flag.Parse()
 	if *printVersion {
-		fmt.Println("Moira Cache")
+		fmt.Println("Moira Filter")
 		fmt.Println("Version:", MoiraVersion)
 		fmt.Println("Git Commit:", GitCommit)
 		fmt.Println("Go Version:", Version)
@@ -54,28 +54,28 @@ func main() {
 		os.Exit(1)
 	}
 
-	logger, err := logging.ConfigureLog(config.Logger.LogFile, config.Logger.LogLevel, "cache")
+	logger, err := logging.ConfigureLog(config.Logger.LogFile, config.Logger.LogLevel, "filter")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Can not configure log: %s\n", err.Error())
 		os.Exit(1)
 	}
 
-	cacheMetrics := metrics.ConfigureCacheMetrics("cache")
+	cacheMetrics := metrics.ConfigureFilterMetrics("filter")
 	metrics.Init(config.Graphite.GetSettings(), logger)
 
 	database := redis.NewDatabase(logger, config.Redis.GetSettings())
 
-	retentionConfigFile, err := os.Open(config.Cache.RetentionConfig)
+	retentionConfigFile, err := os.Open(config.Filter.RetentionConfig)
 	if err != nil {
-		logger.Fatalf("Error open retentions file [%s]: %s", config.Cache.RetentionConfig, err.Error())
+		logger.Fatalf("Error open retentions file [%s]: %s", config.Filter.RetentionConfig, err.Error())
 	}
 
-	cacheStorage, err := cache.NewCacheStorage(cacheMetrics, retentionConfigFile)
+	cacheStorage, err := filter.NewCacheStorage(cacheMetrics, retentionConfigFile)
 	if err != nil {
-		logger.Fatalf("Failed to initialize cache with config [%s]: %s", config.Cache.RetentionConfig, err.Error())
+		logger.Fatalf("Failed to initialize cache storage with config [%s]: %s", config.Filter.RetentionConfig, err.Error())
 	}
 
-	patternStorage, err := cache.NewPatternStorage(database, cacheMetrics, logger)
+	patternStorage, err := filter.NewPatternStorage(database, cacheMetrics, logger)
 	if err != nil {
 		logger.Fatalf("Failed to refresh pattern storage: %s", err.Error())
 	}
@@ -89,7 +89,7 @@ func main() {
 	}
 	heartbeatWorker.Start()
 
-	listener, err := connection.NewListener(config.Cache.Listen, logger, patternStorage)
+	listener, err := connection.NewListener(config.Filter.Listen, logger, patternStorage)
 	if err != nil {
 		logger.Fatalf("Failed to start listen: %s", err.Error())
 	}
@@ -99,16 +99,16 @@ func main() {
 	var matcherWG sync.WaitGroup
 	metricsMatcher.Start(metricsChan, &matcherWG)
 
-	logger.Infof("Moira Cache started. Version: %s", MoiraVersion)
+	logger.Infof("Moira Filter started. Version: %s", MoiraVersion)
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 	logger.Info(fmt.Sprint(<-ch))
-	logger.Infof("Moira Cache shutting down.")
+	logger.Infof("Moira Filter shutting down.")
 
 	listener.Stop()
 	matcherWG.Wait()
 	refreshPatternWorker.Stop()
 	heartbeatWorker.Stop()
 
-	logger.Infof("Moira Cache stopped. Version: %s", MoiraVersion)
+	logger.Infof("Moira Filter stopped. Version: %s", MoiraVersion)
 }

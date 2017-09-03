@@ -8,10 +8,10 @@ type config struct {
 	Redis    cmd.RedisConfig    `yaml:"redis"`
 	Graphite cmd.GraphiteConfig `yaml:"graphite"`
 	Logger   cmd.LoggerConfig   `yaml:"log"`
-	Cache    cacheConfig        `yaml:"cache"`
+	Filter   filterConfig       `yaml:"cache"`
 }
 
-type cacheConfig struct {
+type filterConfig struct {
 	Listen          string `yaml:"listen"`
 	RetentionConfig string `yaml:"retention-config"`
 }
@@ -27,7 +27,7 @@ func getDefault() config {
 			LogFile:  "stdout",
 			LogLevel: "debug",
 		},
-		Cache: cacheConfig{
+		Filter: filterConfig{
 			Listen:          ":2003",
 			RetentionConfig: "storage-schemas.conf",
 		},

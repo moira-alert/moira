@@ -89,8 +89,8 @@ func (selfCheck *SelfCheckWorker) check(nowTS int64, lastMetricReceivedTS, redis
 		}
 		if *lastMetricReceivedTS < nowTS-selfCheck.Config.LastMetricReceivedDelay && err == nil {
 			interval := nowTS - *lastMetricReceivedTS
-			selfCheck.Log.Errorf("Moira-Cache does not received new metrics more %ds. Send message.", interval)
-			selfCheck.sendErrorMessages("Moira-Cache does not received new metrics", interval, selfCheck.Config.LastMetricReceivedDelay)
+			selfCheck.Log.Errorf("Moira-Filter does not received new metrics more %ds. Send message.", interval)
+			selfCheck.sendErrorMessages("Moira-Filter does not received new metrics", interval, selfCheck.Config.LastMetricReceivedDelay)
 			*nextSendErrorMessage = nowTS + selfCheck.Config.NoticeInterval
 			return
 		}

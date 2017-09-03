@@ -1,7 +1,7 @@
 package graphite
 
-// CacheMetrics is a collection of metrics used in cache
-type CacheMetrics struct {
+// FilterMetrics is a collection of metrics used in filter
+type FilterMetrics struct {
 	TotalMetricsReceived    Meter // TotalMetricsReceived metrics counter
 	ValidMetricsReceived    Meter // ValidMetricsReceived metrics counter
 	MatchingMetricsReceived Meter // MatchingMetricsReceived metrics counter

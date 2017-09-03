@@ -1,10 +1,10 @@
-package cache
+package filter
 
 import (
 	"bufio"
 	"fmt"
 	"github.com/golang/mock/gomock"
-	"github.com/moira-alert/moira-alert/cache"
+	"github.com/moira-alert/moira-alert/filter"
 	"github.com/moira-alert/moira-alert/metrics/graphite/go-metrics"
 	"github.com/moira-alert/moira-alert/mock/moira-alert"
 	"github.com/op/go-logging"
@@ -34,14 +34,14 @@ func BenchmarkProcessIncomingMetric(b *testing.B) {
 		b.Errorf("Error reading patterns: %s", err.Error())
 	}
 
-	metrics2 := metrics.ConfigureCacheMetrics("test")
+	metrics2 := metrics.ConfigureFilterMetrics("test")
 
 	mockCtrl := gomock.NewController(b)
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Benchmark")
 
 	database.EXPECT().GetPatterns().Return(patterns, nil)
-	patternsStorage, err := cache.NewPatternStorage(database, metrics2, logger)
+	patternsStorage, err := filter.NewPatternStorage(database, metrics2, logger)
 	if err != nil {
 		b.Errorf("Can not create new cache storage %s", err)
 	}
@@ -53,7 +53,7 @@ func BenchmarkProcessIncomingMetric(b *testing.B) {
 	}
 }
 
-func generateMetrics(patterns *cache.PatternStorage, count int) []string {
+func generateMetrics(patterns *filter.PatternStorage, count int) []string {
 	result := make([]string, 0, count)
 	timestamp := time.Now()
 	i := 0

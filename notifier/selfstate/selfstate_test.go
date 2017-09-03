@@ -98,7 +98,7 @@ func TestMoiraCacheDoesNotReceivedNewMetrics(t *testing.T) {
 		metricsCount = 1
 
 		callingNow := now.Add(time.Second * 2)
-		expectedPackage := configureNotificationPackage(adminContact, mock.conf.LastMetricReceivedDelay, callingNow.Unix()-lastMetricReceivedTS, "Moira-Cache does not received new metrics")
+		expectedPackage := configureNotificationPackage(adminContact, mock.conf.LastMetricReceivedDelay, callingNow.Unix()-lastMetricReceivedTS, "Moira-Filter does not received new metrics")
 
 		mock.notif.EXPECT().Send(&expectedPackage, &sendingWG)
 		mock.selfCheckWorker.check(callingNow.Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount)

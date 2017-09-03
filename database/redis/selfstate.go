@@ -10,7 +10,7 @@ func (connector *DbConnector) UpdateMetricsHeartbeat() error {
 	return err
 }
 
-// GetMetricsCount return metrics count received by Moira-Cache
+// GetMetricsCount return metrics count received by Moira-Filter
 func (connector *DbConnector) GetMetricsCount() (int64, error) {
 	c := connector.pool.Get()
 	defer c.Close()

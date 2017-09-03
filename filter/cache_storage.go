@@ -1,4 +1,4 @@
-package cache
+package filter
 
 import (
 	"bufio"
@@ -24,14 +24,14 @@ type retentionCacheItem struct {
 
 // Storage struct to store retention matchers
 type Storage struct {
-	metrics         *graphite.CacheMetrics
+	metrics         *graphite.FilterMetrics
 	retentions      []retentionMatcher
 	retentionsCache map[string]*retentionCacheItem
 	metricsCache    map[string]*moira.MatchedMetric
 }
 
 // NewCacheStorage create new Storage
-func NewCacheStorage(metrics *graphite.CacheMetrics, reader io.Reader) (*Storage, error) {
+func NewCacheStorage(metrics *graphite.FilterMetrics, reader io.Reader) (*Storage, error) {
 	storage := &Storage{
 		retentionsCache: make(map[string]*retentionCacheItem),
 		metricsCache:    make(map[string]*moira.MatchedMetric),

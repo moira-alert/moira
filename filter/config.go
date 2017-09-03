@@ -1,6 +1,6 @@
-package cache
+package filter
 
-// Config is cache configuration settings
+// Config is filter configuration settings
 type Config struct {
 	Enabled         bool
 	Listen          string

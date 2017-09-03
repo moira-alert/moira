@@ -6,7 +6,7 @@ import (
 	"gopkg.in/tomb.v2"
 
 	"github.com/moira-alert/moira-alert"
-	"github.com/moira-alert/moira-alert/cache"
+	"github.com/moira-alert/moira-alert/filter"
 	"github.com/moira-alert/moira-alert/metrics/graphite"
 )
 
@@ -14,13 +14,13 @@ import (
 type RefreshPatternWorker struct {
 	database       moira.Database
 	logger         moira.Logger
-	metrics        *graphite.CacheMetrics
-	patternStorage *cache.PatternStorage
+	metrics        *graphite.FilterMetrics
+	patternStorage *filter.PatternStorage
 	tomb           tomb.Tomb
 }
 
 // NewRefreshPatternWorker creates new RefreshPatternWorker
-func NewRefreshPatternWorker(database moira.Database, metrics *graphite.CacheMetrics, logger moira.Logger, patternStorage *cache.PatternStorage) *RefreshPatternWorker {
+func NewRefreshPatternWorker(database moira.Database, metrics *graphite.FilterMetrics, logger moira.Logger, patternStorage *filter.PatternStorage) *RefreshPatternWorker {
 	return &RefreshPatternWorker{
 		database:       database,
 		metrics:        metrics,
@@ -42,7 +42,7 @@ func (worker *RefreshPatternWorker) Start() error {
 			checkTicker := time.NewTicker(time.Second)
 			select {
 			case <-worker.tomb.Dying():
-				worker.logger.Infof("Moira Cache pattern updater stopped")
+				worker.logger.Infof("Moira Filter pattern updater stopped")
 				return nil
 			case <-checkTicker.C:
 				timer := time.Now()
@@ -54,7 +54,7 @@ func (worker *RefreshPatternWorker) Start() error {
 			}
 		}
 	})
-	worker.logger.Infof("Moira Cache pattern updater started")
+	worker.logger.Infof("Moira Filter pattern updater started")
 	return nil
 }
 

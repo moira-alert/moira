@@ -5,9 +5,9 @@ import (
 	"github.com/moira-alert/moira-alert/metrics/graphite"
 )
 
-// ConfigureCacheMetrics initialize graphite metrics
-func ConfigureCacheMetrics(prefix string) *graphite.CacheMetrics {
-	return &graphite.CacheMetrics{
+// ConfigureFilterMetrics initialize graphite metrics
+func ConfigureFilterMetrics(prefix string) *graphite.FilterMetrics {
+	return &graphite.FilterMetrics{
 		TotalMetricsReceived:    newRegisteredMeter(metricNameWithPrefix(prefix, "received.total")),
 		ValidMetricsReceived:    newRegisteredMeter(metricNameWithPrefix(prefix, "received.valid")),
 		MatchingMetricsReceived: newRegisteredMeter(metricNameWithPrefix(prefix, "received.matching")),

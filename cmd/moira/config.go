@@ -4,7 +4,7 @@ import (
 	"menteslibres.net/gosexy/to"
 
 	"github.com/moira-alert/moira-alert/api"
-	"github.com/moira-alert/moira-alert/cache"
+	"github.com/moira-alert/moira-alert/filter"
 	"github.com/moira-alert/moira-alert/checker"
 	"github.com/moira-alert/moira-alert/cmd"
 	"github.com/moira-alert/moira-alert/notifier"
@@ -48,8 +48,8 @@ type filterConfig struct {
 	LogLevel        string `yaml:"log_level"`
 }
 
-func (config *filterConfig) getSettings() *cache.Config {
-	return &cache.Config{
+func (config *filterConfig) getSettings() *filter.Config {
+	return &filter.Config{
 		Enabled:         cmd.ToBool(config.Enabled),
 		Listen:          config.Listen,
 		RetentionConfig: config.RetentionConfig,

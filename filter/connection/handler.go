@@ -7,17 +7,17 @@ import (
 	"sync"
 
 	"github.com/moira-alert/moira-alert"
-	"github.com/moira-alert/moira-alert/cache"
+	"github.com/moira-alert/moira-alert/filter"
 )
 
 // Handler handling connection data and shift it to MatchedMetrics channel
 type Handler struct {
 	logger          moira.Logger
-	patternsStorage *cache.PatternStorage
+	patternsStorage *filter.PatternStorage
 }
 
 // NewConnectionHandler creates new Handler
-func NewConnectionHandler(logger moira.Logger, patternsStorage *cache.PatternStorage) *Handler {
+func NewConnectionHandler(logger moira.Logger, patternsStorage *filter.PatternStorage) *Handler {
 	return &Handler{
 		logger:          logger,
 		patternsStorage: patternsStorage,

@@ -1,4 +1,4 @@
-package cache
+package filter
 
 import (
 	"fmt"
@@ -17,7 +17,7 @@ var asteriskHash = xxhash.Checksum32([]byte("*"))
 // PatternStorage contains pattern tree
 type PatternStorage struct {
 	database    moira.Database
-	metrics     *graphite.CacheMetrics
+	metrics     *graphite.FilterMetrics
 	logger      moira.Logger
 	PatternTree *patternNode
 }
@@ -32,7 +32,7 @@ type patternNode struct {
 }
 
 // NewPatternStorage creates new PatternStorage struct
-func NewPatternStorage(database moira.Database, metrics *graphite.CacheMetrics, logger moira.Logger) (*PatternStorage, error) {
+func NewPatternStorage(database moira.Database, metrics *graphite.FilterMetrics, logger moira.Logger) (*PatternStorage, error) {
 	storage := &PatternStorage{
 		database: database,
 		metrics:  metrics,

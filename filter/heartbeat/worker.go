@@ -12,13 +12,13 @@ import (
 // Worker is heartbeat worker realization
 type Worker struct {
 	database moira.Database
-	metrics  *graphite.CacheMetrics
+	metrics  *graphite.FilterMetrics
 	logger   moira.Logger
 	tomb     tomb.Tomb
 }
 
 // NewHeartbeatWorker creates new worker
-func NewHeartbeatWorker(database moira.Database, metrics *graphite.CacheMetrics, logger moira.Logger) *Worker {
+func NewHeartbeatWorker(database moira.Database, metrics *graphite.FilterMetrics, logger moira.Logger) *Worker {
 	return &Worker{
 		database: database,
 		metrics:  metrics,
@@ -34,7 +34,7 @@ func (worker *Worker) Start() {
 		for {
 			select {
 			case <-worker.tomb.Dying():
-				worker.logger.Infof("Moira Cache heartbeat stopped")
+				worker.logger.Infof("Moira Filter heartbeat stopped")
 				return nil
 			case <-checkTicker.C:
 				newCount := worker.metrics.TotalMetricsReceived.Count()
@@ -48,7 +48,7 @@ func (worker *Worker) Start() {
 			}
 		}
 	})
-	worker.logger.Infof("Moira Cache heartbeat started")
+	worker.logger.Infof("Moira Filter heartbeat started")
 }
 
 // Stop heartbeat worker

@@ -2,7 +2,7 @@ package matchedmetrics
 
 import (
 	"github.com/moira-alert/moira-alert"
-	"github.com/moira-alert/moira-alert/cache"
+	"github.com/moira-alert/moira-alert/filter"
 	"github.com/moira-alert/moira-alert/metrics/graphite"
 	"sync"
 	"time"
@@ -11,13 +11,13 @@ import (
 // MetricsMatcher make buffer of metrics and save it
 type MetricsMatcher struct {
 	logger       moira.Logger
-	metrics      *graphite.CacheMetrics
+	metrics      *graphite.FilterMetrics
 	database     moira.Database
-	cacheStorage *cache.Storage
+	cacheStorage *filter.Storage
 }
 
 // NewMetricsMatcher creates new MetricsMatcher
-func NewMetricsMatcher(metrics *graphite.CacheMetrics, logger moira.Logger, database moira.Database, cacheStorage *cache.Storage) *MetricsMatcher {
+func NewMetricsMatcher(metrics *graphite.FilterMetrics, logger moira.Logger, database moira.Database, cacheStorage *filter.Storage) *MetricsMatcher {
 	return &MetricsMatcher{
 		metrics:      metrics,
 		logger:       logger,
@@ -26,7 +26,7 @@ func NewMetricsMatcher(metrics *graphite.CacheMetrics, logger moira.Logger, data
 	}
 }
 
-// Start process matched metrics from channel and save it in cache
+// Start process matched metrics from channel and save it in cache storage
 func (matcher *MetricsMatcher) Start(channel chan *moira.MatchedMetric, wg *sync.WaitGroup) {
 	go func() {
 		defer wg.Done()
@@ -58,6 +58,6 @@ func (matcher *MetricsMatcher) Start(channel chan *moira.MatchedMetric, wg *sync
 
 func (matcher *MetricsMatcher) save(buffer map[string]*moira.MatchedMetric) {
 	if err := matcher.database.SaveMetrics(buffer); err != nil {
-		matcher.logger.Infof("Failed to save value in cache: %s", err.Error())
+		matcher.logger.Infof("Failed to save value in cache storage: %s", err.Error())
 	}
 }
