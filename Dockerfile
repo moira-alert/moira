@@ -1,5 +1,7 @@
 FROM scratch
 
+COPY pkg/ca-certificates.crt /etc/ssl/certs/
+
 COPY pkg/moira.yml /
 COPY pkg/storage-schemas.conf /
 COPY build/moira /
