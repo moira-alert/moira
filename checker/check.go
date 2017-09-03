@@ -91,7 +91,6 @@ func (triggerChecker *TriggerChecker) handleTrigger() (moira.CheckData, error) {
 		}
 		if currentState != nil {
 			currentState, err := triggerChecker.compareStates(timeSeries.Name, *currentState, metricLastState)
-			metricLastState = currentState
 			checkData.Metrics[timeSeries.Name] = currentState
 			if err != nil {
 				return checkData, err

@@ -86,8 +86,7 @@ func (storage *PatternStorage) ProcessIncomingMetric(lineBytes []byte) *moira.Ma
 // matchPattern returns array of matched patterns
 func (storage *PatternStorage) matchPattern(metric []byte) []string {
 	currentLevel := []*patternNode{storage.PatternTree}
-	found := 0
-	index := 0
+	var found, index int
 	for i, c := range metric {
 		if c == '.' {
 			part := metric[index:i]
