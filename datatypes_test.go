@@ -95,7 +95,7 @@ func TestIsScheduleAllows(t *testing.T) {
 
 func TestEventsData_GetSubjectState(t *testing.T) {
 	Convey("Get ERROR state", t, func() {
-		states := EventsData{{State: "OK"}, {State: "ERROR"}}
+		states := NotificationEvents{{State: "OK"}, {State: "ERROR"}}
 		So(states.GetSubjectState(), ShouldResemble, "ERROR")
 	})
 }

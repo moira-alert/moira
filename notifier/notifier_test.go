@@ -29,7 +29,7 @@ func TestUnknownContactType(t *testing.T) {
 	configureNotifier(t)
 	defer afterTest()
 
-	var eventsData moira.EventsData = []moira.NotificationEvent{event}
+	var eventsData moira.NotificationEvents = []moira.NotificationEvent{event}
 
 	pkg := NotificationPackage{
 		Events: eventsData,
@@ -50,7 +50,7 @@ func TestFailSendEvent(t *testing.T) {
 	configureNotifier(t)
 	defer afterTest()
 
-	var eventsData moira.EventsData = []moira.NotificationEvent{event}
+	var eventsData moira.NotificationEvents = []moira.NotificationEvent{event}
 
 	pkg := NotificationPackage{
 		Events: eventsData,
@@ -73,7 +73,7 @@ func TestTimeout(t *testing.T) {
 	configureNotifier(t)
 	defer afterTest()
 
-	var eventsData moira.EventsData = []moira.NotificationEvent{event}
+	var eventsData moira.NotificationEvents = []moira.NotificationEvent{event}
 
 	pkg := NotificationPackage{
 		Events: eventsData,

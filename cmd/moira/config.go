@@ -4,9 +4,9 @@ import (
 	"menteslibres.net/gosexy/to"
 
 	"github.com/moira-alert/moira-alert/api"
-	"github.com/moira-alert/moira-alert/filter"
 	"github.com/moira-alert/moira-alert/checker"
 	"github.com/moira-alert/moira-alert/cmd"
+	"github.com/moira-alert/moira-alert/filter"
 	"github.com/moira-alert/moira-alert/notifier"
 	"github.com/moira-alert/moira-alert/notifier/selfstate"
 )

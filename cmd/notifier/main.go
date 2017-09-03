@@ -60,7 +60,9 @@ func main() {
 	}
 
 	notifierMetrics := metrics.ConfigureNotifierMetrics("notifier")
-	metrics.Init(config.Graphite.GetSettings(), logger)
+	if err = metrics.Init(config.Graphite.GetSettings()); err != nil {
+		logger.Error(err)
+	}
 
 	database := redis.NewDatabase(logger, config.Redis.GetSettings())
 	if *convertDb {

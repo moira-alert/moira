@@ -70,7 +70,9 @@ func main() {
 	}
 
 	checkerMetrics := metrics.ConfigureCheckerMetrics("checker")
-	metrics.Init(config.Graphite.GetSettings(), logger)
+	if err = metrics.Init(config.Graphite.GetSettings()); err != nil {
+		logger.Error(err)
+	}
 	checkerWorker := &worker.Checker{
 		Logger:   logger,
 		Database: database,

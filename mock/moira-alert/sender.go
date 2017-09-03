@@ -44,7 +44,7 @@ func (_mr *MockSenderMockRecorder) Init(arg0, arg1 interface{}) *gomock.Call {
 }
 
 // SendEvents mocks base method
-func (_m *MockSender) SendEvents(_param0 moira_alert.EventsData, _param1 moira_alert.ContactData, _param2 moira_alert.TriggerData, _param3 bool) error {
+func (_m *MockSender) SendEvents(_param0 moira_alert.NotificationEvents, _param1 moira_alert.ContactData, _param2 moira_alert.TriggerData, _param3 bool) error {
 	ret := _m.ctrl.Call(_m, "SendEvents", _param0, _param1, _param2, _param3)
 	ret0, _ := ret[0].(error)
 	return ret0

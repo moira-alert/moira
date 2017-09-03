@@ -74,7 +74,7 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 }
 
 // SendEvents implements Sender interface Send
-func (sender *Sender) SendEvents(events moira.EventsData, contact moira.ContactData, trigger moira.TriggerData, throttled bool) error {
+func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, throttled bool) error {
 
 	m := sender.makeMessage(events, contact, trigger, throttled)
 
@@ -97,7 +97,7 @@ func (sender *Sender) SendEvents(events moira.EventsData, contact moira.ContactD
 	return nil
 }
 
-func (sender *Sender) makeMessage(events moira.EventsData, contact moira.ContactData, trigger moira.TriggerData, throttled bool) *gomail.Message {
+func (sender *Sender) makeMessage(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, throttled bool) *gomail.Message {
 	state := events.GetSubjectState()
 	tags := trigger.GetTags()
 

@@ -8,13 +8,13 @@ import (
 	"sync"
 	"syscall"
 
+	"github.com/moira-alert/moira-alert/cmd"
+	"github.com/moira-alert/moira-alert/database/redis"
 	"github.com/moira-alert/moira-alert/filter"
 	"github.com/moira-alert/moira-alert/filter/connection"
 	"github.com/moira-alert/moira-alert/filter/heartbeat"
 	"github.com/moira-alert/moira-alert/filter/matched_metrics"
 	"github.com/moira-alert/moira-alert/filter/patterns"
-	"github.com/moira-alert/moira-alert/cmd"
-	"github.com/moira-alert/moira-alert/database/redis"
 	"github.com/moira-alert/moira-alert/logging/go-logging"
 	"github.com/moira-alert/moira-alert/metrics/graphite/go-metrics"
 )
@@ -61,7 +61,9 @@ func main() {
 	}
 
 	cacheMetrics := metrics.ConfigureFilterMetrics("filter")
-	metrics.Init(config.Graphite.GetSettings(), logger)
+	if err = metrics.Init(config.Graphite.GetSettings()); err != nil {
+		logger.Error(err)
+	}
 
 	database := redis.NewDatabase(logger, config.Redis.GetSettings())
 

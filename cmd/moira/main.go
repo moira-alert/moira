@@ -142,7 +142,7 @@ func main() {
 	fetchNotificationsWorker.Start()
 
 	// Checker
-	checkerLog, err := logging.ConfigureLog(config.Checker.LogFile, config.Filter.LogLevel, "checker")
+	checkerLog, err := logging.ConfigureLog(config.Checker.LogFile, config.Checker.LogLevel, "checker")
 	if err != nil {
 		log.Fatalf("Can't configure logger for Checker: %v\n", err)
 	}
@@ -155,11 +155,13 @@ func main() {
 		Cache:    cache.New(time.Minute, time.Minute*60),
 	}
 
-	if err := checkerWorker.Start(); err != nil {
+	if err = checkerWorker.Start(); err != nil {
 		log.Fatalf("Start Checker failed: %v", err)
 	}
 
-	metrics.Init(config.Graphite.GetSettings(), log)
+	if err = metrics.Init(config.Graphite.GetSettings()); err != nil {
+		log.Error(err)
+	}
 
 	log.Infof("Moira Started (version: %s)", Version)
 	ch := make(chan os.Signal, 1)

@@ -102,6 +102,6 @@ type Logger interface {
 
 // Sender interface for implementing specified contact type sender
 type Sender interface {
-	SendEvents(events EventsData, contact ContactData, trigger TriggerData, throttled bool) error
+	SendEvents(events NotificationEvents, contact ContactData, trigger TriggerData, throttled bool) error
 	Init(senderSettings map[string]string, logger Logger) error
 }
