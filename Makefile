@@ -16,14 +16,14 @@ default: test build
 prepare:
 	go get github.com/kardianos/govendor
 	govendor sync
-	go get github.com/alecthomas/gometalinter
-	gometalinter --install
 
 lint: prepare
+	go get github.com/alecthomas/gometalinter
+	gometalinter --install
 	gometalinter ./... --vendor --skip mock --disable=errcheck --disable=gocyclo
 
 test: prepare
-	echo 'mode: atomic' > coverage.txt && go list ./... | grep -v "/vendor/" | xargs -n1 -I{} sh -c 'go test -bench=. -covermode=atomic -coverprofile=coverage.tmp {} && tail -n +2 coverage.tmp >> coverage.txt' && rm coverage.tmp
+	echo 'mode: atomic' > coverage.txt && go list ./... | grep -v "/vendor/" | xargs -n1 -I{} sh -c 'go test -v -bench=. -covermode=atomic -coverprofile=coverage.tmp {} && tail -n +2 coverage.tmp >> coverage.txt' && rm coverage.tmp
 
 build:
 	CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-X main.Version=${VERSION}-${RELEASE} -X main.GoVersion=${GO_VERSION} -X main.GitHash=${GIT_HASH}" -o build/moira github.com/moira-alert/moira-alert/cmd/moira
