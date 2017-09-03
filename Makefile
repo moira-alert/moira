@@ -20,7 +20,7 @@ prepare:
 lint: prepare
 	go get github.com/alecthomas/gometalinter
 	gometalinter --install
-	gometalinter ./... --vendor --skip mock --disable=errcheck --disable=gocyclo
+	gometalinter ./... --vendor --skip mock --disable=errcheck --disable=gocyclo --deadline=1m
 
 test: prepare
 	echo 'mode: atomic' > coverage.txt && go list ./... | grep -v "/vendor/" | xargs -n1 -I{} sh -c 'go test -v -bench=. -covermode=atomic -coverprofile=coverage.tmp {} && tail -n +2 coverage.tmp >> coverage.txt' && rm coverage.tmp
