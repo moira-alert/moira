@@ -1,6 +1,6 @@
-FROM scratch
+FROM alpine
 
-COPY pkg/ca-certificates.crt /etc/ssl/certs/
+RUN apk add --no-cache ca-certificates && update-ca-certificates
 
 COPY pkg/moira.yml /
 COPY pkg/storage-schemas.conf /
