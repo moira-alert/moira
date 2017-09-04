@@ -46,11 +46,11 @@ func (worker *Checker) handleTriggerToCheck(triggerID string) error {
 	}
 	if acquired {
 		start := time.Now()
+		defer worker.Metrics.TriggerCheckTime.UpdateSince(start)
 		if err := worker.checkTrigger(triggerID); err != nil {
 			worker.Metrics.CheckerError.Mark(1)
 			return err
 		}
-		worker.Metrics.TriggerCheckTime.UpdateSince(start)
 	}
 	return nil
 }

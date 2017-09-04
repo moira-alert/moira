@@ -107,7 +107,7 @@ type Trigger struct {
 	ErrorValue      *float64      `json:"error_value"`
 	Tags            []string      `json:"tags"`
 	TTLState        *string       `json:"ttl_state,omitempty"`
-	TTL             *int64        `json:"ttl"`
+	TTL             int64         `json:"ttl,omitempty"`
 	Schedule        *ScheduleData `json:"sched,omitempty"`
 	Expression      *string       `json:"expression,omitempty"`
 	Patterns        []string      `json:"patterns"`

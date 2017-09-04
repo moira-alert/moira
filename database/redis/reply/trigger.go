@@ -23,7 +23,7 @@ type triggerStorageElement struct {
 	Expression      *string             `json:"expr,omitempty"`
 	Patterns        []string            `json:"patterns"`
 	IsSimpleTrigger bool                `json:"is_simple_trigger"`
-	TTL             *string             `json:"ttl"`
+	TTL             string              `json:"ttl,omitempty"`
 }
 
 func (storageElement *triggerStorageElement) toTrigger() moira.Trigger {
@@ -62,20 +62,16 @@ func toTriggerStorageElement(trigger *moira.Trigger, triggerID string) *triggerS
 	}
 }
 
-func getTriggerTTL(ttlString *string) *int64 {
-	if ttlString == nil {
-		return nil
+func getTriggerTTL(ttlString string) int64 {
+	if ttlString == "" {
+		return 0
 	}
-	ttl, _ := strconv.ParseInt(*ttlString, 10, 64)
-	return &ttl
+	ttl, _ := strconv.ParseInt(ttlString, 10, 64)
+	return ttl
 }
 
-func getTriggerTTLString(ttl *int64) *string {
-	if ttl == nil {
-		return nil
-	}
-	ttlString := fmt.Sprintf("%v", *ttl)
-	return &ttlString
+func getTriggerTTLString(ttl int64) string {
+	return fmt.Sprintf("%v", ttl)
 }
 
 // Trigger converts redis DB reply to moira.Trigger object
