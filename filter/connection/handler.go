@@ -49,5 +49,4 @@ func (handler *Handler) HandleConnection(connection net.Conn, matchedMetricsChan
 			}
 		}
 	}
-	return nil
 }
