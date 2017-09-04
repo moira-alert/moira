@@ -33,9 +33,8 @@ func ConfigureNotifierMetrics(prefix string) *graphite.NotifierMetrics {
 // ConfigureCheckerMetrics is checker metrics configurator
 func ConfigureCheckerMetrics(prefix string) *graphite.CheckerMetrics {
 	return &graphite.CheckerMetrics{
-		CheckerError:      newRegisteredMeter(metricNameWithPrefix(prefix, "errors")),
-		TriggerCheckTime:  newRegisteredTimer(metricNameWithPrefix(prefix, "triggers")),
-		TriggerCheckGauge: newRegisteredGauge(metricNameWithPrefix(prefix, "triggers.sum")),
+		CheckerError:     newRegisteredMeter(metricNameWithPrefix(prefix, "errors")),
+		TriggerCheckTime: newRegisteredTimer(metricNameWithPrefix(prefix, "triggers")),
 	}
 }
 

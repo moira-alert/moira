@@ -50,9 +50,7 @@ func (worker *Checker) handleTriggerToCheck(triggerID string) error {
 			worker.Metrics.CheckerError.Mark(1)
 			return err
 		}
-		end := time.Now()
 		worker.Metrics.TriggerCheckTime.UpdateSince(start)
-		worker.Metrics.TriggerCheckGauge.Update(worker.Metrics.TriggerCheckGauge.Value() + int64(end.Sub(start)))
 	}
 	return nil
 }
