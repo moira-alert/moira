@@ -39,6 +39,9 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 	if trigger.ErrorValue == nil && trigger.Expression == nil {
 		return fmt.Errorf("error_value is required")
 	}
+	if trigger.TTL == nil {
+		return fmt.Errorf("TTL is required")
+	}
 
 	triggerExpression := expression.TriggerExpression{
 		AdditionalTargetsValues: make(map[string]float64),
