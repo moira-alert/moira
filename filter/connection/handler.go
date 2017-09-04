@@ -4,7 +4,8 @@ import (
 	"bufio"
 	"io"
 	"net"
-	"sync"
+
+	"gopkg.in/tomb.v2"
 
 	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/filter"
@@ -14,6 +15,7 @@ import (
 type Handler struct {
 	logger          moira.Logger
 	patternsStorage *filter.PatternStorage
+	tomb            tomb.Tomb
 }
 
 // NewConnectionHandler creates new Handler
@@ -25,31 +27,27 @@ func NewConnectionHandler(logger moira.Logger, patternsStorage *filter.PatternSt
 }
 
 // HandleConnection convert every line from connection to metric and send it to MatchedMetric channel
-func (handler *Handler) HandleConnection(connection net.Conn, matchedMetricsChan chan *moira.MatchedMetric, wg *sync.WaitGroup) {
+func (handler *Handler) HandleConnection(connection net.Conn, matchedMetricsChan chan *moira.MatchedMetric) error {
 	buffer := bufio.NewReader(connection)
-	defer func() {
-		connection.Close()
-		wg.Done()
-	}()
-	var handleLineWG sync.WaitGroup
+	defer connection.Close()
 	for {
-		lineBytes, err := buffer.ReadBytes('\n')
-		if err != nil {
-			if err != io.EOF {
-				handler.logger.Errorf("read failed: %s", err)
+		select {
+		case <-handler.tomb.Dying():
+			connection.Close()
+			return nil
+		default:
+			lineBytes, err := buffer.ReadBytes('\n')
+			if err != nil {
+				if err != io.EOF {
+					handler.logger.Errorf("read failed: %s", err)
+				}
+				return nil
 			}
-			break
+			lineBytes = lineBytes[:len(lineBytes)-1]
+			if m := handler.patternsStorage.ProcessIncomingMetric(lineBytes); m != nil {
+				matchedMetricsChan <- m
+			}
 		}
-		lineBytes = lineBytes[:len(lineBytes)-1]
-		handleLineWG.Add(1)
-		go handler.handleLine(lineBytes, matchedMetricsChan, &handleLineWG)
 	}
-	handleLineWG.Wait()
-}
-
-func (handler *Handler) handleLine(lineBytes []byte, matchedMetricsChan chan *moira.MatchedMetric, wg *sync.WaitGroup) {
-	defer wg.Done()
-	if m := handler.patternsStorage.ProcessIncomingMetric(lineBytes); m != nil {
-		matchedMetricsChan <- m
-	}
+	return nil
 }

@@ -3,7 +3,6 @@ package connection
 import (
 	"fmt"
 	"net"
-	"sync"
 
 	"gopkg.in/tomb.v2"
 
@@ -39,13 +38,13 @@ func NewListener(port string, logger moira.Logger, patternStorage *filter.Patter
 func (listener *MetricsListener) Listen() chan *moira.MatchedMetric {
 	metricsChan := make(chan *moira.MatchedMetric, 10)
 	listener.tomb.Go(func() error {
-		var handlerWG sync.WaitGroup
 		for {
 			select {
 			case <-listener.tomb.Dying():
 				{
 					listener.logger.Info("Listener stopped")
-					handlerWG.Wait()
+					listener.handler.tomb.Kill(nil)
+					listener.handler.tomb.Wait()
 					close(metricsChan)
 					return nil
 				}
@@ -56,8 +55,9 @@ func (listener *MetricsListener) Listen() chan *moira.MatchedMetric {
 						listener.logger.Infof("Failed to accept connection: %s", err.Error())
 						continue
 					}
-					handlerWG.Add(1)
-					go listener.handler.HandleConnection(conn, metricsChan, &handlerWG)
+					listener.handler.tomb.Go(func() error {
+						return listener.handler.HandleConnection(conn, metricsChan)
+					})
 				}
 			}
 		}
