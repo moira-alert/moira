@@ -17,5 +17,5 @@ func (*PatternList) Render(w http.ResponseWriter, r *http.Request) error {
 type PatternData struct {
 	Metrics  []string         `json:"metrics"`
 	Pattern  string           `json:"pattern"`
-	Triggers []*moira.Trigger `json:"triggers"`
+	Triggers []moira.Trigger `json:"triggers"`
 }

@@ -27,7 +27,7 @@ func TestGetEvents(t *testing.T) {
 		list, err := GetTriggerEvents(dataBase, triggerID, page, size)
 		So(err, ShouldBeNil)
 		So(list, ShouldResemble, &dto.EventsList{
-			List:  []*moira.NotificationEvent{{State: "NODATA", OldState: "OK"}, {State: "OK", OldState: "NODATA"}},
+			List:  []moira.NotificationEvent{{State: "NODATA", OldState: "OK"}, {State: "OK", OldState: "NODATA"}},
 			Total: total,
 			Size:  size,
 			Page:  page,
@@ -41,7 +41,7 @@ func TestGetEvents(t *testing.T) {
 		list, err := GetTriggerEvents(dataBase, triggerID, page, size)
 		So(err, ShouldBeNil)
 		So(list, ShouldResemble, &dto.EventsList{
-			List:  make([]*moira.NotificationEvent, 0),
+			List:  make([]moira.NotificationEvent, 0),
 			Total: total,
 			Size:  size,
 			Page:  page,

@@ -10,8 +10,8 @@ import (
 func GetUserSettings(database moira.Database, userLogin string) (*dto.UserSettings, *api.ErrorResponse) {
 	userSettings := &dto.UserSettings{
 		User:          dto.User{Login: userLogin},
-		Contacts:      make([]*moira.ContactData, 0),
-		Subscriptions: make([]*moira.SubscriptionData, 0),
+		Contacts:      make([]moira.ContactData, 0),
+		Subscriptions: make([]moira.SubscriptionData, 0),
 	}
 
 	subscriptionIDs, err := database.GetUserSubscriptionIDs(userLogin)
@@ -19,11 +19,15 @@ func GetUserSettings(database moira.Database, userLogin string) (*dto.UserSettin
 		return nil, api.ErrorInternalServer(err)
 	}
 
-	userSettings.Subscriptions, err = database.GetSubscriptions(subscriptionIDs)
+	subscriptions, err := database.GetSubscriptions(subscriptionIDs)
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
-
+	for _, subscription := range subscriptions {
+		if subscription != nil {
+			userSettings.Subscriptions = append(userSettings.Subscriptions, *subscription)
+		}
+	}
 	contactIDs, err := database.GetUserContactIDs(userLogin)
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
@@ -33,7 +37,10 @@ func GetUserSettings(database moira.Database, userLogin string) (*dto.UserSettin
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
-
-	userSettings.Contacts = contacts
+	for _, contact := range contacts {
+		if contact != nil {
+			userSettings.Contacts = append(userSettings.Contacts, *contact)
+		}
+	}
 	return userSettings, nil
 }

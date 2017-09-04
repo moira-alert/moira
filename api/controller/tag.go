@@ -21,12 +21,19 @@ func GetAllTagsAndSubscriptions(database moira.Database, logger moira.Logger) (*
 
 	for _, tagName := range tagsNames {
 		go func(tagName string) {
-			tagStat := &dto.TagStatistics{}
+			tagStat := &dto.TagStatistics{
+				Subscriptions: make([]moira.SubscriptionData, 0),
+			}
 			tagStat.TagName = tagName
-			tagStat.Subscriptions, err = database.GetTagsSubscriptions([]string{tagName})
+			subscriptions, err := database.GetTagsSubscriptions([]string{tagName})
 			if err != nil {
 				logger.Error(err.Error())
 				rch <- nil
+			}
+			for _, subscription := range subscriptions {
+				if subscription != nil {
+					tagStat.Subscriptions = append(tagStat.Subscriptions, *subscription)
+				}
 			}
 			tagStat.Triggers, err = database.GetTagTriggerIDs(tagName)
 			if err != nil {

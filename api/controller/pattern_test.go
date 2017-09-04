@@ -47,7 +47,7 @@ func TestGetAllPatterns(t *testing.T) {
 		list, err := GetAllPatterns(dataBase, logger)
 		So(err, ShouldBeNil)
 		So(list, ShouldResemble, &dto.PatternList{
-			List: []dto.PatternData{{Metrics: metrics, Pattern: pattern1, Triggers: triggers}},
+			List: []dto.PatternData{{Metrics: metrics, Pattern: pattern1, Triggers: []moira.Trigger{*triggers[0], *triggers[1]}}},
 		})
 	})
 
@@ -64,10 +64,10 @@ func TestGetAllPatterns(t *testing.T) {
 		So(list.List, ShouldHaveLength, 2)
 		for _, patternStat := range list.List {
 			if patternStat.Pattern == pattern1 {
-				So(patternStat, ShouldResemble, dto.PatternData{Metrics: metrics1, Pattern: pattern1, Triggers: triggers1})
+				So(patternStat, ShouldResemble, dto.PatternData{Metrics: metrics1, Pattern: pattern1, Triggers: []moira.Trigger{*triggers1[0], *triggers1[1]}})
 			}
 			if patternStat.Pattern == pattern2 {
-				So(patternStat, ShouldResemble, dto.PatternData{Metrics: metrics2, Pattern: pattern2, Triggers: triggers2})
+				So(patternStat, ShouldResemble, dto.PatternData{Metrics: metrics2, Pattern: pattern2, Triggers: []moira.Trigger{*triggers2[0]}})
 			}
 		}
 	})

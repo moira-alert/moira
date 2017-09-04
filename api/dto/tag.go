@@ -27,9 +27,9 @@ type TagsStatistics struct {
 }
 
 type TagStatistics struct {
-	TagName       string                    `json:"name"`
-	Triggers      []string                  `json:"triggers"`
-	Subscriptions []*moira.SubscriptionData `json:"subscriptions"`
+	TagName       string                   `json:"name"`
+	Triggers      []string                 `json:"triggers"`
+	Subscriptions []moira.SubscriptionData `json:"subscriptions"`
 }
 
 func (*TagsStatistics) Render(w http.ResponseWriter, r *http.Request) error {

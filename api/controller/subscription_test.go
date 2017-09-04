@@ -25,7 +25,7 @@ func TestGetUserSubscriptions(t *testing.T) {
 		database.EXPECT().GetSubscriptions(subscriptionIDs).Return(subscriptions, nil)
 		list, err := GetUserSubscriptions(database, login)
 		So(err, ShouldBeNil)
-		So(list, ShouldResemble, &dto.SubscriptionList{List: subscriptions})
+		So(list, ShouldResemble, &dto.SubscriptionList{List: []moira.SubscriptionData{*subscriptions[0], *subscriptions[1]}})
 	})
 
 	Convey("Two ids, one subscription", t, func() {
@@ -35,7 +35,7 @@ func TestGetUserSubscriptions(t *testing.T) {
 		database.EXPECT().GetSubscriptions(subscriptionIDs).Return(subscriptions, nil)
 		list, err := GetUserSubscriptions(database, login)
 		So(err, ShouldBeNil)
-		So(list, ShouldResemble, &dto.SubscriptionList{List: subscriptions})
+		So(list, ShouldResemble, &dto.SubscriptionList{List: []moira.SubscriptionData{*subscriptions[0]}})
 	})
 
 	Convey("Errors", t, func() {

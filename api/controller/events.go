@@ -18,8 +18,12 @@ func GetTriggerEvents(database moira.Database, triggerID string, page int64, siz
 		Size:  size,
 		Page:  page,
 		Total: eventCount,
-		List:  events,
+		List:  make([]moira.NotificationEvent, 0),
 	}
-
+	for _, event := range events {
+		if event != nil {
+			eventsList.List = append(eventsList.List, *event)
+		}
+	}
 	return eventsList, nil
 }

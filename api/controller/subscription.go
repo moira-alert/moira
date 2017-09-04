@@ -22,7 +22,12 @@ func GetUserSubscriptions(database moira.Database, userLogin string) (*dto.Subsc
 		return nil, api.ErrorInternalServer(err)
 	}
 	subscriptionsList := &dto.SubscriptionList{
-		List: subscriptions,
+		List: make([]moira.SubscriptionData, 0),
+	}
+	for _, subscription := range subscriptions {
+		if subscription != nil {
+			subscriptionsList.List = append(subscriptionsList.List, *subscription)
+		}
 	}
 	return subscriptionsList, nil
 }
