@@ -18,7 +18,7 @@ func ConfigureLog(logFile, logLevel, module string) (*goLogging.Logger, error) {
 		level = goLogging.DEBUG
 	}
 
-	goLogging.SetFormatter(goLogging.MustStringFormatter("%{time:2006-01-02 15:04:05}\t%{module}\t%{level}\t%{message}"))
+	goLogging.SetFormatter(goLogging.MustStringFormatter("%{time:2006-01-02 15:04:05.000}\t%{module}\t%{level}\t%{message}"))
 	logBackend, err := getLogBackend(logFile)
 	if err != nil {
 		return nil, err
