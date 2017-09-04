@@ -3,6 +3,15 @@ Moira is a real-time alerting tool, based on Graphite data.
 [![Build Status](https://travis-ci.org/moira-alert/moira-alert.svg?branch=master)](https://travis-ci.org/moira-alert/moira-alert)
 [![Coverage Status](https://coveralls.io/repos/github/moira-alert/moira-alert/badge.svg?branch=master)](https://coveralls.io/github/moira-alert/moira-alert?branch=master)
 
+Fast Start
+----------
+
+```
+git clone https://github.com/moira-alert/moira-alert.git
+cd moira-alert
+compose up
+```
+
 Get Moira
 ---------
 Use one of four ways

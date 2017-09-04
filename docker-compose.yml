@@ -1,0 +1,21 @@
+version: '2'
+services:
+  redis:
+    image: redis
+  moira-web:
+    image: kontur/moira-web
+    environment:
+      - MOIRA_API_URI=moira-alert:8081
+    ports:
+      - "80:80"
+    depends_on:
+      - moira-alert
+  moira-alert:
+    image: kontur/moira
+    ports:
+      - "2003:2003"
+    volumes:
+      - "./pkg/moira.yml:/moira.yml:ro"
+      - "./pkg/storage-schemas.conf:/storage-schemas.conf:ro"
+    depends_on:
+      - redis

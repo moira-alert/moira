@@ -130,7 +130,7 @@ func getDefault() config {
 		LogFile:  "stdout",
 		LogLevel: "debug",
 		Redis: cmd.RedisConfig{
-			Host: "localhost",
+			Host: "redis",
 			Port: "6379",
 			DBID: 0,
 		},

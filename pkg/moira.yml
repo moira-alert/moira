@@ -1,5 +1,5 @@
 redis:
-  host: localhost
+  host: redis
   port: "6379"
   dbid: 0
 graphite:
