@@ -56,7 +56,7 @@ func (connector *DbConnector) GetTriggers(triggerIDs []string) ([]*moira.Trigger
 	triggers := make([]*moira.Trigger, len(triggerIDs))
 	for i := 0; i < len(rawResponse); i += 2 {
 		triggerID := triggerIDs[i/2]
-		trigger, err := connector.getTriggerWithTags(rawResponse[0], rawResponse[1], triggerID)
+		trigger, err := connector.getTriggerWithTags(rawResponse[i], rawResponse[i+1], triggerID)
 		if err != nil {
 			if err == database.ErrNil {
 				continue
