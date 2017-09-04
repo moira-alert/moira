@@ -21,7 +21,7 @@ type TriggerChecker struct {
 	lastCheck *moira.CheckData
 
 	isSimple bool
-	ttl      *int64
+	ttl      int64
 	ttlState string
 }
 
@@ -55,8 +55,8 @@ func (triggerChecker *TriggerChecker) InitTriggerChecker() error {
 	}
 
 	triggerChecker.From = triggerChecker.lastCheck.Timestamp
-	if triggerChecker.ttl != nil {
-		triggerChecker.From = triggerChecker.From - *triggerChecker.ttl
+	if triggerChecker.ttl != 0 {
+		triggerChecker.From = triggerChecker.From - triggerChecker.ttl
 	} else {
 		triggerChecker.From = triggerChecker.From - 600
 	}

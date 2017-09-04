@@ -107,7 +107,7 @@ func (triggerChecker *TriggerChecker) hasMetrics(tts *triggerTimeSeries) (hasMet
 
 	if len(tts.Main) == 0 {
 		hasMetrics = false
-		if triggerChecker.ttl != nil && len(triggerChecker.lastCheck.Metrics) != 0 {
+		if triggerChecker.ttl != 0 && len(triggerChecker.lastCheck.Metrics) != 0 {
 			sendEvent = true
 		}
 	}
@@ -115,13 +115,12 @@ func (triggerChecker *TriggerChecker) hasMetrics(tts *triggerTimeSeries) (hasMet
 }
 
 func (triggerChecker *TriggerChecker) checkForNoData(timeSeries *target.TimeSeries, metricLastState moira.MetricState) (bool, *moira.MetricState) {
-	if triggerChecker.ttl == nil {
+	if triggerChecker.ttl == 0 {
 		return false, nil
 	}
 	lastCheckTimeStamp := triggerChecker.lastCheck.Timestamp
-	ttl := *triggerChecker.ttl
 
-	if metricLastState.Timestamp+ttl >= lastCheckTimeStamp {
+	if metricLastState.Timestamp+triggerChecker.ttl >= lastCheckTimeStamp {
 		return false, nil
 	}
 	triggerChecker.Logger.Infof("Metric %s TTL expired for state %v", timeSeries.Name, metricLastState)
@@ -130,7 +129,7 @@ func (triggerChecker *TriggerChecker) checkForNoData(timeSeries *target.TimeSeri
 	}
 	return false, &moira.MetricState{
 		State:       toMetricState(triggerChecker.ttlState),
-		Timestamp:   lastCheckTimeStamp - ttl,
+		Timestamp:   lastCheckTimeStamp - triggerChecker.ttl,
 		Value:       nil,
 		Maintenance: metricLastState.Maintenance,
 		Suppressed:  metricLastState.Suppressed,

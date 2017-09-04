@@ -275,7 +275,7 @@ func TestCheckForNODATA(t *testing.T) {
 	var ttl int64 = 600
 	triggerChecker := TriggerChecker{
 		Logger: logger,
-		ttl:    &ttl,
+		ttl:    ttl,
 		lastCheck: &moira.CheckData{
 			Timestamp: 1000,
 		},
@@ -312,7 +312,7 @@ func TestCheckForNODATA(t *testing.T) {
 			So(needToDeleteMetric, ShouldBeFalse)
 			So(currentState, ShouldResemble, &moira.MetricState{
 				State:       NODATA,
-				Timestamp:   triggerChecker.lastCheck.Timestamp - *triggerChecker.ttl,
+				Timestamp:   triggerChecker.lastCheck.Timestamp - triggerChecker.ttl,
 				Value:       nil,
 				Maintenance: metricLastState.Maintenance,
 				Suppressed:  metricLastState.Suppressed,
@@ -326,7 +326,7 @@ func TestCheckForNODATA(t *testing.T) {
 			So(needToDeleteMetric, ShouldBeFalse)
 			So(currentState, ShouldResemble, &moira.MetricState{
 				State:       triggerChecker.ttlState,
-				Timestamp:   triggerChecker.lastCheck.Timestamp - *triggerChecker.ttl,
+				Timestamp:   triggerChecker.lastCheck.Timestamp - triggerChecker.ttl,
 				Value:       nil,
 				Maintenance: metricLastState.Maintenance,
 				Suppressed:  metricLastState.Suppressed,
@@ -339,7 +339,7 @@ func TestCheckForNODATA(t *testing.T) {
 			So(needToDeleteMetric, ShouldBeFalse)
 			So(currentState, ShouldResemble, &moira.MetricState{
 				State:       triggerChecker.ttlState,
-				Timestamp:   triggerChecker.lastCheck.Timestamp - *triggerChecker.ttl,
+				Timestamp:   triggerChecker.lastCheck.Timestamp - triggerChecker.ttl,
 				Value:       nil,
 				Maintenance: metricLastState.Maintenance,
 				Suppressed:  metricLastState.Suppressed,
@@ -352,7 +352,7 @@ func TestHasMetrics(t *testing.T) {
 	var ttl int64 = 100
 	triggerCheckerWithoutTTL := &TriggerChecker{}
 	triggerCheckerWithTTL := &TriggerChecker{
-		ttl:      &ttl,
+		ttl:      ttl,
 		ttlState: NODATA,
 		lastCheck: &moira.CheckData{
 			Metrics: make(map[string]moira.MetricState),
@@ -429,7 +429,7 @@ func TestCheckErrors(t *testing.T) {
 		isSimple: false,
 		From:     17,
 		Until:    67,
-		ttl:      &ttl,
+		ttl:      ttl,
 		ttlState: NODATA,
 		trigger: &moira.Trigger{
 			Targets: []string{pattern},
@@ -544,7 +544,7 @@ func TestHandleTrigger(t *testing.T) {
 		isSimple: true,
 		From:     3617,
 		Until:    3667,
-		ttl:      &ttl,
+		ttl:      ttl,
 		ttlState: NODATA,
 		trigger: &moira.Trigger{
 			ErrorValue: &errValue,
@@ -636,7 +636,7 @@ func TestHandleTrigger(t *testing.T) {
 		dataBase.EXPECT().RemoveMetricValues(metric, triggerChecker.Until-triggerChecker.Config.MetricsTTL)
 		dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
 			TriggerID: triggerChecker.TriggerID,
-			Timestamp: lastCheck.Timestamp - *triggerChecker.ttl,
+			Timestamp: lastCheck.Timestamp - triggerChecker.ttl,
 			State:     NODATA,
 			OldState:  OK,
 			Metric:    metric,
@@ -647,8 +647,8 @@ func TestHandleTrigger(t *testing.T) {
 		So(checkData, ShouldResemble, moira.CheckData{
 			Metrics: map[string]moira.MetricState{
 				metric: {
-					Timestamp:      lastCheck.Timestamp - *triggerChecker.ttl,
-					EventTimestamp: lastCheck.Timestamp - *triggerChecker.ttl,
+					Timestamp:      lastCheck.Timestamp - triggerChecker.ttl,
+					EventTimestamp: lastCheck.Timestamp - triggerChecker.ttl,
 					State:          NODATA,
 					Value:          nil,
 				},
