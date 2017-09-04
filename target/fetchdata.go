@@ -40,9 +40,18 @@ func createMetricData(metric string, from int64, until int64, retention int64, v
 		StopTime:  int32(until),
 		StepTime:  int32(retention),
 		Values:    values,
-		IsAbsent:  make([]bool, len(values)),
+		IsAbsent:  getIsAbsent(values),
 	}
 	return &expr.MetricData{FetchResponse: fetchResponse}
+}
+func getIsAbsent(values []float64) []bool {
+	isAbsent := make([]bool, len(values))
+	for i, value := range values {
+		if math.IsNaN(value) {
+			isAbsent[i] = true
+		}
+	}
+	return isAbsent
 }
 
 func unpackMetricsValues(metricsData map[string][]*moira.MetricValue, retention int64, from int64, until int64, allowRealTimeAlerting bool) map[string][]float64 {
