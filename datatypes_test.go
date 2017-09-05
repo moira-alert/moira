@@ -173,6 +173,35 @@ func TestMetricState_GetEventTimestamp(t *testing.T) {
 	})
 }
 
+func TestTrigger_IsSimple(t *testing.T) {
+	Convey("Is Simple", t, func() {
+		trigger := Trigger{
+			Patterns: []string{"123"},
+			Targets:  []string{"123"},
+		}
+
+		So(trigger.IsSimple(), ShouldBeTrue)
+	})
+
+	Convey("Not simple", t, func() {
+		triggers := []Trigger{
+			{Patterns: []string{"123", "1233"}},
+			{Patterns: []string{"123", "1233"}, Targets: []string{"123", "1233"}},
+			{Targets: []string{"123", "1233"}},
+			{Patterns: []string{"123"}, Targets: []string{"123", "1233"}},
+			{Patterns: []string{"123?"}, Targets: []string{"123"}},
+			{Patterns: []string{"12*3"}, Targets: []string{"123"}},
+			{Patterns: []string{"1{23"}, Targets: []string{"123"}},
+			{Patterns: []string{"[123"}, Targets: []string{"123"}},
+			{Patterns: []string{"[12*3"}, Targets: []string{"123"}},
+		}
+
+		for _, trigger := range triggers {
+			So(trigger.IsSimple(), ShouldBeFalse)
+		}
+	})
+}
+
 func TestCheckData_GetEventTimestamp(t *testing.T) {
 	Convey("Get event timestamp", t, func() {
 		checkData := CheckData{Timestamp: 800, EventTimestamp: 0}

@@ -19,8 +19,9 @@ func (triggerChecker *TriggerChecker) getTimeSeries(from, until int64) (*trigger
 	}
 	metricsArr := make([]string, 0)
 
+	isSimpleTrigger := triggerChecker.trigger.IsSimple()
 	for targetIndex, tar := range triggerChecker.trigger.Targets {
-		result, err := target.EvaluateTarget(triggerChecker.Database, tar, from, until, triggerChecker.isSimple)
+		result, err := target.EvaluateTarget(triggerChecker.Database, tar, from, until, isSimpleTrigger)
 		if err != nil {
 			return nil, nil, err
 		}

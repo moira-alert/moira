@@ -20,7 +20,6 @@ type TriggerChecker struct {
 	trigger   *moira.Trigger
 	lastCheck *moira.CheckData
 
-	isSimple bool
 	ttl      int64
 	ttlState string
 }
@@ -40,7 +39,6 @@ func (triggerChecker *TriggerChecker) InitTriggerChecker() error {
 	}
 
 	triggerChecker.trigger = &trigger
-	triggerChecker.isSimple = trigger.IsSimpleTrigger
 	triggerChecker.ttl = trigger.TTL
 
 	if trigger.TTLState != nil {

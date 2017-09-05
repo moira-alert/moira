@@ -60,9 +60,9 @@ func TestGetTimeSeries(t *testing.T) {
 
 	triggerChecker := &TriggerChecker{
 		Database: dataBase,
-		isSimple: true,
 		trigger: &moira.Trigger{
-			Targets: []string{pattern},
+			Targets:  []string{pattern},
+			Patterns: []string{pattern},
 		},
 	}
 
@@ -130,6 +130,7 @@ func TestGetTimeSeries(t *testing.T) {
 
 		Convey("Two targets", func() {
 			triggerChecker.trigger.Targets = []string{pattern, addPattern}
+			triggerChecker.trigger.Patterns = []string{pattern, addPattern}
 			dataList[addMetric] = metricValues
 
 			dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
@@ -146,8 +147,8 @@ func TestGetTimeSeries(t *testing.T) {
 				StartTime: int32(from),
 				StopTime:  int32(until),
 				StepTime:  int32(retention),
-				Values:    []float64{0, 1, 2, 3, 4},
-				IsAbsent:  make([]bool, 5),
+				Values:    []float64{0, 1, 2, 3},
+				IsAbsent:  make([]bool, 4),
 			}
 			addFetchResponse := fetchResponse
 			addFetchResponse.Name = addMetric

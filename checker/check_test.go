@@ -426,13 +426,13 @@ func TestCheckErrors(t *testing.T) {
 		Config: &Config{
 			MetricsTTL: 10,
 		},
-		isSimple: false,
 		From:     17,
 		Until:    67,
 		ttl:      ttl,
 		ttlState: NODATA,
 		trigger: &moira.Trigger{
-			Targets: []string{pattern},
+			Targets:  []string{pattern},
+			Patterns: []string{pattern},
 		},
 		lastCheck: &moira.CheckData{
 			State:     EXCEPTION,
@@ -541,7 +541,6 @@ func TestHandleTrigger(t *testing.T) {
 		Config: &Config{
 			MetricsTTL: 3600,
 		},
-		isSimple: true,
 		From:     3617,
 		Until:    3667,
 		ttl:      ttl,

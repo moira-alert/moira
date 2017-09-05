@@ -11,54 +11,51 @@ import (
 
 // Duty hack for moira.Trigger TTL int64 and stored trigger TTL string compatibility
 type triggerStorageElement struct {
-	ID              string              `json:"id"`
-	Name            string              `json:"name"`
-	Desc            *string             `json:"desc,omitempty"`
-	Targets         []string            `json:"targets"`
-	WarnValue       *float64            `json:"warn_value"`
-	ErrorValue      *float64            `json:"error_value"`
-	Tags            []string            `json:"tags"`
-	TTLState        *string             `json:"ttl_state,omitempty"`
-	Schedule        *moira.ScheduleData `json:"sched,omitempty"`
-	Expression      *string             `json:"expr,omitempty"`
-	Patterns        []string            `json:"patterns"`
-	IsSimpleTrigger bool                `json:"is_simple_trigger"`
-	TTL             string              `json:"ttl,omitempty"`
+	ID         string              `json:"id"`
+	Name       string              `json:"name"`
+	Desc       *string             `json:"desc,omitempty"`
+	Targets    []string            `json:"targets"`
+	WarnValue  *float64            `json:"warn_value"`
+	ErrorValue *float64            `json:"error_value"`
+	Tags       []string            `json:"tags"`
+	TTLState   *string             `json:"ttl_state,omitempty"`
+	Schedule   *moira.ScheduleData `json:"sched,omitempty"`
+	Expression *string             `json:"expr,omitempty"`
+	Patterns   []string            `json:"patterns"`
+	TTL        string              `json:"ttl,omitempty"`
 }
 
 func (storageElement *triggerStorageElement) toTrigger() moira.Trigger {
 	return moira.Trigger{
-		ID:              storageElement.ID,
-		Name:            storageElement.Name,
-		Desc:            storageElement.Desc,
-		Targets:         storageElement.Targets,
-		WarnValue:       storageElement.WarnValue,
-		ErrorValue:      storageElement.ErrorValue,
-		Tags:            storageElement.Tags,
-		TTLState:        storageElement.TTLState,
-		Schedule:        storageElement.Schedule,
-		Expression:      storageElement.Expression,
-		Patterns:        storageElement.Patterns,
-		IsSimpleTrigger: storageElement.IsSimpleTrigger,
-		TTL:             getTriggerTTL(storageElement.TTL),
+		ID:         storageElement.ID,
+		Name:       storageElement.Name,
+		Desc:       storageElement.Desc,
+		Targets:    storageElement.Targets,
+		WarnValue:  storageElement.WarnValue,
+		ErrorValue: storageElement.ErrorValue,
+		Tags:       storageElement.Tags,
+		TTLState:   storageElement.TTLState,
+		Schedule:   storageElement.Schedule,
+		Expression: storageElement.Expression,
+		Patterns:   storageElement.Patterns,
+		TTL:        getTriggerTTL(storageElement.TTL),
 	}
 }
 
 func toTriggerStorageElement(trigger *moira.Trigger, triggerID string) *triggerStorageElement {
 	return &triggerStorageElement{
-		ID:              triggerID,
-		Name:            trigger.Name,
-		Desc:            trigger.Desc,
-		Targets:         trigger.Targets,
-		WarnValue:       trigger.WarnValue,
-		ErrorValue:      trigger.ErrorValue,
-		Tags:            trigger.Tags,
-		TTLState:        trigger.TTLState,
-		Schedule:        trigger.Schedule,
-		Expression:      trigger.Expression,
-		Patterns:        trigger.Patterns,
-		IsSimpleTrigger: trigger.IsSimpleTrigger,
-		TTL:             getTriggerTTLString(trigger.TTL),
+		ID:         triggerID,
+		Name:       trigger.Name,
+		Desc:       trigger.Desc,
+		Targets:    trigger.Targets,
+		WarnValue:  trigger.WarnValue,
+		ErrorValue: trigger.ErrorValue,
+		Tags:       trigger.Tags,
+		TTLState:   trigger.TTLState,
+		Schedule:   trigger.Schedule,
+		Expression: trigger.Expression,
+		Patterns:   trigger.Patterns,
+		TTL:        getTriggerTTLString(trigger.TTL),
 	}
 }
 

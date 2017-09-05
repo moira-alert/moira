@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"math"
+	"strings"
 	"time"
 )
 
@@ -99,19 +100,18 @@ type MetricValue struct {
 
 // Trigger represents trigger data object
 type Trigger struct {
-	ID              string        `json:"id"`
-	Name            string        `json:"name"`
-	Desc            *string       `json:"desc,omitempty"`
-	Targets         []string      `json:"targets"`
-	WarnValue       *float64      `json:"warn_value"`
-	ErrorValue      *float64      `json:"error_value"`
-	Tags            []string      `json:"tags"`
-	TTLState        *string       `json:"ttl_state,omitempty"`
-	TTL             int64         `json:"ttl,omitempty"`
-	Schedule        *ScheduleData `json:"sched,omitempty"`
-	Expression      *string       `json:"expression,omitempty"`
-	Patterns        []string      `json:"patterns"`
-	IsSimpleTrigger bool          `json:"is_simple_trigger"`
+	ID         string        `json:"id"`
+	Name       string        `json:"name"`
+	Desc       *string       `json:"desc,omitempty"`
+	Targets    []string      `json:"targets"`
+	WarnValue  *float64      `json:"warn_value"`
+	ErrorValue *float64      `json:"error_value"`
+	Tags       []string      `json:"tags"`
+	TTLState   *string       `json:"ttl_state,omitempty"`
+	TTL        int64         `json:"ttl,omitempty"`
+	Schedule   *ScheduleData `json:"sched,omitempty"`
+	Expression *string       `json:"expression,omitempty"`
+	Patterns   []string      `json:"patterns"`
 }
 
 // TriggerCheck represent trigger data with last check data and check timestamp
@@ -250,4 +250,19 @@ func (checkData CheckData) GetEventTimestamp() int64 {
 		return checkData.Timestamp
 	}
 	return checkData.EventTimestamp
+}
+
+// IsSimple checks triggers patterns
+// If patterns more than one or it contains standard graphite wildcard symbols,
+// when this target can contain more then one metrics, and is it not simple trigger
+func (trigger *Trigger) IsSimple() bool {
+	if len(trigger.Targets) > 1 || len(trigger.Patterns) > 1 {
+		return false
+	}
+	for _, pattern := range trigger.Patterns {
+		if strings.ContainsAny(pattern, "*{?[") {
+			return false
+		}
+	}
+	return true
 }

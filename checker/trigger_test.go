@@ -56,16 +56,15 @@ func TestInitTriggerChecker(t *testing.T) {
 	ttlStateNoData := NODATA
 
 	trigger := moira.Trigger{
-		ID:              "d39b8510-b2f4-448c-b881-824658c58128",
-		Name:            "Time",
-		Targets:         []string{"aliasByNode(Metric.*.time, 1)"},
-		WarnValue:       &warnWalue,
-		ErrorValue:      &errorWalue,
-		Tags:            []string{"tag1", "tag2"},
-		TTLState:        &ttlStateOk,
-		Patterns:        []string{"Egais.elasticsearch.*.*.jvm.gc.collection.time"},
-		TTL:             ttl,
-		IsSimpleTrigger: false,
+		ID:         "d39b8510-b2f4-448c-b881-824658c58128",
+		Name:       "Time",
+		Targets:    []string{"aliasByNode(Metric.*.time, 1)"},
+		WarnValue:  &warnWalue,
+		ErrorValue: &errorWalue,
+		Tags:       []string{"tag1", "tag2"},
+		TTLState:   &ttlStateOk,
+		Patterns:   []string{"Egais.elasticsearch.*.*.jvm.gc.collection.time"},
+		TTL:        ttl,
 	}
 
 	lastCheck := moira.CheckData{
@@ -111,7 +110,6 @@ func TestInitTriggerChecker(t *testing.T) {
 
 		expectedTriggerChecker := triggerChecker
 		expectedTriggerChecker.trigger = &trigger
-		expectedTriggerChecker.isSimple = trigger.IsSimpleTrigger
 		expectedTriggerChecker.ttl = trigger.TTL
 		expectedTriggerChecker.ttlState = *trigger.TTLState
 		expectedTriggerChecker.lastCheck = &lastCheck
@@ -127,7 +125,6 @@ func TestInitTriggerChecker(t *testing.T) {
 
 		expectedTriggerChecker := triggerChecker
 		expectedTriggerChecker.trigger = &trigger
-		expectedTriggerChecker.isSimple = trigger.IsSimpleTrigger
 		expectedTriggerChecker.ttl = trigger.TTL
 		expectedTriggerChecker.ttlState = *trigger.TTLState
 		expectedTriggerChecker.lastCheck = &moira.CheckData{
@@ -150,7 +147,6 @@ func TestInitTriggerChecker(t *testing.T) {
 
 		expectedTriggerChecker := triggerChecker
 		expectedTriggerChecker.trigger = &trigger
-		expectedTriggerChecker.isSimple = trigger.IsSimpleTrigger
 		expectedTriggerChecker.ttl = 0
 		expectedTriggerChecker.ttlState = ttlStateNoData
 		expectedTriggerChecker.lastCheck = &moira.CheckData{
@@ -170,7 +166,6 @@ func TestInitTriggerChecker(t *testing.T) {
 
 		expectedTriggerChecker := triggerChecker
 		expectedTriggerChecker.trigger = &trigger
-		expectedTriggerChecker.isSimple = trigger.IsSimpleTrigger
 		expectedTriggerChecker.ttl = 0
 		expectedTriggerChecker.ttlState = ttlStateNoData
 		expectedTriggerChecker.lastCheck = &lastCheck

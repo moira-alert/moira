@@ -9,7 +9,6 @@ import (
 	"github.com/moira-alert/moira-alert/expression"
 	"github.com/moira-alert/moira-alert/target"
 	"net/http"
-	"strings"
 	"time"
 )
 
@@ -62,10 +61,6 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 }
 
 func resolvePatterns(request *http.Request, trigger *Trigger, expressionValues *expression.TriggerExpression) error {
-	trigger.IsSimpleTrigger = true
-	if len(trigger.Targets) > 1 {
-		trigger.IsSimpleTrigger = false
-	}
 	now := time.Now().Unix()
 	targetNum := 1
 	trigger.Patterns = make([]string, 0)
@@ -78,9 +73,6 @@ func resolvePatterns(request *http.Request, trigger *Trigger, expressionValues *
 			return err
 		}
 		trigger.Patterns = append(trigger.Patterns, result.Patterns...)
-		if trigger.IsSimpleTrigger && !isSimpleTarget(result.Patterns) {
-			trigger.IsSimpleTrigger = false
-		}
 		for _, timeSeries := range result.TimeSeries {
 			timeSeriesNames[timeSeries.Name] = true
 		}
@@ -94,19 +86,6 @@ func resolvePatterns(request *http.Request, trigger *Trigger, expressionValues *
 	}
 	middleware.SetTimeSeriesNames(request, timeSeriesNames)
 	return nil
-}
-
-func isSimpleTarget(patterns []string) bool {
-	if len(patterns) > 1 {
-		return false
-	}
-
-	for _, pattern := range patterns {
-		if strings.ContainsAny(pattern, "*{?[") {
-			return false
-		}
-	}
-	return true
 }
 
 func (*Trigger) Render(w http.ResponseWriter, r *http.Request) error {
