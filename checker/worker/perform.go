@@ -2,6 +2,7 @@ package worker
 
 import (
 	"github.com/moira-alert/moira-alert/checker"
+	"runtime/debug"
 	"sync"
 	"time"
 )
@@ -56,7 +57,13 @@ func (worker *Checker) handleTriggerToCheck(triggerID string) error {
 }
 
 func (worker *Checker) checkTrigger(triggerID string) error {
-	defer worker.Database.DeleteTriggerCheckLock(triggerID)
+	defer func() {
+		if r := recover(); r != nil {
+			worker.Logger.Errorf("Panic while check trigger %s: %s", triggerID, debug.Stack())
+		}
+		worker.Database.DeleteTriggerCheckLock(triggerID)
+	}()
+
 	triggerChecker := checker.TriggerChecker{
 		TriggerID: triggerID,
 		Database:  worker.Database,
