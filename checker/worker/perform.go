@@ -59,7 +59,7 @@ func (worker *Checker) handleTriggerToCheck(triggerID string) error {
 func (worker *Checker) checkTrigger(triggerID string) error {
 	defer func() {
 		if r := recover(); r != nil {
-			worker.Logger.Errorf("Panic while check trigger %s: message: stack: %s", triggerID, r, debug.Stack())
+			worker.Logger.Errorf("Panic while check trigger %s: message: %s stack: %s", triggerID, r, debug.Stack())
 		}
 		worker.Database.DeleteTriggerCheckLock(triggerID)
 	}()
