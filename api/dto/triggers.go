@@ -102,7 +102,7 @@ func isSimpleTarget(patterns []string) bool {
 	}
 
 	for _, pattern := range patterns {
-		if strings.ContainsAny(pattern, "*{") {
+		if strings.ContainsAny(pattern, "*{?[") {
 			return false
 		}
 	}
