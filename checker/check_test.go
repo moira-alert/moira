@@ -458,7 +458,7 @@ func TestCheckErrors(t *testing.T) {
 			Metrics:        triggerChecker.lastCheck.Metrics,
 			State:          EXCEPTION,
 			Timestamp:      triggerChecker.Until,
-			EventTimestamp: triggerChecker.Until,
+			EventTimestamp: 0,
 			Score:          100000,
 			Message:        "Trigger evaluation exception",
 		}).Return(nil)
