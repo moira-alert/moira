@@ -209,7 +209,7 @@ func TestCompareChecks(t *testing.T) {
 			actual, err := triggerChecker.compareChecks(currentCheck)
 
 			So(err, ShouldBeNil)
-			currentCheck.EventTimestamp = currentCheck.Timestamp
+			currentCheck.EventTimestamp = lastCheck.EventTimestamp
 			So(actual, ShouldResemble, currentCheck)
 		})
 
