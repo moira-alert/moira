@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/database"
+	"github.com/moira-alert/moira-alert/metrics/graphite"
 	"time"
 )
 
@@ -13,6 +14,7 @@ type TriggerChecker struct {
 	Database  moira.Database
 	Logger    moira.Logger
 	Config    *Config
+	Metrics   *graphite.CheckerMetrics
 
 	From  int64
 	Until int64

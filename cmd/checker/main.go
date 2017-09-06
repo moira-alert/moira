@@ -16,6 +16,7 @@ import (
 	"github.com/moira-alert/moira-alert/cmd"
 	"github.com/moira-alert/moira-alert/database/redis"
 	"github.com/moira-alert/moira-alert/logging/go-logging"
+	"github.com/moira-alert/moira-alert/metrics/graphite"
 	"github.com/moira-alert/moira-alert/metrics/graphite/go-metrics"
 )
 
@@ -64,14 +65,14 @@ func main() {
 	databaseSettings := config.Redis.GetSettings()
 	database := redis.NewDatabase(logger, databaseSettings)
 
-	checkerSettings := config.Checker.getSettings()
-	if triggerID != nil && *triggerID != "" {
-		checkSingleTrigger(database, logger, checkerSettings)
-	}
-
 	checkerMetrics := metrics.ConfigureCheckerMetrics("checker")
 	if err = metrics.Init(config.Graphite.GetSettings()); err != nil {
 		logger.Error(err)
+	}
+
+	checkerSettings := config.Checker.getSettings()
+	if triggerID != nil && *triggerID != "" {
+		checkSingleTrigger(database, logger, checkerMetrics, checkerSettings)
 	}
 	checkerWorker := &worker.Checker{
 		Logger:   logger,
@@ -92,12 +93,13 @@ func main() {
 	logger.Infof("Moira Checker stopped. Version: %s", Version)
 }
 
-func checkSingleTrigger(database moira.Database, logger moira.Logger, settings *checker.Config) {
+func checkSingleTrigger(database moira.Database, logger moira.Logger, metrics *graphite.CheckerMetrics, settings *checker.Config) {
 	triggerChecker := checker.TriggerChecker{
 		TriggerID: *triggerID,
 		Database:  database,
 		Logger:    logger,
 		Config:    settings,
+		Metrics:   metrics,
 	}
 
 	err := triggerChecker.InitTriggerChecker()

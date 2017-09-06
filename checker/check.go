@@ -16,6 +16,8 @@ func (triggerChecker *TriggerChecker) Check() error {
 	triggerChecker.Logger.Debugf("Checking trigger %s", triggerChecker.TriggerID)
 	checkData, err := triggerChecker.handleTrigger()
 	if err != nil {
+		triggerChecker.Metrics.CheckError.Mark(1)
+		triggerChecker.Logger.Errorf("Trigger %s check failed: %v", triggerChecker.TriggerID, err)
 		if err == ErrTriggerHasNoMetrics {
 			checkData.State = triggerChecker.ttlState
 			checkData.Message = "Trigger has no metrics"

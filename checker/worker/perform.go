@@ -34,8 +34,15 @@ func (worker *Checker) needHandleTrigger(triggerID string, cacheTTL time.Duratio
 }
 
 func (worker *Checker) handle(triggerID string, wg *sync.WaitGroup) {
-	defer wg.Done()
+	defer func() {
+		if r := recover(); r != nil {
+			worker.Metrics.HandleError.Mark(1)
+			worker.Logger.Errorf("Panic while perform trigger %s: message: '%s' stack: %s", triggerID, r, debug.Stack())
+		}
+		defer wg.Done()
+	}()
 	if err := worker.handleTriggerToCheck(triggerID); err != nil {
+		worker.Metrics.HandleError.Mark(1)
 		worker.Logger.Errorf("Failed to perform trigger: %s error: %s", triggerID, err.Error())
 	}
 }
@@ -49,7 +56,6 @@ func (worker *Checker) handleTriggerToCheck(triggerID string) error {
 		start := time.Now()
 		defer worker.Metrics.TriggerCheckTime.UpdateSince(start)
 		if err := worker.checkTrigger(triggerID); err != nil {
-			worker.Metrics.CheckerError.Mark(1)
 			return err
 		}
 	}
@@ -57,18 +63,13 @@ func (worker *Checker) handleTriggerToCheck(triggerID string) error {
 }
 
 func (worker *Checker) checkTrigger(triggerID string) error {
-	defer func() {
-		if r := recover(); r != nil {
-			worker.Logger.Errorf("Panic while check trigger %s: message: '%s' stack: %s", triggerID, r, debug.Stack())
-		}
-		worker.Database.DeleteTriggerCheckLock(triggerID)
-	}()
-
+	defer worker.Database.DeleteTriggerCheckLock(triggerID)
 	triggerChecker := checker.TriggerChecker{
 		TriggerID: triggerID,
 		Database:  worker.Database,
 		Logger:    worker.Logger,
 		Config:    worker.Config,
+		Metrics:   worker.Metrics,
 	}
 
 	err := triggerChecker.InitTriggerChecker()

@@ -2,6 +2,7 @@ package graphite
 
 // CheckerMetrics is a collection of metrics used in checker
 type CheckerMetrics struct {
-	CheckerError     Meter
+	CheckError       Meter
+	HandleError      Meter
 	TriggerCheckTime Timer
 }

@@ -5,6 +5,7 @@ import (
 	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira-alert/metrics/graphite/go-metrics"
 	"github.com/moira-alert/moira-alert/mock/moira-alert"
 	"github.com/moira-alert/moira-alert/target"
 	"github.com/op/go-logging"
@@ -18,9 +19,10 @@ func TestGetTimeSeriesState(t *testing.T) {
 	var warnValue float64 = 10
 	var errValue float64 = 20
 	triggerChecker := TriggerChecker{
-		Logger: logger,
-		Until:  67,
-		From:   17,
+		Logger:  logger,
+		Metrics: metrics.ConfigureCheckerMetrics("checker"),
+		Until:   67,
+		From:    17,
 		trigger: &moira.Trigger{
 			WarnValue:  &warnValue,
 			ErrorValue: &errValue,
@@ -274,8 +276,9 @@ func TestCheckForNODATA(t *testing.T) {
 
 	var ttl int64 = 600
 	triggerChecker := TriggerChecker{
-		Logger: logger,
-		ttl:    ttl,
+		Metrics: metrics.ConfigureCheckerMetrics("checker"),
+		Logger:  logger,
+		ttl:     ttl,
 		lastCheck: &moira.CheckData{
 			Timestamp: 1000,
 		},
@@ -426,6 +429,7 @@ func TestCheckErrors(t *testing.T) {
 		Config: &Config{
 			MetricsTTL: 10,
 		},
+		Metrics:  metrics.ConfigureCheckerMetrics("checker"),
 		From:     17,
 		Until:    67,
 		ttl:      ttl,
