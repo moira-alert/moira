@@ -249,7 +249,7 @@
 		{
 			"checksumSHA1": "Sh9gSysXXXM1RDCFjI/hamW1FNY=",
 			"origin": "github.com/mitchellh/hashstructure",
-			"revision": "c0bec0e642447928cdc036c11ce9a8f57a890b33",
+			"revision": "2bca23e0e452137f789efbc8610126fd8b94f73b",
 			"revisionTime": "2017-04-27T09:41:43Z"
 		},
 		{
@@ -379,14 +379,14 @@
 		{
 			"checksumSHA1": "t8jzPFIv4DNACv+cuZoigNmjPLQ=",
 			"origin": "github.com/technoweenie/multipartstreamer",
-			"revision": "c0bec0e642447928cdc036c11ce9a8f57a890b33",
+			"revision": "a90a01d73ae432e2611d178c18367fbaa13e0154",
 			"revisionTime": "2017-04-27T09:41:43Z"
 		},
 		{
 			"checksumSHA1": "ZybgW+BTiGsCwdXXgNbPFG46OpA=",
 			"origin": "github.com/tucnak/telebot",
-			"revision": "c0bec0e642447928cdc036c11ce9a8f57a890b33",
-			"revisionTime": "2017-04-27T09:41:43Z"
+			"revision": "6360f1f7d9464545d98f2b478cd83240a8ced98e",
+			"revisionTime": "2016-11-10T20:04:50Z"
 		},
 		{
 			"checksumSHA1": "tsuv2oy9wMYxdV5YtgIHONPUiv0=",
@@ -422,7 +422,7 @@
 		{
 			"checksumSHA1": "AzeP9gpBdHRcPQ5ozBpkBcqfInk=",
 			"origin": "gopkg.in/telegram-bot-api.v4",
-			"revision": "c0bec0e642447928cdc036c11ce9a8f57a890b33",
+			"revision": "0a57807db79efce7f6719fbb2c0e0f83fda79aec",
 			"revisionTime": "2017-04-27T09:41:43Z"
 		},
 		{
