@@ -20,7 +20,10 @@ func (triggerChecker *TriggerChecker) Check() error {
 		triggerChecker.Logger.Errorf("Trigger %s check failed: %v", triggerChecker.TriggerID, err)
 		if err == ErrTriggerHasNoMetrics {
 			checkData.State = triggerChecker.ttlState
-			checkData.Message = "Trigger has no metrics"
+			checkData.Message = ErrTriggerHasNoMetrics.Error()
+		} else if target.IsErrUnknownFunction(err) {
+			checkData.State = triggerChecker.ttlState
+			checkData.Message = err.Error()
 		} else {
 			checkData.State = EXCEPTION
 			checkData.Message = "Trigger evaluation exception"
