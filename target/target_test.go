@@ -6,10 +6,28 @@ import (
 	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira-alert/database/redis"
 	"github.com/moira-alert/moira-alert/mock/moira-alert"
+	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
+	"time"
 )
+
+func Test1(t *testing.T) {
+	log, _ := logging.GetLogger("test")
+	db := redis.NewDatabase(log, redis.Config{Host: "vm-moira-r1.dev.kontur.ru", Port: "6379"})
+
+	now := time.Now().Unix()
+	from := now - 600
+
+	k, err := EvaluateTarget(db, "aliasByNode(reduceSeries(mapSeries(DevOps.system.vm-d*.memory.{MemAvailable,MemTotal}, 2), 'asPercent', 4, 'MemAvailable', 'MemTotal'), 2)", from, now, false)
+	log.Info(k)
+	log.Info(err)
+
+	//k, _ := EvaluateTarget(db, "gofra.import.new", from, now, false)
+	//log.Info(k)
+}
 
 func TestEvaluateTarget(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
@@ -74,7 +92,7 @@ func TestEvaluateTarget(t *testing.T) {
 			dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 			dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
 			result, err := EvaluateTarget(dataBase, "aliasByNoe(super.puper.pattern, 2)", from, until, true)
-			So(err, ShouldResemble, ErrEvaluateTarget)
+			So(err.Error(), ShouldResemble, "unknown function in evalExpr: \"aliasByNoe\"")
 			So(result, ShouldBeNil)
 		})
 	})

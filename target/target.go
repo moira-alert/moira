@@ -4,10 +4,16 @@ import (
 	"fmt"
 	"github.com/go-graphite/carbonapi/expr"
 	"github.com/moira-alert/moira-alert"
+	"strings"
 )
 
 // ErrEvaluateTarget represent evaluation error by carbon-api eval method
 var ErrEvaluateTarget = fmt.Errorf("Invalid graphite targets")
+
+// IsErrUnknownFunction checks error for carbonapi.errUnknownFunction
+func IsErrUnknownFunction(err error) bool {
+	return strings.HasPrefix(err.Error(), "unknown function in evalExpr")
+}
 
 // EvaluationResult represents evaluation target result and contains TimeSeries list, Pattern list and metric lists appropriate to given target
 type EvaluationResult struct {
@@ -46,6 +52,9 @@ func EvaluateTarget(database moira.Database, target string, from int64, until in
 		} else {
 			metricDatas, err := expr.EvalExpr(expr2, int32(from), int32(until), metricsMap)
 			if err != nil && err != expr.ErrSeriesDoesNotExist {
+				if IsErrUnknownFunction(err) {
+					return nil, err
+				}
 				return nil, ErrEvaluateTarget
 			}
 			for _, metricData := range metricDatas {

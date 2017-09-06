@@ -36,7 +36,7 @@ func saveTrigger(writer http.ResponseWriter, request *http.Request) {
 	triggerID := middleware.GetTriggerID(request)
 	trigger := &dto.Trigger{}
 	if err := render.Bind(request, trigger); err != nil {
-		if _, ok := err.(expression.ErrInvalidExpression); ok || err == target.ErrEvaluateTarget {
+		if _, ok := err.(expression.ErrInvalidExpression); ok || err == target.ErrEvaluateTarget || target.IsErrUnknownFunction(err) {
 			render.Render(writer, request, api.ErrorInvalidRequest(err))
 		} else {
 			render.Render(writer, request, api.ErrorInternalServer(err))
