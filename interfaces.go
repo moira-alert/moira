@@ -46,8 +46,7 @@ type Database interface {
 	GetContact(contactID string) (ContactData, error)
 	GetContacts(contactIDs []string) ([]*ContactData, error)
 	GetAllContacts() ([]*ContactData, error)
-	WriteContact(contact *ContactData) error
-	RemoveContact(contactID string, userLogin string) error
+	RemoveContact(contactID string) error
 	SaveContact(contact *ContactData) error
 	GetUserContactIDs(userLogin string) ([]string, error)
 

@@ -2,8 +2,6 @@
 package redis
 
 import (
-	"encoding/json"
-	"fmt"
 	"github.com/moira-alert/moira-alert"
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
@@ -20,34 +18,6 @@ func TestNotifierDataBase(t *testing.T) {
 		/*	_, err := dataBase.FetchNotificationEvent()
 			So(err, ShouldBeError)
 			So(err, ShouldResemble, database.ErrNil)*/
-	})
-
-	Convey("Contact manipulation", t, func() {
-		Convey("should throw error when no connection", func() {
-			db := NewDatabase(logger, config)
-			dataBase.pool.TestOnBorrow(dataBase.pool.Get(), time.Now())
-			_, err := db.GetAllContacts()
-			So(err, ShouldNotBeNil)
-		})
-
-		Convey("should save contact", func() {
-			db := NewDatabase(logger, config)
-			db.pool = dataBase.pool
-			contact := moira.ContactData{
-				ID:    "id",
-				Type:  "telegram",
-				Value: "contact",
-			}
-			err := db.WriteContact(&contact)
-			So(err, ShouldBeNil)
-		})
-
-		Convey("shouldn't throw error when connection exists", func() {
-			db := NewDatabase(logger, config)
-			db.pool = dataBase.pool
-			_, err := db.GetAllContacts()
-			So(err, ShouldBeNil)
-		})
 	})
 
 	Convey("Try get trigger by empty id, should be error", t, func() {
@@ -83,71 +53,7 @@ func TestNotifierDataBase(t *testing.T) {
 	})
 }
 
-func (connector *DbConnector) fillDataBase() {
-	c := connector.pool.Get()
-	defer c.Close()
-	c.Do("FLUSHDB")
-	for _, testContact := range contacts {
-		testContactString, _ := json.Marshal(testContact)
-		c.Do("SET", fmt.Sprintf("moira-contact:%s", testContact.ID), testContactString)
-	}
-	for _, testSubscription := range subscriptions {
-		testSubscriptionString, _ := json.Marshal(testSubscription)
-		c.Do("SET", fmt.Sprintf("moira-subscription:%s", testSubscription.ID), testSubscriptionString)
-		c.Do("SADD", fmt.Sprintf("moira-tag-subscriptions:%s", testSubscription.Tags[0]), testSubscription.ID)
-	}
-	for _, testTrigger := range triggers {
-		testTriggerString, _ := json.Marshal(testTrigger)
-		c.Do("SET", fmt.Sprintf("moira-trigger:%s", testTrigger.ID), testTriggerString)
-		for _, tag := range testTrigger.Tags {
-			c.Do("SADD", fmt.Sprintf("moira-trigger-tags:%s", testTrigger.ID), tag)
-		}
-	}
-}
-
-var contacts = []moira.ContactData{
-	{
-		ID:    "ContactID-000000000000001",
-		Type:  "email",
-		Value: "mail1@example.com",
-	},
-	{
-		ID:    "ContactID-000000000000002",
-		Type:  "email",
-		Value: "failed@example.com",
-	},
-	{
-		ID:    "ContactID-000000000000003",
-		Type:  "email",
-		Value: "mail3@example.com",
-	},
-	{
-		ID:    "ContactID-000000000000004",
-		Type:  "email",
-		Value: "mail4@example.com",
-	},
-	{
-		ID:    "ContactID-000000000000005",
-		Type:  "slack",
-		Value: "#devops",
-	},
-	{
-		ID:    "ContactID-000000000000006",
-		Type:  "unknown",
-		Value: "no matter",
-	},
-	{
-		ID:    "ContactID-000000000000007",
-		Type:  "slack",
-		Value: "#devops",
-	},
-	{
-		ID:    "ContactID-000000000000008",
-		Type:  "slack",
-		Value: "#devops",
-	},
-}
-
+/*
 var triggers = []moira.TriggerData{
 	{
 		ID:         "triggerID-0000000000001",
@@ -371,4 +277,4 @@ var subscriptions = []moira.SubscriptionData{
 		Contacts:          []string{contacts[0].ID},
 		ThrottlingEnabled: false,
 	},
-}
+}*/

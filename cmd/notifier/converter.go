@@ -23,7 +23,7 @@ func convertDatabase(db moira.Database) {
 	for _, contact := range res {
 		if contact.Type == "telegram" && strings.HasPrefix(contact.Value, "@") {
 			contact.Value = fmt.Sprintf("#%v", contact.Value[1:])
-			db.WriteContact(contact)
+			db.SaveContact(contact)
 		}
 	}
 	os.Exit(0)

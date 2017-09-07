@@ -6,6 +6,7 @@ import (
 
 	"github.com/garyburd/redigo/redis"
 	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira-alert/database"
 	"github.com/moira-alert/moira-alert/database/redis/reply"
 )
 
@@ -66,6 +67,10 @@ func (connector *DbConnector) GetAllContacts() ([]*moira.ContactData, error) {
 
 // SaveContact writes contact data and updates user contacts
 func (connector *DbConnector) SaveContact(contact *moira.ContactData) error {
+	existing, getContactErr := connector.GetContact(contact.ID)
+	if getContactErr != nil && getContactErr != database.ErrNil {
+		return getContactErr
+	}
 	contactString, err := json.Marshal(contact)
 	if err != nil {
 		return err
@@ -76,6 +81,9 @@ func (connector *DbConnector) SaveContact(contact *moira.ContactData) error {
 
 	c.Send("MULTI")
 	c.Send("SET", moiraContact(contact.ID), contactString)
+	if getContactErr != database.ErrNil && contact.User != existing.User {
+		c.Send("SREM", moiraUserContacts(existing.User), contact.ID)
+	}
 	c.Send("SADD", moiraUserContacts(contact.User), contact.ID)
 	_, err = c.Do("EXEC")
 	if err != nil {
@@ -85,31 +93,20 @@ func (connector *DbConnector) SaveContact(contact *moira.ContactData) error {
 }
 
 // RemoveContact deletes contact data and contactID from user contacts
-func (connector *DbConnector) RemoveContact(contactID string, userLogin string) error {
+func (connector *DbConnector) RemoveContact(contactID string) error {
+	existing, err := connector.GetContact(contactID)
+	if err != nil && err != database.ErrNil {
+		return err
+	}
 	c := connector.pool.Get()
 	defer c.Close()
 
 	c.Send("MULTI")
 	c.Send("DEL", moiraContact(contactID))
-	c.Send("SREM", moiraUserContacts(userLogin), contactID)
-	_, err := c.Do("EXEC")
+	c.Send("SREM", moiraUserContacts(existing.User), contactID)
+	_, err = c.Do("EXEC")
 	if err != nil {
 		return fmt.Errorf("Failed to EXEC: %s", err.Error())
-	}
-	return nil
-}
-
-// WriteContact writes contact data
-func (connector *DbConnector) WriteContact(contact *moira.ContactData) error {
-	bytes, err := json.Marshal(contact)
-	if err != nil {
-		return err
-	}
-	c := connector.pool.Get()
-	defer c.Close()
-	_, err = c.Do("SET", moiraContact(contact.ID), bytes)
-	if err != nil {
-		return fmt.Errorf("Failed to set contact data json %s, error: %s", string(bytes), err)
 	}
 	return nil
 }

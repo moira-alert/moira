@@ -496,15 +496,15 @@ func (_mr *MockDatabaseMockRecorder) PushNotificationEvent(arg0, arg1 interface{
 }
 
 // RemoveContact mocks base method
-func (_m *MockDatabase) RemoveContact(_param0 string, _param1 string) error {
-	ret := _m.ctrl.Call(_m, "RemoveContact", _param0, _param1)
+func (_m *MockDatabase) RemoveContact(_param0 string) error {
+	ret := _m.ctrl.Call(_m, "RemoveContact", _param0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // RemoveContact indicates an expected call of RemoveContact
-func (_mr *MockDatabaseMockRecorder) RemoveContact(arg0, arg1 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "RemoveContact", arg0, arg1)
+func (_mr *MockDatabaseMockRecorder) RemoveContact(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "RemoveContact", arg0)
 }
 
 // RemoveMetricValues mocks base method
@@ -735,18 +735,6 @@ func (_m *MockDatabase) UpdateMetricsHeartbeat() error {
 // UpdateMetricsHeartbeat indicates an expected call of UpdateMetricsHeartbeat
 func (_mr *MockDatabaseMockRecorder) UpdateMetricsHeartbeat() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "UpdateMetricsHeartbeat")
-}
-
-// WriteContact mocks base method
-func (_m *MockDatabase) WriteContact(_param0 *moira_alert.ContactData) error {
-	ret := _m.ctrl.Call(_m, "WriteContact", _param0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// WriteContact indicates an expected call of WriteContact
-func (_mr *MockDatabaseMockRecorder) WriteContact(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "WriteContact", arg0)
 }
 
 // WriteSubscriptions mocks base method

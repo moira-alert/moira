@@ -62,7 +62,7 @@ func RemoveContact(database moira.Database, contactID string, userLogin string) 
 		}
 	}
 
-	if err := database.RemoveContact(contactID, userLogin); err != nil {
+	if err := database.RemoveContact(contactID); err != nil {
 		return api.ErrorInternalServer(err)
 	}
 
