@@ -16,15 +16,17 @@ func (triggerChecker *TriggerChecker) Check() error {
 	triggerChecker.Logger.Debugf("Checking trigger %s", triggerChecker.TriggerID)
 	checkData, err := triggerChecker.handleTrigger()
 	if err != nil {
-		triggerChecker.Metrics.CheckError.Mark(1)
-		triggerChecker.Logger.Errorf("Trigger %s check failed: %v", triggerChecker.TriggerID, err)
 		if err == ErrTriggerHasNoMetrics {
+			triggerChecker.Logger.Warningf("Trigger %s: %s", triggerChecker.TriggerID, err.Error())
 			checkData.State = triggerChecker.ttlState
 			checkData.Message = ErrTriggerHasNoMetrics.Error()
 		} else if target.IsErrUnknownFunction(err) {
-			checkData.State = triggerChecker.ttlState
+			triggerChecker.Logger.Warningf("Trigger %s: %s", triggerChecker.TriggerID, err.Error())
+			checkData.State = EXCEPTION
 			checkData.Message = err.Error()
 		} else {
+			triggerChecker.Metrics.CheckError.Mark(1)
+			triggerChecker.Logger.Errorf("Trigger %s check failed: %v", triggerChecker.TriggerID, err)
 			checkData.State = EXCEPTION
 			checkData.Message = "Trigger evaluation exception"
 		}
