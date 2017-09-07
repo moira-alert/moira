@@ -11,8 +11,7 @@ func TestInitialization(t *testing.T) {
 	Convey("Initialization methods", t, func() {
 		mockCtrl := gomock.NewController(t)
 		logger := mock_moira_alert.NewMockLogger(mockCtrl)
-		config := Config{}
-		database := NewDatabase(logger, config)
+		database := NewDatabase(logger, emptyConfig)
 		So(database, ShouldNotBeEmpty)
 		_, err := database.pool.Dial()
 		So(err, ShouldNotBeNil)

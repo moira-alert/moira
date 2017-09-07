@@ -379,12 +379,11 @@ func (_mr *MockDatabaseMockRecorder) GetTrigger(arg0 interface{}) *gomock.Call {
 }
 
 // GetTriggerCheckIDs mocks base method
-func (_m *MockDatabase) GetTriggerCheckIDs(_param0 []string, _param1 bool) ([]string, int64, error) {
+func (_m *MockDatabase) GetTriggerCheckIDs(_param0 []string, _param1 bool) ([]string, error) {
 	ret := _m.ctrl.Call(_m, "GetTriggerCheckIDs", _param0, _param1)
 	ret0, _ := ret[0].([]string)
-	ret1, _ := ret[1].(int64)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // GetTriggerCheckIDs indicates an expected call of GetTriggerCheckIDs

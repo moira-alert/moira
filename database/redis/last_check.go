@@ -42,7 +42,9 @@ func (connector *DbConnector) SetTriggerLastCheck(triggerID string, checkData *m
 	return nil
 }
 
-// SetTriggerCheckMetricsMaintenance sets to given metrics throttling timestamps, if during the update lastCheck was updated, try update again
+// SetTriggerCheckMetricsMaintenance sets to given metrics throttling timestamps,
+// If during the update lastCheck was updated from another place, try update again
+// If CheckData does not contain one of given metrics it will ignore this metric
 func (connector *DbConnector) SetTriggerCheckMetricsMaintenance(triggerID string, metrics map[string]int64) error {
 	c := connector.pool.Get()
 	defer c.Close()
@@ -63,7 +65,7 @@ func (connector *DbConnector) SetTriggerCheckMetricsMaintenance(triggerID string
 			for metric, value := range metrics {
 				data, ok := metricsCheck[metric]
 				if !ok {
-					data = moira.MetricState{}
+					continue
 				}
 				data.Maintenance = value
 				metricsCheck[metric] = data
@@ -89,7 +91,7 @@ func (connector *DbConnector) SetTriggerCheckMetricsMaintenance(triggerID string
 
 // GetTriggerCheckIDs gets checked triggerIDs, sorted from max to min check score and filtered by given tags
 // If onlyErrors return only triggerIDs with score > 0
-func (connector *DbConnector) GetTriggerCheckIDs(tagNames []string, onlyErrors bool) ([]string, int64, error) {
+func (connector *DbConnector) GetTriggerCheckIDs(tagNames []string, onlyErrors bool) ([]string, error) {
 	c := connector.pool.Get()
 	defer c.Close()
 	c.Send("MULTI")
@@ -102,11 +104,11 @@ func (connector *DbConnector) GetTriggerCheckIDs(tagNames []string, onlyErrors b
 	}
 	rawResponse, err := redis.Values(c.Do("EXEC"))
 	if err != nil {
-		return nil, 0, err
+		return nil, err
 	}
 	triggerIDs, err := redis.Strings(rawResponse[0], nil)
 	if err != nil {
-		return nil, 0, fmt.Errorf("Failed to retrieve triggers: %s", err.Error())
+		return nil, fmt.Errorf("Failed to retrieve triggers: %s", err.Error())
 	}
 
 	triggerIDsByTags := make([]map[string]bool, 0)
@@ -116,7 +118,7 @@ func (connector *DbConnector) GetTriggerCheckIDs(tagNames []string, onlyErrors b
 			if err == database.ErrNil {
 				continue
 			}
-			return nil, 0, fmt.Errorf("Failed to retrieve tags triggers: %s", err.Error())
+			return nil, fmt.Errorf("Failed to retrieve tags triggers: %s", err.Error())
 		}
 
 		triggerIDsMap := make(map[string]bool)
@@ -139,7 +141,7 @@ func (connector *DbConnector) GetTriggerCheckIDs(tagNames []string, onlyErrors b
 			total = append(total, triggerID)
 		}
 	}
-	return total, int64(len(total)), nil
+	return total, nil
 }
 
 var moiraBadStateTriggers = "moira-bad-state-triggers"

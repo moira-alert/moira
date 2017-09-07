@@ -1,12 +1,12 @@
 package redis
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
 
-	"fmt"
 	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/database"
 )
@@ -296,12 +296,6 @@ func TestErrorConnection(t *testing.T) {
 		So(actual5, ShouldHaveLength, 0)
 		So(err, ShouldNotBeNil)
 	})
-}
-
-func (connector *DbConnector) flush() {
-	c := connector.pool.Get()
-	defer c.Close()
-	c.Do("FLUSHDB")
 }
 
 var user1Contacts = []*moira.ContactData{

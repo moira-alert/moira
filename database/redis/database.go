@@ -71,3 +71,10 @@ func (connector *DbConnector) manageSubscriptions(psc redis.PubSubConn) <-chan [
 	}()
 	return dataChan
 }
+
+// CLEAN DATABASE! USE IT ONLY FOR TESTING!!!
+func (connector *DbConnector) flush() {
+	c := connector.pool.Get()
+	defer c.Close()
+	c.Do("FLUSHDB")
+}

@@ -40,10 +40,11 @@ func GetAllTriggers(database moira.Database) (*dto.TriggersList, *api.ErrorRespo
 
 // GetTriggerPage gets trigger page and filter trigger by tags and errors
 func GetTriggerPage(database moira.Database, page int64, size int64, onlyErrors bool, filterTags []string) (*dto.TriggersList, *api.ErrorResponse) {
-	triggerIDs, total, err := database.GetTriggerCheckIDs(filterTags, onlyErrors)
+	triggerIDs, err := database.GetTriggerCheckIDs(filterTags, onlyErrors)
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
+	total := int64(len(triggerIDs))
 	triggerIDs = getTriggerIdsRange(triggerIDs, total, page, size)
 	triggerChecks, err := database.GetTriggerChecks(triggerIDs)
 	if err != nil {

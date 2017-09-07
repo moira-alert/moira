@@ -143,7 +143,7 @@ func TestGetTriggerPage(t *testing.T) {
 	Convey("Has tags and only errors", t, func() {
 		tags := []string{"tag1", "tag2"}
 		var exp int64 = 20
-		database.EXPECT().GetTriggerCheckIDs(tags, true).Return(triggerIDs, exp, nil)
+		database.EXPECT().GetTriggerCheckIDs(tags, true).Return(triggerIDs, nil)
 		database.EXPECT().GetTriggerChecks(triggerIDs[0:10]).Return(triggersPointers[0:10], nil)
 		list, err := GetTriggerPage(database, page, size, true, tags)
 		So(err, ShouldBeNil)
@@ -157,7 +157,7 @@ func TestGetTriggerPage(t *testing.T) {
 
 	Convey("All triggers", t, func() {
 		var exp int64 = 20
-		database.EXPECT().GetTriggerCheckIDs(make([]string, 0), false).Return(triggerIDs, exp, nil)
+		database.EXPECT().GetTriggerCheckIDs(make([]string, 0), false).Return(triggerIDs, nil)
 		database.EXPECT().GetTriggerChecks(triggerIDs[0:10]).Return(triggersPointers[0:10], nil)
 		list, err := GetTriggerPage(database, page, size, false, make([]string, 0))
 		So(err, ShouldBeNil)
@@ -170,18 +170,16 @@ func TestGetTriggerPage(t *testing.T) {
 	})
 
 	Convey("Error GetFilteredTriggerCheckIDs", t, func() {
-		var exp int64
 		expected := fmt.Errorf("GetFilteredTriggerCheckIDs error")
-		database.EXPECT().GetTriggerCheckIDs(make([]string, 0), true).Return(nil, exp, expected)
+		database.EXPECT().GetTriggerCheckIDs(make([]string, 0), true).Return(nil, expected)
 		list, err := GetTriggerPage(database, 0, 20, true, make([]string, 0))
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 		So(list, ShouldBeNil)
 	})
 
 	Convey("Error GetTriggerChecks", t, func() {
-		var exp int64 = 20
 		expected := fmt.Errorf("GetTriggerChecks error")
-		database.EXPECT().GetTriggerCheckIDs(make([]string, 0), false).Return(triggerIDs, exp, nil)
+		database.EXPECT().GetTriggerCheckIDs(make([]string, 0), false).Return(triggerIDs, nil)
 		database.EXPECT().GetTriggerChecks(triggerIDs[0:10]).Return(nil, expected)
 		list, err := GetTriggerPage(database, page, size, false, make([]string, 0))
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
