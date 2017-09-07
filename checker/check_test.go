@@ -468,14 +468,15 @@ func TestCheckErrors(t *testing.T) {
 
 	Convey("Trigger has no metrics error", t, func() {
 		dataBase.EXPECT().GetPatternMetrics(pattern).Return(nil, nil)
+		m := ErrTriggerHasNoMetrics.Error()
 		dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
 			TriggerID: triggerChecker.TriggerID,
 			Timestamp: triggerChecker.Until,
 			State:     triggerChecker.ttlState,
 			OldState:  EXCEPTION,
-			Metric:    "",
+			Metric:    triggerChecker.trigger.Name,
 			Value:     nil,
-			Message:   nil}, true).Return(nil)
+			Message:   &m}, true).Return(nil)
 
 		dataBase.EXPECT().SetTriggerLastCheck(triggerChecker.TriggerID, &moira.CheckData{
 			Metrics:        triggerChecker.lastCheck.Metrics,

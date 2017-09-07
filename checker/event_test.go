@@ -226,9 +226,9 @@ func TestCompareChecks(t *testing.T) {
 				Timestamp: currentCheck.Timestamp,
 				State:     EXCEPTION,
 				OldState:  EXCEPTION,
-				Metric:    "",
+				Metric:    triggerChecker.trigger.Name,
 				Value:     nil,
-				Message:   nil,
+				Message:   &currentCheck.Message,
 			}, true).Return(nil)
 
 			actual, err := triggerChecker.compareChecks(currentCheck)
