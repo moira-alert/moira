@@ -51,7 +51,7 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 
 	if err := resolvePatterns(request, trigger, &triggerExpression); err != nil {
 		logger.Infof("Invalid graphite targets %s: %s\n", trigger.Targets, err.Error())
-		return err
+		return fmt.Errorf("Invalid graphite targets: %s", err.Error())
 	}
 	if _, err := triggerExpression.Evaluate(); err != nil {
 		logger.Infof("Invalid expression %s: %s\n", moira.UseString(trigger.Expression), err.Error())
