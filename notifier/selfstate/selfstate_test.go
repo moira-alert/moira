@@ -45,8 +45,8 @@ func TestDatabaseDisconnected(t *testing.T) {
 		Convey("Should notify admin", func() {
 			var sendingWG sync.WaitGroup
 			err := fmt.Errorf("DataBase doesn't work")
-			mock.database.EXPECT().GetMetricsCount().Return(int64(1), nil)
-			mock.database.EXPECT().GetChecksCount().Return(int64(1), err)
+			mock.database.EXPECT().GetMetricsUpdatesCount().Return(int64(1), nil)
+			mock.database.EXPECT().GetChecksUpdatesCount().Return(int64(1), err)
 
 			now := time.Now()
 			redisLastCheckTS = now.Add(-time.Second * 11).Unix()
@@ -87,8 +87,8 @@ func TestMoiraCacheDoesNotReceivedNewMetrics(t *testing.T) {
 	mock.selfCheckWorker.Start()
 	Convey("Should notify admin", t, func() {
 		var sendingWG sync.WaitGroup
-		mock.database.EXPECT().GetMetricsCount().Return(int64(1), nil)
-		mock.database.EXPECT().GetChecksCount().Return(int64(1), nil)
+		mock.database.EXPECT().GetMetricsUpdatesCount().Return(int64(1), nil)
+		mock.database.EXPECT().GetChecksUpdatesCount().Return(int64(1), nil)
 
 		now := time.Now()
 		redisLastCheckTS = now.Unix()
@@ -131,8 +131,8 @@ func TestMoiraCheckerDoesNotChecksTriggers(t *testing.T) {
 	mock.selfCheckWorker.Start()
 	Convey("Should notify admin", t, func() {
 		var sendingWG sync.WaitGroup
-		mock.database.EXPECT().GetMetricsCount().Return(int64(1), nil)
-		mock.database.EXPECT().GetChecksCount().Return(int64(1), nil)
+		mock.database.EXPECT().GetMetricsUpdatesCount().Return(int64(1), nil)
+		mock.database.EXPECT().GetChecksUpdatesCount().Return(int64(1), nil)
 
 		now := time.Now()
 		redisLastCheckTS = now.Unix()
@@ -192,8 +192,8 @@ func TestRunGoRoutine(t *testing.T) {
 
 	Convey("Go routine run before first send, should send after 10 seconds next time", t, func() {
 		err := fmt.Errorf("DataBase doesn't work")
-		database.EXPECT().GetMetricsCount().Return(int64(1), nil).Times(11)
-		database.EXPECT().GetChecksCount().Return(int64(1), err).Times(11)
+		database.EXPECT().GetMetricsUpdatesCount().Return(int64(1), nil).Times(11)
+		database.EXPECT().GetChecksUpdatesCount().Return(int64(1), err).Times(11)
 		notif.EXPECT().Send(gomock.Any(), gomock.Any())
 		selfStateWorker.Start()
 		time.Sleep(time.Second*11 + time.Millisecond*500)

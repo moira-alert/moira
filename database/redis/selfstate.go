@@ -10,8 +10,8 @@ func (connector *DbConnector) UpdateMetricsHeartbeat() error {
 	return err
 }
 
-// GetMetricsCount return metrics count received by Moira-Filter
-func (connector *DbConnector) GetMetricsCount() (int64, error) {
+// GetMetricsUpdatesCount return metrics count received by Moira-Filter
+func (connector *DbConnector) GetMetricsUpdatesCount() (int64, error) {
 	c := connector.pool.Get()
 	defer c.Close()
 	ts, err := redis.Int64(c.Do("GET", moiraSelfStateMetricsHeartbeat))
@@ -21,8 +21,8 @@ func (connector *DbConnector) GetMetricsCount() (int64, error) {
 	return ts, err
 }
 
-// GetChecksCount return checks count by Moira-Checker
-func (connector *DbConnector) GetChecksCount() (int64, error) {
+// GetChecksUpdatesCount return checks count by Moira-Checker
+func (connector *DbConnector) GetChecksUpdatesCount() (int64, error) {
 	c := connector.pool.Get()
 	defer c.Close()
 	ts, err := redis.Int64(c.Do("GET", moiraSelfStateChecksCounter))

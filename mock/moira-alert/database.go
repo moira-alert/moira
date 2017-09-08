@@ -144,17 +144,17 @@ func (_mr *MockDatabaseMockRecorder) GetAllContacts() *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetAllContacts")
 }
 
-// GetChecksCount mocks base method
-func (_m *MockDatabase) GetChecksCount() (int64, error) {
-	ret := _m.ctrl.Call(_m, "GetChecksCount")
+// GetChecksUpdatesCount mocks base method
+func (_m *MockDatabase) GetChecksUpdatesCount() (int64, error) {
+	ret := _m.ctrl.Call(_m, "GetChecksUpdatesCount")
 	ret0, _ := ret[0].(int64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetChecksCount indicates an expected call of GetChecksCount
-func (_mr *MockDatabaseMockRecorder) GetChecksCount() *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetChecksCount")
+// GetChecksUpdatesCount indicates an expected call of GetChecksUpdatesCount
+func (_mr *MockDatabaseMockRecorder) GetChecksUpdatesCount() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetChecksUpdatesCount")
 }
 
 // GetContact mocks base method
@@ -196,17 +196,17 @@ func (_mr *MockDatabaseMockRecorder) GetMetricRetention(arg0 interface{}) *gomoc
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetMetricRetention", arg0)
 }
 
-// GetMetricsCount mocks base method
-func (_m *MockDatabase) GetMetricsCount() (int64, error) {
-	ret := _m.ctrl.Call(_m, "GetMetricsCount")
+// GetMetricsUpdatesCount mocks base method
+func (_m *MockDatabase) GetMetricsUpdatesCount() (int64, error) {
+	ret := _m.ctrl.Call(_m, "GetMetricsUpdatesCount")
 	ret0, _ := ret[0].(int64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetMetricsCount indicates an expected call of GetMetricsCount
-func (_mr *MockDatabaseMockRecorder) GetMetricsCount() *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetMetricsCount")
+// GetMetricsUpdatesCount indicates an expected call of GetMetricsUpdatesCount
+func (_mr *MockDatabaseMockRecorder) GetMetricsUpdatesCount() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetMetricsUpdatesCount")
 }
 
 // GetMetricsValues mocks base method

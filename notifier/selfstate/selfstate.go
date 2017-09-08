@@ -66,8 +66,8 @@ func (selfCheck *SelfCheckWorker) Stop() error {
 }
 
 func (selfCheck *SelfCheckWorker) check(nowTS int64, lastMetricReceivedTS, redisLastCheckTS, lastCheckTS, nextSendErrorMessage, metricsCount, checksCount *int64) {
-	mc, _ := selfCheck.DB.GetMetricsCount()
-	cc, err := selfCheck.DB.GetChecksCount()
+	mc, _ := selfCheck.DB.GetMetricsUpdatesCount()
+	cc, err := selfCheck.DB.GetChecksUpdatesCount()
 	if err == nil {
 		*redisLastCheckTS = nowTS
 		if *metricsCount != mc {

@@ -9,8 +9,8 @@ import (
 type Database interface {
 	// SelfState
 	UpdateMetricsHeartbeat() error
-	GetMetricsCount() (int64, error)
-	GetChecksCount() (int64, error)
+	GetMetricsUpdatesCount() (int64, error)
+	GetChecksUpdatesCount() (int64, error)
 
 	// Tag storing
 	GetTagNames() ([]string, error)
