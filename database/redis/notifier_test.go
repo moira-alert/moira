@@ -14,12 +14,6 @@ func TestNotifierDataBase(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewDatabase(logger, Config{Port: "6379", Host: "localhost"})
 
-	Convey("Event manipulation", t, func() {
-		/*	_, err := dataBase.FetchNotificationEvent()
-			So(err, ShouldBeError)
-			So(err, ShouldResemble, database.ErrNil)*/
-	})
-
 	Convey("Try get trigger by empty id, should be error", t, func() {
 		db := NewDatabase(logger, config)
 		db.pool = dataBase.pool
