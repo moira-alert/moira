@@ -53,9 +53,9 @@ type Database interface {
 	// SubscriptionData storing
 	GetSubscription(id string) (SubscriptionData, error)
 	GetSubscriptions(subscriptionIDs []string) ([]*SubscriptionData, error)
-	WriteSubscriptions(subscriptions []*SubscriptionData) error
 	SaveSubscription(subscription *SubscriptionData) error
-	RemoveSubscription(subscriptionID string, userLogin string) error
+	SaveSubscriptions(subscriptions []*SubscriptionData) error
+	RemoveSubscription(subscriptionID string) error
 	GetUserSubscriptionIDs(userLogin string) ([]string, error)
 	GetTagsSubscriptions(tags []string) ([]*SubscriptionData, error)
 

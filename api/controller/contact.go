@@ -66,7 +66,7 @@ func RemoveContact(database moira.Database, contactID string, userLogin string) 
 		return api.ErrorInternalServer(err)
 	}
 
-	if err := database.WriteSubscriptions(subscriptionsWithDeletingContact); err != nil {
+	if err := database.SaveSubscriptions(subscriptionsWithDeletingContact); err != nil {
 		return api.ErrorInternalServer(err)
 	}
 

@@ -67,14 +67,14 @@ func TestRemoveSubscription(t *testing.T) {
 	id := uuid.NewV4().String()
 
 	Convey("Success", t, func() {
-		database.EXPECT().RemoveSubscription(id, login).Return(nil)
+		database.EXPECT().RemoveSubscription(id).Return(nil)
 		err := RemoveSubscription(database, id, login)
 		So(err, ShouldBeNil)
 	})
 
 	Convey("Error", t, func() {
 		expected := fmt.Errorf("Oooops! Can not remove subscription")
-		database.EXPECT().RemoveSubscription(id, login).Return(expected)
+		database.EXPECT().RemoveSubscription(id).Return(expected)
 		err := RemoveSubscription(database, id, login)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 	})

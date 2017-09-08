@@ -47,7 +47,7 @@ func WriteSubscription(database moira.Database, userLogin string, subscription *
 
 // RemoveSubscription deletes subscription
 func RemoveSubscription(database moira.Database, subscriptionID string, userLogin string) *api.ErrorResponse {
-	if err := database.RemoveSubscription(subscriptionID, userLogin); err != nil {
+	if err := database.RemoveSubscription(subscriptionID); err != nil {
 		return api.ErrorInternalServer(err)
 	}
 	return nil

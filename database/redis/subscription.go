@@ -46,18 +46,19 @@ func (connector *DbConnector) GetSubscriptions(subscriptionIDs []string) ([]*moi
 	return subscriptions, nil
 }
 
-// WriteSubscriptions writes subscriptions data
-func (connector *DbConnector) WriteSubscriptions(subscriptions []*moira.SubscriptionData) error {
+// SaveSubscription writes subscription data, updates tags subscriptions and user subscriptions
+func (connector *DbConnector) SaveSubscription(subscription *moira.SubscriptionData) error {
+	oldSubscription, getSubError := connector.GetSubscription(subscription.ID)
+	if getSubError != nil && getSubError != database.ErrNil {
+		return getSubError
+	}
 	c := connector.pool.Get()
 	defer c.Close()
-
 	c.Send("MULTI")
-	for _, subscription := range subscriptions {
-		bytes, err := json.Marshal(subscription)
-		if err != nil {
-			return err
-		}
-		c.Send("SET", moiraSubscription(subscription.ID), bytes)
+	if getSubError != database.ErrNil {
+		addSendRequests(c, subscription, &oldSubscription)
+	} else {
+		addSendRequests(c, subscription, nil)
 	}
 	_, err := c.Do("EXEC")
 	if err != nil {
@@ -66,28 +67,22 @@ func (connector *DbConnector) WriteSubscriptions(subscriptions []*moira.Subscrip
 	return nil
 }
 
-// SaveSubscription writes subscription data, updates tags subscriptions and user subscriptions
-func (connector *DbConnector) SaveSubscription(subscription *moira.SubscriptionData) error {
-	oldSubscription, err := connector.GetSubscription(subscription.ID)
-	if err != nil && err != database.ErrNil {
-		return err
+// SaveSubscriptions writes subscriptions, updates tags subscriptions and user subscriptions
+func (connector *DbConnector) SaveSubscriptions(subscriptions []*moira.SubscriptionData) error {
+	ids := make([]string, len(subscriptions))
+	for i, subscription := range subscriptions {
+		ids[i] = subscription.ID
 	}
-	bytes, err := json.Marshal(subscription)
+	oldSubscriptions, err := connector.GetSubscriptions(ids)
 	if err != nil {
 		return err
 	}
-
 	c := connector.pool.Get()
 	defer c.Close()
 	c.Send("MULTI")
-	for _, tag := range oldSubscription.Tags {
-		c.Send("SREM", moiraTagSubscription(tag), subscription.ID)
+	for i, subscription := range subscriptions {
+		addSendRequests(c, subscription, oldSubscriptions[i])
 	}
-	for _, tag := range subscription.Tags {
-		c.Send("SADD", moiraTagSubscription(tag), subscription.ID)
-	}
-	c.Send("SADD", moiraUserSubscriptions(subscription.User), subscription.ID)
-	c.Send("SET", moiraSubscription(subscription.ID), bytes)
 	_, err = c.Do("EXEC")
 	if err != nil {
 		return fmt.Errorf("Failed to EXEC: %s", err.Error())
@@ -96,15 +91,18 @@ func (connector *DbConnector) SaveSubscription(subscription *moira.SubscriptionD
 }
 
 // RemoveSubscription deletes subscription data and removes subscriptionID from users and tags subscriptions
-func (connector *DbConnector) RemoveSubscription(subscriptionID string, userLogin string) error {
+func (connector *DbConnector) RemoveSubscription(subscriptionID string) error {
 	subscription, err := connector.GetSubscription(subscriptionID)
 	if err != nil {
-		return nil
+		if err == database.ErrNil {
+			return nil
+		}
+		return err
 	}
 	c := connector.pool.Get()
 	defer c.Close()
 	c.Send("MULTI")
-	c.Send("SREM", moiraUserSubscriptions(userLogin), subscriptionID)
+	c.Send("SREM", moiraUserSubscriptions(subscription.User), subscriptionID)
 	for _, tag := range subscription.Tags {
 		c.Send("SREM", moiraTagSubscription(tag), subscriptionID)
 	}
@@ -155,6 +153,27 @@ func (connector *DbConnector) GetTagsSubscriptions(tags []string) ([]*moira.Subs
 		return nil, err
 	}
 	return subscriptionsData, nil
+}
+
+func addSendRequests(c redis.Conn, subscription *moira.SubscriptionData, oldSubscription *moira.SubscriptionData) error {
+	bytes, err := json.Marshal(subscription)
+	if err != nil {
+		return err
+	}
+	if oldSubscription != nil {
+		for _, tag := range oldSubscription.Tags {
+			c.Send("SREM", moiraTagSubscription(tag), subscription.ID)
+		}
+		if oldSubscription.User != subscription.User {
+			c.Send("SREM", moiraUserSubscriptions(oldSubscription.User), subscription.ID)
+		}
+	}
+	for _, tag := range subscription.Tags {
+		c.Send("SADD", moiraTagSubscription(tag), subscription.ID)
+	}
+	c.Send("SADD", moiraUserSubscriptions(subscription.User), subscription.ID)
+	c.Send("SET", moiraSubscription(subscription.ID), bytes)
+	return nil
 }
 
 func moiraSubscription(id string) string {
