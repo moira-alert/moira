@@ -60,7 +60,7 @@ func TestProcessScheduledEvent(t *testing.T) {
 	}
 
 	Convey("Two different notifications, should send two packages", t, func() {
-		dataBase.EXPECT().GetNotificationsAndDelete(gomock.Any()).Return([]*moira.ScheduledNotification{
+		dataBase.EXPECT().FetchNotifications(gomock.Any()).Return([]*moira.ScheduledNotification{
 			&notification1,
 			&notification2,
 		}, nil)
@@ -93,7 +93,7 @@ func TestProcessScheduledEvent(t *testing.T) {
 	})
 
 	Convey("Two same notifications, should send one package", t, func() {
-		dataBase.EXPECT().GetNotificationsAndDelete(gomock.Any()).Return([]*moira.ScheduledNotification{
+		dataBase.EXPECT().FetchNotifications(gomock.Any()).Return([]*moira.ScheduledNotification{
 			&notification2,
 			&notification3,
 		}, nil)
@@ -153,7 +153,7 @@ func TestGoRoutine(t *testing.T) {
 	}
 
 	shutdown := make(chan bool)
-	dataBase.EXPECT().GetNotificationsAndDelete(gomock.Any()).Return([]*moira.ScheduledNotification{&notification1}, nil)
+	dataBase.EXPECT().FetchNotifications(gomock.Any()).Return([]*moira.ScheduledNotification{&notification1}, nil)
 	notifier.EXPECT().Send(&pkg, gomock.Any()).Do(func(f ...interface{}) { close(shutdown) })
 	notifier.EXPECT().StopSenders()
 

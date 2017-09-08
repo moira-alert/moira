@@ -248,17 +248,17 @@ func (_mr *MockDatabaseMockRecorder) GetNotifications(arg0, arg1 interface{}) *g
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetNotifications", arg0, arg1)
 }
 
-// GetNotificationsAndDelete mocks base method
-func (_m *MockDatabase) GetNotificationsAndDelete(_param0 int64) ([]*moira_alert.ScheduledNotification, error) {
-	ret := _m.ctrl.Call(_m, "GetNotificationsAndDelete", _param0)
+// FetchNotifications mocks base method
+func (_m *MockDatabase) FetchNotifications(_param0 int64) ([]*moira_alert.ScheduledNotification, error) {
+	ret := _m.ctrl.Call(_m, "FetchNotifications", _param0)
 	ret0, _ := ret[0].([]*moira_alert.ScheduledNotification)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetNotificationsAndDelete indicates an expected call of GetNotificationsAndDelete
-func (_mr *MockDatabaseMockRecorder) GetNotificationsAndDelete(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetNotificationsAndDelete", arg0)
+// FetchNotifications indicates an expected call of FetchNotifications
+func (_mr *MockDatabaseMockRecorder) FetchNotifications(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "FetchNotifications", arg0)
 }
 
 // GetPatternMetrics mocks base method

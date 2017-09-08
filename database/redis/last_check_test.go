@@ -15,6 +15,7 @@ func TestLastCheck(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewDatabase(logger, config)
 	dataBase.flush()
+	defer dataBase.flush()
 
 	Convey("LastCheck manipulation", t, func() {
 		Convey("Test read write", func() {
@@ -113,6 +114,7 @@ func TestLastCheckErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewDatabase(logger, emptyConfig)
 	dataBase.flush()
+	defer dataBase.flush()
 	Convey("Should throw error when no connection", t, func() {
 		actual1, err := dataBase.GetTriggerLastCheck("123")
 		So(actual1, ShouldResemble, moira.CheckData{})

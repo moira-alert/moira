@@ -46,8 +46,7 @@ func (worker *FetchNotificationsWorker) Stop() error {
 }
 
 func (worker *FetchNotificationsWorker) processScheduledNotifications() error {
-	ts := time.Now()
-	notifications, err := worker.Database.GetNotificationsAndDelete(ts.Unix())
+	notifications, err := worker.Database.FetchNotifications(time.Now().Unix())
 	if err != nil {
 		return err
 	}

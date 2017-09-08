@@ -16,6 +16,7 @@ func TestNotificationEvents(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewDatabase(logger, config)
 	dataBase.flush()
+	defer dataBase.flush()
 
 	Convey("Notification events manipulation", t, func() {
 		Convey("Test push-get-get count-fetch", func() {
@@ -154,6 +155,7 @@ func TestNotificationEventErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewDatabase(logger, emptyConfig)
 	dataBase.flush()
+	defer dataBase.flush()
 
 	var notificationEvent = moira.NotificationEvent{
 		Timestamp: time.Now().Unix(),

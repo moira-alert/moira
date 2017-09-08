@@ -2,11 +2,9 @@
 package redis
 
 import (
-	"github.com/moira-alert/moira-alert"
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
-	"time"
 )
 
 func TestNotifierDataBase(t *testing.T) {
@@ -19,31 +17,6 @@ func TestNotifierDataBase(t *testing.T) {
 		db.pool = dataBase.pool
 		_, err := db.GetTrigger("")
 		So(err, ShouldNotBeEmpty)
-	})
-
-	Convey("Test get notification", t, func() {
-		db := NewDatabase(logger, config)
-		db.pool = dataBase.pool
-
-		now := time.Now()
-		notif := moira.ScheduledNotification{
-			Timestamp: now.Add(-time.Minute).Unix(),
-		}
-
-		db.AddNotification(&notif)
-		actual, err := db.GetNotificationsAndDelete(now.Unix())
-		So(actual, ShouldResemble, []*moira.ScheduledNotification{&notif})
-		So(err, ShouldBeEmpty)
-	})
-
-	Convey("Test get notification if empty", t, func() {
-		db := NewDatabase(logger, config)
-		db.pool = dataBase.pool
-
-		now := time.Now()
-		actual, err := db.GetNotificationsAndDelete(now.Unix())
-		So(actual, ShouldResemble, []*moira.ScheduledNotification{})
-		So(err, ShouldBeEmpty)
 	})
 }
 

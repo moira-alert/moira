@@ -75,8 +75,8 @@ func (connector *DbConnector) RemoveNotification(notificationKey string) (int64,
 	return int64(total), nil
 }
 
-// GetNotificationsAndDelete fetch notifications by given timestamp and delete it
-func (connector *DbConnector) GetNotificationsAndDelete(to int64) ([]*moira.ScheduledNotification, error) {
+// FetchNotifications fetch notifications by given timestamp and delete it
+func (connector *DbConnector) FetchNotifications(to int64) ([]*moira.ScheduledNotification, error) {
 	c := connector.pool.Get()
 	defer c.Close()
 
