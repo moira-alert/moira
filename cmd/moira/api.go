@@ -22,7 +22,7 @@ type APIServer struct {
 // Start Moira API HTTP server
 func (server *APIServer) Start() error {
 	if !server.Config.Enabled {
-		server.Log.Debug("API Disabled")
+		server.Log.Info("API Disabled")
 		return nil
 	}
 
@@ -41,7 +41,7 @@ func (server *APIServer) Start() error {
 		server.http.Serve(listener)
 	}()
 
-	server.Log.Info("API Started")
+	server.Log.Info("Moira Api Started")
 	return nil
 }
 

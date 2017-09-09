@@ -26,7 +26,7 @@ func (worker *FetchNotificationsWorker) Start() {
 		for {
 			select {
 			case <-worker.tomb.Dying():
-				worker.Logger.Info("Fetching scheduled notifications stopped")
+				worker.Logger.Info("Moira Notifier Fetching scheduled notifications stopped")
 				worker.Notifier.StopSenders()
 				return nil
 			case <-checkTicker.C:
@@ -36,7 +36,7 @@ func (worker *FetchNotificationsWorker) Start() {
 			}
 		}
 	})
-	worker.Logger.Info("Fetching scheduled notifications started")
+	worker.Logger.Info("Moira Notifier Fetching scheduled notifications started")
 }
 
 // Stop stops new notifications fetching and wait for finish

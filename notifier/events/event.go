@@ -28,7 +28,7 @@ func (worker *FetchEventsWorker) Start() {
 			select {
 			case <-worker.tomb.Dying():
 				{
-					worker.Logger.Info("Fetching events stopped")
+					worker.Logger.Info("Moira Notifier Fetching events stopped")
 					return nil
 				}
 			default:
@@ -51,7 +51,7 @@ func (worker *FetchEventsWorker) Start() {
 			}
 		}
 	})
-	worker.Logger.Info("Fetching events started")
+	worker.Logger.Info("Moira Notifier Fetching events started")
 }
 
 // Stop stops new event fetching and wait for finish

@@ -44,7 +44,7 @@ func (selfCheck *SelfCheckWorker) Start() error {
 			select {
 			case <-selfCheck.tomb.Dying():
 				checkTicker.Stop()
-				selfCheck.Log.Info("Self State Monitor Stopped")
+				selfCheck.Log.Info("Moira Notifier Self State Monitor Stopped")
 				return nil
 			case <-checkTicker.C:
 				selfCheck.check(time.Now().Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount)
@@ -52,7 +52,7 @@ func (selfCheck *SelfCheckWorker) Start() error {
 		}
 	})
 
-	selfCheck.Log.Info("Self State Monitor Started")
+	selfCheck.Log.Info("Moira Notifier Self State Monitor Started")
 	return nil
 }
 

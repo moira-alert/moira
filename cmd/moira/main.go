@@ -99,7 +99,6 @@ func main() {
 	}
 
 	// Notifier
-
 	notifierLog, err := logging.ConfigureLog(config.Notifier.LogFile, config.Notifier.LogLevel, "notifier")
 	if err != nil {
 		log.Fatalf("Can't configure logger for Filter: %v\n", err)
@@ -168,11 +167,6 @@ func main() {
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 	log.Info(<-ch)
 
-	if err := apiServer.Stop(); err != nil {
-		log.Errorf("Can't stop API: %v", err)
-	}
-	log.Info("API stopped")
-
 	if err := filterServer.Stop(); err != nil {
 		log.Errorf("Can't stop Filer: %v", err)
 	}
@@ -190,5 +184,11 @@ func main() {
 		log.Errorf("Stop Checker Failed: %v", err)
 	}
 	log.Info("Checker stopped")
+
+	// Stop Api
+	if err := apiServer.Stop(); err != nil {
+		log.Errorf("Can't stop API: %v", err)
+	}
+	log.Info("API stopped")
 	log.Infof("Moira Stopped (version: %s)", Version)
 }

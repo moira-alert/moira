@@ -32,10 +32,10 @@ func (worker *Checker) Start() error {
 	worker.lastData = time.Now().UTC().Unix()
 
 	worker.tomb.Go(worker.noDataChecker)
-	worker.Logger.Info("NoData checker started")
+	worker.Logger.Info("Moira Checker NoData checker started")
 
 	worker.tomb.Go(worker.metricsChecker)
-	worker.Logger.Info("Checking new events started")
+	worker.Logger.Info("Moira Checker Checking new events started")
 	return nil
 }
 

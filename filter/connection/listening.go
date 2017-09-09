@@ -42,7 +42,7 @@ func (listener *MetricsListener) Listen() chan *moira.MatchedMetric {
 			select {
 			case <-listener.tomb.Dying():
 				{
-					listener.logger.Info("Listener stopped")
+					listener.logger.Info("Moira Filter Listener Stopped")
 					listener.handler.tomb.Kill(nil)
 					listener.handler.tomb.Wait()
 					close(metricsChan)
@@ -62,7 +62,7 @@ func (listener *MetricsListener) Listen() chan *moira.MatchedMetric {
 			}
 		}
 	})
-	listener.logger.Info("Listener started")
+	listener.logger.Info("Moira Filter Listener Started")
 	return metricsChan
 }
 
