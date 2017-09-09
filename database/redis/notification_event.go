@@ -19,7 +19,7 @@ func (connector *DbConnector) GetNotificationEvents(triggerID string, start int6
 	c := connector.pool.Get()
 	defer c.Close()
 
-	eventsData, err := reply.Events(c.Do("ZREVRANGE", moiraTriggerEvents(triggerID), start, start+size))
+	eventsData, err := reply.Events(c.Do("ZREVRANGE", triggerEventsKey(triggerID), start, start+size))
 
 	if err != nil {
 		if err == redis.ErrNil {
@@ -42,14 +42,14 @@ func (connector *DbConnector) PushNotificationEvent(event *moira.NotificationEve
 	c := connector.pool.Get()
 	defer c.Close()
 	c.Send("MULTI")
-	c.Send("LPUSH", moiraEventsList, eventBytes)
+	c.Send("LPUSH", eventsListKey, eventBytes)
 	if event.TriggerID != "" {
-		c.Send("ZADD", moiraTriggerEvents(event.TriggerID), event.Timestamp, eventBytes)
-		c.Send("ZREMRANGEBYSCORE", moiraTriggerEvents(event.TriggerID), "-inf", time.Now().Unix()-eventsTTL)
+		c.Send("ZADD", triggerEventsKey(event.TriggerID), event.Timestamp, eventBytes)
+		c.Send("ZREMRANGEBYSCORE", triggerEventsKey(event.TriggerID), "-inf", time.Now().Unix()-eventsTTL)
 	}
 	if ui {
-		c.Send("LPUSH", moiraEventsUIList, eventBytes)
-		c.Send("LTRIM", moiraEventsUIList, 0, 100)
+		c.Send("LPUSH", eventsUIListKey, eventBytes)
+		c.Send("LTRIM", eventsUIListKey, 0, 100)
 	}
 	_, err = c.Do("EXEC")
 	if err != nil {
@@ -63,7 +63,7 @@ func (connector *DbConnector) GetNotificationEventCount(triggerID string, from i
 	c := connector.pool.Get()
 	defer c.Close()
 
-	count, _ := redis.Int64(c.Do("ZCOUNT", moiraTriggerEvents(triggerID), from, "+inf"))
+	count, _ := redis.Int64(c.Do("ZCOUNT", triggerEventsKey(triggerID), from, "+inf"))
 	return count
 }
 
@@ -74,7 +74,7 @@ func (connector *DbConnector) FetchNotificationEvent() (moira.NotificationEvent,
 
 	var event moira.NotificationEvent
 
-	rawRes, err := c.Do("BRPOP", moiraEventsList, 1)
+	rawRes, err := c.Do("BRPOP", eventsListKey, 1)
 	if err != nil {
 		return event, fmt.Errorf("Failed to fetch event: %s", err.Error())
 	}
@@ -95,9 +95,9 @@ func (connector *DbConnector) FetchNotificationEvent() (moira.NotificationEvent,
 	return event, nil
 }
 
-var moiraEventsList = "moira-trigger-events"
-var moiraEventsUIList = "moira-trigger-events-ui"
+var eventsListKey = "moira-trigger-events"
+var eventsUIListKey = "moira-trigger-events-ui"
 
-func moiraTriggerEvents(triggerID string) string {
+func triggerEventsKey(triggerID string) string {
 	return fmt.Sprintf("moira-trigger-events:%s", triggerID)
 }

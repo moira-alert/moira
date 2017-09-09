@@ -6,7 +6,7 @@ import "github.com/garyburd/redigo/redis"
 func (connector *DbConnector) UpdateMetricsHeartbeat() error {
 	c := connector.pool.Get()
 	defer c.Close()
-	err := c.Send("INCR", moiraSelfStateMetricsHeartbeat)
+	err := c.Send("INCR", selfStateMetricsHeartbeatKey)
 	return err
 }
 
@@ -14,7 +14,7 @@ func (connector *DbConnector) UpdateMetricsHeartbeat() error {
 func (connector *DbConnector) GetMetricsUpdatesCount() (int64, error) {
 	c := connector.pool.Get()
 	defer c.Close()
-	ts, err := redis.Int64(c.Do("GET", moiraSelfStateMetricsHeartbeat))
+	ts, err := redis.Int64(c.Do("GET", selfStateMetricsHeartbeatKey))
 	if err == redis.ErrNil {
 		return 0, nil
 	}
@@ -25,12 +25,12 @@ func (connector *DbConnector) GetMetricsUpdatesCount() (int64, error) {
 func (connector *DbConnector) GetChecksUpdatesCount() (int64, error) {
 	c := connector.pool.Get()
 	defer c.Close()
-	ts, err := redis.Int64(c.Do("GET", moiraSelfStateChecksCounter))
+	ts, err := redis.Int64(c.Do("GET", selfStateChecksCounterKey))
 	if err == redis.ErrNil {
 		return 0, nil
 	}
 	return ts, err
 }
 
-var moiraSelfStateMetricsHeartbeat = "moira-selfstate:metrics-heartbeat"
-var moiraSelfStateChecksCounter = "moira-selfstate:checks-counter"
+var selfStateMetricsHeartbeatKey = "moira-selfstate:metrics-heartbeat"
+var selfStateChecksCounterKey = "moira-selfstate:checks-counter"

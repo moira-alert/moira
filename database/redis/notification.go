@@ -12,15 +12,13 @@ import (
 	"github.com/moira-alert/moira-alert/database/redis/reply"
 )
 
-var moiraNotificationsKey = "moira-notifier-notifications"
-
 // GetNotifications gets ScheduledNotifications in given range and full range
 func (connector *DbConnector) GetNotifications(start, end int64) ([]*moira.ScheduledNotification, int64, error) {
 	c := connector.pool.Get()
 	defer c.Close()
 	c.Send("MULTI")
-	c.Send("ZRANGE", moiraNotificationsKey, start, end)
-	c.Send("ZCARD", moiraNotificationsKey)
+	c.Send("ZRANGE", notifierNotificationsKey, start, end)
+	c.Send("ZCARD", notifierNotificationsKey)
 	rawResponse, err := redis.Values(c.Do("EXEC"))
 	if err != nil {
 		return nil, 0, fmt.Errorf("Failed to EXEC: %s", err.Error())
@@ -61,7 +59,7 @@ func (connector *DbConnector) RemoveNotification(notificationKey string) (int64,
 			if err2 != nil {
 				return 0, err2
 			}
-			c.Send("ZREM", moiraNotificationsKey, notificationString)
+			c.Send("ZREM", notifierNotificationsKey, notificationString)
 		}
 	}
 	response, err := redis.Ints(c.Do("EXEC"))
@@ -81,8 +79,8 @@ func (connector *DbConnector) FetchNotifications(to int64) ([]*moira.ScheduledNo
 	defer c.Close()
 
 	c.Send("MULTI")
-	c.Send("ZRANGEBYSCORE", moiraNotificationsKey, "-inf", to)
-	c.Send("ZREMRANGEBYSCORE", moiraNotificationsKey, "-inf", to)
+	c.Send("ZRANGEBYSCORE", notifierNotificationsKey, "-inf", to)
+	c.Send("ZREMRANGEBYSCORE", notifierNotificationsKey, "-inf", to)
 	response, err := redis.Values(c.Do("EXEC"))
 	if err != nil {
 		return nil, fmt.Errorf("Failed to EXEC: %s", err)
@@ -101,7 +99,7 @@ func (connector *DbConnector) AddNotification(notification *moira.ScheduledNotif
 	}
 	c := connector.pool.Get()
 	defer c.Close()
-	_, err = c.Do("ZADD", moiraNotificationsKey, notification.Timestamp, bytes)
+	_, err = c.Do("ZADD", notifierNotificationsKey, notification.Timestamp, bytes)
 	if err != nil {
 		return fmt.Errorf("Failed to add scheduled notification: %s, error: %s", string(bytes), err.Error())
 	}
@@ -118,7 +116,7 @@ func (connector *DbConnector) AddNotifications(notifications []*moira.ScheduledN
 		if err != nil {
 			return err
 		}
-		c.Send("ZADD", moiraNotificationsKey, timestamp, bytes)
+		c.Send("ZADD", notifierNotificationsKey, timestamp, bytes)
 	}
 	_, err := c.Do("EXEC")
 	if err != nil {
@@ -126,3 +124,5 @@ func (connector *DbConnector) AddNotifications(notifications []*moira.ScheduledN
 	}
 	return nil
 }
+
+var notifierNotificationsKey = "moira-notifier-notifications"

@@ -17,7 +17,7 @@ func (connector *DbConnector) GetContact(id string) (moira.ContactData, error) {
 
 	var contact moira.ContactData
 
-	contact, err := reply.Contact(c.Do("GET", moiraContact(id)))
+	contact, err := reply.Contact(c.Do("GET", contactKey(id)))
 	if err != nil {
 		return contact, err
 	}
@@ -32,7 +32,7 @@ func (connector *DbConnector) GetContacts(contactIDs []string) ([]*moira.Contact
 	defer c.Close()
 	c.Send("MULTI")
 	for _, id := range contactIDs {
-		c.Send("GET", moiraContact(id))
+		c.Send("GET", contactKey(id))
 	}
 
 	contacts, err := reply.Contacts(c.Do("EXEC"))
@@ -52,7 +52,7 @@ func (connector *DbConnector) GetAllContacts() ([]*moira.ContactData, error) {
 	c := connector.pool.Get()
 	defer c.Close()
 
-	keys, err := redis.Strings(c.Do("KEYS", moiraContact("*")))
+	keys, err := redis.Strings(c.Do("KEYS", contactKey("*")))
 	if err != nil {
 		return nil, err
 	}
@@ -80,11 +80,11 @@ func (connector *DbConnector) SaveContact(contact *moira.ContactData) error {
 	defer c.Close()
 
 	c.Send("MULTI")
-	c.Send("SET", moiraContact(contact.ID), contactString)
+	c.Send("SET", contactKey(contact.ID), contactString)
 	if getContactErr != database.ErrNil && contact.User != existing.User {
-		c.Send("SREM", moiraUserContacts(existing.User), contact.ID)
+		c.Send("SREM", userContactsKey(existing.User), contact.ID)
 	}
-	c.Send("SADD", moiraUserContacts(contact.User), contact.ID)
+	c.Send("SADD", userContactsKey(contact.User), contact.ID)
 	_, err = c.Do("EXEC")
 	if err != nil {
 		return fmt.Errorf("Failed to EXEC: %s", err.Error())
@@ -102,8 +102,8 @@ func (connector *DbConnector) RemoveContact(contactID string) error {
 	defer c.Close()
 
 	c.Send("MULTI")
-	c.Send("DEL", moiraContact(contactID))
-	c.Send("SREM", moiraUserContacts(existing.User), contactID)
+	c.Send("DEL", contactKey(contactID))
+	c.Send("SREM", userContactsKey(existing.User), contactID)
 	_, err = c.Do("EXEC")
 	if err != nil {
 		return fmt.Errorf("Failed to EXEC: %s", err.Error())
@@ -116,17 +116,17 @@ func (connector *DbConnector) GetUserContactIDs(login string) ([]string, error) 
 	c := connector.pool.Get()
 	defer c.Close()
 
-	contacts, err := redis.Strings(c.Do("SMEMBERS", moiraUserContacts(login)))
+	contacts, err := redis.Strings(c.Do("SMEMBERS", userContactsKey(login)))
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get contacts for user login %s: %s", login, err.Error())
 	}
 	return contacts, nil
 }
 
-func moiraContact(id string) string {
+func contactKey(id string) string {
 	return fmt.Sprintf("moira-contact:%s", id)
 }
 
-func moiraUserContacts(userName string) string {
+func userContactsKey(userName string) string {
 	return fmt.Sprintf("moira-user-contacts:%s", userName)
 }

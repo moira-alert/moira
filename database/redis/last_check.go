@@ -15,7 +15,7 @@ import (
 func (connector *DbConnector) GetTriggerLastCheck(triggerID string) (moira.CheckData, error) {
 	c := connector.pool.Get()
 	defer c.Close()
-	return reply.Check(c.Do("GET", moiraMetricLastCheck(triggerID)))
+	return reply.Check(c.Do("GET", metricLastCheckKey(triggerID)))
 }
 
 // SetTriggerLastCheck sets trigger last check data
@@ -27,13 +27,13 @@ func (connector *DbConnector) SetTriggerLastCheck(triggerID string, checkData *m
 	c := connector.pool.Get()
 	defer c.Close()
 	c.Send("MULTI")
-	c.Send("SET", moiraMetricLastCheck(triggerID), bytes)
-	c.Send("ZADD", moiraTriggersChecks, checkData.Score, triggerID)
-	c.Send("INCR", moiraSelfStateChecksCounter)
+	c.Send("SET", metricLastCheckKey(triggerID), bytes)
+	c.Send("ZADD", triggersChecksKey, checkData.Score, triggerID)
+	c.Send("INCR", selfStateChecksCounterKey)
 	if checkData.Score > 0 {
-		c.Send("SADD", moiraBadStateTriggers, triggerID)
+		c.Send("SADD", badStateTriggersKey, triggerID)
 	} else {
-		c.Send("SREM", moiraBadStateTriggers, triggerID)
+		c.Send("SREM", badStateTriggersKey, triggerID)
 	}
 	_, err = c.Do("EXEC")
 	if err != nil {
@@ -50,7 +50,7 @@ func (connector *DbConnector) SetTriggerCheckMetricsMaintenance(triggerID string
 	defer c.Close()
 	var readingErr error
 
-	lastCheckString, readingErr := redis.String(c.Do("GET", moiraMetricLastCheck(triggerID)))
+	lastCheckString, readingErr := redis.String(c.Do("GET", metricLastCheckKey(triggerID)))
 	if readingErr != nil && readingErr != redis.ErrNil {
 		return readingErr
 	}
@@ -77,7 +77,7 @@ func (connector *DbConnector) SetTriggerCheckMetricsMaintenance(triggerID string
 		}
 
 		var prev string
-		prev, readingErr = redis.String(c.Do("GETSET", moiraMetricLastCheck(triggerID), newLastCheck))
+		prev, readingErr = redis.String(c.Do("GETSET", metricLastCheckKey(triggerID), newLastCheck))
 		if readingErr != nil && readingErr != redis.ErrNil {
 			return readingErr
 		}
@@ -95,12 +95,12 @@ func (connector *DbConnector) GetTriggerCheckIDs(tagNames []string, onlyErrors b
 	c := connector.pool.Get()
 	defer c.Close()
 	c.Send("MULTI")
-	c.Send("ZREVRANGE", moiraTriggersChecks, 0, -1)
+	c.Send("ZREVRANGE", triggersChecksKey, 0, -1)
 	for _, tagName := range tagNames {
-		c.Send("SMEMBERS", moiraTagTriggers(tagName))
+		c.Send("SMEMBERS", tagTriggersKey(tagName))
 	}
 	if onlyErrors {
-		c.Send("SMEMBERS", moiraBadStateTriggers)
+		c.Send("SMEMBERS", badStateTriggersKey)
 	}
 	rawResponse, err := redis.Values(c.Do("EXEC"))
 	if err != nil {
@@ -144,9 +144,9 @@ func (connector *DbConnector) GetTriggerCheckIDs(tagNames []string, onlyErrors b
 	return total, nil
 }
 
-var moiraBadStateTriggers = "moira-bad-state-triggers"
-var moiraTriggersChecks = "moira-triggers-checks"
+var badStateTriggersKey = "moira-bad-state-triggers"
+var triggersChecksKey = "moira-triggers-checks"
 
-func moiraMetricLastCheck(triggerID string) string {
+func metricLastCheckKey(triggerID string) string {
 	return fmt.Sprintf("moira-metric-last-check:%s", triggerID)
 }

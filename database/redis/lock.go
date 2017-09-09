@@ -32,12 +32,12 @@ func (connector *DbConnector) AcquireTriggerCheckLock(triggerID string, timeout 
 func (connector *DbConnector) SetTriggerCheckLock(triggerID string) (bool, error) {
 	c := connector.pool.Get()
 	defer c.Close()
-	_, err := redis.String(c.Do("SET", fmt.Sprintf("moira-metric-check-lock:%s", triggerID), time.Now().Unix(), "EX", 30, "NX"))
+	_, err := redis.String(c.Do("SET", metricCheckLockKey(triggerID), time.Now().Unix(), "EX", 30, "NX"))
 	if err != nil {
 		if err == redis.ErrNil {
 			return false, nil
 		}
-		return false, fmt.Errorf("Failed to set metric-check-lock:%s : %s", triggerID, err.Error())
+		return false, fmt.Errorf("Failed to set check lock:%s error: %s", triggerID, err.Error())
 	}
 	return true, nil
 }
@@ -46,9 +46,13 @@ func (connector *DbConnector) SetTriggerCheckLock(triggerID string) (bool, error
 func (connector *DbConnector) DeleteTriggerCheckLock(triggerID string) error {
 	c := connector.pool.Get()
 	defer c.Close()
-	_, err := c.Do("DEL", fmt.Sprintf("moira-metric-check-lock:%s", triggerID))
+	_, err := c.Do("DEL", metricCheckLockKey(triggerID))
 	if err != nil {
-		return fmt.Errorf("Failed to delete trigger check lock:%s : %s", triggerID, err.Error())
+		return fmt.Errorf("Failed to delete trigger check lock:%s error: %s", triggerID, err.Error())
 	}
 	return nil
+}
+
+func metricCheckLockKey(triggerID string) string {
+	return fmt.Sprintf("moira-metric-check-lock:%s", triggerID)
 }

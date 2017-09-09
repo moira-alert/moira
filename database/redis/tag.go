@@ -11,7 +11,7 @@ func (connector *DbConnector) GetTagNames() ([]string, error) {
 	c := connector.pool.Get()
 	defer c.Close()
 
-	tagNames, err := redis.Strings(c.Do("SMEMBERS", moiraTags))
+	tagNames, err := redis.Strings(c.Do("SMEMBERS", tagsKey))
 	if err != nil {
 		return nil, fmt.Errorf("Failed to retrieve tags: %s", err.Error())
 	}
@@ -24,9 +24,9 @@ func (connector *DbConnector) RemoveTag(tagName string) error {
 	defer c.Close()
 
 	c.Send("MULTI")
-	c.Send("SREM", moiraTags, tagName)
-	c.Send("DEL", moiraTagSubscription(tagName))
-	c.Send("DEL", moiraTagTriggers(tagName))
+	c.Send("SREM", tagsKey, tagName)
+	c.Send("DEL", tagSubscriptionKey(tagName))
+	c.Send("DEL", tagTriggersKey(tagName))
 	_, err := c.Do("EXEC")
 	if err != nil {
 		return fmt.Errorf("Failed to EXEC: %s", err.Error())
@@ -39,7 +39,7 @@ func (connector *DbConnector) GetTagTriggerIDs(tagName string) ([]string, error)
 	c := connector.pool.Get()
 	defer c.Close()
 
-	triggerIDs, err := redis.Strings(c.Do("SMEMBERS", moiraTagTriggers(tagName)))
+	triggerIDs, err := redis.Strings(c.Do("SMEMBERS", tagTriggersKey(tagName)))
 	if err != nil {
 		if err == redis.ErrNil {
 			return make([]string, 0), nil
@@ -49,12 +49,12 @@ func (connector *DbConnector) GetTagTriggerIDs(tagName string) ([]string, error)
 	return triggerIDs, nil
 }
 
-var moiraTags = "moira-tags"
+var tagsKey = "moira-tags"
 
-func moiraTagTriggers(tagName string) string {
+func tagTriggersKey(tagName string) string {
 	return fmt.Sprintf("moira-tag-triggers:%s", tagName)
 }
 
-func moiraTagSubscription(tagName string) string {
+func tagSubscriptionKey(tagName string) string {
 	return fmt.Sprintf("moira-tag-subscriptions:%s", tagName)
 }

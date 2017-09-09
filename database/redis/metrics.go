@@ -15,7 +15,7 @@ import (
 func (connector *DbConnector) GetPatterns() ([]string, error) {
 	c := connector.pool.Get()
 	defer c.Close()
-	patterns, err := redis.Strings(c.Do("SMEMBERS", moiraPatternsList))
+	patterns, err := redis.Strings(c.Do("SMEMBERS", patternsListKey))
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get moira patterns, error: %s", err)
 	}
@@ -29,7 +29,7 @@ func (connector *DbConnector) GetMetricsValues(metrics []string, from int64, unt
 
 	c.Send("MULTI")
 	for _, metric := range metrics {
-		c.Send("ZRANGEBYSCORE", moiraMetricData(metric), from, until, "WITHSCORES")
+		c.Send("ZRANGEBYSCORE", metricDataKey(metric), from, until, "WITHSCORES")
 	}
 	resultByMetrics, err := redis.Values(c.Do("EXEC"))
 	if err != nil {
@@ -76,7 +76,7 @@ func (connector *DbConnector) readMetricRetention(metric string) (int64, error) 
 	c := connector.pool.Get()
 	defer c.Close()
 
-	retention, err := redis.Int64(c.Do("GET", moiraMetricRetention(metric)))
+	retention, err := redis.Int64(c.Do("GET", metricRetentionKey(metric)))
 	if err != nil {
 		if err == redis.ErrNil {
 			return 60, nil
@@ -93,8 +93,8 @@ func (connector *DbConnector) SaveMetrics(metrics map[string]*moira.MatchedMetri
 	for _, metric := range metrics {
 
 		metricValue := fmt.Sprintf("%v %v", metric.Timestamp, metric.Value)
-		c.Send("ZADD", moiraMetricData(metric.Metric), metric.RetentionTimestamp, metricValue)
-		c.Send("SET", moiraMetricRetention(metric.Metric), metric.Retention)
+		c.Send("ZADD", metricDataKey(metric.Metric), metric.RetentionTimestamp, metricValue)
+		c.Send("SET", metricRetentionKey(metric.Metric), metric.Retention)
 
 		for _, pattern := range metric.Patterns {
 			event, err := json.Marshal(&moira.MetricEvent{
@@ -104,7 +104,7 @@ func (connector *DbConnector) SaveMetrics(metrics map[string]*moira.MatchedMetri
 			if err != nil {
 				continue
 			}
-			c.Send("PUBLISH", metricEvent, event)
+			c.Send("PUBLISH", metricEventKey, event)
 		}
 	}
 	return c.Flush()
@@ -114,7 +114,7 @@ func (connector *DbConnector) SaveMetrics(metrics map[string]*moira.MatchedMetri
 func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb) <-chan *moira.MetricEvent {
 	c := connector.pool.Get()
 	psc := redis.PubSubConn{Conn: c}
-	psc.Subscribe(metricEvent)
+	psc.Subscribe(metricEventKey)
 
 	metricsChannel := make(chan *moira.MetricEvent, 100)
 	dataChannel := connector.manageSubscriptions(psc)
@@ -122,7 +122,7 @@ func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb) <-chan *moi
 	go func() {
 		defer c.Close()
 		<-tomb.Dying()
-		connector.logger.Infof("Calling shutdown, unsubscribe from '%s' redis channel...", metricEvent)
+		connector.logger.Infof("Calling shutdown, unsubscribe from '%s' redis channel...", metricEventKey)
 		psc.Unsubscribe()
 	}()
 
@@ -150,7 +150,7 @@ func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb) <-chan *moi
 func (connector *DbConnector) AddPatternMetric(pattern, metric string) error {
 	c := connector.pool.Get()
 	defer c.Close()
-	_, err := c.Do("SADD", moiraPatternMetrics(pattern), metric)
+	_, err := c.Do("SADD", patternMetricsKey(pattern), metric)
 	if err != nil {
 		return fmt.Errorf("Failed to SADD pattern-metrics, pattern: %s, metric: %s, error: %s", pattern, metric, err.Error())
 	}
@@ -162,7 +162,7 @@ func (connector *DbConnector) GetPatternMetrics(pattern string) ([]string, error
 	c := connector.pool.Get()
 	defer c.Close()
 
-	metrics, err := redis.Strings(c.Do("SMEMBERS", moiraPatternMetrics(pattern)))
+	metrics, err := redis.Strings(c.Do("SMEMBERS", patternMetricsKey(pattern)))
 	if err != nil {
 		if err == redis.ErrNil {
 			return make([]string, 0), nil
@@ -176,7 +176,7 @@ func (connector *DbConnector) GetPatternMetrics(pattern string) ([]string, error
 func (connector *DbConnector) RemovePattern(pattern string) error {
 	c := connector.pool.Get()
 	defer c.Close()
-	_, err := c.Do("SREM", moiraPatternsList, pattern)
+	_, err := c.Do("SREM", patternsListKey, pattern)
 	if err != nil {
 		return fmt.Errorf("Failed to remove pattern: %s, error: %s", pattern, err.Error())
 	}
@@ -189,7 +189,7 @@ func (connector *DbConnector) RemovePatternsMetrics(patterns []string) error {
 	defer c.Close()
 	c.Send("MULTI")
 	for _, pattern := range patterns {
-		c.Send("DEL", moiraPatternMetrics(pattern))
+		c.Send("DEL", patternMetricsKey(pattern))
 	}
 	_, err := c.Do("EXEC")
 	if err != nil {
@@ -207,11 +207,11 @@ func (connector *DbConnector) RemovePatternWithMetrics(pattern string) error {
 	c := connector.pool.Get()
 	defer c.Close()
 	c.Send("MULTI")
-	c.Send("SREM", moiraPatternsList, pattern)
+	c.Send("SREM", patternsListKey, pattern)
 	for _, metric := range metrics {
-		c.Send("DEL", moiraMetricData(metric))
+		c.Send("DEL", metricDataKey(metric))
 	}
-	c.Send("DEL", moiraPatternMetrics(pattern))
+	c.Send("DEL", patternMetricsKey(pattern))
 	_, err = c.Do("EXEC")
 	if err != nil {
 		return fmt.Errorf("Failed to EXEC: %s", err.Error())
@@ -226,7 +226,7 @@ func (connector *DbConnector) RemoveMetricValues(metric string, toTime int64) er
 	}
 	c := connector.pool.Get()
 	defer c.Close()
-	_, err := c.Do("ZREMRANGEBYSCORE", moiraMetricData(metric), "-inf", toTime)
+	_, err := c.Do("ZREMRANGEBYSCORE", metricDataKey(metric), "-inf", toTime)
 	if err != nil {
 		return fmt.Errorf("Failed to remove metrics from -inf to %v, error: %s", toTime, err.Error())
 	}
@@ -238,17 +238,17 @@ func (connector *DbConnector) needRemoveMetrics(metric string) bool {
 	return err == nil
 }
 
-var moiraPatternsList = "moira-pattern-list"
-var metricEvent = "metric-event"
+var patternsListKey = "moira-pattern-list"
+var metricEventKey = "metric-event"
 
-func moiraPatternMetrics(pattern string) string {
+func patternMetricsKey(pattern string) string {
 	return fmt.Sprintf("moira-pattern-metrics:%s", pattern)
 }
 
-func moiraMetricData(metric string) string {
+func metricDataKey(metric string) string {
 	return fmt.Sprintf("moira-metric-data:%s", metric)
 }
 
-func moiraMetricRetention(metric string) string {
+func metricRetentionKey(metric string) string {
 	return fmt.Sprintf("moira-metric-retention:%s", metric)
 }

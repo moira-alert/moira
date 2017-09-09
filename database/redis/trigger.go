@@ -115,19 +115,19 @@ func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigg
 		}
 		for _, tag := range leftJoin(existing.Tags, trigger.Tags) {
 			c.Send("SREM", triggerTagsKey(triggerID), tag)
-			c.Send("SREM", moiraTagTriggers(tag), triggerID)
+			c.Send("SREM", tagTriggersKey(tag), triggerID)
 		}
 	}
 	c.Do("SET", triggerKey(triggerID), bytes)
 	c.Do("SADD", triggersListKey, triggerID)
 	for _, pattern := range trigger.Patterns {
-		c.Do("SADD", moiraPatternsList, pattern)
+		c.Do("SADD", patternsListKey, pattern)
 		c.Do("SADD", patternTriggersKey(pattern), triggerID)
 	}
 	for _, tag := range trigger.Tags {
 		c.Send("SADD", triggerTagsKey(triggerID), tag)
-		c.Send("SADD", moiraTagTriggers(tag), triggerID)
-		c.Send("SADD", moiraTags, tag)
+		c.Send("SADD", tagTriggersKey(tag), triggerID)
+		c.Send("SADD", tagsKey, tag)
 	}
 	_, err = c.Do("EXEC")
 	if err != nil {
@@ -167,7 +167,7 @@ func (connector *DbConnector) RemoveTrigger(triggerID string) error {
 	c.Send("DEL", triggerTagsKey(triggerID))
 	c.Send("SREM", triggersListKey, triggerID)
 	for _, tag := range trigger.Tags {
-		c.Send("SREM", moiraTagTriggers(tag), triggerID)
+		c.Send("SREM", tagTriggersKey(tag), triggerID)
 	}
 	for _, pattern := range trigger.Patterns {
 		c.Send("SREM", patternTriggersKey(pattern), triggerID)
@@ -202,7 +202,7 @@ func (connector *DbConnector) GetTriggerChecks(triggerIDs []string) ([]*moira.Tr
 	for _, triggerID := range triggerIDs {
 		c.Send("GET", triggerKey(triggerID))
 		c.Send("SMEMBERS", triggerTagsKey(triggerID))
-		c.Send("GET", moiraMetricLastCheck(triggerID))
+		c.Send("GET", metricLastCheckKey(triggerID))
 		c.Send("GET", notifierNextKey(triggerID))
 	}
 	rawResponse, err := redis.Values(c.Do("EXEC"))
