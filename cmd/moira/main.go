@@ -10,17 +10,11 @@ import (
 
 	"github.com/patrickmn/go-cache"
 
+	"github.com/moira-alert/moira-alert/checker/worker"
 	"github.com/moira-alert/moira-alert/cmd"
 	"github.com/moira-alert/moira-alert/database/redis"
 	"github.com/moira-alert/moira-alert/logging/go-logging"
 	"github.com/moira-alert/moira-alert/metrics/graphite/go-metrics"
-
-	"github.com/moira-alert/moira-alert/notifier"
-	"github.com/moira-alert/moira-alert/notifier/events"
-	"github.com/moira-alert/moira-alert/notifier/notifications"
-	"github.com/moira-alert/moira-alert/notifier/selfstate"
-
-	"github.com/moira-alert/moira-alert/checker/worker"
 )
 
 var (
@@ -67,7 +61,7 @@ func main() {
 	databaseSettings := config.Redis.GetSettings()
 
 	// API
-	apiService := &APIServer{
+	apiService := &APIService{
 		Config:         config.API.getSettings(),
 		DatabaseConfig: &databaseSettings,
 		LogLevel:       config.API.LogLevel,
@@ -79,7 +73,7 @@ func main() {
 	}
 
 	// Filter
-	filterService := &Filter{
+	filterService := &FilterService{
 		Config:         config.Filter.getSettings(),
 		DatabaseConfig: &databaseSettings,
 		LogLevel:       config.Filter.LogLevel,
@@ -91,46 +85,17 @@ func main() {
 	}
 
 	// Notifier
-	notifierLog, err := logging.ConfigureLog(config.Notifier.LogFile, config.Notifier.LogLevel, "notifier")
-	if err != nil {
-		log.Fatalf("Can't configure logger for Filter: %v\n", err)
+	notifierService := &NotifierService{
+		Config:          config.Notifier.getSettings(),
+		SelfStateConfig: config.Notifier.SelfState.getSettings(),
+		DatabaseConfig:  &databaseSettings,
+		LogLevel:        config.Filter.LogLevel,
+		LogFile:         config.Filter.LogFile,
 	}
 
-	notifierMetrics := metrics.ConfigureNotifierMetrics("notifier")
-
-	notifierDB := redis.NewDatabase(notifierLog, databaseSettings)
-
-	notifierConfig := config.Notifier.getSettings()
-	sender := notifier.NewNotifier(notifierDB, notifierLog, *notifierConfig, notifierMetrics)
-
-	if err = sender.RegisterSenders(notifierDB, notifierConfig.FrontURL); err != nil {
-		log.Fatalf("Can't configure senders: %s", err.Error())
+	if err = notifierService.Start(); err != nil {
+		log.Fatalf("Can't start Notifier: %v", err)
 	}
-
-	selfState := &selfstate.SelfCheckWorker{
-		Log:      notifierLog,
-		DB:       notifierDB,
-		Config:   *config.Notifier.SelfState.getSettings(),
-		Notifier: sender,
-	}
-	if err = selfState.Start(); err != nil {
-		log.Fatalf("SelfState failed: %v", err)
-	}
-
-	fetchEventsWorker := events.FetchEventsWorker{
-		Logger:    notifierLog,
-		Database:  notifierDB,
-		Scheduler: notifier.NewScheduler(notifierDB, notifierLog, notifierMetrics),
-		Metrics:   notifierMetrics,
-	}
-	fetchEventsWorker.Start()
-
-	fetchNotificationsWorker := &notifications.FetchNotificationsWorker{
-		Logger:   notifierLog,
-		Database: notifierDB,
-		Notifier: sender,
-	}
-	fetchNotificationsWorker.Start()
 
 	// Checker
 	checkerLog, err := logging.ConfigureLog(config.Checker.LogFile, config.Checker.LogLevel, "checker")
@@ -160,15 +125,12 @@ func main() {
 	log.Info(<-ch)
 
 	if err := filterService.Stop(); err != nil {
-		log.Errorf("Can't stop Moira Filter: %v", err)
+		log.Errorf("Can't stop Moira FilterService: %v", err)
 	}
 	log.Info("Filter stopped")
 
 	// Stop Notifier
-	selfState.Stop()
-	fetchEventsWorker.Stop()
-	fetchNotificationsWorker.Stop()
-	notifierDB.DeregisterBots()
+	notifierService.Stop()
 	log.Info("Notifier stopped")
 
 	// Stop Checker

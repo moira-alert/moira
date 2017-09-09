@@ -83,6 +83,13 @@ type Database interface {
 	AcquireTriggerCheckLock(triggerID string, timeout int) error
 	DeleteTriggerCheckLock(triggerID string) error
 	SetTriggerCheckLock(triggerID string) (bool, error)
+
+	// Bot data storing
+	GetIDByUsername(messenger, username string) (string, error)
+	SetUsernameID(messenger, username, id string) error
+	RegisterBotIfAlreadyNot(string) bool
+	DeregisterBots()
+	DeregisterBot(string) error
 }
 
 // Logger implements logger abstraction

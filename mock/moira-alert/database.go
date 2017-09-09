@@ -105,6 +105,28 @@ func (_mr *MockDatabaseMockRecorder) DeleteTriggerThrottling(arg0 interface{}) *
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "DeleteTriggerThrottling", arg0)
 }
 
+// DeregisterBot mocks base method
+func (_m *MockDatabase) DeregisterBot(_param0 string) error {
+	ret := _m.ctrl.Call(_m, "DeregisterBot", _param0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeregisterBot indicates an expected call of DeregisterBot
+func (_mr *MockDatabaseMockRecorder) DeregisterBot(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "DeregisterBot", arg0)
+}
+
+// DeregisterBots mocks base method
+func (_m *MockDatabase) DeregisterBots() {
+	_m.ctrl.Call(_m, "DeregisterBots")
+}
+
+// DeregisterBots indicates an expected call of DeregisterBots
+func (_mr *MockDatabaseMockRecorder) DeregisterBots() *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "DeregisterBots")
+}
+
 // FetchNotificationEvent mocks base method
 func (_m *MockDatabase) FetchNotificationEvent() (moira_alert.NotificationEvent, error) {
 	ret := _m.ctrl.Call(_m, "FetchNotificationEvent")
@@ -181,6 +203,19 @@ func (_m *MockDatabase) GetContacts(_param0 []string) ([]*moira_alert.ContactDat
 // GetContacts indicates an expected call of GetContacts
 func (_mr *MockDatabaseMockRecorder) GetContacts(arg0 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetContacts", arg0)
+}
+
+// GetIDByUsername mocks base method
+func (_m *MockDatabase) GetIDByUsername(_param0 string, _param1 string) (string, error) {
+	ret := _m.ctrl.Call(_m, "GetIDByUsername", _param0, _param1)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetIDByUsername indicates an expected call of GetIDByUsername
+func (_mr *MockDatabaseMockRecorder) GetIDByUsername(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetIDByUsername", arg0, arg1)
 }
 
 // GetMetricRetention mocks base method
@@ -494,6 +529,18 @@ func (_mr *MockDatabaseMockRecorder) PushNotificationEvent(arg0, arg1 interface{
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "PushNotificationEvent", arg0, arg1)
 }
 
+// RegisterBotIfAlreadyNot mocks base method
+func (_m *MockDatabase) RegisterBotIfAlreadyNot(_param0 string) bool {
+	ret := _m.ctrl.Call(_m, "RegisterBotIfAlreadyNot", _param0)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// RegisterBotIfAlreadyNot indicates an expected call of RegisterBotIfAlreadyNot
+func (_mr *MockDatabaseMockRecorder) RegisterBotIfAlreadyNot(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "RegisterBotIfAlreadyNot", arg0)
+}
+
 // RemoveContact mocks base method
 func (_m *MockDatabase) RemoveContact(_param0 string) error {
 	ret := _m.ctrl.Call(_m, "RemoveContact", _param0)
@@ -722,6 +769,18 @@ func (_m *MockDatabase) SetTriggerThrottling(_param0 string, _param1 time.Time) 
 // SetTriggerThrottling indicates an expected call of SetTriggerThrottling
 func (_mr *MockDatabaseMockRecorder) SetTriggerThrottling(arg0, arg1 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetTriggerThrottling", arg0, arg1)
+}
+
+// SetUsernameID mocks base method
+func (_m *MockDatabase) SetUsernameID(_param0 string, _param1 string, _param2 string) error {
+	ret := _m.ctrl.Call(_m, "SetUsernameID", _param0, _param1, _param2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetUsernameID indicates an expected call of SetUsernameID
+func (_mr *MockDatabaseMockRecorder) SetUsernameID(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "SetUsernameID", arg0, arg1, arg2)
 }
 
 // SubscribeMetricEvents mocks base method

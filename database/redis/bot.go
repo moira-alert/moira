@@ -26,7 +26,7 @@ func (connector *DbConnector) GetIDByUsername(messenger, username string) (strin
 	c := connector.pool.Get()
 	defer c.Close()
 
-	result, err := redis.String(c.Do("GET", fmt.Sprintf("moira-%s-users:%s", messenger, username)))
+	result, err := redis.String(c.Do("GET", usernameKey(messenger, username)))
 
 	return result, err
 }

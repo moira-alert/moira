@@ -2,20 +2,19 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"net/http"
-	"os"
 	"time"
 
-	"fmt"
 	"github.com/moira-alert/moira-alert/api"
 	"github.com/moira-alert/moira-alert/api/handler"
 	"github.com/moira-alert/moira-alert/database/redis"
 	"github.com/moira-alert/moira-alert/logging/go-logging"
 )
 
-// APIServer is a HTTP server for Moira API
-type APIServer struct {
+// APIService is a HTTP server for Moira API
+type APIService struct {
 	Config         *api.Config
 	DatabaseConfig *redis.Config
 
@@ -26,11 +25,10 @@ type APIServer struct {
 }
 
 // Start Moira API HTTP server
-func (apiService *APIServer) Start() error {
+func (apiService *APIService) Start() error {
 	logger, err := logging.ConfigureLog(apiService.LogFile, apiService.LogLevel, "api")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Can't configure logger for API: %v\n", err)
-		os.Exit(1)
+		return fmt.Errorf("Can't configure logger for Api: %v", err)
 	}
 
 	if !apiService.Config.Enabled {
@@ -58,7 +56,7 @@ func (apiService *APIServer) Start() error {
 }
 
 // Stop Moira API HTTP server
-func (apiService *APIServer) Stop() error {
+func (apiService *APIService) Stop() error {
 	if !apiService.Config.Enabled {
 		return nil
 	}

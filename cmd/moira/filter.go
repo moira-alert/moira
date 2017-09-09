@@ -15,8 +15,8 @@ import (
 	"github.com/moira-alert/moira-alert/metrics/graphite/go-metrics"
 )
 
-// Filter represents filter functionality of moira
-type Filter struct {
+// FilterService represents filter functionality of moira
+type FilterService struct {
 	Config         *filter.Config
 	DatabaseConfig *redis.Config
 
@@ -30,11 +30,10 @@ type Filter struct {
 }
 
 // Start Moira Filter
-func (filterService *Filter) Start() error {
+func (filterService *FilterService) Start() error {
 	logger, err := logging.ConfigureLog(filterService.LogFile, filterService.LogLevel, "filter")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Can't configure logger for Filter: %v\n", err)
-		os.Exit(1)
+		return fmt.Errorf("Can't configure logger for Filter: %v", err)
 	}
 
 	if !filterService.Config.Enabled {
@@ -80,7 +79,7 @@ func (filterService *Filter) Start() error {
 }
 
 // Stop Moira Filter
-func (filterService *Filter) Stop() error {
+func (filterService *FilterService) Stop() error {
 	if err := filterService.listener.Stop(); err != nil {
 		return err
 	}
