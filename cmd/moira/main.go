@@ -83,15 +83,11 @@ func main() {
 	}
 
 	// Filter
-	filterLog, err := logging.ConfigureLog(config.Filter.LogFile, config.Filter.LogLevel, "filter")
-	if err != nil {
-		log.Fatalf("Can't configure logger for Filter: %v\n", err)
-	}
-
 	filterServer := &Filter{
-		Config: config.Filter.getSettings(),
-		DB:     redis.NewDatabase(filterLog, databaseSettings),
-		Log:    filterLog,
+		Config:         config.Filter.getSettings(),
+		DatabaseConfig: &databaseSettings,
+		LogLevel:       config.Filter.LogLevel,
+		LogFile:        config.Filter.LogFile,
 	}
 
 	if err = filterServer.Start(); err != nil {
@@ -148,7 +144,7 @@ func main() {
 	checkerMetrics := metrics.ConfigureCheckerMetrics("checker")
 	checkerWorker := &worker.Checker{
 		Logger:   checkerLog,
-		Database: redis.NewDatabase(filterLog, databaseSettings),
+		Database: redis.NewDatabase(checkerLog, databaseSettings),
 		Config:   config.Checker.getSettings(),
 		Metrics:  checkerMetrics,
 		Cache:    cache.New(time.Minute, time.Minute*60),
@@ -168,7 +164,7 @@ func main() {
 	log.Info(<-ch)
 
 	if err := filterServer.Stop(); err != nil {
-		log.Errorf("Can't stop Filer: %v", err)
+		log.Errorf("Can't stop Moira Filter: %v", err)
 	}
 	log.Info("Filter stopped")
 
@@ -181,13 +177,13 @@ func main() {
 
 	// Stop Checker
 	if err := checkerWorker.Stop(); err != nil {
-		log.Errorf("Stop Checker Failed: %v", err)
+		log.Errorf("Can't stop Moira Checker: %v", err)
 	}
 	log.Info("Checker stopped")
 
 	// Stop Api
 	if err := apiServer.Stop(); err != nil {
-		log.Errorf("Can't stop API: %v", err)
+		log.Errorf("Can't stop Moira Api: %v", err)
 	}
 	log.Info("API stopped")
 	log.Infof("Moira Stopped (version: %s)", Version)
