@@ -95,8 +95,12 @@ func TestIsScheduleAllows(t *testing.T) {
 
 func TestEventsData_GetSubjectState(t *testing.T) {
 	Convey("Get ERROR state", t, func() {
-		states := NotificationEvents{{State: "OK"}, {State: "ERROR"}}
+		message := "mes1"
+		var value float64 = 1
+		states := NotificationEvents{{State: "OK"}, {State: "ERROR", Message: &message, Value: &value}}
 		So(states.GetSubjectState(), ShouldResemble, "ERROR")
+		So(states[0].String(), ShouldResemble, "TriggerId: , Metric: , Value: 0, OldState: , State: OK, Message: '', Timestamp: 0")
+		So(states[1].String(), ShouldResemble, "TriggerId: , Metric: , Value: 1, OldState: , State: ERROR, Message: 'mes1', Timestamp: 0")
 	})
 }
 
