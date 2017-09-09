@@ -100,7 +100,7 @@ func TestTriggerStoring(t *testing.T) {
 			//And we have new pattern in patterns list
 			actualPatterns, err = dataBase.GetPatterns()
 			So(err, ShouldBeNil)
-			So(actualPatterns, ShouldResemble, changedTrigger.Patterns)
+			So(actualPatterns, ShouldHaveLength, 2)
 
 			//Now remove old tag and pattern in trigger and save it
 			oldTag := changedTrigger.Tags[1]
@@ -148,7 +148,7 @@ func TestTriggerStoring(t *testing.T) {
 			//But this pattern no more in pattern list, it is not needed
 			actualTags, err = dataBase.GetPatterns()
 			So(err, ShouldBeNil)
-			So(actualTags, ShouldResemble, changedAgainTrigger.Patterns)
+			So(actualTags, ShouldHaveLength, 2)
 
 			//Stop it!! Remove trigger and check for no existing it by pointers
 			err = dataBase.RemoveTrigger(changedAgainTrigger.ID)
