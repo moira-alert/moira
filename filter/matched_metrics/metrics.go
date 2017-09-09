@@ -53,7 +53,7 @@ func (matcher *MetricsMatcher) Start(channel chan *moira.MatchedMetric, wg *sync
 			buffer = make(map[string]*moira.MatchedMetric)
 		}
 	}()
-	matcher.logger.Info("Metrics Matcher started")
+	matcher.logger.Info("Moira Filter Metrics Matcher started")
 }
 
 func (matcher *MetricsMatcher) save(buffer map[string]*moira.MatchedMetric) {

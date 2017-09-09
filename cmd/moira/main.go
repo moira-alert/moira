@@ -67,30 +67,26 @@ func main() {
 	databaseSettings := config.Redis.GetSettings()
 
 	// API
-	apiLog, err := logging.ConfigureLog(config.API.LogFile, config.API.LogLevel, "api")
-	if err != nil {
-		log.Fatalf("Can't configure logger for API: %v\n", err)
+	apiService := &APIServer{
+		Config:         config.API.getSettings(),
+		DatabaseConfig: &databaseSettings,
+		LogLevel:       config.API.LogLevel,
+		LogFile:        config.API.LogFile,
 	}
 
-	apiServer := &APIServer{
-		Config: config.API.getSettings(),
-		DB:     redis.NewDatabase(apiLog, databaseSettings),
-		Log:    apiLog,
-	}
-
-	if err = apiServer.Start(); err != nil {
+	if err = apiService.Start(); err != nil {
 		log.Fatalf("Can't start API: %v", err)
 	}
 
 	// Filter
-	filterServer := &Filter{
+	filterService := &Filter{
 		Config:         config.Filter.getSettings(),
 		DatabaseConfig: &databaseSettings,
 		LogLevel:       config.Filter.LogLevel,
 		LogFile:        config.Filter.LogFile,
 	}
 
-	if err = filterServer.Start(); err != nil {
+	if err = filterService.Start(); err != nil {
 		log.Fatalf("Can't start Filter: %v", err)
 	}
 
@@ -102,7 +98,7 @@ func main() {
 
 	notifierMetrics := metrics.ConfigureNotifierMetrics("notifier")
 
-	notifierDB := redis.NewDatabase(notifierLog, config.Redis.GetSettings())
+	notifierDB := redis.NewDatabase(notifierLog, databaseSettings)
 
 	notifierConfig := config.Notifier.getSettings()
 	sender := notifier.NewNotifier(notifierDB, notifierLog, *notifierConfig, notifierMetrics)
@@ -142,7 +138,7 @@ func main() {
 		log.Fatalf("Can't configure logger for Checker: %v\n", err)
 	}
 	checkerMetrics := metrics.ConfigureCheckerMetrics("checker")
-	checkerWorker := &worker.Checker{
+	checkerService := &worker.Checker{
 		Logger:   checkerLog,
 		Database: redis.NewDatabase(checkerLog, databaseSettings),
 		Config:   config.Checker.getSettings(),
@@ -150,7 +146,7 @@ func main() {
 		Cache:    cache.New(time.Minute, time.Minute*60),
 	}
 
-	if err = checkerWorker.Start(); err != nil {
+	if err = checkerService.Start(); err != nil {
 		log.Fatalf("Start Checker failed: %v", err)
 	}
 
@@ -163,7 +159,7 @@ func main() {
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 	log.Info(<-ch)
 
-	if err := filterServer.Stop(); err != nil {
+	if err := filterService.Stop(); err != nil {
 		log.Errorf("Can't stop Moira Filter: %v", err)
 	}
 	log.Info("Filter stopped")
@@ -176,13 +172,13 @@ func main() {
 	log.Info("Notifier stopped")
 
 	// Stop Checker
-	if err := checkerWorker.Stop(); err != nil {
+	if err := checkerService.Stop(); err != nil {
 		log.Errorf("Can't stop Moira Checker: %v", err)
 	}
 	log.Info("Checker stopped")
 
 	// Stop Api
-	if err := apiServer.Stop(); err != nil {
+	if err := apiService.Stop(); err != nil {
 		log.Errorf("Can't stop Moira Api: %v", err)
 	}
 	log.Info("API stopped")

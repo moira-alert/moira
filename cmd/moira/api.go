@@ -4,55 +4,65 @@ import (
 	"context"
 	"net"
 	"net/http"
+	"os"
 	"time"
 
-	"github.com/moira-alert/moira-alert"
+	"fmt"
 	"github.com/moira-alert/moira-alert/api"
 	"github.com/moira-alert/moira-alert/api/handler"
+	"github.com/moira-alert/moira-alert/database/redis"
+	"github.com/moira-alert/moira-alert/logging/go-logging"
 )
 
 // APIServer is a HTTP server for Moira API
 type APIServer struct {
-	Config *api.Config
-	Log    moira.Logger
-	DB     moira.Database
-	http   *http.Server
+	Config         *api.Config
+	DatabaseConfig *redis.Config
+
+	LogFile  string
+	LogLevel string
+
+	http *http.Server
 }
 
 // Start Moira API HTTP server
-func (server *APIServer) Start() error {
-	if !server.Config.Enabled {
-		server.Log.Info("API Disabled")
+func (apiService *APIServer) Start() error {
+	logger, err := logging.ConfigureLog(apiService.LogFile, apiService.LogLevel, "api")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Can't configure logger for API: %v\n", err)
+		os.Exit(1)
+	}
+
+	if !apiService.Config.Enabled {
+		logger.Info("Moira Api Disabled")
 		return nil
 	}
 
-	listener, err := net.Listen("tcp", server.Config.Listen)
+	dataBase := redis.NewDatabase(logger, *apiService.DatabaseConfig)
+	listener, err := net.Listen("tcp", apiService.Config.Listen)
 	if err != nil {
 		return err
 	}
 
-	httpHandler := handler.NewHandler(server.DB, server.Log)
-
-	server.http = &http.Server{
+	httpHandler := handler.NewHandler(dataBase, logger)
+	apiService.http = &http.Server{
 		Handler: httpHandler,
 	}
 
 	go func() {
-		server.http.Serve(listener)
+		apiService.http.Serve(listener)
 	}()
 
-	server.Log.Info("Moira Api Started")
+	logger.Info("Moira Api Started")
 	return nil
 }
 
 // Stop Moira API HTTP server
-func (server *APIServer) Stop() error {
-	if !server.Config.Enabled {
+func (apiService *APIServer) Stop() error {
+	if !apiService.Config.Enabled {
 		return nil
 	}
-
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-
-	return server.http.Shutdown(ctx)
+	return apiService.http.Shutdown(ctx)
 }
