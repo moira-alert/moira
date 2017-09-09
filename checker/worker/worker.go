@@ -26,16 +26,16 @@ type Checker struct {
 // Start start schedule new MetricEvents and check for NODATA triggers
 func (worker *Checker) Start() error {
 	if !worker.Config.Enabled {
-		worker.Logger.Debug("Checker Disabled")
+		worker.Logger.Info("Checker Disabled")
 		return nil
 	}
 	worker.lastData = time.Now().UTC().Unix()
 
 	worker.tomb.Go(worker.noDataChecker)
-	worker.Logger.Infof("NoData checker started")
+	worker.Logger.Info("NoData checker started")
 
 	worker.tomb.Go(worker.metricsChecker)
-	worker.Logger.Infof("Checking new events started")
+	worker.Logger.Info("Checking new events started")
 	return nil
 }
 

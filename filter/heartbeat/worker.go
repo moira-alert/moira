@@ -34,7 +34,7 @@ func (worker *Worker) Start() {
 		for {
 			select {
 			case <-worker.tomb.Dying():
-				worker.logger.Infof("Moira Filter heartbeat stopped")
+				worker.logger.Info("Moira Filter heartbeat stopped")
 				return nil
 			case <-checkTicker.C:
 				newCount := worker.metrics.TotalMetricsReceived.Count()
@@ -48,7 +48,7 @@ func (worker *Worker) Start() {
 			}
 		}
 	})
-	worker.logger.Infof("Moira Filter heartbeat started")
+	worker.logger.Info("Moira Filter heartbeat started")
 }
 
 // Stop heartbeat worker

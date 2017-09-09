@@ -42,7 +42,7 @@ func (worker *RefreshPatternWorker) Start() error {
 			checkTicker := time.NewTicker(time.Second)
 			select {
 			case <-worker.tomb.Dying():
-				worker.logger.Infof("Moira Filter pattern updater stopped")
+				worker.logger.Info("Moira Filter pattern updater stopped")
 				return nil
 			case <-checkTicker.C:
 				timer := time.Now()
@@ -54,7 +54,7 @@ func (worker *RefreshPatternWorker) Start() error {
 			}
 		}
 	})
-	worker.logger.Infof("Moira Filter pattern updater started")
+	worker.logger.Info("Moira Filter pattern updater started")
 	return nil
 }
 

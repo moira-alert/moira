@@ -28,7 +28,7 @@ func (worker *FetchEventsWorker) Start() {
 			select {
 			case <-worker.tomb.Dying():
 				{
-					worker.Logger.Debug("Fetching events stopped")
+					worker.Logger.Info("Fetching events stopped")
 					return nil
 				}
 			default:
@@ -51,7 +51,7 @@ func (worker *FetchEventsWorker) Start() {
 			}
 		}
 	})
-	worker.Logger.Debug("Fetching events started")
+	worker.Logger.Info("Fetching events started")
 }
 
 // Stop stops new event fetching and wait for finish

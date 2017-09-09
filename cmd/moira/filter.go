@@ -29,7 +29,7 @@ type Filter struct {
 // Start Moira Filter
 func (f *Filter) Start() error {
 	if !f.Config.Enabled {
-		f.Log.Debug("Filter disabled")
+		f.Log.Info("Filter disabled")
 		return nil
 	}
 

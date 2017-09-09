@@ -41,7 +41,7 @@ func (server *APIServer) Start() error {
 		server.http.Serve(listener)
 	}()
 
-	server.Log.Debug("API Started")
+	server.Log.Info("API Started")
 	return nil
 }
 
