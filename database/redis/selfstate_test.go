@@ -33,7 +33,7 @@ func TestSelfCheck(t *testing.T) {
 		})
 
 		Convey("Update metrics checks updates count", func() {
-			err := dataBase.SetTriggerLastCheck("123", &lastCheck)
+			err := dataBase.SetTriggerLastCheck("123", &lastCheckTest)
 			So(err, ShouldBeNil)
 
 			count, err := dataBase.GetChecksUpdatesCount()

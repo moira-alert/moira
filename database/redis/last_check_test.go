@@ -20,12 +20,12 @@ func TestLastCheck(t *testing.T) {
 	Convey("LastCheck manipulation", t, func() {
 		Convey("Test read write", func() {
 			triggerID := uuid.NewV4().String()
-			err := dataBase.SetTriggerLastCheck(triggerID, &lastCheck)
+			err := dataBase.SetTriggerLastCheck(triggerID, &lastCheckTest)
 			So(err, ShouldBeNil)
 
 			actual, err := dataBase.GetTriggerLastCheck(triggerID)
 			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, lastCheck)
+			So(actual, ShouldResemble, lastCheckTest)
 		})
 
 		Convey("Test no lastcheck", func() {
@@ -58,7 +58,7 @@ func TestLastCheck(t *testing.T) {
 
 			Convey("While no metrics to change", func() {
 				triggerID := uuid.NewV4().String()
-				err := dataBase.SetTriggerLastCheck(triggerID, &lastCheck)
+				err := dataBase.SetTriggerLastCheck(triggerID, &lastCheckTest)
 				So(err, ShouldBeNil)
 
 				err = dataBase.SetTriggerCheckMetricsMaintenance(triggerID, map[string]int64{"metric11": 1, "metric55": 5})
@@ -66,11 +66,11 @@ func TestLastCheck(t *testing.T) {
 
 				actual, err := dataBase.GetTriggerLastCheck(triggerID)
 				So(err, ShouldBeNil)
-				So(actual, ShouldResemble, lastCheck)
+				So(actual, ShouldResemble, lastCheckTest)
 			})
 
 			Convey("Has metrics to change", func() {
-				checkData := lastCheck
+				checkData := lastCheckTest
 				triggerID := uuid.NewV4().String()
 				err := dataBase.SetTriggerLastCheck(triggerID, &checkData)
 				So(err, ShouldBeNil)
@@ -96,7 +96,7 @@ func TestLastCheck(t *testing.T) {
 			badTriggerID := uuid.NewV4().String()
 			err := dataBase.SetTriggerLastCheck(okTriggerID, &lastCheckWithNoMetrics)
 			So(err, ShouldBeNil)
-			err = dataBase.SetTriggerLastCheck(badTriggerID, &lastCheck)
+			err = dataBase.SetTriggerLastCheck(badTriggerID, &lastCheckTest)
 			So(err, ShouldBeNil)
 
 			actual, err := dataBase.GetTriggerCheckIDs(make([]string, 0), true)
@@ -120,7 +120,7 @@ func TestLastCheckErrorConnection(t *testing.T) {
 		So(actual1, ShouldResemble, moira.CheckData{})
 		So(err, ShouldNotBeNil)
 
-		err = dataBase.SetTriggerLastCheck("123", &lastCheck)
+		err = dataBase.SetTriggerLastCheck("123", &lastCheckTest)
 		So(err, ShouldNotBeNil)
 
 		err = dataBase.SetTriggerCheckMetricsMaintenance("123", map[string]int64{})
@@ -132,7 +132,7 @@ func TestLastCheckErrorConnection(t *testing.T) {
 	})
 }
 
-var lastCheck = moira.CheckData{
+var lastCheckTest = moira.CheckData{
 	Score:     6000,
 	State:     "OK",
 	Timestamp: 1504509981,

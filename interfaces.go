@@ -32,6 +32,8 @@ type Database interface {
 	RemoveTrigger(triggerID string) error
 	GetPatternTriggerIDs(pattern string) ([]string, error)
 	RemovePatternTriggerIDs(pattern string) error
+
+	// Throttling
 	GetTriggerThrottling(triggerID string) (time.Time, time.Time)
 	SetTriggerThrottling(triggerID string, next time.Time) error
 	DeleteTriggerThrottling(triggerID string) error
