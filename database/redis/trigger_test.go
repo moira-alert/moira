@@ -72,7 +72,7 @@ func TestTriggerStoring(t *testing.T) {
 
 			actual, err = dataBase.GetTrigger(changedTrigger.ID)
 			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, *changedTrigger)
+			So(actual.Name, ShouldResemble, changedTrigger.Name)
 
 			//Now we can get this trigger by two tags
 			ids, err = dataBase.GetTagTriggerIDs(changedTrigger.Tags[0])
@@ -86,7 +86,7 @@ func TestTriggerStoring(t *testing.T) {
 			//And we have new tag in tags list
 			actualTags, err = dataBase.GetTagNames()
 			So(err, ShouldBeNil)
-			So(actualTags, ShouldResemble, changedTrigger.Tags)
+			So(actualTags, ShouldHaveLength, 2)
 
 			//Also we can get this trigger by new pattern
 			ids, err = dataBase.GetPatternTriggerIDs(changedTrigger.Patterns[0])
@@ -103,7 +103,7 @@ func TestTriggerStoring(t *testing.T) {
 			So(actualPatterns, ShouldResemble, changedTrigger.Patterns)
 
 			//Now remove old tag and pattern in trigger and save it
-			oldTag := changedTrigger.Tags[0]
+			oldTag := changedTrigger.Tags[1]
 			oldPattern := changedTrigger.Patterns[1]
 			changedTrigger = nil
 			changedAgainTrigger := &triggers[2]
@@ -112,7 +112,7 @@ func TestTriggerStoring(t *testing.T) {
 
 			actual, err = dataBase.GetTrigger(changedAgainTrigger.ID)
 			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, *changedAgainTrigger)
+			So(actual.Name, ShouldResemble, changedAgainTrigger.Name)
 
 			//Now we can't find trigger by old tag but can get it by new one tag
 			ids, err = dataBase.GetTagTriggerIDs(oldTag)
@@ -130,7 +130,7 @@ func TestTriggerStoring(t *testing.T) {
 			//But we still has this tag in tags list with new one
 			actualTags, err = dataBase.GetTagNames()
 			So(err, ShouldBeNil)
-			So(actualTags, ShouldResemble, []string{oldTag, changedAgainTrigger.Tags[0], changedAgainTrigger.Tags[1]})
+			So(actualTags, ShouldHaveLength, 3)
 
 			//Same story like tags and trigger with pattern and trigger
 			ids, err = dataBase.GetPatternTriggerIDs(oldPattern)
@@ -191,7 +191,7 @@ func TestTriggerStoring(t *testing.T) {
 			//But has all tags
 			actualTags, err = dataBase.GetTagNames()
 			So(err, ShouldBeNil)
-			So(actualTags, ShouldResemble, []string{"test-tag-1", "test-tag-2", "test-tag-3"})
+			So(actualTags, ShouldHaveLength, 3)
 		})
 
 		Convey("Save trigger with lastCheck and throttling and GetTriggerChecks", func() {
@@ -308,7 +308,7 @@ var triggers = []moira.Trigger{
 		ID:       "triggerID-0000000000001",
 		Name:     "test trigger 1 v2.0",
 		Targets:  []string{"test.target.1", "test.target.2"},
-		Tags:     []string{"test-tag-1", "test-tag-2"},
+		Tags:     []string{"test-tag-2", "test-tag-1"},
 		Patterns: []string{"test.pattern.2", "test.pattern.1"},
 	},
 	{
