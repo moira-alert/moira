@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/garyburd/redigo/redis"
+	"github.com/moira-alert/moira-alert/database"
 )
 
 const (
@@ -19,15 +20,14 @@ var messengers = make(map[string]bool)
 func (connector *DbConnector) GetIDByUsername(messenger, username string) (string, error) {
 	if strings.HasPrefix(username, "#") {
 		result := "@" + username[1:]
-		connector.logger.Debugf("Channel %s requested. Returning id: %s", username, result)
 		return result, nil
 	}
-
 	c := connector.pool.Get()
 	defer c.Close()
-
 	result, err := redis.String(c.Do("GET", usernameKey(messenger, username)))
-
+	if err == redis.ErrNil {
+		return result, database.ErrNil
+	}
 	return result, err
 }
 
@@ -48,12 +48,11 @@ func (connector *DbConnector) RegisterBotIfAlreadyNot(messenger string) bool {
 
 	c.Send("WATCH", redisKey)
 
-	status, err := redis.Bytes(c.Do("GET", redisKey))
-	statusStr := string(status)
-	if err != nil {
+	status, err := connector.GetIDByUsername(messenger, botUsername)
+	if err != nil && err != database.ErrNil {
 		connector.logger.Info(err)
 	}
-	if statusStr == "" || statusStr == host || statusStr == deregistered {
+	if status == "" || status == host || status == deregistered {
 		c.Send("MULTI")
 		c.Send("SET", redisKey, host)
 		_, err := c.Do("EXEC")
@@ -70,8 +69,8 @@ func (connector *DbConnector) RegisterBotIfAlreadyNot(messenger string) bool {
 
 // DeregisterBots cancels registration for all registered messengers
 func (connector *DbConnector) DeregisterBots() {
-	for messenger, flag := range messengers {
-		if flag {
+	for messenger, ok := range messengers {
+		if ok {
 			connector.DeregisterBot(messenger)
 		}
 	}
@@ -83,6 +82,7 @@ func (connector *DbConnector) DeregisterBot(messenger string) error {
 	host, _ := os.Hostname()
 	if status == host {
 		connector.logger.Debugf("Bot for %s on host %s exists. Removing registration.", messenger, host)
+		delete(messengers, messenger)
 		return connector.SetUsernameID(messenger, botUsername, deregistered)
 	}
 
