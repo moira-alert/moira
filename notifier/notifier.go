@@ -9,6 +9,20 @@ import (
 	"github.com/moira-alert/moira-alert/metrics/graphite"
 )
 
+// NotificationPackage represent sending data
+type NotificationPackage struct {
+	Events     []moira.NotificationEvent
+	Trigger    moira.TriggerData
+	Contact    moira.ContactData
+	FailCount  int
+	Throttled  bool
+	DontResend bool
+}
+
+func (pkg NotificationPackage) String() string {
+	return fmt.Sprintf("package of %d notifications to %s", len(pkg.Events), pkg.Contact.Value)
+}
+
 // Notifier implements notification functionality
 type Notifier interface {
 	Send(pkg *NotificationPackage, waitGroup *sync.WaitGroup)
