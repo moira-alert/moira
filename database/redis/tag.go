@@ -27,7 +27,6 @@ func (connector *DbConnector) RemoveTag(tagName string) error {
 	c.Send("SREM", moiraTags, tagName)
 	c.Send("DEL", moiraTagSubscription(tagName))
 	c.Send("DEL", moiraTagTriggers(tagName))
-	c.Send("DEL", moiraTag(tagName))
 	_, err := c.Do("EXEC")
 	if err != nil {
 		return fmt.Errorf("Failed to EXEC: %s", err.Error())
@@ -51,10 +50,6 @@ func (connector *DbConnector) GetTagTriggerIDs(tagName string) ([]string, error)
 }
 
 var moiraTags = "moira-tags"
-
-func moiraTag(tagName string) string {
-	return fmt.Sprintf("moira-tag:%s", tagName)
-}
 
 func moiraTagTriggers(tagName string) string {
 	return fmt.Sprintf("moira-tag-triggers:%s", tagName)

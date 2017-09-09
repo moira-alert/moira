@@ -56,9 +56,9 @@ func (connector *DbConnector) SaveSubscription(subscription *moira.SubscriptionD
 	defer c.Close()
 	c.Send("MULTI")
 	if getSubError != database.ErrNil {
-		addSendRequests(c, subscription, &oldSubscription)
+		addSendSubscriptionRequest(c, subscription, &oldSubscription)
 	} else {
-		addSendRequests(c, subscription, nil)
+		addSendSubscriptionRequest(c, subscription, nil)
 	}
 	_, err := c.Do("EXEC")
 	if err != nil {
@@ -81,7 +81,7 @@ func (connector *DbConnector) SaveSubscriptions(subscriptions []*moira.Subscript
 	defer c.Close()
 	c.Send("MULTI")
 	for i, subscription := range subscriptions {
-		addSendRequests(c, subscription, oldSubscriptions[i])
+		addSendSubscriptionRequest(c, subscription, oldSubscriptions[i])
 	}
 	_, err = c.Do("EXEC")
 	if err != nil {
@@ -155,7 +155,7 @@ func (connector *DbConnector) GetTagsSubscriptions(tags []string) ([]*moira.Subs
 	return subscriptionsData, nil
 }
 
-func addSendRequests(c redis.Conn, subscription *moira.SubscriptionData, oldSubscription *moira.SubscriptionData) error {
+func addSendSubscriptionRequest(c redis.Conn, subscription *moira.SubscriptionData, oldSubscription *moira.SubscriptionData) error {
 	bytes, err := json.Marshal(subscription)
 	if err != nil {
 		return err
