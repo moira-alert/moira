@@ -54,10 +54,8 @@ func (connector *DbConnector) manageSubscriptions(psc redis.PubSubConn) <-chan [
 		for {
 			switch n := psc.Receive().(type) {
 			case redis.Message:
-				connector.logger.Infof("Message: %v", n)
 				dataChan <- n.Data
 			case redis.Subscription:
-				connector.logger.Infof("Sub: %v", n)
 				if n.Kind == "subscribe" {
 					connector.logger.Infof("Subscribe to %s channel, current subscriptions is %v", n.Channel, n.Count)
 				} else if n.Kind == "unsubscribe" {
