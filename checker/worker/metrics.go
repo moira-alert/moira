@@ -6,8 +6,7 @@ import (
 	"time"
 )
 
-func (worker *Checker) metricsChecker() error {
-	metricEventsChannel := worker.Database.SubscribeMetricEvents(&worker.tomb)
+func (worker *Checker) metricsChecker(metricEventsChannel <-chan *moira.MetricEvent) error {
 	var handleWaitGroup sync.WaitGroup
 	for {
 		metricEvent, ok := <-metricEventsChannel

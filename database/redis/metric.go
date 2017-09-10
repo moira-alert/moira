@@ -8,6 +8,7 @@ import (
 	"gopkg.in/tomb.v2"
 
 	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira-alert/database"
 	"github.com/moira-alert/moira-alert/database/redis/reply"
 )
 
@@ -55,8 +56,11 @@ func (connector *DbConnector) GetMetricRetention(metric string) (int64, error) {
 	if ok {
 		return retention, nil
 	}
-	retention, err := connector.readMetricRetention(metric)
+	retention, err := connector.getMetricRetention(metric)
 	if err != nil {
+		if err == database.ErrNil {
+			return retention, nil
+		}
 		return retention, err
 	}
 	connector.retentionCache.Set(metric, retention, 0)
@@ -72,16 +76,16 @@ func (connector *DbConnector) getCachedRetention(metric string) (int64, bool) {
 	return retention, ok
 }
 
-func (connector *DbConnector) readMetricRetention(metric string) (int64, error) {
+func (connector *DbConnector) getMetricRetention(metric string) (int64, error) {
 	c := connector.pool.Get()
 	defer c.Close()
 
 	retention, err := redis.Int64(c.Do("GET", metricRetentionKey(metric)))
 	if err != nil {
 		if err == redis.ErrNil {
-			return 60, nil
+			return 60, database.ErrNil
 		}
-		return 0, fmt.Errorf("Failed GET metric-retention:%s, error: %s", metric, err.Error())
+		return 0, fmt.Errorf("Failed GET metric retention:%s, error: %s", metric, err.Error())
 	}
 	return retention, nil
 }
@@ -111,22 +115,25 @@ func (connector *DbConnector) SaveMetrics(metrics map[string]*moira.MatchedMetri
 }
 
 // SubscribeMetricEvents creates subscription for new metrics and return channel for this events
-func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb) <-chan *moira.MetricEvent {
+func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb) (<-chan *moira.MetricEvent, error) {
 	c := connector.pool.Get()
 	psc := redis.PubSubConn{Conn: c}
-	psc.Subscribe(metricEventKey)
+	err := psc.Subscribe(metricEventKey)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to subscribe to '%s', error: %s", metricEventKey, err.Error())
+	}
 
 	metricsChannel := make(chan *moira.MetricEvent, 100)
 	dataChannel := connector.manageSubscriptions(psc)
 
 	go func() {
-		defer c.Close()
 		<-tomb.Dying()
 		connector.logger.Infof("Calling shutdown, unsubscribe from '%s' redis channel...", metricEventKey)
 		psc.Unsubscribe()
 	}()
 
 	go func() {
+		defer c.Close()
 		for {
 			data, ok := <-dataChannel
 			if !ok {
@@ -143,7 +150,7 @@ func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb) <-chan *moi
 		}
 	}()
 
-	return metricsChannel
+	return metricsChannel, nil
 }
 
 // AddPatternMetric adds new metrics by given pattern

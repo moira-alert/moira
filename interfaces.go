@@ -70,15 +70,16 @@ type Database interface {
 
 	// Patterns and metrics storing
 	GetPatterns() ([]string, error)
-	GetMetricsValues(metrics []string, from int64, until int64) (map[string][]*MetricValue, error)
-	SaveMetrics(buffer map[string]*MatchedMetric) error
-	SubscribeMetricEvents(tomb *tomb.Tomb) <-chan *MetricEvent
-	GetMetricRetention(metric string) (int64, error)
 	AddPatternMetric(pattern, metric string) error
 	GetPatternMetrics(pattern string) ([]string, error)
 	RemovePattern(pattern string) error
 	RemovePatternsMetrics(pattern []string) error
 	RemovePatternWithMetrics(pattern string) error
+
+	SubscribeMetricEvents(tomb *tomb.Tomb) (<-chan *MetricEvent, error)
+	SaveMetrics(buffer map[string]*MatchedMetric) error
+	GetMetricRetention(metric string) (int64, error)
+	GetMetricsValues(metrics []string, from int64, until int64) (map[string][]*MetricValue, error)
 	RemoveMetricValues(metric string, toTime int64) error
 
 	// TriggerCheckLock storing

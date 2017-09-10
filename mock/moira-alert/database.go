@@ -784,10 +784,11 @@ func (_mr *MockDatabaseMockRecorder) SetUsernameID(arg0, arg1, arg2 interface{})
 }
 
 // SubscribeMetricEvents mocks base method
-func (_m *MockDatabase) SubscribeMetricEvents(_param0 *tomb_v2.Tomb) <-chan *moira_alert.MetricEvent {
+func (_m *MockDatabase) SubscribeMetricEvents(_param0 *tomb_v2.Tomb) (<-chan *moira_alert.MetricEvent, error) {
 	ret := _m.ctrl.Call(_m, "SubscribeMetricEvents", _param0)
 	ret0, _ := ret[0].(<-chan *moira_alert.MetricEvent)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // SubscribeMetricEvents indicates an expected call of SubscribeMetricEvents

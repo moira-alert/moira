@@ -31,10 +31,18 @@ func (worker *Checker) Start() error {
 	}
 	worker.lastData = time.Now().UTC().Unix()
 
+	metricEventsChannel, err := worker.Database.SubscribeMetricEvents(&worker.tomb)
+	if err != nil {
+		return err
+	}
+
 	worker.tomb.Go(worker.noDataChecker)
 	worker.Logger.Info("Moira Checker NoData checker started")
 
-	worker.tomb.Go(worker.metricsChecker)
+	worker.tomb.Go(func() error {
+		return worker.metricsChecker(metricEventsChannel)
+	})
+
 	worker.Logger.Info("Moira Checker Checking new events started")
 	return nil
 }
