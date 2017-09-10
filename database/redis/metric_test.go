@@ -4,11 +4,9 @@ import (
 	"testing"
 
 	"github.com/op/go-logging"
-	"gopkg.in/tomb.v2"
-	//"github.com/satori/go.uuid"
 	. "github.com/smartystreets/goconvey/convey"
+	"gopkg.in/tomb.v2"
 
-	//"github.com/moira-alert/moira-alert/database"
 	"github.com/moira-alert/moira-alert"
 )
 
