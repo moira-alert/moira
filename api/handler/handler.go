@@ -4,9 +4,9 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
-	"github.com/moira-alert/moira-alert"
-	"github.com/moira-alert/moira-alert/api"
-	moira_middle "github.com/moira-alert/moira-alert/api/middleware"
+	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/api"
+	moira_middle "github.com/moira-alert/moira/api/middleware"
 	"github.com/rs/cors"
 	"net/http"
 )

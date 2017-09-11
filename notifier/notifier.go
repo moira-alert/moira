@@ -5,8 +5,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/moira-alert/moira-alert"
-	"github.com/moira-alert/moira-alert/metrics/graphite"
+	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/metrics/graphite"
 )
 
 // NotificationPackage represent sending data

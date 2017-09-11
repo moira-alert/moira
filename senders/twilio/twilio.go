@@ -8,7 +8,7 @@ import (
 	"time"
 
 	twilio "github.com/carlosdp/twiliogo"
-	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira"
 )
 
 type sendEventsTwilio interface {

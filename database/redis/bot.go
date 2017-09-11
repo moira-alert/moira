@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/garyburd/redigo/redis"
-	"github.com/moira-alert/moira-alert/database"
+	"github.com/moira-alert/moira/database"
 )
 
 const (

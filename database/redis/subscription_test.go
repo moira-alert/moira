@@ -7,8 +7,8 @@ import (
 	"github.com/satori/go.uuid"
 	. "github.com/smartystreets/goconvey/convey"
 
-	"github.com/moira-alert/moira-alert"
-	"github.com/moira-alert/moira-alert/database"
+	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/database"
 )
 
 func TestSubscriptionData(t *testing.T) {

@@ -3,12 +3,12 @@ package main
 import (
 	"menteslibres.net/gosexy/to"
 
-	"github.com/moira-alert/moira-alert/api"
-	"github.com/moira-alert/moira-alert/checker"
-	"github.com/moira-alert/moira-alert/cmd"
-	"github.com/moira-alert/moira-alert/filter"
-	"github.com/moira-alert/moira-alert/notifier"
-	"github.com/moira-alert/moira-alert/notifier/selfstate"
+	"github.com/moira-alert/moira/api"
+	"github.com/moira-alert/moira/checker"
+	"github.com/moira-alert/moira/cmd"
+	"github.com/moira-alert/moira/filter"
+	"github.com/moira-alert/moira/notifier"
+	"github.com/moira-alert/moira/notifier/selfstate"
 )
 
 type config struct {

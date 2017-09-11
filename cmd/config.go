@@ -8,8 +8,8 @@ import (
 	"gopkg.in/yaml.v2"
 	"menteslibres.net/gosexy/to"
 
-	"github.com/moira-alert/moira-alert/database/redis"
-	"github.com/moira-alert/moira-alert/metrics/graphite"
+	"github.com/moira-alert/moira/database/redis"
+	"github.com/moira-alert/moira/metrics/graphite"
 )
 
 // RedisConfig is redis config structure, which are taken on the start of moira

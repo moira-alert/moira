@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"context"
-	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira"
 	"net/http"
 )
 

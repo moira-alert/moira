@@ -6,8 +6,8 @@ import (
 
 	. "github.com/smartystreets/goconvey/convey"
 
-	"github.com/moira-alert/moira-alert/logging/go-logging"
-	"github.com/moira-alert/moira-alert/database"
+	"github.com/moira-alert/moira/logging/go-logging"
+	"github.com/moira-alert/moira/database"
 )
 
 func TestBotDataStoring(t *testing.T) {

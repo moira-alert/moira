@@ -7,10 +7,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/moira-alert/moira-alert/api"
-	"github.com/moira-alert/moira-alert/api/handler"
-	"github.com/moira-alert/moira-alert/database/redis"
-	"github.com/moira-alert/moira-alert/logging/go-logging"
+	"github.com/moira-alert/moira/api"
+	"github.com/moira-alert/moira/api/handler"
+	"github.com/moira-alert/moira/database/redis"
+	"github.com/moira-alert/moira/logging/go-logging"
 )
 
 // APIService is a HTTP server for Moira API

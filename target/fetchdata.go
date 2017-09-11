@@ -3,7 +3,7 @@ package target
 import (
 	"github.com/go-graphite/carbonapi/expr"
 	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
-	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira"
 	"math"
 )
 

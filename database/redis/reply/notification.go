@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/garyburd/redigo/redis"
-	"github.com/moira-alert/moira-alert"
-	"github.com/moira-alert/moira-alert/database"
+	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/database"
 )
 
 // Notification converts redis DB reply to moira.ScheduledNotification object

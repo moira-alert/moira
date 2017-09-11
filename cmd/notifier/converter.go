@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira"
 )
 
 func convertDatabase(db moira.Database) {

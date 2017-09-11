@@ -6,10 +6,10 @@ import (
 	"gopkg.in/tomb.v2"
 
 	"fmt"
-	"github.com/moira-alert/moira-alert"
-	"github.com/moira-alert/moira-alert/database"
-	"github.com/moira-alert/moira-alert/metrics/graphite"
-	"github.com/moira-alert/moira-alert/notifier"
+	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/database"
+	"github.com/moira-alert/moira/metrics/graphite"
+	"github.com/moira-alert/moira/notifier"
 )
 
 // FetchEventsWorker checks for new events and new notifications based on it

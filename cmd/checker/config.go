@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/moira-alert/moira-alert/checker"
-	"github.com/moira-alert/moira-alert/cmd"
+	"github.com/moira-alert/moira/checker"
+	"github.com/moira-alert/moira/cmd"
 	"menteslibres.net/gosexy/to"
 )
 

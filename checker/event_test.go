@@ -3,8 +3,8 @@ package checker
 import (
 	"fmt"
 	"github.com/golang/mock/gomock"
-	"github.com/moira-alert/moira-alert"
-	"github.com/moira-alert/moira-alert/mock/moira-alert"
+	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/mock/moira-alert"
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"

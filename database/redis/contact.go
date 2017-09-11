@@ -5,9 +5,9 @@ import (
 	"fmt"
 
 	"github.com/garyburd/redigo/redis"
-	"github.com/moira-alert/moira-alert"
-	"github.com/moira-alert/moira-alert/database"
-	"github.com/moira-alert/moira-alert/database/redis/reply"
+	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/database"
+	"github.com/moira-alert/moira/database/redis/reply"
 )
 
 // GetContact returns contact data by given id, if no value, return database.ErrNil error

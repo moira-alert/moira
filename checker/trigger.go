@@ -2,9 +2,9 @@ package checker
 
 import (
 	"errors"
-	"github.com/moira-alert/moira-alert"
-	"github.com/moira-alert/moira-alert/database"
-	"github.com/moira-alert/moira-alert/metrics/graphite"
+	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/database"
+	"github.com/moira-alert/moira/metrics/graphite"
 	"time"
 )
 

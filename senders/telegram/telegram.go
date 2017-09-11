@@ -9,7 +9,7 @@ import (
 
 	"github.com/tucnak/telebot"
 
-	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira"
 )
 
 const messenger = "telegram"

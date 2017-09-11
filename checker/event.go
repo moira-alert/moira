@@ -2,7 +2,7 @@ package checker
 
 import (
 	"fmt"
-	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira"
 	"time"
 )
 

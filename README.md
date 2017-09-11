@@ -7,7 +7,7 @@ Fast Start
 ----------
 
 ```
-git clone https://github.com/moira-alert/moira-alert.git
+git clone https://github.com/moira-alert/moira.git
 cd moira-alert
 compose up
 ```
@@ -16,11 +16,11 @@ Get Moira
 ---------
 Use one of four ways
 
-1. Download rpm and deb packages from [GitHub Release Page](https://github.com/moira-alert/moira-alert/releases/latest)
+1. Download rpm and deb packages from [GitHub Release Page](https://github.com/moira-alert/moira/releases/latest)
 
 2. via go get
 ```
-$ go get github.com/moira-alert/moira-alert/cmd/moira
+$ go get github.com/moira-alert/moira/cmd/moira
 $ moira -default-config > /etc/moira.yml
 $ moira -config=/etc/moira.yml
 ```
@@ -38,7 +38,7 @@ $ docker run \
 
 4. Manualy
 ```
-$ git clone https://github.com/moira-alert/moira-alert.git
+$ git clone https://github.com/moira-alert/moira.git
 $ cd moira-alert
 $ make build
 ```

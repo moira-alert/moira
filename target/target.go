@@ -3,7 +3,7 @@ package target
 import (
 	"fmt"
 	"github.com/go-graphite/carbonapi/expr"
-	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira"
 	"strings"
 )
 

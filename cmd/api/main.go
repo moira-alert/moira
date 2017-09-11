@@ -7,10 +7,10 @@ import (
 	"os"
 
 	// "github.com/facebookgo/grace/gracehttp"
-	"github.com/moira-alert/moira-alert/api/handler"
-	"github.com/moira-alert/moira-alert/cmd"
-	"github.com/moira-alert/moira-alert/database/redis"
-	"github.com/moira-alert/moira-alert/logging/go-logging"
+	"github.com/moira-alert/moira/api/handler"
+	"github.com/moira-alert/moira/cmd"
+	"github.com/moira-alert/moira/database/redis"
+	"github.com/moira-alert/moira/logging/go-logging"
 )
 
 var (

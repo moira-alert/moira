@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira"
 
 	"github.com/nlopes/slack"
 )

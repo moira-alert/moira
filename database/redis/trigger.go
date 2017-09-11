@@ -6,9 +6,9 @@ import (
 
 	"github.com/garyburd/redigo/redis"
 
-	"github.com/moira-alert/moira-alert"
-	"github.com/moira-alert/moira-alert/database"
-	"github.com/moira-alert/moira-alert/database/redis/reply"
+	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/database"
+	"github.com/moira-alert/moira/database/redis/reply"
 )
 
 // GetTriggerIDs gets all moira triggerIDs, if no value, return database.ErrNil error

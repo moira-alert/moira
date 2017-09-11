@@ -2,7 +2,7 @@ package metrics
 
 import (
 	"fmt"
-	"github.com/moira-alert/moira-alert/metrics/graphite"
+	"github.com/moira-alert/moira/metrics/graphite"
 )
 
 // ConfigureFilterMetrics initialize graphite metrics

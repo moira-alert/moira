@@ -3,9 +3,9 @@ package handler
 import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
-	"github.com/moira-alert/moira-alert/api"
-	"github.com/moira-alert/moira-alert/api/controller"
-	"github.com/moira-alert/moira-alert/api/middleware"
+	"github.com/moira-alert/moira/api"
+	"github.com/moira-alert/moira/api/controller"
+	"github.com/moira-alert/moira/api/middleware"
 	"net/http"
 )
 

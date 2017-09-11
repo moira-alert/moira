@@ -1,9 +1,9 @@
 package controller
 
 import (
-	"github.com/moira-alert/moira-alert"
-	"github.com/moira-alert/moira-alert/api"
-	"github.com/moira-alert/moira-alert/api/dto"
+	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/api"
+	"github.com/moira-alert/moira/api/dto"
 )
 
 // GetAllPatterns get all patterns and triggers and metrics info corresponding to this pattern

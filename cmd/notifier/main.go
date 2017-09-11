@@ -7,14 +7,14 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/moira-alert/moira-alert/cmd"
-	"github.com/moira-alert/moira-alert/database/redis"
-	"github.com/moira-alert/moira-alert/logging/go-logging"
-	"github.com/moira-alert/moira-alert/metrics/graphite/go-metrics"
-	"github.com/moira-alert/moira-alert/notifier"
-	"github.com/moira-alert/moira-alert/notifier/events"
-	"github.com/moira-alert/moira-alert/notifier/notifications"
-	"github.com/moira-alert/moira-alert/notifier/selfstate"
+	"github.com/moira-alert/moira/cmd"
+	"github.com/moira-alert/moira/database/redis"
+	"github.com/moira-alert/moira/logging/go-logging"
+	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
+	"github.com/moira-alert/moira/notifier"
+	"github.com/moira-alert/moira/notifier/events"
+	"github.com/moira-alert/moira/notifier/notifications"
+	"github.com/moira-alert/moira/notifier/selfstate"
 )
 
 var (

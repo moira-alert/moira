@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/moira-alert/moira-alert/cmd"
+	"github.com/moira-alert/moira/cmd"
 )
 
 type config struct {

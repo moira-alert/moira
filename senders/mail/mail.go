@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira"
 	gomail "gopkg.in/gomail.v2"
 )
 

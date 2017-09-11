@@ -6,9 +6,9 @@ import (
 	"github.com/go-graphite/carbonapi/date"
 	"github.com/satori/go.uuid"
 
-	"github.com/moira-alert/moira-alert"
-	"github.com/moira-alert/moira-alert/api"
-	"github.com/moira-alert/moira-alert/api/dto"
+	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/api"
+	"github.com/moira-alert/moira/api/dto"
 )
 
 // GetUserSubscriptions get all user subscriptions

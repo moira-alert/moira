@@ -7,7 +7,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 	"gopkg.in/tomb.v2"
 
-	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira"
 )
 
 func TestMetricsStoring(t *testing.T) {

@@ -8,7 +8,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 
 	"fmt"
-	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira"
 	"strings"
 )
 

@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
-	"github.com/moira-alert/moira-alert/api"
+	"github.com/moira-alert/moira/api"
 	"net/http"
 	"os"
 	"runtime/debug"

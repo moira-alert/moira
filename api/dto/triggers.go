@@ -3,11 +3,11 @@ package dto
 
 import (
 	"fmt"
-	"github.com/moira-alert/moira-alert"
-	"github.com/moira-alert/moira-alert/api/middleware"
-	"github.com/moira-alert/moira-alert/checker"
-	"github.com/moira-alert/moira-alert/expression"
-	"github.com/moira-alert/moira-alert/target"
+	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/api/middleware"
+	"github.com/moira-alert/moira/checker"
+	"github.com/moira-alert/moira/expression"
+	"github.com/moira-alert/moira/target"
 	"net/http"
 	"time"
 )

@@ -1,9 +1,9 @@
 package matchedmetrics
 
 import (
-	"github.com/moira-alert/moira-alert"
-	"github.com/moira-alert/moira-alert/filter"
-	"github.com/moira-alert/moira-alert/metrics/graphite"
+	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/filter"
+	"github.com/moira-alert/moira/metrics/graphite"
 	"sync"
 	"time"
 )

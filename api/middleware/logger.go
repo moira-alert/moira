@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/go-chi/chi/middleware"
-	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira"
 	"net/http"
 	"time"
 )

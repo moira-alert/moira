@@ -2,9 +2,9 @@ package controller
 
 import (
 	"fmt"
-	"github.com/moira-alert/moira-alert"
-	"github.com/moira-alert/moira-alert/api"
-	"github.com/moira-alert/moira-alert/api/dto"
+	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/api"
+	"github.com/moira-alert/moira/api/dto"
 )
 
 // GetAllTagsAndSubscriptions get tags subscriptions and triggerIDs

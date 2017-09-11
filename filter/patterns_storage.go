@@ -2,8 +2,8 @@ package filter
 
 import (
 	"fmt"
-	"github.com/moira-alert/moira-alert"
-	"github.com/moira-alert/moira-alert/metrics/graphite"
+	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/metrics/graphite"
 	"github.com/vova616/xxhash"
 	"path"
 	"strconv"

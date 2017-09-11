@@ -10,12 +10,12 @@ import (
 
 	"github.com/patrickmn/go-cache"
 
-	"github.com/moira-alert/moira-alert"
-	"github.com/moira-alert/moira-alert/checker/worker"
-	"github.com/moira-alert/moira-alert/cmd"
-	"github.com/moira-alert/moira-alert/database/redis"
-	"github.com/moira-alert/moira-alert/logging/go-logging"
-	"github.com/moira-alert/moira-alert/metrics/graphite/go-metrics"
+	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/checker/worker"
+	"github.com/moira-alert/moira/cmd"
+	"github.com/moira-alert/moira/database/redis"
+	"github.com/moira-alert/moira/logging/go-logging"
+	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
 )
 
 var (

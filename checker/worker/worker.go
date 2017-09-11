@@ -6,9 +6,9 @@ import (
 	"github.com/patrickmn/go-cache"
 	"gopkg.in/tomb.v2"
 
-	"github.com/moira-alert/moira-alert"
-	"github.com/moira-alert/moira-alert/checker"
-	"github.com/moira-alert/moira-alert/metrics/graphite"
+	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/checker"
+	"github.com/moira-alert/moira/metrics/graphite"
 )
 
 // Checker represents workers for periodically triggers checking based by new events

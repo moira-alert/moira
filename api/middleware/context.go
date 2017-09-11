@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
-	"github.com/moira-alert/moira-alert"
-	"github.com/moira-alert/moira-alert/api"
+	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/api"
 	"net/http"
 	"strconv"
 )

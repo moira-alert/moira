@@ -7,10 +7,10 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
-	"github.com/moira-alert/moira-alert"
-	"github.com/moira-alert/moira-alert/mock/moira-alert"
-	"github.com/moira-alert/moira-alert/mock/notifier"
-	"github.com/moira-alert/moira-alert/notifier"
+	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/mock/moira-alert"
+	"github.com/moira-alert/moira/mock/notifier"
+	"github.com/moira-alert/moira/notifier"
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
 )

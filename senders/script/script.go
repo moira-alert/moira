@@ -8,7 +8,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira"
 )
 
 // Sender implements moira sender interface via script execution

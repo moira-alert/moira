@@ -2,7 +2,7 @@
 package metrics
 
 import (
-	"github.com/moira-alert/moira-alert/metrics/graphite"
+	"github.com/moira-alert/moira/metrics/graphite"
 )
 
 // MetricMap is realization of MetricsMap

@@ -2,12 +2,12 @@ package controller
 
 import (
 	"fmt"
-	"github.com/moira-alert/moira-alert"
-	"github.com/moira-alert/moira-alert/api"
-	"github.com/moira-alert/moira-alert/api/dto"
-	"github.com/moira-alert/moira-alert/checker"
-	"github.com/moira-alert/moira-alert/database"
-	"github.com/moira-alert/moira-alert/target"
+	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/api"
+	"github.com/moira-alert/moira/api/dto"
+	"github.com/moira-alert/moira/checker"
+	"github.com/moira-alert/moira/database"
+	"github.com/moira-alert/moira/target"
 	"math"
 	"time"
 )

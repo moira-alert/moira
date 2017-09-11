@@ -6,13 +6,13 @@ import (
 
 	// "git.skbkontur.ru/devops/kontur"
 
-	"github.com/moira-alert/moira-alert"
-	"github.com/moira-alert/moira-alert/senders/mail"
-	"github.com/moira-alert/moira-alert/senders/pushover"
-	"github.com/moira-alert/moira-alert/senders/script"
-	"github.com/moira-alert/moira-alert/senders/slack"
-	"github.com/moira-alert/moira-alert/senders/telegram"
-	"github.com/moira-alert/moira-alert/senders/twilio"
+	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/senders/mail"
+	"github.com/moira-alert/moira/senders/pushover"
+	"github.com/moira-alert/moira/senders/script"
+	"github.com/moira-alert/moira/senders/slack"
+	"github.com/moira-alert/moira/senders/telegram"
+	"github.com/moira-alert/moira/senders/twilio"
 )
 
 // RegisterSenders watch on senders config and register all configured senders

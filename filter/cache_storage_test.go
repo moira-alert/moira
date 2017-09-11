@@ -1,8 +1,8 @@
 package filter
 
 import (
-	"github.com/moira-alert/moira-alert"
-	"github.com/moira-alert/moira-alert/metrics/graphite/go-metrics"
+	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
 	"github.com/smartystreets/assertions/should"
 	. "github.com/smartystreets/goconvey/convey"
 	"strings"

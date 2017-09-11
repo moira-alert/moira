@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/moira-alert/moira-alert/cmd"
-	"github.com/moira-alert/moira-alert/notifier"
-	"github.com/moira-alert/moira-alert/notifier/selfstate"
+	"github.com/moira-alert/moira/cmd"
+	"github.com/moira-alert/moira/notifier"
+	"github.com/moira-alert/moira/notifier/selfstate"
 	"menteslibres.net/gosexy/to"
 )
 

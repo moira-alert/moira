@@ -8,8 +8,8 @@ import (
 
 	"github.com/garyburd/redigo/redis"
 
-	"github.com/moira-alert/moira-alert"
-	"github.com/moira-alert/moira-alert/database/redis/reply"
+	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/database/redis/reply"
 )
 
 // GetNotifications gets ScheduledNotifications in given range and full range

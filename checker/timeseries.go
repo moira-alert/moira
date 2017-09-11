@@ -2,8 +2,8 @@ package checker
 
 import (
 	"fmt"
-	"github.com/moira-alert/moira-alert/expression"
-	"github.com/moira-alert/moira-alert/target"
+	"github.com/moira-alert/moira/expression"
+	"github.com/moira-alert/moira/target"
 	"math"
 )
 

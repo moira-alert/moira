@@ -7,8 +7,8 @@ import (
 
 	"gopkg.in/tomb.v2"
 
-	"github.com/moira-alert/moira-alert"
-	"github.com/moira-alert/moira-alert/notifier"
+	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/notifier"
 )
 
 var defaultCheckInterval = time.Second * 10

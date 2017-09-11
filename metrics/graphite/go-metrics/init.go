@@ -7,7 +7,7 @@ import (
 	"github.com/rcrowley/go-metrics"
 
 	goMetricsGraphite "github.com/cyberdelia/go-metrics-graphite"
-	"github.com/moira-alert/moira-alert/metrics/graphite"
+	"github.com/moira-alert/moira/metrics/graphite"
 )
 
 // Init is initializer for notifier graphite metrics worker based on go-metrics and go-metrics-graphite

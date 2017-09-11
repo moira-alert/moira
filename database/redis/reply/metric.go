@@ -3,7 +3,7 @@ package reply
 import (
 	"fmt"
 	"github.com/garyburd/redigo/redis"
-	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira"
 	"strconv"
 	"strings"
 )

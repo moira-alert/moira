@@ -1,7 +1,7 @@
 package worker
 
 import (
-	"github.com/moira-alert/moira-alert"
+	"github.com/moira-alert/moira"
 	"sync"
 	"time"
 )

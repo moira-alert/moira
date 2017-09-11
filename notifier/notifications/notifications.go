@@ -7,8 +7,8 @@ import (
 
 	"gopkg.in/tomb.v2"
 
-	"github.com/moira-alert/moira-alert"
-	"github.com/moira-alert/moira-alert/notifier"
+	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/notifier"
 )
 
 // FetchNotificationsWorker - check for new notifications and send it using notifier

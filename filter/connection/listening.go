@@ -6,8 +6,8 @@ import (
 
 	"gopkg.in/tomb.v2"
 
-	"github.com/moira-alert/moira-alert"
-	"github.com/moira-alert/moira-alert/filter"
+	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/filter"
 )
 
 // MetricsListener is facade for standard net.MetricsListener and accept connection for handling it

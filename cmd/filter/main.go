@@ -8,15 +8,15 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/moira-alert/moira-alert/cmd"
-	"github.com/moira-alert/moira-alert/database/redis"
-	"github.com/moira-alert/moira-alert/filter"
-	"github.com/moira-alert/moira-alert/filter/connection"
-	"github.com/moira-alert/moira-alert/filter/heartbeat"
-	"github.com/moira-alert/moira-alert/filter/matched_metrics"
-	"github.com/moira-alert/moira-alert/filter/patterns"
-	"github.com/moira-alert/moira-alert/logging/go-logging"
-	"github.com/moira-alert/moira-alert/metrics/graphite/go-metrics"
+	"github.com/moira-alert/moira/cmd"
+	"github.com/moira-alert/moira/database/redis"
+	"github.com/moira-alert/moira/filter"
+	"github.com/moira-alert/moira/filter/connection"
+	"github.com/moira-alert/moira/filter/heartbeat"
+	"github.com/moira-alert/moira/filter/matched_metrics"
+	"github.com/moira-alert/moira/filter/patterns"
+	"github.com/moira-alert/moira/logging/go-logging"
+	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
 )
 
 var (

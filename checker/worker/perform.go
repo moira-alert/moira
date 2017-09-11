@@ -1,7 +1,7 @@
 package worker
 
 import (
-	"github.com/moira-alert/moira-alert/checker"
+	"github.com/moira-alert/moira/checker"
 	"runtime/debug"
 	"sync"
 	"time"
