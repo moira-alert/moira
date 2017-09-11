@@ -1,15 +1,17 @@
 package notifications
 
 import (
+	"testing"
+	"time"
+
 	"github.com/golang/mock/gomock"
+	"github.com/op/go-logging"
+	. "github.com/smartystreets/goconvey/convey"
+
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/mock/moira-alert"
 	"github.com/moira-alert/moira/mock/notifier"
 	notifier2 "github.com/moira-alert/moira/notifier"
-	"github.com/op/go-logging"
-	. "github.com/smartystreets/goconvey/convey"
-	"testing"
-	"time"
 )
 
 func TestProcessScheduledEvent(t *testing.T) {
