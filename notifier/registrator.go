@@ -38,7 +38,7 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database, fron
 				notifier.logger.Fatalf("Can not register sender %s: %s", senderSettings["type"], err)
 			}
 		case "telegram":
-			if err := notifier.RegisterSender(senderSettings, &telegram.Sender{DB: connector}); err != nil {
+			if err := notifier.RegisterSender(senderSettings, &telegram.Sender{DataBase: connector}); err != nil {
 				notifier.logger.Fatalf("Can not register sender %s: %s", senderSettings["type"], err)
 			}
 		case "twilio sms":

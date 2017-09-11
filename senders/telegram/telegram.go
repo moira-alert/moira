@@ -27,10 +27,10 @@ var (
 
 // Sender implements moira sender interface via telegram
 type Sender struct {
-	DB       moira.Database
+	DataBase moira.Database
 	APIToken string
 	FrontURI string
-	log      moira.Logger
+	logger   moira.Logger
 	bot      *telebot.Bot
 }
 
@@ -44,12 +44,11 @@ func (r recipient) Destination() string {
 
 // Init read yaml config
 func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger) error {
-	logger.Info("Telegram init started")
 	sender.APIToken = senderSettings["api_token"]
 	if sender.APIToken == "" {
 		return fmt.Errorf("Can not read telegram api_token from config")
 	}
-	sender.log = logger
+	sender.logger = logger
 	sender.FrontURI = senderSettings["front_uri"]
 
 	var err error
@@ -98,7 +97,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 		message.WriteString("\nPlease, fix your system or tune this trigger to generate less events.")
 	}
 
-	sender.log.Debugf("Calling telegram api with chat_id %s and message body %s", contact.Value, message.String())
+	sender.logger.Debugf("Calling telegram api with chat_id %s and message body %s", contact.Value, message.String())
 
 	if err := sender.Talk(contact.Value, message.String()); err != nil {
 		return fmt.Errorf("Failed to send message to telegram contact %s: %s. ", contact.Value, err)
@@ -112,7 +111,7 @@ func (sender *Sender) StartTelebot() (*telebot.Bot, error) {
 	messages := make(chan telebot.Message)
 
 	bot, err := telebot.NewBot(sender.APIToken)
-	if err == nil && sender.DB.RegisterBotIfAlreadyNot(messenger) {
+	if err == nil && sender.DataBase.RegisterBotIfAlreadyNot(messenger) {
 		go sender.Loop(messages, 1*time.Second)
 	}
 	return bot, err
@@ -124,14 +123,14 @@ func (sender *Sender) Loop(messages chan telebot.Message, timeout time.Duration)
 
 	for message := range messages {
 		if err := sender.handleMessage(message); err != nil {
-			sender.log.Error("Error sending message")
+			sender.logger.Error("Error sending message")
 		}
 	}
 }
 
 // Talk processes one talk
 func (sender *Sender) Talk(username, message string) error {
-	uid, err := sender.DB.GetIDByUsername(messenger, username)
+	uid, err := sender.DataBase.GetIDByUsername(messenger, username)
 	if err != nil {
 		return err
 	}
@@ -149,23 +148,22 @@ func (sender *Sender) handleMessage(message telebot.Message) error {
 	chatType := message.Chat.Type
 	switch {
 	case chatType == "private" && message.Text == "/start":
-		sender.log.Info("Start received")
 		if username == "" {
 			sender.bot.SendMessage(message.Chat, "Username is empty. Please add username in Telegram.", options)
 		} else {
-			err = sender.DB.SetUsernameID(messenger, "@"+username, id)
+			err = sender.DataBase.SetUsernameID(messenger, "@"+username, id)
 			if err != nil {
 				return err
 			}
 			sender.bot.SendMessage(message.Chat, fmt.Sprintf("Okay, %s, your id is %s", userTitle, id), nil)
 		}
 	case chatType == "supergroup" || chatType == "group":
-		uid, _ := sender.DB.GetIDByUsername(messenger, title)
+		uid, _ := sender.DataBase.GetIDByUsername(messenger, title)
 		if uid == "" {
 			sender.bot.SendMessage(message.Chat, fmt.Sprintf("Hi, all!\nI will send alerts in this group (%s).", title), nil)
 		}
 		fmt.Println(chatType, title)
-		err = sender.DB.SetUsernameID(messenger, title, id)
+		err = sender.DataBase.SetUsernameID(messenger, title, id)
 		if err != nil {
 			return err
 		}
