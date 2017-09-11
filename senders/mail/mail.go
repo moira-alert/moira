@@ -3,6 +3,7 @@ package mail
 import (
 	"crypto/tls"
 	"fmt"
+	"html/template"
 	"io"
 	"net/smtp"
 	"strconv"
@@ -14,14 +15,16 @@ import (
 
 // Sender implements moira sender interface via pushover
 type Sender struct {
-	From        string
-	SMTPhost    string
-	SMTPport    int64
-	FrontURI    string
-	InsecureTLS bool
-	Password    string
-	Username    string
-	log         moira.Logger
+	From         string
+	SMTPhost     string
+	SMTPport     int64
+	FrontURI     string
+	InsecureTLS  bool
+	Password     string
+	Username     string
+	TemplateFile string
+	log          moira.Logger
+	template     *template.Template
 }
 
 type templateRow struct {
@@ -45,13 +48,24 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 	sender.FrontURI = senderSettings["front_uri"]
 	sender.Password = senderSettings["smtp_pass"]
 	sender.Username = senderSettings["smtp_user"]
+	sender.TemplateFile = senderSettings["template_file"]
+
 	if sender.Username == "" {
 		sender.Username = sender.From
 	}
-
 	if sender.From == "" {
 		return fmt.Errorf("mail_from can't be empty")
 	}
+
+	if sender.TemplateFile == "" {
+		sender.template = template.Must(template.New("mail").Parse(defaultTemplate))
+	} else {
+		var err error
+		if sender.template, err = template.New("mail").ParseFiles(sender.TemplateFile); err != nil {
+			return err
+		}
+	}
+
 	t, err := smtp.Dial(fmt.Sprintf("%s:%d", sender.SMTPhost, sender.SMTPport))
 	if err != nil {
 		return err
@@ -133,7 +147,7 @@ func (sender *Sender) makeMessage(events moira.NotificationEvents, contact moira
 	m.SetHeader("To", contact.Value)
 	m.SetHeader("Subject", subject)
 	m.AddAlternativeWriter("text/html", func(w io.Writer) error {
-		return tpl.Execute(w, templateData)
+		return sender.template.Execute(w, templateData)
 	})
 
 	return m

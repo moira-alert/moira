@@ -1,8 +1,6 @@
 package mail
 
-import "html/template"
-
-var tpl = template.Must(template.New("mail").Parse(`
+const defaultTemplate = `
 <html>
 	<head>
 		<style type="text/css">
@@ -52,4 +50,5 @@ var tpl = template.Must(template.New("mail").Parse(`
 		{{end}}
 	</body>
 </html>
-`))
+`
+
