@@ -310,11 +310,6 @@
 			"revisionTime": "2017-03-21T23:07:31Z"
 		},
 		{
-			"path": "github.com/skbkontur/bot",
-			"revision": "b93405103fe91d59f3e787740ebc039e982d71bc",
-			"revisionTime": "2017-04-27T09:41:43Z"
-		},
-		{
 			"checksumSHA1": "AikWjAOvWHSJ8G1iU+wNReZnyCk=",
 			"path": "github.com/smartystreets/assertions",
 			"revision": "4ea54c1f28ad3ae597e76607dea3871fa177e263",

@@ -4,15 +4,17 @@ import (
 	"bytes"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
-	"github.com/skbkontur/bot"
+	"github.com/tucnak/telebot"
 
 	"github.com/moira-alert/moira-alert"
 )
 
+const messenger = "telegram"
+
 var (
-	api                  bot.Bot
 	telegramMessageLimit = 4096
 	emojiStates          = map[string]string{
 		"OK":     "\xe2\x9c\x85",
@@ -25,10 +27,19 @@ var (
 
 // Sender implements moira sender interface via telegram
 type Sender struct {
-	DB       bot.Database
+	DB       moira.Database
 	APIToken string
 	FrontURI string
 	log      moira.Logger
+	bot      *telebot.Bot
+}
+
+type recipient struct {
+	uid string
+}
+
+func (r recipient) Destination() string {
+	return r.uid
 }
 
 // Init read yaml config
@@ -42,7 +53,7 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 	sender.FrontURI = senderSettings["front_uri"]
 
 	var err error
-	api, err = bot.StartTelebot(sender.APIToken, sender.DB)
+	sender.bot, err = sender.StartTelebot()
 	if err != nil {
 		return fmt.Errorf("Error starting bot: %s", err)
 	}
@@ -89,9 +100,77 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 
 	sender.log.Debugf("Calling telegram api with chat_id %s and message body %s", contact.Value, message.String())
 
-	if err := api.Talk(contact.Value, message.String()); err != nil {
+	if err := sender.Talk(contact.Value, message.String()); err != nil {
 		return fmt.Errorf("Failed to send message to telegram contact %s: %s. ", contact.Value, err)
 	}
 	return nil
 
+}
+
+// StartTelebot creates an api and start telebot
+func (sender *Sender) StartTelebot() (*telebot.Bot, error) {
+	messages := make(chan telebot.Message)
+
+	bot, err := telebot.NewBot(sender.APIToken)
+	if err == nil && sender.DB.RegisterBotIfAlreadyNot(messenger) {
+		go sender.Loop(messages, 1*time.Second)
+	}
+	return bot, err
+}
+
+// Loop starts api loop
+func (sender *Sender) Loop(messages chan telebot.Message, timeout time.Duration) {
+	sender.bot.Listen(messages, timeout)
+
+	for message := range messages {
+		if err := sender.handleMessage(message); err != nil {
+			sender.log.Error("Error sending message")
+		}
+	}
+}
+
+// Talk processes one talk
+func (sender *Sender) Talk(username, message string) error {
+	uid, err := sender.DB.GetIDByUsername(messenger, username)
+	if err != nil {
+		return err
+	}
+	var options *telebot.SendOptions
+	return sender.bot.SendMessage(recipient{uid}, message, options)
+}
+
+func (sender *Sender) handleMessage(message telebot.Message) error {
+	var err error
+	var options *telebot.SendOptions
+	id := strconv.FormatInt(message.Chat.ID, 10)
+	title := message.Chat.Title
+	userTitle := strings.Trim(fmt.Sprintf("%s %s", message.Sender.FirstName, message.Sender.LastName), " ")
+	username := message.Chat.Username
+	chatType := message.Chat.Type
+	switch {
+	case chatType == "private" && message.Text == "/start":
+		sender.log.Info("Start received")
+		if username == "" {
+			sender.bot.SendMessage(message.Chat, "Username is empty. Please add username in Telegram.", options)
+		} else {
+			err = sender.DB.SetUsernameID(messenger, "@"+username, id)
+			if err != nil {
+				return err
+			}
+			sender.bot.SendMessage(message.Chat, fmt.Sprintf("Okay, %s, your id is %s", userTitle, id), nil)
+		}
+	case chatType == "supergroup" || chatType == "group":
+		uid, _ := sender.DB.GetIDByUsername(messenger, title)
+		if uid == "" {
+			sender.bot.SendMessage(message.Chat, fmt.Sprintf("Hi, all!\nI will send alerts in this group (%s).", title), nil)
+		}
+		fmt.Println(chatType, title)
+		err = sender.DB.SetUsernameID(messenger, title, id)
+		if err != nil {
+			return err
+		}
+	default:
+		sender.bot.SendMessage(message.Chat, "I don't understand you :(", nil)
+	}
+	return err
 }

@@ -13,11 +13,10 @@ import (
 	"github.com/moira-alert/moira-alert/senders/slack"
 	"github.com/moira-alert/moira-alert/senders/telegram"
 	"github.com/moira-alert/moira-alert/senders/twilio"
-	"github.com/skbkontur/bot"
 )
 
 // RegisterSenders watch on senders config and register all configured senders
-func (notifier *StandardNotifier) RegisterSenders(connector bot.Database, frontURI string) error {
+func (notifier *StandardNotifier) RegisterSenders(connector moira.Database, frontURI string) error {
 	for _, senderSettings := range notifier.config.Senders {
 		notifier.logger.Infof("Registering sender %s", senderSettings["type"])
 		senderSettings["front_uri"] = frontURI
