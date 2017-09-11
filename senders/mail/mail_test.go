@@ -1,14 +1,15 @@
 package mail
 
 import (
+	"fmt"
+	"html/template"
+	"os"
 	"testing"
 
-	"fmt"
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira-alert"
 	"github.com/moira-alert/moira-alert/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
-	"os"
 )
 
 func TestMail(t *testing.T) {
@@ -31,10 +32,11 @@ func TestMail(t *testing.T) {
 	}
 
 	sender := Sender{
-		FrontURI: "http:// localhost",
+		FrontURI: "http://localhost",
 		From:     "test@notifier",
 		SMTPhost: "localhost",
 		SMTPport: 25,
+		Template: template.Must(template.New("mail").Parse(defaultTemplate)),
 	}
 	sender.setLogger(logger)
 	events := make([]moira.NotificationEvent, 0, 10)

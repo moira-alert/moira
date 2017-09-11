@@ -24,7 +24,7 @@ type Sender struct {
 	Username     string
 	TemplateFile string
 	log          moira.Logger
-	template     *template.Template
+	Template     *template.Template
 }
 
 type templateRow struct {
@@ -58,10 +58,10 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 	}
 
 	if sender.TemplateFile == "" {
-		sender.template = template.Must(template.New("mail").Parse(defaultTemplate))
+		sender.Template = template.Must(template.New("mail").Parse(defaultTemplate))
 	} else {
 		var err error
-		if sender.template, err = template.New("mail").ParseFiles(sender.TemplateFile); err != nil {
+		if sender.Template, err = template.New("mail").ParseFiles(sender.TemplateFile); err != nil {
 			return err
 		}
 	}
@@ -72,15 +72,13 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 	}
 	defer t.Close()
 	if sender.Password != "" {
-		err = t.StartTLS(&tls.Config{
+		if err := t.StartTLS(&tls.Config{
 			InsecureSkipVerify: sender.InsecureTLS,
 			ServerName:         sender.SMTPhost,
-		})
-		if err != nil {
+		}); err != nil {
 			return err
 		}
-		err = t.Auth(smtp.PlainAuth("", sender.Username, sender.Password, sender.SMTPhost))
-		if err != nil {
+		if err := t.Auth(smtp.PlainAuth("", sender.Username, sender.Password, sender.SMTPhost)); err != nil {
 			return err
 		}
 	}
@@ -147,7 +145,7 @@ func (sender *Sender) makeMessage(events moira.NotificationEvents, contact moira
 	m.SetHeader("To", contact.Value)
 	m.SetHeader("Subject", subject)
 	m.AddAlternativeWriter("text/html", func(w io.Writer) error {
-		return sender.template.Execute(w, templateData)
+		return sender.Template.Execute(w, templateData)
 	})
 
 	return m
