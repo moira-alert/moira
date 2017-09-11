@@ -33,6 +33,7 @@ type Sender struct {
 
 // Init read yaml config
 func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger) error {
+	logger.Info("Telegram init started")
 	sender.APIToken = senderSettings["api_token"]
 	if sender.APIToken == "" {
 		return fmt.Errorf("Can not read telegram api_token from config")
@@ -43,7 +44,7 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 	var err error
 	api, err = bot.StartTelebot(sender.APIToken, sender.DB)
 	if err != nil {
-		sender.log.Errorf("Error starting bot: %s", err)
+		return fmt.Errorf("Error starting bot: %s", err)
 	}
 	return nil
 }

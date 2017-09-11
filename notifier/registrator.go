@@ -19,6 +19,7 @@ import (
 // RegisterSenders watch on senders config and register all configured senders
 func (notifier *StandardNotifier) RegisterSenders(connector bot.Database, frontURI string) error {
 	for _, senderSettings := range notifier.config.Senders {
+		notifier.logger.Infof("Registering sender %s", senderSettings["type"])
 		senderSettings["front_uri"] = frontURI
 		switch senderSettings["type"] {
 		case "pushover":
