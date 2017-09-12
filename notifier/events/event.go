@@ -111,7 +111,7 @@ func (worker *FetchEventsWorker) processEvent(event moira.NotificationEvent) err
 			for _, contactID := range subscription.Contacts {
 				contact, err := worker.Database.GetContact(contactID)
 				if err != nil {
-					worker.Logger.Warning(err.Error())
+					worker.Logger.Warningf("Failed to get contact: %s, skip handling it, error: %v", contactID, err)
 					continue
 				}
 				event.SubscriptionID = &subscription.ID
