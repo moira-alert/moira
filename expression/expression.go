@@ -9,7 +9,7 @@ import (
 var default1, _ = govaluate.NewEvaluableExpression("t1 >= ERROR_VALUE ? ERROR : (t1 >= WARN_VALUE ? WARN : OK)")
 var default2, _ = govaluate.NewEvaluableExpression("t1 <= ERROR_VALUE ? ERROR : (t1 <= WARN_VALUE ? WARN : OK)")
 
-var cache map[string]*govaluate.EvaluableExpression = make(map[string]*govaluate.EvaluableExpression)
+var cache = make(map[string]*govaluate.EvaluableExpression)
 
 // ErrInvalidExpression represents bad expression or its state error
 type ErrInvalidExpression struct {

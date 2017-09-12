@@ -58,7 +58,7 @@ func EvaluateTarget(database moira.Database, target string, from int64, until in
 				return nil, ErrEvaluateTarget
 			}
 			for _, metricData := range metricDatas {
-				var timeSeries TimeSeries = TimeSeries(*metricData)
+				timeSeries := TimeSeries(*metricData)
 				result.TimeSeries = append(result.TimeSeries, &timeSeries)
 			}
 			result.Metrics = append(result.Metrics, metrics...)

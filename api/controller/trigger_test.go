@@ -166,19 +166,19 @@ func TestGetTrigger(t *testing.T) {
 func TestRemoveTrigger(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
-	database := mock_moira_alert.NewMockDatabase(mockCtrl)
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	triggerID := uuid.NewV4().String()
 
 	Convey("Success", t, func() {
-		database.EXPECT().RemoveTrigger(triggerID).Return(nil)
-		err := RemoveTrigger(database, triggerID)
+		dataBase.EXPECT().RemoveTrigger(triggerID).Return(nil)
+		err := RemoveTrigger(dataBase, triggerID)
 		So(err, ShouldBeNil)
 	})
 
 	Convey("Error", t, func() {
 		expected := fmt.Errorf("Oooops! Error delete")
-		database.EXPECT().RemoveTrigger(triggerID).Return(expected)
-		err := RemoveTrigger(database, triggerID)
+		dataBase.EXPECT().RemoveTrigger(triggerID).Return(expected)
+		err := RemoveTrigger(dataBase, triggerID)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 	})
 }
@@ -186,7 +186,7 @@ func TestRemoveTrigger(t *testing.T) {
 func TestGetTriggerThrottling(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
-	database := mock_moira_alert.NewMockDatabase(mockCtrl)
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	triggerID := uuid.NewV4().String()
 	begging := time.Unix(0, 0)
 	now := time.Now()
@@ -194,22 +194,22 @@ func TestGetTriggerThrottling(t *testing.T) {
 	yesterday := now.Add(-time.Hour * 24)
 
 	Convey("no throttling", t, func() {
-		database.EXPECT().GetTriggerThrottling(triggerID).Return(begging, begging)
-		actual, err := GetTriggerThrottling(database, triggerID)
+		dataBase.EXPECT().GetTriggerThrottling(triggerID).Return(begging, begging)
+		actual, err := GetTriggerThrottling(dataBase, triggerID)
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, &dto.ThrottlingResponse{Throttling: 0})
 	})
 
 	Convey("has throttling", t, func() {
-		database.EXPECT().GetTriggerThrottling(triggerID).Return(tomorrow, begging)
-		actual, err := GetTriggerThrottling(database, triggerID)
+		dataBase.EXPECT().GetTriggerThrottling(triggerID).Return(tomorrow, begging)
+		actual, err := GetTriggerThrottling(dataBase, triggerID)
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, &dto.ThrottlingResponse{Throttling: tomorrow.Unix()})
 	})
 
 	Convey("has old throttling", t, func() {
-		database.EXPECT().GetTriggerThrottling(triggerID).Return(yesterday, begging)
-		actual, err := GetTriggerThrottling(database, triggerID)
+		dataBase.EXPECT().GetTriggerThrottling(triggerID).Return(yesterday, begging)
+		actual, err := GetTriggerThrottling(dataBase, triggerID)
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, &dto.ThrottlingResponse{Throttling: 0})
 	})
@@ -218,13 +218,13 @@ func TestGetTriggerThrottling(t *testing.T) {
 func TestGetTriggerLastCheck(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
-	database := mock_moira_alert.NewMockDatabase(mockCtrl)
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	triggerID := uuid.NewV4().String()
 	lastCheck := moira.CheckData{}
 
 	Convey("Success", t, func() {
-		database.EXPECT().GetTriggerLastCheck(triggerID).Return(lastCheck, nil)
-		check, err := GetTriggerLastCheck(database, triggerID)
+		dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(lastCheck, nil)
+		check, err := GetTriggerLastCheck(dataBase, triggerID)
 		So(err, ShouldBeNil)
 		So(check, ShouldResemble, &dto.TriggerCheck{
 			TriggerID: triggerID,
@@ -234,8 +234,8 @@ func TestGetTriggerLastCheck(t *testing.T) {
 
 	Convey("Error", t, func() {
 		expected := fmt.Errorf("Oooops! Error get")
-		database.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, expected)
-		check, err := GetTriggerLastCheck(database, triggerID)
+		dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, expected)
+		check, err := GetTriggerLastCheck(dataBase, triggerID)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 		So(check, ShouldBeNil)
 	})
@@ -244,23 +244,23 @@ func TestGetTriggerLastCheck(t *testing.T) {
 func TestDeleteTriggerThrottling(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
-	database := mock_moira_alert.NewMockDatabase(mockCtrl)
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	triggerID := uuid.NewV4().String()
 
 	Convey("Success", t, func() {
-		database.EXPECT().DeleteTriggerThrottling(triggerID).Return(nil)
+		dataBase.EXPECT().DeleteTriggerThrottling(triggerID).Return(nil)
 		var total int64
 		var to int64 = -1
-		database.EXPECT().GetNotifications(total, to).Return(make([]*moira.ScheduledNotification, 0), total, nil)
-		database.EXPECT().AddNotifications(make([]*moira.ScheduledNotification, 0), gomock.Any()).Return(nil)
-		err := DeleteTriggerThrottling(database, triggerID)
+		dataBase.EXPECT().GetNotifications(total, to).Return(make([]*moira.ScheduledNotification, 0), total, nil)
+		dataBase.EXPECT().AddNotifications(make([]*moira.ScheduledNotification, 0), gomock.Any()).Return(nil)
+		err := DeleteTriggerThrottling(dataBase, triggerID)
 		So(err, ShouldBeNil)
 	})
 
 	Convey("Error", t, func() {
 		expected := fmt.Errorf("Oooops! Error delete")
-		database.EXPECT().DeleteTriggerThrottling(triggerID).Return(expected)
-		err := DeleteTriggerThrottling(database, triggerID)
+		dataBase.EXPECT().DeleteTriggerThrottling(triggerID).Return(expected)
+		err := DeleteTriggerThrottling(dataBase, triggerID)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 	})
 }
@@ -373,20 +373,20 @@ func TestDeleteTriggerMetric(t *testing.T) {
 func TestSetMetricsMaintenance(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
-	database := mock_moira_alert.NewMockDatabase(mockCtrl)
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	triggerID := uuid.NewV4().String()
 	maintenance := make(map[string]int64)
 
 	Convey("Success", t, func() {
-		database.EXPECT().SetTriggerCheckMetricsMaintenance(triggerID, maintenance).Return(nil)
-		err := SetMetricsMaintenance(database, triggerID, maintenance)
+		dataBase.EXPECT().SetTriggerCheckMetricsMaintenance(triggerID, maintenance).Return(nil)
+		err := SetMetricsMaintenance(dataBase, triggerID, maintenance)
 		So(err, ShouldBeNil)
 	})
 
 	Convey("Error", t, func() {
 		expected := fmt.Errorf("Oooops! Error set")
-		database.EXPECT().SetTriggerCheckMetricsMaintenance(triggerID, maintenance).Return(expected)
-		err := SetMetricsMaintenance(database, triggerID, maintenance)
+		dataBase.EXPECT().SetTriggerCheckMetricsMaintenance(triggerID, maintenance).Return(expected)
+		err := SetMetricsMaintenance(dataBase, triggerID, maintenance)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 	})
 }
