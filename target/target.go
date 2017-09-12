@@ -2,9 +2,12 @@ package target
 
 import (
 	"fmt"
-	"github.com/go-graphite/carbonapi/expr"
-	"github.com/moira-alert/moira"
+	"runtime/debug"
 	"strings"
+
+	"github.com/go-graphite/carbonapi/expr"
+
+	"github.com/moira-alert/moira"
 )
 
 // ErrEvaluateTarget represent evaluation error by carbon-api eval method
@@ -50,7 +53,15 @@ func EvaluateTarget(database moira.Database, target string, from int64, until in
 		} else if rewritten {
 			targets = append(targets, newTargets...)
 		} else {
-			metricDatas, err := expr.EvalExpr(expr2, int32(from), int32(until), metricsMap)
+			metricDatas, err := func() (result []*expr.MetricData, err error) {
+				defer func() {
+					if r := recover(); r != nil {
+						result = nil
+						err = fmt.Errorf("Panic while evaluate target %s: message: '%s' stack: %s", target, r, debug.Stack())
+					}
+				}()
+				return expr.EvalExpr(expr2, int32(from), int32(until), metricsMap)
+			}()
 			if err != nil && err != expr.ErrSeriesDoesNotExist {
 				if IsErrUnknownFunction(err) {
 					return nil, err
