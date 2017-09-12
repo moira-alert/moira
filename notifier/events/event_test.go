@@ -259,7 +259,7 @@ func TestFailReadContact(t *testing.T) {
 		logger.EXPECT().Debugf("Processing trigger id %s for metric %s == %f, %s -> %s", event.TriggerID, event.Metric, moira.UseFloat64(event.Value), event.OldState, event.State)
 		logger.EXPECT().Debugf("Getting subscriptions for tags %v", tags)
 		logger.EXPECT().Debugf("Processing contact ids %v for subscription %s", subscription.Contacts, subscription.ID)
-		logger.EXPECT().Warning(getContactError.Error())
+		logger.EXPECT().Warningf("Failed to get contact: %s, skip handling it, error: %v", contact.ID, getContactError)
 
 		err := worker.processEvent(event)
 		So(err, ShouldBeEmpty)
