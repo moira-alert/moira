@@ -28,10 +28,11 @@ func CreateContact(database moira.Database, contact *dto.Contact, userLogin stri
 		Type:  contact.Type,
 		Value: contact.Value,
 	}
-
 	if err := database.SaveContact(contactData); err != nil {
 		return api.ErrorInternalServer(err)
 	}
+	contact.User = &userLogin
+	contact.ID = &id
 	return nil
 }
 
