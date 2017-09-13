@@ -4,7 +4,6 @@ services:
   - redis-server
 language: go
 go:
-  - 1.8.3
   - 1.9
 git:
   depth: 1000
@@ -46,16 +45,16 @@ deploy:
     skip_cleanup: true
     on:
       tags: true
-      condition: "$TRAVIS_GO_VERSION = 1.8.3"
+      condition: "$TRAVIS_GO_VERSION = 1.9"
   - provider: script
     script: make docker_push
     skip_cleanup: true
     on:
       branch: master
-      condition: "$TRAVIS_GO_VERSION = 1.8.3"
+      condition: "$TRAVIS_GO_VERSION = 1.9"
   - provider: script
     script: make docker_push_release
     skip_cleanup: true
     on:
       tags: true
-      condition: "$TRAVIS_GO_VERSION = 1.8.3"
+      condition: "$TRAVIS_GO_VERSION = 1.9"
