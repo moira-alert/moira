@@ -120,6 +120,7 @@ func (sender *Sender) StartTelebot() error {
 				sender.logger.Infof("Registered new %s bot, checking for new messages", messenger)
 				go sender.Loop(1 * time.Second)
 				sender.renewSubscription(ttl)
+				return
 			} else {
 				checkingInterval := time.Minute * 5
 				if firstCheck {
@@ -161,7 +162,7 @@ func (sender *Sender) renewSubscription(ttl time.Duration) {
 				// TODO (borovskyav) here is a bug: if before register bot, another instance will register bot too, we will see two working listeners, and second listener will make errors while receive new messages in loop
 				// TODO best way - graceful stop of failed renew listener, and try to register bots again. But telebot has not graceful stopping.
 				sender.logger.Errorf("Could not register %s bot again, another instance did it already", messenger)
-				break
+				return
 			}
 			sender.logger.Infof("%s bot successfully registered again", messenger)
 		}
