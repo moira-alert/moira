@@ -5,24 +5,30 @@ import (
 	"github.com/garyburd/redigo/redis"
 	"github.com/moira-alert/moira"
 	"github.com/patrickmn/go-cache"
+	"gopkg.in/redsync.v1"
 	"time"
 )
 
 // DbConnector contains redis pool
 type DbConnector struct {
-	pool           *redis.Pool
-	logger         moira.Logger
-	retentionCache *cache.Cache
-	metricsCache   *cache.Cache
+	pool            *redis.Pool
+	logger          moira.Logger
+	retentionCache  *cache.Cache
+	metricsCache    *cache.Cache
+	messengersCache *cache.Cache
+	sync            *redsync.Redsync
 }
 
 // NewDatabase creates Redis pool based on config
 func NewDatabase(logger moira.Logger, config Config) *DbConnector {
+	pool := newRedisPool(fmt.Sprintf("%s:%s", config.Host, config.Port), config.DBID)
 	db := DbConnector{
-		pool:           newRedisPool(fmt.Sprintf("%s:%s", config.Host, config.Port), config.DBID),
-		logger:         logger,
-		retentionCache: cache.New(time.Minute, time.Minute*60),
-		metricsCache:   cache.New(time.Minute, time.Minute*60),
+		pool:            pool,
+		logger:          logger,
+		retentionCache:  cache.New(time.Minute, time.Minute*60),
+		metricsCache:    cache.New(time.Minute, time.Minute*60),
+		messengersCache: cache.New(cache.NoExpiration, cache.DefaultExpiration),
+		sync:            redsync.New([]redsync.Pool{pool}),
 	}
 	return &db
 }

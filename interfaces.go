@@ -90,9 +90,10 @@ type Database interface {
 	// Bot data storing
 	GetIDByUsername(messenger, username string) (string, error)
 	SetUsernameID(messenger, username, id string) error
-	RegisterBotIfAlreadyNot(string) bool
+	RegisterBotIfAlreadyNot(messenger string, ttl time.Duration) bool
+	RenewBotRegistration(messenger string) bool
 	DeregisterBots()
-	DeregisterBot(string) error
+	DeregisterBot(messenger string) bool
 }
 
 // Logger implements logger abstraction

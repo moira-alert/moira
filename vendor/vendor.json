@@ -138,10 +138,10 @@
 			"revisionTime": "2017-09-06T11:25:25Z"
 		},
 		{
-			"checksumSHA1": "HGhun7iAP0ery4shaajz8qleUfQ=",
+			"checksumSHA1": "m9ldEfp1eMmvUvm38XhhtTG/Vbs=",
 			"path": "github.com/golang/mock/gomock",
-			"revision": "93f6609a15b7de76bd49259f1f9a6b58df358936",
-			"revisionTime": "2017-06-22T20:25:52Z"
+			"revision": "cd1f5ca28400ea81f03fbc828a052ab46c33fcf9",
+			"revisionTime": "2017-09-15T15:06:13Z"
 		},
 		{
 			"checksumSHA1": "KVt9/6onCll5wMFzWmgENmILlyM=",
@@ -412,6 +412,12 @@
 			"path": "gopkg.in/gomail.v2",
 			"revision": "81ebce5c23dfd25c6c67194b37d3dd3f338c98b1",
 			"revisionTime": "2016-04-11T21:29:32Z"
+		},
+		{
+			"checksumSHA1": "skSPSmzg+vfeVlePztLzUdZH7sA=",
+			"path": "gopkg.in/redsync.v1",
+			"revision": "98dabdf1c8574561bf976911c14ff652c47b1ddf",
+			"revisionTime": "2016-06-17T03:24:05Z"
 		},
 		{
 			"checksumSHA1": "AzeP9gpBdHRcPQ5ozBpkBcqfInk=",

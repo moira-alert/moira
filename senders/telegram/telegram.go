@@ -51,8 +51,7 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 	sender.logger = logger
 	sender.FrontURI = senderSettings["front_uri"]
 
-	var err error
-	sender.bot, err = sender.StartTelebot()
+	err := sender.StartTelebot()
 	if err != nil {
 		return fmt.Errorf("Error starting bot: %s", err)
 	}
@@ -107,23 +106,64 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 }
 
 // StartTelebot creates an api and start telebot
-func (sender *Sender) StartTelebot() (*telebot.Bot, error) {
-	messages := make(chan telebot.Message)
-
-	bot, err := telebot.NewBot(sender.APIToken)
-	if err == nil && sender.DataBase.RegisterBotIfAlreadyNot(messenger) {
-		go sender.Loop(messages, 1*time.Second)
+func (sender *Sender) StartTelebot() error {
+	ttl := time.Second * 30
+	var err error
+	sender.bot, err = telebot.NewBot(sender.APIToken)
+	if err != nil {
+		return err
 	}
-	return bot, err
+	firstCheck := true
+	go func() {
+		for {
+			if sender.DataBase.RegisterBotIfAlreadyNot(messenger, ttl) {
+				sender.logger.Infof("Registered new %s bot, checking for new messages", messenger)
+				go sender.Loop(1 * time.Second)
+				sender.renewSubscription(ttl)
+			} else {
+				checkingInterval := time.Minute * 5
+				if firstCheck {
+					sender.logger.Infof("%s bot already registered, trying for register every %v in loop", messenger, checkingInterval)
+					firstCheck = false
+				}
+				<-time.After(checkingInterval)
+			}
+		}
+	}()
+	return nil
 }
 
 // Loop starts api loop
-func (sender *Sender) Loop(messages chan telebot.Message, timeout time.Duration) {
+func (sender *Sender) Loop(timeout time.Duration) {
+	messages := make(chan telebot.Message)
 	sender.bot.Listen(messages, timeout)
 
-	for message := range messages {
+	for {
+		message, ok := <-messages
+		if !ok {
+			sender.logger.Warning("Telegram messages channel was closed, stop listening and deregister")
+			sender.DataBase.DeregisterBot(messenger)
+			return
+		}
 		if err := sender.handleMessage(message); err != nil {
 			sender.logger.Error("Error sending message")
+		}
+	}
+}
+
+func (sender *Sender) renewSubscription(ttl time.Duration) {
+	checkTicker := time.NewTicker((ttl / time.Second) / 2 * time.Second)
+	for {
+		<-checkTicker.C
+		if !sender.DataBase.RenewBotRegistration(messenger) {
+			sender.logger.Warningf("Could not renew subscription for %s bot, try to register bot again", messenger)
+			if !sender.DataBase.RegisterBotIfAlreadyNot(messenger, ttl) {
+				// TODO (borovskyav) here is a bug: if before register bot, another instance will register bot too, we will see two working listeners, and second listener will make errors while receive new messages in loop
+				// TODO best way - graceful stop of failed renew listener, and try to register bots again. But telebot has not graceful stopping.
+				sender.logger.Errorf("Could not register %s bot again, another instance did it already", messenger)
+				break
+			}
+			sender.logger.Infof("%s bot successfully registered again", messenger)
 		}
 	}
 }

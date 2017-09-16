@@ -2,19 +2,19 @@ package redis
 
 import (
 	"fmt"
-	"os"
 	"strings"
+	"time"
 
 	"github.com/garyburd/redigo/redis"
+	"gopkg.in/redsync.v1"
+
 	"github.com/moira-alert/moira/database"
+	"github.com/patrickmn/go-cache"
 )
 
 const (
-	botUsername  = "moira-bot-host"
-	deregistered = "deregistered"
+	botUsername = "moira-bot-host"
 )
-
-var messengers = make(map[string]bool)
 
 // GetIDByUsername read ID of user by messenger username
 func (connector *DbConnector) GetIDByUsername(messenger, username string) (string, error) {
@@ -40,54 +40,41 @@ func (connector *DbConnector) SetUsernameID(messenger, username, id string) erro
 }
 
 // RegisterBotIfAlreadyNot creates registration of bot instance in redis
-func (connector *DbConnector) RegisterBotIfAlreadyNot(messenger string) bool {
-	host, _ := os.Hostname()
-	redisKey := usernameKey(messenger, botUsername)
-	c := connector.pool.Get()
-	defer c.Close()
-
-	c.Send("WATCH", redisKey)
-
-	status, err := connector.GetIDByUsername(messenger, botUsername)
-	if err != nil && err != database.ErrNil {
-		connector.logger.Info(err)
+func (connector *DbConnector) RegisterBotIfAlreadyNot(messenger string, ttl time.Duration) bool {
+	mutex := connector.sync.NewMutex(usernameKey(messenger, botUsername), redsync.SetExpiry(ttl), redsync.SetTries(1))
+	if err := mutex.Lock(); err != nil {
+		return false
 	}
-	if status == "" || status == host || status == deregistered {
-		c.Send("MULTI")
-		c.Send("SET", redisKey, host)
-		_, err := c.Do("EXEC")
-		if err != nil {
-			connector.logger.Info(err)
-			return false
-		}
-		messengers[messenger] = true
-		return true
-	}
+	connector.messengersCache.Set(messenger, mutex, cache.NoExpiration)
+	return true
+}
 
-	return false
+// RenewBotRegistration extends bot lock registrations for given ttl
+func (connector *DbConnector) RenewBotRegistration(messenger string) bool {
+	mutexInterface, ok := connector.messengersCache.Get(messenger)
+	if !ok {
+		return false
+	}
+	mutex := mutexInterface.(*redsync.Mutex)
+	return mutex.Extend()
 }
 
 // DeregisterBots cancels registration for all registered messengers
 func (connector *DbConnector) DeregisterBots() {
-	for messenger, ok := range messengers {
-		if ok {
-			connector.DeregisterBot(messenger)
-		}
+	messengers := connector.messengersCache.Items()
+	for messenger := range messengers {
+		connector.DeregisterBot(messenger)
 	}
 }
 
 // DeregisterBot removes registration of bot instance in redis
-func (connector *DbConnector) DeregisterBot(messenger string) error {
-	status, _ := connector.GetIDByUsername(messenger, botUsername)
-	host, _ := os.Hostname()
-	if status == host {
-		connector.logger.Debugf("Bot for %s on host %s exists. Removing registration.", messenger, host)
-		delete(messengers, messenger)
-		return connector.SetUsernameID(messenger, botUsername, deregistered)
+func (connector *DbConnector) DeregisterBot(messenger string) bool {
+	mutexInterface, ok := connector.messengersCache.Get(messenger)
+	if !ok {
+		return false
 	}
-
-	connector.logger.Debugf("Notifier on host %s did't exist. Removing skipped.", host)
-	return nil
+	mutex := mutexInterface.(*redsync.Mutex)
+	return mutex.Unlock()
 }
 
 func usernameKey(messenger, username string) string {
