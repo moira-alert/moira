@@ -89,21 +89,7 @@ func TestGetTimeSeries(t *testing.T) {
 			So(metrics, ShouldBeEmpty)
 			So(err, ShouldBeNil)
 		})
-
-		triggerChecker.trigger.Targets = append(triggerChecker.trigger.Targets, addPattern)
-
-		Convey("in additional target", func() {
-			dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{}, nil)
-			dataBase.EXPECT().GetPatternMetrics(addPattern).Return([]string{}, nil)
-			actual, metrics, err := triggerChecker.getTimeSeries(from, until)
-			So(err, ShouldBeError)
-			So(err, ShouldResemble, fmt.Errorf("Target #2 has no timeseries"))
-			So(actual, ShouldBeNil)
-			So(metrics, ShouldBeNil)
-		})
 	})
-
-	triggerChecker.trigger.Targets = []string{pattern}
 
 	Convey("Test has metrics", t, func() {
 		Convey("Only one target", func() {

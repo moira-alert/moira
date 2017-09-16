@@ -29,12 +29,15 @@ func (triggerChecker *TriggerChecker) getTimeSeries(from, until int64) (*trigger
 		if targetIndex == 0 {
 			triggerTimeSeries.Main = result.TimeSeries
 		} else {
-			if len(result.TimeSeries) == 0 {
+			if len(result.TimeSeries) == 0 && len(result.Metrics) != 0 {
 				return nil, nil, fmt.Errorf("Target #%v has no timeseries", targetIndex+1)
 			} else if len(result.TimeSeries) > 1 {
 				return nil, nil, fmt.Errorf("Target #%v has more than one timeseries", targetIndex+1)
+			} else if len(result.TimeSeries) == 0 {
+				triggerTimeSeries.Additional = append(triggerTimeSeries.Additional, nil)
+			} else {
+				triggerTimeSeries.Additional = append(triggerTimeSeries.Additional, result.TimeSeries[0])
 			}
-			triggerTimeSeries.Additional = append(triggerTimeSeries.Additional, result.TimeSeries[0])
 		}
 		metricsArr = append(metricsArr, result.Metrics...)
 	}
@@ -45,8 +48,8 @@ func (*triggerTimeSeries) getMainTargetName() string {
 	return "t1"
 }
 
-func (*triggerTimeSeries) getAdditionalTargetName(targetNumber int) string {
-	return fmt.Sprintf("t%v", targetNumber+2)
+func (*triggerTimeSeries) getAdditionalTargetName(targetIndex int) string {
+	return fmt.Sprintf("t%v", targetIndex+2)
 }
 
 func (triggerTimeSeries *triggerTimeSeries) getExpressionValues(firstTargetTimeSeries *target.TimeSeries, valueTimestamp int64) (expression.TriggerExpression, bool) {
