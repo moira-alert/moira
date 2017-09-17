@@ -194,6 +194,18 @@ func TestBotDataStoring(t *testing.T) {
 				So(err, ShouldBeNil)
 				So(actual, ShouldResemble, "@"+user1)
 			})
+
+			Convey("Remove this user", func() {
+				err := dataBase.RemoveUser(messenger1, user1)
+				So(err, ShouldBeNil)
+			})
+
+			Convey("Check it for unexisting", func() {
+				actual, err := dataBase.GetIDByUsername(messenger1, user1)
+				So(err, ShouldResemble, database.ErrNil)
+				So(actual, ShouldBeEmpty)
+			})
+
 		})
 	})
 }
@@ -209,6 +221,9 @@ func TestBotDataStoringErrorConnection(t *testing.T) {
 		So(err, ShouldNotBeNil)
 
 		err = dataBase.SetUsernameID(messenger2, user1, "id1")
+		So(err, ShouldNotBeNil)
+
+		err = dataBase.RemoveUser(messenger2, user1)
 		So(err, ShouldNotBeNil)
 
 		actual2 := dataBase.RegisterBotIfAlreadyNot(messenger3, 30)

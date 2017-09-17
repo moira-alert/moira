@@ -39,6 +39,17 @@ func (connector *DbConnector) SetUsernameID(messenger, username, id string) erro
 	return err
 }
 
+// RemoveUser removes username from messenger data
+func (connector *DbConnector) RemoveUser(messenger, username string) error {
+	c := connector.pool.Get()
+	defer c.Close()
+	_, err := c.Do("DEL", usernameKey(messenger, username))
+	if err != nil {
+		return fmt.Errorf("Failed to delete username '%s' from messenger '%s', error: %s", username, messenger, err.Error())
+	}
+	return nil
+}
+
 // RegisterBotIfAlreadyNot creates registration of bot instance in redis
 func (connector *DbConnector) RegisterBotIfAlreadyNot(messenger string, ttl time.Duration) bool {
 	mutex := connector.sync.NewMutex(usernameKey(messenger, botUsername), redsync.SetExpiry(ttl), redsync.SetTries(1))
