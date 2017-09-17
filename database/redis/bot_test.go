@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func TestR(t *testing.T) {
+func TestRenewBot(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test")
 	dataBase := NewDatabase(logger, config)
 	dataBase.flush()

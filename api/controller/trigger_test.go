@@ -14,6 +14,42 @@ import (
 	"time"
 )
 
+func TestUpdateTrigger(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+
+	Convey("Success update", t, func() {
+		trigger := moira.Trigger{ID: uuid.NewV4().String()}
+		dataBase.EXPECT().GetTrigger(trigger.ID).Return(trigger, nil)
+		dataBase.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 10)
+		dataBase.EXPECT().DeleteTriggerCheckLock(gomock.Any())
+		dataBase.EXPECT().GetTriggerLastCheck(gomock.Any()).Return(moira.CheckData{}, database.ErrNil)
+		dataBase.EXPECT().SetTriggerLastCheck(gomock.Any(), gomock.Any()).Return(nil)
+		dataBase.EXPECT().SaveTrigger(gomock.Any(), &trigger).Return(nil)
+		resp, err := UpdateTrigger(dataBase, &trigger, trigger.ID, make(map[string]bool))
+		So(err, ShouldBeNil)
+		So(resp.Message, ShouldResemble, "trigger updated")
+	})
+
+	Convey("Trigger does not exists", t, func() {
+		trigger := moira.Trigger{ID: uuid.NewV4().String()}
+		dataBase.EXPECT().GetTrigger(trigger.ID).Return(trigger, database.ErrNil)
+		resp, err := UpdateTrigger(dataBase, &trigger, trigger.ID, make(map[string]bool))
+		So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("Trigger with ID = '%s' does not exists", trigger.ID)))
+		So(resp, ShouldBeNil)
+	})
+
+	Convey("Get trigger error", t, func() {
+		trigger := moira.Trigger{ID: uuid.NewV4().String()}
+		expected := fmt.Errorf("Soo bad trigger")
+		dataBase.EXPECT().GetTrigger(trigger.ID).Return(trigger, expected)
+		resp, err := UpdateTrigger(dataBase, &trigger, trigger.ID, make(map[string]bool))
+		So(err, ShouldResemble, api.ErrorInternalServer(expected))
+		So(resp, ShouldBeNil)
+	})
+}
+
 func TestSaveTrigger(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -37,7 +73,7 @@ func TestSaveTrigger(t *testing.T) {
 			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
 			dataBase.EXPECT().SetTriggerLastCheck(triggerID, gomock.Any()).Return(nil)
 			dataBase.EXPECT().SaveTrigger(triggerID, &trigger).Return(nil)
-			resp, err := SaveTrigger(dataBase, &trigger, triggerID, make(map[string]bool))
+			resp, err := saveTrigger(dataBase, &trigger, triggerID, make(map[string]bool))
 			So(err, ShouldBeNil)
 			So(resp, ShouldResemble, &dto.SaveTriggerResponse{ID: triggerID, Message: "trigger updated"})
 		})
@@ -48,7 +84,7 @@ func TestSaveTrigger(t *testing.T) {
 			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(actualLastCheck, nil)
 			dataBase.EXPECT().SetTriggerLastCheck(triggerID, &actualLastCheck).Return(nil)
 			dataBase.EXPECT().SaveTrigger(triggerID, &trigger).Return(nil)
-			resp, err := SaveTrigger(dataBase, &trigger, triggerID, make(map[string]bool))
+			resp, err := saveTrigger(dataBase, &trigger, triggerID, make(map[string]bool))
 			So(err, ShouldBeNil)
 			So(resp, ShouldResemble, &dto.SaveTriggerResponse{ID: triggerID, Message: "trigger updated"})
 			So(actualLastCheck, ShouldResemble, emptyLastCheck)
@@ -62,7 +98,7 @@ func TestSaveTrigger(t *testing.T) {
 		dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
 		dataBase.EXPECT().SetTriggerLastCheck(triggerID, gomock.Any()).Return(nil)
 		dataBase.EXPECT().SaveTrigger(triggerID, &trigger).Return(nil)
-		resp, err := SaveTrigger(dataBase, &trigger, triggerID, map[string]bool{"super.metric1": true, "super.metric2": true})
+		resp, err := saveTrigger(dataBase, &trigger, triggerID, map[string]bool{"super.metric1": true, "super.metric2": true})
 		So(err, ShouldBeNil)
 		So(resp, ShouldResemble, &dto.SaveTriggerResponse{ID: triggerID, Message: "trigger updated"})
 		So(actualLastCheck, ShouldResemble, lastCheck)
@@ -72,7 +108,7 @@ func TestSaveTrigger(t *testing.T) {
 		Convey("AcquireTriggerCheckLock error", func() {
 			expected := fmt.Errorf("AcquireTriggerCheckLock error")
 			dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10).Return(expected)
-			resp, err := SaveTrigger(dataBase, &trigger, triggerID, make(map[string]bool))
+			resp, err := saveTrigger(dataBase, &trigger, triggerID, make(map[string]bool))
 			So(err, ShouldResemble, api.ErrorInternalServer(expected))
 			So(resp, ShouldBeNil)
 		})
@@ -82,7 +118,7 @@ func TestSaveTrigger(t *testing.T) {
 			dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10)
 			dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
 			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, expected)
-			resp, err := SaveTrigger(dataBase, &trigger, triggerID, make(map[string]bool))
+			resp, err := saveTrigger(dataBase, &trigger, triggerID, make(map[string]bool))
 			So(err, ShouldResemble, api.ErrorInternalServer(expected))
 			So(resp, ShouldBeNil)
 		})
@@ -93,19 +129,19 @@ func TestSaveTrigger(t *testing.T) {
 			dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
 			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
 			dataBase.EXPECT().SetTriggerLastCheck(triggerID, gomock.Any()).Return(expected)
-			resp, err := SaveTrigger(dataBase, &trigger, triggerID, make(map[string]bool))
+			resp, err := saveTrigger(dataBase, &trigger, triggerID, make(map[string]bool))
 			So(err, ShouldResemble, api.ErrorInternalServer(expected))
 			So(resp, ShouldBeNil)
 		})
 
-		Convey("SaveTrigger error", func() {
-			expected := fmt.Errorf("SaveTrigger error")
+		Convey("saveTrigger error", func() {
+			expected := fmt.Errorf("saveTrigger error")
 			dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10)
 			dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
 			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
 			dataBase.EXPECT().SetTriggerLastCheck(triggerID, gomock.Any()).Return(nil)
 			dataBase.EXPECT().SaveTrigger(triggerID, &trigger).Return(expected)
-			resp, err := SaveTrigger(dataBase, &trigger, triggerID, make(map[string]bool))
+			resp, err := saveTrigger(dataBase, &trigger, triggerID, make(map[string]bool))
 			So(err, ShouldResemble, api.ErrorInternalServer(expected))
 			So(resp, ShouldBeNil)
 		})

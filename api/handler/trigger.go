@@ -17,7 +17,7 @@ import (
 
 func trigger(router chi.Router) {
 	router.Use(middleware.TriggerContext)
-	router.Put("/", saveTrigger)
+	router.Put("/", updateTrigger)
 	router.Get("/", getTrigger)
 	router.Delete("/", removeTrigger)
 	router.Get("/state", getTriggerState)
@@ -32,7 +32,7 @@ func trigger(router chi.Router) {
 	router.Put("/maintenance", setMetricsMaintenance)
 }
 
-func saveTrigger(writer http.ResponseWriter, request *http.Request) {
+func updateTrigger(writer http.ResponseWriter, request *http.Request) {
 	triggerID := middleware.GetTriggerID(request)
 	trigger := &dto.Trigger{}
 	if err := render.Bind(request, trigger); err != nil {
@@ -45,7 +45,7 @@ func saveTrigger(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	timeSeriesNames := middleware.GetTimeSeriesNames(request)
-	response, err := controller.SaveTrigger(database, &trigger.Trigger, triggerID, timeSeriesNames)
+	response, err := controller.UpdateTrigger(database, &trigger.Trigger, triggerID, timeSeriesNames)
 	if err != nil {
 		render.Render(writer, request, err)
 		return

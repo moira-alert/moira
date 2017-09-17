@@ -17,9 +17,9 @@ func TestCreateTrigger(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-	trigger := moira.Trigger{ID: uuid.NewV4().String()}
 
-	Convey("Success", t, func() {
+	Convey("Success with trigger.ID empty", t, func() {
+		trigger := moira.Trigger{}
 		dataBase.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 10)
 		dataBase.EXPECT().DeleteTriggerCheckLock(gomock.Any())
 		dataBase.EXPECT().GetTriggerLastCheck(gomock.Any()).Return(moira.CheckData{}, database.ErrNil)
@@ -30,7 +30,38 @@ func TestCreateTrigger(t *testing.T) {
 		So(resp.Message, ShouldResemble, "trigger created")
 	})
 
+	Convey("Success with triggerID", t, func() {
+		trigger := moira.Trigger{ID: uuid.NewV4().String()}
+		dataBase.EXPECT().GetTrigger(trigger.ID).Return(moira.Trigger{}, database.ErrNil)
+		dataBase.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 10)
+		dataBase.EXPECT().DeleteTriggerCheckLock(gomock.Any())
+		dataBase.EXPECT().GetTriggerLastCheck(gomock.Any()).Return(moira.CheckData{}, database.ErrNil)
+		dataBase.EXPECT().SetTriggerLastCheck(gomock.Any(), gomock.Any()).Return(nil)
+		dataBase.EXPECT().SaveTrigger(gomock.Any(), &trigger).Return(nil)
+		resp, err := CreateTrigger(dataBase, &trigger, make(map[string]bool))
+		So(err, ShouldBeNil)
+		So(resp.Message, ShouldResemble, "trigger created")
+	})
+
+	Convey("Trigger already exists", t, func() {
+		trigger := moira.Trigger{ID: uuid.NewV4().String()}
+		dataBase.EXPECT().GetTrigger(trigger.ID).Return(trigger, nil)
+		resp, err := CreateTrigger(dataBase, &trigger, make(map[string]bool))
+		So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("Trigger with this ID already exists")))
+		So(resp, ShouldBeNil)
+	})
+
+	Convey("Get trigger error", t, func() {
+		trigger := moira.Trigger{ID: uuid.NewV4().String()}
+		expected := fmt.Errorf("Soo bad trigger")
+		dataBase.EXPECT().GetTrigger(trigger.ID).Return(trigger, expected)
+		resp, err := CreateTrigger(dataBase, &trigger, make(map[string]bool))
+		So(err, ShouldResemble, api.ErrorInternalServer(expected))
+		So(resp, ShouldBeNil)
+	})
+
 	Convey("Error", t, func() {
+		trigger := moira.Trigger{}
 		expected := fmt.Errorf("Soo bad trigger")
 		dataBase.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 10)
 		dataBase.EXPECT().DeleteTriggerCheckLock(gomock.Any())

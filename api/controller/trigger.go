@@ -2,18 +2,31 @@ package controller
 
 import (
 	"fmt"
+	"math"
+	"time"
+
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/checker"
 	"github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/target"
-	"math"
-	"time"
 )
 
-// SaveTrigger create or update trigger data and update trigger metrics in last state
-func SaveTrigger(dataBase moira.Database, trigger *moira.Trigger, triggerID string, timeSeriesNames map[string]bool) (*dto.SaveTriggerResponse, *api.ErrorResponse) {
+// UpdateTrigger update trigger data and trigger metrics in last state
+func UpdateTrigger(dataBase moira.Database, trigger *moira.Trigger, triggerID string, timeSeriesNames map[string]bool) (*dto.SaveTriggerResponse, *api.ErrorResponse) {
+	_, err := dataBase.GetTrigger(triggerID)
+	if err != nil {
+		if err == database.ErrNil {
+			return nil, api.ErrorInvalidRequest(fmt.Errorf("Trigger with ID = '%s' does not exists", triggerID))
+		}
+		return nil, api.ErrorInternalServer(err)
+	}
+	return saveTrigger(dataBase, trigger, triggerID, timeSeriesNames)
+}
+
+// saveTrigger create or update trigger data and update trigger metrics in last state
+func saveTrigger(dataBase moira.Database, trigger *moira.Trigger, triggerID string, timeSeriesNames map[string]bool) (*dto.SaveTriggerResponse, *api.ErrorResponse) {
 	if err := dataBase.AcquireTriggerCheckLock(triggerID, 10); err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}

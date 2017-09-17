@@ -1,20 +1,45 @@
 package controller
 
 import (
+	"fmt"
+
+	"github.com/satori/go.uuid"
+
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
-	"github.com/satori/go.uuid"
+	"github.com/moira-alert/moira/database"
 )
 
 // CreateTrigger creates new trigger
-func CreateTrigger(database moira.Database, trigger *moira.Trigger, timeSeriesNames map[string]bool) (*dto.SaveTriggerResponse, *api.ErrorResponse) {
-	triggerID := uuid.NewV4().String()
-	resp, err := SaveTrigger(database, trigger, triggerID, timeSeriesNames)
+func CreateTrigger(dataBase moira.Database, trigger *moira.Trigger, timeSeriesNames map[string]bool) (*dto.SaveTriggerResponse, *api.ErrorResponse) {
+	if trigger.ID == "" {
+		trigger.ID = uuid.NewV4().String()
+	} else {
+		exists, err := isTriggerExists(dataBase, trigger.ID)
+		if err != nil {
+			return nil, api.ErrorInternalServer(err)
+		}
+		if exists {
+			return nil, api.ErrorInvalidRequest(fmt.Errorf("Trigger with this ID already exists"))
+		}
+	}
+	resp, err := saveTrigger(dataBase, trigger, trigger.ID, timeSeriesNames)
 	if resp != nil {
 		resp.Message = "trigger created"
 	}
 	return resp, err
+}
+
+func isTriggerExists(dataBase moira.Database, triggerID string) (bool, error) {
+	_, err := dataBase.GetTrigger(triggerID)
+	if err == database.ErrNil {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 // GetAllTriggers gets all moira triggers
