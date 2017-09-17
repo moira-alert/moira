@@ -122,7 +122,7 @@ func (sender *Sender) StartTelebot() error {
 				sender.renewSubscription(ttl)
 				return
 			}
-			checkingInterval := time.Minute * 5
+			checkingInterval := time.Minute
 			if firstCheck {
 				sender.logger.Infof("%s bot already registered, trying for register every %v in loop", messenger, checkingInterval)
 				firstCheck = false
