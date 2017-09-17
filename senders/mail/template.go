@@ -51,4 +51,3 @@ const defaultTemplate = `
 	</body>
 </html>
 `
-

@@ -18,9 +18,8 @@ func NewHandler(db moira.Database, log moira.Logger) http.Handler {
 	database = db
 	router := chi.NewRouter()
 	router.Use(render.SetContentType(render.ContentTypeJSON))
-	router.Use(moira_middle.Logger(log))
+	router.Use(moira_middle.RequestLogger(log))
 	router.Use(middleware.NoCache)
-	router.Use(moira_middle.Recoverer)
 
 	router.NotFound(notFoundHandler)
 	router.MethodNotAllowed(methodNotAllowedHandler)
