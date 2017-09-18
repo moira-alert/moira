@@ -154,11 +154,11 @@ func ConvertPythonExpressions(dataBase moira.Database) error {
 	for _, trigger := range triggers {
 		if trigger != nil {
 			pythonExpression := trigger.PythonExpression
-			if pythonExpression == nil || *pythonExpression == "" {
+			if !hasExpression(pythonExpression) {
 				continue
 			}
 			expression := trigger.Expression
-			if expression != nil || *expression != "" {
+			if hasExpression(expression) {
 				fmt.Println(fmt.Sprintf("Found trigger with python expression and expression, triggerID: %s", trigger.ID))
 				fmt.Println(fmt.Sprintf("Python expression: %s", *pythonExpression))
 				fmt.Println(fmt.Sprintf("Expression: %s", *expression))
