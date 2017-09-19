@@ -36,6 +36,11 @@ func (notifierService *NotifierService) Start() error {
 		return fmt.Errorf("Can't configure logger for Notifier: %v", err)
 	}
 
+	if !notifierService.Config.Enabled {
+		logger.Info("Moira Notifier disabled")
+		return nil
+	}
+
 	notifierMetrics := metrics.ConfigureNotifierMetrics("notifier")
 
 	notifierService.dataBase = redis.NewDatabase(logger, *notifierService.DatabaseConfig)
@@ -73,6 +78,11 @@ func (notifierService *NotifierService) Start() error {
 
 // Stop Moira Notifier service
 func (notifierService *NotifierService) Stop() {
+	if !notifierService.Config.Enabled {
+		logger.Info("Moira Notifier disabled")
+		return nil
+	}
+
 	notifierService.selfState.Stop()
 	notifierService.fetchEventsWorker.Stop()
 	notifierService.fetchNotificationsWorker.Stop()
