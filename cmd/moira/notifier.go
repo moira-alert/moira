@@ -80,7 +80,7 @@ func (notifierService *NotifierService) Start() error {
 func (notifierService *NotifierService) Stop() {
 	if !notifierService.Config.Enabled {
 		logger.Info("Moira Notifier disabled")
-		return nil
+		return
 	}
 
 	notifierService.selfState.Stop()
