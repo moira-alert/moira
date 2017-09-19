@@ -21,7 +21,7 @@ type DbConnector struct {
 
 // NewDatabase creates Redis pool based on config
 func NewDatabase(logger moira.Logger, config Config) *DbConnector {
-	pool := newRedisPool(fmt.Sprintf("%s:%s", config.Host, config.Port), config.DBID)
+	pool := newRedisPool(fmt.Sprintf("%s:%s", config.Host, config.Port))
 	db := DbConnector{
 		pool:            pool,
 		logger:          logger,
@@ -33,22 +33,22 @@ func NewDatabase(logger moira.Logger, config Config) *DbConnector {
 	return &db
 }
 
-func newRedisPool(redisURI string, dbID ...int) *redis.Pool {
+func newRedisPool(redisURI string) *redis.Pool {
 	return &redis.Pool{
-		MaxIdle:     3,
-		IdleTimeout: 240 * time.Second,
+		MaxIdle:     500,
+		MaxActive:   500,
+		IdleTimeout: 5 * time.Second,
 		Dial: func() (redis.Conn, error) {
-			c, err := redis.Dial("tcp", redisURI)
+			c, err := redis.DialTimeout("tcp", redisURI, 100*time.Millisecond, 100*time.Millisecond, 100*time.Millisecond)
 			if err != nil {
 				return nil, err
-			}
-			if len(dbID) > 0 {
-				c.Do("SELECT", dbID[0])
 			}
 			return c, err
 		},
 		TestOnBorrow: func(c redis.Conn, t time.Time) error {
-			_, err := c.Do("PING")
+			if t.Add(3 * time.Second).Before(time.Now()) {
+				_, err := c.Do("PING")
+			}
 			return err
 		},
 	}
