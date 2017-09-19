@@ -42,7 +42,7 @@ func newRedisPool(redisURI string) *redis.Pool {
 		MaxActive:   500,
 		IdleTimeout: 5 * time.Second,
 		Dial: func() (redis.Conn, error) {
-			c, err := redis.DialTimeout("tcp", redisURI, 100*time.Millisecond, 100*time.Millisecond, 100*time.Millisecond)
+			c, err := redis.Dial("tcp", redisURI, redis.DialConnectTimeout(1*time.Second), redis.DialReadTimeout(1*time.Second), redis.DialWriteTimeout(1*time.Second))
 			if err != nil {
 				return nil, err
 			}
