@@ -130,7 +130,7 @@ func (triggerChecker *TriggerChecker) checkForNoData(timeSeries *target.TimeSeri
 	if metricLastState.Timestamp+triggerChecker.ttl >= lastCheckTimeStamp {
 		return false, nil
 	}
-	triggerChecker.Logger.Infof("[TriggerID:%s][TimeSeries:%s] Metric TTL expired for state %v", triggerChecker.TriggerID, timeSeries.Name, metricLastState)
+	triggerChecker.Logger.Debugf("[TriggerID:%s][TimeSeries:%s] Metric TTL expired for state %v", triggerChecker.TriggerID, timeSeries.Name, metricLastState)
 	if triggerChecker.ttlState == DEL && metricLastState.EventTimestamp != 0 {
 		return true, nil
 	}
