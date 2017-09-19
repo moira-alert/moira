@@ -48,8 +48,9 @@ func newRedisPool(redisURI string) *redis.Pool {
 		TestOnBorrow: func(c redis.Conn, t time.Time) error {
 			if t.Add(3 * time.Second).Before(time.Now()) {
 				_, err := c.Do("PING")
+				return err
 			}
-			return err
+			return nil
 		},
 	}
 }
