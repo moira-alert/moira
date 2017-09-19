@@ -13,6 +13,9 @@ import (
 // GetContact returns contact data by given id, if no value, return database.ErrNil error
 func (connector *DbConnector) GetContact(id string) (moira.ContactData, error) {
 	c := connector.pool.Get()
+	if c.Err() != nil {
+		return moira.ContactData{}, c.Err()
+	}
 	defer c.Close()
 
 	var contact moira.ContactData
@@ -29,6 +32,9 @@ func (connector *DbConnector) GetContact(id string) (moira.ContactData, error) {
 // If there is no object by current ID, then nil is returned
 func (connector *DbConnector) GetContacts(contactIDs []string) ([]*moira.ContactData, error) {
 	c := connector.pool.Get()
+	if c.Err() != nil {
+		return nil, c.Err()
+	}
 	defer c.Close()
 	c.Send("MULTI")
 	for _, id := range contactIDs {
@@ -50,6 +56,9 @@ func (connector *DbConnector) GetContacts(contactIDs []string) ([]*moira.Contact
 // GetAllContacts returns full contact list
 func (connector *DbConnector) GetAllContacts() ([]*moira.ContactData, error) {
 	c := connector.pool.Get()
+	if c.Err() != nil {
+		return nil, c.Err()
+	}
 	defer c.Close()
 
 	keys, err := redis.Strings(c.Do("KEYS", contactKey("*")))
@@ -77,6 +86,9 @@ func (connector *DbConnector) SaveContact(contact *moira.ContactData) error {
 	}
 
 	c := connector.pool.Get()
+	if c.Err() != nil {
+		return c.Err()
+	}
 	defer c.Close()
 
 	c.Send("MULTI")
@@ -99,6 +111,9 @@ func (connector *DbConnector) RemoveContact(contactID string) error {
 		return err
 	}
 	c := connector.pool.Get()
+	if c.Err() != nil {
+		return c.Err()
+	}
 	defer c.Close()
 
 	c.Send("MULTI")
@@ -114,6 +129,9 @@ func (connector *DbConnector) RemoveContact(contactID string) error {
 // GetUserContactIDs returns contacts ids by given login
 func (connector *DbConnector) GetUserContactIDs(login string) ([]string, error) {
 	c := connector.pool.Get()
+	if c.Err() != nil {
+		return nil, c.Err()
+	}
 	defer c.Close()
 
 	contacts, err := redis.Strings(c.Do("SMEMBERS", userContactsKey(login)))

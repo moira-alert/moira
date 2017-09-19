@@ -17,6 +17,9 @@ var eventsTTL int64 = 3600 * 24 * 30
 // GetNotificationEvents gets NotificationEvents by given triggerID and interval
 func (connector *DbConnector) GetNotificationEvents(triggerID string, start int64, size int64) ([]*moira.NotificationEvent, error) {
 	c := connector.pool.Get()
+	if c.Err() != nil {
+		return nil, c.Err()
+	}
 	defer c.Close()
 
 	eventsData, err := reply.Events(c.Do("ZREVRANGE", triggerEventsKey(triggerID), start, start+size))
@@ -40,6 +43,9 @@ func (connector *DbConnector) PushNotificationEvent(event *moira.NotificationEve
 	}
 
 	c := connector.pool.Get()
+	if c.Err() != nil {
+		return c.Err()
+	}
 	defer c.Close()
 	c.Send("MULTI")
 	c.Send("LPUSH", eventsListKey, eventBytes)
@@ -61,6 +67,9 @@ func (connector *DbConnector) PushNotificationEvent(event *moira.NotificationEve
 // GetNotificationEventCount returns planned notifications count from given timestamp
 func (connector *DbConnector) GetNotificationEventCount(triggerID string, from int64) int64 {
 	c := connector.pool.Get()
+	if c.Err() != nil {
+		return 0
+	}
 	defer c.Close()
 
 	count, _ := redis.Int64(c.Do("ZCOUNT", triggerEventsKey(triggerID), from, "+inf"))
@@ -70,6 +79,9 @@ func (connector *DbConnector) GetNotificationEventCount(triggerID string, from i
 // FetchNotificationEvent waiting for event in events list
 func (connector *DbConnector) FetchNotificationEvent() (moira.NotificationEvent, error) {
 	c := connector.pool.Get()
+	if c.Err() != nil {
+		return moira.NotificationEvent{}, c.Err()
+	}
 	defer c.Close()
 
 	var event moira.NotificationEvent

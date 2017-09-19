@@ -31,6 +31,9 @@ func (connector *DbConnector) AcquireTriggerCheckLock(triggerID string, timeout 
 // SetTriggerCheckLock create to database lock object with 30sec TTL and return true if object successfully created, or false if object already exists
 func (connector *DbConnector) SetTriggerCheckLock(triggerID string) (bool, error) {
 	c := connector.pool.Get()
+	if c.Err() != nil {
+		return false, c.Err()
+	}
 	defer c.Close()
 	_, err := redis.String(c.Do("SET", metricCheckLockKey(triggerID), time.Now().Unix(), "EX", 30, "NX"))
 	if err != nil {
@@ -45,6 +48,9 @@ func (connector *DbConnector) SetTriggerCheckLock(triggerID string) (bool, error
 // DeleteTriggerCheckLock deletes trigger check lock for given triggerID
 func (connector *DbConnector) DeleteTriggerCheckLock(triggerID string) error {
 	c := connector.pool.Get()
+	if c.Err() != nil {
+		return c.Err()
+	}
 	defer c.Close()
 	_, err := c.Do("DEL", metricCheckLockKey(triggerID))
 	if err != nil {

@@ -5,6 +5,9 @@ import "github.com/garyburd/redigo/redis"
 // UpdateMetricsHeartbeat increments redis counter
 func (connector *DbConnector) UpdateMetricsHeartbeat() error {
 	c := connector.pool.Get()
+	if c.Err() != nil {
+		return c.Err()
+	}
 	defer c.Close()
 	err := c.Send("INCR", selfStateMetricsHeartbeatKey)
 	return err
@@ -13,6 +16,9 @@ func (connector *DbConnector) UpdateMetricsHeartbeat() error {
 // GetMetricsUpdatesCount return metrics count received by Moira-Filter
 func (connector *DbConnector) GetMetricsUpdatesCount() (int64, error) {
 	c := connector.pool.Get()
+	if c.Err() != nil {
+		return 0, c.Err()
+	}
 	defer c.Close()
 	ts, err := redis.Int64(c.Do("GET", selfStateMetricsHeartbeatKey))
 	if err == redis.ErrNil {
@@ -24,6 +30,9 @@ func (connector *DbConnector) GetMetricsUpdatesCount() (int64, error) {
 // GetChecksUpdatesCount return checks count by Moira-Checker
 func (connector *DbConnector) GetChecksUpdatesCount() (int64, error) {
 	c := connector.pool.Get()
+	if c.Err() != nil {
+		return 0, c.Err()
+	}
 	defer c.Close()
 	ts, err := redis.Int64(c.Do("GET", selfStateChecksCounterKey))
 	if err == redis.ErrNil {

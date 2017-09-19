@@ -10,6 +10,9 @@ import (
 // GetTriggerThrottling get throttling or scheduled notifications delay for given triggerID
 func (connector *DbConnector) GetTriggerThrottling(triggerID string) (time.Time, time.Time) {
 	c := connector.pool.Get()
+	if c.Err() != nil {
+		return time.Unix(0, 0), time.Unix(0, 0)
+	}
 	defer c.Close()
 
 	next, _ := redis.Int64(c.Do("GET", notifierNextKey(triggerID)))
@@ -21,6 +24,9 @@ func (connector *DbConnector) GetTriggerThrottling(triggerID string) (time.Time,
 // SetTriggerThrottling store throttling or scheduled notifications delay for given triggerID
 func (connector *DbConnector) SetTriggerThrottling(triggerID string, next time.Time) error {
 	c := connector.pool.Get()
+	if c.Err() != nil {
+		return c.Err()
+	}
 	defer c.Close()
 	_, err := c.Do("SET", notifierNextKey(triggerID), next.Unix())
 	return err
@@ -29,6 +35,9 @@ func (connector *DbConnector) SetTriggerThrottling(triggerID string, next time.T
 // DeleteTriggerThrottling deletes throttling and scheduled notifications delay for given triggerID
 func (connector *DbConnector) DeleteTriggerThrottling(triggerID string) error {
 	c := connector.pool.Get()
+	if c.Err() != nil {
+		return c.Err()
+	}
 	defer c.Close()
 
 	c.Send("MULTI")
