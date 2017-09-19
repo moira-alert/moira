@@ -158,9 +158,10 @@ func ConvertPythonExpression(dataBase moira.Database, triggerID string) error {
 	if !hasExpression(pythonExpression) {
 		return fmt.Errorf("Trigger has not python expression")
 	}
+	fmt.Println(fmt.Sprintf("Python Expression: %s", *pythonExpression))
 	expression := trigger.Expression
 	if hasExpression(expression) {
-		fmt.Println(fmt.Sprintf("Expression: %s", *pythonExpression))
+		fmt.Println(fmt.Sprintf("Expression: %s", *expression))
 	}
 
 	reader := bufio.NewReader(os.Stdin)
