@@ -17,6 +17,7 @@ var (
 	printVersion                    = flag.Bool("version", false, "Print version and exit")
 	printDefaultConfigFlag          = flag.Bool("default-config", false, "Print default config and exit")
 	convertPythonExpressions        = flag.Bool("convert-expressions", false, "Convert python expression used in moira 1.x to govaluate expressions in moira 2.x")
+	convertPythonExpression         = flag.String("convert-expression", "", "Convert python expression used in moira 1.x to govaluate expressions in moira 2.x for concrete trigger")
 	getTriggerWithPythonExpressions = flag.Bool("python-expressions-triggers", false, "Get count of triggers with python expression and count of triggers, that has python expression and has not govaluate expression")
 	removeBotInstanceLock           = flag.String("delete-bot-host-lock", "", "Delete bot host lock for launching bots with new distributed lock strategy. Must use for upgrade from Moira 1.x to 2.x")
 )
@@ -79,6 +80,13 @@ func main() {
 			os.Exit(1)
 		}
 	}
+
+	if *convertPythonExpression != "" {
+		if err := ConvertPythonExpression(dataBase, *convertPythonExpression); err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to convert: %v", err)
+			os.Exit(1)
+		}
+	}
 }
 
 // RemoveBotInstanceLock - in Moira 2.0 we switch from host-based single instance telegram-bot run lock
@@ -134,6 +142,33 @@ func GetTriggerWithPythonExpressions(dataBase moira.Database) error {
 
 func hasExpression(expr *string) bool {
 	return expr != nil && *expr != ""
+}
+
+// ConvertPythonExpression used in moira 1.x to govaluate expressions in moira 2.x
+// Old python expression contains in redis trigger field 'expression'
+// Now new expression contains in redis field 'expr'.
+// Only for one trigger
+func ConvertPythonExpression(dataBase moira.Database, triggerID string) error {
+	trigger, err := dataBase.GetTrigger(triggerID)
+	if err != nil {
+		return err
+	}
+
+	pythonExpression := trigger.PythonExpression
+	if !hasExpression(pythonExpression) {
+		return fmt.Errorf("Trigger has not python expression")
+	}
+	expression := trigger.Expression
+	if hasExpression(expression) {
+		fmt.Println(fmt.Sprintf("Expression: %s", *pythonExpression))
+	}
+
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("Enter new expression: ")
+	expr, _ := reader.ReadString('\n')
+	trigger.Expression = &expr
+	dataBase.SaveTrigger(trigger.ID, &trigger)
+	return nil
 }
 
 // ConvertPythonExpressions used in moira 1.x to govaluate expressions in moira 2.x
