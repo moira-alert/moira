@@ -14,12 +14,6 @@ import (
 // GetTriggerLastCheck gets trigger last check data by given triggerID, if no value, return database.ErrNil error
 func (connector *DbConnector) GetTriggerLastCheck(triggerID string) (moira.CheckData, error) {
 	c := connector.pool.Get()
-	if c.Err() != nil {
-		return moira.CheckData{}, c.Err()
-	}
-	if c.Err() != nil {
-		return moira.CheckData{}, c.Err()
-	}
 	defer c.Close()
 	return reply.Check(c.Do("GET", metricLastCheckKey(triggerID)))
 }
@@ -31,12 +25,6 @@ func (connector *DbConnector) SetTriggerLastCheck(triggerID string, checkData *m
 		return err
 	}
 	c := connector.pool.Get()
-	if c.Err() != nil {
-		return c.Err()
-	}
-	if c.Err() != nil {
-		return c.Err()
-	}
 	defer c.Close()
 	c.Send("MULTI")
 	c.Send("SET", metricLastCheckKey(triggerID), bytes)
@@ -59,12 +47,6 @@ func (connector *DbConnector) SetTriggerLastCheck(triggerID string, checkData *m
 // If CheckData does not contain one of given metrics it will ignore this metric
 func (connector *DbConnector) SetTriggerCheckMetricsMaintenance(triggerID string, metrics map[string]int64) error {
 	c := connector.pool.Get()
-	if c.Err() != nil {
-		return c.Err()
-	}
-	if c.Err() != nil {
-		return c.Err()
-	}
 	defer c.Close()
 	var readingErr error
 
@@ -111,12 +93,6 @@ func (connector *DbConnector) SetTriggerCheckMetricsMaintenance(triggerID string
 // If onlyErrors return only triggerIDs with score > 0
 func (connector *DbConnector) GetTriggerCheckIDs(tagNames []string, onlyErrors bool) ([]string, error) {
 	c := connector.pool.Get()
-	if c.Err() != nil {
-		return nil, c.Err()
-	}
-	if c.Err() != nil {
-		return nil, c.Err()
-	}
 	defer c.Close()
 	c.Send("MULTI")
 	c.Send("ZREVRANGE", triggersChecksKey, 0, -1)

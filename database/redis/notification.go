@@ -15,9 +15,6 @@ import (
 // GetNotifications gets ScheduledNotifications in given range and full range
 func (connector *DbConnector) GetNotifications(start, end int64) ([]*moira.ScheduledNotification, int64, error) {
 	c := connector.pool.Get()
-	if c.Err() != nil {
-		return nil, 0, c.Err()
-	}
 	defer c.Close()
 	c.Send("MULTI")
 	c.Send("ZRANGE", notifierNotificationsKey, start, end)
@@ -43,9 +40,6 @@ func (connector *DbConnector) GetNotifications(start, end int64) ([]*moira.Sched
 // RemoveNotification delete notifications by key = timestamp + contactID + subID
 func (connector *DbConnector) RemoveNotification(notificationKey string) (int64, error) {
 	c := connector.pool.Get()
-	if c.Err() != nil {
-		return 0, c.Err()
-	}
 	defer c.Close()
 
 	notifications, _, err := connector.GetNotifications(0, -1)
@@ -82,9 +76,6 @@ func (connector *DbConnector) RemoveNotification(notificationKey string) (int64,
 // FetchNotifications fetch notifications by given timestamp and delete it
 func (connector *DbConnector) FetchNotifications(to int64) ([]*moira.ScheduledNotification, error) {
 	c := connector.pool.Get()
-	if c.Err() != nil {
-		return nil, c.Err()
-	}
 	defer c.Close()
 
 	c.Send("MULTI")
@@ -107,9 +98,6 @@ func (connector *DbConnector) AddNotification(notification *moira.ScheduledNotif
 		return err
 	}
 	c := connector.pool.Get()
-	if c.Err() != nil {
-		return c.Err()
-	}
 	defer c.Close()
 	_, err = c.Do("ZADD", notifierNotificationsKey, notification.Timestamp, bytes)
 	if err != nil {
@@ -121,9 +109,6 @@ func (connector *DbConnector) AddNotification(notification *moira.ScheduledNotif
 // AddNotifications store notification at given timestamp
 func (connector *DbConnector) AddNotifications(notifications []*moira.ScheduledNotification, timestamp int64) error {
 	c := connector.pool.Get()
-	if c.Err() != nil {
-		return c.Err()
-	}
 	defer c.Close()
 	c.Send("MULTI")
 	for _, notification := range notifications {

@@ -14,9 +14,6 @@ import (
 // GetSubscription returns subscription data by given id, if no value, return database.ErrNil error
 func (connector *DbConnector) GetSubscription(id string) (moira.SubscriptionData, error) {
 	c := connector.pool.Get()
-	if c.Err() != nil {
-		return moira.SubscriptionData{}, c.Err()
-	}
 	defer c.Close()
 
 	subscription, err := reply.Subscription(c.Do("GET", subscriptionKey(id)))
@@ -31,9 +28,6 @@ func (connector *DbConnector) GetSubscription(id string) (moira.SubscriptionData
 // If there is no object by current ID, then nil is returned
 func (connector *DbConnector) GetSubscriptions(subscriptionIDs []string) ([]*moira.SubscriptionData, error) {
 	c := connector.pool.Get()
-	if c.Err() != nil {
-		return nil, c.Err()
-	}
 	defer c.Close()
 
 	c.Send("MULTI")
@@ -59,9 +53,6 @@ func (connector *DbConnector) SaveSubscription(subscription *moira.SubscriptionD
 		return getSubError
 	}
 	c := connector.pool.Get()
-	if c.Err() != nil {
-		return c.Err()
-	}
 	defer c.Close()
 	c.Send("MULTI")
 	if getSubError != database.ErrNil {
@@ -87,9 +78,6 @@ func (connector *DbConnector) SaveSubscriptions(subscriptions []*moira.Subscript
 		return err
 	}
 	c := connector.pool.Get()
-	if c.Err() != nil {
-		return c.Err()
-	}
 	defer c.Close()
 	c.Send("MULTI")
 	for i, subscription := range subscriptions {
@@ -112,9 +100,6 @@ func (connector *DbConnector) RemoveSubscription(subscriptionID string) error {
 		return err
 	}
 	c := connector.pool.Get()
-	if c.Err() != nil {
-		return c.Err()
-	}
 	defer c.Close()
 	c.Send("MULTI")
 	c.Send("SREM", userSubscriptionsKey(subscription.User), subscriptionID)
@@ -132,9 +117,6 @@ func (connector *DbConnector) RemoveSubscription(subscriptionID string) error {
 // GetUserSubscriptionIDs returns subscriptions ids by given login
 func (connector *DbConnector) GetUserSubscriptionIDs(login string) ([]string, error) {
 	c := connector.pool.Get()
-	if c.Err() != nil {
-		return nil, c.Err()
-	}
 	defer c.Close()
 
 	subscriptions, err := redis.Strings(c.Do("SMEMBERS", userSubscriptionsKey(login)))
@@ -148,9 +130,6 @@ func (connector *DbConnector) GetUserSubscriptionIDs(login string) ([]string, er
 // Len of subscriptionIDs is equal to len of returned values array. If there is no object by current ID, then nil is returned
 func (connector *DbConnector) GetTagsSubscriptions(tags []string) ([]*moira.SubscriptionData, error) {
 	c := connector.pool.Get()
-	if c.Err() != nil {
-		return nil, c.Err()
-	}
 	defer c.Close()
 
 	tagKeys := make([]interface{}, 0, len(tags))

@@ -15,9 +15,6 @@ import (
 // GetPatterns gets updated patterns array
 func (connector *DbConnector) GetPatterns() ([]string, error) {
 	c := connector.pool.Get()
-	if c.Err() != nil {
-		return nil, c.Err()
-	}
 	defer c.Close()
 	patterns, err := redis.Strings(c.Do("SMEMBERS", patternsListKey))
 	if err != nil {
@@ -29,9 +26,6 @@ func (connector *DbConnector) GetPatterns() ([]string, error) {
 // GetMetricsValues gets metrics values for given interval
 func (connector *DbConnector) GetMetricsValues(metrics []string, from int64, until int64) (map[string][]*moira.MetricValue, error) {
 	c := connector.pool.Get()
-	if c.Err() != nil {
-		return nil, c.Err()
-	}
 	defer c.Close()
 
 	c.Send("MULTI")
@@ -84,9 +78,6 @@ func (connector *DbConnector) getCachedRetention(metric string) (int64, bool) {
 
 func (connector *DbConnector) getMetricRetention(metric string) (int64, error) {
 	c := connector.pool.Get()
-	if c.Err() != nil {
-		return 0, c.Err()
-	}
 	defer c.Close()
 
 	retention, err := redis.Int64(c.Do("GET", metricRetentionKey(metric)))
@@ -102,9 +93,6 @@ func (connector *DbConnector) getMetricRetention(metric string) (int64, error) {
 // SaveMetrics saves new metrics
 func (connector *DbConnector) SaveMetrics(metrics map[string]*moira.MatchedMetric) error {
 	c := connector.pool.Get()
-	if c.Err() != nil {
-		return c.Err()
-	}
 	defer c.Close()
 	for _, metric := range metrics {
 		metricValue := fmt.Sprintf("%v %v", metric.Timestamp, metric.Value)
@@ -127,13 +115,22 @@ func (connector *DbConnector) SaveMetrics(metrics map[string]*moira.MatchedMetri
 
 // SubscribeMetricEvents creates subscription for new metrics and return channel for this events
 func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb) (<-chan *moira.MetricEvent, error) {
-	metricsChannel := make(chan *moira.MetricEvent, 100)
-	dataChannel, err := connector.manageSubscriptions(tomb)
-	if err != nil {
-		return nil, err
+	c := connector.pool.Get()
+	psc := redis.PubSubConn{Conn: c}
+	if err := psc.Subscribe(metricEventKey); err != nil {
+		return nil, fmt.Errorf("Failed to subscribe to '%s', error: %v", metricEventKey, err)
 	}
+	metricsChannel := make(chan *moira.MetricEvent, 100)
+	dataChannel := connector.manageSubscriptions(psc)
 
 	go func() {
+		<-tomb.Dying()
+		connector.logger.Infof("Calling shutdown, unsubscribe from '%s' redis channel...", metricEventKey)
+		psc.Unsubscribe()
+	}()
+
+	go func() {
+		defer c.Close()
 		for {
 			data, ok := <-dataChannel
 			if !ok {
@@ -156,9 +153,6 @@ func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb) (<-chan *mo
 // AddPatternMetric adds new metrics by given pattern
 func (connector *DbConnector) AddPatternMetric(pattern, metric string) error {
 	c := connector.pool.Get()
-	if c.Err() != nil {
-		return c.Err()
-	}
 	defer c.Close()
 	if _, err := c.Do("SADD", patternMetricsKey(pattern), metric); err != nil {
 		return fmt.Errorf("Failed to SADD pattern-metrics, pattern: %s, metric: %s, error: %v", pattern, metric, err)
@@ -169,9 +163,6 @@ func (connector *DbConnector) AddPatternMetric(pattern, metric string) error {
 // GetPatternMetrics gets all metrics by given pattern
 func (connector *DbConnector) GetPatternMetrics(pattern string) ([]string, error) {
 	c := connector.pool.Get()
-	if c.Err() != nil {
-		return nil, c.Err()
-	}
 	defer c.Close()
 
 	metrics, err := redis.Strings(c.Do("SMEMBERS", patternMetricsKey(pattern)))
@@ -187,9 +178,6 @@ func (connector *DbConnector) GetPatternMetrics(pattern string) ([]string, error
 // RemovePattern removes pattern from patterns list
 func (connector *DbConnector) RemovePattern(pattern string) error {
 	c := connector.pool.Get()
-	if c.Err() != nil {
-		return c.Err()
-	}
 	defer c.Close()
 	if _, err := c.Do("SREM", patternsListKey, pattern); err != nil {
 		return fmt.Errorf("Failed to remove pattern: %s, error: %v", pattern, err)
@@ -200,9 +188,6 @@ func (connector *DbConnector) RemovePattern(pattern string) error {
 // RemovePatternsMetrics removes metrics by given patterns
 func (connector *DbConnector) RemovePatternsMetrics(patterns []string) error {
 	c := connector.pool.Get()
-	if c.Err() != nil {
-		return c.Err()
-	}
 	defer c.Close()
 	c.Send("MULTI")
 	for _, pattern := range patterns {
@@ -221,9 +206,6 @@ func (connector *DbConnector) RemovePatternWithMetrics(pattern string) error {
 		return err
 	}
 	c := connector.pool.Get()
-	if c.Err() != nil {
-		return c.Err()
-	}
 	defer c.Close()
 	c.Send("MULTI")
 	c.Send("SREM", patternsListKey, pattern)
@@ -243,9 +225,6 @@ func (connector *DbConnector) RemoveMetricValues(metric string, toTime int64) er
 		return nil
 	}
 	c := connector.pool.Get()
-	if c.Err() != nil {
-		return c.Err()
-	}
 	defer c.Close()
 	if _, err := c.Do("ZREMRANGEBYSCORE", metricDataKey(metric), "-inf", toTime); err != nil {
 		return fmt.Errorf("Failed to remove metrics from -inf to %v, error: %v", toTime, err)

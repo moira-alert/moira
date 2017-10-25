@@ -14,9 +14,6 @@ import (
 // GetTriggerIDs gets all moira triggerIDs, if no value, return database.ErrNil error
 func (connector *DbConnector) GetTriggerIDs() ([]string, error) {
 	c := connector.pool.Get()
-	if c.Err() != nil {
-		return nil, c.Err()
-	}
 	defer c.Close()
 	triggerIds, err := redis.Strings(c.Do("SMEMBERS", triggersListKey))
 	if err != nil {
@@ -28,9 +25,6 @@ func (connector *DbConnector) GetTriggerIDs() ([]string, error) {
 // GetTrigger gets trigger and trigger tags by given ID and return it in merged object
 func (connector *DbConnector) GetTrigger(triggerID string) (moira.Trigger, error) {
 	c := connector.pool.Get()
-	if c.Err() != nil {
-		return moira.Trigger{}, c.Err()
-	}
 	defer c.Close()
 
 	c.Send("MULTI")
@@ -47,9 +41,6 @@ func (connector *DbConnector) GetTrigger(triggerID string) (moira.Trigger, error
 // If there is no object by current ID, then nil is returned
 func (connector *DbConnector) GetTriggers(triggerIDs []string) ([]*moira.Trigger, error) {
 	c := connector.pool.Get()
-	if c.Err() != nil {
-		return nil, c.Err()
-	}
 	defer c.Close()
 
 	c.Send("MULTI")
@@ -80,9 +71,6 @@ func (connector *DbConnector) GetTriggers(triggerIDs []string) ([]*moira.Trigger
 // GetPatternTriggerIDs gets trigger list by given pattern
 func (connector *DbConnector) GetPatternTriggerIDs(pattern string) ([]string, error) {
 	c := connector.pool.Get()
-	if c.Err() != nil {
-		return nil, c.Err()
-	}
 	defer c.Close()
 
 	triggerIds, err := redis.Strings(c.Do("SMEMBERS", patternTriggersKey(pattern)))
@@ -95,9 +83,6 @@ func (connector *DbConnector) GetPatternTriggerIDs(pattern string) ([]string, er
 // RemovePatternTriggerIDs removes all triggerIDs list accepted to given pattern
 func (connector *DbConnector) RemovePatternTriggerIDs(pattern string) error {
 	c := connector.pool.Get()
-	if c.Err() != nil {
-		return c.Err()
-	}
 	defer c.Close()
 	_, err := c.Do("DEL", patternTriggersKey(pattern))
 	if err != nil {
@@ -120,9 +105,6 @@ func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigg
 		return err
 	}
 	c := connector.pool.Get()
-	if c.Err() != nil {
-		return c.Err()
-	}
 	defer c.Close()
 	c.Send("MULTI")
 	cleanupPatterns := make([]string, 0)
@@ -178,9 +160,6 @@ func (connector *DbConnector) RemoveTrigger(triggerID string) error {
 	}
 
 	c := connector.pool.Get()
-	if c.Err() != nil {
-		return c.Err()
-	}
 	defer c.Close()
 
 	c.Send("MULTI")
@@ -217,9 +196,6 @@ func (connector *DbConnector) RemoveTrigger(triggerID string) error {
 // If there is no object by current ID, then nil is returned
 func (connector *DbConnector) GetTriggerChecks(triggerIDs []string) ([]*moira.TriggerCheck, error) {
 	c := connector.pool.Get()
-	if c.Err() != nil {
-		return nil, c.Err()
-	}
 	defer c.Close()
 
 	c.Send("MULTI")

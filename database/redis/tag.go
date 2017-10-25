@@ -9,12 +9,6 @@ import (
 // GetTagNames returns all tags from set with tag data
 func (connector *DbConnector) GetTagNames() ([]string, error) {
 	c := connector.pool.Get()
-	if c.Err() != nil {
-		return nil, c.Err()
-	}
-	if c.Err() != nil {
-		return nil, c.Err()
-	}
 	defer c.Close()
 
 	tagNames, err := redis.Strings(c.Do("SMEMBERS", tagsKey))
@@ -27,12 +21,6 @@ func (connector *DbConnector) GetTagNames() ([]string, error) {
 // RemoveTag deletes tag from tags list, deletes triggerIDs and subscriptionsIDs lists by given tag
 func (connector *DbConnector) RemoveTag(tagName string) error {
 	c := connector.pool.Get()
-	if c.Err() != nil {
-		return c.Err()
-	}
-	if c.Err() != nil {
-		return c.Err()
-	}
 	defer c.Close()
 
 	c.Send("MULTI")
@@ -49,12 +37,6 @@ func (connector *DbConnector) RemoveTag(tagName string) error {
 // GetTagTriggerIDs gets all triggersIDs by given tagName
 func (connector *DbConnector) GetTagTriggerIDs(tagName string) ([]string, error) {
 	c := connector.pool.Get()
-	if c.Err() != nil {
-		return nil, c.Err()
-	}
-	if c.Err() != nil {
-		return nil, c.Err()
-	}
 	defer c.Close()
 
 	triggerIDs, err := redis.Strings(c.Do("SMEMBERS", tagTriggersKey(tagName)))

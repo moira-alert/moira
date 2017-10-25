@@ -2,14 +2,11 @@ package redis
 
 import (
 	"fmt"
-	"net"
-	"time"
-
 	"github.com/garyburd/redigo/redis"
 	"github.com/moira-alert/moira"
 	"github.com/patrickmn/go-cache"
 	"gopkg.in/redsync.v1"
-	"gopkg.in/tomb.v2"
+	"time"
 )
 
 // DbConnector contains redis pool
@@ -24,7 +21,7 @@ type DbConnector struct {
 
 // NewDatabase creates Redis pool based on config
 func NewDatabase(logger moira.Logger, config Config) *DbConnector {
-	pool := newRedisPool(fmt.Sprintf("%s:%s", config.Host, config.Port))
+	pool := newRedisPool(fmt.Sprintf("%s:%s", config.Host, config.Port), config.DBID)
 	db := DbConnector{
 		pool:            pool,
 		logger:          logger,
@@ -36,55 +33,30 @@ func NewDatabase(logger moira.Logger, config Config) *DbConnector {
 	return &db
 }
 
-func newRedisPool(redisURI string) *redis.Pool {
+func newRedisPool(redisURI string, dbID ...int) *redis.Pool {
 	return &redis.Pool{
-		MaxIdle:     500,
-		MaxActive:   1000,
-		IdleTimeout: 5 * time.Second,
+		MaxIdle:     3,
+		IdleTimeout: 240 * time.Second,
 		Dial: func() (redis.Conn, error) {
-			c, err := redis.Dial("tcp", redisURI, redis.DialConnectTimeout(1*time.Second), redis.DialReadTimeout(1*time.Second), redis.DialWriteTimeout(1*time.Second))
+			c, err := redis.Dial("tcp", redisURI)
 			if err != nil {
 				return nil, err
+			}
+			if len(dbID) > 0 {
+				c.Do("SELECT", dbID[0])
 			}
 			return c, err
 		},
 		TestOnBorrow: func(c redis.Conn, t time.Time) error {
-			if t.Add(3 * time.Second).Before(time.Now()) {
-				_, err := c.Do("PING")
-				return err
-			}
-			return nil
+			_, err := c.Do("PING")
+			return err
 		},
 	}
 }
 
-func (connector *DbConnector) makePubSubConnection(key string) (*redis.PubSubConn, error) {
-	c := connector.pool.Get()
-	if c.Err() != nil {
-		return nil, c.Err()
-	}
-	psc := redis.PubSubConn{Conn: c}
-	if err := psc.Subscribe(key); err != nil {
-		return nil, fmt.Errorf("Failed to subscribe to '%s', error: %v", key, err)
-	}
-	return &psc, nil
-}
-
-func (connector *DbConnector) manageSubscriptions(tomb *tomb.Tomb) (<-chan []byte, error) {
-	psc, err := connector.makePubSubConnection(metricEventKey)
-	if err != nil {
-		return nil, err
-	}
-
-	go func() {
-		<-tomb.Dying()
-		connector.logger.Infof("Calling shutdown, unsubscribe from '%s' redis channel...", metricEventKey)
-		psc.Unsubscribe()
-	}()
-
+func (connector *DbConnector) manageSubscriptions(psc redis.PubSubConn) <-chan []byte {
 	dataChan := make(chan []byte)
 	go func() {
-		defer psc.Close()
 		for {
 			switch n := psc.Receive().(type) {
 			case redis.Message:
@@ -100,23 +72,13 @@ func (connector *DbConnector) manageSubscriptions(tomb *tomb.Tomb) (<-chan []byt
 						return
 					}
 				}
-			case *net.OpError:
-				connector.logger.Info("psc.Receive() returned *net.OpError, reconnecting")
-				newPsc, err := connector.makePubSubConnection(metricEventKey)
-				if err != nil {
-					connector.logger.Errorf("Failed to reconnect to subscription: %v", err)
-					time.Sleep(time.Second * 5)
-					continue
-				}
-				psc = newPsc
-				time.Sleep(time.Second * 5)
 			default:
 				connector.logger.Errorf("Can not receive message of type '%T': %v", n, n)
 				time.Sleep(time.Second * 5)
 			}
 		}
 	}()
-	return dataChan, nil
+	return dataChan
 }
 
 // CLEAN DATABASE! USE IT ONLY FOR TESTING!!!
