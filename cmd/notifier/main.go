@@ -105,7 +105,7 @@ func main() {
 		Notifier: sender,
 	}
 	fetchNotificationsWorker.Start()
-	defer fetchEventsWorker.Stop()
+	defer fetchNotificationsWorker.Stop()
 
 	logger.Infof("Moira Notifier Started. Version: %s", Version)
 	ch := make(chan os.Signal, 1)
