@@ -10,7 +10,6 @@ import (
 type config struct {
 	Redis    cmd.RedisConfig    `yaml:"redis"`
 	Graphite cmd.GraphiteConfig `yaml:"graphite"`
-	Front    frontConfig        `yaml:"front"`
 	Logger   cmd.LoggerConfig   `yaml:"log"`
 	Notifier notifierConfig     `yaml:"notifier"`
 }
@@ -20,10 +19,7 @@ type notifierConfig struct {
 	ResendingTimeout string              `yaml:"resending_timeout"`
 	Senders          []map[string]string `yaml:"senders"`
 	SelfState        selfStateConfig     `yaml:"moira_selfstate"`
-}
-
-type frontConfig struct {
-	URI string `yaml:"uri"`
+	FrontURI         string              `yaml:"front_uri"`
 }
 
 type selfStateConfig struct {
@@ -41,9 +37,6 @@ func getDefault() config {
 			Host: "localhost",
 			Port: "6379",
 			DBID: 0,
-		},
-		Front: frontConfig{
-			URI: "http:// localhost",
 		},
 		Graphite: cmd.GraphiteConfig{
 			URI:      "localhost:2003",
@@ -64,6 +57,7 @@ func getDefault() config {
 				LastCheckDelay:          60,
 				NoticeInterval:          300,
 			},
+			FrontURI: "http:// localhost",
 		},
 	}
 }
@@ -73,6 +67,7 @@ func (config *notifierConfig) getSettings() notifier.Config {
 		SendingTimeout:   to.Duration(config.SenderTimeout),
 		ResendingTimeout: to.Duration(config.ResendingTimeout),
 		Senders:          config.Senders,
+		FrontURL:         config.FrontURI,
 	}
 }
 

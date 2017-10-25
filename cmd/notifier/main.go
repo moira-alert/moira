@@ -17,6 +17,8 @@ import (
 	"github.com/moira-alert/moira/notifier/selfstate"
 )
 
+var serviceName = "notifier"
+
 var (
 	configFileName         = flag.String("config", "/etc/moira/config.yml", "path to config file")
 	printVersion           = flag.Bool("version", false, "Print current version and exit")
@@ -53,13 +55,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	logger, err := logging.ConfigureLog(config.Logger.LogFile, config.Logger.LogLevel, "notifier")
+	logger, err := logging.ConfigureLog(config.Logger.LogFile, config.Logger.LogLevel, serviceName)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Can not configure log: %s\n", err.Error())
 		os.Exit(1)
 	}
 
-	notifierMetrics := metrics.ConfigureNotifierMetrics("notifier")
+	notifierMetrics := metrics.ConfigureNotifierMetrics(serviceName)
 	if err = metrics.Init(config.Graphite.GetSettings()); err != nil {
 		logger.Error(err)
 	}
@@ -72,9 +74,10 @@ func main() {
 	notifierConfig := config.Notifier.getSettings()
 	sender := notifier.NewNotifier(database, logger, notifierConfig, notifierMetrics)
 
-	if err := sender.RegisterSenders(database, config.Front.URI); err != nil {
+	if err := sender.RegisterSenders(database); err != nil {
 		logger.Fatalf("Can not configure senders: %s", err.Error())
 	}
+	defer database.DeregisterBots()
 
 	selfState := &selfstate.SelfCheckWorker{
 		Log:      logger,
@@ -85,6 +88,7 @@ func main() {
 	if err := selfState.Start(); err != nil {
 		logger.Fatalf("SelfState failed: %v", err)
 	}
+	defer selfState.Stop()
 
 	fetchEventsWorker := events.FetchEventsWorker{
 		Logger:    logger,
@@ -93,6 +97,7 @@ func main() {
 		Metrics:   notifierMetrics,
 	}
 	fetchEventsWorker.Start()
+	defer fetchEventsWorker.Stop()
 
 	fetchNotificationsWorker := &notifications.FetchNotificationsWorker{
 		Logger:   logger,
@@ -100,17 +105,12 @@ func main() {
 		Notifier: sender,
 	}
 	fetchNotificationsWorker.Start()
+	defer fetchEventsWorker.Stop()
 
 	logger.Infof("Moira Notifier Started. Version: %s", Version)
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 	logger.Info(fmt.Sprint(<-ch))
 	logger.Infof("Moira Notifier shutting down.")
-
-	selfState.Stop()
-	fetchEventsWorker.Stop()
-	fetchNotificationsWorker.Stop()
-
-	database.DeregisterBots()
-	logger.Infof("Moira Notifier Stopped. Version: %s", Version)
+	defer logger.Infof("Moira Notifier Stopped. Version: %s", Version)
 }

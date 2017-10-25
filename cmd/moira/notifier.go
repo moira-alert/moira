@@ -46,7 +46,7 @@ func (notifierService *NotifierService) Start() error {
 	notifierService.dataBase = redis.NewDatabase(logger, *notifierService.DatabaseConfig)
 
 	sender := notifier.NewNotifier(notifierService.dataBase, logger, *notifierService.Config, notifierMetrics)
-	if err = sender.RegisterSenders(notifierService.dataBase, notifierService.Config.FrontURL); err != nil {
+	if err = sender.RegisterSenders(notifierService.dataBase); err != nil {
 		log.Fatalf("Can't configure senders: %s", err.Error())
 	}
 
