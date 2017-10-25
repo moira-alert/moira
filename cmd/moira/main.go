@@ -19,7 +19,6 @@ import (
 )
 
 var (
-	logger                 moira.Logger
 	configFileName         = flag.String("config", "moira.yml", "Path to configuration file")
 	printVersion           = flag.Bool("version", false, "Print version and exit")
 	printDefaultConfigFlag = flag.Bool("default-config", false, "Print default config and exit")
@@ -54,7 +53,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	logger, err = logging.ConfigureLog(config.LogFile, config.LogLevel, "main")
+	logger, err := logging.ConfigureLog(config.LogFile, config.LogLevel, "main")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Can't configure main logger: %v\n", err)
 		os.Exit(1)
@@ -73,7 +72,7 @@ func main() {
 	if err = apiService.Start(); err != nil {
 		logger.Fatalf("Can't start API: %v", err)
 	}
-	defer stopAPI(apiService)
+	defer stopAPI(logger, apiService)
 
 	// Filter
 	filterService := &FilterService{
@@ -86,7 +85,7 @@ func main() {
 	if err = filterService.Start(); err != nil {
 		logger.Fatalf("Can't start Filter: %v", err)
 	}
-	defer stopFilter(filterService)
+	defer stopFilter(logger, filterService)
 
 	// Notifier
 	notifierService := &NotifierService{
@@ -100,7 +99,7 @@ func main() {
 	if err = notifierService.Start(); err != nil {
 		logger.Fatalf("Can't start Notifier: %v", err)
 	}
-	defer stopNotifier(notifierService)
+	defer stopNotifier(logger, notifierService)
 
 	// Checker
 	checkerLog, err := logging.ConfigureLog(config.Checker.LogFile, config.Checker.LogLevel, "checker")
@@ -115,7 +114,7 @@ func main() {
 		Metrics:  checkerMetrics,
 		Cache:    cache.New(time.Minute, time.Minute*60),
 	}
-	defer stopChecker(checkerService)
+	defer stopChecker(logger, checkerService)
 
 	if err = checkerService.Start(); err != nil {
 		logger.Fatalf("Start Checker failed: %v", err)
@@ -132,26 +131,26 @@ func main() {
 	logger.Infof("Moira Stopped (version: %s)", Version)
 }
 
-func stopAPI(service *APIService) {
+func stopAPI(logger moira.Logger, service *APIService) {
 	if err := service.Stop(); err != nil {
 		logger.Errorf("Can't stop Moira Api: %v", err)
 	}
 	logger.Info("API stopped")
 }
 
-func stopNotifier(service *NotifierService) {
+func stopNotifier(logger moira.Logger, service *NotifierService) {
 	service.Stop()
 	logger.Info("Notifier stopped")
 }
 
-func stopChecker(service *worker.Checker) {
+func stopChecker(logger moira.Logger, service *worker.Checker) {
 	if err := service.Stop(); err != nil {
 		logger.Errorf("Can't stop Moira Checker: %v", err)
 	}
 	logger.Info("Checker stopped")
 }
 
-func stopFilter(service *FilterService) {
+func stopFilter(logger moira.Logger, service *FilterService) {
 	if err := service.Stop(); err != nil {
 		logger.Errorf("Can't stop Moira Filter: %v", err)
 	}

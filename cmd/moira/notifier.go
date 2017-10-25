@@ -79,7 +79,6 @@ func (notifierService *NotifierService) Start() error {
 // Stop Moira Notifier service
 func (notifierService *NotifierService) Stop() {
 	if !notifierService.Config.Enabled {
-		logger.Info("Moira Notifier disabled")
 		return
 	}
 
