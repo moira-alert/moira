@@ -1,12 +1,17 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
-	// "github.com/facebookgo/grace/gracehttp"
+	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api/handler"
 	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/database/redis"
@@ -57,16 +62,34 @@ func main() {
 	databaseSettings := config.Redis.GetSettings()
 	database := redis.NewDatabase(logger, databaseSettings)
 
-	httpHandler := handler.NewHandler(database, logger)
+	listener, err := net.Listen("tcp", config.API.Listen)
+	if err != nil {
+		logger.Fatal(err)
+	}
 
-	logger.Infof("Start listening by port: [%s]", config.API.Port)
+	logger.Infof("Start listening by address: [%s]", config.API.Listen)
+
+	httpHandler := handler.NewHandler(database, logger)
 	server := &http.Server{
-		Addr:    ":" + config.API.Port,
 		Handler: httpHandler,
 	}
-	/*if err = gracehttp.Serve(server); err != nil {
-		logger.Fatalf("gracehttp failed", err.Error())
-	}*/
-	server.ListenAndServe() // for windows developers =)
-	logger.Infof("Stop Moira api")
+
+	go func() {
+		server.Serve(listener)
+	}()
+	defer Stop(logger, server)
+
+	logger.Infof("Moira Api Started (version: %s)", Version)
+	ch := make(chan os.Signal, 1)
+	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
+}
+
+// Stop Moira API HTTP server
+func Stop(logger moira.Logger, server *http.Server) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := server.Shutdown(ctx); err != nil {
+		logger.Errorf("Can't stop Moira Api correctly: %v", err)
+	}
+	logger.Info("API stopped")
 }
