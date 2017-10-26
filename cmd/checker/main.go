@@ -20,7 +20,10 @@ import (
 	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
 )
 
+const serviceName = "checker"
+
 var (
+	logger                 moira.Logger
 	configFileName         = flag.String("config", "/etc/moira/config.yml", "Path to configuration file")
 	printVersion           = flag.Bool("version", false, "Print version and exit")
 	printDefaultConfigFlag = flag.Bool("default-config", false, "Print default config and exit")
@@ -56,23 +59,24 @@ func main() {
 		os.Exit(1)
 	}
 
-	logger, err := logging.ConfigureLog(config.Logger.LogFile, config.Logger.LogLevel, "checker")
+	logger, err := logging.ConfigureLog(config.Logger.LogFile, config.Logger.LogLevel, serviceName)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Can not configure log: %s\n", err.Error())
 		os.Exit(1)
 	}
+	defer logger.Infof("Moira Checker stopped. Version: %s", Version)
 
 	databaseSettings := config.Redis.GetSettings()
 	database := redis.NewDatabase(logger, databaseSettings)
 
-	checkerMetrics := metrics.ConfigureCheckerMetrics("checker")
+	checkerMetrics := metrics.ConfigureCheckerMetrics(serviceName)
 	if err = metrics.Init(config.Graphite.GetSettings()); err != nil {
 		logger.Error(err)
 	}
 
 	checkerSettings := config.Checker.getSettings()
 	if triggerID != nil && *triggerID != "" {
-		checkSingleTrigger(database, logger, checkerMetrics, checkerSettings)
+		checkSingleTrigger(database, checkerMetrics, checkerSettings)
 	}
 	checkerWorker := &worker.Checker{
 		Logger:   logger,
@@ -81,19 +85,17 @@ func main() {
 		Metrics:  checkerMetrics,
 		Cache:    cache.New(time.Minute, time.Minute*60),
 	}
-
 	checkerWorker.Start()
+	defer stopChecker(checkerWorker)
 
 	logger.Infof("Moira Checker started. Version: %s", Version)
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 	logger.Info(fmt.Sprint(<-ch))
 	logger.Infof("Moira Checker shutting down.")
-	checkerWorker.Stop()
-	logger.Infof("Moira Checker stopped. Version: %s", Version)
 }
 
-func checkSingleTrigger(database moira.Database, logger moira.Logger, metrics *graphite.CheckerMetrics, settings *checker.Config) {
+func checkSingleTrigger(database moira.Database, metrics *graphite.CheckerMetrics, settings *checker.Config) {
 	triggerChecker := checker.TriggerChecker{
 		TriggerID: *triggerID,
 		Database:  database,
@@ -112,4 +114,10 @@ func checkSingleTrigger(database moira.Database, logger moira.Logger, metrics *g
 		os.Exit(1)
 	}
 	os.Exit(0)
+}
+
+func stopChecker(service *worker.Checker) {
+	if err := service.Stop(); err != nil {
+		logger.Errorf("Failed to Stop Moira Checker: %v", err)
+	}
 }
