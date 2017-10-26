@@ -25,7 +25,6 @@ var (
 	configFileName         = flag.String("config", "/etc/moira/config.yml", "path to config file")
 	printVersion           = flag.Bool("version", false, "Print current version and exit")
 	printDefaultConfigFlag = flag.Bool("default-config", false, "Print default config and exit")
-	convertDb              = flag.Bool("convert", false, "Convert telegram contacts and exit")
 )
 
 // Moira notifier bin version
@@ -69,10 +68,8 @@ func main() {
 		logger.Error(err)
 	}
 
-	database := redis.NewDatabase(logger, config.Redis.GetSettings())
-	if *convertDb {
-		convertDatabase(database)
-	}
+	databaseSettings := config.Redis.GetSettings()
+	database := redis.NewDatabase(logger, databaseSettings)
 
 	notifierConfig := config.Notifier.getSettings()
 	sender := notifier.NewNotifier(database, logger, notifierConfig, notifierMetrics)

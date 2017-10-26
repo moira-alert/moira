@@ -18,6 +18,8 @@ import (
 	"github.com/moira-alert/moira/logging/go-logging"
 )
 
+const serviceName = "api"
+
 var (
 	configFileName         = flag.String("config", "/etc/moira/config.yml", "Path to configuration file")
 	printVersion           = flag.Bool("version", false, "Print version and exit")
@@ -53,7 +55,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	logger, err := logging.ConfigureLog(config.Logger.LogFile, config.Logger.LogLevel, "api")
+	logger, err := logging.ConfigureLog(config.Logger.LogFile, config.Logger.LogLevel, serviceName)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Can not configure log: %s\n", err.Error())
 		os.Exit(1)
