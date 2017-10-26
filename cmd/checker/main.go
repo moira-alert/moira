@@ -59,7 +59,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	logger, err := logging.ConfigureLog(config.Logger.LogFile, config.Logger.LogLevel, serviceName)
+	logger, err = logging.ConfigureLog(config.Logger.LogFile, config.Logger.LogLevel, serviceName)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Can not configure log: %s\n", err.Error())
 		os.Exit(1)
