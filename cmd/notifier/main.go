@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/database/redis"
 	"github.com/moira-alert/moira/logging/go-logging"
@@ -20,6 +21,7 @@ import (
 const serviceName = "notifier"
 
 var (
+	logger                 moira.Logger
 	configFileName         = flag.String("config", "/etc/moira/config.yml", "path to config file")
 	printVersion           = flag.Bool("version", false, "Print current version and exit")
 	printDefaultConfigFlag = flag.Bool("default-config", false, "Print default config and exit")
@@ -55,7 +57,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	logger, err := logging.ConfigureLog(config.Logger.LogFile, config.Logger.LogLevel, serviceName)
+	logger, err = logging.ConfigureLog(config.Logger.LogFile, config.Logger.LogLevel, serviceName)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Can not configure log: %s\n", err.Error())
 		os.Exit(1)
@@ -91,7 +93,7 @@ func main() {
 	if err := selfState.Start(); err != nil {
 		logger.Fatalf("SelfState failed: %v", err)
 	}
-	defer selfState.Stop()
+	defer stopSelfStateChecker(selfState)
 
 	// Start moira notification fetcher
 	fetchNotificationsWorker := &notifications.FetchNotificationsWorker{
@@ -100,21 +102,39 @@ func main() {
 		Notifier: sender,
 	}
 	fetchNotificationsWorker.Start()
-	defer fetchNotificationsWorker.Stop()
+	defer stopNotificationsFetcher(fetchNotificationsWorker)
 
 	// Start moira new events fetcher
-	fetchEventsWorker := events.FetchEventsWorker{
+	fetchEventsWorker := &events.FetchEventsWorker{
 		Logger:    logger,
 		Database:  database,
 		Scheduler: notifier.NewScheduler(database, logger, notifierMetrics),
 		Metrics:   notifierMetrics,
 	}
 	fetchEventsWorker.Start()
-	defer fetchEventsWorker.Stop()
+	defer stopFetchEvents(fetchEventsWorker)
 
 	logger.Infof("Moira Notifier Started. Version: %s", Version)
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 	logger.Info(fmt.Sprint(<-ch))
 	logger.Infof("Moira Notifier shutting down.")
+}
+
+func stopFetchEvents(worker *events.FetchEventsWorker) {
+	if err := worker.Stop(); err != nil {
+		logger.Errorf("Failed to stop events fetcher: %v", err)
+	}
+}
+
+func stopNotificationsFetcher(worker *notifications.FetchNotificationsWorker) {
+	if err := worker.Stop(); err != nil {
+		logger.Errorf("Failed to stop notifications fetcher: %v", err)
+	}
+}
+
+func stopSelfStateChecker(checker *selfstate.SelfCheckWorker) {
+	if err := checker.Stop(); err != nil {
+		logger.Errorf("Failed to stop self check worker: %v", err)
+	}
 }
