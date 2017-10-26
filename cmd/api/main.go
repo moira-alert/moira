@@ -89,7 +89,7 @@ func Stop(logger moira.Logger, server *http.Server) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := server.Shutdown(ctx); err != nil {
-		logger.Errorf("Can't stop Moira Api correctly: %v", err)
+		logger.Errorf("Can't stop Moira API correctly: %v", err)
 	}
-	logger.Info("API stopped")
+	logger.Info("Moira API Stopped. Version: %s", Version)
 }

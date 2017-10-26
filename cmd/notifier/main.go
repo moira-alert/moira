@@ -17,7 +17,7 @@ import (
 	"github.com/moira-alert/moira/notifier/selfstate"
 )
 
-var serviceName = "notifier"
+const serviceName = "notifier"
 
 var (
 	configFileName         = flag.String("config", "/etc/moira/config.yml", "path to config file")
@@ -60,6 +60,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Can not configure log: %s\n", err.Error())
 		os.Exit(1)
 	}
+	defer logger.Infof("Moira Notifier Stopped. Version: %s", Version)
 
 	notifierMetrics := metrics.ConfigureNotifierMetrics(serviceName)
 	if err = metrics.Init(config.Graphite.GetSettings()); err != nil {
@@ -74,11 +75,13 @@ func main() {
 	notifierConfig := config.Notifier.getSettings()
 	sender := notifier.NewNotifier(database, logger, notifierConfig, notifierMetrics)
 
+	// Register moira senders
 	if err := sender.RegisterSenders(database); err != nil {
 		logger.Fatalf("Can not configure senders: %s", err.Error())
 	}
 	defer database.DeregisterBots()
 
+	// Start moira self state checker
 	selfState := &selfstate.SelfCheckWorker{
 		Log:      logger,
 		DB:       database,
@@ -90,6 +93,16 @@ func main() {
 	}
 	defer selfState.Stop()
 
+	// Start moira notification fetcher
+	fetchNotificationsWorker := &notifications.FetchNotificationsWorker{
+		Logger:   logger,
+		Database: database,
+		Notifier: sender,
+	}
+	fetchNotificationsWorker.Start()
+	defer fetchNotificationsWorker.Stop()
+
+	// Start moira new events fetcher
 	fetchEventsWorker := events.FetchEventsWorker{
 		Logger:    logger,
 		Database:  database,
@@ -99,18 +112,9 @@ func main() {
 	fetchEventsWorker.Start()
 	defer fetchEventsWorker.Stop()
 
-	fetchNotificationsWorker := &notifications.FetchNotificationsWorker{
-		Logger:   logger,
-		Database: database,
-		Notifier: sender,
-	}
-	fetchNotificationsWorker.Start()
-	defer fetchNotificationsWorker.Stop()
-
 	logger.Infof("Moira Notifier Started. Version: %s", Version)
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 	logger.Info(fmt.Sprint(<-ch))
 	logger.Infof("Moira Notifier shutting down.")
-	defer logger.Infof("Moira Notifier Stopped. Version: %s", Version)
 }

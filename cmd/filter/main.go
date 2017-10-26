@@ -8,6 +8,7 @@ import (
 	"sync"
 	"syscall"
 
+	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/database/redis"
 	"github.com/moira-alert/moira/filter"
@@ -19,7 +20,10 @@ import (
 	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
 )
 
+const serviceName = "filter"
+
 var (
+	logger                 moira.Logger
 	configFileName         = flag.String("config", "/etc/moira/config.yml", "path config file")
 	printVersion           = flag.Bool("version", false, "Print version and exit")
 	printDefaultConfigFlag = flag.Bool("default-config", false, "Print default config and exit")
@@ -54,13 +58,14 @@ func main() {
 		os.Exit(1)
 	}
 
-	logger, err := logging.ConfigureLog(config.Logger.LogFile, config.Logger.LogLevel, "filter")
+	logger, err = logging.ConfigureLog(config.Logger.LogFile, config.Logger.LogLevel, serviceName)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Can not configure log: %s\n", err.Error())
 		os.Exit(1)
 	}
+	defer logger.Infof("Moira Filter stopped. Version: %s", MoiraVersion)
 
-	cacheMetrics := metrics.ConfigureFilterMetrics("filter")
+	cacheMetrics := metrics.ConfigureFilterMetrics(serviceName)
 	if err = metrics.Init(config.Graphite.GetSettings()); err != nil {
 		logger.Error(err)
 	}
@@ -82,35 +87,56 @@ func main() {
 		logger.Fatalf("Failed to refresh pattern storage: %s", err.Error())
 	}
 
+	// Refresh Patterns on first init
 	refreshPatternWorker := patterns.NewRefreshPatternWorker(database, cacheMetrics, logger, patternStorage)
-	heartbeatWorker := heartbeat.NewHeartbeatWorker(database, cacheMetrics, logger)
 
+	// Start patterns refresher
 	err = refreshPatternWorker.Start()
 	if err != nil {
 		logger.Fatalf("Failed to refresh pattern storage: %s", err.Error())
 	}
-	heartbeatWorker.Start()
+	defer stopRefreshPatternWorker(refreshPatternWorker)
 
+	// Start Filter heartbeat
+	heartbeatWorker := heartbeat.NewHeartbeatWorker(database, cacheMetrics, logger)
+	heartbeatWorker.Start()
+	defer stopHeartbeatWorker(heartbeatWorker)
+
+	// Start metrics listener
 	listener, err := connection.NewListener(config.Filter.Listen, logger, patternStorage)
 	if err != nil {
 		logger.Fatalf("Failed to start listen: %s", err.Error())
 	}
-	metricsMatcher := matchedmetrics.NewMetricsMatcher(cacheMetrics, logger, database, cacheStorage)
-
 	metricsChan := listener.Listen()
+
+	// Start metrics matcher
 	var matcherWG sync.WaitGroup
+	metricsMatcher := matchedmetrics.NewMetricsMatcher(cacheMetrics, logger, database, cacheStorage)
 	metricsMatcher.Start(metricsChan, &matcherWG)
+	defer matcherWG.Wait()       // First stop listener
+	defer stopListener(listener) // Then waiting for metrics matcher handle all received events
 
 	logger.Infof("Moira Filter started. Version: %s", MoiraVersion)
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 	logger.Info(fmt.Sprint(<-ch))
 	logger.Infof("Moira Filter shutting down.")
+}
 
-	listener.Stop()
-	matcherWG.Wait()
-	refreshPatternWorker.Stop()
-	heartbeatWorker.Stop()
+func stopListener(listener *connection.MetricsListener) {
+	if err := listener.Stop(); err != nil {
+		logger.Errorf("Failed to stop listener: %v", err)
+	}
+}
 
-	logger.Infof("Moira Filter stopped. Version: %s", MoiraVersion)
+func stopHeartbeatWorker(heartbeatWorker *heartbeat.Worker) {
+	if err := heartbeatWorker.Stop(); err != nil {
+		logger.Errorf("Failed to stop heartbeat worker: %v", err)
+	}
+}
+
+func stopRefreshPatternWorker(refreshPatternWorker *patterns.RefreshPatternWorker) {
+	if err := refreshPatternWorker.Stop(); err != nil {
+		logger.Errorf("Failed to stop refresh pattern worker: %v", err)
+	}
 }
