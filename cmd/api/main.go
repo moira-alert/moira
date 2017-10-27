@@ -84,6 +84,7 @@ func main() {
 	logger.Infof("Moira Api Started (version: %s)", Version)
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
+	logger.Info(fmt.Sprint(<-ch))
 }
 
 // Stop Moira API HTTP server
@@ -93,5 +94,5 @@ func Stop(logger moira.Logger, server *http.Server) {
 	if err := server.Shutdown(ctx); err != nil {
 		logger.Errorf("Can't stop Moira API correctly: %v", err)
 	}
-	logger.Info("Moira API Stopped. Version: %s", Version)
+	logger.Infof("Moira API Stopped. Version: %s", Version)
 }
