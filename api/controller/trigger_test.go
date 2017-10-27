@@ -20,30 +20,31 @@ func TestUpdateTrigger(t *testing.T) {
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 	Convey("Success update", t, func() {
-		trigger := moira.Trigger{ID: uuid.NewV4().String()}
-		dataBase.EXPECT().GetTrigger(trigger.ID).Return(trigger, nil)
+		triggerModel := dto.TriggerModel{ID: uuid.NewV4().String()}
+		trigger := triggerModel.ToMoiraTrigger()
+		dataBase.EXPECT().GetTrigger(triggerModel.ID).Return(*trigger, nil)
 		dataBase.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 10)
 		dataBase.EXPECT().DeleteTriggerCheckLock(gomock.Any())
 		dataBase.EXPECT().GetTriggerLastCheck(gomock.Any()).Return(moira.CheckData{}, database.ErrNil)
 		dataBase.EXPECT().SetTriggerLastCheck(gomock.Any(), gomock.Any()).Return(nil)
-		dataBase.EXPECT().SaveTrigger(gomock.Any(), &trigger).Return(nil)
-		resp, err := UpdateTrigger(dataBase, &trigger, trigger.ID, make(map[string]bool))
+		dataBase.EXPECT().SaveTrigger(gomock.Any(), trigger).Return(nil)
+		resp, err := UpdateTrigger(dataBase, &triggerModel, triggerModel.ID, make(map[string]bool))
 		So(err, ShouldBeNil)
 		So(resp.Message, ShouldResemble, "trigger updated")
 	})
 
 	Convey("Trigger does not exists", t, func() {
-		trigger := moira.Trigger{ID: uuid.NewV4().String()}
-		dataBase.EXPECT().GetTrigger(trigger.ID).Return(trigger, database.ErrNil)
+		trigger := dto.TriggerModel{ID: uuid.NewV4().String()}
+		dataBase.EXPECT().GetTrigger(trigger.ID).Return(moira.Trigger{}, database.ErrNil)
 		resp, err := UpdateTrigger(dataBase, &trigger, trigger.ID, make(map[string]bool))
 		So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("Trigger with ID = '%s' does not exists", trigger.ID)))
 		So(resp, ShouldBeNil)
 	})
 
 	Convey("Get trigger error", t, func() {
-		trigger := moira.Trigger{ID: uuid.NewV4().String()}
+		trigger := dto.TriggerModel{ID: uuid.NewV4().String()}
 		expected := fmt.Errorf("Soo bad trigger")
-		dataBase.EXPECT().GetTrigger(trigger.ID).Return(trigger, expected)
+		dataBase.EXPECT().GetTrigger(trigger.ID).Return(moira.Trigger{}, expected)
 		resp, err := UpdateTrigger(dataBase, &trigger, trigger.ID, make(map[string]bool))
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 		So(resp, ShouldBeNil)
@@ -153,7 +154,8 @@ func TestGetTrigger(t *testing.T) {
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	triggerID := uuid.NewV4().String()
-	trigger := moira.Trigger{ID: triggerID}
+	triggerModel := dto.TriggerModel{ID: triggerID}
+	trigger := *(triggerModel.ToMoiraTrigger())
 	begging := time.Unix(0, 0)
 	now := time.Now()
 	tomorrow := now.Add(time.Hour * 24)
@@ -164,7 +166,7 @@ func TestGetTrigger(t *testing.T) {
 		dataBase.EXPECT().GetTriggerThrottling(triggerID).Return(begging, begging)
 		actual, err := GetTrigger(dataBase, triggerID)
 		So(err, ShouldBeNil)
-		So(actual, ShouldResemble, &dto.Trigger{Trigger: trigger, Throttling: 0})
+		So(actual, ShouldResemble, &dto.Trigger{TriggerModel: triggerModel, Throttling: 0})
 	})
 
 	Convey("Has trigger has throttling", t, func() {
@@ -172,7 +174,7 @@ func TestGetTrigger(t *testing.T) {
 		dataBase.EXPECT().GetTriggerThrottling(triggerID).Return(tomorrow, begging)
 		actual, err := GetTrigger(dataBase, triggerID)
 		So(err, ShouldBeNil)
-		So(actual, ShouldResemble, &dto.Trigger{Trigger: trigger, Throttling: tomorrow.Unix()})
+		So(actual, ShouldResemble, &dto.Trigger{TriggerModel: triggerModel, Throttling: tomorrow.Unix()})
 	})
 
 	Convey("Has trigger has old throttling", t, func() {
@@ -180,7 +182,7 @@ func TestGetTrigger(t *testing.T) {
 		dataBase.EXPECT().GetTriggerThrottling(triggerID).Return(yesterday, begging)
 		actual, err := GetTrigger(dataBase, triggerID)
 		So(err, ShouldBeNil)
-		So(actual, ShouldResemble, &dto.Trigger{Trigger: trigger, Throttling: 0})
+		So(actual, ShouldResemble, &dto.Trigger{TriggerModel: triggerModel, Throttling: 0})
 	})
 
 	Convey("GetTrigger error", t, func() {

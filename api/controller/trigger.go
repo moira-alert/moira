@@ -14,7 +14,7 @@ import (
 )
 
 // UpdateTrigger update trigger data and trigger metrics in last state
-func UpdateTrigger(dataBase moira.Database, trigger *moira.Trigger, triggerID string, timeSeriesNames map[string]bool) (*dto.SaveTriggerResponse, *api.ErrorResponse) {
+func UpdateTrigger(dataBase moira.Database, trigger *dto.TriggerModel, triggerID string, timeSeriesNames map[string]bool) (*dto.SaveTriggerResponse, *api.ErrorResponse) {
 	_, err := dataBase.GetTrigger(triggerID)
 	if err != nil {
 		if err == database.ErrNil {
@@ -22,7 +22,7 @@ func UpdateTrigger(dataBase moira.Database, trigger *moira.Trigger, triggerID st
 		}
 		return nil, api.ErrorInternalServer(err)
 	}
-	return saveTrigger(dataBase, trigger, triggerID, timeSeriesNames)
+	return saveTrigger(dataBase, trigger.ToMoiraTrigger(), triggerID, timeSeriesNames)
 }
 
 // saveTrigger create or update trigger data and update trigger metrics in last state
@@ -82,8 +82,8 @@ func GetTrigger(dataBase moira.Database, triggerID string) (*dto.Trigger, *api.E
 	}
 
 	triggerResponse := dto.Trigger{
-		Trigger:    trigger,
-		Throttling: throttlingUnix,
+		TriggerModel: dto.CreateTriggerModel(&trigger),
+		Throttling:   throttlingUnix,
 	}
 
 	return &triggerResponse, nil

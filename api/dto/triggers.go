@@ -24,18 +24,70 @@ func (*TriggersList) Render(w http.ResponseWriter, r *http.Request) error {
 }
 
 type Trigger struct {
-	moira.Trigger
+	TriggerModel
 	Throttling int64 `json:"throttling"`
+}
+
+// TriggerModel is moira.Trigger api representation
+type TriggerModel struct {
+	ID         string              `json:"id"`
+	Name       string              `json:"name"`
+	Desc       *string             `json:"desc,omitempty"`
+	Targets    []string            `json:"targets"`
+	WarnValue  *float64            `json:"warn_value"`
+	ErrorValue *float64            `json:"error_value"`
+	Tags       []string            `json:"tags"`
+	TTLState   *string             `json:"ttl_state,omitempty"`
+	TTL        int64               `json:"ttl,omitempty"`
+	Schedule   *moira.ScheduleData `json:"sched,omitempty"`
+	Expression string              `json:"expression"`
+	Patterns   []string            `json:"patterns"`
+}
+
+// ToMoiraTrigger transforms TriggerModel to moira.Trigger
+func (model *TriggerModel) ToMoiraTrigger() *moira.Trigger {
+	return &moira.Trigger{
+		ID:         model.ID,
+		Name:       model.Name,
+		Desc:       model.Desc,
+		Targets:    model.Targets,
+		WarnValue:  model.WarnValue,
+		ErrorValue: model.ErrorValue,
+		Tags:       model.Tags,
+		TTLState:   model.TTLState,
+		TTL:        model.TTL,
+		Schedule:   model.Schedule,
+		Expression: &model.Expression,
+		Patterns:   model.Patterns,
+	}
+}
+
+// CreateTriggerModel transforms moira.Trigger to TriggerModel
+func CreateTriggerModel(trigger *moira.Trigger) TriggerModel {
+	return TriggerModel{
+		ID:         trigger.ID,
+		Name:       trigger.Name,
+		Desc:       trigger.Desc,
+		Targets:    trigger.Targets,
+		WarnValue:  trigger.WarnValue,
+		ErrorValue: trigger.ErrorValue,
+		Tags:       trigger.Tags,
+		TTLState:   trigger.TTLState,
+		TTL:        trigger.TTL,
+		Schedule:   trigger.Schedule,
+		Expression: moira.UseString(trigger.Expression),
+		Patterns:   trigger.Patterns,
+	}
 }
 
 func (trigger *Trigger) Bind(request *http.Request) error {
 	if len(trigger.Targets) == 0 {
 		return fmt.Errorf("targets is required")
 	}
-	if trigger.WarnValue == nil && trigger.Expression == nil {
+	if trigger.WarnValue == nil && trigger.Expression == "" {
 		return fmt.Errorf("warn_value is required")
 	}
-	if trigger.ErrorValue == nil && trigger.Expression == nil {
+	if trigger.ErrorValue == nil && trigger.Expression == "" {
 		return fmt.Errorf("error_value is required")
 	}
 
@@ -44,7 +96,7 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 		WarnValue:               trigger.WarnValue,
 		ErrorValue:              trigger.ErrorValue,
 		PreviousState:           checker.NODATA,
-		Expression:              trigger.Expression,
+		Expression:              &trigger.Expression,
 	}
 
 	logger := middleware.GetLoggerEntry(request)
@@ -54,7 +106,7 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 		return fmt.Errorf("Invalid graphite targets: %s", err.Error())
 	}
 	if _, err := triggerExpression.Evaluate(); err != nil {
-		logger.Infof("Invalid expression %s: %s\n", moira.UseString(trigger.Expression), err.Error())
+		logger.Infof("Invalid expression %s: %s\n", trigger.Expression, err.Error())
 		return err
 	}
 	return nil

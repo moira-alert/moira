@@ -37,12 +37,12 @@ func GetAllPatterns(database moira.Database, logger moira.Logger) (*dto.PatternL
 			}
 			patternData := dto.PatternData{
 				Pattern:  pattern,
-				Triggers: make([]moira.Trigger, 0),
+				Triggers: make([]dto.TriggerModel, 0),
 				Metrics:  metrics,
 			}
 			for _, trigger := range triggers {
 				if trigger != nil {
-					patternData.Triggers = append(patternData.Triggers, *trigger)
+					patternData.Triggers = append(patternData.Triggers, dto.CreateTriggerModel(trigger))
 				}
 			}
 			rch <- &patternData

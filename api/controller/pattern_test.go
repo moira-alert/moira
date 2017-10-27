@@ -40,20 +40,20 @@ func TestGetAllPatterns(t *testing.T) {
 	pattern2 := "my.second.pattern"
 
 	Convey("One pattern more triggers", t, func() {
-		triggers := []*moira.Trigger{{ID: uuid.NewV4().String()}, {ID: uuid.NewV4().String()}}
+		triggers := []*dto.TriggerModel{{ID: uuid.NewV4().String()}, {ID: uuid.NewV4().String()}}
 		metrics := []string{"my.first.metric"}
 		dataBase.EXPECT().GetPatterns().Return([]string{pattern1}, nil)
 		expectGettingPatternList(dataBase, pattern1, triggers, metrics)
 		list, err := GetAllPatterns(dataBase, logger)
 		So(err, ShouldBeNil)
 		So(list, ShouldResemble, &dto.PatternList{
-			List: []dto.PatternData{{Metrics: metrics, Pattern: pattern1, Triggers: []moira.Trigger{*triggers[0], *triggers[1]}}},
+			List: []dto.PatternData{{Metrics: metrics, Pattern: pattern1, Triggers: []dto.TriggerModel{*triggers[0], *triggers[1]}}},
 		})
 	})
 
 	Convey("Many patterns one trigger", t, func() {
-		triggers1 := []*moira.Trigger{{ID: "1111"}, {ID: "111111"}}
-		triggers2 := []*moira.Trigger{{ID: "22222"}}
+		triggers1 := []*dto.TriggerModel{{ID: "1111"}, {ID: "111111"}}
+		triggers2 := []*dto.TriggerModel{{ID: "22222"}}
 		metrics1 := []string{"my.first.metric"}
 		metrics2 := []string{"my.second.metric"}
 		dataBase.EXPECT().GetPatterns().Return([]string{pattern1, pattern2}, nil)
@@ -64,10 +64,10 @@ func TestGetAllPatterns(t *testing.T) {
 		So(list.List, ShouldHaveLength, 2)
 		for _, patternStat := range list.List {
 			if patternStat.Pattern == pattern1 {
-				So(patternStat, ShouldResemble, dto.PatternData{Metrics: metrics1, Pattern: pattern1, Triggers: []moira.Trigger{*triggers1[0], *triggers1[1]}})
+				So(patternStat, ShouldResemble, dto.PatternData{Metrics: metrics1, Pattern: pattern1, Triggers: []dto.TriggerModel{*triggers1[0], *triggers1[1]}})
 			}
 			if patternStat.Pattern == pattern2 {
-				So(patternStat, ShouldResemble, dto.PatternData{Metrics: metrics2, Pattern: pattern2, Triggers: []moira.Trigger{*triggers2[0]}})
+				So(patternStat, ShouldResemble, dto.PatternData{Metrics: metrics2, Pattern: pattern2, Triggers: []dto.TriggerModel{*triggers2[0]}})
 			}
 		}
 	})
@@ -83,8 +83,13 @@ func TestGetAllPatterns(t *testing.T) {
 	})
 }
 
-func expectGettingPatternList(database *mock_moira_alert.MockDatabase, pattern string, triggers []*moira.Trigger, metrics []string) {
+func expectGettingPatternList(database *mock_moira_alert.MockDatabase, pattern string, triggers []*dto.TriggerModel, metrics []string) {
+	tr := make([]*moira.Trigger, 0)
+	for _, trigger := range triggers {
+		tr = append(tr, trigger.ToMoiraTrigger())
+	}
+
 	database.EXPECT().GetPatternTriggerIDs(pattern).Return([]string{pattern}, nil)
-	database.EXPECT().GetTriggers([]string{pattern}).Return(triggers, nil)
+	database.EXPECT().GetTriggers([]string{pattern}).Return(tr, nil)
 	database.EXPECT().GetPatternMetrics(pattern).Return(metrics, nil)
 }

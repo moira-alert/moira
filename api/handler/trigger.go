@@ -45,7 +45,7 @@ func updateTrigger(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	timeSeriesNames := middleware.GetTimeSeriesNames(request)
-	response, err := controller.UpdateTrigger(database, &trigger.Trigger, triggerID, timeSeriesNames)
+	response, err := controller.UpdateTrigger(database, &trigger.TriggerModel, triggerID, timeSeriesNames)
 	if err != nil {
 		render.Render(writer, request, err)
 		return

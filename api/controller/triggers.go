@@ -12,7 +12,7 @@ import (
 )
 
 // CreateTrigger creates new trigger
-func CreateTrigger(dataBase moira.Database, trigger *moira.Trigger, timeSeriesNames map[string]bool) (*dto.SaveTriggerResponse, *api.ErrorResponse) {
+func CreateTrigger(dataBase moira.Database, trigger *dto.TriggerModel, timeSeriesNames map[string]bool) (*dto.SaveTriggerResponse, *api.ErrorResponse) {
 	if trigger.ID == "" {
 		trigger.ID = uuid.NewV4().String()
 	} else {
@@ -24,7 +24,7 @@ func CreateTrigger(dataBase moira.Database, trigger *moira.Trigger, timeSeriesNa
 			return nil, api.ErrorInvalidRequest(fmt.Errorf("Trigger with this ID already exists"))
 		}
 	}
-	resp, err := saveTrigger(dataBase, trigger, trigger.ID, timeSeriesNames)
+	resp, err := saveTrigger(dataBase, trigger.ToMoiraTrigger(), trigger.ID, timeSeriesNames)
 	if resp != nil {
 		resp.Message = "trigger created"
 	}

@@ -19,56 +19,58 @@ func TestCreateTrigger(t *testing.T) {
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 	Convey("Success with trigger.ID empty", t, func() {
-		trigger := moira.Trigger{}
+		triggerModel := dto.TriggerModel{}
 		dataBase.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 10)
 		dataBase.EXPECT().DeleteTriggerCheckLock(gomock.Any())
 		dataBase.EXPECT().GetTriggerLastCheck(gomock.Any()).Return(moira.CheckData{}, database.ErrNil)
 		dataBase.EXPECT().SetTriggerLastCheck(gomock.Any(), gomock.Any()).Return(nil)
-		dataBase.EXPECT().SaveTrigger(gomock.Any(), &trigger).Return(nil)
-		resp, err := CreateTrigger(dataBase, &trigger, make(map[string]bool))
+		dataBase.EXPECT().SaveTrigger(gomock.Any(), gomock.Any()).Return(nil)
+		resp, err := CreateTrigger(dataBase, &triggerModel, make(map[string]bool))
 		So(err, ShouldBeNil)
 		So(resp.Message, ShouldResemble, "trigger created")
 	})
 
 	Convey("Success with triggerID", t, func() {
-		trigger := moira.Trigger{ID: uuid.NewV4().String()}
-		dataBase.EXPECT().GetTrigger(trigger.ID).Return(moira.Trigger{}, database.ErrNil)
+		triggerModel := dto.TriggerModel{ID: uuid.NewV4().String()}
+		dataBase.EXPECT().GetTrigger(triggerModel.ID).Return(moira.Trigger{}, database.ErrNil)
 		dataBase.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 10)
 		dataBase.EXPECT().DeleteTriggerCheckLock(gomock.Any())
 		dataBase.EXPECT().GetTriggerLastCheck(gomock.Any()).Return(moira.CheckData{}, database.ErrNil)
 		dataBase.EXPECT().SetTriggerLastCheck(gomock.Any(), gomock.Any()).Return(nil)
-		dataBase.EXPECT().SaveTrigger(gomock.Any(), &trigger).Return(nil)
-		resp, err := CreateTrigger(dataBase, &trigger, make(map[string]bool))
+		dataBase.EXPECT().SaveTrigger(gomock.Any(), triggerModel.ToMoiraTrigger()).Return(nil)
+		resp, err := CreateTrigger(dataBase, &triggerModel, make(map[string]bool))
 		So(err, ShouldBeNil)
 		So(resp.Message, ShouldResemble, "trigger created")
 	})
 
 	Convey("Trigger already exists", t, func() {
-		trigger := moira.Trigger{ID: uuid.NewV4().String()}
-		dataBase.EXPECT().GetTrigger(trigger.ID).Return(trigger, nil)
-		resp, err := CreateTrigger(dataBase, &trigger, make(map[string]bool))
+		triggerModel := dto.TriggerModel{ID: uuid.NewV4().String()}
+		trigger := triggerModel.ToMoiraTrigger()
+		dataBase.EXPECT().GetTrigger(triggerModel.ID).Return(*trigger, nil)
+		resp, err := CreateTrigger(dataBase, &triggerModel, make(map[string]bool))
 		So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("Trigger with this ID already exists")))
 		So(resp, ShouldBeNil)
 	})
 
 	Convey("Get trigger error", t, func() {
-		trigger := moira.Trigger{ID: uuid.NewV4().String()}
+		trigger := dto.TriggerModel{ID: uuid.NewV4().String()}
 		expected := fmt.Errorf("Soo bad trigger")
-		dataBase.EXPECT().GetTrigger(trigger.ID).Return(trigger, expected)
+		dataBase.EXPECT().GetTrigger(trigger.ID).Return(moira.Trigger{}, expected)
 		resp, err := CreateTrigger(dataBase, &trigger, make(map[string]bool))
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 		So(resp, ShouldBeNil)
 	})
 
 	Convey("Error", t, func() {
-		trigger := moira.Trigger{}
+		triggerModel := dto.TriggerModel{ID: uuid.NewV4().String()}
 		expected := fmt.Errorf("Soo bad trigger")
+		dataBase.EXPECT().GetTrigger(triggerModel.ID).Return(moira.Trigger{}, database.ErrNil)
 		dataBase.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 10)
 		dataBase.EXPECT().DeleteTriggerCheckLock(gomock.Any())
 		dataBase.EXPECT().GetTriggerLastCheck(gomock.Any()).Return(moira.CheckData{}, database.ErrNil)
 		dataBase.EXPECT().SetTriggerLastCheck(gomock.Any(), gomock.Any()).Return(nil)
-		dataBase.EXPECT().SaveTrigger(gomock.Any(), &trigger).Return(expected)
-		resp, err := CreateTrigger(dataBase, &trigger, make(map[string]bool))
+		dataBase.EXPECT().SaveTrigger(gomock.Any(), triggerModel.ToMoiraTrigger()).Return(expected)
+		resp, err := CreateTrigger(dataBase, &triggerModel, make(map[string]bool))
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 		So(resp, ShouldBeNil)
 	})
