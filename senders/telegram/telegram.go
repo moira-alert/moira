@@ -32,6 +32,7 @@ type Sender struct {
 	FrontURI string
 	logger   moira.Logger
 	bot      *telebot.Bot
+	location *time.Location
 }
 
 type recipient struct {
@@ -43,13 +44,14 @@ func (r recipient) Destination() string {
 }
 
 // Init read yaml config
-func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger) error {
+func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location) error {
 	sender.APIToken = senderSettings["api_token"]
 	if sender.APIToken == "" {
 		return fmt.Errorf("Can not read telegram api_token from config")
 	}
 	sender.logger = logger
 	sender.FrontURI = senderSettings["front_uri"]
+	sender.location = location
 
 	err := sender.StartTelebot()
 	if err != nil {
@@ -74,7 +76,8 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 
 	for _, event := range events {
 		value := strconv.FormatFloat(moira.UseFloat64(event.Value), 'f', -1, 64)
-		line := fmt.Sprintf("\n%s: %s = %s (%s to %s)", time.Unix(event.Timestamp, 0).Format("15:04"), event.Metric, value, event.OldState, event.State)
+		eventTime := time.Unix(event.Timestamp, 0).In(sender.location)
+		line := fmt.Sprintf("\n%s: %s = %s (%s to %s)", eventTime.Format("15:04"), event.Metric, value, event.OldState, event.State)
 		if len(moira.UseString(event.Message)) > 0 {
 			line += fmt.Sprintf(". %s", moira.UseString(event.Message))
 		}

@@ -25,6 +25,7 @@ type Sender struct {
 	TemplateFile string
 	log          moira.Logger
 	Template     *template.Template
+	location     *time.Location
 }
 
 type templateRow struct {
@@ -39,7 +40,7 @@ type templateRow struct {
 }
 
 // Init read yaml config
-func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger) error {
+func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location) error {
 	sender.setLogger(logger)
 	sender.From = senderSettings["mail_from"]
 	sender.SMTPhost = senderSettings["smtp_host"]
@@ -49,6 +50,7 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 	sender.Password = senderSettings["smtp_pass"]
 	sender.Username = senderSettings["smtp_user"]
 	sender.TemplateFile = senderSettings["template_file"]
+	sender.location = location
 
 	if sender.Username == "" {
 		sender.Username = sender.From
@@ -130,7 +132,7 @@ func (sender *Sender) makeMessage(events moira.NotificationEvents, contact moira
 	for _, event := range events {
 		templateData.Items = append(templateData.Items, &templateRow{
 			Metric:     event.Metric,
-			Timestamp:  time.Unix(event.Timestamp, 0).Format("15:04 02.01.2006"),
+			Timestamp:  time.Unix(event.Timestamp, 0).In(sender.location).Format("15:04 02.01.2006"),
 			Oldstate:   event.OldState,
 			State:      event.State,
 			Value:      strconv.FormatFloat(moira.UseFloat64(event.Value), 'f', -1, 64),

@@ -70,7 +70,7 @@ func (notifier *StandardNotifier) RegisterSender(senderSettings map[string]strin
 	} else {
 		senderIdent = senderSettings["type"]
 	}
-	err := sender.Init(senderSettings, notifier.logger)
+	err := sender.Init(senderSettings, notifier.logger, notifier.config.Location)
 	if err != nil {
 		return fmt.Errorf("Don't initialize sender [%s], err [%s]", senderIdent, err.Error())
 	}

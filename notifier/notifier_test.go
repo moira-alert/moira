@@ -117,9 +117,11 @@ func waitTestEnd() {
 
 func configureNotifier(t *testing.T) {
 	metrics := metrics.ConfigureNotifierMetrics("notifier")
+	var location, _ = time.LoadLocation("UTC")
 	config := Config{
 		SendingTimeout:   time.Millisecond * 10,
 		ResendingTimeout: time.Hour * 24,
+		Location:         location,
 	}
 
 	mockCtrl = gomock.NewController(t)
@@ -134,7 +136,7 @@ func configureNotifier(t *testing.T) {
 		"type": "test",
 	}
 
-	sender.EXPECT().Init(senderSettings, logger).Return(nil)
+	sender.EXPECT().Init(senderSettings, logger, location).Return(nil)
 
 	notif.RegisterSender(senderSettings, sender)
 

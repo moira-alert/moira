@@ -11,4 +11,5 @@ type Config struct {
 	LogFile          string
 	LogLevel         string
 	FrontURL         string
+	Location         *time.Location
 }

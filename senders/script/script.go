@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 
 	"github.com/moira-alert/moira"
 )
@@ -26,7 +27,7 @@ type scriptNotification struct {
 }
 
 // Init read yaml config
-func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger) error {
+func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location) error {
 	if senderSettings["name"] == "" {
 		return fmt.Errorf("Required name for sender type script")
 	}

@@ -1,8 +1,9 @@
 package moira
 
 import (
-	"gopkg.in/tomb.v2"
 	"time"
+
+	"gopkg.in/tomb.v2"
 )
 
 // Database implements DB functionality
@@ -115,5 +116,5 @@ type Logger interface {
 // Sender interface for implementing specified contact type sender
 type Sender interface {
 	SendEvents(events NotificationEvents, contact ContactData, trigger TriggerData, throttled bool) error
-	Init(senderSettings map[string]string, logger Logger) error
+	Init(senderSettings map[string]string, logger Logger, location *time.Location) error
 }

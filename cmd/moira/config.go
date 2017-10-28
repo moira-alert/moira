@@ -1,8 +1,11 @@
 package main
 
 import (
+	"time"
+
 	"menteslibres.net/gosexy/to"
 
+	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/checker"
 	"github.com/moira-alert/moira/cmd"
@@ -91,9 +94,18 @@ type notifierConfig struct {
 	LogFile          string              `yaml:"log_file"`
 	LogLevel         string              `yaml:"log_level"`
 	FrontURL         string              `yaml:"front_uri"`
+	Timezone         string              `yaml:"timezone"`
 }
 
-func (config *notifierConfig) getSettings() *notifier.Config {
+func (config *notifierConfig) getSettings(logger moira.Logger) *notifier.Config {
+	location, err := time.LoadLocation(config.Timezone)
+	if err != nil {
+		logger.Warningf("Timezone '%s' load failed: %s. Use UTC.", config.Timezone, err.Error())
+		location, _ = time.LoadLocation("UTC")
+	} else {
+		logger.Infof("Timezone '%s' loaded.")
+	}
+
 	return &notifier.Config{
 		Enabled:          cmd.ToBool(config.Enabled),
 		SendingTimeout:   to.Duration(config.SenderTimeout),
@@ -102,6 +114,7 @@ func (config *notifierConfig) getSettings() *notifier.Config {
 		LogFile:          config.LogFile,
 		LogLevel:         config.LogLevel,
 		FrontURL:         config.FrontURL,
+		Location:         location,
 	}
 }
 
@@ -170,6 +183,7 @@ func getDefault() config {
 			FrontURL: "https:// moira.example.com",
 			LogFile:  "stdout",
 			LogLevel: "debug",
+			Timezone: "UTC",
 		},
 		Graphite: cmd.GraphiteConfig{
 			Enabled:  "false",

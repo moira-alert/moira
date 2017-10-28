@@ -1,10 +1,14 @@
 package main
 
 import (
+	"time"
+
+	"menteslibres.net/gosexy/to"
+
+	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/notifier"
 	"github.com/moira-alert/moira/notifier/selfstate"
-	"menteslibres.net/gosexy/to"
 )
 
 type config struct {
@@ -20,6 +24,7 @@ type notifierConfig struct {
 	Senders          []map[string]string `yaml:"senders"`
 	SelfState        selfStateConfig     `yaml:"moira_selfstate"`
 	FrontURI         string              `yaml:"front_uri"`
+	Timezone         string              `yaml:"timezone"`
 }
 
 type selfStateConfig struct {
@@ -58,16 +63,26 @@ func getDefault() config {
 				NoticeInterval:          300,
 			},
 			FrontURI: "http:// localhost",
+			Timezone: "UTC",
 		},
 	}
 }
 
-func (config *notifierConfig) getSettings() notifier.Config {
+func (config *notifierConfig) getSettings(logger moira.Logger) notifier.Config {
+	location, err := time.LoadLocation(config.Timezone)
+	if err != nil {
+		logger.Warningf("Timezone '%s' load failed: %s. Use UTC.", config.Timezone, err.Error())
+		location, _ = time.LoadLocation("UTC")
+	} else {
+		logger.Infof("Timezone '%s' loaded.")
+	}
+
 	return notifier.Config{
 		SendingTimeout:   to.Duration(config.SenderTimeout),
 		ResendingTimeout: to.Duration(config.ResendingTimeout),
 		Senders:          config.Senders,
 		FrontURL:         config.FrontURI,
+		Location:         location,
 	}
 }
 

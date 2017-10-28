@@ -89,7 +89,7 @@ func main() {
 
 	// Notifier
 	notifierService := &NotifierService{
-		Config:          config.Notifier.getSettings(),
+		Config:          config.Notifier.getSettings(logger),
 		SelfStateConfig: config.Notifier.SelfState.getSettings(),
 		DatabaseConfig:  &databaseSettings,
 		LogLevel:        config.Filter.LogLevel,

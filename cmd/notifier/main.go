@@ -71,7 +71,7 @@ func main() {
 	databaseSettings := config.Redis.GetSettings()
 	database := redis.NewDatabase(logger, databaseSettings)
 
-	notifierConfig := config.Notifier.getSettings()
+	notifierConfig := config.Notifier.getSettings(logger)
 	sender := notifier.NewNotifier(database, logger, notifierConfig, notifierMetrics)
 
 	// Register moira senders
