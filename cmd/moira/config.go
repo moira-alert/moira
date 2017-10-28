@@ -103,7 +103,7 @@ func (config *notifierConfig) getSettings(logger moira.Logger) *notifier.Config 
 		logger.Warningf("Timezone '%s' load failed: %s. Use UTC.", config.Timezone, err.Error())
 		location, _ = time.LoadLocation("UTC")
 	} else {
-		logger.Infof("Timezone '%s' loaded.")
+		logger.Infof("Timezone '%s' loaded.", config.Timezone)
 	}
 
 	return &notifier.Config{

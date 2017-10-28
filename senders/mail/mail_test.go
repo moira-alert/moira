@@ -10,6 +10,7 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
+	"time"
 )
 
 func TestMail(t *testing.T) {
@@ -31,12 +32,14 @@ func TestMail(t *testing.T) {
 		Tags:       []string{"test-tag-1"},
 	}
 
+	location, _ := time.LoadLocation("UTC")
 	sender := Sender{
 		FrontURI: "http://localhost",
 		From:     "test@notifier",
 		SMTPhost: "localhost",
 		SMTPport: 25,
 		Template: template.Must(template.New("mail").Parse(defaultTemplate)),
+		location: location,
 	}
 	sender.setLogger(logger)
 	events := make([]moira.NotificationEvent, 0, 10)
