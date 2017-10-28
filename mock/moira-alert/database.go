@@ -664,6 +664,18 @@ func (mr *MockDatabaseMockRecorder) RemoveTrigger(arg0 interface{}) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveTrigger", reflect.TypeOf((*MockDatabase)(nil).RemoveTrigger), arg0)
 }
 
+// RemoveTriggerLastCheck mocks base method
+func (m *MockDatabase) RemoveTriggerLastCheck(arg0 string) error {
+	ret := m.ctrl.Call(m, "RemoveTriggerLastCheck", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveTriggerLastCheck indicates an expected call of RemoveTriggerLastCheck
+func (mr *MockDatabaseMockRecorder) RemoveTriggerLastCheck(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveTriggerLastCheck", reflect.TypeOf((*MockDatabase)(nil).RemoveTriggerLastCheck), arg0)
+}
+
 // RemoveUser mocks base method
 func (m *MockDatabase) RemoveUser(arg0, arg1 string) error {
 	ret := m.ctrl.Call(m, "RemoveUser", arg0, arg1)

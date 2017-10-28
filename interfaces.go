@@ -20,6 +20,7 @@ type Database interface {
 	// LastCheck storing
 	GetTriggerLastCheck(triggerID string) (CheckData, error)
 	SetTriggerLastCheck(triggerID string, checkData *CheckData) error
+	RemoveTriggerLastCheck(triggerID string) error
 	GetTriggerCheckIDs(tags []string, onlyErrors bool) ([]string, error)
 	SetTriggerCheckMetricsMaintenance(triggerID string, metrics map[string]int64) error
 

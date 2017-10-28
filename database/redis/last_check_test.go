@@ -18,7 +18,7 @@ func TestLastCheck(t *testing.T) {
 	defer dataBase.flush()
 
 	Convey("LastCheck manipulation", t, func() {
-		Convey("Test read write", func() {
+		Convey("Test read write delete", func() {
 			triggerID := uuid.NewV4().String()
 			err := dataBase.SetTriggerLastCheck(triggerID, &lastCheckTest)
 			So(err, ShouldBeNil)
@@ -26,6 +26,13 @@ func TestLastCheck(t *testing.T) {
 			actual, err := dataBase.GetTriggerLastCheck(triggerID)
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, lastCheckTest)
+
+			err = dataBase.RemoveTriggerLastCheck(triggerID)
+			So(err, ShouldBeNil)
+
+			actual, err = dataBase.GetTriggerLastCheck(triggerID)
+			So(err, ShouldResemble, database.ErrNil)
+			So(actual, ShouldResemble, moira.CheckData{})
 		})
 
 		Convey("Test no lastcheck", func() {
@@ -121,6 +128,9 @@ func TestLastCheckErrorConnection(t *testing.T) {
 		So(err, ShouldNotBeNil)
 
 		err = dataBase.SetTriggerLastCheck("123", &lastCheckTest)
+		So(err, ShouldNotBeNil)
+
+		err = dataBase.RemoveTriggerLastCheck("123")
 		So(err, ShouldNotBeNil)
 
 		err = dataBase.SetTriggerCheckMetricsMaintenance("123", map[string]int64{})

@@ -42,6 +42,21 @@ func (connector *DbConnector) SetTriggerLastCheck(triggerID string, checkData *m
 	return nil
 }
 
+// RemoveTriggerLastCheck removes trigger last check data
+func (connector *DbConnector) RemoveTriggerLastCheck(triggerID string) error {
+	c := connector.pool.Get()
+	defer c.Close()
+	c.Send("MULTI")
+	c.Send("DEL", metricLastCheckKey(triggerID))
+	c.Send("ZREM", triggersChecksKey, triggerID)
+	c.Send("SREM", badStateTriggersKey, triggerID)
+	_, err := c.Do("EXEC")
+	if err != nil {
+		return fmt.Errorf("Failed to EXEC: %s", err.Error())
+	}
+	return nil
+}
+
 // SetTriggerCheckMetricsMaintenance sets to given metrics throttling timestamps,
 // If during the update lastCheck was updated from another place, try update again
 // If CheckData does not contain one of given metrics it will ignore this metric
