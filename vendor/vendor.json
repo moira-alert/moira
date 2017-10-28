@@ -30,6 +30,12 @@
 			"revisionTime": "2017-09-06T11:25:25Z"
 		},
 		{
+			"checksumSHA1": "GCTVJ1J/SGZstNZauuLAnTFOhGA=",
+			"path": "github.com/armon/go-radix",
+			"revision": "1fca145dffbcaa8fe914309b1ec0cfc67500fe61",
+			"revisionTime": "2017-07-27T15:54:43Z"
+		},
+		{
 			"checksumSHA1": "ZmH0Y8Td1CUGfc6ywB40e2u1Kvc=",
 			"path": "github.com/carlosdp/twiliogo",
 			"revision": "b26045ebb9d15c9296ba59d94687aaf7d2080905",
@@ -285,6 +291,12 @@
 			"revisionTime": "2017-07-22T04:01:10Z"
 		},
 		{
+			"checksumSHA1": "rJab1YdNhQooDiBWNnt7TLWPyBU=",
+			"path": "github.com/pkg/errors",
+			"revision": "f15c970de5b76fac0b59abb32d62c17cc7bed265",
+			"revisionTime": "2017-10-18T19:55:50Z"
+		},
+		{
 			"checksumSHA1": "zKKp5SZ3d3ycKe4EKMNT0BqAWBw=",
 			"origin": "github.com/stretchr/testify/vendor/github.com/pmezard/go-difflib/difflib",
 			"path": "github.com/pmezard/go-difflib/difflib",
@@ -377,10 +389,10 @@
 			"revisionTime": "2013-10-20T00:18:33Z"
 		},
 		{
-			"checksumSHA1": "ZybgW+BTiGsCwdXXgNbPFG46OpA=",
+			"checksumSHA1": "qwVHtlsM/vIF1rm4xEBHvAVrBH4=",
 			"path": "github.com/tucnak/telebot",
-			"revision": "6360f1f7d9464545d98f2b478cd83240a8ced98e",
-			"revisionTime": "2016-11-10T20:04:50Z"
+			"revision": "00cebf376d79ee4363a11cd66fbbdf565452e0ab",
+			"revisionTime": "2017-09-12T11:55:53Z"
 		},
 		{
 			"checksumSHA1": "tsuv2oy9wMYxdV5YtgIHONPUiv0=",
