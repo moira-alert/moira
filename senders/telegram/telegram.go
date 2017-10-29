@@ -175,7 +175,7 @@ func (sender *Sender) renewSubscription(ttl time.Duration) {
 func (sender *Sender) Talk(username, message string) error {
 	uid, err := sender.DataBase.GetIDByUsername(messenger, username)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get username uuid: %s", err.Error())
 	}
 	var options *telebot.SendOptions
 	return sender.bot.SendMessage(recipient{uid}, message, options)
