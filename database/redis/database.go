@@ -60,9 +60,6 @@ func newRedisPool(redisURI string, dbID ...int) *redis.Pool {
 
 func (connector *DbConnector) makePubSubConnection(channel string) (*redis.PubSubConn, error) {
 	c := connector.pool.Get()
-	if c.Err() != nil {
-		return nil, c.Err()
-	}
 	psc := redis.PubSubConn{Conn: c}
 	if err := psc.Subscribe(channel); err != nil {
 		return nil, fmt.Errorf("Failed to subscribe to '%s', error: %v", channel, err)
