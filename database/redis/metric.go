@@ -115,22 +115,13 @@ func (connector *DbConnector) SaveMetrics(metrics map[string]*moira.MatchedMetri
 
 // SubscribeMetricEvents creates subscription for new metrics and return channel for this events
 func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb) (<-chan *moira.MetricEvent, error) {
-	c := connector.pool.Get()
-	psc := redis.PubSubConn{Conn: c}
-	if err := psc.Subscribe(metricEventKey); err != nil {
-		return nil, fmt.Errorf("Failed to subscribe to '%s', error: %v", metricEventKey, err)
-	}
 	metricsChannel := make(chan *moira.MetricEvent, 100)
-	dataChannel := connector.manageSubscriptions(psc)
+	dataChannel, err := connector.manageSubscriptions(tomb, metricEventKey)
+	if err != nil {
+		return nil, err
+	}
 
 	go func() {
-		<-tomb.Dying()
-		connector.logger.Infof("Calling shutdown, unsubscribe from '%s' redis channel...", metricEventKey)
-		psc.Unsubscribe()
-	}()
-
-	go func() {
-		defer c.Close()
 		for {
 			data, ok := <-dataChannel
 			if !ok {

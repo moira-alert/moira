@@ -2,11 +2,15 @@ package redis
 
 import (
 	"fmt"
+	"net"
+	"time"
+
 	"github.com/garyburd/redigo/redis"
-	"github.com/moira-alert/moira"
 	"github.com/patrickmn/go-cache"
 	"gopkg.in/redsync.v1"
-	"time"
+	"gopkg.in/tomb.v2"
+
+	"github.com/moira-alert/moira"
 )
 
 // DbConnector contains redis pool
@@ -54,9 +58,33 @@ func newRedisPool(redisURI string, dbID ...int) *redis.Pool {
 	}
 }
 
-func (connector *DbConnector) manageSubscriptions(psc redis.PubSubConn) <-chan []byte {
+func (connector *DbConnector) makePubSubConnection(channel string) (*redis.PubSubConn, error) {
+	c := connector.pool.Get()
+	if c.Err() != nil {
+		return nil, c.Err()
+	}
+	psc := redis.PubSubConn{Conn: c}
+	if err := psc.Subscribe(channel); err != nil {
+		return nil, fmt.Errorf("Failed to subscribe to '%s', error: %v", channel, err)
+	}
+	return &psc, nil
+}
+
+func (connector *DbConnector) manageSubscriptions(tomb *tomb.Tomb, channel string) (<-chan []byte, error) {
+	psc, err := connector.makePubSubConnection(channel)
+	if err != nil {
+		return nil, err
+	}
+
+	go func() {
+		<-tomb.Dying()
+		connector.logger.Infof("Calling shutdown, unsubscribe from '%s' redis channels...", channel)
+		psc.Unsubscribe()
+	}()
+
 	dataChan := make(chan []byte)
 	go func() {
+		defer psc.Close()
 		for {
 			switch n := psc.Receive().(type) {
 			case redis.Message:
@@ -72,13 +100,23 @@ func (connector *DbConnector) manageSubscriptions(psc redis.PubSubConn) <-chan [
 						return
 					}
 				}
+			case *net.OpError:
+				connector.logger.Info("psc.Receive() returned *net.OpError, reconnecting")
+				newPsc, err := connector.makePubSubConnection(metricEventKey)
+				if err != nil {
+					connector.logger.Errorf("Failed to reconnect to subscription: %v", err)
+					<-time.After(5 * time.Second)
+					continue
+				}
+				psc = newPsc
+				<-time.After(5 * time.Second)
 			default:
 				connector.logger.Errorf("Can not receive message of type '%T': %v", n, n)
-				time.Sleep(time.Second * 5)
+				<-time.After(5 * time.Second)
 			}
 		}
 	}()
-	return dataChan
+	return dataChan, nil
 }
 
 // CLEAN DATABASE! USE IT ONLY FOR TESTING!!!
