@@ -368,13 +368,13 @@ func TestHasMetrics(t *testing.T) {
 
 	Convey("TriggerTimeSeries has metrics", t, func() {
 		Convey("Trigger checker no ttl", func() {
-			hasMetrics, sendEvent := triggerCheckerWithoutTTL.hasMetrics(tts)
+			hasMetrics, sendEvent := triggerCheckerWithoutTTL.checkForNoMetrics(tts)
 			So(hasMetrics, ShouldBeTrue)
 			So(sendEvent, ShouldBeFalse)
 		})
 
 		Convey("Trigger checker has ttl", func() {
-			hasMetrics, sendEvent := triggerCheckerWithTTL.hasMetrics(tts)
+			hasMetrics, sendEvent := triggerCheckerWithTTL.checkForNoMetrics(tts)
 			So(hasMetrics, ShouldBeTrue)
 			So(sendEvent, ShouldBeFalse)
 		})
@@ -387,21 +387,21 @@ func TestHasMetrics(t *testing.T) {
 
 	Convey("TriggerTimeSeries no metrics", t, func() {
 		Convey("Trigger checker no ttl", func() {
-			hasMetrics, sendEvent := triggerCheckerWithoutTTL.hasMetrics(tts)
+			hasMetrics, sendEvent := triggerCheckerWithoutTTL.checkForNoMetrics(tts)
 			So(hasMetrics, ShouldBeFalse)
 			So(sendEvent, ShouldBeFalse)
 		})
 
 		Convey("Trigger checker has ttl", func() {
 			Convey("LastCheck no metrics data", func() {
-				hasMetrics, sendEvent := triggerCheckerWithTTL.hasMetrics(tts)
+				hasMetrics, sendEvent := triggerCheckerWithTTL.checkForNoMetrics(tts)
 				So(hasMetrics, ShouldBeFalse)
 				So(sendEvent, ShouldBeFalse)
 			})
 
 			Convey("LastCheck has metrics data", func() {
 				triggerCheckerWithTTL.lastCheck.Metrics["123"] = moira.MetricState{}
-				hasMetrics, sendEvent := triggerCheckerWithTTL.hasMetrics(tts)
+				hasMetrics, sendEvent := triggerCheckerWithTTL.checkForNoMetrics(tts)
 				So(hasMetrics, ShouldBeFalse)
 				So(sendEvent, ShouldBeTrue)
 			})

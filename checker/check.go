@@ -62,7 +62,7 @@ func (triggerChecker *TriggerChecker) handleTrigger() (moira.CheckData, error) {
 
 	triggerChecker.cleanupMetricsValues(metrics, triggerChecker.Until)
 
-	hasMetrics, sendEvent := triggerChecker.hasMetrics(triggerTimeSeries)
+	hasMetrics, sendEvent := triggerChecker.checkForNoMetrics(triggerTimeSeries)
 	if !hasMetrics {
 		if sendEvent {
 			err = ErrTriggerHasNoMetrics
@@ -108,7 +108,7 @@ func (triggerChecker *TriggerChecker) handleTrigger() (moira.CheckData, error) {
 	return checkData, nil
 }
 
-func (triggerChecker *TriggerChecker) hasMetrics(tts *triggerTimeSeries) (hasMetrics, sendEvent bool) {
+func (triggerChecker *TriggerChecker) checkForNoMetrics(tts *triggerTimeSeries) (hasMetrics, sendEvent bool) {
 	hasMetrics = true
 	sendEvent = false
 
