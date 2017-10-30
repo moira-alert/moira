@@ -1,0 +1,15 @@
+redis:
+  host: "{{ moira_redis_host }}"
+  port: "{{ moira_redis_port }}"
+  dbid: 0
+graphite:
+  enabled: "true"
+  uri: {{ moira_graphite }}
+  prefix: DevOps.moira.{{ ansible_hostname }}
+  interval: 60s0ms
+filter:
+  listen: :2003
+  retention-config: /storage-schemas.conf
+log:
+  log_file: stdout
+  log_level: info

@@ -1,0 +1,9 @@
+redis:
+  host: "{{ moira_redis_host }}"
+  port: "{{ moira_redis_port }}"
+  dbid: 0
+api:
+  listen: :8081
+log:
+  log_file: stdout
+  log_level: info
