@@ -8,4 +8,4 @@ EXPOSE 8081 8081
 
 WORKDIR /build/api
 
-ENTRYPOINT ["/build/api/api"]
+ENTRYPOINT ["/build/api"]
