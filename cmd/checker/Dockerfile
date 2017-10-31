@@ -1,6 +1,6 @@
 FROM alpine:latest
 
-mkdir -p build/checker
+RUN mkdir -p build/checker
 
 COPY checker.yml build/checker
 
