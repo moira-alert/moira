@@ -1,6 +1,6 @@
 FROM alpine:latest
 
-mkdir -p build/filter
+RUN mkdir -p build/filter
 
 COPY filter.yml build/filter
 
