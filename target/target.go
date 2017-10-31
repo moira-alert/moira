@@ -27,7 +27,7 @@ type EvaluationResult struct {
 
 // EvaluateTarget is analogue of evaluateTarget method in graphite-web, that gets target metrics value from DB and Evaluate it using carbon-api eval package
 func EvaluateTarget(database moira.Database, target string, from int64, until int64, allowRealTimeAlerting bool) (*EvaluationResult, error) {
-	result := EvaluationResult{
+	result := &EvaluationResult{
 		TimeSeries: make([]*TimeSeries, 0),
 		Patterns:   make([]string, 0),
 		Metrics:    make([]string, 0),
@@ -78,7 +78,7 @@ func EvaluateTarget(database moira.Database, target string, from int64, until in
 			}
 		}
 	}
-	return &result, nil
+	return result, nil
 }
 
 func getPatternsMetricData(database moira.Database, patterns []expr.MetricRequest, from int64, until int64, allowRealTimeAlerting bool) (map[expr.MetricRequest][]*expr.MetricData, []string, error) {

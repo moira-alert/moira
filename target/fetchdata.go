@@ -29,6 +29,10 @@ func FetchData(database moira.Database, pattern string, from int64, until int64,
 		for _, metric := range metrics {
 			metricDatas = append(metricDatas, createMetricData(metric, from, until, retention, valuesMap[metric]))
 		}
+	} else {
+		dataList := map[string][]*moira.MetricValue{pattern: make([]*moira.MetricValue, 0)}
+		valuesMap := unpackMetricsValues(dataList, 60, from, until, allowRealTimeAlerting)
+		metricDatas = append(metricDatas, createMetricData(pattern, from, until, 60, valuesMap[pattern]))
 	}
 	return metricDatas, metrics, nil
 }
