@@ -1,17 +1,17 @@
 redis:
-  host: "{{ moira_redis_host }}"
-  port: "{{ moira_redis_port }}"
+  host: localhost
+  port: "6379"
   dbid: 0
 graphite:
-  enabled: "true"
-  uri: {{ moira_graphite }}
-  prefix: DevOps.moira.{{ ansible_hostname }}
+  enabled: ""
+  uri: localhost:2003
+  prefix: DevOps.Moira
   interval: 60s0ms
-checker:
-  nodata_check_interval: 60s0ms
-  check_interval: 10s0ms
-  metrics_ttl: 10800
-  stop_checking_interval: 30
 log:
   log_file: stdout
-  log_level: info
+  log_level: debug
+checker:
+  nodata_check_interval: 60s0ms
+  check_interval: 5s0ms
+  metrics_ttl: 3600
+  stop_checking_interval: 30
