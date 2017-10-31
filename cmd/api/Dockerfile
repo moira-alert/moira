@@ -1,6 +1,6 @@
 FROM alpine:latest
 
-mkdir -p build/api
+RUN mkdir -p build/api
 
 COPY api.yml build/api
 

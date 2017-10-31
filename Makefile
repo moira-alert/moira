@@ -4,6 +4,10 @@ GIT_COMMIT := $(shell git rev-list v${GIT_TAG}..HEAD --count)
 GO_VERSION := $(shell go version | cut -d' ' -f3)
 VERSION := ${GIT_TAG}.${GIT_COMMIT}
 IMAGE_NAME := kontur/moira
+IMAGE_NAME_FILTER := kontur/moira-filter
+IMAGE_NAME_NOTIFIER := kontur/moira-notifier
+IMAGE_NAME_CHECKER := kontur/moira-checker
+IMAGE_NAME_API := kontur/moira-api
 RELEASE := 1
 VENDOR := "SKB Kontur"
 URL := "https://github.com/moira-alert"
@@ -89,6 +93,10 @@ packages: clean build tar rpm deb
 
 docker_image:
 	docker build -t ${IMAGE_NAME}:${VERSION} -t ${IMAGE_NAME}:latest .
+	docker build -t ${IMAGE_NAME_API}:${VERSION} -t ${IMAGE_NAME}:latest cmd/api
+	docker build -t ${IMAGE_NAME_CHECKER}:${VERSION} -t ${IMAGE_NAME}:latest cmd/checker
+	docker build -t ${IMAGE_NAME_NOTIFIER}:${VERSION} -t ${IMAGE_NAME}:latest cmd/notifier
+	docker build -t ${IMAGE_NAME_FILTER}:${VERSION} -t ${IMAGE_NAME}:latest cmd/filter
 
 docker_push:
 	docker push ${IMAGE_NAME}:latest
