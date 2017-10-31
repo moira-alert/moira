@@ -1,47 +1,25 @@
 redis:
-  host: "{{ moira_redis_host }}"
-  port: "{{ moira_redis_port }}"
+  host: localhost
+  port: "6379"
   dbid: 0
 graphite:
-  enabled: "true"
-  uri: {{ moira_graphite }}
-  prefix: DevOps.moira.{{ ansible_hostname }}
+  enabled: ""
+  uri: localhost:2003
+  prefix: DevOps.Moira
   interval: 60s0ms
+log:
+  log_file: stdout
+  log_level: debug
 notifier:
   sender_timeout: 10s0ms
-  resending_timeout: "1:00"
-  front_uri: https://{{ moira_front_name }}
-  timezone: Europe/Moscow
-  senders:
-    - type: email
-      url: https://mail.kontur.ru/v1/channels/moira-alerts/messages
-      login: devops
-      password: {{ kontur_spam_password }}
-      channel: moira-alerts
-      template: {{ kontur_spam_mail_template_name }}
-    - type: phone
-      url: {{ kontur_sms_gateway }}
-      login: {{ kontur_sms_login }}
-      password: {{ kontur_sms_password }}
-      googl_key: {{ googl_key }}
-    - type: slack
-      api_token: {{ slack_api_token }}
-    - type: pushover
-      api_token: {{ pushover_api_token }}
-    - type: telegram
-      api_token: {{ telegram_api_token }}
-    - type: twilio voice
-      api_asid: {{ twilio_api_asid }}
-      api_authtoken: {{ twilio_api_token }}
-      api_fromphone: +441743562293
-      voiceurl: http://twimlets.com/message?Message%5B0%5D=
-      append_message: true
+  resending_timeout: "24:00"
+  senders: []
   moira_selfstate:
-    enabled: "true"
-    redis_disconect_delay: 60
-    last_metric_received_delay: 120
-    last_check_delay: 120
-    notice_interval: 600
-    contacts:
-      - type: email
-        value: devopsteam@skbkontur.ru
+    enabled: "false"
+    redis_disconect_delay: 30
+    last_metric_received_delay: 60
+    last_check_delay: 60
+    contacts: []
+    notice_interval: 300
+  front_uri: http:// localhost
+  timezone: UTC
