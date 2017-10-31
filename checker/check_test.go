@@ -2,6 +2,7 @@ package checker
 
 import (
 	"fmt"
+	"github.com/go-graphite/carbonapi/expr"
 	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
@@ -46,8 +47,12 @@ func TestGetTimeSeriesState(t *testing.T) {
 	}
 	addFetchResponse.Name = "additional.metric"
 	tts := &triggerTimeSeries{
-		Main:       []*target.TimeSeries{{FetchResponse: fetchResponse}},
-		Additional: []*target.TimeSeries{{FetchResponse: addFetchResponse}},
+		Main: []*target.TimeSeries{{
+			MetricData: expr.MetricData{FetchResponse: fetchResponse},
+		}},
+		Additional: []*target.TimeSeries{{
+			MetricData: expr.MetricData{FetchResponse: addFetchResponse},
+		}},
 	}
 	metricLastState := moira.MetricState{
 		Maintenance: 11111,
@@ -142,8 +147,8 @@ func TestGetTimeSeriesStepsStates(t *testing.T) {
 	}
 	addFetchResponse.Name = "additional.metric"
 	tts := &triggerTimeSeries{
-		Main:       []*target.TimeSeries{{FetchResponse: fetchResponse1}, {FetchResponse: fetchResponse2}},
-		Additional: []*target.TimeSeries{{FetchResponse: addFetchResponse}},
+		Main:       []*target.TimeSeries{{MetricData: expr.MetricData{FetchResponse: fetchResponse1}}, {MetricData: expr.MetricData{FetchResponse: fetchResponse2}}},
+		Additional: []*target.TimeSeries{{MetricData: expr.MetricData{FetchResponse: addFetchResponse}}},
 	}
 	metricLastState := moira.MetricState{
 		Maintenance:    11111,
@@ -266,7 +271,9 @@ func TestCheckForNODATA(t *testing.T) {
 	fetchResponse1 := pb.FetchResponse{
 		Name: "main.metric",
 	}
-	timeSeries := &target.TimeSeries{FetchResponse: fetchResponse1}
+	timeSeries := &target.TimeSeries{
+		MetricData: expr.MetricData{FetchResponse: fetchResponse1},
+	}
 	Convey("No TTL", t, func() {
 		triggerChecker := TriggerChecker{}
 		needToDeleteMetric, currentState := triggerChecker.checkForNoData(timeSeries, metricLastState)
@@ -362,8 +369,8 @@ func TestHasMetrics(t *testing.T) {
 		},
 	}
 	tts := &triggerTimeSeries{
-		Main:       []*target.TimeSeries{{}, {}},
-		Additional: []*target.TimeSeries{{}},
+		Main:       []*target.TimeSeries{{MetricData: expr.MetricData{}}, {MetricData: expr.MetricData{}}},
+		Additional: []*target.TimeSeries{{MetricData: expr.MetricData{}}},
 	}
 
 	Convey("TriggerTimeSeries has metrics", t, func() {

@@ -84,7 +84,16 @@ func TestFetchData(t *testing.T) {
 	Convey("Test no metrics", t, func() {
 		dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{}, nil)
 		metricData, metrics, err := FetchData(dataBase, pattern, from, until, false)
-		So(metricData, ShouldBeEmpty)
+		fetchResponse := pb.FetchResponse{
+			Name:      pattern,
+			StartTime: int32(from),
+			StopTime:  int32(until),
+			StepTime:  60,
+			Values:    []float64{},
+			IsAbsent:  []bool{},
+		}
+		expected := &expr.MetricData{FetchResponse: fetchResponse}
+		So(metricData, ShouldResemble, []*expr.MetricData{expected})
 		So(metrics, ShouldBeEmpty)
 		So(err, ShouldBeNil)
 	})

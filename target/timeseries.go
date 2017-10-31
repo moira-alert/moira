@@ -6,7 +6,10 @@ import (
 )
 
 // TimeSeries is abstraction over carbon-api expr.MetricData type
-type TimeSeries expr.MetricData
+type TimeSeries struct {
+	expr.MetricData
+	Stub bool
+}
 
 // GetTimestampValue gets value of given timestamp index, if value is Nil, then return NaN
 func (timeSeries *TimeSeries) GetTimestampValue(valueTimestamp int64) float64 {

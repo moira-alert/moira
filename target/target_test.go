@@ -83,10 +83,20 @@ func TestEvaluateTarget(t *testing.T) {
 		dataBase.EXPECT().GetPatternMetrics("super.puper.pattern").Return([]string{}, nil)
 		result, err := EvaluateTarget(dataBase, "aliasByNode(super.puper.pattern, 2)", from, until, true)
 		So(err, ShouldBeNil)
+		fetchResponse := pb.FetchResponse{
+			Name:      "pattern",
+			StartTime: int32(from),
+			StopTime:  int32(until),
+			StepTime:  60,
+			Values:    []float64{},
+			IsAbsent:  []bool{},
+		}
 		So(result, ShouldResemble, &EvaluationResult{
-			TimeSeries: make([]*TimeSeries, 0),
-			Metrics:    make([]string, 0),
-			Patterns:   []string{"super.puper.pattern"},
+			TimeSeries: []*TimeSeries{{
+				MetricData: expr.MetricData{FetchResponse: fetchResponse},
+			}},
+			Metrics:  make([]string, 0),
+			Patterns: []string{"super.puper.pattern"},
 		})
 	})
 
@@ -105,9 +115,11 @@ func TestEvaluateTarget(t *testing.T) {
 		}
 		So(err, ShouldBeNil)
 		So(result, ShouldResemble, &EvaluationResult{
-			TimeSeries: []*TimeSeries{&TimeSeries{FetchResponse: fetchResponse}},
-			Metrics:    []string{metric},
-			Patterns:   []string{"super.puper.pattern"},
+			TimeSeries: []*TimeSeries{{
+				MetricData: expr.MetricData{FetchResponse: fetchResponse},
+			}},
+			Metrics:  []string{metric},
+			Patterns: []string{"super.puper.pattern"},
 		})
 	})
 }
