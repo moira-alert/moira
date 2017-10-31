@@ -472,30 +472,6 @@ func TestCheckErrors(t *testing.T) {
 		err := triggerChecker.Check()
 		So(err, ShouldBeNil)
 	})
-
-	Convey("Trigger has no metrics error", t, func() {
-		dataBase.EXPECT().GetPatternMetrics(pattern).Return(nil, nil)
-		m := ErrTriggerHasNoMetrics.Error()
-		dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
-			TriggerID: triggerChecker.TriggerID,
-			Timestamp: triggerChecker.Until,
-			State:     triggerChecker.ttlState,
-			OldState:  EXCEPTION,
-			Metric:    triggerChecker.trigger.Name,
-			Value:     nil,
-			Message:   &m}, true).Return(nil)
-
-		dataBase.EXPECT().SetTriggerLastCheck(triggerChecker.TriggerID, &moira.CheckData{
-			Metrics:        triggerChecker.lastCheck.Metrics,
-			State:          triggerChecker.ttlState,
-			Timestamp:      triggerChecker.Until,
-			EventTimestamp: triggerChecker.Until,
-			Score:          1000,
-			Message:        "Trigger has no metrics",
-		}).Return(nil)
-		err := triggerChecker.Check()
-		So(err, ShouldBeNil)
-	})
 }
 
 func TestHandleTrigger(t *testing.T) {

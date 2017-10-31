@@ -82,8 +82,19 @@ func TestGetTimeSeries(t *testing.T) {
 		Convey("in main target", func() {
 			dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{}, nil)
 			actual, metrics, err := triggerChecker.getTimeSeries(from, until)
+			timeSeries := target.TimeSeries{
+				MetricData: expr.MetricData{FetchResponse: pb.FetchResponse{
+					Name:      pattern,
+					StartTime: int32(from),
+					StopTime:  int32(until),
+					StepTime:  60,
+					Values:    []float64{},
+					IsAbsent:  []bool{},
+				}},
+				Stub: true,
+			}
 			expected := &triggerTimeSeries{
-				Main:       make([]*target.TimeSeries, 0),
+				Main:       []*target.TimeSeries{&timeSeries},
 				Additional: make([]*target.TimeSeries, 0),
 			}
 			So(actual, ShouldResemble, expected)
