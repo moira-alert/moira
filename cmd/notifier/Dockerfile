@@ -1,6 +1,6 @@
 FROM alpine:latest
 
-mkdir -p build/notifier
+RUN mkdir -p build/notifier
 
 COPY notifier.yml build/notifier
 
