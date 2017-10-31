@@ -2,7 +2,7 @@ FROM alpine:latest
 
 RUN mkdir -p build/api
 
-COPY api.yml build/api
+#COPY api.yml build/api
 
 EXPOSE 8081 8081
 
