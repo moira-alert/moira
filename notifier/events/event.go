@@ -142,14 +142,14 @@ func (worker *FetchEventsWorker) getNotificationSubscriptions(event moira.Notifi
 		sub, err := worker.Database.GetSubscription(*event.SubscriptionID)
 		if err != nil {
 			worker.Metrics.SubsMalformed.Mark(1)
-			return nil, err
+			return nil, fmt.Errorf("Error while read subscription %s: %s", *event.SubscriptionID, err.Error())
 		}
 		return &sub, nil
 	} else if event.ContactID != "" {
 		worker.Logger.Debugf("Getting contactID %s for test message", *event.SubscriptionID)
 		contact, err := worker.Database.GetContact(event.ContactID)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("Error while read contact %s: %s", event.ContactID, err.Error())
 		}
 		sub := &moira.SubscriptionData{
 			ID:                "testSubscription",
