@@ -40,6 +40,22 @@ func CreateContact(database moira.Database, contact *dto.Contact, userLogin stri
 	return nil
 }
 
+// UpdateContact updates notification contact for current user
+func UpdateContact(database moira.Database, contact *dto.Contact, contactID string, userLogin string) *api.ErrorResponse {
+	contactData := &moira.ContactData{
+		ID:    contactID,
+		User:  userLogin,
+		Type:  contact.Type,
+		Value: contact.Value,
+	}
+	if err := database.SaveContact(contactData); err != nil {
+		return api.ErrorInternalServer(err)
+	}
+	contact.User = &userLogin
+	contact.ID = &contactID
+	return nil
+}
+
 // RemoveContact deletes notification contact for current user and remove contactID from all subscriptions
 func RemoveContact(database moira.Database, contactID string, userLogin string) *api.ErrorResponse {
 	subscriptionIDs, err := database.GetUserSubscriptionIDs(userLogin)

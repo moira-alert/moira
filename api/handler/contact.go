@@ -14,6 +14,7 @@ import (
 func contact(router chi.Router) {
 	router.Get("/", getAllContacts)
 	router.Put("/", createNewContact)
+	router.Put("/{contactId}", updateContact)
 	router.Delete("/{contactId}", removeContact)
 	router.Post("/{contactId}/test", testContact)
 }
@@ -40,6 +41,30 @@ func createNewContact(writer http.ResponseWriter, request *http.Request) {
 	userLogin := middleware.GetLogin(request)
 
 	if err := controller.CreateContact(database, contact, userLogin); err != nil {
+		render.Render(writer, request, err)
+		return
+	}
+
+	if err := render.Render(writer, request, contact); err != nil {
+		render.Render(writer, request, api.ErrorRender(err))
+		return
+	}
+}
+
+func updateContact(writer http.ResponseWriter, request *http.Request) {
+	contact := &dto.Contact{}
+	if err := render.Bind(request, contact); err != nil {
+		render.Render(writer, request, api.ErrorInvalidRequest(err))
+		return
+	}
+	contactID := chi.URLParam(request, "contactId")
+	if contactID == "" {
+		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("ContactId must be set")))
+		return
+	}
+	userLogin := middleware.GetLogin(request)
+
+	if err := controller.UpdateContact(database, contact, contactID, userLogin); err != nil {
 		render.Render(writer, request, err)
 		return
 	}
