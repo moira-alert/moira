@@ -3,7 +3,6 @@ package notifier
 import (
 	"fmt"
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/metrics/graphite"
 	"time"
 )
@@ -88,9 +87,6 @@ func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *
 
 	subscription, err := scheduler.database.GetSubscription(moira.UseString(event.SubscriptionID))
 	if err != nil {
-		if err == database.ErrNil {
-			return next, false
-		}
 		scheduler.metrics.SubsMalformed.Mark(1)
 		scheduler.logger.Debugf("Failed get subscription by id: %s. %s", moira.UseString(event.SubscriptionID), err.Error())
 		return next, alarmFatigue

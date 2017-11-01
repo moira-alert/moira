@@ -2,17 +2,19 @@ package events
 
 import (
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/golang/mock/gomock"
+	"github.com/op/go-logging"
+	. "github.com/smartystreets/goconvey/convey"
+
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
 	"github.com/moira-alert/moira/mock/moira-alert"
 	mock_scheduler "github.com/moira-alert/moira/mock/scheduler"
 	"github.com/moira-alert/moira/notifier"
-	"github.com/op/go-logging"
-	. "github.com/smartystreets/goconvey/convey"
-	"testing"
-	"time"
 )
 
 var metrics2 = metrics.ConfigureNotifierMetrics("notifier")
@@ -21,16 +23,16 @@ func TestEvent(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	scheduler := mock_scheduler.NewMockScheduler(mockCtrl)
 	logger, _ := logging.GetLogger("Events")
 
-	worker := FetchEventsWorker{
-		Database:  dataBase,
-		Logger:    logger,
-		Metrics:   metrics2,
-		Scheduler: notifier.NewScheduler(dataBase, logger, metrics2),
-	}
-
 	Convey("When event is TEST and subscription is disabled, should add new notification", t, func() {
+		worker := FetchEventsWorker{
+			Database:  dataBase,
+			Logger:    logger,
+			Metrics:   metrics2,
+			Scheduler: notifier.NewScheduler(dataBase, logger, metrics2),
+		}
 		event := moira.NotificationEvent{
 			State:          "TEST",
 			SubscriptionID: &subscription.ID,
@@ -50,7 +52,48 @@ func TestEvent(t *testing.T) {
 			Throttled: false,
 			Contact:   contact,
 		}
-		dataBase.EXPECT().AddNotification(&notification).Times(1)
+		dataBase.EXPECT().AddNotification(&notification)
+
+		err := worker.processEvent(event)
+		So(err, ShouldBeEmpty)
+		mockCtrl.Finish()
+	})
+
+	Convey("When event is TEST and has contactID", t, func() {
+		worker := FetchEventsWorker{
+			Database:  dataBase,
+			Logger:    logger,
+			Metrics:   metrics2,
+			Scheduler: scheduler,
+		}
+
+		subID := "testSubscription"
+		event := moira.NotificationEvent{
+			State:     "TEST",
+			OldState:  "TEST",
+			Metric:    "test.metric",
+			ContactID: contact.ID,
+		}
+		dataBase.EXPECT().GetContact(event.ContactID).Times(1).Return(contact, nil)
+		dataBase.EXPECT().GetContact(contact.ID).Times(1).Return(contact, nil)
+		now := time.Now()
+		notification := moira.ScheduledNotification{
+			Event: moira.NotificationEvent{
+				TriggerID:      "",
+				State:          event.State,
+				OldState:       event.OldState,
+				Metric:         event.Metric,
+				SubscriptionID: &subID,
+			},
+			SendFail:  0,
+			Timestamp: now.Unix(),
+			Throttled: false,
+			Contact:   contact,
+		}
+		event2 := event
+		event2.SubscriptionID = &subID
+		scheduler.EXPECT().ScheduleNotification(gomock.Any(), event2, moira.TriggerData{}, contact, false, 0).Return(&notification)
+		dataBase.EXPECT().AddNotification(&notification)
 
 		err := worker.processEvent(event)
 		So(err, ShouldBeEmpty)
@@ -328,6 +371,44 @@ func TestEmptySubscriptions(t *testing.T) {
 		err := worker.processEvent(event)
 		So(err, ShouldBeEmpty)
 	})
+}
+
+func TestGetNotificationSubscriptions(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	logger, _ := logging.GetLogger("Events")
+	worker := FetchEventsWorker{
+		Database:  dataBase,
+		Logger:    logger,
+		Metrics:   metrics2,
+		Scheduler: notifier.NewScheduler(dataBase, logger, metrics2),
+	}
+
+	Convey("Error GetSubscription", t, func() {
+		event := moira.NotificationEvent{
+			State:          "TEST",
+			SubscriptionID: &subscription.ID,
+		}
+		err := fmt.Errorf("Oppps")
+		dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(moira.SubscriptionData{}, err)
+		sub, expected := worker.getNotificationSubscriptions(event)
+		So(sub, ShouldBeNil)
+		So(expected, ShouldResemble, fmt.Errorf("Error while read subscription %s: %s", *event.SubscriptionID, err.Error()))
+	})
+
+	Convey("Error GetContact", t, func() {
+		event := moira.NotificationEvent{
+			State:     "TEST",
+			ContactID: "1233",
+		}
+		err := fmt.Errorf("Oppps")
+		dataBase.EXPECT().GetContact(event.ContactID).Return(moira.ContactData{}, err)
+		sub, expected := worker.getNotificationSubscriptions(event)
+		So(sub, ShouldBeNil)
+		So(expected, ShouldResemble, fmt.Errorf("Error while read contact %s: %s", event.ContactID, err.Error()))
+	})
+
 }
 
 func TestGoRoutine(t *testing.T) {

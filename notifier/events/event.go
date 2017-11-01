@@ -146,7 +146,7 @@ func (worker *FetchEventsWorker) getNotificationSubscriptions(event moira.Notifi
 		}
 		return &sub, nil
 	} else if event.ContactID != "" {
-		worker.Logger.Debugf("Getting contactID %s for test message", *event.SubscriptionID)
+		worker.Logger.Debugf("Getting contactID %s for test message", event.ContactID)
 		contact, err := worker.Database.GetContact(event.ContactID)
 		if err != nil {
 			return nil, fmt.Errorf("Error while read contact %s: %s", event.ContactID, err.Error())
