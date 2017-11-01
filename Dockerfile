@@ -15,6 +15,7 @@ COPY pkg/moira.yml /
 COPY pkg/storage-schemas.conf /
 COPY build/moira /
 COPY build/api /
+COPY build/checker /
 
 # relay
 EXPOSE 2003 2003
