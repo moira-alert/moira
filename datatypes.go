@@ -20,6 +20,7 @@ type NotificationEvent struct {
 	State          string   `json:"state"`
 	TriggerID      string   `json:"trigger_id"`
 	SubscriptionID *string  `json:"sub_id,omitempty"`
+	ContactID      string   `json:"contactId,omitempty"`
 	OldState       string   `json:"old_state"`
 	Message        *string  `json:"msg,omitempty"`
 }
