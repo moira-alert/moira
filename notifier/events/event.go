@@ -1,11 +1,11 @@
 package events
 
 import (
+	"fmt"
 	"time"
 
 	"gopkg.in/tomb.v2"
 
-	"fmt"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/metrics/graphite"
@@ -95,13 +95,11 @@ func (worker *FetchEventsWorker) processEvent(event moira.NotificationEvent) err
 			return err
 		}
 	} else {
-		worker.Logger.Debugf("Getting subscription id %s for test message", *event.SubscriptionID)
-		sub, err := worker.Database.GetSubscription(*event.SubscriptionID)
+		sub, err := worker.getNotificationSubscriptions(event)
 		if err != nil {
-			worker.Metrics.SubsMalformed.Mark(1)
 			return err
 		}
-		subscriptions = []*moira.SubscriptionData{&sub}
+		subscriptions = []*moira.SubscriptionData{sub}
 	}
 
 	duplications := make(map[string]bool)
@@ -136,6 +134,36 @@ func (worker *FetchEventsWorker) processEvent(event moira.NotificationEvent) err
 		}
 	}
 	return nil
+}
+
+func (worker *FetchEventsWorker) getNotificationSubscriptions(event moira.NotificationEvent) (*moira.SubscriptionData, error) {
+	if event.SubscriptionID != nil {
+		worker.Logger.Debugf("Getting subscriptionID %s for test message", *event.SubscriptionID)
+		sub, err := worker.Database.GetSubscription(*event.SubscriptionID)
+		if err != nil {
+			worker.Metrics.SubsMalformed.Mark(1)
+			return nil, err
+		}
+		return &sub, nil
+	} else if event.ContactID != "" {
+		worker.Logger.Debugf("Getting contactID %s for test message", *event.SubscriptionID)
+		contact, err := worker.Database.GetContact(event.ContactID)
+		if err != nil {
+			return nil, err
+		}
+		sub := &moira.SubscriptionData{
+			ID:                "testSubscription",
+			User:              contact.User,
+			ThrottlingEnabled: false,
+			Enabled:           true,
+			Tags:              make([]string, 0),
+			Contacts:          []string{contact.ID},
+			Schedule:          nil,
+		}
+		return sub, nil
+	}
+
+	return nil, nil
 }
 
 func subset(first, second []string) bool {

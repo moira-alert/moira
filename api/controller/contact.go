@@ -1,10 +1,14 @@
 package controller
 
 import (
+	"time"
+
+	"github.com/go-graphite/carbonapi/date"
+	"github.com/satori/go.uuid"
+
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
-	"github.com/satori/go.uuid"
 )
 
 // GetAllContacts gets all moira contacts
@@ -71,5 +75,22 @@ func RemoveContact(database moira.Database, contactID string, userLogin string) 
 		return api.ErrorInternalServer(err)
 	}
 
+	return nil
+}
+
+// TestContact push test notification to verify the correct contact settings
+func TestContact(database moira.Database, contactID string) *api.ErrorResponse {
+	var value float64 = 1
+	eventData := &moira.NotificationEvent{
+		ContactID: contactID,
+		Metric:    "Test.metric.value",
+		Value:     &value,
+		OldState:  "TEST",
+		State:     "TEST",
+		Timestamp: int64(date.DateParamToEpoch("now", "", time.Now().Add(-24*time.Hour).Unix(), time.UTC)),
+	}
+	if err := database.PushNotificationEvent(eventData, false); err != nil {
+		return api.ErrorInternalServer(err)
+	}
 	return nil
 }
