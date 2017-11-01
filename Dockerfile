@@ -1,4 +1,4 @@
-FROM golang:1.9 AS builder
+COPY --from=builder /go/src/github.com/moira-alert/moira/buildFROM golang:1.9 AS builder
 
 WORKDIR /go/src/github.com/moira-alert/moira
 COPY . /go/src/github.com/moira-alert/moira/
@@ -25,7 +25,7 @@ COPY pkg/notifier.yml /
 COPY pkg/storage-schemas.conf /
 
 WORKDIR /
-COPY --from=builder /go/src/github.com/moira-alert/moira .
+COPY --from=builder /go/src/github.com/moira-alert/moira/build .
 
 # relay
 EXPOSE 2003 2003
