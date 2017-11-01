@@ -32,10 +32,10 @@ func CreateContact(dataBase moira.Database, contact *dto.Contact, userLogin stri
 		Type:  contact.Type,
 		Value: contact.Value,
 	}
-	if contact.ID == nil {
+	if contact.ID == "" {
 		contactData.ID = uuid.NewV4().String()
 	} else {
-		exists, err := isContactExists(dataBase, *contact.ID)
+		exists, err := isContactExists(dataBase, contact.ID)
 		if err != nil {
 			return api.ErrorInternalServer(err)
 		}
@@ -47,8 +47,8 @@ func CreateContact(dataBase moira.Database, contact *dto.Contact, userLogin stri
 	if err := dataBase.SaveContact(&contactData); err != nil {
 		return api.ErrorInternalServer(err)
 	}
-	contact.User = &userLogin
-	contact.ID = &contactData.ID
+	contact.User = userLogin
+	contact.ID = contactData.ID
 	return nil
 }
 

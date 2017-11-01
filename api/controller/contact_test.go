@@ -6,6 +6,7 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
+	"github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/mock/moira-alert"
 	"github.com/satori/go.uuid"
 	. "github.com/smartystreets/goconvey/convey"
@@ -58,18 +59,60 @@ func TestCreateContact(t *testing.T) {
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	defer mockCtrl.Finish()
 	userLogin := "user"
-	contact := &dto.Contact{
-		Value: "some@mail.com",
-		Type:  "mail",
-	}
 
 	Convey("Success create", t, func() {
+		contact := &dto.Contact{
+			Value: "some@mail.com",
+			Type:  "mail",
+		}
 		dataBase.EXPECT().SaveContact(gomock.Any()).Return(nil)
 		err := CreateContact(dataBase, contact, userLogin)
 		So(err, ShouldBeNil)
+		So(contact.User, ShouldResemble, userLogin)
 	})
 
-	Convey("Error create", t, func() {
+	Convey("Success create contact with id", t, func() {
+		contact := &dto.Contact{
+			ID:    uuid.NewV4().String(),
+			Value: "some@mail.com",
+			Type:  "mail",
+		}
+		dataBase.EXPECT().GetContact(contact.ID).Return(moira.ContactData{}, database.ErrNil)
+		dataBase.EXPECT().SaveContact(gomock.Any()).Return(nil)
+		err := CreateContact(dataBase, contact, userLogin)
+		So(err, ShouldBeNil)
+		So(contact.User, ShouldResemble, userLogin)
+		So(contact.ID, ShouldResemble, contact.ID)
+	})
+
+	Convey("Contact exists by id", t, func() {
+		contact := &dto.Contact{
+			ID:    uuid.NewV4().String(),
+			Value: "some@mail.com",
+			Type:  "mail",
+		}
+		dataBase.EXPECT().GetContact(contact.ID).Return(moira.ContactData{}, nil)
+		err := CreateContact(dataBase, contact, userLogin)
+		So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("Contact with this ID already exists")))
+	})
+
+	Convey("Error get contact", t, func() {
+		contact := &dto.Contact{
+			ID:    uuid.NewV4().String(),
+			Value: "some@mail.com",
+			Type:  "mail",
+		}
+		err := fmt.Errorf("Oooops! Can not write contact")
+		dataBase.EXPECT().GetContact(contact.ID).Return(moira.ContactData{}, err)
+		expected := CreateContact(dataBase, contact, userLogin)
+		So(expected, ShouldResemble, api.ErrorInternalServer(err))
+	})
+
+	Convey("Error save contact", t, func() {
+		contact := &dto.Contact{
+			Value: "some@mail.com",
+			Type:  "mail",
+		}
 		err := fmt.Errorf("Oooops! Can not write contact")
 		dataBase.EXPECT().SaveContact(gomock.Any()).Return(err)
 		expected := CreateContact(dataBase, contact, userLogin)
@@ -165,18 +208,52 @@ func TestSendTestContactNotification(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
+	userLogin := uuid.NewV4().String()
 	id := uuid.NewV4().String()
 
 	Convey("Success", t, func() {
 		database.EXPECT().PushNotificationEvent(gomock.Any(), false).Return(nil)
-		err := SendTestContactNotification(database, id)
+		err := SendTestContactNotification(database, id, userLogin)
 		So(err, ShouldBeNil)
 	})
 
 	Convey("Error", t, func() {
 		expected := fmt.Errorf("Oooops! Can not push event")
 		database.EXPECT().PushNotificationEvent(gomock.Any(), false).Return(expected)
-		err := SendTestContactNotification(database, id)
+		err := SendTestContactNotification(database, id, userLogin)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
+	})
+}
+
+func TestCheckUserPermissionsForContact(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	userLogin := uuid.NewV4().String()
+	id := uuid.NewV4().String()
+
+	Convey("No contact", t, func() {
+		dataBase.EXPECT().GetContact(id).Return(moira.ContactData{}, database.ErrNil)
+		expected := CheckUserPermissionsForContact(dataBase, id, userLogin)
+		So(expected, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("Contact with ID '%s' does not exists", id)))
+	})
+
+	Convey("Different user", t, func() {
+		dataBase.EXPECT().GetContact(id).Return(moira.ContactData{User: "diffUser"}, nil)
+		expected := CheckUserPermissionsForContact(dataBase, id, userLogin)
+		So(expected, ShouldResemble, api.ErrorForbidden("You have not permissions"))
+	})
+
+	Convey("Has contact", t, func() {
+		dataBase.EXPECT().GetContact(id).Return(moira.ContactData{User: userLogin}, nil)
+		expected := CheckUserPermissionsForContact(dataBase, id, userLogin)
+		So(expected, ShouldBeNil)
+	})
+
+	Convey("Error get contact", t, func() {
+		err := fmt.Errorf("Oooops! Can not read contact")
+		dataBase.EXPECT().GetContact(id).Return(moira.ContactData{User: userLogin}, err)
+		expected := CheckUserPermissionsForContact(dataBase, id, userLogin)
+		So(expected, ShouldResemble, api.ErrorInternalServer(err))
 	})
 }
