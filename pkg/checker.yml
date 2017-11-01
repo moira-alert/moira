@@ -10,6 +10,8 @@ graphite:
 log:
   log_file: stdout
   log_level: debug
-cache:
-  listen: :2003
-  retention-config: storage-schemas.conf
+checker:
+  nodata_check_interval: 60s0ms
+  check_interval: 5s0ms
+  metrics_ttl: 3600
+stop_checking_interval: 30

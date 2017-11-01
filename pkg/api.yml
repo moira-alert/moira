@@ -7,4 +7,3 @@ log:
   log_level: debug
 api:
   listen: :8081
-  
