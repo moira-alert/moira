@@ -43,6 +43,19 @@ func TriggerContext(next http.Handler) http.Handler {
 	})
 }
 
+// ContactContext gets contactID from parsed URI corresponding to trigger routes and set it to request context
+func ContactContext(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		contactID := chi.URLParam(request, "contactId")
+		if contactID == "" {
+			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("ContactID must be set")))
+			return
+		}
+		ctx := context.WithValue(request.Context(), contactIDKey, contactID)
+		next.ServeHTTP(writer, request.WithContext(ctx))
+	})
+}
+
 // TagContext gets tagName from parsed URI corresponding to tag routes and set it to request context
 func TagContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {

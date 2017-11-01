@@ -1,22 +1,26 @@
 package handler
 
 import (
-	"fmt"
+	"net/http"
+
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
+
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/controller"
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/api/middleware"
-	"net/http"
 )
 
 func contact(router chi.Router) {
 	router.Get("/", getAllContacts)
 	router.Put("/", createNewContact)
-	router.Put("/{contactId}", updateContact)
-	router.Delete("/{contactId}", removeContact)
-	router.Post("/{contactId}/test", testContact)
+	router.Route("/{contactId}", func(router chi.Router) {
+		router.Use(middleware.ContactContext)
+		router.Put("/", updateContact)
+		router.Delete("/", removeContact)
+		router.Post("/test", testContact)
+	})
 }
 
 func getAllContacts(writer http.ResponseWriter, request *http.Request) {
@@ -57,11 +61,7 @@ func updateContact(writer http.ResponseWriter, request *http.Request) {
 		render.Render(writer, request, api.ErrorInvalidRequest(err))
 		return
 	}
-	contactID := chi.URLParam(request, "contactId")
-	if contactID == "" {
-		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("ContactId must be set")))
-		return
-	}
+	contactID := middleware.GetContactID(request)
 	userLogin := middleware.GetLogin(request)
 
 	if err := controller.UpdateContact(database, contact, contactID, userLogin); err != nil {
@@ -76,11 +76,7 @@ func updateContact(writer http.ResponseWriter, request *http.Request) {
 }
 
 func removeContact(writer http.ResponseWriter, request *http.Request) {
-	contactID := chi.URLParam(request, "contactId")
-	if contactID == "" {
-		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("ContactId must be set")))
-		return
-	}
+	contactID := middleware.GetContactID(request)
 	userLogin := middleware.GetLogin(request)
 
 	err := controller.RemoveContact(database, contactID, userLogin)
@@ -90,12 +86,7 @@ func removeContact(writer http.ResponseWriter, request *http.Request) {
 }
 
 func testContact(writer http.ResponseWriter, request *http.Request) {
-	contactID := chi.URLParam(request, "contactId")
-	if contactID == "" {
-		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("ContactId must be set")))
-		return
-	}
-
+	contactID := middleware.GetContactID(request)
 	err := controller.SendTestContactNotification(database, contactID)
 	if err != nil {
 		render.Render(writer, request, err)

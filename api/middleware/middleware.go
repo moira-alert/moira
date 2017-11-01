@@ -15,6 +15,7 @@ func (key contextKey) String() string {
 var (
 	databaseKey        contextKey = "database"
 	triggerIDKey       contextKey = "triggerID"
+	contactIDKey       contextKey = "contactID"
 	tagKey             contextKey = "tag"
 	subscriptionIDKey  contextKey = "subscriptionID"
 	pageKey            contextKey = "page"
@@ -48,6 +49,11 @@ func GetTag(request *http.Request) string {
 // GetSubscriptionID gets subscriptionId string from request context, which was sets in SubscriptionContext middleware
 func GetSubscriptionID(request *http.Request) string {
 	return request.Context().Value(subscriptionIDKey).(string)
+}
+
+// GetContactID gets ContactID string from request context, which was sets in TriggerContext middleware
+func GetContactID(request *http.Request) string {
+	return request.Context().Value(contactIDKey).(string)
 }
 
 // GetPage gets page value from request context, which was sets in Paginate middleware
