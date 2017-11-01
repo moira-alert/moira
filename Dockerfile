@@ -24,7 +24,7 @@ COPY pkg/filter.yml /
 COPY pkg/notifier.yml /
 COPY pkg/storage-schemas.conf /
 
-WORKDIR /root/
+WORKDIR /
 COPY --from=builder /go/src/github.com/moira-alert/moira .
 
 # relay
