@@ -74,10 +74,7 @@ deb: tar
 		--description "Moira" \
 		--vendor ${VENDOR} \
 		--url ${URL} \
-docker build -t ${IMAGE_NAME_API}:${VERSION} -t ${IMAGE_NAME}:latest cmd/api
-	docker build -t ${IMAGE_NAME_CHECKER}:${VERSION} -t ${IMAGE_NAME}:latest cmd/checker
-	docker build -t ${IMAGE_NAME_NOTIFIER}:${VERSION} -t ${IMAGE_NAME}:latest cmd/notifier
-docker build -t ${IMAGE_NAME_FILTER}:${VERSION} -t ${IMAGE_NAME}:latest cmd/filter		--license ${LICENSE} \
+		--license ${LICENSE} \
 		--name "moira" \
 		--version "${VERSION}" \
 		--iteration "${RELEASE}" \
@@ -92,7 +89,6 @@ packages: clean build tar rpm deb
 
 docker_image:
 	docker build -t ${IMAGE_NAME}:${VERSION} -t ${IMAGE_NAME}:latest .
-
 
 docker_push:
 	docker push ${IMAGE_NAME}:latest
