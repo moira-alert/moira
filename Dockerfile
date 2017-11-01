@@ -13,11 +13,16 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-X main.Ve
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-X main.Version=${VERSION}-${RELEASE} -X main.GoVersion=${GO_VERSION} -X main.GitHash=${GIT_HASH}" -o build/checker github.com/moira-alert/moira/cmd/checker
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-X main.Version=${VERSION}-${RELEASE} -X main.GoVersion=${GO_VERSION} -X main.GitHash=${GIT_HASH}" -o build/moira-cli github.com/moira-alert/moira/cmd/moira-cli
 
+
 FROM alpine
 
 RUN apk add --no-cache ca-certificates && update-ca-certificates
 
 COPY pkg/moira.yml /
+COPY pkg/api.yml /
+COPY pkg/checker.yml /
+COPY pkg/filter.yml /
+COPY pkg/notifier.yml /
 COPY pkg/storage-schemas.conf /
 
 WORKDIR /root/
