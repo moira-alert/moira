@@ -64,6 +64,11 @@ func updateContact(writer http.ResponseWriter, request *http.Request) {
 	contactID := middleware.GetContactID(request)
 	userLogin := middleware.GetLogin(request)
 
+	err := controller.CheckUserPermissionsForContact(database, contactID, userLogin)
+	if err != nil {
+		render.Render(writer, request, err)
+	}
+
 	if err := controller.UpdateContact(database, contact, contactID, userLogin); err != nil {
 		render.Render(writer, request, err)
 		return
@@ -78,8 +83,12 @@ func updateContact(writer http.ResponseWriter, request *http.Request) {
 func removeContact(writer http.ResponseWriter, request *http.Request) {
 	contactID := middleware.GetContactID(request)
 	userLogin := middleware.GetLogin(request)
+	err := controller.CheckUserPermissionsForContact(database, contactID, userLogin)
+	if err != nil {
+		render.Render(writer, request, err)
+	}
 
-	err := controller.RemoveContact(database, contactID, userLogin)
+	err = controller.RemoveContact(database, contactID, userLogin)
 	if err != nil {
 		render.Render(writer, request, err)
 	}
@@ -87,7 +96,13 @@ func removeContact(writer http.ResponseWriter, request *http.Request) {
 
 func testContact(writer http.ResponseWriter, request *http.Request) {
 	contactID := middleware.GetContactID(request)
-	err := controller.SendTestContactNotification(database, contactID)
+	userLogin := middleware.GetLogin(request)
+	err := controller.CheckUserPermissionsForContact(database, contactID, userLogin)
+	if err != nil {
+		render.Render(writer, request, err)
+	}
+
+	err = controller.SendTestContactNotification(database, contactID, userLogin)
 	if err != nil {
 		render.Render(writer, request, err)
 	}

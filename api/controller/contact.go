@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/go-graphite/carbonapi/date"
@@ -9,6 +10,7 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
+	"github.com/moira-alert/moira/database"
 )
 
 // GetAllContacts gets all moira contacts
@@ -24,35 +26,47 @@ func GetAllContacts(database moira.Database) (*dto.ContactList, *api.ErrorRespon
 }
 
 // CreateContact creates new notification contact for current user
-func CreateContact(database moira.Database, contact *dto.Contact, userLogin string) *api.ErrorResponse {
-	id := uuid.NewV4().String()
-	contactData := &moira.ContactData{
-		ID:    id,
+func CreateContact(dataBase moira.Database, contact *dto.Contact, userLogin string) *api.ErrorResponse {
+	contactData := moira.ContactData{
 		User:  userLogin,
 		Type:  contact.Type,
 		Value: contact.Value,
 	}
-	if err := database.SaveContact(contactData); err != nil {
+	if contact.ID == nil {
+		contactData.ID = uuid.NewV4().String()
+	} else {
+		exists, err := isContactExists(dataBase, *contact.ID)
+		if err != nil {
+			return api.ErrorInternalServer(err)
+		}
+		if exists {
+			return api.ErrorInvalidRequest(fmt.Errorf("Contact with this ID already exists"))
+		}
+	}
+
+	if err := dataBase.SaveContact(&contactData); err != nil {
 		return api.ErrorInternalServer(err)
 	}
 	contact.User = &userLogin
-	contact.ID = &id
+	contact.ID = &contactData.ID
 	return nil
 }
 
 // UpdateContact updates notification contact for current user
-func UpdateContact(database moira.Database, contact *dto.Contact, contactID string, userLogin string) *api.ErrorResponse {
-	contactData := &moira.ContactData{
-		ID:    contactID,
-		User:  userLogin,
-		Type:  contact.Type,
-		Value: contact.Value,
-	}
-	if err := database.SaveContact(contactData); err != nil {
+func UpdateContact(dataBase moira.Database, contact *dto.Contact, contactID string, userLogin string) *api.ErrorResponse {
+	contactData, err := dataBase.GetContact(contactID)
+	if err != nil {
+		if err == database.ErrNil {
+			return api.ErrorInvalidRequest(fmt.Errorf("Contact with ID '%s' does not exists", contactID))
+		}
 		return api.ErrorInternalServer(err)
 	}
-	contact.User = &userLogin
-	contact.ID = &contactID
+	contactData.Type = contact.Type
+	contactData.Value = contact.Value
+
+	if err := dataBase.SaveContact(&contactData); err != nil {
+		return api.ErrorInternalServer(err)
+	}
 	return nil
 }
 
@@ -95,7 +109,7 @@ func RemoveContact(database moira.Database, contactID string, userLogin string) 
 }
 
 // SendTestContactNotification push test notification to verify the correct contact settings
-func SendTestContactNotification(database moira.Database, contactID string) *api.ErrorResponse {
+func SendTestContactNotification(dataBase moira.Database, contactID string, userLogin string) *api.ErrorResponse {
 	var value float64 = 1
 	eventData := &moira.NotificationEvent{
 		ContactID: contactID,
@@ -105,8 +119,34 @@ func SendTestContactNotification(database moira.Database, contactID string) *api
 		State:     "TEST",
 		Timestamp: int64(date.DateParamToEpoch("now", "", time.Now().Add(-24*time.Hour).Unix(), time.UTC)),
 	}
-	if err := database.PushNotificationEvent(eventData, false); err != nil {
+	if err := dataBase.PushNotificationEvent(eventData, false); err != nil {
 		return api.ErrorInternalServer(err)
 	}
 	return nil
+}
+
+// CheckUserPermissionsForContact checks contact for existence and permissions for given user
+func CheckUserPermissionsForContact(dataBase moira.Database, contactID string, userLogin string) *api.ErrorResponse {
+	contactData, err := dataBase.GetContact(contactID)
+	if err != nil {
+		if err == database.ErrNil {
+			return api.ErrorInvalidRequest(fmt.Errorf("Contact with ID '%s' does not exists", contactID))
+		}
+		return api.ErrorInternalServer(err)
+	}
+	if contactData.User != userLogin {
+		return api.ErrorForbidden("You have not permissions")
+	}
+	return nil
+}
+
+func isContactExists(dataBase moira.Database, contactID string) (bool, error) {
+	_, err := dataBase.GetContact(contactID)
+	if err == database.ErrNil {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }

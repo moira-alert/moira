@@ -54,7 +54,16 @@ func ErrorRender(err error) *ErrorResponse {
 func ErrorNotFound(errorText string) *ErrorResponse {
 	return &ErrorResponse{
 		HTTPStatusCode: 404,
-		StatusText:     "Resource not found.",
+		StatusText:     "Resource not found",
+		ErrorText:      errorText,
+	}
+}
+
+// ErrorForbidden return 403 with given error text
+func ErrorForbidden(errorText string) *ErrorResponse {
+	return &ErrorResponse{
+		HTTPStatusCode: 403,
+		StatusText:     "Forbidden",
 		ErrorText:      errorText,
 	}
 }
