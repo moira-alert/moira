@@ -1,0 +1,17 @@
+redis:
+  host: localhost
+  port: "6379"
+  dbid: 0
+graphite:
+  enabled: ""
+  uri: localhost:2003
+  prefix: DevOps.Moira
+  interval: 60s0ms
+log:
+  log_file: stdout
+  log_level: debug
+checker:
+  nodata_check_interval: 60s0ms
+  check_interval: 5s0ms
+  metrics_ttl: 3600
+stop_checking_interval: 30
