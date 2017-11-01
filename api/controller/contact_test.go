@@ -160,3 +160,23 @@ func TestRemoveContact(t *testing.T) {
 		})
 	})
 }
+
+func TestSendTestContactNotification(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	database := mock_moira_alert.NewMockDatabase(mockCtrl)
+	id := uuid.NewV4().String()
+
+	Convey("Success", t, func() {
+		database.EXPECT().PushNotificationEvent(gomock.Any(), false).Return(nil)
+		err := SendTestContactNotification(database, id)
+		So(err, ShouldBeNil)
+	})
+
+	Convey("Error", t, func() {
+		expected := fmt.Errorf("Oooops! Can not push event")
+		database.EXPECT().PushNotificationEvent(gomock.Any(), false).Return(expected)
+		err := SendTestContactNotification(database, id)
+		So(err, ShouldResemble, api.ErrorInternalServer(expected))
+	})
+}

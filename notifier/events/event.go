@@ -158,7 +158,7 @@ func (worker *FetchEventsWorker) getNotificationSubscriptions(event moira.Notifi
 			Enabled:           true,
 			Tags:              make([]string, 0),
 			Contacts:          []string{contact.ID},
-			Schedule:          nil,
+			Schedule:          moira.ScheduleData{},
 		}
 		return sub, nil
 	}

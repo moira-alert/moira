@@ -71,7 +71,7 @@ func testContact(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	err := controller.TestContact(database, contactID)
+	err := controller.SendTestContactNotification(database, contactID)
 	if err != nil {
 		render.Render(writer, request, err)
 	}
