@@ -1,6 +1,7 @@
 FROM golang:1.9 AS builder
 
 WORKDIR /go/src/github.com/moira-alert/moira
+COPY . /go/src/github.com/moira-alert/moira/
 RUN go get github.com/kardianos/govendor
 #RUN govendor sync
 #RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo .
