@@ -91,7 +91,7 @@ func TestGetTimeSeries(t *testing.T) {
 					Values:    []float64{},
 					IsAbsent:  []bool{},
 				}},
-				Stub: true,
+				Wildcard: true,
 			}
 			expected := &triggerTimeSeries{
 				Main:       []*target.TimeSeries{&timeSeries},

@@ -8,7 +8,7 @@ import (
 // TimeSeries is abstraction over carbon-api expr.MetricData type
 type TimeSeries struct {
 	expr.MetricData
-	Stub bool
+	Wildcard bool
 }
 
 // GetTimestampValue gets value of given timestamp index, if value is Nil, then return NaN

@@ -11,31 +11,19 @@ var checkPointGap int64 = 120
 // ErrTriggerHasNoMetrics used if trigger no metrics
 var ErrTriggerHasNoMetrics = fmt.Errorf("Trigger has no metrics")
 
+// ErrTriggerHasOnlyWildcards used if trigger has only wildcard metrics
+var ErrTriggerHasOnlyWildcards = fmt.Errorf("Trigger has only wildcards")
+
 // Check handle trigger and last check and write new state of trigger, if state were change then write new NotificationEvent
 func (triggerChecker *TriggerChecker) Check() error {
 	triggerChecker.Logger.Debugf("Checking trigger %s", triggerChecker.TriggerID)
 	checkData, err := triggerChecker.handleTrigger()
 	if err != nil {
-		if err == ErrTriggerHasNoMetrics {
-			triggerChecker.Logger.Warningf("Trigger %s: %s", triggerChecker.TriggerID, err.Error())
-			checkData.State = triggerChecker.ttlState
-			checkData.Message = ErrTriggerHasNoMetrics.Error()
-		} else if target.IsErrUnknownFunction(err) {
-			triggerChecker.Logger.Warningf("Trigger %s: %s", triggerChecker.TriggerID, err.Error())
-			checkData.State = EXCEPTION
-			checkData.Message = err.Error()
-		} else {
-			triggerChecker.Metrics.CheckError.Mark(1)
-			triggerChecker.Logger.Errorf("Trigger %s check failed: %v", triggerChecker.TriggerID, err)
-			checkData.State = EXCEPTION
-			checkData.Message = "Trigger evaluation exception"
-		}
-		checkData, err = triggerChecker.compareChecks(checkData)
+		checkData, err = triggerChecker.handleErrorCheck(checkData, err)
 		if err != nil {
 			return err
 		}
 	}
-
 	checkData.Score = scores[checkData.State]
 	for _, metricData := range checkData.Metrics {
 		checkData.Score += scores[metricData.State]
@@ -62,12 +50,12 @@ func (triggerChecker *TriggerChecker) handleTrigger() (moira.CheckData, error) {
 
 	triggerChecker.cleanupMetricsValues(metrics, triggerChecker.Until)
 
-	hasMetrics, sendEvent := triggerChecker.checkForNoMetrics(triggerTimeSeries)
-	if !hasMetrics {
-		if sendEvent {
-			err = ErrTriggerHasNoMetrics
-		}
-		return checkData, err
+	if len(triggerTimeSeries.Main) == 0 {
+		return checkData, ErrTriggerHasNoMetrics
+	}
+
+	if triggerTimeSeries.HasOnlyWildcards() {
+		return checkData, ErrTriggerHasOnlyWildcards
 	}
 
 	for _, timeSeries := range triggerTimeSeries.Main {
@@ -108,17 +96,33 @@ func (triggerChecker *TriggerChecker) handleTrigger() (moira.CheckData, error) {
 	return checkData, nil
 }
 
-func (triggerChecker *TriggerChecker) checkForNoMetrics(tts *triggerTimeSeries) (hasMetrics, sendEvent bool) {
-	hasMetrics = true
-	sendEvent = false
-
-	if len(tts.Main) == 0 {
-		hasMetrics = false
-		if triggerChecker.ttl != 0 && len(triggerChecker.lastCheck.Metrics) != 0 {
-			sendEvent = true
+func (triggerChecker *TriggerChecker) handleErrorCheck(checkData moira.CheckData, checkingError error) (moira.CheckData, error) {
+	if checkingError == ErrTriggerHasNoMetrics {
+		triggerChecker.Logger.Debugf("Trigger %s: %s", triggerChecker.TriggerID, checkingError.Error())
+		if triggerChecker.ttl != 0 {
+			checkData.State = triggerChecker.ttlState
+			checkData.Message = ErrTriggerHasNoMetrics.Error()
+			return triggerChecker.compareChecks(checkData)
 		}
+		return checkData, nil
 	}
-	return hasMetrics, sendEvent
+	if checkingError == ErrTriggerHasOnlyWildcards {
+		triggerChecker.Logger.Debugf("Trigger %s: %s", triggerChecker.TriggerID, checkingError.Error())
+		checkData.State = triggerChecker.ttlState
+		checkData.State = NODATA
+		return triggerChecker.compareChecks(checkData)
+	}
+	if target.IsErrUnknownFunction(checkingError) {
+		triggerChecker.Logger.Warningf("Trigger %s: %s", triggerChecker.TriggerID, checkingError.Error())
+		checkData.State = EXCEPTION
+		checkData.Message = checkingError.Error()
+	} else {
+		triggerChecker.Metrics.CheckError.Mark(1)
+		triggerChecker.Logger.Errorf("Trigger %s check failed: %s", triggerChecker.TriggerID, checkingError.Error())
+		checkData.State = EXCEPTION
+		checkData.Message = "Trigger evaluation exception"
+	}
+	return triggerChecker.compareChecks(checkData)
 }
 
 func (triggerChecker *TriggerChecker) checkForNoData(timeSeries *target.TimeSeries, metricLastState moira.MetricState) (bool, *moira.MetricState) {

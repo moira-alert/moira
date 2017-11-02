@@ -71,7 +71,7 @@ func EvaluateTarget(database moira.Database, target string, from int64, until in
 			for _, metricData := range metricDatas {
 				timeSeries := TimeSeries{
 					MetricData: *metricData,
-					Stub:       len(metrics) == 0,
+					Wildcard:   len(metrics) == 0,
 				}
 				result.TimeSeries = append(result.TimeSeries, &timeSeries)
 			}

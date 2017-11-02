@@ -94,7 +94,7 @@ func TestEvaluateTarget(t *testing.T) {
 		So(result, ShouldResemble, &EvaluationResult{
 			TimeSeries: []*TimeSeries{{
 				MetricData: expr.MetricData{FetchResponse: fetchResponse},
-				Stub:       true,
+				Wildcard:   true,
 			}},
 			Metrics:  make([]string, 0),
 			Patterns: []string{"super.puper.pattern"},

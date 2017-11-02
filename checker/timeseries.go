@@ -75,3 +75,13 @@ func (triggerTimeSeries *triggerTimeSeries) getExpressionValues(firstTargetTimeS
 	}
 	return expressionValues, true
 }
+
+// HasOnlyWildcards checks given targetTimeSeries for only wildcards
+func (triggerTimeSeries *triggerTimeSeries) HasOnlyWildcards() bool {
+	for _, timeSeries := range triggerTimeSeries.Main {
+		if !timeSeries.Wildcard {
+			return false
+		}
+	}
+	return true
+}

@@ -358,64 +358,6 @@ func TestCheckForNODATA(t *testing.T) {
 	})
 }
 
-func TestHasMetrics(t *testing.T) {
-	var ttl int64 = 100
-	triggerCheckerWithoutTTL := &TriggerChecker{}
-	triggerCheckerWithTTL := &TriggerChecker{
-		ttl:      ttl,
-		ttlState: NODATA,
-		lastCheck: &moira.CheckData{
-			Metrics: make(map[string]moira.MetricState),
-		},
-	}
-	tts := &triggerTimeSeries{
-		Main:       []*target.TimeSeries{{MetricData: expr.MetricData{}}, {MetricData: expr.MetricData{}}},
-		Additional: []*target.TimeSeries{{MetricData: expr.MetricData{}}},
-	}
-
-	Convey("TriggerTimeSeries has metrics", t, func() {
-		Convey("Trigger checker no ttl", func() {
-			hasMetrics, sendEvent := triggerCheckerWithoutTTL.checkForNoMetrics(tts)
-			So(hasMetrics, ShouldBeTrue)
-			So(sendEvent, ShouldBeFalse)
-		})
-
-		Convey("Trigger checker has ttl", func() {
-			hasMetrics, sendEvent := triggerCheckerWithTTL.checkForNoMetrics(tts)
-			So(hasMetrics, ShouldBeTrue)
-			So(sendEvent, ShouldBeFalse)
-		})
-	})
-
-	tts = &triggerTimeSeries{
-		Main:       make([]*target.TimeSeries, 0),
-		Additional: make([]*target.TimeSeries, 0),
-	}
-
-	Convey("TriggerTimeSeries no metrics", t, func() {
-		Convey("Trigger checker no ttl", func() {
-			hasMetrics, sendEvent := triggerCheckerWithoutTTL.checkForNoMetrics(tts)
-			So(hasMetrics, ShouldBeFalse)
-			So(sendEvent, ShouldBeFalse)
-		})
-
-		Convey("Trigger checker has ttl", func() {
-			Convey("LastCheck no metrics data", func() {
-				hasMetrics, sendEvent := triggerCheckerWithTTL.checkForNoMetrics(tts)
-				So(hasMetrics, ShouldBeFalse)
-				So(sendEvent, ShouldBeFalse)
-			})
-
-			Convey("LastCheck has metrics data", func() {
-				triggerCheckerWithTTL.lastCheck.Metrics["123"] = moira.MetricState{}
-				hasMetrics, sendEvent := triggerCheckerWithTTL.checkForNoMetrics(tts)
-				So(hasMetrics, ShouldBeFalse)
-				So(sendEvent, ShouldBeTrue)
-			})
-		})
-	})
-}
-
 func TestCheckErrors(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
