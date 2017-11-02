@@ -1,4 +1,4 @@
-
+1229
 FROM golang:1.9 AS builder
 
 WORKDIR /go/src/github.com/moira-alert/moira
@@ -26,11 +26,11 @@ COPY pkg/notifier.yml /
 COPY pkg/storage-schemas.conf /
 
 WORKDIR /
-COPY --from=builder /go/src/github.com/moira-alert/moira/moira .
-COPY --from=builder /go/src/github.com/moira-alert/moira/api .
-COPY --from=builder /go/src/github.com/moira-alert/moira/checker .
-COPY --from=builder /go/src/github.com/moira-alert/moira/filter .
-COPY --from=builder /go/src/github.com/moira-alert/moira/notifier .
+COPY --from=builder /go/src/github.com/moira-alert/moira/build/moira .
+COPY --from=builder /go/src/github.com/moira-alert/moira/build/api .
+COPY --from=builder /go/src/github.com/moira-alert/moira/build/checker .
+COPY --from=builder /go/src/github.com/moira-alert/moira/build/filter .
+COPY --from=builder /go/src/github.com/moira-alert/moira/build/notifier .
 
 # relay
 EXPOSE 2003 2003
