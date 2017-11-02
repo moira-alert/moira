@@ -18,7 +18,7 @@ func UpdateTrigger(dataBase moira.Database, trigger *dto.TriggerModel, triggerID
 	_, err := dataBase.GetTrigger(triggerID)
 	if err != nil {
 		if err == database.ErrNil {
-			return nil, api.ErrorInvalidRequest(fmt.Errorf("Trigger with ID = '%s' does not exists", triggerID))
+			return nil, api.ErrorNotFound(fmt.Sprintf("Trigger with ID = '%s' does not exists", triggerID))
 		}
 		return nil, api.ErrorInternalServer(err)
 	}

@@ -125,6 +125,77 @@ func TestCreateContact(t *testing.T) {
 	})
 }
 
+func TestUpdateContact(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	defer mockCtrl.Finish()
+	userLogin := "user"
+
+	Convey("Success update", t, func() {
+		contactDTO := &dto.Contact{
+			Value: "some@mail.com",
+			Type:  "mail",
+		}
+		contactID := uuid.NewV4().String()
+		contact := moira.ContactData{
+			Value: contactDTO.Value,
+			Type:  contactDTO.Type,
+			ID:    contactID,
+			User:  userLogin,
+		}
+		dataBase.EXPECT().GetContact(contactID).Return(contact, nil)
+		dataBase.EXPECT().SaveContact(&contact).Return(nil)
+		err := UpdateContact(dataBase, contactDTO, contactID, userLogin)
+		So(err, ShouldBeNil)
+		So(contactDTO.User, ShouldResemble, userLogin)
+		So(contactDTO.ID, ShouldResemble, contactID)
+	})
+
+	Convey("Contact not found", t, func() {
+		contactDTO := &dto.Contact{
+			Value: "some@mail.com",
+			Type:  "mail",
+		}
+		contactID := uuid.NewV4().String()
+		dataBase.EXPECT().GetContact(contactID).Return(moira.ContactData{}, database.ErrNil)
+		err := UpdateContact(dataBase, contactDTO, contactID, userLogin)
+		So(err, ShouldResemble, api.ErrorNotFound(fmt.Sprintf("Contact with ID '%s' does not exists", contactID)))
+	})
+
+	Convey("Error get contact", t, func() {
+		contactDTO := &dto.Contact{
+			Value: "some@mail.com",
+			Type:  "mail",
+		}
+		contactID := uuid.NewV4().String()
+		err := fmt.Errorf("Oooops!")
+		dataBase.EXPECT().GetContact(contactID).Return(moira.ContactData{}, err)
+		actual := UpdateContact(dataBase, contactDTO, contactID, userLogin)
+		So(actual, ShouldResemble, api.ErrorInternalServer(err))
+	})
+
+	Convey("Error save", t, func() {
+		contactDTO := &dto.Contact{
+			Value: "some@mail.com",
+			Type:  "mail",
+		}
+		contactID := uuid.NewV4().String()
+		contact := moira.ContactData{
+			Value: contactDTO.Value,
+			Type:  contactDTO.Type,
+			ID:    contactID,
+			User:  userLogin,
+		}
+		err := fmt.Errorf("Oooops!")
+		dataBase.EXPECT().GetContact(contactID).Return(contact, nil)
+		dataBase.EXPECT().SaveContact(&contact).Return(err)
+		actual := UpdateContact(dataBase, contactDTO, contactID, userLogin)
+		So(actual, ShouldResemble, api.ErrorInternalServer(err))
+		So(contactDTO.User, ShouldResemble, userLogin)
+		So(contactDTO.ID, ShouldResemble, contactID)
+	})
+}
+
 func TestRemoveContact(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
@@ -235,7 +306,7 @@ func TestCheckUserPermissionsForContact(t *testing.T) {
 	Convey("No contact", t, func() {
 		dataBase.EXPECT().GetContact(id).Return(moira.ContactData{}, database.ErrNil)
 		expected := CheckUserPermissionsForContact(dataBase, id, userLogin)
-		So(expected, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("Contact with ID '%s' does not exists", id)))
+		So(expected, ShouldResemble, api.ErrorNotFound(fmt.Sprintf("Contact with ID '%s' does not exists", id)))
 	})
 
 	Convey("Different user", t, func() {

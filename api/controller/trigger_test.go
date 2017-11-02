@@ -37,7 +37,7 @@ func TestUpdateTrigger(t *testing.T) {
 		trigger := dto.TriggerModel{ID: uuid.NewV4().String()}
 		dataBase.EXPECT().GetTrigger(trigger.ID).Return(moira.Trigger{}, database.ErrNil)
 		resp, err := UpdateTrigger(dataBase, &trigger, trigger.ID, make(map[string]bool))
-		So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("Trigger with ID = '%s' does not exists", trigger.ID)))
+		So(err, ShouldResemble, api.ErrorNotFound(fmt.Sprintf("Trigger with ID = '%s' does not exists", trigger.ID)))
 		So(resp, ShouldBeNil)
 	})
 

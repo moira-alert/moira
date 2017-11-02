@@ -57,12 +57,14 @@ func UpdateContact(dataBase moira.Database, contact *dto.Contact, contactID stri
 	contactData, err := dataBase.GetContact(contactID)
 	if err != nil {
 		if err == database.ErrNil {
-			return api.ErrorInvalidRequest(fmt.Errorf("Contact with ID '%s' does not exists", contactID))
+			return api.ErrorNotFound(fmt.Sprintf("Contact with ID '%s' does not exists", contactID))
 		}
 		return api.ErrorInternalServer(err)
 	}
 	contactData.Type = contact.Type
 	contactData.Value = contact.Value
+	contact.User = userLogin
+	contact.ID = contactID
 
 	if err := dataBase.SaveContact(&contactData); err != nil {
 		return api.ErrorInternalServer(err)
@@ -130,7 +132,7 @@ func CheckUserPermissionsForContact(dataBase moira.Database, contactID string, u
 	contactData, err := dataBase.GetContact(contactID)
 	if err != nil {
 		if err == database.ErrNil {
-			return api.ErrorInvalidRequest(fmt.Errorf("Contact with ID '%s' does not exists", contactID))
+			return api.ErrorNotFound(fmt.Sprintf("Contact with ID '%s' does not exists", contactID))
 		}
 		return api.ErrorInternalServer(err)
 	}
