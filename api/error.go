@@ -40,7 +40,7 @@ func ErrorInvalidRequest(err error) *ErrorResponse {
 	}
 }
 
-// ErrorRender return 422 render error and used for response rendering erros
+// ErrorRender return 422 render error and used for response rendering errors
 func ErrorRender(err error) *ErrorResponse {
 	return &ErrorResponse{
 		Err:            err,

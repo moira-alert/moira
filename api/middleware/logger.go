@@ -83,6 +83,9 @@ func newLogEntry(logger moira.Logger, request *http.Request) *apiLoggerEntry {
 }
 
 func (entry *apiLoggerEntry) write(status, bytes int, elapsed time.Duration, response http.ResponseWriter) {
+	if status == 0 {
+		status = 200
+	}
 	fmt.Fprintf(entry.buf, "%03d", status)
 	fmt.Fprintf(entry.buf, " %dB", bytes)
 	entry.buf.WriteString(" in ")

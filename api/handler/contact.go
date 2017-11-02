@@ -19,7 +19,7 @@ func contact(router chi.Router) {
 		router.Use(middleware.ContactContext)
 		router.Put("/", updateContact)
 		router.Delete("/", removeContact)
-		router.Post("/test", testContact)
+		router.Post("/test", sendTestContactNotification)
 	})
 }
 
@@ -94,7 +94,7 @@ func removeContact(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func testContact(writer http.ResponseWriter, request *http.Request) {
+func sendTestContactNotification(writer http.ResponseWriter, request *http.Request) {
 	contactID := middleware.GetContactID(request)
 	userLogin := middleware.GetLogin(request)
 	err := controller.CheckUserPermissionsForContact(database, contactID, userLogin)
