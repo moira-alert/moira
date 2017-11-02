@@ -168,7 +168,7 @@ func TestUpdateContact(t *testing.T) {
 			Type:  "mail",
 		}
 		contactID := uuid.NewV4().String()
-		err := fmt.Errorf("Oooops!")
+		err := fmt.Errorf("Oooops")
 		dataBase.EXPECT().GetContact(contactID).Return(moira.ContactData{}, err)
 		actual := UpdateContact(dataBase, contactDTO, contactID, userLogin)
 		So(actual, ShouldResemble, api.ErrorInternalServer(err))
@@ -186,7 +186,7 @@ func TestUpdateContact(t *testing.T) {
 			ID:    contactID,
 			User:  userLogin,
 		}
-		err := fmt.Errorf("Oooops!")
+		err := fmt.Errorf("Oooops")
 		dataBase.EXPECT().GetContact(contactID).Return(contact, nil)
 		dataBase.EXPECT().SaveContact(&contact).Return(err)
 		actual := UpdateContact(dataBase, contactDTO, contactID, userLogin)
