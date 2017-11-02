@@ -25,7 +25,7 @@ COPY pkg/notifier.yml /
 COPY pkg/storage-schemas.conf /
 
 WORKDIR /
-COPY --from=builder /go/src/github.com/moira-alert/moira/build .
+COPY --from=builder /go/src/github.com/moira-alert/moira .
 
 # relay
 EXPOSE 2003 2003
