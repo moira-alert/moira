@@ -25,6 +25,7 @@ COPY pkg/notifier.yml /
 COPY pkg/storage-schemas.conf /
 
 WORKDIR /
+
 COPY --from=builder /go/src/github.com/moira-alert/moira/build/moira .
 COPY --from=builder /go/src/github.com/moira-alert/moira/build/api .
 COPY --from=builder /go/src/github.com/moira-alert/moira/build/checker .
