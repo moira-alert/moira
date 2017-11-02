@@ -1,4 +1,3 @@
-1229
 FROM golang:1.9 AS builder
 
 WORKDIR /go/src/github.com/moira-alert/moira
