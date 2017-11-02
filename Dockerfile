@@ -21,6 +21,7 @@ RUN mkdir /config-api
 RUN mkdir /config-checker
 RUN mkdir /config-filter
 RUN mkdir /config-notifier
+RUN mkdir -p /usr/local/go/lib/time/
 
 COPY pkg/moira.yml /
 COPY pkg/api.yml /config-api/config.yml
@@ -36,6 +37,7 @@ COPY --from=builder /go/src/github.com/moira-alert/moira/build/api .
 COPY --from=builder /go/src/github.com/moira-alert/moira/build/checker .
 COPY --from=builder /go/src/github.com/moira-alert/moira/build/filter .
 COPY --from=builder /go/src/github.com/moira-alert/moira/build/notifier .
+COPY --from=builder /usr/local/go/lib/time/zoneinfo.zip /usr/local/go/lib/time/
 
 # relay
 EXPOSE 2003 2003
