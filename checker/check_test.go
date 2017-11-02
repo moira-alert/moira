@@ -2,17 +2,20 @@ package checker
 
 import (
 	"fmt"
+	"math"
+	"testing"
+	"time"
+
 	"github.com/go-graphite/carbonapi/expr"
 	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
 	"github.com/golang/mock/gomock"
+	"github.com/op/go-logging"
+	. "github.com/smartystreets/goconvey/convey"
+
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
 	"github.com/moira-alert/moira/mock/moira-alert"
 	"github.com/moira-alert/moira/target"
-	"github.com/op/go-logging"
-	. "github.com/smartystreets/goconvey/convey"
-	"math"
-	"testing"
 )
 
 func TestGetTimeSeriesState(t *testing.T) {
