@@ -1,4 +1,4 @@
-FROM golang:1.9 AS builder
+FROM golang:1.9.1 AS builder
 
 WORKDIR /go/src/github.com/moira-alert/moira
 COPY . /go/src/github.com/moira-alert/moira/
@@ -17,11 +17,16 @@ FROM alpine
 
 RUN apk add --no-cache ca-certificates && update-ca-certificates
 
+RUN mkdir /config-api
+RUN mkdir /config-checker
+RUN mkdir /config-filter
+RUN mkdir /config-notifier
+
 COPY pkg/moira.yml /
-COPY pkg/api.yml /
-COPY pkg/checker.yml /
-COPY pkg/filter.yml /
-COPY pkg/notifier.yml /
+COPY pkg/api.yml /config-api/config.yml
+COPY pkg/checker.yml /config-checker/config.yml
+COPY pkg/filter.yml /config-filter/config.yml
+COPY pkg/notifier.yml /config-notifier/config.yml
 COPY pkg/storage-schemas.conf /
 
 WORKDIR /
