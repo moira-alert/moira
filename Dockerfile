@@ -1,4 +1,4 @@
-FROM golang:1.9.1 AS builder
+FROM golang:1.9.1 as builder
 
 WORKDIR /go/src/github.com/moira-alert/moira
 COPY . /go/src/github.com/moira-alert/moira/
