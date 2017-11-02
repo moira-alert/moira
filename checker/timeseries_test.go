@@ -292,3 +292,42 @@ func TestGetExpressionValues(t *testing.T) {
 		So(values, ShouldResemble, expectedExpressionValues)
 	})
 }
+
+func TestTriggerTimeSeriesHasOnlyWildcards(t *testing.T) {
+	Convey("Main timeseries has wildcards only", t, func() {
+		tts := triggerTimeSeries{
+			Main: []*target.TimeSeries{{Wildcard: true}},
+		}
+		So(tts.hasOnlyWildcards(), ShouldBeTrue)
+
+		tts1 := triggerTimeSeries{
+			Main: []*target.TimeSeries{{Wildcard: true}, {Wildcard: true}},
+		}
+		So(tts1.hasOnlyWildcards(), ShouldBeTrue)
+	})
+
+	Convey("Main timeseries has not only wildcards", t, func() {
+		tts := triggerTimeSeries{
+			Main: []*target.TimeSeries{{Wildcard: false}},
+		}
+		So(tts.hasOnlyWildcards(), ShouldBeFalse)
+
+		tts1 := triggerTimeSeries{
+			Main: []*target.TimeSeries{{Wildcard: false}, {Wildcard: true}},
+		}
+		So(tts1.hasOnlyWildcards(), ShouldBeFalse)
+
+		tts2 := triggerTimeSeries{
+			Main: []*target.TimeSeries{{Wildcard: false}, {Wildcard: false}},
+		}
+		So(tts2.hasOnlyWildcards(), ShouldBeFalse)
+	})
+
+	Convey("Additional timeseries has wildcards but Main not", t, func() {
+		tts := triggerTimeSeries{
+			Main:       []*target.TimeSeries{{Wildcard: false}},
+			Additional: []*target.TimeSeries{{Wildcard: true}, {Wildcard: true}},
+		}
+		So(tts.hasOnlyWildcards(), ShouldBeFalse)
+	})
+}

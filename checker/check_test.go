@@ -590,6 +590,23 @@ func TestHandleTrigger(t *testing.T) {
 		mockCtrl.Finish()
 	})
 
+	Convey("No metrics, should return trigger has only wildcards error", t, func() {
+		triggerChecker.From = 4217
+		triggerChecker.Until = 4267
+		triggerChecker.ttlState = NODATA
+		lastCheck.Timestamp = 4267
+		dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{}, nil)
+		checkData, err := triggerChecker.handleTrigger()
+		So(err, ShouldResemble, ErrTriggerHasOnlyWildcards)
+		So(checkData, ShouldResemble, moira.CheckData{
+			Metrics:   lastCheck.Metrics,
+			Timestamp: triggerChecker.Until,
+			State:     OK,
+			Score:     0,
+		})
+		mockCtrl.Finish()
+	})
+
 	Convey("No data too long and ttlState is delete", t, func() {
 		triggerChecker.From = 4217
 		triggerChecker.Until = 4267
@@ -608,6 +625,168 @@ func TestHandleTrigger(t *testing.T) {
 			State:     OK,
 			Score:     0,
 		})
+		mockCtrl.Finish()
+	})
+}
+
+func TestHandleErrorCheck(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	logger, _ := logging.GetLogger("Test")
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+
+	Convey("Handle error no metrics", t, func() {
+		Convey("TTL is 0", func() {
+			triggerChecker := TriggerChecker{
+				TriggerID: "SuperId",
+				Database:  dataBase,
+				Logger:    logger,
+				ttl:       0,
+				trigger:   &moira.Trigger{},
+				lastCheck: &moira.CheckData{
+					Timestamp: 0,
+					State:     NODATA,
+				},
+			}
+			checkData := moira.CheckData{
+				State:     OK,
+				Timestamp: time.Now().Unix(),
+			}
+			actual, err := triggerChecker.handleErrorCheck(checkData, ErrTriggerHasNoMetrics)
+			So(err, ShouldBeNil)
+			So(actual, ShouldResemble, checkData)
+		})
+
+		Convey("TTL is not 0", func() {
+			triggerChecker := TriggerChecker{
+				TriggerID: "SuperId",
+				Database:  dataBase,
+				Logger:    logger,
+				ttl:       60,
+				trigger:   &moira.Trigger{},
+				ttlState:  NODATA,
+				lastCheck: &moira.CheckData{
+					Timestamp: 0,
+					State:     NODATA,
+				},
+			}
+			err1 := "This metric has been in bad state for more than 24 hours - please, fix."
+			checkData := moira.CheckData{
+				State:     OK,
+				Timestamp: time.Now().Unix(),
+			}
+			event := &moira.NotificationEvent{
+				Timestamp: checkData.Timestamp,
+				Message:   &err1,
+				TriggerID: triggerChecker.TriggerID,
+				OldState:  NODATA,
+				State:     NODATA,
+			}
+
+			dataBase.EXPECT().PushNotificationEvent(event, true).Return(nil)
+			actual, err := triggerChecker.handleErrorCheck(checkData, ErrTriggerHasNoMetrics)
+			expected := moira.CheckData{
+				State:          NODATA,
+				Timestamp:      checkData.Timestamp,
+				EventTimestamp: checkData.Timestamp,
+				Message:        "Trigger has no metrics",
+			}
+			So(err, ShouldBeNil)
+			So(actual, ShouldResemble, expected)
+			mockCtrl.Finish()
+		})
+	})
+
+	Convey("Handle trigger has only wildcards without metrics in last state", t, func() {
+		triggerChecker := TriggerChecker{
+			TriggerID: "SuperId",
+			Database:  dataBase,
+			Logger:    logger,
+			ttl:       60,
+			trigger:   &moira.Trigger{},
+			ttlState:  NODATA,
+			lastCheck: &moira.CheckData{
+				Timestamp: time.Now().Unix(),
+				State:     OK,
+			},
+		}
+		checkData := moira.CheckData{
+			State:     OK,
+			Timestamp: time.Now().Unix(),
+		}
+
+		dataBase.EXPECT().PushNotificationEvent(gomock.Any(), true).Return(nil)
+		actual, err := triggerChecker.handleErrorCheck(checkData, ErrTriggerHasOnlyWildcards)
+		expected := moira.CheckData{
+			State:          NODATA,
+			Timestamp:      checkData.Timestamp,
+			EventTimestamp: checkData.Timestamp,
+		}
+		So(err, ShouldBeNil)
+		So(actual, ShouldResemble, expected)
+		mockCtrl.Finish()
+	})
+
+	Convey("Handle trigger has only wildcards with metrics in last state", t, func() {
+		triggerChecker := TriggerChecker{
+			TriggerID: "SuperId",
+			Database:  dataBase,
+			Logger:    logger,
+			ttl:       60,
+			trigger:   &moira.Trigger{},
+			ttlState:  NODATA,
+			lastCheck: &moira.CheckData{
+				Timestamp: time.Now().Unix(),
+				State:     OK,
+			},
+		}
+		checkData := moira.CheckData{
+			Metrics: map[string]moira.MetricState{
+				"123": {},
+			},
+			State:     OK,
+			Timestamp: time.Now().Unix(),
+		}
+
+		actual, err := triggerChecker.handleErrorCheck(checkData, ErrTriggerHasOnlyWildcards)
+		expected := moira.CheckData{
+			Metrics:   checkData.Metrics,
+			State:     OK,
+			Timestamp: checkData.Timestamp,
+		}
+		So(err, ShouldBeNil)
+		So(actual, ShouldResemble, expected)
+		mockCtrl.Finish()
+	})
+
+	Convey("Handle unknown function in evalExpr", t, func() {
+		triggerChecker := TriggerChecker{
+			TriggerID: "SuperId",
+			Database:  dataBase,
+			Logger:    logger,
+			ttl:       60,
+			trigger:   &moira.Trigger{},
+			ttlState:  NODATA,
+			lastCheck: &moira.CheckData{
+				Timestamp: time.Now().Unix(),
+				State:     OK,
+			},
+		}
+		checkData := moira.CheckData{
+			State:     OK,
+			Timestamp: time.Now().Unix(),
+		}
+
+		dataBase.EXPECT().PushNotificationEvent(gomock.Any(), true).Return(nil)
+		actual, err := triggerChecker.handleErrorCheck(checkData, fmt.Errorf("unknown function in evalExpr: 123"))
+		expected := moira.CheckData{
+			State:          EXCEPTION,
+			Timestamp:      checkData.Timestamp,
+			EventTimestamp: checkData.Timestamp,
+			Message:        "unknown function in evalExpr: 123",
+		}
+		So(err, ShouldBeNil)
+		So(actual, ShouldResemble, expected)
 		mockCtrl.Finish()
 	})
 }

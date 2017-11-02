@@ -54,7 +54,7 @@ func (triggerChecker *TriggerChecker) handleTrigger() (moira.CheckData, error) {
 		return checkData, ErrTriggerHasNoMetrics
 	}
 
-	if triggerTimeSeries.HasOnlyWildcards() {
+	if triggerTimeSeries.hasOnlyWildcards() {
 		return checkData, ErrTriggerHasOnlyWildcards
 	}
 
@@ -108,8 +108,9 @@ func (triggerChecker *TriggerChecker) handleErrorCheck(checkData moira.CheckData
 	}
 	if checkingError == ErrTriggerHasOnlyWildcards {
 		triggerChecker.Logger.Debugf("Trigger %s: %s", triggerChecker.TriggerID, checkingError.Error())
-		checkData.State = triggerChecker.ttlState
-		checkData.State = NODATA
+		if len(checkData.Metrics) == 0 {
+			checkData.State = NODATA
+		}
 		return triggerChecker.compareChecks(checkData)
 	}
 	if target.IsErrUnknownFunction(checkingError) {
