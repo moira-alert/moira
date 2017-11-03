@@ -410,7 +410,7 @@ func TestCheckErrors(t *testing.T) {
 			Metrics:        triggerChecker.lastCheck.Metrics,
 			State:          EXCEPTION,
 			Timestamp:      triggerChecker.Until,
-			EventTimestamp: 0,
+			EventTimestamp: triggerChecker.Until,
 			Score:          100000,
 			Message:        "Trigger evaluation exception",
 		}).Return(nil)
@@ -753,9 +753,10 @@ func TestHandleErrorCheck(t *testing.T) {
 
 		actual, err := triggerChecker.handleErrorCheck(checkData, ErrTriggerHasOnlyWildcards)
 		expected := moira.CheckData{
-			Metrics:   checkData.Metrics,
-			State:     OK,
-			Timestamp: checkData.Timestamp,
+			Metrics:        checkData.Metrics,
+			State:          OK,
+			Timestamp:      checkData.Timestamp,
+			EventTimestamp: checkData.Timestamp,
 		}
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, expected)

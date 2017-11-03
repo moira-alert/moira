@@ -18,7 +18,10 @@ func (triggerChecker *TriggerChecker) compareChecks(currentCheck moira.CheckData
 
 	if triggerChecker.lastCheck.EventTimestamp != 0 {
 		currentCheck.EventTimestamp = triggerChecker.lastCheck.EventTimestamp
+	} else {
+		currentCheck.EventTimestamp = timestamp
 	}
+
 	needSend, message := needSendEvent(currentStateValue, lastStateValue, timestamp, triggerChecker.lastCheck.GetEventTimestamp(), triggerChecker.lastCheck.Suppressed)
 	if !needSend {
 		return currentCheck, nil
@@ -93,7 +96,7 @@ func (triggerChecker *TriggerChecker) isTriggerSuppressed(event *moira.Notificat
 	return false
 }
 
-func needSendEvent(currentStateValue string, lastStateValue string, currentStateTimestamp int64, lastStateEventTimestamp int64, isLastStateSuppressed bool) (bool, *string) {
+func needSendEvent(currentStateValue string, lastStateValue string, currentStateTimestamp int64, lastStateEventTimestamp int64, isLastStateSuppressed bool) (needSend bool, message *string) {
 	if currentStateValue != lastStateValue {
 		return true, nil
 	}
