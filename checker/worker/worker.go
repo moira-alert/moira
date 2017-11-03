@@ -25,10 +25,6 @@ type Checker struct {
 
 // Start start schedule new MetricEvents and check for NODATA triggers
 func (worker *Checker) Start() error {
-	if !worker.Config.Enabled {
-		worker.Logger.Info("Checker Disabled")
-		return nil
-	}
 	worker.lastData = time.Now().UTC().Unix()
 
 	metricEventsChannel, err := worker.Database.SubscribeMetricEvents(&worker.tomb)
@@ -49,9 +45,6 @@ func (worker *Checker) Start() error {
 
 // Stop stops checks triggers
 func (worker *Checker) Stop() error {
-	if !worker.Config.Enabled {
-		return nil
-	}
 	worker.tomb.Kill(nil)
 	return worker.tomb.Wait()
 }
