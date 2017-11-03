@@ -1,6 +1,7 @@
 package notifier
 
 import (
+	"fmt"
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database/redis"
@@ -80,7 +81,7 @@ func TestNotifier(t *testing.T) {
 	sender.EXPECT().Init(senderSettings, logger, location).Return(nil)
 	notifier2.RegisterSender(senderSettings, sender)
 	sender.EXPECT().SendEvents(gomock.Any(), contact, triggerData, false).Return(nil).Do(func(f ...interface{}) {
-		logger.Debugf("SendEvents called. End test")
+		fmt.Print("SendEvents called. End test")
 		close(shutdown)
 	})
 
@@ -111,7 +112,7 @@ func waitTestEnd() {
 	case <-shutdown:
 		break
 	case <-time.After(time.Second * 30):
-		logger.Debugf("Test timeout")
+		fmt.Print("Test timeout")
 		close(shutdown)
 		break
 	}

@@ -91,7 +91,7 @@ func TestTimeout(t *testing.T) {
 	}
 	notification := moira.ScheduledNotification{}
 	sender.EXPECT().SendEvents(eventsData, pkg.Contact, pkg.Trigger, pkg.Throttled).Return(nil).Do(func(f ...interface{}) {
-		logger.Debugf("Trying to send for 10 second")
+		fmt.Print("Trying to send for 10 second")
 		time.Sleep(time.Second * 10)
 	})
 	scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, pkg2.Trigger, pkg2.Contact, pkg2.Throttled, pkg2.FailCount+1).Return(&notification)

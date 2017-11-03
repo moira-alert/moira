@@ -80,7 +80,7 @@ func (notifier *StandardNotifier) RegisterSender(senderSettings map[string]strin
 	notifier.metrics.SendersFailedMetrics.AddMetric(senderIdent, fmt.Sprintf("notifier.%s.sends_failed", getGraphiteSenderIdent(senderIdent)))
 	notifier.waitGroup.Add(1)
 	go notifier.run(sender, ch)
-	notifier.logger.Debugf("Sender %s registered", senderIdent)
+	notifier.logger.Infof("Sender %s registered", senderIdent)
 	return nil
 }
 
@@ -90,7 +90,7 @@ func (notifier *StandardNotifier) StopSenders() {
 		close(ch)
 	}
 	notifier.senders = make(map[string]chan NotificationPackage)
-	notifier.logger.Debug("Waiting senders finish ...")
+	notifier.logger.Info("Waiting senders finish ...")
 	notifier.waitGroup.Wait()
 }
 

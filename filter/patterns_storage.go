@@ -58,7 +58,7 @@ func (storage *PatternStorage) ProcessIncomingMetric(lineBytes []byte) *moira.Ma
 
 	metric, value, timestamp, err := storage.parseMetricFromString(lineBytes)
 	if err != nil {
-		storage.logger.Debugf("cannot parse input: %v", err)
+		storage.logger.Infof("cannot parse input: %v", err)
 		return nil
 	}
 
