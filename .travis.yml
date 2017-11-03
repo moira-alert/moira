@@ -18,6 +18,8 @@ notifications:
     on_failure: always
     on_start: never
 before_install:
+  - sudo apt-get update
+  - sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
   - go get -v golang.org/x/tools/cmd/cover
   - go get -v github.com/mattn/goveralls
 install:

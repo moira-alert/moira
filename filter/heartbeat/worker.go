@@ -38,6 +38,7 @@ func (worker *Worker) Start() {
 				return nil
 			case <-checkTicker.C:
 				newCount := worker.metrics.TotalMetricsReceived.Count()
+				worker.logger.Debugf("Update heartbeat count, old value: %v, new value: %v", count, newCount)
 				if newCount != count {
 					if err := worker.database.UpdateMetricsHeartbeat(); err != nil {
 						worker.logger.Infof("Save state failed: %s", err.Error())
