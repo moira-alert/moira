@@ -16,12 +16,14 @@ func (worker *Checker) metricsChecker(metricEventsChannel <-chan *moira.MetricEv
 			return nil
 		}
 		handleWaitGroup.Add(1)
-		go func(event *moira.MetricEvent) {
-			defer handleWaitGroup.Done()
-			if err := worker.handleMetricEvent(metricEvent); err != nil {
-				worker.Logger.Errorf("Failed to handle metricEvent: %s", err.Error())
-			}
-		}(metricEvent)
+		go worker.startCheckNewMetricEvent(metricEvent, &handleWaitGroup)
+	}
+}
+
+func (worker *Checker) startCheckNewMetricEvent(metricEvent *moira.MetricEvent, handleWG *sync.WaitGroup) {
+	defer handleWG.Done()
+	if err := worker.handleMetricEvent(metricEvent); err != nil {
+		worker.Logger.Errorf("Failed to handle metricEvent: %s", err.Error())
 	}
 }
 

@@ -83,11 +83,11 @@ func (triggerChecker *TriggerChecker) compareStates(metric string, currentState 
 
 func (triggerChecker *TriggerChecker) isTriggerSuppressed(event *moira.NotificationEvent, timestamp int64, stateMaintenance int64, metric string) bool {
 	if !triggerChecker.trigger.Schedule.IsScheduleAllows(timestamp) {
-		triggerChecker.Logger.Infof("Event %v suppressed due to trigger schedule", event)
+		triggerChecker.Logger.Debugf("Event %v suppressed due to trigger schedule", event)
 		return true
 	}
 	if stateMaintenance >= timestamp {
-		triggerChecker.Logger.Infof("Event %v suppressed due to metric %s maintenance until %v.", event, metric, time.Unix(stateMaintenance, 0))
+		triggerChecker.Logger.Debugf("Event %v suppressed due to metric %s maintenance until %v.", event, metric, time.Unix(stateMaintenance, 0))
 		return true
 	}
 	return false

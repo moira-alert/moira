@@ -13,7 +13,7 @@ func (worker *Checker) noDataChecker() error {
 		case <-worker.tomb.Dying():
 			checkTicker.Stop()
 			wg.Wait()
-			worker.Logger.Debugf("NoData checker stopped")
+			worker.Logger.Info("NoData checker stopped")
 			return nil
 		case <-checkTicker.C:
 			if err := worker.checkNoData(&wg); err != nil {
