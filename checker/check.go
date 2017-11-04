@@ -24,10 +24,7 @@ func (triggerChecker *TriggerChecker) Check() error {
 			return err
 		}
 	}
-	checkData.Score = scores[checkData.State]
-	for _, metricData := range checkData.Metrics {
-		checkData.Score += scores[metricData.State]
-	}
+	checkData.UpdateScore()
 	return triggerChecker.Database.SetTriggerLastCheck(triggerChecker.TriggerID, &checkData)
 }
 

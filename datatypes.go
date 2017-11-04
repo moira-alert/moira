@@ -12,6 +12,15 @@ var (
 	eventStates = [...]string{"OK", "WARN", "ERROR", "NODATA", "TEST"}
 )
 
+var scores = map[string]int64{
+	"OK":        0,
+	"DEL":       0,
+	"WARN":      1,
+	"ERROR":     100,
+	"NODATA":    1000,
+	"EXCEPTION": 100000,
+}
+
 // NotificationEvent represents trigger state changes event
 type NotificationEvent struct {
 	Timestamp      int64    `json:"timestamp"`
@@ -267,4 +276,13 @@ func (trigger *Trigger) IsSimple() bool {
 		}
 	}
 	return true
+}
+
+// UpdateScore update and return checkData score, based on metric states and checkData state
+func (checkData *CheckData) UpdateScore() int64 {
+	checkData.Score = scores[checkData.State]
+	for _, metricData := range checkData.Metrics {
+		checkData.Score += scores[metricData.State]
+	}
+	return checkData.Score
 }

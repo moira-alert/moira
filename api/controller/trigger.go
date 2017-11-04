@@ -45,9 +45,9 @@ func saveTrigger(dataBase moira.Database, trigger *moira.Trigger, triggerID stri
 	} else {
 		lastCheck = moira.CheckData{
 			Metrics: make(map[string]moira.MetricState),
-			Score:   1000,
 			State:   checker.NODATA,
 		}
+		lastCheck.UpdateScore()
 	}
 
 	if err = dataBase.SetTriggerLastCheck(triggerID, &lastCheck); err != nil {
@@ -179,6 +179,7 @@ func DeleteTriggerMetric(dataBase moira.Database, metricName string, triggerID s
 	_, ok := lastCheck.Metrics[metricName]
 	if ok {
 		delete(lastCheck.Metrics, metricName)
+		lastCheck.UpdateScore()
 	}
 	if err = dataBase.RemovePatternsMetrics(trigger.Patterns); err != nil {
 		return api.ErrorInternalServer(err)

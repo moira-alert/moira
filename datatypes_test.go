@@ -216,6 +216,36 @@ func TestCheckData_GetEventTimestamp(t *testing.T) {
 	})
 }
 
+func TestCheckData_UpdateScore(t *testing.T) {
+	Convey("Update score", t, func() {
+		checkData := CheckData{State: "NODATA"}
+		So(checkData.UpdateScore(), ShouldEqual, 1000)
+		So(checkData.Score, ShouldEqual, 1000)
+
+		checkData = CheckData{
+			State: "OK",
+			Metrics: map[string]MetricState{
+				"123": {State: "NODATA"},
+				"321": {State: "OK"},
+				"345": {State: "WARN"},
+			},
+		}
+		So(checkData.UpdateScore(), ShouldEqual, 1001)
+		So(checkData.Score, ShouldEqual, 1001)
+
+		checkData = CheckData{
+			State: "NODATA",
+			Metrics: map[string]MetricState{
+				"123": {State: "NODATA"},
+				"321": {State: "OK"},
+				"345": {State: "WARN"},
+			},
+		}
+		So(checkData.UpdateScore(), ShouldEqual, 2001)
+		So(checkData.Score, ShouldEqual, 2001)
+	})
+}
+
 func getDefaultSchedule() ScheduleData {
 	return ScheduleData{
 		TimezoneOffset: -300,
