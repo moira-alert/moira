@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/go-graphite/carbonapi/date"
@@ -9,6 +10,7 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
+	"github.com/moira-alert/moira/database"
 )
 
 // GetUserSubscriptions get all user subscriptions
@@ -32,21 +34,41 @@ func GetUserSubscriptions(database moira.Database, userLogin string) (*dto.Subsc
 	return subscriptionsList, nil
 }
 
-// WriteSubscription create or update subscription
-func WriteSubscription(database moira.Database, userLogin string, subscription *dto.Subscription) *api.ErrorResponse {
-	subscription.User = userLogin
+// CreateSubscription create or update subscription
+func CreateSubscription(dataBase moira.Database, userLogin string, subscription *dto.Subscription) *api.ErrorResponse {
 	if subscription.ID == "" {
 		subscription.ID = uuid.NewV4().String()
+	} else {
+		exists, err := isSubscriptionExists(dataBase, subscription.ID)
+		if err != nil {
+			return api.ErrorInternalServer(err)
+		}
+		if exists {
+			return api.ErrorInvalidRequest(fmt.Errorf("Subscription with this ID already exists"))
+		}
 	}
+
+	subscription.User = userLogin
 	data := moira.SubscriptionData(*subscription)
-	if err := database.SaveSubscription(&data); err != nil {
+	if err := dataBase.SaveSubscription(&data); err != nil {
+		return api.ErrorInternalServer(err)
+	}
+	return nil
+}
+
+// UpdateSubscription updates existing subscription
+func UpdateSubscription(dataBase moira.Database, subscriptionId string, userLogin string, subscription *dto.Subscription) *api.ErrorResponse {
+	subscription.ID = subscriptionId
+	subscription.User = userLogin
+	data := moira.SubscriptionData(*subscription)
+	if err := dataBase.SaveSubscription(&data); err != nil {
 		return api.ErrorInternalServer(err)
 	}
 	return nil
 }
 
 // RemoveSubscription deletes subscription
-func RemoveSubscription(database moira.Database, subscriptionID string, userLogin string) *api.ErrorResponse {
+func RemoveSubscription(database moira.Database, subscriptionID string) *api.ErrorResponse {
 	if err := database.RemoveSubscription(subscriptionID); err != nil {
 		return api.ErrorInternalServer(err)
 	}
@@ -70,4 +92,30 @@ func SendTestNotification(database moira.Database, subscriptionID string) *api.E
 	}
 
 	return nil
+}
+
+// CheckUserPermissionsForSubscription checks subscription for existence and permissions for given user
+func CheckUserPermissionsForSubscription(dataBase moira.Database, subscriptionID string, userLogin string) *api.ErrorResponse {
+	subscription, err := dataBase.GetSubscription(subscriptionID)
+	if err != nil {
+		if err == database.ErrNil {
+			return api.ErrorNotFound(fmt.Sprintf("Subscription with ID '%s' does not exists", subscriptionID))
+		}
+		return api.ErrorInternalServer(err)
+	}
+	if subscription.User != userLogin {
+		return api.ErrorForbidden("You have not permissions")
+	}
+	return nil
+}
+
+func isSubscriptionExists(dataBase moira.Database, subscriptionID string) (bool, error) {
+	_, err := dataBase.GetSubscription(subscriptionID)
+	if err == database.ErrNil {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
