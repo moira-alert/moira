@@ -28,16 +28,18 @@ type config struct {
 // API Config
 
 type apiConfig struct {
-	Enabled  string `yaml:"enabled"`
-	Listen   string `yaml:"listen"`
-	LogFile  string `yaml:"log_file"`
-	LogLevel string `yaml:"log_level"`
+	Enabled    string `yaml:"enabled"`
+	Listen     string `yaml:"listen"`
+	LogFile    string `yaml:"log_file"`
+	LogLevel   string `yaml:"log_level"`
+	EnableCORS string `yaml:"enable_cors"`
 }
 
 func (config *apiConfig) getSettings() *api.Config {
 	return &api.Config{
-		Enabled: cmd.ToBool(config.Enabled),
-		Listen:  config.Listen,
+		Enabled:    cmd.ToBool(config.Enabled),
+		Listen:     config.Listen,
+		EnableCORS: cmd.ToBool(config.EnableCORS),
 	}
 }
 

@@ -42,7 +42,7 @@ func (apiService *APIService) Start() error {
 		return err
 	}
 
-	httpHandler := handler.NewHandler(dataBase, logger)
+	httpHandler := handler.NewHandler(dataBase, logger, apiService.Config)
 	apiService.http = &http.Server{
 		Handler: httpHandler,
 	}
