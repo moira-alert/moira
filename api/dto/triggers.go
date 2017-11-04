@@ -84,6 +84,9 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 	if len(trigger.Targets) == 0 {
 		return fmt.Errorf("targets is required")
 	}
+	if len(trigger.Tags) == 0 {
+		return fmt.Errorf("tags is required")
+	}
 	if trigger.WarnValue == nil && trigger.Expression == "" {
 		return fmt.Errorf("warn_value is required")
 	}
