@@ -111,7 +111,7 @@ func RemoveContact(database moira.Database, contactID string, userLogin string) 
 }
 
 // SendTestContactNotification push test notification to verify the correct contact settings
-func SendTestContactNotification(dataBase moira.Database, contactID string, userLogin string) *api.ErrorResponse {
+func SendTestContactNotification(dataBase moira.Database, contactID string) *api.ErrorResponse {
 	var value float64 = 1
 	eventData := &moira.NotificationEvent{
 		ContactID: contactID,

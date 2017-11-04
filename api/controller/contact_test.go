@@ -279,19 +279,18 @@ func TestSendTestContactNotification(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-	userLogin := uuid.NewV4().String()
 	id := uuid.NewV4().String()
 
 	Convey("Success", t, func() {
 		dataBase.EXPECT().PushNotificationEvent(gomock.Any(), false).Return(nil)
-		err := SendTestContactNotification(dataBase, id, userLogin)
+		err := SendTestContactNotification(dataBase, id)
 		So(err, ShouldBeNil)
 	})
 
 	Convey("Error", t, func() {
 		expected := fmt.Errorf("Oooops! Can not push event")
 		dataBase.EXPECT().PushNotificationEvent(gomock.Any(), false).Return(expected)
-		err := SendTestContactNotification(dataBase, id, userLogin)
+		err := SendTestContactNotification(dataBase, id)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 	})
 }

@@ -15,6 +15,7 @@ func subscription(router chi.Router) {
 	router.Put("/", createSubscription)
 	router.Route("/{subscriptionId}", func(router chi.Router) {
 		router.Use(middleware.SubscriptionContext)
+		router.Use(subscriptionFilter)
 		router.Put("/", updateSubscription)
 		router.Delete("/", removeSubscription)
 		router.Put("/test", sendTestNotification)
@@ -52,6 +53,20 @@ func createSubscription(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
+// subscriptionFilter is middleware for check subscription existence and user permissions
+func subscriptionFilter(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		contactID := middleware.GetContactID(request)
+		userLogin := middleware.GetLogin(request)
+		err := controller.CheckUserPermissionsForSubscription(database, contactID, userLogin)
+		if err != nil {
+			render.Render(writer, request, err)
+			return
+		}
+		next.ServeHTTP(writer, request)
+	})
+}
+
 func updateSubscription(writer http.ResponseWriter, request *http.Request) {
 	subscription := &dto.Subscription{}
 	if err := render.Bind(request, subscription); err != nil {
@@ -60,10 +75,6 @@ func updateSubscription(writer http.ResponseWriter, request *http.Request) {
 	}
 	userLogin := middleware.GetLogin(request)
 	subscriptionID := middleware.GetSubscriptionID(request)
-	err := controller.CheckUserPermissionsForSubscription(database, subscriptionID, userLogin)
-	if err != nil {
-		render.Render(writer, request, err)
-	}
 
 	if err := controller.UpdateSubscription(database, subscriptionID, userLogin, subscription); err != nil {
 		render.Render(writer, request, err)
@@ -76,26 +87,14 @@ func updateSubscription(writer http.ResponseWriter, request *http.Request) {
 }
 
 func removeSubscription(writer http.ResponseWriter, request *http.Request) {
-	userLogin := middleware.GetLogin(request)
 	subscriptionID := middleware.GetSubscriptionID(request)
-	err := controller.CheckUserPermissionsForSubscription(database, subscriptionID, userLogin)
-	if err != nil {
-		render.Render(writer, request, err)
-	}
-
 	if err := controller.RemoveSubscription(database, subscriptionID); err != nil {
 		render.Render(writer, request, err)
 	}
 }
 
 func sendTestNotification(writer http.ResponseWriter, request *http.Request) {
-	userLogin := middleware.GetLogin(request)
 	subscriptionID := middleware.GetSubscriptionID(request)
-	err := controller.CheckUserPermissionsForSubscription(database, subscriptionID, userLogin)
-	if err != nil {
-		render.Render(writer, request, err)
-	}
-
 	if err := controller.SendTestNotification(database, subscriptionID); err != nil {
 		render.Render(writer, request, err)
 	}
