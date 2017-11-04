@@ -57,8 +57,8 @@ func CreateSubscription(dataBase moira.Database, userLogin string, subscription 
 }
 
 // UpdateSubscription updates existing subscription
-func UpdateSubscription(dataBase moira.Database, subscriptionId string, userLogin string, subscription *dto.Subscription) *api.ErrorResponse {
-	subscription.ID = subscriptionId
+func UpdateSubscription(dataBase moira.Database, subscriptionID string, userLogin string, subscription *dto.Subscription) *api.ErrorResponse {
+	subscription.ID = subscriptionID
 	subscription.User = userLogin
 	data := moira.SubscriptionData(*subscription)
 	if err := dataBase.SaveSubscription(&data); err != nil {
