@@ -95,18 +95,18 @@ func SendTestNotification(database moira.Database, subscriptionID string) *api.E
 }
 
 // CheckUserPermissionsForSubscription checks subscription for existence and permissions for given user
-func CheckUserPermissionsForSubscription(dataBase moira.Database, subscriptionID string, userLogin string) *api.ErrorResponse {
+func CheckUserPermissionsForSubscription(dataBase moira.Database, subscriptionID string, userLogin string) (moira.SubscriptionData, *api.ErrorResponse) {
 	subscription, err := dataBase.GetSubscription(subscriptionID)
 	if err != nil {
 		if err == database.ErrNil {
-			return api.ErrorNotFound(fmt.Sprintf("Subscription with ID '%s' does not exists", subscriptionID))
+			return subscription, api.ErrorNotFound(fmt.Sprintf("Subscription with ID '%s' does not exists", subscriptionID))
 		}
-		return api.ErrorInternalServer(err)
+		return subscription, api.ErrorInternalServer(err)
 	}
 	if subscription.User != userLogin {
-		return api.ErrorForbidden("You have not permissions")
+		return subscription, api.ErrorForbidden("You have not permissions")
 	}
-	return nil
+	return subscription, nil
 }
 
 func isSubscriptionExists(dataBase moira.Database, subscriptionID string) (bool, error) {

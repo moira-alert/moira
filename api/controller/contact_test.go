@@ -304,26 +304,31 @@ func TestCheckUserPermissionsForContact(t *testing.T) {
 
 	Convey("No contact", t, func() {
 		dataBase.EXPECT().GetContact(id).Return(moira.ContactData{}, database.ErrNil)
-		expected := CheckUserPermissionsForContact(dataBase, id, userLogin)
+		expectedContact, expected := CheckUserPermissionsForContact(dataBase, id, userLogin)
 		So(expected, ShouldResemble, api.ErrorNotFound(fmt.Sprintf("Contact with ID '%s' does not exists", id)))
+		So(expectedContact, ShouldResemble, moira.ContactData{})
 	})
 
 	Convey("Different user", t, func() {
 		dataBase.EXPECT().GetContact(id).Return(moira.ContactData{User: "diffUser"}, nil)
-		expected := CheckUserPermissionsForContact(dataBase, id, userLogin)
+		expectedContact, expected := CheckUserPermissionsForContact(dataBase, id, userLogin)
 		So(expected, ShouldResemble, api.ErrorForbidden("You have not permissions"))
+		So(expectedContact, ShouldResemble, moira.ContactData{User: "diffUser"})
 	})
 
 	Convey("Has contact", t, func() {
-		dataBase.EXPECT().GetContact(id).Return(moira.ContactData{User: userLogin}, nil)
-		expected := CheckUserPermissionsForContact(dataBase, id, userLogin)
+		actualContact := moira.ContactData{ID: id, User: userLogin}
+		dataBase.EXPECT().GetContact(id).Return(actualContact, nil)
+		expectedContact, expected := CheckUserPermissionsForContact(dataBase, id, userLogin)
 		So(expected, ShouldBeNil)
+		So(expectedContact, ShouldResemble, actualContact)
 	})
 
 	Convey("Error get contact", t, func() {
 		err := fmt.Errorf("Oooops! Can not read contact")
 		dataBase.EXPECT().GetContact(id).Return(moira.ContactData{User: userLogin}, err)
-		expected := CheckUserPermissionsForContact(dataBase, id, userLogin)
+		expectedContact, expected := CheckUserPermissionsForContact(dataBase, id, userLogin)
 		So(expected, ShouldResemble, api.ErrorInternalServer(err))
+		So(expectedContact, ShouldResemble, moira.ContactData{User: userLogin})
 	})
 }

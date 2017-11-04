@@ -198,26 +198,32 @@ func TestCheckUserPermissionsForSubscription(t *testing.T) {
 
 	Convey("No subscription", t, func() {
 		dataBase.EXPECT().GetSubscription(id).Return(moira.SubscriptionData{}, database.ErrNil)
-		expected := CheckUserPermissionsForSubscription(dataBase, id, userLogin)
+		expectedSub, expected := CheckUserPermissionsForSubscription(dataBase, id, userLogin)
 		So(expected, ShouldResemble, api.ErrorNotFound(fmt.Sprintf("Subscription with ID '%s' does not exists", id)))
+		So(expectedSub, ShouldResemble, moira.SubscriptionData{})
 	})
 
 	Convey("Different user", t, func() {
-		dataBase.EXPECT().GetSubscription(id).Return(moira.SubscriptionData{User: "diffUser"}, nil)
-		expected := CheckUserPermissionsForSubscription(dataBase, id, userLogin)
+		actualSub := moira.SubscriptionData{User: "diffUser"}
+		dataBase.EXPECT().GetSubscription(id).Return(actualSub, nil)
+		expectedSub, expected := CheckUserPermissionsForSubscription(dataBase, id, userLogin)
 		So(expected, ShouldResemble, api.ErrorForbidden("You have not permissions"))
+		So(expectedSub, ShouldResemble, actualSub)
 	})
 
 	Convey("Has subscription", t, func() {
-		dataBase.EXPECT().GetSubscription(id).Return(moira.SubscriptionData{User: userLogin}, nil)
-		expected := CheckUserPermissionsForSubscription(dataBase, id, userLogin)
+		actualSub := moira.SubscriptionData{ID: id, User: userLogin}
+		dataBase.EXPECT().GetSubscription(id).Return(actualSub, nil)
+		expectedSub, expected := CheckUserPermissionsForSubscription(dataBase, id, userLogin)
 		So(expected, ShouldBeNil)
+		So(expectedSub, ShouldResemble, actualSub)
 	})
 
 	Convey("Error get contact", t, func() {
 		err := fmt.Errorf("Oooops! Can not read contact")
-		dataBase.EXPECT().GetSubscription(id).Return(moira.SubscriptionData{User: userLogin}, err)
-		expected := CheckUserPermissionsForSubscription(dataBase, id, userLogin)
+		dataBase.EXPECT().GetSubscription(id).Return(moira.SubscriptionData{}, err)
+		expectedSub, expected := CheckUserPermissionsForSubscription(dataBase, id, userLogin)
 		So(expected, ShouldResemble, api.ErrorInternalServer(err))
+		So(expectedSub, ShouldResemble, moira.SubscriptionData{})
 	})
 }

@@ -128,18 +128,18 @@ func SendTestContactNotification(dataBase moira.Database, contactID string) *api
 }
 
 // CheckUserPermissionsForContact checks contact for existence and permissions for given user
-func CheckUserPermissionsForContact(dataBase moira.Database, contactID string, userLogin string) *api.ErrorResponse {
+func CheckUserPermissionsForContact(dataBase moira.Database, contactID string, userLogin string) (moira.ContactData, *api.ErrorResponse) {
 	contactData, err := dataBase.GetContact(contactID)
 	if err != nil {
 		if err == database.ErrNil {
-			return api.ErrorNotFound(fmt.Sprintf("Contact with ID '%s' does not exists", contactID))
+			return contactData, api.ErrorNotFound(fmt.Sprintf("Contact with ID '%s' does not exists", contactID))
 		}
-		return api.ErrorInternalServer(err)
+		return contactData, api.ErrorInternalServer(err)
 	}
 	if contactData.User != userLogin {
-		return api.ErrorForbidden("You have not permissions")
+		return contactData, api.ErrorForbidden("You have not permissions")
 	}
-	return nil
+	return contactData, nil
 }
 
 func isContactExists(dataBase moira.Database, contactID string) (bool, error) {

@@ -61,7 +61,7 @@ func contactFilter(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		contactID := middleware.GetContactID(request)
 		userLogin := middleware.GetLogin(request)
-		err := controller.CheckUserPermissionsForContact(database, contactID, userLogin)
+		_, err := controller.CheckUserPermissionsForContact(database, contactID, userLogin)
 		if err != nil {
 			render.Render(writer, request, err)
 			return
