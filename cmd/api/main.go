@@ -55,6 +55,8 @@ func main() {
 		os.Exit(1)
 	}
 
+	apiConfig := config.API.getSettings()
+
 	logger, err := logging.ConfigureLog(config.Logger.LogFile, config.Logger.LogLevel, serviceName)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Can not configure log: %s\n", err.Error())
@@ -64,14 +66,14 @@ func main() {
 	databaseSettings := config.Redis.GetSettings()
 	database := redis.NewDatabase(logger, databaseSettings)
 
-	listener, err := net.Listen("tcp", config.API.Listen)
+	listener, err := net.Listen("tcp", apiConfig.Listen)
 	if err != nil {
 		logger.Fatal(err)
 	}
 
-	logger.Infof("Start listening by address: [%s]", config.API.Listen)
+	logger.Infof("Start listening by address: [%s]", apiConfig.Listen)
 
-	httpHandler := handler.NewHandler(database, logger)
+	httpHandler := handler.NewHandler(database, logger, apiConfig)
 	server := &http.Server{
 		Handler: httpHandler,
 	}

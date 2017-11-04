@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/cmd"
 )
 
@@ -11,7 +12,15 @@ type config struct {
 }
 
 type apiConfig struct {
-	Listen string `yaml:"listen"`
+	Listen     string `yaml:"listen"`
+	EnableCORS string `yaml:"enable_cors"`
+}
+
+func (config *apiConfig) getSettings() *api.Config {
+	return &api.Config{
+		Listen:     config.Listen,
+		EnableCORS: cmd.ToBool(config.EnableCORS),
+	}
 }
 
 func getDefault() config {
@@ -24,8 +33,9 @@ func getDefault() config {
 			LogFile:  "stdout",
 			LogLevel: "debug",
 		},
-		API: apiConfig {
-			Listen: ":8081",
+		API: apiConfig{
+			Listen:     ":8081",
+			EnableCORS: "true",
 		},
 	}
 }
