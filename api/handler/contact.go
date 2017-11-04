@@ -1,11 +1,13 @@
 package handler
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 
+	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/controller"
 	"github.com/moira-alert/moira/api/dto"
@@ -61,40 +63,37 @@ func contactFilter(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		contactID := middleware.GetContactID(request)
 		userLogin := middleware.GetLogin(request)
-		_, err := controller.CheckUserPermissionsForContact(database, contactID, userLogin)
+		contactData, err := controller.CheckUserPermissionsForContact(database, contactID, userLogin)
 		if err != nil {
 			render.Render(writer, request, err)
 			return
 		}
-		next.ServeHTTP(writer, request)
+		ctx := context.WithValue(request.Context(), contactKey, contactData)
+		next.ServeHTTP(writer, request.WithContext(ctx))
 	})
 }
 
 func updateContact(writer http.ResponseWriter, request *http.Request) {
-	contact := &dto.Contact{}
-	if err := render.Bind(request, contact); err != nil {
+	contactDTO := dto.Contact{}
+	if err := render.Bind(request, &contactDTO); err != nil {
 		render.Render(writer, request, api.ErrorInvalidRequest(err))
 		return
 	}
-	contactID := middleware.GetContactID(request)
-	userLogin := middleware.GetLogin(request)
+	contactData := request.Context().Value(contactKey).(moira.ContactData)
 
-	if err := controller.UpdateContact(database, contact, contactID, userLogin); err != nil {
+	contactDTO, err := controller.UpdateContact(database, contactDTO, contactData)
+	if err != nil {
 		render.Render(writer, request, err)
 		return
 	}
-
-	if err := render.Render(writer, request, contact); err != nil {
+	if err := render.Render(writer, request, &contactDTO); err != nil {
 		render.Render(writer, request, api.ErrorRender(err))
-		return
 	}
 }
 
 func removeContact(writer http.ResponseWriter, request *http.Request) {
-	contactID := middleware.GetContactID(request)
-	userLogin := middleware.GetLogin(request)
-
-	err := controller.RemoveContact(database, contactID, userLogin)
+	contactData := request.Context().Value(contactKey).(moira.ContactData)
+	err := controller.RemoveContact(database, contactData.ID, contactData.User)
 	if err != nil {
 		render.Render(writer, request, err)
 	}

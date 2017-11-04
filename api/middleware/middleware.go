@@ -6,24 +6,25 @@ import (
 	"net/http"
 )
 
-type contextKey string
+// ContextKey used as key of api request context values
+type ContextKey string
 
-func (key contextKey) String() string {
+func (key ContextKey) String() string {
 	return "api context key " + string(key)
 }
 
 var (
-	databaseKey        contextKey = "database"
-	triggerIDKey       contextKey = "triggerID"
-	contactIDKey       contextKey = "contactID"
-	tagKey             contextKey = "tag"
-	subscriptionIDKey  contextKey = "subscriptionID"
-	pageKey            contextKey = "page"
-	sizeKey            contextKey = "size"
-	fromKey            contextKey = "from"
-	toKey              contextKey = "to"
-	loginKey           contextKey = "login"
-	timeSeriesNamesKey contextKey = "timeSeriesNames"
+	databaseKey        ContextKey = "database"
+	triggerIDKey       ContextKey = "triggerID"
+	contactIDKey       ContextKey = "contactID"
+	tagKey             ContextKey = "tag"
+	subscriptionIDKey  ContextKey = "subscriptionID"
+	pageKey            ContextKey = "page"
+	sizeKey            ContextKey = "size"
+	fromKey            ContextKey = "from"
+	toKey              ContextKey = "to"
+	loginKey           ContextKey = "login"
+	timeSeriesNamesKey ContextKey = "timeSeriesNames"
 )
 
 // GetDatabase gets moira.Database realization from request context

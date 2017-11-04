@@ -132,7 +132,7 @@ func TestUpdateContact(t *testing.T) {
 	userLogin := "user"
 
 	Convey("Success update", t, func() {
-		contactDTO := &dto.Contact{
+		contactDTO := dto.Contact{
 			Value: "some@mail.com",
 			Type:  "mail",
 		}
@@ -143,39 +143,15 @@ func TestUpdateContact(t *testing.T) {
 			ID:    contactID,
 			User:  userLogin,
 		}
-		dataBase.EXPECT().GetContact(contactID).Return(contact, nil)
 		dataBase.EXPECT().SaveContact(&contact).Return(nil)
-		err := UpdateContact(dataBase, contactDTO, contactID, userLogin)
+		expectedContact, err := UpdateContact(dataBase, contactDTO, moira.ContactData{ID: contactID, User: userLogin})
 		So(err, ShouldBeNil)
-		So(contactDTO.User, ShouldResemble, userLogin)
-		So(contactDTO.ID, ShouldResemble, contactID)
-	})
-
-	Convey("Contact not found", t, func() {
-		contactDTO := &dto.Contact{
-			Value: "some@mail.com",
-			Type:  "mail",
-		}
-		contactID := uuid.NewV4().String()
-		dataBase.EXPECT().GetContact(contactID).Return(moira.ContactData{}, database.ErrNil)
-		err := UpdateContact(dataBase, contactDTO, contactID, userLogin)
-		So(err, ShouldResemble, api.ErrorNotFound(fmt.Sprintf("Contact with ID '%s' does not exists", contactID)))
-	})
-
-	Convey("Error get contact", t, func() {
-		contactDTO := &dto.Contact{
-			Value: "some@mail.com",
-			Type:  "mail",
-		}
-		contactID := uuid.NewV4().String()
-		err := fmt.Errorf("Oooops")
-		dataBase.EXPECT().GetContact(contactID).Return(moira.ContactData{}, err)
-		actual := UpdateContact(dataBase, contactDTO, contactID, userLogin)
-		So(actual, ShouldResemble, api.ErrorInternalServer(err))
+		So(expectedContact.User, ShouldResemble, userLogin)
+		So(expectedContact.ID, ShouldResemble, contactID)
 	})
 
 	Convey("Error save", t, func() {
-		contactDTO := &dto.Contact{
+		contactDTO := dto.Contact{
 			Value: "some@mail.com",
 			Type:  "mail",
 		}
@@ -187,12 +163,11 @@ func TestUpdateContact(t *testing.T) {
 			User:  userLogin,
 		}
 		err := fmt.Errorf("Oooops")
-		dataBase.EXPECT().GetContact(contactID).Return(contact, nil)
 		dataBase.EXPECT().SaveContact(&contact).Return(err)
-		actual := UpdateContact(dataBase, contactDTO, contactID, userLogin)
+		exprectedContact, actual := UpdateContact(dataBase, contactDTO, contact)
 		So(actual, ShouldResemble, api.ErrorInternalServer(err))
-		So(contactDTO.User, ShouldResemble, userLogin)
-		So(contactDTO.ID, ShouldResemble, contactID)
+		So(exprectedContact.User, ShouldResemble, contactDTO.User)
+		So(exprectedContact.ID, ShouldResemble, contactDTO.ID)
 	})
 }
 

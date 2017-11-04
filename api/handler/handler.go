@@ -1,17 +1,22 @@
 package handler
 
 import (
+	"net/http"
+
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
+	"github.com/rs/cors"
+
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	moira_middle "github.com/moira-alert/moira/api/middleware"
-	"github.com/rs/cors"
-	"net/http"
 )
 
 var database moira.Database
+
+const contactKey moira_middle.ContextKey = "contact"
+const subscriptionKey moira_middle.ContextKey = "subscription"
 
 // NewHandler creates new api handler request uris based on github.com/go-chi/chi
 func NewHandler(db moira.Database, log moira.Logger) http.Handler {

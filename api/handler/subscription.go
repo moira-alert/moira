@@ -1,13 +1,17 @@
 package handler
 
 import (
+	"context"
+	"net/http"
+
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
+
+	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/controller"
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/api/middleware"
-	"net/http"
 )
 
 func subscription(router chi.Router) {
@@ -56,14 +60,15 @@ func createSubscription(writer http.ResponseWriter, request *http.Request) {
 // subscriptionFilter is middleware for check subscription existence and user permissions
 func subscriptionFilter(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		contactID := middleware.GetContactID(request)
+		contactID := middleware.GetSubscriptionID(request)
 		userLogin := middleware.GetLogin(request)
-		_, err := controller.CheckUserPermissionsForSubscription(database, contactID, userLogin)
+		subscriptionData, err := controller.CheckUserPermissionsForSubscription(database, contactID, userLogin)
 		if err != nil {
 			render.Render(writer, request, err)
 			return
 		}
-		next.ServeHTTP(writer, request)
+		ctx := context.WithValue(request.Context(), subscriptionKey, subscriptionData)
+		next.ServeHTTP(writer, request.WithContext(ctx))
 	})
 }
 
@@ -73,10 +78,9 @@ func updateSubscription(writer http.ResponseWriter, request *http.Request) {
 		render.Render(writer, request, api.ErrorInvalidRequest(err))
 		return
 	}
-	userLogin := middleware.GetLogin(request)
-	subscriptionID := middleware.GetSubscriptionID(request)
+	subscriptionData := request.Context().Value(subscriptionKey).(moira.SubscriptionData)
 
-	if err := controller.UpdateSubscription(database, subscriptionID, userLogin, subscription); err != nil {
+	if err := controller.UpdateSubscription(database, subscriptionData.ID, subscriptionData.User, subscription); err != nil {
 		render.Render(writer, request, err)
 		return
 	}
