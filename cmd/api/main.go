@@ -87,6 +87,7 @@ func main() {
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 	logger.Info(fmt.Sprint(<-ch))
+	logger.Infof("Moira API shutting down.")
 }
 
 // Stop Moira API HTTP server

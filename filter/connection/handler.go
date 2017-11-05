@@ -4,8 +4,7 @@ import (
 	"bufio"
 	"io"
 	"net"
-
-	"gopkg.in/tomb.v2"
+	"sync"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/filter"
@@ -15,38 +14,58 @@ import (
 type Handler struct {
 	logger          moira.Logger
 	patternsStorage *filter.PatternStorage
-	tomb            tomb.Tomb
+	wg              sync.WaitGroup
+	terminate       chan bool
 }
 
-// NewConnectionHandler creates new Handler
-func NewConnectionHandler(logger moira.Logger, patternsStorage *filter.PatternStorage) *Handler {
+// NewConnectionsHandler creates new Handler
+func NewConnectionsHandler(logger moira.Logger, patternsStorage *filter.PatternStorage) *Handler {
 	return &Handler{
 		logger:          logger,
 		patternsStorage: patternsStorage,
+		terminate:       make(chan bool, 1),
 	}
 }
 
 // HandleConnection convert every line from connection to metric and send it to MatchedMetric channel
-func (handler *Handler) HandleConnection(connection net.Conn, matchedMetricsChan chan *moira.MatchedMetric) error {
+func (handler *Handler) HandleConnection(connection net.Conn, matchedMetricsChan chan *moira.MatchedMetric) {
+	handler.wg.Add(1)
+	go func() {
+		defer handler.wg.Done()
+		handler.handle(connection, matchedMetricsChan)
+	}()
+}
+
+func (handler *Handler) handle(connection net.Conn, matchedMetricsChan chan *moira.MatchedMetric) {
 	buffer := bufio.NewReader(connection)
-	defer connection.Close()
+
+	go func(conn net.Conn) {
+		<-handler.terminate
+		conn.Close()
+	}(connection)
+
 	for {
-		select {
-		case <-handler.tomb.Dying():
+		lineBytes, err := buffer.ReadBytes('\n')
+		if err != nil {
 			connection.Close()
-			return nil
-		default:
-			lineBytes, err := buffer.ReadBytes('\n')
-			if err != nil {
-				if err != io.EOF {
-					handler.logger.Errorf("read failed: %s", err)
-				}
-				return nil
+			if err != io.EOF {
+				handler.logger.Errorf("read failed: %s", err)
 			}
-			lineBytes = lineBytes[:len(lineBytes)-1]
-			if m := handler.patternsStorage.ProcessIncomingMetric(lineBytes); m != nil {
-				matchedMetricsChan <- m
-			}
+			break
 		}
+		lineBytes = lineBytes[:len(lineBytes)-1]
+		handler.wg.Add(1)
+		go func(ch chan *moira.MatchedMetric) {
+			defer handler.wg.Done()
+			if m := handler.patternsStorage.ProcessIncomingMetric(lineBytes); m != nil {
+				ch <- m
+			}
+		}(matchedMetricsChan)
 	}
+}
+
+// StopHandlingConnections closes all open connections and wait for handling ramaining metrics
+func (handler *Handler) StopHandlingConnections() {
+	close(handler.terminate)
+	handler.wg.Wait()
 }

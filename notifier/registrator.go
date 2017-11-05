@@ -18,7 +18,6 @@ import (
 // RegisterSenders watch on senders config and register all configured senders
 func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) error {
 	for _, senderSettings := range notifier.config.Senders {
-		notifier.logger.Infof("Registering sender %s", senderSettings["type"])
 		senderSettings["front_uri"] = notifier.config.FrontURL
 		switch senderSettings["type"] {
 		case "pushover":
