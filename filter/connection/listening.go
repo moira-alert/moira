@@ -3,6 +3,7 @@ package connection
 import (
 	"fmt"
 	"net"
+	"time"
 
 	"gopkg.in/tomb.v2"
 
@@ -12,7 +13,7 @@ import (
 
 // MetricsListener is facade for standard net.MetricsListener and accept connection for handling it
 type MetricsListener struct {
-	listener net.Listener
+	listener *net.TCPListener
 	handler  *Handler
 	logger   moira.Logger
 	tomb     tomb.Tomb
@@ -20,10 +21,13 @@ type MetricsListener struct {
 
 // NewListener creates new listener
 func NewListener(port string, logger moira.Logger, patternStorage *filter.PatternStorage) (*MetricsListener, error) {
-	listen := port
-	newListener, err := net.Listen("tcp", listen)
+	address, err := net.ResolveTCPAddr("tcp", port)
+	if nil != err {
+		return nil, fmt.Errorf("Failed to resolve tcp address [%s]: %s", port, err.Error())
+	}
+	newListener, err := net.ListenTCP("tcp", address)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to listen on [%s]: %s", listen, err.Error())
+		return nil, fmt.Errorf("Failed to listen on [%s]: %s", port, err.Error())
 	}
 	listener := MetricsListener{
 		listener: newListener,
@@ -42,24 +46,26 @@ func (listener *MetricsListener) Listen() chan *moira.MatchedMetric {
 			select {
 			case <-listener.tomb.Dying():
 				{
-					listener.logger.Info("Moira Filter Listener Stopped")
-					listener.handler.tomb.Kill(nil)
-					listener.handler.tomb.Wait()
+					listener.logger.Info("Stopping listener...")
+					listener.listener.Close()
+					listener.handler.StopHandlingConnections()
 					close(metricsChan)
+					listener.logger.Info("Moira Filter Listener Stopped")
 					return nil
 				}
 			default:
-				{
-					conn, err := listener.listener.Accept()
-					if err != nil {
-						listener.logger.Infof("Failed to accept connection: %s", err.Error())
-						continue
-					}
-					listener.handler.tomb.Go(func() error {
-						return listener.handler.HandleConnection(conn, metricsChan)
-					})
-				}
 			}
+			listener.listener.SetDeadline(time.Now().Add(1e9))
+			conn, err := listener.listener.Accept()
+			if nil != err {
+				if opErr, ok := err.(*net.OpError); ok && opErr.Timeout() {
+					continue
+				}
+				listener.logger.Infof("Failed to accept connection: %s", err.Error())
+				continue
+			}
+			listener.logger.Infof("%s connected", conn.RemoteAddr())
+			listener.handler.HandleConnection(conn, metricsChan)
 		}
 	})
 	listener.logger.Info("Moira Filter Listener Started")
