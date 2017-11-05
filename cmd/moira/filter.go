@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"sync"
 
 	"github.com/moira-alert/moira/database/redis"
 	"github.com/moira-alert/moira/filter"
@@ -24,7 +23,7 @@ type FilterService struct {
 	LogLevel string
 
 	listener             *connection.MetricsListener
-	matcherWG            *sync.WaitGroup
+	metricsMather        *matchedmetrics.MetricsMatcher
 	refreshPatternWorker *patterns.RefreshPatternWorker
 	heartbeatWorker      *heartbeat.Worker
 }
@@ -74,7 +73,7 @@ func (filterService *FilterService) Start() error {
 	metricsMatcher := matchedmetrics.NewMetricsMatcher(cacheMetrics, logger, dataBase, cacheStorage)
 
 	metricsChan := filterService.listener.Listen()
-	metricsMatcher.Start(metricsChan, filterService.matcherWG)
+	metricsMatcher.Start(metricsChan)
 	return nil
 }
 
@@ -83,7 +82,7 @@ func (filterService *FilterService) Stop() error {
 	if err := filterService.listener.Stop(); err != nil {
 		return err
 	}
-	filterService.matcherWG.Wait()
+	filterService.metricsMather.Wait()
 	if err := filterService.refreshPatternWorker.Stop(); err != nil {
 		return err
 	}

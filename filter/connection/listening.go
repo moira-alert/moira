@@ -50,7 +50,7 @@ func (listener *MetricsListener) Listen() chan *moira.MatchedMetric {
 					listener.listener.Close()
 					listener.handler.StopHandlingConnections()
 					close(metricsChan)
-					listener.logger.Info("Moira Filter Listener Stopped")
+					listener.logger.Info("Moira Filter Listener stopped")
 					return nil
 				}
 			default:

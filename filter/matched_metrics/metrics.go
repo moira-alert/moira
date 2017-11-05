@@ -1,11 +1,12 @@
 package matchedmetrics
 
 import (
+	"sync"
+	"time"
+
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/filter"
 	"github.com/moira-alert/moira/metrics/graphite"
-	"sync"
-	"time"
 )
 
 // MetricsMatcher make buffer of metrics and save it
@@ -14,6 +15,7 @@ type MetricsMatcher struct {
 	metrics      *graphite.FilterMetrics
 	database     moira.Database
 	cacheStorage *filter.Storage
+	waitGroup    *sync.WaitGroup
 }
 
 // NewMetricsMatcher creates new MetricsMatcher
@@ -23,19 +25,21 @@ func NewMetricsMatcher(metrics *graphite.FilterMetrics, logger moira.Logger, dat
 		logger:       logger,
 		database:     database,
 		cacheStorage: cacheStorage,
+		waitGroup:    &sync.WaitGroup{},
 	}
 }
 
 // Start process matched metrics from channel and save it in cache storage
-func (matcher *MetricsMatcher) Start(channel chan *moira.MatchedMetric, wg *sync.WaitGroup) {
+func (matcher *MetricsMatcher) Start(channel chan *moira.MatchedMetric) {
+	matcher.waitGroup.Add(1)
 	go func() {
-		defer wg.Done()
+		defer matcher.waitGroup.Done()
 		buffer := make(map[string]*moira.MatchedMetric)
 		for {
 			select {
 			case metric, ok := <-channel:
 				if !ok {
-					matcher.logger.Info("Channel was closed, stop Metrics Matcher")
+					matcher.logger.Info("Moira Filter Metrics Matcher stopped")
 					return
 				}
 				matcher.cacheStorage.EnrichMatchedMetric(buffer, metric)
@@ -54,6 +58,11 @@ func (matcher *MetricsMatcher) Start(channel chan *moira.MatchedMetric, wg *sync
 		}
 	}()
 	matcher.logger.Info("Moira Filter Metrics Matcher started")
+}
+
+// Wait waits for metric matcher instance will stop
+func (matcher *MetricsMatcher) Wait() {
+	matcher.waitGroup.Wait()
 }
 
 func (matcher *MetricsMatcher) save(buffer map[string]*moira.MatchedMetric) {

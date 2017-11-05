@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
 
 	"github.com/moira-alert/moira"
@@ -110,10 +109,9 @@ func main() {
 	metricsChan := listener.Listen()
 
 	// Start metrics matcher
-	var matcherWG sync.WaitGroup
 	metricsMatcher := matchedmetrics.NewMetricsMatcher(cacheMetrics, logger, database, cacheStorage)
-	metricsMatcher.Start(metricsChan, &matcherWG)
-	defer matcherWG.Wait()       // First stop listener
+	metricsMatcher.Start(metricsChan)
+	defer metricsMatcher.Wait()  // First stop listener
 	defer stopListener(listener) // Then waiting for metrics matcher handle all received events
 
 	logger.Infof("Moira Filter started. Version: %s", MoiraVersion)
