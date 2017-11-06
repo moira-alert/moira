@@ -3,7 +3,6 @@ GIT_TAG := $(shell git describe --always --tags --abbrev=0 | tail -c+2)
 GIT_COMMIT := $(shell git rev-list v${GIT_TAG}..HEAD --count)
 GO_VERSION := $(shell go version | cut -d' ' -f3)
 VERSION := ${GIT_TAG}.${GIT_COMMIT}
-RELEASE := 1
 VENDOR := "SKB Kontur"
 URL := "https://github.com/moira-alert"
 LICENSE := "GPLv3"
@@ -26,7 +25,7 @@ test: prepare
 
 build:
 	for service in "filter" "notifier" "api" "checker" "cli" ; do \
-		CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-X main.Version=${VERSION}-${RELEASE} -X main.GoVersion=${GO_VERSION} -X main.GitHash=${GIT_HASH}" -o build/$$service github.com/moira-alert/moira/cmd/$$service ; \
+		CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-X main.Version=${VERSION} -X main.GoVersion=${GO_VERSION} -X main.GitHash=${GIT_HASH}" -o build/$$service github.com/moira-alert/moira/cmd/$$service ; \
 	done
 
 clean:
@@ -41,7 +40,7 @@ tar:
 		cp pkg/$$service/moira-$$service.service build/root/$$service/usr/lib/systemd/system/moira-$$service.service ; \
 		cp pkg/storage-schemas.conf build/root/$$service/etc/moira/storage-schemas.conf ; \
 		cp pkg/$$service/$$service.yml build/root/$$service/etc/moira/$$service.yml ; \
-		tar -czvPf build/moira-$$service-${VERSION}-${RELEASE}.tar.gz -C build/root/$$service . ; \
+		tar -czvPf build/moira-$$service-${VERSION}.tar.gz -C build/root/$$service . ; \
 	done
 
 rpm: tar
@@ -54,12 +53,12 @@ rpm: tar
 			--license ${LICENSE} \
 			--name "moira-$$service" \
 			--version "${VERSION}" \
-			--iteration "${RELEASE}" \
+			--iteration "1" \
 			--config-files "/etc/moira/$$service.yml" \
 			--config-files "/etc/moira/storage-schemas.conf" \
 			--after-install "./pkg/$$service/postinst" \
 			-p build \
-			build/moira-$$service-${VERSION}-${RELEASE}.tar.gz ; \
+			build/moira-$$service-${VERSION}.tar.gz ; \
 	done
 
 deb: tar
@@ -72,12 +71,12 @@ deb: tar
 			--license ${LICENSE} \
 			--name "moira-$$service" \
 			--version "${VERSION}" \
-			--iteration "${RELEASE}" \
+			--iteration "1" \
 			--config-files "/etc/moira/$$service.yml" \
 			--config-files "/etc/moira/storage-schemas.conf" \
 			--after-install "./pkg/$$service/postinst" \
 			-p build \
-			build/moira-$$service-${VERSION}-${RELEASE}.tar.gz ; \
+			build/moira-$$service-${VERSION}.tar.gz ; \
 	done
 
 packages: clean build tar rpm deb
