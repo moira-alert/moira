@@ -26,7 +26,7 @@ test: prepare
 	echo 'mode: atomic' > coverage.txt && go list ./... | grep -v "/vendor/" | xargs -n1 -I{} sh -c 'go test -v -bench=. -covermode=atomic -coverprofile=coverage.tmp {} && tail -n +2 coverage.tmp >> coverage.txt' && rm coverage.tmp
 
 build:
-	for service in "filter" "notifier" "api" "checker" "moira-cli" ; do \
+	for service in "filter" "notifier" "api" "checker" "cli" ; do \
 		CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-X main.Version=${VERSION}-${RELEASE} -X main.GoVersion=${GO_VERSION} -X main.GitHash=${GIT_HASH}" -o build/$$service github.com/moira-alert/moira/cmd/$$service ; \
 	done
 
@@ -34,7 +34,7 @@ clean:
 	rm -rf build
 
 tar:
-	for service in "filter" "notifier" "api" "checker" "moira-cli" ; do \
+	for service in "filter" "notifier" "api" "checker" "cli" ; do \
 		mkdir -p build/root/$$service/usr/bin ; \
 		mkdir -p build/root/$$service/usr/lib/systemd/system ; \
 		mkdir -p build/root/$$service/etc/moira ; \
@@ -46,7 +46,7 @@ tar:
 	done
 
 rpm: tar
-	for service in "filter" "notifier" "api" "checker" "moira-cli" ; do \
+	for service in "filter" "notifier" "api" "checker" "cli" ; do \
 		fpm -t rpm \
 			-s "tar" \
 			--description "Moira $$service" \
@@ -64,7 +64,7 @@ rpm: tar
 	done
 
 deb: tar
-	for service in "filter" "notifier" "api" "checker" "moira-cli" ; do \
+	for service in "filter" "notifier" "api" "checker" "cli" ; do \
 		fpm -t deb \
 			-s "tar" \
 			--description "Moira $$service" \
