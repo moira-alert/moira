@@ -1,9 +1,10 @@
 package worker
 
 import (
-	"github.com/moira-alert/moira"
 	"sync"
 	"time"
+
+	"github.com/moira-alert/moira"
 )
 
 func (worker *Checker) metricsChecker(metricEventsChannel <-chan *moira.MetricEvent) error {
@@ -15,15 +16,9 @@ func (worker *Checker) metricsChecker(metricEventsChannel <-chan *moira.MetricEv
 			worker.Logger.Info("Checking for new event stopped")
 			return nil
 		}
-		handleWaitGroup.Add(1)
-		go worker.startCheckNewMetricEvent(metricEvent, &handleWaitGroup)
-	}
-}
-
-func (worker *Checker) startCheckNewMetricEvent(metricEvent *moira.MetricEvent, handleWG *sync.WaitGroup) {
-	defer handleWG.Done()
-	if err := worker.handleMetricEvent(metricEvent); err != nil {
-		worker.Logger.Errorf("Failed to handle metricEvent: %s", err.Error())
+		if err := worker.handleMetricEvent(metricEvent); err != nil {
+			worker.Logger.Errorf("Failed to handle metricEvent: %s", err.Error())
+		}
 	}
 }
 

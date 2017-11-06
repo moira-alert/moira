@@ -9,14 +9,9 @@ import (
 
 func (worker *Checker) perform(triggerIDs []string, noCache bool, cacheTTL time.Duration, wg *sync.WaitGroup) {
 	if noCache {
-		for _, id := range triggerIDs {
+		for _, triggerID := range triggerIDs {
 			wg.Add(1)
-			go func(triggerID string) {
-				defer wg.Done()
-				if err := worker.handleTriggerToCheck(triggerID); err != nil {
-					worker.Logger.Errorf("Failed to perform trigger: %s error: %s", triggerID, err.Error())
-				}
-			}(id)
+			go worker.handle(triggerID, wg)
 		}
 	} else {
 		for _, triggerID := range triggerIDs {
@@ -34,12 +29,12 @@ func (worker *Checker) needHandleTrigger(triggerID string, cacheTTL time.Duratio
 }
 
 func (worker *Checker) handle(triggerID string, wg *sync.WaitGroup) {
+	defer wg.Done()
 	defer func() {
 		if r := recover(); r != nil {
 			worker.Metrics.HandleError.Mark(1)
 			worker.Logger.Errorf("Panic while perform trigger %s: message: '%s' stack: %s", triggerID, r, debug.Stack())
 		}
-		defer wg.Done()
 	}()
 	if err := worker.handleTriggerToCheck(triggerID); err != nil {
 		worker.Metrics.HandleError.Mark(1)
