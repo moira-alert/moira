@@ -26,64 +26,60 @@ test: prepare
 	echo 'mode: atomic' > coverage.txt && go list ./... | grep -v "/vendor/" | xargs -n1 -I{} sh -c 'go test -v -bench=. -covermode=atomic -coverprofile=coverage.tmp {} && tail -n +2 coverage.tmp >> coverage.txt' && rm coverage.tmp
 
 build:
-	CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-X main.Version=${VERSION}-${RELEASE} -X main.GoVersion=${GO_VERSION} -X main.GitHash=${GIT_HASH}" -o build/moira github.com/moira-alert/moira/cmd/moira
-	CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-X main.Version=${VERSION}-${RELEASE} -X main.GoVersion=${GO_VERSION} -X main.GitHash=${GIT_HASH}" -o build/filter github.com/moira-alert/moira/cmd/filter
-	CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-X main.Version=${VERSION}-${RELEASE} -X main.GoVersion=${GO_VERSION} -X main.GitHash=${GIT_HASH}" -o build/notifier github.com/moira-alert/moira/cmd/notifier
-	CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-X main.Version=${VERSION}-${RELEASE} -X main.GoVersion=${GO_VERSION} -X main.GitHash=${GIT_HASH}" -o build/api github.com/moira-alert/moira/cmd/api
-	CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-X main.Version=${VERSION}-${RELEASE} -X main.GoVersion=${GO_VERSION} -X main.GitHash=${GIT_HASH}" -o build/checker github.com/moira-alert/moira/cmd/checker
-	CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-X main.Version=${VERSION}-${RELEASE} -X main.GoVersion=${GO_VERSION} -X main.GitHash=${GIT_HASH}" -o build/moira-cli github.com/moira-alert/moira/cmd/moira-cli
+	for service in "filter" "notifier" "api" "checker" "moira-cli" ; do \
+		CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-X main.Version=${VERSION}-${RELEASE} -X main.GoVersion=${GO_VERSION} -X main.GitHash=${GIT_HASH}" -o build/$$service github.com/moira-alert/moira/cmd/$$service ; \
+	done
 
 clean:
 	rm -rf build
 
 tar:
-	mkdir -p build/root/usr/bin
-	mkdir -p build/root/usr/lib/systemd/system
-	mkdir -p build/root/etc/logrotate.d
-	mkdir -p build/root/etc/moira
-
-	cp build/moira build/root/usr/bin/
-	cp pkg/moira.service build/root/usr/lib/systemd/system/moira.service
-	cp pkg/logrotate build/root/etc/logrotate.d/moira
-
-	cp pkg/storage-schemas.conf build/root/etc/moira/storage-schemas.conf
-	cp pkg/moira.yml build/root/etc/moira/moira.yml
-
-	tar -czvPf build/moira-${VERSION}-${RELEASE}.tar.gz -C build/root .
+	for service in "filter" "notifier" "api" "checker" "moira-cli" ; do \
+		mkdir -p build/root/$$service/usr/bin ; \
+		mkdir -p build/root/$$service/usr/lib/systemd/system ; \
+		mkdir -p build/root/$$service/etc/moira ; \
+		cp build/$$service build/root/$$service/usr/bin/moira-$$service ; \
+		cp pkg/$$service/moira-$$service.service build/root/$$service/usr/lib/systemd/system/moira-$$service.service ; \
+		cp pkg/storage-schemas.conf build/root/$$service/etc/moira/storage-schemas.conf ; \
+		cp pkg/$$service/$$service.yml build/root/$$service/etc/moira/$$service.yml ; \
+		tar -czvPf build/moira-$$service-${VERSION}-${RELEASE}.tar.gz -C build/root/$$service . ; \
+	done
 
 rpm: tar
-	fpm -t rpm \
-		-s "tar" \
-		--description "Moira" \
-		--vendor ${VENDOR} \
-		--url ${URL} \
-		--license ${LICENSE} \
-		--name "moira" \
-		--version "${VERSION}" \
-		--iteration "${RELEASE}" \
-		--config-files "/etc/moira/moira.yml" \
-		--config-files "/etc/moira/storage-schemas.conf" \
-		--after-install "./pkg/postinst" \
-		--depends logrotate \
-		-p build \
-		build/moira-${VERSION}-${RELEASE}.tar.gz
+	for service in "filter" "notifier" "api" "checker" "moira-cli" ; do \
+		fpm -t rpm \
+			-s "tar" \
+			--description "Moira $$service" \
+			--vendor ${VENDOR} \
+			--url ${URL} \
+			--license ${LICENSE} \
+			--name "moira-$$service" \
+			--version "${VERSION}" \
+			--iteration "${RELEASE}" \
+			--config-files "/etc/moira/$$service.yml" \
+			--config-files "/etc/moira/storage-schemas.conf" \
+			--after-install "./pkg/$$service/postinst" \
+			-p build \
+			build/moira-$$service-${VERSION}-${RELEASE}.tar.gz ; \
+	done
 
 deb: tar
-	fpm -t deb \
-		-s "tar" \
-		--description "Moira" \
-		--vendor ${VENDOR} \
-		--url ${URL} \
-		--license ${LICENSE} \
-		--name "moira" \
-		--version "${VERSION}" \
-		--iteration "${RELEASE}" \
-		--config-files "/etc/moira/moira.yml" \
-		--config-files "/etc/moira/storage-schemas.conf" \
-		--after-install "./pkg/postinst" \
-		--depends logrotate \
-		-p build \
-		build/moira-${VERSION}-${RELEASE}.tar.gz
+	for service in "filter" "notifier" "api" "checker" "moira-cli" ; do \
+		fpm -t deb \
+			-s "tar" \
+			--description "Moira $$service" \
+			--vendor ${VENDOR} \
+			--url ${URL} \
+			--license ${LICENSE} \
+			--name "moira-$$service" \
+			--version "${VERSION}" \
+			--iteration "${RELEASE}" \
+			--config-files "/etc/moira/$$service.yml" \
+			--config-files "/etc/moira/storage-schemas.conf" \
+			--after-install "./pkg/$$service/postinst" \
+			-p build \
+			build/moira-$$service-${VERSION}-${RELEASE}.tar.gz ; \
+	done
 
 packages: clean build tar rpm deb
 

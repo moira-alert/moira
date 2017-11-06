@@ -12,4 +12,4 @@ log:
   log_level: debug
 cache:
   listen: :2003
-retention-config: storage-schemas.conf
+  retention-config: storage-schemas.conf

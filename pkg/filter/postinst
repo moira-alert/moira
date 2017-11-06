@@ -1,0 +1,22 @@
+#!/bin/sh
+
+set -e
+
+# Initial installation: $1 == 1
+# Upgrade: $1 == 2, and configured to restart on upgrade
+#if [ $1 -eq 1 ] ; then
+  if ! getent group "moira" > /dev/null 2>&1 ; then
+    groupadd -r "moira"
+  fi
+  if ! getent passwd "moira" > /dev/null 2>&1 ; then
+    useradd -r -g moira -d /usr/share/moira -s /sbin/nologin \
+      -c "Moira user" moira
+  fi
+
+  if [ -x /bin/systemctl ] ; then
+    /bin/systemctl daemon-reload
+    /bin/systemctl enable moira-filter.service
+  elif [ -x /sbin/chkconfig ] ; then
+    /sbin/chkconfig --add moira-filter
+  fi
+#fi

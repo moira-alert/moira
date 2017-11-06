@@ -1,0 +1,16 @@
+[Unit]
+Description=Moira is alerting system based on graphite data
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+ExecStart=/usr/bin/moira-api -config=/etc/moira/api.yml
+User=moira
+Group=moira
+Restart=always
+TimeoutStopSec=30s
+LimitMEMLOCK=infinity
+LimitNOFILE=4096
+
+[Install]
+WantedBy=multi-user.target
