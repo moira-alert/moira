@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	configFileName                  = flag.String("config", "moira.yml", "Path to configuration file")
+	configFileName                  = flag.String("config", "moira-cli.yml", "Path to configuration file")
 	printVersion                    = flag.Bool("version", false, "Print version and exit")
 	printDefaultConfigFlag          = flag.Bool("default-config", false, "Print default config and exit")
 	convertPythonExpressions        = flag.Bool("convert-expressions", false, "Convert python expression used in moira 1.x to govaluate expressions in moira 2.x")
