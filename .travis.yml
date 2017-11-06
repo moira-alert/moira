@@ -32,18 +32,16 @@ script:
   - make packages
   - make docker_image
 before_deploy:
-  - export RELEASE_PKG_TAR=$(ls build/moira*.tar.gz)
-  - export RELEASE_PKG_RPM=$(ls build/moira*.rpm)
-  - export RELEASE_PKG_DEB=$(ls build/moira*.deb)
   - docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
 deploy:
   - provider: releases
     api_key:
       secure: MrD5ER9P/vJoXB5eNbjMI/rKz8TGS9fannjO+K5/wkFxZhLI0JeaRIxjXv30kk9Da6Blkk7AE9dz3tkkLOl82oXS6bKZy4ZCZrTG2NAV9EYzM+LQQTnVzkpUiane4GMKhj4e3Gu1YzJulA/Emec9Ba5TOxp2i5+K3PVkwZcSkMaleIJjzrJWFDaeq6HGiE/43puCVszCFg8vPSTR6zUZhus7qBixpFOmHpD4Kx5wZKUmsSm/iiFIaMYZjVGj3xBIUjfwDKqJkuIJOD8wPFeRhV8hCVuu7uN45lIwUTrzGbzOPPt7/zTpfJodwIS3FmgGF+pMRp2u2ny6xZmdRUwk/dR43ou7hSLb9FHNr6ZWl2cB5VT9p5lAe5wlrRRH6USUF7/Y1tgJrCtEHWPJZPfK4nQ+q0Zx7hs2QNCKmW6TO09JdtZuD09RksoEiG5RCpVZUBJW3Fn7aUkCUUFnXyvRc1IgxcBdVo6DjNTR9LLwwq1iEIXe5ultiMhjbVI2+tawSQbl8vEphOcz5xUebIqK7Yl46txHXHzzYCC0WqGaxOGviHPM6yqvvWGmonj/B57ebKJkKGN3bfZeZ+vn66FrRuEif81zBgnje/va+gQTLckNnYCudZxnezMSF5bk+zYOwDtsyxSO7QEPLTP8zdCQoSvaoAH+4BVU+wcleSNF7zU=
+    file_glob: true
     file:
-      - "${RELEASE_PKG_TAR}"
-      - "${RELEASE_PKG_RPM}"
-      - "${RELEASE_PKG_DEB}"
+      - build/moira*.tar.gz
+      - build/moira*.rpm
+      - build/moira*.deb
     skip_cleanup: true
     on:
       tags: true
