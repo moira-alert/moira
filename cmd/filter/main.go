@@ -23,7 +23,7 @@ const serviceName = "filter"
 
 var (
 	logger                 moira.Logger
-	configFileName         = flag.String("config", "/etc/moira/config.yml", "path config file")
+	configFileName         = flag.String("config", "/etc/moira/filter.yml", "path config file")
 	printVersion           = flag.Bool("version", false, "Print version and exit")
 	printDefaultConfigFlag = flag.Bool("default-config", false, "Print default config and exit")
 )

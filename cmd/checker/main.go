@@ -24,7 +24,7 @@ const serviceName = "checker"
 
 var (
 	logger                 moira.Logger
-	configFileName         = flag.String("config", "/etc/moira/config.yml", "Path to configuration file")
+	configFileName         = flag.String("config", "/etc/moira/checker.yml", "Path to configuration file")
 	printVersion           = flag.Bool("version", false, "Print version and exit")
 	printDefaultConfigFlag = flag.Bool("default-config", false, "Print default config and exit")
 	triggerID              = flag.String("t", "", "Check single trigger by id and exit")

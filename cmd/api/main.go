@@ -21,7 +21,7 @@ import (
 const serviceName = "api"
 
 var (
-	configFileName         = flag.String("config", "/etc/moira/config.yml", "Path to configuration file")
+	configFileName         = flag.String("config", "/etc/moira/api.yml", "Path to configuration file")
 	printVersion           = flag.Bool("version", false, "Print version and exit")
 	printDefaultConfigFlag = flag.Bool("default-config", false, "Print default config and exit")
 )

@@ -1,0 +1,21 @@
+FROM golang:1.9.2 as builder
+
+WORKDIR /go/src/github.com/moira-alert/moira
+COPY . /go/src/github.com/moira-alert/moira/
+RUN go get github.com/kardianos/govendor
+RUN govendor sync
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o build/filter github.com/moira-alert/moira/cmd/filter
+
+
+FROM alpine
+
+RUN apk add --no-cache ca-certificates && update-ca-certificates
+
+COPY pkg/filter/filter.yml /etc/moira/filter.yml
+COPY pkg/storage-schemas.conf /etc/moira/storage-schemas.conf
+
+COPY --from=builder /go/src/github.com/moira-alert/moira/build/filter /usr/bin/filter
+
+EXPOSE 2003 2003
+
+ENTRYPOINT ["/usr/bin/filter"]

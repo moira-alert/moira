@@ -29,7 +29,7 @@ func getDefault() config {
 		},
 		Filter: filterConfig{
 			Listen:          ":2003",
-			RetentionConfig: "storage-schemas.conf",
+			RetentionConfig: "/etc/moira/storage-schemas.conf",
 		},
 		Graphite: cmd.GraphiteConfig{
 			URI:      "localhost:2003",

@@ -22,7 +22,7 @@ const serviceName = "notifier"
 
 var (
 	logger                 moira.Logger
-	configFileName         = flag.String("config", "/etc/moira/config.yml", "path to config file")
+	configFileName         = flag.String("config", "/etc/moira/notifier.yml", "path to config file")
 	printVersion           = flag.Bool("version", false, "Print current version and exit")
 	printDefaultConfigFlag = flag.Bool("default-config", false, "Print default config and exit")
 )
