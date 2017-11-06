@@ -1,8 +1,8 @@
-# Moira 2.0 BETA [![Build Status](https://travis-ci.org/moira-alert/moira.svg?branch=master)](https://travis-ci.org/moira-alert/moira) [![Coverage Status](https://coveralls.io/repos/github/moira-alert/moira/badge.svg?branch=master)](https://coveralls.io/github/moira-alert/moira?branch=master) [![Go Report Card](https://goreportcard.com/badge/github.com/moira-alert/moira)](https://goreportcard.com/report/github.com/moira-alert/moira)
+# Moira 2.0 BETA [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/moira-alert/moira?utm_source=badge&utm_medium=badge&utm_campaign=badge) [![Build Status](https://travis-ci.org/moira-alert/moira.svg?branch=master)](https://travis-ci.org/moira-alert/moira) [![Coverage Status](https://coveralls.io/repos/github/moira-alert/moira/badge.svg?branch=master)](https://coveralls.io/github/moira-alert/moira?branch=master) [![Go Report Card](https://goreportcard.com/badge/github.com/moira-alert/moira)](https://goreportcard.com/report/github.com/moira-alert/moira)
 
 Moira 2.0 is a completely rewritten version of:
 
-1. Checker service in Go (instead of Python), based on [carbonapi](https://github.com/go-graphite/carbonapi) implementation.
+1. Checker and API services in Go (instead of Python), based on [carbonapi](https://github.com/go-graphite/carbonapi) implementation.
 2. Web service in React, with slightly different UI.
 
 There is still some work to do before we can call it a release:
