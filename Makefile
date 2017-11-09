@@ -120,17 +120,17 @@ packages: clean build tar rpm deb
 .PHONY: docker_image
 docker_image:
 	for service in "filter" "notifier" "api" "checker" ; do \
-		docker build -f Dockerfile.$$service -t moira/moira-$$service:${VERSION} -t moira/moira-$$service:latest . ; \
+		docker build -f Dockerfile.$$service -t moira/$$service:${VERSION} -t moira/$$service:latest . ; \
 	done
 
 .PHONY: docker_push
 docker_push:
 	for service in "filter" "notifier" "api" "checker" ; do \
-		docker push moira/moira-$$service:latest ; \
+		docker push moira/$$service:latest ; \
 	done
 
 .PHONY: docker_push_release
 docker_push_release:
 	for service in "filter" "notifier" "api" "checker" ; do \
-		docker push moira/moira-$$service:${VERSION} ; \
+		docker push moira/$$service:${VERSION} ; \
 	done
