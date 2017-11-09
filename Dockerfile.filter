@@ -12,7 +12,7 @@ FROM alpine
 RUN apk add --no-cache ca-certificates && update-ca-certificates
 
 COPY pkg/filter/filter.yml /etc/moira/filter.yml
-COPY pkg/storage-schemas.conf /etc/moira/storage-schemas.conf
+COPY pkg/filter/storage-schemas.conf /etc/moira/storage-schemas.conf
 
 COPY --from=builder /go/src/github.com/moira-alert/moira/build/filter /usr/bin/filter
 
