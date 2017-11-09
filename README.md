@@ -24,11 +24,11 @@ Edit configs in `/etc/moira/` and start services.
 
 2. Use Docker. You can mount volumes and override entrypoints to use custom configs. See `Dockerfile.*` for details.
 ```
-$ docker pull moira/moira-api
-$ docker pull moira/moira-filter
-$ docker pull moira/moira-checker
-$ docker pull moira/moira-notifier
-$ docker pull moira/moira-web2
+$ docker pull moira/api
+$ docker pull moira/filter
+$ docker pull moira/checker
+$ docker pull moira/notifier
+$ docker pull moira/web2
 ```
 
 3. Use Makefile and just get your binaries in `build` directory.
