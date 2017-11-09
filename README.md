@@ -18,7 +18,7 @@ You'll need to install and launch all of them.
 
 Choose one:
 
-1. Download rpm and deb packages from [GitHub Release Page](https://github.com/moira-alert/moira/releases/latest).
+1. Download rpm and deb packages from GitHub Release Page for [backend services](https://github.com/moira-alert/moira/releases/latest) and [UI](https://github.com/moira-alert/web2.0/releases/latest).
 Install as usual, and you'll get `moira-api`, `moira-checker`, `moira-filter` and `moira-notifier` services in your systemd.
 Edit configs in `/etc/moira/` and start services.
 
@@ -37,3 +37,4 @@ $ git clone https://github.com/moira-alert/moira.git
 $ cd moira
 $ make build
 ```
+(repeat for https://github.com/moira-alert/web2.0.git)
