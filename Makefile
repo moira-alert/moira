@@ -62,19 +62,19 @@ rpm: tar
 			build/moira-$$service-${VERSION}.tar.gz ; \
 	done
 	fpm -t rpm \
-    	-s "tar" \
-    	--description "Moira filter" \
-    	--vendor ${VENDOR} \
-    	--url ${URL} \
-    	--license ${LICENSE} \
-    	--name "moira-filter" \
-    	--version "${VERSION}" \
-    	--iteration "1" \
-    	--config-files "/etc/moira/filter.yml" \
-    	--config-files "/etc/moira/storage-schemas.conf" \
-    	--after-install "./pkg/filter/postinst" \
-    	-p build \
-    	build/moira-filter-${VERSION}.tar.gz
+		-s "tar" \
+		--description "Moira filter" \
+		--vendor ${VENDOR} \
+		--url ${URL} \
+		--license ${LICENSE} \
+		--name "moira-filter" \
+		--version "${VERSION}" \
+		--iteration "1" \
+		--config-files "/etc/moira/filter.yml" \
+		--config-files "/etc/moira/storage-schemas.conf" \
+		--after-install "./pkg/filter/postinst" \
+		-p build \
+		build/moira-filter-${VERSION}.tar.gz
 
 deb: tar
 	for service in "notifier" "api" "checker" "cli" ; do \
@@ -93,19 +93,19 @@ deb: tar
 			build/moira-$$service-${VERSION}.tar.gz ; \
 	done
 	fpm -t deb \
-        -s "tar" \
-        --description "Moira filter" \
-        --vendor ${VENDOR} \
-        --url ${URL} \
-        --license ${LICENSE} \
-        --name "moira-filter" \
-        --version "${VERSION}" \
-        --iteration "1" \
-        --config-files "/etc/moira/filter.yml" \
-        --config-files "/etc/moira/storage-schemas.conf" \
-        --after-install "./pkg/filter/postinst" \
-        -p build \
-        build/moira-filter-${VERSION}.tar.gz
+		-s "tar" \
+		--description "Moira filter" \
+		--vendor ${VENDOR} \
+		--url ${URL} \
+		--license ${LICENSE} \
+		--name "moira-filter" \
+		--version "${VERSION}" \
+		--iteration "1" \
+		--config-files "/etc/moira/filter.yml" \
+		--config-files "/etc/moira/storage-schemas.conf" \
+		--after-install "./pkg/filter/postinst" \
+		-p build \
+		build/moira-filter-${VERSION}.tar.gz
 
 packages: clean build tar rpm deb
 
