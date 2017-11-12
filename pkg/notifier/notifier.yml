@@ -22,4 +22,4 @@ notifier:
     contacts: []
     notice_interval: 300
   front_uri: http:// localhost
-timezone: UTC
+  timezone: UTC

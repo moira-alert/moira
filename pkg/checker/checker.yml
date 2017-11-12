@@ -14,4 +14,4 @@ checker:
   nodata_check_interval: 60s0ms
   check_interval: 5s0ms
   metrics_ttl: 3600
-stop_checking_interval: 30
+  stop_checking_interval: 30
