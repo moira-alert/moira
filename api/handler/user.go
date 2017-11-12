@@ -27,9 +27,7 @@ func getUserSettings(writer http.ResponseWriter, request *http.Request) {
 	userLogin := middleware.GetLogin(request)
 	userSettings, err := controller.GetUserSettings(database, userLogin)
 	if err != nil {
-		if err2 := render.Render(writer, request, err); err != nil {
-			render.Render(writer, request, api.ErrorRender(err2))
-		}
+		render.Render(writer, request, err)
 		return
 	}
 
