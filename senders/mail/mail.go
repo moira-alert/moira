@@ -123,7 +123,7 @@ func (sender *Sender) makeMessage(events moira.NotificationEvents, contact moira
 		Throttled   bool
 		Items       []*templateRow
 	}{
-		Link:        fmt.Sprintf("%s/#/events/%s", sender.FrontURI, events[0].TriggerID),
+		Link:        fmt.Sprintf("%s/trigger/%s", sender.FrontURI, events[0].TriggerID),
 		Description: trigger.Desc,
 		Throttled:   throttled,
 		Items:       make([]*templateRow, 0, len(events)),

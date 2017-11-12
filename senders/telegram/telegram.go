@@ -93,7 +93,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 		message.WriteString(fmt.Sprintf("\n\n...and %d more events.", len(events)-lineCount))
 	}
 
-	message.WriteString(fmt.Sprintf("\n\n%s/#/events/%s\n", sender.FrontURI, events[0].TriggerID))
+	message.WriteString(fmt.Sprintf("\n\n%s/trigger/%s\n", sender.FrontURI, events[0].TriggerID))
 
 	if throttled {
 		message.WriteString("\nPlease, fix your system or tune this trigger to generate less events.")

@@ -78,7 +78,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 		Retry:     5 * time.Minute,
 		Expire:    time.Hour,
 		Timestamp: timestamp,
-		URL:       fmt.Sprintf("%s/#/events/%s", sender.FrontURI, events[0].TriggerID),
+		URL:       fmt.Sprintf("%s/trigger/%s", sender.FrontURI, events[0].TriggerID),
 	}
 	_, err := api.SendMessage(pushoverMessage, recipient)
 	if err != nil {
