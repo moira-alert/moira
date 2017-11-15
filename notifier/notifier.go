@@ -58,7 +58,7 @@ func NewNotifier(database moira.Database, logger moira.Logger, config Config, me
 func (notifier *StandardNotifier) Send(pkg *NotificationPackage, waitGroup *sync.WaitGroup) {
 	ch, found := notifier.senders[pkg.Contact.Type]
 	if !found {
-		notifier.resend(pkg, fmt.Sprintf("Unknown contact type [%s]", pkg))
+		notifier.resend(pkg, fmt.Sprintf("Unknown contact type '%s' [%s]", pkg.Contact.Type, pkg))
 		return
 	}
 	waitGroup.Add(1)
