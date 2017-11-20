@@ -2,10 +2,6 @@ FROM golang:1.9.2 as builder
 
 WORKDIR /go/src/github.com/moira-alert/moira
 COPY . /go/src/github.com/moira-alert/moira/
-
-RUN go get -v github.com/hiraq-golang/googl-shortener
-RUN go get -v github.com/AlexAkulov/go-humanize
-
 RUN go get github.com/kardianos/govendor
 RUN govendor sync
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o build/notifier github.com/moira-alert/moira/cmd/notifier
