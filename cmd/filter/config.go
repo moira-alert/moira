@@ -8,7 +8,7 @@ type config struct {
 	Redis    cmd.RedisConfig    `yaml:"redis"`
 	Graphite cmd.GraphiteConfig `yaml:"graphite"`
 	Logger   cmd.LoggerConfig   `yaml:"log"`
-	Filter   filterConfig       `yaml:"cache"`
+	Filter   filterConfig       `yaml:"filter"`
 }
 
 type filterConfig struct {
