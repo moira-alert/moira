@@ -10,6 +10,6 @@ graphite:
 log:
   log_file: stdout
   log_level: debug
-cache:
+filter:
   listen: :2003
   retention-config: /etc/moira/storage-schemas.conf
