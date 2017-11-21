@@ -15,8 +15,8 @@ func (worker *Checker) perform(triggerIDs []string, noCache bool, cacheTTL time.
 		}
 	} else {
 		for _, triggerID := range triggerIDs {
-			wg.Add(1)
 			if worker.needHandleTrigger(triggerID, cacheTTL) {
+				wg.Add(1)
 				go worker.handle(triggerID, wg)
 			}
 		}
