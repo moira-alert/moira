@@ -19,7 +19,6 @@ type Checker struct {
 	Metrics  *graphite.CheckerMetrics
 	Cache    *cache.Cache
 	lastData int64
-	noCache  bool
 	tomb     tomb.Tomb
 }
 

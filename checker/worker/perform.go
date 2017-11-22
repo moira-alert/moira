@@ -1,24 +1,18 @@
 package worker
 
 import (
-	"github.com/moira-alert/moira/checker"
 	"runtime/debug"
 	"sync"
 	"time"
+
+	"github.com/moira-alert/moira/checker"
 )
 
-func (worker *Checker) perform(triggerIDs []string, noCache bool, cacheTTL time.Duration, wg *sync.WaitGroup) {
-	if noCache {
-		for _, triggerID := range triggerIDs {
+func (worker *Checker) perform(triggerIDs []string, cacheTTL time.Duration, wg *sync.WaitGroup) {
+	for _, triggerID := range triggerIDs {
+		if worker.needHandleTrigger(triggerID, cacheTTL) {
 			wg.Add(1)
 			go worker.handle(triggerID, wg)
-		}
-	} else {
-		for _, triggerID := range triggerIDs {
-			if worker.needHandleTrigger(triggerID, cacheTTL) {
-				wg.Add(1)
-				go worker.handle(triggerID, wg)
-			}
 		}
 	}
 }

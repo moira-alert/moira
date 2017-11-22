@@ -40,7 +40,7 @@ func (worker *Checker) handleMetricEvent(metricEvent *moira.MetricEvent) error {
 		}
 	}
 	var performWaitGroup sync.WaitGroup
-	worker.perform(triggerIds, worker.noCache, worker.Config.CheckInterval, &performWaitGroup)
+	worker.perform(triggerIds, worker.Config.CheckInterval, &performWaitGroup)
 	performWaitGroup.Wait()
 	return nil
 }
