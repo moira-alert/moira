@@ -8,21 +8,21 @@ import (
 )
 
 func (worker *Checker) metricsChecker(metricEventsChannel <-chan *moira.MetricEvent) error {
-	var handleWaitGroup sync.WaitGroup
+	var handleMetricWG sync.WaitGroup
 	for {
 		metricEvent, ok := <-metricEventsChannel
 		if !ok {
-			handleWaitGroup.Wait()
+			handleMetricWG.Wait()
 			worker.Logger.Info("Checking for new event stopped")
 			return nil
 		}
-		if err := worker.handleMetricEvent(metricEvent); err != nil {
+		if err := worker.handleMetricEvent(metricEvent, &handleMetricWG); err != nil {
 			worker.Logger.Errorf("Failed to handle metricEvent: %s", err.Error())
 		}
 	}
 }
 
-func (worker *Checker) handleMetricEvent(metricEvent *moira.MetricEvent) error {
+func (worker *Checker) handleMetricEvent(metricEvent *moira.MetricEvent, handleMetricWG *sync.WaitGroup) error {
 	worker.lastData = time.Now().UTC().Unix()
 	pattern := metricEvent.Pattern
 	metric := metricEvent.Metric
@@ -34,13 +34,13 @@ func (worker *Checker) handleMetricEvent(metricEvent *moira.MetricEvent) error {
 	if err != nil {
 		return err
 	}
+	// Cleanup pattern and its metrics if this pattern doesn't match to any trigger
 	if len(triggerIds) == 0 {
 		if err := worker.Database.RemovePatternWithMetrics(pattern); err != nil {
 			return err
 		}
 	}
-	var performWaitGroup sync.WaitGroup
-	worker.perform(triggerIds, worker.Config.CheckInterval, &performWaitGroup)
-	performWaitGroup.Wait()
+	handleMetricWG.Wait()
+	worker.perform(triggerIds, worker.Config.CheckInterval, handleMetricWG)
 	return nil
 }
