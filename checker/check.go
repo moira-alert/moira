@@ -110,7 +110,7 @@ func (triggerChecker *TriggerChecker) handleErrorCheck(checkData moira.CheckData
 		}
 		return triggerChecker.compareChecks(checkData)
 	}
-	if target.IsErrUnknownFunction(checkingError) {
+	if _, ok := checkingError.(target.ErrUnknownFunction); ok {
 		triggerChecker.Logger.Warningf("Trigger %s: %s", triggerChecker.TriggerID, checkingError.Error())
 		checkData.State = EXCEPTION
 		checkData.Message = checkingError.Error()

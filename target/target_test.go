@@ -56,7 +56,8 @@ func TestEvaluateTarget(t *testing.T) {
 	Convey("Errors tests", t, func() {
 		Convey("Error while ParseExpr", func() {
 			result, err := EvaluateTarget(dataBase, "", from, until, true)
-			So(err, ShouldResemble, expr.ErrMissingExpr)
+			So(err, ShouldResemble, ErrParseExpr{target: "", internalError: expr.ErrMissingExpr})
+			So(err.Error(), ShouldResemble, "failed to parse target '': missing expression")
 			So(result, ShouldBeNil)
 		})
 

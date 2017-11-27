@@ -2,17 +2,19 @@ package handler
 
 import (
 	"fmt"
+	"net/http"
+	"time"
+
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 	"github.com/go-graphite/carbonapi/date"
+
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/controller"
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/api/middleware"
 	"github.com/moira-alert/moira/expression"
 	"github.com/moira-alert/moira/target"
-	"net/http"
-	"time"
 )
 
 func trigger(router chi.Router) {
@@ -36,9 +38,12 @@ func updateTrigger(writer http.ResponseWriter, request *http.Request) {
 	triggerID := middleware.GetTriggerID(request)
 	trigger := &dto.Trigger{}
 	if err := render.Bind(request, trigger); err != nil {
-		if _, ok := err.(expression.ErrInvalidExpression); ok || err == target.ErrEvaluateTarget || target.IsErrUnknownFunction(err) {
-			render.Render(writer, request, api.ErrorInvalidRequest(err))
-		} else {
+		switch err.(type) {
+		case target.ErrParseExpr, target.ErrEvalExpr, target.ErrUnknownFunction:
+			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("Invalid graphite targets: %s", err.Error())))
+		case expression.ErrInvalidExpression:
+			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("Invalid expression: %s", err.Error())))
+		default:
 			render.Render(writer, request, api.ErrorInternalServer(err))
 		}
 		return

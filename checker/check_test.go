@@ -105,7 +105,7 @@ func TestGetTimeSeriesState(t *testing.T) {
 		triggerChecker.trigger.WarnValue = nil
 		triggerChecker.trigger.ErrorValue = nil
 		metricState, err := triggerChecker.getTimeSeriesState(tts, tts.Main[0], metricLastState, 42, 27)
-		So(err.Error(), ShouldResemble, "Invalid expression: Error value and Warning value can not be empty")
+		So(err.Error(), ShouldResemble, "Error value and Warning value can not be empty")
 		So(metricState, ShouldBeNil)
 	})
 }
@@ -258,7 +258,7 @@ func TestGetTimeSeriesStepsStates(t *testing.T) {
 		triggerChecker.trigger.WarnValue = nil
 		triggerChecker.trigger.ErrorValue = nil
 		metricState, err := triggerChecker.getTimeSeriesStepsStates(tts, tts.Main[1], metricLastState)
-		So(err.Error(), ShouldResemble, "Invalid expression: Error value and Warning value can not be empty")
+		So(err.Error(), ShouldResemble, "Error value and Warning value can not be empty")
 		So(metricState, ShouldBeNil)
 	})
 }
@@ -782,12 +782,13 @@ func TestHandleErrorCheck(t *testing.T) {
 		}
 
 		dataBase.EXPECT().PushNotificationEvent(gomock.Any(), true).Return(nil)
-		actual, err := triggerChecker.handleErrorCheck(checkData, fmt.Errorf("unknown function in evalExpr: 123"))
+
+		actual, err := triggerChecker.handleErrorCheck(checkData, target.ErrUnknownFunction{InternalError: fmt.Errorf("123")})
 		expected := moira.CheckData{
 			State:          EXCEPTION,
 			Timestamp:      checkData.Timestamp,
 			EventTimestamp: checkData.Timestamp,
-			Message:        "unknown function in evalExpr: 123",
+			Message:        "123",
 		}
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, expected)

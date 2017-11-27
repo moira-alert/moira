@@ -2,8 +2,9 @@ package expression
 
 import (
 	"fmt"
-	"github.com/Knetic/govaluate"
 	"strings"
+
+	"github.com/Knetic/govaluate"
 )
 
 var default1, _ = govaluate.NewEvaluableExpression("t1 >= ERROR_VALUE ? ERROR : (t1 >= WARN_VALUE ? WARN : OK)")
@@ -17,7 +18,7 @@ type ErrInvalidExpression struct {
 }
 
 func (err ErrInvalidExpression) Error() string {
-	return fmt.Sprintf("Invalid expression: %s", err.internalError.Error())
+	return err.internalError.Error()
 }
 
 // TriggerExpression represents trigger expression handler parameters, what can be used for trigger expression handling

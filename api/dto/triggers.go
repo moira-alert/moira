@@ -3,13 +3,14 @@ package dto
 
 import (
 	"fmt"
+	"net/http"
+	"time"
+
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api/middleware"
 	"github.com/moira-alert/moira/checker"
 	"github.com/moira-alert/moira/expression"
 	"github.com/moira-alert/moira/target"
-	"net/http"
-	"time"
 )
 
 type TriggersList struct {
@@ -105,14 +106,10 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 		Expression:              &trigger.Expression,
 	}
 
-	logger := middleware.GetLoggerEntry(request)
-
 	if err := resolvePatterns(request, trigger, &triggerExpression); err != nil {
-		logger.Infof("Invalid graphite targets %s: %s\n", trigger.Targets, err.Error())
 		return fmt.Errorf("Invalid graphite targets: %s", err.Error())
 	}
 	if _, err := triggerExpression.Evaluate(); err != nil {
-		logger.Infof("Invalid expression %s: %s\n", trigger.Expression, err.Error())
 		return err
 	}
 	return nil

@@ -2,8 +2,9 @@ package expression
 
 import (
 	"fmt"
-	. "github.com/smartystreets/goconvey/convey"
 	"testing"
+
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 type getExpressionValuesTest struct {
@@ -45,6 +46,7 @@ func TestExpression(t *testing.T) {
 
 		result, err = (&TriggerExpression{MainTargetValue: 10.0, WarnValue: &warnValue}).Evaluate()
 		So(err, ShouldResemble, ErrInvalidExpression{fmt.Errorf("Error value and Warning value can not be empty")})
+		So(err.Error(), ShouldResemble, "Error value and Warning value can not be empty")
 		So(result, ShouldBeEmpty)
 	})
 

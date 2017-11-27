@@ -3,20 +3,11 @@ package target
 import (
 	"fmt"
 	"runtime/debug"
-	"strings"
 
 	"github.com/go-graphite/carbonapi/expr"
 
 	"github.com/moira-alert/moira"
 )
-
-// ErrEvaluateTarget represent evaluation error by carbon-api eval method
-var ErrEvaluateTarget = fmt.Errorf("Invalid graphite targets")
-
-// IsErrUnknownFunction checks error for carbonapi.errUnknownFunction
-func IsErrUnknownFunction(err error) bool {
-	return strings.HasPrefix(err.Error(), "unknown function in evalExpr")
-}
 
 // EvaluationResult represents evaluation target result and contains TimeSeries list, Pattern list and metric lists appropriate to given target
 type EvaluationResult struct {
@@ -40,7 +31,10 @@ func EvaluateTarget(database moira.Database, target string, from int64, until in
 		targetIdx++
 		expr2, _, err := expr.ParseExpr(target)
 		if err != nil {
-			return nil, err
+			return nil, ErrParseExpr{
+				internalError: err,
+				target:        target,
+			}
 		}
 		patterns := expr2.Metrics()
 		metricsMap, metrics, err := getPatternsMetricData(database, patterns, from, until, allowRealTimeAlerting)
@@ -63,10 +57,13 @@ func EvaluateTarget(database moira.Database, target string, from int64, until in
 				return expr.EvalExpr(expr2, int32(from), int32(until), metricsMap)
 			}()
 			if err != nil && err != expr.ErrSeriesDoesNotExist {
-				if IsErrUnknownFunction(err) {
-					return nil, err
+				if isErrUnknownFunction(err) {
+					return nil, ErrUnknownFunction{InternalError: err}
 				}
-				return nil, ErrEvaluateTarget
+				return nil, ErrParseExpr{
+					target:        target,
+					internalError: err,
+				}
 			}
 			for _, metricData := range metricDatas {
 				timeSeries := TimeSeries{
