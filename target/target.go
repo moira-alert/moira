@@ -51,19 +51,26 @@ func EvaluateTarget(database moira.Database, target string, from int64, until in
 				defer func() {
 					if r := recover(); r != nil {
 						result = nil
-						err = fmt.Errorf("Panic while evaluate target %s: message: '%s' stack: %s", target, r, debug.Stack())
+						err = fmt.Errorf("panic while evaluate target %s: message: '%s' stack: %s", target, r, debug.Stack())
 					}
 				}()
-				return expr.EvalExpr(expr2, int32(from), int32(until), metricsMap)
+				result, err = expr.EvalExpr(expr2, int32(from), int32(until), metricsMap)
+				if err != nil {
+					if err == expr.ErrSeriesDoesNotExist {
+						err = nil
+					} else if isErrUnknownFunction(err) {
+						err = ErrUnknownFunction{InternalError: err}
+					} else {
+						err = ErrEvalExpr{
+							target:        target,
+							internalError: err,
+						}
+					}
+				}
+				return result, err
 			}()
-			if err != nil && err != expr.ErrSeriesDoesNotExist {
-				if isErrUnknownFunction(err) {
-					return nil, ErrUnknownFunction{InternalError: err}
-				}
-				return nil, ErrParseExpr{
-					target:        target,
-					internalError: err,
-				}
+			if err != nil {
+				return nil, err
 			}
 			for _, metricData := range metricDatas {
 				timeSeries := TimeSeries{
