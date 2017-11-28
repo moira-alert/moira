@@ -123,7 +123,7 @@ func resolvePatterns(request *http.Request, trigger *Trigger, expressionValues *
 
 	for _, tar := range trigger.Targets {
 		database := middleware.GetDatabase(request)
-		result, err := target.EvaluateTarget(database, tar, now-600, now, true)
+		result, err := target.EvaluateTarget(database, tar, now-600, now, false)
 		if err != nil {
 			return err
 		}
