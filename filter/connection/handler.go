@@ -55,7 +55,7 @@ func (handler *Handler) handle(connection net.Conn, matchedMetricsChan chan *moi
 		}
 		lineBytes = lineBytes[:len(lineBytes)-1]
 		handler.wg.Add(1)
-		go func(ch chan *moira.MatchedMetric) {
+		func(ch chan *moira.MatchedMetric) {
 			defer handler.wg.Done()
 			if m := handler.patternsStorage.ProcessIncomingMetric(lineBytes); m != nil {
 				ch <- m
