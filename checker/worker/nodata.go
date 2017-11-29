@@ -34,6 +34,7 @@ func (worker *Checker) checkNoData(wg *sync.WaitGroup) error {
 			return err
 		}
 		worker.perform(triggerIds, time.Minute, wg)
+		wg.Wait()
 	}
 	return nil
 }

@@ -13,7 +13,7 @@ func (worker *Checker) metricsChecker(metricEventsChannel <-chan *moira.MetricEv
 		metricEvent, ok := <-metricEventsChannel
 		if !ok {
 			handleMetricWG.Wait()
-			worker.Logger.Info("Checking for new event stopped")
+			worker.Logger.Info("Checking for new events stopped")
 			return nil
 		}
 		if err := worker.handleMetricEvent(metricEvent, &handleMetricWG); err != nil {
