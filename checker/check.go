@@ -63,7 +63,7 @@ func (triggerChecker *TriggerChecker) handleTrigger() (moira.CheckData, error) {
 		metricLastState := triggerChecker.lastCheck.GetOrCreateMetricState(timeSeries.Name, int64(timeSeries.StartTime-3600))
 		metricStates, err := triggerChecker.getTimeSeriesStepsStates(triggerTimeSeries, timeSeries, metricLastState)
 		if err != nil {
-			return checkData, nil
+			return checkData, err
 		}
 		for _, metricState := range metricStates {
 			currentState, err := triggerChecker.compareStates(timeSeries.Name, metricState, metricLastState)
