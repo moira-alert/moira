@@ -72,39 +72,41 @@ func (triggerChecker *TriggerChecker) handleTrigger() (moira.CheckData, error) {
 			continue
 		}
 		timeSeriesNamesMap[timeSeries.Name] = true
-
-		metricLastState := triggerChecker.lastCheck.GetOrCreateMetricState(timeSeries.Name, int64(timeSeries.StartTime-3600))
-		metricStates, err := triggerChecker.getTimeSeriesStepsStates(triggerTimeSeries, timeSeries, metricLastState)
-		if err != nil {
-			return checkData, err
-		}
-		for _, metricState := range metricStates {
-			currentState, err := triggerChecker.compareStates(timeSeries.Name, metricState, metricLastState)
-			metricLastState = currentState
-			checkData.Metrics[timeSeries.Name] = currentState
-			if err != nil {
-				return checkData, err
-			}
-		}
-
-		needToDeleteMetric, currentState := triggerChecker.checkForNoData(timeSeries, metricLastState)
+		metricState, needToDeleteMetric, err := triggerChecker.checkTimeSeries(timeSeries, triggerTimeSeries)
 		if needToDeleteMetric {
 			triggerChecker.Logger.Infof("[TriggerID:%s] Remove metric: '%s'", triggerChecker.TriggerID, timeSeries.Name)
 			delete(checkData.Metrics, timeSeries.Name)
-			if err := triggerChecker.Database.RemovePatternsMetrics(triggerChecker.trigger.Patterns); err != nil {
-				return checkData, err
-			}
-			continue
+			err = triggerChecker.Database.RemovePatternsMetrics(triggerChecker.trigger.Patterns)
+		} else {
+			checkData.Metrics[timeSeries.Name] = metricState
 		}
-		if currentState != nil {
-			currentState, err := triggerChecker.compareStates(timeSeries.Name, *currentState, metricLastState)
-			checkData.Metrics[timeSeries.Name] = currentState
-			if err != nil {
-				return checkData, err
-			}
+		if err != nil {
+			return checkData, err
 		}
 	}
 	return checkData, checkingError
+}
+
+func (triggerChecker *TriggerChecker) checkTimeSeries(timeSeries *target.TimeSeries, triggerTimeSeries *triggerTimeSeries) (lastState moira.MetricState, needToDeleteMetric bool, err error) {
+	lastState = triggerChecker.lastCheck.GetOrCreateMetricState(timeSeries.Name, int64(timeSeries.StartTime-3600))
+	metricStates, err := triggerChecker.getTimeSeriesStepsStates(triggerTimeSeries, timeSeries, lastState)
+	if err != nil {
+		return
+	}
+	for _, currentState := range metricStates {
+		lastState, err = triggerChecker.compareStates(timeSeries.Name, currentState, lastState)
+		if err != nil {
+			return
+		}
+	}
+	needToDeleteMetric, noDataState := triggerChecker.checkForNoData(timeSeries, lastState)
+	if needToDeleteMetric {
+		return
+	}
+	if noDataState != nil {
+		lastState, err = triggerChecker.compareStates(timeSeries.Name, *noDataState, lastState)
+	}
+	return
 }
 
 func (triggerChecker *TriggerChecker) handleErrorCheck(checkData moira.CheckData, checkingError error) (moira.CheckData, error) {
