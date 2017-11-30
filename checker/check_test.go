@@ -412,7 +412,7 @@ func TestCheckErrors(t *testing.T) {
 			Timestamp:      triggerChecker.Until,
 			EventTimestamp: triggerChecker.Until,
 			Score:          100000,
-			Message:        "Trigger evaluation exception",
+			Message:        "",
 		}).Return(nil)
 		err := triggerChecker.Check()
 		So(err, ShouldBeNil)
@@ -724,6 +724,7 @@ func TestHandleErrorCheck(t *testing.T) {
 			State:          NODATA,
 			Timestamp:      checkData.Timestamp,
 			EventTimestamp: checkData.Timestamp,
+			Message:        "Trigger never received metrics",
 		}
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, expected)

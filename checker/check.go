@@ -99,7 +99,7 @@ func (triggerChecker *TriggerChecker) handleErrorCheck(checkData moira.CheckData
 		triggerChecker.Logger.Debugf("Trigger %s: %s", triggerChecker.TriggerID, checkingError.Error())
 		if triggerChecker.ttl != 0 {
 			checkData.State = triggerChecker.ttlState
-			checkData.Message = ErrTriggerHasNoMetrics.Error()
+			checkData.Message = "Trigger has no metrics"
 			return triggerChecker.compareChecks(checkData)
 		}
 		return checkData, nil
@@ -108,6 +108,7 @@ func (triggerChecker *TriggerChecker) handleErrorCheck(checkData moira.CheckData
 		triggerChecker.Logger.Debugf("Trigger %s: %s", triggerChecker.TriggerID, checkingError.Error())
 		if len(checkData.Metrics) == 0 {
 			checkData.State = NODATA
+			checkData.Message = "Trigger never received metrics"
 		}
 		return triggerChecker.compareChecks(checkData)
 	}
@@ -119,7 +120,6 @@ func (triggerChecker *TriggerChecker) handleErrorCheck(checkData moira.CheckData
 		triggerChecker.Metrics.CheckError.Mark(1)
 		triggerChecker.Logger.Errorf("Trigger %s check failed: %s", triggerChecker.TriggerID, checkingError.Error())
 		checkData.State = EXCEPTION
-		checkData.Message = "Trigger evaluation exception"
 	}
 	return triggerChecker.compareChecks(checkData)
 }
