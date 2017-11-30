@@ -1,13 +1,12 @@
 package cmd
 
 import (
-	"net/http"
-
-	_ "net/http/pprof"
-
 	"github.com/moira-alert/moira"
+	"net/http"
+	_ "net/http/pprof"
 )
 
+// StartProfiling starts http server with profiling data at given port
 func StartProfiling(logger moira.Logger, config ProfilerConfig) {
 
 	go func() {
