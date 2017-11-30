@@ -64,6 +64,11 @@ func main() {
 	}
 	defer logger.Infof("Moira Filter stopped. Version: %s", MoiraVersion)
 
+	if config.Pprof.Port != "" {
+		logger.Infof("Starting pprof server at: [%s]", config.Pprof.Port)
+		cmd.StartProfiling(logger, config.Pprof)
+	}
+
 	cacheMetrics := metrics.ConfigureFilterMetrics(serviceName)
 	if err = metrics.Init(config.Graphite.GetSettings()); err != nil {
 		logger.Error(err)

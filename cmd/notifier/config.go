@@ -16,6 +16,7 @@ type config struct {
 	Graphite cmd.GraphiteConfig `yaml:"graphite"`
 	Logger   cmd.LoggerConfig   `yaml:"log"`
 	Notifier notifierConfig     `yaml:"notifier"`
+	Pprof    cmd.ProfilerConfig `yaml:"pprof"`
 }
 
 type notifierConfig struct {
@@ -64,6 +65,9 @@ func getDefault() config {
 			},
 			FrontURI: "http:// localhost",
 			Timezone: "UTC",
+		},
+		Pprof: cmd.ProfilerConfig{
+			Port: "",
 		},
 	}
 }

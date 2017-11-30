@@ -6,9 +6,10 @@ import (
 )
 
 type config struct {
-	Redis  cmd.RedisConfig  `yaml:"redis"`
-	Logger cmd.LoggerConfig `yaml:"log"`
-	API    apiConfig        `yaml:"api"`
+	Redis  cmd.RedisConfig    `yaml:"redis"`
+	Logger cmd.LoggerConfig   `yaml:"log"`
+	API    apiConfig          `yaml:"api"`
+	Pprof  cmd.ProfilerConfig `yaml:"pprof"`
 }
 
 type apiConfig struct {
@@ -36,6 +37,9 @@ func getDefault() config {
 		API: apiConfig{
 			Listen:     ":8081",
 			EnableCORS: "true",
+		},
+		Pprof: cmd.ProfilerConfig{
+			Port: "",
 		},
 	}
 }

@@ -63,6 +63,11 @@ func main() {
 	}
 	defer logger.Infof("Moira Notifier Stopped. Version: %s", Version)
 
+	if config.Pprof.Port != "" {
+		logger.Infof("Starting pprof server at: [%s]", config.Pprof.Port)
+		cmd.StartProfiling(logger, config.Pprof)
+	}
+
 	notifierMetrics := metrics.ConfigureNotifierMetrics(serviceName)
 	if err = metrics.Init(config.Graphite.GetSettings()); err != nil {
 		logger.Error(err)

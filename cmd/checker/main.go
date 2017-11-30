@@ -66,6 +66,11 @@ func main() {
 	}
 	defer logger.Infof("Moira Checker stopped. Version: %s", Version)
 
+	if config.Pprof.Port != "" {
+		logger.Infof("Starting pprof server at: [%s]", config.Pprof.Port)
+		cmd.StartProfiling(logger, config.Pprof)
+	}
+
 	databaseSettings := config.Redis.GetSettings()
 	database := redis.NewDatabase(logger, databaseSettings)
 
