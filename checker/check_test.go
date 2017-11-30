@@ -610,6 +610,64 @@ func TestHandleTrigger(t *testing.T) {
 		mockCtrl.Finish()
 	})
 
+	Convey("Has duplicated names timeseries, should return trigger has same timeseries names error", t, func() {
+		metric1 := "super.puper.metric"
+		metric2 := "super.drupper.metric"
+		pattern1 := "super.*.metric"
+		f := 3.0
+
+		triggerChecker1 := TriggerChecker{
+			TriggerID: "SuperId",
+			Database:  dataBase,
+			Logger:    logger,
+			Config: &Config{
+				MetricsTTL: 3600,
+			},
+			From:     3617,
+			Until:    3667,
+			ttl:      ttl,
+			ttlState: NODATA,
+			trigger: &moira.Trigger{
+				ErrorValue: &errValue,
+				WarnValue:  &warnValue,
+				Targets:    []string{"aliasByNode(super.*.metric, 0)"},
+				Patterns:   []string{pattern1},
+			},
+			lastCheck: &moira.CheckData{
+				Metrics:   make(map[string]moira.MetricState),
+				State:     NODATA,
+				Timestamp: 3647,
+			},
+		}
+		dataBase.EXPECT().GetPatternMetrics(pattern1).Return([]string{metric1, metric2}, nil)
+		dataBase.EXPECT().GetMetricRetention(metric1).Return(retention, nil)
+		dataBase.EXPECT().GetMetricsValues([]string{metric1, metric2}, triggerChecker1.From, triggerChecker1.Until).Return(map[string][]*moira.MetricValue{metric1: metricValues, metric2: metricValues}, nil)
+		dataBase.EXPECT().RemoveMetricValues(metric1, gomock.Any())
+		dataBase.EXPECT().RemoveMetricValues(metric2, gomock.Any())
+		dataBase.EXPECT().PushNotificationEvent(gomock.Any(), true).Return(nil)
+		checkData, err := triggerChecker1.handleTrigger()
+		So(err, ShouldResemble, ErrTriggerHasSameTimeSeriesNames)
+		So(checkData, ShouldResemble, moira.CheckData{
+			Metrics: map[string]moira.MetricState{
+				"super": {
+					EventTimestamp: 3617,
+					State:          "OK",
+					Suppressed:     false,
+					Timestamp:      3647,
+					Value:          &f,
+					Maintenance:    0,
+				},
+			},
+			Score:          0,
+			State:          "OK",
+			Timestamp:      3667,
+			EventTimestamp: 0,
+			Suppressed:     false,
+			Message:        "",
+		})
+		mockCtrl.Finish()
+	})
+
 	Convey("No data too long and ttlState is delete", t, func() {
 		triggerChecker.From = 4217
 		triggerChecker.Until = 4267
@@ -790,6 +848,38 @@ func TestHandleErrorCheck(t *testing.T) {
 			Timestamp:      checkData.Timestamp,
 			EventTimestamp: checkData.Timestamp,
 			Message:        "123",
+		}
+		So(err, ShouldBeNil)
+		So(actual, ShouldResemble, expected)
+		mockCtrl.Finish()
+	})
+
+	Convey("Handle trigger has same timeseries names", t, func() {
+		triggerChecker := TriggerChecker{
+			TriggerID: "SuperId",
+			Database:  dataBase,
+			Logger:    logger,
+			ttl:       60,
+			trigger:   &moira.Trigger{},
+			ttlState:  NODATA,
+			lastCheck: &moira.CheckData{
+				Timestamp: time.Now().Unix(),
+				State:     OK,
+			},
+		}
+		checkData := moira.CheckData{
+			State:     OK,
+			Timestamp: time.Now().Unix(),
+		}
+
+		dataBase.EXPECT().PushNotificationEvent(gomock.Any(), true).Return(nil)
+
+		actual, err := triggerChecker.handleErrorCheck(checkData, ErrTriggerHasSameTimeSeriesNames)
+		expected := moira.CheckData{
+			State:          EXCEPTION,
+			Timestamp:      checkData.Timestamp,
+			EventTimestamp: checkData.Timestamp,
+			Message:        "Trigger has same timeseries names",
 		}
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, expected)

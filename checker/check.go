@@ -15,6 +15,9 @@ var ErrTriggerHasNoMetrics = fmt.Errorf("Trigger has no metrics")
 // ErrTriggerHasOnlyWildcards used if trigger has only wildcard metrics
 var ErrTriggerHasOnlyWildcards = fmt.Errorf("Trigger has only wildcards")
 
+// ErrTriggerHasSameTimeSeriesNames used if trigger has two timeseries with same name
+var ErrTriggerHasSameTimeSeriesNames = fmt.Errorf("Trigger has same timeseries names")
+
 // Check handle trigger and last check and write new state of trigger, if state were change then write new NotificationEvent
 func (triggerChecker *TriggerChecker) Check() error {
 	triggerChecker.Logger.Debugf("Checking trigger %s", triggerChecker.TriggerID)
@@ -56,9 +59,19 @@ func (triggerChecker *TriggerChecker) handleTrigger() (moira.CheckData, error) {
 		return checkData, ErrTriggerHasOnlyWildcards
 	}
 
+	timeSeriesNamesMap := make(map[string]bool)
+	var checkingError error
+
 	for _, timeSeries := range triggerTimeSeries.Main {
 		triggerChecker.Logger.Debugf("[TriggerID:%s] Checking timeSeries %s: %v", triggerChecker.TriggerID, timeSeries.Name, timeSeries.Values)
 		triggerChecker.Logger.Debugf("[TriggerID:%s][TimeSeries:%s] Checking interval: %v - %v (%vs), step: %v", triggerChecker.TriggerID, timeSeries.Name, timeSeries.StartTime, timeSeries.StopTime, timeSeries.StepTime, timeSeries.StopTime-timeSeries.StartTime)
+
+		if _, ok := timeSeriesNamesMap[timeSeries.Name]; ok {
+			checkingError = ErrTriggerHasSameTimeSeriesNames
+			triggerChecker.Logger.Infof("[TriggerID:%s][TimeSeries:%s] Trigger has same timeseries names", triggerChecker.TriggerID, timeSeries.Name)
+			continue
+		}
+		timeSeriesNamesMap[timeSeries.Name] = true
 
 		metricLastState := triggerChecker.lastCheck.GetOrCreateMetricState(timeSeries.Name, int64(timeSeries.StartTime-3600))
 		metricStates, err := triggerChecker.getTimeSeriesStepsStates(triggerTimeSeries, timeSeries, metricLastState)
@@ -91,7 +104,7 @@ func (triggerChecker *TriggerChecker) handleTrigger() (moira.CheckData, error) {
 			}
 		}
 	}
-	return checkData, nil
+	return checkData, checkingError
 }
 
 func (triggerChecker *TriggerChecker) handleErrorCheck(checkData moira.CheckData, checkingError error) (moira.CheckData, error) {
@@ -116,6 +129,9 @@ func (triggerChecker *TriggerChecker) handleErrorCheck(checkData moira.CheckData
 		triggerChecker.Logger.Warningf("Trigger %s: %s", triggerChecker.TriggerID, checkingError.Error())
 		checkData.State = EXCEPTION
 		checkData.Message = checkingError.Error()
+	} else if checkingError == ErrTriggerHasSameTimeSeriesNames {
+		checkData.State = EXCEPTION
+		checkData.Message = "Trigger has same timeseries names"
 	} else {
 		triggerChecker.Metrics.CheckError.Mark(1)
 		triggerChecker.Logger.Errorf("Trigger %s check failed: %s", triggerChecker.TriggerID, checkingError.Error())
