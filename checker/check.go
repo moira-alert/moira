@@ -2,6 +2,7 @@ package checker
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/target"
@@ -217,9 +218,15 @@ func (triggerChecker *TriggerChecker) getTimeSeriesState(triggerTimeSeries *trig
 }
 
 func (triggerChecker *TriggerChecker) cleanupMetricsValues(metrics []string, until int64) {
-	for _, metric := range metrics {
-		if err := triggerChecker.Database.RemoveMetricValues(metric, until-triggerChecker.Config.MetricsTTL); err != nil {
-			triggerChecker.Logger.Error(err.Error())
-		}
+	var wg sync.WaitGroup
+	wg.Add(len(metrics))
+	for _, m := range metrics {
+		go func(metric string) {
+			defer wg.Done()
+			if err := triggerChecker.Database.RemoveMetricValues(metric, until-triggerChecker.Config.MetricsTTL); err != nil {
+				triggerChecker.Logger.Error(err.Error())
+			}
+		}(m)
 	}
+	wg.Wait()
 }
