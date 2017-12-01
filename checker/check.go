@@ -21,7 +21,8 @@ var ErrTriggerHasSameTimeSeriesNames = fmt.Errorf("Trigger has same timeseries n
 
 // Check handle trigger and last check and write new state of trigger, if state were change then write new NotificationEvent
 func (triggerChecker *TriggerChecker) Check() error {
-	triggerChecker.Logger.Debugf("Checking trigger %s", triggerChecker.TriggerID)
+	triggerChecker.Logger.Infof("Checking trigger %s", triggerChecker.TriggerID)
+	defer triggerChecker.Logger.Infof("End check trigger %s", triggerChecker.TriggerID)
 	checkData, err := triggerChecker.handleTrigger()
 	if err != nil {
 		checkData, err = triggerChecker.handleErrorCheck(checkData, err)

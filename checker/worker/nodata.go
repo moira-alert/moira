@@ -28,13 +28,14 @@ func (worker *Checker) checkNoData(wg *sync.WaitGroup) error {
 	if worker.lastData+worker.Config.StopCheckingInterval < now {
 		worker.Logger.Infof("Checking NoData disabled. No metrics for %v seconds", now-worker.lastData)
 	} else {
-		worker.Logger.Info("Checking NoData")
+		worker.Logger.Info("Check NoData start")
 		triggerIds, err := worker.Database.GetTriggerIDs()
 		if err != nil {
 			return err
 		}
 		worker.perform(triggerIds, time.Minute, wg)
 		wg.Wait()
+		worker.Logger.Info("Check NoData end")
 	}
 	return nil
 }
