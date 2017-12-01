@@ -2,8 +2,10 @@ package redis
 
 import (
 	"testing"
+	"time"
 
 	"github.com/op/go-logging"
+	"github.com/patrickmn/go-cache"
 	. "github.com/smartystreets/goconvey/convey"
 	"gopkg.in/tomb.v2"
 
@@ -178,6 +180,157 @@ func TestMetricsStoring(t *testing.T) {
 		actualRet, err = dataBase.GetMetricRetention(metric1)
 		So(err, ShouldBeNil)
 		So(actualRet, ShouldEqual, 10)
+	})
+}
+
+func TestRemoveMetricValues(t *testing.T) {
+	logger, _ := logging.GetLogger("dataBase")
+	dataBase := NewDatabase(logger, config)
+	dataBase.metricsCache = cache.New(time.Second*2, time.Minute*60)
+	dataBase.flush()
+	defer dataBase.flush()
+	metric1 := "my.test.super.metric"
+	pattern := "my.test.*.metric*"
+	met1 := &moira.MatchedMetric{
+		Patterns:           []string{pattern},
+		Metric:             metric1,
+		Retention:          10,
+		RetentionTimestamp: 10,
+		Timestamp:          15,
+		Value:              1,
+	}
+	met2 := &moira.MatchedMetric{
+		Patterns:           []string{pattern},
+		Metric:             metric1,
+		Retention:          10,
+		RetentionTimestamp: 20,
+		Timestamp:          24,
+		Value:              2,
+	}
+	met3 := &moira.MatchedMetric{
+		Patterns:           []string{pattern},
+		Metric:             metric1,
+		Retention:          10,
+		RetentionTimestamp: 30,
+		Timestamp:          34,
+		Value:              3,
+	}
+	met4 := &moira.MatchedMetric{
+		Patterns:           []string{pattern},
+		Metric:             metric1,
+		Retention:          10,
+		RetentionTimestamp: 40,
+		Timestamp:          46,
+		Value:              4,
+	}
+
+	Convey("Test", t, func() {
+		err := dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric1: met1})
+		So(err, ShouldBeNil) //Save metric with changed retention
+		err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric1: met2})
+		So(err, ShouldBeNil) //Save metric with changed retention
+		err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric1: met3})
+		So(err, ShouldBeNil) //Save metric with changed retention
+		err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric1: met4})
+		So(err, ShouldBeNil)
+
+		actualValues, err := dataBase.GetMetricsValues([]string{metric1}, 1, 99)
+		So(err, ShouldBeNil)
+		So(actualValues, ShouldResemble, map[string][]*moira.MetricValue{
+			metric1: {
+				&moira.MetricValue{Timestamp: 15, RetentionTimestamp: 10, Value: 1},
+				&moira.MetricValue{Timestamp: 24, RetentionTimestamp: 20, Value: 2},
+				&moira.MetricValue{Timestamp: 34, RetentionTimestamp: 30, Value: 3},
+				&moira.MetricValue{Timestamp: 46, RetentionTimestamp: 40, Value: 4},
+			},
+		})
+
+		err = dataBase.RemoveMetricValues(metric1, 11)
+		So(err, ShouldBeNil)
+
+		actualValues, err = dataBase.GetMetricsValues([]string{metric1}, 1, 99)
+		So(err, ShouldBeNil)
+		So(actualValues, ShouldResemble, map[string][]*moira.MetricValue{
+			metric1: {
+				&moira.MetricValue{Timestamp: 24, RetentionTimestamp: 20, Value: 2},
+				&moira.MetricValue{Timestamp: 34, RetentionTimestamp: 30, Value: 3},
+				&moira.MetricValue{Timestamp: 46, RetentionTimestamp: 40, Value: 4},
+			},
+		})
+
+		err = dataBase.RemoveMetricValues(metric1, 22)
+		So(err, ShouldBeNil)
+
+		actualValues, err = dataBase.GetMetricsValues([]string{metric1}, 1, 99)
+		So(err, ShouldBeNil)
+		So(actualValues, ShouldResemble, map[string][]*moira.MetricValue{
+			metric1: {
+				&moira.MetricValue{Timestamp: 24, RetentionTimestamp: 20, Value: 2},
+				&moira.MetricValue{Timestamp: 34, RetentionTimestamp: 30, Value: 3},
+				&moira.MetricValue{Timestamp: 46, RetentionTimestamp: 40, Value: 4},
+			},
+		})
+
+		time.Sleep(time.Second * 2)
+
+		err = dataBase.RemoveMetricValues(metric1, 22)
+		So(err, ShouldBeNil)
+
+		actualValues, err = dataBase.GetMetricsValues([]string{metric1}, 1, 99)
+		So(err, ShouldBeNil)
+		So(actualValues, ShouldResemble, map[string][]*moira.MetricValue{
+			metric1: {
+				&moira.MetricValue{Timestamp: 34, RetentionTimestamp: 30, Value: 3},
+				&moira.MetricValue{Timestamp: 46, RetentionTimestamp: 40, Value: 4},
+			},
+		})
+
+		err = dataBase.RemoveMetricValues(metric1, 30)
+		So(err, ShouldBeNil)
+
+		actualValues, err = dataBase.GetMetricsValues([]string{metric1}, 1, 99)
+		So(err, ShouldBeNil)
+		So(actualValues, ShouldResemble, map[string][]*moira.MetricValue{
+			metric1: {
+				&moira.MetricValue{Timestamp: 34, RetentionTimestamp: 30, Value: 3},
+				&moira.MetricValue{Timestamp: 46, RetentionTimestamp: 40, Value: 4},
+			},
+		})
+
+		time.Sleep(time.Second * 2)
+
+		err = dataBase.RemoveMetricValues(metric1, 30)
+		So(err, ShouldBeNil)
+
+		actualValues, err = dataBase.GetMetricsValues([]string{metric1}, 1, 99)
+		So(err, ShouldBeNil)
+		So(actualValues, ShouldResemble, map[string][]*moira.MetricValue{
+			metric1: {
+				&moira.MetricValue{Timestamp: 46, RetentionTimestamp: 40, Value: 4},
+			},
+		})
+
+		time.Sleep(time.Second * 2)
+
+		err = dataBase.RemoveMetricValues(metric1, 39)
+		So(err, ShouldBeNil)
+
+		actualValues, err = dataBase.GetMetricsValues([]string{metric1}, 1, 99)
+		So(err, ShouldBeNil)
+		So(actualValues, ShouldResemble, map[string][]*moira.MetricValue{
+			metric1: {
+				&moira.MetricValue{Timestamp: 46, RetentionTimestamp: 40, Value: 4},
+			},
+		})
+
+		time.Sleep(time.Second * 2)
+
+		err = dataBase.RemoveMetricValues(metric1, 49)
+		So(err, ShouldBeNil)
+
+		actualValues, err = dataBase.GetMetricsValues([]string{metric1}, 1, 99)
+		So(err, ShouldBeNil)
+		So(actualValues, ShouldResemble, map[string][]*moira.MetricValue{metric1: {}})
 	})
 }
 
