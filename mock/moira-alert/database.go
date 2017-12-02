@@ -5,11 +5,12 @@
 package mock_moira_alert
 
 import (
+	reflect "reflect"
+	time "time"
+
 	gomock "github.com/golang/mock/gomock"
 	moira "github.com/moira-alert/moira"
 	tomb_v2 "gopkg.in/tomb.v2"
-	reflect "reflect"
-	time "time"
 )
 
 // MockDatabase is a mock of Database interface
@@ -565,6 +566,18 @@ func (m *MockDatabase) RemoveMetricValues(arg0 string, arg1 int64) error {
 // RemoveMetricValues indicates an expected call of RemoveMetricValues
 func (mr *MockDatabaseMockRecorder) RemoveMetricValues(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveMetricValues", reflect.TypeOf((*MockDatabase)(nil).RemoveMetricValues), arg0, arg1)
+}
+
+// RemoveMetricsValues mocks base method
+func (m *MockDatabase) RemoveMetricsValues(arg0 []string, arg1 int64) error {
+	ret := m.ctrl.Call(m, "RemoveMetricsValues", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveMetricsValues indicates an expected call of RemoveMetricsValues
+func (mr *MockDatabaseMockRecorder) RemoveMetricsValues(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveMetricsValues", reflect.TypeOf((*MockDatabase)(nil).RemoveMetricsValues), arg0, arg1)
 }
 
 // RemoveNotification mocks base method

@@ -210,7 +210,7 @@ func (connector *DbConnector) RemovePatternWithMetrics(pattern string) error {
 	return nil
 }
 
-// RemoveMetricValues remove metrics timestamps values from 0 to given time
+// RemoveMetricValues remove metric timestamps values from 0 to given time
 func (connector *DbConnector) RemoveMetricValues(metric string, toTime int64) error {
 	if !connector.needRemoveMetrics(metric) {
 		return nil
@@ -219,6 +219,23 @@ func (connector *DbConnector) RemoveMetricValues(metric string, toTime int64) er
 	defer c.Close()
 	if _, err := c.Do("ZREMRANGEBYSCORE", metricDataKey(metric), "-inf", toTime); err != nil {
 		return fmt.Errorf("Failed to remove metrics from -inf to %v, error: %v", toTime, err)
+	}
+	return nil
+}
+
+// RemoveMetricsValues remove metrics timestamps values from 0 to given time
+func (connector *DbConnector) RemoveMetricsValues(metrics []string, toTime int64) error {
+	c := connector.pool.Get()
+	defer c.Close()
+
+	c.Send("MULTI")
+	for _, metric := range metrics {
+		if connector.needRemoveMetrics(metric) {
+			c.Send("ZREMRANGEBYSCORE", metricDataKey(metric), "-inf", toTime)
+		}
+	}
+	if _, err := c.Do("EXEC"); err != nil {
+		return fmt.Errorf("Failed to EXEC remove metrics: %v", err)
 	}
 	return nil
 }

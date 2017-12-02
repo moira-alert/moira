@@ -83,6 +83,7 @@ type Database interface {
 	GetMetricRetention(metric string) (int64, error)
 	GetMetricsValues(metrics []string, from int64, until int64) (map[string][]*MetricValue, error)
 	RemoveMetricValues(metric string, toTime int64) error
+	RemoveMetricsValues(metrics []string, toTime int64) error
 
 	// TriggerCheckLock storing
 	AcquireTriggerCheckLock(triggerID string, timeout int) error

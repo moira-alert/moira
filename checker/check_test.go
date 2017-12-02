@@ -493,7 +493,7 @@ func TestHandleTrigger(t *testing.T) {
 		dataBase.EXPECT().GetMetricsValues([]string{metric}, triggerChecker.From, triggerChecker.Until).Return(dataList, nil)
 		var val float64
 		var val1 float64 = 4
-		dataBase.EXPECT().RemoveMetricValues(metric, triggerChecker.Until-triggerChecker.Config.MetricsTTL)
+		dataBase.EXPECT().RemoveMetricsValues([]string{metric}, triggerChecker.Until-triggerChecker.Config.MetricsTTL)
 		dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
 			TriggerID: triggerChecker.TriggerID,
 			Timestamp: 3617,
@@ -538,7 +538,7 @@ func TestHandleTrigger(t *testing.T) {
 		dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
 		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 		dataBase.EXPECT().GetMetricsValues([]string{metric}, triggerChecker.From, triggerChecker.Until).Return(dataList, nil)
-		dataBase.EXPECT().RemoveMetricValues(metric, triggerChecker.Until-triggerChecker.Config.MetricsTTL)
+		dataBase.EXPECT().RemoveMetricsValues([]string{metric}, triggerChecker.Until-triggerChecker.Config.MetricsTTL)
 		checkData, err := triggerChecker.handleTrigger()
 		So(err, ShouldBeNil)
 		var val1 float64 = 4
@@ -565,7 +565,7 @@ func TestHandleTrigger(t *testing.T) {
 		dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
 		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 		dataBase.EXPECT().GetMetricsValues([]string{metric}, triggerChecker.From, triggerChecker.Until).Return(dataList, nil)
-		dataBase.EXPECT().RemoveMetricValues(metric, triggerChecker.Until-triggerChecker.Config.MetricsTTL)
+		dataBase.EXPECT().RemoveMetricsValues([]string{metric}, triggerChecker.Until-triggerChecker.Config.MetricsTTL)
 		dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
 			TriggerID: triggerChecker.TriggerID,
 			Timestamp: lastCheck.Timestamp - triggerChecker.ttl,
@@ -642,8 +642,7 @@ func TestHandleTrigger(t *testing.T) {
 		dataBase.EXPECT().GetPatternMetrics(pattern1).Return([]string{metric1, metric2}, nil)
 		dataBase.EXPECT().GetMetricRetention(metric1).Return(retention, nil)
 		dataBase.EXPECT().GetMetricsValues([]string{metric1, metric2}, triggerChecker1.From, triggerChecker1.Until).Return(map[string][]*moira.MetricValue{metric1: metricValues, metric2: metricValues}, nil)
-		dataBase.EXPECT().RemoveMetricValues(metric1, gomock.Any())
-		dataBase.EXPECT().RemoveMetricValues(metric2, gomock.Any())
+		dataBase.EXPECT().RemoveMetricsValues([]string{metric1, metric2}, gomock.Any())
 		dataBase.EXPECT().PushNotificationEvent(gomock.Any(), true).Return(nil)
 		checkData, err := triggerChecker1.handleTrigger()
 		So(err, ShouldResemble, ErrTriggerHasSameTimeSeriesNames)
@@ -676,7 +675,7 @@ func TestHandleTrigger(t *testing.T) {
 		dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
 		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 		dataBase.EXPECT().GetMetricsValues([]string{metric}, triggerChecker.From, triggerChecker.Until).Return(dataList, nil)
-		dataBase.EXPECT().RemoveMetricValues(metric, triggerChecker.Until-triggerChecker.Config.MetricsTTL)
+		dataBase.EXPECT().RemoveMetricsValues([]string{metric}, triggerChecker.Until-triggerChecker.Config.MetricsTTL)
 		dataBase.EXPECT().RemovePatternsMetrics(triggerChecker.trigger.Patterns).Return(nil)
 		checkData, err := triggerChecker.handleTrigger()
 		So(err, ShouldBeNil)

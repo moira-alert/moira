@@ -271,21 +271,22 @@ func TestRemoveMetricValues(t *testing.T) {
 			},
 		})
 
-		time.Sleep(time.Second * 2)
-
-		err = dataBase.RemoveMetricValues(metric1, 22)
+		err = dataBase.RemoveMetricsValues([]string{metric1}, 22)
 		So(err, ShouldBeNil)
 
 		actualValues, err = dataBase.GetMetricsValues([]string{metric1}, 1, 99)
 		So(err, ShouldBeNil)
 		So(actualValues, ShouldResemble, map[string][]*moira.MetricValue{
 			metric1: {
+				&moira.MetricValue{Timestamp: 24, RetentionTimestamp: 20, Value: 2},
 				&moira.MetricValue{Timestamp: 34, RetentionTimestamp: 30, Value: 3},
 				&moira.MetricValue{Timestamp: 46, RetentionTimestamp: 40, Value: 4},
 			},
 		})
 
-		err = dataBase.RemoveMetricValues(metric1, 30)
+		time.Sleep(time.Second * 2)
+
+		err = dataBase.RemoveMetricsValues([]string{metric1}, 22)
 		So(err, ShouldBeNil)
 
 		actualValues, err = dataBase.GetMetricsValues([]string{metric1}, 1, 99)
