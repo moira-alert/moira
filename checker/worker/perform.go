@@ -2,17 +2,15 @@ package worker
 
 import (
 	"runtime/debug"
-	"sync"
 	"time"
 
 	"github.com/moira-alert/moira/checker"
 )
 
-func (worker *Checker) perform(triggerIDs []string, cacheTTL time.Duration, wg *sync.WaitGroup) {
+func (worker *Checker) perform(triggerIDs []string, cacheTTL time.Duration) {
 	for _, triggerID := range triggerIDs {
 		if worker.needHandleTrigger(triggerID, cacheTTL) {
-			wg.Add(1)
-			go worker.handle(triggerID, wg)
+			worker.triggersToCheck <- triggerID
 		}
 	}
 }
@@ -22,8 +20,17 @@ func (worker *Checker) needHandleTrigger(triggerID string, cacheTTL time.Duratio
 	return err == nil
 }
 
-func (worker *Checker) handle(triggerID string, wg *sync.WaitGroup) {
-	defer wg.Done()
+func (worker *Checker) triggerHandler() error {
+	for {
+		triggerID, ok := <-worker.triggersToCheck
+		if !ok {
+			return nil
+		}
+		worker.handle(triggerID)
+	}
+}
+
+func (worker *Checker) handle(triggerID string) {
 	defer func() {
 		if r := recover(); r != nil {
 			worker.Metrics.HandleError.Mark(1)

@@ -9,6 +9,7 @@ type Config struct {
 	CheckInterval        time.Duration
 	MetricsTTL           int64
 	StopCheckingInterval int64
+	MaxParallelChecks    int
 	LogFile              string
 	LogLevel             string
 }

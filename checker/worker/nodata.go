@@ -1,29 +1,26 @@
 package worker
 
 import (
-	"sync"
 	"time"
 )
 
 func (worker *Checker) noDataChecker() error {
 	checkTicker := time.NewTicker(worker.Config.NoDataCheckInterval)
-	var wg sync.WaitGroup
 	for {
 		select {
 		case <-worker.tomb.Dying():
 			checkTicker.Stop()
-			wg.Wait()
 			worker.Logger.Info("NoData checker stopped")
 			return nil
 		case <-checkTicker.C:
-			if err := worker.checkNoData(&wg); err != nil {
+			if err := worker.checkNoData(); err != nil {
 				worker.Logger.Errorf("NoData check failed: %s", err.Error())
 			}
 		}
 	}
 }
 
-func (worker *Checker) checkNoData(wg *sync.WaitGroup) error {
+func (worker *Checker) checkNoData() error {
 	now := time.Now().UTC().Unix()
 	if worker.lastData+worker.Config.StopCheckingInterval < now {
 		worker.Logger.Infof("Checking NoData disabled. No metrics for %v seconds", now-worker.lastData)
@@ -33,8 +30,7 @@ func (worker *Checker) checkNoData(wg *sync.WaitGroup) error {
 		if err != nil {
 			return err
 		}
-		worker.perform(triggerIds, time.Minute, wg)
-		wg.Wait()
+		worker.perform(triggerIds, time.Minute)
 	}
 	return nil
 }

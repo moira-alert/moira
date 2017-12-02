@@ -1,6 +1,7 @@
 package worker
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/patrickmn/go-cache"
@@ -13,18 +14,24 @@ import (
 
 // Checker represents workers for periodically triggers checking based by new events
 type Checker struct {
-	Logger   moira.Logger
-	Database moira.Database
-	Config   *checker.Config
-	Metrics  *graphite.CheckerMetrics
-	Cache    *cache.Cache
-	lastData int64
-	tomb     tomb.Tomb
+	Logger          moira.Logger
+	Database        moira.Database
+	Config          *checker.Config
+	Metrics         *graphite.CheckerMetrics
+	Cache           *cache.Cache
+	lastData        int64
+	tomb            tomb.Tomb
+	triggersToCheck chan string
 }
 
 // Start start schedule new MetricEvents and check for NODATA triggers
 func (worker *Checker) Start() error {
+	if worker.Config.MaxParallelChecks == 0 {
+		return fmt.Errorf("MaxParallelChecks does not configure, checker does not started")
+	}
+
 	worker.lastData = time.Now().UTC().Unix()
+	worker.triggersToCheck = make(chan string, 100)
 
 	metricEventsChannel, err := worker.Database.SubscribeMetricEvents(&worker.tomb)
 	if err != nil {
@@ -32,13 +39,18 @@ func (worker *Checker) Start() error {
 	}
 
 	worker.tomb.Go(worker.noDataChecker)
-	worker.Logger.Info("Moira Checker NoData checker started")
+	worker.Logger.Info("NoData checker started")
 
 	worker.tomb.Go(func() error {
 		return worker.metricsChecker(metricEventsChannel)
 	})
 
-	worker.Logger.Info("Moira Checker Checking new events started")
+	for i := 0; i < worker.Config.MaxParallelChecks; i++ {
+		worker.tomb.Go(worker.triggerHandler)
+	}
+	worker.Logger.Infof("Start %v parallel checkers", worker.Config.MaxParallelChecks)
+
+	worker.Logger.Info("Checking new events started")
 	return nil
 }
 

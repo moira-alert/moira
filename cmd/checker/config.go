@@ -1,6 +1,8 @@
 package main
 
 import (
+	"runtime"
+
 	"github.com/moira-alert/moira/checker"
 	"github.com/moira-alert/moira/cmd"
 	"menteslibres.net/gosexy/to"
@@ -18,14 +20,19 @@ type checkerConfig struct {
 	CheckInterval        string `yaml:"check_interval"`
 	MetricsTTL           int64  `yaml:"metrics_ttl"`
 	StopCheckingInterval int64  `yaml:"stop_checking_interval"`
+	MaxParallelChecks    int    `yaml:"max_parallel_checks"`
 }
 
 func (config *checkerConfig) getSettings() *checker.Config {
+	if config.MaxParallelChecks == 0 {
+		config.MaxParallelChecks = runtime.NumCPU()
+	}
 	return &checker.Config{
 		MetricsTTL:           config.MetricsTTL,
 		CheckInterval:        to.Duration(config.CheckInterval),
 		NoDataCheckInterval:  to.Duration(config.NoDataCheckInterval),
 		StopCheckingInterval: config.StopCheckingInterval,
+		MaxParallelChecks:    config.MaxParallelChecks,
 	}
 }
 
@@ -44,6 +51,7 @@ func getDefault() config {
 			CheckInterval:        "5s0ms",
 			MetricsTTL:           3600,
 			StopCheckingInterval: 30,
+			MaxParallelChecks:    0,
 		},
 		Graphite: cmd.GraphiteConfig{
 			URI:      "localhost:2003",

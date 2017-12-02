@@ -85,7 +85,10 @@ func main() {
 		Metrics:  checkerMetrics,
 		Cache:    cache.New(time.Minute, time.Minute*60),
 	}
-	checkerWorker.Start()
+	err = checkerWorker.Start()
+	if err != nil {
+		logger.Fatal(err)
+	}
 	defer stopChecker(checkerWorker)
 
 	logger.Infof("Moira Checker started. Version: %s", Version)
