@@ -842,12 +842,12 @@ func TestHandleErrorCheck(t *testing.T) {
 
 		dataBase.EXPECT().PushNotificationEvent(gomock.Any(), true).Return(nil)
 
-		actual, err := triggerChecker.handleErrorCheck(checkData, target.ErrUnknownFunction{InternalError: fmt.Errorf("123")})
+		actual, err := triggerChecker.handleErrorCheck(checkData, target.ErrUnknownFunction{FuncName: "123"})
 		expected := moira.CheckData{
 			State:          EXCEPTION,
 			Timestamp:      checkData.Timestamp,
 			EventTimestamp: checkData.Timestamp,
-			Message:        "123",
+			Message:        "Unknown graphite function: \"123\"",
 		}
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, expected)

@@ -7,12 +7,26 @@ import (
 
 // ErrUnknownFunction used when carbonapi.ParseExpr returns unknown function error
 type ErrUnknownFunction struct {
-	InternalError error
+	FuncName      string
+	internalError error
+}
+
+// ErrorUnknownFunction parses internal carbonapi error errUnknownFunction, gets func name and return ErrUnknownFunction error
+func ErrorUnknownFunction(err error) ErrUnknownFunction {
+	errorStr := err.Error()
+	funcName := strings.Replace(errorStr[strings.Index(errorStr, "\""):], "\"", "", -1)
+	return ErrUnknownFunction{
+		internalError: err,
+		FuncName:      funcName,
+	}
 }
 
 // Error is implementation of golang error interface for ErrUnknownFunction struct
 func (err ErrUnknownFunction) Error() string {
-	return err.InternalError.Error()
+	if err.FuncName == "" {
+		return err.internalError.Error()
+	}
+	return fmt.Sprintf("Unknown graphite function: \"%s\"", err.FuncName)
 }
 
 // isErrUnknownFunction checks error for carbonapi.errUnknownFunction

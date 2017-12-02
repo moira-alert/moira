@@ -2,14 +2,15 @@ package target
 
 import (
 	"fmt"
+	"math"
+	"testing"
+
 	"github.com/go-graphite/carbonapi/expr"
 	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
-	"math"
-	"testing"
 )
 
 func TestFetchData(t *testing.T) {

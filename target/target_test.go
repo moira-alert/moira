@@ -2,13 +2,14 @@ package target
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/go-graphite/carbonapi/expr"
 	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
-	"testing"
 )
 
 func TestEvaluateTarget(t *testing.T) {
@@ -75,7 +76,7 @@ func TestEvaluateTarget(t *testing.T) {
 			dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 			dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
 			result, err := EvaluateTarget(dataBase, "aliasByNoe(super.puper.pattern, 2)", from, until, true)
-			So(err.Error(), ShouldResemble, "unknown function in evalExpr: \"aliasByNoe\"")
+			So(err.Error(), ShouldResemble, "Unknown graphite function: \"aliasByNoe\"")
 			So(result, ShouldBeNil)
 		})
 	})

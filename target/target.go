@@ -59,7 +59,7 @@ func EvaluateTarget(database moira.Database, target string, from int64, until in
 					if err == expr.ErrSeriesDoesNotExist {
 						err = nil
 					} else if isErrUnknownFunction(err) {
-						err = ErrUnknownFunction{InternalError: err}
+						err = ErrorUnknownFunction(err)
 					} else {
 						err = ErrEvalExpr{
 							target:        target,
