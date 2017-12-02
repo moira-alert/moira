@@ -107,7 +107,7 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 	}
 
 	if err := resolvePatterns(request, trigger, &triggerExpression); err != nil {
-		return fmt.Errorf("Invalid graphite targets: %s", err.Error())
+		return err
 	}
 	if _, err := triggerExpression.Evaluate(); err != nil {
 		return err
