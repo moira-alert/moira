@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
@@ -94,22 +93,6 @@ func getRequestTags(request *http.Request) []string {
 		filterTags = append(filterTags, tag)
 		i++
 	}
-
-	if len(filterTags) != 0 {
-		return filterTags
-	}
-
-	fillerTagsCookie, err := request.Cookie("moira_filter_tags")
-	if err == http.ErrNoCookie {
-		filterTags = make([]string, 0)
-	} else {
-		str := strings.Split(fillerTagsCookie.Value, "%2C")
-		for _, tag := range str {
-			if tag != "" {
-				filterTags = append(filterTags, tag)
-			}
-		}
-	}
 	return filterTags
 }
 
@@ -119,10 +102,5 @@ func getOnlyProblemsFlag(request *http.Request) bool {
 		onlyProblems, _ := strconv.ParseBool(onlyProblemsStr)
 		return onlyProblems
 	}
-
-	filterOkCookie, err := request.Cookie("moira_filter_ok")
-	if err == http.ErrNoCookie {
-		return false
-	}
-	return filterOkCookie.Value == "true"
+	return false
 }
