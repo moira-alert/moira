@@ -2,9 +2,10 @@ package checker
 
 import (
 	"fmt"
+	"math"
+
 	"github.com/moira-alert/moira/expression"
 	"github.com/moira-alert/moira/target"
-	"math"
 )
 
 type triggerTimeSeries struct {
@@ -57,7 +58,7 @@ func (triggerTimeSeries *triggerTimeSeries) getExpressionValues(firstTargetTimeS
 		AdditionalTargetsValues: make(map[string]float64),
 	}
 	firstTargetValue := firstTargetTimeSeries.GetTimestampValue(valueTimestamp)
-	if math.IsNaN(firstTargetValue) {
+	if triggerTimeSeries.isInvalidValue(firstTargetValue) {
 		return expressionValues, false
 	}
 	expressionValues.MainTargetValue = firstTargetValue
@@ -68,12 +69,25 @@ func (triggerTimeSeries *triggerTimeSeries) getExpressionValues(firstTargetTimeS
 			return expressionValues, false
 		}
 		tnValue := additionalTimeSeries.GetTimestampValue(valueTimestamp)
-		if math.IsNaN(tnValue) {
+		if triggerTimeSeries.isInvalidValue(tnValue) {
 			return expressionValues, false
 		}
 		expressionValues.AdditionalTargetsValues[triggerTimeSeries.getAdditionalTargetName(targetNumber)] = tnValue
 	}
 	return expressionValues, true
+}
+
+func (triggerTimeSeries *triggerTimeSeries) isInvalidValue(val float64) bool {
+	if math.IsNaN(val) {
+		return true
+	}
+	if math.IsInf(val, -1) {
+		return true
+	}
+	if math.IsInf(val, 1) {
+		return true
+	}
+	return false
 }
 
 // hasOnlyWildcards checks given targetTimeSeries for only wildcards
