@@ -96,7 +96,7 @@ func getSimpleExpression(triggerExpression *TriggerExpression) (*govaluate.Evalu
 	if triggerExpression.ErrorValue == nil || triggerExpression.WarnValue == nil {
 		return nil, fmt.Errorf("Error value and Warning value can not be empty")
 	}
-	if *triggerExpression.ErrorValue > *triggerExpression.WarnValue {
+	if *triggerExpression.ErrorValue >= *triggerExpression.WarnValue {
 		return default1, nil
 	}
 	return default2, nil
