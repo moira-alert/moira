@@ -2,12 +2,13 @@ package filter
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
 	"github.com/moira-alert/moira/mock/moira-alert"
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
-	"testing"
 )
 
 func TestParseMetricFromString(t *testing.T) {
@@ -76,6 +77,7 @@ func TestProcessIncomingMetric(t *testing.T) {
 		"Bracket.pr{one,two,three}suf",
 		"Complex.matching.pattern",
 		"Complex.*.*",
+		"Complex.*.",
 		"Complex.*{one,two,three}suf*.pattern",
 		"Question.?at_begin",
 		"Question.at_the_end?",

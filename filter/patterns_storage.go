@@ -2,14 +2,15 @@ package filter
 
 import (
 	"fmt"
-	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/metrics/graphite"
-	"github.com/vova616/xxhash"
 	"path"
 	"strconv"
 	"strings"
 	"time"
 	"unicode"
+
+	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/metrics/graphite"
+	"github.com/vova616/xxhash"
 )
 
 var asteriskHash = xxhash.Checksum32([]byte("*"))
@@ -171,6 +172,9 @@ func (storage *PatternStorage) buildTree(patterns []string) error {
 	for _, pattern := range patterns {
 		currentNode := newTree
 		parts := strings.Split(pattern, ".")
+		if hasEmptyParts(parts) {
+			continue
+		}
 		for _, part := range parts {
 			found := false
 			for _, child := range currentNode.Children {
@@ -214,6 +218,15 @@ func (storage *PatternStorage) buildTree(patterns []string) error {
 
 	storage.PatternTree = newTree
 	return nil
+}
+
+func hasEmptyParts(parts []string) bool {
+	for _, part := range parts {
+		if part == "" {
+			return true
+		}
+	}
+	return false
 }
 
 func findPart(part []byte, currentLevel []*patternNode) ([]*patternNode, int) {
