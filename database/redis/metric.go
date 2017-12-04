@@ -37,7 +37,7 @@ func (connector *DbConnector) GetMetricsValues(metrics []string, from int64, unt
 		return nil, fmt.Errorf("Failed to EXEC: %v", err)
 	}
 
-	res := make(map[string][]*moira.MetricValue)
+	res := make(map[string][]*moira.MetricValue, len(resultByMetrics))
 
 	for i, resultByMetric := range resultByMetrics {
 		metric := metrics[i]

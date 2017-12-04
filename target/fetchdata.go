@@ -1,10 +1,11 @@
 package target
 
 import (
+	"math"
+
 	"github.com/go-graphite/carbonapi/expr"
 	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
 	"github.com/moira-alert/moira"
-	"math"
 )
 
 // FetchData gets values of given pattern metrics from given interval and returns values and all found pattern metrics
@@ -64,7 +65,7 @@ func unpackMetricsValues(metricsData map[string][]*moira.MetricValue, retention 
 		return (timestamp - retentionFrom) / retention
 	}
 
-	valuesMap := make(map[string][]float64)
+	valuesMap := make(map[string][]float64, len(metricsData))
 	for metric, metricData := range metricsData {
 		points := make(map[int64]float64)
 		for _, metricValue := range metricData {
@@ -73,7 +74,7 @@ func unpackMetricsValues(metricsData map[string][]*moira.MetricValue, retention 
 
 		lastTimeSlot := getTimeSlot(until)
 
-		values := make([]float64, 0)
+		values := make([]float64, 0, lastTimeSlot)
 		// note that right boundary is exclusive
 		for timeSlot := int64(0); timeSlot < lastTimeSlot; timeSlot++ {
 			val, ok := points[timeSlot]
