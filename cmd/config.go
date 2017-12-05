@@ -52,6 +52,11 @@ type LoggerConfig struct {
 	LogLevel string `yaml:"log_level"`
 }
 
+// ProfilerConfig is pprof settings, which are taken on the start of moira
+type ProfilerConfig struct {
+	Listen string `yaml:"listen"`
+}
+
 // ReadConfig gets config file by given file and marshal it to moira-used type
 func ReadConfig(configFileName string, config interface{}) error {
 	configYaml, err := ioutil.ReadFile(configFileName)
