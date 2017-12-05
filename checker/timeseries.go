@@ -53,8 +53,8 @@ func (*triggerTimeSeries) getAdditionalTargetName(targetIndex int) string {
 	return fmt.Sprintf("t%v", targetIndex+2)
 }
 
-func (triggerTimeSeries *triggerTimeSeries) getExpressionValues(firstTargetTimeSeries *target.TimeSeries, valueTimestamp int64) (expression.TriggerExpression, bool) {
-	expressionValues := expression.TriggerExpression{
+func (triggerTimeSeries *triggerTimeSeries) getExpressionValues(firstTargetTimeSeries *target.TimeSeries, valueTimestamp int64) (*expression.TriggerExpression, bool) {
+	expressionValues := &expression.TriggerExpression{
 		AdditionalTargetsValues: make(map[string]float64),
 	}
 	firstTargetValue := firstTargetTimeSeries.GetTimestampValue(valueTimestamp)

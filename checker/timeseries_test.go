@@ -2,6 +2,8 @@ package checker
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/go-graphite/carbonapi/expr"
 	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
 	"github.com/golang/mock/gomock"
@@ -10,7 +12,6 @@ import (
 	"github.com/moira-alert/moira/mock/moira-alert"
 	"github.com/moira-alert/moira/target"
 	. "github.com/smartystreets/goconvey/convey"
-	"testing"
 )
 
 func TestGetTimeSeries(t *testing.T) {
@@ -210,7 +211,7 @@ func TestGetExpressionValues(t *testing.T) {
 		tts := &triggerTimeSeries{
 			Main: []*target.TimeSeries{&timeSeries},
 		}
-		expectedExpressionValues := expression.TriggerExpression{
+		expectedExpressionValues := &expression.TriggerExpression{
 			AdditionalTargetsValues: make(map[string]float64),
 		}
 
@@ -264,7 +265,7 @@ func TestGetExpressionValues(t *testing.T) {
 			Additional: []*target.TimeSeries{&timeSeriesAdd},
 		}
 
-		expectedExpressionValues := expression.TriggerExpression{
+		expectedExpressionValues := &expression.TriggerExpression{
 			AdditionalTargetsValues: make(map[string]float64),
 		}
 
