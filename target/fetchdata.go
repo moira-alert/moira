@@ -67,7 +67,7 @@ func unpackMetricsValues(metricsData map[string][]*moira.MetricValue, retention 
 
 	valuesMap := make(map[string][]float64, len(metricsData))
 	for metric, metricData := range metricsData {
-		points := make(map[int64]float64)
+		points := make(map[int64]float64, len(metricsData))
 		for _, metricValue := range metricData {
 			points[getTimeSlot(metricValue.RetentionTimestamp)] = metricValue.Value
 		}
