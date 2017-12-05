@@ -209,8 +209,9 @@ func GetTriggerMetrics(dataBase moira.Database, from, to int64, triggerID string
 	}
 
 	triggerMetrics := make(map[string][]moira.MetricValue)
+	isSimpleTrigger := trigger.IsSimple()
 	for _, tar := range trigger.Targets {
-		result, err := target.EvaluateTarget(dataBase, tar, from, to, true)
+		result, err := target.EvaluateTarget(dataBase, tar, from, to, isSimpleTrigger)
 		if err != nil {
 			return nil, api.ErrorInternalServer(err)
 		}
