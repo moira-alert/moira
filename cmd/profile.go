@@ -21,7 +21,6 @@ func StartProfiling(logger moira.Logger, config ProfilerConfig) {
 		err := http.ListenAndServe(config.Port, pprofMux)
 		if err != nil {
 			logger.Infof("Can't start pprof server: %v", err)
-			return
 		}
 	}()
 
