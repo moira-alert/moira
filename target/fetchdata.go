@@ -67,9 +67,9 @@ func unpackMetricsValues(metricsData map[string][]*moira.MetricValue, retention 
 
 	valuesMap := make(map[string][]float64, len(metricsData))
 	for metric, metricData := range metricsData {
-		points := make(map[int64]float64, len(metricsData))
+		points := make(map[int64]*moira.MetricValue, len(metricData))
 		for _, metricValue := range metricData {
-			points[getTimeSlot(metricValue.RetentionTimestamp)] = metricValue.Value
+			points[getTimeSlot(metricValue.RetentionTimestamp)] = metricValue
 		}
 
 		lastTimeSlot := getTimeSlot(until)
@@ -91,9 +91,9 @@ func unpackMetricsValues(metricsData map[string][]*moira.MetricValue, retention 
 	return valuesMap
 }
 
-func getMathFloat64(val float64, ok bool) float64 {
+func getMathFloat64(val *moira.MetricValue, ok bool) float64 {
 	if ok {
-		return val
+		return val.Value
 	}
 	return math.NaN()
 }
