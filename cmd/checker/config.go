@@ -11,6 +11,7 @@ type config struct {
 	Graphite cmd.GraphiteConfig `yaml:"graphite"`
 	Logger   cmd.LoggerConfig   `yaml:"log"`
 	Checker  checkerConfig      `yaml:"checker"`
+	Pprof    cmd.ProfilerConfig `yaml:"pprof"`
 }
 
 type checkerConfig struct {
@@ -49,6 +50,9 @@ func getDefault() config {
 			URI:      "localhost:2003",
 			Prefix:   "DevOps.Moira",
 			Interval: "60s0ms",
+		},
+		Pprof: cmd.ProfilerConfig{
+			Listen: "",
 		},
 	}
 }
