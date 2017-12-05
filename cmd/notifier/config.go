@@ -67,7 +67,7 @@ func getDefault() config {
 			Timezone: "UTC",
 		},
 		Pprof: cmd.ProfilerConfig{
-			Port: "",
+			Listen: "",
 		},
 	}
 }

@@ -63,8 +63,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	if config.Pprof.Port != "" {
-		logger.Infof("Starting pprof server at: [%s]", config.Pprof.Port)
+	if config.Pprof.Listen != "" {
+		logger.Infof("Starting pprof server at: [%s]", config.Pprof.Listen)
 		cmd.StartProfiling(logger, config.Pprof)
 	}
 

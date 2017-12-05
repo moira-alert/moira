@@ -39,7 +39,7 @@ func getDefault() config {
 			EnableCORS: "true",
 		},
 		Pprof: cmd.ProfilerConfig{
-			Port: "",
+			Listen: "",
 		},
 	}
 }

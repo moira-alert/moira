@@ -52,7 +52,7 @@ func getDefault() config {
 			Interval: "60s0ms",
 		},
 		Pprof: cmd.ProfilerConfig{
-			Port: "",
+			Listen: "",
 		},
 	}
 }

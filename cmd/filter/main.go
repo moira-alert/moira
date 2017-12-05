@@ -64,8 +64,8 @@ func main() {
 	}
 	defer logger.Infof("Moira Filter stopped. Version: %s", MoiraVersion)
 
-	if config.Pprof.Port != "" {
-		logger.Infof("Starting pprof server at: [%s]", config.Pprof.Port)
+	if config.Pprof.Listen != "" {
+		logger.Infof("Starting pprof server at: [%s]", config.Pprof.Listen)
 		cmd.StartProfiling(logger, config.Pprof)
 	}
 
