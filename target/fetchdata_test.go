@@ -13,6 +13,59 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+func BenchmarkUnpackMetricsValues(b *testing.B) {
+	var from int64 = 17
+	var until int64 = 1317
+	var retention int64 = 10
+	metricsCount := 7300
+
+	metricsValues := make([]*moira.MetricValue, 0)
+
+	for i := from + retention; i <= until; i += retention {
+		metricsValues = append(metricsValues, &moira.MetricValue{
+			RetentionTimestamp: int64((i / retention) * retention),
+			Timestamp:          int64(i),
+			Value:              float64(i),
+		})
+	}
+	metricData := map[string][]*moira.MetricValue{"metric1": metricsValues}
+	for i := 0; i < metricsCount; i++ {
+		metricData[fmt.Sprintf("metric%v", i)] = metricsValues
+	}
+
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		unpackMetricsValues(metricData, retention, from, until, true)
+	}
+}
+
+func BenchmarkUnpackMetricValues(b *testing.B) {
+	var from int64 = 17
+	var until int64 = 317
+	var retention int64 = 10
+
+	metricsValues := make([]*moira.MetricValue, 0)
+
+	for i := from + retention; i <= until; i += retention {
+		metricsValues = append(metricsValues, &moira.MetricValue{
+			RetentionTimestamp: int64((i / retention) * retention),
+			Timestamp:          int64(i),
+			Value:              float64(i),
+		})
+	}
+
+	retentionFrom := roundToMinimalHighestRetention(from, retention)
+	getTimeSlot := func(timestamp int64) int64 {
+		return (timestamp - retentionFrom) / retention
+	}
+
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		unpackMetricValues(metricsValues, until, false, getTimeSlot)
+	}
+
+}
+
 func TestFetchData(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)

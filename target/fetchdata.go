@@ -67,28 +67,31 @@ func unpackMetricsValues(metricsData map[string][]*moira.MetricValue, retention 
 
 	valuesMap := make(map[string][]float64, len(metricsData))
 	for metric, metricData := range metricsData {
-		points := make(map[int64]*moira.MetricValue, len(metricData))
-		for _, metricValue := range metricData {
-			points[getTimeSlot(metricValue.RetentionTimestamp)] = metricValue
-		}
-
-		lastTimeSlot := getTimeSlot(until)
-
-		values := make([]float64, 0, lastTimeSlot)
-		// note that right boundary is exclusive
-		for timeSlot := int64(0); timeSlot < lastTimeSlot; timeSlot++ {
-			val, ok := points[timeSlot]
-			values = append(values, getMathFloat64(val, ok))
-		}
-
-		lastPoint, ok := points[lastTimeSlot]
-		if allowRealTimeAlerting && ok {
-			values = append(values, getMathFloat64(lastPoint, ok))
-		}
-
-		valuesMap[metric] = values
+		valuesMap[metric] = unpackMetricValues(metricData, until, allowRealTimeAlerting, getTimeSlot)
 	}
 	return valuesMap
+}
+
+func unpackMetricValues(metricData []*moira.MetricValue, until int64, allowRealTimeAlerting bool, getTimeSlot func(int64) int64) []float64 {
+	points := make(map[int64]*moira.MetricValue, len(metricData))
+	for _, metricValue := range metricData {
+		points[getTimeSlot(metricValue.RetentionTimestamp)] = metricValue
+	}
+
+	lastTimeSlot := getTimeSlot(until)
+
+	values := make([]float64, 0, lastTimeSlot+1)
+	// note that right boundary is exclusive
+	for timeSlot := int64(0); timeSlot < lastTimeSlot; timeSlot++ {
+		val, ok := points[timeSlot]
+		values = append(values, getMathFloat64(val, ok))
+	}
+
+	lastPoint, ok := points[lastTimeSlot]
+	if allowRealTimeAlerting && ok {
+		values = append(values, getMathFloat64(lastPoint, ok))
+	}
+	return values
 }
 
 func getMathFloat64(val *moira.MetricValue, ok bool) float64 {
