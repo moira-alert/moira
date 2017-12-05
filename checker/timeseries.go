@@ -55,7 +55,7 @@ func (*triggerTimeSeries) getAdditionalTargetName(targetIndex int) string {
 
 func (triggerTimeSeries *triggerTimeSeries) getExpressionValues(firstTargetTimeSeries *target.TimeSeries, valueTimestamp int64) (*expression.TriggerExpression, bool) {
 	expressionValues := &expression.TriggerExpression{
-		AdditionalTargetsValues: make(map[string]float64),
+		AdditionalTargetsValues: make(map[string]float64, len(triggerTimeSeries.Additional)),
 	}
 	firstTargetValue := firstTargetTimeSeries.GetTimestampValue(valueTimestamp)
 	if triggerTimeSeries.isInvalidValue(firstTargetValue) {

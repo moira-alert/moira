@@ -33,7 +33,7 @@ func (triggerChecker *TriggerChecker) Check() error {
 }
 
 func (triggerChecker *TriggerChecker) handleTrigger() (moira.CheckData, error) {
-	lastMetrics := make(map[string]moira.MetricState)
+	lastMetrics := make(map[string]moira.MetricState, len(triggerChecker.lastCheck.Metrics))
 	for k, v := range triggerChecker.lastCheck.Metrics {
 		lastMetrics[k] = v
 	}
@@ -59,7 +59,7 @@ func (triggerChecker *TriggerChecker) handleTrigger() (moira.CheckData, error) {
 		return checkData, ErrTriggerHasOnlyWildcards
 	}
 
-	timeSeriesNamesMap := make(map[string]bool)
+	timeSeriesNamesMap := make(map[string]bool, len(triggerTimeSeries.Main))
 	var checkingError error
 
 	for _, timeSeries := range triggerTimeSeries.Main {
