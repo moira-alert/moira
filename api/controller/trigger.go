@@ -2,7 +2,6 @@ package controller
 
 import (
 	"fmt"
-	"math"
 	"time"
 
 	"github.com/moira-alert/moira"
@@ -220,7 +219,7 @@ func GetTriggerMetrics(dataBase moira.Database, from, to int64, triggerID string
 			for i := 0; i < len(timeSeries.Values); i++ {
 				timestamp := int64(timeSeries.StartTime + int32(i)*timeSeries.StepTime)
 				value := timeSeries.GetTimestampValue(timestamp)
-				if !math.IsNaN(value) {
+				if checker.IsInvalidValue(value) {
 					values = append(values, moira.MetricValue{Value: value, Timestamp: timestamp})
 				}
 			}

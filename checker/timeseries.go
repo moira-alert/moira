@@ -58,7 +58,7 @@ func (triggerTimeSeries *triggerTimeSeries) getExpressionValues(firstTargetTimeS
 		AdditionalTargetsValues: make(map[string]float64, len(triggerTimeSeries.Additional)),
 	}
 	firstTargetValue := firstTargetTimeSeries.GetTimestampValue(valueTimestamp)
-	if triggerTimeSeries.isInvalidValue(firstTargetValue) {
+	if IsInvalidValue(firstTargetValue) {
 		return expressionValues, false
 	}
 	expressionValues.MainTargetValue = firstTargetValue
@@ -69,7 +69,7 @@ func (triggerTimeSeries *triggerTimeSeries) getExpressionValues(firstTargetTimeS
 			return expressionValues, false
 		}
 		tnValue := additionalTimeSeries.GetTimestampValue(valueTimestamp)
-		if triggerTimeSeries.isInvalidValue(tnValue) {
+		if IsInvalidValue(tnValue) {
 			return expressionValues, false
 		}
 		expressionValues.AdditionalTargetsValues[triggerTimeSeries.getAdditionalTargetName(targetNumber)] = tnValue
@@ -77,7 +77,8 @@ func (triggerTimeSeries *triggerTimeSeries) getExpressionValues(firstTargetTimeS
 	return expressionValues, true
 }
 
-func (triggerTimeSeries *triggerTimeSeries) isInvalidValue(val float64) bool {
+// IsInvalidValue checks trigger for Inf and NaN. If it is then trigger is not valid
+func IsInvalidValue(val float64) bool {
 	if math.IsNaN(val) {
 		return true
 	}
