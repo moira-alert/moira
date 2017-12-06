@@ -113,7 +113,7 @@ func (triggerChecker *TriggerChecker) handleErrorCheck(checkData moira.CheckData
 	if checkingError == ErrTriggerHasNoMetrics {
 		triggerChecker.Logger.Debugf("Trigger %s: %s", triggerChecker.TriggerID, checkingError.Error())
 		if triggerChecker.ttl != 0 {
-			checkData.State = triggerChecker.ttlState
+			checkData.State = toMetricState(triggerChecker.ttlState)
 			checkData.Message = "Trigger has no metrics"
 			return triggerChecker.compareChecks(checkData)
 		}
@@ -122,8 +122,13 @@ func (triggerChecker *TriggerChecker) handleErrorCheck(checkData moira.CheckData
 	if checkingError == ErrTriggerHasOnlyWildcards {
 		triggerChecker.Logger.Debugf("Trigger %s: %s", triggerChecker.TriggerID, checkingError.Error())
 		if len(checkData.Metrics) == 0 {
-			checkData.State = NODATA
-			checkData.Message = "Trigger never received metrics"
+			if triggerChecker.ttl == 0 {
+				return checkData, nil
+			}
+			checkData.State = toMetricState(triggerChecker.ttlState)
+			if checkData.State != OK {
+				checkData.Message = "Trigger never received metrics"
+			}
 		}
 		return triggerChecker.compareChecks(checkData)
 	}
