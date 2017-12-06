@@ -219,7 +219,7 @@ func GetTriggerMetrics(dataBase moira.Database, from, to int64, triggerID string
 			for i := 0; i < len(timeSeries.Values); i++ {
 				timestamp := int64(timeSeries.StartTime + int32(i)*timeSeries.StepTime)
 				value := timeSeries.GetTimestampValue(timestamp)
-				if checker.IsInvalidValue(value) {
+				if !checker.IsInvalidValue(value) {
 					values = append(values, moira.MetricValue{Value: value, Timestamp: timestamp})
 				}
 			}
