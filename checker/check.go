@@ -126,6 +126,9 @@ func (triggerChecker *TriggerChecker) handleErrorCheck(checkData moira.CheckData
 				return checkData, nil
 			}
 			checkData.State = toMetricState(triggerChecker.ttlState)
+			if triggerChecker.ttlState == DEL {
+				return checkData, nil
+			}
 			if checkData.State != OK {
 				checkData.Message = "Trigger never received metrics"
 			}
