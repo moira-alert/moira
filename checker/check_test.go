@@ -709,10 +709,11 @@ func TestHandleErrorCheck(t *testing.T) {
 				},
 			}
 			checkData := moira.CheckData{
-				State:     OK,
+				State:     NODATA,
 				Timestamp: time.Now().Unix(),
+				Message:   "Trigger has no metrics, check your target",
 			}
-			actual, err := triggerChecker.handleErrorCheck(checkData, ErrTriggerHasNoMetrics)
+			actual, err := triggerChecker.handleErrorCheck(checkData, ErrTriggerHasNoTimeSeries)
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, checkData)
 		})
@@ -744,12 +745,12 @@ func TestHandleErrorCheck(t *testing.T) {
 			}
 
 			dataBase.EXPECT().PushNotificationEvent(event, true).Return(nil)
-			actual, err := triggerChecker.handleErrorCheck(checkData, ErrTriggerHasNoMetrics)
+			actual, err := triggerChecker.handleErrorCheck(checkData, ErrTriggerHasNoTimeSeries)
 			expected := moira.CheckData{
 				State:          NODATA,
 				Timestamp:      checkData.Timestamp,
 				EventTimestamp: checkData.Timestamp,
-				Message:        "Trigger has no metrics",
+				Message:        "Trigger has no metrics, check your target",
 			}
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, expected)
@@ -764,7 +765,7 @@ func TestHandleErrorCheck(t *testing.T) {
 			Logger:    logger,
 			ttl:       60,
 			trigger:   &moira.Trigger{},
-			ttlState:  NODATA,
+			ttlState:  ERROR,
 			lastCheck: &moira.CheckData{
 				Timestamp: time.Now().Unix(),
 				State:     OK,
@@ -811,14 +812,12 @@ func TestHandleErrorCheck(t *testing.T) {
 
 		actual, err := triggerChecker.handleErrorCheck(checkData, ErrTriggerHasOnlyWildcards)
 		expected := moira.CheckData{
-			Metrics:        checkData.Metrics,
-			State:          OK,
-			Timestamp:      checkData.Timestamp,
-			EventTimestamp: checkData.Timestamp,
+			Metrics:   checkData.Metrics,
+			State:     OK,
+			Timestamp: checkData.Timestamp,
 		}
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, expected)
-		mockCtrl.Finish()
 	})
 
 	Convey("Handle unknown function in evalExpr", t, func() {

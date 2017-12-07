@@ -9,8 +9,8 @@ import (
 
 var checkPointGap int64 = 120
 
-// ErrTriggerHasNoMetrics used if trigger no metrics
-var ErrTriggerHasNoMetrics = fmt.Errorf("Trigger has no metrics")
+// ErrTriggerHasNoTimeSeries used if trigger no metrics
+var ErrTriggerHasNoTimeSeries = fmt.Errorf("Trigger has no metrics")
 
 // ErrTriggerHasOnlyWildcards used if trigger has only wildcard metrics
 var ErrTriggerHasOnlyWildcards = fmt.Errorf("Trigger has only wildcards")
@@ -52,7 +52,7 @@ func (triggerChecker *TriggerChecker) handleTrigger() (moira.CheckData, error) {
 	triggerChecker.cleanupMetricsValues(metrics, triggerChecker.Until)
 
 	if len(triggerTimeSeries.Main) == 0 {
-		return checkData, ErrTriggerHasNoMetrics
+		return checkData, ErrTriggerHasNoTimeSeries
 	}
 
 	if triggerTimeSeries.hasOnlyWildcards() {
@@ -110,30 +110,26 @@ func (triggerChecker *TriggerChecker) checkTimeSeries(timeSeries *target.TimeSer
 }
 
 func (triggerChecker *TriggerChecker) handleErrorCheck(checkData moira.CheckData, checkingError error) (moira.CheckData, error) {
-	if checkingError == ErrTriggerHasNoMetrics {
+	if checkingError == ErrTriggerHasNoTimeSeries {
 		triggerChecker.Logger.Debugf("Trigger %s: %s", triggerChecker.TriggerID, checkingError.Error())
-		if triggerChecker.ttl != 0 {
-			checkData.State = toMetricState(triggerChecker.ttlState)
-			checkData.Message = "Trigger has no metrics"
-			return triggerChecker.compareChecks(checkData)
+		checkData.State = NODATA
+		checkData.Message = "Trigger has no metrics, check your target"
+		if triggerChecker.ttl == 0 {
+			return checkData, nil
 		}
-		return checkData, nil
+		return triggerChecker.compareChecks(checkData)
 	}
 	if checkingError == ErrTriggerHasOnlyWildcards {
 		triggerChecker.Logger.Debugf("Trigger %s: %s", triggerChecker.TriggerID, checkingError.Error())
 		if len(checkData.Metrics) == 0 {
-			if triggerChecker.ttl == 0 {
+			checkData.State = NODATA
+			checkData.Message = "Trigger never received metrics"
+			if triggerChecker.ttl == 0 || triggerChecker.ttlState == DEL {
 				return checkData, nil
 			}
-			checkData.State = toMetricState(triggerChecker.ttlState)
-			if triggerChecker.ttlState == DEL {
-				return checkData, nil
-			}
-			if checkData.State != OK {
-				checkData.Message = "Trigger never received metrics"
-			}
+			return triggerChecker.compareChecks(checkData)
 		}
-		return triggerChecker.compareChecks(checkData)
+		return checkData, nil
 	}
 	if _, ok := checkingError.(target.ErrUnknownFunction); ok {
 		triggerChecker.Logger.Warningf("Trigger %s: %s", triggerChecker.TriggerID, checkingError.Error())
