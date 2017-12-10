@@ -7,3 +7,4 @@ log:
   log_level: debug
 api:
   listen: :8081
+  web_config_path: "/etc/moira/web.json"
