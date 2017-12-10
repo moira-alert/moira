@@ -1,0 +1,10 @@
+{
+  "contacts": [
+    {"type": "mail"},
+    {"type": "pushover"},
+    {"type": "slack"},
+    {"type": "telegram", "help": "required to grant @MoiraBot admin privileges"},
+    {"type": "twilio sms"},
+    {"type": "twilio voice"}
+  ]
+}

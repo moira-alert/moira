@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
@@ -63,6 +64,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	configFile, err := getWebConfigBytes(logger, config.API.WebConfigPath)
+	if err != nil {
+		logger.Warningf("Failed to read web config file by path '%s', method 'api/config' will be return 404, error: %s'", config.API.WebConfigPath, err.Error())
+	}
+
 	if config.Pprof.Listen != "" {
 		logger.Infof("Starting pprof server at: [%s]", config.Pprof.Listen)
 		cmd.StartProfiling(logger, config.Pprof)
@@ -78,7 +84,7 @@ func main() {
 
 	logger.Infof("Start listening by address: [%s]", apiConfig.Listen)
 
-	httpHandler := handler.NewHandler(database, logger, apiConfig)
+	httpHandler := handler.NewHandler(database, logger, apiConfig, configFile)
 	server := &http.Server{
 		Handler: httpHandler,
 	}
@@ -93,6 +99,15 @@ func main() {
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 	logger.Info(fmt.Sprint(<-ch))
 	logger.Infof("Moira API shutting down.")
+}
+
+func getWebConfigBytes(logger moira.Logger, path string) ([]byte, error) {
+	webConfigFile, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer webConfigFile.Close()
+	return ioutil.ReadAll(webConfigFile)
 }
 
 // Stop Moira API HTTP server
