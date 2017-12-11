@@ -22,3 +22,4 @@ Moira was originally developed and is supported by [SKB Kontur][kontur], a B2G c
 [readthedocs]: http://moira.readthedocs.io
 [gitter]: https://gitter.im/moira-alert/moira
 [kontur]: https://kontur.ru/eng/about
+[graphite]: http://graphite.readthedocs.org
