@@ -121,7 +121,7 @@ func (triggerChecker *TriggerChecker) handleErrorCheck(checkData moira.CheckData
 	}
 	if checkingError == ErrTriggerHasOnlyWildcards {
 		triggerChecker.Logger.Debugf("Trigger %s: %s", triggerChecker.TriggerID, checkingError.Error())
-		if len(checkData.Metrics) == 0 {
+		if len(checkData.Metrics) == 0 && triggerChecker.ttlState != OK {
 			checkData.State = NODATA
 			checkData.Message = "Trigger never received metrics"
 			if triggerChecker.ttl == 0 || triggerChecker.ttlState == DEL {
