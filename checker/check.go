@@ -38,10 +38,11 @@ func (triggerChecker *TriggerChecker) handleTrigger() (moira.CheckData, error) {
 		lastMetrics[k] = v
 	}
 	checkData := moira.CheckData{
-		Metrics:   lastMetrics,
-		State:     OK,
-		Timestamp: triggerChecker.Until,
-		Score:     triggerChecker.lastCheck.Score,
+		Metrics:        lastMetrics,
+		State:          OK,
+		Timestamp:      triggerChecker.Until,
+		EventTimestamp: triggerChecker.lastCheck.EventTimestamp,
+		Score:          triggerChecker.lastCheck.Score,
 	}
 
 	triggerTimeSeries, metrics, err := triggerChecker.getTimeSeries(triggerChecker.From, triggerChecker.Until)
@@ -121,15 +122,14 @@ func (triggerChecker *TriggerChecker) handleErrorCheck(checkData moira.CheckData
 	}
 	if checkingError == ErrTriggerHasOnlyWildcards {
 		triggerChecker.Logger.Debugf("Trigger %s: %s", triggerChecker.TriggerID, checkingError.Error())
-		if len(checkData.Metrics) == 0 && triggerChecker.ttlState != OK {
+		if len(checkData.Metrics) == 0 && triggerChecker.ttlState != OK && triggerChecker.ttlState != DEL {
 			checkData.State = NODATA
 			checkData.Message = "Trigger never received metrics"
 			if triggerChecker.ttl == 0 || triggerChecker.ttlState == DEL {
 				return checkData, nil
 			}
-			return triggerChecker.compareChecks(checkData)
 		}
-		return checkData, nil
+		return triggerChecker.compareChecks(checkData)
 	}
 	if _, ok := checkingError.(target.ErrUnknownFunction); ok {
 		triggerChecker.Logger.Warningf("Trigger %s: %s", triggerChecker.TriggerID, checkingError.Error())

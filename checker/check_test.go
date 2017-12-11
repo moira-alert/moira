@@ -812,9 +812,72 @@ func TestHandleErrorCheck(t *testing.T) {
 
 		actual, err := triggerChecker.handleErrorCheck(checkData, ErrTriggerHasOnlyWildcards)
 		expected := moira.CheckData{
-			Metrics:   checkData.Metrics,
+			Metrics:        checkData.Metrics,
+			State:          OK,
+			Timestamp:      checkData.Timestamp,
+			EventTimestamp: checkData.Timestamp,
+		}
+		So(err, ShouldBeNil)
+		So(actual, ShouldResemble, expected)
+	})
+
+	Convey("Handle trigger has only wildcards and ttlState is OK", t, func() {
+		triggerChecker := TriggerChecker{
+			TriggerID: "SuperId",
+			Database:  dataBase,
+			Logger:    logger,
+			ttl:       60,
+			trigger:   &moira.Trigger{},
+			ttlState:  OK,
+			lastCheck: &moira.CheckData{
+				Timestamp: time.Now().Unix(),
+				State:     OK,
+			},
+		}
+		checkData := moira.CheckData{
+			Metrics:   map[string]moira.MetricState{},
 			State:     OK,
-			Timestamp: checkData.Timestamp,
+			Timestamp: time.Now().Unix(),
+		}
+
+		actual, err := triggerChecker.handleErrorCheck(checkData, ErrTriggerHasOnlyWildcards)
+		expected := moira.CheckData{
+			Metrics:        checkData.Metrics,
+			State:          OK,
+			Timestamp:      checkData.Timestamp,
+			EventTimestamp: checkData.Timestamp,
+		}
+		So(err, ShouldBeNil)
+		So(actual, ShouldResemble, expected)
+	})
+
+	Convey("Handle trigger has only wildcards and ttlState is DEL", t, func() {
+		now := time.Now().Unix()
+		triggerChecker := TriggerChecker{
+			TriggerID: "SuperId",
+			Database:  dataBase,
+			Logger:    logger,
+			ttl:       60,
+			trigger:   &moira.Trigger{},
+			ttlState:  DEL,
+			lastCheck: &moira.CheckData{
+				Timestamp:      now,
+				EventTimestamp: now - 3600,
+				State:          OK,
+			},
+		}
+		checkData := moira.CheckData{
+			Metrics:   map[string]moira.MetricState{},
+			State:     OK,
+			Timestamp: now,
+		}
+
+		actual, err := triggerChecker.handleErrorCheck(checkData, ErrTriggerHasOnlyWildcards)
+		expected := moira.CheckData{
+			Metrics:        checkData.Metrics,
+			State:          OK,
+			Timestamp:      now,
+			EventTimestamp: now - 3600,
 		}
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, expected)
