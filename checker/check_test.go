@@ -379,7 +379,7 @@ func TestCheckErrors(t *testing.T) {
 		Database:  dataBase,
 		Logger:    logger,
 		Config: &Config{
-			MetricsTTL: 10,
+			MetricsTTLSeconds: 10,
 		},
 		Metrics:  metrics.ConfigureCheckerMetrics("checker"),
 		From:     17,
@@ -472,7 +472,7 @@ func TestHandleTrigger(t *testing.T) {
 		Database:  dataBase,
 		Logger:    logger,
 		Config: &Config{
-			MetricsTTL: 3600,
+			MetricsTTLSeconds: 3600,
 		},
 		From:     3617,
 		Until:    3667,
@@ -493,7 +493,7 @@ func TestHandleTrigger(t *testing.T) {
 		dataBase.EXPECT().GetMetricsValues([]string{metric}, triggerChecker.From, triggerChecker.Until).Return(dataList, nil)
 		var val float64
 		var val1 float64 = 4
-		dataBase.EXPECT().RemoveMetricsValues([]string{metric}, triggerChecker.Until-triggerChecker.Config.MetricsTTL)
+		dataBase.EXPECT().RemoveMetricsValues([]string{metric}, triggerChecker.Until-triggerChecker.Config.MetricsTTLSeconds)
 		dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
 			TriggerID: triggerChecker.TriggerID,
 			Timestamp: 3617,
@@ -538,7 +538,7 @@ func TestHandleTrigger(t *testing.T) {
 		dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
 		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 		dataBase.EXPECT().GetMetricsValues([]string{metric}, triggerChecker.From, triggerChecker.Until).Return(dataList, nil)
-		dataBase.EXPECT().RemoveMetricsValues([]string{metric}, triggerChecker.Until-triggerChecker.Config.MetricsTTL)
+		dataBase.EXPECT().RemoveMetricsValues([]string{metric}, triggerChecker.Until-triggerChecker.Config.MetricsTTLSeconds)
 		checkData, err := triggerChecker.handleTrigger()
 		So(err, ShouldBeNil)
 		var val1 float64 = 4
@@ -565,7 +565,7 @@ func TestHandleTrigger(t *testing.T) {
 		dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
 		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 		dataBase.EXPECT().GetMetricsValues([]string{metric}, triggerChecker.From, triggerChecker.Until).Return(dataList, nil)
-		dataBase.EXPECT().RemoveMetricsValues([]string{metric}, triggerChecker.Until-triggerChecker.Config.MetricsTTL)
+		dataBase.EXPECT().RemoveMetricsValues([]string{metric}, triggerChecker.Until-triggerChecker.Config.MetricsTTLSeconds)
 		dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
 			TriggerID: triggerChecker.TriggerID,
 			Timestamp: lastCheck.Timestamp - triggerChecker.ttl,
@@ -621,7 +621,7 @@ func TestHandleTrigger(t *testing.T) {
 			Database:  dataBase,
 			Logger:    logger,
 			Config: &Config{
-				MetricsTTL: 3600,
+				MetricsTTLSeconds: 3600,
 			},
 			From:     3617,
 			Until:    3667,
@@ -675,7 +675,7 @@ func TestHandleTrigger(t *testing.T) {
 		dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
 		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 		dataBase.EXPECT().GetMetricsValues([]string{metric}, triggerChecker.From, triggerChecker.Until).Return(dataList, nil)
-		dataBase.EXPECT().RemoveMetricsValues([]string{metric}, triggerChecker.Until-triggerChecker.Config.MetricsTTL)
+		dataBase.EXPECT().RemoveMetricsValues([]string{metric}, triggerChecker.Until-triggerChecker.Config.MetricsTTLSeconds)
 		dataBase.EXPECT().RemovePatternsMetrics(triggerChecker.trigger.Patterns).Return(nil)
 		checkData, err := triggerChecker.handleTrigger()
 		So(err, ShouldBeNil)

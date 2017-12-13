@@ -35,7 +35,7 @@ func getDefault() config {
 		Graphite: cmd.GraphiteConfig{
 			URI:      "localhost:2003",
 			Prefix:   "DevOps.Moira",
-			Interval: "60s0ms",
+			Interval: "60s",
 		},
 		Pprof: cmd.ProfilerConfig{
 			Listen: "",

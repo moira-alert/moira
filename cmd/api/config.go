@@ -14,14 +14,14 @@ type config struct {
 
 type apiConfig struct {
 	Listen        string `yaml:"listen"`
-	EnableCORS    string `yaml:"enable_cors"`
+	EnableCORS    bool   `yaml:"enable_cors"`
 	WebConfigPath string `yaml:"web_config_path"`
 }
 
 func (config *apiConfig) getSettings() *api.Config {
 	return &api.Config{
 		Listen:     config.Listen,
-		EnableCORS: cmd.ToBool(config.EnableCORS),
+		EnableCORS: config.EnableCORS,
 	}
 }
 
@@ -38,7 +38,7 @@ func getDefault() config {
 		API: apiConfig{
 			Listen:        ":8081",
 			WebConfigPath: "/etc/moira/web.json",
-			EnableCORS:    "true",
+			EnableCORS:    false,
 		},
 		Pprof: cmd.ProfilerConfig{
 			Listen: "",

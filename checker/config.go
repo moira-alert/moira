@@ -4,12 +4,12 @@ import "time"
 
 // Config represent checker config
 type Config struct {
-	Enabled              bool
-	NoDataCheckInterval  time.Duration
-	CheckInterval        time.Duration
-	MetricsTTL           int64
-	StopCheckingInterval int64
-	MaxParallelChecks    int
-	LogFile              string
-	LogLevel             string
+	Enabled                     bool
+	NoDataCheckInterval         time.Duration
+	CheckInterval               time.Duration
+	MetricsTTLSeconds           int64
+	StopCheckingIntervalSeconds int64
+	MaxParallelChecks           int
+	LogFile                     string
+	LogLevel                    string
 }

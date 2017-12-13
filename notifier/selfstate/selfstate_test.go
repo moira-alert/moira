@@ -53,7 +53,7 @@ func TestDatabaseDisconnected(t *testing.T) {
 			lastCheckTS = now.Unix()
 			nextSendErrorMessage = now.Add(-time.Second * 5).Unix()
 			lastMetricReceivedTS = now.Unix()
-			expectedPackage := configureNotificationPackage(adminContact, mock.conf.RedisDisconnectDelay, now.Unix()-redisLastCheckTS, "Redis disconnected")
+			expectedPackage := configureNotificationPackage(adminContact, mock.conf.RedisDisconnectDelaySeconds, now.Unix()-redisLastCheckTS, "Redis disconnected")
 
 			mock.notif.EXPECT().Send(&expectedPackage, &sendingWG)
 			mock.selfCheckWorker.check(now.Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount)
@@ -61,7 +61,7 @@ func TestDatabaseDisconnected(t *testing.T) {
 			So(lastMetricReceivedTS, ShouldEqual, now.Unix())
 			So(lastCheckTS, ShouldEqual, now.Unix())
 			So(redisLastCheckTS, ShouldEqual, now.Add(-time.Second*11).Unix())
-			So(nextSendErrorMessage, ShouldEqual, now.Unix()+mock.conf.NoticeInterval)
+			So(nextSendErrorMessage, ShouldEqual, now.Unix()+mock.conf.NoticeIntervalSeconds)
 		})
 	})
 	mock.selfCheckWorker.Stop()
@@ -98,7 +98,7 @@ func TestMoiraCacheDoesNotReceivedNewMetrics(t *testing.T) {
 		metricsCount = 1
 
 		callingNow := now.Add(time.Second * 2)
-		expectedPackage := configureNotificationPackage(adminContact, mock.conf.LastMetricReceivedDelay, callingNow.Unix()-lastMetricReceivedTS, "Moira-Filter does not received new metrics")
+		expectedPackage := configureNotificationPackage(adminContact, mock.conf.LastMetricReceivedDelaySeconds, callingNow.Unix()-lastMetricReceivedTS, "Moira-Filter does not received new metrics")
 
 		mock.notif.EXPECT().Send(&expectedPackage, &sendingWG)
 		mock.selfCheckWorker.check(callingNow.Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount)
@@ -106,7 +106,7 @@ func TestMoiraCacheDoesNotReceivedNewMetrics(t *testing.T) {
 		So(lastMetricReceivedTS, ShouldEqual, now.Add(-time.Second*61).Unix())
 		So(lastCheckTS, ShouldEqual, callingNow.Unix())
 		So(redisLastCheckTS, ShouldEqual, callingNow.Unix())
-		So(nextSendErrorMessage, ShouldEqual, callingNow.Unix()+mock.conf.NoticeInterval)
+		So(nextSendErrorMessage, ShouldEqual, callingNow.Unix()+mock.conf.NoticeIntervalSeconds)
 	})
 	mock.selfCheckWorker.Stop()
 	mock.mockCtrl.Finish()
@@ -142,7 +142,7 @@ func TestMoiraCheckerDoesNotChecksTriggers(t *testing.T) {
 		checksCount = 1
 
 		callingNow := now.Add(time.Second * 2)
-		expectedPackage := configureNotificationPackage(adminContact, mock.conf.LastCheckDelay, callingNow.Unix()-lastCheckTS, "Moira-Checker does not checks triggers")
+		expectedPackage := configureNotificationPackage(adminContact, mock.conf.LastCheckDelaySeconds, callingNow.Unix()-lastCheckTS, "Moira-Checker does not checks triggers")
 
 		mock.notif.EXPECT().Send(&expectedPackage, &sendingWG)
 		mock.selfCheckWorker.check(callingNow.Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount)
@@ -150,7 +150,7 @@ func TestMoiraCheckerDoesNotChecksTriggers(t *testing.T) {
 		So(lastMetricReceivedTS, ShouldEqual, callingNow.Unix())
 		So(lastCheckTS, ShouldEqual, now.Add(-time.Second*121).Unix())
 		So(redisLastCheckTS, ShouldEqual, callingNow.Unix())
-		So(nextSendErrorMessage, ShouldEqual, callingNow.Unix()+mock.conf.NoticeInterval)
+		So(nextSendErrorMessage, ShouldEqual, callingNow.Unix()+mock.conf.NoticeIntervalSeconds)
 	})
 	mock.selfCheckWorker.Stop()
 	mock.mockCtrl.Finish()
@@ -168,9 +168,9 @@ func TestRunGoRoutine(t *testing.T) {
 		Contacts: []map[string]string{
 			adminContact,
 		},
-		RedisDisconnectDelay:    10,
-		LastMetricReceivedDelay: 60,
-		LastCheckDelay:          120,
+		RedisDisconnectDelaySeconds:    10,
+		LastMetricReceivedDelaySeconds: 60,
+		LastCheckDelaySeconds:          120,
 	}
 
 	mockCtrl := gomock.NewController(t)
@@ -212,10 +212,10 @@ func configureWorker(t *testing.T) *selfCheckWorkerMock {
 		Contacts: []map[string]string{
 			adminContact,
 		},
-		RedisDisconnectDelay:    10,
-		LastMetricReceivedDelay: 60,
-		LastCheckDelay:          120,
-		NoticeInterval:          60,
+		RedisDisconnectDelaySeconds:    10,
+		LastMetricReceivedDelaySeconds: 60,
+		LastCheckDelaySeconds:          120,
+		NoticeIntervalSeconds:          60,
 	}
 
 	mockCtrl := gomock.NewController(t)

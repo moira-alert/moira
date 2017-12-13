@@ -6,12 +6,12 @@ import (
 
 // Config is representation of self state worker settings like moira admins contacts and threshold values for checked services
 type Config struct {
-	Enabled                 bool
-	RedisDisconnectDelay    int64
-	LastMetricReceivedDelay int64
-	LastCheckDelay          int64
-	Contacts                []map[string]string
-	NoticeInterval          int64
+	Enabled                        bool
+	RedisDisconnectDelaySeconds    int64
+	LastMetricReceivedDelaySeconds int64
+	LastCheckDelaySeconds          int64
+	Contacts                       []map[string]string
+	NoticeIntervalSeconds          int64
 }
 
 func (config *Config) checkConfig(senders map[string]bool) error {

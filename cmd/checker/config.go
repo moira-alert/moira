@@ -19,8 +19,8 @@ type config struct {
 type checkerConfig struct {
 	NoDataCheckInterval  string `yaml:"nodata_check_interval"`
 	CheckInterval        string `yaml:"check_interval"`
-	MetricsTTL           int64  `yaml:"metrics_ttl"`
-	StopCheckingInterval int64  `yaml:"stop_checking_interval"`
+	MetricsTTL           string `yaml:"metrics_ttl"`
+	StopCheckingInterval string `yaml:"stop_checking_interval"`
 	MaxParallelChecks    int    `yaml:"max_parallel_checks"`
 }
 
@@ -29,11 +29,11 @@ func (config *checkerConfig) getSettings() *checker.Config {
 		config.MaxParallelChecks = runtime.NumCPU()
 	}
 	return &checker.Config{
-		MetricsTTL:           config.MetricsTTL,
-		CheckInterval:        to.Duration(config.CheckInterval),
-		NoDataCheckInterval:  to.Duration(config.NoDataCheckInterval),
-		StopCheckingInterval: config.StopCheckingInterval,
-		MaxParallelChecks:    config.MaxParallelChecks,
+		MetricsTTLSeconds:           int64(to.Duration(config.MetricsTTL).Seconds()),
+		CheckInterval:               to.Duration(config.CheckInterval),
+		NoDataCheckInterval:         to.Duration(config.NoDataCheckInterval),
+		StopCheckingIntervalSeconds: int64(to.Duration(config.StopCheckingInterval).Seconds()),
+		MaxParallelChecks:           config.MaxParallelChecks,
 	}
 }
 
@@ -48,16 +48,16 @@ func getDefault() config {
 			LogLevel: "debug",
 		},
 		Checker: checkerConfig{
-			NoDataCheckInterval:  "60s0ms",
-			CheckInterval:        "5s0ms",
-			MetricsTTL:           3600,
-			StopCheckingInterval: 30,
+			NoDataCheckInterval:  "60s",
+			CheckInterval:        "5s",
+			MetricsTTL:           "1h",
+			StopCheckingInterval: "30s",
 			MaxParallelChecks:    0,
 		},
 		Graphite: cmd.GraphiteConfig{
 			URI:      "localhost:2003",
 			Prefix:   "DevOps.Moira",
-			Interval: "60s0ms",
+			Interval: "60s",
 		},
 		Pprof: cmd.ProfilerConfig{
 			Listen: "",

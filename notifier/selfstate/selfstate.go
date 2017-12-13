@@ -80,25 +80,25 @@ func (selfCheck *SelfCheckWorker) check(nowTS int64, lastMetricReceivedTS, redis
 		}
 	}
 	if *nextSendErrorMessage < nowTS {
-		if *redisLastCheckTS < nowTS-selfCheck.Config.RedisDisconnectDelay {
+		if *redisLastCheckTS < nowTS-selfCheck.Config.RedisDisconnectDelaySeconds {
 			interval := nowTS - *redisLastCheckTS
 			selfCheck.Log.Errorf("Redis disconnected more %ds. Send message.", interval)
-			selfCheck.sendErrorMessages("Redis disconnected", interval, selfCheck.Config.RedisDisconnectDelay)
-			*nextSendErrorMessage = nowTS + selfCheck.Config.NoticeInterval
+			selfCheck.sendErrorMessages("Redis disconnected", interval, selfCheck.Config.RedisDisconnectDelaySeconds)
+			*nextSendErrorMessage = nowTS + selfCheck.Config.NoticeIntervalSeconds
 			return
 		}
-		if *lastMetricReceivedTS < nowTS-selfCheck.Config.LastMetricReceivedDelay && err == nil {
+		if *lastMetricReceivedTS < nowTS-selfCheck.Config.LastMetricReceivedDelaySeconds && err == nil {
 			interval := nowTS - *lastMetricReceivedTS
 			selfCheck.Log.Errorf("Moira-Filter does not received new metrics more %ds. Send message.", interval)
-			selfCheck.sendErrorMessages("Moira-Filter does not received new metrics", interval, selfCheck.Config.LastMetricReceivedDelay)
-			*nextSendErrorMessage = nowTS + selfCheck.Config.NoticeInterval
+			selfCheck.sendErrorMessages("Moira-Filter does not received new metrics", interval, selfCheck.Config.LastMetricReceivedDelaySeconds)
+			*nextSendErrorMessage = nowTS + selfCheck.Config.NoticeIntervalSeconds
 			return
 		}
-		if *lastCheckTS < nowTS-selfCheck.Config.LastCheckDelay && err == nil {
+		if *lastCheckTS < nowTS-selfCheck.Config.LastCheckDelaySeconds && err == nil {
 			interval := nowTS - *lastCheckTS
 			selfCheck.Log.Errorf("Moira-Checker does not checks triggers more %ds. Send message.", interval)
-			selfCheck.sendErrorMessages("Moira-Checker does not checks triggers", interval, selfCheck.Config.LastCheckDelay)
-			*nextSendErrorMessage = nowTS + selfCheck.Config.NoticeInterval
+			selfCheck.sendErrorMessages("Moira-Checker does not checks triggers", interval, selfCheck.Config.LastCheckDelaySeconds)
+			*nextSendErrorMessage = nowTS + selfCheck.Config.NoticeIntervalSeconds
 		}
 	}
 }

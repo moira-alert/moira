@@ -29,12 +29,12 @@ type notifierConfig struct {
 }
 
 type selfStateConfig struct {
-	Enabled                 string              `yaml:"enabled"`
-	RedisDisconnectDelay    int64               `yaml:"redis_disconect_delay"`
-	LastMetricReceivedDelay int64               `yaml:"last_metric_received_delay"`
-	LastCheckDelay          int64               `yaml:"last_check_delay"`
+	Enabled                 bool                `yaml:"enabled"`
+	RedisDisconnectDelay    string              `yaml:"redis_disconect_delay"`
+	LastMetricReceivedDelay string              `yaml:"last_metric_received_delay"`
+	LastCheckDelay          string              `yaml:"last_check_delay"`
 	Contacts                []map[string]string `yaml:"contacts"`
-	NoticeInterval          int64               `yaml:"notice_interval"`
+	NoticeInterval          string              `yaml:"notice_interval"`
 }
 
 func getDefault() config {
@@ -47,23 +47,23 @@ func getDefault() config {
 		Graphite: cmd.GraphiteConfig{
 			URI:      "localhost:2003",
 			Prefix:   "DevOps.Moira",
-			Interval: "60s0ms",
+			Interval: "60s",
 		},
 		Logger: cmd.LoggerConfig{
 			LogFile:  "stdout",
 			LogLevel: "debug",
 		},
 		Notifier: notifierConfig{
-			SenderTimeout:    "10s0ms",
+			SenderTimeout:    "10s",
 			ResendingTimeout: "24:00",
 			SelfState: selfStateConfig{
-				Enabled:                 "false",
-				RedisDisconnectDelay:    30,
-				LastMetricReceivedDelay: 60,
-				LastCheckDelay:          60,
-				NoticeInterval:          300,
+				Enabled:                 false,
+				RedisDisconnectDelay:    "30s",
+				LastMetricReceivedDelay: "60s",
+				LastCheckDelay:          "60s",
+				NoticeInterval:          "300s",
 			},
-			FrontURI: "http:// localhost",
+			FrontURI: "http://localhost",
 			Timezone: "UTC",
 		},
 		Pprof: cmd.ProfilerConfig{
@@ -92,11 +92,11 @@ func (config *notifierConfig) getSettings(logger moira.Logger) notifier.Config {
 
 func (config *selfStateConfig) getSettings() selfstate.Config {
 	return selfstate.Config{
-		Enabled:                 cmd.ToBool(config.Enabled),
-		RedisDisconnectDelay:    config.RedisDisconnectDelay,
-		LastMetricReceivedDelay: config.LastMetricReceivedDelay,
-		LastCheckDelay:          config.LastCheckDelay,
-		Contacts:                config.Contacts,
-		NoticeInterval:          config.NoticeInterval,
+		Enabled:                        config.Enabled,
+		RedisDisconnectDelaySeconds:    int64(to.Duration(config.RedisDisconnectDelay).Seconds()),
+		LastMetricReceivedDelaySeconds: int64(to.Duration(config.LastMetricReceivedDelay).Seconds()),
+		LastCheckDelaySeconds:          int64(to.Duration(config.LastCheckDelay).Seconds()),
+		Contacts:                       config.Contacts,
+		NoticeIntervalSeconds:          int64(to.Duration(config.NoticeInterval).Seconds()),
 	}
 }

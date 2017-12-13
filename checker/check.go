@@ -222,7 +222,7 @@ func (triggerChecker *TriggerChecker) getTimeSeriesState(triggerTimeSeries *trig
 
 func (triggerChecker *TriggerChecker) cleanupMetricsValues(metrics []string, until int64) {
 	if len(metrics) > 0 {
-		if err := triggerChecker.Database.RemoveMetricsValues(metrics, until-triggerChecker.Config.MetricsTTL); err != nil {
+		if err := triggerChecker.Database.RemoveMetricsValues(metrics, until-triggerChecker.Config.MetricsTTLSeconds); err != nil {
 			triggerChecker.Logger.Error(err.Error())
 		}
 	}

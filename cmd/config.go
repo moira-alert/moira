@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"io/ioutil"
-	"strings"
 
 	"gopkg.in/yaml.v2"
 	"menteslibres.net/gosexy/to"
@@ -30,7 +29,7 @@ func (config *RedisConfig) GetSettings() redis.Config {
 
 // GraphiteConfig is graphite metrics config, which are taken on the start of moira
 type GraphiteConfig struct {
-	Enabled  string `yaml:"enabled"`
+	Enabled  bool   `yaml:"enabled"`
 	URI      string `yaml:"uri"`
 	Prefix   string `yaml:"prefix"`
 	Interval string `yaml:"interval"`
@@ -39,7 +38,7 @@ type GraphiteConfig struct {
 // GetSettings return graphite metrics config parsed from moira config files
 func (graphiteConfig *GraphiteConfig) GetSettings() graphite.Config {
 	return graphite.Config{
-		Enabled:  ToBool(graphiteConfig.Enabled),
+		Enabled:  graphiteConfig.Enabled,
 		URI:      graphiteConfig.URI,
 		Prefix:   graphiteConfig.Prefix,
 		Interval: to.Duration(graphiteConfig.Interval),
@@ -74,13 +73,4 @@ func ReadConfig(configFileName string, config interface{}) error {
 func PrintConfig(config interface{}) {
 	d, _ := yaml.Marshal(&config)
 	fmt.Println(string(d))
-}
-
-// ToBool is simple func witch parse popular bool interpretation to golang bool value
-func ToBool(str string) bool {
-	switch strings.ToLower(str) {
-	case "1", "true", "t", "yes", "y":
-		return true
-	}
-	return false
 }

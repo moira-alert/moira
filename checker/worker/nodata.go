@@ -22,7 +22,7 @@ func (worker *Checker) noDataChecker() error {
 
 func (worker *Checker) checkNoData() error {
 	now := time.Now().UTC().Unix()
-	if worker.lastData+worker.Config.StopCheckingInterval < now {
+	if worker.lastData+worker.Config.StopCheckingIntervalSeconds < now {
 		worker.Logger.Infof("Checking NoData disabled. No metrics for %v seconds", now-worker.lastData)
 	} else {
 		worker.Logger.Info("Checking NoData")
