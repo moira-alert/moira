@@ -24,6 +24,7 @@ func NewHandler(db moira.Database, log moira.Logger, config *api.Config, configF
 	database = db
 	router := chi.NewRouter()
 	router.Use(render.SetContentType(render.ContentTypeJSON))
+	router.Use(moira_middle.UserContext)
 	router.Use(moira_middle.RequestLogger(log))
 	router.Use(middleware.NoCache)
 
@@ -32,7 +33,6 @@ func NewHandler(db moira.Database, log moira.Logger, config *api.Config, configF
 
 	router.Route("/api", func(router chi.Router) {
 		router.Use(moira_middle.DatabaseContext(database))
-		router.Use(moira_middle.UserContext)
 		router.Get("/config", webConfig(configFile))
 		router.Route("/user", user)
 		router.Route("/trigger", triggers)

@@ -75,9 +75,15 @@ func newLogEntry(logger moira.Logger, request *http.Request) *apiLoggerEntry {
 	if request.TLS != nil {
 		scheme = "https"
 	}
+	userName := GetLogin(request)
+	if userName == "" {
+		userName = "anonymous"
+	}
 	fmt.Fprintf(entry.buf, "%s:// %s%s %s\" ", scheme, request.Host, request.RequestURI, request.Proto)
 	entry.buf.WriteString("from ")
 	entry.buf.WriteString(request.RemoteAddr)
+	entry.buf.WriteString("by ")
+	entry.buf.WriteString(userName)
 	entry.buf.WriteString(" - ")
 	return entry
 }
