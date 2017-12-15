@@ -100,7 +100,7 @@ func (connector *DbConnector) SaveMetrics(metrics map[string]*moira.MatchedMetri
 		c.Send("SET", metricRetentionKey(metric.Metric), metric.Retention)
 
 		for _, pattern := range metric.Patterns {
-			c.Send("SADD", patternMetricsKey(pattern), metric)
+			c.Send("SADD", patternMetricsKey(pattern), metric.Metric)
 			event, err := json.Marshal(&moira.MetricEvent{
 				Metric:  metric.Metric,
 				Pattern: pattern,
