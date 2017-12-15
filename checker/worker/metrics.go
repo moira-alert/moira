@@ -23,11 +23,6 @@ func (worker *Checker) metricsChecker(metricEventsChannel <-chan *moira.MetricEv
 func (worker *Checker) handleMetricEvent(metricEvent *moira.MetricEvent) error {
 	worker.lastData = time.Now().UTC().Unix()
 	pattern := metricEvent.Pattern
-	metric := metricEvent.Metric
-
-	if err := worker.Database.AddPatternMetric(pattern, metric); err != nil {
-		return err
-	}
 	triggerIds, err := worker.Database.GetPatternTriggerIDs(pattern)
 	if err != nil {
 		return err
