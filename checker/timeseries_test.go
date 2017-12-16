@@ -2,6 +2,7 @@ package checker
 
 import (
 	"fmt"
+	"math"
 	"testing"
 
 	"github.com/go-graphite/carbonapi/expr"
@@ -13,6 +14,15 @@ import (
 	"github.com/moira-alert/moira/target"
 	. "github.com/smartystreets/goconvey/convey"
 )
+
+func TestIsInvalidValue(t *testing.T) {
+	Convey("values +Inf -Inf and NaN is invalid", t, func() {
+		So(IsInvalidValue(math.NaN()), ShouldBeTrue)
+		So(IsInvalidValue(math.Inf(-1)), ShouldBeTrue)
+		So(IsInvalidValue(math.Inf(1)), ShouldBeTrue)
+		So(IsInvalidValue(3.14), ShouldBeFalse)
+	})
+}
 
 func TestGetTimeSeries(t *testing.T) {
 	mockCtrl := gomock.NewController(t)

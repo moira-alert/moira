@@ -82,10 +82,7 @@ func IsInvalidValue(val float64) bool {
 	if math.IsNaN(val) {
 		return true
 	}
-	if math.IsInf(val, -1) {
-		return true
-	}
-	if math.IsInf(val, 1) {
+	if math.IsInf(val, 0) {
 		return true
 	}
 	return false
