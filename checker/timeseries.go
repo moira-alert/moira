@@ -13,10 +13,12 @@ type triggerTimeSeries struct {
 	Additional []*target.TimeSeries
 }
 
+// ErrWrongTriggerTarget occurs when trigger has inconsistent number of timeseries
 type ErrWrongTriggerTarget struct {
 	message string
 }
 
+// NewErrWrongTriggerTarget returns ErrWrongTriggerTarget depending on number of found timeseries
 func NewErrWrongTriggerTarget(targetName string, targetTimeSeries int) *ErrWrongTriggerTarget {
 	if targetTimeSeries != 0 {
 		return &ErrWrongTriggerTarget{
@@ -52,10 +54,10 @@ func (triggerChecker *TriggerChecker) getTimeSeries(from, until int64) (*trigger
 			timeSeriesCount := len(result.TimeSeries)
 			switch {
 			case timeSeriesCount == 0:
-				if len(result.Metrics) != 0 {
-					return nil, nil, NewErrWrongTriggerTarget(triggerChecker.trigger.Targets[targetIndex], timeSeriesCount)
-				} else {
+				if len(result.Metrics) == 0 {
 					triggerTimeSeries.Additional = append(triggerTimeSeries.Additional, nil)
+				} else {
+					return nil, nil, NewErrWrongTriggerTarget(triggerChecker.trigger.Targets[targetIndex], timeSeriesCount)
 				}
 			case timeSeriesCount > 1:
 				return nil, nil, NewErrWrongTriggerTarget(triggerChecker.trigger.Targets[targetIndex], timeSeriesCount)
