@@ -947,14 +947,14 @@ func TestHandleErrorCheck(t *testing.T) {
 		mockCtrl.Finish()
 	})
 
-	Convey("Handle trigger target has no timeseries", t, func() {
+	Convey("Handle additional trigger target has no timeseries", t, func() {
 		triggerChecker := TriggerChecker{
 			TriggerID: "SuperId",
 			Database:  dataBase,
 			Logger:    logger,
 			ttl:       60,
 			trigger:   &moira.Trigger{
-				Targets: []string{"aliasByNode(no.data.*,2)"},
+				Targets: []string{"aliasByNode(some.data.*,2)", "aliasByNode(no.data.*,2)"},
 			},
 			ttlState:  NODATA,
 			lastCheck: &moira.CheckData{
@@ -969,7 +969,7 @@ func TestHandleErrorCheck(t *testing.T) {
 
 		dataBase.EXPECT().PushNotificationEvent(gomock.Any(), true).Return(nil)
 
-		actual, err := triggerChecker.handleErrorCheck(checkData, NewErrWrongTriggerTarget(triggerChecker.trigger.Targets[0], 0))
+		actual, err := triggerChecker.handleErrorCheck(checkData, NewErrWrongTriggerTarget(triggerChecker.trigger.Targets[1], 0))
 		expected := moira.CheckData{
 			State:          EXCEPTION,
 			Timestamp:      checkData.Timestamp,
