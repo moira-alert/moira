@@ -954,7 +954,7 @@ func TestHandleErrorCheck(t *testing.T) {
 			Logger:    logger,
 			ttl:       60,
 			trigger:   &moira.Trigger{
-				Targets: []string{"aliasByNode(some.data.*,2)", "aliasByNode(no.data.*,2)"},
+				Targets: []string{"aliasByNode(some.data.*,2)", "no.data"},
 			},
 			ttlState:  NODATA,
 			lastCheck: &moira.CheckData{
@@ -974,7 +974,7 @@ func TestHandleErrorCheck(t *testing.T) {
 			State:          EXCEPTION,
 			Timestamp:      checkData.Timestamp,
 			EventTimestamp: checkData.Timestamp,
-			Message:        "Target aliasByNode(no.data.*,2) has no timeseries",
+			Message:        "Target no.data has no timeseries",
 		}
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, expected)
