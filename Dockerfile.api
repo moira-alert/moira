@@ -4,7 +4,11 @@ WORKDIR /go/src/github.com/moira-alert/moira
 COPY . /go/src/github.com/moira-alert/moira/
 RUN go get github.com/kardianos/govendor
 RUN govendor sync
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o build/api github.com/moira-alert/moira/cmd/api
+ARG GO_VERSION="GoVersion"
+ARG GIT_COMMIT="git_Commit"
+ARG MoiraVersion="MoiraVersion"
+
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-X main.MoiraVersion=${MoiraVersion} -X main.GoVersion=${GoVersion} -X main.GitCommit=${GitCommit}" -o build/api github.com/moira-alert/moira/cmd/api
 
 
 FROM alpine
