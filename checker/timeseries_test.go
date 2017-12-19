@@ -184,7 +184,7 @@ func TestGetTimeSeries(t *testing.T) {
 
 			actual, metrics, err := triggerChecker.getTimeSeries(from, until)
 			So(err, ShouldBeError)
-			So(err, ShouldResemble, &ErrWrongTriggerTarget{message:"Target additional.pattern has more than one timeseries"})
+			So(err, ShouldResemble, &ErrWrongTriggerTarget{message:"Target t2 has more than one timeseries"})
 			So(actual, ShouldBeNil)
 			So(metrics, ShouldBeNil)
 		})

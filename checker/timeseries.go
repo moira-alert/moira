@@ -19,14 +19,9 @@ type ErrWrongTriggerTarget struct {
 }
 
 // NewErrWrongTriggerTarget returns ErrWrongTriggerTarget depending on number of found timeseries
-func NewErrWrongTriggerTarget(targetName string, targetTimeSeries int) *ErrWrongTriggerTarget {
-	if targetTimeSeries != 0 {
-		return &ErrWrongTriggerTarget{
-			message: fmt.Sprintf("Target %s has more than one timeseries", targetName),
-		}
-	}
+func NewErrWrongTriggerTarget(targetIndex int) *ErrWrongTriggerTarget {
 	return &ErrWrongTriggerTarget{
-		message: fmt.Sprintf("Target %s has no timeseries", targetName),
+		message: fmt.Sprintf("Target t%v has more than one timeseries", targetIndex),
 	}
 }
 
@@ -57,10 +52,10 @@ func (triggerChecker *TriggerChecker) getTimeSeries(from, until int64) (*trigger
 				if len(result.Metrics) == 0 {
 					triggerTimeSeries.Additional = append(triggerTimeSeries.Additional, nil)
 				} else {
-					return nil, nil, NewErrWrongTriggerTarget(triggerChecker.trigger.Targets[targetIndex], timeSeriesCount)
+					return nil, nil, fmt.Errorf("Target t%v has no timeseries", targetIndex+1)
 				}
 			case timeSeriesCount > 1:
-				return nil, nil, NewErrWrongTriggerTarget(triggerChecker.trigger.Targets[targetIndex], timeSeriesCount)
+				return nil, nil, NewErrWrongTriggerTarget(targetIndex+1)
 			default:
 				triggerTimeSeries.Additional = append(triggerTimeSeries.Additional, result.TimeSeries[0])
 			}

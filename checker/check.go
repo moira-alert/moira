@@ -140,7 +140,7 @@ func (triggerChecker *TriggerChecker) handleErrorCheck(checkData moira.CheckData
 		checkData.Message = "Trigger has same timeseries names"
 	} else if checkingError == checkingError.(*ErrWrongTriggerTarget) {
 		checkData.State = EXCEPTION
-		checkData.Message = checkingError.(*ErrWrongTriggerTarget).message
+		checkData.Message = checkingError.(*ErrWrongTriggerTarget).Error()
 	} else {
 		triggerChecker.Metrics.CheckError.Mark(1)
 		triggerChecker.Logger.Errorf("Trigger %s check failed: %s", triggerChecker.TriggerID, checkingError.Error())

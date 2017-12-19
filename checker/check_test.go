@@ -947,40 +947,6 @@ func TestHandleErrorCheck(t *testing.T) {
 		mockCtrl.Finish()
 	})
 
-	Convey("Handle additional trigger target has no timeseries", t, func() {
-		triggerChecker := TriggerChecker{
-			TriggerID: "SuperId",
-			Database:  dataBase,
-			Logger:    logger,
-			ttl:       60,
-			trigger:   &moira.Trigger{
-				Targets: []string{"aliasByNode(some.data.*,2)", "no.data"},
-			},
-			ttlState:  NODATA,
-			lastCheck: &moira.CheckData{
-				Timestamp: time.Now().Unix(),
-				State:     NODATA,
-			},
-		}
-		checkData := moira.CheckData{
-			State:     NODATA,
-			Timestamp: time.Now().Unix(),
-		}
-
-		dataBase.EXPECT().PushNotificationEvent(gomock.Any(), true).Return(nil)
-
-		actual, err := triggerChecker.handleErrorCheck(checkData, NewErrWrongTriggerTarget(triggerChecker.trigger.Targets[1], 0))
-		expected := moira.CheckData{
-			State:          EXCEPTION,
-			Timestamp:      checkData.Timestamp,
-			EventTimestamp: checkData.Timestamp,
-			Message:        "Target no.data has no timeseries",
-		}
-		So(err, ShouldBeNil)
-		So(actual, ShouldResemble, expected)
-		mockCtrl.Finish()
-	})
-
 	Convey("Handle additional trigger target has more than one timeseries", t, func() {
 		triggerChecker := TriggerChecker{
 			TriggerID: "SuperId",
@@ -1003,12 +969,12 @@ func TestHandleErrorCheck(t *testing.T) {
 
 		dataBase.EXPECT().PushNotificationEvent(gomock.Any(), true).Return(nil)
 
-		actual, err := triggerChecker.handleErrorCheck(checkData, NewErrWrongTriggerTarget(triggerChecker.trigger.Targets[1], 2))
+		actual, err := triggerChecker.handleErrorCheck(checkData, NewErrWrongTriggerTarget(2))
 		expected := moira.CheckData{
 			State:          EXCEPTION,
 			Timestamp:      checkData.Timestamp,
 			EventTimestamp: checkData.Timestamp,
-			Message:        "Target aliasByNode(some.more.data.*,2) has more than one timeseries",
+			Message:        "Target t2 has more than one timeseries",
 		}
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, expected)
