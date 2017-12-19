@@ -1,4 +1,4 @@
-FROM golang:1.9.2 as builder
+piFROM golang:1.9.2 as builder
 
 WORKDIR /go/src/github.com/moira-alert/moira
 COPY . /go/src/github.com/moira-alert/moira/
@@ -8,7 +8,7 @@ ARG GO_VERSION="GoVersion"
 ARG GIT_COMMIT="git_Commit"
 ARG MoiraVersion="MoiraVersion"
 
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-X main.MoiraVersion=${MoiraVersion} -X main.GoVersion=${GoVersion} -X main.GitCommit=${GitCommit}" -o build/checker github.com/moira-alert/moira/cmd/checker
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-X main.MoiraVersion=${MoiraVersion} -X main.GoVersion=${GO_VERSION} -X main.GitCommit=${GIT_COMMIT}" -o build/checker github.com/moira-alert/moira/cmd/checker
 
 
 FROM alpine
