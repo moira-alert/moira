@@ -13,7 +13,7 @@ type triggerTimeSeries struct {
 	Additional []*target.TimeSeries
 }
 
-// type ErrWrongTriggerTarget represents inconsistent number of timeseries
+// ErrWrongTriggerTarget represents inconsistent number of timeseries
 type ErrWrongTriggerTarget int
 
 // ErrWrongTriggerTarget implementation for given number of found timeseries
