@@ -28,7 +28,7 @@ test: prepare
 .PHONY: build
 build: prepare
 	for service in "filter" "notifier" "api" "checker" "cli" ; do \
-		CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-X main.Version=${VERSION} -X main.GoVersion=${GO_VERSION} -X main.GitCommit=${GIT_COMMIT}" -o build/$$service github.com/moira-alert/moira/cmd/$$service ; \
+		CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-X main.MoiraVersion=${VERSION} -X main.GoVersion=${GO_VERSION} -X main.GitCommit=${GIT_COMMIT}" -o build/$$service github.com/moira-alert/moira/cmd/$$service ; \
 	done
 
 .PHONY: clean
