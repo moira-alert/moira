@@ -32,7 +32,7 @@ var (
 var (
 	MoiraVersion = "unknown"
 	GitCommit    = "unknown"
-	Version      = "unknown"
+	GoVersion    = "unknown"
 )
 
 func main() {
@@ -41,7 +41,7 @@ func main() {
 		fmt.Println("Moira Filter")
 		fmt.Println("Version:", MoiraVersion)
 		fmt.Println("Git Commit:", GitCommit)
-		fmt.Println("Go Version:", Version)
+		fmt.Println("Go Version:", GoVersion)
 		os.Exit(0)
 	}
 

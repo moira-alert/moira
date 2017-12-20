@@ -34,7 +34,7 @@ var (
 var (
 	MoiraVersion = "unknown"
 	GitCommit    = "unknown"
-	Version      = "unknown"
+	GoVersion    = "unknown"
 )
 
 func main() {
@@ -43,7 +43,7 @@ func main() {
 		fmt.Println("Moira Checker")
 		fmt.Println("Version:", MoiraVersion)
 		fmt.Println("Git Commit:", GitCommit)
-		fmt.Println("Go Version:", Version)
+		fmt.Println("Go Version:", GoVersion)
 		os.Exit(0)
 	}
 
@@ -64,7 +64,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Can not configure log: %s\n", err.Error())
 		os.Exit(1)
 	}
-	defer logger.Infof("Moira Checker stopped. Version: %s", Version)
+	defer logger.Infof("Moira Checker stopped. Version: %s", MoiraVersion)
 
 	if config.Pprof.Listen != "" {
 		logger.Infof("Starting pprof server at: [%s]", config.Pprof.Listen)
@@ -96,7 +96,7 @@ func main() {
 	}
 	defer stopChecker(checkerWorker)
 
-	logger.Infof("Moira Checker started. Version: %s", Version)
+	logger.Infof("Moira Checker started. Version: %s", MoiraVersion)
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 	logger.Info(fmt.Sprint(<-ch))

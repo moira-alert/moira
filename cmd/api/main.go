@@ -31,7 +31,7 @@ var (
 var (
 	MoiraVersion = "unknown"
 	GitCommit    = "unknown"
-	Version      = "unknown"
+	GoVersion    = "unknown"
 )
 
 func main() {
@@ -40,7 +40,7 @@ func main() {
 		fmt.Println("Moira Api")
 		fmt.Println("Version:", MoiraVersion)
 		fmt.Println("Git Commit:", GitCommit)
-		fmt.Println("Go Version:", Version)
+		fmt.Println("Go Version:", GoVersion)
 		os.Exit(0)
 	}
 
@@ -94,7 +94,7 @@ func main() {
 	}()
 	defer Stop(logger, server)
 
-	logger.Infof("Moira Api Started (version: %s)", Version)
+	logger.Infof("Moira Api Started (version: %s)", MoiraVersion)
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 	logger.Info(fmt.Sprint(<-ch))
@@ -117,5 +117,5 @@ func Stop(logger moira.Logger, server *http.Server) {
 	if err := server.Shutdown(ctx); err != nil {
 		logger.Errorf("Can't stop Moira API correctly: %v", err)
 	}
-	logger.Infof("Moira API Stopped. Version: %s", Version)
+	logger.Infof("Moira API Stopped. Version: %s", MoiraVersion)
 }

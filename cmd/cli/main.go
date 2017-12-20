@@ -24,17 +24,17 @@ var (
 
 // Moira version
 var (
-	Version   = "unknown"
-	GitHash   = "unknown"
-	GoVersion = "unknown"
+	MoiraVersion = "unknown"
+	GitCommit    = "unknown"
+	GoVersion    = "unknown"
 )
 
 func main() {
 	flag.Parse()
 	if *printVersion {
 		fmt.Println("Moira - alerting system based on graphite data")
-		fmt.Println("Version:", Version)
-		fmt.Println("Git Commit:", GitHash)
+		fmt.Println("Version:", MoiraVersion)
+		fmt.Println("Git Commit:", GitCommit)
 		fmt.Println("Go Version:", GoVersion)
 		os.Exit(0)
 	}
