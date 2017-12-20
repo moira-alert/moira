@@ -9,14 +9,26 @@ import (
 
 var checkPointGap int64 = 120
 
-// ErrTriggerHasNoTimeSeries used if trigger no metrics
-var ErrTriggerHasNoTimeSeries = fmt.Errorf("Trigger has no metrics")
+// type ErrTriggerHasNoTimeSeries used if trigger has no metrics
+type ErrTriggerHasNoTimeSeries struct{}
+// ErrTriggerHasNoTimeSeries implementation with constant error message
+func (err ErrTriggerHasNoTimeSeries) Error() string {
+	return fmt.Sprintf("Trigger has no metrics, check your target")
+}
 
-// ErrTriggerHasOnlyWildcards used if trigger has only wildcard metrics
-var ErrTriggerHasOnlyWildcards = fmt.Errorf("Trigger has only wildcards")
+// type ErrTriggerHasOnlyWildcards used if trigger has only wildcard metrics
+type ErrTriggerHasOnlyWildcards struct{}
+// ErrTriggerHasOnlyWildcards implementation with constant error message
+func (err ErrTriggerHasOnlyWildcards) Error() string {
+	return fmt.Sprintf("Trigger never received metrics")
+}
 
-// ErrTriggerHasSameTimeSeriesNames used if trigger has two timeseries with same name
-var ErrTriggerHasSameTimeSeriesNames = fmt.Errorf("Trigger has same timeseries names")
+// type ErrTriggerHasSameTimeSeriesNames used if trigger has two timeseries with same name
+type ErrTriggerHasSameTimeSeriesNames struct{}
+// ErrTriggerHasSameTimeSeriesNames implementation with constant error message
+func (err ErrTriggerHasSameTimeSeriesNames) Error() string {
+	return fmt.Sprintf("Trigger has same timeseries names")
+}
 
 // Check handle trigger and last check and write new state of trigger, if state were change then write new NotificationEvent
 func (triggerChecker *TriggerChecker) Check() error {
@@ -53,11 +65,11 @@ func (triggerChecker *TriggerChecker) handleTrigger() (moira.CheckData, error) {
 	triggerChecker.cleanupMetricsValues(metrics, triggerChecker.Until)
 
 	if len(triggerTimeSeries.Main) == 0 {
-		return checkData, ErrTriggerHasNoTimeSeries
+		return checkData, ErrTriggerHasNoTimeSeries{}
 	}
 
 	if triggerTimeSeries.hasOnlyWildcards() {
-		return checkData, ErrTriggerHasOnlyWildcards
+		return checkData, ErrTriggerHasOnlyWildcards{}
 	}
 
 	timeSeriesNamesMap := make(map[string]bool, len(triggerTimeSeries.Main))
@@ -68,7 +80,7 @@ func (triggerChecker *TriggerChecker) handleTrigger() (moira.CheckData, error) {
 		triggerChecker.Logger.Debugf("[TriggerID:%s][TimeSeries:%s] Checking interval: %v - %v (%vs), step: %v", triggerChecker.TriggerID, timeSeries.Name, timeSeries.StartTime, timeSeries.StopTime, timeSeries.StepTime, timeSeries.StopTime-timeSeries.StartTime)
 
 		if _, ok := timeSeriesNamesMap[timeSeries.Name]; ok {
-			checkingError = ErrTriggerHasSameTimeSeriesNames
+			checkingError = ErrTriggerHasSameTimeSeriesNames{}
 			triggerChecker.Logger.Infof("[TriggerID:%s][TimeSeries:%s] Trigger has same timeseries names", triggerChecker.TriggerID, timeSeries.Name)
 			continue
 		}
@@ -111,40 +123,37 @@ func (triggerChecker *TriggerChecker) checkTimeSeries(timeSeries *target.TimeSer
 }
 
 func (triggerChecker *TriggerChecker) handleErrorCheck(checkData moira.CheckData, checkingError error) (moira.CheckData, error) {
-	if checkingError == ErrTriggerHasNoTimeSeries {
+
+	switch checkingError.(type){
+	case ErrTriggerHasNoTimeSeries:
 		triggerChecker.Logger.Debugf("Trigger %s: %s", triggerChecker.TriggerID, checkingError.Error())
 		checkData.State = NODATA
-		checkData.Message = "Trigger has no metrics, check your target"
+		checkData.Message = checkingError.Error()
 		if triggerChecker.ttl == 0 {
 			return checkData, nil
 		}
 		return triggerChecker.compareChecks(checkData)
-	}
-	if checkingError == ErrTriggerHasOnlyWildcards {
+	case ErrTriggerHasOnlyWildcards:
 		triggerChecker.Logger.Debugf("Trigger %s: %s", triggerChecker.TriggerID, checkingError.Error())
 		if len(checkData.Metrics) == 0 && triggerChecker.ttlState != OK && triggerChecker.ttlState != DEL {
 			checkData.State = NODATA
-			checkData.Message = "Trigger never received metrics"
+			checkData.Message = checkingError.Error()
 			if triggerChecker.ttl == 0 || triggerChecker.ttlState == DEL {
 				return checkData, nil
 			}
 		}
 		return triggerChecker.compareChecks(checkData)
-	}
-	if _, ok := checkingError.(target.ErrUnknownFunction); ok {
+	case target.ErrUnknownFunction:
 		triggerChecker.Logger.Warningf("Trigger %s: %s", triggerChecker.TriggerID, checkingError.Error())
 		checkData.State = EXCEPTION
 		checkData.Message = checkingError.Error()
-	} else if checkingError == ErrTriggerHasSameTimeSeriesNames {
+	case ErrWrongTriggerTarget, ErrTriggerHasSameTimeSeriesNames:
 		checkData.State = EXCEPTION
-		checkData.Message = "Trigger has same timeseries names"
-	} else if checkingError == checkingError.(*ErrWrongTriggerTarget) {
-		checkData.State = EXCEPTION
-		checkData.Message = checkingError.(*ErrWrongTriggerTarget).Error()
-	} else {
-		triggerChecker.Metrics.CheckError.Mark(1)
-		triggerChecker.Logger.Errorf("Trigger %s check failed: %s", triggerChecker.TriggerID, checkingError.Error())
-		checkData.State = EXCEPTION
+		checkData.Message = checkingError.Error()
+	default:
+			triggerChecker.Metrics.CheckError.Mark(1)
+			triggerChecker.Logger.Errorf("Trigger %s check failed: %s", triggerChecker.TriggerID, checkingError.Error())
+			checkData.State = EXCEPTION
 	}
 	return triggerChecker.compareChecks(checkData)
 }
