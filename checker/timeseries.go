@@ -15,6 +15,7 @@ type triggerTimeSeries struct {
 
 // type ErrWrongTriggerTarget represents inconsistent number of timeseries
 type ErrWrongTriggerTarget int
+
 // ErrWrongTriggerTarget implementation for given number of found timeseries
 func (err ErrWrongTriggerTarget) Error() string {
 	return fmt.Sprintf("Target t%v has more than one timeseries", int(err))

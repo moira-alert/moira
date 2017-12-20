@@ -11,6 +11,7 @@ var checkPointGap int64 = 120
 
 // type ErrTriggerHasNoTimeSeries used if trigger has no metrics
 type ErrTriggerHasNoTimeSeries struct{}
+
 // ErrTriggerHasNoTimeSeries implementation with constant error message
 func (err ErrTriggerHasNoTimeSeries) Error() string {
 	return fmt.Sprintf("Trigger has no metrics, check your target")
@@ -18,6 +19,7 @@ func (err ErrTriggerHasNoTimeSeries) Error() string {
 
 // type ErrTriggerHasOnlyWildcards used if trigger has only wildcard metrics
 type ErrTriggerHasOnlyWildcards struct{}
+
 // ErrTriggerHasOnlyWildcards implementation with constant error message
 func (err ErrTriggerHasOnlyWildcards) Error() string {
 	return fmt.Sprintf("Trigger never received metrics")
@@ -25,6 +27,7 @@ func (err ErrTriggerHasOnlyWildcards) Error() string {
 
 // type ErrTriggerHasSameTimeSeriesNames used if trigger has two timeseries with same name
 type ErrTriggerHasSameTimeSeriesNames struct{}
+
 // ErrTriggerHasSameTimeSeriesNames implementation with constant error message
 func (err ErrTriggerHasSameTimeSeriesNames) Error() string {
 	return fmt.Sprintf("Trigger has same timeseries names")
