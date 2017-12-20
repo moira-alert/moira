@@ -28,7 +28,7 @@ test: prepare
 .PHONY: build
 build: prepare
 	for service in "filter" "notifier" "api" "checker" "cli" ; do \
-		CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-X main.Version=${VERSION} -X main.GoVersion=${GO_VERSION} -X main.GitHash=${GIT_HASH}" -o build/$$service github.com/moira-alert/moira/cmd/$$service ; \
+		CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-X main.Version=${VERSION} -X main.GoVersion=${GO_VERSION} -X main.GitCommit=${GIT_COMMIT}" -o build/$$service github.com/moira-alert/moira/cmd/$$service ; \
 	done
 
 .PHONY: clean
@@ -120,7 +120,7 @@ packages: clean build tar rpm deb
 .PHONY: docker_image
 docker_image:
 	for service in "filter" "notifier" "api" "checker" ; do \
-		docker build -f Dockerfile.$$service -t moira/$$service:${VERSION} -t moira/$$service:latest . ; \
+		docker build --build-arg "MoiraVersion =${VERSION} GO_VERSION=${GO_VERSION} GIT_COMMIT=${GIT_COMMIT}" -f Dockerfile.$$service -t moira/$$service:${VERSION} -t moira/$$service:latest . ; \
 	done
 
 .PHONY: docker_push
