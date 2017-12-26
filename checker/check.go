@@ -135,7 +135,6 @@ func (triggerChecker *TriggerChecker) handleErrorCheck(checkData moira.CheckData
 		if triggerChecker.ttl == 0 {
 			return checkData, nil
 		}
-		return triggerChecker.compareChecks(checkData)
 	case ErrTriggerHasOnlyWildcards:
 		triggerChecker.Logger.Debugf("Trigger %s: %s", triggerChecker.TriggerID, checkingError.Error())
 		if len(checkData.Metrics) == 0 && triggerChecker.ttlState != OK && triggerChecker.ttlState != DEL {
@@ -145,7 +144,6 @@ func (triggerChecker *TriggerChecker) handleErrorCheck(checkData moira.CheckData
 				return checkData, nil
 			}
 		}
-		return triggerChecker.compareChecks(checkData)
 	case target.ErrUnknownFunction:
 		triggerChecker.Logger.Warningf("Trigger %s: %s", triggerChecker.TriggerID, checkingError.Error())
 		checkData.State = EXCEPTION
