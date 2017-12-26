@@ -127,7 +127,7 @@ func (triggerChecker *TriggerChecker) checkTimeSeries(timeSeries *target.TimeSer
 
 func (triggerChecker *TriggerChecker) handleErrorCheck(checkData moira.CheckData, checkingError error) (moira.CheckData, error) {
 
-	switch checkingError.(type){
+	switch checkingError.(type) {
 	case ErrTriggerHasNoTimeSeries:
 		triggerChecker.Logger.Debugf("Trigger %s: %s", triggerChecker.TriggerID, checkingError.Error())
 		checkData.State = NODATA
@@ -152,9 +152,9 @@ func (triggerChecker *TriggerChecker) handleErrorCheck(checkData moira.CheckData
 		checkData.State = EXCEPTION
 		checkData.Message = checkingError.Error()
 	default:
-			triggerChecker.Metrics.CheckError.Mark(1)
-			triggerChecker.Logger.Errorf("Trigger %s check failed: %s", triggerChecker.TriggerID, checkingError.Error())
-			checkData.State = EXCEPTION
+		triggerChecker.Metrics.CheckError.Mark(1)
+		triggerChecker.Logger.Errorf("Trigger %s check failed: %s", triggerChecker.TriggerID, checkingError.Error())
+		checkData.State = EXCEPTION
 	}
 	return triggerChecker.compareChecks(checkData)
 }
