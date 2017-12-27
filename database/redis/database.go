@@ -87,9 +87,10 @@ func (connector *DbConnector) manageSubscriptions(tomb *tomb.Tomb, channel strin
 			case redis.Message:
 				dataChan <- n.Data
 			case redis.Subscription:
-				if n.Kind == "subscribe" {
+				switch n.Kind {
+				case "subscribe":
 					connector.logger.Infof("Subscribe to %s channel, current subscriptions is %v", n.Channel, n.Count)
-				} else if n.Kind == "unsubscribe" {
+				case "unsubscribe":
 					connector.logger.Infof("Unsubscribe from %s channel, current subscriptions is %v", n.Channel, n.Count)
 					if n.Count == 0 {
 						connector.logger.Infof("No more subscriptions, exit...")
@@ -98,7 +99,7 @@ func (connector *DbConnector) manageSubscriptions(tomb *tomb.Tomb, channel strin
 					}
 				}
 			case *net.OpError:
-				connector.logger.Info("psc.Receive() returned *net.OpError, reconnecting")
+				connector.logger.Info("psc.Receive() returned *net.OpError: %s. Reconnecting...", n.Err.Error())
 				newPsc, err := connector.makePubSubConnection(metricEventKey)
 				if err != nil {
 					connector.logger.Errorf("Failed to reconnect to subscription: %v", err)
