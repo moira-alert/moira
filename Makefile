@@ -39,11 +39,13 @@ clean:
 tar:
 	for service in "filter" "notifier" "api" "checker" "cli" ; do \
 		mkdir -p build/root/$$service/usr/bin ; \
-		mkdir -p build/root/$$service/usr/lib/systemd/system ; \
 		mkdir -p build/root/$$service/etc/moira ; \
 		cp build/$$service build/root/$$service/usr/bin/moira-$$service ; \
-		cp pkg/$$service/moira-$$service.service build/root/$$service/usr/lib/systemd/system/moira-$$service.service ; \
 		cp pkg/$$service/$$service.yml build/root/$$service/etc/moira/$$service.yml ; \
+	done
+	for service in "filter" "notifier" "api" "checker" ; do \
+		mkdir -p build/root/$$service/usr/lib/systemd/system ; \
+		cp pkg/$$service/moira-$$service.service build/root/$$service/usr/lib/systemd/system/moira-$$service.service ; \
 	done
 	cp pkg/filter/storage-schemas.conf build/root/filter/etc/moira/storage-schemas.conf
 	for service in "filter" "notifier" "api" "checker" "cli" ; do \
