@@ -6,5 +6,5 @@ log:
   log_file: stdout
   log_level: debug
 api:
-  listen: :8081
+  listen: ":8081"
   web_config_path: "/etc/moira/web.json"

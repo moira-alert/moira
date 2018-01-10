@@ -3,8 +3,8 @@ redis:
   port: "6379"
   dbid: 0
 graphite:
-  enabled: ""
-  uri: localhost:2003
+  enabled: false
+  uri: "localhost:2003"
   prefix: DevOps.Moira
   interval: 60s0ms
 log:

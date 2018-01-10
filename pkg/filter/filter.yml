@@ -3,13 +3,13 @@ redis:
   port: "6379"
   dbid: 0
 graphite:
-  enabled: ""
-  uri: localhost:2003
+  enabled: false
+  uri: "localhost:2003"
   prefix: DevOps.Moira
   interval: 60s0ms
 log:
   log_file: stdout
   log_level: debug
 filter:
-  listen: :2003
+  listen: ":2003"
   retention-config: /etc/moira/storage-schemas.conf
