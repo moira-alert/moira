@@ -6,12 +6,12 @@ graphite:
   enabled: false
   uri: "localhost:2003"
   prefix: DevOps.Moira
-  interval: 60s0ms
+  interval: 60s
 log:
   log_file: stdout
   log_level: debug
 checker:
-  nodata_check_interval: 60s0ms
-  check_interval: 5s0ms
-  metrics_ttl: 3600
-  stop_checking_interval: 30
+  nodata_check_interval: 60s
+  check_interval: 10s
+  metrics_ttl: 3h
+  stop_checking_interval: 30s
