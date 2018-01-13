@@ -73,6 +73,17 @@ func TestParseMetricFromString(t *testing.T) {
 	Convey("Given valid metric strings with float64 timestamp, should return parsed values", t, func() {
 		var testTimestamp int64 = 1234567890
 
+		// Create and test n metrics with float64 timestamp with fractional part of length n (n=19)
+		//
+		// For example:
+		//
+		// [n=1] One.two.three 123 1234567890.6
+		// [n=2] One.two.three 123 1234567890.94
+		// [n=3] One.two.three 123 1234567890.665
+		// [n=4] One.two.three 123 1234567890.4377
+		// ...
+		// [n=19] One.two.three 123 1234567890.6790847778320312500
+
 		for i := 1; i < 20; i++ {
 			rawTimestamp := strconv.FormatFloat(float64(testTimestamp) + rand.Float64(), 'f', i, 64)
 			rawMetric := "One.two.three 123 " + rawTimestamp
