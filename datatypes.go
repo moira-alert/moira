@@ -290,6 +290,6 @@ func (checkData *CheckData) UpdateScore() int64 {
 
 // ParseTimestamp parses float64 and int64 timestamps from string into int64 timestamp
 func ParseTimestamp(unixTimestamp string) (int64, error) {
-	raw := strings.Split(unixTimestamp, ".")[0]
-	return strconv.ParseInt(raw, 10, 64)
+	timestamp, err := strconv.ParseFloat(unixTimestamp, 64)
+	return int64(timestamp), err
 }

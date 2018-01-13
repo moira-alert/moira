@@ -3,6 +3,8 @@ package filter
 import (
 	"fmt"
 	"testing"
+	"math/rand"
+	"strconv"
 
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
@@ -13,6 +15,13 @@ import (
 
 func TestParseMetricFromString(t *testing.T) {
 	storage := PatternStorage{}
+
+	type ValidMetricCase struct {
+		raw       string
+		metric    string
+		value     float64
+		timestamp int64
+	}
 
 	Convey("Given invalid metric strings, should return errors", t, func() {
 		invalidMetrics := []string{
@@ -42,12 +51,6 @@ func TestParseMetricFromString(t *testing.T) {
 	})
 
 	Convey("Given valid metric strings, should return parsed values", t, func() {
-		type ValidMetricCase struct {
-			raw       string
-			metric    string
-			value     float64
-			timestamp int64
-		}
 		validMetrics := []ValidMetricCase{
 			{"One.two.three 123 1234567890", "One.two.three", 123, 1234567890},
 			{"One.two.three 1.23e2 1234567890", "One.two.three", 123, 1234567890},
@@ -59,6 +62,21 @@ func TestParseMetricFromString(t *testing.T) {
 		}
 
 		for _, validMetric := range validMetrics {
+			metric, value, timestamp, err := storage.parseMetricFromString([]byte(validMetric.raw))
+			So(err, ShouldBeEmpty)
+			So(metric, ShouldResemble, []byte(validMetric.metric))
+			So(value, ShouldResemble, validMetric.value)
+			So(timestamp, ShouldResemble, validMetric.timestamp)
+		}
+	})
+
+	Convey("Given valid metric strings with float64 timestamp, should return parsed values", t, func() {
+		var testTimestamp int64 = 1234567890
+
+		for i := 1; i < 20; i++ {
+			rawTimestamp := strconv.FormatFloat(float64(testTimestamp) + rand.Float64(), 'f', i, 64)
+			rawMetric := "One.two.three 123 " + rawTimestamp
+			validMetric := ValidMetricCase{rawMetric,"One.two.three", 123, testTimestamp}
 			metric, value, timestamp, err := storage.parseMetricFromString([]byte(validMetric.raw))
 			So(err, ShouldBeEmpty)
 			So(metric, ShouldResemble, []byte(validMetric.metric))
@@ -137,12 +155,22 @@ func TestProcessIncomingMetric(t *testing.T) {
 		So(metrics2.MatchingMetricsReceived.Count(), ShouldEqual, 0)
 	})
 
-	patternsStorage.metrics = metrics.ConfigureFilterMetrics("test")
-
 	Convey("When valid non-matching metric arrives", t, func() {
-		Convey("When metric arrives with timestamp", func() {
+		patternsStorage.metrics = metrics.ConfigureFilterMetrics("test")
+		Convey("When metric arrives with int64 timestamp", func() {
 			for _, metric := range nonMatchingMetrics {
 				matchedMetrics := patternsStorage.ProcessIncomingMetric([]byte(metric + " 12 1234567890"))
+				So(matchedMetrics, ShouldBeNil)
+			}
+			So(patternsStorage.metrics.TotalMetricsReceived.Count(), ShouldEqual, len(nonMatchingMetrics))
+			So(patternsStorage.metrics.ValidMetricsReceived.Count(), ShouldEqual, len(nonMatchingMetrics))
+			So(patternsStorage.metrics.MatchingMetricsReceived.Count(), ShouldEqual, 0)
+		})
+
+		Convey("When metric arrives with float64 timestamp", func() {
+			patternsStorage.metrics = metrics.ConfigureFilterMetrics("test")
+			for _, metric := range nonMatchingMetrics {
+				matchedMetrics := patternsStorage.ProcessIncomingMetric([]byte(metric + " 12 1234567890.0"))
 				So(matchedMetrics, ShouldBeNil)
 			}
 			So(patternsStorage.metrics.TotalMetricsReceived.Count(), ShouldEqual, len(nonMatchingMetrics))
@@ -167,6 +195,17 @@ func TestProcessIncomingMetric(t *testing.T) {
 		Convey("When value has dot", func() {
 			for _, metric := range matchingMetrics {
 				matchedMetrics := patternsStorage.ProcessIncomingMetric([]byte(metric + " 12.000000 1234567890"))
+				So(matchedMetrics, ShouldNotBeNil)
+			}
+			So(patternsStorage.metrics.TotalMetricsReceived.Count(), ShouldEqual, len(matchingMetrics))
+			So(patternsStorage.metrics.ValidMetricsReceived.Count(), ShouldEqual, len(matchingMetrics))
+			So(patternsStorage.metrics.MatchingMetricsReceived.Count(), ShouldEqual, len(matchingMetrics))
+		})
+
+		patternsStorage.metrics = metrics.ConfigureFilterMetrics("test")
+		Convey("When timestamp is float64", func() {
+			for _, metric := range matchingMetrics {
+				matchedMetrics := patternsStorage.ProcessIncomingMetric([]byte(metric + " 12 1234567890.0"))
 				So(matchedMetrics, ShouldNotBeNil)
 			}
 			So(patternsStorage.metrics.TotalMetricsReceived.Count(), ShouldEqual, len(matchingMetrics))
