@@ -6,6 +6,7 @@ import (
 	"math"
 	"strings"
 	"time"
+	"strconv"
 )
 
 var (
@@ -285,4 +286,10 @@ func (checkData *CheckData) UpdateScore() int64 {
 		checkData.Score += scores[metricData.State]
 	}
 	return checkData.Score
+}
+
+// ParseTimestamp parses float64 and int64 timestamps from string into int64 timestamp
+func ParseTimestamp(unixTimestamp string) (int64, error) {
+	raw := strings.Split(unixTimestamp, ".")[0]
+	return strconv.ParseInt(raw, 10, 64)
 }

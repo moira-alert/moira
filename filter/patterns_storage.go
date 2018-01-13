@@ -158,7 +158,7 @@ func (*PatternStorage) parseMetricFromString(line []byte) ([]byte, float64, int6
 		return nil, 0, 0, fmt.Errorf("cannot parse value: '%s' (%s)", line, err)
 	}
 
-	timestamp, err := strconv.ParseInt(string(parts[2]), 10, 64)
+	timestamp, err := moira.ParseTimestamp(string(parts[2]))
 	if err != nil || timestamp == 0 {
 		return nil, 0, 0, fmt.Errorf("cannot parse timestamp: '%s' (%s)", line, err)
 	}

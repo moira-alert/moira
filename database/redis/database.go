@@ -99,7 +99,7 @@ func (connector *DbConnector) manageSubscriptions(tomb *tomb.Tomb, channel strin
 					}
 				}
 			case *net.OpError:
-				connector.logger.Info("psc.Receive() returned *net.OpError: %s. Reconnecting...", n.Err.Error())
+				connector.logger.Infof("psc.Receive() returned *net.OpError: %s. Reconnecting...", n.Err.Error())
 				newPsc, err := connector.makePubSubConnection(metricEventKey)
 				if err != nil {
 					connector.logger.Errorf("Failed to reconnect to subscription: %v", err)
