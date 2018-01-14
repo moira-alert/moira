@@ -283,14 +283,3 @@ func getDefaultSchedule() ScheduleData {
 		},
 	}
 }
-
-func TestParseTimestamp(t *testing.T) {
-	Convey("Test parsed unix timestamp is valid", t, func() {
-		unixTimestamps := []string{"2147483647", "2147483647.0"}
-		for _, ut := range unixTimestamps {
-			timestamp, err := ParseTimestamp(ut)
-			So(timestamp, ShouldEqual, 2147483647)
-			So(err, ShouldBeNil)
-		}
-	})
-}

@@ -158,7 +158,7 @@ func (*PatternStorage) parseMetricFromString(line []byte) ([]byte, float64, int6
 		return nil, 0, 0, fmt.Errorf("cannot parse value: '%s' (%s)", line, err)
 	}
 
-	timestamp, err := moira.ParseTimestamp(string(parts[2]))
+	timestamp, err := parseTimestamp(string(parts[2]))
 	if err != nil || timestamp == 0 {
 		return nil, 0, 0, fmt.Errorf("cannot parse timestamp: '%s' (%s)", line, err)
 	}
@@ -218,6 +218,11 @@ func (storage *PatternStorage) buildTree(patterns []string) error {
 
 	storage.PatternTree = newTree
 	return nil
+}
+
+func parseTimestamp(unixTimestamp string) (int64, error) {
+	timestamp, err := strconv.ParseFloat(unixTimestamp, 64)
+	return int64(timestamp), err
 }
 
 func hasEmptyParts(parts []string) bool {
