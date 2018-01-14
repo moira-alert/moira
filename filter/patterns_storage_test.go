@@ -87,7 +87,7 @@ func TestParseMetricFromString(t *testing.T) {
 		for i := 1; i < 20; i++ {
 			rawTimestamp := strconv.FormatFloat(float64(testTimestamp) + rand.Float64(), 'f', i, 64)
 			rawMetric := "One.two.three 123 " + rawTimestamp
-			validMetric := ValidMetricCase{rawMetric,"One.two.three", 123, testTimestamp}
+			validMetric := ValidMetricCase{rawMetric, "One.two.three", 123, testTimestamp}
 			metric, value, timestamp, err := storage.parseMetricFromString([]byte(validMetric.raw))
 			So(err, ShouldBeEmpty)
 			So(metric, ShouldResemble, []byte(validMetric.metric))
