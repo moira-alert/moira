@@ -23,7 +23,7 @@ func Init(config graphite.Config) error {
 		}
 		prefix, err := initPrefix(config.Prefix)
 		if err != nil {
-			return fmt.Errorf("Can not resolve hostname %s: %s", config.Prefix, err)
+			return fmt.Errorf("Can not get OS hostname %s: %s", config.Prefix, err)
 		}
 
 		go goMetricsGraphite.Graphite(metrics.DefaultRegistry, config.Interval, prefix, address)
@@ -40,5 +40,6 @@ func initPrefix(prefix string) (string, error) {
 	if err != nil {
 		return prefix, err
 	}
-	return strings.Replace(prefix, hostnameTmpl, hostname, -1), nil
+	short := strings.Split(hostname, ".")[0]
+	return strings.Replace(prefix, hostnameTmpl, short, -1), nil
 }
