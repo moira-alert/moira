@@ -24,6 +24,9 @@ func CreateTrigger(dataBase moira.Database, trigger *dto.TriggerModel, timeSerie
 			return nil, api.ErrorInvalidRequest(fmt.Errorf("Trigger with this ID already exists"))
 		}
 	}
+	if err := checkTriggerTags(trigger.Tags); err != nil {
+		return nil, api.ErrorInvalidRequest(err)
+	}
 	resp, err := saveTrigger(dataBase, trigger.ToMoiraTrigger(), trigger.ID, timeSeriesNames)
 	if resp != nil {
 		resp.Message = "trigger created"
@@ -103,4 +106,14 @@ func getTriggerIdsRange(triggerIDs []string, total int64, page int64, size int64
 	}
 
 	return triggerIDs[from:to]
+}
+
+func checkTriggerTags(tags []string) error {
+	for _, tag := range tags {
+		switch tag {
+		case moira.EventHighDegradationTag, moira.EventDegradationTag, moira.EventProgressTag:
+			return fmt.Errorf("Can't use reserved keyword: %s", tag)
+		}
+	}
+	return nil
 }

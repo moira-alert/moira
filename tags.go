@@ -7,9 +7,9 @@ var (
 		"ERROR":  100,
 		"NODATA": 10000,
 	}
-	eventHighDegradationTag = "HIGH DEGRADATION"
-	eventDegradationTag     = "DEGRADATION"
-	eventProgressTag        = "PROGRESS"
+	EventHighDegradationTag = "HIGH DEGRADATION"
+	EventDegradationTag     = "DEGRADATION"
+	EventProgressTag        = "PROGRESS"
 )
 
 // GetEventTags returns additional subscription tags based on trigger state
@@ -19,12 +19,12 @@ func (eventData *NotificationEvent) GetEventTags() []string {
 		if newStateWeight, ok := eventStateWeight[eventData.State]; ok {
 			if newStateWeight > oldStateWeight {
 				if newStateWeight-oldStateWeight >= 100 {
-					tags = append(tags, eventHighDegradationTag)
+					tags = append(tags, EventHighDegradationTag)
 				}
-				tags = append(tags, eventDegradationTag)
+				tags = append(tags, EventDegradationTag)
 			}
 			if newStateWeight < oldStateWeight {
-				tags = append(tags, eventProgressTag)
+				tags = append(tags, EventProgressTag)
 			}
 		}
 	}
