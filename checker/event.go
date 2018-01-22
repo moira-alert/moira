@@ -30,13 +30,13 @@ func (triggerChecker *TriggerChecker) compareChecks(currentCheck moira.CheckData
 		message = &currentCheck.Message
 	}
 	event := moira.NotificationEvent{
-		Consistent: true,
-		TriggerID:  triggerChecker.TriggerID,
-		State:      currentStateValue,
-		OldState:   lastStateValue,
-		Timestamp:  timestamp,
-		Metric:     triggerChecker.trigger.Name,
-		Message:    message,
+		IsTriggerEvent: true,
+		TriggerID:      triggerChecker.TriggerID,
+		State:          currentStateValue,
+		OldState:       lastStateValue,
+		Timestamp:      timestamp,
+		Metric:         triggerChecker.trigger.Name,
+		Message:        message,
 	}
 
 	currentCheck.EventTimestamp = timestamp

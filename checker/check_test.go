@@ -737,12 +737,12 @@ func TestHandleErrorCheck(t *testing.T) {
 				Timestamp: time.Now().Unix(),
 			}
 			event := &moira.NotificationEvent{
-				Consistent: true,
-				Timestamp:  checkData.Timestamp,
-				Message:    &err1,
-				TriggerID:  triggerChecker.TriggerID,
-				OldState:   NODATA,
-				State:      NODATA,
+				IsTriggerEvent: true,
+				Timestamp:      checkData.Timestamp,
+				Message:        &err1,
+				TriggerID:      triggerChecker.TriggerID,
+				OldState:       NODATA,
+				State:          NODATA,
 			}
 
 			dataBase.EXPECT().PushNotificationEvent(event, true).Return(nil)
