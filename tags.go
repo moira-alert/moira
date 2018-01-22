@@ -1,16 +1,20 @@
 package moira
 
-var (
-	eventStateWeight = map[string]int{
-		"OK":     0,
-		"WARN":   1,
-		"ERROR":  100,
-		"NODATA": 10000,
-	}
-	EventHighDegradationTag = "HIGH DEGRADATION"
-	EventDegradationTag     = "DEGRADATION"
-	EventProgressTag        = "PROGRESS"
-)
+var eventStateWeight = map[string]int{
+	"OK":     0,
+	"WARN":   1,
+	"ERROR":  100,
+	"NODATA": 10000,
+}
+
+// EventHighDegradationTag is reserved tag that describes High Degradation
+var EventHighDegradationTag = "HIGH DEGRADATION"
+
+// EventHighDegradationTag is reserved tag that describes Degradation
+var EventDegradationTag = "DEGRADATION"
+
+// EventHighDegradationTag is reserved tag that describes Progress
+var EventProgressTag = "PROGRESS"
 
 // GetEventTags returns additional subscription tags based on trigger state
 func (eventData *NotificationEvent) GetEventTags() []string {

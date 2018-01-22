@@ -43,6 +43,17 @@ func TestCreateTrigger(t *testing.T) {
 		So(resp.Message, ShouldResemble, "trigger created")
 	})
 
+	Convey("Fail with reserved tag keyword", t, func() {
+		reserved := []string{moira.EventHighDegradationTag, moira.EventDegradationTag, moira.EventProgressTag}
+		for _, tag := range reserved {
+			expected := fmt.Errorf("Can't use reserved keyword: %s",tag)
+			triggerModel := dto.TriggerModel{Tags:[]string{tag}}
+			resp, err := CreateTrigger(dataBase, &triggerModel, make(map[string]bool))
+			So(err, ShouldResemble, api.ErrorInvalidRequest(expected))
+			So(resp, ShouldBeNil)
+		}
+	})
+
 	Convey("Trigger already exists", t, func() {
 		triggerModel := dto.TriggerModel{ID: uuid.NewV4().String()}
 		trigger := triggerModel.ToMoiraTrigger()
