@@ -737,11 +737,12 @@ func TestHandleErrorCheck(t *testing.T) {
 				Timestamp: time.Now().Unix(),
 			}
 			event := &moira.NotificationEvent{
-				Timestamp: checkData.Timestamp,
-				Message:   &err1,
-				TriggerID: triggerChecker.TriggerID,
-				OldState:  NODATA,
-				State:     NODATA,
+				IsTriggerEvent: true,
+				Timestamp:      checkData.Timestamp,
+				Message:        &err1,
+				TriggerID:      triggerChecker.TriggerID,
+				OldState:       NODATA,
+				State:          NODATA,
 			}
 
 			dataBase.EXPECT().PushNotificationEvent(event, true).Return(nil)
@@ -953,10 +954,10 @@ func TestHandleErrorCheck(t *testing.T) {
 			Database:  dataBase,
 			Logger:    logger,
 			ttl:       60,
-			trigger:   &moira.Trigger{
+			trigger: &moira.Trigger{
 				Targets: []string{"aliasByNode(some.data.*,2)", "aliasByNode(some.more.data.*,2)"},
 			},
-			ttlState:  NODATA,
+			ttlState: NODATA,
 			lastCheck: &moira.CheckData{
 				Timestamp: time.Now().Unix(),
 				State:     NODATA,

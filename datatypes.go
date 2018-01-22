@@ -23,6 +23,7 @@ var scores = map[string]int64{
 
 // NotificationEvent represents trigger state changes event
 type NotificationEvent struct {
+	IsTriggerEvent bool     `json:"trigger_event,omitempty"`
 	Timestamp      int64    `json:"timestamp"`
 	Metric         string   `json:"metric"`
 	Value          *float64 `json:"value,omitempty"`

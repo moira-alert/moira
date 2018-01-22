@@ -222,13 +222,14 @@ func TestCompareChecks(t *testing.T) {
 			currentCheck.State = EXCEPTION
 
 			dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
-				TriggerID: triggerChecker.TriggerID,
-				Timestamp: currentCheck.Timestamp,
-				State:     EXCEPTION,
-				OldState:  EXCEPTION,
-				Metric:    triggerChecker.trigger.Name,
-				Value:     nil,
-				Message:   &currentCheck.Message,
+				IsTriggerEvent: true,
+				TriggerID:      triggerChecker.TriggerID,
+				Timestamp:      currentCheck.Timestamp,
+				State:          EXCEPTION,
+				OldState:       EXCEPTION,
+				Metric:         triggerChecker.trigger.Name,
+				Value:          nil,
+				Message:        &currentCheck.Message,
 			}, true).Return(nil)
 
 			actual, err := triggerChecker.compareChecks(currentCheck)
