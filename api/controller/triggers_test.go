@@ -31,13 +31,27 @@ func TestCreateTrigger(t *testing.T) {
 	})
 
 	Convey("Success with triggerID", t, func() {
-		triggerModel := dto.TriggerModel{ID: uuid.NewV4().String()}
+		triggerId := uuid.NewV4().String()
+		triggerModel := dto.TriggerModel{ID: triggerId}
 		dataBase.EXPECT().GetTrigger(triggerModel.ID).Return(moira.Trigger{}, database.ErrNil)
 		dataBase.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 10)
 		dataBase.EXPECT().DeleteTriggerCheckLock(gomock.Any())
 		dataBase.EXPECT().GetTriggerLastCheck(gomock.Any()).Return(moira.CheckData{}, database.ErrNil)
 		dataBase.EXPECT().SetTriggerLastCheck(gomock.Any(), gomock.Any()).Return(nil)
 		dataBase.EXPECT().SaveTrigger(gomock.Any(), triggerModel.ToMoiraTrigger()).Return(nil)
+		resp, err := CreateTrigger(dataBase, &triggerModel, make(map[string]bool))
+		So(err, ShouldBeNil)
+		So(resp.Message, ShouldResemble, "trigger created")
+		So(resp.ID, ShouldResemble, triggerId)
+	})
+
+	Convey("Success with good tags", t, func() {
+		triggerModel := dto.TriggerModel{Tags:[]string{"Any", "Other", "Tags"}}
+		dataBase.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 10)
+		dataBase.EXPECT().DeleteTriggerCheckLock(gomock.Any())
+		dataBase.EXPECT().GetTriggerLastCheck(gomock.Any()).Return(moira.CheckData{}, database.ErrNil)
+		dataBase.EXPECT().SetTriggerLastCheck(gomock.Any(), gomock.Any()).Return(nil)
+		dataBase.EXPECT().SaveTrigger(gomock.Any(), gomock.Any()).Return(nil)
 		resp, err := CreateTrigger(dataBase, &triggerModel, make(map[string]bool))
 		So(err, ShouldBeNil)
 		So(resp.Message, ShouldResemble, "trigger created")
