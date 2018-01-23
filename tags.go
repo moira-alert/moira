@@ -10,10 +10,10 @@ var eventStateWeight = map[string]int{
 // EventHighDegradationTag is reserved tag that describes High Degradation
 var EventHighDegradationTag = "HIGH DEGRADATION"
 
-// EventHighDegradationTag is reserved tag that describes Degradation
+// EventDegradationTag is reserved tag that describes Degradation
 var EventDegradationTag = "DEGRADATION"
 
-// EventHighDegradationTag is reserved tag that describes Progress
+// EventProgressTag is reserved tag that describes Progress
 var EventProgressTag = "PROGRESS"
 
 // GetEventTags returns additional subscription tags based on trigger state
