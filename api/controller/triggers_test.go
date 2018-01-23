@@ -31,8 +31,8 @@ func TestCreateTrigger(t *testing.T) {
 	})
 
 	Convey("Success with triggerID", t, func() {
-		triggerId := uuid.NewV4().String()
-		triggerModel := dto.TriggerModel{ID: triggerId}
+		triggerID := uuid.NewV4().String()
+		triggerModel := dto.TriggerModel{ID: triggerID}
 		dataBase.EXPECT().GetTrigger(triggerModel.ID).Return(moira.Trigger{}, database.ErrNil)
 		dataBase.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 10)
 		dataBase.EXPECT().DeleteTriggerCheckLock(gomock.Any())
@@ -42,7 +42,7 @@ func TestCreateTrigger(t *testing.T) {
 		resp, err := CreateTrigger(dataBase, &triggerModel, make(map[string]bool))
 		So(err, ShouldBeNil)
 		So(resp.Message, ShouldResemble, "trigger created")
-		So(resp.ID, ShouldResemble, triggerId)
+		So(resp.ID, ShouldResemble, triggerID)
 	})
 
 	Convey("Success with good tags", t, func() {
