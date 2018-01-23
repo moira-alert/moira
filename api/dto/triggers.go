@@ -90,8 +90,9 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 		return fmt.Errorf("tags is required")
 	}
 	reservedTagsFound := checkTriggerTags(trigger.Tags)
-	if reservedTagsFound != "" {
-		return fmt.Errorf("forbidden tags: %s", reservedTagsFound)
+	if len(reservedTagsFound) > 0 {
+		forbiddenTags := strings.Join(reservedTagsFound, ", ")
+		return fmt.Errorf("forbidden tags: %s", forbiddenTags)
 	}
 	if trigger.Name == "" {
 		return fmt.Errorf("trigger name is required")
@@ -148,7 +149,7 @@ func resolvePatterns(request *http.Request, trigger *Trigger, expressionValues *
 	return nil
 }
 
-func checkTriggerTags(tags []string) string {
+func checkTriggerTags(tags []string) []string {
 	reservedTagsFound := make([]string, 0)
 	for _, tag := range tags {
 		switch tag {
@@ -156,7 +157,7 @@ func checkTriggerTags(tags []string) string {
 			reservedTagsFound = append(reservedTagsFound, tag)
 		}
 	}
-	return strings.Join(reservedTagsFound, ", ")
+	return reservedTagsFound
 }
 
 func (*Trigger) Render(w http.ResponseWriter, r *http.Request) error {
