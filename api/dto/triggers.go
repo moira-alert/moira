@@ -150,7 +150,7 @@ func resolvePatterns(request *http.Request, trigger *Trigger, expressionValues *
 }
 
 func checkTriggerTags(tags []string) string {
-	var reservedTagsFound []string
+	reservedTagsFound := make([]string, 0)
 	for _, tag := range tags {
 		switch tag {
 		case moira.EventHighDegradationTag, moira.EventDegradationTag, moira.EventProgressTag:
