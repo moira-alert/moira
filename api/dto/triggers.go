@@ -88,11 +88,10 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 	}
 	if len(trigger.Tags) == 0 {
 		return fmt.Errorf("tags is required")
-	} else {
-		reservedTagsFound := checkTriggerTags(trigger.Tags)
-		if reservedTagsFound != "" {
-			return fmt.Errorf("forbidden tags: %s", reservedTagsFound)
-		}
+	}
+	reservedTagsFound := checkTriggerTags(trigger.Tags)
+	if reservedTagsFound != "" {
+		return fmt.Errorf("forbidden tags: %s", reservedTagsFound)
 	}
 	if trigger.Name == "" {
 		return fmt.Errorf("trigger name is required")
