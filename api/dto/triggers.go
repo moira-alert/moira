@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+	"strings"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api/middleware"
@@ -87,6 +88,11 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 	}
 	if len(trigger.Tags) == 0 {
 		return fmt.Errorf("tags is required")
+	} else {
+		reservedTagsFound := checkTriggerTags(trigger.Tags)
+		if reservedTagsFound != "" {
+			return fmt.Errorf("forbidden tags: %s", reservedTagsFound)
+		}
 	}
 	if trigger.Name == "" {
 		return fmt.Errorf("trigger name is required")
@@ -141,6 +147,17 @@ func resolvePatterns(request *http.Request, trigger *Trigger, expressionValues *
 	}
 	middleware.SetTimeSeriesNames(request, timeSeriesNames)
 	return nil
+}
+
+func checkTriggerTags(tags []string) string {
+	var reservedTagsFound []string
+	for _, tag := range tags {
+		switch tag {
+		case moira.EventHighDegradationTag, moira.EventDegradationTag, moira.EventProgressTag:
+			reservedTagsFound = append(reservedTagsFound, tag)
+		}
+	}
+	return strings.Join(reservedTagsFound, ", ")
 }
 
 func (*Trigger) Render(w http.ResponseWriter, r *http.Request) error {

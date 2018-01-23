@@ -45,29 +45,6 @@ func TestCreateTrigger(t *testing.T) {
 		So(resp.ID, ShouldResemble, triggerID)
 	})
 
-	Convey("Success with good tags", t, func() {
-		triggerModel := dto.TriggerModel{Tags:[]string{"Any", "Other", "Tags"}}
-		dataBase.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 10)
-		dataBase.EXPECT().DeleteTriggerCheckLock(gomock.Any())
-		dataBase.EXPECT().GetTriggerLastCheck(gomock.Any()).Return(moira.CheckData{}, database.ErrNil)
-		dataBase.EXPECT().SetTriggerLastCheck(gomock.Any(), gomock.Any()).Return(nil)
-		dataBase.EXPECT().SaveTrigger(gomock.Any(), gomock.Any()).Return(nil)
-		resp, err := CreateTrigger(dataBase, &triggerModel, make(map[string]bool))
-		So(err, ShouldBeNil)
-		So(resp.Message, ShouldResemble, "trigger created")
-	})
-
-	Convey("Fail with reserved tag keyword", t, func() {
-		reserved := []string{moira.EventHighDegradationTag, moira.EventDegradationTag, moira.EventProgressTag}
-		for _, tag := range reserved {
-			expected := fmt.Errorf("Can't use reserved keyword: %s",tag)
-			triggerModel := dto.TriggerModel{Tags:[]string{tag}}
-			resp, err := CreateTrigger(dataBase, &triggerModel, make(map[string]bool))
-			So(err, ShouldResemble, api.ErrorInvalidRequest(expected))
-			So(resp, ShouldBeNil)
-		}
-	})
-
 	Convey("Trigger already exists", t, func() {
 		triggerModel := dto.TriggerModel{ID: uuid.NewV4().String()}
 		trigger := triggerModel.ToMoiraTrigger()
