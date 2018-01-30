@@ -40,7 +40,7 @@ func NewListener(port string, logger moira.Logger, patternStorage *filter.Patter
 // Listen waits for new data in connection and handles it in ConnectionHandler
 // All handled data sets to metricsChan
 func (listener *MetricsListener) Listen() chan *moira.MatchedMetric {
-	metricsChan := make(chan *moira.MatchedMetric, 10)
+	metricsChan := make(chan *moira.MatchedMetric, 10000)
 	listener.tomb.Go(func() error {
 		for {
 			select {
