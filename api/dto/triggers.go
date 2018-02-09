@@ -133,12 +133,14 @@ func resolvePatterns(request *http.Request, trigger *Trigger, expressionValues *
 		if err != nil {
 			return err
 		}
+
 		trigger.Patterns = append(trigger.Patterns, result.Patterns...)
-		for _, timeSeries := range result.TimeSeries {
-			timeSeriesNames[timeSeries.Name] = true
-		}
+
 		if targetNum == 1 {
 			expressionValues.MainTargetValue = 42
+			for _, timeSeries := range result.TimeSeries {
+				timeSeriesNames[timeSeries.Name] = true
+			}
 		} else {
 			targetName := fmt.Sprintf("t%v", targetNum)
 			expressionValues.AdditionalTargetsValues[targetName] = 42
