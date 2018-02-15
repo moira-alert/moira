@@ -3,7 +3,7 @@ package main
 import (
 	"time"
 
-	"menteslibres.net/gosexy/to"
+	"github.com/gosexy/to"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/cmd"
