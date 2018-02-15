@@ -5,7 +5,7 @@ import (
 
 	"github.com/moira-alert/moira/checker"
 	"github.com/moira-alert/moira/cmd"
-	"menteslibres.net/gosexy/to"
+	"github.com/gosexy/to"
 )
 
 type config struct {

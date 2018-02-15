@@ -234,6 +234,12 @@
 			"revisionTime": "2017-09-06T11:25:25Z"
 		},
 		{
+			"checksumSHA1": "6yZPgam3qkc58aiJKy8eH/Sdfgc=",
+			"path": "github.com/gosexy/to",
+			"revision": "c20e083e31230b84ffa23c5d2fb0bc55f5292681",
+			"revisionTime": "2014-12-21T20:36:44Z"
+		},
+		{
 			"checksumSHA1": "LjBAYU2hSInh1mHuEdWLG1QAusU=",
 			"path": "github.com/gregdel/pushover",
 			"revision": "3c2e00dda05a0225e30f21659b7d9399278bf4a1",
@@ -448,12 +454,6 @@
 			"path": "gopkg.in/yaml.v2",
 			"revision": "25c4ec802a7d637f88d584ab26798e94ad14c13b",
 			"revisionTime": "2017-07-21T12:20:51Z"
-		},
-		{
-			"checksumSHA1": "NHNmSR5DggsQ15Ms7tlbgTOjHo8=",
-			"path": "menteslibres.net/gosexy/to",
-			"revision": "c20e083e31230b84ffa23c5d2fb0bc55f5292681",
-			"revisionTime": "2014-12-21T20:36:44Z"
 		}
 	],
 	"rootPath": "github.com/moira-alert/moira"

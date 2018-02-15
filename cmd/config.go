@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 
 	"gopkg.in/yaml.v2"
-	"menteslibres.net/gosexy/to"
+	"github.com/gosexy/to"
 
 	"github.com/moira-alert/moira/database/redis"
 	"github.com/moira-alert/moira/metrics/graphite"
