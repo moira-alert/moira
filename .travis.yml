@@ -2,10 +2,6 @@ sudo: required
 services:
   - docker
   - redis-server
-env:
-  - REDIS_VERSION=3.2.10
-  - REDIS_VERSION=4.0.7
-  - REDIS_VERSION=4.0.8
 language: go
 go:
   - 1.9.2
@@ -24,8 +20,6 @@ notifications:
 before_install:
   - sudo apt-get update
   - sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
-  - wget https://github.com/antirez/redis/archive/$REDIS_VERSION.tar.gz && tar xzf $REDIS_VERSION.tar.gz && make -C redis-$REDIS_VERSION
-  - PATH=$PWD/redis-$REDIS_VERSION/src:$PATH redis-server --version
   - go get -v golang.org/x/tools/cmd/cover
   - go get -v github.com/mattn/goveralls
 install:
