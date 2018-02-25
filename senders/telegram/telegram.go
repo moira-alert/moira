@@ -35,16 +35,9 @@ type Sender struct {
 	location *time.Location
 }
 
-type recipient struct {
-	uid string
-}
-
-func (r recipient) Destination() string {
-	return r.uid
-}
-
-// Init read yaml config
+// Init loads yaml config and configures telegram bot
 func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location) error {
+	var err error
 	sender.APIToken = senderSettings["api_token"]
 	if sender.APIToken == "" {
 		return fmt.Errorf("Can not read telegram api_token from config")
@@ -52,12 +45,76 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 	sender.logger = logger
 	sender.FrontURI = senderSettings["front_uri"]
 	sender.location = location
-
-	err := sender.StartTelebot()
+	sender.bot, err = telebot.NewBot(telebot.Settings{
+		Token:  sender.APIToken,
+		Poller: &telebot.LongPoller{Timeout: 10 * time.Second},
+	})
 	if err != nil {
-		return fmt.Errorf("Error starting bot: %s", err)
+		return err
+	}
+
+	sender.bot.Handle(telebot.OnText, func(message *telebot.Message) {
+		if err = sender.handleMessage(message); err != nil {
+			sender.logger.Errorf("Error handling incoming message: %s", err.Error())
+		}
+	})
+
+	err = sender.RunTelebot()
+	if err != nil {
+		return fmt.Errorf("Error running bot: %s", err.Error())
 	}
 	return nil
+}
+
+// RunTelebot starts telegam bot and manages bot subscriptions
+func (sender *Sender) RunTelebot() error {
+	ttl := time.Second * 30
+	firstCheck := true
+	go func() {
+		for {
+			if sender.DataBase.RegisterBotIfAlreadyNot(messenger, ttl) {
+				sender.logger.Infof("Registered new %s bot, checking for new messages", messenger)
+				go sender.Loop(1 * time.Second)
+				sender.renewSubscription(ttl)
+				return
+			}
+			checkingInterval := time.Minute
+			if firstCheck {
+				sender.logger.Infof("%s bot already registered, trying for register every %v in loop", messenger, checkingInterval)
+				firstCheck = false
+			}
+			<-time.After(checkingInterval)
+		}
+	}()
+	return nil
+}
+
+// renewSubscription renews telegram bot subscription
+func (sender *Sender) renewSubscription(ttl time.Duration) {
+	checkTicker := time.NewTicker((ttl / time.Second) / 2 * time.Second)
+	for {
+		<-checkTicker.C
+		if !sender.DataBase.RenewBotRegistration(messenger) {
+			sender.logger.Warningf("Could not renew subscription for %s bot, try to register bot again", messenger)
+			if sender.DataBase.RegisterBotIfAlreadyNot(messenger, ttl) {
+				sender.logger.Infof("%s bot successfully registered again", messenger)
+			}
+		}
+	}
+}
+
+// Loop starts telegram api loop
+func (sender *Sender) Loop(ttl time.Duration) {
+	timeout := time.After(ttl)
+	sender.bot.Start()
+	for {
+		select {
+		case <-timeout:
+			sender.bot.Stop()
+			sender.DataBase.DeregisterBot(messenger)
+			return
+		}
+	}
 }
 
 // SendEvents implements Sender interface Send
@@ -108,82 +165,9 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 
 }
 
-// StartTelebot creates an api and start telebot
-func (sender *Sender) StartTelebot() error {
-	ttl := time.Second * 30
+// handleMessage handles incoming messages
+func (sender *Sender) handleMessage(message *telebot.Message) error {
 	var err error
-	sender.bot, err = telebot.NewBot(sender.APIToken)
-	if err != nil {
-		return err
-	}
-	firstCheck := true
-	go func() {
-		for {
-			if sender.DataBase.RegisterBotIfAlreadyNot(messenger, ttl) {
-				sender.logger.Infof("Registered new %s bot, checking for new messages", messenger)
-				go sender.Loop(1 * time.Second)
-				sender.renewSubscription(ttl)
-				return
-			}
-			checkingInterval := time.Minute
-			if firstCheck {
-				sender.logger.Infof("%s bot already registered, trying for register every %v in loop", messenger, checkingInterval)
-				firstCheck = false
-			}
-			<-time.After(checkingInterval)
-		}
-	}()
-	return nil
-}
-
-// Loop starts api loop
-func (sender *Sender) Loop(timeout time.Duration) {
-	messages := make(chan telebot.Message)
-	sender.bot.Listen(messages, timeout)
-
-	for {
-		message, ok := <-messages
-		if !ok {
-			sender.logger.Warning("Telegram messages channel was closed, stop listening and deregister")
-			sender.DataBase.DeregisterBot(messenger)
-			return
-		}
-		if err := sender.handleMessage(message); err != nil {
-			sender.logger.Error("Error sending message")
-		}
-	}
-}
-
-func (sender *Sender) renewSubscription(ttl time.Duration) {
-	checkTicker := time.NewTicker((ttl / time.Second) / 2 * time.Second)
-	for {
-		<-checkTicker.C
-		if !sender.DataBase.RenewBotRegistration(messenger) {
-			sender.logger.Warningf("Could not renew subscription for %s bot, try to register bot again", messenger)
-			if !sender.DataBase.RegisterBotIfAlreadyNot(messenger, ttl) {
-				// TODO (borovskyav) here is a bug: if before register bot, another instance will register bot too, we will see two working listeners, and second listener will make errors while receive new messages in loop
-				// TODO best way - graceful stop of failed renew listener, and try to register bots again. But telebot has not graceful stopping.
-				sender.logger.Errorf("Could not register %s bot again, another instance did it already", messenger)
-				return
-			}
-			sender.logger.Infof("%s bot successfully registered again", messenger)
-		}
-	}
-}
-
-// Talk processes one talk
-func (sender *Sender) Talk(username, message string) error {
-	uid, err := sender.DataBase.GetIDByUsername(messenger, username)
-	if err != nil {
-		return fmt.Errorf("failed to get username uuid: %s", err.Error())
-	}
-	var options *telebot.SendOptions
-	return sender.bot.SendMessage(recipient{uid}, message, options)
-}
-
-func (sender *Sender) handleMessage(message telebot.Message) error {
-	var err error
-	var options *telebot.SendOptions
 	id := strconv.FormatInt(message.Chat.ID, 10)
 	title := message.Chat.Title
 	userTitle := strings.Trim(fmt.Sprintf("%s %s", message.Sender.FirstName, message.Sender.LastName), " ")
@@ -192,18 +176,18 @@ func (sender *Sender) handleMessage(message telebot.Message) error {
 	switch {
 	case chatType == "private" && message.Text == "/start":
 		if username == "" {
-			sender.bot.SendMessage(message.Chat, "Username is empty. Please add username in Telegram.", options)
+			sender.bot.Send(message.Chat, "Username is empty. Please add username in Telegram.")
 		} else {
 			err = sender.DataBase.SetUsernameID(messenger, "@"+username, id)
 			if err != nil {
 				return err
 			}
-			sender.bot.SendMessage(message.Chat, fmt.Sprintf("Okay, %s, your id is %s", userTitle, id), nil)
+			sender.bot.Send(message.Chat, fmt.Sprintf("Okay, %s, your id is %s", userTitle, id))
 		}
 	case chatType == "supergroup" || chatType == "group":
 		uid, _ := sender.DataBase.GetIDByUsername(messenger, title)
 		if uid == "" {
-			sender.bot.SendMessage(message.Chat, fmt.Sprintf("Hi, all!\nI will send alerts in this group (%s).", title), nil)
+			sender.bot.Send(message.Chat, fmt.Sprintf("Hi, all!\nI will send alerts in this group (%s).", title))
 		}
 		fmt.Println(chatType, title)
 		err = sender.DataBase.SetUsernameID(messenger, title, id)
@@ -211,7 +195,25 @@ func (sender *Sender) handleMessage(message telebot.Message) error {
 			return err
 		}
 	default:
-		sender.bot.SendMessage(message.Chat, "I don't understand you :(", nil)
+		sender.bot.Send(message.Chat, "I don't understand you :(")
 	}
 	return err
+}
+
+// Talk processes one talk
+func (sender *Sender) Talk(username, message string) error {
+	var err error
+	uid, err := sender.DataBase.GetIDByUsername(messenger, username)
+	if err != nil {
+		return fmt.Errorf("failed to get username uuid: %s", err.Error())
+	}
+	chat, err := sender.bot.ChatByID(uid)
+	if err != nil {
+		return fmt.Errorf("can't find recepient %s: %s", uid, err.Error())
+	}
+	_, err = sender.bot.Send(chat, message)
+	if err != nil {
+		return fmt.Errorf("can't send message [%s] to %s: %s", message, uid, err.Error())
+	}
+	return nil
 }
