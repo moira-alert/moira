@@ -108,13 +108,11 @@ func (sender *Sender) renewSubscription(ttl time.Duration) {
 
 // SendEvents implements Sender interface Send
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, throttled bool) error {
-
 	var message bytes.Buffer
-
 	state := events.GetSubjectState()
 	tags := trigger.GetTags()
-
 	emoji := emojiStates[state]
+
 	message.WriteString(fmt.Sprintf("%s%s %s %s (%d)\n", emoji, state, trigger.Name, tags, len(events)))
 
 	messageLimitReached := false
