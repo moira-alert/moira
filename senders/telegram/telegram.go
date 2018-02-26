@@ -15,8 +15,11 @@ import (
 const messenger = "telegram"
 
 var (
-	telegramMessageLimit = 4096
-	emojiStates          = map[string]string{
+	telegramMessageLimit    = 4096
+	pollerTimeout           = 10 * time.Second
+	databaseMutexExpiry     = 30 * time.Second
+	singlePollerStateExpiry = time.Minute
+	emojiStates             = map[string]string{
 		"OK":     "\xe2\x9c\x85",
 		"WARN":   "\xe2\x9a\xa0",
 		"ERROR":  "\xe2\xad\x95",
@@ -35,19 +38,20 @@ type Sender struct {
 	location *time.Location
 }
 
-// Init loads yaml config and configures telegram bot
+// Init loads yaml config, configures and starts telegram bot
 func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location) error {
 	var err error
 	sender.APIToken = senderSettings["api_token"]
 	if sender.APIToken == "" {
 		return fmt.Errorf("Can not read telegram api_token from config")
 	}
-	sender.logger = logger
 	sender.FrontURI = senderSettings["front_uri"]
+	sender.logger = logger
 	sender.location = location
+
 	sender.bot, err = telebot.NewBot(telebot.Settings{
 		Token:  sender.APIToken,
-		Poller: &telebot.LongPoller{Timeout: 10 * time.Second},
+		Poller: &telebot.LongPoller{Timeout: pollerTimeout},
 	})
 	if err != nil {
 		return err
@@ -67,51 +71,36 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 }
 
 // RunTelebot starts telegam bot and manages bot subscriptions
+// to make sure there is always only one working Poller
 func (sender *Sender) RunTelebot() error {
-	ttl := time.Second * 30
 	firstCheck := true
 	go func() {
 		for {
-			if sender.DataBase.RegisterBotIfAlreadyNot(messenger, ttl) {
+			if sender.DataBase.RegisterBotIfAlreadyNot(messenger, databaseMutexExpiry) {
 				sender.logger.Infof("Registered new %s bot, checking for new messages", messenger)
-				go sender.Loop(1 * time.Second)
-				sender.renewSubscription(ttl)
-				return
+				go sender.bot.Start()
+				sender.renewSubscription(databaseMutexExpiry)
+				continue
 			}
-			checkingInterval := time.Minute
 			if firstCheck {
-				sender.logger.Infof("%s bot already registered, trying for register every %v in loop", messenger, checkingInterval)
+				sender.logger.Infof("%s bot already registered, trying for register every %v in loop", messenger, singlePollerStateExpiry)
 				firstCheck = false
 			}
-			<-time.After(checkingInterval)
+			<-time.After(singlePollerStateExpiry)
 		}
 	}()
 	return nil
 }
 
-// renewSubscription renews telegram bot subscription
+// renewSubscription tries to renew bot subscription
+// and gracefully stops bot on fail to prevent multiple Poller instances running
 func (sender *Sender) renewSubscription(ttl time.Duration) {
 	checkTicker := time.NewTicker((ttl / time.Second) / 2 * time.Second)
 	for {
 		<-checkTicker.C
 		if !sender.DataBase.RenewBotRegistration(messenger) {
 			sender.logger.Warningf("Could not renew subscription for %s bot, try to register bot again", messenger)
-			if sender.DataBase.RegisterBotIfAlreadyNot(messenger, ttl) {
-				sender.logger.Infof("%s bot successfully registered again", messenger)
-			}
-		}
-	}
-}
-
-// Loop starts telegram api loop
-func (sender *Sender) Loop(ttl time.Duration) {
-	timeout := time.After(ttl)
-	sender.bot.Start()
-	for {
-		select {
-		case <-timeout:
 			sender.bot.Stop()
-			sender.DataBase.DeregisterBot(messenger)
 			return
 		}
 	}
@@ -165,7 +154,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 
 }
 
-// handleMessage handles incoming messages
+// handleMessage handles incoming messages to start sending events to subscribers chats
 func (sender *Sender) handleMessage(message *telebot.Message) error {
 	var err error
 	id := strconv.FormatInt(message.Chat.ID, 10)
