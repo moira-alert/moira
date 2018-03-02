@@ -3,6 +3,7 @@ package controller
 import (
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
@@ -73,7 +74,7 @@ func getTagNamesSorted(database moira.Database) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	sort.Strings(tagsNames)
+	sort.SliceStable(tagsNames, func(i, j int) bool { return strings.ToLower(tagsNames[i]) < strings.ToLower(tagsNames[j]) })
 	return tagsNames, nil
 }
 

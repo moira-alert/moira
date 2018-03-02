@@ -21,10 +21,10 @@ func TestGetAllTags(t *testing.T) {
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 	Convey("Success", t, func() {
-		database.EXPECT().GetTagNames().Return([]string{"atag21", "tag22", "hi", "tag1"}, nil)
+		database.EXPECT().GetTagNames().Return([]string{"_wtf", "atag21", "Tag22", "Hi", "tag1", "1tag"}, nil)
 		data, err := GetAllTags(database)
 		So(err, ShouldBeNil)
-		So(data, ShouldResemble, &dto.TagsData{TagNames: []string{"atag21", "hi", "tag1", "tag22"}})
+		So(data, ShouldResemble, &dto.TagsData{TagNames: []string{"1tag", "_wtf", "atag21", "Hi", "tag1", "Tag22"}})
 	})
 
 	Convey("Error", t, func() {
