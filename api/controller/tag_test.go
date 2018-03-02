@@ -2,14 +2,17 @@ package controller
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/golang/mock/gomock"
+	"github.com/op/go-logging"
+
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/mock/moira-alert"
-	"github.com/op/go-logging"
+
 	. "github.com/smartystreets/goconvey/convey"
-	"testing"
 )
 
 func TestGetAllTags(t *testing.T) {
@@ -18,10 +21,10 @@ func TestGetAllTags(t *testing.T) {
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 	Convey("Success", t, func() {
-		database.EXPECT().GetTagNames().Return([]string{"tag21", "tag22", "tag1"}, nil)
+		database.EXPECT().GetTagNames().Return([]string{"atag21", "tag22", "hi", "tag1"}, nil)
 		data, err := GetAllTags(database)
 		So(err, ShouldBeNil)
-		So(data, ShouldResemble, &dto.TagsData{TagNames: []string{"tag21", "tag22", "tag1"}})
+		So(data, ShouldResemble, &dto.TagsData{TagNames: []string{"atag21", "hi", "tag1", "tag22"}})
 	})
 
 	Convey("Error", t, func() {
