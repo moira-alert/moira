@@ -45,8 +45,8 @@ func TestExpression(t *testing.T) {
 		So(result, ShouldResemble, "ERROR")
 
 		result, err = (&TriggerExpression{MainTargetValue: 10.0, WarnValue: &warnValue}).Evaluate()
-		So(err, ShouldResemble, ErrInvalidExpression{fmt.Errorf("Error value and Warning value can not be empty")})
-		So(err.Error(), ShouldResemble, "Error value and Warning value can not be empty")
+		So(err, ShouldResemble, ErrInvalidExpression{fmt.Errorf("error value and Warning value can not be empty")})
+		So(err.Error(), ShouldResemble, "error value and Warning value can not be empty")
 		So(result, ShouldBeEmpty)
 	})
 
@@ -58,7 +58,7 @@ func TestExpression(t *testing.T) {
 
 		expression = "min(t1, t2) > 10 ? ERROR : OK"
 		result, err = (&TriggerExpression{Expression: &expression, MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{"t2": 4.0}}).Evaluate()
-		So(err, ShouldResemble, ErrInvalidExpression{fmt.Errorf("Functions is forbidden")})
+		So(err, ShouldResemble, ErrInvalidExpression{fmt.Errorf("functions is forbidden")})
 		So(result, ShouldBeEmpty)
 	})
 }
@@ -135,18 +135,18 @@ func TestGetExpressionValue(t *testing.T) {
 				{
 					name:          "WARN_VALUE",
 					expectedValue: nil,
-					expectedError: fmt.Errorf("No value with name WARN_VALUE"),
+					expectedError: fmt.Errorf("no value with name WARN_VALUE"),
 				},
 				{
 					name:          "ERROR_VALUE",
 					expectedValue: nil,
-					expectedError: fmt.Errorf("No value with name ERROR_VALUE"),
+					expectedError: fmt.Errorf("no value with name ERROR_VALUE"),
 				},
 				{
 					values:        TriggerExpression{AdditionalTargetsValues: map[string]float64{"t3": 4.0, "t2": 6.0}},
 					name:          "t4",
 					expectedValue: nil,
-					expectedError: fmt.Errorf("No value with name t4"),
+					expectedError: fmt.Errorf("no value with name t4"),
 				},
 			}
 			runGetExpressionValuesTest(getExpressionValuesTests)

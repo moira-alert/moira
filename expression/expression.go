@@ -3,6 +3,7 @@ package expression
 import (
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/Knetic/govaluate"
 )
@@ -11,6 +12,7 @@ var default1, _ = govaluate.NewEvaluableExpression("t1 >= ERROR_VALUE ? ERROR : 
 var default2, _ = govaluate.NewEvaluableExpression("t1 <= ERROR_VALUE ? ERROR : (t1 <= WARN_VALUE ? WARN : OK)")
 
 var cache = make(map[string]*govaluate.EvaluableExpression)
+var cacheLock sync.Mutex
 
 // ErrInvalidExpression represents bad expression or its state error
 type ErrInvalidExpression struct {
@@ -46,12 +48,12 @@ func (triggerExpression TriggerExpression) Get(name string) (interface{}, error)
 		return "NODATA", nil
 	case "WARN_VALUE":
 		if triggerExpression.WarnValue == nil {
-			return nil, fmt.Errorf("No value with name WARN_VALUE")
+			return nil, fmt.Errorf("no value with name WARN_VALUE")
 		}
 		return *triggerExpression.WarnValue, nil
 	case "ERROR_VALUE":
 		if triggerExpression.ErrorValue == nil {
-			return nil, fmt.Errorf("No value with name ERROR_VALUE")
+			return nil, fmt.Errorf("no value with name ERROR_VALUE")
 		}
 		return *triggerExpression.ErrorValue, nil
 	case "t1":
@@ -61,7 +63,7 @@ func (triggerExpression TriggerExpression) Get(name string) (interface{}, error)
 	default:
 		value, ok := triggerExpression.AdditionalTargetsValues[name]
 		if !ok {
-			return nil, fmt.Errorf("No value with name %s", name)
+			return nil, fmt.Errorf("no value with name %s", name)
 		}
 		return value, nil
 	}
@@ -81,7 +83,7 @@ func (triggerExpression *TriggerExpression) Evaluate() (string, error) {
 	case string:
 		return res, nil
 	default:
-		return "", ErrInvalidExpression{internalError: fmt.Errorf("Expression result must be state value")}
+		return "", ErrInvalidExpression{internalError: fmt.Errorf("expression result must be state value")}
 	}
 }
 
@@ -94,7 +96,7 @@ func getExpression(triggerExpression *TriggerExpression) (*govaluate.EvaluableEx
 
 func getSimpleExpression(triggerExpression *TriggerExpression) (*govaluate.EvaluableExpression, error) {
 	if triggerExpression.ErrorValue == nil || triggerExpression.WarnValue == nil {
-		return nil, fmt.Errorf("Error value and Warning value can not be empty")
+		return nil, fmt.Errorf("error value and Warning value can not be empty")
 	}
 	if *triggerExpression.ErrorValue >= *triggerExpression.WarnValue {
 		return default1, nil
@@ -103,17 +105,32 @@ func getSimpleExpression(triggerExpression *TriggerExpression) (*govaluate.Evalu
 }
 
 func getUserExpression(triggerExpression string) (*govaluate.EvaluableExpression, error) {
-	cached, ok := cache[triggerExpression]
-	if ok {
-		return cached, nil
-	}
-	expr, err := govaluate.NewEvaluableExpression(triggerExpression)
+	err := evaluateAndCacheExpressionIfNeed(triggerExpression)
 	if err != nil {
-		if strings.Contains(err.Error(), "Undefined function") {
-			return nil, fmt.Errorf("Functions is forbidden")
-		}
 		return nil, err
 	}
-	cache[triggerExpression] = expr
-	return expr, nil
+	return cache[triggerExpression], err
+}
+
+func evaluateAndCacheExpressionIfNeed(triggerExpression string) error {
+	if _, ok := cache[triggerExpression]; !ok {
+		cacheLock.Lock()
+		defer cacheLock.Unlock()
+		if _, ok := cache[triggerExpression]; !ok {
+			newCache := make(map[string]*govaluate.EvaluableExpression, len(cache)+1)
+			for k, v := range cache {
+				newCache[k] = v
+			}
+			expr, err := govaluate.NewEvaluableExpression(triggerExpression)
+			if err != nil {
+				if strings.Contains(err.Error(), "Undefined function") {
+					return fmt.Errorf("functions is forbidden")
+				}
+				return err
+			}
+			newCache[triggerExpression] = expr
+			cache = newCache
+		}
+	}
+	return nil
 }
