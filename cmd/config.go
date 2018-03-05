@@ -3,9 +3,10 @@ package cmd
 import (
 	"fmt"
 	"io/ioutil"
+	"strings"
 
-	"gopkg.in/yaml.v2"
 	"github.com/gosexy/to"
+	"gopkg.in/yaml.v2"
 
 	"github.com/moira-alert/moira/database/redis"
 	"github.com/moira-alert/moira/metrics/graphite"
@@ -13,17 +14,21 @@ import (
 
 // RedisConfig is redis config structure, which are taken on the start of moira
 type RedisConfig struct {
-	Host string `yaml:"host"`
-	Port string `yaml:"port"`
-	DBID int    `yaml:"dbid"`
+	MasterName    string `yaml:"master_name"`
+	SentinelAddrs string `yaml:"sentinel_addrs"`
+	Host          string `yaml:"host"`
+	Port          string `yaml:"port"`
+	DBID          int    `yaml:"dbid"`
 }
 
 // GetSettings return redis config parsed from moira config files
 func (config *RedisConfig) GetSettings() redis.Config {
 	return redis.Config{
-		Host: config.Host,
-		Port: config.Port,
-		DBID: config.DBID,
+		MasterName:        config.MasterName,
+		SentinelAddresses: strings.Split(config.SentinelAddrs, ","),
+		Host:              config.Host,
+		Port:              config.Port,
+		DBID:              config.DBID,
 	}
 }
 
