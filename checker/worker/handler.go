@@ -7,50 +7,41 @@ import (
 	"github.com/moira-alert/moira/checker"
 )
 
-func (worker *Checker) perform(triggerIDs []string, cacheTTL time.Duration) {
-	for _, triggerID := range triggerIDs {
-		if worker.needHandleTrigger(triggerID, cacheTTL) {
-			worker.triggersToCheck <- triggerID
-		}
-	}
-}
-
-func (worker *Checker) needHandleTrigger(triggerID string, cacheTTL time.Duration) bool {
-	err := worker.Cache.Add(triggerID, true, cacheTTL)
-	return err == nil
-}
-
-func (worker *Checker) triggerHandler() error {
+func (worker *Checker) startTriggerHandler() error {
 	for {
 		triggerID, ok := <-worker.triggersToCheck
 		if !ok {
 			return nil
 		}
-		worker.handle(triggerID)
+		worker.handleTrigger(triggerID)
 	}
 }
 
-func (worker *Checker) handle(triggerID string) {
+func (worker *Checker) handleTrigger(triggerID string) {
 	defer func() {
 		if r := recover(); r != nil {
 			worker.Metrics.HandleError.Mark(1)
-			worker.Logger.Errorf("Panic while perform trigger %s: message: '%s' stack: %s", triggerID, r, debug.Stack())
+			worker.Logger.Errorf("Panic while handle trigger %s: message: '%s' stack: %s", triggerID, r, debug.Stack())
 		}
 	}()
-	if err := worker.handleTriggerToCheck(triggerID); err != nil {
+	if err := worker.handleTriggerInLock(triggerID); err != nil {
 		worker.Metrics.HandleError.Mark(1)
-		worker.Logger.Errorf("Failed to perform trigger: %s error: %s", triggerID, err.Error())
+		worker.Logger.Errorf("Failed to handle trigger: %s error: %s", triggerID, err.Error())
 	}
 }
 
-func (worker *Checker) handleTriggerToCheck(triggerID string) error {
+func (worker *Checker) handleTriggerInLock(triggerID string) error {
 	acquired, err := worker.Database.SetTriggerCheckLock(triggerID)
 	if err != nil {
 		return err
 	}
 	if acquired {
 		start := time.Now()
-		defer worker.Metrics.TriggerCheckTime.UpdateSince(start)
+		defer func() {
+			timeSinceStart := time.Since(start)
+			worker.Metrics.TriggersCheckTime.Update(timeSinceStart)
+			worker.Metrics.TriggerCheckTime.GetOrAdd(triggerID, triggerID).Update(timeSinceStart)
+		}()
 		if err := worker.checkTrigger(triggerID); err != nil {
 			return err
 		}

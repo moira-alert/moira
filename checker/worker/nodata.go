@@ -10,11 +10,11 @@ func (worker *Checker) noDataChecker() error {
 		select {
 		case <-worker.tomb.Dying():
 			checkTicker.Stop()
-			worker.Logger.Info("NoData checker stopped")
+			worker.Logger.Info("NODATA checker stopped")
 			return nil
 		case <-checkTicker.C:
 			if err := worker.checkNoData(); err != nil {
-				worker.Logger.Errorf("NoData check failed: %s", err.Error())
+				worker.Logger.Errorf("NODATA check failed: %s", err.Error())
 			}
 		}
 	}
@@ -23,14 +23,14 @@ func (worker *Checker) noDataChecker() error {
 func (worker *Checker) checkNoData() error {
 	now := time.Now().UTC().Unix()
 	if worker.lastData+worker.Config.StopCheckingIntervalSeconds < now {
-		worker.Logger.Infof("Checking NoData disabled. No metrics for %v seconds", now-worker.lastData)
+		worker.Logger.Infof("Checking NODATA disabled. No metrics for %v seconds", now-worker.lastData)
 	} else {
-		worker.Logger.Info("Checking NoData")
+		worker.Logger.Info("Checking NODATA")
 		triggerIds, err := worker.Database.GetTriggerIDs()
 		if err != nil {
 			return err
 		}
-		worker.perform(triggerIds, time.Minute)
+		worker.addTriggerIDsIfNeeded(triggerIds, time.Minute)
 	}
 	return nil
 }

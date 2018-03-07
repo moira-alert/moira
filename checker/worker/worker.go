@@ -18,7 +18,8 @@ type Checker struct {
 	Database        moira.Database
 	Config          *checker.Config
 	Metrics         *graphite.CheckerMetrics
-	Cache           *cache.Cache
+	TriggerCache    *cache.Cache
+	PatternCache    *cache.Cache
 	lastData        int64
 	tomb            tomb.Tomb
 	triggersToCheck chan string
@@ -39,19 +40,46 @@ func (worker *Checker) Start() error {
 	}
 
 	worker.tomb.Go(worker.noDataChecker)
-	worker.Logger.Info("NoData checker started")
+	worker.Logger.Info("NODATA checker started")
 
 	worker.tomb.Go(func() error {
 		return worker.metricsChecker(metricEventsChannel)
 	})
 
 	for i := 0; i < worker.Config.MaxParallelChecks; i++ {
-		worker.tomb.Go(worker.triggerHandler)
+		worker.tomb.Go(worker.startTriggerHandler)
 	}
 	worker.Logger.Infof("Start %v parallel checkers", worker.Config.MaxParallelChecks)
 
+	worker.tomb.Go(worker.checkTriggersToCheckChannelLen)
+	worker.tomb.Go(func() error { return worker.checkMetricEventsChannelLen(metricEventsChannel) })
+
 	worker.Logger.Info("Checking new events started")
 	return nil
+}
+
+func (worker *Checker) checkTriggersToCheckChannelLen() error {
+	checkTicker := time.NewTicker(time.Minute)
+	for {
+		select {
+		case <-worker.tomb.Dying():
+			return nil
+		case <-checkTicker.C:
+			worker.Metrics.TriggersToCheckChannelLen.Mark(int64(len(worker.triggersToCheck)))
+		}
+	}
+}
+
+func (worker *Checker) checkMetricEventsChannelLen(ch <-chan *moira.MetricEvent) error {
+	checkTicker := time.NewTicker(time.Minute)
+	for {
+		select {
+		case <-worker.tomb.Dying():
+			return nil
+		case <-checkTicker.C:
+			worker.Metrics.MetricEventsChannelLen.Mark(int64(len(ch)))
+		}
+	}
 }
 
 // Stop stops checks triggers

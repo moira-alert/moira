@@ -84,11 +84,12 @@ func main() {
 		checkSingleTrigger(database, checkerMetrics, checkerSettings)
 	}
 	checkerWorker := &worker.Checker{
-		Logger:   logger,
-		Database: database,
-		Config:   checkerSettings,
-		Metrics:  checkerMetrics,
-		Cache:    cache.New(time.Minute, time.Minute*60),
+		Logger:       logger,
+		Database:     database,
+		Config:       checkerSettings,
+		Metrics:      checkerMetrics,
+		TriggerCache: cache.New(time.Minute, time.Minute*60),
+		PatternCache: cache.New(time.Minute, time.Minute*60),
 	}
 	err = checkerWorker.Start()
 	if err != nil {
