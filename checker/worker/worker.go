@@ -31,7 +31,7 @@ func (worker *Checker) Start() error {
 	}
 
 	worker.lastData = time.Now().UTC().Unix()
-	worker.triggersToCheck = make(chan string, 100)
+	worker.triggersToCheck = make(chan string, 16384)
 
 	metricEventsChannel, err := worker.Database.SubscribeMetricEvents(&worker.tomb)
 	if err != nil {

@@ -15,6 +15,17 @@ import (
 	"github.com/moira-alert/moira"
 )
 
+const pubSubWorkerChannelSize = 16384
+
+const (
+	cacheCleanupInterval         = time.Minute * 60
+	cacheValueExpirationDuration = time.Minute
+)
+
+const (
+	receiveErrorSleepDuration = time.Second
+)
+
 // DbConnector contains redis pool
 type DbConnector struct {
 	pool            *redis.Pool
@@ -31,8 +42,8 @@ func NewDatabase(logger moira.Logger, config Config) *DbConnector {
 	return &DbConnector{
 		pool:            pool,
 		logger:          logger,
-		retentionCache:  cache.New(time.Minute, time.Minute*60),
-		metricsCache:    cache.New(time.Minute, time.Minute*60),
+		retentionCache:  cache.New(cacheValueExpirationDuration, cacheCleanupInterval),
+		metricsCache:    cache.New(cacheValueExpirationDuration, cacheCleanupInterval),
 		messengersCache: cache.New(cache.NoExpiration, cache.DefaultExpiration),
 		sync:            redsync.New([]redsync.Pool{pool}),
 	}
@@ -136,7 +147,7 @@ func (connector *DbConnector) makePubSubConnection(channel string) (*redis.PubSu
 	c := connector.pool.Get()
 	psc := redis.PubSubConn{Conn: c}
 	if err := psc.Subscribe(channel); err != nil {
-		return nil, fmt.Errorf("Failed to subscribe to '%s', error: %v", channel, err)
+		return nil, fmt.Errorf("failed to subscribe to '%s', error: %v", channel, err)
 	}
 	return &psc, nil
 }
@@ -153,12 +164,15 @@ func (connector *DbConnector) manageSubscriptions(tomb *tomb.Tomb, channel strin
 		psc.Unsubscribe()
 	}()
 
-	dataChan := make(chan []byte)
+	dataChan := make(chan []byte, pubSubWorkerChannelSize)
 	go func() {
 		defer psc.Close()
 		for {
 			switch n := psc.Receive().(type) {
 			case redis.Message:
+				if len(n.Data) == 0 {
+					continue
+				}
 				dataChan <- n.Data
 			case redis.Subscription:
 				switch n.Kind {
@@ -177,14 +191,14 @@ func (connector *DbConnector) manageSubscriptions(tomb *tomb.Tomb, channel strin
 				newPsc, err := connector.makePubSubConnection(metricEventKey)
 				if err != nil {
 					connector.logger.Errorf("Failed to reconnect to subscription: %v", err)
-					<-time.After(5 * time.Second)
+					<-time.After(receiveErrorSleepDuration)
 					continue
 				}
 				psc = newPsc
-				<-time.After(5 * time.Second)
+				<-time.After(receiveErrorSleepDuration)
 			default:
 				connector.logger.Errorf("Can not receive message of type '%T': %v", n, n)
-				<-time.After(5 * time.Second)
+				<-time.After(receiveErrorSleepDuration)
 			}
 		}
 	}()
