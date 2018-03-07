@@ -2,40 +2,45 @@ package metrics
 
 import (
 	"fmt"
+
 	"github.com/moira-alert/moira/metrics/graphite"
 )
 
 // ConfigureFilterMetrics initialize graphite metrics
 func ConfigureFilterMetrics(prefix string) *graphite.FilterMetrics {
 	return &graphite.FilterMetrics{
-		TotalMetricsReceived:    newRegisteredMeter(metricNameWithPrefix(prefix, "received.total")),
-		ValidMetricsReceived:    newRegisteredMeter(metricNameWithPrefix(prefix, "received.valid")),
-		MatchingMetricsReceived: newRegisteredMeter(metricNameWithPrefix(prefix, "received.matching")),
-		MatchingTimer:           newRegisteredTimer(metricNameWithPrefix(prefix, "time.match")),
-		SavingTimer:             newRegisteredTimer(metricNameWithPrefix(prefix, "time.save")),
-		BuildTreeTimer:          newRegisteredTimer(metricNameWithPrefix(prefix, "time.buildtree")),
+		TotalMetricsReceived:    registerMeter(metricNameWithPrefix(prefix, "received.total")),
+		ValidMetricsReceived:    registerMeter(metricNameWithPrefix(prefix, "received.valid")),
+		MatchingMetricsReceived: registerMeter(metricNameWithPrefix(prefix, "received.matching")),
+		MatchingTimer:           registerTimer(metricNameWithPrefix(prefix, "time.match")),
+		SavingTimer:             registerTimer(metricNameWithPrefix(prefix, "time.save")),
+		BuildTreeTimer:          registerTimer(metricNameWithPrefix(prefix, "time.buildtree")),
 	}
 }
 
 // ConfigureNotifierMetrics is notifier metrics configurator
 func ConfigureNotifierMetrics(prefix string) *graphite.NotifierMetrics {
 	return &graphite.NotifierMetrics{
-		SubsMalformed:          newRegisteredMeter(metricNameWithPrefix(prefix, "subs.malformed")),
-		EventsReceived:         newRegisteredMeter(metricNameWithPrefix(prefix, "events.received")),
-		EventsMalformed:        newRegisteredMeter(metricNameWithPrefix(prefix, "events.malformed")),
-		EventsProcessingFailed: newRegisteredMeter(metricNameWithPrefix(prefix, "events.failed")),
-		SendingFailed:          newRegisteredMeter(metricNameWithPrefix(prefix, "sending.failed")),
-		SendersOkMetrics:       newMetricsMap(),
-		SendersFailedMetrics:   newMetricsMap(),
+		SubsMalformed:          registerMeter(metricNameWithPrefix(prefix, "subs.malformed")),
+		EventsReceived:         registerMeter(metricNameWithPrefix(prefix, "events.received")),
+		EventsMalformed:        registerMeter(metricNameWithPrefix(prefix, "events.malformed")),
+		EventsProcessingFailed: registerMeter(metricNameWithPrefix(prefix, "events.failed")),
+		SendingFailed:          registerMeter(metricNameWithPrefix(prefix, "sending.failed")),
+		SendersOkMetrics:       newMeterMap(),
+		SendersFailedMetrics:   newMeterMap(),
 	}
 }
 
 // ConfigureCheckerMetrics is checker metrics configurator
 func ConfigureCheckerMetrics(prefix string) *graphite.CheckerMetrics {
 	return &graphite.CheckerMetrics{
-		CheckError:       newRegisteredMeter(metricNameWithPrefix(prefix, "errors.check")),
-		HandleError:      newRegisteredMeter(metricNameWithPrefix(prefix, "errors.handle")),
-		TriggerCheckTime: newRegisteredTimer(metricNameWithPrefix(prefix, "triggers")),
+		CheckError:                registerMeter(metricNameWithPrefix(prefix, "errors.check")),
+		HandleError:               registerMeter(metricNameWithPrefix(prefix, "errors.handle")),
+		TriggersCheckTime:         registerTimer(metricNameWithPrefix(prefix, "triggers")),
+		TriggerCheckTime:          newTimerMap(metricNameWithPrefix(prefix, "trigger")),
+		TriggersToCheckChannelLen: registerMeter(metricNameWithPrefix(prefix, "triggersToCheck")),
+		MetricEventsChannelLen:    registerMeter(metricNameWithPrefix(prefix, "metricEvents")),
+		MetricEventsHandleTime:    registerTimer(metricNameWithPrefix(prefix, "metricEventsHandle")),
 	}
 }
 
