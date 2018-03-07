@@ -88,8 +88,8 @@ func main() {
 		Database:     database,
 		Config:       checkerSettings,
 		Metrics:      checkerMetrics,
-		TriggerCache: cache.New(time.Minute, time.Minute*60),
-		PatternCache: cache.New(time.Minute, time.Minute*60),
+		TriggerCache: cache.New(checkerSettings.CheckInterval, time.Minute*60),
+		PatternCache: cache.New(checkerSettings.CheckInterval, time.Minute*60),
 	}
 	err = checkerWorker.Start()
 	if err != nil {

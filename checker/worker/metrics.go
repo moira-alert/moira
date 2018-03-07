@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira"
+	"github.com/patrickmn/go-cache"
 )
 
 func (worker *Checker) metricsChecker(metricEventsChannel <-chan *moira.MetricEvent) error {
@@ -15,7 +16,7 @@ func (worker *Checker) metricsChecker(metricEventsChannel <-chan *moira.MetricEv
 			return nil
 		}
 		pattern := metricEvent.Pattern
-		if worker.needHandlePattern(pattern, worker.Config.CheckInterval) {
+		if worker.needHandlePattern(pattern) {
 			if err := worker.handleMetricEvent(pattern); err != nil {
 				worker.Logger.Errorf("Failed to handle metricEvent: %s", err.Error())
 			}
@@ -23,8 +24,8 @@ func (worker *Checker) metricsChecker(metricEventsChannel <-chan *moira.MetricEv
 	}
 }
 
-func (worker *Checker) needHandlePattern(pattern string, cacheTTL time.Duration) bool {
-	err := worker.PatternCache.Add(pattern, true, cacheTTL)
+func (worker *Checker) needHandlePattern(pattern string) bool {
+	err := worker.PatternCache.Add(pattern, true, cache.DefaultExpiration)
 	return err == nil
 }
 
@@ -42,19 +43,19 @@ func (worker *Checker) handleMetricEvent(pattern string) error {
 			return err
 		}
 	}
-	worker.addTriggerIDsIfNeeded(triggerIds, worker.Config.CheckInterval)
+	worker.addTriggerIDsIfNeeded(triggerIds)
 	return nil
 }
 
-func (worker *Checker) addTriggerIDsIfNeeded(triggerIDs []string, cacheTTL time.Duration) {
+func (worker *Checker) addTriggerIDsIfNeeded(triggerIDs []string) {
 	for _, triggerID := range triggerIDs {
-		if worker.needHandleTrigger(triggerID, cacheTTL) {
+		if worker.needHandleTrigger(triggerID) {
 			worker.triggersToCheck <- triggerID
 		}
 	}
 }
 
-func (worker *Checker) needHandleTrigger(triggerID string, cacheTTL time.Duration) bool {
-	err := worker.TriggerCache.Add(triggerID, true, cacheTTL)
+func (worker *Checker) needHandleTrigger(triggerID string) bool {
+	err := worker.TriggerCache.Add(triggerID, true, cache.DefaultExpiration)
 	return err == nil
 }
