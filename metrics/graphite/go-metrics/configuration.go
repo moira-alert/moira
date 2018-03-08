@@ -9,9 +9,9 @@ import (
 // ConfigureFilterMetrics initialize graphite metrics
 func ConfigureFilterMetrics(prefix string) *graphite.FilterMetrics {
 	return &graphite.FilterMetrics{
-		TotalMetricsReceived:    registerMeter(metricNameWithPrefix(prefix, "received.total")),
-		ValidMetricsReceived:    registerMeter(metricNameWithPrefix(prefix, "received.valid")),
-		MatchingMetricsReceived: registerMeter(metricNameWithPrefix(prefix, "received.matching")),
+		TotalMetricsReceived:    registerCounter(metricNameWithPrefix(prefix, "received.total")),
+		ValidMetricsReceived:    registerCounter(metricNameWithPrefix(prefix, "received.valid")),
+		MatchingMetricsReceived: registerCounter(metricNameWithPrefix(prefix, "received.matching")),
 		MatchingTimer:           registerTimer(metricNameWithPrefix(prefix, "time.match")),
 		SavingTimer:             registerTimer(metricNameWithPrefix(prefix, "time.save")),
 		BuildTreeTimer:          registerTimer(metricNameWithPrefix(prefix, "time.buildtree")),
