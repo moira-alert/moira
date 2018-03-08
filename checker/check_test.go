@@ -645,7 +645,7 @@ func TestHandleTrigger(t *testing.T) {
 		dataBase.EXPECT().RemoveMetricsValues([]string{metric1, metric2}, gomock.Any())
 		dataBase.EXPECT().PushNotificationEvent(gomock.Any(), true).Return(nil)
 		checkData, err := triggerChecker1.handleTrigger()
-		So(err, ShouldResemble, ErrTriggerHasSameTimeSeriesNames{})
+		So(err, ShouldResemble, ErrTriggerHasSameTimeSeriesNames{names: []string{"super"}})
 		So(checkData, ShouldResemble, moira.CheckData{
 			Metrics: map[string]moira.MetricState{
 				"super": {
@@ -936,12 +936,12 @@ func TestHandleErrorCheck(t *testing.T) {
 
 		dataBase.EXPECT().PushNotificationEvent(gomock.Any(), true).Return(nil)
 
-		actual, err := triggerChecker.handleErrorCheck(checkData, ErrTriggerHasSameTimeSeriesNames{})
+		actual, err := triggerChecker.handleErrorCheck(checkData, ErrTriggerHasSameTimeSeriesNames{names: []string{"first", "second"}})
 		expected := moira.CheckData{
 			State:          EXCEPTION,
 			Timestamp:      checkData.Timestamp,
 			EventTimestamp: checkData.Timestamp,
-			Message:        "Trigger has same timeseries names",
+			Message:        "Trigger has same timeseries names: first, second",
 		}
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, expected)
