@@ -49,3 +49,18 @@ type Gauge interface {
 	Update(int64)
 	Value() int64
 }
+
+// Histogram calculate distribution statistics from a series of int64 values.
+type Histogram interface {
+	Clear()
+	Count() int64
+	Max() int64
+	Mean() float64
+	Min() int64
+	Percentile(float64) float64
+	Percentiles([]float64) []float64
+	StdDev() float64
+	Sum() int64
+	Update(int64)
+	Variance() float64
+}

@@ -38,8 +38,8 @@ func ConfigureCheckerMetrics(prefix string) *graphite.CheckerMetrics {
 		HandleError:               registerMeter(metricNameWithPrefix(prefix, "errors.handle")),
 		TriggersCheckTime:         registerTimer(metricNameWithPrefix(prefix, "triggers")),
 		TriggerCheckTime:          newTimerMap(metricNameWithPrefix(prefix, "trigger")),
-		TriggersToCheckChannelLen: registerMeter(metricNameWithPrefix(prefix, "triggersToCheck")),
-		MetricEventsChannelLen:    registerMeter(metricNameWithPrefix(prefix, "metricEvents")),
+		TriggersToCheckChannelLen: registerHistogram(metricNameWithPrefix(prefix, "triggersToCheck")),
+		MetricEventsChannelLen:    registerHistogram(metricNameWithPrefix(prefix, "metricEvents")),
 		MetricEventsHandleTime:    registerTimer(metricNameWithPrefix(prefix, "metricEventsHandle")),
 	}
 }

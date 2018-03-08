@@ -7,7 +7,7 @@ import (
 	goMetrics "github.com/rcrowley/go-metrics"
 )
 
-// Timer is facade for go-metrics package Meter struct
+// Timer is facade for go-metrics package Timer interface
 type Timer struct {
 	timer goMetrics.Timer
 }

@@ -6,7 +6,7 @@ type CheckerMetrics struct {
 	HandleError               Meter
 	TriggersCheckTime         Timer
 	TriggerCheckTime          TimerMap
-	TriggersToCheckChannelLen Meter
-	MetricEventsChannelLen    Meter
+	TriggersToCheckChannelLen Histogram
+	MetricEventsChannelLen    Histogram
 	MetricEventsHandleTime    Timer
 }

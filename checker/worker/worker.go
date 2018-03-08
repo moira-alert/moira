@@ -59,25 +59,25 @@ func (worker *Checker) Start() error {
 }
 
 func (worker *Checker) checkTriggersToCheckChannelLen() error {
-	checkTicker := time.NewTicker(time.Minute)
+	checkTicker := time.NewTicker(time.Millisecond * 100)
 	for {
 		select {
 		case <-worker.tomb.Dying():
 			return nil
 		case <-checkTicker.C:
-			worker.Metrics.TriggersToCheckChannelLen.Mark(int64(len(worker.triggersToCheck)))
+			worker.Metrics.TriggersToCheckChannelLen.Update(int64(len(worker.triggersToCheck)))
 		}
 	}
 }
 
 func (worker *Checker) checkMetricEventsChannelLen(ch <-chan *moira.MetricEvent) error {
-	checkTicker := time.NewTicker(time.Minute)
+	checkTicker := time.NewTicker(time.Millisecond * 100)
 	for {
 		select {
 		case <-worker.tomb.Dying():
 			return nil
 		case <-checkTicker.C:
-			worker.Metrics.MetricEventsChannelLen.Mark(int64(len(ch)))
+			worker.Metrics.MetricEventsChannelLen.Update(int64(len(ch)))
 		}
 	}
 }
