@@ -42,19 +42,24 @@ func (worker *Checker) Start() error {
 	worker.tomb.Go(worker.noDataChecker)
 	worker.Logger.Info("NODATA checker started")
 
-	worker.tomb.Go(func() error {
-		return worker.metricsChecker(metricEventsChannel)
-	})
-
+	worker.Logger.Infof("Start %v parallel checkers", worker.Config.MaxParallelChecks)
 	for i := 0; i < worker.Config.MaxParallelChecks; i++ {
+		worker.tomb.Go(func() error { return worker.metricsChecker(metricEventsChannel) })
 		worker.tomb.Go(worker.startTriggerHandler)
 	}
-	worker.Logger.Infof("Start %v parallel checkers", worker.Config.MaxParallelChecks)
+	worker.Logger.Info("Checking new events started")
+
+	go func() {
+		for {
+			<-worker.tomb.Dying()
+			close(worker.triggersToCheck)
+			worker.Logger.Info("Checking for new events stopped")
+			return
+		}
+	}()
 
 	worker.tomb.Go(worker.checkTriggersToCheckChannelLen)
 	worker.tomb.Go(func() error { return worker.checkMetricEventsChannelLen(metricEventsChannel) })
-
-	worker.Logger.Info("Checking new events started")
 	return nil
 }
 

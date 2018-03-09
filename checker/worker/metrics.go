@@ -11,8 +11,6 @@ func (worker *Checker) metricsChecker(metricEventsChannel <-chan *moira.MetricEv
 	for {
 		metricEvent, ok := <-metricEventsChannel
 		if !ok {
-			close(worker.triggersToCheck)
-			worker.Logger.Info("Checking for new events stopped")
 			return nil
 		}
 		pattern := metricEvent.Pattern
