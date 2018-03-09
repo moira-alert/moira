@@ -10,7 +10,7 @@ type Meter struct {
 	meter goMetrics.Meter
 }
 
-func newRegisteredMeter(name string) *Meter {
+func registerMeter(name string) *Meter {
 	return &Meter{goMetrics.NewRegisteredMeter(name, goMetrics.DefaultRegistry)}
 }
 

@@ -2,6 +2,7 @@ package checker
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/target"
@@ -26,11 +27,13 @@ func (err ErrTriggerHasOnlyWildcards) Error() string {
 }
 
 // ErrTriggerHasSameTimeSeriesNames used if trigger has two timeseries with same name
-type ErrTriggerHasSameTimeSeriesNames struct{}
+type ErrTriggerHasSameTimeSeriesNames struct {
+	names []string
+}
 
 // ErrTriggerHasSameTimeSeriesNames implementation with constant error message
 func (err ErrTriggerHasSameTimeSeriesNames) Error() string {
-	return fmt.Sprintf("Trigger has same timeseries names")
+	return fmt.Sprintf("Trigger has same timeseries names: %s", strings.Join(err.names, ", "))
 }
 
 // Check handle trigger and last check and write new state of trigger, if state were change then write new NotificationEvent
@@ -75,19 +78,19 @@ func (triggerChecker *TriggerChecker) handleTrigger() (moira.CheckData, error) {
 		return checkData, ErrTriggerHasOnlyWildcards{}
 	}
 
-	timeSeriesNamesMap := make(map[string]bool, len(triggerTimeSeries.Main))
-	var checkingError error
+	timeSeriesNamesHash := make(map[string]bool, len(triggerTimeSeries.Main))
+	duplicateNamesHash := make(map[string]bool)
 
 	for _, timeSeries := range triggerTimeSeries.Main {
 		triggerChecker.Logger.Debugf("[TriggerID:%s] Checking timeSeries %s: %v", triggerChecker.TriggerID, timeSeries.Name, timeSeries.Values)
 		triggerChecker.Logger.Debugf("[TriggerID:%s][TimeSeries:%s] Checking interval: %v - %v (%vs), step: %v", triggerChecker.TriggerID, timeSeries.Name, timeSeries.StartTime, timeSeries.StopTime, timeSeries.StepTime, timeSeries.StopTime-timeSeries.StartTime)
 
-		if _, ok := timeSeriesNamesMap[timeSeries.Name]; ok {
-			checkingError = ErrTriggerHasSameTimeSeriesNames{}
-			triggerChecker.Logger.Infof("[TriggerID:%s][TimeSeries:%s] Trigger has same timeseries names", triggerChecker.TriggerID, timeSeries.Name)
+		if _, ok := timeSeriesNamesHash[timeSeries.Name]; ok {
+			duplicateNamesHash[timeSeries.Name] = true
+			triggerChecker.Logger.Debugf("[TriggerID:%s][TimeSeries:%s] Trigger has same timeseries names", triggerChecker.TriggerID, timeSeries.Name)
 			continue
 		}
-		timeSeriesNamesMap[timeSeries.Name] = true
+		timeSeriesNamesHash[timeSeries.Name] = true
 		metricState, needToDeleteMetric, err := triggerChecker.checkTimeSeries(timeSeries, triggerTimeSeries)
 		if needToDeleteMetric {
 			triggerChecker.Logger.Infof("[TriggerID:%s] Remove metric: '%s'", triggerChecker.TriggerID, timeSeries.Name)
@@ -100,7 +103,14 @@ func (triggerChecker *TriggerChecker) handleTrigger() (moira.CheckData, error) {
 			return checkData, err
 		}
 	}
-	return checkData, checkingError
+	if len(duplicateNamesHash) > 0 {
+		names := make([]string, 0, len(duplicateNamesHash))
+		for key := range duplicateNamesHash {
+			names = append(names, key)
+		}
+		return checkData, ErrTriggerHasSameTimeSeriesNames{names: names}
+	}
+	return checkData, nil
 }
 
 func (triggerChecker *TriggerChecker) checkTimeSeries(timeSeries *target.TimeSeries, triggerTimeSeries *triggerTimeSeries) (lastState moira.MetricState, needToDeleteMetric bool, err error) {

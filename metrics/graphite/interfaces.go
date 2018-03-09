@@ -8,6 +8,11 @@ type MetricsMap interface {
 	GetMetric(name string) (Meter, bool)
 }
 
+// TimerMap implements timer collection abstraction
+type TimerMap interface {
+	GetOrAdd(name, graphitePath string) Timer
+}
+
 // Meter count events to produce exponentially-weighted moving average rates
 // at one-, five-, and fifteen-minutes and a mean rate.
 type Meter interface {
@@ -43,4 +48,27 @@ type Timer interface {
 type Gauge interface {
 	Update(int64)
 	Value() int64
+}
+
+// Histogram calculate distribution statistics from a series of int64 values.
+type Histogram interface {
+	Clear()
+	Count() int64
+	Max() int64
+	Mean() float64
+	Min() int64
+	Percentile(float64) float64
+	Percentiles([]float64) []float64
+	StdDev() float64
+	Sum() int64
+	Update(int64)
+	Variance() float64
+}
+
+// Counter hold an int64 value that can be incremented and decremented.
+type Counter interface {
+	Clear()
+	Count() int64
+	Dec(int64)
+	Inc(int64)
 }

@@ -5,13 +5,13 @@ import (
 	goMetrics "github.com/rcrowley/go-metrics"
 )
 
-func newRegisteredGauge(name string) *Gauge {
-	return &Gauge{goMetrics.NewRegisteredGauge(name, goMetrics.DefaultRegistry)}
-}
-
 // Gauge is facade for go-metrics package Gauge struct
 type Gauge struct {
 	gauge goMetrics.Gauge
+}
+
+func registerGauge(name string) *Gauge {
+	return &Gauge{goMetrics.NewRegisteredGauge(name, goMetrics.DefaultRegistry)}
 }
 
 func (gauge *Gauge) Update(v int64) {
