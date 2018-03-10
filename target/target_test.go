@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/go-graphite/carbonapi/expr/functions"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
 	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
@@ -12,6 +13,10 @@ import (
 	"github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
 )
+
+func init() {
+	functions.New(make(map[string]string))
+}
 
 func TestEvaluateTarget(t *testing.T) {
 	mockCtrl := gomock.NewController(t)

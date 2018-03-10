@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-graphite/carbonapi/expr/functions"
 	"github.com/go-graphite/carbonapi/expr/types"
 	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
 	"github.com/golang/mock/gomock"
@@ -17,6 +18,10 @@ import (
 	"github.com/moira-alert/moira/mock/moira-alert"
 	"github.com/moira-alert/moira/target"
 )
+
+func init() {
+	functions.New(make(map[string]string))
+}
 
 func TestGetTimeSeriesState(t *testing.T) {
 	logger, _ := logging.GetLogger("Test")
