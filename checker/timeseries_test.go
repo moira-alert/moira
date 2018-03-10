@@ -5,7 +5,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/go-graphite/carbonapi/expr"
+	"github.com/go-graphite/carbonapi/expr/types"
 	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
@@ -94,7 +94,7 @@ func TestGetTimeSeries(t *testing.T) {
 			dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{}, nil)
 			actual, metrics, err := triggerChecker.getTimeSeries(from, until)
 			timeSeries := target.TimeSeries{
-				MetricData: expr.MetricData{FetchResponse: pb.FetchResponse{
+				MetricData: types.MetricData{FetchResponse: pb.FetchResponse{
 					Name:      pattern,
 					StartTime: int32(from),
 					StopTime:  int32(until),
@@ -129,7 +129,7 @@ func TestGetTimeSeries(t *testing.T) {
 				IsAbsent:  make([]bool, 5),
 			}
 			expected := &triggerTimeSeries{
-				Main:       []*target.TimeSeries{{MetricData: expr.MetricData{FetchResponse: fetchResponse}}},
+				Main:       []*target.TimeSeries{{MetricData: types.MetricData{FetchResponse: fetchResponse}}},
 				Additional: make([]*target.TimeSeries, 0),
 			}
 			So(err, ShouldBeNil)
@@ -162,8 +162,8 @@ func TestGetTimeSeries(t *testing.T) {
 			addFetchResponse := fetchResponse
 			addFetchResponse.Name = addMetric
 			expected := &triggerTimeSeries{
-				Main:       []*target.TimeSeries{{MetricData: expr.MetricData{FetchResponse: fetchResponse}}},
-				Additional: []*target.TimeSeries{{MetricData: expr.MetricData{FetchResponse: addFetchResponse}}},
+				Main:       []*target.TimeSeries{{MetricData: types.MetricData{FetchResponse: fetchResponse}}},
+				Additional: []*target.TimeSeries{{MetricData: types.MetricData{FetchResponse: addFetchResponse}}},
 			}
 
 			So(err, ShouldBeNil)
@@ -217,7 +217,7 @@ func TestGetExpressionValues(t *testing.T) {
 			IsAbsent:  []bool{false, true, true, false, true},
 		}
 		timeSeries := target.TimeSeries{
-			MetricData: expr.MetricData{FetchResponse: fetchResponse},
+			MetricData: types.MetricData{FetchResponse: fetchResponse},
 		}
 		tts := &triggerTimeSeries{
 			Main: []*target.TimeSeries{&timeSeries},
@@ -258,7 +258,7 @@ func TestGetExpressionValues(t *testing.T) {
 			IsAbsent:  []bool{false, true, true, false, true},
 		}
 		timeSeries := target.TimeSeries{
-			MetricData: expr.MetricData{FetchResponse: fetchResponse},
+			MetricData: types.MetricData{FetchResponse: fetchResponse},
 		}
 		fetchResponseAdd := pb.FetchResponse{
 			Name:      "main",
@@ -269,7 +269,7 @@ func TestGetExpressionValues(t *testing.T) {
 			IsAbsent:  []bool{false, false, true, true, false},
 		}
 		timeSeriesAdd := target.TimeSeries{
-			MetricData: expr.MetricData{FetchResponse: fetchResponseAdd},
+			MetricData: types.MetricData{FetchResponse: fetchResponseAdd},
 		}
 		tts := &triggerTimeSeries{
 			Main:       []*target.TimeSeries{&timeSeries},

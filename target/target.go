@@ -5,6 +5,8 @@ import (
 	"runtime/debug"
 
 	"github.com/go-graphite/carbonapi/expr"
+	"github.com/go-graphite/carbonapi/expr/types"
+	"github.com/go-graphite/carbonapi/pkg/parser"
 
 	"github.com/moira-alert/moira"
 )
@@ -29,7 +31,7 @@ func EvaluateTarget(database moira.Database, target string, from int64, until in
 	for targetIdx < len(targets) {
 		target := targets[targetIdx]
 		targetIdx++
-		expr2, _, err := expr.ParseExpr(target)
+		expr2, _, err := parser.ParseExpr(target)
 		if err != nil {
 			return nil, ErrParseExpr{
 				internalError: err,
@@ -42,12 +44,12 @@ func EvaluateTarget(database moira.Database, target string, from int64, until in
 			return nil, err
 		}
 		rewritten, newTargets, err := expr.RewriteExpr(expr2, int32(from), int32(until), metricsMap)
-		if err != nil && err != expr.ErrSeriesDoesNotExist {
+		if err != nil && err != parser.ErrSeriesDoesNotExist {
 			return nil, fmt.Errorf("Failed RewriteExpr: %s", err.Error())
 		} else if rewritten {
 			targets = append(targets, newTargets...)
 		} else {
-			metricDatas, err := func() (result []*expr.MetricData, err error) {
+			metricDatas, err := func() (result []*types.MetricData, err error) {
 				defer func() {
 					if r := recover(); r != nil {
 						result = nil
@@ -56,7 +58,7 @@ func EvaluateTarget(database moira.Database, target string, from int64, until in
 				}()
 				result, err = expr.EvalExpr(expr2, int32(from), int32(until), metricsMap)
 				if err != nil {
-					if err == expr.ErrSeriesDoesNotExist {
+					if err == parser.ErrSeriesDoesNotExist {
 						err = nil
 					} else if isErrUnknownFunction(err) {
 						err = ErrorUnknownFunction(err)
@@ -88,9 +90,9 @@ func EvaluateTarget(database moira.Database, target string, from int64, until in
 	return result, nil
 }
 
-func getPatternsMetricData(database moira.Database, patterns []expr.MetricRequest, from int64, until int64, allowRealTimeAlerting bool) (map[expr.MetricRequest][]*expr.MetricData, []string, error) {
+func getPatternsMetricData(database moira.Database, patterns []parser.MetricRequest, from int64, until int64, allowRealTimeAlerting bool) (map[parser.MetricRequest][]*types.MetricData, []string, error) {
 	metrics := make([]string, 0)
-	metricsMap := make(map[expr.MetricRequest][]*expr.MetricData)
+	metricsMap := make(map[parser.MetricRequest][]*types.MetricData)
 	for _, pattern := range patterns {
 		pattern.From += int32(from)
 		pattern.Until += int32(until)

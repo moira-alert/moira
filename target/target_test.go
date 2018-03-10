@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/go-graphite/carbonapi/expr"
+	"github.com/go-graphite/carbonapi/expr/types"
+	"github.com/go-graphite/carbonapi/pkg/parser"
 	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
@@ -57,7 +58,7 @@ func TestEvaluateTarget(t *testing.T) {
 	Convey("Errors tests", t, func() {
 		Convey("Error while ParseExpr", func() {
 			result, err := EvaluateTarget(dataBase, "", from, until, true)
-			So(err, ShouldResemble, ErrParseExpr{target: "", internalError: expr.ErrMissingExpr})
+			So(err, ShouldResemble, ErrParseExpr{target: "", internalError: parser.ErrMissingExpr})
 			So(err.Error(), ShouldResemble, "failed to parse target '': missing expression")
 			So(result, ShouldBeNil)
 		})
@@ -95,7 +96,7 @@ func TestEvaluateTarget(t *testing.T) {
 		}
 		So(result, ShouldResemble, &EvaluationResult{
 			TimeSeries: []*TimeSeries{{
-				MetricData: expr.MetricData{FetchResponse: fetchResponse},
+				MetricData: types.MetricData{FetchResponse: fetchResponse},
 				Wildcard:   true,
 			}},
 			Metrics:  make([]string, 0),
@@ -119,7 +120,7 @@ func TestEvaluateTarget(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(result, ShouldResemble, &EvaluationResult{
 			TimeSeries: []*TimeSeries{{
-				MetricData: expr.MetricData{FetchResponse: fetchResponse},
+				MetricData: types.MetricData{FetchResponse: fetchResponse},
 			}},
 			Metrics:  []string{metric},
 			Patterns: []string{"super.puper.pattern"},
