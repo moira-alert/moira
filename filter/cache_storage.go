@@ -28,14 +28,16 @@ type Storage struct {
 	retentions      []retentionMatcher
 	retentionsCache map[string]*retentionCacheItem
 	metricsCache    map[string]*moira.MatchedMetric
+	logger 					moira.Logger
 }
 
 // NewCacheStorage create new Storage
-func NewCacheStorage(metrics *graphite.FilterMetrics, reader io.Reader) (*Storage, error) {
+func NewCacheStorage(logger moira.Logger, metrics *graphite.FilterMetrics, reader io.Reader) (*Storage, error) {
 	storage := &Storage{
 		retentionsCache: make(map[string]*retentionCacheItem),
 		metricsCache:    make(map[string]*moira.MatchedMetric),
 		metrics:         metrics,
+		logger: 				 logger,
 	}
 
 	if err := storage.buildRetentions(bufio.NewScanner(reader)); err != nil {
@@ -88,7 +90,12 @@ func (storage *Storage) buildRetentions(retentionScanner *bufio.Scanner) error {
 
 		retentionScanner.Scan()
 		line = retentionScanner.Text()
-		retentions := strings.TrimSpace(strings.Split(line, "=")[1])
+		splitted := strings.Split(line, "=")
+		if len(splitted) < 1 {
+			storage.logger.Errorf("Failed to parse retention string: '%s'", line)
+			continue
+		}
+		retentions := strings.TrimSpace(splitted[1])
 		retention, err := rawRetentionToSeconds(retentions[0:strings.Index(retentions, ":")])
 		if err != nil {
 			return err

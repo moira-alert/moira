@@ -81,7 +81,7 @@ func main() {
 		logger.Fatalf("Error open retentions file [%s]: %s", config.Filter.RetentionConfig, err.Error())
 	}
 
-	cacheStorage, err := filter.NewCacheStorage(cacheMetrics, retentionConfigFile)
+	cacheStorage, err := filter.NewCacheStorage(logger, cacheMetrics, retentionConfigFile)
 	if err != nil {
 		logger.Fatalf("Failed to initialize cache storage with config [%s]: %s", config.Filter.RetentionConfig, err.Error())
 	}
