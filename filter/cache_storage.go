@@ -78,23 +78,26 @@ func (storage *Storage) buildRetentions(retentionScanner *bufio.Scanner) error {
 	storage.retentions = make([]retentionMatcher, 0, 100)
 
 	for retentionScanner.Scan() {
-		line := retentionScanner.Text()
-		if strings.HasPrefix(line, "#") || strings.Count(line, "=") != 1 {
+		line1 := retentionScanner.Text()
+		if strings.HasPrefix(line1, "#") || strings.Count(line1, "=") != 1 {
 			continue
 		}
 
-		pattern, err := regexp.Compile(strings.TrimSpace(strings.Split(line, "=")[1]))
+		patternString := strings.TrimSpace(strings.Split(line1, "=")[1])
+		pattern, err := regexp.Compile(patternString)
 		if err != nil {
 			return err
 		}
 
 		retentionScanner.Scan()
-		line = retentionScanner.Text()
-		splitted := strings.Split(line, "=")
-		if len(splitted) < 1 {
-			storage.logger.Errorf("Failed to parse retention string: '%s'", line)
+		line2 := retentionScanner.Text()
+		splitted := strings.Split(line2, "=")
+
+		if len(splitted) < 2{
+			storage.logger.Errorf("Invalid pattern found: '%s'", patternString)
 			continue
 		}
+
 		retentions := strings.TrimSpace(splitted[1])
 		retention, err := rawRetentionToSeconds(retentions[0:strings.Index(retentions, ":")])
 		if err != nil {
