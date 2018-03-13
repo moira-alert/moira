@@ -167,7 +167,7 @@ var matchedMetrics = []moira.MatchedMetric{
 
 func TestCacheStorage(t *testing.T) {
 	metrics2 := metrics.ConfigureFilterMetrics("test")
-	storage, err := NewCacheStorage(metrics2, strings.NewReader(testRetentions))
+	storage, err := NewCacheStorage(nil, metrics2, strings.NewReader(testRetentions))
 
 	Convey("Test good retentions", t, func() {
 		So(err, ShouldBeEmpty)
@@ -185,7 +185,7 @@ func TestCacheStorage(t *testing.T) {
 		So(len(buffer), ShouldEqual, len(matchedMetrics))
 	})
 
-	storage, _ = NewCacheStorage(metrics2, strings.NewReader(testRetentions))
+	storage, _ = NewCacheStorage(nil, metrics2, strings.NewReader(testRetentions))
 
 	Convey("Test add one metric twice, should buffer len is 1", t, func() {
 		buffer := make(map[string]*moira.MatchedMetric)
@@ -198,7 +198,7 @@ func TestCacheStorage(t *testing.T) {
 
 func TestRetentions(t *testing.T) {
 	metrics2 := metrics.ConfigureFilterMetrics("test")
-	storage, _ := NewCacheStorage(metrics2, strings.NewReader(testRetentions))
+	storage, _ := NewCacheStorage(nil, metrics2, strings.NewReader(testRetentions))
 
 	Convey("Simple metric, should 60sec", t, func() {
 		buffer := make(map[string]*moira.MatchedMetric)
