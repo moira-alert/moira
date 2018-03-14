@@ -131,4 +131,27 @@ func TestEvaluateTarget(t *testing.T) {
 			Patterns: []string{"super.puper.pattern"},
 		})
 	})
+
+	Convey("Test success evaluate pipe target", t, func() {
+		dataBase.EXPECT().GetPatternMetrics("super.puper.pattern").Return([]string{metric}, nil)
+		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
+		dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
+		result, err := EvaluateTarget(dataBase, "super.puper.pattern | scale(100) | aliasByNode(2)", from, until, true)
+		fetchResponse := pb.FetchResponse{
+			Name:      "metric",
+			StartTime: int32(from),
+			StopTime:  int32(until),
+			StepTime:  int32(retention),
+			Values:    []float64{0, 100, 200, 300, 400},
+			IsAbsent:  make([]bool, 5),
+		}
+		So(err, ShouldBeNil)
+		So(result, ShouldResemble, &EvaluationResult{
+			TimeSeries: []*TimeSeries{{
+				MetricData: types.MetricData{FetchResponse: fetchResponse},
+			}},
+			Metrics:  []string{metric},
+			Patterns: []string{"super.puper.pattern"},
+		})
+	})
 }
