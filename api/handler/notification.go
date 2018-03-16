@@ -13,6 +13,7 @@ import (
 func notification(router chi.Router) {
 	router.Get("/", getNotification)
 	router.Delete("/", deleteNotification)
+	router.Delete("/all", deleteAllNotifications)
 }
 
 func getNotification(writer http.ResponseWriter, request *http.Request) {
@@ -43,6 +44,17 @@ func deleteNotification(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	notifications, errorResponse := controller.DeleteNotification(database, notificationKey)
+	if errorResponse != nil {
+		render.Render(writer, request, errorResponse)
+		return
+	}
+	if err := render.Render(writer, request, notifications); err != nil {
+		render.Render(writer, request, api.ErrorRender(err))
+	}
+}
+
+func deleteAllNotifications(writer http.ResponseWriter, request *http.Request) {
+	notifications, errorResponse := controller.DeleteAllNotifications(database)
 	if errorResponse != nil {
 		render.Render(writer, request, errorResponse)
 		return
