@@ -38,23 +38,15 @@ func (connector *DbConnector) GetNotifications(start, end int64) ([]*moira.Sched
 }
 
 // RemoveAllNotifications delete all notifications
-func (connector *DbConnector) RemoveAllNotifications() (int64, error) {
+func (connector *DbConnector) RemoveAllNotifications() error {
 	c := connector.pool.Get()
 	defer c.Close()
 
-	var err error
-
-	_, total, err := connector.GetNotifications(0, -1)
-	if err != nil {
-		return 0, err
+	if _, err := c.Do("DEL", notifierNotificationsKey); err != nil {
+		return fmt.Errorf("failed to remove %s: %s", notifierNotificationsKey, err.Error())
 	}
 
-	_, err = c.Do("DEL", notifierNotificationsKey)
-	if err != nil {
-		return 0, fmt.Errorf("failed to remove %s: %s", notifierNotificationsKey, err.Error())
-	}
-
-	return int64(total), nil
+	return nil
 }
 
 // RemoveNotification delete notifications by key = timestamp + contactID + subID

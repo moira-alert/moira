@@ -54,12 +54,7 @@ func deleteNotification(writer http.ResponseWriter, request *http.Request) {
 }
 
 func deleteAllNotifications(writer http.ResponseWriter, request *http.Request) {
-	notifications, errorResponse := controller.DeleteAllNotifications(database)
-	if errorResponse != nil {
+	if errorResponse := controller.DeleteAllNotifications(database); errorResponse != nil {
 		render.Render(writer, request, errorResponse)
-		return
-	}
-	if err := render.Render(writer, request, notifications); err != nil {
-		render.Render(writer, request, api.ErrorRender(err))
 	}
 }

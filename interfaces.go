@@ -66,7 +66,7 @@ type Database interface {
 	// ScheduledNotification storing
 	GetNotifications(start, end int64) ([]*ScheduledNotification, int64, error)
 	RemoveNotification(notificationKey string) (int64, error)
-	RemoveAllNotifications() (int64, error)
+	RemoveAllNotifications() error
 	FetchNotifications(to int64) ([]*ScheduledNotification, error)
 	AddNotification(notification *ScheduledNotification) error
 	AddNotifications(notification []*ScheduledNotification, timestamp int64) error

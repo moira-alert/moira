@@ -148,9 +148,8 @@ func TestScheduledNotification(t *testing.T) {
 			So(total, ShouldEqual, 3)
 			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notification1, &notification2, &notification3})
 
-			total, err = dataBase.RemoveAllNotifications()
+			err = dataBase.RemoveAllNotifications()
 			So(err, ShouldBeNil)
-			So(total, ShouldEqual, 3)
 
 			actual, total, err = dataBase.GetNotifications(0, -1)
 			So(err, ShouldBeNil)
