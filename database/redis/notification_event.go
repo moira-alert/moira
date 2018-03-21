@@ -95,6 +95,7 @@ func (connector *DbConnector) FetchNotificationEvent() (moira.NotificationEvent,
 	return event, nil
 }
 
+// RemoveAllNotificationEvents removes all notification events from database
 func (connector *DbConnector) RemoveAllNotificationEvents() error {
 	c := connector.pool.Get()
 	defer c.Close()
