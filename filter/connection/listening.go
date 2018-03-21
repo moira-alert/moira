@@ -9,6 +9,7 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/filter"
+	"github.com/moira-alert/moira/metrics/graphite"
 )
 
 // MetricsListener is facade for standard net.MetricsListener and accept connection for handling it
@@ -17,10 +18,11 @@ type MetricsListener struct {
 	handler  *Handler
 	logger   moira.Logger
 	tomb     tomb.Tomb
+	metrics  *graphite.FilterMetrics
 }
 
 // NewListener creates new listener
-func NewListener(port string, logger moira.Logger, patternStorage *filter.PatternStorage) (*MetricsListener, error) {
+func NewListener(port string, logger moira.Logger, metrics *graphite.FilterMetrics, patternStorage *filter.PatternStorage) (*MetricsListener, error) {
 	address, err := net.ResolveTCPAddr("tcp", port)
 	if nil != err {
 		return nil, fmt.Errorf("Failed to resolve tcp address [%s]: %s", port, err.Error())
@@ -33,6 +35,7 @@ func NewListener(port string, logger moira.Logger, patternStorage *filter.Patter
 		listener: newListener,
 		logger:   logger,
 		handler:  NewConnectionsHandler(logger, patternStorage),
+		metrics: 	metrics,
 	}
 	return &listener, nil
 }
@@ -40,7 +43,7 @@ func NewListener(port string, logger moira.Logger, patternStorage *filter.Patter
 // Listen waits for new data in connection and handles it in ConnectionHandler
 // All handled data sets to metricsChan
 func (listener *MetricsListener) Listen() chan *moira.MatchedMetric {
-	metricsChan := make(chan *moira.MatchedMetric, 10000)
+	metricsChan := make(chan *moira.MatchedMetric, 16384)
 	listener.tomb.Go(func() error {
 		for {
 			select {
@@ -68,8 +71,22 @@ func (listener *MetricsListener) Listen() chan *moira.MatchedMetric {
 			listener.handler.HandleConnection(conn, metricsChan)
 		}
 	})
+
+	listener.tomb.Go(func() error { return listener.checkNewMetricsChannelLen(metricsChan) })
 	listener.logger.Info("Moira Filter Listener Started")
 	return metricsChan
+}
+
+func (listener *MetricsListener) checkNewMetricsChannelLen(channel <-chan *moira.MatchedMetric) error {
+	checkTicker := time.NewTicker(time.Millisecond * 100)
+	for {
+		select {
+		case <-listener.tomb.Dying():
+			return nil
+		case <-checkTicker.C:
+			listener.metrics.MetricChannelLen.Update(int64(len(channel)))
+		}
+	}
 }
 
 // Stop stops listening connection
