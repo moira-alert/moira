@@ -544,6 +544,18 @@ func (mr *MockDatabaseMockRecorder) RegisterBotIfAlreadyNot(arg0, arg1 interface
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterBotIfAlreadyNot", reflect.TypeOf((*MockDatabase)(nil).RegisterBotIfAlreadyNot), arg0, arg1)
 }
 
+// RemoveAllNotificationEvents mocks base method
+func (m *MockDatabase) RemoveAllNotificationEvents() error {
+	ret := m.ctrl.Call(m, "RemoveAllNotificationEvents")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveAllNotificationEvents indicates an expected call of RemoveAllNotificationEvents
+func (mr *MockDatabaseMockRecorder) RemoveAllNotificationEvents() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveAllNotificationEvents", reflect.TypeOf((*MockDatabase)(nil).RemoveAllNotificationEvents))
+}
+
 // RemoveAllNotifications mocks base method
 func (m *MockDatabase) RemoveAllNotifications() error {
 	ret := m.ctrl.Call(m, "RemoveAllNotifications")

@@ -23,4 +23,10 @@ func event(router chi.Router) {
 			render.Render(writer, request, api.ErrorRender(err))
 		}
 	})
+	router.Delete("/all", deleteAllEvents)
+}
+func deleteAllEvents(writer http.ResponseWriter, request *http.Request) {
+	if errorResponse := controller.DeleteAllEvents(database); errorResponse != nil {
+		render.Render(writer, request, errorResponse)
+	}
 }

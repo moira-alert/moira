@@ -27,3 +27,10 @@ func GetTriggerEvents(database moira.Database, triggerID string, page int64, siz
 	}
 	return eventsList, nil
 }
+
+func DeleteAllEvents(database moira.Database) *api.ErrorResponse {
+	if err := database.RemoveAllNotificationEvents(); err != nil {
+		return api.ErrorInternalServer(err)
+	}
+	return nil
+}
