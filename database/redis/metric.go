@@ -10,6 +10,7 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/database/redis/reply"
+	"github.com/patrickmn/go-cache"
 )
 
 // GetPatterns gets updated patterns array
@@ -96,7 +97,10 @@ func (connector *DbConnector) SaveMetrics(metrics map[string]*moira.MatchedMetri
 	for _, metric := range metrics {
 		metricValue := fmt.Sprintf("%v %v", metric.Timestamp, metric.Value)
 		c.Send("ZADD", metricDataKey(metric.Metric), metric.RetentionTimestamp, metricValue)
-		c.Send("SET", metricRetentionKey(metric.Metric), metric.Retention)
+
+		if err := connector.retentionSavingCache.Add(metric.Metric, true, cache.DefaultExpiration); err == nil {
+			c.Send("SET", metricRetentionKey(metric.Metric), metric.Retention)
+		}
 
 		for _, pattern := range metric.Patterns {
 			c.Send("SADD", patternMetricsKey(pattern), metric.Metric)

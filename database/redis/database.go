@@ -28,24 +28,26 @@ const (
 
 // DbConnector contains redis pool
 type DbConnector struct {
-	pool            *redis.Pool
-	logger          moira.Logger
-	retentionCache  *cache.Cache
-	metricsCache    *cache.Cache
-	messengersCache *cache.Cache
-	sync            *redsync.Redsync
+	pool                 *redis.Pool
+	logger               moira.Logger
+	retentionCache       *cache.Cache
+	retentionSavingCache *cache.Cache
+	metricsCache         *cache.Cache
+	messengersCache      *cache.Cache
+	sync                 *redsync.Redsync
 }
 
 // NewDatabase creates Redis pool based on config
 func NewDatabase(logger moira.Logger, config Config) *DbConnector {
 	pool := newRedisPool(logger, config)
 	return &DbConnector{
-		pool:            pool,
-		logger:          logger,
-		retentionCache:  cache.New(cacheValueExpirationDuration, cacheCleanupInterval),
-		metricsCache:    cache.New(cacheValueExpirationDuration, cacheCleanupInterval),
-		messengersCache: cache.New(cache.NoExpiration, cache.DefaultExpiration),
-		sync:            redsync.New([]redsync.Pool{pool}),
+		pool:                 pool,
+		logger:               logger,
+		retentionCache:       cache.New(cacheValueExpirationDuration, cacheCleanupInterval),
+		retentionSavingCache: cache.New(cache.NoExpiration, cache.DefaultExpiration),
+		metricsCache:         cache.New(cacheValueExpirationDuration, cacheCleanupInterval),
+		messengersCache:      cache.New(cache.NoExpiration, cache.DefaultExpiration),
+		sync:                 redsync.New([]redsync.Pool{pool}),
 	}
 }
 
