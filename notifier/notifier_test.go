@@ -118,10 +118,12 @@ func waitTestEnd() {
 func configureNotifier(t *testing.T) {
 	notifierMetrics := metrics.ConfigureNotifierMetrics("notifier")
 	var location, _ = time.LoadLocation("UTC")
+	dateTimeFormat := "15:04 02.01.2006"
 	config := Config{
 		SendingTimeout:   time.Millisecond * 10,
 		ResendingTimeout: time.Hour * 24,
 		Location:         location,
+		DateTimeFormat:   dateTimeFormat,
 	}
 
 	mockCtrl = gomock.NewController(t)
