@@ -86,10 +86,12 @@ func (config *notifierConfig) getSettings(logger moira.Logger) notifier.Config {
 
 	format := "15:04 02.01.2006"
 	if err := checkDateTimeFormat(config.DateTimeFormat); err != nil {
-		logger.Warning(err.Error())
+		logger.Warningf("%v. Current time format: %v", err.Error(), time.Now().Format(format))
 	} else {
 		format = config.DateTimeFormat
+		logger.Infof("Format '%v' parsed successfully. Current time format: %v", format, time.Now().Format(format))
 	}
+
 
 	return notifier.Config{
 		SendingTimeout:   to.Duration(config.SenderTimeout),
