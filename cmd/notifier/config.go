@@ -9,6 +9,7 @@ import (
 	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/notifier"
 	"github.com/moira-alert/moira/notifier/selfstate"
+	"fmt"
 )
 
 type config struct {
@@ -26,6 +27,7 @@ type notifierConfig struct {
 	SelfState        selfStateConfig     `yaml:"moira_selfstate"`
 	FrontURI         string              `yaml:"front_uri"`
 	Timezone         string              `yaml:"timezone"`
+	DateTimeFormat   string              `yaml:"date_time_format"`
 }
 
 type selfStateConfig struct {
@@ -65,6 +67,7 @@ func getDefault() config {
 			},
 			FrontURI: "http://localhost",
 			Timezone: "UTC",
+			DateTimeFormat: "15:04 02.01.2006",
 		},
 		Pprof: cmd.ProfilerConfig{
 			Listen: "",
@@ -81,13 +84,30 @@ func (config *notifierConfig) getSettings(logger moira.Logger) notifier.Config {
 		logger.Infof("Timezone '%s' loaded.", config.Timezone)
 	}
 
+	format := "15:04 02.01.2006"
+	if err := checkDateTimeFormat(config.DateTimeFormat); err != nil {
+		logger.Warning(err.Error())
+	} else {
+		format = config.DateTimeFormat
+	}
+
 	return notifier.Config{
 		SendingTimeout:   to.Duration(config.SenderTimeout),
 		ResendingTimeout: to.Duration(config.ResendingTimeout),
 		Senders:          config.Senders,
 		FrontURL:         config.FrontURI,
 		Location:         location,
+		DateTimeFormat:   format,
 	}
+}
+
+func checkDateTimeFormat(format string) error {
+	fallbackTime := time.Date(0,1,1,0,0,0,0, time.UTC)
+	parsedTime, err := time.Parse(format, time.Now().Format(format))
+	if err != nil || parsedTime == fallbackTime {
+		return fmt.Errorf("could not parse date time format '%v', result: '%v', error: '%v'", format, parsedTime, err)
+	}
+	return nil
 }
 
 func (config *selfStateConfig) getSettings() selfstate.Config {

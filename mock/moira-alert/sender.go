@@ -35,15 +35,15 @@ func (m *MockSender) EXPECT() *MockSenderMockRecorder {
 }
 
 // Init mocks base method
-func (m *MockSender) Init(arg0 map[string]string, arg1 moira.Logger, arg2 *time.Location) error {
-	ret := m.ctrl.Call(m, "Init", arg0, arg1, arg2)
+func (m *MockSender) Init(arg0 map[string]string, arg1 moira.Logger, arg2 *time.Location, arg3 string) error {
+	ret := m.ctrl.Call(m, "Init", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Init indicates an expected call of Init
-func (mr *MockSenderMockRecorder) Init(arg0, arg1, arg2 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Init", reflect.TypeOf((*MockSender)(nil).Init), arg0, arg1, arg2)
+func (mr *MockSenderMockRecorder) Init(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Init", reflect.TypeOf((*MockSender)(nil).Init), arg0, arg1, arg2, arg3)
 }
 
 // SendEvents mocks base method

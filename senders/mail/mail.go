@@ -15,17 +15,18 @@ import (
 
 // Sender implements moira sender interface via pushover
 type Sender struct {
-	From         string
-	SMTPhost     string
-	SMTPport     int64
-	FrontURI     string
-	InsecureTLS  bool
-	Password     string
-	Username     string
-	TemplateFile string
-	log          moira.Logger
-	Template     *template.Template
-	location     *time.Location
+	From           string
+	SMTPhost       string
+	SMTPport       int64
+	FrontURI       string
+	InsecureTLS    bool
+	Password       string
+	Username       string
+	TemplateFile   string
+	log            moira.Logger
+	Template       *template.Template
+	location       *time.Location
+	DateTimeFormat string
 }
 
 type templateRow struct {
@@ -40,7 +41,7 @@ type templateRow struct {
 }
 
 // Init read yaml config
-func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location) error {
+func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	sender.setLogger(logger)
 	sender.From = senderSettings["mail_from"]
 	sender.SMTPhost = senderSettings["smtp_host"]
@@ -51,6 +52,7 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 	sender.Username = senderSettings["smtp_user"]
 	sender.TemplateFile = senderSettings["template_file"]
 	sender.location = location
+	sender.DateTimeFormat = dateTimeFormat
 
 	if sender.Username == "" {
 		sender.Username = sender.From
@@ -132,7 +134,7 @@ func (sender *Sender) makeMessage(events moira.NotificationEvents, contact moira
 	for _, event := range events {
 		templateData.Items = append(templateData.Items, &templateRow{
 			Metric:     event.Metric,
-			Timestamp:  time.Unix(event.Timestamp, 0).In(sender.location).Format("15:04 02.01.2006"),
+			Timestamp:  time.Unix(event.Timestamp, 0).In(sender.location).Format(sender.DateTimeFormat),
 			Oldstate:   event.OldState,
 			State:      event.State,
 			Value:      strconv.FormatFloat(moira.UseFloat64(event.Value), 'f', -1, 64),

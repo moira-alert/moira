@@ -12,4 +12,5 @@ type Config struct {
 	LogLevel         string
 	FrontURL         string
 	Location         *time.Location
+	DateTimeFormat   string
 }
