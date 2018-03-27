@@ -8,4 +8,5 @@ type FilterMetrics struct {
 	MatchingTimer           Timer
 	SavingTimer             Timer
 	BuildTreeTimer          Timer
+	MetricChannelLen        Histogram
 }
