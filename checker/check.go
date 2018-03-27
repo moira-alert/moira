@@ -63,12 +63,22 @@ func (triggerChecker *TriggerChecker) handleTrigger() (moira.CheckData, error) {
 		Score:          triggerChecker.lastCheck.Score,
 	}
 
-	triggerTimeSeries, metrics, err := triggerChecker.getTimeSeries(triggerChecker.From, triggerChecker.Until)
-	if err != nil {
-		return checkData, err
-	}
+	var triggerTimeSeries *triggerTimeSeries
+	var err error
+	if triggerChecker.trigger.IsRemote {
+		triggerTimeSeries, err = triggerChecker.getRemoteTimeSeries(triggerChecker.From, triggerChecker.Until)
+		if err != nil {
+			return checkData, err
+		}
 
-	triggerChecker.cleanupMetricsValues(metrics, triggerChecker.Until)
+	} else {
+		var metrics []string
+		triggerTimeSeries, metrics, err = triggerChecker.getTimeSeries(triggerChecker.From, triggerChecker.Until)
+		if err != nil {
+			return checkData, err
+		}
+		triggerChecker.cleanupMetricsValues(metrics, triggerChecker.Until)
+	}
 
 	if len(triggerTimeSeries.Main) == 0 {
 		return checkData, ErrTriggerHasNoTimeSeries{}

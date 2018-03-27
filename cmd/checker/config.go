@@ -22,6 +22,10 @@ type checkerConfig struct {
 	CheckInterval        string `yaml:"check_interval"`         // Min period to perform triggers re-check. Note: Reducing of this value leads to increasing of CPU and memory usage values
 	MetricsTTL           string `yaml:"metrics_ttl"`            // Time interval to store metrics. Note: Increasing of this value leads to increasing of Redis memory consumption value
 	MaxParallelChecks    int    `yaml:"max_parallel_checks"`    // Max concurrent checkers to run. Equals to the number of processor cores found on Moira host by default or when variable is defined as 0.
+	// TODO comment Remote fields
+	RemoteURL           string `yaml:"remote_url"`
+	RemoteCheckInterval string `yaml:"remote_check_interval"`
+	RemoteTimeout       string `yaml:"remote_timeout"`
 }
 
 func (config *checkerConfig) getSettings() *checker.Config {
@@ -34,6 +38,9 @@ func (config *checkerConfig) getSettings() *checker.Config {
 		NoDataCheckInterval:         to.Duration(config.NoDataCheckInterval),
 		StopCheckingIntervalSeconds: int64(to.Duration(config.StopCheckingInterval).Seconds()),
 		MaxParallelChecks:           config.MaxParallelChecks,
+		RemoteURL:                   config.RemoteURL,
+		RemoteCheckInterval:         to.Duration(config.RemoteCheckInterval),
+		RemoteTimeout:               to.Duration(config.RemoteTimeout),
 	}
 }
 
@@ -53,6 +60,8 @@ func getDefault() config {
 			MetricsTTL:           "1h",
 			StopCheckingInterval: "30s",
 			MaxParallelChecks:    0,
+			RemoteCheckInterval:  "30s",
+			RemoteTimeout:        "10s",
 		},
 		Graphite: cmd.GraphiteConfig{
 			RuntimeStats: false,

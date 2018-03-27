@@ -12,4 +12,7 @@ type Config struct {
 	MaxParallelChecks           int
 	LogFile                     string
 	LogLevel                    string
+	RemoteURL                   string
+	RemoteCheckInterval         time.Duration
+	RemoteTimeout               time.Duration
 }

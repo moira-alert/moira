@@ -1,0 +1,115 @@
+package remote
+
+import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"strconv"
+	"time"
+
+	"github.com/go-graphite/carbonapi/expr"
+	"github.com/moira-alert/moira/target"
+
+	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
+)
+
+type graphiteMetric struct {
+	Target     string
+	Datapoints [][2]*float64
+}
+
+func prepareRequest(url string, from, until int64, target string) (*http.Request, error) {
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	q := req.URL.Query()
+	q.Add("format", "json")
+	q.Add("from", strconv.FormatInt(from, 10))
+	q.Add("target", target)
+	q.Add("until", strconv.FormatInt(until, 10))
+	req.URL.RawQuery = q.Encode()
+	return req, nil
+}
+
+func makeRequest(req *http.Request, timeout time.Duration) ([]byte, error) {
+	client := &http.Client{Timeout: timeout}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	defer resp.Body.Close()
+
+	if err != nil {
+		return body, err
+	}
+
+	if resp.StatusCode != 200 {
+		err = fmt.Errorf("bad response status %d: %s", resp.StatusCode, string(body))
+		return body, err
+	}
+	return body, err
+}
+
+func decodeBody(body []byte) ([]*expr.MetricData, error) {
+	var tmp []graphiteMetric
+	err := json.Unmarshal(body, &tmp)
+	if err != nil {
+		return nil, err
+	}
+	res := make([]*expr.MetricData, 0, len(tmp))
+	for _, m := range tmp {
+		stepTime := int32(60)
+		if len(m.Datapoints) > 1 {
+			stepTime = int32(*m.Datapoints[1][1] - *m.Datapoints[0][1])
+		}
+		pbResp := pb.FetchResponse{
+			Name:      string(m.Target),
+			StartTime: int32(*m.Datapoints[0][1]),
+			StopTime:  int32(*m.Datapoints[len(m.Datapoints)-1][1]),
+			StepTime:  stepTime,
+			Values:    make([]float64, len(m.Datapoints)),
+			IsAbsent:  make([]bool, len(m.Datapoints)),
+		}
+		for i, v := range m.Datapoints {
+			if v[0] == nil {
+				pbResp.Values[i] = 0
+				pbResp.IsAbsent[i] = true
+			} else {
+				pbResp.Values[i] = *v[0]
+				pbResp.IsAbsent[i] = false
+			}
+		}
+		res = append(res, &expr.MetricData{
+			FetchResponse: pbResp,
+		})
+	}
+
+	return res, nil
+}
+
+func convertResponse(r []*expr.MetricData) []*target.TimeSeries {
+	ts := make([]*target.TimeSeries, len(r))
+	for i, md := range r {
+		ts[i] = &target.TimeSeries{MetricData: *md, Wildcard: false}
+	}
+	return ts
+}
+
+func Fetch(url string, from, until int64, target string, timeout time.Duration) ([]*target.TimeSeries, error) {
+	req, err := prepareRequest(url, from, until, target)
+	if err != nil {
+		return nil, err
+	}
+	body, err := makeRequest(req, timeout)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := decodeBody(body)
+	if err != nil {
+		return nil, err
+	}
+	return convertResponse(resp), nil
+}

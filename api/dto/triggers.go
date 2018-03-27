@@ -4,8 +4,8 @@ package dto
 import (
 	"fmt"
 	"net/http"
-	"time"
 	"strings"
+	"time"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api/middleware"
@@ -44,6 +44,7 @@ type TriggerModel struct {
 	Schedule   *moira.ScheduleData `json:"sched,omitempty"`
 	Expression string              `json:"expression"`
 	Patterns   []string            `json:"patterns"`
+	IsRemote   bool                `json:"is_remote"`
 }
 
 // ToMoiraTrigger transforms TriggerModel to moira.Trigger
@@ -61,6 +62,7 @@ func (model *TriggerModel) ToMoiraTrigger() *moira.Trigger {
 		Schedule:   model.Schedule,
 		Expression: &model.Expression,
 		Patterns:   model.Patterns,
+		IsRemote:   model.IsRemote,
 	}
 }
 
@@ -79,6 +81,7 @@ func CreateTriggerModel(trigger *moira.Trigger) TriggerModel {
 		Schedule:   trigger.Schedule,
 		Expression: moira.UseString(trigger.Expression),
 		Patterns:   trigger.Patterns,
+		IsRemote:   trigger.IsRemote,
 	}
 }
 

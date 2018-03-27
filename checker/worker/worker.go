@@ -42,6 +42,13 @@ func (worker *Checker) Start() error {
 	worker.tomb.Go(worker.noDataChecker)
 	worker.Logger.Info("NODATA checker started")
 
+	if worker.Config.RemoteURL == "" {
+		worker.Logger.Info("Remote URL is not set; remote checker disabled")
+	} else {
+		worker.tomb.Go(worker.remoteChecker)
+		worker.Logger.Info("Remote checker started")
+	}
+
 	worker.Logger.Infof("Start %v parallel checkers", worker.Config.MaxParallelChecks)
 	for i := 0; i < worker.Config.MaxParallelChecks; i++ {
 		worker.tomb.Go(func() error { return worker.metricsChecker(metricEventsChannel) })

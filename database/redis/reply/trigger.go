@@ -3,10 +3,11 @@ package reply
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
+
 	"github.com/garyburd/redigo/redis"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
-	"strconv"
 )
 
 // Duty hack for moira.Trigger TTL int64 and stored trigger TTL string compatibility
@@ -24,6 +25,7 @@ type triggerStorageElement struct {
 	PythonExpression *string             `json:"expression,omitempty"`
 	Patterns         []string            `json:"patterns"`
 	TTL              string              `json:"ttl,omitempty"`
+	IsRemote         bool                `json:"is_remote"`
 }
 
 func (storageElement *triggerStorageElement) toTrigger() moira.Trigger {
@@ -41,6 +43,7 @@ func (storageElement *triggerStorageElement) toTrigger() moira.Trigger {
 		PythonExpression: storageElement.PythonExpression,
 		Patterns:         storageElement.Patterns,
 		TTL:              getTriggerTTL(storageElement.TTL),
+		IsRemote:         storageElement.IsRemote,
 	}
 }
 
@@ -59,6 +62,7 @@ func toTriggerStorageElement(trigger *moira.Trigger, triggerID string) *triggerS
 		PythonExpression: trigger.PythonExpression,
 		Patterns:         trigger.Patterns,
 		TTL:              getTriggerTTLString(trigger.TTL),
+		IsRemote:         trigger.IsRemote,
 	}
 }
 

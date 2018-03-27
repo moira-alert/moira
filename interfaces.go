@@ -27,12 +27,14 @@ type Database interface {
 
 	// Trigger storing
 	GetTriggerIDs() ([]string, error)
+	GetRemoteTriggerIDs() ([]string, error)
 	GetTrigger(triggerID string) (Trigger, error)
 	GetTriggers(triggerIDs []string) ([]*Trigger, error)
 	GetTriggerChecks(triggerIDs []string) ([]*TriggerCheck, error)
 	SaveTrigger(triggerID string, trigger *Trigger) error
 	RemoveTrigger(triggerID string) error
 	GetPatternTriggerIDs(pattern string) ([]string, error)
+	GetPatternTriggerIDsWithoutRemote(pattern string) ([]string, error)
 	RemovePatternTriggerIDs(pattern string) error
 
 	// Throttling

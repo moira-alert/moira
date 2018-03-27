@@ -11,13 +11,24 @@ import (
 	"github.com/moira-alert/moira/database/redis/reply"
 )
 
-// GetTriggerIDs gets all moira triggerIDs, if no value, return database.ErrNil error
+// GetTriggerIDs gets all moira triggerIDs
 func (connector *DbConnector) GetTriggerIDs() ([]string, error) {
 	c := connector.pool.Get()
 	defer c.Close()
 	triggerIds, err := redis.Strings(c.Do("SMEMBERS", triggersListKey))
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get triggers-list: %s", err.Error())
+	}
+	return triggerIds, nil
+}
+
+// GetRemoteTriggerIDs gets moira remote triggerIDs
+func (connector *DbConnector) GetRemoteTriggerIDs() ([]string, error) {
+	c := connector.pool.Get()
+	defer c.Close()
+	triggerIds, err := redis.Strings(c.Do("SMEMBERS", remoteTriggersListKey))
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get remote triggers-list: %s", err.Error())
 	}
 	return triggerIds, nil
 }
@@ -80,6 +91,20 @@ func (connector *DbConnector) GetPatternTriggerIDs(pattern string) ([]string, er
 	return triggerIds, nil
 }
 
+// GetPatternTriggerIDsWithoutRemote gets trigger list by given pattern without remote triggers
+func (connector *DbConnector) GetPatternTriggerIDsWithoutRemote(pattern string) ([]string, error) {
+	c := connector.pool.Get()
+	defer c.Close()
+	s1 := patternTriggersKey(pattern)
+	s2 := patternRemoteTriggersKey(pattern)
+
+	triggerIds, err := redis.Strings(c.Do("SDIFF", s1, s2))
+	if err != nil {
+		return nil, fmt.Errorf("Failed to retrieve pattern triggers (without remote) for pattern: %s, error: %s", pattern, err.Error())
+	}
+	return triggerIds, nil
+}
+
 // RemovePatternTriggerIDs removes all triggerIDs list accepted to given pattern
 func (connector *DbConnector) RemovePatternTriggerIDs(pattern string) error {
 	c := connector.pool.Get()
@@ -111,18 +136,36 @@ func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigg
 	if errGetTrigger != database.ErrNil {
 		for _, pattern := range leftJoin(existing.Patterns, trigger.Patterns) {
 			c.Send("SREM", patternTriggersKey(pattern), triggerID)
+			if existing.IsRemote && trigger.IsRemote {
+				c.Send("SREM", patternRemoteTriggersKey(pattern), triggerID)
+			}
 			cleanupPatterns = append(cleanupPatterns, pattern)
 		}
+		if existing.IsRemote && !trigger.IsRemote {
+			// remove all remote patterns
+			for _, pattern := range existing.Patterns {
+				c.Send("SREM", patternRemoteTriggersKey(pattern), triggerID)
+			}
+			c.Send("SREM", remoteTriggersListKey, triggerID)
+		}
+
 		for _, tag := range leftJoin(existing.Tags, trigger.Tags) {
 			c.Send("SREM", triggerTagsKey(triggerID), tag)
 			c.Send("SREM", tagTriggersKey(tag), triggerID)
 		}
 	}
-	c.Do("SET", triggerKey(triggerID), bytes)
-	c.Do("SADD", triggersListKey, triggerID)
+	c.Send("SET", triggerKey(triggerID), bytes)
+	c.Send("SADD", triggersListKey, triggerID)
+	if trigger.IsRemote {
+		c.Send("SADD", remoteTriggersListKey, triggerID)
+	}
+
 	for _, pattern := range trigger.Patterns {
-		c.Do("SADD", patternsListKey, pattern)
-		c.Do("SADD", patternTriggersKey(pattern), triggerID)
+		c.Send("SADD", patternsListKey, pattern)
+		c.Send("SADD", patternTriggersKey(pattern), triggerID)
+		if trigger.IsRemote {
+			c.Send("SADD", patternRemoteTriggersKey(pattern), triggerID)
+		}
 	}
 	for _, tag := range trigger.Tags {
 		c.Send("SADD", triggerTagsKey(triggerID), tag)
@@ -166,11 +209,15 @@ func (connector *DbConnector) RemoveTrigger(triggerID string) error {
 	c.Send("DEL", triggerKey(triggerID))
 	c.Send("DEL", triggerTagsKey(triggerID))
 	c.Send("SREM", triggersListKey, triggerID)
+	c.Send("SREM", remoteTriggersListKey, triggerID)
 	for _, tag := range trigger.Tags {
 		c.Send("SREM", tagTriggersKey(tag), triggerID)
 	}
 	for _, pattern := range trigger.Patterns {
 		c.Send("SREM", patternTriggersKey(pattern), triggerID)
+		if trigger.IsRemote {
+			c.Send("SREM", patternRemoteTriggersKey(pattern), triggerID)
+		}
 	}
 	_, err = c.Do("EXEC")
 	if err != nil {
@@ -274,6 +321,7 @@ func leftJoin(left, right []string) []string {
 }
 
 var triggersListKey = "moira-triggers-list"
+var remoteTriggersListKey = "moira-remote-triggers-list"
 
 func triggerKey(triggerID string) string {
 	return fmt.Sprintf("moira-trigger:%s", triggerID)
@@ -285,4 +333,8 @@ func triggerTagsKey(triggerID string) string {
 
 func patternTriggersKey(pattern string) string {
 	return fmt.Sprintf("moira-pattern-triggers:%s", pattern)
+}
+
+func patternRemoteTriggersKey(pattern string) string {
+	return fmt.Sprintf("moira-pattern-remote-triggers:%s", pattern)
 }
