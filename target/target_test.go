@@ -4,13 +4,19 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/go-graphite/carbonapi/expr"
+	"github.com/go-graphite/carbonapi/expr/functions"
+	"github.com/go-graphite/carbonapi/expr/types"
+	"github.com/go-graphite/carbonapi/pkg/parser"
 	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
 )
+
+func init() {
+	functions.New(make(map[string]string))
+}
 
 func TestEvaluateTarget(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
@@ -57,7 +63,7 @@ func TestEvaluateTarget(t *testing.T) {
 	Convey("Errors tests", t, func() {
 		Convey("Error while ParseExpr", func() {
 			result, err := EvaluateTarget(dataBase, "", from, until, true)
-			So(err, ShouldResemble, ErrParseExpr{target: "", internalError: expr.ErrMissingExpr})
+			So(err, ShouldResemble, ErrParseExpr{target: "", internalError: parser.ErrMissingExpr})
 			So(err.Error(), ShouldResemble, "failed to parse target '': missing expression")
 			So(result, ShouldBeNil)
 		})
@@ -95,7 +101,7 @@ func TestEvaluateTarget(t *testing.T) {
 		}
 		So(result, ShouldResemble, &EvaluationResult{
 			TimeSeries: []*TimeSeries{{
-				MetricData: expr.MetricData{FetchResponse: fetchResponse},
+				MetricData: types.MetricData{FetchResponse: fetchResponse},
 				Wildcard:   true,
 			}},
 			Metrics:  make([]string, 0),
@@ -119,7 +125,30 @@ func TestEvaluateTarget(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(result, ShouldResemble, &EvaluationResult{
 			TimeSeries: []*TimeSeries{{
-				MetricData: expr.MetricData{FetchResponse: fetchResponse},
+				MetricData: types.MetricData{FetchResponse: fetchResponse},
+			}},
+			Metrics:  []string{metric},
+			Patterns: []string{"super.puper.pattern"},
+		})
+	})
+
+	Convey("Test success evaluate pipe target", t, func() {
+		dataBase.EXPECT().GetPatternMetrics("super.puper.pattern").Return([]string{metric}, nil)
+		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
+		dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
+		result, err := EvaluateTarget(dataBase, "super.puper.pattern | scale(100) | aliasByNode(2)", from, until, true)
+		fetchResponse := pb.FetchResponse{
+			Name:      "metric",
+			StartTime: int32(from),
+			StopTime:  int32(until),
+			StepTime:  int32(retention),
+			Values:    []float64{0, 100, 200, 300, 400},
+			IsAbsent:  make([]bool, 5),
+		}
+		So(err, ShouldBeNil)
+		So(result, ShouldResemble, &EvaluationResult{
+			TimeSeries: []*TimeSeries{{
+				MetricData: types.MetricData{FetchResponse: fetchResponse},
 			}},
 			Metrics:  []string{metric},
 			Patterns: []string{"super.puper.pattern"},

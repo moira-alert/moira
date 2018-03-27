@@ -12,6 +12,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/go-graphite/carbonapi/expr/functions"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api/handler"
 	"github.com/moira-alert/moira/cmd"
@@ -81,6 +82,9 @@ func main() {
 	if err != nil {
 		logger.Fatal(err)
 	}
+
+	// configure carbon-api functions
+	functions.New(make(map[string]string))
 
 	logger.Infof("Start listening by address: [%s]", apiConfig.Listen)
 

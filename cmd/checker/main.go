@@ -8,6 +8,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/go-graphite/carbonapi/expr/functions"
 	"github.com/patrickmn/go-cache"
 
 	"github.com/moira-alert/moira"
@@ -83,6 +84,10 @@ func main() {
 	if triggerID != nil && *triggerID != "" {
 		checkSingleTrigger(database, checkerMetrics, checkerSettings)
 	}
+
+	// configure carbon-api functions
+	functions.New(make(map[string]string))
+
 	checkerWorker := &worker.Checker{
 		Logger:       logger,
 		Database:     database,
