@@ -42,7 +42,7 @@ func (worker *Checker) Start() error {
 	worker.tomb.Go(worker.noDataChecker)
 	worker.Logger.Info("NODATA checker started")
 
-	if worker.Config.RemoteURL == "" {
+	if worker.Config.Remote.URL == "" {
 		worker.Logger.Info("Remote URL is not set; remote checker disabled")
 	} else {
 		worker.tomb.Go(worker.remoteChecker)

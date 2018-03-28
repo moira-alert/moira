@@ -19,8 +19,17 @@ type graphiteMetric struct {
 	Datapoints [][2]*float64
 }
 
-func prepareRequest(url string, from, until int64, target string) (*http.Request, error) {
-	req, err := http.NewRequest("GET", url, nil)
+// Config represents config from remote storage
+type Config struct {
+	URL           string
+	CheckInterval time.Duration
+	Timeout       time.Duration
+	User          string
+	Password      string
+}
+
+func prepareRequest(from, until int64, target string, cfg *Config) (*http.Request, error) {
+	req, err := http.NewRequest("GET", cfg.URL, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -30,6 +39,9 @@ func prepareRequest(url string, from, until int64, target string) (*http.Request
 	q.Add("target", target)
 	q.Add("until", strconv.FormatInt(until, 10))
 	req.URL.RawQuery = q.Encode()
+	if cfg.User != "" && cfg.Password != "" {
+		req.SetBasicAuth(cfg.User, cfg.Password)
+	}
 	return req, nil
 }
 
@@ -99,12 +111,12 @@ func convertResponse(r []*expr.MetricData) []*target.TimeSeries {
 }
 
 // Fetch fetches remote metrics and converts then to expected format
-func Fetch(url string, from, until int64, target string, timeout time.Duration) ([]*target.TimeSeries, error) {
-	req, err := prepareRequest(url, from, until, target)
+func Fetch(from, until int64, target string, cfg *Config) ([]*target.TimeSeries, error) {
+	req, err := prepareRequest(from, until, target, cfg)
 	if err != nil {
 		return nil, err
 	}
-	body, err := makeRequest(req, timeout)
+	body, err := makeRequest(req, cfg.Timeout)
 	if err != nil {
 		return nil, err
 	}

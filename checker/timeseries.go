@@ -64,11 +64,8 @@ func (triggerChecker *TriggerChecker) getRemoteTimeSeries(from, until int64) (*t
 		Additional: make([]*target.TimeSeries, 0),
 	}
 
-	remoteURL := triggerChecker.Config.RemoteURL
-	timeout := triggerChecker.Config.RemoteTimeout
-
 	for targetIndex, tar := range triggerChecker.trigger.Targets {
-		timeSeries, err := remote.Fetch(remoteURL, from, until, tar, timeout)
+		timeSeries, err := remote.Fetch(from, until, tar, &triggerChecker.Config.Remote)
 		if err != nil {
 			return nil, err
 		}

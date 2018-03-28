@@ -1,6 +1,10 @@
 package checker
 
-import "time"
+import (
+	"time"
+
+	"github.com/moira-alert/moira/checker/remote"
+)
 
 // Config represent checker config
 type Config struct {
@@ -12,7 +16,5 @@ type Config struct {
 	MaxParallelChecks           int
 	LogFile                     string
 	LogLevel                    string
-	RemoteURL                   string
-	RemoteCheckInterval         time.Duration
-	RemoteTimeout               time.Duration
+	Remote                      remote.Config
 }

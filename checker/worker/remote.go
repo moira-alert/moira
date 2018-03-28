@@ -3,7 +3,7 @@ package worker
 import "time"
 
 func (worker *Checker) remoteChecker() error {
-	checkTicker := time.NewTicker(worker.Config.RemoteCheckInterval)
+	checkTicker := time.NewTicker(worker.Config.Remote.CheckInterval)
 	for {
 		select {
 		case <-worker.tomb.Dying():

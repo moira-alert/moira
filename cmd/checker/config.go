@@ -5,6 +5,7 @@ import (
 
 	"github.com/gosexy/to"
 	"github.com/moira-alert/moira/checker"
+	"github.com/moira-alert/moira/checker/remote"
 	"github.com/moira-alert/moira/cmd"
 )
 
@@ -16,6 +17,14 @@ type config struct {
 	Pprof    cmd.ProfilerConfig `yaml:"pprof"`
 }
 
+type remoteConfig struct {
+	URL           string `yaml:"url"`
+	CheckInterval string `yaml:"check_interval"`
+	Timeout       string `yaml:"timeout"`
+	User          string `yaml:"user"`
+	Password      string `yaml:"password"`
+}
+
 type checkerConfig struct {
 	NoDataCheckInterval  string `yaml:"nodata_check_interval"`  // Period for every trigger to perform forced check on
 	StopCheckingInterval string `yaml:"stop_checking_interval"` // Period for every trigger to cancel forced check (earlier than 'NoDataCheckInterval') if no metrics were received
@@ -23,9 +32,7 @@ type checkerConfig struct {
 	MetricsTTL           string `yaml:"metrics_ttl"`            // Time interval to store metrics. Note: Increasing of this value leads to increasing of Redis memory consumption value
 	MaxParallelChecks    int    `yaml:"max_parallel_checks"`    // Max concurrent checkers to run. Equals to the number of processor cores found on Moira host by default or when variable is defined as 0.
 	// TODO comment Remote fields
-	RemoteURL           string `yaml:"remote_url"`
-	RemoteCheckInterval string `yaml:"remote_check_interval"`
-	RemoteTimeout       string `yaml:"remote_timeout"`
+	Remote remoteConfig `yaml:"remote"`
 }
 
 func (config *checkerConfig) getSettings() *checker.Config {
@@ -38,9 +45,13 @@ func (config *checkerConfig) getSettings() *checker.Config {
 		NoDataCheckInterval:         to.Duration(config.NoDataCheckInterval),
 		StopCheckingIntervalSeconds: int64(to.Duration(config.StopCheckingInterval).Seconds()),
 		MaxParallelChecks:           config.MaxParallelChecks,
-		RemoteURL:                   config.RemoteURL,
-		RemoteCheckInterval:         to.Duration(config.RemoteCheckInterval),
-		RemoteTimeout:               to.Duration(config.RemoteTimeout),
+		Remote: remote.Config{
+			URL:           config.Remote.URL,
+			CheckInterval: to.Duration(config.Remote.CheckInterval),
+			Timeout:       to.Duration(config.Remote.Timeout),
+			User:          config.Remote.User,
+			Password:      config.Remote.Password,
+		},
 	}
 }
 
@@ -60,8 +71,10 @@ func getDefault() config {
 			MetricsTTL:           "1h",
 			StopCheckingInterval: "30s",
 			MaxParallelChecks:    0,
-			RemoteCheckInterval:  "30s",
-			RemoteTimeout:        "10s",
+			Remote: remoteConfig{
+				CheckInterval: "30s",
+				Timeout:       "10s",
+			},
 		},
 		Graphite: cmd.GraphiteConfig{
 			RuntimeStats: false,
