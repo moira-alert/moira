@@ -66,7 +66,7 @@ func decodeBody(body []byte) ([]*expr.MetricData, error) {
 			stepTime = int32(*m.Datapoints[1][1] - *m.Datapoints[0][1])
 		}
 		pbResp := pb.FetchResponse{
-			Name:      string(m.Target),
+			Name:      m.Target,
 			StartTime: int32(*m.Datapoints[0][1]),
 			StopTime:  int32(*m.Datapoints[len(m.Datapoints)-1][1]),
 			StepTime:  stepTime,
@@ -98,6 +98,7 @@ func convertResponse(r []*expr.MetricData) []*target.TimeSeries {
 	return ts
 }
 
+// Fetch fetches remote metrics and converts then to expected format
 func Fetch(url string, from, until int64, target string, timeout time.Duration) ([]*target.TimeSeries, error) {
 	req, err := prepareRequest(url, from, until, target)
 	if err != nil {
