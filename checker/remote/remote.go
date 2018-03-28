@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/go-graphite/carbonapi/expr"
+	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/moira-alert/moira/target"
 
 	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
@@ -65,13 +65,13 @@ func makeRequest(req *http.Request, timeout time.Duration) ([]byte, error) {
 	return body, err
 }
 
-func decodeBody(body []byte) ([]*expr.MetricData, error) {
+func decodeBody(body []byte) ([]*types.MetricData, error) {
 	var tmp []graphiteMetric
 	err := json.Unmarshal(body, &tmp)
 	if err != nil {
 		return nil, err
 	}
-	res := make([]*expr.MetricData, 0, len(tmp))
+	res := make([]*types.MetricData, 0, len(tmp))
 	for _, m := range tmp {
 		stepTime := int32(60)
 		if len(m.Datapoints) > 1 {
@@ -94,7 +94,7 @@ func decodeBody(body []byte) ([]*expr.MetricData, error) {
 				pbResp.IsAbsent[i] = false
 			}
 		}
-		res = append(res, &expr.MetricData{
+		res = append(res, &types.MetricData{
 			FetchResponse: pbResp,
 		})
 	}
@@ -102,7 +102,7 @@ func decodeBody(body []byte) ([]*expr.MetricData, error) {
 	return res, nil
 }
 
-func convertResponse(r []*expr.MetricData) []*target.TimeSeries {
+func convertResponse(r []*types.MetricData) []*target.TimeSeries {
 	ts := make([]*target.TimeSeries, len(r))
 	for i, md := range r {
 		ts[i] = &target.TimeSeries{MetricData: *md, Wildcard: false}
