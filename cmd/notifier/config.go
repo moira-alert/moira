@@ -20,8 +20,8 @@ type config struct {
 }
 
 type notifierConfig struct {
-	SenderTimeout    string              `yaml:"sender_timeout"`    // Hard timeout to stop retrying to send notification after multiple failed attempts
-	ResendingTimeout string              `yaml:"resending_timeout"` // Soft timeout to start retrying to send notification after single failed attempt
+	SenderTimeout    string              `yaml:"sender_timeout"`    // Soft timeout to start retrying to send notification after single failed attempt
+	ResendingTimeout string              `yaml:"resending_timeout"` // Hard timeout to stop retrying to send notification after multiple failed attempts
 	Senders          []map[string]string `yaml:"senders"`           // Senders configuration section. See https://moira.readthedocs.io/en/latest/installation/configuration.html for more explanation
 	SelfState        selfStateConfig     `yaml:"moira_selfstate"`   // Self state monitor configuration section. Note: No inner subscriptions is required. It's own notification mechanism will be used.
 	FrontURI         string              `yaml:"front_uri"`         // Web-UI uri prefix for trigger links in notifications. For example: with 'http://localhost' every notification will contain link like 'http://localhost/trigger/triggerId'
