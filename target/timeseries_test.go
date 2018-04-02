@@ -1,11 +1,12 @@
 package target
 
 import (
-	"github.com/go-graphite/carbonapi/expr"
-	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
-	. "github.com/smartystreets/goconvey/convey"
 	"math"
 	"testing"
+
+	"github.com/go-graphite/carbonapi/expr/types"
+	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestGetTimestampValue(t *testing.T) {
@@ -19,7 +20,7 @@ func TestGetTimestampValue(t *testing.T) {
 			IsAbsent:  []bool{false, false, false, false, false},
 		}
 		timeSeries := TimeSeries{
-			MetricData: expr.MetricData{FetchResponse: fetchResponse},
+			MetricData: types.MetricData{FetchResponse: fetchResponse},
 		}
 		Convey("Has value", func() {
 			actual := timeSeries.GetTimestampValue(18)
@@ -55,7 +56,7 @@ func TestGetTimestampValue(t *testing.T) {
 		}
 
 		timeSeries := TimeSeries{
-			MetricData: expr.MetricData{FetchResponse: fetchResponse},
+			MetricData: types.MetricData{FetchResponse: fetchResponse},
 		}
 
 		actual := timeSeries.GetTimestampValue(18)

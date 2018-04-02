@@ -1,11 +1,12 @@
+#See https://moira.readthedocs.io/en/latest/installation/configuration.html for config explanation
 redis:
   host: localhost
   port: "6379"
   dbid: 0
-log:
-  log_file: stdout
-  log_level: debug
 api:
   listen: ":8081"
   enable_cors: false
   web_config_path: "/etc/moira/web.json"
+log:
+  log_file: stdout
+  log_level: info

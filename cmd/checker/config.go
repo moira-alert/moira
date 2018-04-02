@@ -3,9 +3,9 @@ package main
 import (
 	"runtime"
 
+	"github.com/gosexy/to"
 	"github.com/moira-alert/moira/checker"
 	"github.com/moira-alert/moira/cmd"
-	"github.com/gosexy/to"
 )
 
 type config struct {
@@ -17,11 +17,11 @@ type config struct {
 }
 
 type checkerConfig struct {
-	NoDataCheckInterval  string `yaml:"nodata_check_interval"`
-	CheckInterval        string `yaml:"check_interval"`
-	MetricsTTL           string `yaml:"metrics_ttl"`
-	StopCheckingInterval string `yaml:"stop_checking_interval"`
-	MaxParallelChecks    int    `yaml:"max_parallel_checks"`
+	NoDataCheckInterval  string `yaml:"nodata_check_interval"`  // Period for every trigger to perform forced check on
+	StopCheckingInterval string `yaml:"stop_checking_interval"` // Period for every trigger to cancel forced check (earlier than 'NoDataCheckInterval') if no metrics were received
+	CheckInterval        string `yaml:"check_interval"`         // Min period to perform triggers re-check. Note: Reducing of this value leads to increasing of CPU and memory usage values
+	MetricsTTL           string `yaml:"metrics_ttl"`            // Time interval to store metrics. Note: Increasing of this value leads to increasing of Redis memory consumption value
+	MaxParallelChecks    int    `yaml:"max_parallel_checks"`    // Max concurrent checkers to run. Equals to the number of processor cores found on Moira host by default or when variable is defined as 0.
 }
 
 func (config *checkerConfig) getSettings() *checker.Config {
@@ -45,7 +45,7 @@ func getDefault() config {
 		},
 		Logger: cmd.LoggerConfig{
 			LogFile:  "stdout",
-			LogLevel: "debug",
+			LogLevel: "info",
 		},
 		Checker: checkerConfig{
 			NoDataCheckInterval:  "60s",

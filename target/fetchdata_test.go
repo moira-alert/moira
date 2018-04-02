@@ -5,7 +5,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/go-graphite/carbonapi/expr"
+	"github.com/go-graphite/carbonapi/expr/types"
 	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
@@ -146,8 +146,8 @@ func TestFetchData(t *testing.T) {
 			Values:    []float64{},
 			IsAbsent:  []bool{},
 		}
-		expected := &expr.MetricData{FetchResponse: fetchResponse}
-		So(metricData, ShouldResemble, []*expr.MetricData{expected})
+		expected := &types.MetricData{FetchResponse: fetchResponse}
+		So(metricData, ShouldResemble, []*types.MetricData{expected})
 		So(metrics, ShouldBeEmpty)
 		So(err, ShouldBeNil)
 	})
@@ -165,8 +165,8 @@ func TestFetchData(t *testing.T) {
 			Values:    []float64{0, 1, 2, 3},
 			IsAbsent:  make([]bool, 4),
 		}
-		expected := &expr.MetricData{FetchResponse: fetchResponse}
-		So(metricData, ShouldResemble, []*expr.MetricData{expected})
+		expected := &types.MetricData{FetchResponse: fetchResponse}
+		So(metricData, ShouldResemble, []*types.MetricData{expected})
 		So(metrics, ShouldResemble, []string{metric})
 		So(err, ShouldBeNil)
 	})
@@ -184,8 +184,8 @@ func TestFetchData(t *testing.T) {
 			Values:    []float64{0, 1, 2, 3, 4},
 			IsAbsent:  make([]bool, 5),
 		}
-		expected := &expr.MetricData{FetchResponse: fetchResponse}
-		So(metricData, ShouldResemble, []*expr.MetricData{expected})
+		expected := &types.MetricData{FetchResponse: fetchResponse}
+		So(metricData, ShouldResemble, []*types.MetricData{expected})
 		So(metrics, ShouldResemble, []string{metric})
 		So(err, ShouldBeNil)
 	})
@@ -232,10 +232,10 @@ func TestFetchData(t *testing.T) {
 			Values:    []float64{0, 1, 2, 3, 4},
 			IsAbsent:  make([]bool, 5),
 		}
-		expected := expr.MetricData{FetchResponse: fetchResponse}
+		expected := types.MetricData{FetchResponse: fetchResponse}
 		expected2 := expected
 		expected2.Name = metric2
-		So(metricData, ShouldResemble, []*expr.MetricData{&expected, &expected2})
+		So(metricData, ShouldResemble, []*types.MetricData{&expected, &expected2})
 		So(metrics, ShouldResemble, []string{metric, metric2})
 		So(err, ShouldBeNil)
 	})

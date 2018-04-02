@@ -6,7 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-graphite/carbonapi/expr"
+	"github.com/go-graphite/carbonapi/expr/functions"
+	"github.com/go-graphite/carbonapi/expr/types"
 	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
 	"github.com/golang/mock/gomock"
 	"github.com/op/go-logging"
@@ -17,6 +18,10 @@ import (
 	"github.com/moira-alert/moira/mock/moira-alert"
 	"github.com/moira-alert/moira/target"
 )
+
+func init() {
+	functions.New(make(map[string]string))
+}
 
 func TestGetTimeSeriesState(t *testing.T) {
 	logger, _ := logging.GetLogger("Test")
@@ -51,10 +56,10 @@ func TestGetTimeSeriesState(t *testing.T) {
 	addFetchResponse.Name = "additional.metric"
 	tts := &triggerTimeSeries{
 		Main: []*target.TimeSeries{{
-			MetricData: expr.MetricData{FetchResponse: fetchResponse},
+			MetricData: types.MetricData{FetchResponse: fetchResponse},
 		}},
 		Additional: []*target.TimeSeries{{
-			MetricData: expr.MetricData{FetchResponse: addFetchResponse},
+			MetricData: types.MetricData{FetchResponse: addFetchResponse},
 		}},
 	}
 	metricLastState := moira.MetricState{
@@ -150,8 +155,8 @@ func TestGetTimeSeriesStepsStates(t *testing.T) {
 	}
 	addFetchResponse.Name = "additional.metric"
 	tts := &triggerTimeSeries{
-		Main:       []*target.TimeSeries{{MetricData: expr.MetricData{FetchResponse: fetchResponse1}}, {MetricData: expr.MetricData{FetchResponse: fetchResponse2}}},
-		Additional: []*target.TimeSeries{{MetricData: expr.MetricData{FetchResponse: addFetchResponse}}},
+		Main:       []*target.TimeSeries{{MetricData: types.MetricData{FetchResponse: fetchResponse1}}, {MetricData: types.MetricData{FetchResponse: fetchResponse2}}},
+		Additional: []*target.TimeSeries{{MetricData: types.MetricData{FetchResponse: addFetchResponse}}},
 	}
 	metricLastState := moira.MetricState{
 		Maintenance:    11111,
@@ -275,7 +280,7 @@ func TestCheckForNODATA(t *testing.T) {
 		Name: "main.metric",
 	}
 	timeSeries := &target.TimeSeries{
-		MetricData: expr.MetricData{FetchResponse: fetchResponse1},
+		MetricData: types.MetricData{FetchResponse: fetchResponse1},
 	}
 	Convey("No TTL", t, func() {
 		triggerChecker := TriggerChecker{}

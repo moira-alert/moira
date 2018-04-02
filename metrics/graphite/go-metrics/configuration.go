@@ -15,6 +15,7 @@ func ConfigureFilterMetrics(prefix string) *graphite.FilterMetrics {
 		MatchingTimer:           registerTimer(metricNameWithPrefix(prefix, "time.match")),
 		SavingTimer:             registerTimer(metricNameWithPrefix(prefix, "time.save")),
 		BuildTreeTimer:          registerTimer(metricNameWithPrefix(prefix, "time.buildtree")),
+		MetricChannelLen:        registerHistogram(metricNameWithPrefix(prefix, "metricsToSave")),
 	}
 }
 

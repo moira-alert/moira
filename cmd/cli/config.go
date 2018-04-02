@@ -13,7 +13,7 @@ type config struct {
 func getDefault() config {
 	return config{
 		LogFile:  "stdout",
-		LogLevel: "debug",
+		LogLevel: "info",
 		Redis: cmd.RedisConfig{
 			Host: "localhost",
 			Port: "6379",

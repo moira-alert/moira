@@ -7,19 +7,19 @@ graphite:
   uri: "localhost:2003"
   prefix: DevOps.Moira
   interval: 60s
-log:
-  log_file: stdout
-  log_level: debug
 notifier:
   sender_timeout: 10s
-  resending_timeout: "24:00"
+  resending_timeout: "1:00"
   senders: []
   moira_selfstate:
     enabled: false
-    redis_disconect_delay: 30s
-    last_metric_received_delay: 60s
-    last_check_delay: 60s
+    redis_disconect_delay: 60s
+    last_metric_received_delay: 120s
+    last_check_delay: 120s
     notice_interval: 300s
   front_uri: http://localhost
   timezone: UTC
   date_time_format: "15:04 02.01.2006"
+log:
+  log_file: stdout
+  log_level: info

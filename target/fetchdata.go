@@ -3,18 +3,18 @@ package target
 import (
 	"math"
 
-	"github.com/go-graphite/carbonapi/expr"
+	"github.com/go-graphite/carbonapi/expr/types"
 	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
 	"github.com/moira-alert/moira"
 )
 
 // FetchData gets values of given pattern metrics from given interval and returns values and all found pattern metrics
-func FetchData(database moira.Database, pattern string, from int64, until int64, allowRealTimeAlerting bool) ([]*expr.MetricData, []string, error) {
+func FetchData(database moira.Database, pattern string, from int64, until int64, allowRealTimeAlerting bool) ([]*types.MetricData, []string, error) {
 	metrics, err := database.GetPatternMetrics(pattern)
 	if err != nil {
 		return nil, nil, err
 	}
-	metricDatas := make([]*expr.MetricData, 0)
+	metricDatas := make([]*types.MetricData, 0)
 
 	if len(metrics) > 0 {
 		firstMetric := metrics[0]
@@ -38,7 +38,7 @@ func FetchData(database moira.Database, pattern string, from int64, until int64,
 	return metricDatas, metrics, nil
 }
 
-func createMetricData(metric string, from int64, until int64, retention int64, values []float64) *expr.MetricData {
+func createMetricData(metric string, from int64, until int64, retention int64, values []float64) *types.MetricData {
 	fetchResponse := pb.FetchResponse{
 		Name:      metric,
 		StartTime: int32(from),
@@ -47,7 +47,7 @@ func createMetricData(metric string, from int64, until int64, retention int64, v
 		Values:    values,
 		IsAbsent:  getIsAbsent(values),
 	}
-	return &expr.MetricData{FetchResponse: fetchResponse}
+	return &types.MetricData{FetchResponse: fetchResponse}
 }
 func getIsAbsent(values []float64) []bool {
 	isAbsent := make([]bool, len(values))

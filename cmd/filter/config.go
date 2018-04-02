@@ -13,8 +13,8 @@ type config struct {
 }
 
 type filterConfig struct {
-	Listen          string `yaml:"listen"`
-	RetentionConfig string `yaml:"retention-config"`
+	Listen          string `yaml:"listen"`           // Metrics listener uri
+	RetentionConfig string `yaml:"retention-config"` // Retentions config file path. Simply use your original storage-schemas.conf or create new if you're using Moira without existing Graphite installation.
 }
 
 func getDefault() config {
@@ -26,7 +26,7 @@ func getDefault() config {
 		},
 		Logger: cmd.LoggerConfig{
 			LogFile:  "stdout",
-			LogLevel: "debug",
+			LogLevel: "info",
 		},
 		Filter: filterConfig{
 			Listen:          ":2003",

@@ -12,16 +12,18 @@ import (
 	"github.com/moira-alert/moira/metrics/graphite"
 )
 
-// RedisConfig is redis config structure, which are taken on the start of moira
+// RedisConfig is a redis config structure that initialises at the start of moira
+// Use fields MasterName and SentinelAddrs to enable Redis Sentinel support,
+// use Host and Port fields otherwise.
 type RedisConfig struct {
-	MasterName    string `yaml:"master_name"`
-	SentinelAddrs string `yaml:"sentinel_addrs"`
-	Host          string `yaml:"host"`
-	Port          string `yaml:"port"`
-	DBID          int    `yaml:"dbid"`
+	MasterName    string `yaml:"master_name"`    // Redis Sentinel cluster name
+	SentinelAddrs string `yaml:"sentinel_addrs"` // Redis Sentinel address list, format: {host1_name:port};{ip:port}
+	Host          string `yaml:"host"`           // Redis node ip-address or host name
+	Port          string `yaml:"port"`           // Redis node port
+	DBID          int    `yaml:"dbid"`           // Redis database id
 }
 
-// GetSettings return redis config parsed from moira config files
+// GetSettings returns redis config parsed from moira config files
 func (config *RedisConfig) GetSettings() redis.Config {
 	return redis.Config{
 		MasterName:        config.MasterName,
@@ -32,15 +34,15 @@ func (config *RedisConfig) GetSettings() redis.Config {
 	}
 }
 
-// GraphiteConfig is graphite metrics config, which are taken on the start of moira
+// GraphiteConfig is graphite metrics config structure that initialises at the start of moira
 type GraphiteConfig struct {
-	Enabled  bool   `yaml:"enabled"`
-	URI      string `yaml:"uri"`
-	Prefix   string `yaml:"prefix"`
-	Interval string `yaml:"interval"`
+	Enabled  bool   `yaml:"enabled"`  // If true, graphite logger will be enabled.
+	URI      string `yaml:"uri"`      // Graphite relay URI, format: ip:port
+	Prefix   string `yaml:"prefix"`   // Moira metrics prefix. Use 'prefix: {hostname}' to use hostname autoresolver.
+	Interval string `yaml:"interval"` // Metrics sending interval
 }
 
-// GetSettings return graphite metrics config parsed from moira config files
+// GetSettings returns graphite metrics config parsed from moira config files
 func (graphiteConfig *GraphiteConfig) GetSettings() graphite.Config {
 	return graphite.Config{
 		Enabled:  graphiteConfig.Enabled,
@@ -50,31 +52,31 @@ func (graphiteConfig *GraphiteConfig) GetSettings() graphite.Config {
 	}
 }
 
-// LoggerConfig is logger settings, which are taken on the start of moira
+// LoggerConfig is logger settings structure that initialises at the start of moira
 type LoggerConfig struct {
 	LogFile  string `yaml:"log_file"`
 	LogLevel string `yaml:"log_level"`
 }
 
-// ProfilerConfig is pprof settings, which are taken on the start of moira
+// ProfilerConfig is pprof settings structure that initialises at the start of moira
 type ProfilerConfig struct {
-	Listen string `yaml:"listen"`
+	Listen string `yaml:"listen"` // Define variable as valid non-empty string to enable pprof server. For example ':10000' will enable server available at http://moira.company.com:10000/debug/pprof/
 }
 
-// ReadConfig gets config file by given file and marshal it to moira-used type
+// ReadConfig parses config file by the given path into Moira-used type
 func ReadConfig(configFileName string, config interface{}) error {
 	configYaml, err := ioutil.ReadFile(configFileName)
 	if err != nil {
-		return fmt.Errorf("Can't read file [%s] [%s]", configFileName, err.Error())
+		return fmt.Errorf("can't read file [%s] [%s]", configFileName, err.Error())
 	}
 	err = yaml.Unmarshal(configYaml, config)
 	if err != nil {
-		return fmt.Errorf("Can't parse config file [%s] [%s]", configFileName, err.Error())
+		return fmt.Errorf("can't parse config file [%s] [%s]", configFileName, err.Error())
 	}
 	return nil
 }
 
-// PrintConfig prints config to std
+// PrintConfig prints config to stdout
 func PrintConfig(config interface{}) {
 	d, _ := yaml.Marshal(&config)
 	fmt.Println(string(d))

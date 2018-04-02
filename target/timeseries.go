@@ -1,13 +1,14 @@
 package target
 
 import (
-	"github.com/go-graphite/carbonapi/expr"
+	"github.com/go-graphite/carbonapi/expr/types"
+
 	"math"
 )
 
-// TimeSeries is abstraction over carbon-api expr.MetricData type
+// TimeSeries is abstraction over carbon-api types.MetricData type
 type TimeSeries struct {
-	expr.MetricData
+	types.MetricData
 	Wildcard bool
 }
 
