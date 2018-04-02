@@ -27,7 +27,7 @@ type notifierConfig struct {
 	SelfState        selfStateConfig     `yaml:"moira_selfstate"`   // Self state monitor configuration section. Note: No inner subscriptions is required. It's own notification mechanism will be used.
 	FrontURI         string              `yaml:"front_uri"`         // Web-UI uri prefix for trigger links in notifications. For example: with 'http://localhost' every notification will contain link like 'http://localhost/trigger/triggerId'
 	Timezone         string              `yaml:"timezone"`          // Timezone to use to convert ticks. Default is UTC. See https://golang.org/pkg/time/#LoadLocation for more details.
-	DateTimeFormat   string              `yaml:"date_time_format"`
+	DateTimeFormat   string              `yaml:"date_time_format"`  // Format for email sender. Default is "15:04 02.01.2006". See https://golang.org/pkg/time/#Time.Format for more details about golang time formatting.
 }
 
 type selfStateConfig struct {
