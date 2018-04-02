@@ -1,15 +1,15 @@
 package redis
 
 import (
+	"fmt"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
 
-	"fmt"
 	"github.com/moira-alert/moira"
-	"strings"
 )
 
 func TestScheduledNotification(t *testing.T) {
@@ -195,6 +195,9 @@ func TestScheduledNotificationErrorConnection(t *testing.T) {
 		So(err, ShouldNotBeNil)
 
 		err = dataBase.AddNotifications([]*moira.ScheduledNotification{&notification}, 0)
+		So(err, ShouldNotBeNil)
+
+		err = dataBase.RemoveAllNotifications()
 		So(err, ShouldNotBeNil)
 	})
 }
