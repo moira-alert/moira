@@ -27,3 +27,11 @@ func DeleteNotification(database moira.Database, notificationKey string) (*dto.N
 	}
 	return &dto.NotificationDeleteResponse{Result: result}, nil
 }
+
+// DeleteAllNotifications removes all notifications
+func DeleteAllNotifications(database moira.Database) *api.ErrorResponse {
+	if err := database.RemoveAllNotifications(); err != nil {
+		return api.ErrorInternalServer(err)
+	}
+	return nil
+}

@@ -45,6 +45,7 @@ type Database interface {
 	PushNotificationEvent(event *NotificationEvent, ui bool) error
 	GetNotificationEventCount(triggerID string, from int64) int64
 	FetchNotificationEvent() (NotificationEvent, error)
+	RemoveAllNotificationEvents() error
 
 	// ContactData storing
 	GetContact(contactID string) (ContactData, error)
@@ -66,6 +67,7 @@ type Database interface {
 	// ScheduledNotification storing
 	GetNotifications(start, end int64) ([]*ScheduledNotification, int64, error)
 	RemoveNotification(notificationKey string) (int64, error)
+	RemoveAllNotifications() error
 	FetchNotifications(to int64) ([]*ScheduledNotification, error)
 	AddNotification(notification *ScheduledNotification) error
 	AddNotifications(notification []*ScheduledNotification, timestamp int64) error

@@ -148,6 +148,26 @@ func TestNotificationEvents(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, make([]*moira.NotificationEvent, 0))
 		})
+
+		Convey("Test removing notification events", func() {
+			Convey("Should remove all notifications", func() {
+				err := dataBase.PushNotificationEvent(&notificationEvent, true)
+				So(err, ShouldBeNil)
+
+				err = dataBase.PushNotificationEvent(&notificationEvent1, true)
+				So(err, ShouldBeNil)
+
+				err = dataBase.PushNotificationEvent(&notificationEvent2, true)
+				So(err, ShouldBeNil)
+
+				err = dataBase.RemoveAllNotificationEvents()
+				So(err, ShouldBeNil)
+
+				actual, err := dataBase.FetchNotificationEvent()
+				So(err, ShouldResemble, database.ErrNil)
+				So(actual, ShouldResemble, moira.NotificationEvent{})
+			})
+		})
 	})
 }
 

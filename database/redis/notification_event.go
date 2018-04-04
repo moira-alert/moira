@@ -42,14 +42,14 @@ func (connector *DbConnector) PushNotificationEvent(event *moira.NotificationEve
 	c := connector.pool.Get()
 	defer c.Close()
 	c.Send("MULTI")
-	c.Send("LPUSH", eventsListKey, eventBytes)
+	c.Send("LPUSH", notificationEventsList, eventBytes)
 	if event.TriggerID != "" {
 		c.Send("ZADD", triggerEventsKey(event.TriggerID), event.Timestamp, eventBytes)
 		c.Send("ZREMRANGEBYSCORE", triggerEventsKey(event.TriggerID), "-inf", time.Now().Unix()-eventsTTL)
 	}
 	if ui {
-		c.Send("LPUSH", eventsUIListKey, eventBytes)
-		c.Send("LTRIM", eventsUIListKey, 0, 100)
+		c.Send("LPUSH", notificationEventsUIList, eventBytes)
+		c.Send("LTRIM", notificationEventsUIList, 0, 100)
 	}
 	_, err = c.Do("EXEC")
 	if err != nil {
@@ -74,7 +74,7 @@ func (connector *DbConnector) FetchNotificationEvent() (moira.NotificationEvent,
 
 	var event moira.NotificationEvent
 
-	rawRes, err := c.Do("BRPOP", eventsListKey, 1)
+	rawRes, err := c.Do("BRPOP", notificationEventsList, 1)
 	if err != nil {
 		return event, fmt.Errorf("Failed to fetch event: %s", err.Error())
 	}
@@ -95,8 +95,20 @@ func (connector *DbConnector) FetchNotificationEvent() (moira.NotificationEvent,
 	return event, nil
 }
 
-var eventsListKey = "moira-trigger-events"
-var eventsUIListKey = "moira-trigger-events-ui"
+// RemoveAllNotificationEvents removes all notification events from database
+func (connector *DbConnector) RemoveAllNotificationEvents() error {
+	c := connector.pool.Get()
+	defer c.Close()
+
+	if _, err := c.Do("DEL", notificationEventsList); err != nil {
+		return fmt.Errorf("failed to remove %s: %s", notificationEventsList, err.Error())
+	}
+
+	return nil
+}
+
+var notificationEventsList = "moira-trigger-events"
+var notificationEventsUIList = "moira-trigger-events-ui"
 
 func triggerEventsKey(triggerID string) string {
 	return fmt.Sprintf("moira-trigger-events:%s", triggerID)

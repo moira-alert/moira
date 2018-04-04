@@ -59,3 +59,21 @@ func TestDeleteNotification(t *testing.T) {
 		So(actual, ShouldBeNil)
 	})
 }
+
+func TestDeleteAllNotifications(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+
+	Convey("Success", t, func() {
+		dataBase.EXPECT().RemoveAllNotifications().Return(nil)
+		err := DeleteAllNotifications(dataBase)
+		So(err, ShouldBeNil)
+	})
+
+	Convey("Error delete", t, func() {
+		expected := fmt.Errorf("Oooops! Can not get notifications")
+		dataBase.EXPECT().RemoveAllNotifications().Return(expected)
+		err := DeleteAllNotifications(dataBase)
+		So(err, ShouldResemble, api.ErrorInternalServer(expected))
+	})
+}
