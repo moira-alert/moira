@@ -36,7 +36,7 @@ type Sender struct {
 }
 
 // Init loads yaml config, configures and starts telegram bot
-func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location) error {
+func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	var err error
 	sender.APIToken = senderSettings["api_token"]
 	if sender.APIToken == "" {

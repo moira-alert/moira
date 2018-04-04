@@ -116,12 +116,14 @@ func waitTestEnd() {
 }
 
 func configureNotifier(t *testing.T) {
-	metrics := metrics.ConfigureNotifierMetrics("notifier")
+	notifierMetrics := metrics.ConfigureNotifierMetrics("notifier")
 	var location, _ = time.LoadLocation("UTC")
+	dateTimeFormat := "15:04 02.01.2006"
 	config := Config{
 		SendingTimeout:   time.Millisecond * 10,
 		ResendingTimeout: time.Hour * 24,
 		Location:         location,
+		DateTimeFormat:   dateTimeFormat,
 	}
 
 	mockCtrl = gomock.NewController(t)
@@ -130,13 +132,13 @@ func configureNotifier(t *testing.T) {
 	scheduler = mock_scheduler.NewMockScheduler(mockCtrl)
 	sender = mock_moira_alert.NewMockSender(mockCtrl)
 
-	notif = NewNotifier(dataBase, logger, config, metrics)
+	notif = NewNotifier(dataBase, logger, config, notifierMetrics)
 	notif.scheduler = scheduler
 	senderSettings := map[string]string{
 		"type": "test",
 	}
 
-	sender.EXPECT().Init(senderSettings, logger, location).Return(nil)
+	sender.EXPECT().Init(senderSettings, logger, location, "15:04 02.01.2006").Return(nil)
 
 	notif.RegisterSender(senderSettings, sender)
 

@@ -20,11 +20,13 @@ var senderSettings = map[string]string{
 }
 
 var location, _ = time.LoadLocation("UTC")
+var dateTimeFormat = "15:04 02.01.2006"
 
 var notifierConfig = notifier.Config{
 	SendingTimeout:   time.Millisecond * 10,
 	ResendingTimeout: time.Hour * 24,
 	Location:         location,
+	DateTimeFormat:   dateTimeFormat,
 }
 
 var shutdown = make(chan bool)
@@ -78,7 +80,7 @@ func TestNotifier(t *testing.T) {
 	database.PushNotificationEvent(&event, true)
 	notifier2 := notifier.NewNotifier(database, logger, notifierConfig, notifierMetrics)
 	sender := mock_moira_alert.NewMockSender(mockCtrl)
-	sender.EXPECT().Init(senderSettings, logger, location).Return(nil)
+	sender.EXPECT().Init(senderSettings, logger, location, dateTimeFormat).Return(nil)
 	notifier2.RegisterSender(senderSettings, sender)
 	sender.EXPECT().SendEvents(gomock.Any(), contact, triggerData, false).Return(nil).Do(func(f ...interface{}) {
 		fmt.Print("SendEvents called. End test")
