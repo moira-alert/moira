@@ -43,7 +43,7 @@ func (matcher *MetricsMatcher) Start(channel chan *moira.MatchedMetric) {
 					return
 				}
 				matcher.cacheStorage.EnrichMatchedMetric(buffer, metric)
-				if len(buffer) < 100 {
+				if len(buffer) < 1000 {
 					continue
 				}
 			case <-time.After(time.Second):
