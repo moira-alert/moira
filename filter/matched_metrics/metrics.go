@@ -7,7 +7,6 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/filter"
 	"github.com/moira-alert/moira/metrics/graphite"
-	"runtime"
 )
 
 // MetricsMatcher make buffer of metrics and save it
@@ -32,38 +31,33 @@ func NewMetricsMatcher(metrics *graphite.FilterMetrics, logger moira.Logger, dat
 
 // Start process matched metrics from channel and save it in cache storage
 func (matcher *MetricsMatcher) Start(channel chan *moira.MatchedMetric) {
-	numCPU := runtime.NumCPU()
-	matcher.waitGroup.Add(numCPU)
-	for i := 0; i < numCPU; i++ {
-		go matcher.startSaver(channel)
-	}
-	matcher.logger.Info("Moira Filter Metrics Matcher started")
-}
-
-func (matcher *MetricsMatcher) startSaver(channel chan *moira.MatchedMetric) {
-	defer matcher.waitGroup.Done()
-	buffer := make(map[string]*moira.MatchedMetric)
-	for {
-		select {
-		case metric, ok := <-channel:
-			if !ok {
-				matcher.logger.Info("Moira Filter Metrics Matcher stopped")
-				return
+	matcher.waitGroup.Add(1)
+	go func() {
+		defer matcher.waitGroup.Done()
+		buffer := make(map[string]*moira.MatchedMetric)
+		for {
+			select {
+			case metric, ok := <-channel:
+				if !ok {
+					matcher.logger.Info("Moira Filter Metrics Matcher stopped")
+					return
+				}
+				matcher.cacheStorage.EnrichMatchedMetric(buffer, metric)
+				if len(buffer) < 1000 {
+					continue
+				}
+			case <-time.After(time.Second):
 			}
-			matcher.cacheStorage.EnrichMatchedMetric(buffer, metric)
-			if len(buffer) < 1000 {
+			if len(buffer) == 0 {
 				continue
 			}
-		case <-time.After(time.Second):
+			timer := time.Now()
+			matcher.save(buffer)
+			matcher.metrics.SavingTimer.UpdateSince(timer)
+			buffer = make(map[string]*moira.MatchedMetric)
 		}
-		if len(buffer) == 0 {
-			continue
-		}
-		timer := time.Now()
-		matcher.save(buffer)
-		matcher.metrics.SavingTimer.UpdateSince(timer)
-		buffer = make(map[string]*moira.MatchedMetric)
-	}
+	}()
+	matcher.logger.Info("Moira Filter Metrics Matcher started")
 }
 
 // Wait waits for metric matcher instance will stop
