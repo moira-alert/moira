@@ -7,10 +7,11 @@ import (
 	"io"
 	"net/smtp"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/moira-alert/moira"
-	gomail "gopkg.in/gomail.v2"
+	"gopkg.in/gomail.v2"
 )
 
 // Sender implements moira sender interface via pushover
@@ -121,12 +122,12 @@ func (sender *Sender) makeMessage(events moira.NotificationEvents, contact moira
 
 	templateData := struct {
 		Link        string
-		Description string
+		Description template.HTML
 		Throttled   bool
 		Items       []*templateRow
 	}{
 		Link:        fmt.Sprintf("%s/trigger/%s", sender.FrontURI, events[0].TriggerID),
-		Description: trigger.Desc,
+		Description: formatDescription(trigger.Desc),
 		Throttled:   throttled,
 		Items:       make([]*templateRow, 0, len(events)),
 	}
@@ -157,4 +158,11 @@ func (sender *Sender) makeMessage(events moira.NotificationEvents, contact moira
 
 func (sender *Sender) setLogger(logger moira.Logger) {
 	sender.log = logger
+}
+
+func formatDescription(desc string) template.HTML {
+	escapedDesc := template.HTMLEscapeString(desc)
+	escapedDesc = strings.Replace(escapedDesc, "\n", "\n<br/>", -1)
+
+	return template.HTML(escapedDesc)
 }
