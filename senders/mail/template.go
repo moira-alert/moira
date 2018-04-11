@@ -15,6 +15,8 @@ const defaultTemplate = `
 		</style>
 	</head>
 	<body>
+		<h1>{{ .TriggerName }}</h1>
+		<h3>{{ .Tags }}</h3>
 		<table>
 			<thead>
 				<tr>
