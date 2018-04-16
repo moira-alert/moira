@@ -144,10 +144,6 @@ func getTriggerMetrics(writer http.ResponseWriter, request *http.Request) {
 func deleteTriggerMetric(writer http.ResponseWriter, request *http.Request) {
 	triggerID := middleware.GetTriggerID(request)
 	metricName := request.URL.Query().Get("name")
-	if metricName == "" {
-		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("Metric name can not be empty")))
-		return
-	}
 	if err := controller.DeleteTriggerMetric(database, metricName, triggerID); err != nil {
 		render.Render(writer, request, err)
 	}
