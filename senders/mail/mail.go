@@ -121,19 +121,21 @@ func (sender *Sender) makeMessage(events moira.NotificationEvents, contact moira
 	subject := fmt.Sprintf("%s %s %s (%d)", state, trigger.Name, tags, len(events))
 
 	templateData := struct {
-		Link        string
-		Description template.HTML
-		Throttled   bool
-		TriggerName string
-		Tags        string
-		Items       []*templateRow
+		Link         string
+		Description  template.HTML
+		Throttled    bool
+		TriggerName  string
+		Tags         string
+		TriggerState string
+		Items        []*templateRow
 	}{
-		Link:        fmt.Sprintf("%s/trigger/%s", sender.FrontURI, events[0].TriggerID),
-		Description: formatDescription(trigger.Desc),
-		Throttled:   throttled,
-		TriggerName: trigger.Name,
-		Tags:        tags,
-		Items:       make([]*templateRow, 0, len(events)),
+		Link:         fmt.Sprintf("%s/trigger/%s", sender.FrontURI, events[0].TriggerID),
+		Description:  formatDescription(trigger.Desc),
+		Throttled:    throttled,
+		TriggerName:  trigger.Name,
+		Tags:         tags,
+		TriggerState: state,
+		Items:        make([]*templateRow, 0, len(events)),
 	}
 
 	for _, event := range events {
