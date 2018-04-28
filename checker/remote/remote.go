@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math"
 	"net/http"
 	"strconv"
 	"time"
@@ -87,7 +88,7 @@ func decodeBody(body []byte) ([]*types.MetricData, error) {
 		}
 		for i, v := range m.Datapoints {
 			if v[0] == nil {
-				pbResp.Values[i] = 0
+				pbResp.Values[i] = math.NaN()
 				pbResp.IsAbsent[i] = true
 			} else {
 				pbResp.Values[i] = *v[0]
