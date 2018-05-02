@@ -31,7 +31,7 @@ var notifierConfig = notifier.Config{
 
 var shutdown = make(chan bool)
 
-var notifierMetrics = metrics.ConfigureNotifierMetrics("notifier")
+var notifierMetrics = metrics.ConfigureNotifierMetrics("notifier", false)
 var logger, _ = logging.GetLogger("Notifier_Test")
 var mockCtrl *gomock.Controller
 

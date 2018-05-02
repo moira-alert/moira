@@ -17,7 +17,7 @@ import (
 	"github.com/moira-alert/moira/notifier"
 )
 
-var metrics2 = metrics.ConfigureNotifierMetrics("notifier")
+var metrics2 = metrics.ConfigureNotifierMetrics("notifier", false)
 
 func TestEvent(t *testing.T) {
 	mockCtrl := gomock.NewController(t)

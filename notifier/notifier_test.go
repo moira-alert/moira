@@ -116,7 +116,7 @@ func waitTestEnd() {
 }
 
 func configureNotifier(t *testing.T) {
-	notifierMetrics := metrics.ConfigureNotifierMetrics("notifier")
+	notifierMetrics := metrics.ConfigureNotifierMetrics("notifier", false)
 	var location, _ = time.LoadLocation("UTC")
 	dateTimeFormat := "15:04 02.01.2006"
 	config := Config{

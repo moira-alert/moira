@@ -41,7 +41,7 @@ func TestThrottling(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Scheduler")
-	metrics2 := metrics.ConfigureNotifierMetrics("notifier")
+	metrics2 := metrics.ConfigureNotifierMetrics("notifier", false)
 	scheduler := NewScheduler(dataBase, logger, metrics2)
 
 	now := time.Now()
@@ -125,7 +125,7 @@ func TestSubscriptionSchedule(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Scheduler")
-	metrics2 := metrics.ConfigureNotifierMetrics("notifier")
+	metrics2 := metrics.ConfigureNotifierMetrics("notifier", false)
 	scheduler := NewScheduler(dataBase, logger, metrics2)
 
 	Convey("Throttling disabled", t, func() {
