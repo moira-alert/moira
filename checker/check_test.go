@@ -29,7 +29,7 @@ func TestGetTimeSeriesState(t *testing.T) {
 	var errValue float64 = 20
 	triggerChecker := TriggerChecker{
 		Logger:  logger,
-		Metrics: metrics.ConfigureCheckerMetrics("checker", false),
+		Metrics: metrics.ConfigureCheckerMetrics("checker"),
 		Until:   67,
 		From:    17,
 		trigger: &moira.Trigger{

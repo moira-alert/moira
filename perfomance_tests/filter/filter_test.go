@@ -34,7 +34,7 @@ func BenchmarkProcessIncomingMetric(b *testing.B) {
 		b.Errorf("Error reading patterns: %s", err.Error())
 	}
 
-	metrics2 := metrics.ConfigureFilterMetrics("test", false)
+	metrics2 := metrics.ConfigureFilterMetrics("test")
 
 	mockCtrl := gomock.NewController(b)
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
