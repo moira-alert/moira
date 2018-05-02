@@ -19,7 +19,6 @@ import (
 	"github.com/moira-alert/moira/logging/go-logging"
 	"github.com/moira-alert/moira/metrics/graphite"
 	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
-	"github.com/go-graphite/carbonzipper/cache"
 )
 
 const serviceName = "checker"
