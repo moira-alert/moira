@@ -7,8 +7,9 @@ import (
 )
 
 // ConfigureFilterMetrics initialize graphite metrics
-func ConfigureFilterMetrics(prefix string) *graphite.FilterMetrics {
+func ConfigureFilterMetrics(prefix string, runtimeMetricsEnabled bool) *graphite.FilterMetrics {
 	return &graphite.FilterMetrics{
+		RuntimeMetricsRegistry:  newRuntimeMetricsRegistry(prefix, runtimeMetricsEnabled),
 		TotalMetricsReceived:    registerCounter(metricNameWithPrefix(prefix, "received.total")),
 		ValidMetricsReceived:    registerCounter(metricNameWithPrefix(prefix, "received.valid")),
 		MatchingMetricsReceived: registerCounter(metricNameWithPrefix(prefix, "received.matching")),
@@ -20,8 +21,9 @@ func ConfigureFilterMetrics(prefix string) *graphite.FilterMetrics {
 }
 
 // ConfigureNotifierMetrics is notifier metrics configurator
-func ConfigureNotifierMetrics(prefix string) *graphite.NotifierMetrics {
+func ConfigureNotifierMetrics(prefix string, runtimeMetricsEnabled bool) *graphite.NotifierMetrics {
 	return &graphite.NotifierMetrics{
+		RuntimeMetricsRegistry: newRuntimeMetricsRegistry(prefix, runtimeMetricsEnabled),
 		SubsMalformed:          registerMeter(metricNameWithPrefix(prefix, "subs.malformed")),
 		EventsReceived:         registerMeter(metricNameWithPrefix(prefix, "events.received")),
 		EventsMalformed:        registerMeter(metricNameWithPrefix(prefix, "events.malformed")),
@@ -33,8 +35,9 @@ func ConfigureNotifierMetrics(prefix string) *graphite.NotifierMetrics {
 }
 
 // ConfigureCheckerMetrics is checker metrics configurator
-func ConfigureCheckerMetrics(prefix string) *graphite.CheckerMetrics {
+func ConfigureCheckerMetrics(prefix string, runtimeMetricsEnabled bool) *graphite.CheckerMetrics {
 	return &graphite.CheckerMetrics{
+		RuntimeMetricsRegistry:    newRuntimeMetricsRegistry(prefix, runtimeMetricsEnabled),
 		CheckError:                registerMeter(metricNameWithPrefix(prefix, "errors.check")),
 		HandleError:               registerMeter(metricNameWithPrefix(prefix, "errors.handle")),
 		TriggersCheckTime:         registerTimer(metricNameWithPrefix(prefix, "triggers")),

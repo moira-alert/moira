@@ -19,6 +19,7 @@ import (
 	"github.com/moira-alert/moira/logging/go-logging"
 	"github.com/moira-alert/moira/metrics/graphite"
 	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
+	"github.com/go-graphite/carbonzipper/cache"
 )
 
 const serviceName = "checker"
@@ -75,14 +76,11 @@ func main() {
 	databaseSettings := config.Redis.GetSettings()
 	database := redis.NewDatabase(logger, databaseSettings)
 
-	checkerMetrics := metrics.ConfigureCheckerMetrics(serviceName)
+	runtimeMetricsEnabled := config.Pprof.Metrics
+	checkerMetrics := metrics.ConfigureCheckerMetrics(serviceName, runtimeMetricsEnabled)
 
 	graphiteSettings := config.Graphite.GetSettings()
-	if config.Pprof.Metrics {
-		graphiteSettings.Runtime = true
-	}
-
-	if err = metrics.Init(graphiteSettings); err != nil {
+	if err = metrics.Init(graphiteSettings, checkerMetrics.RuntimeMetricsRegistry); err != nil {
 		logger.Error(err)
 	}
 

@@ -15,7 +15,7 @@ import (
 const hostnameTmpl = "{hostname}"
 
 // Init is initializer for notifier graphite metrics worker based on go-metrics and go-metrics-graphite
-func Init(config graphite.Config) error {
+func Init(config graphite.Config, runtimeRegistry metrics.Registry) error {
 	if config.Enabled {
 		address, err := net.ResolveTCPAddr("tcp", config.URI)
 		if err != nil {
@@ -25,13 +25,14 @@ func Init(config graphite.Config) error {
 		if err != nil {
 			return fmt.Errorf("can't get OS hostname %s: %s", config.Prefix, err)
 		}
-		if config.Runtime {
-			metrics.RegisterRuntimeMemStats(metrics.DefaultRegistry)
-			metrics.RegisterDebugGCStats(metrics.DefaultRegistry)
-			go metrics.CaptureRuntimeMemStats(metrics.DefaultRegistry, config.Interval)
-			go metrics.CaptureDebugGCStats(metrics.DefaultRegistry, config.Interval)
-		}
 		go goMetricsGraphite.Graphite(metrics.DefaultRegistry, config.Interval, prefix, address)
+		if runtimeRegistry != nil {
+			metrics.RegisterRuntimeMemStats(runtimeRegistry)
+			metrics.RegisterDebugGCStats(runtimeRegistry)
+			go metrics.CaptureRuntimeMemStats(runtimeRegistry, config.Interval)
+			go metrics.CaptureDebugGCStats(runtimeRegistry, config.Interval)
+			go goMetricsGraphite.Graphite(runtimeRegistry, config.Interval, prefix, address)
+		}
 		return nil
 	}
 	return nil
