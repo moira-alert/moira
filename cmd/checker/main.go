@@ -75,11 +75,11 @@ func main() {
 	databaseSettings := config.Redis.GetSettings()
 	database := redis.NewDatabase(logger, databaseSettings)
 
-	runtimeMetricsEnabled := config.Pprof.Metrics
-	checkerMetrics := metrics.ConfigureCheckerMetrics(serviceName, runtimeMetricsEnabled)
+	checkerMetrics := metrics.ConfigureCheckerMetrics(serviceName)
+	runtimePrefix := config.Pprof.GetRuntimePrefix(serviceName)
 
 	graphiteSettings := config.Graphite.GetSettings()
-	if err = metrics.Init(graphiteSettings, checkerMetrics.RuntimeMetricsRegistry); err != nil {
+	if err = metrics.Init(graphiteSettings, runtimePrefix); err != nil {
 		logger.Error(err)
 	}
 

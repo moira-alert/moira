@@ -291,7 +291,7 @@ func TestCheckForNODATA(t *testing.T) {
 
 	var ttl int64 = 600
 	triggerChecker := TriggerChecker{
-		Metrics: metrics.ConfigureCheckerMetrics("checker", false),
+		Metrics: metrics.ConfigureCheckerMetrics("checker"),
 		Logger:  logger,
 		ttl:     ttl,
 		lastCheck: &moira.CheckData{
@@ -386,7 +386,7 @@ func TestCheckErrors(t *testing.T) {
 		Config: &Config{
 			MetricsTTLSeconds: 10,
 		},
-		Metrics:  metrics.ConfigureCheckerMetrics("checker", false),
+		Metrics:  metrics.ConfigureCheckerMetrics("checker"),
 		From:     17,
 		Until:    67,
 		ttl:      ttl,

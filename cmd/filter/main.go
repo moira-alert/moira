@@ -69,11 +69,11 @@ func main() {
 		cmd.StartProfiling(logger, config.Pprof)
 	}
 
-	runtimeMetricsEnabled := config.Pprof.Metrics
-	cacheMetrics := metrics.ConfigureFilterMetrics(serviceName, runtimeMetricsEnabled)
+	cacheMetrics := metrics.ConfigureFilterMetrics(serviceName)
+	runtimePrefix := config.Pprof.GetRuntimePrefix(serviceName)
 
 	graphiteSettings := config.Graphite.GetSettings()
-	if err = metrics.Init(graphiteSettings, cacheMetrics.RuntimeMetricsRegistry); err != nil {
+	if err = metrics.Init(graphiteSettings, runtimePrefix); err != nil {
 		logger.Error(err)
 	}
 

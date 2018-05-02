@@ -64,6 +64,14 @@ type ProfilerConfig struct {
 	Metrics bool   `yaml:"metrics"` // If true, runtime stats will be captured and sent to graphite.
 }
 
+// GetRuntimePrefix returns runtime metrics prefix if enabled
+func (profilerConfig ProfilerConfig) GetRuntimePrefix(serviceName string) string {
+	if profilerConfig.Metrics {
+		return fmt.Sprintf("%s.", serviceName)
+	}
+	return ""
+}
+
 // ReadConfig parses config file by the given path into Moira-used type
 func ReadConfig(configFileName string, config interface{}) error {
 	configYaml, err := ioutil.ReadFile(configFileName)

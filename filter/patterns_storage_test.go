@@ -139,7 +139,7 @@ func TestProcessIncomingMetric(t *testing.T) {
 		"Question.at_the_end2",
 	}
 
-	metrics2 := metrics.ConfigureFilterMetrics("test", false)
+	metrics2 := metrics.ConfigureFilterMetrics("test")
 
 	mockCtrl := gomock.NewController(t)
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
@@ -167,7 +167,7 @@ func TestProcessIncomingMetric(t *testing.T) {
 	})
 
 	Convey("When valid non-matching metric arrives", t, func() {
-		patternsStorage.metrics = metrics.ConfigureFilterMetrics("test", false)
+		patternsStorage.metrics = metrics.ConfigureFilterMetrics("test")
 		Convey("When metric arrives with int64 timestamp", func() {
 			for _, metric := range nonMatchingMetrics {
 				matchedMetrics := patternsStorage.ProcessIncomingMetric([]byte(metric + " 12 1234567890"))
@@ -179,7 +179,7 @@ func TestProcessIncomingMetric(t *testing.T) {
 		})
 
 		Convey("When metric arrives with float64 timestamp", func() {
-			patternsStorage.metrics = metrics.ConfigureFilterMetrics("test", false)
+			patternsStorage.metrics = metrics.ConfigureFilterMetrics("test")
 			for _, metric := range nonMatchingMetrics {
 				matchedMetrics := patternsStorage.ProcessIncomingMetric([]byte(metric + " 12 1234567890.0"))
 				So(matchedMetrics, ShouldBeNil)
@@ -191,7 +191,7 @@ func TestProcessIncomingMetric(t *testing.T) {
 	})
 
 	Convey("When valid matching metric arrives", t, func() {
-		patternsStorage.metrics = metrics.ConfigureFilterMetrics("test", false)
+		patternsStorage.metrics = metrics.ConfigureFilterMetrics("test")
 		Convey("When metric name is pure", func() {
 			for _, metric := range matchingMetrics {
 				matchedMetrics := patternsStorage.ProcessIncomingMetric([]byte(metric + " 12 1234567890"))
@@ -202,7 +202,7 @@ func TestProcessIncomingMetric(t *testing.T) {
 			So(patternsStorage.metrics.MatchingMetricsReceived.Count(), ShouldEqual, len(matchingMetrics))
 		})
 
-		patternsStorage.metrics = metrics.ConfigureFilterMetrics("test", false)
+		patternsStorage.metrics = metrics.ConfigureFilterMetrics("test")
 		Convey("When value has dot", func() {
 			for _, metric := range matchingMetrics {
 				matchedMetrics := patternsStorage.ProcessIncomingMetric([]byte(metric + " 12.000000 1234567890"))
@@ -213,7 +213,7 @@ func TestProcessIncomingMetric(t *testing.T) {
 			So(patternsStorage.metrics.MatchingMetricsReceived.Count(), ShouldEqual, len(matchingMetrics))
 		})
 
-		patternsStorage.metrics = metrics.ConfigureFilterMetrics("test", false)
+		patternsStorage.metrics = metrics.ConfigureFilterMetrics("test")
 		Convey("When timestamp is float64", func() {
 			for _, metric := range matchingMetrics {
 				matchedMetrics := patternsStorage.ProcessIncomingMetric([]byte(metric + " 12 1234567890.0"))
