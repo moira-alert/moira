@@ -60,7 +60,8 @@ type LoggerConfig struct {
 
 // ProfilerConfig is pprof settings structure that initialises at the start of moira
 type ProfilerConfig struct {
-	Listen string `yaml:"listen"` // Define variable as valid non-empty string to enable pprof server. For example ':10000' will enable server available at http://moira.company.com:10000/debug/pprof/
+	Listen  string `yaml:"listen"`  // Define variable as valid non-empty string to enable pprof server. For example ':10000' will enable server available at http://moira.company.com:10000/debug/pprof/
+	Metrics bool   `yaml:"metrics"` // If true, runtime stats will be captured and sent to graphite.
 }
 
 // ReadConfig parses config file by the given path into Moira-used type

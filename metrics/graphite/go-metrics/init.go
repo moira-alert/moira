@@ -19,13 +19,18 @@ func Init(config graphite.Config) error {
 	if config.Enabled {
 		address, err := net.ResolveTCPAddr("tcp", config.URI)
 		if err != nil {
-			return fmt.Errorf("Can not resolve graphiteURI %s: %s", config.URI, err)
+			return fmt.Errorf("can't resolve graphiteURI %s: %s", config.URI, err)
 		}
 		prefix, err := initPrefix(config.Prefix)
 		if err != nil {
-			return fmt.Errorf("Can not get OS hostname %s: %s", config.Prefix, err)
+			return fmt.Errorf("can't get OS hostname %s: %s", config.Prefix, err)
 		}
-
+		if config.Runtime {
+			metrics.RegisterRuntimeMemStats(metrics.DefaultRegistry)
+			metrics.RegisterDebugGCStats(metrics.DefaultRegistry)
+			go metrics.CaptureRuntimeMemStats(metrics.DefaultRegistry, config.Interval)
+			go metrics.CaptureDebugGCStats(metrics.DefaultRegistry, config.Interval)
+		}
 		go goMetricsGraphite.Graphite(metrics.DefaultRegistry, config.Interval, prefix, address)
 		return nil
 	}

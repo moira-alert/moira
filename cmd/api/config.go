@@ -42,6 +42,7 @@ func getDefault() config {
 		},
 		Pprof: cmd.ProfilerConfig{
 			Listen: "",
+			Metrics: false,
 		},
 	}
 }
