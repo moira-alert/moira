@@ -5,12 +5,12 @@ import (
 	"net"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/rcrowley/go-metrics"
 
 	goMetricsGraphite "github.com/cyberdelia/go-metrics-graphite"
 	"github.com/moira-alert/moira/metrics/graphite"
-	"time"
 )
 
 const hostnameTmpl = "{hostname}"
@@ -36,7 +36,7 @@ func Init(config graphite.Config, runtimePrefix string) error {
 }
 
 func initRuntimeMetrics(runtimePrefix string, interval time.Duration, prefix string, address *net.TCPAddr) {
-	runtimeRegistry := metrics.NewPrefixedRegistry(prefixNameWithDot(runtimePrefix))
+	runtimeRegistry := metrics.NewPrefixedRegistry(runtimePrefix)
 	metrics.RegisterRuntimeMemStats(runtimeRegistry)
 	metrics.RegisterDebugGCStats(runtimeRegistry)
 	go metrics.CaptureRuntimeMemStats(runtimeRegistry, interval)
