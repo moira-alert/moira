@@ -121,6 +121,7 @@ func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigg
 	cleanupPatterns := make([]string, 0)
 	if errGetTrigger != database.ErrNil {
 		for _, pattern := range leftJoin(existing.Patterns, trigger.Patterns) {
+			// TODO remove all if remote?
 			c.Send("SREM", patternTriggersKey(pattern), triggerID)
 			cleanupPatterns = append(cleanupPatterns, pattern)
 		}
@@ -137,10 +138,10 @@ func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigg
 	c.Send("SADD", triggersListKey, triggerID)
 	if trigger.IsRemote {
 		c.Send("SADD", remoteTriggersListKey, triggerID)
-	}
-
-	for _, pattern := range trigger.Patterns {
-		c.Send("SADD", patternsListKey, pattern)
+	} else {
+		for _, pattern := range trigger.Patterns {
+			c.Send("SADD", patternsListKey, pattern)
+		}
 	}
 	for _, tag := range trigger.Tags {
 		c.Send("SADD", triggerTagsKey(triggerID), tag)
