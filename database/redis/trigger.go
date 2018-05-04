@@ -140,7 +140,8 @@ func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigg
 		c.Send("SADD", remoteTriggersListKey, triggerID)
 	} else {
 		for _, pattern := range trigger.Patterns {
-			c.Send("SADD", patternsListKey, pattern)
+			c.Do("SADD", patternsListKey, pattern)
+			c.Do("SADD", patternTriggersKey(pattern), triggerID)
 		}
 	}
 	for _, tag := range trigger.Tags {
