@@ -94,7 +94,8 @@ func main() {
 
 	logger.Infof("Start listening by address: [%s]", apiConfig.Listen)
 
-	httpHandler := handler.NewHandler(database, logger, apiConfig, configFile)
+	remoteConfig := config.Remote.GetSettings()
+	httpHandler := handler.NewHandler(database, logger, apiConfig, remoteConfig, configFile)
 	server := &http.Server{
 		Handler: httpHandler,
 	}

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gosexy/to"
+	"github.com/moira-alert/moira/remote"
 	"gopkg.in/yaml.v2"
 
 	"github.com/moira-alert/moira/database/redis"
@@ -63,6 +64,25 @@ type LoggerConfig struct {
 // ProfilerConfig is pprof settings structure that initialises at the start of moira
 type ProfilerConfig struct {
 	Listen string `yaml:"listen"` // Define variable as valid non-empty string to enable pprof server. For example ':10000' will enable server available at http://moira.company.com:10000/debug/pprof/
+}
+
+type RemoteConfig struct {
+	URL           string `yaml:"url"`
+	CheckInterval string `yaml:"check_interval"`
+	Timeout       string `yaml:"timeout"`
+	User          string `yaml:"user"`
+	Password      string `yaml:"password"`
+}
+
+// GetSettings returns redis config parsed from moira config files
+func (config *RemoteConfig) GetSettings() *remote.Config {
+	return &remote.Config{
+		URL:           config.URL,
+		CheckInterval: to.Duration(config.CheckInterval),
+		Timeout:       to.Duration(config.Timeout),
+		User:          config.User,
+		Password:      config.Password,
+	}
 }
 
 // ReadConfig parses config file by the given path into Moira-used type

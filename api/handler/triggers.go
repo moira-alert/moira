@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
+	"github.com/moira-alert/moira/remote"
 
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/controller"
@@ -16,11 +17,14 @@ import (
 	"github.com/moira-alert/moira/target"
 )
 
-func triggers(router chi.Router) {
-	router.Get("/", getAllTriggers)
-	router.Put("/", createTrigger)
-	router.With(middleware.Paginate(0, 10)).Get("/page", getTriggersPage)
-	router.Route("/{triggerId}", trigger)
+func triggers(cfg *remote.Config) func(chi.Router) {
+	return func(router chi.Router) {
+		router.Use(middleware.RemoteConfigContext(cfg))
+		router.Get("/", getAllTriggers)
+		router.Put("/", createTrigger)
+		router.With(middleware.Paginate(0, 10)).Get("/page", getTriggersPage)
+		router.Route("/{triggerId}", trigger)
+	}
 }
 
 func getAllTriggers(writer http.ResponseWriter, request *http.Request) {
