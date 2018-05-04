@@ -5,28 +5,40 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira/checker"
+	"github.com/moira-alert/moira/metrics/graphite"
 )
 
-func (worker *Checker) startTriggerHandler() error {
-	for {
-		triggerID, ok := <-worker.triggersToCheck
-		if !ok {
-			return nil
-		}
-		worker.handleTrigger(triggerID)
+func (worker *Checker) startTriggerHandler(isRemote bool) error {
+	var ch <-chan string
+	if isRemote {
+		ch = worker.remoteTriggersToCheck
+	} else {
+		ch = worker.triggersToCheck
 	}
+	for triggerID := range ch {
+		worker.handleTrigger(triggerID, isRemote)
+	}
+	return nil
 }
 
-func (worker *Checker) handleTrigger(triggerID string) {
+func (worker *Checker) handleTrigger(triggerID string, isRemote bool) {
+	var errorMetric graphite.Meter
+	triggerType := " "
+	if isRemote {
+		errorMetric = worker.Metrics.RemoteHandleError
+		triggerType = " remote"
+	} else {
+		errorMetric = worker.Metrics.HandleError
+	}
 	defer func() {
 		if r := recover(); r != nil {
-			worker.Metrics.HandleError.Mark(1)
-			worker.Logger.Errorf("Panic while handle trigger %s: message: '%s' stack: %s", triggerID, r, debug.Stack())
+			errorMetric.Mark(1)
+			worker.Logger.Errorf("Panic while handle%s trigger %s: message: '%s' stack: %s", triggerType, triggerID, r, debug.Stack())
 		}
 	}()
 	if err := worker.handleTriggerInLock(triggerID); err != nil {
-		worker.Metrics.HandleError.Mark(1)
-		worker.Logger.Errorf("Failed to handle trigger: %s error: %s", triggerID, err.Error())
+		errorMetric.Mark(1)
+		worker.Logger.Errorf("Failed to handle%s trigger: %s error: %s", triggerType, triggerID, err.Error())
 	}
 }
 

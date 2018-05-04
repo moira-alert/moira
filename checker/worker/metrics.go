@@ -41,14 +41,18 @@ func (worker *Checker) handleMetricEvent(pattern string) error {
 			return err
 		}
 	}
-	worker.addTriggerIDsIfNeeded(triggerIds)
+	worker.addTriggerIDsIfNeeded(triggerIds, false)
 	return nil
 }
 
-func (worker *Checker) addTriggerIDsIfNeeded(triggerIDs []string) {
+func (worker *Checker) addTriggerIDsIfNeeded(triggerIDs []string, isRemote bool) {
 	for _, triggerID := range triggerIDs {
 		if worker.needHandleTrigger(triggerID) {
-			worker.triggersToCheck <- triggerID
+			if isRemote {
+				worker.remoteTriggersToCheck <- triggerID
+			} else {
+				worker.triggersToCheck <- triggerID
+			}
 		}
 	}
 }

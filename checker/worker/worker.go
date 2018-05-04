@@ -14,15 +14,16 @@ import (
 
 // Checker represents workers for periodically triggers checking based by new events
 type Checker struct {
-	Logger          moira.Logger
-	Database        moira.Database
-	Config          *checker.Config
-	Metrics         *graphite.CheckerMetrics
-	TriggerCache    *cache.Cache
-	PatternCache    *cache.Cache
-	lastData        int64
-	tomb            tomb.Tomb
-	triggersToCheck chan string
+	Logger                moira.Logger
+	Database              moira.Database
+	Config                *checker.Config
+	Metrics               *graphite.CheckerMetrics
+	TriggerCache          *cache.Cache
+	PatternCache          *cache.Cache
+	lastData              int64
+	tomb                  tomb.Tomb
+	triggersToCheck       chan string
+	remoteTriggersToCheck chan string
 }
 
 // Start start schedule new MetricEvents and check for NODATA triggers
@@ -42,17 +43,29 @@ func (worker *Checker) Start() error {
 	worker.tomb.Go(worker.noDataChecker)
 	worker.Logger.Info("NODATA checker started")
 
-	if worker.Config.Remote.URL == "" {
-		worker.Logger.Info("Remote URL is not set; remote checker disabled")
-	} else {
+	isRemoteEnabled := worker.Config.Remote.URL != ""
+	if isRemoteEnabled {
+		worker.remoteTriggersToCheck = make(chan string, 16384)
 		worker.tomb.Go(worker.remoteChecker)
 		worker.Logger.Info("Remote checker started")
+	} else {
+		worker.Logger.Info("Remote URL is not set; remote checker disabled")
 	}
 
 	worker.Logger.Infof("Start %v parallel checkers", worker.Config.MaxParallelChecks)
 	for i := 0; i < worker.Config.MaxParallelChecks; i++ {
 		worker.tomb.Go(func() error { return worker.metricsChecker(metricEventsChannel) })
-		worker.tomb.Go(worker.startTriggerHandler)
+		worker.tomb.Go(func() error { return worker.startTriggerHandler(false) })
+	}
+
+	if isRemoteEnabled {
+		if worker.Config.MaxParallelRemoteChecks == 0 {
+			return fmt.Errorf("MaxParallelRemoteChecks does not configured, checker does not started")
+		}
+		worker.Logger.Infof("Start %v parallel remote checkers", worker.Config.MaxParallelRemoteChecks)
+		for i := 0; i < worker.Config.MaxParallelRemoteChecks; i++ {
+			worker.tomb.Go(func() error { return worker.startTriggerHandler(true) })
+		}
 	}
 	worker.Logger.Info("Checking new events started")
 
@@ -60,6 +73,7 @@ func (worker *Checker) Start() error {
 		for {
 			<-worker.tomb.Dying()
 			close(worker.triggersToCheck)
+			close(worker.remoteTriggersToCheck)
 			worker.Logger.Info("Checking for new events stopped")
 			return
 		}
@@ -78,6 +92,7 @@ func (worker *Checker) checkTriggersToCheckChannelLen() error {
 			return nil
 		case <-checkTicker.C:
 			worker.Metrics.TriggersToCheckChannelLen.Update(int64(len(worker.triggersToCheck)))
+			worker.Metrics.RemoteTriggersToCheckChannelLen.Update(int64(len(worker.remoteTriggersToCheck)))
 		}
 	}
 }

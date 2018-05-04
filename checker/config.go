@@ -14,6 +14,7 @@ type Config struct {
 	MetricsTTLSeconds           int64
 	StopCheckingIntervalSeconds int64
 	MaxParallelChecks           int
+	MaxParallelRemoteChecks     int
 	LogFile                     string
 	LogLevel                    string
 	Remote                      remote.Config
