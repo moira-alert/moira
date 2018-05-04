@@ -292,7 +292,7 @@ func TestRemoteTrigger(t *testing.T) {
 			So(ids, ShouldResemble, []string{trigger.ID})
 		})
 		Convey("Trigger shouldn't be returned as non-remote", func() {
-			ids, err := dataBase.GetPatternTriggerIDsWithoutRemote(trigger.Patterns[0])
+			ids, err := dataBase.GetPatternTriggerIDs(trigger.Patterns[0])
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{})
 		})
@@ -323,7 +323,7 @@ func TestRemoteTrigger(t *testing.T) {
 			So(ids, ShouldResemble, []string{})
 		})
 		Convey("Trigger shouldn't be returned as non-remote", func() {
-			ids, err := dataBase.GetPatternTriggerIDsWithoutRemote(trigger.Patterns[0])
+			ids, err := dataBase.GetPatternTriggerIDs(trigger.Patterns[0])
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{trigger.ID})
 		})

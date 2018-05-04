@@ -31,7 +31,7 @@ func (worker *Checker) handleMetricEvent(pattern string) error {
 	start := time.Now()
 	defer worker.Metrics.MetricEventsHandleTime.UpdateSince(start)
 	worker.lastData = time.Now().UTC().Unix()
-	triggerIds, err := worker.Database.GetPatternTriggerIDsWithoutRemote(pattern)
+	triggerIds, err := worker.Database.GetPatternTriggerIDs(pattern)
 	if err != nil {
 		return err
 	}

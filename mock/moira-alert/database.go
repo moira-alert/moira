@@ -5,12 +5,11 @@
 package mock_moira_alert
 
 import (
-	reflect "reflect"
-	time "time"
-
 	gomock "github.com/golang/mock/gomock"
 	moira "github.com/moira-alert/moira"
 	tomb_v2 "gopkg.in/tomb.v2"
+	reflect "reflect"
+	time "time"
 )
 
 // MockDatabase is a mock of Database interface
@@ -323,19 +322,6 @@ func (m *MockDatabase) GetPatternTriggerIDs(arg0 string) ([]string, error) {
 // GetPatternTriggerIDs indicates an expected call of GetPatternTriggerIDs
 func (mr *MockDatabaseMockRecorder) GetPatternTriggerIDs(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPatternTriggerIDs", reflect.TypeOf((*MockDatabase)(nil).GetPatternTriggerIDs), arg0)
-}
-
-// GetPatternTriggerIDsWithoutRemote mocks base method
-func (m *MockDatabase) GetPatternTriggerIDsWithoutRemote(arg0 string) ([]string, error) {
-	ret := m.ctrl.Call(m, "GetPatternTriggerIDsWithoutRemote", arg0)
-	ret0, _ := ret[0].([]string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetPatternTriggerIDsWithoutRemote indicates an expected call of GetPatternTriggerIDsWithoutRemote
-func (mr *MockDatabaseMockRecorder) GetPatternTriggerIDsWithoutRemote(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPatternTriggerIDsWithoutRemote", reflect.TypeOf((*MockDatabase)(nil).GetPatternTriggerIDsWithoutRemote), arg0)
 }
 
 // GetPatterns mocks base method

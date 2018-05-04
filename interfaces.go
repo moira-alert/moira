@@ -34,7 +34,6 @@ type Database interface {
 	SaveTrigger(triggerID string, trigger *Trigger) error
 	RemoveTrigger(triggerID string) error
 	GetPatternTriggerIDs(pattern string) ([]string, error)
-	GetPatternTriggerIDsWithoutRemote(pattern string) ([]string, error)
 	RemovePatternTriggerIDs(pattern string) error
 
 	// Throttling

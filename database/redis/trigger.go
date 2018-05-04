@@ -91,20 +91,6 @@ func (connector *DbConnector) GetPatternTriggerIDs(pattern string) ([]string, er
 	return triggerIds, nil
 }
 
-// GetPatternTriggerIDsWithoutRemote gets trigger list by given pattern without remote triggers
-func (connector *DbConnector) GetPatternTriggerIDsWithoutRemote(pattern string) ([]string, error) {
-	c := connector.pool.Get()
-	defer c.Close()
-	s1 := patternTriggersKey(pattern)
-	s2 := patternRemoteTriggersKey(pattern)
-
-	triggerIds, err := redis.Strings(c.Do("SDIFF", s1, s2))
-	if err != nil {
-		return nil, fmt.Errorf("Failed to retrieve pattern triggers (without remote) for pattern: %s, error: %s", pattern, err.Error())
-	}
-	return triggerIds, nil
-}
-
 // RemovePatternTriggerIDs removes all triggerIDs list accepted to given pattern
 func (connector *DbConnector) RemovePatternTriggerIDs(pattern string) error {
 	c := connector.pool.Get()
@@ -136,16 +122,9 @@ func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigg
 	if errGetTrigger != database.ErrNil {
 		for _, pattern := range leftJoin(existing.Patterns, trigger.Patterns) {
 			c.Send("SREM", patternTriggersKey(pattern), triggerID)
-			if existing.IsRemote && trigger.IsRemote {
-				c.Send("SREM", patternRemoteTriggersKey(pattern), triggerID)
-			}
 			cleanupPatterns = append(cleanupPatterns, pattern)
 		}
 		if existing.IsRemote && !trigger.IsRemote {
-			// remove all remote patterns
-			for _, pattern := range existing.Patterns {
-				c.Send("SREM", patternRemoteTriggersKey(pattern), triggerID)
-			}
 			c.Send("SREM", remoteTriggersListKey, triggerID)
 		}
 
@@ -162,10 +141,6 @@ func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigg
 
 	for _, pattern := range trigger.Patterns {
 		c.Send("SADD", patternsListKey, pattern)
-		c.Send("SADD", patternTriggersKey(pattern), triggerID)
-		if trigger.IsRemote {
-			c.Send("SADD", patternRemoteTriggersKey(pattern), triggerID)
-		}
 	}
 	for _, tag := range trigger.Tags {
 		c.Send("SADD", triggerTagsKey(triggerID), tag)
@@ -215,9 +190,6 @@ func (connector *DbConnector) RemoveTrigger(triggerID string) error {
 	}
 	for _, pattern := range trigger.Patterns {
 		c.Send("SREM", patternTriggersKey(pattern), triggerID)
-		if trigger.IsRemote {
-			c.Send("SREM", patternRemoteTriggersKey(pattern), triggerID)
-		}
 	}
 	_, err = c.Do("EXEC")
 	if err != nil {
@@ -333,8 +305,4 @@ func triggerTagsKey(triggerID string) string {
 
 func patternTriggersKey(pattern string) string {
 	return fmt.Sprintf("moira-pattern-triggers:%s", pattern)
-}
-
-func patternRemoteTriggersKey(pattern string) string {
-	return fmt.Sprintf("moira-pattern-remote-triggers:%s", pattern)
 }
