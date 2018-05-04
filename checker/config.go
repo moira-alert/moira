@@ -3,7 +3,7 @@ package checker
 import (
 	"time"
 
-	"github.com/moira-alert/moira/checker/remote"
+	"github.com/moira-alert/moira/remote"
 )
 
 // Config represent checker config

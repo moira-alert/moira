@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/moira-alert/moira/checker/remote"
 	"github.com/moira-alert/moira/expression"
+	"github.com/moira-alert/moira/remote"
 	"github.com/moira-alert/moira/target"
 )
 

@@ -111,7 +111,7 @@ func convertResponse(r []*types.MetricData) []*target.TimeSeries {
 	return ts
 }
 
-// Fetch fetches remote metrics and converts then to expected format
+// Fetch fetches remote metrics and converts them to expected format
 func Fetch(from, until int64, target string, cfg *Config) ([]*target.TimeSeries, error) {
 	req, err := prepareRequest(from, until, target, cfg)
 	if err != nil {
