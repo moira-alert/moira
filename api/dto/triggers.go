@@ -11,6 +11,7 @@ import (
 	"github.com/moira-alert/moira/api/middleware"
 	"github.com/moira-alert/moira/checker"
 	"github.com/moira-alert/moira/expression"
+	"github.com/moira-alert/moira/remote"
 	"github.com/moira-alert/moira/target"
 )
 
@@ -130,19 +131,33 @@ func resolvePatterns(request *http.Request, trigger *Trigger, expressionValues *
 	trigger.Patterns = make([]string, 0)
 	timeSeriesNames := make(map[string]bool)
 
+	remoteCfg := middleware.GetRemoteConfig(request)
+
+	var (
+		timeseries []*target.TimeSeries
+		err        error
+	)
 	for _, tar := range trigger.Targets {
 		database := middleware.GetDatabase(request)
-		result, err := target.EvaluateTarget(database, tar, now-600, now, false)
-		if err != nil {
-			return err
-		}
 
-		trigger.Patterns = append(trigger.Patterns, result.Patterns...)
+		if trigger.IsRemote {
+			timeseries, err = remote.Fetch(now-600, now, tar, remoteCfg)
+			if err != nil {
+				return err
+			}
+		} else {
+			result, err := target.EvaluateTarget(database, tar, now-600, now, false)
+			if err != nil {
+				return err
+			}
+			trigger.Patterns = append(trigger.Patterns, result.Patterns...)
+			timeseries = result.TimeSeries
+		}
 
 		if targetNum == 1 {
 			expressionValues.MainTargetValue = 42
-			for _, timeSeries := range result.TimeSeries {
-				timeSeriesNames[timeSeries.Name] = true
+			for _, ts := range timeseries {
+				timeSeriesNames[ts.Name] = true
 			}
 		} else {
 			targetName := fmt.Sprintf("t%v", targetNum)
