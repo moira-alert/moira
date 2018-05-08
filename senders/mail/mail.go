@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"io"
 	"net/smtp"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -24,6 +25,7 @@ type Sender struct {
 	Password       string
 	Username       string
 	TemplateFile   string
+	TemplateName   string
 	log            moira.Logger
 	Template       *template.Template
 	location       *time.Location
@@ -63,10 +65,19 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 	}
 
 	if sender.TemplateFile == "" {
-		sender.Template = template.Must(template.New("mail").Parse(defaultTemplate))
+		sender.TemplateName = "mail"
+		sender.Template = template.Must(template.New(sender.TemplateName).Parse(defaultTemplate))
 	} else {
 		var err error
-		if sender.Template, err = template.New("mail").ParseFiles(sender.TemplateFile); err != nil {
+
+		sender.TemplateName = filepath.Base(sender.TemplateFile)
+		sender.Template, err = template.New(sender.TemplateName).Funcs(template.FuncMap{
+			"htmlSafe": func(html string) template.HTML {
+				return template.HTML(html)
+			},
+		}).ParseFiles(sender.TemplateFile)
+
+		if err != nil {
 			return err
 		}
 	}
@@ -156,7 +167,7 @@ func (sender *Sender) makeMessage(events moira.NotificationEvents, contact moira
 	m.SetHeader("To", contact.Value)
 	m.SetHeader("Subject", subject)
 	m.AddAlternativeWriter("text/html", func(w io.Writer) error {
-		return sender.Template.Execute(w, templateData)
+		return sender.Template.ExecuteTemplate(w, sender.TemplateName, templateData)
 	})
 
 	return m
