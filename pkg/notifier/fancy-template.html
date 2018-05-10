@@ -190,6 +190,10 @@
                                                     valign="top">
                                                 {{ .Oldstate }}→{{ .State }}
                                                 </td>
+                                                <td style="box-sizing: border-box; font-family: 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 14px; vertical-align: top;"
+                                                    valign="top">
+                                                {{ .Message }}
+                                                </td>
                                             </tr>
                                             {{end}}
                                             </tbody>
@@ -267,6 +271,34 @@
                                         </table>
                                     </td>
                                 </tr>
+                            {{ if .Throttled}}
+                                <tr>
+                                    <td style="box-sizing: border-box; font-family: 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 14px; vertical-align: top;"
+                                        valign="top">
+                                        <table class="notice-wrapper" cellpadding="0" cellspacing="0"
+                                               style="box-sizing: border-box; border-collapse: separate !important; mso-table-lspace: 0; mso-table-rspace: 0; width: 100%;"
+                                               width="100%">
+                                            <tr>
+                                                <td class="notice-spacer"
+                                                    style="box-sizing: border-box; font-family: 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 14px; vertical-align: top; padding: 10px 0;"
+                                                    valign="top">
+                                                    <table class="notice notice-warning " cellpadding="0"
+                                                           cellspacing="0"
+                                                           style="box-sizing: border-box; border-collapse: separate !important; mso-table-lspace: 0; mso-table-rspace: 0; width: 100%;"
+                                                           width="100%">
+                                                        <tr>
+                                                            <td style="box-sizing: border-box; vertical-align: top; font-family: 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 8px 12px; line-height: 1.6; font-size: 14px; background: #f7eed0; border: 1px solid #edd993; border-radius: 6px; color: #9a7d1a; font-weight: 400;"
+                                                                valign="top">Please, fix your system or tune this
+                                                                trigger to generate less events.
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            {{end}}
                             </table>
                         </td>
                     </tr>
