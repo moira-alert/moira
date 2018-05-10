@@ -43,6 +43,16 @@ type templateRow struct {
 	Message    string
 }
 
+type triggerData struct {
+	Link         string
+	Description  template.HTML
+	Throttled    bool
+	TriggerName  string
+	Tags         string
+	TriggerState string
+	Items        []*templateRow
+}
+
 // Init read yaml config
 func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	sender.setLogger(logger)
@@ -131,15 +141,7 @@ func (sender *Sender) makeMessage(events moira.NotificationEvents, contact moira
 
 	subject := fmt.Sprintf("%s %s %s (%d)", state, trigger.Name, tags, len(events))
 
-	templateData := struct {
-		Link         string
-		Description  template.HTML
-		Throttled    bool
-		TriggerName  string
-		Tags         string
-		TriggerState string
-		Items        []*templateRow
-	}{
+	templateData := triggerData{
 		Link:         fmt.Sprintf("%s/trigger/%s", sender.FrontURI, events[0].TriggerID),
 		Description:  formatDescription(trigger.Desc),
 		Throttled:    throttled,
