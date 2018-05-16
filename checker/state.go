@@ -16,3 +16,10 @@ func toMetricState(state string) string {
 	}
 	return state
 }
+
+func toTriggerState(state string) string {
+	if state == DEL {
+		return OK
+	}
+	return state
+}
