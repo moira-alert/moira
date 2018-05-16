@@ -44,7 +44,7 @@ func saveTrigger(dataBase moira.Database, trigger *moira.Trigger, triggerID stri
 	} else {
 		lastCheck = moira.CheckData{
 			Metrics: make(map[string]moira.MetricState),
-			State:   checker.OK,
+			State:   checker.ToTriggerState(*trigger.TTLState),
 		}
 		lastCheck.UpdateScore()
 	}

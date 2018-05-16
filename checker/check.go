@@ -148,7 +148,7 @@ func (triggerChecker *TriggerChecker) handleErrorCheck(checkData moira.CheckData
 	case ErrTriggerHasOnlyWildcards:
 		triggerChecker.Logger.Debugf("Trigger %s: %s", triggerChecker.TriggerID, checkingError.Error())
 		if len(checkData.Metrics) == 0 {
-			checkData.State = toTriggerState(triggerChecker.ttlState)
+			checkData.State = ToTriggerState(triggerChecker.ttlState)
 			checkData.Message = checkingError.Error()
 			if triggerChecker.ttl == 0 || triggerChecker.ttlState == DEL {
 				return checkData, nil

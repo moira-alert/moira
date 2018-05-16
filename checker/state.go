@@ -17,7 +17,8 @@ func toMetricState(state string) string {
 	return state
 }
 
-func toTriggerState(state string) string {
+// ToTriggerState is an auxiliary function to handle trigger state properly.
+func ToTriggerState(state string) string {
 	if state == DEL {
 		return OK
 	}
