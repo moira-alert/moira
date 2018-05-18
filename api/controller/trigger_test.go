@@ -151,6 +151,113 @@ func TestSaveTrigger(t *testing.T) {
 	})
 }
 
+func TestVariousTtlState(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+
+	var ttlState, actualTtlState string
+
+	beginning := time.Unix(0, 0)
+	triggerID := uuid.NewV4().String()
+	trigger := moira.Trigger{ID: triggerID, TTLState: &ttlState}
+	triggerModel := dto.TriggerModel{ID: triggerID, TTLState: &actualTtlState}
+
+	Convey("Various TTLState", t, func() {
+		Convey("NODATA TTLState", func() {
+			ttlState = checker.NODATA
+			actualTtlState = checker.NODATA
+			dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10)
+			dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
+			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
+			dataBase.EXPECT().SetTriggerLastCheck(triggerID, gomock.Any()).Return(nil)
+			dataBase.EXPECT().SaveTrigger(triggerID, &trigger).Return(nil)
+			resp, err := saveTrigger(dataBase, &trigger, triggerID, make(map[string]bool))
+			So(err, ShouldBeNil)
+			So(resp, ShouldResemble, &dto.SaveTriggerResponse{ID: triggerID, Message: "trigger updated"})
+
+			dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
+			dataBase.EXPECT().GetTriggerThrottling(triggerID).Return(beginning, beginning)
+			actual, err := GetTrigger(dataBase, triggerID)
+			So(err, ShouldBeNil)
+			So(actual, ShouldResemble, &dto.Trigger{TriggerModel: triggerModel})
+		})
+		Convey("ERROR TTLState", func() {
+			ttlState = checker.ERROR
+			actualTtlState = checker.ERROR
+			dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10)
+			dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
+			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
+			dataBase.EXPECT().SetTriggerLastCheck(triggerID, gomock.Any()).Return(nil)
+			dataBase.EXPECT().SaveTrigger(triggerID, &trigger).Return(nil)
+			resp, err := saveTrigger(dataBase, &trigger, triggerID, make(map[string]bool))
+			So(err, ShouldBeNil)
+			So(resp, ShouldResemble, &dto.SaveTriggerResponse{ID: triggerID, Message: "trigger updated"})
+
+			dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
+			dataBase.EXPECT().GetTriggerThrottling(triggerID).Return(beginning, beginning)
+			actual, err := GetTrigger(dataBase, triggerID)
+			So(err, ShouldBeNil)
+			So(actual, ShouldResemble, &dto.Trigger{TriggerModel: triggerModel, Throttling: 0})
+		})
+		Convey("WARNING TTLState", func() {
+			ttlState = checker.WARN
+			actualTtlState = checker.WARN
+			dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10)
+			dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
+			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
+			dataBase.EXPECT().SetTriggerLastCheck(triggerID, gomock.Any()).Return(nil)
+			dataBase.EXPECT().SaveTrigger(triggerID, &trigger).Return(nil)
+			resp, err := saveTrigger(dataBase, &trigger, triggerID, make(map[string]bool))
+			So(err, ShouldBeNil)
+			So(resp, ShouldResemble, &dto.SaveTriggerResponse{ID: triggerID, Message: "trigger updated"})
+
+			dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
+			dataBase.EXPECT().GetTriggerThrottling(triggerID).Return(beginning, beginning)
+			actual, err := GetTrigger(dataBase, triggerID)
+			So(err, ShouldBeNil)
+			So(actual, ShouldResemble, &dto.Trigger{TriggerModel: triggerModel, Throttling: 0})
+		})
+		Convey("OK TTLState", func() {
+			ttlState = checker.OK
+			actualTtlState = checker.OK
+			dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10)
+			dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
+			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
+			dataBase.EXPECT().SetTriggerLastCheck(triggerID, gomock.Any()).Return(nil)
+			dataBase.EXPECT().SaveTrigger(triggerID, &trigger).Return(nil)
+			resp, err := saveTrigger(dataBase, &trigger, triggerID, make(map[string]bool))
+			So(err, ShouldBeNil)
+			So(resp, ShouldResemble, &dto.SaveTriggerResponse{ID: triggerID, Message: "trigger updated"})
+
+			dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
+			dataBase.EXPECT().GetTriggerThrottling(triggerID).Return(beginning, beginning)
+			actual, err := GetTrigger(dataBase, triggerID)
+			So(err, ShouldBeNil)
+			So(actual, ShouldResemble, &dto.Trigger{TriggerModel: triggerModel, Throttling: 0})
+
+		})
+		Convey("DEL TTLState", func() {
+			ttlState = checker.DEL
+			actualTtlState = checker.OK
+			dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10)
+			dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
+			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
+			dataBase.EXPECT().SetTriggerLastCheck(triggerID, gomock.Any()).Return(nil)
+			dataBase.EXPECT().SaveTrigger(triggerID, &trigger).Return(nil)
+			resp, err := saveTrigger(dataBase, &trigger, triggerID, make(map[string]bool))
+			So(err, ShouldBeNil)
+			So(resp, ShouldResemble, &dto.SaveTriggerResponse{ID: triggerID, Message: "trigger updated"})
+
+			dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
+			dataBase.EXPECT().GetTriggerThrottling(triggerID).Return(beginning, beginning)
+			actual, err := GetTrigger(dataBase, triggerID)
+			So(err, ShouldBeNil)
+			So(actual, ShouldResemble, &dto.Trigger{TriggerModel: triggerModel, Throttling: 0})
+		})
+	})
+}
+
 func TestGetTrigger(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
