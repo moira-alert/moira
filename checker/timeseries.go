@@ -8,7 +8,9 @@ import (
 	"github.com/moira-alert/moira/target"
 )
 
-type triggerTimeSeries struct {
+// TriggerTimeSeries represent collection of Main target timeseries
+// and collection of additions targets timeseries
+type TriggerTimeSeries struct {
 	Main       []*target.TimeSeries
 	Additional []*target.TimeSeries
 }
@@ -21,8 +23,8 @@ func (err ErrWrongTriggerTarget) Error() string {
 	return fmt.Sprintf("Target t%v has more than one timeseries", int(err))
 }
 
-func (triggerChecker *TriggerChecker) getTimeSeries(from, until int64) (*triggerTimeSeries, []string, error) {
-	triggerTimeSeries := &triggerTimeSeries{
+func (triggerChecker *TriggerChecker) getTimeSeries(from, until int64) (*TriggerTimeSeries, []string, error) {
+	triggerTimeSeries := &TriggerTimeSeries{
 		Main:       make([]*target.TimeSeries, 0),
 		Additional: make([]*target.TimeSeries, 0),
 	}
@@ -57,15 +59,15 @@ func (triggerChecker *TriggerChecker) getTimeSeries(from, until int64) (*trigger
 	return triggerTimeSeries, metricsArr, nil
 }
 
-func (*triggerTimeSeries) getMainTargetName() string {
+func (*TriggerTimeSeries) getMainTargetName() string {
 	return "t1"
 }
 
-func (*triggerTimeSeries) getAdditionalTargetName(targetIndex int) string {
+func (*TriggerTimeSeries) getAdditionalTargetName(targetIndex int) string {
 	return fmt.Sprintf("t%v", targetIndex+2)
 }
 
-func (triggerTimeSeries *triggerTimeSeries) getExpressionValues(firstTargetTimeSeries *target.TimeSeries, valueTimestamp int64) (*expression.TriggerExpression, bool) {
+func (triggerTimeSeries *TriggerTimeSeries) getExpressionValues(firstTargetTimeSeries *target.TimeSeries, valueTimestamp int64) (*expression.TriggerExpression, bool) {
 	expressionValues := &expression.TriggerExpression{
 		AdditionalTargetsValues: make(map[string]float64, len(triggerTimeSeries.Additional)),
 	}
@@ -101,7 +103,7 @@ func IsInvalidValue(val float64) bool {
 }
 
 // hasOnlyWildcards checks given targetTimeSeries for only wildcards
-func (triggerTimeSeries *triggerTimeSeries) hasOnlyWildcards() bool {
+func (triggerTimeSeries *TriggerTimeSeries) hasOnlyWildcards() bool {
 	for _, timeSeries := range triggerTimeSeries.Main {
 		if !timeSeries.Wildcard {
 			return false

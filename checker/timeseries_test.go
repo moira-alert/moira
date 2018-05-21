@@ -104,7 +104,7 @@ func TestGetTimeSeries(t *testing.T) {
 				}},
 				Wildcard: true,
 			}
-			expected := &triggerTimeSeries{
+			expected := &TriggerTimeSeries{
 				Main:       []*target.TimeSeries{&timeSeries},
 				Additional: make([]*target.TimeSeries, 0),
 			}
@@ -128,7 +128,7 @@ func TestGetTimeSeries(t *testing.T) {
 				Values:    []float64{0, 1, 2, 3, 4},
 				IsAbsent:  make([]bool, 5),
 			}
-			expected := &triggerTimeSeries{
+			expected := &TriggerTimeSeries{
 				Main:       []*target.TimeSeries{{MetricData: types.MetricData{FetchResponse: fetchResponse}}},
 				Additional: make([]*target.TimeSeries, 0),
 			}
@@ -161,7 +161,7 @@ func TestGetTimeSeries(t *testing.T) {
 			}
 			addFetchResponse := fetchResponse
 			addFetchResponse.Name = addMetric
-			expected := &triggerTimeSeries{
+			expected := &TriggerTimeSeries{
 				Main:       []*target.TimeSeries{{MetricData: types.MetricData{FetchResponse: fetchResponse}}},
 				Additional: []*target.TimeSeries{{MetricData: types.MetricData{FetchResponse: addFetchResponse}}},
 			}
@@ -193,7 +193,7 @@ func TestGetTimeSeries(t *testing.T) {
 }
 
 func TestGetTargetName(t *testing.T) {
-	tts := triggerTimeSeries{}
+	tts := TriggerTimeSeries{}
 
 	Convey("GetMainTargetName", t, func() {
 		So(tts.getMainTargetName(), ShouldResemble, "t1")
@@ -219,7 +219,7 @@ func TestGetExpressionValues(t *testing.T) {
 		timeSeries := target.TimeSeries{
 			MetricData: types.MetricData{FetchResponse: fetchResponse},
 		}
-		tts := &triggerTimeSeries{
+		tts := &TriggerTimeSeries{
 			Main: []*target.TimeSeries{&timeSeries},
 		}
 		expectedExpressionValues := &expression.TriggerExpression{
@@ -271,7 +271,7 @@ func TestGetExpressionValues(t *testing.T) {
 		timeSeriesAdd := target.TimeSeries{
 			MetricData: types.MetricData{FetchResponse: fetchResponseAdd},
 		}
-		tts := &triggerTimeSeries{
+		tts := &TriggerTimeSeries{
 			Main:       []*target.TimeSeries{&timeSeries},
 			Additional: []*target.TimeSeries{&timeSeriesAdd},
 		}
@@ -307,36 +307,36 @@ func TestGetExpressionValues(t *testing.T) {
 
 func TestTriggerTimeSeriesHasOnlyWildcards(t *testing.T) {
 	Convey("Main timeseries has wildcards only", t, func() {
-		tts := triggerTimeSeries{
+		tts := TriggerTimeSeries{
 			Main: []*target.TimeSeries{{Wildcard: true}},
 		}
 		So(tts.hasOnlyWildcards(), ShouldBeTrue)
 
-		tts1 := triggerTimeSeries{
+		tts1 := TriggerTimeSeries{
 			Main: []*target.TimeSeries{{Wildcard: true}, {Wildcard: true}},
 		}
 		So(tts1.hasOnlyWildcards(), ShouldBeTrue)
 	})
 
 	Convey("Main timeseries has not only wildcards", t, func() {
-		tts := triggerTimeSeries{
+		tts := TriggerTimeSeries{
 			Main: []*target.TimeSeries{{Wildcard: false}},
 		}
 		So(tts.hasOnlyWildcards(), ShouldBeFalse)
 
-		tts1 := triggerTimeSeries{
+		tts1 := TriggerTimeSeries{
 			Main: []*target.TimeSeries{{Wildcard: false}, {Wildcard: true}},
 		}
 		So(tts1.hasOnlyWildcards(), ShouldBeFalse)
 
-		tts2 := triggerTimeSeries{
+		tts2 := TriggerTimeSeries{
 			Main: []*target.TimeSeries{{Wildcard: false}, {Wildcard: false}},
 		}
 		So(tts2.hasOnlyWildcards(), ShouldBeFalse)
 	})
 
 	Convey("Additional timeseries has wildcards but Main not", t, func() {
-		tts := triggerTimeSeries{
+		tts := TriggerTimeSeries{
 			Main:       []*target.TimeSeries{{Wildcard: false}},
 			Additional: []*target.TimeSeries{{Wildcard: true}, {Wildcard: true}},
 		}

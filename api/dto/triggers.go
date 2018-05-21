@@ -198,7 +198,10 @@ func (*SaveTriggerResponse) Render(w http.ResponseWriter, r *http.Request) error
 	return nil
 }
 
-type TriggerMetrics map[string][]moira.MetricValue
+type TriggerMetrics struct {
+	Main       map[string][]*moira.MetricValue `json:"main"`
+	Additional map[string][]*moira.MetricValue `json:"additional,omitempty"`
+}
 
 func (*TriggerMetrics) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil

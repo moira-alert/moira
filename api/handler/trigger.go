@@ -3,11 +3,9 @@ package handler
 import (
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
-	"github.com/go-graphite/carbonapi/date"
 
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/controller"
@@ -27,11 +25,9 @@ func trigger(router chi.Router) {
 		router.Get("/", getTriggerThrottling)
 		router.Delete("/", deleteThrottling)
 	})
-	router.Route("/metrics", func(router chi.Router) {
-		router.With(middleware.DateRange("-10minutes", "now")).Get("/", getTriggerMetrics)
-		router.Delete("/", deleteTriggerMetric)
-	})
+	router.Route("/metrics", triggerMetrics)
 	router.Put("/maintenance", setMetricsMaintenance)
+	router.With(middleware.DateRange("-1hour", "now")).Get("/render", renderTrigger)
 }
 
 func updateTrigger(writer http.ResponseWriter, request *http.Request) {
@@ -113,38 +109,6 @@ func deleteThrottling(writer http.ResponseWriter, request *http.Request) {
 	triggerID := middleware.GetTriggerID(request)
 	err := controller.DeleteTriggerThrottling(database, triggerID)
 	if err != nil {
-		render.Render(writer, request, err)
-	}
-}
-
-func getTriggerMetrics(writer http.ResponseWriter, request *http.Request) {
-	triggerID := middleware.GetTriggerID(request)
-	fromStr := middleware.GetFromStr(request)
-	toStr := middleware.GetToStr(request)
-	from := date.DateParamToEpoch(fromStr, "UTC", 0, time.UTC)
-	if from == 0 {
-		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("Can not parse from: %s", fromStr)))
-		return
-	}
-	to := date.DateParamToEpoch(toStr, "UTC", 0, time.UTC)
-	if to == 0 {
-		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("Can not parse to: %v", to)))
-		return
-	}
-	triggerMetrics, err := controller.GetTriggerMetrics(database, int64(from), int64(to), triggerID)
-	if err != nil {
-		render.Render(writer, request, err)
-		return
-	}
-	if err := render.Render(writer, request, &triggerMetrics); err != nil {
-		render.Render(writer, request, api.ErrorRender(err))
-	}
-}
-
-func deleteTriggerMetric(writer http.ResponseWriter, request *http.Request) {
-	triggerID := middleware.GetTriggerID(request)
-	metricName := request.URL.Query().Get("name")
-	if err := controller.DeleteTriggerMetric(database, metricName, triggerID); err != nil {
 		render.Render(writer, request, err)
 	}
 }

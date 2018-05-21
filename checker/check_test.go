@@ -54,7 +54,7 @@ func TestGetTimeSeriesState(t *testing.T) {
 		IsAbsent:  []bool{false, false, false, false, false},
 	}
 	addFetchResponse.Name = "additional.metric"
-	tts := &triggerTimeSeries{
+	tts := &TriggerTimeSeries{
 		Main: []*target.TimeSeries{{
 			MetricData: types.MetricData{FetchResponse: fetchResponse},
 		}},
@@ -154,7 +154,7 @@ func TestGetTimeSeriesStepsStates(t *testing.T) {
 		IsAbsent:  []bool{false, false, false, false, false},
 	}
 	addFetchResponse.Name = "additional.metric"
-	tts := &triggerTimeSeries{
+	tts := &TriggerTimeSeries{
 		Main:       []*target.TimeSeries{{MetricData: types.MetricData{FetchResponse: fetchResponse1}}, {MetricData: types.MetricData{FetchResponse: fetchResponse2}}},
 		Additional: []*target.TimeSeries{{MetricData: types.MetricData{FetchResponse: addFetchResponse}}},
 	}
