@@ -1119,6 +1119,42 @@
 			"revisionTime": "2018-03-11T10:03:28Z"
 		},
 		{
+			"checksumSHA1": "XROO0YZpTusm1g/KXdGUhxNg88I=",
+			"path": "github.com/wcharczuk/go-chart",
+			"revision": "9e3a080aa3e7573281cf8d65a55305e1148d857d",
+			"revisionTime": "2018-04-15T23:53:01Z"
+		},
+		{
+			"checksumSHA1": "ju/iUyjLnQV0xAWEbDqFkXBwaAc=",
+			"path": "github.com/wcharczuk/go-chart/drawing",
+			"revision": "9e3a080aa3e7573281cf8d65a55305e1148d857d",
+			"revisionTime": "2018-04-15T23:53:01Z"
+		},
+		{
+			"checksumSHA1": "COlkHTg3E116nTgtKC5Ddt2M1Mg=",
+			"path": "github.com/wcharczuk/go-chart/matrix",
+			"revision": "9e3a080aa3e7573281cf8d65a55305e1148d857d",
+			"revisionTime": "2018-04-15T23:53:01Z"
+		},
+		{
+			"checksumSHA1": "IB7sLgN3No7pMzxfMetpsWf+zGo=",
+			"path": "github.com/wcharczuk/go-chart/roboto",
+			"revision": "9e3a080aa3e7573281cf8d65a55305e1148d857d",
+			"revisionTime": "2018-04-15T23:53:01Z"
+		},
+		{
+			"checksumSHA1": "ifsgxMsndB4Wd7+V8XFIhWWiO7Y=",
+			"path": "github.com/wcharczuk/go-chart/seq",
+			"revision": "9e3a080aa3e7573281cf8d65a55305e1148d857d",
+			"revisionTime": "2018-04-15T23:53:01Z"
+		},
+		{
+			"checksumSHA1": "adpk+RdamQ1K4qIIwMuxhm6Xwyw=",
+			"path": "github.com/wcharczuk/go-chart/util",
+			"revision": "9e3a080aa3e7573281cf8d65a55305e1148d857d",
+			"revisionTime": "2018-04-15T23:53:01Z"
+		},
+		{
 			"checksumSHA1": "HedK9m8E8iyib4bIBtIX7xprOgo=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/go.uber.org/atomic",
 			"path": "go.uber.org/atomic",

@@ -157,14 +157,14 @@ func TestGetTrigger(t *testing.T) {
 	triggerID := uuid.NewV4().String()
 	triggerModel := dto.TriggerModel{ID: triggerID}
 	trigger := *(triggerModel.ToMoiraTrigger())
-	begging := time.Unix(0, 0)
+	beginning := time.Unix(0, 0)
 	now := time.Now()
 	tomorrow := now.Add(time.Hour * 24)
 	yesterday := now.Add(-time.Hour * 24)
 
 	Convey("Has trigger no throttling", t, func() {
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
-		dataBase.EXPECT().GetTriggerThrottling(triggerID).Return(begging, begging)
+		dataBase.EXPECT().GetTriggerThrottling(triggerID).Return(beginning, beginning)
 		actual, err := GetTrigger(dataBase, triggerID)
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, &dto.Trigger{TriggerModel: triggerModel, Throttling: 0})
@@ -172,7 +172,7 @@ func TestGetTrigger(t *testing.T) {
 
 	Convey("Has trigger has throttling", t, func() {
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
-		dataBase.EXPECT().GetTriggerThrottling(triggerID).Return(tomorrow, begging)
+		dataBase.EXPECT().GetTriggerThrottling(triggerID).Return(tomorrow, beginning)
 		actual, err := GetTrigger(dataBase, triggerID)
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, &dto.Trigger{TriggerModel: triggerModel, Throttling: tomorrow.Unix()})
@@ -180,7 +180,7 @@ func TestGetTrigger(t *testing.T) {
 
 	Convey("Has trigger has old throttling", t, func() {
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
-		dataBase.EXPECT().GetTriggerThrottling(triggerID).Return(yesterday, begging)
+		dataBase.EXPECT().GetTriggerThrottling(triggerID).Return(yesterday, beginning)
 		actual, err := GetTrigger(dataBase, triggerID)
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, &dto.Trigger{TriggerModel: triggerModel, Throttling: 0})

@@ -7,10 +7,13 @@ import (
 
 	"github.com/go-chi/render"
 	"github.com/go-graphite/carbonapi/date"
-	"github.com/go-graphite/carbonapi/expr"
+	"github.com/go-graphite/carbonapi/expr/types"
+	"github.com/wcharczuk/go-chart"
+
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/controller"
 	"github.com/moira-alert/moira/api/middleware"
+	"github.com/moira-alert/moira/plotting"
 )
 
 type metricFormat int
@@ -47,26 +50,22 @@ func renderTrigger(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	var metricsData = make([]*expr.MetricData, 0, len(tts.Main)+len(tts.Additional))
+	var metricsData = make([]*types.MetricData, 0, len(tts.Main)+len(tts.Additional))
 	for _, ts := range tts.Main {
 		metricsData = append(metricsData, &ts.MetricData)
 	}
 
 	switch format {
 	case JSON:
-		json := expr.MarshalJSON(metricsData)
+		json := types.MarshalJSON(metricsData)
 		writer.Header().Set("Content-Type", "application/json")
 		writer.Write(json)
 	case PNG:
-		params := getPictureParams()
-		params.Title = trigger.Name
-		png := expr.MarshalPNG(params, metricsData)
+		font, _ := plotting.GetDefaultFont()
+		plot := plotting.FromParams(trigger.Name, plotting.DarkTheme, nil, trigger.WarnValue, trigger.ErrorValue)
+		renderable := plot.GetRenderable(metricsData, font)
 		writer.Header().Set("Content-Type", "image/png")
-		writer.Write(png)
-	case PNGr:
-		png := expr.MarshalPNGRequest(request, metricsData)
-		writer.Header().Set("Content-Type", "image/png")
-		writer.Write(png)
+		renderable.Render(chart.PNG, writer)
 	default:
 		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("inexpected metrics format")))
 	}
@@ -82,20 +81,7 @@ func getMetricFormat(request *http.Request) (metricFormat, error) {
 		return JSON, nil
 	case "png":
 		return PNG, nil
-	case "pngr":
-		return PNGr, nil
 	default:
 		return JSON, fmt.Errorf("invalid format type: %s", format)
 	}
-}
-
-func getPictureParams() expr.PictureParams {
-	params := expr.DefaultParams
-	params.Width = 586
-	params.Height = 380
-	params.LeftWidth = 2
-	params.BgColor = "1f1d1d"
-	params.MinorGridLineColor = "1f1d1d"
-	params.MajorGridLineColor = "grey"
-	return params
 }
