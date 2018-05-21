@@ -170,81 +170,76 @@ func TestVariousTtlState(t *testing.T) {
 		Convey("NODATA TTLState", func() {
 			ttlState = checker.NODATA
 			lastCheck.State = checker.NODATA
-			actualLastCheck := lastCheck
+			lastCheck.Score = 1000
 
 			dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10)
 			dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
-			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(actualLastCheck, database.ErrNil)
-			dataBase.EXPECT().SetTriggerLastCheck(triggerID, gomock.Any()).Return(nil)
+			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
+			dataBase.EXPECT().SetTriggerLastCheck(triggerID, &lastCheck).Return(nil)
 			dataBase.EXPECT().SaveTrigger(triggerID, &trigger).Return(nil)
 			resp, err := saveTrigger(dataBase, &trigger, triggerID, make(map[string]bool))
 			So(err, ShouldBeNil)
 			So(resp, ShouldResemble, &dto.SaveTriggerResponse{ID: triggerID, Message: "trigger updated"})
-			So(actualLastCheck, ShouldResemble, lastCheck)
 		})
 
 		Convey("ERROR TTLState", func() {
 			ttlState = checker.ERROR
 			lastCheck.State = checker.ERROR
-			actualLastCheck := lastCheck
+			lastCheck.Score = 100
 
 			dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10)
 			dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
-			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(actualLastCheck, database.ErrNil)
-			dataBase.EXPECT().SetTriggerLastCheck(triggerID, gomock.Any()).Return(nil)
+			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
+			dataBase.EXPECT().SetTriggerLastCheck(triggerID, &lastCheck).Return(nil)
 			dataBase.EXPECT().SaveTrigger(triggerID, &trigger).Return(nil)
 			resp, err := saveTrigger(dataBase, &trigger, triggerID, make(map[string]bool))
 			So(err, ShouldBeNil)
 			So(resp, ShouldResemble, &dto.SaveTriggerResponse{ID: triggerID, Message: "trigger updated"})
-			So(actualLastCheck, ShouldResemble, lastCheck)
 		})
 
 		Convey("WARN TTLState", func() {
 			ttlState = checker.WARN
 			lastCheck.State = checker.WARN
-			actualLastCheck := lastCheck
+			lastCheck.Score = 1
 
 			dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10)
 			dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
-			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(actualLastCheck, database.ErrNil)
-			dataBase.EXPECT().SetTriggerLastCheck(triggerID, gomock.Any()).Return(nil)
+			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
+			dataBase.EXPECT().SetTriggerLastCheck(triggerID, &lastCheck).Return(nil)
 			dataBase.EXPECT().SaveTrigger(triggerID, &trigger).Return(nil)
 			resp, err := saveTrigger(dataBase, &trigger, triggerID, make(map[string]bool))
 			So(err, ShouldBeNil)
 			So(resp, ShouldResemble, &dto.SaveTriggerResponse{ID: triggerID, Message: "trigger updated"})
-			So(actualLastCheck, ShouldResemble, lastCheck)
 		})
 
 		Convey("OK TTLState", func() {
 			ttlState = checker.OK
 			lastCheck.State = checker.OK
-			actualLastCheck := lastCheck
+			lastCheck.Score = 0
 
 			dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10)
 			dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
-			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(actualLastCheck, database.ErrNil)
-			dataBase.EXPECT().SetTriggerLastCheck(triggerID, gomock.Any()).Return(nil)
+			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
+			dataBase.EXPECT().SetTriggerLastCheck(triggerID, &lastCheck).Return(nil)
 			dataBase.EXPECT().SaveTrigger(triggerID, &trigger).Return(nil)
 			resp, err := saveTrigger(dataBase, &trigger, triggerID, make(map[string]bool))
 			So(err, ShouldBeNil)
 			So(resp, ShouldResemble, &dto.SaveTriggerResponse{ID: triggerID, Message: "trigger updated"})
-			So(actualLastCheck, ShouldResemble, lastCheck)
 		})
 
 		Convey("DEL TTLState", func() {
 			ttlState = checker.DEL
 			lastCheck.State = checker.OK
-			actualLastCheck := lastCheck
+			lastCheck.Score = 0
 
 			dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10)
 			dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
-			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(actualLastCheck, database.ErrNil)
-			dataBase.EXPECT().SetTriggerLastCheck(triggerID, gomock.Any()).Return(nil)
+			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
+			dataBase.EXPECT().SetTriggerLastCheck(triggerID, &lastCheck).Return(nil)
 			dataBase.EXPECT().SaveTrigger(triggerID, &trigger).Return(nil)
 			resp, err := saveTrigger(dataBase, &trigger, triggerID, make(map[string]bool))
 			So(err, ShouldBeNil)
 			So(resp, ShouldResemble, &dto.SaveTriggerResponse{ID: triggerID, Message: "trigger updated"})
-			So(actualLastCheck, ShouldResemble, lastCheck)
 		})
 	})
 }
