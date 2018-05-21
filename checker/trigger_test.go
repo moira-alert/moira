@@ -2,13 +2,14 @@ package checker
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/mock/moira-alert"
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
-	"testing"
 )
 
 func TestInitTriggerChecker(t *testing.T) {

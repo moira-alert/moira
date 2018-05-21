@@ -2,16 +2,18 @@ package controller
 
 import (
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
+	"github.com/moira-alert/moira/checker"
 	"github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/mock/moira-alert"
 	"github.com/satori/go.uuid"
 	. "github.com/smartystreets/goconvey/convey"
-	"testing"
-	"time"
 )
 
 func TestUpdateTrigger(t *testing.T) {
@@ -149,6 +151,99 @@ func TestSaveTrigger(t *testing.T) {
 	})
 }
 
+func TestVariousTtlState(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+
+	var ttlState string
+
+	triggerID := uuid.NewV4().String()
+	trigger := moira.Trigger{ID: triggerID, TTLState: &ttlState}
+	lastCheck := moira.CheckData{
+		Metrics: make(map[string]moira.MetricState),
+		State:   checker.NODATA,
+		Score:   1000,
+	}
+
+	Convey("Various TTLState", t, func() {
+		Convey("NODATA TTLState", func() {
+			ttlState = checker.NODATA
+			lastCheck.State = checker.NODATA
+			lastCheck.Score = 1000
+
+			dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10)
+			dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
+			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
+			dataBase.EXPECT().SetTriggerLastCheck(triggerID, &lastCheck).Return(nil)
+			dataBase.EXPECT().SaveTrigger(triggerID, &trigger).Return(nil)
+			resp, err := saveTrigger(dataBase, &trigger, triggerID, make(map[string]bool))
+			So(err, ShouldBeNil)
+			So(resp, ShouldResemble, &dto.SaveTriggerResponse{ID: triggerID, Message: "trigger updated"})
+		})
+
+		Convey("ERROR TTLState", func() {
+			ttlState = checker.ERROR
+			lastCheck.State = checker.ERROR
+			lastCheck.Score = 100
+
+			dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10)
+			dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
+			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
+			dataBase.EXPECT().SetTriggerLastCheck(triggerID, &lastCheck).Return(nil)
+			dataBase.EXPECT().SaveTrigger(triggerID, &trigger).Return(nil)
+			resp, err := saveTrigger(dataBase, &trigger, triggerID, make(map[string]bool))
+			So(err, ShouldBeNil)
+			So(resp, ShouldResemble, &dto.SaveTriggerResponse{ID: triggerID, Message: "trigger updated"})
+		})
+
+		Convey("WARN TTLState", func() {
+			ttlState = checker.WARN
+			lastCheck.State = checker.WARN
+			lastCheck.Score = 1
+
+			dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10)
+			dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
+			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
+			dataBase.EXPECT().SetTriggerLastCheck(triggerID, &lastCheck).Return(nil)
+			dataBase.EXPECT().SaveTrigger(triggerID, &trigger).Return(nil)
+			resp, err := saveTrigger(dataBase, &trigger, triggerID, make(map[string]bool))
+			So(err, ShouldBeNil)
+			So(resp, ShouldResemble, &dto.SaveTriggerResponse{ID: triggerID, Message: "trigger updated"})
+		})
+
+		Convey("OK TTLState", func() {
+			ttlState = checker.OK
+			lastCheck.State = checker.OK
+			lastCheck.Score = 0
+
+			dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10)
+			dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
+			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
+			dataBase.EXPECT().SetTriggerLastCheck(triggerID, &lastCheck).Return(nil)
+			dataBase.EXPECT().SaveTrigger(triggerID, &trigger).Return(nil)
+			resp, err := saveTrigger(dataBase, &trigger, triggerID, make(map[string]bool))
+			So(err, ShouldBeNil)
+			So(resp, ShouldResemble, &dto.SaveTriggerResponse{ID: triggerID, Message: "trigger updated"})
+		})
+
+		Convey("DEL TTLState", func() {
+			ttlState = checker.DEL
+			lastCheck.State = checker.OK
+			lastCheck.Score = 0
+
+			dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10)
+			dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
+			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
+			dataBase.EXPECT().SetTriggerLastCheck(triggerID, &lastCheck).Return(nil)
+			dataBase.EXPECT().SaveTrigger(triggerID, &trigger).Return(nil)
+			resp, err := saveTrigger(dataBase, &trigger, triggerID, make(map[string]bool))
+			So(err, ShouldBeNil)
+			So(resp, ShouldResemble, &dto.SaveTriggerResponse{ID: triggerID, Message: "trigger updated"})
+		})
+	})
+}
+
 func TestGetTrigger(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -156,14 +251,14 @@ func TestGetTrigger(t *testing.T) {
 	triggerID := uuid.NewV4().String()
 	triggerModel := dto.TriggerModel{ID: triggerID}
 	trigger := *(triggerModel.ToMoiraTrigger())
-	begging := time.Unix(0, 0)
+	beginning := time.Unix(0, 0)
 	now := time.Now()
 	tomorrow := now.Add(time.Hour * 24)
 	yesterday := now.Add(-time.Hour * 24)
 
 	Convey("Has trigger no throttling", t, func() {
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
-		dataBase.EXPECT().GetTriggerThrottling(triggerID).Return(begging, begging)
+		dataBase.EXPECT().GetTriggerThrottling(triggerID).Return(beginning, beginning)
 		actual, err := GetTrigger(dataBase, triggerID)
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, &dto.Trigger{TriggerModel: triggerModel, Throttling: 0})
@@ -171,7 +266,7 @@ func TestGetTrigger(t *testing.T) {
 
 	Convey("Has trigger has throttling", t, func() {
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
-		dataBase.EXPECT().GetTriggerThrottling(triggerID).Return(tomorrow, begging)
+		dataBase.EXPECT().GetTriggerThrottling(triggerID).Return(tomorrow, beginning)
 		actual, err := GetTrigger(dataBase, triggerID)
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, &dto.Trigger{TriggerModel: triggerModel, Throttling: tomorrow.Unix()})
@@ -179,7 +274,7 @@ func TestGetTrigger(t *testing.T) {
 
 	Convey("Has trigger has old throttling", t, func() {
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
-		dataBase.EXPECT().GetTriggerThrottling(triggerID).Return(yesterday, begging)
+		dataBase.EXPECT().GetTriggerThrottling(triggerID).Return(yesterday, beginning)
 		actual, err := GetTrigger(dataBase, triggerID)
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, &dto.Trigger{TriggerModel: triggerModel, Throttling: 0})
