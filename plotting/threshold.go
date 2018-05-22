@@ -25,20 +25,20 @@ func GenerateThresholds(plot Plot, limits Limits) []Threshold {
 	timePoint := float64(limits.To.UnixNano())
 	if plot.ErrorValue != nil && limits.FormsSetContaining(*plot.ErrorValue) {
 		thresholds = append(thresholds, Threshold{
-			Title: "ERROR",
-			Value: *plot.ErrorValue,
-			Point: timePoint,
-			Color: ErrorThreshold,
+			Title:  "ERROR",
+			Value:  *plot.ErrorValue,
+			Point:  timePoint,
+			Color:  ErrorThreshold,
 			GrowTo: 0,
 		})
 	}
 	if plot.WarnValue != nil && limits.FormsSetContaining(*plot.WarnValue) {
 		if plot.ErrorValue == nil || *plot.WarnValue != *plot.ErrorValue {
 			thresholds = append(thresholds, Threshold{
-				Title: "WARN",
-				Value: *plot.WarnValue,
-				Point: timePoint,
-				Color: WarningThreshold,
+				Title:  "WARN",
+				Value:  *plot.WarnValue,
+				Point:  timePoint,
+				Color:  WarningThreshold,
 				GrowTo: 9,
 			})
 		}

@@ -24,7 +24,7 @@ func GeneratePlotCurves(metricData *types.MetricData, curveColor int, mainYAxis 
 	for _, curve := range curves {
 		if len(curve.Values) > 1 {
 			curveSerie := chart.TimeSeries{
-				Name: metricData.Name,
+				Name:  metricData.Name,
 				YAxis: chart.YAxisType(mainYAxis),
 				Style: chart.Style{
 					Show:        true,
@@ -61,7 +61,7 @@ func DescribePlotCurves(metricData *types.MetricData) []PlotCurve {
 		case true:
 			if len(curves[curvesInd].Values) > 0 {
 				curves = append(curves, PlotCurve{})
-				curvesInd ++
+				curvesInd++
 			}
 		}
 		timeStamp += metricData.StepTime
@@ -75,7 +75,7 @@ func ResolveFirstPoint(metricData *types.MetricData) (int, int32) {
 	startTime := metricData.StartTime
 	for _, absVal := range metricData.IsAbsent {
 		if absVal {
-			start ++
+			start++
 			startTime += metricData.StepTime
 		} else {
 			break

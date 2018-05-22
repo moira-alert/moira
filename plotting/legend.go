@@ -60,7 +60,7 @@ func GetPlotLegend(c *chart.Chart) chart.Renderable {
 
 		labelX := 0
 		labelY := c.Height - 15
-		markerY := labelY - int(legendStyle.FontSize / 2)
+		markerY := labelY - int(legendStyle.FontSize/2)
 
 		var label string
 		for x := 0; x < len(labels); x++ {

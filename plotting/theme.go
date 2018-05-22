@@ -8,16 +8,23 @@ import (
 )
 
 const (
-	DarkTheme  = "1f1d1d" // Classical Grafana-like dark theme
-	LightTheme = "ffffff" // Light theme
+	// Classical Grafana-like dark theme
+	DarkTheme = "1f1d1d"
+	// Light theme
+	LightTheme = "ffffff"
 )
 
 var (
-	PlotWidth        = 800       // Plot width
-	PlotHeight       = 400       // Plot height
-	WarningThreshold = "f79520"  // Warning threshold color
-	ErrorThreshold   = "ed2e18"  // Error threshold color
-	CurveColors      = []string{ // Collection of Grafana-like colors
+	// Plot width
+	PlotWidth = 800
+	// Plot height
+	PlotHeight = 400
+	// Warning threshold color
+	WarningThreshold = "f79520"
+	// Error threshold color
+	ErrorThreshold = "ed2e18"
+	// Collection of Grafana-like colors
+	CurveColors = []string{
 		`89da59`, `90afc5`, `375e97`, `ffbb00`, `5bc8ac`, `4cb5f5`, `6ab187`, `ec96a4`,
 		`f0810f`, `f9a603`, `a1be95`, `e2dfa2`, `ebdf00`, `5b7065`, `eb8a3e`, `217ca3`,
 	}
