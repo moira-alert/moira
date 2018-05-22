@@ -8,15 +8,15 @@ import (
 	"github.com/wcharczuk/go-chart/drawing"
 )
 
-const ThresholdSerie = "threshold"
+const ThresholdSerie = "threshold" // ThresholdSerie is a name that indicates threshold
 
 // Threshold represents threshold parameters
 type Threshold struct {
-	Title string
-	Value float64
-	Point float64
-	Color string
-	RDimV int
+	Title  string
+	Value  float64
+	Point  float64
+	Color  string
+	GrowTo int
 }
 
 // GenerateThresholds returns thresholds available for plot
@@ -29,7 +29,7 @@ func GenerateThresholds(plot Plot, limits Limits) []Threshold {
 			Value: *plot.ErrorValue,
 			Point: timePoint,
 			Color: ErrorThreshold,
-			RDimV: 0,
+			GrowTo: 0,
 		})
 	}
 	if plot.WarnValue != nil && limits.FormsSetContaining(*plot.WarnValue) {
@@ -39,7 +39,7 @@ func GenerateThresholds(plot Plot, limits Limits) []Threshold {
 				Value: *plot.WarnValue,
 				Point: timePoint,
 				Color: WarningThreshold,
-				RDimV: 9,
+				GrowTo: 9,
 			})
 		}
 	}
@@ -49,7 +49,7 @@ func GenerateThresholds(plot Plot, limits Limits) []Threshold {
 // GenerateThresholdSeries returns threshold series
 func (threshold Threshold) GenerateThresholdSeries(limits Limits, isRaising bool) chart.TimeSeries {
 	thresholdValue := threshold.Value
-	if isRaising == true {
+	if isRaising {
 		thresholdValue = limits.Highest - threshold.Value
 	}
 	thresholdSeries := chart.TimeSeries{
@@ -73,7 +73,7 @@ func (threshold Threshold) GenerateThresholdSeries(limits Limits, isRaising bool
 // GenerateAnnotationSeries returns threshold annotation series
 func (threshold Threshold) GenerateAnnotationSeries(limits Limits, isRaising bool, annotationFont *truetype.Font) chart.AnnotationSeries {
 	annotationValue := threshold.Value
-	if isRaising == true {
+	if isRaising {
 		annotationValue = limits.Highest - threshold.Value
 	}
 	annotationSeries := chart.AnnotationSeries{
@@ -84,7 +84,7 @@ func (threshold Threshold) GenerateAnnotationSeries(limits Limits, isRaising boo
 				YValue: annotationValue,
 				Style: chart.Style{
 					Show:        true,
-					Padding:     chart.Box{Right: threshold.RDimV},
+					Padding:     chart.Box{Right: threshold.GrowTo},
 					Font:        annotationFont,
 					FontSize:    8,
 					FontColor:   chart.ColorAlternateGray,

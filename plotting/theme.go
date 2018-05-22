@@ -8,16 +8,16 @@ import (
 )
 
 const (
-	DarkTheme  = "1f1d1d"
-	LightTheme = "ffffff"
+	DarkTheme  = "1f1d1d" // Classical Grafana-like dark theme
+	LightTheme = "ffffff" // Light theme
 )
 
 var (
-	PlotWidth        = 800
-	PlotHeight       = 400
-	WarningThreshold = "f79520"
-	ErrorThreshold   = "ed2e18"
-	CurveColors      = []string{
+	PlotWidth        = 800       // Plot width
+	PlotHeight       = 400       // Plot height
+	WarningThreshold = "f79520"  // Warning threshold color
+	ErrorThreshold   = "ed2e18"  // Error threshold color
+	CurveColors      = []string{ // Collection of Grafana-like colors
 		`89da59`, `90afc5`, `375e97`, `ffbb00`, `5bc8ac`, `4cb5f5`, `6ab187`, `ec96a4`,
 		`f0810f`, `f9a603`, `a1be95`, `e2dfa2`, `ebdf00`, `5b7065`, `eb8a3e`, `217ca3`,
 	}
@@ -50,7 +50,7 @@ func GetGridStyle(plotTheme string) chart.Style {
 
 // GetYAxisParams returns threshold specific params for yaxis
 func GetYAxisParams(isRaising bool) (int, bool) {
-	if isRaising == true {
+	if isRaising {
 		return 1, true
 	}
 	return 0, false

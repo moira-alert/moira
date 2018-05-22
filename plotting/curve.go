@@ -61,7 +61,7 @@ func DescribePlotCurves(metricData *types.MetricData) []PlotCurve {
 		case true:
 			if len(curves[curvesInd].Values) > 0 {
 				curves = append(curves, PlotCurve{})
-				curvesInd += 1
+				curvesInd ++
 			}
 		}
 		timeStamp += metricData.StepTime
@@ -74,8 +74,8 @@ func ResolveFirstPoint(metricData *types.MetricData) (int, int32) {
 	start := 0
 	startTime := metricData.StartTime
 	for _, absVal := range metricData.IsAbsent {
-		if absVal == true {
-			start += 1
+		if absVal {
+			start ++
 			startTime += metricData.StepTime
 		} else {
 			break

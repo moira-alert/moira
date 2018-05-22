@@ -8,6 +8,7 @@ import (
 	"github.com/wcharczuk/go-chart"
 )
 
+// SortedByLen represents string array to be sorted by length
 type SortedByLen []string
 
 func (initial SortedByLen) Len() int {
