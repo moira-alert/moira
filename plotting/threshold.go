@@ -8,7 +8,8 @@ import (
 	"github.com/wcharczuk/go-chart/drawing"
 )
 
-const ThresholdSerie = "threshold" // ThresholdSerie is a name that indicates threshold
+// ThresholdSerie is a name that indicates threshold
+const ThresholdSerie = "threshold"
 
 // Threshold represents threshold parameters
 type Threshold struct {
