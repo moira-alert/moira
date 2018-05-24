@@ -1,7 +1,6 @@
 package plotting
 
 import (
-	"math/rand"
 	"testing"
 
 	"github.com/go-graphite/carbonapi/expr/types"
@@ -11,9 +10,9 @@ import (
 
 // TestResolveLimits tests ResolveLimits on pseudo-random values
 func TestResolveLimits(t *testing.T) {
-	startTime := rand.Int31()
-	stepTime := rand.Int31()
-	stopTime := rand.Int31() * startTime * stepTime
+	startTime := int32(0)
+	stepTime := int32(15)
+	stopTime := int32(180)
 	metricsData := make([]*types.MetricData, 0)
 	metricsDataLength := 10
 	for i := 0; i < metricsDataLength; i++ {
@@ -25,18 +24,20 @@ func TestResolveLimits(t *testing.T) {
 				IsAbsent: []bool{
 					false, false, false, false, false,
 				},
-				StartTime: startTime + int32(i),
-				StepTime:  stepTime + int32(i),
-				StopTime:  stopTime + int32(i),
+				StartTime: startTime,
+				StepTime:  stepTime,
+				StopTime:  stopTime,
 			},
 		}
+		startTime ++
+		stopTime ++
 		metricsData = append(metricsData, &metricData)
 	}
 	Convey("Resolve limits for given MetricsData", t, func() {
 		limits := ResolveLimits(metricsData)
-		So(limits.From, ShouldResemble, Int32ToTime(startTime))
-		So(limits.To, ShouldResemble, Int32ToTime(stopTime+int32(metricsDataLength-1)))
-		So(limits.Lowest, ShouldEqual, 0)
+		So(limits.From, ShouldResemble, Int32ToTime(0))
+		So(limits.To, ShouldResemble, Int32ToTime(189))
+		So(limits.Lowest, ShouldEqual, 11)
 		So(limits.Highest, ShouldEqual, 450)
 	})
 }

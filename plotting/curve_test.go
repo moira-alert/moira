@@ -132,10 +132,11 @@ func TestGeneratePlotCurves(t *testing.T) {
 	Convey("First value is present", t, func() {
 		metricName := "metric.firstValueIsPresent"
 		metricData.FetchResponse.Name = metricName
-		metricData.IsAbsent = firstValIsAbsentBool
-		metricData.Values = firstValIsAbsentVals
+		metricData.IsAbsent = firstValIsPresentBool
+		metricData.Values = firstValIsPresentVals
 		curveSeries := GeneratePlotCurves(&metricData, 0, 0)
-		So(len(curveSeries), ShouldEqual, 3)
+		So(len(curveSeries), ShouldEqual, 2)
+		// So(len(curveSeries), ShouldEqual, 3)
 		So(curveSeries[0].Name, ShouldEqual, metricName)
 		So(curveSeries[0].YValues, ShouldResemble, []float64{11, 23, 45})
 		So(curveSeries[0].XValues, ShouldResemble, []time.Time{
@@ -143,14 +144,15 @@ func TestGeneratePlotCurves(t *testing.T) {
 			Int32ToTime(10),
 			Int32ToTime(20),
 		})
+		// TODO: create style to draw single value in between of gaps
+		// So(curveSeries[1].Name, ShouldEqual, metricName)
+		// So(curveSeries[1].YValues, ShouldResemble, []float64{47})
+		// So(curveSeries[1].XValues, ShouldResemble, []time.Time{
+		// 	Int32ToTime(40),
+		// })
 		So(curveSeries[1].Name, ShouldEqual, metricName)
-		So(curveSeries[1].YValues, ShouldResemble, []float64{47})
+		So(curveSeries[1].YValues, ShouldResemble, []float64{32, 65, 78, 76, 74})
 		So(curveSeries[1].XValues, ShouldResemble, []time.Time{
-			Int32ToTime(40),
-		})
-		So(curveSeries[2].Name, ShouldEqual, metricName)
-		So(curveSeries[2].YValues, ShouldResemble, []float64{32, 65, 78, 76, 74})
-		So(curveSeries[2].XValues, ShouldResemble, []time.Time{
 			Int32ToTime(60),
 			Int32ToTime(70),
 			Int32ToTime(80),

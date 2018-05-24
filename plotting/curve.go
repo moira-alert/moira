@@ -16,6 +16,7 @@ type PlotCurve struct {
 
 // GeneratePlotCurves returns go-chart timeseries to generate plot curves
 func GeneratePlotCurves(metricData *types.MetricData, curveColor int, mainYAxis int) []chart.TimeSeries {
+	// TODO: create style to draw single value in between of gaps
 	curves := DescribePlotCurves(metricData)
 	curveSeries := make([]chart.TimeSeries, 0)
 	if curveColor > len(CurveColors) {

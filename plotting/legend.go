@@ -31,7 +31,7 @@ func GetPlotLegend(c *chart.Chart) chart.Renderable {
 		var symbols int
 		var labels []string
 		var lines []chart.Style
-		for _, s := range c.Series {
+		for ind, s := range c.Series {
 			if s.GetStyle().IsZero() || s.GetStyle().Show {
 				if _, isAnnotationSeries := s.(chart.AnnotationSeries); !isAnnotationSeries {
 					legendLabel := s.GetName()
@@ -42,7 +42,7 @@ func GetPlotLegend(c *chart.Chart) chart.Renderable {
 						symbols += labelLength
 						labels = append(labels, legendLabel)
 						lines = append(lines, s.GetStyle())
-						if symbols > maxLegendLength {
+						if symbols > maxLegendLength || ind == 5 {
 							break
 						}
 					}
