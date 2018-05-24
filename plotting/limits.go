@@ -21,7 +21,7 @@ func ResolveLimits(metricsData []*types.MetricData) Limits {
 	// TODO: this method must be allowed to use empty float arrays
 	from := float64(metricsData[0].StartTime)
 	to := float64(metricsData[0].StopTime)
-	lowest := float64(metricsData[0].Values[0])
+	lowest := metricsData[0].Values[0]
 	highest := lowest
 	for _, metricData := range metricsData {
 		from = math.Min(float64(metricData.StartTime), from)
