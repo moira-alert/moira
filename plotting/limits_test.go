@@ -2,13 +2,14 @@ package plotting
 
 import (
 	"testing"
+	"math"
 
 	"github.com/go-graphite/carbonapi/expr/types"
 	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-// TestResolveLimits tests ResolveLimits on pseudo-random values
+// TestResolveLimits tests ResolveLimits
 func TestResolveLimits(t *testing.T) {
 	startTime := int32(0)
 	stepTime := int32(15)
@@ -19,7 +20,7 @@ func TestResolveLimits(t *testing.T) {
 		metricData := types.MetricData{
 			FetchResponse: pb.FetchResponse{
 				Values: []float64{
-					11, 23, 450, 47, 32,
+					11, 23, 450, math.NaN(), 32,
 				},
 				IsAbsent: []bool{
 					false, false, false, false, false,

@@ -27,8 +27,10 @@ func ResolveLimits(metricsData []*types.MetricData) Limits {
 		from = math.Min(float64(metricData.StartTime), from)
 		to = math.Max(float64(metricData.StopTime), to)
 		for _, metricVal := range metricData.Values {
-			lowest = math.Min(metricVal, lowest)
-			highest = math.Max(metricVal, highest)
+			if !math.IsNaN(metricVal) {
+				lowest = math.Min(metricVal, lowest)
+				highest = math.Max(metricVal, highest)
+			}
 		}
 	}
 	return Limits{
