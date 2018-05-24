@@ -54,10 +54,18 @@ func (plot Plot) GetRenderable(metricsData []*types.MetricData, plotFont *truety
 
 	for timeSerieIndex := range metricsData {
 		plotCurves, curveTimeLimits, curvesValueLimits := GeneratePlotCurves(metricsData[timeSerieIndex], timeSerieIndex, yAxisMain)
-		for _, timeLimit := range curveTimeLimits {
+		for tlInd, timeLimit := range curveTimeLimits {
+			if tlInd == 0 {
+				plotFrom = timeLimit
+				plotTo = timeLimit
+			}
 			plotFrom, plotTo = util.Math.MinAndMaxOfTime(plotFrom, plotTo, timeLimit)
 		}
-		for _, valueLimit := range curvesValueLimits {
+		for vlInd, valueLimit := range curvesValueLimits {
+			if vlInd == 0 {
+				plotLowest = valueLimit
+				plotHighest = valueLimit
+			}
 			plotLowest, plotHighest = util.Math.MinAndMax(plotLowest, plotHighest, valueLimit)
 		}
 		for _, timeSerie := range plotCurves {

@@ -68,6 +68,8 @@ func DescribePlotCurves(metricData *types.MetricData) ([]PlotCurve, []time.Time,
 			pointValue = <-values
 			if !math.IsNaN(pointValue) {
 				timeStampValue := Int32ToTime(timeStamp)
+				from = timeStampValue
+				to = timeStampValue
 				lowest, highest = util.Math.MinAndMax(lowest, highest, pointValue)
 				from, to = util.Math.MinAndMaxOfTime(from, to, timeStampValue)
 				curves[curvesInd].TimeStamps = append(curves[curvesInd].TimeStamps, timeStampValue)
