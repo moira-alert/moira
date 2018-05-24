@@ -2,6 +2,7 @@ package plotting
 
 import (
 	"time"
+	"math"
 
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/wcharczuk/go-chart"
@@ -54,11 +55,16 @@ func DescribePlotCurves(metricData *types.MetricData) []PlotCurve {
 
 	start, timeStamp := ResolveFirstPoint(metricData)
 
+	var value float64
+
 	for absInd := start; absInd < len(metricData.IsAbsent); absInd++ {
 		switch metricData.IsAbsent[absInd] {
 		case false:
-			curves[curvesInd].TimeStamps = append(curves[curvesInd].TimeStamps, Int32ToTime(timeStamp))
-			curves[curvesInd].Values = append(curves[curvesInd].Values, <-values)
+			value = <- values
+			if !math.IsNaN(value) {
+				curves[curvesInd].TimeStamps = append(curves[curvesInd].TimeStamps, Int32ToTime(timeStamp))
+				curves[curvesInd].Values = append(curves[curvesInd].Values, value)
+			}
 		case true:
 			if len(curves[curvesInd].Values) > 0 {
 				curves = append(curves, PlotCurve{})
