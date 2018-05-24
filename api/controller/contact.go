@@ -28,19 +28,20 @@ func GetAllContacts(database moira.Database) (*dto.ContactList, *api.ErrorRespon
 // CreateContact creates new notification contact for current user
 func CreateContact(dataBase moira.Database, contact *dto.Contact, userLogin string) *api.ErrorResponse {
 	contactData := moira.ContactData{
+		ID:    contact.ID,
 		User:  userLogin,
 		Type:  contact.Type,
 		Value: contact.Value,
 	}
-	if contact.ID == "" {
+	if contactData.ID == "" {
 		contactData.ID = uuid.NewV4().String()
 	} else {
-		exists, err := isContactExists(dataBase, contact.ID)
+		exists, err := isContactExists(dataBase, contactData.ID)
 		if err != nil {
 			return api.ErrorInternalServer(err)
 		}
 		if exists {
-			return api.ErrorInvalidRequest(fmt.Errorf("Contact with this ID already exists"))
+			return api.ErrorInvalidRequest(fmt.Errorf("contact with this ID already exists"))
 		}
 	}
 
