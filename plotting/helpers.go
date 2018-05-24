@@ -3,6 +3,7 @@ package plotting
 import (
 	"fmt"
 	"time"
+	"strings"
 
 	"github.com/dustin/go-humanize"
 	"github.com/wcharczuk/go-chart"
@@ -46,7 +47,7 @@ func FloatToHumanizedValueFormatter(v interface{}) string {
 			return fmt.Sprintf("%.f", typed)
 		}
 		typed, postfix := humanize.ComputeSI(typed)
-		return fmt.Sprintf("%.f %s", typed, postfix)
+		return fmt.Sprintf("%.2f %s", typed, strings.ToUpper(postfix))
 	}
 	return ""
 }

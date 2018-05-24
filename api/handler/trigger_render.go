@@ -21,8 +21,8 @@ type metricFormat int
 // Supported metrics format types
 const (
 	PNG metricFormat = iota
-	PNGr
 	JSON
+	RAW
 )
 
 func renderTrigger(writer http.ResponseWriter, request *http.Request) {
@@ -68,6 +68,13 @@ func renderTrigger(writer http.ResponseWriter, request *http.Request) {
 		renderable := plot.GetRenderable(metricsData, font)
 		writer.Header().Set("Content-Type", "image/png")
 		renderable.Render(chart.PNG, writer)
+	case RAW:
+		font, _ := plotting.GetDefaultFont()
+		plot := plotting.FromParams(trigger.Name, plotting.DarkTheme, nil, trigger.WarnValue, trigger.ErrorValue)
+		renderable := plot.GetRenderable(metricsData, font)
+		raw := []byte(fmt.Sprintf("%+v\n", renderable))
+		writer.Header().Set("Content-Type", "text")
+		writer.Write(raw)
 	default:
 		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("inexpected metrics format")))
 	}
@@ -83,6 +90,8 @@ func getMetricFormat(request *http.Request) (metricFormat, error) {
 		return JSON, nil
 	case "png":
 		return PNG, nil
+	case "raw":
+		return RAW, nil
 	default:
 		return JSON, fmt.Errorf("invalid format type: %s", format)
 	}
