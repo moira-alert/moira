@@ -2,8 +2,8 @@ package plotting
 
 import (
 	"fmt"
-	"time"
 	"strings"
+	"time"
 
 	"github.com/dustin/go-humanize"
 	"github.com/wcharczuk/go-chart"

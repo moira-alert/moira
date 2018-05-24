@@ -2,10 +2,12 @@ package plotting
 
 import (
 	"github.com/golang/freetype/truetype"
+	"time"
 
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/wcharczuk/go-chart"
 	"github.com/wcharczuk/go-chart/drawing"
+	"github.com/wcharczuk/go-chart/util"
 )
 
 // Plot represents plot structure to render
@@ -38,18 +40,36 @@ func (plot Plot) IsRaising() bool {
 // GetRenderable returns go-chart to render
 func (plot Plot) GetRenderable(metricsData []*types.MetricData, plotFont *truetype.Font) chart.Chart {
 
-	plotSeries := make([]chart.Series, 0)
-	plotLimits := ResolveLimits(metricsData)
-
 	raising := plot.IsRaising()
 	yAxisMain, yAxisDescending := GetYAxisParams(raising)
-	yAxisValuesFormatter := GetYAxisValuesFormatter(plotLimits)
+
+	plotSeries := make([]chart.Series, 0)
+
+	// TODO: use isolated method to securely count plot limits
+
+	var plotFrom time.Time
+	var plotTo time.Time
+	var plotLowest float64
+	var plotHighest float64
 
 	for timeSerieIndex := range metricsData {
-		plotCurves := GeneratePlotCurves(metricsData[timeSerieIndex], timeSerieIndex, yAxisMain)
+		plotCurves, curveTimeLimits, curvesValueLimits := GeneratePlotCurves(metricsData[timeSerieIndex], timeSerieIndex, yAxisMain)
+		for _, timeLimit := range curveTimeLimits {
+			plotFrom, plotTo = util.Math.MinAndMaxOfTime(plotFrom, plotTo, timeLimit)
+		}
+		for _, valueLimit := range curvesValueLimits {
+			plotLowest, plotHighest = util.Math.MinAndMax(plotLowest, plotHighest, valueLimit)
+		}
 		for _, timeSerie := range plotCurves {
 			plotSeries = append(plotSeries, timeSerie)
 		}
+	}
+
+	plotLimits := Limits{
+		From:    plotFrom,
+		To:      plotTo,
+		Lowest:  plotLowest,
+		Highest: plotHighest,
 	}
 
 	plotThresholds := GenerateThresholds(plot, plotLimits)
@@ -61,6 +81,8 @@ func (plot Plot) GetRenderable(metricsData []*types.MetricData, plotFont *truety
 
 	bgPadding := GetBgPadding(len(plotThresholds))
 	gridStyle := GetGridStyle(plot.Theme)
+
+	yAxisValuesFormatter := GetYAxisValuesFormatter(plotLimits)
 
 	renderable := chart.Chart{
 

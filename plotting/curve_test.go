@@ -56,7 +56,7 @@ func TestDescribePlotCurves(t *testing.T) {
 	Convey("First value is absent", t, func() {
 		metricData.IsAbsent = firstValIsAbsentBool
 		metricData.Values = firstValIsAbsentVals
-		plotCurves := DescribePlotCurves(&metricData)
+		plotCurves, _, _ := DescribePlotCurves(&metricData)
 		So(len(plotCurves), ShouldEqual, 2)
 		So(plotCurves[0].Values, ShouldResemble, []float64{15, 32})
 		So(plotCurves[0].TimeStamps, ShouldResemble, []time.Time{
@@ -77,7 +77,7 @@ func TestDescribePlotCurves(t *testing.T) {
 	Convey("First value is present", t, func() {
 		metricData.IsAbsent = firstValIsPresentBool
 		metricData.Values = firstValIsPresentVals
-		plotCurves := DescribePlotCurves(&metricData)
+		plotCurves, _, _ := DescribePlotCurves(&metricData)
 		So(len(plotCurves), ShouldEqual, 3)
 		So(plotCurves[0].Values, ShouldResemble, []float64{11, 23, 45})
 		So(plotCurves[0].TimeStamps, ShouldResemble, []time.Time{
@@ -109,7 +109,7 @@ func TestGeneratePlotCurves(t *testing.T) {
 		metricData.FetchResponse.Name = metricName
 		metricData.IsAbsent = firstValIsAbsentBool
 		metricData.Values = firstValIsAbsentVals
-		curveSeries := GeneratePlotCurves(&metricData, 0, 0)
+		curveSeries, _, _ := GeneratePlotCurves(&metricData, 0, 0)
 		So(len(curveSeries), ShouldEqual, 2)
 		So(curveSeries[0].Name, ShouldEqual, metricName)
 		So(curveSeries[0].YValues, ShouldResemble, []float64{15, 32})
@@ -134,7 +134,7 @@ func TestGeneratePlotCurves(t *testing.T) {
 		metricData.FetchResponse.Name = metricName
 		metricData.IsAbsent = firstValIsPresentBool
 		metricData.Values = firstValIsPresentVals
-		curveSeries := GeneratePlotCurves(&metricData, 0, 0)
+		curveSeries, _, _ := GeneratePlotCurves(&metricData, 0, 0)
 		So(len(curveSeries), ShouldEqual, 2)
 		// So(len(curveSeries), ShouldEqual, 3)
 		So(curveSeries[0].Name, ShouldEqual, metricName)
