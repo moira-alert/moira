@@ -5,7 +5,7 @@ import (
 	"math"
 
 	"github.com/go-graphite/carbonapi/expr/types"
-	"github.com/wcharczuk/go-chart/util"
+	//"github.com/wcharczuk/go-chart/util"
 )
 
 // Limits is a set of limits for given metricsData
@@ -29,7 +29,9 @@ func ResolveLimits(metricsData []*types.MetricData, from int32, to int32) Limits
 				highest = metricVal
 			}
 			if !math.IsNaN(metricVal) {
-				lowest, highest = util.Math.MinAndMax(lowest, highest, metricVal)
+				lowest = math.Min(lowest, metricVal)
+				highest = math.Max(highest, metricVal)
+				//lowest, highest = util.Math.MinAndMax(lowest, highest, metricVal)
 			}
 		}
 	}
