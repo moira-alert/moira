@@ -60,16 +60,14 @@ func DescribePlotCurves(metricData *types.MetricData) ([]PlotCurve, []float64) {
 	var lowest float64
 	var highest float64
 
-	for absInd := start; absInd < len(metricData.IsAbsent); absInd++ {
-		switch metricData.IsAbsent[absInd] {
+	for valInd := start; valInd < len(metricData.Values); valInd++ {
+		pointValue = <-values
+		switch !math.IsNaN(pointValue) {
 		case false:
-			pointValue = <-values
-			if !math.IsNaN(pointValue) {
-				timeStampValue := Int32ToTime(timeStamp)
-				lowest, highest = util.Math.MinAndMax(lowest, highest, pointValue)
-				curves[curvesInd].TimeStamps = append(curves[curvesInd].TimeStamps, timeStampValue)
-				curves[curvesInd].Values = append(curves[curvesInd].Values, pointValue)
-			}
+			timeStampValue := Int32ToTime(timeStamp)
+			lowest, highest = util.Math.MinAndMax(lowest, highest, pointValue)
+			curves[curvesInd].TimeStamps = append(curves[curvesInd].TimeStamps, timeStampValue)
+			curves[curvesInd].Values = append(curves[curvesInd].Values, pointValue)
 		case true:
 			if len(curves[curvesInd].Values) > 0 {
 				curves = append(curves, PlotCurve{})
@@ -88,8 +86,8 @@ func DescribePlotCurves(metricData *types.MetricData) ([]PlotCurve, []float64) {
 func ResolveFirstPoint(metricData *types.MetricData) (int, int32) {
 	start := 0
 	startTime := metricData.StartTime
-	for _, absVal := range metricData.IsAbsent {
-		if absVal {
+	for _, metricVal := range metricData.Values {
+		if math.IsNaN(metricVal) {
 			start++
 			startTime += metricData.StepTime
 		} else {
