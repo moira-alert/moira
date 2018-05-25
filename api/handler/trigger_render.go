@@ -23,6 +23,7 @@ const (
 	PNG metricFormat = iota
 	JSON
 	RAW
+	CARBONAPI
 )
 
 func renderTrigger(writer http.ResponseWriter, request *http.Request) {
@@ -75,6 +76,10 @@ func renderTrigger(writer http.ResponseWriter, request *http.Request) {
 		raw := []byte(fmt.Sprintf("%+v\n", renderable))
 		writer.Header().Set("Content-Type", "text")
 		writer.Write(raw)
+	case CARBONAPI:
+		carbonapi := []byte(fmt.Sprintf("%+v\n", metricsData))
+		writer.Header().Set("Content-Type", "text")
+		writer.Write(carbonapi)
 	default:
 		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("inexpected metrics format")))
 	}
@@ -92,6 +97,8 @@ func getMetricFormat(request *http.Request) (metricFormat, error) {
 		return PNG, nil
 	case "raw":
 		return RAW, nil
+	case "carbonapi":
+		return CARBONAPI, nil
 	default:
 		return JSON, fmt.Errorf("invalid format type: %s", format)
 	}
