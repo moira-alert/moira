@@ -17,9 +17,9 @@ type PlotCurve struct {
 }
 
 // GeneratePlotCurves returns go-chart timeseries to generate plot curves
-func GeneratePlotCurves(metricData *types.MetricData, curveColor int, mainYAxis int) ([]chart.TimeSeries, []time.Time, []float64) {
+func GeneratePlotCurves(metricData *types.MetricData, curveColor int, mainYAxis int) ([]chart.TimeSeries, []float64) {
 	// TODO: create style to draw single value in between of gaps
-	curves, timeLimits, valueLimits := DescribePlotCurves(metricData)
+	curves, valueLimits := DescribePlotCurves(metricData)
 	curveSeries := make([]chart.TimeSeries, 0)
 	if curveColor > len(CurveColors) {
 		curveColor = 1
@@ -41,11 +41,11 @@ func GeneratePlotCurves(metricData *types.MetricData, curveColor int, mainYAxis 
 			curveSeries = append(curveSeries, curveSerie)
 		}
 	}
-	return curveSeries, timeLimits, valueLimits
+	return curveSeries, valueLimits
 }
 
 // DescribePlotCurves returns parameters for required curves
-func DescribePlotCurves(metricData *types.MetricData) ([]PlotCurve, []time.Time, []float64) {
+func DescribePlotCurves(metricData *types.MetricData) ([]PlotCurve, []float64) {
 	curves := []PlotCurve{{}}
 	curvesInd := 0
 
@@ -57,8 +57,6 @@ func DescribePlotCurves(metricData *types.MetricData) ([]PlotCurve, []time.Time,
 	start, timeStamp := ResolveFirstPoint(metricData)
 
 	var pointValue float64
-	var from time.Time
-	var to time.Time
 	var lowest float64
 	var highest float64
 
@@ -68,10 +66,7 @@ func DescribePlotCurves(metricData *types.MetricData) ([]PlotCurve, []time.Time,
 			pointValue = <-values
 			if !math.IsNaN(pointValue) {
 				timeStampValue := Int32ToTime(timeStamp)
-				from = timeStampValue
-				to = timeStampValue
 				lowest, highest = util.Math.MinAndMax(lowest, highest, pointValue)
-				from, to = util.Math.MinAndMaxOfTime(from, to, timeStampValue)
 				curves[curvesInd].TimeStamps = append(curves[curvesInd].TimeStamps, timeStampValue)
 				curves[curvesInd].Values = append(curves[curvesInd].Values, pointValue)
 			}
@@ -84,10 +79,9 @@ func DescribePlotCurves(metricData *types.MetricData) ([]PlotCurve, []time.Time,
 		timeStamp += metricData.StepTime
 	}
 
-	timeLimits := []time.Time{from, to}
 	valueLimits := []float64{lowest, highest}
 
-	return curves, timeLimits, valueLimits
+	return curves, valueLimits
 }
 
 // ResolveFirstPoint returns first point coordinates

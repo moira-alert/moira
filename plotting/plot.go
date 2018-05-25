@@ -2,7 +2,6 @@ package plotting
 
 import (
 	"github.com/golang/freetype/truetype"
-	"time"
 
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/wcharczuk/go-chart"
@@ -38,7 +37,7 @@ func (plot Plot) IsRaising() bool {
 }
 
 // GetRenderable returns go-chart to render
-func (plot Plot) GetRenderable(metricsData []*types.MetricData, plotFont *truetype.Font) chart.Chart {
+func (plot Plot) GetRenderable(metricsData []*types.MetricData, plotFont *truetype.Font, from int32, to int32) chart.Chart {
 
 	raising := plot.IsRaising()
 	yAxisMain, yAxisDescending := GetYAxisParams(raising)
@@ -47,20 +46,11 @@ func (plot Plot) GetRenderable(metricsData []*types.MetricData, plotFont *truety
 
 	// TODO: use isolated method to securely count plot limits
 
-	var plotFrom time.Time
-	var plotTo time.Time
 	var plotLowest float64
 	var plotHighest float64
 
 	for timeSerieIndex := range metricsData {
-		plotCurves, curveTimeLimits, curvesValueLimits := GeneratePlotCurves(metricsData[timeSerieIndex], timeSerieIndex, yAxisMain)
-		for tlInd, timeLimit := range curveTimeLimits {
-			if tlInd == 0 {
-				plotFrom = timeLimit
-				plotTo = timeLimit
-			}
-			plotFrom, plotTo = util.Math.MinAndMaxOfTime(plotFrom, plotTo, timeLimit)
-		}
+		plotCurves, curvesValueLimits := GeneratePlotCurves(metricsData[timeSerieIndex], timeSerieIndex, yAxisMain)
 		for vlInd, valueLimit := range curvesValueLimits {
 			if vlInd == 0 {
 				plotLowest = valueLimit
@@ -74,8 +64,8 @@ func (plot Plot) GetRenderable(metricsData []*types.MetricData, plotFont *truety
 	}
 
 	plotLimits := Limits{
-		From:    plotFrom,
-		To:      plotTo,
+		From:    Int32ToTime(from),
+		To:      Int32ToTime(to),
 		Lowest:  plotLowest,
 		Highest: plotHighest,
 	}

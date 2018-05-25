@@ -51,10 +51,13 @@ func renderTrigger(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	carbonapiRaw := ""
+
 	var metricsData = make([]*types.MetricData, 0, len(tts.Main)+len(tts.Additional))
 	for _, ts := range tts.Main {
 		if len(ts.MetricData.Values) > 0 {
 			metricsData = append(metricsData, &ts.MetricData)
+			carbonapiRaw += fmt.Sprintf("%+v\n", metricsData)
 		}
 	}
 
@@ -66,18 +69,18 @@ func renderTrigger(writer http.ResponseWriter, request *http.Request) {
 	case PNG:
 		font, _ := plotting.GetDefaultFont()
 		plot := plotting.FromParams(trigger.Name, plotting.DarkTheme, nil, trigger.WarnValue, trigger.ErrorValue)
-		renderable := plot.GetRenderable(metricsData, font)
+		renderable := plot.GetRenderable(metricsData, font, from, to)
 		writer.Header().Set("Content-Type", "image/png")
 		renderable.Render(chart.PNG, writer)
 	case RAW:
 		font, _ := plotting.GetDefaultFont()
 		plot := plotting.FromParams(trigger.Name, plotting.DarkTheme, nil, trigger.WarnValue, trigger.ErrorValue)
-		renderable := plot.GetRenderable(metricsData, font)
+		renderable := plot.GetRenderable(metricsData, font, from, to)
 		raw := []byte(fmt.Sprintf("%+v\n", renderable))
 		writer.Header().Set("Content-Type", "text")
 		writer.Write(raw)
 	case CARBONAPI:
-		carbonapi := []byte(fmt.Sprintf("%+v\n", metricsData))
+		carbonapi := []byte(carbonapiRaw)
 		writer.Header().Set("Content-Type", "text")
 		writer.Write(carbonapi)
 	default:
