@@ -62,7 +62,7 @@ func DescribePlotCurves(metricData *types.MetricData) ([]PlotCurve, []float64) {
 
 	for valInd := start; valInd < len(metricData.Values); valInd++ {
 		pointValue = <-values
-		switch !math.IsNaN(pointValue) {
+		switch math.IsNaN(pointValue) {
 		case false:
 			timeStampValue := Int32ToTime(timeStamp)
 			lowest, highest = util.Math.MinAndMax(lowest, highest, pointValue)
