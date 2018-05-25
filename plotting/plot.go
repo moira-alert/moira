@@ -6,7 +6,6 @@ import (
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/wcharczuk/go-chart"
 	"github.com/wcharczuk/go-chart/drawing"
-	"github.com/wcharczuk/go-chart/util"
 )
 
 // Plot represents plot structure to render
@@ -46,30 +45,14 @@ func (plot Plot) GetRenderable(metricsData []*types.MetricData, plotFont *truety
 
 	// TODO: use isolated method to securely count plot limits
 
-	var plotLowest float64
-	var plotHighest float64
-
 	for timeSerieIndex := range metricsData {
-		plotCurves, curvesValueLimits := GeneratePlotCurves(metricsData[timeSerieIndex], timeSerieIndex, yAxisMain)
-		for vlInd, valueLimit := range curvesValueLimits {
-			if vlInd == 0 {
-				plotLowest = valueLimit
-				plotHighest = valueLimit
-			}
-			plotLowest, plotHighest = util.Math.MinAndMax(plotLowest, plotHighest, valueLimit)
-		}
+		plotCurves := GeneratePlotCurves(metricsData[timeSerieIndex], timeSerieIndex, yAxisMain)
 		for _, timeSerie := range plotCurves {
 			plotSeries = append(plotSeries, timeSerie)
 		}
 	}
 
-	plotLimits := Limits{
-		From:    Int32ToTime(from),
-		To:      Int32ToTime(to),
-		Lowest:  plotLowest,
-		Highest: plotHighest,
-	}
-
+	plotLimits := ResolveLimits(metricsData, from, to)
 	plotThresholds := GenerateThresholds(plot, plotLimits)
 
 	for _, plotThreshold := range plotThresholds {

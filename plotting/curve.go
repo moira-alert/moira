@@ -7,7 +7,6 @@ import (
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/wcharczuk/go-chart"
 	"github.com/wcharczuk/go-chart/drawing"
-	"github.com/wcharczuk/go-chart/util"
 )
 
 // PlotCurve is a single curve for given timeserie
@@ -17,9 +16,9 @@ type PlotCurve struct {
 }
 
 // GeneratePlotCurves returns go-chart timeseries to generate plot curves
-func GeneratePlotCurves(metricData *types.MetricData, curveColor int, mainYAxis int) ([]chart.TimeSeries, []float64) {
+func GeneratePlotCurves(metricData *types.MetricData, curveColor int, mainYAxis int) []chart.TimeSeries {
 	// TODO: create style to draw single value in between of gaps
-	curves, valueLimits := DescribePlotCurves(metricData)
+	curves := DescribePlotCurves(metricData)
 	curveSeries := make([]chart.TimeSeries, 0)
 	if curveColor > len(CurveColors) {
 		curveColor = 1
@@ -41,30 +40,21 @@ func GeneratePlotCurves(metricData *types.MetricData, curveColor int, mainYAxis 
 			curveSeries = append(curveSeries, curveSerie)
 		}
 	}
-	return curveSeries, valueLimits
+	return curveSeries
 }
 
 // DescribePlotCurves returns parameters for required curves
-func DescribePlotCurves(metricData *types.MetricData) ([]PlotCurve, []float64) {
+func DescribePlotCurves(metricData *types.MetricData) []PlotCurve {
 	curves := []PlotCurve{{}}
 	curvesInd := 0
 
 	start, timeStamp := ResolveFirstPoint(metricData)
 
-	var pointValue float64
-	var lowest float64
-	var highest float64
-
 	for valInd := start; valInd < len(metricData.Values); valInd++ {
-		pointValue = metricData.Values[valInd]
-		if valInd == start {
-			lowest = pointValue
-			highest = pointValue
-		}
+		pointValue := metricData.Values[valInd]
 		switch math.IsNaN(pointValue) {
 		case false:
 			timeStampValue := Int32ToTime(timeStamp)
-			lowest, highest = util.Math.MinAndMax(lowest, highest, pointValue)
 			curves[curvesInd].TimeStamps = append(curves[curvesInd].TimeStamps, timeStampValue)
 			curves[curvesInd].Values = append(curves[curvesInd].Values, pointValue)
 		case true:
@@ -75,10 +65,7 @@ func DescribePlotCurves(metricData *types.MetricData) ([]PlotCurve, []float64) {
 		}
 		timeStamp += metricData.StepTime
 	}
-
-	valueLimits := []float64{lowest, highest}
-
-	return curves, valueLimits
+	return curves
 }
 
 // ResolveFirstPoint returns first point coordinates
