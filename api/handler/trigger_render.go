@@ -57,7 +57,8 @@ func renderTrigger(writer http.ResponseWriter, request *http.Request) {
 	for _, ts := range tts.Main {
 		if len(ts.MetricData.Values) > 0 {
 			metricsData = append(metricsData, &ts.MetricData)
-			carbonapiRaw += fmt.Sprintf("%+v\n", metricsData)
+			carbonapiRaw += fmt.Sprintf("IsAbsent: %+v\n", len(ts.IsAbsent))
+			carbonapiRaw += fmt.Sprintf("Values: %+v\n", len(ts.Values))
 		}
 	}
 
