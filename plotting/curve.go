@@ -49,11 +49,6 @@ func DescribePlotCurves(metricData *types.MetricData) ([]PlotCurve, []float64) {
 	curves := []PlotCurve{{}}
 	curvesInd := 0
 
-	values := make(chan float64, len(metricData.Values))
-	for _, val := range metricData.Values {
-		values <- val
-	}
-
 	start, timeStamp := ResolveFirstPoint(metricData)
 
 	var pointValue float64
@@ -61,7 +56,11 @@ func DescribePlotCurves(metricData *types.MetricData) ([]PlotCurve, []float64) {
 	var highest float64
 
 	for valInd := start; valInd < len(metricData.Values); valInd++ {
-		pointValue = <-values
+		pointValue = metricData.Values[valInd]
+		if valInd == start {
+			lowest = pointValue
+			highest = pointValue
+		}
 		switch math.IsNaN(pointValue) {
 		case false:
 			timeStampValue := Int32ToTime(timeStamp)
