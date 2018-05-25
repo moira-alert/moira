@@ -2,12 +2,13 @@ package checker
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/mock/moira-alert"
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
-	"testing"
 )
 
 func TestCompareStates(t *testing.T) {
@@ -176,6 +177,7 @@ func TestCompareStates(t *testing.T) {
 		})
 	})
 }
+
 func TestCompareChecks(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -289,5 +291,43 @@ func TestCompareChecks(t *testing.T) {
 			currentCheck.Suppressed = true
 			So(actual, ShouldResemble, currentCheck)
 		})
+	})
+}
+
+func TestSameStateWithMaintenance(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	logger, _ := logging.GetLogger("Test")
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+
+	triggerChecker := TriggerChecker{
+		Logger:   logger,
+		Until:    67,
+		From:     17,
+		Database: dataBase,
+		trigger: &moira.Trigger{
+			ID:      "superId",
+			Targets: []string{"aliasByNode(super.*.metric, 0)"},
+		},
+	}
+
+	lastState := moira.MetricState{
+		Timestamp:      1000,
+		EventTimestamp: 1,
+		Suppressed:     true,
+		Maintenance:    1100,
+		State:          WARN,
+	}
+	currentState := moira.MetricState{
+		Suppressed: false,
+		Timestamp:  1200,
+		State:      WARN,
+	}
+
+	Convey("Test Same Status after maintenance. No need to send message.", t, func() {
+		actual, err := triggerChecker.compareStates("super.awesome.metric", currentState, lastState)
+		So(err, ShouldBeNil)
+		currentState.EventTimestamp = lastState.EventTimestamp
+		So(actual, ShouldResemble, currentState)
 	})
 }

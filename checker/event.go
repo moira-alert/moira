@@ -2,8 +2,9 @@ package checker
 
 import (
 	"fmt"
-	"github.com/moira-alert/moira"
 	"time"
+
+	"github.com/moira-alert/moira"
 )
 
 var badStateReminder = map[string]int64{
@@ -107,6 +108,9 @@ func needSendEvent(currentStateValue string, lastStateValue string, currentState
 		return true, &message
 	}
 	if !isLastStateSuppressed || currentStateValue == OK {
+		return false, nil
+	}
+	if isLastStateSuppressed && lastStateValue == currentStateValue && currentStateValue != EXCEPTION {
 		return false, nil
 	}
 	return true, nil
