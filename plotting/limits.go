@@ -1,8 +1,8 @@
 package plotting
 
 import (
-	"time"
 	"math"
+	"time"
 
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/wcharczuk/go-chart/util"

@@ -12,8 +12,8 @@ const (
 	deltaMarkerLabel = 26
 	markerLength     = 10
 	deltaMarker      = int(deltaLabels - markerLength)
-	maxLegendLength  = 90
-	maxLabelLength   = int(maxLegendLength / 3)
+	maxLabelsCount   = 4
+	maxLabelLength   = 30
 )
 
 // GetPlotLegend returns plot legend
@@ -28,30 +28,30 @@ func GetPlotLegend(c *chart.Chart) chart.Renderable {
 		legendStyle := chartDefaults.InheritFrom(legendDefault)
 		foundLabels := make(map[string]bool)
 
-		var symbols int
+		labelsCount := 0
 		var labels []string
 		var lines []chart.Style
-		for ind, s := range c.Series {
+		for _, s := range c.Series {
 			if s.GetStyle().IsZero() || s.GetStyle().Show {
 				if _, isAnnotationSeries := s.(chart.AnnotationSeries); !isAnnotationSeries {
 					legendLabel := s.GetName()
 					_, isFound := foundLabels[legendLabel]
 					if !isFound && legendLabel != ThresholdSerie {
 						foundLabels[legendLabel] = true
-						legendLabel, labelLength := sanitizeLabelName(legendLabel, maxLabelLength)
-						symbols += labelLength
+						legendLabel := SanitizeLabelName(legendLabel, maxLabelLength)
 						labels = append(labels, legendLabel)
 						lines = append(lines, s.GetStyle())
-						if symbols > maxLegendLength || ind == 5 {
+						if labelsCount == maxLabelsCount {
 							break
 						}
+						labelsCount++
 					}
 				}
 			}
 		}
 
 		sort.Sort(SortedByLen(labels))
-		if symbols > maxLegendLength {
+		if len(labels) == maxLabelsCount {
 			labels[len(labels)-1] = "other series"
 			lines[len(lines)-1].StrokeColor = chart.ColorAlternateGray
 		}

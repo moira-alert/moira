@@ -43,8 +43,6 @@ func (plot Plot) GetRenderable(metricsData []*types.MetricData, plotFont *truety
 
 	plotSeries := make([]chart.Series, 0)
 
-	// TODO: use isolated method to securely count plot limits
-
 	for timeSerieIndex := range metricsData {
 		plotCurves := GeneratePlotCurves(metricsData[timeSerieIndex], timeSerieIndex, yAxisMain)
 		for _, timeSerie := range plotCurves {

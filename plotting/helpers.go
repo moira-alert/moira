@@ -2,6 +2,7 @@ package plotting
 
 import (
 	"fmt"
+	"math"
 	"strings"
 	"time"
 
@@ -26,24 +27,23 @@ func (initial SortedByLen) Swap(i int, j int) {
 
 // Int32ToTime returns time.Time from int32
 func Int32ToTime(timeStamp int32) time.Time {
-	return time.Unix(int64(timeStamp), 0)
+	return time.Unix(int64(timeStamp), 0).UTC()
 }
 
-// sanitizeLabelName shortens label names to max length
-func sanitizeLabelName(label string, maxLabelLength int) (string, int) {
+// SanitizeLabelName shortens label names to max length
+func SanitizeLabelName(label string, maxLabelLength int) string {
 	labelLength := len(label)
 	if labelLength > maxLabelLength {
 		label = label[:maxLabelLength-3]
 		label += "..."
-		labelLength = maxLabelLength
 	}
-	return label, labelLength
+	return label
 }
 
 // FloatToHumanizedValueFormatter converts floats into humanized strings on y axis of plot
 func FloatToHumanizedValueFormatter(v interface{}) string {
 	if typed, isTyped := v.(float64); isTyped {
-		if typed < 1000 {
+		if math.Abs(typed) < 1000 {
 			return fmt.Sprintf("%.f", typed)
 		}
 		typed, postfix := humanize.ComputeSI(typed)
