@@ -1,6 +1,7 @@
 package plotting
 
 import (
+	"math"
 	"time"
 
 	"github.com/golang/freetype/truetype"
@@ -24,18 +25,21 @@ type Threshold struct {
 func GenerateThresholds(plot Plot, limits Limits) []Threshold {
 	var thresholds = make([]Threshold, 0)
 	timePoint := float64(limits.To.UnixNano())
-	if plot.ErrorValue != nil && limits.FormsSetContaining(*plot.ErrorValue) {
-		thresholds = append(thresholds, Threshold{
-			Title:  "ERROR",
-			Value:  *plot.ErrorValue,
-			Point:  timePoint,
-			Color:  ErrorThreshold,
-			GrowTo: 0,
-		})
+	if plot.ErrorValue != nil {
+		if plot.WarnValue != nil && !(*plot.ErrorValue < *plot.WarnValue) ||
+			limits.FormsSetContaining(*plot.ErrorValue) {
+			thresholds = append(thresholds, Threshold{
+				Title:  "ERROR",
+				Value:  *plot.ErrorValue,
+				Point:  timePoint,
+				Color:  ErrorThreshold,
+				GrowTo: 0,
+			})
+		}
 	}
 	if plot.WarnValue != nil && limits.FormsSetContaining(*plot.WarnValue) {
 		if plot.ErrorValue == nil || *plot.WarnValue != *plot.ErrorValue &&
-			(*plot.ErrorValue-*plot.WarnValue) > (limits.Highest-limits.Lowest)/16 {
+			math.Abs(*plot.ErrorValue-*plot.WarnValue) > math.Abs(limits.Highest-limits.Lowest)/16 {
 			thresholds = append(thresholds, Threshold{
 				Title:  "WARN",
 				Value:  *plot.WarnValue,

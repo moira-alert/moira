@@ -43,7 +43,7 @@ func GetDefaultFont() (*truetype.Font, error) {
 func GetGridStyle(plotTheme string) chart.Style {
 	var styleColor string
 	switch plotTheme {
-	case DarkTheme:
+	case DarkTheme, "":
 		styleColor = "ffffff"
 	case LightTheme:
 		styleColor = "1f1d1d"

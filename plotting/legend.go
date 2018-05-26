@@ -41,7 +41,7 @@ func GetPlotLegend(c *chart.Chart) chart.Renderable {
 						legendLabel := SanitizeLabelName(legendLabel, maxLabelLength)
 						labels = append(labels, legendLabel)
 						lines = append(lines, s.GetStyle())
-						if labelsCount == maxLabelsCount - 1 {
+						if labelsCount == maxLabelsCount-1 {
 							break
 						}
 						labelsCount++
