@@ -55,11 +55,14 @@ func renderTrigger(writer http.ResponseWriter, request *http.Request) {
 
 	var metricsData = make([]*types.MetricData, 0, len(tts.Main)+len(tts.Additional))
 	for _, ts := range tts.Main {
-		if len(ts.MetricData.Values) > 0 {
-			metricsData = append(metricsData, &ts.MetricData)
-			carbonapiRaw += fmt.Sprintf("IsAbsent: %+v\n", len(ts.IsAbsent))
-			carbonapiRaw += fmt.Sprintf("Values: %+v\n", len(ts.Values))
-		}
+		metricsData = append(metricsData, &ts.MetricData)
+		carbonapiRaw += fmt.Sprintf("IsAbsent: %+v\n", len(ts.IsAbsent))
+		carbonapiRaw += fmt.Sprintf("Values: %+v\n", len(ts.Values))
+	}
+	for _, ts := range tts.Additional {
+		metricsData = append(metricsData, &ts.MetricData)
+		carbonapiRaw += fmt.Sprintf("IsAbsent: %+v\n", len(ts.IsAbsent))
+		carbonapiRaw += fmt.Sprintf("Values: %+v\n", len(ts.Values))
 	}
 
 	switch format {
