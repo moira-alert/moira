@@ -36,7 +36,7 @@ func (plot Plot) IsRaising() bool {
 }
 
 // GetRenderable returns go-chart to render
-func (plot Plot) GetRenderable(metricsData []*types.MetricData, plotFont *truetype.Font, from int32, to int32) chart.Chart {
+func (plot Plot) GetRenderable(metricsData []*types.MetricData, plotFont *truetype.Font) chart.Chart {
 
 	raising := plot.IsRaising()
 	yAxisMain, yAxisDescending := GetYAxisParams(raising)
@@ -50,7 +50,7 @@ func (plot Plot) GetRenderable(metricsData []*types.MetricData, plotFont *truety
 		}
 	}
 
-	plotLimits := ResolveLimits(metricsData, from, to)
+	plotLimits := ResolveLimits(metricsData)
 	plotThresholds := GenerateThresholds(plot, plotLimits)
 
 	for _, plotThreshold := range plotThresholds {
