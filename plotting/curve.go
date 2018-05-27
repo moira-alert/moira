@@ -20,7 +20,7 @@ func GeneratePlotCurves(metricData *types.MetricData, curveColor int, mainYAxis 
 	// TODO: create style to draw single value in between of gaps
 	curves := DescribePlotCurves(metricData)
 	curveSeries := make([]chart.TimeSeries, 0)
-	if curveColor > len(CurveColors) {
+	if curveColor > len(CurveColors)-1 {
 		curveColor = 1
 	}
 	for _, curve := range curves {
