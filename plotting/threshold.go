@@ -24,6 +24,10 @@ type Threshold struct {
 // GenerateThresholds returns thresholds available for plot
 func GenerateThresholds(plot Plot, limits Limits) []Threshold {
 	var thresholds = make([]Threshold, 0)
+	if limits.Lowest < 0 || limits.Highest < 0 {
+		// TODO: this case must be described
+		return thresholds
+	}
 	timePoint := float64(limits.To.UnixNano())
 	if plot.ErrorValue != nil {
 		if plot.WarnValue != nil && !(*plot.ErrorValue < *plot.WarnValue) ||

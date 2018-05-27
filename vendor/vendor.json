@@ -68,6 +68,12 @@
 			"revisionTime": "2018-03-11T10:03:28Z"
 		},
 		{
+			"checksumSHA1": "xN34bar6n9kkjxjWt/GvnqbFwnQ=",
+			"path": "github.com/disintegration/imaging",
+			"revision": "bbcee2f5c9d5e94ca42c8b50ec847fec64a6c134",
+			"revisionTime": "2018-05-08T19:53:14Z"
+		},
+		{
 			"checksumSHA1": "tJd2T/eyW6ejAev7WzGxTeUVOPQ=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/dustin/go-humanize",
 			"path": "github.com/dustin/go-humanize",
@@ -1247,6 +1253,12 @@
 			"revisionTime": "2018-03-11T10:03:28Z"
 		},
 		{
+			"checksumSHA1": "UD/pejajPyS7WaWVXq2NU1eK4Ic=",
+			"path": "golang.org/x/image/bmp",
+			"revision": "f315e440302883054d0c2bd85486878cb4f8572c",
+			"revisionTime": "2018-04-03T01:08:12Z"
+		},
+		{
 			"checksumSHA1": "cH+9uIg24pjXHRdUPW0WjMpkau4=",
 			"path": "golang.org/x/image/draw",
 			"revision": "f3a9b89b59def9194717c1d0bd4c0d08fa1afa7b",
@@ -1269,6 +1281,18 @@
 			"path": "golang.org/x/image/math/fixed",
 			"revision": "f3a9b89b59def9194717c1d0bd4c0d08fa1afa7b",
 			"revisionTime": "2018-03-14T17:20:51Z"
+		},
+		{
+			"checksumSHA1": "xHj7hC7bSAOdCF/aEfmFAK5i3ns=",
+			"path": "golang.org/x/image/tiff",
+			"revision": "f315e440302883054d0c2bd85486878cb4f8572c",
+			"revisionTime": "2018-04-03T01:08:12Z"
+		},
+		{
+			"checksumSHA1": "PF6VjvpNpOdR8epWH1Liyy7x1Qg=",
+			"path": "golang.org/x/image/tiff/lzw",
+			"revision": "f315e440302883054d0c2bd85486878cb4f8572c",
+			"revisionTime": "2018-04-03T01:08:12Z"
 		},
 		{
 			"checksumSHA1": "Y+HGqEkYM15ir+J93MEaHdyFy0c=",
