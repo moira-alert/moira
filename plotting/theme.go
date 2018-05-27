@@ -43,7 +43,7 @@ func GetDefaultFont() (*truetype.Font, error) {
 func GetGridStyle(plotTheme string) chart.Style {
 	var styleColor string
 	switch plotTheme {
-	case DarkTheme, "":
+	case DarkTheme:
 		styleColor = "ffffff"
 	case LightTheme:
 		styleColor = "1f1d1d"
@@ -64,9 +64,15 @@ func GetYAxisParams(isRaising bool) (int, bool) {
 }
 
 // GetBgPadding returns background padding
-func GetBgPadding(thresholdsCount int) chart.Box {
+func GetBgPadding(plotLimits Limits, thresholdsCount int) chart.Box {
+	if (plotLimits.Highest - plotLimits.Lowest) > 1000 {
+		if thresholdsCount > 0 {
+			return chart.Box{Top: 40, Left: 15, Right: 21, Bottom: 40}
+		}
+		return chart.Box{Top: 40, Left: 15, Right: 65, Bottom: 40}
+	}
 	if thresholdsCount > 0 {
 		return chart.Box{Top: 40, Left: 30, Bottom: 40}
 	}
-	return chart.Box{Top: 40, Left: 20, Right: 40, Bottom: 40}
+	return chart.Box{Top: 40, Left: 30, Right: 49, Bottom: 40}
 }

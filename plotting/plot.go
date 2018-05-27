@@ -58,7 +58,7 @@ func (plot Plot) GetRenderable(metricsData []*types.MetricData, plotFont *truety
 		plotSeries = append(plotSeries, plotThreshold.GenerateAnnotationSeries(plotLimits, raising, plotFont))
 	}
 
-	bgPadding := GetBgPadding(len(plotThresholds))
+	bgPadding := GetBgPadding(plotLimits, len(plotThresholds))
 	gridStyle := GetGridStyle(plot.Theme)
 
 	yAxisValuesFormatter := GetYAxisValuesFormatter(plotLimits)

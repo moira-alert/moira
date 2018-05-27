@@ -824,6 +824,30 @@
 			"revisionTime": "2014-12-21T20:36:44Z"
 		},
 		{
+			"checksumSHA1": "lfMcCIt+21CRnmBNzWNPvvYXLiw=",
+			"path": "github.com/gotokatsuya/ipare",
+			"revision": "fd52c5b6c44bacdd22df5f49d45d1b723c9f6f40",
+			"revisionTime": "2016-12-02T04:39:54Z"
+		},
+		{
+			"checksumSHA1": "7/h7XdF+/prkoyqvbJj+jp5sN2s=",
+			"path": "github.com/gotokatsuya/ipare/algorithm/hash",
+			"revision": "fd52c5b6c44bacdd22df5f49d45d1b723c9f6f40",
+			"revisionTime": "2016-12-02T04:39:54Z"
+		},
+		{
+			"checksumSHA1": "CJdtGeQrfphRCc7JbB5xkpNmah0=",
+			"path": "github.com/gotokatsuya/ipare/algorithm/pixel",
+			"revision": "fd52c5b6c44bacdd22df5f49d45d1b723c9f6f40",
+			"revisionTime": "2016-12-02T04:39:54Z"
+		},
+		{
+			"checksumSHA1": "SXOk7r2vej6TFdHVnlet/AN1K9Q=",
+			"path": "github.com/gotokatsuya/ipare/util",
+			"revision": "fd52c5b6c44bacdd22df5f49d45d1b723c9f6f40",
+			"revisionTime": "2016-12-02T04:39:54Z"
+		},
+		{
 			"checksumSHA1": "LjBAYU2hSInh1mHuEdWLG1QAusU=",
 			"path": "github.com/gregdel/pushover",
 			"revision": "3c2e00dda05a0225e30f21659b7d9399278bf4a1",
