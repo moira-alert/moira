@@ -10,6 +10,8 @@ const (
 	DEL       = "DEL"
 )
 
+var states = []string{OK, WARN, ERROR, NODATA, EXCEPTION, DEL}
+
 func toMetricState(state string) string {
 	if state == DEL {
 		return NODATA

@@ -12,7 +12,7 @@ var badStateReminder = map[string]int64{
 	NODATA: 86400,
 }
 
-func (triggerChecker *TriggerChecker) compareChecks(currentCheck moira.CheckData) (moira.CheckData, error) {
+func (triggerChecker *TriggerChecker) compareTriggerStates(currentCheck moira.CheckData) (moira.CheckData, error) {
 	currentStateValue := currentCheck.State
 	lastStateValue := triggerChecker.lastCheck.State
 	timestamp := currentCheck.Timestamp
@@ -52,7 +52,7 @@ func (triggerChecker *TriggerChecker) compareChecks(currentCheck moira.CheckData
 	return currentCheck, err
 }
 
-func (triggerChecker *TriggerChecker) compareStates(metric string, currentState moira.MetricState, lastState moira.MetricState) (moira.MetricState, error) {
+func (triggerChecker *TriggerChecker) compareMetricStates(metric string, currentState moira.MetricState, lastState moira.MetricState) (moira.MetricState, error) {
 	if lastState.EventTimestamp != 0 {
 		currentState.EventTimestamp = lastState.EventTimestamp
 	} else {
@@ -98,7 +98,7 @@ func (triggerChecker *TriggerChecker) isTriggerSuppressed(event *moira.Notificat
 	return false
 }
 
-func needSendEvent(currentStateValue string, lastStateValue string, currentStateTimestamp int64, lastStateEventTimestamp int64, isLastStateSuppressed bool) (needSend bool, message *string) {
+func needSendEvent(currentStateValue string, lastStateValue string, currentStateTimestamp int64, lastStateEventTimestamp int64, isLastCheckSuppressed bool) (needSend bool, message *string) {
 	if currentStateValue != lastStateValue {
 		return true, nil
 	}
@@ -107,10 +107,10 @@ func needSendEvent(currentStateValue string, lastStateValue string, currentState
 		message := fmt.Sprintf("This metric has been in bad state for more than %v hours - please, fix.", remindInterval/3600)
 		return true, &message
 	}
-	if !isLastStateSuppressed || currentStateValue == OK {
+	if !isLastCheckSuppressed || currentStateValue == OK {
 		return false, nil
 	}
-	if isLastStateSuppressed && lastStateValue == currentStateValue && currentStateValue != EXCEPTION {
+	if isLastCheckSuppressed && lastStateValue == currentStateValue && currentStateValue != EXCEPTION {
 		return false, nil
 	}
 	return true, nil

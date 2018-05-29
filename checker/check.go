@@ -120,7 +120,7 @@ func (triggerChecker *TriggerChecker) checkTimeSeries(timeSeries *target.TimeSer
 		return
 	}
 	for _, currentState := range metricStates {
-		lastState, err = triggerChecker.compareStates(timeSeries.Name, currentState, lastState)
+		lastState, err = triggerChecker.compareMetricStates(timeSeries.Name, currentState, lastState)
 		if err != nil {
 			return
 		}
@@ -130,7 +130,7 @@ func (triggerChecker *TriggerChecker) checkTimeSeries(timeSeries *target.TimeSer
 		return
 	}
 	if noDataState != nil {
-		lastState, err = triggerChecker.compareStates(timeSeries.Name, *noDataState, lastState)
+		lastState, err = triggerChecker.compareMetricStates(timeSeries.Name, *noDataState, lastState)
 	}
 	return
 }
@@ -167,7 +167,7 @@ func (triggerChecker *TriggerChecker) handleErrorCheck(checkData moira.CheckData
 		triggerChecker.Logger.Errorf("Trigger %s check failed: %s", triggerChecker.TriggerID, checkingError.Error())
 		checkData.State = EXCEPTION
 	}
-	return triggerChecker.compareChecks(checkData)
+	return triggerChecker.compareTriggerStates(checkData)
 }
 
 func (triggerChecker *TriggerChecker) checkForNoData(timeSeries *target.TimeSeries, metricLastState moira.MetricState) (bool, *moira.MetricState) {

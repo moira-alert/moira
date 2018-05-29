@@ -11,7 +11,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestCompareStates(t *testing.T) {
+func TestCompareMetricStates(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	logger, _ := logging.GetLogger("Test")
@@ -42,7 +42,7 @@ func TestCompareStates(t *testing.T) {
 			lastState.State = OK
 			currentState.State = OK
 
-			actual, err := triggerChecker.compareStates("m1", currentState, lastState)
+			actual, err := triggerChecker.compareMetricStates("m1", currentState, lastState)
 			So(err, ShouldBeNil)
 			currentState.EventTimestamp = lastState.EventTimestamp
 			currentState.Suppressed = false
@@ -55,7 +55,7 @@ func TestCompareStates(t *testing.T) {
 			lastState.State = NODATA
 			currentState.State = NODATA
 
-			actual, err := triggerChecker.compareStates("m1", currentState, lastState)
+			actual, err := triggerChecker.compareMetricStates("m1", currentState, lastState)
 			So(err, ShouldBeNil)
 			currentState.EventTimestamp = lastState.EventTimestamp
 			currentState.Suppressed = false
@@ -68,7 +68,7 @@ func TestCompareStates(t *testing.T) {
 			lastState.State = ERROR
 			currentState.State = ERROR
 
-			actual, err := triggerChecker.compareStates("m1", currentState, lastState)
+			actual, err := triggerChecker.compareMetricStates("m1", currentState, lastState)
 			So(err, ShouldBeNil)
 			currentState.EventTimestamp = lastState.EventTimestamp
 			currentState.Suppressed = false
@@ -92,7 +92,7 @@ func TestCompareStates(t *testing.T) {
 				Value:     currentState.Value,
 				Message:   &message,
 			}, true).Return(nil)
-			actual, err := triggerChecker.compareStates("m1", currentState, lastState)
+			actual, err := triggerChecker.compareMetricStates("m1", currentState, lastState)
 			So(err, ShouldBeNil)
 			currentState.EventTimestamp = currentState.Timestamp
 			currentState.Suppressed = false
@@ -116,7 +116,7 @@ func TestCompareStates(t *testing.T) {
 				Value:     currentState.Value,
 				Message:   &message,
 			}, true).Return(nil)
-			actual, err := triggerChecker.compareStates("m1", currentState, lastState)
+			actual, err := triggerChecker.compareMetricStates("m1", currentState, lastState)
 			So(err, ShouldBeNil)
 			currentState.EventTimestamp = currentState.Timestamp
 			currentState.Suppressed = false
@@ -129,7 +129,7 @@ func TestCompareStates(t *testing.T) {
 			lastState.State = EXCEPTION
 			currentState.State = EXCEPTION
 
-			actual, err := triggerChecker.compareStates("m1", currentState, lastState)
+			actual, err := triggerChecker.compareMetricStates("m1", currentState, lastState)
 			So(err, ShouldBeNil)
 			currentState.EventTimestamp = lastState.EventTimestamp
 			currentState.Suppressed = false
@@ -153,7 +153,7 @@ func TestCompareStates(t *testing.T) {
 				Message:   nil,
 			}, true).Return(nil)
 
-			actual, err := triggerChecker.compareStates("m1", currentState, lastState)
+			actual, err := triggerChecker.compareMetricStates("m1", currentState, lastState)
 			So(err, ShouldBeNil)
 			currentState.EventTimestamp = currentState.Timestamp
 			currentState.Suppressed = false
@@ -169,7 +169,7 @@ func TestCompareStates(t *testing.T) {
 			currentState.State = OK
 			currentState.Maintenance = 1502719222
 
-			actual, err := triggerChecker.compareStates("m1", currentState, lastState)
+			actual, err := triggerChecker.compareMetricStates("m1", currentState, lastState)
 			So(err, ShouldBeNil)
 			currentState.EventTimestamp = currentState.Timestamp
 			currentState.Suppressed = true
@@ -178,7 +178,7 @@ func TestCompareStates(t *testing.T) {
 	})
 }
 
-func TestCompareChecks(t *testing.T) {
+func TestCompareTriggerStates(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	logger, _ := logging.GetLogger("Test")
@@ -208,7 +208,7 @@ func TestCompareChecks(t *testing.T) {
 			triggerChecker.lastCheck = &lastCheck
 			lastCheck.State = OK
 			currentCheck.State = OK
-			actual, err := triggerChecker.compareChecks(currentCheck)
+			actual, err := triggerChecker.compareTriggerStates(currentCheck)
 
 			So(err, ShouldBeNil)
 			currentCheck.EventTimestamp = lastCheck.EventTimestamp
@@ -234,7 +234,7 @@ func TestCompareChecks(t *testing.T) {
 				Message:        &currentCheck.Message,
 			}, true).Return(nil)
 
-			actual, err := triggerChecker.compareChecks(currentCheck)
+			actual, err := triggerChecker.compareTriggerStates(currentCheck)
 			So(err, ShouldBeNil)
 			currentCheck.EventTimestamp = currentCheck.Timestamp
 			So(actual, ShouldResemble, currentCheck)
@@ -284,7 +284,7 @@ func TestCompareChecks(t *testing.T) {
 			triggerChecker.lastCheck = &lastCheck
 			lastCheck.State = OK
 			currentCheck.State = NODATA
-			actual, err := triggerChecker.compareChecks(currentCheck)
+			actual, err := triggerChecker.compareTriggerStates(currentCheck)
 
 			So(err, ShouldBeNil)
 			currentCheck.EventTimestamp = currentCheck.Timestamp
@@ -294,7 +294,7 @@ func TestCompareChecks(t *testing.T) {
 	})
 }
 
-func TestSameStateWithMaintenance(t *testing.T) {
+func TestCheckMetricStateWithLastStateSuppressed(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	logger, _ := logging.GetLogger("Test")
@@ -324,10 +324,14 @@ func TestSameStateWithMaintenance(t *testing.T) {
 		State:      WARN,
 	}
 
-	Convey("Test Same Status after maintenance. No need to send message.", t, func() {
-		actual, err := triggerChecker.compareStates("super.awesome.metric", currentState, lastState)
-		So(err, ShouldBeNil)
-		currentState.EventTimestamp = lastState.EventTimestamp
-		So(actual, ShouldResemble, currentState)
-	})
+	for _, state := range states {
+		Convey(fmt.Sprintf("Test Same Status %s after maintenance. No need to send message.", state), t, func() {
+			lastState.State = state
+			currentState.State = state
+			actual, err := triggerChecker.compareMetricStates("super.awesome.metric", currentState, lastState)
+			So(err, ShouldBeNil)
+			currentState.EventTimestamp = lastState.EventTimestamp
+			So(actual, ShouldResemble, currentState)
+		})
+	}
 }
