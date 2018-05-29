@@ -9,7 +9,7 @@ Code in this repository is a backend part of Moira monitoring application. Front
 
 Documentation for the entire Moira project is available on [Read the Docs][readthedocs] site.
 
-If you have any questions, you can ask us on [Gitter][gitter]..
+If you have any questions, you can ask us on [Gitter][gitter].
 
 ## Thanks
 
