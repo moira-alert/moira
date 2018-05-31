@@ -135,30 +135,6 @@ func TestCompareMetricStates(t *testing.T) {
 			currentState.Suppressed = false
 			So(actual, ShouldResemble, currentState)
 		})
-
-		Convey("Status EXCEPTION and lastState.Suppressed=true", func() {
-			lastState := lastStateExample
-			currentState := currentStateExample
-			lastState.State = EXCEPTION
-			lastState.Suppressed = true
-			currentState.State = EXCEPTION
-
-			dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
-				TriggerID: triggerChecker.TriggerID,
-				Timestamp: currentState.Timestamp,
-				State:     EXCEPTION,
-				OldState:  EXCEPTION,
-				Metric:    "m1",
-				Value:     currentState.Value,
-				Message:   nil,
-			}, true).Return(nil)
-
-			actual, err := triggerChecker.compareMetricStates("m1", currentState, lastState)
-			So(err, ShouldBeNil)
-			currentState.EventTimestamp = currentState.Timestamp
-			currentState.Suppressed = false
-			So(actual, ShouldResemble, currentState)
-		})
 	})
 
 	Convey("Test different states", t, func() {
@@ -212,31 +188,6 @@ func TestCompareTriggerStates(t *testing.T) {
 
 			So(err, ShouldBeNil)
 			currentCheck.EventTimestamp = lastCheck.EventTimestamp
-			So(actual, ShouldResemble, currentCheck)
-		})
-
-		Convey("Need send", func() {
-			lastCheck := lastCheckExample
-			currentCheck := currentCheckExample
-			triggerChecker.lastCheck = &lastCheck
-			lastCheck.State = EXCEPTION
-			lastCheck.Suppressed = true
-			currentCheck.State = EXCEPTION
-
-			dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
-				IsTriggerEvent: true,
-				TriggerID:      triggerChecker.TriggerID,
-				Timestamp:      currentCheck.Timestamp,
-				State:          EXCEPTION,
-				OldState:       EXCEPTION,
-				Metric:         triggerChecker.trigger.Name,
-				Value:          nil,
-				Message:        &currentCheck.Message,
-			}, true).Return(nil)
-
-			actual, err := triggerChecker.compareTriggerStates(currentCheck)
-			So(err, ShouldBeNil)
-			currentCheck.EventTimestamp = currentCheck.Timestamp
 			So(actual, ShouldResemble, currentCheck)
 		})
 	})

@@ -15,6 +15,8 @@ var badStateReminder = map[string]int64{
 func (triggerChecker *TriggerChecker) compareTriggerStates(currentCheck moira.CheckData) (moira.CheckData, error) {
 	currentStateValue := currentCheck.State
 	lastStateValue := triggerChecker.lastCheck.State
+	lastStateSuppressed := triggerChecker.lastCheck.Suppressed
+	lastStateSuppressedValue := triggerChecker.lastCheck.SuppressedState
 	timestamp := currentCheck.Timestamp
 
 	if triggerChecker.lastCheck.EventTimestamp != 0 {
@@ -23,7 +25,13 @@ func (triggerChecker *TriggerChecker) compareTriggerStates(currentCheck moira.Ch
 		currentCheck.EventTimestamp = timestamp
 	}
 
-	needSend, message := needSendEvent(currentStateValue, lastStateValue, timestamp, triggerChecker.lastCheck.GetEventTimestamp(), triggerChecker.lastCheck.Suppressed)
+	if lastStateSuppressed && lastStateSuppressedValue == "" {
+		lastStateSuppressedValue = lastStateValue
+	}
+
+	currentCheck.SuppressedState = lastStateSuppressedValue
+
+	needSend, message := needSendEvent(currentStateValue, lastStateValue, timestamp, triggerChecker.lastCheck.GetEventTimestamp(), lastStateSuppressed, lastStateSuppressedValue)
 	if !needSend {
 		return currentCheck, nil
 	}
@@ -45,7 +53,12 @@ func (triggerChecker *TriggerChecker) compareTriggerStates(currentCheck moira.Ch
 
 	if triggerChecker.isTriggerSuppressed(&event, timestamp, 0, "") {
 		currentCheck.Suppressed = true
+		if !lastStateSuppressed {
+			currentCheck.SuppressedState = lastStateValue
+		}
 		return currentCheck, nil
+	} else {
+		currentCheck.SuppressedState = ""
 	}
 	triggerChecker.Logger.Infof("Writing new event: %v", event)
 	err := triggerChecker.Database.PushNotificationEvent(&event, true)
@@ -59,7 +72,13 @@ func (triggerChecker *TriggerChecker) compareMetricStates(metric string, current
 		currentState.EventTimestamp = currentState.Timestamp
 	}
 
-	needSend, message := needSendEvent(currentState.State, lastState.State, currentState.Timestamp, lastState.GetEventTimestamp(), lastState.Suppressed)
+	if lastState.Suppressed && lastState.SuppressedState == "" {
+		lastState.SuppressedState = lastState.State
+	}
+
+	currentState.SuppressedState = lastState.SuppressedState
+
+	needSend, message := needSendEvent(currentState.State, lastState.State, currentState.Timestamp, lastState.GetEventTimestamp(), lastState.Suppressed, lastState.SuppressedState)
 	if !needSend {
 		return currentState, nil
 	}
@@ -79,7 +98,12 @@ func (triggerChecker *TriggerChecker) compareMetricStates(metric string, current
 
 	if triggerChecker.isTriggerSuppressed(&event, currentState.Timestamp, currentState.Maintenance, metric) {
 		currentState.Suppressed = true
+		if !lastState.Suppressed {
+			currentState.SuppressedState = lastState.State
+		}
 		return currentState, nil
+	} else {
+		currentState.SuppressedState = ""
 	}
 	triggerChecker.Logger.Infof("Writing new event: %v", event)
 	err := triggerChecker.Database.PushNotificationEvent(&event, true)
@@ -98,22 +122,20 @@ func (triggerChecker *TriggerChecker) isTriggerSuppressed(event *moira.Notificat
 	return false
 }
 
-func needSendEvent(currentStateValue string, lastStateValue string, currentStateTimestamp int64, lastStateEventTimestamp int64, isLastCheckSuppressed bool) (needSend bool, message *string) {
-	if currentStateValue != lastStateValue {
+func needSendEvent(currentStateValue string, lastStateValue string, currentStateTimestamp int64, lastStateEventTimestamp int64, isLastCheckSuppressed bool, lastStateSuppressedValue string) (needSend bool, message *string) {
+	if !isLastCheckSuppressed && currentStateValue != lastStateValue {
 		return true, nil
+	}
+	if isLastCheckSuppressed && currentStateValue != lastStateSuppressedValue {
+		message := "This metric changed its state during maintenance interval."
+		return true, &message
 	}
 	remindInterval, ok := badStateReminder[currentStateValue]
 	if ok && needRemindAgain(currentStateTimestamp, lastStateEventTimestamp, remindInterval) {
 		message := fmt.Sprintf("This metric has been in bad state for more than %v hours - please, fix.", remindInterval/3600)
 		return true, &message
 	}
-	if !isLastCheckSuppressed || currentStateValue == OK {
-		return false, nil
-	}
-	if isLastCheckSuppressed && lastStateValue == currentStateValue && currentStateValue != EXCEPTION {
-		return false, nil
-	}
-	return true, nil
+	return false, nil
 }
 
 func needRemindAgain(currentStateTimestamp, lastStateEventTimestamp, remindInterval int64) bool {
