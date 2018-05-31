@@ -143,6 +143,7 @@ func TestCompareMetricStates(t *testing.T) {
 			currentState := currentStateExample
 			lastState.State = EXCEPTION
 			currentState.State = OK
+			currentState.SuppressedState = lastState.State
 			currentState.Maintenance = 1502719222
 
 			actual, err := triggerChecker.compareMetricStates("m1", currentState, lastState)
@@ -235,6 +236,7 @@ func TestCompareTriggerStates(t *testing.T) {
 			triggerChecker.lastCheck = &lastCheck
 			lastCheck.State = OK
 			currentCheck.State = NODATA
+			currentCheck.SuppressedState = lastCheck.State
 			actual, err := triggerChecker.compareTriggerStates(currentCheck)
 
 			So(err, ShouldBeNil)
@@ -279,6 +281,7 @@ func TestCheckMetricStateWithLastStateSuppressed(t *testing.T) {
 		Convey(fmt.Sprintf("Test Same Status %s after maintenance. No need to send message.", state), t, func() {
 			lastState.State = state
 			currentState.State = state
+			currentState.SuppressedState = lastState.State
 			actual, err := triggerChecker.compareMetricStates("super.awesome.metric", currentState, lastState)
 			So(err, ShouldBeNil)
 			currentState.EventTimestamp = lastState.EventTimestamp
