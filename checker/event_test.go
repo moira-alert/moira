@@ -277,6 +277,8 @@ func TestCheckMetricStateWithLastStateSuppressed(t *testing.T) {
 		State:      WARN,
 	}
 
+	states := []string{OK, WARN, ERROR, NODATA, EXCEPTION, DEL}
+
 	for _, state := range states {
 		Convey(fmt.Sprintf("Test Same Status %s after maintenance. No need to send message.", state), t, func() {
 			lastState.State = state
@@ -288,4 +290,106 @@ func TestCheckMetricStateWithLastStateSuppressed(t *testing.T) {
 			So(actual, ShouldResemble, currentState)
 		})
 	}
+}
+
+func TestCheckMetricStateSuppressedState(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	logger, _ := logging.GetLogger("Test")
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+
+	triggerChecker := TriggerChecker{
+		Logger:   logger,
+		Until:    67,
+		From:     17,
+		Database: dataBase,
+		trigger: &moira.Trigger{
+			ID:      "superId",
+			Targets: []string{"aliasByNode(super.*.metric, 0)"},
+		},
+	}
+
+	lastState := moira.MetricState{
+		Timestamp:      100,
+		EventTimestamp: 10,
+		State:          OK,
+	}
+	currentState := moira.MetricState{
+		Timestamp:   1000,
+		Maintenance: 1500,
+		State:       WARN,
+	}
+
+	Convey("Test SuppressedState remembered properly", t, func() {
+		Convey("Test switch to maintenance. State changes OK => WARN", func() {
+			currentState.SuppressedState = lastState.State
+			actual, err := triggerChecker.compareMetricStates("super.awesome.metric", currentState, lastState)
+			So(err, ShouldBeNil)
+			currentState.Suppressed = true
+			currentState.EventTimestamp = currentState.Timestamp
+			So(actual, ShouldResemble, currentState)
+		})
+
+		Convey("Test still in maintenance. State changes WARN => OK", func() {
+			lastState = currentState
+			currentState.Timestamp = 1100
+			currentState.State = OK
+			actual, err := triggerChecker.compareMetricStates("super.awesome.metric", currentState, lastState)
+			So(err, ShouldBeNil)
+			currentState.EventTimestamp = lastState.EventTimestamp
+			So(actual, ShouldResemble, currentState)
+		})
+
+		Convey("Test still in maintenance. State changes OK => ERROR", func() {
+			lastState = currentState
+			currentState.Timestamp = 1200
+			currentState.State = ERROR
+			actual, err := triggerChecker.compareMetricStates("super.awesome.metric", currentState, lastState)
+			So(err, ShouldBeNil)
+			currentState.EventTimestamp = currentState.Timestamp
+			So(actual, ShouldResemble, currentState)
+		})
+
+		Convey("Test switch out of maintenance. State didn't change", func() {
+			lastState = currentState
+			currentState.Timestamp = 1600
+			currentState.State = OK
+			actual, err := triggerChecker.compareMetricStates("super.awesome.metric", currentState, lastState)
+			So(err, ShouldBeNil)
+			currentState.EventTimestamp = lastState.EventTimestamp
+			So(actual, ShouldResemble, currentState)
+		})
+
+		Convey("Test switch out of maintenance. State changed during suppression", func() {
+			lastState = moira.MetricState{
+				EventTimestamp:  1300,
+				Timestamp:       1300,
+				Maintenance:     1500,
+				Suppressed:      true,
+				SuppressedState: OK,
+				State:           ERROR,
+			}
+			currentState.Timestamp = 1600
+			currentState.State = ERROR
+
+			message := fmt.Sprintf("This metric changed its state during maintenance interval.")
+			dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
+				TriggerID: triggerChecker.TriggerID,
+				Timestamp: currentState.Timestamp,
+				State:     currentState.State,
+				OldState:  currentState.SuppressedState,
+				Metric:    "super.awesome.metric",
+				Value:     currentState.Value,
+				Message:   &message,
+			}, true).Return(nil)
+
+			actual, err := triggerChecker.compareMetricStates("super.awesome.metric", currentState, lastState)
+			So(err, ShouldBeNil)
+			currentState.Suppressed = false
+			currentState.SuppressedState = ""
+			currentState.EventTimestamp = currentState.Timestamp
+			So(actual, ShouldResemble, currentState)
+		})
+	})
+
 }

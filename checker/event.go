@@ -38,11 +38,17 @@ func (triggerChecker *TriggerChecker) compareTriggerStates(currentCheck moira.Ch
 	if message == nil {
 		message = &currentCheck.Message
 	}
+
+	eventOldState := lastStateValue
+	if lastStateSuppressed {
+		eventOldState = lastStateSuppressedValue
+	}
+
 	event := moira.NotificationEvent{
 		IsTriggerEvent: true,
 		TriggerID:      triggerChecker.TriggerID,
 		State:          currentStateValue,
-		OldState:       lastStateValue,
+		OldState:       eventOldState,
 		Timestamp:      timestamp,
 		Metric:         triggerChecker.trigger.Name,
 		Message:        message,
@@ -57,9 +63,9 @@ func (triggerChecker *TriggerChecker) compareTriggerStates(currentCheck moira.Ch
 			currentCheck.SuppressedState = lastStateValue
 		}
 		return currentCheck, nil
-	} else {
-		currentCheck.SuppressedState = ""
 	}
+
+	currentCheck.SuppressedState = ""
 	triggerChecker.Logger.Infof("Writing new event: %v", event)
 	err := triggerChecker.Database.PushNotificationEvent(&event, true)
 	return currentCheck, err
@@ -83,10 +89,15 @@ func (triggerChecker *TriggerChecker) compareMetricStates(metric string, current
 		return currentState, nil
 	}
 
+	eventOldState := lastState.State
+	if lastState.Suppressed {
+		eventOldState = lastState.SuppressedState
+	}
+
 	event := moira.NotificationEvent{
 		TriggerID: triggerChecker.TriggerID,
 		State:     currentState.State,
-		OldState:  lastState.State,
+		OldState:  eventOldState,
 		Timestamp: currentState.Timestamp,
 		Metric:    metric,
 		Message:   message,
@@ -102,9 +113,9 @@ func (triggerChecker *TriggerChecker) compareMetricStates(metric string, current
 			currentState.SuppressedState = lastState.State
 		}
 		return currentState, nil
-	} else {
-		currentState.SuppressedState = ""
 	}
+
+	currentState.SuppressedState = ""
 	triggerChecker.Logger.Infof("Writing new event: %v", event)
 	err := triggerChecker.Database.PushNotificationEvent(&event, true)
 	return currentState, err
