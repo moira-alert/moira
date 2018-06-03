@@ -9,48 +9,77 @@ import (
 	"github.com/wcharczuk/go-chart/drawing"
 )
 
-// ThresholdSerie is a name that indicates threshold
-const ThresholdSerie = "threshold"
+const (
+	// ThresholdSerie is a name that indicates threshold
+	ThresholdSerie = "threshold"
+	// InvertedThresholdGap is max allowed (area between thresholds)^(-1)
+	InvertedThresholdGap = 16
+)
 
 // Threshold represents threshold parameters
 type Threshold struct {
-	Title  string
-	Value  float64
-	Point  float64
-	Color  string
-	GrowTo int
+	Title     string
+	Value     float64
+	TimePoint float64
+	Color     string
+	GrowTo    int
 }
 
 // GenerateThresholds returns thresholds available for plot
-func GenerateThresholds(plot Plot, limits Limits) []Threshold {
-	var thresholds = make([]Threshold, 0)
-	if limits.Lowest < 0 || limits.Highest < 0 {
-		// TODO: this case must be described
-		return thresholds
-	}
+func GenerateThresholds(plot Plot, limits Limits, raising bool) []Threshold {
 	timePoint := float64(limits.To.UnixNano())
-	if plot.ErrorValue != nil {
-		if plot.WarnValue != nil && !(*plot.ErrorValue < *plot.WarnValue) ||
-			limits.FormsSetContaining(*plot.ErrorValue) {
-			thresholds = append(thresholds, Threshold{
-				Title:  "ERROR",
-				Value:  *plot.ErrorValue,
-				Point:  timePoint,
-				Color:  ErrorThreshold,
-				GrowTo: 0,
-			})
+	thresholds := make([]Threshold, 0)
+	switch plot.ErrorValue {
+	case nil:
+		if plot.WarnValue != nil && !(*plot.WarnValue < 0) {
+			if limits.FormsSetContaining(*plot.WarnValue) {
+				warnThreshold := Threshold{
+					Title:     "WARN",
+					Value:     *plot.WarnValue,
+					TimePoint: timePoint,
+					Color:     WarningThreshold,
+					GrowTo:    9,
+				}
+				if raising {
+					warnThreshold.Value = limits.Highest - *plot.WarnValue
+				}
+				thresholds = append(thresholds, warnThreshold)
+			}
 		}
-	}
-	if plot.WarnValue != nil && limits.FormsSetContaining(*plot.WarnValue) {
-		if plot.ErrorValue == nil || *plot.WarnValue != *plot.ErrorValue &&
-			math.Abs(*plot.ErrorValue-*plot.WarnValue) > math.Abs(limits.Highest-limits.Lowest)/16 {
-			thresholds = append(thresholds, Threshold{
-				Title:  "WARN",
-				Value:  *plot.WarnValue,
-				Point:  timePoint,
-				Color:  WarningThreshold,
-				GrowTo: 9,
-			})
+	default:
+		if !(*plot.ErrorValue < 0) {
+			if limits.FormsSetContaining(*plot.ErrorValue) {
+				errThreshold := Threshold{
+					Title:     "ERROR",
+					Value:     *plot.ErrorValue,
+					TimePoint: timePoint,
+					Color:     ErrorThreshold,
+					GrowTo:    0,
+				}
+				if raising {
+					errThreshold.Value = limits.Highest - *plot.ErrorValue
+				}
+				thresholds = append(thresholds, errThreshold)
+			}
+		}
+		if plot.WarnValue != nil {
+			deltaLimits := math.Abs(limits.Highest - limits.Lowest)
+			deltaThresholds := math.Abs(*plot.ErrorValue - *plot.WarnValue)
+			if !(*plot.WarnValue < 0) && deltaThresholds > (deltaLimits/InvertedThresholdGap) {
+				if limits.FormsSetContaining(*plot.WarnValue) {
+					warnThreshold := Threshold{
+						Title:     "WARN",
+						Value:     *plot.WarnValue,
+						TimePoint: timePoint,
+						Color:     WarningThreshold,
+						GrowTo:    9,
+					}
+					if raising {
+						warnThreshold.Value = limits.Highest - *plot.WarnValue
+					}
+					thresholds = append(thresholds, warnThreshold)
+				}
+			}
 		}
 	}
 	return thresholds
@@ -58,10 +87,6 @@ func GenerateThresholds(plot Plot, limits Limits) []Threshold {
 
 // GenerateThresholdSeries returns threshold series
 func (threshold Threshold) GenerateThresholdSeries(limits Limits, isRaising bool) chart.TimeSeries {
-	thresholdValue := threshold.Value
-	if isRaising {
-		thresholdValue = limits.Highest - threshold.Value
-	}
 	thresholdSeries := chart.TimeSeries{
 		Name: ThresholdSerie,
 		Style: chart.Style{
@@ -75,23 +100,19 @@ func (threshold Threshold) GenerateThresholdSeries(limits Limits, isRaising bool
 		YValues: []float64{},
 	}
 	for j := 0; j < len(thresholdSeries.XValues); j++ {
-		thresholdSeries.YValues = append(thresholdSeries.YValues, thresholdValue)
+		thresholdSeries.YValues = append(thresholdSeries.YValues, threshold.Value)
 	}
 	return thresholdSeries
 }
 
 // GenerateAnnotationSeries returns threshold annotation series
 func (threshold Threshold) GenerateAnnotationSeries(limits Limits, isRaising bool, annotationFont *truetype.Font) chart.AnnotationSeries {
-	annotationValue := threshold.Value
-	if isRaising {
-		annotationValue = limits.Highest - threshold.Value
-	}
 	annotationSeries := chart.AnnotationSeries{
 		Annotations: []chart.Value2{
 			{
 				Label:  threshold.Title,
-				XValue: threshold.Point,
-				YValue: annotationValue,
+				XValue: threshold.TimePoint,
+				YValue: threshold.Value,
 				Style: chart.Style{
 					Show:        true,
 					Padding:     chart.Box{Right: threshold.GrowTo},

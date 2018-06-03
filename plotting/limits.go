@@ -32,8 +32,8 @@ func ResolveLimits(metricsData []*types.MetricData) Limits {
 	from, to := util.Math.MinAndMaxOfTime(allTimes...)
 	lowest, highest := util.Math.MinAndMax(allValues...)
 	if lowest == highest {
-		lowest--
-		highest++
+		lowest = lowest + 5
+		highest = highest + 5
 	}
 	return Limits{
 		From:    from,

@@ -51,7 +51,7 @@ func (plot Plot) GetRenderable(metricsData []*types.MetricData, plotFont *truety
 	}
 
 	plotLimits := ResolveLimits(metricsData)
-	plotThresholds := GenerateThresholds(plot, plotLimits)
+	plotThresholds := GenerateThresholds(plot, plotLimits, raising)
 
 	for _, plotThreshold := range plotThresholds {
 		plotSeries = append(plotSeries, plotThreshold.GenerateThresholdSeries(plotLimits, raising))

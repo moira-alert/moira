@@ -75,8 +75,8 @@ func TestFormsSetContaining(t *testing.T) {
 		Highest: 100,
 	}
 	Convey("check if point belongs to a given set", t, func() {
-		points := []float64{0, 10, 50, 100, 500, 1000}
-		expectedResults := []bool{true, true, true, true, false, false}
+		points := []float64{0, 10, 50, 100, 101}
+		expectedResults := []bool{true, true, true, true, false}
 		actualResults := make([]bool, 0)
 		for _, point := range points {
 			actualResult := limits.FormsSetContaining(point)
