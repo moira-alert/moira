@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"fmt"
 	"math"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
@@ -16,6 +18,31 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/wcharczuk/go-chart"
 )
+
+// BenchmarkGetRenderableFromApi is a simple api rendering benchmark
+func BenchmarkGetRenderableFromApi(b *testing.B) {
+	ts := httptest.NewServer(
+		http.HandlerFunc(
+			func(w http.ResponseWriter, r *http.Request) {
+				warnValue := float64(57000)
+				errorValue := float64(76000)
+				metricsData := generateTestMetricsData("humanized")
+				font, _ := GetDefaultFont()
+				plot := FromParams("triggerName", DarkTheme, nil, &warnValue, &errorValue)
+				renderable := plot.GetRenderable(metricsData, font)
+				w.Header().Set("Content-Type", "image/png")
+				renderable.Render(chart.PNG, w)
+			},
+		),
+	)
+	defer ts.Close()
+	for i := 0; i < b.N; i++ {
+		_, err := http.Get(ts.URL)
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+}
 
 // TestGetRenderable renders plots based on test data and compares
 // test plots hashes with plot examples hashes
@@ -178,6 +205,7 @@ func TestGetRenderable(t *testing.T) {
 	})
 }
 
+// generateTestMetricsData generates metricData array for tests
 func generateTestMetricsData(plotCase string) []*types.MetricData {
 	metricData := types.MetricData{
 		FetchResponse: pb.FetchResponse{
@@ -233,6 +261,7 @@ func generateTestMetricsData(plotCase string) []*types.MetricData {
 	return metricsData
 }
 
+// generateAndSaveRenderable generates and saves rendered plots into a files
 func generateAndSaveRenderable(plotCase string, plotTheme string, isRaising *bool, warnValue *float64, errorValue *float64) {
 	metricsData := generateTestMetricsData(plotCase)
 	font, _ := GetDefaultFont()
@@ -251,6 +280,7 @@ func generateAndSaveRenderable(plotCase string, plotTheme string, isRaising *boo
 	w.Flush()
 }
 
+// calculateHashDistance returns calculated hash distance of two given pictures
 func calculateHashDistance(plotCase string) int {
 	hash := ipare.NewHash()
 	examples, _ := filepath.Abs("../plotting/examples/")
