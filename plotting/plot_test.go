@@ -26,21 +26,21 @@ func TestGetRenderable(t *testing.T) {
 				plotCase := "darkTheme.simple.noThresholds"
 				generateAndSaveRenderable(plotCase, DarkTheme, nil, nil, nil)
 				distance := calculateHashDistance(plotCase)
-				So(distance, ShouldEqual, 0)
+				So(distance, ShouldBeLessThanOrEqualTo, 5)
 			})
 			Convey("Single Error threshold", func() {
 				plotCase := "darkTheme.simple.single.errorThreshold"
 				errorValue := float64(76)
 				generateAndSaveRenderable(plotCase, DarkTheme, nil, nil, &errorValue)
 				distance := calculateHashDistance(plotCase)
-				So(distance, ShouldEqual, 0)
+				So(distance, ShouldBeLessThanOrEqualTo, 5)
 			})
 			Convey("Single Warn threshold", func() {
 				plotCase := "darkTheme.simple.single.warnThreshold"
 				warnValue := float64(57)
 				generateAndSaveRenderable(plotCase, DarkTheme, nil, &warnValue, nil)
 				distance := calculateHashDistance(plotCase)
-				So(distance, ShouldEqual, 0)
+				So(distance, ShouldBeLessThanOrEqualTo, 5)
 			})
 			Convey("isRaising threshold", func() {
 				plotCase := "darkTheme.simple.isRaising.true"
@@ -48,7 +48,7 @@ func TestGetRenderable(t *testing.T) {
 				errorValue := float64(76)
 				generateAndSaveRenderable(plotCase, DarkTheme, nil, &warnValue, &errorValue)
 				distance := calculateHashDistance(plotCase)
-				So(distance, ShouldEqual, 0)
+				So(distance, ShouldBeLessThanOrEqualTo, 5)
 			})
 			Convey("isFalling threshold", func() {
 				plotCase := "darkTheme.simple.isRaising.false"
@@ -56,7 +56,7 @@ func TestGetRenderable(t *testing.T) {
 				errorValue := float64(57)
 				generateAndSaveRenderable(plotCase, DarkTheme, nil, &warnValue, &errorValue)
 				distance := calculateHashDistance(plotCase)
-				So(distance, ShouldEqual, 0)
+				So(distance, ShouldBeLessThanOrEqualTo, 5)
 			})
 		})
 		Convey("Test humanized plot", func() {
@@ -64,21 +64,21 @@ func TestGetRenderable(t *testing.T) {
 				plotCase := "darkTheme.humanized.noThresholds"
 				generateAndSaveRenderable(plotCase, DarkTheme, nil, nil, nil)
 				distance := calculateHashDistance(plotCase)
-				So(distance, ShouldEqual, 0)
+				So(distance, ShouldBeLessThanOrEqualTo, 5)
 			})
 			Convey("Single Error threshold", func() {
 				plotCase := "darkTheme.humanized.single.errorThreshold"
 				errorValue := float64(76000)
 				generateAndSaveRenderable(plotCase, DarkTheme, nil, nil, &errorValue)
 				distance := calculateHashDistance(plotCase)
-				So(distance, ShouldEqual, 0)
+				So(distance, ShouldBeLessThanOrEqualTo, 5)
 			})
 			Convey("Single Warn threshold", func() {
 				plotCase := "darkTheme.humanized.single.warnThreshold"
 				warnValue := float64(57000)
 				generateAndSaveRenderable(plotCase, DarkTheme, nil, &warnValue, nil)
 				distance := calculateHashDistance(plotCase)
-				So(distance, ShouldEqual, 0)
+				So(distance, ShouldBeLessThanOrEqualTo, 5)
 			})
 			Convey("isRaising threshold", func() {
 				plotCase := "darkTheme.humanized.isRaising.true"
@@ -86,7 +86,7 @@ func TestGetRenderable(t *testing.T) {
 				errorValue := float64(76000)
 				generateAndSaveRenderable(plotCase, DarkTheme, nil, &warnValue, &errorValue)
 				distance := calculateHashDistance(plotCase)
-				So(distance, ShouldEqual, 0)
+				So(distance, ShouldBeLessThanOrEqualTo, 5)
 			})
 			Convey("isFalling threshold", func() {
 				plotCase := "darkTheme.humanized.isRaising.false"
@@ -94,7 +94,7 @@ func TestGetRenderable(t *testing.T) {
 				errorValue := float64(57000)
 				generateAndSaveRenderable(plotCase, DarkTheme, nil, &warnValue, &errorValue)
 				distance := calculateHashDistance(plotCase)
-				So(distance, ShouldEqual, 0)
+				So(distance, ShouldBeLessThanOrEqualTo, 5)
 			})
 		})
 	})
@@ -104,21 +104,21 @@ func TestGetRenderable(t *testing.T) {
 				plotCase := "lightTheme.simple.noThresholds"
 				generateAndSaveRenderable(plotCase, LightTheme, nil, nil, nil)
 				distance := calculateHashDistance(plotCase)
-				So(distance, ShouldEqual, 0)
+				So(distance, ShouldBeLessThanOrEqualTo, 5)
 			})
 			Convey("Single Error threshold", func() {
 				plotCase := "lightTheme.simple.single.errorThreshold"
 				errorValue := float64(76)
 				generateAndSaveRenderable(plotCase, LightTheme, nil, nil, &errorValue)
 				distance := calculateHashDistance(plotCase)
-				So(distance, ShouldEqual, 0)
+				So(distance, ShouldBeLessThanOrEqualTo, 5)
 			})
 			Convey("Single Warn threshold", func() {
 				plotCase := "lightTheme.simple.single.warnThreshold"
 				warnValue := float64(57)
 				generateAndSaveRenderable(plotCase, LightTheme, nil, &warnValue, nil)
 				distance := calculateHashDistance(plotCase)
-				So(distance, ShouldEqual, 0)
+				So(distance, ShouldBeLessThanOrEqualTo, 5)
 			})
 			Convey("isRaising threshold", func() {
 				plotCase := "lightTheme.simple.isRaising.true"
@@ -126,7 +126,7 @@ func TestGetRenderable(t *testing.T) {
 				errorValue := float64(76)
 				generateAndSaveRenderable(plotCase, LightTheme, nil, &warnValue, &errorValue)
 				distance := calculateHashDistance(plotCase)
-				So(distance, ShouldEqual, 0)
+				So(distance, ShouldBeLessThanOrEqualTo, 5)
 			})
 			Convey("isFalling threshold", func() {
 				plotCase := "lightTheme.simple.isRaising.false"
@@ -134,7 +134,7 @@ func TestGetRenderable(t *testing.T) {
 				errorValue := float64(57)
 				generateAndSaveRenderable(plotCase, LightTheme, nil, &warnValue, &errorValue)
 				distance := calculateHashDistance(plotCase)
-				So(distance, ShouldEqual, 0)
+				So(distance, ShouldBeLessThanOrEqualTo, 5)
 			})
 		})
 		Convey("Test humanized plot", func() {
@@ -142,21 +142,21 @@ func TestGetRenderable(t *testing.T) {
 				plotCase := "lightTheme.humanized.noThresholds"
 				generateAndSaveRenderable(plotCase, LightTheme, nil, nil, nil)
 				distance := calculateHashDistance(plotCase)
-				So(distance, ShouldEqual, 0)
+				So(distance, ShouldBeLessThanOrEqualTo, 5)
 			})
 			Convey("Single Error threshold", func() {
 				plotCase := "lightTheme.humanized.single.errorThreshold"
 				errorValue := float64(76000)
 				generateAndSaveRenderable(plotCase, LightTheme, nil, nil, &errorValue)
 				distance := calculateHashDistance(plotCase)
-				So(distance, ShouldEqual, 0)
+				So(distance, ShouldBeLessThanOrEqualTo, 5)
 			})
 			Convey("Single Warn threshold", func() {
 				plotCase := "lightTheme.humanized.single.warnThreshold"
 				warnValue := float64(57000)
 				generateAndSaveRenderable(plotCase, LightTheme, nil, &warnValue, nil)
 				distance := calculateHashDistance(plotCase)
-				So(distance, ShouldEqual, 0)
+				So(distance, ShouldBeLessThanOrEqualTo, 5)
 			})
 			Convey("isRaising threshold", func() {
 				plotCase := "lightTheme.humanized.isRaising.true"
@@ -164,7 +164,7 @@ func TestGetRenderable(t *testing.T) {
 				errorValue := float64(76000)
 				generateAndSaveRenderable(plotCase, LightTheme, nil, &warnValue, &errorValue)
 				distance := calculateHashDistance(plotCase)
-				So(distance, ShouldEqual, 0)
+				So(distance, ShouldBeLessThanOrEqualTo, 5)
 			})
 			Convey("isFalling threshold", func() {
 				plotCase := "lightTheme.humanized.isRaising.false"
@@ -172,7 +172,7 @@ func TestGetRenderable(t *testing.T) {
 				errorValue := float64(57000)
 				generateAndSaveRenderable(plotCase, LightTheme, nil, &warnValue, &errorValue)
 				distance := calculateHashDistance(plotCase)
-				So(distance, ShouldEqual, 0)
+				So(distance, ShouldBeLessThanOrEqualTo, 5)
 			})
 		})
 	})
