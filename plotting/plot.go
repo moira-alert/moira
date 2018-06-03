@@ -65,7 +65,7 @@ func (plot Plot) GetRenderable(metricsData []*types.MetricData, plotFont *truety
 
 	renderable := chart.Chart{
 
-		Title: plot.Title,
+		Title: SanitizeLabelName(plot.Title, 40),
 		TitleStyle: chart.Style{
 			Show:        true,
 			Font:        plotFont,
