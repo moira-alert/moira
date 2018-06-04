@@ -3,8 +3,8 @@ package handler
 import (
 	"fmt"
 	"net/http"
-	"time"
 	"strconv"
+	"time"
 
 	"github.com/go-chi/render"
 	"github.com/go-graphite/carbonapi/date"
@@ -31,7 +31,6 @@ func renderTrigger(writer http.ResponseWriter, request *http.Request) {
 		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("can not parse to: %v", toStr)))
 		return
 	}
-
 	tts, trigger, err := controller.GetTriggerEvaluationResult(database, int64(from), int64(to), triggerID)
 	if err != nil {
 		render.Render(writer, request, api.ErrorInternalServer(err))
@@ -55,6 +54,9 @@ func renderTrigger(writer http.ResponseWriter, request *http.Request) {
 		plot = plotting.FromParams(trigger.Name, theme, &raising, trigger.WarnValue, trigger.ErrorValue)
 	}
 	renderable := plot.GetRenderable(metricsData, font)
+	if len(renderable.Series) == 0 {
+		render.Render(writer, request, api.ErrorInternalServer(fmt.Errorf("no timeseries found")))
+	}
 	writer.Header().Set("Content-Type", "image/png")
 	renderable.Render(chart.PNG, writer)
 }
