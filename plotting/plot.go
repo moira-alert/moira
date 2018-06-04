@@ -37,6 +37,7 @@ func (plot Plot) IsRaising() bool {
 
 // GetRenderable returns go-chart to render
 func (plot Plot) GetRenderable(metricsData []*types.MetricData, plotFont *truetype.Font) chart.Chart {
+	// TODO: Return "no metrics found" as picture too
 
 	raising := plot.IsRaising()
 	yAxisMain, yAxisDescending := GetYAxisParams(raising)

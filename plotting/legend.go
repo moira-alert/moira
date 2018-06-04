@@ -18,6 +18,7 @@ const (
 
 // GetPlotLegend returns plot legend
 func GetPlotLegend(c *chart.Chart) chart.Renderable {
+	// TODO: Simplify this method
 	return func(r chart.Renderer, cb chart.Box, chartDefaults chart.Style) {
 		legendDefault := chart.Style{
 			FontSize:    8.0,

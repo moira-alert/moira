@@ -27,6 +27,8 @@ type Threshold struct {
 
 // GenerateThresholds returns thresholds available for plot
 func GenerateThresholds(plot Plot, limits Limits, raising bool) []Threshold {
+	// TODO: cover cases with negative warn & error values
+	// TODO: cover cases with out-of-range thresholds (no annotations required)
 	timePoint := float64(limits.To.UnixNano())
 	thresholds := make([]Threshold, 0)
 	switch plot.ErrorValue {

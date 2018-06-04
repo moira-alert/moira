@@ -65,6 +65,7 @@ func GetYAxisParams(isRaising bool) (int, bool) {
 
 // GetBgPadding returns background padding
 func GetBgPadding(plotLimits Limits, thresholdsCount int) chart.Box {
+	// TODO: simplify this method
 	if (plotLimits.Highest - plotLimits.Lowest) > 1000 {
 		if thresholdsCount > 0 {
 			return chart.Box{Top: 40, Left: 15, Right: 21, Bottom: 40}
