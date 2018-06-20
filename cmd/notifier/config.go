@@ -47,9 +47,10 @@ func getDefault() config {
 			DBID: 0,
 		},
 		Graphite: cmd.GraphiteConfig{
-			URI:      "localhost:2003",
-			Prefix:   "DevOps.Moira",
-			Interval: "60s",
+			RuntimeStats: true,
+			URI:          "localhost:2003",
+			Prefix:       "DevOps.Moira",
+			Interval:     "60s",
 		},
 		Logger: cmd.LoggerConfig{
 			LogFile:  "stdout",
@@ -70,7 +71,6 @@ func getDefault() config {
 		},
 		Pprof: cmd.ProfilerConfig{
 			Listen: "",
-			Metrics: false,
 		},
 	}
 }

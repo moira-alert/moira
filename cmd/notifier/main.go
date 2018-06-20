@@ -69,10 +69,9 @@ func main() {
 	}
 
 	notifierMetrics := metrics.ConfigureNotifierMetrics(serviceName)
-	runtimePrefix := config.Pprof.GetRuntimePrefix(serviceName)
 
 	graphiteSettings := config.Graphite.GetSettings()
-	if err = metrics.Init(graphiteSettings, runtimePrefix); err != nil {
+	if err = metrics.Init(graphiteSettings, serviceName); err != nil {
 		logger.Error(err)
 	}
 
