@@ -785,7 +785,7 @@ func TestHandleErrorCheck(t *testing.T) {
 		dataBase.EXPECT().PushNotificationEvent(gomock.Any(), true).Return(nil)
 		actual, err := triggerChecker.handleErrorCheck(checkData, ErrTriggerHasOnlyWildcards{})
 		expected := moira.CheckData{
-			State:          NODATA,
+			State:          ERROR,
 			Timestamp:      checkData.Timestamp,
 			EventTimestamp: checkData.Timestamp,
 			Message:        "Trigger never received metrics",

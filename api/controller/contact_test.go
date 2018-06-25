@@ -72,14 +72,20 @@ func TestCreateContact(t *testing.T) {
 	})
 
 	Convey("Success create contact with id", t, func() {
-		contact := &dto.Contact{
+		contact := dto.Contact{
 			ID:    uuid.NewV4().String(),
 			Value: "some@mail.com",
 			Type:  "mail",
 		}
+		expectedContact := moira.ContactData{
+			ID:    contact.ID,
+			Value: contact.Value,
+			Type:  contact.Type,
+			User:  userLogin,
+		}
 		dataBase.EXPECT().GetContact(contact.ID).Return(moira.ContactData{}, database.ErrNil)
-		dataBase.EXPECT().SaveContact(gomock.Any()).Return(nil)
-		err := CreateContact(dataBase, contact, userLogin)
+		dataBase.EXPECT().SaveContact(&expectedContact).Return(nil)
+		err := CreateContact(dataBase, &contact, userLogin)
 		So(err, ShouldBeNil)
 		So(contact.User, ShouldResemble, userLogin)
 		So(contact.ID, ShouldResemble, contact.ID)
@@ -93,7 +99,7 @@ func TestCreateContact(t *testing.T) {
 		}
 		dataBase.EXPECT().GetContact(contact.ID).Return(moira.ContactData{}, nil)
 		err := CreateContact(dataBase, contact, userLogin)
-		So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("Contact with this ID already exists")))
+		So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("contact with this ID already exists")))
 	})
 
 	Convey("Error get contact", t, func() {
