@@ -5,7 +5,6 @@ import (
 	"net"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/rcrowley/go-metrics"
 
@@ -28,21 +27,20 @@ func Init(config graphite.Config, serviceName string) error {
 		}
 		go goMetricsGraphite.Graphite(metrics.DefaultRegistry, config.Interval, prefix, address)
 		if config.RuntimeStats {
-			initRuntimeMetrics(serviceName, config.Interval, prefix, address)
+			runtimeRegistry := initRuntimeRegistry(serviceName)
+			go metrics.CaptureRuntimeMemStats(runtimeRegistry, config.Interval)
+			go goMetricsGraphite.Graphite(runtimeRegistry, config.Interval, prefix, address)
 		}
 		return nil
 	}
 	return nil
 }
 
-func initRuntimeMetrics(serviceName string, interval time.Duration, prefix string, address *net.TCPAddr) {
+func initRuntimeRegistry(serviceName string) metrics.Registry {
 	runtimePrefix := fmt.Sprintf("%s.", serviceName)
 	runtimeRegistry := metrics.NewPrefixedRegistry(runtimePrefix)
 	metrics.RegisterRuntimeMemStats(runtimeRegistry)
-	metrics.RegisterDebugGCStats(runtimeRegistry)
-	go metrics.CaptureRuntimeMemStats(runtimeRegistry, interval)
-	go metrics.CaptureDebugGCStats(runtimeRegistry, interval)
-	go goMetricsGraphite.Graphite(runtimeRegistry, interval, prefix, address)
+	return runtimeRegistry
 }
 
 func initPrefix(prefix string) (string, error) {
