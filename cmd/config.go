@@ -36,7 +36,7 @@ func (config *RedisConfig) GetSettings() redis.Config {
 
 // GraphiteConfig is graphite metrics config structure that initialises at the start of moira
 type GraphiteConfig struct {
-	Enabled      bool   `yaml:"enabled"`       // If true, graphite logger will be enabled.
+	Enabled      bool   `yaml:"enabled"`       // If true, graphite sender will be enabled.
 	RuntimeStats bool   `yaml:"runtime_stats"` // If true, runtime stats will be captured and sent to graphite.
 	URI          string `yaml:"uri"`           // Graphite relay URI, format: ip:port
 	Prefix       string `yaml:"prefix"`        // Moira metrics prefix. Use 'prefix: {hostname}' to use hostname autoresolver.
