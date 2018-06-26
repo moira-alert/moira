@@ -12,6 +12,8 @@ type Database interface {
 	UpdateMetricsHeartbeat() error
 	GetMetricsUpdatesCount() (int64, error)
 	GetChecksUpdatesCount() (int64, error)
+	GetNotifierState() (string, error)
+	SetNotifierState(string) error
 
 	// Tag storing
 	GetTagNames() ([]string, error)
