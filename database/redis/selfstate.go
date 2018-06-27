@@ -35,6 +35,7 @@ func (connector *DbConnector) GetChecksUpdatesCount() (int64, error) {
 	return ts, err
 }
 
+// GetNotifierState return current notifier state: <OK|ERROR>
 func (connector *DbConnector) GetNotifierState() (string, error) {
 	c := connector.pool.Get()
 	defer c.Close()
@@ -46,6 +47,7 @@ func (connector *DbConnector) GetNotifierState() (string, error) {
 	return ts, err
 }
 
+// SetNotifierState update current notifier state: <OK|ERROR>
 func (connector *DbConnector) SetNotifierState(health string) error {
 	c := connector.pool.Get()
 	defer c.Close()
