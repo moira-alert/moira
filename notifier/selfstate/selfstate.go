@@ -30,7 +30,7 @@ func (selfCheck *SelfCheckWorker) Start() error {
 	}
 	senders := selfCheck.Notifier.GetSenders()
 	if err := selfCheck.Config.checkConfig(senders); err != nil {
-		return fmt.Errorf("Can't configure self state monitor: %s", err.Error())
+		return fmt.Errorf("can't configure self state monitor: %s", err.Error())
 	}
 	var metricsCount, checksCount int64
 	lastMetricReceivedTS := time.Now().Unix()
@@ -79,6 +79,11 @@ func (selfCheck *SelfCheckWorker) check(nowTS int64, lastMetricReceivedTS, redis
 			*lastCheckTS = nowTS
 		}
 	}
+	notifierState, err2 := selfCheck.DB.GetNotifierState()
+	if err2 != nil {
+		selfCheck.Log.Errorf("can't check notifier state: %v", err2)
+	}
+
 	if *nextSendErrorMessage < nowTS {
 		if *redisLastCheckTS < nowTS-selfCheck.Config.RedisDisconnectDelaySeconds {
 			interval := nowTS - *redisLastCheckTS
@@ -87,17 +92,28 @@ func (selfCheck *SelfCheckWorker) check(nowTS int64, lastMetricReceivedTS, redis
 			*nextSendErrorMessage = nowTS + selfCheck.Config.NoticeIntervalSeconds
 			return
 		}
+
+		if notifierState != OK && err2 == nil {
+			selfCheck.Log.Errorf("Notifier state: %v. Send message.", notifierState)
+			message := fmt.Sprintf("Notifier state: %v. Please, check Moira services.", notifierState)
+			selfCheck.sendErrorMessages(message, 0, 0)
+			*nextSendErrorMessage = nowTS + selfCheck.Config.NoticeIntervalSeconds
+			return
+		}
+
 		if *lastMetricReceivedTS < nowTS-selfCheck.Config.LastMetricReceivedDelaySeconds && err == nil {
 			interval := nowTS - *lastMetricReceivedTS
 			selfCheck.Log.Errorf("Moira-Filter does not received new metrics more %ds. Send message.", interval)
 			selfCheck.sendErrorMessages("Moira-Filter does not received new metrics", interval, selfCheck.Config.LastMetricReceivedDelaySeconds)
 			*nextSendErrorMessage = nowTS + selfCheck.Config.NoticeIntervalSeconds
+			selfCheck.setNotifierState(ERROR)
 			return
 		}
 		if *lastCheckTS < nowTS-selfCheck.Config.LastCheckDelaySeconds && err == nil {
 			interval := nowTS - *lastCheckTS
 			selfCheck.Log.Errorf("Moira-Checker does not checks triggers more %ds. Send message.", interval)
 			selfCheck.sendErrorMessages("Moira-Checker does not checks triggers", interval, selfCheck.Config.LastCheckDelaySeconds)
+			selfCheck.setNotifierState(ERROR)
 			*nextSendErrorMessage = nowTS + selfCheck.Config.NoticeIntervalSeconds
 		}
 	}
@@ -128,5 +144,12 @@ func (selfCheck *SelfCheckWorker) sendErrorMessages(message string, currentValue
 		}
 		selfCheck.Notifier.Send(&pkg, &sendingWG)
 		sendingWG.Wait()
+	}
+}
+
+func (selfCheck *SelfCheckWorker) setNotifierState(state string) {
+	err := selfCheck.DB.SetNotifierState(state)
+	if err != nil {
+		selfCheck.Log.Errorf("can't set notifier state: %v", err)
 	}
 }
