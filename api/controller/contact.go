@@ -11,6 +11,7 @@ import (
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/database"
+	"bytes"
 )
 
 // GetAllContacts gets all moira contacts
@@ -92,11 +93,26 @@ func RemoveContact(database moira.Database, contactID string, userLogin string) 
 		}
 	}
 
-	if err := database.RemoveContact(contactID); err != nil {
-		return api.ErrorInternalServer(err)
+	if len(subscriptionsWithDeletingContact) > 0 {
+		errBuffer := bytes.NewBuffer([]byte("This contact is being used in following subscriptions: "))
+		for subInd, subscription := range subscriptions {
+			errBuffer.WriteString(subscription.ID)
+			errBuffer.WriteString(" (tags: ")
+			for tagInd := range subscription.Tags {
+				errBuffer.WriteString(subscription.Tags[tagInd])
+				if tagInd != len(subscription.Tags) - 1 {
+					errBuffer.WriteString(", ")
+				}
+			}
+			errBuffer.WriteString(")")
+			if subInd != len(subscriptions) - 1 {
+				errBuffer.WriteString(", ")
+			}
+		}
+		return api.ErrorInvalidRequest(fmt.Errorf(errBuffer.String()))
 	}
 
-	if err := database.SaveSubscriptions(subscriptionsWithDeletingContact); err != nil {
+	if err := database.RemoveContact(contactID); err != nil {
 		return api.ErrorInternalServer(err)
 	}
 

@@ -2,15 +2,18 @@ package controller
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
+	"github.com/satori/go.uuid"
 	"github.com/golang/mock/gomock"
+	. "github.com/smartystreets/goconvey/convey"
+
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/mock/moira-alert"
-	"github.com/satori/go.uuid"
-	. "github.com/smartystreets/goconvey/convey"
-	"testing"
 )
 
 func TestGetAllContacts(t *testing.T) {
@@ -206,22 +209,6 @@ func TestRemoveContact(t *testing.T) {
 		So(err, ShouldBeNil)
 	})
 
-	Convey("Delete contact with contact subscriptions", t, func() {
-		subscription := moira.SubscriptionData{
-			Contacts: []string{contactID},
-			ID:       uuid.NewV4().String(),
-		}
-		expectedSub := subscription
-		expectedSub.Contacts = make([]string, 0)
-
-		dataBase.EXPECT().GetUserSubscriptionIDs(userLogin).Return([]string{subscription.ID}, nil)
-		dataBase.EXPECT().GetSubscriptions([]string{subscription.ID}).Return([]*moira.SubscriptionData{&subscription}, nil)
-		dataBase.EXPECT().RemoveContact(contactID).Return(nil)
-		dataBase.EXPECT().SaveSubscriptions([]*moira.SubscriptionData{&expectedSub}).Return(nil)
-		err := RemoveContact(dataBase, contactID, userLogin)
-		So(err, ShouldBeNil)
-	})
-
 	Convey("Error tests", t, func() {
 		Convey("GetUserSubscriptionIDs", func() {
 			expectedError := fmt.Errorf("Oooops! Can not read user subscription ids")
@@ -237,21 +224,18 @@ func TestRemoveContact(t *testing.T) {
 			So(err, ShouldResemble, api.ErrorInternalServer(expectedError))
 		})
 		Convey("RemoveContact", func() {
-			expectedError := fmt.Errorf("Oooops! Can not delete contact")
-			dataBase.EXPECT().GetUserSubscriptionIDs(userLogin).Return(make([]string, 0), nil)
-			dataBase.EXPECT().GetSubscriptions(make([]string, 0)).Return(make([]*moira.SubscriptionData, 0), nil)
-			dataBase.EXPECT().RemoveContact(contactID).Return(expectedError)
-			err := RemoveContact(dataBase, contactID, userLogin)
-			So(err, ShouldResemble, api.ErrorInternalServer(expectedError))
-		})
-		Convey("SaveSubscriptions", func() {
-			expectedError := fmt.Errorf("Oooops! Can not write subscriptions")
-			dataBase.EXPECT().GetUserSubscriptionIDs(userLogin).Return(make([]string, 0), nil)
-			dataBase.EXPECT().GetSubscriptions(make([]string, 0)).Return(make([]*moira.SubscriptionData, 0), nil)
+			subscription := moira.SubscriptionData{
+				Contacts: []string{contactID},
+				ID:       uuid.NewV4().String(),
+				Tags:     []string{"Tag1", "Tag2"},
+			}
+			subscriptionSubstring := fmt.Sprintf("%s (tags: %s)", subscription.ID, strings.Join(subscription.Tags, ", "))
+			expectedError := fmt.Errorf("This contact is being used in following subscriptions: %s", subscriptionSubstring)
+			dataBase.EXPECT().GetUserSubscriptionIDs(userLogin).Return([]string{subscription.ID}, nil)
+			dataBase.EXPECT().GetSubscriptions([]string{subscription.ID}).Return([]*moira.SubscriptionData{&subscription}, nil)
 			dataBase.EXPECT().RemoveContact(contactID).Return(nil)
-			dataBase.EXPECT().SaveSubscriptions(make([]*moira.SubscriptionData, 0)).Return(expectedError)
 			err := RemoveContact(dataBase, contactID, userLogin)
-			So(err, ShouldResemble, api.ErrorInternalServer(expectedError))
+			So(err, ShouldResemble, api.ErrorInvalidRequest(expectedError))
 		})
 	})
 }
