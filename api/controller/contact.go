@@ -3,6 +3,7 @@ package controller
 import (
 	"fmt"
 	"time"
+	"bytes"
 
 	"github.com/go-graphite/carbonapi/date"
 	"github.com/satori/go.uuid"
@@ -11,7 +12,6 @@ import (
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/database"
-	"bytes"
 )
 
 // GetAllContacts gets all moira contacts
