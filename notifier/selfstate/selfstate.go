@@ -81,7 +81,7 @@ func (selfCheck *SelfCheckWorker) check(nowTS int64, lastMetricReceivedTS, redis
 	}
 	notifierState, err2 := selfCheck.DB.GetNotifierState()
 	if err2 != nil {
-		selfCheck.Log.Errorf("can't check notifier state: %v", err2)
+		selfCheck.Log.Errorf("Can't check notifier state: %v", err2)
 	}
 
 	if *nextSendErrorMessage < nowTS {
@@ -135,6 +135,7 @@ func (selfCheck *SelfCheckWorker) sendErrorMessages(message string, currentValue
 			Events: []moira.NotificationEvent{
 				{
 					Timestamp: time.Now().Unix(),
+					OldState:  "NODATA",
 					State:     "ERROR",
 					Metric:    message,
 					Value:     &val,
@@ -150,6 +151,6 @@ func (selfCheck *SelfCheckWorker) sendErrorMessages(message string, currentValue
 func (selfCheck *SelfCheckWorker) setNotifierState(state string) {
 	err := selfCheck.DB.SetNotifierState(state)
 	if err != nil {
-		selfCheck.Log.Errorf("can't set notifier state: %v", err)
+		selfCheck.Log.Errorf("Can't set notifier state: %v", err)
 	}
 }

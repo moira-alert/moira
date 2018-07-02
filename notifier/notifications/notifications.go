@@ -52,11 +52,9 @@ func (worker *FetchNotificationsWorker) processScheduledNotifications() error {
 	}
 	state, err := worker.Database.GetNotifierState()
 	if err != nil {
-		worker.Logger.Error("can't get current notifier state")
 		return fmt.Errorf("can't get current notifier state")
 	}
 	if state != "OK" {
-		worker.Logger.Errorf("Stop sending notifications. Current notifier state: %v", state)
 		return fmt.Errorf("stop sending notifications. Current notifier state: %v", state)
 	}
 
