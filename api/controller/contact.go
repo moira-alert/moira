@@ -95,7 +95,7 @@ func RemoveContact(database moira.Database, contactID string, userLogin string) 
 
 	if len(subscriptionsWithDeletingContact) > 0 {
 		errBuffer := bytes.NewBuffer([]byte("This contact is being used in following subscriptions: "))
-		for subInd, subscription := range subscriptions {
+		for subInd, subscription := range subscriptionsWithDeletingContact {
 			errBuffer.WriteString(subscription.ID)
 			errBuffer.WriteString(" (tags: ")
 			for tagInd := range subscription.Tags {
@@ -105,7 +105,7 @@ func RemoveContact(database moira.Database, contactID string, userLogin string) 
 				}
 			}
 			errBuffer.WriteString(")")
-			if subInd != len(subscriptions) - 1 {
+			if subInd != len(subscriptionsWithDeletingContact) - 1 {
 				errBuffer.WriteString(", ")
 			}
 		}
