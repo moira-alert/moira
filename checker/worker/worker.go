@@ -43,8 +43,7 @@ func (worker *Checker) Start() error {
 	worker.tomb.Go(worker.noDataChecker)
 	worker.Logger.Info("NODATA checker started")
 
-	isRemoteEnabled := worker.Config.Remote.URL != ""
-	if isRemoteEnabled {
+	if worker.Config.Remote.IsEnabled() {
 		worker.remoteTriggersToCheck = make(chan string, 16384)
 		worker.tomb.Go(worker.remoteChecker)
 		worker.Logger.Info("Remote checker started")
@@ -58,9 +57,9 @@ func (worker *Checker) Start() error {
 		worker.tomb.Go(func() error { return worker.startTriggerHandler(false) })
 	}
 
-	if isRemoteEnabled {
+	if worker.Config.Remote.IsEnabled() {
 		if worker.Config.MaxParallelRemoteChecks == 0 {
-			return fmt.Errorf("MaxParallelRemoteChecks does not configured, checker does not started")
+			return fmt.Errorf("MaxParallelRemoteChecks does not configure, checker does not start")
 		}
 		worker.Logger.Infof("Start %v parallel remote checkers", worker.Config.MaxParallelRemoteChecks)
 		for i := 0; i < worker.Config.MaxParallelRemoteChecks; i++ {

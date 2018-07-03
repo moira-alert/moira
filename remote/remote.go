@@ -29,6 +29,10 @@ type Config struct {
 	Password      string
 }
 
+func (c *Config) IsEnabled() bool {
+	return c.URL != ""
+}
+
 func prepareRequest(from, until int64, target string, cfg *Config) (*http.Request, error) {
 	req, err := http.NewRequest("GET", cfg.URL, nil)
 	if err != nil {
