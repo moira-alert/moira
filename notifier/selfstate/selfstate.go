@@ -79,10 +79,7 @@ func (selfCheck *SelfCheckWorker) check(nowTS int64, lastMetricReceivedTS, redis
 			*lastCheckTS = nowTS
 		}
 	}
-	notifierState, err2 := selfCheck.DB.GetNotifierState()
-	if err2 != nil {
-		selfCheck.Log.Errorf("Can't check notifier state: %v", err2)
-	}
+	notifierState, _ := selfCheck.DB.GetNotifierState()
 
 	if *nextSendErrorMessage < nowTS {
 		if *redisLastCheckTS < nowTS-selfCheck.Config.RedisDisconnectDelaySeconds {

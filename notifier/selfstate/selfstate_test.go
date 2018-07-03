@@ -47,7 +47,7 @@ func TestDatabaseDisconnected(t *testing.T) {
 			err := fmt.Errorf("DataBase doesn't work")
 			mock.database.EXPECT().GetMetricsUpdatesCount().Return(int64(1), nil)
 			mock.database.EXPECT().GetChecksUpdatesCount().Return(int64(1), err)
-			mock.database.EXPECT().GetNotifierState().Return("OK", err)
+			mock.database.EXPECT().GetNotifierState().Return("ERROR", err)
 
 			now := time.Now()
 			redisLastCheckTS = now.Add(-time.Second * 11).Unix()
@@ -173,9 +173,10 @@ func TestRunGoRoutine(t *testing.T) {
 		Contacts: []map[string]string{
 			adminContact,
 		},
-		RedisDisconnectDelaySeconds:    10,
+		RedisDisconnectDelaySeconds:    5,
 		LastMetricReceivedDelaySeconds: 60,
 		LastCheckDelaySeconds:          120,
+		NoticeIntervalSeconds:          3,
 	}
 
 	mockCtrl := gomock.NewController(t)
@@ -200,7 +201,7 @@ func TestRunGoRoutine(t *testing.T) {
 		database.EXPECT().GetMetricsUpdatesCount().Return(int64(1), nil).Times(11)
 		database.EXPECT().GetChecksUpdatesCount().Return(int64(1), err).Times(11)
 		database.EXPECT().GetNotifierState().Return("ERROR", err).Times(11)
-		notif.EXPECT().Send(gomock.Any(), gomock.Any()).Times(11)
+		notif.EXPECT().Send(gomock.Any(), gomock.Any()).Times(3)
 		selfStateWorker.Start()
 		time.Sleep(time.Second*11 + time.Millisecond*500)
 		selfStateWorker.Stop()
