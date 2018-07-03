@@ -66,7 +66,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	configFile, err := getWebConfigBytes(logger, config.API.WebConfigPath)
+	configFile, err := getWebConfigBytes(config.API.WebConfigPath)
 	if err != nil {
 		logger.Warningf("Failed to read web config file by path '%s', method 'api/config' will be return 404, error: %s'", config.API.WebConfigPath, err.Error())
 	}
@@ -112,7 +112,7 @@ func main() {
 	logger.Infof("Moira API shutting down.")
 }
 
-func getWebConfigBytes(logger moira.Logger, path string) ([]byte, error) {
+func getWebConfigBytes(path string) ([]byte, error) {
 	webConfigFile, err := os.Open(path)
 	if err != nil {
 		return nil, err

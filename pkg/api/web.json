@@ -6,5 +6,6 @@
     {"type": "telegram", "help": "required to grant @MoiraBot admin privileges"},
     {"type": "twilio sms"},
     {"type": "twilio voice"}
-  ]
+  ],
+  "removeAllowed": false
 }

@@ -118,7 +118,7 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 
 	remoteCfg := middleware.GetRemoteConfig(request)
 	if trigger.IsRemote && !remoteCfg.IsEnabled() {
-		return fmt.Errorf("remote triggers is not enabled")
+		return fmt.Errorf("remote graphite storage is not enabled")
 	}
 
 	if err := resolvePatterns(request, trigger, &triggerExpression); err != nil {

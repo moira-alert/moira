@@ -72,6 +72,7 @@ type RemoteConfig struct {
 	Timeout       string `yaml:"timeout"`
 	User          string `yaml:"user"`
 	Password      string `yaml:"password"`
+	Enabled       bool   `yaml:"enabled"`
 }
 
 // GetSettings returns redis config parsed from moira config files
@@ -82,6 +83,7 @@ func (config *RemoteConfig) GetSettings() *remote.Config {
 		Timeout:       to.Duration(config.Timeout),
 		User:          config.User,
 		Password:      config.Password,
+		Enabled:       config.Enabled,
 	}
 }
 

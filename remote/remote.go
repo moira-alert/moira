@@ -27,10 +27,11 @@ type Config struct {
 	Timeout       time.Duration
 	User          string
 	Password      string
+	Enabled       bool
 }
 
 func (c *Config) IsEnabled() bool {
-	return c.URL != ""
+	return c.URL != "" && c.Enabled
 }
 
 func prepareRequest(from, until int64, target string, cfg *Config) (*http.Request, error) {
