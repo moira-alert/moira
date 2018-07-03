@@ -107,16 +107,23 @@ func decodeBody(body []byte) ([]*types.MetricData, error) {
 	return res, nil
 }
 
-func convertResponse(r []*types.MetricData) []*target.TimeSeries {
+func convertResponse(r []*types.MetricData, allowRealTimeAlerting bool) []*target.TimeSeries {
 	ts := make([]*target.TimeSeries, len(r))
 	for i, md := range r {
+		if !allowRealTimeAlerting {
+			last := len(md.Values) - 1
+			// remove last value
+			md.Values = md.Values[:last]
+			md.IsAbsent = md.IsAbsent[:last]
+		}
 		ts[i] = &target.TimeSeries{MetricData: *md, Wildcard: false}
 	}
+
 	return ts
 }
 
 // Fetch fetches remote metrics and converts them to expected format
-func Fetch(from, until int64, target string, cfg *Config) ([]*target.TimeSeries, error) {
+func Fetch(cfg *Config, target string, from, until int64, allowRealTimeAlerting bool) ([]*target.TimeSeries, error) {
 	req, err := prepareRequest(from, until, target, cfg)
 	if err != nil {
 		return nil, err
@@ -129,5 +136,5 @@ func Fetch(from, until int64, target string, cfg *Config) ([]*target.TimeSeries,
 	if err != nil {
 		return nil, err
 	}
-	return convertResponse(resp), nil
+	return convertResponse(resp, allowRealTimeAlerting), nil
 }

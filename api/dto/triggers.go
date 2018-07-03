@@ -146,7 +146,7 @@ func resolvePatterns(request *http.Request, trigger *Trigger, expressionValues *
 		database := middleware.GetDatabase(request)
 
 		if trigger.IsRemote {
-			timeseries, err = remote.Fetch(now-600, now, tar, remoteCfg)
+			timeseries, err = remote.Fetch(remoteCfg, tar, now-600, now, false)
 			if err != nil {
 				return err
 			}
