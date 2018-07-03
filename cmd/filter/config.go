@@ -33,7 +33,7 @@ func getDefault() config {
 			RetentionConfig: "/etc/moira/storage-schemas.conf",
 		},
 		Graphite: cmd.GraphiteConfig{
-			RuntimeStats: true,
+			RuntimeStats: false,
 			URI:          "localhost:2003",
 			Prefix:       "DevOps.Moira",
 			Interval:     "60s",
