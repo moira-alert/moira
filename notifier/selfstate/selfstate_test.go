@@ -47,6 +47,7 @@ func TestDatabaseDisconnected(t *testing.T) {
 			err := fmt.Errorf("DataBase doesn't work")
 			mock.database.EXPECT().GetMetricsUpdatesCount().Return(int64(1), nil)
 			mock.database.EXPECT().GetChecksUpdatesCount().Return(int64(1), err)
+			mock.database.EXPECT().GetNotifierState().Return("OK", err)
 
 			now := time.Now()
 			redisLastCheckTS = now.Add(-time.Second * 11).Unix()
@@ -100,6 +101,8 @@ func TestMoiraCacheDoesNotReceivedNewMetrics(t *testing.T) {
 		callingNow := now.Add(time.Second * 2)
 		expectedPackage := configureNotificationPackage(adminContact, mock.conf.LastMetricReceivedDelaySeconds, callingNow.Unix()-lastMetricReceivedTS, "Moira-Filter does not received new metrics")
 
+		mock.database.EXPECT().GetNotifierState().Return("OK", nil)
+		mock.database.EXPECT().SetNotifierState("ERROR").Return(nil)
 		mock.notif.EXPECT().Send(&expectedPackage, &sendingWG)
 		mock.selfCheckWorker.check(callingNow.Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount)
 
@@ -144,6 +147,8 @@ func TestMoiraCheckerDoesNotChecksTriggers(t *testing.T) {
 		callingNow := now.Add(time.Second * 2)
 		expectedPackage := configureNotificationPackage(adminContact, mock.conf.LastCheckDelaySeconds, callingNow.Unix()-lastCheckTS, "Moira-Checker does not checks triggers")
 
+		mock.database.EXPECT().GetNotifierState().Return("OK", nil)
+		mock.database.EXPECT().SetNotifierState("ERROR").Return(nil)
 		mock.notif.EXPECT().Send(&expectedPackage, &sendingWG)
 		mock.selfCheckWorker.check(callingNow.Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount)
 
@@ -194,7 +199,8 @@ func TestRunGoRoutine(t *testing.T) {
 		err := fmt.Errorf("DataBase doesn't work")
 		database.EXPECT().GetMetricsUpdatesCount().Return(int64(1), nil).Times(11)
 		database.EXPECT().GetChecksUpdatesCount().Return(int64(1), err).Times(11)
-		notif.EXPECT().Send(gomock.Any(), gomock.Any())
+		database.EXPECT().GetNotifierState().Return("ERROR", err).Times(11)
+		notif.EXPECT().Send(gomock.Any(), gomock.Any()).Times(11)
 		selfStateWorker.Start()
 		time.Sleep(time.Second*11 + time.Millisecond*500)
 		selfStateWorker.Stop()

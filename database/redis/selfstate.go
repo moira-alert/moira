@@ -43,6 +43,8 @@ func (connector *DbConnector) GetNotifierState() (string, error) {
 	if err == redis.ErrNil {
 		ts = selfstate.OK
 		err = connector.SetNotifierState(ts)
+	} else if err != nil {
+		ts = selfstate.ERROR
 	}
 	return ts, err
 }

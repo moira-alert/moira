@@ -93,7 +93,7 @@ func (selfCheck *SelfCheckWorker) check(nowTS int64, lastMetricReceivedTS, redis
 			return
 		}
 
-		if notifierState != OK && err2 == nil {
+		if notifierState != OK {
 			selfCheck.Log.Errorf("Notifier state: %v. Send message.", notifierState)
 			message := fmt.Sprintf("Notifier state: %v. Please, check Moira services.", notifierState)
 			selfCheck.sendErrorMessages(message, 0, 0)
@@ -135,7 +135,6 @@ func (selfCheck *SelfCheckWorker) sendErrorMessages(message string, currentValue
 			Events: []moira.NotificationEvent{
 				{
 					Timestamp: time.Now().Unix(),
-					OldState:  "NODATA",
 					State:     "ERROR",
 					Metric:    message,
 					Value:     &val,
