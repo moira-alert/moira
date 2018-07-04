@@ -3,6 +3,8 @@ package checker
 import (
 	"fmt"
 	"math"
+	"bytes"
+	"strconv"
 
 	"github.com/moira-alert/moira/expression"
 	"github.com/moira-alert/moira/target"
@@ -13,15 +15,31 @@ type triggerTimeSeries struct {
 	Additional []*target.TimeSeries
 }
 
-// ErrWrongTriggerTarget represents inconsistent number of timeseries
-type ErrWrongTriggerTarget int
+// ErrWrongTriggerTargets represents inconsistent number of timeseries
+type ErrWrongTriggerTargets []int
 
 // ErrWrongTriggerTarget implementation for given number of found timeseries
-func (err ErrWrongTriggerTarget) Error() string {
-	return fmt.Sprintf("Target t%v has more than one timeseries", int(err))
+func (err ErrWrongTriggerTargets) Error() string {
+	var countType []byte
+	if len(err) > 1 {
+		countType = []byte("Targets ")
+	} else {
+		countType = []byte("Target ")
+	}
+	wrongTargets := bytes.NewBuffer(countType)
+	for tarInd, tar := range err {
+		wrongTargets.WriteString("t")
+		wrongTargets.WriteString(strconv.Itoa(tar))
+		if tarInd != len(err) - 1 {
+			wrongTargets.WriteString(", ")
+		}
+	}
+	return fmt.Sprintf("%s has more than one timeseries", wrongTargets.String())
 }
 
 func (triggerChecker *TriggerChecker) getTimeSeries(from, until int64) (*triggerTimeSeries, []string, error) {
+	wrongTriggerTargets := make([]int, 0)
+
 	triggerTimeSeries := &triggerTimeSeries{
 		Main:       make([]*target.TimeSeries, 0),
 		Additional: make([]*target.TimeSeries, 0),
@@ -47,13 +65,23 @@ func (triggerChecker *TriggerChecker) getTimeSeries(from, until int64) (*trigger
 					return nil, nil, fmt.Errorf("Target t%v has no timeseries", targetIndex+1)
 				}
 			case timeSeriesCount > 1:
-				return nil, nil, ErrWrongTriggerTarget(targetIndex+1)
+				wrongTriggerTargets = append(wrongTriggerTargets, targetIndex+1)
+				if targetIndex != len(triggerChecker.trigger.Targets) {
+					continue
+				} else {
+					break
+				}
 			default:
 				triggerTimeSeries.Additional = append(triggerTimeSeries.Additional, result.TimeSeries[0])
 			}
 		}
 		metricsArr = append(metricsArr, result.Metrics...)
 	}
+
+	if len(wrongTriggerTargets) > 0 {
+		return nil, nil, ErrWrongTriggerTargets(wrongTriggerTargets)
+	}
+
 	return triggerTimeSeries, metricsArr, nil
 }
 

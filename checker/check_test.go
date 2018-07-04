@@ -975,7 +975,7 @@ func TestHandleErrorCheck(t *testing.T) {
 
 		dataBase.EXPECT().PushNotificationEvent(gomock.Any(), true).Return(nil)
 
-		actual, err := triggerChecker.handleErrorCheck(checkData, ErrWrongTriggerTarget(2))
+		actual, err := triggerChecker.handleErrorCheck(checkData, ErrWrongTriggerTargets([]int{2}))
 		expected := moira.CheckData{
 			State:          EXCEPTION,
 			Timestamp:      checkData.Timestamp,

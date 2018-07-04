@@ -30,10 +30,19 @@ func TestGetTimeSeries(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	pattern := "super.puper.pattern"
-	addPattern := "additional.pattern"
 	metric := "super.puper.metric"
+
+	pattern2 := "super.duper.pattern"
+	metric2 := "super.duper.metric"
+
+	addPattern := "additional.pattern"
 	addMetric := "additional.metric"
 	addMetric2 := "additional.metric2"
+
+	oneMorePattern := "one.more.pattern"
+	oneMoreMetric1 := "one.more.metric.one"
+	oneMoreMetric2 := "one.more.metric.two"
+
 	metricValues := []*moira.MetricValue{
 		{
 			RetentionTimestamp: 20,
@@ -184,8 +193,43 @@ func TestGetTimeSeries(t *testing.T) {
 
 			actual, metrics, err := triggerChecker.getTimeSeries(from, until)
 			So(err, ShouldBeError)
-			So(err, ShouldResemble, ErrWrongTriggerTarget(2))
+			So(err, ShouldResemble, ErrWrongTriggerTargets([]int{2}))
 			So(err.Error(), ShouldResemble, "Target t2 has more than one timeseries")
+			So(actual, ShouldBeNil)
+			So(metrics, ShouldBeNil)
+		})
+
+		Convey("Three targets with many metrics in additional targets", func() {
+
+			triggerChecker.trigger.Targets = []string{pattern, addPattern, pattern2, oneMorePattern}
+			triggerChecker.trigger.Patterns = []string{pattern, addPattern, pattern2, oneMorePattern}
+
+			dataList[addMetric2] = metricValues
+			dataList[metric2] = metricValues
+
+			dataList[oneMoreMetric1] = metricValues
+			dataList[oneMoreMetric2] = metricValues
+
+			dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
+			dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
+			dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
+
+			dataBase.EXPECT().GetPatternMetrics(addPattern).Return([]string{addMetric, addMetric2}, nil)
+			dataBase.EXPECT().GetMetricRetention(addMetric).Return(retention, nil)
+			dataBase.EXPECT().GetMetricsValues([]string{addMetric, addMetric2}, from, until).Return(dataList, nil)
+
+			dataBase.EXPECT().GetPatternMetrics(pattern2).Return([]string{metric2}, nil)
+			dataBase.EXPECT().GetMetricRetention(metric2).Return(retention, nil)
+			dataBase.EXPECT().GetMetricsValues([]string{metric2}, from, until).Return(dataList, nil)
+
+			dataBase.EXPECT().GetPatternMetrics(oneMorePattern).Return([]string{oneMoreMetric1, oneMoreMetric2}, nil)
+			dataBase.EXPECT().GetMetricRetention(oneMoreMetric1).Return(retention, nil)
+			dataBase.EXPECT().GetMetricsValues([]string{oneMoreMetric1, oneMoreMetric2}, from, until).Return(dataList, nil)
+
+			actual, metrics, err := triggerChecker.getTimeSeries(from, until)
+			So(err, ShouldBeError)
+			So(err, ShouldResemble, ErrWrongTriggerTargets([]int{2,4}))
+			So(err.Error(), ShouldResemble, "Targets t2, t4 has more than one timeseries")
 			So(actual, ShouldBeNil)
 			So(metrics, ShouldBeNil)
 		})
