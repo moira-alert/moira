@@ -199,14 +199,12 @@ func TestGetTimeSeries(t *testing.T) {
 			So(metrics, ShouldBeNil)
 		})
 
-		Convey("Three targets with many metrics in additional targets", func() {
-
+		Convey("Four targets with many metrics in additional targets", func() {
 			triggerChecker.trigger.Targets = []string{pattern, addPattern, pattern2, oneMorePattern}
 			triggerChecker.trigger.Patterns = []string{pattern, addPattern, pattern2, oneMorePattern}
 
 			dataList[addMetric2] = metricValues
 			dataList[metric2] = metricValues
-
 			dataList[oneMoreMetric1] = metricValues
 			dataList[oneMoreMetric2] = metricValues
 
