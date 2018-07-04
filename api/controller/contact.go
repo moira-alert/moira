@@ -3,6 +3,7 @@ package controller
 import (
 	"fmt"
 	"time"
+	"bytes"
 
 	"github.com/go-graphite/carbonapi/date"
 	"github.com/satori/go.uuid"
@@ -92,11 +93,26 @@ func RemoveContact(database moira.Database, contactID string, userLogin string) 
 		}
 	}
 
-	if err := database.RemoveContact(contactID); err != nil {
-		return api.ErrorInternalServer(err)
+	if len(subscriptionsWithDeletingContact) > 0 {
+		errBuffer := bytes.NewBuffer([]byte("This contact is being used in following subscriptions: "))
+		for subInd, subscription := range subscriptionsWithDeletingContact {
+			errBuffer.WriteString(subscription.ID)
+			errBuffer.WriteString(" (tags: ")
+			for tagInd := range subscription.Tags {
+				errBuffer.WriteString(subscription.Tags[tagInd])
+				if tagInd != len(subscription.Tags) - 1 {
+					errBuffer.WriteString(", ")
+				}
+			}
+			errBuffer.WriteString(")")
+			if subInd != len(subscriptionsWithDeletingContact) - 1 {
+				errBuffer.WriteString(", ")
+			}
+		}
+		return api.ErrorInvalidRequest(fmt.Errorf(errBuffer.String()))
 	}
 
-	if err := database.SaveSubscriptions(subscriptionsWithDeletingContact); err != nil {
+	if err := database.RemoveContact(contactID); err != nil {
 		return api.ErrorInternalServer(err)
 	}
 
