@@ -1,6 +1,7 @@
 package selfstate
 
 import (
+	"encoding/json"
 	"fmt"
 	"sync"
 	"time"
@@ -66,6 +67,8 @@ func (selfCheck *SelfCheckWorker) Stop() error {
 }
 
 func (selfCheck *SelfCheckWorker) check(nowTS int64, lastMetricReceivedTS, redisLastCheckTS, lastCheckTS, nextSendErrorMessage, metricsCount, checksCount *int64) {
+	var events []moira.NotificationEvent
+
 	mc, _ := selfCheck.DB.GetMetricsUpdatesCount()
 	cc, err := selfCheck.DB.GetChecksUpdatesCount()
 	if err == nil {
@@ -79,64 +82,70 @@ func (selfCheck *SelfCheckWorker) check(nowTS int64, lastMetricReceivedTS, redis
 			*lastCheckTS = nowTS
 		}
 	}
-	notifierState, _ := selfCheck.DB.GetNotifierState()
 
 	if *nextSendErrorMessage < nowTS {
 		if *redisLastCheckTS < nowTS-selfCheck.Config.RedisDisconnectDelaySeconds {
 			interval := nowTS - *redisLastCheckTS
 			selfCheck.Log.Errorf("Redis disconnected more %ds. Send message.", interval)
-			selfCheck.sendErrorMessages("Redis disconnected", interval, selfCheck.Config.RedisDisconnectDelaySeconds)
-			*nextSendErrorMessage = nowTS + selfCheck.Config.NoticeIntervalSeconds
-			return
-		}
-
-		if notifierState != OK {
-			selfCheck.Log.Errorf("Notifier state: %v. Send message.", notifierState)
-			message := fmt.Sprintf("Notifier state: %v. Please, check Moira services.", notifierState)
-			selfCheck.sendErrorMessages(message, 0, 0)
-			*nextSendErrorMessage = nowTS + selfCheck.Config.NoticeIntervalSeconds
-			return
+			appendNotificationEvents(&events, "Redis disconnected", interval)
 		}
 
 		if *lastMetricReceivedTS < nowTS-selfCheck.Config.LastMetricReceivedDelaySeconds && err == nil {
 			interval := nowTS - *lastMetricReceivedTS
 			selfCheck.Log.Errorf("Moira-Filter does not received new metrics more %ds. Send message.", interval)
-			selfCheck.sendErrorMessages("Moira-Filter does not received new metrics", interval, selfCheck.Config.LastMetricReceivedDelaySeconds)
-			*nextSendErrorMessage = nowTS + selfCheck.Config.NoticeIntervalSeconds
+			appendNotificationEvents(&events, "Moira-Filter does not received new metrics", interval)
 			selfCheck.setNotifierState(ERROR)
-			return
 		}
+
 		if *lastCheckTS < nowTS-selfCheck.Config.LastCheckDelaySeconds && err == nil {
 			interval := nowTS - *lastCheckTS
 			selfCheck.Log.Errorf("Moira-Checker does not checks triggers more %ds. Send message.", interval)
-			selfCheck.sendErrorMessages("Moira-Checker does not checks triggers", interval, selfCheck.Config.LastCheckDelaySeconds)
+			appendNotificationEvents(&events, "Moira-Checker does not checks triggers", interval)
 			selfCheck.setNotifierState(ERROR)
+		}
+
+		if notifierState, _ := selfCheck.DB.GetNotifierState(); notifierState != OK {
+			selfCheck.Log.Errorf("Notifier state: %v. Send message.", notifierState)
+			message := fmt.Sprintf("Notifier state: %v. Events are not sending to recipients", notifierState)
+			appendNotificationEvents(&events, message, 0)
+		}
+
+		if len(events) > 0 {
+			eventsJson, _ := json.Marshal(events)
+			selfCheck.Log.Errorf("Selfstate check. Send package of %v notification events: %s", len(events), eventsJson)
+			selfCheck.sendErrorMessages(&events)
 			*nextSendErrorMessage = nowTS + selfCheck.Config.NoticeIntervalSeconds
 		}
+
 	}
 }
 
-func (selfCheck *SelfCheckWorker) sendErrorMessages(message string, currentValue int64, errValue int64) {
+func appendNotificationEvents(events *[]moira.NotificationEvent, message string, currentValue int64) {
+	val := float64(currentValue)
+	event := moira.NotificationEvent{
+		Timestamp: time.Now().Unix(),
+		OldState:  "NODATA",
+		State:     "ERROR",
+		Metric:    message,
+		Value:     &val,
+	}
+
+	*events = append(*events, event)
+}
+
+func (selfCheck *SelfCheckWorker) sendErrorMessages(events *[]moira.NotificationEvent) {
 	var sendingWG sync.WaitGroup
 	for _, adminContact := range selfCheck.Config.Contacts {
-		val := float64(currentValue)
 		pkg := notifier.NotificationPackage{
 			Contact: moira.ContactData{
 				Type:  adminContact["type"],
 				Value: adminContact["value"],
 			},
 			Trigger: moira.TriggerData{
-				Name:       message,
-				ErrorValue: float64(errValue),
+				Name:       "Moira health check",
+				ErrorValue: float64(0),
 			},
-			Events: []moira.NotificationEvent{
-				{
-					Timestamp: time.Now().Unix(),
-					State:     "ERROR",
-					Metric:    message,
-					Value:     &val,
-				},
-			},
+			Events:     *events,
 			DontResend: true,
 		}
 		selfCheck.Notifier.Send(&pkg, &sendingWG)

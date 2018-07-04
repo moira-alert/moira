@@ -43,6 +43,7 @@ func TestDatabaseDisconnected(t *testing.T) {
 	mock.selfCheckWorker.Start()
 	Convey("Database disconnected", t, func() {
 		Convey("Should notify admin", func() {
+			var events []moira.NotificationEvent
 			var sendingWG sync.WaitGroup
 			err := fmt.Errorf("DataBase doesn't work")
 			mock.database.EXPECT().GetMetricsUpdatesCount().Return(int64(1), nil)
@@ -54,7 +55,9 @@ func TestDatabaseDisconnected(t *testing.T) {
 			lastCheckTS = now.Unix()
 			nextSendErrorMessage = now.Add(-time.Second * 5).Unix()
 			lastMetricReceivedTS = now.Unix()
-			expectedPackage := configureNotificationPackage(adminContact, mock.conf.RedisDisconnectDelaySeconds, now.Unix()-redisLastCheckTS, "Redis disconnected")
+			appendNotificationEvents(&events, "Redis disconnected", now.Unix()-redisLastCheckTS)
+			appendNotificationEvents(&events, "Notifier state: ERROR. Events are not sending to recipients", 0)
+			expectedPackage := configureNotificationPackage(adminContact, &events)
 
 			mock.notif.EXPECT().Send(&expectedPackage, &sendingWG)
 			mock.selfCheckWorker.check(now.Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount)
@@ -87,6 +90,7 @@ func TestMoiraCacheDoesNotReceivedNewMetrics(t *testing.T) {
 	mock := configureWorker(t)
 	mock.selfCheckWorker.Start()
 	Convey("Should notify admin", t, func() {
+		var events []moira.NotificationEvent
 		var sendingWG sync.WaitGroup
 		mock.database.EXPECT().GetMetricsUpdatesCount().Return(int64(1), nil)
 		mock.database.EXPECT().GetChecksUpdatesCount().Return(int64(1), nil)
@@ -99,10 +103,12 @@ func TestMoiraCacheDoesNotReceivedNewMetrics(t *testing.T) {
 		metricsCount = 1
 
 		callingNow := now.Add(time.Second * 2)
-		expectedPackage := configureNotificationPackage(adminContact, mock.conf.LastMetricReceivedDelaySeconds, callingNow.Unix()-lastMetricReceivedTS, "Moira-Filter does not received new metrics")
+		appendNotificationEvents(&events, "Moira-Filter does not received new metrics", callingNow.Unix()-lastMetricReceivedTS)
+		appendNotificationEvents(&events, "Notifier state: ERROR. Events are not sending to recipients", 0)
+		expectedPackage := configureNotificationPackage(adminContact, &events)
 
-		mock.database.EXPECT().GetNotifierState().Return("OK", nil)
 		mock.database.EXPECT().SetNotifierState("ERROR").Return(nil)
+		mock.database.EXPECT().GetNotifierState().Return("ERROR", nil)
 		mock.notif.EXPECT().Send(&expectedPackage, &sendingWG)
 		mock.selfCheckWorker.check(callingNow.Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount)
 
@@ -133,6 +139,7 @@ func TestMoiraCheckerDoesNotChecksTriggers(t *testing.T) {
 	mock := configureWorker(t)
 	mock.selfCheckWorker.Start()
 	Convey("Should notify admin", t, func() {
+		var events []moira.NotificationEvent
 		var sendingWG sync.WaitGroup
 		mock.database.EXPECT().GetMetricsUpdatesCount().Return(int64(1), nil)
 		mock.database.EXPECT().GetChecksUpdatesCount().Return(int64(1), nil)
@@ -145,10 +152,13 @@ func TestMoiraCheckerDoesNotChecksTriggers(t *testing.T) {
 		checksCount = 1
 
 		callingNow := now.Add(time.Second * 2)
-		expectedPackage := configureNotificationPackage(adminContact, mock.conf.LastCheckDelaySeconds, callingNow.Unix()-lastCheckTS, "Moira-Checker does not checks triggers")
+		//expectedPackage := configureNotificationPackage(adminContact, mock.conf.LastCheckDelaySeconds, callingNow.Unix()-lastCheckTS, "Moira-Checker does not checks triggers")
+		appendNotificationEvents(&events, "Moira-Checker does not checks triggers", callingNow.Unix()-lastCheckTS)
+		appendNotificationEvents(&events, "Notifier state: ERROR. Events are not sending to recipients", 0)
+		expectedPackage := configureNotificationPackage(adminContact, &events)
 
-		mock.database.EXPECT().GetNotifierState().Return("OK", nil)
 		mock.database.EXPECT().SetNotifierState("ERROR").Return(nil)
+		mock.database.EXPECT().GetNotifierState().Return("ERROR", nil)
 		mock.notif.EXPECT().Send(&expectedPackage, &sendingWG)
 		mock.selfCheckWorker.check(callingNow.Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount)
 
@@ -200,7 +210,7 @@ func TestRunGoRoutine(t *testing.T) {
 		err := fmt.Errorf("DataBase doesn't work")
 		database.EXPECT().GetMetricsUpdatesCount().Return(int64(1), nil).Times(11)
 		database.EXPECT().GetChecksUpdatesCount().Return(int64(1), err).Times(11)
-		database.EXPECT().GetNotifierState().Return("ERROR", err).Times(11)
+		database.EXPECT().GetNotifierState().Return("ERROR", err).Times(3)
 		notif.EXPECT().Send(gomock.Any(), gomock.Any()).Times(3)
 		selfStateWorker.Start()
 		time.Sleep(time.Second*11 + time.Millisecond*500)
@@ -248,25 +258,17 @@ func configureWorker(t *testing.T) *selfCheckWorkerMock {
 	}
 }
 
-func configureNotificationPackage(adminContact map[string]string, errorValue int64, currentValue int64, message string) notifier.NotificationPackage {
-	val := float64(currentValue)
+func configureNotificationPackage(adminContact map[string]string, events *[]moira.NotificationEvent) notifier.NotificationPackage {
 	return notifier.NotificationPackage{
 		Contact: moira.ContactData{
 			Type:  adminContact["type"],
 			Value: adminContact["value"],
 		},
 		Trigger: moira.TriggerData{
-			Name:       message,
-			ErrorValue: float64(errorValue),
+			Name:       "Moira health check",
+			ErrorValue: float64(0),
 		},
-		Events: []moira.NotificationEvent{
-			{
-				Timestamp: time.Now().Unix(),
-				State:     "ERROR",
-				Metric:    message,
-				Value:     &val,
-			},
-		},
+		Events:     *events,
 		DontResend: true,
 	}
 }
