@@ -18,6 +18,7 @@ import (
 	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/database/redis"
 	"github.com/moira-alert/moira/logging/go-logging"
+	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
 )
 
 const serviceName = "api"
@@ -77,6 +78,11 @@ func main() {
 
 	databaseSettings := config.Redis.GetSettings()
 	database := redis.NewDatabase(logger, databaseSettings)
+
+	graphiteSettings := config.Graphite.GetSettings()
+	if err = metrics.Init(graphiteSettings, serviceName); err != nil {
+		logger.Error(err)
+	}
 
 	listener, err := net.Listen("tcp", apiConfig.Listen)
 	if err != nil {
