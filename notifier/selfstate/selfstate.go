@@ -111,8 +111,8 @@ func (selfCheck *SelfCheckWorker) check(nowTS int64, lastMetricReceivedTS, redis
 		}
 
 		if len(events) > 0 {
-			eventsJson, _ := json.Marshal(events)
-			selfCheck.Log.Errorf("Selfstate check. Send package of %v notification events: %s", len(events), eventsJson)
+			eventsJSON, _ := json.Marshal(events)
+			selfCheck.Log.Errorf("Selfstate check. Send package of %v notification events: %s", len(events), eventsJSON)
 			selfCheck.sendErrorMessages(&events)
 			*nextSendErrorMessage = nowTS + selfCheck.Config.NoticeIntervalSeconds
 		}
