@@ -36,13 +36,13 @@ func (worker *Checker) handleTrigger(triggerID string, isRemote bool) {
 			worker.Logger.Errorf("Panic while handle%s trigger %s: message: '%s' stack: %s", triggerType, triggerID, r, debug.Stack())
 		}
 	}()
-	if err := worker.handleTriggerInLock(triggerID); err != nil {
+	if err := worker.handleTriggerInLock(triggerID, isRemote); err != nil {
 		errorMetric.Mark(1)
 		worker.Logger.Errorf("Failed to handle%s trigger: %s error: %s", triggerType, triggerID, err.Error())
 	}
 }
 
-func (worker *Checker) handleTriggerInLock(triggerID string) error {
+func (worker *Checker) handleTriggerInLock(triggerID string, isRemote bool) error {
 	acquired, err := worker.Database.SetTriggerCheckLock(triggerID)
 	if err != nil {
 		return err
@@ -51,8 +51,14 @@ func (worker *Checker) handleTriggerInLock(triggerID string) error {
 		start := time.Now()
 		defer func() {
 			timeSinceStart := time.Since(start)
-			worker.Metrics.TriggersCheckTime.Update(timeSinceStart)
-			worker.Metrics.TriggerCheckTime.GetOrAdd(triggerID, triggerID).Update(timeSinceStart)
+			if isRemote {
+				worker.Metrics.TriggersCheckTime.Update(timeSinceStart)
+				worker.Metrics.TriggerCheckTime.GetOrAdd(triggerID, triggerID).Update(timeSinceStart)
+			} else {
+				worker.Metrics.RemoteTriggersCheckTime.Update(timeSinceStart)
+				worker.Metrics.RemoteTriggerCheckTime.GetOrAdd(triggerID, triggerID).Update(timeSinceStart)
+			}
+
 		}()
 		if err := worker.checkTrigger(triggerID); err != nil {
 			return err

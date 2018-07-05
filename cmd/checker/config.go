@@ -23,7 +23,7 @@ type checkerConfig struct {
 	CheckInterval           string `yaml:"check_interval"`             // Min period to perform triggers re-check. Note: Reducing of this value leads to increasing of CPU and memory usage values
 	MetricsTTL              string `yaml:"metrics_ttl"`                // Time interval to store metrics. Note: Increasing of this value leads to increasing of Redis memory consumption value
 	MaxParallelChecks       int    `yaml:"max_parallel_checks"`        // Max concurrent checkers to run. Equals to the number of processor cores found on Moira host by default or when variable is defined as 0.
-	MaxParallelRemoteChecks int    `yaml:"max_parallel_remote_checks"` // Max TODO
+	MaxParallelRemoteChecks int    `yaml:"max_parallel_remote_checks"` // TODO Max concurrent checkers to run. Equals to the number of processor cores found on Moira host by default or when variable is defined as 0.
 }
 
 func (config *checkerConfig) getSettings() *checker.Config {

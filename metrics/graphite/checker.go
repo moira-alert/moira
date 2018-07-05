@@ -7,6 +7,8 @@ type CheckerMetrics struct {
 	RemoteHandleError               Meter
 	TriggersCheckTime               Timer
 	TriggerCheckTime                TimerMap
+	RemoteTriggersCheckTime         Timer
+	RemoteTriggerCheckTime          TimerMap
 	TriggersToCheckChannelLen       Histogram
 	RemoteTriggersToCheckChannelLen Histogram
 	MetricEventsChannelLen          Histogram

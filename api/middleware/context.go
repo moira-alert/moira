@@ -84,7 +84,7 @@ func SubscriptionContext(next http.Handler) http.Handler {
 	})
 }
 
-// RemoteConfigContect sets to requests context remote config # TODO rewrite
+// RemoteConfigContext sets to requests context remote config # TODO rewrite
 func RemoteConfigContext(cfg *remote.Config) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
