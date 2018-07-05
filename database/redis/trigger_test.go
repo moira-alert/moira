@@ -296,10 +296,10 @@ func TestRemoteTrigger(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{})
 		})
-		Convey("Trigger should be added to patterns collection", func() {
+		Convey("Trigger should not be added to patterns collection", func() {
 			ids, err := dataBase.GetPatternTriggerIDs(trigger.Patterns[0])
 			So(err, ShouldBeNil)
-			So(ids, ShouldResemble, []string{trigger.ID})
+			So(ids, ShouldResemble, []string{})
 		})
 	})
 
