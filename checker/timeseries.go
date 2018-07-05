@@ -1,9 +1,9 @@
 package checker
 
 import (
+	"bytes"
 	"fmt"
 	"math"
-	"bytes"
 	"strconv"
 
 	"github.com/moira-alert/moira/expression"
@@ -30,7 +30,7 @@ func (err ErrWrongTriggerTargets) Error() string {
 	for tarInd, tar := range err {
 		wrongTargets.WriteString("t")
 		wrongTargets.WriteString(strconv.Itoa(tar))
-		if tarInd != len(err) - 1 {
+		if tarInd != len(err)-1 {
 			wrongTargets.WriteString(", ")
 		}
 	}
@@ -47,6 +47,8 @@ func (triggerChecker *TriggerChecker) getTimeSeries(from, until int64) (*trigger
 	metricsArr := make([]string, 0)
 
 	isSimpleTrigger := triggerChecker.trigger.IsSimple()
+
+EVALUATE:
 	for targetIndex, tar := range triggerChecker.trigger.Targets {
 		result, err := target.EvaluateTarget(triggerChecker.Database, tar, from, until, isSimpleTrigger)
 		if err != nil {
@@ -66,10 +68,10 @@ func (triggerChecker *TriggerChecker) getTimeSeries(from, until int64) (*trigger
 				}
 			case timeSeriesCount > 1:
 				wrongTriggerTargets = append(wrongTriggerTargets, targetIndex+1)
-				if targetIndex != len(triggerChecker.trigger.Targets) {
+				if targetIndex != len(triggerChecker.trigger.Targets)-1 {
 					continue
 				} else {
-					break
+					break EVALUATE
 				}
 			default:
 				triggerTimeSeries.Additional = append(triggerTimeSeries.Additional, result.TimeSeries[0])
