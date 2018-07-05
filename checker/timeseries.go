@@ -15,10 +15,10 @@ type triggerTimeSeries struct {
 	Additional []*target.TimeSeries
 }
 
-// ErrWrongTriggerTargets represents inconsistent number of timeseries
+// ErrWrongTriggerTargets represents targets with inconsistent number of timeseries
 type ErrWrongTriggerTargets []int
 
-// ErrWrongTriggerTarget implementation for given number of found timeseries
+// ErrWrongTriggerTarget implementation for list of invalid targets found
 func (err ErrWrongTriggerTargets) Error() string {
 	var countType []byte
 	if len(err) > 1 {
