@@ -34,7 +34,8 @@ func (err ErrWrongTriggerTargets) Error() string {
 			wrongTargets.WriteString(", ")
 		}
 	}
-	return fmt.Sprintf("%s has more than one timeseries", wrongTargets.String())
+	wrongTargets.WriteString(" has more than one timeseries")
+	return wrongTargets.String()
 }
 
 func (triggerChecker *TriggerChecker) getTimeSeries(from, until int64) (*triggerTimeSeries, []string, error) {
