@@ -75,7 +75,7 @@ type RemoteConfig struct {
 	Enabled       bool   `yaml:"enabled"`
 }
 
-// GetSettings returns redis config parsed from moira config files
+// GetSettings returns remote config parsed from moira config files
 func (config *RemoteConfig) GetSettings() *remote.Config {
 	return &remote.Config{
 		URL:           config.URL,

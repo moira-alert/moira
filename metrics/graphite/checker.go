@@ -2,15 +2,16 @@ package graphite
 
 // CheckerMetrics is a collection of metrics used in checker
 type CheckerMetrics struct {
-	CheckError                      Meter
-	HandleError                     Meter
+	CheckError                Meter
+	HandleError               Meter
+	TriggersCheckTime         Timer
+	TriggerCheckTime          TimerMap
+	TriggersToCheckChannelLen Histogram
+	MetricEventsChannelLen    Histogram
+	MetricEventsHandleTime    Timer
+
 	RemoteHandleError               Meter
-	TriggersCheckTime               Timer
-	TriggerCheckTime                TimerMap
 	RemoteTriggersCheckTime         Timer
 	RemoteTriggerCheckTime          TimerMap
-	TriggersToCheckChannelLen       Histogram
 	RemoteTriggersToCheckChannelLen Histogram
-	MetricEventsChannelLen          Histogram
-	MetricEventsHandleTime          Timer
 }

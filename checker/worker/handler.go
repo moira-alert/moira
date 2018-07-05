@@ -52,11 +52,11 @@ func (worker *Checker) handleTriggerInLock(triggerID string, isRemote bool) erro
 		defer func() {
 			timeSinceStart := time.Since(start)
 			if isRemote {
-				worker.Metrics.TriggersCheckTime.Update(timeSinceStart)
-				worker.Metrics.TriggerCheckTime.GetOrAdd(triggerID, triggerID).Update(timeSinceStart)
-			} else {
 				worker.Metrics.RemoteTriggersCheckTime.Update(timeSinceStart)
 				worker.Metrics.RemoteTriggerCheckTime.GetOrAdd(triggerID, triggerID).Update(timeSinceStart)
+			} else {
+				worker.Metrics.TriggersCheckTime.Update(timeSinceStart)
+				worker.Metrics.TriggerCheckTime.GetOrAdd(triggerID, triggerID).Update(timeSinceStart)
 			}
 
 		}()
