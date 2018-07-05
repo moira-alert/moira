@@ -91,7 +91,7 @@ func GetTimeSeriesNames(request *http.Request) map[string]bool {
 	return request.Context().Value(timeSeriesNamesKey).(map[string]bool)
 }
 
-// GetRemoteConfig gets remote config TODO rewrite
+// GetRemoteConfig gets remote config from request context
 func GetRemoteConfig(request *http.Request) *remote.Config {
 	return request.Context().Value(remoteConfigKey).(*remote.Config)
 }
