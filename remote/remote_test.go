@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/go-graphite/carbonapi/expr/types"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -93,6 +94,65 @@ func TestDecodeBody(t *testing.T) {
 			So(fr.IsAbsent[0], ShouldBeTrue)
 			So(fr.IsAbsent[1], ShouldBeFalse)
 			So(fr.Values[1], ShouldEqual, p1)
+		})
+	})
+}
+
+func TestConfig(t *testing.T) {
+	Convey("Given config without url and enabled", t, func() {
+		cfg := &Config{
+			URL:     "",
+			Enabled: true,
+		}
+		Convey("remote triggers should be disabled", func() {
+			So(cfg.IsEnabled(), ShouldBeFalse)
+		})
+	})
+
+	Convey("Given config with url and enabled", t, func() {
+		cfg := &Config{
+			URL:     "http://host",
+			Enabled: true,
+		}
+		Convey("remote triggers should be enabled", func() {
+			So(cfg.IsEnabled(), ShouldBeTrue)
+		})
+	})
+
+	Convey("Given config with url and disabled", t, func() {
+		cfg := &Config{
+			URL:     "http://host",
+			Enabled: false,
+		}
+		Convey("remote triggers should be disabled", func() {
+			So(cfg.IsEnabled(), ShouldBeFalse)
+		})
+	})
+
+	Convey("Given config without url and disabled", t, func() {
+		cfg := &Config{
+			URL:     "",
+			Enabled: false,
+		}
+		Convey("remote triggers should be disabled", func() {
+			So(cfg.IsEnabled(), ShouldBeFalse)
+		})
+	})
+}
+
+func TestConvertResponse(t *testing.T) {
+	d := types.MakeMetricData("test", []float64{1, 2, 3}, 20, 0)
+	data := []*types.MetricData{d}
+	Convey("Given data and allowRealTimeAlerting is set", t, func() {
+		ts := convertResponse(data, true)
+		Convey("response should contain last value", func() {
+			So(ts[0].MetricData.Values, ShouldResemble, []float64{1, 2, 3})
+		})
+	})
+	Convey("Given data and allowRealTimeAlerting is not set", t, func() {
+		ts := convertResponse(data, false)
+		Convey("response should not contain last value", func() {
+			So(ts[0].MetricData.Values, ShouldResemble, []float64{1, 2})
 		})
 	})
 }
