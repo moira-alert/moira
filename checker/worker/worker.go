@@ -24,6 +24,7 @@ type Checker struct {
 	tomb                  tomb.Tomb
 	triggersToCheck       chan string
 	remoteTriggersToCheck chan string
+	remoteEnabled         bool
 }
 
 // Start start schedule new MetricEvents and check for NODATA triggers
@@ -43,12 +44,14 @@ func (worker *Checker) Start() error {
 	worker.tomb.Go(worker.noDataChecker)
 	worker.Logger.Info("NODATA checker started")
 
-	if worker.Config.Remote.IsEnabled() {
+	worker.remoteEnabled = worker.Config.Remote.IsEnabled()
+
+	if worker.remoteEnabled {
 		worker.remoteTriggersToCheck = make(chan string, 16384)
 		worker.tomb.Go(worker.remoteChecker)
 		worker.Logger.Info("Remote checker started")
 	} else {
-		worker.Logger.Info("Remote URL is not set; remote checker disabled")
+		worker.Logger.Info("Remote checker disabled")
 	}
 
 	worker.Logger.Infof("Start %v parallel checkers", worker.Config.MaxParallelChecks)
@@ -57,7 +60,7 @@ func (worker *Checker) Start() error {
 		worker.tomb.Go(func() error { return worker.startTriggerHandler(false) })
 	}
 
-	if worker.Config.Remote.IsEnabled() {
+	if worker.remoteEnabled {
 		if worker.Config.MaxParallelRemoteChecks == 0 {
 			return fmt.Errorf("MaxParallelRemoteChecks does not configure, checker does not start")
 		}
@@ -72,7 +75,9 @@ func (worker *Checker) Start() error {
 		for {
 			<-worker.tomb.Dying()
 			close(worker.triggersToCheck)
-			close(worker.remoteTriggersToCheck)
+			if worker.remoteEnabled {
+				close(worker.remoteTriggersToCheck)
+			}
 			worker.Logger.Info("Checking for new events stopped")
 			return
 		}
@@ -91,7 +96,9 @@ func (worker *Checker) checkTriggersToCheckChannelLen() error {
 			return nil
 		case <-checkTicker.C:
 			worker.Metrics.TriggersToCheckChannelLen.Update(int64(len(worker.triggersToCheck)))
-			worker.Metrics.RemoteTriggersToCheckChannelLen.Update(int64(len(worker.remoteTriggersToCheck)))
+			if worker.remoteEnabled {
+				worker.Metrics.RemoteTriggersToCheckChannelLen.Update(int64(len(worker.remoteTriggersToCheck)))
+			}
 		}
 	}
 }
