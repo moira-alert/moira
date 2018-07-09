@@ -15,7 +15,7 @@ type config struct {
 type filterConfig struct {
 	Listen          string `yaml:"listen"`           // Metrics listener uri
 	RetentionConfig string `yaml:"retention_config"` // Retentions config file path. Simply use your original storage-schemas.conf or create new if you're using Moira without existing Graphite installation.
-	CacheCapacity   int    `yaml:"cache_capacity"`   // Metrics cache capacity. Note: Increasing of this value leads to decreasing Redis CPU usage.
+	CacheCapacity   int    `yaml:"cache_capacity"`   // Number of metrics to cache before sending them to Redis. Note: As this value increases, Redis CPU usage decreases. Normally, this must be value of the same order of graphite.prefix.filter.recevied.matching.count | nonNegativeDerivative() | scaleToSeconds(1)
 }
 
 func getDefault() config {
