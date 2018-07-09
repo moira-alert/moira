@@ -76,7 +76,9 @@ func main() {
 	database := redis.NewDatabase(logger, databaseSettings)
 
 	checkerMetrics := metrics.ConfigureCheckerMetrics(serviceName)
-	if err = metrics.Init(config.Graphite.GetSettings()); err != nil {
+
+	graphiteSettings := config.Graphite.GetSettings()
+	if err = metrics.Init(graphiteSettings, serviceName); err != nil {
 		logger.Error(err)
 	}
 
