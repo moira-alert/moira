@@ -11,21 +11,23 @@ import (
 
 // MetricsMatcher make buffer of metrics and save it
 type MetricsMatcher struct {
-	logger       moira.Logger
-	metrics      *graphite.FilterMetrics
-	database     moira.Database
-	cacheStorage *filter.Storage
-	waitGroup    *sync.WaitGroup
+	logger        moira.Logger
+	metrics       *graphite.FilterMetrics
+	database      moira.Database
+	cacheStorage  *filter.Storage
+	cacheCapacity *int
+	waitGroup     *sync.WaitGroup
 }
 
 // NewMetricsMatcher creates new MetricsMatcher
-func NewMetricsMatcher(metrics *graphite.FilterMetrics, logger moira.Logger, database moira.Database, cacheStorage *filter.Storage) *MetricsMatcher {
+func NewMetricsMatcher(metrics *graphite.FilterMetrics, logger moira.Logger, database moira.Database, cacheStorage *filter.Storage, cacheCapacity int) *MetricsMatcher {
 	return &MetricsMatcher{
-		metrics:      metrics,
-		logger:       logger,
-		database:     database,
-		cacheStorage: cacheStorage,
-		waitGroup:    &sync.WaitGroup{},
+		metrics:       metrics,
+		logger:        logger,
+		database:      database,
+		cacheStorage:  cacheStorage,
+		cacheCapacity: &cacheCapacity,
+		waitGroup:     &sync.WaitGroup{},
 	}
 }
 
@@ -43,7 +45,7 @@ func (matcher *MetricsMatcher) Start(channel chan *moira.MatchedMetric) {
 					return
 				}
 				matcher.cacheStorage.EnrichMatchedMetric(buffer, metric)
-				if len(buffer) < 1000 {
+				if len(buffer) < *matcher.cacheCapacity {
 					continue
 				}
 			case <-time.After(time.Second):

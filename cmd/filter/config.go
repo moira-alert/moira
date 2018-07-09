@@ -14,7 +14,8 @@ type config struct {
 
 type filterConfig struct {
 	Listen          string `yaml:"listen"`           // Metrics listener uri
-	RetentionConfig string `yaml:"retention-config"` // Retentions config file path. Simply use your original storage-schemas.conf or create new if you're using Moira without existing Graphite installation.
+	RetentionConfig string `yaml:"retention_config"` // Retentions config file path. Simply use your original storage-schemas.conf or create new if you're using Moira without existing Graphite installation.
+	CacheCapacity   int    `yaml:"cache_capacity"`   // Metrics cache capacity. Note: Increasing of this value leads to decreasing Redis CPU usage.
 }
 
 func getDefault() config {
@@ -31,6 +32,7 @@ func getDefault() config {
 		Filter: filterConfig{
 			Listen:          ":2003",
 			RetentionConfig: "/etc/moira/storage-schemas.conf",
+			CacheCapacity:   100,
 		},
 		Graphite: cmd.GraphiteConfig{
 			URI:      "localhost:2003",
