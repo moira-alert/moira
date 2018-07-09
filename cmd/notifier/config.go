@@ -47,7 +47,7 @@ func getDefault() config {
 			DBID: 0,
 		},
 		Graphite: cmd.GraphiteConfig{
-			RuntimeStats: true,
+			RuntimeStats: false,
 			URI:          "localhost:2003",
 			Prefix:       "DevOps.Moira",
 			Interval:     "60s",
