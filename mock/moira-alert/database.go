@@ -168,6 +168,19 @@ func (mr *MockDatabaseMockRecorder) GetAllContacts() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllContacts", reflect.TypeOf((*MockDatabase)(nil).GetAllContacts))
 }
 
+// GetAllTriggerIDs mocks base method
+func (m *MockDatabase) GetAllTriggerIDs() ([]string, error) {
+	ret := m.ctrl.Call(m, "GetAllTriggerIDs")
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllTriggerIDs indicates an expected call of GetAllTriggerIDs
+func (mr *MockDatabaseMockRecorder) GetAllTriggerIDs() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllTriggerIDs", reflect.TypeOf((*MockDatabase)(nil).GetAllTriggerIDs))
+}
+
 // GetChecksUpdatesCount mocks base method
 func (m *MockDatabase) GetChecksUpdatesCount() (int64, error) {
 	ret := m.ctrl.Call(m, "GetChecksUpdatesCount")

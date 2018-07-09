@@ -44,7 +44,7 @@ func isTriggerExists(dataBase moira.Database, triggerID string) (bool, error) {
 
 // GetAllTriggers gets all moira triggers
 func GetAllTriggers(database moira.Database) (*dto.TriggersList, *api.ErrorResponse) {
-	triggerIDs, err := database.GetTriggerIDs()
+	triggerIDs, err := database.GetAllTriggerIDs()
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}

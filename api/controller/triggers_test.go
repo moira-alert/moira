@@ -2,6 +2,8 @@ package controller
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
@@ -10,7 +12,6 @@ import (
 	"github.com/moira-alert/moira/mock/moira-alert"
 	"github.com/satori/go.uuid"
 	. "github.com/smartystreets/goconvey/convey"
-	"testing"
 )
 
 func TestCreateTrigger(t *testing.T) {
@@ -87,7 +88,7 @@ func TestGetAllTriggers(t *testing.T) {
 		triggerIDs := []string{uuid.NewV4().String(), uuid.NewV4().String()}
 		triggers := []*moira.TriggerCheck{{Trigger: moira.Trigger{ID: triggerIDs[0]}}, {Trigger: moira.Trigger{ID: triggerIDs[1]}}}
 		triggersList := []moira.TriggerCheck{{Trigger: moira.Trigger{ID: triggerIDs[0]}}, {Trigger: moira.Trigger{ID: triggerIDs[1]}}}
-		database.EXPECT().GetTriggerIDs().Return(triggerIDs, nil)
+		database.EXPECT().GetAllTriggerIDs().Return(triggerIDs, nil)
 		database.EXPECT().GetTriggerChecks(triggerIDs).Return(triggers, nil)
 		list, err := GetAllTriggers(database)
 		So(err, ShouldBeNil)
@@ -95,7 +96,7 @@ func TestGetAllTriggers(t *testing.T) {
 	})
 
 	Convey("No triggers", t, func() {
-		database.EXPECT().GetTriggerIDs().Return(make([]string, 0), nil)
+		database.EXPECT().GetAllTriggerIDs().Return(make([]string, 0), nil)
 		database.EXPECT().GetTriggerChecks(make([]string, 0)).Return(make([]*moira.TriggerCheck, 0), nil)
 		list, err := GetAllTriggers(database)
 		So(err, ShouldBeNil)
@@ -104,7 +105,7 @@ func TestGetAllTriggers(t *testing.T) {
 
 	Convey("GetTriggerIDs error", t, func() {
 		expected := fmt.Errorf("GetTriggerIDs error")
-		database.EXPECT().GetTriggerIDs().Return(nil, expected)
+		database.EXPECT().GetAllTriggerIDs().Return(nil, expected)
 		list, err := GetAllTriggers(database)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 		So(list, ShouldBeNil)
@@ -112,7 +113,7 @@ func TestGetAllTriggers(t *testing.T) {
 
 	Convey("GetTriggerChecks error", t, func() {
 		expected := fmt.Errorf("GetTriggerChecks error")
-		database.EXPECT().GetTriggerIDs().Return(make([]string, 0), nil)
+		database.EXPECT().GetAllTriggerIDs().Return(make([]string, 0), nil)
 		database.EXPECT().GetTriggerChecks(make([]string, 0)).Return(nil, expected)
 		list, err := GetAllTriggers(database)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))

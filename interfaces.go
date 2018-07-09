@@ -27,6 +27,7 @@ type Database interface {
 
 	// Trigger storing
 	GetTriggerIDs() ([]string, error)
+	GetAllTriggerIDs() ([]string, error)
 	GetRemoteTriggerIDs() ([]string, error)
 	GetTrigger(triggerID string) (Trigger, error)
 	GetTriggers(triggerIDs []string) ([]*Trigger, error)

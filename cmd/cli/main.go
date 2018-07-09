@@ -105,7 +105,7 @@ func RemoveBotInstanceLock(dataBase moira.Database, botName string) error {
 // count with python expressions and triggers count with govaluate expressions, used in Moira 2.0
 func GetTriggerWithPythonExpressions(dataBase moira.Database) error {
 	fmt.Println("Getting triggers expressions statistic started")
-	triggerIDs, err := dataBase.GetTriggerIDs()
+	triggerIDs, err := dataBase.GetAllTriggerIDs()
 	if err != nil {
 		return err
 	}
@@ -177,7 +177,7 @@ func ConvertPythonExpression(dataBase moira.Database, triggerID string) error {
 // Now new expression contains in redis field 'expr'.
 func ConvertPythonExpressions(dataBase moira.Database) error {
 	fmt.Println("Convert expressions started")
-	triggerIDs, err := dataBase.GetTriggerIDs()
+	triggerIDs, err := dataBase.GetAllTriggerIDs()
 	if err != nil {
 		return err
 	}

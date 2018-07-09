@@ -282,19 +282,19 @@ func TestRemoteTrigger(t *testing.T) {
 			So(actual, ShouldResemble, *trigger)
 		})
 		Convey("Trigger should be added to triggers collection", func() {
-			ids, err := dataBase.GetTriggerIDs()
+			ids, err := dataBase.GetAllTriggerIDs()
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{trigger.ID})
+		})
+		Convey("Trigger should not be returned as non-remote trigger", func() { //TODO rewrite msg
+			ids, err := dataBase.GetTriggerIDs()
+			So(err, ShouldBeNil)
+			So(ids, ShouldResemble, []string{})
 		})
 		Convey("Trigger should be added to remote triggers collection", func() {
 			ids, err := dataBase.GetRemoteTriggerIDs()
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{trigger.ID})
-		})
-		Convey("Trigger shouldn't be returned as non-remote", func() {
-			ids, err := dataBase.GetPatternTriggerIDs(trigger.Patterns[0])
-			So(err, ShouldBeNil)
-			So(ids, ShouldResemble, []string{})
 		})
 		Convey("Trigger should not be added to patterns collection", func() {
 			ids, err := dataBase.GetPatternTriggerIDs(trigger.Patterns[0])
@@ -314,6 +314,11 @@ func TestRemoteTrigger(t *testing.T) {
 		})
 		Convey("Trigger should be added to triggers collection", func() {
 			ids, err := dataBase.GetTriggerIDs()
+			So(err, ShouldBeNil)
+			So(ids, ShouldResemble, []string{trigger.ID})
+		})
+		Convey("Trigger should be added to all triggers collection", func() {
+			ids, err := dataBase.GetAllTriggerIDs()
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{trigger.ID})
 		})

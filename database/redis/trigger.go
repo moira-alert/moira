@@ -12,10 +12,21 @@ import (
 )
 
 // GetTriggerIDs gets all moira triggerIDs
-func (connector *DbConnector) GetTriggerIDs() ([]string, error) {
+func (connector *DbConnector) GetAllTriggerIDs() ([]string, error) {
 	c := connector.pool.Get()
 	defer c.Close()
 	triggerIds, err := redis.Strings(c.Do("SMEMBERS", triggersListKey))
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get all triggers-list: %s", err.Error())
+	}
+	return triggerIds, nil
+}
+
+// GetTriggerIDs gets moira triggerIDs without remote
+func (connector *DbConnector) GetTriggerIDs() ([]string, error) {
+	c := connector.pool.Get()
+	defer c.Close()
+	triggerIds, err := redis.Strings(c.Do("SDIFF", triggersListKey, remoteTriggersListKey))
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get triggers-list: %s", err.Error())
 	}
