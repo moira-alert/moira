@@ -71,15 +71,12 @@ func (worker *Checker) Start() error {
 	worker.Logger.Info("Checking new events started")
 
 	go func() {
-		for {
-			<-worker.tomb.Dying()
-			close(worker.triggersToCheck)
-			if worker.remoteEnabled {
-				close(worker.remoteTriggersToCheck)
-			}
-			worker.Logger.Info("Checking for new events stopped")
-			return
+		<-worker.tomb.Dying()
+		close(worker.triggersToCheck)
+		if worker.remoteEnabled {
+			close(worker.remoteTriggersToCheck)
 		}
+		worker.Logger.Info("Checking for new events stopped")
 	}()
 
 	worker.tomb.Go(worker.checkTriggersToCheckChannelLen)
