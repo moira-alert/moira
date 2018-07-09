@@ -30,6 +30,7 @@ type Config struct {
 	Enabled       bool
 }
 
+// IsEnabled checks that remote config is enabled (url is defined and enabled flag is set)
 func (c *Config) IsEnabled() bool {
 	return c.Enabled && c.URL != ""
 }

@@ -11,7 +11,7 @@ import (
 	"github.com/moira-alert/moira/database/redis/reply"
 )
 
-// GetTriggerIDs gets all moira triggerIDs
+// GetAllTriggerIDs gets all moira triggerIDs
 func (connector *DbConnector) GetAllTriggerIDs() ([]string, error) {
 	c := connector.pool.Get()
 	defer c.Close()
