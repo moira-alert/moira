@@ -56,17 +56,14 @@ func (worker *Checker) Start() error {
 		worker.Logger.Info("Remote checker disabled")
 	}
 
-	worker.Logger.Infof("Start %v parallel checkers", worker.Config.MaxParallelChecks)
+	worker.Logger.Infof("Start %v parallel checker(s)", worker.Config.MaxParallelChecks)
 	for i := 0; i < worker.Config.MaxParallelChecks; i++ {
 		worker.tomb.Go(func() error { return worker.metricsChecker(metricEventsChannel) })
 		worker.tomb.Go(func() error { return worker.startTriggerHandler(false) })
 	}
 
 	if worker.remoteEnabled {
-		if worker.Config.MaxParallelRemoteChecks == 0 {
-			return fmt.Errorf("MaxParallelRemoteChecks does not configure, checker does not start")
-		}
-		worker.Logger.Infof("Start %v parallel remote checkers", worker.Config.MaxParallelRemoteChecks)
+		worker.Logger.Infof("Start %v parallel remote checker(s)", worker.Config.MaxParallelRemoteChecks)
 		for i := 0; i < worker.Config.MaxParallelRemoteChecks; i++ {
 			worker.tomb.Go(func() error { return worker.startTriggerHandler(true) })
 		}
