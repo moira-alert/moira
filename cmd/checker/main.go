@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/go-graphite/carbonapi/expr/functions"
+	"github.com/moira-alert/moira/remote"
 	"github.com/patrickmn/go-cache"
 
 	"github.com/moira-alert/moira"
@@ -75,8 +76,8 @@ func main() {
 	databaseSettings := config.Redis.GetSettings()
 	database := redis.NewDatabase(logger, databaseSettings)
 
-	checkerMetrics := metrics.ConfigureCheckerMetrics(serviceName)
-
+	remoteSettings := config.Remote.GetSettings()
+	checkerMetrics := metrics.ConfigureCheckerMetrics(serviceName, remoteSettings.IsEnabled())
 	graphiteSettings := config.Graphite.GetSettings()
 	if err = metrics.Init(graphiteSettings, serviceName); err != nil {
 		logger.Error(err)
@@ -84,7 +85,7 @@ func main() {
 
 	checkerSettings := config.Checker.getSettings()
 	if triggerID != nil && *triggerID != "" {
-		checkSingleTrigger(database, checkerMetrics, checkerSettings)
+		checkSingleTrigger(database, checkerMetrics, checkerSettings, remoteSettings)
 	}
 
 	// configure carbon-api functions
@@ -94,6 +95,7 @@ func main() {
 		Logger:       logger,
 		Database:     database,
 		Config:       checkerSettings,
+		RemoteConfig: remoteSettings,
 		Metrics:      checkerMetrics,
 		TriggerCache: cache.New(checkerSettings.CheckInterval, time.Minute*60),
 		PatternCache: cache.New(checkerSettings.CheckInterval, time.Minute*60),
@@ -111,13 +113,14 @@ func main() {
 	logger.Infof("Moira Checker shutting down.")
 }
 
-func checkSingleTrigger(database moira.Database, metrics *graphite.CheckerMetrics, settings *checker.Config) {
+func checkSingleTrigger(database moira.Database, metrics *graphite.CheckerMetrics, settings *checker.Config, remoteSettings *remote.Config) {
 	triggerChecker := checker.TriggerChecker{
-		TriggerID: *triggerID,
-		Database:  database,
-		Logger:    logger,
-		Config:    settings,
-		Metrics:   metrics,
+		TriggerID:    *triggerID,
+		Database:     database,
+		Logger:       logger,
+		Config:       settings,
+		RemoteConfig: remoteSettings,
+		Metrics:      metrics,
 	}
 
 	err := triggerChecker.InitTriggerChecker()

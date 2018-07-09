@@ -2,8 +2,6 @@ package checker
 
 import (
 	"time"
-
-	"github.com/moira-alert/moira/remote"
 )
 
 // Config represent checker config
@@ -17,5 +15,4 @@ type Config struct {
 	MaxParallelRemoteChecks     int
 	LogFile                     string
 	LogLevel                    string
-	Remote                      remote.Config
 }

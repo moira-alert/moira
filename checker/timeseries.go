@@ -66,7 +66,7 @@ func (triggerChecker *TriggerChecker) getRemoteTimeSeries(from, until int64) (*t
 
 	isSimpleTrigger := triggerChecker.trigger.IsSimple()
 	for targetIndex, tar := range triggerChecker.trigger.Targets {
-		timeSeries, err := remote.Fetch(&triggerChecker.Config.Remote, tar, from, until, isSimpleTrigger)
+		timeSeries, err := remote.Fetch(triggerChecker.RemoteConfig, tar, from, until, isSimpleTrigger)
 		if err != nil {
 			return nil, err
 		}

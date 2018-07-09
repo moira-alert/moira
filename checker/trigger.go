@@ -2,19 +2,22 @@ package checker
 
 import (
 	"errors"
+	"time"
+
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/metrics/graphite"
-	"time"
+	"github.com/moira-alert/moira/remote"
 )
 
 // TriggerChecker represents data, used for handling new trigger state
 type TriggerChecker struct {
-	TriggerID string
-	Database  moira.Database
-	Logger    moira.Logger
-	Config    *Config
-	Metrics   *graphite.CheckerMetrics
+	TriggerID    string
+	Database     moira.Database
+	Logger       moira.Logger
+	Config       *Config
+	RemoteConfig *remote.Config
+	Metrics      *graphite.CheckerMetrics
 
 	From  int64
 	Until int64

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/moira-alert/moira/remote"
 	"github.com/patrickmn/go-cache"
 	"gopkg.in/tomb.v2"
 
@@ -17,6 +18,7 @@ type Checker struct {
 	Logger                moira.Logger
 	Database              moira.Database
 	Config                *checker.Config
+	RemoteConfig          *remote.Config
 	Metrics               *graphite.CheckerMetrics
 	TriggerCache          *cache.Cache
 	PatternCache          *cache.Cache
@@ -44,7 +46,7 @@ func (worker *Checker) Start() error {
 	worker.tomb.Go(worker.noDataChecker)
 	worker.Logger.Info("NODATA checker started")
 
-	worker.remoteEnabled = worker.Config.Remote.IsEnabled()
+	worker.remoteEnabled = worker.RemoteConfig.IsEnabled()
 
 	if worker.remoteEnabled {
 		worker.remoteTriggersToCheck = make(chan string, 16384)

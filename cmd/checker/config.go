@@ -70,5 +70,9 @@ func getDefault() config {
 		Pprof: cmd.ProfilerConfig{
 			Listen: "",
 		},
+		Remote: cmd.RemoteConfig{
+			CheckInterval: "5s",
+			Timeout:       "60s",
+		},
 	}
 }

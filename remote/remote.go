@@ -31,7 +31,7 @@ type Config struct {
 }
 
 func (c *Config) IsEnabled() bool {
-	return c.URL != "" && c.Enabled
+	return c.Enabled && c.URL != ""
 }
 
 func prepareRequest(from, until int64, target string, cfg *Config) (*http.Request, error) {

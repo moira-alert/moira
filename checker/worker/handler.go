@@ -70,11 +70,12 @@ func (worker *Checker) handleTriggerInLock(triggerID string, isRemote bool) erro
 func (worker *Checker) checkTrigger(triggerID string) error {
 	defer worker.Database.DeleteTriggerCheckLock(triggerID)
 	triggerChecker := checker.TriggerChecker{
-		TriggerID: triggerID,
-		Database:  worker.Database,
-		Logger:    worker.Logger,
-		Config:    worker.Config,
-		Metrics:   worker.Metrics,
+		TriggerID:    triggerID,
+		Database:     worker.Database,
+		Logger:       worker.Logger,
+		Config:       worker.Config,
+		RemoteConfig: worker.RemoteConfig,
+		Metrics:      worker.Metrics,
 	}
 
 	err := triggerChecker.InitTriggerChecker()

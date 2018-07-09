@@ -66,13 +66,14 @@ type ProfilerConfig struct {
 	Listen string `yaml:"listen"` // Define variable as valid non-empty string to enable pprof server. For example ':10000' will enable server available at http://moira.company.com:10000/debug/pprof/
 }
 
+// RemoteConfig is remote graphite settings structure
 type RemoteConfig struct {
-	URL           string `yaml:"url"`
-	CheckInterval string `yaml:"check_interval"`
-	Timeout       string `yaml:"timeout"`
-	User          string `yaml:"user"`
-	Password      string `yaml:"password"`
-	Enabled       bool   `yaml:"enabled"`
+	URL           string `yaml:"url"`            // graphite url e.g http://graphite/render
+	CheckInterval string `yaml:"check_interval"` // Min period to perform triggers re-check. Note: Reducing of this value leads to increasing of CPU and memory usage values
+	Timeout       string `yaml:"timeout"`        // Timeout for remote requests
+	User          string `yaml:"user"`           // Username for basic auth
+	Password      string `yaml:"password"`       // Password for basic auth
+	Enabled       bool   `yaml:"enabled"`        // If true, remote worker will be enabled.
 }
 
 // GetSettings returns remote config parsed from moira config files
