@@ -8,7 +8,10 @@ import (
 	"github.com/moira-alert/moira/target"
 )
 
-var checkPointGap int64 = 120
+var (
+	checkPointGap int64 = 120
+	triggerStates       = [...]string{"OK", "WARN", "ERROR", "NODATA"}
+)
 
 // ErrTriggerHasNoTimeSeries used if trigger has no metrics
 type ErrTriggerHasNoTimeSeries struct{}
@@ -36,6 +39,14 @@ func (err ErrTriggerHasSameTimeSeriesNames) Error() string {
 	return fmt.Sprintf("Trigger has same timeseries names: %s", strings.Join(err.names, ", "))
 }
 
+// ErrTriggerInExceptionState used if trigger is in EXCEPTION state
+type ErrTriggerInExceptionState struct{}
+
+// ErrTriggerInExceptionState implementation with constant error message
+func (err ErrTriggerInExceptionState) Error() string {
+	return fmt.Sprintf("Trigger is in EXCEPTION state")
+}
+
 // Check handle trigger and last check and write new state of trigger, if state were change then write new NotificationEvent
 func (triggerChecker *TriggerChecker) Check() error {
 	triggerChecker.Logger.Debugf("Checking trigger %s", triggerChecker.TriggerID)
@@ -57,7 +68,7 @@ func (triggerChecker *TriggerChecker) handleTrigger() (moira.CheckData, error) {
 	}
 	checkData := moira.CheckData{
 		Metrics:        lastMetrics,
-		State:          OK,
+		State:          triggerChecker.lastCheck.State,
 		Timestamp:      triggerChecker.Until,
 		EventTimestamp: triggerChecker.lastCheck.EventTimestamp,
 		Score:          triggerChecker.lastCheck.Score,
@@ -110,6 +121,9 @@ func (triggerChecker *TriggerChecker) handleTrigger() (moira.CheckData, error) {
 		}
 		return checkData, ErrTriggerHasSameTimeSeriesNames{names: names}
 	}
+	if checkData.State == EXCEPTION {
+		return checkData, ErrTriggerInExceptionState{}
+	}
 	return checkData, nil
 }
 
@@ -138,6 +152,10 @@ func (triggerChecker *TriggerChecker) checkTimeSeries(timeSeries *target.TimeSer
 func (triggerChecker *TriggerChecker) handleErrorCheck(checkData moira.CheckData, checkingError error) (moira.CheckData, error) {
 
 	switch checkingError.(type) {
+	case ErrTriggerInExceptionState:
+		triggerChecker.Logger.Debugf("Trigger %s: %s", triggerChecker.TriggerID, checkingError.Error())
+		checkData.State = triggerChecker.updateCheckDataState(checkData)
+		checkData.Message = checkingError.Error()
 	case ErrTriggerHasNoTimeSeries:
 		triggerChecker.Logger.Debugf("Trigger %s: %s", triggerChecker.TriggerID, checkingError.Error())
 		checkData.State = NODATA
@@ -160,12 +178,13 @@ func (triggerChecker *TriggerChecker) handleErrorCheck(checkData moira.CheckData
 		checkData.State = EXCEPTION
 		checkData.Message = checkingError.Error()
 	case ErrWrongTriggerTarget, ErrTriggerHasSameTimeSeriesNames:
-		checkData.State = EXCEPTION
+		checkData.State = ERROR
 		checkData.Message = checkingError.Error()
 	default:
 		triggerChecker.Metrics.CheckError.Mark(1)
 		triggerChecker.Logger.Errorf("Trigger %s check failed: %s", triggerChecker.TriggerID, checkingError.Error())
-		checkData.State = EXCEPTION
+		checkData.State = ERROR
+		checkData.Message = checkingError.Error()
 	}
 	return triggerChecker.compareTriggerStates(checkData)
 }
@@ -250,4 +269,19 @@ func (triggerChecker *TriggerChecker) cleanupMetricsValues(metrics []string, unt
 			triggerChecker.Logger.Error(err.Error())
 		}
 	}
+}
+
+func (triggerChecker *TriggerChecker) updateCheckDataState(checkData moira.CheckData) string {
+	metrics := checkData.Metrics
+	result := ""
+	states := make(map[string]bool)
+	for _, metrState := range metrics {
+		states[metrState.State] = true
+	}
+	for _, state := range triggerStates {
+		if states[state] {
+			result = state
+		}
+	}
+	return result
 }
