@@ -49,13 +49,11 @@ func (triggerChecker *TriggerChecker) getTimeSeries(from, until int64) (*trigger
 
 	isSimpleTrigger := triggerChecker.trigger.IsSimple()
 
-EVALUATE:
 	for targetIndex, tar := range triggerChecker.trigger.Targets {
 		result, err := target.EvaluateTarget(triggerChecker.Database, tar, from, until, isSimpleTrigger)
 		if err != nil {
 			return nil, nil, err
 		}
-
 		if targetIndex == 0 {
 			triggerTimeSeries.Main = result.TimeSeries
 		} else {
@@ -69,11 +67,6 @@ EVALUATE:
 				}
 			case timeSeriesCount > 1:
 				wrongTriggerTargets = append(wrongTriggerTargets, targetIndex+1)
-				if targetIndex != len(triggerChecker.trigger.Targets)-1 {
-					continue
-				} else {
-					break EVALUATE
-				}
 			default:
 				triggerTimeSeries.Additional = append(triggerTimeSeries.Additional, result.TimeSeries[0])
 			}
