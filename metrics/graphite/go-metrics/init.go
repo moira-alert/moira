@@ -15,21 +15,32 @@ import (
 const hostnameTmpl = "{hostname}"
 
 // Init is initializer for notifier graphite metrics worker based on go-metrics and go-metrics-graphite
-func Init(config graphite.Config) error {
+func Init(config graphite.Config, serviceName string) error {
 	if config.Enabled {
 		address, err := net.ResolveTCPAddr("tcp", config.URI)
 		if err != nil {
-			return fmt.Errorf("Can not resolve graphiteURI %s: %s", config.URI, err)
+			return fmt.Errorf("can't resolve graphiteURI %s: %s", config.URI, err)
 		}
 		prefix, err := initPrefix(config.Prefix)
 		if err != nil {
-			return fmt.Errorf("Can not get OS hostname %s: %s", config.Prefix, err)
+			return fmt.Errorf("can't get OS hostname %s: %s", config.Prefix, err)
 		}
-
 		go goMetricsGraphite.Graphite(metrics.DefaultRegistry, config.Interval, prefix, address)
+		if config.RuntimeStats {
+			runtimeRegistry := initRuntimeRegistry(serviceName)
+			go metrics.CaptureRuntimeMemStats(runtimeRegistry, config.Interval)
+			go goMetricsGraphite.Graphite(runtimeRegistry, config.Interval, prefix, address)
+		}
 		return nil
 	}
 	return nil
+}
+
+func initRuntimeRegistry(serviceName string) metrics.Registry {
+	runtimePrefix := fmt.Sprintf("%s.", serviceName)
+	runtimeRegistry := metrics.NewPrefixedRegistry(runtimePrefix)
+	metrics.RegisterRuntimeMemStats(runtimeRegistry)
+	return runtimeRegistry
 }
 
 func initPrefix(prefix string) (string, error) {

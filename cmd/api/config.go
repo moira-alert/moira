@@ -6,10 +6,11 @@ import (
 )
 
 type config struct {
-	Redis  cmd.RedisConfig    `yaml:"redis"`
-	Logger cmd.LoggerConfig   `yaml:"log"`
-	API    apiConfig          `yaml:"api"`
-	Pprof  cmd.ProfilerConfig `yaml:"pprof"`
+	Redis    cmd.RedisConfig    `yaml:"redis"`
+	Graphite cmd.GraphiteConfig `yaml:"graphite"`
+	Logger   cmd.LoggerConfig   `yaml:"log"`
+	API      apiConfig          `yaml:"api"`
+	Pprof    cmd.ProfilerConfig `yaml:"pprof"`
 }
 
 type apiConfig struct {
@@ -42,6 +43,12 @@ func getDefault() config {
 			Listen:        ":8081",
 			WebConfigPath: "/etc/moira/web.json",
 			EnableCORS:    false,
+		},
+		Graphite: cmd.GraphiteConfig{
+			RuntimeStats: false,
+			URI:          "localhost:2003",
+			Prefix:       "DevOps.Moira",
+			Interval:     "60s",
 		},
 		Pprof: cmd.ProfilerConfig{
 			Listen: "",

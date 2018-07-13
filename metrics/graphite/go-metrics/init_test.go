@@ -23,3 +23,13 @@ func TestInitPrefix(t *testing.T) {
 		So(err, ShouldBeNil)
 	})
 }
+
+func TestInitRuntimeRegistry(t *testing.T) {
+	runtimeRegistry := initRuntimeRegistry("service")
+	Convey("Metric name should be correct", t, func() {
+		runtimeRegistry.Each(func(name string, i interface{}) {
+			isNameCorrect := strings.HasPrefix(name, "service.runtime")
+			So(isNameCorrect, ShouldBeTrue)
+		})
+	})
+}

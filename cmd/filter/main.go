@@ -70,7 +70,9 @@ func main() {
 	}
 
 	cacheMetrics := metrics.ConfigureFilterMetrics(serviceName)
-	if err = metrics.Init(config.Graphite.GetSettings()); err != nil {
+
+	graphiteSettings := config.Graphite.GetSettings()
+	if err = metrics.Init(graphiteSettings, serviceName); err != nil {
 		logger.Error(err)
 	}
 
