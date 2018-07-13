@@ -60,7 +60,7 @@ func (matcher *MetricsMatcher) Start(channel chan *moira.MatchedMetric) {
 			buffer = make(map[string]*moira.MatchedMetric)
 		}
 	}()
-	matcher.logger.Info("Moira Filter Metrics Matcher started to save %d cached metrics every %s")
+	matcher.logger.Info("Moira Filter Metrics Matcher started to save %d cached metrics every %s", matcher.cacheCapacity, flushInterval.String())
 }
 
 // Wait waits for metric matcher instance will stop
