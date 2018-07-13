@@ -43,8 +43,8 @@ func (config *RedisConfig) GetSettings() redis.Config {
 type GraphiteConfig struct {
 	// If true, graphite logger will be enabled.
 	Enabled bool `yaml:"enabled"`
-  // If true, runtime stats will be captured and sent to graphite. Note: It takes to call stoptheworld() with configured "graphite.interval" to capture runtime stats (https://golang.org/src/runtime/mstats.go)
-  RuntimeStats bool `yaml:"runtime_stats"`
+	// If true, runtime stats will be captured and sent to graphite. Note: It takes to call stoptheworld() with configured "graphite.interval" to capture runtime stats (https://golang.org/src/runtime/mstats.go)
+	RuntimeStats bool `yaml:"runtime_stats"`
 	// Graphite relay URI, format: ip:port
 	URI string `yaml:"uri"`
 	// Moira metrics prefix. Use 'prefix: {hostname}' to use hostname autoresolver.
