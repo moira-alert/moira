@@ -11,7 +11,7 @@ graphite:
 filter:
   listen: ":2003"
   retention_config: /etc/moira/storage-schemas.conf
-  cache_capacity: 100
+  cache_capacity: 10
 log:
   log_file: stdout
   log_level: info

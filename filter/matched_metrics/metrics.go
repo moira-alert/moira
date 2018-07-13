@@ -15,7 +15,7 @@ type MetricsMatcher struct {
 	metrics       *graphite.FilterMetrics
 	database      moira.Database
 	cacheStorage  *filter.Storage
-	cacheCapacity *int
+	cacheCapacity int
 	waitGroup     *sync.WaitGroup
 }
 
@@ -26,13 +26,14 @@ func NewMetricsMatcher(metrics *graphite.FilterMetrics, logger moira.Logger, dat
 		logger:        logger,
 		database:      database,
 		cacheStorage:  cacheStorage,
-		cacheCapacity: &cacheCapacity,
+		cacheCapacity: cacheCapacity,
 		waitGroup:     &sync.WaitGroup{},
 	}
 }
 
 // Start process matched metrics from channel and save it in cache storage
 func (matcher *MetricsMatcher) Start(channel chan *moira.MatchedMetric) {
+	flushInterval := time.Second
 	matcher.waitGroup.Add(1)
 	go func() {
 		defer matcher.waitGroup.Done()
@@ -45,10 +46,10 @@ func (matcher *MetricsMatcher) Start(channel chan *moira.MatchedMetric) {
 					return
 				}
 				matcher.cacheStorage.EnrichMatchedMetric(buffer, metric)
-				if len(buffer) < *matcher.cacheCapacity {
+				if len(buffer) < matcher.cacheCapacity {
 					continue
 				}
-			case <-time.After(time.Second):
+			case <-time.After(flushInterval):
 			}
 			if len(buffer) == 0 {
 				continue
@@ -59,7 +60,7 @@ func (matcher *MetricsMatcher) Start(channel chan *moira.MatchedMetric) {
 			buffer = make(map[string]*moira.MatchedMetric)
 		}
 	}()
-	matcher.logger.Info("Moira Filter Metrics Matcher started")
+	matcher.logger.Info("Moira Filter Metrics Matcher started to save %d cached metrics every %s")
 }
 
 // Wait waits for metric matcher instance will stop

@@ -21,22 +21,35 @@ type config struct {
 }
 
 type notifierConfig struct {
-	SenderTimeout    string              `yaml:"sender_timeout"`    // Soft timeout to start retrying to send notification after single failed attempt
-	ResendingTimeout string              `yaml:"resending_timeout"` // Hard timeout to stop retrying to send notification after multiple failed attempts
-	Senders          []map[string]string `yaml:"senders"`           // Senders configuration section. See https://moira.readthedocs.io/en/latest/installation/configuration.html for more explanation
-	SelfState        selfStateConfig     `yaml:"moira_selfstate"`   // Self state monitor configuration section. Note: No inner subscriptions is required. It's own notification mechanism will be used.
-	FrontURI         string              `yaml:"front_uri"`         // Web-UI uri prefix for trigger links in notifications. For example: with 'http://localhost' every notification will contain link like 'http://localhost/trigger/triggerId'
-	Timezone         string              `yaml:"timezone"`          // Timezone to use to convert ticks. Default is UTC. See https://golang.org/pkg/time/#LoadLocation for more details.
-	DateTimeFormat   string              `yaml:"date_time_format"`  // Format for email sender. Default is "15:04 02.01.2006". See https://golang.org/pkg/time/#Time.Format for more details about golang time formatting.
+	// Soft timeout to start retrying to send notification after single failed attempt
+	SenderTimeout string `yaml:"sender_timeout"`
+	// Hard timeout to stop retrying to send notification after multiple failed attempts
+	ResendingTimeout string `yaml:"resending_timeout"`
+	// Senders configuration section. See https://moira.readthedocs.io/en/latest/installation/configuration.html for more explanation
+	Senders []map[string]string `yaml:"senders"`
+	// Self state monitor configuration section. Note: No inner subscriptions is required. It's own notification mechanism will be used.
+	SelfState selfStateConfig `yaml:"moira_selfstate"`
+	// Web-UI uri prefix for trigger links in notifications. For example: with 'http://localhost' every notification will contain link like 'http://localhost/trigger/triggerId'
+	FrontURI string `yaml:"front_uri"`
+	// Timezone to use to convert ticks. Default is UTC. See https://golang.org/pkg/time/#LoadLocation for more details.
+	Timezone string `yaml:"timezone"`
+	// Format for email sender. Default is "15:04 02.01.2006". See https://golang.org/pkg/time/#Time.Format for more details about golang time formatting.
+	DateTimeFormat string `yaml:"date_time_format"`
 }
 
 type selfStateConfig struct {
-	Enabled                 bool                `yaml:"enabled"`                    // If true, Self state monitor will be enabled.
-	RedisDisconnectDelay    string              `yaml:"redis_disconect_delay"`      // Max Redis disconnect delay to send alert when reached
-	LastMetricReceivedDelay string              `yaml:"last_metric_received_delay"` // Max Filter metrics receive delay to send alert when reached
-	LastCheckDelay          string              `yaml:"last_check_delay"`           // Max Checker checks perform delay to send alert when reached
-	Contacts                []map[string]string `yaml:"contacts"`                   // Contact list for Self state monitor alerts
-	NoticeInterval          string              `yaml:"notice_interval"`            // Self state monitor alerting interval
+	// If true, Self state monitor will be enabled.
+	Enabled bool `yaml:"enabled"`
+	// Max Redis disconnect delay to send alert when reached
+	RedisDisconnectDelay string `yaml:"redis_disconect_delay"`
+	// Max Filter metrics receive delay to send alert when reached
+	LastMetricReceivedDelay string `yaml:"last_metric_received_delay"`
+	// Max Checker checks perform delay to send alert when reached
+	LastCheckDelay string `yaml:"last_check_delay"`
+	// Contact list for Self state monitor alerts
+	Contacts []map[string]string `yaml:"contacts"`
+	// Self state monitor alerting interval
+	NoticeInterval string `yaml:"notice_interval"`
 }
 
 func getDefault() config {

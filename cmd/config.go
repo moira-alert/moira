@@ -16,11 +16,16 @@ import (
 // Use fields MasterName and SentinelAddrs to enable Redis Sentinel support,
 // use Host and Port fields otherwise.
 type RedisConfig struct {
-	MasterName    string `yaml:"master_name"`    // Redis Sentinel cluster name
-	SentinelAddrs string `yaml:"sentinel_addrs"` // Redis Sentinel address list, format: {host1_name:port};{ip:port}
-	Host          string `yaml:"host"`           // Redis node ip-address or host name
-	Port          string `yaml:"port"`           // Redis node port
-	DBID          int    `yaml:"dbid"`           // Redis database id
+	// Redis Sentinel cluster name
+	MasterName string `yaml:"master_name"`
+	// Redis Sentinel address list, format: {host1_name:port};{ip:port}
+	SentinelAddrs string `yaml:"sentinel_addrs"`
+	// Redis node ip-address or host name
+	Host string `yaml:"host"`
+	// Redis node port
+	Port string `yaml:"port"`
+	// Redis database id
+	DBID int `yaml:"dbid"`
 }
 
 // GetSettings returns redis config parsed from moira config files
@@ -36,10 +41,14 @@ func (config *RedisConfig) GetSettings() redis.Config {
 
 // GraphiteConfig is graphite metrics config structure that initialises at the start of moira
 type GraphiteConfig struct {
-	Enabled  bool   `yaml:"enabled"`  // If true, graphite logger will be enabled.
-	URI      string `yaml:"uri"`      // Graphite relay URI, format: ip:port
-	Prefix   string `yaml:"prefix"`   // Moira metrics prefix. Use 'prefix: {hostname}' to use hostname autoresolver.
-	Interval string `yaml:"interval"` // Metrics sending interval
+	// If true, graphite logger will be enabled.
+	Enabled bool `yaml:"enabled"`
+	// Graphite relay URI, format: ip:port
+	URI string `yaml:"uri"`
+	// Moira metrics prefix. Use 'prefix: {hostname}' to use hostname autoresolver.
+	Prefix string `yaml:"prefix"`
+	// Metrics sending interval
+	Interval string `yaml:"interval"`
 }
 
 // GetSettings returns graphite metrics config parsed from moira config files
@@ -60,7 +69,8 @@ type LoggerConfig struct {
 
 // ProfilerConfig is pprof settings structure that initialises at the start of moira
 type ProfilerConfig struct {
-	Listen string `yaml:"listen"` // Define variable as valid non-empty string to enable pprof server. For example ':10000' will enable server available at http://moira.company.com:10000/debug/pprof/
+	// Define variable as valid non-empty string to enable pprof server. For example ':10000' will enable server available at http://moira.company.com:10000/debug/pprof/
+	Listen string `yaml:"listen"`
 }
 
 // ReadConfig parses config file by the given path into Moira-used type
