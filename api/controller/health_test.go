@@ -45,7 +45,7 @@ func TestUpdateNotifierState(t *testing.T) {
 	})
 
 	Convey("Setting ERROR notifier state", t, func() {
-		expectedState := dto.NotifierState{State: selfstate.ERROR}
+		expectedState := dto.NotifierState{State: selfstate.ERROR, Message: dto.ErrorMessage}
 		dataBase.EXPECT().SetNotifierState(selfstate.ERROR).Return(nil)
 		dataBase.EXPECT().GetNotifierState().Return(selfstate.ERROR, nil)
 

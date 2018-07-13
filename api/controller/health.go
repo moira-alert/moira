@@ -12,7 +12,13 @@ func GetNotifierState(database moira.Database) (*dto.NotifierState, *api.ErrorRe
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
-	return &dto.NotifierState{State: state}, nil
+
+	notifierState := dto.NotifierState{State: state}
+	if state == dto.ERROR {
+		notifierState.Message = dto.ErrorMessage
+	}
+
+	return &notifierState, nil
 }
 
 // UpdateNotifierState update current notifier state
