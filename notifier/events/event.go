@@ -63,7 +63,6 @@ func (worker *FetchEventsWorker) Stop() error {
 func (worker *FetchEventsWorker) processEvent(event moira.NotificationEvent) error {
 	var (
 		subscriptions []*moira.SubscriptionData
-		tags          []string
 		triggerData   moira.TriggerData
 	)
 
@@ -88,9 +87,8 @@ func (worker *FetchEventsWorker) processEvent(event moira.NotificationEvent) err
 			Tags:       trigger.Tags,
 		}
 
-		tags = append(trigger.Tags, event.GetEventTags()...)
-		worker.Logger.Debugf("Getting subscriptions for tags %v", tags)
-		subscriptions, err = worker.Database.GetTagsSubscriptions(tags)
+		worker.Logger.Debugf("Getting subscriptions for tags %v", trigger.Tags)
+		subscriptions, err = worker.Database.GetTagsSubscriptions(trigger.Tags)
 		if err != nil {
 			return err
 		}
@@ -104,7 +102,8 @@ func (worker *FetchEventsWorker) processEvent(event moira.NotificationEvent) err
 
 	duplications := make(map[string]bool)
 	for _, subscription := range subscriptions {
-		if subscription != nil && (event.State == "TEST" || (subscription.Enabled && subset(subscription.Tags, tags))) {
+		ignored := event.IsIgnored(subscription.IgnoreWarnings, subscription.IgnoreRecoverings)
+		if subscription != nil && (event.State == "TEST" || (subscription.Enabled && !ignored)) {
 			worker.Logger.Debugf("Processing contact ids %v for subscription %s", subscription.Contacts, subscription.ID)
 			for _, contactID := range subscription.Contacts {
 				contact, err := worker.Database.GetContact(contactID)
@@ -164,19 +163,4 @@ func (worker *FetchEventsWorker) getNotificationSubscriptions(event moira.Notifi
 	}
 
 	return nil, nil
-}
-
-func subset(first, second []string) bool {
-	set := make(map[string]bool)
-	for _, value := range second {
-		set[value] = true
-	}
-
-	for _, value := range first {
-		if !set[value] {
-			return false
-		}
-	}
-
-	return true
 }

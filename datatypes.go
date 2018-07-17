@@ -21,6 +21,13 @@ var scores = map[string]int64{
 	"EXCEPTION": 100000,
 }
 
+var eventStateWeight = map[string]int{
+	"OK":     0,
+	"WARN":   1,
+	"ERROR":  100,
+	"NODATA": 10000,
+}
+
 // NotificationEvent represents trigger state changes event
 type NotificationEvent struct {
 	IsTriggerEvent bool     `json:"trigger_event,omitempty"`
@@ -64,6 +71,8 @@ type SubscriptionData struct {
 	Schedule          ScheduleData `json:"sched"`
 	ID                string       `json:"id"`
 	Enabled           bool         `json:"enabled"`
+	IgnoreWarnings    bool         `json:"ignore_warnings"`
+	IgnoreRecoverings bool         `json:"ignore_recoverings"`
 	ThrottlingEnabled bool         `json:"throttling"`
 	User              string       `json:"user"`
 }
@@ -288,4 +297,23 @@ func (checkData *CheckData) UpdateScore() int64 {
 		checkData.Score += scores[metricData.State]
 	}
 	return checkData.Score
+}
+
+// IsIgnored returns true if given state transition must be ignored
+func (eventData *NotificationEvent) IsIgnored(ignoreWarnings bool, ignoreRecoverings bool) bool {
+	if oldStateWeight, ok := eventStateWeight[eventData.OldState]; ok {
+		if newStateWeight, ok := eventStateWeight[eventData.State]; ok {
+			delta := newStateWeight - oldStateWeight
+			if delta == 1 || delta == -1 {
+				if !ignoreRecoverings{
+					return ignoreWarnings&&!ignoreRecoverings
+				}
+				return ignoreWarnings&&ignoreRecoverings
+			}
+			if delta < 0 {
+				return ignoreRecoverings
+			}
+		}
+	}
+	return false
 }
