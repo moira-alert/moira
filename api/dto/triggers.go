@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"time"
-	"strings"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api/middleware"
