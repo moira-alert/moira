@@ -299,20 +299,29 @@ func (checkData *CheckData) UpdateScore() int64 {
 	return checkData.Score
 }
 
-// IsIgnored returns true if given state transition must be ignored
-func (eventData *NotificationEvent) IsIgnored(ignoreWarnings bool, ignoreRecoverings bool) bool {
+// MustIgnore returns true if given state transition must be ignored
+func (subscription *SubscriptionData) MustIgnore(eventData *NotificationEvent) bool {
 	if oldStateWeight, ok := eventStateWeight[eventData.OldState]; ok {
 		if newStateWeight, ok := eventStateWeight[eventData.State]; ok {
 			delta := newStateWeight - oldStateWeight
-			if delta == 1 || delta == -1 {
-				if !ignoreRecoverings{
-					return ignoreWarnings&&!ignoreRecoverings
-				}
-				return ignoreWarnings&&ignoreRecoverings
-			}
+
 			if delta < 0 {
-				return ignoreRecoverings
+				if delta == -1 {
+					if subscription.IgnoreRecoverings || subscription.IgnoreWarnings {
+						return true
+					}
+				}
+				if subscription.IgnoreRecoverings {
+					return true
+				}
 			}
+
+			if delta == 1 {
+				if subscription.IgnoreWarnings {
+					return true
+				}
+			}
+
 		}
 	}
 	return false

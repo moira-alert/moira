@@ -284,197 +284,201 @@ func getDefaultSchedule() ScheduleData {
 	}
 }
 
-func TestNotificationEvent_IsIgnored(testing *testing.T) {
-	var ignoreWarnings bool
-	var ignoreRecoverings bool
+func TestSubscriptionData_MustIgnore(testing *testing.T) {
 	Convey("Has one type of transitions marked to be ignored", testing, func() {
 		Convey("[TRUE] Send notifications when triggers degraded only", func() {
-			ignoreRecoverings = true
-			ignoreWarnings = false
+			subscription := SubscriptionData{
+				Enabled: true,
+				IgnoreRecoverings: true,
+				IgnoreWarnings: false,
+			}
 			Convey("Transitions to consider", func() {
-				Convey("OK -> WARN", func() {
-					event := NotificationEvent{
-						State:    "OK",
-						OldState: "WARN",
-					}
-					ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-					So(ignored, ShouldBeFalse)
-				})
 				Convey("WARN -> OK", func() {
 					event := NotificationEvent{
 						State:    "WARN",
 						OldState: "OK",
 					}
-					ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-					So(ignored, ShouldBeFalse)
+					willBeIgnored := subscription.MustIgnore(&event)
+					So(willBeIgnored, ShouldBeFalse)
 				})
 				Convey("OK -> ERROR", func() {
 					event := NotificationEvent{
 						State:    "ERROR",
 						OldState: "OK",
 					}
-					ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-					So(ignored, ShouldBeFalse)
+					willBeIgnored := subscription.MustIgnore(&event)
+					So(willBeIgnored, ShouldBeFalse)
 				})
 				Convey("OK -> NODATA", func() {
 					event := NotificationEvent{
 						State:    "NODATA",
 						OldState: "OK",
 					}
-					ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-					So(ignored, ShouldBeFalse)
+					willBeIgnored := subscription.MustIgnore(&event)
+					So(willBeIgnored, ShouldBeFalse)
 				})
 				Convey("WARN -> ERROR", func() {
 					event := NotificationEvent{
 						State:    "ERROR",
 						OldState: "WARN",
 					}
-					ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-					So(ignored, ShouldBeFalse)
+					willBeIgnored := subscription.MustIgnore(&event)
+					So(willBeIgnored, ShouldBeFalse)
 				})
 				Convey("WARN -> NODATA", func() {
 					event := NotificationEvent{
 						State:    "NODATA",
 						OldState: "WARN",
 					}
-					ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-					So(ignored, ShouldBeFalse)
+					willBeIgnored := subscription.MustIgnore(&event)
+					So(willBeIgnored, ShouldBeFalse)
 				})
 				Convey("ERROR -> NODATA", func() {
 					event := NotificationEvent{
 						State:    "NODATA",
 						OldState: "ERROR",
 					}
-					ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-					So(ignored, ShouldBeFalse)
+					willBeIgnored := subscription.MustIgnore(&event)
+					So(willBeIgnored, ShouldBeFalse)
 				})
 			})
 			Convey("Transitions to ignore", func() {
+				Convey("WARN -> OK", func() {
+					event := NotificationEvent{
+						State:    "OK",
+						OldState: "WARN",
+					}
+					willBeIgnored := subscription.MustIgnore(&event)
+					So(willBeIgnored, ShouldBeTrue)
+				})
 				Convey("ERROR -> OK", func() {
 					event := NotificationEvent{
 						State:    "OK",
 						OldState: "ERROR",
 					}
-					ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-					So(ignored, ShouldBeTrue)
+					willBeIgnored := subscription.MustIgnore(&event)
+					So(willBeIgnored, ShouldBeTrue)
 				})
 				Convey("NODATA -> OK", func() {
 					event := NotificationEvent{
 						State:    "OK",
 						OldState: "NODATA",
 					}
-					ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-					So(ignored, ShouldBeTrue)
+					willBeIgnored := subscription.MustIgnore(&event)
+					So(willBeIgnored, ShouldBeTrue)
 				})
 				Convey("ERROR -> WARN", func() {
 					event := NotificationEvent{
 						State:    "WARN",
 						OldState: "ERROR",
 					}
-					ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-					So(ignored, ShouldBeTrue)
+					willBeIgnored := subscription.MustIgnore(&event)
+					So(willBeIgnored, ShouldBeTrue)
 				})
 				Convey("NODATA -> WARN", func() {
 					event := NotificationEvent{
 						State:    "WARN",
 						OldState: "NODATA",
 					}
-					ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-					So(ignored, ShouldBeTrue)
+					willBeIgnored := subscription.MustIgnore(&event)
+					So(willBeIgnored, ShouldBeTrue)
 				})
 				Convey("NODATA -> ERROR", func() {
 					event := NotificationEvent{
 						State:    "ERROR",
 						OldState: "NODATA",
 					}
-					ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-					So(ignored, ShouldBeTrue)
+					willBeIgnored := subscription.MustIgnore(&event)
+					So(willBeIgnored, ShouldBeTrue)
 				})
 			})
 		})
 		Convey("[TRUE] Do not send WARN notifications", func() {
-			ignoreRecoverings = false
-			ignoreWarnings = true
+			subscription := SubscriptionData{
+				Enabled: true,
+				IgnoreRecoverings: false,
+				IgnoreWarnings: true,
+			}
 			Convey("Transitions to consider", func() {
 				Convey("OK -> ERROR", func() {
 					event := NotificationEvent{
 						State:    "ERROR",
 						OldState: "OK",
 					}
-					ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-					So(ignored, ShouldBeFalse)
+					willBeIgnored := subscription.MustIgnore(&event)
+					So(willBeIgnored, ShouldBeFalse)
 				})
 				Convey("OK -> NODATA", func() {
 					event := NotificationEvent{
 						State:    "NODATA",
 						OldState: "OK",
 					}
-					ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-					So(ignored, ShouldBeFalse)
+					willBeIgnored := subscription.MustIgnore(&event)
+					So(willBeIgnored, ShouldBeFalse)
 				})
 				Convey("WARN -> ERROR", func() {
 					event := NotificationEvent{
 						State:    "ERROR",
 						OldState: "WARN",
 					}
-					ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-					So(ignored, ShouldBeFalse)
+					willBeIgnored := subscription.MustIgnore(&event)
+					So(willBeIgnored, ShouldBeFalse)
 				})
 				Convey("WARN -> NODATA", func() {
 					event := NotificationEvent{
 						State:    "NODATA",
 						OldState: "WARN",
 					}
-					ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-					So(ignored, ShouldBeFalse)
+					willBeIgnored := subscription.MustIgnore(&event)
+					So(willBeIgnored, ShouldBeFalse)
 				})
 				Convey("ERROR -> NODATA", func() {
 					event := NotificationEvent{
 						State:    "NODATA",
 						OldState: "ERROR",
 					}
-					ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-					So(ignored, ShouldBeFalse)
+					willBeIgnored := subscription.MustIgnore(&event)
+					So(willBeIgnored, ShouldBeFalse)
 				})
 				Convey("ERROR -> OK", func() {
 					event := NotificationEvent{
 						State:    "OK",
 						OldState: "ERROR",
 					}
-					ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-					So(ignored, ShouldBeFalse)
+					willBeIgnored := subscription.MustIgnore(&event)
+					So(willBeIgnored, ShouldBeFalse)
 				})
 				Convey("NODATA -> OK", func() {
 					event := NotificationEvent{
 						State:    "OK",
 						OldState: "NODATA",
 					}
-					ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-					So(ignored, ShouldBeFalse)
+					willBeIgnored := subscription.MustIgnore(&event)
+					So(willBeIgnored, ShouldBeFalse)
 				})
 				Convey("ERROR -> WARN", func() {
 					event := NotificationEvent{
 						State:    "WARN",
 						OldState: "ERROR",
 					}
-					ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-					So(ignored, ShouldBeFalse)
+					willBeIgnored := subscription.MustIgnore(&event)
+					So(willBeIgnored, ShouldBeFalse)
 				})
 				Convey("NODATA -> WARN", func() {
 					event := NotificationEvent{
 						State:    "WARN",
 						OldState: "NODATA",
 					}
-					ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-					So(ignored, ShouldBeFalse)
+					willBeIgnored := subscription.MustIgnore(&event)
+					So(willBeIgnored, ShouldBeFalse)
 				})
 				Convey("NODATA -> ERROR", func() {
 					event := NotificationEvent{
 						State:    "ERROR",
 						OldState: "NODATA",
 					}
-					ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-					So(ignored, ShouldBeFalse)
+					willBeIgnored := subscription.MustIgnore(&event)
+					So(willBeIgnored, ShouldBeFalse)
 				})
 			})
 			Convey("Transitions to ignore", func() {
@@ -483,63 +487,66 @@ func TestNotificationEvent_IsIgnored(testing *testing.T) {
 						State:    "OK",
 						OldState: "WARN",
 					}
-					ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-					So(ignored, ShouldBeTrue)
+					willBeIgnored := subscription.MustIgnore(&event)
+					So(willBeIgnored, ShouldBeTrue)
 				})
 				Convey("WARN -> OK", func() {
 					event := NotificationEvent{
 						State:    "WARN",
 						OldState: "OK",
 					}
-					ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-					So(ignored, ShouldBeTrue)
+					willBeIgnored := subscription.MustIgnore(&event)
+					So(willBeIgnored, ShouldBeTrue)
 				})
 			})
 		})
 	})
 	Convey("Has all types of transitions marked to be ignored", testing, func() {
-		ignoreRecoverings = true
-		ignoreWarnings = true
+		subscription := SubscriptionData{
+			Enabled: true,
+			IgnoreRecoverings: true,
+			IgnoreWarnings: true,
+		}
 		Convey("Transitions to consider", func() {
 			Convey("OK -> ERROR", func() {
 				event := NotificationEvent{
 					State:    "ERROR",
 					OldState: "OK",
 				}
-				ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-				So(ignored, ShouldBeFalse)
+				willBeIgnored := subscription.MustIgnore(&event)
+				So(willBeIgnored, ShouldBeFalse)
 			})
 			Convey("OK -> NODATA", func() {
 				event := NotificationEvent{
 					State:    "NODATA",
 					OldState: "OK",
 				}
-				ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-				So(ignored, ShouldBeFalse)
+				willBeIgnored := subscription.MustIgnore(&event)
+				So(willBeIgnored, ShouldBeFalse)
 			})
 			Convey("WARN -> ERROR", func() {
 				event := NotificationEvent{
 					State:    "ERROR",
 					OldState: "WARN",
 				}
-				ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-				So(ignored, ShouldBeFalse)
+				willBeIgnored := subscription.MustIgnore(&event)
+				So(willBeIgnored, ShouldBeFalse)
 			})
 			Convey("WARN -> NODATA", func() {
 				event := NotificationEvent{
 					State:    "NODATA",
 					OldState: "WARN",
 				}
-				ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-				So(ignored, ShouldBeFalse)
+				willBeIgnored := subscription.MustIgnore(&event)
+				So(willBeIgnored, ShouldBeFalse)
 			})
 			Convey("ERROR -> NODATA", func() {
 				event := NotificationEvent{
 					State:    "NODATA",
 					OldState: "ERROR",
 				}
-				ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-				So(ignored, ShouldBeFalse)
+				willBeIgnored := subscription.MustIgnore(&event)
+				So(willBeIgnored, ShouldBeFalse)
 			})
 		})
 		Convey("Transitions to ignore", func() {
@@ -549,16 +556,16 @@ func TestNotificationEvent_IsIgnored(testing *testing.T) {
 						State:    "OK",
 						OldState: "WARN",
 					}
-					ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-					So(ignored, ShouldBeTrue)
+					willBeIgnored := subscription.MustIgnore(&event)
+					So(willBeIgnored, ShouldBeTrue)
 				})
 				Convey("WARN -> OK", func() {
 					event := NotificationEvent{
 						State:    "WARN",
 						OldState: "OK",
 					}
-					ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-					So(ignored, ShouldBeTrue)
+					willBeIgnored := subscription.MustIgnore(&event)
+					So(willBeIgnored, ShouldBeTrue)
 				})
 			})
 			Convey("[TRUE] Send notifications when triggers degraded only", func() {
@@ -567,142 +574,145 @@ func TestNotificationEvent_IsIgnored(testing *testing.T) {
 						State:    "OK",
 						OldState: "ERROR",
 					}
-					ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-					So(ignored, ShouldBeTrue)
+					willBeIgnored := subscription.MustIgnore(&event)
+					So(willBeIgnored, ShouldBeTrue)
 				})
 				Convey("NODATA -> OK", func() {
 					event := NotificationEvent{
 						State:    "OK",
 						OldState: "NODATA",
 					}
-					ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-					So(ignored, ShouldBeTrue)
+					willBeIgnored := subscription.MustIgnore(&event)
+					So(willBeIgnored, ShouldBeTrue)
 				})
 				Convey("ERROR -> WARN", func() {
 					event := NotificationEvent{
 						State:    "WARN",
 						OldState: "ERROR",
 					}
-					ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-					So(ignored, ShouldBeTrue)
+					willBeIgnored := subscription.MustIgnore(&event)
+					So(willBeIgnored, ShouldBeTrue)
 				})
 				Convey("NODATA -> WARN", func() {
 					event := NotificationEvent{
 						State:    "WARN",
 						OldState: "NODATA",
 					}
-					ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-					So(ignored, ShouldBeTrue)
+					willBeIgnored := subscription.MustIgnore(&event)
+					So(willBeIgnored, ShouldBeTrue)
 				})
 				Convey("NODATA -> ERROR", func() {
 					event := NotificationEvent{
 						State:    "ERROR",
 						OldState: "NODATA",
 					}
-					ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-					So(ignored, ShouldBeTrue)
+					willBeIgnored := subscription.MustIgnore(&event)
+					So(willBeIgnored, ShouldBeTrue)
 				})
 			})
 		})
 	})
 	Convey("Has no types of transitions marked to be ignored", testing, func() {
-		ignoreRecoverings = false
-		ignoreWarnings = false
+		subscription := SubscriptionData{
+			Enabled: true,
+			IgnoreRecoverings: false,
+			IgnoreWarnings: false,
+		}
 		Convey("OK -> WARN", func() {
 			event := NotificationEvent{
 				State:    "OK",
 				OldState: "WARN",
 			}
-			ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-			So(ignored, ShouldBeFalse)
+			willBeIgnored := subscription.MustIgnore(&event)
+			So(willBeIgnored, ShouldBeFalse)
 		})
 		Convey("WARN -> OK", func() {
 			event := NotificationEvent{
 				State:    "WARN",
 				OldState: "OK",
 			}
-			ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-			So(ignored, ShouldBeFalse)
+			willBeIgnored := subscription.MustIgnore(&event)
+			So(willBeIgnored, ShouldBeFalse)
 		})
 		Convey("OK -> ERROR", func() {
 			event := NotificationEvent{
 				State:    "ERROR",
 				OldState: "OK",
 			}
-			ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-			So(ignored, ShouldBeFalse)
+			willBeIgnored := subscription.MustIgnore(&event)
+			So(willBeIgnored, ShouldBeFalse)
 		})
 		Convey("OK -> NODATA", func() {
 			event := NotificationEvent{
 				State:    "NODATA",
 				OldState: "OK",
 			}
-			ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-			So(ignored, ShouldBeFalse)
+			willBeIgnored := subscription.MustIgnore(&event)
+			So(willBeIgnored, ShouldBeFalse)
 		})
 		Convey("WARN -> ERROR", func() {
 			event := NotificationEvent{
 				State:    "ERROR",
 				OldState: "WARN",
 			}
-			ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-			So(ignored, ShouldBeFalse)
+			willBeIgnored := subscription.MustIgnore(&event)
+			So(willBeIgnored, ShouldBeFalse)
 		})
 		Convey("WARN -> NODATA", func() {
 			event := NotificationEvent{
 				State:    "NODATA",
 				OldState: "WARN",
 			}
-			ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-			So(ignored, ShouldBeFalse)
+			willBeIgnored := subscription.MustIgnore(&event)
+			So(willBeIgnored, ShouldBeFalse)
 		})
 		Convey("ERROR -> NODATA", func() {
 			event := NotificationEvent{
 				State:    "NODATA",
 				OldState: "ERROR",
 			}
-			ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-			So(ignored, ShouldBeFalse)
+			willBeIgnored := subscription.MustIgnore(&event)
+			So(willBeIgnored, ShouldBeFalse)
 		})
 		Convey("ERROR -> OK", func() {
 			event := NotificationEvent{
 				State:    "OK",
 				OldState: "ERROR",
 			}
-			ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-			So(ignored, ShouldBeFalse)
+			willBeIgnored := subscription.MustIgnore(&event)
+			So(willBeIgnored, ShouldBeFalse)
 		})
 		Convey("NODATA -> OK", func() {
 			event := NotificationEvent{
 				State:    "OK",
 				OldState: "NODATA",
 			}
-			ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-			So(ignored, ShouldBeFalse)
+			willBeIgnored := subscription.MustIgnore(&event)
+			So(willBeIgnored, ShouldBeFalse)
 		})
 		Convey("ERROR -> WARN", func() {
 			event := NotificationEvent{
 				State:    "WARN",
 				OldState: "ERROR",
 			}
-			ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-			So(ignored, ShouldBeFalse)
+			willBeIgnored := subscription.MustIgnore(&event)
+			So(willBeIgnored, ShouldBeFalse)
 		})
 		Convey("NODATA -> WARN", func() {
 			event := NotificationEvent{
 				State:    "WARN",
 				OldState: "NODATA",
 			}
-			ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-			So(ignored, ShouldBeFalse)
+			willBeIgnored := subscription.MustIgnore(&event)
+			So(willBeIgnored, ShouldBeFalse)
 		})
 		Convey("NODATA -> ERROR", func() {
 			event := NotificationEvent{
 				State:    "ERROR",
 				OldState: "NODATA",
 			}
-			ignored := event.IsIgnored(ignoreWarnings, ignoreRecoverings)
-			So(ignored, ShouldBeFalse)
+			willBeIgnored := subscription.MustIgnore(&event)
+			So(willBeIgnored, ShouldBeFalse)
 		})
 	})
 }

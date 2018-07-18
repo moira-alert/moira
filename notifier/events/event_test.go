@@ -188,7 +188,7 @@ func TestExtraTags(t *testing.T) {
 
 		logger.EXPECT().Debugf("Processing trigger id %s for metric %s == %f, %s -> %s", event.TriggerID, event.Metric, moira.UseFloat64(event.Value), event.OldState, event.State)
 		logger.EXPECT().Debugf("Getting subscriptions for tags %v", triggerData.Tags)
-		logger.EXPECT().Debugf("Subscription %s has extra tags", multipleTagsSubscription.ID)
+		logger.EXPECT().Debugf("Subscription %s is managed to ignore %s -> %s transitions", multipleTagsSubscription.ID, event.OldState, event.State)
 
 		err := worker.processEvent(event)
 		So(err, ShouldBeEmpty)
