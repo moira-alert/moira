@@ -99,6 +99,10 @@ func main() {
 	}
 	defer stopSelfStateChecker(selfState)
 
+	if err := reconvertSubscriptions(database); err != nil {
+		logger.Fatalf("Can not reconvert subscriptions: %s", err.Error())
+	}
+
 	// Start moira notification fetcher
 	fetchNotificationsWorker := &notifications.FetchNotificationsWorker{
 		Logger:   logger,
@@ -141,4 +145,27 @@ func stopSelfStateChecker(checker *selfstate.SelfCheckWorker) {
 	if err := checker.Stop(); err != nil {
 		logger.Errorf("Failed to stop self check worker: %v", err)
 	}
+}
+
+func reconvertSubscriptions(database moira.Database) error {
+	allTags, err := database.GetTagNames()
+	if err != nil {
+		return err
+	}
+	tagSubscriptions, err := database.GetTagsSubscriptions(allTags)
+	if err != nil {
+		return err
+	}
+	for _, subscription := range tagSubscriptions {
+		for _, tag := range subscription.Tags {
+			switch tag {
+			case "ERROR":
+				subscription.IgnoreWarnings = true
+			case "DEGRADATION", "HIGH DEGRADATION":
+				subscription.IgnoreRecoverings = true
+			}
+		}
+		database.SaveSubscription(subscription)
+	}
+	return nil
 }
