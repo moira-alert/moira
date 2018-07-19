@@ -55,9 +55,10 @@ func getDefault() config {
 			MaxParallelChecks:    0,
 		},
 		Graphite: cmd.GraphiteConfig{
-			URI:      "localhost:2003",
-			Prefix:   "DevOps.Moira",
-			Interval: "60s",
+			RuntimeStats: false,
+			URI:          "localhost:2003",
+			Prefix:       "DevOps.Moira",
+			Interval:     "60s",
 		},
 		Pprof: cmd.ProfilerConfig{
 			Listen: "",

@@ -4,6 +4,7 @@ redis:
   dbid: 0
 graphite:
   enabled: false
+  runtime_stats: false
   uri: "localhost:2003"
   prefix: DevOps.Moira
   interval: 60s
