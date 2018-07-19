@@ -162,8 +162,8 @@ func TestDisabledNotification(t *testing.T) {
 	})
 }
 
-func TestExtraTags(t *testing.T) {
-	Convey("When trigger has not all subscription tags, should not call AddNotification", t, func() {
+func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
+	Convey("[TRUE] Do not send WARN notifications", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
@@ -184,11 +184,71 @@ func TestExtraTags(t *testing.T) {
 		}
 
 		dataBase.EXPECT().GetTrigger(event.TriggerID).Return(trigger, nil)
-		dataBase.EXPECT().GetTagsSubscriptions(triggerData.Tags).Times(1).Return([]*moira.SubscriptionData{&multipleTagsSubscription}, nil)
+		dataBase.EXPECT().GetTagsSubscriptions(triggerData.Tags).Times(1).Return([]*moira.SubscriptionData{&subscriptionToIgnoreWarnings}, nil)
 
 		logger.EXPECT().Debugf("Processing trigger id %s for metric %s == %f, %s -> %s", event.TriggerID, event.Metric, moira.UseFloat64(event.Value), event.OldState, event.State)
 		logger.EXPECT().Debugf("Getting subscriptions for tags %v", triggerData.Tags)
-		logger.EXPECT().Debugf("Subscription %s is managed to ignore %s -> %s transitions", multipleTagsSubscription.ID, event.OldState, event.State)
+		logger.EXPECT().Debugf("Subscription %s is managed to ignore %s -> %s transitions", subscriptionToIgnoreWarnings.ID, event.OldState, event.State)
+
+		err := worker.processEvent(event)
+		So(err, ShouldBeEmpty)
+	})
+	Convey("[TRUE] Send notifications when triggers degraded only", t, func() {
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+		logger := mock_moira_alert.NewMockLogger(mockCtrl)
+
+		worker := FetchEventsWorker{
+			Database:  dataBase,
+			Logger:    logger,
+			Metrics:   metrics2,
+			Scheduler: notifier.NewScheduler(dataBase, logger, metrics2),
+		}
+
+		event := moira.NotificationEvent{
+			Metric:    "generate.event.1",
+			State:     "OK",
+			OldState:  "WARN",
+			TriggerID: triggerData.ID,
+		}
+
+		dataBase.EXPECT().GetTrigger(event.TriggerID).Return(trigger, nil)
+		dataBase.EXPECT().GetTagsSubscriptions(triggerData.Tags).Times(1).Return([]*moira.SubscriptionData{&subscriptionToIgnoreRecoverings}, nil)
+
+		logger.EXPECT().Debugf("Processing trigger id %s for metric %s == %f, %s -> %s", event.TriggerID, event.Metric, moira.UseFloat64(event.Value), event.OldState, event.State)
+		logger.EXPECT().Debugf("Getting subscriptions for tags %v", triggerData.Tags)
+		logger.EXPECT().Debugf("Subscription %s is managed to ignore %s -> %s transitions", subscriptionToIgnoreRecoverings.ID, event.OldState, event.State)
+
+		err := worker.processEvent(event)
+		So(err, ShouldBeEmpty)
+	})
+	Convey("[TRUE] Do not send WARN notifications & [TRUE] Send notifications when triggers degraded only", t, func() {
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+		logger := mock_moira_alert.NewMockLogger(mockCtrl)
+
+		worker := FetchEventsWorker{
+			Database:  dataBase,
+			Logger:    logger,
+			Metrics:   metrics2,
+			Scheduler: notifier.NewScheduler(dataBase, logger, metrics2),
+		}
+
+		event := moira.NotificationEvent{
+			Metric:    "generate.event.1",
+			State:     "OK",
+			OldState:  "WARN",
+			TriggerID: triggerData.ID,
+		}
+
+		dataBase.EXPECT().GetTrigger(event.TriggerID).Return(trigger, nil)
+		dataBase.EXPECT().GetTagsSubscriptions(triggerData.Tags).Times(1).Return([]*moira.SubscriptionData{&subscriptionToIgnoreWarningsAndRecoverings}, nil)
+
+		logger.EXPECT().Debugf("Processing trigger id %s for metric %s == %f, %s -> %s", event.TriggerID, event.Metric, moira.UseFloat64(event.Value), event.OldState, event.State)
+		logger.EXPECT().Debugf("Getting subscriptions for tags %v", triggerData.Tags)
+		logger.EXPECT().Debugf("Subscription %s is managed to ignore %s -> %s transitions", subscriptionToIgnoreWarningsAndRecoverings.ID, event.OldState, event.State)
 
 		err := worker.processEvent(event)
 		So(err, ShouldBeEmpty)
@@ -507,10 +567,30 @@ var disabledSubscription = moira.SubscriptionData{
 	ThrottlingEnabled: true,
 }
 
-var multipleTagsSubscription = moira.SubscriptionData{
+var subscriptionToIgnoreWarnings = moira.SubscriptionData{
 	ID:                "subscriptionID-00000000000003",
 	Enabled:           true,
-	Tags:              []string{"test-tag", "one-more-tag"},
+	Tags:              []string{"test-tag"},
 	Contacts:          []string{contact.ID},
 	ThrottlingEnabled: true,
+	IgnoreWarnings:    true,
+}
+
+var subscriptionToIgnoreRecoverings = moira.SubscriptionData{
+	ID:                "subscriptionID-00000000000003",
+	Enabled:           true,
+	Tags:              []string{"test-tag"},
+	Contacts:          []string{contact.ID},
+	ThrottlingEnabled: true,
+	IgnoreRecoverings: true,
+}
+
+var subscriptionToIgnoreWarningsAndRecoverings = moira.SubscriptionData{
+	ID:                "subscriptionID-00000000000003",
+	Enabled:           true,
+	Tags:              []string{"test-tag"},
+	Contacts:          []string{contact.ID},
+	ThrottlingEnabled: true,
+	IgnoreWarnings:    true,
+	IgnoreRecoverings: true,
 }

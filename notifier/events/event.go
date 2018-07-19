@@ -127,7 +127,7 @@ func (worker *FetchEventsWorker) processEvent(event moira.NotificationEvent) err
 			worker.Logger.Debugf("Subscription is nil")
 		} else if !subscription.Enabled {
 			worker.Logger.Debugf("Subscription %s is disabled", subscription.ID)
-		} else {
+		} else if subscription.MustIgnore(&event) {
 			worker.Logger.Debugf("Subscription %s is managed to ignore %s -> %s transitions", subscription.ID, event.OldState, event.State)
 		}
 	}
