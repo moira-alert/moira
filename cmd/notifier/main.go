@@ -161,6 +161,8 @@ func reconvertSubscriptions(database moira.Database, logger moira.Logger) error 
 	}
 	converted := 0
 	for _, subscription := range tagSubscriptions {
+		subscription.IgnoreWarnings = false
+		subscription.IgnoreRecoverings = false
 		isConverted := false
 		for _, tag := range subscription.Tags {
 			switch tag {
