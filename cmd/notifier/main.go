@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"syscall"
 	"strings"
+	"syscall"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/cmd"
@@ -148,7 +148,7 @@ func stopSelfStateChecker(checker *selfstate.SelfCheckWorker) {
 	}
 }
 
-// reconvertSubscriptions iterates over existing subscriptions and replaces pseudo-tags with corresponding fields
+// reconvertSubscriptions iterates over existing pseudo-tagged subscriptions and adds corresponding "ignore" fields
 // WARNING: This method must be removed after 2.3 release
 func reconvertSubscriptions(database moira.Database, logger moira.Logger) error {
 	allTags, err := database.GetTagNames()
@@ -162,18 +162,16 @@ func reconvertSubscriptions(database moira.Database, logger moira.Logger) error 
 	converted := 0
 	for _, subscription := range tagSubscriptions {
 		isConverted := false
-		for tagInd, tag := range subscription.Tags {
+		for _, tag := range subscription.Tags {
 			switch tag {
 			case "ERROR":
 				logger.Debugf("Managing subscription %s (tags: %s) to ignore warnings", subscription.ID, strings.Join(subscription.Tags, ", "))
 				subscription.IgnoreWarnings = true
 				isConverted = true
-				subscription.Tags = append(subscription.Tags[:tagInd], subscription.Tags[tagInd+1:]...)
 			case "DEGRADATION", "HIGH DEGRADATION":
 				logger.Debugf("Managing subscription %s (tags: %s) to ignore recoverings", subscription.ID, strings.Join(subscription.Tags, ", "))
 				subscription.IgnoreRecoverings = true
 				isConverted = true
-				subscription.Tags = append(subscription.Tags[:tagInd], subscription.Tags[tagInd+1:]...)
 			}
 		}
 		if isConverted {
