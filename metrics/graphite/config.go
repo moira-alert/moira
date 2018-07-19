@@ -4,8 +4,9 @@ import "time"
 
 // Config for graphite connection settings
 type Config struct {
-	Enabled  bool
-	URI      string
-	Prefix   string
-	Interval time.Duration
+	Enabled      bool
+	RuntimeStats bool
+	URI          string
+	Prefix       string
+	Interval     time.Duration
 }

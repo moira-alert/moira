@@ -135,23 +135,25 @@ type TriggerCheck struct {
 
 // CheckData represent last trigger check data
 type CheckData struct {
-	Metrics        map[string]MetricState `json:"metrics"`
-	Score          int64                  `json:"score"`
-	State          string                 `json:"state"`
-	Timestamp      int64                  `json:"timestamp,omitempty"`
-	EventTimestamp int64                  `json:"event_timestamp,omitempty"`
-	Suppressed     bool                   `json:"suppressed,omitempty"`
-	Message        string                 `json:"msg,omitempty"`
+	Metrics         map[string]MetricState `json:"metrics"`
+	Score           int64                  `json:"score"`
+	State           string                 `json:"state"`
+	Timestamp       int64                  `json:"timestamp,omitempty"`
+	EventTimestamp  int64                  `json:"event_timestamp,omitempty"`
+	Suppressed      bool                   `json:"suppressed,omitempty"`
+	SuppressedState string                 `json:"suppressed_state,omitempty"`
+	Message         string                 `json:"msg,omitempty"`
 }
 
 // MetricState represent metric state data for given timestamp
 type MetricState struct {
-	EventTimestamp int64    `json:"event_timestamp"`
-	State          string   `json:"state"`
-	Suppressed     bool     `json:"suppressed"`
-	Timestamp      int64    `json:"timestamp"`
-	Value          *float64 `json:"value,omitempty"`
-	Maintenance    int64    `json:"maintenance,omitempty"`
+	EventTimestamp  int64    `json:"event_timestamp"`
+	State           string   `json:"state"`
+	Suppressed      bool     `json:"suppressed"`
+	SuppressedState string   `json:"suppressed_state,omitempty"`
+	Timestamp       int64    `json:"timestamp"`
+	Value           *float64 `json:"value,omitempty"`
+	Maintenance     int64    `json:"maintenance,omitempty"`
 }
 
 // MetricEvent represent filter metric event
