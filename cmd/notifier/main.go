@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"strings"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/cmd"
@@ -99,7 +100,7 @@ func main() {
 	}
 	defer stopSelfStateChecker(selfState)
 
-	if err := reconvertSubscriptions(database); err != nil {
+	if err := reconvertSubscriptions(database, logger); err != nil {
 		logger.Fatalf("Can not reconvert subscriptions: %s", err.Error())
 	}
 
@@ -147,7 +148,9 @@ func stopSelfStateChecker(checker *selfstate.SelfCheckWorker) {
 	}
 }
 
-func reconvertSubscriptions(database moira.Database) error {
+// reconvertSubscriptions iterates over existing subscriptions and replaces pseudo-tags with corresponding fields
+// WARNING: This method must be removed after 2.3 release
+func reconvertSubscriptions(database moira.Database, logger moira.Logger) error {
 	allTags, err := database.GetTagNames()
 	if err != nil {
 		return err
@@ -156,16 +159,29 @@ func reconvertSubscriptions(database moira.Database) error {
 	if err != nil {
 		return err
 	}
+	converted := 0
 	for _, subscription := range tagSubscriptions {
-		for _, tag := range subscription.Tags {
+		isConverted := false
+		for tagInd, tag := range subscription.Tags {
 			switch tag {
 			case "ERROR":
+				logger.Debugf("Managing subscription %s (tags: %s) to ignore warnings", subscription.ID, strings.Join(subscription.Tags, ", "))
 				subscription.IgnoreWarnings = true
+				isConverted = true
+				subscription.Tags = append(subscription.Tags[:tagInd], subscription.Tags[tagInd+1:]...)
 			case "DEGRADATION", "HIGH DEGRADATION":
+				logger.Debugf("Managing subscription %s (tags: %s) to ignore recoverings", subscription.ID, strings.Join(subscription.Tags, ", "))
 				subscription.IgnoreRecoverings = true
+				isConverted = true
+				subscription.Tags = append(subscription.Tags[:tagInd], subscription.Tags[tagInd+1:]...)
 			}
 		}
-		database.SaveSubscription(subscription)
+		if isConverted {
+			database.SaveSubscription(subscription)
+		}
+	}
+	if converted > 0 {
+		logger.Infof("Successfully converted %d pseudo-tagged subscriptions into ignore-typed subscriptions")
 	}
 	return nil
 }
