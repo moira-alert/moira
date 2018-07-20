@@ -41,7 +41,7 @@ func (config *RedisConfig) GetSettings() redis.Config {
 
 // GraphiteConfig is graphite metrics config structure that initialises at the start of moira
 type GraphiteConfig struct {
-	// If true, graphite logger will be enabled.
+	// If true, graphite sender will be enabled.
 	Enabled bool `yaml:"enabled"`
 	// If true, runtime stats will be captured and sent to graphite. Note: It takes to call stoptheworld() with configured "graphite.interval" to capture runtime stats (https://golang.org/src/runtime/mstats.go)
 	RuntimeStats bool `yaml:"runtime_stats"`
