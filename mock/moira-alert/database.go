@@ -299,6 +299,19 @@ func (mr *MockDatabaseMockRecorder) GetNotifications(arg0, arg1 interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNotifications", reflect.TypeOf((*MockDatabase)(nil).GetNotifications), arg0, arg1)
 }
 
+// GetNotifierState mocks base method
+func (m *MockDatabase) GetNotifierState() (string, error) {
+	ret := m.ctrl.Call(m, "GetNotifierState")
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetNotifierState indicates an expected call of GetNotifierState
+func (mr *MockDatabaseMockRecorder) GetNotifierState() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNotifierState", reflect.TypeOf((*MockDatabase)(nil).GetNotifierState))
+}
+
 // GetPatternMetrics mocks base method
 func (m *MockDatabase) GetPatternMetrics(arg0 string) ([]string, error) {
 	ret := m.ctrl.Call(m, "GetPatternMetrics", arg0)
@@ -795,6 +808,18 @@ func (m *MockDatabase) SaveTrigger(arg0 string, arg1 *moira.Trigger) error {
 // SaveTrigger indicates an expected call of SaveTrigger
 func (mr *MockDatabaseMockRecorder) SaveTrigger(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveTrigger", reflect.TypeOf((*MockDatabase)(nil).SaveTrigger), arg0, arg1)
+}
+
+// SetNotifierState mocks base method
+func (m *MockDatabase) SetNotifierState(arg0 string) error {
+	ret := m.ctrl.Call(m, "SetNotifierState", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetNotifierState indicates an expected call of SetNotifierState
+func (mr *MockDatabaseMockRecorder) SetNotifierState(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetNotifierState", reflect.TypeOf((*MockDatabase)(nil).SetNotifierState), arg0)
 }
 
 // SetTriggerCheckLock mocks base method
