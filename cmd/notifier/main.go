@@ -151,6 +151,8 @@ func stopSelfStateChecker(checker *selfstate.SelfCheckWorker) {
 // reconvertSubscriptions iterates over existing pseudo-tagged subscriptions and adds corresponding "ignore" fields
 // WARNING: This method must be removed after 2.3 release
 func reconvertSubscriptions(database moira.Database, logger moira.Logger) error {
+	logger.Info("Pseudo-tagged Subscriptions converter started")
+	convertedSubscriptions := 0
 	allTags, err := database.GetTagNames()
 	if err != nil {
 		return err
@@ -165,17 +167,27 @@ func reconvertSubscriptions(database moira.Database, logger moira.Logger) error 
 			switch tag {
 			case "ERROR":
 				logger.Debugf("Managing subscription %s (tags: %s) to ignore warnings", subscription.ID, strings.Join(subscription.Tags, ", "))
-				subscription.IgnoreWarnings = true
-				isConverted = true
+				if !subscription.IgnoreWarnings {
+					subscription.IgnoreWarnings = true
+					isConverted = true
+				}
 			case "DEGRADATION", "HIGH DEGRADATION":
 				logger.Debugf("Managing subscription %s (tags: %s) to ignore recoverings", subscription.ID, strings.Join(subscription.Tags, ", "))
-				subscription.IgnoreRecoverings = true
-				isConverted = true
+				if !subscription.IgnoreRecoverings {
+					subscription.IgnoreRecoverings = true
+					isConverted = true
+				}
 			}
 		}
 		if isConverted {
 			database.SaveSubscription(subscription)
+			convertedSubscriptions++
 		}
+	}
+	if convertedSubscriptions > 0 {
+		logger.Infof("%d pseudo-tagged subscriptions has been successfully converted", convertedSubscriptions)
+	} else {
+		logger.Infof("No pseudo-tagged subscriptions found")
 	}
 	return nil
 }
