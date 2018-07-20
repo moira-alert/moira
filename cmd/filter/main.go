@@ -116,7 +116,8 @@ func main() {
 	metricsChan := listener.Listen()
 
 	// Start metrics matcher
-	metricsMatcher := matchedmetrics.NewMetricsMatcher(cacheMetrics, logger, database, cacheStorage)
+	cacheCapacity := config.Filter.CacheCapacity
+	metricsMatcher := matchedmetrics.NewMetricsMatcher(cacheMetrics, logger, database, cacheStorage, cacheCapacity)
 	metricsMatcher.Start(metricsChan)
 	defer metricsMatcher.Wait()  // First stop listener
 	defer stopListener(listener) // Then waiting for metrics matcher handle all received events
