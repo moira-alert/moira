@@ -165,7 +165,7 @@ func (triggerChecker *TriggerChecker) handleTriggerCheck(checkData moira.CheckDa
 		triggerChecker.Logger.Warningf("Trigger %s: %s", triggerChecker.TriggerID, checkingError.Error())
 		checkData.State = EXCEPTION
 		checkData.Message = checkingError.Error()
-	case ErrWrongTriggerTarget, ErrTriggerHasSameTimeSeriesNames:
+	case ErrWrongTriggerTargets, ErrTriggerHasSameTimeSeriesNames:
 		checkData.State = ERROR
 		checkData.Message = checkingError.Error()
 	default:
