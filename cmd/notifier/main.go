@@ -159,10 +159,7 @@ func reconvertSubscriptions(database moira.Database, logger moira.Logger) error 
 	if err != nil {
 		return err
 	}
-	converted := 0
 	for _, subscription := range tagSubscriptions {
-		subscription.IgnoreWarnings = false
-		subscription.IgnoreRecoverings = false
 		isConverted := false
 		for _, tag := range subscription.Tags {
 			switch tag {
@@ -179,9 +176,6 @@ func reconvertSubscriptions(database moira.Database, logger moira.Logger) error 
 		if isConverted {
 			database.SaveSubscription(subscription)
 		}
-	}
-	if converted > 0 {
-		logger.Infof("Successfully converted %d pseudo-tagged subscriptions into ignore-typed subscriptions")
 	}
 	return nil
 }

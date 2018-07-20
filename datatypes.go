@@ -71,8 +71,8 @@ type SubscriptionData struct {
 	Schedule          ScheduleData `json:"sched"`
 	ID                string       `json:"id"`
 	Enabled           bool         `json:"enabled"`
-	IgnoreWarnings    bool         `json:"ignore_warnings"`
-	IgnoreRecoverings bool         `json:"ignore_recoverings"`
+	IgnoreWarnings    bool         `json:"ignore_warnings,omitempty"`
+	IgnoreRecoverings bool         `json:"ignore_recoverings,omitempty"`
 	ThrottlingEnabled bool         `json:"throttling"`
 	User              string       `json:"user"`
 }
