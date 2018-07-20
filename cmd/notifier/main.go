@@ -151,7 +151,7 @@ func stopSelfStateChecker(checker *selfstate.SelfCheckWorker) {
 // reconvertSubscriptions iterates over existing pseudo-tagged subscriptions and adds corresponding "ignore" fields
 // WARNING: This method must be removed after 2.3 release
 func reconvertSubscriptions(database moira.Database, logger moira.Logger) error {
-	logger.Info("Pseudo-tagged Subscriptions converter started")
+	logger.Info("Pseudo-tagged subscriptions converter started")
 	convertedSubscriptions := 0
 	allTags, err := database.GetTagNames()
 	if err != nil {
