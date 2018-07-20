@@ -305,19 +305,13 @@ func (subscription *SubscriptionData) MustIgnore(eventData *NotificationEvent) b
 		if newStateWeight, ok := eventStateWeight[eventData.State]; ok {
 			delta := newStateWeight - oldStateWeight
 			if delta < 0 {
-				if delta == -1 {
-					if subscription.IgnoreRecoverings || subscription.IgnoreWarnings {
-						return true
-					}
-				}
-				if subscription.IgnoreRecoverings {
+				if delta == -1 && (subscription.IgnoreRecoverings || subscription.IgnoreWarnings){
 					return true
 				}
+				return subscription.IgnoreRecoverings
 			}
 			if delta == 1 {
-				if subscription.IgnoreWarnings {
-					return true
-				}
+				return subscription.IgnoreWarnings
 			}
 		}
 	}
