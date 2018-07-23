@@ -27,6 +27,7 @@ func TestGetTimeSeriesState(t *testing.T) {
 	logger, _ := logging.GetLogger("Test")
 	var warnValue float64 = 10
 	var errValue float64 = 20
+	var isRising = true
 	triggerChecker := TriggerChecker{
 		Logger:  logger,
 		Metrics: metrics.ConfigureCheckerMetrics("checker"),
@@ -35,6 +36,7 @@ func TestGetTimeSeriesState(t *testing.T) {
 		trigger: &moira.Trigger{
 			WarnValue:  &warnValue,
 			ErrorValue: &errValue,
+			IsRising:   &isRising,
 		},
 	}
 	fetchResponse := pb.FetchResponse{
@@ -110,7 +112,7 @@ func TestGetTimeSeriesState(t *testing.T) {
 		triggerChecker.trigger.WarnValue = nil
 		triggerChecker.trigger.ErrorValue = nil
 		metricState, err := triggerChecker.getTimeSeriesState(tts, tts.Main[0], metricLastState, 42, 27)
-		So(err.Error(), ShouldResemble, "error value and Warning value can not be empty")
+		So(err.Error(), ShouldResemble, "error value and warning value can not be empty")
 		So(metricState, ShouldBeNil)
 	})
 }
@@ -120,6 +122,7 @@ func TestGetTimeSeriesStepsStates(t *testing.T) {
 	logging.SetLevel(logging.INFO, "Test")
 	var warnValue float64 = 10
 	var errValue float64 = 20
+	var isRising = true
 	triggerChecker := TriggerChecker{
 		Logger: logger,
 		Until:  67,
@@ -127,6 +130,7 @@ func TestGetTimeSeriesStepsStates(t *testing.T) {
 		trigger: &moira.Trigger{
 			WarnValue:  &warnValue,
 			ErrorValue: &errValue,
+			IsRising:   &isRising,
 		},
 	}
 	fetchResponse1 := pb.FetchResponse{
@@ -263,7 +267,7 @@ func TestGetTimeSeriesStepsStates(t *testing.T) {
 		triggerChecker.trigger.WarnValue = nil
 		triggerChecker.trigger.ErrorValue = nil
 		metricState, err := triggerChecker.getTimeSeriesStepsStates(tts, tts.Main[1], metricLastState)
-		So(err.Error(), ShouldResemble, "error value and Warning value can not be empty")
+		So(err.Error(), ShouldResemble, "error value and warning value can not be empty")
 		So(metricState, ShouldBeNil)
 	})
 }
@@ -434,6 +438,7 @@ func TestHandleTrigger(t *testing.T) {
 	var retention int64 = 10
 	var warnValue float64 = 10
 	var errValue float64 = 20
+	var isRising = true
 	pattern := "super.puper.pattern"
 	metric := "super.puper.metric"
 	var ttl int64 = 600
@@ -486,6 +491,7 @@ func TestHandleTrigger(t *testing.T) {
 		trigger: &moira.Trigger{
 			ErrorValue: &errValue,
 			WarnValue:  &warnValue,
+			IsRising:   &isRising,
 			Targets:    []string{pattern},
 			Patterns:   []string{pattern},
 		},
@@ -635,6 +641,7 @@ func TestHandleTrigger(t *testing.T) {
 			trigger: &moira.Trigger{
 				ErrorValue: &errValue,
 				WarnValue:  &warnValue,
+				IsRising:   &isRising,
 				Targets:    []string{"aliasByNode(super.*.metric, 0)"},
 				Patterns:   []string{pattern1},
 			},

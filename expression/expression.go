@@ -106,17 +106,19 @@ func getSimpleExpression(triggerExpression *TriggerExpression) (*govaluate.Evalu
 	if triggerExpression.IsRising == nil {
 		return nil, fmt.Errorf("choose if thresholds are rising or falling")
 	}
-	if triggerExpression.ErrorValue != nil && *triggerExpression.IsRising == true {
-		return defaultErrRising, nil
-	}
-	if triggerExpression.ErrorValue != nil && *triggerExpression.IsRising == false {
-		return defaultErrFalling, nil
-	}
-	if triggerExpression.WarnValue != nil && *triggerExpression.IsRising == true {
-		return defaultWarnRising, nil
-	}
-	if triggerExpression.WarnValue != nil && *triggerExpression.IsRising == false {
-		return defaultWarnFalling, nil
+	if (triggerExpression.ErrorValue != nil) != (triggerExpression.WarnValue != nil) {
+		if triggerExpression.ErrorValue != nil && *triggerExpression.IsRising == true {
+			return defaultErrRising, nil
+		}
+		if triggerExpression.ErrorValue != nil && *triggerExpression.IsRising == false {
+			return defaultErrFalling, nil
+		}
+		if triggerExpression.WarnValue != nil && *triggerExpression.IsRising == true {
+			return defaultWarnRising, nil
+		}
+		if triggerExpression.WarnValue != nil && *triggerExpression.IsRising == false {
+			return defaultWarnFalling, nil
+		}
 	}
 	if *triggerExpression.ErrorValue >= *triggerExpression.WarnValue {
 		return defaultWarnErrorRising, nil
