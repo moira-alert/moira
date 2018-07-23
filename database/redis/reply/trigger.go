@@ -3,10 +3,11 @@ package reply
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
+
 	"github.com/garyburd/redigo/redis"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
-	"strconv"
 )
 
 // Duty hack for moira.Trigger TTL int64 and stored trigger TTL string compatibility
@@ -17,6 +18,7 @@ type triggerStorageElement struct {
 	Targets          []string            `json:"targets"`
 	WarnValue        *float64            `json:"warn_value"`
 	ErrorValue       *float64            `json:"error_value"`
+	IsRising         *bool               `json:"is_rising"`
 	Tags             []string            `json:"tags"`
 	TTLState         *string             `json:"ttl_state,omitempty"`
 	Schedule         *moira.ScheduleData `json:"sched,omitempty"`
@@ -34,6 +36,7 @@ func (storageElement *triggerStorageElement) toTrigger() moira.Trigger {
 		Targets:          storageElement.Targets,
 		WarnValue:        storageElement.WarnValue,
 		ErrorValue:       storageElement.ErrorValue,
+		IsRising:         storageElement.IsRising,
 		Tags:             storageElement.Tags,
 		TTLState:         storageElement.TTLState,
 		Schedule:         storageElement.Schedule,
@@ -52,6 +55,7 @@ func toTriggerStorageElement(trigger *moira.Trigger, triggerID string) *triggerS
 		Targets:          trigger.Targets,
 		WarnValue:        trigger.WarnValue,
 		ErrorValue:       trigger.ErrorValue,
+		IsRising:         trigger.IsRising,
 		Tags:             trigger.Tags,
 		TTLState:         trigger.TTLState,
 		Schedule:         trigger.Schedule,

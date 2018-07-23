@@ -117,6 +117,7 @@ type Trigger struct {
 	Targets          []string      `json:"targets"`
 	WarnValue        *float64      `json:"warn_value"`
 	ErrorValue       *float64      `json:"error_value"`
+	IsRising         *bool         `json:"is_rising"`
 	Tags             []string      `json:"tags"`
 	TTLState         *string       `json:"ttl_state,omitempty"`
 	TTL              int64         `json:"ttl,omitempty"`

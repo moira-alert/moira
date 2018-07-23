@@ -4,8 +4,8 @@ package dto
 import (
 	"fmt"
 	"net/http"
-	"time"
 	"strings"
+	"time"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api/middleware"
@@ -32,18 +32,32 @@ type Trigger struct {
 
 // TriggerModel is moira.Trigger api representation
 type TriggerModel struct {
-	ID         string              `json:"id"`
-	Name       string              `json:"name"`
-	Desc       *string             `json:"desc,omitempty"`
-	Targets    []string            `json:"targets"`
-	WarnValue  *float64            `json:"warn_value"`
-	ErrorValue *float64            `json:"error_value"`
-	Tags       []string            `json:"tags"`
-	TTLState   *string             `json:"ttl_state,omitempty"`
-	TTL        int64               `json:"ttl,omitempty"`
-	Schedule   *moira.ScheduleData `json:"sched,omitempty"`
-	Expression string              `json:"expression"`
-	Patterns   []string            `json:"patterns"`
+	// Trigger unique ID
+	ID string `json:"id"`
+	// Trigger name
+	Name string `json:"name"`
+	// Description string
+	Desc *string `json:"desc,omitempty"`
+	// Graphite-like targets: t1, t2, ...
+	Targets []string `json:"targets"`
+	// WARN threshold
+	WarnValue *float64 `json:"warn_value"`
+	// ERROR threshold
+	ErrorValue *float64 `json:"error_value"`
+	// Determines if trigger should alert when value is >= (true) or <= (false) threshold, By default we assume, IsRising = true
+	IsRising *bool `json:"is_rising,omitempty"`
+	// Set of triggers to manipulate subscriptions
+	Tags []string `json:"tags"`
+	// When there are no metrics for trigger, Moira will switch metric to TTLState state after TTL seconds
+	TTLState *string `json:"ttl_state,omitempty"`
+	// When there are no metrics for trigger, Moira will switch metric to TTLState state after TTL seconds
+	TTL int64 `json:"ttl,omitempty"`
+	// Determines when Moira should monitor trigger
+	Schedule *moira.ScheduleData `json:"sched,omitempty"`
+	// Used if you need more complex logic than provided by WARN/ERROR values
+	Expression string `json:"expression"`
+	// Graphite patterns for trigger
+	Patterns []string `json:"patterns"`
 }
 
 // ToMoiraTrigger transforms TriggerModel to moira.Trigger
@@ -55,6 +69,7 @@ func (model *TriggerModel) ToMoiraTrigger() *moira.Trigger {
 		Targets:    model.Targets,
 		WarnValue:  model.WarnValue,
 		ErrorValue: model.ErrorValue,
+		IsRising:   model.IsRising,
 		Tags:       model.Tags,
 		TTLState:   model.TTLState,
 		TTL:        model.TTL,
@@ -73,6 +88,7 @@ func CreateTriggerModel(trigger *moira.Trigger) TriggerModel {
 		Targets:    trigger.Targets,
 		WarnValue:  trigger.WarnValue,
 		ErrorValue: trigger.ErrorValue,
+		IsRising:   trigger.IsRising,
 		Tags:       trigger.Tags,
 		TTLState:   trigger.TTLState,
 		TTL:        trigger.TTL,
@@ -97,17 +113,22 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 	if trigger.Name == "" {
 		return fmt.Errorf("trigger name is required")
 	}
-	if trigger.WarnValue == nil && trigger.Expression == "" {
-		return fmt.Errorf("warn_value is required")
+	if trigger.WarnValue == nil && trigger.ErrorValue == nil && trigger.Expression == "" {
+		return fmt.Errorf("at least one of error_value, warn_value or expression is required")
 	}
-	if trigger.ErrorValue == nil && trigger.Expression == "" {
-		return fmt.Errorf("error_value is required")
+	if trigger.IsRising == nil {
+		flag := true
+		trigger.IsRising = &flag
+	}
+	if err := checkWarnErrorValues(trigger.WarnValue, trigger.ErrorValue, trigger.IsRising); err != nil {
+		return err
 	}
 
 	triggerExpression := expression.TriggerExpression{
 		AdditionalTargetsValues: make(map[string]float64),
 		WarnValue:               trigger.WarnValue,
 		ErrorValue:              trigger.ErrorValue,
+		IsRising:                trigger.IsRising,
 		PreviousState:           checker.NODATA,
 		Expression:              &trigger.Expression,
 	}
@@ -160,6 +181,21 @@ func checkTriggerTags(tags []string) []string {
 		}
 	}
 	return reservedTagsFound
+}
+
+func checkWarnErrorValues(warn, error *float64, isRising *bool) error {
+	if warn != nil && error != nil {
+		if *warn == *error {
+			return fmt.Errorf("error_value is equal to warn_value, please set exactly one value")
+		}
+		if *isRising && *warn > *error {
+			return fmt.Errorf("error_value should be greater than warn_value")
+		}
+		if !*isRising && *warn < *error {
+			return fmt.Errorf("warn_value should be greater than error_value")
+		}
+	}
+	return nil
 }
 
 func (*Trigger) Render(w http.ResponseWriter, r *http.Request) error {
