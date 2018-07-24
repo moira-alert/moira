@@ -43,6 +43,31 @@ func TestExpression(t *testing.T) {
 		result, err = (&TriggerExpression{MainTargetValue: 10.0, WarnValue: &warnValue, ErrorValue: &errorValue}).Evaluate()
 		So(err, ShouldBeNil)
 		So(result, ShouldResemble, "ERROR")
+
+		result, err = (&TriggerExpression{MainTargetValue: 10.0}).Evaluate()
+		So(err, ShouldResemble, ErrInvalidExpression{fmt.Errorf("error value and warning value can not be empty")})
+		So(err.Error(), ShouldResemble, "error value and warning value can not be empty")
+		So(result, ShouldBeEmpty)
+
+		warnValue = 30.0
+		result, err = (&TriggerExpression{MainTargetValue: 40.0, WarnValue: &warnValue, IsFalling: false}).Evaluate()
+		So(err, ShouldBeNil)
+		So(result, ShouldResemble, "WARN")
+
+		warnValue = 30.0
+		result, err = (&TriggerExpression{MainTargetValue: 40.0, WarnValue: &warnValue, IsFalling: true}).Evaluate()
+		So(err, ShouldBeNil)
+		So(result, ShouldResemble, "OK")
+
+		errorValue = 30.0
+		result, err = (&TriggerExpression{MainTargetValue: 40.0, ErrorValue: &errorValue, IsFalling: false}).Evaluate()
+		So(err, ShouldBeNil)
+		So(result, ShouldResemble, "ERROR")
+
+		errorValue = 30.0
+		result, err = (&TriggerExpression{MainTargetValue: 40.0, ErrorValue: &errorValue, IsFalling: true}).Evaluate()
+		So(err, ShouldBeNil)
+		So(result, ShouldResemble, "OK")
 	})
 
 	Convey("Test Custom", t, func() {

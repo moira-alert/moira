@@ -46,7 +46,7 @@ type TriggerModel struct {
 	ErrorValue *float64 `json:"error_value"`
 	// Determines if trigger should alert when value is <= (IsFalling == true) or >= (IsFalling == false) threshold.
 	IsFalling bool `json:"is_falling"`
-	// Set of triggers to manipulate subscriptions
+	// Set of tags to manipulate subscriptions
 	Tags []string `json:"tags"`
 	// When there are no metrics for trigger, Moira will switch metric to TTLState state after TTL seconds
 	TTLState *string `json:"ttl_state,omitempty"`
