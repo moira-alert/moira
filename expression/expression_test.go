@@ -33,6 +33,7 @@ func TestExpression(t *testing.T) {
 
 		warnValue = 30.0
 		errorValue = 10.0
+		isRising = false
 		result, err = (&TriggerExpression{MainTargetValue: 40.0, WarnValue: &warnValue, ErrorValue: &errorValue, IsRising: &isRising}).Evaluate()
 		So(err, ShouldBeNil)
 		So(result, ShouldResemble, "OK")

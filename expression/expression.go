@@ -8,12 +8,12 @@ import (
 	"github.com/Knetic/govaluate"
 )
 
-var defaultWarnErrorRising, _ = govaluate.NewEvaluableExpression("t1 >= ERROR_VALUE ? ERROR : (t1 >= WARN_VALUE ? WARN : OK)")
-var defaultWarnErrorFalling, _ = govaluate.NewEvaluableExpression("t1 <= ERROR_VALUE ? ERROR : (t1 <= WARN_VALUE ? WARN : OK)")
-var defaultWarnRising, _ = govaluate.NewEvaluableExpression("t1 >= WARN_VALUE ? WARN : OK")
-var defaultErrRising, _ = govaluate.NewEvaluableExpression("t1 >= ERROR_VALUE ? ERROR : OK")
-var defaultWarnFalling, _ = govaluate.NewEvaluableExpression("t1 <= WARN_VALUE ? WARN : OK")
-var defaultErrFalling, _ = govaluate.NewEvaluableExpression("t1 <= ERROR_VALUE ? ERROR : OK")
+var exprWarnErrorRising, _ = govaluate.NewEvaluableExpression("t1 >= ERROR_VALUE ? ERROR : (t1 >= WARN_VALUE ? WARN : OK)")
+var exprWarnErrorFalling, _ = govaluate.NewEvaluableExpression("t1 <= ERROR_VALUE ? ERROR : (t1 <= WARN_VALUE ? WARN : OK)")
+var exprWarnRising, _ = govaluate.NewEvaluableExpression("t1 >= WARN_VALUE ? WARN : OK")
+var exprErrRising, _ = govaluate.NewEvaluableExpression("t1 >= ERROR_VALUE ? ERROR : OK")
+var exprWarnFalling, _ = govaluate.NewEvaluableExpression("t1 <= WARN_VALUE ? WARN : OK")
+var exprErrFalling, _ = govaluate.NewEvaluableExpression("t1 <= ERROR_VALUE ? ERROR : OK")
 
 var cache = make(map[string]*govaluate.EvaluableExpression)
 var cacheLock sync.Mutex
@@ -106,24 +106,25 @@ func getSimpleExpression(triggerExpression *TriggerExpression) (*govaluate.Evalu
 	if triggerExpression.IsRising == nil {
 		return nil, fmt.Errorf("choose if thresholds are rising or falling")
 	}
-	if (triggerExpression.ErrorValue != nil) != (triggerExpression.WarnValue != nil) {
-		if triggerExpression.ErrorValue != nil && *triggerExpression.IsRising == true {
-			return defaultErrRising, nil
+
+	switch *triggerExpression.IsRising {
+	case true:
+		if triggerExpression.ErrorValue != nil && triggerExpression.WarnValue != nil {
+			return exprWarnErrorRising, nil
+		} else if triggerExpression.ErrorValue != nil {
+			return exprErrRising, nil
+		} else {
+			return exprWarnRising, nil
 		}
-		if triggerExpression.ErrorValue != nil && *triggerExpression.IsRising == false {
-			return defaultErrFalling, nil
-		}
-		if triggerExpression.WarnValue != nil && *triggerExpression.IsRising == true {
-			return defaultWarnRising, nil
-		}
-		if triggerExpression.WarnValue != nil && *triggerExpression.IsRising == false {
-			return defaultWarnFalling, nil
+	default:
+		if triggerExpression.ErrorValue != nil && triggerExpression.WarnValue != nil {
+			return exprWarnErrorFalling, nil
+		} else if triggerExpression.ErrorValue != nil {
+			return exprErrFalling, nil
+		} else {
+			return exprWarnFalling, nil
 		}
 	}
-	if *triggerExpression.ErrorValue >= *triggerExpression.WarnValue {
-		return defaultWarnErrorRising, nil
-	}
-	return defaultWarnErrorFalling, nil
 }
 
 func getUserExpression(triggerExpression string) (*govaluate.EvaluableExpression, error) {
