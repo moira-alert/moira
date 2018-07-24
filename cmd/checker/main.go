@@ -88,7 +88,7 @@ func main() {
 		checkSingleTrigger(database, checkerMetrics, checkerSettings)
 	}
 
-	if err := reconvertTriggers(database, logger); err != nil {
+	if err = reconvertTriggers(database, logger); err != nil {
 		logger.Fatalf("Can not reconvert triggers: %v", err)
 	}
 
