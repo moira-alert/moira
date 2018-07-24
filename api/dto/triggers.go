@@ -44,8 +44,8 @@ type TriggerModel struct {
 	WarnValue *float64 `json:"warn_value"`
 	// ERROR threshold
 	ErrorValue *float64 `json:"error_value"`
-	// Determines if trigger should alert when value is >= (true) or <= (false) threshold, By default we assume, IsRising = true
-	IsRising *bool `json:"is_rising,omitempty"`
+	// Determines if trigger should alert when value is <= (IsFalling == true) or >= (IsFalling == false) threshold.
+	IsFalling bool `json:"is_falling"`
 	// Set of triggers to manipulate subscriptions
 	Tags []string `json:"tags"`
 	// When there are no metrics for trigger, Moira will switch metric to TTLState state after TTL seconds
@@ -69,7 +69,7 @@ func (model *TriggerModel) ToMoiraTrigger() *moira.Trigger {
 		Targets:    model.Targets,
 		WarnValue:  model.WarnValue,
 		ErrorValue: model.ErrorValue,
-		IsRising:   model.IsRising,
+		IsFalling:  model.IsFalling,
 		Tags:       model.Tags,
 		TTLState:   model.TTLState,
 		TTL:        model.TTL,
@@ -88,7 +88,7 @@ func CreateTriggerModel(trigger *moira.Trigger) TriggerModel {
 		Targets:    trigger.Targets,
 		WarnValue:  trigger.WarnValue,
 		ErrorValue: trigger.ErrorValue,
-		IsRising:   trigger.IsRising,
+		IsFalling:  trigger.IsFalling,
 		Tags:       trigger.Tags,
 		TTLState:   trigger.TTLState,
 		TTL:        trigger.TTL,
@@ -116,11 +116,7 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 	if trigger.WarnValue == nil && trigger.ErrorValue == nil && trigger.Expression == "" {
 		return fmt.Errorf("at least one of error_value, warn_value or expression is required")
 	}
-	if trigger.IsRising == nil {
-		flag := true
-		trigger.IsRising = &flag
-	}
-	if err := checkWarnErrorValues(trigger.WarnValue, trigger.ErrorValue, trigger.IsRising); err != nil {
+	if err := checkWarnErrorValues(trigger.WarnValue, trigger.ErrorValue, trigger.IsFalling); err != nil {
 		return err
 	}
 
@@ -128,7 +124,7 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 		AdditionalTargetsValues: make(map[string]float64),
 		WarnValue:               trigger.WarnValue,
 		ErrorValue:              trigger.ErrorValue,
-		IsRising:                trigger.IsRising,
+		IsFalling:               trigger.IsFalling,
 		PreviousState:           checker.NODATA,
 		Expression:              &trigger.Expression,
 	}
@@ -183,15 +179,15 @@ func checkTriggerTags(tags []string) []string {
 	return reservedTagsFound
 }
 
-func checkWarnErrorValues(warn, error *float64, isRising *bool) error {
+func checkWarnErrorValues(warn, error *float64, isFalling bool) error {
 	if warn != nil && error != nil {
 		if *warn == *error {
 			return fmt.Errorf("error_value is equal to warn_value, please set exactly one value")
 		}
-		if *isRising && *warn > *error {
+		if isFalling && *warn > *error {
 			return fmt.Errorf("error_value should be greater than warn_value")
 		}
-		if !*isRising && *warn < *error {
+		if !isFalling && *warn < *error {
 			return fmt.Errorf("warn_value should be greater than error_value")
 		}
 	}

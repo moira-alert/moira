@@ -18,31 +18,29 @@ func TestExpression(t *testing.T) {
 	Convey("Test Default", t, func() {
 		warnValue := 60.0
 		errorValue := 90.0
-		isRising := true
-		result, err := (&TriggerExpression{MainTargetValue: 10.0, WarnValue: &warnValue, ErrorValue: &errorValue, IsRising: &isRising}).Evaluate()
+		result, err := (&TriggerExpression{MainTargetValue: 10.0, WarnValue: &warnValue, ErrorValue: &errorValue}).Evaluate()
 		So(err, ShouldBeNil)
 		So(result, ShouldResemble, "OK")
 
-		result, err = (&TriggerExpression{MainTargetValue: 60.0, WarnValue: &warnValue, ErrorValue: &errorValue, IsRising: &isRising}).Evaluate()
+		result, err = (&TriggerExpression{MainTargetValue: 60.0, WarnValue: &warnValue, ErrorValue: &errorValue}).Evaluate()
 		So(err, ShouldBeNil)
 		So(result, ShouldResemble, "WARN")
 
-		result, err = (&TriggerExpression{MainTargetValue: 90.0, WarnValue: &warnValue, ErrorValue: &errorValue, IsRising: &isRising}).Evaluate()
+		result, err = (&TriggerExpression{MainTargetValue: 90.0, WarnValue: &warnValue, ErrorValue: &errorValue}).Evaluate()
 		So(err, ShouldBeNil)
 		So(result, ShouldResemble, "ERROR")
 
 		warnValue = 30.0
 		errorValue = 10.0
-		isRising = false
-		result, err = (&TriggerExpression{MainTargetValue: 40.0, WarnValue: &warnValue, ErrorValue: &errorValue, IsRising: &isRising}).Evaluate()
+		result, err = (&TriggerExpression{MainTargetValue: 40.0, WarnValue: &warnValue, ErrorValue: &errorValue, IsFalling: true}).Evaluate()
 		So(err, ShouldBeNil)
 		So(result, ShouldResemble, "OK")
 
-		result, err = (&TriggerExpression{MainTargetValue: 20.0, WarnValue: &warnValue, ErrorValue: &errorValue, IsRising: &isRising}).Evaluate()
+		result, err = (&TriggerExpression{MainTargetValue: 20.0, WarnValue: &warnValue, ErrorValue: &errorValue, IsFalling: true}).Evaluate()
 		So(err, ShouldBeNil)
 		So(result, ShouldResemble, "WARN")
 
-		result, err = (&TriggerExpression{MainTargetValue: 10.0, WarnValue: &warnValue, ErrorValue: &errorValue, IsRising: &isRising}).Evaluate()
+		result, err = (&TriggerExpression{MainTargetValue: 10.0, WarnValue: &warnValue, ErrorValue: &errorValue}).Evaluate()
 		So(err, ShouldBeNil)
 		So(result, ShouldResemble, "ERROR")
 	})

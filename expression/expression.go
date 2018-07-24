@@ -33,7 +33,7 @@ type TriggerExpression struct {
 
 	WarnValue  *float64
 	ErrorValue *float64
-	IsRising   *bool
+	IsFalling  bool
 
 	MainTargetValue         float64
 	AdditionalTargetsValues map[string]float64
@@ -103,26 +103,22 @@ func getSimpleExpression(triggerExpression *TriggerExpression) (*govaluate.Evalu
 	if triggerExpression.ErrorValue == nil && triggerExpression.WarnValue == nil {
 		return nil, fmt.Errorf("error value and warning value can not be empty")
 	}
-	if triggerExpression.IsRising == nil {
-		return nil, fmt.Errorf("choose if thresholds are rising or falling")
-	}
-
-	switch *triggerExpression.IsRising {
+	switch triggerExpression.IsFalling {
 	case true:
-		if triggerExpression.ErrorValue != nil && triggerExpression.WarnValue != nil {
-			return exprWarnErrorRising, nil
-		} else if triggerExpression.ErrorValue != nil {
-			return exprErrRising, nil
-		} else {
-			return exprWarnRising, nil
-		}
-	default:
 		if triggerExpression.ErrorValue != nil && triggerExpression.WarnValue != nil {
 			return exprWarnErrorFalling, nil
 		} else if triggerExpression.ErrorValue != nil {
 			return exprErrFalling, nil
 		} else {
 			return exprWarnFalling, nil
+		}
+	default:
+		if triggerExpression.ErrorValue != nil && triggerExpression.WarnValue != nil {
+			return exprWarnErrorRising, nil
+		} else if triggerExpression.ErrorValue != nil {
+			return exprErrRising, nil
+		} else {
+			return exprWarnRising, nil
 		}
 	}
 }
