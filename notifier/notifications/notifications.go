@@ -50,6 +50,14 @@ func (worker *FetchNotificationsWorker) processScheduledNotifications() error {
 	if err != nil {
 		return err
 	}
+	state, err := worker.Database.GetNotifierState()
+	if err != nil {
+		return fmt.Errorf("can't get current notifier state")
+	}
+	if state != "OK" {
+		return fmt.Errorf("stop sending notifications. Current notifier state: %v", state)
+	}
+
 	notificationPackages := make(map[string]*notifier.NotificationPackage)
 	for _, notification := range notifications {
 		packageKey := fmt.Sprintf("%s:%s:%s", notification.Contact.Type, notification.Contact.Value, notification.Event.TriggerID)
