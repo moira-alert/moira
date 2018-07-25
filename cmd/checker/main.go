@@ -88,8 +88,12 @@ func main() {
 		checkSingleTrigger(database, checkerMetrics, checkerSettings)
 	}
 
-	if err = reconvertTriggers(database, logger); err != nil {
-		logger.Fatalf("Can not reconvert triggers: %v", err)
+	if !config.Migration.Enabled {
+		logger.Debug("Skip triggers conversion...")
+	} else {
+		if err = reconvertTriggers(database, logger); err != nil {
+			logger.Fatalf("Can not reconvert triggers: %v", err)
+		}
 	}
 
 	// configure carbon-api functions

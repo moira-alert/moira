@@ -17,3 +17,5 @@ checker:
 log:
   log_file: stdout
   log_level: info
+migration:
+  enabled: true
