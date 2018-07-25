@@ -171,25 +171,17 @@ func reconvertTriggers(database moira.Database, logger moira.Logger) error {
 			continue
 		}
 		logger.Infof("Trigger %v handling...", trigger.ID)
-		if trigger.Expression != nil && *trigger.Expression != "" {
-			logger.Infof("Trigger %v has expression '%v', skip...", trigger.ID, *trigger.Expression)
-			continue
-		}
-
 		if trigger.WarnValue != nil && trigger.ErrorValue != nil {
-			needUpdate := false
 			logger.Infof("Trigger %v - warn_value: %v, error_value: %v, isFalling: %v", trigger.ID, *trigger.WarnValue, *trigger.ErrorValue, trigger.IsFalling)
 			if *trigger.ErrorValue > *trigger.WarnValue {
 				if trigger.IsFalling {
 					logger.Infof("Trigger %v - wrong isFalling value, need update", trigger.ID)
-					needUpdate = true
 					trigger.IsFalling = false
 				}
 			}
 			if *trigger.ErrorValue < *trigger.WarnValue {
 				if !trigger.IsFalling {
 					logger.Infof("Trigger %v - wrong isFalling value, need update", trigger.ID)
-					needUpdate = true
 					trigger.IsFalling = true
 				}
 			}
@@ -197,14 +189,11 @@ func reconvertTriggers(database moira.Database, logger moira.Logger) error {
 				logger.Infof("Trigger %v - warn_value == error_value, need update", trigger.ID)
 				trigger.IsFalling = false
 				trigger.WarnValue = nil
-				needUpdate = true
 			}
-			if needUpdate {
-				logger.Infof("Trigger %v saving...", trigger.ID)
-				if err = database.SaveTrigger(trigger.ID, trigger); err != nil {
-					logger.Warningf("Trigger %v saving error: %v", trigger.ID, err)
-				}
-			}
+		}
+		logger.Infof("Trigger %v saving...", trigger.ID)
+		if err = database.SaveTrigger(trigger.ID, trigger); err != nil {
+			logger.Warningf("Trigger %v saving error: %v", trigger.ID, err)
 		}
 	}
 
