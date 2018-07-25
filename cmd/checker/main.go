@@ -152,7 +152,7 @@ func reconvertTriggers(database moira.Database, logger moira.Logger) error {
 
 	triggerIDs, err := database.GetTriggerIDs()
 	if err == MoiraDB.ErrNil {
-		logger.Warning("No triggers in DB.")
+		logger.Warning("No triggers in DB")
 		return nil
 	} else if err != nil {
 		return err
@@ -163,7 +163,13 @@ func reconvertTriggers(database moira.Database, logger moira.Logger) error {
 		return err
 	}
 
-	for _, trigger := range triggers {
+	logger.Infof("Triggers in database: %v", len(triggers))
+
+	for i, trigger := range triggers {
+		if trigger == nil {
+			logger.Warningf("Trigger %v is empty", triggerIDs[i])
+			continue
+		}
 		logger.Infof("Trigger %v handling...", trigger.ID)
 		if trigger.Expression != nil && *trigger.Expression != "" {
 			logger.Infof("Trigger %v has expression '%v', skip...", trigger.ID, *trigger.Expression)
@@ -172,7 +178,7 @@ func reconvertTriggers(database moira.Database, logger moira.Logger) error {
 
 		if trigger.WarnValue != nil && trigger.ErrorValue != nil {
 			needUpdate := false
-			logger.Infof("Trigger %v - warn_value: %v, error_value: %v, isFalling: %v", trigger.ID, trigger.WarnValue, trigger.ErrorValue, trigger.IsFalling)
+			logger.Infof("Trigger %v - warn_value: %v, error_value: %v, isFalling: %v", trigger.ID, *trigger.WarnValue, *trigger.ErrorValue, trigger.IsFalling)
 			if *trigger.ErrorValue > *trigger.WarnValue {
 				if trigger.IsFalling {
 					logger.Infof("Trigger %v - wrong isFalling value, need update", trigger.ID)
@@ -195,8 +201,8 @@ func reconvertTriggers(database moira.Database, logger moira.Logger) error {
 			}
 			if needUpdate {
 				logger.Infof("Trigger %v saving...", trigger.ID)
-				if err := database.SaveTrigger(trigger.ID, trigger); err != nil {
-					logger.Infof("Trigger %v saving error: %v", trigger.ID, err)
+				if err = database.SaveTrigger(trigger.ID, trigger); err != nil {
+					logger.Warningf("Trigger %v saving error: %v", trigger.ID, err)
 				}
 			}
 		}
