@@ -19,15 +19,15 @@ func TestExpression(t *testing.T) {
 	Convey("Test Default", t, func() {
 		warnValue := 60.0
 		errorValue := 90.0
-		result, err := (&TriggerExpression{MainTargetValue: 10.0, WarnValue: &warnValue, ErrorValue: &errorValue}).Evaluate()
+		result, err := (&TriggerExpression{MainTargetValue: 10.0, WarnValue: &warnValue, ErrorValue: &errorValue, TriggerType: moira.RisingTrigger}).Evaluate()
 		So(err, ShouldBeNil)
 		So(result, ShouldResemble, "OK")
 
-		result, err = (&TriggerExpression{MainTargetValue: 60.0, WarnValue: &warnValue, ErrorValue: &errorValue}).Evaluate()
+		result, err = (&TriggerExpression{MainTargetValue: 60.0, WarnValue: &warnValue, ErrorValue: &errorValue, TriggerType: moira.RisingTrigger}).Evaluate()
 		So(err, ShouldBeNil)
 		So(result, ShouldResemble, "WARN")
 
-		result, err = (&TriggerExpression{MainTargetValue: 90.0, WarnValue: &warnValue, ErrorValue: &errorValue}).Evaluate()
+		result, err = (&TriggerExpression{MainTargetValue: 90.0, WarnValue: &warnValue, ErrorValue: &errorValue, TriggerType: moira.RisingTrigger}).Evaluate()
 		So(err, ShouldBeNil)
 		So(result, ShouldResemble, "ERROR")
 
@@ -41,11 +41,11 @@ func TestExpression(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(result, ShouldResemble, "WARN")
 
-		result, err = (&TriggerExpression{MainTargetValue: 10.0, WarnValue: &warnValue, ErrorValue: &errorValue}).Evaluate()
+		result, err = (&TriggerExpression{MainTargetValue: 10.0, WarnValue: &warnValue, ErrorValue: &errorValue, TriggerType: moira.FallingTrigger}).Evaluate()
 		So(err, ShouldBeNil)
 		So(result, ShouldResemble, "ERROR")
 
-		result, err = (&TriggerExpression{MainTargetValue: 10.0}).Evaluate()
+		result, err = (&TriggerExpression{MainTargetValue: 10.0, TriggerType: moira.FallingTrigger}).Evaluate()
 		So(err, ShouldResemble, ErrInvalidExpression{fmt.Errorf("error value and warning value can not be empty")})
 		So(err.Error(), ShouldResemble, "error value and warning value can not be empty")
 		So(result, ShouldBeEmpty)
@@ -73,12 +73,12 @@ func TestExpression(t *testing.T) {
 
 	Convey("Test Custom", t, func() {
 		expression := "t1 > 10 && t2 > 3 ? ERROR : OK"
-		result, err := (&TriggerExpression{Expression: &expression, MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{"t2": 4.0}}).Evaluate()
+		result, err := (&TriggerExpression{Expression: &expression, MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{"t2": 4.0}, TriggerType: moira.ExpressionTrigger}).Evaluate()
 		So(err, ShouldBeNil)
 		So(result, ShouldResemble, "ERROR")
 
 		expression = "min(t1, t2) > 10 ? ERROR : OK"
-		result, err = (&TriggerExpression{Expression: &expression, MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{"t2": 4.0}}).Evaluate()
+		result, err = (&TriggerExpression{Expression: &expression, MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{"t2": 4.0}, TriggerType: moira.ExpressionTrigger}).Evaluate()
 		So(err, ShouldResemble, ErrInvalidExpression{fmt.Errorf("functions is forbidden")})
 		So(result, ShouldBeEmpty)
 	})

@@ -94,7 +94,10 @@ func (triggerExpression *TriggerExpression) Evaluate() (string, error) {
 }
 
 func getExpression(triggerExpression *TriggerExpression) (*govaluate.EvaluableExpression, error) {
-	if triggerExpression.Expression != nil && *triggerExpression.Expression != "" {
+	if triggerExpression.TriggerType == moira.ExpressionTrigger {
+		if triggerExpression.Expression == nil || *triggerExpression.Expression == "" {
+			return nil, fmt.Errorf("trigger_type set to expression, but no expression provided")
+		}
 		return getUserExpression(*triggerExpression.Expression)
 	}
 	return getSimpleExpression(triggerExpression)
@@ -106,7 +109,7 @@ func getSimpleExpression(triggerExpression *TriggerExpression) (*govaluate.Evalu
 	}
 	switch triggerExpression.TriggerType {
 	case "":
-		return nil, fmt.Errorf("triggerType is not set")
+		return nil, fmt.Errorf("trigger_type is not set")
 	case moira.FallingTrigger:
 		if triggerExpression.ErrorValue != nil && triggerExpression.WarnValue != nil {
 			return exprWarnErrorFalling, nil
@@ -124,7 +127,8 @@ func getSimpleExpression(triggerExpression *TriggerExpression) (*govaluate.Evalu
 			return exprWarnRising, nil
 		}
 	}
-	return nil, fmt.Errorf("wrong set of parametres: warn_value - %v, error_value - %v, trigger_type: %v", triggerExpression.WarnValue, triggerExpression.ErrorValue, triggerExpression.TriggerType)
+	return nil, fmt.Errorf("wrong set of parametres: warn_value - %v, error_value - %v, trigger_type: %v",
+		triggerExpression.WarnValue, triggerExpression.ErrorValue, triggerExpression.TriggerType)
 }
 
 func getUserExpression(triggerExpression string) (*govaluate.EvaluableExpression, error) {
