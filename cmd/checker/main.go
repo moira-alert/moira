@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/go-graphite/carbonapi/expr/functions"
-	MoiraDB "github.com/moira-alert/moira/database"
 	"github.com/patrickmn/go-cache"
 
 	"github.com/moira-alert/moira"
@@ -88,14 +87,6 @@ func main() {
 		checkSingleTrigger(database, checkerMetrics, checkerSettings)
 	}
 
-	if !config.Migration.Enabled {
-		logger.Debug("Skip triggers conversion...")
-	} else {
-		if err = reconvertTriggers(database, logger); err != nil {
-			logger.Fatalf("Can not reconvert triggers: %v", err)
-		}
-	}
-
 	// configure carbon-api functions
 	functions.New(make(map[string]string))
 
@@ -145,58 +136,4 @@ func stopChecker(service *worker.Checker) {
 	if err := service.Stop(); err != nil {
 		logger.Errorf("Failed to Stop Moira Checker: %v", err)
 	}
-}
-
-func reconvertTriggers(database moira.Database, logger moira.Logger) error {
-	logger.Info("Trigger converter started")
-
-	triggerIDs, err := database.GetTriggerIDs()
-	if err == MoiraDB.ErrNil {
-		logger.Warning("No triggers in DB")
-		return nil
-	} else if err != nil {
-		return err
-	}
-
-	triggers, err := database.GetTriggers(triggerIDs)
-	if err != nil {
-		return err
-	}
-
-	logger.Infof("Triggers in database: %v", len(triggers))
-
-	for i, trigger := range triggers {
-		if trigger == nil {
-			logger.Warningf("Trigger %v is empty", triggerIDs[i])
-			continue
-		}
-		logger.Infof("Trigger %v handling...", trigger.ID)
-		if trigger.WarnValue != nil && trigger.ErrorValue != nil {
-			logger.Infof("Trigger %v - warn_value: %v, error_value: %v, isFalling: %v", trigger.ID, *trigger.WarnValue, *trigger.ErrorValue, trigger.IsFalling)
-			if *trigger.ErrorValue > *trigger.WarnValue {
-				if trigger.IsFalling {
-					logger.Infof("Trigger %v - wrong isFalling value, need update", trigger.ID)
-					trigger.IsFalling = false
-				}
-			}
-			if *trigger.ErrorValue < *trigger.WarnValue {
-				if !trigger.IsFalling {
-					logger.Infof("Trigger %v - wrong isFalling value, need update", trigger.ID)
-					trigger.IsFalling = true
-				}
-			}
-			if *trigger.ErrorValue == *trigger.WarnValue {
-				logger.Infof("Trigger %v - warn_value == error_value, need update", trigger.ID)
-				trigger.IsFalling = false
-				trigger.WarnValue = nil
-			}
-		}
-		logger.Infof("Trigger %v saving...", trigger.ID)
-		if err = database.SaveTrigger(trigger.ID, trigger); err != nil {
-			logger.Warningf("Trigger %v saving error: %v", trigger.ID, err)
-		}
-	}
-
-	logger.Info("Trigger converter finished")
-	return nil
 }

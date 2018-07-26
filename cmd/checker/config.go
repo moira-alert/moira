@@ -9,12 +9,11 @@ import (
 )
 
 type config struct {
-	Redis     cmd.RedisConfig    `yaml:"redis"`
-	Graphite  cmd.GraphiteConfig `yaml:"graphite"`
-	Logger    cmd.LoggerConfig   `yaml:"log"`
-	Checker   checkerConfig      `yaml:"checker"`
-	Pprof     cmd.ProfilerConfig `yaml:"pprof"`
-	Migration migrationConfig    `yaml:"migration"`
+	Redis    cmd.RedisConfig    `yaml:"redis"`
+	Graphite cmd.GraphiteConfig `yaml:"graphite"`
+	Logger   cmd.LoggerConfig   `yaml:"log"`
+	Checker  checkerConfig      `yaml:"checker"`
+	Pprof    cmd.ProfilerConfig `yaml:"pprof"`
 }
 
 type checkerConfig struct {
@@ -28,10 +27,6 @@ type checkerConfig struct {
 	MetricsTTL string `yaml:"metrics_ttl"`
 	// Max concurrent checkers to run. Equals to the number of processor cores found on Moira host by default or when variable is defined as 0.
 	MaxParallelChecks int `yaml:"max_parallel_checks"`
-}
-
-type migrationConfig struct {
-	Enabled bool `yaml:"enabled"`
 }
 
 func (config *checkerConfig) getSettings() *checker.Config {
@@ -72,9 +67,6 @@ func getDefault() config {
 		},
 		Pprof: cmd.ProfilerConfig{
 			Listen: "",
-		},
-		Migration: migrationConfig{
-			Enabled: true,
 		},
 	}
 }
