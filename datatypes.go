@@ -110,8 +110,11 @@ type MetricValue struct {
 }
 
 const (
-	FallingTrigger    = "falling"
-	RisingTrigger     = "rising"
+	// FallingTrigger represents falling trigger type, in which OK > WARN > ERROR
+	FallingTrigger = "falling"
+	// RisingTrigger represents rising trigger type, in which OK < WARN < ERROR
+	RisingTrigger = "rising"
+	// ExpressionTrigger represents trigger type with custom user expression
 	ExpressionTrigger = "expression"
 )
 
