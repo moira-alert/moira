@@ -18,7 +18,7 @@ type triggerStorageElement struct {
 	Targets          []string            `json:"targets"`
 	WarnValue        *float64            `json:"warn_value"`
 	ErrorValue       *float64            `json:"error_value"`
-	IsFalling        bool                `json:"is_falling"`
+	TriggerType      string              `json:"trigger_type"`
 	Tags             []string            `json:"tags"`
 	TTLState         *string             `json:"ttl_state,omitempty"`
 	Schedule         *moira.ScheduleData `json:"sched,omitempty"`
@@ -36,7 +36,7 @@ func (storageElement *triggerStorageElement) toTrigger() moira.Trigger {
 		Targets:          storageElement.Targets,
 		WarnValue:        storageElement.WarnValue,
 		ErrorValue:       storageElement.ErrorValue,
-		IsFalling:        storageElement.IsFalling,
+		TriggerType:      storageElement.TriggerType,
 		Tags:             storageElement.Tags,
 		TTLState:         storageElement.TTLState,
 		Schedule:         storageElement.Schedule,
@@ -55,7 +55,7 @@ func toTriggerStorageElement(trigger *moira.Trigger, triggerID string) *triggerS
 		Targets:          trigger.Targets,
 		WarnValue:        trigger.WarnValue,
 		ErrorValue:       trigger.ErrorValue,
-		IsFalling:        trigger.IsFalling,
+		TriggerType:      trigger.TriggerType,
 		Tags:             trigger.Tags,
 		TTLState:         trigger.TTLState,
 		Schedule:         trigger.Schedule,

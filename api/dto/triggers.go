@@ -44,8 +44,8 @@ type TriggerModel struct {
 	WarnValue *float64 `json:"warn_value"`
 	// ERROR threshold
 	ErrorValue *float64 `json:"error_value"`
-	// Determines if trigger should alert when value is <= (IsFalling == true) or >= (IsFalling == false) threshold.
-	IsFalling bool `json:"is_falling"`
+	// Could be: rising, falling, expression
+	TriggerType string `json:"trigger_type"`
 	// Set of tags to manipulate subscriptions
 	Tags []string `json:"tags"`
 	// When there are no metrics for trigger, Moira will switch metric to TTLState state after TTL seconds
@@ -63,38 +63,38 @@ type TriggerModel struct {
 // ToMoiraTrigger transforms TriggerModel to moira.Trigger
 func (model *TriggerModel) ToMoiraTrigger() *moira.Trigger {
 	return &moira.Trigger{
-		ID:         model.ID,
-		Name:       model.Name,
-		Desc:       model.Desc,
-		Targets:    model.Targets,
-		WarnValue:  model.WarnValue,
-		ErrorValue: model.ErrorValue,
-		IsFalling:  model.IsFalling,
-		Tags:       model.Tags,
-		TTLState:   model.TTLState,
-		TTL:        model.TTL,
-		Schedule:   model.Schedule,
-		Expression: &model.Expression,
-		Patterns:   model.Patterns,
+		ID:          model.ID,
+		Name:        model.Name,
+		Desc:        model.Desc,
+		Targets:     model.Targets,
+		WarnValue:   model.WarnValue,
+		ErrorValue:  model.ErrorValue,
+		TriggerType: model.TriggerType,
+		Tags:        model.Tags,
+		TTLState:    model.TTLState,
+		TTL:         model.TTL,
+		Schedule:    model.Schedule,
+		Expression:  &model.Expression,
+		Patterns:    model.Patterns,
 	}
 }
 
 // CreateTriggerModel transforms moira.Trigger to TriggerModel
 func CreateTriggerModel(trigger *moira.Trigger) TriggerModel {
 	return TriggerModel{
-		ID:         trigger.ID,
-		Name:       trigger.Name,
-		Desc:       trigger.Desc,
-		Targets:    trigger.Targets,
-		WarnValue:  trigger.WarnValue,
-		ErrorValue: trigger.ErrorValue,
-		IsFalling:  trigger.IsFalling,
-		Tags:       trigger.Tags,
-		TTLState:   trigger.TTLState,
-		TTL:        trigger.TTL,
-		Schedule:   trigger.Schedule,
-		Expression: moira.UseString(trigger.Expression),
-		Patterns:   trigger.Patterns,
+		ID:          trigger.ID,
+		Name:        trigger.Name,
+		Desc:        trigger.Desc,
+		Targets:     trigger.Targets,
+		WarnValue:   trigger.WarnValue,
+		ErrorValue:  trigger.ErrorValue,
+		TriggerType: trigger.TriggerType,
+		Tags:        trigger.Tags,
+		TTLState:    trigger.TTLState,
+		TTL:         trigger.TTL,
+		Schedule:    trigger.Schedule,
+		Expression:  moira.UseString(trigger.Expression),
+		Patterns:    trigger.Patterns,
 	}
 }
 
@@ -113,10 +113,7 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 	if trigger.Name == "" {
 		return fmt.Errorf("trigger name is required")
 	}
-	if trigger.WarnValue == nil && trigger.ErrorValue == nil && trigger.Expression == "" {
-		return fmt.Errorf("at least one of error_value, warn_value or expression is required")
-	}
-	if err := checkWarnErrorValues(trigger.WarnValue, trigger.ErrorValue, trigger.IsFalling); err != nil {
+	if err := checkWarnErrorExpression(trigger); err != nil {
 		return err
 	}
 
@@ -124,7 +121,7 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 		AdditionalTargetsValues: make(map[string]float64),
 		WarnValue:               trigger.WarnValue,
 		ErrorValue:              trigger.ErrorValue,
-		IsFalling:               trigger.IsFalling,
+		TriggerType:             trigger.TriggerType,
 		PreviousState:           checker.NODATA,
 		Expression:              &trigger.Expression,
 	}
@@ -179,18 +176,59 @@ func checkTriggerTags(tags []string) []string {
 	return reservedTagsFound
 }
 
-func checkWarnErrorValues(warn, error *float64, isFalling bool) error {
-	if warn != nil && error != nil {
-		if *warn == *error {
-			return fmt.Errorf("error_value is equal to warn_value, please set exactly one value")
-		}
-		if isFalling && *warn > *error {
-			return fmt.Errorf("error_value should be greater than warn_value")
-		}
-		if !isFalling && *warn < *error {
-			return fmt.Errorf("warn_value should be greater than error_value")
-		}
+func checkWarnErrorExpression(trigger *Trigger) error {
+	if trigger.WarnValue == nil && trigger.ErrorValue == nil && trigger.Expression == "" {
+		return fmt.Errorf("at least one of error_value, warn_value or expression is required")
 	}
+
+	if trigger.WarnValue != nil && trigger.ErrorValue != nil && *trigger.WarnValue == *trigger.ErrorValue {
+		return fmt.Errorf("error_value is equal to warn_value, please set exactly one value")
+	}
+
+	switch trigger.TriggerType {
+	case "":
+		if trigger.Expression != "" {
+			trigger.TriggerType = moira.ExpressionTrigger
+			return nil
+		}
+		if trigger.WarnValue != nil && trigger.ErrorValue != nil {
+			if *trigger.WarnValue > *trigger.ErrorValue {
+				trigger.TriggerType = moira.FallingTrigger
+				return nil
+			}
+			if *trigger.WarnValue < *trigger.ErrorValue {
+				trigger.TriggerType = moira.RisingTrigger
+				return nil
+			}
+		}
+		if trigger.WarnValue == nil {
+			return fmt.Errorf("warn_value: is empty - please fill both values or choose trigger_type: rising, falling, expression")
+		}
+		if trigger.ErrorValue == nil {
+			return fmt.Errorf("error_value: is empty - please fill both values or choose trigger_type: rising, falling, expression")
+		}
+
+	case moira.RisingTrigger:
+		if trigger.WarnValue != nil && trigger.ErrorValue != nil {
+			if *trigger.WarnValue > *trigger.ErrorValue {
+				return fmt.Errorf("error_value should be greater than warn_value")
+			}
+		}
+	case moira.FallingTrigger:
+		if trigger.WarnValue != nil && trigger.ErrorValue != nil {
+			if *trigger.WarnValue < *trigger.ErrorValue {
+				return fmt.Errorf("warn_value should be greater than error_value")
+			}
+		}
+	case moira.ExpressionTrigger:
+		if trigger.Expression == "" {
+			return fmt.Errorf("trigger_type set to expression, but no expression provided")
+		}
+	default:
+		return fmt.Errorf("wrong trigger_type: %v, allowable values: '%v', '%v', '%v'",
+			trigger.TriggerType, moira.RisingTrigger, moira.FallingTrigger, moira.ExpressionTrigger)
+	}
+
 	return nil
 }
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/moira-alert/moira"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -32,11 +33,11 @@ func TestExpression(t *testing.T) {
 
 		warnValue = 30.0
 		errorValue = 10.0
-		result, err = (&TriggerExpression{MainTargetValue: 40.0, WarnValue: &warnValue, ErrorValue: &errorValue, IsFalling: true}).Evaluate()
+		result, err = (&TriggerExpression{MainTargetValue: 40.0, WarnValue: &warnValue, ErrorValue: &errorValue, TriggerType: moira.FallingTrigger}).Evaluate()
 		So(err, ShouldBeNil)
 		So(result, ShouldResemble, "OK")
 
-		result, err = (&TriggerExpression{MainTargetValue: 20.0, WarnValue: &warnValue, ErrorValue: &errorValue, IsFalling: true}).Evaluate()
+		result, err = (&TriggerExpression{MainTargetValue: 20.0, WarnValue: &warnValue, ErrorValue: &errorValue, TriggerType: moira.FallingTrigger}).Evaluate()
 		So(err, ShouldBeNil)
 		So(result, ShouldResemble, "WARN")
 
@@ -50,22 +51,22 @@ func TestExpression(t *testing.T) {
 		So(result, ShouldBeEmpty)
 
 		warnValue = 30.0
-		result, err = (&TriggerExpression{MainTargetValue: 40.0, WarnValue: &warnValue, IsFalling: false}).Evaluate()
+		result, err = (&TriggerExpression{MainTargetValue: 40.0, WarnValue: &warnValue, TriggerType: moira.RisingTrigger}).Evaluate()
 		So(err, ShouldBeNil)
 		So(result, ShouldResemble, "WARN")
 
 		warnValue = 30.0
-		result, err = (&TriggerExpression{MainTargetValue: 40.0, WarnValue: &warnValue, IsFalling: true}).Evaluate()
+		result, err = (&TriggerExpression{MainTargetValue: 40.0, WarnValue: &warnValue, TriggerType: moira.FallingTrigger}).Evaluate()
 		So(err, ShouldBeNil)
 		So(result, ShouldResemble, "OK")
 
 		errorValue = 30.0
-		result, err = (&TriggerExpression{MainTargetValue: 40.0, ErrorValue: &errorValue, IsFalling: false}).Evaluate()
+		result, err = (&TriggerExpression{MainTargetValue: 40.0, ErrorValue: &errorValue, TriggerType: moira.RisingTrigger}).Evaluate()
 		So(err, ShouldBeNil)
 		So(result, ShouldResemble, "ERROR")
 
 		errorValue = 30.0
-		result, err = (&TriggerExpression{MainTargetValue: 40.0, ErrorValue: &errorValue, IsFalling: true}).Evaluate()
+		result, err = (&TriggerExpression{MainTargetValue: 40.0, ErrorValue: &errorValue, TriggerType: moira.FallingTrigger}).Evaluate()
 		So(err, ShouldBeNil)
 		So(result, ShouldResemble, "OK")
 	})
