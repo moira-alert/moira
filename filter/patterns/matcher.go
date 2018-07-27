@@ -41,6 +41,7 @@ func (m *Matcher) Start(workerCnt int, lineChan <-chan []byte) chan *moira.Match
 		m.logger.Info("Moira pattern matcher stopped")
 	}()
 
+	m.tomb.Go(func() error { return m.checkNewMetricsChannelLen(metricsChan) })
 	return metricsChan
 }
 
