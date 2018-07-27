@@ -58,7 +58,7 @@ func main() {
 	}
 
 	if config.Filter.MaxParallelChecks == 0 {
-		fmt.Fprint(os.Stderr, "MaxParallelChecks does not configured, filter does not started")
+		fmt.Fprint(os.Stderr, "MaxParallelChecks is not configured, filter does not start")
 	}
 
 	logger, err = logging.ConfigureLog(config.Logger.LogFile, config.Logger.LogLevel, serviceName)
