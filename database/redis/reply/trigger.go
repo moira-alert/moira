@@ -18,7 +18,7 @@ type triggerStorageElement struct {
 	Targets          []string            `json:"targets"`
 	WarnValue        *float64            `json:"warn_value"`
 	ErrorValue       *float64            `json:"error_value"`
-	TriggerType      string              `json:"trigger_type"`
+	TriggerType      string              `json:"trigger_type,omitempty"`
 	Tags             []string            `json:"tags"`
 	TTLState         *string             `json:"ttl_state,omitempty"`
 	Schedule         *moira.ScheduleData `json:"sched,omitempty"`
