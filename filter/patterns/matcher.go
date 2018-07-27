@@ -9,6 +9,7 @@ import (
 	"gopkg.in/tomb.v2"
 )
 
+// Matcher checks metrics against known patterns
 type Matcher struct {
 	logger         moira.Logger
 	tomb           tomb.Tomb
