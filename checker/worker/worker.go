@@ -28,7 +28,7 @@ type Checker struct {
 // Start start schedule new MetricEvents and check for NODATA triggers
 func (worker *Checker) Start() error {
 	if worker.Config.MaxParallelChecks == 0 {
-		return fmt.Errorf("MaxParallelChecks is not configured, checker doesn't start")
+		return fmt.Errorf("MaxParallelChecks is not configured, checker does not start")
 	}
 
 	worker.lastData = time.Now().UTC().Unix()
