@@ -7,36 +7,33 @@ import (
 	"sync"
 
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/filter"
 )
 
-// Handler handling connection data and shift it to MatchedMetrics channel
+// Handler handling connection data and shift it to lineChan channel
 type Handler struct {
-	logger          moira.Logger
-	patternsStorage *filter.PatternStorage
-	wg              sync.WaitGroup
-	terminate       chan bool
+	logger    moira.Logger
+	wg        sync.WaitGroup
+	terminate chan bool
 }
 
 // NewConnectionsHandler creates new Handler
-func NewConnectionsHandler(logger moira.Logger, patternsStorage *filter.PatternStorage) *Handler {
+func NewConnectionsHandler(logger moira.Logger) *Handler {
 	return &Handler{
-		logger:          logger,
-		patternsStorage: patternsStorage,
-		terminate:       make(chan bool, 1),
+		logger:    logger,
+		terminate: make(chan bool, 1),
 	}
 }
 
-// HandleConnection convert every line from connection to metric and send it to MatchedMetric channel
-func (handler *Handler) HandleConnection(connection net.Conn, matchedMetricsChan chan *moira.MatchedMetric) {
+// HandleConnection convert every line from connection to metric and send it to lineChan channel
+func (handler *Handler) HandleConnection(connection net.Conn, lineChan chan<- []byte) {
 	handler.wg.Add(1)
 	go func() {
 		defer handler.wg.Done()
-		handler.handle(connection, matchedMetricsChan)
+		handler.handle(connection, lineChan)
 	}()
 }
 
-func (handler *Handler) handle(connection net.Conn, matchedMetricsChan chan *moira.MatchedMetric) {
+func (handler *Handler) handle(connection net.Conn, lineChan chan<- []byte) {
 	buffer := bufio.NewReader(connection)
 
 	go func(conn net.Conn) {
@@ -54,13 +51,7 @@ func (handler *Handler) handle(connection net.Conn, matchedMetricsChan chan *moi
 			break
 		}
 		lineBytes = lineBytes[:len(lineBytes)-1]
-		handler.wg.Add(1)
-		func(ch chan *moira.MatchedMetric) {
-			defer handler.wg.Done()
-			if m := handler.patternsStorage.ProcessIncomingMetric(lineBytes); m != nil {
-				ch <- m
-			}
-		}(matchedMetricsChan)
+		lineChan <- lineBytes
 	}
 }
 
