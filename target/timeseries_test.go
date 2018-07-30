@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/go-graphite/carbonapi/expr/types"
-	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
+	pb "github.com/go-graphite/protocol/carbonapi_v3_pb"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -17,7 +17,6 @@ func TestGetTimestampValue(t *testing.T) {
 			StopTime:  67,
 			StepTime:  10,
 			Values:    []float64{0, 1, 2, 3, 4},
-			IsAbsent:  []bool{false, false, false, false, false},
 		}
 		timeSeries := TimeSeries{
 			MetricData: types.MetricData{FetchResponse: fetchResponse},
@@ -45,14 +44,13 @@ func TestGetTimestampValue(t *testing.T) {
 		})
 	})
 
-	Convey("IsAbsent has true", t, func() {
+	Convey("Values has nodata points", t, func() {
 		fetchResponse := pb.FetchResponse{
 			Name:      "m",
 			StartTime: 17,
 			StopTime:  67,
 			StepTime:  10,
-			Values:    []float64{0, 1, 2, 3, 4},
-			IsAbsent:  []bool{false, true, true, false, true},
+			Values:    []float64{0, math.NaN(), math.NaN(), 3, math.NaN()},
 		}
 
 		timeSeries := TimeSeries{

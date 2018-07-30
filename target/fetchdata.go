@@ -4,7 +4,7 @@ import (
 	"math"
 
 	"github.com/go-graphite/carbonapi/expr/types"
-	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
+	pb "github.com/go-graphite/protocol/carbonapi_v3_pb"
 	"github.com/moira-alert/moira"
 )
 
@@ -14,7 +14,7 @@ func FetchData(database moira.Database, pattern string, from int64, until int64,
 	if err != nil {
 		return nil, nil, err
 	}
-	metricDatas := make([]*types.MetricData, 0)
+	metricsData := make([]*types.MetricData, 0)
 
 	if len(metrics) > 0 {
 		firstMetric := metrics[0]
@@ -28,35 +28,25 @@ func FetchData(database moira.Database, pattern string, from int64, until int64,
 		}
 		valuesMap := unpackMetricsValues(dataList, retention, from, until, allowRealTimeAlerting)
 		for _, metric := range metrics {
-			metricDatas = append(metricDatas, createMetricData(metric, from, until, retention, valuesMap[metric]))
+			metricsData = append(metricsData, createMetricData(metric, from, until, retention, valuesMap[metric]))
 		}
 	} else {
 		dataList := map[string][]*moira.MetricValue{pattern: make([]*moira.MetricValue, 0)}
 		valuesMap := unpackMetricsValues(dataList, 60, from, until, allowRealTimeAlerting)
-		metricDatas = append(metricDatas, createMetricData(pattern, from, until, 60, valuesMap[pattern]))
+		metricsData = append(metricsData, createMetricData(pattern, from, until, 60, valuesMap[pattern]))
 	}
-	return metricDatas, metrics, nil
+	return metricsData, metrics, nil
 }
 
 func createMetricData(metric string, from int64, until int64, retention int64, values []float64) *types.MetricData {
 	fetchResponse := pb.FetchResponse{
 		Name:      metric,
-		StartTime: int32(from),
-		StopTime:  int32(until),
-		StepTime:  int32(retention),
+		StartTime: from,
+		StopTime:  until,
+		StepTime:  retention,
 		Values:    values,
-		IsAbsent:  getIsAbsent(values),
 	}
 	return &types.MetricData{FetchResponse: fetchResponse}
-}
-func getIsAbsent(values []float64) []bool {
-	isAbsent := make([]bool, len(values))
-	for i, value := range values {
-		if math.IsNaN(value) {
-			isAbsent[i] = true
-		}
-	}
-	return isAbsent
 }
 
 func unpackMetricsValues(metricsData map[string][]*moira.MetricValue, retention int64, from int64, until int64, allowRealTimeAlerting bool) map[string][]float64 {
