@@ -7,6 +7,7 @@ import (
 	"github.com/moira-alert/moira/database"
 )
 
+// AddTriggersToCheck gets trigger IDs and save it to Redis Set
 func (connector *DbConnector) AddTriggersToCheck(triggerIDs []string) error {
 	c := connector.pool.Get()
 	defer c.Close()
@@ -22,6 +23,7 @@ func (connector *DbConnector) AddTriggersToCheck(triggerIDs []string) error {
 	return nil
 }
 
+// GetTriggerToCheck return random trigger ID from Redis Set
 func (connector *DbConnector) GetTriggerToCheck() (string, error) {
 	c := connector.pool.Get()
 	defer c.Close()

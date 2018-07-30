@@ -62,7 +62,6 @@ func TestTriggerToCheck(t *testing.T) {
 		actual, err = dataBase.GetTriggerToCheck()
 		So(err, ShouldBeNil)
 		So(actual, ShouldBeIn, triggerArr)
-		triggerArr = removeValue(triggerArr, actual)
 
 		actual, err = dataBase.GetTriggerToCheck()
 		So(err, ShouldResemble, database.ErrNil)

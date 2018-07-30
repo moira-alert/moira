@@ -5,15 +5,26 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira/checker"
+	"github.com/moira-alert/moira/database"
 )
+
+const sleepAfterErrorGetTriggerIDTime = time.Millisecond * 500
 
 func (worker *Checker) startTriggerHandler() error {
 	for {
-		triggerID, ok := <-worker.triggersToCheck
-		if !ok {
+		select {
+		case <-worker.tomb.Dying():
 			return nil
+		default:
+			triggerID, err := worker.Database.GetTriggerToCheck()
+			if err != nil {
+				if err != database.ErrNil {
+					worker.Logger.Errorf("Failed to handle trigger loop: %s", err.Error())
+				}
+				<-time.After(sleepAfterErrorGetTriggerIDTime)
+			}
+			worker.handleTrigger(triggerID)
 		}
-		worker.handleTrigger(triggerID)
 	}
 }
 
