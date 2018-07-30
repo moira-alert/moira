@@ -109,6 +109,15 @@ func GetTriggerBytes(triggerID string, trigger *moira.Trigger) ([]byte, error) {
 	return bytes, nil
 }
 
+// convertTriggerIfNecessary converts moira.Trigger to a new format implemented in Moira 2.3 release
+// Difference: in Moira 2.3 trigger could have 3 possible fields:
+//  - WarnValue - warning threshold
+//  - ErrorValue - error threshold
+//  - Expression - custom govaluate expression
+// In Moira 2.3 there is another field - TriggerType, it can take one of the following options:
+//  - rising: error > warning > ok
+//  - falling: error < warning < ok
+//  - expression: trigger has custom expression
 func convertTriggerIfNecessary(trigger *moira.Trigger) {
 	switch trigger.TriggerType {
 	case moira.RisingTrigger, moira.FallingTrigger, moira.ExpressionTrigger:
