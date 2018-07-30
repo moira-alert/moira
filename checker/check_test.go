@@ -33,8 +33,9 @@ func TestGetTimeSeriesState(t *testing.T) {
 		Until:   67,
 		From:    17,
 		trigger: &moira.Trigger{
-			WarnValue:  &warnValue,
-			ErrorValue: &errValue,
+			WarnValue:   &warnValue,
+			ErrorValue:  &errValue,
+			TriggerType: moira.RisingTrigger,
 		},
 	}
 	fetchResponse := pb.FetchResponse{
@@ -110,7 +111,7 @@ func TestGetTimeSeriesState(t *testing.T) {
 		triggerChecker.trigger.WarnValue = nil
 		triggerChecker.trigger.ErrorValue = nil
 		metricState, err := triggerChecker.getTimeSeriesState(tts, tts.Main[0], metricLastState, 42, 27)
-		So(err.Error(), ShouldResemble, "error value and Warning value can not be empty")
+		So(err.Error(), ShouldResemble, "error value and warning value can not be empty")
 		So(metricState, ShouldBeNil)
 	})
 }
@@ -125,8 +126,9 @@ func TestGetTimeSeriesStepsStates(t *testing.T) {
 		Until:  67,
 		From:   17,
 		trigger: &moira.Trigger{
-			WarnValue:  &warnValue,
-			ErrorValue: &errValue,
+			WarnValue:   &warnValue,
+			ErrorValue:  &errValue,
+			TriggerType: moira.RisingTrigger,
 		},
 	}
 	fetchResponse1 := pb.FetchResponse{
@@ -263,7 +265,7 @@ func TestGetTimeSeriesStepsStates(t *testing.T) {
 		triggerChecker.trigger.WarnValue = nil
 		triggerChecker.trigger.ErrorValue = nil
 		metricState, err := triggerChecker.getTimeSeriesStepsStates(tts, tts.Main[1], metricLastState)
-		So(err.Error(), ShouldResemble, "error value and Warning value can not be empty")
+		So(err.Error(), ShouldResemble, "error value and warning value can not be empty")
 		So(metricState, ShouldBeNil)
 	})
 }
@@ -434,11 +436,12 @@ func TestCheckErrors(t *testing.T) {
 		ttl:      ttl,
 		ttlState: NODATA,
 		trigger: &moira.Trigger{
-			Name:       "Super trigger",
-			ErrorValue: &errValue,
-			WarnValue:  &warnValue,
-			Targets:    []string{pattern},
-			Patterns:   []string{pattern},
+			Name:        "Super trigger",
+			ErrorValue:  &errValue,
+			WarnValue:   &warnValue,
+			TriggerType: moira.RisingTrigger,
+			Targets:     []string{pattern},
+			Patterns:    []string{pattern},
 		},
 		lastCheck: &moira.CheckData{
 			State:     OK,
@@ -617,10 +620,11 @@ func TestHandleTrigger(t *testing.T) {
 		ttl:      ttl,
 		ttlState: NODATA,
 		trigger: &moira.Trigger{
-			ErrorValue: &errValue,
-			WarnValue:  &warnValue,
-			Targets:    []string{pattern},
-			Patterns:   []string{pattern},
+			ErrorValue:  &errValue,
+			WarnValue:   &warnValue,
+			TriggerType: moira.RisingTrigger,
+			Targets:     []string{pattern},
+			Patterns:    []string{pattern},
 		},
 		lastCheck: &lastCheck,
 	}
@@ -766,10 +770,11 @@ func TestHandleTrigger(t *testing.T) {
 			ttl:      ttl,
 			ttlState: NODATA,
 			trigger: &moira.Trigger{
-				ErrorValue: &errValue,
-				WarnValue:  &warnValue,
-				Targets:    []string{"aliasByNode(super.*.metric, 0)"},
-				Patterns:   []string{pattern1},
+				ErrorValue:  &errValue,
+				WarnValue:   &warnValue,
+				TriggerType: moira.RisingTrigger,
+				Targets:     []string{"aliasByNode(super.*.metric, 0)"},
+				Patterns:    []string{pattern1},
 			},
 			lastCheck: &moira.CheckData{
 				Metrics:   make(map[string]moira.MetricState),
@@ -840,7 +845,7 @@ func TestHandleErrorCheck(t *testing.T) {
 				Database:  dataBase,
 				Logger:    logger,
 				ttl:       0,
-				trigger:   &moira.Trigger{},
+				trigger:   &moira.Trigger{TriggerType: moira.RisingTrigger},
 				lastCheck: &moira.CheckData{
 					Timestamp: 0,
 					State:     NODATA,
@@ -862,7 +867,7 @@ func TestHandleErrorCheck(t *testing.T) {
 				Database:  dataBase,
 				Logger:    logger,
 				ttl:       60,
-				trigger:   &moira.Trigger{},
+				trigger:   &moira.Trigger{TriggerType: moira.RisingTrigger},
 				ttlState:  NODATA,
 				lastCheck: &moira.CheckData{
 					Timestamp: 0,
@@ -903,7 +908,7 @@ func TestHandleErrorCheck(t *testing.T) {
 			Database:  dataBase,
 			Logger:    logger,
 			ttl:       60,
-			trigger:   &moira.Trigger{},
+			trigger:   &moira.Trigger{TriggerType: moira.RisingTrigger},
 			ttlState:  ERROR,
 			lastCheck: &moira.CheckData{
 				Timestamp: time.Now().Unix(),
@@ -934,7 +939,7 @@ func TestHandleErrorCheck(t *testing.T) {
 			Database:  dataBase,
 			Logger:    logger,
 			ttl:       60,
-			trigger:   &moira.Trigger{},
+			trigger:   &moira.Trigger{TriggerType: moira.RisingTrigger},
 			ttlState:  NODATA,
 			lastCheck: &moira.CheckData{
 				Timestamp: time.Now().Unix(),
@@ -966,7 +971,7 @@ func TestHandleErrorCheck(t *testing.T) {
 			Database:  dataBase,
 			Logger:    logger,
 			ttl:       60,
-			trigger:   &moira.Trigger{},
+			trigger:   &moira.Trigger{TriggerType: moira.RisingTrigger},
 			ttlState:  OK,
 			lastCheck: &moira.CheckData{
 				Timestamp: time.Now().Unix(),
@@ -997,7 +1002,7 @@ func TestHandleErrorCheck(t *testing.T) {
 			Database:  dataBase,
 			Logger:    logger,
 			ttl:       60,
-			trigger:   &moira.Trigger{},
+			trigger:   &moira.Trigger{TriggerType: moira.RisingTrigger},
 			ttlState:  DEL,
 			lastCheck: &moira.CheckData{
 				Timestamp:      now,
@@ -1028,7 +1033,7 @@ func TestHandleErrorCheck(t *testing.T) {
 			Database:  dataBase,
 			Logger:    logger,
 			ttl:       60,
-			trigger:   &moira.Trigger{},
+			trigger:   &moira.Trigger{TriggerType: moira.RisingTrigger},
 			ttlState:  NODATA,
 			lastCheck: &moira.CheckData{
 				Timestamp: time.Now().Unix(),
@@ -1060,7 +1065,7 @@ func TestHandleErrorCheck(t *testing.T) {
 			Database:  dataBase,
 			Logger:    logger,
 			ttl:       60,
-			trigger:   &moira.Trigger{},
+			trigger:   &moira.Trigger{TriggerType: moira.RisingTrigger},
 			ttlState:  NODATA,
 			lastCheck: &moira.CheckData{
 				Timestamp: time.Now().Unix(),
@@ -1093,7 +1098,8 @@ func TestHandleErrorCheck(t *testing.T) {
 			Logger:    logger,
 			ttl:       60,
 			trigger: &moira.Trigger{
-				Targets: []string{"aliasByNode(some.data.*,2)", "aliasByNode(some.more.data.*,2)"},
+				Targets:     []string{"aliasByNode(some.data.*,2)", "aliasByNode(some.more.data.*,2)"},
+				TriggerType: moira.RisingTrigger,
 			},
 			ttlState: NODATA,
 			lastCheck: &moira.CheckData{
