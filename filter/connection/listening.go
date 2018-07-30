@@ -24,11 +24,11 @@ type MetricsListener struct {
 func NewListener(port string, logger moira.Logger, metrics *graphite.FilterMetrics) (*MetricsListener, error) {
 	address, err := net.ResolveTCPAddr("tcp", port)
 	if nil != err {
-		return nil, fmt.Errorf("Failed to resolve tcp address [%s]: %s", port, err.Error())
+		return nil, fmt.Errorf("failed to resolve tcp address [%s]: %s", port, err.Error())
 	}
 	newListener, err := net.ListenTCP("tcp", address)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to listen on [%s]: %s", port, err.Error())
+		return nil, fmt.Errorf("failed to listen on [%s]: %s", port, err.Error())
 	}
 	listener := MetricsListener{
 		listener: newListener,

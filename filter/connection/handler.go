@@ -55,7 +55,7 @@ func (handler *Handler) handle(connection net.Conn, lineChan chan<- []byte) {
 	}
 }
 
-// StopHandlingConnections closes all open connections and wait for handling ramaining metrics
+// StopHandlingConnections closes all open connections and wait for handling remaining metrics
 func (handler *Handler) StopHandlingConnections() {
 	close(handler.terminate)
 	handler.wg.Wait()

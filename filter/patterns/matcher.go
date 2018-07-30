@@ -27,29 +27,29 @@ func NewMatcher(logger moira.Logger, metrics *graphite.FilterMetrics, patternsSt
 }
 
 // Start spawns pattern matcher workers
-func (m *Matcher) Start(workerCnt int, lineChan <-chan []byte) chan *moira.MatchedMetric {
-	metricsChan := make(chan *moira.MatchedMetric, 16384)
-	m.logger.Infof("starting %d pattern matcher workers", workerCnt)
-	for i := 0; i < workerCnt; i++ {
+func (m *Matcher) Start(matchersCount int, lineChan <-chan []byte) chan *moira.MatchedMetric {
+	matchedMetricsChan := make(chan *moira.MatchedMetric, 16384)
+	m.logger.Infof("starting %d pattern matcher workers", matchersCount)
+	for i := 0; i < matchersCount; i++ {
 		m.tomb.Go(func() error {
-			return m.worker(lineChan, metricsChan)
+			return m.worker(lineChan, matchedMetricsChan)
 		})
 	}
 	go func() {
 		<-m.tomb.Dying()
 		m.logger.Info("Stopping pattern matcher...")
-		close(metricsChan)
+		close(matchedMetricsChan)
 		m.logger.Info("Moira pattern matcher stopped")
 	}()
 
-	m.tomb.Go(func() error { return m.checkNewMetricsChannelLen(metricsChan) })
-	return metricsChan
+	m.tomb.Go(func() error { return m.checkNewMetricsChannelLen(matchedMetricsChan) })
+	return matchedMetricsChan
 }
 
-func (m *Matcher) worker(in <-chan []byte, out chan<- *moira.MatchedMetric) error {
-	for line := range in {
-		if m := m.patternStorage.ProcessIncomingMetric(line); m != nil {
-			out <- m
+func (m *Matcher) worker(metricsChan <-chan []byte, matchedMetricsChan chan<- *moira.MatchedMetric) error {
+	for line := range metricsChan {
+		if metric := m.patternStorage.ProcessIncomingMetric(line); metric != nil {
+			matchedMetricsChan <- metric
 		}
 	}
 	return nil

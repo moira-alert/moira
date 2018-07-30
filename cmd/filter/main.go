@@ -57,8 +57,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	if config.Filter.MaxParallelChecks == 0 {
-		fmt.Fprint(os.Stderr, "MaxParallelChecks is not configured, filter does not start")
+	if config.Filter.MaxParallelMatches == 0 {
+		fmt.Fprint(os.Stderr, "MaxParallelMatches is not configured, filter does not start")
 	}
 
 	logger, err = logging.ConfigureLog(config.Logger.LogFile, config.Logger.LogLevel, serviceName)
@@ -120,7 +120,7 @@ func main() {
 	lineChan := listener.Listen()
 
 	patternMatcher := patterns.NewMatcher(logger, cacheMetrics, patternStorage)
-	metricsChan := patternMatcher.Start(config.Filter.MaxParallelChecks, lineChan)
+	metricsChan := patternMatcher.Start(config.Filter.MaxParallelMatches, lineChan)
 
 	// Start metrics matcher
 	cacheCapacity := config.Filter.CacheCapacity

@@ -24,8 +24,9 @@ type filterConfig struct {
 	// Note: As this value increases, Redis CPU usage decreases.
 	// Normally, this value must be an order of magnitude less than graphite.prefix.filter.recevied.matching.count | nonNegativeDerivative() | scaleToSeconds(1)
 	// For example: with 100 matching metrics, set cache_capacity to 10. With 1000 matching metrics, increase cache_capacity up to 100.
-	CacheCapacity     int `yaml:"cache_capacity"`
-	MaxParallelChecks int `yaml:"max_parallel_checks"`
+	CacheCapacity int `yaml:"cache_capacity"`
+	// Max concurrent metric matchers to run. Equals to the number of processor cores found on Moira host by default or when variable is defined as 0.
+	MaxParallelMatches int `yaml:"max_parallel_matches"`
 }
 
 func getDefault() config {
@@ -40,10 +41,10 @@ func getDefault() config {
 			LogLevel: "info",
 		},
 		Filter: filterConfig{
-			Listen:            ":2003",
-			RetentionConfig:   "/etc/moira/storage-schemas.conf",
-			CacheCapacity:     10,
-			MaxParallelChecks: runtime.NumCPU(),
+			Listen:             ":2003",
+			RetentionConfig:    "/etc/moira/storage-schemas.conf",
+			CacheCapacity:      10,
+			MaxParallelMatches: runtime.NumCPU(),
 		},
 		Graphite: cmd.GraphiteConfig{
 			RuntimeStats: false,
