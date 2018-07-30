@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 
 	"github.com/moira-alert/moira"
@@ -100,10 +99,6 @@ func main() {
 	}
 	defer stopSelfStateChecker(selfState)
 
-	if err := reconvertSubscriptions(database, logger); err != nil {
-		logger.Fatalf("Can not reconvert subscriptions: %s", err.Error())
-	}
-
 	// Start moira notification fetcher
 	fetchNotificationsWorker := &notifications.FetchNotificationsWorker{
 		Logger:   logger,
@@ -146,48 +141,4 @@ func stopSelfStateChecker(checker *selfstate.SelfCheckWorker) {
 	if err := checker.Stop(); err != nil {
 		logger.Errorf("Failed to stop self check worker: %v", err)
 	}
-}
-
-// reconvertSubscriptions iterates over existing pseudo-tagged subscriptions and adds corresponding "ignore" fields
-// WARNING: This method must be removed after 2.3 release
-func reconvertSubscriptions(database moira.Database, logger moira.Logger) error {
-	logger.Info("Pseudo-tagged subscriptions converter started")
-	convertedSubscriptions := 0
-	allTags, err := database.GetTagNames()
-	if err != nil {
-		return err
-	}
-	tagSubscriptions, err := database.GetTagsSubscriptions(allTags)
-	if err != nil {
-		return err
-	}
-	for _, subscription := range tagSubscriptions {
-		isConverted := false
-		for _, tag := range subscription.Tags {
-			switch tag {
-			case "ERROR":
-				logger.Debugf("Managing subscription %s (tags: %s) to ignore warnings", subscription.ID, strings.Join(subscription.Tags, ", "))
-				if !subscription.IgnoreWarnings {
-					subscription.IgnoreWarnings = true
-					isConverted = true
-				}
-			case "DEGRADATION", "HIGH DEGRADATION":
-				logger.Debugf("Managing subscription %s (tags: %s) to ignore recoverings", subscription.ID, strings.Join(subscription.Tags, ", "))
-				if !subscription.IgnoreRecoverings {
-					subscription.IgnoreRecoverings = true
-					isConverted = true
-				}
-			}
-		}
-		if isConverted {
-			database.SaveSubscription(subscription)
-			convertedSubscriptions++
-		}
-	}
-	if convertedSubscriptions > 0 {
-		logger.Infof("%d pseudo-tagged subscriptions has been successfully converted", convertedSubscriptions)
-	} else {
-		logger.Infof("No pseudo-tagged subscriptions found")
-	}
-	return nil
 }
