@@ -5,11 +5,11 @@
 package mock_moira_alert
 
 import (
-	reflect "reflect"
-	time "time"
+	"reflect"
+	"time"
 
-	gomock "github.com/golang/mock/gomock"
-	moira "github.com/moira-alert/moira"
+	"github.com/golang/mock/gomock"
+	"github.com/moira-alert/moira"
 	tomb_v2 "gopkg.in/tomb.v2"
 )
 
@@ -82,6 +82,18 @@ func (m *MockDatabase) AddPatternMetric(arg0, arg1 string) error {
 // AddPatternMetric indicates an expected call of AddPatternMetric
 func (mr *MockDatabaseMockRecorder) AddPatternMetric(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddPatternMetric", reflect.TypeOf((*MockDatabase)(nil).AddPatternMetric), arg0, arg1)
+}
+
+// AddTriggersToCheck mocks base method
+func (m *MockDatabase) AddTriggersToCheck(arg0 []string) error {
+	ret := m.ctrl.Call(m, "AddTriggersToCheck", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddTriggersToCheck indicates an expected call of AddTriggersToCheck
+func (mr *MockDatabaseMockRecorder) AddTriggersToCheck(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddTriggersToCheck", reflect.TypeOf((*MockDatabase)(nil).AddTriggersToCheck), arg0)
 }
 
 // DeleteTriggerCheckLock mocks base method
@@ -492,6 +504,19 @@ func (m *MockDatabase) GetTriggerThrottling(arg0 string) (time.Time, time.Time) 
 // GetTriggerThrottling indicates an expected call of GetTriggerThrottling
 func (mr *MockDatabaseMockRecorder) GetTriggerThrottling(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggerThrottling", reflect.TypeOf((*MockDatabase)(nil).GetTriggerThrottling), arg0)
+}
+
+// GetTriggerToCheck mocks base method
+func (m *MockDatabase) GetTriggerToCheck() (string, error) {
+	ret := m.ctrl.Call(m, "GetTriggerToCheck")
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTriggerToCheck indicates an expected call of GetTriggerToCheck
+func (mr *MockDatabaseMockRecorder) GetTriggerToCheck() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggerToCheck", reflect.TypeOf((*MockDatabase)(nil).GetTriggerToCheck))
 }
 
 // GetTriggers mocks base method

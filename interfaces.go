@@ -89,6 +89,9 @@ type Database interface {
 	RemoveMetricValues(metric string, toTime int64) error
 	RemoveMetricsValues(metrics []string, toTime int64) error
 
+	AddTriggersToCheck(triggerID []string) error
+	GetTriggerToCheck() (string, error)
+
 	// TriggerCheckLock storing
 	AcquireTriggerCheckLock(triggerID string, timeout int) error
 	DeleteTriggerCheckLock(triggerID string) error
