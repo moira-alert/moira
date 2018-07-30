@@ -35,10 +35,7 @@ func (connector *DbConnector) GetTrigger(triggerID string) (moira.Trigger, error
 		return moira.Trigger{}, fmt.Errorf("Failed to EXEC: %s", err.Error())
 	}
 
-	triggerWithTags, err := connector.getTriggerWithTags(rawResponse[0], rawResponse[1], triggerID)
-	connector.convertTriggerIfNecessary(&triggerWithTags)
-
-	return triggerWithTags, err
+	return connector.getTriggerWithTags(rawResponse[0], rawResponse[1], triggerID)
 }
 
 // GetTriggers returns triggers data by given ids, len of triggerIDs is equal to len of returned values array.
@@ -289,34 +286,4 @@ func triggerTagsKey(triggerID string) string {
 
 func patternTriggersKey(pattern string) string {
 	return fmt.Sprintf("moira-pattern-triggers:%s", pattern)
-}
-
-func (connector *DbConnector) convertTriggerIfNecessary(trigger *moira.Trigger) {
-	switch trigger.TriggerType {
-	case moira.RisingTrigger, moira.FallingTrigger, moira.ExpressionTrigger:
-		return
-	}
-
-	setProperTriggerType(trigger)
-	connector.SaveTrigger(trigger.ID, trigger)
-}
-
-func setProperTriggerType(trigger *moira.Trigger) {
-	if trigger.Expression != nil && *trigger.Expression != "" {
-		trigger.TriggerType = moira.ExpressionTrigger
-		return
-	}
-
-	trigger.TriggerType = moira.RisingTrigger
-
-	if trigger.WarnValue != nil && trigger.ErrorValue != nil {
-		if *trigger.ErrorValue < *trigger.WarnValue {
-			trigger.TriggerType = moira.FallingTrigger
-			return
-		}
-		if *trigger.ErrorValue == *trigger.WarnValue {
-			trigger.WarnValue = nil
-			return
-		}
-	}
 }

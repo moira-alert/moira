@@ -93,7 +93,10 @@ func Trigger(rep interface{}, err error) (moira.Trigger, error) {
 		return moira.Trigger{}, fmt.Errorf("Failed to parse trigger json %s: %s", string(bytes), err.Error())
 	}
 
-	return triggerSE.toTrigger(), nil
+	trigger := triggerSE.toTrigger()
+	convertTriggerIfNecessary(&trigger)
+
+	return trigger, nil
 }
 
 // GetTriggerBytes marshal moira.Trigger to bytes array
@@ -101,7 +104,35 @@ func GetTriggerBytes(triggerID string, trigger *moira.Trigger) ([]byte, error) {
 	triggerSE := toTriggerStorageElement(trigger, triggerID)
 	bytes, err := json.Marshal(triggerSE)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to marshal trigger: %s", err.Error())
+		return nil, fmt.Errorf("failed to marshal trigger: %s", err.Error())
 	}
 	return bytes, nil
+}
+
+func convertTriggerIfNecessary(trigger *moira.Trigger) {
+	switch trigger.TriggerType {
+	case moira.RisingTrigger, moira.FallingTrigger, moira.ExpressionTrigger:
+		return
+	}
+	setProperTriggerType(trigger)
+}
+
+func setProperTriggerType(trigger *moira.Trigger) {
+	if trigger.Expression != nil && *trigger.Expression != "" {
+		trigger.TriggerType = moira.ExpressionTrigger
+		return
+	}
+
+	trigger.TriggerType = moira.RisingTrigger
+
+	if trigger.WarnValue != nil && trigger.ErrorValue != nil {
+		if *trigger.ErrorValue < *trigger.WarnValue {
+			trigger.TriggerType = moira.FallingTrigger
+			return
+		}
+		if *trigger.ErrorValue == *trigger.WarnValue {
+			trigger.WarnValue = nil
+			return
+		}
+	}
 }

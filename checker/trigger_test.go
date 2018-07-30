@@ -39,14 +39,6 @@ func TestInitTriggerChecker(t *testing.T) {
 			So(err, ShouldResemble, ErrTriggerNotExists)
 		})
 
-		Convey("Get trigger with empty trigger_type", func() {
-			readLastCheckError := fmt.Errorf("trigger converter: trigger  - could not save to Database, error: cannot update trigger  - warn_value: <nil>, error_value: <nil>, expression: <nil>, trigger_type: ''")
-			dataBase.EXPECT().GetTrigger(triggerChecker.TriggerID).Return(moira.Trigger{}, nil)
-			err := triggerChecker.InitTriggerChecker()
-			So(err, ShouldBeError)
-			So(err, ShouldResemble, readLastCheckError)
-		})
-
 		Convey("Get lastCheck error", func() {
 			readLastCheckError := fmt.Errorf("Oppps! Can't read last check")
 			dataBase.EXPECT().GetTrigger(triggerChecker.TriggerID).Return(moira.Trigger{TriggerType: moira.RisingTrigger}, nil)
