@@ -22,6 +22,7 @@ func (worker *Checker) startTriggerHandler() error {
 					worker.Logger.Errorf("Failed to handle trigger loop: %s", err.Error())
 				}
 				<-time.After(sleepAfterErrorGetTriggerIDTime)
+				continue
 			}
 			worker.handleTrigger(triggerID)
 		}
