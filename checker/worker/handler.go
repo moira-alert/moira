@@ -8,7 +8,10 @@ import (
 	"github.com/moira-alert/moira/database"
 )
 
-const sleepAfterErrorGetTriggerIDTime = time.Millisecond * 500
+const sleepAfterGetTriggerIDError = time.Millisecond * 500
+const sleepWhenNoTriggerToCheck = time.Second * 1
+const sleepAfterPanic = time.Second * 1
+const sleepAfterCheckingError = time.Second * 5
 
 func (worker *Checker) startTriggerHandler() error {
 	for {
@@ -18,10 +21,12 @@ func (worker *Checker) startTriggerHandler() error {
 		default:
 			triggerID, err := worker.Database.GetTriggerToCheck()
 			if err != nil {
-				if err != database.ErrNil {
+				if err == database.ErrNil {
+					<-time.After(sleepWhenNoTriggerToCheck)
+				} else {
 					worker.Logger.Errorf("Failed to handle trigger loop: %s", err.Error())
+					<-time.After(sleepAfterGetTriggerIDError)
 				}
-				<-time.After(sleepAfterErrorGetTriggerIDTime)
 				continue
 			}
 			worker.handleTrigger(triggerID)
@@ -34,11 +39,13 @@ func (worker *Checker) handleTrigger(triggerID string) {
 		if r := recover(); r != nil {
 			worker.Metrics.HandleError.Mark(1)
 			worker.Logger.Errorf("Panic while handle trigger %s: message: '%s' stack: %s", triggerID, r, debug.Stack())
+			<-time.After(sleepAfterPanic)
 		}
 	}()
 	if err := worker.handleTriggerInLock(triggerID); err != nil {
 		worker.Metrics.HandleError.Mark(1)
 		worker.Logger.Errorf("Failed to handle trigger: %s error: %s", triggerID, err.Error())
+		<-time.After(sleepAfterCheckingError)
 	}
 }
 
