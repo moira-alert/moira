@@ -137,16 +137,13 @@ func resolvePatterns(request *http.Request, trigger *Trigger, expressionValues *
 	timeSeriesNames := make(map[string]bool)
 
 	remoteCfg := middleware.GetRemoteConfig(request)
+	database := middleware.GetDatabase(request)
+	var err error
 
-	var (
-		timeseries []*target.TimeSeries
-		err        error
-	)
 	for _, tar := range trigger.Targets {
-		database := middleware.GetDatabase(request)
-
+		var timeSeries []*target.TimeSeries
 		if trigger.IsRemote {
-			timeseries, err = remote.Fetch(remoteCfg, tar, now-600, now, false)
+			timeSeries, err = remote.Fetch(remoteCfg, tar, now-600, now, false)
 			if err != nil {
 				return err
 			}
@@ -156,12 +153,12 @@ func resolvePatterns(request *http.Request, trigger *Trigger, expressionValues *
 				return err
 			}
 			trigger.Patterns = append(trigger.Patterns, result.Patterns...)
-			timeseries = result.TimeSeries
+			timeSeries = result.TimeSeries
 		}
 
 		if targetNum == 1 {
 			expressionValues.MainTargetValue = 42
-			for _, ts := range timeseries {
+			for _, ts := range timeSeries {
 				timeSeriesNames[ts.Name] = true
 			}
 		} else {

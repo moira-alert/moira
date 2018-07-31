@@ -8,11 +8,11 @@ func (worker *Checker) remoteChecker() error {
 		select {
 		case <-worker.tomb.Dying():
 			checkTicker.Stop()
-			worker.Logger.Info("remote checker stopped")
+			worker.Logger.Info("Remote checker stopped")
 			return nil
 		case <-checkTicker.C:
 			if err := worker.check(); err != nil {
-				worker.Logger.Errorf("remote checker failed: %s", err.Error())
+				worker.Logger.Errorf("Remote checker failed: %s", err.Error())
 			}
 		}
 	}

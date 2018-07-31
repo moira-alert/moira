@@ -7,5 +7,5 @@
     {"type": "twilio sms"},
     {"type": "twilio voice"}
   ],
-  "removeAllowed": false
+  "remoteAllowed": false
 }
