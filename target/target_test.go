@@ -7,7 +7,7 @@ import (
 	"github.com/go-graphite/carbonapi/expr/functions"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
-	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
+	pb "github.com/go-graphite/protocol/carbonapi_v3_pb"
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/mock/moira-alert"
@@ -93,11 +93,10 @@ func TestEvaluateTarget(t *testing.T) {
 		So(err, ShouldBeNil)
 		fetchResponse := pb.FetchResponse{
 			Name:      "pattern",
-			StartTime: int32(from),
-			StopTime:  int32(until),
+			StartTime: from,
+			StopTime:  until,
 			StepTime:  60,
 			Values:    []float64{},
-			IsAbsent:  []bool{},
 		}
 		So(result, ShouldResemble, &EvaluationResult{
 			TimeSeries: []*TimeSeries{{
@@ -116,11 +115,10 @@ func TestEvaluateTarget(t *testing.T) {
 		result, err := EvaluateTarget(dataBase, "aliasByNode(super.puper.pattern, 2)", from, until, true)
 		fetchResponse := pb.FetchResponse{
 			Name:      "metric",
-			StartTime: int32(from),
-			StopTime:  int32(until),
-			StepTime:  int32(retention),
+			StartTime: from,
+			StopTime:  until,
+			StepTime:  retention,
 			Values:    []float64{0, 1, 2, 3, 4},
-			IsAbsent:  make([]bool, 5),
 		}
 		So(err, ShouldBeNil)
 		So(result, ShouldResemble, &EvaluationResult{
@@ -139,11 +137,10 @@ func TestEvaluateTarget(t *testing.T) {
 		result, err := EvaluateTarget(dataBase, "super.puper.pattern | scale(100) | aliasByNode(2)", from, until, true)
 		fetchResponse := pb.FetchResponse{
 			Name:      "metric",
-			StartTime: int32(from),
-			StopTime:  int32(until),
-			StepTime:  int32(retention),
+			StartTime: from,
+			StopTime:  until,
+			StepTime:  retention,
 			Values:    []float64{0, 100, 200, 300, 400},
-			IsAbsent:  make([]bool, 5),
 		}
 		So(err, ShouldBeNil)
 		So(result, ShouldResemble, &EvaluationResult{

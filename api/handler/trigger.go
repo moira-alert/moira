@@ -131,7 +131,7 @@ func getTriggerMetrics(writer http.ResponseWriter, request *http.Request) {
 		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("Can not parse to: %v", to)))
 		return
 	}
-	triggerMetrics, err := controller.GetTriggerMetrics(database, int64(from), int64(to), triggerID)
+	triggerMetrics, err := controller.GetTriggerMetrics(database, from, to, triggerID)
 	if err != nil {
 		render.Render(writer, request, err)
 		return
