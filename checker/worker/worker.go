@@ -14,15 +14,14 @@ import (
 
 // Checker represents workers for periodically triggers checking based by new events
 type Checker struct {
-	Logger          moira.Logger
-	Database        moira.Database
-	Config          *checker.Config
-	Metrics         *graphite.CheckerMetrics
-	TriggerCache    *cache.Cache
-	PatternCache    *cache.Cache
-	lastData        int64
-	tomb            tomb.Tomb
-	triggersToCheck chan string
+	Logger       moira.Logger
+	Database     moira.Database
+	Config       *checker.Config
+	Metrics      *graphite.CheckerMetrics
+	TriggerCache *cache.Cache
+	PatternCache *cache.Cache
+	lastData     int64
+	tomb         tomb.Tomb
 }
 
 // Start start schedule new MetricEvents and check for NODATA triggers
@@ -32,7 +31,6 @@ func (worker *Checker) Start() error {
 	}
 
 	worker.lastData = time.Now().UTC().Unix()
-	worker.triggersToCheck = make(chan string, 16384)
 
 	metricEventsChannel, err := worker.Database.SubscribeMetricEvents(&worker.tomb)
 	if err != nil {
@@ -52,27 +50,13 @@ func (worker *Checker) Start() error {
 	go func() {
 		for {
 			<-worker.tomb.Dying()
-			close(worker.triggersToCheck)
 			worker.Logger.Info("Checking for new events stopped")
 			return
 		}
 	}()
 
-	worker.tomb.Go(worker.checkTriggersToCheckChannelLen)
 	worker.tomb.Go(func() error { return worker.checkMetricEventsChannelLen(metricEventsChannel) })
 	return nil
-}
-
-func (worker *Checker) checkTriggersToCheckChannelLen() error {
-	checkTicker := time.NewTicker(time.Millisecond * 100)
-	for {
-		select {
-		case <-worker.tomb.Dying():
-			return nil
-		case <-checkTicker.C:
-			worker.Metrics.TriggersToCheckChannelLen.Update(int64(len(worker.triggersToCheck)))
-		}
-	}
 }
 
 func (worker *Checker) checkMetricEventsChannelLen(ch <-chan *moira.MetricEvent) error {
