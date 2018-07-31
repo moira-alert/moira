@@ -116,7 +116,7 @@ func (triggerChecker *TriggerChecker) handleMetricsCheck() (moira.CheckData, err
 }
 
 func (triggerChecker *TriggerChecker) checkTimeSeries(timeSeries *target.TimeSeries, triggerTimeSeries *triggerTimeSeries) (lastState moira.MetricState, needToDeleteMetric bool, err error) {
-	lastState = triggerChecker.lastCheck.GetOrCreateMetricState(timeSeries.Name, int64(timeSeries.StartTime-3600))
+	lastState = triggerChecker.lastCheck.GetOrCreateMetricState(timeSeries.Name, timeSeries.StartTime-3600)
 	metricStates, err := triggerChecker.getTimeSeriesStepsStates(triggerTimeSeries, timeSeries, lastState)
 	if err != nil {
 		return
@@ -200,8 +200,8 @@ func (triggerChecker *TriggerChecker) checkForNoData(timeSeries *target.TimeSeri
 }
 
 func (triggerChecker *TriggerChecker) getTimeSeriesStepsStates(triggerTimeSeries *triggerTimeSeries, timeSeries *target.TimeSeries, metricLastState moira.MetricState) ([]moira.MetricState, error) {
-	startTime := int64(timeSeries.StartTime)
-	stepTime := int64(timeSeries.StepTime)
+	startTime := timeSeries.StartTime
+	stepTime := timeSeries.StepTime
 
 	checkPoint := metricLastState.GetCheckPoint(checkPointGap)
 	triggerChecker.Logger.Debugf("[TriggerID:%s][TimeSeries:%s] Checkpoint: %v", triggerChecker.TriggerID, timeSeries.Name, checkPoint)

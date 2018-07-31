@@ -8,7 +8,7 @@ import (
 
 	"github.com/go-graphite/carbonapi/expr/functions"
 	"github.com/go-graphite/carbonapi/expr/types"
-	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
+	pb "github.com/go-graphite/protocol/carbonapi_v3_pb"
 	"github.com/golang/mock/gomock"
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
@@ -39,19 +39,17 @@ func TestGetTimeSeriesState(t *testing.T) {
 	}
 	fetchResponse := pb.FetchResponse{
 		Name:      "main.metric",
-		StartTime: int32(triggerChecker.From),
-		StopTime:  int32(triggerChecker.Until),
-		StepTime:  int32(10),
-		Values:    []float64{1, 2, 3, 4, math.NaN()},
-		IsAbsent:  []bool{false, true, false, false, false},
+		StartTime: triggerChecker.From,
+		StopTime:  triggerChecker.Until,
+		StepTime:  10,
+		Values:    []float64{1, math.NaN(), 3, 4, math.NaN()},
 	}
 	addFetchResponse := pb.FetchResponse{
 		Name:      "additional.metric",
-		StartTime: int32(triggerChecker.From),
-		StopTime:  int32(triggerChecker.Until),
-		StepTime:  int32(10),
+		StartTime: triggerChecker.From,
+		StopTime:  triggerChecker.Until,
+		StepTime:  10,
 		Values:    []float64{math.NaN(), 4, 3, 2, 1},
-		IsAbsent:  []bool{false, false, false, false, false},
 	}
 	addFetchResponse.Name = "additional.metric"
 	tts := &triggerTimeSeries{
@@ -131,27 +129,24 @@ func TestGetTimeSeriesStepsStates(t *testing.T) {
 	}
 	fetchResponse1 := pb.FetchResponse{
 		Name:      "main.metric",
-		StartTime: int32(triggerChecker.From),
-		StopTime:  int32(triggerChecker.Until),
-		StepTime:  int32(10),
-		Values:    []float64{1, 2, 3, 4, math.NaN()},
-		IsAbsent:  []bool{false, true, false, false, false},
+		StartTime: triggerChecker.From,
+		StopTime:  triggerChecker.Until,
+		StepTime:  10,
+		Values:    []float64{1, math.NaN(), 3, 4, math.NaN()},
 	}
 	fetchResponse2 := pb.FetchResponse{
 		Name:      "main.metric",
-		StartTime: int32(triggerChecker.From),
-		StopTime:  int32(triggerChecker.Until),
-		StepTime:  int32(10),
+		StartTime: triggerChecker.From,
+		StopTime:  triggerChecker.Until,
+		StepTime:  10,
 		Values:    []float64{1, 2, 3, 4, 5},
-		IsAbsent:  []bool{false, false, false, false, false},
 	}
 	addFetchResponse := pb.FetchResponse{
 		Name:      "additional.metric",
-		StartTime: int32(triggerChecker.From),
-		StopTime:  int32(triggerChecker.Until),
-		StepTime:  int32(10),
+		StartTime: triggerChecker.From,
+		StopTime:  triggerChecker.Until,
+		StepTime:  10,
 		Values:    []float64{5, 4, 3, 2, 1},
-		IsAbsent:  []bool{false, false, false, false, false},
 	}
 	addFetchResponse.Name = "additional.metric"
 	tts := &triggerTimeSeries{

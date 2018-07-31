@@ -1,9 +1,9 @@
 package controller
 
 import (
+	"bytes"
 	"fmt"
 	"time"
-	"bytes"
 
 	"github.com/go-graphite/carbonapi/date"
 	"github.com/satori/go.uuid"
@@ -100,12 +100,12 @@ func RemoveContact(database moira.Database, contactID string, userLogin string) 
 			errBuffer.WriteString(" (tags: ")
 			for tagInd := range subscription.Tags {
 				errBuffer.WriteString(subscription.Tags[tagInd])
-				if tagInd != len(subscription.Tags) - 1 {
+				if tagInd != len(subscription.Tags)-1 {
 					errBuffer.WriteString(", ")
 				}
 			}
 			errBuffer.WriteString(")")
-			if subInd != len(subscriptionsWithDeletingContact) - 1 {
+			if subInd != len(subscriptionsWithDeletingContact)-1 {
 				errBuffer.WriteString(", ")
 			}
 		}
@@ -128,7 +128,7 @@ func SendTestContactNotification(dataBase moira.Database, contactID string) *api
 		Value:     &value,
 		OldState:  "TEST",
 		State:     "TEST",
-		Timestamp: int64(date.DateParamToEpoch("now", "", time.Now().Add(-24*time.Hour).Unix(), time.UTC)),
+		Timestamp: date.DateParamToEpoch("now", "", time.Now().Add(-24*time.Hour).Unix(), time.UTC),
 	}
 	if err := dataBase.PushNotificationEvent(eventData, false); err != nil {
 		return api.ErrorInternalServer(err)
