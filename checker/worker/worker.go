@@ -24,7 +24,6 @@ type Checker struct {
 	PatternCache          *cache.Cache
 	lastData              int64
 	tomb                  tomb.Tomb
-	triggersToCheck       chan string
 	remoteTriggersToCheck chan string
 	remoteEnabled         bool
 }
@@ -32,11 +31,10 @@ type Checker struct {
 // Start start schedule new MetricEvents and check for NODATA triggers
 func (worker *Checker) Start() error {
 	if worker.Config.MaxParallelChecks == 0 {
-		return fmt.Errorf("MaxParallelChecks does not configure, checker does not started")
+		return fmt.Errorf("MaxParallelChecks is not configured, checker does not start")
 	}
 
 	worker.lastData = time.Now().UTC().Unix()
-	worker.triggersToCheck = make(chan string, 16384)
 
 	metricEventsChannel, err := worker.Database.SubscribeMetricEvents(&worker.tomb)
 	if err != nil {
@@ -72,18 +70,17 @@ func (worker *Checker) Start() error {
 
 	go func() {
 		<-worker.tomb.Dying()
-		close(worker.triggersToCheck)
 		if worker.remoteEnabled {
 			close(worker.remoteTriggersToCheck)
 		}
 		worker.Logger.Info("Checking for new events stopped")
 	}()
 
-	worker.tomb.Go(worker.checkTriggersToCheckChannelLen)
 	worker.tomb.Go(func() error { return worker.checkMetricEventsChannelLen(metricEventsChannel) })
 	return nil
 }
 
+// ToDo: rewrite checkTriggersToCheckChannelLen so it gets key length from Redis
 func (worker *Checker) checkTriggersToCheckChannelLen() error {
 	checkTicker := time.NewTicker(time.Millisecond * 100)
 	for {
@@ -91,7 +88,6 @@ func (worker *Checker) checkTriggersToCheckChannelLen() error {
 		case <-worker.tomb.Dying():
 			return nil
 		case <-checkTicker.C:
-			worker.Metrics.TriggersToCheckChannelLen.Update(int64(len(worker.triggersToCheck)))
 			if worker.remoteEnabled {
 				worker.Metrics.RemoteTriggersToCheckChannelLen.Update(int64(len(worker.remoteTriggersToCheck)))
 			}

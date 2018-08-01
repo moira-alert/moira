@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/go-graphite/carbonapi/expr/types"
-	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
+	pb "github.com/go-graphite/protocol/carbonapi_v3_pb"
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/mock/moira-alert"
@@ -140,11 +140,10 @@ func TestFetchData(t *testing.T) {
 		metricData, metrics, err := FetchData(dataBase, pattern, from, until, false)
 		fetchResponse := pb.FetchResponse{
 			Name:      pattern,
-			StartTime: int32(from),
-			StopTime:  int32(until),
+			StartTime: from,
+			StopTime:  until,
 			StepTime:  60,
 			Values:    []float64{},
-			IsAbsent:  []bool{},
 		}
 		expected := &types.MetricData{FetchResponse: fetchResponse}
 		So(metricData, ShouldResemble, []*types.MetricData{expected})
@@ -159,11 +158,10 @@ func TestFetchData(t *testing.T) {
 		metricData, metrics, err := FetchData(dataBase, pattern, from, until, false)
 		fetchResponse := pb.FetchResponse{
 			Name:      metric,
-			StartTime: int32(from),
-			StopTime:  int32(until),
-			StepTime:  int32(retention),
+			StartTime: from,
+			StopTime:  until,
+			StepTime:  retention,
 			Values:    []float64{0, 1, 2, 3},
-			IsAbsent:  make([]bool, 4),
 		}
 		expected := &types.MetricData{FetchResponse: fetchResponse}
 		So(metricData, ShouldResemble, []*types.MetricData{expected})
@@ -178,11 +176,10 @@ func TestFetchData(t *testing.T) {
 		metricData, metrics, err := FetchData(dataBase, pattern, from, until, true)
 		fetchResponse := pb.FetchResponse{
 			Name:      metric,
-			StartTime: int32(from),
-			StopTime:  int32(until),
-			StepTime:  int32(retention),
+			StartTime: from,
+			StopTime:  until,
+			StepTime:  retention,
 			Values:    []float64{0, 1, 2, 3, 4},
-			IsAbsent:  make([]bool, 5),
 		}
 		expected := &types.MetricData{FetchResponse: fetchResponse}
 		So(metricData, ShouldResemble, []*types.MetricData{expected})
@@ -226,11 +223,10 @@ func TestFetchData(t *testing.T) {
 		metricData, metrics, err := FetchData(dataBase, pattern, from, until, true)
 		fetchResponse := pb.FetchResponse{
 			Name:      metric,
-			StartTime: int32(from),
-			StopTime:  int32(until),
-			StepTime:  int32(retention),
+			StartTime: from,
+			StopTime:  until,
+			StepTime:  retention,
 			Values:    []float64{0, 1, 2, 3, 4},
-			IsAbsent:  make([]bool, 5),
 		}
 		expected := types.MetricData{FetchResponse: fetchResponse}
 		expected2 := expected

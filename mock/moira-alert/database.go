@@ -5,11 +5,12 @@
 package mock_moira_alert
 
 import (
-	gomock "github.com/golang/mock/gomock"
-	moira "github.com/moira-alert/moira"
+	"reflect"
+	"time"
+
+	"github.com/golang/mock/gomock"
+	"github.com/moira-alert/moira"
 	tomb_v2 "gopkg.in/tomb.v2"
-	reflect "reflect"
-	time "time"
 )
 
 // MockDatabase is a mock of Database interface
@@ -81,6 +82,18 @@ func (m *MockDatabase) AddPatternMetric(arg0, arg1 string) error {
 // AddPatternMetric indicates an expected call of AddPatternMetric
 func (mr *MockDatabaseMockRecorder) AddPatternMetric(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddPatternMetric", reflect.TypeOf((*MockDatabase)(nil).AddPatternMetric), arg0, arg1)
+}
+
+// AddTriggersToCheck mocks base method
+func (m *MockDatabase) AddTriggersToCheck(arg0 []string) error {
+	ret := m.ctrl.Call(m, "AddTriggersToCheck", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddTriggersToCheck indicates an expected call of AddTriggersToCheck
+func (mr *MockDatabaseMockRecorder) AddTriggersToCheck(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddTriggersToCheck", reflect.TypeOf((*MockDatabase)(nil).AddTriggersToCheck), arg0)
 }
 
 // DeleteTriggerCheckLock mocks base method
@@ -311,6 +324,19 @@ func (mr *MockDatabaseMockRecorder) GetNotifications(arg0, arg1 interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNotifications", reflect.TypeOf((*MockDatabase)(nil).GetNotifications), arg0, arg1)
 }
 
+// GetNotifierState mocks base method
+func (m *MockDatabase) GetNotifierState() (string, error) {
+	ret := m.ctrl.Call(m, "GetNotifierState")
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetNotifierState indicates an expected call of GetNotifierState
+func (mr *MockDatabaseMockRecorder) GetNotifierState() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNotifierState", reflect.TypeOf((*MockDatabase)(nil).GetNotifierState))
+}
+
 // GetPatternMetrics mocks base method
 func (m *MockDatabase) GetPatternMetrics(arg0 string) ([]string, error) {
 	ret := m.ctrl.Call(m, "GetPatternMetrics", arg0)
@@ -504,6 +530,19 @@ func (m *MockDatabase) GetTriggerThrottling(arg0 string) (time.Time, time.Time) 
 // GetTriggerThrottling indicates an expected call of GetTriggerThrottling
 func (mr *MockDatabaseMockRecorder) GetTriggerThrottling(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggerThrottling", reflect.TypeOf((*MockDatabase)(nil).GetTriggerThrottling), arg0)
+}
+
+// GetTriggerToCheck mocks base method
+func (m *MockDatabase) GetTriggerToCheck() (string, error) {
+	ret := m.ctrl.Call(m, "GetTriggerToCheck")
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTriggerToCheck indicates an expected call of GetTriggerToCheck
+func (mr *MockDatabaseMockRecorder) GetTriggerToCheck() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggerToCheck", reflect.TypeOf((*MockDatabase)(nil).GetTriggerToCheck))
 }
 
 // GetTriggers mocks base method
@@ -820,6 +859,18 @@ func (m *MockDatabase) SaveTrigger(arg0 string, arg1 *moira.Trigger) error {
 // SaveTrigger indicates an expected call of SaveTrigger
 func (mr *MockDatabaseMockRecorder) SaveTrigger(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveTrigger", reflect.TypeOf((*MockDatabase)(nil).SaveTrigger), arg0, arg1)
+}
+
+// SetNotifierState mocks base method
+func (m *MockDatabase) SetNotifierState(arg0 string) error {
+	ret := m.ctrl.Call(m, "SetNotifierState", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetNotifierState indicates an expected call of SetNotifierState
+func (mr *MockDatabaseMockRecorder) SetNotifierState(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetNotifierState", reflect.TypeOf((*MockDatabase)(nil).SetNotifierState), arg0)
 }
 
 // SetTriggerCheckLock mocks base method

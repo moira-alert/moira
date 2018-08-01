@@ -15,9 +15,12 @@ type config struct {
 }
 
 type apiConfig struct {
-	Listen        string `yaml:"listen"`          // Api local network address. Default is ':8081' so api will be available at http://moira.company.com:8081/api
-	EnableCORS    bool   `yaml:"enable_cors"`     // If true, CORS for cross-domain requests will be enabled. This option can be used only for debugging purposes.
-	WebConfigPath string `yaml:"web_config_path"` // Web_UI config file path. If file not found, api will return 404 in response to "api/config"
+	// Api local network address. Default is ':8081' so api will be available at http://moira.company.com:8081/api
+	Listen string `yaml:"listen"`
+	// If true, CORS for cross-domain requests will be enabled. This option can be used only for debugging purposes.
+	EnableCORS bool `yaml:"enable_cors"`
+	// Web_UI config file path. If file not found, api will return 404 in response to "api/config"
+	WebConfigPath string `yaml:"web_config_path"`
 }
 
 func (config *apiConfig) getSettings() *api.Config {

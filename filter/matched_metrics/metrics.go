@@ -11,42 +11,45 @@ import (
 
 // MetricsMatcher make buffer of metrics and save it
 type MetricsMatcher struct {
-	logger       moira.Logger
-	metrics      *graphite.FilterMetrics
-	database     moira.Database
-	cacheStorage *filter.Storage
-	waitGroup    *sync.WaitGroup
+	logger        moira.Logger
+	metrics       *graphite.FilterMetrics
+	database      moira.Database
+	cacheStorage  *filter.Storage
+	cacheCapacity int
+	waitGroup     *sync.WaitGroup
 }
 
 // NewMetricsMatcher creates new MetricsMatcher
-func NewMetricsMatcher(metrics *graphite.FilterMetrics, logger moira.Logger, database moira.Database, cacheStorage *filter.Storage) *MetricsMatcher {
+func NewMetricsMatcher(metrics *graphite.FilterMetrics, logger moira.Logger, database moira.Database, cacheStorage *filter.Storage, cacheCapacity int) *MetricsMatcher {
 	return &MetricsMatcher{
-		metrics:      metrics,
-		logger:       logger,
-		database:     database,
-		cacheStorage: cacheStorage,
-		waitGroup:    &sync.WaitGroup{},
+		metrics:       metrics,
+		logger:        logger,
+		database:      database,
+		cacheStorage:  cacheStorage,
+		cacheCapacity: cacheCapacity,
+		waitGroup:     &sync.WaitGroup{},
 	}
 }
 
 // Start process matched metrics from channel and save it in cache storage
-func (matcher *MetricsMatcher) Start(channel chan *moira.MatchedMetric) {
+func (matcher *MetricsMatcher) Start(matchedMetricsChan chan *moira.MatchedMetric) {
+	flushInterval := time.Second
 	matcher.waitGroup.Add(1)
 	go func() {
 		defer matcher.waitGroup.Done()
 		buffer := make(map[string]*moira.MatchedMetric)
 		for {
 			select {
-			case metric, ok := <-channel:
+			case metric, ok := <-matchedMetricsChan:
 				if !ok {
 					matcher.logger.Info("Moira Filter Metrics Matcher stopped")
 					return
 				}
 				matcher.cacheStorage.EnrichMatchedMetric(buffer, metric)
-				if len(buffer) < 1000 {
+				if len(buffer) < matcher.cacheCapacity {
 					continue
 				}
-			case <-time.After(time.Second):
+			case <-time.After(flushInterval):
 			}
 			if len(buffer) == 0 {
 				continue
@@ -57,7 +60,7 @@ func (matcher *MetricsMatcher) Start(channel chan *moira.MatchedMetric) {
 			buffer = make(map[string]*moira.MatchedMetric)
 		}
 	}()
-	matcher.logger.Info("Moira Filter Metrics Matcher started")
+	matcher.logger.Infof("Moira Filter Metrics Matcher started to save %d cached metrics every %s", matcher.cacheCapacity, flushInterval.String())
 }
 
 // Wait waits for metric matcher instance will stop

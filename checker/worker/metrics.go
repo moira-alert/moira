@@ -46,14 +46,19 @@ func (worker *Checker) handleMetricEvent(pattern string) error {
 }
 
 func (worker *Checker) addTriggerIDsIfNeeded(triggerIDs []string, isRemote bool) {
+	needToCheckTriggerIDs := make([]string, len(triggerIDs))
 	for _, triggerID := range triggerIDs {
 		if worker.needHandleTrigger(triggerID) {
+			// ToDo: rewrite to dataBase.AddRemoteTriggersToCheck
 			if isRemote {
 				worker.remoteTriggersToCheck <- triggerID
 			} else {
-				worker.triggersToCheck <- triggerID
+				needToCheckTriggerIDs = append(needToCheckTriggerIDs, triggerID)
 			}
 		}
+	}
+	if len(needToCheckTriggerIDs) > 0 {
+		worker.Database.AddTriggersToCheck(needToCheckTriggerIDs)
 	}
 }
 

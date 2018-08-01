@@ -9,4 +9,5 @@ type FilterMetrics struct {
 	SavingTimer             Timer
 	BuildTreeTimer          Timer
 	MetricChannelLen        Histogram
+	LineChannelLen          Histogram
 }

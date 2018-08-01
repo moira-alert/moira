@@ -38,8 +38,8 @@ func (worker *RefreshPatternWorker) Start() error {
 	}
 
 	worker.tomb.Go(func() error {
+		checkTicker := time.NewTicker(time.Second)
 		for {
-			checkTicker := time.NewTicker(time.Second)
 			select {
 			case <-worker.tomb.Dying():
 				worker.logger.Info("Moira Filter Pattern Updater stopped")

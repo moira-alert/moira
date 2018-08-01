@@ -6,8 +6,8 @@
 			"checksumSHA1": "arG4LsDPcrIJjyRERLSyLZGjowI=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/bitbucket.org/tebeka/strftime",
 			"path": "bitbucket.org/tebeka/strftime",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
 			"checksumSHA1": "hBqmLpr3P88FPgBk27hzpa5N0mM=",
@@ -19,8 +19,8 @@
 			"checksumSHA1": "2uHTjq9EzVymiLoPqlFyA0RDmpM=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/JaderDias/movingmedian",
 			"path": "github.com/JaderDias/movingmedian",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
 			"checksumSHA1": "60mJ5p/W8CHWQEp8sYpDusWex4U=",
@@ -32,8 +32,8 @@
 			"checksumSHA1": "eKoKQST+S7X0jcu8IEa/URMOsbY=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/aclements/go-moremath/mathx",
 			"path": "github.com/aclements/go-moremath/mathx",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
 			"checksumSHA1": "GCTVJ1J/SGZstNZauuLAnTFOhGA=",
@@ -64,29 +64,29 @@
 			"checksumSHA1": "W3RxbO61jG2gr4fLrbAy60FOR1s=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/dgryski/go-onlinestats",
 			"path": "github.com/dgryski/go-onlinestats",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "tJd2T/eyW6ejAev7WzGxTeUVOPQ=",
+			"checksumSHA1": "FrFUyTbM2HweMAfdLEig956GBK0=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/dustin/go-humanize",
 			"path": "github.com/dustin/go-humanize",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
 			"checksumSHA1": "69zJh4sDwSmpj/wqHgkOMfj7w/8=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/evmar/gocairo/cairo",
 			"path": "github.com/evmar/gocairo/cairo",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
 			"checksumSHA1": "7NP1qUMF8Kx1y0zANxx0e+oq9Oo=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/fsnotify/fsnotify",
 			"path": "github.com/fsnotify/fsnotify",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
 			"checksumSHA1": "2UmMbNHc8FBr98mJFN1k8ISOIHk=",
@@ -119,588 +119,588 @@
 			"revisionTime": "2017-07-06T22:11:03Z"
 		},
 		{
-			"checksumSHA1": "mXRbGi4wRa8KbPbvUVAMqfLz/sE=",
+			"checksumSHA1": "JO2NDsp7gwsKFfT1Bz9ydvTGDJM=",
 			"path": "github.com/go-graphite/carbonapi/date",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "VOwjQB/0chFG7G4bDqD5AHppRxg=",
+			"checksumSHA1": "N6feSYBKH+sr89v/DP50YJ1KKuM=",
 			"path": "github.com/go-graphite/carbonapi/expr",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "0smH8FNeYHvVaT1i9owIFRk41YA=",
+			"checksumSHA1": "KSNsGMlVCdjI9EBksYGOc8I6VQU=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z",
+			"tree": true
 		},
 		{
-			"checksumSHA1": "TI5t8gvXwchtT6tRBmdXNRXmU+w=",
+			"checksumSHA1": "osF6fAYVM871dzUO0sTKKUd0Wzc=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/absolute",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "O0BBYHndQPZ3YBVZTOjjU2qa3ps=",
+			"checksumSHA1": "144hVIxGW0k9Ffds6QBBG5fYP7s=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/alias",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "R1063JpSfKLfSWIMm6C3ygFkecE=",
+			"checksumSHA1": "n2ihqDOsgL5EtW+i6R4oOVkjuCk=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/aliasByMetric",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "QEQECt3wSScH00piZao93aWcucA=",
+			"checksumSHA1": "fbG4tpI92psuAG/6wI4cfv2O4qs=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/aliasByNode",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "v27sRfFBob2TntmckjqcFHHd+rw=",
+			"checksumSHA1": "KEJYigRirecJ1t2NRivv9YPssE0=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/aliasSub",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "WOGMWBvFSdzR2JULJbk8TThYCuI=",
+			"checksumSHA1": "tgNs56FC1jAmmtMM1FJo8PfuGAs=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/asPercent",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "Cv0KpKiwuEvFCP/AjSfNoq1Pswg=",
+			"checksumSHA1": "R9tuGTCTU6K4VbMt3gLd3c1yVRU=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/averageSeries",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "mCEbdthA1Z2Exjwg/CGcvxAB6L4=",
+			"checksumSHA1": "ZFMpyTTszI/PZ/PFUhnuU+Yq+FQ=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/averageSeriesWithWildcards",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "Xp2nYFx4e2Yk04BcqQ7dfMf/w1M=",
+			"checksumSHA1": "z6X4GiuB51N9whBzJbVLES4u8cM=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/below",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "hFMqX5NfR75qS9yahnIrCnQGVn4=",
+			"checksumSHA1": "DHtzEI0IjAhlSj8iJ8ZQdCda2Dg=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/cactiStyle",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "96gXyP5JY2sRtBxd3prlwDK+a/8=",
+			"checksumSHA1": "WVoIbIvIrIlaBPtn26Y8qh+4oYY=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/cairo",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "QKK8rtKS5pxMqPwwvm0ymODmo+w=",
+			"checksumSHA1": "Z0IR1ZEJnirQQzMnyvYd4zmBivE=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/cairo/png",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "YGofLaSx8/K6C1K82lgoZIdfhlU=",
+			"checksumSHA1": "E+70GDN1tIlwl8aHjnip58LKKCU=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/changed",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "OdeJmYYBGx5AySxP4rr/9T9L4jQ=",
+			"checksumSHA1": "UhpE63u6gjOVKQCERP7JriO71RQ=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/consolidateBy",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "CF4nELBTzfSQZDWNFMmIstst2fY=",
+			"checksumSHA1": "f7iXSEtEbvyGvvqU+daT4dT02II=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/constantLine",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "mG5Iq9k9EioPnslJcVdAYvGPT5w=",
+			"checksumSHA1": "3KgWC1CbiIEYIe++kKyzdzfI53M=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/countSeries",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "ADSjqXM9mKyZvg27wHUvADAHLm0=",
+			"checksumSHA1": "1upS4lOL+Gd+KB4WFGgYKOUkHAE=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/cumulative",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "e6nH2hmFHr1A0z1OoC6vUa9Z9xU=",
+			"checksumSHA1": "QTLKUYXyjDvRm37sVEHOFOO1v44=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/delay",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "DUeqhFEWxM7oz7A+HXl2VEHYuOA=",
+			"checksumSHA1": "3RewFARXpt8T3VPYXKf69fK3mo8=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/derivative",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "laHKZgDRRQeO8ZVRCB1Y2uA+GJw=",
+			"checksumSHA1": "PmYx95rPHTM1O0jVMrXhGLOH7Aw=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/diffSeries",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "qU12P79PAOz6byxdFU/v7Tx16MI=",
+			"checksumSHA1": "wt7xqDowWJT0AX157mL+jslzN9A=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/divideSeries",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "ZFRw/V3rTbHyq+MNgobQqhUhScw=",
+			"checksumSHA1": "IpUdW0z/9bddZ3klKN+ohdRaO8E=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/ewma",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "PP9oh7AFxvWSxjELXxevIQBh3bw=",
+			"checksumSHA1": "2vRMvcHVdTeaxc/FAimfa7qBEVw=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/exclude",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "aCyNglNPysDDbqEN9nyhh+LPi4g=",
+			"checksumSHA1": "Wi+OQqYmbxcPr7Ygf0Q5ZcTZEP0=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/fallbackSeries",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "3pAOXkt7tY7eCk8r7Vc7NIXh8zU=",
+			"checksumSHA1": "FZgdPOXB1e3n8MwGaZiqy/rv1gM=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/fft",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "HyAq1WdmG0L6GZPVnzLBrjEDbPY=",
+			"checksumSHA1": "0gINHm6k5grttXFo74/cm/9g6e8=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/graphiteWeb",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "fuiBA4QnJEY6LBpF4Ft8zJAZdqg=",
+			"checksumSHA1": "PKqHBlp5VpaIRUfVgSMCabXbqBg=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/grep",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "F5iUyBtrgdTBOYNGS3ijXy3mxJ4=",
+			"checksumSHA1": "vkW2pB98Hi+YFVqow2JFLjvonJg=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/group",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "giZvl89E3mu0wG0kRRb+/UF5jis=",
+			"checksumSHA1": "Vx6i3hWfkrL7mBRbrQ9h+oQAWSg=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/groupByNode",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "ZxwdcGiR0kBBe6qdFIcOILmjmAs=",
+			"checksumSHA1": "2iYQDX0w79Kwsu5wctYsmdrAImY=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/highest",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "u+svXGRi3RaCUZeeaAQV+5tfeAE=",
+			"checksumSHA1": "Lau9Ie6q+PBZbjbPDHsmnaN8TWo=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/hitcount",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "0fKVeAFbykXOSlUjUXot4ZtwmxE=",
+			"checksumSHA1": "Uzup74CW+CZfQ8PN4lJydorPXy8=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/holtWintersAberration",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "vVOZUh3zK8EWwBLUsEvzEDG7sgM=",
+			"checksumSHA1": "v30AY6uzEaEZZmhm4uUjuYpbFKc=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/holtWintersConfidenceBands",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "bfOwK7r6+6xzCBJqmky3nu7++YE=",
+			"checksumSHA1": "HrP3PNTx+wYT/z8yBwISL3SSkiQ=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/holtWintersForecast",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "zGVhl8fcx8n2bZ/QYHj4nNZjeJY=",
+			"checksumSHA1": "j/S2AjL9KqT44UHpYcV83QSbq5Y=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/ifft",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "7U4+RauAotkm/wSS88/qK1GH5Zk=",
+			"checksumSHA1": "DBkzTsKkd6t1DXv6nLfONLmwcGw=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/integral",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "0w/hVWtsKrb4y7j9m6Tl9ly0LtI=",
+			"checksumSHA1": "Ics0QHAh2V0eWY4W7lLUeoJc9Sc=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/invert",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "an0ErZox1gGrek6R7iiDrw/A6lw=",
+			"checksumSHA1": "VWcVzj5mnPTpm+G2CHeWavE/B+E=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/isNotNull",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "aS1LDOhd9xzMovflf4wa0PatcnE=",
+			"checksumSHA1": "ZYBeQxeiEw0qRvcXPO7wpXfLpEY=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/keepLastValue",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "xovO7aM/Bn8SeVDasG7vHmq6HTU=",
+			"checksumSHA1": "rt7tloAHBjsR2/MhjlTDBCdYW08=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/kolmogorovSmirnovTest2",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "WC75zEsOSS0gCZAgehCoa5Fb9mU=",
+			"checksumSHA1": "3bdpm7DRZBUHjk+Xx6ShajCUwVE=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/legendValue",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "lHjKnmYrNGixE2h9+Dn+I4/ulBc=",
+			"checksumSHA1": "JsPYcAcXq8LWc0COo7yx1nEeoTc=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/limit",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "efnjoOJmW5Ox4vkx+DOiaRGpkxs=",
+			"checksumSHA1": "HpomUa3HHCgYAZrAAoMvUhE/R44=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/linearRegression",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "fyPDuHU7xjSq1Y+maw1gsC5CjLc=",
+			"checksumSHA1": "qs72/H0lytiT0iu3Aod3qG2t3oo=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/logarithm",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "ozH8GgQCXjgo+P+gtsHBgz+393A=",
+			"checksumSHA1": "Kd0H9Jz1qG1MjvIFwFs4DQKFB0Y=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/lowPass",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "8NNwBEhAqHFVQXCJEnPVHpdLtTw=",
+			"checksumSHA1": "0/Y1i2mC4RAz6fo6AeduGrW+f28=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/lowest",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "hIIvBLYzsjiDyMn3Cv3N0qrS3fc=",
+			"checksumSHA1": "3OviXuZfEuEwZEOYZimS7ox+UOI=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/mapSeries",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "kcFLyi+ySPcpJQkmcsd1rmlsiPQ=",
+			"checksumSHA1": "UgJnL+Dv6OdBYU8l+qgdg9y+K3Y=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/minMax",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "4JStNZoiFrLtRYsF2IXpf0cob8I=",
+			"checksumSHA1": "+uIQPbxMiRvH95FcdUQZjVr3hLE=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/mostDeviant",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "IFmeJAoSaxX6UjzGKvr0tPAk/1Y=",
+			"checksumSHA1": "esh4zminpe3PHUKE/aWX4XFCfBw=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/moving",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "TK6pDvuh9i1gspbdf3/OguY6v6k=",
+			"checksumSHA1": "qus6VDVDX9npDOrLSw/vZUVUtYY=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/movingMedian",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "PRLaP0H9fEDK2zWRw0hn6HgTzR8=",
+			"checksumSHA1": "71dAOECxFuufuWJ5E4RpHFGxLJY=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/multiplySeries",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "cmYp7F55n/TUzokF8mftQkb3Ens=",
+			"checksumSHA1": "RM8eMaZkL3IFJoDskUgxnko2kVE=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/multiplySeriesWithWildcards",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "b2eINq9kQIVyj/bgomhCa/qKvYA=",
+			"checksumSHA1": "pdMzAOvVdRyasbcMsp5la59fYWM=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/nPercentile",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "vNRuVaeceh/GxM9qS3HKdj6Dtlw=",
+			"checksumSHA1": "UrUVmpBHL9pIyZkegQ2rri1mcGg=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/nonNegativeDerivative",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "u94OfXMuDInHE3ltMosm84ce8zU=",
+			"checksumSHA1": "jX0vnVMuUKUI3SB8Lv5VDHVxs2M=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/offset",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "Tam2FEwbuQ9RTISamwBSvJHQZZU=",
+			"checksumSHA1": "W8UU6zg8Qe4j0bhfAjiQd3oPB8w=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/offsetToZero",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "0zVpwoD9tyiZ4Ob7ZuBGSBiL8FY=",
+			"checksumSHA1": "VJcjusrxdX+cPWN4cD5Gj0HQ620=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/pearson",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "iQx2bmbou5epDNbl2NWhhbEmNlM=",
+			"checksumSHA1": "1qH3XJZSTQbN1O+V82N8dr+zT1o=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/pearsonClosest",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "6LxN7ucttPQqosssiGUbIeQtZXs=",
+			"checksumSHA1": "VXNfT/Cv0kR3L0MB0c4n3IuFQFI=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/perSecond",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "6zz9mU7TPL3WINiOqoFrTDalAJI=",
+			"checksumSHA1": "I69YJqO8nHJEeAujWoIbdVYTC5Q=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/percentileOfSeries",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "HxbXHitTlP2qVmL8RN4KWh5vN0k=",
+			"checksumSHA1": "Vv0i4YfMOkYrWHkUeT6wW4xCNAA=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/polyfit",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "2NMyF2Ag6aa7HdxsSHyHkdAz3L8=",
+			"checksumSHA1": "9vM3YUN0GK00OnqlBhv3+F2ZqUs=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/pow",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "w8OUCIupr3lq91WhSWc43Ti4e8k=",
+			"checksumSHA1": "OqtQdQZv+wtWMXojBuC5HkcX4Xc=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/randomWalk",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "qvsPM31rMRDMnuGXMAfBzK9q7Wg=",
+			"checksumSHA1": "ejPiVDGxg7GMOlme13SJeO9uSts=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/rangeOfSeries",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "BmqtVzWEvq8p0brAj/GNFqjJF4I=",
+			"checksumSHA1": "o0odJlRlWX6xXtycD+6sYaT9nYs=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/reduce",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "Jgmgix3EQXd4g2TqtYHn7TBXUVE=",
+			"checksumSHA1": "902zRljbelnNlmIAhJM9AgGlcLs=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/removeBelowSeries",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "FCrkQwaIJLkyUxEeXTpe0oweOi0=",
+			"checksumSHA1": "MOXXrHOHimqDPT/zcl/bJahPBUI=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/removeEmptySeries",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "VbbCiDrOHCTu8XfLMSq8LxGTuE0=",
+			"checksumSHA1": "ENiJ2v9eUA/BEqsnEsYmTYzZnJI=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/scale",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "lt+Yi8H0rwPLlewOVfjoMKPeR2Y=",
+			"checksumSHA1": "vu7vDDT86NqIgxaw0ZHGblZCSyE=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/scaleToSeconds",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "yMW94BSue3aQSYDw/o+PxhgvDtM=",
+			"checksumSHA1": "tcquk+KRVnwzoC34WXU71/RC9c0=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/seriesList",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "rOYQUVCPH9RpIcIppa3Wy4iz3zc=",
+			"checksumSHA1": "j2lRpYxNVkf1dZvoJOVkvQrD4Wc=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/sortBy",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "gUVnHCuVoGUoMs+2N9dPWPq5NKs=",
+			"checksumSHA1": "U2yzIK4DlUsvY8Ts9ZNkZUFmJZ4=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/sortByName",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "Qar4M38UcDSfPJRd4MSeq/Np2Bk=",
+			"checksumSHA1": "OUjET83ZQTMeUsN5KRy3/SvftNI=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/squareRoot",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "sao1DBfc8Hf1j2KB84WVqRvgyyA=",
+			"checksumSHA1": "d7oNSbm4gCCRSIdTGhQI8aHsEjI=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/stddevSeries",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "qmGqJ1B1vltrhMHihoYPRnXLNjk=",
+			"checksumSHA1": "uufYfloQtEnADQaHkFKujoSAUEo=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/stdev",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "NZVeIN6xr9sd1j9hq+PKWRWWRhc=",
+			"checksumSHA1": "KE+FAl0IRBfSUH/gyUZz5zG/gIM=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/substr",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "YZ1KRxKCNNhjmUhwgVCV5d47vM0=",
+			"checksumSHA1": "+qwMuQHQz4D+Ah87cGqxb5PMrB4=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/sum",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "AdRlpXDOZTWLm4tSowlBx6TFAIg=",
+			"checksumSHA1": "SkS9XhoWKmW8zlbUpdBflYfc1zw=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/sumSeriesWithWildcards",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "Vz6wo/y25r1fSxCiqM/HXvxCTaE=",
+			"checksumSHA1": "aYbOtX764tQuGdtXQSO9vVVuX7o=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/summarize",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "nBftOXxtD0B2p0ViYU4Lwf0Kp18=",
+			"checksumSHA1": "1OOJEp5z/CIDMkZqdaXb0kVd+p8=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/timeFunction",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "4MOwUKvEM+ZagH/LrtXNm3wVKEk=",
+			"checksumSHA1": "5FiM5dz/saf+65CcgNVgcyt4GWc=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/timeShift",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "A9wdhaxaZpFnPuCLs0TMRh1Uepo=",
+			"checksumSHA1": "n6qtXdCbnUKaPFGTAUrVX+YOq2o=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/timeStack",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "H0q30zccfSgTUj8fF5CqbUW1fhA=",
+			"checksumSHA1": "8w+20WNBZUOxgK9udCIqDEZ0tK4=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/transformNull",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "GxgdlBNtFQCwZ6oAoCSNmbrz780=",
+			"checksumSHA1": "ru04O1je2ZRuefi7qa/a5syfQvM=",
 			"path": "github.com/go-graphite/carbonapi/expr/functions/tukey",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "odXheVqmzYxMfMIMLZnoVPCGUD4=",
+			"checksumSHA1": "eJdgJ7HyyQNnGnWyVxJBEvsX4Bg=",
 			"path": "github.com/go-graphite/carbonapi/expr/helper",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "vxReCetC1BlanlAg1TZaXPaMOq0=",
+			"checksumSHA1": "35HZvKK2+TzP43dUHIqdZ42o1Ac=",
 			"path": "github.com/go-graphite/carbonapi/expr/holtwinters",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "/5tkCnCnGep6qci3eyEcM1KD050=",
+			"checksumSHA1": "VQhAFn50/IugVaERz9HimHH4lxk=",
 			"path": "github.com/go-graphite/carbonapi/expr/interfaces",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "n/RU46V2fCED4hc0sYx9PKUTMxA=",
+			"checksumSHA1": "8FA014XwzgDz/l3cdXPOXY2zR7g=",
 			"path": "github.com/go-graphite/carbonapi/expr/metadata",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "zh0hgSYYVK0i7E3rGooFr/tmjIQ=",
+			"checksumSHA1": "hcD0h2biHpEnnhiAkDqwDIXqfmQ=",
 			"path": "github.com/go-graphite/carbonapi/expr/types",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "4zmK/dzAvfvZwuX4/6kafqbdehU=",
+			"checksumSHA1": "XNJeKkwhV2+VicTEeDtcz6Xp8sA=",
+			"path": "github.com/go-graphite/carbonapi/limiter",
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
+		},
+		{
+			"checksumSHA1": "ElupUCcSRi5v53UaivTVBvv8Xg4=",
 			"path": "github.com/go-graphite/carbonapi/pkg/parser",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "2wAgO9fG0owb/hGf2NYELPyRG00=",
-			"path": "github.com/go-graphite/carbonzipper/carbonzipperpb3",
-			"revision": "2fac22996a68150be17a60d364402dabc99a2c1d",
-			"revisionTime": "2017-09-06T09:05:30Z"
+			"checksumSHA1": "7H/lA6kRbB1205oG72/3hSS7Pp8=",
+			"path": "github.com/go-graphite/protocol/carbonapi_v3_pb",
+			"revision": "1378a7c8b09d54e7d55cd546114b98523ab9cc5f",
+			"revisionTime": "2018-06-08T13:20:22Z"
 		},
 		{
-			"checksumSHA1": "b0zEODXPrF58OPqpokt4TUA21WE=",
-			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/go-graphite/carbonzipper/limiter",
-			"path": "github.com/go-graphite/carbonzipper/limiter",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
-		},
-		{
-			"checksumSHA1": "BEi3mhcDkClKwleMuQGVPCQXFR4=",
+			"checksumSHA1": "FhLvgtYfuKY0ow9wtLJRoeg7d6w=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/gogo/protobuf/gogoproto",
 			"path": "github.com/gogo/protobuf/gogoproto",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
 			"checksumSHA1": "nTHr8B2CPLP8kcJRtBEXluFvzUY=",
@@ -709,101 +709,23 @@
 			"revisionTime": "2018-02-23T15:10:32Z"
 		},
 		{
-			"checksumSHA1": "wg7MHG+Fuc0ZGWFIlAZJulPxR2s=",
+			"checksumSHA1": "F+PKpdY6PyIrxQ8b20TzsM+1JuI=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/gogo/protobuf/protoc-gen-gogo/descriptor",
 			"path": "github.com/gogo/protobuf/protoc-gen-gogo/descriptor",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
+		},
+		{
+			"checksumSHA1": "HPVQZu059/Rfw2bAWM538bVTcUc=",
+			"path": "github.com/gogo/protobuf/sortkeys",
+			"revision": "646de4defe615515307edb01cfa31b0163afa83a",
+			"revisionTime": "2018-07-30T06:05:41Z"
 		},
 		{
 			"checksumSHA1": "m9ldEfp1eMmvUvm38XhhtTG/Vbs=",
 			"path": "github.com/golang/mock/gomock",
 			"revision": "cd1f5ca28400ea81f03fbc828a052ab46c33fcf9",
 			"revisionTime": "2017-09-15T15:06:13Z"
-		},
-		{
-			"checksumSHA1": "j2Qqz7z/jCufl78OQLPzb1svXzI=",
-			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/gonum/blas",
-			"path": "github.com/gonum/blas",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
-		},
-		{
-			"checksumSHA1": "Hc4+U8HpN0345fLzyzrxlqYBBMs=",
-			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/gonum/blas/blas64",
-			"path": "github.com/gonum/blas/blas64",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
-		},
-		{
-			"checksumSHA1": "KIDU5FFtgLLhyGMksRcNmaQ1m5E=",
-			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/gonum/blas/native",
-			"path": "github.com/gonum/blas/native",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
-		},
-		{
-			"checksumSHA1": "4URlS0sh4+VMLN6iDIYdt0JfpFg=",
-			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/gonum/blas/native/internal/math32",
-			"path": "github.com/gonum/blas/native/internal/math32",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
-		},
-		{
-			"checksumSHA1": "a6MDugnjqh9PwQZ04RqyHIO7vqE=",
-			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/gonum/floats",
-			"path": "github.com/gonum/floats",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
-		},
-		{
-			"checksumSHA1": "vqq3S6LXgLZL9DqFe456yHyqqP4=",
-			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/gonum/internal/asm/f32",
-			"path": "github.com/gonum/internal/asm/f32",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
-		},
-		{
-			"checksumSHA1": "Fca9pauhOLfPOTZPdb0aJREycLQ=",
-			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/gonum/internal/asm/f64",
-			"path": "github.com/gonum/internal/asm/f64",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
-		},
-		{
-			"checksumSHA1": "6BUGKNmx/UWGny4KitDZbttdsNI=",
-			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/gonum/lapack",
-			"path": "github.com/gonum/lapack",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
-		},
-		{
-			"checksumSHA1": "spB0w4NXAqaMj2c7S7oMmPWyWk8=",
-			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/gonum/lapack/lapack64",
-			"path": "github.com/gonum/lapack/lapack64",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
-		},
-		{
-			"checksumSHA1": "W8NtE3DBhdavXhJQwoK6n4Wy2/Y=",
-			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/gonum/lapack/native",
-			"path": "github.com/gonum/lapack/native",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
-		},
-		{
-			"checksumSHA1": "ORElIFsWQub/u1jl6iqBWVqPpc0=",
-			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/gonum/matrix",
-			"path": "github.com/gonum/matrix",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
-		},
-		{
-			"checksumSHA1": "xfHmb35uytlmDCLGOBN4Sy5wF6w=",
-			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/gonum/matrix/mat64",
-			"path": "github.com/gonum/matrix/mat64",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
 		},
 		{
 			"checksumSHA1": "MFb5D6fGctGxRoeYakh0Eo2BF+I=",
@@ -821,64 +743,70 @@
 			"checksumSHA1": "HtpYAWHvd9mq+mHkpo7z8PGzMik=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/hashicorp/hcl",
 			"path": "github.com/hashicorp/hcl",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
 			"checksumSHA1": "XQmjDva9JCGGkIecOgwtBEMCJhU=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/hashicorp/hcl/hcl/ast",
 			"path": "github.com/hashicorp/hcl/hcl/ast",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "/15SVLnCDzxICSatuYbfctrcpSM=",
+			"checksumSHA1": "1GmX7G0Pgf5XprOh+T3zXMXX0dc=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/hashicorp/hcl/hcl/parser",
 			"path": "github.com/hashicorp/hcl/hcl/parser",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "PYDzRc61T0pbwWuLNHgBRp/gJII=",
+			"checksumSHA1": "encY+ZtDf4nJaMvsVL2c+EJ2r3Q=",
+			"path": "github.com/hashicorp/hcl/hcl/printer",
+			"revision": "ef8a98b0bbce4a65b5aa4c368430a80ddc533168",
+			"revisionTime": "2018-04-04T17:41:02Z"
+		},
+		{
+			"checksumSHA1": "+qJTCxhkwC7r+VZlPlZz8S74KmU=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/hashicorp/hcl/hcl/scanner",
 			"path": "github.com/hashicorp/hcl/hcl/scanner",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
 			"checksumSHA1": "oS3SCN9Wd6D8/LG0Yx1fu84a7gI=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/hashicorp/hcl/hcl/strconv",
 			"path": "github.com/hashicorp/hcl/hcl/strconv",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
 			"checksumSHA1": "c6yprzj06ASwCo18TtbbNNBHljA=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/hashicorp/hcl/hcl/token",
 			"path": "github.com/hashicorp/hcl/hcl/token",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
 			"checksumSHA1": "PwlfXt7mFS8UYzWxOK5DOq0yxS0=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/hashicorp/hcl/json/parser",
 			"path": "github.com/hashicorp/hcl/json/parser",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
 			"checksumSHA1": "afrZ8VmAwfTdDAYVgNSXbxa4GsA=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/hashicorp/hcl/json/scanner",
 			"path": "github.com/hashicorp/hcl/json/scanner",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
 			"checksumSHA1": "fNlXQCQEnb+B3k5UDL/r15xtSJY=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/hashicorp/hcl/json/token",
 			"path": "github.com/hashicorp/hcl/json/token",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
 			"checksumSHA1": "Js/yx9fZ3+wH1wZpHNIxSTMIaCg=",
@@ -887,25 +815,37 @@
 			"revisionTime": "2017-05-03T22:40:06Z"
 		},
 		{
+			"checksumSHA1": "s6eyIXpJ7VAU06FM27GcEBM/5lo=",
+			"path": "github.com/lib/pq",
+			"revision": "90697d60dd844d5ef6ff15135d0203f65d2f53b8",
+			"revisionTime": "2018-05-23T17:54:26Z"
+		},
+		{
+			"checksumSHA1": "AU3fA8Sm33Vj9PBoRPSeYfxLRuE=",
+			"path": "github.com/lib/pq/oid",
+			"revision": "90697d60dd844d5ef6ff15135d0203f65d2f53b8",
+			"revisionTime": "2018-05-23T17:54:26Z"
+		},
+		{
 			"checksumSHA1": "a65jiZ9yUoZaFbFm5DFEoE2+YRI=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/lomik/og-rek",
 			"path": "github.com/lomik/og-rek",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "S65k2PLUVxypOoJj5SPgngjIszQ=",
+			"checksumSHA1": "pnyIaUYf/BukrZ3z9KSjP0NJFZA=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/lomik/zapwriter",
 			"path": "github.com/lomik/zapwriter",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "hZO146dK0OpmGx7QQs2wDiEJrGg=",
+			"checksumSHA1": "AYZGozgchqe4WcKH/jCZI1flnP8=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/magiconair/properties",
 			"path": "github.com/magiconair/properties",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
 			"checksumSHA1": "tWUjKyFOGJtYExocPWVYiXBYsfE=",
@@ -914,25 +854,25 @@
 			"revisionTime": "2017-06-09T04:59:27Z"
 		},
 		{
-			"checksumSHA1": "Yvzge1YQcD/wSDXLD5qNHqmI/0s=",
+			"checksumSHA1": "ewGq4nGalpCQOHcmBTdAEQx1wW0=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/mitchellh/mapstructure",
 			"path": "github.com/mitchellh/mapstructure",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
 			"checksumSHA1": "eglLS3h5JcUbDovEFz6+NBTZJWg=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/mjibson/go-dsp/dsputils",
 			"path": "github.com/mjibson/go-dsp/dsputils",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
 			"checksumSHA1": "egBkus5cLypw4Rrrw7zV24cssTc=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/mjibson/go-dsp/fft",
 			"path": "github.com/mjibson/go-dsp/fft",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
 			"checksumSHA1": "SDdJQg0eCU2IfLSuUafSJwQPjh4=",
@@ -953,11 +893,11 @@
 			"revisionTime": "2017-07-22T04:01:10Z"
 		},
 		{
-			"checksumSHA1": "+qobk0BQiCfqdrhKeoZnwz6hFnE=",
+			"checksumSHA1": "hlXUEyUn6u1ZhZbunDqTTEz1gyw=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/pelletier/go-toml",
 			"path": "github.com/pelletier/go-toml",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
 			"checksumSHA1": "rJab1YdNhQooDiBWNnt7TLWPyBU=",
@@ -1033,46 +973,46 @@
 			"revisionTime": "2017-06-02T16:46:21Z"
 		},
 		{
-			"checksumSHA1": "F3JU4T4XXvZTRAcv6rhTao4QGos=",
+			"checksumSHA1": "wsfbX7YxbkeBp+xm9M9nBFzrCnA=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/spf13/afero",
 			"path": "github.com/spf13/afero",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "X6RueW0rO55PbOQ0sMWSQOxVl4I=",
+			"checksumSHA1": "HcOjO9+cwl+xYnkiGuIeesqwBs8=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/spf13/afero/mem",
 			"path": "github.com/spf13/afero/mem",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
 			"checksumSHA1": "Hc2i9OOK34PAImuNftTaHdbdLgs=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/spf13/cast",
 			"path": "github.com/spf13/cast",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
 			"checksumSHA1": "+JFKK0z5Eutk29rUz1lEhLxHMfk=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/spf13/jwalterweatherman",
 			"path": "github.com/spf13/jwalterweatherman",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "STxYqRb4gnlSr3mRpT+Igfdz/kM=",
+			"checksumSHA1": "k5TsfhX2vvfffYbZQ4fMKtL5+cA=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/spf13/pflag",
 			"path": "github.com/spf13/pflag",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "XeB0yeQkOMI+CWrllrbTrg4iOEs=",
+			"checksumSHA1": "AB/VGCv0NIjGYZXhJUBSbVIsOJw=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/spf13/viper",
 			"path": "github.com/spf13/viper",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
 			"checksumSHA1": "EO+jcRet/AJ6IY3lBO8l8BLsZWg=",
@@ -1115,64 +1055,64 @@
 			"checksumSHA1": "H/zX55BGDc+gU2kQztZJI+C3cA8=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/wangjohn/quickselect",
 			"path": "github.com/wangjohn/quickselect",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "HedK9m8E8iyib4bIBtIX7xprOgo=",
+			"checksumSHA1": "VrTiQbtu3FoRCY9h3HwjvtGVksw=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/go.uber.org/atomic",
 			"path": "go.uber.org/atomic",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
 			"checksumSHA1": "JDGx7hehaQunZySwPs7yvdUs2m8=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/go.uber.org/multierr",
 			"path": "go.uber.org/multierr",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "5BYbiKEkYykvfjSaNYDuQpBqglo=",
+			"checksumSHA1": "nqanmFHFB6kLANzkX0SCD0bFfEs=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/go.uber.org/zap",
 			"path": "go.uber.org/zap",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "HYo/9nwrY08NQA+2ItPOAH8IFW8=",
+			"checksumSHA1": "ob7ek7usks81fNLt6HCt1T8v0sE=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/go.uber.org/zap/buffer",
 			"path": "go.uber.org/zap/buffer",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
 			"checksumSHA1": "MuxOAtZEsJitlWBzhmpm2vGiHok=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/go.uber.org/zap/internal/bufferpool",
 			"path": "go.uber.org/zap/internal/bufferpool",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
 			"checksumSHA1": "uC0L9eCSAYcCWNC8udJk/t1vvIU=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/go.uber.org/zap/internal/color",
 			"path": "go.uber.org/zap/internal/color",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
 			"checksumSHA1": "b80CJExrVpXu3SA1iCQ6uLqTn2c=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/go.uber.org/zap/internal/exit",
 			"path": "go.uber.org/zap/internal/exit",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
 			"checksumSHA1": "mRD6lujPvXPkbC3+byNwO/bNVu8=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/go.uber.org/zap/zapcore",
 			"path": "go.uber.org/zap/zapcore",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
 			"checksumSHA1": "Y+HGqEkYM15ir+J93MEaHdyFy0c=",
@@ -1187,25 +1127,97 @@
 			"revisionTime": "2017-06-29T16:46:45Z"
 		},
 		{
-			"checksumSHA1": "gkW/8/3Zvz/RPG4W6N7Tpzzp6oY=",
+			"checksumSHA1": "e66DmNWQKgI97tvj4BH7rHYnyJs=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/golang.org/x/sys/unix",
 			"path": "golang.org/x/sys/unix",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
 			"checksumSHA1": "ziMb9+ANGRJSSIuxYdRbA+cDRBQ=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/golang.org/x/text/transform",
 			"path": "golang.org/x/text/transform",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
 			"checksumSHA1": "BCNYmf4Ek93G4lk5x3ucNi/lTwA=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/golang.org/x/text/unicode/norm",
 			"path": "golang.org/x/text/unicode/norm",
-			"revision": "f9817bf00cffe35a42cd310cb285c07d530283df",
-			"revisionTime": "2018-03-11T10:03:28Z"
+			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
+			"revisionTime": "2018-07-29T13:10:59Z"
+		},
+		{
+			"checksumSHA1": "Y0gxmu9OGGiI4DMlBaJ/jUrg6sI=",
+			"path": "gonum.org/v1/gonum/blas",
+			"revision": "0bf5c67a31b6127c949a77c986d1453d0c10e014",
+			"revisionTime": "2018-07-07T07:10:08Z"
+		},
+		{
+			"checksumSHA1": "HCb6HBvMJb8h3i2xdmYFXkT0C3A=",
+			"path": "gonum.org/v1/gonum/blas/blas64",
+			"revision": "0bf5c67a31b6127c949a77c986d1453d0c10e014",
+			"revisionTime": "2018-07-07T07:10:08Z"
+		},
+		{
+			"checksumSHA1": "1czSDHKN/VuBJ8vmxt7SuSluoU0=",
+			"path": "gonum.org/v1/gonum/blas/gonum",
+			"revision": "0bf5c67a31b6127c949a77c986d1453d0c10e014",
+			"revisionTime": "2018-07-07T07:10:08Z"
+		},
+		{
+			"checksumSHA1": "cm3+4+5K0jp1qbMwXPaCic/sBEk=",
+			"path": "gonum.org/v1/gonum/floats",
+			"revision": "0bf5c67a31b6127c949a77c986d1453d0c10e014",
+			"revisionTime": "2018-07-07T07:10:08Z"
+		},
+		{
+			"checksumSHA1": "lPWQlDrWo6iRLemDPCR5kEdavnw=",
+			"path": "gonum.org/v1/gonum/internal/asm/c128",
+			"revision": "0bf5c67a31b6127c949a77c986d1453d0c10e014",
+			"revisionTime": "2018-07-07T07:10:08Z"
+		},
+		{
+			"checksumSHA1": "5s2AY9p+pN9uu/Bj89CSsKvVxfM=",
+			"path": "gonum.org/v1/gonum/internal/asm/f32",
+			"revision": "0bf5c67a31b6127c949a77c986d1453d0c10e014",
+			"revisionTime": "2018-07-07T07:10:08Z"
+		},
+		{
+			"checksumSHA1": "wIndajSHEh6npNhpjKakeUuaM1o=",
+			"path": "gonum.org/v1/gonum/internal/asm/f64",
+			"revision": "0bf5c67a31b6127c949a77c986d1453d0c10e014",
+			"revisionTime": "2018-07-07T07:10:08Z"
+		},
+		{
+			"checksumSHA1": "Gi7cwcjEebMyJBhYaFo96GQUDjc=",
+			"path": "gonum.org/v1/gonum/internal/math32",
+			"revision": "0bf5c67a31b6127c949a77c986d1453d0c10e014",
+			"revisionTime": "2018-07-07T07:10:08Z"
+		},
+		{
+			"checksumSHA1": "BiiGUFxvB4ZBPZp10wLtUrvhAv0=",
+			"path": "gonum.org/v1/gonum/lapack",
+			"revision": "0bf5c67a31b6127c949a77c986d1453d0c10e014",
+			"revisionTime": "2018-07-07T07:10:08Z"
+		},
+		{
+			"checksumSHA1": "waWXvy2SAoUgl2BTYlkJu4hX92E=",
+			"path": "gonum.org/v1/gonum/lapack/gonum",
+			"revision": "0bf5c67a31b6127c949a77c986d1453d0c10e014",
+			"revisionTime": "2018-07-07T07:10:08Z"
+		},
+		{
+			"checksumSHA1": "8CRslvamUVAHkL4tNQhl28GHMVQ=",
+			"path": "gonum.org/v1/gonum/lapack/lapack64",
+			"revision": "0bf5c67a31b6127c949a77c986d1453d0c10e014",
+			"revisionTime": "2018-07-07T07:10:08Z"
+		},
+		{
+			"checksumSHA1": "7aNECAOT0iGDXQ6jP5kGFl3A+l0=",
+			"path": "gonum.org/v1/gonum/mat",
+			"revision": "e9e56344e335b77c52738092530a60fd12db0351",
+			"revisionTime": "2018-06-21T13:55:16Z"
 		},
 		{
 			"checksumSHA1": "iq5WdjScmTU+LfNoerLuwcnXpdM=",

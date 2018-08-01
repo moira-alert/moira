@@ -57,6 +57,10 @@ func main() {
 		os.Exit(1)
 	}
 
+	if config.Filter.MaxParallelMatches == 0 {
+		fmt.Fprint(os.Stderr, "MaxParallelMatches is not configured, filter does not start")
+	}
+
 	logger, err = logging.ConfigureLog(config.Logger.LogFile, config.Logger.LogLevel, serviceName)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Can not configure log: %s\n", err.Error())
@@ -109,14 +113,18 @@ func main() {
 	defer stopHeartbeatWorker(heartbeatWorker)
 
 	// Start metrics listener
-	listener, err := connection.NewListener(config.Filter.Listen, logger, cacheMetrics, patternStorage)
+	listener, err := connection.NewListener(config.Filter.Listen, logger, cacheMetrics)
 	if err != nil {
 		logger.Fatalf("Failed to start listen: %s", err.Error())
 	}
-	metricsChan := listener.Listen()
+	lineChan := listener.Listen()
+
+	patternMatcher := patterns.NewMatcher(logger, cacheMetrics, patternStorage)
+	metricsChan := patternMatcher.Start(config.Filter.MaxParallelMatches, lineChan)
 
 	// Start metrics matcher
-	metricsMatcher := matchedmetrics.NewMetricsMatcher(cacheMetrics, logger, database, cacheStorage)
+	cacheCapacity := config.Filter.CacheCapacity
+	metricsMatcher := matchedmetrics.NewMetricsMatcher(cacheMetrics, logger, database, cacheStorage, cacheCapacity)
 	metricsMatcher.Start(metricsChan)
 	defer metricsMatcher.Wait()  // First stop listener
 	defer stopListener(listener) // Then waiting for metrics matcher handle all received events

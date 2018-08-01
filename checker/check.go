@@ -8,7 +8,9 @@ import (
 	"github.com/moira-alert/moira/target"
 )
 
-var checkPointGap int64 = 120
+var (
+	checkPointGap int64 = 120
+)
 
 // ErrTriggerHasNoTimeSeries used if trigger has no metrics
 type ErrTriggerHasNoTimeSeries struct{}
@@ -39,25 +41,25 @@ func (err ErrTriggerHasSameTimeSeriesNames) Error() string {
 // Check handle trigger and last check and write new state of trigger, if state were change then write new NotificationEvent
 func (triggerChecker *TriggerChecker) Check() error {
 	triggerChecker.Logger.Debugf("Checking trigger %s", triggerChecker.TriggerID)
-	checkData, err := triggerChecker.handleTrigger()
+	checkData, err := triggerChecker.handleMetricsCheck()
+
+	checkData, err = triggerChecker.handleTriggerCheck(checkData, err)
 	if err != nil {
-		checkData, err = triggerChecker.handleErrorCheck(checkData, err)
-		if err != nil {
-			return err
-		}
+		return err
 	}
+
 	checkData.UpdateScore()
 	return triggerChecker.Database.SetTriggerLastCheck(triggerChecker.TriggerID, &checkData)
 }
 
-func (triggerChecker *TriggerChecker) handleTrigger() (moira.CheckData, error) {
+func (triggerChecker *TriggerChecker) handleMetricsCheck() (moira.CheckData, error) {
 	lastMetrics := make(map[string]moira.MetricState, len(triggerChecker.lastCheck.Metrics))
 	for k, v := range triggerChecker.lastCheck.Metrics {
 		lastMetrics[k] = v
 	}
 	checkData := moira.CheckData{
 		Metrics:        lastMetrics,
-		State:          OK,
+		State:          triggerChecker.lastCheck.State,
 		Timestamp:      triggerChecker.Until,
 		EventTimestamp: triggerChecker.lastCheck.EventTimestamp,
 		Score:          triggerChecker.lastCheck.Score,
@@ -124,7 +126,7 @@ func (triggerChecker *TriggerChecker) handleTrigger() (moira.CheckData, error) {
 }
 
 func (triggerChecker *TriggerChecker) checkTimeSeries(timeSeries *target.TimeSeries, triggerTimeSeries *triggerTimeSeries) (lastState moira.MetricState, needToDeleteMetric bool, err error) {
-	lastState = triggerChecker.lastCheck.GetOrCreateMetricState(timeSeries.Name, int64(timeSeries.StartTime-3600))
+	lastState = triggerChecker.lastCheck.GetOrCreateMetricState(timeSeries.Name, timeSeries.StartTime-3600)
 	metricStates, err := triggerChecker.getTimeSeriesStepsStates(triggerTimeSeries, timeSeries, lastState)
 	if err != nil {
 		return
@@ -145,7 +147,11 @@ func (triggerChecker *TriggerChecker) checkTimeSeries(timeSeries *target.TimeSer
 	return
 }
 
-func (triggerChecker *TriggerChecker) handleErrorCheck(checkData moira.CheckData, checkingError error) (moira.CheckData, error) {
+func (triggerChecker *TriggerChecker) handleTriggerCheck(checkData moira.CheckData, checkingError error) (moira.CheckData, error) {
+	if checkingError == nil {
+		checkData.State = OK
+		return triggerChecker.compareTriggerStates(checkData)
+	}
 
 	switch checkingError.(type) {
 	case ErrTriggerHasNoTimeSeries:
@@ -169,13 +175,14 @@ func (triggerChecker *TriggerChecker) handleErrorCheck(checkData moira.CheckData
 		triggerChecker.Logger.Warningf("Trigger %s: %s", triggerChecker.TriggerID, checkingError.Error())
 		checkData.State = EXCEPTION
 		checkData.Message = checkingError.Error()
-	case ErrWrongTriggerTarget, ErrTriggerHasSameTimeSeriesNames:
-		checkData.State = EXCEPTION
+	case ErrWrongTriggerTargets, ErrTriggerHasSameTimeSeriesNames:
+		checkData.State = ERROR
 		checkData.Message = checkingError.Error()
 	default:
 		triggerChecker.Metrics.CheckError.Mark(1)
 		triggerChecker.Logger.Errorf("Trigger %s check failed: %s", triggerChecker.TriggerID, checkingError.Error())
-		checkData.State = EXCEPTION
+		checkData.State = ERROR
+		checkData.Message = checkingError.Error()
 	}
 	return triggerChecker.compareTriggerStates(checkData)
 }
@@ -203,8 +210,8 @@ func (triggerChecker *TriggerChecker) checkForNoData(timeSeries *target.TimeSeri
 }
 
 func (triggerChecker *TriggerChecker) getTimeSeriesStepsStates(triggerTimeSeries *triggerTimeSeries, timeSeries *target.TimeSeries, metricLastState moira.MetricState) ([]moira.MetricState, error) {
-	startTime := int64(timeSeries.StartTime)
-	stepTime := int64(timeSeries.StepTime)
+	startTime := timeSeries.StartTime
+	stepTime := timeSeries.StepTime
 
 	checkPoint := metricLastState.GetCheckPoint(checkPointGap)
 	triggerChecker.Logger.Debugf("[TriggerID:%s][TimeSeries:%s] Checkpoint: %v", triggerChecker.TriggerID, timeSeries.Name, checkPoint)

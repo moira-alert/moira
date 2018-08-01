@@ -12,6 +12,8 @@ type Database interface {
 	UpdateMetricsHeartbeat() error
 	GetMetricsUpdatesCount() (int64, error)
 	GetChecksUpdatesCount() (int64, error)
+	GetNotifierState() (string, error)
+	SetNotifierState(string) error
 
 	// Tag storing
 	GetTagNames() ([]string, error)
@@ -88,6 +90,9 @@ type Database interface {
 	GetMetricsValues(metrics []string, from int64, until int64) (map[string][]*MetricValue, error)
 	RemoveMetricValues(metric string, toTime int64) error
 	RemoveMetricsValues(metrics []string, toTime int64) error
+
+	AddTriggersToCheck(triggerIDs []string) error
+	GetTriggerToCheck() (string, error)
 
 	// TriggerCheckLock storing
 	AcquireTriggerCheckLock(triggerID string, timeout int) error

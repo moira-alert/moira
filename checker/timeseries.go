@@ -1,8 +1,10 @@
 package checker
 
 import (
+	"bytes"
 	"fmt"
 	"math"
+	"strconv"
 
 	"github.com/moira-alert/moira/expression"
 	"github.com/moira-alert/moira/remote"
@@ -14,15 +16,32 @@ type triggerTimeSeries struct {
 	Additional []*target.TimeSeries
 }
 
-// ErrWrongTriggerTarget represents inconsistent number of timeseries
-type ErrWrongTriggerTarget int
+// ErrWrongTriggerTargets represents targets with inconsistent number of timeseries
+type ErrWrongTriggerTargets []int
 
-// ErrWrongTriggerTarget implementation for given number of found timeseries
-func (err ErrWrongTriggerTarget) Error() string {
-	return fmt.Sprintf("Target t%v has more than one timeseries", int(err))
+// ErrWrongTriggerTarget implementation for list of invalid targets found
+func (err ErrWrongTriggerTargets) Error() string {
+	var countType []byte
+	if len(err) > 1 {
+		countType = []byte("Targets ")
+	} else {
+		countType = []byte("Target ")
+	}
+	wrongTargets := bytes.NewBuffer(countType)
+	for tarInd, tar := range err {
+		wrongTargets.WriteString("t")
+		wrongTargets.WriteString(strconv.Itoa(tar))
+		if tarInd != len(err)-1 {
+			wrongTargets.WriteString(", ")
+		}
+	}
+	wrongTargets.WriteString(" has more than one timeseries")
+	return wrongTargets.String()
 }
 
 func (triggerChecker *TriggerChecker) getTimeSeries(from, until int64) (*triggerTimeSeries, []string, error) {
+	wrongTriggerTargets := make([]int, 0)
+
 	triggerTimeSeries := &triggerTimeSeries{
 		Main:       make([]*target.TimeSeries, 0),
 		Additional: make([]*target.TimeSeries, 0),
@@ -30,12 +49,12 @@ func (triggerChecker *TriggerChecker) getTimeSeries(from, until int64) (*trigger
 	metricsArr := make([]string, 0)
 
 	isSimpleTrigger := triggerChecker.trigger.IsSimple()
+
 	for targetIndex, tar := range triggerChecker.trigger.Targets {
 		result, err := target.EvaluateTarget(triggerChecker.Database, tar, from, until, isSimpleTrigger)
 		if err != nil {
 			return nil, nil, err
 		}
-
 		if targetIndex == 0 {
 			triggerTimeSeries.Main = result.TimeSeries
 		} else {
@@ -48,13 +67,18 @@ func (triggerChecker *TriggerChecker) getTimeSeries(from, until int64) (*trigger
 					return nil, nil, fmt.Errorf("Target t%v has no timeseries", targetIndex+1)
 				}
 			case timeSeriesCount > 1:
-				return nil, nil, ErrWrongTriggerTarget(targetIndex + 1)
+				wrongTriggerTargets = append(wrongTriggerTargets, targetIndex+1)
 			default:
 				triggerTimeSeries.Additional = append(triggerTimeSeries.Additional, result.TimeSeries[0])
 			}
 		}
 		metricsArr = append(metricsArr, result.Metrics...)
 	}
+
+	if len(wrongTriggerTargets) > 0 {
+		return nil, nil, ErrWrongTriggerTargets(wrongTriggerTargets)
+	}
+
 	return triggerTimeSeries, metricsArr, nil
 }
 
