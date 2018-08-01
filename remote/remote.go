@@ -12,7 +12,7 @@ import (
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/moira-alert/moira/target"
 
-	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
+	pb "github.com/go-graphite/protocol/carbonapi_v3_pb"
 )
 
 type graphiteMetric struct {
@@ -80,25 +80,22 @@ func decodeBody(body []byte) ([]*types.MetricData, error) {
 	}
 	res := make([]*types.MetricData, 0, len(tmp))
 	for _, m := range tmp {
-		stepTime := int32(60)
+		var stepTime int64 = 60
 		if len(m.Datapoints) > 1 {
-			stepTime = int32(*m.Datapoints[1][1] - *m.Datapoints[0][1])
+			stepTime = int64(*m.Datapoints[1][1] - *m.Datapoints[0][1])
 		}
 		pbResp := pb.FetchResponse{
 			Name:      m.Target,
-			StartTime: int32(*m.Datapoints[0][1]),
-			StopTime:  int32(*m.Datapoints[len(m.Datapoints)-1][1]),
+			StartTime: int64(*m.Datapoints[0][1]),
+			StopTime:  int64(*m.Datapoints[len(m.Datapoints)-1][1]),
 			StepTime:  stepTime,
 			Values:    make([]float64, len(m.Datapoints)),
-			IsAbsent:  make([]bool, len(m.Datapoints)),
 		}
 		for i, v := range m.Datapoints {
 			if v[0] == nil {
 				pbResp.Values[i] = math.NaN()
-				pbResp.IsAbsent[i] = true
 			} else {
 				pbResp.Values[i] = *v[0]
-				pbResp.IsAbsent[i] = false
 			}
 		}
 		res = append(res, &types.MetricData{
