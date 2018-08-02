@@ -414,6 +414,19 @@ func (mr *MockDatabaseMockRecorder) GetRemoteTriggerToCheck() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRemoteTriggerToCheck", reflect.TypeOf((*MockDatabase)(nil).GetRemoteTriggerToCheck))
 }
 
+// GetRemoteTriggersToCheckCount mocks base method
+func (m *MockDatabase) GetRemoteTriggersToCheckCount() (int64, error) {
+	ret := m.ctrl.Call(m, "GetRemoteTriggersToCheckCount")
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetRemoteTriggersToCheckCount indicates an expected call of GetRemoteTriggersToCheckCount
+func (mr *MockDatabaseMockRecorder) GetRemoteTriggersToCheckCount() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRemoteTriggersToCheckCount", reflect.TypeOf((*MockDatabase)(nil).GetRemoteTriggersToCheckCount))
+}
+
 // GetSubscription mocks base method
 func (m *MockDatabase) GetSubscription(arg0 string) (moira.SubscriptionData, error) {
 	ret := m.ctrl.Call(m, "GetSubscription", arg0)
@@ -581,6 +594,19 @@ func (m *MockDatabase) GetTriggers(arg0 []string) ([]*moira.Trigger, error) {
 // GetTriggers indicates an expected call of GetTriggers
 func (mr *MockDatabaseMockRecorder) GetTriggers(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggers", reflect.TypeOf((*MockDatabase)(nil).GetTriggers), arg0)
+}
+
+// GetTriggersToCheckCount mocks base method
+func (m *MockDatabase) GetTriggersToCheckCount() (int64, error) {
+	ret := m.ctrl.Call(m, "GetTriggersToCheckCount")
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTriggersToCheckCount indicates an expected call of GetTriggersToCheckCount
+func (mr *MockDatabaseMockRecorder) GetTriggersToCheckCount() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggersToCheckCount", reflect.TypeOf((*MockDatabase)(nil).GetTriggersToCheckCount))
 }
 
 // GetUserContactIDs mocks base method
