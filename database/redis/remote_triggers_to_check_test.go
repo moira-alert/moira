@@ -24,18 +24,34 @@ func TestRemoteTriggerToCheck(t *testing.T) {
 		So(err, ShouldResemble, database.ErrNil)
 		So(actual, ShouldBeEmpty)
 
+		count, err := dataBase.GetRemoteTriggersToCheckCount()
+		So(err, ShouldBeNil)
+		So(count, ShouldEqual, 0)
+
 		err = dataBase.AddRemoteTriggersToCheck([]string{triggerID1})
 		So(err, ShouldBeNil)
+
+		count, err = dataBase.GetRemoteTriggersToCheckCount()
+		So(err, ShouldBeNil)
+		So(count, ShouldEqual, 1)
 
 		actual, err = dataBase.GetRemoteTriggerToCheck()
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, triggerID1)
 
+		count, err = dataBase.GetRemoteTriggersToCheckCount()
+		So(err, ShouldBeNil)
+		So(count, ShouldEqual, 0)
+
 		err = dataBase.AddRemoteTriggersToCheck([]string{triggerID1})
 		So(err, ShouldBeNil)
 
 		err = dataBase.AddRemoteTriggersToCheck([]string{triggerID1})
 		So(err, ShouldBeNil)
+
+		count, err = dataBase.GetRemoteTriggersToCheckCount()
+		So(err, ShouldBeNil)
+		So(count, ShouldEqual, 1)
 
 		actual, err = dataBase.GetRemoteTriggerToCheck()
 		So(err, ShouldBeNil)
@@ -49,6 +65,10 @@ func TestRemoteTriggerToCheck(t *testing.T) {
 		err = dataBase.AddRemoteTriggersToCheck(triggerArr)
 		So(err, ShouldBeNil)
 
+		count, err = dataBase.GetRemoteTriggersToCheckCount()
+		So(err, ShouldBeNil)
+		So(count, ShouldEqual, 3)
+
 		actual, err = dataBase.GetRemoteTriggerToCheck()
 		So(err, ShouldBeNil)
 		So(actual, ShouldBeIn, triggerArr)
@@ -66,6 +86,10 @@ func TestRemoteTriggerToCheck(t *testing.T) {
 		actual, err = dataBase.GetRemoteTriggerToCheck()
 		So(err, ShouldResemble, database.ErrNil)
 		So(actual, ShouldBeEmpty)
+
+		count, err = dataBase.GetRemoteTriggersToCheckCount()
+		So(err, ShouldBeNil)
+		So(count, ShouldEqual, 0)
 	})
 }
 

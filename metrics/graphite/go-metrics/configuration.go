@@ -36,11 +36,11 @@ func ConfigureNotifierMetrics(prefix string) *graphite.NotifierMetrics {
 // ConfigureCheckerMetrics is checker metrics configurator
 func ConfigureCheckerMetrics(prefix string, remoteEnabled bool) *graphite.CheckerMetrics {
 	m := &graphite.CheckerMetrics{
-		CheckError:        registerMeter(metricNameWithPrefix(prefix, "errors.check")),
-		HandleError:       registerMeter(metricNameWithPrefix(prefix, "errors.handle")),
-		TriggersCheckTime: registerTimer(metricNameWithPrefix(prefix, "triggers")),
-		TriggerCheckTime:  newTimerMap(metricNameWithPrefix(prefix, "trigger")),
-		// ToDO: add TriggersToCheckChannelLen
+		CheckError:             registerMeter(metricNameWithPrefix(prefix, "errors.check")),
+		HandleError:            registerMeter(metricNameWithPrefix(prefix, "errors.handle")),
+		TriggersCheckTime:      registerTimer(metricNameWithPrefix(prefix, "triggers")),
+		TriggerCheckTime:       newTimerMap(metricNameWithPrefix(prefix, "trigger")),
+		TriggersToCheckCount:   registerHistogram(metricNameWithPrefix(prefix, "triggersToCheck")),
 		MetricEventsChannelLen: registerHistogram(metricNameWithPrefix(prefix, "metricEvents")),
 		MetricEventsHandleTime: registerTimer(metricNameWithPrefix(prefix, "metricEventsHandle")),
 	}
@@ -48,7 +48,7 @@ func ConfigureCheckerMetrics(prefix string, remoteEnabled bool) *graphite.Checke
 		m.RemoteHandleError = registerMeter(metricNameWithPrefix(prefix, "errors.remote_handle"))
 		m.RemoteTriggersCheckTime = registerTimer(metricNameWithPrefix(prefix, "remote_triggers"))
 		m.RemoteTriggerCheckTime = newTimerMap(metricNameWithPrefix(prefix, "remote_trigger"))
-		// ToDo: add RemoteTriggersToCheckChannelLen
+		m.RemoteTriggersToCheckCount = registerHistogram(metricNameWithPrefix(prefix, "remoteTriggersToCheck"))
 	}
 	return m
 }

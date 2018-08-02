@@ -72,10 +72,32 @@ func (worker *Checker) Start() error {
 	}()
 
 	worker.tomb.Go(func() error { return worker.checkMetricEventsChannelLen(metricEventsChannel) })
+	worker.tomb.Go(worker.checkTriggersToCheckChannelLen)
 	return nil
 }
 
-// ToDo: write checkTriggersToCheckChannelLen so it gets key length from Redis
+func (worker *Checker) checkTriggersToCheckChannelLen() error {
+	checkTicker := time.NewTicker(time.Millisecond * 100)
+	var triggersToCheckCount, remoteTriggersToCheckCount int64
+	var err error
+	for {
+		select {
+		case <-worker.tomb.Dying():
+			return nil
+		case <-checkTicker.C:
+			triggersToCheckCount, err = worker.Database.GetTriggersToCheckCount()
+			if err != nil {
+				worker.Metrics.TriggersToCheckCount.Update(triggersToCheckCount)
+			}
+			if worker.remoteEnabled {
+				remoteTriggersToCheckCount, err = worker.Database.GetRemoteTriggersToCheckCount()
+				if err != nil {
+					worker.Metrics.RemoteTriggersToCheckCount.Update(remoteTriggersToCheckCount)
+				}
+			}
+		}
+	}
+}
 
 func (worker *Checker) checkMetricEventsChannelLen(ch <-chan *moira.MetricEvent) error {
 	checkTicker := time.NewTicker(time.Millisecond * 100)

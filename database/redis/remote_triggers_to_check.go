@@ -37,4 +37,18 @@ func (connector *DbConnector) GetRemoteTriggerToCheck() (string, error) {
 	return triggerID, err
 }
 
+// GetRemoteTriggersToCheckCount return number of remote triggers ID to check from Redis Set
+func (connector *DbConnector) GetRemoteTriggersToCheckCount() (int64, error) {
+	c := connector.pool.Get()
+	defer c.Close()
+	triggersToCheckCount, err := redis.Int64(c.Do("SCARD", remoteTriggersToCheckKey))
+	if err != nil {
+		if err == redis.ErrNil {
+			return 0, nil
+		}
+		return 0, fmt.Errorf("failed to get trigger to check count: %s", err.Error())
+	}
+	return triggersToCheckCount, nil
+}
+
 var remoteTriggersToCheckKey = "moira-remote-triggers-to-check"

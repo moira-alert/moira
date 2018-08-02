@@ -24,18 +24,34 @@ func TestTriggerToCheck(t *testing.T) {
 		So(err, ShouldResemble, database.ErrNil)
 		So(actual, ShouldBeEmpty)
 
+		count, err := dataBase.GetTriggersToCheckCount()
+		So(err, ShouldBeNil)
+		So(count, ShouldEqual, 0)
+
 		err = dataBase.AddTriggersToCheck([]string{triggerID1})
 		So(err, ShouldBeNil)
+
+		count, err = dataBase.GetTriggersToCheckCount()
+		So(err, ShouldBeNil)
+		So(count, ShouldEqual, 1)
 
 		actual, err = dataBase.GetTriggerToCheck()
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, triggerID1)
 
+		count, err = dataBase.GetTriggersToCheckCount()
+		So(err, ShouldBeNil)
+		So(count, ShouldEqual, 0)
+
 		err = dataBase.AddTriggersToCheck([]string{triggerID1})
 		So(err, ShouldBeNil)
 
 		err = dataBase.AddTriggersToCheck([]string{triggerID1})
 		So(err, ShouldBeNil)
+
+		count, err = dataBase.GetTriggersToCheckCount()
+		So(err, ShouldBeNil)
+		So(count, ShouldEqual, 1)
 
 		actual, err = dataBase.GetTriggerToCheck()
 		So(err, ShouldBeNil)
@@ -49,6 +65,10 @@ func TestTriggerToCheck(t *testing.T) {
 		err = dataBase.AddTriggersToCheck(triggerArr)
 		So(err, ShouldBeNil)
 
+		count, err = dataBase.GetTriggersToCheckCount()
+		So(err, ShouldBeNil)
+		So(count, ShouldEqual, 3)
+
 		actual, err = dataBase.GetTriggerToCheck()
 		So(err, ShouldBeNil)
 		So(actual, ShouldBeIn, triggerArr)
@@ -66,6 +86,10 @@ func TestTriggerToCheck(t *testing.T) {
 		actual, err = dataBase.GetTriggerToCheck()
 		So(err, ShouldResemble, database.ErrNil)
 		So(actual, ShouldBeEmpty)
+
+		count, err = dataBase.GetTriggersToCheckCount()
+		So(err, ShouldBeNil)
+		So(count, ShouldEqual, 0)
 	})
 }
 
