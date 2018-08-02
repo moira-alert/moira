@@ -10,6 +10,7 @@ import (
 	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/database/redis"
 	"github.com/moira-alert/moira/logging/go-logging"
+	"strings"
 )
 
 var (
@@ -20,6 +21,7 @@ var (
 	convertPythonExpression         = flag.String("convert-expression", "", "Convert python expression used in moira 1.x to govaluate expressions in moira 2.x for concrete trigger")
 	getTriggerWithPythonExpressions = flag.Bool("python-expressions-triggers", false, "Get count of triggers with python expression and count of triggers, that has python expression and has not govaluate expression")
 	removeBotInstanceLock           = flag.String("delete-bot-host-lock", "", "Delete bot host lock for launching bots with new distributed lock strategy. Must use for upgrade from Moira 1.x to 2.x")
+	convertDatabase                 = flag.Bool("convert-database", false, "Convert existing subscriptions")
 )
 
 // Moira version
@@ -85,6 +87,24 @@ func main() {
 		if err := ConvertPythonExpression(dataBase, *convertPythonExpression); err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to convert: %v", err)
 			os.Exit(1)
+		}
+	}
+
+	if *convertDatabase {
+		reader := bufio.NewReader(os.Stdin)
+		fmt.Print("Type to choose convertation strategy:\nu - update\nr - rollback")
+		convertationStrategy, _ := reader.ReadString('\n')
+		switch convertationStrategy {
+		case "u":
+			if err := ConvertSubscriptions(dataBase, false); err != nil {
+				fmt.Println(fmt.Sprintf("Can not convert existing subscriptions: %s", err.Error()))
+			}
+		case "r":
+			if err := ConvertSubscriptions(dataBase, true); err != nil {
+				fmt.Println(fmt.Sprintf("Can not convert existing subscriptions: %s", err.Error()))
+			}
+		default:
+			fmt.Println(fmt.Sprintf("No such option: %s", convertationStrategy))
 		}
 	}
 }
@@ -210,6 +230,65 @@ func ConvertPythonExpressions(dataBase moira.Database) error {
 				fmt.Println()
 			}
 		}
+	}
+	return nil
+}
+
+// ConvertTaggedSubscription checks that subscription has deprecated pseudo-tags
+// and adds corresponding fields into subscription to store actual json structure in redis
+func ConvertTaggedSubscription(database moira.Database, subscription *moira.SubscriptionData) {
+	for tagInd := range subscription.Tags {
+		switch subscription.Tags[tagInd] {
+		case "ERROR":
+			if !subscription.IgnoreWarnings {
+				subscription.IgnoreWarnings = true
+				subscription.Tags = append(subscription.Tags[:tagInd], subscription.Tags[tagInd+1:]...)
+			}
+		case "DEGRADATION", "HIGH DEGRADATION":
+			if !subscription.IgnoreRecoverings {
+				subscription.IgnoreRecoverings = true
+				subscription.Tags = append(subscription.Tags[:tagInd], subscription.Tags[tagInd+1:]...)
+			}
+		}
+	}
+	database.SaveSubscription(subscription)
+}
+
+// ConvertUntaggedSubscription can be used in rollback if something will go wrong after Moira update.
+// This method checks that subscription must ignore specific states transitions and adds required pseudo-tags to existing subscription's tags.
+func ConvertUntaggedSubscription(database moira.Database, subscription *moira.SubscriptionData) {
+	if subscription.IgnoreWarnings {
+		subscription.Tags = append(subscription.Tags, "ERROR")
+	}
+	if subscription.IgnoreRecoverings {
+		subscription.Tags = append(subscription.Tags, "DEGRADATION")
+	}
+	database.SaveSubscription(subscription)
+}
+
+// ConvertSubscriptions converts all existing tag subscriptions under specified convertation strategy
+// In versions older than 2.3 Moira used to check if subscription has special pseudo-tags to ignore trigger's states transitions such as "WARN<->OK" or "ERROR->OK"
+// which can be specified in subscription parameters. Starting from version 2.3 this tags are deprecated and Moira uses corresponding boolean fields instead.
+func ConvertSubscriptions(database moira.Database, rollback bool) error {
+	allTags, err := database.GetTagNames()
+	if err != nil {
+		return err
+	}
+	allSubscriptions, err := database.GetTagsSubscriptions(allTags)
+	if err != nil {
+		return err
+	}
+	var subscriptionsConverter func(moira.Database, *moira.SubscriptionData)
+	if !rollback {
+		subscriptionsConverter = ConvertTaggedSubscription
+	} else {
+		subscriptionsConverter = ConvertUntaggedSubscription
+	}
+	for _, subscription := range allSubscriptions {
+		subscriptionsConverter(database, subscription)
+		convertedMessage := fmt.Sprintf("Subscription %s has been succesfully converted. Tags: %s IgnoreWarnings: %t IgnoreRecoverings: %t",
+			subscription.ID, strings.Join(subscription.Tags, ", "), subscription.IgnoreWarnings, subscription.IgnoreRecoverings)
+		fmt.Println(convertedMessage)
 	}
 	return nil
 }
