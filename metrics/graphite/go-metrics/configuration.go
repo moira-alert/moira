@@ -16,6 +16,7 @@ func ConfigureFilterMetrics(prefix string) *graphite.FilterMetrics {
 		SavingTimer:             registerTimer(metricNameWithPrefix(prefix, "time.save")),
 		BuildTreeTimer:          registerTimer(metricNameWithPrefix(prefix, "time.buildtree")),
 		MetricChannelLen:        registerHistogram(metricNameWithPrefix(prefix, "metricsToSave")),
+		LineChannelLen:          registerHistogram(metricNameWithPrefix(prefix, "linesToMatch")),
 	}
 }
 
@@ -35,13 +36,12 @@ func ConfigureNotifierMetrics(prefix string) *graphite.NotifierMetrics {
 // ConfigureCheckerMetrics is checker metrics configurator
 func ConfigureCheckerMetrics(prefix string) *graphite.CheckerMetrics {
 	return &graphite.CheckerMetrics{
-		CheckError:                registerMeter(metricNameWithPrefix(prefix, "errors.check")),
-		HandleError:               registerMeter(metricNameWithPrefix(prefix, "errors.handle")),
-		TriggersCheckTime:         registerTimer(metricNameWithPrefix(prefix, "triggers")),
-		TriggerCheckTime:          newTimerMap(metricNameWithPrefix(prefix, "trigger")),
-		TriggersToCheckChannelLen: registerHistogram(metricNameWithPrefix(prefix, "triggersToCheck")),
-		MetricEventsChannelLen:    registerHistogram(metricNameWithPrefix(prefix, "metricEvents")),
-		MetricEventsHandleTime:    registerTimer(metricNameWithPrefix(prefix, "metricEventsHandle")),
+		CheckError:             registerMeter(metricNameWithPrefix(prefix, "errors.check")),
+		HandleError:            registerMeter(metricNameWithPrefix(prefix, "errors.handle")),
+		TriggersCheckTime:      registerTimer(metricNameWithPrefix(prefix, "triggers")),
+		TriggerCheckTime:       newTimerMap(metricNameWithPrefix(prefix, "trigger")),
+		MetricEventsChannelLen: registerHistogram(metricNameWithPrefix(prefix, "metricEvents")),
+		MetricEventsHandleTime: registerTimer(metricNameWithPrefix(prefix, "metricEventsHandle")),
 	}
 }
 

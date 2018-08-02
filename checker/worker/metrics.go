@@ -46,10 +46,14 @@ func (worker *Checker) handleMetricEvent(pattern string) error {
 }
 
 func (worker *Checker) addTriggerIDsIfNeeded(triggerIDs []string) {
+	needToCheckTriggerIDs := make([]string, len(triggerIDs))
 	for _, triggerID := range triggerIDs {
 		if worker.needHandleTrigger(triggerID) {
-			worker.triggersToCheck <- triggerID
+			needToCheckTriggerIDs = append(needToCheckTriggerIDs, triggerID)
 		}
+	}
+	if len(needToCheckTriggerIDs) > 0 {
+		worker.Database.AddTriggersToCheck(needToCheckTriggerIDs)
 	}
 }
 

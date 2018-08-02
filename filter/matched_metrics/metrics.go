@@ -32,7 +32,7 @@ func NewMetricsMatcher(metrics *graphite.FilterMetrics, logger moira.Logger, dat
 }
 
 // Start process matched metrics from channel and save it in cache storage
-func (matcher *MetricsMatcher) Start(channel chan *moira.MatchedMetric) {
+func (matcher *MetricsMatcher) Start(matchedMetricsChan chan *moira.MatchedMetric) {
 	flushInterval := time.Second
 	matcher.waitGroup.Add(1)
 	go func() {
@@ -40,7 +40,7 @@ func (matcher *MetricsMatcher) Start(channel chan *moira.MatchedMetric) {
 		buffer := make(map[string]*moira.MatchedMetric)
 		for {
 			select {
-			case metric, ok := <-channel:
+			case metric, ok := <-matchedMetricsChan:
 				if !ok {
 					matcher.logger.Info("Moira Filter Metrics Matcher stopped")
 					return
