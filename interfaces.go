@@ -94,6 +94,9 @@ type Database interface {
 	AddTriggersToCheck(triggerIDs []string) error
 	GetTriggerToCheck() (string, error)
 
+	AddRemoteTriggersToCheck(triggerIDs []string) error
+	GetRemoteTriggerToCheck() (string, error)
+
 	// TriggerCheckLock storing
 	AcquireTriggerCheckLock(triggerID string, timeout int) error
 	DeleteTriggerCheckLock(triggerID string) error

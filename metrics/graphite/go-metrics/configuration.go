@@ -48,7 +48,7 @@ func ConfigureCheckerMetrics(prefix string, remoteEnabled bool) *graphite.Checke
 		m.RemoteHandleError = registerMeter(metricNameWithPrefix(prefix, "errors.remote_handle"))
 		m.RemoteTriggersCheckTime = registerTimer(metricNameWithPrefix(prefix, "remote_triggers"))
 		m.RemoteTriggerCheckTime = newTimerMap(metricNameWithPrefix(prefix, "remote_trigger"))
-		m.RemoteTriggersToCheckChannelLen = registerHistogram(metricNameWithPrefix(prefix, "remoteTriggersToCheck"))
+		// ToDo: add RemoteTriggersToCheckChannelLen
 	}
 	return m
 }

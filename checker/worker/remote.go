@@ -24,6 +24,6 @@ func (worker *Checker) check() error {
 	if err != nil {
 		return err
 	}
-	worker.addTriggerIDsIfNeeded(triggerIds, true)
+	worker.addRemoteTriggerIDsIfNeeded(triggerIds)
 	return nil
 }

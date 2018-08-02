@@ -30,7 +30,7 @@ func (worker *Checker) checkNoData() error {
 		if err != nil {
 			return err
 		}
-		worker.addTriggerIDsIfNeeded(triggerIds, false)
+		worker.addTriggerIDsIfNeeded(triggerIds)
 	}
 	return nil
 }

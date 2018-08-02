@@ -84,6 +84,18 @@ func (mr *MockDatabaseMockRecorder) AddPatternMetric(arg0, arg1 interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddPatternMetric", reflect.TypeOf((*MockDatabase)(nil).AddPatternMetric), arg0, arg1)
 }
 
+// AddRemoteTriggersToCheck mocks base method
+func (m *MockDatabase) AddRemoteTriggersToCheck(arg0 []string) error {
+	ret := m.ctrl.Call(m, "AddRemoteTriggersToCheck", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddRemoteTriggersToCheck indicates an expected call of AddRemoteTriggersToCheck
+func (mr *MockDatabaseMockRecorder) AddRemoteTriggersToCheck(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddRemoteTriggersToCheck", reflect.TypeOf((*MockDatabase)(nil).AddRemoteTriggersToCheck), arg0)
+}
+
 // AddTriggersToCheck mocks base method
 func (m *MockDatabase) AddTriggersToCheck(arg0 []string) error {
 	ret := m.ctrl.Call(m, "AddTriggersToCheck", arg0)
@@ -387,6 +399,19 @@ func (m *MockDatabase) GetRemoteTriggerIDs() ([]string, error) {
 // GetRemoteTriggerIDs indicates an expected call of GetRemoteTriggerIDs
 func (mr *MockDatabaseMockRecorder) GetRemoteTriggerIDs() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRemoteTriggerIDs", reflect.TypeOf((*MockDatabase)(nil).GetRemoteTriggerIDs))
+}
+
+// GetRemoteTriggerToCheck mocks base method
+func (m *MockDatabase) GetRemoteTriggerToCheck() (string, error) {
+	ret := m.ctrl.Call(m, "GetRemoteTriggerToCheck")
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetRemoteTriggerToCheck indicates an expected call of GetRemoteTriggerToCheck
+func (mr *MockDatabaseMockRecorder) GetRemoteTriggerToCheck() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRemoteTriggerToCheck", reflect.TypeOf((*MockDatabase)(nil).GetRemoteTriggerToCheck))
 }
 
 // GetSubscription mocks base method

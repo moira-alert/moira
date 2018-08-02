@@ -14,7 +14,7 @@ func (connector *DbConnector) AddTriggersToCheck(triggerIDs []string) error {
 
 	c.Send("MULTI")
 	for _, triggerID := range triggerIDs {
-		c.Send("SADD", triggerToCheckKey, triggerID)
+		c.Send("SADD", triggersToCheckKey, triggerID)
 	}
 	_, err := redis.Values(c.Do("EXEC"))
 	if err != nil {
@@ -27,7 +27,7 @@ func (connector *DbConnector) AddTriggersToCheck(triggerIDs []string) error {
 func (connector *DbConnector) GetTriggerToCheck() (string, error) {
 	c := connector.pool.Get()
 	defer c.Close()
-	triggerID, err := redis.String(c.Do("SPOP", triggerToCheckKey))
+	triggerID, err := redis.String(c.Do("SPOP", triggersToCheckKey))
 	if err != nil {
 		if err == redis.ErrNil {
 			return "", database.ErrNil
@@ -37,4 +37,4 @@ func (connector *DbConnector) GetTriggerToCheck() (string, error) {
 	return triggerID, err
 }
 
-var triggerToCheckKey = "moira-triggers-to-check"
+var triggersToCheckKey = "moira-triggers-to-check"

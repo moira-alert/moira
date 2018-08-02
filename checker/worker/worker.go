@@ -15,17 +15,16 @@ import (
 
 // Checker represents workers for periodically triggers checking based by new events
 type Checker struct {
-	Logger                moira.Logger
-	Database              moira.Database
-	Config                *checker.Config
-	RemoteConfig          *remote.Config
-	Metrics               *graphite.CheckerMetrics
-	TriggerCache          *cache.Cache
-	PatternCache          *cache.Cache
-	lastData              int64
-	tomb                  tomb.Tomb
-	remoteTriggersToCheck chan string
-	remoteEnabled         bool
+	Logger        moira.Logger
+	Database      moira.Database
+	Config        *checker.Config
+	RemoteConfig  *remote.Config
+	Metrics       *graphite.CheckerMetrics
+	TriggerCache  *cache.Cache
+	PatternCache  *cache.Cache
+	lastData      int64
+	tomb          tomb.Tomb
+	remoteEnabled bool
 }
 
 // Start start schedule new MetricEvents and check for NODATA triggers
@@ -47,7 +46,6 @@ func (worker *Checker) Start() error {
 	worker.remoteEnabled = worker.RemoteConfig.IsEnabled()
 
 	if worker.remoteEnabled {
-		worker.remoteTriggersToCheck = make(chan string, 16384)
 		worker.tomb.Go(worker.remoteChecker)
 		worker.Logger.Info("Remote checker started")
 	} else {
@@ -70,9 +68,6 @@ func (worker *Checker) Start() error {
 
 	go func() {
 		<-worker.tomb.Dying()
-		if worker.remoteEnabled {
-			close(worker.remoteTriggersToCheck)
-		}
 		worker.Logger.Info("Checking for new events stopped")
 	}()
 
@@ -80,20 +75,7 @@ func (worker *Checker) Start() error {
 	return nil
 }
 
-// ToDo: rewrite checkTriggersToCheckChannelLen so it gets key length from Redis
-func (worker *Checker) checkTriggersToCheckChannelLen() error {
-	checkTicker := time.NewTicker(time.Millisecond * 100)
-	for {
-		select {
-		case <-worker.tomb.Dying():
-			return nil
-		case <-checkTicker.C:
-			if worker.remoteEnabled {
-				worker.Metrics.RemoteTriggersToCheckChannelLen.Update(int64(len(worker.remoteTriggersToCheck)))
-			}
-		}
-	}
-}
+// ToDo: write checkTriggersToCheckChannelLen so it gets key length from Redis
 
 func (worker *Checker) checkMetricEventsChannelLen(ch <-chan *moira.MetricEvent) error {
 	checkTicker := time.NewTicker(time.Millisecond * 100)
