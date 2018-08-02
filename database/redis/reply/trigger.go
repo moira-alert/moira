@@ -3,10 +3,11 @@ package reply
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
+
 	"github.com/garyburd/redigo/redis"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
-	"strconv"
 )
 
 // Duty hack for moira.Trigger TTL int64 and stored trigger TTL string compatibility
@@ -17,6 +18,7 @@ type triggerStorageElement struct {
 	Targets          []string            `json:"targets"`
 	WarnValue        *float64            `json:"warn_value"`
 	ErrorValue       *float64            `json:"error_value"`
+	TriggerType      string              `json:"trigger_type,omitempty"`
 	Tags             []string            `json:"tags"`
 	TTLState         *string             `json:"ttl_state,omitempty"`
 	Schedule         *moira.ScheduleData `json:"sched,omitempty"`
@@ -34,6 +36,7 @@ func (storageElement *triggerStorageElement) toTrigger() moira.Trigger {
 		Targets:          storageElement.Targets,
 		WarnValue:        storageElement.WarnValue,
 		ErrorValue:       storageElement.ErrorValue,
+		TriggerType:      storageElement.TriggerType,
 		Tags:             storageElement.Tags,
 		TTLState:         storageElement.TTLState,
 		Schedule:         storageElement.Schedule,
@@ -52,6 +55,7 @@ func toTriggerStorageElement(trigger *moira.Trigger, triggerID string) *triggerS
 		Targets:          trigger.Targets,
 		WarnValue:        trigger.WarnValue,
 		ErrorValue:       trigger.ErrorValue,
+		TriggerType:      trigger.TriggerType,
 		Tags:             trigger.Tags,
 		TTLState:         trigger.TTLState,
 		Schedule:         trigger.Schedule,
@@ -89,7 +93,10 @@ func Trigger(rep interface{}, err error) (moira.Trigger, error) {
 		return moira.Trigger{}, fmt.Errorf("Failed to parse trigger json %s: %s", string(bytes), err.Error())
 	}
 
-	return triggerSE.toTrigger(), nil
+	trigger := triggerSE.toTrigger()
+	convertTriggerIfNecessary(&trigger)
+
+	return trigger, nil
 }
 
 // GetTriggerBytes marshal moira.Trigger to bytes array
@@ -97,7 +104,35 @@ func GetTriggerBytes(triggerID string, trigger *moira.Trigger) ([]byte, error) {
 	triggerSE := toTriggerStorageElement(trigger, triggerID)
 	bytes, err := json.Marshal(triggerSE)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to marshal trigger: %s", err.Error())
+		return nil, fmt.Errorf("failed to marshal trigger: %s", err.Error())
 	}
 	return bytes, nil
+}
+
+func convertTriggerIfNecessary(trigger *moira.Trigger) {
+	switch trigger.TriggerType {
+	case moira.RisingTrigger, moira.FallingTrigger, moira.ExpressionTrigger:
+		return
+	}
+	setProperTriggerType(trigger)
+}
+
+func setProperTriggerType(trigger *moira.Trigger) {
+	if trigger.Expression != nil && *trigger.Expression != "" {
+		trigger.TriggerType = moira.ExpressionTrigger
+		return
+	}
+
+	trigger.TriggerType = moira.RisingTrigger
+
+	if trigger.WarnValue != nil && trigger.ErrorValue != nil {
+		if *trigger.ErrorValue < *trigger.WarnValue {
+			trigger.TriggerType = moira.FallingTrigger
+			return
+		}
+		if *trigger.ErrorValue == *trigger.WarnValue {
+			trigger.WarnValue = nil
+			return
+		}
+	}
 }

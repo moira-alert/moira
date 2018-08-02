@@ -234,6 +234,7 @@ func (triggerChecker *TriggerChecker) getTimeSeriesState(triggerTimeSeries *trig
 
 	triggerExpression.WarnValue = triggerChecker.trigger.WarnValue
 	triggerExpression.ErrorValue = triggerChecker.trigger.ErrorValue
+	triggerExpression.TriggerType = triggerChecker.trigger.TriggerType
 	triggerExpression.PreviousState = lastState.State
 	triggerExpression.Expression = triggerChecker.trigger.Expression
 
