@@ -68,9 +68,6 @@ func TestDecodeBody(t *testing.T) {
 		})
 		Convey("response should not contain any Values", func() {
 			So(err, ShouldBeNil)
-			for _, v := range resp[0].FetchResponse.IsAbsent {
-				So(v, ShouldBeTrue)
-			}
 		})
 		Convey("step size should be default", func() {
 			So(resp[0].FetchResponse.StepTime, ShouldEqual, int32(f2-f))
@@ -91,8 +88,6 @@ func TestDecodeBody(t *testing.T) {
 		Convey("second response value should be set", func() {
 			So(err, ShouldBeNil)
 			fr := resp[0].FetchResponse
-			So(fr.IsAbsent[0], ShouldBeTrue)
-			So(fr.IsAbsent[1], ShouldBeFalse)
 			So(fr.Values[1], ShouldEqual, p1)
 		})
 	})
