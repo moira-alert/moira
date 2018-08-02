@@ -1,8 +1,10 @@
 package moira
 
 import (
-	. "github.com/smartystreets/goconvey/convey"
+	"fmt"
 	"testing"
+
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestIsScheduleAllows(t *testing.T) {
@@ -285,434 +287,113 @@ func getDefaultSchedule() ScheduleData {
 }
 
 func TestSubscriptionData_MustIgnore(testing *testing.T) {
+	type testCase struct {
+		State    string
+		OldState string
+		Ignored  bool
+	}
+	assertIgnored := func(subscription SubscriptionData, eventCase testCase) {
+		Convey(fmt.Sprintf("%s -> %s", eventCase.OldState, eventCase.State), func() {
+			event := NotificationEvent{State: eventCase.State, OldState: eventCase.OldState}
+			actual := subscription.MustIgnore(&event)
+			So(actual, ShouldEqual, eventCase.Ignored)
+		})
+	}
 	Convey("Has one type of transitions marked to be ignored", testing, func() {
 		Convey("[TRUE] Send notifications when triggers degraded only", func() {
 			subscription := SubscriptionData{
-				Enabled: true,
+				Enabled:           true,
 				IgnoreRecoverings: true,
-				IgnoreWarnings: false,
+				IgnoreWarnings:    false,
 			}
-			Convey("Transitions to consider", func() {
-				Convey("WARN -> OK", func() {
-					event := NotificationEvent{
-						State:    "WARN",
-						OldState: "OK",
-					}
-					willBeIgnored := subscription.MustIgnore(&event)
-					So(willBeIgnored, ShouldBeFalse)
-				})
-				Convey("OK -> ERROR", func() {
-					event := NotificationEvent{
-						State:    "ERROR",
-						OldState: "OK",
-					}
-					willBeIgnored := subscription.MustIgnore(&event)
-					So(willBeIgnored, ShouldBeFalse)
-				})
-				Convey("OK -> NODATA", func() {
-					event := NotificationEvent{
-						State:    "NODATA",
-						OldState: "OK",
-					}
-					willBeIgnored := subscription.MustIgnore(&event)
-					So(willBeIgnored, ShouldBeFalse)
-				})
-				Convey("WARN -> ERROR", func() {
-					event := NotificationEvent{
-						State:    "ERROR",
-						OldState: "WARN",
-					}
-					willBeIgnored := subscription.MustIgnore(&event)
-					So(willBeIgnored, ShouldBeFalse)
-				})
-				Convey("WARN -> NODATA", func() {
-					event := NotificationEvent{
-						State:    "NODATA",
-						OldState: "WARN",
-					}
-					willBeIgnored := subscription.MustIgnore(&event)
-					So(willBeIgnored, ShouldBeFalse)
-				})
-				Convey("ERROR -> NODATA", func() {
-					event := NotificationEvent{
-						State:    "NODATA",
-						OldState: "ERROR",
-					}
-					willBeIgnored := subscription.MustIgnore(&event)
-					So(willBeIgnored, ShouldBeFalse)
-				})
-			})
-			Convey("Transitions to ignore", func() {
-				Convey("WARN -> OK", func() {
-					event := NotificationEvent{
-						State:    "OK",
-						OldState: "WARN",
-					}
-					willBeIgnored := subscription.MustIgnore(&event)
-					So(willBeIgnored, ShouldBeTrue)
-				})
-				Convey("ERROR -> OK", func() {
-					event := NotificationEvent{
-						State:    "OK",
-						OldState: "ERROR",
-					}
-					willBeIgnored := subscription.MustIgnore(&event)
-					So(willBeIgnored, ShouldBeTrue)
-				})
-				Convey("NODATA -> OK", func() {
-					event := NotificationEvent{
-						State:    "OK",
-						OldState: "NODATA",
-					}
-					willBeIgnored := subscription.MustIgnore(&event)
-					So(willBeIgnored, ShouldBeTrue)
-				})
-				Convey("ERROR -> WARN", func() {
-					event := NotificationEvent{
-						State:    "WARN",
-						OldState: "ERROR",
-					}
-					willBeIgnored := subscription.MustIgnore(&event)
-					So(willBeIgnored, ShouldBeTrue)
-				})
-				Convey("NODATA -> WARN", func() {
-					event := NotificationEvent{
-						State:    "WARN",
-						OldState: "NODATA",
-					}
-					willBeIgnored := subscription.MustIgnore(&event)
-					So(willBeIgnored, ShouldBeTrue)
-				})
-				Convey("NODATA -> ERROR", func() {
-					event := NotificationEvent{
-						State:    "ERROR",
-						OldState: "NODATA",
-					}
-					willBeIgnored := subscription.MustIgnore(&event)
-					So(willBeIgnored, ShouldBeTrue)
-				})
-			})
+			testCases := []testCase{
+				{"WARN", "OK", false},
+				{"ERROR", "OK", false},
+				{"NODATA", "OK", false},
+				{"ERROR", "WARN", false},
+				{"NODATA", "WARN", false},
+				{"NODATA", "ERROR", false},
+				{"OK", "WARN", true},
+				{"OK", "ERROR", true},
+				{"OK", "NODATA", true},
+				{"WARN", "ERROR", true},
+				{"WARN", "NODATA", true},
+				{"ERROR", "NODATA", true},
+			}
+			for _, testCase := range testCases {
+				assertIgnored(subscription, testCase)
+			}
 		})
 		Convey("[TRUE] Do not send WARN notifications", func() {
 			subscription := SubscriptionData{
-				Enabled: true,
+				Enabled:           true,
 				IgnoreRecoverings: false,
-				IgnoreWarnings: true,
+				IgnoreWarnings:    true,
 			}
-			Convey("Transitions to consider", func() {
-				Convey("OK -> ERROR", func() {
-					event := NotificationEvent{
-						State:    "ERROR",
-						OldState: "OK",
-					}
-					willBeIgnored := subscription.MustIgnore(&event)
-					So(willBeIgnored, ShouldBeFalse)
-				})
-				Convey("OK -> NODATA", func() {
-					event := NotificationEvent{
-						State:    "NODATA",
-						OldState: "OK",
-					}
-					willBeIgnored := subscription.MustIgnore(&event)
-					So(willBeIgnored, ShouldBeFalse)
-				})
-				Convey("WARN -> ERROR", func() {
-					event := NotificationEvent{
-						State:    "ERROR",
-						OldState: "WARN",
-					}
-					willBeIgnored := subscription.MustIgnore(&event)
-					So(willBeIgnored, ShouldBeFalse)
-				})
-				Convey("WARN -> NODATA", func() {
-					event := NotificationEvent{
-						State:    "NODATA",
-						OldState: "WARN",
-					}
-					willBeIgnored := subscription.MustIgnore(&event)
-					So(willBeIgnored, ShouldBeFalse)
-				})
-				Convey("ERROR -> NODATA", func() {
-					event := NotificationEvent{
-						State:    "NODATA",
-						OldState: "ERROR",
-					}
-					willBeIgnored := subscription.MustIgnore(&event)
-					So(willBeIgnored, ShouldBeFalse)
-				})
-				Convey("ERROR -> OK", func() {
-					event := NotificationEvent{
-						State:    "OK",
-						OldState: "ERROR",
-					}
-					willBeIgnored := subscription.MustIgnore(&event)
-					So(willBeIgnored, ShouldBeFalse)
-				})
-				Convey("NODATA -> OK", func() {
-					event := NotificationEvent{
-						State:    "OK",
-						OldState: "NODATA",
-					}
-					willBeIgnored := subscription.MustIgnore(&event)
-					So(willBeIgnored, ShouldBeFalse)
-				})
-				Convey("ERROR -> WARN", func() {
-					event := NotificationEvent{
-						State:    "WARN",
-						OldState: "ERROR",
-					}
-					willBeIgnored := subscription.MustIgnore(&event)
-					So(willBeIgnored, ShouldBeFalse)
-				})
-				Convey("NODATA -> WARN", func() {
-					event := NotificationEvent{
-						State:    "WARN",
-						OldState: "NODATA",
-					}
-					willBeIgnored := subscription.MustIgnore(&event)
-					So(willBeIgnored, ShouldBeFalse)
-				})
-				Convey("NODATA -> ERROR", func() {
-					event := NotificationEvent{
-						State:    "ERROR",
-						OldState: "NODATA",
-					}
-					willBeIgnored := subscription.MustIgnore(&event)
-					So(willBeIgnored, ShouldBeFalse)
-				})
-			})
-			Convey("Transitions to ignore", func() {
-				Convey("OK -> WARN", func() {
-					event := NotificationEvent{
-						State:    "OK",
-						OldState: "WARN",
-					}
-					willBeIgnored := subscription.MustIgnore(&event)
-					So(willBeIgnored, ShouldBeTrue)
-				})
-				Convey("WARN -> OK", func() {
-					event := NotificationEvent{
-						State:    "WARN",
-						OldState: "OK",
-					}
-					willBeIgnored := subscription.MustIgnore(&event)
-					So(willBeIgnored, ShouldBeTrue)
-				})
-			})
+			testCases := []testCase{
+				{"ERROR", "OK", false},
+				{"NODATA", "OK", false},
+				{"ERROR", "WARN", false},
+				{"NODATA", "WARN", false},
+				{"NODATA", "ERROR", false},
+				{"OK", "ERROR", false},
+				{"OK", "NODATA", false},
+				{"WARN", "ERROR", false},
+				{"WARN", "NODATA", false},
+				{"ERROR", "NODATA", false},
+				{"OK", "WARN", true},
+				{"WARN", "OK", true},
+			}
+			for _, testCase := range testCases {
+				assertIgnored(subscription, testCase)
+			}
 		})
 	})
-	Convey("Has all types of transitions marked to be ignored", testing, func() {
+	Convey("Has both types of transitions marked to be ignored", testing, func() {
 		subscription := SubscriptionData{
-			Enabled: true,
+			Enabled:           true,
 			IgnoreRecoverings: true,
-			IgnoreWarnings: true,
+			IgnoreWarnings:    true,
 		}
-		Convey("Transitions to consider", func() {
-			Convey("OK -> ERROR", func() {
-				event := NotificationEvent{
-					State:    "ERROR",
-					OldState: "OK",
-				}
-				willBeIgnored := subscription.MustIgnore(&event)
-				So(willBeIgnored, ShouldBeFalse)
-			})
-			Convey("OK -> NODATA", func() {
-				event := NotificationEvent{
-					State:    "NODATA",
-					OldState: "OK",
-				}
-				willBeIgnored := subscription.MustIgnore(&event)
-				So(willBeIgnored, ShouldBeFalse)
-			})
-			Convey("WARN -> ERROR", func() {
-				event := NotificationEvent{
-					State:    "ERROR",
-					OldState: "WARN",
-				}
-				willBeIgnored := subscription.MustIgnore(&event)
-				So(willBeIgnored, ShouldBeFalse)
-			})
-			Convey("WARN -> NODATA", func() {
-				event := NotificationEvent{
-					State:    "NODATA",
-					OldState: "WARN",
-				}
-				willBeIgnored := subscription.MustIgnore(&event)
-				So(willBeIgnored, ShouldBeFalse)
-			})
-			Convey("ERROR -> NODATA", func() {
-				event := NotificationEvent{
-					State:    "NODATA",
-					OldState: "ERROR",
-				}
-				willBeIgnored := subscription.MustIgnore(&event)
-				So(willBeIgnored, ShouldBeFalse)
-			})
-		})
-		Convey("Transitions to ignore", func() {
-			Convey("[TRUE] Do not send WARN notifications", func() {
-				Convey("OK -> WARN", func() {
-					event := NotificationEvent{
-						State:    "OK",
-						OldState: "WARN",
-					}
-					willBeIgnored := subscription.MustIgnore(&event)
-					So(willBeIgnored, ShouldBeTrue)
-				})
-				Convey("WARN -> OK", func() {
-					event := NotificationEvent{
-						State:    "WARN",
-						OldState: "OK",
-					}
-					willBeIgnored := subscription.MustIgnore(&event)
-					So(willBeIgnored, ShouldBeTrue)
-				})
-			})
-			Convey("[TRUE] Send notifications when triggers degraded only", func() {
-				Convey("ERROR -> OK", func() {
-					event := NotificationEvent{
-						State:    "OK",
-						OldState: "ERROR",
-					}
-					willBeIgnored := subscription.MustIgnore(&event)
-					So(willBeIgnored, ShouldBeTrue)
-				})
-				Convey("NODATA -> OK", func() {
-					event := NotificationEvent{
-						State:    "OK",
-						OldState: "NODATA",
-					}
-					willBeIgnored := subscription.MustIgnore(&event)
-					So(willBeIgnored, ShouldBeTrue)
-				})
-				Convey("ERROR -> WARN", func() {
-					event := NotificationEvent{
-						State:    "WARN",
-						OldState: "ERROR",
-					}
-					willBeIgnored := subscription.MustIgnore(&event)
-					So(willBeIgnored, ShouldBeTrue)
-				})
-				Convey("NODATA -> WARN", func() {
-					event := NotificationEvent{
-						State:    "WARN",
-						OldState: "NODATA",
-					}
-					willBeIgnored := subscription.MustIgnore(&event)
-					So(willBeIgnored, ShouldBeTrue)
-				})
-				Convey("NODATA -> ERROR", func() {
-					event := NotificationEvent{
-						State:    "ERROR",
-						OldState: "NODATA",
-					}
-					willBeIgnored := subscription.MustIgnore(&event)
-					So(willBeIgnored, ShouldBeTrue)
-				})
-			})
-		})
+		testCases := []testCase{
+			{"ERROR", "OK", false},
+			{"NODATA", "OK", false},
+			{"ERROR", "WARN", false},
+			{"NODATA", "WARN", false},
+			{"NODATA", "ERROR", false},
+			{"OK", "WARN", true},
+			{"WARN", "OK", true},
+			{"OK", "ERROR", true},
+			{"OK", "NODATA", true},
+			{"WARN", "ERROR", true},
+			{"WARN", "NODATA", true},
+			{"ERROR", "NODATA", true},
+		}
+		for _, testCase := range testCases {
+			assertIgnored(subscription, testCase)
+		}
 	})
 	Convey("Has no types of transitions marked to be ignored", testing, func() {
 		subscription := SubscriptionData{
-			Enabled: true,
+			Enabled:           true,
 			IgnoreRecoverings: false,
-			IgnoreWarnings: false,
+			IgnoreWarnings:    false,
 		}
-		Convey("OK -> WARN", func() {
-			event := NotificationEvent{
-				State:    "OK",
-				OldState: "WARN",
-			}
-			willBeIgnored := subscription.MustIgnore(&event)
-			So(willBeIgnored, ShouldBeFalse)
-		})
-		Convey("WARN -> OK", func() {
-			event := NotificationEvent{
-				State:    "WARN",
-				OldState: "OK",
-			}
-			willBeIgnored := subscription.MustIgnore(&event)
-			So(willBeIgnored, ShouldBeFalse)
-		})
-		Convey("OK -> ERROR", func() {
-			event := NotificationEvent{
-				State:    "ERROR",
-				OldState: "OK",
-			}
-			willBeIgnored := subscription.MustIgnore(&event)
-			So(willBeIgnored, ShouldBeFalse)
-		})
-		Convey("OK -> NODATA", func() {
-			event := NotificationEvent{
-				State:    "NODATA",
-				OldState: "OK",
-			}
-			willBeIgnored := subscription.MustIgnore(&event)
-			So(willBeIgnored, ShouldBeFalse)
-		})
-		Convey("WARN -> ERROR", func() {
-			event := NotificationEvent{
-				State:    "ERROR",
-				OldState: "WARN",
-			}
-			willBeIgnored := subscription.MustIgnore(&event)
-			So(willBeIgnored, ShouldBeFalse)
-		})
-		Convey("WARN -> NODATA", func() {
-			event := NotificationEvent{
-				State:    "NODATA",
-				OldState: "WARN",
-			}
-			willBeIgnored := subscription.MustIgnore(&event)
-			So(willBeIgnored, ShouldBeFalse)
-		})
-		Convey("ERROR -> NODATA", func() {
-			event := NotificationEvent{
-				State:    "NODATA",
-				OldState: "ERROR",
-			}
-			willBeIgnored := subscription.MustIgnore(&event)
-			So(willBeIgnored, ShouldBeFalse)
-		})
-		Convey("ERROR -> OK", func() {
-			event := NotificationEvent{
-				State:    "OK",
-				OldState: "ERROR",
-			}
-			willBeIgnored := subscription.MustIgnore(&event)
-			So(willBeIgnored, ShouldBeFalse)
-		})
-		Convey("NODATA -> OK", func() {
-			event := NotificationEvent{
-				State:    "OK",
-				OldState: "NODATA",
-			}
-			willBeIgnored := subscription.MustIgnore(&event)
-			So(willBeIgnored, ShouldBeFalse)
-		})
-		Convey("ERROR -> WARN", func() {
-			event := NotificationEvent{
-				State:    "WARN",
-				OldState: "ERROR",
-			}
-			willBeIgnored := subscription.MustIgnore(&event)
-			So(willBeIgnored, ShouldBeFalse)
-		})
-		Convey("NODATA -> WARN", func() {
-			event := NotificationEvent{
-				State:    "WARN",
-				OldState: "NODATA",
-			}
-			willBeIgnored := subscription.MustIgnore(&event)
-			So(willBeIgnored, ShouldBeFalse)
-		})
-		Convey("NODATA -> ERROR", func() {
-			event := NotificationEvent{
-				State:    "ERROR",
-				OldState: "NODATA",
-			}
-			willBeIgnored := subscription.MustIgnore(&event)
-			So(willBeIgnored, ShouldBeFalse)
-		})
+		testCases := []testCase{
+			{"OK", "WARN", false},
+			{"WARN", "OK", false},
+			{"ERROR", "OK", false},
+			{"NODATA", "OK", false},
+			{"ERROR", "WARN", false},
+			{"NODATA", "WARN", false},
+			{"NODATA", "ERROR", false},
+			{"OK", "ERROR", false},
+			{"OK", "NODATA", false},
+			{"WARN", "NODATA", false},
+			{"ERROR", "NODATA", false},
+		}
+		for _, testCase := range testCases {
+			assertIgnored(subscription, testCase)
+		}
 	})
 }
