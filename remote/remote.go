@@ -110,10 +110,8 @@ func convertResponse(r []*types.MetricData, allowRealTimeAlerting bool) []*targe
 	ts := make([]*target.TimeSeries, len(r))
 	for i, md := range r {
 		if !allowRealTimeAlerting {
-			last := len(md.Values) - 1
 			// remove last value
-			md.Values = md.Values[:last]
-			md.IsAbsent = md.IsAbsent[:last]
+			md.Values = md.Values[:len(md.Values)-1]
 		}
 		ts[i] = &target.TimeSeries{MetricData: *md, Wildcard: false}
 	}
