@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/go-graphite/carbonapi/expr/types"
-	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
+	pb "github.com/go-graphite/protocol/carbonapi_v3_pb"
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/expression"
@@ -105,11 +105,10 @@ func TestGetTimeSeries(t *testing.T) {
 			timeSeries := target.TimeSeries{
 				MetricData: types.MetricData{FetchResponse: pb.FetchResponse{
 					Name:      pattern,
-					StartTime: int32(from),
-					StopTime:  int32(until),
+					StartTime: from,
+					StopTime:  until,
 					StepTime:  60,
 					Values:    []float64{},
-					IsAbsent:  []bool{},
 				}},
 				Wildcard: true,
 			}
@@ -131,11 +130,10 @@ func TestGetTimeSeries(t *testing.T) {
 			actual, metrics, err := triggerChecker.getTimeSeries(from, until)
 			fetchResponse := pb.FetchResponse{
 				Name:      metric,
-				StartTime: int32(from),
-				StopTime:  int32(until),
-				StepTime:  int32(retention),
+				StartTime: from,
+				StopTime:  until,
+				StepTime:  retention,
 				Values:    []float64{0, 1, 2, 3, 4},
-				IsAbsent:  make([]bool, 5),
 			}
 			expected := &triggerTimeSeries{
 				Main:       []*target.TimeSeries{{MetricData: types.MetricData{FetchResponse: fetchResponse}}},
@@ -162,11 +160,10 @@ func TestGetTimeSeries(t *testing.T) {
 			actual, metrics, err := triggerChecker.getTimeSeries(from, until)
 			fetchResponse := pb.FetchResponse{
 				Name:      metric,
-				StartTime: int32(from),
-				StopTime:  int32(until),
-				StepTime:  int32(retention),
+				StartTime: from,
+				StopTime:  until,
+				StepTime:  retention,
 				Values:    []float64{0, 1, 2, 3},
-				IsAbsent:  make([]bool, 4),
 			}
 			addFetchResponse := fetchResponse
 			addFetchResponse.Name = addMetric
@@ -226,7 +223,7 @@ func TestGetTimeSeries(t *testing.T) {
 
 			actual, metrics, err := triggerChecker.getTimeSeries(from, until)
 			So(err, ShouldBeError)
-			So(err, ShouldResemble, ErrWrongTriggerTargets([]int{2,4}))
+			So(err, ShouldResemble, ErrWrongTriggerTargets([]int{2, 4}))
 			So(err.Error(), ShouldResemble, "Targets t2, t4 has more than one timeseries")
 			So(actual, ShouldBeNil)
 			So(metrics, ShouldBeNil)
@@ -252,11 +249,10 @@ func TestGetExpressionValues(t *testing.T) {
 	Convey("Has only main timeSeries", t, func() {
 		fetchResponse := pb.FetchResponse{
 			Name:      "m",
-			StartTime: int32(17),
-			StopTime:  int32(67),
-			StepTime:  int32(10),
-			Values:    []float64{0.0, 1.0, 2.0, 3.0, 4.0},
-			IsAbsent:  []bool{false, true, true, false, true},
+			StartTime: 17,
+			StopTime:  67,
+			StepTime:  10,
+			Values:    []float64{0.0, math.NaN(), math.NaN(), 3.0, math.NaN()},
 		}
 		timeSeries := target.TimeSeries{
 			MetricData: types.MetricData{FetchResponse: fetchResponse},
@@ -293,22 +289,20 @@ func TestGetExpressionValues(t *testing.T) {
 	Convey("Has additional series", t, func() {
 		fetchResponse := pb.FetchResponse{
 			Name:      "main",
-			StartTime: int32(17),
-			StopTime:  int32(67),
-			StepTime:  int32(10),
-			Values:    []float64{0.0, 1.0, 2.0, 3.0, 4.0},
-			IsAbsent:  []bool{false, true, true, false, true},
+			StartTime: 17,
+			StopTime:  67,
+			StepTime:  10,
+			Values:    []float64{0.0, math.NaN(), math.NaN(), 3.0, math.NaN()},
 		}
 		timeSeries := target.TimeSeries{
 			MetricData: types.MetricData{FetchResponse: fetchResponse},
 		}
 		fetchResponseAdd := pb.FetchResponse{
 			Name:      "main",
-			StartTime: int32(17),
-			StopTime:  int32(67),
-			StepTime:  int32(10),
-			Values:    []float64{4.0, 3.0, 2.0, 1.0, 0.0},
-			IsAbsent:  []bool{false, false, true, true, false},
+			StartTime: 17,
+			StopTime:  67,
+			StepTime:  10,
+			Values:    []float64{4.0, 3.0, math.NaN(), math.NaN(), 0.0},
 		}
 		timeSeriesAdd := target.TimeSeries{
 			MetricData: types.MetricData{FetchResponse: fetchResponseAdd},

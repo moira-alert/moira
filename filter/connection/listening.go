@@ -8,7 +8,6 @@ import (
 	"gopkg.in/tomb.v2"
 
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/filter"
 	"github.com/moira-alert/moira/metrics/graphite"
 )
 
@@ -22,28 +21,28 @@ type MetricsListener struct {
 }
 
 // NewListener creates new listener
-func NewListener(port string, logger moira.Logger, metrics *graphite.FilterMetrics, patternStorage *filter.PatternStorage) (*MetricsListener, error) {
+func NewListener(port string, logger moira.Logger, metrics *graphite.FilterMetrics) (*MetricsListener, error) {
 	address, err := net.ResolveTCPAddr("tcp", port)
 	if nil != err {
-		return nil, fmt.Errorf("Failed to resolve tcp address [%s]: %s", port, err.Error())
+		return nil, fmt.Errorf("failed to resolve tcp address [%s]: %s", port, err.Error())
 	}
 	newListener, err := net.ListenTCP("tcp", address)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to listen on [%s]: %s", port, err.Error())
+		return nil, fmt.Errorf("failed to listen on [%s]: %s", port, err.Error())
 	}
 	listener := MetricsListener{
 		listener: newListener,
 		logger:   logger,
-		handler:  NewConnectionsHandler(logger, patternStorage),
-		metrics: 	metrics,
+		handler:  NewConnectionsHandler(logger),
+		metrics:  metrics,
 	}
 	return &listener, nil
 }
 
 // Listen waits for new data in connection and handles it in ConnectionHandler
-// All handled data sets to metricsChan
-func (listener *MetricsListener) Listen() chan *moira.MatchedMetric {
-	metricsChan := make(chan *moira.MatchedMetric, 16384)
+// All handled data sets to lineChan
+func (listener *MetricsListener) Listen() chan []byte {
+	lineChan := make(chan []byte, 16384)
 	listener.tomb.Go(func() error {
 		for {
 			select {
@@ -52,7 +51,7 @@ func (listener *MetricsListener) Listen() chan *moira.MatchedMetric {
 					listener.logger.Info("Stopping listener...")
 					listener.listener.Close()
 					listener.handler.StopHandlingConnections()
-					close(metricsChan)
+					close(lineChan)
 					listener.logger.Info("Moira Filter Listener stopped")
 					return nil
 				}
@@ -68,23 +67,22 @@ func (listener *MetricsListener) Listen() chan *moira.MatchedMetric {
 				continue
 			}
 			listener.logger.Infof("%s connected", conn.RemoteAddr())
-			listener.handler.HandleConnection(conn, metricsChan)
+			listener.handler.HandleConnection(conn, lineChan)
 		}
 	})
-
-	listener.tomb.Go(func() error { return listener.checkNewMetricsChannelLen(metricsChan) })
+	listener.tomb.Go(func() error { return listener.checkNewLinesChannelLen(lineChan) })
 	listener.logger.Info("Moira Filter Listener Started")
-	return metricsChan
+	return lineChan
 }
 
-func (listener *MetricsListener) checkNewMetricsChannelLen(channel <-chan *moira.MatchedMetric) error {
+func (listener *MetricsListener) checkNewLinesChannelLen(channel <-chan []byte) error {
 	checkTicker := time.NewTicker(time.Millisecond * 100)
 	for {
 		select {
 		case <-listener.tomb.Dying():
 			return nil
 		case <-checkTicker.C:
-			listener.metrics.MetricChannelLen.Update(int64(len(channel)))
+			listener.metrics.LineChannelLen.Update(int64(len(channel)))
 		}
 	}
 }

@@ -43,7 +43,7 @@ func EvaluateTarget(database moira.Database, target string, from int64, until in
 		if err != nil {
 			return nil, err
 		}
-		rewritten, newTargets, err := expr.RewriteExpr(expr2, int32(from), int32(until), metricsMap)
+		rewritten, newTargets, err := expr.RewriteExpr(expr2, from, until, metricsMap)
 		if err != nil && err != parser.ErrSeriesDoesNotExist {
 			return nil, fmt.Errorf("Failed RewriteExpr: %s", err.Error())
 		} else if rewritten {
@@ -56,7 +56,7 @@ func EvaluateTarget(database moira.Database, target string, from int64, until in
 						err = fmt.Errorf("panic while evaluate target %s: message: '%s' stack: %s", target, r, debug.Stack())
 					}
 				}()
-				result, err = expr.EvalExpr(expr2, int32(from), int32(until), metricsMap)
+				result, err = expr.EvalExpr(expr2, from, until, metricsMap)
 				if err != nil {
 					if err == parser.ErrSeriesDoesNotExist {
 						err = nil
@@ -94,13 +94,13 @@ func getPatternsMetricData(database moira.Database, patterns []parser.MetricRequ
 	metrics := make([]string, 0)
 	metricsMap := make(map[parser.MetricRequest][]*types.MetricData)
 	for _, pattern := range patterns {
-		pattern.From += int32(from)
-		pattern.Until += int32(until)
-		metricDatas, patternMetrics, err := FetchData(database, pattern.Metric, int64(pattern.From), int64(pattern.Until), allowRealTimeAlerting)
+		pattern.From += from
+		pattern.Until += until
+		metricsData, patternMetrics, err := FetchData(database, pattern.Metric, pattern.From, pattern.Until, allowRealTimeAlerting)
 		if err != nil {
 			return nil, nil, err
 		}
-		metricsMap[pattern] = metricDatas
+		metricsMap[pattern] = metricsData
 		metrics = append(metrics, patternMetrics...)
 	}
 	return metricsMap, metrics, nil
