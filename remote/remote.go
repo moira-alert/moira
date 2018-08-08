@@ -20,11 +20,13 @@ type graphiteMetric struct {
 	Datapoints [][2]*float64
 }
 
+// ErrRemoteTriggerResponse is a custom error when remote trigger check fails
 type ErrRemoteTriggerResponse struct {
 	InternalError error
 	Target        string
 }
 
+// Error is a representation of Error interface method
 func (err ErrRemoteTriggerResponse) Error() string {
 	return fmt.Sprintf("failed to get remote target '%s': %s", err.Target, err.InternalError.Error())
 }

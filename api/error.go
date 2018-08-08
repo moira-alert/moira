@@ -70,12 +70,13 @@ func ErrorForbidden(errorText string) *ErrorResponse {
 	}
 }
 
+// ErrorRemoteServerUnavailable return 503 when remote trigger check failed
 func ErrorRemoteServerUnavailable(err error) *ErrorResponse {
 	return &ErrorResponse{
 		Err:            err,
 		HTTPStatusCode: 503,
-		StatusText:     fmt.Sprintf("Remote server unavailable, error: %s", err.Error()),
-		ErrorText:      "Remote server error, please contact administrator",
+		StatusText:     "Remote server unavailable, error: %s",
+		ErrorText:      fmt.Sprintf("Remote server error, please contact administrator. Raw error: %s", err.Error()),
 	}
 }
 

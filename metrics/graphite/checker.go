@@ -8,6 +8,7 @@ type CheckerMetrics struct {
 	MetricEventsHandleTime Timer
 }
 
+// CheckMetrics is a collection of metrics for trigger checks
 type CheckMetrics struct {
 	CheckError           Meter
 	HandleError          Meter
