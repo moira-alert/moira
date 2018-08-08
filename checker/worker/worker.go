@@ -55,13 +55,13 @@ func (worker *Checker) Start() error {
 	worker.Logger.Infof("Start %v parallel checker(s)", worker.Config.MaxParallelChecks)
 	for i := 0; i < worker.Config.MaxParallelChecks; i++ {
 		worker.tomb.Go(func() error { return worker.metricsChecker(metricEventsChannel) })
-		worker.tomb.Go(func() error { return worker.startTriggerHandler(false) })
+		worker.tomb.Go(func() error { return worker.startTriggerHandler(false, worker.Metrics.MoiraMetrics) })
 	}
 
 	if worker.remoteEnabled {
 		worker.Logger.Infof("Start %v parallel remote checker(s)", worker.Config.MaxParallelRemoteChecks)
 		for i := 0; i < worker.Config.MaxParallelRemoteChecks; i++ {
-			worker.tomb.Go(func() error { return worker.startTriggerHandler(true) })
+			worker.tomb.Go(func() error { return worker.startTriggerHandler(true, worker.Metrics.RemoteMetrics) })
 		}
 	}
 	worker.Logger.Info("Checking new events started")
@@ -72,11 +72,11 @@ func (worker *Checker) Start() error {
 	}()
 
 	worker.tomb.Go(func() error { return worker.checkMetricEventsChannelLen(metricEventsChannel) })
-	worker.tomb.Go(worker.checkTriggersToCheckChannelLen)
+	worker.tomb.Go(worker.checkTriggersToCheckCount)
 	return nil
 }
 
-func (worker *Checker) checkTriggersToCheckChannelLen() error {
+func (worker *Checker) checkTriggersToCheckCount() error {
 	checkTicker := time.NewTicker(time.Millisecond * 100)
 	var triggersToCheckCount, remoteTriggersToCheckCount int64
 	var err error
@@ -86,13 +86,13 @@ func (worker *Checker) checkTriggersToCheckChannelLen() error {
 			return nil
 		case <-checkTicker.C:
 			triggersToCheckCount, err = worker.Database.GetTriggersToCheckCount()
-			if err != nil {
-				worker.Metrics.TriggersToCheckCount.Update(triggersToCheckCount)
+			if err == nil {
+				worker.Metrics.MoiraMetrics.TriggersToCheckCount.Update(triggersToCheckCount)
 			}
 			if worker.remoteEnabled {
 				remoteTriggersToCheckCount, err = worker.Database.GetRemoteTriggersToCheckCount()
-				if err != nil {
-					worker.Metrics.RemoteTriggersToCheckCount.Update(remoteTriggersToCheckCount)
+				if err == nil {
+					worker.Metrics.RemoteMetrics.TriggersToCheckCount.Update(remoteTriggersToCheckCount)
 				}
 			}
 		}

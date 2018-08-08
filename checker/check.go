@@ -179,7 +179,11 @@ func (triggerChecker *TriggerChecker) handleTriggerCheck(checkData moira.CheckDa
 		checkData.State = ERROR
 		checkData.Message = checkingError.Error()
 	default:
-		triggerChecker.Metrics.CheckError.Mark(1)
+		if triggerChecker.trigger.IsRemote {
+			triggerChecker.Metrics.RemoteMetrics.CheckError.Mark(1)
+		} else {
+			triggerChecker.Metrics.MoiraMetrics.CheckError.Mark(1)
+		}
 		triggerChecker.Logger.Errorf("Trigger %s check failed: %s", triggerChecker.TriggerID, checkingError.Error())
 		checkData.State = EXCEPTION
 	}

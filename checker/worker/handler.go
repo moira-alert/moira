@@ -6,6 +6,7 @@ import (
 
 	"github.com/moira-alert/moira/checker"
 	"github.com/moira-alert/moira/database"
+	"github.com/moira-alert/moira/metrics/graphite"
 )
 
 const sleepAfterGetTriggerIDError = time.Millisecond * 500
@@ -13,7 +14,7 @@ const sleepWhenNoTriggerToCheck = time.Second * 1
 const sleepAfterPanic = time.Second * 1
 const sleepAfterCheckingError = time.Second * 5
 
-func (worker *Checker) startTriggerHandler(isRemote bool) error {
+func (worker *Checker) startTriggerHandler(isRemote bool, metrics *graphite.CheckMetrics) error {
 	for {
 		select {
 		case <-worker.tomb.Dying():
@@ -30,55 +31,33 @@ func (worker *Checker) startTriggerHandler(isRemote bool) error {
 				if err == database.ErrNil {
 					<-time.After(sleepWhenNoTriggerToCheck)
 				} else {
-					if isRemote {
-						worker.Logger.Errorf("Failed to handle remote trigger loop: %s", err.Error())
-					} else {
-						worker.Logger.Errorf("Failed to handle local trigger loop: %s", err.Error())
-					}
+					worker.Logger.Errorf("Failed to handle trigger loop: %s", err.Error())
 					<-time.After(sleepAfterGetTriggerIDError)
 				}
 				continue
 			}
-			if isRemote {
-				worker.handleRemoteTrigger(triggerID)
-			} else {
-				worker.handleTrigger(triggerID)
-			}
+
+			worker.handleTrigger(triggerID, metrics)
 		}
 	}
 }
 
-func (worker *Checker) handleTrigger(triggerID string) {
+func (worker *Checker) handleTrigger(triggerID string, metrics *graphite.CheckMetrics) {
 	defer func() {
 		if r := recover(); r != nil {
-			worker.Metrics.HandleError.Mark(1)
-			worker.Logger.Errorf("Panic while handle local trigger %s: message: '%s' stack: %s", triggerID, r, debug.Stack())
+			metrics.HandleError.Mark(1)
+			worker.Logger.Errorf("Panic while handle trigger %s: message: '%s' stack: %s", triggerID, r, debug.Stack())
 			<-time.After(sleepAfterPanic)
 		}
 	}()
-	if err := worker.handleTriggerInLock(triggerID); err != nil {
-		worker.Metrics.HandleError.Mark(1)
-		worker.Logger.Errorf("Failed to handle local trigger: %s error: %s", triggerID, err.Error())
+	if err := worker.handleTriggerInLock(triggerID, metrics); err != nil {
+		metrics.HandleError.Mark(1)
+		worker.Logger.Errorf("Failed to handle trigger: %s error: %s", triggerID, err.Error())
 		<-time.After(sleepAfterCheckingError)
 	}
 }
 
-func (worker *Checker) handleRemoteTrigger(triggerID string) {
-	defer func() {
-		if r := recover(); r != nil {
-			worker.Metrics.RemoteHandleError.Mark(1)
-			worker.Logger.Errorf("Panic while handle remote trigger %s: message: '%s' stack: %s", triggerID, r, debug.Stack())
-			<-time.After(sleepAfterPanic)
-		}
-	}()
-	if err := worker.handleRemoteTriggerInLock(triggerID); err != nil {
-		worker.Metrics.RemoteHandleError.Mark(1)
-		worker.Logger.Errorf("Failed to handle remote trigger: %s error: %s", triggerID, err.Error())
-		<-time.After(sleepAfterCheckingError)
-	}
-}
-
-func (worker *Checker) handleTriggerInLock(triggerID string) error {
+func (worker *Checker) handleTriggerInLock(triggerID string, metrics *graphite.CheckMetrics) error {
 	acquired, err := worker.Database.SetTriggerCheckLock(triggerID)
 	if err != nil {
 		return err
@@ -87,27 +66,8 @@ func (worker *Checker) handleTriggerInLock(triggerID string) error {
 		start := time.Now()
 		defer func() {
 			timeSinceStart := time.Since(start)
-			worker.Metrics.TriggersCheckTime.Update(timeSinceStart)
-			worker.Metrics.TriggerCheckTime.GetOrAdd(triggerID, triggerID).Update(timeSinceStart)
-		}()
-		if err := worker.checkTrigger(triggerID); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (worker *Checker) handleRemoteTriggerInLock(triggerID string) error {
-	acquired, err := worker.Database.SetTriggerCheckLock(triggerID)
-	if err != nil {
-		return err
-	}
-	if acquired {
-		start := time.Now()
-		defer func() {
-			timeSinceStart := time.Since(start)
-			worker.Metrics.RemoteTriggersCheckTime.Update(timeSinceStart)
-			worker.Metrics.RemoteTriggerCheckTime.GetOrAdd(triggerID, triggerID).Update(timeSinceStart)
+			metrics.TriggersCheckTime.Update(timeSinceStart)
+			metrics.TriggerCheckTime.GetOrAdd(triggerID, triggerID).Update(timeSinceStart)
 		}()
 		if err := worker.checkTrigger(triggerID); err != nil {
 			return err
