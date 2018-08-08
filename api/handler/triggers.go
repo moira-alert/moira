@@ -48,6 +48,8 @@ func createTrigger(writer http.ResponseWriter, request *http.Request) {
 			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("Invalid graphite targets: %s", err.Error())))
 		case expression.ErrInvalidExpression:
 			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("Invalid expression: %s", err.Error())))
+		case remote.ErrRemoteTriggerResponse:
+			render.Render(writer, request, api.ErrorRemoteServerUnavailable(err))
 		default:
 			render.Render(writer, request, api.ErrorInternalServer(err))
 		}

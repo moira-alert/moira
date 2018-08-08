@@ -3,8 +3,10 @@ package checker
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/remote"
 	"github.com/moira-alert/moira/target"
 )
 
@@ -178,6 +180,11 @@ func (triggerChecker *TriggerChecker) handleTriggerCheck(checkData moira.CheckDa
 	case ErrWrongTriggerTargets, ErrTriggerHasSameTimeSeriesNames:
 		checkData.State = ERROR
 		checkData.Message = checkingError.Error()
+	case remote.ErrRemoteTriggerResponse:
+		triggerChecker.Logger.Errorf("Trigger %s: %s", triggerChecker.TriggerID, checkingError.Error())
+		checkData.State = EXCEPTION
+		notCheckedInterval := time.Now().Unix() - triggerChecker.lastCheck.EventTimestamp
+		checkData.Message = fmt.Sprintf("Remote server unavailable. Trigger is not checked for %d seconds", notCheckedInterval)
 	default:
 		if triggerChecker.trigger.IsRemote {
 			triggerChecker.Metrics.RemoteMetrics.CheckError.Mark(1)

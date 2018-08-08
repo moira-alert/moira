@@ -20,6 +20,15 @@ type graphiteMetric struct {
 	Datapoints [][2]*float64
 }
 
+type ErrRemoteTriggerResponse struct {
+	InternalError error
+	Target        string
+}
+
+func (err ErrRemoteTriggerResponse) Error() string {
+	return fmt.Sprintf("failed to get remote target '%s': %s", err.Target, err.InternalError.Error())
+}
+
 // Config represents config from remote storage
 type Config struct {
 	URL           string
@@ -123,15 +132,24 @@ func convertResponse(r []*types.MetricData, allowRealTimeAlerting bool) []*targe
 func Fetch(cfg *Config, target string, from, until int64, allowRealTimeAlerting bool) ([]*target.TimeSeries, error) {
 	req, err := prepareRequest(from, until, target, cfg)
 	if err != nil {
-		return nil, err
+		return nil, ErrRemoteTriggerResponse{
+			InternalError: err,
+			Target:        target,
+		}
 	}
 	body, err := makeRequest(req, cfg.Timeout)
 	if err != nil {
-		return nil, err
+		return nil, ErrRemoteTriggerResponse{
+			InternalError: err,
+			Target:        target,
+		}
 	}
 	resp, err := decodeBody(body)
 	if err != nil {
-		return nil, err
+		return nil, ErrRemoteTriggerResponse{
+			InternalError: err,
+			Target:        target,
+		}
 	}
 	return convertResponse(resp, allowRealTimeAlerting), nil
 }

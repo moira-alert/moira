@@ -1,8 +1,10 @@
 package api
 
 import (
-	"github.com/go-chi/render"
+	"fmt"
 	"net/http"
+
+	"github.com/go-chi/render"
 )
 
 // ErrorResponse represents custom error response with statusText and error description
@@ -65,6 +67,15 @@ func ErrorForbidden(errorText string) *ErrorResponse {
 		HTTPStatusCode: 403,
 		StatusText:     "Forbidden",
 		ErrorText:      errorText,
+	}
+}
+
+func ErrorRemoteServerUnavailable(err error) *ErrorResponse {
+	return &ErrorResponse{
+		Err:            err,
+		HTTPStatusCode: 503,
+		StatusText:     fmt.Sprintf("Remote server unavailable, error: %s", err.Error()),
+		ErrorText:      "Remote server error, please contact administrator",
 	}
 }
 
