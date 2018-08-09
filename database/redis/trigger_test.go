@@ -264,11 +264,12 @@ func TestRemoteTrigger(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewDatabase(logger, config)
 	trigger := &moira.Trigger{
-		ID:       "triggerID-0000000000010",
-		Name:     "remote",
-		Targets:  []string{"test.target.remote1"},
-		Patterns: []string{"test.pattern.remote1"},
-		IsRemote: true,
+		ID:          "triggerID-0000000000010",
+		Name:        "remote",
+		Targets:     []string{"test.target.remote1"},
+		Patterns:    []string{"test.pattern.remote1"},
+		IsRemote:    true,
+		TriggerType: moira.RisingTrigger,
 	}
 	dataBase.flush()
 	defer dataBase.flush()

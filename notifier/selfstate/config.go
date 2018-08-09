@@ -4,17 +4,16 @@ import (
 	"fmt"
 )
 
-// Config is representation of self state worker settings like moira admins
-// contacts and threshold values for checked services
+// Config is representation of self state worker settings like moira admins contacts and threshold values for checked services
 type Config struct {
 	Enabled                        bool
+	RemoteTriggersEnabled          bool
 	RedisDisconnectDelaySeconds    int64
 	LastMetricReceivedDelaySeconds int64
 	LastCheckDelaySeconds          int64
 	LastRemoteCheckDelaySeconds    int64
-	RemoteTriggersEnabled          bool
-	Contacts                       []map[string]string
 	NoticeIntervalSeconds          int64
+	Contacts                       []map[string]string
 }
 
 func (config *Config) checkConfig(senders map[string]bool) error {

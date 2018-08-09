@@ -271,7 +271,7 @@ func updateTriggers(triggers []*moira.Trigger, dataBase moira.Database) error {
 
 		if err := setProperTriggerType(trigger); err == nil {
 			fmt.Printf("Trigger %v - save to Database", trigger.ID)
-			if err := dataBase.SaveTrigger(trigger.ID, trigger); err != nil {
+			if err = dataBase.SaveTrigger(trigger.ID, trigger); err != nil {
 				return err
 			}
 		} else {
@@ -290,7 +290,7 @@ func downgradeTriggers(triggers []*moira.Trigger, dataBase moira.Database) error
 
 		if err := setProperWarnErrorExpressionValues(trigger); err == nil {
 			fmt.Printf("Trigger %v - save to Database", trigger.ID)
-			if err := dataBase.SaveTrigger(trigger.ID, trigger); err != nil {
+			if err = dataBase.SaveTrigger(trigger.ID, trigger); err != nil {
 				return err
 			}
 		} else {

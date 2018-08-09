@@ -931,6 +931,12 @@
 			"revisionTime": "2017-03-21T23:07:31Z"
 		},
 		{
+			"checksumSHA1": "+eKCPrilWpxu/WPy1zKPaPfV014=",
+			"path": "github.com/sethgrid/pester",
+			"revision": "03e26c9abbbf5accb8349790bf9f41bde09d72c3",
+			"revisionTime": "2018-04-30T14:00:37Z"
+		},
+		{
 			"checksumSHA1": "AikWjAOvWHSJ8G1iU+wNReZnyCk=",
 			"path": "github.com/smartystreets/assertions",
 			"revision": "4ea54c1f28ad3ae597e76607dea3871fa177e263",
