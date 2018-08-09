@@ -1,6 +1,10 @@
 package worker
 
-import "time"
+import (
+	"time"
+
+	"github.com/moira-alert/moira/remote"
+)
 
 func (worker *Checker) remoteChecker() error {
 	checkTicker := time.NewTicker(worker.RemoteConfig.CheckInterval)
@@ -11,19 +15,24 @@ func (worker *Checker) remoteChecker() error {
 			worker.Logger.Info("Remote checker stopped")
 			return nil
 		case <-checkTicker.C:
-			if err := worker.check(); err != nil {
+			if err := worker.checkRemote(); err != nil {
 				worker.Logger.Errorf("Remote checker failed: %s", err.Error())
 			}
 		}
 	}
 }
 
-func (worker *Checker) check() error {
-	worker.Logger.Debug("Checking remote triggers")
-	triggerIds, err := worker.Database.GetRemoteTriggerIDs()
-	if err != nil {
-		return err
+func (worker *Checker) checkRemote() error {
+	remoteAvailable, err := remote.IsRemoteAvailable(worker.RemoteConfig)
+	if !remoteAvailable {
+		worker.Logger.Infof("Remote API is unavailable. Stop checking remote triggers. Error: %s", err.Error())
+	} else {
+		worker.Logger.Debug("Checking remote triggers")
+		triggerIds, err := worker.Database.GetRemoteTriggerIDs()
+		if err != nil {
+			return err
+		}
+		worker.addRemoteTriggerIDsIfNeeded(triggerIds)
 	}
-	worker.addRemoteTriggerIDsIfNeeded(triggerIds)
 	return nil
 }

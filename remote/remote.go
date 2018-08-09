@@ -11,6 +11,7 @@ import (
 
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/moira-alert/moira/target"
+	"github.com/sethgrid/pester"
 
 	pb "github.com/go-graphite/protocol/carbonapi_v3_pb"
 )
@@ -63,10 +64,11 @@ func prepareRequest(from, until int64, target string, cfg *Config) (*http.Reques
 	return req, nil
 }
 
-func makeRequest(req *http.Request, timeout time.Duration) ([]byte, error) {
-	client := &http.Client{Timeout: timeout}
+func makeRequest(req *http.Request, timeout time.Duration, maxRetries int) ([]byte, error) {
+	client := pester.Client{Timeout: timeout, MaxRetries: maxRetries, KeepLog: true}
 	resp, err := client.Do(req)
 	if err != nil {
+		err = fmt.Errorf("bad request: %s", client.LogString())
 		return nil, err
 	}
 	body, err := ioutil.ReadAll(resp.Body)
@@ -139,7 +141,7 @@ func Fetch(cfg *Config, target string, from, until int64, allowRealTimeAlerting 
 			Target:        target,
 		}
 	}
-	body, err := makeRequest(req, cfg.Timeout)
+	body, err := makeRequest(req, cfg.Timeout, 2)
 	if err != nil {
 		return nil, ErrRemoteTriggerResponse{
 			InternalError: err,
@@ -154,4 +156,20 @@ func Fetch(cfg *Config, target string, from, until int64, allowRealTimeAlerting 
 		}
 	}
 	return convertResponse(resp, allowRealTimeAlerting), nil
+}
+
+// IsRemoteAvailable checks if graphite API is available and returns 200 response
+func IsRemoteAvailable(cfg *Config) (bool, error) {
+	until := time.Now().Unix()
+	from := until - 600
+	req, err := prepareRequest(from, until, "*", cfg)
+	if err != nil {
+		return false, err
+	}
+	_, err = makeRequest(req, cfg.Timeout, 5)
+
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
