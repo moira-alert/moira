@@ -118,6 +118,15 @@ type MetricValue struct {
 	Value              float64 `json:"value"`
 }
 
+const (
+	// FallingTrigger represents falling trigger type, in which OK > WARN > ERROR
+	FallingTrigger = "falling"
+	// RisingTrigger represents rising trigger type, in which OK < WARN < ERROR
+	RisingTrigger = "rising"
+	// ExpressionTrigger represents trigger type with custom user expression
+	ExpressionTrigger = "expression"
+)
+
 // Trigger represents trigger data object
 type Trigger struct {
 	ID               string        `json:"id"`
@@ -126,6 +135,7 @@ type Trigger struct {
 	Targets          []string      `json:"targets"`
 	WarnValue        *float64      `json:"warn_value"`
 	ErrorValue       *float64      `json:"error_value"`
+	TriggerType      string        `json:"trigger_type"`
 	Tags             []string      `json:"tags"`
 	TTLState         *string       `json:"ttl_state,omitempty"`
 	TTL              int64         `json:"ttl,omitempty"`

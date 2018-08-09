@@ -171,8 +171,7 @@ func (triggerChecker *TriggerChecker) handleTriggerCheck(checkData moira.CheckDa
 	default:
 		triggerChecker.Metrics.CheckError.Mark(1)
 		triggerChecker.Logger.Errorf("Trigger %s check failed: %s", triggerChecker.TriggerID, checkingError.Error())
-		checkData.State = ERROR
-		checkData.Message = checkingError.Error()
+		checkData.State = EXCEPTION
 	}
 	return triggerChecker.compareTriggerStates(checkData)
 }
@@ -234,6 +233,7 @@ func (triggerChecker *TriggerChecker) getTimeSeriesState(triggerTimeSeries *trig
 
 	triggerExpression.WarnValue = triggerChecker.trigger.WarnValue
 	triggerExpression.ErrorValue = triggerChecker.trigger.ErrorValue
+	triggerExpression.TriggerType = triggerChecker.trigger.TriggerType
 	triggerExpression.PreviousState = lastState.State
 	triggerExpression.Expression = triggerChecker.trigger.Expression
 

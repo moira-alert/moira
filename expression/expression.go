@@ -6,10 +6,15 @@ import (
 	"sync"
 
 	"github.com/Knetic/govaluate"
+	"github.com/moira-alert/moira"
 )
 
-var default1, _ = govaluate.NewEvaluableExpression("t1 >= ERROR_VALUE ? ERROR : (t1 >= WARN_VALUE ? WARN : OK)")
-var default2, _ = govaluate.NewEvaluableExpression("t1 <= ERROR_VALUE ? ERROR : (t1 <= WARN_VALUE ? WARN : OK)")
+var exprWarnErrorRising, _ = govaluate.NewEvaluableExpression("t1 >= ERROR_VALUE ? ERROR : (t1 >= WARN_VALUE ? WARN : OK)")
+var exprWarnErrorFalling, _ = govaluate.NewEvaluableExpression("t1 <= ERROR_VALUE ? ERROR : (t1 <= WARN_VALUE ? WARN : OK)")
+var exprWarnRising, _ = govaluate.NewEvaluableExpression("t1 >= WARN_VALUE ? WARN : OK")
+var exprErrRising, _ = govaluate.NewEvaluableExpression("t1 >= ERROR_VALUE ? ERROR : OK")
+var exprWarnFalling, _ = govaluate.NewEvaluableExpression("t1 <= WARN_VALUE ? WARN : OK")
+var exprErrFalling, _ = govaluate.NewEvaluableExpression("t1 <= ERROR_VALUE ? ERROR : OK")
 
 var cache = make(map[string]*govaluate.EvaluableExpression)
 var cacheLock sync.Mutex
@@ -27,8 +32,9 @@ func (err ErrInvalidExpression) Error() string {
 type TriggerExpression struct {
 	Expression *string
 
-	WarnValue  *float64
-	ErrorValue *float64
+	WarnValue   *float64
+	ErrorValue  *float64
+	TriggerType string
 
 	MainTargetValue         float64
 	AdditionalTargetsValues map[string]float64
@@ -69,7 +75,7 @@ func (triggerExpression TriggerExpression) Get(name string) (interface{}, error)
 	}
 }
 
-// Evaluate gets trigger expression and eveluates it for given parameters using govaluate
+// Evaluate gets trigger expression and evaluates it for given parameters using govaluate
 func (triggerExpression *TriggerExpression) Evaluate() (string, error) {
 	expr, err := getExpression(triggerExpression)
 	if err != nil {
@@ -88,20 +94,41 @@ func (triggerExpression *TriggerExpression) Evaluate() (string, error) {
 }
 
 func getExpression(triggerExpression *TriggerExpression) (*govaluate.EvaluableExpression, error) {
-	if triggerExpression.Expression != nil && *triggerExpression.Expression != "" {
+	if triggerExpression.TriggerType == moira.ExpressionTrigger {
+		if triggerExpression.Expression == nil || *triggerExpression.Expression == "" {
+			return nil, fmt.Errorf("trigger_type set to expression, but no expression provided")
+		}
 		return getUserExpression(*triggerExpression.Expression)
 	}
 	return getSimpleExpression(triggerExpression)
 }
 
 func getSimpleExpression(triggerExpression *TriggerExpression) (*govaluate.EvaluableExpression, error) {
-	if triggerExpression.ErrorValue == nil || triggerExpression.WarnValue == nil {
-		return nil, fmt.Errorf("error value and Warning value can not be empty")
+	if triggerExpression.ErrorValue == nil && triggerExpression.WarnValue == nil {
+		return nil, fmt.Errorf("error value and warning value can not be empty")
 	}
-	if *triggerExpression.ErrorValue >= *triggerExpression.WarnValue {
-		return default1, nil
+	switch triggerExpression.TriggerType {
+	case "":
+		return nil, fmt.Errorf("trigger_type is not set")
+	case moira.FallingTrigger:
+		if triggerExpression.ErrorValue != nil && triggerExpression.WarnValue != nil {
+			return exprWarnErrorFalling, nil
+		} else if triggerExpression.ErrorValue != nil {
+			return exprErrFalling, nil
+		} else {
+			return exprWarnFalling, nil
+		}
+	case moira.RisingTrigger:
+		if triggerExpression.ErrorValue != nil && triggerExpression.WarnValue != nil {
+			return exprWarnErrorRising, nil
+		} else if triggerExpression.ErrorValue != nil {
+			return exprErrRising, nil
+		} else {
+			return exprWarnRising, nil
+		}
 	}
-	return default2, nil
+	return nil, fmt.Errorf("wrong set of parametres: warn_value - %v, error_value - %v, trigger_type: %v",
+		triggerExpression.WarnValue, triggerExpression.ErrorValue, triggerExpression.TriggerType)
 }
 
 func getUserExpression(triggerExpression string) (*govaluate.EvaluableExpression, error) {

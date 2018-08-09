@@ -41,7 +41,7 @@ func TestInitTriggerChecker(t *testing.T) {
 
 		Convey("Get lastCheck error", func() {
 			readLastCheckError := fmt.Errorf("Oppps! Can't read last check")
-			dataBase.EXPECT().GetTrigger(triggerChecker.TriggerID).Return(moira.Trigger{}, nil)
+			dataBase.EXPECT().GetTrigger(triggerChecker.TriggerID).Return(moira.Trigger{TriggerType: moira.RisingTrigger}, nil)
 			dataBase.EXPECT().GetTriggerLastCheck(triggerChecker.TriggerID).Return(moira.CheckData{}, readLastCheckError)
 			err := triggerChecker.InitTriggerChecker()
 			So(err, ShouldBeError)
@@ -50,22 +50,23 @@ func TestInitTriggerChecker(t *testing.T) {
 	})
 
 	var warnWalue float64 = 10000
-	var errorWalue float64 = 10000
+	var errorWalue float64 = 100000
 	var ttl int64 = 900
 	var value float64
 	ttlStateOk := OK
 	ttlStateNoData := NODATA
 
 	trigger := moira.Trigger{
-		ID:         "d39b8510-b2f4-448c-b881-824658c58128",
-		Name:       "Time",
-		Targets:    []string{"aliasByNode(Metric.*.time, 1)"},
-		WarnValue:  &warnWalue,
-		ErrorValue: &errorWalue,
-		Tags:       []string{"tag1", "tag2"},
-		TTLState:   &ttlStateOk,
-		Patterns:   []string{"Egais.elasticsearch.*.*.jvm.gc.collection.time"},
-		TTL:        ttl,
+		ID:          "d39b8510-b2f4-448c-b881-824658c58128",
+		Name:        "Time",
+		Targets:     []string{"aliasByNode(Metric.*.time, 1)"},
+		WarnValue:   &warnWalue,
+		ErrorValue:  &errorWalue,
+		TriggerType: moira.RisingTrigger,
+		Tags:        []string{"tag1", "tag2"},
+		TTLState:    &ttlStateOk,
+		Patterns:    []string{"Egais.elasticsearch.*.*.jvm.gc.collection.time"},
+		TTL:         ttl,
 	}
 
 	lastCheck := moira.CheckData{
