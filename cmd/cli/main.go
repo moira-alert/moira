@@ -95,11 +95,11 @@ func main() {
 		fmt.Print("Type to choose convertation strategy:\nu - update\nr - rollback")
 		convertationStrategy, _ := reader.ReadString('\n')
 		switch convertationStrategy {
-		case "u":
+		case "u", "update":
 			if err := ConvertSubscriptions(dataBase, false); err != nil {
 				fmt.Println(fmt.Sprintf("Can not convert existing subscriptions: %s", err.Error()))
 			}
-		case "r":
+		case "r", "rollback":
 			if err := ConvertSubscriptions(dataBase, true); err != nil {
 				fmt.Println(fmt.Sprintf("Can not convert existing subscriptions: %s", err.Error()))
 			}
