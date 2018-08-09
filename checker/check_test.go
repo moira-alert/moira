@@ -451,23 +451,24 @@ func TestCheckErrors(t *testing.T) {
 	}
 
 	Convey("GetTimeSeries error", t, func() {
+		ms := ""
 		event := moira.NotificationEvent{
 			IsTriggerEvent: true,
 			TriggerID:      triggerChecker.TriggerID,
-			State:          ERROR,
+			State:          EXCEPTION,
 			OldState:       OK,
 			Timestamp:      67,
-			Message:        &message,
 			Metric:         triggerChecker.trigger.Name,
+			Message:        &ms,
 		}
 
 		lastCheck := moira.CheckData{
 			Metrics:        triggerChecker.lastCheck.Metrics,
-			State:          ERROR,
+			State:          EXCEPTION,
 			Timestamp:      triggerChecker.Until,
 			EventTimestamp: triggerChecker.Until,
-			Score:          100,
-			Message:        message,
+			Score:          100000,
+			Message:        ms,
 		}
 
 		dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
