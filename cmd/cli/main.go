@@ -305,6 +305,7 @@ func ConvertSubscriptions(database moira.Database, rollback bool) error {
 		fmt.Println(convertedMessage)
 	}
 	return nil
+}
 
 // ConvertTriggers converts all existing triggers  in following strategy:
 // - update: Set trigger_type to one of the following options: "expression" (trigger has custom user expression) "rising" (error > warn > ok), "falling" (error < warn < ok)
