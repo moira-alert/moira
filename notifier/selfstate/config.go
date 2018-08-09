@@ -10,6 +10,8 @@ type Config struct {
 	RedisDisconnectDelaySeconds    int64
 	LastMetricReceivedDelaySeconds int64
 	LastCheckDelaySeconds          int64
+	LastRemoteCheckDelaySeconds    int64
+	RemoteTriggersEnabled          bool
 	Contacts                       []map[string]string
 	NoticeIntervalSeconds          int64
 }

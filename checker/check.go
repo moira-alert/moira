@@ -51,7 +51,7 @@ func (triggerChecker *TriggerChecker) Check() error {
 	}
 
 	checkData.UpdateScore()
-	return triggerChecker.Database.SetTriggerLastCheck(triggerChecker.TriggerID, &checkData)
+	return triggerChecker.Database.SetTriggerLastCheck(triggerChecker.TriggerID, &checkData, triggerChecker.trigger.IsRemote)
 }
 
 func (triggerChecker *TriggerChecker) handleMetricsCheck() (moira.CheckData, error) {

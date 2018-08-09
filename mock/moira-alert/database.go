@@ -388,6 +388,19 @@ func (mr *MockDatabaseMockRecorder) GetPatterns() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPatterns", reflect.TypeOf((*MockDatabase)(nil).GetPatterns))
 }
 
+// GetRemoteChecksUpdatesCount mocks base method
+func (m *MockDatabase) GetRemoteChecksUpdatesCount() (int64, error) {
+	ret := m.ctrl.Call(m, "GetRemoteChecksUpdatesCount")
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetRemoteChecksUpdatesCount indicates an expected call of GetRemoteChecksUpdatesCount
+func (mr *MockDatabaseMockRecorder) GetRemoteChecksUpdatesCount() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRemoteChecksUpdatesCount", reflect.TypeOf((*MockDatabase)(nil).GetRemoteChecksUpdatesCount))
+}
+
 // GetRemoteTriggerIDs mocks base method
 func (m *MockDatabase) GetRemoteTriggerIDs() ([]string, error) {
 	ret := m.ctrl.Call(m, "GetRemoteTriggerIDs")
@@ -950,15 +963,15 @@ func (mr *MockDatabaseMockRecorder) SetTriggerCheckMetricsMaintenance(arg0, arg1
 }
 
 // SetTriggerLastCheck mocks base method
-func (m *MockDatabase) SetTriggerLastCheck(arg0 string, arg1 *moira.CheckData) error {
-	ret := m.ctrl.Call(m, "SetTriggerLastCheck", arg0, arg1)
+func (m *MockDatabase) SetTriggerLastCheck(arg0 string, arg1 *moira.CheckData, arg2 bool) error {
+	ret := m.ctrl.Call(m, "SetTriggerLastCheck", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SetTriggerLastCheck indicates an expected call of SetTriggerLastCheck
-func (mr *MockDatabaseMockRecorder) SetTriggerLastCheck(arg0, arg1 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTriggerLastCheck", reflect.TypeOf((*MockDatabase)(nil).SetTriggerLastCheck), arg0, arg1)
+func (mr *MockDatabaseMockRecorder) SetTriggerLastCheck(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTriggerLastCheck", reflect.TypeOf((*MockDatabase)(nil).SetTriggerLastCheck), arg0, arg1, arg2)
 }
 
 // SetTriggerThrottling mocks base method

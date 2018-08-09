@@ -53,7 +53,7 @@ func saveTrigger(dataBase moira.Database, trigger *moira.Trigger, triggerID stri
 		lastCheck.UpdateScore()
 	}
 
-	if err = dataBase.SetTriggerLastCheck(triggerID, &lastCheck); err != nil {
+	if err = dataBase.SetTriggerLastCheck(triggerID, &lastCheck, trigger.IsRemote); err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
 
@@ -187,7 +187,7 @@ func DeleteTriggerMetric(dataBase moira.Database, metricName string, triggerID s
 	if err = dataBase.RemovePatternsMetrics(trigger.Patterns); err != nil {
 		return api.ErrorInternalServer(err)
 	}
-	if err = dataBase.SetTriggerLastCheck(triggerID, &lastCheck); err != nil {
+	if err = dataBase.SetTriggerLastCheck(triggerID, &lastCheck, trigger.IsRemote); err != nil {
 		return api.ErrorInternalServer(err)
 	}
 	return nil

@@ -19,7 +19,14 @@ func (connector *DbConnector) GetTriggerLastCheck(triggerID string) (moira.Check
 }
 
 // SetTriggerLastCheck sets trigger last check data
-func (connector *DbConnector) SetTriggerLastCheck(triggerID string, checkData *moira.CheckData) error {
+func (connector *DbConnector) SetTriggerLastCheck(triggerID string, checkData *moira.CheckData, isRemote bool) error {
+	if isRemote {
+		return connector.setTriggerLastCheckAndUpdateProperCounter(triggerID, checkData, selfStateRemoteChecksCounterKey)
+	}
+	return connector.setTriggerLastCheckAndUpdateProperCounter(triggerID, checkData, selfStateChecksCounterKey)
+}
+
+func (connector *DbConnector) setTriggerLastCheckAndUpdateProperCounter(triggerID string, checkData *moira.CheckData, selfStateCheckCountKey string) error {
 	bytes, err := json.Marshal(checkData)
 	if err != nil {
 		return err
@@ -29,7 +36,7 @@ func (connector *DbConnector) SetTriggerLastCheck(triggerID string, checkData *m
 	c.Send("MULTI")
 	c.Send("SET", metricLastCheckKey(triggerID), bytes)
 	c.Send("ZADD", triggersChecksKey, checkData.Score, triggerID)
-	c.Send("INCR", selfStateChecksCounterKey)
+	c.Send("INCR", selfStateCheckCountKey)
 	if checkData.Score > 0 {
 		c.Send("SADD", badStateTriggersKey, triggerID)
 	} else {
