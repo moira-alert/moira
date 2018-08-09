@@ -20,7 +20,8 @@ var (
 	convertPythonExpression         = flag.String("convert-expression", "", "Convert python expression used in moira 1.x to govaluate expressions in moira 2.x for concrete trigger")
 	getTriggerWithPythonExpressions = flag.Bool("python-expressions-triggers", false, "Get count of triggers with python expression and count of triggers, that has python expression and has not govaluate expression")
 	removeBotInstanceLock           = flag.String("delete-bot-host-lock", "", "Delete bot host lock for launching bots with new distributed lock strategy. Must use for upgrade from Moira 1.x to 2.x")
-	convertTriggers                 = flag.Bool("convert-triggers", false, "Convert existing triggers: set trigger_type parameter")
+	updateDatabaseStructures        = flag.Bool("update", false, "convert existing database structures into required ones for current Moira version")
+	downgradeDatabaseStructures     = flag.Bool("downgrade", false, "reconvert existing database structures into required ones for previous Moira version")
 )
 
 // Moira version
@@ -89,23 +90,25 @@ func main() {
 		}
 	}
 
-	if *convertTriggers {
-		reader := bufio.NewReader(os.Stdin)
-		fmt.Print("Type to choose conversion strategy:\nu - update\nr - rollback")
-		conversionStrategy, _ := reader.ReadString('\n')
-		switch conversionStrategy {
-		case "u", "update":
-			if err := ConvertTriggers(dataBase, false); err != nil {
-				fmt.Printf("Can not convert existing triggers: %v", err)
-			}
-		case "r", "rollback":
-			if err := ConvertTriggers(dataBase, true); err != nil {
-				fmt.Printf("Can not convert existing triggers: %v", err)
-			}
-		default:
-			fmt.Printf("Bad option: %v", conversionStrategy)
+	if *updateDatabaseStructures {
+		fmt.Printf("Start updating existing trigger structures into new format")
+		if err := ConvertTriggers(dataBase, false); err != nil {
+			fmt.Printf("Can not update existing triggers: %s", err.Error())
+		} else {
+			fmt.Printf("Trigger structures has been sucessfully updated")
 		}
 	}
+
+	if *downgradeDatabaseStructures {
+		// ToDo: In future: ask which version of Moira structures use to downgrade
+		fmt.Printf("Start downgrading existing trigger structures into old format")
+		if err := ConvertTriggers(dataBase, true); err != nil {
+			fmt.Printf("Can not downgrade existing triggers: %s", err.Error())
+		} else {
+			fmt.Printf("Trigger structures has been sucessfully downgraded")
+		}
+	}
+
 }
 
 // RemoveBotInstanceLock - in Moira 2.0 we switch from host-based single instance telegram-bot run lock
