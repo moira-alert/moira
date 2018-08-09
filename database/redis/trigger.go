@@ -56,6 +56,7 @@ func (connector *DbConnector) GetTrigger(triggerID string) (moira.Trigger, error
 	if err != nil {
 		return moira.Trigger{}, fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
+
 	return connector.getTriggerWithTags(rawResponse[0], rawResponse[1], triggerID)
 }
 
