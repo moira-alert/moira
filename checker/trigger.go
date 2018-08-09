@@ -2,10 +2,11 @@ package checker
 
 import (
 	"errors"
+	"time"
+
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/metrics/graphite"
-	"time"
 )
 
 // TriggerChecker represents data, used for handling new trigger state
