@@ -162,7 +162,7 @@ func Fetch(cfg *Config, target string, from, until int64, allowRealTimeAlerting 
 func IsRemoteAvailable(cfg *Config) (bool, error) {
 	until := time.Now().Unix()
 	from := until - 600
-	req, err := prepareRequest(from, until, "*", cfg)
+	req, err := prepareRequest(from, until, "NonExistingTarget", cfg)
 	if err != nil {
 		return false, err
 	}
