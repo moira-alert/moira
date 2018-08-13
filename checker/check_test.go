@@ -976,6 +976,7 @@ func TestHandleErrorCheck(t *testing.T) {
 			State:          OK,
 			Timestamp:      checkData.Timestamp,
 			EventTimestamp: checkData.Timestamp,
+			Message:        "Trigger never received metrics",
 		}
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, expected)
@@ -1008,6 +1009,7 @@ func TestHandleErrorCheck(t *testing.T) {
 			State:          OK,
 			Timestamp:      now,
 			EventTimestamp: now - 3600,
+			Message:        "Trigger never received metrics",
 		}
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, expected)
