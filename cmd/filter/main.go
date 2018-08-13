@@ -58,17 +58,17 @@ func main() {
 		os.Exit(1)
 	}
 
-	if config.Filter.MaxParallelMatches == 0 {
-		config.Filter.MaxParallelMatches = runtime.NumCPU()
-		fmt.Fprintf(os.Stderr, "MaxParallelMatches is not configured, set it to the number of CPU - %d", config.Filter.MaxParallelMatches)
-	}
-
 	logger, err = logging.ConfigureLog(config.Logger.LogFile, config.Logger.LogLevel, serviceName)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Can not configure log: %s\n", err.Error())
 		os.Exit(1)
 	}
 	defer logger.Infof("Moira Filter stopped. Version: %s", MoiraVersion)
+
+	if config.Filter.MaxParallelMatches == 0 {
+		config.Filter.MaxParallelMatches = runtime.NumCPU()
+		logger.Infof("MaxParallelMatches is not configured, set it to the number of CPU - %d", config.Filter.MaxParallelMatches)
+	}
 
 	if config.Pprof.Listen != "" {
 		logger.Infof("Starting pprof server at: [%s]", config.Pprof.Listen)
