@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"runtime"
 	"syscall"
 
 	"github.com/moira-alert/moira"
@@ -57,16 +58,17 @@ func main() {
 		os.Exit(1)
 	}
 
-	if config.Filter.MaxParallelMatches == 0 {
-		fmt.Fprint(os.Stderr, "MaxParallelMatches is not configured, filter does not start")
-	}
-
 	logger, err = logging.ConfigureLog(config.Logger.LogFile, config.Logger.LogLevel, serviceName)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Can not configure log: %s\n", err.Error())
 		os.Exit(1)
 	}
 	defer logger.Infof("Moira Filter stopped. Version: %s", MoiraVersion)
+
+	if config.Filter.MaxParallelMatches == 0 {
+		config.Filter.MaxParallelMatches = runtime.NumCPU()
+		logger.Infof("MaxParallelMatches is not configured, set it to the number of CPU - %d", config.Filter.MaxParallelMatches)
+	}
 
 	if config.Pprof.Listen != "" {
 		logger.Infof("Starting pprof server at: [%s]", config.Pprof.Listen)
