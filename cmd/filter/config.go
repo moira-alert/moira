@@ -1,8 +1,6 @@
 package main
 
 import (
-	"runtime"
-
 	"github.com/moira-alert/moira/cmd"
 )
 
@@ -44,7 +42,7 @@ func getDefault() config {
 			Listen:             ":2003",
 			RetentionConfig:    "/etc/moira/storage-schemas.conf",
 			CacheCapacity:      10,
-			MaxParallelMatches: runtime.NumCPU(),
+			MaxParallelMatches: 0,
 		},
 		Graphite: cmd.GraphiteConfig{
 			RuntimeStats: false,

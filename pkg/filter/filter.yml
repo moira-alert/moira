@@ -13,6 +13,7 @@ filter:
   listen: ":2003"
   retention_config: /etc/moira/storage-schemas.conf
   cache_capacity: 10
+  max_parallel_matches: 0
 log:
   log_file: stdout
   log_level: info
