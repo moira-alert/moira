@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"runtime"
 	"syscall"
 
 	"github.com/moira-alert/moira"
@@ -58,7 +59,8 @@ func main() {
 	}
 
 	if config.Filter.MaxParallelMatches == 0 {
-		fmt.Fprint(os.Stderr, "MaxParallelMatches is not configured, filter does not start")
+		config.Filter.MaxParallelMatches = runtime.NumCPU()
+		fmt.Fprintf(os.Stderr, "MaxParallelMatches is not configured, set it to the number of CPU - %d", config.Filter.MaxParallelMatches)
 	}
 
 	logger, err = logging.ConfigureLog(config.Logger.LogFile, config.Logger.LogLevel, serviceName)
