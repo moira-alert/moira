@@ -300,7 +300,7 @@ func ConvertSubscriptions(database moira.Database, rollback bool) error {
 	}
 	for _, subscription := range allSubscriptions {
 		subscriptionsConverter(database, subscription)
-		convertedMessage := fmt.Sprintf("Subscription %s has been succesfully converted. Tags: %s IgnoreWarnings: %t IgnoreRecoverings: %t\n",
+		convertedMessage := fmt.Sprintf("Subscription %s has been succesfully converted. Tags: %s IgnoreWarnings: %t IgnoreRecoverings: %t",
 			subscription.ID, strings.Join(subscription.Tags, ", "), subscription.IgnoreWarnings, subscription.IgnoreRecoverings)
 		fmt.Println(convertedMessage)
 	}
