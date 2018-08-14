@@ -53,18 +53,20 @@ func Subscriptions(rep interface{}, err error) ([]*moira.SubscriptionData, error
 }
 
 func convertSubscriptionIfNecessary(subscription *moira.SubscriptionData) {
-	for tagInd := range subscription.Tags {
-		switch subscription.Tags[tagInd] {
+	subscriptionTags := make([]string, 0)
+	for _, tag := range subscription.Tags {
+		switch tag {
 		case "ERROR":
 			if !subscription.IgnoreWarnings {
 				subscription.IgnoreWarnings = true
-				subscription.Tags = append(subscription.Tags[:tagInd], subscription.Tags[tagInd+1:]...)
 			}
 		case "DEGRADATION", "HIGH DEGRADATION":
 			if !subscription.IgnoreRecoverings {
 				subscription.IgnoreRecoverings = true
-				subscription.Tags = append(subscription.Tags[:tagInd], subscription.Tags[tagInd+1:]...)
 			}
+		default:
+			subscriptionTags = append(subscriptionTags, tag)
 		}
 	}
+	subscription.Tags = subscriptionTags
 }

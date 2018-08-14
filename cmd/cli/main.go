@@ -257,20 +257,22 @@ func ConvertPythonExpressions(dataBase moira.Database) error {
 // ConvertTaggedSubscription checks that subscription has deprecated pseudo-tags
 // and adds corresponding fields into subscription to store actual json structure in redis
 func ConvertTaggedSubscription(database moira.Database, subscription *moira.SubscriptionData) {
-	for tagInd := range subscription.Tags {
-		switch subscription.Tags[tagInd] {
+	newTags := make([]string, 0)
+	for _, tag := range subscription.Tags {
+		switch tag {
 		case warningsTag:
 			if !subscription.IgnoreWarnings {
 				subscription.IgnoreWarnings = true
 			}
-			subscription.Tags = append(subscription.Tags[:tagInd], subscription.Tags[tagInd+1:]...)
 		case recoveringsTag, deprecatedRecoveringsTag:
 			if !subscription.IgnoreRecoverings {
 				subscription.IgnoreRecoverings = true
 			}
-			subscription.Tags = append(subscription.Tags[:tagInd], subscription.Tags[tagInd+1:]...)
+		default:
+			newTags = append(newTags, tag)
 		}
 	}
+	subscription.Tags = newTags
 	database.SaveSubscription(subscription)
 }
 
@@ -424,36 +426,39 @@ func setProperTriggerType(trigger *moira.Trigger) error {
 }
 
 func setProperWarnErrorExpressionValues(trigger *moira.Trigger) error {
-	fmt.Printf("Trigger %v: warn_value: %v, error_value: %v, expression: %v, trigger_type: '%v', - start conversion\n",
-		trigger.ID, trigger.WarnValue, trigger.ErrorValue, trigger.Expression, trigger.TriggerType)
+	expr := ""
+	if trigger.Expression != nil {
+		expr = *trigger.Expression
+	}
+	fmt.Printf("Trigger %v: warn_value: %d, error_value: %d, expression: '%s', trigger_type: '%v', - start conversion\n",
+		trigger.ID, trigger.WarnValue, trigger.ErrorValue, expr, trigger.TriggerType)
 	if trigger.TriggerType == moira.ExpressionTrigger &&
-		trigger.Expression != nil &&
-		*trigger.Expression != "" {
-		fmt.Printf("Trigger %v has expression '%v' - set trigger_type to ''\n", trigger.ID, trigger.Expression)
+		expr != "" {
+		fmt.Printf("Trigger %v has expression '%s' - set trigger_type to ''\n", trigger.ID, expr)
 		trigger.TriggerType = ""
 		return nil
 	}
 	if trigger.WarnValue != nil && trigger.ErrorValue != nil {
-		fmt.Printf("Trigger %v has warn_value '%v', error_value '%v' - set trigger_type to ''\n",
+		fmt.Printf("Trigger %v has warn_value '%f', error_value '%v' - set trigger_type to ''\n",
 			trigger.ID, *trigger.WarnValue, *trigger.ErrorValue)
 		trigger.TriggerType = ""
 		return nil
 	}
 	if trigger.WarnValue == nil && trigger.ErrorValue != nil {
-		fmt.Printf("Trigger %v has warn_value '%v', error_value '%v' - set trigger_type to '' and update warn_value to '%v'\n",
-			trigger.ID, trigger.WarnValue, *trigger.ErrorValue, *trigger.ErrorValue)
+		fmt.Printf("Trigger %v has warn_value '<nil>', error_value '%v' - set trigger_type to '' and update warn_value to '%v'\n",
+			trigger.ID, *trigger.ErrorValue, *trigger.ErrorValue)
 		trigger.WarnValue = trigger.ErrorValue
 		trigger.TriggerType = ""
 		return nil
 	}
 	if trigger.WarnValue != nil && trigger.ErrorValue == nil {
-		fmt.Printf("Trigger %v has warn_value '%v', error_value '%v' - set trigger_type to '' and update error_value to '%v'\n",
-			trigger.ID, *trigger.WarnValue, trigger.ErrorValue, *trigger.WarnValue)
+		fmt.Printf("Trigger %v has warn_value '%v', error_value '<nil>' - set trigger_type to '' and update error_value to '%v'\n",
+			trigger.ID, *trigger.WarnValue, *trigger.WarnValue)
 		trigger.ErrorValue = trigger.WarnValue
 		trigger.TriggerType = ""
 		return nil
 	}
 
-	return fmt.Errorf("cannot downgrade trigger %v - warn_value: %v, error_value: %v, expression: %v, trigger_type: ''",
-		trigger.ID, trigger.WarnValue, trigger.ErrorValue, trigger.Expression)
+	return fmt.Errorf("cannot downgrade trigger %v - warn_value: %d, error_value: %d, expression: '%s', trigger_type: ''",
+		trigger.ID, trigger.WarnValue, trigger.ErrorValue, expr)
 }
