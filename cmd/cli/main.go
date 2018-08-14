@@ -262,13 +262,13 @@ func ConvertTaggedSubscription(database moira.Database, subscription *moira.Subs
 		case warningsTag:
 			if !subscription.IgnoreWarnings {
 				subscription.IgnoreWarnings = true
-				subscription.Tags = append(subscription.Tags[:tagInd], subscription.Tags[tagInd+1:]...)
 			}
+			subscription.Tags = append(subscription.Tags[:tagInd], subscription.Tags[tagInd+1:]...)
 		case recoveringsTag, deprecatedRecoveringsTag:
 			if !subscription.IgnoreRecoverings {
 				subscription.IgnoreRecoverings = true
-				subscription.Tags = append(subscription.Tags[:tagInd], subscription.Tags[tagInd+1:]...)
 			}
+			subscription.Tags = append(subscription.Tags[:tagInd], subscription.Tags[tagInd+1:]...)
 		}
 	}
 	database.SaveSubscription(subscription)
@@ -424,31 +424,31 @@ func setProperTriggerType(trigger *moira.Trigger) error {
 }
 
 func setProperWarnErrorExpressionValues(trigger *moira.Trigger) error {
-	fmt.Printf("Trigger %v: warn_value: %v, error_value: %v, expression: %v, trigger_type: '%v', - start conversion\n",
+	fmt.Printf("Trigger %v: warn_value: %v, error_value: %v, expression: %v, trigger_type: '%v', - start conversion",
 		trigger.ID, trigger.WarnValue, trigger.ErrorValue, trigger.Expression, trigger.TriggerType)
 	if trigger.TriggerType == moira.ExpressionTrigger &&
 		trigger.Expression != nil &&
 		*trigger.Expression != "" {
-		fmt.Printf("Trigger %v has expression '%v' - set trigger_type to ''\n", trigger.ID, trigger.Expression)
+		fmt.Printf("Trigger %v has expression '%v' - set trigger_type to ''", trigger.ID, trigger.Expression)
 		trigger.TriggerType = ""
 		return nil
 	}
 	if trigger.WarnValue != nil && trigger.ErrorValue != nil {
-		fmt.Printf("Trigger %v has warn_value '%v', error_value '%v' - set trigger_type to ''\n",
-			trigger.ID, trigger.WarnValue, trigger.ErrorValue)
+		fmt.Printf("Trigger %v has warn_value '%v', error_value '%v' - set trigger_type to ''",
+			trigger.ID, *trigger.WarnValue, *trigger.ErrorValue)
 		trigger.TriggerType = ""
 		return nil
 	}
 	if trigger.WarnValue == nil && trigger.ErrorValue != nil {
-		fmt.Printf("Trigger %v has warn_value '%v', error_value '%v' - set trigger_type to '' and update warn_value to '%v'\n",
-			trigger.ID, trigger.WarnValue, trigger.ErrorValue, trigger.ErrorValue)
+		fmt.Printf("Trigger %v has warn_value '%v', error_value '%v' - set trigger_type to '' and update warn_value to '%v'",
+			trigger.ID, trigger.WarnValue, *trigger.ErrorValue, *trigger.ErrorValue)
 		trigger.WarnValue = trigger.ErrorValue
 		trigger.TriggerType = ""
 		return nil
 	}
 	if trigger.WarnValue != nil && trigger.ErrorValue == nil {
-		fmt.Printf("Trigger %v has warn_value '%v', error_value '%v' - set trigger_type to '' and update error_value to '%v'\n",
-			trigger.ID, trigger.WarnValue, trigger.ErrorValue, trigger.WarnValue)
+		fmt.Printf("Trigger %v has warn_value '%v', error_value '%v' - set trigger_type to '' and update error_value to '%v'",
+			trigger.ID, *trigger.WarnValue, trigger.ErrorValue, *trigger.WarnValue)
 		trigger.ErrorValue = trigger.WarnValue
 		trigger.TriggerType = ""
 		return nil
