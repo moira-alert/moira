@@ -32,6 +32,12 @@ var (
 	GoVersion    = "unknown"
 )
 
+const (
+	warningsTag              = "ERROR"
+	recoveringsTag           = "DEGRADATION"
+	deprecatedRecoveringsTag = "HIGH DEGRADATION"
+)
+
 func main() {
 	flag.Parse()
 	if *printVersion {
@@ -98,7 +104,7 @@ func main() {
 		} else {
 			fmt.Println("Trigger structures has been sucessfully updated")
 		}
-    fmt.Println("Start updating existing subscription structures into new format")
+		fmt.Println("Start updating existing subscription structures into new format")
 		if err := ConvertSubscriptions(dataBase, false); err != nil {
 			fmt.Printf("Can not update existing subscriptions: %s\n", err.Error())
 		} else {
@@ -114,7 +120,7 @@ func main() {
 		} else {
 			fmt.Println("Trigger structures has been sucessfully downgraded")
 		}
-    fmt.Println("Start downgrading existing subscription structures into old format")
+		fmt.Println("Start downgrading existing subscription structures into old format")
 		if err := ConvertSubscriptions(dataBase, true); err != nil {
 			fmt.Printf("Can not downgrade existing subscriptions: %s\n", err.Error())
 		} else {
@@ -253,12 +259,12 @@ func ConvertPythonExpressions(dataBase moira.Database) error {
 func ConvertTaggedSubscription(database moira.Database, subscription *moira.SubscriptionData) {
 	for tagInd := range subscription.Tags {
 		switch subscription.Tags[tagInd] {
-		case "ERROR":
+		case warningsTag:
 			if !subscription.IgnoreWarnings {
 				subscription.IgnoreWarnings = true
 				subscription.Tags = append(subscription.Tags[:tagInd], subscription.Tags[tagInd+1:]...)
 			}
-		case "DEGRADATION", "HIGH DEGRADATION":
+		case recoveringsTag, deprecatedRecoveringsTag:
 			if !subscription.IgnoreRecoverings {
 				subscription.IgnoreRecoverings = true
 				subscription.Tags = append(subscription.Tags[:tagInd], subscription.Tags[tagInd+1:]...)
@@ -271,11 +277,11 @@ func ConvertTaggedSubscription(database moira.Database, subscription *moira.Subs
 // ConvertUntaggedSubscription can be used in rollback if something will go wrong after Moira update.
 // This method checks that subscription must ignore specific states transitions and adds required pseudo-tags to existing subscription's tags.
 func ConvertUntaggedSubscription(database moira.Database, subscription *moira.SubscriptionData) {
-	if subscription.IgnoreWarnings {
-		subscription.Tags = append(subscription.Tags, "ERROR")
+	if subscription.IgnoreWarnings && !subscriptionHasTag(subscription, warningsTag) {
+		subscription.Tags = append(subscription.Tags, warningsTag)
 	}
-	if subscription.IgnoreRecoverings {
-		subscription.Tags = append(subscription.Tags, "DEGRADATION")
+	if subscription.IgnoreRecoverings && !subscriptionHasTag(subscription, recoveringsTag) {
+		subscription.Tags = append(subscription.Tags, recoveringsTag)
 	}
 	database.SaveSubscription(subscription)
 }
@@ -299,10 +305,12 @@ func ConvertSubscriptions(database moira.Database, rollback bool) error {
 		subscriptionsConverter = ConvertUntaggedSubscription
 	}
 	for _, subscription := range allSubscriptions {
-		subscriptionsConverter(database, subscription)
-		convertedMessage := fmt.Sprintf("Subscription %s has been succesfully converted. Tags: %s IgnoreWarnings: %t IgnoreRecoverings: %t",
-			subscription.ID, strings.Join(subscription.Tags, ", "), subscription.IgnoreWarnings, subscription.IgnoreRecoverings)
-		fmt.Println(convertedMessage)
+		if subscription != nil {
+			subscriptionsConverter(database, subscription)
+			convertedMessage := fmt.Sprintf("Subscription %s has been succesfully converted. Tags: %s IgnoreWarnings: %t IgnoreRecoverings: %t",
+				subscription.ID, strings.Join(subscription.Tags, ", "), subscription.IgnoreWarnings, subscription.IgnoreRecoverings)
+			fmt.Println(convertedMessage)
+		}
 	}
 	return nil
 }
@@ -328,6 +336,15 @@ func ConvertTriggers(dataBase moira.Database, rollback bool) error {
 	return updateTriggers(allTriggers, dataBase)
 }
 
+func subscriptionHasTag(subscription *moira.SubscriptionData, tag string) bool {
+	for _, subcriptionTag := range subscription.Tags {
+		if subcriptionTag == tag {
+			return true
+		}
+	}
+	return false
+}
+
 func updateTriggers(triggers []*moira.Trigger, dataBase moira.Database) error {
 	for _, trigger := range triggers {
 		if trigger == nil {
@@ -346,7 +363,7 @@ func updateTriggers(triggers []*moira.Trigger, dataBase moira.Database) error {
 				return err
 			}
 		} else {
-			return fmt.Errorf("trigger converter: trigger %v - could not save to Database, error: %v\n",
+			return fmt.Errorf("trigger converter: trigger %v - could not save to Database, error: %v",
 				trigger.ID, err)
 		}
 	}
@@ -365,7 +382,7 @@ func downgradeTriggers(triggers []*moira.Trigger, dataBase moira.Database) error
 				return err
 			}
 		} else {
-			return fmt.Errorf("trigger converter: trigger %v - could not save to Database, error: %v\n",
+			return fmt.Errorf("trigger converter: trigger %v - could not save to Database, error: %v",
 				trigger.ID, err)
 		}
 	}
@@ -402,7 +419,7 @@ func setProperTriggerType(trigger *moira.Trigger) error {
 			return nil
 		}
 	}
-	return fmt.Errorf("cannot update trigger %v - warn_value: %v, error_value: %v, expression: %v, trigger_type: ''\n",
+	return fmt.Errorf("cannot update trigger %v - warn_value: %v, error_value: %v, expression: %v, trigger_type: ''",
 		trigger.ID, trigger.WarnValue, trigger.ErrorValue, trigger.Expression)
 }
 
@@ -437,6 +454,6 @@ func setProperWarnErrorExpressionValues(trigger *moira.Trigger) error {
 		return nil
 	}
 
-	return fmt.Errorf("cannot downgrade trigger %v - warn_value: %v, error_value: %v, expression: %v, trigger_type: ''\n",
+	return fmt.Errorf("cannot downgrade trigger %v - warn_value: %v, error_value: %v, expression: %v, trigger_type: ''",
 		trigger.ID, trigger.WarnValue, trigger.ErrorValue, trigger.Expression)
 }
