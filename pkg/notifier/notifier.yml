@@ -14,9 +14,11 @@ notifier:
   senders: []
   moira_selfstate:
     enabled: false
+    remote_triggers_enabled: false
     redis_disconect_delay: 60s
     last_metric_received_delay: 120s
     last_check_delay: 120s
+    last_remote_check_delay: 300s
     notice_interval: 300s
   front_uri: http://localhost
   timezone: UTC

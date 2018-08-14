@@ -69,7 +69,7 @@ func getDefault() config {
 			Listen: "",
 		},
 		Remote: cmd.RemoteConfig{
-			CheckInterval: "5s",
+			CheckInterval: "60s",
 			Timeout:       "60s",
 		},
 	}
