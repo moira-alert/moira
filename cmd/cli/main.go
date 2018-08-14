@@ -92,33 +92,33 @@ func main() {
 	}
 
 	if *updateDatabaseStructures {
-		fmt.Printf("Start updating existing trigger structures into new format")
+		fmt.Println("Start updating existing trigger structures into new format")
 		if err := ConvertTriggers(dataBase, false); err != nil {
-			fmt.Printf("Can not update existing triggers: %s", err.Error())
+			fmt.Printf("Can not update existing triggers: %s\n", err.Error())
 		} else {
-			fmt.Printf("Trigger structures has been sucessfully updated")
+			fmt.Println("Trigger structures has been sucessfully updated")
 		}
-    fmt.Printf("Start updating existing subscription structures into new format")
+    fmt.Println("Start updating existing subscription structures into new format")
 		if err := ConvertSubscriptions(dataBase, false); err != nil {
-			fmt.Printf("Can not update existing subscriptions: %s", err.Error())
+			fmt.Printf("Can not update existing subscriptions: %s\n", err.Error())
 		} else {
-			fmt.Printf("Subscription structures has been sucessfully updated")
+			fmt.Println("Subscription structures has been sucessfully updated")
 		}
 	}
 
 	if *downgradeDatabaseStructures {
 		// ToDo: In future: ask which version of Moira structures use to downgrade
-		fmt.Printf("Start downgrading existing trigger structures into old format")
+		fmt.Println("Start downgrading existing trigger structures into old format")
 		if err := ConvertTriggers(dataBase, true); err != nil {
-			fmt.Printf("Can not downgrade existing triggers: %s", err.Error())
+			fmt.Printf("Can not downgrade existing triggers: %s\n", err.Error())
 		} else {
-			fmt.Printf("Trigger structures has been sucessfully downgraded")
+			fmt.Println("Trigger structures has been sucessfully downgraded")
 		}
-    fmt.Printf("Start downgrading existing subscription structures into old format")
+    fmt.Println("Start downgrading existing subscription structures into old format")
 		if err := ConvertSubscriptions(dataBase, true); err != nil {
-			fmt.Printf("Can not downgrade existing subscriptions: %s", err.Error())
+			fmt.Printf("Can not downgrade existing subscriptions: %s\n", err.Error())
 		} else {
-			fmt.Printf("Subscription structures has been sucessfully downgraded")
+			fmt.Println("Subscription structures has been sucessfully downgraded")
 		}
 	}
 }
@@ -300,7 +300,7 @@ func ConvertSubscriptions(database moira.Database, rollback bool) error {
 	}
 	for _, subscription := range allSubscriptions {
 		subscriptionsConverter(database, subscription)
-		convertedMessage := fmt.Sprintf("Subscription %s has been succesfully converted. Tags: %s IgnoreWarnings: %t IgnoreRecoverings: %t",
+		convertedMessage := fmt.Sprintf("Subscription %s has been succesfully converted. Tags: %s IgnoreWarnings: %t IgnoreRecoverings: %t\n",
 			subscription.ID, strings.Join(subscription.Tags, ", "), subscription.IgnoreWarnings, subscription.IgnoreRecoverings)
 		fmt.Println(convertedMessage)
 	}
@@ -336,17 +336,17 @@ func updateTriggers(triggers []*moira.Trigger, dataBase moira.Database) error {
 		if trigger.TriggerType == moira.RisingTrigger ||
 			trigger.TriggerType == moira.FallingTrigger ||
 			trigger.TriggerType == moira.ExpressionTrigger {
-			fmt.Printf("Trigger %v has '%v' type - no need to convert", trigger.ID, trigger.TriggerType)
+			fmt.Printf("Trigger %v has '%v' type - no need to convert\n", trigger.ID, trigger.TriggerType)
 			continue
 		}
 
 		if err := setProperTriggerType(trigger); err == nil {
-			fmt.Printf("Trigger %v - save to Database", trigger.ID)
+			fmt.Printf("Trigger %v - save to Database\n", trigger.ID)
 			if err := dataBase.SaveTrigger(trigger.ID, trigger); err != nil {
 				return err
 			}
 		} else {
-			return fmt.Errorf("trigger converter: trigger %v - could not save to Database, error: %v",
+			return fmt.Errorf("trigger converter: trigger %v - could not save to Database, error: %v\n",
 				trigger.ID, err)
 		}
 	}
@@ -360,12 +360,12 @@ func downgradeTriggers(triggers []*moira.Trigger, dataBase moira.Database) error
 		}
 
 		if err := setProperWarnErrorExpressionValues(trigger); err == nil {
-			fmt.Printf("Trigger %v - save to Database", trigger.ID)
+			fmt.Printf("Trigger %v - save to Database\n", trigger.ID)
 			if err := dataBase.SaveTrigger(trigger.ID, trigger); err != nil {
 				return err
 			}
 		} else {
-			return fmt.Errorf("trigger converter: trigger %v - could not save to Database, error: %v",
+			return fmt.Errorf("trigger converter: trigger %v - could not save to Database, error: %v\n",
 				trigger.ID, err)
 		}
 	}
@@ -373,70 +373,70 @@ func downgradeTriggers(triggers []*moira.Trigger, dataBase moira.Database) error
 }
 
 func setProperTriggerType(trigger *moira.Trigger) error {
-	fmt.Printf("Trigger %v, trigger_type: '%v' - start conversion", trigger.ID, trigger.TriggerType)
+	fmt.Printf("Trigger %v, trigger_type: '%v' - start conversion\n", trigger.ID, trigger.TriggerType)
 	if trigger.Expression != nil && *trigger.Expression != "" {
-		fmt.Printf("Trigger %v has expression '%v' - set trigger_type to '%v'...",
+		fmt.Printf("Trigger %v has expression '%v' - set trigger_type to '%v'...\n",
 			trigger.ID, *trigger.Expression, moira.ExpressionTrigger)
 		trigger.TriggerType = moira.ExpressionTrigger
 		return nil
 	}
 
 	if trigger.WarnValue != nil && trigger.ErrorValue != nil {
-		fmt.Printf("Trigger %v - warn_value: %v, error_value: %v",
+		fmt.Printf("Trigger %v - warn_value: %v, error_value: %v\n",
 			trigger.ID, trigger.WarnValue, trigger.ErrorValue)
 		if *trigger.ErrorValue > *trigger.WarnValue {
-			fmt.Printf("Trigger %v - set trigger_type to '%v'", trigger.ID, moira.RisingTrigger)
+			fmt.Printf("Trigger %v - set trigger_type to '%v'\n", trigger.ID, moira.RisingTrigger)
 			trigger.TriggerType = moira.RisingTrigger
 			return nil
 		}
 		if *trigger.ErrorValue < *trigger.WarnValue {
-			fmt.Printf("Trigger %v - set trigger_type to '%v'", trigger.ID, moira.FallingTrigger)
+			fmt.Printf("Trigger %v - set trigger_type to '%v'\n", trigger.ID, moira.FallingTrigger)
 			trigger.TriggerType = moira.FallingTrigger
 			return nil
 		}
 		if *trigger.ErrorValue == *trigger.WarnValue {
-			fmt.Printf("Trigger %v - warn_value == error_value, set trigger_type to '%v', set warn_value to 'nil'",
+			fmt.Printf("Trigger %v - warn_value == error_value, set trigger_type to '%v', set warn_value to 'nil'\n",
 				trigger.ID, moira.RisingTrigger)
 			trigger.TriggerType = moira.RisingTrigger
 			trigger.WarnValue = nil
 			return nil
 		}
 	}
-	return fmt.Errorf("cannot update trigger %v - warn_value: %v, error_value: %v, expression: %v, trigger_type: ''",
+	return fmt.Errorf("cannot update trigger %v - warn_value: %v, error_value: %v, expression: %v, trigger_type: ''\n",
 		trigger.ID, trigger.WarnValue, trigger.ErrorValue, trigger.Expression)
 }
 
 func setProperWarnErrorExpressionValues(trigger *moira.Trigger) error {
-	fmt.Printf("Trigger %v: warn_value: %v, error_value: %v, expression: %v, trigger_type: '%v', - start conversion",
+	fmt.Printf("Trigger %v: warn_value: %v, error_value: %v, expression: %v, trigger_type: '%v', - start conversion\n",
 		trigger.ID, trigger.WarnValue, trigger.ErrorValue, trigger.Expression, trigger.TriggerType)
 	if trigger.TriggerType == moira.ExpressionTrigger &&
 		trigger.Expression != nil &&
 		*trigger.Expression != "" {
-		fmt.Printf("Trigger %v has expression '%v' - set trigger_type to ''", trigger.ID, trigger.Expression)
+		fmt.Printf("Trigger %v has expression '%v' - set trigger_type to ''\n", trigger.ID, trigger.Expression)
 		trigger.TriggerType = ""
 		return nil
 	}
 	if trigger.WarnValue != nil && trigger.ErrorValue != nil {
-		fmt.Printf("Trigger %v has warn_value '%v', error_value '%v' - set trigger_type to ''",
+		fmt.Printf("Trigger %v has warn_value '%v', error_value '%v' - set trigger_type to ''\n",
 			trigger.ID, trigger.WarnValue, trigger.ErrorValue)
 		trigger.TriggerType = ""
 		return nil
 	}
 	if trigger.WarnValue == nil && trigger.ErrorValue != nil {
-		fmt.Printf("Trigger %v has warn_value '%v', error_value '%v' - set trigger_type to '' and update warn_value to '%v'",
+		fmt.Printf("Trigger %v has warn_value '%v', error_value '%v' - set trigger_type to '' and update warn_value to '%v'\n",
 			trigger.ID, trigger.WarnValue, trigger.ErrorValue, trigger.ErrorValue)
 		trigger.WarnValue = trigger.ErrorValue
 		trigger.TriggerType = ""
 		return nil
 	}
 	if trigger.WarnValue != nil && trigger.ErrorValue == nil {
-		fmt.Printf("Trigger %v has warn_value '%v', error_value '%v' - set trigger_type to '' and update error_value to '%v'",
+		fmt.Printf("Trigger %v has warn_value '%v', error_value '%v' - set trigger_type to '' and update error_value to '%v'\n",
 			trigger.ID, trigger.WarnValue, trigger.ErrorValue, trigger.WarnValue)
 		trigger.ErrorValue = trigger.WarnValue
 		trigger.TriggerType = ""
 		return nil
 	}
 
-	return fmt.Errorf("cannot downgrade trigger %v - warn_value: %v, error_value: %v, expression: %v, trigger_type: ''",
+	return fmt.Errorf("cannot downgrade trigger %v - warn_value: %v, error_value: %v, expression: %v, trigger_type: ''\n",
 		trigger.ID, trigger.WarnValue, trigger.ErrorValue, trigger.Expression)
 }
