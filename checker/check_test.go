@@ -451,30 +451,18 @@ func TestCheckErrors(t *testing.T) {
 	}
 
 	Convey("GetTimeSeries error", t, func() {
-		ms := ""
-		event := moira.NotificationEvent{
-			IsTriggerEvent: true,
-			TriggerID:      triggerChecker.TriggerID,
-			State:          EXCEPTION,
-			OldState:       OK,
-			Timestamp:      67,
-			Metric:         triggerChecker.trigger.Name,
-			Message:        &ms,
-		}
-
 		lastCheck := moira.CheckData{
 			Metrics:        triggerChecker.lastCheck.Metrics,
-			State:          EXCEPTION,
+			State:          OK,
 			Timestamp:      triggerChecker.Until,
 			EventTimestamp: triggerChecker.Until,
-			Score:          100000,
-			Message:        ms,
+			Score:          0,
+			Message:        "",
 		}
 
 		dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
 		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 		dataBase.EXPECT().GetMetricsValues([]string{metric}, triggerChecker.From, triggerChecker.Until).Return(nil, metricErr)
-		dataBase.EXPECT().PushNotificationEvent(&event, true).Return(nil)
 		dataBase.EXPECT().SetTriggerLastCheck(triggerChecker.TriggerID, &lastCheck).Return(nil)
 		err := triggerChecker.Check()
 		So(err, ShouldBeNil)
@@ -833,6 +821,7 @@ func TestHandleErrorCheck(t *testing.T) {
 	defer mockCtrl.Finish()
 	logger, _ := logging.GetLogger("Test")
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	ttlState := NODATA
 
 	Convey("Handle error no metrics", t, func() {
 		Convey("TTL is 0", func() {
@@ -841,7 +830,8 @@ func TestHandleErrorCheck(t *testing.T) {
 				Database:  dataBase,
 				Logger:    logger,
 				ttl:       0,
-				trigger:   &moira.Trigger{TriggerType: moira.RisingTrigger},
+				ttlState:  ttlState,
+				trigger:   &moira.Trigger{TriggerType: moira.RisingTrigger, TTLState: &ttlState},
 				lastCheck: &moira.CheckData{
 					Timestamp: 0,
 					State:     NODATA,
@@ -986,6 +976,7 @@ func TestHandleErrorCheck(t *testing.T) {
 			State:          OK,
 			Timestamp:      checkData.Timestamp,
 			EventTimestamp: checkData.Timestamp,
+			Message:        "Trigger never received metrics",
 		}
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, expected)
@@ -1018,6 +1009,7 @@ func TestHandleErrorCheck(t *testing.T) {
 			State:          OK,
 			Timestamp:      now,
 			EventTimestamp: now - 3600,
+			Message:        "Trigger never received metrics",
 		}
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, expected)
