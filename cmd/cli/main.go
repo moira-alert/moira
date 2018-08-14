@@ -424,30 +424,30 @@ func setProperTriggerType(trigger *moira.Trigger) error {
 }
 
 func setProperWarnErrorExpressionValues(trigger *moira.Trigger) error {
-	fmt.Printf("Trigger %v: warn_value: %v, error_value: %v, expression: %v, trigger_type: '%v', - start conversion",
+	fmt.Printf("Trigger %v: warn_value: %v, error_value: %v, expression: %v, trigger_type: '%v', - start conversion\n",
 		trigger.ID, trigger.WarnValue, trigger.ErrorValue, trigger.Expression, trigger.TriggerType)
 	if trigger.TriggerType == moira.ExpressionTrigger &&
 		trigger.Expression != nil &&
 		*trigger.Expression != "" {
-		fmt.Printf("Trigger %v has expression '%v' - set trigger_type to ''", trigger.ID, trigger.Expression)
+		fmt.Printf("Trigger %v has expression '%v' - set trigger_type to ''\n", trigger.ID, trigger.Expression)
 		trigger.TriggerType = ""
 		return nil
 	}
 	if trigger.WarnValue != nil && trigger.ErrorValue != nil {
-		fmt.Printf("Trigger %v has warn_value '%v', error_value '%v' - set trigger_type to ''",
+		fmt.Printf("Trigger %v has warn_value '%v', error_value '%v' - set trigger_type to ''\n",
 			trigger.ID, *trigger.WarnValue, *trigger.ErrorValue)
 		trigger.TriggerType = ""
 		return nil
 	}
 	if trigger.WarnValue == nil && trigger.ErrorValue != nil {
-		fmt.Printf("Trigger %v has warn_value '%v', error_value '%v' - set trigger_type to '' and update warn_value to '%v'",
+		fmt.Printf("Trigger %v has warn_value '%v', error_value '%v' - set trigger_type to '' and update warn_value to '%v'\n",
 			trigger.ID, trigger.WarnValue, *trigger.ErrorValue, *trigger.ErrorValue)
 		trigger.WarnValue = trigger.ErrorValue
 		trigger.TriggerType = ""
 		return nil
 	}
 	if trigger.WarnValue != nil && trigger.ErrorValue == nil {
-		fmt.Printf("Trigger %v has warn_value '%v', error_value '%v' - set trigger_type to '' and update error_value to '%v'",
+		fmt.Printf("Trigger %v has warn_value '%v', error_value '%v' - set trigger_type to '' and update error_value to '%v'\n",
 			trigger.ID, *trigger.WarnValue, trigger.ErrorValue, *trigger.WarnValue)
 		trigger.ErrorValue = trigger.WarnValue
 		trigger.TriggerType = ""
