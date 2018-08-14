@@ -144,17 +144,10 @@ func (triggerChecker *TriggerChecker) handleTriggerCheck(checkData moira.CheckDa
 	}
 
 	switch checkingError.(type) {
-	case ErrTriggerHasNoTimeSeries:
-		triggerChecker.Logger.Debugf("Trigger %s: %s", triggerChecker.TriggerID, checkingError.Error())
-		checkData.State = NODATA
-		checkData.Message = checkingError.Error()
-		if triggerChecker.ttl == 0 {
-			return checkData, nil
-		}
-	case ErrTriggerHasOnlyWildcards:
+	case ErrTriggerHasNoTimeSeries, ErrTriggerHasOnlyWildcards:
 		triggerChecker.Logger.Debugf("Trigger %s: %s", triggerChecker.TriggerID, checkingError.Error())
 		triggerState := ToTriggerState(triggerChecker.ttlState)
-		if len(checkData.Metrics) == 0 && triggerState != OK {
+		if len(checkData.Metrics) == 0 {
 			checkData.State = triggerState
 			checkData.Message = checkingError.Error()
 			if triggerChecker.ttl == 0 {
@@ -171,7 +164,6 @@ func (triggerChecker *TriggerChecker) handleTriggerCheck(checkData moira.CheckDa
 	default:
 		triggerChecker.Metrics.CheckError.Mark(1)
 		triggerChecker.Logger.Errorf("Trigger %s check failed: %s", triggerChecker.TriggerID, checkingError.Error())
-		checkData.State = EXCEPTION
 	}
 	return triggerChecker.compareTriggerStates(checkData)
 }
