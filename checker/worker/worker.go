@@ -1,7 +1,7 @@
 package worker
 
 import (
-	"fmt"
+	"runtime"
 	"time"
 
 	"github.com/moira-alert/moira/remote"
@@ -30,7 +30,13 @@ type Checker struct {
 // Start start schedule new MetricEvents and check for NODATA triggers
 func (worker *Checker) Start() error {
 	if worker.Config.MaxParallelChecks == 0 {
-		return fmt.Errorf("MaxParallelChecks is not configured, checker does not start")
+		worker.Config.MaxParallelChecks = runtime.NumCPU()
+		worker.Logger.Infof("MaxParallelChecks is not configured, set it to the number of CPU - %d", worker.Config.MaxParallelChecks)
+	}
+
+	if worker.remoteEnabled && worker.Config.MaxParallelRemoteChecks == 0 {
+		worker.Config.MaxParallelRemoteChecks = runtime.NumCPU()
+		worker.Logger.Infof("MaxParallelRemoteChecks is not configured, set it to the number of CPU - %d", worker.Config.MaxParallelRemoteChecks)
 	}
 
 	worker.lastData = time.Now().UTC().Unix()

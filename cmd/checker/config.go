@@ -1,8 +1,6 @@
 package main
 
 import (
-	"runtime"
-
 	"github.com/gosexy/to"
 	"github.com/moira-alert/moira/checker"
 	"github.com/moira-alert/moira/cmd"
@@ -33,12 +31,6 @@ type checkerConfig struct {
 }
 
 func (config *checkerConfig) getSettings() *checker.Config {
-	if config.MaxParallelChecks == 0 {
-		config.MaxParallelChecks = runtime.NumCPU()
-	}
-	if config.MaxParallelRemoteChecks == 0 {
-		config.MaxParallelRemoteChecks = runtime.NumCPU()
-	}
 	return &checker.Config{
 		MetricsTTLSeconds:           int64(to.Duration(config.MetricsTTL).Seconds()),
 		CheckInterval:               to.Duration(config.CheckInterval),
