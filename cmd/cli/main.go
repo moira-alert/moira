@@ -309,12 +309,12 @@ func ConvertSubscriptions(database moira.Database, logger moira.Logger, rollback
 	for _, subscription := range allSubscriptions {
 		if subscription != nil {
 			if err := subscriptionsConverter(database, subscription); err != nil {
+				convertedMessage := fmt.Sprintf("An error occurred due to convertation procees of subscription %s: %s", subscription.ID, err.Error())
+				logger.Error(convertedMessage)
+			} else {
 				convertedMessage := fmt.Sprintf("Subscription %s has been succesfully converted. Tags: %s IgnoreWarnings: %t IgnoreRecoverings: %t",
 					subscription.ID, strings.Join(subscription.Tags, ", "), subscription.IgnoreWarnings, subscription.IgnoreRecoverings)
 				logger.Debug(convertedMessage)
-			} else {
-				convertedMessage := fmt.Sprintf("An error occurred due to convertation procees of subscription %s: %s", subscription.ID, err.Error())
-				logger.Error(convertedMessage)
 			}
 		}
 	}
