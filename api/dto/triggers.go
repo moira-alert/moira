@@ -4,7 +4,6 @@ package dto
 import (
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/moira-alert/moira"
@@ -110,11 +109,6 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 	if len(trigger.Tags) == 0 {
 		return fmt.Errorf("tags is required")
 	}
-	reservedTagsFound := checkTriggerTags(trigger.Tags)
-	if len(reservedTagsFound) > 0 {
-		forbiddenTags := strings.Join(reservedTagsFound, ", ")
-		return fmt.Errorf("forbidden tags: %s", forbiddenTags)
-	}
 	if trigger.Name == "" {
 		return fmt.Errorf("trigger name is required")
 	}
@@ -184,17 +178,6 @@ func resolvePatterns(request *http.Request, trigger *Trigger, expressionValues *
 	}
 	middleware.SetTimeSeriesNames(request, timeSeriesNames)
 	return nil
-}
-
-func checkTriggerTags(tags []string) []string {
-	reservedTagsFound := make([]string, 0)
-	for _, tag := range tags {
-		switch tag {
-		case moira.EventHighDegradationTag, moira.EventDegradationTag, moira.EventProgressTag:
-			reservedTagsFound = append(reservedTagsFound, tag)
-		}
-	}
-	return reservedTagsFound
 }
 
 func checkWarnErrorExpression(trigger *Trigger) error {

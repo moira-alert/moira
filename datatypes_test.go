@@ -1,8 +1,10 @@
 package moira
 
 import (
-	. "github.com/smartystreets/goconvey/convey"
+	"fmt"
 	"testing"
+
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestIsScheduleAllows(t *testing.T) {
@@ -282,4 +284,116 @@ func getDefaultSchedule() ScheduleData {
 			},
 		},
 	}
+}
+
+func TestSubscriptionData_MustIgnore(testing *testing.T) {
+	type testCase struct {
+		State    string
+		OldState string
+		Ignored  bool
+	}
+	assertIgnored := func(subscription SubscriptionData, eventCase testCase) {
+		Convey(fmt.Sprintf("%s -> %s", eventCase.OldState, eventCase.State), func() {
+			event := NotificationEvent{State: eventCase.State, OldState: eventCase.OldState}
+			actual := subscription.MustIgnore(&event)
+			So(actual, ShouldEqual, eventCase.Ignored)
+		})
+	}
+	Convey("Has one type of transitions marked to be ignored", testing, func() {
+		Convey("[TRUE] Send notifications when triggers degraded only", func() {
+			subscription := SubscriptionData{
+				Enabled:           true,
+				IgnoreRecoverings: true,
+				IgnoreWarnings:    false,
+			}
+			testCases := []testCase{
+				{"WARN", "OK", false},
+				{"ERROR", "OK", false},
+				{"NODATA", "OK", false},
+				{"ERROR", "WARN", false},
+				{"NODATA", "WARN", false},
+				{"NODATA", "ERROR", false},
+				{"OK", "WARN", true},
+				{"OK", "ERROR", true},
+				{"OK", "NODATA", true},
+				{"WARN", "ERROR", true},
+				{"WARN", "NODATA", true},
+				{"ERROR", "NODATA", true},
+			}
+			for _, testCase := range testCases {
+				assertIgnored(subscription, testCase)
+			}
+		})
+		Convey("[TRUE] Do not send WARN notifications", func() {
+			subscription := SubscriptionData{
+				Enabled:           true,
+				IgnoreRecoverings: false,
+				IgnoreWarnings:    true,
+			}
+			testCases := []testCase{
+				{"ERROR", "OK", false},
+				{"NODATA", "OK", false},
+				{"ERROR", "WARN", false},
+				{"NODATA", "WARN", false},
+				{"NODATA", "ERROR", false},
+				{"OK", "ERROR", false},
+				{"OK", "NODATA", false},
+				{"WARN", "ERROR", false},
+				{"WARN", "NODATA", false},
+				{"ERROR", "NODATA", false},
+				{"OK", "WARN", true},
+				{"WARN", "OK", true},
+			}
+			for _, testCase := range testCases {
+				assertIgnored(subscription, testCase)
+			}
+		})
+	})
+	Convey("Has both types of transitions marked to be ignored", testing, func() {
+		subscription := SubscriptionData{
+			Enabled:           true,
+			IgnoreRecoverings: true,
+			IgnoreWarnings:    true,
+		}
+		testCases := []testCase{
+			{"ERROR", "OK", false},
+			{"NODATA", "OK", false},
+			{"ERROR", "WARN", false},
+			{"NODATA", "WARN", false},
+			{"NODATA", "ERROR", false},
+			{"OK", "WARN", true},
+			{"WARN", "OK", true},
+			{"OK", "ERROR", true},
+			{"OK", "NODATA", true},
+			{"WARN", "ERROR", true},
+			{"WARN", "NODATA", true},
+			{"ERROR", "NODATA", true},
+		}
+		for _, testCase := range testCases {
+			assertIgnored(subscription, testCase)
+		}
+	})
+	Convey("Has no types of transitions marked to be ignored", testing, func() {
+		subscription := SubscriptionData{
+			Enabled:           true,
+			IgnoreRecoverings: false,
+			IgnoreWarnings:    false,
+		}
+		testCases := []testCase{
+			{"OK", "WARN", false},
+			{"WARN", "OK", false},
+			{"ERROR", "OK", false},
+			{"NODATA", "OK", false},
+			{"ERROR", "WARN", false},
+			{"NODATA", "WARN", false},
+			{"NODATA", "ERROR", false},
+			{"OK", "ERROR", false},
+			{"OK", "NODATA", false},
+			{"WARN", "NODATA", false},
+			{"ERROR", "NODATA", false},
+		}
+		for _, testCase := range testCases {
+			assertIgnored(subscription, testCase)
+		}
+	})
 }
