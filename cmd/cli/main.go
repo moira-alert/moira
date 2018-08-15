@@ -311,7 +311,7 @@ func ConvertSubscriptions(database moira.Database, logger moira.Logger, rollback
 			if err := subscriptionsConverter(database, subscription); err != nil {
 				convertedMessage := fmt.Sprintf("Subscription %s has been succesfully converted. Tags: %s IgnoreWarnings: %t IgnoreRecoverings: %t",
 					subscription.ID, strings.Join(subscription.Tags, ", "), subscription.IgnoreWarnings, subscription.IgnoreRecoverings)
-				logger.Info(convertedMessage)
+				logger.Debug(convertedMessage)
 			} else {
 				convertedMessage := fmt.Sprintf("An error occurred due to convertation procees of subscription %s: %s", subscription.ID, err.Error())
 				logger.Error(convertedMessage)
@@ -359,12 +359,12 @@ func updateTriggers(triggers []*moira.Trigger, dataBase moira.Database, logger m
 		if trigger.TriggerType == moira.RisingTrigger ||
 			trigger.TriggerType == moira.FallingTrigger ||
 			trigger.TriggerType == moira.ExpressionTrigger {
-			logger.Infof("Trigger %v has '%v' type - no need to convert", trigger.ID, trigger.TriggerType)
+			logger.Debugf("Trigger %v has '%v' type - no need to convert", trigger.ID, trigger.TriggerType)
 			continue
 		}
 
 		if err := setProperTriggerType(trigger, logger); err == nil {
-			logger.Infof("Trigger %v - save to Database", trigger.ID)
+			logger.Debugf("Trigger %v - save to Database", trigger.ID)
 			if err := dataBase.SaveTrigger(trigger.ID, trigger); err != nil {
 				return err
 			}
@@ -383,7 +383,7 @@ func downgradeTriggers(triggers []*moira.Trigger, dataBase moira.Database, logge
 		}
 
 		if err := setProperWarnErrorExpressionValues(trigger, logger); err == nil {
-			logger.Infof("Trigger %v - save to Database", trigger.ID)
+			logger.Debugf("Trigger %v - save to Database", trigger.ID)
 			if err := dataBase.SaveTrigger(trigger.ID, trigger); err != nil {
 				return err
 			}
@@ -396,29 +396,29 @@ func downgradeTriggers(triggers []*moira.Trigger, dataBase moira.Database, logge
 }
 
 func setProperTriggerType(trigger *moira.Trigger, logger moira.Logger) error {
-	logger.Infof("Trigger %v, trigger_type: '%v' - start conversion", trigger.ID, trigger.TriggerType)
+	logger.Debugf("Trigger %v, trigger_type: '%v' - start conversion", trigger.ID, trigger.TriggerType)
 	if trigger.Expression != nil && *trigger.Expression != "" {
-		logger.Infof("Trigger %v has expression '%v' - set trigger_type to '%v'...",
+		logger.Debugf("Trigger %v has expression '%v' - set trigger_type to '%v'...",
 			trigger.ID, *trigger.Expression, moira.ExpressionTrigger)
 		trigger.TriggerType = moira.ExpressionTrigger
 		return nil
 	}
 
 	if trigger.WarnValue != nil && trigger.ErrorValue != nil {
-		logger.Infof("Trigger %v - warn_value: %v, error_value: %v",
+		logger.Debugf("Trigger %v - warn_value: %v, error_value: %v",
 			trigger.ID, trigger.WarnValue, trigger.ErrorValue)
 		if *trigger.ErrorValue > *trigger.WarnValue {
-			logger.Infof("Trigger %v - set trigger_type to '%v'", trigger.ID, moira.RisingTrigger)
+			logger.Debugf("Trigger %v - set trigger_type to '%v'", trigger.ID, moira.RisingTrigger)
 			trigger.TriggerType = moira.RisingTrigger
 			return nil
 		}
 		if *trigger.ErrorValue < *trigger.WarnValue {
-			logger.Infof("Trigger %v - set trigger_type to '%v'", trigger.ID, moira.FallingTrigger)
+			logger.Debugf("Trigger %v - set trigger_type to '%v'", trigger.ID, moira.FallingTrigger)
 			trigger.TriggerType = moira.FallingTrigger
 			return nil
 		}
 		if *trigger.ErrorValue == *trigger.WarnValue {
-			logger.Infof("Trigger %v - warn_value == error_value, set trigger_type to '%v', set warn_value to 'nil'",
+			logger.Debugf("Trigger %v - warn_value == error_value, set trigger_type to '%v', set warn_value to 'nil'",
 				trigger.ID, moira.RisingTrigger)
 			trigger.TriggerType = moira.RisingTrigger
 			trigger.WarnValue = nil
@@ -434,29 +434,29 @@ func setProperWarnErrorExpressionValues(trigger *moira.Trigger, logger moira.Log
 	if trigger.Expression != nil {
 		expr = *trigger.Expression
 	}
-	logger.Infof("Trigger %v: warn_value: %d, error_value: %d, expression: '%s', trigger_type: '%v', - start conversion",
+	logger.Debugf("Trigger %v: warn_value: %d, error_value: %d, expression: '%s', trigger_type: '%v', - start conversion",
 		trigger.ID, trigger.WarnValue, trigger.ErrorValue, expr, trigger.TriggerType)
 	if trigger.TriggerType == moira.ExpressionTrigger &&
 		expr != "" {
-		logger.Infof("Trigger %v has expression '%s' - set trigger_type to ''", trigger.ID, expr)
+		logger.Debugf("Trigger %v has expression '%s' - set trigger_type to ''", trigger.ID, expr)
 		trigger.TriggerType = ""
 		return nil
 	}
 	if trigger.WarnValue != nil && trigger.ErrorValue != nil {
-		logger.Infof("Trigger %v has warn_value '%f', error_value '%v' - set trigger_type to ''",
+		logger.Debugf("Trigger %v has warn_value '%f', error_value '%v' - set trigger_type to ''",
 			trigger.ID, *trigger.WarnValue, *trigger.ErrorValue)
 		trigger.TriggerType = ""
 		return nil
 	}
 	if trigger.WarnValue == nil && trigger.ErrorValue != nil {
-		logger.Infof("Trigger %v has warn_value '<nil>', error_value '%v' - set trigger_type to '' and update warn_value to '%v'",
+		logger.Debugf("Trigger %v has warn_value '<nil>', error_value '%v' - set trigger_type to '' and update warn_value to '%v'",
 			trigger.ID, *trigger.ErrorValue, *trigger.ErrorValue)
 		trigger.WarnValue = trigger.ErrorValue
 		trigger.TriggerType = ""
 		return nil
 	}
 	if trigger.WarnValue != nil && trigger.ErrorValue == nil {
-		logger.Infof("Trigger %v has warn_value '%v', error_value '<nil>' - set trigger_type to '' and update error_value to '%v'",
+		logger.Debugf("Trigger %v has warn_value '%v', error_value '<nil>' - set trigger_type to '' and update error_value to '%v'",
 			trigger.ID, *trigger.WarnValue, *trigger.WarnValue)
 		trigger.ErrorValue = trigger.WarnValue
 		trigger.TriggerType = ""
