@@ -12,6 +12,10 @@ import (
 	"github.com/moira-alert/moira/notifier"
 )
 
+const (
+	testEventState = "TEST"
+)
+
 // FetchEventsWorker checks for new events and new notifications based on it
 type FetchEventsWorker struct {
 	Logger    moira.Logger
@@ -63,11 +67,10 @@ func (worker *FetchEventsWorker) Stop() error {
 func (worker *FetchEventsWorker) processEvent(event moira.NotificationEvent) error {
 	var (
 		subscriptions []*moira.SubscriptionData
-		tags          []string
 		triggerData   moira.TriggerData
 	)
 
-	if event.State != "TEST" {
+	if event.State != testEventState {
 		worker.Logger.Debugf("Processing trigger id %s for metric %s == %f, %s -> %s", event.TriggerID, event.Metric, moira.UseFloat64(event.Value), event.OldState, event.State)
 
 		trigger, err := worker.Database.GetTrigger(event.TriggerID)
@@ -88,9 +91,8 @@ func (worker *FetchEventsWorker) processEvent(event moira.NotificationEvent) err
 			Tags:       trigger.Tags,
 		}
 
-		tags = append(trigger.Tags, event.GetEventTags()...)
-		worker.Logger.Debugf("Getting subscriptions for tags %v", tags)
-		subscriptions, err = worker.Database.GetTagsSubscriptions(tags)
+		worker.Logger.Debugf("Getting subscriptions for tags %v", trigger.Tags)
+		subscriptions, err = worker.Database.GetTagsSubscriptions(trigger.Tags)
 		if err != nil {
 			return err
 		}
@@ -103,9 +105,9 @@ func (worker *FetchEventsWorker) processEvent(event moira.NotificationEvent) err
 	}
 
 	duplications := make(map[string]bool)
+
 	for _, subscription := range subscriptions {
-		if subscription != nil && (event.State == "TEST" || (subscription.Enabled && subset(subscription.Tags, tags))) {
-			worker.Logger.Debugf("Processing contact ids %v for subscription %s", subscription.Contacts, subscription.ID)
+		if worker.isNotificationRequired(subscription, triggerData, event) {
 			for _, contactID := range subscription.Contacts {
 				contact, err := worker.Database.GetContact(contactID)
 				if err != nil {
@@ -124,13 +126,6 @@ func (worker *FetchEventsWorker) processEvent(event moira.NotificationEvent) err
 					worker.Logger.Debugf("Skip duplicated notification for contact %s", notification.Contact)
 				}
 			}
-
-		} else if subscription == nil {
-			worker.Logger.Debugf("Subscription is nil")
-		} else if !subscription.Enabled {
-			worker.Logger.Debugf("Subscription %s is disabled", subscription.ID)
-		} else {
-			worker.Logger.Debugf("Subscription %s has extra tags", subscription.ID)
 		}
 	}
 	return nil
@@ -164,6 +159,28 @@ func (worker *FetchEventsWorker) getNotificationSubscriptions(event moira.Notifi
 	}
 
 	return nil, nil
+}
+
+
+func (worker *FetchEventsWorker) isNotificationRequired(subscription *moira.SubscriptionData, trigger moira.TriggerData, event moira.NotificationEvent) bool {
+	if subscription == nil {
+		worker.Logger.Debugf("Subscription is nil")
+		return false
+	}
+	if event.State != testEventState {
+		if !subscription.Enabled {
+			worker.Logger.Debugf("Subscription %s is disabled", subscription.ID)
+			return false
+		}
+		if subscription.MustIgnore(&event) {
+			worker.Logger.Debugf("Subscription %s is managed to ignore %s -> %s transitions", subscription.ID, event.OldState, event.State)
+			return false
+		}
+		if !subset(subscription.Tags, trigger.Tags) {
+			return false
+		}
+	}
+	return true
 }
 
 func subset(first, second []string) bool {

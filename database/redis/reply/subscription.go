@@ -25,6 +25,7 @@ func Subscription(rep interface{}, err error) (moira.SubscriptionData, error) {
 	if err != nil {
 		return subscription, fmt.Errorf("Failed to parse subscription json %s: %s", string(bytes), err.Error())
 	}
+	convertSubscriptionIfNecessary(&subscription)
 	return subscription, nil
 }
 
@@ -49,4 +50,23 @@ func Subscriptions(rep interface{}, err error) ([]*moira.SubscriptionData, error
 		}
 	}
 	return subscriptions, nil
+}
+
+func convertSubscriptionIfNecessary(subscription *moira.SubscriptionData) {
+	subscriptionTags := make([]string, 0)
+	for _, tag := range subscription.Tags {
+		switch tag {
+		case "ERROR":
+			if !subscription.IgnoreWarnings {
+				subscription.IgnoreWarnings = true
+			}
+		case "DEGRADATION", "HIGH DEGRADATION":
+			if !subscription.IgnoreRecoverings {
+				subscription.IgnoreRecoverings = true
+			}
+		default:
+			subscriptionTags = append(subscriptionTags, tag)
+		}
+	}
+	subscription.Tags = subscriptionTags
 }
