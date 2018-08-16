@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gosexy/to"
+	"github.com/moira-alert/moira/remote"
 	"gopkg.in/yaml.v2"
 
 	"github.com/moira-alert/moira/database/redis"
@@ -74,6 +75,34 @@ type LoggerConfig struct {
 type ProfilerConfig struct {
 	// Define variable as valid non-empty string to enable pprof server. For example ':10000' will enable server available at http://moira.company.com:10000/debug/pprof/
 	Listen string `yaml:"listen"`
+}
+
+// RemoteConfig is remote graphite settings structure
+type RemoteConfig struct {
+	// graphite url e.g http://graphite/render
+	URL string `yaml:"url"`
+	// Min period to perform triggers re-check. Note: Reducing of this value leads to increasing of CPU and memory usage values
+	CheckInterval string `yaml:"check_interval"`
+	// Timeout for remote requests
+	Timeout string `yaml:"timeout"`
+	// Username for basic auth
+	User string `yaml:"user"`
+	// Password for basic auth
+	Password string `yaml:"password"`
+	// If true, remote worker will be enabled.
+	Enabled bool `yaml:"enabled"`
+}
+
+// GetSettings returns remote config parsed from moira config files
+func (config *RemoteConfig) GetSettings() *remote.Config {
+	return &remote.Config{
+		URL:           config.URL,
+		CheckInterval: to.Duration(config.CheckInterval),
+		Timeout:       to.Duration(config.Timeout),
+		User:          config.User,
+		Password:      config.Password,
+		Enabled:       config.Enabled,
+	}
 }
 
 // ReadConfig parses config file by the given path into Moira-used type

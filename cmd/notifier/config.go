@@ -38,14 +38,18 @@ type notifierConfig struct {
 }
 
 type selfStateConfig struct {
-	// If true, Self state monitor will be enabled.
+	// If true, Self state monitor will be enabled
 	Enabled bool `yaml:"enabled"`
+	// If true, Self state monitor will check remote checker status
+	RemoteTriggersEnabled bool `yaml:"remote_triggers_enabled"`
 	// Max Redis disconnect delay to send alert when reached
 	RedisDisconnectDelay string `yaml:"redis_disconect_delay"`
 	// Max Filter metrics receive delay to send alert when reached
 	LastMetricReceivedDelay string `yaml:"last_metric_received_delay"`
 	// Max Checker checks perform delay to send alert when reached
 	LastCheckDelay string `yaml:"last_check_delay"`
+	// Max Remote triggers Checker checks perform delay to send alert when reached
+	LastRemoteCheckDelaySeconds int64 `yaml:"last_remote_check_delay"`
 	// Contact list for Self state monitor alerts
 	Contacts []map[string]string `yaml:"contacts"`
 	// Self state monitor alerting interval
@@ -127,9 +131,11 @@ func checkDateTimeFormat(format string) error {
 func (config *selfStateConfig) getSettings() selfstate.Config {
 	return selfstate.Config{
 		Enabled:                        config.Enabled,
+		RemoteTriggersEnabled:          config.RemoteTriggersEnabled,
 		RedisDisconnectDelaySeconds:    int64(to.Duration(config.RedisDisconnectDelay).Seconds()),
 		LastMetricReceivedDelaySeconds: int64(to.Duration(config.LastMetricReceivedDelay).Seconds()),
 		LastCheckDelaySeconds:          int64(to.Duration(config.LastCheckDelay).Seconds()),
+		LastRemoteCheckDelaySeconds:    int64(to.Duration(config.LastRemoteCheckDelaySeconds).Seconds()),
 		Contacts:                       config.Contacts,
 		NoticeIntervalSeconds:          int64(to.Duration(config.NoticeInterval).Seconds()),
 	}

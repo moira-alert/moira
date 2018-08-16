@@ -34,14 +34,25 @@ func ConfigureNotifierMetrics(prefix string) *graphite.NotifierMetrics {
 }
 
 // ConfigureCheckerMetrics is checker metrics configurator
-func ConfigureCheckerMetrics(prefix string) *graphite.CheckerMetrics {
-	return &graphite.CheckerMetrics{
-		CheckError:             registerMeter(metricNameWithPrefix(prefix, "errors.check")),
-		HandleError:            registerMeter(metricNameWithPrefix(prefix, "errors.handle")),
-		TriggersCheckTime:      registerTimer(metricNameWithPrefix(prefix, "triggers")),
-		TriggerCheckTime:       newTimerMap(metricNameWithPrefix(prefix, "trigger")),
+func ConfigureCheckerMetrics(prefix string, remoteEnabled bool) *graphite.CheckerMetrics {
+	m := &graphite.CheckerMetrics{
+		MoiraMetrics:           configureCheckMetrics(prefix + ".local"),
 		MetricEventsChannelLen: registerHistogram(metricNameWithPrefix(prefix, "metricEvents")),
 		MetricEventsHandleTime: registerTimer(metricNameWithPrefix(prefix, "metricEventsHandle")),
+	}
+	if remoteEnabled {
+		m.RemoteMetrics = configureCheckMetrics(prefix + ".remote")
+	}
+	return m
+}
+
+func configureCheckMetrics(prefix string) *graphite.CheckMetrics {
+	return &graphite.CheckMetrics{
+		CheckError:           registerMeter(metricNameWithPrefix(prefix, "errors.check")),
+		HandleError:          registerMeter(metricNameWithPrefix(prefix, "errors.handle")),
+		TriggersCheckTime:    registerTimer(metricNameWithPrefix(prefix, "triggers")),
+		TriggerCheckTime:     newTimerMap(metricNameWithPrefix(prefix, "trigger")),
+		TriggersToCheckCount: registerHistogram(metricNameWithPrefix(prefix, "triggersToCheck")),
 	}
 }
 

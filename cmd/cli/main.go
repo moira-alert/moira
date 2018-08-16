@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/moira-alert/moira"
@@ -145,7 +146,7 @@ func RemoveBotInstanceLock(dataBase moira.Database, botName string) error {
 // count with python expressions and triggers count with govaluate expressions, used in Moira 2.0
 func GetTriggerWithPythonExpressions(dataBase moira.Database) error {
 	fmt.Println("Getting triggers expressions statistic started")
-	triggerIDs, err := dataBase.GetTriggerIDs()
+	triggerIDs, err := dataBase.GetAllTriggerIDs()
 	if err != nil {
 		return err
 	}
@@ -217,7 +218,7 @@ func ConvertPythonExpression(dataBase moira.Database, triggerID string) error {
 // Now new expression contains in redis field 'expr'.
 func ConvertPythonExpressions(dataBase moira.Database) error {
 	fmt.Println("Convert expressions started")
-	triggerIDs, err := dataBase.GetTriggerIDs()
+	triggerIDs, err := dataBase.GetAllTriggerIDs()
 	if err != nil {
 		return err
 	}
@@ -431,38 +432,46 @@ func setProperTriggerType(trigger *moira.Trigger, logger moira.Logger) error {
 
 func setProperWarnErrorExpressionValues(trigger *moira.Trigger, logger moira.Logger) error {
 	expr := ""
+	warnStr := "<nil>"
+	errorStr := "<nil>"
 	if trigger.Expression != nil {
 		expr = *trigger.Expression
 	}
-	logger.Debugf("Trigger %v: warn_value: %d, error_value: %d, expression: '%s', trigger_type: '%v', - start conversion",
-		trigger.ID, trigger.WarnValue, trigger.ErrorValue, expr, trigger.TriggerType)
+	if trigger.WarnValue != nil {
+		warnStr = strconv.FormatFloat(*trigger.WarnValue, 'f', 2, 64)
+	}
+	if trigger.ErrorValue != nil {
+		errorStr = strconv.FormatFloat(*trigger.ErrorValue, 'f', 2, 64)
+	}
+	logger.Debugf("Trigger %s: warn_value: '%s', error_value: '%s', expression: '%s', trigger_type: '%s', - start conversion",
+		trigger.ID, warnStr, errorStr, expr, trigger.TriggerType)
 	if trigger.TriggerType == moira.ExpressionTrigger &&
 		expr != "" {
-		logger.Debugf("Trigger %v has expression '%s' - set trigger_type to ''", trigger.ID, expr)
+		logger.Debugf("Trigger %s has expression '%s' - set trigger_type to ''", trigger.ID, expr)
 		trigger.TriggerType = ""
 		return nil
 	}
 	if trigger.WarnValue != nil && trigger.ErrorValue != nil {
-		logger.Debugf("Trigger %v has warn_value '%f', error_value '%v' - set trigger_type to ''",
-			trigger.ID, *trigger.WarnValue, *trigger.ErrorValue)
+		logger.Debugf("Trigger %s has warn_value '%s', error_value '%s' - set trigger_type to ''",
+			trigger.ID, warnStr, errorStr)
 		trigger.TriggerType = ""
 		return nil
 	}
 	if trigger.WarnValue == nil && trigger.ErrorValue != nil {
-		logger.Debugf("Trigger %v has warn_value '<nil>', error_value '%v' - set trigger_type to '' and update warn_value to '%v'",
-			trigger.ID, *trigger.ErrorValue, *trigger.ErrorValue)
+		logger.Debugf("Trigger %s has warn_value '%s', error_value '%s' - set trigger_type to '' and update warn_value to '%s'",
+			trigger.ID, warnStr, errorStr, errorStr)
 		trigger.WarnValue = trigger.ErrorValue
 		trigger.TriggerType = ""
 		return nil
 	}
 	if trigger.WarnValue != nil && trigger.ErrorValue == nil {
-		logger.Debugf("Trigger %v has warn_value '%v', error_value '<nil>' - set trigger_type to '' and update error_value to '%v'",
-			trigger.ID, *trigger.WarnValue, *trigger.WarnValue)
+		logger.Debugf("Trigger %s has warn_value '%s', error_value '%s' - set trigger_type to '' and update error_value to '%s'",
+			trigger.ID, warnStr, errorStr, warnStr)
 		trigger.ErrorValue = trigger.WarnValue
 		trigger.TriggerType = ""
 		return nil
 	}
 
-	return fmt.Errorf("cannot downgrade trigger %v - warn_value: %d, error_value: %d, expression: '%s', trigger_type: ''",
-		trigger.ID, trigger.WarnValue, trigger.ErrorValue, expr)
+	return fmt.Errorf("cannot downgrade trigger %s - warn_value: '%s', error_value: '%s', expression: '%s', trigger_type: ''",
+		trigger.ID, warnStr, errorStr, expr)
 }

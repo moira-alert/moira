@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/moira-alert/moira/expression"
+	"github.com/moira-alert/moira/remote"
 	"github.com/moira-alert/moira/target"
 )
 
@@ -63,7 +64,7 @@ func (triggerChecker *TriggerChecker) getTimeSeries(from, until int64) (*trigger
 				if len(result.Metrics) == 0 {
 					triggerTimeSeries.Additional = append(triggerTimeSeries.Additional, nil)
 				} else {
-					return nil, nil, fmt.Errorf("Target t%v has no timeseries", targetIndex+1)
+					return nil, nil, fmt.Errorf("target t%v has no timeseries", targetIndex+1)
 				}
 			case timeSeriesCount > 1:
 				wrongTriggerTargets = append(wrongTriggerTargets, targetIndex+1)
@@ -79,6 +80,43 @@ func (triggerChecker *TriggerChecker) getTimeSeries(from, until int64) (*trigger
 	}
 
 	return triggerTimeSeries, metricsArr, nil
+}
+
+func (triggerChecker *TriggerChecker) getRemoteTimeSeries(from, until int64) (*triggerTimeSeries, error) {
+	wrongTriggerTargets := make([]int, 0)
+
+	triggerTimeSeries := &triggerTimeSeries{
+		Main:       make([]*target.TimeSeries, 0),
+		Additional: make([]*target.TimeSeries, 0),
+	}
+
+	isSimpleTrigger := triggerChecker.trigger.IsSimple()
+	for targetIndex, tar := range triggerChecker.trigger.Targets {
+		timeSeries, err := remote.Fetch(triggerChecker.RemoteConfig, tar, from, until, isSimpleTrigger)
+		if err != nil {
+			return nil, err
+		}
+
+		if targetIndex == 0 {
+			triggerTimeSeries.Main = timeSeries
+		} else {
+			timeSeriesCount := len(timeSeries)
+			switch {
+			case timeSeriesCount == 0:
+				return nil, fmt.Errorf("target t%v has no timeseries", targetIndex+1)
+			case timeSeriesCount > 1:
+				wrongTriggerTargets = append(wrongTriggerTargets, targetIndex+1)
+			default: // == 1
+				triggerTimeSeries.Additional = append(triggerTimeSeries.Additional, timeSeries[0])
+			}
+		}
+	}
+
+	if len(wrongTriggerTargets) > 0 {
+		return nil, ErrWrongTriggerTargets(wrongTriggerTargets)
+	}
+
+	return triggerTimeSeries, nil
 }
 
 func (*triggerTimeSeries) getMainTargetName() string {

@@ -212,7 +212,7 @@ func TestTriggerStoring(t *testing.T) {
 			So(actualTriggerChecks, ShouldResemble, []*moira.TriggerCheck{triggerCheck})
 
 			//Add check data
-			err = dataBase.SetTriggerLastCheck(trigger.ID, &lastCheckTest)
+			err = dataBase.SetTriggerLastCheck(trigger.ID, &lastCheckTest, false)
 			So(err, ShouldBeNil)
 
 			triggerCheck.LastCheck = lastCheckTest
@@ -255,6 +255,88 @@ func TestTriggerStoring(t *testing.T) {
 			actualTriggerChecks, err = dataBase.GetTriggerChecks([]string{trigger.ID})
 			So(err, ShouldBeNil)
 			So(actualTriggerChecks, ShouldResemble, []*moira.TriggerCheck{nil})
+		})
+
+	})
+}
+
+func TestRemoteTrigger(t *testing.T) {
+	logger, _ := logging.GetLogger("dataBase")
+	dataBase := NewDatabase(logger, config)
+	trigger := &moira.Trigger{
+		ID:          "triggerID-0000000000010",
+		Name:        "remote",
+		Targets:     []string{"test.target.remote1"},
+		Patterns:    []string{"test.pattern.remote1"},
+		IsRemote:    true,
+		TriggerType: moira.RisingTrigger,
+	}
+	dataBase.flush()
+	defer dataBase.flush()
+
+	Convey("Saving remote trigger", t, func() {
+		Convey("Trigger should be saved correctly", func() {
+			err := dataBase.SaveTrigger(trigger.ID, trigger)
+			So(err, ShouldBeNil)
+			actual, err := dataBase.GetTrigger(trigger.ID)
+			So(err, ShouldBeNil)
+			So(actual, ShouldResemble, *trigger)
+		})
+		Convey("Trigger should be added to triggers collection", func() {
+			ids, err := dataBase.GetAllTriggerIDs()
+			So(err, ShouldBeNil)
+			So(ids, ShouldResemble, []string{trigger.ID})
+		})
+		Convey("Trigger should not be returned as non-remote trigger", func() { //TODO rewrite msg
+			ids, err := dataBase.GetTriggerIDs()
+			So(err, ShouldBeNil)
+			So(ids, ShouldResemble, []string{})
+		})
+		Convey("Trigger should be added to remote triggers collection", func() {
+			ids, err := dataBase.GetRemoteTriggerIDs()
+			So(err, ShouldBeNil)
+			So(ids, ShouldResemble, []string{trigger.ID})
+		})
+		Convey("Trigger should not be added to patterns collection", func() {
+			ids, err := dataBase.GetPatternTriggerIDs(trigger.Patterns[0])
+			So(err, ShouldBeNil)
+			So(ids, ShouldResemble, []string{})
+		})
+	})
+
+	Convey("Resaving remote trigger as non-remote", t, func() {
+		trigger.IsRemote = false
+		Convey("Trigger should be saved correctly", func() {
+			err := dataBase.SaveTrigger(trigger.ID, trigger)
+			So(err, ShouldBeNil)
+			actual, err := dataBase.GetTrigger(trigger.ID)
+			So(err, ShouldBeNil)
+			So(actual, ShouldResemble, *trigger)
+		})
+		Convey("Trigger should be added to triggers collection", func() {
+			ids, err := dataBase.GetTriggerIDs()
+			So(err, ShouldBeNil)
+			So(ids, ShouldResemble, []string{trigger.ID})
+		})
+		Convey("Trigger should be added to all triggers collection", func() {
+			ids, err := dataBase.GetAllTriggerIDs()
+			So(err, ShouldBeNil)
+			So(ids, ShouldResemble, []string{trigger.ID})
+		})
+		Convey("Trigger shouldn't be added to remote triggers collection", func() {
+			ids, err := dataBase.GetRemoteTriggerIDs()
+			So(err, ShouldBeNil)
+			So(ids, ShouldResemble, []string{})
+		})
+		Convey("Trigger shouldn't be returned as non-remote", func() {
+			ids, err := dataBase.GetPatternTriggerIDs(trigger.Patterns[0])
+			So(err, ShouldBeNil)
+			So(ids, ShouldResemble, []string{trigger.ID})
+		})
+		Convey("Trigger should be added to patterns collection", func() {
+			ids, err := dataBase.GetPatternTriggerIDs(trigger.Patterns[0])
+			So(err, ShouldBeNil)
+			So(ids, ShouldResemble, []string{trigger.ID})
 		})
 	})
 }

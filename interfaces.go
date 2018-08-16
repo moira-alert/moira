@@ -12,6 +12,7 @@ type Database interface {
 	UpdateMetricsHeartbeat() error
 	GetMetricsUpdatesCount() (int64, error)
 	GetChecksUpdatesCount() (int64, error)
+	GetRemoteChecksUpdatesCount() (int64, error)
 	GetNotifierState() (string, error)
 	SetNotifierState(string) error
 
@@ -22,13 +23,15 @@ type Database interface {
 
 	// LastCheck storing
 	GetTriggerLastCheck(triggerID string) (CheckData, error)
-	SetTriggerLastCheck(triggerID string, checkData *CheckData) error
+	SetTriggerLastCheck(triggerID string, checkData *CheckData, isRemote bool) error
 	RemoveTriggerLastCheck(triggerID string) error
 	GetTriggerCheckIDs(tags []string, onlyErrors bool) ([]string, error)
 	SetTriggerCheckMetricsMaintenance(triggerID string, metrics map[string]int64) error
 
 	// Trigger storing
 	GetTriggerIDs() ([]string, error)
+	GetAllTriggerIDs() ([]string, error)
+	GetRemoteTriggerIDs() ([]string, error)
 	GetTrigger(triggerID string) (Trigger, error)
 	GetTriggers(triggerIDs []string) ([]*Trigger, error)
 	GetTriggerChecks(triggerIDs []string) ([]*TriggerCheck, error)
@@ -91,6 +94,11 @@ type Database interface {
 
 	AddTriggersToCheck(triggerIDs []string) error
 	GetTriggerToCheck() (string, error)
+	GetTriggersToCheckCount() (int64, error)
+
+	AddRemoteTriggersToCheck(triggerIDs []string) error
+	GetRemoteTriggerToCheck() (string, error)
+	GetRemoteTriggersToCheckCount() (int64, error)
 
 	// TriggerCheckLock storing
 	AcquireTriggerCheckLock(triggerID string, timeout int) error

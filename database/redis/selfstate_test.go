@@ -23,6 +23,10 @@ func TestSelfCheck(t *testing.T) {
 			count, err = dataBase.GetChecksUpdatesCount()
 			So(count, ShouldEqual, 0)
 			So(err, ShouldBeNil)
+
+			count, err = dataBase.GetRemoteChecksUpdatesCount()
+			So(count, ShouldEqual, 0)
+			So(err, ShouldBeNil)
 		})
 
 		Convey("Update metrics heartbeat test", func() {
@@ -35,10 +39,17 @@ func TestSelfCheck(t *testing.T) {
 		})
 
 		Convey("Update metrics checks updates count", func() {
-			err := dataBase.SetTriggerLastCheck("123", &lastCheckTest)
+			err := dataBase.SetTriggerLastCheck("123", &lastCheckTest, false)
 			So(err, ShouldBeNil)
 
 			count, err := dataBase.GetChecksUpdatesCount()
+			So(count, ShouldEqual, 1)
+			So(err, ShouldBeNil)
+
+			err = dataBase.SetTriggerLastCheck("12345", &lastCheckTest, true)
+			So(err, ShouldBeNil)
+
+			count, err = dataBase.GetRemoteChecksUpdatesCount()
 			So(count, ShouldEqual, 1)
 			So(err, ShouldBeNil)
 		})

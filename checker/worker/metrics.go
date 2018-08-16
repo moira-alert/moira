@@ -57,6 +57,18 @@ func (worker *Checker) addTriggerIDsIfNeeded(triggerIDs []string) {
 	}
 }
 
+func (worker *Checker) addRemoteTriggerIDsIfNeeded(triggerIDs []string) {
+	needToCheckRemoteTriggerIDs := make([]string, len(triggerIDs))
+	for _, triggerID := range triggerIDs {
+		if worker.needHandleTrigger(triggerID) {
+			needToCheckRemoteTriggerIDs = append(needToCheckRemoteTriggerIDs, triggerID)
+		}
+	}
+	if len(needToCheckRemoteTriggerIDs) > 0 {
+		worker.Database.AddRemoteTriggersToCheck(needToCheckRemoteTriggerIDs)
+	}
+}
+
 func (worker *Checker) needHandleTrigger(triggerID string) bool {
 	err := worker.TriggerCache.Add(triggerID, true, cache.DefaultExpiration)
 	return err == nil

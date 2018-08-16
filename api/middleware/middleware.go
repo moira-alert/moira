@@ -2,8 +2,10 @@ package middleware
 
 import (
 	"context"
-	"github.com/moira-alert/moira"
 	"net/http"
+
+	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/remote"
 )
 
 // ContextKey used as key of api request context values
@@ -25,6 +27,7 @@ var (
 	toKey              ContextKey = "to"
 	loginKey           ContextKey = "login"
 	timeSeriesNamesKey ContextKey = "timeSeriesNames"
+	remoteConfigKey    ContextKey = "remoteConfig"
 )
 
 // GetDatabase gets moira.Database realization from request context
@@ -86,4 +89,9 @@ func SetTimeSeriesNames(request *http.Request, timeSeriesNames map[string]bool) 
 // GetTimeSeriesNames gets from requests context timeSeriesNames from saved trigger
 func GetTimeSeriesNames(request *http.Request) map[string]bool {
 	return request.Context().Value(timeSeriesNamesKey).(map[string]bool)
+}
+
+// GetRemoteConfig gets remote config from request context
+func GetRemoteConfig(request *http.Request) *remote.Config {
+	return request.Context().Value(remoteConfigKey).(*remote.Config)
 }

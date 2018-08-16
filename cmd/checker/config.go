@@ -12,6 +12,7 @@ type config struct {
 	Logger   cmd.LoggerConfig   `yaml:"log"`
 	Checker  checkerConfig      `yaml:"checker"`
 	Pprof    cmd.ProfilerConfig `yaml:"pprof"`
+	Remote   cmd.RemoteConfig   `yaml:"remote"`
 }
 
 type checkerConfig struct {
@@ -25,6 +26,8 @@ type checkerConfig struct {
 	MetricsTTL string `yaml:"metrics_ttl"`
 	// Max concurrent checkers to run. Equals to the number of processor cores found on Moira host by default or when variable is defined as 0.
 	MaxParallelChecks int `yaml:"max_parallel_checks"`
+	// Max concurrent remote checkers to run. Equals to the number of processor cores found on Moira host by default or when variable is defined as 0.
+	MaxParallelRemoteChecks int `yaml:"max_parallel_remote_checks"`
 }
 
 func (config *checkerConfig) getSettings() *checker.Config {
@@ -34,6 +37,7 @@ func (config *checkerConfig) getSettings() *checker.Config {
 		NoDataCheckInterval:         to.Duration(config.NoDataCheckInterval),
 		StopCheckingIntervalSeconds: int64(to.Duration(config.StopCheckingInterval).Seconds()),
 		MaxParallelChecks:           config.MaxParallelChecks,
+		MaxParallelRemoteChecks:     config.MaxParallelRemoteChecks,
 	}
 }
 
@@ -48,11 +52,12 @@ func getDefault() config {
 			LogLevel: "info",
 		},
 		Checker: checkerConfig{
-			NoDataCheckInterval:  "60s",
-			CheckInterval:        "5s",
-			MetricsTTL:           "1h",
-			StopCheckingInterval: "30s",
-			MaxParallelChecks:    0,
+			NoDataCheckInterval:     "60s",
+			CheckInterval:           "5s",
+			MetricsTTL:              "1h",
+			StopCheckingInterval:    "30s",
+			MaxParallelChecks:       0,
+			MaxParallelRemoteChecks: 0,
 		},
 		Graphite: cmd.GraphiteConfig{
 			RuntimeStats: false,
@@ -62,6 +67,10 @@ func getDefault() config {
 		},
 		Pprof: cmd.ProfilerConfig{
 			Listen: "",
+		},
+		Remote: cmd.RemoteConfig{
+			CheckInterval: "60s",
+			Timeout:       "60s",
 		},
 	}
 }

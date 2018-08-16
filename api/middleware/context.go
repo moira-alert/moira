@@ -3,12 +3,14 @@ package middleware
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"strconv"
+
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
-	"net/http"
-	"strconv"
+	"github.com/moira-alert/moira/remote"
 )
 
 // DatabaseContext sets to requests context configured database
@@ -80,6 +82,16 @@ func SubscriptionContext(next http.Handler) http.Handler {
 		ctx := context.WithValue(request.Context(), subscriptionIDKey, triggerID)
 		next.ServeHTTP(writer, request.WithContext(ctx))
 	})
+}
+
+// RemoteConfigContext adds remote config struct to request context
+func RemoteConfigContext(cfg *remote.Config) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+			ctx := context.WithValue(request.Context(), remoteConfigKey, cfg)
+			next.ServeHTTP(writer, request.WithContext(ctx))
+		})
+	}
 }
 
 // Paginate gets page and size values from URI query and set it to request context. If query has not values sets given values

@@ -151,7 +151,7 @@ func TestFetchData(t *testing.T) {
 		So(err, ShouldBeNil)
 	})
 
-	Convey("Test allowRealTimeAlerting=true", t, func() {
+	Convey("Test allowRealTimeAlerting=false", t, func() {
 		dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
 		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 		dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)

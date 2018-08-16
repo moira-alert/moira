@@ -10,6 +10,7 @@ import (
 	"github.com/moira-alert/moira/api/middleware"
 	"github.com/moira-alert/moira/checker"
 	"github.com/moira-alert/moira/expression"
+	"github.com/moira-alert/moira/remote"
 	"github.com/moira-alert/moira/target"
 )
 
@@ -57,6 +58,8 @@ type TriggerModel struct {
 	Expression string `json:"expression"`
 	// Graphite patterns for trigger
 	Patterns []string `json:"patterns"`
+	// Shows if trigger is remote (graphite-backend) based or stored inside Moira-Redis DB
+	IsRemote bool `json:"is_remote"`
 }
 
 // ToMoiraTrigger transforms TriggerModel to moira.Trigger
@@ -75,6 +78,7 @@ func (model *TriggerModel) ToMoiraTrigger() *moira.Trigger {
 		Schedule:    model.Schedule,
 		Expression:  &model.Expression,
 		Patterns:    model.Patterns,
+		IsRemote:    model.IsRemote,
 	}
 }
 
@@ -94,6 +98,7 @@ func CreateTriggerModel(trigger *moira.Trigger) TriggerModel {
 		Schedule:    trigger.Schedule,
 		Expression:  moira.UseString(trigger.Expression),
 		Patterns:    trigger.Patterns,
+		IsRemote:    trigger.IsRemote,
 	}
 }
 
@@ -120,6 +125,11 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 		Expression:              &trigger.Expression,
 	}
 
+	remoteCfg := middleware.GetRemoteConfig(request)
+	if trigger.IsRemote && !remoteCfg.IsEnabled() {
+		return fmt.Errorf("remote graphite storage is not enabled")
+	}
+
 	if err := resolvePatterns(request, trigger, &triggerExpression); err != nil {
 		return err
 	}
@@ -135,19 +145,30 @@ func resolvePatterns(request *http.Request, trigger *Trigger, expressionValues *
 	trigger.Patterns = make([]string, 0)
 	timeSeriesNames := make(map[string]bool)
 
-	for _, tar := range trigger.Targets {
-		database := middleware.GetDatabase(request)
-		result, err := target.EvaluateTarget(database, tar, now-600, now, false)
-		if err != nil {
-			return err
-		}
+	remoteCfg := middleware.GetRemoteConfig(request)
+	database := middleware.GetDatabase(request)
+	var err error
 
-		trigger.Patterns = append(trigger.Patterns, result.Patterns...)
+	for _, tar := range trigger.Targets {
+		var timeSeries []*target.TimeSeries
+		if trigger.IsRemote {
+			timeSeries, err = remote.Fetch(remoteCfg, tar, now-600, now, false)
+			if err != nil {
+				return err
+			}
+		} else {
+			result, err := target.EvaluateTarget(database, tar, now-600, now, false)
+			if err != nil {
+				return err
+			}
+			trigger.Patterns = append(trigger.Patterns, result.Patterns...)
+			timeSeries = result.TimeSeries
+		}
 
 		if targetNum == 1 {
 			expressionValues.MainTargetValue = 42
-			for _, timeSeries := range result.TimeSeries {
-				timeSeriesNames[timeSeries.Name] = true
+			for _, ts := range timeSeries {
+				timeSeriesNames[ts.Name] = true
 			}
 		} else {
 			targetName := fmt.Sprintf("t%v", targetNum)

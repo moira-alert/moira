@@ -11,6 +11,7 @@ type config struct {
 	Logger   cmd.LoggerConfig   `yaml:"log"`
 	API      apiConfig          `yaml:"api"`
 	Pprof    cmd.ProfilerConfig `yaml:"pprof"`
+	Remote   cmd.RemoteConfig   `yaml:"remote"`
 }
 
 type apiConfig struct {

@@ -32,14 +32,16 @@ func TestDatabaseDisconnected(t *testing.T) {
 	var (
 		metricsCount         int64
 		checksCount          int64
+		remoteChecksCount    int64
 		lastMetricReceivedTS int64
 		redisLastCheckTS     int64
 		lastCheckTS          int64
+		lastRemoteCheckTS    int64
 		nextSendErrorMessage int64
 	)
 
 	// _, selfStateWorker, database, notif, conf, mockCtrl := configureWorker(t)
-	mock := configureWorker(t)
+	mock := configureWorker(t, false)
 	mock.selfCheckWorker.Start()
 	Convey("Database disconnected", t, func() {
 		Convey("Should notify admin", func() {
@@ -53,6 +55,7 @@ func TestDatabaseDisconnected(t *testing.T) {
 			now := time.Now()
 			redisLastCheckTS = now.Add(-time.Second * 11).Unix()
 			lastCheckTS = now.Unix()
+			lastRemoteCheckTS = now.Unix()
 			nextSendErrorMessage = now.Add(-time.Second * 5).Unix()
 			lastMetricReceivedTS = now.Unix()
 			appendNotificationEvents(&events, redisDisconnectedErrorMessage, now.Unix()-redisLastCheckTS)
@@ -60,7 +63,7 @@ func TestDatabaseDisconnected(t *testing.T) {
 			expectedPackage := configureNotificationPackage(adminContact, &events)
 
 			mock.notif.EXPECT().Send(&expectedPackage, &sendingWG)
-			mock.selfCheckWorker.check(now.Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount)
+			mock.selfCheckWorker.check(now.Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS, &lastRemoteCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount, &remoteChecksCount)
 
 			So(lastMetricReceivedTS, ShouldEqual, now.Unix())
 			So(lastCheckTS, ShouldEqual, now.Unix())
@@ -81,13 +84,15 @@ func TestMoiraCacheDoesNotReceivedNewMetrics(t *testing.T) {
 	var (
 		metricsCount         int64
 		checksCount          int64
+		remoteChecksCount    int64
 		lastMetricReceivedTS int64
 		redisLastCheckTS     int64
 		lastCheckTS          int64
+		lastRemoteCheckTS    int64
 		nextSendErrorMessage int64
 	)
 
-	mock := configureWorker(t)
+	mock := configureWorker(t, false)
 	mock.selfCheckWorker.Start()
 	Convey("Should notify admin", t, func() {
 		var events []moira.NotificationEvent
@@ -98,6 +103,7 @@ func TestMoiraCacheDoesNotReceivedNewMetrics(t *testing.T) {
 		now := time.Now()
 		redisLastCheckTS = now.Unix()
 		lastCheckTS = now.Unix()
+		lastRemoteCheckTS = now.Unix()
 		nextSendErrorMessage = now.Add(-time.Second * 5).Unix()
 		lastMetricReceivedTS = now.Add(-time.Second * 61).Unix()
 		metricsCount = 1
@@ -110,7 +116,7 @@ func TestMoiraCacheDoesNotReceivedNewMetrics(t *testing.T) {
 		mock.database.EXPECT().SetNotifierState(ERROR).Return(nil)
 		mock.database.EXPECT().GetNotifierState().Return(ERROR, nil)
 		mock.notif.EXPECT().Send(&expectedPackage, &sendingWG)
-		mock.selfCheckWorker.check(callingNow.Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount)
+		mock.selfCheckWorker.check(callingNow.Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS, &lastRemoteCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount, &remoteChecksCount)
 
 		So(lastMetricReceivedTS, ShouldEqual, now.Add(-time.Second*61).Unix())
 		So(lastCheckTS, ShouldEqual, callingNow.Unix())
@@ -130,13 +136,15 @@ func TestMoiraCheckerDoesNotChecksTriggers(t *testing.T) {
 	var (
 		metricsCount         int64
 		checksCount          int64
+		remoteChecksCount    int64
 		lastMetricReceivedTS int64
 		redisLastCheckTS     int64
 		lastCheckTS          int64
+		lastRemoteCheckTS    int64
 		nextSendErrorMessage int64
 	)
 
-	mock := configureWorker(t)
+	mock := configureWorker(t, false)
 	mock.selfCheckWorker.Start()
 	Convey("Should notify admin", t, func() {
 		var events []moira.NotificationEvent
@@ -147,6 +155,7 @@ func TestMoiraCheckerDoesNotChecksTriggers(t *testing.T) {
 		now := time.Now()
 		redisLastCheckTS = now.Unix()
 		lastCheckTS = now.Add(-time.Second * 121).Unix()
+		lastRemoteCheckTS = now.Unix()
 		nextSendErrorMessage = now.Add(-time.Second * 5).Unix()
 		lastMetricReceivedTS = now.Unix()
 		checksCount = 1
@@ -159,10 +168,62 @@ func TestMoiraCheckerDoesNotChecksTriggers(t *testing.T) {
 		mock.database.EXPECT().SetNotifierState(ERROR).Return(nil)
 		mock.database.EXPECT().GetNotifierState().Return(ERROR, nil)
 		mock.notif.EXPECT().Send(&expectedPackage, &sendingWG)
-		mock.selfCheckWorker.check(callingNow.Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount)
+		mock.selfCheckWorker.check(callingNow.Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS, &lastRemoteCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount, &remoteChecksCount)
 
 		So(lastMetricReceivedTS, ShouldEqual, callingNow.Unix())
 		So(lastCheckTS, ShouldEqual, now.Add(-time.Second*121).Unix())
+		So(redisLastCheckTS, ShouldEqual, callingNow.Unix())
+		So(nextSendErrorMessage, ShouldEqual, callingNow.Unix()+mock.conf.NoticeIntervalSeconds)
+	})
+	mock.selfCheckWorker.Stop()
+	mock.mockCtrl.Finish()
+}
+
+func TestMoiraCheckerDoesNotChecksRemoteTriggers(t *testing.T) {
+	adminContact := map[string]string{
+		"type":  "admin-mail",
+		"value": "admin@company.com",
+	}
+
+	var (
+		metricsCount         int64
+		checksCount          int64
+		remoteChecksCount    int64
+		lastMetricReceivedTS int64
+		redisLastCheckTS     int64
+		lastCheckTS          int64
+		lastRemoteCheckTS    int64
+		nextSendErrorMessage int64
+	)
+
+	mock := configureWorker(t, true)
+	mock.selfCheckWorker.Start()
+	Convey("Should notify admin", t, func() {
+		var events []moira.NotificationEvent
+		var sendingWG sync.WaitGroup
+		mock.database.EXPECT().GetMetricsUpdatesCount().Return(int64(1), nil)
+		mock.database.EXPECT().GetChecksUpdatesCount().Return(int64(1), nil)
+		mock.database.EXPECT().GetRemoteChecksUpdatesCount().Return(int64(1), nil)
+
+		now := time.Now()
+		redisLastCheckTS = now.Unix()
+		lastCheckTS = now.Unix()
+		lastRemoteCheckTS = now.Add(-time.Second * 121).Unix()
+		nextSendErrorMessage = now.Add(-time.Second * 5).Unix()
+		lastMetricReceivedTS = now.Unix()
+		checksCount = 1
+		remoteChecksCount = 1
+
+		callingNow := now.Add(time.Second * 2)
+		appendNotificationEvents(&events, remoteCheckerStateErrorMessage, callingNow.Unix()-lastRemoteCheckTS)
+		expectedPackage := configureNotificationPackage(adminContact, &events)
+
+		mock.database.EXPECT().GetNotifierState().Return(OK, nil)
+		mock.notif.EXPECT().Send(&expectedPackage, &sendingWG)
+		mock.selfCheckWorker.check(callingNow.Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS, &lastRemoteCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount, &remoteChecksCount)
+
+		So(lastMetricReceivedTS, ShouldEqual, callingNow.Unix())
+		So(lastRemoteCheckTS, ShouldEqual, now.Add(-time.Second*121).Unix())
 		So(redisLastCheckTS, ShouldEqual, callingNow.Unix())
 		So(nextSendErrorMessage, ShouldEqual, callingNow.Unix()+mock.conf.NoticeIntervalSeconds)
 	})
@@ -217,20 +278,22 @@ func TestRunGoRoutine(t *testing.T) {
 	})
 }
 
-func configureWorker(t *testing.T) *selfCheckWorkerMock {
+func configureWorker(t *testing.T, remoteEnabled bool) *selfCheckWorkerMock {
 	adminContact := map[string]string{
 		"type":  "admin-mail",
 		"value": "admin@company.com",
 	}
 	defaultCheckInterval = time.Second * 1
 	conf := Config{
-		Enabled: true,
+		Enabled:               true,
+		RemoteTriggersEnabled: remoteEnabled,
 		Contacts: []map[string]string{
 			adminContact,
 		},
 		RedisDisconnectDelaySeconds:    10,
 		LastMetricReceivedDelaySeconds: 60,
 		LastCheckDelaySeconds:          120,
+		LastRemoteCheckDelaySeconds:    120,
 		NoticeIntervalSeconds:          60,
 	}
 

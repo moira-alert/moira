@@ -3,8 +3,10 @@ package checker
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/remote"
 	"github.com/moira-alert/moira/target"
 )
 
@@ -49,7 +51,7 @@ func (triggerChecker *TriggerChecker) Check() error {
 	}
 
 	checkData.UpdateScore()
-	return triggerChecker.Database.SetTriggerLastCheck(triggerChecker.TriggerID, &checkData)
+	return triggerChecker.Database.SetTriggerLastCheck(triggerChecker.TriggerID, &checkData, triggerChecker.trigger.IsRemote)
 }
 
 func (triggerChecker *TriggerChecker) handleMetricsCheck() (moira.CheckData, error) {
@@ -65,12 +67,22 @@ func (triggerChecker *TriggerChecker) handleMetricsCheck() (moira.CheckData, err
 		Score:          triggerChecker.lastCheck.Score,
 	}
 
-	triggerTimeSeries, metrics, err := triggerChecker.getTimeSeries(triggerChecker.From, triggerChecker.Until)
-	if err != nil {
-		return checkData, err
-	}
+	var triggerTimeSeries *triggerTimeSeries
+	var err error
+	if triggerChecker.trigger.IsRemote {
+		triggerTimeSeries, err = triggerChecker.getRemoteTimeSeries(triggerChecker.From, triggerChecker.Until)
+		if err != nil {
+			return checkData, err
+		}
 
-	triggerChecker.cleanupMetricsValues(metrics, triggerChecker.Until)
+	} else {
+		var metrics []string
+		triggerTimeSeries, metrics, err = triggerChecker.getTimeSeries(triggerChecker.From, triggerChecker.Until)
+		if err != nil {
+			return checkData, err
+		}
+		triggerChecker.cleanupMetricsValues(metrics, triggerChecker.Until)
+	}
 
 	if len(triggerTimeSeries.Main) == 0 {
 		return checkData, ErrTriggerHasNoTimeSeries{}
@@ -161,8 +173,17 @@ func (triggerChecker *TriggerChecker) handleTriggerCheck(checkData moira.CheckDa
 	case ErrWrongTriggerTargets, ErrTriggerHasSameTimeSeriesNames:
 		checkData.State = ERROR
 		checkData.Message = checkingError.Error()
+	case remote.ErrRemoteTriggerResponse:
+		triggerChecker.Logger.Errorf("Trigger %s: %s", triggerChecker.TriggerID, checkingError.Error())
+		checkData.State = EXCEPTION
+		notCheckedInterval := time.Now().Unix() - triggerChecker.lastCheck.EventTimestamp
+		checkData.Message = fmt.Sprintf("Remote server unavailable. Trigger is not checked for %d seconds", notCheckedInterval)
 	default:
-		triggerChecker.Metrics.CheckError.Mark(1)
+		if triggerChecker.trigger.IsRemote {
+			triggerChecker.Metrics.RemoteMetrics.CheckError.Mark(1)
+		} else {
+			triggerChecker.Metrics.MoiraMetrics.CheckError.Mark(1)
+		}
 		triggerChecker.Logger.Errorf("Trigger %s check failed: %s", triggerChecker.TriggerID, checkingError.Error())
 	}
 	return triggerChecker.compareTriggerStates(checkData)

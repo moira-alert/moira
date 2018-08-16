@@ -143,6 +143,7 @@ type Trigger struct {
 	Expression       *string       `json:"expression,omitempty"`
 	PythonExpression *string       `json:"python_expression,omitempty"`
 	Patterns         []string      `json:"patterns"`
+	IsRemote         bool          `json:"is_remote"`
 }
 
 // TriggerCheck represent trigger data with last check data and check timestamp
