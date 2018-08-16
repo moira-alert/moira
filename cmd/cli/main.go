@@ -361,17 +361,13 @@ func updateTriggers(triggers []*moira.Trigger, dataBase moira.Database, logger m
 			trigger.TriggerType == moira.FallingTrigger ||
 			trigger.TriggerType == moira.ExpressionTrigger {
 			logger.Debugf("Trigger %v has '%v' type - no need to convert", trigger.ID, trigger.TriggerType)
-			continue
-		}
-
-		if err := setProperTriggerType(trigger, logger); err == nil {
-			logger.Debugf("Trigger %v - save to Database", trigger.ID)
-			if err := dataBase.SaveTrigger(trigger.ID, trigger); err != nil {
-				return err
-			}
-		} else {
+		} else if err := setProperTriggerType(trigger, logger); err != nil {
 			return fmt.Errorf("trigger converter: trigger %v - could not save to Database, error: %v",
 				trigger.ID, err)
+		}
+		logger.Debugf("Trigger %v - save to Database", trigger.ID)
+		if err := dataBase.SaveTrigger(trigger.ID, trigger); err != nil {
+			return err
 		}
 	}
 	return nil
