@@ -125,28 +125,28 @@ deb: tar
 packages: clean build tar rpm deb
 
 .PHONY: docker_feature_images
-docker_image:
+docker_feature_images:
 	for service in "filter" "notifier" "api" "checker" ; do \
 		docker build --build-arg MoiraVersion=${FEATURE_VERSION} --build-arg GO_VERSION=${GO_VERSION} --build-arg GIT_COMMIT=${GIT_HASH} -f Dockerfile.$$service -t moira/$$service:${FEATURE_VERSION} . ; \
 		docker push moira/$$service:${FEATURE_VERSION} ; \
 	done
 
 .PHONY: docker_develop_images
-docker_image:
+docker_develop_images:
 	for service in "filter" "notifier" "api" "checker" ; do \
 		docker build --build-arg MoiraVersion=${DEVELOP_VERSION} --build-arg GO_VERSION=${GO_VERSION} --build-arg GIT_COMMIT=${GIT_HASH} -f Dockerfile.$$service -t moira/$$service:${DEVELOP_VERSION} . ; \
 		docker push moira/$$service:${DEVELOP_VERSION} ; \
 	done
 
 .PHONY: docker_latest_images
-docker_image:
+docker_latest_images:
 	for service in "filter" "notifier" "api" "checker" ; do \
 		docker build --build-arg MoiraVersion=${VERSION} --build-arg GO_VERSION=${GO_VERSION} --build-arg GIT_COMMIT=${GIT_HASH} -f Dockerfile.$$service -t moira/$$service:latest . ; \
 		docker push moira/$$service:latest ; \
 	done
 
 .PHONY: docker_release_images
-docker_image:
+docker_release_images:
 	for service in "filter" "notifier" "api" "checker" ; do \
 		docker build --build-arg MoiraVersion=${VERSION} --build-arg GO_VERSION=${GO_VERSION} --build-arg GIT_COMMIT=${GIT_HASH} -f Dockerfile.$$service -t moira/$$service:${VERSION} . ; \
 		docker push moira/$$service:${VERSION} ; \
