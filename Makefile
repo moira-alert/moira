@@ -1,4 +1,4 @@
-GIT_BRANCH := $(shell git rev-parse --abbrev-ref HEAD | sed -e "s/^feature\///" | sed -e "s/^hotfix\///" | sed -e "s/[^a-zA-Z]/_/g")
+GIT_BRANCH := $(shell git symbolic-ref --short HEAD | sed -e "s/^feature\///" | sed -e "s/^hotfix\///" | sed -e "s/[^a-zA-Z]/_/g")
 GIT_HASH := $(shell git log --pretty=format:%H -n 1)
 GIT_HASH_SIMPLE := $(shell ${GIT_HASH::6})
 GIT_TAG := $(shell git describe --always --tags --abbrev=0 | tail -c+2)
