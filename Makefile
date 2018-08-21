@@ -1,10 +1,10 @@
+GIT_TRAVIS_BRANCH := $(shell echo "${TRAVIS_PULL_REQUEST_BRANCH:-TRAVIS_BRANCH}" | sed -e "s/^feature\///" | sed -e "s/^hotfix\///" | sed -e "s/[^a-zA-Z]/_/g")
 GIT_HASH := $(shell git log --pretty=format:%H -n 1)
 GIT_HASH_SIMPLE := $(shell ${GIT_HASH::6})
 GIT_TAG := $(shell git describe --always --tags --abbrev=0 | tail -c+2)
 GIT_COMMIT := $(shell git rev-list v${GIT_TAG}..HEAD --count)
 GO_VERSION := $(shell go version | cut -d' ' -f3)
-FEATURE_BRANCH := $(shell ${TRAVIS_PULL_REQUEST_BRANCH:-TRAVIS_BRANCH} | sed -e "s/^feature\///" | sed -e "s/^hotfix\///" | sed -e "s/[^a-zA-Z]/_/g")
-FEATURE_VERSION := ${GIT_TAG}-dev-${FEATURE_BRANCH}
+FEATURE_VERSION := ${GIT_TAG}-dev-${GIT_TRAVIS_BRANCH}
 DEVELOP_VERSION := nightly-${GIT_HASH_SIMPLE}
 VERSION := ${GIT_TAG}.${GIT_COMMIT}
 VENDOR := "SKB Kontur"
