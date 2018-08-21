@@ -1,11 +1,12 @@
-GIT_BRANCH := $(shell "${TRAVIS_PULL_REQUEST_BRANCH:-$TRAVIS_BRANCH}" | sed -r 's/[\/\\]+/_/g')
+GIT_BRANCH := ${TRAVIS_PULL_REQUEST_BRANCH:-$TRAVIS_BRANCH}
+GIT_BRANCH_SHORT := $(shell echo "$GIT_BRANCH" | sed -r 's/[\/\\]+/_/g')
 GIT_HASH := $(shell git log --pretty=format:%H -n 1)
-GIT_HASH_SIMPLE := $(shell ${GIT_HASH::6})
+GIT_HASH_SHORT := $(shell ${GIT_HASH::6})
 GIT_TAG := $(shell git describe --always --tags --abbrev=0 | tail -c+2)
 GIT_COMMIT := $(shell git rev-list v${GIT_TAG}..HEAD --count)
 GO_VERSION := $(shell go version | cut -d' ' -f3)
 FEATURE_VERSION := ${GIT_TAG}-dev-${GIT_BRANCH}
-DEVELOP_VERSION := nightly-${GIT_HASH_SIMPLE}
+DEVELOP_VERSION := nightly-${GIT_HASH_SHORT}
 VERSION := ${GIT_TAG}.${GIT_COMMIT}
 VENDOR := "SKB Kontur"
 URL := "https://github.com/moira-alert/moira"
