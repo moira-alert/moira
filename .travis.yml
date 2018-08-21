@@ -32,7 +32,6 @@ script:
   - make packages
 before_deploy:
   - echo "$DOCKER_PASSWORD" | docker login -u="$DOCKER_USERNAME" --password-stdin
-  - export TRAVIS_CURRENT_BRANCH=${TRAVIS_PULL_REQUEST_BRANCH:-TRAVIS_BRANCH}
 deploy:
   - provider: releases
     api_key:
