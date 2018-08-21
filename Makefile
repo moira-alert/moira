@@ -1,5 +1,4 @@
-GIT_BRANCH := ${TRAVIS_BRANCH}
-GIT_BRANCH_SHORT := $(shell echo "$GIT_BRANCH" | sed -r 's/[\/\\]+/_/g')
+GIT_BRANCH := $(shell echo "$TRAVIS_BRANCH" | sed -r 's/[\/\\]+/_/g')
 GIT_HASH := $(shell git log --pretty=format:%H -n 1)
 GIT_HASH_SHORT := $(shell ${GIT_HASH::6})
 GIT_TAG := $(shell git describe --always --tags --abbrev=0 | tail -c+2)
