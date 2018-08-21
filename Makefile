@@ -1,7 +1,11 @@
+GIT_BRANCH := $(shell git rev-parse --abbrev-ref HEAD | sed -e "s/^feature\///" | sed -e "s/^hotfix\///" | sed -e "s/[^a-zA-Z]/_/g")
 GIT_HASH := $(shell git log --pretty=format:%H -n 1)
+GIT_HASH_SIMPLE := $(shell ${GIT_HASH::6})
 GIT_TAG := $(shell git describe --always --tags --abbrev=0 | tail -c+2)
 GIT_COMMIT := $(shell git rev-list v${GIT_TAG}..HEAD --count)
 GO_VERSION := $(shell go version | cut -d' ' -f3)
+FEATURE_VERSION := ${GIT_TAG}-dev-${GIT_BRANCH}
+DEVELOP_VERSION := nightly-${GIT_HASH_SIMPLE}
 VERSION := ${GIT_TAG}.${GIT_COMMIT}
 VENDOR := "SKB Kontur"
 URL := "https://github.com/moira-alert/moira"
@@ -120,20 +124,30 @@ deb: tar
 .PHONY: packages
 packages: clean build tar rpm deb
 
-.PHONY: docker_image
+.PHONY: docker_feature_images
 docker_image:
 	for service in "filter" "notifier" "api" "checker" ; do \
-		docker build --build-arg MoiraVersion=${VERSION} --build-arg GO_VERSION=${GO_VERSION} --build-arg GIT_COMMIT=${GIT_HASH} -f Dockerfile.$$service -t moira/$$service:${VERSION} -t moira/$$service:latest . ; \
+		docker build --build-arg MoiraVersion=${FEATURE_VERSION} --build-arg GO_VERSION=${GO_VERSION} --build-arg GIT_COMMIT=${GIT_HASH} -f Dockerfile.$$service -t moira/$$service:${FEATURE_VERSION} . ; \
+		docker push moira/$$service:${FEATURE_VERSION} ; \
 	done
 
-.PHONY: docker_push
-docker_push:
+.PHONY: docker_develop_images
+docker_image:
 	for service in "filter" "notifier" "api" "checker" ; do \
+		docker build --build-arg MoiraVersion=${DEVELOP_VERSION} --build-arg GO_VERSION=${GO_VERSION} --build-arg GIT_COMMIT=${GIT_HASH} -f Dockerfile.$$service -t moira/$$service:${DEVELOP_VERSION} . ; \
+		docker push moira/$$service:${DEVELOP_VERSION} ; \
+	done
+
+.PHONY: docker_latest_images
+docker_image:
+	for service in "filter" "notifier" "api" "checker" ; do \
+		docker build --build-arg MoiraVersion=${VERSION} --build-arg GO_VERSION=${GO_VERSION} --build-arg GIT_COMMIT=${GIT_HASH} -f Dockerfile.$$service -t moira/$$service:latest . ; \
 		docker push moira/$$service:latest ; \
 	done
 
-.PHONY: docker_push_release
-docker_push_release:
+.PHONY: docker_release_images
+docker_image:
 	for service in "filter" "notifier" "api" "checker" ; do \
+		docker build --build-arg MoiraVersion=${VERSION} --build-arg GO_VERSION=${GO_VERSION} --build-arg GIT_COMMIT=${GIT_HASH} -f Dockerfile.$$service -t moira/$$service:${VERSION} . ; \
 		docker push moira/$$service:${VERSION} ; \
 	done

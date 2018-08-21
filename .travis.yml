@@ -30,7 +30,6 @@ before_script:
   - gem install fpm
 script:
   - make packages
-  - make docker_image
 before_deploy:
   - echo "$DOCKER_PASSWORD" | docker login -u="$DOCKER_USERNAME" --password-stdin
 deploy:
@@ -46,12 +45,27 @@ deploy:
     on:
       tags: true
   - provider: script
-    script: make docker_push
+    script:
+      - make docker_feature_images
+    skip_cleanup: true
+    on:
+      all_branches: true
+      condition: $TRAVIS_BRANCH =~ ^feature*$
+  - provider: script
+    script:
+      - make docker_develop_images
+    skip_cleanup: true
+    on:
+      branch: develop
+  - provider: script
+    script:
+      - make docker_latest_images
     skip_cleanup: true
     on:
       branch: master
   - provider: script
-    script: make docker_push_release
+    script:
+      - make docker_release_images 
     skip_cleanup: true
     on:
       tags: true
