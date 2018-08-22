@@ -4,7 +4,7 @@ GIT_HASH_SHORT := $(shell ${GIT_HASH::6})
 GIT_TAG := $(shell git describe --always --tags --abbrev=0 | tail -c+2)
 GIT_COMMIT := $(shell git rev-list v${GIT_TAG}..HEAD --count)
 GO_VERSION := $(shell go version | cut -d' ' -f3)
-FEATURE_VERSION := ${GIT_TAG}-dev-${GIT_BRANCH}
+FEATURE_VERSION := ${GIT_TAG}-${GIT_BRANCH}
 DEVELOP_VERSION := nightly-${GIT_HASH_SHORT}
 VERSION := ${GIT_TAG}.${GIT_COMMIT}
 VENDOR := "SKB Kontur"
