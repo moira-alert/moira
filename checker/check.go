@@ -132,7 +132,7 @@ func (triggerChecker *TriggerChecker) checkTimeSeries(timeSeries *target.TimeSer
 	if triggerChecker.trigger.NotifyAboutNewMetrics {
 		emptyStateValue = NODATA
 	} else {
-		emptyStateValue = triggerChecker.ttlState
+		emptyStateValue = OK
 	}
 	lastState = triggerChecker.lastCheck.GetOrCreateMetricState(timeSeries.Name, timeSeries.StartTime-3600, emptyStateValue)
 	metricStates, err := triggerChecker.getTimeSeriesStepsStates(triggerTimeSeries, timeSeries, lastState)
@@ -157,6 +157,9 @@ func (triggerChecker *TriggerChecker) checkTimeSeries(timeSeries *target.TimeSer
 
 func (triggerChecker *TriggerChecker) handleTriggerCheck(checkData moira.CheckData, checkingError error) (moira.CheckData, error) {
 	if checkingError == nil {
+		if triggerChecker.lastCheck.EventTimestamp == 0 {
+			triggerChecker.lastCheck.State = OK
+		}
 		checkData.State = OK
 		return triggerChecker.compareTriggerStates(checkData)
 	}

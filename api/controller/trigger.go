@@ -42,7 +42,7 @@ func saveTrigger(dataBase moira.Database, trigger *moira.Trigger, triggerID stri
 			}
 		}
 	} else {
-		triggerState := checker.NODATA
+		triggerState := checker.OK
 		if trigger.TTLState != nil {
 			triggerState = checker.ToTriggerState(*trigger.TTLState)
 		}
