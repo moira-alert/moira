@@ -46,7 +46,7 @@ deploy:
       tags: true
   - provider: script
     script:
-      - make docker_feature_images
+      - make docker_feature_images GIT_BRANCH="${TRAVIS_BRANCH//\//_}"
     skip_cleanup: true
     on:
       all_branches: true
