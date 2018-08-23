@@ -129,12 +129,15 @@ func (triggerChecker *TriggerChecker) handleMetricsCheck() (moira.CheckData, err
 
 func (triggerChecker *TriggerChecker) checkTimeSeries(timeSeries *target.TimeSeries, triggerTimeSeries *triggerTimeSeries) (lastState moira.MetricState, needToDeleteMetric bool, err error) {
 	var emptyStateValue string
+	var emptyTimestampValue int64
 	if triggerChecker.trigger.NotifyAboutNewMetrics {
 		emptyStateValue = NODATA
+		emptyTimestampValue = timeSeries.StartTime - 3600
 	} else {
 		emptyStateValue = OK
+		emptyTimestampValue = time.Now().Unix()
 	}
-	lastState = triggerChecker.lastCheck.GetOrCreateMetricState(timeSeries.Name, timeSeries.StartTime-3600, emptyStateValue)
+	lastState = triggerChecker.lastCheck.GetOrCreateMetricState(timeSeries.Name, emptyTimestampValue, emptyStateValue)
 	metricStates, err := triggerChecker.getTimeSeriesStepsStates(triggerTimeSeries, timeSeries, lastState)
 	if err != nil {
 		return
