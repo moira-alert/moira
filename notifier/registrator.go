@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	// "github.com/skbkontur/moira-kontur-senders"
-
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/senders/mail"
 	"github.com/moira-alert/moira/senders/pushover"
@@ -13,6 +11,7 @@ import (
 	"github.com/moira-alert/moira/senders/slack"
 	"github.com/moira-alert/moira/senders/telegram"
 	"github.com/moira-alert/moira/senders/twilio"
+	// "github.com/moira-alert/moira/senders/kontur"
 )
 
 // RegisterSenders watch on senders config and register all configured senders
