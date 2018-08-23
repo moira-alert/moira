@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	// "github.com/skbkontur/kontur-moira-senders"
+	// "github.com/skbkontur/moira-kontur-senders"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/senders/mail"
