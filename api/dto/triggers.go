@@ -60,7 +60,7 @@ type TriggerModel struct {
 	Patterns []string `json:"patterns"`
 	// Shows if trigger is remote (graphite-backend) based or stored inside Moira-Redis DB
 	IsRemote bool `json:"is_remote"`
-	// If true, first event NODATA → OK will be omitted
+	// If false, first event NODATA → OK will be omitted
 	NotifyAboutNewMetrics bool `json:"notify_about_new_metrics"`
 }
 
