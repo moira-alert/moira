@@ -19,11 +19,7 @@ func (triggerChecker *TriggerChecker) compareTriggerStates(currentCheck moira.Ch
 	lastStateSuppressedValue := triggerChecker.lastCheck.SuppressedState
 	timestamp := currentCheck.Timestamp
 
-	if triggerChecker.lastCheck.EventTimestamp != 0 {
-		currentCheck.EventTimestamp = triggerChecker.lastCheck.EventTimestamp
-	} else {
-		currentCheck.EventTimestamp = timestamp
-	}
+	currentCheck.EventTimestamp = triggerChecker.lastCheck.EventTimestamp
 
 	if lastStateSuppressed && lastStateSuppressedValue == "" {
 		lastStateSuppressedValue = lastStateValue
@@ -35,6 +31,10 @@ func (triggerChecker *TriggerChecker) compareTriggerStates(currentCheck moira.Ch
 	if !needSend {
 		return currentCheck, nil
 	}
+	if triggerChecker.lastCheck.EventTimestamp == 0 {
+		currentCheck.EventTimestamp = timestamp
+	}
+
 	if message == nil {
 		message = &currentCheck.Message
 	}
