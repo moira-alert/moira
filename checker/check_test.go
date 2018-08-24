@@ -454,7 +454,7 @@ func TestCheckErrors(t *testing.T) {
 			Metrics:        triggerChecker.lastCheck.Metrics,
 			State:          OK,
 			Timestamp:      triggerChecker.Until,
-			EventTimestamp: triggerChecker.Until,
+			EventTimestamp: 0,
 			Score:          0,
 			Message:        "",
 		}
@@ -603,11 +603,12 @@ func TestHandleTrigger(t *testing.T) {
 		ttl:      ttl,
 		ttlState: NODATA,
 		trigger: &moira.Trigger{
-			ErrorValue:  &errValue,
-			WarnValue:   &warnValue,
-			TriggerType: moira.RisingTrigger,
-			Targets:     []string{pattern},
-			Patterns:    []string{pattern},
+			ErrorValue:            &errValue,
+			WarnValue:             &warnValue,
+			TriggerType:           moira.RisingTrigger,
+			NotifyAboutNewMetrics: true,
+			Targets:               []string{pattern},
+			Patterns:              []string{pattern},
 		},
 		lastCheck: &lastCheck,
 	}
@@ -753,11 +754,12 @@ func TestHandleTrigger(t *testing.T) {
 			ttl:      ttl,
 			ttlState: NODATA,
 			trigger: &moira.Trigger{
-				ErrorValue:  &errValue,
-				WarnValue:   &warnValue,
-				TriggerType: moira.RisingTrigger,
-				Targets:     []string{"aliasByNode(super.*.metric, 0)"},
-				Patterns:    []string{pattern1},
+				ErrorValue:            &errValue,
+				WarnValue:             &warnValue,
+				TriggerType:           moira.RisingTrigger,
+				NotifyAboutNewMetrics: true,
+				Targets:               []string{"aliasByNode(super.*.metric, 0)"},
+				Patterns:              []string{pattern1},
 			},
 			lastCheck: &moira.CheckData{
 				Metrics:   make(map[string]moira.MetricState),
@@ -924,7 +926,7 @@ func TestHandleErrorCheck(t *testing.T) {
 			Database:  dataBase,
 			Logger:    logger,
 			ttl:       60,
-			trigger:   &moira.Trigger{TriggerType: moira.RisingTrigger},
+			trigger:   &moira.Trigger{TriggerType: moira.RisingTrigger, NotifyAboutNewMetrics: true},
 			ttlState:  NODATA,
 			lastCheck: &moira.CheckData{
 				Timestamp: time.Now().Unix(),
@@ -944,7 +946,7 @@ func TestHandleErrorCheck(t *testing.T) {
 			Metrics:        checkData.Metrics,
 			State:          OK,
 			Timestamp:      checkData.Timestamp,
-			EventTimestamp: checkData.Timestamp,
+			EventTimestamp: 0,
 		}
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, expected)
@@ -956,7 +958,7 @@ func TestHandleErrorCheck(t *testing.T) {
 			Database:  dataBase,
 			Logger:    logger,
 			ttl:       60,
-			trigger:   &moira.Trigger{TriggerType: moira.RisingTrigger},
+			trigger:   &moira.Trigger{TriggerType: moira.RisingTrigger, NotifyAboutNewMetrics: true},
 			ttlState:  OK,
 			lastCheck: &moira.CheckData{
 				Timestamp: time.Now().Unix(),
@@ -974,7 +976,7 @@ func TestHandleErrorCheck(t *testing.T) {
 			Metrics:        checkData.Metrics,
 			State:          OK,
 			Timestamp:      checkData.Timestamp,
-			EventTimestamp: checkData.Timestamp,
+			EventTimestamp: 0,
 			Message:        "Trigger never received metrics",
 		}
 		So(err, ShouldBeNil)
