@@ -35,9 +35,9 @@ type patternNode struct {
 // NewPatternStorage creates new PatternStorage struct
 func NewPatternStorage(database moira.Database, metrics *graphite.FilterMetrics, logger moira.Logger) (*PatternStorage, error) {
 	storage := &PatternStorage{
-		database:    database,
-		metrics:     metrics,
-		logger:      logger,
+		database: database,
+		metrics:  metrics,
+		logger:   logger,
 	}
 	err := storage.RefreshTree()
 	return storage, err
