@@ -20,6 +20,7 @@ type PatternStorage struct {
 	database    moira.Database
 	metrics     *graphite.FilterMetrics
 	logger      moira.Logger
+	patterns    []string
 	PatternTree *patternNode
 }
 
@@ -34,12 +35,10 @@ type patternNode struct {
 
 // NewPatternStorage creates new PatternStorage struct
 func NewPatternStorage(database moira.Database, metrics *graphite.FilterMetrics, logger moira.Logger) (*PatternStorage, error) {
-	patternTree := &patternNode{}
 	storage := &PatternStorage{
-		database:    database,
-		metrics:     metrics,
-		logger:      logger,
-		PatternTree: patternTree,
+		database: database,
+		metrics:  metrics,
+		logger:   logger,
 	}
 	err := storage.RefreshTree()
 	return storage, err
@@ -168,7 +167,29 @@ func (*PatternStorage) parseMetricFromString(line []byte) ([]byte, float64, int6
 	return metric, value, timestamp, nil
 }
 
+func isEqual(databasePatterns []string, storagePatterns []string) bool {
+	if len(databasePatterns) != len(storagePatterns) {
+		return false
+	}
+	for patternInd := range databasePatterns {
+		if databasePatterns[patternInd] != storagePatterns[patternInd] {
+			return false
+		}
+	}
+	return true
+}
+
 func (storage *PatternStorage) buildTree(patterns []string) error {
+
+	if len(storage.patterns) == 0 {
+		storage.patterns = patterns
+	} else {
+		if isEqual(patterns, storage.patterns) {
+			return nil
+		}
+	}
+
+	storage.patterns = patterns
 	newTree := &patternNode{}
 
 	for _, pattern := range patterns {
@@ -218,7 +239,11 @@ func (storage *PatternStorage) buildTree(patterns []string) error {
 		}
 	}
 
-	*storage.PatternTree = *newTree
+	if storage.PatternTree != nil {
+		*storage.PatternTree = *newTree
+	} else {
+		storage.PatternTree = newTree
+	}
 	return nil
 }
 
