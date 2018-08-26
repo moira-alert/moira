@@ -31,14 +31,8 @@ func NewRefreshPatternWorker(database moira.Database, metrics *graphite.FilterMe
 
 // Start process to refresh pattern tree every second
 func (worker *RefreshPatternWorker) Start() error {
-	err := worker.patternStorage.RefreshTree()
-	if err != nil {
-		worker.logger.Errorf("pattern refresh failed: %s", err.Error())
-		return err
-	}
-
 	worker.tomb.Go(func() error {
-		checkTicker := time.NewTicker(time.Second)
+		checkTicker := time.NewTicker(time.Minute)
 		for {
 			select {
 			case <-worker.tomb.Dying():
