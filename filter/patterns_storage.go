@@ -34,10 +34,12 @@ type patternNode struct {
 
 // NewPatternStorage creates new PatternStorage struct
 func NewPatternStorage(database moira.Database, metrics *graphite.FilterMetrics, logger moira.Logger) (*PatternStorage, error) {
+	patternTree := &patternNode{}
 	storage := &PatternStorage{
-		database: database,
-		metrics:  metrics,
-		logger:   logger,
+		database:    database,
+		metrics:     metrics,
+		logger:      logger,
+		PatternTree: patternTree,
 	}
 	err := storage.RefreshTree()
 	return storage, err
@@ -216,11 +218,7 @@ func (storage *PatternStorage) buildTree(patterns []string) error {
 		}
 	}
 
-	if storage.PatternTree != nil {
-		*storage.PatternTree = *newTree
-	} else {
-		storage.PatternTree = newTree
-	}
+	*storage.PatternTree = *newTree
 	return nil
 }
 
