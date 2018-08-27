@@ -49,7 +49,7 @@ type selfStateConfig struct {
 	// Max Checker checks perform delay to send alert when reached
 	LastCheckDelay string `yaml:"last_check_delay"`
 	// Max Remote triggers Checker checks perform delay to send alert when reached
-	LastRemoteCheckDelaySeconds int64 `yaml:"last_remote_check_delay"`
+	LastRemoteCheckDelay string `yaml:"last_remote_check_delay"`
 	// Contact list for Self state monitor alerts
 	Contacts []map[string]string `yaml:"contacts"`
 	// Self state monitor alerting interval
@@ -135,7 +135,7 @@ func (config *selfStateConfig) getSettings() selfstate.Config {
 		RedisDisconnectDelaySeconds:    int64(to.Duration(config.RedisDisconnectDelay).Seconds()),
 		LastMetricReceivedDelaySeconds: int64(to.Duration(config.LastMetricReceivedDelay).Seconds()),
 		LastCheckDelaySeconds:          int64(to.Duration(config.LastCheckDelay).Seconds()),
-		LastRemoteCheckDelaySeconds:    int64(to.Duration(config.LastRemoteCheckDelaySeconds).Seconds()),
+		LastRemoteCheckDelaySeconds:    int64(to.Duration(config.LastRemoteCheckDelay).Seconds()),
 		Contacts:                       config.Contacts,
 		NoticeIntervalSeconds:          int64(to.Duration(config.NoticeInterval).Seconds()),
 	}
