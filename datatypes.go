@@ -161,6 +161,7 @@ type CheckData struct {
 	State           string                 `json:"state"`
 	Timestamp       int64                  `json:"timestamp,omitempty"`
 	EventTimestamp  int64                  `json:"event_timestamp,omitempty"`
+	FirstEventSent  bool                   `json:"first_event_sent"`
 	Suppressed      bool                   `json:"suppressed,omitempty"`
 	SuppressedState string                 `json:"suppressed_state,omitempty"`
 	Message         string                 `json:"msg,omitempty"`

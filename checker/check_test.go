@@ -454,7 +454,7 @@ func TestCheckErrors(t *testing.T) {
 			Metrics:        triggerChecker.lastCheck.Metrics,
 			State:          OK,
 			Timestamp:      triggerChecker.Until,
-			EventTimestamp: 0,
+			EventTimestamp: triggerChecker.Until,
 			Score:          0,
 			Message:        "",
 		}
@@ -486,6 +486,7 @@ func TestCheckErrors(t *testing.T) {
 				EventTimestamp: triggerChecker.Until,
 				Score:          100000,
 				Message:        messageException,
+				FirstEventSent: true,
 			}
 
 			dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
@@ -500,6 +501,7 @@ func TestCheckErrors(t *testing.T) {
 		Convey("Switch state to OK. Event should be created", func() {
 			triggerChecker.lastCheck.State = EXCEPTION
 			triggerChecker.lastCheck.EventTimestamp = 67
+			triggerChecker.lastCheck.FirstEventSent = true
 			lastValue := float64(4)
 			message := ""
 
@@ -529,6 +531,7 @@ func TestCheckErrors(t *testing.T) {
 				Timestamp:      triggerChecker.Until,
 				EventTimestamp: triggerChecker.Until,
 				Score:          0,
+				FirstEventSent: true,
 			}
 
 			dataBase.EXPECT().RemoveMetricsValues([]string{metric}, int64(57)).Return(nil)
@@ -728,10 +731,11 @@ func TestHandleTrigger(t *testing.T) {
 		checkData, err := triggerChecker.handleMetricsCheck()
 		So(err, ShouldResemble, ErrTriggerHasOnlyWildcards{})
 		So(checkData, ShouldResemble, moira.CheckData{
-			Metrics:   lastCheck.Metrics,
-			Timestamp: triggerChecker.Until,
-			State:     OK,
-			Score:     0,
+			Metrics:        lastCheck.Metrics,
+			Timestamp:      triggerChecker.Until,
+			State:          OK,
+			Score:          0,
+			FirstEventSent: true,
 		})
 		mockCtrl.Finish()
 	})
@@ -808,10 +812,11 @@ func TestHandleTrigger(t *testing.T) {
 		checkData, err := triggerChecker.handleMetricsCheck()
 		So(err, ShouldBeNil)
 		So(checkData, ShouldResemble, moira.CheckData{
-			Metrics:   make(map[string]moira.MetricState),
-			Timestamp: triggerChecker.Until,
-			State:     OK,
-			Score:     0,
+			Metrics:        make(map[string]moira.MetricState),
+			Timestamp:      triggerChecker.Until,
+			State:          OK,
+			Score:          0,
+			FirstEventSent: true,
 		})
 		mockCtrl.Finish()
 	})
@@ -882,6 +887,7 @@ func TestHandleErrorCheck(t *testing.T) {
 				Timestamp:      checkData.Timestamp,
 				EventTimestamp: checkData.Timestamp,
 				Message:        "Trigger has no metrics, check your target",
+				FirstEventSent: true,
 			}
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, expected)
@@ -914,6 +920,7 @@ func TestHandleErrorCheck(t *testing.T) {
 			Timestamp:      checkData.Timestamp,
 			EventTimestamp: checkData.Timestamp,
 			Message:        "Trigger never received metrics",
+			FirstEventSent: true,
 		}
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, expected)
@@ -946,7 +953,7 @@ func TestHandleErrorCheck(t *testing.T) {
 			Metrics:        checkData.Metrics,
 			State:          OK,
 			Timestamp:      checkData.Timestamp,
-			EventTimestamp: 0,
+			EventTimestamp: checkData.Timestamp,
 		}
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, expected)
@@ -976,7 +983,7 @@ func TestHandleErrorCheck(t *testing.T) {
 			Metrics:        checkData.Metrics,
 			State:          OK,
 			Timestamp:      checkData.Timestamp,
-			EventTimestamp: 0,
+			EventTimestamp: checkData.Timestamp,
 			Message:        "Trigger never received metrics",
 		}
 		So(err, ShouldBeNil)
@@ -1042,6 +1049,7 @@ func TestHandleErrorCheck(t *testing.T) {
 			Timestamp:      checkData.Timestamp,
 			EventTimestamp: checkData.Timestamp,
 			Message:        "Unknown graphite function: \"123\"",
+			FirstEventSent: true,
 		}
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, expected)
@@ -1074,6 +1082,7 @@ func TestHandleErrorCheck(t *testing.T) {
 			Timestamp:      checkData.Timestamp,
 			EventTimestamp: checkData.Timestamp,
 			Message:        "Trigger has same timeseries names: first, second",
+			FirstEventSent: true,
 		}
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, expected)
@@ -1109,6 +1118,7 @@ func TestHandleErrorCheck(t *testing.T) {
 			Timestamp:      checkData.Timestamp,
 			EventTimestamp: checkData.Timestamp,
 			Message:        "Target t2 has more than one timeseries",
+			FirstEventSent: true,
 		}
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, expected)

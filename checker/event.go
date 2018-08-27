@@ -19,7 +19,11 @@ func (triggerChecker *TriggerChecker) compareTriggerStates(currentCheck moira.Ch
 	lastStateSuppressedValue := triggerChecker.lastCheck.SuppressedState
 	timestamp := currentCheck.Timestamp
 
-	currentCheck.EventTimestamp = triggerChecker.lastCheck.EventTimestamp
+	if triggerChecker.lastCheck.EventTimestamp != 0 {
+		currentCheck.EventTimestamp = triggerChecker.lastCheck.EventTimestamp
+	} else {
+		currentCheck.EventTimestamp = timestamp
+	}
 
 	if lastStateSuppressed && lastStateSuppressedValue == "" {
 		lastStateSuppressedValue = lastStateValue
@@ -30,9 +34,6 @@ func (triggerChecker *TriggerChecker) compareTriggerStates(currentCheck moira.Ch
 	needSend, message := needSendEvent(currentStateValue, lastStateValue, timestamp, triggerChecker.lastCheck.GetEventTimestamp(), lastStateSuppressed, lastStateSuppressedValue)
 	if !needSend {
 		return currentCheck, nil
-	}
-	if triggerChecker.lastCheck.EventTimestamp == 0 {
-		currentCheck.EventTimestamp = timestamp
 	}
 
 	if message == nil {
@@ -68,6 +69,7 @@ func (triggerChecker *TriggerChecker) compareTriggerStates(currentCheck moira.Ch
 	currentCheck.SuppressedState = ""
 	triggerChecker.Logger.Infof("Writing new event: %v", event)
 	err := triggerChecker.Database.PushNotificationEvent(&event, true)
+	currentCheck.FirstEventSent = true
 	return currentCheck, err
 }
 
@@ -118,6 +120,7 @@ func (triggerChecker *TriggerChecker) compareMetricStates(metric string, current
 	currentState.SuppressedState = ""
 	triggerChecker.Logger.Infof("Writing new event: %v", event)
 	err := triggerChecker.Database.PushNotificationEvent(&event, true)
+	triggerChecker.lastCheck.FirstEventSent = true
 	return currentState, err
 }
 

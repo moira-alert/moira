@@ -60,11 +60,14 @@ func (triggerChecker *TriggerChecker) handleMetricsCheck() (moira.CheckData, err
 		lastMetrics[k] = v
 	}
 	checkData := moira.CheckData{
-		Metrics:        lastMetrics,
-		State:          triggerChecker.lastCheck.State,
-		Timestamp:      triggerChecker.Until,
-		EventTimestamp: triggerChecker.lastCheck.EventTimestamp,
-		Score:          triggerChecker.lastCheck.Score,
+		Metrics:         lastMetrics,
+		State:           triggerChecker.lastCheck.State,
+		Timestamp:       triggerChecker.Until,
+		EventTimestamp:  triggerChecker.lastCheck.EventTimestamp,
+		Score:           triggerChecker.lastCheck.Score,
+		FirstEventSent:  triggerChecker.lastCheck.FirstEventSent,
+		Suppressed:      triggerChecker.lastCheck.Suppressed,
+		SuppressedState: triggerChecker.lastCheck.SuppressedState,
 	}
 
 	var triggerTimeSeries *triggerTimeSeries
@@ -162,7 +165,7 @@ func (triggerChecker *TriggerChecker) checkTimeSeries(timeSeries *target.TimeSer
 
 func (triggerChecker *TriggerChecker) handleTriggerCheck(checkData moira.CheckData, checkingError error) (moira.CheckData, error) {
 	if checkingError == nil {
-		if triggerChecker.lastCheck.EventTimestamp == 0 {
+		if !checkData.FirstEventSent {
 			triggerChecker.lastCheck.State = OK
 		}
 		checkData.State = OK

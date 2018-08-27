@@ -22,6 +22,7 @@ func TestCompareMetricStates(t *testing.T) {
 		Database:  dataBase,
 		Logger:    logger,
 		trigger:   &moira.Trigger{},
+		lastCheck: &moira.CheckData{},
 	}
 
 	lastStateExample := moira.MetricState{
@@ -307,6 +308,7 @@ func TestCheckMetricStateSuppressedState(t *testing.T) {
 			ID:      "superId",
 			Targets: []string{"aliasByNode(super.*.metric, 0)"},
 		},
+		lastCheck: &moira.CheckData{},
 	}
 
 	lastState := moira.MetricState{
