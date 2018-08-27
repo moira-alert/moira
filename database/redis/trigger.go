@@ -196,6 +196,8 @@ func (connector *DbConnector) RemoveTrigger(triggerID string) error {
 	c.Send("MULTI")
 	c.Send("DEL", triggerKey(triggerID))
 	c.Send("DEL", triggerTagsKey(triggerID))
+	c.Send("DEL", triggerEventsKey(triggerID))
+	c.Send("DEL", metricLastCheckKey(triggerID))
 	c.Send("SREM", triggersListKey, triggerID)
 	c.Send("SREM", remoteTriggersListKey, triggerID)
 	for _, tag := range trigger.Tags {
