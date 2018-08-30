@@ -263,7 +263,8 @@ func (checkData *CheckData) GetOrCreateMetricState(metric string, emptyTimestamp
 		emptyEventTimestampValue = 0
 	} else {
 		emptyStateValue = "OK"
-		emptyEventTimestampValue = time.Now().Unix()
+		emptyTimestampValue = time.Now().Unix()
+		emptyEventTimestampValue = emptyTimestampValue
 	}
 	_, ok := checkData.Metrics[metric]
 	if !ok {

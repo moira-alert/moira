@@ -150,7 +150,7 @@ func TestCheckData_GetOrCreateMetricState(t *testing.T) {
 		checkData := CheckData{
 			Metrics: make(map[string]MetricState),
 		}
-		So(checkData.GetOrCreateMetricState("my.metric", 12343, false), ShouldResemble, MetricState{State: "OK", Timestamp: 12343, EventTimestamp: time.Now().Unix()})
+		So(checkData.GetOrCreateMetricState("my.metric", 12343, false), ShouldResemble, MetricState{State: "OK", Timestamp: time.Now().Unix(), EventTimestamp: time.Now().Unix()})
 	})
 	Convey("Test has metric", t, func() {
 		metricState := MetricState{Timestamp: 11211}
