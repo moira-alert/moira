@@ -69,7 +69,7 @@ func (triggerChecker *TriggerChecker) compareTriggerStates(currentCheck moira.Ch
 	currentCheck.SuppressedState = ""
 	triggerChecker.Logger.Infof("Writing new event: %v", event)
 	err := triggerChecker.Database.PushNotificationEvent(&event, true)
-	currentCheck.FirstEventSent = true
+	currentCheck.TriggerAlreadyProcessed = true
 	return currentCheck, err
 }
 
@@ -120,7 +120,7 @@ func (triggerChecker *TriggerChecker) compareMetricStates(metric string, current
 	currentState.SuppressedState = ""
 	triggerChecker.Logger.Infof("Writing new event: %v", event)
 	err := triggerChecker.Database.PushNotificationEvent(&event, true)
-	triggerChecker.lastCheck.FirstEventSent = true
+	triggerChecker.lastCheck.TriggerAlreadyProcessed = true
 	return currentState, err
 }
 

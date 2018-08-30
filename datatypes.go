@@ -156,15 +156,15 @@ type TriggerCheck struct {
 
 // CheckData represent last trigger check data
 type CheckData struct {
-	Metrics         map[string]MetricState `json:"metrics"`
-	Score           int64                  `json:"score"`
-	State           string                 `json:"state"`
-	Timestamp       int64                  `json:"timestamp,omitempty"`
-	EventTimestamp  int64                  `json:"event_timestamp,omitempty"`
-	FirstEventSent  bool                   `json:"first_event_sent"`
-	Suppressed      bool                   `json:"suppressed,omitempty"`
-	SuppressedState string                 `json:"suppressed_state,omitempty"`
-	Message         string                 `json:"msg,omitempty"`
+	Metrics                 map[string]MetricState `json:"metrics"`
+	Score                   int64                  `json:"score"`
+	State                   string                 `json:"state"`
+	Timestamp               int64                  `json:"timestamp,omitempty"`
+	EventTimestamp          int64                  `json:"event_timestamp,omitempty"`
+	TriggerAlreadyProcessed bool                   `json:"trigger_already_processed"`
+	Suppressed              bool                   `json:"suppressed,omitempty"`
+	SuppressedState         string                 `json:"suppressed_state,omitempty"`
+	Message                 string                 `json:"msg,omitempty"`
 }
 
 // MetricState represent metric state data for given timestamp
@@ -255,7 +255,16 @@ func (eventData NotificationEvent) String() string {
 }
 
 // GetOrCreateMetricState gets metric state from check data or create new if CheckData has no state for given metric
-func (checkData *CheckData) GetOrCreateMetricState(metric string, emptyTimestampValue, emptyEventTimestampValue int64, emptyStateValue string) MetricState {
+func (checkData *CheckData) GetOrCreateMetricState(metric string, emptyTimestampValue int64, notifyAboutNewMetrics bool) MetricState {
+	var emptyStateValue string
+	var emptyEventTimestampValue int64
+	if notifyAboutNewMetrics {
+		emptyStateValue = "NODATA"
+		emptyEventTimestampValue = 0
+	} else {
+		emptyStateValue = "OK"
+		emptyEventTimestampValue = time.Now().Unix()
+	}
 	_, ok := checkData.Metrics[metric]
 	if !ok {
 		checkData.Metrics[metric] = MetricState{

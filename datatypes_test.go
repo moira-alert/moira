@@ -3,6 +3,7 @@ package moira
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -143,7 +144,13 @@ func TestCheckData_GetOrCreateMetricState(t *testing.T) {
 		checkData := CheckData{
 			Metrics: make(map[string]MetricState),
 		}
-		So(checkData.GetOrCreateMetricState("my.metric", 12343, 0, "NODATA"), ShouldResemble, MetricState{State: "NODATA", Timestamp: 12343})
+		So(checkData.GetOrCreateMetricState("my.metric", 12343, true), ShouldResemble, MetricState{State: "NODATA", Timestamp: 12343})
+	})
+	Convey("Test no metric, notifyAboutNew = false", t, func() {
+		checkData := CheckData{
+			Metrics: make(map[string]MetricState),
+		}
+		So(checkData.GetOrCreateMetricState("my.metric", 12343, false), ShouldResemble, MetricState{State: "OK", Timestamp: 12343, EventTimestamp: time.Now().Unix()})
 	})
 	Convey("Test has metric", t, func() {
 		metricState := MetricState{Timestamp: 11211}
@@ -152,7 +159,7 @@ func TestCheckData_GetOrCreateMetricState(t *testing.T) {
 				"my.metric": metricState,
 			},
 		}
-		So(checkData.GetOrCreateMetricState("my.metric", 12343, 0, "NODATA"), ShouldResemble, metricState)
+		So(checkData.GetOrCreateMetricState("my.metric", 12343, true), ShouldResemble, metricState)
 	})
 }
 
