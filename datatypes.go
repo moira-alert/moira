@@ -256,25 +256,28 @@ func (eventData NotificationEvent) String() string {
 
 // GetOrCreateMetricState gets metric state from check data or create new if CheckData has no state for given metric
 func (checkData *CheckData) GetOrCreateMetricState(metric string, emptyTimestampValue int64, notifyAboutNewMetrics bool) MetricState {
-	var emptyStateValue string
-	var emptyEventTimestampValue int64
-	if notifyAboutNewMetrics {
-		emptyStateValue = "NODATA"
-		emptyEventTimestampValue = 0
-	} else {
-		emptyStateValue = "OK"
-		emptyTimestampValue = time.Now().Unix()
-		emptyEventTimestampValue = emptyTimestampValue
-	}
 	_, ok := checkData.Metrics[metric]
 	if !ok {
-		checkData.Metrics[metric] = MetricState{
-			State:          emptyStateValue,
-			Timestamp:      emptyTimestampValue,
-			EventTimestamp: emptyEventTimestampValue,
-		}
+		checkData.Metrics[metric] = createEmptyMetricState(emptyTimestampValue, notifyAboutNewMetrics)
 	}
 	return checkData.Metrics[metric]
+}
+
+func createEmptyMetricState(defaultTimestampValue int64, firstStateIsNodata bool) MetricState {
+	if firstStateIsNodata {
+		return MetricState{
+			State:     "NODATA",
+			Timestamp: defaultTimestampValue,
+		}
+	}
+
+	unixNow := time.Now().Unix()
+
+	return MetricState{
+		State:          "OK",
+		Timestamp:      unixNow,
+		EventTimestamp: unixNow,
+	}
 }
 
 // GetCheckPoint gets check point for given MetricState
