@@ -546,6 +546,100 @@ func TestCheckErrors(t *testing.T) {
 	})
 }
 
+func TestIgnoreNodataToOk(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	logger, _ := logging.GetLogger("Test")
+	logging.SetLevel(logging.INFO, "Test")
+	defer mockCtrl.Finish()
+
+	var retention int64 = 10
+	var warnValue float64 = 10
+	var errValue float64 = 20
+	pattern := "super.puper.pattern"
+	metric := "super.puper.metric"
+	var ttl int64 = 600
+	lastCheck := moira.CheckData{
+		Metrics:   make(map[string]moira.MetricState),
+		State:     NODATA,
+		Timestamp: 66,
+	}
+	metricValues := []*moira.MetricValue{
+		{
+			RetentionTimestamp: 3620,
+			Timestamp:          3623,
+			Value:              0,
+		},
+		{
+			RetentionTimestamp: 3630,
+			Timestamp:          3633,
+			Value:              1,
+		},
+		{
+			RetentionTimestamp: 3640,
+			Timestamp:          3643,
+			Value:              2,
+		},
+		{
+			RetentionTimestamp: 3650,
+			Timestamp:          3653,
+			Value:              3,
+		},
+		{
+			RetentionTimestamp: 3660,
+			Timestamp:          3663,
+			Value:              4,
+		},
+	}
+	dataList := map[string][]*moira.MetricValue{
+		metric: metricValues,
+	}
+	triggerChecker := TriggerChecker{
+		TriggerID: "SuperId",
+		Database:  dataBase,
+		Logger:    logger,
+		Config: &Config{
+			MetricsTTLSeconds: 3600,
+		},
+		From:     3617,
+		Until:    3667,
+		ttl:      ttl,
+		ttlState: NODATA,
+		trigger: &moira.Trigger{
+			ErrorValue:  &errValue,
+			WarnValue:   &warnValue,
+			TriggerType: moira.RisingTrigger,
+			Targets:     []string{pattern},
+			Patterns:    []string{pattern},
+		},
+		lastCheck: &lastCheck,
+	}
+
+	Convey("First Event, NODATA - OK is ignored", t, func() {
+		triggerChecker.trigger.NotifyAboutNewMetrics = false
+		dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
+		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
+		dataBase.EXPECT().GetMetricsValues([]string{metric}, triggerChecker.From, triggerChecker.Until).Return(dataList, nil)
+		dataBase.EXPECT().RemoveMetricsValues([]string{metric}, triggerChecker.Until-triggerChecker.Config.MetricsTTLSeconds)
+		checkData, err := triggerChecker.handleMetricsCheck()
+		So(err, ShouldBeNil)
+		So(checkData, ShouldResemble, moira.CheckData{
+			Metrics: map[string]moira.MetricState{
+				metric: {
+					Timestamp:      time.Now().Unix(),
+					EventTimestamp: time.Now().Unix(),
+					State:          OK,
+					Value:          nil,
+				},
+			},
+			Timestamp: triggerChecker.Until,
+			State:     NODATA,
+			Score:     0,
+		})
+		mockCtrl.Finish()
+	})
+}
+
 func TestHandleTrigger(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
