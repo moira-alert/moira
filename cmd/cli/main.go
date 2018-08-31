@@ -381,8 +381,8 @@ func downgradeTriggers(triggers []*moira.Trigger, dataBase moira.Database, logge
 
 		if err := setProperWarnErrorExpressionValues(trigger, logger); err == nil {
 			logger.Debugf("Trigger %v - save to Database", trigger.ID)
-			if err := dataBase.SaveTrigger(trigger.ID, trigger); err != nil {
-				return err
+			if err2 := dataBase.SaveTrigger(trigger.ID, trigger); err2 != nil {
+				return err2
 			}
 		} else {
 			return fmt.Errorf("trigger converter: trigger %v - could not save to Database, error: %v",

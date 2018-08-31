@@ -8,11 +8,6 @@ type MetricsMap interface {
 	GetMetric(name string) (Meter, bool)
 }
 
-// TimerMap implements timer collection abstraction
-type TimerMap interface {
-	GetOrAdd(name, graphitePath string) Timer
-}
-
 // Meter count events to produce exponentially-weighted moving average rates
 // at one-, five-, and fifteen-minutes and a mean rate.
 type Meter interface {
