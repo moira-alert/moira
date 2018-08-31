@@ -51,7 +51,6 @@ func configureCheckMetrics(prefix string) *graphite.CheckMetrics {
 		CheckError:           registerMeter(metricNameWithPrefix(prefix, "errors.check")),
 		HandleError:          registerMeter(metricNameWithPrefix(prefix, "errors.handle")),
 		TriggersCheckTime:    registerTimer(metricNameWithPrefix(prefix, "triggers")),
-		TriggerCheckTime:     newTimerMap(metricNameWithPrefix(prefix, "trigger")),
 		TriggersToCheckCount: registerHistogram(metricNameWithPrefix(prefix, "triggersToCheck")),
 	}
 }
