@@ -74,12 +74,12 @@ func TagContext(next http.Handler) http.Handler {
 // SubscriptionContext gets subscriptionId from parsed URI corresponding to subscription routes and set it to request context
 func SubscriptionContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		triggerID := chi.URLParam(request, "subscriptionId")
-		if triggerID == "" {
+		subscriptionID := chi.URLParam(request, "subscriptionId")
+		if subscriptionID == "" {
 			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("SubscriptionId must be set")))
 			return
 		}
-		ctx := context.WithValue(request.Context(), subscriptionIDKey, triggerID)
+		ctx := context.WithValue(request.Context(), subscriptionIDKey, subscriptionID)
 		next.ServeHTTP(writer, request.WithContext(ctx))
 	})
 }
