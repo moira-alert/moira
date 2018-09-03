@@ -24,6 +24,25 @@ func (connector *DbConnector) GetMetricsUpdatesCount() (int64, error) {
 	return ts, err
 }
 
+// UpdateMatchedMetricsHeartbeat increments counter of matching metrics
+func (connector *DbConnector) UpdateMatchedMetricsHeartbeat() error {
+	c := connector.pool.Get()
+	defer c.Close()
+	err := c.Send("INCR", selfStateMatchedMetricsHeartbeatKey)
+	return err
+}
+
+// GetMatchedMetricsUpdatesCount returns count of metrics matched by Moira-Filter
+func (connector *DbConnector) GetMatchedMetricsUpdatesCount() (int64, error) {
+	c := connector.pool.Get()
+	defer c.Close()
+	ts, err := redis.Int64(c.Do("GET", selfStateMatchedMetricsHeartbeatKey))
+	if err == redis.ErrNil {
+		return 0, nil
+	}
+	return ts, err
+}
+
 // GetChecksUpdatesCount return checks count by Moira-Checker
 func (connector *DbConnector) GetChecksUpdatesCount() (int64, error) {
 	c := connector.pool.Get()
@@ -69,6 +88,7 @@ func (connector *DbConnector) SetNotifierState(health string) error {
 }
 
 var selfStateMetricsHeartbeatKey = "moira-selfstate:metrics-heartbeat"
+var selfStateMatchedMetricsHeartbeatKey = "moira-selfstate:matched-metrics-heartbeat"
 var selfStateChecksCounterKey = "moira-selfstate:checks-counter"
 var selfStateRemoteChecksCounterKey = "moira-selfstate:remote-checks-counter"
 var selfStateNotifierHealth = "moira-selfstate:notifier-health"

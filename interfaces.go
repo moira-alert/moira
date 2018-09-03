@@ -10,6 +10,8 @@ import (
 type Database interface {
 	// SelfState
 	UpdateMetricsHeartbeat() error
+	UpdateMatchedMetricsHeartbeat() error
+	GetMatchedMetricsUpdatesCount() (int64, error)
 	GetMetricsUpdatesCount() (int64, error)
 	GetChecksUpdatesCount() (int64, error)
 	GetRemoteChecksUpdatesCount() (int64, error)
@@ -133,4 +135,9 @@ type Logger interface {
 type Sender interface {
 	SendEvents(events NotificationEvents, contact ContactData, trigger TriggerData, throttled bool) error
 	Init(senderSettings map[string]string, logger Logger, location *time.Location, dateTimeFormat string) error
+}
+
+type Sentinel interface {
+	Protect() error
+	Init(sentinelSettings map[string]string, database Database, logger Logger) error
 }
