@@ -65,6 +65,9 @@ func (triggerChecker *TriggerChecker) handleMetricsCheck() (moira.CheckData, err
 		Timestamp:      triggerChecker.Until,
 		EventTimestamp: triggerChecker.lastCheck.EventTimestamp,
 		Score:          triggerChecker.lastCheck.Score,
+		TriggerAlreadyProcessed: triggerChecker.lastCheck.TriggerAlreadyProcessed,
+		Suppressed:              triggerChecker.lastCheck.Suppressed,
+		SuppressedState:         triggerChecker.lastCheck.SuppressedState,
 	}
 
 	var triggerTimeSeries *triggerTimeSeries
@@ -128,7 +131,7 @@ func (triggerChecker *TriggerChecker) handleMetricsCheck() (moira.CheckData, err
 }
 
 func (triggerChecker *TriggerChecker) checkTimeSeries(timeSeries *target.TimeSeries, triggerTimeSeries *triggerTimeSeries) (lastState moira.MetricState, needToDeleteMetric bool, err error) {
-	lastState = triggerChecker.lastCheck.GetOrCreateMetricState(timeSeries.Name, timeSeries.StartTime-3600)
+	lastState = triggerChecker.lastCheck.GetOrCreateMetricState(timeSeries.Name, timeSeries.StartTime-3600, triggerChecker.trigger.NotifyAboutNewMetrics)
 	metricStates, err := triggerChecker.getTimeSeriesStepsStates(triggerTimeSeries, timeSeries, lastState)
 	if err != nil {
 		return
@@ -152,6 +155,10 @@ func (triggerChecker *TriggerChecker) checkTimeSeries(timeSeries *target.TimeSer
 func (triggerChecker *TriggerChecker) handleTriggerCheck(checkData moira.CheckData, checkingError error) (moira.CheckData, error) {
 	if checkingError == nil {
 		checkData.State = OK
+		if !checkData.TriggerAlreadyProcessed {
+			checkData.TriggerAlreadyProcessed = true
+			return checkData, nil
+		}
 		return triggerChecker.compareTriggerStates(checkData)
 	}
 

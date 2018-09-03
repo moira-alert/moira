@@ -129,21 +129,22 @@ const (
 
 // Trigger represents trigger data object
 type Trigger struct {
-	ID               string        `json:"id"`
-	Name             string        `json:"name"`
-	Desc             *string       `json:"desc,omitempty"`
-	Targets          []string      `json:"targets"`
-	WarnValue        *float64      `json:"warn_value"`
-	ErrorValue       *float64      `json:"error_value"`
-	TriggerType      string        `json:"trigger_type"`
-	Tags             []string      `json:"tags"`
-	TTLState         *string       `json:"ttl_state,omitempty"`
-	TTL              int64         `json:"ttl,omitempty"`
-	Schedule         *ScheduleData `json:"sched,omitempty"`
-	Expression       *string       `json:"expression,omitempty"`
-	PythonExpression *string       `json:"python_expression,omitempty"`
-	Patterns         []string      `json:"patterns"`
-	IsRemote         bool          `json:"is_remote"`
+	ID                    string        `json:"id"`
+	Name                  string        `json:"name"`
+	Desc                  *string       `json:"desc,omitempty"`
+	Targets               []string      `json:"targets"`
+	WarnValue             *float64      `json:"warn_value"`
+	ErrorValue            *float64      `json:"error_value"`
+	TriggerType           string        `json:"trigger_type"`
+	Tags                  []string      `json:"tags"`
+	TTLState              *string       `json:"ttl_state,omitempty"`
+	TTL                   int64         `json:"ttl,omitempty"`
+	Schedule              *ScheduleData `json:"sched,omitempty"`
+	Expression            *string       `json:"expression,omitempty"`
+	PythonExpression      *string       `json:"python_expression,omitempty"`
+	Patterns              []string      `json:"patterns"`
+	IsRemote              bool          `json:"is_remote"`
+	NotifyAboutNewMetrics bool          `json:"notify_about_new_metrics"`
 }
 
 // TriggerCheck represent trigger data with last check data and check timestamp
@@ -155,14 +156,15 @@ type TriggerCheck struct {
 
 // CheckData represent last trigger check data
 type CheckData struct {
-	Metrics         map[string]MetricState `json:"metrics"`
-	Score           int64                  `json:"score"`
-	State           string                 `json:"state"`
-	Timestamp       int64                  `json:"timestamp,omitempty"`
-	EventTimestamp  int64                  `json:"event_timestamp,omitempty"`
-	Suppressed      bool                   `json:"suppressed,omitempty"`
-	SuppressedState string                 `json:"suppressed_state,omitempty"`
-	Message         string                 `json:"msg,omitempty"`
+	Metrics                 map[string]MetricState `json:"metrics"`
+	Score                   int64                  `json:"score"`
+	State                   string                 `json:"state"`
+	Timestamp               int64                  `json:"timestamp,omitempty"`
+	EventTimestamp          int64                  `json:"event_timestamp,omitempty"`
+	TriggerAlreadyProcessed bool                   `json:"trigger_already_processed"`
+	Suppressed              bool                   `json:"suppressed,omitempty"`
+	SuppressedState         string                 `json:"suppressed_state,omitempty"`
+	Message                 string                 `json:"msg,omitempty"`
 }
 
 // MetricState represent metric state data for given timestamp
@@ -253,15 +255,29 @@ func (eventData NotificationEvent) String() string {
 }
 
 // GetOrCreateMetricState gets metric state from check data or create new if CheckData has no state for given metric
-func (checkData *CheckData) GetOrCreateMetricState(metric string, emptyTimestampValue int64) MetricState {
+func (checkData *CheckData) GetOrCreateMetricState(metric string, emptyTimestampValue int64, notifyAboutNewMetrics bool) MetricState {
 	_, ok := checkData.Metrics[metric]
 	if !ok {
-		checkData.Metrics[metric] = MetricState{
-			State:     "NODATA",
-			Timestamp: emptyTimestampValue,
-		}
+		checkData.Metrics[metric] = createEmptyMetricState(emptyTimestampValue, notifyAboutNewMetrics)
 	}
 	return checkData.Metrics[metric]
+}
+
+func createEmptyMetricState(defaultTimestampValue int64, firstStateIsNodata bool) MetricState {
+	if firstStateIsNodata {
+		return MetricState{
+			State:     "NODATA",
+			Timestamp: defaultTimestampValue,
+		}
+	}
+
+	unixNow := time.Now().Unix()
+
+	return MetricState{
+		State:          "OK",
+		Timestamp:      unixNow,
+		EventTimestamp: unixNow,
+	}
 }
 
 // GetCheckPoint gets check point for given MetricState
@@ -316,7 +332,7 @@ func (subscription *SubscriptionData) MustIgnore(eventData *NotificationEvent) b
 		if newStateWeight, ok := eventStateWeight[eventData.State]; ok {
 			delta := newStateWeight - oldStateWeight
 			if delta < 0 {
-				if delta == -1 && (subscription.IgnoreRecoverings || subscription.IgnoreWarnings){
+				if delta == -1 && (subscription.IgnoreRecoverings || subscription.IgnoreWarnings) {
 					return true
 				}
 				return subscription.IgnoreRecoverings
