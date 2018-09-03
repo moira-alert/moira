@@ -28,7 +28,8 @@ func NewHeartbeatWorker(database moira.Database, metrics *graphite.FilterMetrics
 
 // Start every 5 second takes TotalMetricsReceived metrics and save it to database, for self-checking
 func (worker *Worker) Start() {
-	count := worker.metrics.TotalMetricsReceived.Count()
+	totalCount := worker.metrics.TotalMetricsReceived.Count()
+	matchedCount := worker.metrics.MatchingMetricsReceived.Count()
 	worker.tomb.Go(func() error {
 		checkTicker := time.NewTicker(time.Second * 5)
 		for {
@@ -37,13 +38,22 @@ func (worker *Worker) Start() {
 				worker.logger.Info("Moira Filter Heartbeat stopped")
 				return nil
 			case <-checkTicker.C:
-				newCount := worker.metrics.TotalMetricsReceived.Count()
-				worker.logger.Debugf("Update heartbeat count, old value: %v, new value: %v", count, newCount)
-				if newCount != count {
+				newTotalCount := worker.metrics.TotalMetricsReceived.Count()
+				worker.logger.Debugf("Update total heartbeat count, old value: %v, new value: %v", totalCount, newTotalCount)
+				if newTotalCount != totalCount {
 					if err := worker.database.UpdateMetricsHeartbeat(); err != nil {
-						worker.logger.Infof("Save state failed: %s", err.Error())
+						worker.logger.Infof("Save total state failed: %s", err.Error())
 					} else {
-						count = newCount
+						totalCount = newTotalCount
+					}
+				}
+				newMatchedCount := worker.metrics.MatchingMetricsReceived.Count()
+				worker.logger.Debugf("Update matched heartbeat count, old value: %v, new value: %v", matchedCount, newMatchedCount)
+				if newMatchedCount != matchedCount {
+					if err := worker.database.UpdateMatchedMetricsHeartbeat(); err != nil {
+						worker.logger.Infof("Save matched state failed: %s", err.Error())
+					} else {
+						matchedCount = newMatchedCount
 					}
 				}
 			}
