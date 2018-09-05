@@ -167,13 +167,13 @@ func TestCheckData_GetOrCreateMetricState(t *testing.T) {
 		checkData := CheckData{
 			Metrics: make(map[string]MetricState),
 		}
-		So(checkData.GetOrCreateMetricState("my.metric", 12343, true), ShouldResemble, MetricState{State: "NODATA", Timestamp: 12343})
+		So(checkData.GetOrCreateMetricState("my.metric", 12343, false), ShouldResemble, MetricState{State: "NODATA", Timestamp: 12343})
 	})
 	Convey("Test no metric, notifyAboutNew = false", t, func() {
 		checkData := CheckData{
 			Metrics: make(map[string]MetricState),
 		}
-		So(checkData.GetOrCreateMetricState("my.metric", 12343, false), ShouldResemble, MetricState{State: "OK", Timestamp: time.Now().Unix(), EventTimestamp: time.Now().Unix()})
+		So(checkData.GetOrCreateMetricState("my.metric", 12343, true), ShouldResemble, MetricState{State: "OK", Timestamp: time.Now().Unix(), EventTimestamp: time.Now().Unix()})
 	})
 	Convey("Test has metric", t, func() {
 		metricState := MetricState{Timestamp: 11211}
@@ -182,7 +182,7 @@ func TestCheckData_GetOrCreateMetricState(t *testing.T) {
 				"my.metric": metricState,
 			},
 		}
-		So(checkData.GetOrCreateMetricState("my.metric", 12343, true), ShouldResemble, metricState)
+		So(checkData.GetOrCreateMetricState("my.metric", 12343, false), ShouldResemble, metricState)
 	})
 }
 

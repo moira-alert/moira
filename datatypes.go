@@ -129,22 +129,22 @@ const (
 
 // Trigger represents trigger data object
 type Trigger struct {
-	ID                    string        `json:"id"`
-	Name                  string        `json:"name"`
-	Desc                  *string       `json:"desc,omitempty"`
-	Targets               []string      `json:"targets"`
-	WarnValue             *float64      `json:"warn_value"`
-	ErrorValue            *float64      `json:"error_value"`
-	TriggerType           string        `json:"trigger_type"`
-	Tags                  []string      `json:"tags"`
-	TTLState              *string       `json:"ttl_state,omitempty"`
-	TTL                   int64         `json:"ttl,omitempty"`
-	Schedule              *ScheduleData `json:"sched,omitempty"`
-	Expression            *string       `json:"expression,omitempty"`
-	PythonExpression      *string       `json:"python_expression,omitempty"`
-	Patterns              []string      `json:"patterns"`
-	IsRemote              bool          `json:"is_remote"`
-	NotifyAboutNewMetrics bool          `json:"notify_about_new_metrics"`
+	ID               string        `json:"id"`
+	Name             string        `json:"name"`
+	Desc             *string       `json:"desc,omitempty"`
+	Targets          []string      `json:"targets"`
+	WarnValue        *float64      `json:"warn_value"`
+	ErrorValue       *float64      `json:"error_value"`
+	TriggerType      string        `json:"trigger_type"`
+	Tags             []string      `json:"tags"`
+	TTLState         *string       `json:"ttl_state,omitempty"`
+	TTL              int64         `json:"ttl,omitempty"`
+	Schedule         *ScheduleData `json:"sched,omitempty"`
+	Expression       *string       `json:"expression,omitempty"`
+	PythonExpression *string       `json:"python_expression,omitempty"`
+	Patterns         []string      `json:"patterns"`
+	IsRemote         bool          `json:"is_remote"`
+	MuteNewMetrics   bool          `json:"mute_new_metrics"`
 }
 
 // TriggerCheck represent trigger data with last check data and check timestamp
@@ -259,10 +259,10 @@ func (eventData NotificationEvent) String() string {
 }
 
 // GetOrCreateMetricState gets metric state from check data or create new if CheckData has no state for given metric
-func (checkData *CheckData) GetOrCreateMetricState(metric string, emptyTimestampValue int64, notifyAboutNewMetrics bool) MetricState {
+func (checkData *CheckData) GetOrCreateMetricState(metric string, emptyTimestampValue int64, muteNewMetric bool) MetricState {
 	_, ok := checkData.Metrics[metric]
 	if !ok {
-		checkData.Metrics[metric] = createEmptyMetricState(emptyTimestampValue, notifyAboutNewMetrics)
+		checkData.Metrics[metric] = createEmptyMetricState(emptyTimestampValue, !muteNewMetric)
 	}
 	return checkData.Metrics[metric]
 }

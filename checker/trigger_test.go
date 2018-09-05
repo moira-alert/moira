@@ -57,17 +57,16 @@ func TestInitTriggerChecker(t *testing.T) {
 	ttlStateNoData := NODATA
 
 	trigger := moira.Trigger{
-		ID:                    "d39b8510-b2f4-448c-b881-824658c58128",
-		Name:                  "Time",
-		Targets:               []string{"aliasByNode(Metric.*.time, 1)"},
-		WarnValue:             &warnWalue,
-		ErrorValue:            &errorWalue,
-		TriggerType:           moira.RisingTrigger,
-		NotifyAboutNewMetrics: true,
-		Tags:     []string{"tag1", "tag2"},
-		TTLState: &ttlStateOk,
-		Patterns: []string{"Egais.elasticsearch.*.*.jvm.gc.collection.time"},
-		TTL:      ttl,
+		ID:          "d39b8510-b2f4-448c-b881-824658c58128",
+		Name:        "Time",
+		Targets:     []string{"aliasByNode(Metric.*.time, 1)"},
+		WarnValue:   &warnWalue,
+		ErrorValue:  &errorWalue,
+		TriggerType: moira.RisingTrigger,
+		Tags:        []string{"tag1", "tag2"},
+		TTLState:    &ttlStateOk,
+		Patterns:    []string{"Egais.elasticsearch.*.*.jvm.gc.collection.time"},
+		TTL:         ttl,
 	}
 
 	lastCheck := moira.CheckData{
