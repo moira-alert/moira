@@ -3,7 +3,6 @@ package checker
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/remote"
@@ -60,14 +59,14 @@ func (triggerChecker *TriggerChecker) handleMetricsCheck() (moira.CheckData, err
 		lastMetrics[k] = v
 	}
 	checkData := moira.CheckData{
-		Metrics:        lastMetrics,
-		State:          triggerChecker.lastCheck.State,
-		Timestamp:      triggerChecker.Until,
-		EventTimestamp: triggerChecker.lastCheck.EventTimestamp,
-		Score:          triggerChecker.lastCheck.Score,
-		TriggerAlreadyProcessed: triggerChecker.lastCheck.TriggerAlreadyProcessed,
-		Suppressed:              triggerChecker.lastCheck.Suppressed,
-		SuppressedState:         triggerChecker.lastCheck.SuppressedState,
+		Metrics:                      lastMetrics,
+		State:                        triggerChecker.lastCheck.State,
+		Timestamp:                    triggerChecker.Until,
+		EventTimestamp:               triggerChecker.lastCheck.EventTimestamp,
+		Score:                        triggerChecker.lastCheck.Score,
+		Suppressed:                   triggerChecker.lastCheck.Suppressed,
+		SuppressedState:              triggerChecker.lastCheck.SuppressedState,
+		LastSuccessfulCheckTimestamp: triggerChecker.lastCheck.LastSuccessfulCheckTimestamp,
 	}
 
 	var triggerTimeSeries *triggerTimeSeries
@@ -155,10 +154,11 @@ func (triggerChecker *TriggerChecker) checkTimeSeries(timeSeries *target.TimeSer
 func (triggerChecker *TriggerChecker) handleTriggerCheck(checkData moira.CheckData, checkingError error) (moira.CheckData, error) {
 	if checkingError == nil {
 		checkData.State = OK
-		if !checkData.TriggerAlreadyProcessed {
-			checkData.TriggerAlreadyProcessed = true
+		if checkData.LastSuccessfulCheckTimestamp == 0 {
+			checkData.LastSuccessfulCheckTimestamp = checkData.Timestamp
 			return checkData, nil
 		}
+		checkData.LastSuccessfulCheckTimestamp = checkData.Timestamp
 		return triggerChecker.compareTriggerStates(checkData)
 	}
 
@@ -181,10 +181,12 @@ func (triggerChecker *TriggerChecker) handleTriggerCheck(checkData moira.CheckDa
 		checkData.State = ERROR
 		checkData.Message = checkingError.Error()
 	case remote.ErrRemoteTriggerResponse:
+		timeSinceLastSuccessfulCheck := checkData.Timestamp - checkData.LastSuccessfulCheckTimestamp
+		if timeSinceLastSuccessfulCheck >= triggerChecker.ttl {
+			checkData.State = EXCEPTION
+			checkData.Message = fmt.Sprintf("Remote server unavailable. Trigger is not checked for %d seconds", timeSinceLastSuccessfulCheck)
+		}
 		triggerChecker.Logger.Errorf("Trigger %s: %s", triggerChecker.TriggerID, checkingError.Error())
-		checkData.State = EXCEPTION
-		notCheckedInterval := time.Now().Unix() - triggerChecker.lastCheck.EventTimestamp
-		checkData.Message = fmt.Sprintf("Remote server unavailable. Trigger is not checked for %d seconds", notCheckedInterval)
 	default:
 		if triggerChecker.trigger.IsRemote {
 			triggerChecker.Metrics.RemoteMetrics.CheckError.Mark(1)
