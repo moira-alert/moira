@@ -45,7 +45,7 @@ func EvaluateTarget(database moira.Database, target string, from int64, until in
 		}
 		rewritten, newTargets, err := expr.RewriteExpr(expr2, from, until, metricsMap)
 		if err != nil && err != parser.ErrSeriesDoesNotExist {
-			return nil, fmt.Errorf("Failed RewriteExpr: %s", err.Error())
+			return nil, fmt.Errorf("failed RewriteExpr: %s", err.Error())
 		} else if rewritten {
 			targets = append(targets, newTargets...)
 		} else {
@@ -104,4 +104,17 @@ func getPatternsMetricData(database moira.Database, patterns []parser.MetricRequ
 		metrics = append(metrics, patternMetrics...)
 	}
 	return metricsMap, metrics, nil
+}
+
+// RequiresUserAttention returns true if target requires user attention
+func RequiresUserAttention(err error) bool {
+	switch err {
+	case types.ErrWildcardNotAllowed:
+		return true
+	}
+	switch err.(type) {
+	case ErrUnknownFunction:
+		return true
+	}
+	return false
 }
