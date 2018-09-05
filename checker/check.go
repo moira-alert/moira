@@ -182,10 +182,8 @@ func (triggerChecker *TriggerChecker) handleTriggerCheck(checkData moira.CheckDa
 		checkData.Message = fmt.Sprintf("Remote server unavailable. Trigger is not checked for %d seconds", notCheckedInterval)
 		triggerChecker.Logger.Errorf("Trigger %s: %s", triggerChecker.TriggerID, checkingError.Error())
 	case target.ErrUnknownFunction, target.ErrEvalExpr:
-		if target.RequiresUserAttention(checkingError) {
-			checkData.State = EXCEPTION
-			checkData.Message = checkingError.Error()
-		}
+		checkData.State = EXCEPTION
+		checkData.Message = checkingError.Error()
 		triggerChecker.Logger.Warningf("Trigger %s: %s", triggerChecker.TriggerID, checkingError.Error())
 	default:
 		if triggerChecker.trigger.IsRemote {
