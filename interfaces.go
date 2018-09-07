@@ -138,6 +138,8 @@ type Sender interface {
 }
 
 type Sentinel interface {
-	Protect() error
 	Init(sentinelSettings map[string]string, database Database, logger Logger) error
+	GetInitialValues() []int64
+	GetCurrentValues(oldValues []int64) ([]int64, error)
+	IsStateDegraded(oldValues []int64, currentValues []int64) bool
 }

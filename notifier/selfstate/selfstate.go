@@ -49,6 +49,8 @@ func (selfCheck *SelfCheckWorker) Start() error {
 
 	selfCheck.tomb.Go(func() error {
 		checkTicker := time.NewTicker(defaultCheckInterval)
+		//protectTicker := time.NewTicker(defaultCheckInterval)
+		//values := sentinel.GetInitialValues()
 		for {
 			select {
 			case <-selfCheck.tomb.Dying():
@@ -56,7 +58,10 @@ func (selfCheck *SelfCheckWorker) Start() error {
 				selfCheck.Log.Info("Moira Notifier Self State Monitor Stopped")
 				return nil
 			case <-checkTicker.C:
-				selfCheck.check(time.Now().Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS, &lastRemoteCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount, &remoteChecksCount)
+				selfCheck.softCheck(time.Now().Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS,
+					&lastRemoteCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount, &remoteChecksCount)
+			//case <- protectTicker.C:
+			//	selfCheck.hardCheck(sentinel, &values)
 			}
 		}
 	})
@@ -74,7 +79,18 @@ func (selfCheck *SelfCheckWorker) Stop() error {
 	return selfCheck.tomb.Wait()
 }
 
-func (selfCheck *SelfCheckWorker) check(nowTS int64, lastMetricReceivedTS, redisLastCheckTS, lastCheckTS, lastRemoteCheckTS, nextSendErrorMessage, metricsCount, checksCount, remoteChecksCount *int64) {
+func (selfCheck *SelfCheckWorker) hardCheck(sentinel moira.Sentinel, values *[]int64) {
+	currentState, _ := selfCheck.DB.GetNotifierState()
+	currentValues, _ := sentinel.GetCurrentValues(*values)
+	degraded := sentinel.IsStateDegraded(*values, currentValues)
+	if degraded && currentState == "OK" {
+		selfCheck.DB.SetNotifierState("ERROR")
+	}
+	values = &currentValues
+}
+
+func (selfCheck *SelfCheckWorker) softCheck(nowTS int64, lastMetricReceivedTS, redisLastCheckTS, lastCheckTS,
+	lastRemoteCheckTS, nextSendErrorMessage, metricsCount, checksCount, remoteChecksCount *int64) {
 	var events []moira.NotificationEvent
 	var rcc int64
 
