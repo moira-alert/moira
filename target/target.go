@@ -45,7 +45,7 @@ func EvaluateTarget(database moira.Database, target string, from int64, until in
 		}
 		rewritten, newTargets, err := expr.RewriteExpr(expr2, from, until, metricsMap)
 		if err != nil && err != parser.ErrSeriesDoesNotExist {
-			return nil, fmt.Errorf("Failed RewriteExpr: %s", err.Error())
+			return nil, fmt.Errorf("failed RewriteExpr: %s", err.Error())
 		} else if rewritten {
 			targets = append(targets, newTargets...)
 		} else {

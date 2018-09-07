@@ -3,6 +3,8 @@ package target
 import (
 	"fmt"
 	"strings"
+
+	"github.com/go-graphite/carbonapi/expr/helper"
 )
 
 // ErrUnknownFunction used when carbonapi.ParseExpr returns unknown function error
@@ -31,7 +33,11 @@ func (err ErrUnknownFunction) Error() string {
 
 // isErrUnknownFunction checks error for carbonapi.errUnknownFunction
 func isErrUnknownFunction(err error) bool {
-	return strings.HasPrefix(err.Error(), "unknown function in evalExpr")
+	switch err.(type) {
+	case helper.ErrUnknownFunction:
+		return true
+	}
+	return false
 }
 
 // ErrParseExpr used when carbonapi.ParseExpr returns error
