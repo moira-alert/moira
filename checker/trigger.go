@@ -75,10 +75,9 @@ func getLastCheck(dataBase moira.Database, triggerID string, emptyLastCheckTimes
 
 	if err == database.ErrNil {
 		lastCheck = moira.CheckData{
-			Metrics:                 make(map[string]moira.MetricState),
-			State:                   OK,
-			Timestamp:               emptyLastCheckTimestamp,
-			TriggerAlreadyProcessed: false,
+			Metrics:   make(map[string]moira.MetricState),
+			State:     OK,
+			Timestamp: emptyLastCheckTimestamp,
 		}
 	}
 
