@@ -8,9 +8,9 @@ import (
 )
 
 type Sentinel struct {
-	database       moira.Database
-	logger         moira.Logger
-	matchedK       int64
+	database moira.Database
+	logger   moira.Logger
+	matchedK int64
 }
 
 func (sentinel *Sentinel) Init(sentinelSettings map[string]string, database moira.Database, logger moira.Logger) error {
@@ -25,11 +25,11 @@ func (sentinel *Sentinel) Init(sentinelSettings map[string]string, database moir
 }
 
 func (sentinel *Sentinel) GetInitialValues() []int64 {
-	return []int64{0,0}
+	return []int64{0, 0}
 }
 
 func (sentinel *Sentinel) GetCurrentValues(oldValues []int64) ([]int64, error) {
-	newValues := make([]int64,len(oldValues))
+	newValues := make([]int64, len(oldValues))
 	newCount, err := sentinel.database.GetMatchedMetricsUpdatesCount()
 	if err != nil {
 		return oldValues, err
