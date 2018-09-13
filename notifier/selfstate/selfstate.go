@@ -10,6 +10,7 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/notifier"
+	"github.com/moira-alert/moira/sentinels/matched"
 )
 
 var defaultCheckInterval = time.Second * 10
@@ -47,10 +48,16 @@ func (selfCheck *SelfCheckWorker) Start() error {
 	lastRemoteCheckTS := time.Now().Unix()
 	nextSendErrorMessage := time.Now().Unix()
 
+	var sentinel moira.Sentinel
+	sentinel = &matched.Sentinel{}
+	sentinel.Init(map[string]string{
+		"k": "0.5",
+	}, selfCheck.DB, selfCheck.Log)
+
 	selfCheck.tomb.Go(func() error {
 		checkTicker := time.NewTicker(defaultCheckInterval)
-		//protectTicker := time.NewTicker(defaultCheckInterval)
-		//values := sentinel.GetInitialValues()
+		protectTicker := time.NewTicker(defaultCheckInterval)
+		values := sentinel.GetInitialValues()
 		for {
 			select {
 			case <-selfCheck.tomb.Dying():
@@ -60,8 +67,8 @@ func (selfCheck *SelfCheckWorker) Start() error {
 			case <-checkTicker.C:
 				selfCheck.softCheck(time.Now().Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS,
 					&lastRemoteCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount, &remoteChecksCount)
-			//case <- protectTicker.C:
-			//	selfCheck.hardCheck(sentinel, &values)
+			case <- protectTicker.C:
+				selfCheck.hardCheck(sentinel, &values)
 			}
 		}
 	})
@@ -80,11 +87,19 @@ func (selfCheck *SelfCheckWorker) Stop() error {
 }
 
 func (selfCheck *SelfCheckWorker) hardCheck(sentinel moira.Sentinel, values *[]int64) {
-	currentState, _ := selfCheck.DB.GetNotifierState()
-	currentValues, _ := sentinel.GetCurrentValues(*values)
+	currentState, err := selfCheck.DB.GetNotifierState()
+	if err != nil {
+		selfCheck.Log.Warningf("Can not get notifier state: %s", err.Error())
+		return
+	}
+	currentValues, err := sentinel.GetCurrentValues(*values)
+	if err != nil {
+		selfCheck.Log.Warningf("Can not get current sentinel values")
+		return
+	}
 	degraded := sentinel.IsStateDegraded(*values, currentValues)
-	if degraded && currentState == "OK" {
-		selfCheck.DB.SetNotifierState("ERROR")
+	if degraded && currentState == OK {
+		selfCheck.DB.SetNotifierState(ERROR)
 	}
 	values = &currentValues
 }

@@ -5,12 +5,11 @@
 package mock_moira_alert
 
 import (
-	"reflect"
-	"time"
-
-	"github.com/golang/mock/gomock"
-	"github.com/moira-alert/moira"
+	gomock "github.com/golang/mock/gomock"
+	moira "github.com/moira-alert/moira"
 	tomb_v2 "gopkg.in/tomb.v2"
+	reflect "reflect"
+	time "time"
 )
 
 // MockDatabase is a mock of Database interface
@@ -256,6 +255,19 @@ func (m *MockDatabase) GetIDByUsername(arg0, arg1 string) (string, error) {
 // GetIDByUsername indicates an expected call of GetIDByUsername
 func (mr *MockDatabaseMockRecorder) GetIDByUsername(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetIDByUsername", reflect.TypeOf((*MockDatabase)(nil).GetIDByUsername), arg0, arg1)
+}
+
+// GetMatchedMetricsUpdatesCount mocks base method
+func (m *MockDatabase) GetMatchedMetricsUpdatesCount() (int64, error) {
+	ret := m.ctrl.Call(m, "GetMatchedMetricsUpdatesCount")
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetMatchedMetricsUpdatesCount indicates an expected call of GetMatchedMetricsUpdatesCount
+func (mr *MockDatabaseMockRecorder) GetMatchedMetricsUpdatesCount() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMatchedMetricsUpdatesCount", reflect.TypeOf((*MockDatabase)(nil).GetMatchedMetricsUpdatesCount))
 }
 
 // GetMetricRetention mocks base method
@@ -1009,6 +1021,18 @@ func (m *MockDatabase) SubscribeMetricEvents(arg0 *tomb_v2.Tomb) (<-chan *moira.
 // SubscribeMetricEvents indicates an expected call of SubscribeMetricEvents
 func (mr *MockDatabaseMockRecorder) SubscribeMetricEvents(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SubscribeMetricEvents", reflect.TypeOf((*MockDatabase)(nil).SubscribeMetricEvents), arg0)
+}
+
+// UpdateMatchedMetricsHeartbeat mocks base method
+func (m *MockDatabase) UpdateMatchedMetricsHeartbeat() error {
+	ret := m.ctrl.Call(m, "UpdateMatchedMetricsHeartbeat")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateMatchedMetricsHeartbeat indicates an expected call of UpdateMatchedMetricsHeartbeat
+func (mr *MockDatabaseMockRecorder) UpdateMatchedMetricsHeartbeat() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateMatchedMetricsHeartbeat", reflect.TypeOf((*MockDatabase)(nil).UpdateMatchedMetricsHeartbeat))
 }
 
 // UpdateMetricsHeartbeat mocks base method
