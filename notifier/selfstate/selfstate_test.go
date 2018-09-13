@@ -63,7 +63,7 @@ func TestDatabaseDisconnected(t *testing.T) {
 			expectedPackage := configureNotificationPackage(adminContact, &events)
 
 			mock.notif.EXPECT().Send(&expectedPackage, &sendingWG)
-			mock.selfCheckWorker.check(now.Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS, &lastRemoteCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount, &remoteChecksCount)
+			mock.selfCheckWorker.softCheck(now.Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS, &lastRemoteCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount, &remoteChecksCount)
 
 			So(lastMetricReceivedTS, ShouldEqual, now.Unix())
 			So(lastCheckTS, ShouldEqual, now.Unix())
@@ -116,7 +116,7 @@ func TestMoiraCacheDoesNotReceivedNewMetrics(t *testing.T) {
 		mock.database.EXPECT().SetNotifierState(ERROR).Return(nil)
 		mock.database.EXPECT().GetNotifierState().Return(ERROR, nil)
 		mock.notif.EXPECT().Send(&expectedPackage, &sendingWG)
-		mock.selfCheckWorker.check(callingNow.Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS, &lastRemoteCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount, &remoteChecksCount)
+		mock.selfCheckWorker.softCheck(callingNow.Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS, &lastRemoteCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount, &remoteChecksCount)
 
 		So(lastMetricReceivedTS, ShouldEqual, now.Add(-time.Second*61).Unix())
 		So(lastCheckTS, ShouldEqual, callingNow.Unix())
@@ -168,7 +168,7 @@ func TestMoiraCheckerDoesNotChecksTriggers(t *testing.T) {
 		mock.database.EXPECT().SetNotifierState(ERROR).Return(nil)
 		mock.database.EXPECT().GetNotifierState().Return(ERROR, nil)
 		mock.notif.EXPECT().Send(&expectedPackage, &sendingWG)
-		mock.selfCheckWorker.check(callingNow.Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS, &lastRemoteCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount, &remoteChecksCount)
+		mock.selfCheckWorker.softCheck(callingNow.Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS, &lastRemoteCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount, &remoteChecksCount)
 
 		So(lastMetricReceivedTS, ShouldEqual, callingNow.Unix())
 		So(lastCheckTS, ShouldEqual, now.Add(-time.Second*121).Unix())
@@ -220,7 +220,7 @@ func TestMoiraCheckerDoesNotChecksRemoteTriggers(t *testing.T) {
 
 		mock.database.EXPECT().GetNotifierState().Return(OK, nil)
 		mock.notif.EXPECT().Send(&expectedPackage, &sendingWG)
-		mock.selfCheckWorker.check(callingNow.Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS, &lastRemoteCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount, &remoteChecksCount)
+		mock.selfCheckWorker.softCheck(callingNow.Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS, &lastRemoteCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount, &remoteChecksCount)
 
 		So(lastMetricReceivedTS, ShouldEqual, callingNow.Unix())
 		So(lastRemoteCheckTS, ShouldEqual, now.Add(-time.Second*121).Unix())
