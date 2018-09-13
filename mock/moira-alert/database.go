@@ -5,11 +5,12 @@
 package mock_moira_alert
 
 import (
-	gomock "github.com/golang/mock/gomock"
-	moira "github.com/moira-alert/moira"
+	"reflect"
+	"time"
+
+	"github.com/golang/mock/gomock"
+	"github.com/moira-alert/moira"
 	tomb_v2 "gopkg.in/tomb.v2"
-	reflect "reflect"
-	time "time"
 )
 
 // MockDatabase is a mock of Database interface
