@@ -53,6 +53,7 @@ func (selfCheck *SelfCheckWorker) Start() error {
 	sentinel.Init(map[string]string{
 		"k": "0.5",
 	}, selfCheck.DB, selfCheck.Log)
+	sentinelEnabled := false
 
 	selfCheck.tomb.Go(func() error {
 		checkTicker := time.NewTicker(defaultCheckInterval)
@@ -68,7 +69,9 @@ func (selfCheck *SelfCheckWorker) Start() error {
 				selfCheck.softCheck(time.Now().Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS,
 					&lastRemoteCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount, &remoteChecksCount)
 			case <- protectTicker.C:
-				selfCheck.hardCheck(sentinel, &values)
+				if sentinelEnabled {
+					selfCheck.hardCheck(sentinel, &values)
+				}
 			}
 		}
 	})

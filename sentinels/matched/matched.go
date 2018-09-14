@@ -35,8 +35,8 @@ func (sentinel *Sentinel) GetCurrentValues(oldValues []int64) ([]int64, error) {
 		return oldValues, err
 	}
 	newDelta := newCount - oldValues[0]
-	newValues = append(newValues, newCount)
-	newValues = append(newValues, newDelta)
+	newValues[0] = newCount
+	newValues[1] = newDelta
 	return newValues, nil
 }
 
