@@ -10,7 +10,7 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/notifier"
-	"github.com/moira-alert/moira/sentinels/matched"
+	"github.com/moira-alert/moira/notifier/protectors"
 )
 
 var defaultCheckInterval = time.Second * 10
@@ -48,17 +48,11 @@ func (selfCheck *SelfCheckWorker) Start() error {
 	lastRemoteCheckTS := time.Now().Unix()
 	nextSendErrorMessage := time.Now().Unix()
 
-	var sentinel moira.Sentinel
-	sentinel = &matched.Sentinel{}
-	sentinel.Init(map[string]string{
-		"k": "0.5",
-	}, selfCheck.DB, selfCheck.Log)
-	sentinelEnabled := false
+	protector, values := protectors.ConfigureProtector(selfCheck.Config.Protector, selfCheck.DB, selfCheck.Log)
 
 	selfCheck.tomb.Go(func() error {
 		checkTicker := time.NewTicker(defaultCheckInterval)
 		protectTicker := time.NewTicker(defaultCheckInterval)
-		values := sentinel.GetInitialValues()
 		for {
 			select {
 			case <-selfCheck.tomb.Dying():
@@ -68,9 +62,9 @@ func (selfCheck *SelfCheckWorker) Start() error {
 			case <-checkTicker.C:
 				selfCheck.softCheck(time.Now().Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS,
 					&lastRemoteCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount, &remoteChecksCount)
-			case <- protectTicker.C:
-				if sentinelEnabled {
-					selfCheck.hardCheck(sentinel, &values)
+			case <-protectTicker.C:
+				if protector != nil {
+					selfCheck.hardCheck(protector, &values)
 				}
 			}
 		}
@@ -89,18 +83,18 @@ func (selfCheck *SelfCheckWorker) Stop() error {
 	return selfCheck.tomb.Wait()
 }
 
-func (selfCheck *SelfCheckWorker) hardCheck(sentinel moira.Sentinel, values *[]int64) {
+func (selfCheck *SelfCheckWorker) hardCheck(protector moira.Protector, values *[]int64) {
 	currentState, err := selfCheck.DB.GetNotifierState()
 	if err != nil {
 		selfCheck.Log.Warningf("Can not get notifier state: %s", err.Error())
 		return
 	}
-	currentValues, err := sentinel.GetCurrentValues(*values)
+	currentValues, err := protector.GetCurrentValues(*values)
 	if err != nil {
 		selfCheck.Log.Warningf("Can not get current sentinel values")
 		return
 	}
-	degraded := sentinel.IsStateDegraded(*values, currentValues)
+	degraded := protector.IsStateDegraded(*values, currentValues)
 	if degraded && currentState == OK {
 		selfCheck.DB.SetNotifierState(ERROR)
 	}

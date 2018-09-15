@@ -9,6 +9,7 @@ import (
 	"github.com/op/go-logging"
 
 	"github.com/moira-alert/moira/mock/moira-alert"
+	"github.com/FZambia/go-sentinel"
 )
 
 type Sample struct {
@@ -68,17 +69,17 @@ func TestMatchedSentinel(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
 
-	sentinel := Sentinel{}
-	sentinel.Init(map[string]string{
+	protector := Protector{}
+	protector.Init(map[string]string{
 		"k": "0.5",
 	}, database, logger)
-	values := sentinel.GetInitialValues()
+	values := protector.GetInitialValues()
 
 	for _, sample := range samples {
 		for _, point := range sample.Serie {
 			database.EXPECT().GetNotifierState().Return("OK", nil)
 			newValues := []int64{0, int64(point)}
-			if degraded := sentinel.IsStateDegraded(values, newValues); degraded {
+			if degraded := protector.IsStateDegraded(values, newValues); degraded {
 				fmt.Println(values)
 				break
 			}

@@ -40,6 +40,17 @@ type notifierConfig struct {
 type selfStateConfig struct {
 	// If true, Self state monitor will be enabled
 	Enabled bool `yaml:"enabled"`
+	// Parameters to perform soft self state checks
+	SoftCheck softCheckConfig `yaml:"soft_check"`
+	// Parameters to perform hard self state checks
+	HardCheck hardCheckConfig `yaml:"hard_check"`
+	// Contact list for Self state monitor alerts
+	Contacts []map[string]string `yaml:"contacts"`
+	// Self state monitor alerting interval
+	NoticeInterval string `yaml:"notice_interval"`
+}
+
+type softCheckConfig struct {
 	// If true, Self state monitor will check remote checker status
 	RemoteTriggersEnabled bool `yaml:"remote_triggers_enabled"`
 	// Max Redis disconnect delay to send alert when reached
@@ -50,10 +61,11 @@ type selfStateConfig struct {
 	LastCheckDelay string `yaml:"last_check_delay"`
 	// Max Remote triggers Checker checks perform delay to send alert when reached
 	LastRemoteCheckDelay string `yaml:"last_remote_check_delay"`
-	// Contact list for Self state monitor alerts
-	Contacts []map[string]string `yaml:"contacts"`
-	// Self state monitor alerting interval
-	NoticeInterval string `yaml:"notice_interval"`
+}
+
+type hardCheckConfig struct {
+	// Nodata protection strategy
+	Protector map[string]string `yaml:"protector"`
 }
 
 func getDefault() config {
@@ -77,11 +89,13 @@ func getDefault() config {
 			SenderTimeout:    "10s",
 			ResendingTimeout: "1:00",
 			SelfState: selfStateConfig{
-				Enabled:                 false,
-				RedisDisconnectDelay:    "30s",
-				LastMetricReceivedDelay: "60s",
-				LastCheckDelay:          "60s",
-				NoticeInterval:          "300s",
+				Enabled: false,
+				SoftCheck: softCheckConfig{
+					RedisDisconnectDelay:    "30s",
+					LastMetricReceivedDelay: "60s",
+					LastCheckDelay:          "60s",
+				},
+				NoticeInterval: "300s",
 			},
 			FrontURI: "http://localhost",
 			Timezone: "UTC",
@@ -131,12 +145,13 @@ func checkDateTimeFormat(format string) error {
 func (config *selfStateConfig) getSettings() selfstate.Config {
 	return selfstate.Config{
 		Enabled:                        config.Enabled,
-		RemoteTriggersEnabled:          config.RemoteTriggersEnabled,
-		RedisDisconnectDelaySeconds:    int64(to.Duration(config.RedisDisconnectDelay).Seconds()),
-		LastMetricReceivedDelaySeconds: int64(to.Duration(config.LastMetricReceivedDelay).Seconds()),
-		LastCheckDelaySeconds:          int64(to.Duration(config.LastCheckDelay).Seconds()),
-		LastRemoteCheckDelaySeconds:    int64(to.Duration(config.LastRemoteCheckDelay).Seconds()),
-		Contacts:                       config.Contacts,
+		RemoteTriggersEnabled:          config.SoftCheck.RemoteTriggersEnabled,
+		RedisDisconnectDelaySeconds:    int64(to.Duration(config.SoftCheck.RedisDisconnectDelay).Seconds()),
+		LastMetricReceivedDelaySeconds: int64(to.Duration(config.SoftCheck.LastMetricReceivedDelay).Seconds()),
+		LastCheckDelaySeconds:          int64(to.Duration(config.SoftCheck.LastCheckDelay).Seconds()),
+		LastRemoteCheckDelaySeconds:    int64(to.Duration(config.SoftCheck.LastRemoteCheckDelay).Seconds()),
 		NoticeIntervalSeconds:          int64(to.Duration(config.NoticeInterval).Seconds()),
+		Protector:                      config.HardCheck.Protector,
+		Contacts:                       config.Contacts,
 	}
 }

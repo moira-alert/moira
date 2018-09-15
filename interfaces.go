@@ -137,7 +137,8 @@ type Sender interface {
 	Init(senderSettings map[string]string, logger Logger, location *time.Location, dateTimeFormat string) error
 }
 
-type Sentinel interface {
+// Protector interface to perform NoData protection mechanisms
+type Protector interface {
 	Init(sentinelSettings map[string]string, database Database, logger Logger) error
 	GetInitialValues() []int64
 	GetCurrentValues(oldValues []int64) ([]int64, error)
