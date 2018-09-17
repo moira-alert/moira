@@ -15,11 +15,11 @@ type Protector struct {
 }
 
 // Init configures protector
-func (protector *Protector) Init(sentinelSettings map[string]string, database moira.Database, logger moira.Logger) error {
+func (protector *Protector) Init(protectorSettings map[string]string, database moira.Database, logger moira.Logger) error {
 	var err error
 	protector.database = database
 	protector.logger = logger
-	protector.matchedK, err = strconv.ParseInt(sentinelSettings["k"], 10, 64)
+	protector.matchedK, err = strconv.ParseInt(protectorSettings["k"], 10, 64)
 	if err != nil {
 		return fmt.Errorf("can not read sentinel matched k from config: %s", err.Error())
 	}

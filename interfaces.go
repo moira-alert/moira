@@ -139,7 +139,7 @@ type Sender interface {
 
 // Protector interface to perform NoData protection mechanisms
 type Protector interface {
-	Init(sentinelSettings map[string]string, database Database, logger Logger) error
+	Init(protectorSettings map[string]string, database Database, logger Logger) error
 	GetInitialValues() []int64
 	GetCurrentValues(oldValues []int64) ([]int64, error)
 	IsStateDegraded(oldValues []int64, currentValues []int64) bool

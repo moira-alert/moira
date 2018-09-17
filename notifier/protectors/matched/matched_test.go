@@ -1,26 +1,27 @@
 package matched
 
 import (
-	"fmt"
 	"math"
 	"testing"
+	. "github.com/smartystreets/goconvey/convey"
 
 	"github.com/golang/mock/gomock"
 	"github.com/op/go-logging"
 
 	"github.com/moira-alert/moira/mock/moira-alert"
-	"github.com/FZambia/go-sentinel"
 )
 
 type Sample struct {
-	Name       string
-	Serie      []float64
-	StopPoints []float64
+	Name        string
+	Description string
+	Serie       []float64
+	StopPoints  []float64
 }
 
 var samples = []Sample{
 	{
 		Name: "520",
+		Description: "This sample has been taken from incident snapshot",
 		Serie: []float64{
 			1408.1, 1385.8666666666666, 1397.2666666666667, 1382.2833333333333, 1408.9333333333334,
 			math.NaN(), math.NaN(), math.NaN(), math.NaN(), math.NaN(), math.NaN(), math.NaN(),
@@ -38,6 +39,7 @@ var samples = []Sample{
 	},
 	{
 		Name: "616.1",
+		Description: "This sample has been taken from incident snapshot",
 		Serie: []float64{
 			1290.6333333333332, math.NaN(), math.NaN(), math.NaN(), math.NaN(), math.NaN(),
 			2072.6, 1402.1333333333332, 1311.1833333333334, 1296.8833333333332, 1313.4, 1306.1833333333334,
@@ -51,6 +53,7 @@ var samples = []Sample{
 	},
 	{
 		Name: "616.2",
+		Description: "This sample has been taken from incident snapshot",
 		Serie: []float64{
 			1234.5833333333333, math.NaN(), math.NaN(), math.NaN(), math.NaN(), math.NaN(),
 			2014.0833333333333, 1337.9166666666667, 1258.3, 1234.65, 1252.7333333333333,
@@ -64,7 +67,7 @@ var samples = []Sample{
 	},
 }
 
-func TestMatchedSentinel(t *testing.T) {
+func TestMatchedProtector(t *testing.T) {
 	logger, _ := logging.GetLogger("SelfState")
 	mockCtrl := gomock.NewController(t)
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
@@ -75,15 +78,19 @@ func TestMatchedSentinel(t *testing.T) {
 	}, database, logger)
 	values := protector.GetInitialValues()
 
-	for _, sample := range samples {
-		for _, point := range sample.Serie {
-			database.EXPECT().GetNotifierState().Return("OK", nil)
-			newValues := []int64{0, int64(point)}
-			if degraded := protector.IsStateDegraded(values, newValues); degraded {
-				fmt.Println(values)
-				break
+	Convey("Test last good values", t, func(){
+		lastGoodValues := make([]int64,0)
+		for _, sample := range samples {
+			for _, point := range sample.Serie {
+				database.EXPECT().GetNotifierState().Return("OK", nil)
+				newValues := []int64{0, int64(point)}
+				if degraded := protector.IsStateDegraded(values, newValues); degraded {
+					lastGoodValues = append(lastGoodValues, values[1])
+					break
+				}
+				values = newValues
 			}
-			values = newValues
 		}
-	}
+		So(lastGoodValues, ShouldResemble, []int64{1408,1290,1234})
+	})
 }
