@@ -98,7 +98,7 @@ func (selfCheck *SelfCheckWorker) hardCheck(protector moira.Protector, values *[
 	if degraded && currentState == OK {
 		selfCheck.DB.SetNotifierState(ERROR)
 	}
-	values = &currentValues
+	*values = currentValues
 }
 
 func (selfCheck *SelfCheckWorker) softCheck(nowTS int64, lastMetricReceivedTS, redisLastCheckTS, lastCheckTS,
