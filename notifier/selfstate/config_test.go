@@ -70,7 +70,7 @@ func TestConfigCheck(testing *testing.T) {
 		}
 
 		actual := config.checkConfig(make(map[string]bool))
-		So(actual, ShouldResemble, fmt.Errorf("Unknown contact type [admin-mail]"))
+		So(actual, ShouldResemble, fmt.Errorf("unknown contact type [admin-mail]"))
 	})
 
 	Convey("Admin sending contact empty, should not pass check without admin contact", testing, func() {
@@ -89,7 +89,7 @@ func TestConfigCheck(testing *testing.T) {
 		}
 
 		actual := config.checkConfig(contactTypes)
-		So(actual, ShouldResemble, fmt.Errorf("Value for [admin-mail] must be present"))
+		So(actual, ShouldResemble, fmt.Errorf("ualue for [admin-mail] must be present"))
 	})
 
 	Convey("Has registered valid admin contact, should pass check", testing, func() {
