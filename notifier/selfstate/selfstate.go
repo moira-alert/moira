@@ -11,7 +11,6 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/notifier"
 	"github.com/moira-alert/moira/notifier/protectors"
-	"math"
 )
 
 var defaultCheckInterval = time.Second * 10
