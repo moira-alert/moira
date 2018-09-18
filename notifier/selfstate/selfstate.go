@@ -11,6 +11,7 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/notifier"
 	"github.com/moira-alert/moira/notifier/protectors"
+	"math"
 )
 
 var defaultCheckInterval = time.Second * 10
@@ -48,7 +49,9 @@ func (selfCheck *SelfCheckWorker) Start() error {
 	lastRemoteCheckTS := time.Now().Unix()
 	nextSendErrorMessage := time.Now().Unix()
 
-	protector, values := protectors.ConfigureProtector(selfCheck.Config.Protector, selfCheck.DB, selfCheck.Log)
+	protector, protectorValues := protectors.ConfigureProtector(
+		selfCheck.Config.Protector, selfCheck.DB, selfCheck.Log,
+	)
 
 	selfCheck.tomb.Go(func() error {
 		checkTicker := time.NewTicker(defaultCheckInterval)
@@ -63,8 +66,8 @@ func (selfCheck *SelfCheckWorker) Start() error {
 				selfCheck.softCheck(time.Now().Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS,
 					&lastRemoteCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount, &remoteChecksCount)
 			case <-protectTicker.C:
-				if protector != nil {
-					selfCheck.hardCheck(protector, &values)
+				if protector.IsEnabled() {
+					selfCheck.hardCheck(protector, &protectorValues)
 				}
 			}
 		}
@@ -83,7 +86,7 @@ func (selfCheck *SelfCheckWorker) Stop() error {
 	return selfCheck.tomb.Wait()
 }
 
-func (selfCheck *SelfCheckWorker) hardCheck(protector moira.Protector, values *[]int64) {
+func (selfCheck *SelfCheckWorker) hardCheck(protector moira.Protector, values *[]float64) {
 	currentState, err := selfCheck.DB.GetNotifierState()
 	if err != nil {
 		selfCheck.Log.Warningf("Can not get notifier state: %s", err.Error())

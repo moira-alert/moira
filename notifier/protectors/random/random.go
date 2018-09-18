@@ -1,4 +1,4 @@
-package matched
+package random
 
 import (
 	"fmt"
@@ -12,7 +12,7 @@ type Protector struct {
 	enabled  bool
 	database moira.Database
 	logger   moira.Logger
-	matchedK float64
+	randomK  float64
 }
 
 // Init configures protector
@@ -20,9 +20,9 @@ func (protector *Protector) Init(protectorSettings map[string]string, database m
 	var err error
 	protector.database = database
 	protector.logger = logger
-	protector.matchedK, err = strconv.ParseFloat(protectorSettings["k"], 64)
+	protector.randomK, err = strconv.ParseFloat(protectorSettings["k"], 64)
 	if err != nil {
-		return fmt.Errorf("can not read matched k from config: %s", err.Error())
+		return fmt.Errorf("can not read random k from config: %s", err.Error())
 	}
 	protector.enabled = true
 	return nil
@@ -40,24 +40,17 @@ func (protector *Protector) GetInitialValues() ([]float64, error) {
 
 // GetCurrentValues returns current values based on previously taken values
 func (protector *Protector) GetCurrentValues(oldValues []float64) ([]float64, error) {
-	newValues := make([]float64, len(oldValues))
-	newCount, err := protector.database.GetMatchedMetricsUpdatesCount()
-	if err != nil {
-		return oldValues, err
-	}
-	newDelta := float64(newCount) - oldValues[0]
-	newValues[0] = float64(newCount)
-	newValues[1] = newDelta
-	return newValues, nil
+	return nil, nil
 }
 
 // IsStateDegraded returns true if state is degraded
-func (protector *Protector) IsStateDegraded(oldValues []float64, currentValues []float64) bool {
-	degraded := currentValues[1] < (oldValues[1] * float64(protector.matchedK))
-	if degraded {
-		protector.logger.Infof(
-			"Matched state degraded. Old value: %.2f, current value: %.2f",
-			oldValues[1], currentValues[1])
-	}
-	return degraded
-}
+//func (protector *Protector) IsStateDegraded(oldValues []float64, currentValues []float64) bool {
+	//degraded :=
+	//if degraded {
+	//	protector.logger.Infof(
+	//		"Matched state degraded. Old value: %.2f, current value: %.2f",
+	//		oldValues[1], currentValues[1])
+	//}
+	//return degraded
+//}
+

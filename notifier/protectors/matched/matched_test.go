@@ -76,21 +76,24 @@ func TestMatchedProtector(t *testing.T) {
 	protector.Init(map[string]string{
 		"k": "0.5",
 	}, database, logger)
-	values := protector.GetInitialValues()
+	values, _ := protector.GetInitialValues()
 
 	Convey("Test last good values", t, func(){
-		lastGoodValues := make([]int64,0)
 		for _, sample := range samples {
+			var lastGoodValue float64
 			for _, point := range sample.Serie {
 				database.EXPECT().GetNotifierState().Return("OK", nil)
-				newValues := []int64{0, int64(point)}
+				if math.IsNaN(point) {
+					point = 0
+				}
+				newValues := []float64{0, point}
 				if degraded := protector.IsStateDegraded(values, newValues); degraded {
-					lastGoodValues = append(lastGoodValues, values[1])
+					lastGoodValue = values[1]
 					break
 				}
 				values = newValues
 			}
+			So(lastGoodValue, ShouldEqual, sample.StopPoints[0])
 		}
-		So(lastGoodValues, ShouldResemble, []int64{1408,1290,1234})
 	})
 }
