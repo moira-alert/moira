@@ -31,6 +31,7 @@ func trigger(router chi.Router) {
 	router.Route("/metrics", func(router chi.Router) {
 		router.With(middleware.DateRange("-10minutes", "now")).Get("/", getTriggerMetrics)
 		router.Delete("/", deleteTriggerMetric)
+		router.Delete("/nodata", deleteTriggerNodataMetrics)
 	})
 	router.Put("/maintenance", setMetricsMaintenance)
 }
@@ -148,6 +149,13 @@ func deleteTriggerMetric(writer http.ResponseWriter, request *http.Request) {
 	triggerID := middleware.GetTriggerID(request)
 	metricName := request.URL.Query().Get("name")
 	if err := controller.DeleteTriggerMetric(database, metricName, triggerID); err != nil {
+		render.Render(writer, request, err)
+	}
+}
+
+func deleteTriggerNodataMetrics(writer http.ResponseWriter, request *http.Request) {
+	triggerID := middleware.GetTriggerID(request)
+	if err := controller.DeleteTriggerNodataMetrics(database, triggerID); err != nil {
 		render.Render(writer, request, err)
 	}
 }
