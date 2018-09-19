@@ -24,6 +24,17 @@ func (connector *DbConnector) GetPatterns() ([]string, error) {
 	return patterns, nil
 }
 
+// GetRandomPatterns returns randomly selected patterns
+func (connector *DbConnector) GetRandomPatterns(count int) ([]string, error) {
+	c := connector.pool.Get()
+	defer c.Close()
+	patterns, err := redis.Strings(c.Do("SRANDMEMBER", patternsListKey, count))
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get random moira patterns: %v", err)
+	}
+	return patterns, nil
+}
+
 // GetMetricsValues gets metrics values for given interval
 func (connector *DbConnector) GetMetricsValues(metrics []string, from int64, until int64) (map[string][]*moira.MetricValue, error) {
 	c := connector.pool.Get()
@@ -168,6 +179,17 @@ func (connector *DbConnector) GetPatternMetrics(pattern string) ([]string, error
 		return nil, fmt.Errorf("Failed to get pattern metrics for pattern %s, error: %v", pattern, err)
 	}
 	return metrics, nil
+}
+
+// GetPatternRandomMetrics returns randomly selected pattern metrics
+func (connector *DbConnector) GetPatternRandomMetrics(pattern string, count int) ([]string, error) {
+	c := connector.pool.Get()
+	defer c.Close()
+	patterns, err := redis.Strings(c.Do("SRANDMEMBER", patternMetricsKey(pattern), count))
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get pattern random metrics for pattern %s, error: %v", pattern, err)
+	}
+	return patterns, nil
 }
 
 // RemovePattern removes pattern from patterns list
