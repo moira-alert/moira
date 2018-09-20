@@ -348,3 +348,7 @@ func (subscription *SubscriptionData) MustIgnore(eventData *NotificationEvent) b
 	}
 	return false
 }
+
+func (Trigger) Type() string {
+	return "moira.trigger"
+}
