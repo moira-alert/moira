@@ -375,6 +375,19 @@ func (mr *MockDatabaseMockRecorder) GetPatternMetrics(arg0 interface{}) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPatternMetrics", reflect.TypeOf((*MockDatabase)(nil).GetPatternMetrics), arg0)
 }
 
+// GetPatternRandomMetrics mocks base method
+func (m *MockDatabase) GetPatternRandomMetrics(arg0 string, arg1 int) ([]string, error) {
+	ret := m.ctrl.Call(m, "GetPatternRandomMetrics", arg0, arg1)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPatternRandomMetrics indicates an expected call of GetPatternRandomMetrics
+func (mr *MockDatabaseMockRecorder) GetPatternRandomMetrics(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPatternRandomMetrics", reflect.TypeOf((*MockDatabase)(nil).GetPatternRandomMetrics), arg0, arg1)
+}
+
 // GetPatternTriggerIDs mocks base method
 func (m *MockDatabase) GetPatternTriggerIDs(arg0 string) ([]string, error) {
 	ret := m.ctrl.Call(m, "GetPatternTriggerIDs", arg0)
@@ -399,6 +412,19 @@ func (m *MockDatabase) GetPatterns() ([]string, error) {
 // GetPatterns indicates an expected call of GetPatterns
 func (mr *MockDatabaseMockRecorder) GetPatterns() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPatterns", reflect.TypeOf((*MockDatabase)(nil).GetPatterns))
+}
+
+// GetRandomPatterns mocks base method
+func (m *MockDatabase) GetRandomPatterns(arg0 int) ([]string, error) {
+	ret := m.ctrl.Call(m, "GetRandomPatterns", arg0)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetRandomPatterns indicates an expected call of GetRandomPatterns
+func (mr *MockDatabaseMockRecorder) GetRandomPatterns(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRandomPatterns", reflect.TypeOf((*MockDatabase)(nil).GetRandomPatterns), arg0)
 }
 
 // GetRemoteChecksUpdatesCount mocks base method

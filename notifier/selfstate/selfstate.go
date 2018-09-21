@@ -10,7 +10,7 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/notifier"
-	"github.com/moira-alert/moira/notifier/protectors"
+	"github.com/moira-alert/moira/protectors"
 )
 
 var defaultCheckInterval = time.Second * 10
@@ -48,42 +48,33 @@ func (selfCheck *SelfCheckWorker) Start() error {
 	lastRemoteCheckTS := time.Now().Unix()
 	nextSendErrorMessage := time.Now().Unix()
 
+	protector, err := protectors.ConfigureProtector(
+		selfCheck.Config.Protector, selfCheck.DB, selfCheck.Log,
+	)
+	if err != nil {
+		return fmt.Errorf("can't configure nodata protector: %s", err.Error())
+	}
+
+	protectorStream := protector.GetStream()
+
 	selfCheck.tomb.Go(func() error {
 		checkTicker := time.NewTicker(defaultCheckInterval)
 		for {
 			select {
 			case <-selfCheck.tomb.Dying():
 				checkTicker.Stop()
-				selfCheck.Log.Info("Moira Notifier Soft Self State Monitor Stopped")
+				selfCheck.Log.Info("Moira Notifier Self State Monitor Stopped")
 				return nil
 			case <-checkTicker.C:
 				selfCheck.softCheck(time.Now().Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS,
 					&lastRemoteCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount, &remoteChecksCount)
-			}
-		}
-	})
-
-	selfCheck.Log.Info("Moira Notifier Soft Self State Monitor Started")
-
-	selfCheck.tomb.Go(func() error {
-		protector, err := protectors.ConfigureProtector(
-			selfCheck.Config.Protector, selfCheck.DB, selfCheck.Log,
-		)
-		if err != nil {
-			selfCheck.Log.Errorf("Can't configure hard self state monitor: %s", err.Error())
-		}
-		protectorStream := protector.GetStream()
-		for {
-			select {
 			case protectorData := <-protectorStream:
-				protector.IsStateDegraded(protectorData)
-			case <-selfCheck.tomb.Dying():
-				selfCheck.Log.Info("Moira Notifier Hard Self State Monitor Stopped")
-				return nil
+				selfCheck.hardCheck(protector, protectorData)
 			}
 		}
 	})
 
+	selfCheck.Log.Info("Moira Notifier Self State Monitor Started")
 	return nil
 }
 

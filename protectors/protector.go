@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/notifier/protectors/matched"
-	"github.com/moira-alert/moira/notifier/protectors/random"
+	"github.com/moira-alert/moira/protectors/matched"
+	"github.com/moira-alert/moira/protectors/random"
 )
 
 const (
