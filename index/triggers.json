@@ -1,0 +1,1748 @@
+{
+  "list": [
+    {
+      "id": "7c5b29b6-c855-4e44-8ed3-28e789661711",
+      "name": "moira-csharp-client-test Trigger for integration tests",
+      "desc": "Description",
+      "warn_value": 75,
+      "error_value": 80,
+      "trigger_type": "rising",
+      "tags": [
+        "moira-csharp-client-test-dontRemove"
+      ],
+      "ttl_state": "NODATA",
+      "ttl": 600,
+      "sched": {
+        "days": [
+          {
+            "enabled": true,
+            "name": "Mon"
+          },
+          {
+            "enabled": true,
+            "name": "Tue"
+          },
+          {
+            "enabled": true,
+            "name": "Wed"
+          },
+          {
+            "enabled": true,
+            "name": "Thu"
+          },
+          {
+            "enabled": true,
+            "name": "Fri"
+          },
+          {
+            "enabled": true,
+            "name": "Sat"
+          },
+          {
+            "enabled": true,
+            "name": "Sun"
+          }
+        ],
+        "tzOffset": -300,
+        "startOffset": 0,
+        "endOffset": 1439
+      },
+      "expression": "",
+      "is_remote": false,
+      "mute_new_metrics": false,
+      "throttling": 0
+    },
+    {
+      "id": "1e5c8c99-8aeb-4916-bae3-84202fccf97c",
+      "name": "Sms Queue Size",
+      "desc": "",
+      "warn_value": 50,
+      "error_value": 100,
+      "trigger_type": "rising",
+      "tags": [
+        "WebSites"
+      ],
+      "ttl_state": "OK",
+      "sched": {
+        "days": [
+          {
+            "enabled": true,
+            "name": "Mon"
+          },
+          {
+            "enabled": true,
+            "name": "Tue"
+          },
+          {
+            "enabled": true,
+            "name": "Wed"
+          },
+          {
+            "enabled": true,
+            "name": "Thu"
+          },
+          {
+            "enabled": true,
+            "name": "Fri"
+          },
+          {
+            "enabled": true,
+            "name": "Sat"
+          },
+          {
+            "enabled": true,
+            "name": "Sun"
+          }
+        ],
+        "tzOffset": -300,
+        "startOffset": 0,
+        "endOffset": 1439
+      },
+      "expression": "",
+      "is_remote": false,
+      "mute_new_metrics": false,
+      "throttling": 0
+    },
+    {
+      "id": "6311feec-be06-4243-b999-480a0601af31",
+      "name": "Egais Elasticsearch Cluster status",
+      "warn_value": 1,
+      "error_value": 0,
+      "trigger_type": "falling",
+      "tags": [
+        "elasticsearch",
+        "Egais"
+      ],
+      "ttl_state": "NODATA",
+      "ttl": 600,
+      "sched": {
+        "days": [
+          {
+            "enabled": true,
+            "name": "Mon"
+          },
+          {
+            "enabled": true,
+            "name": "Tue"
+          },
+          {
+            "enabled": true,
+            "name": "Wed"
+          },
+          {
+            "enabled": true,
+            "name": "Thu"
+          },
+          {
+            "enabled": true,
+            "name": "Fri"
+          },
+          {
+            "enabled": true,
+            "name": "Sat"
+          },
+          {
+            "enabled": true,
+            "name": "Sun"
+          }
+        ],
+        "tzOffset": -300,
+        "startOffset": 0,
+        "endOffset": 1439
+      },
+      "python_expression": "",
+      "is_remote": false,
+      "mute_new_metrics": false,
+      "throttling": 0
+    },
+    {
+      "id": "Snitch.Auto.Dev.453-unknown-errors-per-client.fsprinter",
+      "name": "Snitch alert: 453 unknown errors per client for service 'fsprinter' in 'Snitch.Auto.Dev'",
+      "desc": "Триггер срабатывает при появлении неизвестных ошибок с кодом 453 у клиентов.\r\nМетрики: https://secure_url...\r\nDutymon: http://secure_url...\r\n",
+      "warn_value": 10,
+      "error_value": 30,
+      "trigger_type": "rising",
+      "tags": [
+        "Snitch.Auto.Dev.fsprinter",
+        "Snitch.Auto.Dev",
+        "Snitch.Auto.Dev.453-unknown-errors-per-client"
+      ],
+      "ttl_state": "OK",
+      "ttl": 300,
+      "sched": {
+        "days": [
+          {
+            "enabled": true,
+            "name": "Mon"
+          },
+          {
+            "enabled": true,
+            "name": "Tue"
+          },
+          {
+            "enabled": true,
+            "name": "Wed"
+          },
+          {
+            "enabled": true,
+            "name": "Thu"
+          },
+          {
+            "enabled": true,
+            "name": "Fri"
+          },
+          {
+            "enabled": true,
+            "name": "Sat"
+          },
+          {
+            "enabled": true,
+            "name": "Sun"
+          }
+        ],
+        "tzOffset": -300,
+        "startOffset": 0,
+        "endOffset": 1439
+      },
+      "expression": "",
+      "is_remote": false,
+      "mute_new_metrics": false,
+      "throttling": 0
+    },
+    {
+      "id": "983198d2-596c-4e7e-9805-01349f8efd20",
+      "name": "Moira-Filter metrics recived (per minute)",
+      "warn_value": 1000,
+      "error_value": 100,
+      "trigger_type": "falling",
+      "desc": "",
+      "tags": [
+        "normal",
+        "DevOps",
+        "Moira"
+      ],
+      "ttl_state": "NODATA",
+      "ttl": 600,
+      "sched": {
+        "days": [
+          {
+            "enabled": true,
+            "name": "Mon"
+          },
+          {
+            "enabled": true,
+            "name": "Tue"
+          },
+          {
+            "enabled": true,
+            "name": "Wed"
+          },
+          {
+            "enabled": true,
+            "name": "Thu"
+          },
+          {
+            "enabled": true,
+            "name": "Fri"
+          },
+          {
+            "enabled": true,
+            "name": "Sat"
+          },
+          {
+            "enabled": true,
+            "name": "Sun"
+          }
+        ],
+        "tzOffset": -300,
+        "startOffset": 0,
+        "endOffset": 1439
+      },
+      "expression": "",
+      "is_remote": false,
+      "mute_new_metrics": false,
+      "throttling": 0
+    },
+    {
+      "id": "9efe352d-df44-4149-9c2e-a5dde70a5eda",
+      "name": "test",
+      "desc": "",
+      "warn_value": 0,
+      "error_value": 1,
+      "trigger_type": "expression",
+      "tags": [
+        "kamaev"
+      ],
+      "ttl_state": "ERROR",
+      "ttl": 120,
+      "sched": {
+        "days": [
+          {
+            "enabled": true,
+            "name": "Mon"
+          },
+          {
+            "enabled": true,
+            "name": "Tue"
+          },
+          {
+            "enabled": true,
+            "name": "Wed"
+          },
+          {
+            "enabled": true,
+            "name": "Thu"
+          },
+          {
+            "enabled": true,
+            "name": "Fri"
+          },
+          {
+            "enabled": true,
+            "name": "Sat"
+          },
+          {
+            "enabled": true,
+            "name": "Sun"
+          }
+        ],
+        "tzOffset": -300,
+        "startOffset": 0,
+        "endOffset": 1439
+      },
+      "expression": "OK",
+      "is_remote": false,
+      "mute_new_metrics": false,
+      "throttling": 0
+    },
+    {
+      "id": "Snitch.Auto.Dev.4xx-unusual-errors-per-client.fsprinter",
+      "name": "Snitch alert: 4xx unusual errors per client for service 'fsprinter' in 'Snitch.Auto.Dev'",
+      "desc": "Триггер срабатывает при появлении 'подозрительных' ошибок с 4xx-кодами у клиентов.\r\nМетрики: http://secure_url...\r\nDutymon: http://secure_url...\r\n",
+      "warn_value": 10,
+      "error_value": 30,
+      "trigger_type": "rising",
+      "tags": [
+        "Snitch.Auto.Dev.fsprinter",
+        "Snitch.Auto.Dev.4xx-unusual-errors-per-client",
+        "Snitch.Auto.Dev"
+      ],
+      "ttl_state": "OK",
+      "ttl": 300,
+      "sched": {
+        "days": [
+          {
+            "enabled": true,
+            "name": "Mon"
+          },
+          {
+            "enabled": true,
+            "name": "Tue"
+          },
+          {
+            "enabled": true,
+            "name": "Wed"
+          },
+          {
+            "enabled": true,
+            "name": "Thu"
+          },
+          {
+            "enabled": true,
+            "name": "Fri"
+          },
+          {
+            "enabled": true,
+            "name": "Sat"
+          },
+          {
+            "enabled": true,
+            "name": "Sun"
+          }
+        ],
+        "tzOffset": -300,
+        "startOffset": 0,
+        "endOffset": 1439
+      },
+      "expression": "",
+      "is_remote": false,
+      "mute_new_metrics": false,
+      "throttling": 0
+    },
+    {
+      "id": "11721752-d7aa-4874-9367-9ce795f4fee4",
+      "name": "carbon-c-relay drop metrics",
+      "warn_value": null,
+      "error_value": null,
+      "trigger_type": "expression",
+      "tags": [
+        "Graphite",
+        "critical",
+        "DevOps"
+      ],
+      "ttl_state": "NODATA",
+      "ttl": 300,
+      "sched": {
+        "days": [
+          {
+            "enabled": true,
+            "name": "Mon"
+          },
+          {
+            "enabled": true,
+            "name": "Tue"
+          },
+          {
+            "enabled": true,
+            "name": "Wed"
+          },
+          {
+            "enabled": true,
+            "name": "Thu"
+          },
+          {
+            "enabled": true,
+            "name": "Fri"
+          },
+          {
+            "enabled": true,
+            "name": "Sat"
+          },
+          {
+            "enabled": true,
+            "name": "Sun"
+          }
+        ],
+        "tzOffset": -300,
+        "startOffset": 0,
+        "endOffset": 1439
+      },
+      "expression": "t1 > 0 ? ERROR : OK",
+      "is_remote": false,
+      "mute_new_metrics": false,
+      "throttling": 0
+    },
+    {
+      "id": "Snitch.Auto.Dev.429-throttled-per-client.fsprinter",
+      "name": "Snitch alert: 429 throttling errors per client for service 'fsprinter' in 'Snitch.Auto.Dev'",
+      "desc": "Триггер срабатывает при появлении ошибок с кодом 429 у клиентов.\r\nМетрики: http://secure_url...\r\nDutymon: http://secure_url...\r\n",
+      "warn_value": 10,
+      "error_value": 30,
+      "trigger_type": "rising",
+      "tags": [
+        "Snitch.Auto.Dev.429-throttled-per-client",
+        "Snitch.Auto.Dev.fsprinter",
+        "Snitch.Auto.Dev"
+      ],
+      "ttl_state": "OK",
+      "ttl": 300,
+      "sched": {
+        "days": [
+          {
+            "enabled": true,
+            "name": "Mon"
+          },
+          {
+            "enabled": true,
+            "name": "Tue"
+          },
+          {
+            "enabled": true,
+            "name": "Wed"
+          },
+          {
+            "enabled": true,
+            "name": "Thu"
+          },
+          {
+            "enabled": true,
+            "name": "Fri"
+          },
+          {
+            "enabled": true,
+            "name": "Sat"
+          },
+          {
+            "enabled": true,
+            "name": "Sun"
+          }
+        ],
+        "tzOffset": -300,
+        "startOffset": 0,
+        "endOffset": 1439
+      },
+      "expression": "",
+      "is_remote": false,
+      "mute_new_metrics": false,
+      "throttling": 0
+    },
+    {
+      "id": "bc96bd5f-f66a-4ce8-a6d2-48376b4c5048",
+      "name": "Gorgeous trigger for gorgeous Sasha",
+      "desc": "",
+      "warn_value": 80,
+      "error_value": 90,
+      "trigger_type": "rising",
+      "tags": [
+        "super-test"
+      ],
+      "ttl_state": "NODATA",
+      "ttl": 120,
+      "sched": {
+        "days": [
+          {
+            "enabled": true,
+            "name": "Mon"
+          },
+          {
+            "enabled": true,
+            "name": "Tue"
+          },
+          {
+            "enabled": true,
+            "name": "Wed"
+          },
+          {
+            "enabled": true,
+            "name": "Thu"
+          },
+          {
+            "enabled": true,
+            "name": "Fri"
+          },
+          {
+            "enabled": true,
+            "name": "Sat"
+          },
+          {
+            "enabled": true,
+            "name": "Sun"
+          }
+        ],
+        "tzOffset": -300,
+        "startOffset": 0,
+        "endOffset": 1439
+      },
+      "expression": "",
+      "is_remote": false,
+      "mute_new_metrics": false,
+      "throttling": 0
+    },
+    {
+      "id": "33b2d5b4-9493-4350-bfb9-707cc9e34c05",
+      "name": "CloudCrypt Heartbeat: sonya (Timeout)",
+      "warn_value": 59999999,
+      "error_value": 60000000,
+      "trigger_type": "rising",
+      "tags": [
+        "CloudCrypt"
+      ],
+      "ttl_state": "ERROR",
+      "ttl": 300,
+      "sched": {
+        "days": [
+          {
+            "enabled": true,
+            "name": "Mon"
+          },
+          {
+            "enabled": true,
+            "name": "Tue"
+          },
+          {
+            "enabled": true,
+            "name": "Wed"
+          },
+          {
+            "enabled": true,
+            "name": "Thu"
+          },
+          {
+            "enabled": true,
+            "name": "Fri"
+          },
+          {
+            "enabled": true,
+            "name": "Sat"
+          },
+          {
+            "enabled": true,
+            "name": "Sun"
+          }
+        ],
+        "tzOffset": -300,
+        "startOffset": 0,
+        "endOffset": 1439
+      },
+      "expression": "",
+      "is_remote": false,
+      "mute_new_metrics": false,
+      "throttling": 0
+    },
+    {
+      "id": "76df683d-80c5-4bed-8f93-f6e0d2a1a94e",
+      "name": "ELBA: TC agents disk free space (%)",
+      "warn_value": 8,
+      "error_value": 1,
+      "trigger_type": "falling",
+      "tags": [
+        "seyren",
+        "elba"
+      ],
+      "ttl_state": "OK",
+      "ttl": 1800,
+      "sched": {
+        "days": [
+          {
+            "enabled": true,
+            "name": "Mon"
+          },
+          {
+            "enabled": true,
+            "name": "Tue"
+          },
+          {
+            "enabled": true,
+            "name": "Wed"
+          },
+          {
+            "enabled": true,
+            "name": "Thu"
+          },
+          {
+            "enabled": true,
+            "name": "Fri"
+          },
+          {
+            "enabled": true,
+            "name": "Sat"
+          },
+          {
+            "enabled": true,
+            "name": "Sun"
+          }
+        ],
+        "tzOffset": -300,
+        "startOffset": 0,
+        "endOffset": 1439
+      },
+      "python_expression": "",
+      "is_remote": false,
+      "mute_new_metrics": false,
+      "throttling": 0
+    },
+    {
+      "id": "MoiraCheckerErrors",
+      "name": "[Staging] Moira Checker Errors",
+      "desc": "Срабатывает, если во время чека триггера произошла необработанная ошибка. В логах нужно искать ERROR логи чекера с сообщениями Trigger {TriggerID} check failed, Panic while perform trigger, Failed to perform trigger\n\nThis trigger is manipulated by ansible: http://secure_url...",
+      "warn_value": null,
+      "error_value": null,
+      "trigger_type": "expression",
+      "tags": [
+        "Moira-duty",
+        "DevOps",
+        "Moira"
+      ],
+      "ttl_state": "NODATA",
+      "ttl": 600,
+      "sched": {
+        "days": [
+          {
+            "enabled": true,
+            "name": "Mon"
+          },
+          {
+            "enabled": true,
+            "name": "Tue"
+          },
+          {
+            "enabled": true,
+            "name": "Wed"
+          },
+          {
+            "enabled": true,
+            "name": "Thu"
+          },
+          {
+            "enabled": true,
+            "name": "Fri"
+          },
+          {
+            "enabled": true,
+            "name": "Sat"
+          },
+          {
+            "enabled": true,
+            "name": "Sun"
+          }
+        ],
+        "tzOffset": -180,
+        "startOffset": 0,
+        "endOffset": 1439
+      },
+      "expression": "t1 > 10 ? ERROR : OK",
+      "is_remote": false,
+      "mute_new_metrics": false,
+      "throttling": 0
+    },
+    {
+      "id": "9ce3efdf-33ca-467b-ae7e-66dc71eba87b",
+      "name": "test metrics lag",
+      "desc": "",
+      "warn_value": 150000,
+      "error_value": 300000,
+      "trigger_type": "rising",
+      "tags": [
+        "borovskyav"
+      ],
+      "ttl_state": "NODATA",
+      "ttl": 600,
+      "sched": {
+        "days": [
+          {
+            "enabled": true,
+            "name": "Mon"
+          },
+          {
+            "enabled": true,
+            "name": "Tue"
+          },
+          {
+            "enabled": true,
+            "name": "Wed"
+          },
+          {
+            "enabled": true,
+            "name": "Thu"
+          },
+          {
+            "enabled": true,
+            "name": "Fri"
+          },
+          {
+            "enabled": true,
+            "name": "Sat"
+          },
+          {
+            "enabled": true,
+            "name": "Sun"
+          }
+        ],
+        "tzOffset": -300,
+        "startOffset": 0,
+        "endOffset": 1439
+      },
+      "expression": "",
+      "is_remote": false,
+      "mute_new_metrics": false,
+      "throttling": 0
+    },
+    {
+      "id": "Snitch.Auto.Dev.4xx-net-per-client.fsprinter",
+      "name": "Snitch alert: 4xx network errors per client for service 'fsprinter' in 'Snitch.Auto.Dev'",
+      "desc": "Триггер срабатывает при появлении таймаутов или сетевых ошибок у клиентов.\r\nМетрики: http://secure_url...\r\nDutymon: http://secure_url...\r\n",
+      "warn_value": 10,
+      "error_value": 30,
+      "trigger_type": "rising",
+      "tags": [
+        "Snitch.Auto.Dev.fsprinter",
+        "Snitch.Auto.Dev.4xx-net-per-client",
+        "Snitch.Auto.Dev"
+      ],
+      "ttl_state": "OK",
+      "ttl": 300,
+      "sched": {
+        "days": [
+          {
+            "enabled": true,
+            "name": "Mon"
+          },
+          {
+            "enabled": true,
+            "name": "Tue"
+          },
+          {
+            "enabled": true,
+            "name": "Wed"
+          },
+          {
+            "enabled": true,
+            "name": "Thu"
+          },
+          {
+            "enabled": true,
+            "name": "Fri"
+          },
+          {
+            "enabled": true,
+            "name": "Sat"
+          },
+          {
+            "enabled": true,
+            "name": "Sun"
+          }
+        ],
+        "tzOffset": -300,
+        "startOffset": 0,
+        "endOffset": 1439
+      },
+      "expression": "",
+      "is_remote": false,
+      "mute_new_metrics": false,
+      "throttling": 0
+    },
+    {
+      "id": "4da2e01c-3e01-469c-a247-ad5da36bbbb3",
+      "name": "121321321",
+      "desc": "",
+      "warn_value": 12312321,
+      "error_value": 213213213,
+      "trigger_type": "rising",
+      "tags": [
+        "borovskyav"
+      ],
+      "ttl_state": "OK",
+      "ttl": 600,
+      "sched": {
+        "days": [
+          {
+            "enabled": true,
+            "name": "Mon"
+          },
+          {
+            "enabled": true,
+            "name": "Tue"
+          },
+          {
+            "enabled": true,
+            "name": "Wed"
+          },
+          {
+            "enabled": true,
+            "name": "Thu"
+          },
+          {
+            "enabled": true,
+            "name": "Fri"
+          },
+          {
+            "enabled": true,
+            "name": "Sat"
+          },
+          {
+            "enabled": true,
+            "name": "Sun"
+          }
+        ],
+        "tzOffset": -300,
+        "startOffset": 0,
+        "endOffset": 1439
+      },
+      "expression": "",
+      "is_remote": false,
+      "mute_new_metrics": false,
+      "throttling": 0
+    },
+    {
+      "id": "Snitch.Auto.Dev.errors-dominance.fsprinter",
+      "name": "Snitch alert: errors responses dominance for service 'fsprinter' in 'Snitch.Auto.Dev'",
+      "desc": "Триггер срабатывает при аномально высокой доле сетевых и 5xx-ошибок среди ответов сервиса.\r\nМетрики: http://secure_url...\r\nDutymon: http://secure_url...\r\n",
+      "warn_value": 0.1,
+      "error_value": 0.25,
+      "trigger_type": "rising",
+      "tags": [
+        "Snitch.Auto.Dev.fsprinter",
+        "Snitch.Auto.Dev.errors-dominance",
+        "Snitch.Auto.Dev"
+      ],
+      "ttl_state": "OK",
+      "ttl": 300,
+      "sched": {
+        "days": [
+          {
+            "enabled": true,
+            "name": "Mon"
+          },
+          {
+            "enabled": true,
+            "name": "Tue"
+          },
+          {
+            "enabled": true,
+            "name": "Wed"
+          },
+          {
+            "enabled": true,
+            "name": "Thu"
+          },
+          {
+            "enabled": true,
+            "name": "Fri"
+          },
+          {
+            "enabled": true,
+            "name": "Sat"
+          },
+          {
+            "enabled": true,
+            "name": "Sun"
+          }
+        ],
+        "tzOffset": -300,
+        "startOffset": 0,
+        "endOffset": 1439
+      },
+      "expression": "",
+      "is_remote": false,
+      "mute_new_metrics": false,
+      "throttling": 0
+    },
+    {
+      "id": "247bb3c2-6acd-4f05-a1c0-01e2ff411f2b",
+      "name": "ELK. Elasticsearch cluster status",
+      "warn_value": 1,
+      "error_value": 0,
+      "trigger_type": "falling",
+      "tags": [
+        "ELK",
+        "critical",
+        "DevOps"
+      ],
+      "ttl_state": "NODATA",
+      "ttl": 300,
+      "sched": {
+        "days": [
+          {
+            "enabled": true,
+            "name": "Mon"
+          },
+          {
+            "enabled": true,
+            "name": "Tue"
+          },
+          {
+            "enabled": true,
+            "name": "Wed"
+          },
+          {
+            "enabled": true,
+            "name": "Thu"
+          },
+          {
+            "enabled": true,
+            "name": "Fri"
+          },
+          {
+            "enabled": true,
+            "name": "Sat"
+          },
+          {
+            "enabled": true,
+            "name": "Sun"
+          }
+        ],
+        "tzOffset": -300,
+        "startOffset": 0,
+        "endOffset": 1439
+      },
+      "python_expression": "",
+      "is_remote": false,
+      "mute_new_metrics": false,
+      "throttling": 0
+    },
+    {
+      "id": "614c5a64-351a-4dcb-8284-d998dca9d803",
+      "name": "Graphite. Low disk space",
+      "warn_value": 15,
+      "error_value": 3,
+      "trigger_type": "falling",
+      "tags": [
+        "Graphite",
+        "critical",
+        "DevOps"
+      ],
+      "ttl_state": "NODATA",
+      "ttl": 600,
+      "sched": {
+        "days": [
+          {
+            "enabled": true,
+            "name": "Mon"
+          },
+          {
+            "enabled": true,
+            "name": "Tue"
+          },
+          {
+            "enabled": true,
+            "name": "Wed"
+          },
+          {
+            "enabled": true,
+            "name": "Thu"
+          },
+          {
+            "enabled": true,
+            "name": "Fri"
+          },
+          {
+            "enabled": true,
+            "name": "Sat"
+          },
+          {
+            "enabled": true,
+            "name": "Sun"
+          }
+        ],
+        "tzOffset": -300,
+        "startOffset": 0,
+        "endOffset": 1439
+      },
+      "expression": "",
+      "is_remote": false,
+      "mute_new_metrics": false,
+      "throttling": 0
+    },
+    {
+      "id": "8500929b-e86d-46f8-a78c-ad3a2106beba",
+      "name": "test",
+      "desc": "",
+      "warn_value": 0,
+      "error_value": 1,
+      "trigger_type": "expression",
+      "tags": [
+        "kamaev"
+      ],
+      "ttl_state": "NODATA",
+      "ttl": 600,
+      "sched": {
+        "days": [
+          {
+            "enabled": true,
+            "name": "Mon"
+          },
+          {
+            "enabled": true,
+            "name": "Tue"
+          },
+          {
+            "enabled": true,
+            "name": "Wed"
+          },
+          {
+            "enabled": true,
+            "name": "Thu"
+          },
+          {
+            "enabled": true,
+            "name": "Fri"
+          },
+          {
+            "enabled": true,
+            "name": "Sat"
+          },
+          {
+            "enabled": true,
+            "name": "Sun"
+          }
+        ],
+        "tzOffset": -300,
+        "startOffset": 0,
+        "endOffset": 1439
+      },
+      "expression": "OK",
+      "is_remote": false,
+      "mute_new_metrics": false,
+      "throttling": 0
+    },
+    {
+      "id": "554b7eae-6672-4dfa-9269-c4fa44bc8b93",
+      "name": "CloudCrypt Heartbeat: sonya (Exceptions)",
+      "desc": "",
+      "warn_value": 0.000001,
+      "error_value": 0,
+      "trigger_type": "falling",
+      "tags": [
+        "CloudCrypt"
+      ],
+      "ttl_state": "ERROR",
+      "ttl": 300,
+      "sched": {
+        "days": [
+          {
+            "enabled": true,
+            "name": "Mon"
+          },
+          {
+            "enabled": true,
+            "name": "Tue"
+          },
+          {
+            "enabled": true,
+            "name": "Wed"
+          },
+          {
+            "enabled": true,
+            "name": "Thu"
+          },
+          {
+            "enabled": true,
+            "name": "Fri"
+          },
+          {
+            "enabled": true,
+            "name": "Sat"
+          },
+          {
+            "enabled": true,
+            "name": "Sun"
+          }
+        ],
+        "tzOffset": -300,
+        "startOffset": 0,
+        "endOffset": 1439
+      },
+      "expression": "",
+      "is_remote": false,
+      "mute_new_metrics": false,
+      "throttling": 0
+    },
+    {
+      "id": "3cc4979b-8918-48d7-b1ca-1fb4542fdad1",
+      "name": "test333",
+      "desc": "",
+      "warn_value": null,
+      "error_value": null,
+      "trigger_type": "expression",
+      "tags": [
+        "kamaev"
+      ],
+      "ttl_state": "NODATA",
+      "ttl": 600,
+      "sched": {
+        "days": [
+          {
+            "enabled": true,
+            "name": "Mon"
+          },
+          {
+            "enabled": true,
+            "name": "Tue"
+          },
+          {
+            "enabled": true,
+            "name": "Wed"
+          },
+          {
+            "enabled": true,
+            "name": "Thu"
+          },
+          {
+            "enabled": true,
+            "name": "Fri"
+          },
+          {
+            "enabled": true,
+            "name": "Sat"
+          },
+          {
+            "enabled": true,
+            "name": "Sun"
+          }
+        ],
+        "tzOffset": -300,
+        "startOffset": 0,
+        "endOffset": 1439
+      },
+      "expression": "OK",
+      "is_remote": false,
+      "mute_new_metrics": false,
+      "throttling": 0
+    },
+    {
+      "id": "2c3f812c-c0ab-4d45-88ee-ef341c9952b5",
+      "name": "test",
+      "desc": "",
+      "warn_value": 100,
+      "error_value": 200,
+      "trigger_type": "rising",
+      "tags": [
+        "Snitch.Auto.Dev.429-throttled-per-client",
+        "bla-bla-bla"
+      ],
+      "ttl_state": "NODATA",
+      "ttl": 600,
+      "sched": {
+        "days": [
+          {
+            "enabled": true,
+            "name": "Mon"
+          },
+          {
+            "enabled": true,
+            "name": "Tue"
+          },
+          {
+            "enabled": true,
+            "name": "Wed"
+          },
+          {
+            "enabled": true,
+            "name": "Thu"
+          },
+          {
+            "enabled": true,
+            "name": "Fri"
+          },
+          {
+            "enabled": true,
+            "name": "Sat"
+          },
+          {
+            "enabled": true,
+            "name": "Sun"
+          }
+        ],
+        "tzOffset": -300,
+        "startOffset": 0,
+        "endOffset": 1439
+      },
+      "expression": "",
+      "is_remote": false,
+      "mute_new_metrics": false,
+      "throttling": 0
+    },
+    {
+      "id": "39d1ed59-71de-499f-ad80-0cabb458b5ec",
+      "name": "Gaphite Statsite",
+      "warn_value": 1000,
+      "error_value": 500,
+      "trigger_type": "falling",
+      "tags": [
+        "Graphite",
+        "alerts",
+        "DevOps",
+        "critical"
+      ],
+      "ttl_state": "NODATA",
+      "ttl": 600,
+      "sched": {
+        "days": [
+          {
+            "enabled": true,
+            "name": "Mon"
+          },
+          {
+            "enabled": true,
+            "name": "Tue"
+          },
+          {
+            "enabled": true,
+            "name": "Wed"
+          },
+          {
+            "enabled": true,
+            "name": "Thu"
+          },
+          {
+            "enabled": true,
+            "name": "Fri"
+          },
+          {
+            "enabled": true,
+            "name": "Sat"
+          },
+          {
+            "enabled": true,
+            "name": "Sun"
+          }
+        ],
+        "tzOffset": -300,
+        "startOffset": 0,
+        "endOffset": 1439
+      },
+      "expression": "",
+      "is_remote": false,
+      "mute_new_metrics": false,
+      "throttling": 0
+    },
+    {
+      "id": "13ae7f45-6422-4f28-86f1-d928aaf75abd",
+      "name": "AS - Bad Response",
+      "desc": "Изменение количества 500 http://secure_url...",
+      "warn_value": 1,
+      "error_value": 2,
+      "trigger_type": "rising",
+      "tags": [
+        "abonentsErrors"
+      ],
+      "ttl_state": "OK",
+      "ttl": 600,
+      "sched": {
+        "days": [
+          {
+            "enabled": true,
+            "name": "Mon"
+          },
+          {
+            "enabled": true,
+            "name": "Tue"
+          },
+          {
+            "enabled": true,
+            "name": "Wed"
+          },
+          {
+            "enabled": true,
+            "name": "Thu"
+          },
+          {
+            "enabled": true,
+            "name": "Fri"
+          },
+          {
+            "enabled": true,
+            "name": "Sat"
+          },
+          {
+            "enabled": true,
+            "name": "Sun"
+          }
+        ],
+        "tzOffset": -300,
+        "startOffset": 0,
+        "endOffset": 1439
+      },
+      "python_expression": "",
+      "is_remote": false,
+      "mute_new_metrics": false,
+      "throttling": 0
+    },
+    {
+      "id": "2db1f394-3bfc-41c3-945b-0096bb89a00c",
+      "name": "NewTest",
+      "desc": "",
+      "warn_value": 1000,
+      "error_value": 200,
+      "trigger_type": "expression",
+      "tags": [
+        "kamaev"
+      ],
+      "ttl_state": "NODATA",
+      "ttl": 600,
+      "sched": {
+        "days": [
+          {
+            "enabled": true,
+            "name": "Mon"
+          },
+          {
+            "enabled": true,
+            "name": "Tue"
+          },
+          {
+            "enabled": true,
+            "name": "Wed"
+          },
+          {
+            "enabled": true,
+            "name": "Thu"
+          },
+          {
+            "enabled": true,
+            "name": "Fri"
+          },
+          {
+            "enabled": true,
+            "name": "Sat"
+          },
+          {
+            "enabled": true,
+            "name": "Sun"
+          }
+        ],
+        "tzOffset": -300,
+        "startOffset": 0,
+        "endOffset": 1439
+      },
+      "expression": "OK",
+      "is_remote": false,
+      "mute_new_metrics": false,
+      "throttling": 0
+    },
+    {
+      "id": "67247398-0a5d-47e0-86ca-9c716c32c2d5",
+      "name": "Diadoc Disk space → 0GB",
+      "warn_value": null,
+      "error_value": null,
+      "trigger_type": "expression",
+      "tags": [
+        "critical",
+        "disk",
+        "Diadoc"
+      ],
+      "ttl_state": "OK",
+      "ttl": 600,
+      "sched": {
+        "days": [
+          {
+            "enabled": true,
+            "name": "Mon"
+          },
+          {
+            "enabled": true,
+            "name": "Tue"
+          },
+          {
+            "enabled": true,
+            "name": "Wed"
+          },
+          {
+            "enabled": true,
+            "name": "Thu"
+          },
+          {
+            "enabled": true,
+            "name": "Fri"
+          },
+          {
+            "enabled": true,
+            "name": "Sat"
+          },
+          {
+            "enabled": true,
+            "name": "Sun"
+          }
+        ],
+        "tzOffset": -300,
+        "startOffset": 0,
+        "endOffset": 1439
+      },
+      "expression": "t1 < 2147483648 ? ERROR : OK",
+      "python_expression": "ERROR if t1<2147483648 else OK",
+      "is_remote": false,
+      "mute_new_metrics": false,
+      "throttling": 0
+    },
+    {
+      "id": "351de571-015f-40ff-b16e-8ca57585b4e8",
+      "name": "Devops processes uptime DiTrace",
+      "desc": "",
+      "warn_value": 0.001,
+      "error_value": 0,
+      "trigger_type": "falling",
+      "tags": [
+        "DevOps",
+        "dtrace",
+        "info"
+      ],
+      "ttl_state": "NODATA",
+      "ttl": 600,
+      "sched": {
+        "days": [
+          {
+            "enabled": true,
+            "name": "Mon"
+          },
+          {
+            "enabled": true,
+            "name": "Tue"
+          },
+          {
+            "enabled": true,
+            "name": "Wed"
+          },
+          {
+            "enabled": true,
+            "name": "Thu"
+          },
+          {
+            "enabled": true,
+            "name": "Fri"
+          },
+          {
+            "enabled": true,
+            "name": "Sat"
+          },
+          {
+            "enabled": true,
+            "name": "Sun"
+          }
+        ],
+        "tzOffset": -300,
+        "startOffset": 0,
+        "endOffset": 1439
+      },
+      "expression": "",
+      "python_expression": "",
+      "is_remote": false,
+      "mute_new_metrics": false,
+      "throttling": 0
+    },
+    {
+      "id": "02f4479d-3593-411a-aeac-c3d41b11a37b",
+      "name": "Bad test",
+      "desc": "",
+      "warn_value": null,
+      "error_value": null,
+      "trigger_type": "expression",
+      "tags": [
+        "kamaev"
+      ],
+      "ttl_state": "NODATA",
+      "ttl": 600,
+      "sched": {
+        "days": [
+          {
+            "enabled": true,
+            "name": "Mon"
+          },
+          {
+            "enabled": true,
+            "name": "Tue"
+          },
+          {
+            "enabled": true,
+            "name": "Wed"
+          },
+          {
+            "enabled": true,
+            "name": "Thu"
+          },
+          {
+            "enabled": true,
+            "name": "Fri"
+          },
+          {
+            "enabled": true,
+            "name": "Sat"
+          },
+          {
+            "enabled": true,
+            "name": "Sun"
+          }
+        ],
+        "tzOffset": -300,
+        "startOffset": 0,
+        "endOffset": 1439
+      },
+      "expression": "OK",
+      "is_remote": true,
+      "mute_new_metrics": false,
+      "throttling": 0
+    },
+    {
+      "id": "2a021bd1-9bf7-4af9-9c28-e22e11196493",
+      "name": "testMo",
+      "desc": "",
+      "warn_value": 0,
+      "error_value": 100,
+      "trigger_type": "expression",
+      "tags": [
+        "kamaev"
+      ],
+      "ttl_state": "NODATA",
+      "ttl": 600,
+      "sched": {
+        "days": [
+          {
+            "enabled": true,
+            "name": "Mon"
+          },
+          {
+            "enabled": true,
+            "name": "Tue"
+          },
+          {
+            "enabled": true,
+            "name": "Wed"
+          },
+          {
+            "enabled": true,
+            "name": "Thu"
+          },
+          {
+            "enabled": true,
+            "name": "Fri"
+          },
+          {
+            "enabled": true,
+            "name": "Sat"
+          },
+          {
+            "enabled": true,
+            "name": "Sun"
+          }
+        ],
+        "tzOffset": -300,
+        "startOffset": 0,
+        "endOffset": 1439
+      },
+      "expression": "OK",
+      "is_remote": false,
+      "mute_new_metrics": false,
+      "throttling": 0
+    },
+    {
+      "id": "MoiraMetricsQueueToReceive",
+      "name": "Moira Metrics Queue To Receive",
+      "desc": "На релейке скопилась большая очередь метрик, предназначенных для Мойры. Смотри логи и метрики по moira-filter, moira-checker, carbon-c-relay и redis\n\nThis trigger is manipulated by ansible: http://secure_url...",
+      "warn_value": 10000,
+      "error_value": 30000,
+      "trigger_type": "expression",
+      "tags": [
+        "Moira-duty",
+        "Moira",
+        "DevOps",
+        "critical"
+      ],
+      "ttl_state": "NODATA",
+      "ttl": 600,
+      "sched": {
+        "days": [
+          {
+            "enabled": true,
+            "name": "Mon"
+          },
+          {
+            "enabled": true,
+            "name": "Tue"
+          },
+          {
+            "enabled": true,
+            "name": "Wed"
+          },
+          {
+            "enabled": true,
+            "name": "Thu"
+          },
+          {
+            "enabled": true,
+            "name": "Fri"
+          },
+          {
+            "enabled": true,
+            "name": "Sat"
+          },
+          {
+            "enabled": true,
+            "name": "Sun"
+          }
+        ],
+        "tzOffset": -180,
+        "startOffset": 0,
+        "endOffset": 1439
+      },
+      "expression": "t1 < 1000000 ? OK : ERROR",
+      "is_remote": false,
+      "mute_new_metrics": false,
+      "throttling": 0
+    },
+    {
+      "id": "313185ea-11fd-49c0-9b95-c80db0315605",
+      "name": "DTrace span failed",
+      "desc": "Тут какой-то невразумительный текст",
+      "warn_value": 1000,
+      "error_value": 10000,
+      "trigger_type": "rising",
+      "tags": [
+        "normal",
+        "DevOps",
+        "dtrace"
+      ],
+      "ttl_state": "OK",
+      "ttl": 1200,
+      "sched": {
+        "days": [
+          {
+            "enabled": true,
+            "name": "Mon"
+          },
+          {
+            "enabled": true,
+            "name": "Tue"
+          },
+          {
+            "enabled": true,
+            "name": "Wed"
+          },
+          {
+            "enabled": true,
+            "name": "Thu"
+          },
+          {
+            "enabled": true,
+            "name": "Fri"
+          },
+          {
+            "enabled": true,
+            "name": "Sat"
+          },
+          {
+            "enabled": true,
+            "name": "Sun"
+          }
+        ],
+        "tzOffset": -300,
+        "startOffset": 0,
+        "endOffset": 1439
+      },
+      "python_expression": "",
+      "is_remote": false,
+      "mute_new_metrics": false,
+      "throttling": 0
+    },
+    {
+      "id": "42886513-1cd6-4a00-8166-332094ae208e",
+      "name": "lag",
+      "desc": "",
+      "warn_value": 5000000,
+      "error_value": 10000000,
+      "trigger_type": "rising",
+      "tags": [
+        "borovskyav"
+      ],
+      "ttl_state": "NODATA",
+      "ttl": 600,
+      "sched": {
+        "days": [
+          {
+            "enabled": true,
+            "name": "Mon"
+          },
+          {
+            "enabled": true,
+            "name": "Tue"
+          },
+          {
+            "enabled": true,
+            "name": "Wed"
+          },
+          {
+            "enabled": true,
+            "name": "Thu"
+          },
+          {
+            "enabled": true,
+            "name": "Fri"
+          },
+          {
+            "enabled": true,
+            "name": "Sat"
+          },
+          {
+            "enabled": true,
+            "name": "Sun"
+          }
+        ],
+        "tzOffset": -300,
+        "startOffset": 0,
+        "endOffset": 1439
+      },
+      "expression": "",
+      "is_remote": false,
+      "mute_new_metrics": false,
+      "throttling": 0
+    }
+  ]
+}
