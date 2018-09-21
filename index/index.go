@@ -68,6 +68,7 @@ func loadTriggers(fileName string) ([]moira.Trigger, error) {
 }
 
 func indexTriggers(triggers []moira.Trigger, index bleve.Index) error {
+	// ToDo: make it batch
 	for _, tr := range triggers {
 		err := index.Index(tr.ID, tr)
 		if err != nil {
@@ -96,10 +97,13 @@ func main() {
 	//qString := `+tags:DevOps`
 	//qString += ` +tags:normal`
 	//qString += ` -desc:тут`
-	qString := `ttl:<600`
-	query := bleve.NewQueryStringQuery(qString)
-	req := bleve.NewSearchRequest(query)
+	tq1 := bleve.NewFuzzyQuery("trigger")
+	tq2 := bleve.NewTermQuery("Moira")
+	tq2.FieldVal = "tags"
+	qr := bleve.NewConjunctionQuery(tq1, tq2)
+	req := bleve.NewSearchRequest(qr)
 	req.Fields = []string{"id", "name", "tags", "desc"}
+	req.Highlight = bleve.NewHighlightWithStyle("html")
 	req.Explain = true
 	searchResults, err := bleveIdx.Search(req)
 	if err != nil {
