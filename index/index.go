@@ -1,16 +1,23 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"os"
 
 	"github.com/blevesearch/bleve"
 	"github.com/blevesearch/bleve/analysis/analyzer/keyword"
-	"github.com/blevesearch/bleve/analysis/lang/en"
+	"github.com/blevesearch/bleve/analysis/analyzer/standard"
 	"github.com/blevesearch/bleve/mapping"
 	"github.com/moira-alert/moira"
 )
 
 const indexName = "moira.example"
+
+type listOfTriggers struct {
+	List []moira.Trigger `json:"list"`
+}
 
 func getIndex(indexPath string) (bleve.Index, error) {
 
@@ -30,8 +37,8 @@ func getIndex(indexPath string) (bleve.Index, error) {
 func buildIndexMapping() mapping.IndexMapping {
 
 	// a generic reusable mapping for english text
-	englishTextFieldMapping := bleve.NewTextFieldMapping()
-	englishTextFieldMapping.Analyzer = en.AnalyzerName
+	standardFieldMapping := bleve.NewTextFieldMapping()
+	standardFieldMapping.Analyzer = standard.Name
 
 	// a generic reusable mapping for keyword text
 	keywordFieldMapping := bleve.NewTextFieldMapping()
@@ -39,8 +46,8 @@ func buildIndexMapping() mapping.IndexMapping {
 
 	triggerMapping := bleve.NewDocumentMapping()
 
-	triggerMapping.AddFieldMappingsAt("name", englishTextFieldMapping)
-	triggerMapping.AddFieldMappingsAt("description", englishTextFieldMapping)
+	triggerMapping.AddFieldMappingsAt("name", standardFieldMapping)
+	triggerMapping.AddFieldMappingsAt("description", standardFieldMapping)
 	triggerMapping.AddFieldMappingsAt("tags", keywordFieldMapping)
 
 	indexMapping := bleve.NewIndexMapping()
@@ -48,32 +55,53 @@ func buildIndexMapping() mapping.IndexMapping {
 	return indexMapping
 }
 
+func loadTriggers(fileName string) ([]moira.Trigger, error) {
+	jsonFile, err := os.Open(fileName)
+	if err != nil {
+		return nil, err
+	}
+	defer jsonFile.Close()
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+	var triggers listOfTriggers
+	err = json.Unmarshal(byteValue, &triggers)
+	return triggers.List, err
+}
+
+func indexTriggers(triggers []moira.Trigger, index bleve.Index) error {
+	for _, tr := range triggers {
+		err := index.Index(tr.ID, tr)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func main() {
 	bleveIdx, err := getIndex(indexName)
 
-	desc := "Test trigger description. Many words are written here. None of them are useful."
-	expr := "OK"
-
-	data := moira.Trigger{
-		ID:   "TestTriggerID",
-		Name: "Test trigger name",
-		Desc: &desc,
-		Targets: []string{
-			"Super.Awesome.Metrics.*",
-		},
-		TriggerType: "expression",
-		Expression:  &expr,
-		Tags: []string{
-			"DevOps", "critical", "awesome-tag"},
+	triggers, err := loadTriggers("index\\triggers.json")
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
 	}
 
-	// index some data
-	bleveIdx.Index(data.ID, data)
+	err = indexTriggers(triggers, bleveIdx)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 
 	// search for some text
-	query := bleve.NewMatchQuery("expression")
-	search := bleve.NewSearchRequest(query)
-	searchResults, err := bleveIdx.Search(search)
+	//qString := `+tags:DevOps`
+	//qString += ` +tags:normal`
+	//qString += ` -desc:тут`
+	qString := `ttl:<600`
+	query := bleve.NewQueryStringQuery(qString)
+	req := bleve.NewSearchRequest(query)
+	req.Fields = []string{"id", "name", "tags", "desc"}
+	req.Explain = true
+	searchResults, err := bleveIdx.Search(req)
 	if err != nil {
 		fmt.Println(err)
 		return
