@@ -142,8 +142,6 @@ type Sender interface {
 // Protector interface to perform NoData protection mechanisms
 type Protector interface {
 	Init(protectorSettings map[string]string, database Database, logger Logger) error
-	IsEnabled() bool
-	GetInitialValues() ([]float64, error)
-	GetCurrentValues(oldValues []float64) ([]float64, error)
-	IsStateDegraded(oldValues []float64, currentValues []float64) bool
+	GetStream() (<-chan []ProtectorData)
+	IsStateDegraded([]ProtectorData) bool
 }

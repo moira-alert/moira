@@ -182,6 +182,12 @@ type MetricEvent struct {
 	Pattern string `json:"pattern"`
 }
 
+// ProtectorData is a type to exchange values between protectors
+type ProtectorData struct {
+	Title string
+	Value float64
+}
+
 // GetSubjectState returns the most critical state of events
 func (events NotificationEvents) GetSubjectState() string {
 	result := ""

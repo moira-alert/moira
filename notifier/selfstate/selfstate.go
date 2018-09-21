@@ -48,31 +48,42 @@ func (selfCheck *SelfCheckWorker) Start() error {
 	lastRemoteCheckTS := time.Now().Unix()
 	nextSendErrorMessage := time.Now().Unix()
 
-	protector, protectorValues := protectors.ConfigureProtector(
-		selfCheck.Config.Protector, selfCheck.DB, selfCheck.Log,
-	)
-
 	selfCheck.tomb.Go(func() error {
 		checkTicker := time.NewTicker(defaultCheckInterval)
-		protectTicker := time.NewTicker(defaultCheckInterval)
 		for {
 			select {
 			case <-selfCheck.tomb.Dying():
 				checkTicker.Stop()
-				selfCheck.Log.Info("Moira Notifier Self State Monitor Stopped")
+				selfCheck.Log.Info("Moira Notifier Soft Self State Monitor Stopped")
 				return nil
 			case <-checkTicker.C:
 				selfCheck.softCheck(time.Now().Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS,
 					&lastRemoteCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount, &remoteChecksCount)
-			case <-protectTicker.C:
-				if protector.IsEnabled() {
-					selfCheck.hardCheck(protector, &protectorValues)
-				}
 			}
 		}
 	})
 
-	selfCheck.Log.Info("Moira Notifier Self State Monitor Started")
+	selfCheck.Log.Info("Moira Notifier Soft Self State Monitor Started")
+
+	selfCheck.tomb.Go(func() error {
+		protector, err := protectors.ConfigureProtector(
+			selfCheck.Config.Protector, selfCheck.DB, selfCheck.Log,
+		)
+		if err != nil {
+			selfCheck.Log.Errorf("Can't configure hard self state monitor: %s", err.Error())
+		}
+		protectorStream := protector.GetStream()
+		for {
+			select {
+			case protectorData := <-protectorStream:
+				protector.IsStateDegraded(protectorData)
+			case <-selfCheck.tomb.Dying():
+				selfCheck.Log.Info("Moira Notifier Hard Self State Monitor Stopped")
+				return nil
+			}
+		}
+	})
+
 	return nil
 }
 
@@ -85,22 +96,16 @@ func (selfCheck *SelfCheckWorker) Stop() error {
 	return selfCheck.tomb.Wait()
 }
 
-func (selfCheck *SelfCheckWorker) hardCheck(protector moira.Protector, values *[]float64) {
+func (selfCheck *SelfCheckWorker) hardCheck(protector moira.Protector, protectorData []moira.ProtectorData) {
 	currentState, err := selfCheck.DB.GetNotifierState()
 	if err != nil {
 		selfCheck.Log.Warningf("Can not get notifier state: %s", err.Error())
 		return
 	}
-	currentValues, err := protector.GetCurrentValues(*values)
-	if err != nil {
-		selfCheck.Log.Warningf("Can not get current sentinel values")
-		return
-	}
-	degraded := protector.IsStateDegraded(*values, currentValues)
+	degraded := protector.IsStateDegraded(protectorData)
 	if degraded && currentState == OK {
 		selfCheck.DB.SetNotifierState(ERROR)
 	}
-	*values = currentValues
 }
 
 func (selfCheck *SelfCheckWorker) softCheck(nowTS int64, lastMetricReceivedTS, redisLastCheckTS, lastCheckTS,

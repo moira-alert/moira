@@ -3,6 +3,7 @@ package matched
 import (
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/moira-alert/moira"
 )
@@ -28,36 +29,33 @@ func (protector *Protector) Init(protectorSettings map[string]string, database m
 	return nil
 }
 
-// IsEnabled returns true if protector is enabled
-func (protector *Protector) IsEnabled() bool {
-	return protector.enabled
-}
-
-// GetInitialValues returns initial protector values
-func (protector *Protector) GetInitialValues() ([]float64, error) {
-	return []float64{0, 0}, nil
-}
-
-// GetCurrentValues returns current values based on previously taken values
-func (protector *Protector) GetCurrentValues(oldValues []float64) ([]float64, error) {
-	newValues := make([]float64, len(oldValues))
-	newCount, err := protector.database.GetMatchedMetricsUpdatesCount()
-	if err != nil {
-		return oldValues, err
-	}
-	newDelta := float64(newCount) - oldValues[0]
-	newValues[0] = float64(newCount)
-	newValues[1] = newDelta
-	return newValues, nil
+// GetStream returns stream of ProtectorData
+func (protector *Protector) GetStream() (<-chan []moira.ProtectorData) {
+	ch := make(chan []moira.ProtectorData)
+	go func() {
+		protectorData := make([]moira.ProtectorData, 0)
+		for {
+			matched, _ := protector.database.GetMatchedMetricsUpdatesCount()
+			protectorData = append(protectorData, moira.ProtectorData{
+				Value:float64(matched),
+				})
+			if len(protectorData) == 2 {
+				ch <- protectorData
+				protectorData = nil
+			}
+			time.Sleep(time.Second)
+		}
+	}()
+	return ch
 }
 
 // IsStateDegraded returns true if state is degraded
-func (protector *Protector) IsStateDegraded(oldValues []float64, currentValues []float64) bool {
-	degraded := currentValues[1] < (oldValues[1] * float64(protector.matchedK))
+func (protector *Protector) IsStateDegraded(protectorData []moira.ProtectorData) bool {
+	degraded := protectorData[1].Value < protectorData[0].Value * float64(protector.matchedK)
 	if degraded {
 		protector.logger.Infof(
 			"Matched state degraded. Old value: %.2f, current value: %.2f",
-			oldValues[1], currentValues[1])
+			protectorData[0].Value, protectorData[1].Value)
 	}
 	return degraded
 }
