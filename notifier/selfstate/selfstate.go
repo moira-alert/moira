@@ -49,7 +49,7 @@ func (selfCheck *SelfCheckWorker) Start() error {
 	nextSendErrorMessage := time.Now().Unix()
 
 	protector, err := protectors.ConfigureProtector(
-		selfCheck.Config.Protector, selfCheck.DB, selfCheck.Log,
+		selfCheck.Config.NodataProtection, selfCheck.DB, selfCheck.Log,
 	)
 	if err != nil {
 		return fmt.Errorf("can't configure nodata protector: %s", err.Error())
@@ -87,15 +87,9 @@ func (selfCheck *SelfCheckWorker) Stop() error {
 	return selfCheck.tomb.Wait()
 }
 
-func (selfCheck *SelfCheckWorker) hardCheck(protector moira.Protector, protectorData []moira.ProtectorData) {
-	currentState, err := selfCheck.DB.GetNotifierState()
-	if err != nil {
-		selfCheck.Log.Warningf("Can not get notifier state: %s", err.Error())
-		return
-	}
-	degraded := protector.IsStateDegraded(protectorData)
-	if degraded && currentState == OK {
-		selfCheck.DB.SetNotifierState(ERROR)
+func (selfCheck *SelfCheckWorker) hardCheck(protector moira.Protector, protectorData moira.ProtectorData) {
+	if err := protector.Protect(protectorData); err != nil {
+		selfCheck.Log.Warningf("Nodata protection mechanism failed: %s", err.Error())
 	}
 }
 

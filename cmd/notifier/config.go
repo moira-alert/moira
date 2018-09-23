@@ -43,7 +43,7 @@ type selfStateConfig struct {
 	// Parameters to perform soft self state checks
 	SoftCheck softCheckConfig `yaml:"soft_check"`
 	// Parameters to perform hard self state checks
-	HardCheck hardCheckConfig `yaml:"hard_check"`
+	HardCheck map[string]string `yaml:"hard_check"`
 	// Contact list for Self state monitor alerts
 	Contacts []map[string]string `yaml:"contacts"`
 	// Self state monitor alerting interval
@@ -61,11 +61,6 @@ type softCheckConfig struct {
 	LastCheckDelay string `yaml:"last_check_delay"`
 	// Max Remote triggers Checker checks perform delay to send alert when reached
 	LastRemoteCheckDelay string `yaml:"last_remote_check_delay"`
-}
-
-type hardCheckConfig struct {
-	// Nodata protection strategy
-	Protector map[string]string `yaml:"protector"`
 }
 
 func getDefault() config {
@@ -151,7 +146,7 @@ func (config *selfStateConfig) getSettings() selfstate.Config {
 		LastCheckDelaySeconds:          int64(to.Duration(config.SoftCheck.LastCheckDelay).Seconds()),
 		LastRemoteCheckDelaySeconds:    int64(to.Duration(config.SoftCheck.LastRemoteCheckDelay).Seconds()),
 		NoticeIntervalSeconds:          int64(to.Duration(config.NoticeInterval).Seconds()),
-		Protector:                      config.HardCheck.Protector,
+		NodataProtection:               config.HardCheck,
 		Contacts:                       config.Contacts,
 	}
 }

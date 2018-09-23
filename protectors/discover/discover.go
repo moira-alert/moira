@@ -1,8 +1,6 @@
-package matched
+package discover
 
 import (
-	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/moira-alert/moira"
@@ -12,19 +10,13 @@ import (
 type Protector struct {
 	database moira.Database
 	logger   moira.Logger
-	matchedK float64
 }
 
 // NewProtector returns new protector
 func NewProtector(protectorSettings map[string]string, database moira.Database, logger moira.Logger) (*Protector, error) {
-	matchedK, err := strconv.ParseFloat(protectorSettings["k"], 64)
-	if err != nil {
-		return nil, fmt.Errorf("can not read matched k from config: %s", err.Error())
-	}
 	return &Protector{
 		database: database,
 		logger:   logger,
-		matchedK: matchedK,
 	}, nil
 }
 
@@ -34,11 +26,12 @@ func (protector *Protector) GetStream() <-chan moira.ProtectorData {
 	go func() {
 		protectorSamples := make([]moira.ProtectorSample, 0)
 		for {
-			matched, _ := protector.database.GetMatchedMetricsUpdatesCount()
+			total, _ := protector.database.GetMetricsUpdatesCount()
 			protectorSamples = append(protectorSamples, moira.ProtectorSample{
-				Value: float64(matched),
+				Name: "total_metrics",
+				Value: float64(total),
 			})
-			if len(protectorSamples) == 2 {
+			if len(protectorSamples) == 10 {
 				protectorData := moira.ProtectorData{
 					Samples: protectorSamples,
 					Timestamp: time.Now().UTC().Unix(),
@@ -54,17 +47,5 @@ func (protector *Protector) GetStream() <-chan moira.ProtectorData {
 
 // Protect performs Nodata protection
 func (protector *Protector) Protect(protectorData moira.ProtectorData) error {
-	current := protectorData.Samples[1].Value
-	previous := protectorData.Samples[0].Value
-	degraded := current < previous * protector.matchedK
-	if degraded {
-		protector.logger.Infof(
-			"Matched state degraded. Old value: %.2f, current value: %.2f",
-			current, previous)
-	}
-	_, err := protector.database.GetNotifierState()
-	if err != nil {
-		protector.logger.Warningf("Can not get notifier state: %s", err.Error())
-	}
 	return nil
 }

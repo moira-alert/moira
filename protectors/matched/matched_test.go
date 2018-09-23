@@ -1,9 +1,9 @@
 package matched
 
 import (
+	. "github.com/smartystreets/goconvey/convey"
 	"math"
 	"testing"
-	. "github.com/smartystreets/goconvey/convey"
 
 	"github.com/golang/mock/gomock"
 	"github.com/op/go-logging"
@@ -20,7 +20,7 @@ type Sample struct {
 
 var samples = []Sample{
 	{
-		Name: "520",
+		Name:        "520",
 		Description: "This sample has been taken from incident snapshot",
 		Serie: []float64{
 			1408.1, 1385.8666666666666, 1397.2666666666667, 1382.2833333333333, 1408.9333333333334,
@@ -38,7 +38,7 @@ var samples = []Sample{
 		},
 	},
 	{
-		Name: "616.1",
+		Name:        "616.1",
 		Description: "This sample has been taken from incident snapshot",
 		Serie: []float64{
 			1290.6333333333332, math.NaN(), math.NaN(), math.NaN(), math.NaN(), math.NaN(),
@@ -52,7 +52,7 @@ var samples = []Sample{
 		},
 	},
 	{
-		Name: "616.2",
+		Name:        "616.2",
 		Description: "This sample has been taken from incident snapshot",
 		Serie: []float64{
 			1234.5833333333333, math.NaN(), math.NaN(), math.NaN(), math.NaN(), math.NaN(),
@@ -78,7 +78,7 @@ func TestMatchedProtector(t *testing.T) {
 	}, database, logger)
 	values, _ := protector.GetInitialValues()
 
-	Convey("Test last good values", t, func(){
+	Convey("Test last good values", t, func() {
 		for _, sample := range samples {
 			var lastGoodValue float64
 			for _, point := range sample.Serie {

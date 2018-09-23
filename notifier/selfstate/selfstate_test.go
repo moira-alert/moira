@@ -284,6 +284,9 @@ func configureWorker(t *testing.T, remoteEnabled bool) *selfCheckWorkerMock {
 		"value": "admin@company.com",
 	}
 	defaultCheckInterval = time.Second * 1
+	protector := map[string]string{
+		"mechanism": "discover",
+	}
 	conf := Config{
 		Enabled:               true,
 		RemoteTriggersEnabled: remoteEnabled,
@@ -295,6 +298,7 @@ func configureWorker(t *testing.T, remoteEnabled bool) *selfCheckWorkerMock {
 		LastCheckDelaySeconds:          120,
 		LastRemoteCheckDelaySeconds:    120,
 		NoticeIntervalSeconds:          60,
+		NodataProtection:               protector,
 	}
 
 	mockCtrl := gomock.NewController(t)

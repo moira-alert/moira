@@ -184,7 +184,13 @@ type MetricEvent struct {
 
 // ProtectorData is a type to exchange values between protectors
 type ProtectorData struct {
-	Title string
+	Samples   []ProtectorSample `json:"samples,omitempty"`
+	Timestamp int64             `json:"timestamp"`
+}
+
+// ProtectorSample is a single point captured by protector
+type ProtectorSample struct {
+	Name  string
 	Value float64
 }
 

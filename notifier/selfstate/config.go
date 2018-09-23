@@ -13,7 +13,7 @@ type Config struct {
 	LastCheckDelaySeconds          int64
 	LastRemoteCheckDelaySeconds    int64
 	NoticeIntervalSeconds          int64
-	Protector                      map[string]string
+	NodataProtection               map[string]string
 	Contacts                       []map[string]string
 }
 
