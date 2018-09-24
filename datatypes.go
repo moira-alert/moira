@@ -194,6 +194,20 @@ type ProtectorSample struct {
 	Value float64
 }
 
+// ProtectorConfig is Nodata protector configuration structure
+type ProtectorConfig struct {
+	// Name of chosen Nodata protection mechanism
+	Mechanism string `yaml:"mechanism"`
+	// Number of points to fetch and analyze
+	PointsToFetch int `yaml:"points_to_fetch"`
+	// Interval to fetch single point
+	FetchInterval string `yaml:"fetch_interval"`
+	// Max allowed coefficient to detect degradation
+	Threshold int `yaml:"threshold"`
+	// Max allowed number of bad points
+	MaxBadPoints int `yaml:"max_bad_points"`
+}
+
 // GetSubjectState returns the most critical state of events
 func (events NotificationEvents) GetSubjectState() string {
 	result := ""

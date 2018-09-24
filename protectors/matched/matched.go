@@ -1,8 +1,6 @@
 package matched
 
 import (
-	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/moira-alert/moira"
@@ -12,19 +10,15 @@ import (
 type Protector struct {
 	database moira.Database
 	logger   moira.Logger
-	matchedK float64
+	matchedK int
 }
 
 // NewProtector returns new protector
-func NewProtector(protectorSettings map[string]string, database moira.Database, logger moira.Logger) (*Protector, error) {
-	matchedK, err := strconv.ParseFloat(protectorSettings["k"], 64)
-	if err != nil {
-		return nil, fmt.Errorf("can not read matched k from config: %s", err.Error())
-	}
+func NewProtector(protectorConfig moira.ProtectorConfig, database moira.Database, logger moira.Logger) (*Protector, error) {
 	return &Protector{
 		database: database,
 		logger:   logger,
-		matchedK: matchedK,
+		matchedK: protectorConfig.Threshold,
 	}, nil
 }
 
@@ -56,7 +50,7 @@ func (protector *Protector) GetStream() <-chan moira.ProtectorData {
 func (protector *Protector) Protect(protectorData moira.ProtectorData) error {
 	current := protectorData.Samples[1].Value
 	previous := protectorData.Samples[0].Value
-	degraded := current < previous * protector.matchedK
+	degraded := current < previous * float64(protector.matchedK)
 	if degraded {
 		protector.logger.Infof(
 			"Matched state degraded. Old value: %.2f, current value: %.2f",

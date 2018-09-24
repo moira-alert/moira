@@ -15,15 +15,13 @@ notifier:
   moira_selfstate:
     enabled: false
     notice_interval: 300s
-    soft_check:
-      remote_triggers_enabled: false
-      redis_disconect_delay: 60s
-      last_metric_received_delay: 120s
-      last_check_delay: 120s
-      last_remote_check_delay: 300s
-    hard_check:
+    remote_triggers_enabled: false
+    redis_disconect_delay: 60s
+    last_metric_received_delay: 120s
+    last_check_delay: 120s
+    last_remote_check_delay: 300s
+    protector:
       mechanism: discover
-
   front_uri: http://localhost
   timezone: UTC
   date_time_format: "15:04 02.01.2006"

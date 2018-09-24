@@ -1,8 +1,6 @@
 package random
 
 import (
-	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/moira-alert/moira"
@@ -16,11 +14,8 @@ type Protector struct {
 }
 
 // NewProtector returns new protector
-func NewProtector(protectorSettings map[string]string, database moira.Database, logger moira.Logger) (*Protector, error) {
-	capacity, err := strconv.Atoi(protectorSettings["capacity"])
-	if err != nil {
-		return nil, fmt.Errorf("can not read capacity from config: %s", err.Error())
-	}
+func NewProtector(protectorConfig moira.ProtectorConfig, database moira.Database, logger moira.Logger) (*Protector, error) {
+	capacity := protectorConfig.PointsToFetch
 	return &Protector{
 		database: database,
 		logger:   logger,

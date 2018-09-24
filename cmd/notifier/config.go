@@ -8,6 +8,7 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/cmd"
+	"github.com/moira-alert/moira/protectors"
 	"github.com/moira-alert/moira/notifier"
 	"github.com/moira-alert/moira/notifier/selfstate"
 )
@@ -40,17 +41,6 @@ type notifierConfig struct {
 type selfStateConfig struct {
 	// If true, Self state monitor will be enabled
 	Enabled bool `yaml:"enabled"`
-	// Parameters to perform soft self state checks
-	SoftCheck softCheckConfig `yaml:"soft_check"`
-	// Parameters to perform hard self state checks
-	HardCheck map[string]string `yaml:"hard_check"`
-	// Contact list for Self state monitor alerts
-	Contacts []map[string]string `yaml:"contacts"`
-	// Self state monitor alerting interval
-	NoticeInterval string `yaml:"notice_interval"`
-}
-
-type softCheckConfig struct {
 	// If true, Self state monitor will check remote checker status
 	RemoteTriggersEnabled bool `yaml:"remote_triggers_enabled"`
 	// Max Redis disconnect delay to send alert when reached
@@ -61,6 +51,12 @@ type softCheckConfig struct {
 	LastCheckDelay string `yaml:"last_check_delay"`
 	// Max Remote triggers Checker checks perform delay to send alert when reached
 	LastRemoteCheckDelay string `yaml:"last_remote_check_delay"`
+	// Contact list for Self state monitor alerts
+	Contacts []map[string]string `yaml:"contacts"`
+	// Self state monitor alerting interval
+	NoticeInterval string `yaml:"notice_interval"`
+	// Nodata protector configuration
+	NodataProtector moira.ProtectorConfig `yaml:"protector"`
 }
 
 func getDefault() config {
@@ -84,13 +80,18 @@ func getDefault() config {
 			SenderTimeout:    "10s",
 			ResendingTimeout: "1:00",
 			SelfState: selfStateConfig{
-				Enabled: false,
-				SoftCheck: softCheckConfig{
-					RedisDisconnectDelay:    "30s",
-					LastMetricReceivedDelay: "60s",
-					LastCheckDelay:          "60s",
+				Enabled:                 false,
+				RedisDisconnectDelay:    "30s",
+				LastMetricReceivedDelay: "60s",
+				LastCheckDelay:          "60s",
+				NoticeInterval:          "300s",
+				NodataProtector: moira.ProtectorConfig{
+					Mechanism: "",
+					PointsToFetch: 0,
+					FetchInterval: "0s",
+					Threshold: 1,
+					MaxBadPoints: 0,
 				},
-				NoticeInterval: "300s",
 			},
 			FrontURI: "http://localhost",
 			Timezone: "UTC",
@@ -140,13 +141,13 @@ func checkDateTimeFormat(format string) error {
 func (config *selfStateConfig) getSettings() selfstate.Config {
 	return selfstate.Config{
 		Enabled:                        config.Enabled,
-		RemoteTriggersEnabled:          config.SoftCheck.RemoteTriggersEnabled,
-		RedisDisconnectDelaySeconds:    int64(to.Duration(config.SoftCheck.RedisDisconnectDelay).Seconds()),
-		LastMetricReceivedDelaySeconds: int64(to.Duration(config.SoftCheck.LastMetricReceivedDelay).Seconds()),
-		LastCheckDelaySeconds:          int64(to.Duration(config.SoftCheck.LastCheckDelay).Seconds()),
-		LastRemoteCheckDelaySeconds:    int64(to.Duration(config.SoftCheck.LastRemoteCheckDelay).Seconds()),
-		NoticeIntervalSeconds:          int64(to.Duration(config.NoticeInterval).Seconds()),
-		NodataProtection:               config.HardCheck,
+		RemoteTriggersEnabled:          config.RemoteTriggersEnabled,
+		RedisDisconnectDelaySeconds:    int64(to.Duration(config.RedisDisconnectDelay).Seconds()),
+		LastMetricReceivedDelaySeconds: int64(to.Duration(config.LastMetricReceivedDelay).Seconds()),
+		LastCheckDelaySeconds:          int64(to.Duration(config.LastCheckDelay).Seconds()),
+		LastRemoteCheckDelaySeconds:    int64(to.Duration(config.LastRemoteCheckDelay).Seconds()),
 		Contacts:                       config.Contacts,
+		NoticeIntervalSeconds:          int64(to.Duration(config.NoticeInterval).Seconds()),
+		NodataProtection:               config.NodataProtector,
 	}
 }
