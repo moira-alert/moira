@@ -21,7 +21,11 @@ notifier:
     last_check_delay: 120s
     last_remote_check_delay: 300s
     protector:
-      mechanism: discover
+      mechanism: ""
+      points_to_fetch: 0
+      fetch_interval: "0s"
+      threshold: 1
+      max_bad_points: 0
   front_uri: http://localhost
   timezone: UTC
   date_time_format: "15:04 02.01.2006"
