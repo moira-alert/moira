@@ -38,7 +38,7 @@ func (protector *Protector) GetStream() <-chan moira.ProtectorData {
 			metricValues, _ := protector.database.GetMetricsValues(metrics, 0, 1)
 			for _, metricValue := range metricValues {
 				protectorSamples = append(protectorSamples, moira.ProtectorSample{
-					Value: float64(metricValue[0].Value),
+					Value: metricValue[0].Value,
 				})
 			}
 			if len(protectorSamples) == 2 {
@@ -57,11 +57,5 @@ func (protector *Protector) GetStream() <-chan moira.ProtectorData {
 
 // Protect performs Nodata protection
 func (protector *Protector) Protect(protectorData moira.ProtectorData) error {
-	degraded := protectorData.Samples[1].Value < protectorData.Samples[0].Value
-	if degraded {
-		protector.logger.Infof(
-			"Matched state degraded. Old value: %.2f, current value: %.2f",
-			protectorData.Samples[1].Value, protectorData.Samples[0].Value)
-	}
 	return nil
 }

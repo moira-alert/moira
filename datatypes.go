@@ -203,9 +203,11 @@ type ProtectorConfig struct {
 	// Interval to fetch single point
 	FetchInterval string `yaml:"fetch_interval"`
 	// Max allowed coefficient to detect degradation
-	Threshold int `yaml:"threshold"`
+	Threshold float64 `yaml:"threshold"`
 	// Max allowed number of bad points
 	MaxBadPoints int `yaml:"max_bad_points"`
+	// Dry run
+	DryRunMode bool `yaml:"max_bad_points"`
 }
 
 // GetSubjectState returns the most critical state of events
