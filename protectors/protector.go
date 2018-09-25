@@ -19,7 +19,7 @@ func GetDefaultProtector() *Protector {
 }
 
 // Protector implements NoData Protector interface
-type Protector struct {}
+type Protector struct{}
 
 // GetStream returns stream of ProtectorData
 func (protector *Protector) GetStream() <-chan moira.ProtectorData {

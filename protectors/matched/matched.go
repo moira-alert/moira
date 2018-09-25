@@ -37,24 +37,20 @@ func (protector *Protector) GetStream() <-chan moira.ProtectorData {
 	go func() {
 		protectorSamples := make([]moira.ProtectorSample, 0)
 		protectTicker := time.NewTicker(protector.interval)
-		for {
-			select {
-			case <- protectTicker.C:
-
-				if len(protectorSamples) == protector.points {
-					protectorData := moira.ProtectorData{
-						Samples: protectorSamples,
-						Timestamp: time.Now().UTC().Unix(),
-					}
-					ch <- protectorData
-					protectorSamples = nil
+		for t := range protectTicker.C {
+			if len(protectorSamples) == protector.points {
+				protectorData := moira.ProtectorData{
+					Samples:   protectorSamples,
+					Timestamp: t.Unix(),
 				}
-
-				matched, _ := protector.database.GetMatchedMetricsUpdatesCount()
-				protectorSamples = append(protectorSamples, moira.ProtectorSample{
-					Value: float64(matched),
-				})
+				ch <- protectorData
+				protectorSamples = nil
 			}
+
+			matched, _ := protector.database.GetMatchedMetricsUpdatesCount()
+			protectorSamples = append(protectorSamples, moira.ProtectorSample{
+				Value: float64(matched),
+			})
 		}
 	}()
 	return ch
@@ -72,7 +68,7 @@ func (protector *Protector) Protect(protectorData moira.ProtectorData) error {
 	}
 	for deltaInd := range deltas {
 		if deltaInd > 0 {
-			if deltas[deltaInd] < deltas[deltaInd-1] * protector.matchedK {
+			if deltas[deltaInd] < deltas[deltaInd-1]*protector.matchedK {
 				protector.logger.Infof(
 					"Matched state degraded. Old value: %.2f, current value: %.2f",
 					deltas[deltaInd], deltas[deltaInd-1])

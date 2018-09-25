@@ -43,7 +43,7 @@ func (protector *Protector) GetStream() <-chan moira.ProtectorData {
 			}
 			if len(protectorSamples) == 2 {
 				protectorData := moira.ProtectorData{
-					Samples: protectorSamples,
+					Samples:   protectorSamples,
 					Timestamp: time.Now().UTC().Unix(),
 				}
 				ch <- protectorData
