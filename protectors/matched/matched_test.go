@@ -97,19 +97,12 @@ func TestMatchedProtector(t *testing.T) {
 		for _, val := range databaseResponse {
 			database.EXPECT().GetMatchedMetricsUpdatesCount().Return(val, nil)
 		}
-		//database.EXPECT().GetMatchedMetricsUpdatesCount().Return(int64(0), nil).AnyTimes()
 		stream := protector.GetStream()
-		numChecks := 0
-		for {
-			select {
-			case protectorData := <- stream:
-				fmt.Println(protectorData)
-				protector.Protect(protectorData)
-				if numChecks == 10 {
-					return
-				}
-				numChecks ++
-			}
+		numChecks := 10
+		for i := 0; i < numChecks; i++ {
+			protectorData := <- stream
+			fmt.Println(protectorData)
+			protector.Protect(protectorData)
 		}
 	})
 }
