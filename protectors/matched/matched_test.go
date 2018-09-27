@@ -69,18 +69,18 @@ var samples = []incidentData{
 	},
 }
 
-func convertToDatabaseResponse(data incidentData) []float64 {
-	databaseResponse := make([]float64, 0)
+func convertToDatabaseResponse(data incidentData) []int64 {
+	databaseResponse := make([]int64, 0)
 	metricValues := data.values
 	for valInd := range metricValues {
 		if math.IsNaN(metricValues[valInd]) {
 			metricValues[valInd] = 0
 		}
 	}
-	databaseResponse = append(databaseResponse, metricValues[0])
+	databaseResponse = append(databaseResponse, int64(metricValues[0]))
 	for valInd := range metricValues {
 		if valInd > 0 {
-			responseValue := metricValues[valInd] + databaseResponse[valInd-1]
+			responseValue := int64(metricValues[valInd]) + databaseResponse[valInd-1]
 			databaseResponse = append(databaseResponse, responseValue)
 		}
 	}
@@ -95,7 +95,7 @@ func TestMatchedProtector(t *testing.T) {
 	Convey("Test on #520 incident data", t, func() {
 		databaseResponse := convertToDatabaseResponse(samples[0])
 		for _, val := range databaseResponse {
-			database.EXPECT().GetMatchedMetricsUpdatesCount().Return(int64(val), nil)
+			database.EXPECT().GetMatchedMetricsUpdatesCount().Return(val, nil)
 		}
 		//database.EXPECT().GetMatchedMetricsUpdatesCount().Return(int64(0), nil).AnyTimes()
 		stream := protector.GetStream()
