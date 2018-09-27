@@ -68,10 +68,10 @@ func (protector *Protector) Protect(protectorData moira.ProtectorData) error {
 	}
 	for deltaInd := range deltas {
 		if deltaInd > 0 {
-			if deltas[deltaInd] < deltas[deltaInd-1]*protector.ratio {
+			if deltas[deltaInd] < (deltas[deltaInd-1]*protector.ratio) {
 				protector.logger.Infof(
 					"Matched state degraded. Old value: %.2f, current value: %.2f",
-					deltas[deltaInd], deltas[deltaInd-1])
+					deltas[deltaInd-1], deltas[deltaInd])
 				degraded = true
 				break
 			}

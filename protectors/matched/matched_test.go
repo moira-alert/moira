@@ -10,7 +10,6 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 
 	"github.com/moira-alert/moira/mock/moira-alert"
-	"fmt"
 )
 
 type incidentData struct {
@@ -91,17 +90,17 @@ func TestMatchedProtector(t *testing.T) {
 	logger, _ := logging.GetLogger("SelfState")
 	mockCtrl := gomock.NewController(t)
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
-	protector, _ := NewProtector(database, logger, false, 2, time.Millisecond, 0.5, 1)
+	protector, _ := NewProtector(database, logger, true, 3, time.Millisecond, 0.5, 1)
 	Convey("Test on #520 incident data", t, func() {
 		databaseResponse := convertToDatabaseResponse(samples[0])
 		for _, val := range databaseResponse {
 			database.EXPECT().GetMatchedMetricsUpdatesCount().Return(val, nil)
 		}
+		database.EXPECT().GetNotifierState().Return("OK", nil)
 		stream := protector.GetStream()
 		numChecks := 10
 		for i := 0; i < numChecks; i++ {
 			protectorData := <- stream
-			fmt.Println(protectorData)
 			protector.Protect(protectorData)
 		}
 	})
