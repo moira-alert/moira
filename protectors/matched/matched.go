@@ -47,7 +47,6 @@ func (protector *Protector) GetStream() <-chan moira.ProtectorData {
 				ch <- protectorData
 				protectorSamples = nil
 			}
-
 			matched, _ := protector.database.GetMatchedMetricsUpdatesCount()
 			protectorSamples = append(protectorSamples, moira.ProtectorSample{
 				Value: float64(matched),
