@@ -10,7 +10,6 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/notifier"
-	"github.com/moira-alert/moira/protectors"
 )
 
 var defaultCheckInterval = time.Second * 10
@@ -48,9 +47,7 @@ func (selfCheck *SelfCheckWorker) Start() error {
 	lastRemoteCheckTS := time.Now().Unix()
 	nextSendErrorMessage := time.Now().Unix()
 
-	protector, err := protectors.ConfigureProtector(
-		selfCheck.Config.NodataProtection, selfCheck.DB, selfCheck.Log,
-	)
+	protector, err := ConfigureProtector(selfCheck.Config, selfCheck.DB, selfCheck.Log)
 	if err != nil {
 		return fmt.Errorf("can't configure nodata protector: %s", err.Error())
 	}

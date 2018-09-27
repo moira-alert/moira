@@ -8,18 +8,27 @@ import (
 
 // Protector implements NoData Protector interface
 type Protector struct {
-	database moira.Database
-	logger   moira.Logger
-	capacity int
+	database    moira.Database
+	logger      moira.Logger
+	inspectOnly bool
+	numSamples  int
+	retention   time.Duration
+	ratio       float64
+	throttling  int
 }
 
 // NewProtector returns new protector
-func NewProtector(protectorConfig moira.ProtectorConfig, database moira.Database, logger moira.Logger) (*Protector, error) {
-	capacity := protectorConfig.PointsToFetch
+func NewProtector(database moira.Database, logger moira.Logger,
+	inspectOnly bool, numSamples int, sampleRetention time.Duration,
+	sampleRatio float64, throttling int) (*Protector, error) {
 	return &Protector{
-		database: database,
-		logger:   logger,
-		capacity: capacity,
+		database:    database,
+		logger:      logger,
+		inspectOnly: inspectOnly,
+		numSamples:  numSamples,
+		retention:   sampleRetention,
+		ratio:       sampleRatio,
+		throttling:  throttling,
 	}, nil
 }
 
@@ -30,7 +39,7 @@ func (protector *Protector) GetStream() <-chan moira.ProtectorData {
 		protectorSamples := make([]moira.ProtectorSample, 0)
 		for {
 			metrics := make([]string, 0)
-			randomPatterns, _ := protector.database.GetRandomPatterns(protector.capacity)
+			randomPatterns, _ := protector.database.GetRandomPatterns(protector.numSamples)
 			for patternInd := range randomPatterns {
 				randomMetric, _ := protector.database.GetPatternRandomMetrics(randomPatterns[patternInd], 1)
 				metrics = append(metrics, randomMetric[0])

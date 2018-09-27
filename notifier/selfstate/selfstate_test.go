@@ -284,13 +284,6 @@ func configureWorker(t *testing.T, remoteEnabled bool) *selfCheckWorkerMock {
 		"value": "admin@company.com",
 	}
 	defaultCheckInterval = time.Second * 1
-	protectorConfig := moira.ProtectorConfig{
-		Mechanism: "",
-		PointsToFetch: 0,
-		FetchInterval: "0s",
-		Threshold: 1,
-		MaxBadPoints: 0,
-	}
 	conf := Config{
 		Enabled:               true,
 		RemoteTriggersEnabled: remoteEnabled,
@@ -302,7 +295,6 @@ func configureWorker(t *testing.T, remoteEnabled bool) *selfCheckWorkerMock {
 		LastCheckDelaySeconds:          120,
 		LastRemoteCheckDelaySeconds:    120,
 		NoticeIntervalSeconds:          60,
-		NodataProtection:               protectorConfig,
 	}
 
 	mockCtrl := gomock.NewController(t)

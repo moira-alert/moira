@@ -55,7 +55,22 @@ type selfStateConfig struct {
 	// Self state monitor alerting interval
 	NoticeInterval string `yaml:"notice_interval"`
 	// Nodata protector configuration
-	NodataProtector moira.ProtectorConfig `yaml:"protector"`
+	NodataProtector protectorConfig `yaml:"protector"`
+}
+
+type protectorConfig struct {
+	// Name of chosen Nodata protection mechanism
+	Mechanism string `yaml:"mechanism"`
+	// If true, protector will not disable notifier in case of degradation
+	InspectOnly bool `yaml:"inspect_only"`
+	// Number of samples to analyze
+	NumSamples int `yaml:"samples"`
+	// Interval to fetch every single sample
+	Retention string `yaml:"retention"`
+	// Ratio to compare sample values
+	Ratio float64 `yaml:"threshold"`
+	// Max allowed number of bad values
+	Throttling int `yaml:"throttling"`
 }
 
 func getDefault() config {
@@ -84,12 +99,13 @@ func getDefault() config {
 				LastMetricReceivedDelay: "60s",
 				LastCheckDelay:          "60s",
 				NoticeInterval:          "300s",
-				NodataProtector: moira.ProtectorConfig{
+				NodataProtector: protectorConfig{
 					Mechanism: "",
-					PointsToFetch: 0,
-					FetchInterval: "0s",
-					Threshold: 1,
-					MaxBadPoints: 0,
+					InspectOnly: true,
+					NumSamples: 0,
+					Retention: "0s",
+					Ratio: 0,
+					Throttling: 0,
 				},
 			},
 			FrontURI: "http://localhost",
@@ -141,12 +157,17 @@ func (config *selfStateConfig) getSettings() selfstate.Config {
 	return selfstate.Config{
 		Enabled:                        config.Enabled,
 		RemoteTriggersEnabled:          config.RemoteTriggersEnabled,
+		ProtectorInspectOnly:           config.NodataProtector.InspectOnly,
+		ProtectorNumSamples:            config.NodataProtector.NumSamples,
+		ProtectorThrottling:            config.NodataProtector.Throttling,
 		RedisDisconnectDelaySeconds:    int64(to.Duration(config.RedisDisconnectDelay).Seconds()),
 		LastMetricReceivedDelaySeconds: int64(to.Duration(config.LastMetricReceivedDelay).Seconds()),
 		LastCheckDelaySeconds:          int64(to.Duration(config.LastCheckDelay).Seconds()),
 		LastRemoteCheckDelaySeconds:    int64(to.Duration(config.LastRemoteCheckDelay).Seconds()),
-		Contacts:                       config.Contacts,
 		NoticeIntervalSeconds:          int64(to.Duration(config.NoticeInterval).Seconds()),
-		NodataProtection:               config.NodataProtector,
+		ProtectorSampleRatio:           config.NodataProtector.Ratio,
+		ProtectorSampleRetention:       to.Duration(config.NodataProtector.Retention),
+		ProtectorMechanism:             config.NodataProtector.Mechanism,
+		Contacts:                       config.Contacts,
 	}
 }

@@ -2,20 +2,24 @@ package selfstate
 
 import (
 	"fmt"
-
-	"github.com/moira-alert/moira"
+	"time"
 )
 
 // Config is representation of self state worker settings like moira admins contacts and threshold values for checked services
 type Config struct {
 	Enabled                        bool
 	RemoteTriggersEnabled          bool
+	ProtectorInspectOnly           bool
+	ProtectorNumSamples            int
+	ProtectorThrottling            int
 	RedisDisconnectDelaySeconds    int64
 	LastMetricReceivedDelaySeconds int64
 	LastCheckDelaySeconds          int64
 	LastRemoteCheckDelaySeconds    int64
 	NoticeIntervalSeconds          int64
-	NodataProtection               moira.ProtectorConfig
+	ProtectorSampleRatio           float64
+	ProtectorSampleRetention       time.Duration
+	ProtectorMechanism             string
 	Contacts                       []map[string]string
 }
 

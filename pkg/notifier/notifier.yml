@@ -22,10 +22,11 @@ notifier:
     last_remote_check_delay: 300s
     protector:
       mechanism: ""
-      points_to_fetch: 0
-      fetch_interval: "0s"
-      threshold: 1
-      max_bad_points: 0
+      inspect_only: true
+      samples: 0
+      retention: 0s
+      ratio: 0
+      throttling: 0
   front_uri: http://localhost
   timezone: UTC
   date_time_format: "15:04 02.01.2006"
