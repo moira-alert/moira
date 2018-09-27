@@ -81,7 +81,7 @@ func indexTriggers(triggers []moira.Trigger, index bleve.Index) error {
 func main() {
 	bleveIdx, err := getIndex(indexName)
 
-	triggers, err := loadTriggers("index\\triggers.json")
+	triggers, err := loadTriggers("index\\triggers_test_data.json")
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
