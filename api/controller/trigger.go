@@ -159,76 +159,13 @@ func DeleteTriggerThrottling(database moira.Database, triggerID string) *api.Err
 
 // DeleteTriggerMetric deletes metric from last check and all trigger patterns metrics
 func DeleteTriggerMetric(dataBase moira.Database, metricName string, triggerID string) *api.ErrorResponse {
-	trigger, err := dataBase.GetTrigger(triggerID)
-	if err != nil {
-		if err == database.ErrNil {
-			return api.ErrorInvalidRequest(fmt.Errorf("Trigger not found"))
-		}
-		return api.ErrorInternalServer(err)
-	}
-
-	if err = dataBase.AcquireTriggerCheckLock(triggerID, 10); err != nil {
-		return api.ErrorInternalServer(err)
-	}
-	defer dataBase.DeleteTriggerCheckLock(triggerID)
-
-	lastCheck, err := dataBase.GetTriggerLastCheck(triggerID)
-	if err != nil {
-		if err == database.ErrNil {
-			return api.ErrorInvalidRequest(fmt.Errorf("Trigger check not found"))
-		}
-		return api.ErrorInternalServer(err)
-	}
-	_, ok := lastCheck.Metrics[metricName]
-	if ok {
-		delete(lastCheck.Metrics, metricName)
-		lastCheck.UpdateScore()
-	}
-	if err = dataBase.RemovePatternsMetrics(trigger.Patterns); err != nil {
-		return api.ErrorInternalServer(err)
-	}
-	if err = dataBase.SetTriggerLastCheck(triggerID, &lastCheck, trigger.IsRemote); err != nil {
-		return api.ErrorInternalServer(err)
-	}
-	return nil
+	return deleteTriggerMetrics(dataBase, metricName, triggerID, false)
 }
 
 // DeleteTriggerNodataMetrics deletes all metric from last check which are in NODATA state.
 // It also deletes all trigger patterns of those metrics
 func DeleteTriggerNodataMetrics(dataBase moira.Database, triggerID string) *api.ErrorResponse {
-	trigger, err := dataBase.GetTrigger(triggerID)
-	if err != nil {
-		if err == database.ErrNil {
-			return api.ErrorInvalidRequest(fmt.Errorf("Trigger not found"))
-		}
-		return api.ErrorInternalServer(err)
-	}
-
-	if err = dataBase.AcquireTriggerCheckLock(triggerID, 10); err != nil {
-		return api.ErrorInternalServer(err)
-	}
-	defer dataBase.DeleteTriggerCheckLock(triggerID)
-
-	lastCheck, err := dataBase.GetTriggerLastCheck(triggerID)
-	if err != nil {
-		if err == database.ErrNil {
-			return api.ErrorInvalidRequest(fmt.Errorf("Trigger check not found"))
-		}
-		return api.ErrorInternalServer(err)
-	}
-	for metricName, metricState := range lastCheck.Metrics {
-		if metricState.State == checker.NODATA {
-			delete(lastCheck.Metrics, metricName)
-		}
-	}
-	lastCheck.UpdateScore()
-	if err = dataBase.RemovePatternsMetrics(trigger.Patterns); err != nil {
-		return api.ErrorInternalServer(err)
-	}
-	if err = dataBase.SetTriggerLastCheck(triggerID, &lastCheck, trigger.IsRemote); err != nil {
-		return api.ErrorInternalServer(err)
-	}
-	return nil
+	return deleteTriggerMetrics(dataBase, "", triggerID, true)
 }
 
 // SetMetricsMaintenance sets metrics maintenance for current trigger
@@ -269,4 +206,47 @@ func GetTriggerMetrics(dataBase moira.Database, from, to int64, triggerID string
 		}
 	}
 	return triggerMetrics, nil
+}
+
+func deleteTriggerMetrics(dataBase moira.Database, metricName string, triggerID string, removeAllNodataMetrics bool) *api.ErrorResponse {
+	trigger, err := dataBase.GetTrigger(triggerID)
+	if err != nil {
+		if err == database.ErrNil {
+			return api.ErrorInvalidRequest(fmt.Errorf("Trigger not found"))
+		}
+		return api.ErrorInternalServer(err)
+	}
+
+	if err = dataBase.AcquireTriggerCheckLock(triggerID, 10); err != nil {
+		return api.ErrorInternalServer(err)
+	}
+	defer dataBase.DeleteTriggerCheckLock(triggerID)
+
+	lastCheck, err := dataBase.GetTriggerLastCheck(triggerID)
+	if err != nil {
+		if err == database.ErrNil {
+			return api.ErrorInvalidRequest(fmt.Errorf("Trigger check not found"))
+		}
+		return api.ErrorInternalServer(err)
+	}
+	if removeAllNodataMetrics {
+		for metricName, metricState := range lastCheck.Metrics {
+			if metricState.State == checker.NODATA {
+				delete(lastCheck.Metrics, metricName)
+			}
+		}
+	} else {
+		_, ok := lastCheck.Metrics[metricName]
+		if ok {
+			delete(lastCheck.Metrics, metricName)
+		}
+	}
+	lastCheck.UpdateScore()
+	if err = dataBase.RemovePatternsMetrics(trigger.Patterns); err != nil {
+		return api.ErrorInternalServer(err)
+	}
+	if err = dataBase.SetTriggerLastCheck(triggerID, &lastCheck, trigger.IsRemote); err != nil {
+		return api.ErrorInternalServer(err)
+	}
+	return nil
 }
