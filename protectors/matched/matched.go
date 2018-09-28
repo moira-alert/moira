@@ -1,6 +1,7 @@
 package matched
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/moira-alert/moira"
@@ -21,6 +22,9 @@ type Protector struct {
 func NewProtector(database moira.Database, logger moira.Logger,
 	inspectOnly bool, numSamples int, sampleRetention time.Duration,
 	sampleRatio float64, throttling int) (*Protector, error) {
+	if numSamples < 3 {
+		return nil, fmt.Errorf("it takes to collect at least 3 samples to use matched protector")
+	}
 	return &Protector{
 		database:    database,
 		logger:      logger,
@@ -68,7 +72,7 @@ func (protector *Protector) Protect(protectorData moira.ProtectorData) error {
 	}
 	for deltaInd := range deltas {
 		if deltaInd > 0 {
-			if deltas[deltaInd] < (deltas[deltaInd-1]*protector.ratio) {
+			if deltas[deltaInd] < (deltas[deltaInd-1] * protector.ratio) {
 				protector.logger.Infof(
 					"Matched state degraded. Old value: %.2f, current value: %.2f",
 					deltas[deltaInd-1], deltas[deltaInd])

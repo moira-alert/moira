@@ -20,6 +20,10 @@ func TestSelfCheck(t *testing.T) {
 			So(count, ShouldEqual, 0)
 			So(err, ShouldBeNil)
 
+			count, err = dataBase.GetMatchedMetricsUpdatesCount()
+			So(count, ShouldEqual, 0)
+			So(err, ShouldBeNil)
+
 			count, err = dataBase.GetChecksUpdatesCount()
 			So(count, ShouldEqual, 0)
 			So(err, ShouldBeNil)
@@ -36,6 +40,12 @@ func TestSelfCheck(t *testing.T) {
 			count, err := dataBase.GetMetricsUpdatesCount()
 			So(count, ShouldEqual, 1)
 			So(err, ShouldBeNil)
+
+			err = dataBase.UpdateMatchedMetricsHeartbeat()
+			So(err, ShouldBeNil)
+
+			count, err = dataBase.GetMatchedMetricsUpdatesCount()
+			So(count, ShouldEqual, 1)
 		})
 
 		Convey("Update metrics checks updates count", func() {
@@ -63,6 +73,10 @@ func TestSelfCheckErrorConnection(t *testing.T) {
 	defer dataBase.flush()
 	Convey("Should throw error when no connection", t, func() {
 		count, err := dataBase.GetMetricsUpdatesCount()
+		So(count, ShouldEqual, 0)
+		So(err, ShouldNotBeNil)
+
+		count, err = dataBase.GetMatchedMetricsUpdatesCount()
 		So(count, ShouldEqual, 0)
 		So(err, ShouldNotBeNil)
 
