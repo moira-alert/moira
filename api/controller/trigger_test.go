@@ -512,6 +512,144 @@ func TestDeleteTriggerMetric(t *testing.T) {
 	})
 }
 
+func TestDeleteTriggerNodataMetrics(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	triggerID := uuid.NewV4().String()
+	trigger := moira.Trigger{ID: triggerID}
+
+	lastCheckWithManyStates := moira.CheckData{
+		Metrics: map[string]moira.MetricState{
+			"super.metric1": {State: "NODATA"},
+			"super.metric2": {State: "NODATA"},
+			"super.metric3": {State: "NODATA"},
+			"super.metric4": {State: "OK"},
+			"super.metric5": {State: "ERROR"},
+			"super.metric6": {State: "NODATA"},
+		},
+		Score: 100,
+	}
+
+	lastCheckWithoutNodata := moira.CheckData{
+		Metrics: map[string]moira.MetricState{
+			"super.metric4": {State: "OK"},
+			"super.metric5": {State: "ERROR"},
+		},
+		Score: 100,
+	}
+
+	lastCheckSingleNodata := moira.CheckData{
+		Metrics: map[string]moira.MetricState{
+			"super.metric1": {State: "NODATA"},
+		},
+	}
+	emptyLastCheck := moira.CheckData{
+		Metrics: make(map[string]moira.MetricState),
+	}
+
+	lastCheckWithNodataOnly := moira.CheckData{
+		Metrics: map[string]moira.MetricState{
+			"super.metric1": {State: "NODATA"},
+			"super.metric2": {State: "NODATA"},
+			"super.metric3": {State: "NODATA"},
+			"super.metric6": {State: "NODATA"},
+		},
+	}
+
+	Convey("Success delete from last check, one NODATA", t, func() {
+		expectedLastCheck := lastCheckSingleNodata
+		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
+		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10).Return(nil)
+		dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
+		dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(expectedLastCheck, nil)
+		dataBase.EXPECT().RemovePatternsMetrics(trigger.Patterns).Return(nil)
+		dataBase.EXPECT().SetTriggerLastCheck(triggerID, &expectedLastCheck, trigger.IsRemote)
+		err := DeleteTriggerNodataMetrics(dataBase, triggerID)
+		So(err, ShouldBeNil)
+		So(expectedLastCheck, ShouldResemble, emptyLastCheck)
+	})
+
+	Convey("Success delete from last check, many NODATA", t, func() {
+		expectedLastCheck := lastCheckWithNodataOnly
+		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
+		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10).Return(nil)
+		dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
+		dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(expectedLastCheck, nil)
+		dataBase.EXPECT().RemovePatternsMetrics(trigger.Patterns).Return(nil)
+		dataBase.EXPECT().SetTriggerLastCheck(triggerID, &expectedLastCheck, trigger.IsRemote)
+		err := DeleteTriggerNodataMetrics(dataBase, triggerID)
+		So(err, ShouldBeNil)
+		So(expectedLastCheck, ShouldResemble, emptyLastCheck)
+	})
+
+	Convey("Success delete from last check, many NODATA + other statuses", t, func() {
+		expectedLastCheck := lastCheckWithManyStates
+		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
+		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10).Return(nil)
+		dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
+		dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(expectedLastCheck, nil)
+		dataBase.EXPECT().RemovePatternsMetrics(trigger.Patterns).Return(nil)
+		dataBase.EXPECT().SetTriggerLastCheck(triggerID, &lastCheckWithoutNodata, trigger.IsRemote)
+		err := DeleteTriggerNodataMetrics(dataBase, triggerID)
+		So(err, ShouldBeNil)
+		So(expectedLastCheck, ShouldResemble, lastCheckWithoutNodata)
+	})
+
+	Convey("Success delete nothing to delete", t, func() {
+		expectedLastCheck := emptyLastCheck
+		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
+		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10).Return(nil)
+		dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
+		dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(expectedLastCheck, nil)
+		dataBase.EXPECT().RemovePatternsMetrics(trigger.Patterns).Return(nil)
+		dataBase.EXPECT().SetTriggerLastCheck(triggerID, &expectedLastCheck, trigger.IsRemote)
+		err := DeleteTriggerNodataMetrics(dataBase, triggerID)
+		So(err, ShouldBeNil)
+		So(expectedLastCheck, ShouldResemble, emptyLastCheck)
+	})
+
+	Convey("No trigger", t, func() {
+		dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{}, database.ErrNil)
+		err := DeleteTriggerNodataMetrics(dataBase, triggerID)
+		So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("Trigger not found")))
+	})
+
+	Convey("No last check", t, func() {
+		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
+		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10).Return(nil)
+		dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
+		dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
+		err := DeleteTriggerNodataMetrics(dataBase, triggerID)
+		So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("Trigger check not found")))
+	})
+
+	Convey("Get trigger error", t, func() {
+		expected := fmt.Errorf("Get trigger error")
+		dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{}, expected)
+		err := DeleteTriggerNodataMetrics(dataBase, triggerID)
+		So(err, ShouldResemble, api.ErrorInternalServer(expected))
+	})
+
+	Convey("AcquireTriggerCheckLock error", t, func() {
+		expected := fmt.Errorf("Acquire error")
+		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
+		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10).Return(expected)
+		err := DeleteTriggerMetric(dataBase, "super.metric1", triggerID)
+		So(err, ShouldResemble, api.ErrorInternalServer(expected))
+	})
+
+	Convey("GetTriggerLastCheck error", t, func() {
+		expected := fmt.Errorf("Last check error")
+		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
+		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10).Return(nil)
+		dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
+		dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, expected)
+		err := DeleteTriggerNodataMetrics(dataBase, triggerID)
+		So(err, ShouldResemble, api.ErrorInternalServer(expected))
+	})
+}
+
 func TestSetMetricsMaintenance(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
