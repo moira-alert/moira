@@ -46,6 +46,7 @@ func TestSelfCheck(t *testing.T) {
 
 			count, err = dataBase.GetMatchedMetricsUpdatesCount()
 			So(count, ShouldEqual, 1)
+			So(err, ShouldBeNil)
 		})
 
 		Convey("Update metrics checks updates count", func() {
