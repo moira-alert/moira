@@ -47,6 +47,8 @@ func BenchmarkProcessIncomingMetric(b *testing.B) {
 	}
 	testMetricsLines := generateMetrics(patternsStorage, b.N)
 
+	database.EXPECT().UpdateMatchedMetricsHeartbeat().Return(nil).AnyTimes()
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		patternsStorage.ProcessIncomingMetric([]byte(testMetricsLines[i]))

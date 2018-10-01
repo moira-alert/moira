@@ -158,6 +158,8 @@ func TestProcessIncomingMetric(t *testing.T) {
 		So(err, ShouldBeEmpty)
 	})
 
+	database.EXPECT().UpdateMatchedMetricsHeartbeat().Return(nil).AnyTimes()
+
 	Convey("When invalid metric arrives, should be properly counted", t, func() {
 		matchedMetrics := patternsStorage.ProcessIncomingMetric([]byte("Invalid.metric"))
 		So(matchedMetrics, ShouldBeNil)
