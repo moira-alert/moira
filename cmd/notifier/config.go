@@ -68,7 +68,7 @@ type protectorConfig struct {
 	// Interval to fetch every single sample
 	Retention string `yaml:"retention"`
 	// Ratio to compare sample values
-	Ratio float64 `yaml:"threshold"`
+	Ratio float64 `yaml:"ratio"`
 	// Max allowed number of bad values
 	Throttling int `yaml:"throttling"`
 }
