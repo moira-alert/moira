@@ -66,7 +66,7 @@ func (protector *Protector) Protect(protectorData moira.ProtectorData) error {
 	deltas := make([]float64, len(protectorData.Samples)-1)
 	for sampleInd := range protectorData.Samples {
 		if sampleInd > 0 {
-			protector.logger.Info(
+			protector.logger.Infof(
 				"matched protector data: [old value: %.2f, current value: %.2f]",
 				protectorData.Samples[sampleInd-1].Value,
 				protectorData.Samples[sampleInd].Value,
@@ -77,7 +77,7 @@ func (protector *Protector) Protect(protectorData moira.ProtectorData) error {
 	}
 	for deltaInd := range deltas {
 		if deltaInd > 0 {
-			protector.logger.Info(
+			protector.logger.Infof(
 				"matched protector data: [old value: %.2f, current value: %.2f]",
 				deltas[deltaInd-1],
 				deltas[deltaInd],
