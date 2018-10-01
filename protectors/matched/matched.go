@@ -76,12 +76,12 @@ func (protector *Protector) Protect(protectorData moira.ProtectorData) error {
 		}
 	}
 	for deltaInd := range deltas {
-		protector.logger.Info(
-			"matched protector data: [old value: %.2f, current value: %.2f]",
-			deltas[deltaInd-1],
-			deltas[deltaInd],
-		)
 		if deltaInd > 0 {
+			protector.logger.Info(
+				"matched protector data: [old value: %.2f, current value: %.2f]",
+				deltas[deltaInd-1],
+				deltas[deltaInd],
+			)
 			if deltas[deltaInd] < (deltas[deltaInd-1] * protector.ratio) {
 				protector.logger.Infof(
 					"Matched state degraded. Old value: %.2f, current value: %.2f",
