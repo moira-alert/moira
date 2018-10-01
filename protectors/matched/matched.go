@@ -66,11 +66,21 @@ func (protector *Protector) Protect(protectorData moira.ProtectorData) error {
 	deltas := make([]float64, len(protectorData.Samples)-1)
 	for sampleInd := range protectorData.Samples {
 		if sampleInd > 0 {
+			protector.logger.Info(
+				"matched protector data: [old value: %.2f, current value: %.2f]",
+				protectorData.Samples[sampleInd-1].Value,
+				protectorData.Samples[sampleInd].Value,
+			)
 			delta := protectorData.Samples[sampleInd].Value - protectorData.Samples[sampleInd-1].Value
 			deltas[sampleInd-1] = delta
 		}
 	}
 	for deltaInd := range deltas {
+		protector.logger.Info(
+			"matched protector data: [old value: %.2f, current value: %.2f]",
+			deltas[deltaInd-1],
+			deltas[deltaInd],
+		)
 		if deltaInd > 0 {
 			if deltas[deltaInd] < (deltas[deltaInd-1] * protector.ratio) {
 				protector.logger.Infof(
