@@ -10,6 +10,7 @@ import (
 	"github.com/go-chi/render"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
+	"github.com/moira-alert/moira/index"
 	"github.com/moira-alert/moira/remote"
 )
 
@@ -18,6 +19,16 @@ func DatabaseContext(database moira.Database) func(next http.Handler) http.Handl
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 			ctx := context.WithValue(request.Context(), databaseKey, database)
+			next.ServeHTTP(writer, request.WithContext(ctx))
+		})
+	}
+}
+
+// DatabaseContext sets to requests context configured database
+func SearchIndexContext(index index.SearchIndex) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+			ctx := context.WithValue(request.Context(), databaseKey, index)
 			next.ServeHTTP(writer, request.WithContext(ctx))
 		})
 	}

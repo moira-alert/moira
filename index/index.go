@@ -1,9 +1,6 @@
 package index
 
 import (
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
 	"os"
 
 	"github.com/blevesearch/bleve"
@@ -11,12 +8,107 @@ import (
 	"github.com/blevesearch/bleve/analysis/analyzer/standard"
 	"github.com/blevesearch/bleve/mapping"
 	"github.com/moira-alert/moira"
+	"gopkg.in/tomb.v2"
 )
 
-const indexName = "moira.example"
+const indexName = "moira-index.bleve"
+
+type SearchIndex struct {
+	bleveIndex bleve.Index
+	logger     moira.Logger
+	database   moira.Database
+	tomb       tomb.Tomb
+	indexed    bool
+}
 
 type listOfTriggers struct {
 	List []moira.Trigger `json:"list"`
+}
+
+func NewSearchIndex(logger moira.Logger, database moira.Database) *SearchIndex {
+	return &SearchIndex{
+		logger:   logger,
+		database: database,
+	}
+}
+
+func (index *SearchIndex) Start() error {
+	err := index.CreateIndex()
+	if err != nil {
+		return err
+	}
+	err = index.FillIndex()
+	return err
+}
+
+func (index *SearchIndex) CreateIndex() error {
+	index.logger.Debugf("Removing old index files: %s", indexName)
+	destroyIndex(indexName)
+
+	index.logger.Debugf("Create new index")
+	var err error
+	index.bleveIndex, err = getIndex(indexName)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (index *SearchIndex) FillIndex() error {
+	allTriggerIDs, err := index.database.GetTriggerIDs()
+	if err != nil {
+		return err
+	}
+
+	allTriggers, err := index.database.GetTriggers(allTriggerIDs)
+	if err != nil {
+		return err
+	}
+	count, err := index.addTriggers(allTriggers)
+	index.logger.Infof("%d triggers added to index", count)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (index *SearchIndex) addTriggers(triggers []*moira.Trigger) (count int, err error) {
+	batch := index.bleveIndex.NewBatch()
+	batchSize := 100
+
+	i := 0
+
+	for _, trigger := range triggers {
+		if trigger != nil {
+			err = batch.Index(trigger.ID, &trigger)
+			if err != nil {
+				return
+			}
+		}
+		if i > batchSize {
+			err = index.bleveIndex.Batch(batch)
+			if err != nil {
+				return
+			}
+			i = 0
+			count += batchSize
+		}
+	}
+	if batch.Size() > 0 {
+		err = index.bleveIndex.Batch(batch)
+		if err != nil {
+			count += batch.Size()
+		}
+	}
+	return count, nil
+}
+
+func (index *SearchIndex) Stop() error {
+	index.tomb.Kill(nil)
+	destroyIndex(indexName)
+	return index.tomb.Wait()
 }
 
 func getIndex(indexPath string) (bleve.Index, error) {
@@ -55,60 +147,6 @@ func buildIndexMapping() mapping.IndexMapping {
 	return indexMapping
 }
 
-func loadTriggers(fileName string) ([]moira.Trigger, error) {
-	jsonFile, err := os.Open(fileName)
-	if err != nil {
-		return nil, err
-	}
-	defer jsonFile.Close()
-	byteValue, _ := ioutil.ReadAll(jsonFile)
-	var triggers listOfTriggers
-	err = json.Unmarshal(byteValue, &triggers)
-	return triggers.List, err
-}
-
-func indexTriggers(triggers []moira.Trigger, index bleve.Index) error {
-	// ToDo: make it batch
-	for _, tr := range triggers {
-		err := index.Index(tr.ID, tr)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func main() {
-	bleveIdx, err := getIndex(indexName)
-
-	triggers, err := loadTriggers("index\\triggers_test_data.json")
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	err = indexTriggers(triggers, bleveIdx)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	// search for some text
-	//qString := `+tags:DevOps`
-	//qString += ` +tags:normal`
-	//qString += ` -desc:тут`
-	tq1 := bleve.NewFuzzyQuery("trigger")
-	tq2 := bleve.NewTermQuery("Moira")
-	tq2.FieldVal = "tags"
-	qr := bleve.NewConjunctionQuery(tq1, tq2)
-	req := bleve.NewSearchRequest(qr)
-	req.Fields = []string{"id", "name", "tags", "desc"}
-	req.Highlight = bleve.NewHighlightWithStyle("html")
-	req.Explain = true
-	searchResults, err := bleveIdx.Search(req)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println(searchResults)
+func destroyIndex(path string) {
+	os.RemoveAll(path)
 }
