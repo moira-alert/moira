@@ -4,27 +4,22 @@ import (
 	"os"
 
 	"github.com/blevesearch/bleve"
-	"github.com/blevesearch/bleve/analysis/analyzer/keyword"
-	"github.com/blevesearch/bleve/analysis/analyzer/standard"
-	"github.com/blevesearch/bleve/mapping"
+	"github.com/blevesearch/bleve/search/query"
 	"github.com/moira-alert/moira"
-	"gopkg.in/tomb.v2"
 )
 
-const indexName = "moira-index.bleve"
+const indexName = "moira-search-index.bleve"
 
+// SearchIndex represents Bleve.Index type
 type SearchIndex struct {
 	bleveIndex bleve.Index
 	logger     moira.Logger
 	database   moira.Database
-	tomb       tomb.Tomb
+	inProgress bool
 	indexed    bool
 }
 
-type listOfTriggers struct {
-	List []moira.Trigger `json:"list"`
-}
-
+// NewSearchIndex return new SearchIndex object
 func NewSearchIndex(logger moira.Logger, database moira.Database) *SearchIndex {
 	return &SearchIndex{
 		logger:   logger,
@@ -32,30 +27,71 @@ func NewSearchIndex(logger moira.Logger, database moira.Database) *SearchIndex {
 	}
 }
 
-func (index *SearchIndex) Start() error {
-	err := index.CreateIndex()
+// Init initializes index. It removes old index files, create new mapping and index all triggers from database
+func (index *SearchIndex) Init() error {
+	if index.inProgress {
+		return nil
+	}
+	err := index.createIndex()
 	if err != nil {
 		return err
 	}
-	err = index.FillIndex()
+	err = index.fillIndex()
+	if err == nil {
+		index.indexed = true
+		index.inProgress = false
+	}
 	return err
 }
 
-func (index *SearchIndex) CreateIndex() error {
+// IsReady returns boolean value which determines if index is ready to use
+func (index *SearchIndex) IsReady() bool {
+	return index.indexed
+}
+
+// FindTriggerIds search for triggers in index and returns slice of trigger IDs
+func (index *SearchIndex) FindTriggerIds(filterTags, searchTerms []string) ([]string, error) {
+	searchQueries := make([]query.Query, 0)
+
+	for _, tag := range filterTags {
+		qr := bleve.NewTermQuery(tag)
+		qr.FieldVal = "tags"
+		searchQueries = append(searchQueries, qr)
+	}
+
+	for _, term := range searchTerms {
+		qr := bleve.NewFuzzyQuery(term)
+		searchQueries = append(searchQueries, qr)
+	}
+
+	searchQuery := bleve.NewConjunctionQuery(searchQueries...)
+	req := bleve.NewSearchRequest(searchQuery)
+	searchResult, err := index.bleveIndex.Search(req)
+	if err != nil {
+		return []string{}, err
+	}
+	if searchResult.Hits.Len() == 0 {
+		return []string{}, nil
+	}
+	triggerIds := make([]string, 0)
+	for _, result := range searchResult.Hits {
+		triggerIds = append(triggerIds, result.ID)
+	}
+	return triggerIds, nil
+}
+
+func (index *SearchIndex) createIndex() error {
 	index.logger.Debugf("Removing old index files: %s", indexName)
 	destroyIndex(indexName)
 
 	index.logger.Debugf("Create new index")
 	var err error
 	index.bleveIndex, err = getIndex(indexName)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
-func (index *SearchIndex) FillIndex() error {
+func (index *SearchIndex) fillIndex() error {
+	index.inProgress = true
 	allTriggerIDs, err := index.database.GetTriggerIDs()
 	if err != nil {
 		return err
@@ -67,11 +103,7 @@ func (index *SearchIndex) FillIndex() error {
 	}
 	count, err := index.addTriggers(allTriggers)
 	index.logger.Infof("%d triggers added to index", count)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func (index *SearchIndex) addTriggers(triggers []*moira.Trigger) (count int, err error) {
@@ -105,12 +137,6 @@ func (index *SearchIndex) addTriggers(triggers []*moira.Trigger) (count int, err
 	return count, nil
 }
 
-func (index *SearchIndex) Stop() error {
-	index.tomb.Kill(nil)
-	destroyIndex(indexName)
-	return index.tomb.Wait()
-}
-
 func getIndex(indexPath string) (bleve.Index, error) {
 
 	bleveIdx, err := bleve.Open(indexPath)
@@ -122,29 +148,7 @@ func getIndex(indexPath string) (bleve.Index, error) {
 		}
 	}
 
-	// return de index
 	return bleveIdx, nil
-}
-
-func buildIndexMapping() mapping.IndexMapping {
-
-	// a generic reusable mapping for english text
-	standardFieldMapping := bleve.NewTextFieldMapping()
-	standardFieldMapping.Analyzer = standard.Name
-
-	// a generic reusable mapping for keyword text
-	keywordFieldMapping := bleve.NewTextFieldMapping()
-	keywordFieldMapping.Analyzer = keyword.Name
-
-	triggerMapping := bleve.NewDocumentMapping()
-
-	triggerMapping.AddFieldMappingsAt("name", standardFieldMapping)
-	triggerMapping.AddFieldMappingsAt("description", standardFieldMapping)
-	triggerMapping.AddFieldMappingsAt("tags", keywordFieldMapping)
-
-	indexMapping := bleve.NewIndexMapping()
-	indexMapping.AddDocumentMapping(moira.Trigger{}.Type(), triggerMapping)
-	return indexMapping
 }
 
 func destroyIndex(path string) {

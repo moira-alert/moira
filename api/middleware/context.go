@@ -24,8 +24,8 @@ func DatabaseContext(database moira.Database) func(next http.Handler) http.Handl
 	}
 }
 
-// DatabaseContext sets to requests context configured database
-func SearchIndexContext(index index.SearchIndex) func(next http.Handler) http.Handler {
+// SearchIndexContext sets to requests context configured moira.index.searchIndex
+func SearchIndexContext(index *index.SearchIndex) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 			ctx := context.WithValue(request.Context(), databaseKey, index)

@@ -3,10 +3,13 @@ package handler
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
+	"github.com/moira-alert/moira/index"
 	"github.com/moira-alert/moira/remote"
 
 	"github.com/moira-alert/moira/api"
@@ -17,13 +20,18 @@ import (
 	"github.com/moira-alert/moira/target"
 )
 
-func triggers(cfg *remote.Config) func(chi.Router) {
+func triggers(cfg *remote.Config, index *index.SearchIndex) func(chi.Router) {
 	return func(router chi.Router) {
 		router.Use(middleware.RemoteConfigContext(cfg))
 		router.Get("/", getAllTriggers)
 		router.Put("/", createTrigger)
 		router.With(middleware.Paginate(0, 10)).Get("/page", getTriggersPage)
 		router.Route("/{triggerId}", trigger)
+		router.Route("/search", func(router chi.Router) {
+			router.Use(middleware.SearchIndexContext(index))
+			router.With(middleware.Paginate(0, 10))
+			router.Get("/", searchTriggersPerPage)
+		})
 	}
 }
 
@@ -88,6 +96,26 @@ func getTriggersPage(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
+func searchTriggersPerPage(writer http.ResponseWriter, request *http.Request) {
+	request.ParseForm()
+	filterTags := getRequestTags(request)
+	searchRequestTextTerms := getSearchRequestTextTerms(request)
+
+	page := middleware.GetPage(request)
+	size := middleware.GetSize(request)
+
+	triggersList, errorResponse := controller.FindTriggersPerPage(database, searchIndex, filterTags, searchRequestTextTerms, page, size)
+	if errorResponse != nil {
+		render.Render(writer, request, errorResponse)
+		return
+	}
+
+	if err := render.Render(writer, request, triggersList); err != nil {
+		render.Render(writer, request, api.ErrorRender(err))
+		return
+	}
+}
+
 func getRequestTags(request *http.Request) []string {
 	var filterTags []string
 	i := 0
@@ -109,4 +137,16 @@ func getOnlyProblemsFlag(request *http.Request) bool {
 		return onlyProblems
 	}
 	return false
+}
+
+func getSearchRequestTextTerms(request *http.Request) []string {
+	searchText := request.FormValue("text")
+	searchText, err := url.PathUnescape(searchText)
+	if err != nil {
+		return []string{}
+	}
+	if searchText != "" {
+		return strings.Fields(searchText)
+	}
+	return []string{}
 }

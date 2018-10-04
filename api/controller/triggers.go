@@ -2,7 +2,9 @@ package controller
 
 import (
 	"fmt"
+	"time"
 
+	"github.com/moira-alert/moira/index"
 	"github.com/satori/go.uuid"
 
 	"github.com/moira-alert/moira"
@@ -87,6 +89,50 @@ func GetTriggerPage(database moira.Database, page int64, size int64, onlyErrors 
 			triggersList.List = append(triggersList.List, *triggerCheck)
 		}
 	}
+	return &triggersList, nil
+}
+
+// FindTriggersPerPage gets trigger page and filter trigger by tags and search request terms
+func FindTriggersPerPage(database moira.Database, index *index.SearchIndex, filterTags, searchTerms []string, page, size int64) (*dto.TriggersList, *api.ErrorResponse) {
+	timeout := time.After(time.Second * 10)
+	ticker := time.NewTicker(time.Second * 1)
+	if !index.IsReady() {
+	ReadyCheck:
+		for {
+			select {
+			case <-ticker.C:
+				if index.IsReady() {
+					break ReadyCheck
+				}
+			case <-timeout:
+				return nil, api.ErrorInternalServer(fmt.Errorf("index is not ready, sorry :(. Please, try later, maybe tomorrow"))
+			}
+		}
+	}
+	triggerIds, err := index.FindTriggerIds(filterTags, searchTerms)
+	if err != nil {
+		return nil, api.ErrorInternalServer(err)
+	}
+
+	total := int64(len(triggerIds))
+
+	triggerChecks, err := database.GetTriggerChecks(triggerIds)
+	if err != nil {
+		return nil, api.ErrorInternalServer(err)
+	}
+	triggersList := dto.TriggersList{
+		List:  make([]moira.TriggerCheck, 0),
+		Total: &total,
+		Page:  &page,
+		Size:  &size,
+	}
+
+	for _, triggerCheck := range triggerChecks {
+		if triggerCheck != nil {
+			triggersList.List = append(triggersList.List, *triggerCheck)
+		}
+	}
+
 	return &triggersList, nil
 }
 

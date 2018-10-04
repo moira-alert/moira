@@ -17,6 +17,7 @@ import (
 	"github.com/moira-alert/moira/api/handler"
 	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/database/redis"
+	"github.com/moira-alert/moira/index"
 	"github.com/moira-alert/moira/logging/go-logging"
 	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
 )
@@ -79,6 +80,14 @@ func main() {
 	databaseSettings := config.Redis.GetSettings()
 	database := redis.NewDatabase(logger, databaseSettings)
 
+	searchIndex := index.NewSearchIndex(logger, database)
+	go func() {
+		err2 := searchIndex.Init()
+		if err2 != nil {
+			logger.Error(err2)
+		}
+	}()
+
 	graphiteSettings := config.Graphite.GetSettings()
 	if err = metrics.Init(graphiteSettings, serviceName); err != nil {
 		logger.Error(err)
@@ -95,7 +104,7 @@ func main() {
 	logger.Infof("Start listening by address: [%s]", apiConfig.Listen)
 
 	remoteConfig := config.Remote.GetSettings()
-	httpHandler := handler.NewHandler(database, logger, apiConfig, remoteConfig, configFile)
+	httpHandler := handler.NewHandler(database, logger, searchIndex, apiConfig, remoteConfig, configFile)
 	server := &http.Server{
 		Handler: httpHandler,
 	}

@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/index"
 	"github.com/moira-alert/moira/remote"
 )
 
@@ -34,11 +33,6 @@ var (
 // GetDatabase gets moira.Database realization from request context
 func GetDatabase(request *http.Request) moira.Database {
 	return request.Context().Value(databaseKey).(moira.Database)
-}
-
-// GetDatabase gets moira.Database realization from request context
-func GetSearchIndex(request *http.Request) index.SearchIndex {
-	return request.Context().Value(databaseKey).(index.SearchIndex)
 }
 
 // GetLogin gets user login string from request context, which was sets in UserContext middleware
