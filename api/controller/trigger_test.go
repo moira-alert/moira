@@ -39,13 +39,13 @@ func TestUpdateTrigger(t *testing.T) {
 		trigger := dto.TriggerModel{ID: uuid.NewV4().String()}
 		dataBase.EXPECT().GetTrigger(trigger.ID).Return(moira.Trigger{}, database.ErrNil)
 		resp, err := UpdateTrigger(dataBase, &trigger, trigger.ID, make(map[string]bool))
-		So(err, ShouldResemble, api.ErrorNotFound(fmt.Sprintf("Trigger with ID = '%s' does not exists", trigger.ID)))
+		So(err, ShouldResemble, api.ErrorNotFound(fmt.Sprintf("trigger with ID = '%s' does not exists", trigger.ID)))
 		So(resp, ShouldBeNil)
 	})
 
 	Convey("Get trigger error", t, func() {
 		trigger := dto.TriggerModel{ID: uuid.NewV4().String()}
-		expected := fmt.Errorf("Soo bad trigger")
+		expected := fmt.Errorf("soo bad trigger")
 		dataBase.EXPECT().GetTrigger(trigger.ID).Return(moira.Trigger{}, expected)
 		resp, err := UpdateTrigger(dataBase, &trigger, trigger.ID, make(map[string]bool))
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
@@ -109,7 +109,7 @@ func TestSaveTrigger(t *testing.T) {
 
 	Convey("Errors", t, func() {
 		Convey("AcquireTriggerCheckLock error", func() {
-			expected := fmt.Errorf("AcquireTriggerCheckLock error")
+			expected := fmt.Errorf("acquireTriggerCheckLock error")
 			dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10).Return(expected)
 			resp, err := saveTrigger(dataBase, &trigger, triggerID, make(map[string]bool))
 			So(err, ShouldResemble, api.ErrorInternalServer(expected))
@@ -117,7 +117,7 @@ func TestSaveTrigger(t *testing.T) {
 		})
 
 		Convey("GetTriggerLastCheck error", func() {
-			expected := fmt.Errorf("GetTriggerLastCheck error")
+			expected := fmt.Errorf("getTriggerLastCheck error")
 			dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10)
 			dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
 			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, expected)
@@ -127,7 +127,7 @@ func TestSaveTrigger(t *testing.T) {
 		})
 
 		Convey("SetTriggerLastCheck error", func() {
-			expected := fmt.Errorf("SetTriggerLastCheck error")
+			expected := fmt.Errorf("setTriggerLastCheck error")
 			dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10)
 			dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
 			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
@@ -281,7 +281,7 @@ func TestGetTrigger(t *testing.T) {
 	})
 
 	Convey("GetTrigger error", t, func() {
-		expected := fmt.Errorf("GetTrigger error")
+		expected := fmt.Errorf("getTrigger error")
 		dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{}, expected)
 		actual, err := GetTrigger(dataBase, triggerID)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
@@ -291,7 +291,7 @@ func TestGetTrigger(t *testing.T) {
 	Convey("No trigger", t, func() {
 		dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{}, database.ErrNil)
 		actual, err := GetTrigger(dataBase, triggerID)
-		So(err, ShouldResemble, api.ErrorNotFound("Trigger not found"))
+		So(err, ShouldResemble, api.ErrorNotFound("trigger not found"))
 		So(actual, ShouldBeNil)
 	})
 }
@@ -310,14 +310,14 @@ func TestRemoveTrigger(t *testing.T) {
 	})
 
 	Convey("Error remove trigger", t, func() {
-		expected := fmt.Errorf("Oooops! Error delete")
+		expected := fmt.Errorf("oooops! Error delete")
 		dataBase.EXPECT().RemoveTrigger(triggerID).Return(expected)
 		err := RemoveTrigger(dataBase, triggerID)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 	})
 
 	Convey("Error remove last check", t, func() {
-		expected := fmt.Errorf("Oooops! Error delete")
+		expected := fmt.Errorf("oooops! Error delete")
 		dataBase.EXPECT().RemoveTrigger(triggerID).Return(nil)
 		dataBase.EXPECT().RemoveTriggerLastCheck(triggerID).Return(expected)
 		err := RemoveTrigger(dataBase, triggerID)
@@ -375,7 +375,7 @@ func TestGetTriggerLastCheck(t *testing.T) {
 	})
 
 	Convey("Error", t, func() {
-		expected := fmt.Errorf("Oooops! Error get")
+		expected := fmt.Errorf("oooops! Error get")
 		dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, expected)
 		check, err := GetTriggerLastCheck(dataBase, triggerID)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
@@ -400,7 +400,7 @@ func TestDeleteTriggerThrottling(t *testing.T) {
 	})
 
 	Convey("Error", t, func() {
-		expected := fmt.Errorf("Oooops! Error delete")
+		expected := fmt.Errorf("oooops! Error delete")
 		dataBase.EXPECT().DeleteTriggerThrottling(triggerID).Return(expected)
 		err := DeleteTriggerThrottling(dataBase, triggerID)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
@@ -451,7 +451,7 @@ func TestDeleteTriggerMetric(t *testing.T) {
 	Convey("No trigger", t, func() {
 		dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{}, database.ErrNil)
 		err := DeleteTriggerMetric(dataBase, "super.metric1", triggerID)
-		So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("Trigger not found")))
+		So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("trigger not found")))
 	})
 
 	Convey("No last check", t, func() {
@@ -460,18 +460,18 @@ func TestDeleteTriggerMetric(t *testing.T) {
 		dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
 		dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
 		err := DeleteTriggerMetric(dataBase, "super.metric1", triggerID)
-		So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("Trigger check not found")))
+		So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("trigger check not found")))
 	})
 
 	Convey("Get trigger error", t, func() {
-		expected := fmt.Errorf("Get trigger error")
+		expected := fmt.Errorf("get trigger error")
 		dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{}, expected)
 		err := DeleteTriggerMetric(dataBase, "super.metric1", triggerID)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 	})
 
 	Convey("AcquireTriggerCheckLock error", t, func() {
-		expected := fmt.Errorf("Acquire error")
+		expected := fmt.Errorf("acquire error")
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
 		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10).Return(expected)
 		err := DeleteTriggerMetric(dataBase, "super.metric1", triggerID)
@@ -479,7 +479,7 @@ func TestDeleteTriggerMetric(t *testing.T) {
 	})
 
 	Convey("GetTriggerLastCheck error", t, func() {
-		expected := fmt.Errorf("Last check error")
+		expected := fmt.Errorf("last check error")
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
 		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10).Return(nil)
 		dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
@@ -489,7 +489,7 @@ func TestDeleteTriggerMetric(t *testing.T) {
 	})
 
 	Convey("RemovePatternsMetrics error", t, func() {
-		expected := fmt.Errorf("RemovePatternsMetrics err")
+		expected := fmt.Errorf("removePatternsMetrics err")
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
 		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10).Return(nil)
 		dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
@@ -500,7 +500,7 @@ func TestDeleteTriggerMetric(t *testing.T) {
 	})
 
 	Convey("SetTriggerLastCheck error", t, func() {
-		expected := fmt.Errorf("RemovePatternsMetrics err")
+		expected := fmt.Errorf("removePatternsMetrics err")
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
 		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10).Return(nil)
 		dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
@@ -612,7 +612,7 @@ func TestDeleteTriggerNodataMetrics(t *testing.T) {
 	Convey("No trigger", t, func() {
 		dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{}, database.ErrNil)
 		err := DeleteTriggerNodataMetrics(dataBase, triggerID)
-		So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("Trigger not found")))
+		So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("trigger not found")))
 	})
 
 	Convey("No last check", t, func() {
@@ -621,18 +621,18 @@ func TestDeleteTriggerNodataMetrics(t *testing.T) {
 		dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
 		dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
 		err := DeleteTriggerNodataMetrics(dataBase, triggerID)
-		So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("Trigger check not found")))
+		So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("trigger check not found")))
 	})
 
 	Convey("Get trigger error", t, func() {
-		expected := fmt.Errorf("Get trigger error")
+		expected := fmt.Errorf("get trigger error")
 		dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{}, expected)
 		err := DeleteTriggerNodataMetrics(dataBase, triggerID)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 	})
 
 	Convey("AcquireTriggerCheckLock error", t, func() {
-		expected := fmt.Errorf("Acquire error")
+		expected := fmt.Errorf("acquire error")
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
 		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10).Return(expected)
 		err := DeleteTriggerMetric(dataBase, "super.metric1", triggerID)
@@ -640,7 +640,7 @@ func TestDeleteTriggerNodataMetrics(t *testing.T) {
 	})
 
 	Convey("GetTriggerLastCheck error", t, func() {
-		expected := fmt.Errorf("Last check error")
+		expected := fmt.Errorf("last check error")
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
 		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10).Return(nil)
 		dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
@@ -664,7 +664,7 @@ func TestSetMetricsMaintenance(t *testing.T) {
 	})
 
 	Convey("Error", t, func() {
-		expected := fmt.Errorf("Oooops! Error set")
+		expected := fmt.Errorf("oooops! Error set")
 		dataBase.EXPECT().SetTriggerCheckMetricsMaintenance(triggerID, maintenance).Return(expected)
 		err := SetMetricsMaintenance(dataBase, triggerID, maintenance)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
@@ -723,7 +723,7 @@ func TestGetTriggerMetrics(t *testing.T) {
 	})
 
 	Convey("GetTrigger error", t, func() {
-		expected := fmt.Errorf("Get trigger error")
+		expected := fmt.Errorf("get trigger error")
 		dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{}, expected)
 		triggerMetrics, err := GetTriggerMetrics(dataBase, from, until, triggerID)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
@@ -733,12 +733,12 @@ func TestGetTriggerMetrics(t *testing.T) {
 	Convey("No trigger", t, func() {
 		dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{}, database.ErrNil)
 		triggerMetrics, err := GetTriggerMetrics(dataBase, from, until, triggerID)
-		So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("Trigger not found")))
+		So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("trigger not found")))
 		So(triggerMetrics, ShouldBeNil)
 	})
 
 	Convey("GetMetricsValues error", t, func() {
-		expected := fmt.Errorf("GetMetricsValues error")
+		expected := fmt.Errorf("getMetricsValues error")
 		dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{ID: triggerID, Targets: []string{pattern}}, nil)
 		dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
 		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)

@@ -44,7 +44,7 @@ func CreateSubscription(dataBase moira.Database, userLogin string, subscription 
 			return api.ErrorInternalServer(err)
 		}
 		if exists {
-			return api.ErrorInvalidRequest(fmt.Errorf("Subscription with this ID already exists"))
+			return api.ErrorInvalidRequest(fmt.Errorf("subscription with this ID already exists"))
 		}
 	}
 
@@ -99,12 +99,12 @@ func CheckUserPermissionsForSubscription(dataBase moira.Database, subscriptionID
 	subscription, err := dataBase.GetSubscription(subscriptionID)
 	if err != nil {
 		if err == database.ErrNil {
-			return subscription, api.ErrorNotFound(fmt.Sprintf("Subscription with ID '%s' does not exists", subscriptionID))
+			return subscription, api.ErrorNotFound(fmt.Sprintf("subscription with ID '%s' does not exists", subscriptionID))
 		}
 		return subscription, api.ErrorInternalServer(err)
 	}
 	if subscription.User != userLogin {
-		return subscription, api.ErrorForbidden("You have not permissions")
+		return subscription, api.ErrorForbidden("you are not permitted")
 	}
 	return subscription, nil
 }

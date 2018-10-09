@@ -2,6 +2,8 @@ package controller
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
@@ -10,7 +12,6 @@ import (
 	"github.com/op/go-logging"
 	"github.com/satori/go.uuid"
 	. "github.com/smartystreets/goconvey/convey"
-	"testing"
 )
 
 func TestDeletePattern(t *testing.T) {
@@ -24,7 +25,7 @@ func TestDeletePattern(t *testing.T) {
 	})
 
 	Convey("Error", t, func() {
-		expected := fmt.Errorf("Oooops! Can not remove pattern")
+		expected := fmt.Errorf("oooops! Can not remove pattern")
 		dataBase.EXPECT().RemovePattern("super.puper.pattern").Return(expected)
 		err := DeletePattern(dataBase, "super.puper.pattern")
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
@@ -74,7 +75,7 @@ func TestGetAllPatterns(t *testing.T) {
 
 	Convey("Test errors", t, func() {
 		Convey("GetPatterns error", func() {
-			expected := fmt.Errorf("Oh no!!!11 Cant get patterns")
+			expected := fmt.Errorf("oh no!!!11 Cant get patterns")
 			dataBase.EXPECT().GetPatterns().Return(nil, expected)
 			list, err := GetAllPatterns(dataBase, logger)
 			So(err, ShouldResemble, api.ErrorInternalServer(expected))

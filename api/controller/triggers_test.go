@@ -51,13 +51,13 @@ func TestCreateTrigger(t *testing.T) {
 		trigger := triggerModel.ToMoiraTrigger()
 		dataBase.EXPECT().GetTrigger(triggerModel.ID).Return(*trigger, nil)
 		resp, err := CreateTrigger(dataBase, &triggerModel, make(map[string]bool))
-		So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("Trigger with this ID already exists")))
+		So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("trigger with this ID already exists")))
 		So(resp, ShouldBeNil)
 	})
 
 	Convey("Get trigger error", t, func() {
 		trigger := dto.TriggerModel{ID: uuid.NewV4().String()}
-		expected := fmt.Errorf("Soo bad trigger")
+		expected := fmt.Errorf("soo bad trigger")
 		dataBase.EXPECT().GetTrigger(trigger.ID).Return(moira.Trigger{}, expected)
 		resp, err := CreateTrigger(dataBase, &trigger, make(map[string]bool))
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
@@ -66,7 +66,7 @@ func TestCreateTrigger(t *testing.T) {
 
 	Convey("Error", t, func() {
 		triggerModel := dto.TriggerModel{ID: uuid.NewV4().String()}
-		expected := fmt.Errorf("Soo bad trigger")
+		expected := fmt.Errorf("soo bad trigger")
 		dataBase.EXPECT().GetTrigger(triggerModel.ID).Return(moira.Trigger{}, database.ErrNil)
 		dataBase.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 10)
 		dataBase.EXPECT().DeleteTriggerCheckLock(gomock.Any())
@@ -104,7 +104,7 @@ func TestGetAllTriggers(t *testing.T) {
 	})
 
 	Convey("GetTriggerIDs error", t, func() {
-		expected := fmt.Errorf("GetTriggerIDs error")
+		expected := fmt.Errorf("getTriggerIDs error")
 		mockDatabase.EXPECT().GetAllTriggerIDs().Return(nil, expected)
 		list, err := GetAllTriggers(mockDatabase)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
@@ -112,7 +112,7 @@ func TestGetAllTriggers(t *testing.T) {
 	})
 
 	Convey("GetTriggerChecks error", t, func() {
-		expected := fmt.Errorf("GetTriggerChecks error")
+		expected := fmt.Errorf("getTriggerChecks error")
 		mockDatabase.EXPECT().GetAllTriggerIDs().Return(make([]string, 0), nil)
 		mockDatabase.EXPECT().GetTriggerChecks(make([]string, 0)).Return(nil, expected)
 		list, err := GetAllTriggers(mockDatabase)
@@ -206,7 +206,7 @@ func TestGetTriggerPage(t *testing.T) {
 	})
 
 	Convey("Error GetFilteredTriggerCheckIDs", t, func() {
-		expected := fmt.Errorf("GetFilteredTriggerCheckIDs error")
+		expected := fmt.Errorf("getFilteredTriggerCheckIDs error")
 		mockDatabase.EXPECT().GetTriggerCheckIDs(make([]string, 0), true).Return(nil, expected)
 		list, err := GetTriggerPage(mockDatabase, 0, 20, true, make([]string, 0))
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
@@ -214,7 +214,7 @@ func TestGetTriggerPage(t *testing.T) {
 	})
 
 	Convey("Error GetTriggerChecks", t, func() {
-		expected := fmt.Errorf("GetTriggerChecks error")
+		expected := fmt.Errorf("getTriggerChecks error")
 		mockDatabase.EXPECT().GetTriggerCheckIDs(make([]string, 0), false).Return(triggerIDs, nil)
 		mockDatabase.EXPECT().GetTriggerChecks(triggerIDs[0:10]).Return(nil, expected)
 		list, err := GetTriggerPage(mockDatabase, page, size, false, make([]string, 0))

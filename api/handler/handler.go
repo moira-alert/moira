@@ -54,7 +54,7 @@ func NewHandler(db moira.Database, log moira.Logger, config *api.Config, remoteC
 func webConfig(content []byte) http.HandlerFunc {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		if content == nil {
-			render.Render(writer, request, api.ErrorInternalServer(fmt.Errorf("Web config file was not loaded")))
+			render.Render(writer, request, api.ErrorInternalServer(fmt.Errorf("web config file was not loaded")))
 			return
 		}
 		writer.Header().Set("Content-Type", "application/json")
