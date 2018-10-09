@@ -348,8 +348,3 @@ func (subscription *SubscriptionData) MustIgnore(eventData *NotificationEvent) b
 	}
 	return false
 }
-
-// Type returns string with type name. It is used for Bleve.Search
-func (Trigger) Type() string {
-	return "moira.trigger"
-}

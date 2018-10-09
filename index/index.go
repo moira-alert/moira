@@ -19,6 +19,29 @@ type SearchIndex struct {
 	indexed    bool
 }
 
+type indexedTrigger struct {
+	ID    string
+	Name  string
+	Desc  *string
+	Tags  []string
+	Score int64
+}
+
+// Type returns string with type name. It is used for Bleve.Search
+func (indexedTrigger) Type() string {
+	return "moira.trigger"
+}
+
+func createIndexedTrigger(triggerCheck moira.TriggerCheck) indexedTrigger {
+	return indexedTrigger{
+		ID:    triggerCheck.ID,
+		Name:  triggerCheck.Name,
+		Desc:  triggerCheck.Desc,
+		Tags:  triggerCheck.Tags,
+		Score: triggerCheck.LastCheck.Score,
+	}
+}
+
 // NewSearchIndex return new SearchIndex object
 func NewSearchIndex(logger moira.Logger, database moira.Database) *SearchIndex {
 	return &SearchIndex{
@@ -66,6 +89,8 @@ func (index *SearchIndex) FindTriggerIds(filterTags, searchTerms []string) ([]st
 
 	searchQuery := bleve.NewConjunctionQuery(searchQueries...)
 	req := bleve.NewSearchRequest(searchQuery)
+	docs, _ := index.bleveIndex.DocCount()
+	req.Size = int(docs)
 	searchResult, err := index.bleveIndex.Search(req)
 	if err != nil {
 		return []string{}, err
@@ -99,34 +124,35 @@ func (index *SearchIndex) fillIndex() error {
 		return err
 	}
 
-	allTriggers, err := index.database.GetTriggers(allTriggerIDs)
-	index.logger.Debugf("Triggers fetched from database: %d", len(allTriggers))
+	allTriggersChecks, err := index.database.GetTriggerChecks(allTriggerIDs)
+	index.logger.Debugf("Triggers checks fetched from database: %d", len(allTriggersChecks))
 	if err != nil {
 		return err
 	}
-	count, err := index.addTriggers(allTriggers)
+	count, err := index.addTriggers(allTriggersChecks)
 	index.logger.Infof("%d triggers added to index", count)
 	return err
 }
 
-func (index *SearchIndex) addTriggers(triggers []*moira.Trigger) (count int, err error) {
+func (index *SearchIndex) addTriggers(triggers []*moira.TriggerCheck) (count int, err error) {
 	toIndex := len(triggers)
 	batch := index.bleveIndex.NewBatch()
-	batchSize := 100
+	batchSize := 1000
 
-	for i, trigger := range triggers {
+	for _, trigger := range triggers {
 		if trigger != nil {
-			err = batch.Index(trigger.ID, &trigger)
+			err = batch.Index(trigger.ID, createIndexedTrigger(*trigger))
 			if err != nil {
 				return
 			}
 		}
-		if i != 0 && i%batchSize == 0 {
+		if batch.Size() >= batchSize {
 			err = index.bleveIndex.Batch(batch)
 			if err != nil {
 				return
 			}
-			count += batchSize
+			count += batch.Size()
+			batch = index.bleveIndex.NewBatch()
 			index.logger.Debugf("[%d triggers of %d] added to index", count, toIndex)
 		}
 	}
@@ -137,7 +163,7 @@ func (index *SearchIndex) addTriggers(triggers []*moira.Trigger) (count int, err
 			index.logger.Debugf("[%d triggers of %d] added to index", count, toIndex)
 		}
 	}
-	return count, nil
+	return
 }
 
 func getIndex(indexPath string) (bleve.Index, error) {
