@@ -29,8 +29,7 @@ func triggers(cfg *remote.Config, index *index.SearchIndex) func(chi.Router) {
 		router.Route("/{triggerId}", trigger)
 		router.Route("/search", func(router chi.Router) {
 			router.Use(middleware.SearchIndexContext(index))
-			router.With(middleware.Paginate(0, 10))
-			router.Get("/", searchTriggersPerPage)
+			router.With(middleware.Paginate(0, 10)).Get("/page", searchTriggersPerPage)
 		})
 	}
 }

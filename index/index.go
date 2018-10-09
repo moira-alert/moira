@@ -91,13 +91,16 @@ func (index *SearchIndex) createIndex() error {
 }
 
 func (index *SearchIndex) fillIndex() error {
+	index.logger.Debugf("Start filling index with triggers: %s", indexName)
 	index.inProgress = true
 	allTriggerIDs, err := index.database.GetTriggerIDs()
+	index.logger.Debugf("Triggers IDs fetched from database: %d", len(allTriggerIDs))
 	if err != nil {
 		return err
 	}
 
 	allTriggers, err := index.database.GetTriggers(allTriggerIDs)
+	index.logger.Debugf("Triggers fetched from database: %d", len(allTriggers))
 	if err != nil {
 		return err
 	}
@@ -107,31 +110,31 @@ func (index *SearchIndex) fillIndex() error {
 }
 
 func (index *SearchIndex) addTriggers(triggers []*moira.Trigger) (count int, err error) {
+	toIndex := len(triggers)
 	batch := index.bleveIndex.NewBatch()
 	batchSize := 100
 
-	i := 0
-
-	for _, trigger := range triggers {
+	for i, trigger := range triggers {
 		if trigger != nil {
 			err = batch.Index(trigger.ID, &trigger)
 			if err != nil {
 				return
 			}
 		}
-		if i > batchSize {
+		if i != 0 && i%batchSize == 0 {
 			err = index.bleveIndex.Batch(batch)
 			if err != nil {
 				return
 			}
-			i = 0
 			count += batchSize
+			index.logger.Debugf("[%d triggers of %d] added to index", count, toIndex)
 		}
 	}
 	if batch.Size() > 0 {
 		err = index.bleveIndex.Batch(batch)
-		if err != nil {
+		if err == nil {
 			count += batch.Size()
+			index.logger.Debugf("[%d triggers of %d] added to index", count, toIndex)
 		}
 	}
 	return count, nil
