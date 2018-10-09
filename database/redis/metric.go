@@ -206,6 +206,7 @@ func (connector *DbConnector) RemovePatternWithMetrics(pattern string) error {
 	c.Send("SREM", patternsListKey, pattern)
 	for _, metric := range metrics {
 		c.Send("DEL", metricDataKey(metric))
+		c.Send("DEL", metricRetentionKey(metric))
 	}
 	c.Send("DEL", patternMetricsKey(pattern))
 	if _, err = c.Do("EXEC"); err != nil {
