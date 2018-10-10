@@ -164,18 +164,7 @@ func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigg
 	if err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
-	for _, pattern := range cleanupPatterns {
-		triggerIDs, err := connector.GetPatternTriggerIDs(pattern)
-		if err != nil {
-			return err
-		}
-		if len(triggerIDs) == 0 {
-			connector.RemovePatternTriggerIDs(pattern)
-			connector.RemovePattern(pattern)
-			connector.RemovePatternsMetrics([]string{pattern})
-		}
-	}
-	return nil
+	return connector.cleanupPatternsOutOfUse(cleanupPatterns)
 }
 
 // RemoveTrigger deletes trigger data by given triggerID, delete trigger tag list,
@@ -209,19 +198,7 @@ func (connector *DbConnector) RemoveTrigger(triggerID string) error {
 	if err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
-
-	for _, pattern := range trigger.Patterns {
-		count, err := redis.Int64(c.Do("SCARD", patternTriggersKey(pattern)))
-		if err != nil {
-			return fmt.Errorf("failed to SCARD pattern triggers: %s", err.Error())
-		}
-		if count == 0 {
-			if err := connector.RemovePatternWithMetrics(pattern); err != nil {
-				return err
-			}
-		}
-	}
-	return nil
+	return connector.cleanupPatternsOutOfUse(trigger.Patterns)
 }
 
 // GetTriggerChecks gets triggers data with tags, lastCheck data and throttling by given triggersIDs
@@ -304,6 +281,21 @@ func leftJoin(left, right []string) []string {
 		}
 	}
 	return arr
+}
+
+func (connector *DbConnector) cleanupPatternsOutOfUse(pattern []string) error {
+	for _, pattern := range pattern {
+		triggerIDs, err := connector.GetPatternTriggerIDs(pattern)
+		if err != nil {
+			return err
+		}
+		if len(triggerIDs) == 0 {
+			if err := connector.RemovePatternWithMetrics(pattern); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 var triggersListKey = "moira-triggers-list"
