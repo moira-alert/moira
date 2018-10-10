@@ -9,7 +9,7 @@ import (
 const (
 	OK           = "OK"
 	ERROR        = "ERROR"
-	ErrorMessage = "Something unexpected happened with Moira, so we temporarily turned off the notification mailing. We are already working on the problem and will fix it in the near future."
+	ErrorMessage = "Something unexpected happened to Moira, so we temporarily turned off the notification mailing. We are already working on the problem and will fix it in the near future."
 )
 
 type NotifierState struct {
