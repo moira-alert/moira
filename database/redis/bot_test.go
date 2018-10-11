@@ -65,7 +65,7 @@ func TestRenewBotRegistration(t *testing.T) {
 			lockResults := testLockWithTTLExpireErrorExpected(lockTTL, 2, func() bool {
 				return dataBase.RenewBotRegistration(messenger3)
 			})
-			So(lockResults[1], ShouldBeFalse)
+			So(lockResults[len(lockResults)-1], ShouldBeFalse)
 		})
 	})
 }
