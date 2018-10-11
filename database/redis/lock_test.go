@@ -62,7 +62,7 @@ func TestLockErrorConnection(t *testing.T) {
 }
 
 func testLockWithTTLExpireErrorExpected(lockTTL int, lockWindow int, locker func() bool) []bool {
-	// This test takes ttl expire error into account (can be too late, not too early)
+	// This test takes ttl expire error into account
 	// https://redis.io/commands/expire#expire-accuracy
 	//
 	// So both example outputs are possible:
