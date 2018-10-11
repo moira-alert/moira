@@ -239,8 +239,8 @@ func (schedule *ScheduleData) IsScheduleAllows(ts int64) bool {
 		return false
 	}
 	dayStart := time.Unix(timestamp-timestamp%(24*3600), 0).UTC()
-	startDayTime := dayStart.Add(time.Duration(startOffset) * time.Minute)
-	endDayTime := dayStart.Add(time.Duration(endOffset) * time.Minute)
+	startDayTime := dayStart.Add(time.Duration(startOffset) * time.Minute).Add(-time.Second)
+	endDayTime := dayStart.Add(time.Duration(endOffset) * time.Minute).Add(time.Second)
 	if endOffset < 24*60 {
 		if date.After(startDayTime) && date.Before(endDayTime) {
 			return true
