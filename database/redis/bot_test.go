@@ -11,57 +11,64 @@ import (
 	"time"
 )
 
-//func TestRenewBot(t *testing.T) {
-//	logger, _ := logging.ConfigureLog("stdout", "info", "test")
-//	dataBase := NewDatabase(logger, config)
-//	dataBase.flush()
-//	//defer dataBase.flush()
-//
-//	Convey("Renew bot", t, func() {
-//		extended := dataBase.RenewBotRegistration(messenger3)
-//		So(extended, ShouldBeFalse)
-//
-//		actual := dataBase.RegisterBotIfAlreadyNot(messenger3, time.Second*3)
-//		So(actual, ShouldBeTrue)
-//
-//		firstLockString, _ := dataBase.GetIDByUsername(messenger3, botUsername)
-//		fmt.Println(firstLockString)
-//		So(firstLockString, ShouldNotBeEmpty)
-//
-//		time.Sleep(time.Second * 3)
-//
-//		// extended = dataBase.RenewBotRegistration(messenger3)
-//		// So(extended, ShouldBeFalse)
-//
-//		actual = dataBase.RegisterBotIfAlreadyNot(messenger3, time.Second*3)
-//		So(actual, ShouldBeTrue)
-//
-//		secondLockString, _ := dataBase.GetIDByUsername(messenger3, botUsername)
-//		fmt.Println(secondLockString)
-//		So(firstLockString, ShouldNotBeEmpty)
-//		So(firstLockString, ShouldNotResemble, secondLockString)
-//
-//		time.Sleep(time.Millisecond * 1500)
-//
-//		secondLockString1, _ := dataBase.GetIDByUsername(messenger3, botUsername)
-//		So(firstLockString, ShouldNotBeEmpty)
-//		So(secondLockString, ShouldResemble, secondLockString1)
-//
-//		extended = dataBase.RenewBotRegistration(messenger3)
-//		So(extended, ShouldBeTrue)
-//
-//		time.Sleep(time.Second * 2)
-//
-//		secondLockString2, _ := dataBase.GetIDByUsername(messenger3, botUsername)
-//		So(firstLockString, ShouldNotBeEmpty)
-//		So(secondLockString1, ShouldResemble, secondLockString2)
-//
-//		time.Sleep(time.Second * 2)
-//
-//		extended = dataBase.RenewBotRegistration(messenger3)
-//		So(extended, ShouldBeFalse)
-//	})
-//}
+func TestRenewBotRegistration(t *testing.T) {
+	logger, _ := logging.ConfigureLog("stdout", "info", "test")
+	dataBase := NewDatabase(logger, config)
+	dataBase.flush()
+	defer dataBase.flush()
+
+	lockTTL := 3000
+	lockTime := time.Duration(lockTTL) * time.Millisecond
+
+	var firstLockString string
+	var secondLockString string
+	var testLockString string
+	var err error
+
+	Convey("Manage bot registrations", t, func() {
+		Convey("No registrations to renew", func() {
+			renewed := dataBase.RenewBotRegistration(messenger3)
+			So(renewed, ShouldBeFalse)
+		})
+		Convey("Just register, should be registered", func() {
+			registered := dataBase.RegisterBotIfAlreadyNot(messenger3, lockTime)
+			So(registered, ShouldBeTrue)
+		})
+		Convey("This messenger should be a temp user, with auto generated string", func() {
+			firstLockString, err = dataBase.GetIDByUsername(messenger3, botUsername)
+			So(err, ShouldBeNil)
+			So(firstLockString, ShouldNotBeEmpty)
+			fmt.Println(firstLockString)
+		})
+		Convey("Register second messenger, should be as temp user, with new string", func() {
+			lockResults := testLockWithTTLExpireErrorExpected(lockTTL, 3, func() bool {
+				return dataBase.RegisterBotIfAlreadyNot(messenger3, lockTime)
+			})
+			So(lockResults, ShouldContain, true)
+
+			secondLockString, err = dataBase.GetIDByUsername(messenger3, botUsername)
+			So(err, ShouldBeNil)
+			So(secondLockString, ShouldNotBeEmpty)
+			So(firstLockString, ShouldNotResemble, secondLockString)
+			fmt.Println(secondLockString)
+		})
+		Convey("Renew bot registration, should be renewed", func() {
+			testLockString, err = dataBase.GetIDByUsername(messenger3, botUsername)
+			So(err, ShouldBeNil)
+			So(firstLockString, ShouldNotBeEmpty)
+			So(secondLockString, ShouldResemble, testLockString)
+
+			renewed := dataBase.RenewBotRegistration(messenger3)
+			So(renewed, ShouldBeTrue)
+		})
+		Convey("Renew bot registration, should not be renewed", func() {
+			lockResults := testLockWithTTLExpireErrorExpected(lockTTL, 2, func() bool {
+				return dataBase.RenewBotRegistration(messenger3)
+			})
+			So(lockResults[1], ShouldBeFalse)
+		})
+	})
+}
 
 func TestBotDataStoring(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test")
