@@ -154,6 +154,28 @@ func (mr *MockDatabaseMockRecorder) DeregisterBots() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeregisterBots", reflect.TypeOf((*MockDatabase)(nil).DeregisterBots))
 }
 
+// DeregisterService mocks base method
+func (m *MockDatabase) DeregisterService(arg0 string) bool {
+	ret := m.ctrl.Call(m, "DeregisterService", arg0)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// DeregisterService indicates an expected call of DeregisterService
+func (mr *MockDatabaseMockRecorder) DeregisterService(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeregisterService", reflect.TypeOf((*MockDatabase)(nil).DeregisterService), arg0)
+}
+
+// DeregisterServices mocks base method
+func (m *MockDatabase) DeregisterServices() {
+	m.ctrl.Call(m, "DeregisterServices")
+}
+
+// DeregisterServices indicates an expected call of DeregisterServices
+func (mr *MockDatabaseMockRecorder) DeregisterServices() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeregisterServices", reflect.TypeOf((*MockDatabase)(nil).DeregisterServices))
+}
+
 // FetchNotificationEvent mocks base method
 func (m *MockDatabase) FetchNotificationEvent() (moira.NotificationEvent, error) {
 	ret := m.ctrl.Call(m, "FetchNotificationEvent")
@@ -672,6 +694,18 @@ func (mr *MockDatabaseMockRecorder) RegisterBotIfAlreadyNot(arg0, arg1 interface
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterBotIfAlreadyNot", reflect.TypeOf((*MockDatabase)(nil).RegisterBotIfAlreadyNot), arg0, arg1)
 }
 
+// RegisterServiceIfAlreadyNot mocks base method
+func (m *MockDatabase) RegisterServiceIfAlreadyNot(arg0, arg1 string, arg2 time.Duration) bool {
+	ret := m.ctrl.Call(m, "RegisterServiceIfAlreadyNot", arg0, arg1, arg2)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// RegisterServiceIfAlreadyNot indicates an expected call of RegisterServiceIfAlreadyNot
+func (mr *MockDatabaseMockRecorder) RegisterServiceIfAlreadyNot(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterServiceIfAlreadyNot", reflect.TypeOf((*MockDatabase)(nil).RegisterServiceIfAlreadyNot), arg0, arg1, arg2)
+}
+
 // RemoveAllNotificationEvents mocks base method
 func (m *MockDatabase) RemoveAllNotificationEvents() error {
 	ret := m.ctrl.Call(m, "RemoveAllNotificationEvents")
@@ -863,6 +897,18 @@ func (m *MockDatabase) RenewBotRegistration(arg0 string) bool {
 // RenewBotRegistration indicates an expected call of RenewBotRegistration
 func (mr *MockDatabaseMockRecorder) RenewBotRegistration(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenewBotRegistration", reflect.TypeOf((*MockDatabase)(nil).RenewBotRegistration), arg0)
+}
+
+// RenewServiceRegistration mocks base method
+func (m *MockDatabase) RenewServiceRegistration(arg0 string) bool {
+	ret := m.ctrl.Call(m, "RenewServiceRegistration", arg0)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// RenewServiceRegistration indicates an expected call of RenewServiceRegistration
+func (mr *MockDatabaseMockRecorder) RenewServiceRegistration(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenewServiceRegistration", reflect.TypeOf((*MockDatabase)(nil).RenewServiceRegistration), arg0)
 }
 
 // SaveContact mocks base method
