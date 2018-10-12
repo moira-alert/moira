@@ -14,10 +14,6 @@ func (worker *Checker) noDataChecker(stop chan bool) error {
 	worker.Logger.Info("NODATA checker started")
 	for {
 		select {
-		case <-worker.tomb.Dying():
-			checkTicker.Stop()
-			worker.Logger.Info("NODATA checker stopped")
-			return nil
 		case <-stop:
 			checkTicker.Stop()
 			worker.Logger.Info("NODATA checker stopped")
@@ -49,7 +45,7 @@ func (worker *Checker) checkNoData() error {
 // to make sure there is always only one working checker
 func (worker *Checker) runNodataChecker() error {
 	databaseMutexExpiry := worker.Config.NoDataCheckInterval
-	singleCheckerStateExpiry := databaseMutexExpiry * 2
+	singleCheckerStateExpiry := time.Minute
 	stop := make(chan bool)
 
 	firstCheck := true
@@ -74,11 +70,17 @@ func (worker *Checker) runNodataChecker() error {
 // renewRegistration tries to renew NODATA-checker subscription
 // and gracefully stops NODATA checker on fail to prevent multiple checkers running
 func (worker *Checker) renewRegistration(ttl time.Duration, stop chan bool) {
-	checkTicker := time.NewTicker((ttl / time.Second) / 2 * time.Second)
+	renewTicker := time.NewTicker(ttl / 2)
 	for {
-		<-checkTicker.C
-		if !worker.Database.RenewBotRegistration(nodataCheckerHostname) {
-			worker.Logger.Warningf("Could not renew registration for NODATA checker")
+		select {
+		case <-renewTicker.C:
+			if !worker.Database.RenewServiceRegistration(nodataCheckerHostname) {
+				worker.Logger.Warningf("Could not renew registration for NODATA checker")
+				stop <- true
+				return
+			}
+		case <-worker.tomb.Dying():
+			renewTicker.Stop()
 			stop <- true
 			return
 		}
