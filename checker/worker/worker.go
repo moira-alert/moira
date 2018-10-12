@@ -42,7 +42,7 @@ func (worker *Checker) Start() error {
 	}
 
 	worker.tomb.Go(worker.runNodataChecker)
-	defer worker.Database.DeregisterServices()
+	defer worker.Database.DeregisterNodataChecker()
 
 	worker.remoteEnabled = worker.RemoteConfig.IsEnabled()
 

@@ -4,11 +4,6 @@ import (
 	"time"
 )
 
-const (
-	serviceName           = "checker"
-	nodataCheckerHostname = "moira-nodata-checker-host"
-)
-
 func (worker *Checker) noDataChecker(stop chan bool) error {
 	checkTicker := time.NewTicker(worker.Config.NoDataCheckInterval)
 	worker.Logger.Info("NODATA checker started")
@@ -51,7 +46,7 @@ func (worker *Checker) runNodataChecker() error {
 	firstCheck := true
 	go func() {
 		for {
-			if worker.Database.RegisterServiceIfAlreadyNot(serviceName, nodataCheckerHostname, databaseMutexExpiry) {
+			if worker.Database.RegisterNodataCheckerIfAlreadyNot(databaseMutexExpiry) {
 				worker.Logger.Infof("Registered new NODATA checker, start checking triggers for NODATA")
 				go worker.noDataChecker(stop)
 				worker.renewRegistration(databaseMutexExpiry, stop)
@@ -74,7 +69,7 @@ func (worker *Checker) renewRegistration(ttl time.Duration, stop chan bool) {
 	for {
 		select {
 		case <-renewTicker.C:
-			if !worker.Database.RenewServiceRegistration(nodataCheckerHostname) {
+			if !worker.Database.RenewNodataCheckerRegistration() {
 				worker.Logger.Warningf("Could not renew registration for NODATA checker")
 				stop <- true
 				return

@@ -115,10 +115,9 @@ type Database interface {
 	DeregisterBot(messenger string) bool
 
 	// Service registration
-	RegisterServiceIfAlreadyNot(service, hostname string, ttl time.Duration) bool
-	RenewServiceRegistration(hostname string) bool
-	DeregisterServices()
-	DeregisterService(hostname string) bool
+	RegisterNodataCheckerIfAlreadyNot(ttl time.Duration) bool
+	RenewNodataCheckerRegistration() bool
+	DeregisterNodataChecker() bool
 }
 
 // Logger implements logger abstraction
