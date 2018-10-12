@@ -42,7 +42,6 @@ func (worker *Checker) Start() error {
 	}
 
 	worker.tomb.Go(worker.runNodataChecker)
-	worker.Logger.Info("NODATA checker started")
 
 	worker.remoteEnabled = worker.RemoteConfig.IsEnabled()
 

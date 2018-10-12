@@ -11,6 +11,7 @@ const (
 
 func (worker *Checker) noDataChecker(stop chan bool) error {
 	checkTicker := time.NewTicker(worker.Config.NoDataCheckInterval)
+	worker.Logger.Info("NODATA checker started")
 	for {
 		select {
 		case <-worker.tomb.Dying():
