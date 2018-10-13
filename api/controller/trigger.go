@@ -17,7 +17,7 @@ func UpdateTrigger(dataBase moira.Database, trigger *dto.TriggerModel, triggerID
 	_, err := dataBase.GetTrigger(triggerID)
 	if err != nil {
 		if err == database.ErrNil {
-			return nil, api.ErrorNotFound(fmt.Sprintf("Trigger with ID = '%s' does not exists", triggerID))
+			return nil, api.ErrorNotFound(fmt.Sprintf("trigger with ID = '%s' does not exists", triggerID))
 		}
 		return nil, api.ErrorInternalServer(err)
 	}
@@ -73,7 +73,7 @@ func GetTrigger(dataBase moira.Database, triggerID string) (*dto.Trigger, *api.E
 	trigger, err := dataBase.GetTrigger(triggerID)
 	if err != nil {
 		if err == database.ErrNil {
-			return nil, api.ErrorNotFound("Trigger not found")
+			return nil, api.ErrorNotFound("trigger not found")
 		}
 		return nil, api.ErrorInternalServer(err)
 	}
@@ -181,7 +181,7 @@ func GetTriggerMetrics(dataBase moira.Database, from, to int64, triggerID string
 	trigger, err := dataBase.GetTrigger(triggerID)
 	if err != nil {
 		if err == database.ErrNil {
-			return nil, api.ErrorInvalidRequest(fmt.Errorf("Trigger not found"))
+			return nil, api.ErrorInvalidRequest(fmt.Errorf("trigger not found"))
 		}
 		return nil, api.ErrorInternalServer(err)
 	}
@@ -212,7 +212,7 @@ func deleteTriggerMetrics(dataBase moira.Database, metricName string, triggerID 
 	trigger, err := dataBase.GetTrigger(triggerID)
 	if err != nil {
 		if err == database.ErrNil {
-			return api.ErrorInvalidRequest(fmt.Errorf("Trigger not found"))
+			return api.ErrorInvalidRequest(fmt.Errorf("trigger not found"))
 		}
 		return api.ErrorInternalServer(err)
 	}
@@ -225,7 +225,7 @@ func deleteTriggerMetrics(dataBase moira.Database, metricName string, triggerID 
 	lastCheck, err := dataBase.GetTriggerLastCheck(triggerID)
 	if err != nil {
 		if err == database.ErrNil {
-			return api.ErrorInvalidRequest(fmt.Errorf("Trigger check not found"))
+			return api.ErrorInvalidRequest(fmt.Errorf("trigger check not found"))
 		}
 		return api.ErrorInternalServer(err)
 	}

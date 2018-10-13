@@ -42,7 +42,7 @@ func RequestLogger(logger moira.Logger) func(next http.Handler) http.Handler {
 			t1 := time.Now()
 			defer func() {
 				if rvr := recover(); rvr != nil {
-					render.Render(wrapWriter, request, api.ErrorInternalServer(fmt.Errorf("Internal Server Error")))
+					render.Render(wrapWriter, request, api.ErrorInternalServer(fmt.Errorf("internal Server Error")))
 					entry.writePanic(wrapWriter.Status(), wrapWriter.BytesWritten(), time.Since(t1), rvr, debug.Stack())
 				} else {
 					entry.write(wrapWriter.Status(), wrapWriter.BytesWritten(), time.Since(t1), wrapWriter.Unwrap())

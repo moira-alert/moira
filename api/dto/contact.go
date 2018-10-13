@@ -3,8 +3,9 @@ package dto
 
 import (
 	"fmt"
-	"github.com/moira-alert/moira"
 	"net/http"
+
+	"github.com/moira-alert/moira"
 )
 
 type ContactList struct {
@@ -28,10 +29,10 @@ func (*Contact) Render(w http.ResponseWriter, r *http.Request) error {
 
 func (contact *Contact) Bind(r *http.Request) error {
 	if contact.Type == "" {
-		return fmt.Errorf("Contact type can not be empty")
+		return fmt.Errorf("contact type can not be empty")
 	}
 	if contact.Value == "" {
-		return fmt.Errorf("Contact value of type %s can not be empty", contact.Type)
+		return fmt.Errorf("contact value of type %s can not be empty", contact.Type)
 	}
 	return nil
 }

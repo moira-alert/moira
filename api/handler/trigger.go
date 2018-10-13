@@ -42,9 +42,9 @@ func updateTrigger(writer http.ResponseWriter, request *http.Request) {
 	if err := render.Bind(request, trigger); err != nil {
 		switch err.(type) {
 		case target.ErrParseExpr, target.ErrEvalExpr, target.ErrUnknownFunction:
-			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("Invalid graphite targets: %s", err.Error())))
+			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("invalid graphite targets: %s", err.Error())))
 		case expression.ErrInvalidExpression:
-			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("Invalid expression: %s", err.Error())))
+			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("invalid expression: %s", err.Error())))
 		case remote.ErrRemoteTriggerResponse:
 			render.Render(writer, request, api.ErrorRemoteServerUnavailable(err))
 		default:
@@ -127,12 +127,12 @@ func getTriggerMetrics(writer http.ResponseWriter, request *http.Request) {
 	toStr := middleware.GetToStr(request)
 	from := date.DateParamToEpoch(fromStr, "UTC", 0, time.UTC)
 	if from == 0 {
-		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("Can not parse from: %s", fromStr)))
+		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("can not parse from: %s", fromStr)))
 		return
 	}
 	to := date.DateParamToEpoch(toStr, "UTC", 0, time.UTC)
 	if to == 0 {
-		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("Can not parse to: %v", to)))
+		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("can not parse to: %v", to)))
 		return
 	}
 	triggerMetrics, err := controller.GetTriggerMetrics(database, from, to, triggerID)
