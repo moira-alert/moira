@@ -10,6 +10,7 @@ Docker Compose is the easiest way to try:
 ```
 git clone https://github.com/moira-alert/doc.git
 cd doc
+docker-compose pull
 docker-compose up
 ```
 
