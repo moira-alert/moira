@@ -40,21 +40,18 @@ func NewProtector(database moira.Database, logger moira.Logger,
 func (protector *Protector) GetStream() <-chan moira.ProtectorData {
 	ch := make(chan moira.ProtectorData)
 	go func() {
-		protectorSamples := make([]moira.ProtectorSample, 0)
+		protectorSamples := make([]float64, 0)
 		protectTicker := time.NewTicker(protector.retention)
-		for t := range protectTicker.C {
+		for range protectTicker.C {
 			if len(protectorSamples) == protector.numSamples {
-				protectorData := moira.ProtectorData{
-					Samples:   protectorSamples,
-					Timestamp: t.Unix(),
+				protectorData := &ProtectorData{
+					values: protectorSamples,
 				}
 				ch <- protectorData
 				protectorSamples = nil
 			}
 			matched, _ := protector.database.GetMatchedMetricsUpdatesCount()
-			protectorSamples = append(protectorSamples, moira.ProtectorSample{
-				Value: float64(matched),
-			})
+			protectorSamples = append(protectorSamples, float64(matched))
 		}
 	}()
 	return ch
@@ -63,15 +60,16 @@ func (protector *Protector) GetStream() <-chan moira.ProtectorData {
 // Protect performs Nodata protection
 func (protector *Protector) Protect(protectorData moira.ProtectorData) error {
 	var degraded bool
-	deltas := make([]float64, len(protectorData.Samples)-1)
-	for sampleInd := range protectorData.Samples {
+	protectorSamples := protectorData.GetFloats()
+	deltas := make([]float64, len(protectorSamples)-1)
+	for sampleInd := range protectorSamples {
 		if sampleInd > 0 {
 			protector.logger.Infof(
 				"matched protector value: [old value: %.2f, current value: %.2f]",
-				protectorData.Samples[sampleInd-1].Value,
-				protectorData.Samples[sampleInd].Value,
+				protectorSamples[sampleInd-1],
+				protectorSamples[sampleInd],
 			)
-			delta := protectorData.Samples[sampleInd].Value - protectorData.Samples[sampleInd-1].Value
+			delta := protectorSamples[sampleInd] - protectorSamples[sampleInd-1]
 			deltas[sampleInd-1] = delta
 		}
 	}

@@ -182,18 +182,6 @@ type MetricEvent struct {
 	Pattern string `json:"pattern"`
 }
 
-// ProtectorData is a type to exchange values between protectors
-type ProtectorData struct {
-	Samples   []ProtectorSample `json:"samples,omitempty"`
-	Timestamp int64             `json:"timestamp"`
-}
-
-// ProtectorSample is a single point captured by protector
-type ProtectorSample struct {
-	Name  string
-	Value float64
-}
-
 // GetSubjectState returns the most critical state of events
 func (events NotificationEvents) GetSubjectState() string {
 	result := ""

@@ -10,13 +10,16 @@ import (
 type Database interface {
 	// SelfState
 	UpdateMetricsHeartbeat() error
-	UpdateMatchedMetricsHeartbeat() error
 	GetMetricsUpdatesCount() (int64, error)
-	GetMatchedMetricsUpdatesCount() (int64, error)
 	GetChecksUpdatesCount() (int64, error)
 	GetRemoteChecksUpdatesCount() (int64, error)
 	GetNotifierState() (string, error)
 	SetNotifierState(string) error
+
+	//Nodata protection
+	GetMatchedMetricsValues(from int64, until int64) (map[string][]int64, error)
+	SaveMatchedMetricsValue(source string, timestamp int64, value int64) error
+	RemoveMatchedMetricsValues(toTime int64) error
 
 	// Tag storing
 	GetTagNames() ([]string, error)
@@ -137,6 +140,11 @@ type Logger interface {
 type Sender interface {
 	SendEvents(events NotificationEvents, contact ContactData, trigger TriggerData, throttled bool) error
 	Init(senderSettings map[string]string, logger Logger, location *time.Location, dateTimeFormat string) error
+}
+
+// ProtectorData is an interface to exchange values between protectors
+type ProtectorData interface {
+	GetFloats() []float64
 }
 
 // Protector interface to perform NoData protection mechanisms

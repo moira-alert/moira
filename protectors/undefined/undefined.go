@@ -15,7 +15,7 @@ func (protector *Protector) GetStream() <-chan moira.ProtectorData {
 	ch := make(chan moira.ProtectorData)
 	go func() {
 		for {
-			protectorData := moira.ProtectorData{}
+			protectorData := &ProtectorData{}
 			ch <- protectorData
 		}
 	}()
