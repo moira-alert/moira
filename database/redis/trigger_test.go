@@ -337,6 +337,14 @@ func TestTriggerStoring(t *testing.T) {
 					RetentionTimestamp: val1.RetentionTimestamp,
 					Value:              val1.Value}}})
 
+			actualPatternMetrics, err := dataBase.GetPatternMetrics(pattern1)
+			So(err, ShouldBeNil)
+			So(actualPatternMetrics, ShouldResemble, []string{metric1})
+
+			actualPatternMetrics, err = dataBase.GetPatternMetrics(pattern2)
+			So(err, ShouldBeNil)
+			So(actualPatternMetrics, ShouldResemble, []string{})
+
 			//Update trigger, change its pattern
 			err = dataBase.SaveTrigger(triggerVer2.ID, triggerVer2)
 			So(err, ShouldBeNil)
@@ -379,6 +387,46 @@ func TestTriggerStoring(t *testing.T) {
 			actualValues, err = dataBase.GetMetricsValues([]string{metric1}, 0, 100)
 			So(err, ShouldBeNil)
 			So(actualValues, ShouldResemble, map[string][]*moira.MetricValue{metric1: {}})
+
+			actualPatternMetrics, err = dataBase.GetPatternMetrics(pattern1)
+			So(err, ShouldBeNil)
+			So(actualPatternMetrics, ShouldResemble, []string{})
+
+			actualPatternMetrics, err = dataBase.GetPatternMetrics(pattern2)
+			So(err, ShouldBeNil)
+			So(actualPatternMetrics, ShouldResemble, []string{metric2})
+
+			//It's time to remove trigger and check all data
+			err = dataBase.RemoveTrigger(triggerVer2.ID)
+			So(err, ShouldBeNil)
+
+			actual, err = dataBase.GetTrigger(triggerVer2.ID)
+			So(err, ShouldResemble, database.ErrNil)
+			So(actual, ShouldResemble, moira.Trigger{})
+
+			ids, err = dataBase.GetTriggerIDs()
+			So(err, ShouldBeNil)
+			So(ids, ShouldResemble, []string{})
+
+			ids, err = dataBase.GetTagTriggerIDs(triggerVer2.Tags[0])
+			So(err, ShouldBeNil)
+			So(ids, ShouldResemble, []string{})
+
+			ids, err = dataBase.GetPatternTriggerIDs(triggerVer2.Patterns[0])
+			So(err, ShouldBeNil)
+			So(ids, ShouldResemble, []string{})
+
+			actualTriggers, err = dataBase.GetTriggers(ids)
+			So(err, ShouldBeNil)
+			So(actualTriggers, ShouldResemble, []*moira.Trigger{})
+
+			actualPatternMetrics, err = dataBase.GetPatternMetrics(pattern1)
+			So(err, ShouldBeNil)
+			So(actualPatternMetrics, ShouldResemble, []string{})
+
+			actualPatternMetrics, err = dataBase.GetPatternMetrics(pattern2)
+			So(err, ShouldBeNil)
+			So(actualPatternMetrics, ShouldResemble, []string{})
 		})
 	})
 }
