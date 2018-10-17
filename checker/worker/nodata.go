@@ -39,8 +39,16 @@ func (worker *Checker) checkNoData() error {
 // runNodataChecker starts NODATA checker and manages its subscription in Redis
 // to make sure there is always only one working checker
 func (worker *Checker) runNodataChecker() error {
-	databaseMutexExpiry := worker.Config.NoDataCheckInterval
-	singleCheckerStateExpiry := time.Minute
+	var databaseMutexExpiry, singleCheckerStateExpiry time.Duration
+
+	databaseMutexExpiry = time.Second * 15
+
+	if worker.Config.NoDataCheckInterval > time.Minute {
+		singleCheckerStateExpiry = time.Second * 30
+	} else {
+		singleCheckerStateExpiry = worker.Config.NoDataCheckInterval / 2
+	}
+
 	stop := make(chan bool)
 
 	firstCheck := true
@@ -65,7 +73,7 @@ func (worker *Checker) runNodataChecker() error {
 // renewRegistration tries to renew NODATA-checker subscription
 // and gracefully stops NODATA checker on fail to prevent multiple checkers running
 func (worker *Checker) renewRegistration(ttl time.Duration, stop chan bool) {
-	renewTicker := time.NewTicker(ttl / 2)
+	renewTicker := time.NewTicker(ttl / 3)
 	for {
 		select {
 		case <-renewTicker.C:
