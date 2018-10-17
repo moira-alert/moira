@@ -19,7 +19,7 @@ func (connector *DbConnector) GetPatterns() ([]string, error) {
 	defer c.Close()
 	patterns, err := redis.Strings(c.Do("SMEMBERS", patternsListKey))
 	if err != nil {
-		return nil, fmt.Errorf("Failed to get moira patterns, error: %v", err)
+		return nil, fmt.Errorf("failed to get moira patterns, error: %v", err)
 	}
 	return patterns, nil
 }
@@ -34,7 +34,7 @@ func (connector *DbConnector) GetMetricsValues(metrics []string, from int64, unt
 	}
 	resultByMetrics, err := redis.Values(c.Do(""))
 	if err != nil {
-		return nil, fmt.Errorf("Failed to get metric values: %v", err)
+		return nil, fmt.Errorf("failed to get metric values: %v", err)
 	}
 
 	res := make(map[string][]*moira.MetricValue, len(resultByMetrics))
@@ -85,7 +85,7 @@ func (connector *DbConnector) getMetricRetention(metric string) (int64, error) {
 		if err == redis.ErrNil {
 			return 60, database.ErrNil
 		}
-		return 0, fmt.Errorf("Failed GET metric retention:%s, error: %v", metric, err)
+		return 0, fmt.Errorf("failed GET metric retention:%s, error: %v", metric, err)
 	}
 	return retention, nil
 }
@@ -150,7 +150,7 @@ func (connector *DbConnector) AddPatternMetric(pattern, metric string) error {
 	c := connector.pool.Get()
 	defer c.Close()
 	if _, err := c.Do("SADD", patternMetricsKey(pattern), metric); err != nil {
-		return fmt.Errorf("Failed to SADD pattern-metrics, pattern: %s, metric: %s, error: %v", pattern, metric, err)
+		return fmt.Errorf("failed to SADD pattern-metrics, pattern: %s, metric: %s, error: %v", pattern, metric, err)
 	}
 	return nil
 }
@@ -165,7 +165,7 @@ func (connector *DbConnector) GetPatternMetrics(pattern string) ([]string, error
 		if err == redis.ErrNil {
 			return make([]string, 0), nil
 		}
-		return nil, fmt.Errorf("Failed to get pattern metrics for pattern %s, error: %v", pattern, err)
+		return nil, fmt.Errorf("failed to get pattern metrics for pattern %s, error: %v", pattern, err)
 	}
 	return metrics, nil
 }
@@ -175,7 +175,7 @@ func (connector *DbConnector) RemovePattern(pattern string) error {
 	c := connector.pool.Get()
 	defer c.Close()
 	if _, err := c.Do("SREM", patternsListKey, pattern); err != nil {
-		return fmt.Errorf("Failed to remove pattern: %s, error: %v", pattern, err)
+		return fmt.Errorf("failed to remove pattern: %s, error: %v", pattern, err)
 	}
 	return nil
 }
@@ -189,7 +189,7 @@ func (connector *DbConnector) RemovePatternsMetrics(patterns []string) error {
 		c.Send("DEL", patternMetricsKey(pattern))
 	}
 	if _, err := c.Do("EXEC"); err != nil {
-		return fmt.Errorf("Failed to EXEC: %v", err)
+		return fmt.Errorf("failed to EXEC: %v", err)
 	}
 	return nil
 }
@@ -209,7 +209,7 @@ func (connector *DbConnector) RemovePatternWithMetrics(pattern string) error {
 	}
 	c.Send("DEL", patternMetricsKey(pattern))
 	if _, err = c.Do("EXEC"); err != nil {
-		return fmt.Errorf("Failed to EXEC: %v", err)
+		return fmt.Errorf("failed to EXEC: %v", err)
 	}
 	return nil
 }

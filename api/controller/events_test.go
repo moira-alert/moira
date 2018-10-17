@@ -2,6 +2,8 @@ package controller
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
@@ -9,7 +11,6 @@ import (
 	"github.com/moira-alert/moira/mock/moira-alert"
 	"github.com/satori/go.uuid"
 	. "github.com/smartystreets/goconvey/convey"
-	"testing"
 )
 
 func TestGetEvents(t *testing.T) {
@@ -49,7 +50,7 @@ func TestGetEvents(t *testing.T) {
 	})
 
 	Convey("Test error", t, func() {
-		expected := fmt.Errorf("Oooops! Can not get all contacts")
+		expected := fmt.Errorf("oooops! Can not get all contacts")
 		dataBase.EXPECT().GetNotificationEvents(triggerID, page*size, size-1).Return(nil, expected)
 		list, err := GetTriggerEvents(dataBase, triggerID, page, size)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))

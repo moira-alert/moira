@@ -3,8 +3,9 @@ package dto
 
 import (
 	"fmt"
-	"github.com/moira-alert/moira"
 	"net/http"
+
+	"github.com/moira-alert/moira"
 )
 
 type SubscriptionList struct {
@@ -23,10 +24,10 @@ func (*Subscription) Render(w http.ResponseWriter, r *http.Request) error {
 
 func (subscription *Subscription) Bind(r *http.Request) error {
 	if len(subscription.Tags) == 0 {
-		return fmt.Errorf("Subscription must have tags")
+		return fmt.Errorf("subscription must have tags")
 	}
 	if len(subscription.Contacts) == 0 {
-		return fmt.Errorf("Subscription must have contacts")
+		return fmt.Errorf("subscription must have contacts")
 	}
 	return nil
 }

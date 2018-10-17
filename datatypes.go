@@ -242,7 +242,7 @@ func (schedule *ScheduleData) IsScheduleAllows(ts int64) bool {
 	startDayTime := dayStart.Add(time.Duration(startOffset) * time.Minute)
 	endDayTime := dayStart.Add(time.Duration(endOffset) * time.Minute)
 	if endOffset < 24*60 {
-		if date.After(startDayTime) && date.Before(endDayTime) {
+		if (date.After(startDayTime) || date.Equal(startDayTime)) && (date.Before(endDayTime) || date.Equal(endDayTime)) {
 			return true
 		}
 	} else {

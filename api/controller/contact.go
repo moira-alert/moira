@@ -94,7 +94,7 @@ func RemoveContact(database moira.Database, contactID string, userLogin string) 
 	}
 
 	if len(subscriptionsWithDeletingContact) > 0 {
-		errBuffer := bytes.NewBuffer([]byte("This contact is being used in following subscriptions: "))
+		errBuffer := bytes.NewBuffer([]byte("this contact is being used in following subscriptions: "))
 		for subInd, subscription := range subscriptionsWithDeletingContact {
 			errBuffer.WriteString(subscription.ID)
 			errBuffer.WriteString(" (tags: ")
@@ -141,12 +141,12 @@ func CheckUserPermissionsForContact(dataBase moira.Database, contactID string, u
 	contactData, err := dataBase.GetContact(contactID)
 	if err != nil {
 		if err == database.ErrNil {
-			return contactData, api.ErrorNotFound(fmt.Sprintf("Contact with ID '%s' does not exists", contactID))
+			return contactData, api.ErrorNotFound(fmt.Sprintf("contact with ID '%s' does not exists", contactID))
 		}
 		return contactData, api.ErrorInternalServer(err)
 	}
 	if contactData.User != userLogin {
-		return contactData, api.ErrorForbidden("You have not permissions")
+		return contactData, api.ErrorForbidden("you are not permitted")
 	}
 	return contactData, nil
 }

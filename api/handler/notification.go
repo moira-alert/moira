@@ -2,12 +2,13 @@ package handler
 
 import (
 	"fmt"
+	"net/http"
+	"strconv"
+
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/controller"
-	"net/http"
-	"strconv"
 )
 
 func notification(router chi.Router) {
@@ -39,7 +40,7 @@ func getNotification(writer http.ResponseWriter, request *http.Request) {
 func deleteNotification(writer http.ResponseWriter, request *http.Request) {
 	notificationKey := request.URL.Query().Get("id")
 	if notificationKey == "" {
-		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("Notification id can not be empty")))
+		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("notification id can not be empty")))
 		return
 	}
 
