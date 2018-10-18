@@ -1,7 +1,9 @@
 package redis
 
 import (
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
@@ -57,4 +59,35 @@ func TestLockErrorConnection(t *testing.T) {
 		err = dataBase.DeleteTriggerCheckLock("tr1")
 		So(err, ShouldNotBeNil)
 	})
+}
+
+func testLockWithTTLExpireErrorExpected(lockTTL int, lockWindow int, locker func() bool) []bool {
+	// This test takes ttl expire error into account
+	// https://redis.io/commands/expire#expire-accuracy
+	//
+	// So both example outputs are possible:
+	//
+	// 2018-10-11 13:34:06.4726686 +0500 +05 m=+4.026959900 Attempt: success
+	// 2018-10-11 13:34:06.4738116 +0500 +05 m=+4.028102800 Attempt: failure
+	// 2018-10-11 13:34:06.4749116 +0500 +05 m=+4.029202900 Attempt: failure
+	//
+	// 2018-10-11 13:31:24.0643861 +0500 +05 m=+4.045829100 Attempt: failure
+	// 2018-10-11 13:31:24.0664404 +0500 +05 m=+4.047883400 Attempt: success
+	// 2018-10-11 13:31:24.0675413 +0500 +05 m=+4.048984300 Attempt: failure
+	resultMap := map[bool]string{
+		true:  "success",
+		false: "failure",
+	}
+	time.Sleep(time.Duration(lockTTL-1) * time.Millisecond)
+	lockExpiryTicker := time.NewTicker(time.Millisecond)
+	lockResults := make([]bool, 0)
+	for t := range lockExpiryTicker.C {
+		result := locker()
+		fmt.Printf("%s Attempt: %s\n", t.String(), resultMap[result])
+		lockResults = append(lockResults, result)
+		if len(lockResults) == lockWindow {
+			break
+		}
+	}
+	return lockResults
 }
