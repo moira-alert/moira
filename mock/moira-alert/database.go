@@ -154,6 +154,18 @@ func (mr *MockDatabaseMockRecorder) DeregisterBots() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeregisterBots", reflect.TypeOf((*MockDatabase)(nil).DeregisterBots))
 }
 
+// DeregisterNodataChecker mocks base method
+func (m *MockDatabase) DeregisterNodataChecker() bool {
+	ret := m.ctrl.Call(m, "DeregisterNodataChecker")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// DeregisterNodataChecker indicates an expected call of DeregisterNodataChecker
+func (mr *MockDatabaseMockRecorder) DeregisterNodataChecker() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeregisterNodataChecker", reflect.TypeOf((*MockDatabase)(nil).DeregisterNodataChecker))
+}
+
 // FetchNotificationEvent mocks base method
 func (m *MockDatabase) FetchNotificationEvent() (moira.NotificationEvent, error) {
 	ret := m.ctrl.Call(m, "FetchNotificationEvent")
@@ -672,6 +684,18 @@ func (mr *MockDatabaseMockRecorder) RegisterBotIfAlreadyNot(arg0, arg1 interface
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterBotIfAlreadyNot", reflect.TypeOf((*MockDatabase)(nil).RegisterBotIfAlreadyNot), arg0, arg1)
 }
 
+// RegisterNodataCheckerIfAlreadyNot mocks base method
+func (m *MockDatabase) RegisterNodataCheckerIfAlreadyNot(arg0 time.Duration) bool {
+	ret := m.ctrl.Call(m, "RegisterNodataCheckerIfAlreadyNot", arg0)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// RegisterNodataCheckerIfAlreadyNot indicates an expected call of RegisterNodataCheckerIfAlreadyNot
+func (mr *MockDatabaseMockRecorder) RegisterNodataCheckerIfAlreadyNot(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterNodataCheckerIfAlreadyNot", reflect.TypeOf((*MockDatabase)(nil).RegisterNodataCheckerIfAlreadyNot), arg0)
+}
+
 // RemoveAllNotificationEvents mocks base method
 func (m *MockDatabase) RemoveAllNotificationEvents() error {
 	ret := m.ctrl.Call(m, "RemoveAllNotificationEvents")
@@ -863,6 +887,18 @@ func (m *MockDatabase) RenewBotRegistration(arg0 string) bool {
 // RenewBotRegistration indicates an expected call of RenewBotRegistration
 func (mr *MockDatabaseMockRecorder) RenewBotRegistration(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenewBotRegistration", reflect.TypeOf((*MockDatabase)(nil).RenewBotRegistration), arg0)
+}
+
+// RenewNodataCheckerRegistration mocks base method
+func (m *MockDatabase) RenewNodataCheckerRegistration() bool {
+	ret := m.ctrl.Call(m, "RenewNodataCheckerRegistration")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// RenewNodataCheckerRegistration indicates an expected call of RenewNodataCheckerRegistration
+func (mr *MockDatabaseMockRecorder) RenewNodataCheckerRegistration() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenewNodataCheckerRegistration", reflect.TypeOf((*MockDatabase)(nil).RenewNodataCheckerRegistration))
 }
 
 // SaveContact mocks base method

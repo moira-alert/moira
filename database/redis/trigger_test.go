@@ -257,6 +257,177 @@ func TestTriggerStoring(t *testing.T) {
 			So(actualTriggerChecks, ShouldResemble, []*moira.TriggerCheck{nil})
 		})
 
+		Convey("Save trigger with metrics and get metrics", func() {
+			pattern1 := "my.test.*.metric*"
+			metric1 := "my.test.super.metric1"
+
+			pattern2 := "my.new.test.*.metric*"
+			metric2 := "my.new.test.super.metric2"
+
+			triggerVer1 := &moira.Trigger{
+				ID:          "test-triggerID-id1",
+				Name:        "test trigger 1 v1.0",
+				Targets:     []string{pattern1},
+				Tags:        []string{"test-tag-1"},
+				Patterns:    []string{pattern1},
+				TriggerType: moira.RisingTrigger,
+			}
+
+			triggerVer2 := &moira.Trigger{
+				ID:          "test-triggerID-id1",
+				Name:        "test trigger 1 v2.0",
+				Targets:     []string{pattern2},
+				Tags:        []string{"test-tag-1"},
+				Patterns:    []string{pattern2},
+				TriggerType: moira.RisingTrigger,
+			}
+
+			val1 := &moira.MatchedMetric{
+				Patterns:           []string{pattern1},
+				Metric:             metric1,
+				Retention:          10,
+				RetentionTimestamp: 10,
+				Timestamp:          15,
+				Value:              1,
+			}
+			val2 := &moira.MatchedMetric{
+				Patterns:           []string{pattern2},
+				Metric:             metric2,
+				Retention:          10,
+				RetentionTimestamp: 20,
+				Timestamp:          22,
+				Value:              2,
+			}
+
+			//Add trigger
+			err := dataBase.SaveTrigger(triggerVer1.ID, triggerVer1)
+			So(err, ShouldBeNil)
+
+			//And check for existing by several pointers like id or tag
+			actual, err := dataBase.GetTrigger(triggerVer1.ID)
+			So(err, ShouldBeNil)
+			So(actual, ShouldResemble, *triggerVer1)
+
+			ids, err := dataBase.GetTriggerIDs()
+			So(err, ShouldBeNil)
+			So(ids, ShouldResemble, []string{triggerVer1.ID})
+
+			ids, err = dataBase.GetTagTriggerIDs(triggerVer1.Tags[0])
+			So(err, ShouldBeNil)
+			So(ids, ShouldResemble, []string{triggerVer1.ID})
+
+			ids, err = dataBase.GetPatternTriggerIDs(triggerVer1.Patterns[0])
+			So(err, ShouldBeNil)
+			So(ids, ShouldResemble, []string{triggerVer1.ID})
+
+			actualTriggers, err := dataBase.GetTriggers(ids)
+			So(err, ShouldBeNil)
+			So(actualTriggers, ShouldResemble, []*moira.Trigger{triggerVer1})
+
+			//Save metrics
+			err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric1: val1})
+			So(err, ShouldBeNil)
+
+			//And check it
+			actualValues, err := dataBase.GetMetricsValues([]string{metric1}, 0, 100)
+			So(err, ShouldBeNil)
+			So(actualValues, ShouldResemble, map[string][]*moira.MetricValue{metric1: {
+				&moira.MetricValue{
+					Timestamp:          val1.Timestamp,
+					RetentionTimestamp: val1.RetentionTimestamp,
+					Value:              val1.Value}}})
+
+			actualPatternMetrics, err := dataBase.GetPatternMetrics(pattern1)
+			So(err, ShouldBeNil)
+			So(actualPatternMetrics, ShouldResemble, []string{metric1})
+
+			actualPatternMetrics, err = dataBase.GetPatternMetrics(pattern2)
+			So(err, ShouldBeNil)
+			So(actualPatternMetrics, ShouldResemble, []string{})
+
+			//Update trigger, change its pattern
+			err = dataBase.SaveTrigger(triggerVer2.ID, triggerVer2)
+			So(err, ShouldBeNil)
+
+			//And check for existing by several pointers like id or tag
+			actual, err = dataBase.GetTrigger(triggerVer2.ID)
+			So(err, ShouldBeNil)
+			So(actual, ShouldResemble, *triggerVer2)
+
+			ids, err = dataBase.GetTriggerIDs()
+			So(err, ShouldBeNil)
+			So(ids, ShouldResemble, []string{triggerVer2.ID})
+
+			ids, err = dataBase.GetTagTriggerIDs(triggerVer2.Tags[0])
+			So(err, ShouldBeNil)
+			So(ids, ShouldResemble, []string{triggerVer2.ID})
+
+			ids, err = dataBase.GetPatternTriggerIDs(triggerVer2.Patterns[0])
+			So(err, ShouldBeNil)
+			So(ids, ShouldResemble, []string{triggerVer2.ID})
+
+			actualTriggers, err = dataBase.GetTriggers(ids)
+			So(err, ShouldBeNil)
+			So(actualTriggers, ShouldResemble, []*moira.Trigger{triggerVer2})
+
+			//Save metrics for a new pattern metrics
+			err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric2: val2})
+			So(err, ShouldBeNil)
+
+			//And check it
+			actualValues, err = dataBase.GetMetricsValues([]string{metric2}, 0, 100)
+			So(err, ShouldBeNil)
+			So(actualValues, ShouldResemble, map[string][]*moira.MetricValue{metric2: {
+				&moira.MetricValue{
+					Timestamp:          val2.Timestamp,
+					RetentionTimestamp: val2.RetentionTimestamp,
+					Value:              val2.Value}}})
+
+			//And check old metrics, it must be empty
+			actualValues, err = dataBase.GetMetricsValues([]string{metric1}, 0, 100)
+			So(err, ShouldBeNil)
+			So(actualValues, ShouldResemble, map[string][]*moira.MetricValue{metric1: {}})
+
+			actualPatternMetrics, err = dataBase.GetPatternMetrics(pattern1)
+			So(err, ShouldBeNil)
+			So(actualPatternMetrics, ShouldResemble, []string{})
+
+			actualPatternMetrics, err = dataBase.GetPatternMetrics(pattern2)
+			So(err, ShouldBeNil)
+			So(actualPatternMetrics, ShouldResemble, []string{metric2})
+
+			//It's time to remove trigger and check all data
+			err = dataBase.RemoveTrigger(triggerVer2.ID)
+			So(err, ShouldBeNil)
+
+			actual, err = dataBase.GetTrigger(triggerVer2.ID)
+			So(err, ShouldResemble, database.ErrNil)
+			So(actual, ShouldResemble, moira.Trigger{})
+
+			ids, err = dataBase.GetTriggerIDs()
+			So(err, ShouldBeNil)
+			So(ids, ShouldResemble, []string{})
+
+			ids, err = dataBase.GetTagTriggerIDs(triggerVer2.Tags[0])
+			So(err, ShouldBeNil)
+			So(ids, ShouldResemble, []string{})
+
+			ids, err = dataBase.GetPatternTriggerIDs(triggerVer2.Patterns[0])
+			So(err, ShouldBeNil)
+			So(ids, ShouldResemble, []string{})
+
+			actualTriggers, err = dataBase.GetTriggers(ids)
+			So(err, ShouldBeNil)
+			So(actualTriggers, ShouldResemble, []*moira.Trigger{})
+
+			actualPatternMetrics, err = dataBase.GetPatternMetrics(pattern1)
+			So(err, ShouldBeNil)
+			So(actualPatternMetrics, ShouldResemble, []string{})
+
+			actualPatternMetrics, err = dataBase.GetPatternMetrics(pattern2)
+			So(err, ShouldBeNil)
+			So(actualPatternMetrics, ShouldResemble, []string{})
+		})
 	})
 }
 

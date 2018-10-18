@@ -41,8 +41,7 @@ func (worker *Checker) Start() error {
 		return err
 	}
 
-	worker.tomb.Go(worker.noDataChecker)
-	worker.Logger.Info("NODATA checker started")
+	worker.tomb.Go(worker.runNodataChecker)
 
 	worker.remoteEnabled = worker.RemoteConfig.IsEnabled()
 
@@ -119,6 +118,7 @@ func (worker *Checker) checkMetricEventsChannelLen(ch <-chan *moira.MetricEvent)
 
 // Stop stops checks triggers
 func (worker *Checker) Stop() error {
+	worker.Database.DeregisterNodataChecker()
 	worker.tomb.Kill(nil)
 	return worker.tomb.Wait()
 }
