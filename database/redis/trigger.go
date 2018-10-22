@@ -132,7 +132,7 @@ func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigg
 	c.Send("MULTI")
 	cleanupPatterns := make([]string, 0)
 	if errGetTrigger != database.ErrNil {
-		for _, pattern := range leftJoin(existing.Patterns, trigger.Patterns) {
+		for _, pattern := range moira.LeftJoin(existing.Patterns, trigger.Patterns) {
 			c.Send("SREM", patternTriggersKey(pattern), triggerID)
 			cleanupPatterns = append(cleanupPatterns, pattern)
 		}
@@ -140,7 +140,7 @@ func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigg
 			c.Send("SREM", remoteTriggersListKey, triggerID)
 		}
 
-		for _, tag := range leftJoin(existing.Tags, trigger.Tags) {
+		for _, tag := range moira.LeftJoin(existing.Tags, trigger.Tags) {
 			c.Send("SREM", triggerTagsKey(triggerID), tag)
 			c.Send("SREM", tagTriggersKey(tag), triggerID)
 		}
@@ -267,20 +267,6 @@ func (connector *DbConnector) getTriggerWithTags(triggerRaw interface{}, tagsRaw
 	}
 	trigger.ID = triggerID
 	return trigger, nil
-}
-
-func leftJoin(left, right []string) []string {
-	rightValues := make(map[string]bool)
-	for _, value := range right {
-		rightValues[value] = true
-	}
-	arr := make([]string, 0)
-	for _, leftValue := range left {
-		if _, ok := rightValues[leftValue]; !ok {
-			arr = append(arr, leftValue)
-		}
-	}
-	return arr
 }
 
 func (connector *DbConnector) cleanupPatternsOutOfUse(pattern []string) error {

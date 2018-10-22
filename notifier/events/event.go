@@ -161,7 +161,6 @@ func (worker *FetchEventsWorker) getNotificationSubscriptions(event moira.Notifi
 	return nil, nil
 }
 
-
 func (worker *FetchEventsWorker) isNotificationRequired(subscription *moira.SubscriptionData, trigger moira.TriggerData, event moira.NotificationEvent) bool {
 	if subscription == nil {
 		worker.Logger.Debugf("Subscription is nil")
@@ -176,24 +175,9 @@ func (worker *FetchEventsWorker) isNotificationRequired(subscription *moira.Subs
 			worker.Logger.Debugf("Subscription %s is managed to ignore %s -> %s transitions", subscription.ID, event.OldState, event.State)
 			return false
 		}
-		if !subset(subscription.Tags, trigger.Tags) {
+		if !moira.Subset(subscription.Tags, trigger.Tags) {
 			return false
 		}
 	}
-	return true
-}
-
-func subset(first, second []string) bool {
-	set := make(map[string]bool)
-	for _, value := range second {
-		set[value] = true
-	}
-
-	for _, value := range first {
-		if !set[value] {
-			return false
-		}
-	}
-
 	return true
 }

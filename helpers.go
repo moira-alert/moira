@@ -15,3 +15,34 @@ func UseFloat64(f *float64) float64 {
 	}
 	return *f
 }
+
+// Subset return whether first is a subset of second
+func Subset(first, second []string) bool {
+	set := make(map[string]bool)
+	for _, value := range second {
+		set[value] = true
+	}
+
+	for _, value := range first {
+		if !set[value] {
+			return false
+		}
+	}
+
+	return true
+}
+
+// LeftJoin return sublist of elements presented in left list, but not in right list
+func LeftJoin(left, right []string) []string {
+	rightValues := make(map[string]bool)
+	for _, value := range right {
+		rightValues[value] = true
+	}
+	arr := make([]string, 0)
+	for _, leftValue := range left {
+		if _, ok := rightValues[leftValue]; !ok {
+			arr = append(arr, leftValue)
+		}
+	}
+	return arr
+}
