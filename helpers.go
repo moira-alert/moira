@@ -32,32 +32,48 @@ func Subset(first, second []string) bool {
 	return true
 }
 
-// LeftJoinStrings return sublist of strings presented in left list, but not in right list
-func LeftJoinStrings(left, right []string) []string {
-	rightValues := make(map[string]bool)
-	for _, value := range right {
-		rightValues[value] = true
+// GetStringListsDiff returns the members of the set resulting from the difference between the first set and all the successive lists.
+func GetStringListsDiff(stringLists ...[]string) []string {
+	if len(stringLists) == 0 {
+		return []string{}
 	}
-	arr := make([]string, 0)
-	for _, leftValue := range left {
-		if _, ok := rightValues[leftValue]; !ok {
-			arr = append(arr, leftValue)
+	leftValues := make(map[string]bool)
+	for _, value := range stringLists[0] {
+		leftValues[value] = true
+	}
+	for _, stringList := range stringLists[1:] {
+		for _, value := range stringList {
+			if _, ok := leftValues[value]; ok {
+				delete(leftValues, value)
+			}
 		}
 	}
-	return arr
+	result := make([]string, 0)
+	for key := range leftValues {
+		result = append(result, key)
+	}
+	return result
 }
 
-// LeftJoinTriggers return sublist of moira.Triggers presented in left list, but not in right list
-func LeftJoinTriggers(left, right []*Trigger) []*Trigger {
-	rightValues := make(map[string]bool)
-	for _, value := range right {
-		rightValues[value.ID] = true
+// GetTriggerListsDiff returns the members of the set resulting from the difference between the first set and all the successive lists.
+func GetTriggerListsDiff(triggerLists ...[]*Trigger) []*Trigger {
+	if len(triggerLists) == 0 {
+		return []*Trigger{}
 	}
-	arr := make([]*Trigger, 0)
-	for _, leftValue := range left {
-		if _, ok := rightValues[leftValue.ID]; !ok {
-			arr = append(arr, leftValue)
+	leftValues := make(map[string]*Trigger)
+	for _, value := range triggerLists[0] {
+		leftValues[value.ID] = value
+	}
+	for _, triggerList := range triggerLists[1:] {
+		for _, trigger := range triggerList {
+			if _, ok := leftValues[trigger.ID]; ok {
+				delete(leftValues, trigger.ID)
+			}
 		}
 	}
-	return arr
+	result := make([]*Trigger, 0)
+	for _, value := range leftValues {
+		result = append(result, value)
+	}
+	return result
 }

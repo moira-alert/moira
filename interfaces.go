@@ -119,10 +119,10 @@ type Database interface {
 	RenewNodataCheckerRegistration() bool
 	DeregisterNodataChecker() bool
 
-	//	Triggers without subscription manipulation
-	AddTriggersWithoutSubscriptions(triggerIDs []string) error
-	GetTriggersWithoutSubscriptions() ([]string, error)
-	RemoveTriggersWithoutSubscriptions(triggerIDs []string) error
+	// Triggers without subscription manipulation
+	MarkTriggersAsUnused(triggerIDs ...string) error
+	GetUnusedTriggerIDs() ([]string, error)
+	MarkTriggersAsUsed(triggerIDs ...string) error
 }
 
 // Logger implements logger abstraction

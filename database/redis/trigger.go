@@ -133,7 +133,7 @@ func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigg
 	c.Send("MULTI")
 	cleanupPatterns := make([]string, 0)
 	if errGetTrigger != database.ErrNil {
-		for _, pattern := range moira.LeftJoinStrings(existing.Patterns, trigger.Patterns) {
+		for _, pattern := range moira.GetStringListsDiff(existing.Patterns, trigger.Patterns) {
 			c.Send("SREM", patternTriggersKey(pattern), triggerID)
 			cleanupPatterns = append(cleanupPatterns, pattern)
 		}
@@ -141,7 +141,7 @@ func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigg
 			c.Send("SREM", remoteTriggersListKey, triggerID)
 		}
 
-		for _, tag := range moira.LeftJoinStrings(existing.Tags, trigger.Tags) {
+		for _, tag := range moira.GetStringListsDiff(existing.Tags, trigger.Tags) {
 			c.Send("SREM", triggerTagsKey(triggerID), tag)
 			c.Send("SREM", tagTriggersKey(tag), triggerID)
 		}
@@ -171,9 +171,9 @@ func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigg
 		return fmt.Errorf("failed to check trigger subscriptions: %s", err.Error())
 	}
 	if !hasSubscriptions {
-		connector.AddTriggersWithoutSubscriptions([]string{triggerID})
+		connector.MarkTriggersAsUnused(triggerID)
 	} else {
-		connector.RemoveTriggersWithoutSubscriptions([]string{triggerID})
+		connector.MarkTriggersAsUsed(triggerID)
 	}
 
 	return connector.cleanupPatternsOutOfUse(cleanupPatterns)
@@ -200,6 +200,7 @@ func (connector *DbConnector) RemoveTrigger(triggerID string) error {
 	c.Send("DEL", triggerEventsKey(triggerID))
 	c.Send("SREM", triggersListKey, triggerID)
 	c.Send("SREM", remoteTriggersListKey, triggerID)
+	c.Send("SREM", unusedTriggersKey, triggerID)
 	for _, tag := range trigger.Tags {
 		c.Send("SREM", tagTriggersKey(tag), triggerID)
 	}
@@ -210,7 +211,6 @@ func (connector *DbConnector) RemoveTrigger(triggerID string) error {
 	if err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
-	connector.RemoveTriggersWithoutSubscriptions([]string{triggerID})
 	return connector.cleanupPatternsOutOfUse(trigger.Patterns)
 }
 
