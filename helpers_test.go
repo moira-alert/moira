@@ -19,15 +19,15 @@ func TestLeftJoin(t *testing.T) {
 	Convey("Test left Join", t, func() {
 		left := []string{"1", "2", "3"}
 		right := []string{"1", "2", "3"}
-		joined := LeftJoin(left, right)
+		joined := LeftJoinStrings(left, right)
 		So(joined, ShouldResemble, []string{})
 
 		left = []string{"1", "2", "3", "4", "5"}
-		joined = LeftJoin(left, right)
+		joined = LeftJoinStrings(left, right)
 		So(joined, ShouldResemble, []string{"4", "5"})
 
 		right = []string{"6", "7", "8"}
-		joined = LeftJoin(left, right)
+		joined = LeftJoinStrings(left, right)
 		So(joined, ShouldResemble, left)
 	})
 }

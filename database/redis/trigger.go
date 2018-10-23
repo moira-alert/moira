@@ -117,7 +117,8 @@ func (connector *DbConnector) RemovePatternTriggerIDs(pattern string) error {
 // SaveTrigger sets trigger data by given trigger and triggerID
 // If trigger already exists, then merge old and new trigger patterns and tags list
 // and cleanup not used tags and patterns from lists
-// If given trigger contains new tags then create it
+// If given trigger contains new tags then create it.
+// If given trigger has no subscription on it, add it to triggers-without-subscriptions
 func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigger) error {
 	existing, errGetTrigger := connector.GetTrigger(triggerID)
 	if errGetTrigger != nil && errGetTrigger != database.ErrNil {
@@ -132,7 +133,7 @@ func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigg
 	c.Send("MULTI")
 	cleanupPatterns := make([]string, 0)
 	if errGetTrigger != database.ErrNil {
-		for _, pattern := range moira.LeftJoin(existing.Patterns, trigger.Patterns) {
+		for _, pattern := range moira.LeftJoinStrings(existing.Patterns, trigger.Patterns) {
 			c.Send("SREM", patternTriggersKey(pattern), triggerID)
 			cleanupPatterns = append(cleanupPatterns, pattern)
 		}
@@ -140,7 +141,7 @@ func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigg
 			c.Send("SREM", remoteTriggersListKey, triggerID)
 		}
 
-		for _, tag := range moira.LeftJoin(existing.Tags, trigger.Tags) {
+		for _, tag := range moira.LeftJoinStrings(existing.Tags, trigger.Tags) {
 			c.Send("SREM", triggerTagsKey(triggerID), tag)
 			c.Send("SREM", tagTriggersKey(tag), triggerID)
 		}
@@ -164,6 +165,17 @@ func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigg
 	if err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
+
+	hasSubscriptions, err := connector.triggerHasSubscriptions(trigger)
+	if err != nil {
+		return fmt.Errorf("failed to check trigger subscriptions: %s", err.Error())
+	}
+	if !hasSubscriptions {
+		connector.AddTriggersWithoutSubscriptions([]string{triggerID})
+	} else {
+		connector.RemoveTriggersWithoutSubscriptions([]string{triggerID})
+	}
+
 	return connector.cleanupPatternsOutOfUse(cleanupPatterns)
 }
 
@@ -198,6 +210,7 @@ func (connector *DbConnector) RemoveTrigger(triggerID string) error {
 	if err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
+	connector.RemoveTriggersWithoutSubscriptions([]string{triggerID})
 	return connector.cleanupPatternsOutOfUse(trigger.Patterns)
 }
 
@@ -282,6 +295,21 @@ func (connector *DbConnector) cleanupPatternsOutOfUse(pattern []string) error {
 		}
 	}
 	return nil
+}
+
+func (connector *DbConnector) triggerHasSubscriptions(trigger *moira.Trigger) (bool, error) {
+	subscriptions, err := connector.GetTagsSubscriptions(trigger.Tags)
+	if err != nil {
+		return false, err
+	}
+
+	for _, subscription := range subscriptions {
+		if moira.Subset(subscription.Tags, trigger.Tags) {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 var triggersListKey = "moira-triggers-list"

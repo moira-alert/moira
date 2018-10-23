@@ -108,6 +108,18 @@ func (mr *MockDatabaseMockRecorder) AddTriggersToCheck(arg0 interface{}) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddTriggersToCheck", reflect.TypeOf((*MockDatabase)(nil).AddTriggersToCheck), arg0)
 }
 
+// AddTriggersWithoutSubscriptions mocks base method
+func (m *MockDatabase) AddTriggersWithoutSubscriptions(arg0 []string) error {
+	ret := m.ctrl.Call(m, "AddTriggersWithoutSubscriptions", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddTriggersWithoutSubscriptions indicates an expected call of AddTriggersWithoutSubscriptions
+func (mr *MockDatabaseMockRecorder) AddTriggersWithoutSubscriptions(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddTriggersWithoutSubscriptions", reflect.TypeOf((*MockDatabase)(nil).AddTriggersWithoutSubscriptions), arg0)
+}
+
 // DeleteTriggerCheckLock mocks base method
 func (m *MockDatabase) DeleteTriggerCheckLock(arg0 string) error {
 	ret := m.ctrl.Call(m, "DeleteTriggerCheckLock", arg0)
@@ -634,6 +646,19 @@ func (mr *MockDatabaseMockRecorder) GetTriggersToCheckCount() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggersToCheckCount", reflect.TypeOf((*MockDatabase)(nil).GetTriggersToCheckCount))
 }
 
+// GetTriggersWithoutSubscriptions mocks base method
+func (m *MockDatabase) GetTriggersWithoutSubscriptions() ([]string, error) {
+	ret := m.ctrl.Call(m, "GetTriggersWithoutSubscriptions")
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTriggersWithoutSubscriptions indicates an expected call of GetTriggersWithoutSubscriptions
+func (mr *MockDatabaseMockRecorder) GetTriggersWithoutSubscriptions() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggersWithoutSubscriptions", reflect.TypeOf((*MockDatabase)(nil).GetTriggersWithoutSubscriptions))
+}
+
 // GetUserContactIDs mocks base method
 func (m *MockDatabase) GetUserContactIDs(arg0 string) ([]string, error) {
 	ret := m.ctrl.Call(m, "GetUserContactIDs", arg0)
@@ -863,6 +888,18 @@ func (m *MockDatabase) RemoveTriggerLastCheck(arg0 string) error {
 // RemoveTriggerLastCheck indicates an expected call of RemoveTriggerLastCheck
 func (mr *MockDatabaseMockRecorder) RemoveTriggerLastCheck(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveTriggerLastCheck", reflect.TypeOf((*MockDatabase)(nil).RemoveTriggerLastCheck), arg0)
+}
+
+// RemoveTriggersWithoutSubscriptions mocks base method
+func (m *MockDatabase) RemoveTriggersWithoutSubscriptions(arg0 []string) error {
+	ret := m.ctrl.Call(m, "RemoveTriggersWithoutSubscriptions", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveTriggersWithoutSubscriptions indicates an expected call of RemoveTriggersWithoutSubscriptions
+func (mr *MockDatabaseMockRecorder) RemoveTriggersWithoutSubscriptions(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveTriggersWithoutSubscriptions", reflect.TypeOf((*MockDatabase)(nil).RemoveTriggersWithoutSubscriptions), arg0)
 }
 
 // RemoveUser mocks base method

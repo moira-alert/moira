@@ -32,8 +32,8 @@ func Subset(first, second []string) bool {
 	return true
 }
 
-// LeftJoin return sublist of elements presented in left list, but not in right list
-func LeftJoin(left, right []string) []string {
+// LeftJoinStrings return sublist of strings presented in left list, but not in right list
+func LeftJoinStrings(left, right []string) []string {
 	rightValues := make(map[string]bool)
 	for _, value := range right {
 		rightValues[value] = true
@@ -41,6 +41,21 @@ func LeftJoin(left, right []string) []string {
 	arr := make([]string, 0)
 	for _, leftValue := range left {
 		if _, ok := rightValues[leftValue]; !ok {
+			arr = append(arr, leftValue)
+		}
+	}
+	return arr
+}
+
+// LeftJoinTriggers return sublist of moira.Triggers presented in left list, but not in right list
+func LeftJoinTriggers(left, right []*Trigger) []*Trigger {
+	rightValues := make(map[string]bool)
+	for _, value := range right {
+		rightValues[value.ID] = true
+	}
+	arr := make([]*Trigger, 0)
+	for _, leftValue := range left {
+		if _, ok := rightValues[leftValue.ID]; !ok {
 			arr = append(arr, leftValue)
 		}
 	}

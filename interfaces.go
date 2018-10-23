@@ -118,6 +118,11 @@ type Database interface {
 	RegisterNodataCheckerIfAlreadyNot(ttl time.Duration) bool
 	RenewNodataCheckerRegistration() bool
 	DeregisterNodataChecker() bool
+
+	//	Triggers without subscription manipulation
+	AddTriggersWithoutSubscriptions(triggerIDs []string) error
+	GetTriggersWithoutSubscriptions() ([]string, error)
+	RemoveTriggersWithoutSubscriptions(triggerIDs []string) error
 }
 
 // Logger implements logger abstraction
