@@ -70,6 +70,12 @@ func (worker *Checker) addRemoteTriggerIDsIfNeeded(triggerIDs []string) {
 }
 
 func (worker *Checker) needHandleTrigger(triggerID string) bool {
+	if _, ok := worker.triggersWithoutSubscriptions[triggerID]; ok {
+		err := worker.TriggersWithoutSubscriptionsCache.Add(triggerID, true, cache.DefaultExpiration)
+		if err != nil {
+			return false
+		}
+	}
 	err := worker.TriggerCache.Add(triggerID, true, cache.DefaultExpiration)
 	return err == nil
 }

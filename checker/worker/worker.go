@@ -15,16 +15,18 @@ import (
 
 // Checker represents workers for periodically triggers checking based by new events
 type Checker struct {
-	Logger        moira.Logger
-	Database      moira.Database
-	Config        *checker.Config
-	RemoteConfig  *remote.Config
-	Metrics       *graphite.CheckerMetrics
-	TriggerCache  *cache.Cache
-	PatternCache  *cache.Cache
-	lastData      int64
-	tomb          tomb.Tomb
-	remoteEnabled bool
+	Logger                            moira.Logger
+	Database                          moira.Database
+	Config                            *checker.Config
+	RemoteConfig                      *remote.Config
+	Metrics                           *graphite.CheckerMetrics
+	TriggerCache                      *cache.Cache
+	TriggersWithoutSubscriptionsCache *cache.Cache
+	PatternCache                      *cache.Cache
+	triggersWithoutSubscriptions      map[string]bool
+	lastData                          int64
+	tomb                              tomb.Tomb
+	remoteEnabled                     bool
 }
 
 // Start start schedule new MetricEvents and check for NODATA triggers
@@ -40,6 +42,9 @@ func (worker *Checker) Start() error {
 	if err != nil {
 		return err
 	}
+
+	worker.triggersWithoutSubscriptions = make(map[string]bool, 0)
+	worker.tomb.Go(worker.runTriggersWithoutSubscriptionsUpdater)
 
 	worker.tomb.Go(worker.runNodataChecker)
 

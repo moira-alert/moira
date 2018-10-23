@@ -92,13 +92,14 @@ func main() {
 	functions.New(make(map[string]string))
 
 	checkerWorker := &worker.Checker{
-		Logger:       logger,
-		Database:     database,
-		Config:       checkerSettings,
-		RemoteConfig: remoteSettings,
-		Metrics:      checkerMetrics,
-		TriggerCache: cache.New(checkerSettings.CheckInterval, time.Minute*60),
-		PatternCache: cache.New(checkerSettings.CheckInterval, time.Minute*60),
+		Logger:                            logger,
+		Database:                          database,
+		Config:                            checkerSettings,
+		RemoteConfig:                      remoteSettings,
+		Metrics:                           checkerMetrics,
+		TriggerCache:                      cache.New(checkerSettings.CheckInterval, time.Minute*60),
+		TriggersWithoutSubscriptionsCache: cache.New(time.Minute*10, time.Minute*60),
+		PatternCache:                      cache.New(checkerSettings.CheckInterval, time.Minute*60),
 	}
 	err = checkerWorker.Start()
 	if err != nil {
