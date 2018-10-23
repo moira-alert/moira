@@ -49,8 +49,10 @@ func GetStringListsDiff(stringLists ...[]string) []string {
 		}
 	}
 	result := make([]string, 0)
-	for key := range leftValues {
-		result = append(result, key)
+	for _, value := range stringLists[0] {
+		if _, ok := leftValues[value]; ok {
+			result = append(result, value)
+		}
 	}
 	return result
 }
@@ -60,9 +62,9 @@ func GetTriggerListsDiff(triggerLists ...[]*Trigger) []*Trigger {
 	if len(triggerLists) == 0 {
 		return []*Trigger{}
 	}
-	leftValues := make(map[string]*Trigger)
+	leftValues := make(map[string]bool)
 	for _, value := range triggerLists[0] {
-		leftValues[value.ID] = value
+		leftValues[value.ID] = true
 	}
 	for _, triggerList := range triggerLists[1:] {
 		for _, trigger := range triggerList {
@@ -72,8 +74,10 @@ func GetTriggerListsDiff(triggerLists ...[]*Trigger) []*Trigger {
 		}
 	}
 	result := make([]*Trigger, 0)
-	for _, value := range leftValues {
-		result = append(result, value)
+	for _, value := range triggerLists[0] {
+		if _, ok := leftValues[value.ID]; ok {
+			result = append(result, value)
+		}
 	}
 	return result
 }
