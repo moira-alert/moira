@@ -233,7 +233,7 @@ func (connector *DbConnector) getSubscriptionTriggers(subscription *moira.Subscr
 }
 
 func (connector *DbConnector) getSubscriptionsTriggers(subscriptions []*moira.SubscriptionData) ([]*moira.Trigger, error) {
-	triggersMap := make(map[string]*moira.Trigger, 0)
+	triggersMap := make(map[string]*moira.Trigger)
 	triggers := make([]*moira.Trigger, 0)
 
 	for _, subscription := range subscriptions {

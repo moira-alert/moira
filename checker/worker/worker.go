@@ -43,7 +43,7 @@ func (worker *Checker) Start() error {
 		return err
 	}
 
-	worker.lazyTriggerIDs = make(map[string]bool, 0)
+	worker.lazyTriggerIDs = make(map[string]bool)
 	worker.tomb.Go(worker.lazyTriggersWorker)
 
 	worker.tomb.Go(worker.runNodataChecker)
