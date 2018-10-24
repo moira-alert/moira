@@ -9,33 +9,45 @@ import (
 	"github.com/wcharczuk/go-chart/drawing"
 )
 
-// PlotCurve is a single curve for given timeserie
-type PlotCurve struct {
-	TimeStamps []time.Time
-	Values     []float64
+// plotCurve is a single curve for given timeserie
+type plotCurve struct {
+	timeStamps []time.Time
+	values     []float64
 }
 
-// GeneratePlotCurves returns go-chart timeseries to generate plot curves
-func GeneratePlotCurves(metricData *types.MetricData, curveColor int, mainYAxis int) []chart.TimeSeries {
-	// TODO: create style to draw single value in between of gaps
-	curves := DescribePlotCurves(metricData)
-	curveSeries := make([]chart.TimeSeries, 0)
-	if curveColor > len(CurveColors)-1 {
-		curveColor = 1
+func getCurveSeriesList(metricsData []*types.MetricData, theme *plotTheme, mainYAxis int, limitSeries []string) []chart.TimeSeries {
+	curveSeriesList := make([]chart.TimeSeries, 0)
+	for metricDataInd := range metricsData {
+		if !mustBeShown(metricsData[metricDataInd].Name, limitSeries) {
+			continue
+		}
+		curveColor := theme.pickCurveColor(metricDataInd)
+		curveSeries := generatePlotCurves(metricsData[metricDataInd], curveColor, mainYAxis)
+		for _, curveSerie := range curveSeries {
+			curveSeriesList = append(curveSeriesList, curveSerie)
+		}
 	}
+	return curveSeriesList
+}
+
+// generatePlotCurves returns go-chart timeseries to generate plot curves
+func generatePlotCurves(metricData *types.MetricData, curveColor string, mainYAxis int) []chart.TimeSeries {
+	// TODO: create style to draw single value in between of gaps
+	curves := describePlotCurves(metricData)
+	curveSeries := make([]chart.TimeSeries, 0)
 	for _, curve := range curves {
-		if len(curve.Values) > 1 {
+		if len(curve.values) > 1 {
 			curveSerie := chart.TimeSeries{
 				Name:  metricData.Name,
 				YAxis: chart.YAxisType(mainYAxis),
 				Style: chart.Style{
 					Show:        true,
 					StrokeWidth: 1,
-					StrokeColor: drawing.ColorFromHex(CurveColors[curveColor]).WithAlpha(90),
-					FillColor:   drawing.ColorFromHex(CurveColors[curveColor]).WithAlpha(20),
+					StrokeColor: drawing.ColorFromHex(curveColor).WithAlpha(90),
+					FillColor:   drawing.ColorFromHex(curveColor).WithAlpha(20),
 				},
-				XValues: curve.TimeStamps,
-				YValues: curve.Values,
+				XValues: curve.timeStamps,
+				YValues: curve.values,
 			}
 			curveSeries = append(curveSeries, curveSerie)
 		}
@@ -43,23 +55,23 @@ func GeneratePlotCurves(metricData *types.MetricData, curveColor int, mainYAxis 
 	return curveSeries
 }
 
-// DescribePlotCurves returns parameters for required curves
-func DescribePlotCurves(metricData *types.MetricData) []PlotCurve {
-	curves := []PlotCurve{{}}
+// describePlotCurves returns parameters for required curves
+func describePlotCurves(metricData *types.MetricData) []plotCurve {
+	curves := []plotCurve{{}}
 	curvesInd := 0
 
-	start, timeStamp := ResolveFirstPoint(metricData)
+	start, timeStamp := resolveFirstPoint(metricData)
 
 	for valInd := start; valInd < len(metricData.Values); valInd++ {
 		pointValue := metricData.Values[valInd]
 		switch math.IsNaN(pointValue) {
 		case false:
-			timeStampValue := Int64ToTime(timeStamp)
-			curves[curvesInd].TimeStamps = append(curves[curvesInd].TimeStamps, timeStampValue)
-			curves[curvesInd].Values = append(curves[curvesInd].Values, pointValue)
+			timeStampValue := int64ToTime(timeStamp)
+			curves[curvesInd].timeStamps = append(curves[curvesInd].timeStamps, timeStampValue)
+			curves[curvesInd].values = append(curves[curvesInd].values, pointValue)
 		case true:
-			if len(curves[curvesInd].Values) > 0 {
-				curves = append(curves, PlotCurve{})
+			if len(curves[curvesInd].values) > 0 {
+				curves = append(curves, plotCurve{})
 				curvesInd++
 			}
 		}
@@ -68,8 +80,8 @@ func DescribePlotCurves(metricData *types.MetricData) []PlotCurve {
 	return curves
 }
 
-// ResolveFirstPoint returns first point coordinates
-func ResolveFirstPoint(metricData *types.MetricData) (int, int64) {
+// resolveFirstPoint returns first point coordinates
+func resolveFirstPoint(metricData *types.MetricData) (int, int64) {
 	start := 0
 	startTime := metricData.StartTime
 	for _, metricVal := range metricData.Values {
@@ -81,4 +93,17 @@ func ResolveFirstPoint(metricData *types.MetricData) (int, int64) {
 		}
 	}
 	return start, startTime
+}
+
+// mustBeShown returns true if metric must be shown
+func mustBeShown(metricName string, metricsToShow []string) bool {
+	if len(metricsToShow) == 0 {
+		return true
+	}
+	for _, metricToShow := range metricsToShow {
+		if metricToShow == metricName {
+			return true
+		}
+	}
+	return false
 }

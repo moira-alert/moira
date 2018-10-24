@@ -16,8 +16,8 @@ const (
 	maxLabelLength   = 30
 )
 
-// GetPlotLegend returns plot legend
-func GetPlotLegend(c *chart.Chart) chart.Renderable {
+// getPlotLegend returns plot legend
+func getPlotLegend(c *chart.Chart, plotWidth int) chart.Renderable {
 	// TODO: Simplify this method
 	return func(r chart.Renderer, cb chart.Box, chartDefaults chart.Style) {
 		legendDefault := chart.Style{
@@ -39,7 +39,7 @@ func GetPlotLegend(c *chart.Chart) chart.Renderable {
 					_, isFound := foundLabels[legendLabel]
 					if !isFound && legendLabel != ThresholdSerie {
 						foundLabels[legendLabel] = true
-						legendLabel := SanitizeLabelName(legendLabel, maxLabelLength)
+						legendLabel := sanitizeLabelName(legendLabel, maxLabelLength)
 						labels = append(labels, legendLabel)
 						lines = append(lines, s.GetStyle())
 						if labelsCount == maxLabelsCount-1 {
@@ -51,7 +51,7 @@ func GetPlotLegend(c *chart.Chart) chart.Renderable {
 			}
 		}
 
-		sort.Sort(SortedByLen(labels))
+		sort.Sort(sortedByLen(labels))
 		if len(labels) == maxLabelsCount {
 			labels[len(labels)-1] = "other series"
 			lines[len(lines)-1].StrokeColor = chart.ColorAlternateGray
@@ -73,7 +73,7 @@ func GetPlotLegend(c *chart.Chart) chart.Renderable {
 			}
 		}
 
-		labelX = ((PlotWidth - (labelX - deltaLabels)) / 2) + (markerLength / 2)
+		labelX = ((plotWidth - (labelX - deltaLabels)) / 2) + (markerLength / 2)
 		markerX := labelX + deltaMarkerLabel
 
 		for x := 0; x < len(labels); x++ {
@@ -85,7 +85,7 @@ func GetPlotLegend(c *chart.Chart) chart.Renderable {
 				r.MoveTo(markerX-deltaLabels, markerY)
 				r.LineTo(markerX-deltaMarker, markerY)
 				r.Stroke()
-				// Calculte marker and label shifts
+				// Calculate marker and label shifts
 				textBox := r.MeasureText(label)
 				itemXShift := textBox.Width() + deltaLabels
 				markerX += itemXShift

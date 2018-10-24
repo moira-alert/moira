@@ -8,16 +8,16 @@ import (
 	"github.com/wcharczuk/go-chart/util"
 )
 
-// Limits is a set of limits for given metricsData
-type Limits struct {
-	From    time.Time
-	To      time.Time
-	Lowest  float64
-	Highest float64
+// plotLimits is a set of limits for given metricsData
+type plotLimits struct {
+	from    time.Time
+	to      time.Time
+	lowest  float64
+	highest float64
 }
 
-// ResolveLimits returns common plot limits
-func ResolveLimits(metricsData []*types.MetricData) Limits {
+// resolveLimits returns common plot limits
+func resolveLimits(metricsData []*types.MetricData) plotLimits {
 	allValues := make([]float64, 0)
 	allTimes := make([]time.Time, 0)
 	for _, metricData := range metricsData {
@@ -26,8 +26,8 @@ func ResolveLimits(metricsData []*types.MetricData) Limits {
 				allValues = append(allValues, metricValue)
 			}
 		}
-		allTimes = append(allTimes, Int64ToTime(metricData.StartTime))
-		allTimes = append(allTimes, Int64ToTime(metricData.StopTime))
+		allTimes = append(allTimes, int64ToTime(metricData.StartTime))
+		allTimes = append(allTimes, int64ToTime(metricData.StopTime))
 	}
 	from, to := util.Math.MinAndMaxOfTime(allTimes...)
 	lowest, highest := util.Math.MinAndMax(allValues...)
@@ -35,17 +35,17 @@ func ResolveLimits(metricsData []*types.MetricData) Limits {
 		lowest = lowest + 5
 		highest = highest + 5
 	}
-	return Limits{
-		From:    from,
-		To:      to,
-		Lowest:  lowest,
-		Highest: highest,
+	return plotLimits{
+		from:    from,
+		to:      to,
+		lowest:  lowest,
+		highest: highest,
 	}
 }
 
-// FormsSetContaining returns true if dot can belong to a set formed from limit values
-func (limits Limits) FormsSetContaining(dot float64) bool {
-	if (dot >= limits.Lowest) && (dot <= limits.Highest) {
+// formsSetContaining returns true if dot can belong to a set formed from limit values
+func (limits plotLimits) formsSetContaining(dot float64) bool {
+	if (dot >= limits.lowest) && (dot <= limits.highest) {
 		return true
 	}
 	return false

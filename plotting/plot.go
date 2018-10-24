@@ -1,98 +1,85 @@
 package plotting
 
 import (
-	"github.com/golang/freetype/truetype"
-
 	"github.com/go-graphite/carbonapi/expr/types"
+	"github.com/moira-alert/moira"
 	"github.com/wcharczuk/go-chart"
 	"github.com/wcharczuk/go-chart/drawing"
 )
 
-// Plot represents plot structure to render
+// plot represents plot structure to render
 type Plot struct {
-	Title      string
-	Theme      string
-	Rising    *bool
-	WarnValue  *float64
-	ErrorValue *float64
+	theme  *plotTheme
+	width  int
+	height int
 }
 
-// FromParams returns Plot struct
-func FromParams(plotTitle string, plotTheme string, isRising *bool, warnValue *float64, errorValue *float64) Plot {
-	return Plot{plotTitle, plotTheme, isRising, warnValue, errorValue}
-}
-
-// IsRaising returns true if plot is of type Raising
-func (plot Plot) IsRising() bool {
-	if plot.Rising != nil {
-		return *plot.Rising
+// GetPlotTemplate returns plot template
+func GetPlotTemplate(theme string) (*Plot, error) {
+	plotTheme, err := getPlotTheme(theme)
+	if err != nil {
+		return nil, err
 	}
-	if plot.ErrorValue != nil && plot.WarnValue != nil {
-		if *plot.ErrorValue > *plot.WarnValue {
-			return true
-		}
-	}
-	return false
+	return &Plot{
+		theme:  plotTheme,
+		width:  800,
+		height: 400,
+	}, nil
 }
 
 // GetRenderable returns go-chart to render
-func (plot Plot) GetRenderable(metricsData []*types.MetricData, plotFont *truetype.Font) chart.Chart {
+func (plot *Plot) GetRenderable(trigger *moira.Trigger, metricsData []*types.MetricData, limitSeries []string) chart.Chart {
 	// TODO: Return "no metrics found" as picture too
 
-	rising := plot.IsRising()
-	yAxisMain, yAxisDescending := GetYAxisParams(rising)
+	yAxisMain, yAxisDescending := getYAxisParams(trigger.TriggerType)
 
 	plotSeries := make([]chart.Series, 0)
+	plotLimits := resolveLimits(metricsData)
 
-	for timeSerieIndex := range metricsData {
-		plotCurves := GeneratePlotCurves(metricsData[timeSerieIndex], timeSerieIndex, yAxisMain)
-		for _, timeSerie := range plotCurves {
-			plotSeries = append(plotSeries, timeSerie)
-		}
+	curveSeriesList := getCurveSeriesList(metricsData, plot.theme, yAxisMain, limitSeries)
+	for _, curveSeries := range curveSeriesList {
+		plotSeries = append(plotSeries, curveSeries)
 	}
 
-	plotLimits := ResolveLimits(metricsData)
-	plotThresholds := GenerateThresholds(plot, plotLimits, rising)
-
-	for _, plotThreshold := range plotThresholds {
-		plotSeries = append(plotSeries, plotThreshold.GenerateThresholdSeries(plotLimits, rising))
-		plotSeries = append(plotSeries, plotThreshold.GenerateAnnotationSeries(plotLimits, rising, plotFont))
+	thresholdSeriesList, hasThresholds := getThresholdSeriesList(trigger, plotLimits, plot.theme)
+	for _, thresholdSeries := range thresholdSeriesList {
+		plotSeries = append(plotSeries, thresholdSeries)
 	}
 
-	bgPadding := GetBgPadding(plotLimits, len(plotThresholds))
-	gridStyle := GetGridStyle(plot.Theme)
+	bgPadding := getBgPadding(plotLimits, hasThresholds)
+	gridStyle := plot.theme.gridStyle
 
-	yAxisValuesFormatter := GetYAxisValuesFormatter(plotLimits)
+	yAxisValuesFormatter := getYAxisValuesFormatter(plotLimits)
 
 	renderable := chart.Chart{
 
-		Title: SanitizeLabelName(plot.Title, 40),
+		Title: sanitizeLabelName(trigger.Name, 40),
 		TitleStyle: chart.Style{
 			Show:        true,
-			Font:        plotFont,
+			Font:        plot.theme.font,
 			FontColor:   chart.ColorAlternateGray,
-			FillColor:   drawing.ColorFromHex(plot.Theme),
-			StrokeColor: drawing.ColorFromHex(plot.Theme),
+			FillColor:   drawing.ColorFromHex(plot.theme.bgColor),
+			StrokeColor: drawing.ColorFromHex(plot.theme.bgColor),
 		},
 
-		Width:  PlotWidth,
-		Height: PlotHeight,
+		Width:  plot.width,
+		Height: plot.height,
 
 		Canvas: chart.Style{
-			FillColor: drawing.ColorFromHex(plot.Theme),
+			FillColor: drawing.ColorFromHex(plot.theme.bgColor),
 		},
 		Background: chart.Style{
-			FillColor: drawing.ColorFromHex(plot.Theme),
+			FillColor: drawing.ColorFromHex(plot.theme.bgColor),
 			Padding:   bgPadding,
 		},
 
 		XAxis: chart.XAxis{
 			Style: chart.Style{
 				Show:        true,
-				Font:        plotFont,
+				Font:        plot.theme.font,
 				FontSize:    8,
 				FontColor:   chart.ColorAlternateGray,
-				StrokeColor: drawing.ColorFromHex(plot.Theme),
+				StrokeColor: drawing.ColorFromHex(plot.theme.bgColor),
 			},
 			GridMinorStyle: gridStyle,
 			GridMajorStyle: gridStyle,
@@ -109,7 +96,7 @@ func (plot Plot) GetRenderable(metricsData []*types.MetricData, plotFont *truety
 
 			Range: &chart.ContinuousRange{
 				Descending: yAxisDescending,
-				Max:        plotLimits.Highest,
+				Max:        plotLimits.highest,
 				Min:        0,
 			},
 		},
@@ -118,16 +105,16 @@ func (plot Plot) GetRenderable(metricsData []*types.MetricData, plotFont *truety
 			ValueFormatter: yAxisValuesFormatter,
 			Style: chart.Style{
 				Show:        true,
-				Font:        plotFont,
+				Font:        plot.theme.font,
 				FontColor:   chart.ColorAlternateGray,
-				StrokeColor: drawing.ColorFromHex(plot.Theme),
+				StrokeColor: drawing.ColorFromHex(plot.theme.bgColor),
 			},
 			GridMinorStyle: gridStyle,
 			GridMajorStyle: gridStyle,
 
 			Range: &chart.ContinuousRange{
-				Max: plotLimits.Highest,
-				Min: plotLimits.Lowest,
+				Max: plotLimits.highest,
+				Min: plotLimits.lowest,
 			},
 		},
 
@@ -135,7 +122,7 @@ func (plot Plot) GetRenderable(metricsData []*types.MetricData, plotFont *truety
 	}
 
 	renderable.Elements = []chart.Renderable{
-		GetPlotLegend(&renderable),
+		getPlotLegend(&renderable, plot.width),
 	}
 
 	return renderable
