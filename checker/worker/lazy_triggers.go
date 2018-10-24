@@ -38,9 +38,12 @@ func (worker *Checker) fillLazyTriggerIDs() error {
 	if err != nil {
 		return err
 	}
-	worker.lazyTriggerIDs = make(map[string]bool)
+	newLazyTriggerIDs := make(map[string]bool)
 	for _, triggerID := range triggerIDs {
-		worker.lazyTriggerIDs[triggerID] = true
+		newLazyTriggerIDs[triggerID] = true
+	}
+	if len(newLazyTriggerIDs) > 0 {
+		worker.lazyTriggerIDs = newLazyTriggerIDs
 	}
 	return nil
 }
