@@ -83,6 +83,7 @@ func (worker *Checker) Start() error {
 
 	worker.tomb.Go(func() error { return worker.checkMetricEventsChannelLen(metricEventsChannel) })
 	worker.tomb.Go(worker.checkTriggersToCheckCount)
+	worker.tomb.Go(worker.checkLazyTriggersLen)
 	return nil
 }
 
@@ -117,6 +118,18 @@ func (worker *Checker) checkMetricEventsChannelLen(ch <-chan *moira.MetricEvent)
 			return nil
 		case <-checkTicker.C:
 			worker.Metrics.MetricEventsChannelLen.Update(int64(len(ch)))
+		}
+	}
+}
+
+func (worker *Checker) checkLazyTriggersLen() error {
+	checkTicker := time.NewTicker(time.Millisecond * 100)
+	for {
+		select {
+		case <-worker.tomb.Dying():
+			return nil
+		case <-checkTicker.C:
+			worker.Metrics.UnusedTriggersCount.Update(int64(len(worker.lazyTriggerIDs)))
 		}
 	}
 }

@@ -45,6 +45,5 @@ func (worker *Checker) fillLazyTriggerIDs() error {
 	if len(newLazyTriggerIDs) > 0 {
 		worker.lazyTriggerIDs = newLazyTriggerIDs
 	}
-	worker.Metrics.UnusedTriggersCount.Update(int64(len(worker.lazyTriggerIDs)))
 	return nil
 }
