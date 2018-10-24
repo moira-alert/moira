@@ -78,8 +78,6 @@ func (connector *DbConnector) SaveSubscription(subscription *moira.SubscriptionD
 // SaveSubscriptions writes subscriptions, updates tags subscriptions and user subscriptions
 func (connector *DbConnector) SaveSubscriptions(subscriptions []*moira.SubscriptionData) error {
 	ids := make([]string, len(subscriptions))
-	oldTriggers := make(map[string][]*moira.Trigger)
-	newTriggers := make(map[string][]*moira.Trigger)
 	for i, subscription := range subscriptions {
 		ids[i] = subscription.ID
 	}
@@ -87,11 +85,9 @@ func (connector *DbConnector) SaveSubscriptions(subscriptions []*moira.Subscript
 	if err != nil {
 		return err
 	}
-	for _, subscription := range oldSubscriptions {
-		oldTriggers[subscription.ID], err = connector.getSubscriptionTriggers(subscription)
-		if err != nil {
-			return err
-		}
+	oldTriggers, err := connector.getSubscriptionsTriggers(oldSubscriptions)
+	if err != nil {
+		return err
 	}
 	c := connector.pool.Get()
 	defer c.Close()
@@ -103,21 +99,14 @@ func (connector *DbConnector) SaveSubscriptions(subscriptions []*moira.Subscript
 	if err != nil {
 		return fmt.Errorf("Failed to EXEC: %s", err.Error())
 	}
-
-	for _, subscription := range subscriptions {
-		newTriggers[subscription.ID], err = connector.getSubscriptionTriggers(subscription)
-		if err != nil {
-			return err
-		}
+	newTriggers, err := connector.getSubscriptionsTriggers(subscriptions)
+	if err != nil {
+		return err
+	}
+	if err := connector.refreshUnusedTriggers(newTriggers, oldTriggers); err != nil {
+		return err
 	}
 
-	for _, subscription := range subscriptions {
-		oldTriggersBySubscription := oldTriggers[subscription.ID]
-		newTriggersBySubscription := newTriggers[subscription.ID]
-		if err := connector.refreshUnusedTriggers(newTriggersBySubscription, oldTriggersBySubscription); err != nil {
-			return err
-		}
-	}
 	return nil
 }
 
@@ -240,6 +229,25 @@ func (connector *DbConnector) getSubscriptionTriggers(subscription *moira.Subscr
 		return make([]*moira.Trigger, 0), nil
 	}
 	return connector.GetTriggers(triggerIDs)
+}
+
+func (connector *DbConnector) getSubscriptionsTriggers(subscriptions []*moira.SubscriptionData) ([]*moira.Trigger, error) {
+	triggersMap := make(map[string]*moira.Trigger, 0)
+	triggers := make([]*moira.Trigger, 0)
+
+	for _, subscription := range subscriptions {
+		oldTriggersBySubscription, err := connector.getSubscriptionTriggers(subscription)
+		if err != nil {
+			return triggers, err
+		}
+		for _, trigger := range oldTriggersBySubscription {
+			triggersMap[trigger.ID] = trigger
+		}
+	}
+	for _, trigger := range triggersMap {
+		triggers = append(triggers, trigger)
+	}
+	return triggers, nil
 }
 
 func subscriptionKey(id string) string {
