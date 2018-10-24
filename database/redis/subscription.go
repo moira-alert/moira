@@ -205,11 +205,12 @@ func addSendSubscriptionRequest(c redis.Conn, subscription *moira.SubscriptionDa
 }
 
 func (connector *DbConnector) getSubscriptionTriggers(subscription *moira.SubscriptionData) ([]*moira.Trigger, error) {
-	c := connector.pool.Get()
-	defer c.Close()
-	if len(subscription.Tags) == 0 {
+	if subscription == nil || len(subscription.Tags) == 0 {
 		return make([]*moira.Trigger, 0), nil
 	}
+
+	c := connector.pool.Get()
+	defer c.Close()
 
 	tagKeys := make([]interface{}, 0, len(subscription.Tags))
 	for _, tag := range subscription.Tags {

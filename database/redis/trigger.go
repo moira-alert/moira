@@ -298,6 +298,9 @@ func (connector *DbConnector) cleanupPatternsOutOfUse(pattern []string) error {
 }
 
 func (connector *DbConnector) triggerHasSubscriptions(trigger *moira.Trigger) (bool, error) {
+	if trigger == nil || len(trigger.Tags) == 0 {
+		return false, nil
+	}
 	subscriptions, err := connector.GetTagsSubscriptions(trigger.Tags)
 	if err != nil {
 		return false, err
