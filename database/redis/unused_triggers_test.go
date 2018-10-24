@@ -7,7 +7,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestDbConnector_MarkTriggersAsUnused(t *testing.T) {
+func TestUnusedTriggers(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test")
 	dataBase := NewDatabase(logger, config)
 	dataBase.flush()
@@ -67,6 +67,13 @@ func TestDbConnector_MarkTriggersAsUnused(t *testing.T) {
 
 		triggerIDs, err = dataBase.GetUnusedTriggerIDs()
 		So(triggerIDs, ShouldResemble, []string{"345"})
+		So(err, ShouldBeNil)
+
+		// AAAAND magic
+		err = dataBase.MarkTriggersAsUsed()
+		So(err, ShouldBeNil)
+
+		err = dataBase.MarkTriggersAsUnused()
 		So(err, ShouldBeNil)
 	})
 }
