@@ -2,15 +2,9 @@ package worker
 
 import (
 	"time"
-
-	"github.com/moira-alert/moira/database"
 )
 
-const (
-	sleepAfterGetUnusedTriggerIDsError = time.Second * 1
-	sleepWhenNoUnusedTriggerIDs        = time.Second * 2
-	lazyTriggersWorkerTicker           = time.Second * 10
-)
+const lazyTriggersWorkerTicker = time.Second * 10
 
 func (worker *Checker) lazyTriggersWorker() error {
 	checkTicker := time.NewTicker(lazyTriggersWorkerTicker)
@@ -23,11 +17,8 @@ func (worker *Checker) lazyTriggersWorker() error {
 			return nil
 		case <-checkTicker.C:
 			err := worker.fillLazyTriggerIDs()
-			if err == database.ErrNil {
-				<-time.After(sleepWhenNoUnusedTriggerIDs)
-			} else {
+			if err != nil {
 				worker.Logger.Errorf("Failed to get unused triggers: %s", err.Error())
-				<-time.After(sleepAfterGetUnusedTriggerIDsError)
 			}
 		}
 	}
@@ -42,9 +33,7 @@ func (worker *Checker) fillLazyTriggerIDs() error {
 	for _, triggerID := range triggerIDs {
 		newLazyTriggerIDs[triggerID] = true
 	}
-	if len(newLazyTriggerIDs) > 0 {
-		worker.lazyTriggerIDs = newLazyTriggerIDs
-	}
+	worker.lazyTriggerIDs = newLazyTriggerIDs
 	worker.Metrics.UnusedTriggersCount.Update(int64(len(worker.lazyTriggerIDs)))
 	return nil
 }
