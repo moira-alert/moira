@@ -16,11 +16,16 @@ func TestUnusedTriggers(t *testing.T) {
 	defer dataBase.flush()
 
 	Convey("Check marking unused", t, func() {
+		// Check it before any trigger is marked unused
+		triggerIDs, err := dataBase.GetUnusedTriggerIDs()
+		So(err, ShouldBeNil)
+		So(triggerIDs, ShouldBeEmpty)
+
 		// Mark trigger 123 unused
-		err := dataBase.MarkTriggersAsUnused("123")
+		err = dataBase.MarkTriggersAsUnused("123")
 		So(err, ShouldBeNil)
 
-		triggerIDs, err := dataBase.GetUnusedTriggerIDs()
+		triggerIDs, err = dataBase.GetUnusedTriggerIDs()
 		So(triggerIDs, ShouldResemble, []string{"123"})
 		So(err, ShouldBeNil)
 
