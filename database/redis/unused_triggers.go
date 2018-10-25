@@ -34,6 +34,9 @@ func (connector *DbConnector) GetUnusedTriggerIDs() ([]string, error) {
 
 	triggerIds, err := redis.Strings(c.Do("SMEMBERS", unusedTriggersKey))
 	if err != nil {
+		if err == redis.ErrNil {
+			return make([]string, 0), nil
+		}
 		return nil, fmt.Errorf("failed to get all unused triggers: %s", err.Error())
 	}
 	return triggerIds, nil
@@ -54,7 +57,7 @@ func (connector *DbConnector) MarkTriggersAsUsed(triggerIDs ...string) error {
 	}
 	_, err := redis.Values(c.Do("EXEC"))
 	if err != nil {
-		return fmt.Errorf("failed to add triggers without subscription: %s", err.Error())
+		return fmt.Errorf("failed to mark triggers as used: %s", err.Error())
 	}
 
 	return nil
