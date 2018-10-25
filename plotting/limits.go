@@ -5,7 +5,10 @@ import (
 	"time"
 
 	"github.com/go-graphite/carbonapi/expr/types"
+	"github.com/wcharczuk/go-chart"
 	"github.com/wcharczuk/go-chart/util"
+
+	"github.com/moira-alert/moira"
 )
 
 // plotLimits is a set of limits for given metricsData
@@ -40,6 +43,22 @@ func resolveLimits(metricsData []*types.MetricData) plotLimits {
 		to:      to,
 		lowest:  lowest,
 		highest: highest,
+	}
+}
+
+// getThresholdAxisRange returns threshold axis range
+func (limits *plotLimits) getThresholdAxisRange(triggerType string) chart.ContinuousRange {
+	if triggerType == moira.RisingTrigger {
+		return chart.ContinuousRange{
+			Descending: true,
+			Max:        limits.highest - limits.lowest,
+			Min:        0,
+		}
+	}
+	return chart.ContinuousRange{
+		Descending: false,
+		Max:        limits.highest,
+		Min:        limits.lowest,
 	}
 }
 

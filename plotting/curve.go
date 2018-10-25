@@ -15,23 +15,41 @@ type plotCurve struct {
 	values     []float64
 }
 
-func getCurveSeriesList(metricsData []*types.MetricData, theme *plotTheme, mainYAxis int, limitSeries []string) []chart.TimeSeries {
+// getCurveSeriesList returns curve series list
+func getCurveSeriesList(metricsData []*types.MetricData, theme *plotTheme, metricsWhitelist []string) []chart.TimeSeries {
 	curveSeriesList := make([]chart.TimeSeries, 0)
-	for metricDataInd := range metricsData {
-		if !mustBeShown(metricsData[metricDataInd].Name, limitSeries) {
-			continue
+	metricsToShow := len(metricsWhitelist)
+	switch metricsToShow {
+	case 0:
+		for metricDataInd := range metricsData {
+			curveColor := theme.pickCurveColor(metricDataInd)
+			curveSeries := generatePlotCurves(metricsData[metricDataInd], curveColor)
+			for _, curveSerie := range curveSeries {
+				curveSeriesList = append(curveSeriesList, curveSerie)
+			}
 		}
-		curveColor := theme.pickCurveColor(metricDataInd)
-		curveSeries := generatePlotCurves(metricsData[metricDataInd], curveColor, mainYAxis)
-		for _, curveSerie := range curveSeries {
-			curveSeriesList = append(curveSeriesList, curveSerie)
+	default:
+		metricsProcessed := 0
+		for metricDataInd := range metricsData {
+			if !mustBeShown(metricsData[metricDataInd].Name, metricsWhitelist) {
+				continue
+			}
+			curveColor := theme.pickCurveColor(metricDataInd)
+			curveSeries := generatePlotCurves(metricsData[metricDataInd], curveColor)
+			for _, curveSerie := range curveSeries {
+				curveSeriesList = append(curveSeriesList, curveSerie)
+			}
+			metricsProcessed++
+			if metricsProcessed == len(metricsWhitelist)-1 {
+				break
+			}
 		}
 	}
 	return curveSeriesList
 }
 
 // generatePlotCurves returns go-chart timeseries to generate plot curves
-func generatePlotCurves(metricData *types.MetricData, curveColor string, mainYAxis int) []chart.TimeSeries {
+func generatePlotCurves(metricData *types.MetricData, curveColor string) []chart.TimeSeries {
 	// TODO: create style to draw single value in between of gaps
 	curves := describePlotCurves(metricData)
 	curveSeries := make([]chart.TimeSeries, 0)
@@ -39,7 +57,7 @@ func generatePlotCurves(metricData *types.MetricData, curveColor string, mainYAx
 		if len(curve.values) > 1 {
 			curveSerie := chart.TimeSeries{
 				Name:  metricData.Name,
-				YAxis: chart.YAxisType(mainYAxis),
+				YAxis: chart.YAxisSecondary,
 				Style: chart.Style{
 					Show:        true,
 					StrokeWidth: 1,
@@ -97,9 +115,6 @@ func resolveFirstPoint(metricData *types.MetricData) (int, int64) {
 
 // mustBeShown returns true if metric must be shown
 func mustBeShown(metricName string, metricsToShow []string) bool {
-	if len(metricsToShow) == 0 {
-		return true
-	}
 	for _, metricToShow := range metricsToShow {
 		if metricToShow == metricName {
 			return true

@@ -2,8 +2,6 @@ package plotting
 
 import (
 	"github.com/golang/freetype/truetype"
-	"github.com/moira-alert/moira"
-
 	"github.com/wcharczuk/go-chart"
 	"github.com/wcharczuk/go-chart/drawing"
 )
@@ -81,14 +79,6 @@ func getDefaultFont() (*truetype.Font, error) {
 		return nil, err
 	}
 	return ttf, nil
-}
-
-// getYAxisParams returns threshold specific params for yaxis
-func getYAxisParams(triggerType string) (int, bool) {
-	if triggerType == moira.RisingTrigger {
-		return 1, true
-	}
-	return 0, false
 }
 
 // GetBgPadding returns background padding

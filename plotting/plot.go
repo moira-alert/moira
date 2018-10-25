@@ -28,15 +28,12 @@ func GetPlotTemplate(theme string) (*Plot, error) {
 }
 
 // GetRenderable returns go-chart to render
-func (plot *Plot) GetRenderable(trigger *moira.Trigger, metricsData []*types.MetricData, limitSeries []string) chart.Chart {
+func (plot *Plot) GetRenderable(trigger *moira.Trigger, metricsData []*types.MetricData, metricsWhitelist []string) chart.Chart {
 	// TODO: Return "no metrics found" as picture too
-
-	yAxisMain, yAxisDescending := getYAxisParams(trigger.TriggerType)
-
 	plotSeries := make([]chart.Series, 0)
 	plotLimits := resolveLimits(metricsData)
 
-	curveSeriesList := getCurveSeriesList(metricsData, plot.theme, yAxisMain, limitSeries)
+	curveSeriesList := getCurveSeriesList(metricsData, plot.theme, metricsWhitelist)
 	for _, curveSeries := range curveSeriesList {
 		plotSeries = append(plotSeries, curveSeries)
 	}
@@ -50,6 +47,7 @@ func (plot *Plot) GetRenderable(trigger *moira.Trigger, metricsData []*types.Met
 	gridStyle := plot.theme.gridStyle
 
 	yAxisValuesFormatter := getYAxisValuesFormatter(plotLimits)
+	yAxisRange := plotLimits.getThresholdAxisRange(trigger.TriggerType)
 
 	renderable := chart.Chart{
 
@@ -83,7 +81,6 @@ func (plot *Plot) GetRenderable(trigger *moira.Trigger, metricsData []*types.Met
 			},
 			GridMinorStyle: gridStyle,
 			GridMajorStyle: gridStyle,
-
 			ValueFormatter: chart.TimeValueFormatterWithFormat("15:04"),
 		},
 
@@ -93,12 +90,7 @@ func (plot *Plot) GetRenderable(trigger *moira.Trigger, metricsData []*types.Met
 			},
 			GridMinorStyle: gridStyle,
 			GridMajorStyle: gridStyle,
-
-			Range: &chart.ContinuousRange{
-				Descending: yAxisDescending,
-				Max:        plotLimits.highest-plotLimits.lowest,
-				Min:        0,
-			},
+			Range: &yAxisRange,
 		},
 
 		YAxisSecondary: chart.YAxis{
@@ -111,7 +103,6 @@ func (plot *Plot) GetRenderable(trigger *moira.Trigger, metricsData []*types.Met
 			},
 			GridMinorStyle: gridStyle,
 			GridMajorStyle: gridStyle,
-
 			Range: &chart.ContinuousRange{
 				Max: plotLimits.highest,
 				Min: plotLimits.lowest,
