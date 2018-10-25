@@ -24,6 +24,7 @@ type plotTheme struct {
 }
 
 func getPlotTheme(theme string) (*plotTheme, error) {
+	// TODO: rewrite ligt theme
 	themeFont, err := getDefaultFont()
 	if err != nil {
 		return nil, err
@@ -68,9 +69,9 @@ func getPlotTheme(theme string) (*plotTheme, error) {
 
 func (theme *plotTheme) pickCurveColor(seriesInd int) string {
 	if seriesInd >= len(theme.curveColors)-1 {
-		return theme.curveColors[seriesInd]
+		return theme.curveColors[0]
 	}
-	return theme.curveColors[0]
+	return theme.curveColors[seriesInd]
 }
 
 // getDefaultFont returns true type font

@@ -29,7 +29,7 @@ type threshold struct {
 // getThresholdSeriesList returns collection of thresholds and annotations
 func getThresholdSeriesList(trigger *moira.Trigger, limits plotLimits, theme *plotTheme) ([]chart.Series, bool) {
 	thresholdSeriesList := make([]chart.Series, 0)
-	if trigger.TriggerType == moira.FallingTrigger {
+	if trigger.TriggerType == moira.ExpressionTrigger {
 		return thresholdSeriesList, false
 	}
 	plotThresholds := generateThresholds(trigger, limits, theme)

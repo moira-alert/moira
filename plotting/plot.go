@@ -96,7 +96,7 @@ func (plot *Plot) GetRenderable(trigger *moira.Trigger, metricsData []*types.Met
 
 			Range: &chart.ContinuousRange{
 				Descending: yAxisDescending,
-				Max:        plotLimits.highest,
+				Max:        plotLimits.highest-plotLimits.lowest,
 				Min:        0,
 			},
 		},
