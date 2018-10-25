@@ -7,7 +7,7 @@ import (
 	"github.com/wcharczuk/go-chart/drawing"
 )
 
-// plot represents plot structure to render
+// Plot represents plot structure to render
 type Plot struct {
 	theme  *plotTheme
 	width  int
@@ -31,23 +31,21 @@ func GetPlotTemplate(theme string) (*Plot, error) {
 func (plot *Plot) GetRenderable(trigger *moira.Trigger, metricsData []*types.MetricData, metricsWhitelist []string) chart.Chart {
 	// TODO: Return "no metrics found" as picture too
 	plotSeries := make([]chart.Series, 0)
-	plotLimits := resolveLimits(metricsData)
+	limits := resolveLimits(metricsData)
 
 	curveSeriesList := getCurveSeriesList(metricsData, plot.theme, metricsWhitelist)
 	for _, curveSeries := range curveSeriesList {
 		plotSeries = append(plotSeries, curveSeries)
 	}
 
-	thresholdSeriesList, hasThresholds := getThresholdSeriesList(trigger, plotLimits, plot.theme)
-	for _, thresholdSeries := range thresholdSeriesList {
-		plotSeries = append(plotSeries, thresholdSeries)
-	}
+	thresholdSeriesList, hasThresholds := getThresholdSeriesList(trigger, limits, plot.theme)
+	plotSeries = append(plotSeries, thresholdSeriesList...)
 
-	bgPadding := getBgPadding(plotLimits, hasThresholds)
+	bgPadding := getBgPadding(limits, hasThresholds)
 	gridStyle := plot.theme.gridStyle
 
-	yAxisValuesFormatter := getYAxisValuesFormatter(plotLimits)
-	yAxisRange := plotLimits.getThresholdAxisRange(trigger.TriggerType)
+	yAxisValuesFormatter := getYAxisValuesFormatter(limits)
+	yAxisRange := limits.getThresholdAxisRange(trigger.TriggerType)
 
 	renderable := chart.Chart{
 
@@ -104,8 +102,8 @@ func (plot *Plot) GetRenderable(trigger *moira.Trigger, metricsData []*types.Met
 			GridMinorStyle: gridStyle,
 			GridMajorStyle: gridStyle,
 			Range: &chart.ContinuousRange{
-				Max: plotLimits.highest,
-				Min: plotLimits.lowest,
+				Max: limits.highest,
+				Min: limits.lowest,
 			},
 		},
 

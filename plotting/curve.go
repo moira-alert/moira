@@ -24,9 +24,7 @@ func getCurveSeriesList(metricsData []*types.MetricData, theme *plotTheme, metri
 		for metricDataInd := range metricsData {
 			curveColor := theme.pickCurveColor(metricDataInd)
 			curveSeries := generatePlotCurves(metricsData[metricDataInd], curveColor)
-			for _, curveSerie := range curveSeries {
-				curveSeriesList = append(curveSeriesList, curveSerie)
-			}
+			curveSeriesList = append(curveSeriesList, curveSeries...)
 		}
 	default:
 		metricsProcessed := 0
@@ -36,9 +34,7 @@ func getCurveSeriesList(metricsData []*types.MetricData, theme *plotTheme, metri
 			}
 			curveColor := theme.pickCurveColor(metricDataInd)
 			curveSeries := generatePlotCurves(metricsData[metricDataInd], curveColor)
-			for _, curveSerie := range curveSeries {
-				curveSeriesList = append(curveSeriesList, curveSerie)
-			}
+			curveSeriesList = append(curveSeriesList, curveSeries...)
 			metricsProcessed++
 			if metricsProcessed == len(metricsWhitelist)-1 {
 				break
