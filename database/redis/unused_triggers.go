@@ -83,7 +83,9 @@ func (connector *DbConnector) refreshUnusedTriggers(newTriggers, oldTriggers []*
 	}
 
 	for _, trigger := range newTriggers {
-		usedTriggerIDs = append(usedTriggerIDs, trigger.ID)
+		if trigger != nil {
+			usedTriggerIDs = append(usedTriggerIDs, trigger.ID)
+		}
 	}
 
 	if len(unusedTriggerIDs) > 0 {
