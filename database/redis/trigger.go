@@ -307,7 +307,7 @@ func (connector *DbConnector) triggerHasSubscriptions(trigger *moira.Trigger) (b
 	}
 
 	for _, subscription := range subscriptions {
-		if moira.Subset(subscription.Tags, trigger.Tags) {
+		if subscription != nil && moira.Subset(subscription.Tags, trigger.Tags) {
 			return true, nil
 		}
 	}
