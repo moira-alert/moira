@@ -12,7 +12,8 @@ const (
 
 func (worker *Checker) lazyTriggersWorker() error {
 	checkTicker := time.NewTicker(lazyTriggersWorkerTicker)
-	worker.Logger.Infof("Start lazy triggers worker. Check triggers without any subscription every %v", lazyTriggersWorkerTicker)
+	worker.Logger.Infof("Start lazy triggers worker. Update lazy triggers list every %v", lazyTriggersWorkerTicker)
+	worker.Logger.Infof("Check lazy triggers every %v", worker.Config.LazyTriggersCheckInterval)
 	for {
 		select {
 		case <-worker.tomb.Dying():
@@ -22,7 +23,7 @@ func (worker *Checker) lazyTriggersWorker() error {
 		case <-checkTicker.C:
 			err := worker.fillLazyTriggerIDs()
 			if err != nil {
-				worker.Logger.Errorf("Failed to get unused triggers: %s", err.Error())
+				worker.Logger.Errorf("Failed to get lazy triggers: %s", err.Error())
 			}
 		}
 	}
