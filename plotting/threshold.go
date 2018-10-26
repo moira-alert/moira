@@ -35,7 +35,7 @@ func getThresholdSeriesList(trigger *moira.Trigger, limits plotLimits, theme *pl
 	plotThresholds := generateThresholds(trigger, limits, theme)
 	for _, plotThreshold := range plotThresholds {
 		thresholdSeriesList = append(thresholdSeriesList, plotThreshold.generateThresholdSeries(limits))
-		thresholdSeriesList = append(thresholdSeriesList, plotThreshold.generateAnnotationSeries(limits, theme.font))
+		thresholdSeriesList = append(thresholdSeriesList, plotThreshold.generateAnnotationSeries(theme.font))
 	}
 	return thresholdSeriesList, true
 }
@@ -123,7 +123,7 @@ func (threshold *threshold) generateThresholdSeries(limits plotLimits) chart.Tim
 }
 
 // generateAnnotationSeries returns threshold annotation series
-func (threshold *threshold) generateAnnotationSeries(limits plotLimits, annotationFont *truetype.Font) chart.AnnotationSeries {
+func (threshold *threshold) generateAnnotationSeries(annotationFont *truetype.Font) chart.AnnotationSeries {
 	annotationSeries := chart.AnnotationSeries{
 		Annotations: []chart.Value2{
 			{

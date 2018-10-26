@@ -18,8 +18,7 @@ type plotCurve struct {
 // getCurveSeriesList returns curve series list
 func getCurveSeriesList(metricsData []*types.MetricData, theme *plotTheme, metricsWhitelist []string) []chart.TimeSeries {
 	curveSeriesList := make([]chart.TimeSeries, 0)
-	metricsToShow := len(metricsWhitelist)
-	switch metricsToShow {
+	switch len(metricsWhitelist) {
 	case 0:
 		for metricDataInd := range metricsData {
 			curveColor := theme.pickCurveColor(metricDataInd)

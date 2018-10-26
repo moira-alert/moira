@@ -65,6 +65,7 @@ func getPlotTheme(theme string) (*plotTheme, error) {
 	}
 }
 
+// pickCurveColor returns color for chosen series
 func (theme *plotTheme) pickCurveColor(seriesInd int) string {
 	if seriesInd >= len(theme.curveColors)-1 {
 		return theme.curveColors[0]
