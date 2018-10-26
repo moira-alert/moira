@@ -23,6 +23,7 @@ type checkerConfig struct {
 	// Min period to perform triggers re-check. Note: Reducing of this value leads to increasing of CPU and memory usage values
 	CheckInterval string `yaml:"check_interval"`
 	// Max period to perform lazy triggers re-check. Note: lazy triggers are triggers which has no subscription for it. Moira will check its state less frequently.
+	// Delay for check lazy trigger is random between LazyTriggersCheckInterval/2 and LazyTriggersCheckInterval.
 	LazyTriggersCheckInterval string `yaml:"lazy_triggers_check_interval"`
 	// Time interval to store metrics. Note: Increasing of this value leads to increasing of Redis memory consumption value
 	MetricsTTL string `yaml:"metrics_ttl"`

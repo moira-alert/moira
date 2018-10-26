@@ -7,7 +7,6 @@ import (
 
 const (
 	lazyTriggersWorkerTicker = time.Second * 10
-	maxLazyCacheSeconds      = float64(10 * 60)
 )
 
 func (worker *Checker) lazyTriggersWorker() error {
@@ -43,7 +42,8 @@ func (worker *Checker) fillLazyTriggerIDs() error {
 	return nil
 }
 
-func getRandomLazyCacheDuration() time.Duration {
+func (worker *Checker) getRandomLazyCacheDuration() time.Duration {
+	maxLazyCacheSeconds := worker.Config.LazyTriggersCheckInterval.Seconds()
 	min := maxLazyCacheSeconds / 2
 	i := rand.Float64()*min + min
 	return time.Duration(i) * time.Second
