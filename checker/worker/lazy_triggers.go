@@ -1,10 +1,14 @@
 package worker
 
 import (
+	"math/rand"
 	"time"
 )
 
-const lazyTriggersWorkerTicker = time.Second * 10
+const (
+	lazyTriggersWorkerTicker = time.Second * 10
+	maxLazyCacheSeconds      = float64(10 * 60)
+)
 
 func (worker *Checker) lazyTriggersWorker() error {
 	checkTicker := time.NewTicker(lazyTriggersWorkerTicker)
@@ -36,4 +40,10 @@ func (worker *Checker) fillLazyTriggerIDs() error {
 	worker.lazyTriggerIDs = newLazyTriggerIDs
 	worker.Metrics.UnusedTriggersCount.Update(int64(len(worker.lazyTriggerIDs)))
 	return nil
+}
+
+func getRandomLazyCacheDuration() time.Duration {
+	min := maxLazyCacheSeconds / 2
+	i := rand.Float64()*min + min
+	return time.Duration(i) * time.Second
 }
