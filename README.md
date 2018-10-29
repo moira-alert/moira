@@ -8,8 +8,8 @@ Moira is a real-time alerting tool, based on [Graphite](https://graphite.readthe
 Docker Compose is the easiest way to try:
 
 ```
-git clone https://github.com/moira-alert/doc.git
-cd doc
+git clone https://github.com/moira-alert/docker-compose.git
+cd docker-compose
 docker-compose pull
 docker-compose up
 ```
