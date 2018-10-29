@@ -9,7 +9,7 @@ Docker Compose is the easiest way to try:
 
 ```
 git clone https://github.com/moira-alert/docker-compose.git
-cd doc
+cd docker-compose
 docker-compose pull
 docker-compose up
 ```
