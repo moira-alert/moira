@@ -22,6 +22,9 @@ type checkerConfig struct {
 	StopCheckingInterval string `yaml:"stop_checking_interval"`
 	// Min period to perform triggers re-check. Note: Reducing of this value leads to increasing of CPU and memory usage values
 	CheckInterval string `yaml:"check_interval"`
+	// Max period to perform lazy triggers re-check. Note: lazy triggers are triggers which has no subscription for it. Moira will check its state less frequently.
+	// Delay for check lazy trigger is random between LazyTriggersCheckInterval/2 and LazyTriggersCheckInterval.
+	LazyTriggersCheckInterval string `yaml:"lazy_triggers_check_interval"`
 	// Time interval to store metrics. Note: Increasing of this value leads to increasing of Redis memory consumption value
 	MetricsTTL string `yaml:"metrics_ttl"`
 	// Max concurrent checkers to run. Equals to the number of processor cores found on Moira host by default or when variable is defined as 0.
@@ -34,6 +37,7 @@ func (config *checkerConfig) getSettings() *checker.Config {
 	return &checker.Config{
 		MetricsTTLSeconds:           int64(to.Duration(config.MetricsTTL).Seconds()),
 		CheckInterval:               to.Duration(config.CheckInterval),
+		LazyTriggersCheckInterval:   to.Duration(config.LazyTriggersCheckInterval),
 		NoDataCheckInterval:         to.Duration(config.NoDataCheckInterval),
 		StopCheckingIntervalSeconds: int64(to.Duration(config.StopCheckingInterval).Seconds()),
 		MaxParallelChecks:           config.MaxParallelChecks,
@@ -52,12 +56,13 @@ func getDefault() config {
 			LogLevel: "info",
 		},
 		Checker: checkerConfig{
-			NoDataCheckInterval:     "60s",
-			CheckInterval:           "5s",
-			MetricsTTL:              "1h",
-			StopCheckingInterval:    "30s",
-			MaxParallelChecks:       0,
-			MaxParallelRemoteChecks: 0,
+			NoDataCheckInterval:       "60s",
+			CheckInterval:             "5s",
+			LazyTriggersCheckInterval: "10m",
+			MetricsTTL:                "1h",
+			StopCheckingInterval:      "30s",
+			MaxParallelChecks:         0,
+			MaxParallelRemoteChecks:   0,
 		},
 		Graphite: cmd.GraphiteConfig{
 			RuntimeStats: false,
