@@ -10,6 +10,10 @@ const (
 )
 
 func (worker *Checker) lazyTriggersWorker() error {
+	if worker.Config.LazyTriggersCheckInterval <= worker.Config.CheckInterval {
+		worker.Logger.Infof("Lazy triggers worker won't start because lazy triggers interval '%v' is less or equal to check interval '%v'", worker.Config.LazyTriggersCheckInterval, worker.Config.CheckInterval)
+		return nil
+	}
 	checkTicker := time.NewTicker(lazyTriggersWorkerTicker)
 	worker.Logger.Infof("Start lazy triggers worker. Update lazy triggers list every %v", lazyTriggersWorkerTicker)
 	worker.Logger.Infof("Check lazy triggers every %v", worker.Config.LazyTriggersCheckInterval)
