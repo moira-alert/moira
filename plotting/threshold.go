@@ -1,13 +1,11 @@
 package plotting
 
 import (
-	"github.com/moira-alert/moira"
 	"math"
 	"time"
 
-	"github.com/golang/freetype/truetype"
+	"github.com/moira-alert/moira"
 	"github.com/wcharczuk/go-chart"
-	"github.com/wcharczuk/go-chart/drawing"
 )
 
 const (
@@ -19,29 +17,27 @@ const (
 
 // threshold represents threshold parameters
 type threshold struct {
-	title     string
-	value     float64
-	timePoint float64
-	color     string
-	growTo    int
+	thresholdType string
+	xCoordinate   float64
+	yCoordinate   float64
 }
 
 // getThresholdSeriesList returns collection of thresholds and annotations
-func getThresholdSeriesList(trigger *moira.Trigger, limits plotLimits, theme *plotTheme) ([]chart.Series, bool) {
+func getThresholdSeriesList(trigger *moira.Trigger, limits plotLimits, theme moira.PlotTheme) []chart.Series {
 	thresholdSeriesList := make([]chart.Series, 0)
 	if trigger.TriggerType == moira.ExpressionTrigger {
-		return thresholdSeriesList, false
+		return thresholdSeriesList
 	}
 	plotThresholds := generateThresholds(trigger, limits, theme)
 	for _, plotThreshold := range plotThresholds {
-		thresholdSeriesList = append(thresholdSeriesList, plotThreshold.generateThresholdSeries(limits))
-		thresholdSeriesList = append(thresholdSeriesList, plotThreshold.generateAnnotationSeries(theme.font))
+		thresholdSeriesList = append(thresholdSeriesList, plotThreshold.generateThresholdSeries(theme, limits))
+		thresholdSeriesList = append(thresholdSeriesList, plotThreshold.generateAnnotationSeries(theme))
 	}
-	return thresholdSeriesList, true
+	return thresholdSeriesList
 }
 
 // generateThresholds returns thresholds available for plot
-func generateThresholds(trigger *moira.Trigger, limits plotLimits, theme *plotTheme) []*threshold {
+func generateThresholds(trigger *moira.Trigger, limits plotLimits, theme moira.PlotTheme) []*threshold {
 	// TODO: cover cases with negative warn & error values
 	// TODO: cover cases with out-of-range thresholds (no annotations required)
 	timePoint := float64(limits.to.UnixNano())
@@ -51,14 +47,12 @@ func generateThresholds(trigger *moira.Trigger, limits plotLimits, theme *plotTh
 		if trigger.WarnValue != nil && !(*trigger.WarnValue < 0) {
 			if limits.formsSetContaining(*trigger.WarnValue) {
 				warnThreshold := &threshold{
-					title:     "WARN",
-					value:     *trigger.WarnValue,
-					timePoint: timePoint,
-					color:     theme.warnThresholdColor,
-					growTo:    9,
+					thresholdType: "WARN",
+					xCoordinate:   timePoint,
+					yCoordinate:   *trigger.WarnValue,
 				}
 				if trigger.TriggerType == moira.RisingTrigger {
-					warnThreshold.value = limits.highest - *trigger.WarnValue
+					warnThreshold.yCoordinate = limits.highest - *trigger.WarnValue
 				}
 				thresholds = append(thresholds, warnThreshold)
 			}
@@ -67,14 +61,12 @@ func generateThresholds(trigger *moira.Trigger, limits plotLimits, theme *plotTh
 		if !(*trigger.ErrorValue < 0) {
 			if limits.formsSetContaining(*trigger.ErrorValue) {
 				errThreshold := &threshold{
-					title:     "ERROR",
-					value:     *trigger.ErrorValue,
-					timePoint: timePoint,
-					color:     theme.errorThresholdColor,
-					growTo:    0,
+					thresholdType: "ERROR",
+					xCoordinate:   timePoint,
+					yCoordinate:   *trigger.ErrorValue,
 				}
 				if trigger.TriggerType == moira.RisingTrigger {
-					errThreshold.value = limits.highest - *trigger.ErrorValue
+					errThreshold.yCoordinate = limits.highest - *trigger.ErrorValue
 				}
 				thresholds = append(thresholds, errThreshold)
 			}
@@ -85,14 +77,12 @@ func generateThresholds(trigger *moira.Trigger, limits plotLimits, theme *plotTh
 			if !(*trigger.WarnValue < 0) && deltaThresholds > (deltaLimits/InvertedThresholdGap) {
 				if limits.formsSetContaining(*trigger.WarnValue) {
 					warnThreshold := &threshold{
-						title:     "WARN",
-						value:     *trigger.WarnValue,
-						timePoint: timePoint,
-						color:     theme.warnThresholdColor,
-						growTo:    9,
+						thresholdType: "WARN",
+						xCoordinate:   timePoint,
+						yCoordinate:   *trigger.WarnValue,
 					}
 					if trigger.TriggerType == moira.RisingTrigger {
-						warnThreshold.value = limits.highest - *trigger.WarnValue
+						warnThreshold.yCoordinate = limits.highest - *trigger.WarnValue
 					}
 					thresholds = append(thresholds, warnThreshold)
 				}
@@ -103,42 +93,28 @@ func generateThresholds(trigger *moira.Trigger, limits plotLimits, theme *plotTh
 }
 
 // generateThresholdSeries returns threshold series
-func (threshold *threshold) generateThresholdSeries(limits plotLimits) chart.TimeSeries {
+func (threshold *threshold) generateThresholdSeries(theme moira.PlotTheme, limits plotLimits) chart.TimeSeries {
 	thresholdSeries := chart.TimeSeries{
 		Name: ThresholdSerie,
-		Style: chart.Style{
-			Show:        true,
-			StrokeWidth: 1,
-			StrokeColor: drawing.ColorFromHex(threshold.color).WithAlpha(90),
-			FillColor:   drawing.ColorFromHex(threshold.color).WithAlpha(20),
-		},
-
+		Style: theme.GetThresholdStyle(threshold.thresholdType),
 		XValues: []time.Time{limits.from, limits.to},
 		YValues: []float64{},
 	}
 	for j := 0; j < len(thresholdSeries.XValues); j++ {
-		thresholdSeries.YValues = append(thresholdSeries.YValues, threshold.value)
+		thresholdSeries.YValues = append(thresholdSeries.YValues, threshold.yCoordinate)
 	}
 	return thresholdSeries
 }
 
 // generateAnnotationSeries returns threshold annotation series
-func (threshold *threshold) generateAnnotationSeries(annotationFont *truetype.Font) chart.AnnotationSeries {
+func (threshold *threshold) generateAnnotationSeries(theme moira.PlotTheme) chart.AnnotationSeries {
 	annotationSeries := chart.AnnotationSeries{
 		Annotations: []chart.Value2{
 			{
-				Label:  threshold.title,
-				XValue: threshold.timePoint,
-				YValue: threshold.value,
-				Style: chart.Style{
-					Show:        true,
-					Padding:     chart.Box{Right: threshold.growTo},
-					Font:        annotationFont,
-					FontSize:    8,
-					FontColor:   chart.ColorAlternateGray,
-					StrokeColor: chart.ColorAlternateGray,
-					FillColor:   drawing.ColorFromHex(threshold.color).WithAlpha(20),
-				},
+				Label:  threshold.thresholdType,
+				XValue: threshold.xCoordinate,
+				YValue: threshold.yCoordinate,
+				Style:  theme.GetAnnotationStyle(threshold.thresholdType),
 			},
 		},
 	}

@@ -4,7 +4,6 @@ import (
 	"sort"
 
 	"github.com/wcharczuk/go-chart"
-	"github.com/wcharczuk/go-chart/drawing"
 )
 
 const (
@@ -17,16 +16,10 @@ const (
 )
 
 // getPlotLegend returns plot legend
-func getPlotLegend(c *chart.Chart, plotWidth int) chart.Renderable {
+func getPlotLegend(c *chart.Chart, legendStyle chart.Style, plotWidth int) chart.Renderable {
 	// TODO: Simplify this method
 	return func(r chart.Renderer, cb chart.Box, chartDefaults chart.Style) {
-		legendDefault := chart.Style{
-			FontSize:    8.0,
-			FontColor:   chart.ColorAlternateGray,
-			FillColor:   drawing.ColorTransparent,
-			StrokeColor: drawing.ColorTransparent,
-		}
-		legendStyle := chartDefaults.InheritFrom(legendDefault)
+		legendStyle := chartDefaults.InheritFrom(legendStyle)
 		foundLabels := make(map[string]bool)
 
 		labelsCount := 0

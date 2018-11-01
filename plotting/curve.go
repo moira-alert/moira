@@ -6,7 +6,8 @@ import (
 
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/wcharczuk/go-chart"
-	"github.com/wcharczuk/go-chart/drawing"
+
+	"github.com/moira-alert/moira"
 )
 
 // plotCurve is a single curve for given timeserie
@@ -16,13 +17,13 @@ type plotCurve struct {
 }
 
 // getCurveSeriesList returns curve series list
-func getCurveSeriesList(metricsData []*types.MetricData, theme *plotTheme, metricsWhitelist []string) []chart.TimeSeries {
+func getCurveSeriesList(metricsData []*types.MetricData, theme moira.PlotTheme, metricsWhitelist []string) []chart.TimeSeries {
 	curveSeriesList := make([]chart.TimeSeries, 0)
 	switch len(metricsWhitelist) {
 	case 0:
 		for metricDataInd := range metricsData {
-			curveColor := theme.pickCurveColor(metricDataInd)
-			curveSeries := generatePlotCurves(metricsData[metricDataInd], curveColor)
+			curveStyle := theme.GetCurveStyle(metricDataInd)
+			curveSeries := generatePlotCurves(metricsData[metricDataInd], curveStyle)
 			curveSeriesList = append(curveSeriesList, curveSeries...)
 		}
 	default:
@@ -31,8 +32,8 @@ func getCurveSeriesList(metricsData []*types.MetricData, theme *plotTheme, metri
 			if !mustBeShown(metricsData[metricDataInd].Name, metricsWhitelist) {
 				continue
 			}
-			curveColor := theme.pickCurveColor(metricDataInd)
-			curveSeries := generatePlotCurves(metricsData[metricDataInd], curveColor)
+			curveStyle := theme.GetCurveStyle(metricDataInd)
+			curveSeries := generatePlotCurves(metricsData[metricDataInd], curveStyle)
 			curveSeriesList = append(curveSeriesList, curveSeries...)
 			metricsProcessed++
 			if metricsProcessed == len(metricsWhitelist)-1 {
@@ -44,7 +45,7 @@ func getCurveSeriesList(metricsData []*types.MetricData, theme *plotTheme, metri
 }
 
 // generatePlotCurves returns go-chart timeseries to generate plot curves
-func generatePlotCurves(metricData *types.MetricData, curveColor string) []chart.TimeSeries {
+func generatePlotCurves(metricData *types.MetricData, curveStyle chart.Style) []chart.TimeSeries {
 	// TODO: create style to draw single value in between of gaps
 	curves := describePlotCurves(metricData)
 	curveSeries := make([]chart.TimeSeries, 0)
@@ -53,12 +54,7 @@ func generatePlotCurves(metricData *types.MetricData, curveColor string) []chart
 			curveSerie := chart.TimeSeries{
 				Name:  metricData.Name,
 				YAxis: chart.YAxisSecondary,
-				Style: chart.Style{
-					Show:        true,
-					StrokeWidth: 1,
-					StrokeColor: drawing.ColorFromHex(curveColor).WithAlpha(90),
-					FillColor:   drawing.ColorFromHex(curveColor).WithAlpha(20),
-				},
+				Style: curveStyle,
 				XValues: curve.timeStamps,
 				YValues: curve.values,
 			}

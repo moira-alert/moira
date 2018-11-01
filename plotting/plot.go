@@ -2,14 +2,14 @@ package plotting
 
 import (
 	"github.com/go-graphite/carbonapi/expr/types"
-	"github.com/moira-alert/moira"
 	"github.com/wcharczuk/go-chart"
-	"github.com/wcharczuk/go-chart/drawing"
+
+	"github.com/moira-alert/moira"
 )
 
 // Plot represents plot structure to render
 type Plot struct {
-	theme  *plotTheme
+	theme  moira.PlotTheme
 	width  int
 	height int
 }
@@ -38,11 +38,10 @@ func (plot *Plot) GetRenderable(trigger *moira.Trigger, metricsData []*types.Met
 		plotSeries = append(plotSeries, curveSeries)
 	}
 
-	thresholdSeriesList, hasThresholds := getThresholdSeriesList(trigger, limits, plot.theme)
+	thresholdSeriesList := getThresholdSeriesList(trigger, limits, plot.theme)
 	plotSeries = append(plotSeries, thresholdSeriesList...)
 
-	bgPadding := getBgPadding(limits, hasThresholds)
-	gridStyle := plot.theme.gridStyle
+	gridStyle := plot.theme.GetGridStyle()
 
 	yAxisValuesFormatter := getYAxisValuesFormatter(limits)
 	yAxisRange := limits.getThresholdAxisRange(trigger.TriggerType)
@@ -50,33 +49,16 @@ func (plot *Plot) GetRenderable(trigger *moira.Trigger, metricsData []*types.Met
 	renderable := chart.Chart{
 
 		Title: sanitizeLabelName(trigger.Name, 40),
-		TitleStyle: chart.Style{
-			Show:        true,
-			Font:        plot.theme.font,
-			FontColor:   chart.ColorAlternateGray,
-			FillColor:   drawing.ColorFromHex(plot.theme.bgColor),
-			StrokeColor: drawing.ColorFromHex(plot.theme.bgColor),
-		},
+		TitleStyle: plot.theme.GetTitleStyle(),
 
 		Width:  plot.width,
 		Height: plot.height,
 
-		Canvas: chart.Style{
-			FillColor: drawing.ColorFromHex(plot.theme.bgColor),
-		},
-		Background: chart.Style{
-			FillColor: drawing.ColorFromHex(plot.theme.bgColor),
-			Padding:   bgPadding,
-		},
+		Canvas: plot.theme.GetCanvasStyle(),
+		Background: plot.theme.GetBackgroundStyle(),
 
 		XAxis: chart.XAxis{
-			Style: chart.Style{
-				Show:        true,
-				Font:        plot.theme.font,
-				FontSize:    8,
-				FontColor:   chart.ColorAlternateGray,
-				StrokeColor: drawing.ColorFromHex(plot.theme.bgColor),
-			},
+			Style: plot.theme.GetXAxisStyle(),
 			GridMinorStyle: gridStyle,
 			GridMajorStyle: gridStyle,
 			ValueFormatter: chart.TimeValueFormatterWithFormat("15:04"),
@@ -93,12 +75,7 @@ func (plot *Plot) GetRenderable(trigger *moira.Trigger, metricsData []*types.Met
 
 		YAxisSecondary: chart.YAxis{
 			ValueFormatter: yAxisValuesFormatter,
-			Style: chart.Style{
-				Show:        true,
-				Font:        plot.theme.font,
-				FontColor:   chart.ColorAlternateGray,
-				StrokeColor: drawing.ColorFromHex(plot.theme.bgColor),
-			},
+			Style: plot.theme.GetYAxisStyle(),
 			GridMinorStyle: gridStyle,
 			GridMajorStyle: gridStyle,
 			Range: &chart.ContinuousRange{
@@ -110,8 +87,10 @@ func (plot *Plot) GetRenderable(trigger *moira.Trigger, metricsData []*types.Met
 		Series: plotSeries,
 	}
 
+	renderable.Background.Padding = limits.getBgPadding(renderable.Box().Right)
+
 	renderable.Elements = []chart.Renderable{
-		getPlotLegend(&renderable, plot.width),
+		getPlotLegend(&renderable, plot.theme.GetLegendStyle(), plot.width),
 	}
 
 	return renderable

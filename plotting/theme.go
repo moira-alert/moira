@@ -2,97 +2,43 @@ package plotting
 
 import (
 	"github.com/golang/freetype/truetype"
-	"github.com/wcharczuk/go-chart"
-	"github.com/wcharczuk/go-chart/drawing"
+
+	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/plotting/fonts"
+	"github.com/moira-alert/moira/plotting/themes"
 )
 
-const (
-	darkTheme  = "dark"
-	lightTheme = "light"
-)
-
-// PlotTheme is a structure to store theme parameters
-type plotTheme struct {
-	font                *truetype.Font
-	bgColor             string
-	warnThresholdColor  string
-	errorThresholdColor string
-	curveColors         []string
-	gridStyle           chart.Style
-}
-
-func getPlotTheme(theme string) (*plotTheme, error) {
-	// TODO: rewrite ligt theme
+// getPlotTheme returns plot theme
+func getPlotTheme(plotTheme string) (moira.PlotTheme, error) {
+	// TODO: rewrite light theme
+	var err error
+	var theme moira.PlotTheme
 	themeFont, err := getDefaultFont()
 	if err != nil {
 		return nil, err
 	}
-	switch theme {
-	case lightTheme:
-		return &plotTheme{
-			font:                themeFont,
-			bgColor:             "ffffff",
-			warnThresholdColor:  "f79520",
-			errorThresholdColor: "ed2e18",
-			curveColors: []string{
-				`89da59`, `90afc5`, `375e97`, `ffbb00`, `5bc8ac`, `4cb5f5`, `6ab187`, `ec96a4`,
-				`f0810f`, `f9a603`, `a1be95`, `e2dfa2`, `ebdf00`, `5b7065`, `eb8a3e`, `217ca3`,
-			},
-			gridStyle: chart.Style{
-				Show:        true,
-				StrokeColor: drawing.ColorFromHex("1f1d1d"),
-				StrokeWidth: 0.03,
-			},
-		}, nil
-	case darkTheme:
+	switch plotTheme {
+	case "light":
+		theme, err = themes.GetLightTheme(themeFont)
+		if err != nil {
+			return nil, err
+		}
+	case "dark":
 		fallthrough
 	default:
-		return &plotTheme{
-			font:                themeFont,
-			bgColor:             "1f1d1d",
-			warnThresholdColor:  "f79520",
-			errorThresholdColor: "ed2e18",
-			curveColors: []string{
-				`89da59`, `90afc5`, `375e97`, `ffbb00`, `5bc8ac`, `4cb5f5`, `6ab187`, `ec96a4`,
-				`f0810f`, `f9a603`, `a1be95`, `e2dfa2`, `ebdf00`, `5b7065`, `eb8a3e`, `217ca3`,
-			},
-			gridStyle: chart.Style{
-				Show:        true,
-				StrokeColor: drawing.ColorFromHex("ffffff"),
-				StrokeWidth: 0.03,
-			},
-		}, nil
+		theme, err = themes.GetDarkTheme(themeFont)
+		if err != nil {
+			return nil, err
+		}
 	}
+	return theme, nil
 }
 
-// pickCurveColor returns color for chosen series
-func (theme *plotTheme) pickCurveColor(seriesInd int) string {
-	if seriesInd >= len(theme.curveColors)-1 {
-		return theme.curveColors[0]
-	}
-	return theme.curveColors[seriesInd]
-}
-
-// getDefaultFont returns true type font
+// getDefaultFont returns default font
 func getDefaultFont() (*truetype.Font, error) {
-	ttf, err := truetype.Parse(segoeUI)
+	ttf, err := truetype.Parse(fonts.SegoeUI)
 	if err != nil {
 		return nil, err
 	}
 	return ttf, nil
-}
-
-// GetBgPadding returns background padding
-func getBgPadding(plotLimits plotLimits, hasThresholds bool) chart.Box {
-	// TODO: simplify this method
-	if (plotLimits.highest - plotLimits.lowest) > 1000 {
-		if hasThresholds {
-			return chart.Box{Top: 40, Left: 15, Right: 21, Bottom: 40}
-		}
-		return chart.Box{Top: 40, Left: 15, Right: 65, Bottom: 40}
-	}
-	if hasThresholds {
-		return chart.Box{Top: 40, Left: 30, Bottom: 40}
-	}
-	return chart.Box{Top: 40, Left: 30, Right: 49, Bottom: 40}
 }
