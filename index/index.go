@@ -138,9 +138,18 @@ func (index *SearchIndex) addTriggers(triggers []*moira.TriggerCheck) (count int
 	toIndex := len(triggers)
 	batch := index.bleveIndex.NewBatch()
 	batchSize := 1000
+	firstIndexed := false
 
 	for _, trigger := range triggers {
 		if trigger != nil {
+			// ToDo: this code works, but looks stupid. We have to find a reason why Bleve indexes first batch 1 minute
+			if !firstIndexed {
+				index.bleveIndex.Index(trigger.ID, createIndexedTrigger(*trigger))
+				firstIndexed = true
+				count = 1
+				index.logger.Debugf("[%d triggers of %d] added to index", count, toIndex)
+				continue
+			}
 			err = batch.Index(trigger.ID, createIndexedTrigger(*trigger))
 			if err != nil {
 				return
