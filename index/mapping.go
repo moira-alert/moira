@@ -13,19 +13,26 @@ func buildIndexMapping() mapping.IndexMapping {
 	standardFieldMapping := bleve.NewTextFieldMapping()
 	standardFieldMapping.Analyzer = standard.Name
 	standardFieldMapping.Store = false
+	standardFieldMapping.IncludeTermVectors = false
 
 	// a generic reusable mapping for keyword text
 	keywordFieldMapping := bleve.NewTextFieldMapping()
 	keywordFieldMapping.Analyzer = keyword.Name
 	keywordFieldMapping.Store = false
+	keywordFieldMapping.IncludeTermVectors = false
+	keywordFieldMapping.IncludeInAll = false
 
-	triggerMapping := bleve.NewDocumentMapping()
+	// a generic numeric mapping for digits
+	numericFieldMapping := bleve.NewNumericFieldMapping()
 
-	triggerMapping.AddFieldMappingsAt("name", standardFieldMapping)
-	triggerMapping.AddFieldMappingsAt("desc", standardFieldMapping)
-	triggerMapping.AddFieldMappingsAt("tags", keywordFieldMapping)
+	triggerMapping := bleve.NewDocumentStaticMapping()
+
+	triggerMapping.AddFieldMappingsAt("Name", standardFieldMapping)
+	triggerMapping.AddFieldMappingsAt("Desc", standardFieldMapping)
+	triggerMapping.AddFieldMappingsAt("Tags", keywordFieldMapping)
+	triggerMapping.AddFieldMappingsAt("LastCheckScore", numericFieldMapping)
 
 	indexMapping := bleve.NewIndexMapping()
-	indexMapping.AddDocumentMapping(indexedTrigger{}.Type(), triggerMapping)
+	indexMapping.AddDocumentMapping(indexedTriggerCheck{}.Type(), triggerMapping)
 	return indexMapping
 }

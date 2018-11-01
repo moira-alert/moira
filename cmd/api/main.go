@@ -80,7 +80,7 @@ func main() {
 	databaseSettings := config.Redis.GetSettings()
 	database := redis.NewDatabase(logger, databaseSettings)
 
-	searchIndex := index.NewSearchIndex(logger, database)
+	searchIndex := index.NewSearchWorker(logger, database)
 	go func() {
 		err2 := searchIndex.Init()
 		if err2 != nil {

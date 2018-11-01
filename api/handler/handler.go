@@ -17,13 +17,13 @@ import (
 )
 
 var database moira.Database
-var searchIndex *index.SearchIndex
+var searchIndex *index.Worker
 
 const contactKey moiramiddle.ContextKey = "contact"
 const subscriptionKey moiramiddle.ContextKey = "subscription"
 
 // NewHandler creates new api handler request uris based on github.com/go-chi/chi
-func NewHandler(db moira.Database, log moira.Logger, index *index.SearchIndex, config *api.Config, remoteConfig *remote.Config, configFile []byte) http.Handler {
+func NewHandler(db moira.Database, log moira.Logger, index *index.Worker, config *api.Config, remoteConfig *remote.Config, configFile []byte) http.Handler {
 	database = db
 	searchIndex = index
 	router := chi.NewRouter()
