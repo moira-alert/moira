@@ -8,8 +8,6 @@ import (
 	"github.com/moira-alert/moira"
 )
 
-const indexName = "moira-search-index.bleve"
-
 // Worker represents Worker for Bleve.Index type
 type Worker struct {
 	index      bleve.Index
@@ -117,17 +115,14 @@ func (worker *Worker) Delete(triggerIDs ...string) error {
 }
 
 func (worker *Worker) createIndex() error {
-	worker.logger.Debugf("Removing old index files: %s", indexName)
-	destroyIndex(indexName)
-
 	worker.logger.Debugf("Create new index")
 	var err error
-	worker.index, err = getIndex(indexName)
+	worker.index, err = getIndex()
 	return err
 }
 
 func (worker *Worker) fillIndex() error {
-	worker.logger.Debugf("Start filling index with triggers: %s", indexName)
+	worker.logger.Debugf("Start filling index with triggers")
 	worker.inProgress = true
 	allTriggerIDs, err := worker.database.GetTriggerIDs()
 	worker.logger.Debugf("Triggers IDs fetched from database: %d", len(allTriggerIDs))
@@ -183,18 +178,12 @@ func (worker *Worker) addTriggers(triggers []*moira.TriggerCheck) (count int, er
 	return
 }
 
-func getIndex(indexPath string) (bleve.Index, error) {
+func getIndex() (bleve.Index, error) {
 
-	bleveIdx, err := bleve.Open(indexPath)
-	if err != nil {
-		indexMapping := buildIndexMapping()
-		bleveIdx, err = bleve.New(indexPath, indexMapping)
-		if err != nil {
-			return nil, err
-		}
-	}
+	indexMapping := buildIndexMapping()
+	bleveIdx, err := bleve.NewMemOnly(indexMapping)
 
-	return bleveIdx, nil
+	return bleveIdx, err
 }
 
 func destroyIndex(path string) {
