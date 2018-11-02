@@ -9,11 +9,11 @@ import (
 type TriggerField int
 
 const (
-	TriggerID             TriggerField = 0
-	TriggerName           TriggerField = 1
-	TriggerDesc           TriggerField = 2
-	TriggerTags           TriggerField = 3
-	TriggerLastCheckScore TriggerField = 4
+	TriggerID TriggerField = iota
+	TriggerName
+	TriggerDesc
+	TriggerTags
+	TriggerLastCheckScore
 )
 
 var triggerFieldNames = []string{"ID", "Name", "Desc", "Tags", "LastCheckScore"}
