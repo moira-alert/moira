@@ -136,13 +136,24 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 }
 
 func (sender *Sender) makeMessage(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, throttled bool) *gomail.Message {
+	var sourceURL string
+
 	state := events.GetSubjectState()
 	tags := trigger.GetTags()
+
+	if state != "TEST" {
+		sourceURL = fmt.Sprintf("%s/trigger/%s",
+			sender.FrontURI,
+			events[0].TriggerID,
+		)
+	} else {
+		sourceURL = sender.FrontURI
+	}
 
 	subject := fmt.Sprintf("%s %s %s (%d)", state, trigger.Name, tags, len(events))
 
 	templateData := triggerData{
-		Link:         fmt.Sprintf("%s/trigger/%s", sender.FrontURI, events[0].TriggerID),
+		Link:         sourceURL,
 		Description:  formatDescription(trigger.Desc),
 		Throttled:    throttled,
 		TriggerName:  trigger.Name,

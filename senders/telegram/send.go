@@ -12,9 +12,20 @@ import (
 // SendEvents implements Sender interface Send
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, throttled bool) error {
 	var message bytes.Buffer
+	var sourceURL string
+
 	state := events.GetSubjectState()
 	tags := trigger.GetTags()
 	emoji := emojiStates[state]
+
+	if state != "TEST" {
+		sourceURL = fmt.Sprintf("%s/trigger/%s",
+			sender.FrontURI,
+			events[0].TriggerID,
+		)
+	} else {
+		sourceURL = sender.FrontURI
+	}
 
 	message.WriteString(fmt.Sprintf("%s%s %s %s (%d)\n", emoji, state, trigger.Name, tags, len(events)))
 
@@ -40,7 +51,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 		message.WriteString(fmt.Sprintf("\n\n...and %d more events.", len(events)-lineCount))
 	}
 
-	message.WriteString(fmt.Sprintf("\n\n%s/trigger/%s\n", sender.FrontURI, events[0].TriggerID))
+	message.WriteString(fmt.Sprintf("\n\n%s\n", sourceURL))
 
 	if throttled {
 		message.WriteString("\nPlease, fix your system or tune this trigger to generate less events.")

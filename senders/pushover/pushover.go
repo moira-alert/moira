@@ -33,14 +33,25 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 
 // SendEvents implements Sender interface Send
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, throttled bool) error {
+	var message bytes.Buffer
+	var sourceURL string
+
+	state := events.GetSubjectState()
+	title := fmt.Sprintf("%s %s %s (%d)", state, trigger.Name, trigger.GetTags(), len(events))
+	timestamp := events[len(events)-1].Timestamp
+
+	if state != "TEST" {
+		sourceURL = fmt.Sprintf("%s/trigger/%s",
+			sender.FrontURI,
+			events[0].TriggerID,
+		)
+	} else {
+		sourceURL = sender.FrontURI
+	}
+
 	api := pushover.New(sender.APIToken)
 	recipient := pushover.NewRecipient(contact.Value)
 
-	subjectState := events.GetSubjectState()
-	title := fmt.Sprintf("%s %s %s (%d)", subjectState, trigger.Name, trigger.GetTags(), len(events))
-	timestamp := events[len(events)-1].Timestamp
-
-	var message bytes.Buffer
 	priority := pushover.PriorityNormal
 	for i, event := range events {
 		if i > 4 {
@@ -78,7 +89,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 		Retry:     5 * time.Minute,
 		Expire:    time.Hour,
 		Timestamp: timestamp,
-		URL:       fmt.Sprintf("%s/trigger/%s", sender.FrontURI, events[0].TriggerID),
+		URL:       sourceURL,
 	}
 	_, err := api.SendMessage(pushoverMessage, recipient)
 	if err != nil {

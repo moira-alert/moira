@@ -33,13 +33,26 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 
 // SendEvents implements Sender interface Send
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, throttled bool) error {
-	api := slack.New(sender.APIToken)
-
 	var message bytes.Buffer
+	var sourceURL string
+
 	state := events.GetSubjectState()
 	tags := trigger.GetTags()
-	message.WriteString(fmt.Sprintf("*%s* %s <%s/trigger/%s|%s>\n %s \n```", state, tags, sender.FrontURI, events[0].TriggerID, trigger.Name, trigger.Desc))
 	icon := fmt.Sprintf("%s/public/fav72_ok.png", sender.FrontURI)
+
+	if state != "TEST" {
+		sourceURL = fmt.Sprintf("%s/trigger/%s",
+			sender.FrontURI,
+			events[0].TriggerID,
+		)
+	} else {
+		sourceURL = sender.FrontURI
+	}
+
+	api := slack.New(sender.APIToken)
+
+	message.WriteString(fmt.Sprintf("*%s* %s <%s|%s>\n %s \n```", state, tags, sourceURL, trigger.Name, trigger.Desc))
+
 	for _, event := range events {
 		if event.State != "OK" {
 			icon = fmt.Sprintf("%s/public/fav72_error.png", sender.FrontURI)
