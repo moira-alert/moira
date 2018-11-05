@@ -40,13 +40,13 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	tags := trigger.GetTags()
 	icon := fmt.Sprintf("%s/public/fav72_ok.png", sender.FrontURI)
 
-	if state != "TEST" {
+	if state == "TEST" || trigger.ID == "" {
+		sourceURL = sender.FrontURI
+	} else {
 		sourceURL = fmt.Sprintf("%s/trigger/%s",
 			sender.FrontURI,
-			events[0].TriggerID,
+			trigger.ID,
 		)
-	} else {
-		sourceURL = sender.FrontURI
 	}
 
 	api := slack.New(sender.APIToken)

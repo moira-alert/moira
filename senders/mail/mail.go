@@ -141,13 +141,13 @@ func (sender *Sender) makeMessage(events moira.NotificationEvents, contact moira
 	state := events.GetSubjectState()
 	tags := trigger.GetTags()
 
-	if state != "TEST" {
+	if state == "TEST" || trigger.ID == "" {
+		sourceURL = sender.FrontURI
+	} else {
 		sourceURL = fmt.Sprintf("%s/trigger/%s",
 			sender.FrontURI,
-			events[0].TriggerID,
+			trigger.ID,
 		)
-	} else {
-		sourceURL = sender.FrontURI
 	}
 
 	subject := fmt.Sprintf("%s %s %s (%d)", state, trigger.Name, tags, len(events))

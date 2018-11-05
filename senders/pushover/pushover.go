@@ -40,13 +40,13 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	title := fmt.Sprintf("%s %s %s (%d)", state, trigger.Name, trigger.GetTags(), len(events))
 	timestamp := events[len(events)-1].Timestamp
 
-	if state != "TEST" {
+	if state == "TEST" || trigger.ID == "" {
+		sourceURL = sender.FrontURI
+	} else {
 		sourceURL = fmt.Sprintf("%s/trigger/%s",
 			sender.FrontURI,
-			events[0].TriggerID,
+			trigger.ID,
 		)
-	} else {
-		sourceURL = sender.FrontURI
 	}
 
 	api := pushover.New(sender.APIToken)

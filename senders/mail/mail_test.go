@@ -24,7 +24,6 @@ func TestMail(t *testing.T) {
 	}
 
 	trigger := moira.TriggerData{
-		ID:         "triggerID-0000000000001",
 		Name:       "test trigger 1",
 		Targets:    []string{"test.target.1"},
 		WarnValue:  10,

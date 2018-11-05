@@ -18,13 +18,13 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	tags := trigger.GetTags()
 	emoji := emojiStates[state]
 
-	if state != "TEST" {
+	if state == "TEST" || trigger.ID == "" {
+		sourceURL = sender.FrontURI
+	} else {
 		sourceURL = fmt.Sprintf("%s/trigger/%s",
 			sender.FrontURI,
-			events[0].TriggerID,
+			trigger.ID,
 		)
-	} else {
-		sourceURL = sender.FrontURI
 	}
 
 	message.WriteString(fmt.Sprintf("%s%s %s %s (%d)\n", emoji, state, trigger.Name, tags, len(events)))
