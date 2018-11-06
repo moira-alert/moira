@@ -52,9 +52,9 @@ func generatePlotCurves(metricData *types.MetricData, curveStyle chart.Style) []
 	for _, curve := range curves {
 		if len(curve.values) > 1 {
 			curveSerie := chart.TimeSeries{
-				Name:  metricData.Name,
-				YAxis: chart.YAxisSecondary,
-				Style: curveStyle,
+				Name:    metricData.Name,
+				YAxis:   chart.YAxisSecondary,
+				Style:   curveStyle,
 				XValues: curve.timeStamps,
 				YValues: curve.values,
 			}

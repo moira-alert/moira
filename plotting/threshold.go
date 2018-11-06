@@ -24,17 +24,17 @@ type threshold struct {
 }
 
 // getThresholdSeriesList returns collection of thresholds and annotations
-func getThresholdSeriesList(trigger *moira.Trigger, theme moira.PlotTheme, limits plotLimits) ([]chart.Series, bool) {
+func getThresholdSeriesList(trigger *moira.Trigger, theme moira.PlotTheme, limits plotLimits) []chart.Series {
 	thresholdSeriesList := make([]chart.Series, 0)
 	if trigger.TriggerType == moira.ExpressionTrigger {
-		return thresholdSeriesList, false
+		return thresholdSeriesList
 	}
 	plotThresholds := generateThresholds(trigger, limits)
 	for _, plotThreshold := range plotThresholds {
 		thresholdSeriesList = append(thresholdSeriesList, plotThreshold.generateThresholdSeries(theme, limits))
 		thresholdSeriesList = append(thresholdSeriesList, plotThreshold.generateAnnotationSeries(theme))
 	}
-	return thresholdSeriesList, len(thresholdSeriesList) > 0
+	return thresholdSeriesList
 }
 
 // generateThresholds returns thresholds available for plot
@@ -96,8 +96,8 @@ func generateThresholds(trigger *moira.Trigger, limits plotLimits) []*threshold 
 // generateThresholdSeries returns threshold series
 func (threshold *threshold) generateThresholdSeries(theme moira.PlotTheme, limits plotLimits) chart.TimeSeries {
 	thresholdSeries := chart.TimeSeries{
-		Name: ThresholdSerie,
-		Style: theme.GetThresholdStyle(threshold.thresholdType),
+		Name:    ThresholdSerie,
+		Style:   theme.GetThresholdStyle(threshold.thresholdType),
 		XValues: []time.Time{limits.from, limits.to},
 		YValues: []float64{},
 	}

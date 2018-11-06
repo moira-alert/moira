@@ -38,7 +38,7 @@ func (plot *Plot) GetRenderable(trigger *moira.Trigger, metricsData []*types.Met
 		plotSeries = append(plotSeries, curveSeries)
 	}
 
-	thresholdSeriesList, hasThresholds := getThresholdSeriesList(trigger, plot.theme, limits)
+	thresholdSeriesList := getThresholdSeriesList(trigger, plot.theme, limits)
 	plotSeries = append(plotSeries, thresholdSeriesList...)
 
 	gridStyle := plot.theme.GetGridStyle()
@@ -48,17 +48,17 @@ func (plot *Plot) GetRenderable(trigger *moira.Trigger, metricsData []*types.Met
 
 	renderable := chart.Chart{
 
-		Title: sanitizeLabelName(trigger.Name, 40),
+		Title:      sanitizeLabelName(trigger.Name, 40),
 		TitleStyle: plot.theme.GetTitleStyle(),
 
 		Width:  plot.width,
 		Height: plot.height,
 
-		Canvas: plot.theme.GetCanvasStyle(),
+		Canvas:     plot.theme.GetCanvasStyle(),
 		Background: plot.theme.GetBackgroundStyle(),
 
 		XAxis: chart.XAxis{
-			Style: plot.theme.GetXAxisStyle(),
+			Style:          plot.theme.GetXAxisStyle(),
 			GridMinorStyle: gridStyle,
 			GridMajorStyle: gridStyle,
 			ValueFormatter: chart.TimeValueFormatterWithFormat("15:04"),
@@ -70,12 +70,12 @@ func (plot *Plot) GetRenderable(trigger *moira.Trigger, metricsData []*types.Met
 			},
 			GridMinorStyle: gridStyle,
 			GridMajorStyle: gridStyle,
-			Range: &yAxisRange,
+			Range:          &yAxisRange,
 		},
 
 		YAxisSecondary: chart.YAxis{
 			ValueFormatter: yAxisValuesFormatter,
-			Style: plot.theme.GetYAxisStyle(),
+			Style:          plot.theme.GetYAxisStyle(),
 			GridMinorStyle: gridStyle,
 			GridMajorStyle: gridStyle,
 			Range: &chart.ContinuousRange{
@@ -87,26 +87,9 @@ func (plot *Plot) GetRenderable(trigger *moira.Trigger, metricsData []*types.Met
 		Series: plotSeries,
 	}
 
-	renderable.Background.Padding = getBgPadding(hasThresholds)
-
 	renderable.Elements = []chart.Renderable{
 		getPlotLegend(&renderable, plot.theme.GetLegendStyle(), plot.width),
 	}
 
 	return renderable
-}
-
-// getBgPadding returns background padding
-func getBgPadding(hasThresholds bool) chart.Box {
-	var right = 30
-	if hasThresholds {
-		right = chart.DefaultMinimumTickHorizontalSpacing
-	}
-	bgPadding := chart.Box{
-		Top:    40,
-		Bottom: 40,
-		Left:   30,
-		Right:  right,
-	}
-	return bgPadding
 }

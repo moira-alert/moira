@@ -15,7 +15,7 @@ type darkTheme struct {
 
 func GetDarkTheme(themeFont *truetype.Font) (*darkTheme, error) {
 	return &darkTheme{
-		font: themeFont,
+		font:    themeFont,
 		bgColor: "1f1d1d",
 		curveColors: []string{
 			`89da59`, `90afc5`, `375e97`, `ffbb00`, `5bc8ac`, `4cb5f5`, `6ab187`, `ec96a4`,
@@ -51,6 +51,12 @@ func (theme *darkTheme) GetCanvasStyle() chart.Style {
 func (theme *darkTheme) GetBackgroundStyle() chart.Style {
 	return chart.Style{
 		FillColor: drawing.ColorFromHex(theme.bgColor),
+		Padding: chart.Box{
+			Top:    40,
+			Bottom: 40,
+			Left:   2 * chart.DefaultYAxisMargin,
+			Right:  2 + chart.DefaultYAxisMargin,
+		},
 	}
 }
 

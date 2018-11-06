@@ -15,7 +15,7 @@ type lightTheme struct {
 
 func GetLightTheme(themeFont *truetype.Font) (*lightTheme, error) {
 	return &lightTheme{
-		font: themeFont,
+		font:    themeFont,
 		bgColor: "ffffff",
 		curveColors: []string{
 			`89da59`, `90afc5`, `375e97`, `ffbb00`, `5bc8ac`, `4cb5f5`, `6ab187`, `ec96a4`,
@@ -45,6 +45,12 @@ func (theme *lightTheme) GetGridStyle() chart.Style {
 func (theme *lightTheme) GetCanvasStyle() chart.Style {
 	return chart.Style{
 		FillColor: drawing.ColorFromHex(theme.bgColor),
+		Padding: chart.Box{
+			Top:    40,
+			Bottom: 40,
+			Left:   2 * chart.DefaultYAxisMargin,
+			Right:  2 + chart.DefaultYAxisMargin,
+		},
 	}
 }
 
