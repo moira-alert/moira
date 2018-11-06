@@ -18,7 +18,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	tags := trigger.GetTags()
 	emoji := emojiStates[state]
 
-	if state == "TEST" || trigger.ID == "" {
+	if trigger.ID == "" {
 		sourceURL = sender.FrontURI
 	} else {
 		sourceURL = fmt.Sprintf("%s/trigger/%s",

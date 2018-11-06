@@ -141,7 +141,7 @@ func (sender *Sender) makeMessage(events moira.NotificationEvents, contact moira
 	state := events.GetSubjectState()
 	tags := trigger.GetTags()
 
-	if state == "TEST" || trigger.ID == "" {
+	if trigger.ID == "" {
 		sourceURL = sender.FrontURI
 	} else {
 		sourceURL = fmt.Sprintf("%s/trigger/%s",
