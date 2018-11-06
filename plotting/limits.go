@@ -62,18 +62,6 @@ func (limits *plotLimits) getThresholdAxisRange(triggerType string) chart.Contin
 	}
 }
 
-// getBgPadding returns background padding
-func (limits *plotLimits) getBgPadding(right int) chart.Box {
-	// TODO: simplify this method
-	bgPadding := chart.Box{
-		Top:    40,
-		Bottom: 40,
-		Left:   800 - right + 30,
-		Right:  30,
-	}
-	return bgPadding
-}
-
 // formsSetContaining returns true if dot can belong to a set formed from limit values
 func (limits plotLimits) formsSetContaining(dot float64) bool {
 	if (dot >= limits.lowest) && (dot <= limits.highest) {

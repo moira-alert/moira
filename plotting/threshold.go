@@ -4,8 +4,9 @@ import (
 	"math"
 	"time"
 
-	"github.com/moira-alert/moira"
 	"github.com/wcharczuk/go-chart"
+
+	"github.com/moira-alert/moira"
 )
 
 const (
@@ -23,21 +24,21 @@ type threshold struct {
 }
 
 // getThresholdSeriesList returns collection of thresholds and annotations
-func getThresholdSeriesList(trigger *moira.Trigger, limits plotLimits, theme moira.PlotTheme) []chart.Series {
+func getThresholdSeriesList(trigger *moira.Trigger, theme moira.PlotTheme, limits plotLimits) ([]chart.Series, bool) {
 	thresholdSeriesList := make([]chart.Series, 0)
 	if trigger.TriggerType == moira.ExpressionTrigger {
-		return thresholdSeriesList
+		return thresholdSeriesList, false
 	}
-	plotThresholds := generateThresholds(trigger, limits, theme)
+	plotThresholds := generateThresholds(trigger, limits)
 	for _, plotThreshold := range plotThresholds {
 		thresholdSeriesList = append(thresholdSeriesList, plotThreshold.generateThresholdSeries(theme, limits))
 		thresholdSeriesList = append(thresholdSeriesList, plotThreshold.generateAnnotationSeries(theme))
 	}
-	return thresholdSeriesList
+	return thresholdSeriesList, len(thresholdSeriesList) > 0
 }
 
 // generateThresholds returns thresholds available for plot
-func generateThresholds(trigger *moira.Trigger, limits plotLimits, theme moira.PlotTheme) []*threshold {
+func generateThresholds(trigger *moira.Trigger, limits plotLimits) []*threshold {
 	// TODO: cover cases with negative warn & error values
 	// TODO: cover cases with out-of-range thresholds (no annotations required)
 	timePoint := float64(limits.to.UnixNano())

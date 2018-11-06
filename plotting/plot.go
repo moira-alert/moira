@@ -38,7 +38,7 @@ func (plot *Plot) GetRenderable(trigger *moira.Trigger, metricsData []*types.Met
 		plotSeries = append(plotSeries, curveSeries)
 	}
 
-	thresholdSeriesList := getThresholdSeriesList(trigger, limits, plot.theme)
+	thresholdSeriesList, hasThresholds := getThresholdSeriesList(trigger, plot.theme, limits)
 	plotSeries = append(plotSeries, thresholdSeriesList...)
 
 	gridStyle := plot.theme.GetGridStyle()
@@ -87,11 +87,26 @@ func (plot *Plot) GetRenderable(trigger *moira.Trigger, metricsData []*types.Met
 		Series: plotSeries,
 	}
 
-	renderable.Background.Padding = limits.getBgPadding(renderable.Box().Right)
+	renderable.Background.Padding = getBgPadding(hasThresholds)
 
 	renderable.Elements = []chart.Renderable{
 		getPlotLegend(&renderable, plot.theme.GetLegendStyle(), plot.width),
 	}
 
 	return renderable
+}
+
+// getBgPadding returns background padding
+func getBgPadding(hasThresholds bool) chart.Box {
+	var right = 30
+	if hasThresholds {
+		right = chart.DefaultMinimumTickHorizontalSpacing
+	}
+	bgPadding := chart.Box{
+		Top:    40,
+		Bottom: 40,
+		Left:   30,
+		Right:  right,
+	}
+	return bgPadding
 }
