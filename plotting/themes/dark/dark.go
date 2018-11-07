@@ -30,6 +30,7 @@ func NewTheme(themeFont *truetype.Font) (*PlotTheme, error) {
 	}, nil
 }
 
+// GetTitleStyle returns title style
 func (theme *PlotTheme) GetTitleStyle() chart.Style {
 	return chart.Style{
 		Show:        true,
@@ -40,6 +41,7 @@ func (theme *PlotTheme) GetTitleStyle() chart.Style {
 	}
 }
 
+// GetGridStyle returns grid style
 func (theme *PlotTheme) GetGridStyle() chart.Style {
 	return chart.Style{
 		Show:        true,
@@ -48,12 +50,14 @@ func (theme *PlotTheme) GetGridStyle() chart.Style {
 	}
 }
 
+// GetCanvasStyle returns canvas style
 func (theme *PlotTheme) GetCanvasStyle() chart.Style {
 	return chart.Style{
 		FillColor: drawing.ColorFromHex(theme.bgColor),
 	}
 }
 
+// GetBackgroundStyle returns background style
 func (theme *PlotTheme) GetBackgroundStyle() chart.Style {
 	return chart.Style{
 		FillColor: drawing.ColorFromHex(theme.bgColor),
@@ -66,6 +70,7 @@ func (theme *PlotTheme) GetBackgroundStyle() chart.Style {
 	}
 }
 
+// GetThresholdStyle returns threshold style
 func (theme *PlotTheme) GetThresholdStyle(thresholdType string) chart.Style {
 	var thresholdColor string
 	switch thresholdType {
@@ -82,6 +87,7 @@ func (theme *PlotTheme) GetThresholdStyle(thresholdType string) chart.Style {
 	}
 }
 
+// GetAnnotationStyle returns annotation style
 func (theme *PlotTheme) GetAnnotationStyle(thresholdType string) chart.Style {
 	var rightBoxDimension int
 	var annotationColor string
@@ -103,6 +109,7 @@ func (theme *PlotTheme) GetAnnotationStyle(thresholdType string) chart.Style {
 	}
 }
 
+// GetCurveStyle returns curve style
 func (theme *PlotTheme) GetCurveStyle(curveInd int) chart.Style {
 	var curveColor string
 	if curveInd >= len(theme.curveColors)-1 {
@@ -118,6 +125,7 @@ func (theme *PlotTheme) GetCurveStyle(curveInd int) chart.Style {
 	}
 }
 
+// GetLegendStyle returns legend style
 func (theme *PlotTheme) GetLegendStyle() chart.Style {
 	return chart.Style{
 		Font:        theme.font,
@@ -128,6 +136,7 @@ func (theme *PlotTheme) GetLegendStyle() chart.Style {
 	}
 }
 
+// GetXAxisStyle returns x axis style
 func (theme *PlotTheme) GetXAxisStyle() chart.Style {
 	return chart.Style{
 		Show:        true,
@@ -138,6 +147,7 @@ func (theme *PlotTheme) GetXAxisStyle() chart.Style {
 	}
 }
 
+// GetXAxisStyle returns y axis style
 func (theme *PlotTheme) GetYAxisStyle() chart.Style {
 	return chart.Style{
 		Show:        true,
