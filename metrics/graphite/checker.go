@@ -5,6 +5,7 @@ type CheckerMetrics struct {
 	MoiraMetrics           *CheckMetrics
 	RemoteMetrics          *CheckMetrics
 	MetricEventsChannelLen Histogram
+	UnusedTriggersCount    Histogram
 	MetricEventsHandleTime Timer
 }
 
