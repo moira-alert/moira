@@ -19,7 +19,6 @@ const (
 func getPlotLegend(c *chart.Chart, legendStyle chart.Style, plotWidth int) chart.Renderable {
 	// TODO: Simplify this method
 	return func(r chart.Renderer, cb chart.Box, chartDefaults chart.Style) {
-		legendStyle := chartDefaults.InheritFrom(legendStyle)
 		foundLabels := make(map[string]bool)
 
 		labelsCount := 0
