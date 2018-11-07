@@ -5,7 +5,8 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/plotting/fonts"
-	"github.com/moira-alert/moira/plotting/themes"
+	"github.com/moira-alert/moira/plotting/themes/grafana_dark"
+	"github.com/moira-alert/moira/plotting/themes/grafana_light"
 )
 
 // getPlotTheme returns plot theme
@@ -19,14 +20,14 @@ func getPlotTheme(plotTheme string) (moira.PlotTheme, error) {
 	}
 	switch plotTheme {
 	case "light":
-		theme, err = themes.GetLightTheme(themeFont)
+		theme, err = grafana_light.NewTheme(themeFont)
 		if err != nil {
 			return nil, err
 		}
 	case "dark":
 		fallthrough
 	default:
-		theme, err = themes.GetDarkTheme(themeFont)
+		theme, err = grafana_dark.NewTheme(themeFont)
 		if err != nil {
 			return nil, err
 		}

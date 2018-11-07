@@ -1,4 +1,4 @@
-package themes
+package grafana_light
 
 import (
 	"github.com/golang/freetype/truetype"
@@ -7,16 +7,20 @@ import (
 	"github.com/wcharczuk/go-chart/drawing"
 )
 
-type darkTheme struct {
-	font        *truetype.Font
-	bgColor     string
-	curveColors []string
+type plotTheme struct {
+	font              *truetype.Font
+	fontSizePrimary   float64
+	fontSizeSecondary float64
+	bgColor           string
+	curveColors       []string
 }
 
-func GetDarkTheme(themeFont *truetype.Font) (*darkTheme, error) {
-	return &darkTheme{
-		font:    themeFont,
-		bgColor: "1f1d1d",
+func NewTheme(themeFont *truetype.Font) (*plotTheme, error) {
+	return &plotTheme{
+		font:              themeFont,
+		fontSizePrimary:   10,
+		fontSizeSecondary: 8,
+		bgColor:           `ffffff`,
 		curveColors: []string{
 			`89da59`, `90afc5`, `375e97`, `ffbb00`, `5bc8ac`, `4cb5f5`, `6ab187`, `ec96a4`,
 			`f0810f`, `f9a603`, `a1be95`, `e2dfa2`, `ebdf00`, `5b7065`, `eb8a3e`, `217ca3`,
@@ -24,7 +28,7 @@ func GetDarkTheme(themeFont *truetype.Font) (*darkTheme, error) {
 	}, nil
 }
 
-func (theme *darkTheme) GetTitleStyle() chart.Style {
+func (theme *plotTheme) GetTitleStyle() chart.Style {
 	return chart.Style{
 		Show:        true,
 		Font:        theme.font,
@@ -34,21 +38,15 @@ func (theme *darkTheme) GetTitleStyle() chart.Style {
 	}
 }
 
-func (theme *darkTheme) GetGridStyle() chart.Style {
+func (theme *plotTheme) GetGridStyle() chart.Style {
 	return chart.Style{
 		Show:        true,
-		StrokeColor: drawing.ColorFromHex("ffffff"),
+		StrokeColor: drawing.ColorFromHex(`1f1d1d`),
 		StrokeWidth: 0.03,
 	}
 }
 
-func (theme *darkTheme) GetCanvasStyle() chart.Style {
-	return chart.Style{
-		FillColor: drawing.ColorFromHex(theme.bgColor),
-	}
-}
-
-func (theme *darkTheme) GetBackgroundStyle() chart.Style {
+func (theme *plotTheme) GetCanvasStyle() chart.Style {
 	return chart.Style{
 		FillColor: drawing.ColorFromHex(theme.bgColor),
 		Padding: chart.Box{
@@ -60,13 +58,19 @@ func (theme *darkTheme) GetBackgroundStyle() chart.Style {
 	}
 }
 
-func (theme *darkTheme) GetThresholdStyle(thresholdType string) chart.Style {
+func (theme *plotTheme) GetBackgroundStyle() chart.Style {
+	return chart.Style{
+		FillColor: drawing.ColorFromHex(theme.bgColor),
+	}
+}
+
+func (theme *plotTheme) GetThresholdStyle(thresholdType string) chart.Style {
 	var thresholdColor string
 	switch thresholdType {
 	case "ERROR":
-		thresholdColor = "ed2e18"
+		thresholdColor = `ed2e18`
 	case "WARN":
-		thresholdColor = "f79520"
+		thresholdColor = `f79520`
 	}
 	return chart.Style{
 		Show:        true,
@@ -76,28 +80,28 @@ func (theme *darkTheme) GetThresholdStyle(thresholdType string) chart.Style {
 	}
 }
 
-func (theme *darkTheme) GetAnnotationStyle(thresholdType string) chart.Style {
+func (theme *plotTheme) GetAnnotationStyle(thresholdType string) chart.Style {
 	var rightBoxDimension int
 	var annotationColor string
 	switch thresholdType {
 	case "ERROR":
-		annotationColor = "ed2e18"
+		annotationColor = `ed2e18`
 	case "WARN":
-		annotationColor = "f79520"
+		annotationColor = `f79520`
 		rightBoxDimension = 9
 	}
 	return chart.Style{
 		Show:        true,
 		Padding:     chart.Box{Right: rightBoxDimension},
 		Font:        theme.font,
-		FontSize:    8,
+		FontSize:    theme.fontSizeSecondary,
 		FontColor:   chart.ColorAlternateGray,
 		StrokeColor: chart.ColorAlternateGray,
 		FillColor:   drawing.ColorFromHex(annotationColor).WithAlpha(20),
 	}
 }
 
-func (theme *darkTheme) GetCurveStyle(curveInd int) chart.Style {
+func (theme *plotTheme) GetCurveStyle(curveInd int) chart.Style {
 	var curveColor string
 	if curveInd >= len(theme.curveColors)-1 {
 		curveColor = theme.curveColors[0]
@@ -112,29 +116,31 @@ func (theme *darkTheme) GetCurveStyle(curveInd int) chart.Style {
 	}
 }
 
-func (theme *darkTheme) GetLegendStyle() chart.Style {
+func (theme *plotTheme) GetLegendStyle() chart.Style {
 	return chart.Style{
-		FontSize:    8.0,
+		Font:        theme.font,
+		FontSize:    theme.fontSizeSecondary,
 		FontColor:   chart.ColorAlternateGray,
 		FillColor:   drawing.ColorTransparent,
 		StrokeColor: drawing.ColorTransparent,
 	}
 }
 
-func (theme *darkTheme) GetXAxisStyle() chart.Style {
+func (theme *plotTheme) GetXAxisStyle() chart.Style {
 	return chart.Style{
 		Show:        true,
 		Font:        theme.font,
-		FontSize:    8,
+		FontSize:    theme.fontSizeSecondary,
 		FontColor:   chart.ColorAlternateGray,
 		StrokeColor: drawing.ColorFromHex(theme.bgColor),
 	}
 }
 
-func (theme *darkTheme) GetYAxisStyle() chart.Style {
+func (theme *plotTheme) GetYAxisStyle() chart.Style {
 	return chart.Style{
 		Show:        true,
 		Font:        theme.font,
+		FontSize:    theme.fontSizePrimary,
 		FontColor:   chart.ColorAlternateGray,
 		StrokeColor: drawing.ColorFromHex(theme.bgColor),
 	}
