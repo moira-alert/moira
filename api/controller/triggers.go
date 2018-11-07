@@ -93,7 +93,7 @@ func GetTriggerPage(database moira.Database, page int64, size int64, onlyErrors 
 }
 
 // FindTriggersPerPage gets trigger page and filter trigger by tags and search request terms
-func FindTriggersPerPage(database moira.Database, index *index.Worker, filterTags, searchTerms []string, page, size int64) (*dto.TriggersList, *api.ErrorResponse) {
+func FindTriggersPerPage(database moira.Database, index *index.Index, filterTags, searchTerms []string, page, size int64) (*dto.TriggersList, *api.ErrorResponse) {
 	timeout := time.After(time.Second * 10)
 	ticker := time.NewTicker(time.Second * 1)
 	if !index.IsReady() {

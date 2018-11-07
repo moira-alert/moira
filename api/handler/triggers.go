@@ -20,7 +20,7 @@ import (
 	"github.com/moira-alert/moira/target"
 )
 
-func triggers(cfg *remote.Config, index *index.Worker) func(chi.Router) {
+func triggers(cfg *remote.Config, index *index.Index) func(chi.Router) {
 	return func(router chi.Router) {
 		router.Use(middleware.RemoteConfigContext(cfg))
 		router.Get("/", getAllTriggers)

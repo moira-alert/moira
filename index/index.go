@@ -1,54 +1,57 @@
 package index
 
 import (
-	"os"
-
 	"github.com/blevesearch/bleve"
 	"github.com/blevesearch/bleve/search/query"
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/index/mapping"
+	"gopkg.in/tomb.v2"
 )
 
-// Worker represents Worker for Bleve.Index type
-type Worker struct {
+// Index represents Index for Bleve.Index type
+type Index struct {
 	index      bleve.Index
 	logger     moira.Logger
 	database   moira.Database
+	tomb       tomb.Tomb
 	inProgress bool
 	indexed    bool
 }
 
-// NewSearchWorker return new Worker object
-func NewSearchWorker(logger moira.Logger, database moira.Database) *Worker {
-	return &Worker{
+// NewSearchIndex return new Index object
+func NewSearchIndex(logger moira.Logger, database moira.Database) *Index {
+	return &Index{
 		logger:   logger,
 		database: database,
 	}
 }
 
-// Init initializes index. It removes old index files, create new mapping and index all triggers from database
-func (worker *Worker) Init() error {
-	if worker.inProgress {
+// Start initializes index. It removes old index files, create new mapping and index all triggers from database
+func (index *Index) Start() error {
+	if index.inProgress {
 		return nil
 	}
-	err := worker.createIndex()
+	err := index.createIndex()
 	if err != nil {
 		return err
 	}
-	err = worker.fillIndex()
+	err = index.fillIndex()
 	if err == nil {
-		worker.indexed = true
-		worker.inProgress = false
+		index.indexed = true
+		index.inProgress = false
 	}
+
+	index.tomb.Go(index.actualizeIndex)
 	return err
 }
 
 // IsReady returns boolean value which determines if index is ready to use
-func (worker *Worker) IsReady() bool {
-	return worker.indexed
+func (index *Index) IsReady() bool {
+	return index.indexed
 }
 
 // Search search for triggers in index and returns slice of trigger IDs
-func (worker *Worker) Search(filterTags, searchTerms []string) ([]string, error) {
+func (index *Index) Search(filterTags, searchTerms []string) ([]string, error) {
 	searchQueries := make([]query.Query, 0)
 
 	for _, tag := range filterTags {
@@ -64,9 +67,9 @@ func (worker *Worker) Search(filterTags, searchTerms []string) ([]string, error)
 
 	searchQuery := bleve.NewConjunctionQuery(searchQueries...)
 	req := bleve.NewSearchRequest(searchQuery)
-	docs, _ := worker.index.DocCount()
+	docs, _ := index.index.DocCount()
 	req.Size = int(docs)
-	searchResult, err := worker.index.Search(req)
+	searchResult, err := index.index.Search(req)
 	if err != nil {
 		return []string{}, err
 	}
@@ -81,111 +84,102 @@ func (worker *Worker) Search(filterTags, searchTerms []string) ([]string, error)
 }
 
 // Update get triggerIDs and updates it's in index
-func (worker *Worker) Update(triggerIDs ...string) error {
+func (index *Index) Update(triggerIDs ...string) error {
 	if len(triggerIDs) == 0 {
 		return nil
 	}
-	worker.logger.Debugf("Update index for %d trigger IDs", len(triggerIDs))
-	triggerChecks, err := worker.database.GetTriggerChecks(triggerIDs)
+	index.logger.Debugf("Update index for %d trigger IDs", len(triggerIDs))
+	triggerChecks, err := index.database.GetTriggerChecks(triggerIDs)
 	if err != nil {
 		return err
 	}
-	worker.logger.Debugf("Get %d trigger checks from DB", len(triggerChecks))
+	index.logger.Debugf("Get %d trigger checks from DB", len(triggerChecks))
 	for _, triggerCheck := range triggerChecks {
 		if triggerCheck != nil {
-			err = worker.index.Index(triggerCheck.ID, triggerCheck)
+			err = index.index.Index(triggerCheck.ID, triggerCheck)
 			if err != nil {
 				return err
 			}
-			worker.logger.Debugf("Updated index for trigger ID %s", triggerCheck.ID)
+			index.logger.Debugf("Updated index for trigger ID %s", triggerCheck.ID)
 		}
 	}
 	return nil
 }
 
 // Delete removes triggerIDs from index
-func (worker *Worker) Delete(triggerIDs ...string) error {
+func (index *Index) Delete(triggerIDs ...string) error {
 	if len(triggerIDs) == 0 {
 		return nil
 	}
 	for _, triggerID := range triggerIDs {
-		worker.index.Delete(triggerID)
+		index.index.Delete(triggerID)
 	}
 	return nil
 }
 
-func (worker *Worker) createIndex() error {
-	worker.logger.Debugf("Create new index")
+func (index *Index) createIndex() error {
+	index.logger.Infof("Create new index for full-text search")
 	var err error
-	worker.index, err = getIndex()
+	indexMapping := mapping.BuildIndexMapping(mapping.Trigger{})
+	index.index, err = buildIndex(indexMapping)
 	return err
 }
 
-func (worker *Worker) fillIndex() error {
-	worker.logger.Debugf("Start filling index with triggers")
-	worker.inProgress = true
-	allTriggerIDs, err := worker.database.GetTriggerIDs()
-	worker.logger.Debugf("Triggers IDs fetched from database: %d", len(allTriggerIDs))
+func (index *Index) fillIndex() error {
+	index.logger.Debugf("Start filling index with triggers")
+	index.inProgress = true
+	allTriggerIDs, err := index.database.GetTriggerIDs()
+	index.logger.Debugf("Triggers IDs fetched from database: %d", len(allTriggerIDs))
 	if err != nil {
 		return err
 	}
 
-	allTriggersChecks, err := worker.database.GetTriggerChecks(allTriggerIDs)
-	worker.logger.Debugf("Triggers checks fetched from database: %d", len(allTriggersChecks))
-	if err != nil {
-		return err
-	}
-	count, err := worker.addTriggers(allTriggersChecks)
-	worker.logger.Infof("%d triggers added to index", count)
+	count, err := index.addTriggers(allTriggerIDs)
+	index.logger.Infof("%d triggers added to index", count)
 	return err
 }
 
-func (worker *Worker) addTriggers(triggers []*moira.TriggerCheck) (count int, err error) {
-	toIndex := len(triggers)
-	batch := worker.index.NewBatch()
+func (index *Index) addTriggers(triggerIDs []string) (count int, err error) {
+	toIndex := len(triggerIDs)
+	batch := index.index.NewBatch()
 	batchSize := 1000
 	firstIndexed := false
 
-	for _, trigger := range triggers {
-		if trigger != nil {
-			// ToDo: this code works, but looks stupid. We have to find a reason why Bleve indexes first batch 1 minute
-			if !firstIndexed {
-				worker.index.Index(trigger.ID, createIndexedTriggerCheck(*trigger))
-				firstIndexed = true
-			}
-			err = batch.Index(trigger.ID, createIndexedTriggerCheck(*trigger))
-			if err != nil {
-				return
+	triggerIDsBatches := moira.ChunkSlice(triggerIDs, batchSize)
+	var triggersToCheck []*moira.TriggerCheck
+
+	for _, triggerIDsBatch := range triggerIDsBatches {
+		triggersToCheck, err = index.database.GetTriggerChecks(triggerIDsBatch)
+		index.logger.Debugf("Get %d trigger checks from DB", len(triggersToCheck))
+		if err != nil {
+			return
+		}
+		for _, trigger := range triggersToCheck {
+			if trigger != nil {
+				// ToDo: this code works, but looks stupid. We have to find a reason why Bleve indexes first batch 1 minute
+				if !firstIndexed {
+					index.index.Index(trigger.ID, mapping.CreateIndexedTrigger(*trigger))
+					firstIndexed = true
+				}
+				err = batch.Index(trigger.ID, mapping.CreateIndexedTrigger(*trigger))
+				if err != nil {
+					return
+				}
 			}
 		}
-		if batch.Size() >= batchSize {
-			err = worker.index.Batch(batch)
-			if err != nil {
-				return
-			}
-			count += batch.Size()
-			batch = worker.index.NewBatch()
-			worker.logger.Debugf("[%d triggers of %d] added to index", count, toIndex)
+		err = index.index.Batch(batch)
+		if err != nil {
+			return
 		}
-	}
-	if batch.Size() > 0 {
-		err = worker.index.Batch(batch)
-		if err == nil {
-			count += batch.Size()
-			worker.logger.Debugf("[%d triggers of %d] added to index", count, toIndex)
-		}
+		count += batch.Size()
+		batch.Reset()
+		index.logger.Debugf("[%d triggers of %d] added to index", count, toIndex)
 	}
 	return
 }
 
-func getIndex() (bleve.Index, error) {
-
-	indexMapping := buildIndexMapping()
-	bleveIdx, err := bleve.NewMemOnly(indexMapping)
-
-	return bleveIdx, err
-}
-
-func destroyIndex(path string) {
-	os.RemoveAll(path)
+// Stop stops checks triggers
+func (index *Index) Stop() error {
+	index.tomb.Kill(nil)
+	return index.tomb.Wait()
 }
