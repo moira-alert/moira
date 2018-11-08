@@ -147,7 +147,7 @@ func (theme *PlotTheme) GetXAxisStyle() chart.Style {
 	}
 }
 
-// GetXAxisStyle returns y axis style
+// GetYAxisStyle returns y axis style
 func (theme *PlotTheme) GetYAxisStyle() chart.Style {
 	return chart.Style{
 		Show:        true,
