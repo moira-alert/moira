@@ -108,6 +108,22 @@ func (mr *MockDatabaseMockRecorder) AddTriggersToCheck(arg0 interface{}) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddTriggersToCheck", reflect.TypeOf((*MockDatabase)(nil).AddTriggersToCheck), arg0)
 }
 
+// AddTriggersToUpdate mocks base method
+func (m *MockDatabase) AddTriggersToUpdate(arg0 ...string) error {
+	varargs := []interface{}{}
+	for _, a := range arg0 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "AddTriggersToUpdate", varargs...)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddTriggersToUpdate indicates an expected call of AddTriggersToUpdate
+func (mr *MockDatabaseMockRecorder) AddTriggersToUpdate(arg0 ...interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddTriggersToUpdate", reflect.TypeOf((*MockDatabase)(nil).AddTriggersToUpdate), arg0...)
+}
+
 // DeleteTriggerCheckLock mocks base method
 func (m *MockDatabase) DeleteTriggerCheckLock(arg0 string) error {
 	ret := m.ctrl.Call(m, "DeleteTriggerCheckLock", arg0)
@@ -190,6 +206,19 @@ func (m *MockDatabase) FetchNotifications(arg0 int64) ([]*moira.ScheduledNotific
 // FetchNotifications indicates an expected call of FetchNotifications
 func (mr *MockDatabaseMockRecorder) FetchNotifications(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchNotifications", reflect.TypeOf((*MockDatabase)(nil).FetchNotifications), arg0)
+}
+
+// FetchTriggersToUpdate mocks base method
+func (m *MockDatabase) FetchTriggersToUpdate(arg0 int64) ([]string, error) {
+	ret := m.ctrl.Call(m, "FetchTriggersToUpdate", arg0)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FetchTriggersToUpdate indicates an expected call of FetchTriggersToUpdate
+func (mr *MockDatabaseMockRecorder) FetchTriggersToUpdate(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchTriggersToUpdate", reflect.TypeOf((*MockDatabase)(nil).FetchTriggersToUpdate), arg0)
 }
 
 // GetAllContacts mocks base method
@@ -908,6 +937,18 @@ func (m *MockDatabase) RemoveTriggerLastCheck(arg0 string) error {
 // RemoveTriggerLastCheck indicates an expected call of RemoveTriggerLastCheck
 func (mr *MockDatabaseMockRecorder) RemoveTriggerLastCheck(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveTriggerLastCheck", reflect.TypeOf((*MockDatabase)(nil).RemoveTriggerLastCheck), arg0)
+}
+
+// RemoveTriggersToUpdate mocks base method
+func (m *MockDatabase) RemoveTriggersToUpdate(arg0 int64) error {
+	ret := m.ctrl.Call(m, "RemoveTriggersToUpdate", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveTriggersToUpdate indicates an expected call of RemoveTriggersToUpdate
+func (mr *MockDatabaseMockRecorder) RemoveTriggersToUpdate(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveTriggersToUpdate", reflect.TypeOf((*MockDatabase)(nil).RemoveTriggersToUpdate), arg0)
 }
 
 // RemoveUser mocks base method
