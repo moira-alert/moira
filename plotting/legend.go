@@ -29,7 +29,7 @@ func getPlotLegend(c *chart.Chart, legendStyle chart.Style, plotWidth int) chart
 				if _, isAnnotationSeries := s.(chart.AnnotationSeries); !isAnnotationSeries {
 					legendLabel := s.GetName()
 					_, isFound := foundLabels[legendLabel]
-					if !isFound && legendLabel != ThresholdSerie {
+					if !isFound && legendLabel != thresholdSerie {
 						foundLabels[legendLabel] = true
 						legendLabel := sanitizeLabelName(legendLabel, maxLabelLength)
 						labels = append(labels, legendLabel)

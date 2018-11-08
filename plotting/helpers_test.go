@@ -35,7 +35,7 @@ func TestSortByLen(t *testing.T) {
 	})
 }
 
-// TestInt64ToTime tests simple int32 timestamp to time.Time converter
+// TestInt64ToTime tests simple int64 timestamp to time.Time converter
 func TestInt64ToTime(t *testing.T) {
 	int64timeStamp := int64(1527330278)
 	humanReadabletimeStamp := time.Date(2018, 5, 26, 10, 24, 38, 0, time.UTC)

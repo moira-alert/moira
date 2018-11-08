@@ -9,6 +9,11 @@ import (
 	"github.com/moira-alert/moira/plotting/themes/light"
 )
 
+const (
+	darkPlotTheme  = "dark"
+	lightPlotTheme = "light"
+)
+
 // getPlotTheme returns plot theme
 func getPlotTheme(plotTheme string) (moira.PlotTheme, error) {
 	// TODO: rewrite light theme
@@ -19,12 +24,12 @@ func getPlotTheme(plotTheme string) (moira.PlotTheme, error) {
 		return nil, err
 	}
 	switch plotTheme {
-	case "light":
+	case lightPlotTheme:
 		theme, err = light.NewTheme(themeFont)
 		if err != nil {
 			return nil, err
 		}
-	case "dark":
+	case darkPlotTheme:
 		fallthrough
 	default:
 		theme, err = dark.NewTheme(themeFont)

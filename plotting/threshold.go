@@ -10,10 +10,10 @@ import (
 )
 
 const (
-	// ThresholdSerie is a name that indicates threshold
-	ThresholdSerie = "threshold"
-	// InvertedThresholdGap is max allowed (area between thresholds)^(-1)
-	InvertedThresholdGap = 16
+	// thresholdSerie is a name that indicates threshold
+	thresholdSerie = "threshold"
+	// invertedThresholdGap is max allowed (area between thresholds)^(-1)
+	invertedThresholdGap = 16
 )
 
 // threshold represents threshold parameters
@@ -40,7 +40,6 @@ func getThresholdSeriesList(trigger *moira.Trigger, theme moira.PlotTheme, limit
 // generateThresholds returns thresholds available for plot
 func generateThresholds(trigger *moira.Trigger, limits plotLimits) []*threshold {
 	// TODO: cover cases with negative warn & error values
-	// TODO: cover cases with out-of-range thresholds (no annotations required)
 	timePoint := float64(limits.to.UnixNano())
 	thresholds := make([]*threshold, 0)
 	switch trigger.ErrorValue {
@@ -75,7 +74,7 @@ func generateThresholds(trigger *moira.Trigger, limits plotLimits) []*threshold 
 		if trigger.WarnValue != nil {
 			deltaLimits := math.Abs(limits.highest - limits.lowest)
 			deltaThresholds := math.Abs(*trigger.ErrorValue - *trigger.WarnValue)
-			if !(*trigger.WarnValue < 0) && deltaThresholds > (deltaLimits/InvertedThresholdGap) {
+			if !(*trigger.WarnValue < 0) && deltaThresholds > (deltaLimits/invertedThresholdGap) {
 				if limits.formsSetContaining(*trigger.WarnValue) {
 					warnThreshold := &threshold{
 						thresholdType: "WARN",
@@ -96,7 +95,7 @@ func generateThresholds(trigger *moira.Trigger, limits plotLimits) []*threshold 
 // generateThresholdSeries returns threshold series
 func (threshold *threshold) generateThresholdSeries(theme moira.PlotTheme, limits plotLimits) chart.TimeSeries {
 	thresholdSeries := chart.TimeSeries{
-		Name:    ThresholdSerie,
+		Name:    thresholdSerie,
 		Style:   theme.GetThresholdStyle(threshold.thresholdType),
 		XValues: []time.Time{limits.from, limits.to},
 		YValues: []float64{},
