@@ -58,7 +58,7 @@ func renderTrigger(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 	writer.Header().Set("Content-Type", "image/png")
-	err := renderable.Render(chart.PNG, writer)
+	err = renderable.Render(chart.PNG, writer)
 	if err != nil {
 		render.Render(writer, request, api.ErrorInternalServer(fmt.Errorf("can not render plot %s", err.Error())))
 	}
