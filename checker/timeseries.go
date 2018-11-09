@@ -11,6 +11,8 @@ import (
 	"github.com/moira-alert/moira/target"
 )
 
+// GetTriggerEvaluationResult evaluates every target in trigger and returns
+// result, separated on main and additional targets metrics
 type TriggerTimeSeries struct {
 	Main       []*target.TimeSeries
 	Additional []*target.TimeSeries
