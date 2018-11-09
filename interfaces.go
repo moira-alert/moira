@@ -124,10 +124,10 @@ type Database interface {
 	GetUnusedTriggerIDs() ([]string, error)
 	MarkTriggersAsUsed(triggerIDs ...string) error
 
-	// Triggers to update in full-text search index
-	AddTriggersToUpdate(triggerIDs ...string) error
-	FetchTriggersToUpdate(from int64) ([]string, error)
-	RemoveTriggersToUpdate(to int64) error
+	// Triggers to reindex in full-text search index
+	AddTriggersToReindex(triggerIDs ...string) error
+	FetchTriggersToReindex(from int64) ([]string, error)
+	RemoveTriggersToReindex(to int64) error
 }
 
 // Logger implements logger abstraction

@@ -8,8 +8,8 @@ import (
 	"github.com/moira-alert/moira/database"
 )
 
-// AddTriggersToUpdate adds triggerID to redis. It is used for full-text search index
-func (connector *DbConnector) AddTriggersToUpdate(triggerIDs ...string) error {
+// AddTriggersToReindex adds triggerID to redis. It is used for full-text search index
+func (connector *DbConnector) AddTriggersToReindex(triggerIDs ...string) error {
 	if len(triggerIDs) == 0 {
 		return nil
 	}
@@ -31,9 +31,9 @@ func (connector *DbConnector) AddTriggersToUpdate(triggerIDs ...string) error {
 	return nil
 }
 
-// FetchTriggersToUpdate returns []triggerID of triggers needed to update. It is used for full-text search index
+// FetchTriggersToReindex returns []triggerID of triggers needed to update. It is used for full-text search index
 // It returns triggerIDs from 'from' param to a current time
-func (connector *DbConnector) FetchTriggersToUpdate(from int64) ([]string, error) {
+func (connector *DbConnector) FetchTriggersToReindex(from int64) ([]string, error) {
 	c := connector.pool.Get()
 	defer c.Close()
 
@@ -49,9 +49,9 @@ func (connector *DbConnector) FetchTriggersToUpdate(from int64) ([]string, error
 	return response, nil
 }
 
-// RemoveTriggersToUpdate removes outdated triggerIDs from redis. It is used for full-text search index
+// RemoveTriggersToReindex removes outdated triggerIDs from redis. It is used for full-text search index
 // It removes triggerIDs from the beginning of time to 'to' param
-func (connector *DbConnector) RemoveTriggersToUpdate(to int64) error {
+func (connector *DbConnector) RemoveTriggersToReindex(to int64) error {
 	c := connector.pool.Get()
 	defer c.Close()
 
@@ -62,4 +62,4 @@ func (connector *DbConnector) RemoveTriggersToUpdate(to int64) error {
 	return err
 }
 
-var triggersToUpdateKey = "moira-triggers-to-update"
+var triggersToUpdateKey = "moira-triggers-to-reindex"

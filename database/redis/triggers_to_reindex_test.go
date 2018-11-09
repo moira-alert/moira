@@ -9,7 +9,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestTriggersToUpdate(t *testing.T) {
+func TestTriggersToReindex(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test")
 	dataBase := NewDatabase(logger, config)
 	dataBase.flush()
@@ -20,7 +20,7 @@ func TestTriggersToUpdate(t *testing.T) {
 		triggerID2 := uuid.NewV4().String()
 		triggerID3 := uuid.NewV4().String()
 
-		actual, err := dataBase.FetchTriggersToUpdate(time.Now().Unix())
+		actual, err := dataBase.FetchTriggersToReindex(time.Now().Unix())
 		So(err, ShouldBeNil)
 		So(actual, ShouldBeEmpty)
 
@@ -28,55 +28,55 @@ func TestTriggersToUpdate(t *testing.T) {
 
 		// current time ≈ startTime + 1
 		time.Sleep(time.Second)
-		err = dataBase.AddTriggersToUpdate(triggerID1)
+		err = dataBase.AddTriggersToReindex(triggerID1)
 		So(err, ShouldBeNil)
 
 		//current time ≈ startTime + 2
 		time.Sleep(time.Second)
-		actual, err = dataBase.FetchTriggersToUpdate(time.Now().Unix())
+		actual, err = dataBase.FetchTriggersToReindex(time.Now().Unix())
 		So(err, ShouldBeNil)
 		So(actual, ShouldBeEmpty)
 
-		actual, err = dataBase.FetchTriggersToUpdate(startTime)
+		actual, err = dataBase.FetchTriggersToReindex(startTime)
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, []string{triggerID1})
 
 		//current time ≈ startTime + 3
 		time.Sleep(time.Second)
-		err = dataBase.AddTriggersToUpdate(triggerID2, triggerID3)
+		err = dataBase.AddTriggersToReindex(triggerID2, triggerID3)
 		So(err, ShouldBeNil)
 
-		actual, err = dataBase.FetchTriggersToUpdate(startTime)
+		actual, err = dataBase.FetchTriggersToReindex(startTime)
 		So(err, ShouldBeNil)
 		So(actual, ShouldHaveLength, 3)
 
-		err = dataBase.RemoveTriggersToUpdate(startTime + 2)
+		err = dataBase.RemoveTriggersToReindex(startTime + 2)
 		So(err, ShouldBeNil)
 
-		actual, err = dataBase.FetchTriggersToUpdate(startTime)
+		actual, err = dataBase.FetchTriggersToReindex(startTime)
 		So(err, ShouldBeNil)
 		So(actual, ShouldHaveLength, 2)
 
-		err = dataBase.RemoveTriggersToUpdate(startTime + 4)
+		err = dataBase.RemoveTriggersToReindex(startTime + 4)
 		So(err, ShouldBeNil)
 
-		actual, err = dataBase.FetchTriggersToUpdate(startTime)
+		actual, err = dataBase.FetchTriggersToReindex(startTime)
 		So(err, ShouldBeNil)
 		So(actual, ShouldBeEmpty)
 	})
 }
 
-func TestTriggerToUpdateConnection(t *testing.T) {
+func TestTriggerToReindexConnection(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test")
 	dataBase := NewDatabase(logger, emptyConfig)
 	dataBase.flush()
 	defer dataBase.flush()
 
 	Convey("Should throw error when no connection", t, func() {
-		err := dataBase.AddTriggersToUpdate("123")
+		err := dataBase.AddTriggersToReindex("123")
 		So(err, ShouldNotBeNil)
 
-		triggerID, err := dataBase.FetchTriggersToUpdate(time.Now().Unix())
+		triggerID, err := dataBase.FetchTriggersToReindex(time.Now().Unix())
 		So(triggerID, ShouldBeEmpty)
 		So(err, ShouldNotBeNil)
 	})
