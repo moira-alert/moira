@@ -428,6 +428,58 @@ func TestTriggerStoring(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(actualPatternMetrics, ShouldResemble, []string{})
 		})
+
+		Convey("Test trigger manipulations update 'triggers to reindex' list", func() {
+			dataBase.flush()
+			trigger := &triggers[0]
+
+			err := dataBase.SaveTrigger(trigger.ID, trigger)
+			So(err, ShouldBeNil)
+
+			actualTrigger, err := dataBase.GetTrigger(trigger.ID)
+			So(err, ShouldBeNil)
+			So(actualTrigger, ShouldResemble, *trigger)
+
+			actual, err := dataBase.FetchTriggersToReindex(time.Now().Unix() - 1)
+			So(err, ShouldBeNil)
+			So(actual, ShouldResemble, []string{trigger.ID})
+
+			// Now update trigger
+			trigger = &triggers[1]
+
+			err = dataBase.SaveTrigger(trigger.ID, trigger)
+			So(err, ShouldBeNil)
+
+			actual, err = dataBase.FetchTriggersToReindex(time.Now().Unix() - 1)
+			So(err, ShouldBeNil)
+			So(actual, ShouldResemble, []string{trigger.ID})
+
+			// Add new trigger
+			trigger = &triggers[5]
+
+			err = dataBase.SaveTrigger(trigger.ID, trigger)
+			So(err, ShouldBeNil)
+
+			actual, err = dataBase.FetchTriggersToReindex(time.Now().Unix() - 10)
+			So(err, ShouldBeNil)
+			So(actual, ShouldHaveLength, 2)
+
+			// Clean reindex list
+			err = dataBase.RemoveTriggersToReindex(time.Now().Unix() + 1)
+			So(err, ShouldBeNil)
+
+			actual, err = dataBase.FetchTriggersToReindex(time.Now().Unix() - 10)
+			So(err, ShouldBeNil)
+			So(actual, ShouldBeEmpty)
+
+			// Remove trigger
+			err = dataBase.RemoveTrigger(trigger.ID)
+			So(err, ShouldBeNil)
+
+			actual, err = dataBase.FetchTriggersToReindex(time.Now().Unix() - 1)
+			So(err, ShouldBeNil)
+			So(actual, ShouldResemble, []string{trigger.ID})
+		})
 	})
 }
 
