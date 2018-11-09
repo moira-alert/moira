@@ -53,7 +53,7 @@ func TestGetTimeSeriesState(t *testing.T) {
 		Values:    []float64{math.NaN(), 4, 3, 2, 1},
 	}
 	addFetchResponse.Name = "additional.metric"
-	tts := &triggerTimeSeries{
+	tts := &TriggerTimeSeries{
 		Main: []*target.TimeSeries{{
 			MetricData: types.MetricData{FetchResponse: fetchResponse},
 		}},
@@ -151,7 +151,7 @@ func TestGetTimeSeriesStepsStates(t *testing.T) {
 		Values:    []float64{5, 4, 3, 2, 1},
 	}
 	addFetchResponse.Name = "additional.metric"
-	tts := &triggerTimeSeries{
+	tts := &TriggerTimeSeries{
 		Main:       []*target.TimeSeries{{MetricData: types.MetricData{FetchResponse: fetchResponse1}}, {MetricData: types.MetricData{FetchResponse: fetchResponse2}}},
 		Additional: []*target.TimeSeries{{MetricData: types.MetricData{FetchResponse: addFetchResponse}}},
 	}
