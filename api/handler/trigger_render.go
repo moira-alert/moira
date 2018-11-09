@@ -31,7 +31,7 @@ func renderTrigger(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	tts, trigger, err := controller.GetTriggerEvaluationResult(database, int64(from), int64(to), triggerID)
+	tts, trigger, err := controller.GetTriggerEvaluationResult(database, from, to, triggerID)
 	if err != nil {
 		render.Render(writer, request, api.ErrorInternalServer(err))
 		return
