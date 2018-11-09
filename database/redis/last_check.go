@@ -31,6 +31,9 @@ func (connector *DbConnector) setTriggerLastCheckAndUpdateProperCounter(triggerI
 	if err != nil {
 		return err
 	}
+
+	triggerNeedToReindex := connector.checkDataScoreChanged(triggerID, checkData)
+
 	c := connector.pool.Get()
 	defer c.Close()
 	c.Send("MULTI")
@@ -45,6 +48,11 @@ func (connector *DbConnector) setTriggerLastCheckAndUpdateProperCounter(triggerI
 	_, err = c.Do("EXEC")
 	if err != nil {
 		return fmt.Errorf("Failed to EXEC: %s", err.Error())
+	}
+	if triggerNeedToReindex {
+		if err = connector.AddTriggersToReindex(triggerID); err != nil {
+			return fmt.Errorf("failed to add trigger to reindex: %s", err.Error())
+		}
 	}
 	return nil
 }
@@ -61,6 +69,11 @@ func (connector *DbConnector) RemoveTriggerLastCheck(triggerID string) error {
 	if err != nil {
 		return fmt.Errorf("Failed to EXEC: %s", err.Error())
 	}
+
+	if err = connector.AddTriggersToReindex(triggerID); err != nil {
+		return fmt.Errorf("failed to add trigger to reindex: %s", err.Error())
+	}
+
 	return nil
 }
 
@@ -164,6 +177,19 @@ func (connector *DbConnector) GetTriggerCheckIDs(tagNames []string, onlyErrors b
 		}
 	}
 	return total, nil
+}
+
+// checkDataScoreChanged returns true if checkData.Score changed since last check
+func (connector *DbConnector) checkDataScoreChanged(triggerID string, checkData *moira.CheckData) bool {
+	c := connector.pool.Get()
+	defer c.Close()
+
+	oldScore, err := redis.Int64(c.Do("ZSCORE", triggersChecksKey, triggerID))
+	if err != nil {
+		return true
+	}
+
+	return oldScore != checkData.Score
 }
 
 var badStateTriggersKey = "moira-bad-state-triggers"

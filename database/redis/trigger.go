@@ -170,10 +170,18 @@ func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigg
 	if err != nil {
 		return fmt.Errorf("failed to check trigger subscriptions: %s", err.Error())
 	}
+
 	if !hasSubscriptions {
-		connector.MarkTriggersAsUnused(triggerID)
+		err = connector.MarkTriggersAsUnused(triggerID)
 	} else {
-		connector.MarkTriggersAsUsed(triggerID)
+		err = connector.MarkTriggersAsUsed(triggerID)
+	}
+	if err != nil {
+		return fmt.Errorf("failed to mark trigger as (un)used: %s", err.Error())
+	}
+
+	if err = connector.AddTriggersToReindex(triggerID); err != nil {
+		return fmt.Errorf("failed to add trigger to reindex: %s", err.Error())
 	}
 
 	return connector.cleanupPatternsOutOfUse(cleanupPatterns)
@@ -211,6 +219,11 @@ func (connector *DbConnector) RemoveTrigger(triggerID string) error {
 	if err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
+
+	if err = connector.AddTriggersToReindex(triggerID); err != nil {
+		return fmt.Errorf("failed to add trigger to reindex: %s", err.Error())
+	}
+
 	return connector.cleanupPatternsOutOfUse(trigger.Patterns)
 }
 
