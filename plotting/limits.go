@@ -11,6 +11,10 @@ import (
 	"github.com/moira-alert/moira"
 )
 
+// defaultRangeDelta is an additional value to
+// cover cases with equal highest/lowest limits values
+const defaultRangeDelta = 10
+
 // plotLimits is a set of limits for given metricsData
 type plotLimits struct {
 	from    time.Time
@@ -34,9 +38,9 @@ func resolveLimits(metricsData []*types.MetricData) plotLimits {
 	}
 	from, to := util.Math.MinAndMaxOfTime(allTimes...)
 	lowest, highest := util.Math.MinAndMax(allValues...)
-	if lowest == highest {
-		lowest = lowest + 5
-		highest = highest + 5
+	if highest == lowest {
+		highest = highest + (defaultRangeDelta/2)
+		lowest = lowest - (defaultRangeDelta/2)
 	}
 	return plotLimits{
 		from:    from,

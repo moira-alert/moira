@@ -13,11 +13,6 @@ import (
 	"github.com/moira-alert/moira"
 )
 
-var testLimits = plotLimits{
-	highest: 100,
-	lowest:  -100,
-}
-
 // TestResolveLimits tests plot limits will be calculated correctly for any metricData array
 func TestResolveLimits(t *testing.T) {
 	metricsData := []*types.MetricData{
@@ -78,20 +73,21 @@ func TestResolveLimits(t *testing.T) {
 
 // TestGetThresholdAxisRange tests getThresholdAxisRange returns correct axis range
 func TestGetThresholdAxisRange(t *testing.T) {
+	testLimits := plotLimits{highest: 100, lowest: -100}
 	Convey("Revert area between threshold line and x axis if necessary", t, func() {
 		axisRange := testLimits.getThresholdAxisRange(moira.RisingTrigger)
 		So(axisRange, ShouldResemble, chart.ContinuousRange{
 			Descending: true,
-			Max: 200,
-			Min: 0,
+			Max:        200,
+			Min:        0,
 		})
 		nonRisingTriggers := []string{moira.FallingTrigger, moira.ExpressionTrigger}
 		for _, triggerType := range nonRisingTriggers {
 			axisRange = testLimits.getThresholdAxisRange(triggerType)
 			So(axisRange, ShouldResemble, chart.ContinuousRange{
 				Descending: false,
-				Max: 100,
-				Min: -100,
+				Max:        100,
+				Min:        -100,
 			})
 		}
 	})
@@ -100,6 +96,7 @@ func TestGetThresholdAxisRange(t *testing.T) {
 // TestFormsSetContaining tests formsSetContaining checks points correctly
 func TestFormsSetContaining(t *testing.T) {
 	Convey("check if point belongs to a given set", t, func() {
+		testLimits := plotLimits{highest: 100, lowest: -100}
 		points := []float64{0, 10, 50, 100, 101}
 		expectedResults := []bool{true, true, true, true, false}
 		actualResults := make([]bool, 0)

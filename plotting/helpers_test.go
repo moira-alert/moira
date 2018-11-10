@@ -39,11 +39,11 @@ func TestSortByLen(t *testing.T) {
 func TestInt64ToTime(t *testing.T) {
 	int64timeStamp := int64(1527330278)
 	humanReadabletimeStamp := time.Date(2018, 5, 26, 10, 24, 38, 0, time.UTC)
-	Convey("Convert int32 timestamp into datetime", t, func() {
+	Convey("Convert int64 timestamp into datetime", t, func() {
 		converted := int64ToTime(int64timeStamp)
 		So(converted, ShouldResemble, humanReadabletimeStamp)
 	})
-	Convey("Convert int32 timestamp + 1 minute into datetime", t, func() {
+	Convey("Convert int64 timestamp + 1 minute into datetime", t, func() {
 		int64timeStamp += 60
 		converted := int64ToTime(int64timeStamp)
 		So(converted, ShouldResemble, humanReadabletimeStamp.Add(time.Minute))
