@@ -22,9 +22,8 @@ func GetTriggerEvaluationResult(dataBase moira.Database, from, to int64, trigger
 		Main:       make([]*target.TimeSeries, 0),
 		Additional: make([]*target.TimeSeries, 0),
 	}
-	isSimpleTrigger := trigger.IsSimple()
 	for i, tar := range trigger.Targets {
-		result, err := target.EvaluateTarget(dataBase, tar, from, to, isSimpleTrigger)
+		result, err := target.EvaluateTarget(dataBase, tar, from, to, true)
 		if err != nil {
 			return nil, &trigger, err
 		}
