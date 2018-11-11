@@ -71,29 +71,27 @@ func (testCase *plotsHashDistancesTestCase) getFilePath(toOriginal bool) (string
 
 // getTriggerName returns test trigger name using plot test case parameters
 func (testCase *plotsHashDistancesTestCase) getTriggerName() string {
-	filePrefix := bytes.NewBuffer([]byte("Test trigger "))
-	filePrefix.WriteString("(")
-	filePrefix.WriteString(strings.ToUpper(string(testCase.plotTheme[0])))
-	filePrefix.WriteString(", ")
-	filePrefix.WriteString(strings.ToUpper(string(testCase.triggerType[0])))
-	filePrefix.WriteString(")")
-	filePrefix.WriteString(" {W")
+	triggerName := bytes.NewBuffer([]byte("Test trigger ("))
+	triggerName.WriteString(strings.ToUpper(string(testCase.plotTheme[0])))
+	triggerName.WriteString(", ")
+	triggerName.WriteString(strings.ToUpper(string(testCase.triggerType[0])))
+	triggerName.WriteString(") {")
 	if testCase.warnValue != nil {
-		filePrefix.WriteString("+")
+		triggerName.WriteString("W+")
 	} else {
-		filePrefix.WriteString("-")
+		triggerName.WriteString("W-")
 	}
-	filePrefix.WriteString(", E")
+	triggerName.WriteString(", ")
 	if testCase.errorValue != nil {
-		filePrefix.WriteString("+")
+		triggerName.WriteString("E+")
 	} else {
-		filePrefix.WriteString("-")
+		triggerName.WriteString("E-")
 	}
-	filePrefix.WriteString("}")
+	triggerName.WriteString("}")
 	if !testCase.useHumanizedValues {
-		filePrefix.WriteString(" [H]")
+		triggerName.WriteString(" [H]")
 	}
-	return filePrefix.String()
+	return triggerName.String()
 }
 
 // plotsHashDistancesTestCases is a collection of plot test cases
