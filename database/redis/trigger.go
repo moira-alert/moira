@@ -124,6 +124,9 @@ func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigg
 	if errGetTrigger != nil && errGetTrigger != database.ErrNil {
 		return errGetTrigger
 	}
+	if trigger.IsRemote {
+		trigger.Patterns = make([]string, 0)
+	}
 	bytes, err := reply.GetTriggerBytes(triggerID, trigger)
 	if err != nil {
 		return err
@@ -133,11 +136,7 @@ func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigg
 	c.Send("MULTI")
 	cleanupPatterns := make([]string, 0)
 	if errGetTrigger != database.ErrNil {
-		triggerPatterns := trigger.Patterns
-		if trigger.IsRemote {
-			triggerPatterns = make([]string, 0)
-		}
-		for _, pattern := range moira.GetStringListsDiff(existing.Patterns, triggerPatterns) {
+		for _, pattern := range moira.GetStringListsDiff(existing.Patterns, trigger.Patterns) {
 			c.Send("SREM", patternTriggersKey(pattern), triggerID)
 			cleanupPatterns = append(cleanupPatterns, pattern)
 		}

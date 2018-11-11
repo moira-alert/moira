@@ -434,11 +434,12 @@ func TestTriggerStoring(t *testing.T) {
 func TestRemoteTrigger(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewDatabase(logger, config)
+	pattern := "test.pattern.remote1"
 	trigger := &moira.Trigger{
 		ID:          "triggerID-0000000000010",
 		Name:        "remote",
 		Targets:     []string{"test.target.remote1"},
-		Patterns:    []string{"test.pattern.remote1"},
+		Patterns:    []string{pattern},
 		IsRemote:    true,
 		TriggerType: moira.RisingTrigger,
 	}
@@ -469,7 +470,7 @@ func TestRemoteTrigger(t *testing.T) {
 			So(ids, ShouldResemble, []string{trigger.ID})
 		})
 		Convey("Trigger should not be added to patterns collection", func() {
-			ids, err := dataBase.GetPatternTriggerIDs(trigger.Patterns[0])
+			ids, err := dataBase.GetPatternTriggerIDs(pattern)
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{})
 		})
@@ -482,6 +483,7 @@ func TestRemoteTrigger(t *testing.T) {
 
 	Convey("Resaving remote trigger as non-remote", t, func() {
 		trigger.IsRemote = false
+		trigger.Patterns = []string{pattern}
 		Convey("Trigger should be saved correctly", func() {
 			err := dataBase.SaveTrigger(trigger.ID, trigger)
 			So(err, ShouldBeNil)
@@ -505,12 +507,12 @@ func TestRemoteTrigger(t *testing.T) {
 			So(ids, ShouldResemble, []string{})
 		})
 		Convey("Trigger shouldn't be returned as non-remote", func() {
-			ids, err := dataBase.GetPatternTriggerIDs(trigger.Patterns[0])
+			ids, err := dataBase.GetPatternTriggerIDs(pattern)
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{trigger.ID})
 		})
 		Convey("Trigger should be added to patterns collection", func() {
-			ids, err := dataBase.GetPatternTriggerIDs(trigger.Patterns[0])
+			ids, err := dataBase.GetPatternTriggerIDs(pattern)
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{trigger.ID})
 		})
@@ -544,7 +546,7 @@ func TestRemoteTrigger(t *testing.T) {
 			So(ids, ShouldResemble, []string{trigger.ID})
 		})
 		Convey("Trigger should deleted from patterns collection", func() {
-			ids, err := dataBase.GetPatternTriggerIDs(trigger.Patterns[0])
+			ids, err := dataBase.GetPatternTriggerIDs(pattern)
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{})
 		})
