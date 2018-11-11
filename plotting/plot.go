@@ -29,7 +29,6 @@ func GetPlotTemplate(theme string) (*Plot, error) {
 
 // GetRenderable returns go-chart to render
 func (plot *Plot) GetRenderable(trigger *moira.Trigger, metricsData []*types.MetricData, metricsWhitelist []string) chart.Chart {
-	// TODO: Return "no metrics found" as picture too
 	plotSeries := make([]chart.Series, 0)
 	limits := resolveLimits(metricsData)
 

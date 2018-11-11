@@ -4,10 +4,10 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"github.com/moira-alert/moira"
 	"math"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/go-graphite/carbonapi/expr/types"
@@ -16,6 +16,8 @@ import (
 	"github.com/gotokatsuya/ipare/util"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/wcharczuk/go-chart"
+
+	"github.com/moira-alert/moira"
 )
 
 const (
@@ -33,6 +35,7 @@ const (
 	plotHashDistanceTestFallingErrorThreshold = plotHashDistanceTestRisingWarnThreshold
 )
 
+// plotsHashDistancesTestCase is a single plot test case
 type plotsHashDistancesTestCase struct {
 	name               string
 	plotTheme          string
@@ -43,6 +46,7 @@ type plotsHashDistancesTestCase struct {
 	expected           int
 }
 
+// getFilePath returns path to original or rendered plot file
 func (testCase *plotsHashDistancesTestCase) getFilePath(toOriginal bool) (string, error) {
 	examplesPath, err := filepath.Abs(plottingExamplesPath)
 	if err != nil {
@@ -65,6 +69,34 @@ func (testCase *plotsHashDistancesTestCase) getFilePath(toOriginal bool) (string
 	return fmt.Sprintf("%s.png", filePrefix.String()), nil
 }
 
+// getTriggerName returns test trigger name using plot test case parameters
+func (testCase *plotsHashDistancesTestCase) getTriggerName() string {
+	filePrefix := bytes.NewBuffer([]byte("Test trigger "))
+	filePrefix.WriteString("(")
+	filePrefix.WriteString(strings.ToUpper(string(testCase.plotTheme[0])))
+	filePrefix.WriteString(", ")
+	filePrefix.WriteString(strings.ToUpper(string(testCase.triggerType[0])))
+	filePrefix.WriteString(")")
+	filePrefix.WriteString(" {W")
+	if testCase.warnValue != nil {
+		filePrefix.WriteString("+")
+	} else {
+		filePrefix.WriteString("-")
+	}
+	filePrefix.WriteString(", E")
+	if testCase.errorValue != nil {
+		filePrefix.WriteString("+")
+	} else {
+		filePrefix.WriteString("-")
+	}
+	filePrefix.WriteString("}")
+	if !testCase.useHumanizedValues {
+		filePrefix.WriteString(" [H]")
+	}
+	return filePrefix.String()
+}
+
+// plotsHashDistancesTestCases is a collection of plot test cases
 var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 	{
 		name: "DARK | EXPRESSION | No thresholds | Humanized values",
@@ -448,13 +480,49 @@ func generateTestMetricsData(useHumanizedValues bool) []*types.MetricData {
 	return metricsData
 }
 
-// TestGetRenderable renders plots based on test data and compares
-// test plots hashes with plot examples hashes
+// renderTestMetricsDataToPNG renders and saves rendered plots to PNG
+func renderTestMetricsDataToPNG(trigger moira.Trigger, plotTheme string,
+	metricsData []*types.MetricData, filePath string) (error) {
+	var metricsWhiteList []string
+	plotTemplate, err := GetPlotTemplate(plotTheme)
+	if err != nil {
+		return err
+	}
+	renderable := plotTemplate.GetRenderable(&trigger, metricsData, metricsWhiteList)
+	f, err := os.Create(filePath)
+	if err != nil {
+		return err
+	}
+	w := bufio.NewWriter(f)
+	if err := renderable.Render(chart.PNG, w); err != nil {
+		return err
+	}
+	w.Flush()
+	return nil
+}
+
+// calculateHashDistance returns calculated hash distance of two given pictures
+func calculateHashDistance(pathToOriginal, pathToRendered string) (*int, error) {
+	return nil, nil
+	hash := ipare.NewHash()
+	original, err := util.Open(pathToOriginal)
+	if err != nil {
+		return nil, err
+	}
+	generated, err := util.Open(pathToRendered)
+	if err != nil {
+		return nil, err
+	}
+	distance := hash.Compare(original, generated)
+	return &distance, nil
+}
+
+// TestGetRenderable renders plots based on test data and compares test plots hashes with plot examples hashes
 func TestGetRenderable(t *testing.T) {
 	Convey("Test plots hash distances", t, func() {
 		for _, testCase := range plotsHashDistancesTestCases {
 			trigger := moira.Trigger{
-				Name: testCase.name,
+				Name: testCase.getTriggerName(),
 				TriggerType: testCase.triggerType,
 			}
 			if testCase.errorValue != nil {
@@ -491,41 +559,4 @@ func TestGetRenderable(t *testing.T) {
 			//So(hashDistance, ShouldBeLessThanOrEqualTo, 5)
 		}
 	})
-}
-
-// renderTestMetricsDataToPNG renders and saves rendered plots to PNG
-func renderTestMetricsDataToPNG(trigger moira.Trigger, plotTheme string,
-	metricsData []*types.MetricData, filePath string) (error) {
-	var metricsWhiteList []string
-	plotTemplate, err := GetPlotTemplate(plotTheme)
-	if err != nil {
-		return err
-	}
-	renderable := plotTemplate.GetRenderable(&trigger, metricsData, metricsWhiteList)
-	f, err := os.Create(filePath)
-	if err != nil {
-		return err
-	}
-	w := bufio.NewWriter(f)
-	if err := renderable.Render(chart.PNG, w); err != nil {
-		return err
-	}
-	w.Flush()
-	return nil
-}
-
-// calculateHashDistance returns calculated hash distance of two given pictures
-func calculateHashDistance(pathToOriginal, pathToRendered string) (*int, error) {
-	return nil, nil
-	hash := ipare.NewHash()
-	original, err := util.Open(pathToOriginal)
-	if err != nil {
-		return nil, err
-	}
-	generated, err := util.Open(pathToRendered)
-	if err != nil {
-		return nil, err
-	}
-	distance := hash.Compare(original, generated)
-	return &distance, nil
 }

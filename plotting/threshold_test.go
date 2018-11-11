@@ -31,6 +31,7 @@ var (
 	}
 )
 
+// thresholdTestCase is a single threshold test case
 type thresholdTestCase struct {
 	name        string
 	triggerType string
@@ -40,6 +41,7 @@ type thresholdTestCase struct {
 	expected    []*threshold
 }
 
+// thresholdTestCases is a collection of threshold test cases
 var thresholdTestCases = []thresholdTestCase{
 	{
 		name:        "RISING | {limits.lowest ..limits.highest}, warn",
