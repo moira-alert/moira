@@ -133,7 +133,11 @@ func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigg
 	c.Send("MULTI")
 	cleanupPatterns := make([]string, 0)
 	if errGetTrigger != database.ErrNil {
-		for _, pattern := range moira.GetStringListsDiff(existing.Patterns, trigger.Patterns) {
+		triggerPatterns := trigger.Patterns
+		if trigger.IsRemote {
+			triggerPatterns = make([]string, 0)
+		}
+		for _, pattern := range moira.GetStringListsDiff(existing.Patterns, triggerPatterns) {
 			c.Send("SREM", patternTriggersKey(pattern), triggerID)
 			cleanupPatterns = append(cleanupPatterns, pattern)
 		}

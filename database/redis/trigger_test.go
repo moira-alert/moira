@@ -473,6 +473,11 @@ func TestRemoteTrigger(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{})
 		})
+		Convey("Trigger pattern shouldn't be in patterns collection", func() {
+			patterns, err := dataBase.GetPatterns()
+			So(err, ShouldBeNil)
+			So(patterns, ShouldResemble, []string{})
+		})
 	})
 
 	Convey("Resaving remote trigger as non-remote", t, func() {
@@ -508,6 +513,45 @@ func TestRemoteTrigger(t *testing.T) {
 			ids, err := dataBase.GetPatternTriggerIDs(trigger.Patterns[0])
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{trigger.ID})
+		})
+		Convey("Trigger pattern should be in patterns collection", func() {
+			patterns, err := dataBase.GetPatterns()
+			So(err, ShouldBeNil)
+			So(patterns, ShouldResemble, trigger.Patterns)
+		})
+
+		trigger.IsRemote = true
+		Convey("Update this trigger as remote", func() {
+			err := dataBase.SaveTrigger(trigger.ID, trigger)
+			So(err, ShouldBeNil)
+			actual, err := dataBase.GetTrigger(trigger.ID)
+			So(err, ShouldBeNil)
+			So(actual, ShouldResemble, *trigger)
+		})
+		Convey("Trigger should be deleted from local triggers collection", func() {
+			ids, err := dataBase.GetLocalTriggerIDs()
+			So(err, ShouldBeNil)
+			So(ids, ShouldResemble, []string{})
+		})
+		Convey("Trigger should still be in all triggers collection", func() {
+			ids, err := dataBase.GetAllTriggerIDs()
+			So(err, ShouldBeNil)
+			So(ids, ShouldResemble, []string{trigger.ID})
+		})
+		Convey("Trigger should be added to remote triggers collection", func() {
+			ids, err := dataBase.GetRemoteTriggerIDs()
+			So(err, ShouldBeNil)
+			So(ids, ShouldResemble, []string{trigger.ID})
+		})
+		Convey("Trigger should deleted from patterns collection", func() {
+			ids, err := dataBase.GetPatternTriggerIDs(trigger.Patterns[0])
+			So(err, ShouldBeNil)
+			So(ids, ShouldResemble, []string{})
+		})
+		Convey("Trigger pattern should not be in patterns collection", func() {
+			patterns, err := dataBase.GetPatterns()
+			So(err, ShouldBeNil)
+			So(patterns, ShouldResemble, []string{})
 		})
 	})
 }
