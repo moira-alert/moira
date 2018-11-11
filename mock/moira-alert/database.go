@@ -556,17 +556,17 @@ func (mr *MockDatabaseMockRecorder) GetTriggerChecks(arg0 interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggerChecks", reflect.TypeOf((*MockDatabase)(nil).GetTriggerChecks), arg0)
 }
 
-// GetTriggerIDs mocks base method
+// GetLocalTriggerIDs mocks base method
 func (m *MockDatabase) GetTriggerIDs() ([]string, error) {
-	ret := m.ctrl.Call(m, "GetTriggerIDs")
+	ret := m.ctrl.Call(m, "GetLocalTriggerIDs")
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetTriggerIDs indicates an expected call of GetTriggerIDs
+// GetLocalTriggerIDs indicates an expected call of GetLocalTriggerIDs
 func (mr *MockDatabaseMockRecorder) GetTriggerIDs() *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggerIDs", reflect.TypeOf((*MockDatabase)(nil).GetTriggerIDs))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLocalTriggerIDs", reflect.TypeOf((*MockDatabase)(nil).GetTriggerIDs))
 }
 
 // GetTriggerLastCheck mocks base method

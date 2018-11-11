@@ -103,7 +103,7 @@ func TestGetAllTriggers(t *testing.T) {
 		So(list, ShouldResemble, &dto.TriggersList{List: make([]moira.TriggerCheck, 0)})
 	})
 
-	Convey("GetTriggerIDs error", t, func() {
+	Convey("GetLocalTriggerIDs error", t, func() {
 		expected := fmt.Errorf("getTriggerIDs error")
 		mockDatabase.EXPECT().GetAllTriggerIDs().Return(nil, expected)
 		list, err := GetAllTriggers(mockDatabase)

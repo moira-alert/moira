@@ -22,8 +22,8 @@ func (connector *DbConnector) GetAllTriggerIDs() ([]string, error) {
 	return triggerIds, nil
 }
 
-// GetTriggerIDs gets moira triggerIDs without remote
-func (connector *DbConnector) GetTriggerIDs() ([]string, error) {
+// GetLocalTriggerIDs gets moira local triggerIDs
+func (connector *DbConnector) GetLocalTriggerIDs() ([]string, error) {
 	c := connector.pool.Get()
 	defer c.Close()
 	triggerIds, err := redis.Strings(c.Do("SDIFF", triggersListKey, remoteTriggersListKey))

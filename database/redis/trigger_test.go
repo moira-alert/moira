@@ -38,7 +38,7 @@ func TestTriggerStoring(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, *trigger)
 
-			ids, err := dataBase.GetTriggerIDs()
+			ids, err := dataBase.GetLocalTriggerIDs()
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{trigger.ID})
 
@@ -159,7 +159,7 @@ func TestTriggerStoring(t *testing.T) {
 			So(err, ShouldResemble, database.ErrNil)
 			So(actual, ShouldResemble, moira.Trigger{})
 
-			ids, err = dataBase.GetTriggerIDs()
+			ids, err = dataBase.GetLocalTriggerIDs()
 			So(err, ShouldBeNil)
 			So(ids, ShouldBeEmpty)
 
@@ -308,7 +308,7 @@ func TestTriggerStoring(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, *triggerVer1)
 
-			ids, err := dataBase.GetTriggerIDs()
+			ids, err := dataBase.GetLocalTriggerIDs()
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{triggerVer1.ID})
 
@@ -354,7 +354,7 @@ func TestTriggerStoring(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, *triggerVer2)
 
-			ids, err = dataBase.GetTriggerIDs()
+			ids, err = dataBase.GetLocalTriggerIDs()
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{triggerVer2.ID})
 
@@ -404,7 +404,7 @@ func TestTriggerStoring(t *testing.T) {
 			So(err, ShouldResemble, database.ErrNil)
 			So(actual, ShouldResemble, moira.Trigger{})
 
-			ids, err = dataBase.GetTriggerIDs()
+			ids, err = dataBase.GetLocalTriggerIDs()
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{})
 
@@ -458,8 +458,8 @@ func TestRemoteTrigger(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{trigger.ID})
 		})
-		Convey("Trigger should not be returned as non-remote trigger", func() { //TODO rewrite msg
-			ids, err := dataBase.GetTriggerIDs()
+		Convey("Trigger should not be added to local triggers collection", func() {
+			ids, err := dataBase.GetLocalTriggerIDs()
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{})
 		})
@@ -485,7 +485,7 @@ func TestRemoteTrigger(t *testing.T) {
 			So(actual, ShouldResemble, *trigger)
 		})
 		Convey("Trigger should be added to triggers collection", func() {
-			ids, err := dataBase.GetTriggerIDs()
+			ids, err := dataBase.GetLocalTriggerIDs()
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{trigger.ID})
 		})
@@ -518,7 +518,7 @@ func TestTriggerErrorConnection(t *testing.T) {
 	dataBase.flush()
 	defer dataBase.flush()
 	Convey("Should throw error when no connection", t, func() {
-		actual, err := dataBase.GetTriggerIDs()
+		actual, err := dataBase.GetLocalTriggerIDs()
 		So(err, ShouldNotBeNil)
 		So(actual, ShouldBeNil)
 
