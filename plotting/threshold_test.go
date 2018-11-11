@@ -9,11 +9,11 @@ import (
 )
 
 const (
-	testValueIncrement    = float64(10)
-	testRisingWarnValue   = float64(100)
-	testRisingErrorValue  = float64(200)
-	testFallingWarnValue  = testRisingErrorValue
-	testFallingErrorValue = testRisingWarnValue
+	thresholdTestValueIncrement    = float64(10)
+	thresholdTestRisingWarnValue   = float64(100)
+	thresholdTestRisingErrorValue  = float64(200)
+	thresholdTestFallingWarnValue  = thresholdTestRisingErrorValue
+	thresholdTestFallingErrorValue = thresholdTestRisingWarnValue
 )
 
 var (
@@ -44,7 +44,7 @@ var thresholdTestCases = []thresholdTestCase{
 	{
 		name:        "RISING | {limits.lowest ..limits.highest}, warn",
 		triggerType: moira.RisingTrigger,
-		warnValue:   testRisingWarnValue,
+		warnValue:   thresholdTestRisingWarnValue,
 		errorValue:  nil,
 		limits:      outerTestCaseLimits,
 		expected:    []*threshold{},
@@ -53,29 +53,29 @@ var thresholdTestCases = []thresholdTestCase{
 		name:        "RISING | {limits.lowest ..limits.highest}, error",
 		triggerType: moira.RisingTrigger,
 		warnValue:   nil,
-		errorValue:  testRisingErrorValue,
+		errorValue:  thresholdTestRisingErrorValue,
 		limits:      outerTestCaseLimits,
 		expected:    []*threshold{},
 	},
 	{
 		name:        "RISING | {limits.lowest ..limits.highest}, warn, error",
 		triggerType: moira.RisingTrigger,
-		warnValue:   testRisingWarnValue,
-		errorValue:  testRisingErrorValue,
+		warnValue:   thresholdTestRisingWarnValue,
+		errorValue:  thresholdTestRisingErrorValue,
 		limits:      outerTestCaseLimits,
 		expected:    []*threshold{},
 	},
 	{
 		name:        "RISING | {limits.lowest <= warn <= limits.highest}",
 		triggerType: moira.RisingTrigger,
-		warnValue:   testRisingWarnValue,
+		warnValue:   thresholdTestRisingWarnValue,
 		errorValue:  nil,
 		limits:      innerTestCaseLimits,
 		expected: []*threshold{
 			{
 				thresholdType: "WARN",
 				xCoordinate:   float64(innerTestCaseLimits.to.UnixNano()),
-				yCoordinate:   innerTestCaseLimits.highest - testRisingWarnValue,
+				yCoordinate:   innerTestCaseLimits.highest - thresholdTestRisingWarnValue,
 			},
 		},
 	},
@@ -83,46 +83,46 @@ var thresholdTestCases = []thresholdTestCase{
 		name:        "RISING | {limits.lowest <= error <= limits.highest}",
 		triggerType: moira.RisingTrigger,
 		warnValue:   nil,
-		errorValue:  testRisingErrorValue,
+		errorValue:  thresholdTestRisingErrorValue,
 		limits:      innerTestCaseLimits,
 		expected: []*threshold{
 			{
 				thresholdType: "ERROR",
 				xCoordinate:   float64(innerTestCaseLimits.to.UnixNano()),
-				yCoordinate:   innerTestCaseLimits.highest - testRisingErrorValue,
+				yCoordinate:   innerTestCaseLimits.highest - thresholdTestRisingErrorValue,
 			},
 		},
 	},
 	{
 		name:        "RISING | {limits.lowest <= warn << error <= limits.highest}",
 		triggerType: moira.RisingTrigger,
-		warnValue:   testRisingWarnValue,
-		errorValue:  testRisingErrorValue,
+		warnValue:   thresholdTestRisingWarnValue,
+		errorValue:  thresholdTestRisingErrorValue,
 		limits:      innerTestCaseLimits,
 		expected: []*threshold{
 			{
 				thresholdType: "ERROR",
 				xCoordinate:   float64(innerTestCaseLimits.to.UnixNano()),
-				yCoordinate:   innerTestCaseLimits.highest - testRisingErrorValue,
+				yCoordinate:   innerTestCaseLimits.highest - thresholdTestRisingErrorValue,
 			},
 			{
 				thresholdType: "WARN",
 				xCoordinate:   float64(innerTestCaseLimits.to.UnixNano()),
-				yCoordinate:   innerTestCaseLimits.highest - testRisingWarnValue,
+				yCoordinate:   innerTestCaseLimits.highest - thresholdTestRisingWarnValue,
 			},
 		},
 	},
 	{
 		name:        "RISING | {limits.lowest <= warn < error <= limits.highest}",
 		triggerType: moira.RisingTrigger,
-		warnValue:   testRisingWarnValue,
-		errorValue:  testRisingWarnValue + testValueIncrement,
+		warnValue:   thresholdTestRisingWarnValue,
+		errorValue:  thresholdTestRisingWarnValue + thresholdTestValueIncrement,
 		limits:      innerTestCaseLimits,
 		expected: []*threshold{
 			{
 				thresholdType: "ERROR",
 				xCoordinate:   float64(innerTestCaseLimits.to.UnixNano()),
-				yCoordinate:   innerTestCaseLimits.highest - (testRisingWarnValue + testValueIncrement),
+				yCoordinate:   innerTestCaseLimits.highest - (thresholdTestRisingWarnValue + thresholdTestValueIncrement),
 			},
 		},
 	},
@@ -130,14 +130,14 @@ var thresholdTestCases = []thresholdTestCase{
 		name:        "FALLING | {limits.lowest ..limits.highest}, error",
 		triggerType: moira.FallingTrigger,
 		warnValue:   nil,
-		errorValue:  testFallingErrorValue,
+		errorValue:  thresholdTestFallingErrorValue,
 		limits:      outerTestCaseLimits,
 		expected:    []*threshold{},
 	},
 	{
 		name:        "FALLING | {limits.lowest ..limits.highest}, warn",
 		triggerType: moira.FallingTrigger,
-		warnValue:   testFallingWarnValue,
+		warnValue:   thresholdTestFallingWarnValue,
 		errorValue:  nil,
 		limits:      outerTestCaseLimits,
 		expected:    []*threshold{},
@@ -145,8 +145,8 @@ var thresholdTestCases = []thresholdTestCase{
 	{
 		name:        "FALLING | {limits.lowest ..limits.highest}, error, warn",
 		triggerType: moira.FallingTrigger,
-		warnValue:   testFallingWarnValue,
-		errorValue:  testFallingErrorValue,
+		warnValue:   thresholdTestFallingWarnValue,
+		errorValue:  thresholdTestFallingErrorValue,
 		limits:      outerTestCaseLimits,
 		expected:    []*threshold{},
 	},
@@ -154,60 +154,60 @@ var thresholdTestCases = []thresholdTestCase{
 		name:        "FALLING | {limits.lowest <= error <= limits.highest}",
 		triggerType: moira.FallingTrigger,
 		warnValue:   nil,
-		errorValue:  testFallingErrorValue,
+		errorValue:  thresholdTestFallingErrorValue,
 		limits:      innerTestCaseLimits,
 		expected: []*threshold{
 			{
 				thresholdType: "ERROR",
 				xCoordinate:   float64(innerTestCaseLimits.to.UnixNano()),
-				yCoordinate:   testFallingErrorValue,
+				yCoordinate:   thresholdTestFallingErrorValue,
 			},
 		},
 	},
 	{
 		name:        "FALLING | {limits.lowest <= warn <= limits.highest}",
 		triggerType: moira.FallingTrigger,
-		warnValue:   testFallingWarnValue,
+		warnValue:   thresholdTestFallingWarnValue,
 		errorValue:  nil,
 		limits:      innerTestCaseLimits,
 		expected: []*threshold{
 			{
 				thresholdType: "WARN",
 				xCoordinate:   float64(innerTestCaseLimits.to.UnixNano()),
-				yCoordinate:   testFallingWarnValue,
+				yCoordinate:   thresholdTestFallingWarnValue,
 			},
 		},
 	},
 	{
 		name:        "FALLING | {limits.lowest <= error << warn <= limits.highest}",
 		triggerType: moira.FallingTrigger,
-		warnValue:   testFallingWarnValue,
-		errorValue:  testFallingErrorValue,
+		warnValue:   thresholdTestFallingWarnValue,
+		errorValue:  thresholdTestFallingErrorValue,
 		limits:      innerTestCaseLimits,
 		expected: []*threshold{
 			{
 				thresholdType: "ERROR",
 				xCoordinate:   float64(innerTestCaseLimits.to.UnixNano()),
-				yCoordinate:   testFallingErrorValue,
+				yCoordinate:   thresholdTestFallingErrorValue,
 			},
 			{
 				thresholdType: "WARN",
 				xCoordinate:   float64(innerTestCaseLimits.to.UnixNano()),
-				yCoordinate:   testFallingWarnValue,
+				yCoordinate:   thresholdTestFallingWarnValue,
 			},
 		},
 	},
 	{
 		name:        "FALLING | {limits.lowest <= error < warn <= limits.highest}",
 		triggerType: moira.FallingTrigger,
-		warnValue:   testFallingErrorValue + testValueIncrement,
-		errorValue:  testFallingErrorValue,
+		warnValue:   thresholdTestFallingErrorValue + thresholdTestValueIncrement,
+		errorValue:  thresholdTestFallingErrorValue,
 		limits:      innerTestCaseLimits,
 		expected: []*threshold{
 			{
 				thresholdType: "ERROR",
 				xCoordinate:   float64(innerTestCaseLimits.to.UnixNano()),
-				yCoordinate:   testFallingErrorValue,
+				yCoordinate:   thresholdTestFallingErrorValue,
 			},
 		},
 	},
