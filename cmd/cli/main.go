@@ -24,6 +24,7 @@ var (
 	removeBotInstanceLock           = flag.String("delete-bot-host-lock", "", "Delete bot host lock for launching bots with new distributed lock strategy. Must use for upgrade from Moira 1.x to 2.x")
 	updateDatabaseStructures        = flag.Bool("update", false, "convert existing database structures into required ones for current Moira version")
 	downgradeDatabaseStructures     = flag.Bool("downgrade", false, "reconvert existing database structures into required ones for previous Moira version")
+	markTriggersAsUnused            = flag.Bool("mark-triggers-unused", false, "fill database with trigger IDs not used in any subscription")
 )
 
 // Moira version
@@ -128,6 +129,38 @@ func main() {
 			logger.Info("Subscription structures has been sucessfully downgraded")
 		}
 	}
+
+	if *markTriggersAsUnused {
+		logger.Info("Start marking unused triggers")
+		if err := resaveTriggers(dataBase); err == nil {
+			logger.Info("Unused triggers are marked")
+		} else {
+			logger.Errorf("Can not mark triggers unused: %s", err.Error())
+		}
+	}
+}
+
+func resaveTriggers(database moira.Database) error {
+	allTriggerIDs, err := database.GetAllTriggerIDs()
+	if err != nil {
+		return err
+	}
+
+	allTriggers, err := database.GetTriggers(allTriggerIDs)
+	if err != nil {
+		return err
+	}
+
+	for _, trigger := range allTriggers {
+		if trigger != nil {
+			err = database.SaveTrigger(trigger.ID, trigger)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 // RemoveBotInstanceLock - in Moira 2.0 we switch from host-based single instance telegram-bot run lock

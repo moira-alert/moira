@@ -634,6 +634,19 @@ func (mr *MockDatabaseMockRecorder) GetTriggersToCheckCount() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggersToCheckCount", reflect.TypeOf((*MockDatabase)(nil).GetTriggersToCheckCount))
 }
 
+// GetUnusedTriggerIDs mocks base method
+func (m *MockDatabase) GetUnusedTriggerIDs() ([]string, error) {
+	ret := m.ctrl.Call(m, "GetUnusedTriggerIDs")
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUnusedTriggerIDs indicates an expected call of GetUnusedTriggerIDs
+func (mr *MockDatabaseMockRecorder) GetUnusedTriggerIDs() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUnusedTriggerIDs", reflect.TypeOf((*MockDatabase)(nil).GetUnusedTriggerIDs))
+}
+
 // GetUserContactIDs mocks base method
 func (m *MockDatabase) GetUserContactIDs(arg0 string) ([]string, error) {
 	ret := m.ctrl.Call(m, "GetUserContactIDs", arg0)
@@ -658,6 +671,38 @@ func (m *MockDatabase) GetUserSubscriptionIDs(arg0 string) ([]string, error) {
 // GetUserSubscriptionIDs indicates an expected call of GetUserSubscriptionIDs
 func (mr *MockDatabaseMockRecorder) GetUserSubscriptionIDs(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserSubscriptionIDs", reflect.TypeOf((*MockDatabase)(nil).GetUserSubscriptionIDs), arg0)
+}
+
+// MarkTriggersAsUnused mocks base method
+func (m *MockDatabase) MarkTriggersAsUnused(arg0 ...string) error {
+	varargs := []interface{}{}
+	for _, a := range arg0 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "MarkTriggersAsUnused", varargs...)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// MarkTriggersAsUnused indicates an expected call of MarkTriggersAsUnused
+func (mr *MockDatabaseMockRecorder) MarkTriggersAsUnused(arg0 ...interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarkTriggersAsUnused", reflect.TypeOf((*MockDatabase)(nil).MarkTriggersAsUnused), arg0...)
+}
+
+// MarkTriggersAsUsed mocks base method
+func (m *MockDatabase) MarkTriggersAsUsed(arg0 ...string) error {
+	varargs := []interface{}{}
+	for _, a := range arg0 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "MarkTriggersAsUsed", varargs...)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// MarkTriggersAsUsed indicates an expected call of MarkTriggersAsUsed
+func (mr *MockDatabaseMockRecorder) MarkTriggersAsUsed(arg0 ...interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarkTriggersAsUsed", reflect.TypeOf((*MockDatabase)(nil).MarkTriggersAsUsed), arg0...)
 }
 
 // PushNotificationEvent mocks base method

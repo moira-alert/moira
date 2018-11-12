@@ -39,6 +39,7 @@ func ConfigureCheckerMetrics(prefix string, remoteEnabled bool) *graphite.Checke
 		MoiraMetrics:           configureCheckMetrics(prefix + ".local"),
 		MetricEventsChannelLen: registerHistogram(metricNameWithPrefix(prefix, "metricEvents")),
 		MetricEventsHandleTime: registerTimer(metricNameWithPrefix(prefix, "metricEventsHandle")),
+		UnusedTriggersCount:    registerHistogram(metricNameWithPrefix(prefix, "triggers.unused")),
 	}
 	if remoteEnabled {
 		m.RemoteMetrics = configureCheckMetrics(prefix + ".remote")
