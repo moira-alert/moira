@@ -41,6 +41,7 @@ type plotsHashDistancesTestCase struct {
 	plotTheme          string
 	useHumanizedValues bool
 	triggerType        string
+	stateOk            bool
 	warnValue          interface{}
 	errorValue         interface{}
 	expected           int
@@ -54,11 +55,15 @@ func (testCase *plotsHashDistancesTestCase) getFilePath(toOriginal bool) (string
 	}
 	filePrefix := bytes.NewBuffer([]byte(examplesPath))
 	filePrefix.WriteString(fmt.Sprintf("/%s.%s", testCase.plotTheme, testCase.triggerType))
-	if testCase.warnValue != nil {
-		filePrefix.WriteString(".warn")
-	}
-	if testCase.errorValue != nil {
-		filePrefix.WriteString(".error")
+	if testCase.stateOk {
+		filePrefix.WriteString(".stateOk")
+	} else {
+		if testCase.warnValue != nil {
+			filePrefix.WriteString(".warn")
+		}
+		if testCase.errorValue != nil {
+			filePrefix.WriteString(".error")
+		}
 	}
 	if !testCase.useHumanizedValues {
 		filePrefix.WriteString(".humanized")
@@ -76,16 +81,20 @@ func (testCase *plotsHashDistancesTestCase) getTriggerName() string {
 	triggerName.WriteString(", ")
 	triggerName.WriteString(strings.ToUpper(string(testCase.triggerType[0])))
 	triggerName.WriteString(") {")
-	if testCase.warnValue != nil {
-		triggerName.WriteString("W+")
+	if testCase.stateOk {
+		triggerName.WriteString("OK")
 	} else {
-		triggerName.WriteString("W-")
-	}
-	triggerName.WriteString(", ")
-	if testCase.errorValue != nil {
-		triggerName.WriteString("E+")
-	} else {
-		triggerName.WriteString("E-")
+		if testCase.warnValue != nil {
+			triggerName.WriteString("W+")
+		} else {
+			triggerName.WriteString("W-")
+		}
+		triggerName.WriteString(", ")
+		if testCase.errorValue != nil {
+			triggerName.WriteString("E+")
+		} else {
+			triggerName.WriteString("E-")
+		}
 	}
 	triggerName.WriteString("}")
 	if !testCase.useHumanizedValues {
@@ -119,6 +128,7 @@ var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 		plotTheme: "dark",
 		useHumanizedValues: true,
 		triggerType: moira.RisingTrigger,
+		stateOk: true,
 		warnValue: plotHashDistanceTestRisingWarnThreshold - plotHashDistanceTestOuterPointIncrement,
 		errorValue: plotHashDistanceTestRisingErrorThreshold + plotHashDistanceTestOuterPointIncrement,
 		expected: minAcceptableHashDistance,
@@ -155,6 +165,7 @@ var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 		plotTheme: "dark",
 		useHumanizedValues: false,
 		triggerType: moira.RisingTrigger,
+		stateOk: true,
 		warnValue: plotHashDistanceTestRisingWarnThreshold - plotHashDistanceTestOuterPointIncrement,
 		errorValue: plotHashDistanceTestRisingErrorThreshold + plotHashDistanceTestOuterPointIncrement,
 		expected: minAcceptableHashDistance,
@@ -191,6 +202,7 @@ var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 		plotTheme: "dark",
 		useHumanizedValues: true,
 		triggerType: moira.FallingTrigger,
+		stateOk: true,
 		warnValue: plotHashDistanceTestFallingWarnThreshold - plotHashDistanceTestOuterPointIncrement,
 		errorValue: plotHashDistanceTestFallingErrorThreshold + plotHashDistanceTestOuterPointIncrement,
 		expected: minAcceptableHashDistance,
@@ -227,6 +239,7 @@ var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 		plotTheme: "dark",
 		useHumanizedValues: false,
 		triggerType: moira.FallingTrigger,
+		stateOk: true,
 		warnValue: plotHashDistanceTestFallingWarnThreshold - plotHashDistanceTestOuterPointIncrement,
 		errorValue: plotHashDistanceTestFallingErrorThreshold + plotHashDistanceTestOuterPointIncrement,
 		expected: minAcceptableHashDistance,
@@ -281,6 +294,7 @@ var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 		plotTheme: "light",
 		useHumanizedValues: true,
 		triggerType: moira.RisingTrigger,
+		stateOk: true,
 		warnValue: plotHashDistanceTestRisingWarnThreshold - plotHashDistanceTestOuterPointIncrement,
 		errorValue: plotHashDistanceTestRisingErrorThreshold + plotHashDistanceTestOuterPointIncrement,
 		expected: minAcceptableHashDistance,
@@ -317,6 +331,7 @@ var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 		plotTheme: "light",
 		useHumanizedValues: false,
 		triggerType: moira.RisingTrigger,
+		stateOk: true,
 		warnValue: plotHashDistanceTestRisingWarnThreshold - plotHashDistanceTestOuterPointIncrement,
 		errorValue: plotHashDistanceTestRisingErrorThreshold + plotHashDistanceTestOuterPointIncrement,
 		expected: minAcceptableHashDistance,
@@ -353,6 +368,7 @@ var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 		plotTheme: "light",
 		useHumanizedValues: true,
 		triggerType: moira.FallingTrigger,
+		stateOk: true,
 		warnValue: plotHashDistanceTestFallingWarnThreshold - plotHashDistanceTestOuterPointIncrement,
 		errorValue: plotHashDistanceTestFallingErrorThreshold + plotHashDistanceTestOuterPointIncrement,
 		expected: minAcceptableHashDistance,
@@ -389,6 +405,7 @@ var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 		plotTheme: "light",
 		useHumanizedValues: false,
 		triggerType: moira.FallingTrigger,
+		stateOk: true,
 		warnValue: plotHashDistanceTestFallingWarnThreshold - plotHashDistanceTestOuterPointIncrement,
 		errorValue: plotHashDistanceTestFallingErrorThreshold + plotHashDistanceTestOuterPointIncrement,
 		expected: minAcceptableHashDistance,
@@ -501,17 +518,16 @@ func renderTestMetricsDataToPNG(trigger moira.Trigger, plotTheme string,
 
 // calculateHashDistance returns calculated hash distance of two given pictures
 func calculateHashDistance(pathToOriginal, pathToRendered string) (*int, error) {
-	return nil, nil
 	hash := ipare.NewHash()
 	original, err := util.Open(pathToOriginal)
 	if err != nil {
 		return nil, err
 	}
-	generated, err := util.Open(pathToRendered)
+	rendered, err := util.Open(pathToRendered)
 	if err != nil {
 		return nil, err
 	}
-	distance := hash.Compare(original, generated)
+	distance := hash.Compare(original, rendered)
 	return &distance, nil
 }
 
@@ -550,11 +566,11 @@ func TestGetRenderable(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			_, err = calculateHashDistance(pathToOriginal, pathToRendered)
+			hashDistance, err := calculateHashDistance(pathToOriginal, pathToRendered)
 			if err != nil {
 				t.Fatal(err)
 			}
-			//So(hashDistance, ShouldBeLessThanOrEqualTo, 5)
+			So(*hashDistance, ShouldBeLessThanOrEqualTo, testCase.expected)
 		}
 	})
 }
