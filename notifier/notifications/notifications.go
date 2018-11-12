@@ -11,7 +11,7 @@ import (
 	"github.com/moira-alert/moira/notifier"
 )
 
-const sleepAfterNotifierBadState = time.Second * 30
+const sleepAfterNotifierBadState = time.Second * 10
 
 // FetchNotificationsWorker - check for new notifications and send it using notifier
 type FetchNotificationsWorker struct {
@@ -60,10 +60,10 @@ func (worker *FetchNotificationsWorker) processScheduledNotifications() error {
 	}
 	state, err := worker.Database.GetNotifierState()
 	if err != nil {
-		return notifierInBadStateError{"can't get current notifier state"}
+		return notifierInBadStateError("can't get current notifier state")
 	}
 	if state != "OK" {
-		return notifierInBadStateError{fmt.Sprintf("notifier in a bad state: %v", state)}
+		return notifierInBadStateError(fmt.Sprintf("notifier in a bad state: %v", state))
 	}
 
 	notificationPackages := make(map[string]*notifier.NotificationPackage)
