@@ -6,18 +6,26 @@ import (
 	"github.com/moira-alert/moira"
 )
 
+// TriggerField is used as enum
 type TriggerField int
 
+// Constants used as enum
 const (
 	TriggerID TriggerField = iota
 	TriggerName
-	TriggerDesc
+	//TriggerDesc
 	TriggerTags
 	TriggerLastCheckScore
 )
 
-var triggerFieldNames = []string{"ID", "Name", "Desc", "Tags", "LastCheckScore"}
+var triggerFieldNames = []string{
+	"ID",
+	"Name",
+	//"Desc",
+	"Tags",
+	"LastCheckScore"}
 
+// Trigger represents Moira.Trigger type for full-text search index. It includes only indexed fields
 type Trigger struct {
 	ID             string
 	Name           string
