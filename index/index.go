@@ -52,13 +52,13 @@ func (index *Index) IsReady() bool {
 	return index.indexed
 }
 
-// Search search for triggers in index and returns slice of trigger IDs
-func (index *Index) Search(filterTags, searchTerms []string) ([]string, error) {
+// SearchTriggers search for triggers in index and returns slice of trigger IDs
+func (index *Index) SearchTriggers(filterTags, searchTerms []string, onlyErrors bool) ([]string, error) {
 	searchQueries := make([]query.Query, 0)
 
 	for _, tag := range filterTags {
 		qr := bleve.NewTermQuery(tag)
-		qr.FieldVal = "Tags"
+		qr.FieldVal = mapping.TriggerTags.String()
 		searchQueries = append(searchQueries, qr)
 	}
 
@@ -67,10 +67,18 @@ func (index *Index) Search(filterTags, searchTerms []string) ([]string, error) {
 		searchQueries = append(searchQueries, qr)
 	}
 
+	if onlyErrors {
+		minScore := float64(1)
+		qr := bleve.NewNumericRangeQuery(&minScore, nil)
+		qr.FieldVal = mapping.TriggerLastCheckScore.String()
+		searchQueries = append(searchQueries, qr)
+	}
+
 	searchQuery := bleve.NewConjunctionQuery(searchQueries...)
 	req := bleve.NewSearchRequest(searchQuery)
 	docs, _ := index.index.DocCount()
 	req.Size = int(docs)
+	req.SortBy([]string{mapping.TriggerLastCheckScore.String(), "score", mapping.TriggerName.String()})
 	searchResult, err := index.index.Search(req)
 	if err != nil {
 		return []string{}, err

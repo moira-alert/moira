@@ -97,13 +97,14 @@ func getTriggersPage(writer http.ResponseWriter, request *http.Request) {
 
 func searchTriggersPerPage(writer http.ResponseWriter, request *http.Request) {
 	request.ParseForm()
+	onlyErrors := getOnlyProblemsFlag(request)
 	filterTags := getRequestTags(request)
-	searchRequestTextTerms := getSearchRequestTextTerms(request)
+	searchTerms := getSearchRequestTextTerms(request)
 
 	page := middleware.GetPage(request)
 	size := middleware.GetSize(request)
 
-	triggersList, errorResponse := controller.FindTriggersPerPage(database, searchIndex, filterTags, searchRequestTextTerms, page, size)
+	triggersList, errorResponse := controller.FindTriggersPerPage(database, searchIndex, page, size, onlyErrors, filterTags, searchTerms)
 	if errorResponse != nil {
 		render.Render(writer, request, errorResponse)
 		return

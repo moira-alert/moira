@@ -93,7 +93,7 @@ func GetTriggerPage(database moira.Database, page int64, size int64, onlyErrors 
 }
 
 // FindTriggersPerPage gets trigger page and filter trigger by tags and search request terms
-func FindTriggersPerPage(database moira.Database, index *index.Index, filterTags, searchTerms []string, page, size int64) (*dto.TriggersList, *api.ErrorResponse) {
+func FindTriggersPerPage(database moira.Database, index *index.Index, page int64, size int64, onlyErrors bool, filterTags []string, searchTerms []string) (*dto.TriggersList, *api.ErrorResponse) {
 	timeout := time.After(time.Second * 10)
 	ticker := time.NewTicker(time.Second * 1)
 	if !index.IsReady() {
@@ -105,18 +105,18 @@ func FindTriggersPerPage(database moira.Database, index *index.Index, filterTags
 					break ReadyCheck
 				}
 			case <-timeout:
-				return nil, api.ErrorInternalServer(fmt.Errorf("index is not ready, sorry :(. Please, try later, maybe tomorrow"))
+				return nil, api.ErrorInternalServer(fmt.Errorf("index is not ready, please try later"))
 			}
 		}
 	}
-	triggerIds, err := index.Search(filterTags, searchTerms)
+	triggerIDs, err := index.SearchTriggers(filterTags, searchTerms, onlyErrors)
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
 
-	total := int64(len(triggerIds))
-
-	triggerChecks, err := database.GetTriggerChecks(triggerIds)
+	total := int64(len(triggerIDs))
+	triggerIDs = getTriggerIdsRange(triggerIDs, total, page, size)
+	triggerChecks, err := database.GetTriggerChecks(triggerIDs)
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
