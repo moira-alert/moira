@@ -41,7 +41,9 @@ func (index *Index) Start() error {
 		index.inProgress = false
 	}
 
-	index.tomb.Go(index.actualizeIndex)
+	index.tomb.Go(index.runIndexActualizer)
+	index.tomb.Go(index.runTriggersToReindexSweepper)
+
 	return err
 }
 
@@ -83,38 +85,20 @@ func (index *Index) Search(filterTags, searchTerms []string) ([]string, error) {
 	return triggerIds, nil
 }
 
-// Update get triggerIDs and updates it's in index
-func (index *Index) Update(triggerIDs ...string) error {
-	if len(triggerIDs) == 0 {
-		return nil
-	}
-	index.logger.Debugf("Update index for %d trigger IDs", len(triggerIDs))
-	triggerChecks, err := index.database.GetTriggerChecks(triggerIDs)
-	if err != nil {
-		return err
-	}
-	index.logger.Debugf("Get %d trigger checks from DB", len(triggerChecks))
-	for _, triggerCheck := range triggerChecks {
-		if triggerCheck != nil {
-			err = index.index.Index(triggerCheck.ID, triggerCheck)
-			if err != nil {
-				return err
-			}
-			index.logger.Debugf("Updated index for trigger ID %s", triggerCheck.ID)
-		}
-	}
-	return nil
+// Stop stops checks triggers
+func (index *Index) Stop() error {
+	index.tomb.Kill(nil)
+	return index.tomb.Wait()
 }
 
-// Delete removes triggerIDs from index
-func (index *Index) Delete(triggerIDs ...string) error {
-	if len(triggerIDs) == 0 {
-		return nil
-	}
-	for _, triggerID := range triggerIDs {
-		index.index.Delete(triggerID)
-	}
-	return nil
+// used as abstraction
+func (index *Index) indexTriggerCheck(triggerCheck *moira.TriggerCheck) error {
+	return index.index.Index(triggerCheck.ID, mapping.CreateIndexedTrigger(triggerCheck))
+}
+
+// used as abstraction
+func (index *Index) batchIndexTriggerCheck(batch *bleve.Batch, triggerCheck *moira.TriggerCheck) error {
+	return batch.Index(triggerCheck.ID, mapping.CreateIndexedTrigger(triggerCheck))
 }
 
 func (index *Index) createIndex() error {
@@ -158,10 +142,10 @@ func (index *Index) addTriggers(triggerIDs []string) (count int, err error) {
 			if trigger != nil {
 				// ToDo: this code works, but looks stupid. We have to find a reason why Bleve indexes first batch 1 minute
 				if !firstIndexed {
-					index.index.Index(trigger.ID, mapping.CreateIndexedTrigger(*trigger))
+					index.indexTriggerCheck(trigger)
 					firstIndexed = true
 				}
-				err = batch.Index(trigger.ID, mapping.CreateIndexedTrigger(*trigger))
+				err = index.batchIndexTriggerCheck(batch, trigger)
 				if err != nil {
 					return
 				}
@@ -176,10 +160,4 @@ func (index *Index) addTriggers(triggerIDs []string) (count int, err error) {
 		index.logger.Debugf("[%d triggers of %d] added to index", count, toIndex)
 	}
 	return
-}
-
-// Stop stops checks triggers
-func (index *Index) Stop() error {
-	index.tomb.Kill(nil)
-	return index.tomb.Wait()
 }
