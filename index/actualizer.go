@@ -8,7 +8,7 @@ const actualizerRunInterval = time.Second
 
 func (index *Index) runIndexActualizer() error {
 	ticker := time.NewTicker(actualizerRunInterval)
-	actualizationTime := time.Now().Unix()
+	actualizationTime := time.Now().Add(-time.Minute * 5).Unix()
 	index.logger.Infof("Start index actualizer: reindex changed triggers every %v", actualizerRunInterval)
 
 	for {
