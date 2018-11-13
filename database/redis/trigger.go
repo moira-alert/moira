@@ -161,6 +161,7 @@ func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigg
 		c.Send("SADD", tagTriggersKey(tag), triggerID)
 		c.Send("SADD", tagsKey, tag)
 	}
+	c.Send("ZADD", triggersToReindexKey, time.Now().Unix(), triggerID)
 	_, err = c.Do("EXEC")
 	if err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
@@ -178,10 +179,6 @@ func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigg
 	}
 	if err != nil {
 		return fmt.Errorf("failed to mark trigger as (un)used: %s", err.Error())
-	}
-
-	if err = connector.AddTriggersToReindex(triggerID); err != nil {
-		return fmt.Errorf("failed to add trigger to reindex: %s", err.Error())
 	}
 
 	return connector.cleanupPatternsOutOfUse(cleanupPatterns)
@@ -215,13 +212,10 @@ func (connector *DbConnector) RemoveTrigger(triggerID string) error {
 	for _, pattern := range trigger.Patterns {
 		c.Send("SREM", patternTriggersKey(pattern), triggerID)
 	}
+	c.Send("ZADD", triggersToReindexKey, time.Now().Unix(), triggerID)
 	_, err = c.Do("EXEC")
 	if err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
-	}
-
-	if err = connector.AddTriggersToReindex(triggerID); err != nil {
-		return fmt.Errorf("failed to add trigger to reindex: %s", err.Error())
 	}
 
 	return connector.cleanupPatternsOutOfUse(trigger.Patterns)

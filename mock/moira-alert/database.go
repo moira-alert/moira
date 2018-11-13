@@ -108,22 +108,6 @@ func (mr *MockDatabaseMockRecorder) AddTriggersToCheck(arg0 interface{}) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddTriggersToCheck", reflect.TypeOf((*MockDatabase)(nil).AddTriggersToCheck), arg0)
 }
 
-// AddTriggersToReindex mocks base method
-func (m *MockDatabase) AddTriggersToUpdate(arg0 ...string) error {
-	varargs := []interface{}{}
-	for _, a := range arg0 {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "AddTriggersToReindex", varargs...)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// AddTriggersToReindex indicates an expected call of AddTriggersToReindex
-func (mr *MockDatabaseMockRecorder) AddTriggersToUpdate(arg0 ...interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddTriggersToReindex", reflect.TypeOf((*MockDatabase)(nil).AddTriggersToUpdate), arg0...)
-}
-
 // DeleteTriggerCheckLock mocks base method
 func (m *MockDatabase) DeleteTriggerCheckLock(arg0 string) error {
 	ret := m.ctrl.Call(m, "DeleteTriggerCheckLock", arg0)
@@ -209,7 +193,7 @@ func (mr *MockDatabaseMockRecorder) FetchNotifications(arg0 interface{}) *gomock
 }
 
 // FetchTriggersToReindex mocks base method
-func (m *MockDatabase) FetchTriggersToUpdate(arg0 int64) ([]string, error) {
+func (m *MockDatabase) FetchTriggersToReindex(arg0 int64) ([]string, error) {
 	ret := m.ctrl.Call(m, "FetchTriggersToReindex", arg0)
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
@@ -217,8 +201,8 @@ func (m *MockDatabase) FetchTriggersToUpdate(arg0 int64) ([]string, error) {
 }
 
 // FetchTriggersToReindex indicates an expected call of FetchTriggersToReindex
-func (mr *MockDatabaseMockRecorder) FetchTriggersToUpdate(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchTriggersToReindex", reflect.TypeOf((*MockDatabase)(nil).FetchTriggersToUpdate), arg0)
+func (mr *MockDatabaseMockRecorder) FetchTriggersToReindex(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchTriggersToReindex", reflect.TypeOf((*MockDatabase)(nil).FetchTriggersToReindex), arg0)
 }
 
 // GetAllContacts mocks base method
@@ -940,15 +924,15 @@ func (mr *MockDatabaseMockRecorder) RemoveTriggerLastCheck(arg0 interface{}) *go
 }
 
 // RemoveTriggersToReindex mocks base method
-func (m *MockDatabase) RemoveTriggersToUpdate(arg0 int64) error {
+func (m *MockDatabase) RemoveTriggersToReindex(arg0 int64) error {
 	ret := m.ctrl.Call(m, "RemoveTriggersToReindex", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // RemoveTriggersToReindex indicates an expected call of RemoveTriggersToReindex
-func (mr *MockDatabaseMockRecorder) RemoveTriggersToUpdate(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveTriggersToReindex", reflect.TypeOf((*MockDatabase)(nil).RemoveTriggersToUpdate), arg0)
+func (mr *MockDatabaseMockRecorder) RemoveTriggersToReindex(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveTriggersToReindex", reflect.TypeOf((*MockDatabase)(nil).RemoveTriggersToReindex), arg0)
 }
 
 // RemoveUser mocks base method

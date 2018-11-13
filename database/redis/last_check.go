@@ -3,6 +3,7 @@ package redis
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/garyburd/redigo/redis"
 
@@ -45,14 +46,12 @@ func (connector *DbConnector) setTriggerLastCheckAndUpdateProperCounter(triggerI
 	} else {
 		c.Send("SREM", badStateTriggersKey, triggerID)
 	}
+	if triggerNeedToReindex {
+		c.Send("ZADD", triggersToReindexKey, time.Now().Unix(), triggerID)
+	}
 	_, err = c.Do("EXEC")
 	if err != nil {
 		return fmt.Errorf("Failed to EXEC: %s", err.Error())
-	}
-	if triggerNeedToReindex {
-		if err = connector.AddTriggersToReindex(triggerID); err != nil {
-			return fmt.Errorf("failed to add trigger to reindex: %s", err.Error())
-		}
 	}
 	return nil
 }
@@ -65,13 +64,10 @@ func (connector *DbConnector) RemoveTriggerLastCheck(triggerID string) error {
 	c.Send("DEL", metricLastCheckKey(triggerID))
 	c.Send("ZREM", triggersChecksKey, triggerID)
 	c.Send("SREM", badStateTriggersKey, triggerID)
+	c.Send("ZADD", triggersToReindexKey, time.Now().Unix(), triggerID)
 	_, err := c.Do("EXEC")
 	if err != nil {
 		return fmt.Errorf("Failed to EXEC: %s", err.Error())
-	}
-
-	if err = connector.AddTriggersToReindex(triggerID); err != nil {
-		return fmt.Errorf("failed to add trigger to reindex: %s", err.Error())
 	}
 
 	return nil

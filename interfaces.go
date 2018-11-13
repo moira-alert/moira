@@ -125,7 +125,6 @@ type Database interface {
 	MarkTriggersAsUsed(triggerIDs ...string) error
 
 	// Triggers to reindex in full-text search index
-	AddTriggersToReindex(triggerIDs ...string) error
 	FetchTriggersToReindex(from int64) ([]string, error)
 	RemoveTriggersToReindex(to int64) error
 }
