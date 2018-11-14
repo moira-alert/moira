@@ -10,7 +10,6 @@ import (
 	"github.com/go-chi/render"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
-	"github.com/moira-alert/moira/index"
 	"github.com/moira-alert/moira/remote"
 )
 
@@ -25,10 +24,10 @@ func DatabaseContext(database moira.Database) func(next http.Handler) http.Handl
 }
 
 // SearchIndexContext sets to requests context configured moira.index.searchIndex
-func SearchIndexContext(index *index.Index) func(next http.Handler) http.Handler {
+func SearchIndexContext(searcher moira.Searcher) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-			ctx := context.WithValue(request.Context(), databaseKey, index)
+			ctx := context.WithValue(request.Context(), databaseKey, searcher)
 			next.ServeHTTP(writer, request.WithContext(ctx))
 		})
 	}

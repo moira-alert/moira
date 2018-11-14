@@ -17,7 +17,7 @@ import (
 )
 
 var database moira.Database
-var searchIndex *index.Index
+var searchIndex moira.Searcher
 
 const contactKey moiramiddle.ContextKey = "contact"
 const subscriptionKey moiramiddle.ContextKey = "subscription"

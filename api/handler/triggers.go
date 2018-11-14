@@ -9,7 +9,7 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
-	"github.com/moira-alert/moira/index"
+	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/remote"
 
 	"github.com/moira-alert/moira/api"
@@ -20,7 +20,7 @@ import (
 	"github.com/moira-alert/moira/target"
 )
 
-func triggers(cfg *remote.Config, index *index.Index) func(chi.Router) {
+func triggers(cfg *remote.Config, searcher moira.Searcher) func(chi.Router) {
 	return func(router chi.Router) {
 		router.Use(middleware.RemoteConfigContext(cfg))
 		router.Get("/", getAllTriggers)
@@ -28,7 +28,7 @@ func triggers(cfg *remote.Config, index *index.Index) func(chi.Router) {
 		router.With(middleware.Paginate(0, 10)).Get("/page", getTriggersPage)
 		router.Route("/{triggerId}", trigger)
 		router.Route("/search", func(router chi.Router) {
-			router.Use(middleware.SearchIndexContext(index))
+			router.Use(middleware.SearchIndexContext(searcher))
 			router.With(middleware.Paginate(0, 10)).Get("/page", searchTriggersPerPage)
 		})
 	}

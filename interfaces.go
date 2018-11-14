@@ -148,3 +148,11 @@ type Sender interface {
 	SendEvents(events NotificationEvents, contact ContactData, trigger TriggerData, throttled bool) error
 	Init(senderSettings map[string]string, logger Logger, location *time.Location, dateTimeFormat string) error
 }
+
+// Searcher interface implements full-text search index functionality
+type Searcher interface {
+	Start() error
+	Stop() error
+	IsReady() bool
+	SearchTriggers(filterTags, searchTerms []string, onlyErrors bool) ([]string, error)
+}
