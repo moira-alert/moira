@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/garyburd/redigo/redis"
-	"github.com/moira-alert/moira/database"
 )
 
 // FetchTriggersToReindex returns []triggerID of triggers needed to update. It is used for full-text search index
@@ -34,7 +33,7 @@ func (connector *DbConnector) RemoveTriggersToReindex(to int64) error {
 	err := c.Send("ZREMRANGEBYSCORE", triggersToReindexKey, "-inf", to)
 	if err != nil {
 		if err == redis.ErrNil {
-			return database.ErrNil
+			return nil
 		}
 		return fmt.Errorf("failed to remove triggers to reindex: %s", err.Error())
 	}

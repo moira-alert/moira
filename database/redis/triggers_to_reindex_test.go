@@ -16,6 +16,15 @@ func TestTriggersToReindex(t *testing.T) {
 	dataBase.flush()
 	defer dataBase.flush()
 
+	Convey("Test on empty DB", t, func() {
+		actual, err := dataBase.FetchTriggersToReindex(time.Now().Unix())
+		So(err, ShouldBeNil)
+		So(actual, ShouldBeEmpty)
+
+		err = dataBase.RemoveTriggersToReindex(time.Now().Unix())
+		So(err, ShouldBeNil)
+	})
+
 	Convey("Trigger to update add and fetch", t, func() {
 		triggerID1 := uuid.NewV4().String()
 		triggerID2 := uuid.NewV4().String()
@@ -74,11 +83,11 @@ func TestTriggerToReindexConnection(t *testing.T) {
 	defer dataBase.flush()
 
 	Convey("Should throw error when no connection", t, func() {
-		err := dataBase.addTriggersToReindex("123")
-		So(err, ShouldNotBeNil)
-
 		triggerID, err := dataBase.FetchTriggersToReindex(time.Now().Unix())
 		So(triggerID, ShouldBeEmpty)
+		So(err, ShouldNotBeNil)
+
+		err = dataBase.RemoveTriggersToReindex(time.Now().Unix())
 		So(err, ShouldNotBeNil)
 	})
 }
