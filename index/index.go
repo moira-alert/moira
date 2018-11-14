@@ -155,6 +155,10 @@ func buildSearchRequest(filterTags, searchTerms []string, onlyErrors bool, maxDo
 
 	req := bleve.NewSearchRequest(searchQuery)
 	req.Size = int(maxDocuments)
+	// sorting order:
+	// TriggerCheck.Score (desc)
+	// Relevance (asc)
+	// Trigger.Name (asc)
 	req.SortBy([]string{fmt.Sprintf("-%s", mapping.TriggerLastCheckScore.String()), "_score", mapping.TriggerName.String()})
 
 	return req
