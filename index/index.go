@@ -56,37 +56,15 @@ func (index *Index) IsReady() bool {
 
 // SearchTriggers search for triggers in index and returns slice of trigger IDs
 func (index *Index) SearchTriggers(filterTags, searchTerms []string, onlyErrors bool) ([]string, error) {
-	searchQueries := make([]query.Query, 0)
+	maxDocuments, _ := index.index.DocCount()
+	req := buildSearchRequest(filterTags, searchTerms, onlyErrors, maxDocuments)
 
-	for _, tag := range filterTags {
-		qr := bleve.NewTermQuery(tag)
-		qr.FieldVal = mapping.TriggerTags.String()
-		searchQueries = append(searchQueries, qr)
-	}
-
-	for _, term := range searchTerms {
-		qr := bleve.NewFuzzyQuery(term)
-		searchQueries = append(searchQueries, qr)
-	}
-
-	if onlyErrors {
-		minScore := float64(1)
-		qr := bleve.NewNumericRangeQuery(&minScore, nil)
-		qr.FieldVal = mapping.TriggerLastCheckScore.String()
-		searchQueries = append(searchQueries, qr)
-	}
-
-	searchQuery := bleve.NewConjunctionQuery(searchQueries...)
-	req := bleve.NewSearchRequest(searchQuery)
-	docs, _ := index.index.DocCount()
-	req.Size = int(docs)
-	req.SortBy([]string{fmt.Sprintf("-%s", mapping.TriggerLastCheckScore.String()), "_score", mapping.TriggerName.String()})
 	searchResult, err := index.index.Search(req)
 	if err != nil {
-		return []string{}, err
+		return make([]string, 0), err
 	}
 	if searchResult.Hits.Len() == 0 {
-		return []string{}, nil
+		return make([]string, 0), nil
 	}
 	triggerIds := make([]string, 0)
 	for _, result := range searchResult.Hits {
@@ -170,4 +148,42 @@ func (index *Index) addTriggers(triggerIDs []string) (count int, err error) {
 		index.logger.Debugf("[%d triggers of %d] added to index", count, toIndex)
 	}
 	return
+}
+
+func buildSearchRequest(filterTags, searchTerms []string, onlyErrors bool, maxDocuments uint64) *bleve.SearchRequest {
+	searchQuery := buildSearchQuery(filterTags, searchTerms, onlyErrors)
+
+	req := bleve.NewSearchRequest(searchQuery)
+	req.Size = int(maxDocuments)
+	req.SortBy([]string{fmt.Sprintf("-%s", mapping.TriggerLastCheckScore.String()), "_score", mapping.TriggerName.String()})
+
+	return req
+}
+
+func buildSearchQuery(filterTags, searchTerms []string, onlyErrors bool) query.Query {
+	if !onlyErrors && len(filterTags) == 0 && len(searchTerms) == 0 {
+		return bleve.NewMatchAllQuery()
+	}
+
+	searchQueries := make([]query.Query, 0)
+
+	for _, tag := range filterTags {
+		qr := bleve.NewTermQuery(tag)
+		qr.FieldVal = mapping.TriggerTags.String()
+		searchQueries = append(searchQueries, qr)
+	}
+
+	for _, term := range searchTerms {
+		qr := bleve.NewFuzzyQuery(term)
+		searchQueries = append(searchQueries, qr)
+	}
+
+	if onlyErrors {
+		minScore := float64(1)
+		qr := bleve.NewNumericRangeQuery(&minScore, nil)
+		qr.FieldVal = mapping.TriggerLastCheckScore.String()
+		searchQueries = append(searchQueries, qr)
+	}
+
+	return bleve.NewConjunctionQuery(searchQueries...)
 }
