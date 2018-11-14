@@ -1,6 +1,8 @@
 package index
 
 import (
+	"fmt"
+
 	"github.com/blevesearch/bleve"
 	"github.com/blevesearch/bleve/search/query"
 	"github.com/moira-alert/moira"
@@ -78,7 +80,7 @@ func (index *Index) SearchTriggers(filterTags, searchTerms []string, onlyErrors 
 	req := bleve.NewSearchRequest(searchQuery)
 	docs, _ := index.index.DocCount()
 	req.Size = int(docs)
-	req.SortBy([]string{mapping.TriggerLastCheckScore.String(), "score", mapping.TriggerName.String()})
+	req.SortBy([]string{fmt.Sprintf("-%s", mapping.TriggerLastCheckScore.String()), "_score", mapping.TriggerName.String()})
 	searchResult, err := index.index.Search(req)
 	if err != nil {
 		return []string{}, err
