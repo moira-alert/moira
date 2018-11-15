@@ -223,74 +223,197 @@ func TestGetTriggerPage(t *testing.T) {
 	})
 }
 
-//func TestFindTriggersPerPage(t *testing.T) {
-//	mockCtrl := gomock.NewController(t)
-//	defer mockCtrl.Finish()
-//	mockDatabase := mock_moira_alert.NewMockDatabase(mockCtrl)
-//	//mockIndex := mock_moira_alert.NewMockSearcher(mockCtrl)
-//	var page int64
-//	var size int64 = 10
-//	triggerIDs := make([]string, 20)
-//	for i := range triggerIDs {
-//		triggerIDs[i] = uuid.NewV4().String()
-//	}
-//	triggers := make([]moira.TriggerCheck, 20)
-//	for i := range triggerIDs {
-//		triggers[i] = moira.TriggerCheck{Trigger: moira.Trigger{ID: triggerIDs[i]}}
-//	}
-//	triggersPointers := make([]*moira.TriggerCheck, 20)
-//	for i := range triggerIDs {
-//		triggersPointers[i] = &moira.TriggerCheck{Trigger: moira.Trigger{ID: triggerIDs[i]}}
-//	}
-//
-//	Convey("Has tags and only errors", t, func() {
-//		tags := []string{"tag1", "tag2"}
-//		var exp int64 = 20
-//		mockDatabase.EXPECT().GetTriggerCheckIDs(tags, true).Return(triggerIDs, nil)
-//		mockDatabase.EXPECT().GetTriggerChecks(triggerIDs[0:10]).Return(triggersPointers[0:10], nil)
-//		list, err := GetTriggerPage(mockDatabase, page, size, true, tags)
-//		So(err, ShouldBeNil)
-//		So(list, ShouldResemble, &dto.TriggersList{
-//			List:  triggers[0:10],
-//			Total: &exp,
-//			Page:  &page,
-//			Size:  &size,
-//		})
-//	})
-//
-//	Convey("All triggers", t, func() {
-//		var exp int64 = 20
-//		mockDatabase.EXPECT().GetTriggerCheckIDs(make([]string, 0), false).Return(triggerIDs, nil)
-//		mockDatabase.EXPECT().GetTriggerChecks(triggerIDs[0:10]).Return(triggersPointers[0:10], nil)
-//		list, err := GetTriggerPage(mockDatabase, page, size, false, make([]string, 0))
-//		So(err, ShouldBeNil)
-//		So(list, ShouldResemble, &dto.TriggersList{
-//			List:  triggers[0:10],
-//			Total: &exp,
-//			Page:  &page,
-//			Size:  &size,
-//		})
-//	})
-//
-//	Convey("Error GetFilteredTriggerCheckIDs", t, func() {
-//		expected := fmt.Errorf("getFilteredTriggerCheckIDs error")
-//		mockDatabase.EXPECT().GetTriggerCheckIDs(make([]string, 0), true).Return(nil, expected)
-//		list, err := GetTriggerPage(mockDatabase, 0, 20, true, make([]string, 0))
-//		So(err, ShouldResemble, api.ErrorInternalServer(expected))
-//		So(list, ShouldBeNil)
-//	})
-//
-//	Convey("Error GetTriggerChecks", t, func() {
-//		expected := fmt.Errorf("getTriggerChecks error")
-//		mockDatabase.EXPECT().GetTriggerCheckIDs(make([]string, 0), false).Return(triggerIDs, nil)
-//		mockDatabase.EXPECT().GetTriggerChecks(triggerIDs[0:10]).Return(nil, expected)
-//		list, err := GetTriggerPage(mockDatabase, page, size, false, make([]string, 0))
-//		So(err, ShouldResemble, api.ErrorInternalServer(expected))
-//		So(list, ShouldBeNil)
-//	})
-//}
+func TestFindTriggersPerPage(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockDatabase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	mockIndex := mock_moira_alert.NewMockSearcher(mockCtrl)
+	var page int64
+	var size int64 = 50
+	var exp int64 = 31
+	triggerIDs := make([]string, len(triggerChecks))
+	for i, trigger := range triggerChecks {
+		triggerIDs[i] = trigger.ID
+	}
 
-var triggerChecks = []*moira.TriggerCheck{
+	triggersPointers := make([]*moira.TriggerCheck, len(triggerChecks))
+	for i, trigger := range triggerChecks {
+		newTrigger := new(moira.TriggerCheck)
+		*newTrigger = trigger
+		triggersPointers[i] = newTrigger
+	}
+
+	tags := make([]string, 0)
+	textTerms := make([]string, 0)
+
+	Convey("No tags, no text, onlyErrors = false, ", t, func() {
+		Convey("Page is bigger than triggers number", func() {
+			mockIndex.EXPECT().IsReady().Return(true)
+			mockIndex.EXPECT().SearchTriggers(tags, textTerms, false).Return(triggerIDs, nil)
+			mockDatabase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggersPointers, nil)
+			list, err := FindTriggersPerPage(mockDatabase, mockIndex, page, size, false, tags, textTerms)
+			So(err, ShouldBeNil)
+			So(list, ShouldResemble, &dto.TriggersList{
+				List:  triggerChecks,
+				Total: &exp,
+				Page:  &page,
+				Size:  &size,
+			})
+		})
+
+		Convey("Page is less than triggers number", func() {
+			size = 10
+			mockIndex.EXPECT().IsReady().Return(true)
+			mockIndex.EXPECT().SearchTriggers(tags, textTerms, false).Return(triggerIDs, nil)
+			mockDatabase.EXPECT().GetTriggerChecks(triggerIDs[:10]).Return(triggersPointers[:10], nil)
+			list, err := FindTriggersPerPage(mockDatabase, mockIndex, page, size, false, tags, textTerms)
+			So(err, ShouldBeNil)
+			So(list, ShouldResemble, &dto.TriggersList{
+				List:  triggerChecks[:10],
+				Total: &exp,
+				Page:  &page,
+				Size:  &size,
+			})
+
+			Convey("Second page", func() {
+				page = 1
+				mockIndex.EXPECT().IsReady().Return(true)
+				mockIndex.EXPECT().SearchTriggers(tags, textTerms, false).Return(triggerIDs, nil)
+				mockDatabase.EXPECT().GetTriggerChecks(triggerIDs[10:20]).Return(triggersPointers[10:20], nil)
+				list, err := FindTriggersPerPage(mockDatabase, mockIndex, page, size, false, tags, textTerms)
+				So(err, ShouldBeNil)
+				So(list, ShouldResemble, &dto.TriggersList{
+					List:  triggerChecks[10:20],
+					Total: &exp,
+					Page:  &page,
+					Size:  &size,
+				})
+			})
+		})
+	})
+
+	Convey("Complex search query", t, func() {
+		size = 10
+		page = 0
+		Convey("Only errors", func() {
+			exp = 30
+			mockIndex.EXPECT().IsReady().Return(true)
+			// superTrigger31 is the only trigger without errors
+			mockIndex.EXPECT().SearchTriggers(tags, textTerms, true).Return(triggerIDs[:30], nil)
+			mockDatabase.EXPECT().GetTriggerChecks(triggerIDs[:10]).Return(triggersPointers[:10], nil)
+			list, err := FindTriggersPerPage(mockDatabase, mockIndex, page, size, true, tags, textTerms)
+			So(err, ShouldBeNil)
+			So(list, ShouldResemble, &dto.TriggersList{
+				List:  triggerChecks[0:10],
+				Total: &exp,
+				Page:  &page,
+				Size:  &size,
+			})
+
+			Convey("Only errors with tags", func() {
+				tags = []string{"encounters", "Kobold"}
+				exp = 2
+				mockIndex.EXPECT().IsReady().Return(true)
+				mockIndex.EXPECT().SearchTriggers(tags, textTerms, true).Return(triggerIDs[1:3], nil)
+				mockDatabase.EXPECT().GetTriggerChecks(triggerIDs[1:3]).Return(triggersPointers[1:3], nil)
+				list, err := FindTriggersPerPage(mockDatabase, mockIndex, page, size, true, tags, textTerms)
+				So(err, ShouldBeNil)
+				So(list, ShouldResemble, &dto.TriggersList{
+					List:  triggerChecks[1:3],
+					Total: &exp,
+					Page:  &page,
+					Size:  &size,
+				})
+			})
+
+			Convey("Only errors with text terms", func() {
+				textTerms = []string{"dragonshield", "medium"}
+				exp = 1
+				mockIndex.EXPECT().IsReady().Return(true)
+				mockIndex.EXPECT().SearchTriggers(tags, textTerms, true).Return(triggerIDs[2:3], nil)
+				mockDatabase.EXPECT().GetTriggerChecks(triggerIDs[2:3]).Return(triggersPointers[2:3], nil)
+				list, err := FindTriggersPerPage(mockDatabase, mockIndex, page, size, true, tags, textTerms)
+				So(err, ShouldBeNil)
+				So(list, ShouldResemble, &dto.TriggersList{
+					List:  triggerChecks[2:3],
+					Total: &exp,
+					Page:  &page,
+					Size:  &size,
+				})
+			})
+
+			Convey("Only errors with tags and text terms", func() {
+				tags = []string{"traps"}
+				textTerms = []string{"deadly"}
+				exp = 4
+
+				deadlyTraps := []moira.TriggerCheck{
+					triggerChecks[10],
+					triggerChecks[14],
+					triggerChecks[18],
+					triggerChecks[19],
+				}
+
+				deadlyTrapsPointers := []*moira.TriggerCheck{
+					&triggerChecks[10],
+					&triggerChecks[14],
+					&triggerChecks[18],
+					&triggerChecks[19],
+				}
+
+				deadlyTrapsIDs := []string{
+					triggerChecks[10].ID,
+					triggerChecks[14].ID,
+					triggerChecks[18].ID,
+					triggerChecks[19].ID,
+				}
+
+				mockIndex.EXPECT().IsReady().Return(true)
+				mockIndex.EXPECT().SearchTriggers(tags, textTerms, true).Return(deadlyTrapsIDs, nil)
+				mockDatabase.EXPECT().GetTriggerChecks(deadlyTrapsIDs).Return(deadlyTrapsPointers, nil)
+				list, err := FindTriggersPerPage(mockDatabase, mockIndex, page, size, true, tags, textTerms)
+				So(err, ShouldBeNil)
+				So(list, ShouldResemble, &dto.TriggersList{
+					List:  deadlyTraps,
+					Total: &exp,
+					Page:  &page,
+					Size:  &size,
+				})
+			})
+		})
+	})
+
+	Convey("Find triggers errors", t, func() {
+		Convey("Error from searcher", func() {
+			mockIndex.EXPECT().IsReady().Return(true)
+			searcherError := fmt.Errorf("very bad request")
+			mockIndex.EXPECT().SearchTriggers(tags, textTerms, false).Return(make([]string, 0), searcherError)
+			list, err := FindTriggersPerPage(mockDatabase, mockIndex, page, size, false, tags, textTerms)
+			So(err, ShouldNotBeNil)
+			So(list, ShouldBeNil)
+		})
+
+		Convey("Error from database", func() {
+			size = 50
+			mockIndex.EXPECT().IsReady().Return(true)
+			searcherError := fmt.Errorf("very bad request")
+			mockIndex.EXPECT().SearchTriggers(tags, textTerms, false).Return(triggerIDs, nil)
+			mockDatabase.EXPECT().GetTriggerChecks(triggerIDs).Return(nil, searcherError)
+			list, err := FindTriggersPerPage(mockDatabase, mockIndex, page, size, false, tags, textTerms)
+			So(err, ShouldNotBeNil)
+			So(list, ShouldBeNil)
+		})
+
+		Convey("Index is not ready", func() {
+			mockIndex.EXPECT().IsReady().Return(false).AnyTimes()
+			list, err := FindTriggersPerPage(mockDatabase, mockIndex, page, size, false, tags, textTerms)
+			So(err, ShouldNotBeNil)
+			So(list, ShouldBeNil)
+		})
+	})
+}
+
+var triggerChecks = []moira.TriggerCheck{
 	{
 		Trigger: moira.Trigger{
 			ID:   "SuperTrigger1",
@@ -298,7 +421,7 @@ var triggerChecks = []*moira.TriggerCheck{
 			Tags: []string{"DND-generator", "common"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 0,
+			Score: 30,
 		},
 	},
 	{
@@ -308,7 +431,7 @@ var triggerChecks = []*moira.TriggerCheck{
 			Tags: []string{"DND-generator", "Kobold", "Sorcerer", "encounters"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 1,
+			Score: 29,
 		},
 	},
 	{
@@ -318,7 +441,7 @@ var triggerChecks = []*moira.TriggerCheck{
 			Tags: []string{"DND-generator", "Kobold", "Dragonshield", "encounters"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 2,
+			Score: 28,
 		},
 	},
 	{
@@ -328,7 +451,7 @@ var triggerChecks = []*moira.TriggerCheck{
 			Tags: []string{"DND-generator", "Orc", "encounters"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 3,
+			Score: 27,
 		},
 	},
 	{
@@ -338,7 +461,7 @@ var triggerChecks = []*moira.TriggerCheck{
 			Tags: []string{"DND-generator", "Rust-Monster", "encounters"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 4,
+			Score: 26,
 		},
 	},
 	{
@@ -348,7 +471,7 @@ var triggerChecks = []*moira.TriggerCheck{
 			Tags: []string{"Giant", "DND-generator", "Snake", "encounters"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 5,
+			Score: 25,
 		},
 	},
 	{
@@ -358,7 +481,7 @@ var triggerChecks = []*moira.TriggerCheck{
 			Tags: []string{"Darkling", "DND-generator", "encounters"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 6,
+			Score: 24,
 		},
 	},
 	{
@@ -368,7 +491,7 @@ var triggerChecks = []*moira.TriggerCheck{
 			Tags: []string{"Ghost", "DND-generator", "encounters"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 7,
+			Score: 23,
 		},
 	},
 	{
@@ -378,7 +501,7 @@ var triggerChecks = []*moira.TriggerCheck{
 			Tags: []string{"Spectator", "DND-generator", "encounters"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 8,
+			Score: 22,
 		},
 	},
 	{
@@ -388,7 +511,7 @@ var triggerChecks = []*moira.TriggerCheck{
 			Tags: []string{"Gibbering-Mouther", "DND-generator", "encounters"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 9,
+			Score: 21,
 		},
 	},
 	{
@@ -398,7 +521,7 @@ var triggerChecks = []*moira.TriggerCheck{
 			Tags: []string{"Scythe Blade", "DND-generator", "traps"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 10,
+			Score: 20,
 		},
 	},
 	{
@@ -408,7 +531,7 @@ var triggerChecks = []*moira.TriggerCheck{
 			Tags: []string{"Falling-Block", "DND-generator", "traps"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 11,
+			Score: 19,
 		},
 	},
 	{
@@ -418,7 +541,7 @@ var triggerChecks = []*moira.TriggerCheck{
 			Tags: []string{"Thunderstone-Mine", "DND-generator", "traps"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 12,
+			Score: 18,
 		},
 	},
 	{
@@ -428,7 +551,7 @@ var triggerChecks = []*moira.TriggerCheck{
 			Tags: []string{"Falling-Block", "DND-generator", "traps"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 13,
+			Score: 17,
 		},
 	},
 	{
@@ -438,7 +561,7 @@ var triggerChecks = []*moira.TriggerCheck{
 			Tags: []string{"Chain-Flail", "DND-generator", "traps"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 14,
+			Score: 16,
 		},
 	},
 	{
@@ -458,7 +581,7 @@ var triggerChecks = []*moira.TriggerCheck{
 			Tags: []string{"Electrified-Floortile", "DND-generator", "traps"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 16,
+			Score: 14,
 		},
 	},
 	{
@@ -468,7 +591,7 @@ var triggerChecks = []*moira.TriggerCheck{
 			Tags: []string{"Earthmaw-Trap", "DND-generator", "traps"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 17,
+			Score: 13,
 		},
 	},
 	{
@@ -478,7 +601,7 @@ var triggerChecks = []*moira.TriggerCheck{
 			Tags: []string{"Thunderstone-Mine", "DND-generator", "traps"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 18,
+			Score: 12,
 		},
 	},
 	{
@@ -488,7 +611,7 @@ var triggerChecks = []*moira.TriggerCheck{
 			Tags: []string{"Scythe-Blade", "DND-generator", "traps"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 19,
+			Score: 11,
 		},
 	},
 	{
@@ -498,7 +621,7 @@ var triggerChecks = []*moira.TriggerCheck{
 			Tags: []string{"Female", "DND-generator", "Elf", "Monk", "NPCs"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 20,
+			Score: 10,
 		},
 	},
 	{
@@ -508,7 +631,7 @@ var triggerChecks = []*moira.TriggerCheck{
 			Tags: []string{"Female", "DND-generator", "Halfling", "Cleric", "NPCs"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 21,
+			Score: 9,
 		},
 	},
 	{
@@ -518,7 +641,7 @@ var triggerChecks = []*moira.TriggerCheck{
 			Tags: []string{"Male", "DND-generator", "Human", "Soldier", "NPCs"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 22,
+			Score: 8,
 		},
 	},
 	{
@@ -528,7 +651,7 @@ var triggerChecks = []*moira.TriggerCheck{
 			Tags: []string{"Female", "DND-generator", "Human", "Barbarian", "NPCs"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 23,
+			Score: 7,
 		},
 	},
 	{
@@ -538,7 +661,7 @@ var triggerChecks = []*moira.TriggerCheck{
 			Tags: []string{"Male", "DND-generator", "Half-elf", "Monk", "NPCs"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 24,
+			Score: 6,
 		},
 	},
 	{
@@ -548,7 +671,7 @@ var triggerChecks = []*moira.TriggerCheck{
 			Tags: []string{"Male", "DND-generator", "Elf", "Servant", "NPCs"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 25,
+			Score: 5,
 		},
 	},
 	{
@@ -558,7 +681,7 @@ var triggerChecks = []*moira.TriggerCheck{
 			Tags: []string{"Male", "DND-generator", "Elf", "Sorcerer", "NPCs"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 26,
+			Score: 4,
 		},
 	},
 	{
@@ -568,7 +691,7 @@ var triggerChecks = []*moira.TriggerCheck{
 			Tags: []string{"Female", "DND-generator", "Human", "Bard", "NPCs"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 27,
+			Score: 3,
 		},
 	},
 	{
@@ -578,7 +701,7 @@ var triggerChecks = []*moira.TriggerCheck{
 			Tags: []string{"Female", "DND-generator", "Gnome", "Druid", "NPCs"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 28,
+			Score: 2,
 		},
 	},
 	{
@@ -588,7 +711,7 @@ var triggerChecks = []*moira.TriggerCheck{
 			Tags: []string{"Female", "DND-generator", "Human", "Aristocrat", "NPCs"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 29,
+			Score: 1,
 		},
 	},
 	{
@@ -598,7 +721,7 @@ var triggerChecks = []*moira.TriggerCheck{
 			Tags: []string{"Something-extremely-new"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 30,
+			Score: 0,
 		},
 	},
 }
