@@ -9,6 +9,11 @@ import (
 
 func TestSearchIndex(testing *testing.T) {
 	Convey("Test", testing, func() {
+		triggerIDs := make([]string, len(triggerChecks))
+
+		for i, trigger := range triggerChecks {
+			triggerIDs[i] = trigger.ID
+		}
 
 	})
 }
