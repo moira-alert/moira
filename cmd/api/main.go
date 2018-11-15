@@ -87,6 +87,7 @@ func main() {
 			logger.Error(err2)
 		}
 	}()
+	defer searchIndex.Stop()
 
 	graphiteSettings := config.Graphite.GetSettings()
 	if err = metrics.Init(graphiteSettings, serviceName); err != nil {

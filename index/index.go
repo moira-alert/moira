@@ -75,6 +75,7 @@ func (index *Index) SearchTriggers(filterTags, searchTerms []string, onlyErrors 
 
 // Stop stops checks triggers
 func (index *Index) Stop() error {
+	index.logger.Info("Stop search index")
 	index.tomb.Kill(nil)
 	return index.tomb.Wait()
 }

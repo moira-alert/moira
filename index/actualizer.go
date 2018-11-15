@@ -14,6 +14,7 @@ func (index *Index) runIndexActualizer() error {
 	for {
 		select {
 		case <-index.tomb.Dying():
+			index.logger.Info("Stop index actualizer")
 			return nil
 		case <-ticker.C:
 			newTime := time.Now().Unix()
