@@ -3,22 +3,52 @@ package index
 import (
 	"testing"
 
+	"github.com/blevesearch/bleve"
+	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/mock/moira-alert"
+	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestSearchIndex(testing *testing.T) {
-	Convey("Test", testing, func() {
-		triggerIDs := make([]string, len(triggerChecks))
+func TestSearchIndex(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	logger, _ := logging.GetLogger("Test")
 
-		for i, trigger := range triggerChecks {
-			triggerIDs[i] = trigger.ID
-		}
+	index := NewSearchIndex(logger, dataBase)
 
+	triggerIDs := make([]string, len(triggerChecks))
+	for i, trigger := range triggerChecks {
+		triggerIDs[i] = trigger.ID
+	}
+
+	triggersPointers := make([]*moira.TriggerCheck, len(triggerChecks))
+	for i, trigger := range triggerChecks {
+		newTrigger := new(moira.TriggerCheck)
+		*newTrigger = trigger
+		triggersPointers[i] = newTrigger
+	}
+
+	Convey("Test create index", t, func() {
+		err := index.createIndex()
+		So(err, ShouldBeNil)
+		emptyIndex, _ := bleve.NewMemOnly(bleve.NewIndexMapping())
+		So(index.index, ShouldHaveSameTypeAs, emptyIndex)
+	})
+
+	Convey("Test fill index", t, func() {
+		dataBase.EXPECT().GetTriggerIDs().Return(triggerIDs, nil)
+		dataBase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggersPointers, nil)
+		err := index.fillIndex()
+		So(err, ShouldBeNil)
+		docCount, _ := index.index.DocCount()
+		So(docCount, ShouldEqual, uint64(31))
 	})
 }
 
-var triggerChecks = []*moira.TriggerCheck{
+var triggerChecks = []moira.TriggerCheck{
 	{
 		Trigger: moira.Trigger{
 			ID:   "SuperTrigger1",
