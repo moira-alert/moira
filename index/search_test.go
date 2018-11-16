@@ -32,7 +32,7 @@ func TestIndex_SearchTriggers(t *testing.T) {
 	}
 
 	Convey("First of all, start and fill index", t, func() {
-		dataBase.EXPECT().GetTriggerIDs().Return(triggerIDs, nil)
+		dataBase.EXPECT().GetAllTriggerIDs().Return(triggerIDs, nil)
 		dataBase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggersPointers, nil)
 
 		err := index.Start()

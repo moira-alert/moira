@@ -82,7 +82,7 @@ func (index *Index) createIndex() error {
 func (index *Index) fillIndex() error {
 	index.logger.Debugf("Start filling index with triggers")
 	index.inProgress = true
-	allTriggerIDs, err := index.database.GetTriggerIDs()
+	allTriggerIDs, err := index.database.GetAllTriggerIDs()
 	index.logger.Debugf("Triggers IDs fetched from database: %d", len(allTriggerIDs))
 	if err != nil {
 		return err

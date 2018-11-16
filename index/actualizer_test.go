@@ -31,7 +31,7 @@ func TestIndex_actualize(t *testing.T) {
 	}
 
 	Convey("First of all, start and fill index", t, func() {
-		dataBase.EXPECT().GetTriggerIDs().Return(triggerIDs[:20], nil)
+		dataBase.EXPECT().GetAllTriggerIDs().Return(triggerIDs[:20], nil)
 		dataBase.EXPECT().GetTriggerChecks(triggerIDs[:20]).Return(triggersPointers[:20], nil)
 
 		err := index.Start()
