@@ -1,14 +1,13 @@
 package index
 
 import (
-	"fmt"
-
 	"github.com/blevesearch/bleve"
-	"github.com/blevesearch/bleve/search/query"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/index/mapping"
 	"gopkg.in/tomb.v2"
 )
+
+const indexBatchSize = 1000
 
 // Index represents Index for Bleve.Index type
 type Index struct {
@@ -54,29 +53,11 @@ func (index *Index) IsReady() bool {
 	return index.indexed
 }
 
-// SearchTriggers search for triggers in index and returns slice of trigger IDs
-func (index *Index) SearchTriggers(filterTags, searchTerms []string, onlyErrors bool) ([]string, error) {
-	maxDocuments, _ := index.index.DocCount()
-	req := buildSearchRequest(filterTags, searchTerms, onlyErrors, maxDocuments)
-
-	searchResult, err := index.index.Search(req)
-	if err != nil {
-		return make([]string, 0), err
-	}
-	if searchResult.Hits.Len() == 0 {
-		return make([]string, 0), nil
-	}
-	triggerIds := make([]string, 0)
-	for _, result := range searchResult.Hits {
-		triggerIds = append(triggerIds, result.ID)
-	}
-	return triggerIds, nil
-}
-
 // Stop stops checks triggers
 func (index *Index) Stop() error {
 	index.logger.Info("Stop search index")
 	index.tomb.Kill(nil)
+	defer index.index.Close()
 	return index.tomb.Wait()
 }
 
@@ -107,15 +88,14 @@ func (index *Index) fillIndex() error {
 		return err
 	}
 
-	count, err := index.addTriggers(allTriggerIDs)
+	count, err := index.addTriggers(allTriggerIDs, indexBatchSize)
 	index.logger.Infof("%d triggers added to index", count)
 	return err
 }
 
-func (index *Index) addTriggers(triggerIDs []string) (count int, err error) {
+func (index *Index) addTriggers(triggerIDs []string, batchSize int) (count int, err error) {
 	toIndex := len(triggerIDs)
 	batch := index.index.NewBatch()
-	batchSize := 1000
 	firstIndexed := false
 
 	triggerIDsBatches := moira.ChunkSlice(triggerIDs, batchSize)
@@ -149,46 +129,4 @@ func (index *Index) addTriggers(triggerIDs []string) (count int, err error) {
 		index.logger.Debugf("[%d triggers of %d] added to index", count, toIndex)
 	}
 	return
-}
-
-func buildSearchRequest(filterTags, searchTerms []string, onlyErrors bool, maxDocuments uint64) *bleve.SearchRequest {
-	searchQuery := buildSearchQuery(filterTags, searchTerms, onlyErrors)
-
-	req := bleve.NewSearchRequest(searchQuery)
-	req.Size = int(maxDocuments)
-	// sorting order:
-	// TriggerCheck.Score (desc)
-	// Relevance (asc)
-	// Trigger.Name (asc)
-	req.SortBy([]string{fmt.Sprintf("-%s", mapping.TriggerLastCheckScore.String()), "_score", mapping.TriggerName.String()})
-
-	return req
-}
-
-func buildSearchQuery(filterTags, searchTerms []string, onlyErrors bool) query.Query {
-	if !onlyErrors && len(filterTags) == 0 && len(searchTerms) == 0 {
-		return bleve.NewMatchAllQuery()
-	}
-
-	searchQueries := make([]query.Query, 0)
-
-	for _, tag := range filterTags {
-		qr := bleve.NewTermQuery(tag)
-		qr.FieldVal = mapping.TriggerTags.String()
-		searchQueries = append(searchQueries, qr)
-	}
-
-	for _, term := range searchTerms {
-		qr := bleve.NewFuzzyQuery(term)
-		searchQueries = append(searchQueries, qr)
-	}
-
-	if onlyErrors {
-		minScore := float64(1)
-		qr := bleve.NewNumericRangeQuery(&minScore, nil)
-		qr.FieldVal = mapping.TriggerLastCheckScore.String()
-		searchQueries = append(searchQueries, qr)
-	}
-
-	return bleve.NewConjunctionQuery(searchQueries...)
 }

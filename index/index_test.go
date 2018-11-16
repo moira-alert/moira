@@ -11,7 +11,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestSearchIndex(t *testing.T) {
+func TestIndex_CreateAndFill(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
@@ -46,6 +46,76 @@ func TestSearchIndex(t *testing.T) {
 		docCount, _ := index.index.DocCount()
 		So(docCount, ShouldEqual, uint64(31))
 	})
+
+	Convey("Test add Triggers to index", t, func() {
+		index.destroyIndex()
+		index.createIndex()
+		dataBase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggersPointers, nil)
+		count, err := index.addTriggers(triggerIDs, indexBatchSize)
+		So(err, ShouldBeNil)
+		So(count, ShouldEqual, 31)
+		docCount, _ := index.index.DocCount()
+		So(docCount, ShouldEqual, uint64(31))
+	})
+
+	Convey("Test add Triggers to index, batch size is less than number of triggers", t, func() {
+		index.destroyIndex()
+		index.createIndex()
+		dataBase.EXPECT().GetTriggerChecks(triggerIDs[:20]).Return(triggersPointers[:20], nil)
+		dataBase.EXPECT().GetTriggerChecks(triggerIDs[20:]).Return(triggersPointers[20:], nil)
+		count, err := index.addTriggers(triggerIDs, 20)
+		So(err, ShouldBeNil)
+		So(count, ShouldEqual, 31)
+		docCount, _ := index.index.DocCount()
+		So(docCount, ShouldEqual, uint64(31))
+	})
+
+	Convey("Test add Triggers to index where triggers are already presented", t, func() {
+		dataBase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggersPointers, nil)
+		count, err := index.addTriggers(triggerIDs, indexBatchSize)
+		So(err, ShouldBeNil)
+		So(count, ShouldEqual, 31)
+		docCount, _ := index.index.DocCount()
+		So(docCount, ShouldEqual, uint64(31))
+	})
+
+	Convey("Test start index from the beginning", t, func() {
+		newIndex := NewSearchIndex(logger, dataBase)
+		defer newIndex.destroyIndex()
+
+		dataBase.EXPECT().GetTriggerIDs().Return(triggerIDs, nil)
+		dataBase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggersPointers, nil)
+
+		err := newIndex.Start()
+		So(err, ShouldBeNil)
+		docCount, _ := newIndex.index.DocCount()
+		So(docCount, ShouldEqual, uint64(31))
+		So(newIndex.IsReady(), ShouldBeTrue)
+	})
+
+	Convey("Test start and stop index", t, func() {
+		newIndex := NewSearchIndex(logger, dataBase)
+
+		dataBase.EXPECT().GetTriggerIDs().Return(triggerIDs, nil)
+		dataBase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggersPointers, nil)
+
+		err := newIndex.Start()
+		So(err, ShouldBeNil)
+		docCount, _ := newIndex.index.DocCount()
+		So(docCount, ShouldEqual, uint64(31))
+		So(newIndex.IsReady(), ShouldBeTrue)
+
+		err = newIndex.Stop()
+		So(err, ShouldBeNil)
+		docCount, err = newIndex.index.DocCount()
+		So(err, ShouldNotBeNil)
+		So(docCount, ShouldEqual, 0)
+	})
+
+}
+
+func (index *Index) destroyIndex() {
+	index.index.Close()
 }
 
 var triggerChecks = []moira.TriggerCheck{
@@ -56,7 +126,7 @@ var triggerChecks = []moira.TriggerCheck{
 			Tags: []string{"DND-generator", "common"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 0,
+			Score: 30,
 		},
 	},
 	{
@@ -66,7 +136,7 @@ var triggerChecks = []moira.TriggerCheck{
 			Tags: []string{"DND-generator", "Kobold", "Sorcerer", "encounters"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 1,
+			Score: 29,
 		},
 	},
 	{
@@ -76,7 +146,7 @@ var triggerChecks = []moira.TriggerCheck{
 			Tags: []string{"DND-generator", "Kobold", "Dragonshield", "encounters"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 2,
+			Score: 28,
 		},
 	},
 	{
@@ -86,7 +156,7 @@ var triggerChecks = []moira.TriggerCheck{
 			Tags: []string{"DND-generator", "Orc", "encounters"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 3,
+			Score: 27,
 		},
 	},
 	{
@@ -96,7 +166,7 @@ var triggerChecks = []moira.TriggerCheck{
 			Tags: []string{"DND-generator", "Rust-Monster", "encounters"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 4,
+			Score: 26,
 		},
 	},
 	{
@@ -106,7 +176,7 @@ var triggerChecks = []moira.TriggerCheck{
 			Tags: []string{"Giant", "DND-generator", "Snake", "encounters"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 5,
+			Score: 25,
 		},
 	},
 	{
@@ -116,7 +186,7 @@ var triggerChecks = []moira.TriggerCheck{
 			Tags: []string{"Darkling", "DND-generator", "encounters"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 6,
+			Score: 24,
 		},
 	},
 	{
@@ -126,7 +196,7 @@ var triggerChecks = []moira.TriggerCheck{
 			Tags: []string{"Ghost", "DND-generator", "encounters"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 7,
+			Score: 23,
 		},
 	},
 	{
@@ -136,7 +206,7 @@ var triggerChecks = []moira.TriggerCheck{
 			Tags: []string{"Spectator", "DND-generator", "encounters"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 8,
+			Score: 22,
 		},
 	},
 	{
@@ -146,7 +216,7 @@ var triggerChecks = []moira.TriggerCheck{
 			Tags: []string{"Gibbering-Mouther", "DND-generator", "encounters"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 9,
+			Score: 21,
 		},
 	},
 	{
@@ -156,7 +226,7 @@ var triggerChecks = []moira.TriggerCheck{
 			Tags: []string{"Scythe Blade", "DND-generator", "traps"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 10,
+			Score: 20,
 		},
 	},
 	{
@@ -166,7 +236,7 @@ var triggerChecks = []moira.TriggerCheck{
 			Tags: []string{"Falling-Block", "DND-generator", "traps"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 11,
+			Score: 19,
 		},
 	},
 	{
@@ -176,7 +246,7 @@ var triggerChecks = []moira.TriggerCheck{
 			Tags: []string{"Thunderstone-Mine", "DND-generator", "traps"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 12,
+			Score: 18,
 		},
 	},
 	{
@@ -186,7 +256,7 @@ var triggerChecks = []moira.TriggerCheck{
 			Tags: []string{"Falling-Block", "DND-generator", "traps"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 13,
+			Score: 17,
 		},
 	},
 	{
@@ -196,7 +266,7 @@ var triggerChecks = []moira.TriggerCheck{
 			Tags: []string{"Chain-Flail", "DND-generator", "traps"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 14,
+			Score: 16,
 		},
 	},
 	{
@@ -216,7 +286,7 @@ var triggerChecks = []moira.TriggerCheck{
 			Tags: []string{"Electrified-Floortile", "DND-generator", "traps"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 16,
+			Score: 14,
 		},
 	},
 	{
@@ -226,7 +296,7 @@ var triggerChecks = []moira.TriggerCheck{
 			Tags: []string{"Earthmaw-Trap", "DND-generator", "traps"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 17,
+			Score: 13,
 		},
 	},
 	{
@@ -236,7 +306,7 @@ var triggerChecks = []moira.TriggerCheck{
 			Tags: []string{"Thunderstone-Mine", "DND-generator", "traps"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 18,
+			Score: 12,
 		},
 	},
 	{
@@ -246,7 +316,7 @@ var triggerChecks = []moira.TriggerCheck{
 			Tags: []string{"Scythe-Blade", "DND-generator", "traps"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 19,
+			Score: 11,
 		},
 	},
 	{
@@ -256,7 +326,7 @@ var triggerChecks = []moira.TriggerCheck{
 			Tags: []string{"Female", "DND-generator", "Elf", "Monk", "NPCs"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 20,
+			Score: 10,
 		},
 	},
 	{
@@ -266,7 +336,7 @@ var triggerChecks = []moira.TriggerCheck{
 			Tags: []string{"Female", "DND-generator", "Halfling", "Cleric", "NPCs"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 21,
+			Score: 9,
 		},
 	},
 	{
@@ -276,7 +346,7 @@ var triggerChecks = []moira.TriggerCheck{
 			Tags: []string{"Male", "DND-generator", "Human", "Soldier", "NPCs"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 22,
+			Score: 8,
 		},
 	},
 	{
@@ -286,7 +356,7 @@ var triggerChecks = []moira.TriggerCheck{
 			Tags: []string{"Female", "DND-generator", "Human", "Barbarian", "NPCs"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 23,
+			Score: 7,
 		},
 	},
 	{
@@ -296,7 +366,7 @@ var triggerChecks = []moira.TriggerCheck{
 			Tags: []string{"Male", "DND-generator", "Half-elf", "Monk", "NPCs"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 24,
+			Score: 6,
 		},
 	},
 	{
@@ -306,7 +376,7 @@ var triggerChecks = []moira.TriggerCheck{
 			Tags: []string{"Male", "DND-generator", "Elf", "Servant", "NPCs"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 25,
+			Score: 5,
 		},
 	},
 	{
@@ -316,7 +386,7 @@ var triggerChecks = []moira.TriggerCheck{
 			Tags: []string{"Male", "DND-generator", "Elf", "Sorcerer", "NPCs"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 26,
+			Score: 4,
 		},
 	},
 	{
@@ -326,7 +396,7 @@ var triggerChecks = []moira.TriggerCheck{
 			Tags: []string{"Female", "DND-generator", "Human", "Bard", "NPCs"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 27,
+			Score: 3,
 		},
 	},
 	{
@@ -336,7 +406,7 @@ var triggerChecks = []moira.TriggerCheck{
 			Tags: []string{"Female", "DND-generator", "Gnome", "Druid", "NPCs"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 28,
+			Score: 2,
 		},
 	},
 	{
@@ -346,7 +416,7 @@ var triggerChecks = []moira.TriggerCheck{
 			Tags: []string{"Female", "DND-generator", "Human", "Aristocrat", "NPCs"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 29,
+			Score: 1,
 		},
 	},
 	{
@@ -356,7 +426,7 @@ var triggerChecks = []moira.TriggerCheck{
 			Tags: []string{"Something-extremely-new"},
 		},
 		LastCheck: moira.CheckData{
-			Score: 30,
+			Score: 0,
 		},
 	},
 }
