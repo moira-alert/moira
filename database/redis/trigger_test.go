@@ -481,7 +481,7 @@ func TestRemoteTrigger(t *testing.T) {
 		})
 	})
 
-	Convey("Resaving remote trigger as non-remote", t, func() {
+	Convey("Update remote trigger as local", t, func() {
 		trigger.IsRemote = false
 		trigger.Patterns = []string{pattern}
 		Convey("Trigger should be saved correctly", func() {
@@ -506,7 +506,7 @@ func TestRemoteTrigger(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{})
 		})
-		Convey("Trigger shouldn't be returned as non-remote", func() {
+		Convey("Trigger shouldn't be returned as local", func() {
 			ids, err := dataBase.GetPatternTriggerIDs(pattern)
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{trigger.ID})
