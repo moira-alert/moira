@@ -359,7 +359,7 @@ func ConvertSubscriptions(database moira.Database, logger moira.Logger, rollback
 // - update: Set trigger_type to one of the following options: "expression" (trigger has custom user expression) "rising" (error > warn > ok), "falling" (error < warn < ok)
 // - rollback: Set trigger_type to empty string and fill omitted warn/error values
 func ConvertTriggers(dataBase moira.Database, logger moira.Logger, rollback bool) error {
-	allTriggerIDs, err := dataBase.GetTriggerIDs()
+	allTriggerIDs, err := dataBase.GetLocalTriggerIDs()
 	if err != nil {
 		return err
 	}

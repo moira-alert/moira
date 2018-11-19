@@ -29,7 +29,7 @@ type Database interface {
 	SetTriggerCheckMetricsMaintenance(triggerID string, metrics map[string]int64) error
 
 	// Trigger storing
-	GetTriggerIDs() ([]string, error)
+	GetLocalTriggerIDs() ([]string, error)
 	GetAllTriggerIDs() ([]string, error)
 	GetRemoteTriggerIDs() ([]string, error)
 	GetTrigger(triggerID string) (Trigger, error)

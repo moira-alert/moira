@@ -38,7 +38,7 @@ func TestTriggerStoring(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, *trigger)
 
-			ids, err := dataBase.GetTriggerIDs()
+			ids, err := dataBase.GetLocalTriggerIDs()
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{trigger.ID})
 
@@ -159,7 +159,7 @@ func TestTriggerStoring(t *testing.T) {
 			So(err, ShouldResemble, database.ErrNil)
 			So(actual, ShouldResemble, moira.Trigger{})
 
-			ids, err = dataBase.GetTriggerIDs()
+			ids, err = dataBase.GetLocalTriggerIDs()
 			So(err, ShouldBeNil)
 			So(ids, ShouldBeEmpty)
 
@@ -308,7 +308,7 @@ func TestTriggerStoring(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, *triggerVer1)
 
-			ids, err := dataBase.GetTriggerIDs()
+			ids, err := dataBase.GetLocalTriggerIDs()
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{triggerVer1.ID})
 
@@ -354,7 +354,7 @@ func TestTriggerStoring(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, *triggerVer2)
 
-			ids, err = dataBase.GetTriggerIDs()
+			ids, err = dataBase.GetLocalTriggerIDs()
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{triggerVer2.ID})
 
@@ -404,7 +404,7 @@ func TestTriggerStoring(t *testing.T) {
 			So(err, ShouldResemble, database.ErrNil)
 			So(actual, ShouldResemble, moira.Trigger{})
 
-			ids, err = dataBase.GetTriggerIDs()
+			ids, err = dataBase.GetLocalTriggerIDs()
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{})
 
@@ -434,11 +434,12 @@ func TestTriggerStoring(t *testing.T) {
 func TestRemoteTrigger(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewDatabase(logger, config)
+	pattern := "test.pattern.remote1"
 	trigger := &moira.Trigger{
 		ID:          "triggerID-0000000000010",
 		Name:        "remote",
 		Targets:     []string{"test.target.remote1"},
-		Patterns:    []string{"test.pattern.remote1"},
+		Patterns:    []string{pattern},
 		IsRemote:    true,
 		TriggerType: moira.RisingTrigger,
 	}
@@ -458,8 +459,8 @@ func TestRemoteTrigger(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{trigger.ID})
 		})
-		Convey("Trigger should not be returned as non-remote trigger", func() { //TODO rewrite msg
-			ids, err := dataBase.GetTriggerIDs()
+		Convey("Trigger should not be added to local triggers collection", func() {
+			ids, err := dataBase.GetLocalTriggerIDs()
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{})
 		})
@@ -469,14 +470,20 @@ func TestRemoteTrigger(t *testing.T) {
 			So(ids, ShouldResemble, []string{trigger.ID})
 		})
 		Convey("Trigger should not be added to patterns collection", func() {
-			ids, err := dataBase.GetPatternTriggerIDs(trigger.Patterns[0])
+			ids, err := dataBase.GetPatternTriggerIDs(pattern)
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{})
 		})
+		Convey("Trigger pattern shouldn't be in patterns collection", func() {
+			patterns, err := dataBase.GetPatterns()
+			So(err, ShouldBeNil)
+			So(patterns, ShouldResemble, []string{})
+		})
 	})
 
-	Convey("Resaving remote trigger as non-remote", t, func() {
+	Convey("Update remote trigger as local", t, func() {
 		trigger.IsRemote = false
+		trigger.Patterns = []string{pattern}
 		Convey("Trigger should be saved correctly", func() {
 			err := dataBase.SaveTrigger(trigger.ID, trigger)
 			So(err, ShouldBeNil)
@@ -485,7 +492,7 @@ func TestRemoteTrigger(t *testing.T) {
 			So(actual, ShouldResemble, *trigger)
 		})
 		Convey("Trigger should be added to triggers collection", func() {
-			ids, err := dataBase.GetTriggerIDs()
+			ids, err := dataBase.GetLocalTriggerIDs()
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{trigger.ID})
 		})
@@ -499,15 +506,54 @@ func TestRemoteTrigger(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{})
 		})
-		Convey("Trigger shouldn't be returned as non-remote", func() {
-			ids, err := dataBase.GetPatternTriggerIDs(trigger.Patterns[0])
+		Convey("Trigger shouldn't be returned as local", func() {
+			ids, err := dataBase.GetPatternTriggerIDs(pattern)
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{trigger.ID})
 		})
 		Convey("Trigger should be added to patterns collection", func() {
-			ids, err := dataBase.GetPatternTriggerIDs(trigger.Patterns[0])
+			ids, err := dataBase.GetPatternTriggerIDs(pattern)
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{trigger.ID})
+		})
+		Convey("Trigger pattern should be in patterns collection", func() {
+			patterns, err := dataBase.GetPatterns()
+			So(err, ShouldBeNil)
+			So(patterns, ShouldResemble, trigger.Patterns)
+		})
+
+		trigger.IsRemote = true
+		Convey("Update this trigger as remote", func() {
+			err := dataBase.SaveTrigger(trigger.ID, trigger)
+			So(err, ShouldBeNil)
+			actual, err := dataBase.GetTrigger(trigger.ID)
+			So(err, ShouldBeNil)
+			So(actual, ShouldResemble, *trigger)
+		})
+		Convey("Trigger should be deleted from local triggers collection", func() {
+			ids, err := dataBase.GetLocalTriggerIDs()
+			So(err, ShouldBeNil)
+			So(ids, ShouldResemble, []string{})
+		})
+		Convey("Trigger should still be in all triggers collection", func() {
+			ids, err := dataBase.GetAllTriggerIDs()
+			So(err, ShouldBeNil)
+			So(ids, ShouldResemble, []string{trigger.ID})
+		})
+		Convey("Trigger should be added to remote triggers collection", func() {
+			ids, err := dataBase.GetRemoteTriggerIDs()
+			So(err, ShouldBeNil)
+			So(ids, ShouldResemble, []string{trigger.ID})
+		})
+		Convey("Trigger should deleted from patterns collection", func() {
+			ids, err := dataBase.GetPatternTriggerIDs(pattern)
+			So(err, ShouldBeNil)
+			So(ids, ShouldResemble, []string{})
+		})
+		Convey("Trigger pattern should not be in patterns collection", func() {
+			patterns, err := dataBase.GetPatterns()
+			So(err, ShouldBeNil)
+			So(patterns, ShouldResemble, []string{})
 		})
 	})
 }
@@ -518,7 +564,7 @@ func TestTriggerErrorConnection(t *testing.T) {
 	dataBase.flush()
 	defer dataBase.flush()
 	Convey("Should throw error when no connection", t, func() {
-		actual, err := dataBase.GetTriggerIDs()
+		actual, err := dataBase.GetLocalTriggerIDs()
 		So(err, ShouldNotBeNil)
 		So(actual, ShouldBeNil)
 
