@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
-	"strings"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
@@ -27,10 +26,8 @@ func triggers(cfg *remote.Config, searcher moira.Searcher) func(chi.Router) {
 		router.Put("/", createTrigger)
 		router.With(middleware.Paginate(0, 10)).Get("/page", getTriggersPage)
 		router.Route("/{triggerId}", trigger)
-		router.Route("/search", func(router chi.Router) {
-			router.Use(middleware.SearchIndexContext(searcher))
-			router.With(middleware.Paginate(0, 10)).Get("/page", searchTriggersPerPage)
-		})
+		router.Use(middleware.SearchIndexContext(searcher))
+		router.With(middleware.Paginate(0, 10)).Get("/search", searchTriggers)
 	}
 }
 
@@ -95,16 +92,16 @@ func getTriggersPage(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func searchTriggersPerPage(writer http.ResponseWriter, request *http.Request) {
+func searchTriggers(writer http.ResponseWriter, request *http.Request) {
 	request.ParseForm()
 	onlyErrors := getOnlyProblemsFlag(request)
 	filterTags := getRequestTags(request)
-	searchTerms := getSearchRequestTextTerms(request)
+	searchString := getSearchRequestString(request)
 
 	page := middleware.GetPage(request)
 	size := middleware.GetSize(request)
 
-	triggersList, errorResponse := controller.FindTriggersPerPage(database, searchIndex, page, size, onlyErrors, filterTags, searchTerms)
+	triggersList, errorResponse := controller.SearchTriggers(database, searchIndex, page, size, onlyErrors, filterTags, searchString)
 	if errorResponse != nil {
 		render.Render(writer, request, errorResponse)
 		return
@@ -139,14 +136,8 @@ func getOnlyProblemsFlag(request *http.Request) bool {
 	return false
 }
 
-func getSearchRequestTextTerms(request *http.Request) []string {
+func getSearchRequestString(request *http.Request) string {
 	searchText := request.FormValue("text")
-	searchText, err := url.PathUnescape(searchText)
-	if err != nil {
-		return []string{}
-	}
-	if searchText != "" {
-		return strings.Fields(searchText)
-	}
-	return []string{}
+	searchText, _ = url.PathUnescape(searchText)
+	return searchText
 }

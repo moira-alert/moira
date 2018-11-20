@@ -8,29 +8,33 @@ import (
 )
 
 // SearchTriggers search for triggers in index and returns slice of trigger IDs
-func (index *Index) SearchTriggers(filterTags, searchTerms []string, onlyErrors bool) ([]string, error) {
-	maxDocuments, _ := index.index.DocCount()
-	req := buildSearchRequest(filterTags, searchTerms, onlyErrors, maxDocuments)
+func (index *Index) SearchTriggers(filterTags []string, searchString string, onlyErrors bool, page int64, size int64) (triggerIDs []string, total int64, err error) {
+	if !index.checkIfIndexIsReady() {
+		return make([]string, 0), 0, fmt.Errorf("index is not ready, please try later")
+	}
+	req := buildSearchRequest(filterTags, searchString, onlyErrors, int(page), int(size))
 
 	searchResult, err := index.index.Search(req)
 	if err != nil {
-		return make([]string, 0), err
+		return
 	}
+	total = int64(searchResult.Total)
 	if searchResult.Hits.Len() == 0 {
-		return make([]string, 0), nil
+		return
 	}
-	triggerIds := make([]string, 0)
 	for _, result := range searchResult.Hits {
-		triggerIds = append(triggerIds, result.ID)
+		triggerIDs = append(triggerIDs, result.ID)
 	}
-	return triggerIds, nil
+	return
 }
 
-func buildSearchRequest(filterTags, searchTerms []string, onlyErrors bool, maxDocuments uint64) *bleve.SearchRequest {
+func buildSearchRequest(filterTags []string, searchString string, onlyErrors bool, page, size int) *bleve.SearchRequest {
+
+	searchTerms := splitStringToTerms(searchString)
 	searchQuery := buildSearchQuery(filterTags, searchTerms, onlyErrors)
 
-	req := bleve.NewSearchRequest(searchQuery)
-	req.Size = int(maxDocuments)
+	from := page * size
+	req := bleve.NewSearchRequestOptions(searchQuery, size, from, false)
 	// sorting order:
 	// TriggerCheck.Score (desc)
 	// Relevance (asc)

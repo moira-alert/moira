@@ -154,5 +154,5 @@ type Searcher interface {
 	Start() error
 	Stop() error
 	IsReady() bool
-	SearchTriggers(filterTags, searchTerms []string, onlyErrors bool) ([]string, error)
+	SearchTriggers(filterTags []string, searchString string, onlyErrors bool, page int64, size int64) (triggerIDs []string, total int64, err error)
 }

@@ -2,7 +2,6 @@ package controller
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/satori/go.uuid"
 
@@ -91,30 +90,13 @@ func GetTriggerPage(database moira.Database, page int64, size int64, onlyErrors 
 	return &triggersList, nil
 }
 
-// FindTriggersPerPage gets trigger page and filter trigger by tags and search request terms
-func FindTriggersPerPage(database moira.Database, searcher moira.Searcher, page int64, size int64, onlyErrors bool, filterTags []string, searchTerms []string) (*dto.TriggersList, *api.ErrorResponse) {
-	timeout := time.After(time.Second * 10)
-	ticker := time.NewTicker(time.Second * 1)
-	if !searcher.IsReady() {
-	ReadyCheck:
-		for {
-			select {
-			case <-ticker.C:
-				if searcher.IsReady() {
-					break ReadyCheck
-				}
-			case <-timeout:
-				return nil, api.ErrorInternalServer(fmt.Errorf("index is not ready, please try later"))
-			}
-		}
-	}
-	triggerIDs, err := searcher.SearchTriggers(filterTags, searchTerms, onlyErrors)
+// SearchTriggers gets trigger page and filter trigger by tags and search request terms
+func SearchTriggers(database moira.Database, searcher moira.Searcher, page int64, size int64, onlyErrors bool, filterTags []string, searchString string) (*dto.TriggersList, *api.ErrorResponse) {
+	triggerIDs, total, err := searcher.SearchTriggers(filterTags, searchString, onlyErrors, page, size)
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
 
-	total := int64(len(triggerIDs))
-	triggerIDs = getTriggerIdsRange(triggerIDs, total, page, size)
 	triggerChecks, err := database.GetTriggerChecks(triggerIDs)
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
