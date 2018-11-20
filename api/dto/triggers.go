@@ -259,6 +259,15 @@ func (*MetricsMaintenance) Bind(r *http.Request) error {
 	return nil
 }
 
+type TriggerMaintenance struct {
+	Trigger int64              `json:"trigger"`
+	Metrics MetricsMaintenance `json:"metrics"`
+}
+
+func (*TriggerMaintenance) Bind(r *http.Request) error {
+	return nil
+}
+
 type ThrottlingResponse struct {
 	Throttling int64 `json:"throttling"`
 }

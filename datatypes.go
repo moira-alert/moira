@@ -159,6 +159,7 @@ type CheckData struct {
 	Metrics                      map[string]MetricState `json:"metrics"`
 	Score                        int64                  `json:"score"`
 	State                        string                 `json:"state"`
+	Maintenance                  int64                  `json:"maintenance,omitempty"`
 	Timestamp                    int64                  `json:"timestamp,omitempty"`
 	EventTimestamp               int64                  `json:"event_timestamp,omitempty"`
 	LastSuccessfulCheckTimestamp int64                  `json:"last_successful_check_timestamp"`

@@ -33,6 +33,8 @@ func trigger(router chi.Router) {
 		router.Delete("/", deleteTriggerMetric)
 		router.Delete("/nodata", deleteTriggerNodataMetrics)
 	})
+	router.Put("/setMaintenance", setTriggerMaintenance)
+	// deprecated
 	router.Put("/maintenance", setMetricsMaintenance)
 }
 
@@ -160,6 +162,7 @@ func deleteTriggerNodataMetrics(writer http.ResponseWriter, request *http.Reques
 	}
 }
 
+// ToDo: DEPRECATED, remove in future versions
 func setMetricsMaintenance(writer http.ResponseWriter, request *http.Request) {
 	triggerID := middleware.GetTriggerID(request)
 	metricsMaintenance := dto.MetricsMaintenance{}
@@ -168,6 +171,20 @@ func setMetricsMaintenance(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 	err := controller.SetMetricsMaintenance(database, triggerID, metricsMaintenance)
+	if err != nil {
+		render.Render(writer, request, err)
+	}
+}
+
+func setTriggerMaintenance(writer http.ResponseWriter, request *http.Request) {
+	triggerID := middleware.GetTriggerID(request)
+	triggerMaintenance := dto.TriggerMaintenance{}
+	if err := render.Bind(request, &triggerMaintenance); err != nil {
+		render.Render(writer, request, api.ErrorInvalidRequest(err))
+		return
+	}
+
+	err := controller.SetTriggerMaintenance(database, triggerID, triggerMaintenance)
 	if err != nil {
 		render.Render(writer, request, err)
 	}
