@@ -175,7 +175,7 @@ func SetMetricsMaintenance(database moira.Database, triggerID string, metricsMai
 	if err := SetTriggerMaintenance(database, triggerID, triggerMaintenance); err != nil {
 		return err
 	}
-	return api.WarningDeprecatedApi(fmt.Sprintf("deprecated API, use /trigger/%s/setMaintenance instead", triggerID))
+	return api.WarningDeprecatedAPI(fmt.Sprintf("deprecated API, use /trigger/%s/setMaintenance instead", triggerID))
 }
 
 // SetTriggerMaintenance sets maintenance to metrics and whole trigger

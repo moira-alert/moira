@@ -80,8 +80,9 @@ func ErrorRemoteServerUnavailable(err error) *ErrorResponse {
 	}
 }
 
-// WarningDeprecatedApi
-func WarningDeprecatedApi(text string) *ErrorResponse {
+// WarningDeprecatedAPI return 299 code and message about deprecated method
+// https://stackoverflow.com/a/29623798
+func WarningDeprecatedAPI(text string) *ErrorResponse {
 	return &ErrorResponse{
 		HTTPStatusCode: 299,
 		StatusText:     "Deprecated API",
