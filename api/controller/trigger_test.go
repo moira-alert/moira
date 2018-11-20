@@ -658,14 +658,15 @@ func TestSetMetricsMaintenance(t *testing.T) {
 	maintenance := make(map[string]int64)
 
 	Convey("Success", t, func() {
-		dataBase.EXPECT().SetTriggerCheckMetricsMaintenance(triggerID, maintenance).Return(nil)
+		errorMessage := api.WarningDeprecatedApi(fmt.Sprintf("deprecated API, use /trigger/%s/setMaintenance instead", triggerID))
+		dataBase.EXPECT().SetTriggerCheckMaintenance(triggerID, maintenance, int64(0)).Return(nil)
 		err := SetMetricsMaintenance(dataBase, triggerID, maintenance)
-		So(err, ShouldBeNil)
+		So(err, ShouldResemble, errorMessage)
 	})
 
 	Convey("Error", t, func() {
 		expected := fmt.Errorf("oooops! Error set")
-		dataBase.EXPECT().SetTriggerCheckMetricsMaintenance(triggerID, maintenance).Return(expected)
+		dataBase.EXPECT().SetTriggerCheckMaintenance(triggerID, maintenance, int64(0)).Return(expected)
 		err := SetMetricsMaintenance(dataBase, triggerID, maintenance)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 	})
