@@ -672,6 +672,47 @@ func TestSetMetricsMaintenance(t *testing.T) {
 	})
 }
 
+func TestSetTriggerMaintenance(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	triggerID := uuid.NewV4().String()
+	metricsMaintenance := dto.MetricsMaintenance{
+		"Metric1": 12345,
+		"Metric2": 12346,
+	}
+	triggerMaintenance := dto.TriggerMaintenance{Metrics: metricsMaintenance}
+
+	Convey("Success setting metrics maintenance only", t, func() {
+		dataBase.EXPECT().SetTriggerCheckMaintenance(triggerID, map[string]int64(triggerMaintenance.Metrics), triggerMaintenance.Trigger).Return(nil)
+		err := SetTriggerMaintenance(dataBase, triggerID, triggerMaintenance)
+		So(err, ShouldBeNil)
+	})
+
+	Convey("Success setting trigger maintenance only", t, func() {
+		triggerMaintenance.Trigger = 12347
+		triggerMaintenance.Metrics = dto.MetricsMaintenance{}
+		dataBase.EXPECT().SetTriggerCheckMaintenance(triggerID, map[string]int64(triggerMaintenance.Metrics), triggerMaintenance.Trigger).Return(nil)
+		err := SetTriggerMaintenance(dataBase, triggerID, triggerMaintenance)
+		So(err, ShouldBeNil)
+	})
+
+	Convey("Success setting metrics and trigger maintenance at once", t, func() {
+		triggerMaintenance.Trigger = 12347
+		triggerMaintenance.Metrics = metricsMaintenance
+		dataBase.EXPECT().SetTriggerCheckMaintenance(triggerID, map[string]int64(triggerMaintenance.Metrics), triggerMaintenance.Trigger).Return(nil)
+		err := SetTriggerMaintenance(dataBase, triggerID, triggerMaintenance)
+		So(err, ShouldBeNil)
+	})
+
+	Convey("Error", t, func() {
+		expected := fmt.Errorf("oooops! Error set")
+		dataBase.EXPECT().SetTriggerCheckMaintenance(triggerID, map[string]int64(triggerMaintenance.Metrics), triggerMaintenance.Trigger).Return(expected)
+		err := SetTriggerMaintenance(dataBase, triggerID, triggerMaintenance)
+		So(err, ShouldResemble, api.ErrorInternalServer(expected))
+	})
+}
+
 func TestGetTriggerMetrics(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
