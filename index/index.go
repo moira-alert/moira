@@ -9,7 +9,7 @@ import (
 	"gopkg.in/tomb.v2"
 )
 
-const indexBatchSize = 1000
+const defaultIndexBatchSize = 1000
 
 // Index represents Index for Bleve.Index type
 type Index struct {

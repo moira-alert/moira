@@ -52,7 +52,7 @@ func TestIndex_CreateAndFill(t *testing.T) {
 		index.destroyIndex()
 		index.createIndex()
 		dataBase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggersPointers, nil)
-		count, err := index.addTriggers(triggerIDs, indexBatchSize)
+		count, err := index.addTriggers(triggerIDs, defaultIndexBatchSize)
 		So(err, ShouldBeNil)
 		So(count, ShouldEqual, 31)
 		docCount, _ := index.index.DocCount()
@@ -73,7 +73,7 @@ func TestIndex_CreateAndFill(t *testing.T) {
 
 	Convey("Test add Triggers to index where triggers are already presented", t, func() {
 		dataBase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggersPointers, nil)
-		count, err := index.addTriggers(triggerIDs, indexBatchSize)
+		count, err := index.addTriggers(triggerIDs, defaultIndexBatchSize)
 		So(err, ShouldBeNil)
 		So(count, ShouldEqual, 31)
 		docCount, _ := index.index.DocCount()

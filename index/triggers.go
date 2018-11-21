@@ -15,7 +15,7 @@ func (index *Index) fillIndex() error {
 		return err
 	}
 
-	count, err := index.addTriggers(allTriggerIDs, indexBatchSize)
+	count, err := index.addTriggers(allTriggerIDs, defaultIndexBatchSize)
 	index.logger.Infof("%d triggers added to index", count)
 	return err
 }
