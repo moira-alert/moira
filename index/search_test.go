@@ -184,4 +184,57 @@ func TestIndex_SearchTriggers(t *testing.T) {
 			So(err, ShouldBeNil)
 		})
 	})
+
+	Convey("Search for triggers by description", t, func() {
+		page := int64(0)
+		size := int64(50)
+		tags := make([]string, 0)
+		searchString := ""
+		onlyErrors := false
+
+		Convey("OnlyErrors = false, search by name and description, 0 results", func() {
+			searchString = "life female druid"
+			actualTriggerIDs, count, err := index.SearchTriggers(tags, searchString, onlyErrors, page, size)
+			So(actualTriggerIDs, ShouldBeEmpty)
+			So(count, ShouldEqual, 0)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("OnlyErrors = false, search by name and description, 3 results", func() {
+			easyTriggerIDs := []string{
+				triggerChecks[4].ID,
+				triggerChecks[9].ID,
+				triggerChecks[30].ID,
+			}
+
+			searchString = "easy"
+			actualTriggerIDs, count, err := index.SearchTriggers(tags, searchString, onlyErrors, page, size)
+			So(actualTriggerIDs, ShouldResemble, easyTriggerIDs)
+			So(count, ShouldEqual, 3)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("OnlyErrors = false, search by name and description, 1 result", func() {
+			searchString = "little monster"
+			actualTriggerIDs, count, err := index.SearchTriggers(tags, searchString, onlyErrors, page, size)
+			So(actualTriggerIDs, ShouldResemble, triggerIDs[4:5])
+			So(count, ShouldEqual, 1)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("OnlyErrors = false, search by description and tags, 2 results", func() {
+			searchString = "mama"
+			tags := []string{"traps"}
+
+			mamaTrapsTriggerIDs := []string{
+				triggerChecks[11].ID,
+				triggerChecks[19].ID,
+			}
+
+			actualTriggerIDs, count, err := index.SearchTriggers(tags, searchString, onlyErrors, page, size)
+			So(actualTriggerIDs, ShouldResemble, mamaTrapsTriggerIDs)
+			So(count, ShouldEqual, 2)
+			So(err, ShouldBeNil)
+		})
+	})
 }

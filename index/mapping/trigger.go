@@ -13,7 +13,7 @@ type TriggerField int
 const (
 	TriggerID TriggerField = iota
 	TriggerName
-	//TriggerDesc
+	TriggerDesc
 	TriggerTags
 	TriggerLastCheckScore
 )
@@ -21,7 +21,7 @@ const (
 var triggerFieldNames = []string{
 	"ID",
 	"Name",
-	//"Desc",
+	"Desc",
 	"Tags",
 	"LastCheckScore"}
 
@@ -51,8 +51,7 @@ func (Trigger) GetDocumentMapping() *mapping.DocumentMapping {
 
 	triggerMapping.AddFieldMappingsAt(TriggerName.String(), getStandardMapping())
 	triggerMapping.AddFieldMappingsAt(TriggerTags.String(), getKeywordMapping())
-	// ToDo: do we want to index description?
-	//triggerMapping.AddFieldMappingsAt(TriggerDesc.String(), getStandardMapping())
+	triggerMapping.AddFieldMappingsAt(TriggerDesc.String(), getStandardMapping())
 	triggerMapping.AddFieldMappingsAt(TriggerLastCheckScore.String(), getNumericMapping())
 
 	return triggerMapping
