@@ -171,7 +171,7 @@ func DeleteTriggerNodataMetrics(dataBase moira.Database, triggerID string) *api.
 // SetMetricsMaintenance sets metrics maintenance for current trigger
 // ToDo: DEPRECATED, remove in future versions
 func SetMetricsMaintenance(database moira.Database, triggerID string, metricsMaintenance dto.MetricsMaintenance) *api.ErrorResponse {
-	triggerMaintenance := dto.TriggerMaintenance{Metrics: metricsMaintenance}
+	triggerMaintenance := dto.TriggerMaintenance{Metrics: map[string]int64(metricsMaintenance)}
 	if err := SetTriggerMaintenance(database, triggerID, triggerMaintenance); err != nil {
 		return err
 	}
@@ -180,7 +180,7 @@ func SetMetricsMaintenance(database moira.Database, triggerID string, metricsMai
 
 // SetTriggerMaintenance sets maintenance to metrics and whole trigger
 func SetTriggerMaintenance(database moira.Database, triggerID string, triggerMaintenance dto.TriggerMaintenance) *api.ErrorResponse {
-	if err := database.SetTriggerCheckMaintenance(triggerID, map[string]int64(triggerMaintenance.Metrics), triggerMaintenance.Trigger); err != nil {
+	if err := database.SetTriggerCheckMaintenance(triggerID, triggerMaintenance.Metrics, triggerMaintenance.Trigger); err != nil {
 		return api.ErrorInternalServer(err)
 	}
 	return nil

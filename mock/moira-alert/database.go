@@ -5,12 +5,11 @@
 package mock_moira_alert
 
 import (
-	"reflect"
-	"time"
-
-	"github.com/golang/mock/gomock"
-	"github.com/moira-alert/moira"
+	gomock "github.com/golang/mock/gomock"
+	moira "github.com/moira-alert/moira"
 	tomb_v2 "gopkg.in/tomb.v2"
+	reflect "reflect"
+	time "time"
 )
 
 // MockDatabase is a mock of Database interface
@@ -1041,18 +1040,6 @@ func (m *MockDatabase) SetTriggerCheckMaintenance(arg0 string, arg1 map[string]i
 // SetTriggerCheckMaintenance indicates an expected call of SetTriggerCheckMaintenance
 func (mr *MockDatabaseMockRecorder) SetTriggerCheckMaintenance(arg0, arg1, arg2 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTriggerCheckMaintenance", reflect.TypeOf((*MockDatabase)(nil).SetTriggerCheckMaintenance), arg0, arg1, arg2)
-}
-
-// SetTriggerCheckMetricsMaintenance mocks base method
-func (m *MockDatabase) SetTriggerCheckMetricsMaintenance(arg0 string, arg1 map[string]int64) error {
-	ret := m.ctrl.Call(m, "SetTriggerCheckMetricsMaintenance", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SetTriggerCheckMetricsMaintenance indicates an expected call of SetTriggerCheckMetricsMaintenance
-func (mr *MockDatabaseMockRecorder) SetTriggerCheckMetricsMaintenance(arg0, arg1 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTriggerCheckMetricsMaintenance", reflect.TypeOf((*MockDatabase)(nil).SetTriggerCheckMetricsMaintenance), arg0, arg1)
 }
 
 // SetTriggerLastCheck mocks base method

@@ -46,7 +46,7 @@ func TestLastCheck(t *testing.T) {
 		Convey("Test set metrics check maintenance", func() {
 			Convey("While no check", func() {
 				triggerID := uuid.NewV4().String()
-				err := dataBase.SetTriggerCheckMetricsMaintenance(triggerID, map[string]int64{})
+				err := dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{}, 0)
 				So(err, ShouldBeNil)
 			})
 
@@ -55,7 +55,7 @@ func TestLastCheck(t *testing.T) {
 				err := dataBase.SetTriggerLastCheck(triggerID, &lastCheckWithNoMetrics, false)
 				So(err, ShouldBeNil)
 
-				err = dataBase.SetTriggerCheckMetricsMaintenance(triggerID, map[string]int64{"metric1": 1, "metric5": 5})
+				err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric1": 1, "metric5": 5}, 0)
 				So(err, ShouldBeNil)
 
 				actual, err := dataBase.GetTriggerLastCheck(triggerID)
@@ -68,7 +68,7 @@ func TestLastCheck(t *testing.T) {
 				err := dataBase.SetTriggerLastCheck(triggerID, &lastCheckTest, false)
 				So(err, ShouldBeNil)
 
-				err = dataBase.SetTriggerCheckMetricsMaintenance(triggerID, map[string]int64{"metric11": 1, "metric55": 5})
+				err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric11": 1, "metric55": 5}, 0)
 				So(err, ShouldBeNil)
 
 				actual, err := dataBase.GetTriggerLastCheck(triggerID)
@@ -82,7 +82,7 @@ func TestLastCheck(t *testing.T) {
 				err := dataBase.SetTriggerLastCheck(triggerID, &checkData, false)
 				So(err, ShouldBeNil)
 
-				err = dataBase.SetTriggerCheckMetricsMaintenance(triggerID, map[string]int64{"metric1": 1, "metric5": 5})
+				err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric1": 1, "metric5": 5}, 0)
 				So(err, ShouldBeNil)
 				metric1 := checkData.Metrics["metric1"]
 				metric5 := checkData.Metrics["metric5"]
@@ -255,7 +255,7 @@ func TestRemoteLastCheck(t *testing.T) {
 		Convey("Test set trigger check maintenance", func() {
 			Convey("While no check", func() {
 				triggerID := uuid.NewV4().String()
-				err := dataBase.SetTriggerCheckMetricsMaintenance(triggerID, map[string]int64{})
+				err := dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{}, 0)
 				So(err, ShouldBeNil)
 			})
 
@@ -264,7 +264,7 @@ func TestRemoteLastCheck(t *testing.T) {
 				err := dataBase.SetTriggerLastCheck(triggerID, &lastCheckWithNoMetrics, true)
 				So(err, ShouldBeNil)
 
-				err = dataBase.SetTriggerCheckMetricsMaintenance(triggerID, map[string]int64{"metric1": 1, "metric5": 5})
+				err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric1": 1, "metric5": 5}, 0)
 				So(err, ShouldBeNil)
 
 				actual, err := dataBase.GetTriggerLastCheck(triggerID)
@@ -277,7 +277,7 @@ func TestRemoteLastCheck(t *testing.T) {
 				err := dataBase.SetTriggerLastCheck(triggerID, &lastCheckTest, true)
 				So(err, ShouldBeNil)
 
-				err = dataBase.SetTriggerCheckMetricsMaintenance(triggerID, map[string]int64{"metric11": 1, "metric55": 5})
+				err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric11": 1, "metric55": 5}, 0)
 				So(err, ShouldBeNil)
 
 				actual, err := dataBase.GetTriggerLastCheck(triggerID)
@@ -291,7 +291,7 @@ func TestRemoteLastCheck(t *testing.T) {
 				err := dataBase.SetTriggerLastCheck(triggerID, &checkData, true)
 				So(err, ShouldBeNil)
 
-				err = dataBase.SetTriggerCheckMetricsMaintenance(triggerID, map[string]int64{"metric1": 1, "metric5": 5})
+				err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric1": 1, "metric5": 5}, 0)
 				So(err, ShouldBeNil)
 				metric1 := checkData.Metrics["metric1"]
 				metric5 := checkData.Metrics["metric5"]
@@ -342,7 +342,7 @@ func TestLastCheckErrorConnection(t *testing.T) {
 		err = dataBase.RemoveTriggerLastCheck("123")
 		So(err, ShouldNotBeNil)
 
-		err = dataBase.SetTriggerCheckMetricsMaintenance("123", map[string]int64{})
+		err = dataBase.SetTriggerCheckMaintenance("123", map[string]int64{}, 123)
 		So(err, ShouldNotBeNil)
 
 		actual2, err := dataBase.GetTriggerCheckIDs(make([]string, 0), true)

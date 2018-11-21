@@ -114,14 +114,6 @@ func (connector *DbConnector) SetTriggerCheckMaintenance(triggerID string, metri
 	return nil
 }
 
-// SetTriggerCheckMetricsMaintenance sets to given metrics throttling timestamps,
-// If during the update lastCheck was updated from another place, try update again
-// If CheckData does not contain one of given metrics it will ignore this metric
-// ToDo: DEPRECATED, remove in future versions
-func (connector *DbConnector) SetTriggerCheckMetricsMaintenance(triggerID string, metrics map[string]int64) error {
-	return connector.SetTriggerCheckMaintenance(triggerID, metrics, 0)
-}
-
 // GetTriggerCheckIDs gets checked triggerIDs, sorted from max to min check score and filtered by given tags
 // If onlyErrors return only triggerIDs with score > 0
 func (connector *DbConnector) GetTriggerCheckIDs(tagNames []string, onlyErrors bool) ([]string, error) {

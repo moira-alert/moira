@@ -501,7 +501,6 @@ func TestTriggerMaintenance(t *testing.T) {
 				currentTriggerState.EventTimestamp = 1600
 				currentTriggerState.Suppressed = false
 				currentTriggerState.SuppressedState = ""
-				currentTriggerState.Maintenance = 0
 				So(err, ShouldBeNil)
 				So(actual, ShouldResemble, currentTriggerState)
 			})
