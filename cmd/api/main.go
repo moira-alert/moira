@@ -81,10 +81,13 @@ func main() {
 	database := redis.NewDatabase(logger, databaseSettings)
 
 	searchIndex := index.NewSearchIndex(logger, database)
+	if searchIndex == nil {
+		logger.Fatalf("Failed to create search index")
+	}
 	go func() {
 		err2 := searchIndex.Start()
 		if err2 != nil {
-			logger.Error(err2)
+			logger.Fatalf("Failed to start search index: %s", err2.Error())
 		}
 	}()
 	defer searchIndex.Stop()

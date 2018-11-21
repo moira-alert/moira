@@ -6,6 +6,7 @@ import (
 	"github.com/blevesearch/bleve"
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/index/mapping"
 	"github.com/moira-alert/moira/mock/moira-alert"
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
@@ -115,6 +116,14 @@ func TestIndex_CreateAndFill(t *testing.T) {
 
 func (index *Index) destroyIndex() {
 	index.index.Close()
+}
+
+func (index *Index) createIndex() error {
+	index.logger.Infof("Create new index for full-text search")
+	var err error
+	indexMapping := mapping.BuildIndexMapping(mapping.Trigger{})
+	index.index, err = buildIndex(indexMapping)
+	return err
 }
 
 var triggerChecks = []moira.TriggerCheck{

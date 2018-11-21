@@ -6,8 +6,8 @@ import (
 	"github.com/garyburd/redigo/redis"
 )
 
-// FetchTriggersToReindex returns []triggerID of triggers needed to update. It is used for full-text search index
-// It returns triggerIDs from 'from' param to a current time
+// FetchTriggersToReindex returns trigger IDs updated since 'from' param
+// The trigger could be changed by user, or it's score was changed during trigger check
 func (connector *DbConnector) FetchTriggersToReindex(from int64) ([]string, error) {
 	c := connector.pool.Get()
 	defer c.Close()
@@ -24,8 +24,7 @@ func (connector *DbConnector) FetchTriggersToReindex(from int64) ([]string, erro
 	return response, nil
 }
 
-// RemoveTriggersToReindex removes outdated triggerIDs from redis. It is used for full-text search index
-// It removes triggerIDs from the beginning of time to 'to' param
+// RemoveTriggersToReindex removes outdated triggerIDs from redis
 func (connector *DbConnector) RemoveTriggersToReindex(to int64) error {
 	c := connector.pool.Get()
 	defer c.Close()

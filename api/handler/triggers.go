@@ -22,11 +22,11 @@ import (
 func triggers(cfg *remote.Config, searcher moira.Searcher) func(chi.Router) {
 	return func(router chi.Router) {
 		router.Use(middleware.RemoteConfigContext(cfg))
+		router.Use(middleware.SearchIndexContext(searcher))
 		router.Get("/", getAllTriggers)
 		router.Put("/", createTrigger)
 		router.With(middleware.Paginate(0, 10)).Get("/page", getTriggersPage)
 		router.Route("/{triggerId}", trigger)
-		router.Use(middleware.SearchIndexContext(searcher))
 		router.With(middleware.Paginate(0, 10)).Get("/search", searchTriggers)
 	}
 }

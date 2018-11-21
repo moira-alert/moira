@@ -8,7 +8,6 @@ const actualizerRunInterval = time.Second
 
 func (index *Index) runIndexActualizer() error {
 	ticker := time.NewTicker(actualizerRunInterval)
-	actualizationTime := time.Now().Add(-time.Minute * 5).Unix()
 	index.logger.Infof("Start index actualizer: reindex changed triggers every %v", actualizerRunInterval)
 
 	for {
@@ -18,17 +17,21 @@ func (index *Index) runIndexActualizer() error {
 			return nil
 		case <-ticker.C:
 			newTime := time.Now().Unix()
-			if err := index.actualizeIndex(actualizationTime); err != nil {
+			if float64(newTime-index.indexActualizedTS) > sweeperTimeToKeep.Seconds() {
+				index.logger.Errorf("Index was actualized too far ago. Index actualized: %s. Current time: %s. Should actualize every: %v. Maximum possible interval without actualization: %s",
+					time.Unix(index.indexActualizedTS, 0).Format(time.RFC3339), time.Now().Format(time.RFC3339), actualizerRunInterval, sweeperTimeToKeep)
+			}
+			if err := index.actualizeIndex(); err != nil {
 				index.logger.Warningf("Cannot actualize triggers: %s", err.Error())
 				continue
 			}
-			actualizationTime = newTime
+			index.indexActualizedTS = newTime
 		}
 	}
 }
 
-func (index *Index) actualizeIndex(lastActualizeTs int64) error {
-	triggerToReindexIDs, err := index.database.FetchTriggersToReindex(lastActualizeTs)
+func (index *Index) actualizeIndex() error {
+	triggerToReindexIDs, err := index.database.FetchTriggersToReindex(index.indexActualizedTS)
 	if err != nil {
 		return err
 	}
@@ -37,7 +40,7 @@ func (index *Index) actualizeIndex(lastActualizeTs int64) error {
 		return nil
 	}
 
-	index.logger.Debugf("[Index actualizer]: got %d triggers from redis", len(triggerToReindexIDs))
+	index.logger.Debugf("[Index actualizer]: got %d triggers to actualize", len(triggerToReindexIDs))
 
 	triggersToReindex, err := index.database.GetTriggerChecks(triggerToReindexIDs)
 	if err != nil {

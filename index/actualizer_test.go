@@ -43,11 +43,12 @@ func TestIndex_actualize(t *testing.T) {
 
 	Convey("Test actualizer", t, func() {
 		fakeTS := int64(12345)
+		index.indexActualizedTS = fakeTS
 		Convey("Test deletion", func() {
 			dataBase.EXPECT().FetchTriggersToReindex(fakeTS).Return(triggerIDs[18:20], nil)
 			dataBase.EXPECT().GetTriggerChecks(triggerIDs[18:20]).Return([]*moira.TriggerCheck{nil, nil}, nil)
 
-			err := index.actualizeIndex(fakeTS)
+			err := index.actualizeIndex()
 			So(err, ShouldBeNil)
 			docCount, _ := index.index.DocCount()
 			So(docCount, ShouldEqual, uint64(18))
@@ -57,7 +58,7 @@ func TestIndex_actualize(t *testing.T) {
 			dataBase.EXPECT().FetchTriggersToReindex(fakeTS).Return(triggerIDs[18:20], nil)
 			dataBase.EXPECT().GetTriggerChecks(triggerIDs[18:20]).Return(triggersPointers[18:20], nil)
 
-			err := index.actualizeIndex(fakeTS)
+			err := index.actualizeIndex()
 			So(err, ShouldBeNil)
 			docCount, _ := index.index.DocCount()
 			So(docCount, ShouldEqual, uint64(20))
@@ -67,7 +68,7 @@ func TestIndex_actualize(t *testing.T) {
 			dataBase.EXPECT().FetchTriggersToReindex(fakeTS).Return(triggerIDs[10:12], nil)
 			dataBase.EXPECT().GetTriggerChecks(triggerIDs[10:12]).Return(triggersPointers[10:12], nil)
 
-			err := index.actualizeIndex(fakeTS)
+			err := index.actualizeIndex()
 			So(err, ShouldBeNil)
 			docCount, _ := index.index.DocCount()
 			So(docCount, ShouldEqual, uint64(20))
