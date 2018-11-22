@@ -46,6 +46,7 @@ func (index *Index) actualizeIndex() error {
 	if err != nil {
 		return err
 	}
+	triggersToUpdate := make([]string, 0)
 
 	for i, triggerID := range triggerToReindexIDs {
 		trigger := triggersToReindex[i]
@@ -53,11 +54,15 @@ func (index *Index) actualizeIndex() error {
 			index.logger.Debugf("[Index actualizer] [triggerID: %s] is nil, remove from index", triggerID)
 			index.index.Delete(triggerID)
 		} else {
-			index.logger.Debugf("[Index actualizer] [triggerID: %s] reindexing...", triggerID)
-			err = index.indexTriggerCheck(trigger)
-			if err != nil {
-				return err
-			}
+			triggersToUpdate = append(triggersToUpdate, trigger.ID)
+			index.logger.Debugf("[Index actualizer] [triggerID: %s] need to be reindexed...", triggerID)
+		}
+	}
+	if len(triggersToUpdate) > 0 {
+		count, err2 := index.addTriggers(triggersToUpdate, defaultIndexBatchSize)
+		index.logger.Debugf("[Index actualizer] %d triggers reindexed", count)
+		if err2 != nil {
+			return err2
 		}
 	}
 	return nil

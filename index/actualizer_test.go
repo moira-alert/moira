@@ -57,6 +57,7 @@ func TestIndex_actualize(t *testing.T) {
 		Convey("Test addition", func() {
 			dataBase.EXPECT().FetchTriggersToReindex(fakeTS).Return(triggerIDs[18:20], nil)
 			dataBase.EXPECT().GetTriggerChecks(triggerIDs[18:20]).Return(triggersPointers[18:20], nil)
+			dataBase.EXPECT().GetTriggerChecks(triggerIDs[18:20]).Return(triggersPointers[18:20], nil)
 
 			err := index.actualizeIndex()
 			So(err, ShouldBeNil)
@@ -66,6 +67,7 @@ func TestIndex_actualize(t *testing.T) {
 
 		Convey("Test reindexing old ones", func() {
 			dataBase.EXPECT().FetchTriggersToReindex(fakeTS).Return(triggerIDs[10:12], nil)
+			dataBase.EXPECT().GetTriggerChecks(triggerIDs[10:12]).Return(triggersPointers[10:12], nil)
 			dataBase.EXPECT().GetTriggerChecks(triggerIDs[10:12]).Return(triggersPointers[10:12], nil)
 
 			err := index.actualizeIndex()
