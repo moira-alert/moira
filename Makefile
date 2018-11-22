@@ -27,7 +27,7 @@ lint: prepare
 
 .PHONY: test
 test: prepare
-	echo 'mode: atomic' > coverage.txt && go test ./... -v -bench=. -covermode=atomic -coverprofile=coverage.tmp -cpu=4 -parallel=4 && tail -n +2 coverage.tmp >> coverage.txt && rm coverage.tmp
+	echo 'mode: atomic' > coverage.txt && go test ./... -v -bench=. -failfast -covermode=atomic -coverprofile=coverage.tmp -cpu=4 -parallel=4 && tail -n +2 coverage.tmp >> coverage.txt && rm coverage.tmp
 
 
 .PHONY: build
