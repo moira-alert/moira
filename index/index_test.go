@@ -119,7 +119,6 @@ func (index *Index) destroyIndex() {
 }
 
 func (index *Index) createIndex() error {
-	index.logger.Infof("Create new index for full-text search")
 	var err error
 	indexMapping := mapping.BuildIndexMapping(mapping.Trigger{})
 	index.index, err = buildIndex(indexMapping)

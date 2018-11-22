@@ -13,25 +13,23 @@ import (
 
 func BenchmarkIndex_FillWithDefaultBatchSize(b *testing.B) {
 	mockCtrl := gomock.NewController(b)
+	defer mockCtrl.Finish()
+
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Benchmark")
-	defer mockCtrl.Finish()
+
+	searchIndex := NewSearchIndex(logger, database)
 
 	var indexSizes = []int64{10, 50, 100, 500, 1000, 5000, 10000}
 
 	var numberOfTriggers = 10000
 
-	triggerIDs := make([]string, numberOfTriggers)
-	for i := range triggerIDs {
-		triggerIDs[i] = uuid.NewV4().String()
-	}
-
 	triggersPointers := make([]*moira.TriggerCheck, numberOfTriggers)
-	for i := range triggerIDs {
+	for i := range triggersPointers {
 		description := randStringBytes(500)
 		triggersPointers[i] = &moira.TriggerCheck{
 			Trigger: moira.Trigger{
-				ID:   triggerIDs[i],
+				ID:   uuid.NewV4().String(),
 				Name: randStringBytes(100),
 				Desc: &description,
 				Tags: []string{randStringBytes(5), randStringBytes(3)},
@@ -43,41 +41,38 @@ func BenchmarkIndex_FillWithDefaultBatchSize(b *testing.B) {
 	}
 
 	batchSize := defaultIndexBatchSize
+	indexFake := true
 
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N && i < len(indexSizes); i++ {
 		size := indexSizes[i]
-		logger.Infof("Index %d triggers", size)
-		newSearchIndex := NewSearchIndex(logger, database)
-		newTriggerIDs := triggerIDs[:size]
+		logger.Infof("[Benchmark] [BatchSize: %d] [Triggers: %d] [IndexFake: %v] Start", batchSize, size, indexFake)
 		newTriggerPointers := triggersPointers[:size]
-		batchFillIndexWithTriggers(newSearchIndex, database, newTriggerIDs, newTriggerPointers, batchSize)
-		logger.Info("Successfully indexed %d triggers", size)
+		fillIndexWithTriggers(searchIndex, newTriggerPointers, batchSize, indexFake)
+		logger.Infof("[Benchmark] [BatchSize: %d] [Triggers: %d] [IndexFake: %v] Finish", batchSize, size, indexFake)
 	}
 }
 
 func BenchmarkIndex_FillWithSeveralBatchSize(b *testing.B) {
 	mockCtrl := gomock.NewController(b)
+	defer mockCtrl.Finish()
+
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Benchmark")
-	defer mockCtrl.Finish()
+
+	searchIndex := NewSearchIndex(logger, database)
 
 	var batchSizes = []int{10, 50, 100, 250, 500, 750, 1000}
 
 	var numberOfTriggers = 1000
 
-	triggerIDs := make([]string, numberOfTriggers)
-	for i := range triggerIDs {
-		triggerIDs[i] = uuid.NewV4().String()
-	}
-
 	triggersPointers := make([]*moira.TriggerCheck, numberOfTriggers)
-	for i := range triggerIDs {
+	for i := range triggersPointers {
 		description := randStringBytes(500)
 		triggersPointers[i] = &moira.TriggerCheck{
 			Trigger: moira.Trigger{
-				ID:   triggerIDs[i],
+				ID:   uuid.NewV4().String(),
 				Name: randStringBytes(100),
 				Desc: &description,
 				Tags: []string{randStringBytes(5), randStringBytes(3)},
@@ -88,30 +83,43 @@ func BenchmarkIndex_FillWithSeveralBatchSize(b *testing.B) {
 		}
 	}
 
+	indexFake := true
+
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N && i < len(batchSizes); i++ {
 		size := batchSizes[i]
 		batchSize := size
-		logger.Infof("Index %d triggers", size)
-		newSearchIndex := NewSearchIndex(logger, database)
-		newTriggerIDs := triggerIDs[:size]
+		logger.Infof("[Benchmark] [BatchSize: %d] [Triggers: %d] [IndexFake: %v] Start", batchSize, size, indexFake)
 		newTriggerPointers := triggersPointers[:size]
-		batchFillIndexWithTriggers(newSearchIndex, database, newTriggerIDs, newTriggerPointers, batchSize)
-		logger.Info("Successfully indexed %d triggers", size)
+		fillIndexWithTriggers(searchIndex, newTriggerPointers, batchSize, indexFake)
+		logger.Infof("[Benchmark] [BatchSize: %d] [Triggers: %d] [IndexFake: %v] Finish", batchSize, size, indexFake)
 	}
 
+	indexFake = false
+	for i := 0; i < b.N && i < len(batchSizes); i++ {
+		size := batchSizes[i]
+		batchSize := size
+		logger.Infof("[Benchmark] [BatchSize: %d] [Triggers: %d] [IndexFake: %v] Start", batchSize, size, indexFake)
+		newTriggerPointers := triggersPointers[:size]
+		fillIndexWithTriggers(searchIndex, newTriggerPointers, batchSize, indexFake)
+		logger.Infof("[Benchmark] [BatchSize: %d] [Triggers: %d] [IndexFake: %v] Finish", batchSize, size, indexFake)
+	}
 }
 
-func batchFillIndexWithTriggers(index *Index, database *mock_moira_alert.MockDatabase, triggerIDs []string, triggerPointers []*moira.TriggerCheck, batchSize int) {
-	chunkedTriggerIDs := moira.ChunkSlice(triggerIDs, batchSize)
-	chunkedTriggerPointers := chunkTriggerChecks(triggerPointers, batchSize)
+func fillIndexWithTriggers(index *Index, triggerChecksToIndex []*moira.TriggerCheck, batchSize int, indexFakeTrigger bool) {
+	index.destroyIndex()
+	index.createIndex()
 
-	for i, slice := range chunkedTriggerIDs {
-		database.EXPECT().GetTriggerChecks(slice).Return(chunkedTriggerPointers[i], nil)
+	chunkedTriggersToIndex := chunkTriggerChecks(triggerChecksToIndex, batchSize)
+	if indexFakeTrigger {
+		index.indexTriggerCheck(fakeTriggerToIndex)
+		defer index.index.Delete(fakeTriggerToIndex.ID)
 	}
 
-	index.addTriggers(triggerIDs, batchSize)
+	for _, slice := range chunkedTriggersToIndex {
+		index.addBatchOfTriggerChecks(slice)
+	}
 }
 
 func randStringBytes(n int) string {
