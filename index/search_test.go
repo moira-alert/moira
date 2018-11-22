@@ -17,7 +17,6 @@ func TestIndex_SearchTriggers(t *testing.T) {
 	logger, _ := logging.GetLogger("Test")
 
 	index := NewSearchIndex(logger, dataBase)
-	defer index.Stop()
 
 	triggerIDs := make([]string, len(triggerChecks))
 	for i, trigger := range triggerChecks {
@@ -31,15 +30,15 @@ func TestIndex_SearchTriggers(t *testing.T) {
 		triggersPointers[i] = newTrigger
 	}
 
-	Convey("First of all, start and fill index", t, func() {
+	Convey("First of all, fill index", t, func() {
 		dataBase.EXPECT().GetAllTriggerIDs().Return(triggerIDs, nil)
 		dataBase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggersPointers, nil)
 
-		err := index.Start()
+		err := index.fillIndex()
+		index.indexed = true
 		So(err, ShouldBeNil)
 		docCount, _ := index.index.DocCount()
 		So(docCount, ShouldEqual, uint64(31))
-		So(index.IsReady(), ShouldBeTrue)
 	})
 
 	Convey("Search for triggers without pagination", t, func() {

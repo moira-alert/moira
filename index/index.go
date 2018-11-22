@@ -1,8 +1,6 @@
 package index
 
 import (
-	"time"
-
 	"github.com/blevesearch/bleve"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/index/mapping"
@@ -43,7 +41,6 @@ func (index *Index) Start() error {
 		return nil
 	}
 
-	index.indexActualizedTS = time.Now().Unix()
 	err := index.fillIndex()
 	if err == nil {
 		index.indexed = true

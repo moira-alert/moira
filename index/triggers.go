@@ -1,6 +1,8 @@
 package index
 
 import (
+	"time"
+
 	"github.com/blevesearch/bleve"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/index/mapping"
@@ -21,6 +23,7 @@ var (
 func (index *Index) fillIndex() error {
 	index.logger.Debugf("Start filling index with triggers")
 	index.inProgress = true
+	index.indexActualizedTS = time.Now().Unix()
 	allTriggerIDs, err := index.database.GetAllTriggerIDs()
 	index.logger.Debugf("Triggers IDs fetched from database: %d", len(allTriggerIDs))
 	if err != nil {

@@ -6,7 +6,6 @@ import (
 	"github.com/blevesearch/bleve"
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/index/mapping"
 	"github.com/moira-alert/moira/mock/moira-alert"
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
@@ -17,8 +16,6 @@ func TestIndex_CreateAndFill(t *testing.T) {
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Test")
-
-	index := NewSearchIndex(logger, dataBase)
 
 	triggerIDs := make([]string, len(triggerChecks))
 	for i, trigger := range triggerChecks {
@@ -33,13 +30,13 @@ func TestIndex_CreateAndFill(t *testing.T) {
 	}
 
 	Convey("Test create index", t, func() {
-		err := index.createIndex()
-		So(err, ShouldBeNil)
+		index := NewSearchIndex(logger, dataBase)
 		emptyIndex, _ := bleve.NewMemOnly(bleve.NewIndexMapping())
 		So(index.index, ShouldHaveSameTypeAs, emptyIndex)
 	})
 
 	Convey("Test fill index", t, func() {
+		index := NewSearchIndex(logger, dataBase)
 		dataBase.EXPECT().GetAllTriggerIDs().Return(triggerIDs, nil)
 		dataBase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggersPointers, nil)
 		err := index.fillIndex()
@@ -49,8 +46,7 @@ func TestIndex_CreateAndFill(t *testing.T) {
 	})
 
 	Convey("Test add Triggers to index", t, func() {
-		index.destroyIndex()
-		index.createIndex()
+		index := NewSearchIndex(logger, dataBase)
 		dataBase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggersPointers, nil)
 		count, err := index.addTriggers(triggerIDs, defaultIndexBatchSize)
 		So(err, ShouldBeNil)
@@ -60,8 +56,7 @@ func TestIndex_CreateAndFill(t *testing.T) {
 	})
 
 	Convey("Test add Triggers to index, batch size is less than number of triggers", t, func() {
-		index.destroyIndex()
-		index.createIndex()
+		index := NewSearchIndex(logger, dataBase)
 		dataBase.EXPECT().GetTriggerChecks(triggerIDs[:20]).Return(triggersPointers[:20], nil)
 		dataBase.EXPECT().GetTriggerChecks(triggerIDs[20:]).Return(triggersPointers[20:], nil)
 		count, err := index.addTriggers(triggerIDs, 20)
@@ -72,54 +67,24 @@ func TestIndex_CreateAndFill(t *testing.T) {
 	})
 
 	Convey("Test add Triggers to index where triggers are already presented", t, func() {
+		index := NewSearchIndex(logger, dataBase)
+
+		// first time
 		dataBase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggersPointers, nil)
 		count, err := index.addTriggers(triggerIDs, defaultIndexBatchSize)
 		So(err, ShouldBeNil)
 		So(count, ShouldEqual, 31)
 		docCount, _ := index.index.DocCount()
 		So(docCount, ShouldEqual, uint64(31))
-	})
 
-	Convey("Test start index from the beginning", t, func() {
-		newIndex := NewSearchIndex(logger, dataBase)
-		defer newIndex.destroyIndex()
-
-		dataBase.EXPECT().GetAllTriggerIDs().Return(triggerIDs, nil)
+		// second time
 		dataBase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggersPointers, nil)
-
-		err := newIndex.Start()
+		count, err = index.addTriggers(triggerIDs, defaultIndexBatchSize)
 		So(err, ShouldBeNil)
-		docCount, _ := newIndex.index.DocCount()
+		So(count, ShouldEqual, 31)
+		docCount, _ = index.index.DocCount()
 		So(docCount, ShouldEqual, uint64(31))
-		So(newIndex.IsReady(), ShouldBeTrue)
 	})
-
-	Convey("Test start and stop index", t, func() {
-		newIndex := NewSearchIndex(logger, dataBase)
-
-		dataBase.EXPECT().GetAllTriggerIDs().Return(triggerIDs, nil)
-		dataBase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggersPointers, nil)
-
-		err := newIndex.Start()
-		So(err, ShouldBeNil)
-		docCount, _ := newIndex.index.DocCount()
-		So(docCount, ShouldEqual, uint64(31))
-		So(newIndex.IsReady(), ShouldBeTrue)
-
-		err = newIndex.Stop()
-		So(err, ShouldBeNil)
-	})
-}
-
-func (index *Index) destroyIndex() {
-	index.index.Close()
-}
-
-func (index *Index) createIndex() error {
-	var err error
-	indexMapping := mapping.BuildIndexMapping(mapping.Trigger{})
-	index.index, err = buildIndex(indexMapping)
-	return err
 }
 
 var triggerChecks = []moira.TriggerCheck{
