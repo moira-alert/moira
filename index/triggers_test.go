@@ -1,6 +1,7 @@
 package index
 
 import (
+	"fmt"
 	"math/rand"
 	"testing"
 
@@ -10,31 +11,45 @@ import (
 	"github.com/satori/go.uuid"
 )
 
+type config struct {
+	triggersSize     int
+	batchSize        int
+	indexFakeTrigger bool
+}
+
+var testCases = []config{
+	{50, 1000, true},
+	{100, 1000, true},
+	{250, 1000, true},
+	{500, 1000, true},
+	{1000, 1000, true},
+	{5000, 1000, true},
+	{10000, 1000, true},
+	{100, 10, true},
+	{500, 50, true},
+	{1000, 100, true},
+	{2500, 250, true},
+	{5000, 500, true},
+	{10, 1000, false},
+	{50, 1000, false},
+	{100, 1000, false},
+	{250, 1000, false},
+	{500, 1000, false},
+	{1000, 1000, false},
+	{100, 10, false},
+	{500, 50, false},
+	{1000, 100, false},
+	{2500, 250, false},
+	{5000, 500, false},
+}
+
 func BenchmarkFillIndex(b *testing.B) {
-	b.Run("Benchmark: Size 10, Batch 1000, Index fake trigger", func(b *testing.B) { runBenchmark(b, 10, 1000, true) })
-	b.Run("Benchmark: Size 50, Batch 1000, Index fake trigger", func(b *testing.B) { runBenchmark(b, 50, 1000, true) })
-	b.Run("Benchmark: Size 100, Batch 1000, Index fake trigger", func(b *testing.B) { runBenchmark(b, 100, 1000, true) })
-	b.Run("Benchmark: Size 250, Batch 1000, Index fake trigger", func(b *testing.B) { runBenchmark(b, 250, 1000, true) })
-	b.Run("Benchmark: Size 500, Batch 1000, Index fake trigger", func(b *testing.B) { runBenchmark(b, 500, 1000, true) })
-	b.Run("Benchmark: Size 1000, Batch 1000, Index fake trigger", func(b *testing.B) { runBenchmark(b, 1000, 1000, true) })
-	b.Run("Benchmark: Size 5000, Batch 1000, Index fake trigger", func(b *testing.B) { runBenchmark(b, 5000, 1000, true) })
-	b.Run("Benchmark: Size 10000, Batch 1000, Index fake trigger", func(b *testing.B) { runBenchmark(b, 10000, 1000, true) })
-	b.Run("Benchmark: Size 100, Batch 10, Index fake trigger", func(b *testing.B) { runBenchmark(b, 100, 10, true) })
-	b.Run("Benchmark: Size 500, Batch 50, Index fake trigger", func(b *testing.B) { runBenchmark(b, 500, 50, true) })
-	b.Run("Benchmark: Size 1000, Batch 100, Index fake trigger", func(b *testing.B) { runBenchmark(b, 1000, 100, true) })
-	b.Run("Benchmark: Size 2500, Batch 250, Index fake trigger", func(b *testing.B) { runBenchmark(b, 2500, 250, true) })
-	b.Run("Benchmark: Size 5000, Batch 500, Index fake trigger", func(b *testing.B) { runBenchmark(b, 5000, 500, true) })
-	b.Run("Benchmark: Size 10, Batch 1000, NO index fake trigger", func(b *testing.B) { runBenchmark(b, 10, 1000, false) })
-	b.Run("Benchmark: Size 50, Batch 1000, NO index fake trigger", func(b *testing.B) { runBenchmark(b, 50, 1000, false) })
-	b.Run("Benchmark: Size 100, Batch 1000, NO index fake trigger", func(b *testing.B) { runBenchmark(b, 100, 1000, false) })
-	b.Run("Benchmark: Size 250, Batch 1000, NO index fake trigger", func(b *testing.B) { runBenchmark(b, 250, 1000, false) })
-	b.Run("Benchmark: Size 500, Batch 1000, NO index fake trigger", func(b *testing.B) { runBenchmark(b, 500, 1000, false) })
-	b.Run("Benchmark: Size 1000, Batch 1000, NO index fake trigger", func(b *testing.B) { runBenchmark(b, 1000, 1000, false) })
-	b.Run("Benchmark: Size 100, Batch 10, NO index fake trigger", func(b *testing.B) { runBenchmark(b, 100, 10, false) })
-	b.Run("Benchmark: Size 500, Batch 50, NO index fake trigger", func(b *testing.B) { runBenchmark(b, 500, 50, false) })
-	b.Run("Benchmark: Size 1000, Batch 100, NO index fake trigger", func(b *testing.B) { runBenchmark(b, 1000, 100, false) })
-	b.Run("Benchmark: Size 2500, Batch 250, NO index fake trigger", func(b *testing.B) { runBenchmark(b, 2500, 250, false) })
-	b.Run("Benchmark: Size 5000, Batch 500, NO index fake trigger", func(b *testing.B) { runBenchmark(b, 5000, 500, false) })
+	for _, testCase := range testCases {
+		b.Run(fmt.Sprintf("BenchmarkFillIndex_Size:%d_Batch:%d_IndexFakeTrigger:%t", testCase.triggersSize, testCase.batchSize, testCase.indexFakeTrigger),
+			func(b *testing.B) {
+				runBenchmark(b, testCase.triggersSize, testCase.batchSize, testCase.indexFakeTrigger)
+			})
+	}
 }
 
 func runBenchmark(b *testing.B, triggersSize int, batchSize int, indexFakeTrigger bool) {

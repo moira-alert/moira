@@ -108,9 +108,6 @@ func TestIndex_CreateAndFill(t *testing.T) {
 
 		err = newIndex.Stop()
 		So(err, ShouldBeNil)
-		docCount, err = newIndex.index.DocCount()
-		So(err, ShouldNotBeNil)
-		So(docCount, ShouldEqual, 0)
 	})
 }
 
