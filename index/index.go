@@ -65,6 +65,5 @@ func (index *Index) IsReady() bool {
 func (index *Index) Stop() error {
 	index.logger.Info("Stop search index")
 	index.tomb.Kill(nil)
-	defer index.index.Close()
 	return index.tomb.Wait()
 }

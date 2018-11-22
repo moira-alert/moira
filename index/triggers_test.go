@@ -10,114 +10,34 @@ import (
 	"github.com/satori/go.uuid"
 )
 
-func BenchmarkSize10Batch1000WithFakeTrigger(b *testing.B) {
-	benchmarkIndex(b, 10, 1000, true)
+func BenchmarkFillIndex(b *testing.B) {
+	b.Run("Benchmark: Size 10, Batch 1000, Index fake trigger", func(b *testing.B) { runBenchmark(b, 10, 1000, true) })
+	b.Run("Benchmark: Size 50, Batch 1000, Index fake trigger", func(b *testing.B) { runBenchmark(b, 50, 1000, true) })
+	b.Run("Benchmark: Size 100, Batch 1000, Index fake trigger", func(b *testing.B) { runBenchmark(b, 100, 1000, true) })
+	b.Run("Benchmark: Size 250, Batch 1000, Index fake trigger", func(b *testing.B) { runBenchmark(b, 250, 1000, true) })
+	b.Run("Benchmark: Size 500, Batch 1000, Index fake trigger", func(b *testing.B) { runBenchmark(b, 500, 1000, true) })
+	b.Run("Benchmark: Size 1000, Batch 1000, Index fake trigger", func(b *testing.B) { runBenchmark(b, 1000, 1000, true) })
+	b.Run("Benchmark: Size 5000, Batch 1000, Index fake trigger", func(b *testing.B) { runBenchmark(b, 5000, 1000, true) })
+	b.Run("Benchmark: Size 10000, Batch 1000, Index fake trigger", func(b *testing.B) { runBenchmark(b, 10000, 1000, true) })
+	b.Run("Benchmark: Size 100, Batch 10, Index fake trigger", func(b *testing.B) { runBenchmark(b, 100, 10, true) })
+	b.Run("Benchmark: Size 500, Batch 50, Index fake trigger", func(b *testing.B) { runBenchmark(b, 500, 50, true) })
+	b.Run("Benchmark: Size 1000, Batch 100, Index fake trigger", func(b *testing.B) { runBenchmark(b, 1000, 100, true) })
+	b.Run("Benchmark: Size 2500, Batch 250, Index fake trigger", func(b *testing.B) { runBenchmark(b, 2500, 250, true) })
+	b.Run("Benchmark: Size 5000, Batch 500, Index fake trigger", func(b *testing.B) { runBenchmark(b, 5000, 500, true) })
+	b.Run("Benchmark: Size 10, Batch 1000, NO index fake trigger", func(b *testing.B) { runBenchmark(b, 10, 1000, false) })
+	b.Run("Benchmark: Size 50, Batch 1000, NO index fake trigger", func(b *testing.B) { runBenchmark(b, 50, 1000, false) })
+	b.Run("Benchmark: Size 100, Batch 1000, NO index fake trigger", func(b *testing.B) { runBenchmark(b, 100, 1000, false) })
+	b.Run("Benchmark: Size 250, Batch 1000, NO index fake trigger", func(b *testing.B) { runBenchmark(b, 250, 1000, false) })
+	b.Run("Benchmark: Size 500, Batch 1000, NO index fake trigger", func(b *testing.B) { runBenchmark(b, 500, 1000, false) })
+	b.Run("Benchmark: Size 1000, Batch 1000, NO index fake trigger", func(b *testing.B) { runBenchmark(b, 1000, 1000, false) })
+	b.Run("Benchmark: Size 100, Batch 10, NO index fake trigger", func(b *testing.B) { runBenchmark(b, 100, 10, false) })
+	b.Run("Benchmark: Size 500, Batch 50, NO index fake trigger", func(b *testing.B) { runBenchmark(b, 500, 50, false) })
+	b.Run("Benchmark: Size 1000, Batch 100, NO index fake trigger", func(b *testing.B) { runBenchmark(b, 1000, 100, false) })
+	b.Run("Benchmark: Size 2500, Batch 250, NO index fake trigger", func(b *testing.B) { runBenchmark(b, 2500, 250, false) })
+	b.Run("Benchmark: Size 5000, Batch 500, NO index fake trigger", func(b *testing.B) { runBenchmark(b, 5000, 500, false) })
 }
 
-func BenchmarkSize50Batch1000WithFakeTrigger(b *testing.B) {
-	benchmarkIndex(b, 50, 1000, true)
-}
-
-func BenchmarkSize100Batch1000WithFakeTrigger(b *testing.B) {
-	benchmarkIndex(b, 100, 1000, true)
-}
-
-func BenchmarkSize250Batch1000WithFakeTrigger(b *testing.B) {
-	benchmarkIndex(b, 250, 1000, true)
-}
-
-func BenchmarkSize500Batch1000WithFakeTrigger(b *testing.B) {
-	benchmarkIndex(b, 500, 1000, true)
-}
-
-func BenchmarkSize1000Batch1000WithFakeTrigger(b *testing.B) {
-	benchmarkIndex(b, 1000, 1000, true)
-}
-
-func BenchmarkSize5000Batch1000WithFakeTrigger(b *testing.B) {
-	benchmarkIndex(b, 5000, 1000, true)
-}
-
-func BenchmarkSize10000Batch1000WithFakeTrigger(b *testing.B) {
-	benchmarkIndex(b, 10000, 1000, true)
-}
-
-func BenchmarkSize100Batch10WithFakeTrigger(b *testing.B) {
-	benchmarkIndex(b, 100, 10, true)
-}
-
-func BenchmarkSize500Batch50WithFakeTrigger(b *testing.B) {
-	benchmarkIndex(b, 500, 50, true)
-}
-
-func BenchmarkSize1000Batch100WithFakeTrigger(b *testing.B) {
-	benchmarkIndex(b, 1000, 100, true)
-}
-
-func BenchmarkSize2500Batch250WithFakeTrigger(b *testing.B) {
-	benchmarkIndex(b, 2500, 250, true)
-
-}
-
-func BenchmarkSize5000Batch500WithFakeTrigger(b *testing.B) {
-	benchmarkIndex(b, 5000, 500, true)
-
-}
-
-func BenchmarkSize10Batch1000WithNoFakeTrigger(b *testing.B) {
-	benchmarkIndex(b, 10, 1000, false)
-
-}
-
-func BenchmarkSize50Batch1000WithNoFakeTrigger(b *testing.B) {
-	benchmarkIndex(b, 50, 1000, false)
-}
-
-func BenchmarkSize100Batch1000WithNoFakeTrigger(b *testing.B) {
-	benchmarkIndex(b, 100, 1000, false)
-
-}
-
-func BenchmarkSize250Batch1000WithNoFakeTrigger(b *testing.B) {
-	benchmarkIndex(b, 250, 1000, false)
-
-}
-
-func BenchmarkSize500Batch1000WithNoFakeTrigger(b *testing.B) {
-	benchmarkIndex(b, 500, 1000, false)
-
-}
-
-func BenchmarkSize1000Batch1000WithNoFakeTrigger(b *testing.B) {
-	benchmarkIndex(b, 1000, 1000, false)
-
-}
-
-func BenchmarkSize100Batch10WithNoFakeTrigger(b *testing.B) {
-	benchmarkIndex(b, 100, 10, false)
-
-}
-
-func BenchmarkSize500Batch50WithNoFakeTrigger(b *testing.B) {
-	benchmarkIndex(b, 500, 50, false)
-
-}
-
-func BenchmarkSize1000Batch100WithNoFakeTrigger(b *testing.B) {
-	benchmarkIndex(b, 1000, 100, false)
-
-}
-
-func BenchmarkSize2500Batch250WithNoFakeTrigger(b *testing.B) {
-	benchmarkIndex(b, 2500, 250, false)
-
-}
-
-func BenchmarkSize5000Batch500WithNoFakeTrigger(b *testing.B) {
-	benchmarkIndex(b, 5000, 500, false)
-}
-
-func benchmarkIndex(b *testing.B, triggersSize int, batchSize int, indexFakeTrigger bool) {
+func runBenchmark(b *testing.B, triggersSize int, batchSize int, indexFakeTrigger bool) {
 	logger, _ := logging.GetLogger("Benchmark")
 	database := redis.NewDatabase(logger, redis.Config{})
 
