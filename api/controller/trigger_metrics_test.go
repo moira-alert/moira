@@ -13,6 +13,7 @@ import (
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/mock/moira-alert"
+	"github.com/moira-alert/moira/remote"
 )
 
 func TestDeleteTriggerMetric(t *testing.T) {
@@ -298,27 +299,28 @@ func TestGetTriggerMetrics(t *testing.T) {
 	var from int64 = 17
 	var until int64 = 67
 	var retention int64 = 10
+	var remoteCfg *remote.Config
 
 	Convey("Has metrics", t, func() {
 		dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{ID: triggerID, Targets: []string{pattern}}, nil)
 		dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
 		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 		dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
-		triggerMetrics, err := GetTriggerMetrics(dataBase, from, until, triggerID)
+		triggerMetrics, err := GetTriggerMetrics(dataBase, remoteCfg, from, until, triggerID)
 		So(err, ShouldBeNil)
 		So(*triggerMetrics, ShouldResemble, dto.TriggerMetrics{Main: map[string][]*moira.MetricValue{metric: {{Value: 0, Timestamp: 17}, {Value: 1, Timestamp: 27}, {Value: 2, Timestamp: 37}, {Value: 3, Timestamp: 47}, {Value: 4, Timestamp: 57}}}, Additional: make(map[string][]*moira.MetricValue)})	})
 
 	Convey("GetTrigger error", t, func() {
 		expected := fmt.Errorf("get trigger error")
 		dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{}, expected)
-		triggerMetrics, err := GetTriggerMetrics(dataBase, from, until, triggerID)
+		triggerMetrics, err := GetTriggerMetrics(dataBase, remoteCfg, from, until, triggerID)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 		So(triggerMetrics, ShouldBeNil)
 	})
 
 	Convey("No trigger", t, func() {
 		dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{}, database.ErrNil)
-		triggerMetrics, err := GetTriggerMetrics(dataBase, from, until, triggerID)
+		triggerMetrics, err := GetTriggerMetrics(dataBase, remoteCfg, from, until, triggerID)
 		So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("trigger not found")))
 		So(triggerMetrics, ShouldBeNil)
 	})
@@ -329,7 +331,7 @@ func TestGetTriggerMetrics(t *testing.T) {
 		dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
 		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 		dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(nil, expected)
-		triggerMetrics, err := GetTriggerMetrics(dataBase, from, until, triggerID)
+		triggerMetrics, err := GetTriggerMetrics(dataBase, remoteCfg, from, until, triggerID)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 		So(triggerMetrics, ShouldBeNil)
 	})
