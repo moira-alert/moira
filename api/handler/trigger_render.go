@@ -15,15 +15,16 @@ import (
 	"github.com/moira-alert/moira/api/controller"
 	"github.com/moira-alert/moira/api/middleware"
 	"github.com/moira-alert/moira/plotting"
+	"github.com/moira-alert/moira/remote"
 )
 
 func renderTrigger(writer http.ResponseWriter, request *http.Request) {
-	from, to, triggerID, err := getMetricParameters(request)
+	remoteCfg, from, to, triggerID, err := getMetricParameters(request)
 	if err != nil {
 		render.Render(writer, request, api.ErrorInvalidRequest(err))
 		return
 	}
-	metricsData, trigger, err := evaluateTriggerMetrics(from, to, triggerID)
+	metricsData, trigger, err := evaluateTriggerMetrics(remoteCfg, from, to, triggerID)
 	if err != nil {
 		render.Render(writer, request, api.ErrorInternalServer(err))
 		return
@@ -40,23 +41,24 @@ func renderTrigger(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func getMetricParameters(request *http.Request) (from int64, to int64, triggerID string, err error) {
+func getMetricParameters(request *http.Request) (remoteCfg *remote.Config, from int64, to int64, triggerID string, err error) {
+	remoteCfg = middleware.GetRemoteConfig(request)
 	triggerID = middleware.GetTriggerID(request)
 	fromStr := middleware.GetFromStr(request)
 	toStr := middleware.GetToStr(request)
 	from = date.DateParamToEpoch(fromStr, "UTC", 0, time.UTC)
 	if from == 0 {
-		return 0, 0, "", fmt.Errorf("can not parse from: %s", fromStr)
+		return remoteCfg, 0, 0, "", fmt.Errorf("can not parse from: %s", fromStr)
 	}
 	to = date.DateParamToEpoch(toStr, "UTC", 0, time.UTC)
 	if to == 0 {
-		return 0, 0, "", fmt.Errorf("can not parse to: %s", fromStr)
+		return remoteCfg, 0, 0, "", fmt.Errorf("can not parse to: %s", fromStr)
 	}
 	return
 }
 
-func evaluateTriggerMetrics(from, to int64, triggerID string) ([]*types.MetricData, *moira.Trigger, error) {
-	tts, trigger, err := controller.GetTriggerEvaluationResult(database, from, to, triggerID)
+func evaluateTriggerMetrics(remoteCfg *remote.Config, from, to int64, triggerID string) ([]*types.MetricData, *moira.Trigger, error) {
+	tts, trigger, err := controller.GetTriggerEvaluationResult(database, remoteCfg, from, to, triggerID)
 	if err != nil {
 		return nil, trigger, err
 	}

@@ -8,12 +8,15 @@ import (
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/checker"
 	"github.com/moira-alert/moira/database"
+	"github.com/moira-alert/moira/remote"
 	"github.com/moira-alert/moira/target"
 )
 
 // GetTriggerEvaluationResult evaluates every target in trigger and returns
 // result, separated on main and additional targets metrics
-func GetTriggerEvaluationResult(dataBase moira.Database, from, to int64, triggerID string) (*checker.TriggerTimeSeries, *moira.Trigger, error) {
+func GetTriggerEvaluationResult(dataBase moira.Database, remoteConfig *remote.Config,
+	from, to int64, triggerID string) (*checker.TriggerTimeSeries, *moira.Trigger, error) {
+	allowRealtimeAllerting := true
 	trigger, err := dataBase.GetTrigger(triggerID)
 	if err != nil {
 		return nil, nil, err
@@ -22,15 +25,27 @@ func GetTriggerEvaluationResult(dataBase moira.Database, from, to int64, trigger
 		Main:       make([]*target.TimeSeries, 0),
 		Additional: make([]*target.TimeSeries, 0),
 	}
+	if trigger.IsRemote && !remoteConfig.IsEnabled() {
+		return nil, &trigger, fmt.Errorf("remote graphite storage is not enabled")
+	}
 	for i, tar := range trigger.Targets {
-		result, err := target.EvaluateTarget(dataBase, tar, from, to, true)
-		if err != nil {
-			return nil, &trigger, err
+		var timeSeries []*target.TimeSeries
+		if trigger.IsRemote {
+			timeSeries, err = remote.Fetch(remoteConfig, tar, from, to, allowRealtimeAllerting)
+			if err != nil {
+				return nil, &trigger, err
+			}
+		} else {
+			result, err := target.EvaluateTarget(dataBase, tar, from, to, allowRealtimeAllerting)
+			if err != nil {
+				return nil, &trigger, err
+			}
+			timeSeries = result.TimeSeries
 		}
 		if i == 0 {
-			triggerMetrics.Main = result.TimeSeries
+			triggerMetrics.Main = timeSeries
 		} else {
-			triggerMetrics.Additional = append(triggerMetrics.Additional, result.TimeSeries...)
+			triggerMetrics.Additional = append(triggerMetrics.Additional, timeSeries...)
 		}
 	}
 	return triggerMetrics, &trigger, nil
@@ -48,8 +63,9 @@ func DeleteTriggerNodataMetrics(dataBase moira.Database, triggerID string) *api.
 }
 
 // GetTriggerMetrics gets all trigger metrics values, default values from: now - 10min, to: now
-func GetTriggerMetrics(dataBase moira.Database, from, to int64, triggerID string) (*dto.TriggerMetrics, *api.ErrorResponse) {
-	tts, _, err := GetTriggerEvaluationResult(dataBase, from, to, triggerID)
+func GetTriggerMetrics(dataBase moira.Database, remoteConfig *remote.Config,
+	from, to int64, triggerID string) (*dto.TriggerMetrics, *api.ErrorResponse) {
+	tts, _, err := GetTriggerEvaluationResult(dataBase, remoteConfig, from, to, triggerID)
 	if err != nil {
 		if err == database.ErrNil {
 			return nil, api.ErrorInvalidRequest(fmt.Errorf("trigger not found"))
