@@ -19,14 +19,7 @@ type plotCurve struct {
 // getCurveSeriesList returns curve series list
 func getCurveSeriesList(metricsData []*types.MetricData, theme moira.PlotTheme, metricsWhitelist []string) []chart.TimeSeries {
 	curveSeriesList := make([]chart.TimeSeries, 0)
-	switch len(metricsWhitelist) {
-	case 0:
-		for metricDataInd := range metricsData {
-			curveStyle := theme.GetCurveStyle(metricDataInd)
-			curveSeries := generatePlotCurves(metricsData[metricDataInd], curveStyle)
-			curveSeriesList = append(curveSeriesList, curveSeries...)
-		}
-	default:
+	if len(metricsWhitelist) > 0 {
 		metricsProcessed := 0
 		for metricDataInd := range metricsData {
 			if !mustBeShown(metricsData[metricDataInd].Name, metricsWhitelist) {
@@ -39,6 +32,12 @@ func getCurveSeriesList(metricsData []*types.MetricData, theme moira.PlotTheme, 
 			if metricsProcessed == len(metricsWhitelist)-1 {
 				break
 			}
+		}
+	} else {
+		for metricDataInd := range metricsData {
+			curveStyle := theme.GetCurveStyle(metricDataInd)
+			curveSeries := generatePlotCurves(metricsData[metricDataInd], curveStyle)
+			curveSeriesList = append(curveSeriesList, curveSeries...)
 		}
 	}
 	return curveSeriesList
@@ -73,12 +72,11 @@ func describePlotCurves(metricData *types.MetricData) []plotCurve {
 
 	for valInd := start; valInd < len(metricData.Values); valInd++ {
 		pointValue := metricData.Values[valInd]
-		switch math.IsNaN(pointValue) {
-		case false:
+		if !math.IsNaN(pointValue) {
 			timeStampValue := int64ToTime(timeStamp)
 			curves[curvesInd].timeStamps = append(curves[curvesInd].timeStamps, timeStampValue)
 			curves[curvesInd].values = append(curves[curvesInd].values, pointValue)
-		case true:
+		} else {
 			if len(curves[curvesInd].values) > 0 {
 				curves = append(curves, plotCurve{})
 				curvesInd++
