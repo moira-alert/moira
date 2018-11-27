@@ -33,10 +33,16 @@ func TestGeneratePlotCurves(t *testing.T) {
 		metricName := "metric.firstValueIsAbsent"
 		metricData.FetchResponse.Name = metricName
 		metricData.Values = firstValIsAbsentVals
-		curveSeries := generatePlotCurves(&metricData, chart.Style{})
+		curveSeries := generatePlotCurves(&metricData, chart.Style{}, chart.Style{})
+		So(len(curveSeries), ShouldEqual, 2)
 		So(curveSeries[0].Name, ShouldEqual, metricName)
-		So(curveSeries[0].YValues, ShouldResemble, []float64{54, 20, 43, 56, 2, 79, 76})
+		So(curveSeries[0].YValues, ShouldResemble, []float64{32})
 		So(curveSeries[0].XValues, ShouldResemble, []time.Time{
+			int64ToTime(20),
+		})
+		So(curveSeries[1].Name, ShouldEqual, metricName)
+		So(curveSeries[1].YValues, ShouldResemble, []float64{54, 20, 43, 56, 2, 79, 76})
+		So(curveSeries[1].XValues, ShouldResemble, []time.Time{
 			int64ToTime(40),
 			int64ToTime(50),
 			int64ToTime(60),
@@ -50,8 +56,8 @@ func TestGeneratePlotCurves(t *testing.T) {
 		metricName := "metric.firstValueIsPresent"
 		metricData.FetchResponse.Name = metricName
 		metricData.Values = firstValIsPresentVals
-		curveSeries := generatePlotCurves(&metricData, chart.Style{})
-		So(len(curveSeries), ShouldEqual, 2)
+		curveSeries := generatePlotCurves(&metricData, chart.Style{}, chart.Style{})
+		So(len(curveSeries), ShouldEqual, 3)
 		So(curveSeries[0].Name, ShouldEqual, metricName)
 		So(curveSeries[0].YValues, ShouldResemble, []float64{11, 23, 45})
 		So(curveSeries[0].XValues, ShouldResemble, []time.Time{
@@ -60,8 +66,13 @@ func TestGeneratePlotCurves(t *testing.T) {
 			int64ToTime(20),
 		})
 		So(curveSeries[1].Name, ShouldEqual, metricName)
-		So(curveSeries[1].YValues, ShouldResemble, []float64{32, 65, 78, 76, 74})
+		So(curveSeries[1].YValues, ShouldResemble, []float64{47})
 		So(curveSeries[1].XValues, ShouldResemble, []time.Time{
+			int64ToTime(40),
+		})
+		So(curveSeries[2].Name, ShouldEqual, metricName)
+		So(curveSeries[2].YValues, ShouldResemble, []float64{32, 65, 78, 76, 74})
+		So(curveSeries[2].XValues, ShouldResemble, []time.Time{
 			int64ToTime(60),
 			int64ToTime(70),
 			int64ToTime(80),

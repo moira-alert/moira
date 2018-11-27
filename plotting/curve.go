@@ -25,8 +25,8 @@ func getCurveSeriesList(metricsData []*types.MetricData, theme moira.PlotTheme, 
 			if !mustBeShown(metricsData[metricDataInd].Name, metricsWhitelist) {
 				continue
 			}
-			curveStyle := theme.GetCurveStyle(metricDataInd)
-			curveSeries := generatePlotCurves(metricsData[metricDataInd], curveStyle)
+			curveStyle, pointStyle := theme.GetSerieStyles(metricDataInd)
+			curveSeries := generatePlotCurves(metricsData[metricDataInd], curveStyle, pointStyle)
 			curveSeriesList = append(curveSeriesList, curveSeries...)
 			metricsProcessed++
 			if metricsProcessed == len(metricsWhitelist)-1 {
@@ -35,8 +35,8 @@ func getCurveSeriesList(metricsData []*types.MetricData, theme moira.PlotTheme, 
 		}
 	} else {
 		for metricDataInd := range metricsData {
-			curveStyle := theme.GetCurveStyle(metricDataInd)
-			curveSeries := generatePlotCurves(metricsData[metricDataInd], curveStyle)
+			curveStyle, pointStyle := theme.GetSerieStyles(metricDataInd)
+			curveSeries := generatePlotCurves(metricsData[metricDataInd], curveStyle, pointStyle)
 			curveSeriesList = append(curveSeriesList, curveSeries...)
 		}
 	}
@@ -44,21 +44,24 @@ func getCurveSeriesList(metricsData []*types.MetricData, theme moira.PlotTheme, 
 }
 
 // generatePlotCurves returns go-chart timeseries to generate plot curves
-func generatePlotCurves(metricData *types.MetricData, curveStyle chart.Style) []chart.TimeSeries {
-	// TODO: create style to draw single value in between of gaps
+func generatePlotCurves(metricData *types.MetricData, curveStyle chart.Style, pointStyle chart.Style) []chart.TimeSeries {
 	curves := describePlotCurves(metricData)
 	curveSeries := make([]chart.TimeSeries, 0)
 	for _, curve := range curves {
+		var serieStyle chart.Style
 		if len(curve.values) > 1 {
-			curveSerie := chart.TimeSeries{
-				Name:    metricData.Name,
-				YAxis:   chart.YAxisSecondary,
-				Style:   curveStyle,
-				XValues: curve.timeStamps,
-				YValues: curve.values,
-			}
-			curveSeries = append(curveSeries, curveSerie)
+			serieStyle = curveStyle
+		} else {
+			serieStyle = pointStyle
 		}
+		curveSerie := chart.TimeSeries{
+			Name:    metricData.Name,
+			YAxis:   chart.YAxisSecondary,
+			Style:   serieStyle,
+			XValues: curve.timeStamps,
+			YValues: curve.values,
+		}
+		curveSeries = append(curveSeries, curveSerie)
 	}
 	return curveSeries
 }

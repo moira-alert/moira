@@ -109,20 +109,27 @@ func (theme *PlotTheme) GetAnnotationStyle(thresholdType string) chart.Style {
 	}
 }
 
-// GetCurveStyle returns curve style
-func (theme *PlotTheme) GetCurveStyle(curveInd int) chart.Style {
+// GetSerieStyles returns curve and single point styles
+func (theme *PlotTheme) GetSerieStyles(curveInd int) (chart.Style, chart.Style) {
 	var curveColor string
 	if curveInd >= len(theme.curveColors)-1 {
 		curveColor = theme.curveColors[0]
 	} else {
 		curveColor = theme.curveColors[curveInd]
 	}
-	return chart.Style{
+	curveStyle := chart.Style{
 		Show:        true,
 		StrokeWidth: 1,
 		StrokeColor: drawing.ColorFromHex(curveColor).WithAlpha(90),
 		FillColor:   drawing.ColorFromHex(curveColor).WithAlpha(20),
 	}
+	pointStyle := chart.Style{
+		Show:        true,
+		StrokeWidth: chart.Disabled,
+		DotWidth:    1,
+		DotColor:    drawing.ColorFromHex(curveColor).WithAlpha(90),
+	}
+	return curveStyle, pointStyle
 }
 
 // GetLegendStyle returns legend style
