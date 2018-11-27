@@ -19,7 +19,7 @@ import (
 )
 
 func renderTrigger(writer http.ResponseWriter, request *http.Request) {
-	remoteCfg, from, to, triggerID, err := getMetricParameters(request)
+	remoteCfg, from, to, triggerID, err := getEvaluationParameters(request)
 	if err != nil {
 		render.Render(writer, request, api.ErrorInvalidRequest(err))
 		return
@@ -41,7 +41,7 @@ func renderTrigger(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func getMetricParameters(request *http.Request) (remoteCfg *remote.Config, from int64, to int64, triggerID string, err error) {
+func getEvaluationParameters(request *http.Request) (remoteCfg *remote.Config, from int64, to int64, triggerID string, err error) {
 	remoteCfg = middleware.GetRemoteConfig(request)
 	triggerID = middleware.GetTriggerID(request)
 	fromStr := middleware.GetFromStr(request)
