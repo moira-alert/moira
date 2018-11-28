@@ -4,10 +4,15 @@ import (
 	"github.com/blevesearch/bleve"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/index/mapping"
+	"github.com/moira-alert/moira/metrics/graphite"
+	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
 	"gopkg.in/tomb.v2"
 )
 
-const defaultIndexBatchSize = 1000
+const (
+	defaultIndexBatchSize = 1000
+	serviceName           = "searchIndex"
+)
 
 // Index represents Index for Bleve.Index type
 type Index struct {
@@ -15,6 +20,7 @@ type Index struct {
 	logger            moira.Logger
 	database          moira.Database
 	tomb              tomb.Tomb
+	metrics           *graphite.IndexMetrics
 	inProgress        bool
 	indexed           bool
 	indexActualizedTS int64
@@ -27,6 +33,7 @@ func NewSearchIndex(logger moira.Logger, database moira.Database) *Index {
 		logger:   logger,
 		database: database,
 	}
+	newIndex.metrics = metrics.ConfigureIndexMetrics(serviceName)
 	indexMapping := mapping.BuildIndexMapping(mapping.Trigger{})
 	newIndex.index, err = buildIndex(indexMapping)
 	if err != nil {
@@ -49,6 +56,8 @@ func (index *Index) Start() error {
 
 	index.tomb.Go(index.runIndexActualizer)
 	index.tomb.Go(index.runTriggersToReindexSweepper)
+	index.tomb.Go(index.checkIndexActualizationLag)
+	index.tomb.Go(index.checkIndexedTriggersCount)
 
 	return err
 }
