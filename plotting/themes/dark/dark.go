@@ -111,23 +111,24 @@ func (theme *PlotTheme) GetAnnotationStyle(thresholdType string) chart.Style {
 
 // GetSerieStyles returns curve and single point styles
 func (theme *PlotTheme) GetSerieStyles(curveInd int) (chart.Style, chart.Style) {
-	var curveColor string
+	var curveColor drawing.Color
 	if curveInd >= len(theme.curveColors)-1 {
-		curveColor = theme.curveColors[0]
+		curveColor = drawing.ColorFromHex(theme.curveColors[0])
 	} else {
-		curveColor = theme.curveColors[curveInd]
+		curveColor = drawing.ColorFromHex(theme.curveColors[curveInd])
 	}
+	curveWidth := float64(1)
 	curveStyle := chart.Style{
 		Show:        true,
-		StrokeWidth: 1,
-		StrokeColor: drawing.ColorFromHex(curveColor).WithAlpha(90),
-		FillColor:   drawing.ColorFromHex(curveColor).WithAlpha(20),
+		StrokeWidth: curveWidth,
+		StrokeColor: curveColor.WithAlpha(90),
+		FillColor:   curveColor.WithAlpha(20),
 	}
 	pointStyle := chart.Style{
 		Show:        true,
 		StrokeWidth: chart.Disabled,
-		DotWidth:    1,
-		DotColor:    drawing.ColorFromHex(curveColor).WithAlpha(90),
+		DotWidth:    curveWidth/2,
+		DotColor:    curveColor.WithAlpha(90),
 	}
 	return curveStyle, pointStyle
 }

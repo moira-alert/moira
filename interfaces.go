@@ -154,7 +154,7 @@ type PlotTheme interface {
 	GetBackgroundStyle() chart.Style
 	GetThresholdStyle(thresholdType string) chart.Style
 	GetAnnotationStyle(thresholdType string) chart.Style
-	GetSerieStyles(curveInd int) (chart.Style, chart.Style)
+	GetSerieStyles(curveInd int) (curveStyle, pointStyle chart.Style)
 	GetLegendStyle() chart.Style
 	GetXAxisStyle() chart.Style
 	GetYAxisStyle() chart.Style
