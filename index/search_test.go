@@ -55,7 +55,16 @@ func TestIndex_SearchTriggers(t *testing.T) {
 			So(err, ShouldBeNil)
 		})
 
+		Convey("No tags, no searchString, onlyErrors = false, size = -1 (must return all triggers)", func() {
+			size = -1
+			actualTriggerIDs, count, err := index.SearchTriggers(tags, searchString, onlyErrors, page, size)
+			So(actualTriggerIDs, ShouldResemble, triggerIDs)
+			So(count, ShouldEqual, 31)
+			So(err, ShouldBeNil)
+		})
+
 		Convey("OnlyErrors = true", func() {
+			size = 50
 			onlyErrors = true
 			actualTriggerIDs, count, err := index.SearchTriggers(tags, searchString, onlyErrors, page, size)
 			So(actualTriggerIDs, ShouldResemble, triggerIDs[:30])
