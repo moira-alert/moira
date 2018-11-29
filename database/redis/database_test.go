@@ -7,6 +7,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+// docker run -p 6379:6379 redis
 func TestInitialization(t *testing.T) {
 	Convey("Initialization methods", t, func() {
 		logger, _ := logging.ConfigureLog("stdout", "info", "test")

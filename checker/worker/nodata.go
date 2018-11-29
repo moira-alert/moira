@@ -27,7 +27,7 @@ func (worker *Checker) checkNoData() error {
 		worker.Logger.Infof("Checking NODATA disabled. No metrics for %v seconds", now-worker.lastData)
 	} else {
 		worker.Logger.Info("Checking NODATA")
-		triggerIds, err := worker.Database.GetTriggerIDs()
+		triggerIds, err := worker.Database.GetLocalTriggerIDs()
 		if err != nil {
 			return err
 		}
