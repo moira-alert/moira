@@ -28,8 +28,8 @@ var (
 )
 
 var (
-	update    = flag.Bool("update", false, fmt.Sprintf("convert existing database structures into required ones for current Moira version. ou must choose required version using flag '-from-version'. Valid update versions is %s", strings.Join(moiraValidVersions, ", ")))
-	downgrade = flag.Bool("downgrade", false, fmt.Sprintf("convert existing database structures into required ones for previous Moira version. You must choose required version using flag '-to-version'. Valid downgrade versions is %s", strings.Join(moiraValidVersions, ", ")))
+	update    = flag.Bool("update", false, fmt.Sprintf("convert database to Moira current version. You must choose required version using flag '-from-version'. Valid update versions is %s", strings.Join(moiraValidVersions, ", ")))
+	downgrade = flag.Bool("downgrade", false, fmt.Sprintf("convert database to Moira previous version. You must choose required version using flag '-to-version'. Valid downgrade versions is %s", strings.Join(moiraValidVersions, ", ")))
 )
 
 var (
@@ -37,52 +37,46 @@ var (
 	downgradeToVersion = flag.String("to-version", "", "determines Moira version, TO which need to DOWNGRADE database structures")
 )
 
-const (
-	stateErrorTag           = "ERROR"
-	stateDegradationTag     = "DEGRADATION"
-	stateHighDegradationTag = "HIGH DEGRADATION"
-)
-
 func main() {
 	logger, dataBase := initApp()
 
 	if *update {
-		fromVersion := checkValidVersion(updateFromVersion, true)
+		fromVersion := checkValidVersion(logger, updateFromVersion, true)
 		switch fromVersion {
 		case "2.2":
 			err := updateFrom22(logger, dataBase)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "Fail to update from version %s: %s", fromVersion, err.Error())
+				logger.Fatalf("Fail to update from version %s: %s", fromVersion, err.Error())
 				os.Exit(1)
 			}
 			fallthrough
 		case "2.3":
 			err := updateFrom23(logger, dataBase)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "Fail to update from version %s: %s", fromVersion, err.Error())
+				logger.Fatalf("Fail to update from version %s: %s", fromVersion, err.Error())
 				os.Exit(1)
 			}
 		}
 	}
 
 	if *downgrade {
-		toVersion := checkValidVersion(downgradeToVersion, false)
+		toVersion := checkValidVersion(logger, downgradeToVersion, false)
 		switch toVersion {
 		case "2.2":
 			err := downgradeTo23(logger, dataBase)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "Fail to downgrade to version %s: %s", toVersion, err.Error())
+				logger.Fatalf("Fail to downgrade to version %s: %s", toVersion, err.Error())
 				os.Exit(1)
 			}
 			err = downgradeTo22(logger, dataBase)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "Fail to downgrade to version %s: %s", toVersion, err.Error())
+				logger.Fatalf("Fail to downgrade to version %s: %s", toVersion, err.Error())
 				os.Exit(1)
 			}
 		case "2.3":
 			err := downgradeTo23(logger, dataBase)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "Fail to update to version %s: %s", toVersion, err.Error())
+				logger.Fatalf("Fail to update to version %s: %s", toVersion, err.Error())
 				os.Exit(1)
 			}
 		}
@@ -122,14 +116,14 @@ func initApp() (moira.Logger, moira.Database) {
 	return logger, dataBase
 }
 
-func checkValidVersion(updateFromVersion *string, isUpdate bool) string {
-	validFlag := "-from-version"
+func checkValidVersion(logger moira.Logger, updateFromVersion *string, isUpdate bool) string {
+	validFlag := "--from-version"
 	if !isUpdate {
-		validFlag = "-to-version"
+		validFlag = "--to-version"
 	}
 
-	if updateFromVersion == nil || *updateFromVersion == "" || contains(moiraValidVersions, *updateFromVersion) {
-		fmt.Fprintf(os.Stderr, "You must set valid '%s' flag. Valid versions is %s", validFlag, strings.Join(moiraValidVersions, ", "))
+	if updateFromVersion == nil || *updateFromVersion == "" || !contains(moiraValidVersions, *updateFromVersion) {
+		logger.Fatalf("You must set valid '%s' flag. Valid versions is %s", validFlag, strings.Join(moiraValidVersions, ", "))
 		os.Exit(1)
 	}
 	return *updateFromVersion

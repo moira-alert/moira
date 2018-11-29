@@ -8,6 +8,12 @@ import (
 	"github.com/moira-alert/moira"
 )
 
+const (
+	stateErrorTag           = "ERROR"
+	stateDegradationTag     = "DEGRADATION"
+	stateHighDegradationTag = "HIGH DEGRADATION"
+)
+
 func updateFrom22(logger moira.Logger, dataBase moira.Database) error {
 	logger.Info("Update 2.2 -> 2.3 start")
 
@@ -19,7 +25,7 @@ func updateFrom22(logger moira.Logger, dataBase moira.Database) error {
 	}
 
 	logger.Info("Start updating existing subscription structures into new format")
-	if err := ConvertSubscriptions(dataBase, logger, false); err != nil {
+	if err := convertSubscriptions(dataBase, logger, false); err != nil {
 		logger.Errorf("Can not update existing subscriptions: %s", err.Error())
 	} else {
 		logger.Info("Subscription structures has been successfully updated")
@@ -40,7 +46,7 @@ func downgradeTo22(logger moira.Logger, dataBase moira.Database) error {
 	}
 
 	logger.Info("Start downgrading existing subscription structures into old format")
-	if err := ConvertSubscriptions(dataBase, logger, true); err != nil {
+	if err := convertSubscriptions(dataBase, logger, true); err != nil {
 		logger.Errorf("Can not downgrade existing subscriptions: %s", err.Error())
 	} else {
 		logger.Info("Subscription structures has been successfully downgraded")
@@ -111,9 +117,9 @@ func downgradeTriggers(triggers []*moira.Trigger, dataBase moira.Database, logge
 	return nil
 }
 
-// ConvertTaggedSubscription checks that subscription has deprecated pseudo-tags
+// convertTaggedSubscription checks that subscription has deprecated pseudo-tags
 // and adds corresponding fields into subscription to store actual json structure in redis
-func ConvertTaggedSubscription(database moira.Database, subscription *moira.SubscriptionData) error {
+func convertTaggedSubscription(database moira.Database, subscription *moira.SubscriptionData) error {
 	newTags := make([]string, 0)
 	for _, tag := range subscription.Tags {
 		switch tag {
@@ -133,22 +139,22 @@ func ConvertTaggedSubscription(database moira.Database, subscription *moira.Subs
 	return database.SaveSubscription(subscription)
 }
 
-// ConvertUntaggedSubscription can be used in rollback if something will go wrong after Moira update.
+// convertUntaggedSubscription can be used in rollback if something will go wrong after Moira update.
 // This method checks that subscription must ignore specific states transitions and adds required pseudo-tags to existing subscription's tags.
-func ConvertUntaggedSubscription(database moira.Database, subscription *moira.SubscriptionData) error {
-	if subscription.IgnoreWarnings && !subscriptionHasTag(subscription, stateErrorTag) {
+func convertUntaggedSubscription(database moira.Database, subscription *moira.SubscriptionData) error {
+	if subscription.IgnoreWarnings && !contains(subscription.Tags, stateErrorTag) {
 		subscription.Tags = append(subscription.Tags, stateErrorTag)
 	}
-	if subscription.IgnoreRecoverings && !subscriptionHasTag(subscription, stateDegradationTag) {
+	if subscription.IgnoreRecoverings && !contains(subscription.Tags, stateDegradationTag) {
 		subscription.Tags = append(subscription.Tags, stateDegradationTag)
 	}
 	return database.SaveSubscription(subscription)
 }
 
-// ConvertSubscriptions converts all existing tag subscriptions under specified convertation strategy
+// convertSubscriptions converts all existing tag subscriptions under specified convertation strategy
 // In versions older than 2.3 Moira used to check if subscription has special pseudo-tags to ignore trigger's states transitions such as "WARN<->OK" or "ERROR->OK"
 // which can be specified in subscription parameters. Starting from version 2.3 this tags are deprecated and Moira uses corresponding boolean fields instead.
-func ConvertSubscriptions(database moira.Database, logger moira.Logger, rollback bool) error {
+func convertSubscriptions(database moira.Database, logger moira.Logger, rollback bool) error {
 	allTags, err := database.GetTagNames()
 	if err != nil {
 		return err
@@ -159,32 +165,21 @@ func ConvertSubscriptions(database moira.Database, logger moira.Logger, rollback
 	}
 	var subscriptionsConverter func(moira.Database, *moira.SubscriptionData) error
 	if !rollback {
-		subscriptionsConverter = ConvertTaggedSubscription
+		subscriptionsConverter = convertTaggedSubscription
 	} else {
-		subscriptionsConverter = ConvertUntaggedSubscription
+		subscriptionsConverter = convertUntaggedSubscription
 	}
 	for _, subscription := range allSubscriptions {
 		if subscription != nil {
 			if err := subscriptionsConverter(database, subscription); err != nil {
-				convertedMessage := fmt.Sprintf("An error occurred due to convertation procees of subscription %s: %s", subscription.ID, err.Error())
-				logger.Error(convertedMessage)
+				logger.Error(fmt.Sprintf("An error occurred due to convertation procees of subscription %s: %s", subscription.ID, err.Error()))
 			} else {
-				convertedMessage := fmt.Sprintf("Subscription %s has been succesfully converted. Tags: %s IgnoreWarnings: %t IgnoreRecoverings: %t",
-					subscription.ID, strings.Join(subscription.Tags, ", "), subscription.IgnoreWarnings, subscription.IgnoreRecoverings)
-				logger.Debug(convertedMessage)
+				logger.Debug(fmt.Sprintf("Subscription %s has been succesfully converted. Tags: %s IgnoreWarnings: %t IgnoreRecoverings: %t",
+					subscription.ID, strings.Join(subscription.Tags, ", "), subscription.IgnoreWarnings, subscription.IgnoreRecoverings))
 			}
 		}
 	}
 	return nil
-}
-
-func subscriptionHasTag(subscription *moira.SubscriptionData, tag string) bool {
-	for _, subcriptionTag := range subscription.Tags {
-		if subcriptionTag == tag {
-			return true
-		}
-	}
-	return false
 }
 
 func setProperTriggerType(trigger *moira.Trigger, logger moira.Logger) error {
@@ -222,12 +217,9 @@ func setProperTriggerType(trigger *moira.Trigger, logger moira.Logger) error {
 }
 
 func setProperWarnErrorExpressionValues(trigger *moira.Trigger, logger moira.Logger) error {
-	expr := ""
+	expr := moira.UseString(trigger.Expression)
 	warnStr := "<nil>"
 	errorStr := "<nil>"
-	if trigger.Expression != nil {
-		expr = *trigger.Expression
-	}
 	if trigger.WarnValue != nil {
 		warnStr = strconv.FormatFloat(*trigger.WarnValue, 'f', 2, 64)
 	}
