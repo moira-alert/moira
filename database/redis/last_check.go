@@ -122,6 +122,7 @@ func (connector *DbConnector) SetTriggerCheckMetricsMaintenance(triggerID string
 
 // GetTriggerCheckIDs gets checked triggerIDs, sorted from max to min check score and filtered by given tags
 // If onlyErrors return only triggerIDs with score > 0
+// ToDo: DEPRECATED method. Remove in Moira 2.5
 func (connector *DbConnector) GetTriggerCheckIDs(tagNames []string, onlyErrors bool) ([]string, error) {
 	c := connector.pool.Get()
 	defer c.Close()
