@@ -47,14 +47,12 @@ func main() {
 			err := updateFrom22(logger, dataBase)
 			if err != nil {
 				logger.Fatalf("Fail to update from version %s: %s", fromVersion, err.Error())
-				os.Exit(1)
 			}
 			fallthrough
 		case "2.3":
 			err := updateFrom23(logger, dataBase)
 			if err != nil {
 				logger.Fatalf("Fail to update from version %s: %s", fromVersion, err.Error())
-				os.Exit(1)
 			}
 		}
 	}
@@ -66,18 +64,15 @@ func main() {
 			err := downgradeTo23(logger, dataBase)
 			if err != nil {
 				logger.Fatalf("Fail to downgrade to version %s: %s", toVersion, err.Error())
-				os.Exit(1)
 			}
 			err = downgradeTo22(logger, dataBase)
 			if err != nil {
 				logger.Fatalf("Fail to downgrade to version %s: %s", toVersion, err.Error())
-				os.Exit(1)
 			}
 		case "2.3":
 			err := downgradeTo23(logger, dataBase)
 			if err != nil {
 				logger.Fatalf("Fail to update to version %s: %s", toVersion, err.Error())
-				os.Exit(1)
 			}
 		}
 	}
@@ -124,7 +119,6 @@ func checkValidVersion(logger moira.Logger, updateFromVersion *string, isUpdate 
 
 	if updateFromVersion == nil || *updateFromVersion == "" || !contains(moiraValidVersions, *updateFromVersion) {
 		logger.Fatalf("You must set valid '%s' flag. Valid versions is %s", validFlag, strings.Join(moiraValidVersions, ", "))
-		os.Exit(1)
 	}
 	return *updateFromVersion
 }
