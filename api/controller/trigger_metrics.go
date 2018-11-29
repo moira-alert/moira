@@ -26,7 +26,7 @@ func GetTriggerEvaluationResult(dataBase moira.Database, remoteConfig *remote.Co
 		Additional: make([]*target.TimeSeries, 0),
 	}
 	if trigger.IsRemote && !remoteConfig.IsEnabled() {
-		return nil, &trigger, fmt.Errorf("remote graphite storage is not enabled")
+		return nil, &trigger, remote.ErrRemoteStorageDisabled
 	}
 	for i, tar := range trigger.Targets {
 		var timeSeries []*target.TimeSeries
