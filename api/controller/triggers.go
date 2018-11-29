@@ -16,7 +16,7 @@ func CreateTrigger(dataBase moira.Database, trigger *dto.TriggerModel, timeSerie
 	if trigger.ID == "" {
 		trigger.ID = uuid.NewV4().String()
 	} else {
-		exists, err := isTriggerExists(dataBase, trigger.ID)
+		exists, err := triggerExists(dataBase, trigger.ID)
 		if err != nil {
 			return nil, api.ErrorInternalServer(err)
 		}
@@ -29,17 +29,6 @@ func CreateTrigger(dataBase moira.Database, trigger *dto.TriggerModel, timeSerie
 		resp.Message = "trigger created"
 	}
 	return resp, err
-}
-
-func isTriggerExists(dataBase moira.Database, triggerID string) (bool, error) {
-	_, err := dataBase.GetTrigger(triggerID)
-	if err == database.ErrNil {
-		return false, nil
-	}
-	if err != nil {
-		return false, err
-	}
-	return true, nil
 }
 
 // GetAllTriggers gets all moira triggers
@@ -55,33 +44,6 @@ func GetAllTriggers(database moira.Database) (*dto.TriggersList, *api.ErrorRespo
 	triggersList := dto.TriggersList{
 		List: make([]moira.TriggerCheck, 0),
 	}
-	for _, triggerCheck := range triggerChecks {
-		if triggerCheck != nil {
-			triggersList.List = append(triggersList.List, *triggerCheck)
-		}
-	}
-	return &triggersList, nil
-}
-
-// GetTriggerPage gets trigger page and filter trigger by tags and errors
-func GetTriggerPage(database moira.Database, page int64, size int64, onlyErrors bool, filterTags []string) (*dto.TriggersList, *api.ErrorResponse) {
-	triggerIDs, err := database.GetTriggerCheckIDs(filterTags, onlyErrors)
-	if err != nil {
-		return nil, api.ErrorInternalServer(err)
-	}
-	total := int64(len(triggerIDs))
-	triggerIDs = getTriggerIdsRange(triggerIDs, total, page, size)
-	triggerChecks, err := database.GetTriggerChecks(triggerIDs)
-	if err != nil {
-		return nil, api.ErrorInternalServer(err)
-	}
-	triggersList := dto.TriggersList{
-		List:  make([]moira.TriggerCheck, 0),
-		Total: &total,
-		Page:  &page,
-		Size:  &size,
-	}
-
 	for _, triggerCheck := range triggerChecks {
 		if triggerCheck != nil {
 			triggersList.List = append(triggersList.List, *triggerCheck)
@@ -117,17 +79,13 @@ func SearchTriggers(database moira.Database, searcher moira.Searcher, page int64
 	return &triggersList, nil
 }
 
-func getTriggerIdsRange(triggerIDs []string, total int64, page int64, size int64) []string {
-	from := page * size
-	to := (page + 1) * size
-
-	if from > total {
-		from = total
+func triggerExists(dataBase moira.Database, triggerID string) (bool, error) {
+	_, err := dataBase.GetTrigger(triggerID)
+	if err == database.ErrNil {
+		return false, nil
 	}
-
-	if to > total {
-		to = total
+	if err != nil {
+		return false, err
 	}
-
-	return triggerIDs[from:to]
+	return true, nil
 }

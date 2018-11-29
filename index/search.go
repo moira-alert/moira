@@ -12,6 +12,12 @@ func (index *Index) SearchTriggers(filterTags []string, searchString string, onl
 	if !index.checkIfIndexIsReady() {
 		return make([]string, 0), 0, fmt.Errorf("index is not ready, please try later")
 	}
+	if size < 0 {
+		page = 0
+		docs, _ := index.index.DocCount()
+		size = int64(docs)
+	}
+
 	req := buildSearchRequest(filterTags, searchString, onlyErrors, int(page), int(size))
 
 	searchResult, err := index.index.Search(req)

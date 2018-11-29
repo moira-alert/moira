@@ -25,9 +25,10 @@ func triggers(cfg *remote.Config, searcher moira.Searcher) func(chi.Router) {
 		router.Use(middleware.SearchIndexContext(searcher))
 		router.Get("/", getAllTriggers)
 		router.Put("/", createTrigger)
-		router.With(middleware.Paginate(0, 10)).Get("/page", getTriggersPage)
 		router.Route("/{triggerId}", trigger)
 		router.With(middleware.Paginate(0, 10)).Get("/search", searchTriggers)
+		// ToDo: DEPRECATED method. Remove in Moira 2.5
+		router.With(middleware.Paginate(0, 10)).Get("/page", searchTriggers)
 	}
 }
 
@@ -67,26 +68,6 @@ func createTrigger(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	if err := render.Render(writer, request, response); err != nil {
-		render.Render(writer, request, api.ErrorRender(err))
-		return
-	}
-}
-
-func getTriggersPage(writer http.ResponseWriter, request *http.Request) {
-	request.ParseForm()
-	onlyErrors := getOnlyProblemsFlag(request)
-	filterTags := getRequestTags(request)
-
-	page := middleware.GetPage(request)
-	size := middleware.GetSize(request)
-
-	triggersList, errorResponse := controller.GetTriggerPage(database, page, size, onlyErrors, filterTags)
-	if errorResponse != nil {
-		render.Render(writer, request, errorResponse)
-		return
-	}
-
-	if err := render.Render(writer, request, triggersList); err != nil {
 		render.Render(writer, request, api.ErrorRender(err))
 		return
 	}
