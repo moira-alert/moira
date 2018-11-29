@@ -80,23 +80,28 @@ func main() {
 	databaseSettings := config.Redis.GetSettings()
 	database := redis.NewDatabase(logger, databaseSettings)
 
-	searchIndex := index.NewSearchIndex(logger, database)
-	if searchIndex == nil {
-		logger.Fatalf("Failed to create search index")
-	}
-	go func() {
-		err2 := searchIndex.Start()
-		if err2 != nil {
-			logger.Fatalf("Failed to start search index: %s", err2.Error())
-		}
-	}()
-	defer searchIndex.Stop()
-
 	graphiteSettings := config.Graphite.GetSettings()
 	if err = metrics.Init(graphiteSettings, serviceName); err != nil {
 		logger.Error(err)
 	}
 
+	// Start Index right before HTTP listener. Fail if index cannot start
+	searchIndex := index.NewSearchIndex(logger, database)
+	if searchIndex == nil {
+		logger.Fatalf("Failed to create search index")
+	}
+
+	err = searchIndex.Start()
+	if err != nil {
+		logger.Fatalf("Failed to start search index: %s", err.Error())
+	}
+	defer searchIndex.Stop()
+
+	if !searchIndex.IsReady() {
+		logger.Fatalf("Search index is not ready, exit")
+	}
+
+	// Start listener only after index is ready
 	listener, err := net.Listen("tcp", apiConfig.Listen)
 	if err != nil {
 		logger.Fatal(err)

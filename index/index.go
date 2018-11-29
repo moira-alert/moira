@@ -42,7 +42,7 @@ func NewSearchIndex(logger moira.Logger, database moira.Database) *Index {
 	return &newIndex
 }
 
-// Start initializes index. It removes old index files, create new mapping and index all triggers from database
+// Start initializes index. It creates new mapping and index all triggers from database
 func (index *Index) Start() error {
 	if index.inProgress || index.indexed {
 		return nil
