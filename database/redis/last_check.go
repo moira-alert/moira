@@ -8,6 +8,7 @@ import (
 	"github.com/garyburd/redigo/redis"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/database/redis/reply"
 )
 
@@ -38,7 +39,13 @@ func (connector *DbConnector) setTriggerLastCheckAndUpdateProperCounter(triggerI
 	defer c.Close()
 	c.Send("MULTI")
 	c.Send("SET", metricLastCheckKey(triggerID), bytes)
+	c.Send("ZADD", triggersChecksKey, checkData.Score, triggerID)
 	c.Send("INCR", selfStateCheckCountKey)
+	if checkData.Score > 0 {
+		c.Send("SADD", badStateTriggersKey, triggerID)
+	} else {
+		c.Send("SREM", badStateTriggersKey, triggerID)
+	}
 	if triggerNeedToReindex {
 		c.Send("ZADD", triggersToReindexKey, time.Now().Unix(), triggerID)
 	}
@@ -55,6 +62,8 @@ func (connector *DbConnector) RemoveTriggerLastCheck(triggerID string) error {
 	defer c.Close()
 	c.Send("MULTI")
 	c.Send("DEL", metricLastCheckKey(triggerID))
+	c.Send("ZREM", triggersChecksKey, triggerID)
+	c.Send("SREM", badStateTriggersKey, triggerID)
 	c.Send("ZADD", triggersToReindexKey, time.Now().Unix(), triggerID)
 	_, err := c.Do("EXEC")
 	if err != nil {
@@ -111,19 +120,76 @@ func (connector *DbConnector) SetTriggerCheckMetricsMaintenance(triggerID string
 	return nil
 }
 
+// GetTriggerCheckIDs gets checked triggerIDs, sorted from max to min check score and filtered by given tags
+// If onlyErrors return only triggerIDs with score > 0
+func (connector *DbConnector) GetTriggerCheckIDs(tagNames []string, onlyErrors bool) ([]string, error) {
+	c := connector.pool.Get()
+	defer c.Close()
+	c.Send("MULTI")
+	c.Send("ZREVRANGE", triggersChecksKey, 0, -1)
+	for _, tagName := range tagNames {
+		c.Send("SMEMBERS", tagTriggersKey(tagName))
+	}
+	if onlyErrors {
+		c.Send("SMEMBERS", badStateTriggersKey)
+	}
+	rawResponse, err := redis.Values(c.Do("EXEC"))
+	if err != nil {
+		return nil, err
+	}
+	triggerIDs, err := redis.Strings(rawResponse[0], nil)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to retrieve triggers: %s", err.Error())
+	}
+
+	triggerIDsByTags := make([]map[string]bool, 0)
+	for _, triggersArray := range rawResponse[1:] {
+		tagTriggerIDs, err := redis.Strings(triggersArray, nil)
+		if err != nil {
+			if err == database.ErrNil {
+				continue
+			}
+			return nil, fmt.Errorf("Failed to retrieve tags triggers: %s", err.Error())
+		}
+
+		triggerIDsMap := make(map[string]bool)
+		for _, triggerID := range tagTriggerIDs {
+			triggerIDsMap[triggerID] = true
+		}
+		triggerIDsByTags = append(triggerIDsByTags, triggerIDsMap)
+	}
+
+	total := make([]string, 0)
+	for _, triggerID := range triggerIDs {
+		valid := true
+		for _, triggerIDsByTag := range triggerIDsByTags {
+			if _, ok := triggerIDsByTag[triggerID]; !ok {
+				valid = false
+				break
+			}
+		}
+		if valid {
+			total = append(total, triggerID)
+		}
+	}
+	return total, nil
+}
+
 // checkDataScoreChanged returns true if checkData.Score changed since last check
 func (connector *DbConnector) checkDataScoreChanged(triggerID string, checkData *moira.CheckData) bool {
 	c := connector.pool.Get()
 	defer c.Close()
 
-	oldLastCheck, err := reply.Check(c.Do("GET", metricLastCheckKey(triggerID)))
+	oldScore, err := redis.Int64(c.Do("ZSCORE", triggersChecksKey, triggerID))
 	if err != nil {
 		return true
 	}
-	oldScore := oldLastCheck.Score
 
 	return oldScore != checkData.Score
 }
+
+var badStateTriggersKey = "moira-bad-state-triggers"
+var triggersChecksKey = "moira-triggers-checks"
 
 func metricLastCheckKey(triggerID string) string {
 	return fmt.Sprintf("moira-metric-last-check:%s", triggerID)

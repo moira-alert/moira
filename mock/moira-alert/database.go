@@ -5,11 +5,12 @@
 package mock_moira_alert
 
 import (
-	gomock "github.com/golang/mock/gomock"
-	moira "github.com/moira-alert/moira"
+	"reflect"
+	"time"
+
+	"github.com/golang/mock/gomock"
+	"github.com/moira-alert/moira"
 	tomb_v2 "gopkg.in/tomb.v2"
-	reflect "reflect"
-	time "time"
 )
 
 // MockDatabase is a mock of Database interface
@@ -553,6 +554,19 @@ func (m *MockDatabase) GetTrigger(arg0 string) (moira.Trigger, error) {
 // GetTrigger indicates an expected call of GetTrigger
 func (mr *MockDatabaseMockRecorder) GetTrigger(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTrigger", reflect.TypeOf((*MockDatabase)(nil).GetTrigger), arg0)
+}
+
+// GetTriggerCheckIDs mocks base method
+func (m *MockDatabase) GetTriggerCheckIDs(arg0 []string, arg1 bool) ([]string, error) {
+	ret := m.ctrl.Call(m, "GetTriggerCheckIDs", arg0, arg1)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTriggerCheckIDs indicates an expected call of GetTriggerCheckIDs
+func (mr *MockDatabaseMockRecorder) GetTriggerCheckIDs(arg0, arg1 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggerCheckIDs", reflect.TypeOf((*MockDatabase)(nil).GetTriggerCheckIDs), arg0, arg1)
 }
 
 // GetTriggerChecks mocks base method
