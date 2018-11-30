@@ -76,7 +76,6 @@ var thresholdTestCases = []thresholdTestCase{
 		expected: []*threshold{
 			{
 				thresholdType: "WARN",
-				xCoordinate:   float64(innerTestCaseLimits.to.UnixNano()),
 				yCoordinate:   innerTestCaseLimits.highest - thresholdTestRisingWarnValue,
 			},
 		},
@@ -90,7 +89,6 @@ var thresholdTestCases = []thresholdTestCase{
 		expected: []*threshold{
 			{
 				thresholdType: "ERROR",
-				xCoordinate:   float64(innerTestCaseLimits.to.UnixNano()),
 				yCoordinate:   innerTestCaseLimits.highest - thresholdTestRisingErrorValue,
 			},
 		},
@@ -104,12 +102,10 @@ var thresholdTestCases = []thresholdTestCase{
 		expected: []*threshold{
 			{
 				thresholdType: "ERROR",
-				xCoordinate:   float64(innerTestCaseLimits.to.UnixNano()),
 				yCoordinate:   innerTestCaseLimits.highest - thresholdTestRisingErrorValue,
 			},
 			{
 				thresholdType: "WARN",
-				xCoordinate:   float64(innerTestCaseLimits.to.UnixNano()),
 				yCoordinate:   innerTestCaseLimits.highest - thresholdTestRisingWarnValue,
 			},
 		},
@@ -123,7 +119,6 @@ var thresholdTestCases = []thresholdTestCase{
 		expected: []*threshold{
 			{
 				thresholdType: "ERROR",
-				xCoordinate:   float64(innerTestCaseLimits.to.UnixNano()),
 				yCoordinate:   innerTestCaseLimits.highest - (thresholdTestRisingWarnValue + thresholdTestValueIncrement),
 			},
 		},
@@ -161,7 +156,6 @@ var thresholdTestCases = []thresholdTestCase{
 		expected: []*threshold{
 			{
 				thresholdType: "ERROR",
-				xCoordinate:   float64(innerTestCaseLimits.to.UnixNano()),
 				yCoordinate:   thresholdTestFallingErrorValue,
 			},
 		},
@@ -175,7 +169,6 @@ var thresholdTestCases = []thresholdTestCase{
 		expected: []*threshold{
 			{
 				thresholdType: "WARN",
-				xCoordinate:   float64(innerTestCaseLimits.to.UnixNano()),
 				yCoordinate:   thresholdTestFallingWarnValue,
 			},
 		},
@@ -189,12 +182,10 @@ var thresholdTestCases = []thresholdTestCase{
 		expected: []*threshold{
 			{
 				thresholdType: "ERROR",
-				xCoordinate:   float64(innerTestCaseLimits.to.UnixNano()),
 				yCoordinate:   thresholdTestFallingErrorValue,
 			},
 			{
 				thresholdType: "WARN",
-				xCoordinate:   float64(innerTestCaseLimits.to.UnixNano()),
 				yCoordinate:   thresholdTestFallingWarnValue,
 			},
 		},
@@ -208,7 +199,6 @@ var thresholdTestCases = []thresholdTestCase{
 		expected: []*threshold{
 			{
 				thresholdType: "ERROR",
-				xCoordinate:   float64(innerTestCaseLimits.to.UnixNano()),
 				yCoordinate:   thresholdTestFallingErrorValue,
 			},
 		},

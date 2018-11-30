@@ -19,8 +19,21 @@ const (
 // threshold represents threshold parameters
 type threshold struct {
 	thresholdType string
-	xCoordinate   float64
 	yCoordinate   float64
+}
+
+// newThreshold returns described threshold item
+func newThreshold(triggerType, thresholdType string, thresholdValue, higherLimit float64) *threshold {
+	var yCoordinate float64
+	if triggerType == moira.RisingTrigger {
+		yCoordinate = higherLimit - thresholdValue
+	} else {
+		yCoordinate = thresholdValue
+	}
+	return &threshold{
+		thresholdType: thresholdType,
+		yCoordinate:   yCoordinate,
+	}
 }
 
 // getThresholdSeriesList returns collection of thresholds and annotations
@@ -32,7 +45,7 @@ func getThresholdSeriesList(trigger *moira.Trigger, theme moira.PlotTheme, limit
 	plotThresholds := generateThresholds(trigger, limits)
 	for _, plotThreshold := range plotThresholds {
 		thresholdSeriesList = append(thresholdSeriesList, plotThreshold.generateThresholdSeries(theme, limits))
-		thresholdSeriesList = append(thresholdSeriesList, plotThreshold.generateAnnotationSeries(theme))
+		thresholdSeriesList = append(thresholdSeriesList, plotThreshold.generateAnnotationSeries(theme, limits))
 	}
 	return thresholdSeriesList
 }
@@ -40,53 +53,30 @@ func getThresholdSeriesList(trigger *moira.Trigger, theme moira.PlotTheme, limit
 // generateThresholds returns thresholds available for plot
 func generateThresholds(trigger *moira.Trigger, limits plotLimits) []*threshold {
 	// TODO: cover cases with negative warn & error values
-	timePoint := float64(limits.to.UnixNano())
 	thresholds := make([]*threshold, 0)
-	switch trigger.ErrorValue {
-	case nil:
-		if trigger.WarnValue != nil && !(*trigger.WarnValue < 0) {
-			if limits.formsSetContaining(*trigger.WarnValue) {
-				warnThreshold := &threshold{
-					thresholdType: "WARN",
-					xCoordinate:   timePoint,
-					yCoordinate:   *trigger.WarnValue,
-				}
-				if trigger.TriggerType == moira.RisingTrigger {
-					warnThreshold.yCoordinate = limits.highest - *trigger.WarnValue
-				}
-				thresholds = append(thresholds, warnThreshold)
-			}
-		}
-	default:
-		if !(*trigger.ErrorValue < 0) {
-			if limits.formsSetContaining(*trigger.ErrorValue) {
-				errThreshold := &threshold{
-					thresholdType: "ERROR",
-					xCoordinate:   timePoint,
-					yCoordinate:   *trigger.ErrorValue,
-				}
-				if trigger.TriggerType == moira.RisingTrigger {
-					errThreshold.yCoordinate = limits.highest - *trigger.ErrorValue
-				}
-				thresholds = append(thresholds, errThreshold)
-			}
-		}
-		if trigger.WarnValue != nil {
+	// No thresholds required
+	if trigger.WarnValue == nil && trigger.ErrorValue == nil {
+		return thresholds
+	}
+	// Trigger has non-negative ERROR value and threshold can be drawn
+	if trigger.ErrorValue != nil && *trigger.ErrorValue > 0 && limits.formsSetContaining(*trigger.ErrorValue) {
+		thresholds = append(thresholds, newThreshold(
+			trigger.TriggerType, "ERROR", *trigger.ErrorValue, limits.highest))
+	}
+	// Trigger has non-negative WARN value and threshold can be drawn when:
+	if trigger.WarnValue != nil && *trigger.WarnValue > 0 && limits.formsSetContaining(*trigger.WarnValue) {
+		if trigger.ErrorValue != nil {
 			deltaLimits := math.Abs(limits.highest - limits.lowest)
 			deltaThresholds := math.Abs(*trigger.ErrorValue - *trigger.WarnValue)
-			if !(*trigger.WarnValue < 0) && deltaThresholds > (deltaLimits/invertedThresholdGap) {
-				if limits.formsSetContaining(*trigger.WarnValue) {
-					warnThreshold := &threshold{
-						thresholdType: "WARN",
-						xCoordinate:   timePoint,
-						yCoordinate:   *trigger.WarnValue,
-					}
-					if trigger.TriggerType == moira.RisingTrigger {
-						warnThreshold.yCoordinate = limits.highest - *trigger.WarnValue
-					}
-					thresholds = append(thresholds, warnThreshold)
-				}
+			if deltaThresholds > (deltaLimits / invertedThresholdGap) {
+				// there is enough place to draw both of ERROR and WARN thresholds
+				thresholds = append(thresholds, newThreshold(
+					trigger.TriggerType, "WARN", *trigger.WarnValue, limits.highest))
 			}
+		} else {
+			// there is no ERROR threshold required
+			thresholds = append(thresholds, newThreshold(
+				trigger.TriggerType, "WARN", *trigger.WarnValue, limits.highest))
 		}
 	}
 	return thresholds
@@ -107,12 +97,12 @@ func (threshold *threshold) generateThresholdSeries(theme moira.PlotTheme, limit
 }
 
 // generateAnnotationSeries returns threshold annotation series
-func (threshold *threshold) generateAnnotationSeries(theme moira.PlotTheme) chart.AnnotationSeries {
+func (threshold *threshold) generateAnnotationSeries(theme moira.PlotTheme, limits plotLimits) chart.AnnotationSeries {
 	annotationSeries := chart.AnnotationSeries{
 		Annotations: []chart.Value2{
 			{
 				Label:  threshold.thresholdType,
-				XValue: threshold.xCoordinate,
+				XValue: float64(limits.to.UnixNano()),
 				YValue: threshold.yCoordinate,
 				Style:  theme.GetAnnotationStyle(threshold.thresholdType),
 			},
