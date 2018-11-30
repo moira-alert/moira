@@ -18,14 +18,10 @@ const (
 
 var (
 	innerTestCaseLimits = plotLimits{
-		from:    int64ToTime(0),
-		to:      int64ToTime(100),
 		lowest:  0,
 		highest: 200,
 	}
 	outerTestCaseLimits = plotLimits{
-		from:    int64ToTime(0),
-		to:      int64ToTime(100),
 		lowest:  1000,
 		highest: 2000,
 	}

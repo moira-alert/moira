@@ -12,8 +12,9 @@ import (
 const (
 	// thresholdSerie is a name that indicates threshold
 	thresholdSerie = "threshold"
-	// invertedThresholdGap is max allowed (area between thresholds)^(-1)
-	invertedThresholdGap = 16
+	// thresholdGapCoefficient is max allowed area
+	// between thresholds as percentage of limits delta
+	thresholdGapCoefficient = 0.25
 )
 
 // threshold represents threshold parameters
@@ -52,7 +53,6 @@ func getThresholdSeriesList(trigger *moira.Trigger, theme moira.PlotTheme, limit
 
 // generateThresholds returns thresholds available for plot
 func generateThresholds(trigger *moira.Trigger, limits plotLimits) []*threshold {
-	// TODO: cover cases with negative warn & error values
 	thresholds := make([]*threshold, 0)
 	// No thresholds required
 	if trigger.WarnValue == nil && trigger.ErrorValue == nil {
@@ -68,7 +68,7 @@ func generateThresholds(trigger *moira.Trigger, limits plotLimits) []*threshold 
 		if trigger.ErrorValue != nil {
 			deltaLimits := math.Abs(limits.highest - limits.lowest)
 			deltaThresholds := math.Abs(*trigger.ErrorValue - *trigger.WarnValue)
-			if deltaThresholds > (deltaLimits / invertedThresholdGap) {
+			if deltaThresholds > thresholdGapCoefficient * deltaLimits {
 				// there is enough place to draw both of ERROR and WARN thresholds
 				thresholds = append(thresholds, newThreshold(
 					trigger.TriggerType, "WARN", *trigger.WarnValue, limits.highest))
