@@ -29,7 +29,7 @@ const (
 const (
 	plotHashDistanceTestOuterPointIncrement   = float64(10000)
 	plotHashDistanceTestOuterPointMultiplier  = float64(1000)
-	plotHashDistanceTestRisingWarnThreshold   = float64(57)
+	plotHashDistanceTestRisingWarnThreshold   = float64(43)
 	plotHashDistanceTestRisingErrorThreshold  = float64(76)
 	plotHashDistanceTestFallingWarnThreshold  = plotHashDistanceTestRisingErrorThreshold
 	plotHashDistanceTestFallingErrorThreshold = plotHashDistanceTestRisingWarnThreshold
