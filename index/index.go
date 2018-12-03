@@ -49,10 +49,12 @@ func (index *Index) Start() error {
 	}
 
 	err := index.fillIndex()
-	if err == nil {
-		index.indexed = true
-		index.inProgress = false
+	if err != nil {
+		return err
 	}
+
+	index.indexed = true
+	index.inProgress = false
 
 	index.tomb.Go(index.runIndexActualizer)
 	index.tomb.Go(index.runTriggersToReindexSweepper)

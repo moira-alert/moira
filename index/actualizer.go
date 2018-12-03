@@ -18,7 +18,7 @@ func (index *Index) runIndexActualizer() error {
 		case <-ticker.C:
 			newTime := time.Now().Unix()
 			if float64(newTime-index.indexActualizedTS) > sweeperTimeToKeep.Seconds() {
-				index.logger.Errorf("Index was actualized too far ago. Index actualized: %s. Current time: %s. Should actualize every: %v. Maximum possible interval without actualization: %s",
+				index.logger.Errorf("Index was actualized too far ago. Index actualized: %s. Current time: %s. Should actualize every: %v. Maximum possible interval without actualization: %s. Restart moira-API service to solve this issue",
 					time.Unix(index.indexActualizedTS, 0).Format(time.RFC3339), time.Now().Format(time.RFC3339), actualizerRunInterval, sweeperTimeToKeep)
 			}
 			if err := index.actualizeIndex(); err != nil {

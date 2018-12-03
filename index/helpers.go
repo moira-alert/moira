@@ -1,12 +1,12 @@
 package index
 
 import (
+	"regexp"
 	"strings"
 	"time"
 )
 
 const (
-	symbolsToEscape  = `|+-=&<>!(){}[]^"'~*?\/.,:;_-@`
 	indexWaitTimeout = time.Second * 3
 )
 
@@ -36,9 +36,5 @@ func splitStringToTerms(searchString string) (searchTerms []string) {
 }
 
 func escapeString(original string) (escaped string) {
-	escaped = original
-	for _, symbol := range symbolsToEscape {
-		escaped = strings.Replace(escaped, string(symbol), " ", -1)
-	}
-	return
+	return regexp.MustCompile(`[|+\-=&<>!(){}\[\]^"'~*?\\/.,:;_@]`).ReplaceAllString(original, " ")
 }
