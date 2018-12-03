@@ -1,6 +1,8 @@
 package index
 
 import (
+	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/blevesearch/bleve"
@@ -35,9 +37,8 @@ func (index *Index) fillIndex() error {
 	return err
 }
 
-func (index *Index) addTriggers(triggerIDs []string, batchSize int) (count int, err error) {
+func (index *Index) addTriggers(triggerIDs []string, batchSize int) (count int64, err error) {
 	toIndex := len(triggerIDs)
-
 	if !index.indexed {
 		// We index fake trigger to increase batch index speed. Otherwise, first batch is indexed for too long
 		index.indexTriggerCheck(fakeTriggerToIndex)
@@ -45,26 +46,40 @@ func (index *Index) addTriggers(triggerIDs []string, batchSize int) (count int, 
 	}
 
 	triggerIDsBatches := moira.ChunkSlice(triggerIDs, batchSize)
-	var triggerChecksToIndex []*moira.TriggerCheck
 
-	for _, triggerIDsBatch := range triggerIDsBatches {
-		var indexed int
-		triggerChecksToIndex, err = index.database.GetTriggerChecks(triggerIDsBatch)
-		index.logger.Debugf("Get %d trigger checks from DB", len(triggerChecksToIndex))
-		if err != nil {
-			return
+	triggerChecksChan := make(chan []*moira.TriggerCheck)
+	errorsChan := make(chan error)
+	go index.getTriggerChecksBatches(triggerIDsBatches, triggerChecksChan, errorsChan)
+
+	wg := &sync.WaitGroup{}
+
+Loop:
+	for range triggerIDs {
+		select {
+		case batch, ok := <-triggerChecksChan:
+			if !ok {
+				break Loop
+			}
+			index.logger.Debugf("Get %d trigger checks from DB", len(batch))
+			wg.Add(1)
+			go func(b []*moira.TriggerCheck) {
+				defer wg.Done()
+				indexed, err := index.addBatchOfTriggerChecks(b)
+				atomic.AddInt64(&count, indexed)
+				if err != nil {
+					return
+				}
+				index.logger.Debugf("[%d triggers of %d] added to index", count, toIndex)
+			}(batch)
+		case err := <-errorsChan:
+			index.logger.Errorf("Cannot get trigger checks from DB: %s", err.Error())
 		}
-		indexed, err = index.addBatchOfTriggerChecks(triggerChecksToIndex)
-		count = count + indexed
-		if err != nil {
-			return
-		}
-		index.logger.Debugf("[%d triggers of %d] added to index", count, toIndex)
 	}
+	wg.Wait()
 	return
 }
 
-func (index *Index) addBatchOfTriggerChecks(triggerChecks []*moira.TriggerCheck) (count int, err error) {
+func (index *Index) addBatchOfTriggerChecks(triggerChecks []*moira.TriggerCheck) (count int64, err error) {
 	batch := index.index.NewBatch()
 	defer batch.Reset()
 
@@ -80,8 +95,20 @@ func (index *Index) addBatchOfTriggerChecks(triggerChecks []*moira.TriggerCheck)
 	if err != nil {
 		return
 	}
-	count += batch.Size()
+	count += int64(batch.Size())
 	return
+}
+
+func (index *Index) getTriggerChecksBatches(triggerIDsBatches [][]string, triggerChecksChan chan []*moira.TriggerCheck, errors chan error) {
+	for _, triggerIDsBatch := range triggerIDsBatches {
+		newBatch, err := index.database.GetTriggerChecks(triggerIDsBatch)
+		if err != nil {
+			errors <- err
+			return
+		}
+		triggerChecksChan <- newBatch
+	}
+	close(triggerChecksChan)
 }
 
 // used as abstraction
