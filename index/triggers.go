@@ -46,35 +46,44 @@ func (index *Index) addTriggers(triggerIDs []string, batchSize int) (count int64
 	}
 
 	triggerIDsBatches := moira.ChunkSlice(triggerIDs, batchSize)
+	triggerChecksChan, errorsChan := index.getTriggerChecksBatches(triggerIDsBatches)
+	return index.handleTriggerBatches(triggerChecksChan, errorsChan, toIndex)
+}
 
-	triggerChecksChan := make(chan []*moira.TriggerCheck)
-	errorsChan := make(chan error)
-	go index.getTriggerChecksBatches(triggerIDsBatches, triggerChecksChan, errorsChan)
-
+func (index *Index) handleTriggerBatches(triggerChecksChan chan []*moira.TriggerCheck, getTriggersErrors chan error, toIndex int) (count int64, err error) {
+	indexErrors := make(chan error)
 	wg := &sync.WaitGroup{}
-
-Loop:
-	for range triggerIDs {
-		select {
-		case batch, ok := <-triggerChecksChan:
-			if !ok {
-				break Loop
-			}
-			index.logger.Debugf("Get %d trigger checks from DB", len(batch))
-			wg.Add(1)
-			go func(b []*moira.TriggerCheck) {
-				defer wg.Done()
-				indexed, err := index.addBatchOfTriggerChecks(b)
-				atomic.AddInt64(&count, indexed)
-				if err != nil {
+	func() {
+		for {
+			select {
+			case batch, ok := <-triggerChecksChan:
+				if !ok {
 					return
 				}
-				index.logger.Debugf("[%d triggers of %d] added to index", count, toIndex)
-			}(batch)
-		case err := <-errorsChan:
-			index.logger.Errorf("Cannot get trigger checks from DB: %s", err.Error())
+				wg.Add(1)
+				go func(b []*moira.TriggerCheck) {
+					defer wg.Done()
+					indexed, err2 := index.addBatchOfTriggerChecks(b)
+					atomic.AddInt64(&count, indexed)
+					if err2 != nil {
+						indexErrors <- err2
+						return
+					}
+					index.logger.Debugf("[%d triggers of %d] added to index", count, toIndex)
+				}(batch)
+			case err, ok := <-getTriggersErrors:
+				if ok {
+					index.logger.Errorf("Cannot get trigger checks from DB: %s", err.Error())
+				}
+				return
+			case err, ok := <-indexErrors:
+				if ok {
+					index.logger.Errorf("Cannot index trigger checks: %s", err.Error())
+				}
+				return
+			}
 		}
-	}
+	}()
 	wg.Wait()
 	return
 }
@@ -99,16 +108,29 @@ func (index *Index) addBatchOfTriggerChecks(triggerChecks []*moira.TriggerCheck)
 	return
 }
 
-func (index *Index) getTriggerChecksBatches(triggerIDsBatches [][]string, triggerChecksChan chan []*moira.TriggerCheck, errors chan error) {
+func (index *Index) getTriggerChecksBatches(triggerIDsBatches [][]string) (triggerChecksChan chan []*moira.TriggerCheck, errors chan error) {
+	wg := sync.WaitGroup{}
+	triggerChecksChan = make(chan []*moira.TriggerCheck)
+	errors = make(chan error)
 	for _, triggerIDsBatch := range triggerIDsBatches {
-		newBatch, err := index.database.GetTriggerChecks(triggerIDsBatch)
-		if err != nil {
-			errors <- err
-			return
-		}
-		triggerChecksChan <- newBatch
+		wg.Add(1)
+		go func(batch []string) {
+			defer wg.Done()
+			newBatch, err := index.database.GetTriggerChecks(batch)
+			if err != nil {
+				errors <- err
+				return
+			}
+			index.logger.Debugf("Get %d trigger checks from DB", len(newBatch))
+			triggerChecksChan <- newBatch
+		}(triggerIDsBatch)
 	}
-	close(triggerChecksChan)
+	go func() {
+		wg.Wait()
+		close(triggerChecksChan)
+		close(errors)
+	}()
+	return
 }
 
 // used as abstraction
