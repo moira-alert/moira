@@ -1,6 +1,8 @@
 package plotting
 
 import (
+	"bytes"
+	"fmt"
 	"testing"
 
 	. "github.com/smartystreets/goconvey/convey"
@@ -9,19 +11,31 @@ import (
 )
 
 const (
-	thresholdTestValueIncrement    = float64(10)
-	thresholdTestRisingWarnValue   = float64(100)
-	thresholdTestRisingErrorValue  = float64(200)
-	thresholdTestFallingWarnValue  = thresholdTestRisingErrorValue
-	thresholdTestFallingErrorValue = thresholdTestRisingWarnValue
+	thresholdTestValueIncrement               = float64(10)
+	thresholdNegativeTestRisingWarnValue      = float64(-100)
+	thresholdNegativeTestRisingErrorValue     = float64(0)
+	thresholdNegativeTestFallingWarnValue     = thresholdNegativeTestRisingErrorValue
+	thresholdNegativeTestFallingErrorValue    = thresholdNegativeTestRisingWarnValue
+	thresholdNonNegativeTestRisingWarnValue   = float64(100)
+	thresholdNonNegativeTestRisingErrorValue  = float64(200)
+	thresholdNonNegativeTestFallingWarnValue  = thresholdNonNegativeTestRisingErrorValue
+	thresholdNonNegativeTestFallingErrorValue = thresholdNonNegativeTestRisingWarnValue
 )
 
 var (
-	innerTestCaseLimits = plotLimits{
+	innerNegativeTestCaseLimits = plotLimits{
+		lowest:  -100,
+		highest: 100,
+	}
+	outerNegativeTestCaseLimits = plotLimits{
+		lowest:  100,
+		highest: 200,
+	}
+	innerNonNegativeTestCaseLimits = plotLimits{
 		lowest:  0,
 		highest: 200,
 	}
-	outerTestCaseLimits = plotLimits{
+	outerNonNegativeTestCaseLimits = plotLimits{
 		lowest:  1000,
 		highest: 2000,
 	}
@@ -37,165 +51,356 @@ type thresholdTestCase struct {
 	expected    []*threshold
 }
 
-// thresholdTestCases is a collection of threshold test cases
-var thresholdTestCases = []thresholdTestCase{
+func (testCase *thresholdTestCase) getCaseMessage() string {
+	caseMessage := bytes.NewBuffer([]byte("Trying to generate thresholds for "))
+	caseMessage.WriteString(fmt.Sprintf("%s trigger:\n", testCase.triggerType))
+	caseMessage.WriteString(fmt.Sprintf("lowest limit: %f, highest limit: %f\n",
+		testCase.limits.lowest, testCase.limits.highest))
+	if testCase.warnValue != nil {
+		caseMessage.WriteString(fmt.Sprintf("WARN value: %f ", testCase.warnValue))
+	}
+	if testCase.errorValue != nil {
+		caseMessage.WriteString(fmt.Sprintf("ERROR value: %f", testCase.errorValue))
+	}
+	if testCase.warnValue != nil || testCase.errorValue != nil {
+		caseMessage.WriteString("\n")
+	}
+	expectedThresholds := ""
+	if len(testCase.expected) > 0 {
+		for _, expectedItem := range testCase.expected {
+			expectedThresholds += fmt.Sprintf("%s threshold (y): %f ",
+				expectedItem.thresholdType, expectedItem.yCoordinate)
+		}
+	} else {
+		expectedThresholds = "no thresholds required"
+	}
+	caseMessage.WriteString(expectedThresholds)
+	return caseMessage.String()
+}
+
+// thresholdNegativeTestCases is a collection of negative threshold test cases
+var thresholdNegativeTestCases = []thresholdTestCase{
 	{
-		name:        "RISING | {limits.lowest ..limits.highest}, warn",
+		name:        "Negative | RISING | {limits.lowest ..limits.highest}, warn",
 		triggerType: moira.RisingTrigger,
-		warnValue:   thresholdTestRisingWarnValue,
+		warnValue:   thresholdNegativeTestRisingWarnValue,
 		errorValue:  nil,
-		limits:      outerTestCaseLimits,
+		limits:      outerNegativeTestCaseLimits,
 		expected:    []*threshold{},
 	},
 	{
-		name:        "RISING | {limits.lowest ..limits.highest}, error",
+		name:        "Negative | RISING | {limits.lowest ..limits.highest}, error",
 		triggerType: moira.RisingTrigger,
 		warnValue:   nil,
-		errorValue:  thresholdTestRisingErrorValue,
-		limits:      outerTestCaseLimits,
+		errorValue:  thresholdNegativeTestRisingErrorValue,
+		limits:      outerNegativeTestCaseLimits,
 		expected:    []*threshold{},
 	},
 	{
-		name:        "RISING | {limits.lowest ..limits.highest}, warn, error",
+		name:        "Negative | RISING | {limits.lowest ..limits.highest}, warn, error",
 		triggerType: moira.RisingTrigger,
-		warnValue:   thresholdTestRisingWarnValue,
-		errorValue:  thresholdTestRisingErrorValue,
-		limits:      outerTestCaseLimits,
+		warnValue:   thresholdNegativeTestRisingWarnValue,
+		errorValue:  thresholdNegativeTestRisingErrorValue,
+		limits:      outerNegativeTestCaseLimits,
 		expected:    []*threshold{},
 	},
 	{
-		name:        "RISING | {limits.lowest <= warn <= limits.highest}",
+		name:        "Negative | RISING | {limits.lowest <= warn <= limits.highest}",
 		triggerType: moira.RisingTrigger,
-		warnValue:   thresholdTestRisingWarnValue,
+		warnValue:   thresholdNegativeTestRisingWarnValue,
 		errorValue:  nil,
-		limits:      innerTestCaseLimits,
+		limits:      innerNegativeTestCaseLimits,
 		expected: []*threshold{
 			{
 				thresholdType: "WARN",
-				yCoordinate:   innerTestCaseLimits.highest - thresholdTestRisingWarnValue,
+				yCoordinate:   innerNegativeTestCaseLimits.highest - thresholdNegativeTestRisingWarnValue,
 			},
 		},
 	},
 	{
-		name:        "RISING | {limits.lowest <= error <= limits.highest}",
+		name:        "Negative | RISING | {limits.lowest <= error <= limits.highest}",
 		triggerType: moira.RisingTrigger,
 		warnValue:   nil,
-		errorValue:  thresholdTestRisingErrorValue,
-		limits:      innerTestCaseLimits,
+		errorValue:  thresholdNegativeTestRisingErrorValue,
+		limits:      innerNegativeTestCaseLimits,
 		expected: []*threshold{
 			{
 				thresholdType: "ERROR",
-				yCoordinate:   innerTestCaseLimits.highest - thresholdTestRisingErrorValue,
+				yCoordinate:   innerNegativeTestCaseLimits.highest - thresholdNegativeTestRisingErrorValue,
 			},
 		},
 	},
 	{
-		name:        "RISING | {limits.lowest <= warn << error <= limits.highest}",
+		name:        "Negative | RISING | {limits.lowest <= warn << error <= limits.highest}",
 		triggerType: moira.RisingTrigger,
-		warnValue:   thresholdTestRisingWarnValue,
-		errorValue:  thresholdTestRisingErrorValue,
-		limits:      innerTestCaseLimits,
+		warnValue:   thresholdNegativeTestRisingWarnValue,
+		errorValue:  thresholdNegativeTestRisingErrorValue,
+		limits:      innerNegativeTestCaseLimits,
 		expected: []*threshold{
 			{
 				thresholdType: "ERROR",
-				yCoordinate:   innerTestCaseLimits.highest - thresholdTestRisingErrorValue,
+				yCoordinate:   innerNegativeTestCaseLimits.highest - thresholdNegativeTestRisingErrorValue,
 			},
 			{
 				thresholdType: "WARN",
-				yCoordinate:   innerTestCaseLimits.highest - thresholdTestRisingWarnValue,
+				yCoordinate:   innerNegativeTestCaseLimits.highest - thresholdNegativeTestRisingWarnValue,
 			},
 		},
 	},
 	{
-		name:        "RISING | {limits.lowest <= warn < error <= limits.highest}",
+		name:        "Negative | RISING | {limits.lowest <= warn < error <= limits.highest}",
 		triggerType: moira.RisingTrigger,
-		warnValue:   thresholdTestRisingWarnValue,
-		errorValue:  thresholdTestRisingWarnValue + thresholdTestValueIncrement,
-		limits:      innerTestCaseLimits,
+		warnValue:   thresholdNegativeTestRisingWarnValue,
+		errorValue:  thresholdNegativeTestRisingWarnValue + thresholdTestValueIncrement,
+		limits:      innerNegativeTestCaseLimits,
 		expected: []*threshold{
 			{
 				thresholdType: "ERROR",
-				yCoordinate:   innerTestCaseLimits.highest - (thresholdTestRisingWarnValue + thresholdTestValueIncrement),
+				yCoordinate:   innerNegativeTestCaseLimits.highest - (thresholdNegativeTestRisingWarnValue + thresholdTestValueIncrement),
 			},
 		},
 	},
 	{
-		name:        "FALLING | {limits.lowest ..limits.highest}, error",
+		name:        "Negative | FALLING | {limits.lowest ..limits.highest}, error",
 		triggerType: moira.FallingTrigger,
 		warnValue:   nil,
-		errorValue:  thresholdTestFallingErrorValue,
-		limits:      outerTestCaseLimits,
+		errorValue:  thresholdNegativeTestFallingErrorValue,
+		limits:      outerNegativeTestCaseLimits,
 		expected:    []*threshold{},
 	},
 	{
-		name:        "FALLING | {limits.lowest ..limits.highest}, warn",
+		name:        "Negative | FALLING | {limits.lowest ..limits.highest}, warn",
 		triggerType: moira.FallingTrigger,
-		warnValue:   thresholdTestFallingWarnValue,
+		warnValue:   thresholdNegativeTestFallingWarnValue,
 		errorValue:  nil,
-		limits:      outerTestCaseLimits,
+		limits:      outerNegativeTestCaseLimits,
 		expected:    []*threshold{},
 	},
 	{
-		name:        "FALLING | {limits.lowest ..limits.highest}, error, warn",
+		name:        "Negative | FALLING | {limits.lowest ..limits.highest}, error, warn",
 		triggerType: moira.FallingTrigger,
-		warnValue:   thresholdTestFallingWarnValue,
-		errorValue:  thresholdTestFallingErrorValue,
-		limits:      outerTestCaseLimits,
+		warnValue:   thresholdNegativeTestFallingWarnValue,
+		errorValue:  thresholdNegativeTestFallingErrorValue,
+		limits:      outerNegativeTestCaseLimits,
 		expected:    []*threshold{},
 	},
 	{
-		name:        "FALLING | {limits.lowest <= error <= limits.highest}",
+		name:        "Negative | FALLING | {limits.lowest <= error <= limits.highest}",
 		triggerType: moira.FallingTrigger,
 		warnValue:   nil,
-		errorValue:  thresholdTestFallingErrorValue,
-		limits:      innerTestCaseLimits,
+		errorValue:  thresholdNegativeTestFallingErrorValue,
+		limits:      innerNegativeTestCaseLimits,
 		expected: []*threshold{
 			{
 				thresholdType: "ERROR",
-				yCoordinate:   thresholdTestFallingErrorValue,
+				yCoordinate:   thresholdNegativeTestFallingErrorValue,
 			},
 		},
 	},
 	{
-		name:        "FALLING | {limits.lowest <= warn <= limits.highest}",
+		name:        "Negative | FALLING | {limits.lowest <= warn <= limits.highest}",
 		triggerType: moira.FallingTrigger,
-		warnValue:   thresholdTestFallingWarnValue,
+		warnValue:   thresholdNegativeTestFallingWarnValue,
 		errorValue:  nil,
-		limits:      innerTestCaseLimits,
+		limits:      innerNegativeTestCaseLimits,
 		expected: []*threshold{
 			{
 				thresholdType: "WARN",
-				yCoordinate:   thresholdTestFallingWarnValue,
+				yCoordinate:   thresholdNegativeTestFallingWarnValue,
 			},
 		},
 	},
 	{
-		name:        "FALLING | {limits.lowest <= error << warn <= limits.highest}",
+		name:        "Negative | FALLING | {limits.lowest <= error << warn <= limits.highest}",
 		triggerType: moira.FallingTrigger,
-		warnValue:   thresholdTestFallingWarnValue,
-		errorValue:  thresholdTestFallingErrorValue,
-		limits:      innerTestCaseLimits,
+		warnValue:   thresholdNegativeTestFallingWarnValue,
+		errorValue:  thresholdNegativeTestFallingErrorValue,
+		limits:      innerNegativeTestCaseLimits,
 		expected: []*threshold{
 			{
 				thresholdType: "ERROR",
-				yCoordinate:   thresholdTestFallingErrorValue,
+				yCoordinate:   thresholdNegativeTestFallingErrorValue,
 			},
 			{
 				thresholdType: "WARN",
-				yCoordinate:   thresholdTestFallingWarnValue,
+				yCoordinate:   thresholdNegativeTestFallingWarnValue,
 			},
 		},
 	},
 	{
-		name:        "FALLING | {limits.lowest <= error < warn <= limits.highest}",
+		name:        "Negative | FALLING | {limits.lowest <= error < warn <= limits.highest}",
 		triggerType: moira.FallingTrigger,
-		warnValue:   thresholdTestFallingErrorValue + thresholdTestValueIncrement,
-		errorValue:  thresholdTestFallingErrorValue,
-		limits:      innerTestCaseLimits,
+		warnValue:   thresholdNegativeTestFallingErrorValue + thresholdTestValueIncrement,
+		errorValue:  thresholdNegativeTestFallingErrorValue,
+		limits:      innerNegativeTestCaseLimits,
 		expected: []*threshold{
 			{
 				thresholdType: "ERROR",
-				yCoordinate:   thresholdTestFallingErrorValue,
+				yCoordinate:   thresholdNegativeTestFallingErrorValue,
+			},
+		},
+	},
+}
+
+// thresholdNonNegativeTestCases is a collection of non-negative threshold test cases
+var thresholdNonNegativeTestCases = []thresholdTestCase{
+	{
+		name:        "Non-negative | RISING | {limits.lowest ..limits.highest}, warn",
+		triggerType: moira.RisingTrigger,
+		warnValue:   thresholdNonNegativeTestRisingWarnValue,
+		errorValue:  nil,
+		limits:      outerNonNegativeTestCaseLimits,
+		expected:    []*threshold{},
+	},
+	{
+		name:        "Non-negative | RISING | {limits.lowest ..limits.highest}, error",
+		triggerType: moira.RisingTrigger,
+		warnValue:   nil,
+		errorValue:  thresholdNonNegativeTestRisingErrorValue,
+		limits:      outerNonNegativeTestCaseLimits,
+		expected:    []*threshold{},
+	},
+	{
+		name:        "Non-negative | RISING | {limits.lowest ..limits.highest}, warn, error",
+		triggerType: moira.RisingTrigger,
+		warnValue:   thresholdNonNegativeTestRisingWarnValue,
+		errorValue:  thresholdNonNegativeTestRisingErrorValue,
+		limits:      outerNonNegativeTestCaseLimits,
+		expected:    []*threshold{},
+	},
+	{
+		name:        "Non-negative | RISING | {limits.lowest <= warn <= limits.highest}",
+		triggerType: moira.RisingTrigger,
+		warnValue:   thresholdNonNegativeTestRisingWarnValue,
+		errorValue:  nil,
+		limits:      innerNonNegativeTestCaseLimits,
+		expected: []*threshold{
+			{
+				thresholdType: "WARN",
+				yCoordinate:   innerNonNegativeTestCaseLimits.highest - thresholdNonNegativeTestRisingWarnValue,
+			},
+		},
+	},
+	{
+		name:        "Non-negative | RISING | {limits.lowest <= error <= limits.highest}",
+		triggerType: moira.RisingTrigger,
+		warnValue:   nil,
+		errorValue:  thresholdNonNegativeTestRisingErrorValue,
+		limits:      innerNonNegativeTestCaseLimits,
+		expected: []*threshold{
+			{
+				thresholdType: "ERROR",
+				yCoordinate:   innerNonNegativeTestCaseLimits.highest - thresholdNonNegativeTestRisingErrorValue,
+			},
+		},
+	},
+	{
+		name:        "Non-negative | RISING | {limits.lowest <= warn << error <= limits.highest}",
+		triggerType: moira.RisingTrigger,
+		warnValue:   thresholdNonNegativeTestRisingWarnValue,
+		errorValue:  thresholdNonNegativeTestRisingErrorValue,
+		limits:      innerNonNegativeTestCaseLimits,
+		expected: []*threshold{
+			{
+				thresholdType: "ERROR",
+				yCoordinate:   innerNonNegativeTestCaseLimits.highest - thresholdNonNegativeTestRisingErrorValue,
+			},
+			{
+				thresholdType: "WARN",
+				yCoordinate:   innerNonNegativeTestCaseLimits.highest - thresholdNonNegativeTestRisingWarnValue,
+			},
+		},
+	},
+	{
+		name:        "Non-negative | RISING | {limits.lowest <= warn < error <= limits.highest}",
+		triggerType: moira.RisingTrigger,
+		warnValue:   thresholdNonNegativeTestRisingWarnValue,
+		errorValue:  thresholdNonNegativeTestRisingWarnValue + thresholdTestValueIncrement,
+		limits:      innerNonNegativeTestCaseLimits,
+		expected: []*threshold{
+			{
+				thresholdType: "ERROR",
+				yCoordinate:   innerNonNegativeTestCaseLimits.highest - (thresholdNonNegativeTestRisingWarnValue + thresholdTestValueIncrement),
+			},
+		},
+	},
+	{
+		name:        "Non-negative | FALLING | {limits.lowest ..limits.highest}, error",
+		triggerType: moira.FallingTrigger,
+		warnValue:   nil,
+		errorValue:  thresholdNonNegativeTestFallingErrorValue,
+		limits:      outerNonNegativeTestCaseLimits,
+		expected:    []*threshold{},
+	},
+	{
+		name:        "Non-negative | FALLING | {limits.lowest ..limits.highest}, warn",
+		triggerType: moira.FallingTrigger,
+		warnValue:   thresholdNonNegativeTestFallingWarnValue,
+		errorValue:  nil,
+		limits:      outerNonNegativeTestCaseLimits,
+		expected:    []*threshold{},
+	},
+	{
+		name:        "Non-negative | FALLING | {limits.lowest ..limits.highest}, error, warn",
+		triggerType: moira.FallingTrigger,
+		warnValue:   thresholdNonNegativeTestFallingWarnValue,
+		errorValue:  thresholdNonNegativeTestFallingErrorValue,
+		limits:      outerNonNegativeTestCaseLimits,
+		expected:    []*threshold{},
+	},
+	{
+		name:        "Non-negative | FALLING | {limits.lowest <= error <= limits.highest}",
+		triggerType: moira.FallingTrigger,
+		warnValue:   nil,
+		errorValue:  thresholdNonNegativeTestFallingErrorValue,
+		limits:      innerNonNegativeTestCaseLimits,
+		expected: []*threshold{
+			{
+				thresholdType: "ERROR",
+				yCoordinate:   thresholdNonNegativeTestFallingErrorValue,
+			},
+		},
+	},
+	{
+		name:        "Non-negative | FALLING | {limits.lowest <= warn <= limits.highest}",
+		triggerType: moira.FallingTrigger,
+		warnValue:   thresholdNonNegativeTestFallingWarnValue,
+		errorValue:  nil,
+		limits:      innerNonNegativeTestCaseLimits,
+		expected: []*threshold{
+			{
+				thresholdType: "WARN",
+				yCoordinate:   thresholdNonNegativeTestFallingWarnValue,
+			},
+		},
+	},
+	{
+		name:        "Non-negative | FALLING | {limits.lowest <= error << warn <= limits.highest}",
+		triggerType: moira.FallingTrigger,
+		warnValue:   thresholdNonNegativeTestFallingWarnValue,
+		errorValue:  thresholdNonNegativeTestFallingErrorValue,
+		limits:      innerNonNegativeTestCaseLimits,
+		expected: []*threshold{
+			{
+				thresholdType: "ERROR",
+				yCoordinate:   thresholdNonNegativeTestFallingErrorValue,
+			},
+			{
+				thresholdType: "WARN",
+				yCoordinate:   thresholdNonNegativeTestFallingWarnValue,
+			},
+		},
+	},
+	{
+		name:        "Non-negative | FALLING | {limits.lowest <= error < warn <= limits.highest}",
+		triggerType: moira.FallingTrigger,
+		warnValue:   thresholdNonNegativeTestFallingErrorValue + thresholdTestValueIncrement,
+		errorValue:  thresholdNonNegativeTestFallingErrorValue,
+		limits:      innerNonNegativeTestCaseLimits,
+		expected: []*threshold{
+			{
+				thresholdType: "ERROR",
+				yCoordinate:   thresholdNonNegativeTestFallingErrorValue,
 			},
 		},
 	},
@@ -203,6 +408,8 @@ var thresholdTestCases = []thresholdTestCase{
 
 // TestGenerateThresholds tests thresholds will be generated correctly
 func TestGenerateThresholds(t *testing.T) {
+	thresholdTestCases := append(thresholdNegativeTestCases,
+		thresholdNonNegativeTestCases...)
 	for _, testCase := range thresholdTestCases {
 		Convey(testCase.name, t, func() {
 			trigger := moira.Trigger{
@@ -218,6 +425,8 @@ func TestGenerateThresholds(t *testing.T) {
 			}
 			limits := testCase.limits
 			actual := generateThresholds(&trigger, limits)
+			caseMessage := testCase.getCaseMessage()
+			fmt.Println(caseMessage)
 			So(actual, ShouldResemble, testCase.expected)
 		})
 	}

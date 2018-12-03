@@ -58,14 +58,14 @@ func generateThresholds(trigger *moira.Trigger, limits plotLimits) []*threshold 
 	if trigger.WarnValue == nil && trigger.ErrorValue == nil {
 		return thresholds
 	}
-	// Trigger has non-negative ERROR value and threshold can be drawn
-	if trigger.ErrorValue != nil && *trigger.ErrorValue > 0 && limits.formsSetContaining(*trigger.ErrorValue) {
+	// Trigger has ERROR value and threshold can be drawn
+	if trigger.ErrorValue != nil && limits.formsSetContaining(*trigger.ErrorValue) {
 		thresholds = append(thresholds, newThreshold(
 			trigger.TriggerType, "ERROR", *trigger.ErrorValue, limits.highest))
 	}
-	// Trigger has non-negative WARN value and threshold can be drawn when:
-	if trigger.WarnValue != nil && *trigger.WarnValue > 0 && limits.formsSetContaining(*trigger.WarnValue) {
-		if trigger.ErrorValue != nil {
+	// Trigger has WARN value and threshold can be drawn when:
+	if trigger.WarnValue != nil && limits.formsSetContaining(*trigger.WarnValue) {
+		if trigger.ErrorValue != nil && limits.formsSetContaining(*trigger.ErrorValue) {
 			deltaLimits := math.Abs(limits.highest - limits.lowest)
 			deltaThresholds := math.Abs(*trigger.ErrorValue - *trigger.WarnValue)
 			if deltaThresholds > thresholdGapCoefficient * deltaLimits {
