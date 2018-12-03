@@ -1680,6 +1680,126 @@
 			"path": "gopkg.in/yaml.v2",
 			"revision": "25c4ec802a7d637f88d584ab26798e94ad14c13b",
 			"revisionTime": "2017-07-21T12:20:51Z"
+		},
+		{
+			"checksumSHA1": "xN34bar6n9kkjxjWt/GvnqbFwnQ=",
+			"path": "github.com/disintegration/imaging",
+			"revision": "bbcee2f5c9d5e94ca42c8b50ec847fec64a6c134",
+			"revisionTime": "2018-05-08T19:53:14Z"
+		},
+		{
+			"checksumSHA1": "Rz+jeTntp13wrnlqUfEaRsnuHrI=",
+			"path": "github.com/golang/freetype/raster",
+			"revision": "e2365dfdc4a05e4b8299a783240d4a7d5a65d4e4",
+			"revisionTime": "2017-06-09T00:35:04Z"
+		},
+		{
+			"checksumSHA1": "kukfJu1TyH0z6fyc9Dh4hw/PnBM=",
+			"path": "github.com/golang/freetype/truetype",
+			"revision": "e2365dfdc4a05e4b8299a783240d4a7d5a65d4e4",
+			"revisionTime": "2017-06-09T00:35:04Z"
+		},
+		{
+			"checksumSHA1": "lfMcCIt+21CRnmBNzWNPvvYXLiw=",
+			"path": "github.com/gotokatsuya/ipare",
+			"revision": "fd52c5b6c44bacdd22df5f49d45d1b723c9f6f40",
+			"revisionTime": "2016-12-02T04:39:54Z"
+		},
+		{
+			"checksumSHA1": "7/h7XdF+/prkoyqvbJj+jp5sN2s=",
+			"path": "github.com/gotokatsuya/ipare/algorithm/hash",
+			"revision": "fd52c5b6c44bacdd22df5f49d45d1b723c9f6f40",
+			"revisionTime": "2016-12-02T04:39:54Z"
+		},
+		{
+			"checksumSHA1": "CJdtGeQrfphRCc7JbB5xkpNmah0=",
+			"path": "github.com/gotokatsuya/ipare/algorithm/pixel",
+			"revision": "fd52c5b6c44bacdd22df5f49d45d1b723c9f6f40",
+			"revisionTime": "2016-12-02T04:39:54Z"
+		},
+		{
+			"checksumSHA1": "SXOk7r2vej6TFdHVnlet/AN1K9Q=",
+			"path": "github.com/gotokatsuya/ipare/util",
+			"revision": "fd52c5b6c44bacdd22df5f49d45d1b723c9f6f40",
+			"revisionTime": "2016-12-02T04:39:54Z"
+		},
+		{
+			"checksumSHA1": "XROO0YZpTusm1g/KXdGUhxNg88I=",
+			"path": "github.com/wcharczuk/go-chart",
+			"revision": "9e3a080aa3e7573281cf8d65a55305e1148d857d",
+			"revisionTime": "2018-04-15T23:53:01Z"
+		},
+		{
+			"checksumSHA1": "ju/iUyjLnQV0xAWEbDqFkXBwaAc=",
+			"path": "github.com/wcharczuk/go-chart/drawing",
+			"revision": "9e3a080aa3e7573281cf8d65a55305e1148d857d",
+			"revisionTime": "2018-04-15T23:53:01Z"
+		},
+		{
+			"checksumSHA1": "COlkHTg3E116nTgtKC5Ddt2M1Mg=",
+			"path": "github.com/wcharczuk/go-chart/matrix",
+			"revision": "9e3a080aa3e7573281cf8d65a55305e1148d857d",
+			"revisionTime": "2018-04-15T23:53:01Z"
+		},
+		{
+			"checksumSHA1": "IB7sLgN3No7pMzxfMetpsWf+zGo=",
+			"path": "github.com/wcharczuk/go-chart/roboto",
+			"revision": "9e3a080aa3e7573281cf8d65a55305e1148d857d",
+			"revisionTime": "2018-04-15T23:53:01Z"
+		},
+		{
+			"checksumSHA1": "ifsgxMsndB4Wd7+V8XFIhWWiO7Y=",
+			"path": "github.com/wcharczuk/go-chart/seq",
+			"revision": "9e3a080aa3e7573281cf8d65a55305e1148d857d",
+			"revisionTime": "2018-04-15T23:53:01Z"
+		},
+		{
+			"checksumSHA1": "adpk+RdamQ1K4qIIwMuxhm6Xwyw=",
+			"path": "github.com/wcharczuk/go-chart/util",
+			"revision": "9e3a080aa3e7573281cf8d65a55305e1148d857d",
+			"revisionTime": "2018-04-15T23:53:01Z"
+		},
+		{
+			"checksumSHA1": "UD/pejajPyS7WaWVXq2NU1eK4Ic=",
+			"path": "golang.org/x/image/bmp",
+			"revision": "f315e440302883054d0c2bd85486878cb4f8572c",
+			"revisionTime": "2018-04-03T01:08:12Z"
+		},
+		{
+			"checksumSHA1": "cH+9uIg24pjXHRdUPW0WjMpkau4=",
+			"path": "golang.org/x/image/draw",
+			"revision": "f3a9b89b59def9194717c1d0bd4c0d08fa1afa7b",
+			"revisionTime": "2018-03-14T17:20:51Z"
+		},
+		{
+			"checksumSHA1": "+U1IB5N4LDS74y4fXjARb4/S4IE=",
+			"path": "golang.org/x/image/font",
+			"revision": "f3a9b89b59def9194717c1d0bd4c0d08fa1afa7b",
+			"revisionTime": "2018-03-14T17:20:51Z"
+		},
+		{
+			"checksumSHA1": "o7VkCGBiKM5HXzVzrIci1YDlpvc=",
+			"path": "golang.org/x/image/math/f64",
+			"revision": "f3a9b89b59def9194717c1d0bd4c0d08fa1afa7b",
+			"revisionTime": "2018-03-14T17:20:51Z"
+		},
+		{
+			"checksumSHA1": "euzvwlMLxyD0hwc+raoVsDLv6j4=",
+			"path": "golang.org/x/image/math/fixed",
+			"revision": "f3a9b89b59def9194717c1d0bd4c0d08fa1afa7b",
+			"revisionTime": "2018-03-14T17:20:51Z"
+		},
+		{
+			"checksumSHA1": "xHj7hC7bSAOdCF/aEfmFAK5i3ns=",
+			"path": "golang.org/x/image/tiff",
+			"revision": "f315e440302883054d0c2bd85486878cb4f8572c",
+			"revisionTime": "2018-04-03T01:08:12Z"
+		},
+		{
+			"checksumSHA1": "PF6VjvpNpOdR8epWH1Liyy7x1Qg=",
+			"path": "golang.org/x/image/tiff/lzw",
+			"revision": "f315e440302883054d0c2bd85486878cb4f8572c",
+			"revisionTime": "2018-04-03T01:08:12Z"
 		}
 	],
 	"rootPath": "github.com/moira-alert/moira"

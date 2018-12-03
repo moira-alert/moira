@@ -11,7 +11,9 @@ import (
 	"github.com/moira-alert/moira/target"
 )
 
-type triggerTimeSeries struct {
+// TriggerTimeSeries represent collection of Main target timeseries
+// and collection of additions targets timeseries
+type TriggerTimeSeries struct {
 	Main       []*target.TimeSeries
 	Additional []*target.TimeSeries
 }
@@ -39,10 +41,10 @@ func (err ErrWrongTriggerTargets) Error() string {
 	return wrongTargets.String()
 }
 
-func (triggerChecker *TriggerChecker) getTimeSeries(from, until int64) (*triggerTimeSeries, []string, error) {
+func (triggerChecker *TriggerChecker) getTimeSeries(from, until int64) (*TriggerTimeSeries, []string, error) {
 	wrongTriggerTargets := make([]int, 0)
 
-	triggerTimeSeries := &triggerTimeSeries{
+	triggerTimeSeries := &TriggerTimeSeries{
 		Main:       make([]*target.TimeSeries, 0),
 		Additional: make([]*target.TimeSeries, 0),
 	}
@@ -82,10 +84,10 @@ func (triggerChecker *TriggerChecker) getTimeSeries(from, until int64) (*trigger
 	return triggerTimeSeries, metricsArr, nil
 }
 
-func (triggerChecker *TriggerChecker) getRemoteTimeSeries(from, until int64) (*triggerTimeSeries, error) {
+func (triggerChecker *TriggerChecker) getRemoteTimeSeries(from, until int64) (*TriggerTimeSeries, error) {
 	wrongTriggerTargets := make([]int, 0)
 
-	triggerTimeSeries := &triggerTimeSeries{
+	triggerTimeSeries := &TriggerTimeSeries{
 		Main:       make([]*target.TimeSeries, 0),
 		Additional: make([]*target.TimeSeries, 0),
 	}
@@ -119,15 +121,15 @@ func (triggerChecker *TriggerChecker) getRemoteTimeSeries(from, until int64) (*t
 	return triggerTimeSeries, nil
 }
 
-func (*triggerTimeSeries) getMainTargetName() string {
+func (*TriggerTimeSeries) getMainTargetName() string {
 	return "t1"
 }
 
-func (*triggerTimeSeries) getAdditionalTargetName(targetIndex int) string {
+func (*TriggerTimeSeries) getAdditionalTargetName(targetIndex int) string {
 	return fmt.Sprintf("t%v", targetIndex+2)
 }
 
-func (triggerTimeSeries *triggerTimeSeries) getExpressionValues(firstTargetTimeSeries *target.TimeSeries, valueTimestamp int64) (*expression.TriggerExpression, bool) {
+func (triggerTimeSeries *TriggerTimeSeries) getExpressionValues(firstTargetTimeSeries *target.TimeSeries, valueTimestamp int64) (*expression.TriggerExpression, bool) {
 	expressionValues := &expression.TriggerExpression{
 		AdditionalTargetsValues: make(map[string]float64, len(triggerTimeSeries.Additional)),
 	}
@@ -163,7 +165,7 @@ func IsInvalidValue(val float64) bool {
 }
 
 // hasOnlyWildcards checks given targetTimeSeries for only wildcards
-func (triggerTimeSeries *triggerTimeSeries) hasOnlyWildcards() bool {
+func (triggerTimeSeries *TriggerTimeSeries) hasOnlyWildcards() bool {
 	for _, timeSeries := range triggerTimeSeries.Main {
 		if !timeSeries.Wildcard {
 			return false

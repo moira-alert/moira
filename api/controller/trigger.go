@@ -9,7 +9,6 @@ import (
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/checker"
 	"github.com/moira-alert/moira/database"
-	"github.com/moira-alert/moira/target"
 )
 
 // UpdateTrigger update trigger data and trigger metrics in last state
@@ -157,95 +156,9 @@ func DeleteTriggerThrottling(database moira.Database, triggerID string) *api.Err
 	return nil
 }
 
-// DeleteTriggerMetric deletes metric from last check and all trigger patterns metrics
-func DeleteTriggerMetric(dataBase moira.Database, metricName string, triggerID string) *api.ErrorResponse {
-	return deleteTriggerMetrics(dataBase, metricName, triggerID, false)
-}
-
-// DeleteTriggerNodataMetrics deletes all metric from last check which are in NODATA state.
-// It also deletes all trigger patterns of those metrics
-func DeleteTriggerNodataMetrics(dataBase moira.Database, triggerID string) *api.ErrorResponse {
-	return deleteTriggerMetrics(dataBase, "", triggerID, true)
-}
-
 // SetMetricsMaintenance sets metrics maintenance for current trigger
 func SetMetricsMaintenance(database moira.Database, triggerID string, metricsMaintenance dto.MetricsMaintenance) *api.ErrorResponse {
 	if err := database.SetTriggerCheckMetricsMaintenance(triggerID, map[string]int64(metricsMaintenance)); err != nil {
-		return api.ErrorInternalServer(err)
-	}
-	return nil
-}
-
-// GetTriggerMetrics gets all trigger metrics values, default values from: now - 10min, to: now
-func GetTriggerMetrics(dataBase moira.Database, from, to int64, triggerID string) (dto.TriggerMetrics, *api.ErrorResponse) {
-	trigger, err := dataBase.GetTrigger(triggerID)
-	if err != nil {
-		if err == database.ErrNil {
-			return nil, api.ErrorInvalidRequest(fmt.Errorf("trigger not found"))
-		}
-		return nil, api.ErrorInternalServer(err)
-	}
-
-	triggerMetrics := make(map[string][]moira.MetricValue)
-	isSimpleTrigger := trigger.IsSimple()
-	for _, tar := range trigger.Targets {
-		result, err := target.EvaluateTarget(dataBase, tar, from, to, isSimpleTrigger)
-		if err != nil {
-			return nil, api.ErrorInternalServer(err)
-		}
-		for _, timeSeries := range result.TimeSeries {
-			values := make([]moira.MetricValue, 0)
-			for i := 0; i < len(timeSeries.Values); i++ {
-				timestamp := timeSeries.StartTime + int64(i)*timeSeries.StepTime
-				value := timeSeries.GetTimestampValue(timestamp)
-				if !checker.IsInvalidValue(value) {
-					values = append(values, moira.MetricValue{Value: value, Timestamp: timestamp})
-				}
-			}
-			triggerMetrics[timeSeries.Name] = values
-		}
-	}
-	return triggerMetrics, nil
-}
-
-func deleteTriggerMetrics(dataBase moira.Database, metricName string, triggerID string, removeAllNodataMetrics bool) *api.ErrorResponse {
-	trigger, err := dataBase.GetTrigger(triggerID)
-	if err != nil {
-		if err == database.ErrNil {
-			return api.ErrorInvalidRequest(fmt.Errorf("trigger not found"))
-		}
-		return api.ErrorInternalServer(err)
-	}
-
-	if err = dataBase.AcquireTriggerCheckLock(triggerID, 10); err != nil {
-		return api.ErrorInternalServer(err)
-	}
-	defer dataBase.DeleteTriggerCheckLock(triggerID)
-
-	lastCheck, err := dataBase.GetTriggerLastCheck(triggerID)
-	if err != nil {
-		if err == database.ErrNil {
-			return api.ErrorInvalidRequest(fmt.Errorf("trigger check not found"))
-		}
-		return api.ErrorInternalServer(err)
-	}
-	if removeAllNodataMetrics {
-		for metricName, metricState := range lastCheck.Metrics {
-			if metricState.State == checker.NODATA {
-				delete(lastCheck.Metrics, metricName)
-			}
-		}
-	} else {
-		_, ok := lastCheck.Metrics[metricName]
-		if ok {
-			delete(lastCheck.Metrics, metricName)
-		}
-	}
-	lastCheck.UpdateScore()
-	if err = dataBase.RemovePatternsMetrics(trigger.Patterns); err != nil {
-		return api.ErrorInternalServer(err)
-	}
-	if err = dataBase.SetTriggerLastCheck(triggerID, &lastCheck, trigger.IsRemote); err != nil {
 		return api.ErrorInternalServer(err)
 	}
 	return nil
