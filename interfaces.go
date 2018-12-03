@@ -3,6 +3,7 @@ package moira
 import (
 	"time"
 
+	"github.com/wcharczuk/go-chart"
 	"gopkg.in/tomb.v2"
 )
 
@@ -143,4 +144,18 @@ type Logger interface {
 type Sender interface {
 	SendEvents(events NotificationEvents, contact ContactData, trigger TriggerData, throttled bool) error
 	Init(senderSettings map[string]string, logger Logger, location *time.Location, dateTimeFormat string) error
+}
+
+// PlotTheme is an interface to access plot theme styles
+type PlotTheme interface {
+	GetTitleStyle() chart.Style
+	GetGridStyle() chart.Style
+	GetCanvasStyle() chart.Style
+	GetBackgroundStyle() chart.Style
+	GetThresholdStyle(thresholdType string) chart.Style
+	GetAnnotationStyle(thresholdType string) chart.Style
+	GetSerieStyles(curveInd int) (curveStyle, pointStyle chart.Style)
+	GetLegendStyle() chart.Style
+	GetXAxisStyle() chart.Style
+	GetYAxisStyle() chart.Style
 }
