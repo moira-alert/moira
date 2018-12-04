@@ -1,4 +1,4 @@
-package index
+package bleve
 
 import (
 	"fmt"
@@ -6,78 +6,60 @@ import (
 	"testing"
 
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/database/redis"
+	"github.com/moira-alert/moira/index/mapping"
 	"github.com/op/go-logging"
 	"github.com/satori/go.uuid"
 )
 
 type config struct {
-	triggersSize     int
-	batchSize        int
-	indexFakeTrigger bool
+	triggersSize int
+	batchSize    int
 }
 
 var testCases = []config{
-	{50, 1000, true},
-	{100, 1000, true},
-	{250, 1000, true},
-	{500, 1000, true},
-	{1000, 1000, true},
-	{5000, 1000, true},
-	{10000, 1000, true},
-	{100, 10, true},
-	{500, 50, true},
-	{1000, 100, true},
-	{2500, 250, true},
-	{5000, 500, true},
-	{10, 1000, false},
-	{50, 1000, false},
-	{100, 1000, false},
-	{250, 1000, false},
-	{500, 1000, false},
-	{1000, 1000, false},
-	{100, 10, false},
-	{500, 50, false},
-	{1000, 100, false},
-	{2500, 250, false},
-	{5000, 500, false},
+	{50, 1000},
+	{100, 1000},
+	{250, 1000},
+	{500, 1000},
+	{1000, 1000},
+	{5000, 1000},
+	{10000, 1000},
+	{100, 10},
+	{500, 50},
+	{1000, 100},
+	{2500, 250},
+	{5000, 500},
 }
 
 func BenchmarkFillIndex(b *testing.B) {
 	for _, testCase := range testCases {
-		b.Run(fmt.Sprintf("BenchmarkFillIndex_Size:%d_Batch:%d_IndexFakeTrigger:%t", testCase.triggersSize, testCase.batchSize, testCase.indexFakeTrigger),
+		b.Run(fmt.Sprintf("BenchmarkFillIndex_Size:%d_Batch:%d", testCase.triggersSize, testCase.batchSize),
 			func(b *testing.B) {
-				runBenchmark(b, testCase.triggersSize, testCase.batchSize, testCase.indexFakeTrigger)
+				runBenchmark(b, testCase.triggersSize, testCase.batchSize)
 			})
 	}
 }
 
-func runBenchmark(b *testing.B, triggersSize int, batchSize int, indexFakeTrigger bool) {
+func runBenchmark(b *testing.B, triggersSize int, batchSize int) {
 	logger, _ := logging.GetLogger("Benchmark")
-	database := redis.NewDatabase(logger, redis.Config{})
-
 	triggersPointers := generateTriggerChecks(triggersSize)
+	triggerMapping := mapping.BuildIndexMapping(mapping.Trigger{})
 
 	b.ResetTimer()
 	b.ReportAllocs()
 
 	for n := 0; n < b.N; n++ {
-		searchIndex := NewSearchIndex(logger, database)
-		logger.Infof("[Benchmark] [BatchSize: %d] [Triggers: %d] [IndexFake: %v] Start", batchSize, triggersSize, indexFakeTrigger)
-		fillIndexWithTriggers(searchIndex, triggersPointers, batchSize, indexFakeTrigger)
-		logger.Infof("[Benchmark] [BatchSize: %d] [Triggers: %d] [IndexFake: %v] Finish", batchSize, triggersSize, indexFakeTrigger)
+		newIndex, _ := CreateTriggerIndex(triggerMapping)
+		logger.Infof("[Benchmark] [BatchSize: %d] [Triggers: %d] Start", batchSize, triggersSize)
+		fillIndexWithTriggers(newIndex, triggersPointers, batchSize)
+		logger.Infof("[Benchmark] [BatchSize: %d] [Triggers: %d] Finish", batchSize, triggersSize)
 	}
 }
 
-func fillIndexWithTriggers(index *Index, triggerChecksToIndex []*moira.TriggerCheck, batchSize int, indexFakeTrigger bool) {
+func fillIndexWithTriggers(index *TriggerIndex, triggerChecksToIndex []*moira.TriggerCheck, batchSize int) {
 	chunkedTriggersToIndex := chunkTriggerChecks(triggerChecksToIndex, batchSize)
-	if indexFakeTrigger {
-		index.indexTriggerCheck(fakeTriggerToIndex)
-		defer index.index.Delete(fakeTriggerToIndex.ID)
-	}
-
 	for _, slice := range chunkedTriggersToIndex {
-		index.addBatchOfTriggerChecks(slice)
+		index.Write(slice)
 	}
 }
 

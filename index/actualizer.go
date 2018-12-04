@@ -2,6 +2,8 @@ package index
 
 import (
 	"time"
+
+	"github.com/moira-alert/moira"
 )
 
 const actualizerRunInterval = time.Second
@@ -46,24 +48,34 @@ func (index *Index) actualizeIndex() error {
 	if err != nil {
 		return err
 	}
-	triggersToUpdate := make([]string, 0)
+	triggersToUpdate := make([]*moira.TriggerCheck, 0)
+	triggersToDelete := make([]string, 0)
 
 	for i, triggerID := range triggerToReindexIDs {
 		trigger := triggersToReindex[i]
 		if trigger == nil {
+			triggersToDelete = append(triggersToDelete, triggerID)
 			index.logger.Debugf("[Index actualizer] [triggerID: %s] is nil, remove from index", triggerID)
-			index.index.Delete(triggerID)
 		} else {
-			triggersToUpdate = append(triggersToUpdate, trigger.ID)
+			triggersToUpdate = append(triggersToUpdate, trigger)
 			index.logger.Debugf("[Index actualizer] [triggerID: %s] need to be reindexed...", triggerID)
 		}
 	}
-	if len(triggersToUpdate) > 0 {
-		count, err2 := index.addTriggers(triggersToUpdate, defaultIndexBatchSize)
-		index.logger.Debugf("[Index actualizer] %d triggers reindexed", count)
+
+	if len(triggersToDelete) > 0 {
+		err2 := index.triggerIndex.Delete(triggersToDelete)
 		if err2 != nil {
 			return err2
 		}
+		index.logger.Debugf("[Index actualizer] %d triggers deleted", len(triggersToDelete))
+	}
+
+	if len(triggersToUpdate) > 0 {
+		err2 := index.triggerIndex.Write(triggersToUpdate)
+		if err2 != nil {
+			return err2
+		}
+		index.logger.Debugf("[Index actualizer] %d triggers reindexed", len(triggersToUpdate))
 	}
 	return nil
 }
