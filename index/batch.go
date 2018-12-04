@@ -41,7 +41,7 @@ func (index *Index) getTriggerChecksBatches(triggerIDsBatches [][]string) (trigg
 func (index *Index) handleTriggerBatches(triggerChecksChan chan []*moira.TriggerCheck, getTriggersErrors chan error, toIndex int) error {
 	indexErrors := make(chan error)
 	wg := &sync.WaitGroup{}
-	var count int64 = 0
+	var count int64
 	func() {
 		for {
 			select {

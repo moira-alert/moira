@@ -9,6 +9,10 @@ import (
 	"github.com/moira-alert/moira/index/mapping"
 )
 
+// Search gets search params and returns triggerIDs in following order:
+// TriggerCheck.Score (desc)
+// Relevance (asc)
+// Trigger.Name (asc)
 func (index *TriggerIndex) Search(filterTags []string, searchString string, onlyErrors bool, page int64, size int64) (triggerIDs []string, total int64, err error) {
 	if size < 0 {
 		page = 0

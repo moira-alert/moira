@@ -6,6 +6,7 @@ import (
 	"github.com/moira-alert/moira/index/mapping"
 )
 
+// Write adds moira.TriggerChecks to TriggerIndex
 func (index *TriggerIndex) Write(checks []*moira.TriggerCheck) error {
 	batch := index.index.NewBatch()
 	defer batch.Reset()

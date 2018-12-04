@@ -14,6 +14,7 @@ const (
 	serviceName           = "searchIndex"
 )
 
+// TriggerIndex is index for moira.TriggerChecks type
 type TriggerIndex interface {
 	Search(filterTags []string, searchString string, onlyErrors bool, page int64, size int64) (triggerIDs []string, total int64, err error)
 	Write(checks []*moira.TriggerCheck) error
