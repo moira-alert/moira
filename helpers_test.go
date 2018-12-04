@@ -82,3 +82,21 @@ var triggerVal4 = &Trigger{
 	TTL:      600,
 	Tags:     []string{"4"},
 }
+
+func TestChunkSlice(t *testing.T) {
+	Convey("Test chunking slices", t, func() {
+		originalSlice := []string{"123", "234", "345", "456", "567", "678", "789", "890"}
+
+		actual := ChunkSlice(originalSlice, 10)
+		So(actual, ShouldResemble, [][]string{originalSlice})
+
+		actual = ChunkSlice(originalSlice, 1)
+		So(actual, ShouldResemble, [][]string{{"123"}, {"234"}, {"345"}, {"456"}, {"567"}, {"678"}, {"789"}, {"890"}})
+
+		actual = ChunkSlice(originalSlice, 5)
+		So(actual, ShouldResemble, [][]string{{"123", "234", "345", "456", "567"}, {"678", "789", "890"}})
+
+		actual = ChunkSlice(originalSlice, 0)
+		So(actual, ShouldBeEmpty)
+	})
+}
