@@ -27,7 +27,7 @@ func DatabaseContext(database moira.Database) func(next http.Handler) http.Handl
 func SearchIndexContext(searcher moira.Searcher) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-			ctx := context.WithValue(request.Context(), databaseKey, searcher)
+			ctx := context.WithValue(request.Context(), searcherKey, searcher)
 			next.ServeHTTP(writer, request.WithContext(ctx))
 		})
 	}
