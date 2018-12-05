@@ -3,6 +3,7 @@ package redis
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/garyburd/redigo/redis"
 
@@ -31,6 +32,9 @@ func (connector *DbConnector) setTriggerLastCheckAndUpdateProperCounter(triggerI
 	if err != nil {
 		return err
 	}
+
+	triggerNeedToReindex := connector.checkDataScoreChanged(triggerID, checkData)
+
 	c := connector.pool.Get()
 	defer c.Close()
 	c.Send("MULTI")
@@ -41,6 +45,9 @@ func (connector *DbConnector) setTriggerLastCheckAndUpdateProperCounter(triggerI
 		c.Send("SADD", badStateTriggersKey, triggerID)
 	} else {
 		c.Send("SREM", badStateTriggersKey, triggerID)
+	}
+	if triggerNeedToReindex {
+		c.Send("ZADD", triggersToReindexKey, time.Now().Unix(), triggerID)
 	}
 	_, err = c.Do("EXEC")
 	if err != nil {
@@ -57,10 +64,12 @@ func (connector *DbConnector) RemoveTriggerLastCheck(triggerID string) error {
 	c.Send("DEL", metricLastCheckKey(triggerID))
 	c.Send("ZREM", triggersChecksKey, triggerID)
 	c.Send("SREM", badStateTriggersKey, triggerID)
+	c.Send("ZADD", triggersToReindexKey, time.Now().Unix(), triggerID)
 	_, err := c.Do("EXEC")
 	if err != nil {
 		return fmt.Errorf("Failed to EXEC: %s", err.Error())
 	}
+
 	return nil
 }
 
@@ -116,6 +125,7 @@ func (connector *DbConnector) SetTriggerCheckMaintenance(triggerID string, metri
 
 // GetTriggerCheckIDs gets checked triggerIDs, sorted from max to min check score and filtered by given tags
 // If onlyErrors return only triggerIDs with score > 0
+// ToDo: DEPRECATED method. Remove in Moira 2.5
 func (connector *DbConnector) GetTriggerCheckIDs(tagNames []string, onlyErrors bool) ([]string, error) {
 	c := connector.pool.Get()
 	defer c.Close()
@@ -167,6 +177,19 @@ func (connector *DbConnector) GetTriggerCheckIDs(tagNames []string, onlyErrors b
 		}
 	}
 	return total, nil
+}
+
+// checkDataScoreChanged returns true if checkData.Score changed since last check
+func (connector *DbConnector) checkDataScoreChanged(triggerID string, checkData *moira.CheckData) bool {
+	c := connector.pool.Get()
+	defer c.Close()
+
+	oldScore, err := redis.Int64(c.Do("ZSCORE", triggersChecksKey, triggerID))
+	if err != nil {
+		return true
+	}
+
+	return oldScore != checkData.Score
 }
 
 var badStateTriggersKey = "moira-bad-state-triggers"

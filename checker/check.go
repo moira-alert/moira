@@ -70,7 +70,7 @@ func (triggerChecker *TriggerChecker) handleMetricsCheck() (moira.CheckData, err
 		LastSuccessfulCheckTimestamp: triggerChecker.lastCheck.LastSuccessfulCheckTimestamp,
 	}
 
-	var triggerTimeSeries *triggerTimeSeries
+	var triggerTimeSeries *TriggerTimeSeries
 	var err error
 	if triggerChecker.trigger.IsRemote {
 		triggerTimeSeries, err = triggerChecker.getRemoteTimeSeries(triggerChecker.From, triggerChecker.Until)
@@ -130,7 +130,7 @@ func (triggerChecker *TriggerChecker) handleMetricsCheck() (moira.CheckData, err
 	return checkData, nil
 }
 
-func (triggerChecker *TriggerChecker) checkTimeSeries(timeSeries *target.TimeSeries, triggerTimeSeries *triggerTimeSeries) (lastState moira.MetricState, needToDeleteMetric bool, err error) {
+func (triggerChecker *TriggerChecker) checkTimeSeries(timeSeries *target.TimeSeries, triggerTimeSeries *TriggerTimeSeries) (lastState moira.MetricState, needToDeleteMetric bool, err error) {
 	lastState = triggerChecker.lastCheck.GetOrCreateMetricState(timeSeries.Name, timeSeries.StartTime-3600, triggerChecker.trigger.MuteNewMetrics)
 	metricStates, err := triggerChecker.getTimeSeriesStepsStates(triggerTimeSeries, timeSeries, lastState)
 	if err != nil {
@@ -221,7 +221,7 @@ func (triggerChecker *TriggerChecker) checkForNoData(timeSeries *target.TimeSeri
 	}
 }
 
-func (triggerChecker *TriggerChecker) getTimeSeriesStepsStates(triggerTimeSeries *triggerTimeSeries, timeSeries *target.TimeSeries, metricLastState moira.MetricState) ([]moira.MetricState, error) {
+func (triggerChecker *TriggerChecker) getTimeSeriesStepsStates(triggerTimeSeries *TriggerTimeSeries, timeSeries *target.TimeSeries, metricLastState moira.MetricState) ([]moira.MetricState, error) {
 	startTime := timeSeries.StartTime
 	stepTime := timeSeries.StepTime
 
@@ -244,7 +244,7 @@ func (triggerChecker *TriggerChecker) getTimeSeriesStepsStates(triggerTimeSeries
 	return metricStates, nil
 }
 
-func (triggerChecker *TriggerChecker) getTimeSeriesState(triggerTimeSeries *triggerTimeSeries, timeSeries *target.TimeSeries, lastState moira.MetricState, valueTimestamp, checkPoint int64) (*moira.MetricState, error) {
+func (triggerChecker *TriggerChecker) getTimeSeriesState(triggerTimeSeries *TriggerTimeSeries, timeSeries *target.TimeSeries, lastState moira.MetricState, valueTimestamp, checkPoint int64) (*moira.MetricState, error) {
 	if valueTimestamp <= checkPoint {
 		return nil, nil
 	}

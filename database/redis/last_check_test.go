@@ -2,6 +2,7 @@ package redis
 
 import (
 	"testing"
+	"time"
 
 	"github.com/op/go-logging"
 	"github.com/satori/go.uuid"
@@ -216,6 +217,49 @@ func TestLastCheck(t *testing.T) {
 			actual, err = dataBase.GetTriggerCheckIDs(make([]string, 0), false)
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, []string{badTriggerID, okTriggerID})
+		})
+
+		Convey("Test last check manipulations update 'triggers to reindex' list", func() {
+			dataBase.flush()
+			triggerID := uuid.NewV4().String()
+
+			// there was no trigger with such ID, so function should return true
+			So(dataBase.checkDataScoreChanged(triggerID, &lastCheckWithNoMetrics), ShouldBeTrue)
+
+			// set new last check. Should add a trigger to a reindex set
+			err := dataBase.SetTriggerLastCheck(triggerID, &lastCheckWithNoMetrics, false)
+			So(err, ShouldBeNil)
+
+			So(dataBase.checkDataScoreChanged(triggerID, &lastCheckWithNoMetrics), ShouldBeFalse)
+
+			So(dataBase.checkDataScoreChanged(triggerID, &lastCheckTest), ShouldBeTrue)
+
+			actual, err := dataBase.FetchTriggersToReindex(time.Now().Unix() - 1)
+			So(err, ShouldBeNil)
+			So(actual, ShouldResemble, []string{triggerID})
+
+			time.Sleep(time.Second)
+
+			err = dataBase.SetTriggerLastCheck(triggerID, &lastCheckTest, false)
+			So(err, ShouldBeNil)
+
+			actual, err = dataBase.FetchTriggersToReindex(time.Now().Unix() - 10)
+			So(err, ShouldBeNil)
+			So(actual, ShouldResemble, []string{triggerID})
+
+			err = dataBase.RemoveTriggersToReindex(time.Now().Unix() + 10)
+			So(err, ShouldBeNil)
+
+			actual, err = dataBase.FetchTriggersToReindex(time.Now().Unix() - 10)
+			So(err, ShouldBeNil)
+			So(actual, ShouldBeEmpty)
+
+			err = dataBase.RemoveTriggerLastCheck(triggerID)
+			So(err, ShouldBeNil)
+
+			actual, err = dataBase.FetchTriggersToReindex(time.Now().Unix() - 1)
+			So(err, ShouldBeNil)
+			So(actual, ShouldResemble, []string{triggerID})
 		})
 	})
 }

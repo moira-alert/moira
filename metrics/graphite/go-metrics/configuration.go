@@ -47,6 +47,14 @@ func ConfigureCheckerMetrics(prefix string, remoteEnabled bool) *graphite.Checke
 	return m
 }
 
+// ConfigureIndexMetrics in full-text search index metrics configurator
+func ConfigureIndexMetrics(prefix string) *graphite.IndexMetrics {
+	return &graphite.IndexMetrics{
+		IndexedTriggersCount:  registerHistogram(metricNameWithPrefix(prefix, "indexedTriggers")),
+		IndexActualizationLag: registerTimer(metricNameWithPrefix(prefix, "actualizationLag")),
+	}
+}
+
 func configureCheckMetrics(prefix string) *graphite.CheckMetrics {
 	return &graphite.CheckMetrics{
 		CheckError:           registerMeter(metricNameWithPrefix(prefix, "errors.check")),

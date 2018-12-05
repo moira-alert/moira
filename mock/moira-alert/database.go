@@ -191,6 +191,19 @@ func (mr *MockDatabaseMockRecorder) FetchNotifications(arg0 interface{}) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchNotifications", reflect.TypeOf((*MockDatabase)(nil).FetchNotifications), arg0)
 }
 
+// FetchTriggersToReindex mocks base method
+func (m *MockDatabase) FetchTriggersToReindex(arg0 int64) ([]string, error) {
+	ret := m.ctrl.Call(m, "FetchTriggersToReindex", arg0)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FetchTriggersToReindex indicates an expected call of FetchTriggersToReindex
+func (mr *MockDatabaseMockRecorder) FetchTriggersToReindex(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchTriggersToReindex", reflect.TypeOf((*MockDatabase)(nil).FetchTriggersToReindex), arg0)
+}
+
 // GetAllContacts mocks base method
 func (m *MockDatabase) GetAllContacts() ([]*moira.ContactData, error) {
 	ret := m.ctrl.Call(m, "GetAllContacts")
@@ -907,6 +920,18 @@ func (m *MockDatabase) RemoveTriggerLastCheck(arg0 string) error {
 // RemoveTriggerLastCheck indicates an expected call of RemoveTriggerLastCheck
 func (mr *MockDatabaseMockRecorder) RemoveTriggerLastCheck(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveTriggerLastCheck", reflect.TypeOf((*MockDatabase)(nil).RemoveTriggerLastCheck), arg0)
+}
+
+// RemoveTriggersToReindex mocks base method
+func (m *MockDatabase) RemoveTriggersToReindex(arg0 int64) error {
+	ret := m.ctrl.Call(m, "RemoveTriggersToReindex", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveTriggersToReindex indicates an expected call of RemoveTriggersToReindex
+func (mr *MockDatabaseMockRecorder) RemoveTriggersToReindex(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveTriggersToReindex", reflect.TypeOf((*MockDatabase)(nil).RemoveTriggersToReindex), arg0)
 }
 
 // RemoveUser mocks base method
