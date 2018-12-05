@@ -51,6 +51,7 @@ type triggerData struct {
 	Tags         string
 	TriggerState string
 	Items        []*templateRow
+	ImageBase64  string
 }
 
 // Init read yaml config
