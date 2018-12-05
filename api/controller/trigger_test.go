@@ -416,14 +416,14 @@ func TestSetMetricsMaintenance(t *testing.T) {
 
 	Convey("Success", t, func() {
 		errorMessage := api.WarningDeprecatedAPI(fmt.Sprintf("deprecated API, use /trigger/%s/setMaintenance instead", triggerID))
-		dataBase.EXPECT().SetTriggerCheckMaintenance(triggerID, maintenance, int64(0)).Return(nil)
+		dataBase.EXPECT().SetTriggerCheckMaintenance(triggerID, maintenance, nil).Return(nil)
 		err := SetMetricsMaintenance(dataBase, triggerID, maintenance)
 		So(err, ShouldResemble, errorMessage)
 	})
 
 	Convey("Error", t, func() {
 		expected := fmt.Errorf("oooops! Error set")
-		dataBase.EXPECT().SetTriggerCheckMaintenance(triggerID, maintenance, int64(0)).Return(expected)
+		dataBase.EXPECT().SetTriggerCheckMaintenance(triggerID, maintenance, nil).Return(expected)
 		err := SetMetricsMaintenance(dataBase, triggerID, maintenance)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 	})
@@ -439,6 +439,7 @@ func TestSetTriggerMaintenance(t *testing.T) {
 		"Metric2": 12346,
 	}
 	triggerMaintenance := dto.TriggerMaintenance{Metrics: map[string]int64(metricsMaintenance)}
+	var maintenanceTS int64 = 12347
 
 	Convey("Success setting metrics maintenance only", t, func() {
 		dataBase.EXPECT().SetTriggerCheckMaintenance(triggerID, triggerMaintenance.Metrics, triggerMaintenance.Trigger).Return(nil)
@@ -447,7 +448,7 @@ func TestSetTriggerMaintenance(t *testing.T) {
 	})
 
 	Convey("Success setting trigger maintenance only", t, func() {
-		triggerMaintenance.Trigger = 12347
+		triggerMaintenance.Trigger = &maintenanceTS
 		triggerMaintenance.Metrics = dto.MetricsMaintenance{}
 		dataBase.EXPECT().SetTriggerCheckMaintenance(triggerID, triggerMaintenance.Metrics, triggerMaintenance.Trigger).Return(nil)
 		err := SetTriggerMaintenance(dataBase, triggerID, triggerMaintenance)
@@ -455,7 +456,7 @@ func TestSetTriggerMaintenance(t *testing.T) {
 	})
 
 	Convey("Success setting metrics and trigger maintenance at once", t, func() {
-		triggerMaintenance.Trigger = 12347
+		triggerMaintenance.Trigger = &maintenanceTS
 		triggerMaintenance.Metrics = metricsMaintenance
 		dataBase.EXPECT().SetTriggerCheckMaintenance(triggerID, triggerMaintenance.Metrics, triggerMaintenance.Trigger).Return(nil)
 		err := SetTriggerMaintenance(dataBase, triggerID, triggerMaintenance)
