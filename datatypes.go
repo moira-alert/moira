@@ -64,11 +64,12 @@ type ContactData struct {
 	User  string `json:"user"`
 }
 
-// SubscriptionData represent user subscription
+// SubscriptionData represents user subscription
 type SubscriptionData struct {
 	Contacts          []string     `json:"contacts"`
 	Tags              []string     `json:"tags"`
 	Schedule          ScheduleData `json:"sched"`
+	Plotting          PlottingData `json:"plotting"`
 	ID                string       `json:"id"`
 	Enabled           bool         `json:"enabled"`
 	IgnoreWarnings    bool         `json:"ignore_warnings,omitempty"`
@@ -77,7 +78,13 @@ type SubscriptionData struct {
 	User              string       `json:"user"`
 }
 
-// ScheduleData represent subscription schedule
+// PlottingData represents plotting settings
+type PlottingData struct {
+	Enabled bool   `json:"enabled"`
+	Theme   string `json:"theme"`
+}
+
+// ScheduleData represents subscription schedule
 type ScheduleData struct {
 	Days           []ScheduleDataDay `json:"days"`
 	TimezoneOffset int64             `json:"tzOffset"`
@@ -85,7 +92,7 @@ type ScheduleData struct {
 	EndOffset      int64             `json:"endOffset"`
 }
 
-// ScheduleDataDay represent week day of schedule
+// ScheduleDataDay represents week day of schedule
 type ScheduleDataDay struct {
 	Enabled bool   `json:"enabled"`
 	Name    string `json:"name,omitempty"`
@@ -101,7 +108,7 @@ type ScheduledNotification struct {
 	Timestamp int64             `json:"timestamp"`
 }
 
-// MatchedMetric represent parsed and matched metric data
+// MatchedMetric represents parsed and matched metric data
 type MatchedMetric struct {
 	Metric             string
 	Patterns           []string
@@ -111,7 +118,7 @@ type MatchedMetric struct {
 	Retention          int
 }
 
-// MetricValue represent metric data
+// MetricValue represents metric data
 type MetricValue struct {
 	RetentionTimestamp int64   `json:"step,omitempty"`
 	Timestamp          int64   `json:"ts"`
@@ -147,14 +154,14 @@ type Trigger struct {
 	MuteNewMetrics   bool          `json:"mute_new_metrics"`
 }
 
-// TriggerCheck represent trigger data with last check data and check timestamp
+// TriggerCheck represents trigger data with last check data and check timestamp
 type TriggerCheck struct {
 	Trigger
 	Throttling int64     `json:"throttling"`
 	LastCheck  CheckData `json:"last_check"`
 }
 
-// CheckData represent last trigger check data
+// CheckData represents last trigger check data
 type CheckData struct {
 	Metrics                      map[string]MetricState `json:"metrics"`
 	Score                        int64                  `json:"score"`
@@ -167,7 +174,7 @@ type CheckData struct {
 	Message                      string                 `json:"msg,omitempty"`
 }
 
-// MetricState represent metric state data for given timestamp
+// MetricState represents metric state data for given timestamp
 type MetricState struct {
 	EventTimestamp  int64    `json:"event_timestamp"`
 	State           string   `json:"state"`
@@ -178,7 +185,7 @@ type MetricState struct {
 	Maintenance     int64    `json:"maintenance,omitempty"`
 }
 
-// MetricEvent represent filter metric event
+// MetricEvent represents filter metric event
 type MetricEvent struct {
 	Metric  string `json:"metric"`
 	Pattern string `json:"pattern"`
