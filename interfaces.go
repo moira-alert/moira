@@ -146,7 +146,7 @@ type Logger interface {
 
 // Sender interface for implementing specified contact type sender
 type Sender interface {
-	SendEvents(events NotificationEvents, contact ContactData, trigger TriggerData, throttled bool) error
+	SendEvents(events NotificationEvents, contact ContactData, trigger TriggerData, throttled bool, plot []byte) error
 	Init(senderSettings map[string]string, logger Logger, location *time.Location, dateTimeFormat string) error
 }
 

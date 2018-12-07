@@ -1,14 +1,18 @@
 package notifications
 
 import (
+	"bytes"
 	"fmt"
 	"sync"
 	"time"
 
+	"github.com/go-graphite/carbonapi/expr/types"
+	"github.com/wcharczuk/go-chart"
 	"gopkg.in/tomb.v2"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/notifier"
+	"github.com/moira-alert/moira/plotting"
 )
 
 const sleepAfterNotifierBadState = time.Second * 10
@@ -81,6 +85,14 @@ func (worker *FetchNotificationsWorker) processScheduledNotifications() error {
 		}
 		p.Events = append(p.Events, notification.Event)
 		notificationPackages[packageKey] = p
+
+		if notification.Plotting.Enabled {
+			plot, err := worker.getNotificationPackagePlot(notification.Trigger, p.Events, notification.Plotting.Theme)
+			if err != nil {
+				p.Plot = plot
+			}
+		}
+
 	}
 	var sendingWG sync.WaitGroup
 	for _, pkg := range notificationPackages {
@@ -88,4 +100,33 @@ func (worker *FetchNotificationsWorker) processScheduledNotifications() error {
 	}
 	sendingWG.Wait()
 	return nil
+}
+
+func (worker *FetchNotificationsWorker) getNotificationPackagePlot(triggerData moira.TriggerData, events []moira.NotificationEvent, plotTheme string) ([]byte, error) {
+	buff := bytes.NewBuffer(make([]byte, 0))
+
+	trigger, err := worker.Database.GetTrigger(triggerData.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	plotTemplate, err := plotting.GetPlotTemplate(plotTheme)
+	if err != nil {
+		return nil, err
+	}
+
+	var metricsData []*types.MetricData
+
+	metricsToShow := make([]string, 0)
+
+	for _, event := range events {
+		metricsToShow = append(metricsToShow, event.Metric)
+	}
+
+	renderable := plotTemplate.GetRenderable(&trigger, metricsData, metricsToShow)
+	if err = renderable.Render(chart.PNG, buff); err != nil {
+		return nil, err
+	}
+
+	return buff.Bytes(), nil
 }

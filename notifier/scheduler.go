@@ -2,14 +2,16 @@ package notifier
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/metrics/graphite"
-	"time"
 )
 
 // Scheduler implements event scheduling functionality
 type Scheduler interface {
-	ScheduleNotification(now time.Time, event moira.NotificationEvent, trigger moira.TriggerData, contact moira.ContactData, throttledOld bool, sendfail int) *moira.ScheduledNotification
+	ScheduleNotification(now time.Time, event moira.NotificationEvent, trigger moira.TriggerData, contact moira.ContactData,
+		plottingSettings moira.PlottingData, throttledOld bool, sendfail int) *moira.ScheduledNotification
 }
 
 // StandardScheduler represents standard event scheduling
@@ -35,7 +37,8 @@ func NewScheduler(database moira.Database, logger moira.Logger, metrics *graphit
 }
 
 // ScheduleNotification is realization of scheduling event, based on trigger and subscription time intervals and triggers settings
-func (scheduler *StandardScheduler) ScheduleNotification(now time.Time, event moira.NotificationEvent, trigger moira.TriggerData, contact moira.ContactData, throttledOld bool, sendfail int) *moira.ScheduledNotification {
+func (scheduler *StandardScheduler) ScheduleNotification(now time.Time, event moira.NotificationEvent,
+	trigger moira.TriggerData, contact moira.ContactData, throttledOld bool, sendfail int) *moira.ScheduledNotification {
 	var (
 		next      time.Time
 		throttled bool
@@ -104,7 +107,8 @@ func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *
 				count := scheduler.database.GetNotificationEventCount(event.TriggerID, from.Unix())
 				if count >= level.count {
 					next = now.Add(level.delay)
-					scheduler.logger.Debugf("Trigger %s switched %d times in last %s, delaying next notification for %s", event.TriggerID, count, level.duration, level.delay)
+					scheduler.logger.Debugf("Trigger %s switched %d times in last %s, delaying next notification for %s",
+						event.TriggerID, count, level.duration, level.delay)
 					if err = scheduler.database.SetTriggerThrottling(event.TriggerID, next); err != nil {
 						scheduler.logger.Errorf("Failed to set trigger throttling timestamp: %s", err)
 					}

@@ -104,6 +104,7 @@ type ScheduledNotification struct {
 	Event     NotificationEvent `json:"event"`
 	Trigger   TriggerData       `json:"trigger"`
 	Contact   ContactData       `json:"contact"`
+	Plotting  PlottingData      `json:"plotting"`
 	Throttled bool              `json:"throttled"`
 	SendFail  int               `json:"send_fail"`
 	Timestamp int64             `json:"timestamp"`

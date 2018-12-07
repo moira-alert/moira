@@ -11,6 +11,7 @@ import (
 
 // NotificationPackage represent sending data
 type NotificationPackage struct {
+	Plot       []byte
 	Events     []moira.NotificationEvent
 	Trigger    moira.TriggerData
 	Contact    moira.ContactData
@@ -108,7 +109,7 @@ func (notifier *StandardNotifier) resend(pkg *NotificationPackage, reason string
 func (notifier *StandardNotifier) run(sender moira.Sender, ch chan NotificationPackage) {
 	defer notifier.waitGroup.Done()
 	for pkg := range ch {
-		err := sender.SendEvents(pkg.Events, pkg.Contact, pkg.Trigger, pkg.Throttled)
+		err := sender.SendEvents(pkg.Events, pkg.Contact, pkg.Trigger, pkg.Throttled, pkg.Plot)
 		if err == nil {
 			if metric, found := notifier.metrics.SendersOkMetrics.GetMetric(pkg.Contact.Type); found {
 				metric.Mark(1)
