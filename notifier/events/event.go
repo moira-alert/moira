@@ -88,6 +88,7 @@ func (worker *FetchEventsWorker) processEvent(event moira.NotificationEvent) err
 			Targets:    trigger.Targets,
 			WarnValue:  moira.UseFloat64(trigger.WarnValue),
 			ErrorValue: moira.UseFloat64(trigger.ErrorValue),
+			IsRemote:   trigger.IsRemote,
 			Tags:       trigger.Tags,
 		}
 

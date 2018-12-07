@@ -61,6 +61,10 @@ func (plot *Plot) GetRenderable(trigger *moira.Trigger, metricsData []*types.Met
 			GridMinorStyle: gridStyle,
 			GridMajorStyle: gridStyle,
 			ValueFormatter: chart.TimeValueFormatterWithFormat("15:04"),
+			Range: &chart.ContinuousRange{
+				Min: float64(limits.from.UnixNano()),
+				Max: float64(limits.to.UnixNano()),
+			},
 		},
 
 		YAxis: chart.YAxis{
