@@ -31,8 +31,8 @@ func getPlotLegend(c *chart.Chart, legendStyle chart.Style, plotWidth int) chart
 					_, isFound := foundLabels[legendLabel]
 					if !isFound && legendLabel != thresholdSerie {
 						foundLabels[legendLabel] = true
-						legendLabel1 := sanitizeLabelName(legendLabel, maxLabelLength)
-						labels = append(labels, legendLabel1)
+						legendLabel = sanitizeLabelName(legendLabel, maxLabelLength)
+						labels = append(labels, legendLabel)
 						lines = append(lines, s.GetStyle())
 						if labelsCount == maxLabelsCount-1 {
 							break
