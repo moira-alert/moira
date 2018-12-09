@@ -78,7 +78,7 @@ func main() {
 	}
 
 	databaseSettings := config.Redis.GetSettings()
-	database := redis.NewDatabase(logger, databaseSettings)
+	database := redis.NewDatabase(logger, databaseSettings, redis.API)
 
 	graphiteSettings := config.Graphite.GetSettings()
 	if err = metrics.Init(graphiteSettings, serviceName); err != nil {

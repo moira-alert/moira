@@ -16,10 +16,16 @@ var user2 = "user2"
 
 var config = Config{Port: "6379", Host: "localhost"}
 var emptyConfig = Config{}
+var testSource = DBSource("test")
+
+// use it only for tests
+func newTestDatabase(logger moira.Logger, config Config) *DbConnector {
+	return NewDatabase(logger, config, testSource)
+}
 
 func TestContacts(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewDatabase(logger, config)
+	dataBase := newTestDatabase(logger, config)
 	dataBase.flush()
 	defer dataBase.flush()
 
@@ -268,7 +274,7 @@ func TestContacts(t *testing.T) {
 
 func TestErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewDatabase(logger, emptyConfig)
+	dataBase := newTestDatabase(logger, emptyConfig)
 	dataBase.flush()
 	defer dataBase.flush()
 

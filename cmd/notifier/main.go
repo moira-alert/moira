@@ -76,7 +76,7 @@ func main() {
 	}
 
 	databaseSettings := config.Redis.GetSettings()
-	database := redis.NewDatabase(logger, databaseSettings)
+	database := redis.NewDatabase(logger, databaseSettings, redis.Notifier)
 
 	notifierConfig := config.Notifier.getSettings(logger)
 	sender := notifier.NewNotifier(database, logger, notifierConfig, notifierMetrics)

@@ -11,7 +11,7 @@ import (
 
 func TestSelfCheck(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewDatabase(logger, config)
+	dataBase := newTestDatabase(logger, config)
 	dataBase.flush()
 	defer dataBase.flush()
 	Convey("Self state triggers manipulation", t, func() {
@@ -58,7 +58,7 @@ func TestSelfCheck(t *testing.T) {
 
 func TestSelfCheckErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewDatabase(logger, emptyConfig)
+	dataBase := newTestDatabase(logger, emptyConfig)
 	dataBase.flush()
 	defer dataBase.flush()
 	Convey("Should throw error when no connection", t, func() {
@@ -77,8 +77,8 @@ func TestSelfCheckErrorConnection(t *testing.T) {
 
 func TestNotifierState(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewDatabase(logger, config)
-	emptyDataBase := NewDatabase(logger, emptyConfig)
+	dataBase := newTestDatabase(logger, config)
+	emptyDataBase := newTestDatabase(logger, emptyConfig)
 	dataBase.flush()
 	defer dataBase.flush()
 	defer dataBase.flush()

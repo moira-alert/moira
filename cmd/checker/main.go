@@ -74,7 +74,7 @@ func main() {
 	}
 
 	databaseSettings := config.Redis.GetSettings()
-	database := redis.NewDatabase(logger, databaseSettings)
+	database := redis.NewDatabase(logger, databaseSettings, redis.Checker)
 
 	remoteSettings := config.Remote.GetSettings()
 	checkerMetrics := metrics.ConfigureCheckerMetrics(serviceName, remoteSettings.IsEnabled())

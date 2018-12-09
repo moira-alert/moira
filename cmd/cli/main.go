@@ -69,7 +69,7 @@ func main() {
 	}
 
 	databaseSettings := config.Redis.GetSettings()
-	dataBase := redis.NewDatabase(logger, databaseSettings)
+	dataBase := redis.NewDatabase(logger, databaseSettings, redis.Cli)
 
 	if *convertPythonExpressions {
 		if err := ConvertPythonExpressions(dataBase); err != nil {

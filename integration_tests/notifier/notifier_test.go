@@ -2,6 +2,9 @@ package notifier
 
 import (
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database/redis"
@@ -11,8 +14,6 @@ import (
 	"github.com/moira-alert/moira/notifier/events"
 	"github.com/moira-alert/moira/notifier/notifications"
 	"github.com/op/go-logging"
-	"testing"
-	"time"
 )
 
 var senderSettings = map[string]string{
@@ -73,7 +74,7 @@ var event = moira.NotificationEvent{
 func TestNotifier(t *testing.T) {
 	mockCtrl = gomock.NewController(t)
 	defer mockCtrl.Finish()
-	database := redis.NewDatabase(logger, redis.Config{Port: "6379", Host: "localhost"})
+	database := redis.NewDatabase(logger, redis.Config{Port: "6379", Host: "localhost"}, redis.Notifier)
 	database.SaveContact(&contact)
 	database.SaveSubscription(&subscription)
 	database.SaveTrigger(trigger.ID, &trigger)
