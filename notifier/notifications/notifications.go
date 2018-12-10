@@ -3,6 +3,7 @@ package notifications
 import (
 	"bytes"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -123,10 +124,10 @@ func (worker *FetchNotificationsWorker) getNotificationPackagePlot(triggerData m
 		return buff.Bytes(), err
 	}
 
-	remoteCfg := &remote.Config{Enabled:false}
+	remoteCfg := &remote.Config{Enabled: false}
 
-	to := time.Now()
-	from := to.Add(-60*time.Minute)
+	to := time.Now().UTC()
+	from := to.Add(-60 * time.Minute)
 
 	tts, err := getTriggerEvaluationResult(worker.Database, remoteCfg, from.Unix(), to.Unix(), trigger.ID)
 	if err != nil {
@@ -148,6 +149,10 @@ func (worker *FetchNotificationsWorker) getNotificationPackagePlot(triggerData m
 	}
 
 	renderable := plotTemplate.GetRenderable(&trigger, metricsData, metricsToShow)
+
+	worker.Logger.Debugf("Attempt to render %s timeseries: %s", trigger.ID,
+		strings.Join(metricsToShow, ", "))
+
 	if err = renderable.Render(chart.PNG, buff); err != nil {
 		return buff.Bytes(), err
 	}
