@@ -53,13 +53,14 @@ func TestFailSendEvent(t *testing.T) {
 	var eventsData moira.NotificationEvents = []moira.NotificationEvent{event}
 
 	pkg := NotificationPackage{
+		Plot: make([]byte, 0),
 		Events: eventsData,
 		Contact: moira.ContactData{
 			Type: "test",
 		},
 	}
 	notification := moira.ScheduledNotification{}
-	sender.EXPECT().SendEvents(eventsData, pkg.Contact, pkg.Trigger, pkg.Throttled).Return(fmt.Errorf("Cant't send"))
+	sender.EXPECT().SendEvents(eventsData, pkg.Contact, pkg.Trigger, pkg.Plot, pkg.Throttled).Return(fmt.Errorf("Cant't send"))
 	scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, pkg.Trigger, pkg.Contact, pkg.Throttled, pkg.FailCount+1).Return(&notification)
 	dataBase.EXPECT().AddNotification(&notification).Return(nil)
 
@@ -90,7 +91,7 @@ func TestTimeout(t *testing.T) {
 		},
 	}
 	notification := moira.ScheduledNotification{}
-	sender.EXPECT().SendEvents(eventsData, pkg.Contact, pkg.Trigger, pkg.Throttled).Return(nil).Do(func(f ...interface{}) {
+	sender.EXPECT().SendEvents(eventsData, pkg.Contact, pkg.Trigger, pkg.Plot, pkg.Throttled).Return(nil).Do(func(f ...interface{}) {
 		fmt.Print("Trying to send for 10 second")
 		time.Sleep(time.Second * 10)
 	})
