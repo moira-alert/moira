@@ -146,7 +146,7 @@ type Logger interface {
 
 // Sender interface for implementing specified contact type sender
 type Sender interface {
-	SendEvents(events NotificationEvents, contact ContactData, trigger TriggerData, throttled bool, plot []byte) error
+	SendEvents(events NotificationEvents, contact ContactData, trigger TriggerData, plot []byte, throttled bool) error
 	Init(senderSettings map[string]string, logger Logger, location *time.Location, dateTimeFormat string) error
 }
 
@@ -155,7 +155,8 @@ type Searcher interface {
 	Start() error
 	Stop() error
 	IsReady() bool
-	SearchTriggers(filterTags []string, searchString string, onlyErrors bool, page int64, size int64) (triggerIDs []string, total int64, err error)
+	SearchTriggers(filterTags []string, searchString string, onlyErrors bool,
+		page int64, size int64) (triggerIDs []string, total int64, err error)
 }
 
 // PlotTheme is an interface to access plot theme styles

@@ -12,7 +12,8 @@ import (
 )
 
 type sendEventsTwilio interface {
-	SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, throttled bool) error
+	SendEvents(events moira.NotificationEvents, contact moira.ContactData,
+		trigger moira.TriggerData, plot []byte, throttled bool) error
 }
 
 type twilioSender struct {
@@ -32,7 +33,9 @@ type twilioSenderVoice struct {
 	appendMessage bool
 }
 
-func (smsSender *twilioSenderSms) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, throttled bool) error {
+func (smsSender *twilioSenderSms) SendEvents(events moira.NotificationEvents, contact moira.ContactData,
+	trigger moira.TriggerData, plot []byte, throttled bool) error {
+
 	var message bytes.Buffer
 
 	state := events.GetSubjectState()
@@ -42,7 +45,9 @@ func (smsSender *twilioSenderSms) SendEvents(events moira.NotificationEvents, co
 
 	for _, event := range events {
 		value := strconv.FormatFloat(moira.UseFloat64(event.Value), 'f', -1, 64)
-		message.WriteString(fmt.Sprintf("\n%s: %s = %s (%s to %s)", time.Unix(event.Timestamp, 0).In(smsSender.location).Format("15:04"), event.Metric, value, event.OldState, event.State))
+		message.WriteString(fmt.Sprintf("\n%s: %s = %s (%s to %s)",
+			time.Unix(event.Timestamp, 0).In(smsSender.location).Format("15:04"),
+			event.Metric, value, event.OldState, event.State))
 		if len(moira.UseString(event.Message)) > 0 {
 			message.WriteString(fmt.Sprintf(". %s", moira.UseString(event.Message)))
 		}
@@ -68,7 +73,9 @@ func (smsSender *twilioSenderSms) SendEvents(events moira.NotificationEvents, co
 	return nil
 }
 
-func (voiceSender *twilioSenderVoice) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, throttled bool) error {
+func (voiceSender *twilioSenderVoice) SendEvents(events moira.NotificationEvents, contact moira.ContactData,
+	trigger moira.TriggerData, plot []byte, throttled bool) error {
+
 	voiceURL := voiceSender.voiceURL
 	if voiceSender.appendMessage {
 		voiceURL += url.QueryEscape(fmt.Sprintf("Hi! This is a notification for Moira trigger %s. Please, visit Moira web interface for details.", trigger.Name))
@@ -91,7 +98,9 @@ type Sender struct {
 }
 
 // Init read yaml config
-func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger,
+	location *time.Location, dateTimeFormat string) error {
+
 	apiType := senderSettings["type"]
 
 	apiASID := senderSettings["api_asid"]
@@ -137,6 +146,7 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 }
 
 // SendEvents implements Sender interface Send
-func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, throttled bool) error {
-	return sender.sender.SendEvents(events, contact, trigger, throttled)
+func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData,
+	trigger moira.TriggerData, plot []byte, throttled bool) error {
+	return sender.sender.SendEvents(events, contact, trigger, plot, throttled)
 }

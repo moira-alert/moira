@@ -20,7 +20,9 @@ type Sender struct {
 }
 
 // Init read yaml config
-func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger,
+	location *time.Location, dateTimeFormat string) error {
+
 	sender.APIToken = senderSettings["api_token"]
 	if sender.APIToken == "" {
 		return fmt.Errorf("Can not read pushover api_token from config")
@@ -32,7 +34,9 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 }
 
 // SendEvents implements Sender interface Send
-func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, throttled bool) error {
+func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData,
+	trigger moira.TriggerData, plot []byte, throttled bool) error {
+
 	api := pushover.New(sender.APIToken)
 	recipient := pushover.NewRecipient(contact.Value)
 
@@ -53,7 +57,9 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 			priority = pushover.PriorityHigh
 		}
 		value := strconv.FormatFloat(moira.UseFloat64(event.Value), 'f', -1, 64)
-		message.WriteString(fmt.Sprintf("%s: %s = %s (%s to %s)", time.Unix(event.Timestamp, 0).In(sender.location).Format("15:04"), event.Metric, value, event.OldState, event.State))
+		message.WriteString(fmt.Sprintf("%s: %s = %s (%s to %s)",
+			time.Unix(event.Timestamp, 0).In(sender.location).Format("15:04"),
+			event.Metric, value, event.OldState, event.State))
 		if len(moira.UseString(event.Message)) > 0 {
 			message.WriteString(fmt.Sprintf(". %s\n", moira.UseString(event.Message)))
 		} else {

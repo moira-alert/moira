@@ -27,7 +27,9 @@ type scriptNotification struct {
 }
 
 // Init read yaml config
-func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger,
+	location *time.Location, dateTimeFormat string) error {
+
 	if senderSettings["name"] == "" {
 		return fmt.Errorf("Required name for sender type script")
 	}
@@ -46,7 +48,8 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 }
 
 // SendEvents implements Sender interface Send
-func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, throttled bool) error {
+func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData,
+	trigger moira.TriggerData, plot []byte, throttled bool) error {
 
 	execString := strings.Replace(sender.Exec, "${trigger_name}", trigger.Name, -1)
 	execString = strings.Replace(execString, "${contact_value}", contact.Value, -1)
