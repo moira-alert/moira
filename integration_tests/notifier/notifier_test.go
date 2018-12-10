@@ -2,7 +2,12 @@ package notifier
 
 import (
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/golang/mock/gomock"
+	"github.com/op/go-logging"
+
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database/redis"
 	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
@@ -10,9 +15,6 @@ import (
 	"github.com/moira-alert/moira/notifier"
 	"github.com/moira-alert/moira/notifier/events"
 	"github.com/moira-alert/moira/notifier/notifications"
-	"github.com/op/go-logging"
-	"testing"
-	"time"
 )
 
 var senderSettings = map[string]string{
@@ -63,8 +65,6 @@ var triggerData = moira.TriggerData{
 	Tags:    []string{"test-tag-1"},
 }
 
-var plot = make([]byte, 0)
-
 var event = moira.NotificationEvent{
 	Metric:    "generate.event.1",
 	State:     "OK",
@@ -84,7 +84,7 @@ func TestNotifier(t *testing.T) {
 	sender := mock_moira_alert.NewMockSender(mockCtrl)
 	sender.EXPECT().Init(senderSettings, logger, location, dateTimeFormat).Return(nil)
 	notifier2.RegisterSender(senderSettings, sender)
-	sender.EXPECT().SendEvents(gomock.Any(), contact, triggerData, plot, false).Return(nil).Do(func(f ...interface{}) {
+	sender.EXPECT().SendEvents(gomock.Any(), contact, triggerData, gomock.Any(), false).Return(nil).Do(func(f ...interface{}) {
 		fmt.Print("SendEvents called. End test")
 		close(shutdown)
 	})
