@@ -109,9 +109,6 @@ func (notifier *StandardNotifier) resend(pkg *NotificationPackage, reason string
 func (notifier *StandardNotifier) run(sender moira.Sender, ch chan NotificationPackage) {
 	defer notifier.waitGroup.Done()
 	for pkg := range ch {
-		if pkg.Plot == nil {
-			panic("")
-		}
 		err := sender.SendEvents(pkg.Events, pkg.Contact, pkg.Trigger, pkg.Plot, pkg.Throttled)
 		if err == nil {
 			if metric, found := notifier.metrics.SendersOkMetrics.GetMetric(pkg.Contact.Type); found {
