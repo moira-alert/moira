@@ -117,7 +117,8 @@ func (worker *FetchEventsWorker) processEvent(event moira.NotificationEvent) err
 				}
 				event.SubscriptionID = &subscription.ID
 				notification := worker.Scheduler.ScheduleNotification(time.Now(), event, triggerData,
-					contact, subscription.Plotting, false, 0)
+					contact, false, 0)
+				notification.Plotting = subscription.Plotting
 				key := notification.GetKey()
 				if _, exist := duplications[key]; !exist {
 					if err := worker.Database.AddNotification(notification); err != nil {

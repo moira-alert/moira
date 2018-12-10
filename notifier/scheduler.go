@@ -10,8 +10,8 @@ import (
 
 // Scheduler implements event scheduling functionality
 type Scheduler interface {
-	ScheduleNotification(now time.Time, event moira.NotificationEvent, trigger moira.TriggerData, contact moira.ContactData,
-		plottingSettings moira.PlottingData, throttledOld bool, sendfail int) *moira.ScheduledNotification
+	ScheduleNotification(now time.Time, event moira.NotificationEvent, trigger moira.TriggerData,
+		contact moira.ContactData, throttledOld bool, sendfail int) *moira.ScheduledNotification
 }
 
 // StandardScheduler represents standard event scheduling

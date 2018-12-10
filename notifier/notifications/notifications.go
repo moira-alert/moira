@@ -102,7 +102,9 @@ func (worker *FetchNotificationsWorker) processScheduledNotifications() error {
 	return nil
 }
 
-func (worker *FetchNotificationsWorker) getNotificationPackagePlot(triggerData moira.TriggerData, events []moira.NotificationEvent, plotTheme string) ([]byte, error) {
+func (worker *FetchNotificationsWorker) getNotificationPackagePlot(triggerData moira.TriggerData,
+	events []moira.NotificationEvent, plotTheme string) ([]byte, error) {
+
 	buff := bytes.NewBuffer(make([]byte, 0))
 
 	trigger, err := worker.Database.GetTrigger(triggerData.ID)
