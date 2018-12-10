@@ -86,6 +86,7 @@ func TestTimeout(t *testing.T) {
 	}
 
 	pkg2 := NotificationPackage{
+		Plot: make([]byte, 0),
 		Events: eventsData,
 		Contact: moira.ContactData{
 			Type:  "test",
