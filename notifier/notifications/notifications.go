@@ -88,8 +88,6 @@ func (worker *FetchNotificationsWorker) processScheduledNotifications() error {
 			}
 		}
 		p.Events = append(p.Events, notification.Event)
-		notificationPackages[packageKey] = p
-
 		if notification.Plotting.Enabled {
 			plot, err := worker.getNotificationPackagePlot(notification.Trigger, p.Events, notification.Plotting.Theme)
 			if err != nil {
@@ -99,7 +97,7 @@ func (worker *FetchNotificationsWorker) processScheduledNotifications() error {
 					err.Error())
 			}
 		}
-
+		notificationPackages[packageKey] = p
 	}
 	var sendingWG sync.WaitGroup
 	for _, pkg := range notificationPackages {
