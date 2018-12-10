@@ -93,6 +93,9 @@ func (worker *FetchNotificationsWorker) processScheduledNotifications() error {
 			plot, err := worker.getNotificationPackagePlot(notification.Trigger, p.Events, notification.Plotting.Theme)
 			if err != nil {
 				p.Plot = plot
+			} else {
+				worker.Logger.Errorf("Can't get notification package plot for trigger %s: %s", notification.Trigger,
+					err.Error())
 			}
 		}
 
