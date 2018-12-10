@@ -32,6 +32,7 @@ func TestUnknownContactType(t *testing.T) {
 	var eventsData moira.NotificationEvents = []moira.NotificationEvent{event}
 
 	pkg := NotificationPackage{
+		Plot: make([]byte, 0),
 		Events: eventsData,
 		Contact: moira.ContactData{
 			Type: "unknown contact",
@@ -77,6 +78,7 @@ func TestTimeout(t *testing.T) {
 	var eventsData moira.NotificationEvents = []moira.NotificationEvent{event}
 
 	pkg := NotificationPackage{
+		Plot: make([]byte, 0),
 		Events: eventsData,
 		Contact: moira.ContactData{
 			Type: "test",
