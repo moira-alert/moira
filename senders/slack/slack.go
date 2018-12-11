@@ -66,28 +66,53 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 
 	sender.log.Debugf("Calling slack with message body %s", message.String())
 
-	params := slack.PostMessageParameters{
-		Username: "Moira",
-		IconURL:  icon,
-		Markdown: true,
-	}
+	//params := slack.PostMessageParameters{
+	//	Username: "Moira",
+	//	IconURL:  icon,
+	//	Markdown: true,
+	//}
 
-	_, _, err := api.PostMessage(contact.Value, message.String(), params)
-	if err != nil {
-		return fmt.Errorf("Failed to send message to slack [%s]: %s", contact.Value, err.Error())
-	}
+	//_, _, err := api.PostMessage(contact.Value, message.String(), params)
+	//if err != nil {
+	//	return fmt.Errorf("Failed to send message to slack [%s]: %s", contact.Value, err.Error())
+	//}
 
-	if err == nil && len(plot) > 0 {
+	//if err == nil && len(plot) > 0 {
+	//	buff := bytes.NewBuffer(plot)
+	//	uploadParameters := slack.FileUploadParameters{
+	//		Channels: []string{contact.Value},
+	//		Filetype: "png",
+	//		Filename: trigger.ID,
+	//		Reader: buff,
+	//	}
+	//	_, err := api.UploadFile(uploadParameters)
+	//	if err != nil {
+	//		sender.log.Errorf("Can't send %s plot to %s: %s", trigger.ID, contact.Value, err.Error())
+	//	}
+	//}
+
+	if len(plot) > 0 {
 		buff := bytes.NewBuffer(plot)
-		uploadParameters := slack.FileUploadParameters{
-			Channels: []string{contact.Value},
-			Filetype: "png",
-			Filename: trigger.ID,
-			Reader: buff,
+		params := slack.FileUploadParameters{
+			Channels:       []string{contact.Value},
+			Filetype:       "png",
+			Filename:       trigger.ID,
+			Reader:         buff,
+			InitialComment: message.String(),
 		}
-		_, err := api.UploadFile(uploadParameters)
+		_, err := api.UploadFile(params)
 		if err != nil {
 			sender.log.Errorf("Can't send %s plot to %s: %s", trigger.ID, contact.Value, err.Error())
+		}
+	} else {
+		params := slack.PostMessageParameters{
+			Username: "Moira",
+			IconURL:  icon,
+			Markdown: true,
+		}
+		_, _, err := api.PostMessage(contact.Value, message.String(), params)
+		if err != nil {
+			return fmt.Errorf("Failed to send message to slack [%s]: %s", contact.Value, err.Error())
 		}
 	}
 
