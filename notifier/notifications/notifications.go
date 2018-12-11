@@ -1,22 +1,14 @@
 package notifications
 
 import (
-	"bytes"
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 
-	"github.com/go-graphite/carbonapi/expr/types"
-	"github.com/wcharczuk/go-chart"
 	"gopkg.in/tomb.v2"
 
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/checker"
 	"github.com/moira-alert/moira/notifier"
-	"github.com/moira-alert/moira/plotting"
-	"github.com/moira-alert/moira/remote"
-	"github.com/moira-alert/moira/target"
 )
 
 const sleepAfterNotifierBadState = time.Second * 10
@@ -83,20 +75,12 @@ func (worker *FetchNotificationsWorker) processScheduledNotifications() error {
 				Events:    make([]moira.NotificationEvent, 0, len(notifications)),
 				Trigger:   notification.Trigger,
 				Contact:   notification.Contact,
+				Plotting:  notification.Plotting,
 				Throttled: notification.Throttled,
 				FailCount: notification.SendFail,
 			}
 		}
 		p.Events = append(p.Events, notification.Event)
-		if notification.Plotting.Enabled {
-			plot, err := worker.getNotificationPackagePlot(notification.Trigger, p.Events, notification.Plotting.Theme)
-			if err != nil {
-				p.Plot = plot
-			} else {
-				worker.Logger.Errorf("Can't get notification package plot for trigger %s: %s", notification.Trigger,
-					err.Error())
-			}
-		}
 		notificationPackages[packageKey] = p
 	}
 	var sendingWG sync.WaitGroup
@@ -105,92 +89,4 @@ func (worker *FetchNotificationsWorker) processScheduledNotifications() error {
 	}
 	sendingWG.Wait()
 	return nil
-}
-
-func (worker *FetchNotificationsWorker) getNotificationPackagePlot(triggerData moira.TriggerData,
-	events []moira.NotificationEvent, plotTheme string) ([]byte, error) {
-
-	buff := bytes.NewBuffer(make([]byte, 0))
-
-	trigger, err := worker.Database.GetTrigger(triggerData.ID)
-	if err != nil {
-		return buff.Bytes(), err
-	}
-
-	plotTemplate, err := plotting.GetPlotTemplate(plotTheme)
-	if err != nil {
-		return buff.Bytes(), err
-	}
-
-	remoteCfg := &remote.Config{Enabled: false}
-
-	to := time.Now().UTC()
-	from := to.Add(-60 * time.Minute)
-
-	tts, err := getTriggerEvaluationResult(worker.Database, remoteCfg, from.Unix(), to.Unix(), trigger.ID)
-	if err != nil {
-		return buff.Bytes(), err
-	}
-
-	var metricsData = make([]*types.MetricData, 0, len(tts.Main)+len(tts.Additional))
-	for _, ts := range tts.Main {
-		metricsData = append(metricsData, &ts.MetricData)
-	}
-	for _, ts := range tts.Additional {
-		metricsData = append(metricsData, &ts.MetricData)
-	}
-
-	metricsToShow := make([]string, 0)
-
-	for _, event := range events {
-		metricsToShow = append(metricsToShow, event.Metric)
-	}
-
-	renderable := plotTemplate.GetRenderable(&trigger, metricsData, metricsToShow)
-
-	worker.Logger.Debugf("Attempt to render %s timeseries: %s", trigger.ID,
-		strings.Join(metricsToShow, ", "))
-
-	if err = renderable.Render(chart.PNG, buff); err != nil {
-		return buff.Bytes(), err
-	}
-
-	return buff.Bytes(), nil
-}
-
-func getTriggerEvaluationResult(dataBase moira.Database, remoteConfig *remote.Config,
-	from, to int64, triggerID string) (*checker.TriggerTimeSeries, error) {
-	allowRealtimeAllerting := true
-	trigger, err := dataBase.GetTrigger(triggerID)
-	if err != nil {
-		return nil, err
-	}
-	triggerMetrics := &checker.TriggerTimeSeries{
-		Main:       make([]*target.TimeSeries, 0),
-		Additional: make([]*target.TimeSeries, 0),
-	}
-	if trigger.IsRemote && !remoteConfig.IsEnabled() {
-		return nil, remote.ErrRemoteStorageDisabled
-	}
-	for i, tar := range trigger.Targets {
-		var timeSeries []*target.TimeSeries
-		if trigger.IsRemote {
-			timeSeries, err = remote.Fetch(remoteConfig, tar, from, to, allowRealtimeAllerting)
-			if err != nil {
-				return nil, err
-			}
-		} else {
-			result, err := target.EvaluateTarget(dataBase, tar, from, to, allowRealtimeAllerting)
-			if err != nil {
-				return nil, err
-			}
-			timeSeries = result.TimeSeries
-		}
-		if i == 0 {
-			triggerMetrics.Main = timeSeries
-		} else {
-			triggerMetrics.Additional = append(triggerMetrics.Additional, timeSeries...)
-		}
-	}
-	return triggerMetrics, nil
 }

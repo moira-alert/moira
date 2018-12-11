@@ -11,7 +11,7 @@ import (
 // Scheduler implements event scheduling functionality
 type Scheduler interface {
 	ScheduleNotification(now time.Time, event moira.NotificationEvent, trigger moira.TriggerData,
-		contact moira.ContactData, throttledOld bool, sendfail int) *moira.ScheduledNotification
+		contact moira.ContactData, plotting moira.PlottingData, throttledOld bool, sendfail int) *moira.ScheduledNotification
 }
 
 // StandardScheduler represents standard event scheduling
@@ -37,8 +37,8 @@ func NewScheduler(database moira.Database, logger moira.Logger, metrics *graphit
 }
 
 // ScheduleNotification is realization of scheduling event, based on trigger and subscription time intervals and triggers settings
-func (scheduler *StandardScheduler) ScheduleNotification(now time.Time, event moira.NotificationEvent,
-	trigger moira.TriggerData, contact moira.ContactData, throttledOld bool, sendfail int) *moira.ScheduledNotification {
+func (scheduler *StandardScheduler) ScheduleNotification(now time.Time, event moira.NotificationEvent, trigger moira.TriggerData,
+	contact moira.ContactData, plotting moira.PlottingData, throttledOld bool, sendfail int) *moira.ScheduledNotification {
 	var (
 		next      time.Time
 		throttled bool
@@ -61,6 +61,7 @@ func (scheduler *StandardScheduler) ScheduleNotification(now time.Time, event mo
 		Throttled: throttled,
 		SendFail:  sendfail,
 		Timestamp: next.Unix(),
+		Plotting:  plotting,
 	}
 	scheduler.logger.Debugf(
 		"Scheduled notification for contact %s:%s trigger %s at %s (%d)",
