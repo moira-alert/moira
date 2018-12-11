@@ -14,7 +14,10 @@ import (
 	"time"
 )
 
-var shutdown = make(chan bool)
+var (
+	plot     = make([]byte, 0)
+	shutdown = make(chan bool)
+)
 
 var (
 	mockCtrl  *gomock.Controller
@@ -32,14 +35,13 @@ func TestUnknownContactType(t *testing.T) {
 	var eventsData moira.NotificationEvents = []moira.NotificationEvent{event}
 
 	pkg := NotificationPackage{
-		Plot: make([]byte, 0),
 		Events: eventsData,
 		Contact: moira.ContactData{
 			Type: "unknown contact",
 		},
 	}
 	notification := moira.ScheduledNotification{}
-	scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, pkg.Trigger, pkg.Contact, pkg.Throttled, pkg.FailCount+1).Return(&notification)
+	scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, pkg.Trigger, pkg.Contact, pkg.Plotting, pkg.Throttled, pkg.FailCount+1).Return(&notification)
 	dataBase.EXPECT().AddNotification(&notification).Return(nil)
 
 	var wg sync.WaitGroup
@@ -54,15 +56,14 @@ func TestFailSendEvent(t *testing.T) {
 	var eventsData moira.NotificationEvents = []moira.NotificationEvent{event}
 
 	pkg := NotificationPackage{
-		Plot: make([]byte, 0),
 		Events: eventsData,
 		Contact: moira.ContactData{
 			Type: "test",
 		},
 	}
 	notification := moira.ScheduledNotification{}
-	sender.EXPECT().SendEvents(eventsData, pkg.Contact, pkg.Trigger, pkg.Plot, pkg.Throttled).Return(fmt.Errorf("Cant't send"))
-	scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, pkg.Trigger, pkg.Contact, pkg.Throttled, pkg.FailCount+1).Return(&notification)
+	sender.EXPECT().SendEvents(eventsData, pkg.Contact, pkg.Trigger, plot, pkg.Throttled).Return(fmt.Errorf("Cant't send"))
+	scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, pkg.Trigger, pkg.Contact, pkg.Plotting, pkg.Throttled, pkg.FailCount+1).Return(&notification)
 	dataBase.EXPECT().AddNotification(&notification).Return(nil)
 
 	var wg sync.WaitGroup
@@ -78,7 +79,6 @@ func TestTimeout(t *testing.T) {
 	var eventsData moira.NotificationEvents = []moira.NotificationEvent{event}
 
 	pkg := NotificationPackage{
-		Plot: make([]byte, 0),
 		Events: eventsData,
 		Contact: moira.ContactData{
 			Type: "test",
@@ -86,7 +86,6 @@ func TestTimeout(t *testing.T) {
 	}
 
 	pkg2 := NotificationPackage{
-		Plot: make([]byte, 0),
 		Events: eventsData,
 		Contact: moira.ContactData{
 			Type:  "test",
@@ -94,11 +93,11 @@ func TestTimeout(t *testing.T) {
 		},
 	}
 	notification := moira.ScheduledNotification{}
-	sender.EXPECT().SendEvents(eventsData, pkg.Contact, pkg.Trigger, pkg.Plot, pkg.Throttled).Return(nil).Do(func(f ...interface{}) {
+	sender.EXPECT().SendEvents(eventsData, pkg.Contact, pkg.Trigger, plot, pkg.Throttled).Return(nil).Do(func(f ...interface{}) {
 		fmt.Print("Trying to send for 10 second")
 		time.Sleep(time.Second * 10)
 	})
-	scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, pkg2.Trigger, pkg2.Contact, pkg2.Throttled, pkg2.FailCount+1).Return(&notification)
+	scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, pkg2.Trigger, pkg2.Contact, pkg.Plotting, pkg2.Throttled, pkg2.FailCount+1).Return(&notification)
 	dataBase.EXPECT().AddNotification(&notification).Return(nil).Do(func(f ...interface{}) { close(shutdown) })
 
 	var wg sync.WaitGroup

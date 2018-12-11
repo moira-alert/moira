@@ -35,13 +35,13 @@ func (m *MockScheduler) EXPECT() *MockSchedulerMockRecorder {
 }
 
 // ScheduleNotification mocks base method
-func (m *MockScheduler) ScheduleNotification(arg0 time.Time, arg1 moira.NotificationEvent, arg2 moira.TriggerData, arg3 moira.ContactData, arg4 bool, arg5 int) *moira.ScheduledNotification {
-	ret := m.ctrl.Call(m, "ScheduleNotification", arg0, arg1, arg2, arg3, arg4, arg5)
+func (m *MockScheduler) ScheduleNotification(arg0 time.Time, arg1 moira.NotificationEvent, arg2 moira.TriggerData, arg3 moira.ContactData, arg4 moira.PlottingData, arg5 bool, arg6 int) *moira.ScheduledNotification {
+	ret := m.ctrl.Call(m, "ScheduleNotification", arg0, arg1, arg2, arg3, arg4, arg5, arg6)
 	ret0, _ := ret[0].(*moira.ScheduledNotification)
 	return ret0
 }
 
 // ScheduleNotification indicates an expected call of ScheduleNotification
-func (mr *MockSchedulerMockRecorder) ScheduleNotification(arg0, arg1, arg2, arg3, arg4, arg5 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ScheduleNotification", reflect.TypeOf((*MockScheduler)(nil).ScheduleNotification), arg0, arg1, arg2, arg3, arg4, arg5)
+func (mr *MockSchedulerMockRecorder) ScheduleNotification(arg0, arg1, arg2, arg3, arg4, arg5, arg6 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ScheduleNotification", reflect.TypeOf((*MockScheduler)(nil).ScheduleNotification), arg0, arg1, arg2, arg3, arg4, arg5, arg6)
 }

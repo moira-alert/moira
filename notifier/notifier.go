@@ -138,6 +138,10 @@ func (notifier *StandardNotifier) getNotificationPackagePlot(pkg NotificationPac
 
 	buff := bytes.NewBuffer(make([]byte, 0))
 
+	if pkg.Trigger.ID == "" {
+		return buff.Bytes(), nil
+	}
+
 	trigger, err := notifier.database.GetTrigger(pkg.Trigger.ID)
 	if err != nil {
 		return buff.Bytes(), err
