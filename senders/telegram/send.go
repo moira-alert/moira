@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"time"
 
+	"gopkg.in/tucnak/telebot.v2"
+
 	"github.com/moira-alert/moira"
 )
 
@@ -51,14 +53,14 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 
 	sender.logger.Debugf("Calling telegram api with chat_id %s and message body %s", contact.Value, message.String())
 
-	if err := sender.talk(contact.Value, message.String()); err != nil {
+	if err := sender.talk(contact.Value, message.String(), plot); err != nil {
 		return fmt.Errorf("Failed to send message to telegram contact %s: %s. ", contact.Value, err)
 	}
 	return nil
 }
 
 // talk processes one talk
-func (sender *Sender) talk(username, message string) error {
+func (sender *Sender) talk(username, message string, plot []byte) error {
 	var err error
 	uid, err := sender.DataBase.GetIDByUsername(messenger, username)
 	if err != nil {
@@ -68,9 +70,16 @@ func (sender *Sender) talk(username, message string) error {
 	if err != nil {
 		return fmt.Errorf("can't find recepient %s: %s", uid, err.Error())
 	}
-	_, err = sender.bot.Send(chat, message)
+	postedMessage, err := sender.bot.Send(chat, message)
 	if err != nil {
 		return fmt.Errorf("can't send message [%s] to %s: %s", message, uid, err.Error())
+	}
+	if len(plot) > 0 {
+		photo := telebot.Photo{File: telebot.FromReader(bytes.NewReader(plot))}
+		_, err = photo.Send(sender.bot, chat, &telebot.SendOptions{ReplyTo: postedMessage})
+		if err != nil {
+			return fmt.Errorf("can't send plot to %s: %s", uid, err.Error())
+		}
 	}
 	return nil
 }
