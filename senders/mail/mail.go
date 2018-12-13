@@ -51,7 +51,7 @@ type triggerData struct {
 	Tags         string
 	TriggerState string
 	Items        []*templateRow
-	ImageBase64  string
+	PlotCID      string
 }
 
 // Init read yaml config
@@ -118,7 +118,7 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData,
 	trigger moira.TriggerData, plot []byte, throttled bool) error {
 
-	m := sender.makeMessage(events, contact, trigger, throttled)
+	m := sender.makeMessage(events, contact, trigger, plot, throttled)
 
 	d := gomail.Dialer{
 		Host: sender.SMTPhost,
@@ -140,7 +140,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 }
 
 func (sender *Sender) makeMessage(events moira.NotificationEvents, contact moira.ContactData,
-	trigger moira.TriggerData, throttled bool) *gomail.Message {
+	trigger moira.TriggerData, plot []byte, throttled bool) *gomail.Message {
 
 	state := events.GetSubjectState()
 	tags := trigger.GetTags()
@@ -174,6 +174,16 @@ func (sender *Sender) makeMessage(events moira.NotificationEvents, contact moira
 	m.SetHeader("From", sender.From)
 	m.SetHeader("To", contact.Value)
 	m.SetHeader("Subject", subject)
+
+	if len(plot) > 0 {
+		plotCID := "plot.png"
+		templateData.PlotCID = plotCID
+		m.Embed(plotCID, gomail.SetCopyFunc(func(w io.Writer) error {
+			_, err := w.Write(plot)
+			return err
+		}))
+	}
+
 	m.AddAlternativeWriter("text/html", func(w io.Writer) error {
 		return sender.Template.ExecuteTemplate(w, sender.TemplateName, templateData)
 	})
