@@ -89,7 +89,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 		}
 		_, err := api.UploadFile(uploadParameters)
 		if err != nil {
-			sender.log.Errorf("Can't send %s plot to %s: %s", trigger.ID, contact.Value, err.Error())
+			sender.log.Errorf("Failed to send %s plot to %s: %s", trigger.ID, contact.Value, err.Error())
 		}
 	}
 
