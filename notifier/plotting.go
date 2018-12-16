@@ -46,7 +46,16 @@ func (notifier *StandardNotifier) buildNotificationPackagePlot(pkg NotificationP
 		metricsToShow = append(metricsToShow, event.Metric)
 	}
 
+	notifier.logger.Info("expected series: %s", strings.Join(metricsToShow, ", "))
+	metricsToShow = make([]string, 0)
+
 	renderable := plotTemplate.GetRenderable(&trigger, metricsData, metricsToShow)
+
+	allseries := make([]string, 0)
+	for _, serie := range renderable.Series {
+		allseries = append(allseries, serie.GetName())
+	}
+	notifier.logger.Infof("found series: %s", allseries)
 
 	notifier.logger.Debugf("Attempt to render %s timeseries: %s", trigger.ID,
 		strings.Join(metricsToShow, ", "))

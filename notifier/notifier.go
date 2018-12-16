@@ -135,7 +135,8 @@ func (notifier *StandardNotifier) run(sender moira.Sender, ch chan NotificationP
 	for pkg := range ch {
 		plot, err := notifier.buildNotificationPackagePlot(pkg)
 		if err != nil {
-			notifier.logger.Errorf("Can't build notification package plot for %s: %s", pkg.Trigger, err.Error())
+			notifier.logger.Errorf("Can't build notification package plot for %s: %s",
+				pkg.Trigger.ID, err.Error())
 		}
 		err = sender.SendEvents(pkg.Events, pkg.Contact, pkg.Trigger, plot, pkg.Throttled)
 		if err == nil {
