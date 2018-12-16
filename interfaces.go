@@ -146,11 +146,8 @@ type Logger interface {
 
 // Sender interface for implementing specified contact type sender
 type Sender interface {
-	SendEvents(events NotificationEvents, contact ContactData,
-		trigger TriggerData, plot []byte, throttled bool) error
-	Init(senderSettings map[string]string, logger Logger,
-		location *time.Location, dateTimeFormat string) error
-	GetLocation() *time.Location
+	SendEvents(events NotificationEvents, contact ContactData, trigger TriggerData, plot []byte, throttled bool) error
+	Init(senderSettings map[string]string, logger Logger, location *time.Location, dateTimeFormat string) error
 }
 
 // Searcher interface implements full-text search index functionality

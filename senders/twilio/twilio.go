@@ -150,8 +150,3 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	trigger moira.TriggerData, plot []byte, throttled bool) error {
 	return sender.sender.SendEvents(events, contact, trigger, plot, throttled)
 }
-
-// GetLocation implements Sender interface GetLocation
-func (sender *Sender) GetLocation() *time.Location {
-	return nil
-}

@@ -89,7 +89,3 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	return nil
 }
 
-// GetLocation implements Sender interface GetLocation
-func (sender *Sender) GetLocation() *time.Location {
-	return nil
-}
