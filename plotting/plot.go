@@ -2,13 +2,23 @@ package plotting
 
 import (
 	"time"
+	"fmt"
 
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/wcharczuk/go-chart"
 
 	"github.com/moira-alert/moira"
-	"fmt"
 )
+
+// ErrNoPointsToRender is used to prevent unnecessary render calls
+type ErrNoPointsToRender struct {
+	TriggerName string
+}
+
+// ErrNoPointsToRender implementation with detailed error message
+func (err ErrNoPointsToRender) Error() string {
+	return fmt.Sprintf("no points found to render %s", err.TriggerName)
+}
 
 // Plot represents plot structure to render
 type Plot struct {
