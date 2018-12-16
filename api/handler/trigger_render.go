@@ -73,8 +73,9 @@ func evaluateTriggerMetrics(remoteCfg *remote.Config, from, to int64, triggerID 
 }
 
 func buildRenderable(request *http.Request, trigger *moira.Trigger, metricsData []*types.MetricData) (*chart.Chart, error) {
+	location, _ := time.LoadLocation("UTC")
 	plotTheme := request.URL.Query().Get("theme")
-	plotTemplate, err := plotting.GetPlotTemplate(plotTheme)
+	plotTemplate, err := plotting.GetPlotTemplate(plotTheme, location)
 	if err != nil {
 		return nil, fmt.Errorf("can not initialize plot theme %s", err.Error())
 	}

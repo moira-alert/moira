@@ -26,8 +26,8 @@ func (initial sortedByLen) Swap(i int, j int) {
 }
 
 // int64ToTime returns time.Time from int64
-func int64ToTime(timeStamp int64) time.Time {
-	return time.Unix(timeStamp, 0).UTC()
+func int64ToTime(timeStamp int64, location *time.Location) time.Time {
+	return time.Unix(timeStamp, 0).In(location)
 }
 
 // sanitizeLabelName shortens label names to max length

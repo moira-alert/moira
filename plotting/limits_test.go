@@ -58,9 +58,10 @@ func TestResolveLimits(t *testing.T) {
 		metricData.StopTime = 1527330278
 	}
 	Convey("Resolve limits for given MetricsData for 5 minutes", t, func() {
-		expectedTo := time.Date(2018, 5, 26, 10, 24, 38, 0, time.UTC)
+		location, _ := time.LoadLocation("UTC")
+		expectedTo := time.Date(2018, 5, 26, 10, 24, 38, 0, location)
 		expectedFrom := expectedTo.Add(time.Duration(-len(metricsData)) * time.Minute)
-		limits := resolveLimits(metricsData)
+		limits := resolveLimits(metricsData, location)
 		So(limits.from, ShouldResemble, expectedFrom)
 		So(limits.to, ShouldResemble, expectedTo)
 		So(limits.lowest, ShouldNotEqual, 0)

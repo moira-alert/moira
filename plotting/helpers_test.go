@@ -8,6 +8,13 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+// testDate is a container to store
+// test date and corresponding unix timestamp
+type testDate struct {
+	humanReadable time.Time
+	timeStamp     int64
+}
+
 // TestSortByLen tests simple string array sorting by length
 func TestSortByLen(t *testing.T) {
 	labelsUnsorted := []string{
@@ -37,16 +44,34 @@ func TestSortByLen(t *testing.T) {
 
 // TestInt64ToTime tests simple int64 timestamp to time.Time converter
 func TestInt64ToTime(t *testing.T) {
-	int64timeStamp := int64(1527330278)
-	humanReadabletimeStamp := time.Date(2018, 5, 26, 10, 24, 38, 0, time.UTC)
+	defaultLocation, _ := time.LoadLocation("UTC")
+	mskLocation, _ := time.LoadLocation("Europe/Moscow")
+	testDates := []testDate{
+		{
+			time.Date(2018, 5, 26, 10, 24, 38, 0, time.UTC),
+			1527330278,
+		},
+		{
+			time.Date(2018, 12, 15, 23, 44, 30, 0, time.UTC),
+			1544917470,
+		},
+	}
 	Convey("Convert int64 timestamp into datetime", t, func() {
-		converted := int64ToTime(int64timeStamp)
-		So(converted, ShouldResemble, humanReadabletimeStamp)
+		for _, testdate := range testDates {
+			converted := int64ToTime(testdate.timeStamp, defaultLocation)
+			convertedMsk := int64ToTime(testdate.timeStamp, mskLocation)
+			So(converted, ShouldResemble, testdate.humanReadable)
+			So(convertedMsk.Hour(), ShouldResemble, converted.Add(3 * time.Hour).Hour())
+		}
 	})
 	Convey("Convert int64 timestamp + 1 minute into datetime", t, func() {
-		int64timeStamp += 60
-		converted := int64ToTime(int64timeStamp)
-		So(converted, ShouldResemble, humanReadabletimeStamp.Add(time.Minute))
+		for _, testdate := range testDates {
+			shiftedTimestamp := testdate.timeStamp + 60
+			converted := int64ToTime(shiftedTimestamp, defaultLocation)
+			convertedMsk := int64ToTime(shiftedTimestamp, mskLocation)
+			So(converted, ShouldResemble, testdate.humanReadable.Add(time.Minute))
+			So(convertedMsk.Hour(), ShouldResemble, converted.Add(3 * time.Hour).Hour())
+		}
 	})
 }
 

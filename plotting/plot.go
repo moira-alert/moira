@@ -1,38 +1,48 @@
 package plotting
 
 import (
+	"time"
+
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/wcharczuk/go-chart"
 
 	"github.com/moira-alert/moira"
+	"fmt"
 )
 
 // Plot represents plot structure to render
 type Plot struct {
-	theme  moira.PlotTheme
-	width  int
-	height int
+	theme    moira.PlotTheme
+	location *time.Location
+	width    int
+	height   int
 }
 
 // GetPlotTemplate returns plot template
-func GetPlotTemplate(theme string) (*Plot, error) {
+func GetPlotTemplate(theme string, location *time.Location) (*Plot, error) {
 	plotTheme, err := getPlotTheme(theme)
 	if err != nil {
 		return nil, err
 	}
+	if location == nil {
+		return nil, fmt.Errorf("location not specified")
+	}
 	return &Plot{
-		theme:  plotTheme,
-		width:  800,
-		height: 400,
+		theme:    plotTheme,
+		location: location,
+		width:    800,
+		height:   400,
 	}, nil
 }
 
 // GetRenderable returns go-chart to render
-func (plot *Plot) GetRenderable(trigger *moira.Trigger, metricsData []*types.MetricData, metricsWhitelist []string) chart.Chart {
-	plotSeries := make([]chart.Series, 0)
-	limits := resolveLimits(metricsData)
+func (plot *Plot) GetRenderable(trigger *moira.Trigger,
+	metricsData []*types.MetricData, metricsWhitelist []string) chart.Chart {
 
-	curveSeriesList := getCurveSeriesList(metricsData, plot.theme, metricsWhitelist)
+	plotSeries := make([]chart.Series, 0)
+	limits := resolveLimits(metricsData, plot.location)
+
+	curveSeriesList := getCurveSeriesList(metricsData, metricsWhitelist, plot.theme, plot.location)
 	for _, curveSeries := range curveSeriesList {
 		plotSeries = append(plotSeries, curveSeries)
 	}
