@@ -20,8 +20,31 @@ type NotificationPackage struct {
 	DontResend bool
 }
 
+// String returns notification package summary
 func (pkg NotificationPackage) String() string {
 	return fmt.Sprintf("package of %d notifications to %s", len(pkg.Events), pkg.Contact.Value)
+}
+
+// Window returns the earliest and the latest notification package timestamps
+func (pkg NotificationPackage) Window() (from, to int64, err error) {
+	timeStamps := make([]int64, 0)
+	for _, event := range pkg.Events {
+		timeStamps = append(timeStamps, event.Timestamp)
+	}
+	if len(timeStamps) < 1 {
+		return 0, 0, fmt.Errorf("not enough data to resolve package window")
+	}
+	from = timeStamps[0]
+	to = timeStamps[len(timeStamps)-1]
+	for _, timeStamp := range timeStamps {
+		if timeStamp < from {
+			from = timeStamp
+		}
+		if timeStamp > to {
+			to = timeStamp
+		}
+	}
+	return from, to, nil
 }
 
 // Notifier implements notification functionality

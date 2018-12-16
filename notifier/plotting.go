@@ -15,8 +15,10 @@ import (
 	"github.com/moira-alert/moira/target"
 )
 
-func (notifier *StandardNotifier) buildNotificationPackagePlot(pkg NotificationPackage) ([]byte, error) {
+var defaultPlotWindow = 60 * time.Minute
 
+// buildNotificationPackagePlot returns bytes slice containing package plot
+func (notifier *StandardNotifier) buildNotificationPackagePlot(pkg NotificationPackage) ([]byte, error) {
 	buff := bytes.NewBuffer(make([]byte, 0))
 
 	if pkg.Trigger.ID == "" {
@@ -35,21 +37,8 @@ func (notifier *StandardNotifier) buildNotificationPackagePlot(pkg NotificationP
 
 	remoteCfg := notifier.config.RemoteConfig
 
-	to := time.Now().UTC()
-	from := to.Add(-60 * time.Minute)
-
-	tts, err := getTriggerEvaluationResult(notifier.database, remoteCfg, from.Unix(), to.Unix(), trigger.ID)
-	if err != nil {
-		return buff.Bytes(), err
-	}
-
-	var metricsData = make([]*types.MetricData, 0, len(tts.Main)+len(tts.Additional))
-	for _, ts := range tts.Main {
-		metricsData = append(metricsData, &ts.MetricData)
-	}
-	for _, ts := range tts.Additional {
-		metricsData = append(metricsData, &ts.MetricData)
-	}
+	from, to := notifier.getPlotWindow(trigger, pkg)
+	metricsData, _, _ := notifier.evaluateTriggerMetrics(remoteCfg, from, to, trigger.ID)
 
 	metricsToShow := make([]string, 0)
 
@@ -69,31 +58,65 @@ func (notifier *StandardNotifier) buildNotificationPackagePlot(pkg NotificationP
 	return buff.Bytes(), nil
 }
 
-func getTriggerEvaluationResult(dataBase moira.Database, remoteConfig *remote.Config,
-	from, to int64, triggerID string) (*checker.TriggerTimeSeries, error) {
+func (notifier *StandardNotifier) getPlotWindow(trigger moira.Trigger, pkg NotificationPackage) (int64, int64) {
+	var err error
+	var from, to int64
+	if trigger.IsRemote {
+		from, to, err = pkg.Window()
+	}
+	if !trigger.IsRemote || err != nil {
+		if err != nil {
+			notifier.logger.Warningf("can not use remote trigger %s window: %s, using default %s window",
+				trigger.ID, err.Error(), defaultPlotWindow.String())
+		}
+		now := time.Now()
+		from = now.In(notifier.config.Location).Add(-defaultPlotWindow).Unix()
+		to = now.In(notifier.config.Location).Unix()
+	}
+	return from, to
+}
+
+func (notifier *StandardNotifier) evaluateTriggerMetrics(remoteCfg *remote.Config,
+	from, to int64, triggerID string) ([]*types.MetricData, *moira.Trigger, error) {
+	tts, trigger, err := notifier.getTriggerEvaluationResult(notifier.database, remoteCfg, from, to, triggerID)
+	if err != nil {
+		return nil, trigger, err
+	}
+	var metricsData = make([]*types.MetricData, 0, len(tts.Main)+len(tts.Additional))
+	for _, ts := range tts.Main {
+		metricsData = append(metricsData, &ts.MetricData)
+	}
+	for _, ts := range tts.Additional {
+		metricsData = append(metricsData, &ts.MetricData)
+	}
+	return metricsData, trigger, err
+}
+
+func (notifier *StandardNotifier) getTriggerEvaluationResult(dataBase moira.Database, remoteConfig *remote.Config,
+	from, to int64, triggerID string) (*checker.TriggerTimeSeries, *moira.Trigger, error) {
 	allowRealtimeAllerting := true
 	trigger, err := dataBase.GetTrigger(triggerID)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	triggerMetrics := &checker.TriggerTimeSeries{
 		Main:       make([]*target.TimeSeries, 0),
 		Additional: make([]*target.TimeSeries, 0),
 	}
 	if trigger.IsRemote && !remoteConfig.IsEnabled() {
-		return nil, remote.ErrRemoteStorageDisabled
+		return nil, &trigger, remote.ErrRemoteStorageDisabled
 	}
 	for i, tar := range trigger.Targets {
 		var timeSeries []*target.TimeSeries
 		if trigger.IsRemote {
 			timeSeries, err = remote.Fetch(remoteConfig, tar, from, to, allowRealtimeAllerting)
 			if err != nil {
-				return nil, err
+				return nil, &trigger, err
 			}
 		} else {
 			result, err := target.EvaluateTarget(dataBase, tar, from, to, allowRealtimeAllerting)
 			if err != nil {
-				return nil, err
+				return nil, &trigger, err
 			}
 			timeSeries = result.TimeSeries
 		}
@@ -103,6 +126,6 @@ func getTriggerEvaluationResult(dataBase moira.Database, remoteConfig *remote.Co
 			triggerMetrics.Additional = append(triggerMetrics.Additional, timeSeries...)
 		}
 	}
-	return triggerMetrics, nil
+	return triggerMetrics, &trigger, nil
 }
 
