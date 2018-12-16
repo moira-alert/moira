@@ -110,8 +110,7 @@ func (notifier *StandardNotifier) resend(pkg *NotificationPackage, reason string
 func (notifier *StandardNotifier) run(sender moira.Sender, ch chan NotificationPackage) {
 	defer notifier.waitGroup.Done()
 	for pkg := range ch {
-		location := notifier.config.Location
-		plot, err := notifier.buildNotificationPackagePlot(pkg, location)
+		plot, err := notifier.buildNotificationPackagePlot(pkg)
 		if err != nil {
 			notifier.logger.Errorf("Can't build notification package plot for %s: %s", pkg.Trigger, err.Error())
 		}

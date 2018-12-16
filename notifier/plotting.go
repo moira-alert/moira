@@ -15,8 +15,7 @@ import (
 	"github.com/moira-alert/moira/target"
 )
 
-func (notifier *StandardNotifier) buildNotificationPackagePlot(pkg NotificationPackage,
-	location *time.Location) ([]byte, error) {
+func (notifier *StandardNotifier) buildNotificationPackagePlot(pkg NotificationPackage) ([]byte, error) {
 
 	buff := bytes.NewBuffer(make([]byte, 0))
 
@@ -29,7 +28,7 @@ func (notifier *StandardNotifier) buildNotificationPackagePlot(pkg NotificationP
 		return buff.Bytes(), err
 	}
 
-	plotTemplate, err := plotting.GetPlotTemplate(pkg.Plotting.Theme, location)
+	plotTemplate, err := plotting.GetPlotTemplate(pkg.Plotting.Theme, notifier.config.Location)
 	if err != nil {
 		return buff.Bytes(), err
 	}
