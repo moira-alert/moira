@@ -75,7 +75,7 @@ func (notifier *StandardNotifier) getPlotWindow(trigger moira.TriggerData, pkg N
 
 func (notifier *StandardNotifier) evaluateTriggerMetrics(remoteCfg *remote.Config,
 	from, to int64, triggerID string) ([]*types.MetricData, *moira.Trigger, error) {
-	tts, trigger, err := notifier.getTriggerEvaluationResult(notifier.database, remoteCfg, from, to, triggerID)
+	tts, trigger, err := getTriggerEvaluationResult(notifier.database, remoteCfg, from, to, triggerID)
 	if err != nil {
 		return nil, trigger, err
 	}
@@ -89,9 +89,9 @@ func (notifier *StandardNotifier) evaluateTriggerMetrics(remoteCfg *remote.Confi
 	return metricsData, trigger, err
 }
 
-func (notifier *StandardNotifier) getTriggerEvaluationResult(dataBase moira.Database, remoteConfig *remote.Config,
+func getTriggerEvaluationResult(dataBase moira.Database, remoteConfig *remote.Config,
 	from, to int64, triggerID string) (*checker.TriggerTimeSeries, *moira.Trigger, error) {
-	allowRealtimeAllerting := true
+	allowRealtimeAlerting := true
 	trigger, err := dataBase.GetTrigger(triggerID)
 	if err != nil {
 		return nil, nil, err
@@ -106,12 +106,12 @@ func (notifier *StandardNotifier) getTriggerEvaluationResult(dataBase moira.Data
 	for i, tar := range trigger.Targets {
 		var timeSeries []*target.TimeSeries
 		if trigger.IsRemote {
-			timeSeries, err = remote.Fetch(remoteConfig, tar, from, to, allowRealtimeAllerting)
+			timeSeries, err = remote.Fetch(remoteConfig, tar, from, to, allowRealtimeAlerting)
 			if err != nil {
 				return nil, &trigger, err
 			}
 		} else {
-			result, err := target.EvaluateTarget(dataBase, tar, from, to, allowRealtimeAllerting)
+			result, err := target.EvaluateTarget(dataBase, tar, from, to, allowRealtimeAlerting)
 			if err != nil {
 				return nil, &trigger, err
 			}
