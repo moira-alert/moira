@@ -15,7 +15,8 @@ import (
 	"github.com/moira-alert/moira/target"
 )
 
-var defaultPlotWindow = 60 * time.Minute
+// defaultTimeRange is default time range to fetch timeseries
+var defaultTimeRange = 60 * time.Minute
 
 // buildNotificationPackagePlot returns bytes slice containing package plot
 func (notifier *StandardNotifier) buildNotificationPackagePlot(pkg NotificationPackage) ([]byte, error) {
@@ -56,10 +57,10 @@ func resolveMetricsWindow(logger moira.Logger, trigger moira.TriggerData, pkg No
 	if !trigger.IsRemote || err != nil {
 		if err != nil {
 			logger.Warningf("can not use remote trigger %s window: %s, using default %s window",
-				trigger.ID, err.Error(), defaultPlotWindow.String())
+				trigger.ID, err.Error(), defaultTimeRange.String())
 		}
 		now := time.Now()
-		from = now.UTC().Add(-defaultPlotWindow).Unix()
+		from = now.UTC().Add(-defaultTimeRange).Unix()
 		to = now.UTC().Unix()
 	}
 	return from, to
