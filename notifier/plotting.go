@@ -35,8 +35,8 @@ func (notifier *StandardNotifier) buildNotificationPackagePlot(pkg NotificationP
 	}
 	metricsToShow := pkg.MetricNames()
 	renderable := plotTemplate.GetRenderable(trigger, metricsData, metricsToShow)
-	notifier.logger.Debugf("processing render %s timeseries: %s", trigger.ID,
-		strings.Join(metricsToShow, ", "))
+	notifier.logger.Debugf("processing render %s timeseries: %s with location: %s",
+		trigger.ID, strings.Join(metricsToShow, ", "), notifier.config.Location.String())
 	if len(renderable.Series) == 0 {
 		return buff.Bytes(), plotting.ErrNoPointsToRender{TriggerName: trigger.Name}
 	}

@@ -12,6 +12,7 @@ import (
 // test date and corresponding unix timestamp
 type testDate struct {
 	humanReadable time.Time
+	formatted     map[string]string
 	timeStamp     int64
 }
 
@@ -49,14 +50,33 @@ func TestInt64ToTime(t *testing.T) {
 	testDates := []testDate{
 		{
 			time.Date(2018, 5, 26, 10, 24, 38, 0, time.UTC),
+			map[string]string{
+				"UTC":           "10:24",
+				"Europe/Moscow": "13:24",
+			},
 			1527330278,
 		},
 		{
 			time.Date(2018, 12, 15, 23, 44, 30, 0, time.UTC),
+			map[string]string{
+				"UTC":           "23:44",
+				"Europe/Moscow": "02:44",
+			},
 			1544917470,
 		},
 	}
-	Convey("Convert int64 timestamp into datetime", t, func() {
+	Convey("Convert int64 timestamp into datetime (simple)", t, func() {
+		for _, testdate := range testDates {
+			converted := int64ToTime(testdate.timeStamp, defaultLocation)
+			convertedMsk := int64ToTime(testdate.timeStamp, mskLocation)
+			formatted := converted.Format("15:04")
+			formattedMsk := convertedMsk.Format("15:04")
+			So(formatted, ShouldNotEqual, formattedMsk)
+			So(formatted, ShouldEqual, testdate.formatted["UTC"])
+			So(formattedMsk, ShouldEqual, testdate.formatted["Europe/Moscow"])
+		}
+	})
+	Convey("Convert int64 timestamp into datetime (extended)", t, func() {
 		for _, testdate := range testDates {
 			converted := int64ToTime(testdate.timeStamp, defaultLocation)
 			convertedMsk := int64ToTime(testdate.timeStamp, mskLocation)
