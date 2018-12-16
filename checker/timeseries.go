@@ -6,7 +6,6 @@ import (
 	"math"
 	"strconv"
 
-	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/expression"
 	"github.com/moira-alert/moira/remote"
 	"github.com/moira-alert/moira/target"
@@ -40,44 +39,6 @@ func (err ErrWrongTriggerTargets) Error() string {
 	}
 	wrongTargets.WriteString(" has more than one timeseries")
 	return wrongTargets.String()
-}
-
-// GetTriggerEvaluationResult to test checker
-func GetTriggerEvaluationResult(dataBase moira.Database, remoteConfig *remote.Config,
-	from, to int64, triggerID string) (*TriggerTimeSeries, *moira.Trigger, error) {
-	allowRealtimeAlerting := true
-	trigger, err := dataBase.GetTrigger(triggerID)
-	if err != nil {
-		return nil, nil, err
-	}
-	triggerMetrics := &TriggerTimeSeries{
-		Main:       make([]*target.TimeSeries, 0),
-		Additional: make([]*target.TimeSeries, 0),
-	}
-	if trigger.IsRemote && !remoteConfig.IsEnabled() {
-		return nil, &trigger, remote.ErrRemoteStorageDisabled
-	}
-	for i, tar := range trigger.Targets {
-		var timeSeries []*target.TimeSeries
-		if trigger.IsRemote {
-			timeSeries, err = remote.Fetch(remoteConfig, tar, from, to, allowRealtimeAlerting)
-			if err != nil {
-				return nil, &trigger, err
-			}
-		} else {
-			result, err := target.EvaluateTarget(dataBase, tar, from, to, allowRealtimeAlerting)
-			if err != nil {
-				return nil, &trigger, err
-			}
-			timeSeries = result.TimeSeries
-		}
-		if i == 0 {
-			triggerMetrics.Main = timeSeries
-		} else {
-			triggerMetrics.Additional = append(triggerMetrics.Additional, timeSeries...)
-		}
-	}
-	return triggerMetrics, &trigger, nil
 }
 
 func (triggerChecker *TriggerChecker) getTimeSeries(from, until int64) (*TriggerTimeSeries, []string, error) {

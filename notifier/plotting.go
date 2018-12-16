@@ -75,7 +75,7 @@ func (notifier *StandardNotifier) getPlotWindow(trigger moira.TriggerData, pkg N
 
 func (notifier *StandardNotifier) evaluateTriggerMetrics(remoteCfg *remote.Config,
 	from, to int64, triggerID string) ([]*types.MetricData, *moira.Trigger, error) {
-	tts, trigger, err := checker.GetTriggerEvaluationResult(notifier.database, remoteCfg, from, to, triggerID)
+	tts, trigger, err := getTriggerEvaluationResult(notifier.database, remoteCfg, from, to, triggerID)
 	if err != nil {
 		return nil, trigger, err
 	}

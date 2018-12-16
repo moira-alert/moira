@@ -24,15 +24,15 @@ func getPlotTheme(plotTheme string) (moira.PlotTheme, error) {
 		return nil, err
 	}
 	switch plotTheme {
-	case lightPlotTheme:
-		theme, err = light.NewTheme(themeFont)
+	case darkPlotTheme:
+		theme, err = dark.NewTheme(themeFont)
 		if err != nil {
 			return nil, err
 		}
-	case darkPlotTheme:
+	case lightPlotTheme:
 		fallthrough
 	default:
-		theme, err = dark.NewTheme(themeFont)
+		theme, err = light.NewTheme(themeFont)
 		if err != nil {
 			return nil, err
 		}
