@@ -25,20 +25,15 @@ func (notifier *StandardNotifier) buildNotificationPackagePlot(pkg NotificationP
 		return buff.Bytes(), nil
 	}
 
-	trigger, err := notifier.database.GetTrigger(pkg.Trigger.ID)
-	if err != nil {
-		return buff.Bytes(), err
-	}
-
 	plotTemplate, err := plotting.GetPlotTemplate(pkg.Plotting.Theme, notifier.config.Location)
 	if err != nil {
 		return buff.Bytes(), err
 	}
 
 	remoteCfg := notifier.config.RemoteConfig
-	from, to := notifier.getPlotWindow(trigger, pkg)
+	from, to := notifier.getPlotWindow(pkg.Trigger, pkg)
 
-	metricsData, _, err := notifier.evaluateTriggerMetrics(remoteCfg, from, to, trigger.ID)
+	metricsData, trigger, err := notifier.evaluateTriggerMetrics(remoteCfg, from, to, pkg.Trigger.ID)
 	if err != nil {
 		return buff.Bytes(), err
 	}
@@ -48,9 +43,9 @@ func (notifier *StandardNotifier) buildNotificationPackagePlot(pkg NotificationP
 		metricsToShow = append(metricsToShow, event.Metric)
 	}
 
-	renderable := plotTemplate.GetRenderable(&trigger, metricsData, metricsToShow)
+	renderable := plotTemplate.GetRenderable(trigger, metricsData, metricsToShow)
 
-	notifier.logger.Debugf("Processing render %s timeseries: %s", trigger.ID,
+	notifier.logger.Debugf("processing render %s timeseries: %s", trigger.ID,
 		strings.Join(metricsToShow, ", "))
 
 	if err = renderable.Render(chart.PNG, buff); err != nil {
@@ -60,7 +55,7 @@ func (notifier *StandardNotifier) buildNotificationPackagePlot(pkg NotificationP
 	return buff.Bytes(), nil
 }
 
-func (notifier *StandardNotifier) getPlotWindow(trigger moira.Trigger, pkg NotificationPackage) (int64, int64) {
+func (notifier *StandardNotifier) getPlotWindow(trigger moira.TriggerData, pkg NotificationPackage) (int64, int64) {
 	var err error
 	var from, to int64
 	if trigger.IsRemote {
