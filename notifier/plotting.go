@@ -36,28 +36,21 @@ func (notifier *StandardNotifier) buildNotificationPackagePlot(pkg NotificationP
 	}
 
 	remoteCfg := notifier.config.RemoteConfig
-
 	from, to := notifier.getPlotWindow(trigger, pkg)
-	metricsData, _, _ := notifier.evaluateTriggerMetrics(remoteCfg, from, to, trigger.ID)
+
+	metricsData, _, err := notifier.evaluateTriggerMetrics(remoteCfg, from, to, trigger.ID)
+	if err != nil {
+		return buff.Bytes(), err
+	}
 
 	metricsToShow := make([]string, 0)
-
 	for _, event := range pkg.Events {
 		metricsToShow = append(metricsToShow, event.Metric)
 	}
 
-	notifier.logger.Info("expected series: %s", strings.Join(metricsToShow, ", "))
-	metricsToShow = make([]string, 0)
-
 	renderable := plotTemplate.GetRenderable(&trigger, metricsData, metricsToShow)
 
-	allseries := make([]string, 0)
-	for _, serie := range renderable.Series {
-		allseries = append(allseries, serie.GetName())
-	}
-	notifier.logger.Infof("found series: %s", allseries)
-
-	notifier.logger.Debugf("Attempt to render %s timeseries: %s", trigger.ID,
+	notifier.logger.Debugf("Processing render %s timeseries: %s", trigger.ID,
 		strings.Join(metricsToShow, ", "))
 
 	if err = renderable.Render(chart.PNG, buff); err != nil {
@@ -79,8 +72,8 @@ func (notifier *StandardNotifier) getPlotWindow(trigger moira.Trigger, pkg Notif
 				trigger.ID, err.Error(), defaultPlotWindow.String())
 		}
 		now := time.Now()
-		from = now.In(notifier.config.Location).Add(-defaultPlotWindow).Unix()
-		to = now.In(notifier.config.Location).Unix()
+		from = now.UTC().Add(-defaultPlotWindow).Unix()
+		to = now.UTC().Unix()
 	}
 	return from, to
 }
