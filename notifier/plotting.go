@@ -20,42 +20,34 @@ var defaultPlotWindow = 60 * time.Minute
 // buildNotificationPackagePlot returns bytes slice containing package plot
 func (notifier *StandardNotifier) buildNotificationPackagePlot(pkg NotificationPackage) ([]byte, error) {
 	buff := bytes.NewBuffer(make([]byte, 0))
-
 	if pkg.Trigger.ID == "" {
 		return buff.Bytes(), nil
 	}
-
 	plotTemplate, err := plotting.GetPlotTemplate(pkg.Plotting.Theme, notifier.config.Location)
 	if err != nil {
 		return buff.Bytes(), err
 	}
-
 	remoteCfg := notifier.config.RemoteConfig
-	from, to := notifier.getPlotWindow(pkg.Trigger, pkg)
-
-	metricsData, trigger, err := notifier.evaluateTriggerMetrics(remoteCfg, from, to, pkg.Trigger.ID)
+	from, to := resolveMetricsWindow(notifier.logger, pkg.Trigger, pkg)
+	metricsData, trigger, err := evaluateTriggerMetrics(notifier.database, remoteCfg, from, to, pkg.Trigger.ID)
 	if err != nil {
 		return buff.Bytes(), err
 	}
-
-	metricsToShow := make([]string, 0)
-	for _, event := range pkg.Events {
-		metricsToShow = append(metricsToShow, event.Metric)
-	}
-
+	metricsToShow := pkg.MetricNames()
 	renderable := plotTemplate.GetRenderable(trigger, metricsData, metricsToShow)
-
 	notifier.logger.Debugf("processing render %s timeseries: %s", trigger.ID,
 		strings.Join(metricsToShow, ", "))
-
+	if len(renderable.Series) == 0 {
+		return buff.Bytes(), plotting.ErrNoPointsToRender{TriggerName: trigger.Name}
+	}
 	if err = renderable.Render(chart.PNG, buff); err != nil {
 		return buff.Bytes(), err
 	}
-
 	return buff.Bytes(), nil
 }
 
-func (notifier *StandardNotifier) getPlotWindow(trigger moira.TriggerData, pkg NotificationPackage) (int64, int64) {
+// resolveMetricsWindow returns from, to parameters depending on trigger type
+func resolveMetricsWindow(logger moira.Logger, trigger moira.TriggerData, pkg NotificationPackage) (int64, int64) {
 	var err error
 	var from, to int64
 	if trigger.IsRemote {
@@ -63,7 +55,7 @@ func (notifier *StandardNotifier) getPlotWindow(trigger moira.TriggerData, pkg N
 	}
 	if !trigger.IsRemote || err != nil {
 		if err != nil {
-			notifier.logger.Warningf("can not use remote trigger %s window: %s, using default %s window",
+			logger.Warningf("can not use remote trigger %s window: %s, using default %s window",
 				trigger.ID, err.Error(), defaultPlotWindow.String())
 		}
 		now := time.Now()
@@ -73,9 +65,10 @@ func (notifier *StandardNotifier) getPlotWindow(trigger moira.TriggerData, pkg N
 	return from, to
 }
 
-func (notifier *StandardNotifier) evaluateTriggerMetrics(remoteCfg *remote.Config,
+// evaluateTriggerMetrics returns collection of MetricData
+func evaluateTriggerMetrics(database moira.Database, remoteCfg *remote.Config,
 	from, to int64, triggerID string) ([]*types.MetricData, *moira.Trigger, error) {
-	tts, trigger, err := getTriggerEvaluationResult(notifier.database, remoteCfg, from, to, triggerID)
+	tts, trigger, err := getTriggerEvaluationResult(database, remoteCfg, from, to, triggerID)
 	if err != nil {
 		return nil, trigger, err
 	}
@@ -89,6 +82,7 @@ func (notifier *StandardNotifier) evaluateTriggerMetrics(remoteCfg *remote.Confi
 	return metricsData, trigger, err
 }
 
+// getTriggerEvaluationResult returns trigger metrics from chosen data source
 func getTriggerEvaluationResult(dataBase moira.Database, remoteConfig *remote.Config,
 	from, to int64, triggerID string) (*checker.TriggerTimeSeries, *moira.Trigger, error) {
 	allowRealtimeAlerting := true

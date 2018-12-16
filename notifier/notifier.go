@@ -47,6 +47,15 @@ func (pkg NotificationPackage) Window() (from, to int64, err error) {
 	return from, to, nil
 }
 
+// MetricNames returns all metric names found in package events
+func(pkg NotificationPackage) MetricNames() []string {
+	metricNames := make([]string, 0)
+	for _, event := range pkg.Events {
+		metricNames = append(metricNames, event.Metric)
+	}
+	return metricNames
+}
+
 // Notifier implements notification functionality
 type Notifier interface {
 	Send(pkg *NotificationPackage, waitGroup *sync.WaitGroup)
