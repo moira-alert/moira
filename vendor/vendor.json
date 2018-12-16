@@ -1205,10 +1205,16 @@
 			"revisionTime": "2016-05-14T03:14:55Z"
 		},
 		{
-			"checksumSHA1": "SDdJQg0eCU2IfLSuUafSJwQPjh4=",
+			"checksumSHA1": "bYySBbBO3hKLmqlxoVBtIqKNA6c=",
 			"path": "github.com/nlopes/slack",
-			"revision": "ca8436d76f805ec1e682eaae2de3c3a9bc894b0f",
-			"revisionTime": "2017-07-01T16:13:22Z"
+			"revision": "38ac5e8c495bc1d4d299c6a14930376f32145eb8",
+			"revisionTime": "2018-11-18T08:39:49Z"
+		},
+		{
+			"checksumSHA1": "MH2aECaXQSW8yjgMJSXORiVY+h8=",
+			"path": "github.com/nlopes/slack/slackutilsx",
+			"revision": "38ac5e8c495bc1d4d299c6a14930376f32145eb8",
+			"revisionTime": "2018-11-18T08:39:49Z"
 		},
 		{
 			"checksumSHA1": "BoXdUBWB8UnSlFlbnuTQaPqfCGk=",
