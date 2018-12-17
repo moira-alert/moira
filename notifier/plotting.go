@@ -54,7 +54,7 @@ func resolveMetricsWindow(logger moira.Logger, trigger moira.TriggerData, pkg No
 	if trigger.IsRemote {
 		from, to, err := pkg.Window()
 		if err != nil {
-			logger.Warningf("failed to get remote trigger %s package window: %s using default %s window",
+			logger.Warningf("failed to get remote trigger %s package window: %s, using default %s window",
 				trigger.ID, err.Error(), defaultTimeRange.String())
 			return defaultFrom, defaultTo
 		}
