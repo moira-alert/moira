@@ -88,7 +88,7 @@ func TestInt64ToTime(t *testing.T) {
 // TestTimeValueFormatter tests time.Time to formatted string converter
 func TestTimeValueFormatter(t *testing.T) {
 	dateTimeFormat := "15:04"
-	timeValue := int64ToTime(int64(1527330278)).In(time.UTC)
+	timeValue := int64ToTime(int64(1527330278))
 	locationIncrements := map[string]int{
 		"Europe/Moscow":      3,
 		"Asia/Yekaterinburg": 5,

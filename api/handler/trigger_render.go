@@ -73,8 +73,13 @@ func evaluateTriggerMetrics(remoteCfg *remote.Config, from, to int64, triggerID 
 }
 
 func buildRenderable(request *http.Request, trigger *moira.Trigger, metricsData []*types.MetricData) (*chart.Chart, error) {
+	timezone := request.URL.Query().Get("timezone")
+	location, err := time.LoadLocation(timezone)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load %s timezone: %s", timezone, err.Error())
+	}
 	plotTheme := request.URL.Query().Get("theme")
-	plotTemplate, err := plotting.GetPlotTemplate(plotTheme, time.UTC)
+	plotTemplate, err := plotting.GetPlotTemplate(plotTheme, location)
 	if err != nil {
 		return nil, fmt.Errorf("can not initialize plot theme %s", err.Error())
 	}
