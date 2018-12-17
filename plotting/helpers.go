@@ -25,11 +25,6 @@ func (initial sortedByLen) Swap(i int, j int) {
 	initial[i], initial[j] = initial[j], initial[i]
 }
 
-// int64ToTime returns time.Time from int64
-func int64ToTime(timeStamp int64) time.Time {
-	return time.Unix(timeStamp, 0).UTC()
-}
-
 // sanitizeLabelName shortens label names to max length
 func sanitizeLabelName(label string, maxLabelLength int) string {
 	labelLength := len(label)

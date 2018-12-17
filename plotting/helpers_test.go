@@ -9,6 +9,8 @@ import (
 	"time"
 
 	. "github.com/smartystreets/goconvey/convey"
+
+	"github.com/moira-alert/moira"
 )
 
 // TestSortByLen tests simple string array sorting by length
@@ -70,25 +72,10 @@ func TestSanitizeLabelName(t *testing.T) {
 	})
 }
 
-// TestInt64ToTime tests simple int64 timestamp to time.Time converter
-func TestInt64ToTime(t *testing.T) {
-	int64timeStamp := int64(1527330278)
-	humanReadabletimeStamp := time.Date(2018, 5, 26, 10, 24, 38, 0, time.UTC)
-	Convey("Convert int64 timestamp into datetime", t, func() {
-		converted := int64ToTime(int64timeStamp)
-		So(converted, ShouldResemble, humanReadabletimeStamp)
-	})
-	Convey("Convert int64 timestamp + 1 minute into datetime", t, func() {
-		int64timeStamp += 60
-		converted := int64ToTime(int64timeStamp)
-		So(converted, ShouldResemble, humanReadabletimeStamp.Add(time.Minute))
-	})
-}
-
 // TestTimeValueFormatter tests time.Time to formatted string converter
 func TestTimeValueFormatter(t *testing.T) {
 	dateTimeFormat, separator := "15:04", ":"
-	timeValue := int64ToTime(int64(1527330278))
+	timeValue := moira.Int64ToTime(int64(1527330278))
 	locationIncrements := map[string]int{
 		"Europe/Moscow":      3,
 		"Asia/Yekaterinburg": 5,

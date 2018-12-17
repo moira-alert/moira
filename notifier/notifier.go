@@ -31,7 +31,7 @@ func (pkg NotificationPackage) Window() (from, to int64, err error) {
 	for _, event := range pkg.Events {
 		timeStamps = append(timeStamps, event.Timestamp)
 	}
-	if len(timeStamps) < 1 {
+	if len(timeStamps) == 0 {
 		return 0, 0, fmt.Errorf("not enough data to resolve package window")
 	}
 	from = timeStamps[0]

@@ -33,8 +33,8 @@ func resolveLimits(metricsData []*types.MetricData) plotLimits {
 				allValues = append(allValues, metricValue)
 			}
 		}
-		allTimes = append(allTimes, int64ToTime(metricData.StartTime))
-		allTimes = append(allTimes, int64ToTime(metricData.StopTime))
+		allTimes = append(allTimes, moira.Int64ToTime(metricData.StartTime))
+		allTimes = append(allTimes, moira.Int64ToTime(metricData.StopTime))
 	}
 	from, to := util.Math.MinAndMaxOfTime(allTimes...)
 	lowest, highest := util.Math.MinAndMax(allValues...)

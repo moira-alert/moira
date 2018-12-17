@@ -48,21 +48,25 @@ func (notifier *StandardNotifier) buildNotificationPackagePlot(pkg NotificationP
 
 // resolveMetricsWindow returns from, to parameters depending on trigger type
 func resolveMetricsWindow(logger moira.Logger, trigger moira.TriggerData, pkg NotificationPackage) (int64, int64) {
-	var err error
-	var from, to int64
+	now := time.Now()
+	defaultFrom := now.UTC().Add(-defaultTimeRange).Unix()
+	defaultTo := now.UTC().Unix()
 	if trigger.IsRemote {
-		from, to, err = pkg.Window()
-	}
-	if !trigger.IsRemote || err != nil {
+		from, to, err := pkg.Window()
 		if err != nil {
-			logger.Warningf("can not use remote trigger %s window: %s, using default %s window",
+			logger.Warningf("failed to get remote trigger %s package window: %s using default %s window",
 				trigger.ID, err.Error(), defaultTimeRange.String())
+			return defaultFrom, defaultTo
 		}
-		now := time.Now()
-		from = now.UTC().Add(-defaultTimeRange).Unix()
-		to = now.UTC().Unix()
+		fromTime, toTime := moira.Int64ToTime(from), moira.Int64ToTime(to)
+		if toTime.Sub(fromTime).Minutes() < defaultTimeRange.Minutes() {
+			logger.Warningf("remote trigger %s window too small, using default %s window",
+				trigger.ID, defaultTimeRange.String())
+			return fromTime.Add(-defaultTimeRange / 2).Unix(), toTime.Add(defaultTimeRange / 2).Unix()
+		}
+		return fromTime.Unix(), toTime.Unix()
 	}
-	return from, to
+	return defaultFrom, defaultTo
 }
 
 // evaluateTriggerMetrics returns collection of MetricData

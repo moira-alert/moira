@@ -76,7 +76,7 @@ func describePlotCurves(metricData *types.MetricData) []plotCurve {
 	for valInd := start; valInd < len(metricData.Values); valInd++ {
 		pointValue := metricData.Values[valInd]
 		if !math.IsNaN(pointValue) {
-			timeStampValue := int64ToTime(timeStamp)
+			timeStampValue := moira.Int64ToTime(timeStamp)
 			curves[curvesInd].timeStamps = append(curves[curvesInd].timeStamps, timeStampValue)
 			curves[curvesInd].values = append(curves[curvesInd].values, pointValue)
 		} else {
