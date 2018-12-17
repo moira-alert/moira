@@ -62,7 +62,7 @@ func (plot *Plot) GetRenderable(trigger *moira.Trigger,
 
 	gridStyle := plot.theme.GetGridStyle()
 
-	yAxisValuesFormatter := getYAxisValuesFormatter(limits)
+	yAxisValuesFormatter, maxMarkLen := getYAxisValuesFormatter(limits)
 	yAxisRange := limits.getThresholdAxisRange(trigger.TriggerType)
 
 	renderable := chart.Chart{
@@ -74,7 +74,7 @@ func (plot *Plot) GetRenderable(trigger *moira.Trigger,
 		Height: plot.height,
 
 		Canvas:     plot.theme.GetCanvasStyle(),
-		Background: plot.theme.GetBackgroundStyle(),
+		Background: plot.theme.GetBackgroundStyle(maxMarkLen),
 
 		XAxis: chart.XAxis{
 			Style:          plot.theme.GetXAxisStyle(),

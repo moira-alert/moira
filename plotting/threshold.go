@@ -46,7 +46,8 @@ func getThresholdSeriesList(trigger *moira.Trigger, theme moira.PlotTheme, limit
 	plotThresholds := generateThresholds(trigger, limits)
 	for _, plotThreshold := range plotThresholds {
 		thresholdSeriesList = append(thresholdSeriesList, plotThreshold.generateThresholdSeries(theme, limits))
-		thresholdSeriesList = append(thresholdSeriesList, plotThreshold.generateAnnotationSeries(theme, limits))
+		// TODO: uncomment to use annotations if necessary, remove otherwise
+		//thresholdSeriesList = append(thresholdSeriesList, plotThreshold.generateAnnotationSeries(theme, limits))
 	}
 	return thresholdSeriesList
 }

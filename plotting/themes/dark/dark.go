@@ -58,14 +58,16 @@ func (theme *PlotTheme) GetCanvasStyle() chart.Style {
 }
 
 // GetBackgroundStyle returns background style
-func (theme *PlotTheme) GetBackgroundStyle() chart.Style {
+func (theme *PlotTheme) GetBackgroundStyle(maxMarkLen int) chart.Style {
+	verticalShift := 40
+	horizontalShift := 20
 	return chart.Style{
 		FillColor: drawing.ColorFromHex(theme.bgColor),
 		Padding: chart.Box{
-			Top:    40,
-			Bottom: 40,
-			Left:   2 * chart.DefaultYAxisMargin,
-			Right:  2 + chart.DefaultYAxisMargin,
+			Top:    verticalShift,
+			Bottom: verticalShift,
+			Left:   horizontalShift,
+			Right:  horizontalShift + (maxMarkLen * 6),
 		},
 	}
 }

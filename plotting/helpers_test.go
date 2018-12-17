@@ -157,12 +157,13 @@ func TestGetYAxisValuesFormatter(t *testing.T) {
 		formattedMetricValues := []string{
 			"0.00", "1.00", "2.00", "3.00", "4.00", "5.00", "6.00", "7.00", "8.00", "9.00", "10.00",
 		}
-		valueFormatter := getYAxisValuesFormatter(lowLimits)
+		valueFormatter, maxMarkLen := getYAxisValuesFormatter(lowLimits)
 		formattedValues := make([]string, 0)
 		for _, metricValue := range metricValues {
 			formattedValue := valueFormatter(metricValue)
 			formattedValues = append(formattedValues, formattedValue)
 		}
+		So(maxMarkLen, ShouldEqual, 5)
 		So(len(formattedValues), ShouldEqual, len(formattedMetricValues))
 		So(formattedValues, ShouldResemble, formattedMetricValues)
 	})
@@ -173,12 +174,13 @@ func TestGetYAxisValuesFormatter(t *testing.T) {
 		formattedMetricValues := []string{
 			"-5", "-4", "-3", "-2", "-1", "0", "1", "2", "3", "4", "5",
 		}
-		valueFormatter := getYAxisValuesFormatter(mediumLimits)
+		valueFormatter, maxMarkLen := getYAxisValuesFormatter(mediumLimits)
 		formattedValues := make([]string, 0)
 		for _, metricValue := range metricValues {
 			formattedValue := valueFormatter(metricValue)
 			formattedValues = append(formattedValues, formattedValue)
 		}
+		So(maxMarkLen, ShouldEqual, 3)
 		So(len(formattedValues), ShouldEqual, len(formattedMetricValues))
 		So(formattedValues, ShouldResemble, formattedMetricValues)
 	})
@@ -189,12 +191,13 @@ func TestGetYAxisValuesFormatter(t *testing.T) {
 		formattedMetricValues := []string{
 			"-1.00 K", "-100", "0", "100", "1.00 K",
 		}
-		valueFormatter := getYAxisValuesFormatter(highLimits)
+		valueFormatter, maxMarkLen := getYAxisValuesFormatter(highLimits)
 		formattedValues := make([]string, 0)
 		for _, metricValue := range metricValues {
 			formattedValue := valueFormatter(metricValue)
 			formattedValues = append(formattedValues, formattedValue)
 		}
+		So(maxMarkLen, ShouldEqual, 7)
 		So(len(formattedValues), ShouldEqual, len(formattedMetricValues))
 		So(formattedValues, ShouldResemble, formattedMetricValues)
 	})

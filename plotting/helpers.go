@@ -68,13 +68,22 @@ func (storage locationStorage) formatTimeWithLocation(v interface{}, dateFormat 
 	return ""
 }
 
-// getYAxisValuesFormatter returns value formatter for values on yaxis
-func getYAxisValuesFormatter(limits plotLimits) func(v interface{}) string {
+// getYAxisValuesFormatter returns value formatter
+// for values on yaxis and resolved maximal formatted value length
+func getYAxisValuesFormatter(limits plotLimits) (func(v interface{}) string, int) {
+	var formatter func(v interface{}) string
 	deltaLimits := int64(limits.highest) - int64(limits.lowest)
 	if deltaLimits > 10 {
-		return floatToHumanizedValueFormatter
+		formatter = floatToHumanizedValueFormatter
+	} else {
+		formatter = chart.FloatValueFormatter
 	}
-	return chart.FloatValueFormatter
+	lowestLen := len(formatter(limits.lowest))
+	highestLen := len(formatter(limits.highest))
+	if lowestLen > highestLen {
+		return formatter, lowestLen
+	}
+	return formatter, highestLen
 }
 
 // floatToHumanizedValueFormatter converts floats into humanized strings on y axis of plot
