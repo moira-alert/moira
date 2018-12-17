@@ -24,7 +24,7 @@ type plotLimits struct {
 }
 
 // resolveLimits returns common plot limits
-func resolveLimits(metricsData []*types.MetricData, location *time.Location) plotLimits {
+func resolveLimits(metricsData []*types.MetricData) plotLimits {
 	allValues := make([]float64, 0)
 	allTimes := make([]time.Time, 0)
 	for _, metricData := range metricsData {
@@ -33,14 +33,14 @@ func resolveLimits(metricsData []*types.MetricData, location *time.Location) plo
 				allValues = append(allValues, metricValue)
 			}
 		}
-		allTimes = append(allTimes, int64ToTime(metricData.StartTime, location))
-		allTimes = append(allTimes, int64ToTime(metricData.StopTime, location))
+		allTimes = append(allTimes, int64ToTime(metricData.StartTime))
+		allTimes = append(allTimes, int64ToTime(metricData.StopTime))
 	}
 	from, to := util.Math.MinAndMaxOfTime(allTimes...)
 	lowest, highest := util.Math.MinAndMax(allValues...)
 	if highest == lowest {
-		highest = highest + (defaultRangeDelta/2)
-		lowest = lowest - (defaultRangeDelta/2)
+		highest = highest + (defaultRangeDelta / 2)
+		lowest = lowest - (defaultRangeDelta / 2)
 	}
 	return plotLimits{
 		from:    from,

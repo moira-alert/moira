@@ -17,8 +17,7 @@ type plotCurve struct {
 }
 
 // getCurveSeriesList returns curve series list
-func getCurveSeriesList(metricsData []*types.MetricData, metricsWhitelist []string,
-	theme moira.PlotTheme, location *time.Location) []chart.TimeSeries {
+func getCurveSeriesList(metricsData []*types.MetricData, metricsWhitelist []string, theme moira.PlotTheme) []chart.TimeSeries {
 	curveSeriesList := make([]chart.TimeSeries, 0)
 	if len(metricsWhitelist) > 0 {
 		metricsProcessed := 0
@@ -27,7 +26,7 @@ func getCurveSeriesList(metricsData []*types.MetricData, metricsWhitelist []stri
 				continue
 			}
 			curveStyle, pointStyle := theme.GetSerieStyles(metricDataInd)
-			curveSeries := generatePlotCurves(metricsData[metricDataInd], curveStyle, pointStyle, location)
+			curveSeries := generatePlotCurves(metricsData[metricDataInd], curveStyle, pointStyle)
 			curveSeriesList = append(curveSeriesList, curveSeries...)
 			metricsProcessed++
 			if metricsProcessed == len(metricsWhitelist)-1 {
@@ -37,7 +36,7 @@ func getCurveSeriesList(metricsData []*types.MetricData, metricsWhitelist []stri
 	} else {
 		for metricDataInd := range metricsData {
 			curveStyle, pointStyle := theme.GetSerieStyles(metricDataInd)
-			curveSeries := generatePlotCurves(metricsData[metricDataInd], curveStyle, pointStyle, location)
+			curveSeries := generatePlotCurves(metricsData[metricDataInd], curveStyle, pointStyle)
 			curveSeriesList = append(curveSeriesList, curveSeries...)
 		}
 	}
@@ -45,9 +44,8 @@ func getCurveSeriesList(metricsData []*types.MetricData, metricsWhitelist []stri
 }
 
 // generatePlotCurves returns go-chart timeseries to generate plot curves
-func generatePlotCurves(metricData *types.MetricData, curveStyle chart.Style,
-	pointStyle chart.Style, location *time.Location) []chart.TimeSeries {
-	curves := describePlotCurves(metricData, location)
+func generatePlotCurves(metricData *types.MetricData, curveStyle chart.Style, pointStyle chart.Style) []chart.TimeSeries {
+	curves := describePlotCurves(metricData)
 	curveSeries := make([]chart.TimeSeries, 0)
 	for _, curve := range curves {
 		var serieStyle chart.Style
@@ -69,7 +67,7 @@ func generatePlotCurves(metricData *types.MetricData, curveStyle chart.Style,
 }
 
 // describePlotCurves returns parameters for required curves
-func describePlotCurves(metricData *types.MetricData, location *time.Location) []plotCurve {
+func describePlotCurves(metricData *types.MetricData) []plotCurve {
 	curves := []plotCurve{{}}
 	curvesInd := 0
 
@@ -78,7 +76,7 @@ func describePlotCurves(metricData *types.MetricData, location *time.Location) [
 	for valInd := start; valInd < len(metricData.Values); valInd++ {
 		pointValue := metricData.Values[valInd]
 		if !math.IsNaN(pointValue) {
-			timeStampValue := int64ToTime(timeStamp, location)
+			timeStampValue := int64ToTime(timeStamp)
 			curves[curvesInd].timeStamps = append(curves[curvesInd].timeStamps, timeStampValue)
 			curves[curvesInd].values = append(curves[curvesInd].values, pointValue)
 		} else {

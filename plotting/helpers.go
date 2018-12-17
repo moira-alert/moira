@@ -26,8 +26,8 @@ func (initial sortedByLen) Swap(i int, j int) {
 }
 
 // int64ToTime returns time.Time from int64
-func int64ToTime(timeStamp int64, location *time.Location) time.Time {
-	return time.Unix(timeStamp, 0).In(location)
+func int64ToTime(timeStamp int64) time.Time {
+	return time.Unix(timeStamp, 0)
 }
 
 // sanitizeLabelName shortens label names to max length
@@ -40,14 +40,30 @@ func sanitizeLabelName(label string, maxLabelLength int) string {
 	return label
 }
 
-// floatToHumanizedValueFormatter converts floats into humanized strings on y axis of plot
-func floatToHumanizedValueFormatter(v interface{}) string {
+// getTimeValueFormatter returns a time formatter with a given format and timezone
+func getTimeValueFormatter(location *time.Location, format string) chart.ValueFormatter {
+	return func(v interface{}) string {
+		storage := &locationStorage{location: location}
+		return storage.formatTimeWithLocation(v, format)
+	}
+}
+
+// locationStorage is a container to store
+// timezone and provide time value formatter
+type locationStorage struct {
+	location *time.Location
+}
+
+// TimeValueFormatterWithFormat is a ValueFormatter for timestamps with a given format.
+func (storage locationStorage) formatTimeWithLocation(v interface{}, dateFormat string) string {
+	if typed, isTyped := v.(time.Time); isTyped {
+		return typed.In(storage.location).Format(dateFormat)
+	}
+	if typed, isTyped := v.(int64); isTyped {
+		return time.Unix(0, typed).In(storage.location).Format(dateFormat)
+	}
 	if typed, isTyped := v.(float64); isTyped {
-		if math.Abs(typed) < 1000 {
-			return fmt.Sprintf("%.f", typed)
-		}
-		typed, postfix := humanize.ComputeSI(typed)
-		return fmt.Sprintf("%.2f %s", typed, strings.ToUpper(postfix))
+		return time.Unix(0, int64(typed)).In(storage.location).Format(dateFormat)
 	}
 	return ""
 }
@@ -59,4 +75,16 @@ func getYAxisValuesFormatter(limits plotLimits) func(v interface{}) string {
 		return floatToHumanizedValueFormatter
 	}
 	return chart.FloatValueFormatter
+}
+
+// floatToHumanizedValueFormatter converts floats into humanized strings on y axis of plot
+func floatToHumanizedValueFormatter(v interface{}) string {
+	if typed, isTyped := v.(float64); isTyped {
+		if math.Abs(typed) < 1000 {
+			return fmt.Sprintf("%.f", typed)
+		}
+		typed, postfix := humanize.ComputeSI(typed)
+		return fmt.Sprintf("%.2f %s", typed, strings.ToUpper(postfix))
+	}
+	return ""
 }

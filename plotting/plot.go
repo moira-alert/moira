@@ -50,9 +50,9 @@ func (plot *Plot) GetRenderable(trigger *moira.Trigger,
 	metricsData []*types.MetricData, metricsWhitelist []string) chart.Chart {
 
 	plotSeries := make([]chart.Series, 0)
-	limits := resolveLimits(metricsData, plot.location)
+	limits := resolveLimits(metricsData)
 
-	curveSeriesList := getCurveSeriesList(metricsData, metricsWhitelist, plot.theme, plot.location)
+	curveSeriesList := getCurveSeriesList(metricsData, metricsWhitelist, plot.theme)
 	for _, curveSeries := range curveSeriesList {
 		plotSeries = append(plotSeries, curveSeries)
 	}
@@ -80,7 +80,7 @@ func (plot *Plot) GetRenderable(trigger *moira.Trigger,
 			Style:          plot.theme.GetXAxisStyle(),
 			GridMinorStyle: gridStyle,
 			GridMajorStyle: gridStyle,
-			ValueFormatter: chart.TimeValueFormatterWithFormat("15:04"),
+			ValueFormatter: getTimeValueFormatter(plot.location, "15:04"),
 			Range: &chart.ContinuousRange{
 				Min: float64(limits.from.UnixNano()),
 				Max: float64(limits.to.UnixNano()),

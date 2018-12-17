@@ -83,9 +83,9 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 		uploadParameters := slack.FileUploadParameters{
 			Channels:        []string{contact.Value},
 			ThreadTimestamp: threadTimestamp,
-			Filetype:        "png",
-			Filename:        trigger.ID,
 			Reader:          buff,
+			Filetype:        "png",
+			Filename:        fmt.Sprintf("%s.png", trigger.ID),
 		}
 		_, err := api.UploadFile(uploadParameters)
 		if err != nil {

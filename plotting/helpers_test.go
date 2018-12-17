@@ -1,20 +1,15 @@
 package plotting
 
 import (
+	"fmt"
 	"sort"
+	"strconv"
+	"strings"
 	"testing"
 	"time"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
-
-// testDate is a container to store
-// test date and corresponding unix timestamp
-type testDate struct {
-	humanReadable time.Time
-	formatted     map[string]string
-	timeStamp     int64
-}
 
 // TestSortByLen tests simple string array sorting by length
 func TestSortByLen(t *testing.T) {
@@ -40,58 +35,6 @@ func TestSortByLen(t *testing.T) {
 		sort.Sort(sortedByLen(labelsUnsorted))
 		So(len(labelsUnsorted), ShouldEqual, len(labelsSorted))
 		So(labelsUnsorted, ShouldResemble, labelsSorted)
-	})
-}
-
-// TestInt64ToTime tests simple int64 timestamp to time.Time converter
-func TestInt64ToTime(t *testing.T) {
-	defaultLocation, _ := time.LoadLocation("UTC")
-	mskLocation, _ := time.LoadLocation("Europe/Moscow")
-	testDates := []testDate{
-		{
-			time.Date(2018, 5, 26, 10, 24, 38, 0, time.UTC),
-			map[string]string{
-				"UTC":           "10:24",
-				"Europe/Moscow": "13:24",
-			},
-			1527330278,
-		},
-		{
-			time.Date(2018, 12, 15, 23, 44, 30, 0, time.UTC),
-			map[string]string{
-				"UTC":           "23:44",
-				"Europe/Moscow": "02:44",
-			},
-			1544917470,
-		},
-	}
-	Convey("Convert int64 timestamp into datetime (simple)", t, func() {
-		for _, testdate := range testDates {
-			converted := int64ToTime(testdate.timeStamp, defaultLocation)
-			convertedMsk := int64ToTime(testdate.timeStamp, mskLocation)
-			formatted := converted.Format("15:04")
-			formattedMsk := convertedMsk.Format("15:04")
-			So(formatted, ShouldNotEqual, formattedMsk)
-			So(formatted, ShouldEqual, testdate.formatted["UTC"])
-			So(formattedMsk, ShouldEqual, testdate.formatted["Europe/Moscow"])
-		}
-	})
-	Convey("Convert int64 timestamp into datetime (extended)", t, func() {
-		for _, testdate := range testDates {
-			converted := int64ToTime(testdate.timeStamp, defaultLocation)
-			convertedMsk := int64ToTime(testdate.timeStamp, mskLocation)
-			So(converted, ShouldResemble, testdate.humanReadable)
-			So(convertedMsk.Hour(), ShouldResemble, converted.Add(3 * time.Hour).Hour())
-		}
-	})
-	Convey("Convert int64 timestamp + 1 minute into datetime", t, func() {
-		for _, testdate := range testDates {
-			shiftedTimestamp := testdate.timeStamp + 60
-			converted := int64ToTime(shiftedTimestamp, defaultLocation)
-			convertedMsk := int64ToTime(shiftedTimestamp, mskLocation)
-			So(converted, ShouldResemble, testdate.humanReadable.Add(time.Minute))
-			So(convertedMsk.Hour(), ShouldResemble, converted.Add(3 * time.Hour).Hour())
-		}
 	})
 }
 
@@ -124,6 +67,47 @@ func TestSanitizeLabelName(t *testing.T) {
 		}
 		So(len(shortLablelsList), ShouldEqual, len(labelsShortForm))
 		So(shortLablelsList, ShouldResemble, labelsShortForm)
+	})
+}
+
+// TestInt64ToTime tests simple int64 timestamp to time.Time converter
+func TestInt64ToTime(t *testing.T) {
+	int64timeStamp := int64(1527330278)
+	humanReadabletimeStamp := time.Date(2018, 5, 26, 10, 24, 38, 0, time.UTC)
+	Convey("Convert int64 timestamp into datetime", t, func() {
+		converted := int64ToTime(int64timeStamp)
+		So(converted, ShouldResemble, humanReadabletimeStamp)
+	})
+	Convey("Convert int64 timestamp + 1 minute into datetime", t, func() {
+		int64timeStamp += 60
+		converted := int64ToTime(int64timeStamp)
+		So(converted, ShouldResemble, humanReadabletimeStamp.Add(time.Minute))
+	})
+}
+
+// TestTimeValueFormatter tests time.Time to formatted string converter
+func TestTimeValueFormatter(t *testing.T) {
+	dateTimeFormat := "15:04"
+	timeValue := int64ToTime(int64(1527330278)).In(time.UTC)
+	locationIncrements := map[string]int{
+		"Europe/Moscow":      3,
+		"Asia/Yekaterinburg": 5,
+	}
+	Convey("Format int64 timestamps into correct strings", t, func() {
+		for name, increment := range locationIncrements {
+			location, err := time.LoadLocation(name)
+			storage := &locationStorage{location: location}
+			formatted := storage.formatTimeWithLocation(timeValue, dateTimeFormat)
+			formattedHourAndMinute := strings.Split(formatted, ":")
+			formattedHour, err := strconv.Atoi(formattedHourAndMinute[0])
+			formattedMinute, err := strconv.Atoi(formattedHourAndMinute[1])
+			if err != nil {
+				t.Fatalf("invalid test conditions: %s", err.Error())
+			}
+			fmt.Printf("UTC: %s,\n%s: %s\n\n", timeValue.String(), location.String(), formatted)
+			So(formattedMinute, ShouldEqual, timeValue.Minute())
+			So(formattedHour, ShouldEqual, timeValue.Add(time.Duration(increment) * time.Hour).Hour())
+		}
 	})
 }
 
