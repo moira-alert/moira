@@ -23,7 +23,7 @@ func (*Subscription) Render(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (subscription *Subscription) Bind(r *http.Request) error {
-	subscription.normalizeTags()
+	subscription.Tags = normalizeTags(subscription.Tags)
 	if len(subscription.Tags) == 0 {
 		return fmt.Errorf("subscription must have tags")
 	}
@@ -33,12 +33,12 @@ func (subscription *Subscription) Bind(r *http.Request) error {
 	return nil
 }
 
-func (subscription *Subscription) normalizeTags() {
-	var tags = make([]string, 0)
-	for _, subTag := range subscription.Tags {
+func normalizeTags(tags []string) []string {
+	var normalized = make([]string, 0)
+	for _, subTag := range tags {
 		if subTag != "" {
-			tags = append(tags, subTag)
+			normalized = append(normalized, subTag)
 		}
 	}
-	subscription.Tags = tags
+	return normalized
 }
