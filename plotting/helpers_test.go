@@ -87,7 +87,7 @@ func TestInt64ToTime(t *testing.T) {
 
 // TestTimeValueFormatter tests time.Time to formatted string converter
 func TestTimeValueFormatter(t *testing.T) {
-	dateTimeFormat := "15:04"
+	dateTimeFormat, separator := "15:04", ":"
 	timeValue := int64ToTime(int64(1527330278))
 	locationIncrements := map[string]int{
 		"Europe/Moscow":      3,
@@ -95,16 +95,14 @@ func TestTimeValueFormatter(t *testing.T) {
 	}
 	Convey("Format int64 timestamps into correct strings", t, func() {
 		for name, increment := range locationIncrements {
-			location, err := time.LoadLocation(name)
+			location, _ := time.LoadLocation(name)
 			storage := &locationStorage{location: location}
 			formatted := storage.formatTimeWithLocation(timeValue, dateTimeFormat)
-			formattedHourAndMinute := strings.Split(formatted, ":")
-			formattedHour, err := strconv.Atoi(formattedHourAndMinute[0])
-			formattedMinute, err := strconv.Atoi(formattedHourAndMinute[1])
-			if err != nil {
-				t.Fatalf("invalid test conditions: %s", err.Error())
-			}
-			fmt.Printf("UTC: %s,\n%s: %s\n\n", timeValue.String(), location.String(), formatted)
+			formattedHourAndMinute := strings.Split(formatted, separator)
+			formattedHour, _ := strconv.Atoi(formattedHourAndMinute[0])
+			formattedMinute, _ := strconv.Atoi(formattedHourAndMinute[1])
+			fmt.Printf("%s: %s,\n%s: %s\n\n",
+				timeValue.Location().String(), timeValue.String(), location.String(), formatted)
 			So(formattedMinute, ShouldEqual, timeValue.Minute())
 			So(formattedHour, ShouldEqual, timeValue.Add(time.Duration(increment) * time.Hour).Hour())
 		}
