@@ -61,6 +61,9 @@ func (theme *PlotTheme) GetCanvasStyle() chart.Style {
 func (theme *PlotTheme) GetBackgroundStyle(maxMarkLen int) chart.Style {
 	verticalShift := 40
 	horizontalShift := 20
+	if maxMarkLen > 4 {
+		horizontalShift = horizontalShift/2
+	}
 	return chart.Style{
 		FillColor: drawing.ColorFromHex(theme.bgColor),
 		Padding: chart.Box{
