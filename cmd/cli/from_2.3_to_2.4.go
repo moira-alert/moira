@@ -6,7 +6,12 @@ func updateFrom23(logger moira.Logger, dataBase moira.Database) error {
 	logger.Info("Update 2.3 -> 2.4 start")
 
 	logger.Info("Start marking unused triggers")
-	if err := resaveTriggers(dataBase); err == nil {
+	if err := resaveTriggers(dataBase); err != nil {
+		return err
+	}
+
+	logger.Info("Start adding plotting settings to existing subscriptions")
+	if err := resaveSubscriptions(dataBase); err != nil {
 		return err
 	}
 
@@ -15,6 +20,27 @@ func updateFrom23(logger moira.Logger, dataBase moira.Database) error {
 }
 
 func downgradeTo23(logger moira.Logger, dataBase moira.Database) error {
+	return nil
+}
+
+func resaveSubscriptions(database moira.Database) error {
+	allTags, err := database.GetTagNames()
+	if err != nil {
+		return err
+	}
+	allSubscriptions, err := database.GetTagsSubscriptions(allTags)
+	if err != nil {
+		return err
+	}
+	for _, subscription := range allSubscriptions {
+		subscription.Plotting = moira.PlottingData{
+			Enabled: true,
+			Theme:   "light",
+		}
+		if err := database.SaveSubscription(subscription); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -29,8 +55,7 @@ func resaveTriggers(database moira.Database) error {
 	}
 	for _, trigger := range allTriggers {
 		if trigger != nil {
-			err = database.SaveTrigger(trigger.ID, trigger)
-			if err != nil {
+			if err = database.SaveTrigger(trigger.ID, trigger); err != nil {
 				return err
 			}
 		}
