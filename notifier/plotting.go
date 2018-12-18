@@ -16,7 +16,7 @@ import (
 )
 
 // defaultTimeRange is default time range to fetch timeseries
-var defaultTimeRange = 60 * time.Minute
+var defaultTimeRange = 30 * time.Minute
 
 // buildNotificationPackagePlot returns bytes slice containing package plot
 func (notifier *StandardNotifier) buildNotificationPackagePlot(pkg NotificationPackage) ([]byte, error) {
