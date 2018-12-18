@@ -62,7 +62,7 @@ func resolveMetricsWindow(logger moira.Logger, trigger moira.TriggerData, pkg No
 		if toTime.Sub(fromTime).Minutes() < defaultTimeRange.Minutes() {
 			logger.Debugf("remote trigger %s window too small, using default %s window",
 				trigger.ID, defaultTimeRange.String())
-			return fromTime.Add(-defaultTimeRange / 2).Unix(), toTime.Add(defaultTimeRange / 2).Unix()
+			return fromTime.Add(-defaultTimeRange).Unix(), toTime.Unix()
 		}
 		return fromTime.Unix(), toTime.Unix()
 	}

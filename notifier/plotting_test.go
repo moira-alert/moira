@@ -15,7 +15,7 @@ func TestResolveMetricsWindow(t *testing.T) {
 	emptyEventsPackage := NotificationPackage{}
 	triggerJustCreatedEvents := NotificationPackage{
 		Events: []moira.NotificationEvent{
-			{Timestamp: time.Unix(1800, 0).Unix()},
+			{Timestamp: time.Unix(3600, 0).Unix()},
 		},
 	}
 	realtimeTriggerEvents := NotificationPackage{
@@ -59,8 +59,8 @@ func TestResolveMetricsWindow(t *testing.T) {
 		})
 		Convey("Low time range, takes to extend", func() {
 			from, to := resolveMetricsWindow(logger, trigger, triggerJustCreatedEvents)
-			So(from, ShouldEqual, 1800/2)
-			So(to, ShouldEqual, 1800+1800/2)
+			So(from, ShouldEqual, 1800)
+			So(to, ShouldEqual, 3600)
 		})
 		Convey("Now time range, force default range", func() {
 			from, to := resolveMetricsWindow(logger, trigger, emptyEventsPackage)
