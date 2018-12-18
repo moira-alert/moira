@@ -27,8 +27,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	for _, event := range events {
 		value := strconv.FormatFloat(moira.UseFloat64(event.Value), 'f', -1, 64)
 		eventTime := time.Unix(event.Timestamp, 0).In(sender.location)
-		line := fmt.Sprintf("\n%s: %s = %s (%s to %s)", eventTime.Format("15:04"),
-			event.Metric, value, event.OldState, event.State)
+		line := fmt.Sprintf("\n%s: %s = %s (%s to %s)", eventTime.Format("15:04"), event.Metric, value, event.OldState, event.State)
 		if len(moira.UseString(event.Message)) > 0 {
 			line += fmt.Sprintf(". %s", moira.UseString(event.Message))
 		}

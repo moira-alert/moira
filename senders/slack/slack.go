@@ -48,9 +48,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 			icon = fmt.Sprintf("%s/public/fav72_error.png", sender.FrontURI)
 		}
 		value := strconv.FormatFloat(moira.UseFloat64(event.Value), 'f', -1, 64)
-		message.WriteString(fmt.Sprintf("\n%s: %s = %s (%s to %s)",
-			time.Unix(event.Timestamp, 0).In(sender.location).Format("15:04"),
-			event.Metric, value, event.OldState, event.State))
+		message.WriteString(fmt.Sprintf("\n%s: %s = %s (%s to %s)", time.Unix(event.Timestamp, 0).In(sender.location).Format("15:04"), event.Metric, value, event.OldState, event.State))
 		if len(moira.UseString(event.Message)) > 0 {
 			message.WriteString(fmt.Sprintf(". %s", moira.UseString(event.Message)))
 		}
