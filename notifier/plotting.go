@@ -34,7 +34,7 @@ func (notifier *StandardNotifier) buildNotificationPackagePlot(pkg NotificationP
 	if err != nil {
 		return buff.Bytes(), err
 	}
-	metricsToShow := pkg.MetricNames()
+	metricsToShow := pkg.GetMetricNames()
 	notifier.logger.Debugf("rendering %s timeseries: %s", trigger.ID, strings.Join(metricsToShow, ", "))
 	renderable, err := plotTemplate.GetRenderable(trigger, metricsData, metricsToShow)
 	if err != nil {
@@ -52,7 +52,7 @@ func resolveMetricsWindow(logger moira.Logger, trigger moira.TriggerData, pkg No
 	defaultFrom := now.UTC().Add(-defaultTimeRange).Unix()
 	defaultTo := now.UTC().Unix()
 	if trigger.IsRemote {
-		from, to, err := pkg.Window()
+		from, to, err := pkg.GetWindow()
 		if err != nil {
 			logger.Warningf("failed to get remote trigger %s package window: %s, using default %s window",
 				trigger.ID, err.Error(), defaultTimeRange.String())
@@ -60,7 +60,7 @@ func resolveMetricsWindow(logger moira.Logger, trigger moira.TriggerData, pkg No
 		}
 		fromTime, toTime := moira.Int64ToTime(from), moira.Int64ToTime(to)
 		if toTime.Sub(fromTime).Minutes() < defaultTimeRange.Minutes() {
-			logger.Warningf("remote trigger %s window too small, using default %s window",
+			logger.Debugf("remote trigger %s window too small, using default %s window",
 				trigger.ID, defaultTimeRange.String())
 			return fromTime.Add(-defaultTimeRange / 2).Unix(), toTime.Add(defaultTimeRange / 2).Unix()
 		}

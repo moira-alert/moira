@@ -51,7 +51,7 @@ func TestResolveMetricsWindow(t *testing.T) {
 		Convey("High time range, use package window", func() {
 			for _, pkg := range highTimeRangePackages {
 				from, to := resolveMetricsWindow(logger, trigger, pkg)
-				expectedFrom, expectedTo, err := pkg.Window()
+				expectedFrom, expectedTo, err := pkg.GetWindow()
 				So(err, ShouldBeNil)
 				So(from, ShouldEqual, expectedFrom)
 				So(to, ShouldEqual, expectedTo)

@@ -26,7 +26,7 @@ func (pkg NotificationPackage) String() string {
 }
 
 // Window returns the earliest and the latest notification package timestamps
-func (pkg NotificationPackage) Window() (from, to int64, err error) {
+func (pkg NotificationPackage) GetWindow() (from, to int64, err error) {
 	timeStamps := make([]int64, 0)
 	for _, event := range pkg.Events {
 		timeStamps = append(timeStamps, event.Timestamp)
@@ -48,7 +48,7 @@ func (pkg NotificationPackage) Window() (from, to int64, err error) {
 }
 
 // MetricNames returns all metric names found in package events
-func(pkg NotificationPackage) MetricNames() []string {
+func(pkg NotificationPackage) GetMetricNames() []string {
 	metricNames := make([]string, 0)
 	for _, event := range pkg.Events {
 		metricNames = append(metricNames, event.Metric)
