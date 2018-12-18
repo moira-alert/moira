@@ -33,6 +33,8 @@ func TestResolveMetricsWindow(t *testing.T) {
 	}
 	redisTrigger := moira.TriggerData{ID: "redisTrigger", IsRemote: false}
 	remoteTrigger := moira.TriggerData{ID: "remoteTrigger", IsRemote: true}
+	timerange := time.Unix(int64(defaultTimeRange.Seconds()), 0).Unix()
+	timeShift := time.Unix(int64(defaultTimeShift.Seconds()), 0).Unix()
 	Convey("REDIS TRIGGER | Resolve trigger metrics window", t, func() {
 		Convey("High time range, use package window", func() {
 			defaultTimeRangePackages := make([]NotificationPackage, 0)
@@ -42,8 +44,8 @@ func TestResolveMetricsWindow(t *testing.T) {
 				_, expectedTo, err := pkg.GetWindow()
 				So(err, ShouldBeNil)
 				from, to := resolveMetricsWindow(logger, redisTrigger, pkg)
-				So(from, ShouldEqual, expectedTo-1800+120)
-				So(to, ShouldEqual, expectedTo+120)
+				So(from, ShouldEqual, expectedTo-timerange+timeShift)
+				So(to, ShouldEqual, expectedTo+timeShift)
 			}
 		})
 	})
@@ -65,8 +67,8 @@ func TestResolveMetricsWindow(t *testing.T) {
 			from, to := resolveMetricsWindow(logger, remoteTrigger, pkg)
 			_, expectedTo, err := pkg.GetWindow()
 			So(err, ShouldBeNil)
-			So(from, ShouldEqual, expectedTo-1800+120)
-			So(to, ShouldEqual, expectedTo+120)
+			So(from, ShouldEqual, expectedTo-timerange+timeShift)
+			So(to, ShouldEqual, expectedTo+timeShift)
 		})
 	})
 	Convey("ANY TRIGGER | Zero time range, force default time range", t, func() {

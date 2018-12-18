@@ -17,7 +17,7 @@ import (
 
 var (
 	// defaultTimeShift is default time shift to fetch timeseries
-	defaultTimeShift = 2 * time.Minute
+	defaultTimeShift = 1 * time.Minute
 	// defaultTimeRange is default time range to fetch timeseries
 	defaultTimeRange = 30 * time.Minute
 )
@@ -67,7 +67,7 @@ func resolveMetricsWindow(logger moira.Logger, trigger moira.TriggerData, pkg No
 			return fromTime.Unix(), toTime.Unix()
 		}
 	}
-	logger.Debugf("trigger %s window too small, using default %s window with", trigger.ID, defaultTimeRange.String())
+	logger.Debugf("trigger %s window too small, using default %s window with %s timeshift", trigger.ID, defaultTimeRange.String(), defaultTimeShift.String())
 	return toTime.Add(-defaultTimeRange+defaultTimeShift).Unix(), toTime.Add(defaultTimeShift).Unix()
 }
 
