@@ -51,22 +51,22 @@ func resolveMetricsWindow(logger moira.Logger, trigger moira.TriggerData, pkg No
 	now := time.Now()
 	defaultFrom := now.UTC().Add(-defaultTimeRange).Unix()
 	defaultTo := now.UTC().Unix()
+	from, to, err := pkg.GetWindow()
+	if err != nil {
+		logger.Warningf("failed to get trigger %s package window: %s, using default %s window",
+			trigger.ID, err.Error(), defaultTimeRange.String())
+		return defaultFrom, defaultTo
+	}
+	fromTime, toTime := moira.Int64ToTime(from), moira.Int64ToTime(to)
 	if trigger.IsRemote {
-		from, to, err := pkg.GetWindow()
-		if err != nil {
-			logger.Warningf("failed to get remote trigger %s package window: %s, using default %s window",
-				trigger.ID, err.Error(), defaultTimeRange.String())
-			return defaultFrom, defaultTo
-		}
-		fromTime, toTime := moira.Int64ToTime(from), moira.Int64ToTime(to)
 		if toTime.Sub(fromTime).Minutes() < defaultTimeRange.Minutes() {
 			logger.Debugf("remote trigger %s window too small, using default %s window",
 				trigger.ID, defaultTimeRange.String())
-			return fromTime.Add(-defaultTimeRange).Unix(), toTime.Unix()
+			return toTime.Add(-defaultTimeRange).Unix(), toTime.Unix()
 		}
 		return fromTime.Unix(), toTime.Unix()
 	}
-	return defaultFrom, defaultTo
+	return toTime.Add(-defaultTimeRange).Unix(), toTime.Unix()
 }
 
 // evaluateTriggerMetrics returns collection of MetricData
