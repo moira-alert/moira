@@ -12,12 +12,12 @@ import (
 
 // ErrNoPointsToRender is used to prevent unnecessary render calls
 type ErrNoPointsToRender struct {
-	TriggerName string
+	triggerName string
 }
 
 // ErrNoPointsToRender implementation with detailed error message
 func (err ErrNoPointsToRender) Error() string {
-	return fmt.Sprintf("no points found to render %s", err.TriggerName)
+	return fmt.Sprintf("no points found to render %s", err.triggerName)
 }
 
 // Plot represents plot structure to render
@@ -46,8 +46,7 @@ func GetPlotTemplate(theme string, location *time.Location) (*Plot, error) {
 }
 
 // GetRenderable returns go-chart to render
-func (plot *Plot) GetRenderable(trigger *moira.Trigger,
-	metricsData []*types.MetricData, metricsWhitelist []string) chart.Chart {
+func (plot *Plot) GetRenderable(trigger *moira.Trigger, metricsData []*types.MetricData, metricsWhitelist []string) (chart.Chart, error) {
 
 	plotSeries := make([]chart.Series, 0)
 	limits := resolveLimits(metricsData)
@@ -114,5 +113,9 @@ func (plot *Plot) GetRenderable(trigger *moira.Trigger,
 		getPlotLegend(&renderable, plot.theme.GetLegendStyle(), plot.width),
 	}
 
-	return renderable
+	if len(renderable.Series) == 0 {
+		return renderable, ErrNoPointsToRender{triggerName:trigger.Name}
+	}
+
+	return renderable, nil
 }

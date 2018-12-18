@@ -35,10 +35,10 @@ func (notifier *StandardNotifier) buildNotificationPackagePlot(pkg NotificationP
 		return buff.Bytes(), err
 	}
 	metricsToShow := pkg.MetricNames()
-	renderable := plotTemplate.GetRenderable(trigger, metricsData, metricsToShow)
 	notifier.logger.Debugf("rendering %s timeseries: %s", trigger.ID, strings.Join(metricsToShow, ", "))
-	if len(renderable.Series) == 0 {
-		return buff.Bytes(), plotting.ErrNoPointsToRender{TriggerName: trigger.Name}
+	renderable, err := plotTemplate.GetRenderable(trigger, metricsData, metricsToShow)
+	if err != nil {
+		return buff.Bytes(), err
 	}
 	if err = renderable.Render(chart.PNG, buff); err != nil {
 		return buff.Bytes(), err

@@ -498,14 +498,17 @@ func generateTestMetricsData(useHumanizedValues bool) []*types.MetricData {
 
 // renderTestMetricsDataToPNG renders and saves rendered plots to PNG
 func renderTestMetricsDataToPNG(trigger moira.Trigger, plotTheme string,
-	metricsData []*types.MetricData, filePath string) (error) {
+	metricsData []*types.MetricData, filePath string) error {
 	var metricsWhiteList []string
 	location, _ := time.LoadLocation("UTC")
 	plotTemplate, err := GetPlotTemplate(plotTheme, location)
 	if err != nil {
 		return err
 	}
-	renderable := plotTemplate.GetRenderable(&trigger, metricsData, metricsWhiteList)
+	renderable, err := plotTemplate.GetRenderable(&trigger, metricsData, metricsWhiteList)
+	if err != nil {
+		return err
+	}
 	f, err := os.Create(filePath)
 	if err != nil {
 		return err
