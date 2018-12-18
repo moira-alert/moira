@@ -25,7 +25,7 @@ func (pkg NotificationPackage) String() string {
 	return fmt.Sprintf("package of %d notifications to %s", len(pkg.Events), pkg.Contact.Value)
 }
 
-// Window returns the earliest and the latest notification package timestamps
+// GetWindow returns the earliest and the latest notification package timestamps
 func (pkg NotificationPackage) GetWindow() (from, to int64, err error) {
 	timeStamps := make([]int64, 0)
 	for _, event := range pkg.Events {
@@ -47,7 +47,7 @@ func (pkg NotificationPackage) GetWindow() (from, to int64, err error) {
 	return from, to, nil
 }
 
-// MetricNames returns all metric names found in package events
+// GetMetricNames returns all metric names found in package events
 func(pkg NotificationPackage) GetMetricNames() []string {
 	metricNames := make([]string, 0)
 	for _, event := range pkg.Events {
