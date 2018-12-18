@@ -11,8 +11,8 @@ func (index *Index) checkIndexedTriggersCount() error {
 		case <-index.tomb.Dying():
 			return nil
 		case <-checkTicker.C:
-			if documents, err := index.index.DocCount(); err != nil {
-				index.metrics.IndexedTriggersCount.Update(int64(documents))
+			if documents, err := index.triggerIndex.GetCount(); err == nil {
+				index.metrics.IndexedTriggersCount.Update(documents)
 			}
 		}
 	}

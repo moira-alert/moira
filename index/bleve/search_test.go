@@ -1,22 +1,19 @@
-package index
+package bleve
 
 import (
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/mock/moira-alert"
-	"github.com/op/go-logging"
+	"github.com/moira-alert/moira/index/mapping"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestIndex_SearchTriggers(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-	logger, _ := logging.GetLogger("Test")
+func TestTriggerIndex_Search(t *testing.T) {
+	var newIndex *TriggerIndex
+	var err error
+	var count int64
 
-	index := NewSearchIndex(logger, dataBase)
+	triggerMapping := mapping.BuildIndexMapping(mapping.Trigger{})
 
 	triggerIDs := make([]string, len(triggerChecks))
 	for i, trigger := range triggerChecks {
@@ -30,15 +27,21 @@ func TestIndex_SearchTriggers(t *testing.T) {
 		triggersPointers[i] = newTrigger
 	}
 
-	Convey("First of all, fill index", t, func() {
-		dataBase.EXPECT().GetAllTriggerIDs().Return(triggerIDs, nil)
-		dataBase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggersPointers, nil)
-
-		err := index.fillIndex()
-		index.indexed = true
+	Convey("First of all, create and fill index", t, func() {
+		newIndex, err = CreateTriggerIndex(triggerMapping)
+		So(newIndex, ShouldHaveSameTypeAs, &TriggerIndex{})
 		So(err, ShouldBeNil)
-		docCount, _ := index.triggerIndex.GetCount()
-		So(docCount, ShouldEqual, int64(31))
+
+		count, err = newIndex.GetCount()
+		So(count, ShouldBeZeroValue)
+		So(err, ShouldBeNil)
+
+		err = newIndex.Write(triggersPointers)
+		So(err, ShouldBeNil)
+
+		count, err = newIndex.GetCount()
+		So(count, ShouldEqual, int64(31))
+		So(err, ShouldBeNil)
 	})
 
 	Convey("Search for triggers without pagination", t, func() {
@@ -49,7 +52,7 @@ func TestIndex_SearchTriggers(t *testing.T) {
 		onlyErrors := false
 
 		Convey("No tags, no searchString, onlyErrors = false", func() {
-			actualTriggerIDs, count, err := index.SearchTriggers(tags, searchString, onlyErrors, page, size)
+			actualTriggerIDs, count, err := newIndex.Search(tags, searchString, onlyErrors, page, size)
 			So(actualTriggerIDs, ShouldResemble, triggerIDs)
 			So(count, ShouldEqual, 31)
 			So(err, ShouldBeNil)
@@ -57,7 +60,7 @@ func TestIndex_SearchTriggers(t *testing.T) {
 
 		Convey("No tags, no searchString, onlyErrors = false, size = -1 (must return all triggers)", func() {
 			size = -1
-			actualTriggerIDs, count, err := index.SearchTriggers(tags, searchString, onlyErrors, page, size)
+			actualTriggerIDs, count, err := newIndex.Search(tags, searchString, onlyErrors, page, size)
 			So(actualTriggerIDs, ShouldResemble, triggerIDs)
 			So(count, ShouldEqual, 31)
 			So(err, ShouldBeNil)
@@ -66,7 +69,7 @@ func TestIndex_SearchTriggers(t *testing.T) {
 		Convey("OnlyErrors = true", func() {
 			size = 50
 			onlyErrors = true
-			actualTriggerIDs, count, err := index.SearchTriggers(tags, searchString, onlyErrors, page, size)
+			actualTriggerIDs, count, err := newIndex.Search(tags, searchString, onlyErrors, page, size)
 			So(actualTriggerIDs, ShouldResemble, triggerIDs[:30])
 			So(count, ShouldEqual, 30)
 			So(err, ShouldBeNil)
@@ -75,7 +78,7 @@ func TestIndex_SearchTriggers(t *testing.T) {
 		Convey("OnlyErrors = true, several tags", func() {
 			onlyErrors = true
 			tags = []string{"encounters", "Kobold"}
-			actualTriggerIDs, count, err := index.SearchTriggers(tags, searchString, onlyErrors, page, size)
+			actualTriggerIDs, count, err := newIndex.Search(tags, searchString, onlyErrors, page, size)
 			So(actualTriggerIDs, ShouldResemble, triggerIDs[1:3])
 			So(count, ShouldEqual, 2)
 			So(err, ShouldBeNil)
@@ -84,7 +87,7 @@ func TestIndex_SearchTriggers(t *testing.T) {
 		Convey("OnlyErrors = false, several tags", func() {
 			onlyErrors = false
 			tags = []string{"Something-extremely-new"}
-			actualTriggerIDs, count, err := index.SearchTriggers(tags, searchString, onlyErrors, page, size)
+			actualTriggerIDs, count, err := newIndex.Search(tags, searchString, onlyErrors, page, size)
 			So(actualTriggerIDs, ShouldResemble, triggerIDs[30:])
 			So(count, ShouldEqual, 1)
 			So(err, ShouldBeNil)
@@ -93,7 +96,7 @@ func TestIndex_SearchTriggers(t *testing.T) {
 		Convey("Empty list should be", func() {
 			onlyErrors = true
 			tags = []string{"Something-extremely-new"}
-			actualTriggerIDs, count, err := index.SearchTriggers(tags, searchString, onlyErrors, page, size)
+			actualTriggerIDs, count, err := newIndex.Search(tags, searchString, onlyErrors, page, size)
 			So(actualTriggerIDs, ShouldBeEmpty)
 			So(count, ShouldBeZeroValue)
 			So(err, ShouldBeNil)
@@ -103,7 +106,7 @@ func TestIndex_SearchTriggers(t *testing.T) {
 			onlyErrors = true
 			tags = make([]string, 0)
 			searchString = "dragonshield medium"
-			actualTriggerIDs, count, err := index.SearchTriggers(tags, searchString, onlyErrors, page, size)
+			actualTriggerIDs, count, err := newIndex.Search(tags, searchString, onlyErrors, page, size)
 			So(actualTriggerIDs, ShouldResemble, triggerIDs[2:3])
 			So(count, ShouldEqual, 1)
 			So(err, ShouldBeNil)
@@ -121,7 +124,7 @@ func TestIndex_SearchTriggers(t *testing.T) {
 				triggerChecks[19].ID,
 			}
 
-			actualTriggerIDs, count, err := index.SearchTriggers(tags, searchString, onlyErrors, page, size)
+			actualTriggerIDs, count, err := newIndex.Search(tags, searchString, onlyErrors, page, size)
 			So(actualTriggerIDs, ShouldResemble, deadlyTrapsIDs)
 			So(count, ShouldEqual, 4)
 			So(err, ShouldBeNil)
@@ -136,7 +139,7 @@ func TestIndex_SearchTriggers(t *testing.T) {
 		onlyErrors := false
 
 		Convey("No tags, no searchString, onlyErrors = false, page -> 0, size -> 10", func() {
-			actualTriggerIDs, total, err := index.SearchTriggers(tags, searchString, onlyErrors, page, size)
+			actualTriggerIDs, total, err := newIndex.Search(tags, searchString, onlyErrors, page, size)
 			So(actualTriggerIDs, ShouldResemble, triggerIDs[:10])
 			So(total, ShouldEqual, 31)
 			So(err, ShouldBeNil)
@@ -144,7 +147,7 @@ func TestIndex_SearchTriggers(t *testing.T) {
 
 		Convey("No tags, no searchString, onlyErrors = false, page -> 1, size -> 10", func() {
 			page = 1
-			actualTriggerIDs, total, err := index.SearchTriggers(tags, searchString, onlyErrors, page, size)
+			actualTriggerIDs, total, err := newIndex.Search(tags, searchString, onlyErrors, page, size)
 			So(actualTriggerIDs, ShouldResemble, triggerIDs[10:20])
 			So(total, ShouldEqual, 31)
 			So(err, ShouldBeNil)
@@ -153,7 +156,7 @@ func TestIndex_SearchTriggers(t *testing.T) {
 		Convey("No tags, no searchString, onlyErrors = false, page -> 1, size -> 20", func() {
 			page = 1
 			size = 20
-			actualTriggerIDs, total, err := index.SearchTriggers(tags, searchString, onlyErrors, page, size)
+			actualTriggerIDs, total, err := newIndex.Search(tags, searchString, onlyErrors, page, size)
 			So(actualTriggerIDs, ShouldResemble, triggerIDs[20:])
 			So(total, ShouldEqual, 31)
 			So(err, ShouldBeNil)
@@ -173,7 +176,7 @@ func TestIndex_SearchTriggers(t *testing.T) {
 				triggerChecks[19].ID,
 			}
 
-			actualTriggerIDs, count, err := index.SearchTriggers(tags, searchString, onlyErrors, page, size)
+			actualTriggerIDs, count, err := newIndex.Search(tags, searchString, onlyErrors, page, size)
 			So(actualTriggerIDs, ShouldResemble, deadlyTrapsIDs[:2])
 			So(count, ShouldEqual, 4)
 			So(err, ShouldBeNil)
@@ -186,7 +189,7 @@ func TestIndex_SearchTriggers(t *testing.T) {
 			tags = []string{"traps"}
 			searchString = "deadly"
 
-			actualTriggerIDs, count, err := index.SearchTriggers(tags, searchString, onlyErrors, page, size)
+			actualTriggerIDs, count, err := newIndex.Search(tags, searchString, onlyErrors, page, size)
 			So(actualTriggerIDs, ShouldBeEmpty)
 			So(count, ShouldEqual, 4)
 			So(err, ShouldBeNil)
@@ -202,7 +205,7 @@ func TestIndex_SearchTriggers(t *testing.T) {
 
 		Convey("OnlyErrors = false, search by name and description, 0 results", func() {
 			searchString = "life female druid"
-			actualTriggerIDs, count, err := index.SearchTriggers(tags, searchString, onlyErrors, page, size)
+			actualTriggerIDs, count, err := newIndex.Search(tags, searchString, onlyErrors, page, size)
 			So(actualTriggerIDs, ShouldBeEmpty)
 			So(count, ShouldEqual, 0)
 			So(err, ShouldBeNil)
@@ -216,7 +219,7 @@ func TestIndex_SearchTriggers(t *testing.T) {
 			}
 
 			searchString = "easy"
-			actualTriggerIDs, count, err := index.SearchTriggers(tags, searchString, onlyErrors, page, size)
+			actualTriggerIDs, count, err := newIndex.Search(tags, searchString, onlyErrors, page, size)
 			So(actualTriggerIDs, ShouldResemble, easyTriggerIDs)
 			So(count, ShouldEqual, 3)
 			So(err, ShouldBeNil)
@@ -224,7 +227,7 @@ func TestIndex_SearchTriggers(t *testing.T) {
 
 		Convey("OnlyErrors = false, search by name and description, 1 result", func() {
 			searchString = "little monster"
-			actualTriggerIDs, count, err := index.SearchTriggers(tags, searchString, onlyErrors, page, size)
+			actualTriggerIDs, count, err := newIndex.Search(tags, searchString, onlyErrors, page, size)
 			So(actualTriggerIDs, ShouldResemble, triggerIDs[4:5])
 			So(count, ShouldEqual, 1)
 			So(err, ShouldBeNil)
@@ -239,57 +242,42 @@ func TestIndex_SearchTriggers(t *testing.T) {
 				triggerChecks[19].ID,
 			}
 
-			actualTriggerIDs, count, err := index.SearchTriggers(tags, searchString, onlyErrors, page, size)
+			actualTriggerIDs, count, err := newIndex.Search(tags, searchString, onlyErrors, page, size)
 			So(actualTriggerIDs, ShouldResemble, mamaTrapsTriggerIDs)
 			So(count, ShouldEqual, 2)
 			So(err, ShouldBeNil)
 		})
 	})
+
 }
 
-func TestIndex_SearchErrors(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-	logger, _ := logging.GetLogger("Test")
-
-	index := NewSearchIndex(logger, dataBase)
-
-	triggerIDs := make([]string, len(triggerChecks))
-	for i, trigger := range triggerChecks {
-		triggerIDs[i] = trigger.ID
-	}
-
-	triggersPointers := make([]*moira.TriggerCheck, len(triggerChecks))
-	for i, trigger := range triggerChecks {
-		newTrigger := new(moira.TriggerCheck)
-		*newTrigger = trigger
-		triggersPointers[i] = newTrigger
-	}
-
-	Convey("First of all, fill index", t, func() {
-		dataBase.EXPECT().GetAllTriggerIDs().Return(triggerIDs, nil)
-		dataBase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggersPointers, nil)
-
-		err := index.fillIndex()
-		index.indexed = true
-		So(err, ShouldBeNil)
-		docCount, _ := index.triggerIndex.GetCount()
-		So(docCount, ShouldEqual, int64(31))
+func TestStringsManipulations(t *testing.T) {
+	Convey("Test escape symbols", t, func() {
+		So(escapeString("12345"), ShouldResemble, "12345")
+		So(escapeString("abcdefghijklmnop QRSTUVWXYZ"), ShouldResemble, "abcdefghijklmnop QRSTUVWXYZ")
+		So(escapeString("I'm gonna use some.Bad.symbols.here. !!! Here we GO!!! (yeap, I mean it]"), ShouldResemble, "I m gonna use some Bad symbols here      Here we GO     yeap  I mean it ")
+		So(escapeString(`+-=&|><!(){}[]^"'~*?\/`), ShouldResemble, "                      ")
 	})
 
-	index.indexed = false
-
-	Convey("Test search on non-ready index", t, func() {
-		page := int64(0)
-		size := int64(50)
-		tags := make([]string, 0)
-		searchString := ""
-
-		actualTriggerIDs, total, err := index.SearchTriggers(tags, searchString, false, page, size)
-		So(actualTriggerIDs, ShouldBeEmpty)
-		So(total, ShouldBeZeroValue)
-		So(err, ShouldNotBeNil)
+	Convey("Test split strings with symbols to escape", t, func() {
+		So(splitStringToTerms("I.want.to.break:free!"), ShouldResemble, []string{"I", "want", "to", "break", "free"})
+		So(splitStringToTerms("I;want-to,break_free!"), ShouldResemble, []string{"I", "want", "to", "break", "free"})
+		So(splitStringToTerms(`I>want<to/break\free from&your@lies`), ShouldResemble, []string{"I", "want", "to", "break", "free", "from", "your", "lies"})
+		So(splitStringToTerms(`(You)'[re] {so} "self" 'satisfied' |I| \don't/ ~need~ *you*`), ShouldResemble,
+			[]string{"You", "re", "so", "self", "satisfied", "I", "don", "t", "need", "you"})
 	})
 
+	Convey("Test to split string in different languages", t, func() {
+		So(splitStringToTerms("Привет, мир!"), ShouldResemble, []string{"Привет", "мир"})
+		So(splitStringToTerms("Chào thế giới!"), ShouldResemble, []string{"Chào", "thế", "giới"})
+		So(splitStringToTerms("ሰላም ልዑል!"), ShouldResemble, []string{"ሰላም", "ልዑል"})
+		So(splitStringToTerms("Բարեւ աշխարհ!"), ShouldResemble, []string{"Բարեւ", "աշխարհ"})
+		So(splitStringToTerms("ওহে বিশ্ব!"), ShouldResemble, []string{"ওহে", "বিশ্ব"})
+		So(splitStringToTerms("你好 世界!"), ShouldResemble, []string{"你好", "世界"})
+		So(splitStringToTerms("Γειά σου Κόσμε!"), ShouldResemble, []string{"Γειά", "σου", "Κόσμε"})
+		So(splitStringToTerms("હેલો વર્લ્ડ!"), ShouldResemble, []string{"હેલો", "વર્લ્ડ"})
+		So(splitStringToTerms("नमस्ते दुनिया!"), ShouldResemble, []string{"नमस्ते", "दुनिया"})
+		So(splitStringToTerms("Გამარჯობა მსოფლიო!"), ShouldResemble, []string{"Გამარჯობა", "მსოფლიო"})
+		So(splitStringToTerms("こんにちは世界!"), ShouldResemble, []string{"こんにちは世界"})
+	})
 }

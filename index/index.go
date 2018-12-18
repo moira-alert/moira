@@ -1,8 +1,8 @@
 package index
 
 import (
-	"github.com/blevesearch/bleve"
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/index/bleve"
 	"github.com/moira-alert/moira/index/mapping"
 	"github.com/moira-alert/moira/metrics/graphite"
 	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
@@ -14,9 +14,17 @@ const (
 	serviceName           = "searchIndex"
 )
 
+// TriggerIndex is index for moira.TriggerChecks type
+type TriggerIndex interface {
+	Search(filterTags []string, searchString string, onlyErrors bool, page int64, size int64) (triggerIDs []string, total int64, err error)
+	Write(checks []*moira.TriggerCheck) error
+	Delete(triggerIDs []string) error
+	GetCount() (int64, error)
+}
+
 // Index represents Index for Bleve.Index type
 type Index struct {
-	index             bleve.Index
+	triggerIndex      TriggerIndex
 	logger            moira.Logger
 	database          moira.Database
 	tomb              tomb.Tomb
@@ -35,7 +43,7 @@ func NewSearchIndex(logger moira.Logger, database moira.Database) *Index {
 	}
 	newIndex.metrics = metrics.ConfigureIndexMetrics(serviceName)
 	indexMapping := mapping.BuildIndexMapping(mapping.Trigger{})
-	newIndex.index, err = buildIndex(indexMapping)
+	newIndex.triggerIndex, err = bleve.CreateTriggerIndex(indexMapping)
 	if err != nil {
 		return nil
 	}
