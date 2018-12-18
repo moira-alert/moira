@@ -55,8 +55,7 @@ type triggerData struct {
 }
 
 // Init read yaml config
-func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger,
-	location *time.Location, dateTimeFormat string) error {
+func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 
 	sender.setLogger(logger)
 	sender.From = senderSettings["mail_from"]
@@ -115,8 +114,7 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 }
 
 // SendEvents implements Sender interface Send
-func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData,
-	trigger moira.TriggerData, plot []byte, throttled bool) error {
+func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) error {
 
 	m := sender.makeMessage(events, contact, trigger, plot, throttled)
 
@@ -139,8 +137,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	return nil
 }
 
-func (sender *Sender) makeMessage(events moira.NotificationEvents, contact moira.ContactData,
-	trigger moira.TriggerData, plot []byte, throttled bool) *gomail.Message {
+func (sender *Sender) makeMessage(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) *gomail.Message {
 
 	state := events.GetSubjectState()
 	tags := trigger.GetTags()

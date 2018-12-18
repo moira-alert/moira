@@ -12,8 +12,7 @@ import (
 )
 
 type sendEventsTwilio interface {
-	SendEvents(events moira.NotificationEvents, contact moira.ContactData,
-		trigger moira.TriggerData, plot []byte, throttled bool) error
+	SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) error
 }
 
 type twilioSender struct {
@@ -33,8 +32,7 @@ type twilioSenderVoice struct {
 	appendMessage bool
 }
 
-func (smsSender *twilioSenderSms) SendEvents(events moira.NotificationEvents, contact moira.ContactData,
-	trigger moira.TriggerData, plot []byte, throttled bool) error {
+func (smsSender *twilioSenderSms) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) error {
 
 	var message bytes.Buffer
 
@@ -73,8 +71,7 @@ func (smsSender *twilioSenderSms) SendEvents(events moira.NotificationEvents, co
 	return nil
 }
 
-func (voiceSender *twilioSenderVoice) SendEvents(events moira.NotificationEvents, contact moira.ContactData,
-	trigger moira.TriggerData, plot []byte, throttled bool) error {
+func (voiceSender *twilioSenderVoice) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) error {
 
 	voiceURL := voiceSender.voiceURL
 	if voiceSender.appendMessage {
@@ -146,7 +143,6 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 }
 
 // SendEvents implements Sender interface Send
-func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData,
-	trigger moira.TriggerData, plot []byte, throttled bool) error {
+func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) error {
 	return sender.sender.SendEvents(events, contact, trigger, plot, throttled)
 }

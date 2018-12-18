@@ -20,8 +20,7 @@ type Sender struct {
 }
 
 // Init read yaml config
-func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger,
-	location *time.Location, dateTimeFormat string) error {
+func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 
 	sender.APIToken = senderSettings["api_token"]
 	if sender.APIToken == "" {
@@ -34,8 +33,7 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 }
 
 // SendEvents implements Sender interface Send
-func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData,
-	trigger moira.TriggerData, plot []byte, throttled bool) error {
+func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) error {
 
 	api := slack.New(sender.APIToken)
 

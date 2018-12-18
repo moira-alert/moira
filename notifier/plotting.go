@@ -70,8 +70,7 @@ func resolveMetricsWindow(logger moira.Logger, trigger moira.TriggerData, pkg No
 }
 
 // evaluateTriggerMetrics returns collection of MetricData
-func evaluateTriggerMetrics(database moira.Database, remoteCfg *remote.Config,
-	from, to int64, triggerID string) ([]*types.MetricData, *moira.Trigger, error) {
+func evaluateTriggerMetrics(database moira.Database, remoteCfg *remote.Config, from, to int64, triggerID string) ([]*types.MetricData, *moira.Trigger, error) {
 	tts, trigger, err := getTriggerEvaluationResult(database, remoteCfg, from, to, triggerID)
 	if err != nil {
 		return nil, trigger, err
@@ -87,8 +86,7 @@ func evaluateTriggerMetrics(database moira.Database, remoteCfg *remote.Config,
 }
 
 // getTriggerEvaluationResult returns trigger metrics from chosen data source
-func getTriggerEvaluationResult(dataBase moira.Database, remoteConfig *remote.Config,
-	from, to int64, triggerID string) (*checker.TriggerTimeSeries, *moira.Trigger, error) {
+func getTriggerEvaluationResult(dataBase moira.Database, remoteConfig *remote.Config, from, to int64, triggerID string) (*checker.TriggerTimeSeries, *moira.Trigger, error) {
 	allowRealtimeAlerting := true
 	trigger, err := dataBase.GetTrigger(triggerID)
 	if err != nil {

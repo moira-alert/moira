@@ -12,8 +12,7 @@ import (
 )
 
 // SendEvents implements Sender interface Send
-func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData,
-	trigger moira.TriggerData, plot []byte, throttled bool) error {
+func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) error {
 
 	var message bytes.Buffer
 	state := events.GetSubjectState()
