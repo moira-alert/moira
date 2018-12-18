@@ -73,7 +73,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	_, threadTimestamp, err := api.PostMessage(contact.Value, slack.MsgOptionText(message.String(),
 		false), slack.MsgOptionPostMessageParameters(params))
 	if err != nil {
-		return fmt.Errorf("Failed to send message to slack [%s]: %s", contact.Value, err.Error())
+		return fmt.Errorf("Failed to send %s event message to slack [%s]: %s", trigger.ID, contact.Value, err.Error())
 	}
 
 	if len(plot) > 0 {
@@ -87,7 +87,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 		}
 		_, err := api.UploadFile(uploadParameters)
 		if err != nil {
-			sender.log.Errorf("Failed to send %s plot to %s: %s", trigger.ID, contact.Value, err.Error())
+			sender.log.Errorf("Failed to send %s event plot to %s: %s", trigger.ID, contact.Value, err.Error())
 		}
 	}
 

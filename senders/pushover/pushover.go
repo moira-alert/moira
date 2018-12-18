@@ -84,9 +84,17 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 		Timestamp: timestamp,
 		URL:       fmt.Sprintf("%s/trigger/%s", sender.FrontURI, events[0].TriggerID),
 	}
+
+	if len(plot) > 0 {
+		buff := bytes.NewBuffer(plot)
+		if err := pushoverMessage.AddAttachment(buff); err != nil {
+			sender.log.Errorf("Failed to send %s event plot to pushover user %s: %s", trigger.ID, contact.Value, err.Error())
+		}
+	}
+
 	_, err := api.SendMessage(pushoverMessage, recipient)
 	if err != nil {
-		return fmt.Errorf("Failed to send message to pushover user %s: %s", contact.Value, err.Error())
+		return fmt.Errorf("Failed to send %s event message to pushover user %s: %s", trigger.ID, contact.Value, err.Error())
 	}
 	return nil
 }

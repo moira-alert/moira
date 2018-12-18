@@ -71,13 +71,13 @@ func (sender *Sender) talk(username, message string, plot []byte) error {
 	}
 	postedMessage, err := sender.bot.Send(chat, message)
 	if err != nil {
-		return fmt.Errorf("can't send message [%s] to %s: %s", message, uid, err.Error())
+		return fmt.Errorf("can't send event message [%s] to %s: %s", message, uid, err.Error())
 	}
 	if len(plot) > 0 {
 		photo := telebot.Photo{File: telebot.FromReader(bytes.NewReader(plot))}
 		_, err = photo.Send(sender.bot, chat, &telebot.SendOptions{ReplyTo: postedMessage})
 		if err != nil {
-			return fmt.Errorf("can't send plot to %s: %s", uid, err.Error())
+			return fmt.Errorf("can't send event plot to %s: %s", uid, err.Error())
 		}
 	}
 	return nil
