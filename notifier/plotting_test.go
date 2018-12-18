@@ -42,8 +42,8 @@ func TestResolveMetricsWindow(t *testing.T) {
 				_, expectedTo, err := pkg.GetWindow()
 				So(err, ShouldBeNil)
 				from, to := resolveMetricsWindow(logger, redisTrigger, pkg)
-				So(from, ShouldEqual, expectedTo-1800)
-				So(to, ShouldEqual, expectedTo)
+				So(from, ShouldEqual, expectedTo-1800+120)
+				So(to, ShouldEqual, expectedTo+120)
 			}
 		})
 	})
@@ -57,6 +57,7 @@ func TestResolveMetricsWindow(t *testing.T) {
 				So(err, ShouldBeNil)
 				So(from, ShouldEqual, expectedFrom)
 				So(to, ShouldEqual, expectedTo)
+				fmt.Println(expectedTo)
 			}
 		})
 		Convey("Low time range, takes to extend", func() {
@@ -64,8 +65,8 @@ func TestResolveMetricsWindow(t *testing.T) {
 			from, to := resolveMetricsWindow(logger, remoteTrigger, pkg)
 			_, expectedTo, err := pkg.GetWindow()
 			So(err, ShouldBeNil)
-			So(from, ShouldEqual, expectedTo-1800)
-			So(to, ShouldEqual, expectedTo)
+			So(from, ShouldEqual, expectedTo-1800+120)
+			So(to, ShouldEqual, expectedTo+120)
 		})
 	})
 	Convey("ANY TRIGGER | Zero time range, force default time range", t, func() {

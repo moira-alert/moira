@@ -15,8 +15,12 @@ import (
 	"github.com/moira-alert/moira/target"
 )
 
-// defaultTimeRange is default time range to fetch timeseries
-var defaultTimeRange = 30 * time.Minute
+var (
+	// defaultTimeShift is default time shift to fetch timeseries
+	defaultTimeShift = 2 * time.Minute
+	// defaultTimeRange is default time range to fetch timeseries
+	defaultTimeRange = 30 * time.Minute
+)
 
 // buildNotificationPackagePlot returns bytes slice containing package plot
 func (notifier *StandardNotifier) buildNotificationPackagePlot(pkg NotificationPackage) ([]byte, error) {
@@ -59,12 +63,12 @@ func resolveMetricsWindow(logger moira.Logger, trigger moira.TriggerData, pkg No
 	}
 	fromTime, toTime := moira.Int64ToTime(from), moira.Int64ToTime(to)
 	if trigger.IsRemote {
-		if toTime.Sub(fromTime).Minutes() > defaultTimeRange.Minutes() {
+		if toTime.Sub(fromTime).Minutes() >= defaultTimeRange.Minutes() {
 			return fromTime.Unix(), toTime.Unix()
 		}
 	}
-	logger.Debugf("trigger %s window too small, using default %s window", trigger.ID, defaultTimeRange.String())
-	return toTime.Add(-defaultTimeRange).Unix(), toTime.Unix()
+	logger.Debugf("trigger %s window too small, using default %s window with", trigger.ID, defaultTimeRange.String())
+	return toTime.Add(-defaultTimeRange+defaultTimeShift).Unix(), toTime.Add(defaultTimeShift).Unix()
 }
 
 // evaluateTriggerMetrics returns collection of MetricData
