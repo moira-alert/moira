@@ -575,6 +575,7 @@ func TestGetRenderable(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
+			os.Remove(pathToRendered)
 			So(*hashDistance, ShouldBeLessThanOrEqualTo, testCase.expected)
 		}
 	})

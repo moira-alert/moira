@@ -75,11 +75,11 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	}
 
 	if len(plot) > 0 {
-		buff := bytes.NewBuffer(plot)
+		reader := bytes.NewReader(plot)
 		uploadParameters := slack.FileUploadParameters{
 			Channels:        []string{contact.Value},
 			ThreadTimestamp: threadTimestamp,
-			Reader:          buff,
+			Reader:          reader,
 			Filetype:        "png",
 			Filename:        fmt.Sprintf("%s.png", trigger.ID),
 		}

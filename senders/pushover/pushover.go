@@ -84,8 +84,8 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	}
 
 	if len(plot) > 0 {
-		buff := bytes.NewBuffer(plot)
-		if err := pushoverMessage.AddAttachment(buff); err != nil {
+		reader := bytes.NewReader(plot)
+		if err := pushoverMessage.AddAttachment(reader); err != nil {
 			sender.log.Errorf("Failed to send %s event plot to pushover user %s: %s", trigger.ID, contact.Value, err.Error())
 		}
 	}
