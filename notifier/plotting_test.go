@@ -12,73 +12,82 @@ import (
 )
 
 func TestResolveMetricsWindow(t *testing.T) {
+	testLaunchTime := time.Now().UTC()
 	logger, _ := logging.GetLogger("Notifier")
 	emptyEventsPackage := NotificationPackage{}
 	triggerJustCreatedEvents := NotificationPackage{
 		Events: []moira.NotificationEvent{
-			{Timestamp: time.Unix(3600, 0).Unix()},
+			{Timestamp: testLaunchTime.Unix()},
 		},
 	}
 	realtimeTriggerEvents := NotificationPackage{
 		Events: []moira.NotificationEvent{
-			{Timestamp: time.Unix(1800, 0).Unix()},
-			{Timestamp: time.Unix(0, 0).Unix()},
+			{Timestamp: testLaunchTime.Add(-time.Minute).Unix()},
+			{Timestamp: testLaunchTime.Unix()},
 		},
 	}
 	oldTriggerEvents := NotificationPackage{
 		Events: []moira.NotificationEvent{
-			{Timestamp: time.Unix(0, 0).Unix()},
-			{Timestamp: time.Unix(604800, 0).Unix()},
+			{Timestamp: testLaunchTime.Add(-720 * time.Hour).Unix()},
+			{Timestamp: testLaunchTime.Add(-360 * time.Hour).Unix()},
 		},
 	}
-	redisTrigger := moira.TriggerData{ID: "redisTrigger", IsRemote: false}
+	localTrigger := moira.TriggerData{ID: "redisTrigger", IsRemote: false}
 	remoteTrigger := moira.TriggerData{ID: "remoteTrigger", IsRemote: true}
 	timeRange := time.Unix(int64(defaultTimeRange.Seconds()), 0).Unix()
 	timeShift := time.Unix(int64(defaultTimeShift.Seconds()), 0).Unix()
-	Convey("REDIS TRIGGER | Resolve trigger metrics window", t, func() {
-		Convey("High time range, use package window", func() {
-			defaultTimeRangePackages := make([]NotificationPackage, 0)
-			defaultTimeRangePackages = append(defaultTimeRangePackages,
-				triggerJustCreatedEvents, realtimeTriggerEvents, oldTriggerEvents)
-			for _, pkg := range defaultTimeRangePackages {
+	var pkg NotificationPackage
+	var pkgs []NotificationPackage
+	var trigger moira.TriggerData
+	Convey("LOCAL TRIGGER | Resolve trigger metrics window", t, func() {
+		trigger = localTrigger
+		Convey("Window is realtime: use shifted window to fetch actual data from redis", func() {
+			pkgs = []NotificationPackage{triggerJustCreatedEvents, realtimeTriggerEvents}
+			for _, pkg := range pkgs {
 				_, expectedTo, err := pkg.GetWindow()
 				So(err, ShouldBeNil)
-				from, to := resolveMetricsWindow(logger, redisTrigger, pkg)
+				from, to := resolveMetricsWindow(logger, trigger, pkg)
+				So(from, ShouldEqual, expectedTo-timeRange+timeShift)
+				So(to, ShouldEqual, expectedTo+timeShift)
+			}
+		})
+		Convey("Window is not realtime: force realtime window", func() {
+			pkg = oldTriggerEvents
+			_, _, err := pkg.GetWindow()
+			So(err, ShouldBeNil)
+			from, to := resolveMetricsWindow(logger, trigger, pkg)
+			So(from, ShouldEqual, testLaunchTime.Add(-defaultTimeRange).UTC().Unix())
+			So(to, ShouldEqual, testLaunchTime.UTC().Unix())
+		})
+	})
+	Convey("REMOTE TRIGGER | Resolve remote trigger metrics window", t, func() {
+		trigger = remoteTrigger
+		Convey("Window is wide: use package window to fetch limited historical data from graphite", func() {
+			pkg = oldTriggerEvents
+			expectedFrom, expectedTo, err := pkg.GetWindow()
+			So(err, ShouldBeNil)
+			from, to := resolveMetricsWindow(logger, trigger, pkg)
+			So(from, ShouldEqual, expectedFrom)
+			So(to, ShouldEqual, expectedTo)
+		})
+		Convey("Window is not wide: use shifted window to fetch extended historical data from graphite", func() {
+			pkgs = []NotificationPackage{triggerJustCreatedEvents, realtimeTriggerEvents}
+			for _, pkg := range pkgs {
+				_, expectedTo, err := pkg.GetWindow()
+				So(err, ShouldBeNil)
+				from, to := resolveMetricsWindow(logger, trigger, pkg)
 				So(from, ShouldEqual, expectedTo-timeRange+timeShift)
 				So(to, ShouldEqual, expectedTo+timeShift)
 			}
 		})
 	})
-	Convey("REMOTE TRIGGER | Resolve remote trigger metrics window", t, func() {
-		highTimeRangePackages := make([]NotificationPackage, 0)
-		highTimeRangePackages = append(highTimeRangePackages, realtimeTriggerEvents, oldTriggerEvents)
-		Convey("High time range, use package window", func() {
-			for _, pkg := range highTimeRangePackages {
-				from, to := resolveMetricsWindow(logger, remoteTrigger, pkg)
-				expectedFrom, expectedTo, err := pkg.GetWindow()
-				So(err, ShouldBeNil)
-				So(from, ShouldEqual, expectedFrom)
-				So(to, ShouldEqual, expectedTo)
-				fmt.Println(expectedTo)
-			}
-		})
-		Convey("Low time range, takes to extend", func() {
-			pkg := triggerJustCreatedEvents
-			from, to := resolveMetricsWindow(logger, remoteTrigger, pkg)
-			_, expectedTo, err := pkg.GetWindow()
-			So(err, ShouldBeNil)
-			So(from, ShouldEqual, expectedTo-timeRange+timeShift)
-			So(to, ShouldEqual, expectedTo+timeShift)
-		})
-	})
 	Convey("ANY TRIGGER | Zero time range, force default time range", t, func() {
-		allTriggers := []moira.TriggerData{redisTrigger, remoteTrigger}
+		allTriggers := []moira.TriggerData{localTrigger, remoteTrigger}
 		for _, trigger := range allTriggers {
 			pkg := emptyEventsPackage
 			from, to := resolveMetricsWindow(logger, trigger, pkg)
-			now := time.Now()
-			expectedFrom := now.UTC().Add(-defaultTimeRange).Unix()
-			expectedTo := now.UTC().Unix()
+			expectedFrom := testLaunchTime.Add(-defaultTimeRange).Unix()
+			expectedTo := testLaunchTime.Unix()
 			_, _, err := pkg.GetWindow()
 			So(err, ShouldResemble, fmt.Errorf("not enough data to resolve package window"))
 			So(from, ShouldEqual, expectedFrom)

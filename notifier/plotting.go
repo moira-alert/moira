@@ -52,23 +52,37 @@ func (notifier *StandardNotifier) buildNotificationPackagePlot(pkg NotificationP
 
 // resolveMetricsWindow returns from, to parameters depending on trigger type
 func resolveMetricsWindow(logger moira.Logger, trigger moira.TriggerData, pkg NotificationPackage) (int64, int64) {
+	// resolve default realtime window for any case
 	now := time.Now()
 	defaultFrom := now.UTC().Add(-defaultTimeRange).Unix()
 	defaultTo := now.UTC().Unix()
+	// try to resolve package window, force default realtime window on fail for both local and remote triggers
 	from, to, err := pkg.GetWindow()
 	if err != nil {
 		logger.Warningf("failed to get trigger %s package window: %s, using default %s window",
 			trigger.ID, err.Error(), defaultTimeRange.String())
 		return defaultFrom, defaultTo
 	}
+	// package window successfully resolved, test it's wide and realtime metrics window
 	fromTime, toTime := moira.Int64ToTime(from), moira.Int64ToTime(to)
+	isWideWindow := toTime.Sub(fromTime).Minutes() >= defaultTimeRange.Minutes()
+	isRealTimeWindow := now.UTC().Sub(fromTime).Minutes() <= defaultTimeRange.Minutes()
+	// resolve remote trigger window
+	// window is wide: use package window to fetch limited historical data from graphite
+	// window is not wide: use shifted window to fetch extended historical data from graphite
 	if trigger.IsRemote {
-		if toTime.Sub(fromTime).Minutes() >= defaultTimeRange.Minutes() {
+		if isWideWindow {
 			return fromTime.Unix(), toTime.Unix()
 		}
+		return toTime.Add(-defaultTimeRange + defaultTimeShift).Unix(), toTime.Add(defaultTimeShift).Unix()
 	}
-	logger.Debugf("trigger %s window too small, using default %s window with %s timeshift", trigger.ID, defaultTimeRange.String(), defaultTimeShift.String())
-	return toTime.Add(-defaultTimeRange+defaultTimeShift).Unix(), toTime.Add(defaultTimeShift).Unix()
+	// resolve local trigger window
+	// window is realtime: use shifted window to fetch actual data from redis
+	// window is not realtime: force realtime window
+	if isRealTimeWindow {
+		return toTime.Add(-defaultTimeRange + defaultTimeShift).Unix(), toTime.Add(defaultTimeShift).Unix()
+	}
+	return defaultFrom, defaultTo
 }
 
 // evaluateTriggerMetrics returns collection of MetricData
