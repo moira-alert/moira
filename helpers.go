@@ -1,5 +1,12 @@
 package moira
 
+import "time"
+
+// Int64ToTime returns time.Time from int64
+func Int64ToTime(timeStamp int64) time.Time {
+	return time.Unix(timeStamp, 0).UTC()
+}
+
 // UseString gets pointer value of string or default string if pointer is nil
 func UseString(str *string) string {
 	if str == nil {

@@ -1,38 +1,57 @@
 package plotting
 
 import (
+	"time"
+	"fmt"
+
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/wcharczuk/go-chart"
 
 	"github.com/moira-alert/moira"
 )
 
+// ErrNoPointsToRender is used to prevent unnecessary render calls
+type ErrNoPointsToRender struct {
+	triggerName string
+}
+
+// ErrNoPointsToRender implementation with detailed error message
+func (err ErrNoPointsToRender) Error() string {
+	return fmt.Sprintf("no points found to render %s", err.triggerName)
+}
+
 // Plot represents plot structure to render
 type Plot struct {
-	theme  moira.PlotTheme
-	width  int
-	height int
+	theme    moira.PlotTheme
+	location *time.Location
+	width    int
+	height   int
 }
 
 // GetPlotTemplate returns plot template
-func GetPlotTemplate(theme string) (*Plot, error) {
+func GetPlotTemplate(theme string, location *time.Location) (*Plot, error) {
 	plotTheme, err := getPlotTheme(theme)
 	if err != nil {
 		return nil, err
 	}
+	if location == nil {
+		return nil, fmt.Errorf("location not specified")
+	}
 	return &Plot{
-		theme:  plotTheme,
-		width:  800,
-		height: 400,
+		theme:    plotTheme,
+		location: location,
+		width:    800,
+		height:   400,
 	}, nil
 }
 
 // GetRenderable returns go-chart to render
-func (plot *Plot) GetRenderable(trigger *moira.Trigger, metricsData []*types.MetricData, metricsWhitelist []string) chart.Chart {
+func (plot *Plot) GetRenderable(trigger *moira.Trigger, metricsData []*types.MetricData, metricsWhitelist []string) (chart.Chart, error) {
+
 	plotSeries := make([]chart.Series, 0)
 	limits := resolveLimits(metricsData)
 
-	curveSeriesList := getCurveSeriesList(metricsData, plot.theme, metricsWhitelist)
+	curveSeriesList := getCurveSeriesList(metricsData, metricsWhitelist, plot.theme)
 	for _, curveSeries := range curveSeriesList {
 		plotSeries = append(plotSeries, curveSeries)
 	}
@@ -42,7 +61,7 @@ func (plot *Plot) GetRenderable(trigger *moira.Trigger, metricsData []*types.Met
 
 	gridStyle := plot.theme.GetGridStyle()
 
-	yAxisValuesFormatter := getYAxisValuesFormatter(limits)
+	yAxisValuesFormatter, maxMarkLen := getYAxisValuesFormatter(limits)
 	yAxisRange := limits.getThresholdAxisRange(trigger.TriggerType)
 
 	renderable := chart.Chart{
@@ -54,13 +73,17 @@ func (plot *Plot) GetRenderable(trigger *moira.Trigger, metricsData []*types.Met
 		Height: plot.height,
 
 		Canvas:     plot.theme.GetCanvasStyle(),
-		Background: plot.theme.GetBackgroundStyle(),
+		Background: plot.theme.GetBackgroundStyle(maxMarkLen),
 
 		XAxis: chart.XAxis{
 			Style:          plot.theme.GetXAxisStyle(),
 			GridMinorStyle: gridStyle,
 			GridMajorStyle: gridStyle,
-			ValueFormatter: chart.TimeValueFormatterWithFormat("15:04"),
+			ValueFormatter: getTimeValueFormatter(plot.location, "15:04"),
+			Range: &chart.ContinuousRange{
+				Min: float64(limits.from.UnixNano()),
+				Max: float64(limits.to.UnixNano()),
+			},
 		},
 
 		YAxis: chart.YAxis{
@@ -90,5 +113,9 @@ func (plot *Plot) GetRenderable(trigger *moira.Trigger, metricsData []*types.Met
 		getPlotLegend(&renderable, plot.theme.GetLegendStyle(), plot.width),
 	}
 
-	return renderable
+	if len(renderable.Series) == 0 {
+		return renderable, ErrNoPointsToRender{triggerName:trigger.Name}
+	}
+
+	return renderable, nil
 }

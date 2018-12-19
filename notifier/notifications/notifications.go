@@ -75,6 +75,7 @@ func (worker *FetchNotificationsWorker) processScheduledNotifications() error {
 				Events:    make([]moira.NotificationEvent, 0, len(notifications)),
 				Trigger:   notification.Trigger,
 				Contact:   notification.Contact,
+				Plotting:  notification.Plotting,
 				Throttled: notification.Throttled,
 				FailCount: notification.SendFail,
 			}

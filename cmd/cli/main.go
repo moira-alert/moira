@@ -37,6 +37,10 @@ var (
 	downgradeToVersion = flag.String("to-version", "", "determines Moira version, TO which need to DOWNGRADE database structures")
 )
 
+var (
+	plotting = flag.Bool("plotting", false, "enable images in all notifications")
+)
+
 func main() {
 	logger, dataBase := initApp()
 
@@ -74,6 +78,12 @@ func main() {
 			if err != nil {
 				logger.Fatalf("Fail to update to version %s: %s", toVersion, err.Error())
 			}
+		}
+	}
+
+	if *plotting {
+		if err := enablePlottingInAllSubscriptions(logger, dataBase); err != nil {
+			logger.Errorf("failed to enable images in all notifications")
 		}
 	}
 }

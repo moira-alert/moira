@@ -85,6 +85,9 @@ func main() {
 		logger.Error(err)
 	}
 
+	// configure carbon-api functions
+	functions.New(make(map[string]string))
+
 	// Start Index right before HTTP listener. Fail if index cannot start
 	searchIndex := index.NewSearchIndex(logger, database)
 	if searchIndex == nil {
@@ -106,9 +109,6 @@ func main() {
 	if err != nil {
 		logger.Fatal(err)
 	}
-
-	// configure carbon-api functions
-	functions.New(make(map[string]string))
 
 	logger.Infof("Start listening by address: [%s]", apiConfig.Listen)
 

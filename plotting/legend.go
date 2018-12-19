@@ -31,9 +31,9 @@ func getPlotLegend(c *chart.Chart, legendStyle chart.Style, plotWidth int) chart
 					_, isFound := foundLabels[legendLabel]
 					if !isFound && legendLabel != thresholdSerie {
 						foundLabels[legendLabel] = true
-						legendLabel := sanitizeLabelName(legendLabel, maxLabelLength)
+						legendLabel = sanitizeLabelName(legendLabel, maxLabelLength)
 						labels = append(labels, legendLabel)
-						lines = append(lines, s.GetStyle())
+						lines = append(lines, inheritFrom(s.GetStyle()))
 						if labelsCount == maxLabelsCount-1 {
 							break
 						}
@@ -87,4 +87,13 @@ func getPlotLegend(c *chart.Chart, legendStyle chart.Style, plotWidth int) chart
 			}
 		}
 	}
+}
+
+// inheritFrom inherits style from initial to make sure marker will be added
+func inheritFrom(initial chart.Style) chart.Style {
+	if initial.StrokeColor.IsZero() {
+		initial.StrokeColor = initial.DotColor
+		initial.StrokeWidth = 1
+	}
+	return initial
 }

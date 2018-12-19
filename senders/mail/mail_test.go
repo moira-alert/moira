@@ -33,22 +33,28 @@ func TestMail(t *testing.T) {
 	}
 
 	location, _ := time.LoadLocation("UTC")
+	templateName := "mail"
+
 	sender := Sender{
-		FrontURI: "http://localhost",
-		From:     "test@notifier",
-		SMTPhost: "localhost",
-		SMTPport: 25,
-		Template: template.Must(template.New("mail").Parse(defaultTemplate)),
-		location: location,
+		FrontURI:     "http://localhost",
+		From:         "test@notifier",
+		SMTPhost:     "localhost",
+		SMTPport:     25,
+		Template:     template.Must(template.New(templateName).Parse(defaultTemplate)),
+		TemplateName: templateName,
+		location:     location,
 	}
+
 	sender.setLogger(logger)
 	events := make([]moira.NotificationEvent, 0, 10)
 	for event := range generateTestEvents(10, trigger.ID) {
 		events = append(events, *event)
 	}
 
+	plot := make([]byte, 0)
+
 	Convey("Make message", t, func() {
-		message := sender.makeMessage(events, contact, trigger, true)
+		message := sender.makeMessage(events, contact, trigger, plot, true)
 		So(message.GetHeader("From")[0], ShouldEqual, sender.From)
 		So(message.GetHeader("To")[0], ShouldEqual, contact.Value)
 		message.WriteTo(os.Stdout)

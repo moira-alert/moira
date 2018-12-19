@@ -29,8 +29,7 @@ func resaveTriggers(database moira.Database) error {
 	}
 	for _, trigger := range allTriggers {
 		if trigger != nil {
-			err = database.SaveTrigger(trigger.ID, trigger)
-			if err != nil {
+			if err = database.SaveTrigger(trigger.ID, trigger); err != nil {
 				return err
 			}
 		}

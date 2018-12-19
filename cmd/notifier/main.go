@@ -7,6 +7,8 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/go-graphite/carbonapi/expr/functions"
+
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/database/redis"
@@ -78,7 +80,12 @@ func main() {
 	databaseSettings := config.Redis.GetSettings()
 	database := redis.NewDatabase(logger, databaseSettings)
 
-	notifierConfig := config.Notifier.getSettings(logger)
+	// configure carbon-api functions
+	functions.New(make(map[string]string))
+
+	remoteConfig := config.Remote.GetSettings()
+	notifierConfig := config.Notifier.getSettings(logger, remoteConfig)
+
 	sender := notifier.NewNotifier(database, logger, notifierConfig, notifierMetrics)
 
 	// Register moira senders
