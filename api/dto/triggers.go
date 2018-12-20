@@ -107,6 +107,7 @@ func CreateTriggerModel(trigger *moira.Trigger) TriggerModel {
 }
 
 func (trigger *Trigger) Bind(request *http.Request) error {
+	trigger.Tags = normalizeTags(trigger.Tags)
 	if len(trigger.Targets) == 0 {
 		return fmt.Errorf("targets is required")
 	}
