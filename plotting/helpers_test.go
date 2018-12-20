@@ -91,7 +91,7 @@ func TestTimeValueFormatter(t *testing.T) {
 			fmt.Printf("%s: %s,\n%s: %s\n\n",
 				timeValue.Location().String(), timeValue.String(), location.String(), formatted)
 			So(formattedMinute, ShouldEqual, timeValue.Minute())
-			So(formattedHour, ShouldEqual, timeValue.Add(time.Duration(increment) * time.Hour).Hour())
+			So(formattedHour, ShouldEqual, timeValue.Add(time.Duration(increment)*time.Hour).Hour())
 		}
 	})
 }

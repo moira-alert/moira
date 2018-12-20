@@ -59,4 +59,3 @@ func deleteTriggerNodataMetrics(writer http.ResponseWriter, request *http.Reques
 		render.Render(writer, request, err)
 	}
 }
-

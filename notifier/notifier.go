@@ -48,7 +48,7 @@ func (pkg NotificationPackage) GetWindow() (from, to int64, err error) {
 }
 
 // GetMetricNames returns all metric names found in package events
-func(pkg NotificationPackage) GetMetricNames() []string {
+func (pkg NotificationPackage) GetMetricNames() []string {
 	metricNames := make([]string, 0)
 	for _, event := range pkg.Events {
 		metricNames = append(metricNames, event.Metric)
