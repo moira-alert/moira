@@ -1,8 +1,8 @@
 package plotting
 
 import (
-	"time"
 	"fmt"
+	"time"
 
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/wcharczuk/go-chart"
@@ -114,7 +114,7 @@ func (plot *Plot) GetRenderable(trigger *moira.Trigger, metricsData []*types.Met
 	}
 
 	if len(renderable.Series) == 0 {
-		return renderable, ErrNoPointsToRender{triggerName:trigger.Name}
+		return renderable, ErrNoPointsToRender{triggerName: trigger.Name}
 	}
 
 	return renderable, nil

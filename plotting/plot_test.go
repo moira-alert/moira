@@ -541,7 +541,7 @@ func TestGetRenderable(t *testing.T) {
 	Convey("Test plots hash distances", t, func() {
 		for _, testCase := range plotsHashDistancesTestCases {
 			trigger := moira.Trigger{
-				Name: testCase.getTriggerName(),
+				Name:        testCase.getTriggerName(),
 				TriggerType: testCase.triggerType,
 			}
 			if testCase.errorValue != nil {

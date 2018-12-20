@@ -86,4 +86,3 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	}
 	return nil
 }
-

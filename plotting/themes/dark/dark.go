@@ -62,7 +62,7 @@ func (theme *PlotTheme) GetBackgroundStyle(maxMarkLen int) chart.Style {
 	verticalShift := 40
 	horizontalShift := 20
 	if maxMarkLen > 4 {
-		horizontalShift = horizontalShift/2
+		horizontalShift = horizontalShift / 2
 	}
 	return chart.Style{
 		FillColor: drawing.ColorFromHex(theme.bgColor),
@@ -132,7 +132,7 @@ func (theme *PlotTheme) GetSerieStyles(curveInd int) (chart.Style, chart.Style) 
 	pointStyle := chart.Style{
 		Show:        true,
 		StrokeWidth: chart.Disabled,
-		DotWidth:    curveWidth/2,
+		DotWidth:    curveWidth / 2,
 		DotColor:    curveColor.WithAlpha(90),
 	}
 	return curveStyle, pointStyle
