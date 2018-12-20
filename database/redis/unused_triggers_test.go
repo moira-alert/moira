@@ -11,7 +11,7 @@ import (
 
 func TestUnusedTriggers(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test")
-	dataBase := NewDatabase(logger, config)
+	dataBase := newTestDatabase(logger, config)
 	dataBase.flush()
 	defer dataBase.flush()
 
@@ -278,7 +278,7 @@ func TestUnusedTriggers(t *testing.T) {
 
 func TestUnusedTriggersConnection(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test")
-	dataBase := NewDatabase(logger, emptyConfig)
+	dataBase := newTestDatabase(logger, emptyConfig)
 	dataBase.flush()
 	defer dataBase.flush()
 	Convey("Should throw error when no connection", t, func() {

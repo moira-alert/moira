@@ -7,14 +7,15 @@ import (
 	"github.com/satori/go.uuid"
 	. "github.com/smartystreets/goconvey/convey"
 
+	"time"
+
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
-	"time"
 )
 
 func TestNotificationEvents(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewDatabase(logger, config)
+	dataBase := newTestDatabase(logger, config)
 	dataBase.flush()
 	defer dataBase.flush()
 
@@ -173,7 +174,7 @@ func TestNotificationEvents(t *testing.T) {
 
 func TestNotificationEventErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewDatabase(logger, emptyConfig)
+	dataBase := newTestDatabase(logger, emptyConfig)
 	dataBase.flush()
 	defer dataBase.flush()
 

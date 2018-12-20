@@ -16,7 +16,7 @@ default: test build
 
 .PHONY: prepare
 prepare:
-	go get github.com/kardianos/govendor
+	go get -u github.com/kardianos/govendor
 	govendor sync
 
 .PHONY: lint

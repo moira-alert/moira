@@ -12,7 +12,7 @@ import (
 
 func TestRemoteTriggerToCheck(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test")
-	dataBase := NewDatabase(logger, config)
+	dataBase := newTestDatabase(logger, config)
 	dataBase.flush()
 	defer dataBase.flush()
 	Convey("Trigger to check get and add", t, func() {
@@ -95,7 +95,7 @@ func TestRemoteTriggerToCheck(t *testing.T) {
 
 func TestRemoteTriggerToCheckConnection(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test")
-	dataBase := NewDatabase(logger, emptyConfig)
+	dataBase := newTestDatabase(logger, emptyConfig)
 	dataBase.flush()
 	defer dataBase.flush()
 	Convey("Should throw error when no connection", t, func() {

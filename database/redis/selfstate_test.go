@@ -9,9 +9,9 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestSelfCheck(t *testing.T) {
+func TestSelfCheckWithWritesInChecker(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewDatabase(logger, config)
+	dataBase := NewDatabase(logger, config, Checker)
 	dataBase.flush()
 	defer dataBase.flush()
 	Convey("Self state triggers manipulation", t, func() {
@@ -56,9 +56,40 @@ func TestSelfCheck(t *testing.T) {
 	})
 }
 
+func TestSelfCheckWithWritesNotInChecker(t *testing.T) {
+	dbSources := []DBSource{Filter, API, Notifier, Cli, testSource}
+	for _, dbSource := range dbSources {
+		testSelfCheckWithWritesInDBSource(t, dbSource)
+	}
+}
+
+func testSelfCheckWithWritesInDBSource(t *testing.T, dbSource DBSource) {
+	logger, _ := logging.GetLogger("dataBase")
+	dataBase := NewDatabase(logger, config, dbSource)
+	dataBase.flush()
+	defer dataBase.flush()
+	Convey(fmt.Sprintf("Self state triggers manipulation in %s", dbSource), t, func() {
+		Convey("Update metrics checks updates count", func() {
+			err := dataBase.SetTriggerLastCheck("123", &lastCheckTest, false)
+			So(err, ShouldBeNil)
+
+			count, err := dataBase.GetChecksUpdatesCount()
+			So(count, ShouldEqual, 0)
+			So(err, ShouldBeNil)
+
+			err = dataBase.SetTriggerLastCheck("12345", &lastCheckTest, true)
+			So(err, ShouldBeNil)
+
+			count, err = dataBase.GetRemoteChecksUpdatesCount()
+			So(count, ShouldEqual, 0)
+			So(err, ShouldBeNil)
+		})
+	})
+}
+
 func TestSelfCheckErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewDatabase(logger, emptyConfig)
+	dataBase := newTestDatabase(logger, emptyConfig)
 	dataBase.flush()
 	defer dataBase.flush()
 	Convey("Should throw error when no connection", t, func() {
@@ -77,8 +108,8 @@ func TestSelfCheckErrorConnection(t *testing.T) {
 
 func TestNotifierState(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewDatabase(logger, config)
-	emptyDataBase := NewDatabase(logger, emptyConfig)
+	dataBase := newTestDatabase(logger, config)
+	emptyDataBase := newTestDatabase(logger, emptyConfig)
 	dataBase.flush()
 	defer dataBase.flush()
 	defer dataBase.flush()
