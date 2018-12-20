@@ -27,7 +27,7 @@ type Database interface {
 	SetTriggerLastCheck(triggerID string, checkData *CheckData, isRemote bool) error
 	RemoveTriggerLastCheck(triggerID string) error
 	GetTriggerCheckIDs(tags []string, onlyErrors bool) ([]string, error)
-	SetTriggerCheckMetricsMaintenance(triggerID string, metrics map[string]int64) error
+	SetTriggerCheckMaintenance(triggerID string, metrics map[string]int64, triggerMaintenance *int64) error
 
 	// Trigger storing
 	GetLocalTriggerIDs() ([]string, error)
