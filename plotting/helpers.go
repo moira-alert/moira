@@ -87,8 +87,8 @@ func floatToHumanizedValueFormatter(v interface{}) string {
 		if math.Abs(typed) < 1000 {
 			return fmt.Sprintf("%.f", typed)
 		}
-		typed, postfix := humanize.ComputeSI(typed)
-		return fmt.Sprintf("%.2f %s", typed, strings.ToUpper(postfix))
+		humanized, postfix := humanize.ComputeSI(typed)
+		return fmt.Sprintf("%.2f %s", humanized, strings.ToUpper(postfix))
 	}
 	return ""
 }
