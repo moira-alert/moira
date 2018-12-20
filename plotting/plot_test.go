@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/go-graphite/carbonapi/expr/types"
 	pb "github.com/go-graphite/protocol/carbonapi_v3_pb"
@@ -497,13 +498,17 @@ func generateTestMetricsData(useHumanizedValues bool) []*types.MetricData {
 
 // renderTestMetricsDataToPNG renders and saves rendered plots to PNG
 func renderTestMetricsDataToPNG(trigger moira.Trigger, plotTheme string,
-	metricsData []*types.MetricData, filePath string) (error) {
+	metricsData []*types.MetricData, filePath string) error {
 	var metricsWhiteList []string
-	plotTemplate, err := GetPlotTemplate(plotTheme)
+	location, _ := time.LoadLocation("UTC")
+	plotTemplate, err := GetPlotTemplate(plotTheme, location)
 	if err != nil {
 		return err
 	}
-	renderable := plotTemplate.GetRenderable(&trigger, metricsData, metricsWhiteList)
+	renderable, err := plotTemplate.GetRenderable(&trigger, metricsData, metricsWhiteList)
+	if err != nil {
+		return err
+	}
 	f, err := os.Create(filePath)
 	if err != nil {
 		return err
@@ -570,6 +575,7 @@ func TestGetRenderable(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
+			os.Remove(pathToRendered)
 			So(*hashDistance, ShouldBeLessThanOrEqualTo, testCase.expected)
 		}
 	})

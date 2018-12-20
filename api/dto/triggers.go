@@ -107,6 +107,7 @@ func CreateTriggerModel(trigger *moira.Trigger) TriggerModel {
 }
 
 func (trigger *Trigger) Bind(request *http.Request) error {
+	trigger.Tags = normalizeTags(trigger.Tags)
 	if len(trigger.Targets) == 0 {
 		return fmt.Errorf("targets is required")
 	}
@@ -256,6 +257,15 @@ func (*TriggerCheck) Render(w http.ResponseWriter, r *http.Request) error {
 type MetricsMaintenance map[string]int64
 
 func (*MetricsMaintenance) Bind(r *http.Request) error {
+	return nil
+}
+
+type TriggerMaintenance struct {
+	Trigger *int64           `json:"trigger"`
+	Metrics map[string]int64 `json:"metrics"`
+}
+
+func (*TriggerMaintenance) Bind(r *http.Request) error {
 	return nil
 }
 

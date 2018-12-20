@@ -10,6 +10,7 @@ import (
 	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/notifier"
 	"github.com/moira-alert/moira/notifier/selfstate"
+	"github.com/moira-alert/moira/remote"
 )
 
 type config struct {
@@ -18,6 +19,7 @@ type config struct {
 	Logger   cmd.LoggerConfig   `yaml:"log"`
 	Notifier notifierConfig     `yaml:"notifier"`
 	Pprof    cmd.ProfilerConfig `yaml:"pprof"`
+	Remote   cmd.RemoteConfig   `yaml:"remote"`
 }
 
 type notifierConfig struct {
@@ -89,10 +91,13 @@ func getDefault() config {
 		Pprof: cmd.ProfilerConfig{
 			Listen: "",
 		},
+		Remote: cmd.RemoteConfig{
+			Timeout: "60s",
+		},
 	}
 }
 
-func (config *notifierConfig) getSettings(logger moira.Logger) notifier.Config {
+func (config *notifierConfig) getSettings(logger moira.Logger, remoteConfig *remote.Config) notifier.Config {
 	location, err := time.LoadLocation(config.Timezone)
 	if err != nil {
 		logger.Warningf("Timezone '%s' load failed: %s. Use UTC.", config.Timezone, err.Error())
@@ -116,6 +121,7 @@ func (config *notifierConfig) getSettings(logger moira.Logger) notifier.Config {
 		FrontURL:         config.FrontURI,
 		Location:         location,
 		DateTimeFormat:   format,
+		RemoteConfig:     remoteConfig,
 	}
 }
 

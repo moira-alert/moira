@@ -14,13 +14,46 @@ type NotificationPackage struct {
 	Events     []moira.NotificationEvent
 	Trigger    moira.TriggerData
 	Contact    moira.ContactData
+	Plotting   moira.PlottingData
 	FailCount  int
 	Throttled  bool
 	DontResend bool
 }
 
+// String returns notification package summary
 func (pkg NotificationPackage) String() string {
 	return fmt.Sprintf("package of %d notifications to %s", len(pkg.Events), pkg.Contact.Value)
+}
+
+// GetWindow returns the earliest and the latest notification package timestamps
+func (pkg NotificationPackage) GetWindow() (from, to int64, err error) {
+	timeStamps := make([]int64, 0)
+	for _, event := range pkg.Events {
+		timeStamps = append(timeStamps, event.Timestamp)
+	}
+	if len(timeStamps) == 0 {
+		return 0, 0, fmt.Errorf("not enough data to resolve package window")
+	}
+	from = timeStamps[0]
+	to = timeStamps[len(timeStamps)-1]
+	for _, timeStamp := range timeStamps {
+		if timeStamp < from {
+			from = timeStamp
+		}
+		if timeStamp > to {
+			to = timeStamp
+		}
+	}
+	return from, to, nil
+}
+
+// GetMetricNames returns all metric names found in package events
+func(pkg NotificationPackage) GetMetricNames() []string {
+	metricNames := make([]string, 0)
+	for _, event := range pkg.Events {
+		metricNames = append(metricNames, event.Metric)
+	}
+	return metricNames
 }
 
 // Notifier implements notification functionality
@@ -97,7 +130,8 @@ func (notifier *StandardNotifier) resend(pkg *NotificationPackage, reason string
 		notifier.logger.Error("Stop resending. Notification interval is timed out")
 	} else {
 		for _, event := range pkg.Events {
-			notification := notifier.scheduler.ScheduleNotification(time.Now(), event, pkg.Trigger, pkg.Contact, pkg.Throttled, pkg.FailCount+1)
+			notification := notifier.scheduler.ScheduleNotification(time.Now(), event,
+				pkg.Trigger, pkg.Contact, pkg.Plotting, pkg.Throttled, pkg.FailCount+1)
 			if err := notifier.database.AddNotification(notification); err != nil {
 				notifier.logger.Errorf("Failed to save scheduled notification: %s", err)
 			}
@@ -108,7 +142,12 @@ func (notifier *StandardNotifier) resend(pkg *NotificationPackage, reason string
 func (notifier *StandardNotifier) run(sender moira.Sender, ch chan NotificationPackage) {
 	defer notifier.waitGroup.Done()
 	for pkg := range ch {
-		err := sender.SendEvents(pkg.Events, pkg.Contact, pkg.Trigger, pkg.Throttled)
+		plot, err := notifier.buildNotificationPackagePlot(pkg)
+		if err != nil {
+			notifier.logger.Errorf("Can't build notification package plot for %s: %s",
+				pkg.Trigger.ID, err.Error())
+		}
+		err = sender.SendEvents(pkg.Events, pkg.Contact, pkg.Trigger, plot, pkg.Throttled)
 		if err == nil {
 			if metric, found := notifier.metrics.SendersOkMetrics.GetMetric(pkg.Contact.Type); found {
 				metric.Mark(1)

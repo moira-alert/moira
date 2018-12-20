@@ -1,11 +1,16 @@
 package plotting
 
 import (
+	"fmt"
 	"sort"
+	"strconv"
+	"strings"
 	"testing"
 	"time"
 
 	. "github.com/smartystreets/goconvey/convey"
+
+	"github.com/moira-alert/moira"
 )
 
 // TestSortByLen tests simple string array sorting by length
@@ -32,21 +37,6 @@ func TestSortByLen(t *testing.T) {
 		sort.Sort(sortedByLen(labelsUnsorted))
 		So(len(labelsUnsorted), ShouldEqual, len(labelsSorted))
 		So(labelsUnsorted, ShouldResemble, labelsSorted)
-	})
-}
-
-// TestInt64ToTime tests simple int64 timestamp to time.Time converter
-func TestInt64ToTime(t *testing.T) {
-	int64timeStamp := int64(1527330278)
-	humanReadabletimeStamp := time.Date(2018, 5, 26, 10, 24, 38, 0, time.UTC)
-	Convey("Convert int64 timestamp into datetime", t, func() {
-		converted := int64ToTime(int64timeStamp)
-		So(converted, ShouldResemble, humanReadabletimeStamp)
-	})
-	Convey("Convert int64 timestamp + 1 minute into datetime", t, func() {
-		int64timeStamp += 60
-		converted := int64ToTime(int64timeStamp)
-		So(converted, ShouldResemble, humanReadabletimeStamp.Add(time.Minute))
 	})
 }
 
@@ -79,6 +69,30 @@ func TestSanitizeLabelName(t *testing.T) {
 		}
 		So(len(shortLablelsList), ShouldEqual, len(labelsShortForm))
 		So(shortLablelsList, ShouldResemble, labelsShortForm)
+	})
+}
+
+// TestTimeValueFormatter tests time.Time to formatted string converter
+func TestTimeValueFormatter(t *testing.T) {
+	dateTimeFormat, separator := "15:04", ":"
+	timeValue := moira.Int64ToTime(int64(1527330278))
+	locationIncrements := map[string]int{
+		"Europe/Moscow":      3,
+		"Asia/Yekaterinburg": 5,
+	}
+	Convey("Format int64 timestamps into correct strings", t, func() {
+		for name, increment := range locationIncrements {
+			location, _ := time.LoadLocation(name)
+			storage := &locationStorage{location: location}
+			formatted := storage.formatTimeWithLocation(timeValue, dateTimeFormat)
+			formattedHourAndMinute := strings.Split(formatted, separator)
+			formattedHour, _ := strconv.Atoi(formattedHourAndMinute[0])
+			formattedMinute, _ := strconv.Atoi(formattedHourAndMinute[1])
+			fmt.Printf("%s: %s,\n%s: %s\n\n",
+				timeValue.Location().String(), timeValue.String(), location.String(), formatted)
+			So(formattedMinute, ShouldEqual, timeValue.Minute())
+			So(formattedHour, ShouldEqual, timeValue.Add(time.Duration(increment) * time.Hour).Hour())
+		}
 	})
 }
 
@@ -130,12 +144,13 @@ func TestGetYAxisValuesFormatter(t *testing.T) {
 		formattedMetricValues := []string{
 			"0.00", "1.00", "2.00", "3.00", "4.00", "5.00", "6.00", "7.00", "8.00", "9.00", "10.00",
 		}
-		valueFormatter := getYAxisValuesFormatter(lowLimits)
+		valueFormatter, maxMarkLen := getYAxisValuesFormatter(lowLimits)
 		formattedValues := make([]string, 0)
 		for _, metricValue := range metricValues {
 			formattedValue := valueFormatter(metricValue)
 			formattedValues = append(formattedValues, formattedValue)
 		}
+		So(maxMarkLen, ShouldEqual, 5)
 		So(len(formattedValues), ShouldEqual, len(formattedMetricValues))
 		So(formattedValues, ShouldResemble, formattedMetricValues)
 	})
@@ -146,12 +161,13 @@ func TestGetYAxisValuesFormatter(t *testing.T) {
 		formattedMetricValues := []string{
 			"-5", "-4", "-3", "-2", "-1", "0", "1", "2", "3", "4", "5",
 		}
-		valueFormatter := getYAxisValuesFormatter(mediumLimits)
+		valueFormatter, maxMarkLen := getYAxisValuesFormatter(mediumLimits)
 		formattedValues := make([]string, 0)
 		for _, metricValue := range metricValues {
 			formattedValue := valueFormatter(metricValue)
 			formattedValues = append(formattedValues, formattedValue)
 		}
+		So(maxMarkLen, ShouldEqual, 3)
 		So(len(formattedValues), ShouldEqual, len(formattedMetricValues))
 		So(formattedValues, ShouldResemble, formattedMetricValues)
 	})
@@ -162,12 +178,13 @@ func TestGetYAxisValuesFormatter(t *testing.T) {
 		formattedMetricValues := []string{
 			"-1.00 K", "-100", "0", "100", "1.00 K",
 		}
-		valueFormatter := getYAxisValuesFormatter(highLimits)
+		valueFormatter, maxMarkLen := getYAxisValuesFormatter(highLimits)
 		formattedValues := make([]string, 0)
 		for _, metricValue := range metricValues {
 			formattedValue := valueFormatter(metricValue)
 			formattedValues = append(formattedValues, formattedValue)
 		}
+		So(maxMarkLen, ShouldEqual, 7)
 		So(len(formattedValues), ShouldEqual, len(formattedMetricValues))
 		So(formattedValues, ShouldResemble, formattedMetricValues)
 	})

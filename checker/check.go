@@ -63,6 +63,7 @@ func (triggerChecker *TriggerChecker) handleMetricsCheck() (moira.CheckData, err
 		State:                        triggerChecker.lastCheck.State,
 		Timestamp:                    triggerChecker.Until,
 		EventTimestamp:               triggerChecker.lastCheck.EventTimestamp,
+		Maintenance:                  triggerChecker.lastCheck.Maintenance,
 		Score:                        triggerChecker.lastCheck.Score,
 		Suppressed:                   triggerChecker.lastCheck.Suppressed,
 		SuppressedState:              triggerChecker.lastCheck.SuppressedState,

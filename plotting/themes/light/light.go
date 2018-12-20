@@ -58,14 +58,19 @@ func (theme *PlotTheme) GetCanvasStyle() chart.Style {
 }
 
 // GetBackgroundStyle returns background style
-func (theme *PlotTheme) GetBackgroundStyle() chart.Style {
+func (theme *PlotTheme) GetBackgroundStyle(maxMarkLen int) chart.Style {
+	verticalShift := 40
+	horizontalShift := 20
+	if maxMarkLen > 4 {
+		horizontalShift = horizontalShift/2
+	}
 	return chart.Style{
 		FillColor: drawing.ColorFromHex(theme.bgColor),
 		Padding: chart.Box{
-			Top:    40,
-			Bottom: 40,
-			Left:   2 * chart.DefaultYAxisMargin,
-			Right:  2 + chart.DefaultYAxisMargin,
+			Top:    verticalShift,
+			Bottom: verticalShift,
+			Left:   horizontalShift,
+			Right:  horizontalShift + (maxMarkLen * 6),
 		},
 	}
 }
@@ -75,9 +80,9 @@ func (theme *PlotTheme) GetThresholdStyle(thresholdType string) chart.Style {
 	var thresholdColor string
 	switch thresholdType {
 	case "ERROR":
-		thresholdColor = `ed2e18`
+		thresholdColor = `8b0000`
 	case "WARN":
-		thresholdColor = `f79520`
+		thresholdColor = `cccc00`
 	}
 	return chart.Style{
 		Show:        true,
@@ -93,9 +98,9 @@ func (theme *PlotTheme) GetAnnotationStyle(thresholdType string) chart.Style {
 	var annotationColor string
 	switch thresholdType {
 	case "ERROR":
-		annotationColor = `ed2e18`
+		annotationColor = `8b0000`
 	case "WARN":
-		annotationColor = `f79520`
+		annotationColor = `cccc00`
 		rightBoxDimension = 9
 	}
 	return chart.Style{

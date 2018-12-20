@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/tucnak/telebot"
+	"gopkg.in/tucnak/telebot.v2"
 
 	"github.com/moira-alert/moira"
 )

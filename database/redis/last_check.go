@@ -79,10 +79,10 @@ func (connector *DbConnector) RemoveTriggerLastCheck(triggerID string) error {
 	return nil
 }
 
-// SetTriggerCheckMetricsMaintenance sets to given metrics throttling timestamps,
+// SetTriggerCheckMaintenance sets maintenance for whole trigger and to given metrics,
 // If during the update lastCheck was updated from another place, try update again
 // If CheckData does not contain one of given metrics it will ignore this metric
-func (connector *DbConnector) SetTriggerCheckMetricsMaintenance(triggerID string, metrics map[string]int64) error {
+func (connector *DbConnector) SetTriggerCheckMaintenance(triggerID string, metrics map[string]int64, triggerMaintenance *int64) error {
 	c := connector.pool.Get()
 	defer c.Close()
 	var readingErr error
@@ -107,6 +107,9 @@ func (connector *DbConnector) SetTriggerCheckMetricsMaintenance(triggerID string
 				data.Maintenance = value
 				metricsCheck[metric] = data
 			}
+		}
+		if triggerMaintenance != nil {
+			lastCheck.Maintenance = *triggerMaintenance
 		}
 		newLastCheck, err := json.Marshal(lastCheck)
 		if err != nil {

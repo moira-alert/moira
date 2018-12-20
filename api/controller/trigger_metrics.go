@@ -16,7 +16,7 @@ import (
 // result, separated on main and additional targets metrics
 func GetTriggerEvaluationResult(dataBase moira.Database, remoteConfig *remote.Config,
 	from, to int64, triggerID string) (*checker.TriggerTimeSeries, *moira.Trigger, error) {
-	allowRealtimeAllerting := true
+	allowRealtimeAlerting := true
 	trigger, err := dataBase.GetTrigger(triggerID)
 	if err != nil {
 		return nil, nil, err
@@ -31,12 +31,12 @@ func GetTriggerEvaluationResult(dataBase moira.Database, remoteConfig *remote.Co
 	for i, tar := range trigger.Targets {
 		var timeSeries []*target.TimeSeries
 		if trigger.IsRemote {
-			timeSeries, err = remote.Fetch(remoteConfig, tar, from, to, allowRealtimeAllerting)
+			timeSeries, err = remote.Fetch(remoteConfig, tar, from, to, allowRealtimeAlerting)
 			if err != nil {
 				return nil, &trigger, err
 			}
 		} else {
-			result, err := target.EvaluateTarget(dataBase, tar, from, to, allowRealtimeAllerting)
+			result, err := target.EvaluateTarget(dataBase, tar, from, to, allowRealtimeAlerting)
 			if err != nil {
 				return nil, &trigger, err
 			}
