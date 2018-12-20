@@ -11,7 +11,7 @@ import (
 func TestInitialization(t *testing.T) {
 	Convey("Initialization methods", t, func() {
 		logger, _ := logging.ConfigureLog("stdout", "info", "test")
-		database := NewDatabase(logger, emptyConfig)
+		database := newTestDatabase(logger, emptyConfig)
 		So(database, ShouldNotBeEmpty)
 		_, err := database.pool.Dial()
 		So(err, ShouldNotBeNil)

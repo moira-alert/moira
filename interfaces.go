@@ -27,7 +27,7 @@ type Database interface {
 	SetTriggerLastCheck(triggerID string, checkData *CheckData, isRemote bool) error
 	RemoveTriggerLastCheck(triggerID string) error
 	GetTriggerCheckIDs(tags []string, onlyErrors bool) ([]string, error)
-	SetTriggerCheckMetricsMaintenance(triggerID string, metrics map[string]int64) error
+	SetTriggerCheckMaintenance(triggerID string, metrics map[string]int64, triggerMaintenance *int64) error
 
 	// Trigger storing
 	GetLocalTriggerIDs() ([]string, error)
@@ -146,7 +146,7 @@ type Logger interface {
 
 // Sender interface for implementing specified contact type sender
 type Sender interface {
-	SendEvents(events NotificationEvents, contact ContactData, trigger TriggerData, throttled bool) error
+	SendEvents(events NotificationEvents, contact ContactData, trigger TriggerData, plot []byte, throttled bool) error
 	Init(senderSettings map[string]string, logger Logger, location *time.Location, dateTimeFormat string) error
 }
 
@@ -155,7 +155,8 @@ type Searcher interface {
 	Start() error
 	Stop() error
 	IsReady() bool
-	SearchTriggers(filterTags []string, searchString string, onlyErrors bool, page int64, size int64) (triggerIDs []string, total int64, err error)
+	SearchTriggers(filterTags []string, searchString string, onlyErrors bool,
+		page int64, size int64) (triggerIDs []string, total int64, err error)
 }
 
 // PlotTheme is an interface to access plot theme styles
@@ -163,7 +164,7 @@ type PlotTheme interface {
 	GetTitleStyle() chart.Style
 	GetGridStyle() chart.Style
 	GetCanvasStyle() chart.Style
-	GetBackgroundStyle() chart.Style
+	GetBackgroundStyle(maxMarkLen int) chart.Style
 	GetThresholdStyle(thresholdType string) chart.Style
 	GetAnnotationStyle(thresholdType string) chart.Style
 	GetSerieStyles(curveInd int) (curveStyle, pointStyle chart.Style)

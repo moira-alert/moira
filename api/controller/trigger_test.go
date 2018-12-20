@@ -415,15 +415,58 @@ func TestSetMetricsMaintenance(t *testing.T) {
 	maintenance := make(map[string]int64)
 
 	Convey("Success", t, func() {
-		dataBase.EXPECT().SetTriggerCheckMetricsMaintenance(triggerID, maintenance).Return(nil)
+		errorMessage := api.WarningDeprecatedAPI(fmt.Sprintf("deprecated API, use /trigger/%s/setMaintenance instead", triggerID))
+		dataBase.EXPECT().SetTriggerCheckMaintenance(triggerID, maintenance, nil).Return(nil)
 		err := SetMetricsMaintenance(dataBase, triggerID, maintenance)
+		So(err, ShouldResemble, errorMessage)
+	})
+
+	Convey("Error", t, func() {
+		expected := fmt.Errorf("oooops! Error set")
+		dataBase.EXPECT().SetTriggerCheckMaintenance(triggerID, maintenance, nil).Return(expected)
+		err := SetMetricsMaintenance(dataBase, triggerID, maintenance)
+		So(err, ShouldResemble, api.ErrorInternalServer(expected))
+	})
+}
+
+func TestSetTriggerMaintenance(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	triggerID := uuid.NewV4().String()
+	metricsMaintenance := dto.MetricsMaintenance{
+		"Metric1": 12345,
+		"Metric2": 12346,
+	}
+	triggerMaintenance := dto.TriggerMaintenance{Metrics: map[string]int64(metricsMaintenance)}
+	var maintenanceTS int64 = 12347
+
+	Convey("Success setting metrics maintenance only", t, func() {
+		dataBase.EXPECT().SetTriggerCheckMaintenance(triggerID, triggerMaintenance.Metrics, triggerMaintenance.Trigger).Return(nil)
+		err := SetTriggerMaintenance(dataBase, triggerID, triggerMaintenance)
+		So(err, ShouldBeNil)
+	})
+
+	Convey("Success setting trigger maintenance only", t, func() {
+		triggerMaintenance.Trigger = &maintenanceTS
+		triggerMaintenance.Metrics = dto.MetricsMaintenance{}
+		dataBase.EXPECT().SetTriggerCheckMaintenance(triggerID, triggerMaintenance.Metrics, triggerMaintenance.Trigger).Return(nil)
+		err := SetTriggerMaintenance(dataBase, triggerID, triggerMaintenance)
+		So(err, ShouldBeNil)
+	})
+
+	Convey("Success setting metrics and trigger maintenance at once", t, func() {
+		triggerMaintenance.Trigger = &maintenanceTS
+		triggerMaintenance.Metrics = metricsMaintenance
+		dataBase.EXPECT().SetTriggerCheckMaintenance(triggerID, triggerMaintenance.Metrics, triggerMaintenance.Trigger).Return(nil)
+		err := SetTriggerMaintenance(dataBase, triggerID, triggerMaintenance)
 		So(err, ShouldBeNil)
 	})
 
 	Convey("Error", t, func() {
 		expected := fmt.Errorf("oooops! Error set")
-		dataBase.EXPECT().SetTriggerCheckMetricsMaintenance(triggerID, maintenance).Return(expected)
-		err := SetMetricsMaintenance(dataBase, triggerID, maintenance)
+		dataBase.EXPECT().SetTriggerCheckMaintenance(triggerID, triggerMaintenance.Metrics, triggerMaintenance.Trigger).Return(expected)
+		err := SetTriggerMaintenance(dataBase, triggerID, triggerMaintenance)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 	})
 }

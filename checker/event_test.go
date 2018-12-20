@@ -393,5 +393,117 @@ func TestCheckMetricStateSuppressedState(t *testing.T) {
 			So(actual, ShouldResemble, currentState)
 		})
 	})
+}
 
+func TestTriggerMaintenance(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	logger, _ := logging.GetLogger("Test")
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+
+	triggerChecker := TriggerChecker{
+		Logger:   logger,
+		Until:    67,
+		From:     17,
+		Database: dataBase,
+		trigger: &moira.Trigger{
+			ID:      "superId",
+			Targets: []string{"aliasByNode(super.*.metric, 0)"},
+		},
+		lastCheck: &moira.CheckData{
+			Maintenance: 1500,
+		},
+	}
+
+	lastMetricState := moira.MetricState{
+		Timestamp:      100,
+		EventTimestamp: 10,
+		State:          OK,
+	}
+	currentMetricState := moira.MetricState{
+		Timestamp: 1000,
+		State:     WARN,
+	}
+
+	lastTriggerState := moira.CheckData{
+		Maintenance:    1500,
+		Timestamp:      100,
+		EventTimestamp: 10,
+		Suppressed:     false,
+		State:          OK,
+	}
+
+	currentTriggerState := moira.CheckData{
+		Timestamp:  1000,
+		Suppressed: false,
+		State:      ERROR,
+	}
+
+	Convey("Test trigger maintenance work properly and we don't create events", t, func() {
+		Convey("Compare metric state", func() {
+
+			Convey("No need to send", func() {
+				actual, err := triggerChecker.compareMetricStates("m1", currentMetricState, lastMetricState)
+				currentMetricState.EventTimestamp = 1000
+				currentMetricState.Suppressed = true
+				currentMetricState.SuppressedState = OK
+				So(err, ShouldBeNil)
+				So(actual, ShouldResemble, currentMetricState)
+			})
+
+			Convey("Need to send", func() {
+				currentMetricState.Timestamp = 1600
+				dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
+					TriggerID: triggerChecker.TriggerID,
+					Timestamp: currentMetricState.Timestamp,
+					State:     WARN,
+					OldState:  OK,
+					Metric:    "m1",
+					Value:     currentMetricState.Value,
+				}, true).Return(nil)
+
+				actual, err := triggerChecker.compareMetricStates("m1", currentMetricState, lastMetricState)
+				currentMetricState.EventTimestamp = 1600
+				currentMetricState.Suppressed = false
+				currentMetricState.SuppressedState = ""
+				So(err, ShouldBeNil)
+				So(actual, ShouldResemble, currentMetricState)
+			})
+		})
+
+		Convey("Compare trigger state", func() {
+			triggerChecker.lastCheck = &lastTriggerState
+
+			Convey("No need to send", func() {
+				currentTriggerState.Maintenance = lastTriggerState.Maintenance
+				actual, err := triggerChecker.compareTriggerStates(currentTriggerState)
+				currentTriggerState.EventTimestamp = 1000
+				currentTriggerState.Suppressed = true
+				currentTriggerState.SuppressedState = OK
+				So(err, ShouldBeNil)
+				So(actual, ShouldResemble, currentTriggerState)
+			})
+
+			Convey("Need to send", func() {
+				currentTriggerState.Timestamp = 1600
+				emptyEvent := ""
+				dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
+					TriggerID:      triggerChecker.TriggerID,
+					Timestamp:      currentTriggerState.Timestamp,
+					State:          ERROR,
+					OldState:       OK,
+					Metric:         "",
+					Message:        &emptyEvent,
+					IsTriggerEvent: true,
+				}, true).Return(nil)
+
+				actual, err := triggerChecker.compareTriggerStates(currentTriggerState)
+				currentTriggerState.EventTimestamp = 1600
+				currentTriggerState.Suppressed = false
+				currentTriggerState.SuppressedState = ""
+				So(err, ShouldBeNil)
+				So(actual, ShouldResemble, currentTriggerState)
+			})
+		})
+	})
 }

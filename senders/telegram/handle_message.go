@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/tucnak/telebot"
+	"gopkg.in/tucnak/telebot.v2"
 )
 
 // handleMessage handles incoming messages to start sending events to subscribers chats

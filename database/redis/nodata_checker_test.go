@@ -11,7 +11,7 @@ import (
 
 func TestRenewNodataCheckerRegistration(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test")
-	dataBase := NewDatabase(logger, config)
+	dataBase := newTestDatabase(logger, config)
 	dataBase.flush()
 	defer dataBase.flush()
 

@@ -17,7 +17,7 @@ type plotCurve struct {
 }
 
 // getCurveSeriesList returns curve series list
-func getCurveSeriesList(metricsData []*types.MetricData, theme moira.PlotTheme, metricsWhitelist []string) []chart.TimeSeries {
+func getCurveSeriesList(metricsData []*types.MetricData, metricsWhitelist []string, theme moira.PlotTheme) []chart.TimeSeries {
 	curveSeriesList := make([]chart.TimeSeries, 0)
 	if len(metricsWhitelist) > 0 {
 		metricsProcessed := 0
@@ -76,7 +76,7 @@ func describePlotCurves(metricData *types.MetricData) []plotCurve {
 	for valInd := start; valInd < len(metricData.Values); valInd++ {
 		pointValue := metricData.Values[valInd]
 		if !math.IsNaN(pointValue) {
-			timeStampValue := int64ToTime(timeStamp)
+			timeStampValue := moira.Int64ToTime(timeStamp)
 			curves[curvesInd].timeStamps = append(curves[curvesInd].timeStamps, timeStampValue)
 			curves[curvesInd].values = append(curves[curvesInd].values, pointValue)
 		} else {

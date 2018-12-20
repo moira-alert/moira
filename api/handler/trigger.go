@@ -27,8 +27,10 @@ func trigger(router chi.Router) {
 		router.Delete("/", deleteThrottling)
 	})
 	router.Route("/metrics", triggerMetrics)
-	router.Put("/maintenance", setMetricsMaintenance)
+	router.Put("/setMaintenance", setTriggerMaintenance)
 	router.With(middleware.DateRange("-1hour", "now")).Get("/render", renderTrigger)
+	// deprecated
+	router.Put("/maintenance", setMetricsMaintenance)
 }
 
 func updateTrigger(writer http.ResponseWriter, request *http.Request) {
@@ -116,6 +118,7 @@ func deleteThrottling(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
+// ToDo: DEPRECATED, remove in future versions
 func setMetricsMaintenance(writer http.ResponseWriter, request *http.Request) {
 	triggerID := middleware.GetTriggerID(request)
 	metricsMaintenance := dto.MetricsMaintenance{}
@@ -124,6 +127,20 @@ func setMetricsMaintenance(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 	err := controller.SetMetricsMaintenance(database, triggerID, metricsMaintenance)
+	if err != nil {
+		render.Render(writer, request, err)
+	}
+}
+
+func setTriggerMaintenance(writer http.ResponseWriter, request *http.Request) {
+	triggerID := middleware.GetTriggerID(request)
+	triggerMaintenance := dto.TriggerMaintenance{}
+	if err := render.Bind(request, &triggerMaintenance); err != nil {
+		render.Render(writer, request, api.ErrorInvalidRequest(err))
+		return
+	}
+
+	err := controller.SetTriggerMaintenance(database, triggerID, triggerMaintenance)
 	if err != nil {
 		render.Render(writer, request, err)
 	}

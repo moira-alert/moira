@@ -1046,16 +1046,22 @@
 			"revisionTime": "2018-05-18T05:39:59Z"
 		},
 		{
+			"checksumSHA1": "W+UDF6H5I7spd9+8iXDbnFGKIo8=",
+			"path": "github.com/gorilla/websocket",
+			"revision": "ea4d1f681babbce9545c9c5f3d5194a789c89f5b",
+			"revisionTime": "2017-06-20T19:01:03Z"
+		},
+		{
 			"checksumSHA1": "MFb5D6fGctGxRoeYakh0Eo2BF+I=",
 			"path": "github.com/gosexy/to",
 			"revision": "c20e083e31230b84ffa23c5d2fb0bc55f5292681",
 			"revisionTime": "2014-12-21T20:36:44Z"
 		},
 		{
-			"checksumSHA1": "LjBAYU2hSInh1mHuEdWLG1QAusU=",
+			"checksumSHA1": "EQMQQQ9yjyhsXon3eNYcVqGtteg=",
 			"path": "github.com/gregdel/pushover",
-			"revision": "3c2e00dda05a0225e30f21659b7d9399278bf4a1",
-			"revisionTime": "2016-12-19T17:02:06Z"
+			"revision": "1e03358b8e7e921df70042289c6e9ae96f8d5484",
+			"revisionTime": "2018-02-08T23:07:17Z"
 		},
 		{
 			"checksumSHA1": "HtpYAWHvd9mq+mHkpo7z8PGzMik=",
@@ -1205,10 +1211,16 @@
 			"revisionTime": "2016-05-14T03:14:55Z"
 		},
 		{
-			"checksumSHA1": "SDdJQg0eCU2IfLSuUafSJwQPjh4=",
+			"checksumSHA1": "bYySBbBO3hKLmqlxoVBtIqKNA6c=",
 			"path": "github.com/nlopes/slack",
-			"revision": "ca8436d76f805ec1e682eaae2de3c3a9bc894b0f",
-			"revisionTime": "2017-07-01T16:13:22Z"
+			"revision": "38ac5e8c495bc1d4d299c6a14930376f32145eb8",
+			"revisionTime": "2018-11-18T08:39:49Z"
+		},
+		{
+			"checksumSHA1": "MH2aECaXQSW8yjgMJSXORiVY+h8=",
+			"path": "github.com/nlopes/slack/slackutilsx",
+			"revision": "38ac5e8c495bc1d4d299c6a14930376f32145eb8",
+			"revisionTime": "2018-11-18T08:39:49Z"
 		},
 		{
 			"checksumSHA1": "BoXdUBWB8UnSlFlbnuTQaPqfCGk=",
@@ -1466,10 +1478,10 @@
 			"revisionTime": "2018-09-12T22:15:30Z"
 		},
 		{
-			"checksumSHA1": "UnXXs5Evvuhy2Kj3liTlDYHTCDQ=",
-			"path": "github.com/tucnak/telebot",
-			"revision": "2cebf54e145e9a5733e1220ddce94e338b4f90ef",
-			"revisionTime": "2018-01-17T15:52:58Z"
+			"checksumSHA1": "ou3EAfzWYlAyzTMBY8OosNb7CIc=",
+			"path": "gopkg.in/tucnak/telebot.v2",
+			"revision": "4688194c178d4f933ed839e75765b1dace2eee46",
+			"revisionTime": "2018-11-15T15:09:21Z"
 		},
 		{
 			"checksumSHA1": "tsuv2oy9wMYxdV5YtgIHONPUiv0=",

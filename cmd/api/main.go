@@ -78,12 +78,15 @@ func main() {
 	}
 
 	databaseSettings := config.Redis.GetSettings()
-	database := redis.NewDatabase(logger, databaseSettings)
+	database := redis.NewDatabase(logger, databaseSettings, redis.API)
 
 	graphiteSettings := config.Graphite.GetSettings()
 	if err = metrics.Init(graphiteSettings, serviceName); err != nil {
 		logger.Error(err)
 	}
+
+	// configure carbon-api functions
+	functions.New(make(map[string]string))
 
 	// Start Index right before HTTP listener. Fail if index cannot start
 	searchIndex := index.NewSearchIndex(logger, database)
@@ -106,9 +109,6 @@ func main() {
 	if err != nil {
 		logger.Fatal(err)
 	}
-
-	// configure carbon-api functions
-	functions.New(make(map[string]string))
 
 	logger.Infof("Start listening by address: [%s]", apiConfig.Listen)
 

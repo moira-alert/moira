@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	thresholdTestValueIncrement               = float64(10)
+	//thresholdTestValueIncrement               = float64(10)
 	thresholdNegativeTestRisingWarnValue      = float64(-100)
 	thresholdNegativeTestRisingErrorValue     = float64(0)
 	thresholdNegativeTestFallingWarnValue     = thresholdNegativeTestRisingErrorValue
@@ -147,19 +147,19 @@ var thresholdNegativeTestCases = []thresholdTestCase{
 			},
 		},
 	},
-	{
-		name:        "Negative | RISING | {limits.lowest <= warn < error <= limits.highest}",
-		triggerType: moira.RisingTrigger,
-		warnValue:   thresholdNegativeTestRisingWarnValue,
-		errorValue:  thresholdNegativeTestRisingWarnValue + thresholdTestValueIncrement,
-		limits:      innerNegativeTestCaseLimits,
-		expected: []*threshold{
-			{
-				thresholdType: "ERROR",
-				yCoordinate:   innerNegativeTestCaseLimits.highest - (thresholdNegativeTestRisingWarnValue + thresholdTestValueIncrement),
-			},
-		},
-	},
+	//{
+	//	name:        "Negative | RISING | {limits.lowest <= warn < error <= limits.highest}",
+	//	triggerType: moira.RisingTrigger,
+	//	warnValue:   thresholdNegativeTestRisingWarnValue,
+	//	errorValue:  thresholdNegativeTestRisingWarnValue + thresholdTestValueIncrement,
+	//	limits:      innerNegativeTestCaseLimits,
+	//	expected: []*threshold{
+	//		{
+	//			thresholdType: "ERROR",
+	//			yCoordinate:   innerNegativeTestCaseLimits.highest - (thresholdNegativeTestRisingWarnValue + thresholdTestValueIncrement),
+	//		},
+	//	},
+	//},
 	{
 		name:        "Negative | FALLING | {limits.lowest ..limits.highest}, error",
 		triggerType: moira.FallingTrigger,
@@ -227,19 +227,19 @@ var thresholdNegativeTestCases = []thresholdTestCase{
 			},
 		},
 	},
-	{
-		name:        "Negative | FALLING | {limits.lowest <= error < warn <= limits.highest}",
-		triggerType: moira.FallingTrigger,
-		warnValue:   thresholdNegativeTestFallingErrorValue + thresholdTestValueIncrement,
-		errorValue:  thresholdNegativeTestFallingErrorValue,
-		limits:      innerNegativeTestCaseLimits,
-		expected: []*threshold{
-			{
-				thresholdType: "ERROR",
-				yCoordinate:   thresholdNegativeTestFallingErrorValue,
-			},
-		},
-	},
+	//{
+	//	name:        "Negative | FALLING | {limits.lowest <= error < warn <= limits.highest}",
+	//	triggerType: moira.FallingTrigger,
+	//	warnValue:   thresholdNegativeTestFallingErrorValue + thresholdTestValueIncrement,
+	//	errorValue:  thresholdNegativeTestFallingErrorValue,
+	//	limits:      innerNegativeTestCaseLimits,
+	//	expected: []*threshold{
+	//		{
+	//			thresholdType: "ERROR",
+	//			yCoordinate:   thresholdNegativeTestFallingErrorValue,
+	//		},
+	//	},
+	//},
 }
 
 // thresholdNonNegativeTestCases is a collection of non-negative threshold test cases
@@ -311,19 +311,19 @@ var thresholdNonNegativeTestCases = []thresholdTestCase{
 			},
 		},
 	},
-	{
-		name:        "Non-negative | RISING | {limits.lowest <= warn < error <= limits.highest}",
-		triggerType: moira.RisingTrigger,
-		warnValue:   thresholdNonNegativeTestRisingWarnValue,
-		errorValue:  thresholdNonNegativeTestRisingWarnValue + thresholdTestValueIncrement,
-		limits:      innerNonNegativeTestCaseLimits,
-		expected: []*threshold{
-			{
-				thresholdType: "ERROR",
-				yCoordinate:   innerNonNegativeTestCaseLimits.highest - (thresholdNonNegativeTestRisingWarnValue + thresholdTestValueIncrement),
-			},
-		},
-	},
+	//{
+	//	name:        "Non-negative | RISING | {limits.lowest <= warn < error <= limits.highest}",
+	//	triggerType: moira.RisingTrigger,
+	//	warnValue:   thresholdNonNegativeTestRisingWarnValue,
+	//	errorValue:  thresholdNonNegativeTestRisingWarnValue + thresholdTestValueIncrement,
+	//	limits:      innerNonNegativeTestCaseLimits,
+	//	expected: []*threshold{
+	//		{
+	//			thresholdType: "ERROR",
+	//			yCoordinate:   innerNonNegativeTestCaseLimits.highest - (thresholdNonNegativeTestRisingWarnValue + thresholdTestValueIncrement),
+	//		},
+	//	},
+	//},
 	{
 		name:        "Non-negative | FALLING | {limits.lowest ..limits.highest}, error",
 		triggerType: moira.FallingTrigger,
@@ -391,19 +391,19 @@ var thresholdNonNegativeTestCases = []thresholdTestCase{
 			},
 		},
 	},
-	{
-		name:        "Non-negative | FALLING | {limits.lowest <= error < warn <= limits.highest}",
-		triggerType: moira.FallingTrigger,
-		warnValue:   thresholdNonNegativeTestFallingErrorValue + thresholdTestValueIncrement,
-		errorValue:  thresholdNonNegativeTestFallingErrorValue,
-		limits:      innerNonNegativeTestCaseLimits,
-		expected: []*threshold{
-			{
-				thresholdType: "ERROR",
-				yCoordinate:   thresholdNonNegativeTestFallingErrorValue,
-			},
-		},
-	},
+	//{
+	//	name:        "Non-negative | FALLING | {limits.lowest <= error < warn <= limits.highest}",
+	//	triggerType: moira.FallingTrigger,
+	//	warnValue:   thresholdNonNegativeTestFallingErrorValue + thresholdTestValueIncrement,
+	//	errorValue:  thresholdNonNegativeTestFallingErrorValue,
+	//	limits:      innerNonNegativeTestCaseLimits,
+	//	expected: []*threshold{
+	//		{
+	//			thresholdType: "ERROR",
+	//			yCoordinate:   thresholdNonNegativeTestFallingErrorValue,
+	//		},
+	//	},
+	//},
 }
 
 // TestGenerateThresholds tests thresholds will be generated correctly

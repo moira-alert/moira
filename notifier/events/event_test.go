@@ -92,7 +92,7 @@ func TestEvent(t *testing.T) {
 		}
 		event2 := event
 		event2.SubscriptionID = &subID
-		scheduler.EXPECT().ScheduleNotification(gomock.Any(), event2, moira.TriggerData{}, contact, false, 0).Return(&notification)
+		scheduler.EXPECT().ScheduleNotification(gomock.Any(), event2, moira.TriggerData{}, contact, notification.Plotting, false, 0).Return(&notification)
 		dataBase.EXPECT().AddNotification(&notification)
 
 		err := worker.processEvent(event)
@@ -281,7 +281,7 @@ func TestAddNotification(t *testing.T) {
 		dataBase.EXPECT().GetTrigger(event.TriggerID).Return(trigger, nil)
 		dataBase.EXPECT().GetTagsSubscriptions(triggerData.Tags).Times(1).Return([]*moira.SubscriptionData{&subscription}, nil)
 		dataBase.EXPECT().GetContact(contact.ID).Times(1).Return(contact, nil)
-		scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, triggerData, contact, false, 0).Times(1).Return(&emptyNotification)
+		scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, triggerData, contact, emptyNotification.Plotting, false, 0).Times(1).Return(&emptyNotification)
 		dataBase.EXPECT().AddNotification(&emptyNotification).Times(1).Return(nil)
 
 		err := worker.processEvent(event)
@@ -319,8 +319,8 @@ func TestAddOneNotificationByTwoSubscriptionsWithSame(t *testing.T) {
 		dataBase.EXPECT().GetTagsSubscriptions(triggerData.Tags).Times(1).Return([]*moira.SubscriptionData{&subscription, &subscription4}, nil)
 		dataBase.EXPECT().GetContact(contact.ID).Times(2).Return(contact, nil)
 
-		scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, triggerData, contact, false, 0).Times(1).Return(&notification2)
-		scheduler.EXPECT().ScheduleNotification(gomock.Any(), event2, triggerData, contact, false, 0).Times(1).Return(&notification2)
+		scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, triggerData, contact, notification2.Plotting, false, 0).Times(1).Return(&notification2)
+		scheduler.EXPECT().ScheduleNotification(gomock.Any(), event2, triggerData, contact, notification2.Plotting, false, 0).Times(1).Return(&notification2)
 
 		dataBase.EXPECT().AddNotification(&notification2).Times(1).Return(nil)
 
@@ -496,7 +496,7 @@ func TestGoRoutine(t *testing.T) {
 		dataBase.EXPECT().GetTrigger(event.TriggerID).Times(1).Return(trigger, nil)
 		dataBase.EXPECT().GetTagsSubscriptions(triggerData.Tags).Times(1).Return([]*moira.SubscriptionData{&subscription}, nil)
 		dataBase.EXPECT().GetContact(contact.ID).Times(1).Return(contact, nil)
-		scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, triggerData, contact, false, 0).Times(1).Return(&emptyNotification)
+		scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, triggerData, contact, emptyNotification.Plotting, false, 0).Times(1).Return(&emptyNotification)
 		dataBase.EXPECT().AddNotification(&emptyNotification).Times(1).Return(nil).Do(func(f ...interface{}) { close(shutdown) })
 
 		worker.Start()
