@@ -25,6 +25,9 @@ var (
 // buildNotificationPackagePlot returns bytes slice containing package plot
 func (notifier *StandardNotifier) buildNotificationPackagePlot(pkg NotificationPackage) ([]byte, error) {
 	buff := bytes.NewBuffer(make([]byte, 0))
+	if !pkg.Plotting.Enabled {
+		return buff.Bytes(), nil
+	}
 	if pkg.Trigger.ID == "" {
 		return buff.Bytes(), nil
 	}
