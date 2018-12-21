@@ -73,6 +73,17 @@ func TestSanitizeLabelName(t *testing.T) {
 	})
 }
 
+// TestPercentsOfRange is a simple test of percentsOfRange method
+func TestPercentsOfRange(t *testing.T) {
+	Convey("Test nth percent is calculated correctly", t, func() {
+		for i := 0; i < 100; i++ {
+			actual := percentsOfRange(float64(0), float64(100), float64(i))
+			expected := i
+			So(actual, ShouldEqual, expected)
+		}
+	})
+}
+
 // TestTimeValueFormatter tests time.Time to formatted string converter
 func TestTimeValueFormatter(t *testing.T) {
 	dateTimeFormat, separator := "15:04", ":"
