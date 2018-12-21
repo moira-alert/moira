@@ -64,11 +64,12 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 
 	params := slack.PostMessageParameters{
 		Username: "Moira",
+		AsUser:   true,
 		IconURL:  icon,
 		Markdown: true,
 	}
 
-	_, threadTimestamp, err := api.PostMessage(contact.Value, slack.MsgOptionText(message.String(),
+	channelID, threadTimestamp, err := api.PostMessage(contact.Value, slack.MsgOptionText(message.String(),
 		false), slack.MsgOptionPostMessageParameters(params))
 	if err != nil {
 		return fmt.Errorf("Failed to send %s event message to slack [%s]: %s", trigger.ID, contact.Value, err.Error())
@@ -77,7 +78,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	if len(plot) > 0 {
 		reader := bytes.NewReader(plot)
 		uploadParameters := slack.FileUploadParameters{
-			Channels:        []string{contact.Value},
+			Channels:        []string{channelID},
 			ThreadTimestamp: threadTimestamp,
 			Reader:          reader,
 			Filetype:        "png",
