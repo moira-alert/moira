@@ -212,7 +212,7 @@ func TestToLimitedMetricsData(t *testing.T) {
 			So(len(metricsData), ShouldEqual, 0)
 		})
 	})
-	Convey("Limit series by non-empty whitelist", t, func() {
+	Convey("Limit series by an empty whitelist", t, func() {
 		metricsWhiteList := make([]string, 0)
 		metricsData := toLimitedMetricsData(givenSeries, metricsWhiteList)
 		for metricDataInd := range metricsData {
