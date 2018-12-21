@@ -77,8 +77,8 @@ func TestSanitizeLabelName(t *testing.T) {
 func TestPercentsOfRange(t *testing.T) {
 	Convey("Test nth percent is calculated correctly", t, func() {
 		for i := 0; i < 100; i++ {
-			actual := percentsOfRange(float64(0), float64(100), float64(i))
 			expected := i
+			actual := percentsOfRange(float64(0), float64(100), float64(i))
 			So(actual, ShouldEqual, expected)
 		}
 	})
