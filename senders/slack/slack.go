@@ -75,7 +75,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 		return fmt.Errorf("Failed to send %s event message to slack [%s]: %s", trigger.ID, contact.Value, err.Error())
 	}
 
-	if len(plot) > 0 {
+	if channelID != "" && len(plot) > 0 {
 		reader := bytes.NewReader(plot)
 		uploadParameters := slack.FileUploadParameters{
 			Channels:        []string{channelID},
