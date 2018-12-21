@@ -49,9 +49,11 @@ func GetPlotTemplate(theme string, location *time.Location) (*Plot, error) {
 func (plot *Plot) GetRenderable(trigger *moira.Trigger, metricsData []*types.MetricData, metricsWhitelist []string) (chart.Chart, error) {
 
 	plotSeries := make([]chart.Series, 0)
+
+	metricsData = toLimitedMetricsData(metricsData, metricsWhitelist)
 	limits := resolveLimits(metricsData)
 
-	curveSeriesList := getCurveSeriesList(metricsData, metricsWhitelist, plot.theme)
+	curveSeriesList := getCurveSeriesList(metricsData, plot.theme)
 	for _, curveSeries := range curveSeriesList {
 		plotSeries = append(plotSeries, curveSeries)
 	}

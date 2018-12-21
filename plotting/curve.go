@@ -17,28 +17,12 @@ type plotCurve struct {
 }
 
 // getCurveSeriesList returns curve series list
-func getCurveSeriesList(metricsData []*types.MetricData, metricsWhitelist []string, theme moira.PlotTheme) []chart.TimeSeries {
+func getCurveSeriesList(metricsData []*types.MetricData, theme moira.PlotTheme) []chart.TimeSeries {
 	curveSeriesList := make([]chart.TimeSeries, 0)
-	if len(metricsWhitelist) > 0 {
-		metricsProcessed := 0
-		for metricDataInd := range metricsData {
-			if !mustBeShown(metricsData[metricDataInd].Name, metricsWhitelist) {
-				continue
-			}
-			curveStyle, pointStyle := theme.GetSerieStyles(metricDataInd)
-			curveSeries := generatePlotCurves(metricsData[metricDataInd], curveStyle, pointStyle)
-			curveSeriesList = append(curveSeriesList, curveSeries...)
-			metricsProcessed++
-			if metricsProcessed == len(metricsWhitelist)-1 {
-				break
-			}
-		}
-	} else {
-		for metricDataInd := range metricsData {
-			curveStyle, pointStyle := theme.GetSerieStyles(metricDataInd)
-			curveSeries := generatePlotCurves(metricsData[metricDataInd], curveStyle, pointStyle)
-			curveSeriesList = append(curveSeriesList, curveSeries...)
-		}
+	for metricDataInd := range metricsData {
+		curveStyle, pointStyle := theme.GetSerieStyles(metricDataInd)
+		curveSeries := generatePlotCurves(metricsData[metricDataInd], curveStyle, pointStyle)
+		curveSeriesList = append(curveSeriesList, curveSeries...)
 	}
 	return curveSeriesList
 }
@@ -103,14 +87,4 @@ func resolveFirstPoint(metricData *types.MetricData) (int, int64) {
 		}
 	}
 	return start, startTime
-}
-
-// mustBeShown returns true if metric must be shown
-func mustBeShown(metricName string, metricsToShow []string) bool {
-	for _, metricToShow := range metricsToShow {
-		if metricToShow == metricName {
-			return true
-		}
-	}
-	return false
 }

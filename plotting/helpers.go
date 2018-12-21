@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/dustin/go-humanize"
+	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/wcharczuk/go-chart"
 )
 
@@ -91,4 +92,28 @@ func floatToHumanizedValueFormatter(v interface{}) string {
 		return fmt.Sprintf("%.2f %s", humanized, strings.ToUpper(postfix))
 	}
 	return ""
+}
+
+// toLimitedMetricsData returns MetricData limited by whitelist
+func toLimitedMetricsData(metricsData []*types.MetricData, metricsWhitelist []string) []*types.MetricData {
+	if len(metricsWhitelist) == 0 {
+		return metricsData
+	}
+	newMetricsData := make([]*types.MetricData, 0, len(metricsWhitelist))
+	for _, metricData := range metricsData {
+		if isWhiteListedMetric(metricData.Name, metricsWhitelist) {
+			newMetricsData = append(newMetricsData, metricData)
+		}
+	}
+	return newMetricsData
+}
+
+// isWhiteListedMetric returns true if metric is whitelisted
+func isWhiteListedMetric(metricName string, metricsWhitelist []string) bool {
+	for _, whiteListed := range metricsWhitelist {
+		if whiteListed == metricName {
+			return true
+		}
+	}
+	return false
 }
