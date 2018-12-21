@@ -198,10 +198,6 @@ func TestToLimitedMetricsData(t *testing.T) {
 		types.MakeMetricData("metricPrefix.metricName2", []float64{2}, 2, 2),
 		types.MakeMetricData("metricPrefix.metricName3", []float64{3}, 3, 3),
 	}
-	metricsData := make([]*types.MetricData, 0, len(givenSeries))
-	for _, metricData := range givenSeries {
-		metricsData = append(metricsData, metricData)
-	}
 	Convey("Limit series by non-empty whitelist", t, func() {
 		Convey("MetricsData has necessary series", func() {
 			metricsWhiteList := []string{"metricPrefix.metricName1", "metricPrefix.metricName2"}
