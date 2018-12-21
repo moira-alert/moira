@@ -15,9 +15,10 @@ const (
 	// defaultRangeDelta is an additional value to
 	// cover cases with equal highest/lowest limits values
 	defaultRangeDelta = 10
-	// defaultYAxisIncrement is default additional increment
-	// used only in plot-prettifying purposes
-	defaultYAxisIncrement = 10
+	// defaultYAxisRangePercent is a default percent value to
+	// generate plotLimits lowest/highest additional increment
+	// used in plot-prettifying purposes only
+	defaultYAxisRangePercent = 10
 )
 
 // plotLimits is a set of limits for given metricsData
@@ -47,7 +48,7 @@ func resolveLimits(metricsData []*types.MetricData) plotLimits {
 		highest = highest + (defaultRangeDelta / 2)
 		lowest = lowest - (defaultRangeDelta / 2)
 	}
-	yAxisIncrement := percentsOfRange(lowest, highest, defaultYAxisIncrement)
+	yAxisIncrement := percentsOfRange(lowest, highest, defaultYAxisRangePercent)
 	if highest > 0 {
 		highest = highest + yAxisIncrement
 	}

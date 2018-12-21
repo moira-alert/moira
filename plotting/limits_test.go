@@ -43,7 +43,7 @@ func TestResolveLimits(t *testing.T) {
 	Convey("Resolve limits for collection of random MetricDatas", t, func() {
 		expectedFrom := moira.Int64ToTime(int64(startTime))
 		expectedTo := expectedFrom.Add(time.Duration(elementsToUse) * time.Minute)
-		expectedIncrement := percentsOfRange(float64(minValue), float64(maxValue), defaultYAxisIncrement)
+		expectedIncrement := percentsOfRange(float64(minValue), float64(maxValue), defaultYAxisRangePercent)
 		expectedLowest := float64(minValue) - expectedIncrement
 		expectedHighest := float64(maxValue) + expectedIncrement
 		limits := resolveLimits(metricsData)
