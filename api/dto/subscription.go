@@ -82,8 +82,11 @@ func (subscription *Subscription) checkContacts(request *http.Request) error {
 		if err != nil {
 			return SubscriptionHasAnotherUserContact{}
 		}
-		anotherUserNames := make([]string, len(anotherUserContactIds))
+		anotherUserNames := make([]string, 0)
 		for _, contact := range contacts {
+			if contact == nil {
+				continue
+			}
 			anotherUserNames = append(anotherUserNames, contact.Value)
 		}
 		return SubscriptionHasAnotherUserContact{contactNames: anotherUserNames}
