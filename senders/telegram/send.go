@@ -76,7 +76,7 @@ func (sender *Sender) talk(username, message string, plot []byte) error {
 		photo := telebot.Photo{File: telebot.FromReader(bytes.NewReader(plot))}
 		_, err = photo.Send(sender.bot, chat, &telebot.SendOptions{ReplyTo: postedMessage})
 		if err != nil {
-			return fmt.Errorf("can't send event plot to %s: %s", uid, err.Error())
+			sender.logger.Errorf("can't send event plot to %s: %s", uid, err.Error())
 		}
 	}
 	return nil
