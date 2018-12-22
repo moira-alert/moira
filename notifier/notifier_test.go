@@ -37,8 +37,8 @@ func TestGetMetricNames(t *testing.T) {
 		So(actual, ShouldResemble, expected)
 	})
 	Convey("Test empty notification package", t, func() {
-		notificationsPackage = NotificationPackage{}
-		actual := notificationsPackage.GetMetricNames()
+		emptyNotificationPackage := NotificationPackage{}
+		actual := emptyNotificationPackage.GetMetricNames()
 		So(actual, ShouldResemble, make([]string, 0))
 	})
 }
@@ -51,8 +51,8 @@ func TestGetWindow(t *testing.T) {
 		So(to, ShouldEqual, 79)
 	})
 	Convey("Test empty notification package", t, func() {
-		notificationsPackage = NotificationPackage{}
-		_, _, err := notificationsPackage.GetWindow()
+		emptyNotificationPackage := NotificationPackage{}
+		_, _, err := emptyNotificationPackage.GetWindow()
 		So(err, ShouldResemble, fmt.Errorf("not enough data to resolve package window"))
 	})
 }
