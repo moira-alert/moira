@@ -2,16 +2,18 @@ package notifier
 
 import (
 	"fmt"
+	"sync"
+	"testing"
+	"time"
+
 	"github.com/golang/mock/gomock"
+	"github.com/op/go-logging"
+	. "github.com/smartystreets/goconvey/convey"
+
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
 	"github.com/moira-alert/moira/mock/moira-alert"
 	"github.com/moira-alert/moira/mock/scheduler"
-	"github.com/op/go-logging"
-	. "github.com/smartystreets/goconvey/convey"
-	"sync"
-	"testing"
-	"time"
 )
 
 var (
@@ -27,6 +29,33 @@ var (
 	dataBase  *mock_moira_alert.MockDatabase
 	logger    moira.Logger
 )
+
+func TestGetMetricNames(t *testing.T) {
+	Convey("Test non-empty notification package", t, func() {
+		actual := notificationsPackage.GetMetricNames()
+		expected := []string{"metricName1", "metricName2", "metricName3", "metricName4", "metricName5"}
+		So(actual, ShouldResemble, expected)
+	})
+	Convey("Test empty notification package", t, func() {
+		notificationsPackage = NotificationPackage{}
+		actual := notificationsPackage.GetMetricNames()
+		So(actual, ShouldResemble, make([]string, 0))
+	})
+}
+
+func TestGetWindow(t *testing.T) {
+	Convey("Test non-empty notification package", t, func() {
+		from, to, err := notificationsPackage.GetWindow()
+		So(err, ShouldBeNil)
+		So(from, ShouldEqual, 10)
+		So(to, ShouldEqual, 79)
+	})
+	Convey("Test empty notification package", t, func() {
+		notificationsPackage = NotificationPackage{}
+		_, _, err := notificationsPackage.GetWindow()
+		So(err, ShouldResemble, fmt.Errorf("not enough data to resolve package window"))
+	})
+}
 
 func TestUnknownContactType(t *testing.T) {
 	configureNotifier(t)
@@ -163,4 +192,14 @@ var event = moira.NotificationEvent{
 	OldState:       "WARN",
 	TriggerID:      "triggerID-0000000000001",
 	SubscriptionID: &subID,
+}
+
+var notificationsPackage = NotificationPackage{
+	Events: []moira.NotificationEvent{
+		{Metric: "metricName1", Timestamp: 15},
+		{Metric: "metricName2", Timestamp: 10},
+		{Metric: "metricName3", Timestamp: 31},
+		{Metric: "metricName4", Timestamp: 79},
+		{Metric: "metricName5", Timestamp: 10},
+	},
 }

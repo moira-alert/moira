@@ -13,6 +13,7 @@ import (
 	"github.com/moira-alert/moira/plotting"
 	"github.com/moira-alert/moira/remote"
 	"github.com/moira-alert/moira/target"
+	"fmt"
 )
 
 var (
@@ -21,6 +22,17 @@ var (
 	// defaultTimeRange is default time range to fetch timeseries
 	defaultTimeRange = 30 * time.Minute
 )
+
+// ErrFetchAvailableSeriesFailed is used in cases when fetchAvailableSeries failed after retry
+type ErrFetchAvailableSeriesFailed struct {
+	realtimeErr string
+	storedErr   string
+}
+
+// Error is implementation of golang error interface for ErrFetchAvailableSeriesFailed struct
+func (err ErrFetchAvailableSeriesFailed) Error() string {
+	return fmt.Sprintf("Failed to fetch both realtime and stored data: [realtime]: %s, [stored]: %s", err.realtimeErr, err.storedErr)
+}
 
 // buildNotificationPackagePlot returns bytes slice containing package plot
 func (notifier *StandardNotifier) buildNotificationPackagePlot(pkg NotificationPackage) ([]byte, error) {
@@ -106,7 +118,6 @@ func evaluateTriggerMetrics(database moira.Database, remoteCfg *remote.Config, f
 
 // getTriggerEvaluationResult returns trigger metrics from chosen data source
 func getTriggerEvaluationResult(dataBase moira.Database, remoteConfig *remote.Config, from, to int64, triggerID string) (*checker.TriggerTimeSeries, *moira.Trigger, error) {
-	allowRealtimeAlerting := true
 	trigger, err := dataBase.GetTrigger(triggerID)
 	if err != nil {
 		return nil, nil, err
@@ -119,18 +130,9 @@ func getTriggerEvaluationResult(dataBase moira.Database, remoteConfig *remote.Co
 		return nil, &trigger, remote.ErrRemoteStorageDisabled
 	}
 	for i, tar := range trigger.Targets {
-		var timeSeries []*target.TimeSeries
-		if trigger.IsRemote {
-			timeSeries, err = remote.Fetch(remoteConfig, tar, from, to, allowRealtimeAlerting)
-			if err != nil {
-				return nil, &trigger, err
-			}
-		} else {
-			result, err := target.EvaluateTarget(dataBase, tar, from, to, allowRealtimeAlerting)
-			if err != nil {
-				return nil, &trigger, err
-			}
-			timeSeries = result.TimeSeries
+		timeSeries, err := fetchAvailableSeries(dataBase, remoteConfig, trigger.IsRemote, tar, from, to)
+		if err != nil {
+			return nil, &trigger, err
 		}
 		if i == 0 {
 			triggerMetrics.Main = timeSeries
@@ -139,4 +141,30 @@ func getTriggerEvaluationResult(dataBase moira.Database, remoteConfig *remote.Co
 		}
 	}
 	return triggerMetrics, &trigger, nil
+}
+
+// fetchAvailableSeries calls fetch function with realtime alerting and retries on fail without
+func fetchAvailableSeries(database moira.Database, remoteCfg *remote.Config, isRemote bool, tar string, from, to int64) ([]*target.TimeSeries, error) {
+	var err error
+	allowRealtimeAlerting := true
+	if isRemote {
+		timeSeries, realtimeErr := remote.Fetch(remoteCfg, tar, from, to, allowRealtimeAlerting)
+		if realtimeErr != nil {
+			allowRealtimeAlerting = false
+			timeSeries, err = remote.Fetch(remoteCfg, tar, from, to, allowRealtimeAlerting)
+			if err != nil {
+				return nil, ErrFetchAvailableSeriesFailed{realtimeErr:realtimeErr.Error(), storedErr:err.Error()}
+			}
+		}
+		return timeSeries, nil
+	}
+	result, realtimeErr := target.EvaluateTarget(database, tar, from, to, allowRealtimeAlerting)
+	if realtimeErr != nil {
+		allowRealtimeAlerting = false
+		result, err = target.EvaluateTarget(database, tar, from, to, allowRealtimeAlerting)
+		if err != nil {
+			return nil, ErrFetchAvailableSeriesFailed{realtimeErr:realtimeErr.Error(), storedErr:err.Error()}
+		}
+	}
+	return result.TimeSeries, nil
 }

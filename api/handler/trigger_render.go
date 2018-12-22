@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+	"strconv"
 
 	"github.com/go-chi/render"
 	"github.com/go-graphite/carbonapi/date"
@@ -19,12 +20,12 @@ import (
 )
 
 func renderTrigger(writer http.ResponseWriter, request *http.Request) {
-	remoteCfg, from, to, triggerID, err := getEvaluationParameters(request)
+	remoteCfg, from, to, triggerID, fetchRealtimeData, err := getEvaluationParameters(request)
 	if err != nil {
 		render.Render(writer, request, api.ErrorInvalidRequest(err))
 		return
 	}
-	metricsData, trigger, err := evaluateTriggerMetrics(remoteCfg, from, to, triggerID)
+	metricsData, trigger, err := evaluateTriggerMetrics(remoteCfg, from, to, triggerID, fetchRealtimeData)
 	if err != nil {
 		render.Render(writer, request, api.ErrorInternalServer(err))
 		return
@@ -41,24 +42,32 @@ func renderTrigger(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func getEvaluationParameters(request *http.Request) (remoteCfg *remote.Config, from int64, to int64, triggerID string, err error) {
+func getEvaluationParameters(request *http.Request) (remoteCfg *remote.Config, from int64, to int64, triggerID string, fetchRealtimeData bool, err error) {
 	remoteCfg = middleware.GetRemoteConfig(request)
 	triggerID = middleware.GetTriggerID(request)
 	fromStr := middleware.GetFromStr(request)
 	toStr := middleware.GetToStr(request)
 	from = date.DateParamToEpoch(fromStr, "UTC", 0, time.UTC)
 	if from == 0 {
-		return remoteCfg, 0, 0, "", fmt.Errorf("can not parse from: %s", fromStr)
+		return remoteCfg, 0, 0, "", false, fmt.Errorf("can not parse from: %s", fromStr)
 	}
 	to = date.DateParamToEpoch(toStr, "UTC", 0, time.UTC)
 	if to == 0 {
-		return remoteCfg, 0, 0, "", fmt.Errorf("can not parse to: %s", fromStr)
+		return remoteCfg, 0, 0, "", false, fmt.Errorf("can not parse to: %s", fromStr)
+	}
+	realtime := request.URL.Query().Get("realtime")
+	if realtime == "" {
+		return
+	}
+	fetchRealtimeData, err = strconv.ParseBool(realtime)
+	if err != nil {
+		return remoteCfg, 0, 0, "", false, fmt.Errorf("invalid realtime param: %s", err.Error())
 	}
 	return
 }
 
-func evaluateTriggerMetrics(remoteCfg *remote.Config, from, to int64, triggerID string) ([]*types.MetricData, *moira.Trigger, error) {
-	tts, trigger, err := controller.GetTriggerEvaluationResult(database, remoteCfg, from, to, triggerID)
+func evaluateTriggerMetrics(remoteCfg *remote.Config, from, to int64, triggerID string, fetchRealtimeData bool) ([]*types.MetricData, *moira.Trigger, error) {
+	tts, trigger, err := controller.GetTriggerEvaluationResult(database, remoteCfg, from, to, triggerID, fetchRealtimeData)
 	if err != nil {
 		return nil, trigger, err
 	}
