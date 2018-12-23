@@ -10,14 +10,14 @@ import (
 	"github.com/moira-alert/moira/api/middleware"
 )
 
-// UserNotPermittedToUseContactsError used when user try to save subscription with another users contacts
-type UserNotPermittedToUseContactsError struct {
+// ErrProvidedContactsForbidden used when user try to save subscription with another users contacts
+type ErrProvidedContactsForbidden struct {
 	contactIds   []string
 	contactNames []string
 }
 
-// Error is implementation of golang error interface for UserNotPermittedToUseContactsError struct
-func (err UserNotPermittedToUseContactsError) Error() string {
+// Error is implementation of golang error interface for ErrProvidedContactsForbidden struct
+func (err ErrProvidedContactsForbidden) Error() string {
 	if len(err.contactNames) == 1 {
 		return fmt.Sprintf("user not permitted to use contact '%s'", err.contactNames[0])
 	}
@@ -80,7 +80,7 @@ func (subscription *Subscription) checkContacts(request *http.Request) error {
 	if len(anotherUserContactIds) > 0 {
 		contacts, err := database.GetContacts(anotherUserContactIds)
 		if err != nil {
-			return UserNotPermittedToUseContactsError{contactIds: anotherUserContactIds}
+			return ErrProvidedContactsForbidden{contactIds: anotherUserContactIds}
 		}
 		anotherUserNames := make([]string, 0)
 		anotherContactIds := make([]string, 0)
@@ -91,7 +91,7 @@ func (subscription *Subscription) checkContacts(request *http.Request) error {
 				anotherUserNames = append(anotherUserNames, contact.Value)
 			}
 		}
-		return UserNotPermittedToUseContactsError{
+		return ErrProvidedContactsForbidden{
 			contactNames: anotherUserNames,
 			contactIds:   anotherUserContactIds,
 		}
