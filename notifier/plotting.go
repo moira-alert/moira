@@ -23,14 +23,14 @@ var (
 	defaultTimeRange = 30 * time.Minute
 )
 
-// ErrFetchAvailableSeriesFailed is used in cases when fetchAvailableSeries failed after retry
-type ErrFetchAvailableSeriesFailed struct {
+// errFetchAvailableSeriesFailed is used in cases when fetchAvailableSeries failed after retry
+type errFetchAvailableSeriesFailed struct {
 	realtimeErr string
 	storedErr   string
 }
 
-// Error is implementation of golang error interface for ErrFetchAvailableSeriesFailed struct
-func (err ErrFetchAvailableSeriesFailed) Error() string {
+// Error is implementation of golang error interface for errFetchAvailableSeriesFailed struct
+func (err errFetchAvailableSeriesFailed) Error() string {
 	return fmt.Sprintf("Failed to fetch both realtime and stored data: [realtime]: %s, [stored]: %s", err.realtimeErr, err.storedErr)
 }
 
@@ -146,25 +146,16 @@ func getTriggerEvaluationResult(dataBase moira.Database, remoteConfig *remote.Co
 // fetchAvailableSeries calls fetch function with realtime alerting and retries on fail without
 func fetchAvailableSeries(database moira.Database, remoteCfg *remote.Config, isRemote bool, tar string, from, to int64) ([]*target.TimeSeries, error) {
 	var err error
-	allowRealtimeAlerting := true
 	if isRemote {
-		timeSeries, realtimeErr := remote.Fetch(remoteCfg, tar, from, to, allowRealtimeAlerting)
-		if realtimeErr != nil {
-			allowRealtimeAlerting = false
-			timeSeries, err = remote.Fetch(remoteCfg, tar, from, to, allowRealtimeAlerting)
-			if err != nil {
-				return nil, ErrFetchAvailableSeriesFailed{realtimeErr:realtimeErr.Error(), storedErr:err.Error()}
-			}
-		}
-		return timeSeries, nil
+		return remote.Fetch(remoteCfg, tar, from, to, true)
 	}
-	result, realtimeErr := target.EvaluateTarget(database, tar, from, to, allowRealtimeAlerting)
-	if realtimeErr != nil {
-		allowRealtimeAlerting = false
-		result, err = target.EvaluateTarget(database, tar, from, to, allowRealtimeAlerting)
+	result, realtimeErr := target.EvaluateTarget(database, tar, from, to, true)
+	switch realtimeErr.(type) {
+	case target.ErrEvalExprFailedWithPanic:
+		result, err = target.EvaluateTarget(database, tar, from, to, false)
 		if err != nil {
-			return nil, ErrFetchAvailableSeriesFailed{realtimeErr:realtimeErr.Error(), storedErr:err.Error()}
+			return nil, errFetchAvailableSeriesFailed{realtimeErr:realtimeErr.Error(), storedErr:err.Error()}
 		}
 	}
-	return result.TimeSeries, nil
+	return result.TimeSeries, err
 }

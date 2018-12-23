@@ -11,6 +11,18 @@ import (
 	"github.com/moira-alert/moira"
 )
 
+// ErrEvalExprFailedWithPanic used to identify occurred error as a result of recover from panic
+type ErrEvalExprFailedWithPanic struct {
+	target         string
+	recoverMessage interface{}
+	stackRecord    []byte
+}
+
+// Error is implementation of golang error interface for ErrEvalExprFailedWithPanic struct
+func(err ErrEvalExprFailedWithPanic) Error() string {
+	return fmt.Sprintf("panic while evaluate target %s: message: '%s' stack: %s", err.target, err.recoverMessage, err.stackRecord)
+}
+
 // EvaluationResult represents evaluation target result and contains TimeSeries list, Pattern list and metric lists appropriate to given target
 type EvaluationResult struct {
 	TimeSeries []*TimeSeries
@@ -53,7 +65,7 @@ func EvaluateTarget(database moira.Database, target string, from int64, until in
 				defer func() {
 					if r := recover(); r != nil {
 						result = nil
-						err = fmt.Errorf("panic while evaluate target %s: message: '%s' stack: %s", target, r, debug.Stack())
+						err = ErrEvalExprFailedWithPanic{target: target, recoverMessage: r, stackRecord: debug.Stack()}
 					}
 				}()
 				result, err = expr.EvalExpr(expr2, from, until, metricsMap)
