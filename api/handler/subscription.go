@@ -75,7 +75,7 @@ func updateSubscription(writer http.ResponseWriter, request *http.Request) {
 	subscription := &dto.Subscription{}
 	if err := render.Bind(request, subscription); err != nil {
 		switch err.(type) {
-		case dto.SubscriptionHasAnotherUserContact:
+		case dto.ErrProvidedContactsForbidden:
 			render.Render(writer, request, api.ErrorForbidden(err.Error()))
 		default:
 			render.Render(writer, request, api.ErrorInvalidRequest(err))

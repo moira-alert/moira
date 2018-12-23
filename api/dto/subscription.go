@@ -2,35 +2,35 @@
 package dto
 
 import (
-	"bytes"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api/middleware"
 )
 
-// SubscriptionHasAnotherUserContact used when user try to save subscription with another users contacts
-type SubscriptionHasAnotherUserContact struct {
+// ErrProvidedContactsForbidden used when user try to save subscription with another users contacts
+type ErrProvidedContactsForbidden struct {
+	contactIds   []string
 	contactNames []string
 }
 
-// Error is implementation of golang error interface for SubscriptionHasAnotherUserContact struct
-func (err SubscriptionHasAnotherUserContact) Error() string {
-	if len(err.contactNames) == 0 {
-		return fmt.Sprintf("user has not one of subscription contacts")
-	}
+// Error is implementation of golang error interface for ErrProvidedContactsForbidden struct
+func (err ErrProvidedContactsForbidden) Error() string {
 	if len(err.contactNames) == 1 {
-		return fmt.Sprintf("user has not contact '%s'", err.contactNames[0])
+		return fmt.Sprintf("user not permitted to use contact '%s'", err.contactNames[0])
 	}
-	errBuffer := bytes.NewBuffer([]byte("user has not contacts: "))
-	for idx, contactName := range err.contactNames {
-		errBuffer.WriteString(fmt.Sprintf("'%s'", contactName))
-		if idx != len(err.contactNames) {
-			errBuffer.WriteString(", ")
-		}
+	if len(err.contactNames) > 1 {
+		return fmt.Sprintf("user not permitted to use following contacts: %s", strings.Join(err.contactNames, ", "))
 	}
-	return errBuffer.String()
+	if len(err.contactIds) == 1 {
+		return fmt.Sprintf("failed to identify the ownership of the contact id '%s'", err.contactIds[0])
+	}
+	if len(err.contactIds) > 1 {
+		return fmt.Sprintf("failed to identify the ownership of the following contact ids: '%s'", strings.Join(err.contactIds, ", "))
+	}
+	return "failed to identify the ownership of requested contacts"
 }
 
 type SubscriptionList struct {
@@ -80,13 +80,21 @@ func (subscription *Subscription) checkContacts(request *http.Request) error {
 	if len(anotherUserContactIds) > 0 {
 		contacts, err := database.GetContacts(anotherUserContactIds)
 		if err != nil {
-			return SubscriptionHasAnotherUserContact{}
+			return ErrProvidedContactsForbidden{contactIds: anotherUserContactIds}
 		}
-		anotherUserNames := make([]string, len(anotherUserContactIds))
-		for _, contact := range contacts {
-			anotherUserNames = append(anotherUserNames, contact.Value)
+		anotherUserNames := make([]string, 0)
+		anotherContactIds := make([]string, 0)
+		for i, contact := range contacts {
+			if contact == nil {
+				anotherContactIds = append(anotherContactIds, anotherUserContactIds[i])
+			} else {
+				anotherUserNames = append(anotherUserNames, contact.Value)
+			}
 		}
-		return SubscriptionHasAnotherUserContact{contactNames: anotherUserNames}
+		return ErrProvidedContactsForbidden{
+			contactNames: anotherUserNames,
+			contactIds:   anotherUserContactIds,
+		}
 	}
 	return nil
 }
