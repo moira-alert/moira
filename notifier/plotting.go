@@ -157,5 +157,5 @@ func fetchAvailableSeries(database moira.Database, remoteCfg *remote.Config, isR
 			return nil, errFetchAvailableSeriesFailed{realtimeErr:realtimeErr.Error(), storedErr:err.Error()}
 		}
 	}
-	return result.TimeSeries, err
+	return result.TimeSeries, realtimeErr
 }
