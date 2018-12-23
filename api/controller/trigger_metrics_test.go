@@ -308,7 +308,7 @@ func TestGetTriggerMetrics(t *testing.T) {
 		dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
 		triggerMetrics, err := GetTriggerMetrics(dataBase, remoteCfg, from, until, triggerID)
 		So(err, ShouldBeNil)
-		So(*triggerMetrics, ShouldResemble, dto.TriggerMetrics{Main: map[string][]*moira.MetricValue{metric: {{Value: 0, Timestamp: 17}, {Value: 1, Timestamp: 27}, {Value: 2, Timestamp: 37}, {Value: 3, Timestamp: 47}, {Value: 4, Timestamp: 57}}}, Additional: make(map[string][]*moira.MetricValue)})
+		So(*triggerMetrics, ShouldResemble, dto.TriggerMetrics{Main: map[string][]*moira.MetricValue{metric: {{Value: 0, Timestamp: 17}, {Value: 1, Timestamp: 27}, {Value: 2, Timestamp: 37}, {Value: 3, Timestamp: 47}}}, Additional: make(map[string][]*moira.MetricValue)})
 	})
 
 	Convey("GetTrigger error", t, func() {

@@ -15,8 +15,7 @@ import (
 // GetTriggerEvaluationResult evaluates every target in trigger and returns
 // result, separated on main and additional targets metrics
 func GetTriggerEvaluationResult(dataBase moira.Database, remoteConfig *remote.Config,
-	from, to int64, triggerID string) (*checker.TriggerTimeSeries, *moira.Trigger, error) {
-	allowRealtimeAlerting := true
+	from, to int64, triggerID string, fetchRealtimeData bool) (*checker.TriggerTimeSeries, *moira.Trigger, error) {
 	trigger, err := dataBase.GetTrigger(triggerID)
 	if err != nil {
 		return nil, nil, err
@@ -31,12 +30,12 @@ func GetTriggerEvaluationResult(dataBase moira.Database, remoteConfig *remote.Co
 	for i, tar := range trigger.Targets {
 		var timeSeries []*target.TimeSeries
 		if trigger.IsRemote {
-			timeSeries, err = remote.Fetch(remoteConfig, tar, from, to, allowRealtimeAlerting)
+			timeSeries, err = remote.Fetch(remoteConfig, tar, from, to, fetchRealtimeData)
 			if err != nil {
 				return nil, &trigger, err
 			}
 		} else {
-			result, err := target.EvaluateTarget(dataBase, tar, from, to, allowRealtimeAlerting)
+			result, err := target.EvaluateTarget(dataBase, tar, from, to, fetchRealtimeData)
 			if err != nil {
 				return nil, &trigger, err
 			}
@@ -65,7 +64,7 @@ func DeleteTriggerNodataMetrics(dataBase moira.Database, triggerID string) *api.
 // GetTriggerMetrics gets all trigger metrics values, default values from: now - 10min, to: now
 func GetTriggerMetrics(dataBase moira.Database, remoteConfig *remote.Config,
 	from, to int64, triggerID string) (*dto.TriggerMetrics, *api.ErrorResponse) {
-	tts, _, err := GetTriggerEvaluationResult(dataBase, remoteConfig, from, to, triggerID)
+	tts, _, err := GetTriggerEvaluationResult(dataBase, remoteConfig, from, to, triggerID, false)
 	if err != nil {
 		if err == database.ErrNil {
 			return nil, api.ErrorInvalidRequest(fmt.Errorf("trigger not found"))
