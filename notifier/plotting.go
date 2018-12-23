@@ -2,6 +2,7 @@ package notifier
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 	"time"
 
@@ -13,7 +14,6 @@ import (
 	"github.com/moira-alert/moira/plotting"
 	"github.com/moira-alert/moira/remote"
 	"github.com/moira-alert/moira/target"
-	"fmt"
 )
 
 var (

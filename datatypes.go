@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	eventStates = [...]string{"OK", "WARN", "ERROR", "NODATA", "TEST"}
+	eventStates = [...]string{"OK", "WARN", "ERROR", "NODATA", "EXCEPTION", "TEST"}
 )
 
 var scores = map[string]int64{

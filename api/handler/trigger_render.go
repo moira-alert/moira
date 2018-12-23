@@ -3,8 +3,8 @@ package handler
 import (
 	"fmt"
 	"net/http"
-	"time"
 	"strconv"
+	"time"
 
 	"github.com/go-chi/render"
 	"github.com/go-graphite/carbonapi/date"
