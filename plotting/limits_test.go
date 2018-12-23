@@ -1,12 +1,11 @@
 package plotting
 
 import (
-	"math"
+	"math/rand"
 	"testing"
 	"time"
 
 	"github.com/go-graphite/carbonapi/expr/types"
-	pb "github.com/go-graphite/protocol/carbonapi_v3_pb"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/wcharczuk/go-chart"
 
@@ -15,59 +14,46 @@ import (
 
 // TestResolveLimits tests plot limits will be calculated correctly for any metricData array
 func TestResolveLimits(t *testing.T) {
-	metricsData := []*types.MetricData{
-		{
-			FetchResponse: pb.FetchResponse{
-				Values: []float64{
-					1, 2, 3, math.NaN(), 5,
-				},
-			},
-		},
-		{
-			FetchResponse: pb.FetchResponse{
-				Values: []float64{
-					6, 7, math.NaN(), 9, 10,
-				},
-			},
-		},
-		{
-			FetchResponse: pb.FetchResponse{
-				Values: []float64{
-					math.NaN(), 11, 12, 13, 10000,
-				},
-			},
-		},
-		{
-			FetchResponse: pb.FetchResponse{
-				Values: []float64{
-					1, 1, 1, 1, 1,
-				},
-			},
-		},
-		{
-			FetchResponse: pb.FetchResponse{
-				Values: []float64{
-					math.NaN(), math.NaN(), math.NaN(), math.NaN(), math.NaN(),
-				},
-			},
-		},
+	var minValue = -1
+	var maxValue = 10000
+	stepTime := 60
+	elementsToUse := 10
+	startTime := time.Now().UTC().Unix()
+	var metricsData []*types.MetricData
+	// Fill MetricsData with random float64 values that higher than minValue and lower than maxValue
+	for i := 0; i < int(elementsToUse); i++ {
+		values := make([]float64, elementsToUse)
+		for valInd := range values {
+			values[valInd] = float64(rand.Intn(maxValue-1)) * rand.Float64()
+		}
+		metricData := types.MakeMetricData("test", values, int64(stepTime), int64(startTime))
+		metricsData = append(metricsData, metricData)
 	}
-	for _, metricData := range metricsData {
-		metricData.StartTime = 1527329978
-		metricData.StepTime = 60
-		metricData.StopTime = 1527330278
-	}
-	Convey("Resolve limits for given MetricsData for 5 minutes", t, func() {
-		expectedTo := time.Date(2018, 5, 26, 10, 24, 38, 0, time.UTC)
-		expectedFrom := expectedTo.Add(time.Duration(-len(metricsData)) * time.Minute)
+	// Change 2 first points of MetricsData to minValue and maxValue
+	metricsData[0].Values[0], metricsData[0].Values[1] = float64(minValue), float64(maxValue)
+	// So we're actually using elementsToUse x elementsToUse MetricsData with values like:
+	// [-1                 10000              2252.779679004119  1333.7005695781143...
+	// [1491.4815658695925 3528.452470599303  296.78548099273524 2048.473675536235
+	// [1961.4869744066652 574.2827161848164  1757.8304749568863 2406.1508870508073
+	// [2075.6933900571207 3393.385674988974  3234.9526818050126 5602.5371761246915
+	// [384.016924791711   9066.931651012908  563.0027804705013  5100.243298996324
+	// [519.4539685177408  6029.673742973381  243.3464382654782  2590.9614772639184
+	// [3712.024207074801  8137.757246113409  3653.0361832312265 632.2809306369263
+	// ...
+	Convey("Resolve limits for collection of random MetricDatas", t, func() {
+		expectedFrom := moira.Int64ToTime(int64(startTime))
+		expectedTo := expectedFrom.Add(time.Duration(elementsToUse) * time.Minute)
+		expectedIncrement := percentsOfRange(float64(minValue), float64(maxValue), defaultYAxisRangePercent)
+		expectedLowest := float64(minValue) - expectedIncrement
+		expectedHighest := float64(maxValue) + expectedIncrement
 		limits := resolveLimits(metricsData)
 		So(limits.from, ShouldResemble, expectedFrom)
 		So(limits.to, ShouldResemble, expectedTo)
 		So(limits.lowest, ShouldNotEqual, 0)
 		So(limits.highest, ShouldNotEqual, 0)
 		So(limits.lowest, ShouldNotEqual, limits.highest)
-		So(limits.lowest, ShouldEqual, 1)
-		So(limits.highest, ShouldEqual, 10000)
+		So(limits.lowest, ShouldEqual, expectedLowest)
+		So(limits.highest, ShouldEqual, expectedHighest)
 	})
 }
 

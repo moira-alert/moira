@@ -36,6 +36,12 @@ func sanitizeLabelName(label string, maxLabelLength int) string {
 	return label
 }
 
+// percentsOfRange results expected percents of range by given min and max values
+func percentsOfRange(min, max, percent float64) float64 {
+	delta := math.Abs(max - min)
+	return percent * (delta / 100)
+}
+
 // getTimeValueFormatter returns a time formatter with a given format and timezone
 func getTimeValueFormatter(location *time.Location, format string) chart.ValueFormatter {
 	return func(v interface{}) string {

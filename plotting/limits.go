@@ -11,9 +11,15 @@ import (
 	"github.com/moira-alert/moira"
 )
 
-// defaultRangeDelta is an additional value to
-// cover cases with equal highest/lowest limits values
-const defaultRangeDelta = 10
+const (
+	// defaultRangeDelta is an additional value to
+	// cover cases with equal highest/lowest limits values
+	defaultRangeDelta = 10
+	// defaultYAxisRangePercent is a default percent value to
+	// generate plotLimits lowest/highest additional increment
+	// used in plot-prettifying purposes only
+	defaultYAxisRangePercent = 10
+)
 
 // plotLimits is a set of limits for given metricsData
 type plotLimits struct {
@@ -41,6 +47,13 @@ func resolveLimits(metricsData []*types.MetricData) plotLimits {
 	if highest == lowest {
 		highest = highest + (defaultRangeDelta / 2)
 		lowest = lowest - (defaultRangeDelta / 2)
+	}
+	yAxisIncrement := percentsOfRange(lowest, highest, defaultYAxisRangePercent)
+	if highest > 0 {
+		highest = highest + yAxisIncrement
+	}
+	if lowest < 0 {
+		lowest = lowest - yAxisIncrement
 	}
 	return plotLimits{
 		from:    from,
