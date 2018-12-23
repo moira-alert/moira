@@ -151,7 +151,7 @@ func fetchAvailableSeries(database moira.Database, remoteCfg *remote.Config, isR
 	}
 	result, realtimeErr := target.EvaluateTarget(database, tar, from, to, true)
 	switch realtimeErr.(type) {
-	case target.ErrEvalExprFailedWithPanic:
+	case target.ErrEvaluateTargetFailedWithPanic:
 		result, err = target.EvaluateTarget(database, tar, from, to, false)
 		if err != nil {
 			return nil, errFetchAvailableSeriesFailed{realtimeErr:realtimeErr.Error(), storedErr:err.Error()}
