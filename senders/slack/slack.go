@@ -64,7 +64,6 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 
 	params := slack.PostMessageParameters{
 		Username: "Moira",
-		AsUser:   true,
 		IconURL:  icon,
 		Markdown: true,
 	}
