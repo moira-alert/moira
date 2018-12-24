@@ -68,9 +68,8 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	sender.log.Debugf("Calling slack with message body %s", message.String())
 
 	params := slack.PostMessageParameters{
-		User: sender.User,
+		User:     sender.User,
 		Username: sender.User,
-		AsUser:   true,
 		IconURL:  icon,
 		Markdown: true,
 	}
