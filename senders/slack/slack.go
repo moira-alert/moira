@@ -14,7 +14,6 @@ import (
 // Sender implements moira sender interface via slack
 type Sender struct {
 	APIToken string
-	User     string
 	FrontURI string
 	log      moira.Logger
 	location *time.Location
@@ -26,10 +25,6 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 	sender.APIToken = senderSettings["api_token"]
 	if sender.APIToken == "" {
 		return fmt.Errorf("Can not read slack api_token from config")
-	}
-	sender.User = senderSettings["user"]
-	if sender.User == "" {
-		return fmt.Errorf("Slack user not specified")
 	}
 	sender.log = logger
 	sender.FrontURI = senderSettings["front_uri"]
@@ -68,8 +63,8 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	sender.log.Debugf("Calling slack with message body %s", message.String())
 
 	params := slack.PostMessageParameters{
-		User:     sender.User,
-		Username: sender.User,
+		Username: "Moira",
+		AsUser:   useDirectMessaging(contact.Value),
 		IconURL:  icon,
 		Markdown: true,
 	}
@@ -96,4 +91,12 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	}
 
 	return nil
+}
+
+// useDirectMessaging returns true if user contact is provided
+func useDirectMessaging(contactValue string) bool {
+	if len(contactValue) > 0 && contactValue[0:1] == "@" {
+		return true
+	}
+	return false
 }
