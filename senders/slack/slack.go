@@ -14,6 +14,7 @@ import (
 // Sender implements moira sender interface via slack
 type Sender struct {
 	APIToken string
+	User     string
 	FrontURI string
 	log      moira.Logger
 	location *time.Location
@@ -25,6 +26,10 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 	sender.APIToken = senderSettings["api_token"]
 	if sender.APIToken == "" {
 		return fmt.Errorf("Can not read slack api_token from config")
+	}
+	sender.User = senderSettings["user"]
+	if sender.User == "" {
+		return fmt.Errorf("Slack user not specified")
 	}
 	sender.log = logger
 	sender.FrontURI = senderSettings["front_uri"]
@@ -63,7 +68,8 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	sender.log.Debugf("Calling slack with message body %s", message.String())
 
 	params := slack.PostMessageParameters{
-		Username: "Moira",
+		Username: sender.User,
+		AsUser:   true,
 		IconURL:  icon,
 		Markdown: true,
 	}
