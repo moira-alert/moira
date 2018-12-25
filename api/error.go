@@ -80,16 +80,6 @@ func ErrorRemoteServerUnavailable(err error) *ErrorResponse {
 	}
 }
 
-// WarningDeprecatedAPI return 299 code and message about deprecated method
-// https://stackoverflow.com/a/29623798
-func WarningDeprecatedAPI(text string) *ErrorResponse {
-	return &ErrorResponse{
-		HTTPStatusCode: 299,
-		StatusText:     "Deprecated API",
-		ErrorText:      text,
-	}
-}
-
 // ErrNotFound is default router page not found
 var ErrNotFound = &ErrorResponse{HTTPStatusCode: 404, StatusText: "Page not found."}
 

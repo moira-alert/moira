@@ -156,16 +156,6 @@ func DeleteTriggerThrottling(database moira.Database, triggerID string) *api.Err
 	return nil
 }
 
-// SetMetricsMaintenance sets metrics maintenance for current trigger
-// ToDo: DEPRECATED, remove in future versions
-func SetMetricsMaintenance(database moira.Database, triggerID string, metricsMaintenance dto.MetricsMaintenance) *api.ErrorResponse {
-	triggerMaintenance := dto.TriggerMaintenance{Metrics: map[string]int64(metricsMaintenance)}
-	if err := SetTriggerMaintenance(database, triggerID, triggerMaintenance); err != nil {
-		return err
-	}
-	return api.WarningDeprecatedAPI(fmt.Sprintf("deprecated API, use /trigger/%s/setMaintenance instead", triggerID))
-}
-
 // SetTriggerMaintenance sets maintenance to metrics and whole trigger
 func SetTriggerMaintenance(database moira.Database, triggerID string, triggerMaintenance dto.TriggerMaintenance) *api.ErrorResponse {
 	if err := database.SetTriggerCheckMaintenance(triggerID, triggerMaintenance.Metrics, triggerMaintenance.Trigger); err != nil {
