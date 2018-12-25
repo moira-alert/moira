@@ -5,6 +5,7 @@ type CheckerMetrics struct {
 	MoiraMetrics           *CheckMetrics
 	RemoteMetrics          *CheckMetrics
 	MetricEventsChannelLen Histogram
+	UnusedTriggersCount    Histogram
 	MetricEventsHandleTime Timer
 }
 
@@ -13,6 +14,5 @@ type CheckMetrics struct {
 	CheckError           Meter
 	HandleError          Meter
 	TriggersCheckTime    Timer
-	TriggerCheckTime     TimerMap
 	TriggersToCheckCount Histogram
 }

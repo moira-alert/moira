@@ -2,12 +2,13 @@ package handler
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/controller"
 	"github.com/moira-alert/moira/api/middleware"
-	"net/http"
 )
 
 func pattern(router chi.Router) {
@@ -30,7 +31,7 @@ func getAllPatterns(writer http.ResponseWriter, request *http.Request) {
 func deletePattern(writer http.ResponseWriter, request *http.Request) {
 	pattern := chi.URLParam(request, "pattern")
 	if pattern == "" {
-		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("Pattern must be set")))
+		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("pattern must be set")))
 		return
 	}
 	err := controller.DeletePattern(database, pattern)

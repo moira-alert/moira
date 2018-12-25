@@ -12,6 +12,11 @@ import (
 	"time"
 )
 
+var plottingData = moira.PlottingData{
+	Enabled: false,
+	Theme:   "dark",
+}
+
 func TestThrottling(t *testing.T) {
 	var trigger = moira.TriggerData{
 		ID:         "triggerID-0000000000001",
@@ -50,6 +55,7 @@ func TestThrottling(t *testing.T) {
 		Event:     event,
 		Trigger:   trigger,
 		Contact:   contact,
+		Plotting:  plottingData,
 		Throttled: false,
 		Timestamp: now.Unix(),
 		SendFail:  0,
@@ -60,7 +66,7 @@ func TestThrottling(t *testing.T) {
 		expected2.SendFail = 1
 		expected2.Timestamp = now.Add(time.Minute).Unix()
 
-		notification := scheduler.ScheduleNotification(now, event, trigger, contact, false, 1)
+		notification := scheduler.ScheduleNotification(now, event, trigger, contact, plottingData, false, 1)
 		So(notification, ShouldResemble, &expected2)
 		mockCtrl.Finish()
 	})
@@ -71,7 +77,7 @@ func TestThrottling(t *testing.T) {
 		expected2.Timestamp = now.Add(time.Minute).Unix()
 		expected2.Throttled = true
 
-		notification := scheduler.ScheduleNotification(now, event, trigger, contact, true, 3)
+		notification := scheduler.ScheduleNotification(now, event, trigger, contact, plottingData, true, 3)
 		So(notification, ShouldResemble, &expected2)
 		mockCtrl.Finish()
 	})
@@ -89,7 +95,7 @@ func TestThrottling(t *testing.T) {
 		expected3 := expected
 		expected3.Event = testEvent
 
-		notification := scheduler.ScheduleNotification(now, testEvent, trigger, contact, false, 0)
+		notification := scheduler.ScheduleNotification(now, testEvent, trigger, contact, plottingData, false, 0)
 		So(notification, ShouldResemble, &expected3)
 		mockCtrl.Finish()
 	})
@@ -98,7 +104,7 @@ func TestThrottling(t *testing.T) {
 		dataBase.EXPECT().GetTriggerThrottling(trigger.ID).Times(1).Return(time.Unix(0, 0), time.Unix(0, 0))
 		dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Times(1).Return(moira.SubscriptionData{}, fmt.Errorf("Error while read subscription"))
 
-		notification := scheduler.ScheduleNotification(now, event, trigger, contact, false, 0)
+		notification := scheduler.ScheduleNotification(now, event, trigger, contact, plottingData, false, 0)
 		So(notification, ShouldResemble, &expected)
 		mockCtrl.Finish()
 	})

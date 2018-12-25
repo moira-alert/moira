@@ -131,7 +131,7 @@ func TestInitTriggerChecker(t *testing.T) {
 		expectedTriggerChecker.ttlState = *trigger.TTLState
 		expectedTriggerChecker.lastCheck = &moira.CheckData{
 			Metrics:   make(map[string]moira.MetricState),
-			State:     NODATA,
+			State:     OK,
 			Timestamp: expectedTriggerChecker.Until - 3600,
 		}
 		expectedTriggerChecker.From = expectedTriggerChecker.Until - 3600 - ttl
@@ -153,7 +153,7 @@ func TestInitTriggerChecker(t *testing.T) {
 		expectedTriggerChecker.ttlState = ttlStateNoData
 		expectedTriggerChecker.lastCheck = &moira.CheckData{
 			Metrics:   make(map[string]moira.MetricState),
-			State:     NODATA,
+			State:     OK,
 			Timestamp: expectedTriggerChecker.Until - 3600,
 		}
 		expectedTriggerChecker.From = expectedTriggerChecker.Until - 3600 - 600

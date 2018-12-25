@@ -9,6 +9,9 @@ graphite:
   uri: "localhost:2003"
   prefix: DevOps.Moira
   interval: 60s
+remote:
+  enabled: false
+  timeout: 60s
 api:
   listen: ":8081"
   enable_cors: false

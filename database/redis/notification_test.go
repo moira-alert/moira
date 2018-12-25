@@ -14,7 +14,7 @@ import (
 
 func TestScheduledNotification(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewDatabase(logger, config)
+	dataBase := newTestDatabase(logger, config)
 	dataBase.flush()
 	defer dataBase.flush()
 
@@ -172,7 +172,7 @@ func addNotifications(dataBase moira.Database, notifications []moira.ScheduledNo
 
 func TestScheduledNotificationErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewDatabase(logger, emptyConfig)
+	dataBase := newTestDatabase(logger, emptyConfig)
 	dataBase.flush()
 	defer dataBase.flush()
 

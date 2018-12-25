@@ -21,6 +21,7 @@ type Sender struct {
 
 // Init read yaml config
 func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+
 	sender.APIToken = senderSettings["api_token"]
 	if sender.APIToken == "" {
 		return fmt.Errorf("Can not read pushover api_token from config")
@@ -32,7 +33,8 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 }
 
 // SendEvents implements Sender interface Send
-func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, throttled bool) error {
+func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) error {
+
 	api := pushover.New(sender.APIToken)
 	recipient := pushover.NewRecipient(contact.Value)
 
@@ -80,9 +82,17 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 		Timestamp: timestamp,
 		URL:       fmt.Sprintf("%s/trigger/%s", sender.FrontURI, events[0].TriggerID),
 	}
+
+	if len(plot) > 0 {
+		reader := bytes.NewReader(plot)
+		if err := pushoverMessage.AddAttachment(reader); err != nil {
+			sender.log.Errorf("Failed to send %s event plot to pushover user %s: %s", trigger.ID, contact.Value, err.Error())
+		}
+	}
+
 	_, err := api.SendMessage(pushoverMessage, recipient)
 	if err != nil {
-		return fmt.Errorf("Failed to send message to pushover user %s: %s", contact.Value, err.Error())
+		return fmt.Errorf("Failed to send %s event message to pushover user %s: %s", trigger.ID, contact.Value, err.Error())
 	}
 	return nil
 }

@@ -15,6 +15,9 @@ import (
 	pb "github.com/go-graphite/protocol/carbonapi_v3_pb"
 )
 
+// ErrRemoteStorageDisabled is used to prevent remote.Fetch calls when remote storage is disabled
+var ErrRemoteStorageDisabled = fmt.Errorf("remote graphite storage is not enabled")
+
 type graphiteMetric struct {
 	Target     string
 	Datapoints [][2]*float64

@@ -2,6 +2,7 @@ package target
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/go-graphite/carbonapi/expr/functions"
@@ -83,6 +84,16 @@ func TestEvaluateTarget(t *testing.T) {
 			dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
 			result, err := EvaluateTarget(dataBase, "aliasByNoe(super.puper.pattern, 2)", from, until, true)
 			So(err.Error(), ShouldResemble, "Unknown graphite function: \"aliasByNoe\"")
+			So(result, ShouldBeNil)
+		})
+
+		Convey("Panic while evaluate target", func() {
+			dataBase.EXPECT().GetPatternMetrics("super.puper.pattern").Return([]string{metric}, nil)
+			dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
+			dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
+			result, err := EvaluateTarget(dataBase, "movingAverage(super.puper.pattern, -1)", from, until, true)
+			expectedErrSubstring := strings.Split(ErrEvaluateTargetFailedWithPanic{target: "movingAverage(super.puper.pattern, -1)"}.Error(), ":")[0]
+			So(err.Error(), ShouldStartWith, expectedErrSubstring)
 			So(result, ShouldBeNil)
 		})
 	})

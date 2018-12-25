@@ -2,6 +2,8 @@ package controller
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
@@ -10,7 +12,6 @@ import (
 	"github.com/moira-alert/moira/mock/moira-alert"
 	"github.com/satori/go.uuid"
 	. "github.com/smartystreets/goconvey/convey"
-	"testing"
 )
 
 func TestGetUserSubscriptions(t *testing.T) {
@@ -41,7 +42,7 @@ func TestGetUserSubscriptions(t *testing.T) {
 
 	Convey("Errors", t, func() {
 		Convey("GetUserSubscriptionIDs", func() {
-			expected := fmt.Errorf("Oh no!!!11 Cant get subscription ids")
+			expected := fmt.Errorf("oh no!!!11 Cant get subscription ids")
 			database.EXPECT().GetUserSubscriptionIDs(login).Return(nil, expected)
 			list, err := GetUserSubscriptions(database, login)
 			So(err, ShouldResemble, api.ErrorInternalServer(expected))
@@ -49,7 +50,7 @@ func TestGetUserSubscriptions(t *testing.T) {
 		})
 
 		Convey("GetSubscriptions", func() {
-			expected := fmt.Errorf("Oh no!!!11 Cant get subscriptions")
+			expected := fmt.Errorf("oh no!!!11 Cant get subscriptions")
 			subscriptionIDs := []string{uuid.NewV4().String(), uuid.NewV4().String()}
 			database.EXPECT().GetUserSubscriptionIDs(login).Return(subscriptionIDs, nil)
 			database.EXPECT().GetSubscriptions(subscriptionIDs).Return(nil, expected)
@@ -87,7 +88,7 @@ func TestUpdateSubscription(t *testing.T) {
 			ID:   subscriptionID,
 			User: userLogin,
 		}
-		err := fmt.Errorf("Oooops")
+		err := fmt.Errorf("oooops")
 		dataBase.EXPECT().SaveSubscription(&subscription).Return(err)
 		actual := UpdateSubscription(dataBase, subscriptionID, userLogin, subscriptionDTO)
 		So(actual, ShouldResemble, api.ErrorInternalServer(err))
@@ -99,19 +100,19 @@ func TestUpdateSubscription(t *testing.T) {
 func TestRemoveSubscription(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
-	database := mock_moira_alert.NewMockDatabase(mockCtrl)
+	db := mock_moira_alert.NewMockDatabase(mockCtrl)
 	id := uuid.NewV4().String()
 
 	Convey("Success", t, func() {
-		database.EXPECT().RemoveSubscription(id).Return(nil)
-		err := RemoveSubscription(database, id)
+		db.EXPECT().RemoveSubscription(id).Return(nil)
+		err := RemoveSubscription(db, id)
 		So(err, ShouldBeNil)
 	})
 
 	Convey("Error", t, func() {
-		expected := fmt.Errorf("Oooops! Can not remove subscription")
-		database.EXPECT().RemoveSubscription(id).Return(expected)
-		err := RemoveSubscription(database, id)
+		expected := fmt.Errorf("oooops! Can not remove subscription")
+		db.EXPECT().RemoveSubscription(id).Return(expected)
+		err := RemoveSubscription(db, id)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 	})
 }
@@ -119,19 +120,19 @@ func TestRemoveSubscription(t *testing.T) {
 func TestSendTestNotification(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
-	database := mock_moira_alert.NewMockDatabase(mockCtrl)
+	db := mock_moira_alert.NewMockDatabase(mockCtrl)
 	id := uuid.NewV4().String()
 
 	Convey("Success", t, func() {
-		database.EXPECT().PushNotificationEvent(gomock.Any(), false).Return(nil)
-		err := SendTestNotification(database, id)
+		db.EXPECT().PushNotificationEvent(gomock.Any(), false).Return(nil)
+		err := SendTestNotification(db, id)
 		So(err, ShouldBeNil)
 	})
 
 	Convey("Error", t, func() {
-		expected := fmt.Errorf("Oooops! Can not push event")
-		database.EXPECT().PushNotificationEvent(gomock.Any(), false).Return(expected)
-		err := SendTestNotification(database, id)
+		expected := fmt.Errorf("oooops! Can not push event")
+		db.EXPECT().PushNotificationEvent(gomock.Any(), false).Return(expected)
+		err := SendTestNotification(db, id)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 	})
 }
@@ -167,14 +168,14 @@ func TestCreateSubscription(t *testing.T) {
 		}
 		dataBase.EXPECT().GetSubscription(subscription.ID).Return(moira.SubscriptionData{}, nil)
 		err := CreateSubscription(dataBase, login, subscription)
-		So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("Subscription with this ID already exists")))
+		So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("subscription with this ID already exists")))
 	})
 
 	Convey("Error get subscription", t, func() {
 		subscription := &dto.Subscription{
 			ID: uuid.NewV4().String(),
 		}
-		err := fmt.Errorf("Oooops! Can not write contact")
+		err := fmt.Errorf("oooops! Can not write contact")
 		dataBase.EXPECT().GetSubscription(subscription.ID).Return(moira.SubscriptionData{}, err)
 		expected := CreateSubscription(dataBase, login, subscription)
 		So(expected, ShouldResemble, api.ErrorInternalServer(err))
@@ -182,7 +183,7 @@ func TestCreateSubscription(t *testing.T) {
 
 	Convey("Error save subscription", t, func() {
 		subscription := dto.Subscription{ID: ""}
-		expected := fmt.Errorf("Oooops! Can not create subscription")
+		expected := fmt.Errorf("oooops! Can not create subscription")
 		dataBase.EXPECT().SaveSubscription(gomock.Any()).Return(expected)
 		err := CreateSubscription(dataBase, login, &subscription)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
@@ -199,7 +200,7 @@ func TestCheckUserPermissionsForSubscription(t *testing.T) {
 	Convey("No subscription", t, func() {
 		dataBase.EXPECT().GetSubscription(id).Return(moira.SubscriptionData{}, database.ErrNil)
 		expectedSub, expected := CheckUserPermissionsForSubscription(dataBase, id, userLogin)
-		So(expected, ShouldResemble, api.ErrorNotFound(fmt.Sprintf("Subscription with ID '%s' does not exists", id)))
+		So(expected, ShouldResemble, api.ErrorNotFound(fmt.Sprintf("subscription with ID '%s' does not exists", id)))
 		So(expectedSub, ShouldResemble, moira.SubscriptionData{})
 	})
 
@@ -207,7 +208,7 @@ func TestCheckUserPermissionsForSubscription(t *testing.T) {
 		actualSub := moira.SubscriptionData{User: "diffUser"}
 		dataBase.EXPECT().GetSubscription(id).Return(actualSub, nil)
 		expectedSub, expected := CheckUserPermissionsForSubscription(dataBase, id, userLogin)
-		So(expected, ShouldResemble, api.ErrorForbidden("You have not permissions"))
+		So(expected, ShouldResemble, api.ErrorForbidden("you are not permitted"))
 		So(expectedSub, ShouldResemble, actualSub)
 	})
 
@@ -220,7 +221,7 @@ func TestCheckUserPermissionsForSubscription(t *testing.T) {
 	})
 
 	Convey("Error get contact", t, func() {
-		err := fmt.Errorf("Oooops! Can not read contact")
+		err := fmt.Errorf("oooops! Can not read contact")
 		dataBase.EXPECT().GetSubscription(id).Return(moira.SubscriptionData{}, err)
 		expectedSub, expected := CheckUserPermissionsForSubscription(dataBase, id, userLogin)
 		So(expected, ShouldResemble, api.ErrorInternalServer(err))

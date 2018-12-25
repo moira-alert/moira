@@ -11,6 +11,18 @@ import (
 	"github.com/moira-alert/moira"
 )
 
+// ErrEvaluateTargetFailedWithPanic used to identify occurred error as a result of recover from panic
+type ErrEvaluateTargetFailedWithPanic struct {
+	target         string
+	recoverMessage interface{}
+	stackRecord    []byte
+}
+
+// Error is implementation of golang error interface for ErrEvaluateTargetFailedWithPanic struct
+func(err ErrEvaluateTargetFailedWithPanic) Error() string {
+	return fmt.Sprintf("panic while evaluate target %s: message: '%s' stack: %s", err.target, err.recoverMessage, err.stackRecord)
+}
+
 // EvaluationResult represents evaluation target result and contains TimeSeries list, Pattern list and metric lists appropriate to given target
 type EvaluationResult struct {
 	TimeSeries []*TimeSeries
@@ -45,7 +57,7 @@ func EvaluateTarget(database moira.Database, target string, from int64, until in
 		}
 		rewritten, newTargets, err := expr.RewriteExpr(expr2, from, until, metricsMap)
 		if err != nil && err != parser.ErrSeriesDoesNotExist {
-			return nil, fmt.Errorf("Failed RewriteExpr: %s", err.Error())
+			return nil, fmt.Errorf("failed RewriteExpr: %s", err.Error())
 		} else if rewritten {
 			targets = append(targets, newTargets...)
 		} else {
@@ -53,7 +65,7 @@ func EvaluateTarget(database moira.Database, target string, from int64, until in
 				defer func() {
 					if r := recover(); r != nil {
 						result = nil
-						err = fmt.Errorf("panic while evaluate target %s: message: '%s' stack: %s", target, r, debug.Stack())
+						err = ErrEvaluateTargetFailedWithPanic{target: target, recoverMessage: r, stackRecord: debug.Stack()}
 					}
 				}()
 				result, err = expr.EvalExpr(expr2, from, until, metricsMap)

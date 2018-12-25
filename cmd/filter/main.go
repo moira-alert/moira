@@ -82,7 +82,7 @@ func main() {
 		logger.Error(err)
 	}
 
-	database := redis.NewDatabase(logger, config.Redis.GetSettings())
+	database := redis.NewDatabase(logger, config.Redis.GetSettings(), redis.Filter)
 
 	retentionConfigFile, err := os.Open(config.Filter.RetentionConfig)
 	if err != nil {

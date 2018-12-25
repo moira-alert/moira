@@ -3,15 +3,16 @@ package moira
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestIsScheduleAllows(t *testing.T) {
 	allDaysExcludedSchedule := ScheduleData{
-		TimezoneOffset: -300,
-		StartOffset:    0,
-		EndOffset:      1439,
+		TimezoneOffset: -300, // TimeZone: Asia/Ekaterinburg
+		StartOffset:    0,    // 00:00
+		EndOffset:      1439, // 23:59
 		Days: []ScheduleDataDay{
 			{
 				Name:    "Mon",
@@ -44,8 +45,9 @@ func TestIsScheduleAllows(t *testing.T) {
 		},
 	}
 
-	// 367980 - 01/05/1970 6:13am (UTC) Mon
-	// 454380 - 01/06/1970 6:13am (UTC) Tue
+	// Date Format: dd/mm/yyyy 24h:MM
+	// 367980 - 05/01/1970 18:13 (UTC) Mon - 23:13 (YEKT)
+	// 454380 - 06/01/1970 18:13 (UTC) Tue - 23:13 (YEKT)
 
 	Convey("No schedule", t, func() {
 		var noSchedule *ScheduleData
@@ -61,37 +63,72 @@ func TestIsScheduleAllows(t *testing.T) {
 		schedule := getDefaultSchedule()
 		schedule.Days[0].Enabled = false
 		So(schedule.IsScheduleAllows(367980), ShouldBeFalse)
-		So(schedule.IsScheduleAllows(367980+86400), ShouldBeTrue)
+		So(schedule.IsScheduleAllows(454380), ShouldBeTrue)
 		So(schedule.IsScheduleAllows(367980+86400*2), ShouldBeTrue)
 	})
 
 	Convey("Exclude all days", t, func() {
 		schedule := allDaysExcludedSchedule
 		So(schedule.IsScheduleAllows(367980), ShouldBeFalse)
-		So(schedule.IsScheduleAllows(367980+86400), ShouldBeFalse)
+		So(schedule.IsScheduleAllows(454380), ShouldBeFalse)
 		So(schedule.IsScheduleAllows(367980+86400*5), ShouldBeFalse)
 	})
 
 	Convey("Include only morning", t, func() {
-		schedule := getDefaultSchedule()
-		schedule.StartOffset = 60
-		schedule.EndOffset = 540
-		So(schedule.IsScheduleAllows(86400+129*60), ShouldBeTrue)  // 2/01/1970 2:09
-		So(schedule.IsScheduleAllows(86400-239*60), ShouldBeTrue)  // 1/01/1970 20:01
-		So(schedule.IsScheduleAllows(86400-241*60), ShouldBeFalse) // 1/01/1970 19:58
-		So(schedule.IsScheduleAllows(86400+541*60), ShouldBeFalse) // 2/01/1970 9:01
-		So(schedule.IsScheduleAllows(86400-255*60), ShouldBeFalse) // 1/01/1970 19:45
+		schedule := getDefaultSchedule()                           // TimeZone: Asia/Ekaterinburg (YEKT)
+		schedule.StartOffset = 60                                  // 01:00
+		schedule.EndOffset = 540                                   // 09:00
+		So(schedule.IsScheduleAllows(86400+129*60), ShouldBeTrue)  // 02/01/1970 2:09  - 02/01/1970 07:09 (YEKT)
+		So(schedule.IsScheduleAllows(86400-239*60), ShouldBeTrue)  // 01/01/1970 20:01 - 02/01/1970 01:01 (YEKT)
+		So(schedule.IsScheduleAllows(86400-241*60), ShouldBeFalse) // 01/01/1970 19:59 - 02/01/1970 00:59 (YEKT)
+		So(schedule.IsScheduleAllows(86400+541*60), ShouldBeFalse) // 02/01/1970 9:01  - 02/01/1970 14:01 (YEKT)
+		So(schedule.IsScheduleAllows(86400-255*60), ShouldBeFalse) // 01/01/1970 19:45 - 02/01/1970 00:45 (YEKT)
+	})
+
+	Convey("Check border cases", t, func() {
+		schedule := getDefaultSchedule()                    // TimeZone: Asia/Ekaterinburg (YEKT)
+		So(schedule.IsScheduleAllows(68400), ShouldBeTrue)  // 02/01/1970 00:00:00 (YEKT)
+		So(schedule.IsScheduleAllows(68401), ShouldBeTrue)  // 02/01/1970 00:00:01 (YEKT)
+		So(schedule.IsScheduleAllows(68430), ShouldBeTrue)  // 02/01/1970 00:00:30 (YEKT)
+		So(schedule.IsScheduleAllows(68459), ShouldBeTrue)  // 02/01/1970 00:00:59 (YEKT)
+		So(schedule.IsScheduleAllows(154739), ShouldBeTrue) // 02/01/1970 23:58:59 (YEKT)
+		So(schedule.IsScheduleAllows(154740), ShouldBeTrue) // 02/01/1970 23:59:00 (YEKT)
+		So(schedule.IsScheduleAllows(154741), ShouldBeTrue) // 02/01/1970 23:59:01 (YEKT)
+		So(schedule.IsScheduleAllows(154770), ShouldBeTrue) // 02/01/1970 23:59:30 (YEKT)
+		So(schedule.IsScheduleAllows(154799), ShouldBeTrue) // 02/01/1970 23:59:59 (YEKT)
 	})
 
 	Convey("Exclude morning", t, func() {
-		schedule := getDefaultSchedule()
-		schedule.StartOffset = 540
-		schedule.EndOffset = 1499
-		So(schedule.IsScheduleAllows(86400+129*60), ShouldBeFalse) // 2/01/1970 2:09
-		So(schedule.IsScheduleAllows(86400-239*60), ShouldBeFalse) // 1/01/1970 20:01
-		So(schedule.IsScheduleAllows(86400-242*60), ShouldBeTrue)  // 1/01/1970 19:58
-		So(schedule.IsScheduleAllows(86400+541*60), ShouldBeTrue)  // 2/01/1970 9:01
-		So(schedule.IsScheduleAllows(86400-255*60), ShouldBeTrue)  // 1/01/1970 19:45
+		schedule := getDefaultSchedule()                           // TimeZone: Asia/Ekaterinburg (YEKT)
+		schedule.StartOffset = 420                                 // 07:00
+		schedule.EndOffset = 1439                                  // 23:59
+		So(schedule.IsScheduleAllows(86400+129*60), ShouldBeTrue)  // 02/01/1970 2:09  - 02/01/1970 07:09 (YEKT)
+		So(schedule.IsScheduleAllows(86400-239*60), ShouldBeFalse) // 01/01/1970 20:01 - 02/01/1970 01:01 (YEKT)
+		So(schedule.IsScheduleAllows(86400-242*60), ShouldBeFalse) // 01/01/1970 19:59 - 02/01/1970 00:59 (YEKT)
+		So(schedule.IsScheduleAllows(86400+541*60), ShouldBeTrue)  // 02/01/1970 9:01  - 02/01/1970 14:01 (YEKT)
+		So(schedule.IsScheduleAllows(86400-255*60), ShouldBeFalse) // 01/01/1970 19:45 - 02/01/1970 00:45 (YEKT)
+	})
+
+	Convey("Exclude 10 minutes between 07:00 and 07:10", t, func() {
+		schedule := getDefaultSchedule()                           // TimeZone: Asia/Ekaterinburg (YEKT)
+		schedule.StartOffset = 430                                 // 07:10
+		schedule.EndOffset = 420                                   // 07:00
+		So(schedule.IsScheduleAllows(86400+129*60), ShouldBeFalse) // 02/01/1970 2:09  - 02/01/1970 07:09 (YEKT)
+		So(schedule.IsScheduleAllows(86400-239*60), ShouldBeTrue)  // 01/01/1970 20:01 - 02/01/1970 01:01 (YEKT)
+		So(schedule.IsScheduleAllows(86400-242*60), ShouldBeTrue)  // 01/01/1970 19:59 - 02/01/1970 00:59 (YEKT)
+		So(schedule.IsScheduleAllows(86400+541*60), ShouldBeTrue)  // 02/01/1970 9:01  - 02/01/1970 14:01 (YEKT)
+		So(schedule.IsScheduleAllows(86400-255*60), ShouldBeTrue)  // 01/01/1970 19:45 - 02/01/1970 00:45 (YEKT)
+	})
+
+	Convey("Exclude business hours", t, func() {
+		schedule := getDefaultSchedule()                           // TimeZone: Asia/Ekaterinburg (YEKT)
+		schedule.StartOffset = 12000                               // 20:00
+		schedule.EndOffset = 420                                   // 07:00
+		So(schedule.IsScheduleAllows(86400+129*60), ShouldBeFalse) // 02/01/1970 2:09  - 02/01/1970 07:09 (YEKT)
+		So(schedule.IsScheduleAllows(86400-239*60), ShouldBeTrue)  // 01/01/1970 20:01 - 02/01/1970 01:01 (YEKT)
+		So(schedule.IsScheduleAllows(86400-242*60), ShouldBeTrue)  // 01/01/1970 19:59 - 02/01/1970 00:59 (YEKT)
+		So(schedule.IsScheduleAllows(86400+541*60), ShouldBeFalse) // 02/01/1970 9:01  - 02/01/1970 14:01 (YEKT)
+		So(schedule.IsScheduleAllows(86400-255*60), ShouldBeTrue)  // 01/01/1970 19:45 - 02/01/1970 00:45 (YEKT)
 	})
 }
 
@@ -143,7 +180,13 @@ func TestCheckData_GetOrCreateMetricState(t *testing.T) {
 		checkData := CheckData{
 			Metrics: make(map[string]MetricState),
 		}
-		So(checkData.GetOrCreateMetricState("my.metric", 12343), ShouldResemble, MetricState{State: "NODATA", Timestamp: 12343})
+		So(checkData.GetOrCreateMetricState("my.metric", 12343, false), ShouldResemble, MetricState{State: "NODATA", Timestamp: 12343})
+	})
+	Convey("Test no metric, notifyAboutNew = false", t, func() {
+		checkData := CheckData{
+			Metrics: make(map[string]MetricState),
+		}
+		So(checkData.GetOrCreateMetricState("my.metric", 12343, true), ShouldResemble, MetricState{State: "OK", Timestamp: time.Now().Unix(), EventTimestamp: time.Now().Unix()})
 	})
 	Convey("Test has metric", t, func() {
 		metricState := MetricState{Timestamp: 11211}
@@ -152,7 +195,7 @@ func TestCheckData_GetOrCreateMetricState(t *testing.T) {
 				"my.metric": metricState,
 			},
 		}
-		So(checkData.GetOrCreateMetricState("my.metric", 12343), ShouldResemble, metricState)
+		So(checkData.GetOrCreateMetricState("my.metric", 12343, false), ShouldResemble, metricState)
 	})
 }
 
@@ -250,9 +293,9 @@ func TestCheckData_UpdateScore(t *testing.T) {
 
 func getDefaultSchedule() ScheduleData {
 	return ScheduleData{
-		TimezoneOffset: -300,
-		StartOffset:    0,
-		EndOffset:      1439,
+		TimezoneOffset: -300, // TimeZone: Asia/Ekaterinburg
+		StartOffset:    0,    // 00:00
+		EndOffset:      1439, // 23:59
 		Days: []ScheduleDataDay{
 			{
 				Name:    "Mon",

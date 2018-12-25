@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/satori/go.uuid"
 	"github.com/golang/mock/gomock"
+	"github.com/satori/go.uuid"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"github.com/moira-alert/moira"
@@ -21,7 +21,7 @@ func TestGetAllContacts(t *testing.T) {
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 	Convey("Error get all contacts", t, func() {
-		expected := fmt.Errorf("Oooops! Can not get all contacts")
+		expected := fmt.Errorf("oooops! Can not get all contacts")
 		dataBase.EXPECT().GetAllContacts().Return(nil, expected)
 		contacts, err := GetAllContacts(dataBase)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
@@ -111,7 +111,7 @@ func TestCreateContact(t *testing.T) {
 			Value: "some@mail.com",
 			Type:  "mail",
 		}
-		err := fmt.Errorf("Oooops! Can not write contact")
+		err := fmt.Errorf("oooops! Can not write contact")
 		dataBase.EXPECT().GetContact(contact.ID).Return(moira.ContactData{}, err)
 		expected := CreateContact(dataBase, contact, userLogin)
 		So(expected, ShouldResemble, api.ErrorInternalServer(err))
@@ -122,7 +122,7 @@ func TestCreateContact(t *testing.T) {
 			Value: "some@mail.com",
 			Type:  "mail",
 		}
-		err := fmt.Errorf("Oooops! Can not write contact")
+		err := fmt.Errorf("oooops! Can not write contact")
 		dataBase.EXPECT().SaveContact(gomock.Any()).Return(err)
 		expected := CreateContact(dataBase, contact, userLogin)
 		So(expected, ShouldResemble, &api.ErrorResponse{
@@ -171,12 +171,12 @@ func TestUpdateContact(t *testing.T) {
 			ID:    contactID,
 			User:  userLogin,
 		}
-		err := fmt.Errorf("Oooops")
+		err := fmt.Errorf("oooops")
 		dataBase.EXPECT().SaveContact(&contact).Return(err)
-		exprectedContact, actual := UpdateContact(dataBase, contactDTO, contact)
+		expectedContact, actual := UpdateContact(dataBase, contactDTO, contact)
 		So(actual, ShouldResemble, api.ErrorInternalServer(err))
-		So(exprectedContact.User, ShouldResemble, contactDTO.User)
-		So(exprectedContact.ID, ShouldResemble, contactDTO.ID)
+		So(expectedContact.User, ShouldResemble, contactDTO.User)
+		So(expectedContact.ID, ShouldResemble, contactDTO.ID)
 	})
 }
 
@@ -211,13 +211,13 @@ func TestRemoveContact(t *testing.T) {
 
 	Convey("Error tests", t, func() {
 		Convey("GetUserSubscriptionIDs", func() {
-			expectedError := fmt.Errorf("Oooops! Can not read user subscription ids")
+			expectedError := fmt.Errorf("oooops! Can not read user subscription ids")
 			dataBase.EXPECT().GetUserSubscriptionIDs(userLogin).Return(nil, expectedError)
 			err := RemoveContact(dataBase, contactID, userLogin)
 			So(err, ShouldResemble, api.ErrorInternalServer(expectedError))
 		})
 		Convey("GetSubscriptions", func() {
-			expectedError := fmt.Errorf("Oooops! Can not read user subscriptions")
+			expectedError := fmt.Errorf("oooops! Can not read user subscriptions")
 			dataBase.EXPECT().GetUserSubscriptionIDs(userLogin).Return(make([]string, 0), nil)
 			dataBase.EXPECT().GetSubscriptions(make([]string, 0)).Return(nil, expectedError)
 			err := RemoveContact(dataBase, contactID, userLogin)
@@ -230,7 +230,7 @@ func TestRemoveContact(t *testing.T) {
 				Tags:     []string{"Tag1", "Tag2"},
 			}
 			subscriptionSubstring := fmt.Sprintf("%s (tags: %s)", subscription.ID, strings.Join(subscription.Tags, ", "))
-			expectedError := fmt.Errorf("This contact is being used in following subscriptions: %s", subscriptionSubstring)
+			expectedError := fmt.Errorf("this contact is being used in following subscriptions: %s", subscriptionSubstring)
 			dataBase.EXPECT().GetUserSubscriptionIDs(userLogin).Return([]string{subscription.ID}, nil)
 			dataBase.EXPECT().GetSubscriptions([]string{subscription.ID}).Return([]*moira.SubscriptionData{&subscription}, nil)
 			dataBase.EXPECT().RemoveContact(contactID).Return(nil)
@@ -253,7 +253,7 @@ func TestSendTestContactNotification(t *testing.T) {
 	})
 
 	Convey("Error", t, func() {
-		expected := fmt.Errorf("Oooops! Can not push event")
+		expected := fmt.Errorf("oooops! Can not push event")
 		dataBase.EXPECT().PushNotificationEvent(gomock.Any(), false).Return(expected)
 		err := SendTestContactNotification(dataBase, id)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
@@ -270,14 +270,14 @@ func TestCheckUserPermissionsForContact(t *testing.T) {
 	Convey("No contact", t, func() {
 		dataBase.EXPECT().GetContact(id).Return(moira.ContactData{}, database.ErrNil)
 		expectedContact, expected := CheckUserPermissionsForContact(dataBase, id, userLogin)
-		So(expected, ShouldResemble, api.ErrorNotFound(fmt.Sprintf("Contact with ID '%s' does not exists", id)))
+		So(expected, ShouldResemble, api.ErrorNotFound(fmt.Sprintf("contact with ID '%s' does not exists", id)))
 		So(expectedContact, ShouldResemble, moira.ContactData{})
 	})
 
 	Convey("Different user", t, func() {
 		dataBase.EXPECT().GetContact(id).Return(moira.ContactData{User: "diffUser"}, nil)
 		expectedContact, expected := CheckUserPermissionsForContact(dataBase, id, userLogin)
-		So(expected, ShouldResemble, api.ErrorForbidden("You have not permissions"))
+		So(expected, ShouldResemble, api.ErrorForbidden("you are not permitted"))
 		So(expectedContact, ShouldResemble, moira.ContactData{User: "diffUser"})
 	})
 
@@ -290,7 +290,7 @@ func TestCheckUserPermissionsForContact(t *testing.T) {
 	})
 
 	Convey("Error get contact", t, func() {
-		err := fmt.Errorf("Oooops! Can not read contact")
+		err := fmt.Errorf("oooops! Can not read contact")
 		dataBase.EXPECT().GetContact(id).Return(moira.ContactData{User: userLogin}, err)
 		expectedContact, expected := CheckUserPermissionsForContact(dataBase, id, userLogin)
 		So(expected, ShouldResemble, api.ErrorInternalServer(err))

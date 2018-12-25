@@ -6,14 +6,15 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 
 	"fmt"
+	"time"
+
 	"github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/logging/go-logging"
-	"time"
 )
 
 //func TestRenewBot(t *testing.T) {
 //	logger, _ := logging.ConfigureLog("stdout", "info", "test")
-//	dataBase := NewDatabase(logger, config)
+//	dataBase := newTestDatabase(logger, config)
 //	dataBase.flush()
 //	//defer dataBase.flush()
 //
@@ -65,7 +66,7 @@ import (
 
 func TestBotDataStoring(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test")
-	dataBase := NewDatabase(logger, config)
+	dataBase := newTestDatabase(logger, config)
 	dataBase.flush()
 	defer dataBase.flush()
 
@@ -212,7 +213,7 @@ func TestBotDataStoring(t *testing.T) {
 
 func TestBotDataStoringErrorConnection(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test")
-	dataBase := NewDatabase(logger, emptyConfig)
+	dataBase := newTestDatabase(logger, emptyConfig)
 	dataBase.flush()
 	defer dataBase.flush()
 	Convey("Should throw error when no connection", t, func() {

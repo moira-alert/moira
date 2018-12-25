@@ -67,7 +67,6 @@ func (worker *Checker) handleTriggerInLock(triggerID string, metrics *graphite.C
 		defer func() {
 			timeSinceStart := time.Since(start)
 			metrics.TriggersCheckTime.Update(timeSinceStart)
-			metrics.TriggerCheckTime.GetOrAdd(triggerID, triggerID).Update(timeSinceStart)
 		}()
 		if err := worker.checkTrigger(triggerID); err != nil {
 			return err

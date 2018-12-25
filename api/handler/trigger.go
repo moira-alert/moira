@@ -3,18 +3,16 @@ package handler
 import (
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
-	"github.com/go-graphite/carbonapi/date"
-	"github.com/moira-alert/moira/remote"
 
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/controller"
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/api/middleware"
 	"github.com/moira-alert/moira/expression"
+	"github.com/moira-alert/moira/remote"
 	"github.com/moira-alert/moira/target"
 )
 
@@ -28,10 +26,10 @@ func trigger(router chi.Router) {
 		router.Get("/", getTriggerThrottling)
 		router.Delete("/", deleteThrottling)
 	})
-	router.Route("/metrics", func(router chi.Router) {
-		router.With(middleware.DateRange("-10minutes", "now")).Get("/", getTriggerMetrics)
-		router.Delete("/", deleteTriggerMetric)
-	})
+	router.Route("/metrics", triggerMetrics)
+	router.Put("/setMaintenance", setTriggerMaintenance)
+	router.With(middleware.DateRange("-1hour", "now")).Get("/render", renderTrigger)
+	// deprecated
 	router.Put("/maintenance", setMetricsMaintenance)
 }
 
@@ -41,9 +39,9 @@ func updateTrigger(writer http.ResponseWriter, request *http.Request) {
 	if err := render.Bind(request, trigger); err != nil {
 		switch err.(type) {
 		case target.ErrParseExpr, target.ErrEvalExpr, target.ErrUnknownFunction:
-			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("Invalid graphite targets: %s", err.Error())))
+			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("invalid graphite targets: %s", err.Error())))
 		case expression.ErrInvalidExpression:
-			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("Invalid expression: %s", err.Error())))
+			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("invalid expression: %s", err.Error())))
 		case remote.ErrRemoteTriggerResponse:
 			render.Render(writer, request, api.ErrorRemoteServerUnavailable(err))
 		default:
@@ -120,38 +118,7 @@ func deleteThrottling(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func getTriggerMetrics(writer http.ResponseWriter, request *http.Request) {
-	triggerID := middleware.GetTriggerID(request)
-	fromStr := middleware.GetFromStr(request)
-	toStr := middleware.GetToStr(request)
-	from := date.DateParamToEpoch(fromStr, "UTC", 0, time.UTC)
-	if from == 0 {
-		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("Can not parse from: %s", fromStr)))
-		return
-	}
-	to := date.DateParamToEpoch(toStr, "UTC", 0, time.UTC)
-	if to == 0 {
-		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("Can not parse to: %v", to)))
-		return
-	}
-	triggerMetrics, err := controller.GetTriggerMetrics(database, from, to, triggerID)
-	if err != nil {
-		render.Render(writer, request, err)
-		return
-	}
-	if err := render.Render(writer, request, &triggerMetrics); err != nil {
-		render.Render(writer, request, api.ErrorRender(err))
-	}
-}
-
-func deleteTriggerMetric(writer http.ResponseWriter, request *http.Request) {
-	triggerID := middleware.GetTriggerID(request)
-	metricName := request.URL.Query().Get("name")
-	if err := controller.DeleteTriggerMetric(database, metricName, triggerID); err != nil {
-		render.Render(writer, request, err)
-	}
-}
-
+// ToDo: DEPRECATED, remove in future versions
 func setMetricsMaintenance(writer http.ResponseWriter, request *http.Request) {
 	triggerID := middleware.GetTriggerID(request)
 	metricsMaintenance := dto.MetricsMaintenance{}
@@ -160,6 +127,20 @@ func setMetricsMaintenance(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 	err := controller.SetMetricsMaintenance(database, triggerID, metricsMaintenance)
+	if err != nil {
+		render.Render(writer, request, err)
+	}
+}
+
+func setTriggerMaintenance(writer http.ResponseWriter, request *http.Request) {
+	triggerID := middleware.GetTriggerID(request)
+	triggerMaintenance := dto.TriggerMaintenance{}
+	if err := render.Bind(request, &triggerMaintenance); err != nil {
+		render.Render(writer, request, api.ErrorInvalidRequest(err))
+		return
+	}
+
+	err := controller.SetTriggerMaintenance(database, triggerID, triggerMaintenance)
 	if err != nil {
 		render.Render(writer, request, err)
 	}

@@ -6,7 +6,6 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
-
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/controller"
@@ -75,7 +74,12 @@ func subscriptionFilter(next http.Handler) http.Handler {
 func updateSubscription(writer http.ResponseWriter, request *http.Request) {
 	subscription := &dto.Subscription{}
 	if err := render.Bind(request, subscription); err != nil {
-		render.Render(writer, request, api.ErrorInvalidRequest(err))
+		switch err.(type) {
+		case dto.ErrProvidedContactsForbidden:
+			render.Render(writer, request, api.ErrorForbidden(err.Error()))
+		default:
+			render.Render(writer, request, api.ErrorInvalidRequest(err))
+		}
 		return
 	}
 	subscriptionData := request.Context().Value(subscriptionKey).(moira.SubscriptionData)

@@ -2,19 +2,24 @@ package notifier
 
 import (
 	"fmt"
+	"sync"
+	"testing"
+	"time"
+
 	"github.com/golang/mock/gomock"
+	"github.com/op/go-logging"
+	. "github.com/smartystreets/goconvey/convey"
+
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
 	"github.com/moira-alert/moira/mock/moira-alert"
 	"github.com/moira-alert/moira/mock/scheduler"
-	"github.com/op/go-logging"
-	. "github.com/smartystreets/goconvey/convey"
-	"sync"
-	"testing"
-	"time"
 )
 
-var shutdown = make(chan bool)
+var (
+	plot     = make([]byte, 0)
+	shutdown = make(chan bool)
+)
 
 var (
 	mockCtrl  *gomock.Controller
@@ -24,6 +29,33 @@ var (
 	dataBase  *mock_moira_alert.MockDatabase
 	logger    moira.Logger
 )
+
+func TestGetMetricNames(t *testing.T) {
+	Convey("Test non-empty notification package", t, func() {
+		actual := notificationsPackage.GetMetricNames()
+		expected := []string{"metricName1", "metricName2", "metricName3", "metricName4", "metricName5"}
+		So(actual, ShouldResemble, expected)
+	})
+	Convey("Test empty notification package", t, func() {
+		emptyNotificationPackage := NotificationPackage{}
+		actual := emptyNotificationPackage.GetMetricNames()
+		So(actual, ShouldResemble, make([]string, 0))
+	})
+}
+
+func TestGetWindow(t *testing.T) {
+	Convey("Test non-empty notification package", t, func() {
+		from, to, err := notificationsPackage.GetWindow()
+		So(err, ShouldBeNil)
+		So(from, ShouldEqual, 10)
+		So(to, ShouldEqual, 79)
+	})
+	Convey("Test empty notification package", t, func() {
+		emptyNotificationPackage := NotificationPackage{}
+		_, _, err := emptyNotificationPackage.GetWindow()
+		So(err, ShouldResemble, fmt.Errorf("not enough data to resolve package window"))
+	})
+}
 
 func TestUnknownContactType(t *testing.T) {
 	configureNotifier(t)
@@ -38,7 +70,7 @@ func TestUnknownContactType(t *testing.T) {
 		},
 	}
 	notification := moira.ScheduledNotification{}
-	scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, pkg.Trigger, pkg.Contact, pkg.Throttled, pkg.FailCount+1).Return(&notification)
+	scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, pkg.Trigger, pkg.Contact, pkg.Plotting, pkg.Throttled, pkg.FailCount+1).Return(&notification)
 	dataBase.EXPECT().AddNotification(&notification).Return(nil)
 
 	var wg sync.WaitGroup
@@ -59,8 +91,8 @@ func TestFailSendEvent(t *testing.T) {
 		},
 	}
 	notification := moira.ScheduledNotification{}
-	sender.EXPECT().SendEvents(eventsData, pkg.Contact, pkg.Trigger, pkg.Throttled).Return(fmt.Errorf("Cant't send"))
-	scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, pkg.Trigger, pkg.Contact, pkg.Throttled, pkg.FailCount+1).Return(&notification)
+	sender.EXPECT().SendEvents(eventsData, pkg.Contact, pkg.Trigger, plot, pkg.Throttled).Return(fmt.Errorf("Cant't send"))
+	scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, pkg.Trigger, pkg.Contact, pkg.Plotting, pkg.Throttled, pkg.FailCount+1).Return(&notification)
 	dataBase.EXPECT().AddNotification(&notification).Return(nil)
 
 	var wg sync.WaitGroup
@@ -90,11 +122,11 @@ func TestTimeout(t *testing.T) {
 		},
 	}
 	notification := moira.ScheduledNotification{}
-	sender.EXPECT().SendEvents(eventsData, pkg.Contact, pkg.Trigger, pkg.Throttled).Return(nil).Do(func(f ...interface{}) {
+	sender.EXPECT().SendEvents(eventsData, pkg.Contact, pkg.Trigger, plot, pkg.Throttled).Return(nil).Do(func(f ...interface{}) {
 		fmt.Print("Trying to send for 10 second")
 		time.Sleep(time.Second * 10)
 	})
-	scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, pkg2.Trigger, pkg2.Contact, pkg2.Throttled, pkg2.FailCount+1).Return(&notification)
+	scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, pkg2.Trigger, pkg2.Contact, pkg.Plotting, pkg2.Throttled, pkg2.FailCount+1).Return(&notification)
 	dataBase.EXPECT().AddNotification(&notification).Return(nil).Do(func(f ...interface{}) { close(shutdown) })
 
 	var wg sync.WaitGroup
@@ -160,4 +192,14 @@ var event = moira.NotificationEvent{
 	OldState:       "WARN",
 	TriggerID:      "triggerID-0000000000001",
 	SubscriptionID: &subID,
+}
+
+var notificationsPackage = NotificationPackage{
+	Events: []moira.NotificationEvent{
+		{Metric: "metricName1", Timestamp: 15},
+		{Metric: "metricName2", Timestamp: 10},
+		{Metric: "metricName3", Timestamp: 31},
+		{Metric: "metricName4", Timestamp: 79},
+		{Metric: "metricName5", Timestamp: 10},
+	},
 }

@@ -22,8 +22,8 @@ func (connector *DbConnector) GetAllTriggerIDs() ([]string, error) {
 	return triggerIds, nil
 }
 
-// GetTriggerIDs gets moira triggerIDs without remote
-func (connector *DbConnector) GetTriggerIDs() ([]string, error) {
+// GetLocalTriggerIDs gets moira local triggerIDs
+func (connector *DbConnector) GetLocalTriggerIDs() ([]string, error) {
 	c := connector.pool.Get()
 	defer c.Close()
 	triggerIds, err := redis.Strings(c.Do("SDIFF", triggersListKey, remoteTriggersListKey))
@@ -117,11 +117,15 @@ func (connector *DbConnector) RemovePatternTriggerIDs(pattern string) error {
 // SaveTrigger sets trigger data by given trigger and triggerID
 // If trigger already exists, then merge old and new trigger patterns and tags list
 // and cleanup not used tags and patterns from lists
-// If given trigger contains new tags then create it
+// If given trigger contains new tags then create it.
+// If given trigger has no subscription on it, add it to triggers-without-subscriptions
 func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigger) error {
 	existing, errGetTrigger := connector.GetTrigger(triggerID)
 	if errGetTrigger != nil && errGetTrigger != database.ErrNil {
 		return errGetTrigger
+	}
+	if trigger.IsRemote {
+		trigger.Patterns = make([]string, 0)
 	}
 	bytes, err := reply.GetTriggerBytes(triggerID, trigger)
 	if err != nil {
@@ -132,7 +136,7 @@ func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigg
 	c.Send("MULTI")
 	cleanupPatterns := make([]string, 0)
 	if errGetTrigger != database.ErrNil {
-		for _, pattern := range leftJoin(existing.Patterns, trigger.Patterns) {
+		for _, pattern := range moira.GetStringListsDiff(existing.Patterns, trigger.Patterns) {
 			c.Send("SREM", patternTriggersKey(pattern), triggerID)
 			cleanupPatterns = append(cleanupPatterns, pattern)
 		}
@@ -140,7 +144,7 @@ func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigg
 			c.Send("SREM", remoteTriggersListKey, triggerID)
 		}
 
-		for _, tag := range leftJoin(existing.Tags, trigger.Tags) {
+		for _, tag := range moira.GetStringListsDiff(existing.Tags, trigger.Tags) {
 			c.Send("SREM", triggerTagsKey(triggerID), tag)
 			c.Send("SREM", tagTriggersKey(tag), triggerID)
 		}
@@ -160,22 +164,29 @@ func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigg
 		c.Send("SADD", tagTriggersKey(tag), triggerID)
 		c.Send("SADD", tagsKey, tag)
 	}
+	if connector.source != Cli {
+		c.Send("ZADD", triggersToReindexKey, time.Now().Unix(), triggerID)
+	}
 	_, err = c.Do("EXEC")
 	if err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
-	for _, pattern := range cleanupPatterns {
-		triggerIDs, err := connector.GetPatternTriggerIDs(pattern)
-		if err != nil {
-			return err
-		}
-		if len(triggerIDs) == 0 {
-			connector.RemovePatternTriggerIDs(pattern)
-			connector.RemovePattern(pattern)
-			connector.RemovePatternsMetrics([]string{pattern})
-		}
+
+	hasSubscriptions, err := connector.triggerHasSubscriptions(trigger)
+	if err != nil {
+		return fmt.Errorf("failed to check trigger subscriptions: %s", err.Error())
 	}
-	return nil
+
+	if !hasSubscriptions {
+		err = connector.MarkTriggersAsUnused(triggerID)
+	} else {
+		err = connector.MarkTriggersAsUsed(triggerID)
+	}
+	if err != nil {
+		return fmt.Errorf("failed to mark trigger as (un)used: %s", err.Error())
+	}
+
+	return connector.cleanupPatternsOutOfUse(cleanupPatterns)
 }
 
 // RemoveTrigger deletes trigger data by given triggerID, delete trigger tag list,
@@ -196,31 +207,23 @@ func (connector *DbConnector) RemoveTrigger(triggerID string) error {
 	c.Send("MULTI")
 	c.Send("DEL", triggerKey(triggerID))
 	c.Send("DEL", triggerTagsKey(triggerID))
+	c.Send("DEL", triggerEventsKey(triggerID))
 	c.Send("SREM", triggersListKey, triggerID)
 	c.Send("SREM", remoteTriggersListKey, triggerID)
+	c.Send("SREM", unusedTriggersKey, triggerID)
 	for _, tag := range trigger.Tags {
 		c.Send("SREM", tagTriggersKey(tag), triggerID)
 	}
 	for _, pattern := range trigger.Patterns {
 		c.Send("SREM", patternTriggersKey(pattern), triggerID)
 	}
+	c.Send("ZADD", triggersToReindexKey, time.Now().Unix(), triggerID)
 	_, err = c.Do("EXEC")
 	if err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
 
-	for _, pattern := range trigger.Patterns {
-		count, err := redis.Int64(c.Do("SCARD", patternTriggersKey(pattern)))
-		if err != nil {
-			return fmt.Errorf("failed to SCARD pattern triggers: %s", err.Error())
-		}
-		if count == 0 {
-			if err := connector.RemovePatternWithMetrics(pattern); err != nil {
-				return err
-			}
-		}
-	}
-	return nil
+	return connector.cleanupPatternsOutOfUse(trigger.Patterns)
 }
 
 // GetTriggerChecks gets triggers data with tags, lastCheck data and throttling by given triggersIDs
@@ -291,18 +294,37 @@ func (connector *DbConnector) getTriggerWithTags(triggerRaw interface{}, tagsRaw
 	return trigger, nil
 }
 
-func leftJoin(left, right []string) []string {
-	rightValues := make(map[string]bool)
-	for _, value := range right {
-		rightValues[value] = true
-	}
-	arr := make([]string, 0)
-	for _, leftValue := range left {
-		if _, ok := rightValues[leftValue]; !ok {
-			arr = append(arr, leftValue)
+func (connector *DbConnector) cleanupPatternsOutOfUse(pattern []string) error {
+	for _, pattern := range pattern {
+		triggerIDs, err := connector.GetPatternTriggerIDs(pattern)
+		if err != nil {
+			return err
+		}
+		if len(triggerIDs) == 0 {
+			if err := connector.RemovePatternWithMetrics(pattern); err != nil {
+				return err
+			}
 		}
 	}
-	return arr
+	return nil
+}
+
+func (connector *DbConnector) triggerHasSubscriptions(trigger *moira.Trigger) (bool, error) {
+	if trigger == nil || len(trigger.Tags) == 0 {
+		return false, nil
+	}
+	subscriptions, err := connector.GetTagsSubscriptions(trigger.Tags)
+	if err != nil {
+		return false, err
+	}
+
+	for _, subscription := range subscriptions {
+		if subscription != nil && moira.Subset(subscription.Tags, trigger.Tags) {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
 
 var triggersListKey = "moira-triggers-list"

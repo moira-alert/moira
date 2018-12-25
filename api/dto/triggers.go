@@ -60,49 +60,54 @@ type TriggerModel struct {
 	Patterns []string `json:"patterns"`
 	// Shows if trigger is remote (graphite-backend) based or stored inside Moira-Redis DB
 	IsRemote bool `json:"is_remote"`
+	// If true, first event NODATA → OK will be omitted
+	MuteNewMetrics bool `json:"mute_new_metrics"`
 }
 
 // ToMoiraTrigger transforms TriggerModel to moira.Trigger
 func (model *TriggerModel) ToMoiraTrigger() *moira.Trigger {
 	return &moira.Trigger{
-		ID:          model.ID,
-		Name:        model.Name,
-		Desc:        model.Desc,
-		Targets:     model.Targets,
-		WarnValue:   model.WarnValue,
-		ErrorValue:  model.ErrorValue,
-		TriggerType: model.TriggerType,
-		Tags:        model.Tags,
-		TTLState:    model.TTLState,
-		TTL:         model.TTL,
-		Schedule:    model.Schedule,
-		Expression:  &model.Expression,
-		Patterns:    model.Patterns,
-		IsRemote:    model.IsRemote,
+		ID:             model.ID,
+		Name:           model.Name,
+		Desc:           model.Desc,
+		Targets:        model.Targets,
+		WarnValue:      model.WarnValue,
+		ErrorValue:     model.ErrorValue,
+		TriggerType:    model.TriggerType,
+		Tags:           model.Tags,
+		TTLState:       model.TTLState,
+		TTL:            model.TTL,
+		Schedule:       model.Schedule,
+		Expression:     &model.Expression,
+		Patterns:       model.Patterns,
+		IsRemote:       model.IsRemote,
+		MuteNewMetrics: model.MuteNewMetrics,
 	}
 }
 
 // CreateTriggerModel transforms moira.Trigger to TriggerModel
 func CreateTriggerModel(trigger *moira.Trigger) TriggerModel {
 	return TriggerModel{
-		ID:          trigger.ID,
-		Name:        trigger.Name,
-		Desc:        trigger.Desc,
-		Targets:     trigger.Targets,
-		WarnValue:   trigger.WarnValue,
-		ErrorValue:  trigger.ErrorValue,
-		TriggerType: trigger.TriggerType,
-		Tags:        trigger.Tags,
-		TTLState:    trigger.TTLState,
-		TTL:         trigger.TTL,
-		Schedule:    trigger.Schedule,
-		Expression:  moira.UseString(trigger.Expression),
-		Patterns:    trigger.Patterns,
-		IsRemote:    trigger.IsRemote,
+		ID:             trigger.ID,
+		Name:           trigger.Name,
+		Desc:           trigger.Desc,
+		Targets:        trigger.Targets,
+		WarnValue:      trigger.WarnValue,
+		ErrorValue:     trigger.ErrorValue,
+		TriggerType:    trigger.TriggerType,
+		Tags:           trigger.Tags,
+		TTLState:       trigger.TTLState,
+		TTL:            trigger.TTL,
+		Schedule:       trigger.Schedule,
+		Expression:     moira.UseString(trigger.Expression),
+		Patterns:       trigger.Patterns,
+		IsRemote:       trigger.IsRemote,
+		MuteNewMetrics: trigger.MuteNewMetrics,
 	}
 }
 
 func (trigger *Trigger) Bind(request *http.Request) error {
+	trigger.Tags = normalizeTags(trigger.Tags)
 	if len(trigger.Targets) == 0 {
 		return fmt.Errorf("targets is required")
 	}
@@ -127,7 +132,7 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 
 	remoteCfg := middleware.GetRemoteConfig(request)
 	if trigger.IsRemote && !remoteCfg.IsEnabled() {
-		return fmt.Errorf("remote graphite storage is not enabled")
+		return remote.ErrRemoteStorageDisabled
 	}
 
 	if err := resolvePatterns(request, trigger, &triggerExpression); err != nil {
@@ -255,6 +260,15 @@ func (*MetricsMaintenance) Bind(r *http.Request) error {
 	return nil
 }
 
+type TriggerMaintenance struct {
+	Trigger *int64           `json:"trigger"`
+	Metrics map[string]int64 `json:"metrics"`
+}
+
+func (*TriggerMaintenance) Bind(r *http.Request) error {
+	return nil
+}
+
 type ThrottlingResponse struct {
 	Throttling int64 `json:"throttling"`
 }
@@ -272,7 +286,10 @@ func (*SaveTriggerResponse) Render(w http.ResponseWriter, r *http.Request) error
 	return nil
 }
 
-type TriggerMetrics map[string][]moira.MetricValue
+type TriggerMetrics struct {
+	Main       map[string][]*moira.MetricValue `json:"main"`
+	Additional map[string][]*moira.MetricValue `json:"additional,omitempty"`
+}
 
 func (*TriggerMetrics) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil

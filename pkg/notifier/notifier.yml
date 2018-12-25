@@ -1,3 +1,4 @@
+#See https://moira.readthedocs.io/en/latest/installation/configuration.html for config explanation
 redis:
   host: localhost
   port: "6379"
@@ -8,6 +9,9 @@ graphite:
   uri: "localhost:2003"
   prefix: DevOps.Moira
   interval: 60s
+remote:
+  enabled: false
+  timeout: 60s
 notifier:
   sender_timeout: 10s
   resending_timeout: "1:00"

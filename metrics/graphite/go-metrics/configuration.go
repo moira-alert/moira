@@ -39,6 +39,7 @@ func ConfigureCheckerMetrics(prefix string, remoteEnabled bool) *graphite.Checke
 		MoiraMetrics:           configureCheckMetrics(prefix + ".local"),
 		MetricEventsChannelLen: registerHistogram(metricNameWithPrefix(prefix, "metricEvents")),
 		MetricEventsHandleTime: registerTimer(metricNameWithPrefix(prefix, "metricEventsHandle")),
+		UnusedTriggersCount:    registerHistogram(metricNameWithPrefix(prefix, "triggers.unused")),
 	}
 	if remoteEnabled {
 		m.RemoteMetrics = configureCheckMetrics(prefix + ".remote")
@@ -46,12 +47,19 @@ func ConfigureCheckerMetrics(prefix string, remoteEnabled bool) *graphite.Checke
 	return m
 }
 
+// ConfigureIndexMetrics in full-text search index metrics configurator
+func ConfigureIndexMetrics(prefix string) *graphite.IndexMetrics {
+	return &graphite.IndexMetrics{
+		IndexedTriggersCount:  registerHistogram(metricNameWithPrefix(prefix, "indexedTriggers")),
+		IndexActualizationLag: registerTimer(metricNameWithPrefix(prefix, "actualizationLag")),
+	}
+}
+
 func configureCheckMetrics(prefix string) *graphite.CheckMetrics {
 	return &graphite.CheckMetrics{
 		CheckError:           registerMeter(metricNameWithPrefix(prefix, "errors.check")),
 		HandleError:          registerMeter(metricNameWithPrefix(prefix, "errors.handle")),
 		TriggersCheckTime:    registerTimer(metricNameWithPrefix(prefix, "triggers")),
-		TriggerCheckTime:     newTimerMap(metricNameWithPrefix(prefix, "trigger")),
 		TriggersToCheckCount: registerHistogram(metricNameWithPrefix(prefix, "triggersToCheck")),
 	}
 }

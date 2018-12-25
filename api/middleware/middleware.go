@@ -17,6 +17,7 @@ func (key ContextKey) String() string {
 
 var (
 	databaseKey        ContextKey = "database"
+	searcherKey        ContextKey = "searcher"
 	triggerIDKey       ContextKey = "triggerID"
 	contactIDKey       ContextKey = "contactID"
 	tagKey             ContextKey = "tag"

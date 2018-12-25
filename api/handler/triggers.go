@@ -3,10 +3,12 @@ package handler
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
+	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/remote"
 
 	"github.com/moira-alert/moira/api"
@@ -17,13 +19,16 @@ import (
 	"github.com/moira-alert/moira/target"
 )
 
-func triggers(cfg *remote.Config) func(chi.Router) {
+func triggers(cfg *remote.Config, searcher moira.Searcher) func(chi.Router) {
 	return func(router chi.Router) {
 		router.Use(middleware.RemoteConfigContext(cfg))
+		router.Use(middleware.SearchIndexContext(searcher))
 		router.Get("/", getAllTriggers)
 		router.Put("/", createTrigger)
-		router.With(middleware.Paginate(0, 10)).Get("/page", getTriggersPage)
 		router.Route("/{triggerId}", trigger)
+		router.With(middleware.Paginate(0, 10)).Get("/search", searchTriggers)
+		// ToDo: DEPRECATED method. Remove in Moira 2.5
+		router.With(middleware.Paginate(0, 10)).Get("/page", searchTriggers)
 	}
 }
 
@@ -45,9 +50,9 @@ func createTrigger(writer http.ResponseWriter, request *http.Request) {
 	if err := render.Bind(request, trigger); err != nil {
 		switch err.(type) {
 		case target.ErrParseExpr, target.ErrEvalExpr, target.ErrUnknownFunction:
-			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("Invalid graphite targets: %s", err.Error())))
+			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("invalid graphite targets: %s", err.Error())))
 		case expression.ErrInvalidExpression:
-			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("Invalid expression: %s", err.Error())))
+			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("invalid expression: %s", err.Error())))
 		case remote.ErrRemoteTriggerResponse:
 			render.Render(writer, request, api.ErrorRemoteServerUnavailable(err))
 		default:
@@ -68,15 +73,16 @@ func createTrigger(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func getTriggersPage(writer http.ResponseWriter, request *http.Request) {
+func searchTriggers(writer http.ResponseWriter, request *http.Request) {
 	request.ParseForm()
 	onlyErrors := getOnlyProblemsFlag(request)
 	filterTags := getRequestTags(request)
+	searchString := getSearchRequestString(request)
 
 	page := middleware.GetPage(request)
 	size := middleware.GetSize(request)
 
-	triggersList, errorResponse := controller.GetTriggerPage(database, page, size, onlyErrors, filterTags)
+	triggersList, errorResponse := controller.SearchTriggers(database, searchIndex, page, size, onlyErrors, filterTags, searchString)
 	if errorResponse != nil {
 		render.Render(writer, request, errorResponse)
 		return
@@ -109,4 +115,10 @@ func getOnlyProblemsFlag(request *http.Request) bool {
 		return onlyProblems
 	}
 	return false
+}
+
+func getSearchRequestString(request *http.Request) string {
+	searchText := request.FormValue("text")
+	searchText, _ = url.PathUnescape(searchText)
+	return searchText
 }

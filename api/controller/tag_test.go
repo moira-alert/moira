@@ -28,7 +28,7 @@ func TestGetAllTags(t *testing.T) {
 	})
 
 	Convey("Error", t, func() {
-		expected := fmt.Errorf("Nooooooooooooooooooooo")
+		expected := fmt.Errorf("nooooooooooooooooooooo")
 		database.EXPECT().GetTagNames().Return(nil, expected)
 		data, err := GetAllTags(database)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
@@ -53,12 +53,12 @@ func TestDeleteTag(t *testing.T) {
 	Convey("Test has trigger ids by tag", t, func() {
 		database.EXPECT().GetTagTriggerIDs(tag).Return([]string{"123"}, nil)
 		resp, err := RemoveTag(database, tag)
-		So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("This tag is assigned to %v triggers. Remove tag from triggers first", 1)))
+		So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("this tag is assigned to %v triggers. Remove tag from triggers first", 1)))
 		So(resp, ShouldBeNil)
 	})
 
 	Convey("GetTagTriggerIDs error", t, func() {
-		expected := fmt.Errorf("Can not read trigger ids")
+		expected := fmt.Errorf("can not read trigger ids")
 		database.EXPECT().GetTagTriggerIDs(tag).Return(nil, expected)
 		resp, err := RemoveTag(database, tag)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
@@ -66,7 +66,7 @@ func TestDeleteTag(t *testing.T) {
 	})
 
 	Convey("Error delete tag", t, func() {
-		expected := fmt.Errorf("Can not delete tag")
+		expected := fmt.Errorf("can not delete tag")
 		database.EXPECT().GetTagTriggerIDs(tag).Return(nil, nil)
 		database.EXPECT().RemoveTag(tag).Return(expected)
 		resp, err := RemoveTag(database, tag)
@@ -108,7 +108,7 @@ func TestGetAllTagsAndSubscriptions(t *testing.T) {
 
 	Convey("Errors", t, func() {
 		Convey("GetTagNames", func() {
-			expected := fmt.Errorf("Can not get tag names")
+			expected := fmt.Errorf("can not get tag names")
 			tags := []string{"tag21", "tag22", "tag1"}
 			database.EXPECT().GetTagNames().Return(tags, expected)
 			stat, err := GetAllTagsAndSubscriptions(database, logger)
