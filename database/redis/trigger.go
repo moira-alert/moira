@@ -164,7 +164,9 @@ func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigg
 		c.Send("SADD", tagTriggersKey(tag), triggerID)
 		c.Send("SADD", tagsKey, tag)
 	}
-	c.Send("ZADD", triggersToReindexKey, time.Now().Unix(), triggerID)
+	if connector.source != Cli {
+		c.Send("ZADD", triggersToReindexKey, time.Now().Unix(), triggerID)
+	}
 	_, err = c.Do("EXEC")
 	if err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
