@@ -139,11 +139,14 @@ func calculateNextDelivery(schedule *moira.ScheduleData, nextTime time.Time) (ti
 	if len(schedule.Days) == 0 {
 		return nextTime, nil
 	}
+	beginOffset := time.Duration(schedule.StartOffset) * time.Minute
+	endOffset := time.Duration(schedule.EndOffset) * time.Minute
+	if schedule.EndOffset < schedule.StartOffset {
+		endOffset = endOffset + (time.Hour * 24)
+	}
 
 	tzOffset := time.Duration(schedule.TimezoneOffset) * time.Minute
 	localNextTime := nextTime.Add(-tzOffset).Truncate(time.Minute)
-	beginOffset := time.Duration(schedule.StartOffset) * time.Minute
-	endOffset := time.Duration(schedule.EndOffset) * time.Minute
 	localNextTimeDay := localNextTime.Truncate(24 * time.Hour)
 	localNextWeekday := int(localNextTimeDay.Weekday()+6) % 7
 

@@ -234,6 +234,20 @@ func TestSubscriptionSchedule(t *testing.T) {
 			mockCtrl.Finish()
 		})
 	})
+
+	Convey("When we use advanced time (e.g. 02:00 - 00:00), schedule must work properly", t, func() {
+		now := time.Unix(1441191600, 0)
+		subscription.ThrottlingEnabled = false
+		subscription.Schedule = schedule3
+		dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
+		dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
+
+		// 1441191600 2015-09-02, 16:00:00 GMT+05:00
+		next, throttled := scheduler.calculateNextDelivery(now, &event)
+		So(next, ShouldResemble, time.Unix(1441191600, 0))
+		So(throttled, ShouldBeFalse)
+		mockCtrl.Finish()
+	})
 }
 
 var schedule1 = moira.ScheduleData{
@@ -263,5 +277,20 @@ var schedule2 = moira.ScheduleData{
 		{Enabled: false},
 		{Enabled: false},
 		{Enabled: false},
+	},
+}
+
+var schedule3 = moira.ScheduleData{
+	StartOffset:    120, // 00:00 (GMT +5) before
+	EndOffset:      0,   // 20:00 (GMT +5)
+	TimezoneOffset: -300,
+	Days: []moira.ScheduleDataDay{
+		{Enabled: true},
+		{Enabled: true},
+		{Enabled: true},
+		{Enabled: true},
+		{Enabled: true},
+		{Enabled: true},
+		{Enabled: true},
 	},
 }
