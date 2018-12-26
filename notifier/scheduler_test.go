@@ -235,18 +235,98 @@ func TestSubscriptionSchedule(t *testing.T) {
 		})
 	})
 
-	Convey("When we use advanced time (e.g. 02:00 - 00:00), schedule must work properly", t, func() {
-		now := time.Unix(1441191600, 0)
-		subscription.ThrottlingEnabled = false
-		subscription.Schedule = schedule3
-		dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
-		dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
+	Convey("Test advanced schedule (e.g. 02:00 - 00:00)", t, func() {
+		// Schedule: 02:00 - 00:00 (GTM +3)
+		Convey("Time is out of range, nextTime should resemble now", func() {
+			// 2015-09-02, 14:00:00 GMT+03:00
+			now := time.Unix(1441191600, 0)
+			subscription.ThrottlingEnabled = false
+			subscription.Schedule = schedule3
+			dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
+			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
 
-		// 1441191600 2015-09-02, 16:00:00 GMT+05:00
-		next, throttled := scheduler.calculateNextDelivery(now, &event)
-		So(next, ShouldResemble, time.Unix(1441191600, 0))
-		So(throttled, ShouldBeFalse)
-		mockCtrl.Finish()
+			next, throttled := scheduler.calculateNextDelivery(now, &event)
+			// 2015-09-02, 14:00:00 GMT+03:00
+			So(next, ShouldResemble, time.Unix(1441191600, 0))
+			So(throttled, ShouldBeFalse)
+			mockCtrl.Finish()
+		})
+
+		Convey("Time is in range, nextTime should resemble start of new period", func() {
+			// 2015-09-02, 01:00:00 GMT+03:00
+			now := time.Unix(1441144800, 0)
+			subscription.ThrottlingEnabled = false
+			subscription.Schedule = schedule3
+			dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
+			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
+
+			next, throttled := scheduler.calculateNextDelivery(now, &event)
+			// 2015-09-02, 02:00:00 GMT+03:00
+			So(next, ShouldResemble, time.Unix(1441148400, 0))
+			So(throttled, ShouldBeFalse)
+			mockCtrl.Finish()
+		})
+
+		Convey("Up border case, nextTime should resemble now", func() {
+			// 2015-09-02, 02:00:00 GMT+03:00
+			now := time.Unix(1441148400, 0)
+			subscription.ThrottlingEnabled = false
+			subscription.Schedule = schedule3
+			dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
+			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
+
+			next, throttled := scheduler.calculateNextDelivery(now, &event)
+			// 2015-09-02, 02:00:00 GMT+03:00
+			So(next, ShouldResemble, time.Unix(1441148400, 0))
+			So(throttled, ShouldBeFalse)
+			mockCtrl.Finish()
+		})
+
+		Convey("Low border case, nextTime should resemble start of new period", func() {
+			// 2015-09-02, 00:00:00 GMT+03:00
+			now := time.Unix(1441141200, 0)
+			subscription.ThrottlingEnabled = false
+			subscription.Schedule = schedule3
+			dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
+			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
+
+			next, throttled := scheduler.calculateNextDelivery(now, &event)
+			// 2015-09-02, 02:00:00 GMT+03:00
+			So(next, ShouldResemble, time.Unix(1441148400, 0))
+			So(throttled, ShouldBeFalse)
+			mockCtrl.Finish()
+		})
+
+		Convey("Low border case - 1 minute, nextTime should resemble now", func() {
+			// 2015-09-01, 23:59:00 GMT+03:00
+			now := time.Unix(1441141140, 0)
+			subscription.ThrottlingEnabled = false
+			subscription.Schedule = schedule3
+			dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
+			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
+
+			next, throttled := scheduler.calculateNextDelivery(now, &event)
+			// 2015-09-01, 23:59:00 GMT+03:00
+			So(next, ShouldResemble, time.Unix(1441141140, 0))
+			So(throttled, ShouldBeFalse)
+			mockCtrl.Finish()
+		})
+
+		Convey("Up border case - 1 minute, nextTime should resemble start of new period", func() {
+			// 2015-09-02, 01:59:00 GMT+03:00
+			now := time.Unix(1441148340, 0)
+			subscription.ThrottlingEnabled = false
+			subscription.Schedule = schedule3
+			dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
+			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
+
+			next, throttled := scheduler.calculateNextDelivery(now, &event)
+			// 2015-09-02, 02:00:00 GMT+03:00
+			So(next, ShouldResemble, time.Unix(1441148400, 0))
+			So(throttled, ShouldBeFalse)
+			mockCtrl.Finish()
+		})
+
 	})
 }
 
@@ -281,9 +361,9 @@ var schedule2 = moira.ScheduleData{
 }
 
 var schedule3 = moira.ScheduleData{
-	StartOffset:    120, // 00:00 (GMT +5) before
-	EndOffset:      0,   // 20:00 (GMT +5)
-	TimezoneOffset: -300,
+	StartOffset:    120,  // 02:00
+	EndOffset:      0,    // 00:00
+	TimezoneOffset: -180, // (GMT +3)
 	Days: []moira.ScheduleDataDay{
 		{Enabled: true},
 		{Enabled: true},

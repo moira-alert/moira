@@ -122,7 +122,7 @@ func TestIsScheduleAllows(t *testing.T) {
 
 	Convey("Exclude business hours", t, func() {
 		schedule := getDefaultSchedule()                           // TimeZone: Asia/Ekaterinburg (YEKT)
-		schedule.StartOffset = 12000                               // 20:00
+		schedule.StartOffset = 1200                                // 20:00
 		schedule.EndOffset = 420                                   // 07:00
 		So(schedule.IsScheduleAllows(86400+129*60), ShouldBeFalse) // 02/01/1970 2:09  - 02/01/1970 07:09 (YEKT)
 		So(schedule.IsScheduleAllows(86400-239*60), ShouldBeTrue)  // 01/01/1970 20:01 - 02/01/1970 01:01 (YEKT)
