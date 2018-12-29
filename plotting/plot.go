@@ -54,12 +54,13 @@ func (plot *Plot) GetRenderable(trigger *moira.Trigger, metricsData []*types.Met
 	limits := resolveLimits(metricsData)
 
 	curveSeriesList := getCurveSeriesList(metricsData, plot.theme)
-	for _, curveSeries := range curveSeriesList {
-		plotSeries = append(plotSeries, curveSeries)
+	if len(curveSeriesList) > 0 {
+		for _, curveSeries := range curveSeriesList {
+			plotSeries = append(plotSeries, curveSeries)
+		}
+		thresholdSeriesList := getThresholdSeriesList(trigger, plot.theme, limits)
+		plotSeries = append(plotSeries, thresholdSeriesList...)
 	}
-
-	thresholdSeriesList := getThresholdSeriesList(trigger, plot.theme, limits)
-	plotSeries = append(plotSeries, thresholdSeriesList...)
 
 	gridStyle := plot.theme.GetGridStyle()
 
