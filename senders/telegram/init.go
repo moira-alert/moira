@@ -71,9 +71,10 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 // to make sure there is always only one working Poller
 func (sender *Sender) runTelebot() error {
 	firstCheck := true
+	defer sender.DataBase.DeregisterService(moira.TelegramBot)
 	go func() {
 		for {
-			if sender.DataBase.RegisterBotIfAlreadyNot(messenger, databaseMutexExpiry) {
+			if sender.DataBase.RegisterServiceIfNotDone(moira.TelegramBot, databaseMutexExpiry) {
 				sender.logger.Infof("Registered new %s bot, checking for new messages", messenger)
 				go sender.bot.Start()
 				sender.renewSubscription(databaseMutexExpiry)
@@ -95,7 +96,7 @@ func (sender *Sender) renewSubscription(ttl time.Duration) {
 	checkTicker := time.NewTicker((ttl / time.Second) / 2 * time.Second)
 	for {
 		<-checkTicker.C
-		if !sender.DataBase.RenewBotRegistration(messenger) {
+		if !sender.DataBase.RenewServiceRegistration(moira.TelegramBot) {
 			sender.logger.Warningf("Could not renew subscription for %s bot, try to register bot again", messenger)
 			sender.bot.Stop()
 			return

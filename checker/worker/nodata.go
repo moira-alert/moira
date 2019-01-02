@@ -1,6 +1,7 @@
 package worker
 
 import (
+	"github.com/moira-alert/moira"
 	"time"
 )
 
@@ -54,7 +55,7 @@ func (worker *Checker) runNodataChecker() error {
 	firstCheck := true
 	go func() {
 		for {
-			if worker.Database.RegisterNodataCheckerIfAlreadyNot(databaseMutexExpiry) {
+			if worker.Database.RegisterServiceIfNotDone(moira.NodataChecker, databaseMutexExpiry) {
 				worker.Logger.Infof("Registered new NODATA checker, start checking triggers for NODATA")
 				go worker.noDataChecker(stop)
 				worker.renewRegistration(databaseMutexExpiry, stop)
@@ -77,7 +78,7 @@ func (worker *Checker) renewRegistration(ttl time.Duration, stop chan bool) {
 	for {
 		select {
 		case <-renewTicker.C:
-			if !worker.Database.RenewNodataCheckerRegistration() {
+			if !worker.Database.RenewServiceRegistration(moira.NodataChecker) {
 				worker.Logger.Warningf("Could not renew registration for NODATA checker")
 				stop <- true
 				return

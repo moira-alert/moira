@@ -92,7 +92,6 @@ func main() {
 	if err := sender.RegisterSenders(database); err != nil {
 		logger.Fatalf("Can not configure senders: %s", err.Error())
 	}
-	defer database.DeregisterBots()
 
 	// Start moira self state checker
 	selfState := &selfstate.SelfCheckWorker{

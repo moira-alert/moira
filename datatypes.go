@@ -28,6 +28,16 @@ var eventStateWeight = map[string]int{
 	"NODATA": 10000,
 }
 
+// SingleInstanceService is type which describes Moira services which should run in the only copy at once
+type SingleInstanceService string
+
+// Constants used as enum
+const (
+	NodataChecker    SingleInstanceService = "checker:nodata"
+	SelfStateChecker SingleInstanceService = "notifier:selfstate"
+	TelegramBot      SingleInstanceService = "notifier:telegram-bot"
+)
+
 // NotificationEvent represents trigger state changes event
 type NotificationEvent struct {
 	IsTriggerEvent bool     `json:"trigger_event,omitempty"`

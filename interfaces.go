@@ -110,15 +110,11 @@ type Database interface {
 	GetIDByUsername(messenger, username string) (string, error)
 	SetUsernameID(messenger, username, id string) error
 	RemoveUser(messenger, username string) error
-	RegisterBotIfAlreadyNot(messenger string, ttl time.Duration) bool
-	RenewBotRegistration(messenger string) bool
-	DeregisterBots()
-	DeregisterBot(messenger string) bool
 
-	// Service registration
-	RegisterNodataCheckerIfAlreadyNot(ttl time.Duration) bool
-	RenewNodataCheckerRegistration() bool
-	DeregisterNodataChecker() bool
+	// SingleInstanceService registration
+	RegisterServiceIfNotDone(service SingleInstanceService, ttl time.Duration) bool
+	RenewServiceRegistration(service SingleInstanceService) bool
+	DeregisterService(service SingleInstanceService) bool
 
 	// Triggers without subscription manipulation
 	MarkTriggersAsUnused(triggerIDs ...string) error
