@@ -407,28 +407,6 @@ func TestDeleteTriggerThrottling(t *testing.T) {
 	})
 }
 
-func TestSetMetricsMaintenance(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-	triggerID := uuid.NewV4().String()
-	maintenance := make(map[string]int64)
-
-	Convey("Success", t, func() {
-		errorMessage := api.WarningDeprecatedAPI(fmt.Sprintf("deprecated API, use /trigger/%s/setMaintenance instead", triggerID))
-		dataBase.EXPECT().SetTriggerCheckMaintenance(triggerID, maintenance, nil).Return(nil)
-		err := SetMetricsMaintenance(dataBase, triggerID, maintenance)
-		So(err, ShouldResemble, errorMessage)
-	})
-
-	Convey("Error", t, func() {
-		expected := fmt.Errorf("oooops! Error set")
-		dataBase.EXPECT().SetTriggerCheckMaintenance(triggerID, maintenance, nil).Return(expected)
-		err := SetMetricsMaintenance(dataBase, triggerID, maintenance)
-		So(err, ShouldResemble, api.ErrorInternalServer(expected))
-	})
-}
-
 func TestSetTriggerMaintenance(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
