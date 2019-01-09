@@ -1,12 +1,13 @@
 package redis
 
 import (
-	"github.com/moira-alert/moira"
 	"testing"
 	"time"
 
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
+
+	"github.com/moira-alert/moira"
 )
 
 func TestLock(t *testing.T) {
