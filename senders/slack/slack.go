@@ -73,7 +73,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	params := slack.PostMessageParameters{
 		Username:  "Moira",
 		AsUser:    useDirectMessaging(contact.Value),
-		IconEmoji: getStateEmoji(sender.useEmoji, events),
+		IconEmoji: getStateEmoji(sender.useEmoji, state),
 		Markdown:  true,
 	}
 
@@ -102,12 +102,10 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 }
 
 // getStateEmoji returns corresponding state emoji
-func getStateEmoji(emojiEnabled bool, events moira.NotificationEvents) string {
+func getStateEmoji(emojiEnabled bool, subjectState string) string {
 	if emojiEnabled {
-		for _, event := range events {
-			if event.State != "OK" {
-				return badStateEmoji
-			}
+		if subjectState != "OK" {
+			return badStateEmoji
 		}
 		return goodStateEmoji
 	}
