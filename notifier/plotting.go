@@ -43,6 +43,10 @@ func (notifier *StandardNotifier) buildNotificationPackagePlot(pkg NotificationP
 	if pkg.Trigger.ID == "" {
 		return buff.Bytes(), nil
 	}
+	metricsToShow := pkg.GetMetricNames()
+	if len(metricsToShow) == 0 {
+		return buff.Bytes(), nil
+	}
 	plotTemplate, err := plotting.GetPlotTemplate(pkg.Plotting.Theme, notifier.config.Location)
 	if err != nil {
 		return buff.Bytes(), err
@@ -53,7 +57,6 @@ func (notifier *StandardNotifier) buildNotificationPackagePlot(pkg NotificationP
 	if err != nil {
 		return buff.Bytes(), err
 	}
-	metricsToShow := pkg.GetMetricNames()
 	notifier.logger.Debugf("rendering %s timeseries: %s", trigger.ID, strings.Join(metricsToShow, ", "))
 	renderable, err := plotTemplate.GetRenderable(trigger, metricsData, metricsToShow)
 	if err != nil {
