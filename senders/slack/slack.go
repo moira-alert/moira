@@ -11,10 +11,16 @@ import (
 	"github.com/nlopes/slack"
 )
 
+const (
+	badStateEmoji  = ":moira-bad-state:"
+	goodStateEmoji = ":moira-good-state:"
+)
+
 // Sender implements moira sender interface via slack
 type Sender struct {
 	APIToken string
 	FrontURI string
+	useEmoji bool
 	log      moira.Logger
 	location *time.Location
 }
@@ -25,6 +31,13 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 	sender.APIToken = senderSettings["api_token"]
 	if sender.APIToken == "" {
 		return fmt.Errorf("Can not read slack api_token from config")
+	}
+	var err error
+	if useEmoji, ok := senderSettings["use_emoji"]; ok {
+		sender.useEmoji, err = strconv.ParseBool(useEmoji)
+		if err != nil {
+			return fmt.Errorf("Can not read slack use_emoji parameter: %s", err.Error())
+		}
 	}
 	sender.log = logger
 	sender.FrontURI = senderSettings["front_uri"]
@@ -40,13 +53,8 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	var message bytes.Buffer
 	state := events.GetSubjectState()
 	tags := trigger.GetTags()
-	message.WriteString(fmt.Sprintf("*%s* %s <%s/trigger/%s|%s>\n %s \n```",
-		state, tags, sender.FrontURI, events[0].TriggerID, trigger.Name, trigger.Desc))
-	icon := fmt.Sprintf("%s/public/fav72_ok.png", sender.FrontURI)
+	message.WriteString(fmt.Sprintf("*%s* %s <%s/trigger/%s|%s>\n %s \n```", state, tags, sender.FrontURI, events[0].TriggerID, trigger.Name, trigger.Desc))
 	for _, event := range events {
-		if event.State != "OK" {
-			icon = fmt.Sprintf("%s/public/fav72_error.png", sender.FrontURI)
-		}
 		value := strconv.FormatFloat(moira.UseFloat64(event.Value), 'f', -1, 64)
 		message.WriteString(fmt.Sprintf("\n%s: %s = %s (%s to %s)", time.Unix(event.Timestamp, 0).In(sender.location).Format("15:04"), event.Metric, value, event.OldState, event.State))
 		if len(moira.UseString(event.Message)) > 0 {
@@ -63,10 +71,10 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	sender.log.Debugf("Calling slack with message body %s", message.String())
 
 	params := slack.PostMessageParameters{
-		Username: "Moira",
-		AsUser:   useDirectMessaging(contact.Value),
-		IconURL:  icon,
-		Markdown: true,
+		Username:  "Moira",
+		AsUser:    useDirectMessaging(contact.Value),
+		IconEmoji: getStateEmoji(sender.useEmoji, events),
+		Markdown:  true,
 	}
 
 	channelID, threadTimestamp, err := api.PostMessage(contact.Value, slack.MsgOptionText(message.String(),
@@ -93,10 +101,20 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	return nil
 }
 
+// getStateEmoji returns corresponding state emoji
+func getStateEmoji(emojiEnabled bool, events moira.NotificationEvents) string {
+	if emojiEnabled {
+		for _, event := range events {
+			if event.State != "OK" {
+				return badStateEmoji
+			}
+		}
+		return goodStateEmoji
+	}
+	return slack.DEFAULT_MESSAGE_ICON_EMOJI
+}
+
 // useDirectMessaging returns true if user contact is provided
 func useDirectMessaging(contactValue string) bool {
-	if len(contactValue) > 0 && contactValue[0:1] == "@" {
-		return true
-	}
-	return false
+	return len(contactValue) > 0 && contactValue[0:1] == "@"
 }
