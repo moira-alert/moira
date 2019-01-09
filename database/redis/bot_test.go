@@ -1,16 +1,80 @@
 package redis
 
 import (
+	"fmt"
 	"testing"
+	"time"
 
 	. "github.com/smartystreets/goconvey/convey"
-
-	"fmt"
-	"time"
 
 	"github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/logging/go-logging"
 )
+
+func TestRenewBotRegistration(t *testing.T) {
+	logger, _ := logging.ConfigureLog("stdout", "debug", "test")
+	dataBase := NewDatabase(logger, config, Notifier)
+	dataBase.flush()
+	defer dataBase.flush()
+
+	lockTTLMilliseconds := 3000
+	lockTTLDuration := time.Duration(lockTTLMilliseconds) * time.Millisecond
+
+	var firstLockString string
+	var secondLockString string
+	var testLockString string
+	var err error
+
+	Convey("Manage bot registrations", t, func() {
+		Convey("No registrations to renew", func() {
+			renewed := dataBase.RenewBotRegistration(messenger3)
+			So(renewed, ShouldBeFalse)
+		})
+		Convey("Just register, should be registered", func() {
+			registered := dataBase.RegisterBotIfAlreadyNot(messenger3, lockTTLDuration)
+			So(registered, ShouldBeTrue)
+		})
+		Convey("This messenger should be a temp user, with auto generated string", func() {
+			firstLockString, err = dataBase.GetIDByUsername(messenger3, botUsername)
+			So(err, ShouldBeNil)
+			So(firstLockString, ShouldNotBeEmpty)
+			fmt.Println(firstLockString)
+		})
+		Convey("Accidentally called Renew bot registration, should not be renewed", func() {
+			lockResults := testLockWithTTLExpireErrorExpected(logger, lockTTLMilliseconds, true, 2, func() bool {
+				return dataBase.RenewBotRegistration(messenger3)
+			})
+			So(lockResults[len(lockResults)-1], ShouldBeFalse)
+		})
+		Convey("Register second messenger, should be as temp user, with new string", func() {
+			lockResults := testLockWithTTLExpireErrorExpected(logger, lockTTLMilliseconds, false, 3, func() bool {
+				return dataBase.RegisterBotIfAlreadyNot(messenger3, lockTTLDuration)
+			})
+			So(lockResults, ShouldContain, true)
+
+			secondLockString, err = dataBase.GetIDByUsername(messenger3, botUsername)
+			So(err, ShouldBeNil)
+			So(secondLockString, ShouldNotBeEmpty)
+			So(firstLockString, ShouldNotResemble, secondLockString)
+			fmt.Println(secondLockString)
+		})
+		Convey("Renew bot registration, should be renewed", func() {
+			testLockString, err = dataBase.GetIDByUsername(messenger3, botUsername)
+			So(err, ShouldBeNil)
+			So(firstLockString, ShouldNotBeEmpty)
+			So(secondLockString, ShouldResemble, testLockString)
+
+			renewed := dataBase.RenewBotRegistration(messenger3)
+			So(renewed, ShouldBeTrue)
+		})
+		Convey("Accidentally called Renew bot registration again, should not be renewed", func() {
+			lockResults := testLockWithTTLExpireErrorExpected(logger, lockTTLMilliseconds, true, 2, func() bool {
+				return dataBase.RenewBotRegistration(messenger3)
+			})
+			So(lockResults[len(lockResults)-1], ShouldBeFalse)
+		})
+	})
+}
 
 func TestBotDataStoring(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test")
