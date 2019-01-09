@@ -2,7 +2,12 @@ package notifier
 
 import (
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/golang/mock/gomock"
+	"github.com/op/go-logging"
+
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database/redis"
 	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
@@ -10,9 +15,6 @@ import (
 	"github.com/moira-alert/moira/notifier"
 	"github.com/moira-alert/moira/notifier/events"
 	"github.com/moira-alert/moira/notifier/notifications"
-	"github.com/op/go-logging"
-	"testing"
-	"time"
 )
 
 var senderSettings = map[string]string{
@@ -73,7 +75,7 @@ var event = moira.NotificationEvent{
 func TestNotifier(t *testing.T) {
 	mockCtrl = gomock.NewController(t)
 	defer mockCtrl.Finish()
-	database := redis.NewDatabase(logger, redis.Config{Port: "6379", Host: "localhost"})
+	database := redis.NewDatabase(logger, redis.Config{Port: "6379", Host: "localhost"}, redis.Notifier)
 	database.SaveContact(&contact)
 	database.SaveSubscription(&subscription)
 	database.SaveTrigger(trigger.ID, &trigger)
@@ -82,7 +84,7 @@ func TestNotifier(t *testing.T) {
 	sender := mock_moira_alert.NewMockSender(mockCtrl)
 	sender.EXPECT().Init(senderSettings, logger, location, dateTimeFormat).Return(nil)
 	notifier2.RegisterSender(senderSettings, sender)
-	sender.EXPECT().SendEvents(gomock.Any(), contact, triggerData, false).Return(nil).Do(func(f ...interface{}) {
+	sender.EXPECT().SendEvents(gomock.Any(), contact, triggerData, gomock.Any(), false).Return(nil).Do(func(f ...interface{}) {
 		fmt.Print("SendEvents called. End test")
 		close(shutdown)
 	})

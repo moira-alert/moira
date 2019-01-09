@@ -2,13 +2,14 @@ package controller
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
-	"testing"
 )
 
 func TestGetNotifications(t *testing.T) {
@@ -27,7 +28,7 @@ func TestGetNotifications(t *testing.T) {
 	})
 
 	Convey("Test error", t, func() {
-		expected := fmt.Errorf("Oooops! Can not get notifications")
+		expected := fmt.Errorf("oooops! Can not get notifications")
 		var total int64 = 666
 		dataBase.EXPECT().GetNotifications(start, end).Return(nil, total, expected)
 		list, err := GetNotifications(dataBase, start, end)
@@ -52,7 +53,7 @@ func TestDeleteNotification(t *testing.T) {
 	Convey("Error delete", t, func() {
 		key := "123"
 		var result int64
-		expected := fmt.Errorf("Oooops! Can not get notifications")
+		expected := fmt.Errorf("oooops! Can not get notifications")
 		dataBase.EXPECT().RemoveNotification(key).Return(result, expected)
 		actual, err := DeleteNotification(dataBase, key)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
@@ -71,7 +72,7 @@ func TestDeleteAllNotifications(t *testing.T) {
 	})
 
 	Convey("Error delete", t, func() {
-		expected := fmt.Errorf("Oooops! Can not get notifications")
+		expected := fmt.Errorf("oooops! Can not get notifications")
 		dataBase.EXPECT().RemoveAllNotifications().Return(expected)
 		err := DeleteAllNotifications(dataBase)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))

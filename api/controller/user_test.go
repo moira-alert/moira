@@ -2,6 +2,8 @@ package controller
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
@@ -9,7 +11,6 @@ import (
 	"github.com/moira-alert/moira/mock/moira-alert"
 	"github.com/satori/go.uuid"
 	. "github.com/smartystreets/goconvey/convey"
-	"testing"
 )
 
 func TestGetUserSettings(t *testing.T) {
@@ -52,14 +53,14 @@ func TestGetUserSettings(t *testing.T) {
 
 	Convey("Errors", t, func() {
 		Convey("GetUserSubscriptionIDs", func() {
-			expected := fmt.Errorf("Can not read ids")
+			expected := fmt.Errorf("can not read ids")
 			database.EXPECT().GetUserSubscriptionIDs(login).Return(nil, expected)
 			settings, err := GetUserSettings(database, login)
 			So(err, ShouldResemble, api.ErrorInternalServer(expected))
 			So(settings, ShouldBeNil)
 		})
 		Convey("GetSubscriptions", func() {
-			expected := fmt.Errorf("Can not read subscriptions")
+			expected := fmt.Errorf("can not read subscriptions")
 			database.EXPECT().GetUserSubscriptionIDs(login).Return(make([]string, 0), nil)
 			database.EXPECT().GetSubscriptions(make([]string, 0)).Return(nil, expected)
 			settings, err := GetUserSettings(database, login)
@@ -67,7 +68,7 @@ func TestGetUserSettings(t *testing.T) {
 			So(settings, ShouldBeNil)
 		})
 		Convey("GetUserContactIDs", func() {
-			expected := fmt.Errorf("Can not read contact ids")
+			expected := fmt.Errorf("can not read contact ids")
 			database.EXPECT().GetUserSubscriptionIDs(login).Return(make([]string, 0), nil)
 			database.EXPECT().GetSubscriptions(make([]string, 0)).Return(make([]*moira.SubscriptionData, 0), nil)
 			database.EXPECT().GetUserContactIDs(login).Return(nil, expected)
@@ -76,7 +77,7 @@ func TestGetUserSettings(t *testing.T) {
 			So(settings, ShouldBeNil)
 		})
 		Convey("GetContacts", func() {
-			expected := fmt.Errorf("Can not read contacts")
+			expected := fmt.Errorf("can not read contacts")
 			subscriptionIDs := []string{uuid.NewV4().String(), uuid.NewV4().String()}
 			subscriptions := []*moira.SubscriptionData{{ID: subscriptionIDs[0]}, {ID: subscriptionIDs[1]}}
 			contactIDs := []string{uuid.NewV4().String(), uuid.NewV4().String()}

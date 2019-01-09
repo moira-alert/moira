@@ -11,6 +11,8 @@ import (
 	"github.com/moira-alert/moira/notifier"
 )
 
+const sleepAfterNotifierBadState = time.Second * 10
+
 // FetchNotificationsWorker - check for new notifications and send it using notifier
 type FetchNotificationsWorker struct {
 	Logger   moira.Logger
@@ -31,7 +33,13 @@ func (worker *FetchNotificationsWorker) Start() {
 				return nil
 			case <-checkTicker.C:
 				if err := worker.processScheduledNotifications(); err != nil {
-					worker.Logger.Warningf("Failed to fetch scheduled notifications: %s", err.Error())
+					switch err.(type) {
+					case notifierInBadStateError:
+						worker.Logger.Warningf("Stop sending notifications for %v: %s", sleepAfterNotifierBadState, err.Error())
+						<-time.After(sleepAfterNotifierBadState)
+					default:
+						worker.Logger.Warningf("Failed to fetch scheduled notifications: %s", err.Error())
+					}
 				}
 			}
 		}
@@ -52,10 +60,10 @@ func (worker *FetchNotificationsWorker) processScheduledNotifications() error {
 	}
 	state, err := worker.Database.GetNotifierState()
 	if err != nil {
-		return fmt.Errorf("can't get current notifier state")
+		return notifierInBadStateError("can't get current notifier state")
 	}
 	if state != "OK" {
-		return fmt.Errorf("stop sending notifications. Current notifier state: %v", state)
+		return notifierInBadStateError(fmt.Sprintf("notifier in a bad state: %v", state))
 	}
 
 	notificationPackages := make(map[string]*notifier.NotificationPackage)
@@ -67,6 +75,7 @@ func (worker *FetchNotificationsWorker) processScheduledNotifications() error {
 				Events:    make([]moira.NotificationEvent, 0, len(notifications)),
 				Trigger:   notification.Trigger,
 				Contact:   notification.Contact,
+				Plotting:  notification.Plotting,
 				Throttled: notification.Throttled,
 				FailCount: notification.SendFail,
 			}

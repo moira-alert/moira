@@ -2,9 +2,9 @@ package filter
 
 import (
 	"fmt"
-	"testing"
 	"math/rand"
 	"strconv"
+	"testing"
 
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
@@ -85,7 +85,7 @@ func TestParseMetricFromString(t *testing.T) {
 		// [n=19] One.two.three 123 1234567890.6790847778320312500
 
 		for i := 1; i < 20; i++ {
-			rawTimestamp := strconv.FormatFloat(float64(testTimestamp) + rand.Float64(), 'f', i, 64)
+			rawTimestamp := strconv.FormatFloat(float64(testTimestamp)+rand.Float64(), 'f', i, 64)
 			rawMetric := "One.two.three 123 " + rawTimestamp
 			validMetric := ValidMetricCase{rawMetric, "One.two.three", 123, testTimestamp}
 			metric, value, timestamp, err := storage.parseMetricFromString([]byte(validMetric.raw))

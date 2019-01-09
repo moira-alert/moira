@@ -15,16 +15,18 @@ import (
 
 // Checker represents workers for periodically triggers checking based by new events
 type Checker struct {
-	Logger        moira.Logger
-	Database      moira.Database
-	Config        *checker.Config
-	RemoteConfig  *remote.Config
-	Metrics       *graphite.CheckerMetrics
-	TriggerCache  *cache.Cache
-	PatternCache  *cache.Cache
-	lastData      int64
-	tomb          tomb.Tomb
-	remoteEnabled bool
+	Logger            moira.Logger
+	Database          moira.Database
+	Config            *checker.Config
+	RemoteConfig      *remote.Config
+	Metrics           *graphite.CheckerMetrics
+	TriggerCache      *cache.Cache
+	LazyTriggersCache *cache.Cache
+	PatternCache      *cache.Cache
+	lazyTriggerIDs    map[string]bool
+	lastData          int64
+	tomb              tomb.Tomb
+	remoteEnabled     bool
 }
 
 // Start start schedule new MetricEvents and check for NODATA triggers
@@ -41,8 +43,10 @@ func (worker *Checker) Start() error {
 		return err
 	}
 
-	worker.tomb.Go(worker.noDataChecker)
-	worker.Logger.Info("NODATA checker started")
+	worker.lazyTriggerIDs = make(map[string]bool)
+	worker.tomb.Go(worker.lazyTriggersWorker)
+
+	worker.tomb.Go(worker.runNodataChecker)
 
 	worker.remoteEnabled = worker.RemoteConfig.IsEnabled()
 
@@ -119,6 +123,7 @@ func (worker *Checker) checkMetricEventsChannelLen(ch <-chan *moira.MetricEvent)
 
 // Stop stops checks triggers
 func (worker *Checker) Stop() error {
+	worker.Database.DeregisterNodataChecker()
 	worker.tomb.Kill(nil)
 	return worker.tomb.Wait()
 }

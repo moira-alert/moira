@@ -47,13 +47,13 @@ func (mr *MockSenderMockRecorder) Init(arg0, arg1, arg2, arg3 interface{}) *gomo
 }
 
 // SendEvents mocks base method
-func (m *MockSender) SendEvents(arg0 moira.NotificationEvents, arg1 moira.ContactData, arg2 moira.TriggerData, arg3 bool) error {
-	ret := m.ctrl.Call(m, "SendEvents", arg0, arg1, arg2, arg3)
+func (m *MockSender) SendEvents(arg0 moira.NotificationEvents, arg1 moira.ContactData, arg2 moira.TriggerData, arg3 []byte, arg4 bool) error {
+	ret := m.ctrl.Call(m, "SendEvents", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SendEvents indicates an expected call of SendEvents
-func (mr *MockSenderMockRecorder) SendEvents(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendEvents", reflect.TypeOf((*MockSender)(nil).SendEvents), arg0, arg1, arg2, arg3)
+func (mr *MockSenderMockRecorder) SendEvents(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendEvents", reflect.TypeOf((*MockSender)(nil).SendEvents), arg0, arg1, arg2, arg3, arg4)
 }

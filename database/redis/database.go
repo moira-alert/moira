@@ -26,6 +26,18 @@ const (
 	receiveErrorSleepDuration = time.Second
 )
 
+// DBSource is type for describing who create database instance
+type DBSource string
+
+// All types of database instances users
+const (
+	API      DBSource = "API"
+	Checker  DBSource = "Checker"
+	Filter   DBSource = "Filter"
+	Notifier DBSource = "Notifier"
+	Cli      DBSource = "Cli"
+)
+
 // DbConnector contains redis pool
 type DbConnector struct {
 	pool                 *redis.Pool
@@ -33,12 +45,14 @@ type DbConnector struct {
 	retentionCache       *cache.Cache
 	retentionSavingCache *cache.Cache
 	metricsCache         *cache.Cache
+	servicesCache        *cache.Cache
 	messengersCache      *cache.Cache
 	sync                 *redsync.Redsync
+	source               DBSource
 }
 
 // NewDatabase creates Redis pool based on config
-func NewDatabase(logger moira.Logger, config Config) *DbConnector {
+func NewDatabase(logger moira.Logger, config Config, source DBSource) *DbConnector {
 	pool := newRedisPool(logger, config)
 	return &DbConnector{
 		pool:                 pool,
@@ -46,8 +60,10 @@ func NewDatabase(logger moira.Logger, config Config) *DbConnector {
 		retentionCache:       cache.New(cacheValueExpirationDuration, cacheCleanupInterval),
 		retentionSavingCache: cache.New(cache.NoExpiration, cache.DefaultExpiration),
 		metricsCache:         cache.New(cacheValueExpirationDuration, cacheCleanupInterval),
+		servicesCache:        cache.New(cacheValueExpirationDuration, cacheCleanupInterval),
 		messengersCache:      cache.New(cache.NoExpiration, cache.DefaultExpiration),
 		sync:                 redsync.New([]redsync.Pool{pool}),
+		source:               source,
 	}
 }
 

@@ -23,6 +23,16 @@ func DatabaseContext(database moira.Database) func(next http.Handler) http.Handl
 	}
 }
 
+// SearchIndexContext sets to requests context configured moira.index.searchIndex
+func SearchIndexContext(searcher moira.Searcher) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+			ctx := context.WithValue(request.Context(), searcherKey, searcher)
+			next.ServeHTTP(writer, request.WithContext(ctx))
+		})
+	}
+}
+
 // UserContext get x-webauth-user header and sets it in request context, if header is empty sets empty string
 func UserContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
@@ -37,7 +47,7 @@ func TriggerContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		triggerID := chi.URLParam(request, "triggerId")
 		if triggerID == "" {
-			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("TriggerID must be set")))
+			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("triggerID must be set")))
 			return
 		}
 		ctx := context.WithValue(request.Context(), triggerIDKey, triggerID)
@@ -50,7 +60,7 @@ func ContactContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		contactID := chi.URLParam(request, "contactId")
 		if contactID == "" {
-			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("ContactID must be set")))
+			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("contactID must be set")))
 			return
 		}
 		ctx := context.WithValue(request.Context(), contactIDKey, contactID)
@@ -63,7 +73,7 @@ func TagContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		tag := chi.URLParam(request, "tag")
 		if tag == "" {
-			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("Tag must be set")))
+			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("tag must be set")))
 			return
 		}
 		ctx := context.WithValue(request.Context(), tagKey, tag)
@@ -76,7 +86,7 @@ func SubscriptionContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		subscriptionID := chi.URLParam(request, "subscriptionId")
 		if subscriptionID == "" {
-			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("SubscriptionId must be set")))
+			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("subscriptionId must be set")))
 			return
 		}
 		ctx := context.WithValue(request.Context(), subscriptionIDKey, subscriptionID)

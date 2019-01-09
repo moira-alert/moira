@@ -107,6 +107,7 @@ func CreateTriggerModel(trigger *moira.Trigger) TriggerModel {
 }
 
 func (trigger *Trigger) Bind(request *http.Request) error {
+	trigger.Tags = normalizeTags(trigger.Tags)
 	if len(trigger.Targets) == 0 {
 		return fmt.Errorf("targets is required")
 	}
@@ -131,7 +132,7 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 
 	remoteCfg := middleware.GetRemoteConfig(request)
 	if trigger.IsRemote && !remoteCfg.IsEnabled() {
-		return fmt.Errorf("remote graphite storage is not enabled")
+		return remote.ErrRemoteStorageDisabled
 	}
 
 	if err := resolvePatterns(request, trigger, &triggerExpression); err != nil {
@@ -259,6 +260,15 @@ func (*MetricsMaintenance) Bind(r *http.Request) error {
 	return nil
 }
 
+type TriggerMaintenance struct {
+	Trigger *int64           `json:"trigger"`
+	Metrics map[string]int64 `json:"metrics"`
+}
+
+func (*TriggerMaintenance) Bind(r *http.Request) error {
+	return nil
+}
+
 type ThrottlingResponse struct {
 	Throttling int64 `json:"throttling"`
 }
@@ -276,7 +286,10 @@ func (*SaveTriggerResponse) Render(w http.ResponseWriter, r *http.Request) error
 	return nil
 }
 
-type TriggerMetrics map[string][]moira.MetricValue
+type TriggerMetrics struct {
+	Main       map[string][]*moira.MetricValue `json:"main"`
+	Additional map[string][]*moira.MetricValue `json:"additional,omitempty"`
+}
 
 func (*TriggerMetrics) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil

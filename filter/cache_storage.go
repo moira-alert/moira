@@ -28,7 +28,7 @@ type Storage struct {
 	retentions      []retentionMatcher
 	retentionsCache map[string]*retentionCacheItem
 	metricsCache    map[string]*moira.MatchedMetric
-	logger 					moira.Logger
+	logger          moira.Logger
 }
 
 // NewCacheStorage create new Storage
@@ -37,7 +37,7 @@ func NewCacheStorage(logger moira.Logger, metrics *graphite.FilterMetrics, reade
 		retentionsCache: make(map[string]*retentionCacheItem),
 		metricsCache:    make(map[string]*moira.MatchedMetric),
 		metrics:         metrics,
-		logger: 				 logger,
+		logger:          logger,
 	}
 
 	if err := storage.buildRetentions(bufio.NewScanner(reader)); err != nil {
@@ -93,7 +93,7 @@ func (storage *Storage) buildRetentions(retentionScanner *bufio.Scanner) error {
 		line2 := retentionScanner.Text()
 		splitted := strings.Split(line2, "=")
 
-		if len(splitted) < 2{
+		if len(splitted) < 2 {
 			storage.logger.Errorf("Invalid pattern found: '%s'", patternString)
 			continue
 		}

@@ -3,6 +3,7 @@ package redis
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/garyburd/redigo/redis"
 
@@ -20,33 +21,45 @@ func (connector *DbConnector) GetTriggerLastCheck(triggerID string) (moira.Check
 
 // SetTriggerLastCheck sets trigger last check data
 func (connector *DbConnector) SetTriggerLastCheck(triggerID string, checkData *moira.CheckData, isRemote bool) error {
-	if isRemote {
-		return connector.setTriggerLastCheckAndUpdateProperCounter(triggerID, checkData, selfStateRemoteChecksCounterKey)
-	}
-	return connector.setTriggerLastCheckAndUpdateProperCounter(triggerID, checkData, selfStateChecksCounterKey)
-}
-
-func (connector *DbConnector) setTriggerLastCheckAndUpdateProperCounter(triggerID string, checkData *moira.CheckData, selfStateCheckCountKey string) error {
+	selfStateCheckCountKey := connector.getSelfStateCheckCountKey(isRemote)
 	bytes, err := json.Marshal(checkData)
 	if err != nil {
 		return err
 	}
+
+	triggerNeedToReindex := connector.checkDataScoreChanged(triggerID, checkData)
+
 	c := connector.pool.Get()
 	defer c.Close()
 	c.Send("MULTI")
 	c.Send("SET", metricLastCheckKey(triggerID), bytes)
 	c.Send("ZADD", triggersChecksKey, checkData.Score, triggerID)
-	c.Send("INCR", selfStateCheckCountKey)
+	if selfStateCheckCountKey != "" {
+		c.Send("INCR", selfStateCheckCountKey)
+	}
 	if checkData.Score > 0 {
 		c.Send("SADD", badStateTriggersKey, triggerID)
 	} else {
 		c.Send("SREM", badStateTriggersKey, triggerID)
+	}
+	if triggerNeedToReindex {
+		c.Send("ZADD", triggersToReindexKey, time.Now().Unix(), triggerID)
 	}
 	_, err = c.Do("EXEC")
 	if err != nil {
 		return fmt.Errorf("Failed to EXEC: %s", err.Error())
 	}
 	return nil
+}
+
+func (connector *DbConnector) getSelfStateCheckCountKey(isRemote bool) string {
+	if connector.source != Checker {
+		return ""
+	}
+	if isRemote {
+		return selfStateRemoteChecksCounterKey
+	}
+	return selfStateChecksCounterKey
 }
 
 // RemoveTriggerLastCheck removes trigger last check data
@@ -57,17 +70,19 @@ func (connector *DbConnector) RemoveTriggerLastCheck(triggerID string) error {
 	c.Send("DEL", metricLastCheckKey(triggerID))
 	c.Send("ZREM", triggersChecksKey, triggerID)
 	c.Send("SREM", badStateTriggersKey, triggerID)
+	c.Send("ZADD", triggersToReindexKey, time.Now().Unix(), triggerID)
 	_, err := c.Do("EXEC")
 	if err != nil {
 		return fmt.Errorf("Failed to EXEC: %s", err.Error())
 	}
+
 	return nil
 }
 
-// SetTriggerCheckMetricsMaintenance sets to given metrics throttling timestamps,
+// SetTriggerCheckMaintenance sets maintenance for whole trigger and to given metrics,
 // If during the update lastCheck was updated from another place, try update again
 // If CheckData does not contain one of given metrics it will ignore this metric
-func (connector *DbConnector) SetTriggerCheckMetricsMaintenance(triggerID string, metrics map[string]int64) error {
+func (connector *DbConnector) SetTriggerCheckMaintenance(triggerID string, metrics map[string]int64, triggerMaintenance *int64) error {
 	c := connector.pool.Get()
 	defer c.Close()
 	var readingErr error
@@ -93,6 +108,9 @@ func (connector *DbConnector) SetTriggerCheckMetricsMaintenance(triggerID string
 				metricsCheck[metric] = data
 			}
 		}
+		if triggerMaintenance != nil {
+			lastCheck.Maintenance = *triggerMaintenance
+		}
 		newLastCheck, err := json.Marshal(lastCheck)
 		if err != nil {
 			return err
@@ -113,6 +131,7 @@ func (connector *DbConnector) SetTriggerCheckMetricsMaintenance(triggerID string
 
 // GetTriggerCheckIDs gets checked triggerIDs, sorted from max to min check score and filtered by given tags
 // If onlyErrors return only triggerIDs with score > 0
+// ToDo: DEPRECATED method. Remove in Moira 2.5
 func (connector *DbConnector) GetTriggerCheckIDs(tagNames []string, onlyErrors bool) ([]string, error) {
 	c := connector.pool.Get()
 	defer c.Close()
@@ -164,6 +183,19 @@ func (connector *DbConnector) GetTriggerCheckIDs(tagNames []string, onlyErrors b
 		}
 	}
 	return total, nil
+}
+
+// checkDataScoreChanged returns true if checkData.Score changed since last check
+func (connector *DbConnector) checkDataScoreChanged(triggerID string, checkData *moira.CheckData) bool {
+	c := connector.pool.Get()
+	defer c.Close()
+
+	oldScore, err := redis.Int64(c.Do("ZSCORE", triggersChecksKey, triggerID))
+	if err != nil {
+		return true
+	}
+
+	return oldScore != checkData.Score
 }
 
 var badStateTriggersKey = "moira-bad-state-triggers"

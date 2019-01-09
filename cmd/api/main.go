@@ -17,6 +17,7 @@ import (
 	"github.com/moira-alert/moira/api/handler"
 	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/database/redis"
+	"github.com/moira-alert/moira/index"
 	"github.com/moira-alert/moira/logging/go-logging"
 	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
 )
@@ -77,25 +78,42 @@ func main() {
 	}
 
 	databaseSettings := config.Redis.GetSettings()
-	database := redis.NewDatabase(logger, databaseSettings)
+	database := redis.NewDatabase(logger, databaseSettings, redis.API)
 
 	graphiteSettings := config.Graphite.GetSettings()
 	if err = metrics.Init(graphiteSettings, serviceName); err != nil {
 		logger.Error(err)
 	}
 
+	// configure carbon-api functions
+	functions.New(make(map[string]string))
+
+	// Start Index right before HTTP listener. Fail if index cannot start
+	searchIndex := index.NewSearchIndex(logger, database)
+	if searchIndex == nil {
+		logger.Fatalf("Failed to create search index")
+	}
+
+	err = searchIndex.Start()
+	if err != nil {
+		logger.Fatalf("Failed to start search index: %s", err.Error())
+	}
+	defer searchIndex.Stop()
+
+	if !searchIndex.IsReady() {
+		logger.Fatalf("Search index is not ready, exit")
+	}
+
+	// Start listener only after index is ready
 	listener, err := net.Listen("tcp", apiConfig.Listen)
 	if err != nil {
 		logger.Fatal(err)
 	}
 
-	// configure carbon-api functions
-	functions.New(make(map[string]string))
-
 	logger.Infof("Start listening by address: [%s]", apiConfig.Listen)
 
 	remoteConfig := config.Remote.GetSettings()
-	httpHandler := handler.NewHandler(database, logger, apiConfig, remoteConfig, configFile)
+	httpHandler := handler.NewHandler(database, logger, searchIndex, apiConfig, remoteConfig, configFile)
 	server := &http.Server{
 		Handler: httpHandler,
 	}

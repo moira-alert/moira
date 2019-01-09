@@ -70,6 +70,13 @@ func (worker *Checker) addRemoteTriggerIDsIfNeeded(triggerIDs []string) {
 }
 
 func (worker *Checker) needHandleTrigger(triggerID string) bool {
+	if _, ok := worker.lazyTriggerIDs[triggerID]; ok {
+		randomDuration := worker.getRandomLazyCacheDuration()
+		err := worker.LazyTriggersCache.Add(triggerID, true, randomDuration)
+		if err != nil {
+			return false
+		}
+	}
 	err := worker.TriggerCache.Add(triggerID, true, cache.DefaultExpiration)
 	return err == nil
 }
