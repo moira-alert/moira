@@ -1,12 +1,13 @@
 package redis
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
+
+	"github.com/moira-alert/moira"
 )
 
 func TestLock(t *testing.T) {
@@ -61,7 +62,7 @@ func TestLockErrorConnection(t *testing.T) {
 	})
 }
 
-func testLockWithTTLExpireErrorExpected(lockTTL int, lockWindow int, locker func() bool) []bool {
+func testLockWithTTLExpireErrorExpected(logger moira.Logger, lockTTL int, lag bool, lockWindow int, locker func() bool) []bool {
 	// This test takes ttl expire error into account
 	// https://redis.io/commands/expire#expire-accuracy
 	//
@@ -78,12 +79,15 @@ func testLockWithTTLExpireErrorExpected(lockTTL int, lockWindow int, locker func
 		true:  "success",
 		false: "failure",
 	}
-	time.Sleep(time.Duration(lockTTL-1) * time.Millisecond)
+	if !lag {
+		lockTTL --
+	}
+	time.Sleep(time.Duration(lockTTL) * time.Millisecond)
 	lockExpiryTicker := time.NewTicker(time.Millisecond)
 	lockResults := make([]bool, 0)
 	for t := range lockExpiryTicker.C {
 		result := locker()
-		fmt.Printf("%s Attempt: %s\n", t.String(), resultMap[result])
+		logger.Debugf("%s Lock Attempt: %s\n", t.String(), resultMap[result])
 		lockResults = append(lockResults, result)
 		if len(lockResults) == lockWindow {
 			break

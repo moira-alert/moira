@@ -10,7 +10,7 @@ import (
 )
 
 func TestRenewNodataCheckerRegistration(t *testing.T) {
-	logger, _ := logging.ConfigureLog("stdout", "info", "test")
+	logger, _ := logging.ConfigureLog("stdout", "debug", "test")
 	dataBase := newTestDatabase(logger, config)
 	dataBase.flush()
 	defer dataBase.flush()
@@ -32,7 +32,7 @@ func TestRenewNodataCheckerRegistration(t *testing.T) {
 			So(renewed, ShouldBeTrue)
 		})
 		Convey("Renew bot registration, should not be renewed", func() {
-			lockResults := testLockWithTTLExpireErrorExpected(lockTTLMilliseconds, 2, func() bool {
+			lockResults := testLockWithTTLExpireErrorExpected(logger, lockTTLMilliseconds, true, 2, func() bool {
 				return dataBase.RenewNodataCheckerRegistration()
 			})
 			So(lockResults[len(lockResults)-1], ShouldBeFalse)
