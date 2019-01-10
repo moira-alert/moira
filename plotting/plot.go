@@ -12,12 +12,12 @@ import (
 
 // ErrNoPointsToRender is used to prevent unnecessary render calls
 type ErrNoPointsToRender struct {
-	triggerName string
+	triggerID string
 }
 
 // ErrNoPointsToRender implementation with detailed error message
 func (err ErrNoPointsToRender) Error() string {
-	return fmt.Sprintf("no points found to render %s", err.triggerName)
+	return fmt.Sprintf("no points found to render trigger: %s", err.triggerID)
 }
 
 // Plot represents plot structure to render
@@ -47,6 +47,7 @@ func GetPlotTemplate(theme string, location *time.Location) (*Plot, error) {
 
 // GetRenderable returns go-chart to render
 func (plot *Plot) GetRenderable(trigger *moira.Trigger, metricsData []*types.MetricData, metricsWhitelist []string) (chart.Chart, error) {
+	var renderable chart.Chart
 
 	plotSeries := make([]chart.Series, 0)
 
@@ -54,20 +55,23 @@ func (plot *Plot) GetRenderable(trigger *moira.Trigger, metricsData []*types.Met
 	limits := resolveLimits(metricsData)
 
 	curveSeriesList := getCurveSeriesList(metricsData, plot.theme)
-	if len(curveSeriesList) > 0 {
-		for _, curveSeries := range curveSeriesList {
-			plotSeries = append(plotSeries, curveSeries)
-		}
-		thresholdSeriesList := getThresholdSeriesList(trigger, plot.theme, limits)
-		plotSeries = append(plotSeries, thresholdSeriesList...)
+	if len(curveSeriesList) == 0 {
+		return renderable, ErrNoPointsToRender{triggerID: trigger.ID}
 	}
+
+	for _, curveSeries := range curveSeriesList {
+		plotSeries = append(plotSeries, curveSeries)
+	}
+
+	thresholdSeriesList := getThresholdSeriesList(trigger, plot.theme, limits)
+	plotSeries = append(plotSeries, thresholdSeriesList...)
 
 	gridStyle := plot.theme.GetGridStyle()
 
 	yAxisValuesFormatter, maxMarkLen := getYAxisValuesFormatter(limits)
 	yAxisRange := limits.getThresholdAxisRange(trigger.TriggerType)
 
-	renderable := chart.Chart{
+	renderable = chart.Chart{
 
 		Title:      sanitizeLabelName(trigger.Name, 40),
 		TitleStyle: plot.theme.GetTitleStyle(),
@@ -114,10 +118,6 @@ func (plot *Plot) GetRenderable(trigger *moira.Trigger, metricsData []*types.Met
 
 	renderable.Elements = []chart.Renderable{
 		getPlotLegend(&renderable, plot.theme.GetLegendStyle(), plot.width),
-	}
-
-	if len(renderable.Series) == 0 {
-		return renderable, ErrNoPointsToRender{triggerName: trigger.Name}
 	}
 
 	return renderable, nil

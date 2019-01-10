@@ -32,15 +32,19 @@ var (
 
 func TestGetMetricNames(t *testing.T) {
 	Convey("Test non-empty notification package", t, func() {
+		triggerEvent := moira.NotificationEvent{
+			IsTriggerEvent: true,
+			Metric:         "triggerEventMetricName",
+		}
 		Convey("Test package with non-trigger events", func() {
 			pkg := notificationsPackage
-			pkg.Events = append(pkg.Events, moira.NotificationEvent{IsTriggerEvent:true})
+			pkg.Events = append(pkg.Events, triggerEvent)
 			expected := []string{"metricName1", "metricName2", "metricName3", "metricName4", "metricName5"}
 			actual := pkg.GetMetricNames()
 			So(actual, ShouldResemble, expected)
 		})
 		Convey("Test package with single trigger event", func() {
-			pkg := NotificationPackage{Events: []moira.NotificationEvent{{IsTriggerEvent: true}}}
+			pkg := NotificationPackage{Events: []moira.NotificationEvent{triggerEvent}}
 			actual := pkg.GetMetricNames()
 			So(len(actual), ShouldEqual, 0)
 		})
