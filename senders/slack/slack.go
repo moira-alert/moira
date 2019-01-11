@@ -11,12 +11,7 @@ import (
 	"github.com/nlopes/slack"
 )
 
-const (
-	badStateEmoji  = ":moira-bad-state:"
-	goodStateEmoji = ":moira-good-state:"
-)
-
-var stateEmojies = map[string]string{
+var stateEmoji = map[string]string{
 	"OK":        ":moira-state-ok:",
 	"WARN":      ":moira-state-warn:",
 	"ERROR":     ":moira-state-error:",
@@ -113,10 +108,9 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 // getStateEmoji returns corresponding state emoji
 func getStateEmoji(emojiEnabled bool, subjectState string) string {
 	if emojiEnabled {
-		if subjectState != "OK" {
-			return badStateEmoji
+		if emoji, ok := stateEmoji[subjectState]; ok {
+			return emoji
 		}
-		return goodStateEmoji
 	}
 	return slack.DEFAULT_MESSAGE_ICON_EMOJI
 }
