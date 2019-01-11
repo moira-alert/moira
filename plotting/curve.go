@@ -33,10 +33,13 @@ func generatePlotCurves(metricData *types.MetricData, curveStyle chart.Style, po
 	curveSeries := make([]chart.TimeSeries, 0)
 	for _, curve := range curves {
 		var serieStyle chart.Style
-		if len(curve.values) > 1 {
-			serieStyle = curveStyle
-		} else {
+		switch len(curve.values) {
+		case 0:
+			continue
+		case 1:
 			serieStyle = pointStyle
+		default:
+			serieStyle = curveStyle
 		}
 		curveSerie := chart.TimeSeries{
 			Name:    metricData.Name,

@@ -32,14 +32,28 @@ var (
 
 func TestGetMetricNames(t *testing.T) {
 	Convey("Test non-empty notification package", t, func() {
-		actual := notificationsPackage.GetMetricNames()
-		expected := []string{"metricName1", "metricName2", "metricName3", "metricName4", "metricName5"}
-		So(actual, ShouldResemble, expected)
+		Convey("Test package with trigger events", func() {
+			expected := []string{"metricName1", "metricName2", "metricName3", "metricName5"}
+			actual := notificationsPackage.GetMetricNames()
+			So(actual, ShouldResemble, expected)
+		})
+		Convey("Test package with no trigger events", func() {
+			pkg := NotificationPackage{}
+			for _, event := range notificationsPackage.Events {
+				if event.IsTriggerEvent {
+					event.IsTriggerEvent = false
+				}
+				pkg.Events = append(pkg.Events, event)
+			}
+			expected := []string{"metricName1", "metricName2", "metricName3", "metricName4", "metricName5"}
+			actual := pkg.GetMetricNames()
+			So(actual, ShouldResemble, expected)
+		})
 	})
 	Convey("Test empty notification package", t, func() {
 		emptyNotificationPackage := NotificationPackage{}
 		actual := emptyNotificationPackage.GetMetricNames()
-		So(actual, ShouldResemble, make([]string, 0))
+		So(actual, ShouldHaveLength, 0)
 	})
 }
 
@@ -47,8 +61,8 @@ func TestGetWindow(t *testing.T) {
 	Convey("Test non-empty notification package", t, func() {
 		from, to, err := notificationsPackage.GetWindow()
 		So(err, ShouldBeNil)
-		So(from, ShouldEqual, 10)
-		So(to, ShouldEqual, 79)
+		So(from, ShouldEqual, 11)
+		So(to, ShouldEqual, 179)
 	})
 	Convey("Test empty notification package", t, func() {
 		emptyNotificationPackage := NotificationPackage{}
@@ -196,10 +210,10 @@ var event = moira.NotificationEvent{
 
 var notificationsPackage = NotificationPackage{
 	Events: []moira.NotificationEvent{
-		{Metric: "metricName1", Timestamp: 15},
-		{Metric: "metricName2", Timestamp: 10},
-		{Metric: "metricName3", Timestamp: 31},
-		{Metric: "metricName4", Timestamp: 79},
-		{Metric: "metricName5", Timestamp: 10},
+		{Metric: "metricName1", Timestamp: 15, IsTriggerEvent: false},
+		{Metric: "metricName2", Timestamp: 11, IsTriggerEvent: false},
+		{Metric: "metricName3", Timestamp: 31, IsTriggerEvent: false},
+		{Metric: "metricName4", Timestamp: 179, IsTriggerEvent: true},
+		{Metric: "metricName5", Timestamp: 12, IsTriggerEvent: false},
 	},
 }
