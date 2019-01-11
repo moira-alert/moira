@@ -657,7 +657,13 @@ func TestErrNoPointsToRender_Error(t *testing.T) {
 	}
 	Convey("Trigger has no timeseries", t, func() {
 		testMetricsData := generateRandomTestMetricsData(10, 10)
-		fmt.Println(testMetricsData[0].Values)
+		testMetricsPoints := make([]float64, 0)
+		for _, testMetricData := range testMetricsData {
+			for _, value := range testMetricData.Values {
+				testMetricsPoints = append(testMetricsPoints, value)
+			}
+		}
+		fmt.Printf("MetricsData points: %#v", testMetricsPoints)
 		for _, trigger := range testTriggers {
 			_, err = plotTemplate.GetRenderable(&trigger, testMetricsData, testMetricsWhiteList)
 			So(err.Error(), ShouldEqual, ErrNoPointsToRender{triggerID: trigger.ID}.Error())
@@ -665,7 +671,13 @@ func TestErrNoPointsToRender_Error(t *testing.T) {
 	})
 	Convey("Trigger has at least one timeserie", t, func() {
 		testMetricsData := generateRandomTestMetricsData(10, 9)
-		fmt.Println(testMetricsData[0].Values)
+		testMetricsPoints := make([]float64, 0)
+		for _, testMetricData := range testMetricsData {
+			for _, value := range testMetricData.Values {
+				testMetricsPoints = append(testMetricsPoints, value)
+			}
+		}
+		fmt.Printf("MetricsData points: %#v", testMetricsPoints)
 		for _, trigger := range testTriggers {
 			_, err = plotTemplate.GetRenderable(&trigger, testMetricsData, testMetricsWhiteList)
 			So(err, ShouldBeNil)
