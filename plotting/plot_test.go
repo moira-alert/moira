@@ -659,9 +659,7 @@ func TestErrNoPointsToRender_Error(t *testing.T) {
 		testMetricsData := generateRandomTestMetricsData(10, 10)
 		testMetricsPoints := make([]float64, 0)
 		for _, testMetricData := range testMetricsData {
-			for _, value := range testMetricData.Values {
-				testMetricsPoints = append(testMetricsPoints, value)
-			}
+			testMetricsPoints = append(testMetricsPoints, testMetricData.Values...)
 		}
 		fmt.Printf("MetricsData points: %#v", testMetricsPoints)
 		for _, trigger := range testTriggers {
@@ -673,9 +671,7 @@ func TestErrNoPointsToRender_Error(t *testing.T) {
 		testMetricsData := generateRandomTestMetricsData(10, 9)
 		testMetricsPoints := make([]float64, 0)
 		for _, testMetricData := range testMetricsData {
-			for _, value := range testMetricData.Values {
-				testMetricsPoints = append(testMetricsPoints, value)
-			}
+			testMetricsPoints = append(testMetricsPoints, testMetricData.Values...)
 		}
 		fmt.Printf("MetricsData points: %#v", testMetricsPoints)
 		for _, trigger := range testTriggers {
