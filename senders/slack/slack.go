@@ -16,6 +16,15 @@ const (
 	goodStateEmoji = ":moira-good-state:"
 )
 
+var stateEmojies = map[string]string{
+	"OK":        ":moira-state-ok:",
+	"WARN":      ":moira-state-warn:",
+	"ERROR":     ":moira-state-error:",
+	"NODATA":    ":moira-state-nodata:",
+	"EXCEPTION": ":moira-state-exception:",
+	"TEST":      ":moira-state-test:",
+}
+
 // Sender implements moira sender interface via slack
 type Sender struct {
 	APIToken string
