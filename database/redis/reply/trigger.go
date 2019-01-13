@@ -112,23 +112,3 @@ func GetTriggerBytes(triggerID string, trigger *moira.Trigger) ([]byte, error) {
 	}
 	return bytes, nil
 }
-
-func setProperTriggerType(trigger *moira.Trigger) {
-	if trigger.Expression != nil && *trigger.Expression != "" {
-		trigger.TriggerType = moira.ExpressionTrigger
-		return
-	}
-
-	trigger.TriggerType = moira.RisingTrigger
-
-	if trigger.WarnValue != nil && trigger.ErrorValue != nil {
-		if *trigger.ErrorValue < *trigger.WarnValue {
-			trigger.TriggerType = moira.FallingTrigger
-			return
-		}
-		if *trigger.ErrorValue == *trigger.WarnValue {
-			trigger.WarnValue = nil
-			return
-		}
-	}
-}
