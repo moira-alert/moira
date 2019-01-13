@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metrics/graphite"
 )
 
@@ -68,24 +69,26 @@ type Notifier interface {
 
 // StandardNotifier represent notification functionality
 type StandardNotifier struct {
-	waitGroup sync.WaitGroup
-	senders   map[string]chan NotificationPackage
-	logger    moira.Logger
-	database  moira.Database
-	scheduler Scheduler
-	config    Config
-	metrics   *graphite.NotifierMetrics
+	waitGroup            sync.WaitGroup
+	senders              map[string]chan NotificationPackage
+	logger               moira.Logger
+	database             moira.Database
+	scheduler            Scheduler
+	config               Config
+	metrics              *graphite.NotifierMetrics
+	metricSourceProvider *metricSource.SourceProvider
 }
 
 // NewNotifier is initializer for StandardNotifier
-func NewNotifier(database moira.Database, logger moira.Logger, config Config, metrics *graphite.NotifierMetrics) *StandardNotifier {
+func NewNotifier(database moira.Database, logger moira.Logger, config Config, metrics *graphite.NotifierMetrics, metricSourceProvider *metricSource.SourceProvider) *StandardNotifier {
 	return &StandardNotifier{
-		senders:   make(map[string]chan NotificationPackage),
-		logger:    logger,
-		database:  database,
-		scheduler: NewScheduler(database, logger, metrics),
-		config:    config,
-		metrics:   metrics,
+		senders:              make(map[string]chan NotificationPackage),
+		logger:               logger,
+		database:             database,
+		scheduler:            NewScheduler(database, logger, metrics),
+		config:               config,
+		metrics:              metrics,
+		metricSourceProvider: metricSourceProvider,
 	}
 }
 

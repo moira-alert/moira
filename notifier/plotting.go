@@ -6,15 +6,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/moira-alert/moira/metric_source"
+	"github.com/moira-alert/moira/metric_source/local"
 	"github.com/wcharczuk/go-chart"
 
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/checker"
 	"github.com/moira-alert/moira/plotting"
-	"github.com/moira-alert/moira/remote"
-	"github.com/moira-alert/moira/target"
 )
 
 var (
@@ -52,9 +49,9 @@ func (notifier *StandardNotifier) buildNotificationPackagePlot(pkg NotificationP
 	if err != nil {
 		return buff.Bytes(), err
 	}
-	remoteCfg := notifier.config.RemoteConfig
+
 	from, to := resolveMetricsWindow(notifier.logger, pkg.Trigger, pkg)
-	metricsData, trigger, err := evaluateTriggerMetrics(notifier.database, remoteCfg, from, to, pkg.Trigger.ID)
+	metricsData, trigger, err := notifier.evaluateTriggerMetrics(from, to, pkg.Trigger.ID)
 	if err != nil {
 		return buff.Bytes(), err
 	}
@@ -115,62 +112,36 @@ func resolveMetricsWindow(logger moira.Logger, trigger moira.TriggerData, pkg No
 }
 
 // evaluateTriggerMetrics returns collection of MetricData
-func evaluateTriggerMetrics(database moira.Database, remoteCfg *remote.Config, from, to int64, triggerID string) ([]*types.MetricData, *moira.Trigger, error) {
-	tts, trigger, err := getTriggerEvaluationResult(database, remoteCfg, from, to, triggerID)
-	if err != nil {
-		return nil, trigger, err
-	}
-	var metricsData = make([]*types.MetricData, 0, len(tts.Main)+len(tts.Additional))
-	for _, ts := range tts.Main {
-		metricsData = append(metricsData, &ts.MetricData)
-	}
-	for _, ts := range tts.Additional {
-		metricsData = append(metricsData, &ts.MetricData)
-	}
-	return metricsData, trigger, err
-}
-
-// getTriggerEvaluationResult returns trigger metrics from chosen data source
-func getTriggerEvaluationResult(dataBase moira.Database, remoteConfig *remote.Config, from, to int64, triggerID string) (*checker.TriggerTimeSeries, *moira.Trigger, error) {
-	trigger, err := dataBase.GetTrigger(triggerID)
+func (notifier *StandardNotifier) evaluateTriggerMetrics(from, to int64, triggerID string) ([]*metricSource.MetricData, *moira.Trigger, error) {
+	trigger, err := notifier.database.GetTrigger(triggerID)
 	if err != nil {
 		return nil, nil, err
 	}
-	triggerMetrics := &checker.TriggerTimeSeries{
-		Main:       make([]*target.TimeSeries, 0),
-		Additional: make([]*target.TimeSeries, 0),
+	metricsSource, err := notifier.metricSourceProvider.GetTriggerMetricSource(&trigger)
+	if err != nil {
+		return nil, &trigger, err
 	}
-	if trigger.IsRemote && !remoteConfig.IsEnabled() {
-		return nil, &trigger, remote.ErrRemoteStorageDisabled
-	}
-	for i, tar := range trigger.Targets {
-		timeSeries, err := fetchAvailableSeries(dataBase, remoteConfig, trigger.IsRemote, tar, from, to)
-		if err != nil {
-			return nil, &trigger, err
+	var metricsData = make([]*metricSource.MetricData, 0)
+	for _, target := range trigger.Targets {
+		timeSeries, fetchErr := fetchAvailableSeries(metricsSource, target, from, to)
+		if fetchErr != nil {
+			return nil, &trigger, fetchErr
 		}
-		if i == 0 {
-			triggerMetrics.Main = timeSeries
-		} else {
-			triggerMetrics.Additional = append(triggerMetrics.Additional, timeSeries...)
-		}
+		metricsData = append(metricsData, timeSeries...)
 	}
-	return triggerMetrics, &trigger, nil
+	return metricsData, &trigger, err
 }
 
 // fetchAvailableSeries calls fetch function with realtime alerting and retries on fail without
-func fetchAvailableSeries(database moira.Database, remoteCfg *remote.Config, isRemote bool, tar string, from, to int64) ([]*target.TimeSeries, error) {
-	var err error
-	if isRemote {
-		return remote.Fetch(remoteCfg, tar, from, to, true)
-	}
-	result, realtimeErr := target.EvaluateTarget(database, tar, from, to, true)
+func fetchAvailableSeries(metricsSource metricSource.MetricSource, target string, from, to int64) ([]*metricSource.MetricData, error) {
+	realtimeFetchResult, realtimeErr := metricsSource.Fetch(target, from, to, true)
 	switch realtimeErr.(type) {
-	case target.ErrEvaluateTargetFailedWithPanic:
-		result, err = target.EvaluateTarget(database, tar, from, to, false)
+	case local.ErrEvaluateTargetFailedWithPanic:
+		fetchResult, err := metricsSource.Fetch(target, from, to, false)
 		if err != nil {
 			return nil, errFetchAvailableSeriesFailed{realtimeErr: realtimeErr.Error(), storedErr: err.Error()}
 		}
-		return result.TimeSeries, nil
+		return fetchResult.GetMetricsData(), nil
 	}
-	return result.TimeSeries, realtimeErr
+	return realtimeFetchResult.GetMetricsData(), realtimeErr
 }

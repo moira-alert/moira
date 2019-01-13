@@ -2,8 +2,6 @@ package notifier
 
 import (
 	"time"
-
-	"github.com/moira-alert/moira/remote"
 )
 
 // Config is sending settings including log settings
@@ -17,5 +15,4 @@ type Config struct {
 	FrontURL         string
 	Location         *time.Location
 	DateTimeFormat   string
-	RemoteConfig     *remote.Config
 }
