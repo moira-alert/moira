@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/go-graphite/carbonapi/expr/types"
+	"github.com/moira-alert/moira/metric_source"
 	"github.com/wcharczuk/go-chart"
 
 	"github.com/moira-alert/moira"
@@ -46,7 +46,7 @@ func GetPlotTemplate(theme string, location *time.Location) (*Plot, error) {
 }
 
 // GetRenderable returns go-chart to render
-func (plot *Plot) GetRenderable(trigger *moira.Trigger, metricsData []*types.MetricData, metricsWhitelist []string) (chart.Chart, error) {
+func (plot *Plot) GetRenderable(trigger *moira.Trigger, metricsData []*metricSource.MetricData, metricsWhitelist []string) (chart.Chart, error) {
 	var renderable chart.Chart
 
 	plotSeries := make([]chart.Series, 0)

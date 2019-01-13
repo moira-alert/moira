@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/remote"
 
 	"github.com/moira-alert/moira/api"
@@ -19,15 +20,15 @@ import (
 	"github.com/moira-alert/moira/target"
 )
 
-func triggers(cfg *remote.Config, searcher moira.Searcher) func(chi.Router) {
+func triggers(metricSourceProvider *metricSource.SourceProvider, searcher moira.Searcher) func(chi.Router) {
 	return func(router chi.Router) {
-		router.Use(middleware.RemoteConfigContext(cfg))
+		router.Use(middleware.MetricSourceProvider(metricSourceProvider))
 		router.Use(middleware.SearchIndexContext(searcher))
 		router.Get("/", getAllTriggers)
 		router.Put("/", createTrigger)
 		router.Route("/{triggerId}", trigger)
 		router.With(middleware.Paginate(0, 10)).Get("/search", searchTriggers)
-		// ToDo: DEPRECATED method. Remove in Moira 2.5
+		// ToDo: DEPRECATED method. Remove in Moira 2.6
 		router.With(middleware.Paginate(0, 10)).Get("/page", searchTriggers)
 	}
 }

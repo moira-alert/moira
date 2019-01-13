@@ -7,6 +7,9 @@ import (
 	"github.com/moira-alert/moira/metric_source"
 )
 
+// ErrRemoteStorageDisabled is used to prevent remote.Fetch calls when remote storage is disabled
+var ErrRemoteStorageDisabled = fmt.Errorf("remote graphite storage is not enabled")
+
 // ErrRemoteTriggerResponse is a custom error when remote trigger check fails
 type ErrRemoteTriggerResponse struct {
 	InternalError error
@@ -23,8 +26,8 @@ type Remote struct {
 	config *Config
 }
 
-// CreateRemote configures remote metric source
-func CreateRemote(config *Config) metricSource.MetricSource {
+// CreateRemoteSource configures remote metric source
+func CreateRemoteSource(config *Config) metricSource.MetricSource {
 	return &Remote{
 		config: config,
 	}
@@ -55,6 +58,14 @@ func (remote *Remote) Fetch(target string, from, until int64, allowRealTimeAlert
 	}
 	fetchResult := convertResponse(resp, allowRealTimeAlerting)
 	return &fetchResult, nil
+}
+
+// IsConfigured returns false in cases that user does not properly configure remote settings like graphite URL
+func (remote *Remote) IsConfigured() (bool, error) {
+	if remote.config.isEnabled() {
+		return true, nil
+	}
+	return false, ErrRemoteStorageDisabled
 }
 
 // IsRemoteAvailable checks if graphite API is available and returns 200 response

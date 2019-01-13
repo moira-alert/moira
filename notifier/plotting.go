@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/go-graphite/carbonapi/expr/types"
+	"github.com/moira-alert/moira/metric_source"
 	"github.com/wcharczuk/go-chart"
 
 	"github.com/moira-alert/moira"
@@ -58,7 +59,17 @@ func (notifier *StandardNotifier) buildNotificationPackagePlot(pkg NotificationP
 		return buff.Bytes(), err
 	}
 	notifier.logger.Debugf("rendering %s timeseries: %s", trigger.ID, strings.Join(metricsToShow, ", "))
-	renderable, err := plotTemplate.GetRenderable(trigger, metricsData, metricsToShow)
+	var md = make([]*metricSource.MetricData, 0, len(metricsData))
+	for _, metricData := range metricsData {
+		md = append(md, &metricSource.MetricData{
+			Name:      metricData.Name,
+			StartTime: metricData.StartTime,
+			StopTime:  metricData.StopTime,
+			StepTime:  metricData.StepTime,
+			Values:    metricData.Values,
+		})
+	}
+	renderable, err := plotTemplate.GetRenderable(trigger, md, metricsToShow)
 	if err != nil {
 		return buff.Bytes(), err
 	}

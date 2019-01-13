@@ -1,6 +1,9 @@
 package moira
 
-import "time"
+import (
+	"math"
+	"time"
+)
 
 // Int64ToTime returns time.Time from int64
 func Int64ToTime(timeStamp int64) time.Time {
@@ -21,6 +24,17 @@ func UseFloat64(f *float64) float64 {
 		return 0
 	}
 	return *f
+}
+
+// IsValidFloat64 checks float64 for Inf and NaN. If it is then float64 is not valid
+func IsValidFloat64(val float64) bool {
+	if math.IsNaN(val) {
+		return false
+	}
+	if math.IsInf(val, 0) {
+		return false
+	}
+	return true
 }
 
 // Subset return whether first is a subset of second

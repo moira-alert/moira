@@ -21,7 +21,7 @@ func init() {
 func TestEvaluateTarget(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-	localSource := CreateLocal(dataBase)
+	localSource := CreateLocalSource(dataBase)
 	defer mockCtrl.Finish()
 
 	pattern := "super.puper.pattern"

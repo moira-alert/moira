@@ -10,7 +10,7 @@ import (
 	"github.com/go-chi/render"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
-	"github.com/moira-alert/moira/remote"
+	"github.com/moira-alert/moira/metric_source"
 )
 
 // DatabaseContext sets to requests context configured database
@@ -94,11 +94,11 @@ func SubscriptionContext(next http.Handler) http.Handler {
 	})
 }
 
-// RemoteConfigContext adds remote config struct to request context
-func RemoteConfigContext(cfg *remote.Config) func(next http.Handler) http.Handler {
+// MetricSourceProvider adds metrics source provider to context
+func MetricSourceProvider(metricSourceProvider *metricSource.SourceProvider) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-			ctx := context.WithValue(request.Context(), remoteConfigKey, cfg)
+			ctx := context.WithValue(request.Context(), subscriptionIDKey, metricSourceProvider)
 			next.ServeHTTP(writer, request.WithContext(ctx))
 		})
 	}

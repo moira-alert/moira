@@ -8,43 +8,32 @@ import (
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/checker"
 	"github.com/moira-alert/moira/database"
-	"github.com/moira-alert/moira/remote"
-	"github.com/moira-alert/moira/target"
+	"github.com/moira-alert/moira/metric_source"
 )
 
 // GetTriggerEvaluationResult evaluates every target in trigger and returns
 // result, separated on main and additional targets metrics
-func GetTriggerEvaluationResult(dataBase moira.Database, remoteConfig *remote.Config,
-	from, to int64, triggerID string, fetchRealtimeData bool) (*checker.TriggerTimeSeries, *moira.Trigger, error) {
+func GetTriggerEvaluationResult(dataBase moira.Database, metricSourceProvider *metricSource.SourceProvider, from, to int64, triggerID string, fetchRealtimeData bool) (*metricSource.TriggerMetricsData, *moira.Trigger, error) {
 	trigger, err := dataBase.GetTrigger(triggerID)
 	if err != nil {
 		return nil, nil, err
 	}
-	triggerMetrics := &checker.TriggerTimeSeries{
-		Main:       make([]*target.TimeSeries, 0),
-		Additional: make([]*target.TimeSeries, 0),
+	triggerMetrics := metricSource.MakeEmptyTriggerMetricsData()
+	metricsSource, err := metricSourceProvider.GetTriggerMetricSource(&trigger)
+	if err != nil {
+		return nil, &trigger, err
 	}
-	if trigger.IsRemote && !remoteConfig.IsEnabled() {
-		return nil, &trigger, remote.ErrRemoteStorageDisabled
-	}
+
 	for i, tar := range trigger.Targets {
-		var timeSeries []*target.TimeSeries
-		if trigger.IsRemote {
-			timeSeries, err = remote.Fetch(remoteConfig, tar, from, to, fetchRealtimeData)
-			if err != nil {
-				return nil, &trigger, err
-			}
-		} else {
-			result, err := target.EvaluateTarget(dataBase, tar, from, to, fetchRealtimeData)
-			if err != nil {
-				return nil, &trigger, err
-			}
-			timeSeries = result.TimeSeries
+		fetchResult, err := metricsSource.Fetch(tar, from, to, fetchRealtimeData)
+		if err != nil {
+			return nil, &trigger, err
 		}
+		metricData := fetchResult.GetMetricsData()
 		if i == 0 {
-			triggerMetrics.Main = timeSeries
+			triggerMetrics.Main = metricData
 		} else {
-			triggerMetrics.Additional = append(triggerMetrics.Additional, timeSeries...)
+			triggerMetrics.Additional = append(triggerMetrics.Additional, metricData...)
 		}
 	}
 	return triggerMetrics, &trigger, nil
@@ -62,9 +51,8 @@ func DeleteTriggerNodataMetrics(dataBase moira.Database, triggerID string) *api.
 }
 
 // GetTriggerMetrics gets all trigger metrics values, default values from: now - 10min, to: now
-func GetTriggerMetrics(dataBase moira.Database, remoteConfig *remote.Config,
-	from, to int64, triggerID string) (*dto.TriggerMetrics, *api.ErrorResponse) {
-	tts, _, err := GetTriggerEvaluationResult(dataBase, remoteConfig, from, to, triggerID, false)
+func GetTriggerMetrics(dataBase moira.Database, metricSourceProvider *metricSource.SourceProvider, from, to int64, triggerID string) (*dto.TriggerMetrics, *api.ErrorResponse) {
+	tts, _, err := GetTriggerEvaluationResult(dataBase, metricSourceProvider, from, to, triggerID, false)
 	if err != nil {
 		if err == database.ErrNil {
 			return nil, api.ErrorInvalidRequest(fmt.Errorf("trigger not found"))
@@ -80,7 +68,7 @@ func GetTriggerMetrics(dataBase moira.Database, remoteConfig *remote.Config,
 		for i := 0; i < len(timeSeries.Values); i++ {
 			timestamp := timeSeries.StartTime + int64(i)*timeSeries.StepTime
 			value := timeSeries.GetTimestampValue(timestamp)
-			if !checker.IsInvalidValue(value) {
+			if moira.IsValidFloat64(value) {
 				values = append(values, &moira.MetricValue{Value: value, Timestamp: timestamp})
 			}
 		}
@@ -91,7 +79,7 @@ func GetTriggerMetrics(dataBase moira.Database, remoteConfig *remote.Config,
 		for i := 0; i < len(timeSeries.Values); i++ {
 			timestamp := timeSeries.StartTime + int64(i)*timeSeries.StepTime
 			value := timeSeries.GetTimestampValue(timestamp)
-			if !checker.IsInvalidValue(value) {
+			if moira.IsValidFloat64(value) {
 				values = append(values, &moira.MetricValue{Value: value, Timestamp: timestamp})
 			}
 		}

@@ -8,7 +8,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/dustin/go-humanize"
-	"github.com/go-graphite/carbonapi/expr/types"
+	"github.com/moira-alert/moira/metric_source"
 	"github.com/wcharczuk/go-chart"
 )
 
@@ -102,11 +102,11 @@ func floatToHumanizedValueFormatter(v interface{}) string {
 }
 
 // toLimitedMetricsData returns MetricData limited by whitelist
-func toLimitedMetricsData(metricsData []*types.MetricData, metricsWhitelist []string) []*types.MetricData {
+func toLimitedMetricsData(metricsData []*metricSource.MetricData, metricsWhitelist []string) []*metricSource.MetricData {
 	if len(metricsWhitelist) == 0 {
 		return metricsData
 	}
-	newMetricsData := make([]*types.MetricData, 0, len(metricsWhitelist))
+	newMetricsData := make([]*metricSource.MetricData, 0, len(metricsWhitelist))
 	for _, metricData := range metricsData {
 		if isWhiteListedMetric(metricData.Name, metricsWhitelist) {
 			newMetricsData = append(newMetricsData, metricData)

@@ -5,6 +5,7 @@ import (
 	"runtime/debug"
 
 	"github.com/go-graphite/carbonapi/expr"
+	"github.com/go-graphite/carbonapi/expr/functions"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
 	"github.com/moira-alert/moira"
@@ -16,8 +17,11 @@ type Local struct {
 	dataBase moira.Database
 }
 
-// CreateLocal configures local metric source
-func CreateLocal(dataBase moira.Database) metricSource.MetricSource {
+// CreateLocalSource configures local metric source
+func CreateLocalSource(dataBase moira.Database) metricSource.MetricSource {
+	// configure carbon-api functions
+	functions.New(make(map[string]string))
+
 	return &Local{
 		dataBase: dataBase,
 	}
@@ -94,6 +98,11 @@ func (local *Local) Fetch(target string, from int64, until int64, allowRealTimeA
 	}
 
 	return result, nil
+}
+
+// IsConfigured always returns true. It easy to configure local source =)
+func (local *Local) IsConfigured() (bool, error) {
+	return true, nil
 }
 
 func getPatternsMetricData(database moira.Database, patterns []parser.MetricRequest, from int64, until int64, allowRealTimeAlerting bool) (map[parser.MetricRequest][]*types.MetricData, []string, error) {
