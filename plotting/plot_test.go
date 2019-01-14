@@ -533,12 +533,12 @@ func generateRandomTestMetricsData(numTotal int, numEmpty int) []*metricSource.M
 	startTime := int64(0)
 	stepTime := int64(10)
 	stopTime := int64(numTotal) * stepTime
-	fetchResponseValues := make([]float64, 0, numTotal)
+	metricDataValues := make([]float64, 0, numTotal)
 	for valInd := 0; valInd < numTotal; valInd++ {
 		if valInd < numEmpty {
-			fetchResponseValues = append(fetchResponseValues, math.NaN())
+			metricDataValues = append(metricDataValues, math.NaN())
 		} else {
-			fetchResponseValues = append(fetchResponseValues, rand.Float64())
+			metricDataValues = append(metricDataValues, rand.Float64())
 		}
 	}
 	return []*metricSource.MetricData{
@@ -547,7 +547,7 @@ func generateRandomTestMetricsData(numTotal int, numEmpty int) []*metricSource.M
 			StartTime: startTime,
 			StepTime:  stepTime,
 			StopTime:  stopTime,
-			Values:    fetchResponseValues,
+			Values:    metricDataValues,
 		},
 	}
 }
