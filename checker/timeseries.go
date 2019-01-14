@@ -4,15 +4,7 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/expression"
 	"github.com/moira-alert/moira/metric_source"
-	"github.com/moira-alert/moira/target"
 )
-
-// TriggerTimeSeries represent collection of Main target timeseries
-// and collection of additions targets timeseries
-type TriggerTimeSeries struct {
-	Main       []*target.TimeSeries
-	Additional []*target.TimeSeries
-}
 
 func (triggerChecker *TriggerChecker) getFetchResult(from, until int64) (*metricSource.TriggerMetricsData, []string, error) {
 	wrongTriggerTargets := make([]int, 0)

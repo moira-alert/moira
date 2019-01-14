@@ -15,7 +15,6 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
 	"github.com/moira-alert/moira/mock/moira-alert"
-	"github.com/moira-alert/moira/target"
 )
 
 func TestGetTimeSeriesState(t *testing.T) {
@@ -365,7 +364,7 @@ func TestCheckErrors(t *testing.T) {
 	message := "ooops, metric error"
 	metricErr := fmt.Errorf(message)
 	messageException := `Unknown graphite function: "WrongFunction"`
-	unknownFunctionExc := target.ErrorUnknownFunction(fmt.Errorf(messageException))
+	unknownFunctionExc := local.ErrorUnknownFunction(fmt.Errorf(messageException))
 
 	metricValues := []*moira.MetricValue{
 		{
@@ -1127,7 +1126,7 @@ func TestHandleErrorCheck(t *testing.T) {
 
 		dataBase.EXPECT().PushNotificationEvent(gomock.Any(), true).Return(nil)
 
-		actual, err := triggerChecker.handleTriggerCheck(checkData, target.ErrUnknownFunction{FuncName: "123"})
+		actual, err := triggerChecker.handleTriggerCheck(checkData, local.ErrUnknownFunction{FuncName: "123"})
 		expected := moira.CheckData{
 			State:          EXCEPTION,
 			Timestamp:      checkData.Timestamp,

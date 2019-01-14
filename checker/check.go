@@ -5,8 +5,8 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/metric_source"
+	"github.com/moira-alert/moira/metric_source/local"
 	"github.com/moira-alert/moira/metric_source/remote"
-	"github.com/moira-alert/moira/target"
 )
 
 var (
@@ -147,7 +147,7 @@ func (triggerChecker *TriggerChecker) handleTriggerCheck(checkData moira.CheckDa
 			checkData.Message = fmt.Sprintf("Remote server unavailable. Trigger is not checked for %d seconds", timeSinceLastSuccessfulCheck)
 		}
 		triggerChecker.Logger.Errorf("Trigger %s: %s", triggerChecker.TriggerID, checkingError.Error())
-	case target.ErrUnknownFunction, target.ErrEvalExpr:
+	case local.ErrUnknownFunction, local.ErrEvalExpr:
 		checkData.State = EXCEPTION
 		checkData.Message = checkingError.Error()
 		triggerChecker.Logger.Warningf("Trigger %s: %s", triggerChecker.TriggerID, checkingError.Error())
