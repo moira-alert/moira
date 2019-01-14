@@ -48,7 +48,7 @@ func (provider *SourceProvider) GetMetricSource(isRemote bool) (MetricSource, er
 
 func returnSource(source MetricSource) (MetricSource, error) {
 	isConfigured, err := source.IsConfigured()
-	if !isConfigured && err != nil {
+	if !isConfigured && err == nil {
 		return source, ErrMetricSourceIsNotConfigured
 	}
 	return source, err

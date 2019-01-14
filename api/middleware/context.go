@@ -95,10 +95,10 @@ func SubscriptionContext(next http.Handler) http.Handler {
 }
 
 // MetricSourceProvider adds metrics source provider to context
-func MetricSourceProvider(metricSourceProvider *metricSource.SourceProvider) func(next http.Handler) http.Handler {
+func MetricSourceProvider(sourceProvider *metricSource.SourceProvider) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-			ctx := context.WithValue(request.Context(), subscriptionIDKey, metricSourceProvider)
+			ctx := context.WithValue(request.Context(), metricSourceProvider, sourceProvider)
 			next.ServeHTTP(writer, request.WithContext(ctx))
 		})
 	}
