@@ -22,7 +22,7 @@ func (*FetchResult) GetPatterns() ([]string, error) {
 	return make([]string, 0), fmt.Errorf("remote fetch result never returns patterns")
 }
 
-// GetPatterMetrics always returns error, because remote fetch doesn't return base pattern metrics
-func (*FetchResult) GetPatterMetrics() ([]string, error) {
+// GetPatternMetrics always returns error, because remote fetch doesn't return base pattern metrics
+func (*FetchResult) GetPatternMetrics() ([]string, error) {
 	return make([]string, 0), fmt.Errorf("remote fetch result never returns pattern metrics")
 }

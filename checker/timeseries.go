@@ -1,13 +1,9 @@
 package checker
 
 import (
-	"bytes"
-	"fmt"
-	"math"
-	"strconv"
-
+	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/expression"
-	"github.com/moira-alert/moira/remote"
+	"github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/target"
 )
 
@@ -18,158 +14,69 @@ type TriggerTimeSeries struct {
 	Additional []*target.TimeSeries
 }
 
-// ErrWrongTriggerTargets represents targets with inconsistent number of timeseries
-type ErrWrongTriggerTargets []int
-
-// ErrWrongTriggerTarget implementation for list of invalid targets found
-func (err ErrWrongTriggerTargets) Error() string {
-	var countType []byte
-	if len(err) > 1 {
-		countType = []byte("Targets ")
-	} else {
-		countType = []byte("Target ")
-	}
-	wrongTargets := bytes.NewBuffer(countType)
-	for tarInd, tar := range err {
-		wrongTargets.WriteString("t")
-		wrongTargets.WriteString(strconv.Itoa(tar))
-		if tarInd != len(err)-1 {
-			wrongTargets.WriteString(", ")
-		}
-	}
-	wrongTargets.WriteString(" has more than one timeseries")
-	return wrongTargets.String()
-}
-
-func (triggerChecker *TriggerChecker) getTimeSeries(from, until int64) (*TriggerTimeSeries, []string, error) {
+func (triggerChecker *TriggerChecker) getFetchResult(from, until int64) (*metricSource.TriggerMetricsData, []string, error) {
 	wrongTriggerTargets := make([]int, 0)
-
-	triggerTimeSeries := &TriggerTimeSeries{
-		Main:       make([]*target.TimeSeries, 0),
-		Additional: make([]*target.TimeSeries, 0),
-	}
+	triggerMetricsData := metricSource.MakeEmptyTriggerMetricsData()
 	metricsArr := make([]string, 0)
 
 	isSimpleTrigger := triggerChecker.trigger.IsSimple()
-
 	for targetIndex, tar := range triggerChecker.trigger.Targets {
-		result, err := target.EvaluateTarget(triggerChecker.Database, tar, from, until, isSimpleTrigger)
+		fetchResult, err := triggerChecker.Source.Fetch(tar, from, until, isSimpleTrigger)
 		if err != nil {
 			return nil, nil, err
 		}
+		metricsData := fetchResult.GetMetricsData()
+		metricsFetchResult, metricsErr := fetchResult.GetPatternMetrics()
 		if targetIndex == 0 {
-			triggerTimeSeries.Main = result.TimeSeries
+			triggerMetricsData.Main = metricsData
 		} else {
-			timeSeriesCount := len(result.TimeSeries)
+			metricsDataCount := len(metricsData)
 			switch {
-			case timeSeriesCount == 0:
-				if len(result.Metrics) == 0 {
-					triggerTimeSeries.Additional = append(triggerTimeSeries.Additional, nil)
-				} else {
-					return nil, nil, fmt.Errorf("target t%v has no timeseries", targetIndex+1)
+			case metricsDataCount == 0:
+				if metricsErr != nil {
+					return nil, nil, ErrTargetHasNoTimeSeries{targetIndex: targetIndex + 1}
 				}
-			case timeSeriesCount > 1:
+				if len(metricsFetchResult) == 0 {
+					triggerMetricsData.Additional = append(triggerMetricsData.Additional, nil)
+				} else {
+					return nil, nil, ErrTargetHasNoTimeSeries{targetIndex: targetIndex + 1}
+				}
+			case metricsDataCount > 1:
 				wrongTriggerTargets = append(wrongTriggerTargets, targetIndex+1)
 			default:
-				triggerTimeSeries.Additional = append(triggerTimeSeries.Additional, result.TimeSeries[0])
+				triggerMetricsData.Additional = append(triggerMetricsData.Additional, metricsData[0])
 			}
 		}
-		metricsArr = append(metricsArr, result.Metrics...)
+		if metricsErr == nil {
+			metricsArr = append(metricsArr, metricsFetchResult...)
+		}
 	}
-
 	if len(wrongTriggerTargets) > 0 {
 		return nil, nil, ErrWrongTriggerTargets(wrongTriggerTargets)
 	}
-
-	return triggerTimeSeries, metricsArr, nil
+	return triggerMetricsData, metricsArr, nil
 }
 
-func (triggerChecker *TriggerChecker) getRemoteTimeSeries(from, until int64) (*TriggerTimeSeries, error) {
-	wrongTriggerTargets := make([]int, 0)
-
-	triggerTimeSeries := &TriggerTimeSeries{
-		Main:       make([]*target.TimeSeries, 0),
-		Additional: make([]*target.TimeSeries, 0),
-	}
-
-	isSimpleTrigger := triggerChecker.trigger.IsSimple()
-	for targetIndex, tar := range triggerChecker.trigger.Targets {
-		timeSeries, err := remote.Fetch(triggerChecker.RemoteConfig, tar, from, until, isSimpleTrigger)
-		if err != nil {
-			return nil, err
-		}
-
-		if targetIndex == 0 {
-			triggerTimeSeries.Main = timeSeries
-		} else {
-			timeSeriesCount := len(timeSeries)
-			switch {
-			case timeSeriesCount == 0:
-				return nil, fmt.Errorf("target t%v has no timeseries", targetIndex+1)
-			case timeSeriesCount > 1:
-				wrongTriggerTargets = append(wrongTriggerTargets, targetIndex+1)
-			default: // == 1
-				triggerTimeSeries.Additional = append(triggerTimeSeries.Additional, timeSeries[0])
-			}
-		}
-	}
-
-	if len(wrongTriggerTargets) > 0 {
-		return nil, ErrWrongTriggerTargets(wrongTriggerTargets)
-	}
-
-	return triggerTimeSeries, nil
-}
-
-func (*TriggerTimeSeries) getMainTargetName() string {
-	return "t1"
-}
-
-func (*TriggerTimeSeries) getAdditionalTargetName(targetIndex int) string {
-	return fmt.Sprintf("t%v", targetIndex+2)
-}
-
-func (triggerTimeSeries *TriggerTimeSeries) getExpressionValues(firstTargetTimeSeries *target.TimeSeries, valueTimestamp int64) (*expression.TriggerExpression, bool) {
+func getExpressionValues(triggerMetricsData *metricSource.TriggerMetricsData, firstTargetMetricData *metricSource.MetricData, valueTimestamp int64) (*expression.TriggerExpression, bool) {
 	expressionValues := &expression.TriggerExpression{
-		AdditionalTargetsValues: make(map[string]float64, len(triggerTimeSeries.Additional)),
+		AdditionalTargetsValues: make(map[string]float64, len(triggerMetricsData.Additional)),
 	}
-	firstTargetValue := firstTargetTimeSeries.GetTimestampValue(valueTimestamp)
-	if IsInvalidValue(firstTargetValue) {
+	firstTargetValue := firstTargetMetricData.GetTimestampValue(valueTimestamp)
+	if !moira.IsValidFloat64(firstTargetValue) {
 		return expressionValues, false
 	}
 	expressionValues.MainTargetValue = firstTargetValue
 
-	for targetNumber := 0; targetNumber < len(triggerTimeSeries.Additional); targetNumber++ {
-		additionalTimeSeries := triggerTimeSeries.Additional[targetNumber]
+	for targetNumber := 0; targetNumber < len(triggerMetricsData.Additional); targetNumber++ {
+		additionalTimeSeries := triggerMetricsData.Additional[targetNumber]
 		if additionalTimeSeries == nil {
 			return expressionValues, false
 		}
 		tnValue := additionalTimeSeries.GetTimestampValue(valueTimestamp)
-		if IsInvalidValue(tnValue) {
+		if !moira.IsValidFloat64(tnValue) {
 			return expressionValues, false
 		}
-		expressionValues.AdditionalTargetsValues[triggerTimeSeries.getAdditionalTargetName(targetNumber)] = tnValue
+		expressionValues.AdditionalTargetsValues[triggerMetricsData.GetAdditionalTargetName(targetNumber)] = tnValue
 	}
 	return expressionValues, true
-}
-
-// IsInvalidValue checks trigger for Inf and NaN. If it is then trigger is not valid
-func IsInvalidValue(val float64) bool {
-	if math.IsNaN(val) {
-		return true
-	}
-	if math.IsInf(val, 0) {
-		return true
-	}
-	return false
-}
-
-// hasOnlyWildcards checks given targetTimeSeries for only wildcards
-func (triggerTimeSeries *TriggerTimeSeries) hasOnlyWildcards() bool {
-	for _, timeSeries := range triggerTimeSeries.Main {
-		if !timeSeries.Wildcard {
-			return false
-		}
-	}
-	return true
 }

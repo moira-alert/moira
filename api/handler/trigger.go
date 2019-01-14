@@ -6,13 +6,13 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
+	"github.com/moira-alert/moira/metric_source/remote"
 
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/controller"
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/api/middleware"
 	"github.com/moira-alert/moira/expression"
-	"github.com/moira-alert/moira/remote"
 	"github.com/moira-alert/moira/target"
 )
 

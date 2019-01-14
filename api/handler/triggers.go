@@ -10,7 +10,7 @@ import (
 	"github.com/go-chi/render"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/metric_source"
-	"github.com/moira-alert/moira/remote"
+	"github.com/moira-alert/moira/metric_source/remote"
 
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/controller"

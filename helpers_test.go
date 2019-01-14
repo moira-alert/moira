@@ -1,6 +1,7 @@
 package moira
 
 import (
+	"math"
 	"testing"
 	"time"
 
@@ -113,5 +114,14 @@ func TestChunkSlice(t *testing.T) {
 
 		actual = ChunkSlice(originalSlice, 0)
 		So(actual, ShouldBeEmpty)
+	})
+}
+
+func TestIsValidFloat64(t *testing.T) {
+	Convey("values +Inf -Inf and NaN is invalid", t, func() {
+		So(IsValidFloat64(math.NaN()), ShouldBeFalse)
+		So(IsValidFloat64(math.Inf(-1)), ShouldBeFalse)
+		So(IsValidFloat64(math.Inf(1)), ShouldBeFalse)
+		So(IsValidFloat64(3.14), ShouldBeTrue)
 	})
 }

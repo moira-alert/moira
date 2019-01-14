@@ -7,7 +7,6 @@ import (
 
 	"github.com/gosexy/to"
 	remoteSource "github.com/moira-alert/moira/metric_source/remote"
-	"github.com/moira-alert/moira/remote"
 	"gopkg.in/yaml.v2"
 
 	"github.com/moira-alert/moira/database/redis"
@@ -92,18 +91,6 @@ type RemoteConfig struct {
 	Password string `yaml:"password"`
 	// If true, remote worker will be enabled.
 	Enabled bool `yaml:"enabled"`
-}
-
-// GetSettings returns remote config parsed from moira config files
-func (config *RemoteConfig) GetSettings() *remote.Config {
-	return &remote.Config{
-		URL:           config.URL,
-		CheckInterval: to.Duration(config.CheckInterval),
-		Timeout:       to.Duration(config.Timeout),
-		User:          config.User,
-		Password:      config.Password,
-		Enabled:       config.Enabled,
-	}
 }
 
 // GetRemoteSourceSettings returns remote config parsed from moira config files

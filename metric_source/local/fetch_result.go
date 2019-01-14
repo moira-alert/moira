@@ -31,7 +31,7 @@ func (fetchResult *FetchResult) GetPatterns() ([]string, error) {
 	return fetchResult.Patterns, nil
 }
 
-// GetPatterMetrics return all metrics which match to evaluated graphite target patterns
-func (fetchResult *FetchResult) GetPatterMetrics() ([]string, error) {
+// GetPatternMetrics return all metrics which match to evaluated graphite target patterns
+func (fetchResult *FetchResult) GetPatternMetrics() ([]string, error) {
 	return fetchResult.Metrics, nil
 }

@@ -10,5 +10,5 @@ type MetricSource interface {
 type FetchResult interface {
 	GetMetricsData() []*MetricData
 	GetPatterns() ([]string, error)
-	GetPatterMetrics() ([]string, error)
+	GetPatternMetrics() ([]string, error)
 }
