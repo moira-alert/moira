@@ -51,6 +51,7 @@ func TestSanitizeLabelName(t *testing.T) {
 		"HostName.CategoryName.CategoryCounterName.CategoryCounterType.MetricName",
 		"ServiceName.HostName.CategoryName.CategoryCounterName.CategoryCounterType.MetricName",
 		"MetricPrefix.ServiceName.HostName.CategoryName.CategoryCounterName.CategoryCounterType.MetricName",
+		"Рост количества ответов nginx р95",
 	}
 	labelsShortForm := []string{
 		"MetricName",
@@ -60,6 +61,7 @@ func TestSanitizeLabelName(t *testing.T) {
 		"HostName.CategoryName.Categ...",
 		"ServiceName.HostName.Catego...",
 		"MetricPrefix.ServiceName.Ho...",
+		"Рост количества ответов ngi...",
 	}
 	Convey("sanitize lables names", t, func() {
 		maxLabelLength := 30
@@ -103,7 +105,7 @@ func TestTimeValueFormatter(t *testing.T) {
 			fmt.Printf("%s: %s,\n%s: %s\n\n",
 				timeValue.Location().String(), timeValue.String(), location.String(), formatted)
 			So(formattedMinute, ShouldEqual, timeValue.Minute())
-			So(formattedHour, ShouldEqual, timeValue.Add(time.Duration(increment) * time.Hour).Hour())
+			So(formattedHour, ShouldEqual, timeValue.Add(time.Duration(increment)*time.Hour).Hour())
 		}
 	})
 }

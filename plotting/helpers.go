@@ -5,6 +5,7 @@ import (
 	"math"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/dustin/go-humanize"
 	"github.com/go-graphite/carbonapi/expr/types"
@@ -28,9 +29,9 @@ func (initial sortedByLen) Swap(i int, j int) {
 
 // sanitizeLabelName shortens label names to max length
 func sanitizeLabelName(label string, maxLabelLength int) string {
-	labelLength := len(label)
+	labelLength := utf8.RuneCountInString(label)
 	if labelLength > maxLabelLength {
-		label = label[:maxLabelLength-3]
+		label = string([]rune(label)[:maxLabelLength-3])
 		label += "..."
 	}
 	return label
