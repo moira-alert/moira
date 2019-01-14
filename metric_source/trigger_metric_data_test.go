@@ -22,7 +22,7 @@ func TestGetTargetName(t *testing.T) {
 }
 
 func TestTriggerTimeSeriesHasOnlyWildcards(t *testing.T) {
-	Convey("Main timeseries has wildcards only", t, func() {
+	Convey("Main metrics data has wildcards only", t, func() {
 		tts := TriggerMetricsData{
 			Main: []*MetricData{{Wildcard: true}},
 		}
@@ -34,7 +34,7 @@ func TestTriggerTimeSeriesHasOnlyWildcards(t *testing.T) {
 		So(tts1.HasOnlyWildcards(), ShouldBeTrue)
 	})
 
-	Convey("Main timeseries has not only wildcards", t, func() {
+	Convey("Main metrics data has not only wildcards", t, func() {
 		tts := TriggerMetricsData{
 			Main: []*MetricData{{Wildcard: false}},
 		}
@@ -51,7 +51,7 @@ func TestTriggerTimeSeriesHasOnlyWildcards(t *testing.T) {
 		So(tts2.HasOnlyWildcards(), ShouldBeFalse)
 	})
 
-	Convey("Additional timeseries has wildcards but Main not", t, func() {
+	Convey("Additional metrics data has wildcards but Main not", t, func() {
 		tts := TriggerMetricsData{
 			Main:       []*MetricData{{Wildcard: false}},
 			Additional: []*MetricData{{Wildcard: true}, {Wildcard: true}},
