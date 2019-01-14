@@ -19,7 +19,7 @@ type ErrEvaluateTargetFailedWithPanic struct {
 }
 
 // Error is implementation of golang error interface for ErrEvaluateTargetFailedWithPanic struct
-func(err ErrEvaluateTargetFailedWithPanic) Error() string {
+func (err ErrEvaluateTargetFailedWithPanic) Error() string {
 	return fmt.Sprintf("panic while evaluate target %s: message: '%s' stack: %s", err.target, err.recoverMessage, err.stackRecord)
 }
 

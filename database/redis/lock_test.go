@@ -80,7 +80,7 @@ func testLockWithTTLExpireErrorExpected(logger moira.Logger, lockTTL int, lag bo
 		false: "failure",
 	}
 	if !lag {
-		lockTTL --
+		lockTTL--
 	}
 	time.Sleep(time.Duration(lockTTL) * time.Millisecond)
 	lockExpiryTicker := time.NewTicker(time.Millisecond)
