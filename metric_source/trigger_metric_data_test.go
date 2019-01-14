@@ -7,6 +7,38 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+func TestMakeEmptyTriggerMetricsData(t *testing.T) {
+	Convey("Just make empty TriggerMetricsData", t, func() {
+		So(*(MakeEmptyTriggerMetricsData()), ShouldResemble, TriggerMetricsData{
+			Main:       make([]*MetricData, 0),
+			Additional: make([]*MetricData, 0),
+		})
+	})
+}
+
+func TestMakeTriggerMetricsData(t *testing.T) {
+	Convey("Just make empty TriggerMetricsData", t, func() {
+		So(*(MakeTriggerMetricsData(make([]*MetricData, 0), make([]*MetricData, 0))), ShouldResemble, TriggerMetricsData{
+			Main:       make([]*MetricData, 0),
+			Additional: make([]*MetricData, 0),
+		})
+	})
+
+	Convey("Just make TriggerMetricsData only with main", t, func() {
+		So(*(MakeTriggerMetricsData([]*MetricData{MakeMetricData("000", make([]float64, 0), 10, 0)}, make([]*MetricData, 0))), ShouldResemble, TriggerMetricsData{
+			Main:       []*MetricData{MakeMetricData("000", make([]float64, 0), 10, 0)},
+			Additional: make([]*MetricData, 0),
+		})
+	})
+
+	Convey("Just make TriggerMetricsData with main and additional", t, func() {
+		So(*(MakeTriggerMetricsData([]*MetricData{MakeMetricData("000", make([]float64, 0), 10, 0)}, []*MetricData{MakeMetricData("000", make([]float64, 0), 10, 0)})), ShouldResemble, TriggerMetricsData{
+			Main:       []*MetricData{MakeMetricData("000", make([]float64, 0), 10, 0)},
+			Additional: []*MetricData{MakeMetricData("000", make([]float64, 0), 10, 0)},
+		})
+	})
+}
+
 func TestGetTargetName(t *testing.T) {
 	tts := TriggerMetricsData{}
 

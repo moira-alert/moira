@@ -155,3 +155,15 @@ func TestEvaluateTarget(t *testing.T) {
 		})
 	})
 }
+
+func TestLocal_IsConfigured(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	localSource := CreateLocalSource(dataBase)
+
+	Convey("Always true", t, func() {
+		actual, err := localSource.IsConfigured()
+		So(err, ShouldBeNil)
+		So(actual, ShouldBeTrue)
+	})
+}

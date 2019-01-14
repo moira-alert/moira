@@ -11,26 +11,26 @@ var ErrMetricSourceIsNotConfigured = fmt.Errorf("metric source is not configured
 
 // SourceProvider is a provider for all known metrics sources
 type SourceProvider struct {
-	localSource  MetricSource
-	remoteSource MetricSource
+	local  MetricSource
+	remote MetricSource
 }
 
 // CreateMetricSourceProvider just creates SourceProvider with all known metrics sources
 func CreateMetricSourceProvider(local MetricSource, remote MetricSource) *SourceProvider {
 	return &SourceProvider{
-		remoteSource: remote,
-		localSource:  local,
+		remote: remote,
+		local:  local,
 	}
 }
 
 // GetLocal gets local metric source. If it not configured returns not empty error
 func (provider *SourceProvider) GetLocal() (MetricSource, error) {
-	return returnSource(provider.localSource)
+	return returnSource(provider.local)
 }
 
 // GetRemote gets remote metric source. If it not configured returns not empty error
 func (provider *SourceProvider) GetRemote() (MetricSource, error) {
-	return returnSource(provider.remoteSource)
+	return returnSource(provider.remote)
 }
 
 // GetTriggerMetricSource get metrics source by given trigger. If it not configured returns not empty error

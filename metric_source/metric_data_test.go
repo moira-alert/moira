@@ -7,6 +7,37 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+func TestMakeMetricData(t *testing.T) {
+	Convey("Just make MetricData", t, func() {
+		metricData := MakeMetricData("123", []float64{1, 2, 3}, 60, 0)
+		So(*metricData, ShouldResemble, MetricData{
+			Name:      "123",
+			Values:    []float64{1, 2, 3},
+			StepTime:  60,
+			StartTime: 0,
+			StopTime:  180,
+		})
+
+		metricData = MakeMetricData("123", []float64{1, 2, 3}, 10, 0)
+		So(*metricData, ShouldResemble, MetricData{
+			Name:      "123",
+			Values:    []float64{1, 2, 3},
+			StepTime:  10,
+			StartTime: 0,
+			StopTime:  30,
+		})
+
+		metricData = MakeMetricData("000", make([]float64, 0), 10, 0)
+		So(*metricData, ShouldResemble, MetricData{
+			Name:      "000",
+			Values:    make([]float64, 0),
+			StepTime:  10,
+			StartTime: 0,
+			StopTime:  0,
+		})
+	})
+}
+
 func TestGetTimestampValue(t *testing.T) {
 	Convey("IsAbsent only false", t, func() {
 		metricData := MetricData{
