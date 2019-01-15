@@ -78,7 +78,7 @@ func TestNotifier(t *testing.T) {
 	mockCtrl = gomock.NewController(t)
 	defer mockCtrl.Finish()
 	database := redis.NewDatabase(logger, redis.Config{Port: "6379", Host: "localhost"}, redis.Notifier)
-	metricsSourceProvider := metricSource.CreateMetricSourceProvider(local.CreateLocalSource(database), nil)
+	metricsSourceProvider := metricSource.CreateMetricSourceProvider(local.Create(database), nil)
 	database.SaveContact(&contact)
 	database.SaveSubscription(&subscription)
 	database.SaveTrigger(trigger.ID, &trigger)

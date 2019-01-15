@@ -28,8 +28,8 @@ type Remote struct {
 	client *http.Client
 }
 
-// CreateRemoteSource configures remote metric source
-func CreateRemoteSource(config *Config) metricSource.MetricSource {
+// Create configures remote metric source
+func Create(config *Config) metricSource.MetricSource {
 	return &Remote{
 		config: config,
 		client: &http.Client{Timeout: config.Timeout},

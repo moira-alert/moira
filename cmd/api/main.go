@@ -111,9 +111,9 @@ func main() {
 
 	logger.Infof("Start listening by address: [%s]", apiConfig.Listen)
 
-	localSource := local.CreateLocalSource(database)
+	localSource := local.Create(database)
 	remoteConfig := config.Remote.GetRemoteSourceSettings()
-	remoteSource := remote.CreateRemoteSource(remoteConfig)
+	remoteSource := remote.Create(remoteConfig)
 	metricSourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource)
 
 	httpHandler := handler.NewHandler(database, logger, searchIndex, apiConfig, metricSourceProvider, configFile)

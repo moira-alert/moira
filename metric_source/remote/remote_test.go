@@ -11,14 +11,14 @@ import (
 
 func TestIsConfigured(t *testing.T) {
 	Convey("Remote is not configured", t, func() {
-		remote := CreateRemoteSource(&Config{URL: "", Enabled: true})
+		remote := Create(&Config{URL: "", Enabled: true})
 		isConfigured, err := remote.IsConfigured()
 		So(isConfigured, ShouldBeFalse)
 		So(err, ShouldResemble, ErrRemoteStorageDisabled)
 	})
 
 	Convey("Remote is configured", t, func() {
-		remote := CreateRemoteSource(&Config{URL: "http://host", Enabled: true})
+		remote := Create(&Config{URL: "http://host", Enabled: true})
 		isConfigured, err := remote.IsConfigured()
 		So(isConfigured, ShouldBeTrue)
 		So(err, ShouldBeEmpty)

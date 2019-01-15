@@ -82,9 +82,9 @@ func main() {
 	databaseSettings := config.Redis.GetSettings()
 	database := redis.NewDatabase(logger, databaseSettings, redis.Notifier)
 
-	localSource := local.CreateLocalSource(database)
+	localSource := local.Create(database)
 	remoteConfig := config.Remote.GetRemoteSourceSettings()
-	remoteSource := remote.CreateRemoteSource(remoteConfig)
+	remoteSource := remote.Create(remoteConfig)
 	metricSourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource)
 
 	notifierConfig := config.Notifier.getSettings(logger)

@@ -17,8 +17,8 @@ type Local struct {
 	dataBase moira.Database
 }
 
-// CreateLocalSource configures local metric source
-func CreateLocalSource(dataBase moira.Database) metricSource.MetricSource {
+// Create configures local metric source
+func Create(dataBase moira.Database) metricSource.MetricSource {
 	// configure carbon-api functions
 	functions.New(make(map[string]string))
 

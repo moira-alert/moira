@@ -21,7 +21,7 @@ func init() {
 func TestEvaluateTarget(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-	localSource := CreateLocalSource(dataBase)
+	localSource := Create(dataBase)
 	defer mockCtrl.Finish()
 
 	pattern := "super.puper.pattern"
@@ -159,7 +159,7 @@ func TestEvaluateTarget(t *testing.T) {
 func TestLocal_IsConfigured(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-	localSource := CreateLocalSource(dataBase)
+	localSource := Create(dataBase)
 
 	Convey("Always true", t, func() {
 		actual, err := localSource.IsConfigured()

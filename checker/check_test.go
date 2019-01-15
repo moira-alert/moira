@@ -407,7 +407,7 @@ func TestCheckErrors(t *testing.T) {
 	triggerChecker := TriggerChecker{
 		TriggerID: "SuperId",
 		Database:  dataBase,
-		Source:    local.CreateLocalSource(dataBase),
+		Source:    local.Create(dataBase),
 		Logger:    logger,
 		Config: &Config{
 			MetricsTTLSeconds: 10,
@@ -585,7 +585,7 @@ func TestIgnoreNodataToOk(t *testing.T) {
 	triggerChecker := TriggerChecker{
 		TriggerID: "SuperId",
 		Database:  dataBase,
-		Source:    local.CreateLocalSource(dataBase),
+		Source:    local.Create(dataBase),
 		Logger:    logger,
 		Config: &Config{
 			MetricsTTLSeconds: 3600,
@@ -679,7 +679,7 @@ func TestHandleTrigger(t *testing.T) {
 	triggerChecker := TriggerChecker{
 		TriggerID: "SuperId",
 		Database:  dataBase,
-		Source:    local.CreateLocalSource(dataBase),
+		Source:    local.Create(dataBase),
 		Logger:    logger,
 		Config: &Config{
 			MetricsTTLSeconds: 3600,
@@ -826,7 +826,7 @@ func TestHandleTrigger(t *testing.T) {
 		triggerChecker1 := TriggerChecker{
 			TriggerID: "SuperId",
 			Database:  dataBase,
-			Source:    local.CreateLocalSource(dataBase),
+			Source:    local.Create(dataBase),
 			Logger:    logger,
 			Config: &Config{
 				MetricsTTLSeconds: 3600,
