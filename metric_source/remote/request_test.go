@@ -73,7 +73,7 @@ func TestMakeRequest(t *testing.T) {
 		remote := Remote{client: server.Client(), config: &Config{URL: "http://bad/"}}
 		request, _ := remote.prepareRequest(from, until, target)
 		actual, err := remote.makeRequest(request)
-		So(err.Error(), ShouldResemble, "Get http://bad/?format=json&from=300&target=foo.bar&until=500: dial tcp: lookup bad: no such host")
+		So(err, ShouldNotBeEmpty)
 		So(actual, ShouldBeEmpty)
 	})
 }
