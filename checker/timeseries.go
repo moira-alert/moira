@@ -6,14 +6,14 @@ import (
 	"github.com/moira-alert/moira/metric_source"
 )
 
-func (triggerChecker *TriggerChecker) getFetchResult(from, until int64) (*metricSource.TriggerMetricsData, []string, error) {
+func (triggerChecker *TriggerChecker) getFetchResult() (*metricSource.TriggerMetricsData, []string, error) {
 	wrongTriggerTargets := make([]int, 0)
 	triggerMetricsData := metricSource.MakeEmptyTriggerMetricsData()
 	metricsArr := make([]string, 0)
 
 	isSimpleTrigger := triggerChecker.trigger.IsSimple()
-	for targetIndex, tar := range triggerChecker.trigger.Targets {
-		fetchResult, err := triggerChecker.Source.Fetch(tar, from, until, isSimpleTrigger)
+	for targetIndex, target := range triggerChecker.trigger.Targets {
+		fetchResult, err := triggerChecker.Source.Fetch(target, triggerChecker.From, triggerChecker.Until, isSimpleTrigger)
 		if err != nil {
 			return nil, nil, err
 		}

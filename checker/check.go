@@ -44,7 +44,7 @@ func (triggerChecker *TriggerChecker) handleMetricsCheck() (moira.CheckData, err
 		LastSuccessfulCheckTimestamp: triggerChecker.lastCheck.LastSuccessfulCheckTimestamp,
 	}
 
-	triggerMetricsData, metrics, err := triggerChecker.getFetchResult(triggerChecker.From, triggerChecker.Until)
+	triggerMetricsData, metrics, err := triggerChecker.getFetchResult()
 	if err != nil {
 		return checkData, err
 	}
