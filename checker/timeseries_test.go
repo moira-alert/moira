@@ -9,7 +9,7 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/expression"
 	"github.com/moira-alert/moira/metric_source"
-	"github.com/moira-alert/moira/metric_source/local"
+	"github.com/moira-alert/moira/mock/metric_source"
 	"github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -17,6 +17,8 @@ import (
 func TestGetTimeSeries(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	source := mock_metric_source.NewMockMetricSource(mockCtrl)
+	fetchResult := mock_metric_source.NewMockFetchResult(mockCtrl)
 	defer mockCtrl.Finish()
 
 	pattern := "super.puper.pattern"
@@ -33,45 +35,13 @@ func TestGetTimeSeries(t *testing.T) {
 	oneMoreMetric1 := "one.more.metric.one"
 	oneMoreMetric2 := "one.more.metric.two"
 
-	metricValues := []*moira.MetricValue{
-		{
-			RetentionTimestamp: 20,
-			Timestamp:          23,
-			Value:              0,
-		},
-		{
-			RetentionTimestamp: 30,
-			Timestamp:          33,
-			Value:              1,
-		},
-		{
-			RetentionTimestamp: 40,
-			Timestamp:          43,
-			Value:              2,
-		},
-		{
-			RetentionTimestamp: 50,
-			Timestamp:          53,
-			Value:              3,
-		},
-		{
-			RetentionTimestamp: 60,
-			Timestamp:          63,
-			Value:              4,
-		},
-	}
-	dataList := map[string][]*moira.MetricValue{
-		metric: metricValues,
-	}
-
 	var from int64 = 17
 	var until int64 = 67
 	var retention int64 = 10
-	metricErr := fmt.Errorf("ooops, metric error")
 
 	triggerChecker := &TriggerChecker{
 		Database: dataBase,
-		Source:   local.CreateLocalSource(dataBase),
+		Source:   source,
 		trigger: &moira.Trigger{
 			Targets:  []string{pattern},
 			Patterns: []string{pattern},
@@ -79,9 +49,8 @@ func TestGetTimeSeries(t *testing.T) {
 	}
 
 	Convey("Error test", t, func() {
-		dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
-		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
-		dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(nil, metricErr)
+		metricErr := fmt.Errorf("ooops, metric error")
+		source.EXPECT().Fetch(pattern, from, until, true).Return(nil, metricErr)
 		actual, metrics, err := triggerChecker.getFetchResult(from, until)
 		So(actual, ShouldBeNil)
 		So(metrics, ShouldBeNil)
@@ -90,9 +59,7 @@ func TestGetTimeSeries(t *testing.T) {
 	})
 
 	Convey("Test no metrics", t, func() {
-		Convey("in main target", func() {
-			dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{}, nil)
-			actual, metrics, err := triggerChecker.getFetchResult(from, until)
+		Convey("In main target", func() {
 			metricData := &metricSource.MetricData{
 				Name:      pattern,
 				StartTime: from,
@@ -101,18 +68,71 @@ func TestGetTimeSeries(t *testing.T) {
 				Values:    []float64{},
 				Wildcard:  true,
 			}
-			expected := metricSource.MakeTriggerMetricsData([]*metricSource.MetricData{metricData}, make([]*metricSource.MetricData, 0))
-			So(actual, ShouldResemble, expected)
+
+			source.EXPECT().Fetch(pattern, from, until, true).Return(fetchResult, nil)
+			fetchResult.EXPECT().GetMetricsData().Return([]*metricSource.MetricData{metricData})
+			fetchResult.EXPECT().GetPatternMetrics().Return([]string{}, nil)
+			actual, metrics, err := triggerChecker.getFetchResult(from, until)
+			So(actual, ShouldResemble, metricSource.MakeTriggerMetricsData([]*metricSource.MetricData{metricData}, make([]*metricSource.MetricData, 0)))
 			So(metrics, ShouldBeEmpty)
 			So(err, ShouldBeNil)
+		})
+
+		Convey("In additional target", func() {
+			metricError := fmt.Errorf("metric error")
+			triggerChecker1 := &TriggerChecker{
+				Database: dataBase,
+				Source:   source,
+				trigger: &moira.Trigger{
+					Targets:  []string{pattern, addPattern},
+					Patterns: []string{pattern, addPattern},
+				},
+			}
+
+			metricData := []*metricSource.MetricData{metricSource.MakeMetricData(metric, []float64{0, 1, 2, 3, 4}, retention, from)}
+			addMetricData := make([]*metricSource.MetricData, 0)
+
+			source.EXPECT().Fetch(pattern, from, until, false).Return(fetchResult, nil)
+			fetchResult.EXPECT().GetMetricsData().Return(metricData)
+			fetchResult.EXPECT().GetPatternMetrics().Return([]string{metric}, nil)
+
+			source.EXPECT().Fetch(addPattern, from, until, false).Return(fetchResult, nil)
+			fetchResult.EXPECT().GetMetricsData().Return(addMetricData)
+
+			Convey("get pattern metrics error", func() {
+				fetchResult.EXPECT().GetPatternMetrics().Return([]string{}, metricError)
+				actual, metrics, err := triggerChecker1.getFetchResult(from, until)
+				So(actual, ShouldBeNil)
+				So(metrics, ShouldBeNil)
+				So(err, ShouldBeError)
+				So(err, ShouldResemble, ErrTargetHasNoTimeSeries{targetIndex: 2})
+			})
+
+			Convey("get pattern metrics has metrics", func() {
+				fetchResult.EXPECT().GetPatternMetrics().Return([]string{addMetric}, nil)
+				actual, metrics, err := triggerChecker1.getFetchResult(from, until)
+				So(actual, ShouldBeNil)
+				So(metrics, ShouldBeNil)
+				So(err, ShouldBeError)
+				So(err, ShouldResemble, ErrTargetHasNoTimeSeries{targetIndex: 2})
+				So(err.Error(), ShouldResemble, "target t3 has no timeseries")
+			})
+
+			Convey("get pattern metrics has no metrics", func() {
+				fetchResult.EXPECT().GetPatternMetrics().Return([]string{}, nil)
+				actual, metrics, err := triggerChecker1.getFetchResult(from, until)
+				So(actual, ShouldResemble, metricSource.MakeTriggerMetricsData(metricData, []*metricSource.MetricData{nil}))
+				So(metrics, ShouldResemble, []string{metric})
+				So(err, ShouldBeNil)
+			})
 		})
 	})
 
 	Convey("Test has metrics", t, func() {
 		Convey("Only one target", func() {
-			dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
-			dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
-			dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
+			source.EXPECT().Fetch(pattern, from, until, true).Return(fetchResult, nil)
+			fetchResult.EXPECT().GetMetricsData().Return([]*metricSource.MetricData{metricSource.MakeMetricData(metric, []float64{0, 1, 2, 3, 4}, retention, from)})
+			fetchResult.EXPECT().GetPatternMetrics().Return([]string{metric}, nil)
 			actual, metrics, err := triggerChecker.getFetchResult(from, until)
 			metricData := &metricSource.MetricData{
 				Name:      metric,
@@ -130,27 +150,20 @@ func TestGetTimeSeries(t *testing.T) {
 		Convey("Two targets", func() {
 			triggerChecker.trigger.Targets = []string{pattern, addPattern}
 			triggerChecker.trigger.Patterns = []string{pattern, addPattern}
-			dataList[addMetric] = metricValues
 
-			dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
-			dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
-			dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
+			metricData := []*metricSource.MetricData{metricSource.MakeMetricData(metric, []float64{0, 1, 2, 3, 4}, retention, from)}
+			addMetricData := []*metricSource.MetricData{metricSource.MakeMetricData(addMetric, []float64{0, 1, 2, 3, 4}, retention, from)}
 
-			dataBase.EXPECT().GetPatternMetrics(addPattern).Return([]string{addMetric}, nil)
-			dataBase.EXPECT().GetMetricRetention(addMetric).Return(retention, nil)
-			dataBase.EXPECT().GetMetricsValues([]string{addMetric}, from, until).Return(dataList, nil)
+			source.EXPECT().Fetch(pattern, from, until, false).Return(fetchResult, nil)
+			fetchResult.EXPECT().GetMetricsData().Return(metricData)
+			fetchResult.EXPECT().GetPatternMetrics().Return([]string{metric}, nil)
+
+			source.EXPECT().Fetch(addPattern, from, until, false).Return(fetchResult, nil)
+			fetchResult.EXPECT().GetMetricsData().Return(addMetricData)
+			fetchResult.EXPECT().GetPatternMetrics().Return([]string{addMetric}, nil)
 
 			actual, metrics, err := triggerChecker.getFetchResult(from, until)
-			metricData := metricSource.MetricData{
-				Name:      metric,
-				StartTime: from,
-				StopTime:  until,
-				StepTime:  retention,
-				Values:    []float64{0, 1, 2, 3},
-			}
-			addMetricData := metricData
-			addMetricData.Name = addMetric
-			expected := metricSource.MakeTriggerMetricsData([]*metricSource.MetricData{&metricData}, []*metricSource.MetricData{&addMetricData})
+			expected := metricSource.MakeTriggerMetricsData(metricData, addMetricData)
 
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, expected)
@@ -158,15 +171,19 @@ func TestGetTimeSeries(t *testing.T) {
 		})
 
 		Convey("Two targets with many metrics in additional target", func() {
-			dataList[addMetric2] = metricValues
+			metricData := []*metricSource.MetricData{metricSource.MakeMetricData(metric, []float64{0, 1, 2, 3, 4}, retention, from)}
+			addMetricData := []*metricSource.MetricData{
+				metricSource.MakeMetricData(addMetric, []float64{0, 1, 2, 3, 4}, retention, from),
+				metricSource.MakeMetricData(addMetric2, []float64{0, 1, 2, 3, 4}, retention, from),
+			}
 
-			dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
-			dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
-			dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
+			source.EXPECT().Fetch(pattern, from, until, false).Return(fetchResult, nil)
+			fetchResult.EXPECT().GetMetricsData().Return(metricData)
+			fetchResult.EXPECT().GetPatternMetrics().Return([]string{metric}, nil)
 
-			dataBase.EXPECT().GetPatternMetrics(addPattern).Return([]string{addMetric, addMetric2}, nil)
-			dataBase.EXPECT().GetMetricRetention(addMetric).Return(retention, nil)
-			dataBase.EXPECT().GetMetricsValues([]string{addMetric, addMetric2}, from, until).Return(dataList, nil)
+			source.EXPECT().Fetch(addPattern, from, until, false).Return(fetchResult, nil)
+			fetchResult.EXPECT().GetMetricsData().Return(addMetricData)
+			fetchResult.EXPECT().GetPatternMetrics().Return([]string{addMetric, addMetric2}, nil)
 
 			actual, metrics, err := triggerChecker.getFetchResult(from, until)
 			So(err, ShouldBeError)
@@ -180,26 +197,32 @@ func TestGetTimeSeries(t *testing.T) {
 			triggerChecker.trigger.Targets = []string{pattern, addPattern, pattern2, oneMorePattern}
 			triggerChecker.trigger.Patterns = []string{pattern, addPattern, pattern2, oneMorePattern}
 
-			dataList[addMetric2] = metricValues
-			dataList[metric2] = metricValues
-			dataList[oneMoreMetric1] = metricValues
-			dataList[oneMoreMetric2] = metricValues
+			metricData := []*metricSource.MetricData{metricSource.MakeMetricData(metric, []float64{0, 1, 2, 3, 4}, retention, from)}
+			add1MetricData := []*metricSource.MetricData{
+				metricSource.MakeMetricData(addMetric, []float64{0, 1, 2, 3, 4}, retention, from),
+				metricSource.MakeMetricData(addMetric2, []float64{0, 1, 2, 3, 4}, retention, from),
+			}
+			add2MetricData := []*metricSource.MetricData{metricSource.MakeMetricData(metric2, []float64{0, 1, 2, 3, 4}, retention, from)}
+			oneMoreMetricData := []*metricSource.MetricData{
+				metricSource.MakeMetricData(oneMoreMetric1, []float64{0, 1, 2, 3, 4}, retention, from),
+				metricSource.MakeMetricData(oneMoreMetric2, []float64{0, 1, 2, 3, 4}, retention, from),
+			}
 
-			dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
-			dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
-			dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
+			source.EXPECT().Fetch(pattern, from, until, false).Return(fetchResult, nil)
+			fetchResult.EXPECT().GetMetricsData().Return(metricData)
+			fetchResult.EXPECT().GetPatternMetrics().Return([]string{metric}, nil)
 
-			dataBase.EXPECT().GetPatternMetrics(addPattern).Return([]string{addMetric, addMetric2}, nil)
-			dataBase.EXPECT().GetMetricRetention(addMetric).Return(retention, nil)
-			dataBase.EXPECT().GetMetricsValues([]string{addMetric, addMetric2}, from, until).Return(dataList, nil)
+			source.EXPECT().Fetch(addPattern, from, until, false).Return(fetchResult, nil)
+			fetchResult.EXPECT().GetMetricsData().Return(add1MetricData)
+			fetchResult.EXPECT().GetPatternMetrics().Return([]string{addMetric, addMetric2}, nil)
 
-			dataBase.EXPECT().GetPatternMetrics(pattern2).Return([]string{metric2}, nil)
-			dataBase.EXPECT().GetMetricRetention(metric2).Return(retention, nil)
-			dataBase.EXPECT().GetMetricsValues([]string{metric2}, from, until).Return(dataList, nil)
+			source.EXPECT().Fetch(pattern2, from, until, false).Return(fetchResult, nil)
+			fetchResult.EXPECT().GetMetricsData().Return(add2MetricData)
+			fetchResult.EXPECT().GetPatternMetrics().Return([]string{metric2}, nil)
 
-			dataBase.EXPECT().GetPatternMetrics(oneMorePattern).Return([]string{oneMoreMetric1, oneMoreMetric2}, nil)
-			dataBase.EXPECT().GetMetricRetention(oneMoreMetric1).Return(retention, nil)
-			dataBase.EXPECT().GetMetricsValues([]string{oneMoreMetric1, oneMoreMetric2}, from, until).Return(dataList, nil)
+			source.EXPECT().Fetch(oneMorePattern, from, until, false).Return(fetchResult, nil)
+			fetchResult.EXPECT().GetMetricsData().Return(oneMoreMetricData)
+			fetchResult.EXPECT().GetPatternMetrics().Return([]string{oneMoreMetric1, oneMoreMetric2}, nil)
 
 			actual, metrics, err := triggerChecker.getFetchResult(from, until)
 			So(err, ShouldBeError)
