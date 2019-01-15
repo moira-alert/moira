@@ -10,7 +10,7 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/mock/moira-alert"
-	mock_notifier "github.com/moira-alert/moira/mock/notifier"
+	"github.com/moira-alert/moira/mock/notifier"
 	notifier2 "github.com/moira-alert/moira/notifier"
 )
 
@@ -156,7 +156,7 @@ func TestGoRoutine(t *testing.T) {
 		Notifier: notifier,
 	}
 
-	shutdown := make(chan bool)
+	shutdown := make(chan struct{})
 	dataBase.EXPECT().FetchNotifications(gomock.Any()).Return([]*moira.ScheduledNotification{&notification1}, nil)
 	notifier.EXPECT().Send(&pkg, gomock.Any()).Do(func(f ...interface{}) { close(shutdown) })
 	notifier.EXPECT().StopSenders()
@@ -167,7 +167,7 @@ func TestGoRoutine(t *testing.T) {
 	mockCtrl.Finish()
 }
 
-func waitTestEnd(shutdown chan bool, worker *FetchNotificationsWorker) {
+func waitTestEnd(shutdown chan struct{}, worker *FetchNotificationsWorker) {
 	select {
 	case <-shutdown:
 		worker.Stop()
