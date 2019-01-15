@@ -13,14 +13,14 @@ import (
 type Handler struct {
 	logger    moira.Logger
 	wg        sync.WaitGroup
-	terminate chan bool
+	terminate chan struct{}
 }
 
 // NewConnectionsHandler creates new Handler
 func NewConnectionsHandler(logger moira.Logger) *Handler {
 	return &Handler{
 		logger:    logger,
-		terminate: make(chan bool, 1),
+		terminate: make(chan struct{}, 1),
 	}
 }
 

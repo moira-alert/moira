@@ -18,7 +18,7 @@ import (
 
 var (
 	plot     = make([]byte, 0)
-	shutdown = make(chan bool)
+	shutdown = make(chan struct{})
 )
 
 var (

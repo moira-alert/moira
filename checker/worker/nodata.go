@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-func (worker *Checker) noDataChecker(stop chan bool) error {
+func (worker *Checker) noDataChecker(stop <-chan struct{}) error {
 	checkTicker := time.NewTicker(worker.Config.NoDataCheckInterval)
 	worker.Logger.Info("NODATA checker started")
 	for {
@@ -49,7 +49,7 @@ func (worker *Checker) runNodataChecker() error {
 		singleCheckerStateExpiry = worker.Config.NoDataCheckInterval / 2
 	}
 
-	stop := make(chan bool)
+	stop := make(chan struct{})
 
 	firstCheck := true
 	go func() {
@@ -72,19 +72,19 @@ func (worker *Checker) runNodataChecker() error {
 
 // renewRegistration tries to renew NODATA-checker subscription
 // and gracefully stops NODATA checker on fail to prevent multiple checkers running
-func (worker *Checker) renewRegistration(ttl time.Duration, stop chan bool) {
+func (worker *Checker) renewRegistration(ttl time.Duration, stop chan struct{}) {
 	renewTicker := time.NewTicker(ttl / 3)
 	for {
 		select {
 		case <-renewTicker.C:
 			if !worker.Database.RenewNodataCheckerRegistration() {
 				worker.Logger.Warningf("Could not renew registration for NODATA checker")
-				stop <- true
+				stop <- struct{}{}
 				return
 			}
 		case <-worker.tomb.Dying():
 			renewTicker.Stop()
-			stop <- true
+			stop <- struct{}{}
 			return
 		}
 	}

@@ -31,7 +31,7 @@ var notifierConfig = notifier.Config{
 	DateTimeFormat:   dateTimeFormat,
 }
 
-var shutdown = make(chan bool)
+var shutdown = make(chan struct{})
 
 var notifierMetrics = metrics.ConfigureNotifierMetrics("notifier")
 var logger, _ = logging.GetLogger("Notifier_Test")

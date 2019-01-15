@@ -13,7 +13,7 @@ import (
 	"github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
 	"github.com/moira-alert/moira/mock/moira-alert"
-	mock_scheduler "github.com/moira-alert/moira/mock/scheduler"
+	"github.com/moira-alert/moira/mock/scheduler"
 	"github.com/moira-alert/moira/notifier"
 )
 
@@ -486,7 +486,7 @@ func TestGoRoutine(t *testing.T) {
 			SubscriptionID: &subscription.ID,
 		}
 		emptyNotification := moira.ScheduledNotification{}
-		shutdown := make(chan bool)
+		shutdown := make(chan struct{})
 
 		dataBase.EXPECT().FetchNotificationEvent().Return(moira.NotificationEvent{}, fmt.Errorf("3433434")).Do(func(f ...interface{}) {
 			dataBase.EXPECT().FetchNotificationEvent().Return(event, nil).Do(func(f ...interface{}) {
@@ -504,7 +504,7 @@ func TestGoRoutine(t *testing.T) {
 	})
 }
 
-func waitTestEnd(shutdown chan bool, worker *FetchEventsWorker) {
+func waitTestEnd(shutdown chan struct{}, worker *FetchEventsWorker) {
 	select {
 	case <-shutdown:
 		worker.Stop()
