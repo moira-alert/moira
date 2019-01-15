@@ -5,11 +5,10 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
-	"time"
 )
 
-func prepareRequest(from, until int64, target string, cfg *Config) (*http.Request, error) {
-	req, err := http.NewRequest("GET", cfg.URL, nil)
+func (remote *Remote) prepareRequest(from, until int64, target string) (*http.Request, error) {
+	req, err := http.NewRequest("GET", remote.config.URL, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -19,15 +18,14 @@ func prepareRequest(from, until int64, target string, cfg *Config) (*http.Reques
 	q.Add("target", target)
 	q.Add("until", strconv.FormatInt(until, 10))
 	req.URL.RawQuery = q.Encode()
-	if cfg.User != "" && cfg.Password != "" {
-		req.SetBasicAuth(cfg.User, cfg.Password)
+	if remote.config.User != "" && remote.config.Password != "" {
+		req.SetBasicAuth(remote.config.User, remote.config.Password)
 	}
 	return req, nil
 }
 
-func makeRequest(req *http.Request, timeout time.Duration) ([]byte, error) {
-	client := &http.Client{Timeout: timeout}
-	resp, err := client.Do(req)
+func (remote *Remote) makeRequest(req *http.Request) ([]byte, error) {
+	resp, err := remote.client.Do(req)
 	if err != nil {
 		return nil, err
 	}

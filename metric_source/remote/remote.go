@@ -2,6 +2,7 @@ package remote
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/moira-alert/moira/metric_source"
@@ -24,25 +25,27 @@ func (err ErrRemoteTriggerResponse) Error() string {
 // Remote is implementation of MetricSource interface, which implements fetch metrics method from remote graphite installation
 type Remote struct {
 	config *Config
+	client *http.Client
 }
 
 // CreateRemoteSource configures remote metric source
 func CreateRemoteSource(config *Config) metricSource.MetricSource {
 	return &Remote{
 		config: config,
+		client: &http.Client{Timeout: config.Timeout},
 	}
 }
 
 // Fetch fetches remote metrics and converts them to expected format
 func (remote *Remote) Fetch(target string, from, until int64, allowRealTimeAlerting bool) (metricSource.FetchResult, error) {
-	req, err := prepareRequest(from, until, target, remote.config)
+	req, err := remote.prepareRequest(from, until, target)
 	if err != nil {
 		return nil, ErrRemoteTriggerResponse{
 			InternalError: err,
 			Target:        target,
 		}
 	}
-	body, err := makeRequest(req, remote.config.Timeout)
+	body, err := remote.makeRequest(req)
 	if err != nil {
 		return nil, ErrRemoteTriggerResponse{
 			InternalError: err,
@@ -73,12 +76,12 @@ func (remote *Remote) IsRemoteAvailable() (bool, error) {
 	maxRetries := 3
 	until := time.Now().Unix()
 	from := until - 600
-	req, err := prepareRequest(from, until, "NonExistingTarget", remote.config)
+	req, err := remote.prepareRequest(from, until, "NonExistingTarget")
 	if err != nil {
 		return false, err
 	}
 	for attempt := 0; attempt < maxRetries; attempt++ {
-		_, err = makeRequest(req, remote.config.Timeout)
+		_, err = remote.makeRequest(req)
 		if err == nil {
 			return true, nil
 		}
