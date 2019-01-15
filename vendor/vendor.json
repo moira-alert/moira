@@ -324,6 +324,12 @@
 			"revisionTime": "2019-01-11T18:41:51Z"
 		},
 		{
+			"checksumSHA1": "+f2D43uOxtc/IAtSfdUWqfWkFe0=",
+			"path": "github.com/couchbase/vellum/levenshtein2",
+			"revision": "e91b68ff3efe3cc11723aa25dd315cbc9276cd65",
+			"revisionTime": "2019-01-11T18:41:51Z"
+		},
+		{
 			"checksumSHA1": "gl3QhLkgP+O7Q3YlTSR7oDVEpac=",
 			"path": "github.com/couchbase/vellum/regexp",
 			"revision": "e91b68ff3efe3cc11723aa25dd315cbc9276cd65",
