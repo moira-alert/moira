@@ -51,6 +51,9 @@ func TestSanitizeLabelName(t *testing.T) {
 		"HostName.CategoryName.CategoryCounterName.CategoryCounterType.MetricName",
 		"ServiceName.HostName.CategoryName.CategoryCounterName.CategoryCounterType.MetricName",
 		"MetricPrefix.ServiceName.HostName.CategoryName.CategoryCounterName.CategoryCounterType.MetricName",
+		"Рост количества ответов nginx р95",
+		"ЯдлиннаядлиннаястрокабезпробеловизрусскихбуквчтобыТимуриАркадийневыпендривалисьаЛешенепришлосьприходитьивсеобъяснятьнормально😈",
+		"Привет, не режь меня!",
 	}
 	labelsShortForm := []string{
 		"MetricName",
@@ -60,6 +63,9 @@ func TestSanitizeLabelName(t *testing.T) {
 		"HostName.CategoryName.Categ...",
 		"ServiceName.HostName.Catego...",
 		"MetricPrefix.ServiceName.Ho...",
+		"Рост количества ответов ngi...",
+		"Ядлиннаядлиннаястрокабезпро...",
+		"Привет, не режь меня!",
 	}
 	Convey("sanitize lables names", t, func() {
 		maxLabelLength := 30
