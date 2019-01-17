@@ -109,15 +109,6 @@ type Database interface {
 	GetIDByUsername(messenger, username string) (string, error)
 	SetUsernameID(messenger, username, id string) error
 	RemoveUser(messenger, username string) error
-	RegisterBotIfAlreadyNot(messenger string, ttl time.Duration) bool
-	RenewBotRegistration(messenger string) bool
-	DeregisterBots()
-	DeregisterBot(messenger string) bool
-
-	// Service registration
-	RegisterNodataCheckerIfAlreadyNot(ttl time.Duration) bool
-	RenewNodataCheckerRegistration() bool
-	DeregisterNodataChecker() bool
 
 	// Triggers without subscription manipulation
 	MarkTriggersAsUnused(triggerIDs ...string) error
@@ -127,6 +118,13 @@ type Database interface {
 	// Triggers to reindex in full-text search index
 	FetchTriggersToReindex(from int64) ([]string, error)
 	RemoveTriggersToReindex(to int64) error
+
+	NewLock(name string, ttl time.Duration) Lock
+}
+
+type Lock interface {
+	Acquire(<-chan struct{}) (<-chan struct{}, error)
+	Release()
 }
 
 // Logger implements logger abstraction

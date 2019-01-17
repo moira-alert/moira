@@ -3,6 +3,7 @@ package selfstate
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/moira-alert/moira/database"
 	"sync"
 	"time"
 
@@ -20,6 +21,9 @@ const (
 	checkerStateErrorMessage       = "Moira-Checker does not check triggers"
 	remoteCheckerStateErrorMessage = "Moira-Remote-Checker does not check remote triggers"
 )
+
+const selfStateLockName = "moira-self-state-monitor"
+const selfStateLockTTL = time.Second * 15
 
 // SelfCheckWorker checks what all notifier services works correctly and send message when moira don't work
 type SelfCheckWorker struct {
@@ -48,15 +52,35 @@ func (selfCheck *SelfCheckWorker) Start() error {
 	nextSendErrorMessage := time.Now().Unix()
 
 	selfCheck.tomb.Go(func() error {
-		checkTicker := time.NewTicker(defaultCheckInterval)
+		lock := selfCheck.DB.NewLock(selfStateLockName, selfStateLockTTL)
 		for {
-			select {
-			case <-selfCheck.tomb.Dying():
-				checkTicker.Stop()
-				selfCheck.Log.Info("Moira Notifier Self State Monitor Stopped")
-				return nil
-			case <-checkTicker.C:
-				selfCheck.check(time.Now().Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS, &lastRemoteCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount, &remoteChecksCount)
+Reacquire:
+			lost, err := lock.Acquire(selfCheck.tomb.Dying())
+			if err != nil {
+				if err == database.ErrLockAcquireInterrupted {
+					return nil
+				}
+
+				selfCheck.Log.Warningf("Could not acquire lock for self state monitor, err %s", err)
+				continue
+			}
+
+			checkTicker := time.NewTicker(defaultCheckInterval)
+			for {
+				select {
+				case <-lost:
+					checkTicker.Stop()
+					lock.Release()
+					selfCheck.Log.Info("Moira Notifier Self State Monitor Stopped")
+					goto Reacquire
+				case <-selfCheck.tomb.Dying():
+					checkTicker.Stop()
+					lock.Release()
+					selfCheck.Log.Info("Moira Notifier Self State Monitor Stopped")
+					return nil
+				case <-checkTicker.C:
+					selfCheck.check(time.Now().Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS, &lastRemoteCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount, &remoteChecksCount)
+				}
 			}
 		}
 	})
