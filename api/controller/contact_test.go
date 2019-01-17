@@ -18,6 +18,7 @@ import (
 
 func TestGetAllContacts(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 	Convey("Error get all contacts", t, func() {
@@ -182,6 +183,7 @@ func TestUpdateContact(t *testing.T) {
 
 func TestRemoveContact(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	userLogin := "user"
 	contactID := uuid.NewV4().String()
@@ -190,7 +192,6 @@ func TestRemoveContact(t *testing.T) {
 		dataBase.EXPECT().GetUserSubscriptionIDs(userLogin).Return(make([]string, 0), nil)
 		dataBase.EXPECT().GetSubscriptions(make([]string, 0)).Return(make([]*moira.SubscriptionData, 0), nil)
 		dataBase.EXPECT().RemoveContact(contactID).Return(nil)
-		dataBase.EXPECT().SaveSubscriptions(make([]*moira.SubscriptionData, 0)).Return(nil)
 		err := RemoveContact(dataBase, contactID, userLogin)
 		So(err, ShouldBeNil)
 	})
@@ -204,7 +205,6 @@ func TestRemoveContact(t *testing.T) {
 		dataBase.EXPECT().GetUserSubscriptionIDs(userLogin).Return([]string{subscription.ID}, nil)
 		dataBase.EXPECT().GetSubscriptions([]string{subscription.ID}).Return([]*moira.SubscriptionData{subscription}, nil)
 		dataBase.EXPECT().RemoveContact(contactID).Return(nil)
-		dataBase.EXPECT().SaveSubscriptions(make([]*moira.SubscriptionData, 0)).Return(nil)
 		err := RemoveContact(dataBase, contactID, userLogin)
 		So(err, ShouldBeNil)
 	})
@@ -223,7 +223,7 @@ func TestRemoveContact(t *testing.T) {
 			err := RemoveContact(dataBase, contactID, userLogin)
 			So(err, ShouldResemble, api.ErrorInternalServer(expectedError))
 		})
-		Convey("RemoveContact", func() {
+		Convey("Subscription has contact", func() {
 			subscription := moira.SubscriptionData{
 				Contacts: []string{contactID},
 				ID:       uuid.NewV4().String(),
@@ -233,7 +233,6 @@ func TestRemoveContact(t *testing.T) {
 			expectedError := fmt.Errorf("this contact is being used in following subscriptions: %s", subscriptionSubstring)
 			dataBase.EXPECT().GetUserSubscriptionIDs(userLogin).Return([]string{subscription.ID}, nil)
 			dataBase.EXPECT().GetSubscriptions([]string{subscription.ID}).Return([]*moira.SubscriptionData{&subscription}, nil)
-			dataBase.EXPECT().RemoveContact(contactID).Return(nil)
 			err := RemoveContact(dataBase, contactID, userLogin)
 			So(err, ShouldResemble, api.ErrorInvalidRequest(expectedError))
 		})

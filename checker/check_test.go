@@ -636,7 +636,6 @@ func TestIgnoreNodataToOk(t *testing.T) {
 			State:     NODATA,
 			Score:     0,
 		})
-		mockCtrl.Finish()
 	})
 }
 
@@ -739,7 +738,6 @@ func TestHandleTrigger(t *testing.T) {
 			State:     NODATA,
 			Score:     0,
 		})
-		mockCtrl.Finish()
 	})
 
 	var val float64 = 3
@@ -777,7 +775,6 @@ func TestHandleTrigger(t *testing.T) {
 			State:     OK,
 			Score:     0,
 		})
-		mockCtrl.Finish()
 	})
 
 	Convey("No data too long", t, func() {
@@ -811,8 +808,6 @@ func TestHandleTrigger(t *testing.T) {
 			State:     OK,
 			Score:     0,
 		})
-
-		mockCtrl.Finish()
 	})
 
 	Convey("No metrics, should return trigger has only wildcards error", t, func() {
@@ -830,7 +825,6 @@ func TestHandleTrigger(t *testing.T) {
 			Score:                        0,
 			LastSuccessfulCheckTimestamp: 0,
 		})
-		mockCtrl.Finish()
 	})
 
 	Convey("Has duplicated names timeseries, should return trigger has same timeseries names error", t, func() {
@@ -888,7 +882,6 @@ func TestHandleTrigger(t *testing.T) {
 			Suppressed:     false,
 			Message:        "",
 		})
-		mockCtrl.Finish()
 	})
 
 	Convey("No data too long and ttlState is delete", t, func() {
@@ -910,7 +903,6 @@ func TestHandleTrigger(t *testing.T) {
 			Score:                        0,
 			LastSuccessfulCheckTimestamp: 0,
 		})
-		mockCtrl.Finish()
 	})
 }
 
@@ -985,7 +977,6 @@ func TestHandleErrorCheck(t *testing.T) {
 			}
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, expected)
-			mockCtrl.Finish()
 		})
 	})
 
@@ -1019,7 +1010,6 @@ func TestHandleErrorCheck(t *testing.T) {
 		}
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, expected)
-		mockCtrl.Finish()
 	})
 
 	Convey("Handle trigger has only wildcards with metrics in last state", t, func() {
@@ -1155,7 +1145,6 @@ func TestHandleErrorCheck(t *testing.T) {
 		}
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, expected)
-		mockCtrl.Finish()
 	})
 
 	Convey("Handle trigger has same timeseries names", t, func() {
@@ -1188,7 +1177,6 @@ func TestHandleErrorCheck(t *testing.T) {
 		}
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, expected)
-		mockCtrl.Finish()
 	})
 
 	Convey("Handle additional trigger target has more than one timeseries", t, func() {
@@ -1224,6 +1212,5 @@ func TestHandleErrorCheck(t *testing.T) {
 		}
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, expected)
-		mockCtrl.Finish()
 	})
 }

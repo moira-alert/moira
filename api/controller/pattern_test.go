@@ -16,6 +16,7 @@ import (
 
 func TestDeletePattern(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 	Convey("Success", t, func() {
