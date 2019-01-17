@@ -56,7 +56,6 @@ func TestEvent(t *testing.T) {
 
 		err := worker.processEvent(event)
 		So(err, ShouldBeEmpty)
-		mockCtrl.Finish()
 	})
 
 	Convey("When event is TEST and has contactID", t, func() {
@@ -163,12 +162,12 @@ func TestDisabledNotification(t *testing.T) {
 }
 
 func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
-	Convey("[TRUE] Do not send WARN notifications", t, func() {
-		mockCtrl := gomock.NewController(t)
-		defer mockCtrl.Finish()
-		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-		logger := mock_moira_alert.NewMockLogger(mockCtrl)
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	logger := mock_moira_alert.NewMockLogger(mockCtrl)
 
+	Convey("[TRUE] Do not send WARN notifications", t, func() {
 		worker := FetchEventsWorker{
 			Database:  dataBase,
 			Logger:    logger,
@@ -194,11 +193,6 @@ func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
 		So(err, ShouldBeEmpty)
 	})
 	Convey("[TRUE] Send notifications when triggers degraded only", t, func() {
-		mockCtrl := gomock.NewController(t)
-		defer mockCtrl.Finish()
-		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-		logger := mock_moira_alert.NewMockLogger(mockCtrl)
-
 		worker := FetchEventsWorker{
 			Database:  dataBase,
 			Logger:    logger,
@@ -224,11 +218,6 @@ func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
 		So(err, ShouldBeEmpty)
 	})
 	Convey("[TRUE] Do not send WARN notifications & [TRUE] Send notifications when triggers degraded only", t, func() {
-		mockCtrl := gomock.NewController(t)
-		defer mockCtrl.Finish()
-		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-		logger := mock_moira_alert.NewMockLogger(mockCtrl)
-
 		worker := FetchEventsWorker{
 			Database:  dataBase,
 			Logger:    logger,
@@ -396,7 +385,6 @@ func TestEmptySubscriptions(t *testing.T) {
 
 	Convey("When subscription is nil", t, func() {
 		mockCtrl := gomock.NewController(t)
-		defer mockCtrl.Finish()
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger := mock_moira_alert.NewMockLogger(mockCtrl)
 		worker := FetchEventsWorker{

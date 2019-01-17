@@ -52,6 +52,7 @@ func TestProcessScheduledEvent(t *testing.T) {
 	}
 
 	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	notifier := mock_notifier.NewMockNotifier(mockCtrl)
 	logger, _ := logging.GetLogger("Notification")
@@ -92,7 +93,6 @@ func TestProcessScheduledEvent(t *testing.T) {
 		dataBase.EXPECT().GetNotifierState().Return("OK", nil)
 		err := worker.processScheduledNotifications()
 		So(err, ShouldBeEmpty)
-		mockCtrl.Finish()
 	})
 
 	Convey("Two same notifications, should send one package", t, func() {
@@ -117,7 +117,6 @@ func TestProcessScheduledEvent(t *testing.T) {
 		dataBase.EXPECT().GetNotifierState().Return("OK", nil)
 		err := worker.processScheduledNotifications()
 		So(err, ShouldBeEmpty)
-		mockCtrl.Finish()
 	})
 }
 
