@@ -14,6 +14,7 @@ import (
 
 func TestGetNotifications(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	var start int64 = 100
 	var end int64 = 33
@@ -39,6 +40,7 @@ func TestGetNotifications(t *testing.T) {
 
 func TestDeleteNotification(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 	Convey("Success", t, func() {
@@ -63,6 +65,7 @@ func TestDeleteNotification(t *testing.T) {
 
 func TestDeleteAllNotifications(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 	Convey("Success", t, func() {
