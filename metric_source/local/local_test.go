@@ -158,6 +158,7 @@ func TestEvaluateTarget(t *testing.T) {
 
 func TestLocal_IsConfigured(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	localSource := Create(dataBase)
 
