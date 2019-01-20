@@ -23,7 +23,7 @@ func (connector *DbConnector) AcquireTriggerCheckLock(triggerID string, timeout 
 		}
 	}
 	if !acquired {
-		return fmt.Errorf("Can not acquire trigger lock in %v seconds", timeout)
+		return fmt.Errorf("can not acquire trigger lock in %v seconds", timeout)
 	}
 	return nil
 }
@@ -37,7 +37,7 @@ func (connector *DbConnector) SetTriggerCheckLock(triggerID string) (bool, error
 		if err == redis.ErrNil {
 			return false, nil
 		}
-		return false, fmt.Errorf("Failed to set check lock:%s error: %s", triggerID, err.Error())
+		return false, fmt.Errorf("failed to set check lock: %s error: %s", triggerID, err.Error())
 	}
 	return true, nil
 }
@@ -48,7 +48,7 @@ func (connector *DbConnector) DeleteTriggerCheckLock(triggerID string) error {
 	defer c.Close()
 	_, err := c.Do("DEL", metricCheckLockKey(triggerID))
 	if err != nil {
-		return fmt.Errorf("Failed to delete trigger check lock:%s error: %s", triggerID, err.Error())
+		return fmt.Errorf("failed to delete trigger check lock: %s error: %s", triggerID, err.Error())
 	}
 	return nil
 }

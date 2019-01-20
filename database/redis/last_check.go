@@ -47,7 +47,7 @@ func (connector *DbConnector) SetTriggerLastCheck(triggerID string, checkData *m
 	}
 	_, err = c.Do("EXEC")
 	if err != nil {
-		return fmt.Errorf("Failed to EXEC: %s", err.Error())
+		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
 	return nil
 }
@@ -73,7 +73,7 @@ func (connector *DbConnector) RemoveTriggerLastCheck(triggerID string) error {
 	c.Send("ZADD", triggersToReindexKey, time.Now().Unix(), triggerID)
 	_, err := c.Do("EXEC")
 	if err != nil {
-		return fmt.Errorf("Failed to EXEC: %s", err.Error())
+		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
 
 	return nil
@@ -95,7 +95,7 @@ func (connector *DbConnector) SetTriggerCheckMaintenance(triggerID string, metri
 		var lastCheck = moira.CheckData{}
 		err := json.Unmarshal([]byte(lastCheckString), &lastCheck)
 		if err != nil {
-			return fmt.Errorf("Failed to parse lastCheck json %s: %s", lastCheckString, err.Error())
+			return fmt.Errorf("failed to parse lastCheck json %s: %s", lastCheckString, err.Error())
 		}
 		metricsCheck := lastCheck.Metrics
 		if len(metricsCheck) > 0 {
@@ -149,7 +149,7 @@ func (connector *DbConnector) GetTriggerCheckIDs(tagNames []string, onlyErrors b
 	}
 	triggerIDs, err := redis.Strings(rawResponse[0], nil)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to retrieve triggers: %s", err.Error())
+		return nil, fmt.Errorf("failed to retrieve triggers: %s", err.Error())
 	}
 
 	triggerIDsByTags := make([]map[string]bool, 0)
@@ -159,7 +159,7 @@ func (connector *DbConnector) GetTriggerCheckIDs(tagNames []string, onlyErrors b
 			if err == database.ErrNil {
 				continue
 			}
-			return nil, fmt.Errorf("Failed to retrieve tags triggers: %s", err.Error())
+			return nil, fmt.Errorf("failed to retrieve tags triggers: %s", err.Error())
 		}
 
 		triggerIDsMap := make(map[string]bool)

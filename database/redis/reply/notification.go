@@ -3,6 +3,7 @@ package reply
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/garyburd/redigo/redis"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
@@ -16,11 +17,11 @@ func Notification(rep interface{}, err error) (moira.ScheduledNotification, erro
 		if err == redis.ErrNil {
 			return notification, database.ErrNil
 		}
-		return notification, fmt.Errorf("Failed to read scheduledNotification: %s", err.Error())
+		return notification, fmt.Errorf("failed to read scheduledNotification: %s", err.Error())
 	}
 	err = json.Unmarshal(bytes, &notification)
 	if err != nil {
-		return notification, fmt.Errorf("Failed to parse notification json %s: %s", string(bytes), err.Error())
+		return notification, fmt.Errorf("failed to parse notification json %s: %s", string(bytes), err.Error())
 	}
 	return notification, nil
 }
@@ -32,7 +33,7 @@ func Notifications(rep interface{}, err error) ([]*moira.ScheduledNotification, 
 		if err == redis.ErrNil {
 			return make([]*moira.ScheduledNotification, 0), nil
 		}
-		return nil, fmt.Errorf("Failed to read ScheduledNotifications: %s", err.Error())
+		return nil, fmt.Errorf("failed to read ScheduledNotifications: %s", err.Error())
 	}
 	notifications := make([]*moira.ScheduledNotification, len(values))
 	for i, value := range values {
