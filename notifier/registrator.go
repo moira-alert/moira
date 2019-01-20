@@ -54,7 +54,7 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 		// 	if err := notifier.RegisterSender(senderSettings, &kontur.SmsSender{}); err != nil {
 		// 	}
 		default:
-			return fmt.Errorf("Unknown sender type [%s]", senderSettings["type"])
+			return fmt.Errorf("unknown sender type [%s]", senderSettings["type"])
 		}
 	}
 	return nil
@@ -70,7 +70,7 @@ func (notifier *StandardNotifier) RegisterSender(senderSettings map[string]strin
 	}
 	err := sender.Init(senderSettings, notifier.logger, notifier.config.Location, notifier.config.DateTimeFormat)
 	if err != nil {
-		return fmt.Errorf("Don't initialize sender [%s], err [%s]", senderIdent, err.Error())
+		return fmt.Errorf("don't initialize sender [%s], err [%s]", senderIdent, err.Error())
 	}
 	ch := make(chan NotificationPackage)
 	notifier.senders[senderIdent] = ch

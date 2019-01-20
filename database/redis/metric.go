@@ -223,7 +223,7 @@ func (connector *DbConnector) RemoveMetricValues(metric string, toTime int64) er
 	c := connector.pool.Get()
 	defer c.Close()
 	if _, err := c.Do("ZREMRANGEBYSCORE", metricDataKey(metric), "-inf", toTime); err != nil {
-		return fmt.Errorf("Failed to remove metrics from -inf to %v, error: %v", toTime, err)
+		return fmt.Errorf("failed to remove metrics from -inf to %v, error: %v", toTime, err)
 	}
 	return nil
 }
@@ -240,7 +240,7 @@ func (connector *DbConnector) RemoveMetricsValues(metrics []string, toTime int64
 		}
 	}
 	if _, err := c.Do("EXEC"); err != nil {
-		return fmt.Errorf("Failed to EXEC remove metrics: %v", err)
+		return fmt.Errorf("failed to EXEC remove metrics: %v", err)
 	}
 	return nil
 }

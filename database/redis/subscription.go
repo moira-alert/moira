@@ -36,7 +36,7 @@ func (connector *DbConnector) GetSubscriptions(subscriptionIDs []string) ([]*moi
 	}
 	subscriptions, err := reply.Subscriptions(c.Do("EXEC"))
 	if err != nil {
-		return nil, fmt.Errorf("Failed to EXEC: %s", err.Error())
+		return nil, fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
 	for i := range subscriptions {
 		if subscriptions[i] != nil {
@@ -66,7 +66,7 @@ func (connector *DbConnector) SaveSubscription(subscription *moira.SubscriptionD
 	}
 	_, err = c.Do("EXEC")
 	if err != nil {
-		return fmt.Errorf("Failed to EXEC: %s", err.Error())
+		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
 	newTriggers, err := connector.getSubscriptionTriggers(subscription)
 	if err != nil {
@@ -97,7 +97,7 @@ func (connector *DbConnector) SaveSubscriptions(subscriptions []*moira.Subscript
 	}
 	_, err = c.Do("EXEC")
 	if err != nil {
-		return fmt.Errorf("Failed to EXEC: %s", err.Error())
+		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
 	newTriggers, err := connector.getSubscriptionsTriggers(subscriptions)
 	if err != nil {
@@ -133,7 +133,7 @@ func (connector *DbConnector) RemoveSubscription(subscriptionID string) error {
 	c.Send("DEL", subscriptionKey(subscription.ID))
 	_, err = c.Do("EXEC")
 	if err != nil {
-		return fmt.Errorf("Failed to EXEC: %s", err.Error())
+		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
 	err = connector.refreshUnusedTriggers([]*moira.Trigger{}, oldTriggers)
 	if err != nil {
@@ -149,7 +149,7 @@ func (connector *DbConnector) GetUserSubscriptionIDs(login string) ([]string, er
 
 	subscriptions, err := redis.Strings(c.Do("SMEMBERS", userSubscriptionsKey(login)))
 	if err != nil {
-		return nil, fmt.Errorf("Failed to retrieve subscriptions for user login %s: %s", login, err.Error())
+		return nil, fmt.Errorf("failed to retrieve subscriptions for user login %s: %s", login, err.Error())
 	}
 	return subscriptions, nil
 }
@@ -166,11 +166,11 @@ func (connector *DbConnector) GetTagsSubscriptions(tags []string) ([]*moira.Subs
 	}
 	values, err := redis.Values(c.Do("SUNION", tagKeys...))
 	if err != nil {
-		return nil, fmt.Errorf("Failed to retrieve subscriptions for tags %v: %s", tags, err.Error())
+		return nil, fmt.Errorf("failed to retrieve subscriptions for tags %v: %s", tags, err.Error())
 	}
 	var subscriptionsIDs []string
 	if err = redis.ScanSlice(values, &subscriptionsIDs); err != nil {
-		return nil, fmt.Errorf("Failed to retrieve subscriptions for tags %v: %s", tags, err.Error())
+		return nil, fmt.Errorf("failed to retrieve subscriptions for tags %v: %s", tags, err.Error())
 	}
 	if len(subscriptionsIDs) == 0 {
 		return make([]*moira.SubscriptionData, 0), nil

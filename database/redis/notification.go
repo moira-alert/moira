@@ -21,7 +21,7 @@ func (connector *DbConnector) GetNotifications(start, end int64) ([]*moira.Sched
 	c.Send("ZCARD", notifierNotificationsKey)
 	rawResponse, err := redis.Values(c.Do("EXEC"))
 	if err != nil {
-		return nil, 0, fmt.Errorf("Failed to EXEC: %s", err.Error())
+		return nil, 0, fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
 	if len(rawResponse) == 0 {
 		return make([]*moira.ScheduledNotification, 0), 0, nil
@@ -76,7 +76,7 @@ func (connector *DbConnector) RemoveNotification(notificationKey string) (int64,
 	}
 	response, err := redis.Ints(c.Do("EXEC"))
 	if err != nil {
-		return 0, fmt.Errorf("Failed to remove notifier-notification: %s", err.Error())
+		return 0, fmt.Errorf("failed to remove notifier-notification: %s", err.Error())
 	}
 	total := 0
 	for _, val := range response {
@@ -95,7 +95,7 @@ func (connector *DbConnector) FetchNotifications(to int64) ([]*moira.ScheduledNo
 	c.Send("ZREMRANGEBYSCORE", notifierNotificationsKey, "-inf", to)
 	response, err := redis.Values(c.Do("EXEC"))
 	if err != nil {
-		return nil, fmt.Errorf("Failed to EXEC: %s", err)
+		return nil, fmt.Errorf("failed to EXEC: %s", err)
 	}
 	if len(response) == 0 {
 		return make([]*moira.ScheduledNotification, 0), nil
@@ -113,7 +113,7 @@ func (connector *DbConnector) AddNotification(notification *moira.ScheduledNotif
 	defer c.Close()
 	_, err = c.Do("ZADD", notifierNotificationsKey, notification.Timestamp, bytes)
 	if err != nil {
-		return fmt.Errorf("Failed to add scheduled notification: %s, error: %s", string(bytes), err.Error())
+		return fmt.Errorf("failed to add scheduled notification: %s, error: %s", string(bytes), err.Error())
 	}
 	return err
 }
@@ -132,7 +132,7 @@ func (connector *DbConnector) AddNotifications(notifications []*moira.ScheduledN
 	}
 	_, err := c.Do("EXEC")
 	if err != nil {
-		return fmt.Errorf("Failed to EXEC: %s", err.Error())
+		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
 	return nil
 }

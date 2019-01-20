@@ -24,7 +24,7 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 
 	sender.APIToken = senderSettings["api_token"]
 	if sender.APIToken == "" {
-		return fmt.Errorf("Can not read pushover api_token from config")
+		return fmt.Errorf("can not read pushover api_token from config")
 	}
 	sender.log = logger
 	sender.FrontURI = senderSettings["front_uri"]
@@ -92,7 +92,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 
 	_, err := api.SendMessage(pushoverMessage, recipient)
 	if err != nil {
-		return fmt.Errorf("Failed to send %s event message to pushover user %s: %s", trigger.ID, contact.Value, err.Error())
+		return fmt.Errorf("failed to send %s event message to pushover user %s: %s", trigger.ID, contact.Value, err.Error())
 	}
 	return nil
 }

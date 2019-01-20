@@ -2,16 +2,17 @@ package logging
 
 import (
 	"fmt"
-	goLogging "github.com/op/go-logging"
 	"os"
 	"path/filepath"
+
+	goLogging "github.com/op/go-logging"
 )
 
 // ConfigureLog creates new logger based on github.com/op/go-logging package
 func ConfigureLog(logFile, logLevel, module string) (*goLogging.Logger, error) {
 	log, err := goLogging.GetLogger(module)
 	if err != nil {
-		return nil, fmt.Errorf("Can't initialize logger: %s", err.Error())
+		return nil, fmt.Errorf("can't initialize logger: %s", err.Error())
 	}
 	level, err := goLogging.LogLevel(logLevel)
 	if err != nil {
@@ -36,11 +37,11 @@ func getLogBackend(logFileName string) (*goLogging.LogBackend, error) {
 
 	logDir := filepath.Dir(logFileName)
 	if err := os.MkdirAll(logDir, 0755); err != nil {
-		return nil, fmt.Errorf("Can't create log directories %s: %s", logDir, err.Error())
+		return nil, fmt.Errorf("can't create log directories %s: %s", logDir, err.Error())
 	}
 	logFile, err := os.OpenFile(logFileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 	if err != nil {
-		return nil, fmt.Errorf("Can't open log file %s: %s", logFileName, err.Error())
+		return nil, fmt.Errorf("can't open log file %s: %s", logFileName, err.Error())
 	}
 	return goLogging.NewLogBackend(logFile, "", 0), nil
 }

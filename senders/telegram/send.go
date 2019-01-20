@@ -52,7 +52,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	sender.logger.Debugf("Calling telegram api with chat_id %s and message body %s", contact.Value, message.String())
 
 	if err := sender.talk(contact.Value, message.String(), plot); err != nil {
-		return fmt.Errorf("Failed to send message to telegram contact %s: %s. ", contact.Value, err)
+		return fmt.Errorf("failed to send message to telegram contact %s: %s. ", contact.Value, err)
 	}
 	return nil
 }

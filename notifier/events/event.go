@@ -78,7 +78,7 @@ func (worker *FetchEventsWorker) processEvent(event moira.NotificationEvent) err
 			return err
 		}
 		if len(trigger.Tags) == 0 {
-			return fmt.Errorf("No tags found for trigger id %s", event.TriggerID)
+			return fmt.Errorf("no tags found for trigger id %s", event.TriggerID)
 		}
 
 		triggerData = moira.TriggerData{
@@ -139,14 +139,14 @@ func (worker *FetchEventsWorker) getNotificationSubscriptions(event moira.Notifi
 		sub, err := worker.Database.GetSubscription(*event.SubscriptionID)
 		if err != nil {
 			worker.Metrics.SubsMalformed.Mark(1)
-			return nil, fmt.Errorf("Error while read subscription %s: %s", *event.SubscriptionID, err.Error())
+			return nil, fmt.Errorf("error while read subscription %s: %s", *event.SubscriptionID, err.Error())
 		}
 		return &sub, nil
 	} else if event.ContactID != "" {
 		worker.Logger.Debugf("Getting contactID %s for test message", event.ContactID)
 		contact, err := worker.Database.GetContact(event.ContactID)
 		if err != nil {
-			return nil, fmt.Errorf("Error while read contact %s: %s", event.ContactID, err.Error())
+			return nil, fmt.Errorf("error while read contact %s: %s", event.ContactID, err.Error())
 		}
 		sub := &moira.SubscriptionData{
 			ID:                "testSubscription",

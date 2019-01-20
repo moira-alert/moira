@@ -25,10 +25,10 @@ func (config *Config) checkConfig(senders map[string]bool) error {
 	}
 	for _, adminContact := range config.Contacts {
 		if _, ok := senders[adminContact["type"]]; !ok {
-			return fmt.Errorf("Unknown contact type [%s]", adminContact["type"])
+			return fmt.Errorf("unknown contact type [%s]", adminContact["type"])
 		}
 		if adminContact["value"] == "" {
-			return fmt.Errorf("Value for [%s] must be present", adminContact["type"])
+			return fmt.Errorf("value for [%s] must be present", adminContact["type"])
 		}
 	}
 	return nil

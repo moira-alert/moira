@@ -30,13 +30,13 @@ type scriptNotification struct {
 func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 
 	if senderSettings["name"] == "" {
-		return fmt.Errorf("Required name for sender type script")
+		return fmt.Errorf("required name for sender type script")
 	}
 	args := strings.Split(senderSettings["exec"], " ")
 	scriptFile := args[0]
 	infoFile, err := os.Stat(scriptFile)
 	if err != nil {
-		return fmt.Errorf("File %s not found", scriptFile)
+		return fmt.Errorf("file %s not found", scriptFile)
 	}
 	if !infoFile.Mode().IsRegular() {
 		return fmt.Errorf("%s not file", scriptFile)
@@ -56,7 +56,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	scriptFile := args[0]
 	infoFile, err := os.Stat(scriptFile)
 	if err != nil {
-		return fmt.Errorf("File %s not found", scriptFile)
+		return fmt.Errorf("file %s not found", scriptFile)
 	}
 	if !infoFile.Mode().IsRegular() {
 		return fmt.Errorf("%s not file", scriptFile)
@@ -70,7 +70,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	}
 	scriptJSON, err := json.MarshalIndent(scriptMessage, "", "\t")
 	if err != nil {
-		return fmt.Errorf("Failed marshal json")
+		return fmt.Errorf("failed marshal json")
 	}
 
 	c := exec.Command(scriptFile, args[1:]...)
@@ -82,7 +82,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	sender.log.Debugf("Finished executing: %s", scriptFile)
 
 	if err != nil {
-		return fmt.Errorf("Failed exec [%s] Error [%s] Output: [%s]", sender.Exec, err.Error(), scriptOutput.String())
+		return fmt.Errorf("failed exec [%s] Error [%s] Output: [%s]", sender.Exec, err.Error(), scriptOutput.String())
 	}
 	return nil
 }

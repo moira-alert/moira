@@ -73,7 +73,7 @@ func (connector *DbConnector) GetTriggers(triggerIDs []string) ([]*moira.Trigger
 	}
 	rawResponse, err := redis.Values(c.Do("EXEC"))
 	if err != nil {
-		return nil, fmt.Errorf("Failed to EXEC: %s", err.Error())
+		return nil, fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
 
 	triggers := make([]*moira.Trigger, len(triggerIDs))
@@ -242,7 +242,7 @@ func (connector *DbConnector) GetTriggerChecks(triggerIDs []string) ([]*moira.Tr
 	}
 	rawResponse, err := redis.Values(c.Do("EXEC"))
 	if err != nil {
-		return nil, fmt.Errorf("Failed to EXEC: %s", err)
+		return nil, fmt.Errorf("failed to EXEC: %s", err)
 	}
 	var slices [][]interface{}
 	for i := 0; i < len(rawResponse); i += 4 {

@@ -9,15 +9,15 @@ import (
 
 func TestInt64ToTime(t *testing.T) {
 	int64timeStamp := int64(1527330278)
-	humanReadabletimeStamp := time.Date(2018, 5, 26, 10, 24, 38, 0, time.UTC)
+	humanReadableTimestamp := time.Date(2018, 5, 26, 10, 24, 38, 0, time.UTC)
 	Convey("Convert int64 timestamp into datetime", t, func() {
 		converted := Int64ToTime(int64timeStamp)
-		So(converted, ShouldResemble, humanReadabletimeStamp)
+		So(converted, ShouldResemble, humanReadableTimestamp)
 	})
 	Convey("Convert int64 timestamp + 1 minute into datetime", t, func() {
 		int64timeStamp += 60
 		converted := Int64ToTime(int64timeStamp)
-		So(converted, ShouldResemble, humanReadabletimeStamp.Add(time.Minute))
+		So(converted, ShouldResemble, humanReadableTimestamp.Add(time.Minute))
 	})
 }
 
