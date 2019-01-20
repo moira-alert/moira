@@ -34,13 +34,13 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 
 	sender.APIToken = senderSettings["api_token"]
 	if sender.APIToken == "" {
-		return fmt.Errorf("Can not read slack api_token from config")
+		return fmt.Errorf("can not read slack api_token from config")
 	}
 	var err error
 	if useEmoji, ok := senderSettings["use_emoji"]; ok {
 		sender.useEmoji, err = strconv.ParseBool(useEmoji)
 		if err != nil {
-			return fmt.Errorf("Can not read slack use_emoji parameter: %s", err.Error())
+			return fmt.Errorf("can not read slack use_emoji parameter: %s", err.Error())
 		}
 	}
 	sender.log = logger
@@ -84,7 +84,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	channelID, threadTimestamp, err := api.PostMessage(contact.Value, slack.MsgOptionText(message.String(),
 		false), slack.MsgOptionPostMessageParameters(params))
 	if err != nil {
-		return fmt.Errorf("Failed to send %s event message to slack [%s]: %s", trigger.ID, contact.Value, err.Error())
+		return fmt.Errorf("failed to send %s event message to slack [%s]: %s", trigger.ID, contact.Value, err.Error())
 	}
 
 	if channelID != "" && len(plot) > 0 {
