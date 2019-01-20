@@ -133,7 +133,7 @@ func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *
 func calculateNextDelivery(schedule *moira.ScheduleData, nextTime time.Time) (time.Time, error) {
 
 	if len(schedule.Days) != 0 && len(schedule.Days) != 7 {
-		return nextTime, fmt.Errorf("Invalid scheduled settings: %d days defined", len(schedule.Days))
+		return nextTime, fmt.Errorf("invalid scheduled settings: %d days defined", len(schedule.Days))
 	}
 
 	if len(schedule.Days) == 0 {
@@ -169,5 +169,5 @@ func calculateNextDelivery(schedule *moira.ScheduleData, nextTime time.Time) (ti
 		return nextLocalDayBegin.Add(beginOffset + tzOffset), nil
 	}
 
-	return nextTime, fmt.Errorf("Can not find allowed schedule day")
+	return nextTime, fmt.Errorf("can not find allowed schedule day")
 }
