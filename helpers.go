@@ -50,9 +50,7 @@ func GetStringListsDiff(stringLists ...[]string) []string {
 	}
 	for _, stringList := range stringLists[1:] {
 		for _, value := range stringList {
-			if _, ok := leftValues[value]; ok {
-				delete(leftValues, value)
-			}
+			delete(leftValues, value)
 		}
 	}
 	result := make([]string, 0)
@@ -75,9 +73,7 @@ func GetTriggerListsDiff(triggerLists ...[]*Trigger) []*Trigger {
 	}
 	for _, triggerList := range triggerLists[1:] {
 		for _, trigger := range triggerList {
-			if _, ok := leftValues[trigger.ID]; ok {
-				delete(leftValues, trigger.ID)
-			}
+			delete(leftValues, trigger.ID)
 		}
 	}
 	result := make([]*Trigger, 0)
