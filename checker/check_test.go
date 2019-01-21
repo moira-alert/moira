@@ -9,6 +9,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
+	"github.com/moira-alert/moira/metric_source/remote"
 	"github.com/moira-alert/moira/mock/metric_source"
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
@@ -728,6 +729,22 @@ func TestHandleTrigger(t *testing.T) {
 		})
 	})
 
+	Convey("No metrics in main target, should return trigger has no timeseries", t, func() {
+		source.EXPECT().Fetch(pattern, triggerChecker.From, triggerChecker.Until, true).Return(fetchResult, nil)
+		fetchResult.EXPECT().GetMetricsData().Return([]*metricSource.MetricData{})
+		fetchResult.EXPECT().GetPatternMetrics().Return([]string{}, nil)
+
+		checkData, err := triggerChecker.handleMetricsCheck()
+		So(err, ShouldResemble, ErrTriggerHasNoTimeSeries{})
+		So(checkData, ShouldResemble, moira.CheckData{
+			Metrics:                      lastCheck.Metrics,
+			Timestamp:                    triggerChecker.Until,
+			State:                        OK,
+			Score:                        0,
+			LastSuccessfulCheckTimestamp: 0,
+		})
+	})
+
 	Convey("Has duplicated names timeseries, should return trigger has same timeseries names error", t, func() {
 		metric1 := "super.puper.metric"
 		metric2 := "super.drupper.metric"
@@ -814,12 +831,38 @@ func TestHandleTrigger(t *testing.T) {
 	})
 }
 
-func TestHandleErrorCheck(t *testing.T) {
+func TestHandleTriggerCheck(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	logger, _ := logging.GetLogger("Test")
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	ttlState := NODATA
+
+	Convey("Handle trigger was not successful checked and no error", t, func() {
+		triggerChecker := TriggerChecker{
+			TriggerID: "SuperId",
+			Database:  dataBase,
+			Logger:    logger,
+			ttl:       0,
+			ttlState:  ttlState,
+			trigger:   &moira.Trigger{TriggerType: moira.RisingTrigger, TTLState: &ttlState},
+			lastCheck: &moira.CheckData{
+				Timestamp: 0,
+				State:     NODATA,
+			},
+		}
+		checkData := moira.CheckData{
+			State:     OK,
+			Timestamp: time.Now().Unix(),
+		}
+		actual, err := triggerChecker.handleTriggerCheck(checkData, nil)
+		So(err, ShouldBeNil)
+		So(actual, ShouldResemble, moira.CheckData{
+			State:                        OK,
+			Timestamp:                    time.Now().Unix(),
+			LastSuccessfulCheckTimestamp: time.Now().Unix(),
+		})
+	})
 
 	Convey("Handle error no metrics", t, func() {
 		Convey("TTL is 0", func() {
@@ -1085,6 +1128,58 @@ func TestHandleErrorCheck(t *testing.T) {
 		}
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, expected)
+	})
+
+	Convey("Handle trigger error remote trigger response", t, func() {
+		now := time.Now()
+		triggerChecker := TriggerChecker{
+			TriggerID: "SuperId",
+			Database:  dataBase,
+			Logger:    logger,
+			ttl:       300,
+			trigger:   &moira.Trigger{TriggerType: moira.RisingTrigger},
+			ttlState:  NODATA,
+			lastCheck: &moira.CheckData{
+				Timestamp:      time.Now().Unix(),
+				EventTimestamp: time.Now().Add(-1 * time.Hour).Unix(),
+				State:          OK,
+			},
+		}
+		Convey("but time since last successful check less than ttl", func() {
+			checkData := moira.CheckData{
+				State:                        OK,
+				Timestamp:                    now.Unix(),
+				LastSuccessfulCheckTimestamp: now.Add(-1 * time.Minute).Unix(),
+			}
+			expected := moira.CheckData{
+				State:                        OK,
+				Timestamp:                    now.Unix(),
+				EventTimestamp:               time.Now().Add(-1 * time.Hour).Unix(),
+				LastSuccessfulCheckTimestamp: now.Add(-1 * time.Minute).Unix(),
+			}
+			actual, err := triggerChecker.handleTriggerCheck(checkData, remote.ErrRemoteTriggerResponse{InternalError: fmt.Errorf("pain"), Target: "pain.target"})
+			So(err, ShouldBeNil)
+			So(actual, ShouldResemble, expected)
+		})
+
+		Convey("and time since last successful check more than ttl", func() {
+			checkData := moira.CheckData{
+				State:                        OK,
+				Timestamp:                    now.Unix(),
+				LastSuccessfulCheckTimestamp: now.Add(-10 * time.Minute).Unix(),
+			}
+			expected := moira.CheckData{
+				State:                        EXCEPTION,
+				Message:                      fmt.Sprintf("Remote server unavailable. Trigger is not checked for %d seconds", checkData.Timestamp-checkData.LastSuccessfulCheckTimestamp),
+				Timestamp:                    now.Unix(),
+				EventTimestamp:               now.Unix(),
+				LastSuccessfulCheckTimestamp: now.Add(-10 * time.Minute).Unix(),
+			}
+			dataBase.EXPECT().PushNotificationEvent(gomock.Any(), true).Return(nil)
+			actual, err := triggerChecker.handleTriggerCheck(checkData, remote.ErrRemoteTriggerResponse{InternalError: fmt.Errorf("pain"), Target: "pain.target"})
+			So(err, ShouldBeNil)
+			So(actual, ShouldResemble, expected)
+		})
 	})
 
 	Convey("Handle additional trigger target has more than one timeseries", t, func() {
