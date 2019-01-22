@@ -10,10 +10,10 @@
 			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "hBqmLpr3P88FPgBk27hzpa5N0mM=",
-			"path": "github.com/FZambia/go-sentinel",
-			"revision": "76bd05e8e22f9f8f5e1dd6d3a85b7951da7cce57",
-			"revisionTime": "2017-12-04T08:54:13Z"
+			"checksumSHA1": "3Uyji2mxcwH47z3i8elO3VbzOvE=",
+			"path": "github.com/FZambia/sentinel",
+			"revision": "52eb51343b45ab047f25b864563d93ed16e28c6c",
+			"revisionTime": "2018-06-30T10:12:55Z"
 		},
 		{
 			"checksumSHA1": "2uHTjq9EzVymiLoPqlFyA0RDmpM=",

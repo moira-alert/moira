@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/FZambia/go-sentinel"
+	"github.com/FZambia/sentinel"
 	"github.com/gomodule/redigo/redis"
 	"github.com/patrickmn/go-cache"
 	"gopkg.in/redsync.v1"
