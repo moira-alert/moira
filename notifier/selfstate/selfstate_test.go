@@ -258,6 +258,10 @@ func TestRunGoRoutine(t *testing.T) {
 		"admin-mail": true,
 	}
 	notif.EXPECT().GetSenders().Return(senders)
+	lock := mock_moira_alert.NewMockLock(mockCtrl)
+	lock.EXPECT().Acquire(gomock.Any()).Return(nil, nil)
+	lock.EXPECT().Release()
+	database.EXPECT().NewLock(gomock.Any(), gomock.Any()).Return(lock)
 
 	selfStateWorker := &SelfCheckWorker{
 		Log:      logger,
@@ -305,6 +309,11 @@ func configureWorker(t *testing.T, remoteEnabled bool) *selfCheckWorkerMock {
 		"admin-mail": true,
 	}
 	notif.EXPECT().GetSenders().Return(senders)
+
+	lock := mock_moira_alert.NewMockLock(mockCtrl)
+	lock.EXPECT().Acquire(gomock.Any()).Return(nil, nil)
+	lock.EXPECT().Release()
+	database.EXPECT().NewLock(gomock.Any(), gomock.Any()).Return(lock)
 
 	return &selfCheckWorkerMock{
 		selfCheckWorker: &SelfCheckWorker{
