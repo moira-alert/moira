@@ -395,18 +395,6 @@
 			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "2UmMbNHc8FBr98mJFN1k8ISOIHk=",
-			"path": "github.com/garyburd/redigo/internal",
-			"revision": "57f1cd7de6175c96b423e7ac2534ff2b39e2ef79",
-			"revisionTime": "2017-06-15T18:53:09Z"
-		},
-		{
-			"checksumSHA1": "dGCqjUjHaREgF/BM+u0UdebD4fk=",
-			"path": "github.com/garyburd/redigo/redis",
-			"revision": "57f1cd7de6175c96b423e7ac2534ff2b39e2ef79",
-			"revisionTime": "2017-06-15T18:53:09Z"
-		},
-		{
 			"checksumSHA1": "5/EykaE4WlsUKufLsv6l2N+U4HU=",
 			"path": "github.com/glycerine/go-unsnap-stream",
 			"revision": "9f0cb55181dd3a0a4c168d3dbc72d4aca4853126",
@@ -1068,6 +1056,18 @@
 			"path": "github.com/golang/snappy",
 			"revision": "2e65f85255dbc3072edf28d6b5b8efc472979f5a",
 			"revisionTime": "2018-05-18T05:39:59Z"
+		},
+		{
+			"checksumSHA1": "73htiRJAyEYC5HJaFtkhmosWlbE=",
+			"path": "github.com/gomodule/redigo/redis",
+			"revision": "02dc2736dbc3a4a56907b0d5a9fead2f71b499db",
+			"revisionTime": "2018-12-13T21:05:01Z"
+		},
+		{
+			"checksumSHA1": "J9ZXa0GW8FQXR/1Tw70wr6I20XI=",
+			"path": "github.com/gomodule/redigo/redisx",
+			"revision": "02dc2736dbc3a4a56907b0d5a9fead2f71b499db",
+			"revisionTime": "2018-12-13T21:05:01Z"
 		},
 		{
 			"checksumSHA1": "hEnH6sgR83Qfx7UNnphNNlelmj0=",

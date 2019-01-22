@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/FZambia/go-sentinel"
-	"github.com/garyburd/redigo/redis"
+	"github.com/gomodule/redigo/redis"
 	"github.com/patrickmn/go-cache"
 	"gopkg.in/redsync.v1"
 	"gopkg.in/tomb.v2"

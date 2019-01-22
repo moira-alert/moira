@@ -3,7 +3,7 @@ package redis
 import (
 	"fmt"
 
-	"github.com/garyburd/redigo/redis"
+	"github.com/gomodule/redigo/redis"
 )
 
 // FetchTriggersToReindex returns trigger IDs updated since 'from' param
