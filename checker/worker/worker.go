@@ -51,7 +51,7 @@ func (worker *Checker) Start() error {
 	worker.tomb.Go(worker.runNodataChecker)
 
 	_, err = worker.SourceProvider.GetRemote()
-	worker.remoteEnabled = err != nil
+	worker.remoteEnabled = err == nil
 
 	if worker.remoteEnabled && worker.Config.MaxParallelRemoteChecks == 0 {
 		worker.Config.MaxParallelRemoteChecks = runtime.NumCPU()
