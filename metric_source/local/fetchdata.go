@@ -1,4 +1,4 @@
-package target
+package local
 
 import (
 	"math"

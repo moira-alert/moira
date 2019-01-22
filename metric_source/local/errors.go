@@ -1,4 +1,4 @@
-package target
+package local
 
 import (
 	"fmt"
@@ -13,7 +13,7 @@ type ErrUnknownFunction struct {
 	internalError error
 }
 
-// ErrorUnknownFunction parses internal carbonapi error errUnknownFunction, gets func name and return ErrUnknownFunction error
+// ErrorUnknownFunction parses internal carbon-api error errUnknownFunction, gets func name and return ErrUnknownFunction error
 func ErrorUnknownFunction(err error) ErrUnknownFunction {
 	errorStr := err.Error()
 	funcName := strings.Replace(errorStr[strings.Index(errorStr, "\""):], "\"", "", -1)
@@ -60,4 +60,16 @@ type ErrEvalExpr struct {
 // Error is implementation of golang error interface for ErrEvalExpr struct
 func (err ErrEvalExpr) Error() string {
 	return fmt.Sprintf("failed to evaluate target '%s': %s", err.target, err.internalError.Error())
+}
+
+// ErrEvaluateTargetFailedWithPanic used to identify occurred error as a result of recover from panic
+type ErrEvaluateTargetFailedWithPanic struct {
+	target         string
+	recoverMessage interface{}
+	stackRecord    []byte
+}
+
+// Error is implementation of golang error interface for ErrEvaluateTargetFailedWithPanic struct
+func (err ErrEvaluateTargetFailedWithPanic) Error() string {
+	return fmt.Sprintf("panic while evaluate target %s: message: '%s' stack: %s", err.target, err.recoverMessage, err.stackRecord)
 }

@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/moira-alert/moira/metric_source"
+	"github.com/moira-alert/moira/metric_source/local"
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
 
@@ -177,8 +179,9 @@ func configureNotifier(t *testing.T) {
 	logger, _ = logging.GetLogger("Scheduler")
 	scheduler = mock_scheduler.NewMockScheduler(mockCtrl)
 	sender = mock_moira_alert.NewMockSender(mockCtrl)
+	metricsSourceProvider := metricSource.CreateMetricSourceProvider(local.Create(dataBase), nil)
 
-	notif = NewNotifier(dataBase, logger, config, notifierMetrics)
+	notif = NewNotifier(dataBase, logger, config, notifierMetrics, metricsSourceProvider)
 	notif.scheduler = scheduler
 	senderSettings := map[string]string{
 		"type": "test",

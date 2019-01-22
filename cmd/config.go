@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/gosexy/to"
-	"github.com/moira-alert/moira/remote"
+	remoteSource "github.com/moira-alert/moira/metric_source/remote"
 	"gopkg.in/yaml.v2"
 
 	"github.com/moira-alert/moira/database/redis"
@@ -93,9 +93,9 @@ type RemoteConfig struct {
 	Enabled bool `yaml:"enabled"`
 }
 
-// GetSettings returns remote config parsed from moira config files
-func (config *RemoteConfig) GetSettings() *remote.Config {
-	return &remote.Config{
+// GetRemoteSourceSettings returns remote config parsed from moira config files
+func (config *RemoteConfig) GetRemoteSourceSettings() *remoteSource.Config {
+	return &remoteSource.Config{
 		URL:           config.URL,
 		CheckInterval: to.Duration(config.CheckInterval),
 		Timeout:       to.Duration(config.Timeout),

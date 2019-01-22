@@ -76,17 +76,7 @@ func (worker *Checker) handleTriggerInLock(triggerID string, metrics *graphite.C
 }
 
 func (worker *Checker) checkTrigger(triggerID string) error {
-	defer worker.Database.DeleteTriggerCheckLock(triggerID)
-	triggerChecker := checker.TriggerChecker{
-		TriggerID:    triggerID,
-		Database:     worker.Database,
-		Logger:       worker.Logger,
-		Config:       worker.Config,
-		RemoteConfig: worker.RemoteConfig,
-		Metrics:      worker.Metrics,
-	}
-
-	err := triggerChecker.InitTriggerChecker()
+	triggerChecker, err := checker.MakeTriggerChecker(triggerID, worker.Database, worker.Logger, worker.Config, worker.SourceProvider, worker.Metrics)
 	if err != nil {
 		if err == checker.ErrTriggerNotExists {
 			return nil

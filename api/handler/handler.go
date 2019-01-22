@@ -7,7 +7,7 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
-	"github.com/moira-alert/moira/remote"
+	"github.com/moira-alert/moira/metric_source"
 	"github.com/rs/cors"
 
 	"github.com/moira-alert/moira"
@@ -22,7 +22,7 @@ const contactKey moiramiddle.ContextKey = "contact"
 const subscriptionKey moiramiddle.ContextKey = "subscription"
 
 // NewHandler creates new api handler request uris based on github.com/go-chi/chi
-func NewHandler(db moira.Database, log moira.Logger, index moira.Searcher, config *api.Config, remoteConfig *remote.Config, configFile []byte) http.Handler {
+func NewHandler(db moira.Database, log moira.Logger, index moira.Searcher, config *api.Config, metricSourceProvider *metricSource.SourceProvider, configFile []byte) http.Handler {
 	database = db
 	searchIndex = index
 	router := chi.NewRouter()
@@ -38,7 +38,7 @@ func NewHandler(db moira.Database, log moira.Logger, index moira.Searcher, confi
 		router.Use(moiramiddle.DatabaseContext(database))
 		router.Get("/config", webConfig(configFile))
 		router.Route("/user", user)
-		router.Route("/trigger", triggers(remoteConfig, searchIndex))
+		router.Route("/trigger", triggers(metricSourceProvider, searchIndex))
 		router.Route("/tag", tag)
 		router.Route("/pattern", pattern)
 		router.Route("/event", event)

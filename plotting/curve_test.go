@@ -5,8 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-graphite/carbonapi/expr/types"
-	pb "github.com/go-graphite/protocol/carbonapi_v3_pb"
+	"github.com/moira-alert/moira/metric_source"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/wcharczuk/go-chart"
 
@@ -14,7 +13,7 @@ import (
 )
 
 var (
-	fetchResponse = pb.FetchResponse{
+	metricData = metricSource.MetricData{
 		StartTime: 0,
 		StopTime:  100,
 		StepTime:  10,
@@ -30,10 +29,9 @@ var (
 // TestGeneratePlotCurves tests generatePlotCurves returns
 // collection of chart.Timeseries with actual field values
 func TestGeneratePlotCurves(t *testing.T) {
-	metricData := types.MetricData{FetchResponse: fetchResponse}
 	Convey("First value is absent", t, func() {
 		metricName := "metric.firstValueIsAbsent"
-		metricData.FetchResponse.Name = metricName
+		metricData.Name = metricName
 		metricData.Values = firstValIsAbsentVals
 		curveSeries := generatePlotCurves(&metricData, chart.Style{}, chart.Style{})
 		So(len(curveSeries), ShouldEqual, 2)
@@ -56,7 +54,7 @@ func TestGeneratePlotCurves(t *testing.T) {
 	})
 	Convey("First value is present", t, func() {
 		metricName := "metric.firstValueIsPresent"
-		metricData.FetchResponse.Name = metricName
+		metricData.Name = metricName
 		metricData.Values = firstValIsPresentVals
 		curveSeries := generatePlotCurves(&metricData, chart.Style{}, chart.Style{})
 		So(len(curveSeries), ShouldEqual, 3)
@@ -87,7 +85,6 @@ func TestGeneratePlotCurves(t *testing.T) {
 // TestDescribePlotCurves tests describePlotCurves returns collection of
 // n PlotCurves from timeseries with n-1 gaps (IsAbsent values)
 func TestDescribePlotCurves(t *testing.T) {
-	metricData := types.MetricData{FetchResponse: fetchResponse}
 	Convey("First value is absent", t, func() {
 		metricData.Values = firstValIsAbsentVals
 		plotCurves := describePlotCurves(&metricData)
@@ -135,7 +132,6 @@ func TestDescribePlotCurves(t *testing.T) {
 // TestResolveFirstPoint tests resolveFirstPoint returns correct start time
 // for given MetricData whether IsAbsent[0] is true or false
 func TestResolveFirstPoint(t *testing.T) {
-	metricData := types.MetricData{FetchResponse: fetchResponse}
 	Convey("First value is absent", t, func() {
 		metricData.Values = firstValIsAbsentVals
 		firstPointInd, startTime := resolveFirstPoint(&metricData)

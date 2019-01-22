@@ -12,10 +12,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-graphite/carbonapi/expr/types"
-	pb "github.com/go-graphite/protocol/carbonapi_v3_pb"
 	"github.com/gotokatsuya/ipare"
 	"github.com/gotokatsuya/ipare/util"
+	"github.com/moira-alert/moira/metric_source"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/wcharczuk/go-chart"
 
@@ -442,42 +441,34 @@ var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 }
 
 // generateTestMetricsData generates metricData array for tests
-func generateTestMetricsData(useHumanizedValues bool) []*types.MetricData {
-	metricData := types.MetricData{
-		FetchResponse: pb.FetchResponse{
-			Name:      "MetricName",
-			StartTime: 0,
-			StepTime:  10,
-			StopTime:  100,
-			Values:    []float64{12, 34, 23, 45, 76, 64, 32, 13, 34, 130, 70},
-		},
+func generateTestMetricsData(useHumanizedValues bool) []*metricSource.MetricData {
+	metricData := metricSource.MetricData{
+		Name:      "MetricName",
+		StartTime: 0,
+		StepTime:  10,
+		StopTime:  100,
+		Values:    []float64{12, 34, 23, 45, 76, 64, 32, 13, 34, 130, 70},
 	}
-	metricData2 := types.MetricData{
-		FetchResponse: pb.FetchResponse{
-			Name:      "CategoryCounterType.MetricName",
-			StartTime: 0,
-			StepTime:  10,
-			StopTime:  100,
-			Values:    []float64{math.NaN(), 15, 32, math.NaN(), 54, 20, 43, 56, 2, 79, 76},
-		},
+	metricData2 := metricSource.MetricData{
+		Name:      "CategoryCounterType.MetricName",
+		StartTime: 0,
+		StepTime:  10,
+		StopTime:  100,
+		Values:    []float64{math.NaN(), 15, 32, math.NaN(), 54, 20, 43, 56, 2, 79, 76},
 	}
-	metricData3 := types.MetricData{
-		FetchResponse: pb.FetchResponse{
-			Name:      "CategoryCounterName.CategoryCounterType.MetricName",
-			StartTime: 0,
-			StepTime:  10,
-			StopTime:  100,
-			Values:    []float64{11, 23, 45, math.NaN(), 45, math.NaN(), 32, 65, 78, 76, 74},
-		},
+	metricData3 := metricSource.MetricData{
+		Name:      "CategoryCounterName.CategoryCounterType.MetricName",
+		StartTime: 0,
+		StepTime:  10,
+		StopTime:  100,
+		Values:    []float64{11, 23, 45, math.NaN(), 45, math.NaN(), 32, 65, 78, 76, 74},
 	}
-	metricData4 := types.MetricData{
-		FetchResponse: pb.FetchResponse{
-			Name:      "CategoryName.CategoryCounterName.CategoryCounterType.MetricName",
-			StartTime: 0,
-			StepTime:  10,
-			StopTime:  100,
-			Values:    []float64{11, 23, 10, 9, 17, 10, 25, 12, 10, 15, 30},
-		},
+	metricData4 := metricSource.MetricData{
+		Name:      "CategoryName.CategoryCounterName.CategoryCounterType.MetricName",
+		StartTime: 0,
+		StepTime:  10,
+		StopTime:  100,
+		Values:    []float64{11, 23, 10, 9, 17, 10, 25, 12, 10, 15, 30},
 	}
 	if !useHumanizedValues {
 		for valInd, value := range metricData.Values {
@@ -493,13 +484,13 @@ func generateTestMetricsData(useHumanizedValues bool) []*types.MetricData {
 			metricData4.Values[valInd] = plotTestOuterPointMultiplier * value
 		}
 	}
-	metricsData := []*types.MetricData{&metricData, &metricData2, &metricData3, &metricData4}
+	metricsData := []*metricSource.MetricData{&metricData, &metricData2, &metricData3, &metricData4}
 	return metricsData
 }
 
 // renderTestMetricsDataToPNG renders and saves rendered plots to PNG
 func renderTestMetricsDataToPNG(trigger moira.Trigger, plotTheme string,
-	metricsData []*types.MetricData, filePath string) error {
+	metricsData []*metricSource.MetricData, filePath string) error {
 	var metricsWhiteList []string
 	location, _ := time.LoadLocation("UTC")
 	plotTemplate, err := GetPlotTemplate(plotTheme, location)
@@ -538,27 +529,25 @@ func calculateHashDistance(pathToOriginal, pathToRendered string) (*int, error) 
 }
 
 // generateRandomTestMetricsData returns random test MetricsData by given numbers of values
-func generateRandomTestMetricsData(numTotal int, numEmpty int) []*types.MetricData {
+func generateRandomTestMetricsData(numTotal int, numEmpty int) []*metricSource.MetricData {
 	startTime := int64(0)
 	stepTime := int64(10)
 	stopTime := int64(numTotal) * stepTime
-	fetchResponseValues := make([]float64, 0, numTotal)
+	metricDataValues := make([]float64, 0, numTotal)
 	for valInd := 0; valInd < numTotal; valInd++ {
 		if valInd < numEmpty {
-			fetchResponseValues = append(fetchResponseValues, math.NaN())
+			metricDataValues = append(metricDataValues, math.NaN())
 		} else {
-			fetchResponseValues = append(fetchResponseValues, rand.Float64())
+			metricDataValues = append(metricDataValues, rand.Float64())
 		}
 	}
-	return []*types.MetricData{
+	return []*metricSource.MetricData{
 		{
-			FetchResponse: pb.FetchResponse{
-				Name:      "RandomTestMetric",
-				StartTime: startTime,
-				StepTime:  stepTime,
-				StopTime:  stopTime,
-				Values:    fetchResponseValues,
-			},
+			Name:      "RandomTestMetric",
+			StartTime: startTime,
+			StepTime:  stepTime,
+			StopTime:  stopTime,
+			Values:    metricDataValues,
 		},
 	}
 }

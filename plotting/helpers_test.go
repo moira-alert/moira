@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-graphite/carbonapi/expr/types"
+	"github.com/moira-alert/moira/metric_source"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"github.com/moira-alert/moira"
@@ -210,10 +210,10 @@ func TestGetYAxisValuesFormatter(t *testing.T) {
 
 // TestToLimitedMetricsData tests to limited metricsData returns only necessary metricsData
 func TestToLimitedMetricsData(t *testing.T) {
-	givenSeries := []*types.MetricData{
-		types.MakeMetricData("metricPrefix.metricName1", []float64{1}, 1, 1),
-		types.MakeMetricData("metricPrefix.metricName2", []float64{2}, 2, 2),
-		types.MakeMetricData("metricPrefix.metricName3", []float64{3}, 3, 3),
+	givenSeries := []*metricSource.MetricData{
+		metricSource.MakeMetricData("metricPrefix.metricName1", []float64{1}, 1, 1),
+		metricSource.MakeMetricData("metricPrefix.metricName2", []float64{2}, 2, 2),
+		metricSource.MakeMetricData("metricPrefix.metricName3", []float64{3}, 3, 3),
 	}
 	Convey("Limit series by non-empty whitelist", t, func() {
 		Convey("MetricsData has necessary series", func() {

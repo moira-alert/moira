@@ -1,42 +1,35 @@
-package target
+package local
 
 import (
 	"fmt"
 	"runtime/debug"
 
 	"github.com/go-graphite/carbonapi/expr"
+	"github.com/go-graphite/carbonapi/expr/functions"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
-
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/metric_source"
 )
 
-// ErrEvaluateTargetFailedWithPanic used to identify occurred error as a result of recover from panic
-type ErrEvaluateTargetFailedWithPanic struct {
-	target         string
-	recoverMessage interface{}
-	stackRecord    []byte
+// Local is implementation of MetricSource interface, which implements fetch metrics method from moira database installation
+type Local struct {
+	dataBase moira.Database
 }
 
-// Error is implementation of golang error interface for ErrEvaluateTargetFailedWithPanic struct
-func (err ErrEvaluateTargetFailedWithPanic) Error() string {
-	return fmt.Sprintf("panic while evaluate target %s: message: '%s' stack: %s", err.target, err.recoverMessage, err.stackRecord)
-}
+// Create configures local metric source
+func Create(dataBase moira.Database) metricSource.MetricSource {
+	// configure carbon-api functions
+	functions.New(make(map[string]string))
 
-// EvaluationResult represents evaluation target result and contains TimeSeries list, Pattern list and metric lists appropriate to given target
-type EvaluationResult struct {
-	TimeSeries []*TimeSeries
-	Patterns   []string
-	Metrics    []string
-}
-
-// EvaluateTarget is analogue of evaluateTarget method in graphite-web, that gets target metrics value from DB and Evaluate it using carbon-api eval package
-func EvaluateTarget(database moira.Database, target string, from int64, until int64, allowRealTimeAlerting bool) (*EvaluationResult, error) {
-	result := &EvaluationResult{
-		TimeSeries: make([]*TimeSeries, 0),
-		Patterns:   make([]string, 0),
-		Metrics:    make([]string, 0),
+	return &Local{
+		dataBase: dataBase,
 	}
+}
+
+// Fetch is analogue of evaluateTarget method in graphite-web, that gets target metrics value from DB and Evaluate it using carbon-api eval package
+func (local *Local) Fetch(target string, from int64, until int64, allowRealTimeAlerting bool) (metricSource.FetchResult, error) {
+	result := CreateEmptyFetchResult()
 
 	targets := []string{target}
 	targetIdx := 0
@@ -51,7 +44,7 @@ func EvaluateTarget(database moira.Database, target string, from int64, until in
 			}
 		}
 		patterns := expr2.Metrics()
-		metricsMap, metrics, err := getPatternsMetricData(database, patterns, from, until, allowRealTimeAlerting)
+		metricsMap, metrics, err := getPatternsMetricData(local.dataBase, patterns, from, until, allowRealTimeAlerting)
 		if err != nil {
 			return nil, err
 		}
@@ -61,7 +54,7 @@ func EvaluateTarget(database moira.Database, target string, from int64, until in
 		} else if rewritten {
 			targets = append(targets, newTargets...)
 		} else {
-			metricDatas, err := func() (result []*types.MetricData, err error) {
+			metricsData, err := func() (result []*types.MetricData, err error) {
 				defer func() {
 					if r := recover(); r != nil {
 						result = nil
@@ -86,12 +79,16 @@ func EvaluateTarget(database moira.Database, target string, from int64, until in
 			if err != nil {
 				return nil, err
 			}
-			for _, metricData := range metricDatas {
-				timeSeries := TimeSeries{
-					MetricData: *metricData,
-					Wildcard:   len(metrics) == 0,
-				}
-				result.TimeSeries = append(result.TimeSeries, &timeSeries)
+			for _, metricData := range metricsData {
+				md := *metricData
+				result.MetricsData = append(result.MetricsData, &metricSource.MetricData{
+					Name:      md.Name,
+					StartTime: md.StartTime,
+					StopTime:  md.StopTime,
+					StepTime:  md.StepTime,
+					Values:    md.Values,
+					Wildcard:  len(metrics) == 0,
+				})
 			}
 			result.Metrics = append(result.Metrics, metrics...)
 			for _, pattern := range patterns {
@@ -99,7 +96,13 @@ func EvaluateTarget(database moira.Database, target string, from int64, until in
 			}
 		}
 	}
+
 	return result, nil
+}
+
+// IsConfigured always returns true. It easy to configure local source =)
+func (local *Local) IsConfigured() (bool, error) {
+	return true, nil
 }
 
 func getPatternsMetricData(database moira.Database, patterns []parser.MetricRequest, from int64, until int64, allowRealTimeAlerting bool) (map[parser.MetricRequest][]*types.MetricData, []string, error) {

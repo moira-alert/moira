@@ -4,7 +4,8 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/moira-alert/moira/remote"
+	"github.com/moira-alert/moira/metric_source"
+	"github.com/moira-alert/moira/metric_source/remote"
 	"github.com/patrickmn/go-cache"
 	"gopkg.in/tomb.v2"
 
@@ -19,6 +20,7 @@ type Checker struct {
 	Database          moira.Database
 	Config            *checker.Config
 	RemoteConfig      *remote.Config
+	SourceProvider    *metricSource.SourceProvider
 	Metrics           *graphite.CheckerMetrics
 	TriggerCache      *cache.Cache
 	LazyTriggersCache *cache.Cache
@@ -48,7 +50,8 @@ func (worker *Checker) Start() error {
 
 	worker.tomb.Go(worker.runNodataChecker)
 
-	worker.remoteEnabled = worker.RemoteConfig.IsEnabled()
+	_, err = worker.SourceProvider.GetRemote()
+	worker.remoteEnabled = err == nil
 
 	if worker.remoteEnabled && worker.Config.MaxParallelRemoteChecks == 0 {
 		worker.Config.MaxParallelRemoteChecks = runtime.NumCPU()

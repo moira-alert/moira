@@ -1,4 +1,4 @@
-package target
+package local
 
 import (
 	"fmt"
@@ -6,11 +6,10 @@ import (
 	"testing"
 
 	"github.com/go-graphite/carbonapi/expr/functions"
-	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
-	pb "github.com/go-graphite/protocol/carbonapi_v3_pb"
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -22,6 +21,7 @@ func init() {
 func TestEvaluateTarget(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	localSource := Create(dataBase)
 	defer mockCtrl.Finish()
 
 	pattern := "super.puper.pattern"
@@ -63,7 +63,7 @@ func TestEvaluateTarget(t *testing.T) {
 
 	Convey("Errors tests", t, func() {
 		Convey("Error while ParseExpr", func() {
-			result, err := EvaluateTarget(dataBase, "", from, until, true)
+			result, err := localSource.Fetch("", from, until, true)
 			So(err, ShouldResemble, ErrParseExpr{target: "", internalError: parser.ErrMissingExpr})
 			So(err.Error(), ShouldResemble, "failed to parse target '': missing expression")
 			So(result, ShouldBeNil)
@@ -73,7 +73,7 @@ func TestEvaluateTarget(t *testing.T) {
 			dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
 			dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 			dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(nil, metricErr)
-			result, err := EvaluateTarget(dataBase, "super.puper.pattern", from, until, true)
+			result, err := localSource.Fetch("super.puper.pattern", from, until, true)
 			So(err, ShouldResemble, metricErr)
 			So(result, ShouldBeNil)
 		})
@@ -82,7 +82,7 @@ func TestEvaluateTarget(t *testing.T) {
 			dataBase.EXPECT().GetPatternMetrics("super.puper.pattern").Return([]string{metric}, nil)
 			dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 			dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
-			result, err := EvaluateTarget(dataBase, "aliasByNoe(super.puper.pattern, 2)", from, until, true)
+			result, err := localSource.Fetch("aliasByNoe(super.puper.pattern, 2)", from, until, true)
 			So(err.Error(), ShouldResemble, "Unknown graphite function: \"aliasByNoe\"")
 			So(result, ShouldBeNil)
 		})
@@ -91,7 +91,7 @@ func TestEvaluateTarget(t *testing.T) {
 			dataBase.EXPECT().GetPatternMetrics("super.puper.pattern").Return([]string{metric}, nil)
 			dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 			dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
-			result, err := EvaluateTarget(dataBase, "movingAverage(super.puper.pattern, -1)", from, until, true)
+			result, err := localSource.Fetch("movingAverage(super.puper.pattern, -1)", from, until, true)
 			expectedErrSubstring := strings.Split(ErrEvaluateTargetFailedWithPanic{target: "movingAverage(super.puper.pattern, -1)"}.Error(), ":")[0]
 			So(err.Error(), ShouldStartWith, expectedErrSubstring)
 			So(result, ShouldBeNil)
@@ -100,19 +100,16 @@ func TestEvaluateTarget(t *testing.T) {
 
 	Convey("Test no metrics", t, func() {
 		dataBase.EXPECT().GetPatternMetrics("super.puper.pattern").Return([]string{}, nil)
-		result, err := EvaluateTarget(dataBase, "aliasByNode(super.puper.pattern, 2)", from, until, true)
+		result, err := localSource.Fetch("aliasByNode(super.puper.pattern, 2)", from, until, true)
 		So(err, ShouldBeNil)
-		fetchResponse := pb.FetchResponse{
-			Name:      "pattern",
-			StartTime: from,
-			StopTime:  until,
-			StepTime:  60,
-			Values:    []float64{},
-		}
-		So(result, ShouldResemble, &EvaluationResult{
-			TimeSeries: []*TimeSeries{{
-				MetricData: types.MetricData{FetchResponse: fetchResponse},
-				Wildcard:   true,
+		So(result, ShouldResemble, &FetchResult{
+			MetricsData: []*metricSource.MetricData{{
+				Name:      "pattern",
+				StartTime: from,
+				StopTime:  until,
+				StepTime:  60,
+				Values:    []float64{},
+				Wildcard:  true,
 			}},
 			Metrics:  make([]string, 0),
 			Patterns: []string{"super.puper.pattern"},
@@ -123,19 +120,17 @@ func TestEvaluateTarget(t *testing.T) {
 		dataBase.EXPECT().GetPatternMetrics("super.puper.pattern").Return([]string{metric}, nil)
 		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 		dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
-		result, err := EvaluateTarget(dataBase, "aliasByNode(super.puper.pattern, 2)", from, until, true)
-		fetchResponse := pb.FetchResponse{
-			Name:      "metric",
-			StartTime: from,
-			StopTime:  until,
-			StepTime:  retention,
-			Values:    []float64{0, 1, 2, 3, 4},
-		}
+		result, err := localSource.Fetch("aliasByNode(super.puper.pattern, 2)", from, until, true)
 		So(err, ShouldBeNil)
-		So(result, ShouldResemble, &EvaluationResult{
-			TimeSeries: []*TimeSeries{{
-				MetricData: types.MetricData{FetchResponse: fetchResponse},
-			}},
+		So(result, ShouldResemble, &FetchResult{
+			MetricsData: []*metricSource.MetricData{{
+				Name:      "metric",
+				StartTime: from,
+				StopTime:  until,
+				StepTime:  retention,
+				Values:    []float64{0, 1, 2, 3, 4},
+			},
+			},
 			Metrics:  []string{metric},
 			Patterns: []string{"super.puper.pattern"},
 		})
@@ -145,21 +140,31 @@ func TestEvaluateTarget(t *testing.T) {
 		dataBase.EXPECT().GetPatternMetrics("super.puper.pattern").Return([]string{metric}, nil)
 		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 		dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
-		result, err := EvaluateTarget(dataBase, "super.puper.pattern | scale(100) | aliasByNode(2)", from, until, true)
-		fetchResponse := pb.FetchResponse{
-			Name:      "metric",
-			StartTime: from,
-			StopTime:  until,
-			StepTime:  retention,
-			Values:    []float64{0, 100, 200, 300, 400},
-		}
+		result, err := localSource.Fetch("super.puper.pattern | scale(100) | aliasByNode(2)", from, until, true)
 		So(err, ShouldBeNil)
-		So(result, ShouldResemble, &EvaluationResult{
-			TimeSeries: []*TimeSeries{{
-				MetricData: types.MetricData{FetchResponse: fetchResponse},
+		So(result, ShouldResemble, &FetchResult{
+			MetricsData: []*metricSource.MetricData{{
+				Name:      "metric",
+				StartTime: from,
+				StopTime:  until,
+				StepTime:  retention,
+				Values:    []float64{0, 100, 200, 300, 400},
 			}},
 			Metrics:  []string{metric},
 			Patterns: []string{"super.puper.pattern"},
 		})
+	})
+}
+
+func TestLocal_IsConfigured(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	localSource := Create(dataBase)
+
+	Convey("Always true", t, func() {
+		actual, err := localSource.IsConfigured()
+		So(err, ShouldBeNil)
+		So(actual, ShouldBeTrue)
 	})
 }

@@ -9,25 +9,26 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/remote"
+	"github.com/moira-alert/moira/metric_source"
+	"github.com/moira-alert/moira/metric_source/local"
+	"github.com/moira-alert/moira/metric_source/remote"
 
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/controller"
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/api/middleware"
 	"github.com/moira-alert/moira/expression"
-	"github.com/moira-alert/moira/target"
 )
 
-func triggers(cfg *remote.Config, searcher moira.Searcher) func(chi.Router) {
+func triggers(metricSourceProvider *metricSource.SourceProvider, searcher moira.Searcher) func(chi.Router) {
 	return func(router chi.Router) {
-		router.Use(middleware.RemoteConfigContext(cfg))
+		router.Use(middleware.MetricSourceProvider(metricSourceProvider))
 		router.Use(middleware.SearchIndexContext(searcher))
 		router.Get("/", getAllTriggers)
 		router.Put("/", createTrigger)
 		router.Route("/{triggerId}", trigger)
 		router.With(middleware.Paginate(0, 10)).Get("/search", searchTriggers)
-		// ToDo: DEPRECATED method. Remove in Moira 2.5
+		// ToDo: DEPRECATED method. Remove in Moira 2.6
 		router.With(middleware.Paginate(0, 10)).Get("/page", searchTriggers)
 	}
 }
@@ -49,7 +50,7 @@ func createTrigger(writer http.ResponseWriter, request *http.Request) {
 	trigger := &dto.Trigger{}
 	if err := render.Bind(request, trigger); err != nil {
 		switch err.(type) {
-		case target.ErrParseExpr, target.ErrEvalExpr, target.ErrUnknownFunction:
+		case local.ErrParseExpr, local.ErrEvalExpr, local.ErrUnknownFunction:
 			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("invalid graphite targets: %s", err.Error())))
 		case expression.ErrInvalidExpression:
 			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("invalid expression: %s", err.Error())))

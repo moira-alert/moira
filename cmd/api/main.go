@@ -12,13 +12,15 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/go-graphite/carbonapi/expr/functions"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api/handler"
 	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/database/redis"
 	"github.com/moira-alert/moira/index"
 	"github.com/moira-alert/moira/logging/go-logging"
+	"github.com/moira-alert/moira/metric_source"
+	"github.com/moira-alert/moira/metric_source/local"
+	"github.com/moira-alert/moira/metric_source/remote"
 	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
 )
 
@@ -85,9 +87,6 @@ func main() {
 		logger.Error(err)
 	}
 
-	// configure carbon-api functions
-	functions.New(make(map[string]string))
-
 	// Start Index right before HTTP listener. Fail if index cannot start
 	searchIndex := index.NewSearchIndex(logger, database)
 	if searchIndex == nil {
@@ -112,8 +111,12 @@ func main() {
 
 	logger.Infof("Start listening by address: [%s]", apiConfig.Listen)
 
-	remoteConfig := config.Remote.GetSettings()
-	httpHandler := handler.NewHandler(database, logger, searchIndex, apiConfig, remoteConfig, configFile)
+	localSource := local.Create(database)
+	remoteConfig := config.Remote.GetRemoteSourceSettings()
+	remoteSource := remote.Create(remoteConfig)
+	metricSourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource)
+
+	httpHandler := handler.NewHandler(database, logger, searchIndex, apiConfig, metricSourceProvider, configFile)
 	server := &http.Server{
 		Handler: httpHandler,
 	}

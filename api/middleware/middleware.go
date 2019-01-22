@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/remote"
+	"github.com/moira-alert/moira/metric_source"
 )
 
 // ContextKey used as key of api request context values
@@ -16,19 +16,19 @@ func (key ContextKey) String() string {
 }
 
 var (
-	databaseKey        ContextKey = "database"
-	searcherKey        ContextKey = "searcher"
-	triggerIDKey       ContextKey = "triggerID"
-	contactIDKey       ContextKey = "contactID"
-	tagKey             ContextKey = "tag"
-	subscriptionIDKey  ContextKey = "subscriptionID"
-	pageKey            ContextKey = "page"
-	sizeKey            ContextKey = "size"
-	fromKey            ContextKey = "from"
-	toKey              ContextKey = "to"
-	loginKey           ContextKey = "login"
-	timeSeriesNamesKey ContextKey = "timeSeriesNames"
-	remoteConfigKey    ContextKey = "remoteConfig"
+	databaseKey          ContextKey = "database"
+	searcherKey          ContextKey = "searcher"
+	triggerIDKey         ContextKey = "triggerID"
+	contactIDKey         ContextKey = "contactID"
+	tagKey               ContextKey = "tag"
+	subscriptionIDKey    ContextKey = "subscriptionID"
+	pageKey              ContextKey = "page"
+	sizeKey              ContextKey = "size"
+	fromKey              ContextKey = "from"
+	toKey                ContextKey = "to"
+	loginKey             ContextKey = "login"
+	timeSeriesNamesKey   ContextKey = "timeSeriesNames"
+	metricSourceProvider ContextKey = "metricSourceProvider"
 )
 
 // GetDatabase gets moira.Database realization from request context
@@ -92,7 +92,7 @@ func GetTimeSeriesNames(request *http.Request) map[string]bool {
 	return request.Context().Value(timeSeriesNamesKey).(map[string]bool)
 }
 
-// GetRemoteConfig gets remote config from request context
-func GetRemoteConfig(request *http.Request) *remote.Config {
-	return request.Context().Value(remoteConfigKey).(*remote.Config)
+// GetTriggerTargetsSourceProvider gets trigger targets source provider
+func GetTriggerTargetsSourceProvider(request *http.Request) *metricSource.SourceProvider {
+	return request.Context().Value(metricSourceProvider).(*metricSource.SourceProvider)
 }

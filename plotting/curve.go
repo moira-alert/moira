@@ -4,7 +4,7 @@ import (
 	"math"
 	"time"
 
-	"github.com/go-graphite/carbonapi/expr/types"
+	"github.com/moira-alert/moira/metric_source"
 	"github.com/wcharczuk/go-chart"
 
 	"github.com/moira-alert/moira"
@@ -17,7 +17,7 @@ type plotCurve struct {
 }
 
 // getCurveSeriesList returns curve series list
-func getCurveSeriesList(metricsData []*types.MetricData, theme moira.PlotTheme) []chart.TimeSeries {
+func getCurveSeriesList(metricsData []*metricSource.MetricData, theme moira.PlotTheme) []chart.TimeSeries {
 	curveSeriesList := make([]chart.TimeSeries, 0)
 	for metricDataInd := range metricsData {
 		curveStyle, pointStyle := theme.GetSerieStyles(metricDataInd)
@@ -28,7 +28,7 @@ func getCurveSeriesList(metricsData []*types.MetricData, theme moira.PlotTheme) 
 }
 
 // generatePlotCurves returns go-chart timeseries to generate plot curves
-func generatePlotCurves(metricData *types.MetricData, curveStyle chart.Style, pointStyle chart.Style) []chart.TimeSeries {
+func generatePlotCurves(metricData *metricSource.MetricData, curveStyle chart.Style, pointStyle chart.Style) []chart.TimeSeries {
 	curves := describePlotCurves(metricData)
 	curveSeries := make([]chart.TimeSeries, 0)
 	for _, curve := range curves {
@@ -54,7 +54,7 @@ func generatePlotCurves(metricData *types.MetricData, curveStyle chart.Style, po
 }
 
 // describePlotCurves returns parameters for required curves
-func describePlotCurves(metricData *types.MetricData) []plotCurve {
+func describePlotCurves(metricData *metricSource.MetricData) []plotCurve {
 	curves := []plotCurve{{}}
 	curvesInd := 0
 
@@ -78,7 +78,7 @@ func describePlotCurves(metricData *types.MetricData) []plotCurve {
 }
 
 // resolveFirstPoint returns first point coordinates
-func resolveFirstPoint(metricData *types.MetricData) (int, int64) {
+func resolveFirstPoint(metricData *metricSource.MetricData) (int, int64) {
 	start := 0
 	startTime := metricData.StartTime
 	for _, metricVal := range metricData.Values {

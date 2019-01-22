@@ -10,8 +10,7 @@ import (
 	"github.com/moira-alert/moira/api/middleware"
 	"github.com/moira-alert/moira/checker"
 	"github.com/moira-alert/moira/expression"
-	"github.com/moira-alert/moira/remote"
-	"github.com/moira-alert/moira/target"
+	"github.com/moira-alert/moira/metric_source"
 )
 
 type TriggersList struct {
@@ -130,12 +129,13 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 		Expression:              &trigger.Expression,
 	}
 
-	remoteCfg := middleware.GetRemoteConfig(request)
-	if trigger.IsRemote && !remoteCfg.IsEnabled() {
-		return remote.ErrRemoteStorageDisabled
+	metricsSourceProvider := middleware.GetTriggerTargetsSourceProvider(request)
+	metricsSource, err := metricsSourceProvider.GetMetricSource(trigger.IsRemote)
+	if err != nil {
+		return err
 	}
 
-	if err := resolvePatterns(request, trigger, &triggerExpression); err != nil {
+	if err := resolvePatterns(request, trigger, &triggerExpression, metricsSource); err != nil {
 		return err
 	}
 	if _, err := triggerExpression.Evaluate(); err != nil {
@@ -144,36 +144,26 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 	return nil
 }
 
-func resolvePatterns(request *http.Request, trigger *Trigger, expressionValues *expression.TriggerExpression) error {
+func resolvePatterns(request *http.Request, trigger *Trigger, expressionValues *expression.TriggerExpression, metricsSource metricSource.MetricSource) error {
 	now := time.Now().Unix()
 	targetNum := 1
 	trigger.Patterns = make([]string, 0)
-	timeSeriesNames := make(map[string]bool)
-
-	remoteCfg := middleware.GetRemoteConfig(request)
-	database := middleware.GetDatabase(request)
-	var err error
+	metricsDataNames := make(map[string]bool)
 
 	for _, tar := range trigger.Targets {
-		var timeSeries []*target.TimeSeries
-		if trigger.IsRemote {
-			timeSeries, err = remote.Fetch(remoteCfg, tar, now-600, now, false)
-			if err != nil {
-				return err
-			}
-		} else {
-			result, err := target.EvaluateTarget(database, tar, now-600, now, false)
-			if err != nil {
-				return err
-			}
-			trigger.Patterns = append(trigger.Patterns, result.Patterns...)
-			timeSeries = result.TimeSeries
+		fetchResult, err := metricsSource.Fetch(tar, now-600, now, false)
+		if err != nil {
+			return err
+		}
+		targetPatterns, err := fetchResult.GetPatterns()
+		if err == nil {
+			trigger.Patterns = append(trigger.Patterns, targetPatterns...)
 		}
 
 		if targetNum == 1 {
 			expressionValues.MainTargetValue = 42
-			for _, ts := range timeSeries {
-				timeSeriesNames[ts.Name] = true
+			for _, metricData := range fetchResult.GetMetricsData() {
+				metricsDataNames[metricData.Name] = true
 			}
 		} else {
 			targetName := fmt.Sprintf("t%v", targetNum)
@@ -181,7 +171,7 @@ func resolvePatterns(request *http.Request, trigger *Trigger, expressionValues *
 		}
 		targetNum++
 	}
-	middleware.SetTimeSeriesNames(request, timeSeriesNames)
+	middleware.SetTimeSeriesNames(request, metricsDataNames)
 	return nil
 }
 
