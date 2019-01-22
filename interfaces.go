@@ -119,11 +119,13 @@ type Database interface {
 	FetchTriggersToReindex(from int64) ([]string, error)
 	RemoveTriggersToReindex(to int64) error
 
+	// Creates Lock
 	NewLock(name string, ttl time.Duration) Lock
 }
 
+// Lock implements lock abstraction
 type Lock interface {
-	Acquire(<-chan struct{}) (<-chan struct{}, error)
+	Acquire(stop <-chan struct{}) (lost <-chan struct{}, error error)
 	Release()
 }
 

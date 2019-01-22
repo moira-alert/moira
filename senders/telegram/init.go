@@ -2,22 +2,19 @@ package telegram
 
 import (
 	"fmt"
-	"time"
-
-	"gopkg.in/tucnak/telebot.v2"
-
 	"github.com/moira-alert/moira"
+	"gopkg.in/tucnak/telebot.v2"
+	"time"
 )
 
 const telegramLockName = "moira-telegram-users:moira-bot-host"
 const messenger = "telegram"
 
 var (
-	telegramMessageLimit    = 4096
-	pollerTimeout           = 10 * time.Second
-	telegramLockTTL         = 30 * time.Second
-	singlePollerStateExpiry = time.Minute
-	emojiStates             = map[string]string{
+	telegramMessageLimit = 4096
+	pollerTimeout        = 10 * time.Second
+	telegramLockTTL      = 30 * time.Second
+	emojiStates          = map[string]string{
 		"OK":     "\xe2\x9c\x85",
 		"WARN":   "\xe2\x9a\xa0",
 		"ERROR":  "\xe2\xad\x95",
