@@ -59,7 +59,6 @@ func NewDatabase(logger moira.Logger, config Config, source DBSource) *DbConnect
 		retentionCache:       cache.New(cacheValueExpirationDuration, cacheCleanupInterval),
 		retentionSavingCache: cache.New(cache.NoExpiration, cache.DefaultExpiration),
 		metricsCache:         cache.New(cacheValueExpirationDuration, cacheCleanupInterval),
-		servicesCache:        cache.New(cacheValueExpirationDuration, cacheCleanupInterval),
 		sync:                 redsync.New([]redsync.Pool{pool}),
 		source:               source,
 	}
@@ -216,4 +215,22 @@ func (connector *DbConnector) flush() {
 	c := connector.pool.Get()
 	defer c.Close()
 	c.Do("FLUSHDB")
+}
+
+// GET KEY TTL! USE IT ONLY FOR TESTING!!!
+func (connector *DbConnector) getTTL(key string) int {
+	c := connector.pool.Get()
+	defer c.Close()
+	ttl, err := redis.Int(c.Do("PTTL", key))
+	if err != nil {
+		return 0
+	}
+	return ttl
+}
+
+// DELETE KEY! USE IT ONLY FOR TESTING!!!
+func (connector *DbConnector) delete(key string) {
+	c := connector.pool.Get()
+	defer c.Close()
+	c.Do("DEL", key)
 }

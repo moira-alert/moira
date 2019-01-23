@@ -1,7 +1,6 @@
 package redis
 
 import (
-	"fmt"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
 	"gopkg.in/redsync.v1"
@@ -32,21 +31,24 @@ func (lock *Lock) Acquire(stop <-chan struct{}) (<-chan struct{}, error) {
 
 	for {
 		lost, err := lock.tryAcquire()
-
-		if err != nil {
-			select {
-			case <-stop:
-				{
-					return nil, database.ErrLockAcquireInterrupted
-				}
-			case <-time.After(lock.ttl / 3):
-				{
-					continue
-				}
-			}
+		if err == nil {
+			return lost, nil
 		}
 
-		return lost, nil
+		if err == database.ErrLockAlreadyHeld {
+			return nil, database.ErrLockAlreadyHeld
+		}
+
+		select {
+		case <-stop:
+			{
+				return nil, database.ErrLockAcquireInterrupted
+			}
+		case <-time.After(lock.ttl / 3):
+			{
+				continue
+			}
+		}
 	}
 }
 
@@ -73,7 +75,7 @@ func (lock *Lock) tryAcquire() (<-chan struct{}, error) {
 	}
 
 	if err := lock.mutex.Lock(); err != nil {
-		return nil, fmt.Errorf("lock was not acquired")
+		return nil, database.ErrLockNotAcquired
 	}
 
 	lost := make(chan struct{})
@@ -91,9 +93,7 @@ func extendMutex(mutex *redsync.Mutex, ttl time.Duration, done chan struct{}, st
 	for {
 		select {
 		case <-stop:
-			{
-				return
-			}
+			return
 		case <-extendTicker.C:
 			if !mutex.Extend() {
 				return
