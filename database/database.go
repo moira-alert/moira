@@ -10,6 +10,6 @@ var (
 	ErrLockAlreadyHeld = fmt.Errorf("lock was already held")
 	// ErrLockAcquireInterrupted is returned if we cancel the acquire
 	ErrLockAcquireInterrupted = fmt.Errorf("lock's request was interrupted")
-	// ErrLockAcquireInterrupted if we cannot acquire
+	// ErrLockNotAcquired if we cannot acquire
 	ErrLockNotAcquired = fmt.Errorf("lock was not acquired")
 )

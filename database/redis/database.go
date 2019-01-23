@@ -45,7 +45,6 @@ type DbConnector struct {
 	retentionCache       *cache.Cache
 	retentionSavingCache *cache.Cache
 	metricsCache         *cache.Cache
-	servicesCache        *cache.Cache
 	sync                 *redsync.Redsync
 	source               DBSource
 }
