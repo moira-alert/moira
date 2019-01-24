@@ -134,6 +134,7 @@ func (notifier *StandardNotifier) evaluateTriggerMetrics(from, to int64, trigger
 
 // fetchAvailableSeries calls fetch function with realtime alerting and retries on fail without
 func fetchAvailableSeries(metricsSource metricSource.MetricSource, target string, from, to int64) ([]*metricSource.MetricData, error) {
+	from -= from % 60
 	realtimeFetchResult, realtimeErr := metricsSource.Fetch(target, from, to, true)
 	switch realtimeErr.(type) {
 	case local.ErrEvaluateTargetFailedWithPanic:
