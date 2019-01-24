@@ -34,16 +34,19 @@ type SelfCheckWorker struct {
 	tomb     tomb.Tomb
 }
 
-// Start self check worker
-func (selfCheck *SelfCheckWorker) Start() error {
+func (selfCheck *SelfCheckWorker) selfStateChecker(stop <-chan struct{}) {
 	if !selfCheck.Config.Enabled {
 		selfCheck.Log.Debugf("Moira Self State Monitoring disabled")
-		return nil
+		return
 	}
 	senders := selfCheck.Notifier.GetSenders()
 	if err := selfCheck.Config.checkConfig(senders); err != nil {
-		return fmt.Errorf("can't configure self state monitor: %s", err.Error())
+		selfCheck.Log.Errorf("Can't configure Moira Self State Monitoring: %s", err.Error())
+		return
 	}
+
+	selfCheck.Log.Info("Moira Notifier Self State Monitor Started")
+
 	var metricsCount, checksCount, remoteChecksCount int64
 	lastMetricReceivedTS := time.Now().Unix()
 	redisLastCheckTS := time.Now().Unix()
@@ -51,41 +54,46 @@ func (selfCheck *SelfCheckWorker) Start() error {
 	lastRemoteCheckTS := time.Now().Unix()
 	nextSendErrorMessage := time.Now().Unix()
 
+	checkTicker := time.NewTicker(defaultCheckInterval)
+	defer checkTicker.Stop()
+
+	for {
+		select {
+		case <-stop:
+			selfCheck.Log.Info("Moira Notifier Self State Monitor Stopped")
+			return
+		case <-checkTicker.C:
+			selfCheck.check(time.Now().Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS, &lastRemoteCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount, &remoteChecksCount)
+		}
+	}
+}
+
+// Start self check worker
+func (selfCheck *SelfCheckWorker) Start() error {
 	selfCheck.tomb.Go(func() error {
 		lock := selfCheck.DB.NewLock(selfStateLockName, selfStateLockTTL)
 		for {
-Reacquire:
 			lost, err := lock.Acquire(selfCheck.tomb.Dying())
-			if err != nil {
-				if err == database.ErrLockAcquireInterrupted {
-					return nil
-				}
-
-				selfCheck.Log.Warningf("Could not acquire lock for self state monitor, err %s", err)
-				continue
-			}
-
-			checkTicker := time.NewTicker(defaultCheckInterval)
-			for {
+			if err == nil {
+				stop := make(chan struct{})
+				go selfCheck.selfStateChecker(stop)
 				select {
 				case <-lost:
-					checkTicker.Stop()
-					lock.Release()
-					selfCheck.Log.Info("Moira Notifier Self State Monitor Stopped")
-					goto Reacquire
+					close(stop)
 				case <-selfCheck.tomb.Dying():
-					checkTicker.Stop()
-					lock.Release()
-					selfCheck.Log.Info("Moira Notifier Self State Monitor Stopped")
+					close(stop)
 					return nil
-				case <-checkTicker.C:
-					selfCheck.check(time.Now().Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS, &lastRemoteCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount, &remoteChecksCount)
 				}
+				continue
 			}
+			if err == database.ErrLockAcquireInterrupted {
+				return nil
+			}
+
+			selfCheck.Log.Warningf("Could not acquire lock for Moira Notifier Self State Monitor , err %s", err)
 		}
 	})
 
-	selfCheck.Log.Info("Moira Notifier Self State Monitor Started")
 	return nil
 }
 
