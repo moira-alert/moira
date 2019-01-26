@@ -28,22 +28,7 @@ func (triggerChecker *TriggerChecker) Check() error {
 }
 
 func (triggerChecker *TriggerChecker) handleMetricsCheck() (moira.CheckData, error) {
-	lastMetrics := make(map[string]moira.MetricState, len(triggerChecker.lastCheck.Metrics))
-	for k, v := range triggerChecker.lastCheck.Metrics {
-		lastMetrics[k] = v
-	}
-	checkData := moira.CheckData{
-		Metrics:                      lastMetrics,
-		State:                        triggerChecker.lastCheck.State,
-		Timestamp:                    triggerChecker.Until,
-		EventTimestamp:               triggerChecker.lastCheck.EventTimestamp,
-		Maintenance:                  triggerChecker.lastCheck.Maintenance,
-		Score:                        triggerChecker.lastCheck.Score,
-		Suppressed:                   triggerChecker.lastCheck.Suppressed,
-		SuppressedState:              triggerChecker.lastCheck.SuppressedState,
-		LastSuccessfulCheckTimestamp: triggerChecker.lastCheck.LastSuccessfulCheckTimestamp,
-	}
-
+	checkData := copyLastCheck(triggerChecker.lastCheck, triggerChecker.Until)
 	triggerMetricsData, metrics, err := triggerChecker.getFetchResult()
 	if err != nil {
 		return checkData, err
@@ -57,7 +42,27 @@ func (triggerChecker *TriggerChecker) handleMetricsCheck() (moira.CheckData, err
 	if triggerMetricsData.HasOnlyWildcards() {
 		return checkData, ErrTriggerHasOnlyWildcards{}
 	}
+	return triggerChecker.checkTriggerTimeSeries(triggerMetricsData, checkData)
+}
 
+func copyLastCheck(lastCheck *moira.CheckData, checkTimeStamp int64) moira.CheckData {
+	lastMetrics := make(map[string]moira.MetricState, len(lastCheck.Metrics))
+	for k, v := range lastCheck.Metrics {
+		lastMetrics[k] = v
+	}
+	return moira.CheckData{
+		Metrics:                      lastMetrics,
+		State:                        lastCheck.State,
+		Timestamp:                    checkTimeStamp,
+		EventTimestamp:               lastCheck.EventTimestamp,
+		Score:                        lastCheck.Score,
+		Suppressed:                   lastCheck.Suppressed,
+		SuppressedState:              lastCheck.SuppressedState,
+		LastSuccessfulCheckTimestamp: lastCheck.LastSuccessfulCheckTimestamp,
+	}
+}
+
+func (triggerChecker *TriggerChecker) checkTriggerTimeSeries(triggerMetricsData *metricSource.TriggerMetricsData, checkData moira.CheckData) (moira.CheckData, error) {
 	timeSeriesNamesHash := make(map[string]bool, len(triggerMetricsData.Main))
 	duplicateNamesHash := make(map[string]bool)
 
