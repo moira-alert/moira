@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/gofrs/uuid"
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/mock/moira-alert"
-	"github.com/satori/go.uuid"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -32,7 +32,7 @@ func TestCreateTrigger(t *testing.T) {
 	})
 
 	Convey("Success with triggerID", t, func() {
-		triggerID := uuid.NewV4().String()
+		triggerID := uuid.Must(uuid.NewV4()).String()
 		triggerModel := dto.TriggerModel{ID: triggerID}
 		dataBase.EXPECT().GetTrigger(triggerModel.ID).Return(moira.Trigger{}, database.ErrNil)
 		dataBase.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 10)
@@ -47,7 +47,7 @@ func TestCreateTrigger(t *testing.T) {
 	})
 
 	Convey("Trigger already exists", t, func() {
-		triggerModel := dto.TriggerModel{ID: uuid.NewV4().String()}
+		triggerModel := dto.TriggerModel{ID: uuid.Must(uuid.NewV4()).String()}
 		trigger := triggerModel.ToMoiraTrigger()
 		dataBase.EXPECT().GetTrigger(triggerModel.ID).Return(*trigger, nil)
 		resp, err := CreateTrigger(dataBase, &triggerModel, make(map[string]bool))
@@ -56,7 +56,7 @@ func TestCreateTrigger(t *testing.T) {
 	})
 
 	Convey("Get trigger error", t, func() {
-		trigger := dto.TriggerModel{ID: uuid.NewV4().String()}
+		trigger := dto.TriggerModel{ID: uuid.Must(uuid.NewV4()).String()}
 		expected := fmt.Errorf("soo bad trigger")
 		dataBase.EXPECT().GetTrigger(trigger.ID).Return(moira.Trigger{}, expected)
 		resp, err := CreateTrigger(dataBase, &trigger, make(map[string]bool))
@@ -65,7 +65,7 @@ func TestCreateTrigger(t *testing.T) {
 	})
 
 	Convey("Error", t, func() {
-		triggerModel := dto.TriggerModel{ID: uuid.NewV4().String()}
+		triggerModel := dto.TriggerModel{ID: uuid.Must(uuid.NewV4()).String()}
 		expected := fmt.Errorf("soo bad trigger")
 		dataBase.EXPECT().GetTrigger(triggerModel.ID).Return(moira.Trigger{}, database.ErrNil)
 		dataBase.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 10)
@@ -85,7 +85,7 @@ func TestGetAllTriggers(t *testing.T) {
 	mockDatabase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 	Convey("Has triggers", t, func() {
-		triggerIDs := []string{uuid.NewV4().String(), uuid.NewV4().String()}
+		triggerIDs := []string{uuid.Must(uuid.NewV4()).String(), uuid.Must(uuid.NewV4()).String()}
 		triggers := []*moira.TriggerCheck{{Trigger: moira.Trigger{ID: triggerIDs[0]}}, {Trigger: moira.Trigger{ID: triggerIDs[1]}}}
 		triggersList := []moira.TriggerCheck{{Trigger: moira.Trigger{ID: triggerIDs[0]}}, {Trigger: moira.Trigger{ID: triggerIDs[1]}}}
 		mockDatabase.EXPECT().GetAllTriggerIDs().Return(triggerIDs, nil)

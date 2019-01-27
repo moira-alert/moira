@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
@@ -12,7 +13,6 @@ import (
 	"github.com/moira-alert/moira/checker"
 	"github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/mock/moira-alert"
-	"github.com/satori/go.uuid"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -22,7 +22,7 @@ func TestUpdateTrigger(t *testing.T) {
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 	Convey("Success update", t, func() {
-		triggerModel := dto.TriggerModel{ID: uuid.NewV4().String()}
+		triggerModel := dto.TriggerModel{ID: uuid.Must(uuid.NewV4()).String()}
 		trigger := triggerModel.ToMoiraTrigger()
 		dataBase.EXPECT().GetTrigger(triggerModel.ID).Return(*trigger, nil)
 		dataBase.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 10)
@@ -36,7 +36,7 @@ func TestUpdateTrigger(t *testing.T) {
 	})
 
 	Convey("Trigger does not exists", t, func() {
-		trigger := dto.TriggerModel{ID: uuid.NewV4().String()}
+		trigger := dto.TriggerModel{ID: uuid.Must(uuid.NewV4()).String()}
 		dataBase.EXPECT().GetTrigger(trigger.ID).Return(moira.Trigger{}, database.ErrNil)
 		resp, err := UpdateTrigger(dataBase, &trigger, trigger.ID, make(map[string]bool))
 		So(err, ShouldResemble, api.ErrorNotFound(fmt.Sprintf("trigger with ID = '%s' does not exists", trigger.ID)))
@@ -44,7 +44,7 @@ func TestUpdateTrigger(t *testing.T) {
 	})
 
 	Convey("Get trigger error", t, func() {
-		trigger := dto.TriggerModel{ID: uuid.NewV4().String()}
+		trigger := dto.TriggerModel{ID: uuid.Must(uuid.NewV4()).String()}
 		expected := fmt.Errorf("soo bad trigger")
 		dataBase.EXPECT().GetTrigger(trigger.ID).Return(moira.Trigger{}, expected)
 		resp, err := UpdateTrigger(dataBase, &trigger, trigger.ID, make(map[string]bool))
@@ -57,7 +57,7 @@ func TestSaveTrigger(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-	triggerID := uuid.NewV4().String()
+	triggerID := uuid.Must(uuid.NewV4()).String()
 	trigger := moira.Trigger{ID: triggerID}
 	lastCheck := moira.CheckData{
 		Metrics: map[string]moira.MetricState{
@@ -158,7 +158,7 @@ func TestVariousTtlState(t *testing.T) {
 
 	var ttlState string
 
-	triggerID := uuid.NewV4().String()
+	triggerID := uuid.Must(uuid.NewV4()).String()
 	trigger := moira.Trigger{ID: triggerID, TTLState: &ttlState}
 	lastCheck := moira.CheckData{
 		Metrics: make(map[string]moira.MetricState),
@@ -248,7 +248,7 @@ func TestGetTrigger(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-	triggerID := uuid.NewV4().String()
+	triggerID := uuid.Must(uuid.NewV4()).String()
 	triggerModel := dto.TriggerModel{ID: triggerID}
 	trigger := *(triggerModel.ToMoiraTrigger())
 	beginning := time.Unix(0, 0)
@@ -300,7 +300,7 @@ func TestRemoveTrigger(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-	triggerID := uuid.NewV4().String()
+	triggerID := uuid.Must(uuid.NewV4()).String()
 
 	Convey("Success", t, func() {
 		dataBase.EXPECT().RemoveTrigger(triggerID).Return(nil)
@@ -329,7 +329,7 @@ func TestGetTriggerThrottling(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-	triggerID := uuid.NewV4().String()
+	triggerID := uuid.Must(uuid.NewV4()).String()
 	begging := time.Unix(0, 0)
 	now := time.Now()
 	tomorrow := now.Add(time.Hour * 24)
@@ -361,7 +361,7 @@ func TestGetTriggerLastCheck(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-	triggerID := uuid.NewV4().String()
+	triggerID := uuid.Must(uuid.NewV4()).String()
 	lastCheck := moira.CheckData{}
 
 	Convey("Success", t, func() {
@@ -387,7 +387,7 @@ func TestDeleteTriggerThrottling(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-	triggerID := uuid.NewV4().String()
+	triggerID := uuid.Must(uuid.NewV4()).String()
 
 	Convey("Success", t, func() {
 		dataBase.EXPECT().DeleteTriggerThrottling(triggerID).Return(nil)
@@ -411,7 +411,7 @@ func TestSetTriggerMaintenance(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-	triggerID := uuid.NewV4().String()
+	triggerID := uuid.Must(uuid.NewV4()).String()
 	metricsMaintenance := dto.MetricsMaintenance{
 		"Metric1": 12345,
 		"Metric2": 12346,

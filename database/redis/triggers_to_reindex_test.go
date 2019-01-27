@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/moira-alert/moira/logging/go-logging"
-	"github.com/satori/go.uuid"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -26,9 +26,9 @@ func TestTriggersToReindex(t *testing.T) {
 	})
 
 	Convey("Trigger to update add and fetch", t, func() {
-		triggerID1 := uuid.NewV4().String()
-		triggerID2 := uuid.NewV4().String()
-		triggerID3 := uuid.NewV4().String()
+		triggerID1 := uuid.Must(uuid.NewV4()).String()
+		triggerID2 := uuid.Must(uuid.NewV4()).String()
+		triggerID3 := uuid.Must(uuid.NewV4()).String()
 
 		actual, err := dataBase.FetchTriggersToReindex(time.Now().Unix())
 		So(err, ShouldBeNil)

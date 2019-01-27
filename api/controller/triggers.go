@@ -3,7 +3,7 @@ package controller
 import (
 	"fmt"
 
-	"github.com/satori/go.uuid"
+	"github.com/gofrs/uuid"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
@@ -14,7 +14,11 @@ import (
 // CreateTrigger creates new trigger
 func CreateTrigger(dataBase moira.Database, trigger *dto.TriggerModel, timeSeriesNames map[string]bool) (*dto.SaveTriggerResponse, *api.ErrorResponse) {
 	if trigger.ID == "" {
-		trigger.ID = uuid.NewV4().String()
+		uuid4, err := uuid.NewV4()
+		if err != nil {
+			return nil, api.ErrorInternalServer(err)
+		}
+		trigger.ID = uuid4.String()
 	} else {
 		exists, err := triggerExists(dataBase, trigger.ID)
 		if err != nil {
