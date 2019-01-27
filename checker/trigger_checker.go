@@ -95,17 +95,13 @@ func getLastCheck(dataBase moira.Database, triggerID string, emptyLastCheckTimes
 func getTTLState(triggerTTLState *string) string {
 	if triggerTTLState != nil {
 		return *triggerTTLState
-	} else {
-		return NODATA
 	}
+	return NODATA
 }
 
 func calculateFrom(lastCheckTimestamp, triggerTTL int64) int64 {
-	from := lastCheckTimestamp
 	if triggerTTL != 0 {
-		from = from - triggerTTL
-	} else {
-		from = from - 600
+		return lastCheckTimestamp - triggerTTL
 	}
-	return from
+	return lastCheckTimestamp - 600
 }
