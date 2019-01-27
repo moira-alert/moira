@@ -10,11 +10,11 @@ import (
 // ErrTriggerNotExists used if trigger to check does not exists
 var ErrTriggerNotExists = fmt.Errorf("trigger does not exists")
 
-// ErrTriggerHasNoTimeSeries used if trigger has no metrics
-type ErrTriggerHasNoTimeSeries struct{}
+// ErrTriggerHasNoMetrics used if trigger has no metrics
+type ErrTriggerHasNoMetrics struct{}
 
-// ErrTriggerHasNoTimeSeries implementation with constant error message
-func (err ErrTriggerHasNoTimeSeries) Error() string {
+// ErrTriggerHasNoMetrics implementation with constant error message
+func (err ErrTriggerHasNoMetrics) Error() string {
 	return fmt.Sprintf("Trigger has no metrics, check your target")
 }
 
@@ -26,23 +26,23 @@ func (err ErrTriggerHasOnlyWildcards) Error() string {
 	return fmt.Sprintf("Trigger never received metrics")
 }
 
-// ErrTriggerHasSameTimeSeriesNames used if trigger has two timeseries with same name
-type ErrTriggerHasSameTimeSeriesNames struct {
+// ErrTriggerHasSameMetricNames used if trigger has two timeseries with same name
+type ErrTriggerHasSameMetricNames struct {
 	names []string
 }
 
-// ErrTriggerHasSameTimeSeriesNames implementation with constant error message
-func (err ErrTriggerHasSameTimeSeriesNames) Error() string {
+// ErrTriggerHasSameMetricNames implementation with constant error message
+func (err ErrTriggerHasSameMetricNames) Error() string {
 	return fmt.Sprintf("Trigger has same timeseries names: %s", strings.Join(err.names, ", "))
 }
 
-// ErrTargetHasNoTimeSeries used if additional trigger target has not metrics data after fetch from source
-type ErrTargetHasNoTimeSeries struct {
+// ErrTargetHasNoMetrics used if additional trigger target has not metrics data after fetch from source
+type ErrTargetHasNoMetrics struct {
 	targetIndex int
 }
 
-// ErrTargetHasNoTimeSeries implementation with constant error message
-func (err ErrTargetHasNoTimeSeries) Error() string {
+// ErrTargetHasNoMetrics implementation with constant error message
+func (err ErrTargetHasNoMetrics) Error() string {
 	return fmt.Sprintf("target t%v has no timeseries", err.targetIndex+1)
 }
 
