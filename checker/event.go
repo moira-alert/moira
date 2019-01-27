@@ -47,7 +47,7 @@ func (triggerChecker *TriggerChecker) compareTriggerStates(currentCheck moira.Ch
 
 	event := moira.NotificationEvent{
 		IsTriggerEvent: true,
-		TriggerID:      triggerChecker.TriggerID,
+		TriggerID:      triggerChecker.triggerID,
 		State:          currentStateValue,
 		OldState:       eventOldState,
 		Timestamp:      timestamp,
@@ -67,8 +67,8 @@ func (triggerChecker *TriggerChecker) compareTriggerStates(currentCheck moira.Ch
 	}
 
 	currentCheck.SuppressedState = ""
-	triggerChecker.Logger.Debugf("Writing new event: %v", event)
-	err := triggerChecker.Database.PushNotificationEvent(&event, true)
+	triggerChecker.logger.Debugf("Writing new event: %v", event)
+	err := triggerChecker.database.PushNotificationEvent(&event, true)
 	return currentCheck, err
 }
 
@@ -96,7 +96,7 @@ func (triggerChecker *TriggerChecker) compareMetricStates(metric string, current
 	}
 
 	event := moira.NotificationEvent{
-		TriggerID: triggerChecker.TriggerID,
+		TriggerID: triggerChecker.triggerID,
 		State:     currentState.State,
 		OldState:  eventOldState,
 		Timestamp: currentState.Timestamp,
@@ -117,23 +117,23 @@ func (triggerChecker *TriggerChecker) compareMetricStates(metric string, current
 	}
 
 	currentState.SuppressedState = ""
-	triggerChecker.Logger.Debugf("Writing new event: %v", event)
-	err := triggerChecker.Database.PushNotificationEvent(&event, true)
+	triggerChecker.logger.Debugf("Writing new event: %v", event)
+	err := triggerChecker.database.PushNotificationEvent(&event, true)
 	return currentState, err
 }
 
 func (triggerChecker *TriggerChecker) isTriggerSuppressed(event *moira.NotificationEvent, timestamp int64, metricMaintenance int64, triggerMaintenance int64, metric string) bool {
 	if !triggerChecker.trigger.Schedule.IsScheduleAllows(timestamp) {
-		triggerChecker.Logger.Debugf("Event %v suppressed due to trigger schedule", event)
+		triggerChecker.logger.Debugf("Event %v suppressed due to trigger schedule", event)
 		return true
 	}
 	// We must always check triggerMaintenance along with metricMaintenance to avoid cases when metric is not suppressed, but trigger is.
 	if triggerMaintenance >= timestamp {
-		triggerChecker.Logger.Debugf("Event %v suppressed due to trigger %s maintenance until %v.", event, triggerChecker.trigger.ID, time.Unix(triggerMaintenance, 0))
+		triggerChecker.logger.Debugf("Event %v suppressed due to trigger %s maintenance until %v.", event, triggerChecker.trigger.ID, time.Unix(triggerMaintenance, 0))
 		return true
 	}
 	if metricMaintenance >= timestamp {
-		triggerChecker.Logger.Debugf("Event %v suppressed due to metric %s maintenance until %v.", event, metric, time.Unix(metricMaintenance, 0))
+		triggerChecker.logger.Debugf("Event %v suppressed due to metric %s maintenance until %v.", event, metric, time.Unix(metricMaintenance, 0))
 		return true
 	}
 	return false

@@ -15,7 +15,7 @@ var (
 
 // Check handle trigger and last check and write new state of trigger, if state were change then write new NotificationEvent
 func (triggerChecker *TriggerChecker) Check() error {
-	triggerChecker.Logger.Debugf("Checking trigger %s", triggerChecker.TriggerID)
+	triggerChecker.logger.Debugf("Checking trigger %s", triggerChecker.triggerID)
 	checkData, err := triggerChecker.handleMetricsCheck()
 
 	checkData, err = triggerChecker.handleTriggerCheck(checkData, err)
@@ -24,16 +24,16 @@ func (triggerChecker *TriggerChecker) Check() error {
 	}
 
 	checkData.UpdateScore()
-	return triggerChecker.Database.SetTriggerLastCheck(triggerChecker.TriggerID, &checkData, triggerChecker.trigger.IsRemote)
+	return triggerChecker.database.SetTriggerLastCheck(triggerChecker.triggerID, &checkData, triggerChecker.trigger.IsRemote)
 }
 
 func (triggerChecker *TriggerChecker) handleMetricsCheck() (moira.CheckData, error) {
-	checkData := copyLastCheck(triggerChecker.lastCheck, triggerChecker.Until)
+	checkData := copyLastCheck(triggerChecker.lastCheck, triggerChecker.until)
 	triggerMetricsData, metrics, err := triggerChecker.getFetchResult()
 	if err != nil {
 		return checkData, err
 	}
-	triggerChecker.cleanupMetricsValues(metrics, triggerChecker.Until)
+	triggerChecker.cleanupMetricsValues(metrics, triggerChecker.until)
 
 	if len(triggerMetricsData.Main) == 0 {
 		return checkData, ErrTriggerHasNoTimeSeries{}
@@ -66,14 +66,14 @@ func (triggerChecker *TriggerChecker) checkTriggerTimeSeries(triggerMetricsData 
 	metricsDataToCheck, duplicateError := triggerChecker.getMetricsDataToCheck(triggerMetricsData.Main)
 
 	for _, metricData := range metricsDataToCheck {
-		triggerChecker.Logger.Debugf("[TriggerID:%s] Checking metricData %s: %v", triggerChecker.TriggerID, metricData.Name, metricData.Values)
-		triggerChecker.Logger.Debugf("[TriggerID:%s][TimeSeries:%s] Checking interval: %v - %v (%vs), step: %v", triggerChecker.TriggerID, metricData.Name, metricData.StartTime, metricData.StopTime, metricData.StepTime, metricData.StopTime-metricData.StartTime)
+		triggerChecker.logger.Debugf("[TriggerID:%s] Checking metricData %s: %v", triggerChecker.triggerID, metricData.Name, metricData.Values)
+		triggerChecker.logger.Debugf("[TriggerID:%s][TimeSeries:%s] Checking interval: %v - %v (%vs), step: %v", triggerChecker.triggerID, metricData.Name, metricData.StartTime, metricData.StopTime, metricData.StepTime, metricData.StopTime-metricData.StartTime)
 
 		metricState, needToDeleteMetric, err := triggerChecker.checkTimeSeries(metricData, triggerMetricsData)
 		if needToDeleteMetric {
-			triggerChecker.Logger.Infof("[TriggerID:%s] Remove metric: '%s'", triggerChecker.TriggerID, metricData.Name)
+			triggerChecker.logger.Infof("[TriggerID:%s] Remove metric: '%s'", triggerChecker.triggerID, metricData.Name)
 			delete(checkData.Metrics, metricData.Name)
-			err = triggerChecker.Database.RemovePatternsMetrics(triggerChecker.trigger.Patterns)
+			err = triggerChecker.database.RemovePatternsMetrics(triggerChecker.trigger.Patterns)
 		} else {
 			checkData.Metrics[metricData.Name] = metricState
 		}
@@ -95,7 +95,7 @@ func (triggerChecker *TriggerChecker) getMetricsDataToCheck(fetchedMetrics []*me
 
 	for _, metricData := range fetchedMetrics {
 		if _, ok := timeSeriesNamesHash[metricData.Name]; ok {
-			triggerChecker.Logger.Debugf("[TriggerID:%s][TimeSeries:%s] Trigger has same timeseries names", triggerChecker.TriggerID, metricData.Name)
+			triggerChecker.logger.Debugf("[TriggerID:%s][TimeSeries:%s] Trigger has same timeseries names", triggerChecker.triggerID, metricData.Name)
 			duplicateNames = append(duplicateNames, metricData.Name)
 			continue
 		}
@@ -109,7 +109,7 @@ func (triggerChecker *TriggerChecker) getMetricsDataToCheck(fetchedMetrics []*me
 		if len(fetchedMetrics) > 0 {
 			step = fetchedMetrics[0].StepTime
 		}
-		metricData := metricSource.MakeEmptyMetricData(metricName, step, triggerChecker.From, triggerChecker.Until)
+		metricData := metricSource.MakeEmptyMetricData(metricName, step, triggerChecker.from, triggerChecker.until)
 		metricsToCheck = append(metricsToCheck, metricData)
 	}
 
@@ -154,7 +154,7 @@ func (triggerChecker *TriggerChecker) handleTriggerCheck(checkData moira.CheckDa
 
 	switch checkingError.(type) {
 	case ErrTriggerHasNoTimeSeries, ErrTriggerHasOnlyWildcards:
-		triggerChecker.Logger.Debugf("Trigger %s: %s", triggerChecker.TriggerID, checkingError.Error())
+		triggerChecker.logger.Debugf("Trigger %s: %s", triggerChecker.triggerID, checkingError.Error())
 		triggerState := ToTriggerState(triggerChecker.ttlState)
 		if len(checkData.Metrics) == 0 {
 			checkData.State = triggerState
@@ -172,14 +172,14 @@ func (triggerChecker *TriggerChecker) handleTriggerCheck(checkData moira.CheckDa
 			checkData.State = EXCEPTION
 			checkData.Message = fmt.Sprintf("Remote server unavailable. Trigger is not checked for %d seconds", timeSinceLastSuccessfulCheck)
 		}
-		triggerChecker.Logger.Errorf("Trigger %s: %s", triggerChecker.TriggerID, checkingError.Error())
+		triggerChecker.logger.Errorf("Trigger %s: %s", triggerChecker.triggerID, checkingError.Error())
 	case local.ErrUnknownFunction, local.ErrEvalExpr:
 		checkData.State = EXCEPTION
 		checkData.Message = checkingError.Error()
-		triggerChecker.Logger.Warningf("Trigger %s: %s", triggerChecker.TriggerID, checkingError.Error())
+		triggerChecker.logger.Warningf("Trigger %s: %s", triggerChecker.triggerID, checkingError.Error())
 	default:
-		triggerChecker.Metrics.CheckError.Mark(1)
-		triggerChecker.Logger.Errorf("Trigger %s check failed: %s", triggerChecker.TriggerID, checkingError.Error())
+		triggerChecker.metrics.CheckError.Mark(1)
+		triggerChecker.logger.Errorf("Trigger %s check failed: %s", triggerChecker.triggerID, checkingError.Error())
 	}
 	return triggerChecker.compareTriggerStates(checkData)
 }
@@ -193,7 +193,7 @@ func (triggerChecker *TriggerChecker) checkForNoData(metricData *metricSource.Me
 	if metricLastState.Timestamp+triggerChecker.ttl >= lastCheckTimeStamp {
 		return false, nil
 	}
-	triggerChecker.Logger.Debugf("[TriggerID:%s][TimeSeries:%s] Metric TTL expired for state %v", triggerChecker.TriggerID, metricData.Name, metricLastState)
+	triggerChecker.logger.Debugf("[TriggerID:%s][TimeSeries:%s] Metric TTL expired for state %v", triggerChecker.triggerID, metricData.Name, metricLastState)
 	if triggerChecker.ttlState == DEL && metricLastState.EventTimestamp != 0 {
 		return true, nil
 	}
@@ -211,11 +211,11 @@ func (triggerChecker *TriggerChecker) getTimeSeriesStepsStates(triggerMetricsDat
 	stepTime := metricData.StepTime
 
 	checkPoint := metricLastState.GetCheckPoint(checkPointGap)
-	triggerChecker.Logger.Debugf("[TriggerID:%s][TimeSeries:%s] Checkpoint: %v", triggerChecker.TriggerID, metricData.Name, checkPoint)
+	triggerChecker.logger.Debugf("[TriggerID:%s][TimeSeries:%s] Checkpoint: %v", triggerChecker.triggerID, metricData.Name, checkPoint)
 
 	metricStates := make([]moira.MetricState, 0)
 
-	for valueTimestamp := startTime; valueTimestamp < triggerChecker.Until+stepTime; valueTimestamp += stepTime {
+	for valueTimestamp := startTime; valueTimestamp < triggerChecker.until+stepTime; valueTimestamp += stepTime {
 		metricNewState, err := triggerChecker.getTimeSeriesState(triggerMetricsData, metricData, metricLastState, valueTimestamp, checkPoint)
 		if err != nil {
 			return nil, err
@@ -237,7 +237,7 @@ func (triggerChecker *TriggerChecker) getTimeSeriesState(triggerMetricsData *met
 	if !noEmptyValues {
 		return nil, nil
 	}
-	triggerChecker.Logger.Debugf("[TriggerID:%s][TimeSeries:%s] Values for ts %v: MainTargetValue: %v, additionalTargetValues: %v", triggerChecker.TriggerID, metricData.Name, valueTimestamp, triggerExpression.MainTargetValue, triggerExpression.AdditionalTargetsValues)
+	triggerChecker.logger.Debugf("[TriggerID:%s][TimeSeries:%s] Values for ts %v: MainTargetValue: %v, additionalTargetValues: %v", triggerChecker.triggerID, metricData.Name, valueTimestamp, triggerExpression.MainTargetValue, triggerExpression.AdditionalTargetsValues)
 
 	triggerExpression.WarnValue = triggerChecker.trigger.WarnValue
 	triggerExpression.ErrorValue = triggerChecker.trigger.ErrorValue
@@ -261,8 +261,8 @@ func (triggerChecker *TriggerChecker) getTimeSeriesState(triggerMetricsData *met
 
 func (triggerChecker *TriggerChecker) cleanupMetricsValues(metrics []string, until int64) {
 	if len(metrics) > 0 {
-		if err := triggerChecker.Database.RemoveMetricsValues(metrics, until-triggerChecker.Config.MetricsTTLSeconds); err != nil {
-			triggerChecker.Logger.Error(err.Error())
+		if err := triggerChecker.database.RemoveMetricsValues(metrics, until-triggerChecker.config.MetricsTTLSeconds); err != nil {
+			triggerChecker.logger.Error(err.Error())
 		}
 	}
 }

@@ -40,10 +40,10 @@ func TestGetTimeSeries(t *testing.T) {
 	var retention int64 = 10
 
 	triggerChecker := &TriggerChecker{
-		Database: dataBase,
-		Source:   source,
-		From:     from,
-		Until:    until,
+		database: dataBase,
+		source:   source,
+		from:     from,
+		until:    until,
 		trigger: &moira.Trigger{
 			Targets:  []string{pattern},
 			Patterns: []string{pattern},
@@ -83,10 +83,10 @@ func TestGetTimeSeries(t *testing.T) {
 		Convey("In additional target", func() {
 			metricError := fmt.Errorf("metric error")
 			triggerChecker1 := &TriggerChecker{
-				Database: dataBase,
-				Source:   source,
-				From:     from,
-				Until:    until,
+				database: dataBase,
+				source:   source,
+				from:     from,
+				until:    until,
 				trigger: &moira.Trigger{
 					Targets:  []string{pattern, addPattern},
 					Patterns: []string{pattern, addPattern},

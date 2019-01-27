@@ -13,7 +13,7 @@ func (triggerChecker *TriggerChecker) getFetchResult() (*metricSource.TriggerMet
 
 	isSimpleTrigger := triggerChecker.trigger.IsSimple()
 	for targetIndex, target := range triggerChecker.trigger.Targets {
-		fetchResult, err := triggerChecker.Source.Fetch(target, triggerChecker.From, triggerChecker.Until, isSimpleTrigger)
+		fetchResult, err := triggerChecker.source.Fetch(target, triggerChecker.from, triggerChecker.until, isSimpleTrigger)
 		if err != nil {
 			return nil, nil, err
 		}
