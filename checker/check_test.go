@@ -106,6 +106,92 @@ func TestGetTimeSeriesState(t *testing.T) {
 	})
 }
 
+func TestGetMetricsDataToCheck(t *testing.T) {
+	logger, _ := logging.GetLogger("Test")
+	Convey("Get metrics data to check:", t, func() {
+		triggerChecker := TriggerChecker{
+			TriggerID: "ID",
+			Logger:    logger,
+			From:      0,
+			Until:     60,
+			lastCheck: &moira.CheckData{},
+		}
+		Convey("last check has no metrics", func() {
+			Convey("fetched metrics is empty", func() {
+				actual, err := triggerChecker.getMetricsDataToCheck([]*metricSource.MetricData{})
+				So(actual, ShouldHaveLength, 0)
+				So(err, ShouldBeNil)
+			})
+
+			Convey("fetched metrics has metrics", func() {
+				actual, err := triggerChecker.getMetricsDataToCheck([]*metricSource.MetricData{metricSource.MakeMetricData("123", []float64{1, 2, 3}, 10, 0)})
+				So(actual, ShouldHaveLength, 1)
+				So(err, ShouldBeNil)
+			})
+
+			Convey("fetched metrics has duplicate metrics", func() {
+				actual, err := triggerChecker.getMetricsDataToCheck(
+					[]*metricSource.MetricData{
+						metricSource.MakeMetricData("123", []float64{1, 2, 3}, 10, 0),
+						metricSource.MakeMetricData("123", []float64{4, 5, 6}, 10, 0),
+					})
+				So(actual, ShouldResemble, []*metricSource.MetricData{metricSource.MakeMetricData("123", []float64{1, 2, 3}, 10, 0)})
+				So(err, ShouldResemble, ErrTriggerHasSameTimeSeriesNames{names: []string{"123"}})
+			})
+		})
+
+		Convey("last check has metrics", func() {
+			triggerChecker.lastCheck = &moira.CheckData{
+				Metrics: map[string]moira.MetricState{
+					"first":  {},
+					"second": {},
+					"third":  {},
+				}}
+
+			Convey("fetched metrics is empty", func() {
+				actual, err := triggerChecker.getMetricsDataToCheck([]*metricSource.MetricData{})
+				So(actual, ShouldHaveLength, 3)
+				for _, actualMetricData := range actual {
+					So(actualMetricData.Values, ShouldHaveLength, 1)
+					So(actualMetricData.StepTime, ShouldResemble, int64(60))
+					So(actualMetricData.StartTime, ShouldResemble, int64(0))
+					So(actualMetricData.StopTime, ShouldResemble, int64(60))
+				}
+				So(err, ShouldBeNil)
+			})
+
+			Convey("fetched metrics has one of last check metrics", func() {
+				actual, err := triggerChecker.getMetricsDataToCheck([]*metricSource.MetricData{
+					metricSource.MakeMetricData("first", []float64{1, 2, 3, 4, 5, 6}, 10, 0),
+				})
+				So(actual, ShouldHaveLength, 3)
+				for _, actualMetricData := range actual {
+					So(actualMetricData.Values, ShouldHaveLength, 6)
+					So(actualMetricData.StepTime, ShouldResemble, int64(10))
+					So(actualMetricData.StartTime, ShouldResemble, int64(0))
+					So(actualMetricData.StopTime, ShouldResemble, int64(60))
+				}
+				So(err, ShouldBeNil)
+			})
+
+			Convey("fetched metrics has one of last check metrics and one new", func() {
+				actual, err := triggerChecker.getMetricsDataToCheck([]*metricSource.MetricData{
+					metricSource.MakeMetricData("first", []float64{1, 2, 3, 4, 5, 6}, 10, 0),
+					metricSource.MakeMetricData("fourth", []float64{7, 8, 9, 1, 2, 3}, 10, 0),
+				})
+				So(actual, ShouldHaveLength, 4)
+				for _, actualMetricData := range actual {
+					So(actualMetricData.Values, ShouldHaveLength, 6)
+					So(actualMetricData.StepTime, ShouldResemble, int64(10))
+					So(actualMetricData.StartTime, ShouldResemble, int64(0))
+					So(actualMetricData.StopTime, ShouldResemble, int64(60))
+				}
+				So(err, ShouldBeNil)
+			})
+		})
+	})
+}
+
 func TestGetTimeSeriesStepsStates(t *testing.T) {
 	logger, _ := logging.GetLogger("Test")
 	logging.SetLevel(logging.INFO, "Test")

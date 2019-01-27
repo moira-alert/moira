@@ -105,7 +105,11 @@ func (triggerChecker *TriggerChecker) getMetricsDataToCheck(fetchedMetrics []*me
 	}
 
 	for metricName := range lastCheckMetricNamesHash {
-		metricData := metricSource.MakeEmptyMetricData(metricName, triggerChecker.From, triggerChecker.Until, 60)
+		step := int64(60)
+		if len(fetchedMetrics) > 0 {
+			step = fetchedMetrics[0].StepTime
+		}
+		metricData := metricSource.MakeEmptyMetricData(metricName, step, triggerChecker.From, triggerChecker.Until)
 		metricsToCheck = append(metricsToCheck, metricData)
 	}
 
