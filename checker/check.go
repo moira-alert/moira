@@ -88,6 +88,10 @@ func (triggerChecker *TriggerChecker) getMetricsDataToCheck(fetchedMetrics []*me
 	timeSeriesNamesHash := make(map[string]struct{}, len(fetchedMetrics))
 	duplicateNames := make([]string, 0)
 	metricsToCheck := make([]*metricSource.MetricData, 0, len(fetchedMetrics))
+	lastCheckMetricNamesHash := make(map[string]struct{}, len(triggerChecker.lastCheck.Metrics))
+	for metricName, _ := range triggerChecker.lastCheck.Metrics {
+		lastCheckMetricNamesHash[metricName] = struct{}{}
+	}
 
 	for _, metricData := range fetchedMetrics {
 		if _, ok := timeSeriesNamesHash[metricData.Name]; ok {
@@ -97,6 +101,12 @@ func (triggerChecker *TriggerChecker) getMetricsDataToCheck(fetchedMetrics []*me
 		}
 		timeSeriesNamesHash[metricData.Name] = struct{}{}
 		metricsToCheck = append(metricsToCheck, metricData)
+		delete(lastCheckMetricNamesHash, metricData.Name)
+	}
+
+	for metricName, _ := range lastCheckMetricNamesHash {
+		metricData := metricSource.MakeEmptyMetricData(metricName, triggerChecker.From, triggerChecker.Until, 60)
+		fetchedMetrics = append(fetchedMetrics, metricData)
 	}
 
 	if len(duplicateNames) > 0 {
