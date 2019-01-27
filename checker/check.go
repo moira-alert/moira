@@ -63,19 +63,12 @@ func copyLastCheck(lastCheck *moira.CheckData, checkTimeStamp int64) moira.Check
 }
 
 func (triggerChecker *TriggerChecker) checkTriggerTimeSeries(triggerMetricsData *metricSource.TriggerMetricsData, checkData moira.CheckData) (moira.CheckData, error) {
-	timeSeriesNamesHash := make(map[string]bool, len(triggerMetricsData.Main))
-	duplicateNamesHash := make(map[string]bool)
+	metricsDataToCheck, duplicateError := triggerChecker.getMetricsDataToCheck(triggerMetricsData.Main)
 
-	for _, metricData := range triggerMetricsData.Main {
+	for _, metricData := range metricsDataToCheck {
 		triggerChecker.Logger.Debugf("[TriggerID:%s] Checking metricData %s: %v", triggerChecker.TriggerID, metricData.Name, metricData.Values)
 		triggerChecker.Logger.Debugf("[TriggerID:%s][TimeSeries:%s] Checking interval: %v - %v (%vs), step: %v", triggerChecker.TriggerID, metricData.Name, metricData.StartTime, metricData.StopTime, metricData.StepTime, metricData.StopTime-metricData.StartTime)
 
-		if _, ok := timeSeriesNamesHash[metricData.Name]; ok {
-			duplicateNamesHash[metricData.Name] = true
-			triggerChecker.Logger.Debugf("[TriggerID:%s][TimeSeries:%s] Trigger has same timeseries names", triggerChecker.TriggerID, metricData.Name)
-			continue
-		}
-		timeSeriesNamesHash[metricData.Name] = true
 		metricState, needToDeleteMetric, err := triggerChecker.checkTimeSeries(metricData, triggerMetricsData)
 		if needToDeleteMetric {
 			triggerChecker.Logger.Infof("[TriggerID:%s] Remove metric: '%s'", triggerChecker.TriggerID, metricData.Name)
@@ -88,14 +81,28 @@ func (triggerChecker *TriggerChecker) checkTriggerTimeSeries(triggerMetricsData 
 			return checkData, err
 		}
 	}
-	if len(duplicateNamesHash) > 0 {
-		names := make([]string, 0, len(duplicateNamesHash))
-		for key := range duplicateNamesHash {
-			names = append(names, key)
+	return checkData, duplicateError
+}
+
+func (triggerChecker *TriggerChecker) getMetricsDataToCheck(fetchedMetrics []*metricSource.MetricData) ([]*metricSource.MetricData, error) {
+	timeSeriesNamesHash := make(map[string]struct{}, len(fetchedMetrics))
+	duplicateNames := make([]string, 0)
+	metricsToCheck := make([]*metricSource.MetricData, 0, len(fetchedMetrics))
+
+	for _, metricData := range fetchedMetrics {
+		if _, ok := timeSeriesNamesHash[metricData.Name]; ok {
+			triggerChecker.Logger.Debugf("[TriggerID:%s][TimeSeries:%s] Trigger has same timeseries names", triggerChecker.TriggerID, metricData.Name)
+			duplicateNames = append(duplicateNames, metricData.Name)
+			continue
 		}
-		return checkData, ErrTriggerHasSameTimeSeriesNames{names: names}
+		timeSeriesNamesHash[metricData.Name] = struct{}{}
+		metricsToCheck = append(metricsToCheck, metricData)
 	}
-	return checkData, nil
+
+	if len(duplicateNames) > 0 {
+		return metricsToCheck, ErrTriggerHasSameTimeSeriesNames{names: duplicateNames}
+	}
+	return metricsToCheck, nil
 }
 
 func (triggerChecker *TriggerChecker) checkTimeSeries(metricData *metricSource.MetricData, triggerMetricsData *metricSource.TriggerMetricsData) (lastState moira.MetricState, needToDeleteMetric bool, err error) {
