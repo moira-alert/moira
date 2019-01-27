@@ -23,7 +23,7 @@ prepare:
 lint: prepare
 	go get -u github.com/alecthomas/gometalinter
 	gometalinter --install
-	gometalinter ./... --vendor --skip mock --disable=errcheck --disable=gocyclo --disable=gosec --deadline=5m
+	gometalinter ./... --aggregate --vendor --skip mock --disable=errcheck --disable=gocyclo --disable=gosec --deadline=5m
 
 .PHONY: test
 test: prepare
