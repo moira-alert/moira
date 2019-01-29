@@ -63,10 +63,11 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 // RegisterSender adds sender for notification type and registers metrics
 func (notifier *StandardNotifier) RegisterSender(senderSettings map[string]string, sender moira.Sender) error {
 	var senderIdent string
-	if senderSettings["type"] == "script" {
-		senderIdent = senderSettings["name"]
-	} else {
+	switch senderSettings["type"] {
+	case scriptSender, webhookSender:
 		senderIdent = senderSettings["type"]
+	default:
+		senderIdent = senderSettings["name"]
 	}
 	err := sender.Init(senderSettings, notifier.logger, notifier.config.Location, notifier.config.DateTimeFormat)
 	if err != nil {

@@ -29,11 +29,11 @@ type eventData struct {
 	Timestamp      int64   `json:"timestamp"`
 	IsTriggerEvent bool    `json:"trigger_event"`
 	State          string  `json:"state"`
-	OldState       string  `json:"state"`
+	OldState       string  `json:"old_state"`
 }
 
 func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) (*http.Request, error) {
-	requestUrl := buildRequestUrl(sender.url, trigger, contact)
+	requestURL := buildRequestURL(sender.url, trigger, contact)
 	eventsData := make([]eventData, 0, len(events))
 	for _, event := range events {
 		eventsData = append(eventsData, eventData{
@@ -61,10 +61,10 @@ func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moir
 		return nil, err
 	}
 	bodyBuff := bytes.NewBuffer(body)
-	return http.NewRequest("POST", requestUrl, bodyBuff)
+	return http.NewRequest("POST", requestURL, bodyBuff)
 }
 
-func buildRequestUrl(pattern string, trigger moira.TriggerData, contact moira.ContactData) string {
+func buildRequestURL(pattern string, trigger moira.TriggerData, contact moira.ContactData) string {
 	templateVariables := map[string]string{
 		"${contact_id}":    contact.ID,
 		"${contact_value}": contact.Value,

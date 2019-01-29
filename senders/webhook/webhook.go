@@ -12,6 +12,7 @@ import (
 	"github.com/moira-alert/moira"
 )
 
+// Sender implements moira sender interface via webhook
 type Sender struct {
 	url          string
 	user         string
@@ -22,8 +23,8 @@ type Sender struct {
 	client       *http.Client
 }
 
+// Init read yaml config
 func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
-	var err error
 
 	sender.url = senderSettings["url"]
 	if sender.url == "" {
@@ -55,6 +56,7 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 	}
 
 	if timeout, ok := senderSettings["timeout"]; ok {
+		var err error
 		sender.timeout, err = strconv.Atoi(timeout)
 		if err != nil {
 			return fmt.Errorf("can not read timeout from config: %s", err.Error())
@@ -68,6 +70,7 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 	return nil
 }
 
+// SendEvents implements Sender interface Send
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) error {
 	request, err := sender.buildRequest(events, contact, trigger, plot, throttled)
 	if request != nil {

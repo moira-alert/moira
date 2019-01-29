@@ -25,33 +25,43 @@ var expectedPayload = `
   "events": [
     {
       "metric": "metricName1",
-      "value": 0,
+      "value": 30,
       "timestamp": 15,
-      "trigger_event": false
+      "trigger_event": false,
+			"state": "OK",
+			"old_state": "ERROR"
     },
     {
       "metric": "metricName2",
-      "value": 0,
+      "value": 30,
       "timestamp": 11,
-      "trigger_event": false
+      "trigger_event": false,
+			"state": "OK",
+			"old_state": "ERROR"
     },
     {
       "metric": "metricName3",
-      "value": 0,
+      "value": 30,
       "timestamp": 31,
-      "trigger_event": false
+      "trigger_event": false,
+			"state": "OK",
+			"old_state": "ERROR"
     },
     {
       "metric": "metricName4",
-      "value": 0,
+      "value": 30,
       "timestamp": 179,
-      "trigger_event": true
+      "trigger_event": true,
+			"state": "OK",
+			"old_state": "ERROR"
     },
     {
       "metric": "metricName5",
-      "value": 0,
+      "value": 30,
       "timestamp": 12,
-      "trigger_event": false
+      "trigger_event": false,
+			"state": "OK",
+			"old_state": "ERROR"
     }
   ],
   "contact": {
@@ -79,12 +89,13 @@ var (
 		ErrorValue: 20,
 		Tags:       []string{"test-tag-1"},
 	}
-	testEvents = []moira.NotificationEvent{
-		{Metric: "metricName1", Timestamp: 15, IsTriggerEvent: false},
-		{Metric: "metricName2", Timestamp: 11, IsTriggerEvent: false},
-		{Metric: "metricName3", Timestamp: 31, IsTriggerEvent: false},
-		{Metric: "metricName4", Timestamp: 179, IsTriggerEvent: true},
-		{Metric: "metricName5", Timestamp: 12, IsTriggerEvent: false},
+	testEventsValue = float64(30)
+	testEvents      = []moira.NotificationEvent{
+		{Metric: "metricName1", Value: &testEventsValue, Timestamp: 15, IsTriggerEvent: false, State: "OK", OldState: "ERROR"},
+		{Metric: "metricName2", Value: &testEventsValue, Timestamp: 11, IsTriggerEvent: false, State: "OK", OldState: "ERROR"},
+		{Metric: "metricName3", Value: &testEventsValue, Timestamp: 31, IsTriggerEvent: false, State: "OK", OldState: "ERROR"},
+		{Metric: "metricName4", Value: &testEventsValue, Timestamp: 179, IsTriggerEvent: true, State: "OK", OldState: "ERROR"},
+		{Metric: "metricName5", Value: &testEventsValue, Timestamp: 12, IsTriggerEvent: false, State: "OK", OldState: "ERROR"},
 	}
 	testPlot = make([]byte, 0)
 )
@@ -115,8 +126,8 @@ func TestBuildRequest(t *testing.T) {
 		})
 
 		Convey("Test url template", func() {
-			events, contact, trigger, plot := testEvents, testContact, testTrigger, testPlot
-			contact = moira.ContactData{
+			events, trigger, plot := testEvents, testTrigger, testPlot
+			contact := moira.ContactData{
 				ID:    "contactID",
 				Type:  "contactType",
 				Value: "contactValue",
