@@ -116,7 +116,7 @@ func TestBuildRequest(t *testing.T) {
 
 			fmt.Println(requestBodyBuff.String())
 
-			actual, err := readLastLine(requestBodyBuff.String())
+			actual, err := getLastLine(requestBodyBuff.String())
 			if err != nil {
 				t.Fatal(err)
 			}
