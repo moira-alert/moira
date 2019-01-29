@@ -26,6 +26,10 @@ type Sender struct {
 // Init read yaml config
 func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 
+	if senderSettings["name"] == "" {
+		return fmt.Errorf("required name for sender type webhook")
+	}
+
 	sender.url = senderSettings["url"]
 	if sender.url == "" {
 		return fmt.Errorf("can not read url from config")
@@ -111,8 +115,8 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 }
 
 func (sender *Sender) isAllowedResponseCode(responseCode int) bool {
-	for _, validCode := range sender.allowedCodes {
-		if validCode == responseCode {
+	for _, allowedCode := range sender.allowedCodes {
+		if allowedCode == responseCode {
 			return true
 		}
 	}

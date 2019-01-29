@@ -38,6 +38,7 @@ func TestSender_SendEvents(t *testing.T) {
 		defer ts.Close()
 
 		senderSettings := map[string]string{
+			"name":          "testWebhook",
 			"url":           ts.URL,
 			"allowed_codes": "200, 201",
 			"user":          testUser,
@@ -60,7 +61,7 @@ func testRequest(r *http.Request) (int, error) {
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}
-	actualJSON, err := readLastLine(requestBodyBuff.String())
+	actualJSON, err := getLastLine(requestBodyBuff.String())
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}

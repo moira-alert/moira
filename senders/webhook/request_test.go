@@ -28,40 +28,40 @@ var expectedPayload = `
       "value": 30,
       "timestamp": 15,
       "trigger_event": false,
-			"state": "OK",
-			"old_state": "ERROR"
+      "state": "OK",
+      "old_state": "ERROR"
     },
     {
       "metric": "metricName2",
       "value": 30,
       "timestamp": 11,
       "trigger_event": false,
-			"state": "OK",
-			"old_state": "ERROR"
+      "state": "OK",
+      "old_state": "ERROR"
     },
     {
       "metric": "metricName3",
       "value": 30,
       "timestamp": 31,
       "trigger_event": false,
-			"state": "OK",
-			"old_state": "ERROR"
+      "state": "OK",
+      "old_state": "ERROR"
     },
     {
       "metric": "metricName4",
       "value": 30,
       "timestamp": 179,
       "trigger_event": true,
-			"state": "OK",
-			"old_state": "ERROR"
+      "state": "OK",
+      "old_state": "ERROR"
     },
     {
       "metric": "metricName5",
       "value": 30,
       "timestamp": 12,
       "trigger_event": false,
-			"state": "OK",
-			"old_state": "ERROR"
+      "state": "OK",
+      "old_state": "ERROR"
     }
   ],
   "contact": {
@@ -70,7 +70,7 @@ var expectedPayload = `
     "id": "ContactID-000000000000001",
     "user": "user"
   },
-	"plot": ""
+  "plot": ""
 }
 `
 
@@ -149,7 +149,7 @@ func prepareStrings(actual, expected, separator string) (string, string) {
 	return strings.Join(strings.Fields(actual), separator), strings.Join(strings.Fields(expected), separator)
 }
 
-func readLastLine(longString string) (string, error) {
+func getLastLine(longString string) (string, error) {
 	reader := bytes.NewReader([]byte(longString))
 	var lastLine string
 	s := bufio.NewScanner(reader)

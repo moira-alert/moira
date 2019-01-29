@@ -65,9 +65,9 @@ func (notifier *StandardNotifier) RegisterSender(senderSettings map[string]strin
 	var senderIdent string
 	switch senderSettings["type"] {
 	case scriptSender, webhookSender:
-		senderIdent = senderSettings["type"]
-	default:
 		senderIdent = senderSettings["name"]
+	default:
+		senderIdent = senderSettings["type"]
 	}
 	err := sender.Init(senderSettings, notifier.logger, notifier.config.Location, notifier.config.DateTimeFormat)
 	if err != nil {
