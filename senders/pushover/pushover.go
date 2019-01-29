@@ -25,7 +25,6 @@ type Sender struct {
 
 // Init read yaml config
 func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
-
 	sender.apiToken = senderSettings["api_token"]
 	if sender.apiToken == "" {
 		return fmt.Errorf("can not read pushover api_token from config")
