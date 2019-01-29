@@ -28,29 +28,33 @@ const (
 
 // RegisterSenders watch on senders config and register all configured senders
 func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) error {
+	var err error
 	for _, senderSettings := range notifier.config.Senders {
 		senderSettings["front_uri"] = notifier.config.FrontURL
 		switch senderSettings["type"] {
 		case pushoverSender:
-			return notifier.RegisterSender(senderSettings, &pushover.Sender{})
+			err = notifier.RegisterSender(senderSettings, &pushover.Sender{})
 		case slackSender:
-			return notifier.RegisterSender(senderSettings, &slack.Sender{})
+			err = notifier.RegisterSender(senderSettings, &slack.Sender{})
 		case mailSender:
-			return notifier.RegisterSender(senderSettings, &mail.Sender{})
+			err = notifier.RegisterSender(senderSettings, &mail.Sender{})
 		case telegramSender:
-			return notifier.RegisterSender(senderSettings, &telegram.Sender{DataBase: connector})
+			err = notifier.RegisterSender(senderSettings, &telegram.Sender{DataBase: connector})
 		case twilioSmsSender, twilioVoiceSender:
-			return notifier.RegisterSender(senderSettings, &twilio.Sender{})
+			err = notifier.RegisterSender(senderSettings, &twilio.Sender{})
 		case scriptSender:
-			return notifier.RegisterSender(senderSettings, &script.Sender{})
+			err = notifier.RegisterSender(senderSettings, &script.Sender{})
 		case webhookSender:
-			return notifier.RegisterSender(senderSettings, &webhook.Sender{})
+			err = notifier.RegisterSender(senderSettings, &webhook.Sender{})
 		// case "email":
-		// 	return notifier.RegisterSender(senderSettings, &kontur.MailSender{})
+		// 	err = notifier.RegisterSender(senderSettings, &kontur.MailSender{})
 		// case "phone":
-		// 	return notifier.RegisterSender(senderSettings, &kontur.SmsSender{})
+		// 	err = notifier.RegisterSender(senderSettings, &kontur.SmsSender{})
 		default:
 			return fmt.Errorf("unknown sender type [%s]", senderSettings["type"])
+		}
+		if err != nil {
+			return err
 		}
 	}
 	return nil
