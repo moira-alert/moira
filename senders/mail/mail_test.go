@@ -5,12 +5,12 @@ import (
 	"html/template"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
-	"time"
 )
 
 func TestMail(t *testing.T) {
