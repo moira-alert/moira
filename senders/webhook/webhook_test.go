@@ -49,7 +49,7 @@ func TestSender_SendEvents(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		err := sender.SendEvents(testEvents, testContact, testTrigger, testPlot, true)
+		err := sender.SendEvents(testEvents, testContact, testTrigger, testPlot, false)
 		So(err, ShouldBeNil)
 	})
 }
