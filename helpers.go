@@ -1,7 +1,6 @@
 package moira
 
 import (
-	"encoding/base64"
 	"math"
 	"time"
 )
@@ -9,11 +8,6 @@ import (
 // Int64ToTime returns time.Time from int64
 func Int64ToTime(timeStamp int64) time.Time {
 	return time.Unix(timeStamp, 0).UTC()
-}
-
-// BytesToBase64 converts given bytes slice to base64 string
-func BytesToBase64(data []byte) string {
-	return base64.StdEncoding.EncodeToString(data)
 }
 
 // UseString gets pointer value of string or default string if pointer is nil

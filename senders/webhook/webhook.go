@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/moira-alert/moira"
@@ -17,8 +16,6 @@ type Sender struct {
 	url          string
 	user         string
 	password     string
-	timeout      int
-	allowedCodes []int
 	headers      map[string]string
 	client       *http.Client
 }
@@ -47,30 +44,18 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 		sender.headers = senderHeaders
 	}
 
-	if allowedCodes, ok := senderSettings["allowed_codes"]; ok {
-		allowedCodes = strings.Replace(allowedCodes, " ", "", -1)
-		allowedCodesRaw := strings.Split(allowedCodes, ",")
-		for _, allowedCodeRaw := range allowedCodesRaw {
-			allowedCode, err := strconv.Atoi(allowedCodeRaw)
-			if err != nil {
-				return fmt.Errorf("can not read valid_codes parameter from config: %s", err.Error())
-			}
-			sender.allowedCodes = append(sender.allowedCodes, allowedCode)
-		}
-	}
+	timeout := 30
 
-	if timeout, ok := senderSettings["timeout"]; ok {
+	if timeoutRaw, ok := senderSettings["timeout"]; ok {
 		var err error
-		sender.timeout, err = strconv.Atoi(timeout)
+		timeout, err = strconv.Atoi(timeoutRaw)
 		if err != nil {
 			return fmt.Errorf("can not read timeout from config: %s", err.Error())
 		}
-	} else {
-		sender.timeout = 30
 	}
 
 	tr := &http.Transport{DisableKeepAlives: true}
-	sender.client = &http.Client{Timeout: time.Duration(sender.timeout) * time.Second, Transport: tr}
+	sender.client = &http.Client{Timeout: time.Duration(timeout) * time.Second, Transport: tr}
 	return nil
 }
 
@@ -85,7 +70,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 		return fmt.Errorf("failed to build request body: %s", err.Error())
 	}
 
-	if sender.user != "" {
+	if sender.user != "" && sender.password != "" {
 		request.SetBasicAuth(sender.user, sender.password)
 	}
 
@@ -107,18 +92,13 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 		return fmt.Errorf("failed to read response body: %s", err.Error())
 	}
 
-	if !sender.isAllowedResponseCode(response.StatusCode) {
+	if !isAllowedResponseCode(response.StatusCode) {
 		return fmt.Errorf("invalid status code: %d, server response: %s", response.StatusCode, string(responseBody))
 	}
 
 	return nil
 }
 
-func (sender *Sender) isAllowedResponseCode(responseCode int) bool {
-	for _, allowedCode := range sender.allowedCodes {
-		if allowedCode == responseCode {
-			return true
-		}
-	}
-	return false
+func isAllowedResponseCode(responseCode int) bool {
+	return (responseCode >= 200) && (responseCode <= 299)
 }

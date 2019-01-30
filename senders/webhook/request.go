@@ -2,18 +2,21 @@ package webhook
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/moira-alert/moira"
 )
 
 type payload struct {
-	Trigger triggerData       `json:"trigger"`
-	Events  []eventData       `json:"events"`
-	Contact moira.ContactData `json:"contact"`
-	Plot    string            `json:"plot"`
+	Trigger   triggerData       `json:"trigger"`
+	Events    []eventData       `json:"events"`
+	Contact   moira.ContactData `json:"contact"`
+	Plot      string            `json:"plot"`
+	Throttled bool              `json:"throttled"`
 }
 
 type triggerData struct {
@@ -52,9 +55,10 @@ func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moir
 			Description: trigger.Desc,
 			Tags:        trigger.Tags,
 		},
-		Events:  eventsData,
-		Contact: contact,
-		Plot:    moira.BytesToBase64(plot),
+		Events:    eventsData,
+		Contact:   contact,
+		Plot:      bytesToBase64(plot),
+		Throttled: throttled,
 	}
 	body, err := json.Marshal(requestPayload)
 	if err != nil {
@@ -72,7 +76,12 @@ func buildRequestURL(pattern string, trigger moira.TriggerData, contact moira.Co
 		"${trigger_id}":    trigger.ID,
 	}
 	for k, v := range templateVariables {
-		pattern = strings.Replace(pattern, k, v, -1)
+		pattern = strings.Replace(pattern, k, url.PathEscape(v), -1)
 	}
 	return pattern
+}
+
+// bytesToBase64 converts given bytes slice to base64 string
+func bytesToBase64(data []byte) string {
+	return base64.StdEncoding.EncodeToString(data)
 }

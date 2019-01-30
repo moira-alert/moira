@@ -70,7 +70,8 @@ var expectedPayload = `
     "id": "ContactID-000000000000001",
     "user": "user"
   },
-  "plot": ""
+  "plot": "",
+  "throttled": false
 }
 `
 

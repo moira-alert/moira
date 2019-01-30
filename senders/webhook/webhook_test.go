@@ -40,7 +40,6 @@ func TestSender_SendEvents(t *testing.T) {
 		senderSettings := map[string]string{
 			"name":          "testWebhook",
 			"url":           ts.URL,
-			"allowed_codes": "200, 201",
 			"user":          testUser,
 			"password":      testPass,
 			"headers":       fmt.Sprintf("{'TestHeader':'%s'}", testHeader),
