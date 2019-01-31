@@ -165,6 +165,7 @@ func (connector *DbConnector) makePubSubConnection(channel string) (*redis.PubSu
 	c := connector.pool.Get()
 	psc := redis.PubSubConn{Conn: c}
 	if err := psc.Subscribe(channel); err != nil {
+		c.Close()
 		return nil, fmt.Errorf("failed to subscribe to '%s', error: %v", channel, err)
 	}
 	return &psc, nil
