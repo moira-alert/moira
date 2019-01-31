@@ -25,7 +25,6 @@ type Worker struct {
 	logger         moira.Logger
 	lock           moira.Lock
 	action         func(stop <-chan struct{})
-	wg             sync.WaitGroup
 	lockRetryDelay time.Duration
 }
 
@@ -39,7 +38,7 @@ func (worker *Worker) Run(stop <-chan struct{}) {
 			case database.ErrLockAcquireInterrupted:
 				return
 			default:
-				worker.logger.Errorf("%s failed to acquire lock %s", worker.name, err.Error())
+				worker.logger.Errorf("%s failed to acquire lock: %s", worker.name, err.Error())
 
 				select {
 				case <-stop:
@@ -53,21 +52,23 @@ func (worker *Worker) Run(stop <-chan struct{}) {
 		worker.logger.Infof("%s acquired the lock", worker.name)
 
 		actionStop := make(chan struct{})
-		worker.wg.Add(1)
-		go func(worker *Worker, actionStop <-chan struct{}) {
-			worker.action(actionStop)
-			worker.lock.Release()
-			worker.wg.Done()
-		}(worker, actionStop)
+		actionWg := &sync.WaitGroup{}
+		actionWg.Add(1)
+		go func(action func(<-chan struct{}), actionWg *sync.WaitGroup, actionStop <-chan struct{}) {
+			action(actionStop)
+			actionWg.Done()
+		}(worker.action, actionWg, actionStop)
 
 		select {
 		case <-lost:
 			worker.logger.Warningf("%s lost the lock", worker.name)
 			close(actionStop)
-			worker.wg.Wait()
+			actionWg.Wait()
+			worker.lock.Release()
 		case <-stop:
 			close(actionStop)
-			worker.wg.Wait()
+			actionWg.Wait()
+			worker.lock.Release()
 			return
 		}
 	}
