@@ -3,7 +3,7 @@ package telegram
 import (
 	"fmt"
 	"github.com/moira-alert/moira"
-	. "github.com/moira-alert/moira/worker"
+	w "github.com/moira-alert/moira/worker"
 	"gopkg.in/tucnak/telebot.v2"
 	"time"
 )
@@ -71,11 +71,10 @@ func (sender *Sender) runTelebot() {
 		sender.bot.Stop()
 	}
 
-	worker := NewWorker(
+	w.NewWorker(
 		"Telebot",
 		sender.logger,
 		sender.DataBase.NewLock(telegramLockName, telegramLockTTL),
 		workerAction,
-	)
-	worker.Run(nil)
+	).Run(nil)
 }

@@ -14,7 +14,6 @@ import (
 const testLockRetryDelay = time.Millisecond * 100
 
 func Test(t *testing.T) {
-
 	Convey("Should stop if the lock's acquire was interrupted", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
@@ -106,14 +105,7 @@ func createTestWorker(lock moira.Lock) *Worker {
 		"Test Worker",
 		logging.MustGetLogger("Test Worker"),
 		lock,
-		func(stop <-chan struct{}) {
-			select {
-			case <-stop:
-				{
-					return
-				}
-			}
-		})
+		func(stop <-chan struct{}) { <-stop })
 	worker.SetLockRetryDelay(testLockRetryDelay)
 	return worker
 }

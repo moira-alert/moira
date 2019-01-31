@@ -1,7 +1,7 @@
 package worker
 
 import (
-	. "github.com/moira-alert/moira/worker"
+	w "github.com/moira-alert/moira/worker"
 	"time"
 )
 
@@ -43,7 +43,7 @@ func (worker *Checker) checkNoData() error {
 // runNodataChecker starts NODATA checker and manages its subscription in Redis
 // to make sure there is always only one working checker
 func (worker *Checker) runNodataChecker() error {
-	NewWorker(
+	w.NewWorker(
 		"NOData checker",
 		worker.Logger,
 		worker.Database.NewLock(nodataCheckerLockName, nodataCheckerLockTTL),

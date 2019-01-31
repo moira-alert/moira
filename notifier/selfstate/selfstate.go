@@ -10,7 +10,7 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/notifier"
-	. "github.com/moira-alert/moira/worker"
+	w "github.com/moira-alert/moira/worker"
 )
 
 var defaultCheckInterval = time.Second * 10
@@ -72,7 +72,7 @@ func (selfCheck *SelfCheckWorker) selfStateChecker(stop <-chan struct{}) {
 func (selfCheck *SelfCheckWorker) Start() error {
 
 	selfCheck.tomb.Go(func() error {
-		NewWorker(
+		w.NewWorker(
 			"Moira Self State Monitoring",
 			selfCheck.Log,
 			selfCheck.DB.NewLock(selfStateLockName, selfStateLockTTL),
