@@ -12,11 +12,11 @@ import (
 )
 
 type payload struct {
-	Trigger   triggerData       `json:"trigger"`
-	Events    []eventData       `json:"events"`
-	Contact   moira.ContactData `json:"contact"`
-	Plot      string            `json:"plot"`
-	Throttled bool              `json:"throttled"`
+	Trigger   triggerData `json:"trigger"`
+	Events    []eventData `json:"events"`
+	Contact   contactData `json:"contact"`
+	Plot      string      `json:"plot"`
+	Throttled bool        `json:"throttled"`
 }
 
 type triggerData struct {
@@ -33,6 +33,13 @@ type eventData struct {
 	IsTriggerEvent bool    `json:"trigger_event"`
 	State          string  `json:"state"`
 	OldState       string  `json:"old_state"`
+}
+
+type contactData struct {
+	Type  string `json:"type"`
+	Value string `json:"value"`
+	ID    string `json:"id"`
+	User  string `json:"user"`
 }
 
 func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) (*http.Request, error) {
@@ -55,8 +62,13 @@ func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moir
 			Description: trigger.Desc,
 			Tags:        trigger.Tags,
 		},
-		Events:    eventsData,
-		Contact:   contact,
+		Events: eventsData,
+		Contact: contactData{
+			Type:  contact.Type,
+			Value: contact.Value,
+			ID:    contact.ID,
+			User:  contact.User,
+		},
 		Plot:      bytesToBase64(plot),
 		Throttled: throttled,
 	}
