@@ -45,11 +45,10 @@ func TestSender_SendEvents(t *testing.T) {
 			"headers":       fmt.Sprintf("{'TestHeader':'%s'}", testHeader),
 		}
 		sender := Sender{}
-		if err := sender.Init(senderSettings, logger, time.UTC, ""); err != nil {
-			t.Fatal(err)
-		}
+		err := sender.Init(senderSettings, logger, time.UTC, "")
+		So(err, ShouldBeNil)
 
-		err := sender.SendEvents(testEvents, testContact, testTrigger, testPlot, false)
+		err = sender.SendEvents(testEvents, testContact, testTrigger, testPlot, false)
 		So(err, ShouldBeNil)
 	})
 }

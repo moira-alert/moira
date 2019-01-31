@@ -87,13 +87,15 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 		return fmt.Errorf("failed to perform request: %s", err.Error())
 	}
 
-	responseBody, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		return fmt.Errorf("failed to read response body: %s", err.Error())
-	}
-
 	if !isAllowedResponseCode(response.StatusCode) {
-		return fmt.Errorf("invalid status code: %d, server response: %s", response.StatusCode, string(responseBody))
+		var serverResponse string
+		responseBody, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			serverResponse = fmt.Sprintf("failed to read response body: %s", err.Error())
+		} else {
+			serverResponse = string(responseBody)
+		}
+		return fmt.Errorf("invalid status code: %d, server response: %s", response.StatusCode, serverResponse)
 	}
 
 	return nil
