@@ -3,7 +3,6 @@ package selfstate
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/moira-alert/moira/database"
 	"sync"
 	"time"
 
@@ -11,6 +10,7 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/notifier"
+	. "github.com/moira-alert/moira/worker"
 )
 
 var defaultCheckInterval = time.Second * 10
@@ -45,7 +45,7 @@ func (selfCheck *SelfCheckWorker) selfStateChecker(stop <-chan struct{}) {
 		return
 	}
 
-	selfCheck.Log.Info("Moira Notifier Self State Monitor Started")
+	selfCheck.Log.Info("Moira Notifier Self State Monitor started")
 
 	var metricsCount, checksCount, remoteChecksCount int64
 	lastMetricReceivedTS := time.Now().Unix()
@@ -60,7 +60,7 @@ func (selfCheck *SelfCheckWorker) selfStateChecker(stop <-chan struct{}) {
 	for {
 		select {
 		case <-stop:
-			selfCheck.Log.Info("Moira Notifier Self State Monitor Stopped")
+			selfCheck.Log.Info("Moira Notifier Self State Monitor stopped")
 			return
 		case <-checkTicker.C:
 			selfCheck.check(time.Now().Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS, &lastRemoteCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount, &remoteChecksCount)
@@ -70,28 +70,15 @@ func (selfCheck *SelfCheckWorker) selfStateChecker(stop <-chan struct{}) {
 
 // Start self check worker
 func (selfCheck *SelfCheckWorker) Start() error {
-	selfCheck.tomb.Go(func() error {
-		lock := selfCheck.DB.NewLock(selfStateLockName, selfStateLockTTL)
-		for {
-			lost, err := lock.Acquire(selfCheck.tomb.Dying())
-			if err == nil {
-				stop := make(chan struct{})
-				go selfCheck.selfStateChecker(stop)
-				select {
-				case <-lost:
-					close(stop)
-				case <-selfCheck.tomb.Dying():
-					close(stop)
-					return nil
-				}
-				continue
-			}
-			if err == database.ErrLockAcquireInterrupted {
-				return nil
-			}
 
-			selfCheck.Log.Warningf("Could not acquire lock for Moira Notifier Self State Monitor , err %s", err)
-		}
+	selfCheck.tomb.Go(func() error {
+		NewWorker(
+			"Moira Self State Monitoring",
+			selfCheck.Log,
+			selfCheck.DB.NewLock(selfStateLockName, selfStateLockTTL),
+			selfCheck.selfStateChecker,
+		).Run(selfCheck.tomb.Dying())
+		return nil
 	})
 
 	return nil
@@ -173,7 +160,6 @@ func (selfCheck *SelfCheckWorker) check(nowTS int64, lastMetricReceivedTS, redis
 			selfCheck.sendErrorMessages(&events)
 			*nextSendErrorMessage = nowTS + selfCheck.Config.NoticeIntervalSeconds
 		}
-
 	}
 }
 

@@ -1,7 +1,7 @@
 package worker
 
 import (
-	"github.com/moira-alert/moira/database"
+	. "github.com/moira-alert/moira/worker"
 	"time"
 )
 
@@ -43,29 +43,12 @@ func (worker *Checker) checkNoData() error {
 // runNodataChecker starts NODATA checker and manages its subscription in Redis
 // to make sure there is always only one working checker
 func (worker *Checker) runNodataChecker() error {
-	lock := worker.Database.NewLock(nodataCheckerLockName, nodataCheckerLockTTL)
-	for {
-		lost, err := lock.Acquire(worker.tomb.Dying())
-		if err != nil {
-			if err == database.ErrLockAcquireInterrupted {
-				return nil
-			}
+	NewWorker(
+		"NOData checker",
+		worker.Logger,
+		worker.Database.NewLock(nodataCheckerLockName, nodataCheckerLockTTL),
+		worker.noDataChecker,
+	).Run(worker.tomb.Dying())
 
-			worker.Logger.Warningf("Could not acquire lock for NODATA checker, err %s", err)
-			continue
-		}
-
-		stop := make(chan struct{})
-		go worker.noDataChecker(stop)
-		select {
-		case <-worker.tomb.Dying():
-			close(stop)
-			lock.Release()
-			return nil
-		case <-lost:
-			close(stop)
-			lock.Release()
-			continue
-		}
-	}
+	return nil
 }

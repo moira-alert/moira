@@ -3,6 +3,7 @@ package telegram
 import (
 	"fmt"
 	"github.com/moira-alert/moira"
+	. "github.com/moira-alert/moira/worker"
 	"gopkg.in/tucnak/telebot.v2"
 	"time"
 )
@@ -64,15 +65,17 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 // runTelebot starts telegram bot and manages bot subscriptions
 // to make sure there is always only one working Poller
 func (sender *Sender) runTelebot() {
-	lock := sender.DataBase.NewLock(telegramLockName, telegramLockTTL)
-	for {
-		lost, err := lock.Acquire(nil)
-		if err != nil {
-			continue
-		}
-		go sender.bot.Start()
-		<-lost
+	workerAction := func(stop <-chan struct{}) {
+		sender.bot.Start()
+		<-stop
 		sender.bot.Stop()
-		lock.Release()
 	}
+
+	worker := NewWorker(
+		"Telebot",
+		sender.logger,
+		sender.DataBase.NewLock(telegramLockName, telegramLockTTL),
+		workerAction,
+	)
+	worker.Run(nil)
 }
