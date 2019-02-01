@@ -110,7 +110,7 @@ func TestBuildRequestBody(t *testing.T) {
 func TestBuildRequestURL(t *testing.T) {
 	Convey("URL should contain variables values", t, func() {
 		template := "https://hostname.domain/${contact_type}/${contact_id}/${contact_value}/${trigger_id}"
-		expected := "https://hostname.domain/contactType/contactID/contactValue/triggerID"
+		expected := "https://hostname.domain/contactType/contactID/contactValue/%21@%23$"
 		actual := buildRequestURL(template, testTrigger, testContact)
 		So(actual, ShouldEqual, expected)
 	})
