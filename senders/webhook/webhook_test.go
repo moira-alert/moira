@@ -77,10 +77,9 @@ func testRequestURL(r *http.Request) (int, error) {
 }
 
 func testRequestHeaders(r *http.Request) (int, error) {
-	actualHeaders := map[string]string{testHeader: r.Header.Get(testHeader), "Content-Type": "application/json"}
-	expectedHeaders := map[string]string{testHeader: testHeaders[testHeader], "Content-Type": "application/json"}
-	if !isHeadersEqual(actualHeaders, expectedHeaders) {
-		return http.StatusBadRequest, fmt.Errorf("invalid headers: %#v\nexpected: %#v", actualHeaders, expectedHeaders)
+	actualHeaderValue, expectedHeaderValue := r.Header.Get(testHeader), testHeaders[testHeader]
+	if actualHeaderValue != expectedHeaderValue {
+		return http.StatusBadRequest, fmt.Errorf("invalid test header value: %s\nexpected: %s", actualHeaderValue, expectedHeaderValue)
 	}
 	authHeader := strings.SplitN(r.Header.Get("Authorization"), " ", 2)
 	payload, err := base64.StdEncoding.DecodeString(authHeader[1])
@@ -112,19 +111,6 @@ func testRequestBody(r *http.Request) (int, error) {
 		return http.StatusBadRequest, fmt.Errorf("invalid json body: %s\nexpected: %s", actualJSON, expectedJSON)
 	}
 	return http.StatusCreated, nil
-}
-
-func isHeadersEqual(actualHeaders, expectedHeaders map[string]string) bool {
-	for k, v := range actualHeaders {
-		found, ok := expectedHeaders[k]
-		if !ok || found != v {
-			return false
-		}
-	}
-	if len(actualHeaders) != len(expectedHeaders) {
-		return false
-	}
-	return true
 }
 
 func getLastLine(longString string) (string, error) {
