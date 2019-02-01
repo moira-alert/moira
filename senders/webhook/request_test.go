@@ -1,9 +1,6 @@
 package webhook
 
 import (
-	"bufio"
-	"bytes"
-	"fmt"
 	"strings"
 	"testing"
 
@@ -12,14 +9,40 @@ import (
 	"github.com/moira-alert/moira"
 )
 
+var (
+	testContact = moira.ContactData{
+		ID:    "contactID",
+		Type:  "contactType",
+		Value: "contactValue",
+		User:  "contactUser",
+	}
+	testTrigger = moira.TriggerData{
+		ID:         "!@#$",
+		Name:       "triggerName for test",
+		Desc:       "triggerDescription",
+		Tags:       []string{"triggerTag1", "triggerTag2"},
+	}
+	testEventsValue = float64(30)
+	testEvents      = []moira.NotificationEvent{
+		{Metric: "metricName1", Value: &testEventsValue, Timestamp: 15, IsTriggerEvent: false, State: "OK", OldState: "ERROR"},
+		{Metric: "metricName2", Value: &testEventsValue, Timestamp: 11, IsTriggerEvent: false, State: "OK", OldState: "ERROR"},
+		{Metric: "metricName3", Value: &testEventsValue, Timestamp: 31, IsTriggerEvent: false, State: "OK", OldState: "ERROR"},
+		{Metric: "metricName4", Value: &testEventsValue, Timestamp: 179, IsTriggerEvent: true, State: "OK", OldState: "ERROR"},
+		{Metric: "metricName5", Value: &testEventsValue, Timestamp: 12, IsTriggerEvent: false, State: "OK", OldState: "ERROR"},
+	}
+	testPlot = make([]byte, 0)
+	testThrottled = false
+)
+
 var expectedPayload = `
 {
   "trigger": {
-    "id": "triggerID-0000000000001",
-    "name": "test trigger 1",
-    "description": "",
+    "id": "!@#$",
+    "name": "triggerName for test",
+    "description": "triggerDescription",
     "tags": [
-      "test-tag-1"
+      "triggerTag1",
+      "triggerTag2"
     ]
   },
   "events": [
@@ -65,100 +88,34 @@ var expectedPayload = `
     }
   ],
   "contact": {
-    "type": "email",
-    "value": "mail1@example.com",
-    "id": "ContactID-000000000000001",
-    "user": "user"
+    "type": "contactType",
+    "value": "contactValue",
+    "id": "contactID",
+    "user": "contactUser"
   },
   "plot": "",
   "throttled": false
 }
 `
 
-var (
-	testContact = moira.ContactData{
-		ID:    "ContactID-000000000000001",
-		Type:  "email",
-		Value: "mail1@example.com",
-		User:  "user",
-	}
-	testTrigger = moira.TriggerData{
-		ID:         "triggerID-0000000000001",
-		Name:       "test trigger 1",
-		Targets:    []string{"test.target.1"},
-		WarnValue:  10,
-		ErrorValue: 20,
-		Tags:       []string{"test-tag-1"},
-	}
-	testEventsValue = float64(30)
-	testEvents      = []moira.NotificationEvent{
-		{Metric: "metricName1", Value: &testEventsValue, Timestamp: 15, IsTriggerEvent: false, State: "OK", OldState: "ERROR"},
-		{Metric: "metricName2", Value: &testEventsValue, Timestamp: 11, IsTriggerEvent: false, State: "OK", OldState: "ERROR"},
-		{Metric: "metricName3", Value: &testEventsValue, Timestamp: 31, IsTriggerEvent: false, State: "OK", OldState: "ERROR"},
-		{Metric: "metricName4", Value: &testEventsValue, Timestamp: 179, IsTriggerEvent: true, State: "OK", OldState: "ERROR"},
-		{Metric: "metricName5", Value: &testEventsValue, Timestamp: 12, IsTriggerEvent: false, State: "OK", OldState: "ERROR"},
-	}
-	testPlot = make([]byte, 0)
-)
-
-func TestBuildRequest(t *testing.T) {
-	Convey("Build request", t, func() {
-		Convey("Test payload is valid", func() {
-			sender := Sender{}
-			events, contact, trigger, plot := testEvents, testContact, testTrigger, testPlot
-			request, err := sender.buildRequest(events, contact, trigger, plot, false)
-			So(err, ShouldBeNil)
-
-			requestBodyBuff := bytes.NewBuffer([]byte{})
-			err = request.Write(requestBodyBuff)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			fmt.Println(requestBodyBuff.String())
-
-			actual, err := getLastLine(requestBodyBuff.String())
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			actual, expected := prepareStrings(actual, expectedPayload, "")
-			So(actual, ShouldEqual, expected)
-		})
-
-		Convey("Test url template", func() {
-			events, trigger, plot := testEvents, testTrigger, testPlot
-			contact := moira.ContactData{
-				ID:    "contactID",
-				Type:  "contactType",
-				Value: "contactValue",
-			}
-			trigger.ID = "triggerID"
-			urlTemplate := "https://hostname.domain/${contact_type}/${contact_id}/${contact_value}/${trigger_id}"
-			sender := Sender{url: urlTemplate}
-			request, err := sender.buildRequest(events, contact, trigger, plot, false)
-			So(err, ShouldBeNil)
-
-			expected := "https://hostname.domain/contactType/contactID/contactValue/triggerID"
-			actual := request.URL.String()
-			So(actual, ShouldEqual, expected)
-		})
+func TestBuildRequestBody(t *testing.T) {
+	Convey("Payload should be valid", t, func() {
+		requestBody, err := buildRequestBody(testEvents, testContact, testTrigger, testPlot, testThrottled)
+		actual, expected := prepareStrings(string(requestBody), expectedPayload)
+		So(actual, ShouldEqual, expected)
+		So(err, ShouldBeNil)
 	})
 }
 
-func prepareStrings(actual, expected, separator string) (string, string) {
-	return strings.Join(strings.Fields(actual), separator), strings.Join(strings.Fields(expected), separator)
+func TestBuildRequestURL(t *testing.T) {
+	Convey("URL should contain variables values", t, func() {
+		template := "https://hostname.domain/${contact_type}/${contact_id}/${contact_value}/${trigger_id}"
+		expected := "https://hostname.domain/contactType/contactID/contactValue/triggerID"
+		actual := buildRequestURL(template, testTrigger, testContact)
+		So(actual, ShouldEqual, expected)
+	})
 }
 
-func getLastLine(longString string) (string, error) {
-	reader := bytes.NewReader([]byte(longString))
-	var lastLine string
-	s := bufio.NewScanner(reader)
-	for s.Scan() {
-		lastLine = s.Text()
-	}
-	if err := s.Err(); err != nil {
-		return "", err
-	}
-	return lastLine, nil
+func prepareStrings(actual, expected string) (string, string) {
+	return strings.Join(strings.Fields(actual), ""), strings.Join(strings.Fields(expected), "")
 }

@@ -2,22 +2,24 @@ package webhook
 
 import (
 	"fmt"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 	"time"
+
+	"gopkg.in/yaml.v2"
 
 	"github.com/moira-alert/moira"
 )
 
 // Sender implements moira sender interface via webhook
 type Sender struct {
-	url          string
-	user         string
-	password     string
-	headers      map[string]string
-	client       *http.Client
+	url      string
+	user     string
+	password string
+	headers  map[string]string
+	client   *http.Client
+	log      moira.Logger
 }
 
 // Init read yaml config
@@ -34,18 +36,20 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 
 	sender.user, sender.password = senderSettings["user"], senderSettings["password"]
 
-	senderHeaders := make(map[string]string)
-
-	if headers, ok := senderSettings["headers"]; ok {
-		err := yaml.Unmarshal([]byte(headers), senderHeaders)
+	senderHeaders := map[string]string{"Content-Type": "application/json"}
+	if headersRaw, ok := senderSettings["headers"]; ok {
+		headers := make(map[string]string)
+		err := yaml.Unmarshal([]byte(headersRaw), headers)
 		if err != nil {
 			return fmt.Errorf("can not read headers from config: %s", err.Error())
 		}
-		sender.headers = senderHeaders
+		for k, v := range headers {
+			senderHeaders[k] = v
+		}
 	}
+	sender.headers = senderHeaders
 
 	timeout := 30
-
 	if timeoutRaw, ok := senderSettings["timeout"]; ok {
 		var err error
 		timeout, err = strconv.Atoi(timeoutRaw)
@@ -54,28 +58,24 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 		}
 	}
 
-	tr := &http.Transport{DisableKeepAlives: true}
-	sender.client = &http.Client{Timeout: time.Duration(timeout) * time.Second, Transport: tr}
+	sender.log = logger
+	sender.client = &http.Client{
+		Timeout: time.Duration(timeout) * time.Second,
+		Transport: &http.Transport{DisableKeepAlives: true},
+	}
 	return nil
 }
 
 // SendEvents implements Sender interface Send
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) error {
+
 	request, err := sender.buildRequest(events, contact, trigger, plot, throttled)
 	if request != nil {
 		defer request.Body.Close()
 	}
 
 	if err != nil {
-		return fmt.Errorf("failed to build request body: %s", err.Error())
-	}
-
-	if sender.user != "" && sender.password != "" {
-		request.SetBasicAuth(sender.user, sender.password)
-	}
-
-	for k, v := range sender.headers {
-		request.Header.Set(k, v)
+		return fmt.Errorf("failed to build request: %s", err.Error())
 	}
 
 	response, err := sender.client.Do(request)

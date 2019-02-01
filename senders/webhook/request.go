@@ -44,6 +44,25 @@ type contactData struct {
 
 func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) (*http.Request, error) {
 	requestURL := buildRequestURL(sender.url, trigger, contact)
+	requestBody, err := buildRequestBody(events, contact, trigger, plot, throttled)
+	if err != nil {
+		return nil, err
+	}
+	request, err := http.NewRequest("POST", requestURL, bytes.NewBuffer(requestBody))
+	if err != nil {
+		return request, err
+	}
+	if sender.user != "" && sender.password != "" {
+		request.SetBasicAuth(sender.user, sender.password)
+	}
+	for k, v := range sender.headers {
+		request.Header.Set(k, v)
+	}
+	sender.log.Debugf("%s %s '%s'", request.Method, request.URL.String(), bytes.NewBuffer(requestBody).String())
+	return request, nil
+}
+
+func buildRequestBody(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) ([]byte, error) {
 	eventsData := make([]eventData, 0, len(events))
 	for _, event := range events {
 		eventsData = append(eventsData, eventData{
@@ -72,12 +91,7 @@ func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moir
 		Plot:      bytesToBase64(plot),
 		Throttled: throttled,
 	}
-	body, err := json.Marshal(requestPayload)
-	if err != nil {
-		return nil, err
-	}
-	bodyBuff := bytes.NewBuffer(body)
-	return http.NewRequest("POST", requestURL, bodyBuff)
+	return json.Marshal(requestPayload)
 }
 
 func buildRequestURL(pattern string, trigger moira.TriggerData, contact moira.ContactData) string {
