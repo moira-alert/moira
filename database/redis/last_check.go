@@ -8,7 +8,6 @@ import (
 	"github.com/garyburd/redigo/redis"
 
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/database/redis/reply"
 )
 
@@ -127,62 +126,6 @@ func (connector *DbConnector) SetTriggerCheckMaintenance(triggerID string, metri
 		lastCheckString = prev
 	}
 	return nil
-}
-
-// GetTriggerCheckIDs gets checked triggerIDs, sorted from max to min check score and filtered by given tags
-// If onlyErrors return only triggerIDs with score > 0
-// ToDo: DEPRECATED method. Remove in Moira 2.5
-func (connector *DbConnector) GetTriggerCheckIDs(tagNames []string, onlyErrors bool) ([]string, error) {
-	c := connector.pool.Get()
-	defer c.Close()
-	c.Send("MULTI")
-	c.Send("ZREVRANGE", triggersChecksKey, 0, -1)
-	for _, tagName := range tagNames {
-		c.Send("SMEMBERS", tagTriggersKey(tagName))
-	}
-	if onlyErrors {
-		c.Send("SMEMBERS", badStateTriggersKey)
-	}
-	rawResponse, err := redis.Values(c.Do("EXEC"))
-	if err != nil {
-		return nil, err
-	}
-	triggerIDs, err := redis.Strings(rawResponse[0], nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve triggers: %s", err.Error())
-	}
-
-	triggerIDsByTags := make([]map[string]bool, 0)
-	for _, triggersArray := range rawResponse[1:] {
-		tagTriggerIDs, err := redis.Strings(triggersArray, nil)
-		if err != nil {
-			if err == database.ErrNil {
-				continue
-			}
-			return nil, fmt.Errorf("failed to retrieve tags triggers: %s", err.Error())
-		}
-
-		triggerIDsMap := make(map[string]bool)
-		for _, triggerID := range tagTriggerIDs {
-			triggerIDsMap[triggerID] = true
-		}
-		triggerIDsByTags = append(triggerIDsByTags, triggerIDsMap)
-	}
-
-	total := make([]string, 0)
-	for _, triggerID := range triggerIDs {
-		valid := true
-		for _, triggerIDsByTag := range triggerIDsByTags {
-			if _, ok := triggerIDsByTag[triggerID]; !ok {
-				valid = false
-				break
-			}
-		}
-		if valid {
-			total = append(total, triggerID)
-		}
-	}
-	return total, nil
 }
 
 // checkDataScoreChanged returns true if checkData.Score changed since last check

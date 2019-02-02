@@ -221,24 +221,6 @@ func TestLastCheck(t *testing.T) {
 			})
 		})
 
-		Convey("Test get trigger check ids", func() {
-			dataBase.flush()
-			okTriggerID := uuid.Must(uuid.NewV4()).String()
-			badTriggerID := uuid.Must(uuid.NewV4()).String()
-			err := dataBase.SetTriggerLastCheck(okTriggerID, &lastCheckWithNoMetrics, false)
-			So(err, ShouldBeNil)
-			err = dataBase.SetTriggerLastCheck(badTriggerID, &lastCheckTest, false)
-			So(err, ShouldBeNil)
-
-			actual, err := dataBase.GetTriggerCheckIDs(make([]string, 0), true)
-			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, []string{badTriggerID})
-
-			actual, err = dataBase.GetTriggerCheckIDs(make([]string, 0), false)
-			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, []string{badTriggerID, okTriggerID})
-		})
-
 		Convey("Test last check manipulations update 'triggers to reindex' list", func() {
 			dataBase.flush()
 			triggerID := uuid.Must(uuid.NewV4()).String()
@@ -369,24 +351,6 @@ func TestRemoteLastCheck(t *testing.T) {
 				So(actual, ShouldResemble, checkData)
 			})
 		})
-
-		Convey("Test get trigger check ids", func() {
-			dataBase.flush()
-			okTriggerID := uuid.Must(uuid.NewV4()).String()
-			badTriggerID := uuid.Must(uuid.NewV4()).String()
-			err := dataBase.SetTriggerLastCheck(okTriggerID, &lastCheckWithNoMetrics, true)
-			So(err, ShouldBeNil)
-			err = dataBase.SetTriggerLastCheck(badTriggerID, &lastCheckTest, true)
-			So(err, ShouldBeNil)
-
-			actual, err := dataBase.GetTriggerCheckIDs(make([]string, 0), true)
-			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, []string{badTriggerID})
-
-			actual, err = dataBase.GetTriggerCheckIDs(make([]string, 0), false)
-			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, []string{badTriggerID, okTriggerID})
-		})
 	})
 }
 
@@ -410,8 +374,8 @@ func TestLastCheckErrorConnection(t *testing.T) {
 		err = dataBase.SetTriggerCheckMaintenance("123", map[string]int64{}, &triggerMaintenanceTS)
 		So(err, ShouldNotBeNil)
 
-		actual2, err := dataBase.GetTriggerCheckIDs(make([]string, 0), true)
-		So(actual2, ShouldResemble, []string(nil))
+		actual2, err := dataBase.GetTriggerLastCheck("123")
+		So(actual2, ShouldResemble, moira.CheckData{})
 		So(err, ShouldNotBeNil)
 	})
 }
