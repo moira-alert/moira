@@ -3,14 +3,14 @@ package mail
 import (
 	"fmt"
 	"html/template"
-	"os"
 	"testing"
+
+	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
-	"time"
 )
 
 func TestMail(t *testing.T) {
@@ -57,7 +57,6 @@ func TestMail(t *testing.T) {
 		message := sender.makeMessage(events, contact, trigger, plot, true)
 		So(message.GetHeader("From")[0], ShouldEqual, sender.From)
 		So(message.GetHeader("To")[0], ShouldEqual, contact.Value)
-		message.WriteTo(os.Stdout)
 	})
 }
 

@@ -106,17 +106,17 @@ func TestInitTriggerChecker(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		expected := TriggerChecker{
-			TriggerID: triggerID,
-			Database:  dataBase,
-			Config:    config,
-			Source:    localSource,
-			Logger:    logger,
+			triggerID: triggerID,
+			database:  dataBase,
+			config:    config,
+			source:    localSource,
+			logger:    logger,
 			trigger:   &trigger,
 			ttl:       trigger.TTL,
 			ttlState:  *trigger.TTLState,
 			lastCheck: &lastCheck,
-			From:      lastCheck.Timestamp - ttl,
-			Until:     actual.Until,
+			from:      lastCheck.Timestamp - ttl,
+			until:     actual.until,
 		}
 		So(*actual, ShouldResemble, expected)
 	})
@@ -128,21 +128,21 @@ func TestInitTriggerChecker(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		expected := TriggerChecker{
-			TriggerID: triggerID,
-			Database:  dataBase,
-			Config:    config,
-			Source:    localSource,
-			Logger:    logger,
+			triggerID: triggerID,
+			database:  dataBase,
+			config:    config,
+			source:    localSource,
+			logger:    logger,
 			trigger:   &trigger,
 			ttl:       trigger.TTL,
 			ttlState:  *trigger.TTLState,
 			lastCheck: &moira.CheckData{
 				Metrics:   make(map[string]moira.MetricState),
 				State:     OK,
-				Timestamp: actual.Until - 3600,
+				Timestamp: actual.until - 3600,
 			},
-			From:  actual.Until - 3600 - ttl,
-			Until: actual.Until,
+			from:  actual.until - 3600 - ttl,
+			until: actual.until,
 		}
 		So(*actual, ShouldResemble, expected)
 	})
@@ -157,21 +157,21 @@ func TestInitTriggerChecker(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		expected := TriggerChecker{
-			TriggerID: triggerID,
-			Database:  dataBase,
-			Config:    config,
-			Source:    localSource,
-			Logger:    logger,
+			triggerID: triggerID,
+			database:  dataBase,
+			config:    config,
+			source:    localSource,
+			logger:    logger,
 			trigger:   &trigger,
 			ttl:       0,
 			ttlState:  ttlStateNoData,
 			lastCheck: &moira.CheckData{
 				Metrics:   make(map[string]moira.MetricState),
 				State:     OK,
-				Timestamp: actual.Until - 3600,
+				Timestamp: actual.until - 3600,
 			},
-			From:  actual.Until - 3600 - 600,
-			Until: actual.Until,
+			from:  actual.until - 3600 - 600,
+			until: actual.until,
 		}
 		So(*actual, ShouldResemble, expected)
 	})
@@ -183,17 +183,17 @@ func TestInitTriggerChecker(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		expected := TriggerChecker{
-			TriggerID: triggerID,
-			Database:  dataBase,
-			Config:    config,
-			Source:    localSource,
-			Logger:    logger,
+			triggerID: triggerID,
+			database:  dataBase,
+			config:    config,
+			source:    localSource,
+			logger:    logger,
 			trigger:   &trigger,
 			ttl:       0,
 			ttlState:  ttlStateNoData,
 			lastCheck: &lastCheck,
-			From:      lastCheck.Timestamp - 600,
-			Until:     actual.Until,
+			from:      lastCheck.Timestamp - 600,
+			until:     actual.until,
 		}
 		So(*actual, ShouldResemble, expected)
 	})

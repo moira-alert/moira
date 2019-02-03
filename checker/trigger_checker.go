@@ -11,16 +11,16 @@ import (
 
 // TriggerChecker represents data, used for handling new trigger state
 type TriggerChecker struct {
-	TriggerID string
-	Database  moira.Database
-	Logger    moira.Logger
-	Config    *Config
-	Metrics   *graphite.CheckMetrics
-	Source    metricSource.MetricSource
+	database moira.Database
+	logger   moira.Logger
+	config   *Config
+	metrics  *graphite.CheckMetrics
+	source   metricSource.MetricSource
 
-	From  int64
-	Until int64
+	from  int64
+	until int64
 
+	triggerID string
 	trigger   *moira.Trigger
 	lastCheck *moira.CheckData
 
@@ -28,8 +28,11 @@ type TriggerChecker struct {
 	ttlState string
 }
 
-// MakeTriggerChecker initialize new triggerChecker data, if trigger does not exists then return ErrTriggerNotExists error
+// MakeTriggerChecker initialize new triggerChecker data
+// if trigger does not exists then return ErrTriggerNotExists error
+// if trigger metrics source does not configured then return ErrMetricSourceIsNotConfigured error.
 func MakeTriggerChecker(triggerID string, dataBase moira.Database, logger moira.Logger, config *Config, sourceProvider *metricSource.SourceProvider, metrics *graphite.CheckerMetrics) (*TriggerChecker, error) {
+	until := time.Now().Unix()
 	trigger, err := dataBase.GetTrigger(triggerID)
 	if err != nil {
 		if err == database.ErrNil {
@@ -43,38 +46,29 @@ func MakeTriggerChecker(triggerID string, dataBase moira.Database, logger moira.
 		return nil, err
 	}
 
-	triggerChecker := TriggerChecker{
-		TriggerID: triggerID,
-		Database:  dataBase,
-		Logger:    logger,
-		Config:    config,
-		Metrics:   metrics.GetCheckMetrics(&trigger),
-		Source:    source,
-		Until:     time.Now().Unix(),
-		trigger:   &trigger,
-		ttl:       trigger.TTL,
-	}
-
-	if trigger.TTLState != nil {
-		triggerChecker.ttlState = *trigger.TTLState
-	} else {
-		triggerChecker.ttlState = NODATA
-	}
-
-	lastCheck, err := getLastCheck(triggerChecker.Database, triggerChecker.TriggerID, triggerChecker.Until-3600)
+	lastCheck, err := getLastCheck(dataBase, triggerID, until-3600)
 	if err != nil {
 		return nil, err
 	}
-	triggerChecker.lastCheck = lastCheck
 
-	triggerChecker.From = triggerChecker.lastCheck.Timestamp
-	if triggerChecker.ttl != 0 {
-		triggerChecker.From = triggerChecker.From - triggerChecker.ttl
-	} else {
-		triggerChecker.From = triggerChecker.From - 600
+	triggerChecker := &TriggerChecker{
+		database: dataBase,
+		logger:   logger,
+		config:   config,
+		metrics:  metrics.GetCheckMetrics(&trigger),
+		source:   source,
+
+		from:  calculateFrom(lastCheck.Timestamp, trigger.TTL),
+		until: until,
+
+		triggerID: triggerID,
+		trigger:   &trigger,
+		lastCheck: lastCheck,
+
+		ttl:      trigger.TTL,
+		ttlState: getTTLState(trigger.TTLState),
 	}
-
-	return &triggerChecker, nil
+	return triggerChecker, nil
 }
 
 func getLastCheck(dataBase moira.Database, triggerID string, emptyLastCheckTimestamp int64) (*moira.CheckData, error) {
@@ -96,4 +90,18 @@ func getLastCheck(dataBase moira.Database, triggerID string, emptyLastCheckTimes
 	}
 
 	return &lastCheck, nil
+}
+
+func getTTLState(triggerTTLState *string) string {
+	if triggerTTLState != nil {
+		return *triggerTTLState
+	}
+	return NODATA
+}
+
+func calculateFrom(lastCheckTimestamp, triggerTTL int64) int64 {
+	if triggerTTL != 0 {
+		return lastCheckTimestamp - triggerTTL
+	}
+	return lastCheckTimestamp - 600
 }

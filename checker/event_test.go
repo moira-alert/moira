@@ -18,9 +18,9 @@ func TestCompareMetricStates(t *testing.T) {
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 	triggerChecker := TriggerChecker{
-		TriggerID: "SuperId",
-		Database:  dataBase,
-		Logger:    logger,
+		triggerID: "SuperId",
+		database:  dataBase,
+		logger:    logger,
 		trigger:   &moira.Trigger{},
 		lastCheck: &moira.CheckData{},
 	}
@@ -85,7 +85,7 @@ func TestCompareMetricStates(t *testing.T) {
 
 			message := fmt.Sprintf("This metric has been in bad state for more than 24 hours - please, fix.")
 			dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
-				TriggerID: triggerChecker.TriggerID,
+				TriggerID: triggerChecker.triggerID,
 				Timestamp: currentState.Timestamp,
 				State:     NODATA,
 				OldState:  NODATA,
@@ -109,7 +109,7 @@ func TestCompareMetricStates(t *testing.T) {
 
 			message := fmt.Sprintf("This metric has been in bad state for more than 24 hours - please, fix.")
 			dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
-				TriggerID: triggerChecker.TriggerID,
+				TriggerID: triggerChecker.triggerID,
 				Timestamp: currentState.Timestamp,
 				State:     ERROR,
 				OldState:  ERROR,
@@ -163,9 +163,9 @@ func TestCompareTriggerStates(t *testing.T) {
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 	triggerChecker := TriggerChecker{
-		TriggerID: "SuperId",
-		Database:  dataBase,
-		Logger:    logger,
+		triggerID: "SuperId",
+		database:  dataBase,
+		logger:    logger,
 		trigger:   &moira.Trigger{},
 	}
 
@@ -255,10 +255,10 @@ func TestCheckMetricStateWithLastStateSuppressed(t *testing.T) {
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 	triggerChecker := TriggerChecker{
-		Logger:   logger,
-		Until:    67,
-		From:     17,
-		Database: dataBase,
+		logger:   logger,
+		until:    67,
+		from:     17,
+		database: dataBase,
 		trigger: &moira.Trigger{
 			ID:      "superId",
 			Targets: []string{"aliasByNode(super.*.metric, 0)"},
@@ -300,10 +300,10 @@ func TestCheckMetricStateSuppressedState(t *testing.T) {
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 	triggerChecker := TriggerChecker{
-		Logger:   logger,
-		Until:    67,
-		From:     17,
-		Database: dataBase,
+		logger:   logger,
+		until:    67,
+		from:     17,
+		database: dataBase,
 		trigger: &moira.Trigger{
 			ID:      "superId",
 			Targets: []string{"aliasByNode(super.*.metric, 0)"},
@@ -376,7 +376,7 @@ func TestCheckMetricStateSuppressedState(t *testing.T) {
 
 			message := fmt.Sprintf("This metric changed its state during maintenance interval.")
 			dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
-				TriggerID: triggerChecker.TriggerID,
+				TriggerID: triggerChecker.triggerID,
 				Timestamp: currentState.Timestamp,
 				State:     currentState.State,
 				OldState:  currentState.SuppressedState,
@@ -402,10 +402,10 @@ func TestTriggerMaintenance(t *testing.T) {
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 	triggerChecker := TriggerChecker{
-		Logger:   logger,
-		Until:    67,
-		From:     17,
-		Database: dataBase,
+		logger:   logger,
+		until:    67,
+		from:     17,
+		database: dataBase,
 		trigger: &moira.Trigger{
 			ID:      "superId",
 			Targets: []string{"aliasByNode(super.*.metric, 0)"},
@@ -454,7 +454,7 @@ func TestTriggerMaintenance(t *testing.T) {
 			Convey("Need to send", func() {
 				currentMetricState.Timestamp = 1600
 				dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
-					TriggerID: triggerChecker.TriggerID,
+					TriggerID: triggerChecker.triggerID,
 					Timestamp: currentMetricState.Timestamp,
 					State:     WARN,
 					OldState:  OK,
@@ -488,7 +488,7 @@ func TestTriggerMaintenance(t *testing.T) {
 				currentTriggerState.Timestamp = 1600
 				emptyEvent := ""
 				dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
-					TriggerID:      triggerChecker.TriggerID,
+					TriggerID:      triggerChecker.triggerID,
 					Timestamp:      currentTriggerState.Timestamp,
 					State:          ERROR,
 					OldState:       OK,
