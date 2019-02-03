@@ -9,12 +9,16 @@ import (
 
 // MarkTriggersAsUnused adds unused trigger IDs to Redis set
 func (connector *DbConnector) MarkTriggersAsUnused(triggerIDs ...string) error {
+	c := connector.pool.Get()
+	defer c.Close()
+
+	return connector.markTriggersAsUnused(c, triggerIDs...)
+}
+
+func (connector *DbConnector) markTriggersAsUnused(c redis.Conn, triggerIDs ...string) error {
 	if len(triggerIDs) == 0 {
 		return nil
 	}
-
-	c := connector.pool.Get()
-	defer c.Close()
 
 	c.Send("MULTI")
 	for _, triggerID := range triggerIDs {
@@ -44,12 +48,16 @@ func (connector *DbConnector) GetUnusedTriggerIDs() ([]string, error) {
 
 // MarkTriggersAsUsed removes trigger IDs from Redis set
 func (connector *DbConnector) MarkTriggersAsUsed(triggerIDs ...string) error {
+	c := connector.pool.Get()
+	defer c.Close()
+
+	return connector.markTriggersAsUsed(c, triggerIDs...)
+}
+
+func (connector *DbConnector) markTriggersAsUsed(c redis.Conn, triggerIDs ...string) error {
 	if len(triggerIDs) == 0 {
 		return nil
 	}
-
-	c := connector.pool.Get()
-	defer c.Close()
 
 	c.Send("MULTI")
 	for _, triggerID := range triggerIDs {
@@ -67,13 +75,13 @@ func (connector *DbConnector) MarkTriggersAsUsed(triggerIDs ...string) error {
 // It filters triggers which are presented in oldTriggers but not in newTriggers.
 // For every trigger in that diff-list it checks whether this trigger has any subscription and mark it unused if not.
 // At the end, refreshUnusedTriggers mark all newTriggers as used
-func (connector *DbConnector) refreshUnusedTriggers(newTriggers, oldTriggers []*moira.Trigger) error {
+func (connector *DbConnector) refreshUnusedTriggers(c redis.Conn, newTriggers, oldTriggers []*moira.Trigger) error {
 	unusedTriggerIDs := make([]string, 0)
 	usedTriggerIDs := make([]string, 0)
 
 	triggersNotInNewList := moira.GetTriggerListsDiff(oldTriggers, newTriggers)
 	for _, trigger := range triggersNotInNewList {
-		ok, err := connector.triggerHasSubscriptions(trigger)
+		ok, err := connector.triggerHasSubscriptions(c, trigger)
 		if err != nil {
 			return err
 		}
@@ -89,14 +97,14 @@ func (connector *DbConnector) refreshUnusedTriggers(newTriggers, oldTriggers []*
 	}
 
 	if len(unusedTriggerIDs) > 0 {
-		err := connector.MarkTriggersAsUnused(unusedTriggerIDs...)
+		err := connector.markTriggersAsUnused(c, unusedTriggerIDs...)
 		if err != nil {
 			return err
 		}
 	}
 
 	if len(usedTriggerIDs) > 0 {
-		return connector.MarkTriggersAsUsed(usedTriggerIDs...)
+		return connector.markTriggersAsUsed(c, usedTriggerIDs...)
 	}
 
 	return nil

@@ -16,6 +16,10 @@ func (connector *DbConnector) GetSubscription(id string) (moira.SubscriptionData
 	c := connector.pool.Get()
 	defer c.Close()
 
+	return connector.getSubscription(c, id)
+}
+
+func (connector *DbConnector) getSubscription(c redis.Conn, id string) (moira.SubscriptionData, error) {
 	subscription, err := reply.Subscription(c.Do("GET", subscriptionKey(id)))
 	if err != nil {
 		return subscription, err
@@ -30,6 +34,10 @@ func (connector *DbConnector) GetSubscriptions(subscriptionIDs []string) ([]*moi
 	c := connector.pool.Get()
 	defer c.Close()
 
+	return connector.getSubscriptions(c, subscriptionIDs)
+}
+
+func (connector *DbConnector) getSubscriptions(c redis.Conn, subscriptionIDs []string) ([]*moira.SubscriptionData, error) {
 	c.Send("MULTI")
 	for _, id := range subscriptionIDs {
 		c.Send("GET", subscriptionKey(id))
@@ -48,16 +56,17 @@ func (connector *DbConnector) GetSubscriptions(subscriptionIDs []string) ([]*moi
 
 // SaveSubscription writes subscription data, updates tags subscriptions and user subscriptions
 func (connector *DbConnector) SaveSubscription(subscription *moira.SubscriptionData) error {
-	oldSubscription, getSubError := connector.GetSubscription(subscription.ID)
+	c := connector.pool.Get()
+	defer c.Close()
+
+	oldSubscription, getSubError := connector.getSubscription(c, subscription.ID)
 	if getSubError != nil && getSubError != database.ErrNil {
 		return getSubError
 	}
-	oldTriggers, err := connector.getSubscriptionTriggers(&oldSubscription)
+	oldTriggers, err := connector.getSubscriptionTriggers(c, &oldSubscription)
 	if err != nil {
 		return fmt.Errorf("failed to get triggers by subscription: %s", err.Error())
 	}
-	c := connector.pool.Get()
-	defer c.Close()
 	c.Send("MULTI")
 	if getSubError != database.ErrNil {
 		addSendSubscriptionRequest(c, subscription, &oldSubscription)
@@ -68,11 +77,11 @@ func (connector *DbConnector) SaveSubscription(subscription *moira.SubscriptionD
 	if err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
-	newTriggers, err := connector.getSubscriptionTriggers(subscription)
+	newTriggers, err := connector.getSubscriptionTriggers(c, subscription)
 	if err != nil {
 		return fmt.Errorf("failed to get triggers by subscription: %s", err.Error())
 	}
-	return connector.refreshUnusedTriggers(newTriggers, oldTriggers)
+	return connector.refreshUnusedTriggers(c, newTriggers, oldTriggers)
 }
 
 // SaveSubscriptions writes subscriptions, updates tags subscriptions and user subscriptions
@@ -81,16 +90,18 @@ func (connector *DbConnector) SaveSubscriptions(subscriptions []*moira.Subscript
 	for i, subscription := range subscriptions {
 		ids[i] = subscription.ID
 	}
-	oldSubscriptions, err := connector.GetSubscriptions(ids)
-	if err != nil {
-		return err
-	}
-	oldTriggers, err := connector.getSubscriptionsTriggers(oldSubscriptions)
-	if err != nil {
-		return err
-	}
+
 	c := connector.pool.Get()
 	defer c.Close()
+
+	oldSubscriptions, err := connector.getSubscriptions(c, ids)
+	if err != nil {
+		return err
+	}
+	oldTriggers, err := connector.getSubscriptionsTriggers(c, oldSubscriptions)
+	if err != nil {
+		return err
+	}
 	c.Send("MULTI")
 	for i, subscription := range subscriptions {
 		addSendSubscriptionRequest(c, subscription, oldSubscriptions[i])
@@ -99,11 +110,11 @@ func (connector *DbConnector) SaveSubscriptions(subscriptions []*moira.Subscript
 	if err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
-	newTriggers, err := connector.getSubscriptionsTriggers(subscriptions)
+	newTriggers, err := connector.getSubscriptionsTriggers(c, subscriptions)
 	if err != nil {
 		return err
 	}
-	if err := connector.refreshUnusedTriggers(newTriggers, oldTriggers); err != nil {
+	if err := connector.refreshUnusedTriggers(c, newTriggers, oldTriggers); err != nil {
 		return err
 	}
 
@@ -112,19 +123,21 @@ func (connector *DbConnector) SaveSubscriptions(subscriptions []*moira.Subscript
 
 // RemoveSubscription deletes subscription data and removes subscriptionID from users and tags subscriptions
 func (connector *DbConnector) RemoveSubscription(subscriptionID string) error {
-	subscription, err := connector.GetSubscription(subscriptionID)
+	c := connector.pool.Get()
+	defer c.Close()
+
+	subscription, err := connector.getSubscription(c, subscriptionID)
 	if err != nil {
 		if err == database.ErrNil {
 			return nil
 		}
 		return err
 	}
-	oldTriggers, err := connector.getSubscriptionTriggers(&subscription)
+	oldTriggers, err := connector.getSubscriptionTriggers(c, &subscription)
 	if err != nil {
 		return fmt.Errorf("failed to get triggers by subscription: %s", err.Error())
 	}
-	c := connector.pool.Get()
-	defer c.Close()
+
 	c.Send("MULTI")
 	c.Send("SREM", userSubscriptionsKey(subscription.User), subscriptionID)
 	for _, tag := range subscription.Tags {
@@ -135,7 +148,7 @@ func (connector *DbConnector) RemoveSubscription(subscriptionID string) error {
 	if err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
-	err = connector.refreshUnusedTriggers([]*moira.Trigger{}, oldTriggers)
+	err = connector.refreshUnusedTriggers(c, []*moira.Trigger{}, oldTriggers)
 	if err != nil {
 		return fmt.Errorf("failed to update triggers by subscription: %s", err.Error())
 	}
@@ -160,6 +173,10 @@ func (connector *DbConnector) GetTagsSubscriptions(tags []string) ([]*moira.Subs
 	c := connector.pool.Get()
 	defer c.Close()
 
+	return connector.getTagsSubscriptions(c, tags)
+}
+
+func (connector *DbConnector) getTagsSubscriptions(c redis.Conn, tags []string) ([]*moira.SubscriptionData, error) {
 	tagKeys := make([]interface{}, 0, len(tags))
 	for _, tag := range tags {
 		tagKeys = append(tagKeys, fmt.Sprintf("moira-tag-subscriptions:%s", tag))
@@ -176,7 +193,7 @@ func (connector *DbConnector) GetTagsSubscriptions(tags []string) ([]*moira.Subs
 		return make([]*moira.SubscriptionData, 0), nil
 	}
 
-	subscriptionsData, err := connector.GetSubscriptions(subscriptionsIDs)
+	subscriptionsData, err := connector.getSubscriptions(c, subscriptionsIDs)
 	if err != nil {
 		return nil, err
 	}
@@ -204,13 +221,10 @@ func addSendSubscriptionRequest(c redis.Conn, subscription *moira.SubscriptionDa
 	return nil
 }
 
-func (connector *DbConnector) getSubscriptionTriggers(subscription *moira.SubscriptionData) ([]*moira.Trigger, error) {
+func (connector *DbConnector) getSubscriptionTriggers(c redis.Conn, subscription *moira.SubscriptionData) ([]*moira.Trigger, error) {
 	if subscription == nil || len(subscription.Tags) == 0 {
 		return make([]*moira.Trigger, 0), nil
 	}
-
-	c := connector.pool.Get()
-	defer c.Close()
 
 	tagKeys := make([]interface{}, 0, len(subscription.Tags))
 	for _, tag := range subscription.Tags {
@@ -232,12 +246,12 @@ func (connector *DbConnector) getSubscriptionTriggers(subscription *moira.Subscr
 	return connector.GetTriggers(triggerIDs)
 }
 
-func (connector *DbConnector) getSubscriptionsTriggers(subscriptions []*moira.SubscriptionData) ([]*moira.Trigger, error) {
+func (connector *DbConnector) getSubscriptionsTriggers(c redis.Conn, subscriptions []*moira.SubscriptionData) ([]*moira.Trigger, error) {
 	triggersMap := make(map[string]*moira.Trigger)
 	triggers := make([]*moira.Trigger, 0)
 
 	for _, subscription := range subscriptions {
-		triggersBySubscription, err := connector.getSubscriptionTriggers(subscription)
+		triggersBySubscription, err := connector.getSubscriptionTriggers(c, subscription)
 		if err != nil {
 			return triggers, err
 		}

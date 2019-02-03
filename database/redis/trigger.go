@@ -49,6 +49,10 @@ func (connector *DbConnector) GetTrigger(triggerID string) (moira.Trigger, error
 	c := connector.pool.Get()
 	defer c.Close()
 
+	return connector.getTrigger(c, triggerID)
+}
+
+func (connector *DbConnector) getTrigger(c redis.Conn, triggerID string) (moira.Trigger, error) {
 	c.Send("MULTI")
 	c.Send("GET", triggerKey(triggerID))
 	c.Send("SMEMBERS", triggerTagsKey(triggerID))
@@ -56,7 +60,6 @@ func (connector *DbConnector) GetTrigger(triggerID string) (moira.Trigger, error
 	if err != nil {
 		return moira.Trigger{}, fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
-
 	return connector.getTriggerWithTags(rawResponse[0], rawResponse[1], triggerID)
 }
 
@@ -96,6 +99,10 @@ func (connector *DbConnector) GetPatternTriggerIDs(pattern string) ([]string, er
 	c := connector.pool.Get()
 	defer c.Close()
 
+	return connector.getPatternTriggerIDs(c, pattern)
+}
+
+func (connector *DbConnector) getPatternTriggerIDs(c redis.Conn, pattern string) ([]string, error) {
 	triggerIds, err := redis.Strings(c.Do("SMEMBERS", patternTriggersKey(pattern)))
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve pattern triggers for pattern: %s, error: %s", pattern, err.Error())
@@ -120,7 +127,10 @@ func (connector *DbConnector) RemovePatternTriggerIDs(pattern string) error {
 // If given trigger contains new tags then create it.
 // If given trigger has no subscription on it, add it to triggers-without-subscriptions
 func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigger) error {
-	existing, errGetTrigger := connector.GetTrigger(triggerID)
+	c := connector.pool.Get()
+	defer c.Close()
+
+	existing, errGetTrigger := connector.getTrigger(c, triggerID)
 	if errGetTrigger != nil && errGetTrigger != database.ErrNil {
 		return errGetTrigger
 	}
@@ -131,8 +141,7 @@ func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigg
 	if err != nil {
 		return err
 	}
-	c := connector.pool.Get()
-	defer c.Close()
+
 	c.Send("MULTI")
 	cleanupPatterns := make([]string, 0)
 	if errGetTrigger != database.ErrNil {
@@ -172,37 +181,37 @@ func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigg
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
 
-	hasSubscriptions, err := connector.triggerHasSubscriptions(trigger)
+	hasSubscriptions, err := connector.triggerHasSubscriptions(c, trigger)
 	if err != nil {
 		return fmt.Errorf("failed to check trigger subscriptions: %s", err.Error())
 	}
 
 	if !hasSubscriptions {
-		err = connector.MarkTriggersAsUnused(triggerID)
+		err = connector.markTriggersAsUnused(c, triggerID)
 	} else {
-		err = connector.MarkTriggersAsUsed(triggerID)
+		err = connector.markTriggersAsUsed(c, triggerID)
 	}
 	if err != nil {
 		return fmt.Errorf("failed to mark trigger as (un)used: %s", err.Error())
 	}
 
-	return connector.cleanupPatternsOutOfUse(cleanupPatterns)
+	return connector.cleanupPatternsOutOfUse(c, cleanupPatterns)
 }
 
 // RemoveTrigger deletes trigger data by given triggerID, delete trigger tag list,
 // Deletes triggerID from containing tags triggers list and from containing patterns triggers list
 // If containing patterns doesn't used in another triggers, then delete this patterns with metrics data
 func (connector *DbConnector) RemoveTrigger(triggerID string) error {
-	trigger, err := connector.GetTrigger(triggerID)
+	c := connector.pool.Get()
+	defer c.Close()
+
+	trigger, err := connector.getTrigger(c, triggerID)
 	if err != nil {
 		if err == database.ErrNil {
 			return nil
 		}
 		return err
 	}
-
-	c := connector.pool.Get()
-	defer c.Close()
 
 	c.Send("MULTI")
 	c.Send("DEL", triggerKey(triggerID))
@@ -223,7 +232,7 @@ func (connector *DbConnector) RemoveTrigger(triggerID string) error {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
 
-	return connector.cleanupPatternsOutOfUse(trigger.Patterns)
+	return connector.cleanupPatternsOutOfUse(c, trigger.Patterns)
 }
 
 // GetTriggerChecks gets triggers data with tags, lastCheck data and throttling by given triggersIDs
@@ -294,14 +303,14 @@ func (connector *DbConnector) getTriggerWithTags(triggerRaw interface{}, tagsRaw
 	return trigger, nil
 }
 
-func (connector *DbConnector) cleanupPatternsOutOfUse(pattern []string) error {
+func (connector *DbConnector) cleanupPatternsOutOfUse(c redis.Conn, pattern []string) error {
 	for _, pattern := range pattern {
-		triggerIDs, err := connector.GetPatternTriggerIDs(pattern)
+		triggerIDs, err := connector.getPatternTriggerIDs(c, pattern)
 		if err != nil {
 			return err
 		}
 		if len(triggerIDs) == 0 {
-			if err := connector.RemovePatternWithMetrics(pattern); err != nil {
+			if err := connector.removePatternWithMetrics(c, pattern); err != nil {
 				return err
 			}
 		}
@@ -309,11 +318,11 @@ func (connector *DbConnector) cleanupPatternsOutOfUse(pattern []string) error {
 	return nil
 }
 
-func (connector *DbConnector) triggerHasSubscriptions(trigger *moira.Trigger) (bool, error) {
+func (connector *DbConnector) triggerHasSubscriptions(c redis.Conn, trigger *moira.Trigger) (bool, error) {
 	if trigger == nil || len(trigger.Tags) == 0 {
 		return false, nil
 	}
-	subscriptions, err := connector.GetTagsSubscriptions(trigger.Tags)
+	subscriptions, err := connector.getTagsSubscriptions(c, trigger.Tags)
 	if err != nil {
 		return false, err
 	}

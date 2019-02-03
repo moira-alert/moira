@@ -170,6 +170,17 @@ func (connector *DbConnector) GetPatternMetrics(pattern string) ([]string, error
 	return metrics, nil
 }
 
+func (connector *DbConnector) getPatternMetrics(c redis.Conn, pattern string) ([]string, error) {
+	metrics, err := redis.Strings(c.Do("SMEMBERS", patternMetricsKey(pattern)))
+	if err != nil {
+		if err == redis.ErrNil {
+			return make([]string, 0), nil
+		}
+		return nil, fmt.Errorf("failed to get pattern metrics for pattern %s, error: %v", pattern, err)
+	}
+	return metrics, nil
+}
+
 // RemovePattern removes pattern from patterns list
 func (connector *DbConnector) RemovePattern(pattern string) error {
 	c := connector.pool.Get()
@@ -196,12 +207,18 @@ func (connector *DbConnector) RemovePatternsMetrics(patterns []string) error {
 
 // RemovePatternWithMetrics removes pattern metrics with data and given pattern
 func (connector *DbConnector) RemovePatternWithMetrics(pattern string) error {
-	metrics, err := connector.GetPatternMetrics(pattern)
+	c := connector.pool.Get()
+	defer c.Close()
+
+	return connector.removePatternWithMetrics(c, pattern)
+}
+
+func (connector *DbConnector) removePatternWithMetrics(c redis.Conn, pattern string) error {
+	metrics, err := connector.getPatternMetrics(c, pattern)
 	if err != nil {
 		return err
 	}
-	c := connector.pool.Get()
-	defer c.Close()
+
 	c.Send("MULTI")
 	c.Send("SREM", patternsListKey, pattern)
 	for _, metric := range metrics {
