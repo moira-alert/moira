@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/gofrs/uuid"
 	"github.com/golang/mock/gomock"
-	"github.com/satori/go.uuid"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"github.com/moira-alert/moira"
@@ -32,13 +32,13 @@ func TestGetAllContacts(t *testing.T) {
 	Convey("Get contacts", t, func() {
 		contacts := []*moira.ContactData{
 			{
-				ID:    uuid.NewV4().String(),
+				ID:    uuid.Must(uuid.NewV4()).String(),
 				Type:  "mail",
 				User:  "user1",
 				Value: "good@mail.com",
 			},
 			{
-				ID:    uuid.NewV4().String(),
+				ID:    uuid.Must(uuid.NewV4()).String(),
 				Type:  "pushover",
 				User:  "user2",
 				Value: "ggg1",
@@ -77,7 +77,7 @@ func TestCreateContact(t *testing.T) {
 
 	Convey("Success create contact with id", t, func() {
 		contact := dto.Contact{
-			ID:    uuid.NewV4().String(),
+			ID:    uuid.Must(uuid.NewV4()).String(),
 			Value: "some@mail.com",
 			Type:  "mail",
 		}
@@ -97,7 +97,7 @@ func TestCreateContact(t *testing.T) {
 
 	Convey("Contact exists by id", t, func() {
 		contact := &dto.Contact{
-			ID:    uuid.NewV4().String(),
+			ID:    uuid.Must(uuid.NewV4()).String(),
 			Value: "some@mail.com",
 			Type:  "mail",
 		}
@@ -108,7 +108,7 @@ func TestCreateContact(t *testing.T) {
 
 	Convey("Error get contact", t, func() {
 		contact := &dto.Contact{
-			ID:    uuid.NewV4().String(),
+			ID:    uuid.Must(uuid.NewV4()).String(),
 			Value: "some@mail.com",
 			Type:  "mail",
 		}
@@ -146,7 +146,7 @@ func TestUpdateContact(t *testing.T) {
 			Value: "some@mail.com",
 			Type:  "mail",
 		}
-		contactID := uuid.NewV4().String()
+		contactID := uuid.Must(uuid.NewV4()).String()
 		contact := moira.ContactData{
 			Value: contactDTO.Value,
 			Type:  contactDTO.Type,
@@ -165,7 +165,7 @@ func TestUpdateContact(t *testing.T) {
 			Value: "some@mail.com",
 			Type:  "mail",
 		}
-		contactID := uuid.NewV4().String()
+		contactID := uuid.Must(uuid.NewV4()).String()
 		contact := moira.ContactData{
 			Value: contactDTO.Value,
 			Type:  contactDTO.Type,
@@ -186,7 +186,7 @@ func TestRemoveContact(t *testing.T) {
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	userLogin := "user"
-	contactID := uuid.NewV4().String()
+	contactID := uuid.Must(uuid.NewV4()).String()
 
 	Convey("Delete contact without user subscriptions", t, func() {
 		dataBase.EXPECT().GetUserSubscriptionIDs(userLogin).Return(make([]string, 0), nil)
@@ -198,8 +198,8 @@ func TestRemoveContact(t *testing.T) {
 
 	Convey("Delete contact without contact subscriptions", t, func() {
 		subscription := &moira.SubscriptionData{
-			Contacts: []string{uuid.NewV4().String()},
-			ID:       uuid.NewV4().String(),
+			Contacts: []string{uuid.Must(uuid.NewV4()).String()},
+			ID:       uuid.Must(uuid.NewV4()).String(),
 		}
 
 		dataBase.EXPECT().GetUserSubscriptionIDs(userLogin).Return([]string{subscription.ID}, nil)
@@ -226,7 +226,7 @@ func TestRemoveContact(t *testing.T) {
 		Convey("Subscription has contact", func() {
 			subscription := moira.SubscriptionData{
 				Contacts: []string{contactID},
-				ID:       uuid.NewV4().String(),
+				ID:       uuid.Must(uuid.NewV4()).String(),
 				Tags:     []string{"Tag1", "Tag2"},
 			}
 			subscriptionSubstring := fmt.Sprintf("%s (tags: %s)", subscription.ID, strings.Join(subscription.Tags, ", "))
@@ -243,7 +243,7 @@ func TestSendTestContactNotification(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-	id := uuid.NewV4().String()
+	id := uuid.Must(uuid.NewV4()).String()
 
 	Convey("Success", t, func() {
 		dataBase.EXPECT().PushNotificationEvent(gomock.Any(), false).Return(nil)
@@ -263,8 +263,8 @@ func TestCheckUserPermissionsForContact(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-	userLogin := uuid.NewV4().String()
-	id := uuid.NewV4().String()
+	userLogin := uuid.Must(uuid.NewV4()).String()
+	id := uuid.Must(uuid.NewV4()).String()
 
 	Convey("No contact", t, func() {
 		dataBase.EXPECT().GetContact(id).Return(moira.ContactData{}, database.ErrNil)

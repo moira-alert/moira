@@ -3,8 +3,8 @@ package redis
 import (
 	"testing"
 
+	"github.com/gofrs/uuid"
 	"github.com/op/go-logging"
-	"github.com/satori/go.uuid"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"github.com/moira-alert/moira"
@@ -214,7 +214,7 @@ var subscriptions = []*moira.SubscriptionData{
 		ID:                "subscriptionID-00000000000001",
 		Enabled:           true,
 		Tags:              []string{tag1, tag2, tag3},
-		Contacts:          []string{uuid.NewV4().String()},
+		Contacts:          []string{uuid.Must(uuid.NewV4()).String()},
 		ThrottlingEnabled: true,
 		User:              user1,
 	},
@@ -222,7 +222,7 @@ var subscriptions = []*moira.SubscriptionData{
 		ID:       "subscriptionID-00000000000002",
 		Enabled:  true,
 		Tags:     []string{tag1},
-		Contacts: []string{uuid.NewV4().String()},
+		Contacts: []string{uuid.Must(uuid.NewV4()).String()},
 		User:     user1,
 		Schedule: moira.ScheduleData{
 			StartOffset:    10,
@@ -244,7 +244,7 @@ var subscriptions = []*moira.SubscriptionData{
 		ID:       "subscriptionID-00000000000003",
 		Enabled:  true,
 		Tags:     []string{tag3, tag1},
-		Contacts: []string{uuid.NewV4().String()},
+		Contacts: []string{uuid.Must(uuid.NewV4()).String()},
 		User:     user1,
 		Schedule: moira.ScheduleData{
 			StartOffset:    0,   // 0:00 (GMT +5) after
@@ -266,7 +266,7 @@ var subscriptions = []*moira.SubscriptionData{
 		ID:       "subscriptionID-00000000000004",
 		Enabled:  true,
 		Tags:     []string{tag3},
-		Contacts: []string{uuid.NewV4().String()},
+		Contacts: []string{uuid.Must(uuid.NewV4()).String()},
 		User:     user1,
 		Schedule: moira.ScheduleData{
 			StartOffset:    660, // 16:00 (GMT +5) before
@@ -288,7 +288,7 @@ var subscriptions = []*moira.SubscriptionData{
 		ID:                "subscriptionID-00000000000005",
 		Enabled:           false,
 		Tags:              []string{tag1, tag2, tag3},
-		Contacts:          []string{uuid.NewV4().String()},
+		Contacts:          []string{uuid.Must(uuid.NewV4()).String()},
 		ThrottlingEnabled: true,
 		User:              user1,
 	},
@@ -296,7 +296,7 @@ var subscriptions = []*moira.SubscriptionData{
 		ID:                "subscriptionID-00000000000006",
 		Enabled:           false,
 		Tags:              []string{tag2},
-		Contacts:          []string{uuid.NewV4().String()},
+		Contacts:          []string{uuid.Must(uuid.NewV4()).String()},
 		ThrottlingEnabled: true,
 		User:              user1,
 	},
@@ -304,7 +304,7 @@ var subscriptions = []*moira.SubscriptionData{
 		ID:                "subscriptionID-00000000000007",
 		Enabled:           false,
 		Tags:              []string{tag2},
-		Contacts:          []string{uuid.NewV4().String()},
+		Contacts:          []string{uuid.Must(uuid.NewV4()).String()},
 		ThrottlingEnabled: true,
 		User:              user1,
 	},

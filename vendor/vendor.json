@@ -1008,6 +1008,12 @@
 			"revisionTime": "2018-06-08T13:20:22Z"
 		},
 		{
+			"checksumSHA1": "+QA+yCapL80NO5GzibuyicX6g0E=",
+			"path": "github.com/gofrs/uuid",
+			"revision": "6b08a5c5172ba18946672b49749cde22873dd7c2",
+			"revisionTime": "2019-01-11T07:18:23Z"
+		},
+		{
 			"checksumSHA1": "FhLvgtYfuKY0ow9wtLJRoeg7d6w=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/gogo/protobuf/gogoproto",
 			"path": "github.com/gogo/protobuf/gogoproto",
@@ -1313,12 +1319,6 @@
 			"path": "github.com/rs/cors",
 			"revision": "eabcc6af4bbe5ad3a949d36450326a2b0b9894b8",
 			"revisionTime": "2017-08-01T07:32:01Z"
-		},
-		{
-			"checksumSHA1": "zmC8/3V4ls53DJlNTKDZwPSC/dA=",
-			"path": "github.com/satori/go.uuid",
-			"revision": "5bf94b69c6b68ee1b541973bb8e1144db23a194b",
-			"revisionTime": "2017-03-21T23:07:31Z"
 		},
 		{
 			"checksumSHA1": "y5uEa8FUgEkc/2/fs+XQ+ilB0js=",
