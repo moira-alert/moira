@@ -100,17 +100,7 @@ func newRedisPool(logger moira.Logger, config Config) *redis.Pool {
 				}
 				lastMu.Unlock()
 			}
-			c, err := redis.Dial("tcp", serverAddr)
-			if err != nil {
-				return nil, err
-			}
-			if config.DBID != 0 {
-				if _, err = c.Do("SELECT", config.DBID); err != nil {
-					c.Close()
-					return nil, err
-				}
-			}
-			return c, err
+			return redis.Dial("tcp", serverAddr, redis.DialDatabase(config.DBID))
 		},
 		TestOnBorrow: func(c redis.Conn, t time.Time) error {
 			if useSentinel {
@@ -132,14 +122,13 @@ func createSentinel(logger moira.Logger, config Config, useSentinel bool) (*sent
 			MasterName: config.MasterName,
 			Dial: func(addr string) (redis.Conn, error) {
 				timeout := 300 * time.Millisecond
-				c, err := redis.Dial("tcp", addr,
+				return redis.Dial(
+					"tcp",
+					addr,
 					redis.DialConnectTimeout(timeout),
 					redis.DialReadTimeout(timeout),
-					redis.DialWriteTimeout(timeout))
-				if err != nil {
-					return nil, err
-				}
-				return c, nil
+					redis.DialWriteTimeout(timeout),
+				)
 			},
 		}
 
