@@ -9,7 +9,7 @@ import (
 
 const lockRetryDelay = time.Second * 5
 
-// Shorthand to `func(stop <-chan struct{}) error`
+// Action is the shorthand to `func(stop <-chan struct{}) error`
 type Action func(stop <-chan struct{}) error
 
 // NewWorker creates Worker
