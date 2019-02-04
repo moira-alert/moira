@@ -65,7 +65,7 @@ func (worker *Worker) Run(stop <-chan struct{}) {
 				}
 			}()
 
-			if err := action(actionStop); err != nil {
+			if err := action(stop); err != nil {
 				logger.Errorf("%s failed during the execution: %s", worker.name, err.Error())
 			}
 		}(worker.action, worker.logger, actionDone, actionStop)
