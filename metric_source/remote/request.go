@@ -26,19 +26,18 @@ func (remote *Remote) prepareRequest(from, until int64, target string) (*http.Re
 
 func (remote *Remote) makeRequest(req *http.Request) ([]byte, error) {
 	resp, err := remote.client.Do(req)
+	if resp != nil {
+		defer resp.Body.Close()
+	}
 	if err != nil {
 		return nil, err
 	}
 	body, err := ioutil.ReadAll(resp.Body)
-	defer resp.Body.Close()
-
 	if err != nil {
 		return body, err
 	}
-
 	if resp.StatusCode != 200 {
-		err = fmt.Errorf("bad response status %d: %s", resp.StatusCode, string(body))
-		return body, err
+		return body, fmt.Errorf("bad response status %d: %s", resp.StatusCode, string(body))
 	}
 	return body, err
 }
