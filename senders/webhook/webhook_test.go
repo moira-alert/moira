@@ -46,6 +46,7 @@ func TestSender_SendEvents(t *testing.T) {
 						w.Write([]byte(err.Error()))
 						w.WriteHeader(status)
 					}
+					w.WriteHeader(status)
 				},
 			),
 		)
