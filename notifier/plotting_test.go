@@ -48,7 +48,7 @@ func TestResolveMetricsWindow(t *testing.T) {
 				So(err, ShouldBeNil)
 				from, to := resolveMetricsWindow(logger, trigger, pkg)
 				So(from, ShouldEqual, expectedTo-timeRange+timeShift)
-				So(to, ShouldEqual, expectedTo+timeShift)
+				So(to, ShouldEqual, expectedTo)
 			}
 		})
 		Convey("Window is not realtime: force realtime window", func() {
@@ -77,7 +77,7 @@ func TestResolveMetricsWindow(t *testing.T) {
 				So(err, ShouldBeNil)
 				from, to := resolveMetricsWindow(logger, trigger, pkg)
 				So(from, ShouldEqual, expectedTo-timeRange+timeShift)
-				So(to, ShouldEqual, expectedTo+timeShift)
+				So(to, ShouldEqual, expectedTo)
 			}
 		})
 	})

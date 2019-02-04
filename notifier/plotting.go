@@ -100,13 +100,13 @@ func resolveMetricsWindow(logger moira.Logger, trigger moira.TriggerData, pkg No
 		if isWideWindow {
 			return fromTime.Unix(), toTime.Unix()
 		}
-		return toTime.Add(-defaultTimeRange + defaultTimeShift).Unix(), toTime.Add(defaultTimeShift).Unix()
+		return toTime.Add(-defaultTimeRange + defaultTimeShift).Unix(), toTime.Unix()
 	}
 	// resolve local trigger window
 	// window is realtime: use shifted window to fetch actual data from redis
 	// window is not realtime: force realtime window
 	if isRealTimeWindow {
-		return toTime.Add(-defaultTimeRange + defaultTimeShift).Unix(), toTime.Add(defaultTimeShift).Unix()
+		return toTime.Add(-defaultTimeRange + defaultTimeShift).Unix(), toTime.Unix()
 	}
 	return defaultFrom, defaultTo
 }
