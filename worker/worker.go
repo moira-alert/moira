@@ -1,16 +1,18 @@
 package worker
 
 import (
+	"time"
+
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
-	"sync"
-	"time"
 )
 
 const lockRetryDelay = time.Second * 5
 
+type Action func(stop <-chan struct{}) error
+
 // NewWorker creates Worker
-func NewWorker(name string, logger moira.Logger, lock moira.Lock, action func(stop <-chan struct{})) *Worker {
+func NewWorker(name string, logger moira.Logger, lock moira.Lock, action Action) *Worker {
 	return &Worker{name: name, logger: logger, lock: lock, action: action, lockRetryDelay: lockRetryDelay}
 }
 
@@ -24,7 +26,7 @@ type Worker struct {
 	name           string
 	logger         moira.Logger
 	lock           moira.Lock
-	action         func(stop <-chan struct{})
+	action         Action
 	lockRetryDelay time.Duration
 }
 
@@ -52,22 +54,32 @@ func (worker *Worker) Run(stop <-chan struct{}) {
 		worker.logger.Infof("%s acquired the lock", worker.name)
 
 		actionStop := make(chan struct{})
-		actionWg := &sync.WaitGroup{}
-		actionWg.Add(1)
-		go func(action func(<-chan struct{}), actionWg *sync.WaitGroup, actionStop <-chan struct{}) {
-			action(actionStop)
-			actionWg.Done()
-		}(worker.action, actionWg, actionStop)
+		actionDone := make(chan struct{})
+		go func(action Action, logger moira.Logger, done chan struct{}, stop <-chan struct{}) {
+			defer close(done)
+
+			defer func() {
+				if r := recover(); r != nil {
+					logger.Errorf("%s panicked during the execution: %s", worker.name, r)
+				}
+			}()
+
+			if err := action(actionStop); err != nil {
+				logger.Errorf("%s failed during the execution: %s", worker.name, err.Error())
+			}
+		}(worker.action, worker.logger, actionDone, actionStop)
 
 		select {
+		case <-actionDone:
+			worker.lock.Release()
 		case <-lost:
 			worker.logger.Warningf("%s lost the lock", worker.name)
 			close(actionStop)
-			actionWg.Wait()
+			<-actionDone
 			worker.lock.Release()
 		case <-stop:
 			close(actionStop)
-			actionWg.Wait()
+			<-actionDone
 			worker.lock.Release()
 			return
 		}

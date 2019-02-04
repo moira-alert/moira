@@ -2,10 +2,11 @@ package telegram
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/moira-alert/moira"
 	w "github.com/moira-alert/moira/worker"
 	"gopkg.in/tucnak/telebot.v2"
-	"time"
 )
 
 const telegramLockName = "moira-telegram-users:moira-bot-host"
@@ -65,10 +66,11 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 // runTelebot starts telegram bot and manages bot subscriptions
 // to make sure there is always only one working Poller
 func (sender *Sender) runTelebot() {
-	workerAction := func(stop <-chan struct{}) {
+	workerAction := func(stop <-chan struct{}) error {
 		sender.bot.Start()
 		<-stop
 		sender.bot.Stop()
+		return nil
 	}
 
 	w.NewWorker(

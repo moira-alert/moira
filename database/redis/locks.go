@@ -1,11 +1,12 @@
 package redis
 
 import (
+	"sync"
+	"time"
+
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
 	"gopkg.in/redsync.v1"
-	"sync"
-	"time"
 )
 
 // NewLock returns the implementation of moira.Lock which can be used to Acquire or Release the lock
@@ -14,7 +15,7 @@ func (connector *DbConnector) NewLock(name string, ttl time.Duration) moira.Lock
 	return &Lock{name: name, ttl: ttl, mutex: mutex}
 }
 
-// Lock is used to hide low-level details of redsync.Mutex such as an extention of it
+// Lock is used to hide low-level details of redsync.Mutex such as an extension of it
 type Lock struct {
 	name   string
 	ttl    time.Duration

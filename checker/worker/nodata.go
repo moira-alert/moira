@@ -1,14 +1,15 @@
 package worker
 
 import (
-	w "github.com/moira-alert/moira/worker"
 	"time"
+
+	w "github.com/moira-alert/moira/worker"
 )
 
 const nodataCheckerLockName = "moira-nodata-checker"
 const nodataCheckerLockTTL = time.Second * 15
 
-func (worker *Checker) noDataChecker(stop <-chan struct{}) {
+func (worker *Checker) noDataChecker(stop <-chan struct{}) error {
 	checkTicker := time.NewTicker(worker.Config.NoDataCheckInterval)
 	defer checkTicker.Stop()
 	worker.Logger.Info("NODATA checker started")
@@ -16,7 +17,7 @@ func (worker *Checker) noDataChecker(stop <-chan struct{}) {
 		select {
 		case <-stop:
 			worker.Logger.Info("NODATA checker stopped")
-			return
+			return nil
 		case <-checkTicker.C:
 			if err := worker.checkNoData(); err != nil {
 				worker.Logger.Errorf("NODATA check failed: %s", err.Error())

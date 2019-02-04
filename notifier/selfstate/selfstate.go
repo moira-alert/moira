@@ -34,7 +34,7 @@ type SelfCheckWorker struct {
 	tomb     tomb.Tomb
 }
 
-func (selfCheck *SelfCheckWorker) selfStateChecker(stop <-chan struct{}) {
+func (selfCheck *SelfCheckWorker) selfStateChecker(stop <-chan struct{}) error {
 	selfCheck.Log.Info("Moira Notifier Self State Monitor started")
 
 	var metricsCount, checksCount, remoteChecksCount int64
@@ -51,7 +51,7 @@ func (selfCheck *SelfCheckWorker) selfStateChecker(stop <-chan struct{}) {
 		select {
 		case <-stop:
 			selfCheck.Log.Info("Moira Notifier Self State Monitor stopped")
-			return
+			return nil
 		case <-checkTicker.C:
 			selfCheck.check(time.Now().Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS, &lastRemoteCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount, &remoteChecksCount)
 		}
