@@ -67,9 +67,9 @@ func newRedisPool(logger moira.Logger, config Config) *redis.Pool {
 	serverAddr := net.JoinHostPort(config.Host, config.Port)
 	useSentinel := config.MasterName != "" && len(config.SentinelAddresses) > 0
 	if !useSentinel {
-		logger.Infof("Redis: %v, DbID: %v", serverAddr, config.DBID)
+		logger.Infof("Redis: %v, DB: %v", serverAddr, config.DB)
 	} else {
-		logger.Infof("Redis: Sentinel for name: %v, DbID: %v", config.MasterName, config.DBID)
+		logger.Infof("Redis: Sentinel for name: %v, DB: %v", config.MasterName, config.DB)
 	}
 	sntnl, err := createSentinel(logger, config, useSentinel)
 	if err != nil {
@@ -81,7 +81,9 @@ func newRedisPool(logger moira.Logger, config Config) *redis.Pool {
 	var lastMaster string
 
 	return &redis.Pool{
-		MaxIdle:     3,
+		MaxIdle:     config.ConnectionLimit,
+		MaxActive:   config.ConnectionLimit,
+		Wait:        true,
 		IdleTimeout: 240 * time.Second,
 		Dial: func() (redis.Conn, error) {
 			if sntnl != nil {
@@ -96,7 +98,12 @@ func newRedisPool(logger moira.Logger, config Config) *redis.Pool {
 				}
 				lastMu.Unlock()
 			}
-			return redis.Dial("tcp", serverAddr, redis.DialDatabase(config.DBID))
+			return redis.Dial(
+				"tcp",
+				serverAddr,
+				redis.DialDatabase(config.DB),
+				redis.DialConnectTimeout(500*time.Millisecond),
+			)
 		},
 		TestOnBorrow: func(c redis.Conn, t time.Time) error {
 			if useSentinel {
@@ -113,17 +120,15 @@ func newRedisPool(logger moira.Logger, config Config) *redis.Pool {
 
 func createSentinel(logger moira.Logger, config Config, useSentinel bool) (*sentinel.Sentinel, error) {
 	if useSentinel {
+		// https://redis.io/topics/sentinel-clients
 		sntnl := &sentinel.Sentinel{
 			Addrs:      config.SentinelAddresses,
 			MasterName: config.MasterName,
 			Dial: func(addr string) (redis.Conn, error) {
-				timeout := 300 * time.Millisecond
 				return redis.Dial(
 					"tcp",
 					addr,
-					redis.DialConnectTimeout(timeout),
-					redis.DialReadTimeout(timeout),
-					redis.DialWriteTimeout(timeout),
+					redis.DialConnectTimeout(500*time.Millisecond),
 				)
 			},
 		}

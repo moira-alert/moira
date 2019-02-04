@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"runtime"
 	"time"
 
 	"github.com/gosexy/to"
@@ -60,9 +61,9 @@ type selfStateConfig struct {
 func getDefault() config {
 	return config{
 		Redis: cmd.RedisConfig{
-			Host: "localhost",
-			Port: "6379",
-			DBID: 0,
+			Host:            "localhost",
+			Port:            "6379",
+			ConnectionLimit: 10 * runtime.NumCPU(),
 		},
 		Graphite: cmd.GraphiteConfig{
 			RuntimeStats: false,

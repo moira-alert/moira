@@ -1,6 +1,8 @@
 package main
 
 import (
+	"runtime"
+
 	"github.com/gosexy/to"
 	"github.com/moira-alert/moira/checker"
 	"github.com/moira-alert/moira/cmd"
@@ -48,8 +50,9 @@ func (config *checkerConfig) getSettings() *checker.Config {
 func getDefault() config {
 	return config{
 		Redis: cmd.RedisConfig{
-			Host: "localhost",
-			Port: "6379",
+			Host:            "localhost",
+			Port:            "6379",
+			ConnectionLimit: 10 * runtime.NumCPU(),
 		},
 		Logger: cmd.LoggerConfig{
 			LogFile:  "stdout",

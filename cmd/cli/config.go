@@ -1,6 +1,8 @@
 package main
 
 import (
+	"runtime"
+
 	"github.com/moira-alert/moira/cmd"
 )
 
@@ -15,9 +17,9 @@ func getDefault() config {
 		LogFile:  "stdout",
 		LogLevel: "info",
 		Redis: cmd.RedisConfig{
-			Host: "localhost",
-			Port: "6379",
-			DBID: 0,
+			Host:            "localhost",
+			Port:            "6379",
+			ConnectionLimit: 10 * runtime.NumCPU(),
 		},
 	}
 }

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"runtime"
+
 	"github.com/moira-alert/moira/cmd"
 )
 
@@ -30,9 +32,9 @@ type filterConfig struct {
 func getDefault() config {
 	return config{
 		Redis: cmd.RedisConfig{
-			Host: "localhost",
-			Port: "6379",
-			DBID: 0,
+			Host:            "localhost",
+			Port:            "6379",
+			ConnectionLimit: 10 * runtime.NumCPU(),
 		},
 		Logger: cmd.LoggerConfig{
 			LogFile:  "stdout",
