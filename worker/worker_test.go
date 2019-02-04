@@ -9,7 +9,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
-	"github.com/moira-alert/moira/mock/moira-alert"
+	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -61,7 +61,7 @@ func Test(t *testing.T) {
 		worker.Run(stop)
 	})
 
-	Convey("Should handle error and release the lock", t, func() {
+	Convey("Should release the lock after an error", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
@@ -76,7 +76,22 @@ func Test(t *testing.T) {
 		worker.Run(stop)
 	})
 
-	Convey("Should recover panic and release the lock", t, func() {
+	Convey("Should release the lock after a completion", t, func() {
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		stop := make(chan struct{})
+		lock := mock_moira_alert.NewMockLock(mockCtrl)
+		worker := createTestWorkerWithAction(lock, func(stop <-chan struct{}) error { return nil })
+		gomock.InOrder(
+			lock.EXPECT().Acquire(gomock.Any()).Return(nil, nil),
+			lock.EXPECT().Release(),
+			lock.EXPECT().Acquire(gomock.Any()).Return(nil, database.ErrLockAcquireInterrupted).Do(func(_ interface{}) { close(stop) }),
+		)
+		worker.Run(stop)
+	})
+
+	Convey("Should release the lock after a recovery", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
@@ -91,7 +106,7 @@ func Test(t *testing.T) {
 		worker.Run(stop)
 	})
 
-	Convey("Worker should respect lost chanel", t, func() {
+	Convey("Should respect lost chanel", t, func() {
 
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
@@ -111,7 +126,7 @@ func Test(t *testing.T) {
 		worker.Run(stop)
 	})
 
-	Convey("Worker should respect stop chanel", t, func() {
+	Convey("Should respect stop chanel", t, func() {
 
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
@@ -134,17 +149,13 @@ func Test(t *testing.T) {
 }
 
 func createTestWorkerWithDefaultAction(lock moira.Lock) *Worker {
-	worker := NewWorker(
-		"Test Worker",
-		logging.MustGetLogger("Test Worker"),
+	return createTestWorkerWithAction(
 		lock,
 		func(stop <-chan struct{}) error {
 			<-stop
 			return nil
 		},
 	)
-	worker.SetLockRetryDelay(testLockRetryDelay)
-	return worker
 }
 
 func createTestWorkerWithAction(lock moira.Lock, action Action) *Worker {

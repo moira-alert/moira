@@ -42,7 +42,6 @@ func (worker *Worker) Run(stop <-chan struct{}) {
 				return
 			default:
 				worker.logger.Errorf("%s failed to acquire the lock: %s", worker.name, err.Error())
-
 				select {
 				case <-stop:
 					return
@@ -73,6 +72,12 @@ func (worker *Worker) Run(stop <-chan struct{}) {
 		select {
 		case <-actionDone:
 			worker.lock.Release()
+			select {
+			case <-stop:
+				return
+			case <-time.After(worker.lockRetryDelay):
+				continue
+			}
 		case <-lost:
 			worker.logger.Warningf("%s lost the lock", worker.name)
 			close(actionStop)
