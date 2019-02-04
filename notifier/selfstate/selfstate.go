@@ -35,16 +35,6 @@ type SelfCheckWorker struct {
 }
 
 func (selfCheck *SelfCheckWorker) selfStateChecker(stop <-chan struct{}) {
-	if !selfCheck.Config.Enabled {
-		selfCheck.Log.Debugf("Moira Self State Monitoring disabled")
-		return
-	}
-	senders := selfCheck.Notifier.GetSenders()
-	if err := selfCheck.Config.checkConfig(senders); err != nil {
-		selfCheck.Log.Errorf("Can't configure Moira Self State Monitoring: %s", err.Error())
-		return
-	}
-
 	selfCheck.Log.Info("Moira Notifier Self State Monitor started")
 
 	var metricsCount, checksCount, remoteChecksCount int64
@@ -70,6 +60,15 @@ func (selfCheck *SelfCheckWorker) selfStateChecker(stop <-chan struct{}) {
 
 // Start self check worker
 func (selfCheck *SelfCheckWorker) Start() error {
+	if !selfCheck.Config.Enabled {
+		selfCheck.Log.Debugf("Moira Self State Monitoring disabled")
+		return nil
+	}
+	senders := selfCheck.Notifier.GetSenders()
+	if err := selfCheck.Config.checkConfig(senders); err != nil {
+		selfCheck.Log.Errorf("Can't configure Moira Self State Monitoring: %s", err.Error())
+		return nil
+	}
 
 	selfCheck.tomb.Go(func() error {
 		w.NewWorker(
