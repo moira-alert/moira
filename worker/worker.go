@@ -41,7 +41,7 @@ func (worker *Worker) Run(stop <-chan struct{}) {
 			case database.ErrLockAcquireInterrupted:
 				return
 			default:
-				worker.logger.Errorf("%s failed to acquire lock: %s", worker.name, err.Error())
+				worker.logger.Errorf("%s failed to acquire the lock: %s", worker.name, err.Error())
 
 				select {
 				case <-stop:
