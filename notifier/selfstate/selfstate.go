@@ -88,6 +88,11 @@ func (selfCheck *SelfCheckWorker) Stop() error {
 	if !selfCheck.Config.Enabled {
 		return nil
 	}
+	senders := selfCheck.Notifier.GetSenders()
+	if err := selfCheck.Config.checkConfig(senders); err != nil {
+		return nil
+	}
+
 	selfCheck.tomb.Kill(nil)
 	return selfCheck.tomb.Wait()
 }
