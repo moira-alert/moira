@@ -72,6 +72,7 @@ func (worker *Worker) Run(stop <-chan struct{}) {
 		select {
 		case <-actionDone:
 			worker.lock.Release()
+			worker.logger.Infof("%s released the lock", worker.name)
 			select {
 			case <-stop:
 				return
@@ -87,6 +88,7 @@ func (worker *Worker) Run(stop <-chan struct{}) {
 			close(actionStop)
 			<-actionDone
 			worker.lock.Release()
+			worker.logger.Infof("%s released the lock", worker.name)
 			return
 		}
 	}
