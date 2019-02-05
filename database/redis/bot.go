@@ -2,9 +2,10 @@ package redis
 
 import (
 	"fmt"
-	"github.com/garyburd/redigo/redis"
-	"github.com/moira-alert/moira/database"
 	"strings"
+
+	"github.com/gomodule/redigo/redis"
+	"github.com/moira-alert/moira/database"
 )
 
 // GetIDByUsername read ID of user by messenger username

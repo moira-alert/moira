@@ -10,10 +10,10 @@
 			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "hBqmLpr3P88FPgBk27hzpa5N0mM=",
-			"path": "github.com/FZambia/go-sentinel",
-			"revision": "76bd05e8e22f9f8f5e1dd6d3a85b7951da7cce57",
-			"revisionTime": "2017-12-04T08:54:13Z"
+			"checksumSHA1": "3Uyji2mxcwH47z3i8elO3VbzOvE=",
+			"path": "github.com/FZambia/sentinel",
+			"revision": "52eb51343b45ab047f25b864563d93ed16e28c6c",
+			"revisionTime": "2018-06-30T10:12:55Z"
 		},
 		{
 			"checksumSHA1": "2uHTjq9EzVymiLoPqlFyA0RDmpM=",
@@ -393,18 +393,6 @@
 			"path": "github.com/fsnotify/fsnotify",
 			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
 			"revisionTime": "2018-07-29T13:10:59Z"
-		},
-		{
-			"checksumSHA1": "2UmMbNHc8FBr98mJFN1k8ISOIHk=",
-			"path": "github.com/garyburd/redigo/internal",
-			"revision": "57f1cd7de6175c96b423e7ac2534ff2b39e2ef79",
-			"revisionTime": "2017-06-15T18:53:09Z"
-		},
-		{
-			"checksumSHA1": "dGCqjUjHaREgF/BM+u0UdebD4fk=",
-			"path": "github.com/garyburd/redigo/redis",
-			"revision": "57f1cd7de6175c96b423e7ac2534ff2b39e2ef79",
-			"revisionTime": "2017-06-15T18:53:09Z"
 		},
 		{
 			"checksumSHA1": "5/EykaE4WlsUKufLsv6l2N+U4HU=",
@@ -1068,6 +1056,18 @@
 			"path": "github.com/golang/snappy",
 			"revision": "2e65f85255dbc3072edf28d6b5b8efc472979f5a",
 			"revisionTime": "2018-05-18T05:39:59Z"
+		},
+		{
+			"checksumSHA1": "73htiRJAyEYC5HJaFtkhmosWlbE=",
+			"path": "github.com/gomodule/redigo/redis",
+			"revision": "02dc2736dbc3a4a56907b0d5a9fead2f71b499db",
+			"revisionTime": "2018-12-13T21:05:01Z"
+		},
+		{
+			"checksumSHA1": "J9ZXa0GW8FQXR/1Tw70wr6I20XI=",
+			"path": "github.com/gomodule/redigo/redisx",
+			"revision": "02dc2736dbc3a4a56907b0d5a9fead2f71b499db",
+			"revisionTime": "2018-12-13T21:05:01Z"
 		},
 		{
 			"checksumSHA1": "hEnH6sgR83Qfx7UNnphNNlelmj0=",
@@ -1784,10 +1784,10 @@
 			"revisionTime": "2016-04-11T21:29:32Z"
 		},
 		{
-			"checksumSHA1": "skSPSmzg+vfeVlePztLzUdZH7sA=",
+			"checksumSHA1": "RNv1AEu9g8sB3dTzKiPFpjZpRxE=",
 			"path": "gopkg.in/redsync.v1",
-			"revision": "98dabdf1c8574561bf976911c14ff652c47b1ddf",
-			"revisionTime": "2016-06-17T03:24:05Z"
+			"revision": "89538344de92e78df4b7eeeceec1f3cf2d7c0aeb",
+			"revisionTime": "2018-11-21T13:23:58Z"
 		},
 		{
 			"checksumSHA1": "AzeP9gpBdHRcPQ5ozBpkBcqfInk=",

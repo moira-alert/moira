@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/garyburd/redigo/redis"
+	"github.com/gomodule/redigo/redis"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database/redis/reply"
