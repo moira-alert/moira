@@ -491,13 +491,12 @@ func generateTestMetricsData(useHumanizedValues bool) []*metricSource.MetricData
 // renderTestMetricsDataToPNG renders and saves rendered plots to PNG
 func renderTestMetricsDataToPNG(trigger moira.Trigger, plotTheme string,
 	metricsData []*metricSource.MetricData, filePath string) error {
-	var metricsWhiteList []string
 	location, _ := time.LoadLocation("UTC")
 	plotTemplate, err := GetPlotTemplate(plotTheme, location)
 	if err != nil {
 		return err
 	}
-	renderable, err := plotTemplate.GetRenderable(&trigger, metricsData, metricsWhiteList)
+	renderable, err := plotTemplate.GetRenderable(&trigger, metricsData)
 	if err != nil {
 		return err
 	}
@@ -599,7 +598,6 @@ func TestGetRenderable(t *testing.T) {
 
 // TestErrNoPointsToRender_Error asserts conditions which leads to ErrNoPointsToRender
 func TestErrNoPointsToRender_Error(t *testing.T) {
-	var testMetricsWhiteList []string
 	location, _ := time.LoadLocation("UTC")
 	plotTemplate, err := GetPlotTemplate("", location)
 	if err != nil {
@@ -652,7 +650,7 @@ func TestErrNoPointsToRender_Error(t *testing.T) {
 		}
 		fmt.Printf("MetricsData points: %#v", testMetricsPoints)
 		for _, trigger := range testTriggers {
-			_, err = plotTemplate.GetRenderable(&trigger, testMetricsData, testMetricsWhiteList)
+			_, err = plotTemplate.GetRenderable(&trigger, testMetricsData)
 			So(err.Error(), ShouldEqual, ErrNoPointsToRender{triggerID: trigger.ID}.Error())
 		}
 	})
@@ -664,7 +662,7 @@ func TestErrNoPointsToRender_Error(t *testing.T) {
 		}
 		fmt.Printf("MetricsData points: %#v", testMetricsPoints)
 		for _, trigger := range testTriggers {
-			_, err = plotTemplate.GetRenderable(&trigger, testMetricsData, testMetricsWhiteList)
+			_, err = plotTemplate.GetRenderable(&trigger, testMetricsData)
 			So(err, ShouldBeNil)
 		}
 	})

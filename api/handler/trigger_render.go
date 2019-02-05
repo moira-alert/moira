@@ -87,8 +87,7 @@ func buildRenderable(request *http.Request, trigger *moira.Trigger, metricsData 
 	if err != nil {
 		return nil, fmt.Errorf("can not initialize plot theme %s", err.Error())
 	}
-	var metricsWhiteList = make([]string, 0)
-	renderable, err := plotTemplate.GetRenderable(trigger, metricsData, metricsWhiteList)
+	renderable, err := plotTemplate.GetRenderable(trigger, metricsData)
 	if err != nil {
 		return nil, err
 	}

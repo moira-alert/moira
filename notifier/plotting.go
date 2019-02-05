@@ -57,7 +57,7 @@ func (notifier *StandardNotifier) buildNotificationPackagePlot(pkg NotificationP
 	}
 	metricsData = getMetricDataToShow(metricsData, metricsToShow)
 	notifier.logger.Debugf("rendering %s metricsData: %s", trigger.ID, strings.Join(metricsToShow, ", "))
-	renderable, err := plotTemplate.GetRenderable(trigger, metricsData, metricsToShow)
+	renderable, err := plotTemplate.GetRenderable(trigger, metricsData)
 	if err != nil {
 		return buff.Bytes(), err
 	}

@@ -46,7 +46,7 @@ func GetPlotTemplate(theme string, location *time.Location) (*Plot, error) {
 }
 
 // GetRenderable returns go-chart to render
-func (plot *Plot) GetRenderable(trigger *moira.Trigger, metricsData []*metricSource.MetricData, metricsWhitelist []string) (chart.Chart, error) {
+func (plot *Plot) GetRenderable(trigger *moira.Trigger, metricsData []*metricSource.MetricData) (chart.Chart, error) {
 	var renderable chart.Chart
 
 	plotSeries := make([]chart.Series, 0)
