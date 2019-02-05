@@ -3,7 +3,6 @@ package notifier
 import (
 	"bytes"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/moira-alert/moira/metric_source"
@@ -56,7 +55,7 @@ func (notifier *StandardNotifier) buildNotificationPackagePlot(pkg NotificationP
 		return buff.Bytes(), err
 	}
 	metricsData = getMetricDataToShow(metricsData, metricsToShow)
-	notifier.logger.Debugf("rendering %s metricsData: %s", trigger.ID, strings.Join(metricsToShow, ", "))
+	notifier.logger.Debugf("rendering %s metricsData: %s", trigger.ID, metricsData)
 	renderable, err := plotTemplate.GetRenderable(trigger, metricsData)
 	if err != nil {
 		return buff.Bytes(), err

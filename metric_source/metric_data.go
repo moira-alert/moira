@@ -1,6 +1,9 @@
 package metricSource
 
-import "math"
+import (
+	"fmt"
+	"math"
+)
 
 // MetricData is moira implementation of target evaluation result
 type MetricData struct {
@@ -40,13 +43,17 @@ func MakeEmptyMetricData(name string, step, start, stop int64) *MetricData {
 }
 
 // GetTimestampValue gets value of given timestamp index, if value is Nil, then return NaN
-func (timeSeries *MetricData) GetTimestampValue(valueTimestamp int64) float64 {
-	if valueTimestamp < timeSeries.StartTime {
+func (metricData *MetricData) GetTimestampValue(valueTimestamp int64) float64 {
+	if valueTimestamp < metricData.StartTime {
 		return math.NaN()
 	}
-	valueIndex := int((valueTimestamp - timeSeries.StartTime) / timeSeries.StepTime)
-	if len(timeSeries.Values) <= valueIndex {
+	valueIndex := int((valueTimestamp - metricData.StartTime) / metricData.StepTime)
+	if len(metricData.Values) <= valueIndex {
 		return math.NaN()
 	}
-	return timeSeries.Values[valueIndex]
+	return metricData.Values[valueIndex]
+}
+
+func (metricData *MetricData) String() string {
+	return fmt.Sprintf("Metric: %s, StartTime: %v, StopTime: %v, StepTime: %v, Points: %v", metricData.Name, metricData.StartTime, metricData.StopTime, metricData.StepTime, metricData.Values)
 }
