@@ -4,19 +4,19 @@ import (
 	"fmt"
 	"time"
 
-	"gopkg.in/tucnak/telebot.v2"
-
 	"github.com/moira-alert/moira"
+	w "github.com/moira-alert/moira/worker"
+	"gopkg.in/tucnak/telebot.v2"
 )
 
+const telegramLockName = "moira-telegram-users:moira-bot-host"
 const messenger = "telegram"
 
 var (
-	telegramMessageLimit    = 4096
-	pollerTimeout           = 10 * time.Second
-	databaseMutexExpiry     = 30 * time.Second
-	singlePollerStateExpiry = time.Minute
-	emojiStates             = map[string]string{
+	telegramMessageLimit = 4096
+	pollerTimeout        = 10 * time.Second
+	telegramLockTTL      = 30 * time.Second
+	emojiStates          = map[string]string{
 		"OK":     "\xe2\x9c\x85",
 		"WARN":   "\xe2\x9a\xa0",
 		"ERROR":  "\xe2\xad\x95",
@@ -59,46 +59,24 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 			sender.logger.Errorf("Error handling incoming message: %s", err.Error())
 		}
 	})
-
-	err = sender.runTelebot()
-	if err != nil {
-		return fmt.Errorf("error running bot: %s", err.Error())
-	}
+	go sender.runTelebot()
 	return nil
 }
 
 // runTelebot starts telegram bot and manages bot subscriptions
 // to make sure there is always only one working Poller
-func (sender *Sender) runTelebot() error {
-	firstCheck := true
-	go func() {
-		for {
-			if sender.DataBase.RegisterBotIfAlreadyNot(messenger, databaseMutexExpiry) {
-				sender.logger.Infof("Registered new %s bot, checking for new messages", messenger)
-				go sender.bot.Start()
-				sender.renewSubscription(databaseMutexExpiry)
-				continue
-			}
-			if firstCheck {
-				sender.logger.Infof("%s bot already registered, trying for register every %v in loop", messenger, singlePollerStateExpiry)
-				firstCheck = false
-			}
-			<-time.After(singlePollerStateExpiry)
-		}
-	}()
-	return nil
-}
-
-// renewSubscription tries to renew bot subscription
-// and gracefully stops bot on fail to prevent multiple Poller instances running
-func (sender *Sender) renewSubscription(ttl time.Duration) {
-	checkTicker := time.NewTicker((ttl / time.Second) / 2 * time.Second)
-	for {
-		<-checkTicker.C
-		if !sender.DataBase.RenewBotRegistration(messenger) {
-			sender.logger.Warningf("Could not renew subscription for %s bot, try to register bot again", messenger)
-			sender.bot.Stop()
-			return
-		}
+func (sender *Sender) runTelebot() {
+	workerAction := func(stop <-chan struct{}) error {
+		sender.bot.Start()
+		<-stop
+		sender.bot.Stop()
+		return nil
 	}
+
+	w.NewWorker(
+		"Telebot",
+		sender.logger,
+		sender.DataBase.NewLock(telegramLockName, telegramLockTTL),
+		workerAction,
+	).Run(nil)
 }
