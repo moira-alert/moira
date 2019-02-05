@@ -106,21 +106,16 @@ func toLimitedMetricsData(metricsData []*metricSource.MetricData, metricsWhiteli
 	if len(metricsWhitelist) == 0 {
 		return metricsData
 	}
+	metricsWhitelistHash := make(map[string]struct{}, len(metricsWhitelist))
+	for _, whiteListed := range metricsWhitelist {
+		metricsWhitelistHash[whiteListed] = struct{}{}
+	}
+
 	newMetricsData := make([]*metricSource.MetricData, 0, len(metricsWhitelist))
 	for _, metricData := range metricsData {
-		if isWhiteListedMetric(metricData.Name, metricsWhitelist) {
+		if _, ok := metricsWhitelistHash[metricData.Name]; ok {
 			newMetricsData = append(newMetricsData, metricData)
 		}
 	}
 	return newMetricsData
-}
-
-// isWhiteListedMetric returns true if metric is whitelisted
-func isWhiteListedMetric(metricName string, metricsWhitelist []string) bool {
-	for _, whiteListed := range metricsWhitelist {
-		if whiteListed == metricName {
-			return true
-		}
-	}
-	return false
 }
