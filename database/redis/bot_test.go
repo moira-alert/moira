@@ -1,8 +1,9 @@
 package redis
 
 import (
-	. "github.com/smartystreets/goconvey/convey"
 	"testing"
+
+	. "github.com/smartystreets/goconvey/convey"
 
 	"github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/logging/go-logging"
