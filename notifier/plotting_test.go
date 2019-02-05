@@ -36,7 +36,6 @@ func TestResolveMetricsWindow(t *testing.T) {
 	localTrigger := moira.TriggerData{ID: "redisTrigger", IsRemote: false}
 	remoteTrigger := moira.TriggerData{ID: "remoteTrigger", IsRemote: true}
 	timeRange := time.Unix(int64(defaultTimeRange.Seconds()), 0).Unix()
-	timeShift := time.Unix(int64(defaultTimeShift.Seconds()), 0).Unix()
 	var pkg NotificationPackage
 	var pkgs []NotificationPackage
 	var trigger moira.TriggerData
@@ -48,7 +47,7 @@ func TestResolveMetricsWindow(t *testing.T) {
 				_, expectedTo, err := pkg.GetWindow()
 				So(err, ShouldBeNil)
 				from, to := resolveMetricsWindow(logger, trigger, pkg)
-				So(from, ShouldEqual, expectedTo-timeRange+timeShift)
+				So(from, ShouldEqual, expectedTo-timeRange)
 				So(to, ShouldEqual, expectedTo)
 			}
 		})
@@ -77,7 +76,7 @@ func TestResolveMetricsWindow(t *testing.T) {
 				_, expectedTo, err := pkg.GetWindow()
 				So(err, ShouldBeNil)
 				from, to := resolveMetricsWindow(logger, trigger, pkg)
-				So(from, ShouldEqual, expectedTo-timeRange+timeShift)
+				So(from, ShouldEqual, expectedTo-timeRange)
 				So(to, ShouldEqual, expectedTo)
 			}
 		})
