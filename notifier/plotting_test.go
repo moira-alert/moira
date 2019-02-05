@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/moira-alert/moira/metric_source"
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
 
@@ -93,5 +94,36 @@ func TestResolveMetricsWindow(t *testing.T) {
 			So(from, ShouldEqual, expectedFrom)
 			So(to, ShouldEqual, expectedTo)
 		}
+	})
+}
+
+// TestGetMetricDataToShow tests to limited metricsData returns only necessary metricsData
+func TestGetMetricDataToShow(t *testing.T) {
+	givenSeries := []*metricSource.MetricData{
+		metricSource.MakeMetricData("metricPrefix.metricName1", []float64{1}, 1, 1),
+		metricSource.MakeMetricData("metricPrefix.metricName2", []float64{2}, 2, 2),
+		metricSource.MakeMetricData("metricPrefix.metricName3", []float64{3}, 3, 3),
+	}
+	Convey("Limit series by non-empty whitelist", t, func() {
+		Convey("MetricsData has necessary series", func() {
+			metricsWhiteList := []string{"metricPrefix.metricName1", "metricPrefix.metricName2"}
+			metricsData := getMetricDataToShow(givenSeries, metricsWhiteList)
+			So(len(metricsData), ShouldEqual, len(metricsWhiteList))
+			So(metricsData[0].Name, ShouldEqual, metricsWhiteList[0])
+			So(metricsData[1].Name, ShouldEqual, metricsWhiteList[1])
+		})
+		Convey("MetricsData has no necessary series", func() {
+			metricsWhiteList := []string{"metricPrefix.metricName4"}
+			metricsData := getMetricDataToShow(givenSeries, metricsWhiteList)
+			So(len(metricsData), ShouldEqual, 0)
+		})
+	})
+	Convey("Limit series by an empty whitelist", t, func() {
+		metricsWhiteList := make([]string, 0)
+		metricsData := getMetricDataToShow(givenSeries, metricsWhiteList)
+		for metricDataInd := range metricsData {
+			So(metricsData[metricDataInd].Name, ShouldEqual, givenSeries[metricDataInd].Name)
+		}
+		So(len(metricsData), ShouldEqual, len(givenSeries))
 	})
 }

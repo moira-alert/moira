@@ -8,7 +8,6 @@ import (
 	"unicode/utf8"
 
 	"github.com/dustin/go-humanize"
-	"github.com/moira-alert/moira/metric_source"
 	"github.com/wcharczuk/go-chart"
 )
 
@@ -99,23 +98,4 @@ func floatToHumanizedValueFormatter(v interface{}) string {
 		return fmt.Sprintf("%.2f %s", humanized, strings.ToUpper(postfix))
 	}
 	return ""
-}
-
-// toLimitedMetricsData returns MetricData limited by whitelist
-func toLimitedMetricsData(metricsData []*metricSource.MetricData, metricsWhitelist []string) []*metricSource.MetricData {
-	if len(metricsWhitelist) == 0 {
-		return metricsData
-	}
-	metricsWhitelistHash := make(map[string]struct{}, len(metricsWhitelist))
-	for _, whiteListed := range metricsWhitelist {
-		metricsWhitelistHash[whiteListed] = struct{}{}
-	}
-
-	newMetricsData := make([]*metricSource.MetricData, 0, len(metricsWhitelist))
-	for _, metricData := range metricsData {
-		if _, ok := metricsWhitelistHash[metricData.Name]; ok {
-			newMetricsData = append(newMetricsData, metricData)
-		}
-	}
-	return newMetricsData
 }

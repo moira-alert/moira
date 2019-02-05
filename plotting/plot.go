@@ -51,7 +51,6 @@ func (plot *Plot) GetRenderable(trigger *moira.Trigger, metricsData []*metricSou
 
 	plotSeries := make([]chart.Series, 0)
 
-	metricsData = toLimitedMetricsData(metricsData, metricsWhitelist)
 	limits := resolveLimits(metricsData)
 
 	curveSeriesList := getCurveSeriesList(metricsData, plot.theme)

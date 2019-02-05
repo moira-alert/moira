@@ -55,18 +55,9 @@ func (notifier *StandardNotifier) buildNotificationPackagePlot(pkg NotificationP
 	if err != nil {
 		return buff.Bytes(), err
 	}
-	notifier.logger.Debugf("rendering %s timeseries: %s", trigger.ID, strings.Join(metricsToShow, ", "))
-	var md = make([]*metricSource.MetricData, 0, len(metricsData))
-	for _, metricData := range metricsData {
-		md = append(md, &metricSource.MetricData{
-			Name:      metricData.Name,
-			StartTime: metricData.StartTime,
-			StopTime:  metricData.StopTime,
-			StepTime:  metricData.StepTime,
-			Values:    metricData.Values,
-		})
-	}
-	renderable, err := plotTemplate.GetRenderable(trigger, md, metricsToShow)
+	metricsData = getMetricDataToShow(metricsData, metricsToShow)
+	notifier.logger.Debugf("rendering %s metricsData: %s", trigger.ID, strings.Join(metricsToShow, ", "))
+	renderable, err := plotTemplate.GetRenderable(trigger, metricsData, metricsToShow)
 	if err != nil {
 		return buff.Bytes(), err
 	}
@@ -145,4 +136,23 @@ func fetchAvailableSeries(metricsSource metricSource.MetricSource, target string
 		return fetchResult.GetMetricsData(), nil
 	}
 	return realtimeFetchResult.GetMetricsData(), realtimeErr
+}
+
+// getMetricDataToShow returns MetricData limited by whitelist
+func getMetricDataToShow(metricsData []*metricSource.MetricData, metricsWhitelist []string) []*metricSource.MetricData {
+	if len(metricsWhitelist) == 0 {
+		return metricsData
+	}
+	metricsWhitelistHash := make(map[string]struct{}, len(metricsWhitelist))
+	for _, whiteListed := range metricsWhitelist {
+		metricsWhitelistHash[whiteListed] = struct{}{}
+	}
+
+	newMetricsData := make([]*metricSource.MetricData, 0, len(metricsWhitelist))
+	for _, metricData := range metricsData {
+		if _, ok := metricsWhitelistHash[metricData.Name]; ok {
+			newMetricsData = append(newMetricsData, metricData)
+		}
+	}
+	return newMetricsData
 }
