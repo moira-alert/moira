@@ -47,7 +47,7 @@ func TestResolveMetricsWindow(t *testing.T) {
 				_, expectedTo, err := pkg.GetWindow()
 				So(err, ShouldBeNil)
 				from, to := resolveMetricsWindow(logger, trigger, pkg)
-				So(from, ShouldEqual, expectedTo-timeRange)
+				So(from, ShouldEqual, alignToMinutes(expectedTo)-timeRange)
 				So(to, ShouldEqual, expectedTo)
 			}
 		})
@@ -56,7 +56,7 @@ func TestResolveMetricsWindow(t *testing.T) {
 			_, _, err := pkg.GetWindow()
 			So(err, ShouldBeNil)
 			from, to := resolveMetricsWindow(logger, trigger, pkg)
-			So(from, ShouldEqual, testLaunchTime.Add(-defaultTimeRange).UTC().Unix())
+			So(from, ShouldEqual, alignToMinutes(testLaunchTime.Add(-defaultTimeRange).UTC().Unix()))
 			So(to, ShouldEqual, testLaunchTime.UTC().Unix())
 		})
 	})
@@ -67,7 +67,7 @@ func TestResolveMetricsWindow(t *testing.T) {
 			expectedFrom, expectedTo, err := pkg.GetWindow()
 			So(err, ShouldBeNil)
 			from, to := resolveMetricsWindow(logger, trigger, pkg)
-			So(from, ShouldEqual, expectedFrom)
+			So(from, ShouldEqual, alignToMinutes(expectedFrom))
 			So(to, ShouldEqual, expectedTo)
 		})
 		Convey("Window is not wide: use shifted window to fetch extended historical data from graphite", func() {
@@ -76,7 +76,7 @@ func TestResolveMetricsWindow(t *testing.T) {
 				_, expectedTo, err := pkg.GetWindow()
 				So(err, ShouldBeNil)
 				from, to := resolveMetricsWindow(logger, trigger, pkg)
-				So(from, ShouldEqual, expectedTo-timeRange)
+				So(from, ShouldEqual, alignToMinutes(expectedTo-timeRange))
 				So(to, ShouldEqual, expectedTo)
 			}
 		})
@@ -90,7 +90,7 @@ func TestResolveMetricsWindow(t *testing.T) {
 			expectedTo := testLaunchTime.Unix()
 			_, _, err := pkg.GetWindow()
 			So(err, ShouldResemble, fmt.Errorf("not enough data to resolve package window"))
-			So(from, ShouldEqual, expectedFrom)
+			So(from, ShouldEqual, alignToMinutes(expectedFrom))
 			So(to, ShouldEqual, expectedTo)
 		}
 	})

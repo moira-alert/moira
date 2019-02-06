@@ -23,8 +23,6 @@ func GetTriggerEvaluationResult(dataBase moira.Database, metricSourceProvider *m
 	if err != nil {
 		return nil, &trigger, err
 	}
-
-	from -= from % 60
 	for i, tar := range trigger.Targets {
 		fetchResult, err := metricsSource.Fetch(tar, from, to, fetchRealtimeData)
 		if err != nil {

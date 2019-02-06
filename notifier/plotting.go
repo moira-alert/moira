@@ -73,9 +73,8 @@ func resolveMetricsWindow(logger moira.Logger, trigger moira.TriggerData, pkg No
 	// try to resolve package window, force default realtime window on fail for both local and remote triggers
 	from, to, err := pkg.GetWindow()
 	if err != nil {
-		logger.Warningf("failed to get trigger %s package window: %s, using default %s window",
-			trigger.ID, err.Error(), defaultTimeRange.String())
-		return defaultFrom, defaultTo
+		logger.Warningf("failed to get trigger %s package window: %s, using default %s window", trigger.ID, err.Error(), defaultTimeRange.String())
+		return alignToMinutes(defaultFrom), defaultTo
 	}
 	// package window successfully resolved, test it's wide and realtime metrics window
 	fromTime, toTime := moira.Int64ToTime(from), moira.Int64ToTime(to)
@@ -86,17 +85,22 @@ func resolveMetricsWindow(logger moira.Logger, trigger moira.TriggerData, pkg No
 	// window is not wide: use shifted window to fetch extended historical data from graphite
 	if trigger.IsRemote {
 		if isWideWindow {
-			return fromTime.Unix(), toTime.Unix()
+			return alignToMinutes(fromTime.Unix()), toTime.Unix()
 		}
-		return toTime.Add(-defaultTimeRange).Unix(), toTime.Unix()
+		return alignToMinutes(toTime.Add(-defaultTimeRange).Unix()), toTime.Unix()
 	}
 	// resolve local trigger window
 	// window is realtime: use shifted window to fetch actual data from redis
 	// window is not realtime: force realtime window
 	if isRealTimeWindow {
-		return toTime.Add(-defaultTimeRange).Unix(), toTime.Unix()
+		return alignToMinutes(toTime.Add(-defaultTimeRange).Unix()), toTime.Unix()
 	}
-	return defaultFrom, defaultTo
+	return alignToMinutes(defaultFrom), defaultTo
+}
+
+func alignToMinutes(unixTime int64) int64 {
+	unixTime -= unixTime % 60
+	return unixTime
 }
 
 // evaluateTriggerMetrics returns collection of MetricData
@@ -122,7 +126,6 @@ func (notifier *StandardNotifier) evaluateTriggerMetrics(from, to int64, trigger
 
 // fetchAvailableSeries calls fetch function with realtime alerting and retries on fail without
 func fetchAvailableSeries(metricsSource metricSource.MetricSource, target string, from, to int64) ([]*metricSource.MetricData, error) {
-	from -= from % 60
 	realtimeFetchResult, realtimeErr := metricsSource.Fetch(target, from, to, true)
 	switch realtimeErr.(type) {
 	case local.ErrEvaluateTargetFailedWithPanic:

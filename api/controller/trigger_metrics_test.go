@@ -274,7 +274,6 @@ func TestGetTriggerMetrics(t *testing.T) {
 	metric := "super.puper.metric"
 
 	var from int64 = 17
-	var from2 int64
 	var until int64 = 67
 	var retention int64 = 10
 
@@ -297,7 +296,7 @@ func TestGetTriggerMetrics(t *testing.T) {
 	Convey("Has metrics", t, func() {
 		dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{ID: triggerID, Targets: []string{pattern}}, nil)
 		localSource.EXPECT().IsConfigured().Return(true, nil)
-		localSource.EXPECT().Fetch(pattern, from2, until, false).Return(fetchResult, nil)
+		localSource.EXPECT().Fetch(pattern, from, until, false).Return(fetchResult, nil)
 		fetchResult.EXPECT().GetMetricsData().Return([]*metricSource.MetricData{metricSource.MakeMetricData(metric, []float64{0, 1, 2, 3, 4}, retention, from)})
 		triggerMetrics, err := GetTriggerMetrics(dataBase, sourceProvider, from, until, triggerID)
 		So(err, ShouldBeNil)
@@ -323,7 +322,7 @@ func TestGetTriggerMetrics(t *testing.T) {
 		expectedError := remote.ErrRemoteTriggerResponse{InternalError: fmt.Errorf("some error"), Target: pattern}
 		dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{ID: triggerID, Targets: []string{pattern}, IsRemote: true}, nil)
 		remoteSource.EXPECT().IsConfigured().Return(true, nil)
-		remoteSource.EXPECT().Fetch(pattern, from2, until, false).Return(nil, expectedError)
+		remoteSource.EXPECT().Fetch(pattern, from, until, false).Return(nil, expectedError)
 		triggerMetrics, err := GetTriggerMetrics(dataBase, sourceProvider, from, until, triggerID)
 		So(err, ShouldResemble, api.ErrorInternalServer(expectedError))
 		So(triggerMetrics, ShouldBeNil)
