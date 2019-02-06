@@ -17,9 +17,9 @@ import (
 )
 
 const (
-	testUser       = "testUser"
-	testPass       = "testPass"
-	testHeader     = "testHeader"
+	testUser   = "testUser"
+	testPass   = "testPass"
+	testHeader = "testHeader"
 )
 
 var testHeaders = map[string]string{testHeader: "testHeaderValue"}
@@ -53,11 +53,11 @@ func TestSender_SendEvents(t *testing.T) {
 		defer ts.Close()
 
 		senderSettings := map[string]string{
-			"name":          "testWebhook",
-			"url":           fmt.Sprintf("%s/${trigger_id}", ts.URL),
-			"user":          testUser,
-			"password":      testPass,
-			"headers":       fmt.Sprintf("{'%s':'%s'}", testHeader, testHeaders[testHeader]),
+			"name":     "testWebhook",
+			"url":      fmt.Sprintf("%s/${trigger_id}", ts.URL),
+			"user":     testUser,
+			"password": testPass,
+			"headers":  fmt.Sprintf("{'%s':'%s'}", testHeader, testHeaders[testHeader]),
 		}
 		sender := Sender{}
 		err := sender.Init(senderSettings, logger, time.UTC, "")
@@ -107,7 +107,7 @@ func testRequestBody(r *http.Request) (int, error) {
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}
-	actualJSON, expectedJSON := prepareStrings(actualJSON, expectedPayload)
+	actualJSON, expectedJSON := prepareStrings(actualJSON, expectedStateChangePayload)
 	if actualJSON != expectedJSON {
 		return http.StatusBadRequest, fmt.Errorf("invalid json body: %s\nexpected: %s", actualJSON, expectedJSON)
 	}

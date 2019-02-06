@@ -39,7 +39,7 @@ var (
 	testThrottled = false
 )
 
-var expectedPayload = `
+const expectedStateChangePayload = `
 {
   "trigger": {
     "id": "triggerID",
@@ -103,6 +103,26 @@ var expectedPayload = `
 }
 `
 
+const expectedEmptyPayload = `
+{
+ "trigger": {
+  "id": "",
+  "name": "",
+  "description": "",
+  "tags": []
+ },
+ "events": [],
+ "contact": {
+  "type": "",
+  "value": "",
+  "id": "",
+  "user": ""
+ },
+ "plot": "",
+ "throttled": false
+}
+`
+
 type requestURLTestCase struct {
 	trigger moira.TriggerData
 	contact moira.ContactData
@@ -159,10 +179,21 @@ var requestURLTestCases = []requestURLTestCase{
 
 func TestBuildRequestBody(t *testing.T) {
 	Convey("Payload should be valid", t, func() {
-		requestBody, err := buildRequestBody(testEvents, testContact, testTrigger, testPlot, testThrottled)
-		actual, expected := prepareStrings(string(requestBody), expectedPayload)
-		So(actual, ShouldEqual, expected)
-		So(err, ShouldBeNil)
+		Convey("Trigger state change", func() {
+			events, contact, trigger, plot, throttled := testEvents, testContact, testTrigger, testPlot, testThrottled
+			requestBody, err := buildRequestBody(events, contact, trigger, plot, throttled)
+			actual, expected := prepareStrings(string(requestBody), expectedStateChangePayload)
+			So(actual, ShouldEqual, expected)
+			So(err, ShouldBeNil)
+		})
+		Convey("Empty notification", func() {
+			events, contact, trigger, plot, throttled := moira.NotificationEvents{}, moira.ContactData{}, moira.TriggerData{}, testPlot, testThrottled
+			requestBody, err := buildRequestBody(events, contact, trigger, plot, throttled)
+			actual, expected := prepareStrings(string(requestBody), expectedEmptyPayload)
+			So(actual, ShouldEqual, expected)
+			So(actual, ShouldNotContainSubstring, "null")
+			So(err, ShouldBeNil)
+		})
 	})
 }
 

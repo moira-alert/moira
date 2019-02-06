@@ -60,7 +60,7 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 
 	sender.log = logger
 	sender.client = &http.Client{
-		Timeout: time.Duration(timeout) * time.Second,
+		Timeout:   time.Duration(timeout) * time.Second,
 		Transport: &http.Transport{DisableKeepAlives: true},
 	}
 	return nil

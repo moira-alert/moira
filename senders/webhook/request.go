@@ -42,6 +42,20 @@ type contactData struct {
 	User  string `json:"user"`
 }
 
+// toTriggerData returns correct triggerData structure to marshall JSON
+func toTriggerData(trigger moira.TriggerData) triggerData {
+	result := triggerData{
+		ID:          trigger.ID,
+		Name:        trigger.Name,
+		Description: trigger.Desc,
+		Tags:        make([]string, 0),
+	}
+	for _, tag := range trigger.Tags {
+		result.Tags = append(result.Tags, tag)
+	}
+	return result
+}
+
 func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) (*http.Request, error) {
 	requestURL := buildRequestURL(sender.url, trigger, contact)
 	requestBody, err := buildRequestBody(events, contact, trigger, plot, throttled)
@@ -75,13 +89,8 @@ func buildRequestBody(events moira.NotificationEvents, contact moira.ContactData
 		})
 	}
 	requestPayload := payload{
-		Trigger: triggerData{
-			ID:          trigger.ID,
-			Name:        trigger.Name,
-			Description: trigger.Desc,
-			Tags:        trigger.Tags,
-		},
-		Events: eventsData,
+		Trigger: toTriggerData(trigger),
+		Events:  eventsData,
 		Contact: contactData{
 			Type:  contact.Type,
 			Value: contact.Value,
