@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/moira-alert/moira/metric_source"
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
 
@@ -35,7 +36,6 @@ func TestResolveMetricsWindow(t *testing.T) {
 	localTrigger := moira.TriggerData{ID: "redisTrigger", IsRemote: false}
 	remoteTrigger := moira.TriggerData{ID: "remoteTrigger", IsRemote: true}
 	timeRange := time.Unix(int64(defaultTimeRange.Seconds()), 0).Unix()
-	timeShift := time.Unix(int64(defaultTimeShift.Seconds()), 0).Unix()
 	var pkg NotificationPackage
 	var pkgs []NotificationPackage
 	var trigger moira.TriggerData
@@ -47,8 +47,8 @@ func TestResolveMetricsWindow(t *testing.T) {
 				_, expectedTo, err := pkg.GetWindow()
 				So(err, ShouldBeNil)
 				from, to := resolveMetricsWindow(logger, trigger, pkg)
-				So(from, ShouldEqual, expectedTo-timeRange+timeShift)
-				So(to, ShouldEqual, expectedTo+timeShift)
+				So(from, ShouldEqual, alignToMinutes(expectedTo)-timeRange)
+				So(to, ShouldEqual, expectedTo)
 			}
 		})
 		Convey("Window is not realtime: force realtime window", func() {
@@ -56,7 +56,7 @@ func TestResolveMetricsWindow(t *testing.T) {
 			_, _, err := pkg.GetWindow()
 			So(err, ShouldBeNil)
 			from, to := resolveMetricsWindow(logger, trigger, pkg)
-			So(from, ShouldEqual, testLaunchTime.Add(-defaultTimeRange).UTC().Unix())
+			So(from, ShouldEqual, alignToMinutes(testLaunchTime.Add(-defaultTimeRange).UTC().Unix()))
 			So(to, ShouldEqual, testLaunchTime.UTC().Unix())
 		})
 	})
@@ -67,7 +67,7 @@ func TestResolveMetricsWindow(t *testing.T) {
 			expectedFrom, expectedTo, err := pkg.GetWindow()
 			So(err, ShouldBeNil)
 			from, to := resolveMetricsWindow(logger, trigger, pkg)
-			So(from, ShouldEqual, expectedFrom)
+			So(from, ShouldEqual, alignToMinutes(expectedFrom))
 			So(to, ShouldEqual, expectedTo)
 		})
 		Convey("Window is not wide: use shifted window to fetch extended historical data from graphite", func() {
@@ -76,8 +76,8 @@ func TestResolveMetricsWindow(t *testing.T) {
 				_, expectedTo, err := pkg.GetWindow()
 				So(err, ShouldBeNil)
 				from, to := resolveMetricsWindow(logger, trigger, pkg)
-				So(from, ShouldEqual, expectedTo-timeRange+timeShift)
-				So(to, ShouldEqual, expectedTo+timeShift)
+				So(from, ShouldEqual, alignToMinutes(expectedTo-timeRange))
+				So(to, ShouldEqual, expectedTo)
 			}
 		})
 	})
@@ -90,8 +90,39 @@ func TestResolveMetricsWindow(t *testing.T) {
 			expectedTo := testLaunchTime.Unix()
 			_, _, err := pkg.GetWindow()
 			So(err, ShouldResemble, fmt.Errorf("not enough data to resolve package window"))
-			So(from, ShouldEqual, expectedFrom)
+			So(from, ShouldEqual, alignToMinutes(expectedFrom))
 			So(to, ShouldEqual, expectedTo)
 		}
+	})
+}
+
+// TestGetMetricDataToShow tests to limited metricsData returns only necessary metricsData
+func TestGetMetricDataToShow(t *testing.T) {
+	givenSeries := []*metricSource.MetricData{
+		metricSource.MakeMetricData("metricPrefix.metricName1", []float64{1}, 1, 1),
+		metricSource.MakeMetricData("metricPrefix.metricName2", []float64{2}, 2, 2),
+		metricSource.MakeMetricData("metricPrefix.metricName3", []float64{3}, 3, 3),
+	}
+	Convey("Limit series by non-empty whitelist", t, func() {
+		Convey("MetricsData has necessary series", func() {
+			metricsWhiteList := []string{"metricPrefix.metricName1", "metricPrefix.metricName2"}
+			metricsData := getMetricDataToShow(givenSeries, metricsWhiteList)
+			So(len(metricsData), ShouldEqual, len(metricsWhiteList))
+			So(metricsData[0].Name, ShouldEqual, metricsWhiteList[0])
+			So(metricsData[1].Name, ShouldEqual, metricsWhiteList[1])
+		})
+		Convey("MetricsData has no necessary series", func() {
+			metricsWhiteList := []string{"metricPrefix.metricName4"}
+			metricsData := getMetricDataToShow(givenSeries, metricsWhiteList)
+			So(len(metricsData), ShouldEqual, 0)
+		})
+	})
+	Convey("Limit series by an empty whitelist", t, func() {
+		metricsWhiteList := make([]string, 0)
+		metricsData := getMetricDataToShow(givenSeries, metricsWhiteList)
+		for metricDataInd := range metricsData {
+			So(metricsData[metricDataInd].Name, ShouldEqual, givenSeries[metricDataInd].Name)
+		}
+		So(len(metricsData), ShouldEqual, len(givenSeries))
 	})
 }

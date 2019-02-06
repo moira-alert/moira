@@ -3,7 +3,6 @@ package notifier
 import (
 	"bytes"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/moira-alert/moira/metric_source"
@@ -14,9 +13,7 @@ import (
 	"github.com/moira-alert/moira/plotting"
 )
 
-var (
-	// defaultTimeShift is default time shift to fetch timeseries
-	defaultTimeShift = 1 * time.Minute
+const (
 	// defaultTimeRange is default time range to fetch timeseries
 	defaultTimeRange = 30 * time.Minute
 )
@@ -55,18 +52,9 @@ func (notifier *StandardNotifier) buildNotificationPackagePlot(pkg NotificationP
 	if err != nil {
 		return buff.Bytes(), err
 	}
-	notifier.logger.Debugf("rendering %s timeseries: %s", trigger.ID, strings.Join(metricsToShow, ", "))
-	var md = make([]*metricSource.MetricData, 0, len(metricsData))
-	for _, metricData := range metricsData {
-		md = append(md, &metricSource.MetricData{
-			Name:      metricData.Name,
-			StartTime: metricData.StartTime,
-			StopTime:  metricData.StopTime,
-			StepTime:  metricData.StepTime,
-			Values:    metricData.Values,
-		})
-	}
-	renderable, err := plotTemplate.GetRenderable(trigger, md, metricsToShow)
+	metricsData = getMetricDataToShow(metricsData, metricsToShow)
+	notifier.logger.Debugf("rendering %s metricsData: %v", trigger.ID, metricsData)
+	renderable, err := plotTemplate.GetRenderable(trigger, metricsData)
 	if err != nil {
 		return buff.Bytes(), err
 	}
@@ -85,9 +73,8 @@ func resolveMetricsWindow(logger moira.Logger, trigger moira.TriggerData, pkg No
 	// try to resolve package window, force default realtime window on fail for both local and remote triggers
 	from, to, err := pkg.GetWindow()
 	if err != nil {
-		logger.Warningf("failed to get trigger %s package window: %s, using default %s window",
-			trigger.ID, err.Error(), defaultTimeRange.String())
-		return defaultFrom, defaultTo
+		logger.Warningf("failed to get trigger %s package window: %s, using default %s window", trigger.ID, err.Error(), defaultTimeRange.String())
+		return alignToMinutes(defaultFrom), defaultTo
 	}
 	// package window successfully resolved, test it's wide and realtime metrics window
 	fromTime, toTime := moira.Int64ToTime(from), moira.Int64ToTime(to)
@@ -98,17 +85,22 @@ func resolveMetricsWindow(logger moira.Logger, trigger moira.TriggerData, pkg No
 	// window is not wide: use shifted window to fetch extended historical data from graphite
 	if trigger.IsRemote {
 		if isWideWindow {
-			return fromTime.Unix(), toTime.Unix()
+			return alignToMinutes(fromTime.Unix()), toTime.Unix()
 		}
-		return toTime.Add(-defaultTimeRange + defaultTimeShift).Unix(), toTime.Add(defaultTimeShift).Unix()
+		return alignToMinutes(toTime.Add(-defaultTimeRange).Unix()), toTime.Unix()
 	}
 	// resolve local trigger window
 	// window is realtime: use shifted window to fetch actual data from redis
 	// window is not realtime: force realtime window
 	if isRealTimeWindow {
-		return toTime.Add(-defaultTimeRange + defaultTimeShift).Unix(), toTime.Add(defaultTimeShift).Unix()
+		return alignToMinutes(toTime.Add(-defaultTimeRange).Unix()), toTime.Unix()
 	}
-	return defaultFrom, defaultTo
+	return alignToMinutes(defaultFrom), defaultTo
+}
+
+func alignToMinutes(unixTime int64) int64 {
+	unixTime -= unixTime % 60
+	return unixTime
 }
 
 // evaluateTriggerMetrics returns collection of MetricData
@@ -144,4 +136,23 @@ func fetchAvailableSeries(metricsSource metricSource.MetricSource, target string
 		return fetchResult.GetMetricsData(), nil
 	}
 	return realtimeFetchResult.GetMetricsData(), realtimeErr
+}
+
+// getMetricDataToShow returns MetricData limited by whitelist
+func getMetricDataToShow(metricsData []*metricSource.MetricData, metricsWhitelist []string) []*metricSource.MetricData {
+	if len(metricsWhitelist) == 0 {
+		return metricsData
+	}
+	metricsWhitelistHash := make(map[string]struct{}, len(metricsWhitelist))
+	for _, whiteListed := range metricsWhitelist {
+		metricsWhitelistHash[whiteListed] = struct{}{}
+	}
+
+	newMetricsData := make([]*metricSource.MetricData, 0, len(metricsWhitelist))
+	for _, metricData := range metricsData {
+		if _, ok := metricsWhitelistHash[metricData.Name]; ok {
+			newMetricsData = append(newMetricsData, metricData)
+		}
+	}
+	return newMetricsData
 }

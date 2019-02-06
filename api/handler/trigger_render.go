@@ -50,6 +50,7 @@ func getEvaluationParameters(request *http.Request) (sourceProvider *metricSourc
 	if from == 0 {
 		return sourceProvider, 0, 0, "", false, fmt.Errorf("can not parse from: %s", fromStr)
 	}
+	from -= from % 60
 	to = date.DateParamToEpoch(toStr, "UTC", 0, time.UTC)
 	if to == 0 {
 		return sourceProvider, 0, 0, "", false, fmt.Errorf("can not parse to: %s", fromStr)
@@ -87,8 +88,7 @@ func buildRenderable(request *http.Request, trigger *moira.Trigger, metricsData 
 	if err != nil {
 		return nil, fmt.Errorf("can not initialize plot theme %s", err.Error())
 	}
-	var metricsWhiteList = make([]string, 0)
-	renderable, err := plotTemplate.GetRenderable(trigger, metricsData, metricsWhiteList)
+	renderable, err := plotTemplate.GetRenderable(trigger, metricsData)
 	if err != nil {
 		return nil, err
 	}

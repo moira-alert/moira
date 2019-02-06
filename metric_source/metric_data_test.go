@@ -1,6 +1,7 @@
 package metricSource
 
 import (
+	"fmt"
 	"math"
 	"testing"
 
@@ -110,5 +111,21 @@ func TestGetTimestampValue(t *testing.T) {
 		So(math.IsNaN(actual), ShouldBeTrue)
 		actual = metricData.GetTimestampValue(66)
 		So(math.IsNaN(actual), ShouldBeTrue)
+	})
+}
+
+func TestMetricData_String(t *testing.T) {
+	metricData1 := MakeMetricData("123", []float64{1, 2, 3}, 60, 0)
+	metricData2 := MakeEmptyMetricData("123", 10, 50, 100)
+	Convey("MetricData with points", t, func() {
+		So(metricData1.String(), ShouldResemble, "Metric: 123, StartTime: 0, StopTime: 180, StepTime: 60, Points: [1 2 3]")
+	})
+
+	Convey("MetricData with NaN points", t, func() {
+		So(metricData2.String(), ShouldResemble, "Metric: 123, StartTime: 50, StopTime: 100, StepTime: 10, Points: [NaN NaN NaN NaN NaN]")
+	})
+
+	Convey("MetricsData array", t, func() {
+		So(fmt.Sprintf("%v", []*MetricData{metricData1, metricData2}), ShouldResemble, "[Metric: 123, StartTime: 0, StopTime: 180, StepTime: 60, Points: [1 2 3] Metric: 123, StartTime: 50, StopTime: 100, StepTime: 10, Points: [NaN NaN NaN NaN NaN]]")
 	})
 }
