@@ -48,7 +48,7 @@ func (connector *DbConnector) GetSubscriptions(subscriptionIDs []string) ([]*moi
 
 // SaveSubscription writes subscription data, updates tags subscriptions and user subscriptions
 func (connector *DbConnector) SaveSubscription(subscription *moira.SubscriptionData) error {
-	var oldSubscription *moira.SubscriptionData = nil
+	var oldSubscription *moira.SubscriptionData
 
 	if subscription, err := connector.GetSubscription(subscription.ID); err == nil {
 		oldSubscription = &subscription
@@ -59,7 +59,7 @@ func (connector *DbConnector) SaveSubscription(subscription *moira.SubscriptionD
 	if err != nil {
 		return fmt.Errorf("failed to get triggers by subscription: %s", err.Error())
 	}
-	if err := connector.updateSubscription(subscription, oldSubscription); err != nil {
+	if err = connector.updateSubscription(subscription, oldSubscription); err != nil {
 		return fmt.Errorf("failed to update subscription: %s", err.Error())
 	}
 	newTriggers, err := connector.getSubscriptionTriggers(subscription)
@@ -96,7 +96,7 @@ func (connector *DbConnector) SaveSubscriptions(newSubscriptions []*moira.Subscr
 	if err != nil {
 		return err
 	}
-	if err := connector.updateSubscriptions(oldSubscriptions, newSubscriptions); err != nil {
+	if err = connector.updateSubscriptions(oldSubscriptions, newSubscriptions); err != nil {
 		return err
 	}
 	newTriggers, err := connector.getSubscriptionsTriggers(newSubscriptions)
