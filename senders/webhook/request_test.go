@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	testBadId    = "!@#$"
+	testBadID    = "!@#$"
 	testTemplate = "https://hostname.domain/${trigger_id}/${contact_type}/${contact_id}/${contact_value}"
 )
 
@@ -138,7 +138,7 @@ var requestURLTestCases = []requestURLTestCase{
 		},
 	},
 	{
-		trigger: moira.TriggerData{ID: testBadId},
+		trigger: moira.TriggerData{ID: testBadID},
 		contact: moira.ContactData{Type: "contactType", ID: "contactID", Value: "contactValue"},
 		results: map[string]string{
 			testTemplate: "https://hostname.domain/%21@%23$/contactType/contactID/contactValue",
@@ -146,24 +146,24 @@ var requestURLTestCases = []requestURLTestCase{
 		},
 	},
 	{
-		trigger: moira.TriggerData{ID: testBadId},
-		contact: moira.ContactData{Type: testBadId, ID: "contactID", Value: "contactValue"},
+		trigger: moira.TriggerData{ID: testBadID},
+		contact: moira.ContactData{Type: testBadID, ID: "contactID", Value: "contactValue"},
 		results: map[string]string{
 			testTemplate: "https://hostname.domain/%21@%23$/%21@%23$/contactID/contactValue",
 			"https://hostname.domain/${contact_id}/${contact_value}": "https://hostname.domain/contactID/contactValue",
 		},
 	},
 	{
-		trigger: moira.TriggerData{ID: testBadId},
-		contact: moira.ContactData{Type: testBadId, ID: testBadId, Value: "contactValue"},
+		trigger: moira.TriggerData{ID: testBadID},
+		contact: moira.ContactData{Type: testBadID, ID: testBadID, Value: "contactValue"},
 		results: map[string]string{
 			testTemplate:                               "https://hostname.domain/%21@%23$/%21@%23$/%21@%23$/contactValue",
 			"https://hostname.domain/${contact_value}": "https://hostname.domain/contactValue",
 		},
 	},
 	{
-		trigger: moira.TriggerData{ID: testBadId},
-		contact: moira.ContactData{Type: testBadId, ID: testBadId, Value: testBadId},
+		trigger: moira.TriggerData{ID: testBadID},
+		contact: moira.ContactData{Type: testBadID, ID: testBadID, Value: testBadID},
 		results: map[string]string{
 			testTemplate: "https://hostname.domain/%21@%23$/%21@%23$/%21@%23$/%21@%23$",
 		},

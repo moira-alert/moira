@@ -50,9 +50,7 @@ func toTriggerData(trigger moira.TriggerData) triggerData {
 		Description: trigger.Desc,
 		Tags:        make([]string, 0),
 	}
-	for _, tag := range trigger.Tags {
-		result.Tags = append(result.Tags, tag)
-	}
+	result.Tags = append(result.Tags, trigger.Tags...)
 	return result
 }
 
