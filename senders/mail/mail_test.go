@@ -3,8 +3,9 @@ package mail
 import (
 	"fmt"
 	"html/template"
-	"os"
 	"testing"
+	"time"
+
 	"time"
 
 	"github.com/golang/mock/gomock"
@@ -57,7 +58,6 @@ func TestMail(t *testing.T) {
 		message := sender.makeMessage(events, contact, trigger, plot, true)
 		So(message.GetHeader("From")[0], ShouldEqual, sender.From)
 		So(message.GetHeader("To")[0], ShouldEqual, contact.Value)
-		message.WriteTo(os.Stdout)
 	})
 }
 

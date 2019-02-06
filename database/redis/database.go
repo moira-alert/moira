@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/FZambia/go-sentinel"
-	"github.com/garyburd/redigo/redis"
+	"github.com/FZambia/sentinel"
+	"github.com/gomodule/redigo/redis"
 	"github.com/patrickmn/go-cache"
 	"gopkg.in/redsync.v1"
 	"gopkg.in/tomb.v2"
@@ -45,8 +45,6 @@ type DbConnector struct {
 	retentionCache       *cache.Cache
 	retentionSavingCache *cache.Cache
 	metricsCache         *cache.Cache
-	servicesCache        *cache.Cache
-	messengersCache      *cache.Cache
 	sync                 *redsync.Redsync
 	source               DBSource
 }
@@ -60,8 +58,6 @@ func NewDatabase(logger moira.Logger, config Config, source DBSource) *DbConnect
 		retentionCache:       cache.New(cacheValueExpirationDuration, cacheCleanupInterval),
 		retentionSavingCache: cache.New(cache.NoExpiration, cache.DefaultExpiration),
 		metricsCache:         cache.New(cacheValueExpirationDuration, cacheCleanupInterval),
-		servicesCache:        cache.New(cacheValueExpirationDuration, cacheCleanupInterval),
-		messengersCache:      cache.New(cache.NoExpiration, cache.DefaultExpiration),
 		sync:                 redsync.New([]redsync.Pool{pool}),
 		source:               source,
 	}
@@ -100,17 +96,7 @@ func newRedisPool(logger moira.Logger, config Config) *redis.Pool {
 				}
 				lastMu.Unlock()
 			}
-			c, err := redis.Dial("tcp", serverAddr)
-			if err != nil {
-				return nil, err
-			}
-			if config.DBID != 0 {
-				if _, err = c.Do("SELECT", config.DBID); err != nil {
-					c.Close()
-					return nil, err
-				}
-			}
-			return c, err
+			return redis.Dial("tcp", serverAddr, redis.DialDatabase(config.DBID))
 		},
 		TestOnBorrow: func(c redis.Conn, t time.Time) error {
 			if useSentinel {
@@ -132,14 +118,13 @@ func createSentinel(logger moira.Logger, config Config, useSentinel bool) (*sent
 			MasterName: config.MasterName,
 			Dial: func(addr string) (redis.Conn, error) {
 				timeout := 300 * time.Millisecond
-				c, err := redis.Dial("tcp", addr,
+				return redis.Dial(
+					"tcp",
+					addr,
 					redis.DialConnectTimeout(timeout),
 					redis.DialReadTimeout(timeout),
-					redis.DialWriteTimeout(timeout))
-				if err != nil {
-					return nil, err
-				}
-				return c, nil
+					redis.DialWriteTimeout(timeout),
+				)
 			},
 		}
 
@@ -165,6 +150,7 @@ func (connector *DbConnector) makePubSubConnection(channel string) (*redis.PubSu
 	c := connector.pool.Get()
 	psc := redis.PubSubConn{Conn: c}
 	if err := psc.Subscribe(channel); err != nil {
+		c.Close()
 		return nil, fmt.Errorf("failed to subscribe to '%s', error: %v", channel, err)
 	}
 	return &psc, nil
@@ -228,4 +214,22 @@ func (connector *DbConnector) flush() {
 	c := connector.pool.Get()
 	defer c.Close()
 	c.Do("FLUSHDB")
+}
+
+// GET KEY TTL! USE IT ONLY FOR TESTING!!!
+func (connector *DbConnector) getTTL(key string) int {
+	c := connector.pool.Get()
+	defer c.Close()
+	ttl, err := redis.Int(c.Do("PTTL", key))
+	if err != nil {
+		return 0
+	}
+	return ttl
+}
+
+// DELETE KEY! USE IT ONLY FOR TESTING!!!
+func (connector *DbConnector) delete(key string) {
+	c := connector.pool.Get()
+	defer c.Close()
+	c.Do("DEL", key)
 }

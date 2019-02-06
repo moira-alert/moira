@@ -3,7 +3,7 @@ package redis
 import (
 	"fmt"
 
-	"github.com/garyburd/redigo/redis"
+	"github.com/gomodule/redigo/redis"
 	"github.com/moira-alert/moira"
 )
 

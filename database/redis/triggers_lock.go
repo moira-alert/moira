@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/garyburd/redigo/redis"
+	"github.com/gomodule/redigo/redis"
 )
 
 // AcquireTriggerCheckLock sets trigger lock by given id. If lock does not take, try again and repeat it for given attempts

@@ -10,6 +10,7 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/notifier"
+	w "github.com/moira-alert/moira/worker"
 )
 
 var defaultCheckInterval = time.Second * 10
@@ -21,6 +22,9 @@ const (
 	remoteCheckerStateErrorMessage = "Moira-Remote-Checker does not check remote triggers"
 )
 
+const selfStateLockName = "moira-self-state-monitor"
+const selfStateLockTTL = time.Second * 15
+
 // SelfCheckWorker checks what all notifier services works correctly and send message when moira don't work
 type SelfCheckWorker struct {
 	Log      moira.Logger
@@ -28,6 +32,30 @@ type SelfCheckWorker struct {
 	Notifier notifier.Notifier
 	Config   Config
 	tomb     tomb.Tomb
+}
+
+func (selfCheck *SelfCheckWorker) selfStateChecker(stop <-chan struct{}) error {
+	selfCheck.Log.Info("Moira Notifier Self State Monitor started")
+
+	var metricsCount, checksCount, remoteChecksCount int64
+	lastMetricReceivedTS := time.Now().Unix()
+	redisLastCheckTS := time.Now().Unix()
+	lastCheckTS := time.Now().Unix()
+	lastRemoteCheckTS := time.Now().Unix()
+	nextSendErrorMessage := time.Now().Unix()
+
+	checkTicker := time.NewTicker(defaultCheckInterval)
+	defer checkTicker.Stop()
+
+	for {
+		select {
+		case <-stop:
+			selfCheck.Log.Info("Moira Notifier Self State Monitor stopped")
+			return nil
+		case <-checkTicker.C:
+			selfCheck.check(time.Now().Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS, &lastRemoteCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount, &remoteChecksCount)
+		}
+	}
 }
 
 // Start self check worker
@@ -38,30 +66,20 @@ func (selfCheck *SelfCheckWorker) Start() error {
 	}
 	senders := selfCheck.Notifier.GetSenders()
 	if err := selfCheck.Config.checkConfig(senders); err != nil {
-		return fmt.Errorf("can't configure self state monitor: %s", err.Error())
+		selfCheck.Log.Errorf("Can't configure Moira Self State Monitoring: %s", err.Error())
+		return nil
 	}
-	var metricsCount, checksCount, remoteChecksCount int64
-	lastMetricReceivedTS := time.Now().Unix()
-	redisLastCheckTS := time.Now().Unix()
-	lastCheckTS := time.Now().Unix()
-	lastRemoteCheckTS := time.Now().Unix()
-	nextSendErrorMessage := time.Now().Unix()
 
 	selfCheck.tomb.Go(func() error {
-		checkTicker := time.NewTicker(defaultCheckInterval)
-		for {
-			select {
-			case <-selfCheck.tomb.Dying():
-				checkTicker.Stop()
-				selfCheck.Log.Info("Moira Notifier Self State Monitor Stopped")
-				return nil
-			case <-checkTicker.C:
-				selfCheck.check(time.Now().Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS, &lastRemoteCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount, &remoteChecksCount)
-			}
-		}
+		w.NewWorker(
+			"Moira Self State Monitoring",
+			selfCheck.Log,
+			selfCheck.DB.NewLock(selfStateLockName, selfStateLockTTL),
+			selfCheck.selfStateChecker,
+		).Run(selfCheck.tomb.Dying())
+		return nil
 	})
 
-	selfCheck.Log.Info("Moira Notifier Self State Monitor Started")
 	return nil
 }
 
@@ -70,6 +88,11 @@ func (selfCheck *SelfCheckWorker) Stop() error {
 	if !selfCheck.Config.Enabled {
 		return nil
 	}
+	senders := selfCheck.Notifier.GetSenders()
+	if err := selfCheck.Config.checkConfig(senders); err != nil {
+		return nil
+	}
+
 	selfCheck.tomb.Kill(nil)
 	return selfCheck.tomb.Wait()
 }
@@ -141,7 +164,6 @@ func (selfCheck *SelfCheckWorker) check(nowTS int64, lastMetricReceivedTS, redis
 			selfCheck.sendErrorMessages(&events)
 			*nextSendErrorMessage = nowTS + selfCheck.Config.NoticeIntervalSeconds
 		}
-
 	}
 }
 

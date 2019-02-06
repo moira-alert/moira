@@ -36,6 +36,23 @@ func TestMakeMetricData(t *testing.T) {
 			StopTime:  0,
 		})
 	})
+
+	Convey("Make empty metric data", t, func() {
+		metricData := MakeEmptyMetricData("123", 10, 50, 100)
+		So(metricData.Values, ShouldHaveLength, 5)
+
+		metricData = MakeEmptyMetricData("123", 10, 51, 99)
+		So(metricData.Values, ShouldHaveLength, 5)
+
+		metricData = MakeEmptyMetricData("123", 10, 51, 102)
+		So(metricData.Values, ShouldHaveLength, 6)
+
+		metricData = MakeEmptyMetricData("123", 60, 51, 102)
+		So(metricData.Values, ShouldHaveLength, 1)
+
+		metricData = MakeEmptyMetricData("123", 40, 51, 102)
+		So(metricData.Values, ShouldHaveLength, 2)
+	})
 }
 
 func TestGetTimestampValue(t *testing.T) {

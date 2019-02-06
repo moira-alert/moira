@@ -8,8 +8,8 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/mock/moira-alert"
-	"github.com/moira-alert/moira/mock/notifier"
+	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
+	mock_notifier "github.com/moira-alert/moira/mock/notifier"
 	"github.com/moira-alert/moira/notifier"
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
@@ -257,7 +257,11 @@ func TestRunGoRoutine(t *testing.T) {
 	senders := map[string]bool{
 		"admin-mail": true,
 	}
-	notif.EXPECT().GetSenders().Return(senders)
+	notif.EXPECT().GetSenders().Return(senders).MinTimes(1)
+	lock := mock_moira_alert.NewMockLock(mockCtrl)
+	lock.EXPECT().Acquire(gomock.Any()).Return(nil, nil)
+	lock.EXPECT().Release()
+	database.EXPECT().NewLock(gomock.Any(), gomock.Any()).Return(lock)
 
 	selfStateWorker := &SelfCheckWorker{
 		Log:      logger,
@@ -304,7 +308,12 @@ func configureWorker(t *testing.T, remoteEnabled bool) *selfCheckWorkerMock {
 	senders := map[string]bool{
 		"admin-mail": true,
 	}
-	notif.EXPECT().GetSenders().Return(senders)
+	notif.EXPECT().GetSenders().Return(senders).MinTimes(1)
+
+	lock := mock_moira_alert.NewMockLock(mockCtrl)
+	lock.EXPECT().Acquire(gomock.Any()).Return(nil, nil)
+	lock.EXPECT().Release()
+	database.EXPECT().NewLock(gomock.Any(), gomock.Any()).Return(lock)
 
 	return &selfCheckWorkerMock{
 		selfCheckWorker: &SelfCheckWorker{

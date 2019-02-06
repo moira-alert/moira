@@ -26,7 +26,6 @@ type Database interface {
 	GetTriggerLastCheck(triggerID string) (CheckData, error)
 	SetTriggerLastCheck(triggerID string, checkData *CheckData, isRemote bool) error
 	RemoveTriggerLastCheck(triggerID string) error
-	GetTriggerCheckIDs(tags []string, onlyErrors bool) ([]string, error)
 	SetTriggerCheckMaintenance(triggerID string, metrics map[string]int64, triggerMaintenance *int64) error
 
 	// Trigger storing
@@ -110,15 +109,6 @@ type Database interface {
 	GetIDByUsername(messenger, username string) (string, error)
 	SetUsernameID(messenger, username, id string) error
 	RemoveUser(messenger, username string) error
-	RegisterBotIfAlreadyNot(messenger string, ttl time.Duration) bool
-	RenewBotRegistration(messenger string) bool
-	DeregisterBots()
-	DeregisterBot(messenger string) bool
-
-	// Service registration
-	RegisterNodataCheckerIfAlreadyNot(ttl time.Duration) bool
-	RenewNodataCheckerRegistration() bool
-	DeregisterNodataChecker() bool
 
 	// Triggers without subscription manipulation
 	MarkTriggersAsUnused(triggerIDs ...string) error
@@ -128,6 +118,15 @@ type Database interface {
 	// Triggers to reindex in full-text search index
 	FetchTriggersToReindex(from int64) ([]string, error)
 	RemoveTriggersToReindex(to int64) error
+
+	// Creates Lock
+	NewLock(name string, ttl time.Duration) Lock
+}
+
+// Lock implements lock abstraction
+type Lock interface {
+	Acquire(stop <-chan struct{}) (lost <-chan struct{}, error error)
+	Release()
 }
 
 // Logger implements logger abstraction

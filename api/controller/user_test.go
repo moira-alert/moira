@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/gofrs/uuid"
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/mock/moira-alert"
-	"github.com/satori/go.uuid"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -20,9 +20,9 @@ func TestGetUserSettings(t *testing.T) {
 	login := "user"
 
 	Convey("Success get user data", t, func() {
-		subscriptionIDs := []string{uuid.NewV4().String(), uuid.NewV4().String()}
+		subscriptionIDs := []string{uuid.Must(uuid.NewV4()).String(), uuid.Must(uuid.NewV4()).String()}
 		subscriptions := []*moira.SubscriptionData{{ID: subscriptionIDs[0]}, {ID: subscriptionIDs[1]}}
-		contactIDs := []string{uuid.NewV4().String(), uuid.NewV4().String()}
+		contactIDs := []string{uuid.Must(uuid.NewV4()).String(), uuid.Must(uuid.NewV4()).String()}
 		contacts := []*moira.ContactData{{ID: contactIDs[0]}, {ID: contactIDs[1]}}
 		database.EXPECT().GetUserSubscriptionIDs(login).Return(subscriptionIDs, nil)
 		database.EXPECT().GetSubscriptions(subscriptionIDs).Return(subscriptions, nil)
@@ -78,9 +78,9 @@ func TestGetUserSettings(t *testing.T) {
 		})
 		Convey("GetContacts", func() {
 			expected := fmt.Errorf("can not read contacts")
-			subscriptionIDs := []string{uuid.NewV4().String(), uuid.NewV4().String()}
+			subscriptionIDs := []string{uuid.Must(uuid.NewV4()).String(), uuid.Must(uuid.NewV4()).String()}
 			subscriptions := []*moira.SubscriptionData{{ID: subscriptionIDs[0]}, {ID: subscriptionIDs[1]}}
-			contactIDs := []string{uuid.NewV4().String(), uuid.NewV4().String()}
+			contactIDs := []string{uuid.Must(uuid.NewV4()).String(), uuid.Must(uuid.NewV4()).String()}
 			database.EXPECT().GetUserSubscriptionIDs(login).Return(subscriptionIDs, nil)
 			database.EXPECT().GetSubscriptions(subscriptionIDs).Return(subscriptions, nil)
 			database.EXPECT().GetUserContactIDs(login).Return(contactIDs, nil)

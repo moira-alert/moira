@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/go-graphite/carbonapi/date"
-	"github.com/satori/go.uuid"
+	"github.com/gofrs/uuid"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
@@ -35,7 +35,11 @@ func CreateContact(dataBase moira.Database, contact *dto.Contact, userLogin stri
 		Value: contact.Value,
 	}
 	if contactData.ID == "" {
-		contactData.ID = uuid.NewV4().String()
+		uuid4, err := uuid.NewV4()
+		if err != nil {
+			return api.ErrorInternalServer(err)
+		}
+		contactData.ID = uuid4.String()
 	} else {
 		exists, err := isContactExists(dataBase, contactData.ID)
 		if err != nil {

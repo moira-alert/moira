@@ -24,6 +24,21 @@ func MakeMetricData(name string, values []float64, step, start int64) *MetricDat
 	}
 }
 
+// MakeEmptyMetricData create MetricData with given interval and retention step with all empty metric points
+func MakeEmptyMetricData(name string, step, start, stop int64) *MetricData {
+	values := make([]float64, 0)
+	for i := start; i < stop; i += step {
+		values = append(values, math.NaN())
+	}
+	return &MetricData{
+		Name:      name,
+		Values:    values,
+		StartTime: start,
+		StepTime:  step,
+		StopTime:  stop,
+	}
+}
+
 // GetTimestampValue gets value of given timestamp index, if value is Nil, then return NaN
 func (timeSeries *MetricData) GetTimestampValue(valueTimestamp int64) float64 {
 	if valueTimestamp < timeSeries.StartTime {

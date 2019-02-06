@@ -3,8 +3,8 @@ package redis
 import (
 	"testing"
 
+	"github.com/gofrs/uuid"
 	"github.com/op/go-logging"
-	"github.com/satori/go.uuid"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"time"
@@ -122,7 +122,7 @@ func TestNotificationEvents(t *testing.T) {
 				Timestamp: now,
 				State:     "NODATA",
 				OldState:  "NODATA",
-				TriggerID: uuid.NewV4().String(),
+				TriggerID: uuid.Must(uuid.NewV4()).String(),
 				Metric:    "my.metric",
 			}
 
@@ -215,13 +215,13 @@ var notificationEvent1 = moira.NotificationEvent{
 	Timestamp: time.Now().Unix(),
 	State:     "EXCEPTION",
 	OldState:  "NODATA",
-	TriggerID: uuid.NewV4().String(),
+	TriggerID: uuid.Must(uuid.NewV4()).String(),
 	Metric:    "my.metric",
 }
 var notificationEvent2 = moira.NotificationEvent{
 	Timestamp: time.Now().Unix(),
 	State:     "OK",
 	OldState:  "WARN",
-	TriggerID: uuid.NewV4().String(),
+	TriggerID: uuid.Must(uuid.NewV4()).String(),
 	Metric:    "my.metric1",
 }

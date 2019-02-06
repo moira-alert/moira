@@ -3,8 +3,8 @@ package redis
 import (
 	"testing"
 
+	"github.com/gofrs/uuid"
 	"github.com/moira-alert/moira/database"
-	"github.com/satori/go.uuid"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"github.com/moira-alert/moira/logging/go-logging"
@@ -16,9 +16,9 @@ func TestRemoteTriggerToCheck(t *testing.T) {
 	dataBase.flush()
 	defer dataBase.flush()
 	Convey("Trigger to check get and add", t, func() {
-		triggerID1 := uuid.NewV4().String()
-		triggerID2 := uuid.NewV4().String()
-		triggerID3 := uuid.NewV4().String()
+		triggerID1 := uuid.Must(uuid.NewV4()).String()
+		triggerID2 := uuid.Must(uuid.NewV4()).String()
+		triggerID3 := uuid.Must(uuid.NewV4()).String()
 
 		actual, err := dataBase.GetRemoteTriggerToCheck()
 		So(err, ShouldResemble, database.ErrNil)

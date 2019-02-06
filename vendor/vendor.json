@@ -10,10 +10,10 @@
 			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
-			"checksumSHA1": "hBqmLpr3P88FPgBk27hzpa5N0mM=",
-			"path": "github.com/FZambia/go-sentinel",
-			"revision": "76bd05e8e22f9f8f5e1dd6d3a85b7951da7cce57",
-			"revisionTime": "2017-12-04T08:54:13Z"
+			"checksumSHA1": "3Uyji2mxcwH47z3i8elO3VbzOvE=",
+			"path": "github.com/FZambia/sentinel",
+			"revision": "52eb51343b45ab047f25b864563d93ed16e28c6c",
+			"revisionTime": "2018-06-30T10:12:55Z"
 		},
 		{
 			"checksumSHA1": "2uHTjq9EzVymiLoPqlFyA0RDmpM=",
@@ -393,18 +393,6 @@
 			"path": "github.com/fsnotify/fsnotify",
 			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
 			"revisionTime": "2018-07-29T13:10:59Z"
-		},
-		{
-			"checksumSHA1": "2UmMbNHc8FBr98mJFN1k8ISOIHk=",
-			"path": "github.com/garyburd/redigo/internal",
-			"revision": "57f1cd7de6175c96b423e7ac2534ff2b39e2ef79",
-			"revisionTime": "2017-06-15T18:53:09Z"
-		},
-		{
-			"checksumSHA1": "dGCqjUjHaREgF/BM+u0UdebD4fk=",
-			"path": "github.com/garyburd/redigo/redis",
-			"revision": "57f1cd7de6175c96b423e7ac2534ff2b39e2ef79",
-			"revisionTime": "2017-06-15T18:53:09Z"
 		},
 		{
 			"checksumSHA1": "5/EykaE4WlsUKufLsv6l2N+U4HU=",
@@ -1008,6 +996,12 @@
 			"revisionTime": "2018-06-08T13:20:22Z"
 		},
 		{
+			"checksumSHA1": "+QA+yCapL80NO5GzibuyicX6g0E=",
+			"path": "github.com/gofrs/uuid",
+			"revision": "6b08a5c5172ba18946672b49749cde22873dd7c2",
+			"revisionTime": "2019-01-11T07:18:23Z"
+		},
+		{
 			"checksumSHA1": "FhLvgtYfuKY0ow9wtLJRoeg7d6w=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/gogo/protobuf/gogoproto",
 			"path": "github.com/gogo/protobuf/gogoproto",
@@ -1062,6 +1056,18 @@
 			"path": "github.com/golang/snappy",
 			"revision": "2e65f85255dbc3072edf28d6b5b8efc472979f5a",
 			"revisionTime": "2018-05-18T05:39:59Z"
+		},
+		{
+			"checksumSHA1": "73htiRJAyEYC5HJaFtkhmosWlbE=",
+			"path": "github.com/gomodule/redigo/redis",
+			"revision": "02dc2736dbc3a4a56907b0d5a9fead2f71b499db",
+			"revisionTime": "2018-12-13T21:05:01Z"
+		},
+		{
+			"checksumSHA1": "J9ZXa0GW8FQXR/1Tw70wr6I20XI=",
+			"path": "github.com/gomodule/redigo/redisx",
+			"revision": "02dc2736dbc3a4a56907b0d5a9fead2f71b499db",
+			"revisionTime": "2018-12-13T21:05:01Z"
 		},
 		{
 			"checksumSHA1": "hEnH6sgR83Qfx7UNnphNNlelmj0=",
@@ -1315,58 +1321,52 @@
 			"revisionTime": "2017-08-01T07:32:01Z"
 		},
 		{
-			"checksumSHA1": "zmC8/3V4ls53DJlNTKDZwPSC/dA=",
-			"path": "github.com/satori/go.uuid",
-			"revision": "5bf94b69c6b68ee1b541973bb8e1144db23a194b",
-			"revisionTime": "2017-03-21T23:07:31Z"
-		},
-		{
 			"checksumSHA1": "y5uEa8FUgEkc/2/fs+XQ+ilB0js=",
 			"path": "github.com/seiflotfy/cuckoofilter",
 			"revision": "09e42b44620a3ea116a06f755fbf05fb62a1f550",
 			"revisionTime": "2018-08-01T14:34:48Z"
 		},
 		{
-			"checksumSHA1": "AikWjAOvWHSJ8G1iU+wNReZnyCk=",
+			"checksumSHA1": "y685idTxBySLYWaeyUKpZs5hqck=",
 			"path": "github.com/smartystreets/assertions",
-			"revision": "4ea54c1f28ad3ae597e76607dea3871fa177e263",
-			"revisionTime": "2017-06-07T22:27:57Z"
+			"revision": "b6c0e53d73045618965505ac26ff7864fe3ab2b2",
+			"revisionTime": "2019-01-16T19:17:33Z"
 		},
 		{
-			"checksumSHA1": "Vzb+dEH/LTYbvr8RXHmt6xJHz04=",
+			"checksumSHA1": "v6W3GIQMzr3QSXB2NtBa9X7SwiI=",
 			"path": "github.com/smartystreets/assertions/internal/go-render/render",
-			"revision": "4ea54c1f28ad3ae597e76607dea3871fa177e263",
-			"revisionTime": "2017-06-07T22:27:57Z"
+			"revision": "b6c0e53d73045618965505ac26ff7864fe3ab2b2",
+			"revisionTime": "2019-01-16T19:17:33Z"
 		},
 		{
 			"checksumSHA1": "r6FauVdOTFnwYQgrKGFuWUbIAJE=",
 			"path": "github.com/smartystreets/assertions/internal/oglematchers",
-			"revision": "4ea54c1f28ad3ae597e76607dea3871fa177e263",
-			"revisionTime": "2017-06-07T22:27:57Z"
+			"revision": "b6c0e53d73045618965505ac26ff7864fe3ab2b2",
+			"revisionTime": "2019-01-16T19:17:33Z"
 		},
 		{
-			"checksumSHA1": "DJkKC9Fsa49QQI+HKwof4La2tec=",
+			"checksumSHA1": "Nje8gktnEadeovVYB5CS8ZN9I7M=",
 			"path": "github.com/smartystreets/assertions/should",
-			"revision": "4ea54c1f28ad3ae597e76607dea3871fa177e263",
-			"revisionTime": "2017-06-07T22:27:57Z"
+			"revision": "b6c0e53d73045618965505ac26ff7864fe3ab2b2",
+			"revisionTime": "2019-01-16T19:17:33Z"
 		},
 		{
-			"checksumSHA1": "f4m09DHEetaanti/GqUJzyCBTaI=",
+			"checksumSHA1": "c71WVAQlpp3r4I+BtTxRz1Cq1Lw=",
 			"path": "github.com/smartystreets/goconvey/convey",
-			"revision": "9e8dc3f972df6c8fcc0375ef492c24d0bb204857",
-			"revisionTime": "2017-06-02T16:46:21Z"
+			"revision": "044398e4856c3a83fb98f9de0a8ed1c6495e2843",
+			"revisionTime": "2018-11-08T00:35:08Z"
 		},
 		{
-			"checksumSHA1": "9LakndErFi5uCXtY1KWl0iRnT4c=",
+			"checksumSHA1": "6Mgn4H/4vpqYGlaIKZ0UwOmJN0E=",
 			"path": "github.com/smartystreets/goconvey/convey/gotest",
-			"revision": "9e8dc3f972df6c8fcc0375ef492c24d0bb204857",
-			"revisionTime": "2017-06-02T16:46:21Z"
+			"revision": "044398e4856c3a83fb98f9de0a8ed1c6495e2843",
+			"revisionTime": "2018-11-08T00:35:08Z"
 		},
 		{
-			"checksumSHA1": "FWDhk37bhAwZ2363D/L2xePwR64=",
+			"checksumSHA1": "uTSA/KWQA01sKPYfmLyMPvXbYaA=",
 			"path": "github.com/smartystreets/goconvey/convey/reporting",
-			"revision": "9e8dc3f972df6c8fcc0375ef492c24d0bb204857",
-			"revisionTime": "2017-06-02T16:46:21Z"
+			"revision": "044398e4856c3a83fb98f9de0a8ed1c6495e2843",
+			"revisionTime": "2018-11-08T00:35:08Z"
 		},
 		{
 			"checksumSHA1": "wsfbX7YxbkeBp+xm9M9nBFzrCnA=",
@@ -1784,10 +1784,10 @@
 			"revisionTime": "2016-04-11T21:29:32Z"
 		},
 		{
-			"checksumSHA1": "skSPSmzg+vfeVlePztLzUdZH7sA=",
+			"checksumSHA1": "RNv1AEu9g8sB3dTzKiPFpjZpRxE=",
 			"path": "gopkg.in/redsync.v1",
-			"revision": "98dabdf1c8574561bf976911c14ff652c47b1ddf",
-			"revisionTime": "2016-06-17T03:24:05Z"
+			"revision": "89538344de92e78df4b7eeeceec1f3cf2d7c0aeb",
+			"revisionTime": "2018-11-21T13:23:58Z"
 		},
 		{
 			"checksumSHA1": "AzeP9gpBdHRcPQ5ozBpkBcqfInk=",
