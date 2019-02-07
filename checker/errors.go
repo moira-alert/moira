@@ -26,7 +26,7 @@ func (err ErrTriggerHasOnlyWildcards) Error() string {
 	return fmt.Sprintf("Trigger never received metrics")
 }
 
-// ErrTriggerHasSameMetricNames used if trigger has two timeseries with same name
+// ErrTriggerHasSameMetricNames used if trigger has two metric data with same name
 type ErrTriggerHasSameMetricNames struct {
 	names []string
 }
@@ -46,7 +46,7 @@ func (err ErrTargetHasNoMetrics) Error() string {
 	return fmt.Sprintf("target t%v has no metrics", err.targetIndex+1)
 }
 
-// ErrWrongTriggerTargets represents targets with inconsistent number of timeseries
+// ErrWrongTriggerTargets represents targets with inconsistent number of metrics
 type ErrWrongTriggerTargets []int
 
 // ErrWrongTriggerTarget implementation for list of invalid targets found
