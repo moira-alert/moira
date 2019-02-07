@@ -1197,7 +1197,7 @@ func TestHandleTriggerCheck(t *testing.T) {
 			State:          moira.StateERROR,
 			Timestamp:      checkData.Timestamp,
 			EventTimestamp: checkData.Timestamp,
-			Message:        "Trigger has same timeseries names: first, second",
+			Message:        "Trigger has same metric names: first, second",
 			LastSuccessfulCheckTimestamp: 0,
 		}
 		So(err, ShouldBeNil)
@@ -1284,7 +1284,7 @@ func TestHandleTriggerCheck(t *testing.T) {
 			State:          moira.StateERROR,
 			Timestamp:      checkData.Timestamp,
 			EventTimestamp: checkData.Timestamp,
-			Message:        "Target t2 has more than one timeseries",
+			Message:        "Target t2 has more than one metric",
 			LastSuccessfulCheckTimestamp: 0,
 		}
 		So(err, ShouldBeNil)

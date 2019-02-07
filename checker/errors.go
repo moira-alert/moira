@@ -33,7 +33,7 @@ type ErrTriggerHasSameMetricNames struct {
 
 // ErrTriggerHasSameMetricNames implementation with constant error message
 func (err ErrTriggerHasSameMetricNames) Error() string {
-	return fmt.Sprintf("Trigger has same timeseries names: %s", strings.Join(err.names, ", "))
+	return fmt.Sprintf("Trigger has same metric names: %s", strings.Join(err.names, ", "))
 }
 
 // ErrTargetHasNoMetrics used if additional trigger target has not metrics data after fetch from source
@@ -43,7 +43,7 @@ type ErrTargetHasNoMetrics struct {
 
 // ErrTargetHasNoMetrics implementation with constant error message
 func (err ErrTargetHasNoMetrics) Error() string {
-	return fmt.Sprintf("target t%v has no timeseries", err.targetIndex+1)
+	return fmt.Sprintf("target t%v has no metrics", err.targetIndex+1)
 }
 
 // ErrWrongTriggerTargets represents targets with inconsistent number of timeseries
@@ -65,6 +65,6 @@ func (err ErrWrongTriggerTargets) Error() string {
 			wrongTargets.WriteString(", ")
 		}
 	}
-	wrongTargets.WriteString(" has more than one timeseries")
+	wrongTargets.WriteString(" has more than one metric")
 	return wrongTargets.String()
 }
