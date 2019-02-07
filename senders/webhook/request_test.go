@@ -105,21 +105,21 @@ const expectedStateChangePayload = `
 
 const expectedEmptyPayload = `
 {
- "trigger": {
-  "id": "",
-  "name": "",
-  "description": "",
-  "tags": []
- },
- "events": [],
- "contact": {
-  "type": "",
-  "value": "",
-  "id": "",
-  "user": ""
- },
- "plot": "",
- "throttled": false
+    "trigger": {
+        "id": "",
+        "name": "",
+        "description": "",
+        "tags": []
+    },
+    "events": [],
+    "contact": {
+        "type": "",
+        "value": "",
+        "id": "",
+        "user": ""
+    },
+    "plot": "",
+    "throttled": false
 }
 `
 

@@ -2,7 +2,6 @@ package webhook
 
 import (
 	"bytes"
-	"encoding/base64"
 	"encoding/json"
 	"net/http"
 	"net/url"
@@ -10,49 +9,6 @@ import (
 
 	"github.com/moira-alert/moira"
 )
-
-type payload struct {
-	Trigger   triggerData `json:"trigger"`
-	Events    []eventData `json:"events"`
-	Contact   contactData `json:"contact"`
-	Plot      string      `json:"plot"`
-	Throttled bool        `json:"throttled"`
-}
-
-type triggerData struct {
-	ID          string   `json:"id"`
-	Name        string   `json:"name"`
-	Description string   `json:"description"`
-	Tags        []string `json:"tags"`
-}
-
-type eventData struct {
-	Metric         string  `json:"metric"`
-	Value          float64 `json:"value"`
-	Timestamp      int64   `json:"timestamp"`
-	IsTriggerEvent bool    `json:"trigger_event"`
-	State          string  `json:"state"`
-	OldState       string  `json:"old_state"`
-}
-
-type contactData struct {
-	Type  string `json:"type"`
-	Value string `json:"value"`
-	ID    string `json:"id"`
-	User  string `json:"user"`
-}
-
-// toTriggerData returns correct triggerData structure to marshall JSON
-func toTriggerData(trigger moira.TriggerData) triggerData {
-	result := triggerData{
-		ID:          trigger.ID,
-		Name:        trigger.Name,
-		Description: trigger.Desc,
-		Tags:        make([]string, 0),
-	}
-	result.Tags = append(result.Tags, trigger.Tags...)
-	return result
-}
 
 func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) (*http.Request, error) {
 	requestURL := buildRequestURL(sender.url, trigger, contact)
@@ -75,20 +31,9 @@ func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moir
 }
 
 func buildRequestBody(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) ([]byte, error) {
-	eventsData := make([]eventData, 0, len(events))
-	for _, event := range events {
-		eventsData = append(eventsData, eventData{
-			Metric:         event.Metric,
-			Value:          moira.UseFloat64(event.Value),
-			Timestamp:      event.Timestamp,
-			IsTriggerEvent: event.IsTriggerEvent,
-			State:          event.State,
-			OldState:       event.OldState,
-		})
-	}
 	requestPayload := payload{
 		Trigger: toTriggerData(trigger),
-		Events:  eventsData,
+		Events:  toEventsData(events),
 		Contact: contactData{
 			Type:  contact.Type,
 			Value: contact.Value,
@@ -112,9 +57,4 @@ func buildRequestURL(pattern string, trigger moira.TriggerData, contact moira.Co
 		pattern = strings.Replace(pattern, k, url.PathEscape(v), -1)
 	}
 	return pattern
-}
-
-// bytesToBase64 converts given bytes slice to base64 string
-func bytesToBase64(data []byte) string {
-	return base64.StdEncoding.EncodeToString(data)
 }
