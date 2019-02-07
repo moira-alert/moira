@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"runtime"
 	"time"
 
 	"github.com/gosexy/to"
@@ -63,7 +62,7 @@ func getDefault() config {
 		Redis: cmd.RedisConfig{
 			Host:            "localhost",
 			Port:            "6379",
-			ConnectionLimit: 10 * runtime.NumCPU(),
+			ConnectionLimit: 512,
 		},
 		Graphite: cmd.GraphiteConfig{
 			RuntimeStats: false,
