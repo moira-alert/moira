@@ -3,8 +3,6 @@ package twilio
 import (
 	"bytes"
 	"fmt"
-	"strconv"
-	"time"
 
 	twilio "github.com/carlosdp/twiliogo"
 	"github.com/moira-alert/moira"
@@ -37,9 +35,7 @@ func (sender *twilioSenderSms) buildMessage(events moira.NotificationEvents, tri
 		if i > printEventsCount-1 {
 			break
 		}
-		timeStr := time.Unix(event.Timestamp, 0).In(sender.location).Format("15:04")
-		value := strconv.FormatFloat(moira.UseFloat64(event.Value), 'f', -1, 64)
-		message.WriteString(fmt.Sprintf("\n%s: %s = %s (%s to %s)", timeStr, event.Metric, value, event.OldState, event.State))
+		message.WriteString(fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location), event.Metric, event.GetMetricValue(), event.OldState, event.State))
 		if len(moira.UseString(event.Message)) > 0 {
 			message.WriteString(fmt.Sprintf(". %s", moira.UseString(event.Message)))
 		}

@@ -3,7 +3,6 @@ package pushover
 import (
 	"bytes"
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/moira-alert/moira"
@@ -76,9 +75,7 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, throttled bo
 		if i > printEventsCount-1 {
 			break
 		}
-		value := strconv.FormatFloat(moira.UseFloat64(event.Value), 'f', -1, 64)
-		timeStr := time.Unix(event.Timestamp, 0).In(sender.location).Format("15:04")
-		message.WriteString(fmt.Sprintf("%s: %s = %s (%s to %s)", timeStr, event.Metric, value, event.OldState, event.State))
+		message.WriteString(fmt.Sprintf("%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location), event.Metric, event.GetMetricValue(), event.OldState, event.State))
 		if len(moira.UseString(event.Message)) > 0 {
 			message.WriteString(fmt.Sprintf(". %s\n", moira.UseString(event.Message)))
 		} else {
@@ -96,8 +93,7 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, throttled bo
 }
 
 func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData) string {
-	subjectState := events.GetSubjectState()
-	return fmt.Sprintf("%s %s %s (%d)", subjectState, trigger.Name, trigger.GetTags(), len(events))
+	return fmt.Sprintf("%s %s %s (%d)", events.GetSubjectState(), trigger.Name, trigger.GetTags(), len(events))
 }
 
 func (sender *Sender) getMessagePriority(events moira.NotificationEvents) int {

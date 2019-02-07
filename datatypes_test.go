@@ -132,7 +132,7 @@ func TestIsScheduleAllows(t *testing.T) {
 	})
 }
 
-func TestEventsData_GetSubjectState(t *testing.T) {
+func TestNotificationEvent_GetSubjectState(t *testing.T) {
 	Convey("Get ERROR state", t, func() {
 		message := "mes1"
 		var value float64 = 1
@@ -140,6 +140,40 @@ func TestEventsData_GetSubjectState(t *testing.T) {
 		So(states.GetSubjectState(), ShouldResemble, "ERROR")
 		So(states[0].String(), ShouldResemble, "TriggerId: , Metric: , Value: 0, OldState: , State: OK, Message: '', Timestamp: 0")
 		So(states[1].String(), ShouldResemble, "TriggerId: , Metric: , Value: 1, OldState: , State: ERROR, Message: 'mes1', Timestamp: 0")
+	})
+}
+
+func TestNotificationEvent_FormatTimestamp(t *testing.T) {
+	Convey("Test FormatTimestamp", t, func() {
+		event := NotificationEvent{Timestamp: 150000000}
+		location, _ := time.LoadLocation("UTC")
+		location1, _ := time.LoadLocation("Europe/Moscow")
+		location2, _ := time.LoadLocation("Asia/Yekaterinburg")
+		So(event.FormatTimestamp(location), ShouldResemble, "02:40")
+		So(event.FormatTimestamp(location1), ShouldResemble, "05:40")
+		So(event.FormatTimestamp(location2), ShouldResemble, "07:40")
+	})
+}
+
+func TestNotificationEvent_GetValue(t *testing.T) {
+	event := NotificationEvent{}
+	value1 := float64(2.32)
+	value2 := float64(2.3222222)
+	value3 := float64(2)
+	value4 := float64(2.000001)
+	value5 := float64(2.33333333)
+	Convey("Test GetMetricValue", t, func() {
+		So(event.GetMetricValue(), ShouldResemble, "0")
+		event.Value = &value1
+		So(event.GetMetricValue(), ShouldResemble, "2.32")
+		event.Value = &value2
+		So(event.GetMetricValue(), ShouldResemble, "2.3222222")
+		event.Value = &value3
+		So(event.GetMetricValue(), ShouldResemble, "2")
+		event.Value = &value4
+		So(event.GetMetricValue(), ShouldResemble, "2.000001")
+		event.Value = &value5
+		So(event.GetMetricValue(), ShouldResemble, "2.33333333")
 	})
 }
 
