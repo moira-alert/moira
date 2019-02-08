@@ -11,103 +11,109 @@ import (
 	"github.com/nlopes/slack"
 )
 
+const (
+	okEmoji        = ":moira-state-ok:"
+	warnEmoji      = ":moira-state-warn:"
+	errorEmoji     = ":moira-state-error:"
+	nodataEmoji    = ":moira-state-nodata:"
+	exceptionEmoji = ":moira-state-exception:"
+	testEmoji      = ":moira-state-test:"
+)
+
 var stateEmoji = map[string]string{
-	"OK":        ":moira-state-ok:",
-	"WARN":      ":moira-state-warn:",
-	"ERROR":     ":moira-state-error:",
-	"NODATA":    ":moira-state-nodata:",
-	"EXCEPTION": ":moira-state-exception:",
-	"TEST":      ":moira-state-test:",
+	"OK":        okEmoji,
+	"WARN":      warnEmoji,
+	"ERROR":     errorEmoji,
+	"NODATA":    nodataEmoji,
+	"EXCEPTION": exceptionEmoji,
+	"TEST":      testEmoji,
 }
 
 // Sender implements moira sender interface via slack
 type Sender struct {
-	APIToken string
-	FrontURI string
+	frontURI string
 	useEmoji bool
-	log      moira.Logger
+	logger   moira.Logger
 	location *time.Location
+	client   *slack.Client
 }
 
 // Init read yaml config
 func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
-
-	sender.APIToken = senderSettings["api_token"]
-	if sender.APIToken == "" {
+	apiToken := senderSettings["api_token"]
+	if apiToken == "" {
 		return fmt.Errorf("can not read slack api_token from config")
 	}
-	var err error
-	if useEmoji, ok := senderSettings["use_emoji"]; ok {
-		sender.useEmoji, err = strconv.ParseBool(useEmoji)
-		if err != nil {
-			return fmt.Errorf("can not read slack use_emoji parameter: %s", err.Error())
-		}
-	}
-	sender.log = logger
-	sender.FrontURI = senderSettings["front_uri"]
+	sender.useEmoji, _ = strconv.ParseBool(senderSettings["use_emoji"])
+	sender.logger = logger
+	sender.frontURI = senderSettings["front_uri"]
 	sender.location = location
+	sender.client = slack.New(apiToken)
 	return nil
 }
 
 // SendEvents implements Sender interface Send
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) error {
+	message := sender.buildMessage(events, trigger, throttled)
+	useDirectMessaging := useDirectMessaging(contact.Value)
+	emoji := sender.getStateEmoji(events.GetSubjectState())
+	channelID, threadTimestamp, err := sender.sendMessage(message, contact.Value, trigger.ID, useDirectMessaging, emoji)
+	if err != nil {
+		return err
+	}
+	if channelID != "" && len(plot) > 0 {
+		sender.sendPlot(plot, channelID, threadTimestamp, trigger.ID)
+	}
+	return nil
+}
 
-	api := slack.New(sender.APIToken)
-
+func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
 	var message bytes.Buffer
-	state := events.GetSubjectState()
-	tags := trigger.GetTags()
-	message.WriteString(fmt.Sprintf("*%s* %s <%s/trigger/%s|%s>\n %s \n```", state, tags, sender.FrontURI, events[0].TriggerID, trigger.Name, trigger.Desc))
+	message.WriteString(fmt.Sprintf("*%s* %s <%s/trigger/%s|%s>\n %s \n```", events.GetSubjectState(), trigger.GetTags(), sender.frontURI, events[0].TriggerID, trigger.Name, trigger.Desc))
 	for _, event := range events {
-		value := strconv.FormatFloat(moira.UseFloat64(event.Value), 'f', -1, 64)
-		message.WriteString(fmt.Sprintf("\n%s: %s = %s (%s to %s)", time.Unix(event.Timestamp, 0).In(sender.location).Format("15:04"), event.Metric, value, event.OldState, event.State))
+		message.WriteString(fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location), event.Metric, event.GetMetricValue(), event.OldState, event.State))
 		if len(moira.UseString(event.Message)) > 0 {
 			message.WriteString(fmt.Sprintf(". %s", moira.UseString(event.Message)))
 		}
 	}
-
 	message.WriteString("```")
-
 	if throttled {
 		message.WriteString("\nPlease, *fix your system or tune this trigger* to generate less events.")
 	}
+	return message.String()
+}
 
-	sender.log.Debugf("Calling slack with message body %s", message.String())
-
+func (sender *Sender) sendMessage(message string, contact string, triggerID string, useDirectMessaging bool, emoji string) (string, string, error) {
 	params := slack.PostMessageParameters{
 		Username:  "Moira",
-		AsUser:    useDirectMessaging(contact.Value),
-		IconEmoji: getStateEmoji(sender.useEmoji, state),
+		AsUser:    useDirectMessaging,
+		IconEmoji: emoji,
 		Markdown:  true,
 	}
-
-	channelID, threadTimestamp, err := api.PostMessage(contact.Value, slack.MsgOptionText(message.String(),
-		false), slack.MsgOptionPostMessageParameters(params))
+	sender.logger.Debugf("Calling slack with message body %s", message)
+	channelID, threadTimestamp, err := sender.client.PostMessage(contact, slack.MsgOptionText(message, false), slack.MsgOptionPostMessageParameters(params))
 	if err != nil {
-		return fmt.Errorf("failed to send %s event message to slack [%s]: %s", trigger.ID, contact.Value, err.Error())
+		return channelID, threadTimestamp, fmt.Errorf("failed to send %s event message to slack [%s]: %s", triggerID, contact, err.Error())
 	}
+	return channelID, threadTimestamp, nil
+}
 
-	if channelID != "" && len(plot) > 0 {
-		reader := bytes.NewReader(plot)
-		uploadParameters := slack.FileUploadParameters{
-			Channels:        []string{channelID},
-			ThreadTimestamp: threadTimestamp,
-			Reader:          reader,
-			Filetype:        "png",
-			Filename:        fmt.Sprintf("%s.png", trigger.ID),
-		}
-		_, err := api.UploadFile(uploadParameters)
-		if err != nil {
-			sender.log.Errorf("Failed to send %s event plot to %s: %s", trigger.ID, contact.Value, err.Error())
-		}
+func (sender *Sender) sendPlot(plot []byte, channelID, threadTimestamp, triggerID string) error {
+	reader := bytes.NewReader(plot)
+	uploadParameters := slack.FileUploadParameters{
+		Channels:        []string{channelID},
+		ThreadTimestamp: threadTimestamp,
+		Reader:          reader,
+		Filetype:        "png",
+		Filename:        fmt.Sprintf("%s.png", triggerID),
 	}
-
-	return nil
+	_, err := sender.client.UploadFile(uploadParameters)
+	return err
 }
 
 // getStateEmoji returns corresponding state emoji
-func getStateEmoji(emojiEnabled bool, subjectState string) string {
-	if emojiEnabled {
+func (sender *Sender) getStateEmoji(subjectState string) string {
+	if sender.useEmoji {
 		if emoji, ok := stateEmoji[subjectState]; ok {
 			return emoji
 		}
