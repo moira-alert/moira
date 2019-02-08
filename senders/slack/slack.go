@@ -11,13 +11,22 @@ import (
 	"github.com/nlopes/slack"
 )
 
+const (
+	okEmoji        = ":moira-state-ok:"
+	warnEmoji      = ":moira-state-warn:"
+	errorEmoji     = ":moira-state-error:"
+	nodataEmoji    = ":moira-state-nodata:"
+	exceptionEmoji = ":moira-state-exception:"
+	testEmoji      = ":moira-state-test:"
+)
+
 var stateEmoji = map[string]string{
-	"OK":        ":moira-state-ok:",
-	"WARN":      ":moira-state-warn:",
-	"ERROR":     ":moira-state-error:",
-	"NODATA":    ":moira-state-nodata:",
-	"EXCEPTION": ":moira-state-exception:",
-	"TEST":      ":moira-state-test:",
+	"OK":        okEmoji,
+	"WARN":      warnEmoji,
+	"ERROR":     errorEmoji,
+	"NODATA":    nodataEmoji,
+	"EXCEPTION": exceptionEmoji,
+	"TEST":      testEmoji,
 }
 
 // Sender implements moira sender interface via slack

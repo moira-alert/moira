@@ -128,9 +128,13 @@ Please, fix your system or tune this trigger to generate less events.`
 
 func TestBuildTitle(t *testing.T) {
 	sender := Sender{}
-	Convey("Build title with three events with max ERORR state and two tags", t, func() {
+	Convey("Build title with three events with max ERROR state and two tags", t, func() {
 		title := sender.buildTitle([]moira.NotificationEvent{{State: "ERROR"}, {State: "WARN"}, {State: "WARN"}, {State: "OK"}}, moira.TriggerData{Tags: []string{"tag1", "tag2"}, Name: "Name"})
 		So(title, ShouldResemble, "ERROR Name [tag1][tag2] (4)")
+	})
+	Convey("Build title with three events with max ERROR state empty trigger", t, func() {
+		title := sender.buildTitle([]moira.NotificationEvent{{State: "ERROR"}, {State: "WARN"}, {State: "WARN"}, {State: "OK"}}, moira.TriggerData{})
+		So(title, ShouldResemble, "ERROR   (4)")
 	})
 }
 
@@ -145,6 +149,12 @@ func TestBuildTriggerURL(t *testing.T) {
 		sender.frontURI = "https://my-moira.com"
 		url := sender.buildTriggerURL(moira.TriggerData{ID: "SomeID"})
 		So(url, ShouldResemble, "https://my-moira.com/trigger/SomeID")
+	})
+
+	Convey("Empty trigger", t, func() {
+		sender.frontURI = "https://my-moira.com"
+		url := sender.buildTriggerURL(moira.TriggerData{})
+		So(url, ShouldResemble, "https://my-moira.com/trigger/")
 	})
 }
 
