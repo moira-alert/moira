@@ -31,14 +31,14 @@ var characterLimits = map[messageType]int{
 
 // SendEvents implements Sender interface Send
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) error {
-	messageType := getMessageType(plot)
-	message := sender.buildMessage(events, trigger, throttled, characterLimits[messageType])
+	msgType := getMessageType(plot)
+	message := sender.buildMessage(events, trigger, throttled, characterLimits[msgType])
 	sender.logger.Debugf("Calling telegram api with chat_id %s and message body %s", contact.Value, message)
 	chat, err := sender.getChat(contact.Value)
 	if err != nil {
 		return err
 	}
-	if err := sender.talk(chat, message, plot, messageType); err != nil {
+	if err := sender.talk(chat, message, plot, msgType); err != nil {
 		return fmt.Errorf("failed to send message to telegram contact %s: %s. ", contact.Value, err)
 	}
 	return nil
