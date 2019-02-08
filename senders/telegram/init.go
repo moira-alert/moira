@@ -5,17 +5,20 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira"
-	w "github.com/moira-alert/moira/worker"
+	"github.com/moira-alert/moira/worker"
 	"gopkg.in/tucnak/telebot.v2"
 )
 
-const telegramLockName = "moira-telegram-users:moira-bot-host"
-const messenger = "telegram"
+const (
+	telegramLockName = "moira-telegram-users:moira-bot-host"
+	workerName       = "Telebot"
+	messenger        = "telegram"
+	telegramLockTTL  = 30 * time.Second
+)
 
 var (
 	telegramMessageLimit = 4096
 	pollerTimeout        = 10 * time.Second
-	telegramLockTTL      = 30 * time.Second
 	emojiStates          = map[string]string{
 		"OK":     "\xe2\x9c\x85",
 		"WARN":   "\xe2\x9a\xa0",
@@ -28,26 +31,27 @@ var (
 // Sender implements moira sender interface via telegram
 type Sender struct {
 	DataBase moira.Database
-	APIToken string
-	FrontURI string
 	logger   moira.Logger
+	apiToken string
+	frontURI string
 	bot      *telebot.Bot
 	location *time.Location
 }
 
 // Init loads yaml config, configures and starts telegram bot
 func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
-	var err error
-	sender.APIToken = senderSettings["api_token"]
-	if sender.APIToken == "" {
+	apiToken := senderSettings["api_token"]
+	if apiToken == "" {
 		return fmt.Errorf("can not read telegram api_token from config")
 	}
-	sender.FrontURI = senderSettings["front_uri"]
+
+	sender.apiToken = apiToken
+	sender.frontURI = senderSettings["front_uri"]
 	sender.logger = logger
 	sender.location = location
-
+	var err error
 	sender.bot, err = telebot.NewBot(telebot.Settings{
-		Token:  sender.APIToken,
+		Token:  sender.apiToken,
 		Poller: &telebot.LongPoller{Timeout: pollerTimeout},
 	})
 	if err != nil {
@@ -73,8 +77,8 @@ func (sender *Sender) runTelebot() {
 		return nil
 	}
 
-	w.NewWorker(
-		"Telebot",
+	worker.NewWorker(
+		workerName,
 		sender.logger,
 		sender.DataBase.NewLock(telegramLockName, telegramLockTTL),
 		workerAction,

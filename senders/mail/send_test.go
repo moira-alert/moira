@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"html/template"
 	"testing"
-
 	"time"
 
 	"github.com/moira-alert/moira"
@@ -47,6 +46,7 @@ func TestMakeMessage(t *testing.T) {
 		message := sender.makeMessage(generateTestEvents(10, trigger.ID), contact, trigger, []byte{1, 0, 1}, true)
 		So(message.GetHeader("From")[0], ShouldEqual, sender.From)
 		So(message.GetHeader("To")[0], ShouldEqual, contact.Value)
+		//message.WriteTo(os.Stdout)
 	})
 }
 
