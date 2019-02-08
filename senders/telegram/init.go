@@ -17,9 +17,8 @@ const (
 )
 
 var (
-	telegramMessageLimit = 4096
-	pollerTimeout        = 10 * time.Second
-	emojiStates          = map[string]string{
+	pollerTimeout = 10 * time.Second
+	emojiStates   = map[string]string{
 		"OK":     "\xe2\x9c\x85",
 		"WARN":   "\xe2\x9a\xa0",
 		"ERROR":  "\xe2\xad\x95",
