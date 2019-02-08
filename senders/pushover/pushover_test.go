@@ -1,6 +1,7 @@
 package pushover
 
 import (
+	"bytes"
 	"fmt"
 	"testing"
 	"time"
@@ -175,7 +176,7 @@ func TestMakePushoverMessage(t *testing.T) {
 		contact := moira.ContactData{
 			Value: "123",
 		}
-		So(sender.makePushoverMessage(event, contact, trigger, []byte{}, false), ShouldResemble, &pushover.Message{
+		expected := &pushover.Message{
 			Timestamp: 150000000,
 			Retry:     5 * time.Minute,
 			Expire:    time.Hour,
@@ -183,6 +184,8 @@ func TestMakePushoverMessage(t *testing.T) {
 			Priority:  pushover.PriorityEmergency,
 			Title:     "ERROR TriggerName [tag1][tag2] (1)",
 			Message:   "02:40: Metric = 123 (OK to ERROR)\n",
-		})
+		}
+		expected.AddAttachment(bytes.NewReader([]byte{1, 0, 1}))
+		So(sender.makePushoverMessage(event, contact, trigger, []byte{1, 0, 1}, false), ShouldResemble, expected)
 	})
 }
