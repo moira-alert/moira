@@ -1062,7 +1062,7 @@ func TestHandleTriggerCheck(t *testing.T) {
 		actual, err := triggerChecker.handleCheckResult(checkData, ErrTriggerHasOnlyWildcards{})
 		expected := moira.CheckData{
 			Metrics:                      checkData.Metrics,
-			State:                        NODATA,
+			State:                        moira.StateNODATA,
 			Timestamp:                    checkData.Timestamp,
 			EventTimestamp:               checkData.Timestamp,
 			Message:                      "Trigger never received metrics",

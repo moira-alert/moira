@@ -12,10 +12,6 @@ import (
 	"github.com/moira-alert/moira/notifier"
 )
 
-const (
-	testEventState = "TEST"
-)
-
 // FetchEventsWorker checks for new events and new notifications based on it
 type FetchEventsWorker struct {
 	Logger    moira.Logger
@@ -70,7 +66,7 @@ func (worker *FetchEventsWorker) processEvent(event moira.NotificationEvent) err
 		triggerData   moira.TriggerData
 	)
 
-	if event.State != testEventState {
+	if event.State != moira.StateTEST {
 		worker.Logger.Debugf("Processing trigger id %s for metric %s == %f, %s -> %s", event.TriggerID, event.Metric, moira.UseFloat64(event.Value), event.OldState, event.State)
 
 		trigger, err := worker.Database.GetTrigger(event.TriggerID)
@@ -168,7 +164,7 @@ func (worker *FetchEventsWorker) isNotificationRequired(subscription *moira.Subs
 		worker.Logger.Debugf("Subscription is nil")
 		return false
 	}
-	if event.State != testEventState {
+	if event.State != moira.StateTEST {
 		if !subscription.Enabled {
 			worker.Logger.Debugf("Subscription %s is disabled", subscription.ID)
 			return false

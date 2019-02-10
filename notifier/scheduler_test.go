@@ -38,8 +38,8 @@ func TestThrottling(t *testing.T) {
 
 	var event = moira.NotificationEvent{
 		Metric:         "generate.event.1",
-		State:          "OK",
-		OldState:       "WARN",
+		State:          moira.StateOK,
+		OldState:       moira.StateWARN,
 		TriggerID:      trigger.ID,
 		SubscriptionID: &subID,
 	}
@@ -86,8 +86,8 @@ func TestThrottling(t *testing.T) {
 		subID := "SubscriptionID-000000000000001"
 		testEvent := moira.NotificationEvent{
 			Metric:         "generate.event.1",
-			State:          "TEST",
-			OldState:       "WARN",
+			State:          moira.StateTEST,
+			OldState:       moira.StateWARN,
 			TriggerID:      trigger.ID,
 			SubscriptionID: &subID,
 		}
@@ -120,8 +120,8 @@ func TestSubscriptionSchedule(t *testing.T) {
 
 	var event = moira.NotificationEvent{
 		Metric:         "generate.event.1",
-		State:          "OK",
-		OldState:       "WARN",
+		State:          moira.StateOK,
+		OldState:       moira.StateWARN,
 		TriggerID:      "triggerID-0000000000001",
 		SubscriptionID: &subID,
 	}

@@ -130,8 +130,8 @@ func SendTestContactNotification(dataBase moira.Database, contactID string) *api
 		ContactID: contactID,
 		Metric:    "Test.metric.value",
 		Value:     &value,
-		OldState:  "TEST",
-		State:     "TEST",
+		OldState:  moira.StateTEST,
+		State:     moira.StateTEST,
 		Timestamp: date.DateParamToEpoch("now", "", time.Now().Add(-24*time.Hour).Unix(), time.UTC),
 	}
 	if err := dataBase.PushNotificationEvent(eventData, false); err != nil {

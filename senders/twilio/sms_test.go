@@ -24,8 +24,8 @@ func TestBuildMoiraMessage(t *testing.T) {
 			Value:     &value,
 			Timestamp: 150000000,
 			Metric:    "Metric",
-			OldState:  "OK",
-			State:     "NODATA",
+			OldState:  moira.StateOK,
+			State:     moira.StateNODATA,
 			Message:   nil,
 		}
 
@@ -85,8 +85,8 @@ func TestTwilioSenderSms_SendEvents(t *testing.T) {
 		Value:     &value,
 		Timestamp: 150000000,
 		Metric:    "Metric",
-		OldState:  "OK",
-		State:     "NODATA",
+		OldState:  moira.StateOK,
+		State:     moira.StateNODATA,
 	}
 
 	Convey("just send", t, func() {

@@ -278,7 +278,7 @@ func (checkData *CheckData) GetOrCreateMetricState(metric string, emptyTimestamp
 func createEmptyMetricState(defaultTimestampValue int64, firstStateIsNodata bool) MetricState {
 	if firstStateIsNodata {
 		return MetricState{
-			State:     "NODATA",
+			State:     StateNODATA,
 			Timestamp: defaultTimestampValue,
 		}
 	}
@@ -286,7 +286,7 @@ func createEmptyMetricState(defaultTimestampValue int64, firstStateIsNodata bool
 	unixNow := time.Now().Unix()
 
 	return MetricState{
-		State:          "OK",
+		State:          StateOK,
 		Timestamp:      unixNow,
 		EventTimestamp: unixNow,
 	}

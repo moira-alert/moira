@@ -132,27 +132,27 @@ func TestDeleteTriggerNodataMetrics(t *testing.T) {
 
 	lastCheckWithManyStates := moira.CheckData{
 		Metrics: map[string]moira.MetricState{
-			"super.metric1": {State: "NODATA"},
-			"super.metric2": {State: "NODATA"},
-			"super.metric3": {State: "NODATA"},
-			"super.metric4": {State: "OK"},
-			"super.metric5": {State: "ERROR"},
-			"super.metric6": {State: "NODATA"},
+			"super.metric1": {State: moira.StateNODATA},
+			"super.metric2": {State: moira.StateNODATA},
+			"super.metric3": {State: moira.StateNODATA},
+			"super.metric4": {State: moira.StateOK},
+			"super.metric5": {State: moira.StateERROR},
+			"super.metric6": {State: moira.StateNODATA},
 		},
 		Score: 100,
 	}
 
 	lastCheckWithoutNodata := moira.CheckData{
 		Metrics: map[string]moira.MetricState{
-			"super.metric4": {State: "OK"},
-			"super.metric5": {State: "ERROR"},
+			"super.metric4": {State: moira.StateOK},
+			"super.metric5": {State: moira.StateERROR},
 		},
 		Score: 100,
 	}
 
 	lastCheckSingleNodata := moira.CheckData{
 		Metrics: map[string]moira.MetricState{
-			"super.metric1": {State: "NODATA"},
+			"super.metric1": {State: moira.StateNODATA},
 		},
 	}
 	emptyLastCheck := moira.CheckData{
@@ -161,10 +161,10 @@ func TestDeleteTriggerNodataMetrics(t *testing.T) {
 
 	lastCheckWithNodataOnly := moira.CheckData{
 		Metrics: map[string]moira.MetricState{
-			"super.metric1": {State: "NODATA"},
-			"super.metric2": {State: "NODATA"},
-			"super.metric3": {State: "NODATA"},
-			"super.metric6": {State: "NODATA"},
+			"super.metric1": {State: moira.StateNODATA},
+			"super.metric2": {State: moira.StateNODATA},
+			"super.metric3": {State: moira.StateNODATA},
+			"super.metric6": {State: moira.StateNODATA},
 		},
 	}
 

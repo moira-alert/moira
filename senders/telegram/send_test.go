@@ -21,8 +21,8 @@ func TestBuildMessage(t *testing.T) {
 			Value:     &value,
 			Timestamp: 150000000,
 			Metric:    "Metric name",
-			OldState:  "OK",
-			State:     "NODATA",
+			OldState:  moira.StateOK,
+			State:     moira.StateNODATA,
 			Message:   nil,
 		}
 

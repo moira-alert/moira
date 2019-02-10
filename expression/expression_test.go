@@ -95,23 +95,23 @@ func TestGetExpressionValue(t *testing.T) {
 		getExpressionValuesTests := []getExpressionValuesTest{
 			{
 				name:          "OK",
-				expectedValue: "OK",
+				expectedValue: moira.StateOK,
 			},
 			{
 				name:          "WARN",
-				expectedValue: "WARN",
+				expectedValue: moira.StateWARN,
 			},
 			{
 				name:          "WARNING",
-				expectedValue: "WARN",
+				expectedValue: moira.StateWARN,
 			},
 			{
 				name:          "ERROR",
-				expectedValue: "ERROR",
+				expectedValue: moira.StateERROR,
 			},
 			{
 				name:          "NODATA",
-				expectedValue: "NODATA",
+				expectedValue: moira.StateNODATA,
 			},
 		}
 		runGetExpressionValuesTest(getExpressionValuesTests)

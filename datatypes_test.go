@@ -136,7 +136,7 @@ func TestNotificationEvent_GetSubjectState(t *testing.T) {
 	Convey("Get ERROR state", t, func() {
 		message := "mes1"
 		var value float64 = 1
-		states := NotificationEvents{{State: "OK"}, {State: "ERROR", Message: &message, Value: &value}}
+		states := NotificationEvents{{State: StateOK}, {State: StateERROR, Message: &message, Value: &value}}
 		So(states.GetSubjectState(), ShouldResemble, StateERROR)
 		So(states[0].String(), ShouldResemble, "TriggerId: , Metric: , Value: 0, OldState: , State: OK, Message: '', Timestamp: 0")
 		So(states[1].String(), ShouldResemble, "TriggerId: , Metric: , Value: 1, OldState: , State: ERROR, Message: 'mes1', Timestamp: 0")
@@ -202,7 +202,7 @@ func TestScheduledNotification_GetKey(t *testing.T) {
 	Convey("Get key", t, func() {
 		notification := ScheduledNotification{
 			Contact:   ContactData{Type: "email", Value: "my@mail.com"},
-			Event:     NotificationEvent{Value: nil, State: "NODATA", Metric: "my.metric"},
+			Event:     NotificationEvent{Value: nil, State: StateNODATA, Metric: "my.metric"},
 			Timestamp: 123456789,
 		}
 		So(notification.GetKey(), ShouldResemble, "email:my@mail.com::my.metric:NODATA:0:0.000000:0:false:123456789")
@@ -214,13 +214,13 @@ func TestCheckData_GetOrCreateMetricState(t *testing.T) {
 		checkData := CheckData{
 			Metrics: make(map[string]MetricState),
 		}
-		So(checkData.GetOrCreateMetricState("my.metric", 12343, false), ShouldResemble, MetricState{State: "NODATA", Timestamp: 12343})
+		So(checkData.GetOrCreateMetricState("my.metric", 12343, false), ShouldResemble, MetricState{State: StateNODATA, Timestamp: 12343})
 	})
 	Convey("Test no metric, notifyAboutNew = false", t, func() {
 		checkData := CheckData{
 			Metrics: make(map[string]MetricState),
 		}
-		So(checkData.GetOrCreateMetricState("my.metric", 12343, true), ShouldResemble, MetricState{State: "OK", Timestamp: time.Now().Unix(), EventTimestamp: time.Now().Unix()})
+		So(checkData.GetOrCreateMetricState("my.metric", 12343, true), ShouldResemble, MetricState{State: StateOK, Timestamp: time.Now().Unix(), EventTimestamp: time.Now().Unix()})
 	})
 	Convey("Test has metric", t, func() {
 		metricState := MetricState{Timestamp: 11211}
@@ -297,27 +297,27 @@ func TestCheckData_GetEventTimestamp(t *testing.T) {
 
 func TestCheckData_UpdateScore(t *testing.T) {
 	Convey("Update score", t, func() {
-		checkData := CheckData{State: "NODATA"}
+		checkData := CheckData{State: StateNODATA}
 		So(checkData.UpdateScore(), ShouldEqual, 1000)
 		So(checkData.Score, ShouldEqual, 1000)
 
 		checkData = CheckData{
-			State: "OK",
+			State: StateOK,
 			Metrics: map[string]MetricState{
-				"123": {State: "NODATA"},
-				"321": {State: "OK"},
-				"345": {State: "WARN"},
+				"123": {State: StateNODATA},
+				"321": {State: StateOK},
+				"345": {State: StateWARN},
 			},
 		}
 		So(checkData.UpdateScore(), ShouldEqual, 1001)
 		So(checkData.Score, ShouldEqual, 1001)
 
 		checkData = CheckData{
-			State: "NODATA",
+			State: StateNODATA,
 			Metrics: map[string]MetricState{
-				"123": {State: "NODATA"},
-				"321": {State: "OK"},
-				"345": {State: "WARN"},
+				"123": {State: StateNODATA},
+				"321": {State: StateOK},
+				"345": {State: StateWARN},
 			},
 		}
 		So(checkData.UpdateScore(), ShouldEqual, 2001)
@@ -384,18 +384,18 @@ func TestSubscriptionData_MustIgnore(testing *testing.T) {
 				IgnoreWarnings:    false,
 			}
 			testCases := []testCase{
-				{"WARN", "OK", false},
-				{"ERROR", "OK", false},
-				{"NODATA", "OK", false},
-				{"ERROR", "WARN", false},
-				{"NODATA", "WARN", false},
-				{"NODATA", "ERROR", false},
-				{"OK", "WARN", true},
-				{"OK", "ERROR", true},
-				{"OK", "NODATA", true},
-				{"WARN", "ERROR", true},
-				{"WARN", "NODATA", true},
-				{"ERROR", "NODATA", true},
+				{StateWARN, StateOK, false},
+				{StateERROR, StateOK, false},
+				{StateNODATA, StateOK, false},
+				{StateERROR, StateWARN, false},
+				{StateNODATA, StateWARN, false},
+				{StateNODATA, StateERROR, false},
+				{StateOK, StateWARN, true},
+				{StateOK, StateERROR, true},
+				{StateOK, StateNODATA, true},
+				{StateWARN, StateERROR, true},
+				{StateWARN, StateNODATA, true},
+				{StateERROR, StateNODATA, true},
 			}
 			for _, testCase := range testCases {
 				assertIgnored(subscription, testCase)
@@ -408,18 +408,18 @@ func TestSubscriptionData_MustIgnore(testing *testing.T) {
 				IgnoreWarnings:    true,
 			}
 			testCases := []testCase{
-				{"ERROR", "OK", false},
-				{"NODATA", "OK", false},
-				{"ERROR", "WARN", false},
-				{"NODATA", "WARN", false},
-				{"NODATA", "ERROR", false},
-				{"OK", "ERROR", false},
-				{"OK", "NODATA", false},
-				{"WARN", "ERROR", false},
-				{"WARN", "NODATA", false},
-				{"ERROR", "NODATA", false},
-				{"OK", "WARN", true},
-				{"WARN", "OK", true},
+				{StateERROR, StateOK, false},
+				{StateNODATA, StateOK, false},
+				{StateERROR, StateWARN, false},
+				{StateNODATA, StateWARN, false},
+				{StateNODATA, StateERROR, false},
+				{StateOK, StateERROR, false},
+				{StateOK, StateNODATA, false},
+				{StateWARN, StateERROR, false},
+				{StateWARN, StateNODATA, false},
+				{StateERROR, StateNODATA, false},
+				{StateOK, StateWARN, true},
+				{StateWARN, StateOK, true},
 			}
 			for _, testCase := range testCases {
 				assertIgnored(subscription, testCase)
@@ -433,18 +433,18 @@ func TestSubscriptionData_MustIgnore(testing *testing.T) {
 			IgnoreWarnings:    true,
 		}
 		testCases := []testCase{
-			{"ERROR", "OK", false},
-			{"NODATA", "OK", false},
-			{"ERROR", "WARN", false},
-			{"NODATA", "WARN", false},
-			{"NODATA", "ERROR", false},
-			{"OK", "WARN", true},
-			{"WARN", "OK", true},
-			{"OK", "ERROR", true},
-			{"OK", "NODATA", true},
-			{"WARN", "ERROR", true},
-			{"WARN", "NODATA", true},
-			{"ERROR", "NODATA", true},
+			{StateERROR, StateOK, false},
+			{StateNODATA, StateOK, false},
+			{StateERROR, StateWARN, false},
+			{StateNODATA, StateWARN, false},
+			{StateNODATA, StateERROR, false},
+			{StateOK, StateWARN, true},
+			{StateWARN, StateOK, true},
+			{StateOK, StateERROR, true},
+			{StateOK, StateNODATA, true},
+			{StateWARN, StateERROR, true},
+			{StateWARN, StateNODATA, true},
+			{StateERROR, StateNODATA, true},
 		}
 		for _, testCase := range testCases {
 			assertIgnored(subscription, testCase)
@@ -457,17 +457,17 @@ func TestSubscriptionData_MustIgnore(testing *testing.T) {
 			IgnoreWarnings:    false,
 		}
 		testCases := []testCase{
-			{"OK", "WARN", false},
-			{"WARN", "OK", false},
-			{"ERROR", "OK", false},
-			{"NODATA", "OK", false},
-			{"ERROR", "WARN", false},
-			{"NODATA", "WARN", false},
-			{"NODATA", "ERROR", false},
-			{"OK", "ERROR", false},
-			{"OK", "NODATA", false},
-			{"WARN", "NODATA", false},
-			{"ERROR", "NODATA", false},
+			{StateOK, StateWARN, false},
+			{StateWARN, StateOK, false},
+			{StateERROR, StateOK, false},
+			{StateNODATA, StateOK, false},
+			{StateERROR, StateWARN, false},
+			{StateNODATA, StateWARN, false},
+			{StateNODATA, StateERROR, false},
+			{StateOK, StateERROR, false},
+			{StateOK, StateNODATA, false},
+			{StateWARN, StateNODATA, false},
+			{StateERROR, StateNODATA, false},
 		}
 		for _, testCase := range testCases {
 			assertIgnored(subscription, testCase)

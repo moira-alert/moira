@@ -171,8 +171,8 @@ func appendNotificationEvents(events *[]moira.NotificationEvent, message string,
 	val := float64(currentValue)
 	event := moira.NotificationEvent{
 		Timestamp: time.Now().Unix(),
-		OldState:  "NODATA",
-		State:     "ERROR",
+		OldState:  moira.StateNODATA,
+		State:     moira.StateERROR,
 		Metric:    message,
 		Value:     &val,
 	}

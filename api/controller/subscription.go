@@ -86,8 +86,8 @@ func SendTestNotification(database moira.Database, subscriptionID string) *api.E
 		SubscriptionID: &subscriptionID,
 		Metric:         "Test.metric.value",
 		Value:          &value,
-		OldState:       "TEST",
-		State:          "TEST",
+		OldState:       moira.StateTEST,
+		State:          moira.StateTEST,
 		Timestamp:      date.DateParamToEpoch("now", "", time.Now().Add(-24*time.Hour).Unix(), time.UTC),
 	}
 
