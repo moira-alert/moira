@@ -69,7 +69,14 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 
 func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
 	var message bytes.Buffer
-	message.WriteString(fmt.Sprintf("*%s* %s <%s|%s>\n %s \n```", events.GetSubjectState(), trigger.GetTags(), trigger.GetTriggerUri(sender.frontURI), events[0].TriggerID, trigger.Name, trigger.Desc))
+	var triggerLink, url string
+	url = trigger.GetTriggerUri(sender.frontURI)
+	if url != "" {
+		triggerLink = (fmt.Sprintf("<%s|%s>", url, trigger.Name))
+	} else {
+		triggerLink = trigger.Name
+	}
+	message.WriteString(fmt.Sprintf("*%s* %s %s\n %s \n```", events.GetSubjectState(), trigger.GetTags(), triggerLink, trigger.Desc))
 	for _, event := range events {
 		message.WriteString(fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location), event.Metric, event.GetMetricValue(), event.OldState, event.State))
 		if len(moira.UseString(event.Message)) > 0 {
