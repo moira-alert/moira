@@ -33,15 +33,15 @@ func TestCompareMetricStates(t *testing.T) {
 	currentStateExample := moira.MetricState{
 		Suppressed: false,
 		Timestamp:  1502719200,
-		State:      NODATA,
+		State:      moira.StateNODATA,
 	}
 
 	Convey("Same state values", t, func() {
 		Convey("Status OK, no need to send", func() {
 			lastState := lastStateExample
 			currentState := currentStateExample
-			lastState.State = OK
-			currentState.State = OK
+			lastState.State = moira.StateOK
+			currentState.State = moira.StateOK
 
 			actual, err := triggerChecker.compareMetricStates("m1", currentState, lastState)
 			So(err, ShouldBeNil)
@@ -53,8 +53,8 @@ func TestCompareMetricStates(t *testing.T) {
 		Convey("Status NODATA and no remind interval, no need to send", func() {
 			lastState := lastStateExample
 			currentState := currentStateExample
-			lastState.State = NODATA
-			currentState.State = NODATA
+			lastState.State = moira.StateNODATA
+			currentState.State = moira.StateNODATA
 
 			actual, err := triggerChecker.compareMetricStates("m1", currentState, lastState)
 			So(err, ShouldBeNil)
@@ -66,8 +66,8 @@ func TestCompareMetricStates(t *testing.T) {
 		Convey("Status ERROR and no remind interval, no need to send", func() {
 			lastState := lastStateExample
 			currentState := currentStateExample
-			lastState.State = ERROR
-			currentState.State = ERROR
+			lastState.State = moira.StateERROR
+			currentState.State = moira.StateERROR
 
 			actual, err := triggerChecker.compareMetricStates("m1", currentState, lastState)
 			So(err, ShouldBeNil)
@@ -79,16 +79,16 @@ func TestCompareMetricStates(t *testing.T) {
 		Convey("Status NODATA and remind interval, need to send", func() {
 			lastState := lastStateExample
 			currentState := currentStateExample
-			lastState.State = NODATA
-			currentState.State = NODATA
+			lastState.State = moira.StateNODATA
+			currentState.State = moira.StateNODATA
 			currentState.Timestamp = 1502809200
 
 			message := fmt.Sprintf("This metric has been in bad state for more than 24 hours - please, fix.")
 			dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
 				TriggerID: triggerChecker.triggerID,
 				Timestamp: currentState.Timestamp,
-				State:     NODATA,
-				OldState:  NODATA,
+				State:     moira.StateNODATA,
+				OldState:  moira.StateNODATA,
 				Metric:    "m1",
 				Value:     currentState.Value,
 				Message:   &message,
@@ -103,16 +103,16 @@ func TestCompareMetricStates(t *testing.T) {
 		Convey("Status ERROR and remind interval, need to send", func() {
 			lastState := lastStateExample
 			currentState := currentStateExample
-			lastState.State = ERROR
-			currentState.State = ERROR
+			lastState.State = moira.StateERROR
+			currentState.State = moira.StateERROR
 			currentState.Timestamp = 1502809200
 
 			message := fmt.Sprintf("This metric has been in bad state for more than 24 hours - please, fix.")
 			dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
 				TriggerID: triggerChecker.triggerID,
 				Timestamp: currentState.Timestamp,
-				State:     ERROR,
-				OldState:  ERROR,
+				State:     moira.StateERROR,
+				OldState:  moira.StateERROR,
 				Metric:    "m1",
 				Value:     currentState.Value,
 				Message:   &message,
@@ -127,8 +127,8 @@ func TestCompareMetricStates(t *testing.T) {
 		Convey("Status EXCEPTION and lastState.Suppressed=false", func() {
 			lastState := lastStateExample
 			currentState := currentStateExample
-			lastState.State = EXCEPTION
-			currentState.State = EXCEPTION
+			lastState.State = moira.StateEXCEPTION
+			currentState.State = moira.StateEXCEPTION
 
 			actual, err := triggerChecker.compareMetricStates("m1", currentState, lastState)
 			So(err, ShouldBeNil)
@@ -142,8 +142,8 @@ func TestCompareMetricStates(t *testing.T) {
 		Convey("Trigger maintenance", func() {
 			lastState := lastStateExample
 			currentState := currentStateExample
-			lastState.State = EXCEPTION
-			currentState.State = OK
+			lastState.State = moira.StateEXCEPTION
+			currentState.State = moira.StateOK
 			currentState.SuppressedState = lastState.State
 			currentState.Maintenance = 1502719222
 
@@ -184,8 +184,8 @@ func TestCompareTriggerStates(t *testing.T) {
 			lastCheck := lastCheckExample
 			currentCheck := currentCheckExample
 			triggerChecker.lastCheck = &lastCheck
-			lastCheck.State = OK
-			currentCheck.State = OK
+			lastCheck.State = moira.StateOK
+			currentCheck.State = moira.StateOK
 			actual, err := triggerChecker.compareTriggerStates(currentCheck)
 
 			So(err, ShouldBeNil)
@@ -235,8 +235,8 @@ func TestCompareTriggerStates(t *testing.T) {
 			lastCheck := lastCheckExample
 			currentCheck := currentCheckExample
 			triggerChecker.lastCheck = &lastCheck
-			lastCheck.State = OK
-			currentCheck.State = NODATA
+			lastCheck.State = moira.StateOK
+			currentCheck.State = moira.StateNODATA
 			currentCheck.SuppressedState = lastCheck.State
 			actual, err := triggerChecker.compareTriggerStates(currentCheck)
 
@@ -270,15 +270,15 @@ func TestCheckMetricStateWithLastStateSuppressed(t *testing.T) {
 		EventTimestamp: 1,
 		Suppressed:     true,
 		Maintenance:    1100,
-		State:          WARN,
+		State:          moira.StateWARN,
 	}
 	currentState := moira.MetricState{
 		Suppressed: false,
 		Timestamp:  1200,
-		State:      WARN,
+		State:      moira.StateWARN,
 	}
 
-	states := []string{OK, WARN, ERROR, NODATA, EXCEPTION, DEL}
+	states := []moira.State{moira.StateOK, moira.StateWARN, moira.StateERROR, moira.StateNODATA, moira.StateEXCEPTION}
 
 	for _, state := range states {
 		Convey(fmt.Sprintf("Test Same Status %s after maintenance. No need to send message.", state), t, func() {
@@ -314,12 +314,12 @@ func TestCheckMetricStateSuppressedState(t *testing.T) {
 	lastState := moira.MetricState{
 		Timestamp:      100,
 		EventTimestamp: 10,
-		State:          OK,
+		State:          moira.StateOK,
 	}
 	currentState := moira.MetricState{
 		Timestamp:   1000,
 		Maintenance: 1500,
-		State:       WARN,
+		State:       moira.StateWARN,
 	}
 
 	Convey("Test SuppressedState remembered properly", t, func() {
@@ -335,7 +335,7 @@ func TestCheckMetricStateSuppressedState(t *testing.T) {
 		Convey("Test still in maintenance. State changes WARN => OK", func() {
 			lastState = currentState
 			currentState.Timestamp = 1100
-			currentState.State = OK
+			currentState.State = moira.StateOK
 			actual, err := triggerChecker.compareMetricStates("super.awesome.metric", currentState, lastState)
 			So(err, ShouldBeNil)
 			currentState.EventTimestamp = lastState.EventTimestamp
@@ -345,7 +345,7 @@ func TestCheckMetricStateSuppressedState(t *testing.T) {
 		Convey("Test still in maintenance. State changes OK => ERROR", func() {
 			lastState = currentState
 			currentState.Timestamp = 1200
-			currentState.State = ERROR
+			currentState.State = moira.StateERROR
 			actual, err := triggerChecker.compareMetricStates("super.awesome.metric", currentState, lastState)
 			So(err, ShouldBeNil)
 			currentState.EventTimestamp = currentState.Timestamp
@@ -355,7 +355,7 @@ func TestCheckMetricStateSuppressedState(t *testing.T) {
 		Convey("Test switch out of maintenance. State didn't change", func() {
 			lastState = currentState
 			currentState.Timestamp = 1600
-			currentState.State = OK
+			currentState.State = moira.StateOK
 			actual, err := triggerChecker.compareMetricStates("super.awesome.metric", currentState, lastState)
 			So(err, ShouldBeNil)
 			currentState.EventTimestamp = lastState.EventTimestamp
@@ -368,11 +368,11 @@ func TestCheckMetricStateSuppressedState(t *testing.T) {
 				Timestamp:       1300,
 				Maintenance:     1500,
 				Suppressed:      true,
-				SuppressedState: OK,
-				State:           ERROR,
+				SuppressedState: moira.StateOK,
+				State:           moira.StateERROR,
 			}
 			currentState.Timestamp = 1600
-			currentState.State = ERROR
+			currentState.State = moira.StateERROR
 
 			message := fmt.Sprintf("This metric changed its state during maintenance interval.")
 			dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
@@ -418,11 +418,11 @@ func TestTriggerMaintenance(t *testing.T) {
 	lastMetricState := moira.MetricState{
 		Timestamp:      100,
 		EventTimestamp: 10,
-		State:          OK,
+		State:          moira.StateOK,
 	}
 	currentMetricState := moira.MetricState{
 		Timestamp: 1000,
-		State:     WARN,
+		State:     moira.StateWARN,
 	}
 
 	lastTriggerState := moira.CheckData{
@@ -430,13 +430,13 @@ func TestTriggerMaintenance(t *testing.T) {
 		Timestamp:      100,
 		EventTimestamp: 10,
 		Suppressed:     false,
-		State:          OK,
+		State:          moira.StateOK,
 	}
 
 	currentTriggerState := moira.CheckData{
 		Timestamp:  1000,
 		Suppressed: false,
-		State:      ERROR,
+		State:      moira.StateERROR,
 	}
 
 	Convey("Test trigger maintenance work properly and we don't create events", t, func() {
@@ -446,7 +446,7 @@ func TestTriggerMaintenance(t *testing.T) {
 				actual, err := triggerChecker.compareMetricStates("m1", currentMetricState, lastMetricState)
 				currentMetricState.EventTimestamp = 1000
 				currentMetricState.Suppressed = true
-				currentMetricState.SuppressedState = OK
+				currentMetricState.SuppressedState = moira.StateOK
 				So(err, ShouldBeNil)
 				So(actual, ShouldResemble, currentMetricState)
 			})
@@ -456,8 +456,8 @@ func TestTriggerMaintenance(t *testing.T) {
 				dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
 					TriggerID: triggerChecker.triggerID,
 					Timestamp: currentMetricState.Timestamp,
-					State:     WARN,
-					OldState:  OK,
+					State:     moira.StateWARN,
+					OldState:  moira.StateOK,
 					Metric:    "m1",
 					Value:     currentMetricState.Value,
 				}, true).Return(nil)
@@ -479,7 +479,7 @@ func TestTriggerMaintenance(t *testing.T) {
 				actual, err := triggerChecker.compareTriggerStates(currentTriggerState)
 				currentTriggerState.EventTimestamp = 1000
 				currentTriggerState.Suppressed = true
-				currentTriggerState.SuppressedState = OK
+				currentTriggerState.SuppressedState = moira.StateOK
 				So(err, ShouldBeNil)
 				So(actual, ShouldResemble, currentTriggerState)
 			})
@@ -490,8 +490,8 @@ func TestTriggerMaintenance(t *testing.T) {
 				dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
 					TriggerID:      triggerChecker.triggerID,
 					Timestamp:      currentTriggerState.Timestamp,
-					State:          ERROR,
-					OldState:       OK,
+					State:          moira.StateERROR,
+					OldState:       moira.StateOK,
 					Metric:         "",
 					Message:        &emptyEvent,
 					IsTriggerEvent: true,

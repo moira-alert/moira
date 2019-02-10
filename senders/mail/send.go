@@ -17,8 +17,8 @@ import (
 type templateRow struct {
 	Metric     string
 	Timestamp  string
-	Oldstate   string
-	State      string
+	Oldstate   moira.State
+	State      moira.State
 	Value      string
 	WarnValue  string
 	ErrorValue string
@@ -31,7 +31,7 @@ type triggerData struct {
 	Throttled    bool
 	TriggerName  string
 	Tags         string
-	TriggerState string
+	TriggerState moira.State
 	Items        []*templateRow
 	PlotCID      string
 }

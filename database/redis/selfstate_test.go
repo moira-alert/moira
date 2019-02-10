@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/moira-alert/moira/notifier/selfstate"
+	"github.com/moira-alert/moira"
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -112,35 +112,34 @@ func TestNotifierState(t *testing.T) {
 	emptyDataBase := newTestDatabase(logger, emptyConfig)
 	dataBase.flush()
 	defer dataBase.flush()
-	defer dataBase.flush()
 	Convey(fmt.Sprintf("Test on empty key '%v'", selfStateNotifierHealth), t, func() {
 		Convey("On empty database should return ERROR", func() {
 			notifierState, err := emptyDataBase.GetNotifierState()
-			So(notifierState, ShouldEqual, selfstate.ERROR)
+			So(notifierState, ShouldEqual, moira.SelfStateERROR)
 			So(err, ShouldNotBeNil)
 		})
 		Convey("On real database should return OK", func() {
 			notifierState, err := dataBase.GetNotifierState()
-			So(notifierState, ShouldEqual, selfstate.OK)
+			So(notifierState, ShouldEqual, moira.SelfStateOK)
 			So(err, ShouldBeNil)
 		})
 	})
 
 	Convey(fmt.Sprintf("Test setting '%v' and reading it back", selfStateNotifierHealth), t, func() {
 		Convey("Switch notifier to OK", func() {
-			err := dataBase.SetNotifierState(selfstate.OK)
+			err := dataBase.SetNotifierState(moira.SelfStateOK)
 			actualNotifierState, err2 := dataBase.GetNotifierState()
 
-			So(actualNotifierState, ShouldEqual, selfstate.OK)
+			So(actualNotifierState, ShouldEqual, moira.SelfStateOK)
 			So(err, ShouldBeNil)
 			So(err2, ShouldBeNil)
 		})
 
 		Convey("Switch notifier to ERROR", func() {
-			err := dataBase.SetNotifierState(selfstate.ERROR)
+			err := dataBase.SetNotifierState(moira.SelfStateERROR)
 			actualNotifierState, err2 := dataBase.GetNotifierState()
 
-			So(actualNotifierState, ShouldEqual, selfstate.ERROR)
+			So(actualNotifierState, ShouldEqual, moira.SelfStateERROR)
 			So(err, ShouldBeNil)
 			So(err2, ShouldBeNil)
 		})

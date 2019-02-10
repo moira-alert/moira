@@ -20,13 +20,13 @@ const (
 	testEmoji      = ":moira-state-test:"
 )
 
-var stateEmoji = map[string]string{
-	"OK":        okEmoji,
-	"WARN":      warnEmoji,
-	"ERROR":     errorEmoji,
-	"NODATA":    nodataEmoji,
-	"EXCEPTION": exceptionEmoji,
-	"TEST":      testEmoji,
+var stateEmoji = map[moira.State]string{
+	moira.StateOK:        okEmoji,
+	moira.StateWARN:      warnEmoji,
+	moira.StateERROR:     errorEmoji,
+	moira.StateNODATA:    nodataEmoji,
+	moira.StateEXCEPTION: exceptionEmoji,
+	moira.StateTEST:      testEmoji,
 }
 
 // Sender implements moira sender interface via slack
@@ -135,7 +135,7 @@ func (sender *Sender) sendPlot(plot []byte, channelID, threadTimestamp, triggerI
 }
 
 // getStateEmoji returns corresponding state emoji
-func (sender *Sender) getStateEmoji(subjectState string) string {
+func (sender *Sender) getStateEmoji(subjectState moira.State) string {
 	if sender.useEmoji {
 		if emoji, ok := stateEmoji[subjectState]; ok {
 			return emoji

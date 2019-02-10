@@ -137,7 +137,7 @@ func TestNotificationEvent_GetSubjectState(t *testing.T) {
 		message := "mes1"
 		var value float64 = 1
 		states := NotificationEvents{{State: "OK"}, {State: "ERROR", Message: &message, Value: &value}}
-		So(states.GetSubjectState(), ShouldResemble, "ERROR")
+		So(states.GetSubjectState(), ShouldResemble, StateERROR)
 		So(states[0].String(), ShouldResemble, "TriggerId: , Metric: , Value: 0, OldState: , State: OK, Message: '', Timestamp: 0")
 		So(states[1].String(), ShouldResemble, "TriggerId: , Metric: , Value: 1, OldState: , State: ERROR, Message: 'mes1', Timestamp: 0")
 	})
@@ -365,8 +365,8 @@ func getDefaultSchedule() ScheduleData {
 
 func TestSubscriptionData_MustIgnore(testing *testing.T) {
 	type testCase struct {
-		State    string
-		OldState string
+		State    State
+		OldState State
 		Ignored  bool
 	}
 	assertIgnored := func(subscription SubscriptionData, eventCase testCase) {

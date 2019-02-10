@@ -1,40 +1,46 @@
 package moira
 
+// State type describe all default moira triggers or metrics states
 type State string
 
-type TtlState string
+// TTLState declares all ttl (NODATA) states, used if metric has no values for given interval (ttl)
+type TTLState string
 
-// Default moira triggers and metrics states
+// Moira notifier self-states
 const (
-	StateOK     State = "OK"
-	StateWARN   State = "WARN"
-	StateERROR  State = "ERROR"
-	StateNODATA State = "NODATA"
-	// Use this for trigger check unexpected errors
-	StateEXCEPTION State = "EXCEPTION"
-	// Use this only for test notifications
-	StateTEST State = "TEST"
+	SelfStateOK    = "OK"    // OK means notifier is healthy
+	SelfStateERROR = "ERROR" // ERROR means notifier is stopped, admin intervention is required
+)
+
+// Moira trigger and metric states
+var (
+	StateOK        State = "OK"
+	StateWARN      State = "WARN"
+	StateERROR     State = "ERROR"
+	StateNODATA    State = "NODATA"
+	StateEXCEPTION State = "EXCEPTION" // Use this for trigger check unexpected errors
+	StateTEST      State = "TEST"      // Use this only for test notifications
 )
 
 // Moira ttl states
-const (
-	TTLStateOK     TtlState = "OK"
-	TTLStateWARN   TtlState = "WARN"
-	TTLStateERROR  TtlState = "ERROR"
-	TTLStateNODATA TtlState = "NODATA"
-	TTLStateDEL    TtlState = "DEL"
+var (
+	TTLStateOK     TTLState = "OK"
+	TTLStateWARN   TTLState = "WARN"
+	TTLStateERROR  TTLState = "ERROR"
+	TTLStateNODATA TTLState = "NODATA"
+	TTLStateDEL    TTLState = "DEL"
 )
 
 var (
 	eventStatesPriority = [...]State{StateOK, StateWARN, StateERROR, StateNODATA, StateEXCEPTION, StateTEST}
-	stateScore          = map[State]int64{
+	stateScores         = map[State]int64{
 		StateOK:        0,
 		StateWARN:      1,
 		StateERROR:     100,
 		StateNODATA:    1000,
 		StateEXCEPTION: 100000,
 	}
-	eventStateWeight1 = map[State]int{
+	eventStateWeight = map[State]int{
 		StateOK:     0,
 		StateWARN:   1,
 		StateERROR:  100,
@@ -42,7 +48,8 @@ var (
 	}
 )
 
-func (state TtlState) ToMetricState() State {
+// ToMetricState is an auxiliary function to handle metric state properly.
+func (state TTLState) ToMetricState() State {
 	if state == TTLStateDEL {
 		return StateNODATA
 	}
@@ -50,7 +57,7 @@ func (state TtlState) ToMetricState() State {
 }
 
 // ToTriggerState is an auxiliary function to handle trigger state properly.
-func (state TtlState) ToTriggerState() State {
+func (state TTLState) ToTriggerState() State {
 	if state == TTLStateDEL {
 		return StateOK
 	}

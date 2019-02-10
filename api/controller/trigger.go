@@ -7,7 +7,6 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
-	"github.com/moira-alert/moira/checker"
 	"github.com/moira-alert/moira/database"
 )
 
@@ -41,9 +40,9 @@ func saveTrigger(dataBase moira.Database, trigger *moira.Trigger, triggerID stri
 			}
 		}
 	} else {
-		triggerState := checker.NODATA
+		triggerState := moira.StateNODATA
 		if trigger.TTLState != nil {
-			triggerState = checker.ToTriggerState(*trigger.TTLState)
+			triggerState = trigger.TTLState.ToTriggerState()
 		}
 		lastCheck = moira.CheckData{
 			Metrics: make(map[string]moira.MetricState),

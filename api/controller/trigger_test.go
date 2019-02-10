@@ -10,7 +10,6 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
-	"github.com/moira-alert/moira/checker"
 	"github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
@@ -156,20 +155,18 @@ func TestVariousTtlState(t *testing.T) {
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
-	var ttlState string
-
 	triggerID := uuid.Must(uuid.NewV4()).String()
-	trigger := moira.Trigger{ID: triggerID, TTLState: &ttlState}
+	trigger := moira.Trigger{ID: triggerID, TTLState: nil}
 	lastCheck := moira.CheckData{
 		Metrics: make(map[string]moira.MetricState),
-		State:   checker.NODATA,
+		State:   moira.StateNODATA,
 		Score:   1000,
 	}
 
 	Convey("Various TTLState", t, func() {
 		Convey("NODATA TTLState", func() {
-			ttlState = checker.NODATA
-			lastCheck.State = checker.NODATA
+			trigger.TTLState = &moira.TTLStateNODATA
+			lastCheck.State = moira.StateNODATA
 			lastCheck.Score = 1000
 
 			dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10)
@@ -183,8 +180,8 @@ func TestVariousTtlState(t *testing.T) {
 		})
 
 		Convey("ERROR TTLState", func() {
-			ttlState = checker.ERROR
-			lastCheck.State = checker.ERROR
+			trigger.TTLState = &moira.TTLStateERROR
+			lastCheck.State = moira.StateERROR
 			lastCheck.Score = 100
 
 			dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10)
@@ -198,8 +195,8 @@ func TestVariousTtlState(t *testing.T) {
 		})
 
 		Convey("WARN TTLState", func() {
-			ttlState = checker.WARN
-			lastCheck.State = checker.WARN
+			trigger.TTLState = &moira.TTLStateWARN
+			lastCheck.State = moira.StateWARN
 			lastCheck.Score = 1
 
 			dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10)
@@ -213,8 +210,8 @@ func TestVariousTtlState(t *testing.T) {
 		})
 
 		Convey("OK TTLState", func() {
-			ttlState = checker.OK
-			lastCheck.State = checker.OK
+			trigger.TTLState = &moira.TTLStateOK
+			lastCheck.State = moira.StateOK
 			lastCheck.Score = 0
 
 			dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10)
@@ -228,8 +225,8 @@ func TestVariousTtlState(t *testing.T) {
 		})
 
 		Convey("DEL TTLState", func() {
-			ttlState = checker.DEL
-			lastCheck.State = checker.OK
+			trigger.TTLState = &moira.TTLStateDEL
+			lastCheck.State = moira.StateOK
 			lastCheck.Score = 0
 
 			dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10)
