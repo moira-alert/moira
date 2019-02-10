@@ -56,7 +56,12 @@ func (notifier *StandardNotifier) buildNotificationPackagePlot(pkg NotificationP
 	notifier.logger.Debugf("rendering %s metricsData: %v", trigger.ID, metricsData)
 	renderable, err := plotTemplate.GetRenderable(trigger, metricsData)
 	if err != nil {
-		return buff.Bytes(), err
+		switch err.(type) {
+		case plotting.ErrNoPointsToRender:
+			return buff.Bytes(), nil
+		default:
+			return buff.Bytes(), err
+		}
 	}
 	if err = renderable.Render(chart.PNG, buff); err != nil {
 		return buff.Bytes(), err
