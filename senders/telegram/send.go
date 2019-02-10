@@ -47,7 +47,7 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 		buffer.WriteString(fmt.Sprintf("\n\n...and %d more events.", len(events)-lineCount))
 	}
 
-	buffer.WriteString(fmt.Sprintf("\n\n%s/trigger/%s\n", sender.frontURI, events[0].TriggerID))
+	buffer.WriteString(fmt.Sprintf("\n\n%s\n", trigger.GetTriggerUri(sender.frontURI)))
 
 	if throttled {
 		buffer.WriteString("\nPlease, fix your system or tune this trigger to generate less events.")

@@ -58,6 +58,13 @@ type TriggerData struct {
 	Tags       []string `json:"__notifier_trigger_tags"`
 }
 
+func (trigger TriggerData) GetTriggerUri(frontUri string) string {
+	if trigger.ID != "" {
+		return fmt.Sprintf("%s/trigger/%s", frontUri, trigger.ID)
+	}
+	return ""
+}
+
 // ContactData represents contact object
 type ContactData struct {
 	Type  string `json:"type"`

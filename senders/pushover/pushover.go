@@ -53,7 +53,7 @@ func (sender *Sender) makePushoverMessage(events moira.NotificationEvents, conta
 		Message:   sender.buildMessage(events, throttled),
 		Title:     sender.buildTitle(events, trigger),
 		Priority:  sender.getMessagePriority(events),
-		URL:       sender.buildTriggerURL(trigger),
+		URL:       trigger.GetTriggerUri(sender.frontURI),
 		Retry:     5 * time.Minute,
 		Expire:    time.Hour,
 		Timestamp: events[len(events)-1].Timestamp,
@@ -105,8 +105,4 @@ func (sender *Sender) getMessagePriority(events moira.NotificationEvents) int {
 		}
 	}
 	return priority
-}
-
-func (sender *Sender) buildTriggerURL(trigger moira.TriggerData) string {
-	return fmt.Sprintf("%s/trigger/%s", sender.frontURI, trigger.ID)
 }
