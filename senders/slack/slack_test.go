@@ -113,7 +113,7 @@ func TestBuildMessage(t *testing.T) {
 
 		Convey("Print moira message with empty trigger", func() {
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{}, false)
-			expected := "*NODATA*  <http://moira.url/trigger/TriggerID|>\n  \n```\n02:40: Metric = 123 (OK to NODATA)```"
+			expected := "*NODATA*  \n  \n```\n02:40: Metric = 123 (OK to NODATA)```"
 			So(actual, ShouldResemble, expected)
 		})
 
