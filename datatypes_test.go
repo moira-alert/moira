@@ -474,3 +474,19 @@ func TestSubscriptionData_MustIgnore(testing *testing.T) {
 		}
 	})
 }
+func TestBuildTriggerURL(t *testing.T) {
+	Convey("Sender has no moira uri", t, func() {
+		url := TriggerData{ID: "SomeID"}.GetTriggerURI("")
+		So(url, ShouldResemble, "/trigger/SomeID")
+	})
+
+	Convey("Sender uri", t, func() {
+		url := TriggerData{ID: "SomeID"}.GetTriggerURI("https://my-moira.com")
+		So(url, ShouldResemble, "https://my-moira.com/trigger/SomeID")
+	})
+
+	Convey("Empty trigger", t, func() {
+		url := TriggerData{}.GetTriggerURI("https://my-moira.com")
+		So(url, ShouldBeEmpty)
+	})
+}
