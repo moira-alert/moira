@@ -91,9 +91,6 @@ func TestTriggerToCheck(t *testing.T) {
 		So(actual[0], ShouldBeIn, triggerArr)
 		So(actual[1], ShouldBeIn, triggerArr)
 		So(actual[2], ShouldBeIn, triggerArr)
-		triggerArr = removeValue(triggerArr, actual[0])
-		triggerArr = removeValue(triggerArr, actual[1])
-		triggerArr = removeValue(triggerArr, actual[2])
 
 		actual, err = dataBase.GetTriggersToCheck(1)
 		So(err, ShouldBeNil)
@@ -186,9 +183,6 @@ func TestRemoteTriggerToCheck(t *testing.T) {
 		So(actual[0], ShouldBeIn, triggerArr)
 		So(actual[1], ShouldBeIn, triggerArr)
 		So(actual[2], ShouldBeIn, triggerArr)
-		triggerArr = removeValue(triggerArr, actual[0])
-		triggerArr = removeValue(triggerArr, actual[1])
-		triggerArr = removeValue(triggerArr, actual[2])
 
 		actual, err = dataBase.GetRemoteTriggersToCheck(5)
 		So(err, ShouldBeNil)
