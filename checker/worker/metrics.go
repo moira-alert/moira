@@ -7,7 +7,7 @@ import (
 	"github.com/patrickmn/go-cache"
 )
 
-func (worker *Checker) metricsChecker(metricEventsChannel <-chan *moira.MetricEvent) error {
+func (worker *Checker) newMetricsHandler(metricEventsChannel <-chan *moira.MetricEvent) error {
 	for {
 		metricEvent, ok := <-metricEventsChannel
 		if !ok {

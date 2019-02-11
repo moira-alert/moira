@@ -65,16 +65,24 @@ func (worker *Checker) Start() error {
 		worker.Logger.Info("Remote checker disabled")
 	}
 
-	worker.Logger.Infof("Start %v parallel checker(s)", worker.Config.MaxParallelChecks)
+	worker.Logger.Infof("Start %v parallel local checker(s)", worker.Config.MaxParallelChecks)
+	localTriggerIdsToCheckChan := worker.startTriggerToCheckGetter(false, worker.Config.MaxParallelChecks)
 	for i := 0; i < worker.Config.MaxParallelChecks; i++ {
-		worker.tomb.Go(func() error { return worker.metricsChecker(metricEventsChannel) })
-		worker.tomb.Go(func() error { return worker.startTriggerHandler(false, worker.Metrics.MoiraMetrics) })
+		worker.tomb.Go(func() error {
+			return worker.newMetricsHandler(metricEventsChannel)
+		})
+		worker.tomb.Go(func() error {
+			return worker.startTriggerHandler(localTriggerIdsToCheckChan, worker.Metrics.LocalMetrics)
+		})
 	}
 
 	if worker.remoteEnabled {
 		worker.Logger.Infof("Start %v parallel remote checker(s)", worker.Config.MaxParallelRemoteChecks)
+		remoteTriggerIdsToCheckChan := worker.startTriggerToCheckGetter(true, worker.Config.MaxParallelRemoteChecks)
 		for i := 0; i < worker.Config.MaxParallelRemoteChecks; i++ {
-			worker.tomb.Go(func() error { return worker.startTriggerHandler(true, worker.Metrics.RemoteMetrics) })
+			worker.tomb.Go(func() error {
+				return worker.startTriggerHandler(remoteTriggerIdsToCheckChan, worker.Metrics.RemoteMetrics)
+			})
 		}
 	}
 	worker.Logger.Info("Checking new events started")
@@ -100,7 +108,7 @@ func (worker *Checker) checkTriggersToCheckCount() error {
 		case <-checkTicker.C:
 			triggersToCheckCount, err = worker.Database.GetTriggersToCheckCount()
 			if err == nil {
-				worker.Metrics.MoiraMetrics.TriggersToCheckCount.Update(triggersToCheckCount)
+				worker.Metrics.LocalMetrics.TriggersToCheckCount.Update(triggersToCheckCount)
 			}
 			if worker.remoteEnabled {
 				remoteTriggersToCheckCount, err = worker.Database.GetRemoteTriggersToCheckCount()

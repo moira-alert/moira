@@ -4,7 +4,7 @@ import "github.com/moira-alert/moira"
 
 // CheckerMetrics is a collection of metrics used in checker
 type CheckerMetrics struct {
-	MoiraMetrics           *CheckMetrics
+	LocalMetrics           *CheckMetrics
 	RemoteMetrics          *CheckMetrics
 	MetricEventsChannelLen Histogram
 	UnusedTriggersCount    Histogram
@@ -16,7 +16,7 @@ func (metrics *CheckerMetrics) GetCheckMetrics(trigger *moira.Trigger) *CheckMet
 	if trigger.IsRemote {
 		return metrics.RemoteMetrics
 	}
-	return metrics.MoiraMetrics
+	return metrics.LocalMetrics
 }
 
 // CheckMetrics is a collection of metrics for trigger checks
