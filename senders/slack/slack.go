@@ -69,14 +69,30 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 
 func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
 	var message bytes.Buffer
-	var triggerLink, url string
-	url = trigger.GetTriggerUri(sender.frontURI)
-	if url != "" {
-		triggerLink = (fmt.Sprintf("<%s|%s>", url, trigger.Name))
-	} else {
-		triggerLink = trigger.Name
+
+	message.WriteString(fmt.Sprintf("*%s*", events.GetSubjectState()))
+
+	tags := trigger.GetTags()
+	if tags != "" {
+		message.WriteString(" ")
+		message.WriteString(tags)
 	}
-	message.WriteString(fmt.Sprintf("*%s* %s %s\n %s \n```", events.GetSubjectState(), trigger.GetTags(), triggerLink, trigger.Desc))
+
+	triggerURI := trigger.GetTriggerURI(sender.frontURI)
+	if triggerURI != "" {
+		message.WriteString(fmt.Sprintf(" <%s|%s>", triggerURI, trigger.Name))
+	} else if trigger.Name != "" {
+		message.WriteString(" ")
+		message.WriteString(trigger.Name)
+	}
+
+	if trigger.Desc != "" {
+		message.WriteString("\n")
+		message.WriteString(trigger.Desc)
+	}
+
+	message.WriteString("\n```")
+
 	for _, event := range events {
 		message.WriteString(fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location), event.Metric, event.GetMetricValue(), event.OldState, event.State))
 		if len(moira.UseString(event.Message)) > 0 {

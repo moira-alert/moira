@@ -46,7 +46,7 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 	if messageLimitReached {
 		buffer.WriteString(fmt.Sprintf("\n\n...and %d more events.", len(events)-lineCount))
 	}
-  url := trigger.GetTriggerUri(sender.frontURI)
+  url := trigger.GetTriggerURI(sender.frontURI)
   if url != "" {
 		buffer.WriteString(fmt.Sprintf("\n\n%s\n", url))
 	}

@@ -141,19 +141,19 @@ func TestBuildTitle(t *testing.T) {
 func TestBuildTriggerURL(t *testing.T) {
 	sender := Sender{}
 	Convey("Sender has no moira uri", t, func() {
-		url := moira.TriggerData{ID: "SomeID"}.GetTriggerUri(sender.frontURI)
+		url := moira.TriggerData{ID: "SomeID"}.GetTriggerURI(sender.frontURI)
 		So(url, ShouldResemble, "/trigger/SomeID")
 	})
 
 	Convey("Sender uri", t, func() {
 		sender.frontURI = "https://my-moira.com"
-		url := moira.TriggerData{ID: "SomeID"}.GetTriggerUri(sender.frontURI)
+		url := moira.TriggerData{ID: "SomeID"}.GetTriggerURI(sender.frontURI)
 		So(url, ShouldResemble, "https://my-moira.com/trigger/SomeID")
 	})
 
 	Convey("Empty trigger", t, func() {
 		sender.frontURI = "https://my-moira.com"
-		url := moira.TriggerData{}.GetTriggerUri(sender.frontURI)
+		url := moira.TriggerData{}.GetTriggerURI(sender.frontURI)
 		So(url, ShouldNotResemble, "https://my-moira.com/trigger/")
 	})
 }
