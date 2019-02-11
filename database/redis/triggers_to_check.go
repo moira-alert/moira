@@ -18,13 +18,13 @@ func (connector *DbConnector) AddRemoteTriggersToCheck(triggerIDs []string) erro
 }
 
 // GetTriggersToCheck return random trigger ID from Redis Set
-func (connector *DbConnector) GetTriggersToCheck(count int64) ([]string, error) {
+func (connector *DbConnector) GetTriggersToCheck(count int) ([]string, error) {
 	return connector.getTriggersToCheck(localTriggersToCheckKey, count)
 
 }
 
 // GetRemoteTriggersToCheck return random remote trigger ID from Redis Set
-func (connector *DbConnector) GetRemoteTriggersToCheck(count int64) ([]string, error) {
+func (connector *DbConnector) GetRemoteTriggersToCheck(count int) ([]string, error) {
 	return connector.getTriggersToCheck(remoteTriggersToCheckKey, count)
 }
 
@@ -53,7 +53,7 @@ func (connector *DbConnector) addTriggersToCheck(key string, triggerIDs []string
 	return nil
 }
 
-func (connector *DbConnector) getTriggersToCheck(key string, count int64) ([]string, error) {
+func (connector *DbConnector) getTriggersToCheck(key string, count int) ([]string, error) {
 	c := connector.pool.Get()
 	defer c.Close()
 	triggerIDs, err := redis.Strings(c.Do("SPOP", key, count))

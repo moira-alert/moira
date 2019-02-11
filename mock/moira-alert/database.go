@@ -478,7 +478,7 @@ func (mr *MockDatabaseMockRecorder) GetRemoteTriggerIDs() *gomock.Call {
 }
 
 // GetRemoteTriggersToCheck mocks base method
-func (m *MockDatabase) GetRemoteTriggersToCheck(arg0 int64) ([]string, error) {
+func (m *MockDatabase) GetRemoteTriggersToCheck(arg0 int) ([]string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetRemoteTriggersToCheck", arg0)
 	ret0, _ := ret[0].([]string)
@@ -658,7 +658,7 @@ func (mr *MockDatabaseMockRecorder) GetTriggers(arg0 interface{}) *gomock.Call {
 }
 
 // GetTriggersToCheck mocks base method
-func (m *MockDatabase) GetTriggersToCheck(arg0 int64) ([]string, error) {
+func (m *MockDatabase) GetTriggersToCheck(arg0 int) ([]string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetTriggersToCheck", arg0)
 	ret0, _ := ret[0].([]string)
