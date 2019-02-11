@@ -93,11 +93,11 @@ type Database interface {
 	RemoveMetricsValues(metrics []string, toTime int64) error
 
 	AddTriggersToCheck(triggerIDs []string) error
-	GetTriggerToCheck() (string, error)
+	GetTriggersToCheck(count int64) ([]string, error)
 	GetTriggersToCheckCount() (int64, error)
 
 	AddRemoteTriggersToCheck(triggerIDs []string) error
-	GetRemoteTriggerToCheck() (string, error)
+	GetRemoteTriggersToCheck(count int64) ([]string, error)
 	GetRemoteTriggersToCheckCount() (int64, error)
 
 	// TriggerCheckLock storing

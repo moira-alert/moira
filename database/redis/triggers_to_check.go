@@ -17,15 +17,15 @@ func (connector *DbConnector) AddRemoteTriggersToCheck(triggerIDs []string) erro
 	return connector.addTriggersToCheck(remoteTriggersToCheckKey, triggerIDs)
 }
 
-// GetTriggerToCheck return random trigger ID from Redis Set
-func (connector *DbConnector) GetTriggerToCheck() (string, error) {
-	return connector.getTriggerToCheck(localTriggersToCheckKey)
+// GetTriggersToCheck return random trigger ID from Redis Set
+func (connector *DbConnector) GetTriggersToCheck(count int64) ([]string, error) {
+	return connector.getTriggersToCheck(localTriggersToCheckKey, count)
 
 }
 
-// GetRemoteTriggerToCheck return random remote trigger ID from Redis Set
-func (connector *DbConnector) GetRemoteTriggerToCheck() (string, error) {
-	return connector.getTriggerToCheck(remoteTriggersToCheckKey)
+// GetRemoteTriggersToCheck return random remote trigger ID from Redis Set
+func (connector *DbConnector) GetRemoteTriggersToCheck(count int64) ([]string, error) {
+	return connector.getTriggersToCheck(remoteTriggersToCheckKey, count)
 }
 
 // GetTriggersToCheckCount return number of triggers ID to check from Redis Set
@@ -53,17 +53,17 @@ func (connector *DbConnector) addTriggersToCheck(key string, triggerIDs []string
 	return nil
 }
 
-func (connector *DbConnector) getTriggerToCheck(key string) (string, error) {
+func (connector *DbConnector) getTriggersToCheck(key string, count int64) ([]string, error) {
 	c := connector.pool.Get()
 	defer c.Close()
-	triggerID, err := redis.String(c.Do("SPOP", key))
+	triggerIDs, err := redis.Strings(c.Do("SPOP", key, count))
 	if err != nil {
 		if err == redis.ErrNil {
-			return "", database.ErrNil
+			return make([]string, 0), database.ErrNil
 		}
-		return "", fmt.Errorf("failed to pop trigger to check: %s", err.Error())
+		return make([]string, 0), fmt.Errorf("failed to pop trigger to check: %s", err.Error())
 	}
-	return triggerID, err
+	return triggerIDs, err
 }
 
 func (connector *DbConnector) getTriggersToCheckCount(key string) (int64, error) {

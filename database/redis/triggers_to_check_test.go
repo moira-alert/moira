@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/gofrs/uuid"
-	"github.com/moira-alert/moira/database"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"github.com/moira-alert/moira/logging/go-logging"
@@ -19,9 +18,12 @@ func TestTriggerToCheck(t *testing.T) {
 		triggerID1 := uuid.Must(uuid.NewV4()).String()
 		triggerID2 := uuid.Must(uuid.NewV4()).String()
 		triggerID3 := uuid.Must(uuid.NewV4()).String()
+		triggerID4 := uuid.Must(uuid.NewV4()).String()
+		triggerID5 := uuid.Must(uuid.NewV4()).String()
+		triggerID6 := uuid.Must(uuid.NewV4()).String()
 
-		actual, err := dataBase.GetTriggerToCheck()
-		So(err, ShouldResemble, database.ErrNil)
+		actual, err := dataBase.GetTriggersToCheck(1)
+		So(err, ShouldBeNil)
 		So(actual, ShouldBeEmpty)
 
 		count, err := dataBase.GetTriggersToCheckCount()
@@ -35,9 +37,9 @@ func TestTriggerToCheck(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(count, ShouldEqual, 1)
 
-		actual, err = dataBase.GetTriggerToCheck()
+		actual, err = dataBase.GetTriggersToCheck(1)
 		So(err, ShouldBeNil)
-		So(actual, ShouldResemble, triggerID1)
+		So(actual, ShouldResemble, []string{triggerID1})
 
 		count, err = dataBase.GetTriggersToCheckCount()
 		So(err, ShouldBeNil)
@@ -53,38 +55,48 @@ func TestTriggerToCheck(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(count, ShouldEqual, 1)
 
-		actual, err = dataBase.GetTriggerToCheck()
+		actual, err = dataBase.GetTriggersToCheck(1)
 		So(err, ShouldBeNil)
-		So(actual, ShouldResemble, triggerID1)
+		So(actual, ShouldResemble, []string{triggerID1})
 
-		actual, err = dataBase.GetTriggerToCheck()
-		So(err, ShouldResemble, database.ErrNil)
+		actual, err = dataBase.GetTriggersToCheck(1)
+		So(err, ShouldBeNil)
 		So(actual, ShouldBeEmpty)
 
-		triggerArr := []string{triggerID1, triggerID2, triggerID3}
+		triggerArr := []string{triggerID1, triggerID2, triggerID3, triggerID4, triggerID5, triggerID6}
 		err = dataBase.AddTriggersToCheck(triggerArr)
 		So(err, ShouldBeNil)
 
 		count, err = dataBase.GetTriggersToCheckCount()
 		So(err, ShouldBeNil)
-		So(count, ShouldEqual, 3)
+		So(count, ShouldEqual, 6)
 
-		actual, err = dataBase.GetTriggerToCheck()
+		actual, err = dataBase.GetTriggersToCheck(1)
 		So(err, ShouldBeNil)
-		So(actual, ShouldBeIn, triggerArr)
-		triggerArr = removeValue(triggerArr, actual)
+		So(actual, ShouldHaveLength, 1)
+		So(actual[0], ShouldBeIn, triggerArr)
+		triggerArr = removeValue(triggerArr, actual[0])
 
-		actual, err = dataBase.GetTriggerToCheck()
+		actual, err = dataBase.GetTriggersToCheck(2)
 		So(err, ShouldBeNil)
-		So(actual, ShouldBeIn, triggerArr)
-		triggerArr = removeValue(triggerArr, actual)
+		So(actual, ShouldHaveLength, 2)
+		So(actual[0], ShouldBeIn, triggerArr)
+		So(actual[1], ShouldBeIn, triggerArr)
+		triggerArr = removeValue(triggerArr, actual[0])
+		triggerArr = removeValue(triggerArr, actual[1])
 
-		actual, err = dataBase.GetTriggerToCheck()
+		actual, err = dataBase.GetTriggersToCheck(6)
 		So(err, ShouldBeNil)
-		So(actual, ShouldBeIn, triggerArr)
+		So(actual, ShouldHaveLength, 3)
+		So(actual[0], ShouldBeIn, triggerArr)
+		So(actual[1], ShouldBeIn, triggerArr)
+		So(actual[2], ShouldBeIn, triggerArr)
+		triggerArr = removeValue(triggerArr, actual[0])
+		triggerArr = removeValue(triggerArr, actual[1])
+		triggerArr = removeValue(triggerArr, actual[2])
 
-		actual, err = dataBase.GetTriggerToCheck()
-		So(err, ShouldResemble, database.ErrNil)
+		actual, err = dataBase.GetTriggersToCheck(1)
+		So(err, ShouldBeNil)
 		So(actual, ShouldBeEmpty)
 
 		count, err = dataBase.GetTriggersToCheckCount()
@@ -102,9 +114,12 @@ func TestRemoteTriggerToCheck(t *testing.T) {
 		triggerID1 := uuid.Must(uuid.NewV4()).String()
 		triggerID2 := uuid.Must(uuid.NewV4()).String()
 		triggerID3 := uuid.Must(uuid.NewV4()).String()
+		triggerID4 := uuid.Must(uuid.NewV4()).String()
+		triggerID5 := uuid.Must(uuid.NewV4()).String()
+		triggerID6 := uuid.Must(uuid.NewV4()).String()
 
-		actual, err := dataBase.GetRemoteTriggerToCheck()
-		So(err, ShouldResemble, database.ErrNil)
+		actual, err := dataBase.GetRemoteTriggersToCheck(1)
+		So(err, ShouldBeNil)
 		So(actual, ShouldBeEmpty)
 
 		count, err := dataBase.GetRemoteTriggersToCheckCount()
@@ -118,9 +133,9 @@ func TestRemoteTriggerToCheck(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(count, ShouldEqual, 1)
 
-		actual, err = dataBase.GetRemoteTriggerToCheck()
+		actual, err = dataBase.GetRemoteTriggersToCheck(1)
 		So(err, ShouldBeNil)
-		So(actual, ShouldResemble, triggerID1)
+		So(actual, ShouldResemble, []string{triggerID1})
 
 		count, err = dataBase.GetRemoteTriggersToCheckCount()
 		So(err, ShouldBeNil)
@@ -136,41 +151,50 @@ func TestRemoteTriggerToCheck(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(count, ShouldEqual, 1)
 
-		actual, err = dataBase.GetRemoteTriggerToCheck()
+		actual, err = dataBase.GetRemoteTriggersToCheck(1)
 		So(err, ShouldBeNil)
-		So(actual, ShouldResemble, triggerID1)
+		So(actual, ShouldResemble, []string{triggerID1})
 
-		actual, err = dataBase.GetRemoteTriggerToCheck()
-		So(err, ShouldResemble, database.ErrNil)
+		actual, err = dataBase.GetRemoteTriggersToCheck(1)
+		So(err, ShouldBeNil)
 		So(actual, ShouldBeEmpty)
 
-		triggerArr := []string{triggerID1, triggerID2, triggerID3}
+		triggerArr := []string{triggerID1, triggerID2, triggerID3, triggerID4, triggerID5, triggerID6}
 		err = dataBase.AddRemoteTriggersToCheck(triggerArr)
 		So(err, ShouldBeNil)
 
 		count, err = dataBase.GetRemoteTriggersToCheckCount()
 		So(err, ShouldBeNil)
-		So(count, ShouldEqual, 3)
+		So(count, ShouldEqual, 6)
 
-		actual, err = dataBase.GetRemoteTriggerToCheck()
+		actual, err = dataBase.GetRemoteTriggersToCheck(1)
 		So(err, ShouldBeNil)
-		So(actual, ShouldBeIn, triggerArr)
-		triggerArr = removeValue(triggerArr, actual)
+		So(actual[0], ShouldBeIn, triggerArr)
+		triggerArr = removeValue(triggerArr, actual[0])
 
-		actual, err = dataBase.GetRemoteTriggerToCheck()
+		actual, err = dataBase.GetRemoteTriggersToCheck(2)
 		So(err, ShouldBeNil)
-		So(actual, ShouldBeIn, triggerArr)
-		triggerArr = removeValue(triggerArr, actual)
+		So(actual, ShouldHaveLength, 2)
+		So(actual[0], ShouldBeIn, triggerArr)
+		So(actual[1], ShouldBeIn, triggerArr)
+		triggerArr = removeValue(triggerArr, actual[0])
+		triggerArr = removeValue(triggerArr, actual[1])
 
-		actual, err = dataBase.GetRemoteTriggerToCheck()
+		actual, err = dataBase.GetRemoteTriggersToCheck(6)
 		So(err, ShouldBeNil)
-		So(actual, ShouldBeIn, triggerArr)
+		So(actual, ShouldHaveLength, 3)
+		So(actual[0], ShouldBeIn, triggerArr)
+		So(actual[1], ShouldBeIn, triggerArr)
+		So(actual[2], ShouldBeIn, triggerArr)
+		triggerArr = removeValue(triggerArr, actual[0])
+		triggerArr = removeValue(triggerArr, actual[1])
+		triggerArr = removeValue(triggerArr, actual[2])
 
-		actual, err = dataBase.GetRemoteTriggerToCheck()
-		So(err, ShouldResemble, database.ErrNil)
+		actual, err = dataBase.GetRemoteTriggersToCheck(5)
+		So(err, ShouldBeNil)
 		So(actual, ShouldBeEmpty)
 
-		count, err = dataBase.GetRemoteTriggersToCheckCount()
+		count, err = dataBase.GetTriggersToCheckCount()
 		So(err, ShouldBeNil)
 		So(count, ShouldEqual, 0)
 	})
@@ -185,7 +209,7 @@ func TestRemoteTriggerToCheckConnection(t *testing.T) {
 		err := dataBase.AddRemoteTriggersToCheck([]string{"123"})
 		So(err, ShouldNotBeNil)
 
-		triggerID, err := dataBase.GetRemoteTriggerToCheck()
+		triggerID, err := dataBase.GetRemoteTriggersToCheck(1)
 		So(triggerID, ShouldBeEmpty)
 		So(err, ShouldNotBeNil)
 	})
@@ -200,7 +224,7 @@ func TestTriggerToCheckConnection(t *testing.T) {
 		err := dataBase.AddTriggersToCheck([]string{"123"})
 		So(err, ShouldNotBeNil)
 
-		triggerID, err := dataBase.GetTriggerToCheck()
+		triggerID, err := dataBase.GetTriggersToCheck(1)
 		So(triggerID, ShouldBeEmpty)
 		So(err, ShouldNotBeNil)
 	})

@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira/checker"
-	"github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/metrics/graphite"
 )
 
@@ -20,26 +19,26 @@ func (worker *Checker) startTriggerHandler(isRemote bool, metrics *graphite.Chec
 		case <-worker.tomb.Dying():
 			return nil
 		default:
-			var triggerID string
-			var err error
-			if isRemote {
-				triggerID, err = worker.Database.GetRemoteTriggerToCheck()
-			} else {
-				triggerID, err = worker.Database.GetTriggerToCheck()
-			}
+			triggerIDs, err := worker.getTriggersToCheck(isRemote)
 			if err != nil {
-				if err == database.ErrNil {
-					<-time.After(sleepWhenNoTriggerToCheck)
-				} else {
-					worker.Logger.Errorf("Failed to handle trigger loop: %s", err.Error())
-					<-time.After(sleepAfterGetTriggerIDError)
-				}
+				worker.Logger.Errorf("Failed to handle trigger loop: %s", err.Error())
+				<-time.After(sleepAfterGetTriggerIDError)
 				continue
 			}
-
-			worker.handleTrigger(triggerID, metrics)
+			if len(triggerIDs) == 0 {
+				<-time.After(sleepWhenNoTriggerToCheck)
+				continue
+			}
+			worker.handleTrigger(triggerIDs[0], metrics)
 		}
 	}
+}
+
+func (worker *Checker) getTriggersToCheck(isRemote bool) ([]string, error) {
+	if isRemote {
+		return worker.Database.GetRemoteTriggersToCheck(1)
+	}
+	return worker.Database.GetTriggersToCheck(1)
 }
 
 func (worker *Checker) handleTrigger(triggerID string, metrics *graphite.CheckMetrics) {
