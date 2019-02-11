@@ -34,7 +34,8 @@ func (worker *Checker) handleTrigger(triggerID string, metrics *graphite.CheckMe
 			err = fmt.Errorf("panic: '%s' stack: %s", r, debug.Stack())
 		}
 	}()
-	return worker.handleTriggerInLock(triggerID, metrics)
+	err = worker.handleTriggerInLock(triggerID, metrics)
+	return err
 }
 
 func (worker *Checker) handleTriggerInLock(triggerID string, metrics *graphite.CheckMetrics) error {
