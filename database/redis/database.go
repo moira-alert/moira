@@ -3,10 +3,8 @@ package redis
 import (
 	"fmt"
 	"net"
-	"sync"
 	"time"
 
-	"github.com/FZambia/sentinel"
 	"github.com/gomodule/redigo/redis"
 	"github.com/patrickmn/go-cache"
 	"gopkg.in/redsync.v1"
@@ -16,6 +14,7 @@ import (
 )
 
 const pubSubWorkerChannelSize = 16384
+const dialTimeout = time.Millisecond * 500
 
 const (
 	cacheCleanupInterval         = time.Minute * 60
@@ -51,104 +50,57 @@ type DbConnector struct {
 
 // NewDatabase creates Redis pool based on config
 func NewDatabase(logger moira.Logger, config Config, source DBSource) *DbConnector {
-	pool := newRedisPool(logger, config)
+	poolDialer := newPoolDialer(logger, config)
+
+	pool := &redis.Pool{
+		MaxIdle:      config.ConnectionLimit,
+		MaxActive:    config.ConnectionLimit,
+		Wait:         true,
+		IdleTimeout:  240 * time.Second,
+		Dial:         poolDialer.Dial,
+		TestOnBorrow: poolDialer.Test,
+	}
+	syncPool := &redis.Pool{
+		MaxIdle:      config.ConnectionLimit,
+		MaxActive:    config.ConnectionLimit,
+		Wait:         true,
+		IdleTimeout:  240 * time.Second,
+		Dial:         poolDialer.Dial,
+		TestOnBorrow: poolDialer.Test,
+	}
+
 	return &DbConnector{
 		pool:                 pool,
 		logger:               logger,
 		retentionCache:       cache.New(cacheValueExpirationDuration, cacheCleanupInterval),
 		retentionSavingCache: cache.New(cache.NoExpiration, cache.DefaultExpiration),
 		metricsCache:         cache.New(cacheValueExpirationDuration, cacheCleanupInterval),
-		sync:                 redsync.New([]redsync.Pool{pool}),
+		sync:                 redsync.New([]redsync.Pool{syncPool}),
 		source:               source,
 	}
 }
 
-func newRedisPool(logger moira.Logger, config Config) *redis.Pool {
-	serverAddr := net.JoinHostPort(config.Host, config.Port)
-	useSentinel := config.MasterName != "" && len(config.SentinelAddresses) > 0
-	if !useSentinel {
-		logger.Infof("Redis: %v, DB: %v", serverAddr, config.DB)
-	} else {
+func newPoolDialer(logger moira.Logger, config Config) PoolDialer {
+	if config.MasterName != "" && len(config.SentinelAddresses) > 0 {
 		logger.Infof("Redis: Sentinel for name: %v, DB: %v", config.MasterName, config.DB)
-	}
-	sntnl, err := createSentinel(logger, config, useSentinel)
-	if err != nil {
-		logger.Error(err)
-		return nil
-	}
-
-	var lastMu sync.Mutex
-	var lastMaster string
-
-	return &redis.Pool{
-		MaxIdle:     config.ConnectionLimit,
-		MaxActive:   config.ConnectionLimit,
-		Wait:        true,
-		IdleTimeout: 240 * time.Second,
-		Dial: func() (redis.Conn, error) {
-			if sntnl != nil {
-				serverAddr, err = sntnl.MasterAddr()
-				if err != nil {
-					return nil, err
-				}
-				lastMu.Lock()
-				if serverAddr != lastMaster {
-					logger.Infof("Redis master discovered: %s", serverAddr)
-					lastMaster = serverAddr
-				}
-				lastMu.Unlock()
-			}
-			return redis.Dial(
-				"tcp",
-				serverAddr,
-				redis.DialDatabase(config.DB),
-				redis.DialConnectTimeout(500*time.Millisecond),
-			)
-		},
-		TestOnBorrow: func(c redis.Conn, t time.Time) error {
-			if useSentinel {
-				if !sentinel.TestRole(c, "master") {
-					return fmt.Errorf("failed master role check")
-				}
-				return nil
-			}
-			_, err := c.Do("PING")
-			return err
-		},
-	}
-}
-
-func createSentinel(logger moira.Logger, config Config, useSentinel bool) (*sentinel.Sentinel, error) {
-	if useSentinel {
-		// https://redis.io/topics/sentinel-clients
-		sntnl := &sentinel.Sentinel{
-			Addrs:      config.SentinelAddresses,
-			MasterName: config.MasterName,
-			Dial: func(addr string) (redis.Conn, error) {
-				return redis.Dial(
-					"tcp",
-					addr,
-					redis.DialConnectTimeout(500*time.Millisecond),
-				)
+		return NewSentinelPoolDialer(
+			logger,
+			SentinelPoolDialerConfig{
+				MasterName:        config.MasterName,
+				SentinelAddresses: config.SentinelAddresses,
+				DB:                config.DB,
+				DialTimeout:       dialTimeout,
 			},
-		}
-
-		// Periodically discover new Sentinels.
-		go func() {
-			if err := sntnl.Discover(); err != nil {
-				logger.Error(err)
-			}
-			checkTicker := time.NewTicker(30 * time.Second)
-			for {
-				<-checkTicker.C
-				if err := sntnl.Discover(); err != nil {
-					logger.Error(err)
-				}
-			}
-		}()
-		return sntnl, nil
+		)
 	}
-	return nil, nil
+
+	serverAddr := net.JoinHostPort(config.Host, config.Port)
+	logger.Infof("Redis: %v, DB: %v", serverAddr, config.DB)
+	return &DirectPoolDialer{
+		serverAddress: serverAddr,
+		db:            config.DB,
+		dialTimeout:   dialTimeout,
+	}
 }
 
 func (connector *DbConnector) makePubSubConnection(channel string) (*redis.PubSubConn, error) {
