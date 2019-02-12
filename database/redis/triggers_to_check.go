@@ -8,7 +8,7 @@ import (
 )
 
 // AddLocalTriggersToCheck gets trigger IDs and save it to Redis Set
-func (connector *DbConnector) AddTriggersToCheck(triggerIDs []string) error {
+func (connector *DbConnector) AddLocalTriggersToCheck(triggerIDs []string) error {
 	return connector.addTriggersToCheck(localTriggersToCheckKey, triggerIDs)
 }
 
@@ -18,7 +18,7 @@ func (connector *DbConnector) AddRemoteTriggersToCheck(triggerIDs []string) erro
 }
 
 // GetLocalTriggersToCheck return random trigger ID from Redis Set
-func (connector *DbConnector) GetTriggersToCheck(count int) ([]string, error) {
+func (connector *DbConnector) GetLocalTriggersToCheck(count int) ([]string, error) {
 	return connector.getTriggersToCheck(localTriggersToCheckKey, count)
 
 }
@@ -29,7 +29,7 @@ func (connector *DbConnector) GetRemoteTriggersToCheck(count int) ([]string, err
 }
 
 // GetLocalTriggersToCheckCount return number of triggers ID to check from Redis Set
-func (connector *DbConnector) GetTriggersToCheckCount() (int64, error) {
+func (connector *DbConnector) GetLocalTriggersToCheckCount() (int64, error) {
 	return connector.getTriggersToCheckCount(localTriggersToCheckKey)
 }
 
