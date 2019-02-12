@@ -14,25 +14,30 @@ func (worker *Checker) startTriggerToCheckGetter(fetch func(int) ([]string, erro
 }
 
 func (worker *Checker) triggerToCheckGetter(fetch func(int) ([]string, error), batchSize int, triggerIDsToCheck chan<- string) error {
+	var fetchDelay time.Duration
 	for {
+		startFetch := time.After(fetchDelay)
 		select {
 		case <-worker.tomb.Dying():
 			close(triggerIDsToCheck)
 			return nil
-		default:
+		case <-startFetch:
 			triggerIDs, err := fetch(batchSize)
-			if err != nil {
-				worker.Logger.Errorf("Failed to handle trigger loop: %s", err.Error())
-				<-time.After(sleepAfterGetTriggerIDError)
-				continue
-			}
-			if len(triggerIDs) == 0 {
-				<-time.After(sleepWhenNoTriggerToCheck)
-				continue
-			}
-			for _, triggerID := range triggerIDs {
-				triggerIDsToCheck <- triggerID
-			}
+			fetchDelay = worker.handleFetchResponse(triggerIDs, err, triggerIDsToCheck)
 		}
 	}
+}
+
+func (worker *Checker) handleFetchResponse(triggerIDs []string, fetchError error, triggerIDsToCheck chan<- string) time.Duration {
+	if fetchError != nil {
+		worker.Logger.Errorf("Failed to handle trigger loop: %s", fetchError.Error())
+		return sleepAfterGetTriggerIDError
+	}
+	if len(triggerIDs) == 0 {
+		return sleepWhenNoTriggerToCheck
+	}
+	for _, triggerID := range triggerIDs {
+		triggerIDsToCheck <- triggerID
+	}
+	return time.Duration(0)
 }
