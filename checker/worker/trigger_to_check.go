@@ -41,5 +41,5 @@ func (worker *Checker) getTriggersToCheck(isRemote bool, batchSize int) ([]strin
 	if isRemote {
 		return worker.Database.GetRemoteTriggersToCheck(batchSize)
 	}
-	return worker.Database.GetTriggersToCheck(batchSize)
+	return worker.Database.GetLocalTriggersToCheck(batchSize)
 }

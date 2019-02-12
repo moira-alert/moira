@@ -49,6 +49,20 @@ func (mr *MockDatabaseMockRecorder) AcquireTriggerCheckLock(arg0, arg1 interface
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AcquireTriggerCheckLock", reflect.TypeOf((*MockDatabase)(nil).AcquireTriggerCheckLock), arg0, arg1)
 }
 
+// AddLocalTriggersToCheck mocks base method
+func (m *MockDatabase) AddLocalTriggersToCheck(arg0 []string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddLocalTriggersToCheck", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddLocalTriggersToCheck indicates an expected call of AddLocalTriggersToCheck
+func (mr *MockDatabaseMockRecorder) AddLocalTriggersToCheck(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddLocalTriggersToCheck", reflect.TypeOf((*MockDatabase)(nil).AddLocalTriggersToCheck), arg0)
+}
+
 // AddNotification mocks base method
 func (m *MockDatabase) AddNotification(arg0 *moira.ScheduledNotification) error {
 	m.ctrl.T.Helper()
@@ -103,20 +117,6 @@ func (m *MockDatabase) AddRemoteTriggersToCheck(arg0 []string) error {
 func (mr *MockDatabaseMockRecorder) AddRemoteTriggersToCheck(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddRemoteTriggersToCheck", reflect.TypeOf((*MockDatabase)(nil).AddRemoteTriggersToCheck), arg0)
-}
-
-// AddTriggersToCheck mocks base method
-func (m *MockDatabase) AddTriggersToCheck(arg0 []string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddTriggersToCheck", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// AddTriggersToCheck indicates an expected call of AddTriggersToCheck
-func (mr *MockDatabaseMockRecorder) AddTriggersToCheck(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddTriggersToCheck", reflect.TypeOf((*MockDatabase)(nil).AddTriggersToCheck), arg0)
 }
 
 // DeleteTriggerCheckLock mocks base method
@@ -295,6 +295,36 @@ func (m *MockDatabase) GetLocalTriggerIDs() ([]string, error) {
 func (mr *MockDatabaseMockRecorder) GetLocalTriggerIDs() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLocalTriggerIDs", reflect.TypeOf((*MockDatabase)(nil).GetLocalTriggerIDs))
+}
+
+// GetLocalTriggersToCheck mocks base method
+func (m *MockDatabase) GetLocalTriggersToCheck(arg0 int) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetLocalTriggersToCheck", arg0)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetLocalTriggersToCheck indicates an expected call of GetLocalTriggersToCheck
+func (mr *MockDatabaseMockRecorder) GetLocalTriggersToCheck(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLocalTriggersToCheck", reflect.TypeOf((*MockDatabase)(nil).GetLocalTriggersToCheck), arg0)
+}
+
+// GetLocalTriggersToCheckCount mocks base method
+func (m *MockDatabase) GetLocalTriggersToCheckCount() (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetLocalTriggersToCheckCount")
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetLocalTriggersToCheckCount indicates an expected call of GetLocalTriggersToCheckCount
+func (mr *MockDatabaseMockRecorder) GetLocalTriggersToCheckCount() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLocalTriggersToCheckCount", reflect.TypeOf((*MockDatabase)(nil).GetLocalTriggersToCheckCount))
 }
 
 // GetMetricRetention mocks base method
@@ -655,36 +685,6 @@ func (m *MockDatabase) GetTriggers(arg0 []string) ([]*moira.Trigger, error) {
 func (mr *MockDatabaseMockRecorder) GetTriggers(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggers", reflect.TypeOf((*MockDatabase)(nil).GetTriggers), arg0)
-}
-
-// GetTriggersToCheck mocks base method
-func (m *MockDatabase) GetTriggersToCheck(arg0 int) ([]string, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTriggersToCheck", arg0)
-	ret0, _ := ret[0].([]string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetTriggersToCheck indicates an expected call of GetTriggersToCheck
-func (mr *MockDatabaseMockRecorder) GetTriggersToCheck(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggersToCheck", reflect.TypeOf((*MockDatabase)(nil).GetTriggersToCheck), arg0)
-}
-
-// GetTriggersToCheckCount mocks base method
-func (m *MockDatabase) GetTriggersToCheckCount() (int64, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetTriggersToCheckCount")
-	ret0, _ := ret[0].(int64)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetTriggersToCheckCount indicates an expected call of GetTriggersToCheckCount
-func (mr *MockDatabaseMockRecorder) GetTriggersToCheckCount() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggersToCheckCount", reflect.TypeOf((*MockDatabase)(nil).GetTriggersToCheckCount))
 }
 
 // GetUnusedTriggerIDs mocks base method

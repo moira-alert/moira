@@ -53,7 +53,7 @@ func (worker *Checker) addTriggerIDsIfNeeded(triggerIDs []string) {
 		}
 	}
 	if len(needToCheckTriggerIDs) > 0 {
-		worker.Database.AddTriggersToCheck(needToCheckTriggerIDs)
+		worker.Database.AddLocalTriggersToCheck(needToCheckTriggerIDs)
 	}
 }
 

@@ -92,9 +92,9 @@ type Database interface {
 	RemoveMetricValues(metric string, toTime int64) error
 	RemoveMetricsValues(metrics []string, toTime int64) error
 
-	AddTriggersToCheck(triggerIDs []string) error
-	GetTriggersToCheck(count int) ([]string, error)
-	GetTriggersToCheckCount() (int64, error)
+	AddLocalTriggersToCheck(triggerIDs []string) error
+	GetLocalTriggersToCheck(count int) ([]string, error)
+	GetLocalTriggersToCheckCount() (int64, error)
 
 	AddRemoteTriggersToCheck(triggerIDs []string) error
 	GetRemoteTriggersToCheck(count int) ([]string, error)

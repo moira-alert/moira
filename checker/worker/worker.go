@@ -106,7 +106,7 @@ func (worker *Checker) checkTriggersToCheckCount() error {
 		case <-worker.tomb.Dying():
 			return nil
 		case <-checkTicker.C:
-			triggersToCheckCount, err = worker.Database.GetTriggersToCheckCount()
+			triggersToCheckCount, err = worker.Database.GetLocalTriggersToCheckCount()
 			if err == nil {
 				worker.Metrics.LocalMetrics.TriggersToCheckCount.Update(triggersToCheckCount)
 			}

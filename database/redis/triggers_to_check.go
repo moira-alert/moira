@@ -7,7 +7,7 @@ import (
 	"github.com/moira-alert/moira/database"
 )
 
-// AddTriggersToCheck gets trigger IDs and save it to Redis Set
+// AddLocalTriggersToCheck gets trigger IDs and save it to Redis Set
 func (connector *DbConnector) AddTriggersToCheck(triggerIDs []string) error {
 	return connector.addTriggersToCheck(localTriggersToCheckKey, triggerIDs)
 }
@@ -17,7 +17,7 @@ func (connector *DbConnector) AddRemoteTriggersToCheck(triggerIDs []string) erro
 	return connector.addTriggersToCheck(remoteTriggersToCheckKey, triggerIDs)
 }
 
-// GetTriggersToCheck return random trigger ID from Redis Set
+// GetLocalTriggersToCheck return random trigger ID from Redis Set
 func (connector *DbConnector) GetTriggersToCheck(count int) ([]string, error) {
 	return connector.getTriggersToCheck(localTriggersToCheckKey, count)
 
@@ -28,7 +28,7 @@ func (connector *DbConnector) GetRemoteTriggersToCheck(count int) ([]string, err
 	return connector.getTriggersToCheck(remoteTriggersToCheckKey, count)
 }
 
-// GetTriggersToCheckCount return number of triggers ID to check from Redis Set
+// GetLocalTriggersToCheckCount return number of triggers ID to check from Redis Set
 func (connector *DbConnector) GetTriggersToCheckCount() (int64, error) {
 	return connector.getTriggersToCheckCount(localTriggersToCheckKey)
 }
