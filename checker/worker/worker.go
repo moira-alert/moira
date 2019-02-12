@@ -66,7 +66,7 @@ func (worker *Checker) Start() error {
 	}
 
 	worker.Logger.Infof("Start %v parallel local checker(s)", worker.Config.MaxParallelChecks)
-	localTriggerIdsToCheckChan := worker.startTriggerToCheckGetter(false, worker.Config.MaxParallelChecks)
+	localTriggerIdsToCheckChan := worker.startTriggerToCheckGetter(worker.Database.GetLocalTriggersToCheck, worker.Config.MaxParallelChecks)
 	for i := 0; i < worker.Config.MaxParallelChecks; i++ {
 		worker.tomb.Go(func() error {
 			return worker.newMetricsHandler(metricEventsChannel)
@@ -78,7 +78,7 @@ func (worker *Checker) Start() error {
 
 	if worker.remoteEnabled {
 		worker.Logger.Infof("Start %v parallel remote checker(s)", worker.Config.MaxParallelRemoteChecks)
-		remoteTriggerIdsToCheckChan := worker.startTriggerToCheckGetter(true, worker.Config.MaxParallelRemoteChecks)
+		remoteTriggerIdsToCheckChan := worker.startTriggerToCheckGetter(worker.Database.GetRemoteTriggersToCheck, worker.Config.MaxParallelRemoteChecks)
 		for i := 0; i < worker.Config.MaxParallelRemoteChecks; i++ {
 			worker.tomb.Go(func() error {
 				return worker.startTriggerHandler(remoteTriggerIdsToCheckChan, worker.Metrics.RemoteMetrics)
