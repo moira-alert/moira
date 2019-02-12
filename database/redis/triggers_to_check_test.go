@@ -22,62 +22,62 @@ func TestTriggerToCheck(t *testing.T) {
 		triggerID5 := uuid.Must(uuid.NewV4()).String()
 		triggerID6 := uuid.Must(uuid.NewV4()).String()
 
-		actual, err := dataBase.GetTriggersToCheck(1)
+		actual, err := dataBase.GetLocalTriggersToCheck(1)
 		So(err, ShouldBeNil)
 		So(actual, ShouldBeEmpty)
 
-		count, err := dataBase.GetTriggersToCheckCount()
+		count, err := dataBase.GetLocalTriggersToCheckCount()
 		So(err, ShouldBeNil)
 		So(count, ShouldEqual, 0)
 
-		err = dataBase.AddTriggersToCheck([]string{triggerID1})
+		err = dataBase.AddLocalTriggersToCheck([]string{triggerID1})
 		So(err, ShouldBeNil)
 
-		count, err = dataBase.GetTriggersToCheckCount()
+		count, err = dataBase.GetLocalTriggersToCheckCount()
 		So(err, ShouldBeNil)
 		So(count, ShouldEqual, 1)
 
-		actual, err = dataBase.GetTriggersToCheck(1)
+		actual, err = dataBase.GetLocalTriggersToCheck(1)
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, []string{triggerID1})
 
-		count, err = dataBase.GetTriggersToCheckCount()
+		count, err = dataBase.GetLocalTriggersToCheckCount()
 		So(err, ShouldBeNil)
 		So(count, ShouldEqual, 0)
 
-		err = dataBase.AddTriggersToCheck([]string{triggerID1})
+		err = dataBase.AddLocalTriggersToCheck([]string{triggerID1})
 		So(err, ShouldBeNil)
 
-		err = dataBase.AddTriggersToCheck([]string{triggerID1})
+		err = dataBase.AddLocalTriggersToCheck([]string{triggerID1})
 		So(err, ShouldBeNil)
 
-		count, err = dataBase.GetTriggersToCheckCount()
+		count, err = dataBase.GetLocalTriggersToCheckCount()
 		So(err, ShouldBeNil)
 		So(count, ShouldEqual, 1)
 
-		actual, err = dataBase.GetTriggersToCheck(1)
+		actual, err = dataBase.GetLocalTriggersToCheck(1)
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, []string{triggerID1})
 
-		actual, err = dataBase.GetTriggersToCheck(1)
+		actual, err = dataBase.GetLocalTriggersToCheck(1)
 		So(err, ShouldBeNil)
 		So(actual, ShouldBeEmpty)
 
 		triggerArr := []string{triggerID1, triggerID2, triggerID3, triggerID4, triggerID5, triggerID6}
-		err = dataBase.AddTriggersToCheck(triggerArr)
+		err = dataBase.AddLocalTriggersToCheck(triggerArr)
 		So(err, ShouldBeNil)
 
-		count, err = dataBase.GetTriggersToCheckCount()
+		count, err = dataBase.GetLocalTriggersToCheckCount()
 		So(err, ShouldBeNil)
 		So(count, ShouldEqual, 6)
 
-		actual, err = dataBase.GetTriggersToCheck(1)
+		actual, err = dataBase.GetLocalTriggersToCheck(1)
 		So(err, ShouldBeNil)
 		So(actual, ShouldHaveLength, 1)
 		So(actual[0], ShouldBeIn, triggerArr)
 		triggerArr = removeValue(triggerArr, actual[0])
 
-		actual, err = dataBase.GetTriggersToCheck(2)
+		actual, err = dataBase.GetLocalTriggersToCheck(2)
 		So(err, ShouldBeNil)
 		So(actual, ShouldHaveLength, 2)
 		So(actual[0], ShouldBeIn, triggerArr)
@@ -85,18 +85,18 @@ func TestTriggerToCheck(t *testing.T) {
 		triggerArr = removeValue(triggerArr, actual[0])
 		triggerArr = removeValue(triggerArr, actual[1])
 
-		actual, err = dataBase.GetTriggersToCheck(6)
+		actual, err = dataBase.GetLocalTriggersToCheck(6)
 		So(err, ShouldBeNil)
 		So(actual, ShouldHaveLength, 3)
 		So(actual[0], ShouldBeIn, triggerArr)
 		So(actual[1], ShouldBeIn, triggerArr)
 		So(actual[2], ShouldBeIn, triggerArr)
 
-		actual, err = dataBase.GetTriggersToCheck(1)
+		actual, err = dataBase.GetLocalTriggersToCheck(1)
 		So(err, ShouldBeNil)
 		So(actual, ShouldBeEmpty)
 
-		count, err = dataBase.GetTriggersToCheckCount()
+		count, err = dataBase.GetLocalTriggersToCheckCount()
 		So(err, ShouldBeNil)
 		So(count, ShouldEqual, 0)
 	})
@@ -188,7 +188,7 @@ func TestRemoteTriggerToCheck(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(actual, ShouldBeEmpty)
 
-		count, err = dataBase.GetTriggersToCheckCount()
+		count, err = dataBase.GetLocalTriggersToCheckCount()
 		So(err, ShouldBeNil)
 		So(count, ShouldEqual, 0)
 	})
@@ -215,10 +215,10 @@ func TestTriggerToCheckConnection(t *testing.T) {
 	dataBase.flush()
 	defer dataBase.flush()
 	Convey("Should throw error when no connection", t, func() {
-		err := dataBase.AddTriggersToCheck([]string{"123"})
+		err := dataBase.AddLocalTriggersToCheck([]string{"123"})
 		So(err, ShouldNotBeNil)
 
-		triggerID, err := dataBase.GetTriggersToCheck(1)
+		triggerID, err := dataBase.GetLocalTriggersToCheck(1)
 		So(triggerID, ShouldBeEmpty)
 		So(err, ShouldNotBeNil)
 	})
