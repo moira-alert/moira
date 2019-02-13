@@ -25,8 +25,9 @@ type RedisConfig struct {
 	Host string `yaml:"host"`
 	// Redis node port
 	Port string `yaml:"port"`
-	// Redis database id
-	DBID int `yaml:"dbid"`
+	// Redis database
+	DB              int `yaml:"dbid"`
+	ConnectionLimit int `yaml:"connection_limit"`
 }
 
 // GetSettings returns redis config parsed from moira config files
@@ -36,7 +37,8 @@ func (config *RedisConfig) GetSettings() redis.Config {
 		SentinelAddresses: strings.Split(config.SentinelAddrs, ","),
 		Host:              config.Host,
 		Port:              config.Port,
-		DBID:              config.DBID,
+		DB:                config.DB,
+		ConnectionLimit:   config.ConnectionLimit,
 	}
 }
 

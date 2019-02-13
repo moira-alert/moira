@@ -60,9 +60,9 @@ type selfStateConfig struct {
 func getDefault() config {
 	return config{
 		Redis: cmd.RedisConfig{
-			Host: "localhost",
-			Port: "6379",
-			DBID: 0,
+			Host:            "localhost",
+			Port:            "6379",
+			ConnectionLimit: 512,
 		},
 		Graphite: cmd.GraphiteConfig{
 			RuntimeStats: false,

@@ -33,8 +33,9 @@ func (config *apiConfig) getSettings() *api.Config {
 func getDefault() config {
 	return config{
 		Redis: cmd.RedisConfig{
-			Host: "localhost",
-			Port: "6379",
+			Host:            "localhost",
+			Port:            "6379",
+			ConnectionLimit: 512,
 		},
 		Logger: cmd.LoggerConfig{
 			LogFile:  "stdout",
