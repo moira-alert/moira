@@ -50,6 +50,7 @@ func copyLastCheck(lastCheck *moira.CheckData, checkTimeStamp int64) moira.Check
 		Score:                        lastCheck.Score,
 		Suppressed:                   lastCheck.Suppressed,
 		SuppressedState:              lastCheck.SuppressedState,
+		Maintenance:                  lastCheck.Maintenance,
 		LastSuccessfulCheckTimestamp: lastCheck.LastSuccessfulCheckTimestamp,
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"math"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -55,6 +56,13 @@ type TriggerData struct {
 	ErrorValue float64  `json:"error_value"`
 	IsRemote   bool     `json:"is_remote"`
 	Tags       []string `json:"__notifier_trigger_tags"`
+}
+// GetTriggerURI gets frontUri and returns triggerUrl, returns empty string on selfcheck and test notifications
+func (trigger TriggerData) GetTriggerURI(frontURI string) string {
+	if trigger.ID != "" {
+		return fmt.Sprintf("%s/trigger/%s", frontURI, trigger.ID)
+	}
+	return ""
 }
 
 // ContactData represents contact object
@@ -264,8 +272,18 @@ func (schedule *ScheduleData) IsScheduleAllows(ts int64) bool {
 	return false
 }
 
-func (eventData NotificationEvent) String() string {
-	return fmt.Sprintf("TriggerId: %s, Metric: %s, Value: %v, OldState: %s, State: %s, Message: '%s', Timestamp: %v", eventData.TriggerID, eventData.Metric, UseFloat64(eventData.Value), eventData.OldState, eventData.State, UseString(eventData.Message), eventData.Timestamp)
+func (event NotificationEvent) String() string {
+	return fmt.Sprintf("TriggerId: %s, Metric: %s, Value: %v, OldState: %s, State: %s, Message: '%s', Timestamp: %v", event.TriggerID, event.Metric, UseFloat64(event.Value), event.OldState, event.State, UseString(event.Message), event.Timestamp)
+}
+
+// GetMetricValue gets event metric value and format it to human readable presentation
+func (event NotificationEvent) GetMetricValue() string {
+	return strconv.FormatFloat(UseFloat64(event.Value), 'f', -1, 64)
+}
+
+// FormatTimestamp gets event timestamp and format it using given location to human readable presentation
+func (event NotificationEvent) FormatTimestamp(location *time.Location) string {
+	return time.Unix(event.Timestamp, 0).In(location).Format("15:04")
 }
 
 // GetOrCreateMetricState gets metric state from check data or create new if CheckData has no state for given metric

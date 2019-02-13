@@ -2,76 +2,48 @@ package mail
 
 import (
 	"fmt"
-	"html/template"
 	"testing"
-	"time"
 
-	"github.com/golang/mock/gomock"
-	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestMail(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	logger := mock_moira_alert.NewMockLogger(mockCtrl)
+func TestFillSettings(t *testing.T) {
+	Convey("Empty map", t, func() {
+		sender := Sender{}
+		err := sender.fillSettings(map[string]string{}, nil, nil, "")
+		So(err, ShouldResemble, fmt.Errorf("mail_from can't be empty"))
+		So(sender, ShouldResemble, Sender{})
+	})
 
-	contact := moira.ContactData{
-		ID:    "ContactID-000000000000001",
-		Type:  "email",
-		Value: "mail1@example.com",
-	}
-
-	trigger := moira.TriggerData{
-		ID:         "triggerID-0000000000001",
-		Name:       "test trigger 1",
-		Targets:    []string{"test.target.1"},
-		WarnValue:  10,
-		ErrorValue: 20,
-		Tags:       []string{"test-tag-1"},
-	}
-
-	location, _ := time.LoadLocation("UTC")
-	templateName := "mail"
-
-	sender := Sender{
-		FrontURI:     "http://localhost",
-		From:         "test@notifier",
-		SMTPhost:     "localhost",
-		SMTPport:     25,
-		Template:     template.Must(template.New(templateName).Parse(defaultTemplate)),
-		TemplateName: templateName,
-		location:     location,
-	}
-
-	sender.setLogger(logger)
-	events := make([]moira.NotificationEvent, 0, 10)
-	for event := range generateTestEvents(10, trigger.ID) {
-		events = append(events, *event)
-	}
-
-	plot := make([]byte, 0)
-
-	Convey("Make message", t, func() {
-		message := sender.makeMessage(events, contact, trigger, plot, true)
-		So(message.GetHeader("From")[0], ShouldEqual, sender.From)
-		So(message.GetHeader("To")[0], ShouldEqual, contact.Value)
+	Convey("Has From", t, func() {
+		sender := Sender{}
+		settings := map[string]string{"mail_from": "123"}
+		Convey("No username", func() {
+			err := sender.fillSettings(settings, nil, nil, "")
+			So(err, ShouldBeNil)
+			So(sender, ShouldResemble, Sender{From: "123", Username: "123"})
+		})
+		Convey("Has username", func() {
+			settings["smtp_user"] = "user"
+			err := sender.fillSettings(settings, nil, nil, "")
+			So(err, ShouldBeNil)
+			So(sender, ShouldResemble, Sender{From: "123", Username: "user"})
+		})
 	})
 }
 
-func generateTestEvents(n int, subscriptionID string) chan *moira.NotificationEvent {
-	ch := make(chan *moira.NotificationEvent)
-	go func() {
-		for i := 0; i < n; i++ {
-			event := &moira.NotificationEvent{
-				Metric:         fmt.Sprintf("Metric number #%d", i),
-				SubscriptionID: &subscriptionID,
-				State:          "TEST",
-			}
+func TestParseTemplate(t *testing.T) {
+	Convey("Template path is empty", t, func() {
+		name, t, err := parseTemplate("")
+		So(name, ShouldResemble, "mail")
+		So(t, ShouldNotBeNil)
+		So(err, ShouldBeNil)
+	})
 
-			ch <- event
-		}
-		close(ch)
-	}()
-	return ch
+	Convey("Template path no empty", t, func() {
+		name, t, err := parseTemplate("bin/template")
+		So(name, ShouldResemble, "template")
+		So(t, ShouldBeNil)
+		So(err, ShouldNotBeNil)
+	})
 }

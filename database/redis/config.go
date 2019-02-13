@@ -6,5 +6,6 @@ type Config struct {
 	SentinelAddresses []string
 	Host              string
 	Port              string
-	DBID              int
+	DB                int
+	ConnectionLimit   int
 }

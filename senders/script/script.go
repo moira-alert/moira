@@ -14,8 +14,8 @@ import (
 
 // Sender implements moira sender interface via script execution
 type Sender struct {
-	Exec string
-	log  moira.Logger
+	exec   string
+	logger moira.Logger
 }
 
 type scriptNotification struct {
@@ -28,40 +28,44 @@ type scriptNotification struct {
 
 // Init read yaml config
 func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
-
 	if senderSettings["name"] == "" {
 		return fmt.Errorf("required name for sender type script")
 	}
-	args := strings.Split(senderSettings["exec"], " ")
-	scriptFile := args[0]
-	infoFile, err := os.Stat(scriptFile)
+	_, _, err := parseExec(senderSettings["exec"])
 	if err != nil {
-		return fmt.Errorf("file %s not found", scriptFile)
+		return err
 	}
-	if !infoFile.Mode().IsRegular() {
-		return fmt.Errorf("%s not file", scriptFile)
-	}
-	sender.Exec = senderSettings["exec"]
-	sender.log = logger
+	sender.exec = senderSettings["exec"]
+	sender.logger = logger
 	return nil
 }
 
 // SendEvents implements Sender interface Send
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) error {
-
-	execString := strings.Replace(sender.Exec, "${trigger_name}", trigger.Name, -1)
-	execString = strings.Replace(execString, "${contact_value}", contact.Value, -1)
-
-	args := strings.Split(execString, " ")
-	scriptFile := args[0]
-	infoFile, err := os.Stat(scriptFile)
+	scriptFile, args, scriptBody, err := sender.buildCommandData(events, contact, trigger, throttled)
 	if err != nil {
-		return fmt.Errorf("file %s not found", scriptFile)
+		return err
 	}
-	if !infoFile.Mode().IsRegular() {
-		return fmt.Errorf("%s not file", scriptFile)
+	command := exec.Command(scriptFile, args...)
+	var scriptOutput bytes.Buffer
+	command.Stdin = bytes.NewReader(scriptBody)
+	command.Stdout = &scriptOutput
+	sender.logger.Debugf("Executing script: %s", scriptFile)
+	err = command.Run()
+	sender.logger.Debugf("Finished executing: %s", scriptFile)
+	if err != nil {
+		return fmt.Errorf("failed exec [%s] Error [%s] Output: [%s]", sender.exec, err.Error(), scriptOutput.String())
 	}
+	return nil
+}
 
+func (sender *Sender) buildCommandData(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, throttled bool) (scriptFile string, args []string, scriptBody []byte, err error) {
+	execString := strings.Replace(sender.exec, "${trigger_name}", trigger.Name, -1)
+	execString = strings.Replace(execString, "${contact_value}", contact.Value, -1)
+	scriptFile, args, err = parseExec(execString)
+	if err != nil {
+		return scriptFile, args[1:], []byte{}, err
+	}
 	scriptMessage := &scriptNotification{
 		Events:    events,
 		Trigger:   trigger,
@@ -70,19 +74,20 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	}
 	scriptJSON, err := json.MarshalIndent(scriptMessage, "", "\t")
 	if err != nil {
-		return fmt.Errorf("failed marshal json")
+		return scriptFile, args[1:], scriptJSON, fmt.Errorf("failed marshal json: %s", err.Error())
 	}
+	return scriptFile, args[1:], scriptJSON, nil
+}
 
-	c := exec.Command(scriptFile, args[1:]...)
-	var scriptOutput bytes.Buffer
-	c.Stdin = bytes.NewReader(scriptJSON)
-	c.Stdout = &scriptOutput
-	sender.log.Debugf("Executing script: %s", scriptFile)
-	err = c.Run()
-	sender.log.Debugf("Finished executing: %s", scriptFile)
-
+func parseExec(execString string) (scriptFile string, args []string, err error) {
+	args = strings.Split(execString, " ")
+	scriptFile = args[0]
+	infoFile, err := os.Stat(scriptFile)
 	if err != nil {
-		return fmt.Errorf("failed exec [%s] Error [%s] Output: [%s]", sender.Exec, err.Error(), scriptOutput.String())
+		return scriptFile, args, fmt.Errorf("file %s not found", scriptFile)
 	}
-	return nil
+	if !infoFile.Mode().IsRegular() {
+		return scriptFile, args, fmt.Errorf("%s not file", scriptFile)
+	}
+	return scriptFile, args, nil
 }

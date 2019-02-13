@@ -1,60 +1,41 @@
 package worker
 
 import (
+	"fmt"
 	"runtime/debug"
 	"time"
 
 	"github.com/moira-alert/moira/checker"
-	"github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/metrics/graphite"
 )
 
-const sleepAfterGetTriggerIDError = time.Millisecond * 500
-const sleepWhenNoTriggerToCheck = time.Second * 1
-const sleepAfterPanic = time.Second * 1
-const sleepAfterCheckingError = time.Second * 5
+const sleepAfterCheckingError = time.Second * 2
 
-func (worker *Checker) startTriggerHandler(isRemote bool, metrics *graphite.CheckMetrics) error {
+// startTriggerHandler is blocking func
+func (worker *Checker) startTriggerHandler(triggerIDsToCheck <-chan string, metrics *graphite.CheckMetrics) error {
 	for {
-		select {
-		case <-worker.tomb.Dying():
+		triggerID, ok := <-triggerIDsToCheck
+		if !ok {
 			return nil
-		default:
-			var triggerID string
-			var err error
-			if isRemote {
-				triggerID, err = worker.Database.GetRemoteTriggerToCheck()
-			} else {
-				triggerID, err = worker.Database.GetTriggerToCheck()
-			}
-			if err != nil {
-				if err == database.ErrNil {
-					<-time.After(sleepWhenNoTriggerToCheck)
-				} else {
-					worker.Logger.Errorf("Failed to handle trigger loop: %s", err.Error())
-					<-time.After(sleepAfterGetTriggerIDError)
-				}
-				continue
-			}
-
-			worker.handleTrigger(triggerID, metrics)
+		}
+		err := worker.handleTrigger(triggerID, metrics)
+		if err != nil {
+			metrics.HandleError.Mark(1)
+			worker.Logger.Errorf("Failed to handle trigger %s: %s", triggerID, err.Error())
+			<-time.After(sleepAfterCheckingError)
 		}
 	}
 }
 
-func (worker *Checker) handleTrigger(triggerID string, metrics *graphite.CheckMetrics) {
+func (worker *Checker) handleTrigger(triggerID string, metrics *graphite.CheckMetrics) error {
+	var err error
 	defer func() {
 		if r := recover(); r != nil {
-			metrics.HandleError.Mark(1)
-			worker.Logger.Errorf("Panic while handle trigger %s: message: '%s' stack: %s", triggerID, r, debug.Stack())
-			<-time.After(sleepAfterPanic)
+			err = fmt.Errorf("panic: '%s' stack: %s", r, debug.Stack())
 		}
 	}()
-	if err := worker.handleTriggerInLock(triggerID, metrics); err != nil {
-		metrics.HandleError.Mark(1)
-		worker.Logger.Errorf("Failed to handle trigger: %s error: %s", triggerID, err.Error())
-		<-time.After(sleepAfterCheckingError)
-	}
+	err = worker.handleTriggerInLock(triggerID, metrics)
+	return err
 }
 
 func (worker *Checker) handleTriggerInLock(triggerID string, metrics *graphite.CheckMetrics) error {

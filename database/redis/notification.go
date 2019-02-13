@@ -16,6 +16,7 @@ import (
 func (connector *DbConnector) GetNotifications(start, end int64) ([]*moira.ScheduledNotification, int64, error) {
 	c := connector.pool.Get()
 	defer c.Close()
+
 	c.Send("MULTI")
 	c.Send("ZRANGE", notifierNotificationsKey, start, end)
 	c.Send("ZCARD", notifierNotificationsKey)
@@ -51,28 +52,39 @@ func (connector *DbConnector) RemoveAllNotifications() error {
 
 // RemoveNotification delete notifications by key = timestamp + contactID + subID
 func (connector *DbConnector) RemoveNotification(notificationKey string) (int64, error) {
-	c := connector.pool.Get()
-	defer c.Close()
-
 	notifications, _, err := connector.GetNotifications(0, -1)
 	if err != nil {
 		return 0, err
 	}
 
-	c.Send("MULTI")
-
+	foundNotifications := make([]*moira.ScheduledNotification, 0)
 	for _, notification := range notifications {
 		timestamp := strconv.FormatInt(notification.Timestamp, 10)
 		contactID := notification.Contact.ID
 		subID := moira.UseString(notification.Event.SubscriptionID)
 		idstr := strings.Join([]string{timestamp, contactID, subID}, "")
 		if idstr == notificationKey {
-			notificationString, err2 := json.Marshal(notification)
-			if err2 != nil {
-				return 0, err2
-			}
-			c.Send("ZREM", notifierNotificationsKey, notificationString)
+			foundNotifications = append(foundNotifications, notification)
 		}
+	}
+	return connector.removeNotifications(foundNotifications)
+}
+
+func (connector *DbConnector) removeNotifications(notifications []*moira.ScheduledNotification) (int64, error) {
+	if len(notifications) == 0 {
+		return 0, nil
+	}
+
+	c := connector.pool.Get()
+	defer c.Close()
+
+	c.Send("MULTI")
+	for _, notification := range notifications {
+		notificationString, err := json.Marshal(notification)
+		if err != nil {
+			return 0, err
+		}
+		c.Send("ZREM", notifierNotificationsKey, notificationString)
 	}
 	response, err := redis.Ints(c.Do("EXEC"))
 	if err != nil {
@@ -111,6 +123,7 @@ func (connector *DbConnector) AddNotification(notification *moira.ScheduledNotif
 	}
 	c := connector.pool.Get()
 	defer c.Close()
+
 	_, err = c.Do("ZADD", notifierNotificationsKey, notification.Timestamp, bytes)
 	if err != nil {
 		return fmt.Errorf("failed to add scheduled notification: %s, error: %s", string(bytes), err.Error())
@@ -122,6 +135,7 @@ func (connector *DbConnector) AddNotification(notification *moira.ScheduledNotif
 func (connector *DbConnector) AddNotifications(notifications []*moira.ScheduledNotification, timestamp int64) error {
 	c := connector.pool.Get()
 	defer c.Close()
+
 	c.Send("MULTI")
 	for _, notification := range notifications {
 		bytes, err := json.Marshal(notification)

@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/moira-alert/moira/metric_source"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"github.com/moira-alert/moira"
@@ -205,36 +204,5 @@ func TestGetYAxisValuesFormatter(t *testing.T) {
 		So(maxMarkLen, ShouldEqual, 7)
 		So(len(formattedValues), ShouldEqual, len(formattedMetricValues))
 		So(formattedValues, ShouldResemble, formattedMetricValues)
-	})
-}
-
-// TestToLimitedMetricsData tests to limited metricsData returns only necessary metricsData
-func TestToLimitedMetricsData(t *testing.T) {
-	givenSeries := []*metricSource.MetricData{
-		metricSource.MakeMetricData("metricPrefix.metricName1", []float64{1}, 1, 1),
-		metricSource.MakeMetricData("metricPrefix.metricName2", []float64{2}, 2, 2),
-		metricSource.MakeMetricData("metricPrefix.metricName3", []float64{3}, 3, 3),
-	}
-	Convey("Limit series by non-empty whitelist", t, func() {
-		Convey("MetricsData has necessary series", func() {
-			metricsWhiteList := []string{"metricPrefix.metricName1", "metricPrefix.metricName2"}
-			metricsData := toLimitedMetricsData(givenSeries, metricsWhiteList)
-			So(len(metricsData), ShouldEqual, len(metricsWhiteList))
-			So(metricsData[0].Name, ShouldEqual, metricsWhiteList[0])
-			So(metricsData[1].Name, ShouldEqual, metricsWhiteList[1])
-		})
-		Convey("MetricsData has no necessary series", func() {
-			metricsWhiteList := []string{"metricPrefix.metricName4"}
-			metricsData := toLimitedMetricsData(givenSeries, metricsWhiteList)
-			So(len(metricsData), ShouldEqual, 0)
-		})
-	})
-	Convey("Limit series by an empty whitelist", t, func() {
-		metricsWhiteList := make([]string, 0)
-		metricsData := toLimitedMetricsData(givenSeries, metricsWhiteList)
-		for metricDataInd := range metricsData {
-			So(metricsData[metricDataInd].Name, ShouldEqual, givenSeries[metricDataInd].Name)
-		}
-		So(len(metricsData), ShouldEqual, len(givenSeries))
 	})
 }
