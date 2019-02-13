@@ -42,27 +42,30 @@ http://moira.url/trigger/TriggerID
 			So(actual, ShouldResemble, expected)
 		})
 
+		Convey("Print moira message with empty triggerID, but with trigger Name", func() {
+			actual := sender.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{Name: "Name"}, false)
+			expected := `💣NODATA Name  (1)
+
+02:40: Metric = 123 (OK to NODATA)`
+			So(actual, ShouldResemble, expected)
+		})
+
 		Convey("Print moira message with empty trigger", func() {
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{}, false)
 			expected := `💣NODATA   (1)
 
-02:40: Metric = 123 (OK to NODATA)
-
-http://moira.url/trigger/TriggerID
-`
+02:40: Metric = 123 (OK to NODATA)`
 			So(actual, ShouldResemble, expected)
 		})
 
 		Convey("Print moira message with one event and message", func() {
 			event.Message = &message
 			event.TriggerID = ""
+			trigger.ID = ""
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, false)
 			expected := `💣NODATA Name [tag1][tag2] (1)
 
-02:40: Metric = 123 (OK to NODATA). This is message
-
-http://moira.url/trigger/
-`
+02:40: Metric = 123 (OK to NODATA). This is message`
 			So(actual, ShouldResemble, expected)
 		})
 

@@ -138,26 +138,6 @@ func TestBuildTitle(t *testing.T) {
 	})
 }
 
-func TestBuildTriggerURL(t *testing.T) {
-	sender := Sender{}
-	Convey("Sender has no moira uri", t, func() {
-		url := sender.buildTriggerURL(moira.TriggerData{ID: "SomeID"})
-		So(url, ShouldResemble, "/trigger/SomeID")
-	})
-
-	Convey("Sender uri", t, func() {
-		sender.frontURI = "https://my-moira.com"
-		url := sender.buildTriggerURL(moira.TriggerData{ID: "SomeID"})
-		So(url, ShouldResemble, "https://my-moira.com/trigger/SomeID")
-	})
-
-	Convey("Empty trigger", t, func() {
-		sender.frontURI = "https://my-moira.com"
-		url := sender.buildTriggerURL(moira.TriggerData{})
-		So(url, ShouldResemble, "https://my-moira.com/trigger/")
-	})
-}
-
 func TestMakePushoverMessage(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test")

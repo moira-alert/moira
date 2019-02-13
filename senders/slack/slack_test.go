@@ -107,33 +107,40 @@ func TestBuildMessage(t *testing.T) {
 
 		Convey("Print moira message with one event", func() {
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, false)
-			expected := "*NODATA* [tag1][tag2] <http://moira.url/trigger/TriggerID|Name>\n  \n```\n02:40: Metric = 123 (OK to NODATA)```"
+			expected := "*NODATA* [tag1][tag2] <http://moira.url/trigger/TriggerID|Name>\n```\n02:40: Metric = 123 (OK to NODATA)```"
 			So(actual, ShouldResemble, expected)
 		})
 
 		Convey("Print moira message with empty trigger", func() {
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{}, false)
-			expected := "*NODATA*  <http://moira.url/trigger/TriggerID|>\n  \n```\n02:40: Metric = 123 (OK to NODATA)```"
+			expected := "*NODATA*\n```\n02:40: Metric = 123 (OK to NODATA)```"
 			So(actual, ShouldResemble, expected)
 		})
 
 		Convey("Print moira message with one event and message", func() {
 			event.Message = &message
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, false)
-			expected := "*NODATA* [tag1][tag2] <http://moira.url/trigger/TriggerID|Name>\n  \n```\n02:40: Metric = 123 (OK to NODATA). This is message```"
+			expected := "*NODATA* [tag1][tag2] <http://moira.url/trigger/TriggerID|Name>\n```\n02:40: Metric = 123 (OK to NODATA). This is message```"
 			So(actual, ShouldResemble, expected)
 		})
 
 		Convey("Print moira message with one event and throttled", func() {
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, true)
-			expected := "*NODATA* [tag1][tag2] <http://moira.url/trigger/TriggerID|Name>\n  \n```\n02:40: Metric = 123 (OK to NODATA)```\nPlease, *fix your system or tune this trigger* to generate less events."
+			expected := "*NODATA* [tag1][tag2] <http://moira.url/trigger/TriggerID|Name>\n```\n02:40: Metric = 123 (OK to NODATA)```\nPlease, *fix your system or tune this trigger* to generate less events."
 			So(actual, ShouldResemble, expected)
 		})
 
 		Convey("Print moira message with 6 events", func() {
 			actual := sender.buildMessage([]moira.NotificationEvent{event, event, event, event, event, event}, trigger, false)
-			expected := "*NODATA* [tag1][tag2] <http://moira.url/trigger/TriggerID|Name>\n  \n```\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)```"
+			expected := "*NODATA* [tag1][tag2] <http://moira.url/trigger/TriggerID|Name>\n```\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)```"
 			So(actual, ShouldResemble, expected)
 		})
+
+		Convey("Print moira message with empty triggerID, but with trigger name", func() {
+			actual := sender.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{Name: "Name"}, false)
+			expected := "*NODATA* Name\n```\n02:40: Metric = 123 (OK to NODATA)```"
+			So(actual, ShouldResemble, expected)
+		})
+
 	})
 }

@@ -46,7 +46,9 @@ const defaultTemplate = `
 			</tbody>
 		</table>
 		<p>Description: {{ .Description }}</p>
+    {{ if .Link }}
 		<p><a href="{{ .Link }}">{{ .Link }}</a></p>
+    {{ end }}
 		{{if .Throttled}}
 		<p>Please, <b>fix your system or tune this trigger</b> to generate less events.</p>
 		{{end}}

@@ -57,6 +57,13 @@ type TriggerData struct {
 	IsRemote   bool     `json:"is_remote"`
 	Tags       []string `json:"__notifier_trigger_tags"`
 }
+// GetTriggerURI gets frontUri and returns triggerUrl, returns empty string on selfcheck and test notifications
+func (trigger TriggerData) GetTriggerURI(frontURI string) string {
+	if trigger.ID != "" {
+		return fmt.Sprintf("%s/trigger/%s", frontURI, trigger.ID)
+	}
+	return ""
+}
 
 // ContactData represents contact object
 type ContactData struct {
