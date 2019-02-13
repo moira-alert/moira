@@ -25,7 +25,7 @@ func TestGetTimeSeriesState(t *testing.T) {
 	var errValue float64 = 20
 	triggerChecker := TriggerChecker{
 		logger:  logger,
-		metrics: metrics.ConfigureCheckerMetrics("checker", false).MoiraMetrics,
+		metrics: metrics.ConfigureCheckerMetrics("checker", false).LocalMetrics,
 		until:   67,
 		from:    17,
 		trigger: &moira.Trigger{
@@ -363,7 +363,7 @@ func TestCheckForNODATA(t *testing.T) {
 
 	var ttl int64 = 600
 	triggerChecker := TriggerChecker{
-		metrics: metrics.ConfigureCheckerMetrics("checker", false).MoiraMetrics,
+		metrics: metrics.ConfigureCheckerMetrics("checker", false).LocalMetrics,
 		logger:  logger,
 		ttl:     ttl,
 		lastCheck: &moira.CheckData{
@@ -466,7 +466,7 @@ func TestCheckErrors(t *testing.T) {
 		config: &Config{
 			MetricsTTLSeconds: 10,
 		},
-		metrics:  metrics.ConfigureCheckerMetrics("checker", false).MoiraMetrics,
+		metrics:  metrics.ConfigureCheckerMetrics("checker", false).LocalMetrics,
 		from:     17,
 		until:    67,
 		ttl:      ttl,

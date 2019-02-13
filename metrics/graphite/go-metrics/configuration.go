@@ -36,7 +36,7 @@ func ConfigureNotifierMetrics(prefix string) *graphite.NotifierMetrics {
 // ConfigureCheckerMetrics is checker metrics configurator
 func ConfigureCheckerMetrics(prefix string, remoteEnabled bool) *graphite.CheckerMetrics {
 	m := &graphite.CheckerMetrics{
-		MoiraMetrics:           configureCheckMetrics(prefix + ".local"),
+		LocalMetrics:           configureCheckMetrics(prefix + ".local"),
 		MetricEventsChannelLen: registerHistogram(metricNameWithPrefix(prefix, "metricEvents")),
 		MetricEventsHandleTime: registerTimer(metricNameWithPrefix(prefix, "metricEventsHandle")),
 		UnusedTriggersCount:    registerHistogram(metricNameWithPrefix(prefix, "triggers.unused")),
