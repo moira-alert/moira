@@ -7,8 +7,6 @@ import (
 	"strconv"
 	"time"
 
-	"gopkg.in/yaml.v2"
-
 	"github.com/moira-alert/moira"
 )
 
@@ -36,18 +34,10 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 
 	sender.user, sender.password = senderSettings["user"], senderSettings["password"]
 
-	senderHeaders := map[string]string{"Content-Type": "application/json"}
-	if headersRaw, ok := senderSettings["headers"]; ok {
-		headers := make(map[string]string)
-		err := yaml.Unmarshal([]byte(headersRaw), headers)
-		if err != nil {
-			return fmt.Errorf("can not read headers from config: %s", err.Error())
-		}
-		for k, v := range headers {
-			senderHeaders[k] = v
-		}
+	sender.headers = map[string]string{
+		"User-Agent":   "Moira",
+		"Content-Type": "application/json",
 	}
-	sender.headers = senderHeaders
 
 	timeout := 30
 	if timeoutRaw, ok := senderSettings["timeout"]; ok {

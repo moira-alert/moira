@@ -17,12 +17,9 @@ import (
 )
 
 const (
-	testUser   = "testUser"
-	testPass   = "testPass"
-	testHeader = "testHeader"
+	testUser = "testUser"
+	testPass = "testPass"
 )
-
-var testHeaders = map[string]string{testHeader: "testHeaderValue"}
 
 var logger, _ = logging.GetLogger("webhook")
 
@@ -57,7 +54,6 @@ func TestSender_SendEvents(t *testing.T) {
 			"url":      fmt.Sprintf("%s/${trigger_id}", ts.URL),
 			"user":     testUser,
 			"password": testPass,
-			"headers":  fmt.Sprintf("{'%s':'%s'}", testHeader, testHeaders[testHeader]),
 		}
 		sender := Sender{}
 		err := sender.Init(senderSettings, logger, time.UTC, "")
@@ -78,17 +74,23 @@ func testRequestURL(r *http.Request) (int, error) {
 }
 
 func testRequestHeaders(r *http.Request) (int, error) {
-	actualHeaderValue, expectedHeaderValue := r.Header.Get(testHeader), testHeaders[testHeader]
-	if actualHeaderValue != expectedHeaderValue {
-		return http.StatusBadRequest, fmt.Errorf("invalid test header value: %s\nexpected: %s", actualHeaderValue, expectedHeaderValue)
+	expectedHeaders := map[string]string{
+		"User-Agent":   "Moira",
+		"Content-Type": "application/json",
+	}
+	for headerName, headerValue := range expectedHeaders {
+		actualHeaderValue := r.Header.Get(headerName)
+		if actualHeaderValue != headerValue {
+			return http.StatusBadRequest, fmt.Errorf("invalid header value: %s\nexpected: %s", actualHeaderValue, headerValue)
+		}
 	}
 	authHeader := strings.SplitN(r.Header.Get("Authorization"), " ", 2)
-	payload, err := base64.StdEncoding.DecodeString(authHeader[1])
+	authPayload, err := base64.StdEncoding.DecodeString(authHeader[1])
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}
-	pair := strings.SplitN(string(payload), ":", 2)
-	actualUser, actualPass := pair[0], pair[1]
+	authPair := strings.SplitN(string(authPayload), ":", 2)
+	actualUser, actualPass := authPair[0], authPair[1]
 	if actualUser != testUser || actualPass != testPass {
 		actualCred := fmt.Sprintf("user: %s, pass: %s", actualUser, actualPass)
 		expectedCred := fmt.Sprintf("user: %s, pass: %s", testUser, testPass)
