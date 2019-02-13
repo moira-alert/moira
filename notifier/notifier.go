@@ -8,6 +8,7 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metrics/graphite"
+	"github.com/moira-alert/moira/plotting"
 )
 
 // NotificationPackage represent sending data
@@ -149,8 +150,13 @@ func (notifier *StandardNotifier) run(sender moira.Sender, ch chan NotificationP
 	for pkg := range ch {
 		plot, err := notifier.buildNotificationPackagePlot(pkg)
 		if err != nil {
-			notifier.logger.Errorf("Can't build notification package plot for %s: %s",
-				pkg.Trigger.ID, err.Error())
+			buildErr := fmt.Sprintf("Can't build notification package plot for %s: %s", pkg.Trigger.ID, err.Error())
+			switch err.(type) {
+			case plotting.ErrNoPointsToRender:
+				notifier.logger.Debugf(buildErr)
+			default:
+				notifier.logger.Errorf(buildErr)
+			}
 		}
 		err = sender.SendEvents(pkg.Events, pkg.Contact, pkg.Trigger, plot, pkg.Throttled)
 		if err == nil {
