@@ -61,8 +61,8 @@ func NewDatabase(logger moira.Logger, config Config, source DBSource) *DbConnect
 		TestOnBorrow: poolDialer.Test,
 	}
 	syncPool := &redis.Pool{
-		MaxIdle:      config.ConnectionLimit,
-		MaxActive:    config.ConnectionLimit,
+		MaxIdle:      3,
+		MaxActive:    10,
 		Wait:         true,
 		IdleTimeout:  240 * time.Second,
 		Dial:         poolDialer.Dial,
