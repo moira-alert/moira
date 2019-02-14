@@ -160,6 +160,30 @@ func TestGetMetricsDataToCheck(t *testing.T) {
 				So(err, ShouldBeNil)
 			})
 
+			Convey("fetched metrics has only wildcards, step is 0", func() {
+				actual, err := triggerChecker.getMetricsToCheck([]*metricSource.MetricData{{Name: "wildcard", Wildcard: true}})
+				So(actual, ShouldHaveLength, 3)
+				for _, actualMetricData := range actual {
+					So(actualMetricData.Values, ShouldHaveLength, 1)
+					So(actualMetricData.StepTime, ShouldResemble, int64(60))
+					So(actualMetricData.StartTime, ShouldResemble, int64(0))
+					So(actualMetricData.StopTime, ShouldResemble, int64(60))
+				}
+				So(err, ShouldBeNil)
+			})
+
+			Convey("fetched metrics has only wildcards, step is 10", func() {
+				actual, err := triggerChecker.getMetricsToCheck([]*metricSource.MetricData{{Name: "wildcard", Wildcard: true, StepTime: 10}})
+				So(actual, ShouldHaveLength, 3)
+				for _, actualMetricData := range actual {
+					So(actualMetricData.Values, ShouldHaveLength, 6)
+					So(actualMetricData.StepTime, ShouldResemble, int64(10))
+					So(actualMetricData.StartTime, ShouldResemble, int64(0))
+					So(actualMetricData.StopTime, ShouldResemble, int64(60))
+				}
+				So(err, ShouldBeNil)
+			})
+
 			Convey("fetched metrics has one of last check metrics", func() {
 				actual, err := triggerChecker.getMetricsToCheck([]*metricSource.MetricData{
 					metricSource.MakeMetricData("first", []float64{1, 2, 3, 4, 5, 6}, 10, 0),

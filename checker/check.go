@@ -87,6 +87,9 @@ func (triggerChecker *TriggerChecker) getMetricsToCheck(fetchedMetrics []*metric
 	}
 
 	for _, metricData := range fetchedMetrics {
+		if metricData.Wildcard {
+			continue
+		}
 		if _, ok := metricNamesHash[metricData.Name]; ok {
 			triggerChecker.logger.Debugf("[TriggerID:%s][TimeSeries:%s] Trigger has same timeseries names", triggerChecker.triggerID, metricData.Name)
 			duplicateNames = append(duplicateNames, metricData.Name)
@@ -99,7 +102,7 @@ func (triggerChecker *TriggerChecker) getMetricsToCheck(fetchedMetrics []*metric
 
 	for metricName := range lastCheckMetricNamesHash {
 		step := int64(60)
-		if len(fetchedMetrics) > 0 {
+		if len(fetchedMetrics) > 0 && fetchedMetrics[0].StepTime != 0 {
 			step = fetchedMetrics[0].StepTime
 		}
 		metricData := metricSource.MakeEmptyMetricData(metricName, step, triggerChecker.from, triggerChecker.until)
