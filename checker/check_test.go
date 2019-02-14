@@ -794,43 +794,6 @@ func TestHandleTrigger(t *testing.T) {
 		})
 	})
 
-	Convey("No metrics, should return trigger has only wildcards error", t, func() {
-		triggerChecker.from = 4217
-		triggerChecker.until = 4267
-		triggerChecker.ttlState = NODATA
-		lastCheck.Timestamp = 4267
-
-		source.EXPECT().Fetch(pattern, triggerChecker.from, triggerChecker.until, true).Return(fetchResult, nil)
-		fetchResult.EXPECT().GetMetricsData().Return([]*metricSource.MetricData{{Name: pattern, Wildcard: true}})
-		fetchResult.EXPECT().GetPatternMetrics().Return([]string{}, nil)
-
-		checkData, err := triggerChecker.checkTrigger()
-		So(err, ShouldResemble, ErrTriggerHasOnlyWildcards{})
-		So(checkData, ShouldResemble, moira.CheckData{
-			Metrics:                      lastCheck.Metrics,
-			Timestamp:                    triggerChecker.until,
-			State:                        OK,
-			Score:                        0,
-			LastSuccessfulCheckTimestamp: 0,
-		})
-	})
-
-	Convey("No metrics in main target, should return trigger has no timeseries", t, func() {
-		source.EXPECT().Fetch(pattern, triggerChecker.from, triggerChecker.until, true).Return(fetchResult, nil)
-		fetchResult.EXPECT().GetMetricsData().Return([]*metricSource.MetricData{})
-		fetchResult.EXPECT().GetPatternMetrics().Return([]string{}, nil)
-
-		checkData, err := triggerChecker.checkTrigger()
-		So(err, ShouldResemble, ErrTriggerHasNoMetrics{})
-		So(checkData, ShouldResemble, moira.CheckData{
-			Metrics:                      lastCheck.Metrics,
-			Timestamp:                    triggerChecker.until,
-			State:                        OK,
-			Score:                        0,
-			LastSuccessfulCheckTimestamp: 0,
-		})
-	})
-
 	Convey("Has duplicated names timeseries, should return trigger has same timeseries names error", t, func() {
 		metric1 := "super.puper.metric"
 		metric2 := "super.drupper.metric"
@@ -1016,7 +979,6 @@ func TestHandleTriggerCheck(t *testing.T) {
 			So(actual, ShouldResemble, expected)
 		})
 	})
-
 	Convey("Handle trigger has only wildcards without metrics in last state", t, func() {
 		triggerChecker := TriggerChecker{
 			triggerID: "SuperId",
@@ -1072,12 +1034,14 @@ func TestHandleTriggerCheck(t *testing.T) {
 			LastSuccessfulCheckTimestamp: 0,
 		}
 
+		dataBase.EXPECT().PushNotificationEvent(gomock.Any(), true).Return(nil)
 		actual, err := triggerChecker.handleCheckResult(checkData, ErrTriggerHasOnlyWildcards{})
 		expected := moira.CheckData{
 			Metrics:                      checkData.Metrics,
-			State:                        OK,
+			State:                        NODATA,
 			Timestamp:                    checkData.Timestamp,
 			EventTimestamp:               checkData.Timestamp,
+			Message:                      "Trigger never received metrics",
 			LastSuccessfulCheckTimestamp: 0,
 		}
 		So(err, ShouldBeNil)

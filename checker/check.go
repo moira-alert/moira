@@ -149,12 +149,12 @@ func (triggerChecker *TriggerChecker) handleCheckResult(checkData moira.CheckDat
 	case ErrTriggerHasNoMetrics, ErrTriggerHasOnlyWildcards:
 		triggerChecker.logger.Debugf("Trigger %s: %s", triggerChecker.triggerID, checkingError.Error())
 		triggerState := ToTriggerState(triggerChecker.ttlState)
-		if len(checkData.Metrics) == 0 {
-			checkData.State = triggerState
-			checkData.Message = checkingError.Error()
-			if triggerChecker.ttl == 0 {
-				return checkData, nil
-			}
+		checkData.State = triggerState
+		checkData.Message = checkingError.Error()
+		if triggerChecker.ttl == 0 {
+			// Do not alert when user don't wanna receive
+			// NODATA state alerts, but change trigger status
+			return checkData, nil
 		}
 	case ErrWrongTriggerTargets, ErrTriggerHasSameMetricNames:
 		checkData.State = ERROR
