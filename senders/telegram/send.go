@@ -75,8 +75,8 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 	if messageLimitReached {
 		buffer.WriteString(fmt.Sprintf("\n\n...and %d more events.", len(events)-printEventsCount))
 	}
-  url := trigger.GetTriggerURI(sender.frontURI)
-  if url != "" {
+	url := trigger.GetTriggerURI(sender.frontURI)
+	if url != "" {
 		buffer.WriteString(fmt.Sprintf("\n\n%s\n", url))
 	}
 
@@ -101,12 +101,12 @@ func (sender *Sender) getChat(username string) (*telebot.Chat, error) {
 // talk processes one talk
 func (sender *Sender) talk(chat *telebot.Chat, message string, plot []byte, messageType messageType) error {
 	if messageType == Photo {
-		return sender.sendPhoto(chat, plot, message)
+		return sender.sendAsPhoto(chat, plot, message)
 	}
-	return sender.sendMessage(chat, message)
+	return sender.sendAsMessage(chat, message)
 }
 
-func (sender *Sender) sendMessage(chat *telebot.Chat, message string) error {
+func (sender *Sender) sendAsMessage(chat *telebot.Chat, message string) error {
 	_, err := sender.bot.Send(chat, message)
 	if err != nil {
 		return fmt.Errorf("can't send event message [%s] to %v: %s", message, chat.ID, err.Error())
@@ -114,8 +114,8 @@ func (sender *Sender) sendMessage(chat *telebot.Chat, message string) error {
 	return nil
 }
 
-func (sender *Sender) sendPhoto(chat *telebot.Chat, plot []byte, caption string) error {
-	photo := telebot.Photo{File: telebot.FromReader(bytes.NewReader(plot)), Caption: caption, Width: 800, Height: 400}
+func (sender *Sender) sendAsPhoto(chat *telebot.Chat, plot []byte, caption string) error {
+	photo := telebot.Photo{File: telebot.FromReader(bytes.NewReader(plot)), Caption: caption}
 	_, err := photo.Send(sender.bot, chat, &telebot.SendOptions{ParseMode: telebot.ModeMarkdown})
 	if err != nil {
 		return fmt.Errorf("can't send event plot to %v: %s", chat.ID, err.Error())
