@@ -44,10 +44,10 @@ http://moira.url/trigger/TriggerID
 		})
 
 		Convey("Print moira message with empty triggerID, but with trigger Name", func() {
-			actual := sender.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{Name: "Name"}, false)
+			actual := sender.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{Name: "Name"}, false, messageMaxCharacters)
 			expected := `💣NODATA Name  (1)
 
-02:40: Metric = 123 (OK to NODATA)`
+02:40: Metric name = 97.4458331200185 (OK to NODATA)`
 			So(actual, ShouldResemble, expected)
 		})
 
@@ -63,10 +63,10 @@ http://moira.url/trigger/TriggerID
 			event.Message = &message
 			event.TriggerID = ""
 			trigger.ID = ""
-			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, false)
-			expected := `💣NODATA Name [tag1][tag2] (1)
+			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, false, messageMaxCharacters)
+			expected := `💣NODATA Trigger Name [tag1][tag2] (1)
 
-02:40: Metric = 123 (OK to NODATA). This is message`
+02:40: Metric name = 97.4458331200185 (OK to NODATA). This is message`
 			So(actual, ShouldResemble, expected)
 		})
 
