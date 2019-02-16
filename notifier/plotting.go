@@ -73,7 +73,7 @@ func resolveMetricsWindow(logger moira.Logger, trigger moira.TriggerData, pkg No
 	// try to resolve package window, force default realtime window on fail for both local and remote triggers
 	from, to, err := pkg.GetWindow()
 	if err != nil {
-		logger.Warningf("failed to get trigger %s package window: %s, using default %s window", trigger.ID, err.Error(), defaultTimeRange.String())
+		logger.Warningf("Failed to get trigger %s package window: %s, using default %s window", trigger.ID, err.Error(), defaultTimeRange.String())
 		return alignToMinutes(defaultFrom), defaultTo
 	}
 	// package window successfully resolved, test it's wide and realtime metrics window

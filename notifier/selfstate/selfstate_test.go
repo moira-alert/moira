@@ -264,7 +264,7 @@ func TestRunGoRoutine(t *testing.T) {
 	database.EXPECT().NewLock(gomock.Any(), gomock.Any()).Return(lock)
 
 	selfStateWorker := &SelfCheckWorker{
-		Log:      logger,
+		Logger:   logger,
 		DB:       database,
 		Config:   conf,
 		Notifier: notif,
@@ -317,7 +317,7 @@ func configureWorker(t *testing.T, remoteEnabled bool) *selfCheckWorkerMock {
 
 	return &selfCheckWorkerMock{
 		selfCheckWorker: &SelfCheckWorker{
-			Log:      logger,
+			Logger:   logger,
 			DB:       database,
 			Config:   conf,
 			Notifier: notif,

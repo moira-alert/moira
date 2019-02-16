@@ -27,7 +27,7 @@ const selfStateLockTTL = time.Second * 15
 
 // SelfCheckWorker checks what all notifier services works correctly and send message when moira don't work
 type SelfCheckWorker struct {
-	Log      moira.Logger
+	Logger   moira.Logger
 	DB       moira.Database
 	Notifier notifier.Notifier
 	Config   Config
@@ -35,7 +35,7 @@ type SelfCheckWorker struct {
 }
 
 func (selfCheck *SelfCheckWorker) selfStateChecker(stop <-chan struct{}) error {
-	selfCheck.Log.Info("Moira Notifier Self State Monitor started")
+	selfCheck.Logger.Info("Moira Notifier Self State Monitor started")
 
 	var metricsCount, checksCount, remoteChecksCount int64
 	lastMetricReceivedTS := time.Now().Unix()
@@ -50,7 +50,7 @@ func (selfCheck *SelfCheckWorker) selfStateChecker(stop <-chan struct{}) error {
 	for {
 		select {
 		case <-stop:
-			selfCheck.Log.Info("Moira Notifier Self State Monitor stopped")
+			selfCheck.Logger.Info("Moira Notifier Self State Monitor stopped")
 			return nil
 		case <-checkTicker.C:
 			selfCheck.check(time.Now().Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS, &lastRemoteCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount, &remoteChecksCount)
@@ -61,19 +61,19 @@ func (selfCheck *SelfCheckWorker) selfStateChecker(stop <-chan struct{}) error {
 // Start self check worker
 func (selfCheck *SelfCheckWorker) Start() error {
 	if !selfCheck.Config.Enabled {
-		selfCheck.Log.Debugf("Moira Self State Monitoring disabled")
+		selfCheck.Logger.Debugf("Moira Self State Monitoring disabled")
 		return nil
 	}
 	senders := selfCheck.Notifier.GetSenders()
 	if err := selfCheck.Config.checkConfig(senders); err != nil {
-		selfCheck.Log.Errorf("Can't configure Moira Self State Monitoring: %s", err.Error())
+		selfCheck.Logger.Errorf("Can't configure Moira Self State Monitoring: %s", err.Error())
 		return nil
 	}
 
 	selfCheck.tomb.Go(func() error {
 		w.NewWorker(
 			"Moira Self State Monitoring",
-			selfCheck.Log,
+			selfCheck.Logger,
 			selfCheck.DB.NewLock(selfStateLockName, selfStateLockTTL),
 			selfCheck.selfStateChecker,
 		).Run(selfCheck.tomb.Dying())
@@ -127,20 +127,20 @@ func (selfCheck *SelfCheckWorker) check(nowTS int64, lastMetricReceivedTS, redis
 	if *nextSendErrorMessage < nowTS {
 		if *redisLastCheckTS < nowTS-selfCheck.Config.RedisDisconnectDelaySeconds {
 			interval := nowTS - *redisLastCheckTS
-			selfCheck.Log.Errorf("%s more than %ds. Send message.", redisDisconnectedErrorMessage, interval)
+			selfCheck.Logger.Errorf("%s more than %ds. Send message.", redisDisconnectedErrorMessage, interval)
 			appendNotificationEvents(&events, redisDisconnectedErrorMessage, interval)
 		}
 
 		if *lastMetricReceivedTS < nowTS-selfCheck.Config.LastMetricReceivedDelaySeconds && err == nil {
 			interval := nowTS - *lastMetricReceivedTS
-			selfCheck.Log.Errorf("%s more than %ds. Send message.", filterStateErrorMessage, interval)
+			selfCheck.Logger.Errorf("%s more than %ds. Send message.", filterStateErrorMessage, interval)
 			appendNotificationEvents(&events, filterStateErrorMessage, interval)
 			selfCheck.setNotifierState(moira.SelfStateERROR)
 		}
 
 		if *lastCheckTS < nowTS-selfCheck.Config.LastCheckDelaySeconds && err == nil {
 			interval := nowTS - *lastCheckTS
-			selfCheck.Log.Errorf("%s more than %ds. Send message.", checkerStateErrorMessage, interval)
+			selfCheck.Logger.Errorf("%s more than %ds. Send message.", checkerStateErrorMessage, interval)
 			appendNotificationEvents(&events, checkerStateErrorMessage, interval)
 			selfCheck.setNotifierState(moira.SelfStateERROR)
 		}
@@ -148,19 +148,19 @@ func (selfCheck *SelfCheckWorker) check(nowTS int64, lastMetricReceivedTS, redis
 		if selfCheck.Config.RemoteTriggersEnabled {
 			if *lastRemoteCheckTS < nowTS-selfCheck.Config.LastRemoteCheckDelaySeconds && err == nil {
 				interval := nowTS - *lastRemoteCheckTS
-				selfCheck.Log.Errorf("%s more than %ds. Send message.", remoteCheckerStateErrorMessage, interval)
+				selfCheck.Logger.Errorf("%s more than %ds. Send message.", remoteCheckerStateErrorMessage, interval)
 				appendNotificationEvents(&events, remoteCheckerStateErrorMessage, interval)
 			}
 		}
 
 		if notifierState, _ := selfCheck.DB.GetNotifierState(); notifierState != moira.SelfStateOK {
-			selfCheck.Log.Errorf("%s. Send message.", notifierStateErrorMessage(notifierState))
+			selfCheck.Logger.Errorf("%s. Send message.", notifierStateErrorMessage(notifierState))
 			appendNotificationEvents(&events, notifierStateErrorMessage(notifierState), 0)
 		}
 
 		if len(events) > 0 {
 			eventsJSON, _ := json.Marshal(events)
-			selfCheck.Log.Errorf("Health check. Send package of %v notification events: %s", len(events), eventsJSON)
+			selfCheck.Logger.Errorf("Health check. Send package of %v notification events: %s", len(events), eventsJSON)
 			selfCheck.sendErrorMessages(&events)
 			*nextSendErrorMessage = nowTS + selfCheck.Config.NoticeIntervalSeconds
 		}
@@ -203,7 +203,7 @@ func (selfCheck *SelfCheckWorker) sendErrorMessages(events *[]moira.Notification
 func (selfCheck *SelfCheckWorker) setNotifierState(state string) {
 	err := selfCheck.DB.SetNotifierState(state)
 	if err != nil {
-		selfCheck.Log.Errorf("Can't set notifier state: %v", err)
+		selfCheck.Logger.Errorf("Can't set notifier state: %v", err)
 	}
 }
 

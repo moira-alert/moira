@@ -98,7 +98,7 @@ func main() {
 
 	// Start moira self state checker
 	selfState := &selfstate.SelfCheckWorker{
-		Log:      logger,
+		Logger:   logger,
 		DB:       database,
 		Config:   config.Notifier.SelfState.getSettings(),
 		Notifier: sender,
