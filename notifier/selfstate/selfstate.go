@@ -135,14 +135,14 @@ func (selfCheck *SelfCheckWorker) check(nowTS int64, lastMetricReceivedTS, redis
 			interval := nowTS - *lastMetricReceivedTS
 			selfCheck.Log.Errorf("%s more than %ds. Send message.", filterStateErrorMessage, interval)
 			appendNotificationEvents(&events, filterStateErrorMessage, interval)
-			selfCheck.setNotifierState(ERROR)
+			selfCheck.setNotifierState(moira.SelfStateERROR)
 		}
 
 		if *lastCheckTS < nowTS-selfCheck.Config.LastCheckDelaySeconds && err == nil {
 			interval := nowTS - *lastCheckTS
 			selfCheck.Log.Errorf("%s more than %ds. Send message.", checkerStateErrorMessage, interval)
 			appendNotificationEvents(&events, checkerStateErrorMessage, interval)
-			selfCheck.setNotifierState(ERROR)
+			selfCheck.setNotifierState(moira.SelfStateERROR)
 		}
 
 		if selfCheck.Config.RemoteTriggersEnabled {
@@ -153,7 +153,7 @@ func (selfCheck *SelfCheckWorker) check(nowTS int64, lastMetricReceivedTS, redis
 			}
 		}
 
-		if notifierState, _ := selfCheck.DB.GetNotifierState(); notifierState != OK {
+		if notifierState, _ := selfCheck.DB.GetNotifierState(); notifierState != moira.SelfStateOK {
 			selfCheck.Log.Errorf("%s. Send message.", notifierStateErrorMessage(notifierState))
 			appendNotificationEvents(&events, notifierStateErrorMessage(notifierState), 0)
 		}
@@ -171,8 +171,8 @@ func appendNotificationEvents(events *[]moira.NotificationEvent, message string,
 	val := float64(currentValue)
 	event := moira.NotificationEvent{
 		Timestamp: time.Now().Unix(),
-		OldState:  "NODATA",
-		State:     "ERROR",
+		OldState:  moira.StateNODATA,
+		State:     moira.StateERROR,
 		Metric:    message,
 		Value:     &val,
 	}

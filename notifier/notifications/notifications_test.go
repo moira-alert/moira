@@ -22,7 +22,7 @@ func TestProcessScheduledEvent(t *testing.T) {
 	notification1 := moira.ScheduledNotification{
 		Event: moira.NotificationEvent{
 			SubscriptionID: &subID5,
-			State:          "TEST",
+			State:          moira.StateTEST,
 		},
 		Contact:   contact1,
 		Throttled: false,
@@ -31,7 +31,7 @@ func TestProcessScheduledEvent(t *testing.T) {
 	notification2 := moira.ScheduledNotification{
 		Event: moira.NotificationEvent{
 			SubscriptionID: &subID7,
-			State:          "TEST",
+			State:          moira.StateTEST,
 			TriggerID:      "triggerID-00000000000001",
 		},
 		Contact:   contact2,
@@ -42,7 +42,7 @@ func TestProcessScheduledEvent(t *testing.T) {
 	notification3 := moira.ScheduledNotification{
 		Event: moira.NotificationEvent{
 			SubscriptionID: &subID2,
-			State:          "TEST",
+			State:          moira.StateTEST,
 			TriggerID:      "triggerID-00000000000001",
 		},
 		Contact:   contact2,
@@ -90,7 +90,7 @@ func TestProcessScheduledEvent(t *testing.T) {
 		}
 		notifier.EXPECT().Send(&pkg1, gomock.Any())
 		notifier.EXPECT().Send(&pkg2, gomock.Any())
-		dataBase.EXPECT().GetNotifierState().Return("OK", nil)
+		dataBase.EXPECT().GetNotifierState().Return(moira.SelfStateOK, nil)
 		err := worker.processScheduledNotifications()
 		So(err, ShouldBeEmpty)
 	})
@@ -114,7 +114,7 @@ func TestProcessScheduledEvent(t *testing.T) {
 		}
 
 		notifier.EXPECT().Send(&pkg, gomock.Any())
-		dataBase.EXPECT().GetNotifierState().Return("OK", nil)
+		dataBase.EXPECT().GetNotifierState().Return(moira.SelfStateOK, nil)
 		err := worker.processScheduledNotifications()
 		So(err, ShouldBeEmpty)
 	})
@@ -126,7 +126,7 @@ func TestGoRoutine(t *testing.T) {
 	notification1 := moira.ScheduledNotification{
 		Event: moira.NotificationEvent{
 			SubscriptionID: &subID5,
-			State:          "TEST",
+			State:          moira.StateTEST,
 		},
 		Contact:   contact1,
 		Throttled: false,
@@ -159,7 +159,7 @@ func TestGoRoutine(t *testing.T) {
 	dataBase.EXPECT().FetchNotifications(gomock.Any()).Return([]*moira.ScheduledNotification{&notification1}, nil)
 	notifier.EXPECT().Send(&pkg, gomock.Any()).Do(func(f ...interface{}) { close(shutdown) })
 	notifier.EXPECT().StopSenders()
-	dataBase.EXPECT().GetNotifierState().Return("OK", nil)
+	dataBase.EXPECT().GetNotifierState().Return(moira.SelfStateOK, nil)
 
 	worker.Start()
 	waitTestEnd(shutdown, worker)

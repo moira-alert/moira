@@ -25,7 +25,7 @@ type TriggerChecker struct {
 	lastCheck *moira.CheckData
 
 	ttl      int64
-	ttlState string
+	ttlState moira.TTLState
 }
 
 // MakeTriggerChecker initialize new triggerChecker data
@@ -80,7 +80,7 @@ func getLastCheck(dataBase moira.Database, triggerID string, emptyLastCheckTimes
 	if err == database.ErrNil {
 		lastCheck = moira.CheckData{
 			Metrics:   make(map[string]moira.MetricState),
-			State:     OK,
+			State:     moira.StateOK,
 			Timestamp: emptyLastCheckTimestamp,
 		}
 	}
@@ -92,11 +92,11 @@ func getLastCheck(dataBase moira.Database, triggerID string, emptyLastCheckTimes
 	return &lastCheck, nil
 }
 
-func getTTLState(triggerTTLState *string) string {
+func getTTLState(triggerTTLState *moira.TTLState) moira.TTLState {
 	if triggerTTLState != nil {
 		return *triggerTTLState
 	}
-	return NODATA
+	return moira.TTLStateNODATA
 }
 
 func calculateFrom(lastCheckTimestamp, triggerTTL int64) int64 {

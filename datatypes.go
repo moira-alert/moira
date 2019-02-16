@@ -9,37 +9,17 @@ import (
 	"time"
 )
 
-var (
-	eventStates = [...]string{"OK", "WARN", "ERROR", "NODATA", "EXCEPTION", "TEST"}
-)
-
-var scores = map[string]int64{
-	"OK":        0,
-	"DEL":       0,
-	"WARN":      1,
-	"ERROR":     100,
-	"NODATA":    1000,
-	"EXCEPTION": 100000,
-}
-
-var eventStateWeight = map[string]int{
-	"OK":     0,
-	"WARN":   1,
-	"ERROR":  100,
-	"NODATA": 10000,
-}
-
 // NotificationEvent represents trigger state changes event
 type NotificationEvent struct {
 	IsTriggerEvent bool     `json:"trigger_event,omitempty"`
 	Timestamp      int64    `json:"timestamp"`
 	Metric         string   `json:"metric"`
 	Value          *float64 `json:"value,omitempty"`
-	State          string   `json:"state"`
+	State          State    `json:"state"`
 	TriggerID      string   `json:"trigger_id"`
 	SubscriptionID *string  `json:"sub_id,omitempty"`
 	ContactID      string   `json:"contactId,omitempty"`
-	OldState       string   `json:"old_state"`
+	OldState       State    `json:"old_state"`
 	Message        *string  `json:"msg,omitempty"`
 }
 
@@ -154,7 +134,7 @@ type Trigger struct {
 	ErrorValue       *float64      `json:"error_value"`
 	TriggerType      string        `json:"trigger_type"`
 	Tags             []string      `json:"tags"`
-	TTLState         *string       `json:"ttl_state,omitempty"`
+	TTLState         *TTLState     `json:"ttl_state,omitempty"`
 	TTL              int64         `json:"ttl,omitempty"`
 	Schedule         *ScheduleData `json:"sched,omitempty"`
 	Expression       *string       `json:"expression,omitempty"`
@@ -175,22 +155,22 @@ type TriggerCheck struct {
 type CheckData struct {
 	Metrics                      map[string]MetricState `json:"metrics"`
 	Score                        int64                  `json:"score"`
-	State                        string                 `json:"state"`
+	State                        State                  `json:"state"`
 	Maintenance                  int64                  `json:"maintenance,omitempty"`
 	Timestamp                    int64                  `json:"timestamp,omitempty"`
 	EventTimestamp               int64                  `json:"event_timestamp,omitempty"`
 	LastSuccessfulCheckTimestamp int64                  `json:"last_successful_check_timestamp"`
 	Suppressed                   bool                   `json:"suppressed,omitempty"`
-	SuppressedState              string                 `json:"suppressed_state,omitempty"`
+	SuppressedState              State                  `json:"suppressed_state,omitempty"`
 	Message                      string                 `json:"msg,omitempty"`
 }
 
 // MetricState represents metric state data for given timestamp
 type MetricState struct {
 	EventTimestamp  int64    `json:"event_timestamp"`
-	State           string   `json:"state"`
+	State           State    `json:"state"`
 	Suppressed      bool     `json:"suppressed"`
-	SuppressedState string   `json:"suppressed_state,omitempty"`
+	SuppressedState State    `json:"suppressed_state,omitempty"`
 	Timestamp       int64    `json:"timestamp"`
 	Value           *float64 `json:"value,omitempty"`
 	Maintenance     int64    `json:"maintenance,omitempty"`
@@ -203,13 +183,13 @@ type MetricEvent struct {
 }
 
 // GetSubjectState returns the most critical state of events
-func (events NotificationEvents) GetSubjectState() string {
-	result := ""
-	states := make(map[string]bool)
+func (events NotificationEvents) GetSubjectState() State {
+	result := StateOK
+	states := make(map[State]bool)
 	for _, event := range events {
 		states[event.State] = true
 	}
-	for _, state := range eventStates {
+	for _, state := range eventStatesPriority {
 		if states[state] {
 			result = state
 		}
@@ -298,7 +278,7 @@ func (checkData *CheckData) GetOrCreateMetricState(metric string, emptyTimestamp
 func createEmptyMetricState(defaultTimestampValue int64, firstStateIsNodata bool) MetricState {
 	if firstStateIsNodata {
 		return MetricState{
-			State:     "NODATA",
+			State:     StateNODATA,
 			Timestamp: defaultTimestampValue,
 		}
 	}
@@ -306,7 +286,7 @@ func createEmptyMetricState(defaultTimestampValue int64, firstStateIsNodata bool
 	unixNow := time.Now().Unix()
 
 	return MetricState{
-		State:          "OK",
+		State:          StateOK,
 		Timestamp:      unixNow,
 		EventTimestamp: unixNow,
 	}
@@ -351,9 +331,9 @@ func (trigger *Trigger) IsSimple() bool {
 
 // UpdateScore update and return checkData score, based on metric states and checkData state
 func (checkData *CheckData) UpdateScore() int64 {
-	checkData.Score = scores[checkData.State]
+	checkData.Score = stateScores[checkData.State]
 	for _, metricData := range checkData.Metrics {
-		checkData.Score += scores[metricData.State]
+		checkData.Score += stateScores[metricData.State]
 	}
 	return checkData.Score
 }

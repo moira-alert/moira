@@ -97,10 +97,10 @@ func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.
 func (sender *Sender) getMessagePriority(events moira.NotificationEvents) int {
 	priority := pushover.PriorityNormal
 	for _, event := range events {
-		if event.State == "ERROR" || event.State == "EXCEPTION" {
+		if event.State == moira.StateERROR || event.State == moira.StateEXCEPTION {
 			priority = pushover.PriorityEmergency
 		}
-		if priority != pushover.PriorityEmergency && (event.State == "WARN" || event.State == "NODATA") {
+		if priority != pushover.PriorityEmergency && (event.State == moira.StateWARN || event.State == moira.StateNODATA) {
 			priority = pushover.PriorityHigh
 		}
 	}

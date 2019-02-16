@@ -38,20 +38,20 @@ type TriggerExpression struct {
 
 	MainTargetValue         float64
 	AdditionalTargetsValues map[string]float64
-	PreviousState           string
+	PreviousState           moira.State
 }
 
 // Get realizing govaluate.Parameters interface used in evaluable expression
 func (triggerExpression TriggerExpression) Get(name string) (interface{}, error) {
 	switch name {
 	case "OK":
-		return "OK", nil
+		return moira.StateOK, nil
 	case "WARN", "WARNING":
-		return "WARN", nil
+		return moira.StateWARN, nil
 	case "ERROR":
-		return "ERROR", nil
+		return moira.StateERROR, nil
 	case "NODATA":
-		return "NODATA", nil
+		return moira.StateNODATA, nil
 	case "WARN_VALUE":
 		if triggerExpression.WarnValue == nil {
 			return nil, fmt.Errorf("no value with name WARN_VALUE")
@@ -76,7 +76,7 @@ func (triggerExpression TriggerExpression) Get(name string) (interface{}, error)
 }
 
 // Evaluate gets trigger expression and evaluates it for given parameters using govaluate
-func (triggerExpression *TriggerExpression) Evaluate() (string, error) {
+func (triggerExpression *TriggerExpression) Evaluate() (moira.State, error) {
 	expr, err := getExpression(triggerExpression)
 	if err != nil {
 		return "", ErrInvalidExpression{internalError: err}
@@ -86,7 +86,7 @@ func (triggerExpression *TriggerExpression) Evaluate() (string, error) {
 		return "", ErrInvalidExpression{internalError: err}
 	}
 	switch res := result.(type) {
-	case string:
+	case moira.State:
 		return res, nil
 	default:
 		return "", ErrInvalidExpression{internalError: fmt.Errorf("expression result must be state value")}

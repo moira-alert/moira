@@ -14,7 +14,7 @@ func GetNotifierState(database moira.Database) (*dto.NotifierState, *api.ErrorRe
 	}
 
 	notifierState := dto.NotifierState{State: state}
-	if state == dto.ERROR {
+	if state == moira.SelfStateERROR {
 		notifierState.Message = dto.ErrorMessage
 	}
 

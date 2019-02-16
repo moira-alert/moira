@@ -205,8 +205,8 @@ var subID = "SubscriptionID-000000000000001"
 
 var event = moira.NotificationEvent{
 	Metric:         "generate.event.1",
-	State:          "OK",
-	OldState:       "WARN",
+	State:          moira.StateOK,
+	OldState:       moira.StateWARN,
 	TriggerID:      "triggerID-0000000000001",
 	SubscriptionID: &subID,
 }

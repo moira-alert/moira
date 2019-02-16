@@ -382,36 +382,36 @@ func TestLastCheckErrorConnection(t *testing.T) {
 
 var lastCheckTest = moira.CheckData{
 	Score:     6000,
-	State:     "OK",
+	State:     moira.StateOK,
 	Timestamp: 1504509981,
 	Metrics: map[string]moira.MetricState{
 		"metric1": {
 			EventTimestamp: 1504449789,
-			State:          "NODATA",
+			State:          moira.StateNODATA,
 			Suppressed:     false,
 			Timestamp:      1504509380,
 		},
 		"metric2": {
 			EventTimestamp: 1504449789,
-			State:          "NODATA",
+			State:          moira.StateNODATA,
 			Suppressed:     false,
 			Timestamp:      1504509380,
 		},
 		"metric3": {
 			EventTimestamp: 1504449789,
-			State:          "NODATA",
+			State:          moira.StateNODATA,
 			Suppressed:     false,
 			Timestamp:      1504509380,
 		},
 		"metric4": {
 			EventTimestamp: 1504463770,
-			State:          "NODATA",
+			State:          moira.StateNODATA,
 			Suppressed:     false,
 			Timestamp:      1504509380,
 		},
 		"metric5": {
 			EventTimestamp: 1504463770,
-			State:          "NODATA",
+			State:          moira.StateNODATA,
 			Suppressed:     false,
 			Timestamp:      1504509380,
 		},
@@ -426,14 +426,14 @@ var lastCheckTest = moira.CheckData{
 
 var lastCheckWithNoMetrics = moira.CheckData{
 	Score:     0,
-	State:     "OK",
+	State:     moira.StateOK,
 	Timestamp: 1504509981,
 	Metrics:   make(map[string]moira.MetricState),
 }
 
 var lastCheckWithNoMetricsWithMaintenance = moira.CheckData{
 	Score:       0,
-	State:       "OK",
+	State:       moira.StateOK,
 	Timestamp:   1504509981,
 	Maintenance: 1000,
 	Metrics:     make(map[string]moira.MetricState),

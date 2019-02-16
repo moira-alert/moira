@@ -68,17 +68,17 @@ func TestUseDirectMessaging(t *testing.T) {
 func TestGetStateEmoji(t *testing.T) {
 	sender := Sender{}
 	Convey("Use emoji is false", t, func() {
-		So(sender.getStateEmoji("ERROR"), ShouldResemble, "")
+		So(sender.getStateEmoji(moira.StateERROR), ShouldResemble, "")
 	})
 
 	Convey("Use emoji is true", t, func() {
 		sender := Sender{useEmoji: true}
-		So(sender.getStateEmoji("OK"), ShouldResemble, okEmoji)
-		So(sender.getStateEmoji("WARN"), ShouldResemble, warnEmoji)
-		So(sender.getStateEmoji("ERROR"), ShouldResemble, errorEmoji)
-		So(sender.getStateEmoji("NODATA"), ShouldResemble, nodataEmoji)
-		So(sender.getStateEmoji("EXCEPTION"), ShouldResemble, exceptionEmoji)
-		So(sender.getStateEmoji("TEST"), ShouldResemble, testEmoji)
+		So(sender.getStateEmoji(moira.StateOK), ShouldResemble, okEmoji)
+		So(sender.getStateEmoji(moira.StateWARN), ShouldResemble, warnEmoji)
+		So(sender.getStateEmoji(moira.StateERROR), ShouldResemble, errorEmoji)
+		So(sender.getStateEmoji(moira.StateNODATA), ShouldResemble, nodataEmoji)
+		So(sender.getStateEmoji(moira.StateEXCEPTION), ShouldResemble, exceptionEmoji)
+		So(sender.getStateEmoji(moira.StateTEST), ShouldResemble, testEmoji)
 	})
 }
 
@@ -94,8 +94,8 @@ func TestBuildMessage(t *testing.T) {
 			Value:     &value,
 			Timestamp: 150000000,
 			Metric:    "Metric",
-			OldState:  "OK",
-			State:     "NODATA",
+			OldState:  moira.StateOK,
+			State:     moira.StateNODATA,
 			Message:   nil,
 		}
 
