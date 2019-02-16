@@ -5,6 +5,7 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
 	"unicode"
 
@@ -20,7 +21,7 @@ type PatternStorage struct {
 	database    moira.Database
 	metrics     *graphite.FilterMetrics
 	logger      moira.Logger
-	PatternTree *patternNode
+	PatternTree atomic.Value
 }
 
 // patternNode contains pattern node
@@ -86,7 +87,7 @@ func (storage *PatternStorage) ProcessIncomingMetric(lineBytes []byte) *moira.Ma
 
 // matchPattern returns array of matched patterns
 func (storage *PatternStorage) matchPattern(metric []byte) []string {
-	currentLevel := []*patternNode{storage.PatternTree}
+	currentLevel := []*patternNode{storage.PatternTree.Load().(*patternNode)}
 	var found, index int
 	for i, c := range metric {
 		if c == '.' {
@@ -216,7 +217,7 @@ func (storage *PatternStorage) buildTree(patterns []string) error {
 		}
 	}
 
-	storage.PatternTree = newTree
+	storage.PatternTree.Store(newTree)
 	return nil
 }
 
