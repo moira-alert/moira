@@ -5,6 +5,7 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
 	"unicode"
 
@@ -20,12 +21,12 @@ type PatternStorage struct {
 	database    moira.Database
 	metrics     *graphite.FilterMetrics
 	logger      moira.Logger
-	PatternTree *patternNode
+	PatternTree atomic.Value
 }
 
-// patternNode contains pattern node
-type patternNode struct {
-	Children   []*patternNode
+// PatternNode contains pattern node
+type PatternNode struct {
+	Children   []*PatternNode
 	Part       string
 	Hash       uint32
 	Prefix     string
@@ -86,7 +87,7 @@ func (storage *PatternStorage) ProcessIncomingMetric(lineBytes []byte) *moira.Ma
 
 // matchPattern returns array of matched patterns
 func (storage *PatternStorage) matchPattern(metric []byte) []string {
-	currentLevel := []*patternNode{storage.PatternTree}
+	currentLevel := []*PatternNode{storage.PatternTree.Load().(*PatternNode)}
 	var found, index int
 	for i, c := range metric {
 		if c == '.' {
@@ -167,7 +168,7 @@ func (*PatternStorage) parseMetricFromString(line []byte) ([]byte, float64, int6
 }
 
 func (storage *PatternStorage) buildTree(patterns []string) error {
-	newTree := &patternNode{}
+	newTree := &PatternNode{}
 
 	for _, pattern := range patterns {
 		currentNode := newTree
@@ -185,7 +186,7 @@ func (storage *PatternStorage) buildTree(patterns []string) error {
 				}
 			}
 			if !found {
-				newNode := &patternNode{Part: part}
+				newNode := &PatternNode{Part: part}
 
 				if currentNode.Prefix == "" {
 					newNode.Prefix = part
@@ -216,7 +217,7 @@ func (storage *PatternStorage) buildTree(patterns []string) error {
 		}
 	}
 
-	storage.PatternTree = newTree
+	storage.PatternTree.Store(newTree)
 	return nil
 }
 
@@ -234,8 +235,8 @@ func hasEmptyParts(parts []string) bool {
 	return false
 }
 
-func findPart(part []byte, currentLevel []*patternNode) ([]*patternNode, int) {
-	nextLevel := make([]*patternNode, 0, 64)
+func findPart(part []byte, currentLevel []*PatternNode) ([]*PatternNode, int) {
+	nextLevel := make([]*PatternNode, 0, 64)
 	hash := xxhash.Checksum32(part)
 	for _, node := range currentLevel {
 		for _, child := range node.Children {

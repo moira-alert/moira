@@ -41,8 +41,8 @@ func (worker *Checker) fillLazyTriggerIDs() error {
 	for _, triggerID := range triggerIDs {
 		newLazyTriggerIDs[triggerID] = true
 	}
-	worker.lazyTriggerIDs = newLazyTriggerIDs
-	worker.Metrics.UnusedTriggersCount.Update(int64(len(worker.lazyTriggerIDs)))
+	worker.lazyTriggerIDs.Store(newLazyTriggerIDs)
+	worker.Metrics.UnusedTriggersCount.Update(int64(len(newLazyTriggerIDs)))
 	return nil
 }
 

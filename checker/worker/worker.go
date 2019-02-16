@@ -2,9 +2,10 @@ package worker
 
 import (
 	"runtime"
+	"sync/atomic"
 	"time"
 
-	"github.com/moira-alert/moira/metric_source"
+	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/remote"
 	"github.com/patrickmn/go-cache"
 	"gopkg.in/tomb.v2"
@@ -25,7 +26,7 @@ type Checker struct {
 	TriggerCache      *cache.Cache
 	LazyTriggersCache *cache.Cache
 	PatternCache      *cache.Cache
-	lazyTriggerIDs    map[string]bool
+	lazyTriggerIDs    atomic.Value
 	lastData          int64
 	tomb              tomb.Tomb
 	remoteEnabled     bool
@@ -45,7 +46,7 @@ func (worker *Checker) Start() error {
 		return err
 	}
 
-	worker.lazyTriggerIDs = make(map[string]bool)
+	worker.lazyTriggerIDs.Store(make(map[string]bool))
 	worker.tomb.Go(worker.lazyTriggersWorker)
 
 	worker.tomb.Go(worker.runNodataChecker)
