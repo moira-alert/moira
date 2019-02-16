@@ -70,6 +70,6 @@ func (matcher *MetricsMatcher) Wait() {
 
 func (matcher *MetricsMatcher) save(buffer map[string]*moira.MatchedMetric) {
 	if err := matcher.database.SaveMetrics(buffer); err != nil {
-		matcher.logger.Errorf("Failed to save value in cache storage: %s", err.Error())
+		matcher.logger.Errorf("Failed to save matched metrics: %s", err.Error())
 	}
 }
