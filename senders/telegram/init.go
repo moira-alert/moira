@@ -17,9 +17,8 @@ const (
 )
 
 var (
-	telegramMessageLimit = 4096
-	pollerTimeout        = 10 * time.Second
-	emojiStates          = map[moira.State]string{
+	pollerTimeout = 10 * time.Second
+	emojiStates   = map[moira.State]string{
 		moira.StateOK:     "\xe2\x9c\x85",
 		moira.StateWARN:   "\xe2\x9a\xa0",
 		moira.StateERROR:  "\xe2\xad\x95",
