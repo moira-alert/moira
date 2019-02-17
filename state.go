@@ -13,7 +13,7 @@ const (
 )
 
 // Moira trigger and metric states
-var (
+const (
 	StateOK        State = "OK"
 	StateWARN      State = "WARN"
 	StateERROR     State = "ERROR"
@@ -23,7 +23,7 @@ var (
 )
 
 // Moira ttl states
-var (
+const (
 	TTLStateOK     TTLState = "OK"
 	TTLStateWARN   TTLState = "WARN"
 	TTLStateERROR  TTLState = "ERROR"
