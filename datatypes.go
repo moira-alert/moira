@@ -10,10 +10,15 @@ import (
 )
 
 const (
+	// VariableContactID is used to render template with contact.ID
 	VariableContactID    = "${contact_id}"
+	// VariableContactValue is used to render template with contact.Value
 	VariableContactValue = "${contact_value}"
+	// VariableContactType is used to render template with contact.Type
 	VariableContactType  = "${contact_type}"
+	// VariableTriggerID is used to render template with trigger.ID
 	VariableTriggerID    = "${trigger_id}"
+	// VariableTriggerName is used to render template with trigger.Name
 	VariableTriggerName  = "${trigger_name}"
 )
 

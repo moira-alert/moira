@@ -17,29 +17,29 @@ var (
 )
 
 type execStringTestCase struct {
-	pattern  string
+	template string
 	expected string
 }
 
 var execStringTestCases = []execStringTestCase{
 	{
-		pattern:  fmt.Sprintf("%s/%s/%s/%s/%s/script.go", testDir, moira.VariableContactType, moira.VariableContactID, moira.VariableTriggerID, moira.VariableContactValue),
+		template: fmt.Sprintf("%s/%s/%s/%s/%s/script.go", testDir, moira.VariableContactType, moira.VariableContactID, moira.VariableTriggerID, moira.VariableContactValue),
 		expected: "/tmp/contactType/contactID/triggerID/contactValue/script.go",
 	},
 	{
-		pattern:  fmt.Sprintf("%s/%s/%s/%s/script.go", testDir, moira.VariableContactID, moira.VariableTriggerID, moira.VariableContactValue),
+		template: fmt.Sprintf("%s/%s/%s/%s/script.go", testDir, moira.VariableContactID, moira.VariableTriggerID, moira.VariableContactValue),
 		expected: "/tmp/contactID/triggerID/contactValue/script.go",
 	},
 	{
-		pattern:  fmt.Sprintf("%s/%s/%s/script.go", testDir, moira.VariableTriggerID, moira.VariableContactValue),
+		template: fmt.Sprintf("%s/%s/%s/script.go", testDir, moira.VariableTriggerID, moira.VariableContactValue),
 		expected: "/tmp/triggerID/contactValue/script.go",
 	},
 	{
-		pattern:  fmt.Sprintf("%s/%s/script.go", testDir, moira.VariableContactValue),
+		template: fmt.Sprintf("%s/%s/script.go", testDir, moira.VariableContactValue),
 		expected: "/tmp/contactValue/script.go",
 	},
 	{
-		pattern:  fmt.Sprintf("%s/script.go", testDir),
+		template: fmt.Sprintf("%s/script.go", testDir),
 		expected: "/tmp/script.go",
 	},
 }
@@ -100,7 +100,7 @@ func TestBuildCommandData(t *testing.T) {
 
 	Convey("Test exec string builder", t, func() {
 		for _, testCase := range execStringTestCases {
-			actual := buildExecString(testCase.pattern, testTrigger, testContact)
+			actual := buildExecString(testCase.template, testTrigger, testContact)
 			So(actual, ShouldEqual, testCase.expected)
 		}
 	})

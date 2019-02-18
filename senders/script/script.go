@@ -61,7 +61,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 
 func (sender *Sender) buildCommandData(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, throttled bool) (scriptFile string, args []string, scriptBody []byte, err error) {
 	if strings.Contains(sender.exec, moira.VariableTriggerName) {
-		sender.logger.Warningf("%s is deprecated", moira.VariableTriggerName)
+		sender.logger.Warningf("%s is deprecated and will be removed in 2.6 release", moira.VariableTriggerName)
 	}
 	execString := buildExecString(sender.exec, trigger, contact)
 	scriptFile, args, err = parseExec(execString)
@@ -94,7 +94,7 @@ func parseExec(execString string) (scriptFile string, args []string, err error) 
 	return scriptFile, args, nil
 }
 
-func buildExecString(pattern string, trigger moira.TriggerData, contact moira.ContactData) string {
+func buildExecString(template string, trigger moira.TriggerData, contact moira.ContactData) string {
 	templateVariables := map[string]string{
 		moira.VariableContactID:    contact.ID,
 		moira.VariableContactValue: contact.Value,
@@ -103,7 +103,7 @@ func buildExecString(pattern string, trigger moira.TriggerData, contact moira.Co
 		moira.VariableTriggerName:  trigger.Name,
 	}
 	for k, v := range templateVariables {
-		pattern = strings.Replace(pattern, k, v, -1)
+		template = strings.Replace(template, k, v, -1)
 	}
-	return pattern
+	return template
 }

@@ -49,7 +49,7 @@ func buildRequestBody(events moira.NotificationEvents, contact moira.ContactData
 	return json.Marshal(requestPayload)
 }
 
-func buildRequestURL(pattern string, trigger moira.TriggerData, contact moira.ContactData) string {
+func buildRequestURL(template string, trigger moira.TriggerData, contact moira.ContactData) string {
 	templateVariables := map[string]string{
 		moira.VariableContactID:    contact.ID,
 		moira.VariableContactValue: contact.Value,
@@ -57,7 +57,7 @@ func buildRequestURL(pattern string, trigger moira.TriggerData, contact moira.Co
 		moira.VariableTriggerID:    trigger.ID,
 	}
 	for k, v := range templateVariables {
-		pattern = strings.Replace(pattern, k, url.PathEscape(v), -1)
+		template = strings.Replace(template, k, url.PathEscape(v), -1)
 	}
-	return pattern
+	return template
 }
