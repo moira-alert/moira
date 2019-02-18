@@ -1,6 +1,7 @@
 package webhook
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -9,12 +10,12 @@ import (
 	"github.com/moira-alert/moira"
 )
 
-const (
-	testBadID    = "!@#$"
-	testTemplate = "https://hostname.domain/${trigger_id}/${contact_type}/${contact_id}/${contact_value}"
-)
+const testBadID = "!@#$"
 
 var (
+	testHost     = "https://hostname.domain"
+	testTemplate = fmt.Sprintf("%s/%s/%s/%s/%s",
+		testHost, moira.VariableTriggerID, moira.VariableContactType, moira.VariableContactID, moira.VariableContactValue)
 	testContact = moira.ContactData{
 		ID:    "contactID",
 		Type:  "contactType",
@@ -142,7 +143,7 @@ var requestURLTestCases = []requestURLTestCase{
 		contact: moira.ContactData{Type: "contactType", ID: "contactID", Value: "contactValue"},
 		results: map[string]string{
 			testTemplate: "https://hostname.domain/%21@%23$/contactType/contactID/contactValue",
-			"https://hostname.domain/${contact_type}/${contact_id}/${contact_value}": "https://hostname.domain/contactType/contactID/contactValue",
+			fmt.Sprintf("%s/%s/%s/%s", testHost, moira.VariableContactType, moira.VariableContactID, moira.VariableContactValue): "https://hostname.domain/contactType/contactID/contactValue",
 		},
 	},
 	{
@@ -150,15 +151,15 @@ var requestURLTestCases = []requestURLTestCase{
 		contact: moira.ContactData{Type: testBadID, ID: "contactID", Value: "contactValue"},
 		results: map[string]string{
 			testTemplate: "https://hostname.domain/%21@%23$/%21@%23$/contactID/contactValue",
-			"https://hostname.domain/${contact_id}/${contact_value}": "https://hostname.domain/contactID/contactValue",
+			fmt.Sprintf("%s/%s/%s", testHost, moira.VariableContactID, moira.VariableContactValue): "https://hostname.domain/contactID/contactValue",
 		},
 	},
 	{
 		trigger: moira.TriggerData{ID: testBadID},
 		contact: moira.ContactData{Type: testBadID, ID: testBadID, Value: "contactValue"},
 		results: map[string]string{
-			testTemplate:                               "https://hostname.domain/%21@%23$/%21@%23$/%21@%23$/contactValue",
-			"https://hostname.domain/${contact_value}": "https://hostname.domain/contactValue",
+			testTemplate: "https://hostname.domain/%21@%23$/%21@%23$/%21@%23$/contactValue",
+			fmt.Sprintf("%s/%s", testHost, moira.VariableContactValue): "https://hostname.domain/contactValue",
 		},
 	},
 	{
@@ -172,7 +173,7 @@ var requestURLTestCases = []requestURLTestCase{
 		trigger: moira.TriggerData{},
 		contact: moira.ContactData{},
 		results: map[string]string{
-			"https://hostname.domain/": "https://hostname.domain/",
+			testHost: "https://hostname.domain",
 		},
 	},
 }

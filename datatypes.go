@@ -9,6 +9,14 @@ import (
 	"time"
 )
 
+const (
+	VariableContactID    = "${contact_id}"
+	VariableContactValue = "${contact_value}"
+	VariableContactType  = "${contact_type}"
+	VariableTriggerID    = "${trigger_id}"
+	VariableTriggerName  = "${trigger_name}"
+)
+
 var (
 	eventStates = [...]string{"OK", "WARN", "ERROR", "NODATA", "EXCEPTION", "TEST"}
 )
@@ -57,6 +65,7 @@ type TriggerData struct {
 	IsRemote   bool     `json:"is_remote"`
 	Tags       []string `json:"__notifier_trigger_tags"`
 }
+
 // GetTriggerURI gets frontUri and returns triggerUrl, returns empty string on selfcheck and test notifications
 func (trigger TriggerData) GetTriggerURI(frontURI string) string {
 	if trigger.ID != "" {

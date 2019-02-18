@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
+	"github.com/moira-alert/moira"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -51,7 +52,7 @@ func TestSender_SendEvents(t *testing.T) {
 
 		senderSettings := map[string]string{
 			"name":     "testWebhook",
-			"url":      fmt.Sprintf("%s/${trigger_id}", ts.URL),
+			"url":      fmt.Sprintf("%s/%s", ts.URL, moira.VariableTriggerID),
 			"user":     testUser,
 			"password": testPass,
 		}
