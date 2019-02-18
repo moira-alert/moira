@@ -58,8 +58,8 @@ func toEventsData(events moira.NotificationEvents) []eventData {
 			Value:          moira.UseFloat64(event.Value),
 			Timestamp:      event.Timestamp,
 			IsTriggerEvent: event.IsTriggerEvent,
-			State:          event.State,
-			OldState:       event.OldState,
+			State:          string(event.State),
+			OldState:       string(event.OldState),
 		})
 	}
 	return result
