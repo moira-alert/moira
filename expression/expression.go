@@ -3,7 +3,8 @@ package expression
 import (
 	"fmt"
 	"strings"
-	"sync"
+
+	"github.com/patrickmn/go-cache"
 
 	"github.com/Knetic/govaluate"
 	"github.com/moira-alert/moira"
@@ -16,8 +17,7 @@ var exprErrRising, _ = govaluate.NewEvaluableExpression("t1 >= ERROR_VALUE ? ERR
 var exprWarnFalling, _ = govaluate.NewEvaluableExpression("t1 <= WARN_VALUE ? WARN : OK")
 var exprErrFalling, _ = govaluate.NewEvaluableExpression("t1 <= ERROR_VALUE ? ERROR : OK")
 
-var cache = make(map[string]*govaluate.EvaluableExpression)
-var cacheLock sync.Mutex
+var exprCache = cache.New(cache.NoExpiration, cache.NoExpiration)
 
 // ErrInvalidExpression represents bad expression or its state error
 type ErrInvalidExpression struct {
@@ -38,20 +38,20 @@ type TriggerExpression struct {
 
 	MainTargetValue         float64
 	AdditionalTargetsValues map[string]float64
-	PreviousState           string
+	PreviousState           moira.State
 }
 
 // Get realizing govaluate.Parameters interface used in evaluable expression
 func (triggerExpression TriggerExpression) Get(name string) (interface{}, error) {
 	switch name {
 	case "OK":
-		return "OK", nil
+		return moira.StateOK, nil
 	case "WARN", "WARNING":
-		return "WARN", nil
+		return moira.StateWARN, nil
 	case "ERROR":
-		return "ERROR", nil
+		return moira.StateERROR, nil
 	case "NODATA":
-		return "NODATA", nil
+		return moira.StateNODATA, nil
 	case "WARN_VALUE":
 		if triggerExpression.WarnValue == nil {
 			return nil, fmt.Errorf("no value with name WARN_VALUE")
@@ -76,7 +76,7 @@ func (triggerExpression TriggerExpression) Get(name string) (interface{}, error)
 }
 
 // Evaluate gets trigger expression and evaluates it for given parameters using govaluate
-func (triggerExpression *TriggerExpression) Evaluate() (string, error) {
+func (triggerExpression *TriggerExpression) Evaluate() (moira.State, error) {
 	expr, err := getExpression(triggerExpression)
 	if err != nil {
 		return "", ErrInvalidExpression{internalError: err}
@@ -86,7 +86,7 @@ func (triggerExpression *TriggerExpression) Evaluate() (string, error) {
 		return "", ErrInvalidExpression{internalError: err}
 	}
 	switch res := result.(type) {
-	case string:
+	case moira.State:
 		return res, nil
 	default:
 		return "", ErrInvalidExpression{internalError: fmt.Errorf("expression result must be state value")}
@@ -132,32 +132,18 @@ func getSimpleExpression(triggerExpression *TriggerExpression) (*govaluate.Evalu
 }
 
 func getUserExpression(triggerExpression string) (*govaluate.EvaluableExpression, error) {
-	err := evaluateAndCacheExpressionIfNeed(triggerExpression)
+	if expr, found := exprCache.Get(triggerExpression); found {
+		return expr.(*govaluate.EvaluableExpression), nil
+	}
+
+	expr, err := govaluate.NewEvaluableExpression(triggerExpression)
 	if err != nil {
+		if strings.Contains(err.Error(), "Undefined function") {
+			return nil, fmt.Errorf("functions is forbidden")
+		}
 		return nil, err
 	}
-	return cache[triggerExpression], err
-}
 
-func evaluateAndCacheExpressionIfNeed(triggerExpression string) error {
-	if _, ok := cache[triggerExpression]; !ok {
-		cacheLock.Lock()
-		defer cacheLock.Unlock()
-		if _, ok := cache[triggerExpression]; !ok {
-			newCache := make(map[string]*govaluate.EvaluableExpression, len(cache)+1)
-			for k, v := range cache {
-				newCache[k] = v
-			}
-			expr, err := govaluate.NewEvaluableExpression(triggerExpression)
-			if err != nil {
-				if strings.Contains(err.Error(), "Undefined function") {
-					return fmt.Errorf("functions is forbidden")
-				}
-				return err
-			}
-			newCache[triggerExpression] = expr
-			cache = newCache
-		}
-	}
-	return nil
+	exprCache.Add(triggerExpression, expr, cache.NoExpiration)
+	return expr, nil
 }

@@ -8,7 +8,6 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api/middleware"
-	"github.com/moira-alert/moira/checker"
 	"github.com/moira-alert/moira/expression"
 	"github.com/moira-alert/moira/metric_source"
 )
@@ -48,7 +47,7 @@ type TriggerModel struct {
 	// Set of tags to manipulate subscriptions
 	Tags []string `json:"tags"`
 	// When there are no metrics for trigger, Moira will switch metric to TTLState state after TTL seconds
-	TTLState *string `json:"ttl_state,omitempty"`
+	TTLState *moira.TTLState `json:"ttl_state,omitempty"`
 	// When there are no metrics for trigger, Moira will switch metric to TTLState state after TTL seconds
 	TTL int64 `json:"ttl,omitempty"`
 	// Determines when Moira should monitor trigger
@@ -125,7 +124,7 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 		WarnValue:               trigger.WarnValue,
 		ErrorValue:              trigger.ErrorValue,
 		TriggerType:             trigger.TriggerType,
-		PreviousState:           checker.NODATA,
+		PreviousState:           moira.StateNODATA,
 		Expression:              &trigger.Expression,
 	}
 

@@ -120,8 +120,8 @@ func TestNotificationEvents(t *testing.T) {
 			now := time.Now().Unix()
 			event := moira.NotificationEvent{
 				Timestamp: now,
-				State:     "NODATA",
-				OldState:  "NODATA",
+				State:     moira.StateNODATA,
+				OldState:  moira.StateNODATA,
 				TriggerID: uuid.Must(uuid.NewV4()).String(),
 				Metric:    "my.metric",
 			}
@@ -180,8 +180,8 @@ func TestNotificationEventErrorConnection(t *testing.T) {
 
 	var notificationEvent = moira.NotificationEvent{
 		Timestamp: time.Now().Unix(),
-		State:     "NODATA",
-		OldState:  "NODATA",
+		State:     moira.StateNODATA,
+		OldState:  moira.StateNODATA,
 		TriggerID: "81588c33-eab3-4ad4-aa03-82a9560adad9",
 		Metric:    "my.metric",
 	}
@@ -205,23 +205,23 @@ func TestNotificationEventErrorConnection(t *testing.T) {
 
 var notificationEvent = moira.NotificationEvent{
 	Timestamp: time.Now().Unix(),
-	State:     "NODATA",
-	OldState:  "NODATA",
+	State:     moira.StateNODATA,
+	OldState:  moira.StateNODATA,
 	TriggerID: "81588c33-eab3-4ad4-aa03-82a9560adad9",
 	Metric:    "my.metric",
 }
 
 var notificationEvent1 = moira.NotificationEvent{
 	Timestamp: time.Now().Unix(),
-	State:     "EXCEPTION",
-	OldState:  "NODATA",
+	State:     moira.StateEXCEPTION,
+	OldState:  moira.StateNODATA,
 	TriggerID: uuid.Must(uuid.NewV4()).String(),
 	Metric:    "my.metric",
 }
 var notificationEvent2 = moira.NotificationEvent{
 	Timestamp: time.Now().Unix(),
-	State:     "OK",
-	OldState:  "WARN",
+	State:     moira.StateOK,
+	OldState:  moira.StateWARN,
 	TriggerID: uuid.Must(uuid.NewV4()).String(),
 	Metric:    "my.metric1",
 }

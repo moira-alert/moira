@@ -11,13 +11,16 @@ func (triggerChecker *TriggerChecker) fetchTriggerMetrics() (*metricSource.Trigg
 	}
 	triggerChecker.cleanupMetricsValues(metrics, triggerChecker.until)
 
-	if len(triggerMetricsData.Main) == 0 {
-		return triggerMetricsData, ErrTriggerHasNoMetrics{}
+	if len(triggerChecker.lastCheck.Metrics) == 0 {
+		if len(triggerMetricsData.Main) == 0 {
+			return triggerMetricsData, ErrTriggerHasNoMetrics{}
+		}
+
+		if triggerMetricsData.HasOnlyWildcards() {
+			return triggerMetricsData, ErrTriggerHasOnlyWildcards{}
+		}
 	}
 
-	if triggerMetricsData.HasOnlyWildcards() {
-		return triggerMetricsData, ErrTriggerHasOnlyWildcards{}
-	}
 	return triggerMetricsData, nil
 }
 

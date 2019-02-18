@@ -34,7 +34,7 @@ func TestEvent(t *testing.T) {
 			Scheduler: notifier.NewScheduler(dataBase, logger, metrics2),
 		}
 		event := moira.NotificationEvent{
-			State:          "TEST",
+			State:          moira.StateTEST,
 			SubscriptionID: &subscription.ID,
 		}
 		dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Times(1).Return(subscription, nil)
@@ -68,8 +68,8 @@ func TestEvent(t *testing.T) {
 
 		subID := "testSubscription"
 		event := moira.NotificationEvent{
-			State:     "TEST",
-			OldState:  "TEST",
+			State:     moira.StateTEST,
+			OldState:  moira.StateTEST,
 			Metric:    "test.metric",
 			ContactID: contact.ID,
 		}
@@ -115,8 +115,8 @@ func TestNoSubscription(t *testing.T) {
 
 		event := moira.NotificationEvent{
 			Metric:    "generate.event.1",
-			State:     "OK",
-			OldState:  "WARN",
+			State:     moira.StateOK,
+			OldState:  moira.StateWARN,
 			TriggerID: triggerData.ID,
 		}
 
@@ -144,8 +144,8 @@ func TestDisabledNotification(t *testing.T) {
 
 		event := moira.NotificationEvent{
 			Metric:    "generate.event.1",
-			State:     "OK",
-			OldState:  "WARN",
+			State:     moira.StateOK,
+			OldState:  moira.StateWARN,
 			TriggerID: triggerData.ID,
 		}
 
@@ -177,8 +177,8 @@ func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
 
 		event := moira.NotificationEvent{
 			Metric:    "generate.event.1",
-			State:     "OK",
-			OldState:  "WARN",
+			State:     moira.StateOK,
+			OldState:  moira.StateWARN,
 			TriggerID: triggerData.ID,
 		}
 
@@ -202,8 +202,8 @@ func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
 
 		event := moira.NotificationEvent{
 			Metric:    "generate.event.1",
-			State:     "OK",
-			OldState:  "WARN",
+			State:     moira.StateOK,
+			OldState:  moira.StateWARN,
 			TriggerID: triggerData.ID,
 		}
 
@@ -227,8 +227,8 @@ func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
 
 		event := moira.NotificationEvent{
 			Metric:    "generate.event.1",
-			State:     "OK",
-			OldState:  "WARN",
+			State:     moira.StateOK,
+			OldState:  moira.StateWARN,
 			TriggerID: triggerData.ID,
 		}
 
@@ -260,8 +260,8 @@ func TestAddNotification(t *testing.T) {
 
 		event := moira.NotificationEvent{
 			Metric:         "generate.event.1",
-			State:          "OK",
-			OldState:       "WARN",
+			State:          moira.StateOK,
+			OldState:       moira.StateWARN,
 			TriggerID:      triggerData.ID,
 			SubscriptionID: &subscription.ID,
 		}
@@ -294,8 +294,8 @@ func TestAddOneNotificationByTwoSubscriptionsWithSame(t *testing.T) {
 
 		event := moira.NotificationEvent{
 			Metric:         "generate.event.1",
-			State:          "OK",
-			OldState:       "WARN",
+			State:          moira.StateOK,
+			OldState:       moira.StateWARN,
 			TriggerID:      triggerData.ID,
 			SubscriptionID: &subscription.ID,
 		}
@@ -333,8 +333,8 @@ func TestFailReadContact(t *testing.T) {
 
 		event := moira.NotificationEvent{
 			Metric:    "generate.event.1",
-			State:     "OK",
-			OldState:  "WARN",
+			State:     moira.StateOK,
+			OldState:  moira.StateWARN,
 			TriggerID: triggerData.ID,
 		}
 
@@ -367,8 +367,8 @@ func TestEmptySubscriptions(t *testing.T) {
 
 		event := moira.NotificationEvent{
 			Metric:    "generate.event.1",
-			State:     "OK",
-			OldState:  "WARN",
+			State:     moira.StateOK,
+			OldState:  moira.StateWARN,
 			TriggerID: triggerData.ID,
 		}
 
@@ -396,8 +396,8 @@ func TestEmptySubscriptions(t *testing.T) {
 
 		event := moira.NotificationEvent{
 			Metric:    "generate.event.1",
-			State:     "OK",
-			OldState:  "WARN",
+			State:     moira.StateOK,
+			OldState:  moira.StateWARN,
 			TriggerID: triggerData.ID,
 		}
 
@@ -427,7 +427,7 @@ func TestGetNotificationSubscriptions(t *testing.T) {
 
 	Convey("Error GetSubscription", t, func() {
 		event := moira.NotificationEvent{
-			State:          "TEST",
+			State:          moira.StateTEST,
 			SubscriptionID: &subscription.ID,
 		}
 		err := fmt.Errorf("Oppps")
@@ -439,7 +439,7 @@ func TestGetNotificationSubscriptions(t *testing.T) {
 
 	Convey("Error GetContact", t, func() {
 		event := moira.NotificationEvent{
-			State:     "TEST",
+			State:     moira.StateTEST,
 			ContactID: "1233",
 		}
 		err := fmt.Errorf("Oppps")
@@ -468,8 +468,8 @@ func TestGoRoutine(t *testing.T) {
 
 		event := moira.NotificationEvent{
 			Metric:         "generate.event.1",
-			State:          "OK",
-			OldState:       "WARN",
+			State:          moira.StateOK,
+			OldState:       moira.StateWARN,
 			TriggerID:      triggerData.ID,
 			SubscriptionID: &subscription.ID,
 		}

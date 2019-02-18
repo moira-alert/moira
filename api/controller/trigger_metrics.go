@@ -6,7 +6,6 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
-	"github.com/moira-alert/moira/checker"
 	"github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/metric_source"
 )
@@ -110,7 +109,7 @@ func deleteTriggerMetrics(dataBase moira.Database, metricName string, triggerID 
 	}
 	if removeAllNodataMetrics {
 		for metricName, metricState := range lastCheck.Metrics {
-			if metricState.State == checker.NODATA {
+			if metricState.State == moira.StateNODATA {
 				delete(lastCheck.Metrics, metricName)
 			}
 		}

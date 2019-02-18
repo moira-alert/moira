@@ -47,7 +47,7 @@ func (scheduler *StandardScheduler) ScheduleNotification(now time.Time, event mo
 		next = now.Add(time.Minute)
 		throttled = throttledOld
 	} else {
-		if event.State == "TEST" {
+		if event.State == moira.StateTEST {
 			next = now
 			throttled = false
 		} else {

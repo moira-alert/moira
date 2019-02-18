@@ -40,37 +40,37 @@ func TestSender_Init(t *testing.T) {
 func TestGetPushoverPriority(t *testing.T) {
 	sender := Sender{}
 	Convey("All events has OK state", t, func() {
-		priority := sender.getMessagePriority([]moira.NotificationEvent{{State: "OK"}, {State: "OK"}, {State: "OK"}})
+		priority := sender.getMessagePriority([]moira.NotificationEvent{{State: moira.StateOK}, {State: moira.StateOK}, {State: moira.StateOK}})
 		So(priority, ShouldResemble, pushover.PriorityNormal)
 	})
 
 	Convey("One of events has WARN state", t, func() {
-		priority := sender.getMessagePriority([]moira.NotificationEvent{{State: "OK"}, {State: "WARN"}, {State: "OK"}})
+		priority := sender.getMessagePriority([]moira.NotificationEvent{{State: moira.StateOK}, {State: moira.StateWARN}, {State: moira.StateOK}})
 		So(priority, ShouldResemble, pushover.PriorityHigh)
 	})
 
 	Convey("One of events has NODATA state", t, func() {
-		priority := sender.getMessagePriority([]moira.NotificationEvent{{State: "OK"}, {State: "NODATA"}, {State: "OK"}})
+		priority := sender.getMessagePriority([]moira.NotificationEvent{{State: moira.StateOK}, {State: moira.StateNODATA}, {State: moira.StateOK}})
 		So(priority, ShouldResemble, pushover.PriorityHigh)
 	})
 
 	Convey("One of events has ERROR state", t, func() {
-		priority := sender.getMessagePriority([]moira.NotificationEvent{{State: "OK"}, {State: "ERROR"}, {State: "OK"}})
+		priority := sender.getMessagePriority([]moira.NotificationEvent{{State: moira.StateOK}, {State: moira.StateERROR}, {State: moira.StateOK}})
 		So(priority, ShouldResemble, pushover.PriorityEmergency)
 	})
 
 	Convey("One of events has EXCEPTION state", t, func() {
-		priority := sender.getMessagePriority([]moira.NotificationEvent{{State: "OK"}, {State: "EXCEPTION"}, {State: "OK"}})
+		priority := sender.getMessagePriority([]moira.NotificationEvent{{State: moira.StateOK}, {State: moira.StateEXCEPTION}, {State: moira.StateOK}})
 		So(priority, ShouldResemble, pushover.PriorityEmergency)
 	})
 
 	Convey("Events has WARN and ERROR states", t, func() {
-		priority := sender.getMessagePriority([]moira.NotificationEvent{{State: "OK"}, {State: "WARN"}, {State: "ERROR"}})
+		priority := sender.getMessagePriority([]moira.NotificationEvent{{State: moira.StateOK}, {State: moira.StateWARN}, {State: moira.StateERROR}})
 		So(priority, ShouldResemble, pushover.PriorityEmergency)
 	})
 
 	Convey("Events has ERROR and WARN states", t, func() {
-		priority := sender.getMessagePriority([]moira.NotificationEvent{{State: "OK"}, {State: "ERROR"}, {State: "WARN"}})
+		priority := sender.getMessagePriority([]moira.NotificationEvent{{State: moira.StateOK}, {State: moira.StateERROR}, {State: moira.StateWARN}})
 		So(priority, ShouldResemble, pushover.PriorityEmergency)
 	})
 }
@@ -86,8 +86,8 @@ func TestBuildMoiraMessage(t *testing.T) {
 			Value:     &value,
 			Timestamp: 150000000,
 			Metric:    "Metric",
-			OldState:  "OK",
-			State:     "NODATA",
+			OldState:  moira.StateOK,
+			State:     moira.StateNODATA,
 			Message:   nil,
 		}
 
@@ -129,11 +129,11 @@ Please, fix your system or tune this trigger to generate less events.`
 func TestBuildTitle(t *testing.T) {
 	sender := Sender{}
 	Convey("Build title with three events with max ERROR state and two tags", t, func() {
-		title := sender.buildTitle([]moira.NotificationEvent{{State: "ERROR"}, {State: "WARN"}, {State: "WARN"}, {State: "OK"}}, moira.TriggerData{Tags: []string{"tag1", "tag2"}, Name: "Name"})
+		title := sender.buildTitle([]moira.NotificationEvent{{State: moira.StateERROR}, {State: moira.StateWARN}, {State: moira.StateWARN}, {State: moira.StateOK}}, moira.TriggerData{Tags: []string{"tag1", "tag2"}, Name: "Name"})
 		So(title, ShouldResemble, "ERROR Name [tag1][tag2] (4)")
 	})
 	Convey("Build title with three events with max ERROR state empty trigger", t, func() {
-		title := sender.buildTitle([]moira.NotificationEvent{{State: "ERROR"}, {State: "WARN"}, {State: "WARN"}, {State: "OK"}}, moira.TriggerData{})
+		title := sender.buildTitle([]moira.NotificationEvent{{State: moira.StateERROR}, {State: moira.StateWARN}, {State: moira.StateWARN}, {State: moira.StateOK}}, moira.TriggerData{})
 		So(title, ShouldResemble, "ERROR   (4)")
 	})
 }
@@ -153,8 +153,8 @@ func TestMakePushoverMessage(t *testing.T) {
 			Value:     &value,
 			Timestamp: 150000000,
 			Metric:    "Metric",
-			OldState:  "OK",
-			State:     "ERROR",
+			OldState:  moira.StateOK,
+			State:     moira.StateERROR,
 			Message:   nil,
 		},
 		}

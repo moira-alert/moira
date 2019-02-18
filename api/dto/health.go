@@ -4,11 +4,11 @@ package dto
 import (
 	"fmt"
 	"net/http"
+
+	"github.com/moira-alert/moira"
 )
 
 const (
-	OK           = "OK"
-	ERROR        = "ERROR"
 	ErrorMessage = "Something unexpected happened to Moira, so we temporarily turned off the notification mailing. We are already working on the problem and will fix it in the near future."
 )
 
@@ -21,12 +21,12 @@ func (*NotifierState) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func (contact *NotifierState) Bind(r *http.Request) error {
-	if contact.State == "" {
+func (state *NotifierState) Bind(r *http.Request) error {
+	if state.State == "" {
 		return fmt.Errorf("state can not be empty")
 	}
-	if contact.State != OK && contact.State != ERROR {
-		return fmt.Errorf("invalid state '%s'. State should be one of: <OK|ERROR>", contact.State)
+	if state.State != moira.SelfStateOK && state.State != moira.SelfStateERROR {
+		return fmt.Errorf("invalid state '%s'. State should be one of: <OK|ERROR>", state.State)
 	}
 	return nil
 }

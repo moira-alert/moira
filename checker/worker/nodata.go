@@ -6,8 +6,24 @@ import (
 	w "github.com/moira-alert/moira/worker"
 )
 
-const nodataCheckerLockName = "moira-nodata-checker"
-const nodataCheckerLockTTL = time.Second * 15
+const (
+	nodataCheckerLockName = "moira-nodata-checker"
+	nodataCheckerLockTTL  = time.Second * 15
+	nodataWorkerName      = "NODATA checker"
+)
+
+// runNodataChecker starts NODATA checker and manages its subscription in Redis
+// to make sure there is always only one working checker
+func (worker *Checker) runNodataChecker() error {
+	w.NewWorker(
+		nodataWorkerName,
+		worker.Logger,
+		worker.Database.NewLock(nodataCheckerLockName, nodataCheckerLockTTL),
+		worker.noDataChecker,
+	).Run(worker.tomb.Dying())
+
+	return nil
+}
 
 func (worker *Checker) noDataChecker(stop <-chan struct{}) error {
 	checkTicker := time.NewTicker(worker.Config.NoDataCheckInterval)
@@ -38,18 +54,5 @@ func (worker *Checker) checkNoData() error {
 		}
 		worker.addTriggerIDsIfNeeded(triggerIds)
 	}
-	return nil
-}
-
-// runNodataChecker starts NODATA checker and manages its subscription in Redis
-// to make sure there is always only one working checker
-func (worker *Checker) runNodataChecker() error {
-	w.NewWorker(
-		"NOData checker",
-		worker.Logger,
-		worker.Database.NewLock(nodataCheckerLockName, nodataCheckerLockTTL),
-		worker.noDataChecker,
-	).Run(worker.tomb.Dying())
-
 	return nil
 }

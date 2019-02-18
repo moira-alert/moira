@@ -54,8 +54,6 @@ func TestInitTriggerChecker(t *testing.T) {
 	var errorValue float64 = 100000
 	var ttl int64 = 900
 	var value float64
-	ttlStateOk := OK
-	ttlStateNoData := NODATA
 
 	trigger := moira.Trigger{
 		ID:          "d39b8510-b2f4-448c-b881-824658c58128",
@@ -65,33 +63,33 @@ func TestInitTriggerChecker(t *testing.T) {
 		ErrorValue:  &errorValue,
 		TriggerType: moira.RisingTrigger,
 		Tags:        []string{"tag1", "tag2"},
-		TTLState:    &ttlStateOk,
+		TTLState:    &moira.TTLStateOK,
 		Patterns:    []string{"Egais.elasticsearch.*.*.jvm.gc.collection.time"},
 		TTL:         ttl,
 	}
 
 	lastCheck := moira.CheckData{
 		Timestamp: 1502694487,
-		State:     OK,
+		State:     moira.StateOK,
 		Score:     0,
 		Metrics: map[string]moira.MetricState{
 			"1": {
 				Timestamp:      1502694427,
-				State:          OK,
+				State:          moira.StateOK,
 				Suppressed:     false,
 				Value:          &value,
 				EventTimestamp: 1501680428,
 			},
 			"2": {
 				Timestamp:      1502694427,
-				State:          OK,
+				State:          moira.StateOK,
 				Suppressed:     false,
 				Value:          &value,
 				EventTimestamp: 1501679827,
 			},
 			"3": {
 				Timestamp:      1502694427,
-				State:          OK,
+				State:          moira.StateOK,
 				Suppressed:     false,
 				Value:          &value,
 				EventTimestamp: 1501679887,
@@ -138,7 +136,7 @@ func TestInitTriggerChecker(t *testing.T) {
 			ttlState:  *trigger.TTLState,
 			lastCheck: &moira.CheckData{
 				Metrics:   make(map[string]moira.MetricState),
-				State:     OK,
+				State:     moira.StateOK,
 				Timestamp: actual.until - 3600,
 			},
 			from:  actual.until - 3600 - ttl,
@@ -164,10 +162,10 @@ func TestInitTriggerChecker(t *testing.T) {
 			logger:    logger,
 			trigger:   &trigger,
 			ttl:       0,
-			ttlState:  ttlStateNoData,
+			ttlState:  moira.TTLStateNODATA,
 			lastCheck: &moira.CheckData{
 				Metrics:   make(map[string]moira.MetricState),
-				State:     OK,
+				State:     moira.StateOK,
 				Timestamp: actual.until - 3600,
 			},
 			from:  actual.until - 3600 - 600,
@@ -190,7 +188,7 @@ func TestInitTriggerChecker(t *testing.T) {
 			logger:    logger,
 			trigger:   &trigger,
 			ttl:       0,
-			ttlState:  ttlStateNoData,
+			ttlState:  moira.TTLStateNODATA,
 			lastCheck: &lastCheck,
 			from:      lastCheck.Timestamp - 600,
 			until:     actual.until,

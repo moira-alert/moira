@@ -7,9 +7,9 @@ import (
 	"github.com/moira-alert/moira"
 )
 
-var badStateReminder = map[string]int64{
-	ERROR:  86400,
-	NODATA: 86400,
+var badStateReminder = map[moira.State]int64{
+	moira.StateERROR:  86400,
+	moira.StateNODATA: 86400,
 }
 
 func (triggerChecker *TriggerChecker) compareTriggerStates(currentCheck moira.CheckData) (moira.CheckData, error) {
@@ -139,7 +139,7 @@ func (triggerChecker *TriggerChecker) isTriggerSuppressed(event *moira.Notificat
 	return false
 }
 
-func needSendEvent(currentStateValue string, lastStateValue string, currentStateTimestamp int64, lastStateEventTimestamp int64, isLastCheckSuppressed bool, lastStateSuppressedValue string) (needSend bool, message *string) {
+func needSendEvent(currentStateValue moira.State, lastStateValue moira.State, currentStateTimestamp int64, lastStateEventTimestamp int64, isLastCheckSuppressed bool, lastStateSuppressedValue moira.State) (needSend bool, message *string) {
 	if !isLastCheckSuppressed && currentStateValue != lastStateValue {
 		return true, nil
 	}

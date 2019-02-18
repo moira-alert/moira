@@ -17,14 +17,13 @@ const (
 )
 
 var (
-	telegramMessageLimit = 4096
-	pollerTimeout        = 10 * time.Second
-	emojiStates          = map[string]string{
-		"OK":     "\xe2\x9c\x85",
-		"WARN":   "\xe2\x9a\xa0",
-		"ERROR":  "\xe2\xad\x95",
-		"NODATA": "\xf0\x9f\x92\xa3",
-		"TEST":   "\xf0\x9f\x98\x8a",
+	pollerTimeout = 10 * time.Second
+	emojiStates   = map[moira.State]string{
+		moira.StateOK:     "\xe2\x9c\x85",
+		moira.StateWARN:   "\xe2\x9a\xa0",
+		moira.StateERROR:  "\xe2\xad\x95",
+		moira.StateNODATA: "\xf0\x9f\x92\xa3",
+		moira.StateTEST:   "\xf0\x9f\x98\x8a",
 	}
 )
 

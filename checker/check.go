@@ -87,6 +87,9 @@ func (triggerChecker *TriggerChecker) getMetricsToCheck(fetchedMetrics []*metric
 	}
 
 	for _, metricData := range fetchedMetrics {
+		if metricData.Wildcard {
+			continue
+		}
 		if _, ok := metricNamesHash[metricData.Name]; ok {
 			triggerChecker.logger.Debugf("[TriggerID:%s][TimeSeries:%s] Trigger has same timeseries names", triggerChecker.triggerID, metricData.Name)
 			duplicateNames = append(duplicateNames, metricData.Name)
@@ -99,7 +102,7 @@ func (triggerChecker *TriggerChecker) getMetricsToCheck(fetchedMetrics []*metric
 
 	for metricName := range lastCheckMetricNamesHash {
 		step := int64(60)
-		if len(fetchedMetrics) > 0 {
+		if len(fetchedMetrics) > 0 && fetchedMetrics[0].StepTime != 0 {
 			step = fetchedMetrics[0].StepTime
 		}
 		metricData := metricSource.MakeEmptyMetricData(metricName, step, triggerChecker.from, triggerChecker.until)
@@ -136,7 +139,7 @@ func (triggerChecker *TriggerChecker) checkMetricData(metricData *metricSource.M
 
 func (triggerChecker *TriggerChecker) handleCheckResult(checkData moira.CheckData, checkingError error) (moira.CheckData, error) {
 	if checkingError == nil {
-		checkData.State = OK
+		checkData.State = moira.StateOK
 		if checkData.LastSuccessfulCheckTimestamp == 0 {
 			checkData.LastSuccessfulCheckTimestamp = checkData.Timestamp
 			return checkData, nil
@@ -148,26 +151,26 @@ func (triggerChecker *TriggerChecker) handleCheckResult(checkData moira.CheckDat
 	switch checkingError.(type) {
 	case ErrTriggerHasNoMetrics, ErrTriggerHasOnlyWildcards:
 		triggerChecker.logger.Debugf("Trigger %s: %s", triggerChecker.triggerID, checkingError.Error())
-		triggerState := ToTriggerState(triggerChecker.ttlState)
-		if len(checkData.Metrics) == 0 {
-			checkData.State = triggerState
-			checkData.Message = checkingError.Error()
-			if triggerChecker.ttl == 0 {
-				return checkData, nil
-			}
+		triggerState := triggerChecker.ttlState.ToTriggerState()
+		checkData.State = triggerState
+		checkData.Message = checkingError.Error()
+		if triggerChecker.ttl == 0 {
+			// Do not alert when user don't wanna receive
+			// NODATA state alerts, but change trigger status
+			return checkData, nil
 		}
 	case ErrWrongTriggerTargets, ErrTriggerHasSameMetricNames:
-		checkData.State = ERROR
+		checkData.State = moira.StateERROR
 		checkData.Message = checkingError.Error()
 	case remote.ErrRemoteTriggerResponse:
 		timeSinceLastSuccessfulCheck := checkData.Timestamp - checkData.LastSuccessfulCheckTimestamp
 		if timeSinceLastSuccessfulCheck >= triggerChecker.ttl {
-			checkData.State = EXCEPTION
+			checkData.State = moira.StateEXCEPTION
 			checkData.Message = fmt.Sprintf("Remote server unavailable. Trigger is not checked for %d seconds", timeSinceLastSuccessfulCheck)
 		}
 		triggerChecker.logger.Errorf("Trigger %s: %s", triggerChecker.triggerID, checkingError.Error())
 	case local.ErrUnknownFunction, local.ErrEvalExpr:
-		checkData.State = EXCEPTION
+		checkData.State = moira.StateEXCEPTION
 		checkData.Message = checkingError.Error()
 		triggerChecker.logger.Warningf("Trigger %s: %s", triggerChecker.triggerID, checkingError.Error())
 	default:
@@ -187,11 +190,11 @@ func (triggerChecker *TriggerChecker) checkForNoData(metricData *metricSource.Me
 		return false, nil
 	}
 	triggerChecker.logger.Debugf("[TriggerID:%s][TimeSeries:%s] Metric TTL expired for state %v", triggerChecker.triggerID, metricData.Name, metricLastState)
-	if triggerChecker.ttlState == DEL && metricLastState.EventTimestamp != 0 {
+	if triggerChecker.ttlState == moira.TTLStateDEL && metricLastState.EventTimestamp != 0 {
 		return true, nil
 	}
 	return false, &moira.MetricState{
-		State:       toMetricState(triggerChecker.ttlState),
+		State:       triggerChecker.ttlState.ToMetricState(),
 		Timestamp:   lastCheckTimeStamp - triggerChecker.ttl,
 		Value:       nil,
 		Maintenance: metricLastState.Maintenance,

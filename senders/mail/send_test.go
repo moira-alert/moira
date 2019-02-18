@@ -63,7 +63,7 @@ func generateTestEvents(n int, subscriptionID string) []moira.NotificationEvent 
 		event := moira.NotificationEvent{
 			Metric:         fmt.Sprintf("Metric number #%d", i),
 			SubscriptionID: &subscriptionID,
-			State:          "TEST",
+			State:          moira.StateTEST,
 		}
 		events = append(events, event)
 	}

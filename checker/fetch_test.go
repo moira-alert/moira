@@ -14,6 +14,78 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+func TestFetchTriggerMetrics(t *testing.T) {
+
+	Convey("Test fetch trigger metrics", t, func() {
+		mockCtrl := gomock.NewController(t)
+		source := mock_metric_source.NewMockMetricSource(mockCtrl)
+		fetchResult := mock_metric_source.NewMockFetchResult(mockCtrl)
+		defer mockCtrl.Finish()
+
+		var from int64 = 17
+		var until int64 = 67
+		pattern := "super.puper.pattern"
+
+		triggerChecker := &TriggerChecker{
+			source: source,
+			from:   from,
+			until:  until,
+			trigger: &moira.Trigger{
+				Targets:  []string{pattern},
+				Patterns: []string{pattern},
+			},
+			lastCheck: &moira.CheckData{
+				Metrics: map[string]moira.MetricState{},
+			},
+		}
+
+		Convey("no metrics in last check", func() {
+			Convey("fetch returns wildcard", func() {
+				source.EXPECT().Fetch(pattern, triggerChecker.from, triggerChecker.until, true).Return(fetchResult, nil)
+				fetchResult.EXPECT().GetMetricsData().Return([]*metricSource.MetricData{{Name: pattern, Wildcard: true}})
+				fetchResult.EXPECT().GetPatternMetrics().Return([]string{}, nil)
+
+				actual, err := triggerChecker.fetchTriggerMetrics()
+				So(err, ShouldResemble, ErrTriggerHasOnlyWildcards{})
+				So(actual, ShouldResemble, metricSource.MakeTriggerMetricsData([]*metricSource.MetricData{{Name: pattern, Wildcard: true}}, []*metricSource.MetricData{}))
+			})
+
+			Convey("fetch returns no metrics", func() {
+				source.EXPECT().Fetch(pattern, triggerChecker.from, triggerChecker.until, true).Return(fetchResult, nil)
+				fetchResult.EXPECT().GetMetricsData().Return([]*metricSource.MetricData{})
+				fetchResult.EXPECT().GetPatternMetrics().Return([]string{}, nil)
+
+				actual, err := triggerChecker.fetchTriggerMetrics()
+				So(err, ShouldResemble, ErrTriggerHasNoMetrics{})
+				So(actual, ShouldResemble, metricSource.MakeTriggerMetricsData([]*metricSource.MetricData{}, []*metricSource.MetricData{}))
+			})
+		})
+
+		Convey("has metrics in last check", func() {
+			triggerChecker.lastCheck.Metrics["metric"] = moira.MetricState{}
+			Convey("fetch returns wildcard", func() {
+				source.EXPECT().Fetch(pattern, triggerChecker.from, triggerChecker.until, true).Return(fetchResult, nil)
+				fetchResult.EXPECT().GetMetricsData().Return([]*metricSource.MetricData{{Name: pattern, Wildcard: true}})
+				fetchResult.EXPECT().GetPatternMetrics().Return([]string{}, nil)
+
+				actual, err := triggerChecker.fetchTriggerMetrics()
+				So(err, ShouldBeEmpty)
+				So(actual, ShouldResemble, metricSource.MakeTriggerMetricsData([]*metricSource.MetricData{{Name: pattern, Wildcard: true}}, []*metricSource.MetricData{}))
+			})
+
+			Convey("fetch returns no metrics", func() {
+				source.EXPECT().Fetch(pattern, triggerChecker.from, triggerChecker.until, true).Return(fetchResult, nil)
+				fetchResult.EXPECT().GetMetricsData().Return([]*metricSource.MetricData{})
+				fetchResult.EXPECT().GetPatternMetrics().Return([]string{}, nil)
+
+				actual, err := triggerChecker.fetchTriggerMetrics()
+				So(err, ShouldBeEmpty)
+				So(actual, ShouldResemble, metricSource.MakeTriggerMetricsData([]*metricSource.MetricData{}, []*metricSource.MetricData{}))
+			})
+		})
+	})
+}
+
 func TestGetTimeSeries(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
