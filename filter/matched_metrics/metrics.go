@@ -54,7 +54,7 @@ func (matcher *MetricsMatcher) receiveBatch(metrics <-chan *moira.MatchedMetric)
 		batchTimer := time.NewTimer(time.Second)
 		defer batchTimer.Stop()
 		for {
-			batch := make(map[string]*moira.MatchedMetric)
+			batch := make(map[string]*moira.MatchedMetric, matcher.cacheCapacity)
 		retry:
 			select {
 			case metric, ok := <-metrics:
