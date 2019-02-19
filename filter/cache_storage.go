@@ -2,12 +2,13 @@ package filter
 
 import (
 	"bufio"
-	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/metrics/graphite"
 	"io"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/metrics/graphite"
 )
 
 var defaultRetention = 60
@@ -47,14 +48,14 @@ func NewCacheStorage(logger moira.Logger, metrics *graphite.FilterMetrics, reade
 }
 
 // EnrichMatchedMetric calculate retention and filter cached values
-func (storage *Storage) EnrichMatchedMetric(buffer map[string]*moira.MatchedMetric, m *moira.MatchedMetric) {
+func (storage *Storage) EnrichMatchedMetric(batch map[string]*moira.MatchedMetric, m *moira.MatchedMetric) {
 	m.Retention = storage.getRetention(m)
 	m.RetentionTimestamp = roundToNearestRetention(m.Timestamp, int64(m.Retention))
 	if ex, ok := storage.metricsCache[m.Metric]; ok && ex.RetentionTimestamp == m.RetentionTimestamp && ex.Value == m.Value {
 		return
 	}
 	storage.metricsCache[m.Metric] = m
-	buffer[m.Metric] = m
+	batch[m.Metric] = m
 }
 
 // getRetention returns first matched retention for metric

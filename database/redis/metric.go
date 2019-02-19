@@ -92,6 +92,10 @@ func (connector *DbConnector) getMetricRetention(metric string) (int64, error) {
 
 // SaveMetrics saves new metrics
 func (connector *DbConnector) SaveMetrics(metrics map[string]*moira.MatchedMetric) error {
+	if len(metrics) == 0 {
+		return nil
+	}
+
 	c := connector.pool.Get()
 	defer c.Close()
 	for _, metric := range metrics {
