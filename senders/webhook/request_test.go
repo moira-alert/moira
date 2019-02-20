@@ -14,8 +14,7 @@ const testBadID = "!@#$"
 
 var (
 	testHost     = "https://hostname.domain"
-	testTemplate = fmt.Sprintf("%s/%s/%s/%s/%s",
-		testHost, moira.VariableTriggerID, moira.VariableContactType, moira.VariableContactID, moira.VariableContactValue)
+	testTemplate = fmt.Sprintf("%s/%s/%s/%s/%s", testHost, moira.VariableTriggerID, moira.VariableContactType, moira.VariableContactID, moira.VariableContactValue)
 	testContact = moira.ContactData{
 		ID:    "contactID",
 		Type:  "contactType",
@@ -188,7 +187,7 @@ func TestBuildRequestBody(t *testing.T) {
 			So(err, ShouldBeNil)
 		})
 		Convey("Empty notification", func() {
-			events, contact, trigger, plot, throttled := moira.NotificationEvents{}, moira.ContactData{}, moira.TriggerData{}, make([]byte, 0), false
+			events, contact, trigger, plot, throttled := moira.NotificationEvents{}, moira.ContactData{}, moira.TriggerData{}, make([]byte, 0), testThrottled
 			requestBody, err := buildRequestBody(events, contact, trigger, plot, throttled)
 			actual, expected := prepareStrings(string(requestBody), expectedEmptyPayload)
 			So(actual, ShouldEqual, expected)
