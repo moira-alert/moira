@@ -9,6 +9,19 @@ import (
 	"time"
 )
 
+const (
+	// VariableContactID is used to render template with contact.ID
+	VariableContactID    = "${contact_id}"
+	// VariableContactValue is used to render template with contact.Value
+	VariableContactValue = "${contact_value}"
+	// VariableContactType is used to render template with contact.Type
+	VariableContactType  = "${contact_type}"
+	// VariableTriggerID is used to render template with trigger.ID
+	VariableTriggerID    = "${trigger_id}"
+	// VariableTriggerName is used to render template with trigger.Name
+	VariableTriggerName  = "${trigger_name}"
+)
+
 // NotificationEvent represents trigger state changes event
 type NotificationEvent struct {
 	IsTriggerEvent bool     `json:"trigger_event,omitempty"`
@@ -37,6 +50,7 @@ type TriggerData struct {
 	IsRemote   bool     `json:"is_remote"`
 	Tags       []string `json:"__notifier_trigger_tags"`
 }
+
 // GetTriggerURI gets frontUri and returns triggerUrl, returns empty string on selfcheck and test notifications
 func (trigger TriggerData) GetTriggerURI(frontURI string) string {
 	if trigger.ID != "" {

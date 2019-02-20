@@ -60,8 +60,11 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 }
 
 func (sender *Sender) buildCommandData(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, throttled bool) (scriptFile string, args []string, scriptBody []byte, err error) {
-	execString := strings.Replace(sender.exec, "${trigger_name}", trigger.Name, -1)
-	execString = strings.Replace(execString, "${contact_value}", contact.Value, -1)
+	// TODO: Remove moira.VariableTriggerName from buildExecString in 2.6
+	if strings.Contains(sender.exec, moira.VariableTriggerName) {
+		sender.logger.Warningf("%s is deprecated and will be removed in 2.6 release", moira.VariableTriggerName)
+	}
+	execString := buildExecString(sender.exec, trigger, contact)
 	scriptFile, args, err = parseExec(execString)
 	if err != nil {
 		return scriptFile, args[1:], []byte{}, err
@@ -90,4 +93,18 @@ func parseExec(execString string) (scriptFile string, args []string, err error) 
 		return scriptFile, args, fmt.Errorf("%s not file", scriptFile)
 	}
 	return scriptFile, args, nil
+}
+
+func buildExecString(template string, trigger moira.TriggerData, contact moira.ContactData) string {
+	templateVariables := map[string]string{
+		moira.VariableContactID:    contact.ID,
+		moira.VariableContactValue: contact.Value,
+		moira.VariableContactType:  contact.Type,
+		moira.VariableTriggerID:    trigger.ID,
+		moira.VariableTriggerName:  trigger.Name,
+	}
+	for k, v := range templateVariables {
+		template = strings.Replace(template, k, v, -1)
+	}
+	return template
 }

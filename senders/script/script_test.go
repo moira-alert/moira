@@ -9,6 +9,41 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+const testDir = "/tmp"
+
+var (
+	testTrigger = moira.TriggerData{ID: "triggerID"}
+	testContact = moira.ContactData{Type: "contactType", ID: "contactID", Value: "contactValue"}
+)
+
+type execStringTestCase struct {
+	template string
+	expected string
+}
+
+var execStringTestCases = []execStringTestCase{
+	{
+		template: fmt.Sprintf("%s/%s/%s/%s/%s/script.go", testDir, moira.VariableContactType, moira.VariableContactID, moira.VariableTriggerID, moira.VariableContactValue),
+		expected: "/tmp/contactType/contactID/triggerID/contactValue/script.go",
+	},
+	{
+		template: fmt.Sprintf("%s/%s/%s/%s/script.go", testDir, moira.VariableContactID, moira.VariableTriggerID, moira.VariableContactValue),
+		expected: "/tmp/contactID/triggerID/contactValue/script.go",
+	},
+	{
+		template: fmt.Sprintf("%s/%s/%s/script.go", testDir, moira.VariableTriggerID, moira.VariableContactValue),
+		expected: "/tmp/triggerID/contactValue/script.go",
+	},
+	{
+		template: fmt.Sprintf("%s/%s/script.go", testDir, moira.VariableContactValue),
+		expected: "/tmp/contactValue/script.go",
+	},
+	{
+		template: fmt.Sprintf("%s/script.go", testDir),
+		expected: "/tmp/script.go",
+	},
+}
+
 func TestInit(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test")
 	Convey("Init tests", t, func() {
@@ -61,5 +96,12 @@ func TestBuildCommandData(t *testing.T) {
 		So(args, ShouldResemble, []string{"first", "second"})
 		So(err, ShouldNotBeNil)
 		So(scriptBody, ShouldBeEmpty)
+	})
+
+	Convey("Test exec string builder", t, func() {
+		for _, testCase := range execStringTestCases {
+			actual := buildExecString(testCase.template, testTrigger, testContact)
+			So(actual, ShouldEqual, testCase.expected)
+		}
 	})
 }
