@@ -50,8 +50,16 @@ func (handler *Handler) handle(connection net.Conn, lineChan chan<- []byte) {
 			}
 			break
 		}
-		lineBytes = lineBytes[:len(lineBytes)-1]
-		lineChan <- lineBytes
+		lineBytesLength := len(lineBytes)
+		if lineBytesLength > 0 && lineBytes[lineBytesLength-1] == '\n' {
+			lineBytesLength--
+		}
+		if lineBytesLength > 0 && lineBytes[lineBytesLength-1] == '\r' {
+			lineBytesLength--
+		}
+		if lineBytesLength > 0 {
+			lineChan <- lineBytes[:lineBytesLength]
+		}
 	}
 }
 
