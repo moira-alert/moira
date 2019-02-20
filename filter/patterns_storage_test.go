@@ -8,7 +8,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
-	"github.com/moira-alert/moira/mock/moira-alert"
+	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -45,7 +45,7 @@ func TestParseMetricFromString(t *testing.T) {
 		}
 
 		for _, invalidMetric := range invalidMetrics {
-			_, _, _, err := storage.parseMetricFromString([]byte(invalidMetric))
+			_, _, _, err := storage.parseMetric([]byte(invalidMetric))
 			So(err, ShouldBeError)
 		}
 	})
@@ -62,7 +62,7 @@ func TestParseMetricFromString(t *testing.T) {
 		}
 
 		for _, validMetric := range validMetrics {
-			metric, value, timestamp, err := storage.parseMetricFromString([]byte(validMetric.raw))
+			metric, value, timestamp, err := storage.parseMetric([]byte(validMetric.raw))
 			So(err, ShouldBeEmpty)
 			So(metric, ShouldResemble, []byte(validMetric.metric))
 			So(value, ShouldResemble, validMetric.value)
@@ -88,7 +88,7 @@ func TestParseMetricFromString(t *testing.T) {
 			rawTimestamp := strconv.FormatFloat(float64(testTimestamp)+rand.Float64(), 'f', i, 64)
 			rawMetric := "One.two.three 123 " + rawTimestamp
 			validMetric := ValidMetricCase{rawMetric, "One.two.three", 123, testTimestamp}
-			metric, value, timestamp, err := storage.parseMetricFromString([]byte(validMetric.raw))
+			metric, value, timestamp, err := storage.parseMetric([]byte(validMetric.raw))
 			So(err, ShouldBeEmpty)
 			So(metric, ShouldResemble, []byte(validMetric.metric))
 			So(value, ShouldResemble, validMetric.value)

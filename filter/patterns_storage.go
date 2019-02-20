@@ -1,13 +1,14 @@
 package filter
 
 import (
+	"bytes"
 	"fmt"
 	"path"
 	"strconv"
 	"strings"
 	"sync/atomic"
 	"time"
-	"unicode"
+	"unsafe"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/metrics/graphite"
@@ -58,7 +59,7 @@ func (storage *PatternStorage) ProcessIncomingMetric(lineBytes []byte) *moira.Ma
 	storage.metrics.TotalMetricsReceived.Inc(1)
 	count := storage.metrics.TotalMetricsReceived.Count()
 
-	metric, value, timestamp, err := storage.parseMetricFromString(lineBytes)
+	metric, value, timestamp, err := storage.parseMetric(lineBytes)
 	if err != nil {
 		storage.logger.Infof("cannot parse input: %v", err)
 		return nil
@@ -122,46 +123,33 @@ func (storage *PatternStorage) matchPattern(metric []byte) []string {
 	return matched
 }
 
-// parseMetricFromString parses metric from string
+// parseMetric parses metric from string
 // supported format: "<metricString> <valueFloat64> <timestampInt64>"
-func (*PatternStorage) parseMetricFromString(line []byte) ([]byte, float64, int64, error) {
-	var parts [3][]byte
-	partIndex := 0
-	partOffset := 0
-	for i, b := range line {
-		r := rune(b)
-		if r > unicode.MaxASCII || !strconv.IsPrint(r) {
-			return nil, 0, 0, fmt.Errorf("non-ascii or non-printable chars in metric name: '%s'", line)
-		}
-		if b == ' ' {
-			parts[partIndex] = line[partOffset:i]
-			partOffset = i + 1
-			partIndex++
-		}
-		if partIndex > 2 {
-			return nil, 0, 0, fmt.Errorf("too many space-separated items: '%s'", line)
-		}
+func (*PatternStorage) parseMetric(input []byte) ([]byte, float64, int64, error) {
+	firstSpaceIndex := bytes.IndexByte(input, ' ')
+	if firstSpaceIndex < 1 {
+		return nil, 0, 0, fmt.Errorf("too few space-separated items: '%s'", input)
 	}
 
-	if partIndex < 2 {
-		return nil, 0, 0, fmt.Errorf("too few space-separated items: '%s'", line)
+	secondSpaceIndex := bytes.IndexByte(input[firstSpaceIndex+1:], ' ')
+	if secondSpaceIndex < 1 {
+		return nil, 0, 0, fmt.Errorf("too few space-separated items: '%s'", input)
+	}
+	secondSpaceIndex += firstSpaceIndex + 1
+
+	metric := input[:firstSpaceIndex]
+	if !isPrintableASCII(metric) {
+		return nil, 0, 0, fmt.Errorf("non-ascii or non-printable chars in metric name: '%s'", input)
 	}
 
-	parts[partIndex] = line[partOffset:]
-
-	metric := parts[0]
-	if len(metric) < 1 {
-		return nil, 0, 0, fmt.Errorf("metric name is empty: '%s'", line)
-	}
-
-	value, err := strconv.ParseFloat(string(parts[1]), 64)
+	value, err := strconv.ParseFloat(unsafeString(input[firstSpaceIndex+1:secondSpaceIndex]), 64)
 	if err != nil {
-		return nil, 0, 0, fmt.Errorf("cannot parse value: '%s' (%s)", line, err)
+		return nil, 0, 0, fmt.Errorf("cannot parse value: '%s' (%s)", input, err)
 	}
 
-	timestamp, err := parseTimestamp(string(parts[2]))
+	timestamp, err := parseTimestamp(unsafeString(input[secondSpaceIndex+1:]))
 	if err != nil || timestamp == 0 {
-		return nil, 0, 0, fmt.Errorf("cannot parse timestamp: '%s' (%s)", line, err)
+		return nil, 0, 0, fmt.Errorf("cannot parse timestamp: '%s' (%s)", input, err)
 	}
 
 	return metric, value, timestamp, nil
@@ -268,4 +256,18 @@ func split2(s, sep string) (string, string) {
 		return splitResult[0], ""
 	}
 	return splitResult[0], splitResult[1]
+}
+
+func unsafeString(b []byte) string {
+	return *(*string)(unsafe.Pointer(&b))
+}
+
+func isPrintableASCII(b []byte) bool {
+	for i := 0; i < len(b); i++ {
+		if b[i] < 0x20 || b[i] > 0x7E {
+			return false
+		}
+	}
+
+	return true
 }
