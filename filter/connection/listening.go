@@ -1,9 +1,13 @@
 package connection
 
 import (
+	"compress/gzip"
 	"fmt"
+	"io"
 	"net"
 	"time"
+
+	"github.com/golang/snappy"
 
 	"gopkg.in/tomb.v2"
 
@@ -21,7 +25,7 @@ type MetricsListener struct {
 }
 
 // NewListener creates new listener
-func NewListener(port string, logger moira.Logger, metrics *graphite.FilterMetrics) (*MetricsListener, error) {
+func NewListener(port string, compression string, logger moira.Logger, metrics *graphite.FilterMetrics) (*MetricsListener, error) {
 	address, err := net.ResolveTCPAddr("tcp", port)
 	if nil != err {
 		return nil, fmt.Errorf("failed to resolve tcp address [%s]: %s", port, err.Error())
@@ -30,10 +34,11 @@ func NewListener(port string, logger moira.Logger, metrics *graphite.FilterMetri
 	if err != nil {
 		return nil, fmt.Errorf("failed to listen on [%s]: %s", port, err.Error())
 	}
+	decompressor := newDecompressor(compression)
 	listener := MetricsListener{
 		listener: newListener,
 		logger:   logger,
-		handler:  NewConnectionsHandler(logger),
+		handler:  NewConnectionsHandler(logger, decompressor),
 		metrics:  metrics,
 	}
 	return &listener, nil
@@ -83,6 +88,23 @@ func (listener *MetricsListener) checkNewLinesChannelLen(channel <-chan []byte) 
 			return nil
 		case <-checkTicker.C:
 			listener.metrics.LineChannelLen.Update(int64(len(channel)))
+		}
+	}
+}
+
+func newDecompressor(compression string) decompressor {
+	switch compression {
+	case "snappy":
+		return func(c net.Conn) (io.Reader, error) {
+			return snappy.NewReader(c), nil
+		}
+	case "gzip":
+		return func(c net.Conn) (io.Reader, error) {
+			return gzip.NewReader(c)
+		}
+	default:
+		return func(c net.Conn) (io.Reader, error) {
+			return c, nil
 		}
 	}
 }

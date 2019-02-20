@@ -9,18 +9,22 @@ import (
 	"github.com/moira-alert/moira"
 )
 
+type decompressor func(net.Conn) (io.Reader, error)
+
 // Handler handling connection data and shift it to lineChan channel
 type Handler struct {
-	logger    moira.Logger
-	wg        sync.WaitGroup
-	terminate chan struct{}
+	logger       moira.Logger
+	wg           sync.WaitGroup
+	terminate    chan struct{}
+	decompressor decompressor
 }
 
 // NewConnectionsHandler creates new Handler
-func NewConnectionsHandler(logger moira.Logger) *Handler {
+func NewConnectionsHandler(logger moira.Logger, decompressor decompressor) *Handler {
 	return &Handler{
-		logger:    logger,
-		terminate: make(chan struct{}, 1),
+		logger:       logger,
+		terminate:    make(chan struct{}, 1),
+		decompressor: decompressor,
 	}
 }
 
@@ -34,15 +38,21 @@ func (handler *Handler) HandleConnection(connection net.Conn, lineChan chan<- []
 }
 
 func (handler *Handler) handle(connection net.Conn, lineChan chan<- []byte) {
-	buffer := bufio.NewReader(connection)
+	decompressedConnection, err := handler.decompressor(connection)
+	if err != nil {
+		connection.Close()
+		handler.logger.Errorf("Failed init decompressor: %s", err)
+		return
+	}
+	connectionReader := bufio.NewReader(decompressedConnection)
 
-	go func(conn net.Conn) {
+	go func(connection net.Conn) {
 		<-handler.terminate
-		conn.Close()
+		connection.Close()
 	}(connection)
 
 	for {
-		bytes, err := buffer.ReadBytes('\n')
+		bytes, err := connectionReader.ReadBytes('\n')
 		if err != nil {
 			connection.Close()
 			if err != io.EOF {

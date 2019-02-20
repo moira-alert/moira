@@ -25,6 +25,8 @@ type filterConfig struct {
 	CacheCapacity int `yaml:"cache_capacity"`
 	// Max concurrent metric matchers to run. Equals to the number of processor cores found on Moira host by default or when variable is defined as 0.
 	MaxParallelMatches int `yaml:"max_parallel_matches"`
+	// Allow to receive compressed(snappy and gzip are supported) metrics
+	Compression string `yaml:"compression"`
 }
 
 func getDefault() config {
@@ -43,6 +45,7 @@ func getDefault() config {
 			RetentionConfig:    "/etc/moira/storage-schemas.conf",
 			CacheCapacity:      10,
 			MaxParallelMatches: 0,
+			Compression:        "",
 		},
 		Graphite: cmd.GraphiteConfig{
 			RuntimeStats: false,
