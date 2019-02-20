@@ -187,7 +187,7 @@ func TestBuildRequestBody(t *testing.T) {
 			So(err, ShouldBeNil)
 		})
 		Convey("Empty notification", func() {
-			events, contact, trigger, plot, throttled := moira.NotificationEvents{}, moira.ContactData{}, moira.TriggerData{}, make([]byte, 0), testThrottled
+			events, contact, trigger, plot, throttled := moira.NotificationEvents{}, moira.ContactData{}, moira.TriggerData{}, make([]byte, 0), false
 			requestBody, err := buildRequestBody(events, contact, trigger, plot, throttled)
 			actual, expected := prepareStrings(string(requestBody), expectedEmptyPayload)
 			So(actual, ShouldEqual, expected)
