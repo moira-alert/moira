@@ -70,6 +70,35 @@ func TestGetTriggerListsDiff(t *testing.T) {
 		third := []*Trigger{triggerVal3, triggerVal3, triggerVal3}
 		diff = GetTriggerListsDiff(first, second, third)
 		So(diff, ShouldResemble, []*Trigger{triggerVal1, triggerVal4})
+
+		Convey("One trigger in first array is nil", func() {
+			first = []*Trigger{nil, triggerVal2, triggerVal3, triggerVal4}
+			second = []*Trigger{triggerVal2}
+			diff = GetTriggerListsDiff(first, second)
+			So(diff, ShouldResemble, []*Trigger{triggerVal3, triggerVal4})
+		})
+
+		Convey("One trigger in additional arrays in nil", func() {
+			first = []*Trigger{triggerVal1, triggerVal2, triggerVal3, triggerVal4}
+			second = []*Trigger{nil}
+			diff = GetTriggerListsDiff(first, second)
+			So(diff, ShouldResemble, []*Trigger{triggerVal1, triggerVal2, triggerVal3, triggerVal4})
+		})
+
+		Convey("First array is empty", func() {
+			first = []*Trigger{nil, nil, nil}
+			second = []*Trigger{triggerVal1}
+			diff = GetTriggerListsDiff(first, second)
+			So(diff, ShouldResemble, []*Trigger{})
+		})
+
+		Convey("Additional arrays is empty", func() {
+			first = []*Trigger{triggerVal1}
+			second = []*Trigger{nil}
+			third = []*Trigger{nil}
+			diff = GetTriggerListsDiff(first, second, third)
+			So(diff, ShouldResemble, first)
+		})
 	})
 }
 

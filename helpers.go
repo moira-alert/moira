@@ -83,15 +83,22 @@ func GetTriggerListsDiff(triggerLists ...[]*Trigger) []*Trigger {
 	}
 	leftValues := make(map[string]bool)
 	for _, value := range triggerLists[0] {
-		leftValues[value.ID] = true
+		if value != nil {
+			leftValues[value.ID] = true
+		}
 	}
 	for _, triggerList := range triggerLists[1:] {
 		for _, trigger := range triggerList {
-			delete(leftValues, trigger.ID)
+			if trigger != nil {
+				delete(leftValues, trigger.ID)
+			}
 		}
 	}
 	result := make([]*Trigger, 0)
 	for _, value := range triggerLists[0] {
+		if value == nil {
+			continue
+		}
 		if _, ok := leftValues[value.ID]; ok {
 			result = append(result, value)
 		}
