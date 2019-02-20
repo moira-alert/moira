@@ -116,7 +116,7 @@ func (sender *Sender) sendAsMessage(chat *telebot.Chat, message string) error {
 
 func (sender *Sender) sendAsPhoto(chat *telebot.Chat, plot []byte, caption string) error {
 	photo := telebot.Photo{File: telebot.FromReader(bytes.NewReader(plot)), Caption: caption}
-	_, err := photo.Send(sender.bot, chat, &telebot.SendOptions{ParseMode: telebot.ModeMarkdown})
+	_, err := photo.Send(sender.bot, chat, &telebot.SendOptions{})
 	if err != nil {
 		return fmt.Errorf("can't send event plot to %v: %s", chat.ID, err.Error())
 	}
