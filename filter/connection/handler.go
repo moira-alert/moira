@@ -42,7 +42,7 @@ func (handler *Handler) handle(connection net.Conn, lineChan chan<- []byte) {
 	}(connection)
 
 	for {
-		lineBytes, err := buffer.ReadBytes('\n')
+		bytes, err := buffer.ReadBytes('\n')
 		if err != nil {
 			connection.Close()
 			if err != io.EOF {
@@ -50,15 +50,9 @@ func (handler *Handler) handle(connection net.Conn, lineChan chan<- []byte) {
 			}
 			break
 		}
-		lineBytesLength := len(lineBytes)
-		if lineBytesLength > 0 && lineBytes[lineBytesLength-1] == '\n' {
-			lineBytesLength--
-		}
-		if lineBytesLength > 0 && lineBytes[lineBytesLength-1] == '\r' {
-			lineBytesLength--
-		}
-		if lineBytesLength > 0 {
-			lineChan <- lineBytes[:lineBytesLength]
+		bytesWithoutCRLF := dropCRLF(bytes)
+		if len(bytesWithoutCRLF) > 0 {
+			lineChan <- bytesWithoutCRLF
 		}
 	}
 }
@@ -67,4 +61,15 @@ func (handler *Handler) handle(connection net.Conn, lineChan chan<- []byte) {
 func (handler *Handler) StopHandlingConnections() {
 	close(handler.terminate)
 	handler.wg.Wait()
+}
+
+func dropCRLF(bytes []byte) []byte {
+	bytesLength := len(bytes)
+	if bytesLength > 0 && bytes[bytesLength-1] == '\n' {
+		bytesLength--
+	}
+	if bytesLength > 0 && bytes[bytesLength-1] == '\r' {
+		bytesLength--
+	}
+	return bytes[:bytesLength]
 }
