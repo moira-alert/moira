@@ -115,7 +115,7 @@ func main() {
 	defer stopHeartbeatWorker(heartbeatWorker)
 
 	// Start metrics listener
-	listener, err := connection.NewListener(config.Filter.Listen, logger, cacheMetrics)
+	listener, err := connection.NewListener(config.Filter.Listen, config.Filter.Compression, logger, cacheMetrics)
 	if err != nil {
 		logger.Fatalf("Failed to start listen: %s", err.Error())
 	}
