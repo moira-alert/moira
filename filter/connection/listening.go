@@ -34,11 +34,10 @@ func NewListener(port string, compression string, logger moira.Logger, metrics *
 	if err != nil {
 		return nil, fmt.Errorf("failed to listen on [%s]: %s", port, err.Error())
 	}
-	decompressor := newDecompressor(compression)
 	listener := MetricsListener{
 		listener: newListener,
 		logger:   logger,
-		handler:  NewConnectionsHandler(logger, decompressor),
+		handler:  NewConnectionsHandler(logger, newDecompressor(compression)),
 		metrics:  metrics,
 	}
 	return &listener, nil
