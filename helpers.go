@@ -3,7 +3,18 @@ package moira
 import (
 	"math"
 	"time"
+	"unsafe"
 )
+
+// UnsafeBytesToString converts bytes to string without copying
+func UnsafeBytesToString(b []byte) string {
+	return *(*string)(unsafe.Pointer(&b))
+}
+
+// UnsafeStringToBytes converts string to bytes without copying
+func UnsafeStringToBytes(s string) []byte {
+	return *(*[]byte)(unsafe.Pointer(&s))
+}
 
 // Int64ToTime returns time.Time from int64
 func Int64ToTime(timeStamp int64) time.Time {

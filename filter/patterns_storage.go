@@ -1,14 +1,11 @@
 package filter
 
 import (
-	"bytes"
 	"fmt"
 	"path"
-	"strconv"
 	"strings"
 	"sync/atomic"
 	"time"
-	"unsafe"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/metrics/graphite"
@@ -59,7 +56,7 @@ func (storage *PatternStorage) ProcessIncomingMetric(lineBytes []byte) *moira.Ma
 	storage.metrics.TotalMetricsReceived.Inc(1)
 	count := storage.metrics.TotalMetricsReceived.Count()
 
-	metric, value, timestamp, err := storage.parseMetric(lineBytes)
+	metric, value, timestamp, err := ParseMetric(lineBytes)
 	if err != nil {
 		storage.logger.Infof("cannot parse input: %v", err)
 		return nil
@@ -75,7 +72,7 @@ func (storage *PatternStorage) ProcessIncomingMetric(lineBytes []byte) *moira.Ma
 	if len(matched) > 0 {
 		storage.metrics.MatchingMetricsReceived.Inc(1)
 		return &moira.MatchedMetric{
-			Metric:             string(metric),
+			Metric:             metric,
 			Patterns:           matched,
 			Value:              value,
 			Timestamp:          timestamp,
@@ -87,7 +84,7 @@ func (storage *PatternStorage) ProcessIncomingMetric(lineBytes []byte) *moira.Ma
 }
 
 // matchPattern returns array of matched patterns
-func (storage *PatternStorage) matchPattern(metric []byte) []string {
+func (storage *PatternStorage) matchPattern(metric string) []string {
 	currentLevel := []*PatternNode{storage.PatternTree.Load().(*PatternNode)}
 	var found, index int
 	for i, c := range metric {
@@ -121,38 +118,6 @@ func (storage *PatternStorage) matchPattern(metric []byte) []string {
 	}
 
 	return matched
-}
-
-// parseMetric parses metric from string
-// supported format: "<metricString> <valueFloat64> <timestampInt64>"
-func (*PatternStorage) parseMetric(input []byte) ([]byte, float64, int64, error) {
-	firstSpaceIndex := bytes.IndexByte(input, ' ')
-	if firstSpaceIndex < 1 {
-		return nil, 0, 0, fmt.Errorf("too few space-separated items: '%s'", input)
-	}
-
-	secondSpaceIndex := bytes.IndexByte(input[firstSpaceIndex+1:], ' ')
-	if secondSpaceIndex < 1 {
-		return nil, 0, 0, fmt.Errorf("too few space-separated items: '%s'", input)
-	}
-	secondSpaceIndex += firstSpaceIndex + 1
-
-	metric := input[:firstSpaceIndex]
-	if !isPrintableASCII(metric) {
-		return nil, 0, 0, fmt.Errorf("non-ascii or non-printable chars in metric name: '%s'", input)
-	}
-
-	value, err := strconv.ParseFloat(unsafeString(input[firstSpaceIndex+1:secondSpaceIndex]), 64)
-	if err != nil {
-		return nil, 0, 0, fmt.Errorf("cannot parse value: '%s' (%s)", input, err)
-	}
-
-	timestamp, err := parseTimestamp(unsafeString(input[secondSpaceIndex+1:]))
-	if err != nil || timestamp == 0 {
-		return nil, 0, 0, fmt.Errorf("cannot parse timestamp: '%s' (%s)", input, err)
-	}
-
-	return metric, value, timestamp, nil
 }
 
 func (storage *PatternStorage) buildTree(patterns []string) error {
@@ -209,11 +174,6 @@ func (storage *PatternStorage) buildTree(patterns []string) error {
 	return nil
 }
 
-func parseTimestamp(unixTimestamp string) (int64, error) {
-	timestamp, err := strconv.ParseFloat(unixTimestamp, 64)
-	return int64(timestamp), err
-}
-
 func hasEmptyParts(parts []string) bool {
 	for _, part := range parts {
 		if part == "" {
@@ -223,9 +183,9 @@ func hasEmptyParts(parts []string) bool {
 	return false
 }
 
-func findPart(part []byte, currentLevel []*PatternNode) ([]*PatternNode, int) {
+func findPart(part string, currentLevel []*PatternNode) ([]*PatternNode, int) {
 	nextLevel := make([]*PatternNode, 0, 64)
-	hash := xxhash.Checksum32(part)
+	hash := xxhash.Checksum32(moira.UnsafeStringToBytes(part))
 	for _, node := range currentLevel {
 		for _, child := range node.Children {
 			match := false
@@ -234,7 +194,7 @@ func findPart(part []byte, currentLevel []*PatternNode) ([]*PatternNode, int) {
 				match = true
 			} else if len(child.InnerParts) > 0 {
 				for _, innerPart := range child.InnerParts {
-					innerMatch, _ := path.Match(innerPart, string(part))
+					innerMatch, _ := path.Match(innerPart, part)
 					if innerMatch {
 						match = true
 						break
@@ -256,18 +216,4 @@ func split2(s, sep string) (string, string) {
 		return splitResult[0], ""
 	}
 	return splitResult[0], splitResult[1]
-}
-
-func unsafeString(b []byte) string {
-	return *(*string)(unsafe.Pointer(&b))
-}
-
-func isPrintableASCII(b []byte) bool {
-	for i := 0; i < len(b); i++ {
-		if b[i] < 0x20 || b[i] > 0x7E {
-			return false
-		}
-	}
-
-	return true
 }

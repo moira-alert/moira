@@ -8,6 +8,10 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+func TestUnsafeStringToBytes(t *testing.T) {
+	ShouldEqual(UnsafeBytesToString(UnsafeStringToBytes("42")), "42")
+}
+
 func TestInt64ToTime(t *testing.T) {
 	int64timeStamp := int64(1527330278)
 	humanReadableTimestamp := time.Date(2018, 5, 26, 10, 24, 38, 0, time.UTC)

@@ -2,8 +2,6 @@ package filter
 
 import (
 	"fmt"
-	"math/rand"
-	"strconv"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -12,90 +10,6 @@ import (
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
 )
-
-func TestParseMetricFromString(t *testing.T) {
-	storage := PatternStorage{}
-
-	type ValidMetricCase struct {
-		raw       string
-		metric    string
-		value     float64
-		timestamp int64
-	}
-
-	Convey("Given invalid metric strings, should return errors", t, func() {
-		invalidMetrics := []string{
-			"Invalid.value 12g5 1234567890",
-			"No.value.two.spaces  1234567890",
-			"No.timestamp.space.in.the.end 12 ",
-			"No.timestamp 12",
-			" 12 1234567890",
-			"Non-ascii.こんにちは 12 1234567890",
-			"Non-printable.\000 12 1234567890",
-			"",
-			"\n",
-			"Too.many.parts 1 2 3 4 12 1234567890",
-			"Space.in.the.end 12 1234567890 ",
-			" Space.in.the.beginning 12 1234567890",
-			"\tNon-printable.in.the.beginning 12 1234567890",
-			"\rNon-printable.in.the.beginning 12 1234567890",
-			"Newline.in.the.end 12 1234567890\n",
-			"Newline.in.the.end 12 1234567890\r",
-			"Newline.in.the.end 12 1234567890\r\n",
-		}
-
-		for _, invalidMetric := range invalidMetrics {
-			_, _, _, err := storage.parseMetric([]byte(invalidMetric))
-			So(err, ShouldBeError)
-		}
-	})
-
-	Convey("Given valid metric strings, should return parsed values", t, func() {
-		validMetrics := []ValidMetricCase{
-			{"One.two.three 123 1234567890", "One.two.three", 123, 1234567890},
-			{"One.two.three 1.23e2 1234567890", "One.two.three", 123, 1234567890},
-			{"One.two.three -123 1234567890", "One.two.three", -123, 1234567890},
-			{"One.two.three +123 1234567890", "One.two.three", 123, 1234567890},
-			{"One.two.three 123. 1234567890", "One.two.three", 123, 1234567890},
-			{"One.two.three 123.0 1234567890", "One.two.three", 123, 1234567890},
-			{"One.two.three .123 1234567890", "One.two.three", 0.123, 1234567890},
-		}
-
-		for _, validMetric := range validMetrics {
-			metric, value, timestamp, err := storage.parseMetric([]byte(validMetric.raw))
-			So(err, ShouldBeEmpty)
-			So(metric, ShouldResemble, []byte(validMetric.metric))
-			So(value, ShouldResemble, validMetric.value)
-			So(timestamp, ShouldResemble, validMetric.timestamp)
-		}
-	})
-
-	Convey("Given valid metric strings with float64 timestamp, should return parsed values", t, func() {
-		var testTimestamp int64 = 1234567890
-
-		// Create and test n metrics with float64 timestamp with fractional part of length n (n=19)
-		//
-		// For example:
-		//
-		// [n=1] One.two.three 123 1234567890.6
-		// [n=2] One.two.three 123 1234567890.94
-		// [n=3] One.two.three 123 1234567890.665
-		// [n=4] One.two.three 123 1234567890.4377
-		// ...
-		// [n=19] One.two.three 123 1234567890.6790847778320312500
-
-		for i := 1; i < 20; i++ {
-			rawTimestamp := strconv.FormatFloat(float64(testTimestamp)+rand.Float64(), 'f', i, 64)
-			rawMetric := "One.two.three 123 " + rawTimestamp
-			validMetric := ValidMetricCase{rawMetric, "One.two.three", 123, testTimestamp}
-			metric, value, timestamp, err := storage.parseMetric([]byte(validMetric.raw))
-			So(err, ShouldBeEmpty)
-			So(metric, ShouldResemble, []byte(validMetric.metric))
-			So(value, ShouldResemble, validMetric.value)
-			So(timestamp, ShouldResemble, validMetric.timestamp)
-		}
-	})
-}
 
 func TestProcessIncomingMetric(t *testing.T) {
 	testPatterns := []string{
