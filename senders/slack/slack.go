@@ -18,6 +18,9 @@ const (
 	nodataEmoji    = ":moira-state-nodata:"
 	exceptionEmoji = ":moira-state-exception:"
 	testEmoji      = ":moira-state-test:"
+
+	messageMaxCharacters          = 4000
+	additionalInfoCharactersCount = 400
 )
 
 var stateEmoji = map[moira.State]string{
@@ -93,13 +96,30 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 
 	message.WriteString("\n```")
 
+	var printEventsCount int
+	messageCharsCount := len([]rune(message.String()))
+	messageLimitReached := false
+
 	for _, event := range events {
-		message.WriteString(fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location), event.Metric, event.GetMetricValue(), event.OldState, event.State))
+		line := fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location), event.Metric, event.GetMetricValue(), event.OldState, event.State)
 		if len(moira.UseString(event.Message)) > 0 {
-			message.WriteString(fmt.Sprintf(". %s", moira.UseString(event.Message)))
+			line += fmt.Sprintf(". %s", moira.UseString(event.Message))
 		}
+		lineCharsCount := len([]rune(line))
+		if messageCharsCount+lineCharsCount > messageMaxCharacters-additionalInfoCharactersCount {
+			messageLimitReached = true
+			break
+		}
+		message.WriteString(line)
+		messageCharsCount += lineCharsCount
+		printEventsCount++
 	}
 	message.WriteString("```")
+
+	if messageLimitReached {
+		message.WriteString(fmt.Sprintf("\n\n...and %d more events.", len(events)-printEventsCount))
+	}
+
 	if throttled {
 		message.WriteString("\nPlease, *fix your system or tune this trigger* to generate less events.")
 	}
