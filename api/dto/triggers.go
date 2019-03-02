@@ -118,6 +118,9 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 	if err := checkWarnErrorExpression(trigger); err != nil {
 		return err
 	}
+	if err := validateTriggerTargetsAndValues(trigger); err != nil {
+		return err
+	}
 
 	triggerExpression := expression.TriggerExpression{
 		AdditionalTargetsValues: make(map[string]float64),
@@ -139,6 +142,19 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 	}
 	if _, err := triggerExpression.Evaluate(); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func validateTriggerTargetsAndValues(trigger *Trigger) error {
+	if len(trigger.Targets) > 1 {
+		if trigger.ErrorValue != nil  {
+			return fmt.Errorf("Can't use error_value with multiple targets")
+		}
+		if trigger.WarnValue != nil {
+			return fmt.Errorf("Can't use warn_value with multiple targets")
+		}
 	}
 	return nil
 }
