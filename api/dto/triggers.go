@@ -149,6 +149,9 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 
 func validateTriggerTargetsAndValues(trigger *Trigger) error {
 	if len(trigger.Targets) > 1 {
+		if trigger.TriggerType != moira.ExpressionTrigger {
+			return fmt.Errorf("Can't use trigger_type not '%v' for with multiple targets", moira.ExpressionTrigger)
+		}
 		if trigger.ErrorValue != nil  {
 			return fmt.Errorf("Can't use error_value with multiple targets")
 		}
