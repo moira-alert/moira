@@ -10,6 +10,33 @@ import (
 
 func TestUnsafeStringToBytes(t *testing.T) {
 	ShouldEqual(UnsafeBytesToString(UnsafeStringToBytes("42")), "42")
+	ShouldEqual(UnsafeBytesToString(UnsafeStringToBytes("")), "")
+}
+
+func TestSplitBytes(t *testing.T) {
+	type SplitBytesCase struct {
+		input  string
+		output []string
+	}
+	Convey("", t, func() {
+		cases := []SplitBytesCase{
+			{input: "", output: []string{}},
+			{input: "a", output: []string{"a"}},
+			{input: " ", output: []string{"", ""}},
+			{input: "a ", output: []string{"a", ""}},
+			{input: " a", output: []string{"", "a"}},
+			{input: " a ", output: []string{"", "a", ""}},
+			{input: "a a", output: []string{"a", "a"}},
+		}
+		for _, c := range cases {
+			actualOutput := make([]string, 0)
+			scanner := SplitBytes([]byte(c.input), ' ')
+			for scanner.HasNext() {
+				actualOutput = append(actualOutput, string(scanner.Next()))
+			}
+			So(actualOutput, ShouldResemble, c.output)
+		}
+	})
 }
 
 func TestInt64ToTime(t *testing.T) {

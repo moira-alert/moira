@@ -8,10 +8,11 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestParseMetricFromString(t *testing.T) {
+func TestParseMetric(t *testing.T) {
 	type ValidMetricCase struct {
 		raw       string
 		metric    string
+		labels    map[string]string
 		value     float64
 		timestamp int64
 	}
@@ -35,31 +36,38 @@ func TestParseMetricFromString(t *testing.T) {
 			"Newline.in.the.end 12 1234567890\n",
 			"Newline.in.the.end 12 1234567890\r",
 			"Newline.in.the.end 12 1234567890\r\n",
+			";empty.name.but.with.label= 1 2",
+			"no.labels.but.delimiter.in.the.end; 1 2",
+			"empty.label.name;= 1 2",
 		}
 
 		for _, invalidMetric := range invalidMetrics {
-			_, _, _, err := ParseMetric([]byte(invalidMetric))
+			_, _, _, _, err := ParseMetric([]byte(invalidMetric))
 			So(err, ShouldBeError)
 		}
 	})
 
 	Convey("Given valid metric strings, should return parsed values", t, func() {
 		validMetrics := []ValidMetricCase{
-			{"One.two.three 123 1234567890", "One.two.three", 123, 1234567890},
-			{"One.two.three 1.23e2 1234567890", "One.two.three", 123, 1234567890},
-			{"One.two.three -123 1234567890", "One.two.three", -123, 1234567890},
-			{"One.two.three +123 1234567890", "One.two.three", 123, 1234567890},
-			{"One.two.three 123. 1234567890", "One.two.three", 123, 1234567890},
-			{"One.two.three 123.0 1234567890", "One.two.three", 123, 1234567890},
-			{"One.two.three .123 1234567890", "One.two.three", 0.123, 1234567890},
+			{"One.two.three 123 1234567890", "One.two.three", map[string]string{"name": "One.two.three"}, 123, 1234567890},
+			{"One.two.three 1.23e2 1234567890", "One.two.three", map[string]string{"name": "One.two.three"}, 123, 1234567890},
+			{"One.two.three -123 1234567890", "One.two.three", map[string]string{"name": "One.two.three"}, -123, 1234567890},
+			{"One.two.three +123 1234567890", "One.two.three", map[string]string{"name": "One.two.three"}, 123, 1234567890},
+			{"One.two.three 123. 1234567890", "One.two.three", map[string]string{"name": "One.two.three"}, 123, 1234567890},
+			{"One.two.three 123.0 1234567890", "One.two.three", map[string]string{"name": "One.two.three"}, 123, 1234567890},
+			{"One.two.three .123 1234567890", "One.two.three", map[string]string{"name": "One.two.three"}, 0.123, 1234567890},
+			{"One.two.three;four=five 123 1234567890", "One.two.three", map[string]string{"name": "One.two.three", "four": "five"}, 123, 1234567890},
+			{"One.two.three;four= 123 1234567890", "One.two.three", map[string]string{"name": "One.two.three", "four": ""}, 123, 1234567890},
+			{"One.two.three;four=five;six=seven 123 1234567890", "One.two.three", map[string]string{"name": "One.two.three", "four": "five", "six": "seven"}, 123, 1234567890},
 		}
 
 		for _, validMetric := range validMetrics {
-			metric, value, timestamp, err := ParseMetric([]byte(validMetric.raw))
+			metric, labels, value, timestamp, err := ParseMetric([]byte(validMetric.raw))
 			So(err, ShouldBeEmpty)
-			So(metric, ShouldResemble, validMetric.metric)
-			So(value, ShouldResemble, validMetric.value)
-			So(timestamp, ShouldResemble, validMetric.timestamp)
+			So(metric, ShouldEqual, validMetric.metric)
+			So(labels, ShouldResemble, validMetric.labels)
+			So(value, ShouldEqual, validMetric.value)
+			So(timestamp, ShouldEqual, validMetric.timestamp)
 		}
 	})
 
@@ -80,12 +88,12 @@ func TestParseMetricFromString(t *testing.T) {
 		for i := 1; i < 20; i++ {
 			rawTimestamp := strconv.FormatFloat(float64(testTimestamp)+rand.Float64(), 'f', i, 64)
 			rawMetric := "One.two.three 123 " + rawTimestamp
-			validMetric := ValidMetricCase{rawMetric, "One.two.three", 123, testTimestamp}
-			metric, value, timestamp, err := ParseMetric([]byte(validMetric.raw))
+			validMetric := ValidMetricCase{rawMetric, "One.two.three", map[string]string{}, 123, testTimestamp}
+			metric, _, value, timestamp, err := ParseMetric([]byte(validMetric.raw))
 			So(err, ShouldBeEmpty)
 			So(metric, ShouldResemble, validMetric.metric)
-			So(value, ShouldResemble, validMetric.value)
-			So(timestamp, ShouldResemble, validMetric.timestamp)
+			So(value, ShouldEqual, validMetric.value)
+			So(timestamp, ShouldEqual, validMetric.timestamp)
 		}
 	})
 }
