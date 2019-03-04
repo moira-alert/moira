@@ -7,50 +7,66 @@ import (
 	"github.com/moira-alert/moira"
 )
 
+//ParsedMetric represents a result of ParseMetric.
+type ParsedMetric struct {
+	Metric    string
+	Name      string
+	Labels    map[string]string
+	Value     float64
+	Timestamp int64
+}
+
 // ParseMetric parses metric from string
 // supported format: "<metricString> <valueFloat64> <timestampInt64>"
-func ParseMetric(input []byte) (string, map[string]string, float64, int64, error) {
+func ParseMetric(input []byte) (*ParsedMetric, error) {
 	if !isPrintableASCII(input) {
-		return "", nil, 0, 0, fmt.Errorf("non-ascii or non-printable chars in metric name: '%s'", input)
+		return nil, fmt.Errorf("non-ascii or non-printable chars in metric name: '%s'", input)
 	}
 
-	var metricsBytes, valueBytes, timestampBytes []byte
+	var metricBytes, valueBytes, timestampBytes []byte
 	inputScanner := moira.SplitBytes(input, ' ')
 	if !inputScanner.HasNext() {
-		return "", nil, 0, 0, fmt.Errorf("too few space-separated items: '%s'", input)
+		return nil, fmt.Errorf("too few space-separated items: '%s'", input)
 	}
-	metricsBytes = inputScanner.Next()
+	metricBytes = inputScanner.Next()
 	if !inputScanner.HasNext() {
-		return "", nil, 0, 0, fmt.Errorf("too few space-separated items: '%s'", input)
+		return nil, fmt.Errorf("too few space-separated items: '%s'", input)
 	}
 	valueBytes = inputScanner.Next()
 	if !inputScanner.HasNext() {
-		return "", nil, 0, 0, fmt.Errorf("too few space-separated items: '%s'", input)
+		return nil, fmt.Errorf("too few space-separated items: '%s'", input)
 	}
 	timestampBytes = inputScanner.Next()
 	if inputScanner.HasNext() {
-		return "", nil, 0, 0, fmt.Errorf("too many space-separated items: '%s'", input)
+		return nil, fmt.Errorf("too many space-separated items: '%s'", input)
 	}
 
-	metric, labels, err := parseMetric(metricsBytes)
+	name, labels, err := parseNameAndLabels(metricBytes)
 	if err != nil {
-		return "", nil, 0, 0, fmt.Errorf("cannot parse metric: '%s' (%s)", input, err)
+		return nil, fmt.Errorf("cannot parse metric: '%s' (%s)", input, err)
 	}
 
 	value, err := parseFloat(valueBytes)
 	if err != nil {
-		return "", nil, 0, 0, fmt.Errorf("cannot parse value: '%s' (%s)", input, err)
+		return nil, fmt.Errorf("cannot parse value: '%s' (%s)", input, err)
 	}
 
 	timestamp, err := parseFloat(timestampBytes)
 	if err != nil {
-		return "", nil, 0, 0, fmt.Errorf("cannot parse timestamp: '%s' (%s)", input, err)
+		return nil, fmt.Errorf("cannot parse timestamp: '%s' (%s)", input, err)
 	}
 
-	return metric, labels, value, int64(timestamp), nil
+	parsedMetric := &ParsedMetric{
+		moira.UnsafeBytesToString(metricBytes),
+		name,
+		labels,
+		value,
+		int64(timestamp),
+	}
+	return parsedMetric, nil
 }
 
-func parseMetric(metricBytes []byte) (string, map[string]string, error) {
+func parseNameAndLabels(metricBytes []byte) (string, map[string]string, error) {
 	metricBytesScanner := moira.SplitBytes(metricBytes, ';')
 	if !metricBytesScanner.HasNext() {
 		return "", nil, fmt.Errorf("too few colon-separated items: '%s'", metricBytes)

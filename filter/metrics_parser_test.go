@@ -42,7 +42,7 @@ func TestParseMetric(t *testing.T) {
 		}
 
 		for _, invalidMetric := range invalidMetrics {
-			_, _, _, _, err := ParseMetric([]byte(invalidMetric))
+			_, err := ParseMetric([]byte(invalidMetric))
 			So(err, ShouldBeError)
 		}
 	})
@@ -62,12 +62,12 @@ func TestParseMetric(t *testing.T) {
 		}
 
 		for _, validMetric := range validMetrics {
-			metric, labels, value, timestamp, err := ParseMetric([]byte(validMetric.raw))
+			parsedMetric, err := ParseMetric([]byte(validMetric.raw))
 			So(err, ShouldBeEmpty)
-			So(metric, ShouldEqual, validMetric.metric)
-			So(labels, ShouldResemble, validMetric.labels)
-			So(value, ShouldEqual, validMetric.value)
-			So(timestamp, ShouldEqual, validMetric.timestamp)
+			So(parsedMetric.Name, ShouldEqual, validMetric.metric)
+			So(parsedMetric.Labels, ShouldResemble, validMetric.labels)
+			So(parsedMetric.Value, ShouldEqual, validMetric.value)
+			So(parsedMetric.Timestamp, ShouldEqual, validMetric.timestamp)
 		}
 	})
 
@@ -89,11 +89,11 @@ func TestParseMetric(t *testing.T) {
 			rawTimestamp := strconv.FormatFloat(float64(testTimestamp)+rand.Float64(), 'f', i, 64)
 			rawMetric := "One.two.three 123 " + rawTimestamp
 			validMetric := ValidMetricCase{rawMetric, "One.two.three", map[string]string{}, 123, testTimestamp}
-			metric, _, value, timestamp, err := ParseMetric([]byte(validMetric.raw))
+			parsedMetric, err := ParseMetric([]byte(validMetric.raw))
 			So(err, ShouldBeEmpty)
-			So(metric, ShouldResemble, validMetric.metric)
-			So(value, ShouldEqual, validMetric.value)
-			So(timestamp, ShouldEqual, validMetric.timestamp)
+			So(parsedMetric.Name, ShouldResemble, validMetric.metric)
+			So(parsedMetric.Value, ShouldEqual, validMetric.value)
+			So(parsedMetric.Timestamp, ShouldEqual, validMetric.timestamp)
 		}
 	})
 }

@@ -56,7 +56,7 @@ func (storage *PatternStorage) ProcessIncomingMetric(lineBytes []byte) *moira.Ma
 	storage.metrics.TotalMetricsReceived.Inc(1)
 	count := storage.metrics.TotalMetricsReceived.Count()
 
-	metric, _, value, timestamp, err := ParseMetric(lineBytes)
+	parsedMetric, err := ParseMetric(lineBytes)
 	if err != nil {
 		storage.logger.Infof("cannot parse input: %v", err)
 		return nil
@@ -65,26 +65,26 @@ func (storage *PatternStorage) ProcessIncomingMetric(lineBytes []byte) *moira.Ma
 	storage.metrics.ValidMetricsReceived.Inc(1)
 
 	matchingStart := time.Now()
-	matched := storage.matchPattern(metric)
+	matchedPatterns := storage.matchPatterns(parsedMetric.Name)
 	if count%10 == 0 {
 		storage.metrics.MatchingTimer.UpdateSince(matchingStart)
 	}
-	if len(matched) > 0 {
+	if len(matchedPatterns) > 0 {
 		storage.metrics.MatchingMetricsReceived.Inc(1)
 		return &moira.MatchedMetric{
-			Metric:             metric,
-			Patterns:           matched,
-			Value:              value,
-			Timestamp:          timestamp,
-			RetentionTimestamp: timestamp,
+			Metric:             parsedMetric.Metric,
+			Patterns:           matchedPatterns,
+			Value:              parsedMetric.Value,
+			Timestamp:          parsedMetric.Timestamp,
+			RetentionTimestamp: parsedMetric.Timestamp,
 			Retention:          60,
 		}
 	}
 	return nil
 }
 
-// matchPattern returns array of matched patterns
-func (storage *PatternStorage) matchPattern(metric string) []string {
+// matchPatterns returns array of matched patterns
+func (storage *PatternStorage) matchPatterns(metric string) []string {
 	currentLevel := []*PatternNode{storage.PatternTree.Load().(*PatternNode)}
 	var found, index int
 	for i, c := range metric {
