@@ -1,12 +1,14 @@
+MARK_NIGHTLY := "nightly"
+MARK_UNSTABLE := "unstable"
 GIT_BRANCH := "unknown"
 GIT_HASH := $(shell git log --pretty=format:%H -n 1)
-GIT_HASH_SHORT := $(shell echo "${GIT_HASH}" | cut -c1-6)
+GIT_HASH_SHORT := $(shell echo "${GIT_HASH}" | cut -c1-7)
 GIT_TAG := $(shell git describe --always --tags --abbrev=0 | tail -c+2)
 GIT_COMMIT := $(shell git rev-list v${GIT_TAG}..HEAD --count)
 GO_VERSION := $(shell go version | cut -d' ' -f3)
-FEATURE_VERSION := ${GIT_TAG}-${GIT_BRANCH}
-DEVELOP_VERSION := nightly-${GIT_HASH_SHORT}
-VERSION := ${GIT_TAG}.${GIT_COMMIT}
+VERSION_FEATURE := ${GIT_TAG}-${GIT_BRANCH}
+VERSION_DEVELOP := ${GIT_HASH_SHORT}
+VERSION_DEFAULT := ${GIT_TAG}.${GIT_COMMIT}
 VENDOR := "SKB Kontur"
 URL := "https://github.com/moira-alert/moira"
 LICENSE := "MIT"
@@ -32,7 +34,7 @@ test: prepare
 .PHONY: build
 build: prepare
 	for service in "filter" "notifier" "api" "checker" "cli" ; do \
-		CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-X main.MoiraVersion=${VERSION} -X main.GoVersion=${GO_VERSION} -X main.GitCommit=${GIT_HASH}" -o build/$$service github.com/moira-alert/moira/cmd/$$service ; \
+		CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-X main.MoiraVersion=${VERSION_DEFAULT} -X main.GoVersion=${GO_VERSION} -X main.GitCommit=${GIT_HASH}" -o build/$$service github.com/moira-alert/moira/cmd/$$service ; \
 	done
 
 .PHONY: clean
@@ -54,7 +56,7 @@ tar:
 	cp pkg/filter/storage-schemas.conf build/root/filter/etc/moira/storage-schemas.conf
 	cp pkg/notifier/*.html build/root/notifier/etc/moira/
 	for service in "filter" "notifier" "api" "checker" "cli" ; do \
-		tar -czvPf build/moira-$$service-${VERSION}.tar.gz -C build/root/$$service . ; \
+		tar -czvPf build/moira-$$service-${VERSION_DEFAULT}.tar.gz -C build/root/$$service . ; \
 	done
 
 .PHONY: rpm
@@ -67,12 +69,12 @@ rpm: tar
 			--url ${URL} \
 			--license ${LICENSE} \
 			--name "moira-$$service" \
-			--version "${VERSION}" \
+			--version "${VERSION_DEFAULT}" \
 			--iteration "1" \
 			--config-files "/etc/moira/$$service.yml" \
 			--after-install "./pkg/$$service/postinst" \
 			-p build \
-			build/moira-$$service-${VERSION}.tar.gz ; \
+			build/moira-$$service-${VERSION_DEFAULT}.tar.gz ; \
 	done
 	fpm -t rpm \
 		-s "tar" \
@@ -81,13 +83,13 @@ rpm: tar
 		--url ${URL} \
 		--license ${LICENSE} \
 		--name "moira-filter" \
-		--version "${VERSION}" \
+		--version "${VERSION_DEFAULT}" \
 		--iteration "1" \
 		--config-files "/etc/moira/filter.yml" \
 		--config-files "/etc/moira/storage-schemas.conf" \
 		--after-install "./pkg/filter/postinst" \
 		-p build \
-		build/moira-filter-${VERSION}.tar.gz
+		build/moira-filter-${VERSION_DEFAULT}.tar.gz
 
 .PHONY: deb
 deb: tar
@@ -99,12 +101,12 @@ deb: tar
 			--url ${URL} \
 			--license ${LICENSE} \
 			--name "moira-$$service" \
-			--version "${VERSION}" \
+			--version "${VERSION_DEFAULT}" \
 			--iteration "1" \
 			--config-files "/etc/moira/$$service.yml" \
 			--after-install "./pkg/$$service/postinst" \
 			-p build \
-			build/moira-$$service-${VERSION}.tar.gz ; \
+			build/moira-$$service-${VERSION_DEFAULT}.tar.gz ; \
 	done
 	fpm -t deb \
 		-s "tar" \
@@ -113,13 +115,13 @@ deb: tar
 		--url ${URL} \
 		--license ${LICENSE} \
 		--name "moira-filter" \
-		--version "${VERSION}" \
+		--version "${VERSION_DEFAULT}" \
 		--iteration "1" \
 		--config-files "/etc/moira/filter.yml" \
 		--config-files "/etc/moira/storage-schemas.conf" \
 		--after-install "./pkg/filter/postinst" \
 		-p build \
-		build/moira-filter-${VERSION}.tar.gz
+		build/moira-filter-${VERSION_DEFAULT}.tar.gz
 
 .PHONY: packages
 packages: clean build tar rpm deb
@@ -127,27 +129,20 @@ packages: clean build tar rpm deb
 .PHONY: docker_feature_images
 docker_feature_images:
 	for service in "filter" "notifier" "api" "checker" ; do \
-		docker build --build-arg MoiraVersion=${FEATURE_VERSION} --build-arg GO_VERSION=${GO_VERSION} --build-arg GIT_COMMIT=${GIT_HASH} -f Dockerfile.$$service -t moira/$$service:${FEATURE_VERSION} . ; \
-		docker push moira/$$service:${FEATURE_VERSION} ; \
+		docker build --build-arg MoiraVersion=${VERSION_FEATURE} --build-arg GO_VERSION=${GO_VERSION} --build-arg GIT_COMMIT=${GIT_HASH} -f Dockerfile.$$service -t moira/$$service-${MARK_UNSTABLE}:${VERSION_FEATURE} . ; \
+		docker push moira/$$service-${MARK_UNSTABLE}:${VERSION_FEATURE} ; \
 	done
 
 .PHONY: docker_develop_images
 docker_develop_images:
 	for service in "filter" "notifier" "api" "checker" ; do \
-		docker build --build-arg MoiraVersion=${DEVELOP_VERSION} --build-arg GO_VERSION=${GO_VERSION} --build-arg GIT_COMMIT=${GIT_HASH} -f Dockerfile.$$service -t moira/$$service:${DEVELOP_VERSION} . ; \
-		docker push moira/$$service:${DEVELOP_VERSION} ; \
-	done
-
-.PHONY: docker_latest_images
-docker_latest_images:
-	for service in "filter" "notifier" "api" "checker" ; do \
-		docker build --build-arg MoiraVersion=${VERSION} --build-arg GO_VERSION=${GO_VERSION} --build-arg GIT_COMMIT=${GIT_HASH} -f Dockerfile.$$service -t moira/$$service:latest . ; \
-		docker push moira/$$service:latest ; \
+		docker build --build-arg MoiraVersion=${VERSION_DEVELOP} --build-arg GO_VERSION=${GO_VERSION} --build-arg GIT_COMMIT=${GIT_HASH} -f Dockerfile.$$service -t moira/$$service-${MARK_NIGHTLY}:${VERSION_DEVELOP} . ; \
+		docker push moira/$$service-${MARK_NIGHTLY}:${VERSION_DEVELOP} ; \
 	done
 
 .PHONY: docker_release_images
 docker_release_images:
 	for service in "filter" "notifier" "api" "checker" ; do \
-		docker build --build-arg MoiraVersion=${VERSION} --build-arg GO_VERSION=${GO_VERSION} --build-arg GIT_COMMIT=${GIT_HASH} -f Dockerfile.$$service -t moira/$$service:${VERSION} . ; \
-		docker push moira/$$service:${VERSION} ; \
+		docker build --build-arg MoiraVersion=${VERSION_DEFAULT} --build-arg GO_VERSION=${GO_VERSION} --build-arg GIT_COMMIT=${GIT_HASH} -f Dockerfile.$$service -t moira/$$service:${VERSION_DEFAULT} . ; \
+		docker push moira/$$service:${VERSION_DEFAULT} ; \
 	done
