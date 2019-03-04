@@ -100,7 +100,6 @@ func parseNameAndLabels(metricBytes []byte) (string, map[string]string, error) {
 		labelValue := moira.UnsafeBytesToString(labelValueBytes)
 		labels[labelName] = labelValue
 	}
-	labels["name"] = name
 	return name, labels, nil
 }
 

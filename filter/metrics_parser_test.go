@@ -49,16 +49,16 @@ func TestParseMetric(t *testing.T) {
 
 	Convey("Given valid metric strings, should return parsed values", t, func() {
 		validMetrics := []ValidMetricCase{
-			{"One.two.three 123 1234567890", "One.two.three", map[string]string{"name": "One.two.three"}, 123, 1234567890},
-			{"One.two.three 1.23e2 1234567890", "One.two.three", map[string]string{"name": "One.two.three"}, 123, 1234567890},
-			{"One.two.three -123 1234567890", "One.two.three", map[string]string{"name": "One.two.three"}, -123, 1234567890},
-			{"One.two.three +123 1234567890", "One.two.three", map[string]string{"name": "One.two.three"}, 123, 1234567890},
-			{"One.two.three 123. 1234567890", "One.two.three", map[string]string{"name": "One.two.three"}, 123, 1234567890},
-			{"One.two.three 123.0 1234567890", "One.two.three", map[string]string{"name": "One.two.three"}, 123, 1234567890},
-			{"One.two.three .123 1234567890", "One.two.three", map[string]string{"name": "One.two.three"}, 0.123, 1234567890},
-			{"One.two.three;four=five 123 1234567890", "One.two.three", map[string]string{"name": "One.two.three", "four": "five"}, 123, 1234567890},
-			{"One.two.three;four= 123 1234567890", "One.two.three", map[string]string{"name": "One.two.three", "four": ""}, 123, 1234567890},
-			{"One.two.three;four=five;six=seven 123 1234567890", "One.two.three", map[string]string{"name": "One.two.three", "four": "five", "six": "seven"}, 123, 1234567890},
+			{"One.two.three 123 1234567890", "One.two.three", map[string]string{}, 123, 1234567890},
+			{"One.two.three 1.23e2 1234567890", "One.two.three", map[string]string{}, 123, 1234567890},
+			{"One.two.three -123 1234567890", "One.two.three", map[string]string{}, -123, 1234567890},
+			{"One.two.three +123 1234567890", "One.two.three", map[string]string{}, 123, 1234567890},
+			{"One.two.three 123. 1234567890", "One.two.three", map[string]string{}, 123, 1234567890},
+			{"One.two.three 123.0 1234567890", "One.two.three", map[string]string{}, 123, 1234567890},
+			{"One.two.three .123 1234567890", "One.two.three", map[string]string{}, 0.123, 1234567890},
+			{"One.two.three;four=five 123 1234567890", "One.two.three", map[string]string{"four": "five"}, 123, 1234567890},
+			{"One.two.three;four= 123 1234567890", "One.two.three", map[string]string{"four": ""}, 123, 1234567890},
+			{"One.two.three;four=five;six=seven 123 1234567890", "One.two.three", map[string]string{"four": "five", "six": "seven"}, 123, 1234567890},
 		}
 
 		for _, validMetric := range validMetrics {
@@ -92,6 +92,7 @@ func TestParseMetric(t *testing.T) {
 			parsedMetric, err := ParseMetric([]byte(validMetric.raw))
 			So(err, ShouldBeEmpty)
 			So(parsedMetric.Name, ShouldResemble, validMetric.metric)
+			So(parsedMetric.Labels, ShouldResemble, validMetric.labels)
 			So(parsedMetric.Value, ShouldEqual, validMetric.value)
 			So(parsedMetric.Timestamp, ShouldEqual, validMetric.timestamp)
 		}
