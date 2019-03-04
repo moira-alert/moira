@@ -11,6 +11,7 @@ import (
 )
 
 const printEventsCount int = 5
+const titleLimit = 250
 
 // Sender implements moira sender interface via pushover
 type Sender struct {
@@ -91,7 +92,17 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, throttled bo
 }
 
 func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData) string {
-	return fmt.Sprintf("%s %s %s (%d)", events.GetSubjectState(), trigger.Name, trigger.GetTags(), len(events))
+	title := fmt.Sprintf("%s %s %s (%d)", events.GetSubjectState(), trigger.Name, trigger.GetTags(), len(events))
+	tags := 1
+	for len(title) > titleLimit-30 {
+		var tagBuffer bytes.Buffer
+		for i := 0; i < len(trigger.Tags)-tags; i++ {
+			tagBuffer.WriteString(fmt.Sprintf("[%s]", trigger.Tags[i]))
+		}
+		title = fmt.Sprintf("%s %s %s and %d more tags (%d)", events.GetSubjectState(), trigger.Name, tagBuffer.String(), tags, len(events))
+		tags++
+	}
+	return title
 }
 
 func (sender *Sender) getMessagePriority(events moira.NotificationEvents) int {
