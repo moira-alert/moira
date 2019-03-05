@@ -138,13 +138,13 @@ func TestBuildMessage(t *testing.T) {
 		})
 
 		events := make([]moira.NotificationEvent, 0)
-		Convey("Print moira message with 100 events and cutoff", func() {
-			for i := 0; i < 200; i++ {
+		Convey("Print moira message with 1129 events and cutoff", func() {
+			for i := 0; i < 1200; i++ {
 				events = append(events, event)
 			}
-			lines := strings.Repeat("\n02:40: Metric = 123 (OK to NODATA)", 100)
+			lines := strings.Repeat("\n02:40: Metric = 123 (OK to NODATA)", 1129)
 			actual := sender.buildMessage(events, trigger, false)
-			expected := fmt.Sprintf("*NODATA* [tag1][tag2] <http://moira.url/trigger/TriggerID|Name>\n```%s```\n\n...and 100 more events.", lines)
+			expected := fmt.Sprintf("*NODATA* [tag1][tag2] <http://moira.url/trigger/TriggerID|Name>\n```%s```\n\n...and 71 more events.", lines)
 			So(actual, ShouldResemble, expected)
 		})
 
