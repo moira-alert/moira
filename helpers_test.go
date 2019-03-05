@@ -30,7 +30,7 @@ func TestSplitBytes(t *testing.T) {
 		}
 		for _, c := range cases {
 			actualOutput := make([]string, 0)
-			scanner := SplitBytes([]byte(c.input), ' ')
+			scanner := NewBytesScanner([]byte(c.input), ' ')
 			for scanner.HasNext() {
 				actualOutput = append(actualOutput, string(scanner.Next()))
 			}

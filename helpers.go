@@ -27,8 +27,8 @@ func UnsafeStringToBytes(s string) []byte {
 	}))
 }
 
-// ByteSliceSplitScanner allows to scan for subslices separated by separator
-type ByteSliceSplitScanner struct {
+// BytesScanner allows to scan for subslices separated by separator
+type BytesScanner struct {
 	source         []byte
 	index          int
 	separator      byte
@@ -36,12 +36,12 @@ type ByteSliceSplitScanner struct {
 }
 
 //HasNext checks if next subslice available or not
-func (it *ByteSliceSplitScanner) HasNext() bool {
+func (it *BytesScanner) HasNext() bool {
 	return it.index < len(it.source) || it.emitEmptySlice
 }
 
 //Next returns available subslice and advances the scanner to next slice
-func (it *ByteSliceSplitScanner) Next() (result []byte) {
+func (it *BytesScanner) Next() (result []byte) {
 	if it.emitEmptySlice {
 		it.emitEmptySlice = false
 		result = make([]byte, 0)
@@ -64,9 +64,9 @@ func (it *ByteSliceSplitScanner) Next() (result []byte) {
 	return result
 }
 
-//SplitBytes slices bytes into all subslices separated by separator and returns a scanner which allows to scan for these subslices
-func SplitBytes(bytes []byte, separator byte) *ByteSliceSplitScanner {
-	return &ByteSliceSplitScanner{
+//NewBytesScanner slices bytes into all subslices separated by separator and returns a scanner which allows to scan for these subslices
+func NewBytesScanner(bytes []byte, separator byte) *BytesScanner {
+	return &BytesScanner{
 		source:         bytes,
 		index:          0,
 		separator:      separator,
