@@ -54,14 +54,13 @@ func TestExpressionModeMultipleTargetsWarnValue (t *testing.T) {
 		}
 
 		Convey("Test multiple targets, expression mode", func() {
-			trigger.TriggerType = moira.ExpressionTrigger
+			trigger.TriggerType = moira.FallingTrigger
 			trigger.Targets = []string{
 				"aliasByNode(DevOps.system.graphite01.disk._mnt_data.gigabyte_percentfree, 2, 4)",
 				"aliasByNode(DevOps.system.sd2-graphite01.disk._mnt_data.gigabyte_percentfree, 2, 4)",
 				"aliasByNode(DevOps.system.bst-graphite01.disk.root.gigabyte_percentfree, 2, 4)",
 				"aliasByNode(DevOps.system.dtl-graphite01.disk._mnt_data.gigabyte_percentfree, 2, 4)",
 			}
-			trigger.Expression = "(t1 < 10 && t2 < 10) ? WARN:OK"
 
 			Convey("and warn_value", func() {
 				trigger.WarnValue = &warnValue
@@ -80,6 +79,7 @@ func TestExpressionModeMultipleTargetsWarnValue (t *testing.T) {
 
 			})
 			Convey("and expression value", func() {
+				trigger.Expression = "(t1 < 10 && t2 < 10) ? WARN:OK"
 				tr := Trigger{trigger, throttling}
 				err := tr.Bind(request)
 				So(err, ShouldBeNil)
