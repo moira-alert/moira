@@ -18,6 +18,7 @@ import (
 // Sender implements moira sender interface via pushover
 type Sender struct {
 	From           string
+	SMTPhello      string
 	SMTPhost       string
 	SMTPport       int64
 	FrontURI       string
@@ -59,6 +60,7 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 
 	sender.setLogger(logger)
 	sender.From = senderSettings["mail_from"]
+  sender.SMTPhello = senderSettings["smtp_hello"]
 	sender.SMTPhost = senderSettings["smtp_host"]
 	sender.SMTPport, _ = strconv.ParseInt(senderSettings["smtp_port"], 10, 64)
 	sender.InsecureTLS, _ = strconv.ParseBool(senderSettings["insecure_tls"])
@@ -69,6 +71,10 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 	sender.location = location
 	sender.DateTimeFormat = dateTimeFormat
 
+	if sender.SMTPhello == "" {
+		// default LocalName used in gomail.Dialer
+		sender.SMTPhello = "localhost"
+	}
 	if sender.Username == "" {
 		sender.Username = sender.From
 	}
@@ -121,6 +127,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	d := gomail.Dialer{
 		Host: sender.SMTPhost,
 		Port: int(sender.SMTPport),
+		LocalName: sender.SMTPhello,
 		TLSConfig: &tls.Config{
 			InsecureSkipVerify: sender.InsecureTLS,
 			ServerName:         sender.SMTPhost,
