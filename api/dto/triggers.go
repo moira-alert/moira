@@ -184,18 +184,6 @@ func checkWarnErrorExpression(trigger *Trigger) error {
 		return fmt.Errorf("error_value is equal to warn_value, please set exactly one value")
 	}
 
-	if len(trigger.Targets) > 1 {
-		if trigger.TriggerType != moira.ExpressionTrigger {
-			return fmt.Errorf("can't use trigger_type not '%v' for with multiple targets", moira.ExpressionTrigger)
-		}
-		if trigger.ErrorValue != nil  {
-			return fmt.Errorf("can't use error_value with multiple targets")
-		}
-		if trigger.WarnValue != nil {
-			return fmt.Errorf("can't use warn_value with multiple targets")
-		}
-	}
-
 	switch trigger.TriggerType {
 	case "":
 		if trigger.Expression != "" {
@@ -225,7 +213,9 @@ func checkWarnErrorExpression(trigger *Trigger) error {
 				return fmt.Errorf("error_value should be greater than warn_value")
 			}
 		}
-		checkSimpleModeFields(trigger)
+		if err := checkSimpleModeFields(trigger); err != nil {
+			return err
+		}
 
 	case moira.FallingTrigger:
 		if trigger.WarnValue != nil && trigger.ErrorValue != nil {
@@ -233,9 +223,14 @@ func checkWarnErrorExpression(trigger *Trigger) error {
 				return fmt.Errorf("warn_value should be greater than error_value")
 			}
 		}
-		checkSimpleModeFields(trigger)
+		if err := checkSimpleModeFields(trigger); err != nil {
+			return err
+		}
 
 	case moira.ExpressionTrigger:
+		if trigger.Expression == "" {
+			return fmt.Errorf("trigger_type set to expression, but no expression provided")
+		}
 		if  trigger.WarnValue != nil &&  trigger.ErrorValue != nil {
 			return fmt.Errorf("can't use 'warn_value' and 'error_value' on trigger_type: '%v'", moira.ExpressionTrigger)
 		}

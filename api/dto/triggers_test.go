@@ -53,65 +53,116 @@ func TestExpressionModeMultipleTargetsWarnValue (t *testing.T) {
 			MuteNewMetrics: false,
 		}
 
-		Convey("Test multiple targets, expression mode", func() {
+		Convey("Test FallingTrigger", func() {
 			trigger.TriggerType = moira.FallingTrigger
-			trigger.Targets = []string{
-				"aliasByNode(DevOps.system.graphite01.disk._mnt_data.gigabyte_percentfree, 2, 4)",
-				"aliasByNode(DevOps.system.sd2-graphite01.disk._mnt_data.gigabyte_percentfree, 2, 4)",
-				"aliasByNode(DevOps.system.bst-graphite01.disk.root.gigabyte_percentfree, 2, 4)",
-				"aliasByNode(DevOps.system.dtl-graphite01.disk._mnt_data.gigabyte_percentfree, 2, 4)",
-			}
 
-			Convey("and warn_value", func() {
-				trigger.WarnValue = &warnValue
-				tr := Trigger{trigger, throttling}
-				err := tr.Bind(request)
-				So(err, ShouldNotBeNil)
-				So(err.Error(), ShouldContainSubstring, "can't use warn_value with multiple targets")
-
-			})
-			Convey("and error_value", func() {
-				trigger.ErrorValue = &errorValue
-				tr := Trigger{trigger, throttling}
-				err := tr.Bind(request)
-				So(err, ShouldNotBeNil)
-				So(err.Error(), ShouldContainSubstring, "can't use error_value with multiple targets")
-
-			})
-			Convey("and expression value", func() {
-				trigger.Expression = "(t1 < 10 && t2 < 10) ? WARN:OK"
-				tr := Trigger{trigger, throttling}
-				err := tr.Bind(request)
-				So(err, ShouldBeNil)
-			})
-
-		})
-		Convey("Test falling mode", func() {
-			trigger.TriggerType = moira.FallingTrigger
-			trigger.ErrorValue = &errorValue
-			trigger.WarnValue = &warnValue
-			trigger.Expression = "(t1 < 10 && t2 < 10) ? WARN:OK"
-
-			Convey("one targert", func() {
+			Convey("and one target", func() {
 				trigger.Targets = []string{
-				"aliasByNode(DevOps.system.graphite01.disk._mnt_data.gigabyte_percentfree, 2, 4)",
+					"aliasByNode(DevOps.system.graphite01.disk._mnt_data.gigabyte_percentfree, 2, 4)",
 				}
-				tr := Trigger{trigger, throttling}
-				err := tr.Bind(request)
-				So(err, ShouldBeNil)
+				Convey("and expression", func() {
+					trigger.Expression = "(t1 < 10 && t2 < 10) ? WARN:OK"
+					tr := Trigger{trigger, throttling}
+					err := tr.Bind(request)
+					So(err, ShouldNotBeNil)
+					So(err.Error(), ShouldContainSubstring, "can't use 'expression' to trigger_type: 'falling'")
+				})
+
+				Convey("and warn_value and error_value", func() {
+					trigger.WarnValue = &warnValue
+					trigger.ErrorValue = &errorValue
+					tr := Trigger{trigger, throttling}
+					err := tr.Bind(request)
+					So(err, ShouldBeNil)
+				})
 			})
 
-			Convey("multiple targets", func() {
+			Convey("and one multiple targets", func() {
 				trigger.Targets = []string{
 					"aliasByNode(DevOps.system.graphite01.disk._mnt_data.gigabyte_percentfree, 2, 4)",
 					"aliasByNode(DevOps.system.sd2-graphite01.disk._mnt_data.gigabyte_percentfree, 2, 4)",
 					"aliasByNode(DevOps.system.bst-graphite01.disk.root.gigabyte_percentfree, 2, 4)",
 					"aliasByNode(DevOps.system.dtl-graphite01.disk._mnt_data.gigabyte_percentfree, 2, 4)",
 				}
+				trigger.WarnValue = &warnValue
+				trigger.ErrorValue = &errorValue
 				tr := Trigger{trigger, throttling}
 				err := tr.Bind(request)
 				So(err, ShouldNotBeNil)
-				So(err.Error(), ShouldResemble, "can't use trigger_type not 'expression' for with multiple targets")
+				So(err.Error(), ShouldContainSubstring, "can't use trigger_type not 'falling' for with multiple targets")
+			})
+
+		})
+		Convey("Test RisingTrigger", func() {
+			trigger.TriggerType = moira.RisingTrigger
+
+			Convey("and one target", func() {
+				trigger.Targets = []string{
+					"aliasByNode(DevOps.system.graphite01.disk._mnt_data.gigabyte_percentfree, 2, 4)",
+				}
+				Convey("and expression", func() {
+					trigger.Expression = "(t1 < 10 && t2 < 10) ? WARN:OK"
+					tr := Trigger{trigger, throttling}
+					err := tr.Bind(request)
+					So(err, ShouldNotBeNil)
+					So(err.Error(), ShouldContainSubstring, "can't use 'expression' to trigger_type: 'rising'")
+				})
+
+				Convey("and warn_value and error_value", func() {
+					trigger.WarnValue = &errorValue
+					trigger.ErrorValue = &warnValue
+					tr := Trigger{trigger, throttling}
+					err := tr.Bind(request)
+					So(err, ShouldBeNil)
+				})
+			})
+
+			Convey("and one multiple targets", func() {
+				trigger.Targets = []string{
+					"aliasByNode(DevOps.system.graphite01.disk._mnt_data.gigabyte_percentfree, 2, 4)",
+					"aliasByNode(DevOps.system.sd2-graphite01.disk._mnt_data.gigabyte_percentfree, 2, 4)",
+					"aliasByNode(DevOps.system.bst-graphite01.disk.root.gigabyte_percentfree, 2, 4)",
+					"aliasByNode(DevOps.system.dtl-graphite01.disk._mnt_data.gigabyte_percentfree, 2, 4)",
+				}
+				trigger.WarnValue = &errorValue
+				trigger.ErrorValue = &warnValue
+				tr := Trigger{trigger, throttling}
+				err := tr.Bind(request)
+				So(err, ShouldNotBeNil)
+				So(err.Error(), ShouldContainSubstring, "can't use trigger_type not 'rising' for with multiple targets")
+			})
+
+		})
+		Convey("Test ExpressionTrigger", func() {
+			trigger.TriggerType = moira.ExpressionTrigger
+			trigger.Expression = "(t1 < 10 && t2 < 10) ? WARN:OK"
+			trigger.Targets = []string{
+				"aliasByNode(DevOps.system.graphite01.disk._mnt_data.gigabyte_percentfree, 2, 4)",
+				"aliasByNode(DevOps.system.sd2-graphite01.disk._mnt_data.gigabyte_percentfree, 2, 4)",
+				"aliasByNode(DevOps.system.bst-graphite01.disk.root.gigabyte_percentfree, 2, 4)",
+				"aliasByNode(DevOps.system.dtl-graphite01.disk._mnt_data.gigabyte_percentfree, 2, 4)",
+				}
+			Convey("and warn_value", func() {
+				trigger.WarnValue = &warnValue
+				tr := Trigger{trigger, throttling}
+				err := tr.Bind(request)
+				So(err, ShouldNotBeNil)
+				So(err.Error(), ShouldContainSubstring, "can't use 'warn_value' on trigger_type: 'expression'")
+			})
+
+			Convey("and error_value", func() {
+				trigger.ErrorValue = &errorValue
+				tr := Trigger{trigger, throttling}
+				err := tr.Bind(request)
+				So(err, ShouldNotBeNil)
+				So(err.Error(), ShouldContainSubstring, "can't use 'error_value' on trigger_type: 'expression'")
+
+			})
+			Convey("and expression", func() {
+				tr := Trigger{trigger, throttling}
+				err := tr.Bind(request)
+				So(err, ShouldBeNil)
+
 			})
 		})
 	})
