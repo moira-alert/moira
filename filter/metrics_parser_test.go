@@ -10,8 +10,9 @@ import (
 
 func TestParseMetric(t *testing.T) {
 	type ValidMetricCase struct {
-		raw       string
+		input     string
 		metric    string
+		name      string
 		labels    map[string]string
 		value     float64
 		timestamp int64
@@ -49,22 +50,23 @@ func TestParseMetric(t *testing.T) {
 
 	Convey("Given valid metric strings, should return parsed values", t, func() {
 		validMetrics := []ValidMetricCase{
-			{"One.two.three 123 1234567890", "One.two.three", map[string]string{}, 123, 1234567890},
-			{"One.two.three 1.23e2 1234567890", "One.two.three", map[string]string{}, 123, 1234567890},
-			{"One.two.three -123 1234567890", "One.two.three", map[string]string{}, -123, 1234567890},
-			{"One.two.three +123 1234567890", "One.two.three", map[string]string{}, 123, 1234567890},
-			{"One.two.three 123. 1234567890", "One.two.three", map[string]string{}, 123, 1234567890},
-			{"One.two.three 123.0 1234567890", "One.two.three", map[string]string{}, 123, 1234567890},
-			{"One.two.three .123 1234567890", "One.two.three", map[string]string{}, 0.123, 1234567890},
-			{"One.two.three;four=five 123 1234567890", "One.two.three", map[string]string{"four": "five"}, 123, 1234567890},
-			{"One.two.three;four= 123 1234567890", "One.two.three", map[string]string{"four": ""}, 123, 1234567890},
-			{"One.two.three;four=five;six=seven 123 1234567890", "One.two.three", map[string]string{"four": "five", "six": "seven"}, 123, 1234567890},
+			{"One.two.three 123 1234567890", "One.two.three", "One.two.three", map[string]string{}, 123, 1234567890},
+			{"One.two.three 1.23e2 1234567890", "One.two.three", "One.two.three", map[string]string{}, 123, 1234567890},
+			{"One.two.three -123 1234567890", "One.two.three", "One.two.three", map[string]string{}, -123, 1234567890},
+			{"One.two.three +123 1234567890", "One.two.three", "One.two.three", map[string]string{}, 123, 1234567890},
+			{"One.two.three 123. 1234567890", "One.two.three", "One.two.three", map[string]string{}, 123, 1234567890},
+			{"One.two.three 123.0 1234567890", "One.two.three", "One.two.three", map[string]string{}, 123, 1234567890},
+			{"One.two.three .123 1234567890", "One.two.three", "One.two.three", map[string]string{}, 0.123, 1234567890},
+			{"One.two.three;four=five 123 1234567890", "One.two.three;four=five", "One.two.three", map[string]string{"four": "five"}, 123, 1234567890},
+			{"One.two.three;four= 123 1234567890", "One.two.three;four=", "One.two.three", map[string]string{"four": ""}, 123, 1234567890},
+			{"One.two.three;four=five;six=seven 123 1234567890", "One.two.three;four=five;six=seven", "One.two.three", map[string]string{"four": "five", "six": "seven"}, 123, 1234567890},
 		}
 
 		for _, validMetric := range validMetrics {
-			parsedMetric, err := ParseMetric([]byte(validMetric.raw))
+			parsedMetric, err := ParseMetric([]byte(validMetric.input))
 			So(err, ShouldBeEmpty)
-			So(parsedMetric.Name, ShouldEqual, validMetric.metric)
+			So(parsedMetric.Metric, ShouldEqual, validMetric.metric)
+			So(parsedMetric.Name, ShouldEqual, validMetric.name)
 			So(parsedMetric.Labels, ShouldResemble, validMetric.labels)
 			So(parsedMetric.Value, ShouldEqual, validMetric.value)
 			So(parsedMetric.Timestamp, ShouldEqual, validMetric.timestamp)
@@ -88,10 +90,11 @@ func TestParseMetric(t *testing.T) {
 		for i := 1; i < 20; i++ {
 			rawTimestamp := strconv.FormatFloat(float64(testTimestamp)+rand.Float64(), 'f', i, 64)
 			rawMetric := "One.two.three 123 " + rawTimestamp
-			validMetric := ValidMetricCase{rawMetric, "One.two.three", map[string]string{}, 123, testTimestamp}
-			parsedMetric, err := ParseMetric([]byte(validMetric.raw))
+			validMetric := ValidMetricCase{rawMetric, "One.two.three", "One.two.three", map[string]string{}, 123, testTimestamp}
+			parsedMetric, err := ParseMetric([]byte(validMetric.input))
 			So(err, ShouldBeEmpty)
-			So(parsedMetric.Name, ShouldResemble, validMetric.metric)
+			So(parsedMetric.Metric, ShouldResemble, validMetric.metric)
+			So(parsedMetric.Name, ShouldResemble, validMetric.name)
 			So(parsedMetric.Labels, ShouldResemble, validMetric.labels)
 			So(parsedMetric.Value, ShouldEqual, validMetric.value)
 			So(parsedMetric.Timestamp, ShouldEqual, validMetric.timestamp)
