@@ -8,18 +8,13 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestUnsafeStringToBytes(t *testing.T) {
-	ShouldEqual(UnsafeBytesToString(UnsafeStringToBytes("42")), "42")
-	ShouldEqual(UnsafeBytesToString(UnsafeStringToBytes("")), "")
-}
-
-func TestSplitBytes(t *testing.T) {
-	type SplitBytesCase struct {
+func TestBytesScanner(t *testing.T) {
+	type BytesScannerTestCase struct {
 		input  string
 		output []string
 	}
 	Convey("", t, func() {
-		cases := []SplitBytesCase{
+		cases := []BytesScannerTestCase{
 			{input: "", output: []string{}},
 			{input: "a", output: []string{"a"}},
 			{input: " ", output: []string{"", ""}},
