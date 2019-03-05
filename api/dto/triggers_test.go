@@ -2,13 +2,15 @@ package dto
 
 import (
 	"context"
-	"github.com/golang/mock/gomock"
+	"net/http"
+	"testing"
+
 	"github.com/moira-alert/moira/api/middleware"
 	"github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/mock/metric_source"
 	"github.com/moira-alert/moira"
-	"net/http"
-	"testing"
+
+	"github.com/golang/mock/gomock"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
