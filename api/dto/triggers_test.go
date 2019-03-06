@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"testing"
+	"fmt"
 
 	"github.com/moira-alert/moira/api/middleware"
 	"github.com/moira-alert/moira/metric_source"
@@ -65,7 +66,7 @@ func TestExpressionModeMultipleTargetsWarnValue (t *testing.T) {
 					tr := Trigger{trigger, throttling}
 					err := tr.Bind(request)
 					So(err, ShouldNotBeNil)
-					So(err.Error(), ShouldContainSubstring, "can't use 'expression' to trigger_type: 'falling'")
+					So(err, ShouldResemble, fmt.Errorf("can't use 'expression' to trigger_type: 'falling'"))
 				})
 
 				Convey("and warn_value and error_value", func() {
@@ -89,7 +90,7 @@ func TestExpressionModeMultipleTargetsWarnValue (t *testing.T) {
 				tr := Trigger{trigger, throttling}
 				err := tr.Bind(request)
 				So(err, ShouldNotBeNil)
-				So(err.Error(), ShouldContainSubstring, "can't use trigger_type not 'falling' for with multiple targets")
+				So(err, ShouldResemble, fmt.Errorf("can't use trigger_type not 'falling' for with multiple targets"))
 			})
 
 		})
@@ -105,7 +106,7 @@ func TestExpressionModeMultipleTargetsWarnValue (t *testing.T) {
 					tr := Trigger{trigger, throttling}
 					err := tr.Bind(request)
 					So(err, ShouldNotBeNil)
-					So(err.Error(), ShouldContainSubstring, "can't use 'expression' to trigger_type: 'rising'")
+					So(err, ShouldResemble, fmt.Errorf("can't use 'expression' to trigger_type: 'rising'"))
 				})
 
 				Convey("and warn_value and error_value", func() {
@@ -129,7 +130,7 @@ func TestExpressionModeMultipleTargetsWarnValue (t *testing.T) {
 				tr := Trigger{trigger, throttling}
 				err := tr.Bind(request)
 				So(err, ShouldNotBeNil)
-				So(err.Error(), ShouldContainSubstring, "can't use trigger_type not 'rising' for with multiple targets")
+				So(err, ShouldResemble, fmt.Errorf("can't use trigger_type not 'rising' for with multiple targets"))
 			})
 
 		})
@@ -147,7 +148,7 @@ func TestExpressionModeMultipleTargetsWarnValue (t *testing.T) {
 				tr := Trigger{trigger, throttling}
 				err := tr.Bind(request)
 				So(err, ShouldNotBeNil)
-				So(err.Error(), ShouldContainSubstring, "can't use 'warn_value' on trigger_type: 'expression'")
+				So(err, ShouldResemble, fmt.Errorf("can't use 'warn_value' on trigger_type: 'expression'"))
 			})
 
 			Convey("and error_value", func() {
@@ -155,14 +156,12 @@ func TestExpressionModeMultipleTargetsWarnValue (t *testing.T) {
 				tr := Trigger{trigger, throttling}
 				err := tr.Bind(request)
 				So(err, ShouldNotBeNil)
-				So(err.Error(), ShouldContainSubstring, "can't use 'error_value' on trigger_type: 'expression'")
-
+				So(err, ShouldResemble, fmt.Errorf("can't use 'error_value' on trigger_type: 'expression'"))
 			})
 			Convey("and expression", func() {
 				tr := Trigger{trigger, throttling}
 				err := tr.Bind(request)
 				So(err, ShouldBeNil)
-
 			})
 		})
 	})
