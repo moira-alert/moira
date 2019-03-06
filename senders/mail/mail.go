@@ -15,6 +15,7 @@ import (
 // Sender implements moira sender interface via pushover
 type Sender struct {
 	From           string
+	SMTPHello			 string
 	SMTPHost       string
 	SMTPPort       int64
 	FrontURI       string
@@ -46,6 +47,7 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 func (sender *Sender) fillSettings(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	sender.logger = logger
 	sender.From = senderSettings["mail_from"]
+	sender.SMTPHello = senderSettings["smtp_hello"]
 	sender.SMTPHost = senderSettings["smtp_host"]
 	sender.SMTPPort, _ = strconv.ParseInt(senderSettings["smtp_port"], 10, 64)
 	sender.InsecureTLS, _ = strconv.ParseBool(senderSettings["insecure_tls"])
