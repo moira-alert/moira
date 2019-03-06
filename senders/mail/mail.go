@@ -87,6 +87,11 @@ func (sender *Sender) tryDial() error {
 		return err
 	}
 	defer t.Close()
+	if sender.SMTPHello != "" {
+		if err := t.Hello(sender.SMTPHello); err != nil {
+			return err
+		}
+	}
 	if sender.Password != "" {
 		tlsConfig := &tls.Config{
 			InsecureSkipVerify: sender.InsecureTLS,
