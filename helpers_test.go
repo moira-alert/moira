@@ -8,6 +8,32 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+func TestBytesScanner(t *testing.T) {
+	type BytesScannerTestCase struct {
+		input  string
+		output []string
+	}
+	Convey("", t, func() {
+		cases := []BytesScannerTestCase{
+			{input: "", output: []string{}},
+			{input: "a", output: []string{"a"}},
+			{input: " ", output: []string{"", ""}},
+			{input: "a ", output: []string{"a", ""}},
+			{input: " a", output: []string{"", "a"}},
+			{input: " a ", output: []string{"", "a", ""}},
+			{input: "a a", output: []string{"a", "a"}},
+		}
+		for _, c := range cases {
+			actualOutput := make([]string, 0)
+			scanner := NewBytesScanner([]byte(c.input), ' ')
+			for scanner.HasNext() {
+				actualOutput = append(actualOutput, string(scanner.Next()))
+			}
+			So(actualOutput, ShouldResemble, c.output)
+		}
+	})
+}
+
 func TestInt64ToTime(t *testing.T) {
 	int64timeStamp := int64(1527330278)
 	humanReadableTimestamp := time.Date(2018, 5, 26, 10, 24, 38, 0, time.UTC)
