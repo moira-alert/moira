@@ -133,7 +133,13 @@ func TestSearchTriggers(t *testing.T) {
 	for i, trigger := range triggerChecks {
 		triggerIDs[i] = trigger.ID
 	}
-
+	triggerSearchResults := make([]*moira.SearchResult, 0)
+	for _, triggerID := range triggerIDs {
+		triggerSearchResults = append(triggerSearchResults, &moira.SearchResult{
+			ObjectID:   triggerID,
+			HighLights: highLights,
+		})
+	}
 	triggersPointers := make([]*moira.TriggerCheck, len(triggerChecks))
 	for i, trigger := range triggerChecks {
 		newTrigger := new(moira.TriggerCheck)
@@ -146,8 +152,8 @@ func TestSearchTriggers(t *testing.T) {
 
 	Convey("No tags, no text, onlyErrors = false, ", t, func() {
 		Convey("Page is bigger than triggers number", func() {
-			mockIndex.EXPECT().SearchTriggers(tags, searchString, false, page, size).Return(triggerIDs, exp, nil)
-			mockDatabase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggersPointers, nil)
+			mockIndex.EXPECT().SearchTriggers(tags, searchString, false, page, size).Return(triggerSearchResults, exp, nil)
+			mockDatabase.EXPECT().GetTriggerChecksWithHighLights(triggerSearchResults).Return(triggersPointers, nil)
 			list, err := SearchTriggers(mockDatabase, mockIndex, page, size, false, tags, searchString)
 			So(err, ShouldBeNil)
 			So(list, ShouldResemble, &dto.TriggersList{
@@ -160,8 +166,8 @@ func TestSearchTriggers(t *testing.T) {
 
 		Convey("Must return all triggers, when size is -1", func() {
 			size = -1
-			mockIndex.EXPECT().SearchTriggers(tags, searchString, false, page, size).Return(triggerIDs, exp, nil)
-			mockDatabase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggersPointers, nil)
+			mockIndex.EXPECT().SearchTriggers(tags, searchString, false, page, size).Return(triggerSearchResults, exp, nil)
+			mockDatabase.EXPECT().GetTriggerChecksWithHighLights(triggerSearchResults).Return(triggersPointers, nil)
 			list, err := SearchTriggers(mockDatabase, mockIndex, page, size, false, tags, searchString)
 			So(err, ShouldBeNil)
 			So(list, ShouldResemble, &dto.TriggersList{
@@ -174,8 +180,8 @@ func TestSearchTriggers(t *testing.T) {
 
 		Convey("Page is less than triggers number", func() {
 			size = 10
-			mockIndex.EXPECT().SearchTriggers(tags, searchString, false, page, size).Return(triggerIDs[:10], exp, nil)
-			mockDatabase.EXPECT().GetTriggerChecks(triggerIDs[:10]).Return(triggersPointers[:10], nil)
+			mockIndex.EXPECT().SearchTriggers(tags, searchString, false, page, size).Return(triggerSearchResults[:10], exp, nil)
+			mockDatabase.EXPECT().GetTriggerChecksWithHighLights(triggerSearchResults[:10]).Return(triggersPointers[:10], nil)
 			list, err := SearchTriggers(mockDatabase, mockIndex, page, size, false, tags, searchString)
 			So(err, ShouldBeNil)
 			So(list, ShouldResemble, &dto.TriggersList{
@@ -187,8 +193,8 @@ func TestSearchTriggers(t *testing.T) {
 
 			Convey("Second page", func() {
 				page = 1
-				mockIndex.EXPECT().SearchTriggers(tags, searchString, false, page, size).Return(triggerIDs[10:20], exp, nil)
-				mockDatabase.EXPECT().GetTriggerChecks(triggerIDs[10:20]).Return(triggersPointers[10:20], nil)
+				mockIndex.EXPECT().SearchTriggers(tags, searchString, false, page, size).Return(triggerSearchResults[10:20], exp, nil)
+				mockDatabase.EXPECT().GetTriggerChecksWithHighLights(triggerSearchResults[10:20]).Return(triggersPointers[10:20], nil)
 				list, err := SearchTriggers(mockDatabase, mockIndex, page, size, false, tags, searchString)
 				So(err, ShouldBeNil)
 				So(list, ShouldResemble, &dto.TriggersList{
@@ -207,8 +213,8 @@ func TestSearchTriggers(t *testing.T) {
 		Convey("Only errors", func() {
 			exp = 30
 			// superTrigger31 is the only trigger without errors
-			mockIndex.EXPECT().SearchTriggers(tags, searchString, true, page, size).Return(triggerIDs[:10], exp, nil)
-			mockDatabase.EXPECT().GetTriggerChecks(triggerIDs[:10]).Return(triggersPointers[:10], nil)
+			mockIndex.EXPECT().SearchTriggers(tags, searchString, true, page, size).Return(triggerSearchResults[:10], exp, nil)
+			mockDatabase.EXPECT().GetTriggerChecksWithHighLights(triggerSearchResults[:10]).Return(triggersPointers[:10], nil)
 			list, err := SearchTriggers(mockDatabase, mockIndex, page, size, true, tags, searchString)
 			So(err, ShouldBeNil)
 			So(list, ShouldResemble, &dto.TriggersList{
@@ -221,8 +227,8 @@ func TestSearchTriggers(t *testing.T) {
 			Convey("Only errors with tags", func() {
 				tags = []string{"encounters", "Kobold"}
 				exp = 2
-				mockIndex.EXPECT().SearchTriggers(tags, searchString, true, page, size).Return(triggerIDs[1:3], exp, nil)
-				mockDatabase.EXPECT().GetTriggerChecks(triggerIDs[1:3]).Return(triggersPointers[1:3], nil)
+				mockIndex.EXPECT().SearchTriggers(tags, searchString, true, page, size).Return(triggerSearchResults[1:3], exp, nil)
+				mockDatabase.EXPECT().GetTriggerChecks(triggerSearchResults[1:3]).Return(triggersPointers[1:3], nil)
 				list, err := SearchTriggers(mockDatabase, mockIndex, page, size, true, tags, searchString)
 				So(err, ShouldBeNil)
 				So(list, ShouldResemble, &dto.TriggersList{
@@ -236,8 +242,8 @@ func TestSearchTriggers(t *testing.T) {
 			Convey("Only errors with text terms", func() {
 				searchString = "dragonshield medium"
 				exp = 1
-				mockIndex.EXPECT().SearchTriggers(tags, searchString, true, page, size).Return(triggerIDs[2:3], exp, nil)
-				mockDatabase.EXPECT().GetTriggerChecks(triggerIDs[2:3]).Return(triggersPointers[2:3], nil)
+				mockIndex.EXPECT().SearchTriggers(tags, searchString, true, page, size).Return(triggerSearchResults[2:3], exp, nil)
+				mockDatabase.EXPECT().GetTriggerChecksWithHighLights(triggerSearchResults[2:3]).Return(triggersPointers[2:3], nil)
 				list, err := SearchTriggers(mockDatabase, mockIndex, page, size, true, tags, searchString)
 				So(err, ShouldBeNil)
 				So(list, ShouldResemble, &dto.TriggersList{
@@ -322,6 +328,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 30,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -332,6 +339,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 29,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -342,6 +350,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 28,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -352,6 +361,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 27,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -362,6 +372,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 26,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -372,6 +383,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 25,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -382,6 +394,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 24,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -392,6 +405,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 23,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -402,6 +416,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 22,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -412,6 +427,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 21,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -422,6 +438,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 20,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -432,6 +449,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 19,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -442,6 +460,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 18,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -452,6 +471,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 17,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -462,6 +482,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 16,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -472,6 +493,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 15,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -482,6 +504,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 14,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -492,6 +515,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 13,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -502,6 +526,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 12,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -512,6 +537,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 11,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -522,6 +548,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 10,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -532,6 +559,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 9,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -542,6 +570,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 8,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -552,6 +581,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 7,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -562,6 +592,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 6,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -572,6 +603,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 5,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -582,6 +614,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 4,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -592,6 +625,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 3,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -602,6 +636,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 2,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -612,6 +647,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 1,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -622,5 +658,13 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 0,
 		},
+		HighLights: highLights,
+	},
+}
+
+var highLights = []moira.SearchHighLight{
+	{
+		Field: "testField",
+		Value: "testValue",
 	},
 }

@@ -14,15 +14,6 @@ import (
 var user1 = "user1"
 var user2 = "user2"
 
-var config = Config{Port: "6379", Host: "localhost"}
-var emptyConfig = Config{}
-var testSource = DBSource("test")
-
-// use it only for tests
-func newTestDatabase(logger moira.Logger, config Config) *DbConnector {
-	return NewDatabase(logger, config, testSource)
-}
-
 func TestContacts(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := newTestDatabase(logger, config)

@@ -11,15 +11,15 @@ import (
 
 const (
 	// VariableContactID is used to render template with contact.ID
-	VariableContactID    = "${contact_id}"
+	VariableContactID = "${contact_id}"
 	// VariableContactValue is used to render template with contact.Value
 	VariableContactValue = "${contact_value}"
 	// VariableContactType is used to render template with contact.Type
-	VariableContactType  = "${contact_type}"
+	VariableContactType = "${contact_type}"
 	// VariableTriggerID is used to render template with trigger.ID
-	VariableTriggerID    = "${trigger_id}"
+	VariableTriggerID = "${trigger_id}"
 	// VariableTriggerName is used to render template with trigger.Name
-	VariableTriggerName  = "${trigger_name}"
+	VariableTriggerName = "${trigger_name}"
 )
 
 // NotificationEvent represents trigger state changes event
@@ -161,8 +161,9 @@ type Trigger struct {
 // TriggerCheck represents trigger data with last check data and check timestamp
 type TriggerCheck struct {
 	Trigger
-	Throttling int64     `json:"throttling"`
-	LastCheck  CheckData `json:"last_check"`
+	Throttling int64             `json:"throttling"`
+	LastCheck  CheckData         `json:"last_check"`
+	HighLights []SearchHighLight `json:"highlights"`
 }
 
 // CheckData represents last trigger check data
@@ -194,6 +195,16 @@ type MetricState struct {
 type MetricEvent struct {
 	Metric  string `json:"metric"`
 	Pattern string `json:"pattern"`
+}
+
+type SearchHighLight struct {
+	Field string `json:"field"`
+	Value string `json:"string"`
+}
+
+type SearchResult struct {
+	ObjectID   string
+	HighLights []SearchHighLight
 }
 
 // GetSubjectState returns the most critical state of events

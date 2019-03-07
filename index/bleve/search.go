@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	"github.com/blevesearch/bleve"
+
+	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/index/mapping"
 )
 
@@ -13,7 +15,7 @@ import (
 // TriggerCheck.Score (desc)
 // Relevance (asc)
 // Trigger.Name (asc)
-func (index *TriggerIndex) Search(filterTags []string, searchString string, onlyErrors bool, page int64, size int64) (triggerIDs []string, total int64, err error) {
+func (index *TriggerIndex) Search(filterTags []string, searchString string, onlyErrors bool, page int64, size int64) (searchResults []*moira.SearchResult, total int64, err error) {
 	if size < 0 {
 		page = 0
 		docs, _ := index.index.DocCount()
@@ -31,7 +33,31 @@ func (index *TriggerIndex) Search(filterTags []string, searchString string, only
 		return
 	}
 	for _, result := range searchResult.Hits {
-		triggerIDs = append(triggerIDs, result.ID)
+		highLights := make([]moira.SearchHighLight, 0)
+		if nameFragments, ok := result.Fragments[mapping.TriggerName.String()]; ok {
+			var nameHighLight string
+			for _, fragment := range nameFragments {
+				nameHighLight += fragment
+			}
+			highLights = append(highLights, moira.SearchHighLight{
+				Field: mapping.TriggerName.String(),
+				Value: nameHighLight,
+			})
+		}
+		if descFragments, ok := result.Fragments[mapping.TriggerDesc.String()]; ok {
+			var descHighLight string
+			for _, fragment := range descFragments {
+				descHighLight += fragment
+			}
+			highLights = append(highLights, moira.SearchHighLight{
+				Field: mapping.TriggerDesc.String(),
+				Value: descHighLight,
+			})
+		}
+		triggerSearchResult := moira.SearchResult{
+			ObjectID: result.ID,
+		}
+		searchResults = append(searchResults, &triggerSearchResult)
 	}
 	return
 }
@@ -48,6 +74,7 @@ func buildSearchRequest(filterTags []string, searchString string, onlyErrors boo
 	// Relevance (asc)
 	// Trigger.Name (asc)
 	req.SortBy([]string{fmt.Sprintf("-%s", mapping.TriggerLastCheckScore.String()), "_score", mapping.TriggerName.String()})
+	req.Highlight = bleve.NewHighlight()
 
 	return req
 }

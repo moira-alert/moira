@@ -246,6 +246,72 @@ func (connector *DbConnector) removeTrigger(triggerID string, trigger *moira.Tri
 	return nil
 }
 
+// GetTriggerChecksWithHighLights returns triggerChecks collection by given search results
+func (connector *DbConnector) GetTriggerChecksWithHighLights(searchResults []*moira.SearchResult) ([]*moira.TriggerCheck, error) {
+	c := connector.pool.Get()
+	defer c.Close()
+
+	triggerChecks := make([]*moira.TriggerCheck, 0, len(searchResults))
+
+	c.Send("MULTI")
+	for _, searchResult := range searchResults {
+		triggerID := searchResult.ObjectID
+		c.Send("GET", triggerKey(triggerID))
+		c.Send("SMEMBERS", triggerTagsKey(triggerID))
+		c.Send("GET", metricLastCheckKey(triggerID))
+		c.Send("GET", notifierNextKey(triggerID))
+	}
+	rawResponses, err := redis.Values(c.Do("EXEC"))
+	if err != nil {
+		return nil, fmt.Errorf("failed to EXEC: %s", err)
+	}
+
+	var rawResponseInd int
+	var rawResponseIndShift = 4
+
+	rawResponsesCount, searchResultsCount := len(rawResponses)/4, len(searchResults)
+
+	if rawResponsesCount != searchResultsCount {
+		return triggerChecks, fmt.Errorf("inconsistent number of raw database responses. want: %d, found: %d", rawResponsesCount, searchResultsCount)
+	}
+
+	for _, searchResult := range searchResults {
+
+		rawResponse := rawResponses[rawResponseInd : rawResponseInd+rawResponseIndShift]
+		rawResponseInd += rawResponseIndShift
+
+		triggerID := searchResult.ObjectID
+		triggerRaw, tagsRow, lastCheckRaw, throttlingRaw := rawResponse[0], rawResponse[1], rawResponse[2], rawResponse[3]
+
+		trigger, err := connector.getTriggerWithTags(triggerRaw, tagsRow, triggerID)
+		if err != nil {
+			if err == database.ErrNil {
+				continue
+			}
+			return triggerChecks, err
+		}
+
+		lastCheck, err := reply.Check(lastCheckRaw, nil)
+		if err != nil && err != database.ErrNil {
+			return triggerChecks, err
+		}
+		throttling, _ := redis.Int64(throttlingRaw, nil)
+		if time.Now().Unix() >= throttling {
+			throttling = 0
+		}
+
+		triggerChecks = append(triggerChecks, &moira.TriggerCheck{
+			Trigger:    trigger,
+			LastCheck:  lastCheck,
+			Throttling: throttling,
+			HighLights: searchResult.HighLights,
+		})
+
+	}
+
+	return triggerChecks, nil
+}
+
 // GetTriggerChecks gets triggers data with tags, lastCheck data and throttling by given triggersIDs
 // Len of triggerIDs is equal to len of returned values array.
 // If there is no object by current ID, then nil is returned
