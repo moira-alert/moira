@@ -65,7 +65,6 @@ func TestExpressionModeMultipleTargetsWarnValue (t *testing.T) {
 					trigger.Expression = "(t1 < 10 && t2 < 10) ? WARN:OK"
 					tr := Trigger{trigger, throttling}
 					err := tr.Bind(request)
-					So(err, ShouldNotBeNil)
 					So(err, ShouldResemble, fmt.Errorf("can't use 'expression' to trigger_type: 'falling'"))
 				})
 
@@ -89,7 +88,6 @@ func TestExpressionModeMultipleTargetsWarnValue (t *testing.T) {
 				trigger.ErrorValue = &errorValue
 				tr := Trigger{trigger, throttling}
 				err := tr.Bind(request)
-				So(err, ShouldNotBeNil)
 				So(err, ShouldResemble, fmt.Errorf("can't use trigger_type not 'falling' for with multiple targets"))
 			})
 
@@ -105,7 +103,6 @@ func TestExpressionModeMultipleTargetsWarnValue (t *testing.T) {
 					trigger.Expression = "(t1 < 10 && t2 < 10) ? WARN:OK"
 					tr := Trigger{trigger, throttling}
 					err := tr.Bind(request)
-					So(err, ShouldNotBeNil)
 					So(err, ShouldResemble, fmt.Errorf("can't use 'expression' to trigger_type: 'rising'"))
 				})
 
@@ -129,7 +126,6 @@ func TestExpressionModeMultipleTargetsWarnValue (t *testing.T) {
 				trigger.ErrorValue = &warnValue
 				tr := Trigger{trigger, throttling}
 				err := tr.Bind(request)
-				So(err, ShouldNotBeNil)
 				So(err, ShouldResemble, fmt.Errorf("can't use trigger_type not 'rising' for with multiple targets"))
 			})
 
@@ -155,7 +151,6 @@ func TestExpressionModeMultipleTargetsWarnValue (t *testing.T) {
 				trigger.ErrorValue = &errorValue
 				tr := Trigger{trigger, throttling}
 				err := tr.Bind(request)
-				So(err, ShouldNotBeNil)
 				So(err, ShouldResemble, fmt.Errorf("can't use 'error_value' on trigger_type: 'expression'"))
 			})
 			Convey("and expression", func() {
