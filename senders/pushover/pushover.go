@@ -12,6 +12,7 @@ import (
 
 const printEventsCount int = 5
 const titleLimit = 250
+const urlLimit = 512
 
 // Sender implements moira sender interface via pushover
 type Sender struct {
@@ -54,12 +55,14 @@ func (sender *Sender) makePushoverMessage(events moira.NotificationEvents, conta
 		Message:   sender.buildMessage(events, throttled),
 		Title:     sender.buildTitle(events, trigger),
 		Priority:  sender.getMessagePriority(events),
-		URL:       trigger.GetTriggerURI(sender.frontURI),
 		Retry:     5 * time.Minute,
 		Expire:    time.Hour,
 		Timestamp: events[len(events)-1].Timestamp,
 	}
-
+	url := trigger.GetTriggerURI(sender.frontURI)
+	if len(url) < urlLimit {
+		pushoverMessage.URL = url
+	}
 	if len(plot) > 0 {
 		reader := bytes.NewReader(plot)
 		pushoverMessage.AddAttachment(reader)
