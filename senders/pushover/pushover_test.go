@@ -136,13 +136,13 @@ func TestBuildTitle(t *testing.T) {
 		title := sender.buildTitle([]moira.NotificationEvent{{State: moira.StateERROR}, {State: moira.StateWARN}, {State: moira.StateWARN}, {State: moira.StateOK}}, moira.TriggerData{})
 		So(title, ShouldResemble, "ERROR   (4)")
 	})
-	Convey("Build title that exceed the title limit", t, func() {
+	Convey("Build title that exceeds the title limit", t, func() {
 		var reallyLongTag string
 		for i := 0; i < 30; i++ {
 			reallyLongTag = reallyLongTag + "randomstring"
 		}
 		title := sender.buildTitle([]moira.NotificationEvent{{State: moira.StateERROR}, {State: moira.StateWARN}, {State: moira.StateWARN}, {State: moira.StateOK}}, moira.TriggerData{Tags: []string{"tag1", "tag2", "tag3", reallyLongTag, "tag4"}, Name: "Name"})
-		So(title, ShouldResemble, "ERROR Name [tag1][tag2][tag3] and 2 more tags (4)")
+		So(title, ShouldResemble, "ERROR Name [tag1][tag2][tag3].... (4)")
 	})
 }
 
