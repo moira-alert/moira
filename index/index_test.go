@@ -167,6 +167,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 30,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -178,6 +179,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 29,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -189,6 +191,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 28,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -200,6 +203,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 27,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -211,6 +215,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 26,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -222,6 +227,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 25,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -233,6 +239,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 24,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -244,6 +251,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 23,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -255,6 +263,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 22,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -266,6 +275,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 21,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -277,6 +287,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 20,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -288,6 +299,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 19,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -299,6 +311,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 18,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -310,6 +323,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 17,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -321,6 +335,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 16,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -332,6 +347,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 15,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -343,6 +359,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 14,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -354,6 +371,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 13,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -365,6 +383,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 12,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -376,6 +395,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 11,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -387,6 +407,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 10,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -398,6 +419,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 9,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -409,6 +431,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 8,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -420,6 +443,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 7,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -431,6 +455,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 6,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -442,6 +467,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 5,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -453,6 +479,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 4,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -464,6 +491,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 3,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -475,6 +503,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 2,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -486,6 +515,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 1,
 		},
+		HighLights: highLights,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -497,6 +527,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 0,
 		},
+		HighLights: highLights,
 	},
 }
 
@@ -542,3 +573,5 @@ No, no, no, no, no, no, no
 (Oh mamma mia, mamma mia) Mamma mia, let me go
 Beelzebub has a devil put aside for me, for me, for me!`,
 }
+
+var highLights []moira.SearchHighLight
