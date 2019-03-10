@@ -491,3 +491,5 @@ No, no, no, no, no, no, no
 (Oh mamma mia, mamma mia) Mamma mia, let me go
 Beelzebub has a devil put aside for me, for me, for me!`,
 }
+
+var highLights []moira.SearchHighLight
