@@ -48,6 +48,7 @@ func TestDatabaseDisconnected(t *testing.T) {
 			var events []moira.NotificationEvent
 			var sendingWG sync.WaitGroup
 			err := fmt.Errorf("DataBase doesn't work")
+			mock.database.EXPECT().GetPatterns().Return([]string{"p1"}, nil)
 			mock.database.EXPECT().GetMetricsUpdatesCount().Return(int64(1), nil)
 			mock.database.EXPECT().GetChecksUpdatesCount().Return(int64(1), err)
 			mock.database.EXPECT().GetNotifierState().Return(moira.SelfStateERROR, err)
@@ -97,6 +98,7 @@ func TestMoiraCacheDoesNotReceivedNewMetrics(t *testing.T) {
 	Convey("Should notify admin", t, func() {
 		var events []moira.NotificationEvent
 		var sendingWG sync.WaitGroup
+		mock.database.EXPECT().GetPatterns().Return([]string{"p1"}, nil)
 		mock.database.EXPECT().GetMetricsUpdatesCount().Return(int64(1), nil)
 		mock.database.EXPECT().GetChecksUpdatesCount().Return(int64(1), nil)
 
@@ -149,6 +151,7 @@ func TestMoiraCheckerDoesNotChecksTriggers(t *testing.T) {
 	Convey("Should notify admin", t, func() {
 		var events []moira.NotificationEvent
 		var sendingWG sync.WaitGroup
+		mock.database.EXPECT().GetPatterns().Return([]string{"p1"}, nil)
 		mock.database.EXPECT().GetMetricsUpdatesCount().Return(int64(1), nil)
 		mock.database.EXPECT().GetChecksUpdatesCount().Return(int64(1), nil)
 
@@ -201,9 +204,11 @@ func TestMoiraCheckerDoesNotChecksRemoteTriggers(t *testing.T) {
 	Convey("Should notify admin", t, func() {
 		var events []moira.NotificationEvent
 		var sendingWG sync.WaitGroup
+		mock.database.EXPECT().GetPatterns().Return([]string{"p1"}, nil)
 		mock.database.EXPECT().GetMetricsUpdatesCount().Return(int64(1), nil)
 		mock.database.EXPECT().GetChecksUpdatesCount().Return(int64(1), nil)
 		mock.database.EXPECT().GetRemoteChecksUpdatesCount().Return(int64(1), nil)
+		mock.database.EXPECT().GetRemoteTriggerIDs().Return([]string{"t1"}, nil)
 
 		now := time.Now()
 		redisLastCheckTS = now.Unix()
@@ -272,6 +277,7 @@ func TestRunGoRoutine(t *testing.T) {
 
 	Convey("Go routine run before first send, should send after 10 seconds next time", t, func() {
 		err := fmt.Errorf("DataBase doesn't work")
+		database.EXPECT().GetPatterns().Return([]string{"p1"}, nil).Times(11)
 		database.EXPECT().GetMetricsUpdatesCount().Return(int64(1), nil).Times(11)
 		database.EXPECT().GetChecksUpdatesCount().Return(int64(1), err).Times(11)
 		database.EXPECT().GetNotifierState().Return(moira.SelfStateERROR, err).Times(3)

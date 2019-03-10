@@ -100,11 +100,14 @@ func (selfCheck *SelfCheckWorker) Stop() error {
 func (selfCheck *SelfCheckWorker) check(nowTS int64, lastMetricReceivedTS, redisLastCheckTS, lastCheckTS, lastRemoteCheckTS, nextSendErrorMessage, metricsCount, checksCount, remoteChecksCount *int64) {
 	var events []moira.NotificationEvent
 	var rcc int64
+	var remoteTriggers []string
 
+	metrics, _ := selfCheck.DB.GetPatterns()
 	mc, _ := selfCheck.DB.GetMetricsUpdatesCount()
 	cc, err := selfCheck.DB.GetChecksUpdatesCount()
 	if selfCheck.Config.RemoteTriggersEnabled {
 		rcc, _ = selfCheck.DB.GetRemoteChecksUpdatesCount()
+		remoteTriggers, _ = selfCheck.DB.GetRemoteTriggerIDs()
 	}
 	if err == nil {
 		*redisLastCheckTS = nowTS
@@ -131,21 +134,23 @@ func (selfCheck *SelfCheckWorker) check(nowTS int64, lastMetricReceivedTS, redis
 			appendNotificationEvents(&events, redisDisconnectedErrorMessage, interval)
 		}
 
-		if *lastMetricReceivedTS < nowTS-selfCheck.Config.LastMetricReceivedDelaySeconds && err == nil {
-			interval := nowTS - *lastMetricReceivedTS
-			selfCheck.Logger.Errorf("%s more than %ds. Send message.", filterStateErrorMessage, interval)
-			appendNotificationEvents(&events, filterStateErrorMessage, interval)
-			selfCheck.setNotifierState(moira.SelfStateERROR)
+		if len(metrics) > 0 {
+			if *lastMetricReceivedTS < nowTS-selfCheck.Config.LastMetricReceivedDelaySeconds && err == nil {
+				interval := nowTS - *lastMetricReceivedTS
+				selfCheck.Logger.Errorf("%s more than %ds. Send message.", filterStateErrorMessage, interval)
+				appendNotificationEvents(&events, filterStateErrorMessage, interval)
+				selfCheck.setNotifierState(moira.SelfStateERROR)
+			}
+
+			if *lastCheckTS < nowTS-selfCheck.Config.LastCheckDelaySeconds && err == nil {
+				interval := nowTS - *lastCheckTS
+				selfCheck.Logger.Errorf("%s more than %ds. Send message.", checkerStateErrorMessage, interval)
+				appendNotificationEvents(&events, checkerStateErrorMessage, interval)
+				selfCheck.setNotifierState(moira.SelfStateERROR)
+			}
 		}
 
-		if *lastCheckTS < nowTS-selfCheck.Config.LastCheckDelaySeconds && err == nil {
-			interval := nowTS - *lastCheckTS
-			selfCheck.Logger.Errorf("%s more than %ds. Send message.", checkerStateErrorMessage, interval)
-			appendNotificationEvents(&events, checkerStateErrorMessage, interval)
-			selfCheck.setNotifierState(moira.SelfStateERROR)
-		}
-
-		if selfCheck.Config.RemoteTriggersEnabled {
+		if selfCheck.Config.RemoteTriggersEnabled && len(remoteTriggers) > 0 {
 			if *lastRemoteCheckTS < nowTS-selfCheck.Config.LastRemoteCheckDelaySeconds && err == nil {
 				interval := nowTS - *lastRemoteCheckTS
 				selfCheck.Logger.Errorf("%s more than %ds. Send message.", remoteCheckerStateErrorMessage, interval)
