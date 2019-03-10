@@ -197,11 +197,13 @@ type MetricEvent struct {
 	Pattern string `json:"pattern"`
 }
 
+// SearchHighLight represents highlight
 type SearchHighLight struct {
 	Field string `json:"field"`
 	Value string `json:"string"`
 }
 
+// SearchResult represents fulltext search result
 type SearchResult struct {
 	ObjectID   string
 	HighLights []SearchHighLight

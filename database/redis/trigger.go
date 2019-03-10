@@ -269,7 +269,7 @@ func (connector *DbConnector) GetTriggerChecksWithHighLights(searchResults []*mo
 	var rawResponseInd int
 	var rawResponseIndShift = 4
 
-	rawResponsesCount, searchResultsCount := len(rawResponses)/4, len(searchResults)
+	rawResponsesCount, searchResultsCount := len(rawResponses)/rawResponseIndShift, len(searchResults)
 
 	if rawResponsesCount != searchResultsCount {
 		return triggerChecks, fmt.Errorf("inconsistent number of raw database responses. want: %d, found: %d", rawResponsesCount, searchResultsCount)
@@ -295,6 +295,7 @@ func (connector *DbConnector) GetTriggerChecksWithHighLights(searchResults []*mo
 		if err != nil && err != database.ErrNil {
 			return triggerChecks, err
 		}
+
 		throttling, _ := redis.Int64(throttlingRaw, nil)
 		if time.Now().Unix() >= throttling {
 			throttling = 0
