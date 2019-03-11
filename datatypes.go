@@ -171,6 +171,7 @@ type CheckData struct {
 	Score                        int64                  `json:"score"`
 	State                        State                  `json:"state"`
 	Maintenance                  int64                  `json:"maintenance,omitempty"`
+	MaintenanceWho 							 *MaintenanceWho        `json:"maintanencewho"`
 	Timestamp                    int64                  `json:"timestamp,omitempty"`
 	EventTimestamp               int64                  `json:"event_timestamp,omitempty"`
 	LastSuccessfulCheckTimestamp int64                  `json:"last_successful_check_timestamp"`
@@ -188,6 +189,14 @@ type MetricState struct {
 	Timestamp       int64    `json:"timestamp"`
 	Value           *float64 `json:"value,omitempty"`
 	Maintenance     int64    `json:"maintenance,omitempty"`
+	MaintenanceWho 	*MaintenanceWho `json:"maintanencewho"`
+}
+
+type MaintenanceWho struct {
+	StartMaintenanceUser *string
+	StartMaintenanceTime *int64
+	StopMaintenanceUser  *string
+	StopMaintenanceTime  *int64
 }
 
 // MetricEvent represents filter metric event
