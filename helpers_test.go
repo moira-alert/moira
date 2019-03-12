@@ -2,7 +2,6 @@ package moira
 
 import (
 	"math"
-	"sort"
 	"testing"
 	"time"
 
@@ -95,14 +94,12 @@ func TestGetStringListsUnion(t *testing.T) {
 			first := []string{"1", "2", "3"}
 			second := []string{"1", "2", "3"}
 			union := GetStringListsUnion(first, second)
-			sort.Strings(union)
 			So(union, ShouldResemble, []string{"1", "2", "3"})
 		}
 		{
 			first := []string{"1", "2", "3"}
 			second := []string{"4", "5", "6"}
 			union := GetStringListsUnion(first, second)
-			sort.Strings(union)
 			So(union, ShouldResemble, []string{"1", "2", "3", "4", "5", "6"})
 		}
 	})

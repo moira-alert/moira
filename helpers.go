@@ -130,17 +130,18 @@ func GetStringListsUnion(stringLists ...[]string) []string {
 		return []string{}
 	}
 
+	values := make([]string, 0)
+
 	uniqueValues := make(map[string]bool)
 	for _, stringList := range stringLists {
 		for _, value := range stringList {
-			uniqueValues[value] = true
+			if _, ok := uniqueValues[value]; !ok {
+				values = append(values, value)
+				uniqueValues[value] = true
+			}
 		}
 	}
 
-	values := make([]string, 0, len(uniqueValues))
-	for key := range uniqueValues {
-		values = append(values, key)
-	}
 	return values
 }
 
