@@ -3,7 +3,7 @@ package bleve
 import (
 	"testing"
 
-	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/fixtures"
 	"github.com/moira-alert/moira/index/mapping"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -15,17 +15,10 @@ func TestTriggerIndex_Delete(t *testing.T) {
 
 	triggerMapping := mapping.BuildIndexMapping(mapping.Trigger{})
 
-	triggerIDs := make([]string, len(triggerChecks))
-	for i, trigger := range triggerChecks {
-		triggerIDs[i] = trigger.ID
-	}
+	triggerTestCases := fixtures.TriggerTestCases
 
-	triggersPointers := make([]*moira.TriggerCheck, len(triggerChecks))
-	for i, trigger := range triggerChecks {
-		newTrigger := new(moira.TriggerCheck)
-		*newTrigger = trigger
-		triggersPointers[i] = newTrigger
-	}
+	triggerIDs := triggerTestCases.ToTriggerIDs()
+	triggerChecksPointers := triggerTestCases.ToTriggerChecks()
 
 	Convey("First of all, create and fill index", t, func() {
 		newIndex, err = CreateTriggerIndex(triggerMapping)
@@ -36,7 +29,7 @@ func TestTriggerIndex_Delete(t *testing.T) {
 		So(count, ShouldBeZeroValue)
 		So(err, ShouldBeNil)
 
-		err = newIndex.Write(triggersPointers)
+		err = newIndex.Write(triggerChecksPointers)
 		So(err, ShouldBeNil)
 
 		count, err = newIndex.GetCount()
