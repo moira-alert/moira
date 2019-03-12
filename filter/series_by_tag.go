@@ -13,27 +13,31 @@ var tagSpecsRegexString = tagSpecRegexString + "(" + tagSpecsDelimiterRegexStrin
 var seriesByTagRegexString = "^seriesByTag\\(" + tagSpecsRegexString + "\\)$"
 var seriesByTagRegex = regexp.MustCompile(seriesByTagRegexString)
 
-//ErrNotSeriesByTag is returned if the pattern is not seriesByTag
+// ErrNotSeriesByTag is returned if the pattern is not seriesByTag
 var ErrNotSeriesByTag = fmt.Errorf("not seriesByTag pattern")
 
-//TagSpecOperator is an operator inside a TagSpec
+// TagSpecOperator represents an operator and it is used to query metric by tag value
 type TagSpecOperator string
 
 const (
-	Equal    TagSpecOperator = "="
-	NotEqual TagSpecOperator = "!="
-	Match    TagSpecOperator = "=~"
-	NotMatch TagSpecOperator = "!=~"
+	// EqualOperator is a strict equality operator and it is used to query metric by tag's value
+	EqualOperator TagSpecOperator = "="
+	// NotEqualOperator is a strict non-equality operator and it is used to query metric by tag's value
+	NotEqualOperator TagSpecOperator = "!="
+	// MatchOperator is a match operator which helps to match metric by regex
+	MatchOperator TagSpecOperator = "=~"
+	// NotMatchOperator is a non-match operator which helps not to match metric by regex
+	NotMatchOperator TagSpecOperator = "!=~"
 )
 
-//TagSpec is a filter expression inside seriesByTag pattern
+// TagSpec is a filter expression inside seriesByTag pattern
 type TagSpec struct {
 	Name     string
 	Operator TagSpecOperator
 	Value    string
 }
 
-//ParseSeriesByTag parses seriesByTag pattern and returns tags specs
+// ParseSeriesByTag parses seriesByTag pattern and returns tags specs
 func ParseSeriesByTag(pattern string) ([]TagSpec, error) {
 	matches := seriesByTagRegex.FindStringSubmatch(pattern)
 	if len(matches) == 0 {
@@ -71,12 +75,12 @@ func ParseSeriesByTag(pattern string) ([]TagSpec, error) {
 	return tagSpecs, nil
 }
 
-//SeriesByTagIndex helps to index the seriesByTag patterns and allows to match them by metric
+// SeriesByTagIndex helps to index the seriesByTag patterns and allows to match them by metric
 type SeriesByTagIndex struct {
 	filters map[string][]func(string) ([]string, bool)
 }
 
-// NewPatternIndex creates new PatternIndex using seriesByTag patterns and parsed specs comes from ParseSeriesByTag
+// NewSeriesByTagIndex creates new SeriesByTagIndex using seriesByTag patterns and parsed specs comes from ParseSeriesByTag
 func NewSeriesByTagIndex(tagSpecsByPattern map[string][]TagSpec) *SeriesByTagIndex {
 	tagSpecsByTag := make(map[string]map[TagSpec][]string)
 
@@ -89,7 +93,7 @@ func NewSeriesByTagIndex(tagSpecsByPattern map[string][]TagSpec) *SeriesByTagInd
 				patternsByTagSpec = make(map[TagSpec][]string)
 			}
 
-			patterns, _ := patternsByTagSpec[tagSpec]
+			patterns := patternsByTagSpec[tagSpec]
 			patternsByTagSpec[tagSpec] = append(patterns, pattern)
 			tagSpecsByTag[tagSpec.Name] = patternsByTagSpec
 		}
@@ -108,7 +112,7 @@ func NewSeriesByTagIndex(tagSpecsByPattern map[string][]TagSpec) *SeriesByTagInd
 	return &SeriesByTagIndex{filters: filters}
 }
 
-//MatchPatterns allows to match patterns by metric name and its labels
+// MatchPatterns allows to match patterns by metric name and its labels
 func (index *SeriesByTagIndex) MatchPatterns(name string, labels map[string]string) []string {
 	matchedPatterns := make([][]string, 0)
 
@@ -136,20 +140,20 @@ func (index *SeriesByTagIndex) MatchPatterns(name string, labels map[string]stri
 func createFilter(spec TagSpec, patterns []string) func(string) ([]string, bool) {
 	var filterCondition func(string) bool
 	switch spec.Operator {
-	case Equal:
+	case EqualOperator:
 		filterCondition = func(value string) bool {
 			return value == spec.Value
 		}
-	case NotEqual:
+	case NotEqualOperator:
 		filterCondition = func(value string) bool {
 			return value != spec.Value
 		}
-	case Match:
+	case MatchOperator:
 		matchRegex := regexp.MustCompile("^" + spec.Value)
 		filterCondition = func(value string) bool {
 			return matchRegex.MatchString(value)
 		}
-	case NotMatch:
+	case NotMatchOperator:
 		matchRegex := regexp.MustCompile("^" + spec.Value)
 		filterCondition = func(value string) bool {
 			return !matchRegex.MatchString(value)
@@ -163,8 +167,8 @@ func createFilter(spec TagSpec, patterns []string) func(string) ([]string, bool)
 	return func(value string) ([]string, bool) {
 		if filterCondition(value) {
 			return patterns, true
-		} else {
-			return nil, false
 		}
+
+		return nil, false
 	}
 }

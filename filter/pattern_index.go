@@ -12,7 +12,7 @@ import (
 
 var asteriskHash = xxhash.Checksum32([]byte("*"))
 
-//PatternNode contains pattern node
+// PatternNode contains pattern node
 type PatternNode struct {
 	Children   []*PatternNode
 	Part       string

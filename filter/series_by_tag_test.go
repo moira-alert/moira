@@ -11,12 +11,12 @@ func TestParseSeriesByTag(t *testing.T) {
 
 	Convey("Given valid seriesByTag patterns, should return parsed tag specs", t, func() {
 		validSeriesByTagCases := []ValidSeriesByTagCase{
-			{"seriesByTag(\"a=b\")", []TagSpec{{"a", Equal, "b"}}},
-			{"seriesByTag(\"a!=b\")", []TagSpec{{"a", NotEqual, "b"}}},
-			{"seriesByTag(\"a=~b\")", []TagSpec{{"a", Match, "b"}}},
-			{"seriesByTag(\"a!=~b\")", []TagSpec{{"a", NotMatch, "b"}}},
-			{"seriesByTag(\"a=\")", []TagSpec{{"a", Equal, ""}}},
-			{"seriesByTag(\"a=b\",\"a=c\")", []TagSpec{{"a", Equal, "c"}}},
+			{"seriesByTag(\"a=b\")", []TagSpec{{"a", EqualOperator, "b"}}},
+			{"seriesByTag(\"a!=b\")", []TagSpec{{"a", NotEqualOperator, "b"}}},
+			{"seriesByTag(\"a=~b\")", []TagSpec{{"a", MatchOperator, "b"}}},
+			{"seriesByTag(\"a!=~b\")", []TagSpec{{"a", NotMatchOperator, "b"}}},
+			{"seriesByTag(\"a=\")", []TagSpec{{"a", EqualOperator, ""}}},
+			{"seriesByTag(\"a=b\",\"a=c\")", []TagSpec{{"a", EqualOperator, "c"}}},
 		}
 
 		for _, validCase := range validSeriesByTagCases {

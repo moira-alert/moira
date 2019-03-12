@@ -35,7 +35,7 @@ func (storage *PatternStorage) Refresh() error {
 		return err
 	}
 
-	seriesByTagPatterns := make(map[string][]TagSpec, 0)
+	seriesByTagPatterns := make(map[string][]TagSpec)
 	patterns := make([]string, 0)
 	for _, newPattern := range newPatterns {
 		tagSpecs, err := ParseSeriesByTag(newPattern)
