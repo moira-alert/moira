@@ -10,11 +10,11 @@ import (
 
 // PatternStorage contains pattern tree
 type PatternStorage struct {
-	database         moira.Database
-	metrics          *graphite.FilterMetrics
-	logger           moira.Logger
-	PatternIndex     atomic.Value
-	SeriesByTagIndex atomic.Value
+	database                moira.Database
+	metrics                 *graphite.FilterMetrics
+	logger                  moira.Logger
+	PatternIndex            atomic.Value
+	SeriesByTagPatternIndex atomic.Value
 }
 
 // NewPatternStorage creates new PatternStorage struct
@@ -47,7 +47,7 @@ func (storage *PatternStorage) Refresh() error {
 	}
 
 	storage.PatternIndex.Store(NewPatternIndex(patterns))
-	storage.SeriesByTagIndex.Store(NewSeriesByTagIndex(seriesByTagPatterns))
+	storage.SeriesByTagPatternIndex.Store(NewSeriesByTagPatternIndex(seriesByTagPatterns))
 	return nil
 }
 
@@ -85,10 +85,10 @@ func (storage *PatternStorage) ProcessIncomingMetric(lineBytes []byte) *moira.Ma
 
 func (storage *PatternStorage) matchPatterns(metric *ParsedMetric) []string {
 	patternIndex := storage.PatternIndex.Load().(*PatternIndex)
-	seriesByTagIndex := storage.SeriesByTagIndex.Load().(*SeriesByTagIndex)
+	seriesByTagPatternIndex := storage.SeriesByTagPatternIndex.Load().(*SeriesByTagPatternIndex)
 
 	matchedPatterns := make([]string, 0)
 	matchedPatterns = append(matchedPatterns, patternIndex.MatchPatterns(metric.Name)...)
-	matchedPatterns = append(matchedPatterns, seriesByTagIndex.MatchPatterns(metric.Name, metric.Labels)...)
+	matchedPatterns = append(matchedPatterns, seriesByTagPatternIndex.MatchPatterns(metric.Name, metric.Labels)...)
 	return matchedPatterns
 }

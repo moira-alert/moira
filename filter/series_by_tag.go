@@ -75,13 +75,13 @@ func ParseSeriesByTag(pattern string) ([]TagSpec, error) {
 	return tagSpecs, nil
 }
 
-// SeriesByTagIndex helps to index the seriesByTag patterns and allows to match them by metric
-type SeriesByTagIndex struct {
+// SeriesByTagPatternIndex helps to index the seriesByTag patterns and allows to match them by metric
+type SeriesByTagPatternIndex struct {
 	filters map[string][]func(string) ([]string, bool)
 }
 
-// NewSeriesByTagIndex creates new SeriesByTagIndex using seriesByTag patterns and parsed specs comes from ParseSeriesByTag
-func NewSeriesByTagIndex(tagSpecsByPattern map[string][]TagSpec) *SeriesByTagIndex {
+// NewSeriesByTagPatternIndex creates new SeriesByTagPatternIndex using seriesByTag patterns and parsed specs comes from ParseSeriesByTag
+func NewSeriesByTagPatternIndex(tagSpecsByPattern map[string][]TagSpec) *SeriesByTagPatternIndex {
 	tagSpecsByTag := make(map[string]map[TagSpec][]string)
 
 	for pattern, tagSpecs := range tagSpecsByPattern {
@@ -109,11 +109,11 @@ func NewSeriesByTagIndex(tagSpecsByPattern map[string][]TagSpec) *SeriesByTagInd
 		filters[tag] = tagFilters
 	}
 
-	return &SeriesByTagIndex{filters: filters}
+	return &SeriesByTagPatternIndex{filters: filters}
 }
 
 // MatchPatterns allows to match patterns by metric name and its labels
-func (index *SeriesByTagIndex) MatchPatterns(name string, labels map[string]string) []string {
+func (index *SeriesByTagPatternIndex) MatchPatterns(name string, labels map[string]string) []string {
 	matchedPatterns := make([][]string, 0)
 
 	if filters, found := index.filters["name"]; found {
