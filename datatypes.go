@@ -165,6 +165,10 @@ type TriggerCheck struct {
 	LastCheck  CheckData `json:"last_check"`
 }
 
+type MaintenaceCheck interface {
+	SetMaintenanceWho(maintenanceWho *MaintenanceWho)
+}
+
 // CheckData represents last trigger check data
 type CheckData struct {
 	Metrics                      map[string]MetricState `json:"metrics"`
@@ -190,6 +194,10 @@ type MetricState struct {
 	Value           *float64 `json:"value,omitempty"`
 	Maintenance     int64    `json:"maintenance,omitempty"`
 	MaintenanceWho 	*MaintenanceWho `json:"maintanencewho"`
+}
+
+func (metricState *MetricState) SetMaintenanceWho(maintenanceWho *MaintenanceWho) {
+	metricState.MaintenanceWho = maintenanceWho
 }
 
 type MaintenanceWho struct {
@@ -296,6 +304,10 @@ func (checkData *CheckData) GetOrCreateMetricState(metric string, emptyTimestamp
 		checkData.Metrics[metric] = createEmptyMetricState(emptyTimestampValue, !muteNewMetric)
 	}
 	return checkData.Metrics[metric]
+}
+
+func (checkData *CheckData) SetMaintenanceWho(maintenanceWho *MaintenanceWho) {
+	checkData.MaintenanceWho = maintenanceWho
 }
 
 func createEmptyMetricState(defaultTimestampValue int64, firstStateIsNodata bool) MetricState {

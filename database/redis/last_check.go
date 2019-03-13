@@ -103,14 +103,14 @@ func (connector *DbConnector) SetTriggerCheckMaintenance(triggerID string, metri
 				if !ok {
 					continue
 				}
-        setMaintenanceMetricUserAndTime(data, &value, user, callMaintenance)
+				setMaintenanceUserAndTime(&data, &value, user, callMaintenance)
 				data.Maintenance = value
 				metricsCheck[metric] = data
 			}
 		}
 		if triggerMaintenance != nil {
 			lastCheck.Maintenance = *triggerMaintenance
-			setMaintenanceTriggerUserAndTime(lastCheck, triggerMaintenance, user, callMaintenance)
+			setMaintenanceUserAndTime(&lastCheck, triggerMaintenance, user, callMaintenance)
 		}
 		newLastCheck, err := json.Marshal(lastCheck)
 		if err != nil {
@@ -130,33 +130,22 @@ func (connector *DbConnector) SetTriggerCheckMaintenance(triggerID string, metri
 	return nil
 }
 
-func setMaintenanceTriggerUserAndTime (checkData moira.CheckData, triggerMaintenance *int64, user *string, callMaintenance *int64 ){
-	if *user != "" || *user != "anonymous" {
+func setMaintenanceUserAndTime(maintenaceCheck moira.MaintenaceCheck, triggerMaintenance *int64, user *string, callMaintenance *int64 ){
+	if *user != "" && *user != "anonymous" && user != nil {
+		var maintenanceWho moira.MaintenanceWho
 		if *triggerMaintenance < *callMaintenance {
-			checkData.MaintenanceWho.StopMaintenanceUser = user
-			checkData.MaintenanceWho.StopMaintenanceTime = callMaintenance
+			maintenanceWho.StopMaintenanceUser = user
+			maintenanceWho.StopMaintenanceTime = callMaintenance
 		} else {
-			checkData.MaintenanceWho.StopMaintenanceUser = nil
-			checkData.MaintenanceWho.StopMaintenanceTime = nil
-			checkData.MaintenanceWho.StartMaintenanceUser = user
-			checkData.MaintenanceWho.StartMaintenanceTime = callMaintenance
+			maintenanceWho.StopMaintenanceUser = nil
+			maintenanceWho.StopMaintenanceTime = nil
+			maintenanceWho.StartMaintenanceUser = user
+			maintenanceWho.StartMaintenanceTime = callMaintenance
 		}
+		maintenaceCheck.SetMaintenanceWho(&maintenanceWho)
 	}
 }
 
-func setMaintenanceMetricUserAndTime (metricState moira.MetricState, triggerMaintenance *int64, user *string, callMaintenance *int64 ){
-	if *user != "" || *user != "anonymous" {
-		if *triggerMaintenance < *callMaintenance {
-			metricState.MaintenanceWho.StopMaintenanceUser = user
-			metricState.MaintenanceWho.StopMaintenanceTime = callMaintenance
-		} else {
-			metricState.MaintenanceWho.StopMaintenanceUser = nil
-			metricState.MaintenanceWho.StopMaintenanceTime = nil
-			metricState.MaintenanceWho.StartMaintenanceUser = user
-			metricState.MaintenanceWho.StartMaintenanceTime = callMaintenance
-		}
-	}
-}
 // checkDataScoreChanged returns true if checkData.Score changed since last check
 func (connector *DbConnector) checkDataScoreChanged(triggerID string, checkData *moira.CheckData) bool {
 	c := connector.pool.Get()
