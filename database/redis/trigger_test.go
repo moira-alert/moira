@@ -287,7 +287,7 @@ func TestTriggerStoring(t *testing.T) {
 
 			actualTriggerChecks, err = dataBase.GetTriggerChecks([]string{trigger.ID})
 			So(err, ShouldBeNil)
-			So(actualTriggerChecks, ShouldResemble, []*moira.TriggerCheck{nil})
+			So(actualTriggerChecks, ShouldResemble, []*moira.TriggerCheck{})
 
 			actualTriggerChecksWithHighLights, err = dataBase.GetTriggerChecksWithHighLights(searchResults)
 			So(err, ShouldBeNil)
@@ -667,7 +667,7 @@ func TestTriggerErrorConnection(t *testing.T) {
 
 		actual3, err := dataBase.GetTriggerChecks([]string{})
 		So(err, ShouldNotBeNil)
-		So(actual3, ShouldBeNil)
+		So(actual3, ShouldBeEmpty)
 
 		err = dataBase.SaveTrigger("", &triggers[0])
 		So(err, ShouldNotBeNil)
