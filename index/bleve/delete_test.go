@@ -15,7 +15,7 @@ func TestTriggerIndex_Delete(t *testing.T) {
 
 	triggerMapping := mapping.BuildIndexMapping(mapping.Trigger{})
 
-	triggerTestCases := fixtures.TriggerTestCases
+	triggerTestCases := fixtures.IndexedTriggerTestCases
 
 	triggerIDs := triggerTestCases.ToTriggerIDs()
 	triggerChecksPointers := triggerTestCases.ToTriggerChecks()

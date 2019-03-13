@@ -20,7 +20,7 @@ func TestIndex_SearchTriggers(t *testing.T) {
 
 	index := NewSearchIndex(logger, dataBase)
 
-	triggerTestCases := fixtures.TriggerTestCases
+	triggerTestCases := fixtures.IndexedTriggerTestCases
 
 	triggerIDs := triggerTestCases.ToTriggerIDs()
 	triggerChecksPointers := triggerTestCases.ToTriggerChecks()
@@ -253,7 +253,7 @@ func TestIndex_SearchErrors(t *testing.T) {
 
 	index := NewSearchIndex(logger, dataBase)
 
-	triggerTestCases := fixtures.TriggerTestCases
+	triggerTestCases := fixtures.IndexedTriggerTestCases
 
 	triggerIDs := triggerTestCases.ToTriggerIDs()
 	triggerChecksPointers := triggerTestCases.ToTriggerChecks()

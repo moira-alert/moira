@@ -19,7 +19,7 @@ func TestIndex_actualize(t *testing.T) {
 	logger, _ := logging.GetLogger("Test")
 
 	index := NewSearchIndex(logger, dataBase)
-	triggerTestCases := fixtures.TriggerTestCases
+	triggerTestCases := fixtures.IndexedTriggerTestCases
 
 	triggerIDs := triggerTestCases.ToTriggerIDs()
 	triggerChecksPointers := triggerTestCases.ToTriggerChecks()

@@ -70,8 +70,8 @@ func (its *fixtureIndexedTriggers) ToTriggerIDs() []string {
 	return triggerIDs
 }
 
-// TriggerTestCases is a fixture to test fulltext search
-var TriggerTestCases = fixtureIndexedTriggers{
+// IndexedTriggerTestCases is a fixture to test fulltext search
+var IndexedTriggerTestCases = fixtureIndexedTriggers{
 	list: []fixtureIndexedTrigger{
 		{
 			triggerID: "SuperTrigger1",
@@ -100,7 +100,7 @@ var TriggerTestCases = fixtureIndexedTriggers{
 			triggerName: fixtureIndexedField{
 				content: "Kobold Dragonshield (cr 1, vgm 165) and 1 x Kobold (cr 1/8, mm 195); medium, 225 xp",
 				highLights: map[string][]moira.SearchHighLight{
-					"dragonshield medium": []moira.SearchHighLight{
+					"dragonshield medium": {
 						{
 							Field: "Name",
 							Value: "Kobold <mark>Dragonshield</mark> (cr 1, vgm 165) and 1 x Kobold (cr 1/8, mm 195); <mark>medium</mark>, 225 xp",
@@ -130,13 +130,13 @@ var TriggerTestCases = fixtureIndexedTriggers{
 			triggerName: fixtureIndexedField{
 				content: "Rust Monster (cr 1/2, mm 262); easy, 100 xp",
 				highLights: map[string][]moira.SearchHighLight{
-					"easy": []moira.SearchHighLight{
+					"easy": {
 						{
 							Field: "Name",
 							Value: "Rust Monster (cr 1/2, mm 262); <mark>easy</mark>, 100 xp",
 						},
 					},
-					"little monster": []moira.SearchHighLight{
+					"little monster": {
 						{
 							Field: "Name",
 							Value: "Rust <mark>Monster</mark> (cr 1/2, mm 262); easy, 100 xp",
@@ -147,13 +147,13 @@ var TriggerTestCases = fixtureIndexedTriggers{
 			triggerDesc: fixtureIndexedField{
 				content: "4: Because I'm easy come, easy go, little high, little low",
 				highLights: map[string][]moira.SearchHighLight{
-					"easy": []moira.SearchHighLight{
+					"easy": {
 						{
 							Field: "Desc",
 							Value: "4: Because I'm <mark>easy</mark> come, <mark>easy</mark> go, little high, little low",
 						},
 					},
-					"little monster": []moira.SearchHighLight{
+					"little monster": {
 						{
 							Field: "Desc",
 							Value: "4: Because I'm easy come, easy go, <mark>little</mark> high, <mark>little</mark> low",
@@ -213,7 +213,7 @@ var TriggerTestCases = fixtureIndexedTriggers{
 			triggerName: fixtureIndexedField{
 				content: "Gibbering Mouther (cr 2, mm 157); easy, 450 xp",
 				highLights: map[string][]moira.SearchHighLight{
-					"easy": []moira.SearchHighLight{
+					"easy": {
 						{
 							Field: "Name",
 							Value: "Gibbering Mouther (cr 2, mm 157); <mark>easy</mark>, 450 xp",
@@ -232,7 +232,7 @@ var TriggerTestCases = fixtureIndexedTriggers{
 			triggerName: fixtureIndexedField{
 				content: "Scythe Blade: DC 10 to find, DC 10 to disable; +11 to hit against all targets within a 5 ft. arc, 4d10 slashing damage; apprentice tier, deadly",
 				highLights: map[string][]moira.SearchHighLight{
-					"deadly": []moira.SearchHighLight{
+					"deadly": {
 						{
 							Field: "Name",
 							Value: "Scythe Blade: DC 10 to find, DC 10 to disable; +11 to hit against all targets within a 5 ft. arc, 4d10 slashing damage; apprentice tier, <mark>deadly</mark>",
@@ -254,7 +254,7 @@ var TriggerTestCases = fixtureIndexedTriggers{
 			triggerDesc: fixtureIndexedField{
 				content: "11: Mama, ooh, didn't mean to make you cry",
 				highLights: map[string][]moira.SearchHighLight{
-					"mama": []moira.SearchHighLight{
+					"mama": {
 						{
 							Field: "Desc",
 							Value: "11: <mark>Mama</mark>, ooh, didn't mean to make you cry",
@@ -292,7 +292,7 @@ var TriggerTestCases = fixtureIndexedTriggers{
 			triggerName: fixtureIndexedField{
 				content: "Chain Flail: DC 15 to find, DC 10 to disable; initiative +3, 1 attack per round, +11 to hit against all targets within 5 ft., 4d10 bludgeoning damage; apprentice tier, deadly",
 				highLights: map[string][]moira.SearchHighLight{
-					"deadly": []moira.SearchHighLight{
+					"deadly": {
 						{
 							Field: "Name",
 							Value: "Chain Flail: DC 15 to find, DC 10 to disable; initiative +3, 1 attack per round, +11 to hit against all targets within 5 ft., 4d10 bludgeoning damage; apprentice tier, <mark>deadly</mark>",
@@ -344,7 +344,7 @@ var TriggerTestCases = fixtureIndexedTriggers{
 			triggerName: fixtureIndexedField{
 				content: "Thunderstone Mine: DC 15 to find, DC 20 to disable; affects all targets within 20 ft., DC 18 save or take 4d10 thunder damage and become deafened for 1d4 rounds; apprentice tier, deadly",
 				highLights: map[string][]moira.SearchHighLight{
-					"deadly": []moira.SearchHighLight{
+					"deadly": {
 						{
 							Field: "Name",
 							Value: "Thunderstone Mine: DC 15 to find, DC 20 to disable; affects all targets within 20 ft., DC 18 save or take 4d10 thunder damage and become deafened for 1d4 rounds; apprentice tier, <mark>deadly</mark>",
@@ -363,7 +363,7 @@ var TriggerTestCases = fixtureIndexedTriggers{
 			triggerName: fixtureIndexedField{
 				content: "Scythe Blade: DC 15 to find, DC 10 to disable; +12 to hit against all targets within a 5 ft. arc, 4d10 slashing damage; apprentice tier, deadly",
 				highLights: map[string][]moira.SearchHighLight{
-					"deadly": []moira.SearchHighLight{
+					"deadly": {
 						{
 							Field: "Name",
 							Value: "Scythe Blade: DC 15 to find, DC 10 to disable; +12 to hit against all targets within a 5 ft. arc, 4d10 slashing damage; apprentice tier, <mark>deadly</mark>",
@@ -374,7 +374,7 @@ var TriggerTestCases = fixtureIndexedTriggers{
 			triggerDesc: fixtureIndexedField{
 				content: "19: Mama, ooh, (Any way the wind blows)",
 				highLights: map[string][]moira.SearchHighLight{
-					"mama": []moira.SearchHighLight{
+					"mama": {
 						{
 							Field: "Desc",
 							Value: "19: <mark>Mama</mark>, ooh, (Any way the wind blows)",
@@ -512,7 +512,7 @@ var TriggerTestCases = fixtureIndexedTriggers{
 				(Oh mamma mia, mamma mia) Mamma mia, let me go
 				Beelzebub has a devil put aside for me, for me, for me!`,
 				highLights: map[string][]moira.SearchHighLight{
-					"easy": []moira.SearchHighLight{
+					"easy": {
 						{
 							Field: "Desc",
 							Value: "…: <mark>Easy</mark> come, <mark>easy</mark> go, will you let me go?\n\t\t\t\tBismillah! No, we will not let you go\n\t\t\t\t(Let him go!) Bismillah! We will not let you go\n\t\t\t\t(Let him go!) Bismillah! We will not let you go\n\t\t\t\t(Let me …",

@@ -17,7 +17,7 @@ func TestTriggerIndex_Search(t *testing.T) {
 
 	triggerMapping := mapping.BuildIndexMapping(mapping.Trigger{})
 
-	triggerTestCases := fixtures.TriggerTestCases
+	triggerTestCases := fixtures.IndexedTriggerTestCases
 
 	triggerChecksPointers := triggerTestCases.ToTriggerChecks()
 

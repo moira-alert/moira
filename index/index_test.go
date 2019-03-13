@@ -20,7 +20,7 @@ func TestIndex_CreateAndFill(t *testing.T) {
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Test")
 
-	triggerTestCases := fixtures.TriggerTestCases
+	triggerTestCases := fixtures.IndexedTriggerTestCases
 
 	triggerIDs := triggerTestCases.ToTriggerIDs()
 	triggerChecksPointers := triggerTestCases.ToTriggerChecks()
@@ -86,7 +86,7 @@ func TestIndex_Start(t *testing.T) {
 	logger, _ := logging.GetLogger("Test")
 	index := NewSearchIndex(logger, dataBase)
 
-	triggerTestCases := fixtures.TriggerTestCases
+	triggerTestCases := fixtures.IndexedTriggerTestCases
 
 	triggerIDs := triggerTestCases.ToTriggerIDs()
 	triggerChecksPointers := triggerTestCases.ToTriggerChecks()
