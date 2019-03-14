@@ -38,14 +38,15 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 
 	Convey("Given patterns with tagspecs, should build index and match patterns", t, func() {
 		tagSpecsByPattern := map[string][]TagSpec{
-			"name=cpu1":  {{"name", EqualOperator, "cpu1"}},
-			"name!=cpu1": {{"name", NotEqualOperator, "cpu1"}},
-			"name~=cpu":  {{"name", MatchOperator, "cpu"}},
-			"name!~=cpu": {{"name", NotMatchOperator, "cpu"}},
-			"dc=ru1":     {{"dc", EqualOperator, "ru1"}},
-			"dc!=ru1":    {{"dc", NotEqualOperator, "ru1"}},
-			"dc~=ru":     {{"dc", MatchOperator, "ru"}},
-			"dc!~=ru":    {{"dc", NotMatchOperator, "ru"}},
+			"name=cpu1":        {{"name", EqualOperator, "cpu1"}},
+			"name!=cpu1":       {{"name", NotEqualOperator, "cpu1"}},
+			"name~=cpu":        {{"name", MatchOperator, "cpu"}},
+			"name!~=cpu":       {{"name", NotMatchOperator, "cpu"}},
+			"dc=ru1":           {{"dc", EqualOperator, "ru1"}},
+			"dc!=ru1":          {{"dc", NotEqualOperator, "ru1"}},
+			"dc~=ru":           {{"dc", MatchOperator, "ru"}},
+			"dc!~=ru":          {{"dc", NotMatchOperator, "ru"}},
+			"invalid operator": {{"dc", TagSpecOperator("invalid operator"), "ru"}},
 		}
 		testCases := []struct {
 			Name            string

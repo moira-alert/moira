@@ -87,6 +87,14 @@ func TestGetStringListsDiff(t *testing.T) {
 func TestGetStringListsUnion(t *testing.T) {
 	Convey("Test Get Union between string lists", t, func() {
 		{
+			union := GetStringListsUnion()
+			So(union, ShouldResemble, []string{})
+		}
+		{
+			union := GetStringListsUnion(nil)
+			So(union, ShouldResemble, []string{})
+		}
+		{
 			union := GetStringListsUnion(nil, nil)
 			So(union, ShouldResemble, []string{})
 		}
