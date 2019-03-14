@@ -131,7 +131,7 @@ func (connector *DbConnector) SetTriggerCheckMaintenance(triggerID string, metri
 }
 
 func setMaintenanceUserAndTime(maintenaceCheck moira.MaintenaceCheck, triggerMaintenance *int64, user *string, callMaintenance *int64 ){
-	if *user != "" && *user != "anonymous" && user != nil {
+	if user != nil && *user != "" && *user != "anonymous" {
 		var maintenanceWho moira.MaintenanceWho
 		if *triggerMaintenance < *callMaintenance {
 			maintenanceWho.StopMaintenanceUser = user
