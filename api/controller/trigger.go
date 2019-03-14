@@ -156,8 +156,8 @@ func DeleteTriggerThrottling(database moira.Database, triggerID string) *api.Err
 }
 
 // SetTriggerMaintenance sets maintenance to metrics and whole trigger
-func SetTriggerMaintenance(database moira.Database, triggerID string, triggerMaintenance dto.TriggerMaintenance, user *string, callMaintenance *int64) *api.ErrorResponse {
-	if err := database.SetTriggerCheckMaintenance(triggerID, triggerMaintenance.Metrics, triggerMaintenance.Trigger, user, callMaintenance); err != nil {
+func SetTriggerMaintenance(database moira.Database, triggerID string, triggerMaintenance dto.TriggerMaintenance, userLogin *string, timeCallMaintenance *int64) *api.ErrorResponse {
+	if err := database.SetTriggerCheckMaintenance(triggerID, triggerMaintenance.Metrics, triggerMaintenance.Trigger, userLogin, timeCallMaintenance); err != nil {
 		return api.ErrorInternalServer(err)
 	}
 	return nil

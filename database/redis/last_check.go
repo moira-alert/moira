@@ -81,7 +81,7 @@ func (connector *DbConnector) RemoveTriggerLastCheck(triggerID string) error {
 // SetTriggerCheckMaintenance sets maintenance for whole trigger and to given metrics,
 // If during the update lastCheck was updated from another place, try update again
 // If CheckData does not contain one of given metrics it will ignore this metric
-func (connector *DbConnector) SetTriggerCheckMaintenance(triggerID string, metrics map[string]int64, triggerMaintenance *int64, user *string, callMaintenance *int64) error {
+func (connector *DbConnector) SetTriggerCheckMaintenance(triggerID string, metrics map[string]int64, triggerMaintenance *int64, userLogin *string, timeCallMaintenance *int64) error {
 	c := connector.pool.Get()
 	defer c.Close()
 	var readingErr error
@@ -103,14 +103,14 @@ func (connector *DbConnector) SetTriggerCheckMaintenance(triggerID string, metri
 				if !ok {
 					continue
 				}
-				setMaintenanceUserAndTime(&data, &value, user, callMaintenance)
+				setMaintenanceUserAndTime(&data, &value, userLogin, timeCallMaintenance)
 				data.Maintenance = value
 				metricsCheck[metric] = data
 			}
 		}
 		if triggerMaintenance != nil {
 			lastCheck.Maintenance = *triggerMaintenance
-			setMaintenanceUserAndTime(&lastCheck, triggerMaintenance, user, callMaintenance)
+			setMaintenanceUserAndTime(&lastCheck, triggerMaintenance, userLogin, timeCallMaintenance)
 		}
 		newLastCheck, err := json.Marshal(lastCheck)
 		if err != nil {

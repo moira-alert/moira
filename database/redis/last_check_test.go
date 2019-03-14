@@ -81,14 +81,14 @@ func TestLastCheck(t *testing.T) {
 			Convey("Has metrics to change", func() {
 				checkData := lastCheckTest
 				triggerID := uuid.Must(uuid.NewV4()).String()
-				userMaintenance := "test"
-				var timeMaintenance = int64(3)
+				userLogin := "test"
+				var timeCallMaintenance = int64(3)
 
 
 				err := dataBase.SetTriggerLastCheck(triggerID, &checkData, false)
 				So(err, ShouldBeNil)
 
-				err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric1": 1, "metric5": 5}, nil, &userMaintenance, &timeMaintenance)
+				err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric1": 1, "metric5": 5}, nil, &userLogin, &timeCallMaintenance)
 				So(err, ShouldBeNil)
 				metric1 := checkData.Metrics["metric1"]
 				metric5 := checkData.Metrics["metric5"]
@@ -97,10 +97,10 @@ func TestLastCheck(t *testing.T) {
 				metric5.MaintenanceWho = &moira.MaintenanceWho{}
 				metric1.Maintenance = 1
 				metric5.Maintenance = 5
-				metric1.MaintenanceWho.StopMaintenanceUser = &userMaintenance
-				metric1.MaintenanceWho.StopMaintenanceTime = &timeMaintenance
-				metric5.MaintenanceWho.StartMaintenanceUser = &userMaintenance
-				metric5.MaintenanceWho.StartMaintenanceTime = &timeMaintenance
+				metric1.MaintenanceWho.StopMaintenanceUser = &userLogin
+				metric1.MaintenanceWho.StopMaintenanceTime = &timeCallMaintenance
+				metric5.MaintenanceWho.StartMaintenanceUser = &userLogin
+				metric5.MaintenanceWho.StartMaintenanceTime = &timeCallMaintenance
 
 				checkData.Metrics["metric1"] = metric1
 				checkData.Metrics["metric5"] = metric5
@@ -178,13 +178,13 @@ func TestLastCheck(t *testing.T) {
 			Convey("Set metrics maintenance while has metrics to change", func() {
 				checkData := lastCheckTest
 				triggerID := uuid.Must(uuid.NewV4()).String()
-				userMaintenance := "test"
-				var timeMaintenance = int64(3)
+				userLogin := "test"
+				var timeCallMaintenance = int64(3)
 
 				err := dataBase.SetTriggerLastCheck(triggerID, &checkData, false)
 				So(err, ShouldBeNil)
 
-				err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric1": 1, "metric5": 5}, nil, &userMaintenance, &timeMaintenance )
+				err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric1": 1, "metric5": 5}, nil, &userLogin, &timeCallMaintenance)
 				So(err, ShouldBeNil)
 				metric1 := checkData.Metrics["metric1"]
 				metric5 := checkData.Metrics["metric5"]
@@ -193,10 +193,10 @@ func TestLastCheck(t *testing.T) {
 				metric5.MaintenanceWho = &moira.MaintenanceWho{}
 				metric1.Maintenance = 1
 				metric5.Maintenance = 5
-				metric1.MaintenanceWho.StopMaintenanceUser = &userMaintenance
-				metric1.MaintenanceWho.StopMaintenanceTime = &timeMaintenance
-				metric5.MaintenanceWho.StartMaintenanceUser = &userMaintenance
-				metric5.MaintenanceWho.StartMaintenanceTime = &timeMaintenance
+				metric1.MaintenanceWho.StopMaintenanceUser = &userLogin
+				metric1.MaintenanceWho.StopMaintenanceTime = &timeCallMaintenance
+				metric5.MaintenanceWho.StartMaintenanceUser = &userLogin
+				metric5.MaintenanceWho.StartMaintenanceTime = &timeCallMaintenance
 
 				checkData.Metrics["metric1"] = metric1
 				checkData.Metrics["metric5"] = metric5
@@ -210,13 +210,13 @@ func TestLastCheck(t *testing.T) {
 				checkData := lastCheckTest
 				triggerID := uuid.Must(uuid.NewV4()).String()
 				checkData.MaintenanceWho = &moira.MaintenanceWho{}
-				userMaintenance := "test"
-				var timeMaintenance = int64(3)
+				userLogin := "test"
+				var timeCallMaintenance = int64(3)
 				err := dataBase.SetTriggerLastCheck(triggerID, &checkData, false)
 				So(err, ShouldBeNil)
 
 				triggerMaintenanceTS = 1000
-				err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric1": 1, "metric5": 5}, &triggerMaintenanceTS, &userMaintenance, &timeMaintenance)
+				err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric1": 1, "metric5": 5}, &triggerMaintenanceTS, &userLogin, &timeCallMaintenance)
 				So(err, ShouldBeNil)
 				metric1 := checkData.Metrics["metric1"]
 				metric5 := checkData.Metrics["metric5"]
@@ -225,16 +225,16 @@ func TestLastCheck(t *testing.T) {
 				metric5.MaintenanceWho = &moira.MaintenanceWho{}
 				metric1.Maintenance = 1
 				metric5.Maintenance = 5
-				metric1.MaintenanceWho.StopMaintenanceUser = &userMaintenance
-				metric1.MaintenanceWho.StopMaintenanceTime = &timeMaintenance
-				metric5.MaintenanceWho.StartMaintenanceUser = &userMaintenance
-				metric5.MaintenanceWho.StartMaintenanceTime = &timeMaintenance
+				metric1.MaintenanceWho.StopMaintenanceUser = &userLogin
+				metric1.MaintenanceWho.StopMaintenanceTime = &timeCallMaintenance
+				metric5.MaintenanceWho.StartMaintenanceUser = &userLogin
+				metric5.MaintenanceWho.StartMaintenanceTime = &timeCallMaintenance
 
 				checkData.Metrics["metric1"] = metric1
 				checkData.Metrics["metric5"] = metric5
 				checkData.Maintenance = 1000
-				checkData.MaintenanceWho.StartMaintenanceUser = &userMaintenance
-				checkData.MaintenanceWho.StartMaintenanceTime = &timeMaintenance
+				checkData.MaintenanceWho.StartMaintenanceUser = &userLogin
+				checkData.MaintenanceWho.StartMaintenanceTime = &timeCallMaintenance
 
 
 				actual, err := dataBase.GetTriggerLastCheck(triggerID)
@@ -372,13 +372,13 @@ func TestRemoteLastCheck(t *testing.T) {
 			Convey("Has metrics to change", func() {
 				checkData := lastCheckTest
 				triggerID := uuid.Must(uuid.NewV4()).String()
-				userMaintenance := "test"
-				var timeMaintenance = int64(3)
+				userLogin := "test"
+				var timeCallMaintenance = int64(3)
 
 				err := dataBase.SetTriggerLastCheck(triggerID, &checkData, true)
 				So(err, ShouldBeNil)
 
-				err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric1": 1, "metric5": 5}, nil,&userMaintenance,&timeMaintenance)
+				err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric1": 1, "metric5": 5}, nil, &userLogin, &timeCallMaintenance)
 				So(err, ShouldBeNil)
 				metric1 := checkData.Metrics["metric1"]
 				metric5 := checkData.Metrics["metric5"]
@@ -387,10 +387,10 @@ func TestRemoteLastCheck(t *testing.T) {
 				metric5.MaintenanceWho = &moira.MaintenanceWho{}
 				metric1.Maintenance = 1
 				metric5.Maintenance = 5
-				metric1.MaintenanceWho.StopMaintenanceUser = &userMaintenance
-				metric1.MaintenanceWho.StopMaintenanceTime = &timeMaintenance
-				metric5.MaintenanceWho.StartMaintenanceUser = &userMaintenance
-				metric5.MaintenanceWho.StartMaintenanceTime = &timeMaintenance
+				metric1.MaintenanceWho.StopMaintenanceUser = &userLogin
+				metric1.MaintenanceWho.StopMaintenanceTime = &timeCallMaintenance
+				metric5.MaintenanceWho.StartMaintenanceUser = &userLogin
+				metric5.MaintenanceWho.StartMaintenanceTime = &timeCallMaintenance
 
 				checkData.Metrics["metric1"] = metric1
 				checkData.Metrics["metric5"] = metric5
