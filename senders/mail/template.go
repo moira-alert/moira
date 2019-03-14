@@ -245,7 +245,7 @@ const defaultTemplate = `
                                             <img src="cid:{{ .PlotCID }}" alt="Trigger plot" style="-ms-interpolation-mode: bicubic; max-width: 100%;">
                                         </td>
                                     </tr>
-                                    {{end}}
+                                    {{end}} {{ if .Link }}
                                     <tr>
                                         <td style="box-sizing: border-box; font-family: 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 16px; vertical-align: top; font-weight: 500;"
                                             valign="top">
@@ -268,6 +268,7 @@ const defaultTemplate = `
                                             </table>
                                         </td>
                                     </tr>
+                                    {{ end }}
                                 </table>
                             </td>
                         </tr>
