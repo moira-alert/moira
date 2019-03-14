@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
@@ -123,8 +124,10 @@ func setTriggerMaintenance(writer http.ResponseWriter, request *http.Request) {
 		render.Render(writer, request, api.ErrorInvalidRequest(err))
 		return
 	}
+	userLogin := middleware.GetLogin(request)
+	callMaintenance := time.Now().Unix()
 
-	err := controller.SetTriggerMaintenance(database, triggerID, triggerMaintenance)
+	err := controller.SetTriggerMaintenance(database, triggerID, triggerMaintenance, &userLogin, &callMaintenance)
 	if err != nil {
 		render.Render(writer, request, err)
 	}
