@@ -165,6 +165,7 @@ type TriggerCheck struct {
 	LastCheck  CheckData `json:"last_check"`
 }
 
+// Set maintenance user, time
 type MaintenaceCheck interface {
 	SetMaintenanceWho(maintenanceWho *MaintenanceWho)
 }
@@ -196,10 +197,12 @@ type MetricState struct {
 	MaintenanceWho 	*MaintenanceWho `json:"maintanencewho"`
 }
 
+// Set maintenance user, time for MetricState
 func (metricState *MetricState) SetMaintenanceWho(maintenanceWho *MaintenanceWho) {
 	metricState.MaintenanceWho = maintenanceWho
 }
 
+// MaintenancerWho represents user and time set/unset maintenance
 type MaintenanceWho struct {
 	StartMaintenanceUser *string
 	StartMaintenanceTime *int64
@@ -306,6 +309,7 @@ func (checkData *CheckData) GetOrCreateMetricState(metric string, emptyTimestamp
 	return checkData.Metrics[metric]
 }
 
+// Set maintenance user, time for CheckData
 func (checkData *CheckData) SetMaintenanceWho(maintenanceWho *MaintenanceWho) {
 	checkData.MaintenanceWho = maintenanceWho
 }
