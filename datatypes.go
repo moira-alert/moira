@@ -197,7 +197,7 @@ type MetricState struct {
 	MaintenanceWho 	*MaintenanceWho `json:"maintanencewho"`
 }
 
-// MetricState.SetMaintenanceWho set maintenance user, time for MetricState
+// SetMaintenanceWho set maintenance user, time for MetricState
 func (metricState *MetricState) SetMaintenanceWho(maintenanceWho *MaintenanceWho) {
 	metricState.MaintenanceWho = maintenanceWho
 }
@@ -309,7 +309,7 @@ func (checkData *CheckData) GetOrCreateMetricState(metric string, emptyTimestamp
 	return checkData.Metrics[metric]
 }
 
-// CheckData.SetMaintenanceWho set maintenance user, time for CheckData
+// SetMaintenanceWho set maintenance user, time for CheckData
 func (checkData *CheckData) SetMaintenanceWho(maintenanceWho *MaintenanceWho) {
 	checkData.MaintenanceWho = maintenanceWho
 }

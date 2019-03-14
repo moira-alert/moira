@@ -32,12 +32,20 @@ func (triggerChecker *TriggerChecker) compareTriggerStates(currentCheck moira.Ch
 	currentCheck.SuppressedState = lastStateSuppressedValue
 
 	needSend, message := needSendEvent(currentStateValue, lastStateValue, timestamp, triggerChecker.lastCheck.GetEventTimestamp(), lastStateSuppressed, lastStateSuppressedValue)
-	if !needSend {
+	if needSend != -1 {
 		return currentCheck, nil
 	}
 
-	if message == nil {
+	if needSend == 0 {
 		message = &currentCheck.Message
+	}
+
+  if needSend == 1 {
+   *message += fmt.Sprintf("Maintenance was set by user %v at %v and expired at %v.",
+   	currentCheck.MaintenanceWho.StartMaintenanceUser,
+   	time.Unix(*triggerChecker.lastCheck.MaintenanceWho.StartMaintenanceTime, 0),
+   	time.Unix(triggerChecker.lastCheck.Maintenance, 0),
+   	)
 	}
 
 	eventOldState := lastStateValue
@@ -86,10 +94,17 @@ func (triggerChecker *TriggerChecker) compareMetricStates(metric string, current
 	currentState.SuppressedState = lastState.SuppressedState
 
 	needSend, message := needSendEvent(currentState.State, lastState.State, currentState.Timestamp, lastState.GetEventTimestamp(), lastState.Suppressed, lastState.SuppressedState)
-	if !needSend {
+	if needSend != -1 {
 		return currentState, nil
 	}
 
+	if needSend == 1 {
+		*message += fmt.Sprintf("Maintenance was set by user %v at %v and expired at %v.",
+			currentState.MaintenanceWho.StartMaintenanceUser,
+			time.Unix(*triggerChecker.lastCheck.MaintenanceWho.StartMaintenanceTime, 0),
+			time.Unix(triggerChecker.lastCheck.Maintenance, 0),
+		)
+	}
 	eventOldState := lastState.State
 	if lastState.Suppressed {
 		eventOldState = lastState.SuppressedState
@@ -129,30 +144,30 @@ func (triggerChecker *TriggerChecker) isTriggerSuppressed(event *moira.Notificat
 	}
 	// We must always check triggerMaintenance along with metricMaintenance to avoid cases when metric is not suppressed, but trigger is.
 	if triggerMaintenance >= timestamp {
-		triggerChecker.logger.Debugf("Event %v suppressed due to trigger %s maintenance until %v.", event, triggerChecker.trigger.ID, time.Unix(triggerMaintenance, 0))
+		triggerChecker.logger.Debugf("Event %v suppressed due to trigger %s maintenance until %v. Maintenance was set by user %v at %v.", event, triggerChecker.trigger.ID, time.Unix(triggerMaintenance, 0), triggerChecker.lastCheck.MaintenanceWho.StartMaintenanceUser, time.Unix(*triggerChecker.lastCheck.MaintenanceWho.StartMaintenanceTime, 0))
 		return true
 	}
 	if metricMaintenance >= timestamp {
-		triggerChecker.logger.Debugf("Event %v suppressed due to metric %s maintenance until %v.", event, metric, time.Unix(metricMaintenance, 0))
+		triggerChecker.logger.Debugf("Event %v suppressed due to metric %s maintenance until %v. Maintenance was set by user %v at %v.", event, metric, time.Unix(metricMaintenance, 0),  triggerChecker.lastCheck.MaintenanceWho.StartMaintenanceUser, time.Unix(*triggerChecker.lastCheck.MaintenanceWho.StartMaintenanceTime, 0))
 		return true
 	}
 	return false
 }
 
-func needSendEvent(currentStateValue moira.State, lastStateValue moira.State, currentStateTimestamp int64, lastStateEventTimestamp int64, isLastCheckSuppressed bool, lastStateSuppressedValue moira.State) (needSend bool, message *string) {
+func needSendEvent(currentStateValue moira.State, lastStateValue moira.State, currentStateTimestamp int64, lastStateEventTimestamp int64, isLastCheckSuppressed bool, lastStateSuppressedValue moira.State) (needSend int, message *string) {
 	if !isLastCheckSuppressed && currentStateValue != lastStateValue {
-		return true, nil
+		return 0, nil
 	}
 	if isLastCheckSuppressed && currentStateValue != lastStateSuppressedValue {
 		message := "This metric changed its state during maintenance interval."
-		return true, &message
+		return 1, &message
 	}
 	remindInterval, ok := badStateReminder[currentStateValue]
 	if ok && needRemindAgain(currentStateTimestamp, lastStateEventTimestamp, remindInterval) {
 		message := fmt.Sprintf("This metric has been in bad state for more than %v hours - please, fix.", remindInterval/3600)
-		return true, &message
+		return 2, &message
 	}
-	return false, nil
+	return -1, nil
 }
 
 func needRemindAgain(currentStateTimestamp, lastStateEventTimestamp, remindInterval int64) bool {
