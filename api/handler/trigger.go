@@ -127,7 +127,7 @@ func setTriggerMaintenance(writer http.ResponseWriter, request *http.Request) {
 	userLogin := middleware.GetLogin(request)
 	timeCallMaintenance := time.Now().Unix()
 
-	err := controller.SetTriggerMaintenance(database, triggerID, triggerMaintenance, &userLogin, &timeCallMaintenance)
+	err := controller.SetTriggerMaintenance(database, triggerID, triggerMaintenance, userLogin, timeCallMaintenance)
 	if err != nil {
 		render.Render(writer, request, err)
 	}

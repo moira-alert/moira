@@ -11,15 +11,15 @@ import (
 
 const (
 	// VariableContactID is used to render template with contact.ID
-	VariableContactID    = "${contact_id}"
+	VariableContactID = "${contact_id}"
 	// VariableContactValue is used to render template with contact.Value
 	VariableContactValue = "${contact_value}"
 	// VariableContactType is used to render template with contact.Type
-	VariableContactType  = "${contact_type}"
+	VariableContactType = "${contact_type}"
 	// VariableTriggerID is used to render template with trigger.ID
-	VariableTriggerID    = "${trigger_id}"
+	VariableTriggerID = "${trigger_id}"
 	// VariableTriggerName is used to render template with trigger.Name
-	VariableTriggerName  = "${trigger_name}"
+	VariableTriggerName = "${trigger_name}"
 )
 
 // NotificationEvent represents trigger state changes event
@@ -165,8 +165,8 @@ type TriggerCheck struct {
 	LastCheck  CheckData `json:"last_check"`
 }
 
-// MaintenaceCheck set maintenance user, time
-type MaintenaceCheck interface {
+// MaintenanceCheck set maintenance user, time
+type MaintenanceCheck interface {
 	SetMaintenanceWho(maintenanceWho *MaintenanceWho)
 }
 
@@ -176,7 +176,7 @@ type CheckData struct {
 	Score                        int64                  `json:"score"`
 	State                        State                  `json:"state"`
 	Maintenance                  int64                  `json:"maintenance,omitempty"`
-	MaintenanceWho 							 *MaintenanceWho        `json:"maintanencewho"`
+	MaintenanceWho               MaintenanceWho         `json:"maintenance_who"`
 	Timestamp                    int64                  `json:"timestamp,omitempty"`
 	EventTimestamp               int64                  `json:"event_timestamp,omitempty"`
 	LastSuccessfulCheckTimestamp int64                  `json:"last_successful_check_timestamp"`
@@ -187,19 +187,19 @@ type CheckData struct {
 
 // MetricState represents metric state data for given timestamp
 type MetricState struct {
-	EventTimestamp  int64    `json:"event_timestamp"`
-	State           State    `json:"state"`
-	Suppressed      bool     `json:"suppressed"`
-	SuppressedState State    `json:"suppressed_state,omitempty"`
-	Timestamp       int64    `json:"timestamp"`
-	Value           *float64 `json:"value,omitempty"`
-	Maintenance     int64    `json:"maintenance,omitempty"`
-	MaintenanceWho 	*MaintenanceWho `json:"maintanencewho"`
+	EventTimestamp  int64          `json:"event_timestamp"`
+	State           State          `json:"state"`
+	Suppressed      bool           `json:"suppressed"`
+	SuppressedState State          `json:"suppressed_state,omitempty"`
+	Timestamp       int64          `json:"timestamp"`
+	Value           *float64       `json:"value,omitempty"`
+	Maintenance     int64          `json:"maintenance,omitempty"`
+	MaintenanceWho  MaintenanceWho `json:"maintenance_who"`
 }
 
 // SetMaintenanceWho set maintenance user, time for MetricState
 func (metricState *MetricState) SetMaintenanceWho(maintenanceWho *MaintenanceWho) {
-	metricState.MaintenanceWho = maintenanceWho
+	metricState.MaintenanceWho = *maintenanceWho
 }
 
 // MaintenanceWho represents user and time set/unset maintenance
@@ -311,7 +311,7 @@ func (checkData *CheckData) GetOrCreateMetricState(metric string, emptyTimestamp
 
 // SetMaintenanceWho set maintenance user, time for CheckData
 func (checkData *CheckData) SetMaintenanceWho(maintenanceWho *MaintenanceWho) {
-	checkData.MaintenanceWho = maintenanceWho
+	checkData.MaintenanceWho = *maintenanceWho
 }
 
 func createEmptyMetricState(defaultTimestampValue int64, firstStateIsNodata bool) MetricState {

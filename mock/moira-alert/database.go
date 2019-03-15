@@ -1121,7 +1121,7 @@ func (mr *MockDatabaseMockRecorder) SetTriggerCheckLock(arg0 interface{}) *gomoc
 }
 
 // SetTriggerCheckMaintenance mocks base method
-func (m *MockDatabase) SetTriggerCheckMaintenance(arg0 string, arg1 map[string]int64, arg2 *int64, arg3 *string, arg4 *int64) error {
+func (m *MockDatabase) SetTriggerCheckMaintenance(arg0 string, arg1 map[string]int64, arg2 *int64, arg3 string, arg4 int64) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetTriggerCheckMaintenance", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(error)

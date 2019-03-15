@@ -81,7 +81,7 @@ func (connector *DbConnector) RemoveTriggerLastCheck(triggerID string) error {
 // SetTriggerCheckMaintenance sets maintenance for whole trigger and to given metrics,
 // If during the update lastCheck was updated from another place, try update again
 // If CheckData does not contain one of given metrics it will ignore this metric
-func (connector *DbConnector) SetTriggerCheckMaintenance(triggerID string, metrics map[string]int64, triggerMaintenance *int64, userLogin *string, timeCallMaintenance *int64) error {
+func (connector *DbConnector) SetTriggerCheckMaintenance(triggerID string, metrics map[string]int64, triggerMaintenance *int64, userLogin string, timeCallMaintenance int64) error {
 	c := connector.pool.Get()
 	defer c.Close()
 	var readingErr error
@@ -130,17 +130,17 @@ func (connector *DbConnector) SetTriggerCheckMaintenance(triggerID string, metri
 	return nil
 }
 
-func setMaintenanceUserAndTime(maintenaceCheck moira.MaintenaceCheck, triggerMaintenance *int64, user *string, callMaintenance *int64 ){
-	if user != nil && *user != "" && *user != "anonymous" {
+func setMaintenanceUserAndTime(maintenaceCheck moira.MaintenanceCheck, triggerMaintenance *int64, user string, callMaintenance int64){
+	if user != "" && user != "anonymous" && callMaintenance != 0 {
 		var maintenanceWho moira.MaintenanceWho
-		if *triggerMaintenance < *callMaintenance {
-			maintenanceWho.StopMaintenanceUser = user
-			maintenanceWho.StopMaintenanceTime = callMaintenance
+		if *triggerMaintenance < callMaintenance {
+			maintenanceWho.StopMaintenanceUser = &user
+			maintenanceWho.StopMaintenanceTime = &callMaintenance
 		} else {
 			maintenanceWho.StopMaintenanceUser = nil
 			maintenanceWho.StopMaintenanceTime = nil
-			maintenanceWho.StartMaintenanceUser = user
-			maintenanceWho.StartMaintenanceTime = callMaintenance
+			maintenanceWho.StartMaintenanceUser = &user
+			maintenanceWho.StartMaintenanceTime = &callMaintenance
 		}
 		maintenaceCheck.SetMaintenanceWho(&maintenanceWho)
 	}
