@@ -428,6 +428,114 @@ func TestLastCheckErrorConnection(t *testing.T) {
 		So(err, ShouldNotBeNil)
 	})
 }
+func TestSetMaintenanceUserAndTime (t *testing.T) {
+	startMaintenanceUser := "testStartMtUser"
+	startMaintenanceTime := int64(1550304140)
+	stopMaintenanceUser := "testStopMtUser"
+	stopMaintenanceTime := int64(1553068940)
+	triggerMaintenanceTS := int64(1552723340)
+
+	Convey("Test trigger", t, func() {
+		Convey("User anonymous", func() {
+			actual := lastCheckTest
+			setMaintenanceUserAndTime(&lastCheckTest, &triggerMaintenanceTS, "anonymous", startMaintenanceTime)
+			actual.MaintenanceWho.StartMaintenanceUser = nil
+			actual.MaintenanceWho.StartMaintenanceTime = nil
+			actual.MaintenanceWho.StopMaintenanceUser = nil
+			actual.MaintenanceWho.StopMaintenanceTime = nil
+			So(actual, ShouldResemble, lastCheckTest)
+		})
+		Convey("User '' ", func() {
+			actual := lastCheckTest
+			setMaintenanceUserAndTime(&lastCheckTest, &triggerMaintenanceTS, "", startMaintenanceTime)
+			actual.MaintenanceWho.StartMaintenanceUser = nil
+			actual.MaintenanceWho.StartMaintenanceTime = nil
+			actual.MaintenanceWho.StopMaintenanceUser = nil
+			actual.MaintenanceWho.StopMaintenanceTime = nil
+			So(actual, ShouldResemble, lastCheckTest)
+		})
+		Convey("User and time start maintenance", func() {
+			actual := lastCheckTest
+			setMaintenanceUserAndTime(&lastCheckTest, &triggerMaintenanceTS, startMaintenanceUser, startMaintenanceTime)
+			actual.MaintenanceWho.StartMaintenanceUser = &startMaintenanceUser
+			actual.MaintenanceWho.StartMaintenanceTime = &startMaintenanceTime
+			actual.MaintenanceWho.StopMaintenanceUser = nil
+			actual.MaintenanceWho.StopMaintenanceTime = nil
+			So(actual, ShouldResemble, lastCheckTest)
+		})
+		Convey("User and time stop maintenance", func() {
+			actual := lastCheckTest
+			setMaintenanceUserAndTime(&lastCheckTest, &triggerMaintenanceTS, stopMaintenanceUser, stopMaintenanceTime)
+			actual.MaintenanceWho.StartMaintenanceUser = nil
+			actual.MaintenanceWho.StartMaintenanceTime = nil
+			actual.MaintenanceWho.StopMaintenanceUser = &stopMaintenanceUser
+			actual.MaintenanceWho.StopMaintenanceTime = &stopMaintenanceTime
+			So(actual, ShouldResemble, lastCheckTest)
+		})
+		Convey("User and time start maintenance if set user and time stop maintenance", func() {
+			actual := lastCheckTest
+			lastCheckTest.MaintenanceWho.StopMaintenanceUser = &stopMaintenanceUser
+			lastCheckTest.MaintenanceWho.StopMaintenanceTime = &stopMaintenanceTime
+			setMaintenanceUserAndTime(&lastCheckTest, &triggerMaintenanceTS, startMaintenanceUser, startMaintenanceTime)
+			actual.MaintenanceWho.StartMaintenanceUser = &startMaintenanceUser
+			actual.MaintenanceWho.StartMaintenanceTime = &startMaintenanceTime
+			actual.MaintenanceWho.StopMaintenanceUser = nil
+			actual.MaintenanceWho.StopMaintenanceTime = nil
+			So(actual, ShouldResemble, lastCheckTest)
+		})
+	})
+
+	Convey("Test metric", t, func() {
+		Convey("User anonymous", func(){
+			actual := lastMetricsTest
+			setMaintenanceUserAndTime(&lastMetricsTest, &triggerMaintenanceTS, "anonymous", startMaintenanceTime)
+			actual.MaintenanceWho.StartMaintenanceUser = nil
+			actual.MaintenanceWho.StartMaintenanceTime = nil
+			actual.MaintenanceWho.StopMaintenanceUser = nil
+			actual.MaintenanceWho.StopMaintenanceTime = nil
+			So(actual, ShouldResemble, lastMetricsTest)
+		})
+		Convey("User '' ", func() {
+			actual := lastMetricsTest
+			setMaintenanceUserAndTime(&lastMetricsTest, &triggerMaintenanceTS, "", startMaintenanceTime)
+			actual.MaintenanceWho.StartMaintenanceUser = nil
+			actual.MaintenanceWho.StartMaintenanceTime = nil
+			actual.MaintenanceWho.StopMaintenanceUser = nil
+			actual.MaintenanceWho.StopMaintenanceTime = nil
+			So(actual, ShouldResemble, lastMetricsTest)
+		})
+		Convey("User and time start maintenance", func(){
+			actual := lastMetricsTest
+			setMaintenanceUserAndTime(&lastMetricsTest, &triggerMaintenanceTS, startMaintenanceUser, startMaintenanceTime)
+			actual.MaintenanceWho.StartMaintenanceUser = &startMaintenanceUser
+			actual.MaintenanceWho.StartMaintenanceTime = &startMaintenanceTime
+			actual.MaintenanceWho.StopMaintenanceUser = nil
+			actual.MaintenanceWho.StopMaintenanceTime = nil
+			So(actual, ShouldResemble, lastMetricsTest)
+		})
+		Convey("User and time stop maintenance", func(){
+			actual := lastMetricsTest
+			setMaintenanceUserAndTime(&lastMetricsTest, &triggerMaintenanceTS, stopMaintenanceUser, stopMaintenanceTime)
+			actual.MaintenanceWho.StartMaintenanceUser = nil
+			actual.MaintenanceWho.StartMaintenanceTime = nil
+			actual.MaintenanceWho.StopMaintenanceUser = &stopMaintenanceUser
+			actual.MaintenanceWho.StopMaintenanceTime = &stopMaintenanceTime
+			So(actual, ShouldResemble, lastMetricsTest)
+		})
+		Convey("User and time start maintenance if set user and time stop maintenance", func(){
+			actual := lastMetricsTest
+			lastCheckTest.MaintenanceWho.StopMaintenanceUser = &stopMaintenanceUser
+			lastCheckTest.MaintenanceWho.StopMaintenanceTime = &stopMaintenanceTime
+			setMaintenanceUserAndTime(&lastMetricsTest, &triggerMaintenanceTS, startMaintenanceUser, startMaintenanceTime)
+			actual.MaintenanceWho.StartMaintenanceUser = &startMaintenanceUser
+			actual.MaintenanceWho.StartMaintenanceTime = &startMaintenanceTime
+			actual.MaintenanceWho.StopMaintenanceUser = nil
+			actual.MaintenanceWho.StopMaintenanceTime = nil
+			So(actual, ShouldResemble, lastMetricsTest)
+		})
+	})
+}
+
 
 var lastCheckTest = moira.CheckData{
 	Score:     6000,
@@ -471,6 +579,13 @@ var lastCheckTest = moira.CheckData{
 			Timestamp:      1504509380,
 		},
 	},
+}
+
+var lastMetricsTest = moira.MetricState {
+	EventTimestamp: 1504449789,
+	State:          moira.StateNODATA,
+	Suppressed:     false,
+	Timestamp:      1504509380,
 }
 
 var lastCheckWithNoMetrics = moira.CheckData{
