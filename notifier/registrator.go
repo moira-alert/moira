@@ -55,12 +55,13 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 		default:
 			return fmt.Errorf("unknown sender type [%s]", senderSettings["type"])
 		}
-		selfStateSettings := map[string]string{"type": selfStateSender}
-		err = notifier.RegisterSender(selfStateSettings, &selfstate.Sender{Database: connector,
-			Enabled: notifier.config.SelfStateEnabled})
 		if err != nil {
 			return err
 		}
+	}
+	selfStateSettings := map[string]string{"type": selfStateSender}
+	if err = notifier.RegisterSender(selfStateSettings, &selfstate.Sender{Database: connector, Enabled: notifier.config.SelfStateEnabled}); err != nil {
+			notifier.logger.Debugf("failed to register selfstate sender: %s", err.Error())
 	}
 	return nil
 }
