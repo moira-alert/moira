@@ -8,6 +8,7 @@ import (
 	"github.com/moira-alert/moira/senders/mail"
 	"github.com/moira-alert/moira/senders/pushover"
 	"github.com/moira-alert/moira/senders/script"
+	"github.com/moira-alert/moira/senders/selfstate"
 	"github.com/moira-alert/moira/senders/slack"
 	"github.com/moira-alert/moira/senders/telegram"
 	"github.com/moira-alert/moira/senders/twilio"
@@ -19,6 +20,7 @@ const (
 	mailSender        = "mail"
 	pushoverSender    = "pushover"
 	scriptSender      = "script"
+	selfStateSender   = "selfstate"
 	slackSender       = "slack"
 	telegramSender    = "telegram"
 	twilioSmsSender   = "twilio sms"
@@ -32,18 +34,18 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 	for _, senderSettings := range notifier.config.Senders {
 		senderSettings["front_uri"] = notifier.config.FrontURL
 		switch senderSettings["type"] {
-		case pushoverSender:
-			err = notifier.RegisterSender(senderSettings, &pushover.Sender{})
-		case slackSender:
-			err = notifier.RegisterSender(senderSettings, &slack.Sender{})
 		case mailSender:
 			err = notifier.RegisterSender(senderSettings, &mail.Sender{})
+		case pushoverSender:
+			err = notifier.RegisterSender(senderSettings, &pushover.Sender{})
+		case scriptSender:
+			err = notifier.RegisterSender(senderSettings, &script.Sender{})
+		case slackSender:
+			err = notifier.RegisterSender(senderSettings, &slack.Sender{})
 		case telegramSender:
 			err = notifier.RegisterSender(senderSettings, &telegram.Sender{DataBase: connector})
 		case twilioSmsSender, twilioVoiceSender:
 			err = notifier.RegisterSender(senderSettings, &twilio.Sender{})
-		case scriptSender:
-			err = notifier.RegisterSender(senderSettings, &script.Sender{})
 		case webhookSender:
 			err = notifier.RegisterSender(senderSettings, &webhook.Sender{})
 		// case "email":
@@ -53,6 +55,9 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 		default:
 			return fmt.Errorf("unknown sender type [%s]", senderSettings["type"])
 		}
+		selfStateSettings := map[string]string{"type": selfStateSender}
+		err = notifier.RegisterSender(selfStateSettings, &selfstate.Sender{Database: connector,
+			Enabled: notifier.config.SelfStateEnabled})
 		if err != nil {
 			return err
 		}

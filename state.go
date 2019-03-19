@@ -48,6 +48,11 @@ var (
 	}
 )
 
+// String is a simple Stringer implementation for State
+func (state State) String() string {
+	return string(state)
+}
+
 // ToMetricState is an auxiliary function to handle metric state properly.
 func (state TTLState) ToMetricState() State {
 	if state == TTLStateDEL {
