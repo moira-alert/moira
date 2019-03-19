@@ -40,6 +40,8 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 			err = notifier.RegisterSender(senderSettings, &pushover.Sender{})
 		case scriptSender:
 			err = notifier.RegisterSender(senderSettings, &script.Sender{})
+		case selfStateSender:
+			err = notifier.RegisterSender(senderSettings, &selfstate.Sender{Database: connector, Enabled: notifier.config.SelfStateEnabled})
 		case slackSender:
 			err = notifier.RegisterSender(senderSettings, &slack.Sender{})
 		case telegramSender:
@@ -58,10 +60,6 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 		if err != nil {
 			return err
 		}
-	}
-	selfStateSettings := map[string]string{"type": selfStateSender}
-	if err = notifier.RegisterSender(selfStateSettings, &selfstate.Sender{Database: connector, Enabled: notifier.config.SelfStateEnabled}); err != nil {
-			notifier.logger.Warningf("failed to register selfstate sender: %s", err.Error())
 	}
 	return nil
 }

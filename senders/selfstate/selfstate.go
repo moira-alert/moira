@@ -16,6 +16,9 @@ type Sender struct {
 
 // Init read yaml config
 func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+	if !sender.Enabled {
+		return fmt.Errorf("moira_selfstate must be enabled")
+	}
 	sender.logger = logger
 	return nil
 }
@@ -36,9 +39,6 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 		return nil
 	default:
 		sender.logger.Warningf("bad self state expected")
-		if !sender.Enabled {
-			return nil
-		}
 		if err := sender.Database.SetNotifierState(moira.SelfStateERROR); err != nil {
 			return fmt.Errorf("failed to disable notifications: %s", err.Error())
 		}
