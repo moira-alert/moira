@@ -61,7 +61,7 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 	}
 	selfStateSettings := map[string]string{"type": selfStateSender}
 	if err = notifier.RegisterSender(selfStateSettings, &selfstate.Sender{Database: connector, Enabled: notifier.config.SelfStateEnabled}); err != nil {
-			notifier.logger.Debugf("failed to register selfstate sender: %s", err.Error())
+			notifier.logger.Warningf("failed to register selfstate sender: %s", err.Error())
 	}
 	return nil
 }

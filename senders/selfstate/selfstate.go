@@ -9,18 +9,14 @@ import (
 
 // Sender implements moira sender interface via selfstate
 type Sender struct {
-	Database       moira.Database
-	Enabled        bool
-	logger         moira.Logger
-	location       *time.Location
-	dateTimeFormat string
+	Database moira.Database
+	Enabled  bool
+	logger   moira.Logger
 }
 
 // Init read yaml config
 func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	sender.logger = logger
-	sender.location = location
-	sender.dateTimeFormat = dateTimeFormat
 	return nil
 }
 
