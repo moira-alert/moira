@@ -32,7 +32,6 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	case moira.StateOK, moira.State(selfState):
 		return nil
 	default:
-		sender.logger.Warningf("bad self state expected")
 		if err := sender.Database.SetNotifierState(moira.SelfStateERROR); err != nil {
 			return fmt.Errorf("failed to disable notifications: %s", err.Error())
 		}
