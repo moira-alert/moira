@@ -53,6 +53,14 @@ func (state State) String() string {
 	return string(state)
 }
 
+// ToSelfState converts State to corresponding SelfState
+func (state State) ToSelfState() string {
+	if state != StateOK {
+		return SelfStateERROR
+	}
+	return SelfStateOK
+}
+
 // ToMetricState is an auxiliary function to handle metric state properly.
 func (state TTLState) ToMetricState() State {
 	if state == TTLStateDEL {
