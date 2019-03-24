@@ -7,11 +7,9 @@ import (
 	"github.com/moira-alert/moira"
 )
 
-var tagSpecRegexString = "\"(?P<name>[^,!=]+)\\s*(?P<operator>!?=~?)\\s*(?P<spec>[^,]*)\""
-var tagSpecsDelimiterRegexString = "\\s*,\\s*"
-var tagSpecsRegexString = tagSpecRegexString + "(" + tagSpecsDelimiterRegexString + tagSpecRegexString + ")*"
-var seriesByTagRegexString = "^seriesByTag\\(" + tagSpecsRegexString + "\\)$"
-var seriesByTagRegex = regexp.MustCompile(seriesByTagRegexString)
+var tagSpecRegex = regexp.MustCompile("^\"([^,!=]+)\\s*(!?=~?)\\s*([^,]*)\"")
+var tagSpecDelimiterRegex = regexp.MustCompile("^\\s*,\\s*")
+var seriesByTagRegex = regexp.MustCompile("^seriesByTag\\(([^)]+)\\)$")
 
 // ErrNotSeriesByTag is returned if the pattern is not seriesByTag
 var ErrNotSeriesByTag = fmt.Errorf("not seriesByTag pattern")
@@ -38,40 +36,38 @@ type TagSpec struct {
 }
 
 // ParseSeriesByTag parses seriesByTag pattern and returns tags specs
-func ParseSeriesByTag(pattern string) ([]TagSpec, error) {
-	matches := seriesByTagRegex.FindStringSubmatch(pattern)
-	if len(matches) == 0 {
+func ParseSeriesByTag(input string) ([]TagSpec, error) {
+	matchedSeriesByTagIndexes := seriesByTagRegex.FindStringSubmatchIndex(input)
+	if len(matchedSeriesByTagIndexes) != 4 {
 		return nil, ErrNotSeriesByTag
 	}
 
-	tagSpecsByName := make(map[string]TagSpec)
-	subExprNames := seriesByTagRegex.SubexpNames()
+	input = input[matchedSeriesByTagIndexes[2]:matchedSeriesByTagIndexes[3]]
 
-	index := 0
+	tagSpecs := make([]TagSpec, 0)
 
-	for index < len(subExprNames) {
-		subExprName := subExprNames[index]
-		if subExprName != "name" {
-			index++
-			continue
+	for len(input) > 0 {
+		if len(tagSpecs) > 0 {
+			matchedTagSpecDelimiterIndexes := tagSpecDelimiterRegex.FindStringSubmatchIndex(input)
+			if len(matchedTagSpecDelimiterIndexes) != 2 {
+				return nil, ErrNotSeriesByTag
+			}
+			input = input[matchedTagSpecDelimiterIndexes[1]:]
 		}
 
-		name := matches[index]
-		if len(name) == 0 {
-			break
+		matchedTagSpecIndexes := tagSpecRegex.FindStringSubmatchIndex(input)
+		if len(matchedTagSpecIndexes) != 8 {
+			return nil, ErrNotSeriesByTag
 		}
 
-		operator := TagSpecOperator(matches[index+1])
-		spec := matches[index+2]
-		index += 3
-		tagSpecsByName[name] = TagSpec{name, operator, spec}
-	}
+		name := input[matchedTagSpecIndexes[2]:matchedTagSpecIndexes[3]]
+		operator := TagSpecOperator(input[matchedTagSpecIndexes[4]:matchedTagSpecIndexes[5]])
+		spec := input[matchedTagSpecIndexes[6]:matchedTagSpecIndexes[7]]
 
-	tagSpecs := make([]TagSpec, 0, len(tagSpecsByName))
-	for _, value := range tagSpecsByName {
-		tagSpecs = append(tagSpecs, value)
-	}
+		tagSpecs = append(tagSpecs, TagSpec{name, operator, spec})
 
+		input = input[matchedTagSpecIndexes[1]:]
+	}
 	return tagSpecs, nil
 }
 

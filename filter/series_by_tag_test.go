@@ -19,7 +19,8 @@ func TestParseSeriesByTag(t *testing.T) {
 			{"seriesByTag(\"a=~b\")", []TagSpec{{"a", MatchOperator, "b"}}},
 			{"seriesByTag(\"a!=~b\")", []TagSpec{{"a", NotMatchOperator, "b"}}},
 			{"seriesByTag(\"a=\")", []TagSpec{{"a", EqualOperator, ""}}},
-			{"seriesByTag(\"a=b\",\"a=c\")", []TagSpec{{"a", EqualOperator, "c"}}},
+			{"seriesByTag(\"a=b\",\"a=c\")", []TagSpec{{"a", EqualOperator, "b"}, {"a", EqualOperator, "c"}}},
+			{"seriesByTag(\"a=b\",\"b=c\",\"c=d\")", []TagSpec{{"a", EqualOperator, "b"}, {"b", EqualOperator, "c"}, {"c", EqualOperator, "d"}}},
 		}
 
 		for _, validCase := range validSeriesByTagCases {

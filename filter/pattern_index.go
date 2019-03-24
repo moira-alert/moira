@@ -69,7 +69,6 @@ func NewPatternIndex(patterns []string) *PatternIndex {
 					} else {
 						newNode.InnerParts = []string{part}
 					}
-
 				}
 				currentNode.Children = append(currentNode.Children, newNode)
 				currentNode = newNode
