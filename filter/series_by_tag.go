@@ -7,9 +7,9 @@ import (
 	"github.com/moira-alert/moira"
 )
 
-var tagSpecRegex = regexp.MustCompile("^\"([^,!=]+)\\s*(!?=~?)\\s*([^,]*)\"")
-var tagSpecDelimiterRegex = regexp.MustCompile("^\\s*,\\s*")
-var seriesByTagRegex = regexp.MustCompile("^seriesByTag\\(([^)]+)\\)$")
+var tagSpecRegex = regexp.MustCompile(`^"([^,!=]+)\s*(!?=~?)\s*([^,]*)"`)
+var tagSpecDelimiterRegex = regexp.MustCompile(`^\s*,\s*`)
+var seriesByTagRegex = regexp.MustCompile(`^seriesByTag\(([^)]+)\)$`)
 
 // ErrNotSeriesByTag is returned if the pattern is not seriesByTag
 var ErrNotSeriesByTag = fmt.Errorf("not seriesByTag pattern")
@@ -73,7 +73,8 @@ func ParseSeriesByTag(input string) ([]TagSpec, error) {
 
 // SeriesByTagPatternIndex helps to index the seriesByTag patterns and allows to match them by metric
 type SeriesByTagPatternIndex struct {
-	filters map[string][]func(string) ([]string, bool)
+	filtersByTag map[string][]func(string) ([]string, bool)
+	filters      []func(string, map[string]string) (string, bool)
 }
 
 // NewSeriesByTagPatternIndex creates new SeriesByTagPatternIndex using seriesByTag patterns and parsed specs comes from ParseSeriesByTag
@@ -105,14 +106,14 @@ func NewSeriesByTagPatternIndex(tagSpecsByPattern map[string][]TagSpec) *SeriesB
 		filters[tag] = tagFilters
 	}
 
-	return &SeriesByTagPatternIndex{filters: filters}
+	return &SeriesByTagPatternIndex{filtersByTag: filters}
 }
 
 // MatchPatterns allows to match patterns by metric name and its labels
 func (index *SeriesByTagPatternIndex) MatchPatterns(name string, labels map[string]string) []string {
 	matchedPatterns := make([][]string, 0)
 
-	if filters, found := index.filters["name"]; found {
+	if filters, found := index.filtersByTag["name"]; found {
 		for _, filter := range filters {
 			if patterns, matched := filter(name); matched {
 				matchedPatterns = append(matchedPatterns, patterns)
@@ -121,7 +122,7 @@ func (index *SeriesByTagPatternIndex) MatchPatterns(name string, labels map[stri
 	}
 
 	for name, value := range labels {
-		if filters, found := index.filters[name]; found {
+		if filters, found := index.filtersByTag[name]; found {
 			for _, filter := range filters {
 				if patterns, matched := filter(value); matched {
 					matchedPatterns = append(matchedPatterns, patterns)
