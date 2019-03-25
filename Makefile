@@ -52,7 +52,6 @@ tar:
 		cp pkg/$$service/moira-$$service.service build/root/$$service/usr/lib/systemd/system/moira-$$service.service ; \
 	done
 	cp pkg/filter/storage-schemas.conf build/root/filter/etc/moira/storage-schemas.conf
-	cp pkg/notifier/*.html build/root/notifier/etc/moira/
 	for service in "filter" "notifier" "api" "checker" "cli" ; do \
 		tar -czvPf build/moira-$$service-${VERSION}.tar.gz -C build/root/$$service . ; \
 	done
