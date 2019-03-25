@@ -74,7 +74,6 @@ func ParseSeriesByTag(input string) ([]TagSpec, error) {
 // SeriesByTagPatternIndex helps to index the seriesByTag patterns and allows to match them by metric
 type SeriesByTagPatternIndex struct {
 	filtersByTag map[string][]func(string) ([]string, bool)
-	filters      []func(string, map[string]string) (string, bool)
 }
 
 // NewSeriesByTagPatternIndex creates new SeriesByTagPatternIndex using seriesByTag patterns and parsed specs comes from ParseSeriesByTag
