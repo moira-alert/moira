@@ -103,14 +103,12 @@ func (connector *DbConnector) SetTriggerCheckMaintenance(triggerID string, metri
 				if !ok {
 					continue
 				}
-				setMaintenanceUserAndTime(&data, &value, userLogin, timeCallMaintenance)
-				data.Maintenance = value
+				moira.SetMaintenanceUserAndTime(&data, value, userLogin, timeCallMaintenance)
 				metricsCheck[metric] = data
 			}
 		}
 		if triggerMaintenance != nil {
-			lastCheck.Maintenance = *triggerMaintenance
-			setMaintenanceUserAndTime(&lastCheck, triggerMaintenance, userLogin, timeCallMaintenance)
+			moira.SetMaintenanceUserAndTime(&lastCheck, *triggerMaintenance, userLogin, timeCallMaintenance)
 		}
 		newLastCheck, err := json.Marshal(lastCheck)
 		if err != nil {
@@ -128,22 +126,6 @@ func (connector *DbConnector) SetTriggerCheckMaintenance(triggerID string, metri
 		lastCheckString = prev
 	}
 	return nil
-}
-
-func setMaintenanceUserAndTime(maintenaceCheck moira.MaintenanceCheck, triggerMaintenance *int64, user string, callMaintenance int64){
-	if user != "" && user != "anonymous" && callMaintenance != 0 {
-		var maintenanceWho moira.MaintenanceWho
-		if *triggerMaintenance < callMaintenance {
-			maintenanceWho.StopMaintenanceUser = &user
-			maintenanceWho.StopMaintenanceTime = &callMaintenance
-		} else {
-			maintenanceWho.StopMaintenanceUser = nil
-			maintenanceWho.StopMaintenanceTime = nil
-			maintenanceWho.StartMaintenanceUser = &user
-			maintenanceWho.StartMaintenanceTime = &callMaintenance
-		}
-		maintenaceCheck.SetMaintenanceWho(&maintenanceWho)
-	}
 }
 
 // checkDataScoreChanged returns true if checkData.Score changed since last check

@@ -490,3 +490,99 @@ func TestBuildTriggerURL(t *testing.T) {
 		So(url, ShouldBeEmpty)
 	})
 }
+
+func TestSetMaintenanceUserAndTime (t *testing.T) {
+	startMaintenanceUser := "testStartMtUser"
+	startMaintenanceTime := int64(1550304140)
+	stopMaintenanceUser := "testStopMtUser"
+	stopMaintenanceTime := int64(1553068940)
+	triggerMaintenanceTS := int64(1552723340)
+
+	Convey("Test trigger", t, func() {
+		Convey("User anonymous", func() {
+			actual := lastCheckTest
+			SetMaintenanceUserAndTime(&lastCheckTest, triggerMaintenanceTS, "anonymous", startMaintenanceTime)
+			actual.Maintenance = triggerMaintenanceTS
+			actual.MaintenanceInfo.Set(nil, nil, nil, nil)
+			So(actual, ShouldResemble, lastCheckTest)
+		})
+		Convey("User '' ", func() {
+			actual := lastCheckTest
+			SetMaintenanceUserAndTime(&lastCheckTest, triggerMaintenanceTS, "", startMaintenanceTime)
+			actual.MaintenanceInfo.Set(nil, nil, nil, nil)
+			So(actual, ShouldResemble, lastCheckTest)
+		})
+		Convey("User and time start maintenance", func() {
+			actual := lastCheckTest
+			SetMaintenanceUserAndTime(&lastCheckTest, triggerMaintenanceTS, startMaintenanceUser, startMaintenanceTime)
+			actual.MaintenanceInfo.Set(&startMaintenanceUser, &startMaintenanceTime, nil, nil)
+			So(actual, ShouldResemble, lastCheckTest)
+		})
+		Convey("User and time stop maintenance", func() {
+			actual := lastCheckTest
+			SetMaintenanceUserAndTime(&lastCheckTest, triggerMaintenanceTS, stopMaintenanceUser, stopMaintenanceTime)
+			actual.MaintenanceInfo.Set(nil, nil, &stopMaintenanceUser, &stopMaintenanceTime)
+			So(actual, ShouldResemble, lastCheckTest)
+		})
+		Convey("User and time start maintenance if set user and time stop maintenance", func() {
+			actual := lastCheckTest
+			lastCheckTest.MaintenanceInfo.Set(nil,nil, &stopMaintenanceUser, &stopMaintenanceTime)
+			actual.MaintenanceInfo.Set(&startMaintenanceUser,&startMaintenanceTime, nil,nil)
+			SetMaintenanceUserAndTime(&lastCheckTest, triggerMaintenanceTS, startMaintenanceUser, startMaintenanceTime)
+			So(actual, ShouldResemble, lastCheckTest)
+		})
+		Convey("User and time start maintenance if user is anonymous", func(){
+			actual := lastCheckTest
+			lastCheckTest.MaintenanceInfo.Set(nil,nil, &stopMaintenanceUser, &stopMaintenanceTime)
+			SetMaintenanceUserAndTime(&lastCheckTest, triggerMaintenanceTS, "anonymous", startMaintenanceTime)
+			actual.MaintenanceInfo.Set(nil,nil,nil,nil)
+			So(actual, ShouldResemble, lastCheckTest)
+		})
+	})
+
+	Convey("Test metric", t, func() {
+		Convey("User anonymous", func(){
+			actual := lastMetricsTest
+			SetMaintenanceUserAndTime(&lastMetricsTest, triggerMaintenanceTS, "anonymous", startMaintenanceTime)
+			actual.MaintenanceInfo.Set(nil, nil, nil, nil)
+			So(actual, ShouldResemble, lastMetricsTest)
+		})
+		Convey("User '' ", func() {
+			actual := lastMetricsTest
+			SetMaintenanceUserAndTime(&lastMetricsTest, triggerMaintenanceTS, "", startMaintenanceTime)
+			actual.MaintenanceInfo.Set(nil, nil, nil, nil)
+			So(actual, ShouldResemble, lastMetricsTest)
+		})
+		Convey("User and time start maintenance", func(){
+			actual := lastMetricsTest
+			SetMaintenanceUserAndTime(&lastMetricsTest, triggerMaintenanceTS, startMaintenanceUser, startMaintenanceTime)
+			actual.MaintenanceInfo.Set(&startMaintenanceUser, &startMaintenanceTime, nil, nil)
+			So(actual, ShouldResemble, lastMetricsTest)
+		})
+		Convey("User and time start maintenance if user is anonymous", func(){
+			actual := lastMetricsTest
+			lastCheckTest.MaintenanceInfo.StopUser = &stopMaintenanceUser
+			lastCheckTest.MaintenanceInfo.StopTime = &stopMaintenanceTime
+			SetMaintenanceUserAndTime(&lastMetricsTest, triggerMaintenanceTS, "anonymous", startMaintenanceTime)
+			actual.MaintenanceInfo.Set(nil, nil, nil, nil)
+			So(actual, ShouldResemble, lastMetricsTest)
+		})
+	})
+}
+
+var lastCheckTest = CheckData{
+	Score:     6000,
+	State:     StateOK,
+	Suppressed: true ,
+	SuppressedState: StateERROR,
+	Timestamp: 1504509981,
+	Maintenance: 1000,
+}
+
+var lastMetricsTest = MetricState {
+	EventTimestamp: 1504449789,
+	State:          StateNODATA,
+	Suppressed:     true,
+	Timestamp:      1504509380,
+	Maintenance:    1552723340,
+}

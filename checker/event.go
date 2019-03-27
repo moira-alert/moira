@@ -34,7 +34,7 @@ func (triggerChecker *TriggerChecker) compareTriggerStates(currentCheck moira.Ch
 
 	currentCheck.SuppressedState = lastStateSuppressedValue
 
-	needSend, message := needSendEvent(currentStateValue, lastStateValue, timestamp, triggerChecker.lastCheck.GetEventTimestamp(), lastStateSuppressed, lastStateSuppressedValue, triggerChecker.lastCheck.MaintenanceWho)
+	needSend, message := needSendEvent(currentStateValue, lastStateValue, timestamp, triggerChecker.lastCheck.GetEventTimestamp(), lastStateSuppressed, lastStateSuppressedValue, triggerChecker.lastCheck.MaintenanceInfo)
 	if !needSend {
 		return currentCheck, nil
 	}
@@ -88,7 +88,7 @@ func (triggerChecker *TriggerChecker) compareMetricStates(metric string, current
 
 	currentState.SuppressedState = lastState.SuppressedState
 
-	needSend, message := needSendEvent(currentState.State, lastState.State, currentState.Timestamp, lastState.GetEventTimestamp(), lastState.Suppressed, lastState.SuppressedState, currentState.MaintenanceWho)
+	needSend, message := needSendEvent(currentState.State, lastState.State, currentState.Timestamp, lastState.GetEventTimestamp(), lastState.Suppressed, lastState.SuppressedState, currentState.MaintenanceInfo)
 	if !needSend {
 		return currentState, nil
 	}
@@ -142,40 +142,13 @@ func (triggerChecker *TriggerChecker) isTriggerSuppressed(event *moira.Notificat
 	return false
 }
 
-func needSendEvent(currentStateValue moira.State, lastStateValue moira.State, currentStateTimestamp int64, lastStateEventTimestamp int64, isLastCheckSuppressed bool, lastStateSuppressedValue moira.State, maintenanceWho moira.MaintenanceWho) (needSend bool, message *string) {
+func needSendEvent(currentStateValue moira.State, lastStateValue moira.State, currentStateTimestamp int64, lastStateEventTimestamp int64, isLastCheckSuppressed bool, lastStateSuppressedValue moira.State, maintenanceInfo moira.MaintenanceInfo) (needSend bool, message *string) {
 	if !isLastCheckSuppressed && currentStateValue != lastStateValue {
 		return true, nil
 	}
 
 	if isLastCheckSuppressed && currentStateValue != lastStateSuppressedValue {
-		messageBuffer := bytes.NewBuffer([]byte(""))
-		messageBuffer.WriteString("This metric changed its state during maintenance interval.")
-
-    if maintenanceWho.StartMaintenanceUser != nil || maintenanceWho.StartMaintenanceTime != nil {
-			messageBuffer.WriteString(" Maintenance was set")
-			if maintenanceWho.StartMaintenanceUser != nil {
-				messageBuffer.WriteString(" by user ")
-				messageBuffer.WriteString(*maintenanceWho.StartMaintenanceUser)
-			}
-			if maintenanceWho.StartMaintenanceTime != nil {
-				messageBuffer.WriteString(" at ")
-				messageBuffer.WriteString(time.Unix(*maintenanceWho.StartMaintenanceTime, 0).Format(format))
-			}
-			messageBuffer.WriteString(".")
-		}
-    if maintenanceWho.StopMaintenanceUser != nil || maintenanceWho.StopMaintenanceTime != nil {
-			messageBuffer.WriteString(" Maintenance removed")
-			if maintenanceWho.StopMaintenanceUser != nil {
-				messageBuffer.WriteString(" by user ")
-				messageBuffer.WriteString(*maintenanceWho.StopMaintenanceUser)
-			}
-			if maintenanceWho.StopMaintenanceTime != nil {
-				messageBuffer.WriteString(" at ")
-				messageBuffer.WriteString(time.Unix(*maintenanceWho.StopMaintenanceTime, 0).Format(format))
-			}
-			messageBuffer.WriteString(".")
-		}
-		message := messageBuffer.String()
+    message := getMaintenceCreateMessage(maintenanceInfo)
 		return true, &message
 	}
 	remindInterval, ok := badStateReminder[currentStateValue]
@@ -188,4 +161,35 @@ func needSendEvent(currentStateValue moira.State, lastStateValue moira.State, cu
 
 func needRemindAgain(currentStateTimestamp, lastStateEventTimestamp, remindInterval int64) bool {
 	return currentStateTimestamp-lastStateEventTimestamp >= remindInterval
+}
+
+func getMaintenceCreateMessage (info moira.MaintenanceInfo) string {
+	messageBuffer := bytes.NewBuffer([]byte(""))
+	messageBuffer.WriteString("This metric changed its state during maintenance interval.")
+
+	if info.StartUser != nil || info.StartTime != nil {
+		messageBuffer.WriteString(" Maintenance was set")
+		if info.StartUser != nil {
+			messageBuffer.WriteString(" by user ")
+			messageBuffer.WriteString(*info.StartUser)
+		}
+		if info.StartTime != nil {
+			messageBuffer.WriteString(" at ")
+			messageBuffer.WriteString(time.Unix(*info.StartTime, 0).Format(format))
+		}
+		messageBuffer.WriteString(".")
+	}
+	if info.StopUser != nil || info.StopTime != nil {
+		messageBuffer.WriteString(" Maintenance removed")
+		if info.StopUser != nil {
+			messageBuffer.WriteString(" by user ")
+			messageBuffer.WriteString(*info.StopUser)
+		}
+		if info.StopTime != nil {
+			messageBuffer.WriteString(" at ")
+			messageBuffer.WriteString(time.Unix(*info.StopTime, 0).Format(format))
+		}
+		messageBuffer.WriteString(".")
+	}
+	return messageBuffer.String()
 }
