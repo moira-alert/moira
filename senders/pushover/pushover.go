@@ -11,6 +11,8 @@ import (
 )
 
 const printEventsCount int = 5
+const titleLimit = 250
+const urlLimit = 512
 
 // Sender implements moira sender interface via pushover
 type Sender struct {
@@ -53,12 +55,14 @@ func (sender *Sender) makePushoverMessage(events moira.NotificationEvents, conta
 		Message:   sender.buildMessage(events, throttled),
 		Title:     sender.buildTitle(events, trigger),
 		Priority:  sender.getMessagePriority(events),
-		URL:       trigger.GetTriggerURI(sender.frontURI),
 		Retry:     5 * time.Minute,
 		Expire:    time.Hour,
 		Timestamp: events[len(events)-1].Timestamp,
 	}
-
+	url := trigger.GetTriggerURI(sender.frontURI)
+	if len(url) < urlLimit {
+		pushoverMessage.URL = url
+	}
 	if len(plot) > 0 {
 		reader := bytes.NewReader(plot)
 		pushoverMessage.AddAttachment(reader)
@@ -91,7 +95,17 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, throttled bo
 }
 
 func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData) string {
-	return fmt.Sprintf("%s %s %s (%d)", events.GetSubjectState(), trigger.Name, trigger.GetTags(), len(events))
+	title := fmt.Sprintf("%s %s %s (%d)", events.GetSubjectState(), trigger.Name, trigger.GetTags(), len(events))
+	tags := 1
+	for len([]rune(title)) > titleLimit {
+		var tagBuffer bytes.Buffer
+		for i := 0; i < len(trigger.Tags)-tags; i++ {
+			tagBuffer.WriteString(fmt.Sprintf("[%s]", trigger.Tags[i]))
+		}
+		title = fmt.Sprintf("%s %s %s.... (%d)", events.GetSubjectState(), trigger.Name, tagBuffer.String(), len(events))
+		tags++
+	}
+	return title
 }
 
 func (sender *Sender) getMessagePriority(events moira.NotificationEvents) int {
