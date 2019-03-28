@@ -167,7 +167,7 @@ type TriggerCheck struct {
 
 // MaintenanceCheck set maintenance user, time
 type MaintenanceCheck interface {
-	SetMaintenance(maintenanceInfo *MaintenanceInfo, triggerMaintenance int64)
+	SetMaintenance(maintenanceInfo *MaintenanceInfo, maintenance int64)
 }
 
 // CheckData represents last trigger check data
@@ -198,9 +198,9 @@ type MetricState struct {
 }
 
 // SetMaintenance set maintenance user, time for MetricState
-func (metricState *MetricState) SetMaintenance(maintenanceInfo *MaintenanceInfo, triggerMaintenance int64) {
+func (metricState *MetricState) SetMaintenance(maintenanceInfo *MaintenanceInfo, maintenance int64) {
 	metricState.MaintenanceInfo = *maintenanceInfo
-	metricState.Maintenance = triggerMaintenance
+	metricState.Maintenance = maintenance
 }
 
 // MaintenanceInfo represents user and time set/unset maintenance
@@ -319,9 +319,9 @@ func (checkData *CheckData) GetOrCreateMetricState(metric string, emptyTimestamp
 }
 
 // SetMaintenance set maintenance user, time for CheckData
-func (checkData *CheckData) SetMaintenance(maintenanceInfo *MaintenanceInfo, triggerMaintenance int64) {
+func (checkData *CheckData) SetMaintenance(maintenanceInfo *MaintenanceInfo, maintenance int64) {
 	checkData.MaintenanceInfo = *maintenanceInfo
-	checkData.Maintenance = triggerMaintenance
+	checkData.Maintenance = maintenance
 }
 
 func createEmptyMetricState(defaultTimestampValue int64, firstStateIsNodata bool) MetricState {
@@ -405,15 +405,16 @@ func (subscription *SubscriptionData) MustIgnore(eventData *NotificationEvent) b
 	}
 	return false
 }
+
 // isAnonymous checks if user is Anonymous or empty
 func isAnonymous (user string) bool{
 	return user == "anonymous" || user == ""
 }
 
 // SetMaintenanceUserAndTime set startuser and starttime or stopuser and stoptime for MaintenanceInfo
-func SetMaintenanceUserAndTime(maintenanceCheck MaintenanceCheck, triggerMaintenance int64, user string, callMaintenance int64) {
+func SetMaintenanceUserAndTime(maintenanceCheck MaintenanceCheck, maintenance int64, user string, callMaintenance int64) {
 	var maintenanceInfo MaintenanceInfo
-	  if triggerMaintenance < callMaintenance {
+	  if maintenance < callMaintenance {
 	  	if (maintenanceInfo.StartUser != nil && !isAnonymous(*maintenanceInfo.StartUser)) || !isAnonymous(user) {
 				maintenanceInfo.StopUser = &user
 				maintenanceInfo.StopTime = &callMaintenance
@@ -423,5 +424,5 @@ func SetMaintenanceUserAndTime(maintenanceCheck MaintenanceCheck, triggerMainten
 				maintenanceInfo.Set(&user, &callMaintenance, nil, nil)
 			}
 		}
-	maintenanceCheck.SetMaintenance(&maintenanceInfo, triggerMaintenance)
+	maintenanceCheck.SetMaintenance(&maintenanceInfo, maintenance)
 }

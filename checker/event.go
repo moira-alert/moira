@@ -148,7 +148,7 @@ func needSendEvent(currentStateValue moira.State, lastStateValue moira.State, cu
 	}
 
 	if isLastCheckSuppressed && currentStateValue != lastStateSuppressedValue {
-    message := getMaintenceCreateMessage(maintenanceInfo)
+    message := getMaintenanceCreateMessage(maintenanceInfo)
 		return true, &message
 	}
 	remindInterval, ok := badStateReminder[currentStateValue]
@@ -163,7 +163,7 @@ func needRemindAgain(currentStateTimestamp, lastStateEventTimestamp, remindInter
 	return currentStateTimestamp-lastStateEventTimestamp >= remindInterval
 }
 
-func getMaintenceCreateMessage (info moira.MaintenanceInfo) string {
+func getMaintenanceCreateMessage(info moira.MaintenanceInfo) string {
 	messageBuffer := bytes.NewBuffer([]byte(""))
 	messageBuffer.WriteString("This metric changed its state during maintenance interval.")
 
