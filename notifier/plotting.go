@@ -14,6 +14,8 @@ import (
 )
 
 const (
+	// defaultTimeShift is default time shift to fetch timeseries
+	defaultTimeShift = 1 * time.Minute
 	// defaultTimeRange is default time range to fetch timeseries
 	defaultTimeRange = 30 * time.Minute
 )
@@ -87,13 +89,13 @@ func resolveMetricsWindow(logger moira.Logger, trigger moira.TriggerData, pkg No
 		if isWideWindow {
 			return alignToMinutes(fromTime.Unix()), toTime.Unix()
 		}
-		return alignToMinutes(toTime.Add(-defaultTimeRange).Unix()), toTime.Unix()
+		return alignToMinutes(toTime.Add(-defaultTimeRange + defaultTimeShift).Unix()), toTime.Add(defaultTimeShift).Unix()
 	}
 	// resolve local trigger window
 	// window is realtime: use shifted window to fetch actual data from redis
 	// window is not realtime: force realtime window
 	if isRealTimeWindow {
-		return alignToMinutes(toTime.Add(-defaultTimeRange).Unix()), toTime.Unix()
+		return alignToMinutes(toTime.Add(-defaultTimeRange + defaultTimeShift).Unix()), toTime.Add(defaultTimeShift).Unix()
 	}
 	return alignToMinutes(defaultFrom), defaultTo
 }
