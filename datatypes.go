@@ -168,6 +168,7 @@ type TriggerCheck struct {
 // MaintenanceCheck set maintenance user, time
 type MaintenanceCheck interface {
 	SetMaintenance(maintenanceInfo *MaintenanceInfo, maintenance int64)
+	GetMaintenance() MaintenanceInfo
 }
 
 // CheckData represents last trigger check data
@@ -201,6 +202,11 @@ type MetricState struct {
 func (metricState *MetricState) SetMaintenance(maintenanceInfo *MaintenanceInfo, maintenance int64) {
 	metricState.MaintenanceInfo = *maintenanceInfo
 	metricState.Maintenance = maintenance
+}
+
+// GetMaintenance return metricState MaintenanceInfo
+func (metricState *MetricState) GetMaintenance() MaintenanceInfo{
+	return metricState.MaintenanceInfo
 }
 
 // MaintenanceInfo represents user and time set/unset maintenance
@@ -324,6 +330,11 @@ func (checkData *CheckData) SetMaintenance(maintenanceInfo *MaintenanceInfo, mai
 	checkData.Maintenance = maintenance
 }
 
+// GetMaintenance return metricState MaintenanceInfo
+func (checkData *CheckData) GetMaintenance() MaintenanceInfo{
+  return checkData.MaintenanceInfo
+}
+
 func createEmptyMetricState(defaultTimestampValue int64, firstStateIsNodata bool) MetricState {
 	if firstStateIsNodata {
 		return MetricState{
@@ -413,15 +424,21 @@ func isAnonymous (user string) bool{
 
 // SetMaintenanceUserAndTime set startuser and starttime or stopuser and stoptime for MaintenanceInfo
 func SetMaintenanceUserAndTime(maintenanceCheck MaintenanceCheck, maintenance int64, user string, callMaintenance int64) {
-	var maintenanceInfo MaintenanceInfo
+	var maintenanceInfo = maintenanceCheck.GetMaintenance()
 	  if maintenance < callMaintenance {
 	  	if (maintenanceInfo.StartUser != nil && !isAnonymous(*maintenanceInfo.StartUser)) || !isAnonymous(user) {
 				maintenanceInfo.StopUser = &user
 				maintenanceInfo.StopTime = &callMaintenance
 			}
+	  	if isAnonymous(user) {
+				maintenanceInfo.StopUser = nil
+				maintenanceInfo.StopTime = nil
+			}
 		} else {
 			if !isAnonymous(user) {
 				maintenanceInfo.Set(&user, &callMaintenance, nil, nil)
+			} else {
+				maintenanceInfo.Set(nil, nil, nil, nil)
 			}
 		}
 	maintenanceCheck.SetMaintenance(&maintenanceInfo, maintenance)
