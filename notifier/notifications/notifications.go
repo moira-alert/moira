@@ -35,7 +35,7 @@ func (worker *FetchNotificationsWorker) Start() {
 				if err := worker.processScheduledNotifications(); err != nil {
 					switch err.(type) {
 					case notifierInBadStateError:
-						worker.Logger.Warningf("Stop sending notifications for %v: %s", sleepAfterNotifierBadState, err.Error())
+						worker.Logger.Warningf("Stop sending notifications for %v: %s. Fix SelfState errors and turn on notifier in /notifications page", sleepAfterNotifierBadState, err.Error())
 						<-time.After(sleepAfterNotifierBadState)
 					default:
 						worker.Logger.Warningf("Failed to fetch scheduled notifications: %s", err.Error())
