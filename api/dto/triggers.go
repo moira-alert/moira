@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/middleware"
 	"github.com/moira-alert/moira/expression"
 	"github.com/moira-alert/moira/metric_source"
@@ -107,16 +108,16 @@ func CreateTriggerModel(trigger *moira.Trigger) TriggerModel {
 func (trigger *Trigger) Bind(request *http.Request) error {
 	trigger.Tags = normalizeTags(trigger.Tags)
 	if len(trigger.Targets) == 0 {
-		return fmt.Errorf("targets is required")
+		return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("targets is required")}
 	}
 	if len(trigger.Tags) == 0 {
-		return fmt.Errorf("tags is required")
+		return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("tags is required")}
 	}
 	if trigger.Name == "" {
-		return fmt.Errorf("trigger name is required")
+		return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("trigger name is required")}
 	}
 	if err := checkWarnErrorExpression(trigger); err != nil {
-		return err
+		return api.ErrInvalidRequestContent{ValidationError: err}
 	}
 
 	triggerExpression := expression.TriggerExpression{
@@ -231,10 +232,10 @@ func checkWarnErrorExpression(trigger *Trigger) error {
 		if trigger.Expression == "" {
 			return fmt.Errorf("trigger_type set to expression, but no expression provided")
 		}
-		if  trigger.WarnValue != nil &&  trigger.ErrorValue != nil {
+		if trigger.WarnValue != nil && trigger.ErrorValue != nil {
 			return fmt.Errorf("can't use 'warn_value' and 'error_value' on trigger_type: '%v'", moira.ExpressionTrigger)
 		}
-		if trigger.WarnValue != nil  {
+		if trigger.WarnValue != nil {
 			return fmt.Errorf("can't use 'warn_value' on trigger_type: '%v'", moira.ExpressionTrigger)
 		}
 		if trigger.ErrorValue != nil {
@@ -249,7 +250,7 @@ func checkWarnErrorExpression(trigger *Trigger) error {
 	return nil
 }
 
-func checkSimpleModeFields(trigger *Trigger) error{
+func checkSimpleModeFields(trigger *Trigger) error {
 	if len(trigger.Targets) > 1 {
 		return fmt.Errorf("can't use trigger_type not '%v' for with multiple targets", trigger.TriggerType)
 	}
