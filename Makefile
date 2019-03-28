@@ -146,4 +146,5 @@ docker_release_images:
 	for service in "filter" "notifier" "api" "checker" ; do \
 		docker build --build-arg MoiraVersion=${VERSION_RELEASE} --build-arg GO_VERSION=${GO_VERSION} --build-arg GIT_COMMIT=${GIT_HASH} -f Dockerfile.$$service -t moira/$$service:${VERSION_RELEASE} -t moira/$$service:latest . ; \
 		docker push moira/$$service:${VERSION_RELEASE} ; \
+		docker push moira/$$service:latest ; \
 	done
