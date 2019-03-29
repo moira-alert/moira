@@ -18,7 +18,7 @@ func (connector *DbConnector) GetMatchedMetricsValues(from int64, until int64) (
 	c.Send("ZRANGEBYSCORE", protectorDataKey(matchedMechanism), from, until, "WITHSCORES")
 	matchedValues, err := redis.Values(c.Do(""))
 	if err != nil {
-		return nil, fmt.Errorf("failed to get matched metric values: %v", err)
+		return nil, fmt.Errorf("failed to get matched metric values: %s", err.Error())
 	}
 
 	res := make(map[string][]int64, len(matchedValues))
