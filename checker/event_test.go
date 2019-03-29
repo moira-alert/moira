@@ -3,6 +3,7 @@ package checker
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
@@ -506,4 +507,100 @@ func TestTriggerMaintenance(t *testing.T) {
 			})
 		})
 	})
+}
+
+func TestNeedSendEvent(t *testing.T){
+	startMaintenanceUser := "testStartMtUser"
+	startMaintenanceTime := int64(123)
+	stopMaintenanceUser := "testStopMtUser"
+	stopMaintenanceTime := int64(1230)
+
+	Convey("Test needSendEvents for trigger", t, func(){
+		Convey("Start Maintenance not start user and time", func(){
+			actual := fmt.Sprintf("This metric changed its state during maintenance interval.")
+			needSend, message := needSendEvent(currentCheckTest.State, lastCheckTest.State, currentCheckTest.Timestamp, lastCheckTest.GetEventTimestamp(),lastCheckTest.Suppressed, lastCheckTest.SuppressedState, lastCheckTest.MaintenanceInfo)
+			So(needSend, ShouldBeTrue)
+			So(*message, ShouldResemble, actual)
+		})
+		Convey("Start Maintenance", func(){
+			actual := fmt.Sprintf("This metric changed its state during maintenance interval. Maintenance was set by user %v at %v.", startMaintenanceUser, time.Unix(startMaintenanceTime, 0).Format("15:04 02.01.2006"))
+			lastCheckTest.MaintenanceInfo.Set(&startMaintenanceUser, &startMaintenanceTime, nil, nil)
+			needSend, message := needSendEvent(currentCheckTest.State, lastCheckTest.State, currentCheckTest.Timestamp, lastCheckTest.GetEventTimestamp(),lastCheckTest.Suppressed, lastCheckTest.SuppressedState, lastCheckTest.MaintenanceInfo)
+			So(needSend, ShouldBeTrue)
+			So(*message, ShouldResemble, actual)
+		})
+		Convey("Stop Maintenance", func(){
+			actual := fmt.Sprintf("This metric changed its state during maintenance interval. Maintenance was set by user %v at %v. Maintenance removed by user %v at %v.", startMaintenanceUser, time.Unix(startMaintenanceTime, 0).Format("15:04 02.01.2006"), stopMaintenanceUser, time.Unix(stopMaintenanceTime, 0).Format("15:04 02.01.2006"))
+			lastCheckTest.MaintenanceInfo.Set(&startMaintenanceUser, &startMaintenanceTime, &stopMaintenanceUser, &stopMaintenanceTime)
+			needSend, message := needSendEvent(currentCheckTest.State, lastCheckTest.State, currentCheckTest.Timestamp, lastCheckTest.GetEventTimestamp(),lastCheckTest.Suppressed, lastCheckTest.SuppressedState, lastCheckTest.MaintenanceInfo)
+			So(needSend, ShouldBeTrue)
+			So(*message, ShouldResemble, actual)
+		})
+		Convey("Stop Maintenance not start user and time", func(){
+			actual := fmt.Sprintf("This metric changed its state during maintenance interval. Maintenance removed by user %v at %v.", stopMaintenanceUser, time.Unix(stopMaintenanceTime, 0).Format("15:04 02.01.2006") )
+			lastCheckTest.MaintenanceInfo.Set(nil, nil, &stopMaintenanceUser, &stopMaintenanceTime)
+			needSend, message := needSendEvent(currentCheckTest.State, lastCheckTest.State, currentCheckTest.Timestamp, lastCheckTest.GetEventTimestamp(),lastCheckTest.Suppressed, lastCheckTest.SuppressedState, lastCheckTest.MaintenanceInfo)
+			So(needSend, ShouldBeTrue)
+			So(*message, ShouldResemble, actual)
+		})
+	})
+
+	Convey("Test needSendEvents for metric", t, func(){
+		Convey("Start Maintenance not start user and time", func(){
+			actual := fmt.Sprintf("This metric changed its state during maintenance interval.")
+			needSend, message := needSendEvent(currentMetricTest.State, lastMetricsTest.State, currentMetricTest.Timestamp, lastMetricsTest.GetEventTimestamp(), lastMetricsTest.Suppressed, lastMetricsTest.SuppressedState, currentMetricTest.MaintenanceInfo)
+			So(needSend, ShouldBeTrue)
+			So(*message, ShouldResemble, actual)
+		})
+		Convey("Start Maintenance", func(){
+			actual := fmt.Sprintf("This metric changed its state during maintenance interval. Maintenance was set by user %v at %v.", startMaintenanceUser, time.Unix(startMaintenanceTime, 0).Format("15:04 02.01.2006"))
+			currentMetricTest.MaintenanceInfo.Set(&startMaintenanceUser, &startMaintenanceTime, nil, nil)
+			needSend, message := needSendEvent(currentMetricTest.State, lastMetricsTest.State, currentMetricTest.Timestamp, lastMetricsTest.GetEventTimestamp(), lastMetricsTest.Suppressed, lastMetricsTest.SuppressedState, currentMetricTest.MaintenanceInfo)
+			So(needSend, ShouldBeTrue)
+			So(*message, ShouldResemble, actual)
+		})
+		Convey("Stop Maintenance", func(){
+			actual := fmt.Sprintf("This metric changed its state during maintenance interval. Maintenance removed by user %v at %v.", stopMaintenanceUser, time.Unix(stopMaintenanceTime, 0).Format("15:04 02.01.2006") )
+			currentMetricTest.MaintenanceInfo.Set(nil, nil, &stopMaintenanceUser, &stopMaintenanceTime)
+			needSend, message := needSendEvent(currentMetricTest.State, lastMetricsTest.State, currentMetricTest.Timestamp, lastMetricsTest.GetEventTimestamp(), lastMetricsTest.Suppressed, lastMetricsTest.SuppressedState, currentMetricTest.MaintenanceInfo)
+			So(needSend, ShouldBeTrue)
+			So(*message, ShouldResemble, actual)
+		})
+		Convey("Stop Maintenance not start user and time", func(){
+			actual := fmt.Sprintf("This metric changed its state during maintenance interval. Maintenance was set by user %v at %v. Maintenance removed by user %v at %v.", startMaintenanceUser, time.Unix(startMaintenanceTime, 0).Format("15:04 02.01.2006"), stopMaintenanceUser, time.Unix(stopMaintenanceTime, 0).Format("15:04 02.01.2006") )
+			currentMetricTest.MaintenanceInfo.Set(&startMaintenanceUser, &startMaintenanceTime, &stopMaintenanceUser, &stopMaintenanceTime)
+			needSend, message := needSendEvent(currentMetricTest.State, lastMetricsTest.State, currentMetricTest.Timestamp, lastMetricsTest.GetEventTimestamp(), lastMetricsTest.Suppressed, lastMetricsTest.SuppressedState, currentMetricTest.MaintenanceInfo)
+			So(needSend, ShouldBeTrue)
+			So(*message, ShouldResemble, actual)
+		})
+	})
+}
+
+var lastCheckTest = moira.CheckData{
+	Score:     6000,
+	State:     moira.StateOK,
+	Suppressed: true ,
+	SuppressedState: moira.StateERROR,
+	Timestamp: 1504509981,
+	Maintenance: 1000,
+}
+
+var currentCheckTest = moira.CheckData {
+	State:     moira.StateWARN,
+	Timestamp: 1504509981,
+}
+
+var currentMetricTest = moira.MetricState{
+	EventTimestamp: 1504449789,
+	State:          moira.StateWARN,
+	Suppressed:     true,
+	Timestamp:      1504509380,
+}
+
+var lastMetricsTest = moira.MetricState {
+	EventTimestamp: 1504449789,
+	State:          moira.StateNODATA,
+	Suppressed:     true,
+	Timestamp:      1504509380,
+	Maintenance:    1552723340,
 }

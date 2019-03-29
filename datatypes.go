@@ -165,12 +165,19 @@ type TriggerCheck struct {
 	LastCheck  CheckData `json:"last_check"`
 }
 
+// MaintenanceCheck set maintenance user, time
+type MaintenanceCheck interface {
+	SetMaintenance(maintenanceInfo *MaintenanceInfo, maintenance int64)
+	GetMaintenance() MaintenanceInfo
+}
+
 // CheckData represents last trigger check data
 type CheckData struct {
 	Metrics                      map[string]MetricState `json:"metrics"`
 	Score                        int64                  `json:"score"`
 	State                        State                  `json:"state"`
 	Maintenance                  int64                  `json:"maintenance,omitempty"`
+	MaintenanceInfo              MaintenanceInfo        `json:"maintenance_info"`
 	Timestamp                    int64                  `json:"timestamp,omitempty"`
 	EventTimestamp               int64                  `json:"event_timestamp,omitempty"`
 	LastSuccessfulCheckTimestamp int64                  `json:"last_successful_check_timestamp"`
@@ -181,13 +188,41 @@ type CheckData struct {
 
 // MetricState represents metric state data for given timestamp
 type MetricState struct {
-	EventTimestamp  int64    `json:"event_timestamp"`
-	State           State    `json:"state"`
-	Suppressed      bool     `json:"suppressed"`
-	SuppressedState State    `json:"suppressed_state,omitempty"`
-	Timestamp       int64    `json:"timestamp"`
-	Value           *float64 `json:"value,omitempty"`
-	Maintenance     int64    `json:"maintenance,omitempty"`
+	EventTimestamp  int64           `json:"event_timestamp"`
+	State           State           `json:"state"`
+	Suppressed      bool            `json:"suppressed"`
+	SuppressedState State           `json:"suppressed_state,omitempty"`
+	Timestamp       int64           `json:"timestamp"`
+	Value           *float64        `json:"value,omitempty"`
+	Maintenance     int64           `json:"maintenance,omitempty"`
+	MaintenanceInfo MaintenanceInfo `json:"maintenance_info"`
+}
+
+// SetMaintenance set maintenance user, time for MetricState
+func (metricState *MetricState) SetMaintenance(maintenanceInfo *MaintenanceInfo, maintenance int64) {
+	metricState.MaintenanceInfo = *maintenanceInfo
+	metricState.Maintenance = maintenance
+}
+
+// GetMaintenance return metricState MaintenanceInfo
+func (metricState *MetricState) GetMaintenance() MaintenanceInfo{
+	return metricState.MaintenanceInfo
+}
+
+// MaintenanceInfo represents user and time set/unset maintenance
+type MaintenanceInfo struct {
+	StartUser *string `json:"start_user"`
+	StartTime *int64  `json:"start_time"`
+	StopUser  *string `json:"stop_user"`
+	StopTime  *int64  `json:"stop_time"`
+}
+
+// Set maintanace start and stop users and times
+func (maintenanceInfo *MaintenanceInfo) Set(startUser *string, startTime *int64, stopUser *string, stopTime *int64) {
+	maintenanceInfo.StartUser = startUser
+	maintenanceInfo.StartTime = startTime
+	maintenanceInfo.StopUser = stopUser
+	maintenanceInfo.StopTime = stopTime
 }
 
 // MetricEvent represents filter metric event
@@ -289,6 +324,17 @@ func (checkData *CheckData) GetOrCreateMetricState(metric string, emptyTimestamp
 	return checkData.Metrics[metric]
 }
 
+// SetMaintenance set maintenance user, time for CheckData
+func (checkData *CheckData) SetMaintenance(maintenanceInfo *MaintenanceInfo, maintenance int64) {
+	checkData.MaintenanceInfo = *maintenanceInfo
+	checkData.Maintenance = maintenance
+}
+
+// GetMaintenance return metricState MaintenanceInfo
+func (checkData *CheckData) GetMaintenance() MaintenanceInfo{
+  return checkData.MaintenanceInfo
+}
+
 func createEmptyMetricState(defaultTimestampValue int64, firstStateIsNodata bool) MetricState {
 	if firstStateIsNodata {
 		return MetricState{
@@ -369,4 +415,31 @@ func (subscription *SubscriptionData) MustIgnore(eventData *NotificationEvent) b
 		}
 	}
 	return false
+}
+
+// isAnonymous checks if user is Anonymous or empty
+func isAnonymous (user string) bool{
+	return user == "anonymous" || user == ""
+}
+
+// SetMaintenanceUserAndTime set startuser and starttime or stopuser and stoptime for MaintenanceInfo
+func SetMaintenanceUserAndTime(maintenanceCheck MaintenanceCheck, maintenance int64, user string, callMaintenance int64) {
+	var maintenanceInfo = maintenanceCheck.GetMaintenance()
+	  if maintenance < callMaintenance {
+	  	if (maintenanceInfo.StartUser != nil && !isAnonymous(*maintenanceInfo.StartUser)) || !isAnonymous(user) {
+				maintenanceInfo.StopUser = &user
+				maintenanceInfo.StopTime = &callMaintenance
+			}
+	  	if isAnonymous(user) {
+				maintenanceInfo.StopUser = nil
+				maintenanceInfo.StopTime = nil
+			}
+		} else {
+			if !isAnonymous(user) {
+				maintenanceInfo.Set(&user, &callMaintenance, nil, nil)
+			} else {
+				maintenanceInfo.Set(nil, nil, nil, nil)
+			}
+		}
+	maintenanceCheck.SetMaintenance(&maintenanceInfo, maintenance)
 }
