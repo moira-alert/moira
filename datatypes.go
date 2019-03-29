@@ -197,7 +197,7 @@ type MetricEvent struct {
 	Pattern string `json:"pattern"`
 }
 
-// SearchHighLight represents highlight
+// SearchHighLight represents highlight structure
 type SearchHighLight struct {
 	Field string `json:"field"`
 	Value string `json:"string"`
