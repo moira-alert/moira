@@ -11,15 +11,15 @@ import (
 
 const (
 	// VariableContactID is used to render template with contact.ID
-	VariableContactID    = "${contact_id}"
+	VariableContactID = "${contact_id}"
 	// VariableContactValue is used to render template with contact.Value
 	VariableContactValue = "${contact_value}"
 	// VariableContactType is used to render template with contact.Type
-	VariableContactType  = "${contact_type}"
+	VariableContactType = "${contact_type}"
 	// VariableTriggerID is used to render template with trigger.ID
-	VariableTriggerID    = "${trigger_id}"
+	VariableTriggerID = "${trigger_id}"
 	// VariableTriggerName is used to render template with trigger.Name
-	VariableTriggerName  = "${trigger_name}"
+	VariableTriggerName = "${trigger_name}"
 )
 
 // NotificationEvent represents trigger state changes event
@@ -205,16 +205,16 @@ func (metricState *MetricState) SetMaintenance(maintenanceInfo *MaintenanceInfo,
 }
 
 // GetMaintenance return metricState MaintenanceInfo
-func (metricState *MetricState) GetMaintenance() MaintenanceInfo{
+func (metricState *MetricState) GetMaintenance() MaintenanceInfo {
 	return metricState.MaintenanceInfo
 }
 
 // MaintenanceInfo represents user and time set/unset maintenance
 type MaintenanceInfo struct {
-	StartUser *string `json:"start_user"`
-	StartTime *int64  `json:"start_time"`
-	StopUser  *string `json:"stop_user"`
-	StopTime  *int64  `json:"stop_time"`
+	StartUser *string `json:"setup_user"`
+	StartTime *int64  `json:"setup_time"`
+	StopUser  *string `json:"remove_user"`
+	StopTime  *int64  `json:"remove_time"`
 }
 
 // Set maintanace start and stop users and times
@@ -331,8 +331,8 @@ func (checkData *CheckData) SetMaintenance(maintenanceInfo *MaintenanceInfo, mai
 }
 
 // GetMaintenance return metricState MaintenanceInfo
-func (checkData *CheckData) GetMaintenance() MaintenanceInfo{
-  return checkData.MaintenanceInfo
+func (checkData *CheckData) GetMaintenance() MaintenanceInfo {
+	return checkData.MaintenanceInfo
 }
 
 func createEmptyMetricState(defaultTimestampValue int64, firstStateIsNodata bool) MetricState {
@@ -418,28 +418,28 @@ func (subscription *SubscriptionData) MustIgnore(eventData *NotificationEvent) b
 }
 
 // isAnonymous checks if user is Anonymous or empty
-func isAnonymous (user string) bool{
+func isAnonymous(user string) bool {
 	return user == "anonymous" || user == ""
 }
 
 // SetMaintenanceUserAndTime set startuser and starttime or stopuser and stoptime for MaintenanceInfo
 func SetMaintenanceUserAndTime(maintenanceCheck MaintenanceCheck, maintenance int64, user string, callMaintenance int64) {
 	var maintenanceInfo = maintenanceCheck.GetMaintenance()
-	  if maintenance < callMaintenance {
-	  	if (maintenanceInfo.StartUser != nil && !isAnonymous(*maintenanceInfo.StartUser)) || !isAnonymous(user) {
-				maintenanceInfo.StopUser = &user
-				maintenanceInfo.StopTime = &callMaintenance
-			}
-	  	if isAnonymous(user) {
-				maintenanceInfo.StopUser = nil
-				maintenanceInfo.StopTime = nil
-			}
-		} else {
-			if !isAnonymous(user) {
-				maintenanceInfo.Set(&user, &callMaintenance, nil, nil)
-			} else {
-				maintenanceInfo.Set(nil, nil, nil, nil)
-			}
+	if maintenance < callMaintenance {
+		if (maintenanceInfo.StartUser != nil && !isAnonymous(*maintenanceInfo.StartUser)) || !isAnonymous(user) {
+			maintenanceInfo.StopUser = &user
+			maintenanceInfo.StopTime = &callMaintenance
 		}
+		if isAnonymous(user) {
+			maintenanceInfo.StopUser = nil
+			maintenanceInfo.StopTime = nil
+		}
+	} else {
+		if !isAnonymous(user) {
+			maintenanceInfo.Set(&user, &callMaintenance, nil, nil)
+		} else {
+			maintenanceInfo.Set(nil, nil, nil, nil)
+		}
+	}
 	maintenanceCheck.SetMaintenance(&maintenanceInfo, maintenance)
 }
