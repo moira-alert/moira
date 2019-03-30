@@ -12,147 +12,159 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+func newMocks(t *testing.T) (dataBase *mock_moira_alert.MockDatabase, mockCtrl *gomock.Controller) {
+	mockCtrl = gomock.NewController(t)
+	dataBase = mock_moira_alert.NewMockDatabase(mockCtrl)
+	return
+}
+
 func TestCompareMetricStates(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-	logger, _ := logging.GetLogger("Test")
-	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	Convey("Test compare metric states", t, func() {
+		logger, _ := logging.GetLogger("Test")
 
-	triggerChecker := TriggerChecker{
-		triggerID: "SuperId",
-		database:  dataBase,
-		logger:    logger,
-		trigger:   &moira.Trigger{},
-		lastCheck: &moira.CheckData{},
-	}
+		triggerChecker := TriggerChecker{
+			triggerID: "SuperId",
+			logger:    logger,
+			trigger:   &moira.Trigger{},
+			lastCheck: &moira.CheckData{},
+		}
 
-	lastStateExample := moira.MetricState{
-		Timestamp:      1502712000,
-		EventTimestamp: 1502708400,
-		Suppressed:     false,
-	}
-	currentStateExample := moira.MetricState{
-		Suppressed: false,
-		Timestamp:  1502719200,
-		State:      moira.StateNODATA,
-	}
+		lastStateExample := moira.MetricState{
+			Timestamp:      1502712000,
+			EventTimestamp: 1502708400,
+			Suppressed:     false,
+		}
+		currentStateExample := moira.MetricState{
+			Suppressed: false,
+			Timestamp:  1502719200,
+			State:      moira.StateNODATA,
+		}
 
-	Convey("Same state values", t, func() {
-		Convey("Status OK, no need to send", func() {
-			lastState := lastStateExample
-			currentState := currentStateExample
-			lastState.State = moira.StateOK
-			currentState.State = moira.StateOK
+		Convey("Same state values", func() {
+			Convey("Status OK, no need to send", func() {
+				lastState := lastStateExample
+				currentState := currentStateExample
+				lastState.State = moira.StateOK
+				currentState.State = moira.StateOK
 
-			actual, err := triggerChecker.compareMetricStates("m1", currentState, lastState)
-			So(err, ShouldBeNil)
-			currentState.EventTimestamp = lastState.EventTimestamp
-			currentState.Suppressed = false
-			So(actual, ShouldResemble, currentState)
+				actual, err := triggerChecker.compareMetricStates("m1", currentState, lastState)
+				So(err, ShouldBeNil)
+				currentState.EventTimestamp = lastState.EventTimestamp
+				currentState.Suppressed = false
+				So(actual, ShouldResemble, currentState)
+			})
+
+			Convey("Status NODATA and no remind interval, no need to send", func() {
+				lastState := lastStateExample
+				currentState := currentStateExample
+				lastState.State = moira.StateNODATA
+				currentState.State = moira.StateNODATA
+
+				actual, err := triggerChecker.compareMetricStates("m1", currentState, lastState)
+				So(err, ShouldBeNil)
+				currentState.EventTimestamp = lastState.EventTimestamp
+				currentState.Suppressed = false
+				So(actual, ShouldResemble, currentState)
+			})
+
+			Convey("Status ERROR and no remind interval, no need to send", func() {
+				lastState := lastStateExample
+				currentState := currentStateExample
+				lastState.State = moira.StateERROR
+				currentState.State = moira.StateERROR
+
+				actual, err := triggerChecker.compareMetricStates("m1", currentState, lastState)
+				So(err, ShouldBeNil)
+				currentState.EventTimestamp = lastState.EventTimestamp
+				currentState.Suppressed = false
+				So(actual, ShouldResemble, currentState)
+			})
+
+			Convey("Status NODATA and remind interval, need to send", func() {
+				dataBase, mockCtrl := newMocks(t)
+				triggerChecker.database = dataBase
+				defer mockCtrl.Finish()
+
+				lastState := lastStateExample
+				currentState := currentStateExample
+				lastState.State = moira.StateNODATA
+				currentState.State = moira.StateNODATA
+				currentState.Timestamp = 1502809200
+
+				message := fmt.Sprintf(remindMessage, 24)
+				dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
+					TriggerID: triggerChecker.triggerID,
+					Timestamp: currentState.Timestamp,
+					State:     moira.StateNODATA,
+					OldState:  moira.StateNODATA,
+					Metric:    "m1",
+					Value:     currentState.Value,
+					Message:   &message,
+				}, true).Return(nil)
+				actual, err := triggerChecker.compareMetricStates("m1", currentState, lastState)
+				So(err, ShouldBeNil)
+				currentState.EventTimestamp = currentState.Timestamp
+				currentState.Suppressed = false
+				So(actual, ShouldResemble, currentState)
+			})
+
+			Convey("Status ERROR and remind interval, need to send", func() {
+				dataBase, mockCtrl := newMocks(t)
+				triggerChecker.database = dataBase
+				defer mockCtrl.Finish()
+
+				lastState := lastStateExample
+				currentState := currentStateExample
+				lastState.State = moira.StateERROR
+				currentState.State = moira.StateERROR
+				currentState.Timestamp = 1502809200
+
+				message := fmt.Sprintf(remindMessage, 24)
+				dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
+					TriggerID: triggerChecker.triggerID,
+					Timestamp: currentState.Timestamp,
+					State:     moira.StateERROR,
+					OldState:  moira.StateERROR,
+					Metric:    "m1",
+					Value:     currentState.Value,
+					Message:   &message,
+				}, true).Return(nil)
+				actual, err := triggerChecker.compareMetricStates("m1", currentState, lastState)
+				So(err, ShouldBeNil)
+				currentState.EventTimestamp = currentState.Timestamp
+				currentState.Suppressed = false
+				So(actual, ShouldResemble, currentState)
+			})
+
+			Convey("Status EXCEPTION and lastState.Suppressed=false", func() {
+				lastState := lastStateExample
+				currentState := currentStateExample
+				lastState.State = moira.StateEXCEPTION
+				currentState.State = moira.StateEXCEPTION
+
+				actual, err := triggerChecker.compareMetricStates("m1", currentState, lastState)
+				So(err, ShouldBeNil)
+				currentState.EventTimestamp = lastState.EventTimestamp
+				currentState.Suppressed = false
+				So(actual, ShouldResemble, currentState)
+			})
 		})
 
-		Convey("Status NODATA and no remind interval, no need to send", func() {
-			lastState := lastStateExample
-			currentState := currentStateExample
-			lastState.State = moira.StateNODATA
-			currentState.State = moira.StateNODATA
+		Convey("Test different states", func() {
+			Convey("Trigger maintenance", func() {
+				lastState := lastStateExample
+				currentState := currentStateExample
+				lastState.State = moira.StateEXCEPTION
+				currentState.State = moira.StateOK
+				currentState.SuppressedState = lastState.State
+				currentState.Maintenance = 1502719222
 
-			actual, err := triggerChecker.compareMetricStates("m1", currentState, lastState)
-			So(err, ShouldBeNil)
-			currentState.EventTimestamp = lastState.EventTimestamp
-			currentState.Suppressed = false
-			So(actual, ShouldResemble, currentState)
-		})
-
-		Convey("Status ERROR and no remind interval, no need to send", func() {
-			lastState := lastStateExample
-			currentState := currentStateExample
-			lastState.State = moira.StateERROR
-			currentState.State = moira.StateERROR
-
-			actual, err := triggerChecker.compareMetricStates("m1", currentState, lastState)
-			So(err, ShouldBeNil)
-			currentState.EventTimestamp = lastState.EventTimestamp
-			currentState.Suppressed = false
-			So(actual, ShouldResemble, currentState)
-		})
-
-		Convey("Status NODATA and remind interval, need to send", func() {
-			lastState := lastStateExample
-			currentState := currentStateExample
-			lastState.State = moira.StateNODATA
-			currentState.State = moira.StateNODATA
-			currentState.Timestamp = 1502809200
-
-			message := fmt.Sprintf("This metric has been in bad state for more than 24 hours - please, fix.")
-			dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
-				TriggerID: triggerChecker.triggerID,
-				Timestamp: currentState.Timestamp,
-				State:     moira.StateNODATA,
-				OldState:  moira.StateNODATA,
-				Metric:    "m1",
-				Value:     currentState.Value,
-				Message:   &message,
-			}, true).Return(nil)
-			actual, err := triggerChecker.compareMetricStates("m1", currentState, lastState)
-			So(err, ShouldBeNil)
-			currentState.EventTimestamp = currentState.Timestamp
-			currentState.Suppressed = false
-			So(actual, ShouldResemble, currentState)
-		})
-
-		Convey("Status ERROR and remind interval, need to send", func() {
-			lastState := lastStateExample
-			currentState := currentStateExample
-			lastState.State = moira.StateERROR
-			currentState.State = moira.StateERROR
-			currentState.Timestamp = 1502809200
-
-			message := fmt.Sprintf("This metric has been in bad state for more than 24 hours - please, fix.")
-			dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
-				TriggerID: triggerChecker.triggerID,
-				Timestamp: currentState.Timestamp,
-				State:     moira.StateERROR,
-				OldState:  moira.StateERROR,
-				Metric:    "m1",
-				Value:     currentState.Value,
-				Message:   &message,
-			}, true).Return(nil)
-			actual, err := triggerChecker.compareMetricStates("m1", currentState, lastState)
-			So(err, ShouldBeNil)
-			currentState.EventTimestamp = currentState.Timestamp
-			currentState.Suppressed = false
-			So(actual, ShouldResemble, currentState)
-		})
-
-		Convey("Status EXCEPTION and lastState.Suppressed=false", func() {
-			lastState := lastStateExample
-			currentState := currentStateExample
-			lastState.State = moira.StateEXCEPTION
-			currentState.State = moira.StateEXCEPTION
-
-			actual, err := triggerChecker.compareMetricStates("m1", currentState, lastState)
-			So(err, ShouldBeNil)
-			currentState.EventTimestamp = lastState.EventTimestamp
-			currentState.Suppressed = false
-			So(actual, ShouldResemble, currentState)
-		})
-	})
-
-	Convey("Test different states", t, func() {
-		Convey("Trigger maintenance", func() {
-			lastState := lastStateExample
-			currentState := currentStateExample
-			lastState.State = moira.StateEXCEPTION
-			currentState.State = moira.StateOK
-			currentState.SuppressedState = lastState.State
-			currentState.Maintenance = 1502719222
-
-			actual, err := triggerChecker.compareMetricStates("m1", currentState, lastState)
-			So(err, ShouldBeNil)
-			currentState.EventTimestamp = currentState.Timestamp
-			currentState.Suppressed = true
-			So(actual, ShouldResemble, currentState)
+				actual, err := triggerChecker.compareMetricStates("m1", currentState, lastState)
+				So(err, ShouldBeNil)
+				currentState.EventTimestamp = currentState.Timestamp
+				currentState.Suppressed = true
+				So(actual, ShouldResemble, currentState)
+			})
 		})
 	})
 }
@@ -264,6 +276,7 @@ func TestCheckMetricStateWithLastStateSuppressed(t *testing.T) {
 			ID:      "superId",
 			Targets: []string{"aliasByNode(super.*.metric, 0)"},
 		},
+		lastCheck: &moira.CheckData{},
 	}
 
 	lastState := moira.MetricState{
@@ -509,65 +522,65 @@ func TestTriggerMaintenance(t *testing.T) {
 	})
 }
 
-func TestNeedSendEvent(t *testing.T){
+func TestNeedSendEvent(t *testing.T) {
 	startMaintenanceUser := "testStartMtUser"
 	startMaintenanceTime := int64(123)
 	stopMaintenanceUser := "testStopMtUser"
 	stopMaintenanceTime := int64(1230)
 
-	Convey("Test needSendEvents for trigger", t, func(){
-		Convey("Start Maintenance not start user and time", func(){
+	Convey("Test needSendEvents for trigger", t, func() {
+		Convey("Start Maintenance not start user and time", func() {
 			actual := fmt.Sprintf("This metric changed its state during maintenance interval.")
-			needSend, message := needSendEvent(currentCheckTest.State, lastCheckTest.State, currentCheckTest.Timestamp, lastCheckTest.GetEventTimestamp(),lastCheckTest.Suppressed, lastCheckTest.SuppressedState, lastCheckTest.MaintenanceInfo)
+			needSend, message := needSendEvent(currentCheckTest.State, lastCheckTest.State, currentCheckTest.Timestamp, lastCheckTest.GetEventTimestamp(), lastCheckTest.Suppressed, lastCheckTest.SuppressedState, lastCheckTest.MaintenanceInfo)
 			So(needSend, ShouldBeTrue)
 			So(*message, ShouldResemble, actual)
 		})
-		Convey("Start Maintenance", func(){
+		Convey("Start Maintenance", func() {
 			actual := fmt.Sprintf("This metric changed its state during maintenance interval. Maintenance was set by user %v at %v.", startMaintenanceUser, time.Unix(startMaintenanceTime, 0).Format("15:04 02.01.2006"))
 			lastCheckTest.MaintenanceInfo.Set(&startMaintenanceUser, &startMaintenanceTime, nil, nil)
-			needSend, message := needSendEvent(currentCheckTest.State, lastCheckTest.State, currentCheckTest.Timestamp, lastCheckTest.GetEventTimestamp(),lastCheckTest.Suppressed, lastCheckTest.SuppressedState, lastCheckTest.MaintenanceInfo)
+			needSend, message := needSendEvent(currentCheckTest.State, lastCheckTest.State, currentCheckTest.Timestamp, lastCheckTest.GetEventTimestamp(), lastCheckTest.Suppressed, lastCheckTest.SuppressedState, lastCheckTest.MaintenanceInfo)
 			So(needSend, ShouldBeTrue)
 			So(*message, ShouldResemble, actual)
 		})
-		Convey("Stop Maintenance", func(){
+		Convey("Stop Maintenance", func() {
 			actual := fmt.Sprintf("This metric changed its state during maintenance interval. Maintenance was set by user %v at %v. Maintenance removed by user %v at %v.", startMaintenanceUser, time.Unix(startMaintenanceTime, 0).Format("15:04 02.01.2006"), stopMaintenanceUser, time.Unix(stopMaintenanceTime, 0).Format("15:04 02.01.2006"))
 			lastCheckTest.MaintenanceInfo.Set(&startMaintenanceUser, &startMaintenanceTime, &stopMaintenanceUser, &stopMaintenanceTime)
-			needSend, message := needSendEvent(currentCheckTest.State, lastCheckTest.State, currentCheckTest.Timestamp, lastCheckTest.GetEventTimestamp(),lastCheckTest.Suppressed, lastCheckTest.SuppressedState, lastCheckTest.MaintenanceInfo)
+			needSend, message := needSendEvent(currentCheckTest.State, lastCheckTest.State, currentCheckTest.Timestamp, lastCheckTest.GetEventTimestamp(), lastCheckTest.Suppressed, lastCheckTest.SuppressedState, lastCheckTest.MaintenanceInfo)
 			So(needSend, ShouldBeTrue)
 			So(*message, ShouldResemble, actual)
 		})
-		Convey("Stop Maintenance not start user and time", func(){
-			actual := fmt.Sprintf("This metric changed its state during maintenance interval. Maintenance removed by user %v at %v.", stopMaintenanceUser, time.Unix(stopMaintenanceTime, 0).Format("15:04 02.01.2006") )
+		Convey("Stop Maintenance not start user and time", func() {
+			actual := fmt.Sprintf("This metric changed its state during maintenance interval. Maintenance removed by user %v at %v.", stopMaintenanceUser, time.Unix(stopMaintenanceTime, 0).Format("15:04 02.01.2006"))
 			lastCheckTest.MaintenanceInfo.Set(nil, nil, &stopMaintenanceUser, &stopMaintenanceTime)
-			needSend, message := needSendEvent(currentCheckTest.State, lastCheckTest.State, currentCheckTest.Timestamp, lastCheckTest.GetEventTimestamp(),lastCheckTest.Suppressed, lastCheckTest.SuppressedState, lastCheckTest.MaintenanceInfo)
+			needSend, message := needSendEvent(currentCheckTest.State, lastCheckTest.State, currentCheckTest.Timestamp, lastCheckTest.GetEventTimestamp(), lastCheckTest.Suppressed, lastCheckTest.SuppressedState, lastCheckTest.MaintenanceInfo)
 			So(needSend, ShouldBeTrue)
 			So(*message, ShouldResemble, actual)
 		})
 	})
 
-	Convey("Test needSendEvents for metric", t, func(){
-		Convey("Start Maintenance not start user and time", func(){
+	Convey("Test needSendEvents for metric", t, func() {
+		Convey("Start Maintenance not start user and time", func() {
 			actual := fmt.Sprintf("This metric changed its state during maintenance interval.")
 			needSend, message := needSendEvent(currentMetricTest.State, lastMetricsTest.State, currentMetricTest.Timestamp, lastMetricsTest.GetEventTimestamp(), lastMetricsTest.Suppressed, lastMetricsTest.SuppressedState, currentMetricTest.MaintenanceInfo)
 			So(needSend, ShouldBeTrue)
 			So(*message, ShouldResemble, actual)
 		})
-		Convey("Start Maintenance", func(){
+		Convey("Start Maintenance", func() {
 			actual := fmt.Sprintf("This metric changed its state during maintenance interval. Maintenance was set by user %v at %v.", startMaintenanceUser, time.Unix(startMaintenanceTime, 0).Format("15:04 02.01.2006"))
 			currentMetricTest.MaintenanceInfo.Set(&startMaintenanceUser, &startMaintenanceTime, nil, nil)
 			needSend, message := needSendEvent(currentMetricTest.State, lastMetricsTest.State, currentMetricTest.Timestamp, lastMetricsTest.GetEventTimestamp(), lastMetricsTest.Suppressed, lastMetricsTest.SuppressedState, currentMetricTest.MaintenanceInfo)
 			So(needSend, ShouldBeTrue)
 			So(*message, ShouldResemble, actual)
 		})
-		Convey("Stop Maintenance", func(){
-			actual := fmt.Sprintf("This metric changed its state during maintenance interval. Maintenance removed by user %v at %v.", stopMaintenanceUser, time.Unix(stopMaintenanceTime, 0).Format("15:04 02.01.2006") )
+		Convey("Stop Maintenance", func() {
+			actual := fmt.Sprintf("This metric changed its state during maintenance interval. Maintenance removed by user %v at %v.", stopMaintenanceUser, time.Unix(stopMaintenanceTime, 0).Format("15:04 02.01.2006"))
 			currentMetricTest.MaintenanceInfo.Set(nil, nil, &stopMaintenanceUser, &stopMaintenanceTime)
 			needSend, message := needSendEvent(currentMetricTest.State, lastMetricsTest.State, currentMetricTest.Timestamp, lastMetricsTest.GetEventTimestamp(), lastMetricsTest.Suppressed, lastMetricsTest.SuppressedState, currentMetricTest.MaintenanceInfo)
 			So(needSend, ShouldBeTrue)
 			So(*message, ShouldResemble, actual)
 		})
-		Convey("Stop Maintenance not start user and time", func(){
-			actual := fmt.Sprintf("This metric changed its state during maintenance interval. Maintenance was set by user %v at %v. Maintenance removed by user %v at %v.", startMaintenanceUser, time.Unix(startMaintenanceTime, 0).Format("15:04 02.01.2006"), stopMaintenanceUser, time.Unix(stopMaintenanceTime, 0).Format("15:04 02.01.2006") )
+		Convey("Stop Maintenance not start user and time", func() {
+			actual := fmt.Sprintf("This metric changed its state during maintenance interval. Maintenance was set by user %v at %v. Maintenance removed by user %v at %v.", startMaintenanceUser, time.Unix(startMaintenanceTime, 0).Format("15:04 02.01.2006"), stopMaintenanceUser, time.Unix(stopMaintenanceTime, 0).Format("15:04 02.01.2006"))
 			currentMetricTest.MaintenanceInfo.Set(&startMaintenanceUser, &startMaintenanceTime, &stopMaintenanceUser, &stopMaintenanceTime)
 			needSend, message := needSendEvent(currentMetricTest.State, lastMetricsTest.State, currentMetricTest.Timestamp, lastMetricsTest.GetEventTimestamp(), lastMetricsTest.Suppressed, lastMetricsTest.SuppressedState, currentMetricTest.MaintenanceInfo)
 			So(needSend, ShouldBeTrue)
@@ -577,15 +590,15 @@ func TestNeedSendEvent(t *testing.T){
 }
 
 var lastCheckTest = moira.CheckData{
-	Score:     6000,
-	State:     moira.StateOK,
-	Suppressed: true ,
+	Score:           6000,
+	State:           moira.StateOK,
+	Suppressed:      true,
 	SuppressedState: moira.StateERROR,
-	Timestamp: 1504509981,
-	Maintenance: 1000,
+	Timestamp:       1504509981,
+	Maintenance:     1000,
 }
 
-var currentCheckTest = moira.CheckData {
+var currentCheckTest = moira.CheckData{
 	State:     moira.StateWARN,
 	Timestamp: 1504509981,
 }
@@ -597,7 +610,7 @@ var currentMetricTest = moira.MetricState{
 	Timestamp:      1504509380,
 }
 
-var lastMetricsTest = moira.MetricState {
+var lastMetricsTest = moira.MetricState{
 	EventTimestamp: 1504449789,
 	State:          moira.StateNODATA,
 	Suppressed:     true,

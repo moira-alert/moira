@@ -13,7 +13,10 @@ var badStateReminder = map[moira.State]int64{
 	moira.StateNODATA: 86400,
 }
 
-const format = "15:04 02.01.2006"
+const (
+	format        = "15:04 02.01.2006"
+	remindMessage = "This metric has been in bad state for more than %v hours - please, fix."
+)
 
 func (triggerChecker *TriggerChecker) compareTriggerStates(currentCheck moira.CheckData) (moira.CheckData, error) {
 	lastCheck := triggerChecker.lastCheck
@@ -36,8 +39,9 @@ func (triggerChecker *TriggerChecker) compareTriggerStates(currentCheck moira.Ch
 	}
 
 	currentCheck.SuppressedState = lastStateSuppressedValue
+	maintenanceInfo, maintenanceTimestamp := getMaintenanceInfo(triggerChecker.lastCheck, nil)
 
-	needSend, message := needSendEvent(currentStateValue, lastStateValue, currentCheckTimestamp, lastCheck.GetEventTimestamp(), lastStateSuppressed, lastStateSuppressedValue, lastCheck.MaintenanceInfo)
+	needSend, message := needSendEvent(currentStateValue, lastStateValue, currentCheckTimestamp, lastCheck.GetEventTimestamp(), lastStateSuppressed, lastStateSuppressedValue, maintenanceInfo)
 	if !needSend {
 		return currentCheck, nil
 	}
@@ -64,7 +68,7 @@ func (triggerChecker *TriggerChecker) compareTriggerStates(currentCheck moira.Ch
 	currentCheck.EventTimestamp = currentCheckTimestamp
 	currentCheck.Suppressed = false
 
-	if triggerChecker.isTriggerSuppressed(&event, currentCheckTimestamp, 0, currentCheck.Maintenance, "") {
+	if triggerChecker.isTriggerSuppressed(currentCheckTimestamp, maintenanceTimestamp) {
 		currentCheck.Suppressed = true
 		if !lastStateSuppressed {
 			currentCheck.SuppressedState = lastStateValue
@@ -91,8 +95,9 @@ func (triggerChecker *TriggerChecker) compareMetricStates(metric string, current
 	}
 
 	currentState.SuppressedState = lastState.SuppressedState
+	maintenanceInfo, maintenanceTimestamp := getMaintenanceInfo(triggerChecker.lastCheck, &currentState)
 
-	needSend, message := needSendEvent(currentState.State, lastState.State, currentState.Timestamp, lastState.GetEventTimestamp(), lastState.Suppressed, lastState.SuppressedState, currentState.MaintenanceInfo)
+	needSend, message := needSendEvent(currentState.State, lastState.State, currentState.Timestamp, lastState.GetEventTimestamp(), lastState.Suppressed, lastState.SuppressedState, maintenanceInfo)
 	if !needSend {
 		return currentState, nil
 	}
@@ -115,7 +120,7 @@ func (triggerChecker *TriggerChecker) compareMetricStates(metric string, current
 	currentState.EventTimestamp = currentState.Timestamp
 	currentState.Suppressed = false
 
-	if triggerChecker.isTriggerSuppressed(&event, currentState.Timestamp, currentState.Maintenance, triggerChecker.lastCheck.Maintenance, metric) {
+	if triggerChecker.isTriggerSuppressed(currentState.Timestamp, maintenanceTimestamp) {
 		currentState.Suppressed = true
 		if !lastState.Suppressed {
 			currentState.SuppressedState = lastState.State
@@ -129,21 +134,19 @@ func (triggerChecker *TriggerChecker) compareMetricStates(metric string, current
 	return currentState, err
 }
 
-func (triggerChecker *TriggerChecker) isTriggerSuppressed(event *moira.NotificationEvent, timestamp int64, metricMaintenance int64, triggerMaintenance int64, metric string) bool {
-	if !triggerChecker.trigger.Schedule.IsScheduleAllows(timestamp) {
-		triggerChecker.logger.Debugf("Event %v suppressed due to trigger schedule", event)
-		return true
+func (triggerChecker *TriggerChecker) isTriggerSuppressed(timestamp int64, maintenanceTimestamp int64) bool {
+	return !triggerChecker.trigger.Schedule.IsScheduleAllows(timestamp) || maintenanceTimestamp >= timestamp
+}
+
+// We must always check triggerMaintenance along with metricMaintenance to avoid cases when metric is not suppressed, but trigger is.
+func getMaintenanceInfo(previousTriggerState *moira.CheckData, previousMetricState *moira.MetricState) (moira.MaintenanceInfo, int64) {
+	if previousMetricState == nil {
+		return previousTriggerState.GetMaintenance(), previousTriggerState.Maintenance
 	}
-	// We must always check triggerMaintenance along with metricMaintenance to avoid cases when metric is not suppressed, but trigger is.
-	if triggerMaintenance >= timestamp {
-		triggerChecker.logger.Debugf("Event %v suppressed due to trigger %s maintenance until %v.", event, triggerChecker.trigger.ID, time.Unix(triggerMaintenance, 0))
-		return true
+	if previousMetricState.Maintenance >= previousTriggerState.Maintenance {
+		return previousMetricState.GetMaintenance(), previousMetricState.Maintenance
 	}
-	if metricMaintenance >= timestamp {
-		triggerChecker.logger.Debugf("Event %v suppressed due to metric %s maintenance until %v.", event, metric, time.Unix(metricMaintenance, 0))
-		return true
-	}
-	return false
+	return previousTriggerState.GetMaintenance(), previousTriggerState.Maintenance
 }
 
 func needSendEvent(currentStateValue moira.State, lastStateValue moira.State, currentStateTimestamp int64, lastStateEventTimestamp int64, isLastCheckSuppressed bool, lastStateSuppressedValue moira.State, maintenanceInfo moira.MaintenanceInfo) (needSend bool, message *string) {
@@ -157,7 +160,7 @@ func needSendEvent(currentStateValue moira.State, lastStateValue moira.State, cu
 	}
 	remindInterval, ok := badStateReminder[currentStateValue]
 	if ok && needRemindAgain(currentStateTimestamp, lastStateEventTimestamp, remindInterval) {
-		message := fmt.Sprintf("This metric has been in bad state for more than %v hours - please, fix.", remindInterval/3600)
+		message := fmt.Sprintf(remindMessage, remindInterval/3600)
 		return true, &message
 	}
 	return false, nil
