@@ -16,16 +16,19 @@ var badStateReminder = map[moira.State]int64{
 const format = "15:04 02.01.2006"
 
 func (triggerChecker *TriggerChecker) compareTriggerStates(currentCheck moira.CheckData) (moira.CheckData, error) {
-	currentStateValue := currentCheck.State
-	lastStateValue := triggerChecker.lastCheck.State
-	lastStateSuppressed := triggerChecker.lastCheck.Suppressed
-	lastStateSuppressedValue := triggerChecker.lastCheck.SuppressedState
-	timestamp := currentCheck.Timestamp
+	lastCheck := triggerChecker.lastCheck
 
-	if triggerChecker.lastCheck.EventTimestamp != 0 {
-		currentCheck.EventTimestamp = triggerChecker.lastCheck.EventTimestamp
+	currentStateValue := currentCheck.State
+	lastStateValue := lastCheck.State
+	lastStateSuppressed := lastCheck.Suppressed
+	lastStateSuppressedValue := lastCheck.SuppressedState
+	currentCheckTimestamp := currentCheck.Timestamp
+
+	// TODO: also these fields are put in current check data initialization func, make sure that this logic can be merged with that init logic
+	if lastCheck.EventTimestamp != 0 {
+		currentCheck.EventTimestamp = lastCheck.EventTimestamp
 	} else {
-		currentCheck.EventTimestamp = timestamp
+		currentCheck.EventTimestamp = currentCheckTimestamp
 	}
 
 	if lastStateSuppressed && lastStateSuppressedValue == "" {
@@ -34,7 +37,7 @@ func (triggerChecker *TriggerChecker) compareTriggerStates(currentCheck moira.Ch
 
 	currentCheck.SuppressedState = lastStateSuppressedValue
 
-	needSend, message := needSendEvent(currentStateValue, lastStateValue, timestamp, triggerChecker.lastCheck.GetEventTimestamp(), lastStateSuppressed, lastStateSuppressedValue, triggerChecker.lastCheck.MaintenanceInfo)
+	needSend, message := needSendEvent(currentStateValue, lastStateValue, currentCheckTimestamp, lastCheck.GetEventTimestamp(), lastStateSuppressed, lastStateSuppressedValue, lastCheck.MaintenanceInfo)
 	if !needSend {
 		return currentCheck, nil
 	}
@@ -53,15 +56,15 @@ func (triggerChecker *TriggerChecker) compareTriggerStates(currentCheck moira.Ch
 		TriggerID:      triggerChecker.triggerID,
 		State:          currentStateValue,
 		OldState:       eventOldState,
-		Timestamp:      timestamp,
+		Timestamp:      currentCheckTimestamp,
 		Metric:         triggerChecker.trigger.Name,
 		Message:        message,
 	}
 
-	currentCheck.EventTimestamp = timestamp
+	currentCheck.EventTimestamp = currentCheckTimestamp
 	currentCheck.Suppressed = false
 
-	if triggerChecker.isTriggerSuppressed(&event, timestamp, 0, currentCheck.Maintenance, "") {
+	if triggerChecker.isTriggerSuppressed(&event, currentCheckTimestamp, 0, currentCheck.Maintenance, "") {
 		currentCheck.Suppressed = true
 		if !lastStateSuppressed {
 			currentCheck.SuppressedState = lastStateValue
@@ -76,6 +79,7 @@ func (triggerChecker *TriggerChecker) compareTriggerStates(currentCheck moira.Ch
 }
 
 func (triggerChecker *TriggerChecker) compareMetricStates(metric string, currentState moira.MetricState, lastState moira.MetricState) (moira.MetricState, error) {
+	// TODO: make sure that this logic can be moved to current state initialization
 	if lastState.EventTimestamp != 0 {
 		currentState.EventTimestamp = lastState.EventTimestamp
 	} else {
@@ -148,7 +152,7 @@ func needSendEvent(currentStateValue moira.State, lastStateValue moira.State, cu
 	}
 
 	if isLastCheckSuppressed && currentStateValue != lastStateSuppressedValue {
-    message := getMaintenanceCreateMessage(maintenanceInfo)
+		message := getMaintenanceCreateMessage(maintenanceInfo)
 		return true, &message
 	}
 	remindInterval, ok := badStateReminder[currentStateValue]
