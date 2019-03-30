@@ -16,7 +16,6 @@ FROM alpine
 RUN apk add --no-cache ca-certificates && update-ca-certificates
 
 COPY pkg/notifier/notifier.yml /etc/moira/notifier.yml
-COPY pkg/notifier/fancy-template.html /etc/moira/fancy-template.html
 
 COPY --from=builder /go/src/github.com/moira-alert/moira/build/notifier /usr/bin/notifier
 COPY --from=builder /usr/local/go/lib/time/zoneinfo.zip /usr/local/go/lib/time/
