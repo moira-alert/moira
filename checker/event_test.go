@@ -479,7 +479,7 @@ func TestCheckMetricStateSuppressedState(t *testing.T) {
 					StartUser: &startMetricUser,
 					StartTime: &startMetricTime,
 				}
-				message := fmt.Sprintf("This metric changed its state during maintenance interval. Maintenance was set by user metric user at 05:15 01.01.1970.")
+				message := fmt.Sprintf("This metric changed its state during maintenance interval. Maintenance was set by user metric user at %v 01.01.1970.", time.Unix(startMetricTime, 0).Format(format))
 				dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
 					TriggerID: triggerChecker.triggerID,
 					Timestamp: currentState.Timestamp,
@@ -511,7 +511,7 @@ func TestCheckMetricStateSuppressedState(t *testing.T) {
 					StartUser: &startMetricUser,
 					StartTime: &startMetricTime,
 				}
-				message := fmt.Sprintf("This metric changed its state during maintenance interval. Maintenance was set by user trigger user at 05:16 01.01.1970.")
+				message := fmt.Sprintf("This metric changed its state during maintenance interval. Maintenance was set by user trigger user at %v 01.01.1970.", time.Unix(startTriggerTime, 0).Format(format))
 				dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
 					TriggerID: triggerChecker.triggerID,
 					Timestamp: currentState.Timestamp,
