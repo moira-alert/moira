@@ -65,7 +65,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Can not configure log: %s\n", err.Error())
 		os.Exit(1)
 	}
-	defer logger.Infof("Moira Notifier Stopped. Version: %s", MoiraVersion)
+	defer logger.Infof("Moira Notifier stopped. Version: %s", MoiraVersion)
 
 	if config.Pprof.Listen != "" {
 		logger.Infof("Starting pprof server at: [%s]", config.Pprof.Listen)

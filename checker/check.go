@@ -29,7 +29,7 @@ func (triggerChecker *TriggerChecker) Check() error {
 }
 
 func (triggerChecker *TriggerChecker) checkTrigger() (moira.CheckData, error) {
-	checkData := copyLastCheck(triggerChecker.lastCheck, triggerChecker.until)
+	checkData := newCheckData(triggerChecker.lastCheck, triggerChecker.until)
 	triggerMetricsData, err := triggerChecker.fetchTriggerMetrics()
 	if err != nil {
 		return checkData, err
@@ -37,22 +37,40 @@ func (triggerChecker *TriggerChecker) checkTrigger() (moira.CheckData, error) {
 	return triggerChecker.checkTriggerMetrics(triggerMetricsData, checkData)
 }
 
-func copyLastCheck(lastCheck *moira.CheckData, checkTimeStamp int64) moira.CheckData {
+// Set new last check timestamp that equal to "until" targets fetch interval
+// Do not copy message, if will be set if needed
+func newCheckData(lastCheck *moira.CheckData, checkTimeStamp int64) moira.CheckData {
 	lastMetrics := make(map[string]moira.MetricState, len(lastCheck.Metrics))
 	for k, v := range lastCheck.Metrics {
 		lastMetrics[k] = v
 	}
-	return moira.CheckData{
-		Metrics:                      lastMetrics,
-		State:                        lastCheck.State,
-		Timestamp:                    checkTimeStamp,
-		EventTimestamp:               lastCheck.EventTimestamp,
-		Score:                        lastCheck.Score,
-		Suppressed:                   lastCheck.Suppressed,
-		SuppressedState:              lastCheck.SuppressedState,
-		Maintenance:                  lastCheck.Maintenance,
-		LastSuccessfulCheckTimestamp: lastCheck.LastSuccessfulCheckTimestamp,
-	}
+	newCheckData := *lastCheck
+	newCheckData.Metrics = lastMetrics
+	newCheckData.Timestamp = checkTimeStamp
+	newCheckData.Message = ""
+	return newCheckData
+}
+
+func newMetricState(oldMetricState moira.MetricState, newState moira.State, newTimestamp int64, newValue *float64) *moira.MetricState {
+	newMetricState := oldMetricState
+
+	// This field always changed in every metric check operation
+	newMetricState.State = newState
+	newMetricState.Timestamp = newTimestamp
+	newMetricState.Value = newValue
+
+	// Always set. This fields only changed by user actions
+	newMetricState.Maintenance = oldMetricState.Maintenance
+	newMetricState.MaintenanceInfo = oldMetricState.MaintenanceInfo
+
+	// Only can be change while understand that metric in maintenance or not in compareMetricStates logic
+	newMetricState.Suppressed = oldMetricState.Suppressed
+
+	// This fields always set in compareMetricStates logic
+	// TODO: make sure that this logic can be moved here
+	newMetricState.EventTimestamp = 0
+	newMetricState.SuppressedState = ""
+	return &newMetricState
 }
 
 func (triggerChecker *TriggerChecker) checkTriggerMetrics(triggerMetricsData *metricSource.TriggerMetricsData, checkData moira.CheckData) (moira.CheckData, error) {
@@ -193,13 +211,12 @@ func (triggerChecker *TriggerChecker) checkForNoData(metricData *metricSource.Me
 	if triggerChecker.ttlState == moira.TTLStateDEL && metricLastState.EventTimestamp != 0 {
 		return true, nil
 	}
-	return false, &moira.MetricState{
-		State:       triggerChecker.ttlState.ToMetricState(),
-		Timestamp:   lastCheckTimeStamp - triggerChecker.ttl,
-		Value:       nil,
-		Maintenance: metricLastState.Maintenance,
-		Suppressed:  metricLastState.Suppressed,
-	}
+	return false, newMetricState(
+		metricLastState,
+		triggerChecker.ttlState.ToMetricState(),
+		lastCheckTimeStamp-triggerChecker.ttl,
+		nil,
+	)
 }
 
 func (triggerChecker *TriggerChecker) getMetricStepsStates(triggerMetricsData *metricSource.TriggerMetricsData, metricData *metricSource.MetricData, metricLastState moira.MetricState) ([]moira.MetricState, error) {
@@ -246,13 +263,12 @@ func (triggerChecker *TriggerChecker) getMetricDataState(triggerMetricsData *met
 		return nil, err
 	}
 
-	return &moira.MetricState{
-		State:       expressionState,
-		Timestamp:   valueTimestamp,
-		Value:       &triggerExpression.MainTargetValue,
-		Maintenance: lastState.Maintenance,
-		Suppressed:  lastState.Suppressed,
-	}, nil
+	return newMetricState(
+		lastState,
+		expressionState,
+		valueTimestamp,
+		&triggerExpression.MainTargetValue,
+	), nil
 }
 
 func getExpressionValues(triggerMetricsData *metricSource.TriggerMetricsData, firstTargetMetricData *metricSource.MetricData, valueTimestamp int64) (*expression.TriggerExpression, bool) {

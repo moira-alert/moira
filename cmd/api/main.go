@@ -68,6 +68,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Can not configure log: %s\n", err.Error())
 		os.Exit(1)
 	}
+	logger.Infof("Moira API stopped. Version: %s", MoiraVersion)
 
 	configFile, err := getWebConfigBytes(config.API.WebConfigPath)
 	if err != nil {
@@ -149,5 +150,4 @@ func Stop(logger moira.Logger, server *http.Server) {
 	if err := server.Shutdown(ctx); err != nil {
 		logger.Errorf("Can't stop Moira API correctly: %v", err)
 	}
-	logger.Infof("Moira API Stopped. Version: %s", MoiraVersion)
 }
