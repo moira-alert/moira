@@ -130,6 +130,10 @@ func (index *SeriesByTagPatternIndex) MatchPatterns(name string, labels map[stri
 		}
 	}
 
+	if len(index.filtersByTag) != len(matchedPatterns) {
+		return ([]string{})
+	}
+
 	return moira.GetStringListsUnion(matchedPatterns...)
 }
 
