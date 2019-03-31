@@ -7,7 +7,7 @@ import (
 	"github.com/moira-alert/moira"
 )
 
-var tagSpecRegex = regexp.MustCompile(`^"([^,!=]+)\s*(!?=~?)\s*([^,]*)"`)
+var tagSpecRegex = regexp.MustCompile(`^["']{1}([^,!=]+)\s*(!?=~?)\s*([^,]*)["']{1}`)
 var tagSpecDelimiterRegex = regexp.MustCompile(`^\s*,\s*`)
 var seriesByTagRegex = regexp.MustCompile(`^seriesByTag\(([^)]+)\)$`)
 
