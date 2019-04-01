@@ -35,7 +35,6 @@ type Database interface {
 	GetTrigger(triggerID string) (Trigger, error)
 	GetTriggers(triggerIDs []string) ([]*Trigger, error)
 	GetTriggerChecks(triggerIDs []string) ([]*TriggerCheck, error)
-	GetTriggerChecksWithHighLights(searchResults []*SearchResult) ([]*TriggerCheck, error)
 	SaveTrigger(triggerID string, trigger *Trigger) error
 	RemoveTrigger(triggerID string) error
 	GetPatternTriggerIDs(pattern string) ([]string, error)

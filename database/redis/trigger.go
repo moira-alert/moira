@@ -247,112 +247,11 @@ func (connector *DbConnector) removeTrigger(triggerID string, trigger *moira.Tri
 }
 
 // GetTriggerChecks gets triggers data with tags, lastCheck data and throttling by given triggersIDs
-// Len of triggerIDs is equal to len of returned values array. If there is no object by current ID, then nil is returned
+// Len of triggerIDs is equal to len of returned values array.
+// If there is no object by current ID, then nil is returned
 func (connector *DbConnector) GetTriggerChecks(triggerIDs []string) ([]*moira.TriggerCheck, error) {
-	triggerChecks := make([]*moira.TriggerCheck, 0, len(triggerIDs))
-	rawResponses, indShift, err := connector.getTriggerChecks(triggerIDs)
-	if err != nil {
-		return triggerChecks, err
-	}
-
-	var rawResponseInd int
-
-	for _, triggerID := range triggerIDs {
-
-		rawResponse := rawResponses[rawResponseInd : rawResponseInd+indShift]
-		rawResponseInd += indShift
-
-		triggerRaw, tagsRow, lastCheckRaw, throttlingRaw := rawResponse[0], rawResponse[1], rawResponse[2], rawResponse[3]
-
-		trigger, err := connector.getTriggerWithTags(triggerRaw, tagsRow, triggerID)
-		if err != nil {
-			if err == database.ErrNil {
-				continue
-			}
-			return triggerChecks, err
-		}
-
-		lastCheck, err := reply.Check(lastCheckRaw, nil)
-		if err != nil && err != database.ErrNil {
-			return triggerChecks, err
-		}
-
-		throttling, _ := redis.Int64(throttlingRaw, nil)
-		if time.Now().Unix() >= throttling {
-			throttling = 0
-		}
-
-		triggerChecks = append(triggerChecks, &moira.TriggerCheck{
-			Trigger:    trigger,
-			LastCheck:  lastCheck,
-			Throttling: throttling,
-		})
-
-	}
-
-	return triggerChecks, nil
-}
-
-// GetTriggerChecksWithHighLights gets triggers data with tags, lastCheck data and throttling by given triggersIDs
-// Len of triggerIDs is equal to len of returned values array. If there is no object by current ID, then nil is returned
-func (connector *DbConnector) GetTriggerChecksWithHighLights(searchResults []*moira.SearchResult) ([]*moira.TriggerCheck, error) {
-	triggerChecks := make([]*moira.TriggerCheck, 0, len(searchResults))
-	triggerIDs := make([]string, 0, len(searchResults))
-
-	for _, searchResult := range searchResults {
-		triggerIDs = append(triggerIDs, searchResult.ObjectID)
-	}
-
-	rawResponses, indShift, err := connector.getTriggerChecks(triggerIDs)
-	if err != nil {
-		return triggerChecks, err
-	}
-
-	var rawResponseInd int
-
-	for _, searchResult := range searchResults {
-
-		rawResponse := rawResponses[rawResponseInd : rawResponseInd+indShift]
-		rawResponseInd += indShift
-
-		triggerID := searchResult.ObjectID
-		triggerRaw, tagsRow, lastCheckRaw, throttlingRaw := rawResponse[0], rawResponse[1], rawResponse[2], rawResponse[3]
-
-		trigger, err := connector.getTriggerWithTags(triggerRaw, tagsRow, triggerID)
-		if err != nil {
-			if err == database.ErrNil {
-				continue
-			}
-			return triggerChecks, err
-		}
-
-		lastCheck, err := reply.Check(lastCheckRaw, nil)
-		if err != nil && err != database.ErrNil {
-			return triggerChecks, err
-		}
-
-		throttling, _ := redis.Int64(throttlingRaw, nil)
-		if time.Now().Unix() >= throttling {
-			throttling = 0
-		}
-
-		triggerChecks = append(triggerChecks, &moira.TriggerCheck{
-			Trigger:    trigger,
-			LastCheck:  lastCheck,
-			Throttling: throttling,
-			HighLights: searchResult.HighLights,
-		})
-
-	}
-
-	return triggerChecks, nil
-}
-
-func (connector *DbConnector) getTriggerChecks(triggerIDs []string) ([]interface{}, int, error) {
 	c := connector.pool.Get()
 	defer c.Close()
-
-	var rawResponseIndShift = 4
 
 	c.Send("MULTI")
 	for _, triggerID := range triggerIDs {
@@ -361,20 +260,42 @@ func (connector *DbConnector) getTriggerChecks(triggerIDs []string) ([]interface
 		c.Send("GET", metricLastCheckKey(triggerID))
 		c.Send("GET", notifierNextKey(triggerID))
 	}
-
-	rawResponses, err := redis.Values(c.Do("EXEC"))
+	rawResponse, err := redis.Values(c.Do("EXEC"))
 	if err != nil {
-		return nil, rawResponseIndShift, fmt.Errorf("failed to EXEC: %s", err)
+		return nil, fmt.Errorf("failed to EXEC: %s", err)
 	}
-
-	rawResponsesCount, searchResultsCount := len(rawResponses)/rawResponseIndShift, len(triggerIDs)
-
-	if rawResponsesCount != searchResultsCount {
-		return nil, rawResponseIndShift, fmt.Errorf("inconsistent number of raw database responses. want: %d, found: %d",
-			rawResponsesCount, searchResultsCount)
+	var slices [][]interface{}
+	for i := 0; i < len(rawResponse); i += 4 {
+		arr := make([]interface{}, 0, 5)
+		arr = append(arr, triggerIDs[i/4])
+		arr = append(arr, rawResponse[i:i+4]...)
+		slices = append(slices, arr)
 	}
-
-	return rawResponses, rawResponseIndShift, nil
+	triggerChecks := make([]*moira.TriggerCheck, len(slices))
+	for i, slice := range slices {
+		triggerID := slice[0].(string)
+		trigger, err := connector.getTriggerWithTags(slice[1], slice[2], triggerID)
+		if err != nil {
+			if err == database.ErrNil {
+				continue
+			}
+			return nil, err
+		}
+		lastCheck, err := reply.Check(slice[3], nil)
+		if err != nil && err != database.ErrNil {
+			return nil, err
+		}
+		throttling, _ := redis.Int64(slice[4], nil)
+		if time.Now().Unix() >= throttling {
+			throttling = 0
+		}
+		triggerChecks[i] = &moira.TriggerCheck{
+			Trigger:    trigger,
+			LastCheck:  lastCheck,
+			Throttling: throttling,
+		}
+	}
+	return triggerChecks, nil
 }
 
 func (connector *DbConnector) getTriggerWithTags(triggerRaw interface{}, tagsRaw interface{}, triggerID string) (moira.Trigger, error) {

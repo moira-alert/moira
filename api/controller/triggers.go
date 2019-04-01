@@ -63,7 +63,12 @@ func SearchTriggers(database moira.Database, searcher moira.Searcher, page int64
 		return nil, api.ErrorInternalServer(err)
 	}
 
-	triggerChecks, err := database.GetTriggerChecksWithHighLights(searchResults)
+	var triggerIDs []string
+	for _, searchResult := range searchResults {
+		triggerIDs = append(triggerIDs, searchResult.ObjectID)
+	}
+
+	triggerChecks, err := database.GetTriggerChecks(triggerIDs)
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
@@ -74,8 +79,10 @@ func SearchTriggers(database moira.Database, searcher moira.Searcher, page int64
 		Size:  &size,
 	}
 
-	for _, triggerCheck := range triggerChecks {
+	for triggerCheckInd := range triggerChecks {
+		triggerCheck := triggerChecks[triggerCheckInd]
 		if triggerCheck != nil {
+			triggerCheck.HighLights = searchResults[triggerCheckInd].HighLights
 			triggersList.List = append(triggersList.List, *triggerCheck)
 		}
 	}

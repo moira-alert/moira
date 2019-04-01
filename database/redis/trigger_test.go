@@ -196,18 +196,8 @@ func TestTriggerStoring(t *testing.T) {
 
 		Convey("Save trigger with lastCheck and throttling and GetTriggerChecks", func() {
 			trigger := triggers[5]
-			searchResults := []*moira.SearchResult{
-				{
-					ObjectID:   trigger.ID,
-					HighLights: highlights,
-				},
-			}
 			triggerCheck := &moira.TriggerCheck{
 				Trigger: trigger,
-			}
-			triggerCheckWithHighLights := &moira.TriggerCheck{
-				Trigger:    trigger,
-				HighLights: highlights,
 			}
 
 			err := dataBase.SaveTrigger(trigger.ID, &trigger)
@@ -221,10 +211,6 @@ func TestTriggerStoring(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(actualTriggerChecks, ShouldResemble, []*moira.TriggerCheck{triggerCheck})
 
-			actualTriggerChecksWithHighLights, err := dataBase.GetTriggerChecksWithHighLights(searchResults)
-			So(err, ShouldBeNil)
-			So(actualTriggerChecksWithHighLights, ShouldResemble, []*moira.TriggerCheck{triggerCheckWithHighLights})
-
 			//Add check data
 			err = dataBase.SetTriggerLastCheck(trigger.ID, &lastCheckTest, false)
 			So(err, ShouldBeNil)
@@ -234,11 +220,6 @@ func TestTriggerStoring(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(actualTriggerChecks, ShouldResemble, []*moira.TriggerCheck{triggerCheck})
 
-			triggerCheckWithHighLights.LastCheck = lastCheckTest
-			actualTriggerChecksWithHighLights, err = dataBase.GetTriggerChecksWithHighLights(searchResults)
-			So(err, ShouldBeNil)
-			So(actualTriggerChecksWithHighLights, ShouldResemble, []*moira.TriggerCheck{triggerCheckWithHighLights})
-
 			//And throttling
 			err = dataBase.SetTriggerThrottling(trigger.ID, time.Now().Add(-time.Minute))
 			So(err, ShouldBeNil)
@@ -247,10 +228,6 @@ func TestTriggerStoring(t *testing.T) {
 			actualTriggerChecks, err = dataBase.GetTriggerChecks([]string{trigger.ID})
 			So(err, ShouldBeNil)
 			So(actualTriggerChecks, ShouldResemble, []*moira.TriggerCheck{triggerCheck})
-
-			actualTriggerChecksWithHighLights, err = dataBase.GetTriggerChecksWithHighLights(searchResults)
-			So(err, ShouldBeNil)
-			So(actualTriggerChecksWithHighLights, ShouldResemble, []*moira.TriggerCheck{triggerCheckWithHighLights})
 
 			//Now good throttling
 			th := time.Now().Add(time.Minute)
@@ -262,11 +239,6 @@ func TestTriggerStoring(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(actualTriggerChecks, ShouldResemble, []*moira.TriggerCheck{triggerCheck})
 
-			triggerCheckWithHighLights.Throttling = th.Unix()
-			actualTriggerChecksWithHighLights, err = dataBase.GetTriggerChecksWithHighLights(searchResults)
-			So(err, ShouldBeNil)
-			So(actualTriggerChecksWithHighLights, ShouldResemble, []*moira.TriggerCheck{triggerCheckWithHighLights})
-
 			//Remove throttling
 			err = dataBase.DeleteTriggerThrottling(trigger.ID)
 			So(err, ShouldBeNil)
@@ -276,22 +248,13 @@ func TestTriggerStoring(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(actualTriggerChecks, ShouldResemble, []*moira.TriggerCheck{triggerCheck})
 
-			triggerCheckWithHighLights.Throttling = 0
-			actualTriggerChecksWithHighLights, err = dataBase.GetTriggerChecksWithHighLights(searchResults)
-			So(err, ShouldBeNil)
-			So(actualTriggerChecksWithHighLights, ShouldResemble, []*moira.TriggerCheck{triggerCheckWithHighLights})
-
 			//Can not remove check data, but can remove trigger!
 			err = dataBase.RemoveTrigger(trigger.ID)
 			So(err, ShouldBeNil)
 
 			actualTriggerChecks, err = dataBase.GetTriggerChecks([]string{trigger.ID})
 			So(err, ShouldBeNil)
-			So(actualTriggerChecks, ShouldResemble, []*moira.TriggerCheck{})
-
-			actualTriggerChecksWithHighLights, err = dataBase.GetTriggerChecksWithHighLights(searchResults)
-			So(err, ShouldBeNil)
-			So(actualTriggerChecksWithHighLights, ShouldResemble, []*moira.TriggerCheck{})
+			So(actualTriggerChecks, ShouldResemble, []*moira.TriggerCheck{nil})
 		})
 
 		Convey("Save trigger with metrics and get metrics", func() {
@@ -667,7 +630,7 @@ func TestTriggerErrorConnection(t *testing.T) {
 
 		actual3, err := dataBase.GetTriggerChecks([]string{})
 		So(err, ShouldNotBeNil)
-		So(actual3, ShouldBeEmpty)
+		So(actual3, ShouldBeNil)
 
 		err = dataBase.SaveTrigger("", &triggers[0])
 		So(err, ShouldNotBeNil)
@@ -751,12 +714,5 @@ var triggers = []moira.Trigger{
 		Targets:     []string{"test.target.9"},
 		Tags:        []string{"test-degradation"},
 		TriggerType: moira.RisingTrigger,
-	},
-}
-
-var highlights = []moira.SearchHighLight{
-	{
-		Field: "testField",
-		Value: "testValue",
 	},
 }
