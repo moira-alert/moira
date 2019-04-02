@@ -5,7 +5,7 @@ import (
 	"regexp"
 )
 
-var tagSpecRegex = regexp.MustCompile(`^"([^,!=]+)\s*(!?=~?)\s*([^,]*)"`)
+var tagSpecRegex = regexp.MustCompile(`^["']([^,!=]+)\s*(!?=~?)\s*([^,]*)["']`)
 var tagSpecDelimiterRegex = regexp.MustCompile(`^\s*,\s*`)
 var seriesByTagRegex = regexp.MustCompile(`^seriesByTag\(([^)]+)\)$`)
 
@@ -55,6 +55,9 @@ func ParseSeriesByTag(input string) ([]TagSpec, error) {
 
 		matchedTagSpecIndexes := tagSpecRegex.FindStringSubmatchIndex(input)
 		if len(matchedTagSpecIndexes) != 8 {
+			return nil, ErrNotSeriesByTag
+		}
+		if input[matchedTagSpecIndexes[0]] != input[matchedTagSpecIndexes[1]-1] {
 			return nil, ErrNotSeriesByTag
 		}
 
