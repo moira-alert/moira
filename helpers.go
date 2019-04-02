@@ -1,9 +1,57 @@
 package moira
 
 import (
+	"bytes"
 	"math"
 	"time"
 )
+
+// BytesScanner allows to scan for subslices separated by separator
+type BytesScanner struct {
+	source         []byte
+	index          int
+	separator      byte
+	emitEmptySlice bool
+}
+
+//HasNext checks if next subslice available or not
+func (it *BytesScanner) HasNext() bool {
+	return it.index < len(it.source) || it.emitEmptySlice
+}
+
+//Next returns available subslice and advances the scanner to next slice
+func (it *BytesScanner) Next() (result []byte) {
+	if it.emitEmptySlice {
+		it.emitEmptySlice = false
+		result = make([]byte, 0)
+		return result
+	}
+
+	scannerIndex := it.index
+	separatorIndex := bytes.IndexByte(it.source[scannerIndex:], it.separator)
+	if separatorIndex < 0 {
+		result = it.source[scannerIndex:]
+		it.index = len(it.source)
+	} else {
+		separatorIndex += scannerIndex
+		result = it.source[scannerIndex:separatorIndex]
+		if separatorIndex == len(it.source)-1 {
+			it.emitEmptySlice = true
+		}
+		it.index = separatorIndex + 1
+	}
+	return result
+}
+
+//NewBytesScanner slices bytes into all subslices separated by separator and returns a scanner which allows to scan for these subslices
+func NewBytesScanner(bytes []byte, separator byte) *BytesScanner {
+	return &BytesScanner{
+		source:         bytes,
+		index:          0,
+		separator:      separator,
+		emitEmptySlice: false,
+	}
+}
 
 // Int64ToTime returns time.Time from int64
 func Int64ToTime(timeStamp int64) time.Time {

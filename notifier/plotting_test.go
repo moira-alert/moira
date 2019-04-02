@@ -36,6 +36,7 @@ func TestResolveMetricsWindow(t *testing.T) {
 	localTrigger := moira.TriggerData{ID: "redisTrigger", IsRemote: false}
 	remoteTrigger := moira.TriggerData{ID: "remoteTrigger", IsRemote: true}
 	timeRange := time.Unix(int64(defaultTimeRange.Seconds()), 0).Unix()
+	timeShift := time.Unix(int64(defaultTimeShift.Seconds()), 0).Unix()
 	var pkg NotificationPackage
 	var pkgs []NotificationPackage
 	var trigger moira.TriggerData
@@ -47,8 +48,8 @@ func TestResolveMetricsWindow(t *testing.T) {
 				_, expectedTo, err := pkg.GetWindow()
 				So(err, ShouldBeNil)
 				from, to := resolveMetricsWindow(logger, trigger, pkg)
-				So(from, ShouldEqual, alignToMinutes(expectedTo)-timeRange)
-				So(to, ShouldEqual, expectedTo)
+				So(from, ShouldEqual, alignToMinutes(expectedTo)-timeRange+timeShift)
+				So(to, ShouldEqual, expectedTo+timeShift)
 			}
 		})
 		Convey("Window is not realtime: force realtime window", func() {
@@ -76,8 +77,8 @@ func TestResolveMetricsWindow(t *testing.T) {
 				_, expectedTo, err := pkg.GetWindow()
 				So(err, ShouldBeNil)
 				from, to := resolveMetricsWindow(logger, trigger, pkg)
-				So(from, ShouldEqual, alignToMinutes(expectedTo-timeRange))
-				So(to, ShouldEqual, expectedTo)
+				So(from, ShouldEqual, alignToMinutes(expectedTo-timeRange+timeShift))
+				So(to, ShouldEqual, expectedTo+timeShift)
 			}
 		})
 	})

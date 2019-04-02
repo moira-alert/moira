@@ -103,6 +103,7 @@ func (sender *Sender) dialAndSend(message *gomail.Message) error {
 	d := gomail.Dialer{
 		Host: sender.SMTPHost,
 		Port: int(sender.SMTPPort),
+		LocalName: sender.SMTPHello,
 		TLSConfig: &tls.Config{
 			InsecureSkipVerify: sender.InsecureTLS,
 			ServerName:         sender.SMTPHost,

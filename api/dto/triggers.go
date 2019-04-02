@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/middleware"
 	"github.com/moira-alert/moira/expression"
 	"github.com/moira-alert/moira/metric_source"
@@ -107,16 +108,16 @@ func CreateTriggerModel(trigger *moira.Trigger) TriggerModel {
 func (trigger *Trigger) Bind(request *http.Request) error {
 	trigger.Tags = normalizeTags(trigger.Tags)
 	if len(trigger.Targets) == 0 {
-		return fmt.Errorf("targets is required")
+		return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("targets is required")}
 	}
 	if len(trigger.Tags) == 0 {
-		return fmt.Errorf("tags is required")
+		return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("tags is required")}
 	}
 	if trigger.Name == "" {
-		return fmt.Errorf("trigger name is required")
+		return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("trigger name is required")}
 	}
 	if err := checkWarnErrorExpression(trigger); err != nil {
-		return err
+		return api.ErrInvalidRequestContent{ValidationError: err}
 	}
 
 	triggerExpression := expression.TriggerExpression{
@@ -140,6 +141,7 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 	if _, err := triggerExpression.Evaluate(); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -212,21 +214,49 @@ func checkWarnErrorExpression(trigger *Trigger) error {
 				return fmt.Errorf("error_value should be greater than warn_value")
 			}
 		}
+		if err := checkSimpleModeFields(trigger); err != nil {
+			return err
+		}
+
 	case moira.FallingTrigger:
 		if trigger.WarnValue != nil && trigger.ErrorValue != nil {
 			if *trigger.WarnValue < *trigger.ErrorValue {
 				return fmt.Errorf("warn_value should be greater than error_value")
 			}
 		}
+		if err := checkSimpleModeFields(trigger); err != nil {
+			return err
+		}
+
 	case moira.ExpressionTrigger:
 		if trigger.Expression == "" {
 			return fmt.Errorf("trigger_type set to expression, but no expression provided")
 		}
+		if trigger.WarnValue != nil && trigger.ErrorValue != nil {
+			return fmt.Errorf("can't use 'warn_value' and 'error_value' on trigger_type: '%v'", moira.ExpressionTrigger)
+		}
+		if trigger.WarnValue != nil {
+			return fmt.Errorf("can't use 'warn_value' on trigger_type: '%v'", moira.ExpressionTrigger)
+		}
+		if trigger.ErrorValue != nil {
+			return fmt.Errorf("can't use 'error_value' on trigger_type: '%v'", moira.ExpressionTrigger)
+		}
+
 	default:
 		return fmt.Errorf("wrong trigger_type: %v, allowable values: '%v', '%v', '%v'",
 			trigger.TriggerType, moira.RisingTrigger, moira.FallingTrigger, moira.ExpressionTrigger)
 	}
 
+	return nil
+}
+
+func checkSimpleModeFields(trigger *Trigger) error {
+	if len(trigger.Targets) > 1 {
+		return fmt.Errorf("can't use trigger_type not '%v' for with multiple targets", trigger.TriggerType)
+	}
+	if trigger.Expression != "" {
+		return fmt.Errorf("can't use 'expression' to trigger_type: '%v'", trigger.TriggerType)
+	}
 	return nil
 }
 
