@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/blevesearch/bleve"
+	"github.com/blevesearch/bleve/search"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/index/mapping"
@@ -32,28 +33,11 @@ func (index *TriggerIndex) Search(filterTags []string, searchString string, only
 	if searchResult.Hits.Len() == 0 {
 		return
 	}
+
+	highlightedFields := []string{mapping.TriggerName.String(), mapping.TriggerDesc.String()}
+
 	for _, result := range searchResult.Hits {
-		highlights := make([]moira.SearchHighlight, 0)
-		if nameFragments, ok := result.Fragments[mapping.TriggerName.String()]; ok {
-			var nameHighlight string
-			for _, fragment := range nameFragments {
-				nameHighlight += fragment
-			}
-			highlights = append(highlights, moira.SearchHighlight{
-				Field: mapping.TriggerName.String(),
-				Value: nameHighlight,
-			})
-		}
-		if descFragments, ok := result.Fragments[mapping.TriggerDesc.String()]; ok {
-			var descHighlight string
-			for _, fragment := range descFragments {
-				descHighlight += fragment
-			}
-			highlights = append(highlights, moira.SearchHighlight{
-				Field: mapping.TriggerDesc.String(),
-				Value: descHighlight,
-			})
-		}
+		highlights := getHighlights(result.Fragments, highlightedFields)
 		triggerSearchResult := moira.SearchResult{
 			ObjectID:   result.ID,
 			Highlights: highlights,
@@ -61,6 +45,23 @@ func (index *TriggerIndex) Search(filterTags []string, searchString string, only
 		searchResults = append(searchResults, &triggerSearchResult)
 	}
 	return
+}
+
+func getHighlights(fragmentsMap search.FieldFragmentMap, fields []string) []moira.SearchHighlight {
+	highlights := make([]moira.SearchHighlight, 0)
+	for _, field := range fields {
+		var highlightValue string
+		if fragments, ok := fragmentsMap[field]; ok {
+			for _, fragment := range fragments {
+				highlightValue += fragment
+			}
+			highlights = append(highlights, moira.SearchHighlight{
+				Field: field,
+				Value: highlightValue,
+			})
+		}
+	}
+	return highlights
 }
 
 func buildSearchRequest(filterTags []string, searchString string, onlyErrors bool, page, size int) *bleve.SearchRequest {
