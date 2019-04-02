@@ -95,4 +95,26 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 			c.So(patterns, ShouldResemble, testCase.MatchedPatterns)
 		}
 	})
+
+	Convey("Given patterns with empty tag spec, should build index and match patterns", t, func(c C) {
+		tagSpecsByPattern := map[string][]TagSpec{
+			"name=~cpu;dc=": {{"dc", EqualOperator, ""}},
+		}
+
+		testCases := []struct {
+			Name            string
+			Labels          map[string]string
+			MatchedPatterns []string
+		}{
+			{"cpu1", map[string]string{"dc": "dc1"}, []string{}},
+			{"cpu2", map[string]string{"dc": ""}, []string{"name=~cpu;dc="}},
+			{"cpu3", map[string]string{}, []string{"name=~cpu;dc="}},
+		}
+		index := NewSeriesByTagPatternIndex(tagSpecsByPattern)
+		for _, testCase := range testCases {
+			patterns := index.MatchPatterns(testCase.Name, testCase.Labels)
+			sort.Strings(patterns)
+			c.So(patterns, ShouldResemble, testCase.MatchedPatterns)
+		}
+	})
 }
