@@ -4,7 +4,7 @@ import "github.com/moira-alert/moira"
 
 type fixtureIndexedField struct {
 	content    string
-	highLights map[string][]moira.SearchHighLight
+	highlights map[string][]moira.SearchHighlight
 }
 
 type fixtureIndexedTriggers struct {
@@ -19,15 +19,15 @@ type fixtureIndexedTrigger struct {
 	triggerScore int64
 }
 
-func (it *fixtureIndexedTrigger) GetHighLights(searchString string) []moira.SearchHighLight {
-	highLights := make([]moira.SearchHighLight, 0)
-	if nameHighLights, ok := it.triggerName.highLights[searchString]; ok {
-		highLights = append(highLights, nameHighLights...)
+func (it *fixtureIndexedTrigger) GetHighLights(searchString string) []moira.SearchHighlight {
+	highlights := make([]moira.SearchHighlight, 0)
+	if nameHighlights, ok := it.triggerName.highlights[searchString]; ok {
+		highlights = append(highlights, nameHighlights...)
 	}
-	if descHighLights, ok := it.triggerDesc.highLights[searchString]; ok {
-		highLights = append(highLights, descHighLights...)
+	if descHighlights, ok := it.triggerDesc.highlights[searchString]; ok {
+		highlights = append(highlights, descHighlights...)
 	}
-	return highLights
+	return highlights
 }
 
 func (its *fixtureIndexedTriggers) ToTriggerChecks() []*moira.TriggerCheck {
@@ -99,7 +99,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 			triggerID: "SuperTrigger3",
 			triggerName: fixtureIndexedField{
 				content: "Kobold Dragonshield (cr 1, vgm 165) and 1 x Kobold (cr 1/8, mm 195); medium, 225 xp",
-				highLights: map[string][]moira.SearchHighLight{
+				highlights: map[string][]moira.SearchHighlight{
 					"dragonshield medium": {
 						{
 							Field: "Name",
@@ -129,7 +129,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 			triggerID: "SuperTrigger5",
 			triggerName: fixtureIndexedField{
 				content: "Rust Monster (cr 1/2, mm 262); easy, 100 xp",
-				highLights: map[string][]moira.SearchHighLight{
+				highlights: map[string][]moira.SearchHighlight{
 					"easy": {
 						{
 							Field: "Name",
@@ -146,7 +146,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 			},
 			triggerDesc: fixtureIndexedField{
 				content: "4: Because I'm easy come, easy go, little high, little low",
-				highLights: map[string][]moira.SearchHighLight{
+				highlights: map[string][]moira.SearchHighlight{
 					"easy": {
 						{
 							Field: "Desc",
@@ -212,7 +212,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 			triggerID: "SuperTrigger10",
 			triggerName: fixtureIndexedField{
 				content: "Gibbering Mouther (cr 2, mm 157); easy, 450 xp",
-				highLights: map[string][]moira.SearchHighLight{
+				highlights: map[string][]moira.SearchHighlight{
 					"easy": {
 						{
 							Field: "Name",
@@ -231,7 +231,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 			triggerID: "SuperTrigger11",
 			triggerName: fixtureIndexedField{
 				content: "Scythe Blade: DC 10 to find, DC 10 to disable; +11 to hit against all targets within a 5 ft. arc, 4d10 slashing damage; apprentice tier, deadly",
-				highLights: map[string][]moira.SearchHighLight{
+				highlights: map[string][]moira.SearchHighlight{
 					"deadly": {
 						{
 							Field: "Name",
@@ -253,7 +253,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 			},
 			triggerDesc: fixtureIndexedField{
 				content: "11: Mama, ooh, didn't mean to make you cry",
-				highLights: map[string][]moira.SearchHighLight{
+				highlights: map[string][]moira.SearchHighlight{
 					"mama": {
 						{
 							Field: "Desc",
@@ -291,7 +291,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 			triggerID: "SuperTrigger15",
 			triggerName: fixtureIndexedField{
 				content: "Chain Flail: DC 15 to find, DC 10 to disable; initiative +3, 1 attack per round, +11 to hit against all targets within 5 ft., 4d10 bludgeoning damage; apprentice tier, deadly",
-				highLights: map[string][]moira.SearchHighLight{
+				highlights: map[string][]moira.SearchHighlight{
 					"deadly": {
 						{
 							Field: "Name",
@@ -343,7 +343,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 			triggerID: "SuperTrigger19",
 			triggerName: fixtureIndexedField{
 				content: "Thunderstone Mine: DC 15 to find, DC 20 to disable; affects all targets within 20 ft., DC 18 save or take 4d10 thunder damage and become deafened for 1d4 rounds; apprentice tier, deadly",
-				highLights: map[string][]moira.SearchHighLight{
+				highlights: map[string][]moira.SearchHighlight{
 					"deadly": {
 						{
 							Field: "Name",
@@ -362,7 +362,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 			triggerID: "SuperTrigger20",
 			triggerName: fixtureIndexedField{
 				content: "Scythe Blade: DC 15 to find, DC 10 to disable; +12 to hit against all targets within a 5 ft. arc, 4d10 slashing damage; apprentice tier, deadly",
-				highLights: map[string][]moira.SearchHighLight{
+				highlights: map[string][]moira.SearchHighlight{
 					"deadly": {
 						{
 							Field: "Name",
@@ -373,7 +373,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 			},
 			triggerDesc: fixtureIndexedField{
 				content: "19: Mama, ooh, (Any way the wind blows)",
-				highLights: map[string][]moira.SearchHighLight{
+				highlights: map[string][]moira.SearchHighlight{
 					"mama": {
 						{
 							Field: "Desc",
@@ -511,7 +511,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 				No, no, no, no, no, no, no
 				(Oh mamma mia, mamma mia) Mamma mia, let me go
 				Beelzebub has a devil put aside for me, for me, for me!`,
-				highLights: map[string][]moira.SearchHighLight{
+				highlights: map[string][]moira.SearchHighlight{
 					"easy": {
 						{
 							Field: "Desc",

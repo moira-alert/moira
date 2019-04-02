@@ -33,30 +33,30 @@ func (index *TriggerIndex) Search(filterTags []string, searchString string, only
 		return
 	}
 	for _, result := range searchResult.Hits {
-		highLights := make([]moira.SearchHighLight, 0)
+		highlights := make([]moira.SearchHighlight, 0)
 		if nameFragments, ok := result.Fragments[mapping.TriggerName.String()]; ok {
-			var nameHighLight string
+			var nameHighlight string
 			for _, fragment := range nameFragments {
-				nameHighLight += fragment
+				nameHighlight += fragment
 			}
-			highLights = append(highLights, moira.SearchHighLight{
+			highlights = append(highlights, moira.SearchHighlight{
 				Field: mapping.TriggerName.String(),
-				Value: nameHighLight,
+				Value: nameHighlight,
 			})
 		}
 		if descFragments, ok := result.Fragments[mapping.TriggerDesc.String()]; ok {
-			var descHighLight string
+			var descHighlight string
 			for _, fragment := range descFragments {
-				descHighLight += fragment
+				descHighlight += fragment
 			}
-			highLights = append(highLights, moira.SearchHighLight{
+			highlights = append(highlights, moira.SearchHighlight{
 				Field: mapping.TriggerDesc.String(),
-				Value: descHighLight,
+				Value: descHighlight,
 			})
 		}
 		triggerSearchResult := moira.SearchResult{
 			ObjectID:   result.ID,
-			HighLights: highLights,
+			HighLights: highlights,
 		}
 		searchResults = append(searchResults, &triggerSearchResult)
 	}

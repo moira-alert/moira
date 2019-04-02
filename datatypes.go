@@ -163,7 +163,7 @@ type TriggerCheck struct {
 	Trigger
 	Throttling int64             `json:"throttling"`
 	LastCheck  CheckData         `json:"last_check"`
-	HighLights []SearchHighLight `json:"highlights"`
+	HighLights []SearchHighlight `json:"highlights"`
 }
 
 // CheckData represents last trigger check data
@@ -197,8 +197,8 @@ type MetricEvent struct {
 	Pattern string `json:"pattern"`
 }
 
-// SearchHighLight represents highlight
-type SearchHighLight struct {
+// SearchHighlight represents highlight
+type SearchHighlight struct {
 	Field string `json:"field"`
 	Value string `json:"string"`
 }
@@ -206,7 +206,7 @@ type SearchHighLight struct {
 // SearchResult represents fulltext search result
 type SearchResult struct {
 	ObjectID   string
-	HighLights []SearchHighLight
+	HighLights []SearchHighlight
 }
 
 // GetSubjectState returns the most critical state of events

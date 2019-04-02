@@ -663,7 +663,7 @@ var triggerChecks = []moira.TriggerCheck{
 	},
 }
 
-var highLights = []moira.SearchHighLight{
+var highLights = []moira.SearchHighlight{
 	{
 		Field: "testField",
 		Value: "testValue",
