@@ -133,7 +133,7 @@ func TestSearchTriggers(t *testing.T) {
 	for _, triggerCheck := range triggerChecks {
 		triggerSearchResults = append(triggerSearchResults, &moira.SearchResult{
 			ObjectID:   triggerCheck.ID,
-			HighLights: highLights,
+			Highlights: highLights,
 		})
 	}
 	triggerIDs := make([]string, len(triggerChecks))
@@ -276,7 +276,7 @@ func TestSearchTriggers(t *testing.T) {
 				for _, deadlyTrap := range deadlyTraps {
 					deadlyTrapsSearchResults = append(deadlyTrapsSearchResults, &moira.SearchResult{
 						ObjectID:   deadlyTrap.ID,
-						HighLights: deadlyTrap.HighLights,
+						Highlights: deadlyTrap.HighLights,
 					})
 					deadlyTrapsTriggerIDs = append(deadlyTrapsTriggerIDs, deadlyTrap.ID)
 				}

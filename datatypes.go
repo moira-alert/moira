@@ -206,7 +206,7 @@ type SearchHighlight struct {
 // SearchResult represents fulltext search result
 type SearchResult struct {
 	ObjectID   string
-	HighLights []SearchHighlight
+	Highlights []SearchHighlight
 }
 
 // GetSubjectState returns the most critical state of events

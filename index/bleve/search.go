@@ -56,7 +56,7 @@ func (index *TriggerIndex) Search(filterTags []string, searchString string, only
 		}
 		triggerSearchResult := moira.SearchResult{
 			ObjectID:   result.ID,
-			HighLights: highlights,
+			Highlights: highlights,
 		}
 		searchResults = append(searchResults, &triggerSearchResult)
 	}

@@ -55,7 +55,7 @@ func (its *fixtureIndexedTriggers) ToSearchResults(searchString string) []*moira
 	for _, indexedTrigger := range its.list {
 		searchResult := moira.SearchResult{
 			ObjectID:   indexedTrigger.triggerID,
-			HighLights: indexedTrigger.GetHighLights(searchString),
+			Highlights: indexedTrigger.GetHighLights(searchString),
 		}
 		searchResults = append(searchResults, &searchResult)
 	}
