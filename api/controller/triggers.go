@@ -82,7 +82,9 @@ func SearchTriggers(database moira.Database, searcher moira.Searcher, page int64
 	for triggerCheckInd := range triggerChecks {
 		triggerCheck := triggerChecks[triggerCheckInd]
 		if triggerCheck != nil {
-			triggerCheck.Highlights = searchResults[triggerCheckInd].Highlights
+			for _, highlight := range searchResults[triggerCheckInd].Highlights {
+				triggerCheck.Highlights[highlight.Field] = highlight.Value
+			}
 			triggersList.List = append(triggersList.List, *triggerCheck)
 		}
 	}

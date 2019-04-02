@@ -37,7 +37,7 @@ func (index *TriggerIndex) Search(filterTags []string, searchString string, only
 	highlightedFields := []string{mapping.TriggerName.String(), mapping.TriggerDesc.String()}
 
 	for _, result := range searchResult.Hits {
-		highlights := getHighlights(result.Fragments, highlightedFields)
+		highlights := getHighlights(result.Fragments, highlightedFields...)
 		triggerSearchResult := moira.SearchResult{
 			ObjectID:   result.ID,
 			Highlights: highlights,
@@ -47,7 +47,7 @@ func (index *TriggerIndex) Search(filterTags []string, searchString string, only
 	return
 }
 
-func getHighlights(fragmentsMap search.FieldFragmentMap, fields []string) []moira.SearchHighlight {
+func getHighlights(fragmentsMap search.FieldFragmentMap, fields ...string) []moira.SearchHighlight {
 	highlights := make([]moira.SearchHighlight, 0)
 	for _, field := range fields {
 		var highlightValue string
