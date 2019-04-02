@@ -163,7 +163,7 @@ type TriggerCheck struct {
 	Trigger
 	Throttling int64             `json:"throttling"`
 	LastCheck  CheckData         `json:"last_check"`
-	HighLights []SearchHighlight `json:"highlights"`
+	Highlights []SearchHighlight `json:"highlights"`
 }
 
 // CheckData represents last trigger check data
