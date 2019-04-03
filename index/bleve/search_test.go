@@ -279,3 +279,41 @@ func TestStringsManipulations(t *testing.T) {
 		So(splitStringToTerms("こんにちは世界!"), ShouldResemble, []string{"こんにちは世界"})
 	})
 }
+
+func TestIndex_GetTagsByFieldNames(t *testing.T) {
+	triggerFieldNames := []string{
+		mapping.TriggerID.String(),
+		mapping.TriggerName.String(),
+		mapping.TriggerDesc.String(),
+		mapping.TriggerTags.String(),
+	}
+	randomFieldNames := []string{
+		"there",
+		"is",
+		"no",
+		"such",
+		"fields",
+		"in",
+		"moira.Trigger",
+	}
+	Convey("Get tags for fields that exist", t, func() {
+		fieldNames := triggerFieldNames
+		tagsByFieldNames := getTagsByFieldNames(fieldNames)
+		for tagInd := range tagsByFieldNames {
+			tagFound := tagsByFieldNames[tagInd]
+			fieldRequested := fieldNames[tagInd]
+			So(tagFound, ShouldNotBeEmpty)
+			So(fieldRequested, ShouldNotEqual, tagFound)
+		}
+	})
+	Convey("Get tags for fields that not exist", t, func() {
+		fieldNames := randomFieldNames
+		tagsByFieldNames := getTagsByFieldNames(fieldNames)
+		for tagInd := range tagsByFieldNames {
+			tagFound := tagsByFieldNames[tagInd]
+			fieldRequested := fieldNames[tagInd]
+			So(tagFound, ShouldNotBeEmpty)
+			So(fieldRequested, ShouldEqual, tagFound)
+		}
+	})
+}
