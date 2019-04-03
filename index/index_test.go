@@ -9,7 +9,7 @@ import (
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
 
-	"github.com/moira-alert/moira/fixtures"
+	"github.com/moira-alert/moira/index/fixtures"
 	"github.com/moira-alert/moira/index/bleve"
 	"github.com/moira-alert/moira/mock/moira-alert"
 )

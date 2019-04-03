@@ -3,7 +3,7 @@ package bleve
 import (
 	"testing"
 
-	"github.com/moira-alert/moira/fixtures"
+	"github.com/moira-alert/moira/index/fixtures"
 	"github.com/moira-alert/moira/index/mapping"
 	. "github.com/smartystreets/goconvey/convey"
 )
