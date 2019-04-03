@@ -129,18 +129,18 @@ func TestSearchTriggers(t *testing.T) {
 	var page int64
 	var size int64 = 50
 	var exp int64 = 31
+	testHighlights := make([]moira.SearchHighlight, 0)
+	for field, value := range testHighlightsMap {
+		testHighlights = append(testHighlights, moira.SearchHighlight{
+			Field: field,
+			Value: value,
+		})
+	}
 	triggerSearchResults := make([]*moira.SearchResult, 0)
 	for _, triggerCheck := range triggerChecks {
-		highlights := make([]moira.SearchHighlight, 0)
-		for field, value := range testHighlights {
-			highlights = append(highlights, moira.SearchHighlight{
-				Field: field,
-				Value: value,
-			})
-		}
 		triggerSearchResults = append(triggerSearchResults, &moira.SearchResult{
 			ObjectID:   triggerCheck.ID,
-			Highlights: highlights,
+			Highlights: testHighlights,
 		})
 	}
 	triggerIDs := make([]string, len(triggerChecks))
@@ -281,16 +281,9 @@ func TestSearchTriggers(t *testing.T) {
 				deadlyTrapsTriggerIDs := make([]string, 0)
 				deadlyTrapsSearchResults := make([]*moira.SearchResult, 0)
 				for _, deadlyTrap := range deadlyTraps {
-					highlights := make([]moira.SearchHighlight, 0)
-					for field, value := range testHighlights {
-						highlights = append(highlights, moira.SearchHighlight{
-							Field: field,
-							Value: value,
-						})
-					}
 					deadlyTrapsSearchResults = append(deadlyTrapsSearchResults, &moira.SearchResult{
 						ObjectID:   deadlyTrap.ID,
-						Highlights: highlights,
+						Highlights: testHighlights,
 					})
 					deadlyTrapsTriggerIDs = append(deadlyTrapsTriggerIDs, deadlyTrap.ID)
 				}
@@ -343,7 +336,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 30,
 		},
-		Highlights: testHighlights,
+		Highlights: testHighlightsMap,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -354,7 +347,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 29,
 		},
-		Highlights: testHighlights,
+		Highlights: testHighlightsMap,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -365,7 +358,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 28,
 		},
-		Highlights: testHighlights,
+		Highlights: testHighlightsMap,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -376,7 +369,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 27,
 		},
-		Highlights: testHighlights,
+		Highlights: testHighlightsMap,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -387,7 +380,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 26,
 		},
-		Highlights: testHighlights,
+		Highlights: testHighlightsMap,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -398,7 +391,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 25,
 		},
-		Highlights: testHighlights,
+		Highlights: testHighlightsMap,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -409,7 +402,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 24,
 		},
-		Highlights: testHighlights,
+		Highlights: testHighlightsMap,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -420,7 +413,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 23,
 		},
-		Highlights: testHighlights,
+		Highlights: testHighlightsMap,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -431,7 +424,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 22,
 		},
-		Highlights: testHighlights,
+		Highlights: testHighlightsMap,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -442,7 +435,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 21,
 		},
-		Highlights: testHighlights,
+		Highlights: testHighlightsMap,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -453,7 +446,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 20,
 		},
-		Highlights: testHighlights,
+		Highlights: testHighlightsMap,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -464,7 +457,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 19,
 		},
-		Highlights: testHighlights,
+		Highlights: testHighlightsMap,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -475,7 +468,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 18,
 		},
-		Highlights: testHighlights,
+		Highlights: testHighlightsMap,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -486,7 +479,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 17,
 		},
-		Highlights: testHighlights,
+		Highlights: testHighlightsMap,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -497,7 +490,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 16,
 		},
-		Highlights: testHighlights,
+		Highlights: testHighlightsMap,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -508,7 +501,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 15,
 		},
-		Highlights: testHighlights,
+		Highlights: testHighlightsMap,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -519,7 +512,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 14,
 		},
-		Highlights: testHighlights,
+		Highlights: testHighlightsMap,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -530,7 +523,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 13,
 		},
-		Highlights: testHighlights,
+		Highlights: testHighlightsMap,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -541,7 +534,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 12,
 		},
-		Highlights: testHighlights,
+		Highlights: testHighlightsMap,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -552,7 +545,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 11,
 		},
-		Highlights: testHighlights,
+		Highlights: testHighlightsMap,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -563,7 +556,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 10,
 		},
-		Highlights: testHighlights,
+		Highlights: testHighlightsMap,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -574,7 +567,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 9,
 		},
-		Highlights: testHighlights,
+		Highlights: testHighlightsMap,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -585,7 +578,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 8,
 		},
-		Highlights: testHighlights,
+		Highlights: testHighlightsMap,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -596,7 +589,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 7,
 		},
-		Highlights: testHighlights,
+		Highlights: testHighlightsMap,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -607,7 +600,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 6,
 		},
-		Highlights: testHighlights,
+		Highlights: testHighlightsMap,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -618,7 +611,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 5,
 		},
-		Highlights: testHighlights,
+		Highlights: testHighlightsMap,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -629,7 +622,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 4,
 		},
-		Highlights: testHighlights,
+		Highlights: testHighlightsMap,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -640,7 +633,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 3,
 		},
-		Highlights: testHighlights,
+		Highlights: testHighlightsMap,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -651,7 +644,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 2,
 		},
-		Highlights: testHighlights,
+		Highlights: testHighlightsMap,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -662,7 +655,7 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 1,
 		},
-		Highlights: testHighlights,
+		Highlights: testHighlightsMap,
 	},
 	{
 		Trigger: moira.Trigger{
@@ -673,8 +666,8 @@ var triggerChecks = []moira.TriggerCheck{
 		LastCheck: moira.CheckData{
 			Score: 0,
 		},
-		Highlights: testHighlights,
+		Highlights: testHighlightsMap,
 	},
 }
 
-var testHighlights = map[string]string{"testField": "testHighlight"}
+var testHighlightsMap = map[string]string{"testField": "testHighlight"}
