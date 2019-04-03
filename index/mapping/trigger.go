@@ -23,7 +23,8 @@ var triggerFieldNames = []string{
 	"Name",
 	"Desc",
 	"Tags",
-	"LastCheckScore"}
+	"LastCheckScore",
+}
 
 // Trigger represents Moira.Trigger type for full-text search index. It includes only indexed fields
 type Trigger struct {

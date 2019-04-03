@@ -102,7 +102,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 				highlights: map[string][]moira.SearchHighlight{
 					"dragonshield medium": {
 						{
-							Field: "Name",
+							Field: "name",
 							Value: "Kobold <mark>Dragonshield</mark> (cr 1, vgm 165) and 1 x Kobold (cr 1/8, mm 195); <mark>medium</mark>, 225 xp",
 						},
 					},
@@ -132,13 +132,13 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 				highlights: map[string][]moira.SearchHighlight{
 					"easy": {
 						{
-							Field: "Name",
+							Field: "name",
 							Value: "Rust Monster (cr 1/2, mm 262); <mark>easy</mark>, 100 xp",
 						},
 					},
 					"little monster": {
 						{
-							Field: "Name",
+							Field: "name",
 							Value: "Rust <mark>Monster</mark> (cr 1/2, mm 262); easy, 100 xp",
 						},
 					},
@@ -149,13 +149,13 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 				highlights: map[string][]moira.SearchHighlight{
 					"easy": {
 						{
-							Field: "Desc",
+							Field: "desc",
 							Value: "4: Because I'm <mark>easy</mark> come, <mark>easy</mark> go, little high, little low",
 						},
 					},
 					"little monster": {
 						{
-							Field: "Desc",
+							Field: "desc",
 							Value: "4: Because I'm easy come, easy go, <mark>little</mark> high, <mark>little</mark> low",
 						},
 					},
@@ -215,7 +215,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 				highlights: map[string][]moira.SearchHighlight{
 					"easy": {
 						{
-							Field: "Name",
+							Field: "name",
 							Value: "Gibbering Mouther (cr 2, mm 157); <mark>easy</mark>, 450 xp",
 						},
 					},
@@ -234,7 +234,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 				highlights: map[string][]moira.SearchHighlight{
 					"deadly": {
 						{
-							Field: "Name",
+							Field: "name",
 							Value: "Scythe Blade: DC 10 to find, DC 10 to disable; +11 to hit against all targets within a 5 ft. arc, 4d10 slashing damage; apprentice tier, <mark>deadly</mark>",
 						},
 					},
@@ -256,7 +256,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 				highlights: map[string][]moira.SearchHighlight{
 					"mama": {
 						{
-							Field: "Desc",
+							Field: "desc",
 							Value: "11: <mark>Mama</mark>, ooh, didn't mean to make you cry",
 						},
 					},
@@ -294,7 +294,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 				highlights: map[string][]moira.SearchHighlight{
 					"deadly": {
 						{
-							Field: "Name",
+							Field: "name",
 							Value: "Chain Flail: DC 15 to find, DC 10 to disable; initiative +3, 1 attack per round, +11 to hit against all targets within 5 ft., 4d10 bludgeoning damage; apprentice tier, <mark>deadly</mark>",
 						},
 					},
@@ -346,7 +346,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 				highlights: map[string][]moira.SearchHighlight{
 					"deadly": {
 						{
-							Field: "Name",
+							Field: "name",
 							Value: "Thunderstone Mine: DC 15 to find, DC 20 to disable; affects all targets within 20 ft., DC 18 save or take 4d10 thunder damage and become deafened for 1d4 rounds; apprentice tier, <mark>deadly</mark>",
 						},
 					},
@@ -365,7 +365,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 				highlights: map[string][]moira.SearchHighlight{
 					"deadly": {
 						{
-							Field: "Name",
+							Field: "name",
 							Value: "Scythe Blade: DC 15 to find, DC 10 to disable; +12 to hit against all targets within a 5 ft. arc, 4d10 slashing damage; apprentice tier, <mark>deadly</mark>",
 						},
 					},
@@ -376,7 +376,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 				highlights: map[string][]moira.SearchHighlight{
 					"mama": {
 						{
-							Field: "Desc",
+							Field: "desc",
 							Value: "19: <mark>Mama</mark>, ooh, (Any way the wind blows)",
 						},
 					},
@@ -514,7 +514,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 				highlights: map[string][]moira.SearchHighlight{
 					"easy": {
 						{
-							Field: "Desc",
+							Field: "desc",
 							Value: "…: <mark>Easy</mark> come, <mark>easy</mark> go, will you let me go?\n\t\t\t\tBismillah! No, we will not let you go\n\t\t\t\t(Let him go!) Bismillah! We will not let you go\n\t\t\t\t(Let him go!) Bismillah! We will not let you go\n\t\t\t\t(Let me …",
 						},
 					},
