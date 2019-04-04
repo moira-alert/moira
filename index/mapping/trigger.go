@@ -18,13 +18,22 @@ const (
 	TriggerLastCheckScore
 )
 
-var triggerFieldNames = []string{
-	"ID",
-	"Name",
-	"Desc",
-	"Tags",
-	"LastCheckScore",
-}
+var (
+	triggerFieldNames = []string{
+		"ID",
+		"Name",
+		"Desc",
+		"Tags",
+		"LastCheckScore",
+	}
+	triggerFieldTagValues = []string{
+		"id",
+		"name",
+		"desc",
+		"tags",
+		"",
+	}
+)
 
 // Trigger represents Moira.Trigger type for full-text search index. It includes only indexed fields
 type Trigger struct {
@@ -43,6 +52,11 @@ func (Trigger) Type() string {
 // String returns TriggerField name. It works like enum
 func (field TriggerField) String() string {
 	return triggerFieldNames[field]
+}
+
+// GetKey returns TriggerField value used in marshalling. It works like enum
+func (field TriggerField) GetTagValue() string {
+	return triggerFieldTagValues[field]
 }
 
 // GetDocumentMapping returns Bleve.mapping.DocumentMapping for Trigger type

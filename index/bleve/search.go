@@ -2,7 +2,6 @@ package bleve
 
 import (
 	"fmt"
-	"reflect"
 	"regexp"
 	"strings"
 
@@ -35,11 +34,8 @@ func (index *TriggerIndex) Search(filterTags []string, searchString string, only
 		return
 	}
 
-	fieldNames := []string{mapping.TriggerName.String(), mapping.TriggerDesc.String()}
-	fieldTags := getTagsByFieldNames(fieldNames)
-
 	for _, result := range searchResult.Hits {
-		highlights := getHighlights(result.Fragments, fieldNames, fieldTags)
+		highlights := getHighlights(result.Fragments, mapping.TriggerName, mapping.TriggerDesc)
 		triggerSearchResult := moira.SearchResult{
 			ObjectID:   result.ID,
 			Highlights: highlights,
@@ -49,40 +45,21 @@ func (index *TriggerIndex) Search(filterTags []string, searchString string, only
 	return
 }
 
-func getHighlights(fragmentsMap search.FieldFragmentMap, fieldNames, fieldTags []string) []moira.SearchHighlight {
+func getHighlights(fragmentsMap search.FieldFragmentMap, triggerFields ...mapping.TriggerField) []moira.SearchHighlight {
 	highlights := make([]moira.SearchHighlight, 0)
-	for fieldInd := range fieldNames {
+	for _, triggerField := range triggerFields {
 		var highlightValue string
-		fieldName, fieldTag := fieldNames[fieldInd], fieldTags[fieldInd]
-		if fragments, ok := fragmentsMap[fieldName]; ok {
+		if fragments, ok := fragmentsMap[triggerField.String()]; ok {
 			for _, fragment := range fragments {
 				highlightValue += fragment
 			}
 			highlights = append(highlights, moira.SearchHighlight{
-				Field: fieldTag,
+				Field: triggerField.GetTagValue(),
 				Value: highlightValue,
 			})
 		}
 	}
 	return highlights
-}
-
-// getTagsByFieldNames returns collections of corresponding JSON tags for given trigger fields
-// if there is no tag found field name will be added. Output is same length as input.
-func getTagsByFieldNames(fieldNames []string) []string {
-	var trigger moira.Trigger
-	fieldTags := make([]string, 0, len(fieldNames))
-	for _, fieldName := range fieldNames {
-		var fieldTag string
-		if field, ok := reflect.TypeOf(&trigger).Elem().FieldByName(fieldName); ok {
-			fieldTag = field.Tag.Get("json")
-			fieldTag = strings.Replace(fieldTag, ",omitempty", "", -1)
-		} else {
-			fieldTag = fieldName
-		}
-		fieldTags = append(fieldTags, fieldTag)
-	}
-	return fieldTags
 }
 
 func buildSearchRequest(filterTags []string, searchString string, onlyErrors bool, page, size int) *bleve.SearchRequest {
