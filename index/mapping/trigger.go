@@ -54,7 +54,7 @@ func (field TriggerField) String() string {
 	return triggerFieldNames[field]
 }
 
-// GetKey returns TriggerField value used in marshalling. It works like enum
+// GetTagValue returns TriggerField value used in marshalling. It works like enum
 func (field TriggerField) GetTagValue() string {
 	return triggerFieldTagValues[field]
 }
