@@ -41,7 +41,7 @@ func (triggerChecker *TriggerChecker) compareTriggerStates(currentCheck moira.Ch
 	currentCheck.SuppressedState = lastStateSuppressedValue
 
 	maintenanceInfo, maintenanceTimestamp := getMaintenanceInfo(lastCheck, nil)
-	needSend, message := isStateChanged(currentStateValue, lastStateValue, currentCheckTimestamp, lastCheck.GetEventTimestamp(), lastStateSuppressed, lastStateSuppressedValue, maintenanceTimestamp, maintenanceInfo)
+	needSend, message := isStateChanged(currentStateValue, lastStateValue, currentCheckTimestamp, lastCheck.GetEventTimestamp(), lastStateSuppressed, lastStateSuppressedValue, maintenanceInfo)
 	if !needSend {
 		if maintenanceTimestamp < currentCheckTimestamp {
 			currentCheck.Suppressed = false
@@ -95,7 +95,7 @@ func (triggerChecker *TriggerChecker) compareMetricStates(metric string, current
 	currentState.SuppressedState = lastState.SuppressedState
 
 	maintenanceInfo, maintenanceTimestamp := getMaintenanceInfo(triggerChecker.lastCheck, &currentState)
-	needSend, message := isStateChanged(currentState.State, lastState.State, currentState.Timestamp, lastState.GetEventTimestamp(), lastState.Suppressed, lastState.SuppressedState, maintenanceTimestamp, maintenanceInfo)
+	needSend, message := isStateChanged(currentState.State, lastState.State, currentState.Timestamp, lastState.GetEventTimestamp(), lastState.Suppressed, lastState.SuppressedState, maintenanceInfo)
 	if !needSend {
 		if maintenanceTimestamp < currentState.Timestamp {
 			currentState.Suppressed = false
@@ -152,16 +152,14 @@ func (triggerChecker *TriggerChecker) isTriggerSuppressed(timestamp int64, maint
 	return !triggerChecker.trigger.Schedule.IsScheduleAllows(timestamp) || maintenanceTimestamp >= timestamp
 }
 
-func isStateChanged(currentStateValue moira.State, lastStateValue moira.State, currentStateTimestamp int64, lastStateEventTimestamp int64, isLastCheckSuppressed bool, lastStateSuppressedValue moira.State, maintenance int64, maintenanceInfo moira.MaintenanceInfo) (needSend bool, message *string) {
+func isStateChanged(currentStateValue moira.State, lastStateValue moira.State, currentStateTimestamp int64, lastStateEventTimestamp int64, isLastCheckSuppressed bool, lastStateSuppressedValue moira.State, maintenanceInfo moira.MaintenanceInfo) (needSend bool, message *string) {
 	if !isLastCheckSuppressed && currentStateValue != lastStateValue {
 		return true, nil
 	}
 
 	if isLastCheckSuppressed && currentStateValue != lastStateSuppressedValue {
-		if currentStateTimestamp > maintenance || currentStateValue != lastStateValue {
-			message := getMaintenanceCreateMessage(maintenanceInfo)
-			return true, &message
-		}
+		message := getMaintenanceCreateMessage(maintenanceInfo)
+		return true, &message
 	}
 	remindInterval, ok := badStateReminder[currentStateValue]
 	if ok && needRemindAgain(currentStateTimestamp, lastStateEventTimestamp, remindInterval) {
