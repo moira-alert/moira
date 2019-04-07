@@ -360,30 +360,6 @@ func TestCheckMetricStateSuppressedState(t *testing.T) {
 			So(actual, ShouldResemble, currentState)
 		})
 
-		Convey("Test still in maintenance. State changes WARN => WARN", func() {
-			lastState := moira.MetricState{
-				Timestamp:       1000,
-				EventTimestamp:  1000,
-				Maintenance:     1500,
-				State:           moira.StateWARN,
-				Suppressed:      true,
-				SuppressedState: moira.StateOK,
-			}
-
-			currentState := moira.MetricState{
-				Timestamp:   1100,
-				Maintenance: 1500,
-				State:       moira.StateWARN,
-				Suppressed:  true,
-			}
-
-			actual, err := triggerChecker.compareMetricStates("super.awesome.metric", currentState, lastState)
-			So(err, ShouldBeNil)
-			currentState.SuppressedState = lastState.SuppressedState
-			currentState.EventTimestamp = lastState.EventTimestamp
-			So(actual, ShouldResemble, currentState)
-		})
-
 		Convey("Test still in maintenance. State changes OK => ERROR", func() {
 			lastState := moira.MetricState{
 				Timestamp:       1100,
@@ -463,7 +439,7 @@ func TestCheckMetricStateSuppressedState(t *testing.T) {
 				Timestamp:       1200,
 				EventTimestamp:  1200,
 				Maintenance:     1500,
-				State:           moira.StateERROR,
+				State:           moira.StateOK,
 				Suppressed:      true,
 				SuppressedState: moira.StateOK,
 			}
@@ -707,28 +683,28 @@ func TestIsStateChanged(t *testing.T) {
 		Convey("Test needSendEvents for trigger", func() {
 			Convey("Start Maintenance not start user and time", func() {
 				actual := fmt.Sprintf("This metric changed its state during maintenance interval.")
-				needSend, message := isStateChanged(currentCheckTest.State, lastCheckTest.State, currentCheckTest.Timestamp, lastCheckTest.GetEventTimestamp(), lastCheckTest.Suppressed, lastCheckTest.SuppressedState, 0, lastCheckTest.MaintenanceInfo)
+				needSend, message := isStateChanged(currentCheckTest.State, lastCheckTest.State, currentCheckTest.Timestamp, lastCheckTest.GetEventTimestamp(), lastCheckTest.Suppressed, lastCheckTest.SuppressedState, lastCheckTest.MaintenanceInfo)
 				So(needSend, ShouldBeTrue)
 				So(*message, ShouldResemble, actual)
 			})
 			Convey("Start Maintenance", func() {
 				actual := fmt.Sprintf("This metric changed its state during maintenance interval. Maintenance was set by user %v at %v.", startMaintenanceUser, time.Unix(startMaintenanceTime, 0).Format("15:04 02.01.2006"))
 				lastCheckTest.MaintenanceInfo.Set(&startMaintenanceUser, &startMaintenanceTime, nil, nil)
-				needSend, message := isStateChanged(currentCheckTest.State, lastCheckTest.State, currentCheckTest.Timestamp, lastCheckTest.GetEventTimestamp(), lastCheckTest.Suppressed, lastCheckTest.SuppressedState, 0, lastCheckTest.MaintenanceInfo)
+				needSend, message := isStateChanged(currentCheckTest.State, lastCheckTest.State, currentCheckTest.Timestamp, lastCheckTest.GetEventTimestamp(), lastCheckTest.Suppressed, lastCheckTest.SuppressedState, lastCheckTest.MaintenanceInfo)
 				So(needSend, ShouldBeTrue)
 				So(*message, ShouldResemble, actual)
 			})
 			Convey("Stop Maintenance", func() {
 				actual := fmt.Sprintf("This metric changed its state during maintenance interval. Maintenance was set by user %v at %v. Maintenance removed by user %v at %v.", startMaintenanceUser, time.Unix(startMaintenanceTime, 0).Format("15:04 02.01.2006"), stopMaintenanceUser, time.Unix(stopMaintenanceTime, 0).Format("15:04 02.01.2006"))
 				lastCheckTest.MaintenanceInfo.Set(&startMaintenanceUser, &startMaintenanceTime, &stopMaintenanceUser, &stopMaintenanceTime)
-				needSend, message := isStateChanged(currentCheckTest.State, lastCheckTest.State, currentCheckTest.Timestamp, lastCheckTest.GetEventTimestamp(), lastCheckTest.Suppressed, lastCheckTest.SuppressedState, 0, lastCheckTest.MaintenanceInfo)
+				needSend, message := isStateChanged(currentCheckTest.State, lastCheckTest.State, currentCheckTest.Timestamp, lastCheckTest.GetEventTimestamp(), lastCheckTest.Suppressed, lastCheckTest.SuppressedState, lastCheckTest.MaintenanceInfo)
 				So(needSend, ShouldBeTrue)
 				So(*message, ShouldResemble, actual)
 			})
 			Convey("Stop Maintenance not start user and time", func() {
 				actual := fmt.Sprintf("This metric changed its state during maintenance interval. Maintenance removed by user %v at %v.", stopMaintenanceUser, time.Unix(stopMaintenanceTime, 0).Format("15:04 02.01.2006"))
 				lastCheckTest.MaintenanceInfo.Set(nil, nil, &stopMaintenanceUser, &stopMaintenanceTime)
-				needSend, message := isStateChanged(currentCheckTest.State, lastCheckTest.State, currentCheckTest.Timestamp, lastCheckTest.GetEventTimestamp(), lastCheckTest.Suppressed, lastCheckTest.SuppressedState, 0, lastCheckTest.MaintenanceInfo)
+				needSend, message := isStateChanged(currentCheckTest.State, lastCheckTest.State, currentCheckTest.Timestamp, lastCheckTest.GetEventTimestamp(), lastCheckTest.Suppressed, lastCheckTest.SuppressedState, lastCheckTest.MaintenanceInfo)
 				So(needSend, ShouldBeTrue)
 				So(*message, ShouldResemble, actual)
 			})
@@ -737,28 +713,28 @@ func TestIsStateChanged(t *testing.T) {
 		Convey("Test needSendEvents for metric", func() {
 			Convey("Start Maintenance not start user and time", func() {
 				actual := fmt.Sprintf("This metric changed its state during maintenance interval.")
-				needSend, message := isStateChanged(currentMetricTest.State, lastMetricsTest.State, currentMetricTest.Timestamp, lastMetricsTest.GetEventTimestamp(), lastMetricsTest.Suppressed, lastMetricsTest.SuppressedState, 0, currentMetricTest.MaintenanceInfo)
+				needSend, message := isStateChanged(currentMetricTest.State, lastMetricsTest.State, currentMetricTest.Timestamp, lastMetricsTest.GetEventTimestamp(), lastMetricsTest.Suppressed, lastMetricsTest.SuppressedState, currentMetricTest.MaintenanceInfo)
 				So(needSend, ShouldBeTrue)
 				So(*message, ShouldResemble, actual)
 			})
 			Convey("Start Maintenance", func() {
 				actual := fmt.Sprintf("This metric changed its state during maintenance interval. Maintenance was set by user %v at %v.", startMaintenanceUser, time.Unix(startMaintenanceTime, 0).Format("15:04 02.01.2006"))
 				currentMetricTest.MaintenanceInfo.Set(&startMaintenanceUser, &startMaintenanceTime, nil, nil)
-				needSend, message := isStateChanged(currentMetricTest.State, lastMetricsTest.State, currentMetricTest.Timestamp, lastMetricsTest.GetEventTimestamp(), lastMetricsTest.Suppressed, lastMetricsTest.SuppressedState, 0, currentMetricTest.MaintenanceInfo)
+				needSend, message := isStateChanged(currentMetricTest.State, lastMetricsTest.State, currentMetricTest.Timestamp, lastMetricsTest.GetEventTimestamp(), lastMetricsTest.Suppressed, lastMetricsTest.SuppressedState, currentMetricTest.MaintenanceInfo)
 				So(needSend, ShouldBeTrue)
 				So(*message, ShouldResemble, actual)
 			})
 			Convey("Stop Maintenance", func() {
 				actual := fmt.Sprintf("This metric changed its state during maintenance interval. Maintenance removed by user %v at %v.", stopMaintenanceUser, time.Unix(stopMaintenanceTime, 0).Format("15:04 02.01.2006"))
 				currentMetricTest.MaintenanceInfo.Set(nil, nil, &stopMaintenanceUser, &stopMaintenanceTime)
-				needSend, message := isStateChanged(currentMetricTest.State, lastMetricsTest.State, currentMetricTest.Timestamp, lastMetricsTest.GetEventTimestamp(), lastMetricsTest.Suppressed, lastMetricsTest.SuppressedState, 0, currentMetricTest.MaintenanceInfo)
+				needSend, message := isStateChanged(currentMetricTest.State, lastMetricsTest.State, currentMetricTest.Timestamp, lastMetricsTest.GetEventTimestamp(), lastMetricsTest.Suppressed, lastMetricsTest.SuppressedState, currentMetricTest.MaintenanceInfo)
 				So(needSend, ShouldBeTrue)
 				So(*message, ShouldResemble, actual)
 			})
 			Convey("Stop Maintenance not start user and time", func() {
 				actual := fmt.Sprintf("This metric changed its state during maintenance interval. Maintenance was set by user %v at %v. Maintenance removed by user %v at %v.", startMaintenanceUser, time.Unix(startMaintenanceTime, 0).Format("15:04 02.01.2006"), stopMaintenanceUser, time.Unix(stopMaintenanceTime, 0).Format("15:04 02.01.2006"))
 				currentMetricTest.MaintenanceInfo.Set(&startMaintenanceUser, &startMaintenanceTime, &stopMaintenanceUser, &stopMaintenanceTime)
-				needSend, message := isStateChanged(currentMetricTest.State, lastMetricsTest.State, currentMetricTest.Timestamp, lastMetricsTest.GetEventTimestamp(), lastMetricsTest.Suppressed, lastMetricsTest.SuppressedState, 0, currentMetricTest.MaintenanceInfo)
+				needSend, message := isStateChanged(currentMetricTest.State, lastMetricsTest.State, currentMetricTest.Timestamp, lastMetricsTest.GetEventTimestamp(), lastMetricsTest.Suppressed, lastMetricsTest.SuppressedState, currentMetricTest.MaintenanceInfo)
 				So(needSend, ShouldBeTrue)
 				So(*message, ShouldResemble, actual)
 			})
