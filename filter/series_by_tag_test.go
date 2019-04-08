@@ -62,19 +62,23 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 			"dc~=ru":           {{"dc", MatchOperator, "ru"}},
 			"dc!~=ru":          {{"dc", NotMatchOperator, "ru"}},
 			"invalid operator": {{"dc", TagSpecOperator("invalid operator"), "ru"}},
+			"name~=cpu;dc=":    {{"name", MatchOperator, "cpu"}, {"dc", EqualOperator, ""}},
+			"name~=cpu;dc!=":   {{"name", MatchOperator, "cpu"}, {"dc", NotEqualOperator, ""}},
+			"name~=cpu;dc~=":   {{"name", MatchOperator, "cpu"}, {"dc", MatchOperator, ""}},
+			"name~=cpu;dc!~=":  {{"name", MatchOperator, "cpu"}, {"dc", NotMatchOperator, ""}},
 		}
 		testCases := []struct {
 			Name            string
 			Labels          map[string]string
 			MatchedPatterns []string
 		}{
-			{"cpu1", map[string]string{}, []string{"name=cpu1", "name~=cpu"}},
-			{"cpu2", map[string]string{}, []string{"name!=cpu1", "name~=cpu"}},
+			{"cpu1", map[string]string{}, []string{"name=cpu1", "name~=cpu", "name~=cpu;dc=", "name~=cpu;dc~="}},
+			{"cpu2", map[string]string{}, []string{"name!=cpu1", "name~=cpu", "name~=cpu;dc=", "name~=cpu;dc~="}},
 			{"disk", map[string]string{}, []string{"name!=cpu1", "name!~=cpu"}},
-			{"cpu1", map[string]string{"dc": "ru1"}, []string{"dc=ru1", "dc~=ru", "name=cpu1", "name~=cpu"}},
-			{"cpu1", map[string]string{"dc": "ru2"}, []string{"dc!=ru1", "dc~=ru", "name=cpu1", "name~=cpu"}},
-			{"cpu1", map[string]string{"dc": "us"}, []string{"dc!=ru1", "dc!~=ru", "name=cpu1", "name~=cpu"}},
-			{"cpu1", map[string]string{"machine": "machine"}, []string{"name=cpu1", "name~=cpu"}},
+			{"cpu1", map[string]string{"dc": "ru1"}, []string{"dc=ru1", "dc~=ru", "name=cpu1", "name~=cpu", "name~=cpu;dc!=", "name~=cpu;dc~="}},
+			{"cpu1", map[string]string{"dc": "ru2"}, []string{"dc!=ru1", "dc~=ru", "name=cpu1", "name~=cpu", "name~=cpu;dc!=", "name~=cpu;dc~="}},
+			{"cpu1", map[string]string{"dc": "us"}, []string{"dc!=ru1", "dc!~=ru", "name=cpu1", "name~=cpu", "name~=cpu;dc!=", "name~=cpu;dc~="}},
+			{"cpu1", map[string]string{"machine": "machine"}, []string{"name=cpu1", "name~=cpu", "name~=cpu;dc=", "name~=cpu;dc~="}},
 		}
 
 		index := NewSeriesByTagPatternIndex(tagSpecsByPattern)
