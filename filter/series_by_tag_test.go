@@ -62,10 +62,20 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 			"dc~=ru":           {{"dc", MatchOperator, "ru"}},
 			"dc!~=ru":          {{"dc", NotMatchOperator, "ru"}},
 			"invalid operator": {{"dc", TagSpecOperator("invalid operator"), "ru"}},
-			"name~=cpu;dc=":    {{"name", MatchOperator, "cpu"}, {"dc", EqualOperator, ""}},
-			"name~=cpu;dc!=":   {{"name", MatchOperator, "cpu"}, {"dc", NotEqualOperator, ""}},
-			"name~=cpu;dc~=":   {{"name", MatchOperator, "cpu"}, {"dc", MatchOperator, ""}},
-			"name~=cpu;dc!~=":  {{"name", MatchOperator, "cpu"}, {"dc", NotMatchOperator, ""}},
+
+			"name=cpu1;dc=ru1": {{"name", MatchOperator, "cpu1"}, {"dc", EqualOperator, "ru1"}},
+			"name=cpu1;dc=ru2": {{"name", MatchOperator, "cpu1"}, {"dc", EqualOperator, "ru2"}},
+			"name=cpu2;dc=ru1": {{"name", MatchOperator, "cpu2"}, {"dc", EqualOperator, "ru1"}},
+			"name=cpu2;dc=ru2": {{"name", MatchOperator, "cpu2"}, {"dc", EqualOperator, "ru2"}},
+			"name=disk;dc=ru1": {{"name", MatchOperator, "disk"}, {"dc", EqualOperator, "ru1"}},
+			"name=disk;dc=ru2": {{"name", MatchOperator, "disk"}, {"dc", EqualOperator, "ru2"}},
+			"name=cpu1;dc=us":  {{"name", MatchOperator, "cpu1"}, {"dc", EqualOperator, "us"}},
+			"name=cpu2;dc=us":  {{"name", MatchOperator, "cpu2"}, {"dc", EqualOperator, "us"}},
+
+			"name~=cpu;dc=":   {{"name", MatchOperator, "cpu"}, {"dc", EqualOperator, ""}},
+			"name~=cpu;dc!=":  {{"name", MatchOperator, "cpu"}, {"dc", NotEqualOperator, ""}},
+			"name~=cpu;dc~=":  {{"name", MatchOperator, "cpu"}, {"dc", MatchOperator, ""}},
+			"name~=cpu;dc!~=": {{"name", MatchOperator, "cpu"}, {"dc", NotMatchOperator, ""}},
 		}
 		testCases := []struct {
 			Name            string
@@ -75,59 +85,12 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 			{"cpu1", map[string]string{}, []string{"name=cpu1", "name~=cpu", "name~=cpu;dc=", "name~=cpu;dc~="}},
 			{"cpu2", map[string]string{}, []string{"name!=cpu1", "name~=cpu", "name~=cpu;dc=", "name~=cpu;dc~="}},
 			{"disk", map[string]string{}, []string{"name!=cpu1", "name!~=cpu"}},
-			{"cpu1", map[string]string{"dc": "ru1"}, []string{"dc=ru1", "dc~=ru", "name=cpu1", "name~=cpu", "name~=cpu;dc!=", "name~=cpu;dc~="}},
-			{"cpu1", map[string]string{"dc": "ru2"}, []string{"dc!=ru1", "dc~=ru", "name=cpu1", "name~=cpu", "name~=cpu;dc!=", "name~=cpu;dc~="}},
-			{"cpu1", map[string]string{"dc": "us"}, []string{"dc!=ru1", "dc!~=ru", "name=cpu1", "name~=cpu", "name~=cpu;dc!=", "name~=cpu;dc~="}},
+			{"cpu1", map[string]string{"dc": "ru1"}, []string{"dc=ru1", "dc~=ru", "name=cpu1", "name=cpu1;dc=ru1", "name~=cpu", "name~=cpu;dc!=", "name~=cpu;dc~="}},
+			{"cpu1", map[string]string{"dc": "ru2"}, []string{"dc!=ru1", "dc~=ru", "name=cpu1", "name=cpu1;dc=ru2", "name~=cpu", "name~=cpu;dc!=", "name~=cpu;dc~="}},
+			{"cpu1", map[string]string{"dc": "us"}, []string{"dc!=ru1", "dc!~=ru", "name=cpu1", "name=cpu1;dc=us", "name~=cpu", "name~=cpu;dc!=", "name~=cpu;dc~="}},
 			{"cpu1", map[string]string{"machine": "machine"}, []string{"name=cpu1", "name~=cpu", "name~=cpu;dc=", "name~=cpu;dc~="}},
 		}
 
-		index := NewSeriesByTagPatternIndex(tagSpecsByPattern)
-		for _, testCase := range testCases {
-			patterns := index.MatchPatterns(testCase.Name, testCase.Labels)
-			sort.Strings(patterns)
-			c.So(patterns, ShouldResemble, testCase.MatchedPatterns)
-		}
-	})
-
-	Convey("Given complex patterns with tagspecs, should build index and match patterns", t, func(c C) {
-		tagSpecsByPattern := map[string][]TagSpec{
-			"name=cpu1;dc=dc1": {{"name", EqualOperator, "cpu1"}, {"dc", EqualOperator, "dc1"}},
-			"name=cpu2;dc=dc2": {{"name", EqualOperator, "cpu2"}, {"dc", EqualOperator, "dc2"}},
-		}
-
-		testCases := []struct {
-			Name            string
-			Labels          map[string]string
-			MatchedPatterns []string
-		}{
-			{"cpu1", map[string]string{"dc": "dc1"}, []string{"name=cpu1;dc=dc1"}},
-			{"cpu2", map[string]string{"dc": "dc2"}, []string{"name=cpu2;dc=dc2"}},
-			{"cpu1", map[string]string{"dc": "dc2"}, []string{}},
-			{"cpu2", map[string]string{"dc": "dc1"}, []string{}},
-		}
-
-		index := NewSeriesByTagPatternIndex(tagSpecsByPattern)
-		for _, testCase := range testCases {
-			patterns := index.MatchPatterns(testCase.Name, testCase.Labels)
-			sort.Strings(patterns)
-			c.So(patterns, ShouldResemble, testCase.MatchedPatterns)
-		}
-	})
-
-	Convey("Given patterns with empty tag spec, should build index and match patterns", t, func(c C) {
-		tagSpecsByPattern := map[string][]TagSpec{
-			"name=~cpu;dc=": {{"dc", EqualOperator, ""}},
-		}
-
-		testCases := []struct {
-			Name            string
-			Labels          map[string]string
-			MatchedPatterns []string
-		}{
-			{"cpu1", map[string]string{"dc": "dc1"}, []string{}},
-			{"cpu2", map[string]string{"dc": ""}, []string{"name=~cpu;dc="}},
-			{"cpu3", map[string]string{}, []string{"name=~cpu;dc="}},
-		}
 		index := NewSeriesByTagPatternIndex(tagSpecsByPattern)
 		for _, testCase := range testCases {
 			patterns := index.MatchPatterns(testCase.Name, testCase.Labels)
