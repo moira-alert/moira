@@ -168,7 +168,7 @@ type TriggerCheck struct {
 // MaintenanceCheck set maintenance user, time
 type MaintenanceCheck interface {
 	SetMaintenance(maintenanceInfo *MaintenanceInfo, maintenance int64)
-	GetMaintenance() MaintenanceInfo
+	GetMaintenance() (MaintenanceInfo, int64)
 }
 
 // CheckData represents last trigger check data
@@ -205,8 +205,8 @@ func (metricState *MetricState) SetMaintenance(maintenanceInfo *MaintenanceInfo,
 }
 
 // GetMaintenance return metricState MaintenanceInfo
-func (metricState *MetricState) GetMaintenance() MaintenanceInfo {
-	return metricState.MaintenanceInfo
+func (metricState *MetricState) GetMaintenance() (MaintenanceInfo, int64) {
+	return metricState.MaintenanceInfo, metricState.Maintenance
 }
 
 // MaintenanceInfo represents user and time set/unset maintenance
@@ -331,8 +331,8 @@ func (checkData *CheckData) SetMaintenance(maintenanceInfo *MaintenanceInfo, mai
 }
 
 // GetMaintenance return metricState MaintenanceInfo
-func (checkData *CheckData) GetMaintenance() MaintenanceInfo {
-	return checkData.MaintenanceInfo
+func (checkData *CheckData) GetMaintenance() (MaintenanceInfo, int64) {
+	return checkData.MaintenanceInfo, checkData.Maintenance
 }
 
 func createEmptyMetricState(defaultTimestampValue int64, firstStateIsNodata bool) MetricState {
@@ -424,7 +424,7 @@ func isAnonymous(user string) bool {
 
 // SetMaintenanceUserAndTime set startuser and starttime or stopuser and stoptime for MaintenanceInfo
 func SetMaintenanceUserAndTime(maintenanceCheck MaintenanceCheck, maintenance int64, user string, callMaintenance int64) {
-	var maintenanceInfo = maintenanceCheck.GetMaintenance()
+	maintenanceInfo, _ := maintenanceCheck.GetMaintenance()
 	if maintenance < callMaintenance {
 		if (maintenanceInfo.StartUser != nil && !isAnonymous(*maintenanceInfo.StartUser)) || !isAnonymous(user) {
 			maintenanceInfo.StopUser = &user
