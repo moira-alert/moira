@@ -124,6 +124,27 @@ func GetStringListsDiff(stringLists ...[]string) []string {
 	return result
 }
 
+// GetStringListsUnion returns the union set of stringLists
+func GetStringListsUnion(stringLists ...[]string) []string {
+	if len(stringLists) == 0 {
+		return []string{}
+	}
+
+	values := make([]string, 0)
+
+	uniqueValues := make(map[string]bool)
+	for _, stringList := range stringLists {
+		for _, value := range stringList {
+			if _, ok := uniqueValues[value]; !ok {
+				values = append(values, value)
+				uniqueValues[value] = true
+			}
+		}
+	}
+
+	return values
+}
+
 // GetTriggerListsDiff returns the members of the set resulting from the difference between the first set and all the successive lists.
 func GetTriggerListsDiff(triggerLists ...[]*Trigger) []*Trigger {
 	if len(triggerLists) == 0 {
