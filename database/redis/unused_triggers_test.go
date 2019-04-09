@@ -15,76 +15,76 @@ func TestUnusedTriggers(t *testing.T) {
 	dataBase.flush()
 	defer dataBase.flush()
 
-	Convey("Check marking unused", t, func() {
+	Convey("Check marking unused", t, func(c C) {
 		// Check it before any trigger is marked unused
 		triggerIDs, err := dataBase.GetUnusedTriggerIDs()
-		So(err, ShouldBeNil)
-		So(triggerIDs, ShouldBeEmpty)
+		c.So(err, ShouldBeNil)
+		c.So(triggerIDs, ShouldBeEmpty)
 
 		// Mark trigger 123 unused
 		err = dataBase.MarkTriggersAsUnused("123")
-		So(err, ShouldBeNil)
+		c.So(err, ShouldBeNil)
 
 		triggerIDs, err = dataBase.GetUnusedTriggerIDs()
-		So(triggerIDs, ShouldResemble, []string{"123"})
-		So(err, ShouldBeNil)
+		c.So(triggerIDs, ShouldResemble, []string{"123"})
+		c.So(err, ShouldBeNil)
 
 		// Repeat procedure till success
 		err = dataBase.MarkTriggersAsUnused("123")
-		So(err, ShouldBeNil)
+		c.So(err, ShouldBeNil)
 
 		triggerIDs, err = dataBase.GetUnusedTriggerIDs()
-		So(triggerIDs, ShouldResemble, []string{"123"})
-		So(err, ShouldBeNil)
+		c.So(triggerIDs, ShouldResemble, []string{"123"})
+		c.So(err, ShouldBeNil)
 
 		// Trying to unmark it
 		err = dataBase.MarkTriggersAsUsed("123")
-		So(err, ShouldBeNil)
+		c.So(err, ShouldBeNil)
 
 		triggerIDs, err = dataBase.GetUnusedTriggerIDs()
-		So(triggerIDs, ShouldBeEmpty)
-		So(err, ShouldBeNil)
+		c.So(triggerIDs, ShouldBeEmpty)
+		c.So(err, ShouldBeNil)
 
 		// Ok, let's raise the rates
 		err = dataBase.MarkTriggersAsUnused("123", "234", "345")
-		So(err, ShouldBeNil)
+		c.So(err, ShouldBeNil)
 
 		triggerIDs, err = dataBase.GetUnusedTriggerIDs()
-		So(triggerIDs, ShouldResemble, []string{"123", "234", "345"})
-		So(err, ShouldBeNil)
+		c.So(triggerIDs, ShouldResemble, []string{"123", "234", "345"})
+		c.So(err, ShouldBeNil)
 
 		// But, maybe we want to see the world burn?
 		err = dataBase.MarkTriggersAsUnused("123", "234", "345")
-		So(err, ShouldBeNil)
+		c.So(err, ShouldBeNil)
 
 		triggerIDs, err = dataBase.GetUnusedTriggerIDs()
-		So(triggerIDs, ShouldResemble, []string{"123", "234", "345"})
-		So(err, ShouldBeNil)
+		c.So(triggerIDs, ShouldResemble, []string{"123", "234", "345"})
+		c.So(err, ShouldBeNil)
 
 		err = dataBase.MarkTriggersAsUsed("123", "234")
-		So(err, ShouldBeNil)
+		c.So(err, ShouldBeNil)
 
 		triggerIDs, err = dataBase.GetUnusedTriggerIDs()
-		So(triggerIDs, ShouldResemble, []string{"345"})
-		So(err, ShouldBeNil)
+		c.So(triggerIDs, ShouldResemble, []string{"345"})
+		c.So(err, ShouldBeNil)
 
 		// Okey, I want to unmark non-existing triggers
 		err = dataBase.MarkTriggersAsUsed("alalala", "babababa")
-		So(err, ShouldBeNil)
+		c.So(err, ShouldBeNil)
 
 		triggerIDs, err = dataBase.GetUnusedTriggerIDs()
-		So(triggerIDs, ShouldResemble, []string{"345"})
-		So(err, ShouldBeNil)
+		c.So(triggerIDs, ShouldResemble, []string{"345"})
+		c.So(err, ShouldBeNil)
 
 		// AAAAND magic
 		err = dataBase.MarkTriggersAsUsed()
-		So(err, ShouldBeNil)
+		c.So(err, ShouldBeNil)
 
 		err = dataBase.MarkTriggersAsUnused()
-		So(err, ShouldBeNil)
+		c.So(err, ShouldBeNil)
 	})
 
-	Convey("Check triggers are marked used and unused properly", t, func() {
+	Convey("Check triggers are marked used and unused properly", t, func(c C) {
 		trigger1Ver1 := &moira.Trigger{
 			ID:          "triggerID-0000000000001",
 			Name:        "test trigger 1 v1.0",
@@ -130,52 +130,52 @@ func TestUnusedTriggers(t *testing.T) {
 			User:              "user1",
 		}
 
-		Convey("Very simple trigger-subscription test", func() {
+		Convey("Very simple trigger-subscription test", t, func(c C) {
 			dataBase.flush()
 
 			err := dataBase.SaveTrigger(trigger1Ver1.ID, trigger1Ver1)
-			So(err, ShouldBeNil)
+			c.So(err, ShouldBeNil)
 
 			unusedTriggerIDs, err := dataBase.GetUnusedTriggerIDs()
-			So(err, ShouldBeNil)
-			So(unusedTriggerIDs, ShouldResemble, []string{trigger1Ver1.ID})
+			c.So(err, ShouldBeNil)
+			c.So(unusedTriggerIDs, ShouldResemble, []string{trigger1Ver1.ID})
 
 			err = dataBase.SaveSubscription(subscription1Ver1)
-			So(err, ShouldBeNil)
+			c.So(err, ShouldBeNil)
 
 			unusedTriggerIDs, err = dataBase.GetUnusedTriggerIDs()
-			So(err, ShouldBeNil)
-			So(unusedTriggerIDs, ShouldBeEmpty)
+			c.So(err, ShouldBeNil)
+			c.So(unusedTriggerIDs, ShouldBeEmpty)
 		})
 
-		Convey("Let's change trigger", func() {
+		Convey("Let's change trigger", t, func(c C) {
 			// Add tags, don't remove old tags
 			err := dataBase.SaveTrigger(trigger1Ver2.ID, trigger1Ver2)
-			So(err, ShouldBeNil)
+			c.So(err, ShouldBeNil)
 
 			unusedTriggerIDs, err := dataBase.GetUnusedTriggerIDs()
-			So(err, ShouldBeNil)
-			So(unusedTriggerIDs, ShouldBeEmpty)
+			c.So(err, ShouldBeNil)
+			c.So(unusedTriggerIDs, ShouldBeEmpty)
 
 			// Remove old tag
 			err = dataBase.SaveTrigger(trigger1Ver3.ID, trigger1Ver3)
-			So(err, ShouldBeNil)
+			c.So(err, ShouldBeNil)
 
 			unusedTriggerIDs, err = dataBase.GetUnusedTriggerIDs()
-			So(err, ShouldBeNil)
-			So(unusedTriggerIDs, ShouldResemble, []string{trigger1Ver3.ID})
+			c.So(err, ShouldBeNil)
+			c.So(unusedTriggerIDs, ShouldResemble, []string{trigger1Ver3.ID})
 		})
 
-		Convey("Let's change subscription", func() {
+		Convey("Let's change subscription", t, func(c C) {
 			err := dataBase.SaveSubscription(subscription1Ver2)
-			So(err, ShouldBeNil)
+			c.So(err, ShouldBeNil)
 
 			unusedTriggerIDs, err := dataBase.GetUnusedTriggerIDs()
-			So(err, ShouldBeNil)
-			So(unusedTriggerIDs, ShouldBeEmpty)
+			c.So(err, ShouldBeNil)
+			c.So(unusedTriggerIDs, ShouldBeEmpty)
 		})
 
-		Convey("Mass operations with triggers and subscriptions", func() {
+		Convey("Mass operations with triggers and subscriptions", t, func(c C) {
 			dataBase.flush()
 
 			triggers := []*moira.Trigger{
@@ -258,20 +258,20 @@ func TestUnusedTriggers(t *testing.T) {
 			// Add new triggers
 			for _, trigger := range triggers {
 				err := dataBase.SaveTrigger(trigger.ID, trigger)
-				So(err, ShouldBeNil)
+				c.So(err, ShouldBeNil)
 			}
 
 			unusedTriggerIDs, err := dataBase.GetUnusedTriggerIDs()
-			So(err, ShouldBeNil)
-			So(len(unusedTriggerIDs), ShouldEqual, 6)
+			c.So(err, ShouldBeNil)
+			c.So(len(unusedTriggerIDs), ShouldEqual, 6)
 
 			// Add all subscriptions
 			err = dataBase.SaveSubscriptions(subscriptions)
-			So(err, ShouldBeNil)
+			c.So(err, ShouldBeNil)
 
 			unusedTriggerIDs, err = dataBase.GetUnusedTriggerIDs()
-			So(err, ShouldBeNil)
-			So(unusedTriggerIDs, ShouldResemble, []string{triggers[5].ID})
+			c.So(err, ShouldBeNil)
+			c.So(unusedTriggerIDs, ShouldResemble, []string{triggers[5].ID})
 		})
 	})
 }
@@ -281,12 +281,12 @@ func TestUnusedTriggersConnection(t *testing.T) {
 	dataBase := newTestDatabase(logger, emptyConfig)
 	dataBase.flush()
 	defer dataBase.flush()
-	Convey("Should throw error when no connection", t, func() {
+	Convey("Should throw error when no connection", t, func(c C) {
 		err := dataBase.MarkTriggersAsUnused("123")
-		So(err, ShouldNotBeNil)
+		c.So(err, ShouldNotBeNil)
 
 		triggerIDs, err := dataBase.GetUnusedTriggerIDs()
-		So(triggerIDs, ShouldBeEmpty)
-		So(err, ShouldNotBeNil)
+		c.So(triggerIDs, ShouldBeEmpty)
+		c.So(err, ShouldNotBeNil)
 	})
 }

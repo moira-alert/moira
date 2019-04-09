@@ -12,8 +12,8 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
-	"github.com/moira-alert/moira/mock/moira-alert"
-	"github.com/moira-alert/moira/mock/scheduler"
+	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
+	mock_scheduler "github.com/moira-alert/moira/mock/scheduler"
 	"github.com/moira-alert/moira/notifier"
 )
 
@@ -26,7 +26,7 @@ func TestEvent(t *testing.T) {
 	scheduler := mock_scheduler.NewMockScheduler(mockCtrl)
 	logger, _ := logging.GetLogger("Events")
 
-	Convey("When event is TEST and subscription is disabled, should add new notification", t, func() {
+	Convey("When event is TEST and subscription is disabled, should add new notification", t, func(c C) {
 		worker := FetchEventsWorker{
 			Database:  dataBase,
 			Logger:    logger,
@@ -55,10 +55,10 @@ func TestEvent(t *testing.T) {
 		dataBase.EXPECT().AddNotification(&notification)
 
 		err := worker.processEvent(event)
-		So(err, ShouldBeEmpty)
+		c.So(err, ShouldBeEmpty)
 	})
 
-	Convey("When event is TEST and has contactID", t, func() {
+	Convey("When event is TEST and has contactID", t, func(c C) {
 		worker := FetchEventsWorker{
 			Database:  dataBase,
 			Logger:    logger,
@@ -95,12 +95,12 @@ func TestEvent(t *testing.T) {
 		dataBase.EXPECT().AddNotification(&notification)
 
 		err := worker.processEvent(event)
-		So(err, ShouldBeEmpty)
+		c.So(err, ShouldBeEmpty)
 	})
 }
 
 func TestNoSubscription(t *testing.T) {
-	Convey("When no subscription by event tags, should not call AddNotification", t, func() {
+	Convey("When no subscription by event tags, should not call AddNotification", t, func(c C) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
@@ -124,12 +124,12 @@ func TestNoSubscription(t *testing.T) {
 		dataBase.EXPECT().GetTagsSubscriptions(triggerData.Tags).Times(1).Return(make([]*moira.SubscriptionData, 0), nil)
 
 		err := worker.processEvent(event)
-		So(err, ShouldBeEmpty)
+		c.So(err, ShouldBeEmpty)
 	})
 }
 
 func TestDisabledNotification(t *testing.T) {
-	Convey("When subscription event tags is disabled, should not call AddNotification", t, func() {
+	Convey("When subscription event tags is disabled, should not call AddNotification", t, func(c C) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
@@ -157,7 +157,7 @@ func TestDisabledNotification(t *testing.T) {
 		logger.EXPECT().Debugf("Subscription %s is disabled", disabledSubscription.ID)
 
 		err := worker.processEvent(event)
-		So(err, ShouldBeEmpty)
+		c.So(err, ShouldBeEmpty)
 	})
 }
 
@@ -167,7 +167,7 @@ func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger := mock_moira_alert.NewMockLogger(mockCtrl)
 
-	Convey("[TRUE] Do not send WARN notifications", t, func() {
+	Convey("[TRUE] Do not send WARN notifications", t, func(c C) {
 		worker := FetchEventsWorker{
 			Database:  dataBase,
 			Logger:    logger,
@@ -190,9 +190,9 @@ func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
 		logger.EXPECT().Debugf("Subscription %s is managed to ignore %s -> %s transitions", subscriptionToIgnoreWarnings.ID, event.OldState, event.State)
 
 		err := worker.processEvent(event)
-		So(err, ShouldBeEmpty)
+		c.So(err, ShouldBeEmpty)
 	})
-	Convey("[TRUE] Send notifications when triggers degraded only", t, func() {
+	Convey("[TRUE] Send notifications when triggers degraded only", t, func(c C) {
 		worker := FetchEventsWorker{
 			Database:  dataBase,
 			Logger:    logger,
@@ -215,9 +215,9 @@ func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
 		logger.EXPECT().Debugf("Subscription %s is managed to ignore %s -> %s transitions", subscriptionToIgnoreRecoverings.ID, event.OldState, event.State)
 
 		err := worker.processEvent(event)
-		So(err, ShouldBeEmpty)
+		c.So(err, ShouldBeEmpty)
 	})
-	Convey("[TRUE] Do not send WARN notifications & [TRUE] Send notifications when triggers degraded only", t, func() {
+	Convey("[TRUE] Do not send WARN notifications & [TRUE] Send notifications when triggers degraded only", t, func(c C) {
 		worker := FetchEventsWorker{
 			Database:  dataBase,
 			Logger:    logger,
@@ -240,12 +240,12 @@ func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
 		logger.EXPECT().Debugf("Subscription %s is managed to ignore %s -> %s transitions", subscriptionToIgnoreWarningsAndRecoverings.ID, event.OldState, event.State)
 
 		err := worker.processEvent(event)
-		So(err, ShouldBeEmpty)
+		c.So(err, ShouldBeEmpty)
 	})
 }
 
 func TestAddNotification(t *testing.T) {
-	Convey("When good subscription, should add new notification", t, func() {
+	Convey("When good subscription, should add new notification", t, func(c C) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
@@ -274,12 +274,12 @@ func TestAddNotification(t *testing.T) {
 		dataBase.EXPECT().AddNotification(&emptyNotification).Times(1).Return(nil)
 
 		err := worker.processEvent(event)
-		So(err, ShouldBeEmpty)
+		c.So(err, ShouldBeEmpty)
 	})
 }
 
 func TestAddOneNotificationByTwoSubscriptionsWithSame(t *testing.T) {
-	Convey("When good subscription and create 2 same scheduled notifications, should add one new notification", t, func() {
+	Convey("When good subscription and create 2 same scheduled notifications, should add one new notification", t, func(c C) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
@@ -314,12 +314,12 @@ func TestAddOneNotificationByTwoSubscriptionsWithSame(t *testing.T) {
 		dataBase.EXPECT().AddNotification(&notification2).Times(1).Return(nil)
 
 		err := worker.processEvent(event)
-		So(err, ShouldBeEmpty)
+		c.So(err, ShouldBeEmpty)
 	})
 }
 
 func TestFailReadContact(t *testing.T) {
-	Convey("When read contact returns error, should not call AddNotification and not crashed", t, func() {
+	Convey("When read contact returns error, should not call AddNotification and not crashed", t, func(c C) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
@@ -348,12 +348,12 @@ func TestFailReadContact(t *testing.T) {
 		logger.EXPECT().Warningf("Failed to get contact: %s, skip handling it, error: %v", contact.ID, getContactError)
 
 		err := worker.processEvent(event)
-		So(err, ShouldBeEmpty)
+		c.So(err, ShouldBeEmpty)
 	})
 }
 
 func TestEmptySubscriptions(t *testing.T) {
-	Convey("When subscription is empty value object", t, func() {
+	Convey("When subscription is empty value object", t, func(c C) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
@@ -380,10 +380,10 @@ func TestEmptySubscriptions(t *testing.T) {
 		logger.EXPECT().Debugf("Subscription %s is disabled", "")
 
 		err := worker.processEvent(event)
-		So(err, ShouldBeEmpty)
+		c.So(err, ShouldBeEmpty)
 	})
 
-	Convey("When subscription is nil", t, func() {
+	Convey("When subscription is nil", t, func(c C) {
 		mockCtrl := gomock.NewController(t)
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger := mock_moira_alert.NewMockLogger(mockCtrl)
@@ -409,7 +409,7 @@ func TestEmptySubscriptions(t *testing.T) {
 		logger.EXPECT().Debugf("Subscription is nil")
 
 		err := worker.processEvent(event)
-		So(err, ShouldBeEmpty)
+		c.So(err, ShouldBeEmpty)
 	})
 }
 
@@ -425,7 +425,7 @@ func TestGetNotificationSubscriptions(t *testing.T) {
 		Scheduler: notifier.NewScheduler(dataBase, logger, metrics2),
 	}
 
-	Convey("Error GetSubscription", t, func() {
+	Convey("Error GetSubscription", t, func(c C) {
 		event := moira.NotificationEvent{
 			State:          moira.StateTEST,
 			SubscriptionID: &subscription.ID,
@@ -433,11 +433,11 @@ func TestGetNotificationSubscriptions(t *testing.T) {
 		err := fmt.Errorf("Oppps")
 		dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(moira.SubscriptionData{}, err)
 		sub, expected := worker.getNotificationSubscriptions(event)
-		So(sub, ShouldBeNil)
-		So(expected, ShouldResemble, fmt.Errorf("error while read subscription %s: %s", *event.SubscriptionID, err.Error()))
+		c.So(sub, ShouldBeNil)
+		c.So(expected, ShouldResemble, fmt.Errorf("error while read subscription %s: %s", *event.SubscriptionID, err.Error()))
 	})
 
-	Convey("Error GetContact", t, func() {
+	Convey("Error GetContact", t, func(c C) {
 		event := moira.NotificationEvent{
 			State:     moira.StateTEST,
 			ContactID: "1233",
@@ -445,14 +445,14 @@ func TestGetNotificationSubscriptions(t *testing.T) {
 		err := fmt.Errorf("Oppps")
 		dataBase.EXPECT().GetContact(event.ContactID).Return(moira.ContactData{}, err)
 		sub, expected := worker.getNotificationSubscriptions(event)
-		So(sub, ShouldBeNil)
-		So(expected, ShouldResemble, fmt.Errorf("error while read contact %s: %s", event.ContactID, err.Error()))
+		c.So(sub, ShouldBeNil)
+		c.So(expected, ShouldResemble, fmt.Errorf("error while read contact %s: %s", event.ContactID, err.Error()))
 	})
 
 }
 
 func TestGoRoutine(t *testing.T) {
-	Convey("When good subscription, should add new notification", t, func() {
+	Convey("When good subscription, should add new notification", t, func(c C) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)

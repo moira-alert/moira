@@ -8,8 +8,8 @@ import (
 )
 
 func TestMakeEmptyTriggerMetricsData(t *testing.T) {
-	Convey("Just make empty TriggerMetricsData", t, func() {
-		So(*(MakeEmptyTriggerMetricsData()), ShouldResemble, TriggerMetricsData{
+	Convey("Just make empty TriggerMetricsData", t, func(c C) {
+		c.So(*(MakeEmptyTriggerMetricsData()), ShouldResemble, TriggerMetricsData{
 			Main:       make([]*MetricData, 0),
 			Additional: make([]*MetricData, 0),
 		})
@@ -17,22 +17,22 @@ func TestMakeEmptyTriggerMetricsData(t *testing.T) {
 }
 
 func TestMakeTriggerMetricsData(t *testing.T) {
-	Convey("Just make empty TriggerMetricsData", t, func() {
-		So(*(MakeTriggerMetricsData(make([]*MetricData, 0), make([]*MetricData, 0))), ShouldResemble, TriggerMetricsData{
+	Convey("Just make empty TriggerMetricsData", t, func(c C) {
+		c.So(*(MakeTriggerMetricsData(make([]*MetricData, 0), make([]*MetricData, 0))), ShouldResemble, TriggerMetricsData{
 			Main:       make([]*MetricData, 0),
 			Additional: make([]*MetricData, 0),
 		})
 	})
 
-	Convey("Just make TriggerMetricsData only with main", t, func() {
-		So(*(MakeTriggerMetricsData([]*MetricData{MakeMetricData("000", make([]float64, 0), 10, 0)}, make([]*MetricData, 0))), ShouldResemble, TriggerMetricsData{
+	Convey("Just make TriggerMetricsData only with main", t, func(c C) {
+		c.So(*(MakeTriggerMetricsData([]*MetricData{MakeMetricData("000", make([]float64, 0), 10, 0)}, make([]*MetricData, 0))), ShouldResemble, TriggerMetricsData{
 			Main:       []*MetricData{MakeMetricData("000", make([]float64, 0), 10, 0)},
 			Additional: make([]*MetricData, 0),
 		})
 	})
 
-	Convey("Just make TriggerMetricsData with main and additional", t, func() {
-		So(*(MakeTriggerMetricsData([]*MetricData{MakeMetricData("000", make([]float64, 0), 10, 0)}, []*MetricData{MakeMetricData("000", make([]float64, 0), 10, 0)})), ShouldResemble, TriggerMetricsData{
+	Convey("Just make TriggerMetricsData with main and additional", t, func(c C) {
+		c.So(*(MakeTriggerMetricsData([]*MetricData{MakeMetricData("000", make([]float64, 0), 10, 0)}, []*MetricData{MakeMetricData("000", make([]float64, 0), 10, 0)})), ShouldResemble, TriggerMetricsData{
 			Main:       []*MetricData{MakeMetricData("000", make([]float64, 0), 10, 0)},
 			Additional: []*MetricData{MakeMetricData("000", make([]float64, 0), 10, 0)},
 		})
@@ -42,52 +42,52 @@ func TestMakeTriggerMetricsData(t *testing.T) {
 func TestGetTargetName(t *testing.T) {
 	tts := TriggerMetricsData{}
 
-	Convey("GetMainTargetName", t, func() {
-		So(tts.GetMainTargetName(), ShouldResemble, "t1")
+	Convey("GetMainTargetName", t, func(c C) {
+		c.So(tts.GetMainTargetName(), ShouldResemble, "t1")
 	})
 
-	Convey("GetAdditionalTargetName", t, func() {
+	Convey("GetAdditionalTargetName", t, func(c C) {
 		for i := 0; i < 5; i++ {
-			So(tts.GetAdditionalTargetName(i), ShouldResemble, fmt.Sprintf("t%v", i+2))
+			c.So(tts.GetAdditionalTargetName(i), ShouldResemble, fmt.Sprintf("t%v", i+2))
 		}
 	})
 }
 
 func TestTriggerTimeSeriesHasOnlyWildcards(t *testing.T) {
-	Convey("Main metrics data has wildcards only", t, func() {
+	Convey("Main metrics data has wildcards only", t, func(c C) {
 		tts := TriggerMetricsData{
 			Main: []*MetricData{{Wildcard: true}},
 		}
-		So(tts.HasOnlyWildcards(), ShouldBeTrue)
+		c.So(tts.HasOnlyWildcards(), ShouldBeTrue)
 
 		tts1 := TriggerMetricsData{
 			Main: []*MetricData{{Wildcard: true}, {Wildcard: true}},
 		}
-		So(tts1.HasOnlyWildcards(), ShouldBeTrue)
+		c.So(tts1.HasOnlyWildcards(), ShouldBeTrue)
 	})
 
-	Convey("Main metrics data has not only wildcards", t, func() {
+	Convey("Main metrics data has not only wildcards", t, func(c C) {
 		tts := TriggerMetricsData{
 			Main: []*MetricData{{Wildcard: false}},
 		}
-		So(tts.HasOnlyWildcards(), ShouldBeFalse)
+		c.So(tts.HasOnlyWildcards(), ShouldBeFalse)
 
 		tts1 := TriggerMetricsData{
 			Main: []*MetricData{{Wildcard: false}, {Wildcard: true}},
 		}
-		So(tts1.HasOnlyWildcards(), ShouldBeFalse)
+		c.So(tts1.HasOnlyWildcards(), ShouldBeFalse)
 
 		tts2 := TriggerMetricsData{
 			Main: []*MetricData{{Wildcard: false}, {Wildcard: false}},
 		}
-		So(tts2.HasOnlyWildcards(), ShouldBeFalse)
+		c.So(tts2.HasOnlyWildcards(), ShouldBeFalse)
 	})
 
-	Convey("Additional metrics data has wildcards but Main not", t, func() {
+	Convey("Additional metrics data has wildcards but Main not", t, func(c C) {
 		tts := TriggerMetricsData{
 			Main:       []*MetricData{{Wildcard: false}},
 			Additional: []*MetricData{{Wildcard: true}, {Wildcard: true}},
 		}
-		So(tts.HasOnlyWildcards(), ShouldBeFalse)
+		c.So(tts.HasOnlyWildcards(), ShouldBeFalse)
 	})
 }

@@ -19,104 +19,104 @@ func TestNotificationEvents(t *testing.T) {
 	dataBase.flush()
 	defer dataBase.flush()
 
-	Convey("Notification events manipulation", t, func() {
-		Convey("Test push-get-get count-fetch", func() {
-			Convey("Should no events", func() {
+	Convey("Notification events manipulation", t, func(c C) {
+		Convey("Test push-get-get count-fetch", t, func(c C) {
+			Convey("Should no events", t, func(c C) {
 				actual, err := dataBase.GetNotificationEvents(notificationEvent.TriggerID, 0, 1)
-				So(err, ShouldBeNil)
-				So(actual, ShouldResemble, make([]*moira.NotificationEvent, 0))
+				c.So(err, ShouldBeNil)
+				c.So(actual, ShouldResemble, make([]*moira.NotificationEvent, 0))
 
 				total := dataBase.GetNotificationEventCount(notificationEvent.TriggerID, 0)
-				So(total, ShouldEqual, 0)
+				c.So(total, ShouldEqual, 0)
 
 				actual1, err := dataBase.FetchNotificationEvent()
-				So(err, ShouldBeError)
-				So(err, ShouldResemble, database.ErrNil)
-				So(actual1, ShouldResemble, moira.NotificationEvent{})
+				c.So(err, ShouldBeError)
+				c.So(err, ShouldResemble, database.ErrNil)
+				c.So(actual1, ShouldResemble, moira.NotificationEvent{})
 			})
 
-			Convey("Should has one events after push", func() {
+			Convey("Should has one events after push", t, func(c C) {
 				err := dataBase.PushNotificationEvent(&notificationEvent, true)
-				So(err, ShouldBeNil)
+				c.So(err, ShouldBeNil)
 
 				actual, err := dataBase.GetNotificationEvents(notificationEvent.TriggerID, 0, 1)
-				So(err, ShouldBeNil)
-				So(actual, ShouldResemble, []*moira.NotificationEvent{&notificationEvent})
+				c.So(err, ShouldBeNil)
+				c.So(actual, ShouldResemble, []*moira.NotificationEvent{&notificationEvent})
 
 				total := dataBase.GetNotificationEventCount(notificationEvent.TriggerID, 0)
-				So(total, ShouldEqual, 1)
+				c.So(total, ShouldEqual, 1)
 
 				actual1, err := dataBase.FetchNotificationEvent()
-				So(err, ShouldBeNil)
-				So(actual1, ShouldResemble, notificationEvent)
+				c.So(err, ShouldBeNil)
+				c.So(actual1, ShouldResemble, notificationEvent)
 			})
 
-			Convey("Should has event by triggerID after fetch", func() {
+			Convey("Should has event by triggerID after fetch", t, func(c C) {
 				actual, err := dataBase.GetNotificationEvents(notificationEvent.TriggerID, 0, 1)
-				So(err, ShouldBeNil)
-				So(actual, ShouldResemble, []*moira.NotificationEvent{&notificationEvent})
+				c.So(err, ShouldBeNil)
+				c.So(actual, ShouldResemble, []*moira.NotificationEvent{&notificationEvent})
 
 				total := dataBase.GetNotificationEventCount(notificationEvent.TriggerID, 0)
-				So(total, ShouldEqual, 1)
+				c.So(total, ShouldEqual, 1)
 			})
 
-			Convey("Should no events to fetch after fetch", func() {
+			Convey("Should no events to fetch after fetch", t, func(c C) {
 				actual1, err := dataBase.FetchNotificationEvent()
-				So(err, ShouldBeError)
-				So(err, ShouldResemble, database.ErrNil)
-				So(actual1, ShouldResemble, moira.NotificationEvent{})
+				c.So(err, ShouldBeError)
+				c.So(err, ShouldResemble, database.ErrNil)
+				c.So(actual1, ShouldResemble, moira.NotificationEvent{})
 			})
 		})
 
-		Convey("Test push-fetch multiple event by differ triggerIDs", func() {
-			Convey("Push events and get it by triggerIDs", func() {
+		Convey("Test push-fetch multiple event by differ triggerIDs", t, func(c C) {
+			Convey("Push events and get it by triggerIDs", t, func(c C) {
 				err := dataBase.PushNotificationEvent(&notificationEvent1, true)
-				So(err, ShouldBeNil)
+				c.So(err, ShouldBeNil)
 
 				err = dataBase.PushNotificationEvent(&notificationEvent2, true)
-				So(err, ShouldBeNil)
+				c.So(err, ShouldBeNil)
 
 				actual, err := dataBase.GetNotificationEvents(notificationEvent1.TriggerID, 0, 1)
-				So(err, ShouldBeNil)
-				So(actual, ShouldResemble, []*moira.NotificationEvent{&notificationEvent1})
+				c.So(err, ShouldBeNil)
+				c.So(actual, ShouldResemble, []*moira.NotificationEvent{&notificationEvent1})
 
 				total := dataBase.GetNotificationEventCount(notificationEvent1.TriggerID, 0)
-				So(total, ShouldEqual, 1)
+				c.So(total, ShouldEqual, 1)
 
 				actual, err = dataBase.GetNotificationEvents(notificationEvent2.TriggerID, 0, 1)
-				So(err, ShouldBeNil)
-				So(actual, ShouldResemble, []*moira.NotificationEvent{&notificationEvent2})
+				c.So(err, ShouldBeNil)
+				c.So(actual, ShouldResemble, []*moira.NotificationEvent{&notificationEvent2})
 
 				total = dataBase.GetNotificationEventCount(notificationEvent2.TriggerID, 0)
-				So(total, ShouldEqual, 1)
+				c.So(total, ShouldEqual, 1)
 			})
 
-			Convey("Fetch one of them and check for existing again", func() {
+			Convey("Fetch one of them and check for existing again", t, func(c C) {
 				actual1, err := dataBase.FetchNotificationEvent()
-				So(err, ShouldBeNil)
-				So(actual1, ShouldResemble, notificationEvent1)
+				c.So(err, ShouldBeNil)
+				c.So(actual1, ShouldResemble, notificationEvent1)
 
 				actual, err := dataBase.GetNotificationEvents(notificationEvent1.TriggerID, 0, 1)
-				So(err, ShouldBeNil)
-				So(actual, ShouldResemble, []*moira.NotificationEvent{&notificationEvent1})
+				c.So(err, ShouldBeNil)
+				c.So(actual, ShouldResemble, []*moira.NotificationEvent{&notificationEvent1})
 
 				total := dataBase.GetNotificationEventCount(notificationEvent1.TriggerID, 0)
-				So(total, ShouldEqual, 1)
+				c.So(total, ShouldEqual, 1)
 			})
 
-			Convey("Fetch second then fetch and and check for ErrNil", func() {
+			Convey("Fetch second then fetch and and check for ErrNil", t, func(c C) {
 				actual, err := dataBase.FetchNotificationEvent()
-				So(err, ShouldBeNil)
-				So(actual, ShouldResemble, notificationEvent2)
+				c.So(err, ShouldBeNil)
+				c.So(actual, ShouldResemble, notificationEvent2)
 
 				actual, err = dataBase.FetchNotificationEvent()
-				So(err, ShouldBeError)
-				So(err, ShouldResemble, database.ErrNil)
-				So(actual, ShouldResemble, moira.NotificationEvent{})
+				c.So(err, ShouldBeError)
+				c.So(err, ShouldResemble, database.ErrNil)
+				c.So(actual, ShouldResemble, moira.NotificationEvent{})
 			})
 		})
 
-		Convey("Test get by ranges", func() {
+		Convey("Test get by ranges", t, func(c C) {
 			now := time.Now().Unix()
 			event := moira.NotificationEvent{
 				Timestamp: now,
@@ -127,46 +127,46 @@ func TestNotificationEvents(t *testing.T) {
 			}
 
 			err := dataBase.PushNotificationEvent(&event, true)
-			So(err, ShouldBeNil)
+			c.So(err, ShouldBeNil)
 
 			actual, err := dataBase.GetNotificationEvents(event.TriggerID, 0, 1)
-			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, []*moira.NotificationEvent{&event})
+			c.So(err, ShouldBeNil)
+			c.So(actual, ShouldResemble, []*moira.NotificationEvent{&event})
 
 			total := dataBase.GetNotificationEventCount(event.TriggerID, 0)
-			So(total, ShouldEqual, 1)
+			c.So(total, ShouldEqual, 1)
 
 			total = dataBase.GetNotificationEventCount(event.TriggerID, now-1)
-			So(total, ShouldEqual, 1)
+			c.So(total, ShouldEqual, 1)
 
 			total = dataBase.GetNotificationEventCount(event.TriggerID, now)
-			So(total, ShouldEqual, 1)
+			c.So(total, ShouldEqual, 1)
 
 			total = dataBase.GetNotificationEventCount(event.TriggerID, now+1)
-			So(total, ShouldEqual, 0)
+			c.So(total, ShouldEqual, 0)
 
 			actual, err = dataBase.GetNotificationEvents(event.TriggerID, 1, 1)
-			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, make([]*moira.NotificationEvent, 0))
+			c.So(err, ShouldBeNil)
+			c.So(actual, ShouldResemble, make([]*moira.NotificationEvent, 0))
 		})
 
-		Convey("Test removing notification events", func() {
-			Convey("Should remove all notifications", func() {
+		Convey("Test removing notification events", t, func(c C) {
+			Convey("Should remove all notifications", t, func(c C) {
 				err := dataBase.PushNotificationEvent(&notificationEvent, true)
-				So(err, ShouldBeNil)
+				c.So(err, ShouldBeNil)
 
 				err = dataBase.PushNotificationEvent(&notificationEvent1, true)
-				So(err, ShouldBeNil)
+				c.So(err, ShouldBeNil)
 
 				err = dataBase.PushNotificationEvent(&notificationEvent2, true)
-				So(err, ShouldBeNil)
+				c.So(err, ShouldBeNil)
 
 				err = dataBase.RemoveAllNotificationEvents()
-				So(err, ShouldBeNil)
+				c.So(err, ShouldBeNil)
 
 				actual, err := dataBase.FetchNotificationEvent()
-				So(err, ShouldResemble, database.ErrNil)
-				So(actual, ShouldResemble, moira.NotificationEvent{})
+				c.So(err, ShouldResemble, database.ErrNil)
+				c.So(actual, ShouldResemble, moira.NotificationEvent{})
 			})
 		})
 	})
@@ -186,20 +186,20 @@ func TestNotificationEventErrorConnection(t *testing.T) {
 		Metric:    "my.metric",
 	}
 
-	Convey("Should throw error when no connection", t, func() {
+	Convey("Should throw error when no connection", t, func(c C) {
 		actual1, err := dataBase.GetNotificationEvents("123", 0, 1)
-		So(actual1, ShouldBeNil)
-		So(err, ShouldNotBeNil)
+		c.So(actual1, ShouldBeNil)
+		c.So(err, ShouldNotBeNil)
 
 		err = dataBase.PushNotificationEvent(&notificationEvent, true)
-		So(err, ShouldNotBeNil)
+		c.So(err, ShouldNotBeNil)
 
 		total := dataBase.GetNotificationEventCount("123", 0)
-		So(total, ShouldEqual, 0)
+		c.So(total, ShouldEqual, 0)
 
 		actual2, err := dataBase.FetchNotificationEvent()
-		So(actual2, ShouldResemble, moira.NotificationEvent{})
-		So(err, ShouldNotBeNil)
+		c.So(actual2, ShouldResemble, moira.NotificationEvent{})
+		c.So(err, ShouldNotBeNil)
 	})
 }
 

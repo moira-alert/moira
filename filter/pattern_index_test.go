@@ -5,7 +5,7 @@ import "testing"
 import . "github.com/smartystreets/goconvey/convey"
 
 func TestPatternIndex(t *testing.T) {
-	Convey("Given patterns, should build index and match patterns", t, func() {
+	Convey("Given patterns, should build index and match patterns", t, func(c C) {
 		patterns := []string{
 			"Simple.matching.pattern",
 			"Star.single.*",
@@ -51,7 +51,7 @@ func TestPatternIndex(t *testing.T) {
 
 		for _, testCase := range testCases {
 			matchedPatterns := index.MatchPatterns(testCase.Metric)
-			So(matchedPatterns, ShouldResemble, testCase.MatchedPatterns)
+			c.So(matchedPatterns, ShouldResemble, testCase.MatchedPatterns)
 		}
 	})
 }

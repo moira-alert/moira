@@ -33,10 +33,10 @@ func TestSortByLen(t *testing.T) {
 		"ServiceName.HostName.CategoryName.CategoryCounterName.CategoryCounterType.MetricName",
 		"MetricPrefix.ServiceName.HostName.CategoryName.CategoryCounterName.CategoryCounterType.MetricName",
 	}
-	Convey("Sort initial unsorted string array", t, func() {
+	Convey("Sort initial unsorted string array", t, func(c C) {
 		sort.Sort(sortedByLen(labelsUnsorted))
-		So(len(labelsUnsorted), ShouldEqual, len(labelsSorted))
-		So(labelsUnsorted, ShouldResemble, labelsSorted)
+		c.So(len(labelsUnsorted), ShouldEqual, len(labelsSorted))
+		c.So(labelsUnsorted, ShouldResemble, labelsSorted)
 	})
 }
 
@@ -66,25 +66,25 @@ func TestSanitizeLabelName(t *testing.T) {
 		"Ядлиннаядлиннаястрокабезпро...",
 		"Привет, не режь меня!",
 	}
-	Convey("sanitize lables names", t, func() {
+	Convey("sanitize lables names", t, func(c C) {
 		maxLabelLength := 30
 		shortLablelsList := make([]string, 0)
 		for _, label := range labelsCompleteForm {
 			shortLabel := sanitizeLabelName(label, maxLabelLength)
 			shortLablelsList = append(shortLablelsList, shortLabel)
 		}
-		So(len(shortLablelsList), ShouldEqual, len(labelsShortForm))
-		So(shortLablelsList, ShouldResemble, labelsShortForm)
+		c.So(len(shortLablelsList), ShouldEqual, len(labelsShortForm))
+		c.So(shortLablelsList, ShouldResemble, labelsShortForm)
 	})
 }
 
 // TestPercentsOfRange is a simple test of percentsOfRange method
 func TestPercentsOfRange(t *testing.T) {
-	Convey("Test nth percent is calculated correctly", t, func() {
+	Convey("Test nth percent is calculated correctly", t, func(c C) {
 		for i := 0; i < 100; i++ {
 			expected := i
 			actual := percentsOfRange(float64(0), float64(100), float64(i))
-			So(actual, ShouldEqual, expected)
+			c.So(actual, ShouldEqual, expected)
 		}
 	})
 }
@@ -97,7 +97,7 @@ func TestTimeValueFormatter(t *testing.T) {
 		"Europe/Moscow":      3,
 		"Asia/Yekaterinburg": 5,
 	}
-	Convey("Format int64 timestamps into correct strings", t, func() {
+	Convey("Format int64 timestamps into correct strings", t, func(c C) {
 		for name, increment := range locationIncrements {
 			location, _ := time.LoadLocation(name)
 			storage := &locationStorage{location: location}
@@ -107,8 +107,8 @@ func TestTimeValueFormatter(t *testing.T) {
 			formattedMinute, _ := strconv.Atoi(formattedHourAndMinute[1])
 			fmt.Printf("%s: %s,\n%s: %s\n\n",
 				timeValue.Location().String(), timeValue.String(), location.String(), formatted)
-			So(formattedMinute, ShouldEqual, timeValue.Minute())
-			So(formattedHour, ShouldEqual, timeValue.Add(time.Duration(increment)*time.Hour).Hour())
+			c.So(formattedMinute, ShouldEqual, timeValue.Minute())
+			c.So(formattedHour, ShouldEqual, timeValue.Add(time.Duration(increment)*time.Hour).Hour())
 		}
 	})
 }
@@ -129,14 +129,14 @@ func TestFloatToHumanizedValueFormatter(t *testing.T) {
 		"1.00 G",
 		"1.00 T",
 	}
-	Convey("format metric values", t, func() {
+	Convey("format metric values", t, func(c C) {
 		formattedValues := make([]string, 0)
 		for _, metricValue := range metricValues {
 			formattedMetricValue := floatToHumanizedValueFormatter(metricValue)
 			formattedValues = append(formattedValues, formattedMetricValue)
 		}
-		So(len(formattedValues), ShouldEqual, len(metricValuesFormatted))
-		So(formattedValues, ShouldResemble, metricValuesFormatted)
+		c.So(len(formattedValues), ShouldEqual, len(metricValuesFormatted))
+		c.So(formattedValues, ShouldResemble, metricValuesFormatted)
 	})
 }
 
@@ -154,7 +154,7 @@ func TestGetYAxisValuesFormatter(t *testing.T) {
 		lowest:  -1000,
 		highest: 1000,
 	}
-	Convey("format metric values with low limits", t, func() {
+	Convey("format metric values with low limits", t, func(c C) {
 		metricValues := []float64{
 			0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
 		}
@@ -167,11 +167,11 @@ func TestGetYAxisValuesFormatter(t *testing.T) {
 			formattedValue := valueFormatter(metricValue)
 			formattedValues = append(formattedValues, formattedValue)
 		}
-		So(maxMarkLen, ShouldEqual, 5)
-		So(len(formattedValues), ShouldEqual, len(formattedMetricValues))
-		So(formattedValues, ShouldResemble, formattedMetricValues)
+		c.So(maxMarkLen, ShouldEqual, 5)
+		c.So(len(formattedValues), ShouldEqual, len(formattedMetricValues))
+		c.So(formattedValues, ShouldResemble, formattedMetricValues)
 	})
-	Convey("format metric values with medium limits", t, func() {
+	Convey("format metric values with medium limits", t, func(c C) {
 		metricValues := []float64{
 			-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5,
 		}
@@ -184,11 +184,11 @@ func TestGetYAxisValuesFormatter(t *testing.T) {
 			formattedValue := valueFormatter(metricValue)
 			formattedValues = append(formattedValues, formattedValue)
 		}
-		So(maxMarkLen, ShouldEqual, 3)
-		So(len(formattedValues), ShouldEqual, len(formattedMetricValues))
-		So(formattedValues, ShouldResemble, formattedMetricValues)
+		c.So(maxMarkLen, ShouldEqual, 3)
+		c.So(len(formattedValues), ShouldEqual, len(formattedMetricValues))
+		c.So(formattedValues, ShouldResemble, formattedMetricValues)
 	})
-	Convey("format metric values with high limits", t, func() {
+	Convey("format metric values with high limits", t, func(c C) {
 		metricValues := []float64{
 			-1000, -100, 0, 100, 1000,
 		}
@@ -201,8 +201,8 @@ func TestGetYAxisValuesFormatter(t *testing.T) {
 			formattedValue := valueFormatter(metricValue)
 			formattedValues = append(formattedValues, formattedValue)
 		}
-		So(maxMarkLen, ShouldEqual, 7)
-		So(len(formattedValues), ShouldEqual, len(formattedMetricValues))
-		So(formattedValues, ShouldResemble, formattedMetricValues)
+		c.So(maxMarkLen, ShouldEqual, 7)
+		c.So(len(formattedValues), ShouldEqual, len(formattedMetricValues))
+		c.So(formattedValues, ShouldResemble, formattedMetricValues)
 	})
 }

@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/moira-alert/moira/mock/moira-alert"
+	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
 	"gopkg.in/tucnak/telebot.v2"
 )
@@ -15,9 +15,9 @@ func TestGetResponseMessage(t *testing.T) {
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
-	Convey("Test get response message", t, func() {
+	Convey("Test get response message", t, func(c C) {
 		sender := Sender{DataBase: dataBase}
-		Convey("Private chat and bad message", func() {
+		Convey("Private chat and bad message", t, func(c C) {
 			message := &telebot.Message{
 				Chat: &telebot.Chat{
 					Type: telebot.ChatPrivate,
@@ -25,11 +25,11 @@ func TestGetResponseMessage(t *testing.T) {
 				Text: "/Start",
 			}
 			response, err := sender.getResponseMessage(message)
-			So(err, ShouldBeNil)
-			So(response, ShouldResemble, "I don't understand you :(")
+			c.So(err, ShouldBeNil)
+			c.So(response, ShouldResemble, "I don't understand you :(")
 		})
 
-		Convey("Private channel", func() {
+		Convey("Private channel", t, func(c C) {
 			message := &telebot.Message{
 				Chat: &telebot.Chat{
 					Type: telebot.ChatChannelPrivate,
@@ -37,11 +37,11 @@ func TestGetResponseMessage(t *testing.T) {
 				Text: "/Start",
 			}
 			response, err := sender.getResponseMessage(message)
-			So(err, ShouldBeNil)
-			So(response, ShouldResemble, "I don't understand you :(")
+			c.So(err, ShouldBeNil)
+			c.So(response, ShouldResemble, "I don't understand you :(")
 		})
 
-		Convey("Private chat and /start command", func() {
+		Convey("Private chat and /start command", t, func(c C) {
 			message := &telebot.Message{
 				Chat: &telebot.Chat{
 					ID:   123,
@@ -53,31 +53,31 @@ func TestGetResponseMessage(t *testing.T) {
 					LastName:  "LastName",
 				},
 			}
-			Convey("no username", func() {
+			Convey("no username", t, func(c C) {
 				response, err := sender.getResponseMessage(message)
-				So(err, ShouldBeNil)
-				So(response, ShouldResemble, "Username is empty. Please add username in Telegram.")
+				c.So(err, ShouldBeNil)
+				c.So(response, ShouldResemble, "Username is empty. Please add username in Telegram.")
 			})
 
-			Convey("has username", func() {
+			Convey("has username", t, func(c C) {
 				message.Chat.Username = "User"
-				Convey("error while save username", func() {
+				Convey("error while save username", t, func(c C) {
 					dataBase.EXPECT().SetUsernameID(messenger, "@User", "123").Return(fmt.Errorf("error =("))
 					response, err := sender.getResponseMessage(message)
-					So(err, ShouldResemble, fmt.Errorf("error =("))
-					So(response, ShouldBeEmpty)
+					c.So(err, ShouldResemble, fmt.Errorf("error =("))
+					c.So(response, ShouldBeEmpty)
 				})
 
-				Convey("success send", func() {
+				Convey("success send", t, func(c C) {
 					dataBase.EXPECT().SetUsernameID(messenger, "@User", "123").Return(nil)
 					response, err := sender.getResponseMessage(message)
-					So(err, ShouldBeNil)
-					So(response, ShouldResemble, "Okay, FirstName LastName, your id is 123")
+					c.So(err, ShouldBeNil)
+					c.So(response, ShouldResemble, "Okay, FirstName LastName, your id is 123")
 				})
 			})
 		})
 
-		Convey("SuperGroup", func() {
+		Convey("SuperGroup", t, func(c C) {
 			message := &telebot.Message{
 				Chat: &telebot.Chat{
 					ID:    123,
@@ -86,47 +86,47 @@ func TestGetResponseMessage(t *testing.T) {
 				},
 			}
 
-			Convey("GetIDByUsername returns error", func() {
+			Convey("GetIDByUsername returns error", t, func(c C) {
 				dataBase.EXPECT().GetIDByUsername(messenger, message.Chat.Title).Return("", fmt.Errorf("error"))
 				dataBase.EXPECT().SetUsernameID(messenger, message.Chat.Title, "123").Return(nil)
 				response, err := sender.getResponseMessage(message)
-				So(err, ShouldBeNil)
-				So(response, ShouldResemble, fmt.Sprintf("Hi, all!\nI will send alerts in this group (%s).", message.Chat.Title))
+				c.So(err, ShouldBeNil)
+				c.So(response, ShouldResemble, fmt.Sprintf("Hi, all!\nI will send alerts in this group (%s).", message.Chat.Title))
 			})
 
-			Convey("GetIDByUsername returns empty uuid", func() {
-				dataBase.EXPECT().GetIDByUsername(messenger, message.Chat.Title).Return("", nil)
-
-				Convey("SetUsernameID returns error", func() {
+			Convey("GetIDByUsername returns empty uuid", t, func(c C) {
+				Convey("SetUsernameID returns error", t, func(c C) {
+					dataBase.EXPECT().GetIDByUsername(messenger, message.Chat.Title).Return("", nil)
 					dataBase.EXPECT().SetUsernameID(messenger, message.Chat.Title, "123").Return(fmt.Errorf("error"))
 					response, err := sender.getResponseMessage(message)
-					So(err, ShouldResemble, fmt.Errorf("error"))
-					So(response, ShouldBeEmpty)
+					c.So(err, ShouldResemble, fmt.Errorf("error"))
+					c.So(response, ShouldBeEmpty)
 				})
 
-				Convey("SetUsernameID returns empty error", func() {
+				Convey("SetUsernameID returns empty error", t, func(c C) {
+					dataBase.EXPECT().GetIDByUsername(messenger, message.Chat.Title).Return("", nil)
 					dataBase.EXPECT().SetUsernameID(messenger, message.Chat.Title, "123").Return(nil)
 					response, err := sender.getResponseMessage(message)
-					So(err, ShouldBeNil)
-					So(response, ShouldResemble, fmt.Sprintf("Hi, all!\nI will send alerts in this group (%s).", message.Chat.Title))
+					c.So(err, ShouldBeNil)
+					c.So(response, ShouldResemble, fmt.Sprintf("Hi, all!\nI will send alerts in this group (%s).", message.Chat.Title))
 				})
 			})
 
-			Convey("GetIDByUsername return uuid", func() {
-				dataBase.EXPECT().GetIDByUsername(messenger, message.Chat.Title).Return("123", nil)
-
-				Convey("SetUsernameID returns error", func() {
+			Convey("GetIDByUsername return uuid", t, func(c C) {
+				Convey("SetUsernameID returns error", t, func(c C) {
+					dataBase.EXPECT().GetIDByUsername(messenger, message.Chat.Title).Return("123", nil)
 					dataBase.EXPECT().SetUsernameID(messenger, message.Chat.Title, "123").Return(fmt.Errorf("error"))
 					response, err := sender.getResponseMessage(message)
-					So(err, ShouldResemble, fmt.Errorf("error"))
-					So(response, ShouldBeEmpty)
+					c.So(err, ShouldResemble, fmt.Errorf("error"))
+					c.So(response, ShouldBeEmpty)
 				})
 
-				Convey("SetUsernameID returns empty error", func() {
+				Convey("SetUsernameID returns empty error", t, func(c C) {
+					dataBase.EXPECT().GetIDByUsername(messenger, message.Chat.Title).Return("123", nil)
 					dataBase.EXPECT().SetUsernameID(messenger, message.Chat.Title, "123").Return(nil)
 					response, err := sender.getResponseMessage(message)
-					So(err, ShouldBeNil)
-					So(response, ShouldBeEmpty)
+					c.So(err, ShouldBeNil)
+					c.So(response, ShouldBeEmpty)
 				})
 			})
 		})

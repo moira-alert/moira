@@ -46,62 +46,62 @@ var execStringTestCases = []execStringTestCase{
 
 func TestInit(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test")
-	Convey("Init tests", t, func() {
+	Convey("Init tests", t, func(c C) {
 		sender := Sender{}
 		settings := map[string]string{}
-		Convey("Empty map", func() {
+		Convey("Empty map", t, func(c C) {
 			err := sender.Init(settings, logger, nil, "")
-			So(err, ShouldResemble, fmt.Errorf("required name for sender type script"))
-			So(sender, ShouldResemble, Sender{})
+			c.So(err, ShouldResemble, fmt.Errorf("required name for sender type script"))
+			c.So(sender, ShouldResemble, Sender{})
 		})
 
 		settings["name"] = "script_name"
-		Convey("Empty exec", func() {
+		Convey("Empty exec", t, func(c C) {
 			err := sender.Init(settings, logger, nil, "")
-			So(err, ShouldResemble, fmt.Errorf("file  not found"))
-			So(sender, ShouldResemble, Sender{})
+			c.So(err, ShouldResemble, fmt.Errorf("file  not found"))
+			c.So(sender, ShouldResemble, Sender{})
 		})
 
-		Convey("Exec with not exists file", func() {
+		Convey("Exec with not exists file", t, func(c C) {
 			settings["exec"] = "./test_file1"
 			err := sender.Init(settings, logger, nil, "")
-			So(err, ShouldResemble, fmt.Errorf("file ./test_file1 not found"))
-			So(sender, ShouldResemble, Sender{})
+			c.So(err, ShouldResemble, fmt.Errorf("file ./test_file1 not found"))
+			c.So(sender, ShouldResemble, Sender{})
 		})
 
-		Convey("Exec with exists file", func() {
+		Convey("Exec with exists file", t, func(c C) {
 			settings["exec"] = "script.go"
 			err := sender.Init(settings, logger, nil, "")
-			So(err, ShouldBeNil)
-			So(sender, ShouldResemble, Sender{exec: "script.go", logger: logger})
+			c.So(err, ShouldBeNil)
+			c.So(sender, ShouldResemble, Sender{exec: "script.go", logger: logger})
 		})
 	})
 }
 
 func TestBuildCommandData(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test")
-	Convey("Test send events", t, func() {
+	Convey("Test send events", t, func(c C) {
 		sender := Sender{exec: "script.go first second", logger: logger}
 		scriptFile, args, scriptBody, err := sender.buildCommandData([]moira.NotificationEvent{{Metric: "New metric"}}, moira.ContactData{ID: "ContactID"}, moira.TriggerData{ID: "TriggerID"}, true)
-		So(scriptFile, ShouldResemble, "script.go")
-		So(args, ShouldResemble, []string{"first", "second"})
-		So(err, ShouldBeNil)
-		So(string(scriptBody), ShouldResemble, "{\n\t\"events\": [\n\t\t{\n\t\t\t\"timestamp\": 0,\n\t\t\t\"metric\": \"New metric\",\n\t\t\t\"state\": \"\",\n\t\t\t\"trigger_id\": \"\",\n\t\t\t\"old_state\": \"\"\n\t\t}\n\t],\n\t\"trigger\": {\n\t\t\"id\": \"TriggerID\",\n\t\t\"name\": \"\",\n\t\t\"desc\": \"\",\n\t\t\"targets\": null,\n\t\t\"warn_value\": 0,\n\t\t\"error_value\": 0,\n\t\t\"is_remote\": false,\n\t\t\"__notifier_trigger_tags\": null\n\t},\n\t\"contact\": {\n\t\t\"type\": \"\",\n\t\t\"value\": \"\",\n\t\t\"id\": \"ContactID\",\n\t\t\"user\": \"\"\n\t},\n\t\"throttled\": true,\n\t\"timestamp\": 0\n}")
+		c.So(scriptFile, ShouldResemble, "script.go")
+		c.So(args, ShouldResemble, []string{"first", "second"})
+		c.So(err, ShouldBeNil)
+		c.So(string(scriptBody), ShouldResemble, "{\n\t\"events\": [\n\t\t{\n\t\t\t\"timestamp\": 0,\n\t\t\t\"metric\": \"New metric\",\n\t\t\t\"state\": \"\",\n\t\t\t\"trigger_id\": \"\",\n\t\t\t\"old_state\": \"\"\n\t\t}\n\t],\n\t\"trigger\": {\n\t\t\"id\": \"TriggerID\",\n\t\t\"name\": \"\",\n\t\t\"desc\": \"\",\n\t\t\"targets\": null,\n\t\t\"warn_value\": 0,\n\t\t\"error_value\": 0,\n\t\t\"is_remote\": false,\n\t\t\"__notifier_trigger_tags\": null\n\t},\n\t\"contact\": {\n\t\t\"type\": \"\",\n\t\t\"value\": \"\",\n\t\t\"id\": \"ContactID\",\n\t\t\"user\": \"\"\n\t},\n\t\"throttled\": true,\n\t\"timestamp\": 0\n}")
 	})
 
-	Convey("Test file not found", t, func() {
+	Convey("Test file not found", t, func(c C) {
 		sender := Sender{exec: "script1.go first second", logger: logger}
 		scriptFile, args, scriptBody, err := sender.buildCommandData([]moira.NotificationEvent{{Metric: "New metric"}}, moira.ContactData{ID: "ContactID"}, moira.TriggerData{ID: "TriggerID"}, true)
-		So(scriptFile, ShouldResemble, "script1.go")
-		So(args, ShouldResemble, []string{"first", "second"})
-		So(err, ShouldNotBeNil)
-		So(scriptBody, ShouldBeEmpty)
+		c.So(scriptFile, ShouldResemble, "script1.go")
+		c.So(args, ShouldResemble, []string{"first", "second"})
+		c.So(err, ShouldNotBeNil)
+		c.So(scriptBody, ShouldBeEmpty)
 	})
 
-	Convey("Test exec string builder", t, func() {
+	Convey("Test exec string builder", t, func(c C) {
 		for _, testCase := range execStringTestCases {
 			actual := buildExecString(testCase.template, testTrigger, testContact)
-			So(actual, ShouldEqual, testCase.expected)
+			c.So(actual, ShouldEqual, testCase.expected)
 		}
 	})
 }

@@ -25,9 +25,9 @@ func TestTwilioSenderVoice_SendEvents(t *testing.T) {
 		appendMessage: false,
 	}
 
-	Convey("just send", t, func() {
+	Convey("just send", t, func(c C) {
 		err := sender.SendEvents(moira.NotificationEvents{}, moira.ContactData{}, moira.TriggerData{}, []byte{}, true)
-		So(err, ShouldNotBeNil)
+		c.So(err, ShouldNotBeNil)
 	})
 }
 
@@ -40,12 +40,12 @@ func TestBuildVoiceURL(t *testing.T) {
 		voiceURL:      "url here",
 		appendMessage: false,
 	}
-	Convey("append message is false", t, func() {
-		So(sender.buildVoiceURL(moira.TriggerData{Name: "Name"}), ShouldResemble, "url here")
+	Convey("append message is false", t, func(c C) {
+		c.So(sender.buildVoiceURL(moira.TriggerData{Name: "Name"}), ShouldResemble, "url here")
 	})
 
-	Convey("append message is true", t, func() {
+	Convey("append message is true", t, func(c C) {
 		sender.appendMessage = true
-		So(sender.buildVoiceURL(moira.TriggerData{Name: "Name"}), ShouldResemble, "url hereHi%21+This+is+a+notification+for+Moira+trigger+Name.+Please%2C+visit+Moira+web+interface+for+details.")
+		c.So(sender.buildVoiceURL(moira.TriggerData{Name: "Name"}), ShouldResemble, "url hereHi%21+This+is+a+notification+for+Moira+trigger+Name.+Please%2C+visit+Moira+web+interface+for+details.")
 	})
 }

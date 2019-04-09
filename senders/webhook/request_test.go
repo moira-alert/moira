@@ -178,31 +178,31 @@ var requestURLTestCases = []requestURLTestCase{
 }
 
 func TestBuildRequestBody(t *testing.T) {
-	Convey("Payload should be valid", t, func() {
-		Convey("Trigger state change", func() {
+	Convey("Payload should be valid", t, func(c C) {
+		Convey("Trigger state change", t, func(c C) {
 			events, contact, trigger, plot, throttled := testEvents, testContact, testTrigger, testPlot, testThrottled
 			requestBody, err := buildRequestBody(events, contact, trigger, plot, throttled)
 			actual, expected := prepareStrings(string(requestBody), expectedStateChangePayload)
-			So(actual, ShouldEqual, expected)
-			So(err, ShouldBeNil)
+			c.So(actual, ShouldEqual, expected)
+			c.So(err, ShouldBeNil)
 		})
-		Convey("Empty notification", func() {
+		Convey("Empty notification", t, func(c C) {
 			events, contact, trigger, plot, throttled := moira.NotificationEvents{}, moira.ContactData{}, moira.TriggerData{}, make([]byte, 0), false
 			requestBody, err := buildRequestBody(events, contact, trigger, plot, throttled)
 			actual, expected := prepareStrings(string(requestBody), expectedEmptyPayload)
-			So(actual, ShouldEqual, expected)
-			So(actual, ShouldNotContainSubstring, "null")
-			So(err, ShouldBeNil)
+			c.So(actual, ShouldEqual, expected)
+			c.So(actual, ShouldNotContainSubstring, "null")
+			c.So(err, ShouldBeNil)
 		})
 	})
 }
 
 func TestBuildRequestURL(t *testing.T) {
-	Convey("URL should contain variables values", t, func() {
+	Convey("URL should contain variables values", t, func(c C) {
 		for _, testCase := range requestURLTestCases {
 			for k, expected := range testCase.results {
 				actual := buildRequestURL(k, testCase.trigger, testCase.contact)
-				So(actual, ShouldEqual, expected)
+				c.So(actual, ShouldEqual, expected)
 			}
 		}
 	})

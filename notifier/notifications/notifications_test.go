@@ -9,8 +9,8 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/mock/moira-alert"
-	"github.com/moira-alert/moira/mock/notifier"
+	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
+	mock_notifier "github.com/moira-alert/moira/mock/notifier"
 	notifier2 "github.com/moira-alert/moira/notifier"
 )
 
@@ -62,7 +62,7 @@ func TestProcessScheduledEvent(t *testing.T) {
 		Notifier: notifier,
 	}
 
-	Convey("Two different notifications, should send two packages", t, func() {
+	Convey("Two different notifications, should send two packages", t, func(c C) {
 		dataBase.EXPECT().FetchNotifications(gomock.Any()).Return([]*moira.ScheduledNotification{
 			&notification1,
 			&notification2,
@@ -92,10 +92,10 @@ func TestProcessScheduledEvent(t *testing.T) {
 		notifier.EXPECT().Send(&pkg2, gomock.Any())
 		dataBase.EXPECT().GetNotifierState().Return(moira.SelfStateOK, nil)
 		err := worker.processScheduledNotifications()
-		So(err, ShouldBeEmpty)
+		c.So(err, ShouldBeEmpty)
 	})
 
-	Convey("Two same notifications, should send one package", t, func() {
+	Convey("Two same notifications, should send one package", t, func(c C) {
 		dataBase.EXPECT().FetchNotifications(gomock.Any()).Return([]*moira.ScheduledNotification{
 			&notification2,
 			&notification3,
@@ -116,7 +116,7 @@ func TestProcessScheduledEvent(t *testing.T) {
 		notifier.EXPECT().Send(&pkg, gomock.Any())
 		dataBase.EXPECT().GetNotifierState().Return(moira.SelfStateOK, nil)
 		err := worker.processScheduledNotifications()
-		So(err, ShouldBeEmpty)
+		c.So(err, ShouldBeEmpty)
 	})
 }
 

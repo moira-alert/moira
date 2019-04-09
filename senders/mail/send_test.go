@@ -43,15 +43,15 @@ func TestMakeMessage(t *testing.T) {
 		logger:       logger,
 	}
 
-	Convey("Make message", t, func() {
+	Convey("Make message", t, func(c C) {
 		message := sender.makeMessage(generateTestEvents(10, trigger.ID), contact, trigger, []byte{1, 0, 1}, true)
-		So(message.GetHeader("From")[0], ShouldEqual, sender.From)
-		So(message.GetHeader("To")[0], ShouldEqual, contact.Value)
+		c.So(message.GetHeader("From")[0], ShouldEqual, sender.From)
+		c.So(message.GetHeader("To")[0], ShouldEqual, contact.Value)
 
 		messageStr := new(bytes.Buffer)
 		_, err := message.WriteTo(messageStr)
-		So(err, ShouldBeNil)
-		So(messageStr.String(), ShouldContainSubstring, "http://localhost/trigger/triggerID-0000000000001")
+		c.So(err, ShouldBeNil)
+		c.So(messageStr.String(), ShouldContainSubstring, "http://localhost/trigger/triggerID-0000000000001")
 		//fmt.Println(messageStr.String())
 
 	})
@@ -101,15 +101,15 @@ func TestEmptyTriggerID(t *testing.T) {
 		logger:       logger,
 	}
 
-	Convey("Make message", t, func() {
+	Convey("Make message", t, func(c C) {
 		message := sender.makeMessage(generateTestEvents(10, trigger.ID), contact, trigger, []byte{1, 0, 1}, true)
-		So(message.GetHeader("From")[0], ShouldEqual, sender.From)
-		So(message.GetHeader("To")[0], ShouldEqual, contact.Value)
+		c.So(message.GetHeader("From")[0], ShouldEqual, sender.From)
+		c.So(message.GetHeader("To")[0], ShouldEqual, contact.Value)
 		messageStr := new(bytes.Buffer)
 		_, err := message.WriteTo(messageStr)
-		So(err, ShouldBeNil)
-		So(messageStr.String(), ShouldNotContainSubstring, "http://localhost/trigger/")
-		So(messageStr.String(), ShouldNotContainSubstring, "<p><a href=3D\"\"></a></p>")
+		c.So(err, ShouldBeNil)
+		c.So(messageStr.String(), ShouldNotContainSubstring, "http://localhost/trigger/")
+		c.So(messageStr.String(), ShouldNotContainSubstring, "<p><a href=3D\"\"></a></p>")
 		//fmt.Println(messageStr.String())
 	})
 }

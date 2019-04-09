@@ -8,42 +8,42 @@ import (
 )
 
 func TestFillSettings(t *testing.T) {
-	Convey("Empty map", t, func() {
+	Convey("Empty map", t, func(c C) {
 		sender := Sender{}
 		err := sender.fillSettings(map[string]string{}, nil, nil, "")
-		So(err, ShouldResemble, fmt.Errorf("mail_from can't be empty"))
-		So(sender, ShouldResemble, Sender{})
+		c.So(err, ShouldResemble, fmt.Errorf("mail_from can't be empty"))
+		c.So(sender, ShouldResemble, Sender{})
 	})
 
-	Convey("Has From", t, func() {
+	Convey("Has From", t, func(c C) {
 		sender := Sender{}
 		settings := map[string]string{"mail_from": "123"}
-		Convey("No username", func() {
+		Convey("No username", t, func(c C) {
 			err := sender.fillSettings(settings, nil, nil, "")
-			So(err, ShouldBeNil)
-			So(sender, ShouldResemble, Sender{From: "123", Username: "123"})
+			c.So(err, ShouldBeNil)
+			c.So(sender, ShouldResemble, Sender{From: "123", Username: "123"})
 		})
-		Convey("Has username", func() {
+		Convey("Has username", t, func(c C) {
 			settings["smtp_user"] = "user"
 			err := sender.fillSettings(settings, nil, nil, "")
-			So(err, ShouldBeNil)
-			So(sender, ShouldResemble, Sender{From: "123", Username: "user"})
+			c.So(err, ShouldBeNil)
+			c.So(sender, ShouldResemble, Sender{From: "123", Username: "user"})
 		})
 	})
 }
 
 func TestParseTemplate(t *testing.T) {
-	Convey("Template path is empty", t, func() {
+	Convey("Template path is empty", t, func(c C) {
 		name, t, err := parseTemplate("")
-		So(name, ShouldResemble, "mail")
-		So(t, ShouldNotBeNil)
-		So(err, ShouldBeNil)
+		c.So(name, ShouldResemble, "mail")
+		c.So(t, ShouldNotBeNil)
+		c.So(err, ShouldBeNil)
 	})
 
-	Convey("Template path no empty", t, func() {
+	Convey("Template path no empty", t, func(c C) {
 		name, t, err := parseTemplate("bin/template")
-		So(name, ShouldResemble, "template")
-		So(t, ShouldBeNil)
-		So(err, ShouldNotBeNil)
+		c.So(name, ShouldResemble, "template")
+		c.So(t, ShouldBeNil)
+		c.So(err, ShouldNotBeNil)
 	})
 }

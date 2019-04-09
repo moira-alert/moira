@@ -19,7 +19,7 @@ func TestBuildMoiraMessage(t *testing.T) {
 	value := float64(123)
 	message := "This is message"
 
-	Convey("Build Moira Message tests", t, func() {
+	Convey("Build Moira Message tests", t, func(c C) {
 		event := moira.NotificationEvent{
 			Value:     &value,
 			Timestamp: 150000000,
@@ -29,30 +29,30 @@ func TestBuildMoiraMessage(t *testing.T) {
 			Message:   nil,
 		}
 
-		Convey("Print moira message with one event", func() {
+		Convey("Print moira message with one event", t, func(c C) {
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{Name: "Name", Tags: []string{"tag1"}}, false)
 			expected := "NODATA Name [tag1] (1)\n\n02:40: Metric = 123 (OK to NODATA)"
-			So(actual, ShouldResemble, expected)
+			c.So(actual, ShouldResemble, expected)
 		})
 
-		Convey("Print moira message with one event and message", func() {
+		Convey("Print moira message with one event and message", t, func(c C) {
 			event.Message = &message
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{Name: "Name", Tags: []string{"tag1"}}, false)
 			expected := "NODATA Name [tag1] (1)\n\n02:40: Metric = 123 (OK to NODATA). This is message"
-			So(actual, ShouldResemble, expected)
+			c.So(actual, ShouldResemble, expected)
 		})
 
-		Convey("Print moira message with one event and throttled", func() {
+		Convey("Print moira message with one event and throttled", t, func(c C) {
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{Name: "Name", Tags: []string{"tag1"}}, true)
 			expected := `NODATA Name [tag1] (1)
 
 02:40: Metric = 123 (OK to NODATA)
 
 Please, fix your system or tune this trigger to generate less events.`
-			So(actual, ShouldResemble, expected)
+			c.So(actual, ShouldResemble, expected)
 		})
 
-		Convey("Print moira message with 6 events", func() {
+		Convey("Print moira message with 6 events", t, func(c C) {
 			actual := sender.buildMessage([]moira.NotificationEvent{event, event, event, event, event, event}, moira.TriggerData{Name: "Name", Tags: []string{"tag1"}}, false)
 			expected := `NODATA Name [tag1] (6)
 
@@ -63,7 +63,7 @@ Please, fix your system or tune this trigger to generate less events.`
 02:40: Metric = 123 (OK to NODATA)
 
 ...and 1 more events.`
-			So(actual, ShouldResemble, expected)
+			c.So(actual, ShouldResemble, expected)
 		})
 	})
 }
@@ -89,8 +89,8 @@ func TestTwilioSenderSms_SendEvents(t *testing.T) {
 		State:     moira.StateNODATA,
 	}
 
-	Convey("just send", t, func() {
+	Convey("just send", t, func(c C) {
 		err := sender.SendEvents([]moira.NotificationEvent{event}, moira.ContactData{}, moira.TriggerData{Name: "Name", Tags: []string{"tag1"}}, []byte{}, true)
-		So(err, ShouldNotBeNil)
+		c.So(err, ShouldNotBeNil)
 	})
 }

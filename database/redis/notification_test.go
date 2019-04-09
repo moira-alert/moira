@@ -18,7 +18,7 @@ func TestScheduledNotification(t *testing.T) {
 	dataBase.flush()
 	defer dataBase.flush()
 
-	Convey("ScheduledNotification manipulation", t, func() {
+	Convey("ScheduledNotification manipulation", t, func(c C) {
 		now := time.Now().Unix()
 		notificationNew := moira.ScheduledNotification{
 			SendFail:  1,
@@ -33,45 +33,45 @@ func TestScheduledNotification(t *testing.T) {
 			Timestamp: now - 3600,
 		}
 
-		Convey("Test add and get by pages", func() {
-			addNotifications(dataBase, []moira.ScheduledNotification{notification, notificationNew, notificationOld})
+		Convey("Test add and get by pages", t, func(c C) {
+			addNotifications(c, dataBase, []moira.ScheduledNotification{notification, notificationNew, notificationOld})
 			actual, total, err := dataBase.GetNotifications(0, -1)
-			So(err, ShouldBeNil)
-			So(total, ShouldEqual, 3)
-			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notificationOld, &notification, &notificationNew})
+			c.So(err, ShouldBeNil)
+			c.So(total, ShouldEqual, 3)
+			c.So(actual, ShouldResemble, []*moira.ScheduledNotification{&notificationOld, &notification, &notificationNew})
 
 			actual, total, err = dataBase.GetNotifications(0, 0)
-			So(err, ShouldBeNil)
-			So(total, ShouldEqual, 3)
-			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notificationOld})
+			c.So(err, ShouldBeNil)
+			c.So(total, ShouldEqual, 3)
+			c.So(actual, ShouldResemble, []*moira.ScheduledNotification{&notificationOld})
 
 			actual, total, err = dataBase.GetNotifications(1, 2)
-			So(err, ShouldBeNil)
-			So(total, ShouldEqual, 3)
-			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notification, &notificationNew})
+			c.So(err, ShouldBeNil)
+			c.So(total, ShouldEqual, 3)
+			c.So(actual, ShouldResemble, []*moira.ScheduledNotification{&notification, &notificationNew})
 		})
 
-		Convey("Test fetch notifications", func() {
+		Convey("Test fetch notifications", t, func(c C) {
 			actual, err := dataBase.FetchNotifications(now - 3600)
-			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notificationOld})
+			c.So(err, ShouldBeNil)
+			c.So(actual, ShouldResemble, []*moira.ScheduledNotification{&notificationOld})
 
 			actual, total, err := dataBase.GetNotifications(0, -1)
-			So(err, ShouldBeNil)
-			So(total, ShouldEqual, 2)
-			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notification, &notificationNew})
+			c.So(err, ShouldBeNil)
+			c.So(total, ShouldEqual, 2)
+			c.So(actual, ShouldResemble, []*moira.ScheduledNotification{&notification, &notificationNew})
 
 			actual, err = dataBase.FetchNotifications(now + 3600)
-			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notification, &notificationNew})
+			c.So(err, ShouldBeNil)
+			c.So(actual, ShouldResemble, []*moira.ScheduledNotification{&notification, &notificationNew})
 
 			actual, total, err = dataBase.GetNotifications(0, -1)
-			So(err, ShouldBeNil)
-			So(total, ShouldEqual, 0)
-			So(actual, ShouldResemble, make([]*moira.ScheduledNotification, 0))
+			c.So(err, ShouldBeNil)
+			c.So(total, ShouldEqual, 0)
+			c.So(actual, ShouldResemble, make([]*moira.ScheduledNotification, 0))
 		})
 
-		Convey("Test remove notifications by key", func() {
+		Convey("Test remove notifications by key", t, func(c C) {
 			now := time.Now().Unix()
 			id1 := "id1"
 			notification1 := moira.ScheduledNotification{
@@ -92,36 +92,36 @@ func TestScheduledNotification(t *testing.T) {
 				SendFail:  3,
 				Timestamp: now + 3600,
 			}
-			addNotifications(dataBase, []moira.ScheduledNotification{notification1, notification2, notification3})
+			addNotifications(c, dataBase, []moira.ScheduledNotification{notification1, notification2, notification3})
 			actual, total, err := dataBase.GetNotifications(0, -1)
-			So(err, ShouldBeNil)
-			So(total, ShouldEqual, 3)
-			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notification1, &notification2, &notification3})
+			c.So(err, ShouldBeNil)
+			c.So(total, ShouldEqual, 3)
+			c.So(actual, ShouldResemble, []*moira.ScheduledNotification{&notification1, &notification2, &notification3})
 
 			total, err = dataBase.RemoveNotification(strings.Join([]string{fmt.Sprintf("%v", now), id1, id1}, ""))
-			So(err, ShouldBeNil)
-			So(total, ShouldEqual, 2)
+			c.So(err, ShouldBeNil)
+			c.So(total, ShouldEqual, 2)
 
 			actual, total, err = dataBase.GetNotifications(0, -1)
-			So(err, ShouldBeNil)
-			So(total, ShouldEqual, 1)
-			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notification3})
+			c.So(err, ShouldBeNil)
+			c.So(total, ShouldEqual, 1)
+			c.So(actual, ShouldResemble, []*moira.ScheduledNotification{&notification3})
 
 			total, err = dataBase.RemoveNotification(strings.Join([]string{fmt.Sprintf("%v", now+3600), id1, id1}, ""))
-			So(err, ShouldBeNil)
-			So(total, ShouldEqual, 1)
+			c.So(err, ShouldBeNil)
+			c.So(total, ShouldEqual, 1)
 
 			actual, total, err = dataBase.GetNotifications(0, -1)
-			So(err, ShouldBeNil)
-			So(total, ShouldEqual, 0)
-			So(actual, ShouldResemble, []*moira.ScheduledNotification{})
+			c.So(err, ShouldBeNil)
+			c.So(total, ShouldEqual, 0)
+			c.So(actual, ShouldResemble, []*moira.ScheduledNotification{})
 
 			actual, err = dataBase.FetchNotifications(now + 3600)
-			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, []*moira.ScheduledNotification{})
+			c.So(err, ShouldBeNil)
+			c.So(actual, ShouldResemble, []*moira.ScheduledNotification{})
 		})
 
-		Convey("Test remove all notifications", func() {
+		Convey("Test remove all notifications", t, func(c C) {
 			now := time.Now().Unix()
 			id1 := "id1"
 			notification1 := moira.ScheduledNotification{
@@ -142,31 +142,31 @@ func TestScheduledNotification(t *testing.T) {
 				SendFail:  3,
 				Timestamp: now + 3600,
 			}
-			addNotifications(dataBase, []moira.ScheduledNotification{notification1, notification2, notification3})
+			addNotifications(c, dataBase, []moira.ScheduledNotification{notification1, notification2, notification3})
 			actual, total, err := dataBase.GetNotifications(0, -1)
-			So(err, ShouldBeNil)
-			So(total, ShouldEqual, 3)
-			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notification1, &notification2, &notification3})
+			c.So(err, ShouldBeNil)
+			c.So(total, ShouldEqual, 3)
+			c.So(actual, ShouldResemble, []*moira.ScheduledNotification{&notification1, &notification2, &notification3})
 
 			err = dataBase.RemoveAllNotifications()
-			So(err, ShouldBeNil)
+			c.So(err, ShouldBeNil)
 
 			actual, total, err = dataBase.GetNotifications(0, -1)
-			So(err, ShouldBeNil)
-			So(total, ShouldEqual, 0)
-			So(actual, ShouldResemble, []*moira.ScheduledNotification{})
+			c.So(err, ShouldBeNil)
+			c.So(total, ShouldEqual, 0)
+			c.So(actual, ShouldResemble, []*moira.ScheduledNotification{})
 
 			actual, err = dataBase.FetchNotifications(now + 3600)
-			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, []*moira.ScheduledNotification{})
+			c.So(err, ShouldBeNil)
+			c.So(actual, ShouldResemble, []*moira.ScheduledNotification{})
 		})
 	})
 }
 
-func addNotifications(dataBase moira.Database, notifications []moira.ScheduledNotification) {
+func addNotifications(c C, dataBase moira.Database, notifications []moira.ScheduledNotification) {
 	for _, notification := range notifications {
 		err := dataBase.AddNotification(&notification)
-		So(err, ShouldBeNil)
+		c.So(err, ShouldBeNil)
 	}
 }
 
@@ -176,28 +176,28 @@ func TestScheduledNotificationErrorConnection(t *testing.T) {
 	dataBase.flush()
 	defer dataBase.flush()
 
-	Convey("Should throw error when no connection", t, func() {
+	Convey("Should throw error when no connection", t, func(c C) {
 		actual1, total, err := dataBase.GetNotifications(0, 1)
-		So(actual1, ShouldBeNil)
-		So(total, ShouldEqual, 0)
-		So(err, ShouldNotBeNil)
+		c.So(actual1, ShouldBeNil)
+		c.So(total, ShouldEqual, 0)
+		c.So(err, ShouldNotBeNil)
 
 		total, err = dataBase.RemoveNotification("123")
-		So(err, ShouldNotBeNil)
-		So(total, ShouldEqual, 0)
+		c.So(err, ShouldNotBeNil)
+		c.So(total, ShouldEqual, 0)
 
 		actual2, err := dataBase.FetchNotifications(0)
-		So(err, ShouldNotBeNil)
-		So(actual2, ShouldBeNil)
+		c.So(err, ShouldNotBeNil)
+		c.So(actual2, ShouldBeNil)
 
 		notification := moira.ScheduledNotification{}
 		err = dataBase.AddNotification(&notification)
-		So(err, ShouldNotBeNil)
+		c.So(err, ShouldNotBeNil)
 
 		err = dataBase.AddNotifications([]*moira.ScheduledNotification{&notification}, 0)
-		So(err, ShouldNotBeNil)
+		c.So(err, ShouldNotBeNil)
 
 		err = dataBase.RemoveAllNotifications()
-		So(err, ShouldNotBeNil)
+		c.So(err, ShouldNotBeNil)
 	})
 }

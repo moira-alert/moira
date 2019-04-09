@@ -1,11 +1,12 @@
 package mapping
 
 import (
-	"github.com/moira-alert/moira"
-	. "github.com/smartystreets/goconvey/convey"
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/moira-alert/moira"
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestTriggerField_GetTagValue(t *testing.T) {
@@ -18,11 +19,11 @@ func TestTriggerField_GetTagValue(t *testing.T) {
 		TriggerTags,
 		TriggerLastCheckScore,
 	}
-	Convey("Test GetTagValue returns correct JSON tag", t, func() {
+	Convey("Test GetTagValue returns correct JSON tag", t, func(c C) {
 		for _, triggerField := range triggerFields {
 			actual := getTagByFieldName(triggerField.String())
 			expected := triggerField.GetTagValue()
-			So(actual, ShouldEqual, expected)
+			c.So(actual, ShouldEqual, expected)
 		}
 	})
 }

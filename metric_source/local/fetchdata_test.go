@@ -9,7 +9,7 @@ import (
 	pb "github.com/go-graphite/protocol/carbonapi_v3_pb"
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/mock/moira-alert"
+	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -108,34 +108,34 @@ func TestFetchData(t *testing.T) {
 	patternErr := fmt.Errorf("Ooops, pattern error")
 	metricErr := fmt.Errorf("Ooops, metric error")
 
-	Convey("Errors Test", t, func() {
-		Convey("GetPatternMetricsError", func() {
+	Convey("Errors Test", t, func(c C) {
+		Convey("GetPatternMetricsError", t, func(c C) {
 			dataBase.EXPECT().GetPatternMetrics(pattern).Return(nil, patternErr)
 			metricData, metrics, err := FetchData(dataBase, pattern, from, until, true)
-			So(metricData, ShouldBeNil)
-			So(metrics, ShouldBeNil)
-			So(err, ShouldResemble, patternErr)
+			c.So(metricData, ShouldBeNil)
+			c.So(metrics, ShouldBeNil)
+			c.So(err, ShouldResemble, patternErr)
 		})
-		Convey("GetMetricRetentionError", func() {
+		Convey("GetMetricRetentionError", t, func(c C) {
 			dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
 			dataBase.EXPECT().GetMetricRetention(metric).Return(int64(0), retentionErr)
 			metricData, metrics, err := FetchData(dataBase, pattern, from, until, true)
-			So(metricData, ShouldBeNil)
-			So(metrics, ShouldBeNil)
-			So(err, ShouldResemble, retentionErr)
+			c.So(metricData, ShouldBeNil)
+			c.So(metrics, ShouldBeNil)
+			c.So(err, ShouldResemble, retentionErr)
 		})
-		Convey("GetMetricsValuesError", func() {
+		Convey("GetMetricsValuesError", t, func(c C) {
 			dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
 			dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 			dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(nil, metricErr)
 			metricData, metrics, err := FetchData(dataBase, pattern, from, until, true)
-			So(metricData, ShouldBeNil)
-			So(metrics, ShouldBeNil)
-			So(err, ShouldResemble, metricErr)
+			c.So(metricData, ShouldBeNil)
+			c.So(metrics, ShouldBeNil)
+			c.So(err, ShouldResemble, metricErr)
 		})
 	})
 
-	Convey("Test no metrics", t, func() {
+	Convey("Test no metrics", t, func(c C) {
 		dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{}, nil)
 		metricData, metrics, err := FetchData(dataBase, pattern, from, until, false)
 		fetchResponse := pb.FetchResponse{
@@ -146,12 +146,12 @@ func TestFetchData(t *testing.T) {
 			Values:    []float64{},
 		}
 		expected := &types.MetricData{FetchResponse: fetchResponse}
-		So(metricData, ShouldResemble, []*types.MetricData{expected})
-		So(metrics, ShouldBeEmpty)
-		So(err, ShouldBeNil)
+		c.So(metricData, ShouldResemble, []*types.MetricData{expected})
+		c.So(metrics, ShouldBeEmpty)
+		c.So(err, ShouldBeNil)
 	})
 
-	Convey("Test allowRealTimeAlerting=false", t, func() {
+	Convey("Test allowRealTimeAlerting=false", t, func(c C) {
 		dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
 		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 		dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
@@ -164,12 +164,12 @@ func TestFetchData(t *testing.T) {
 			Values:    []float64{0, 1, 2, 3},
 		}
 		expected := &types.MetricData{FetchResponse: fetchResponse}
-		So(metricData, ShouldResemble, []*types.MetricData{expected})
-		So(metrics, ShouldResemble, []string{metric})
-		So(err, ShouldBeNil)
+		c.So(metricData, ShouldResemble, []*types.MetricData{expected})
+		c.So(metrics, ShouldResemble, []string{metric})
+		c.So(err, ShouldBeNil)
 	})
 
-	Convey("Test allowRealTimeAlerting=true", t, func() {
+	Convey("Test allowRealTimeAlerting=true", t, func(c C) {
 		dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
 		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 		dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
@@ -182,9 +182,9 @@ func TestFetchData(t *testing.T) {
 			Values:    []float64{0, 1, 2, 3, 4},
 		}
 		expected := &types.MetricData{FetchResponse: fetchResponse}
-		So(metricData, ShouldResemble, []*types.MetricData{expected})
-		So(metrics, ShouldResemble, []string{metric})
-		So(err, ShouldBeNil)
+		c.So(metricData, ShouldResemble, []*types.MetricData{expected})
+		c.So(metrics, ShouldResemble, []string{metric})
+		c.So(err, ShouldBeNil)
 	})
 
 	metric2 := "super-puper-mega-metric"
@@ -216,7 +216,7 @@ func TestFetchData(t *testing.T) {
 		},
 	}
 
-	Convey("Test multiple metrics", t, func() {
+	Convey("Test multiple metrics", t, func(c C) {
 		dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric, metric2}, nil)
 		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 		dataBase.EXPECT().GetMetricsValues([]string{metric, metric2}, from, until).Return(dataList, nil)
@@ -231,9 +231,9 @@ func TestFetchData(t *testing.T) {
 		expected := types.MetricData{FetchResponse: fetchResponse}
 		expected2 := expected
 		expected2.Name = metric2
-		So(metricData, ShouldResemble, []*types.MetricData{&expected, &expected2})
-		So(metrics, ShouldResemble, []string{metric, metric2})
-		So(err, ShouldBeNil)
+		c.So(metricData, ShouldResemble, []*types.MetricData{&expected, &expected2})
+		c.So(metrics, ShouldResemble, []string{metric, metric2})
+		c.So(err, ShouldBeNil)
 	})
 
 	mockCtrl.Finish()
@@ -270,31 +270,31 @@ func TestAllowRealTimeAlerting(t *testing.T) {
 
 	metricData := map[string][]*moira.MetricValue{"metric1": metricsValues}
 
-	Convey("Test full interval", t, func() {
-		Convey("AllowRealTimeAlerting is false, should be truncated on left", func() {
+	Convey("Test full interval", t, func(c C) {
+		Convey("AllowRealTimeAlerting is false, should be truncated on left", t, func(c C) {
 			val := unpackMetricsValues(metricData, 10, 17, 67, false)
 			expected := []float64{0, 1, 2, 3}
-			So(val["metric1"], ShouldResemble, expected)
+			c.So(val["metric1"], ShouldResemble, expected)
 		})
 
-		Convey("AllowRealTimeAlerting is true, should full interval", func() {
+		Convey("AllowRealTimeAlerting is true, should full interval", t, func(c C) {
 			val := unpackMetricsValues(metricData, 10, 17, 67, true)
 			expected := []float64{0, 1, 2, 3, 4}
-			So(val["metric1"], ShouldResemble, expected)
+			c.So(val["metric1"], ShouldResemble, expected)
 		})
 	})
 
-	Convey("Test interval truncated on the right", t, func() {
-		Convey("AllowRealTimeAlerting is false, should be truncated on left and right", func() {
+	Convey("Test interval truncated on the right", t, func(c C) {
+		Convey("AllowRealTimeAlerting is false, should be truncated on left and right", t, func(c C) {
 			val := unpackMetricsValues(metricData, 10, 24, 67, false)
 			expected := []float64{1, 2, 3}
-			So(val["metric1"], ShouldResemble, expected)
+			c.So(val["metric1"], ShouldResemble, expected)
 		})
 
-		Convey("AllowRealTimeAlerting is true, should be truncated on the right", func() {
+		Convey("AllowRealTimeAlerting is true, should be truncated on the right", t, func(c C) {
 			val := unpackMetricsValues(metricData, 10, 24, 67, true)
 			expected := []float64{1, 2, 3, 4}
-			So(val["metric1"], ShouldResemble, expected)
+			c.So(val["metric1"], ShouldResemble, expected)
 		})
 	})
 }
@@ -304,13 +304,13 @@ func TestConservativeAlignedSeries(t *testing.T) {
 	var from int64
 	metricData := map[string][]*moira.MetricValue{"metric": make([]*moira.MetricValue, 0)}
 
-	Convey("Time == 0", t, func() {
-		Convey("No Metric Values", func() {
+	Convey("Time == 0", t, func(c C) {
+		Convey("No Metric Values", t, func(c C) {
 			val := unpackMetricsValues(metricData, retention, from, 0, false)
 			expected := make([]float64, 0)
-			So(val["metric"], ShouldResemble, expected)
+			c.So(val["metric"], ShouldResemble, expected)
 		})
-		Convey("Has Metric Values", func() {
+		Convey("Has Metric Values", t, func(c C) {
 			metricData["metric"] = []*moira.MetricValue{
 				{
 					RetentionTimestamp: 0,
@@ -320,41 +320,41 @@ func TestConservativeAlignedSeries(t *testing.T) {
 			}
 			val := unpackMetricsValues(metricData, retention, from, 0, false)
 			expected := make([]float64, 0)
-			So(val["metric"], ShouldResemble, expected)
+			c.So(val["metric"], ShouldResemble, expected)
 		})
 	})
 
-	Convey("Time == 9", t, func() {
+	Convey("Time == 9", t, func(c C) {
 		val := unpackMetricsValues(metricData, retention, from, 9, false)
 		expected := make([]float64, 0)
-		So(val["metric"], ShouldResemble, expected)
+		c.So(val["metric"], ShouldResemble, expected)
 	})
 
-	Convey("Time == 10", t, func() {
+	Convey("Time == 10", t, func(c C) {
 		val := unpackMetricsValues(metricData, retention, from, 10, false)
 		expected := []float64{100.00}
-		So(val["metric"], ShouldResemble, expected)
+		c.So(val["metric"], ShouldResemble, expected)
 	})
 
 	metricData["metric"] = append(metricData["metric"], &moira.MetricValue{Timestamp: 10, RetentionTimestamp: 10, Value: 200.00})
 	metricData["metric"] = append(metricData["metric"], &moira.MetricValue{Timestamp: 20, RetentionTimestamp: 20, Value: 300.00})
 
-	Convey("Time == 20", t, func() {
+	Convey("Time == 20", t, func(c C) {
 		val := unpackMetricsValues(metricData, retention, from, 20, false)
 		expected := []float64{100.00, 200.00}
-		So(val["metric"], ShouldResemble, expected)
+		c.So(val["metric"], ShouldResemble, expected)
 	})
 
-	Convey("Time == 29", t, func() {
+	Convey("Time == 29", t, func(c C) {
 		val := unpackMetricsValues(metricData, retention, from, 29, false)
 		expected := []float64{100.00, 200.00}
-		So(val["metric"], ShouldResemble, expected)
+		c.So(val["metric"], ShouldResemble, expected)
 	})
 
-	Convey("Time == 30", t, func() {
+	Convey("Time == 30", t, func(c C) {
 		val := unpackMetricsValues(metricData, retention, from, 30, false)
 		expected := []float64{100.00, 200.00, 300.00}
-		So(val["metric"], ShouldResemble, expected)
+		c.So(val["metric"], ShouldResemble, expected)
 	})
 }
 
@@ -363,13 +363,13 @@ func TestRealTimeAlignedSeries(t *testing.T) {
 	var from int64
 	metricData := map[string][]*moira.MetricValue{"metric": make([]*moira.MetricValue, 0)}
 
-	Convey("Time == 0", t, func() {
-		Convey("No Metric Values", func() {
+	Convey("Time == 0", t, func(c C) {
+		Convey("No Metric Values", t, func(c C) {
 			val := unpackMetricsValues(metricData, retention, from, 0, true)
 			expected := make([]float64, 0)
-			So(val["metric"], ShouldResemble, expected)
+			c.So(val["metric"], ShouldResemble, expected)
 		})
-		Convey("Has Metric Values", func() {
+		Convey("Has Metric Values", t, func(c C) {
 			metricData["metric"] = []*moira.MetricValue{
 				{
 					RetentionTimestamp: 0,
@@ -379,40 +379,40 @@ func TestRealTimeAlignedSeries(t *testing.T) {
 			}
 			val := unpackMetricsValues(metricData, retention, from, 0, true)
 			expected := []float64{100.00}
-			So(val["metric"], ShouldResemble, expected)
+			c.So(val["metric"], ShouldResemble, expected)
 		})
 	})
 
-	Convey("Time == 9", t, func() {
+	Convey("Time == 9", t, func(c C) {
 		val := unpackMetricsValues(metricData, retention, from, 9, true)
 		expected := []float64{100.00}
-		So(val["metric"], ShouldResemble, expected)
+		c.So(val["metric"], ShouldResemble, expected)
 	})
 
-	Convey("Time == 10", t, func() {
+	Convey("Time == 10", t, func(c C) {
 		val := unpackMetricsValues(metricData, retention, from, 10, true)
 		expected := []float64{100.00}
-		So(val["metric"], ShouldResemble, expected)
+		c.So(val["metric"], ShouldResemble, expected)
 	})
 
 	metricData["metric"] = append(metricData["metric"], &moira.MetricValue{Timestamp: 10, RetentionTimestamp: 10, Value: 200.00})
 	metricData["metric"] = append(metricData["metric"], &moira.MetricValue{Timestamp: 20, RetentionTimestamp: 20, Value: 300.00})
 
-	Convey("Time == 20", t, func() {
+	Convey("Time == 20", t, func(c C) {
 		val := unpackMetricsValues(metricData, retention, from, 20, true)
 		expected := []float64{100.00, 200.00, 300.00}
-		So(val["metric"], ShouldResemble, expected)
+		c.So(val["metric"], ShouldResemble, expected)
 	})
-	Convey("Time == 29", t, func() {
+	Convey("Time == 29", t, func(c C) {
 		val := unpackMetricsValues(metricData, retention, from, 29, true)
 		expected := []float64{100.00, 200.00, 300.00}
-		So(val["metric"], ShouldResemble, expected)
+		c.So(val["metric"], ShouldResemble, expected)
 	})
 
-	Convey("Time == 30", t, func() {
+	Convey("Time == 30", t, func(c C) {
 		val := unpackMetricsValues(metricData, retention, from, 30, true)
 		expected := []float64{100.00, 200.00, 300.00}
-		So(val["metric"], ShouldResemble, expected)
+		c.So(val["metric"], ShouldResemble, expected)
 	})
 }
 
@@ -421,67 +421,67 @@ func TestNoDataSeries(t *testing.T) {
 	var from int64
 	metricData := map[string][]*moira.MetricValue{"metric": make([]*moira.MetricValue, 0)}
 
-	Convey("AllowRealTimeAlerting == true", t, func() {
-		Convey("Time == 0", func() {
+	Convey("AllowRealTimeAlerting == true", t, func(c C) {
+		Convey("Time == 0", t, func(c C) {
 			val := unpackMetricsValues(metricData, retention, from, 0, true)
 			expected := make([]float64, 0)
-			So(val["metric"], ShouldResemble, expected)
+			c.So(val["metric"], ShouldResemble, expected)
 		})
 
-		Convey("Time == 9", func() {
+		Convey("Time == 9", t, func(c C) {
 			val := unpackMetricsValues(metricData, retention, from, 9, true)
 			expected := make([]float64, 0)
-			So(val["metric"], ShouldResemble, expected)
+			c.So(val["metric"], ShouldResemble, expected)
 		})
 
-		Convey("Time == 10", func() {
+		Convey("Time == 10", t, func(c C) {
 			val := unpackMetricsValues(metricData, retention, from, 10, true)
 			expected := []float64{math.NaN()}
-			So(arrToString(val["metric"]), ShouldResemble, arrToString(expected))
+			c.So(arrToString(val["metric"]), ShouldResemble, arrToString(expected))
 		})
 
-		Convey("Time == 11", func() {
+		Convey("Time == 11", t, func(c C) {
 			val := unpackMetricsValues(metricData, retention, from, 11, true)
 			expected := []float64{math.NaN()}
-			So(arrToString(val["metric"]), ShouldResemble, arrToString(expected))
+			c.So(arrToString(val["metric"]), ShouldResemble, arrToString(expected))
 		})
 
-		Convey("Time == 20", func() {
+		Convey("Time == 20", t, func(c C) {
 			val := unpackMetricsValues(metricData, retention, from, 20, true)
 			expected := []float64{math.NaN(), math.NaN()}
-			So(arrToString(val["metric"]), ShouldResemble, arrToString(expected))
+			c.So(arrToString(val["metric"]), ShouldResemble, arrToString(expected))
 		})
 	})
 
-	Convey("AllowRealTimeAlerting == false", t, func() {
-		Convey("Time == 0", func() {
+	Convey("AllowRealTimeAlerting == false", t, func(c C) {
+		Convey("Time == 0", t, func(c C) {
 			val := unpackMetricsValues(metricData, retention, from, 0, false)
 			expected := make([]float64, 0)
-			So(val["metric"], ShouldResemble, expected)
+			c.So(val["metric"], ShouldResemble, expected)
 		})
 
-		Convey("Time == 9", func() {
+		Convey("Time == 9", t, func(c C) {
 			val := unpackMetricsValues(metricData, retention, from, 9, true)
 			expected := make([]float64, 0)
-			So(val["metric"], ShouldResemble, expected)
+			c.So(val["metric"], ShouldResemble, expected)
 		})
 
-		Convey("Time == 10", func() {
+		Convey("Time == 10", t, func(c C) {
 			val := unpackMetricsValues(metricData, retention, from, 10, false)
 			expected := []float64{math.NaN()}
-			So(arrToString(val["metric"]), ShouldResemble, arrToString(expected))
+			c.So(arrToString(val["metric"]), ShouldResemble, arrToString(expected))
 		})
 
-		Convey("Time == 11", func() {
+		Convey("Time == 11", t, func(c C) {
 			val := unpackMetricsValues(metricData, retention, from, 11, false)
 			expected := []float64{math.NaN()}
-			So(arrToString(val["metric"]), ShouldResemble, arrToString(expected))
+			c.So(arrToString(val["metric"]), ShouldResemble, arrToString(expected))
 		})
 
-		Convey("Time == 20", func() {
+		Convey("Time == 20", t, func(c C) {
 			val := unpackMetricsValues(metricData, retention, from, 20, false)
 			expected := []float64{math.NaN(), math.NaN()}
-			So(arrToString(val["metric"]), ShouldResemble, arrToString(expected))
+			c.So(arrToString(val["metric"]), ShouldResemble, arrToString(expected))
 		})
 	})
 }
@@ -494,92 +494,92 @@ func TestConservativeMultipleSeries(t *testing.T) {
 		"metric2": make([]*moira.MetricValue, 0),
 	}
 
-	Convey("Time == 0", t, func() {
+	Convey("Time == 0", t, func(c C) {
 		val := unpackMetricsValues(metricData, retention, from, 0, false)
-		So(val["metric1"], ShouldResemble, make([]float64, 0))
-		So(val["metric2"], ShouldResemble, make([]float64, 0))
+		c.So(val["metric1"], ShouldResemble, make([]float64, 0))
+		c.So(val["metric2"], ShouldResemble, make([]float64, 0))
 
 		val1 := unpackMetricsValues(metricData, retention, from, 0, true)
-		So(val1["metric1"], ShouldResemble, make([]float64, 0))
-		So(val1["metric2"], ShouldResemble, make([]float64, 0))
+		c.So(val1["metric1"], ShouldResemble, make([]float64, 0))
+		c.So(val1["metric2"], ShouldResemble, make([]float64, 0))
 
 		metricData["metric1"] = append(metricData["metric1"], &moira.MetricValue{Timestamp: 0, RetentionTimestamp: 0, Value: 100.00})
 
 		val2 := unpackMetricsValues(metricData, retention, from, 0, false)
-		So(val2["metric1"], ShouldResemble, make([]float64, 0))
-		So(val2["metric2"], ShouldResemble, make([]float64, 0))
+		c.So(val2["metric1"], ShouldResemble, make([]float64, 0))
+		c.So(val2["metric2"], ShouldResemble, make([]float64, 0))
 
 		val3 := unpackMetricsValues(metricData, retention, from, 0, true)
-		So(val3["metric1"], ShouldResemble, []float64{100.00})
-		So(val3["metric2"], ShouldResemble, make([]float64, 0))
+		c.So(val3["metric1"], ShouldResemble, []float64{100.00})
+		c.So(val3["metric2"], ShouldResemble, make([]float64, 0))
 	})
 
 	metricData["metric2"] = append(metricData["metric2"], &moira.MetricValue{Timestamp: 5, RetentionTimestamp: 5, Value: 150.00})
 
-	Convey("Time == 5", t, func() {
+	Convey("Time == 5", t, func(c C) {
 		val1 := unpackMetricsValues(metricData, retention, from, 5, false)
-		So(val1["metric1"], ShouldResemble, make([]float64, 0))
-		So(val1["metric2"], ShouldResemble, make([]float64, 0))
+		c.So(val1["metric1"], ShouldResemble, make([]float64, 0))
+		c.So(val1["metric2"], ShouldResemble, make([]float64, 0))
 
 		val3 := unpackMetricsValues(metricData, retention, from, 5, true)
-		So(val3["metric1"], ShouldResemble, []float64{100.00})
-		So(val3["metric2"], ShouldResemble, []float64{150.00})
+		c.So(val3["metric1"], ShouldResemble, []float64{100.00})
+		c.So(val3["metric2"], ShouldResemble, []float64{150.00})
 	})
 
-	Convey("Time == 9", t, func() {
+	Convey("Time == 9", t, func(c C) {
 		val1 := unpackMetricsValues(metricData, retention, from, 9, false)
-		So(val1["metric1"], ShouldResemble, make([]float64, 0))
-		So(val1["metric2"], ShouldResemble, make([]float64, 0))
+		c.So(val1["metric1"], ShouldResemble, make([]float64, 0))
+		c.So(val1["metric2"], ShouldResemble, make([]float64, 0))
 
 		val3 := unpackMetricsValues(metricData, retention, from, 9, true)
-		So(val3["metric1"], ShouldResemble, []float64{100.00})
-		So(val3["metric2"], ShouldResemble, []float64{150.00})
+		c.So(val3["metric1"], ShouldResemble, []float64{100.00})
+		c.So(val3["metric2"], ShouldResemble, []float64{150.00})
 	})
 
-	Convey("Time == 10", t, func() {
+	Convey("Time == 10", t, func(c C) {
 		val1 := unpackMetricsValues(metricData, retention, from, 10, false)
-		So(val1["metric1"], ShouldResemble, []float64{100.00})
-		So(val1["metric2"], ShouldResemble, []float64{150.00})
+		c.So(val1["metric1"], ShouldResemble, []float64{100.00})
+		c.So(val1["metric2"], ShouldResemble, []float64{150.00})
 
 		val3 := unpackMetricsValues(metricData, retention, from, 10, true)
-		So(val3["metric1"], ShouldResemble, []float64{100.00})
-		So(val3["metric2"], ShouldResemble, []float64{150.00})
+		c.So(val3["metric1"], ShouldResemble, []float64{100.00})
+		c.So(val3["metric2"], ShouldResemble, []float64{150.00})
 	})
 
 	metricData["metric1"] = append(metricData["metric1"], &moira.MetricValue{Timestamp: 10, RetentionTimestamp: 10, Value: 200.00})
 	metricData["metric2"] = append(metricData["metric2"], &moira.MetricValue{Timestamp: 15, RetentionTimestamp: 15, Value: 250.00})
 	metricData["metric1"] = append(metricData["metric1"], &moira.MetricValue{Timestamp: 20, RetentionTimestamp: 20, Value: 300.00})
 
-	Convey("Time == 20", t, func() {
+	Convey("Time == 20", t, func(c C) {
 		val1 := unpackMetricsValues(metricData, retention, from, 20, false)
-		So(val1["metric1"], ShouldResemble, []float64{100.00, 200.00})
-		So(val1["metric2"], ShouldResemble, []float64{150.00, 250.00})
+		c.So(val1["metric1"], ShouldResemble, []float64{100.00, 200.00})
+		c.So(val1["metric2"], ShouldResemble, []float64{150.00, 250.00})
 
 		val3 := unpackMetricsValues(metricData, retention, from, 20, true)
-		So(val3["metric1"], ShouldResemble, []float64{100.00, 200.00, 300.00})
-		So(val3["metric2"], ShouldResemble, []float64{150.00, 250.00})
+		c.So(val3["metric1"], ShouldResemble, []float64{100.00, 200.00, 300.00})
+		c.So(val3["metric2"], ShouldResemble, []float64{150.00, 250.00})
 	})
 
 	metricData["metric2"] = append(metricData["metric2"], &moira.MetricValue{Timestamp: 25, RetentionTimestamp: 25, Value: 350.00})
 
-	Convey("Time == 29", t, func() {
+	Convey("Time == 29", t, func(c C) {
 		val1 := unpackMetricsValues(metricData, retention, from, 29, false)
-		So(val1["metric1"], ShouldResemble, []float64{100.00, 200.00})
-		So(val1["metric2"], ShouldResemble, []float64{150.00, 250.00})
+		c.So(val1["metric1"], ShouldResemble, []float64{100.00, 200.00})
+		c.So(val1["metric2"], ShouldResemble, []float64{150.00, 250.00})
 
 		val3 := unpackMetricsValues(metricData, retention, from, 29, true)
-		So(val3["metric1"], ShouldResemble, []float64{100.00, 200.00, 300.00})
-		So(val3["metric2"], ShouldResemble, []float64{150.00, 250.00, 350.00})
+		c.So(val3["metric1"], ShouldResemble, []float64{100.00, 200.00, 300.00})
+		c.So(val3["metric2"], ShouldResemble, []float64{150.00, 250.00, 350.00})
 	})
 
-	Convey("Time == 30", t, func() {
+	Convey("Time == 30", t, func(c C) {
 		val1 := unpackMetricsValues(metricData, retention, from, 30, false)
-		So(val1["metric1"], ShouldResemble, []float64{100.00, 200.00, 300.00})
-		So(val1["metric2"], ShouldResemble, []float64{150.00, 250.00, 350.00})
+		c.So(val1["metric1"], ShouldResemble, []float64{100.00, 200.00, 300.00})
+		c.So(val1["metric2"], ShouldResemble, []float64{150.00, 250.00, 350.00})
 
 		val3 := unpackMetricsValues(metricData, retention, from, 30, true)
-		So(val3["metric1"], ShouldResemble, []float64{100.00, 200.00, 300.00})
-		So(val3["metric2"], ShouldResemble, []float64{150.00, 250.00, 350.00})
+		c.So(val3["metric1"], ShouldResemble, []float64{100.00, 200.00, 300.00})
+		c.So(val3["metric2"], ShouldResemble, []float64{150.00, 250.00, 350.00})
 	})
 }
 
@@ -588,26 +588,26 @@ func TestNonZeroStartTimeSeries(t *testing.T) {
 	var from int64 = 2
 	metricData := map[string][]*moira.MetricValue{"metric": make([]*moira.MetricValue, 0)}
 
-	Convey("Time == 11", t, func() {
+	Convey("Time == 11", t, func(c C) {
 		val1 := unpackMetricsValues(metricData, retention, from, 11, false)
-		So(val1["metric"], ShouldResemble, make([]float64, 0))
+		c.So(val1["metric"], ShouldResemble, make([]float64, 0))
 		val2 := unpackMetricsValues(metricData, retention, from, 11, true)
-		So(val2["metric"], ShouldResemble, make([]float64, 0))
+		c.So(val2["metric"], ShouldResemble, make([]float64, 0))
 
 		metricData["metric"] = append(metricData["metric"], &moira.MetricValue{Timestamp: 11, RetentionTimestamp: 10, Value: 100.00})
 
 		val3 := unpackMetricsValues(metricData, retention, from, 11, false)
-		So(val3["metric"], ShouldResemble, make([]float64, 0))
+		c.So(val3["metric"], ShouldResemble, make([]float64, 0))
 		val4 := unpackMetricsValues(metricData, retention, from, 11, true)
-		So(val4["metric"], ShouldResemble, []float64{100.00})
+		c.So(val4["metric"], ShouldResemble, []float64{100.00})
 	})
 
-	Convey("Time == 12", t, func() {
+	Convey("Time == 12", t, func(c C) {
 		val1 := unpackMetricsValues(metricData, retention, from, 12, false)
-		So(val1["metric"], ShouldResemble, make([]float64, 0))
+		c.So(val1["metric"], ShouldResemble, make([]float64, 0))
 
 		val2 := unpackMetricsValues(metricData, retention, from, 12, true)
-		So(val2["metric"], ShouldResemble, []float64{100.00})
+		c.So(val2["metric"], ShouldResemble, []float64{100.00})
 	})
 }
 
@@ -616,49 +616,49 @@ func TestConservativeShiftedSeries(t *testing.T) {
 	var from int64
 	metricData := map[string][]*moira.MetricValue{"metric": make([]*moira.MetricValue, 0)}
 
-	Convey("Time == 0", t, func() {
+	Convey("Time == 0", t, func(c C) {
 		val1 := unpackMetricsValues(metricData, retention, from, 0, false)
-		So(val1["metric"], ShouldResemble, make([]float64, 0))
+		c.So(val1["metric"], ShouldResemble, make([]float64, 0))
 	})
 
 	metricData["metric"] = append(metricData["metric"], &moira.MetricValue{Timestamp: 4, RetentionTimestamp: 0, Value: 100.00})
 
-	Convey("Time == 5", t, func() {
+	Convey("Time == 5", t, func(c C) {
 		val1 := unpackMetricsValues(metricData, retention, from, 5, false)
-		So(val1["metric"], ShouldResemble, make([]float64, 0))
+		c.So(val1["metric"], ShouldResemble, make([]float64, 0))
 	})
 
-	Convey("Time == 9", t, func() {
+	Convey("Time == 9", t, func(c C) {
 		val1 := unpackMetricsValues(metricData, retention, from, 9, false)
-		So(val1["metric"], ShouldResemble, make([]float64, 0))
+		c.So(val1["metric"], ShouldResemble, make([]float64, 0))
 	})
 
-	Convey("Time == 10", t, func() {
+	Convey("Time == 10", t, func(c C) {
 		val1 := unpackMetricsValues(metricData, retention, from, 10, false)
-		So(val1["metric"], ShouldResemble, []float64{100.00})
+		c.So(val1["metric"], ShouldResemble, []float64{100.00})
 	})
 
-	Convey("Time == 11", t, func() {
+	Convey("Time == 11", t, func(c C) {
 		val1 := unpackMetricsValues(metricData, retention, from, 11, false)
-		So(val1["metric"], ShouldResemble, []float64{100.00})
+		c.So(val1["metric"], ShouldResemble, []float64{100.00})
 	})
 
 	metricData["metric"] = append(metricData["metric"], &moira.MetricValue{Timestamp: 15, RetentionTimestamp: 10, Value: 200.00})
 	metricData["metric"] = append(metricData["metric"], &moira.MetricValue{Timestamp: 25, RetentionTimestamp: 20, Value: 300.00})
 
-	Convey("Time == 25", t, func() {
+	Convey("Time == 25", t, func(c C) {
 		val1 := unpackMetricsValues(metricData, retention, from, 25, false)
-		So(val1["metric"], ShouldResemble, []float64{100.00, 200.00})
+		c.So(val1["metric"], ShouldResemble, []float64{100.00, 200.00})
 	})
 
-	Convey("Time == 29", t, func() {
+	Convey("Time == 29", t, func(c C) {
 		val1 := unpackMetricsValues(metricData, retention, from, 29, false)
-		So(val1["metric"], ShouldResemble, []float64{100.00, 200.00})
+		c.So(val1["metric"], ShouldResemble, []float64{100.00, 200.00})
 	})
 
-	Convey("Time == 30", t, func() {
+	Convey("Time == 30", t, func(c C) {
 		val1 := unpackMetricsValues(metricData, retention, from, 30, false)
-		So(val1["metric"], ShouldResemble, []float64{100.00, 200.00, 300.00})
+		c.So(val1["metric"], ShouldResemble, []float64{100.00, 200.00, 300.00})
 	})
 }
 
@@ -667,49 +667,49 @@ func TestRealTimeShiftedSeries(t *testing.T) {
 	var from int64
 	metricData := map[string][]*moira.MetricValue{"metric": make([]*moira.MetricValue, 0)}
 
-	Convey("Time == 0", t, func() {
+	Convey("Time == 0", t, func(c C) {
 		val1 := unpackMetricsValues(metricData, retention, from, 0, true)
-		So(val1["metric"], ShouldResemble, make([]float64, 0))
+		c.So(val1["metric"], ShouldResemble, make([]float64, 0))
 	})
 
 	metricData["metric"] = append(metricData["metric"], &moira.MetricValue{Timestamp: 4, RetentionTimestamp: 0, Value: 100.00})
 
-	Convey("Time == 5", t, func() {
+	Convey("Time == 5", t, func(c C) {
 		val1 := unpackMetricsValues(metricData, retention, from, 5, true)
-		So(val1["metric"], ShouldResemble, []float64{100.00})
+		c.So(val1["metric"], ShouldResemble, []float64{100.00})
 	})
 
-	Convey("Time == 9", t, func() {
+	Convey("Time == 9", t, func(c C) {
 		val1 := unpackMetricsValues(metricData, retention, from, 9, true)
-		So(val1["metric"], ShouldResemble, []float64{100.00})
+		c.So(val1["metric"], ShouldResemble, []float64{100.00})
 	})
 
-	Convey("Time == 10", t, func() {
+	Convey("Time == 10", t, func(c C) {
 		val1 := unpackMetricsValues(metricData, retention, from, 10, true)
-		So(val1["metric"], ShouldResemble, []float64{100.00})
+		c.So(val1["metric"], ShouldResemble, []float64{100.00})
 	})
 
-	Convey("Time == 11", t, func() {
+	Convey("Time == 11", t, func(c C) {
 		val1 := unpackMetricsValues(metricData, retention, from, 11, true)
-		So(val1["metric"], ShouldResemble, []float64{100.00})
+		c.So(val1["metric"], ShouldResemble, []float64{100.00})
 	})
 
 	metricData["metric"] = append(metricData["metric"], &moira.MetricValue{Timestamp: 15, RetentionTimestamp: 10, Value: 200.00})
 	metricData["metric"] = append(metricData["metric"], &moira.MetricValue{Timestamp: 25, RetentionTimestamp: 20, Value: 300.00})
 
-	Convey("Time == 25", t, func() {
+	Convey("Time == 25", t, func(c C) {
 		val1 := unpackMetricsValues(metricData, retention, from, 25, true)
-		So(val1["metric"], ShouldResemble, []float64{100.00, 200.00, 300.00})
+		c.So(val1["metric"], ShouldResemble, []float64{100.00, 200.00, 300.00})
 	})
 
-	Convey("Time == 29", t, func() {
+	Convey("Time == 29", t, func(c C) {
 		val1 := unpackMetricsValues(metricData, retention, from, 29, true)
-		So(val1["metric"], ShouldResemble, []float64{100.00, 200.00, 300.00})
+		c.So(val1["metric"], ShouldResemble, []float64{100.00, 200.00, 300.00})
 	})
 
-	Convey("Time == 30", t, func() {
+	Convey("Time == 30", t, func(c C) {
 		val1 := unpackMetricsValues(metricData, retention, from, 30, true)
-		So(val1["metric"], ShouldResemble, []float64{100.00, 200.00, 300.00})
+		c.So(val1["metric"], ShouldResemble, []float64{100.00, 200.00, 300.00})
 	})
 }
 

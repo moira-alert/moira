@@ -12,7 +12,7 @@ func TestConfigCheck(testing *testing.T) {
 		"admin-mail": true,
 	}
 
-	Convey("SelfCheck disabled", testing, func() {
+	Convey("SelfCheck disabled", testing, func(c C) {
 		config := Config{
 			Enabled: false,
 			Contacts: []map[string]string{
@@ -23,42 +23,42 @@ func TestConfigCheck(testing *testing.T) {
 			},
 		}
 
-		Convey("all data valid, should return nil error", func() {
+		Convey("all data valid, should return nil error", t, func(c C) {
 			actual := config.checkConfig(contactTypes)
-			So(actual, ShouldBeNil)
+			c.So(actual, ShouldBeNil)
 		})
 
-		Convey("contacts empty, should return nil error", func() {
+		Convey("contacts empty, should return nil error", t, func(c C) {
 			config.Contacts = []map[string]string{}
 			actual := config.checkConfig(contactTypes)
-			So(actual, ShouldBeNil)
+			c.So(actual, ShouldBeNil)
 		})
 
-		Convey("admin sending type not registered, should return nil error", func() {
+		Convey("admin sending type not registered, should return nil error", t, func(c C) {
 			actual := config.checkConfig(make(map[string]bool))
-			So(actual, ShouldBeNil)
+			c.So(actual, ShouldBeNil)
 		})
 
-		Convey("admin sending contact empty, should return nil error", func() {
+		Convey("admin sending contact empty, should return nil error", t, func(c C) {
 			config.Contacts = []map[string]string{
 				{
 					"type":  "admin-mail",
 					"value": "",
 				}}
 			actual := config.checkConfig(make(map[string]bool))
-			So(actual, ShouldBeNil)
+			c.So(actual, ShouldBeNil)
 		})
 	})
 
-	Convey("SelfCheck contacts empty, should return contacts must be specified error", testing, func() {
+	Convey("SelfCheck contacts empty, should return contacts must be specified error", testing, func(c C) {
 		config := Config{
 			Enabled: true,
 		}
 		actual := config.checkConfig(make(map[string]bool))
-		So(actual, ShouldResemble, fmt.Errorf("contacts must be specified"))
+		c.So(actual, ShouldResemble, fmt.Errorf("contacts must be specified"))
 	})
 
-	Convey("Admin sending type not registered, should not pass check without admin contact type", testing, func() {
+	Convey("Admin sending type not registered, should not pass check without admin contact type", testing, func(c C) {
 		config := Config{
 			Enabled: true,
 			Contacts: []map[string]string{
@@ -70,10 +70,10 @@ func TestConfigCheck(testing *testing.T) {
 		}
 
 		actual := config.checkConfig(make(map[string]bool))
-		So(actual, ShouldResemble, fmt.Errorf("unknown contact type [admin-mail]"))
+		c.So(actual, ShouldResemble, fmt.Errorf("unknown contact type [admin-mail]"))
 	})
 
-	Convey("Admin sending contact empty, should not pass check without admin contact", testing, func() {
+	Convey("Admin sending contact empty, should not pass check without admin contact", testing, func(c C) {
 		config := Config{
 			Enabled: true,
 			Contacts: []map[string]string{
@@ -89,10 +89,10 @@ func TestConfigCheck(testing *testing.T) {
 		}
 
 		actual := config.checkConfig(contactTypes)
-		So(actual, ShouldResemble, fmt.Errorf("value for [admin-mail] must be present"))
+		c.So(actual, ShouldResemble, fmt.Errorf("value for [admin-mail] must be present"))
 	})
 
-	Convey("Has registered valid admin contact, should pass check", testing, func() {
+	Convey("Has registered valid admin contact, should pass check", testing, func(c C) {
 		config := Config{
 			Enabled: true,
 			Contacts: []map[string]string{
@@ -108,6 +108,6 @@ func TestConfigCheck(testing *testing.T) {
 		}
 
 		actual := config.checkConfig(contactTypes)
-		So(actual, ShouldBeNil)
+		c.So(actual, ShouldBeNil)
 	})
 }

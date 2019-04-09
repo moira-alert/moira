@@ -43,8 +43,8 @@ func TestDatabaseDisconnected(t *testing.T) {
 	// _, selfStateWorker, database, notif, conf, mockCtrl := configureWorker(t)
 	mock := configureWorker(t, false)
 	mock.selfCheckWorker.Start()
-	Convey("Database disconnected", t, func() {
-		Convey("Should notify admin", func() {
+	Convey("Database disconnected", t, func(c C) {
+		Convey("Should notify admin", t, func(c C) {
 			var events []moira.NotificationEvent
 			var sendingWG sync.WaitGroup
 			err := fmt.Errorf("DataBase doesn't work")
@@ -65,10 +65,10 @@ func TestDatabaseDisconnected(t *testing.T) {
 			mock.notif.EXPECT().Send(&expectedPackage, &sendingWG)
 			mock.selfCheckWorker.check(now.Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS, &lastRemoteCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount, &remoteChecksCount)
 
-			So(lastMetricReceivedTS, ShouldEqual, now.Unix())
-			So(lastCheckTS, ShouldEqual, now.Unix())
-			So(redisLastCheckTS, ShouldEqual, now.Add(-time.Second*11).Unix())
-			So(nextSendErrorMessage, ShouldEqual, now.Unix()+mock.conf.NoticeIntervalSeconds)
+			c.So(lastMetricReceivedTS, ShouldEqual, now.Unix())
+			c.So(lastCheckTS, ShouldEqual, now.Unix())
+			c.So(redisLastCheckTS, ShouldEqual, now.Add(-time.Second*11).Unix())
+			c.So(nextSendErrorMessage, ShouldEqual, now.Unix()+mock.conf.NoticeIntervalSeconds)
 		})
 	})
 	mock.selfCheckWorker.Stop()
@@ -94,7 +94,7 @@ func TestMoiraCacheDoesNotReceivedNewMetrics(t *testing.T) {
 
 	mock := configureWorker(t, false)
 	mock.selfCheckWorker.Start()
-	Convey("Should notify admin", t, func() {
+	Convey("Should notify admin", t, func(c C) {
 		var events []moira.NotificationEvent
 		var sendingWG sync.WaitGroup
 		mock.database.EXPECT().GetMetricsUpdatesCount().Return(int64(1), nil)
@@ -118,10 +118,10 @@ func TestMoiraCacheDoesNotReceivedNewMetrics(t *testing.T) {
 		mock.notif.EXPECT().Send(&expectedPackage, &sendingWG)
 		mock.selfCheckWorker.check(callingNow.Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS, &lastRemoteCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount, &remoteChecksCount)
 
-		So(lastMetricReceivedTS, ShouldEqual, now.Add(-time.Second*61).Unix())
-		So(lastCheckTS, ShouldEqual, callingNow.Unix())
-		So(redisLastCheckTS, ShouldEqual, callingNow.Unix())
-		So(nextSendErrorMessage, ShouldEqual, callingNow.Unix()+mock.conf.NoticeIntervalSeconds)
+		c.So(lastMetricReceivedTS, ShouldEqual, now.Add(-time.Second*61).Unix())
+		c.So(lastCheckTS, ShouldEqual, callingNow.Unix())
+		c.So(redisLastCheckTS, ShouldEqual, callingNow.Unix())
+		c.So(nextSendErrorMessage, ShouldEqual, callingNow.Unix()+mock.conf.NoticeIntervalSeconds)
 	})
 	mock.selfCheckWorker.Stop()
 	mock.mockCtrl.Finish()
@@ -146,7 +146,7 @@ func TestMoiraCheckerDoesNotChecksTriggers(t *testing.T) {
 
 	mock := configureWorker(t, false)
 	mock.selfCheckWorker.Start()
-	Convey("Should notify admin", t, func() {
+	Convey("Should notify admin", t, func(c C) {
 		var events []moira.NotificationEvent
 		var sendingWG sync.WaitGroup
 		mock.database.EXPECT().GetMetricsUpdatesCount().Return(int64(1), nil)
@@ -170,10 +170,10 @@ func TestMoiraCheckerDoesNotChecksTriggers(t *testing.T) {
 		mock.notif.EXPECT().Send(&expectedPackage, &sendingWG)
 		mock.selfCheckWorker.check(callingNow.Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS, &lastRemoteCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount, &remoteChecksCount)
 
-		So(lastMetricReceivedTS, ShouldEqual, callingNow.Unix())
-		So(lastCheckTS, ShouldEqual, now.Add(-time.Second*121).Unix())
-		So(redisLastCheckTS, ShouldEqual, callingNow.Unix())
-		So(nextSendErrorMessage, ShouldEqual, callingNow.Unix()+mock.conf.NoticeIntervalSeconds)
+		c.So(lastMetricReceivedTS, ShouldEqual, callingNow.Unix())
+		c.So(lastCheckTS, ShouldEqual, now.Add(-time.Second*121).Unix())
+		c.So(redisLastCheckTS, ShouldEqual, callingNow.Unix())
+		c.So(nextSendErrorMessage, ShouldEqual, callingNow.Unix()+mock.conf.NoticeIntervalSeconds)
 	})
 	mock.selfCheckWorker.Stop()
 	mock.mockCtrl.Finish()
@@ -198,7 +198,7 @@ func TestMoiraCheckerDoesNotChecksRemoteTriggers(t *testing.T) {
 
 	mock := configureWorker(t, true)
 	mock.selfCheckWorker.Start()
-	Convey("Should notify admin", t, func() {
+	Convey("Should notify admin", t, func(c C) {
 		var events []moira.NotificationEvent
 		var sendingWG sync.WaitGroup
 		mock.database.EXPECT().GetMetricsUpdatesCount().Return(int64(1), nil)
@@ -222,10 +222,10 @@ func TestMoiraCheckerDoesNotChecksRemoteTriggers(t *testing.T) {
 		mock.notif.EXPECT().Send(&expectedPackage, &sendingWG)
 		mock.selfCheckWorker.check(callingNow.Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS, &lastRemoteCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount, &remoteChecksCount)
 
-		So(lastMetricReceivedTS, ShouldEqual, callingNow.Unix())
-		So(lastRemoteCheckTS, ShouldEqual, now.Add(-time.Second*121).Unix())
-		So(redisLastCheckTS, ShouldEqual, callingNow.Unix())
-		So(nextSendErrorMessage, ShouldEqual, callingNow.Unix()+mock.conf.NoticeIntervalSeconds)
+		c.So(lastMetricReceivedTS, ShouldEqual, callingNow.Unix())
+		c.So(lastRemoteCheckTS, ShouldEqual, now.Add(-time.Second*121).Unix())
+		c.So(redisLastCheckTS, ShouldEqual, callingNow.Unix())
+		c.So(nextSendErrorMessage, ShouldEqual, callingNow.Unix()+mock.conf.NoticeIntervalSeconds)
 	})
 	mock.selfCheckWorker.Stop()
 	mock.mockCtrl.Finish()
@@ -270,7 +270,7 @@ func TestRunGoRoutine(t *testing.T) {
 		Notifier: notif,
 	}
 
-	Convey("Go routine run before first send, should send after 10 seconds next time", t, func() {
+	Convey("Go routine run before first send, should send after 10 seconds next time", t, func(c C) {
 		err := fmt.Errorf("DataBase doesn't work")
 		database.EXPECT().GetMetricsUpdatesCount().Return(int64(1), nil).Times(11)
 		database.EXPECT().GetChecksUpdatesCount().Return(int64(1), err).Times(11)
@@ -282,7 +282,7 @@ func TestRunGoRoutine(t *testing.T) {
 	})
 }
 
-func configureWorker(t *testing.T, remoteEnabled bool) *selfCheckWorkerMock {
+func ConfigureWorker(t *testing.T, remoteEnabled bool) *selfCheckWorkerMock {
 	adminContact := map[string]string{
 		"type":  "admin-mail",
 		"value": "admin@company.com",
@@ -329,7 +329,7 @@ func configureWorker(t *testing.T, remoteEnabled bool) *selfCheckWorkerMock {
 	}
 }
 
-func configureNotificationPackage(adminContact map[string]string, events *[]moira.NotificationEvent) notifier.NotificationPackage {
+func ConfigureNotificationPackage(adminContact map[string]string, events *[]moira.NotificationEvent) notifier.NotificationPackage {
 	return notifier.NotificationPackage{
 		Contact: moira.ContactData{
 			Type:  adminContact["type"],

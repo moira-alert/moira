@@ -9,8 +9,8 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/middleware"
-	"github.com/moira-alert/moira/metric_source"
-	"github.com/moira-alert/moira/mock/metric_source"
+	metricSource "github.com/moira-alert/moira/metric_source"
+	mock_metric_source "github.com/moira-alert/moira/mock/metric_source"
 
 	"github.com/golang/mock/gomock"
 	. "github.com/smartystreets/goconvey/convey"
@@ -18,7 +18,7 @@ import (
 
 func TestExpressionModeMultipleTargetsWarnValue(t *testing.T) {
 
-	Convey("Tests targets, values and expression validation", t, func() {
+	Convey("Tests targets, values and expression validation", t, func(c C) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
@@ -55,30 +55,30 @@ func TestExpressionModeMultipleTargetsWarnValue(t *testing.T) {
 			MuteNewMetrics: false,
 		}
 
-		Convey("Test FallingTrigger", func() {
+		Convey("Test FallingTrigger", t, func(c C) {
 			trigger.TriggerType = moira.FallingTrigger
 
-			Convey("and one target", func() {
+			Convey("and one target", t, func(c C) {
 				trigger.Targets = []string{
 					"aliasByNode(DevOps.system.graphite01.disk._mnt_data.gigabyte_percentfree, 2, 4)",
 				}
-				Convey("and expression", func() {
+				Convey("and expression", t, func(c C) {
 					trigger.Expression = "(t1 < 10 && t2 < 10) ? WARN:OK"
 					tr := Trigger{trigger, throttling}
 					err := tr.Bind(request)
-					So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("can't use 'expression' to trigger_type: 'falling'")})
+					c.So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("can't use 'expression' to trigger_type: 'falling'")})
 				})
 
-				Convey("and warn_value and error_value", func() {
+				Convey("and warn_value and error_value", t, func(c C) {
 					trigger.WarnValue = &warnValue
 					trigger.ErrorValue = &errorValue
 					tr := Trigger{trigger, throttling}
 					err := tr.Bind(request)
-					So(err, ShouldBeNil)
+					c.So(err, ShouldBeNil)
 				})
 			})
 
-			Convey("and one multiple targets", func() {
+			Convey("and one multiple targets", t, func(c C) {
 				trigger.Targets = []string{
 					"aliasByNode(DevOps.system.graphite01.disk._mnt_data.gigabyte_percentfree, 2, 4)",
 					"aliasByNode(DevOps.system.sd2-graphite01.disk._mnt_data.gigabyte_percentfree, 2, 4)",
@@ -89,34 +89,34 @@ func TestExpressionModeMultipleTargetsWarnValue(t *testing.T) {
 				trigger.ErrorValue = &errorValue
 				tr := Trigger{trigger, throttling}
 				err := tr.Bind(request)
-				So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("can't use trigger_type not 'falling' for with multiple targets")})
+				c.So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("can't use trigger_type not 'falling' for with multiple targets")})
 			})
 
 		})
-		Convey("Test RisingTrigger", func() {
+		Convey("Test RisingTrigger", t, func(c C) {
 			trigger.TriggerType = moira.RisingTrigger
 
-			Convey("and one target", func() {
+			Convey("and one target", t, func(c C) {
 				trigger.Targets = []string{
 					"aliasByNode(DevOps.system.graphite01.disk._mnt_data.gigabyte_percentfree, 2, 4)",
 				}
-				Convey("and expression", func() {
+				Convey("and expression", t, func(c C) {
 					trigger.Expression = "(t1 < 10 && t2 < 10) ? WARN:OK"
 					tr := Trigger{trigger, throttling}
 					err := tr.Bind(request)
-					So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("can't use 'expression' to trigger_type: 'rising'")})
+					c.So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("can't use 'expression' to trigger_type: 'rising'")})
 				})
 
-				Convey("and warn_value and error_value", func() {
+				Convey("and warn_value and error_value", t, func(c C) {
 					trigger.WarnValue = &errorValue
 					trigger.ErrorValue = &warnValue
 					tr := Trigger{trigger, throttling}
 					err := tr.Bind(request)
-					So(err, ShouldBeNil)
+					c.So(err, ShouldBeNil)
 				})
 			})
 
-			Convey("and one multiple targets", func() {
+			Convey("and one multiple targets", t, func(c C) {
 				trigger.Targets = []string{
 					"aliasByNode(DevOps.system.graphite01.disk._mnt_data.gigabyte_percentfree, 2, 4)",
 					"aliasByNode(DevOps.system.sd2-graphite01.disk._mnt_data.gigabyte_percentfree, 2, 4)",
@@ -127,11 +127,11 @@ func TestExpressionModeMultipleTargetsWarnValue(t *testing.T) {
 				trigger.ErrorValue = &warnValue
 				tr := Trigger{trigger, throttling}
 				err := tr.Bind(request)
-				So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("can't use trigger_type not 'rising' for with multiple targets")})
+				c.So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("can't use trigger_type not 'rising' for with multiple targets")})
 			})
 
 		})
-		Convey("Test ExpressionTrigger", func() {
+		Convey("Test ExpressionTrigger", t, func(c C) {
 			trigger.TriggerType = moira.ExpressionTrigger
 			trigger.Expression = "(t1 < 10 && t2 < 10) ? WARN:OK"
 			trigger.Targets = []string{
@@ -140,24 +140,24 @@ func TestExpressionModeMultipleTargetsWarnValue(t *testing.T) {
 				"aliasByNode(DevOps.system.bst-graphite01.disk.root.gigabyte_percentfree, 2, 4)",
 				"aliasByNode(DevOps.system.dtl-graphite01.disk._mnt_data.gigabyte_percentfree, 2, 4)",
 			}
-			Convey("and warn_value", func() {
+			Convey("and warn_value", t, func(c C) {
 				trigger.WarnValue = &warnValue
 				tr := Trigger{trigger, throttling}
 				err := tr.Bind(request)
-				So(err, ShouldNotBeNil)
-				So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("can't use 'warn_value' on trigger_type: 'expression'")})
+				c.So(err, ShouldNotBeNil)
+				c.So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("can't use 'warn_value' on trigger_type: 'expression'")})
 			})
 
-			Convey("and error_value", func() {
+			Convey("and error_value", t, func(c C) {
 				trigger.ErrorValue = &errorValue
 				tr := Trigger{trigger, throttling}
 				err := tr.Bind(request)
-				So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("can't use 'error_value' on trigger_type: 'expression'")})
+				c.So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("can't use 'error_value' on trigger_type: 'expression'")})
 			})
-			Convey("and expression", func() {
+			Convey("and expression", t, func(c C) {
 				tr := Trigger{trigger, throttling}
 				err := tr.Bind(request)
-				So(err, ShouldBeNil)
+				c.So(err, ShouldBeNil)
 			})
 		})
 	})

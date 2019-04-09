@@ -8,15 +8,15 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/expression"
-	"github.com/moira-alert/moira/metric_source"
-	"github.com/moira-alert/moira/mock/metric_source"
-	"github.com/moira-alert/moira/mock/moira-alert"
+	metricSource "github.com/moira-alert/moira/metric_source"
+	mock_metric_source "github.com/moira-alert/moira/mock/metric_source"
+	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestFetchTriggerMetrics(t *testing.T) {
 
-	Convey("Test fetch trigger metrics", t, func() {
+	Convey("Test fetch trigger metrics", t, func(c C) {
 		mockCtrl := gomock.NewController(t)
 		source := mock_metric_source.NewMockMetricSource(mockCtrl)
 		fetchResult := mock_metric_source.NewMockFetchResult(mockCtrl)
@@ -39,48 +39,48 @@ func TestFetchTriggerMetrics(t *testing.T) {
 			},
 		}
 
-		Convey("no metrics in last check", func() {
-			Convey("fetch returns wildcard", func() {
+		Convey("no metrics in last check", t, func(c C) {
+			Convey("fetch returns wildcard", t, func(c C) {
 				source.EXPECT().Fetch(pattern, triggerChecker.from, triggerChecker.until, true).Return(fetchResult, nil)
 				fetchResult.EXPECT().GetMetricsData().Return([]*metricSource.MetricData{{Name: pattern, Wildcard: true}})
 				fetchResult.EXPECT().GetPatternMetrics().Return([]string{}, nil)
 
 				actual, err := triggerChecker.fetchTriggerMetrics()
-				So(err, ShouldResemble, ErrTriggerHasOnlyWildcards{})
-				So(actual, ShouldResemble, metricSource.MakeTriggerMetricsData([]*metricSource.MetricData{{Name: pattern, Wildcard: true}}, []*metricSource.MetricData{}))
+				c.So(err, ShouldResemble, ErrTriggerHasOnlyWildcards{})
+				c.So(actual, ShouldResemble, metricSource.MakeTriggerMetricsData([]*metricSource.MetricData{{Name: pattern, Wildcard: true}}, []*metricSource.MetricData{}))
 			})
 
-			Convey("fetch returns no metrics", func() {
+			Convey("fetch returns no metrics", t, func(c C) {
 				source.EXPECT().Fetch(pattern, triggerChecker.from, triggerChecker.until, true).Return(fetchResult, nil)
 				fetchResult.EXPECT().GetMetricsData().Return([]*metricSource.MetricData{})
 				fetchResult.EXPECT().GetPatternMetrics().Return([]string{}, nil)
 
 				actual, err := triggerChecker.fetchTriggerMetrics()
-				So(err, ShouldResemble, ErrTriggerHasNoMetrics{})
-				So(actual, ShouldResemble, metricSource.MakeTriggerMetricsData([]*metricSource.MetricData{}, []*metricSource.MetricData{}))
+				c.So(err, ShouldResemble, ErrTriggerHasNoMetrics{})
+				c.So(actual, ShouldResemble, metricSource.MakeTriggerMetricsData([]*metricSource.MetricData{}, []*metricSource.MetricData{}))
 			})
 		})
 
-		Convey("has metrics in last check", func() {
+		Convey("has metrics in last check", t, func(c C) {
 			triggerChecker.lastCheck.Metrics["metric"] = moira.MetricState{}
-			Convey("fetch returns wildcard", func() {
+			Convey("fetch returns wildcard", t, func(c C) {
 				source.EXPECT().Fetch(pattern, triggerChecker.from, triggerChecker.until, true).Return(fetchResult, nil)
 				fetchResult.EXPECT().GetMetricsData().Return([]*metricSource.MetricData{{Name: pattern, Wildcard: true}})
 				fetchResult.EXPECT().GetPatternMetrics().Return([]string{}, nil)
 
 				actual, err := triggerChecker.fetchTriggerMetrics()
-				So(err, ShouldBeEmpty)
-				So(actual, ShouldResemble, metricSource.MakeTriggerMetricsData([]*metricSource.MetricData{{Name: pattern, Wildcard: true}}, []*metricSource.MetricData{}))
+				c.So(err, ShouldBeEmpty)
+				c.So(actual, ShouldResemble, metricSource.MakeTriggerMetricsData([]*metricSource.MetricData{{Name: pattern, Wildcard: true}}, []*metricSource.MetricData{}))
 			})
 
-			Convey("fetch returns no metrics", func() {
+			Convey("fetch returns no metrics", t, func(c C) {
 				source.EXPECT().Fetch(pattern, triggerChecker.from, triggerChecker.until, true).Return(fetchResult, nil)
 				fetchResult.EXPECT().GetMetricsData().Return([]*metricSource.MetricData{})
 				fetchResult.EXPECT().GetPatternMetrics().Return([]string{}, nil)
 
 				actual, err := triggerChecker.fetchTriggerMetrics()
-				So(err, ShouldBeEmpty)
-				So(actual, ShouldResemble, metricSource.MakeTriggerMetricsData([]*metricSource.MetricData{}, []*metricSource.MetricData{}))
+				c.So(err, ShouldBeEmpty)
+				c.So(actual, ShouldResemble, metricSource.MakeTriggerMetricsData([]*metricSource.MetricData{}, []*metricSource.MetricData{}))
 			})
 		})
 	})
@@ -122,18 +122,18 @@ func TestGetTimeSeries(t *testing.T) {
 		},
 	}
 
-	Convey("Error test", t, func() {
+	Convey("Error test", t, func(c C) {
 		metricErr := fmt.Errorf("ooops, metric error")
 		source.EXPECT().Fetch(pattern, from, until, true).Return(nil, metricErr)
 		actual, metrics, err := triggerChecker.fetch()
-		So(actual, ShouldBeNil)
-		So(metrics, ShouldBeNil)
-		So(err, ShouldBeError)
-		So(err, ShouldResemble, metricErr)
+		c.So(actual, ShouldBeNil)
+		c.So(metrics, ShouldBeNil)
+		c.So(err, ShouldBeError)
+		c.So(err, ShouldResemble, metricErr)
 	})
 
-	Convey("Test no metrics", t, func() {
-		Convey("In main target", func() {
+	Convey("Test no metrics", t, func(c C) {
+		Convey("In main target", t, func(c C) {
 			metricData := &metricSource.MetricData{
 				Name:      pattern,
 				StartTime: from,
@@ -147,12 +147,12 @@ func TestGetTimeSeries(t *testing.T) {
 			fetchResult.EXPECT().GetMetricsData().Return([]*metricSource.MetricData{metricData})
 			fetchResult.EXPECT().GetPatternMetrics().Return([]string{}, nil)
 			actual, metrics, err := triggerChecker.fetch()
-			So(actual, ShouldResemble, metricSource.MakeTriggerMetricsData([]*metricSource.MetricData{metricData}, make([]*metricSource.MetricData, 0)))
-			So(metrics, ShouldBeEmpty)
-			So(err, ShouldBeNil)
+			c.So(actual, ShouldResemble, metricSource.MakeTriggerMetricsData([]*metricSource.MetricData{metricData}, make([]*metricSource.MetricData, 0)))
+			c.So(metrics, ShouldBeEmpty)
+			c.So(err, ShouldBeNil)
 		})
 
-		Convey("In additional target", func() {
+		Convey("In additional target", t, func(c C) {
 			metricError := fmt.Errorf("metric error")
 			triggerChecker1 := &TriggerChecker{
 				database: dataBase,
@@ -175,37 +175,37 @@ func TestGetTimeSeries(t *testing.T) {
 			source.EXPECT().Fetch(addPattern, from, until, false).Return(fetchResult, nil)
 			fetchResult.EXPECT().GetMetricsData().Return(addMetricData)
 
-			Convey("get pattern metrics error", func() {
+			Convey("get pattern metrics error", t, func(c C) {
 				fetchResult.EXPECT().GetPatternMetrics().Return([]string{}, metricError)
 				actual, metrics, err := triggerChecker1.fetch()
-				So(actual, ShouldBeNil)
-				So(metrics, ShouldBeNil)
-				So(err, ShouldBeError)
-				So(err, ShouldResemble, ErrTargetHasNoMetrics{targetIndex: 2})
+				c.So(actual, ShouldBeNil)
+				c.So(metrics, ShouldBeNil)
+				c.So(err, ShouldBeError)
+				c.So(err, ShouldResemble, ErrTargetHasNoMetrics{targetIndex: 2})
 			})
 
-			Convey("get pattern metrics has metrics", func() {
+			Convey("get pattern metrics has metrics", t, func(c C) {
 				fetchResult.EXPECT().GetPatternMetrics().Return([]string{addMetric}, nil)
 				actual, metrics, err := triggerChecker1.fetch()
-				So(actual, ShouldBeNil)
-				So(metrics, ShouldBeNil)
-				So(err, ShouldBeError)
-				So(err, ShouldResemble, ErrTargetHasNoMetrics{targetIndex: 2})
-				So(err.Error(), ShouldResemble, "target t3 has no timeseries")
+				c.So(actual, ShouldBeNil)
+				c.So(metrics, ShouldBeNil)
+				c.So(err, ShouldBeError)
+				c.So(err, ShouldResemble, ErrTargetHasNoMetrics{targetIndex: 2})
+				c.So(err.Error(), ShouldResemble, "target t3 has no timeseries")
 			})
 
-			Convey("get pattern metrics has no metrics", func() {
+			Convey("get pattern metrics has no metrics", t, func(c C) {
 				fetchResult.EXPECT().GetPatternMetrics().Return([]string{}, nil)
 				actual, metrics, err := triggerChecker1.fetch()
-				So(actual, ShouldResemble, metricSource.MakeTriggerMetricsData(metricData, []*metricSource.MetricData{nil}))
-				So(metrics, ShouldResemble, []string{metric})
-				So(err, ShouldBeNil)
+				c.So(actual, ShouldResemble, metricSource.MakeTriggerMetricsData(metricData, []*metricSource.MetricData{nil}))
+				c.So(metrics, ShouldResemble, []string{metric})
+				c.So(err, ShouldBeNil)
 			})
 		})
 	})
 
-	Convey("Test has metrics", t, func() {
-		Convey("Only one target", func() {
+	Convey("Test has metrics", t, func(c C) {
+		Convey("Only one target", t, func(c C) {
 			source.EXPECT().Fetch(pattern, from, until, true).Return(fetchResult, nil)
 			fetchResult.EXPECT().GetMetricsData().Return([]*metricSource.MetricData{metricSource.MakeMetricData(metric, []float64{0, 1, 2, 3, 4}, retention, from)})
 			fetchResult.EXPECT().GetPatternMetrics().Return([]string{metric}, nil)
@@ -218,12 +218,12 @@ func TestGetTimeSeries(t *testing.T) {
 				Values:    []float64{0, 1, 2, 3, 4},
 			}
 			expected := metricSource.MakeTriggerMetricsData([]*metricSource.MetricData{metricData}, make([]*metricSource.MetricData, 0))
-			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, expected)
-			So(metrics, ShouldResemble, []string{metric})
+			c.So(err, ShouldBeNil)
+			c.So(actual, ShouldResemble, expected)
+			c.So(metrics, ShouldResemble, []string{metric})
 		})
 
-		Convey("Two targets", func() {
+		Convey("Two targets", t, func(c C) {
 			triggerChecker.trigger.Targets = []string{pattern, addPattern}
 			triggerChecker.trigger.Patterns = []string{pattern, addPattern}
 
@@ -241,12 +241,12 @@ func TestGetTimeSeries(t *testing.T) {
 			actual, metrics, err := triggerChecker.fetch()
 			expected := metricSource.MakeTriggerMetricsData(metricData, addMetricData)
 
-			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, expected)
-			So(metrics, ShouldResemble, []string{metric, addMetric})
+			c.So(err, ShouldBeNil)
+			c.So(actual, ShouldResemble, expected)
+			c.So(metrics, ShouldResemble, []string{metric, addMetric})
 		})
 
-		Convey("Two targets with many metrics in additional target", func() {
+		Convey("Two targets with many metrics in additional target", t, func(c C) {
 			metricData := []*metricSource.MetricData{metricSource.MakeMetricData(metric, []float64{0, 1, 2, 3, 4}, retention, from)}
 			addMetricData := []*metricSource.MetricData{
 				metricSource.MakeMetricData(addMetric, []float64{0, 1, 2, 3, 4}, retention, from),
@@ -262,14 +262,14 @@ func TestGetTimeSeries(t *testing.T) {
 			fetchResult.EXPECT().GetPatternMetrics().Return([]string{addMetric, addMetric2}, nil)
 
 			actual, metrics, err := triggerChecker.fetch()
-			So(err, ShouldBeError)
-			So(err, ShouldResemble, ErrWrongTriggerTargets([]int{2}))
-			So(err.Error(), ShouldResemble, "Target t2 has more than one timeseries")
-			So(actual, ShouldBeNil)
-			So(metrics, ShouldBeNil)
+			c.So(err, ShouldBeError)
+			c.So(err, ShouldResemble, ErrWrongTriggerTargets([]int{2}))
+			c.So(err.Error(), ShouldResemble, "Target t2 has more than one timeseries")
+			c.So(actual, ShouldBeNil)
+			c.So(metrics, ShouldBeNil)
 		})
 
-		Convey("Four targets with many metrics in additional targets", func() {
+		Convey("Four targets with many metrics in additional targets", t, func(c C) {
 			triggerChecker.trigger.Targets = []string{pattern, addPattern, pattern2, oneMorePattern}
 			triggerChecker.trigger.Patterns = []string{pattern, addPattern, pattern2, oneMorePattern}
 
@@ -301,17 +301,17 @@ func TestGetTimeSeries(t *testing.T) {
 			fetchResult.EXPECT().GetPatternMetrics().Return([]string{oneMoreMetric1, oneMoreMetric2}, nil)
 
 			actual, metrics, err := triggerChecker.fetch()
-			So(err, ShouldBeError)
-			So(err, ShouldResemble, ErrWrongTriggerTargets([]int{2, 4}))
-			So(err.Error(), ShouldResemble, "Targets t2, t4 has more than one timeseries")
-			So(actual, ShouldBeNil)
-			So(metrics, ShouldBeNil)
+			c.So(err, ShouldBeError)
+			c.So(err, ShouldResemble, ErrWrongTriggerTargets([]int{2, 4}))
+			c.So(err.Error(), ShouldResemble, "Targets t2, t4 has more than one timeseries")
+			c.So(actual, ShouldBeNil)
+			c.So(metrics, ShouldBeNil)
 		})
 	})
 }
 
 func TestGetExpressionValues(t *testing.T) {
-	Convey("Has only main timeSeries", t, func() {
+	Convey("Has only main timeSeries", t, func(c C) {
 		metricData := &metricSource.MetricData{
 			Name:      "m",
 			StartTime: 17,
@@ -327,28 +327,28 @@ func TestGetExpressionValues(t *testing.T) {
 		}
 
 		values, noEmptyValues := getExpressionValues(tts, metricData, 17)
-		So(noEmptyValues, ShouldBeTrue)
-		So(values, ShouldResemble, expectedExpressionValues)
+		c.So(noEmptyValues, ShouldBeTrue)
+		c.So(values, ShouldResemble, expectedExpressionValues)
 
 		values, noEmptyValues = getExpressionValues(tts, metricData, 67)
-		So(noEmptyValues, ShouldBeFalse)
-		So(values, ShouldResemble, expectedExpressionValues)
+		c.So(noEmptyValues, ShouldBeFalse)
+		c.So(values, ShouldResemble, expectedExpressionValues)
 
 		values, noEmptyValues = getExpressionValues(tts, metricData, 11)
-		So(noEmptyValues, ShouldBeFalse)
-		So(values, ShouldResemble, expectedExpressionValues)
+		c.So(noEmptyValues, ShouldBeFalse)
+		c.So(values, ShouldResemble, expectedExpressionValues)
 
 		values, noEmptyValues = getExpressionValues(tts, metricData, 44)
-		So(noEmptyValues, ShouldBeFalse)
-		So(values, ShouldResemble, expectedExpressionValues)
+		c.So(noEmptyValues, ShouldBeFalse)
+		c.So(values, ShouldResemble, expectedExpressionValues)
 
 		expectedExpressionValues.MainTargetValue = 3
 		values, noEmptyValues = getExpressionValues(tts, metricData, 53)
-		So(noEmptyValues, ShouldBeTrue)
-		So(values, ShouldResemble, expectedExpressionValues)
+		c.So(noEmptyValues, ShouldBeTrue)
+		c.So(values, ShouldResemble, expectedExpressionValues)
 	})
 
-	Convey("Has additional series", t, func() {
+	Convey("Has additional series", t, func(c C) {
 		metricData := &metricSource.MetricData{
 			Name:      "main",
 			StartTime: 17,
@@ -373,26 +373,26 @@ func TestGetExpressionValues(t *testing.T) {
 		}
 
 		values, noEmptyValues := getExpressionValues(tts, metricData, 29)
-		So(noEmptyValues, ShouldBeFalse)
-		So(values, ShouldResemble, expectedExpressionValues)
+		c.So(noEmptyValues, ShouldBeFalse)
+		c.So(values, ShouldResemble, expectedExpressionValues)
 
 		values, noEmptyValues = getExpressionValues(tts, metricData, 42)
-		So(noEmptyValues, ShouldBeFalse)
-		So(values, ShouldResemble, expectedExpressionValues)
+		c.So(noEmptyValues, ShouldBeFalse)
+		c.So(values, ShouldResemble, expectedExpressionValues)
 
 		values, noEmptyValues = getExpressionValues(tts, metricData, 65)
-		So(noEmptyValues, ShouldBeFalse)
-		So(values, ShouldResemble, expectedExpressionValues)
+		c.So(noEmptyValues, ShouldBeFalse)
+		c.So(values, ShouldResemble, expectedExpressionValues)
 
 		expectedExpressionValues.MainTargetValue = 3
 		values, noEmptyValues = getExpressionValues(tts, metricData, 50)
-		So(noEmptyValues, ShouldBeFalse)
-		So(values, ShouldResemble, expectedExpressionValues)
+		c.So(noEmptyValues, ShouldBeFalse)
+		c.So(values, ShouldResemble, expectedExpressionValues)
 
 		expectedExpressionValues.MainTargetValue = 0
 		expectedExpressionValues.AdditionalTargetsValues["t2"] = 4
 		values, noEmptyValues = getExpressionValues(tts, metricData, 17)
-		So(noEmptyValues, ShouldBeTrue)
-		So(values, ShouldResemble, expectedExpressionValues)
+		c.So(noEmptyValues, ShouldBeTrue)
+		c.So(values, ShouldResemble, expectedExpressionValues)
 	})
 }

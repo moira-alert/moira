@@ -411,7 +411,7 @@ func TestGenerateThresholds(t *testing.T) {
 	thresholdTestCases := append(thresholdNegativeTestCases,
 		thresholdNonNegativeTestCases...)
 	for _, testCase := range thresholdTestCases {
-		Convey(testCase.name, t, func() {
+		Convey(testCase.name, t, func(c C) {
 			trigger := moira.Trigger{
 				TriggerType: testCase.triggerType,
 			}
@@ -427,7 +427,7 @@ func TestGenerateThresholds(t *testing.T) {
 			actual := generateThresholds(&trigger, limits)
 			caseMessage := testCase.getCaseMessage()
 			fmt.Println(caseMessage)
-			So(actual, ShouldResemble, testCase.expected)
+			c.So(actual, ShouldResemble, testCase.expected)
 		})
 	}
 }

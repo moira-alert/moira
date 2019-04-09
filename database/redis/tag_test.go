@@ -12,33 +12,33 @@ func TestTagStoring(t *testing.T) {
 	dataBase := newTestDatabase(logger, config)
 	dataBase.flush()
 	defer dataBase.flush()
-	Convey("Tags manipulation", t, func() {
+	Convey("Tags manipulation", t, func(c C) {
 		trigger := triggers[0]
 		triggerIDs, err := dataBase.GetTagTriggerIDs(trigger.Tags[0])
-		So(err, ShouldBeNil)
-		So(triggerIDs, ShouldHaveLength, 0)
+		c.So(err, ShouldBeNil)
+		c.So(triggerIDs, ShouldHaveLength, 0)
 
 		err = dataBase.SaveTrigger(trigger.ID, &trigger)
-		So(err, ShouldBeNil)
+		c.So(err, ShouldBeNil)
 
 		tags, err := dataBase.GetTagNames()
-		So(err, ShouldBeNil)
-		So(tags, ShouldHaveLength, 1)
+		c.So(err, ShouldBeNil)
+		c.So(tags, ShouldHaveLength, 1)
 
 		triggerIDs, err = dataBase.GetTagTriggerIDs(trigger.Tags[0])
-		So(err, ShouldBeNil)
-		So(triggerIDs, ShouldHaveLength, 1)
+		c.So(err, ShouldBeNil)
+		c.So(triggerIDs, ShouldHaveLength, 1)
 
 		err = dataBase.RemoveTag(trigger.Tags[0])
-		So(err, ShouldBeNil)
+		c.So(err, ShouldBeNil)
 
 		tags, err = dataBase.GetTagNames()
-		So(err, ShouldBeNil)
-		So(tags, ShouldHaveLength, 0)
+		c.So(err, ShouldBeNil)
+		c.So(tags, ShouldHaveLength, 0)
 
 		triggerIDs, err = dataBase.GetTagTriggerIDs(trigger.Tags[0])
-		So(err, ShouldBeNil)
-		So(triggerIDs, ShouldHaveLength, 0)
+		c.So(err, ShouldBeNil)
+		c.So(triggerIDs, ShouldHaveLength, 0)
 	})
 }
 
@@ -47,16 +47,16 @@ func TestTagErrorConnection(t *testing.T) {
 	dataBase := newTestDatabase(logger, emptyConfig)
 	dataBase.flush()
 	defer dataBase.flush()
-	Convey("Should throw error when no connection", t, func() {
+	Convey("Should throw error when no connection", t, func(c C) {
 		actual, err := dataBase.GetTagNames()
-		So(err, ShouldNotBeNil)
-		So(actual, ShouldBeNil)
+		c.So(err, ShouldNotBeNil)
+		c.So(actual, ShouldBeNil)
 
 		err = dataBase.RemoveTag("ds")
-		So(err, ShouldNotBeNil)
+		c.So(err, ShouldNotBeNil)
 
 		actual, err = dataBase.GetTagTriggerIDs("34")
-		So(err, ShouldNotBeNil)
-		So(actual, ShouldBeNil)
+		c.So(err, ShouldNotBeNil)
+		c.So(actual, ShouldBeNil)
 	})
 }

@@ -21,52 +21,52 @@ func TestProcessIncomingMetric(t *testing.T) {
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Scheduler")
 
-	Convey("Create new pattern storage, GetPatterns returns error, should error", t, func() {
+	Convey("Create new pattern storage, GetPatterns returns error, should error", t, func(c C) {
 		database.EXPECT().GetPatterns().Return(nil, fmt.Errorf("some error here"))
 		metrics := metrics.ConfigureFilterMetrics("test")
 		_, err := NewPatternStorage(database, metrics, logger)
-		So(err, ShouldBeError, fmt.Errorf("some error here"))
+		c.So(err, ShouldBeError, fmt.Errorf("some error here"))
 	})
 
 	database.EXPECT().GetPatterns().Return(testPatterns, nil)
 	patternsStorage, err := NewPatternStorage(database, metrics.ConfigureFilterMetrics("test"), logger)
 
-	Convey("Create new pattern storage, should no error", t, func() {
-		So(err, ShouldBeEmpty)
+	Convey("Create new pattern storage, should no error", t, func(c C) {
+		c.So(err, ShouldBeEmpty)
 	})
 
-	Convey("When invalid metric arrives, should be properly counted", t, func() {
+	Convey("When invalid metric arrives, should be properly counted", t, func(c C) {
 		matchedMetrics := patternsStorage.ProcessIncomingMetric(nil)
-		So(matchedMetrics, ShouldBeNil)
-		So(patternsStorage.metrics.TotalMetricsReceived.Count(), ShouldEqual, 1)
-		So(patternsStorage.metrics.ValidMetricsReceived.Count(), ShouldEqual, 0)
-		So(patternsStorage.metrics.MatchingMetricsReceived.Count(), ShouldEqual, 0)
+		c.So(matchedMetrics, ShouldBeNil)
+		c.So(patternsStorage.metrics.TotalMetricsReceived.Count(), ShouldEqual, 1)
+		c.So(patternsStorage.metrics.ValidMetricsReceived.Count(), ShouldEqual, 0)
+		c.So(patternsStorage.metrics.MatchingMetricsReceived.Count(), ShouldEqual, 0)
 	})
 
-	Convey("When valid non-matching metric arrives", t, func() {
+	Convey("When valid non-matching metric arrives", t, func(c C) {
 		patternsStorage.metrics = metrics.ConfigureFilterMetrics("test")
 		matchedMetrics := patternsStorage.ProcessIncomingMetric([]byte("disk.used 12 1234567890"))
-		So(matchedMetrics, ShouldBeNil)
-		So(patternsStorage.metrics.TotalMetricsReceived.Count(), ShouldEqual, 1)
-		So(patternsStorage.metrics.ValidMetricsReceived.Count(), ShouldEqual, 1)
-		So(patternsStorage.metrics.MatchingMetricsReceived.Count(), ShouldEqual, 0)
+		c.So(matchedMetrics, ShouldBeNil)
+		c.So(patternsStorage.metrics.TotalMetricsReceived.Count(), ShouldEqual, 1)
+		c.So(patternsStorage.metrics.ValidMetricsReceived.Count(), ShouldEqual, 1)
+		c.So(patternsStorage.metrics.MatchingMetricsReceived.Count(), ShouldEqual, 0)
 	})
 
-	Convey("When valid matching metric arrives", t, func() {
+	Convey("When valid matching metric arrives", t, func(c C) {
 		patternsStorage.metrics = metrics.ConfigureFilterMetrics("test")
 		matchedMetrics := patternsStorage.ProcessIncomingMetric([]byte("cpu.used 12 1234567890"))
-		So(matchedMetrics, ShouldNotBeNil)
-		So(patternsStorage.metrics.TotalMetricsReceived.Count(), ShouldEqual, 1)
-		So(patternsStorage.metrics.ValidMetricsReceived.Count(), ShouldEqual, 1)
-		So(patternsStorage.metrics.MatchingMetricsReceived.Count(), ShouldEqual, 1)
+		c.So(matchedMetrics, ShouldNotBeNil)
+		c.So(patternsStorage.metrics.TotalMetricsReceived.Count(), ShouldEqual, 1)
+		c.So(patternsStorage.metrics.ValidMetricsReceived.Count(), ShouldEqual, 1)
+		c.So(patternsStorage.metrics.MatchingMetricsReceived.Count(), ShouldEqual, 1)
 	})
 
-	Convey("When ten valid metrics arrive match timer should be updated", t, func() {
+	Convey("When ten valid metrics arrive match timer should be updated", t, func(c C) {
 		patternsStorage.metrics = metrics.ConfigureFilterMetrics("test")
 		for i := 0; i < 10; i++ {
 			patternsStorage.ProcessIncomingMetric([]byte("cpu.used 12 1234567890"))
 		}
-		So(patternsStorage.metrics.MatchingTimer.Count(), ShouldEqual, 1)
+		c.So(patternsStorage.metrics.MatchingTimer.Count(), ShouldEqual, 1)
 	})
 
 	mockCtrl.Finish()

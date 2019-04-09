@@ -841,22 +841,22 @@
 			"revisionTime": "2019-01-16T19:17:33Z"
 		},
 		{
-			"checksumSHA1": "c71WVAQlpp3r4I+BtTxRz1Cq1Lw=",
+			"checksumSHA1": "fzTuiT5s2hzKZ/EYS9zMx8ztsXE=",
 			"path": "github.com/smartystreets/goconvey/convey",
-			"revision": "044398e4856c3a83fb98f9de0a8ed1c6495e2843",
-			"revisionTime": "2018-11-08T00:35:08Z"
+			"revision": "68dc04aab96ae4326137d6b77330c224063a927e",
+			"revisionTime": "2019-03-30T03:26:15Z"
 		},
 		{
 			"checksumSHA1": "6Mgn4H/4vpqYGlaIKZ0UwOmJN0E=",
 			"path": "github.com/smartystreets/goconvey/convey/gotest",
-			"revision": "044398e4856c3a83fb98f9de0a8ed1c6495e2843",
-			"revisionTime": "2018-11-08T00:35:08Z"
+			"revision": "68dc04aab96ae4326137d6b77330c224063a927e",
+			"revisionTime": "2019-03-30T03:26:15Z"
 		},
 		{
-			"checksumSHA1": "uTSA/KWQA01sKPYfmLyMPvXbYaA=",
+			"checksumSHA1": "/8sed9aZQ9B7D0cBhH3OhvS2fAk=",
 			"path": "github.com/smartystreets/goconvey/convey/reporting",
-			"revision": "044398e4856c3a83fb98f9de0a8ed1c6495e2843",
-			"revisionTime": "2018-11-08T00:35:08Z"
+			"revision": "68dc04aab96ae4326137d6b77330c224063a927e",
+			"revisionTime": "2019-03-30T03:26:15Z"
 		},
 		{
 			"checksumSHA1": "wsfbX7YxbkeBp+xm9M9nBFzrCnA=",

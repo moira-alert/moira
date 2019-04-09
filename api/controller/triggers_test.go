@@ -10,7 +10,7 @@ import (
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/database"
-	"github.com/moira-alert/moira/mock/moira-alert"
+	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -19,7 +19,7 @@ func TestCreateTrigger(t *testing.T) {
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
-	Convey("Success with trigger.ID empty", t, func() {
+	Convey("Success with trigger.ID empty", t, func(c C) {
 		triggerModel := dto.TriggerModel{}
 		dataBase.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 10)
 		dataBase.EXPECT().DeleteTriggerCheckLock(gomock.Any())
@@ -27,11 +27,11 @@ func TestCreateTrigger(t *testing.T) {
 		dataBase.EXPECT().SetTriggerLastCheck(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 		dataBase.EXPECT().SaveTrigger(gomock.Any(), gomock.Any()).Return(nil)
 		resp, err := CreateTrigger(dataBase, &triggerModel, make(map[string]bool))
-		So(err, ShouldBeNil)
-		So(resp.Message, ShouldResemble, "trigger created")
+		c.So(err, ShouldBeNil)
+		c.So(resp.Message, ShouldResemble, "trigger created")
 	})
 
-	Convey("Success with triggerID", t, func() {
+	Convey("Success with triggerID", t, func(c C) {
 		triggerID := uuid.Must(uuid.NewV4()).String()
 		triggerModel := dto.TriggerModel{ID: triggerID}
 		dataBase.EXPECT().GetTrigger(triggerModel.ID).Return(moira.Trigger{}, database.ErrNil)
@@ -41,30 +41,30 @@ func TestCreateTrigger(t *testing.T) {
 		dataBase.EXPECT().SetTriggerLastCheck(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 		dataBase.EXPECT().SaveTrigger(gomock.Any(), triggerModel.ToMoiraTrigger()).Return(nil)
 		resp, err := CreateTrigger(dataBase, &triggerModel, make(map[string]bool))
-		So(err, ShouldBeNil)
-		So(resp.Message, ShouldResemble, "trigger created")
-		So(resp.ID, ShouldResemble, triggerID)
+		c.So(err, ShouldBeNil)
+		c.So(resp.Message, ShouldResemble, "trigger created")
+		c.So(resp.ID, ShouldResemble, triggerID)
 	})
 
-	Convey("Trigger already exists", t, func() {
+	Convey("Trigger already exists", t, func(c C) {
 		triggerModel := dto.TriggerModel{ID: uuid.Must(uuid.NewV4()).String()}
 		trigger := triggerModel.ToMoiraTrigger()
 		dataBase.EXPECT().GetTrigger(triggerModel.ID).Return(*trigger, nil)
 		resp, err := CreateTrigger(dataBase, &triggerModel, make(map[string]bool))
-		So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("trigger with this ID already exists")))
-		So(resp, ShouldBeNil)
+		c.So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("trigger with this ID already exists")))
+		c.So(resp, ShouldBeNil)
 	})
 
-	Convey("Get trigger error", t, func() {
+	Convey("Get trigger error", t, func(c C) {
 		trigger := dto.TriggerModel{ID: uuid.Must(uuid.NewV4()).String()}
 		expected := fmt.Errorf("soo bad trigger")
 		dataBase.EXPECT().GetTrigger(trigger.ID).Return(moira.Trigger{}, expected)
 		resp, err := CreateTrigger(dataBase, &trigger, make(map[string]bool))
-		So(err, ShouldResemble, api.ErrorInternalServer(expected))
-		So(resp, ShouldBeNil)
+		c.So(err, ShouldResemble, api.ErrorInternalServer(expected))
+		c.So(resp, ShouldBeNil)
 	})
 
-	Convey("Error", t, func() {
+	Convey("Error", t, func(c C) {
 		triggerModel := dto.TriggerModel{ID: uuid.Must(uuid.NewV4()).String()}
 		expected := fmt.Errorf("soo bad trigger")
 		dataBase.EXPECT().GetTrigger(triggerModel.ID).Return(moira.Trigger{}, database.ErrNil)
@@ -74,8 +74,8 @@ func TestCreateTrigger(t *testing.T) {
 		dataBase.EXPECT().SetTriggerLastCheck(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 		dataBase.EXPECT().SaveTrigger(gomock.Any(), triggerModel.ToMoiraTrigger()).Return(expected)
 		resp, err := CreateTrigger(dataBase, &triggerModel, make(map[string]bool))
-		So(err, ShouldResemble, api.ErrorInternalServer(expected))
-		So(resp, ShouldBeNil)
+		c.So(err, ShouldResemble, api.ErrorInternalServer(expected))
+		c.So(resp, ShouldBeNil)
 	})
 }
 
@@ -84,40 +84,40 @@ func TestGetAllTriggers(t *testing.T) {
 	defer mockCtrl.Finish()
 	mockDatabase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
-	Convey("Has triggers", t, func() {
+	Convey("Has triggers", t, func(c C) {
 		triggerIDs := []string{uuid.Must(uuid.NewV4()).String(), uuid.Must(uuid.NewV4()).String()}
 		triggers := []*moira.TriggerCheck{{Trigger: moira.Trigger{ID: triggerIDs[0]}}, {Trigger: moira.Trigger{ID: triggerIDs[1]}}}
 		triggersList := []moira.TriggerCheck{{Trigger: moira.Trigger{ID: triggerIDs[0]}}, {Trigger: moira.Trigger{ID: triggerIDs[1]}}}
 		mockDatabase.EXPECT().GetAllTriggerIDs().Return(triggerIDs, nil)
 		mockDatabase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggers, nil)
 		list, err := GetAllTriggers(mockDatabase)
-		So(err, ShouldBeNil)
-		So(list, ShouldResemble, &dto.TriggersList{List: triggersList})
+		c.So(err, ShouldBeNil)
+		c.So(list, ShouldResemble, &dto.TriggersList{List: triggersList})
 	})
 
-	Convey("No triggers", t, func() {
+	Convey("No triggers", t, func(c C) {
 		mockDatabase.EXPECT().GetAllTriggerIDs().Return(make([]string, 0), nil)
 		mockDatabase.EXPECT().GetTriggerChecks(make([]string, 0)).Return(make([]*moira.TriggerCheck, 0), nil)
 		list, err := GetAllTriggers(mockDatabase)
-		So(err, ShouldBeNil)
-		So(list, ShouldResemble, &dto.TriggersList{List: make([]moira.TriggerCheck, 0)})
+		c.So(err, ShouldBeNil)
+		c.So(list, ShouldResemble, &dto.TriggersList{List: make([]moira.TriggerCheck, 0)})
 	})
 
-	Convey("GetTriggerIDs error", t, func() {
+	Convey("GetTriggerIDs error", t, func(c C) {
 		expected := fmt.Errorf("getTriggerIDs error")
 		mockDatabase.EXPECT().GetAllTriggerIDs().Return(nil, expected)
 		list, err := GetAllTriggers(mockDatabase)
-		So(err, ShouldResemble, api.ErrorInternalServer(expected))
-		So(list, ShouldBeNil)
+		c.So(err, ShouldResemble, api.ErrorInternalServer(expected))
+		c.So(list, ShouldBeNil)
 	})
 
-	Convey("GetTriggerChecks error", t, func() {
+	Convey("GetTriggerChecks error", t, func(c C) {
 		expected := fmt.Errorf("getTriggerChecks error")
 		mockDatabase.EXPECT().GetAllTriggerIDs().Return(make([]string, 0), nil)
 		mockDatabase.EXPECT().GetTriggerChecks(make([]string, 0)).Return(nil, expected)
 		list, err := GetAllTriggers(mockDatabase)
-		So(err, ShouldResemble, api.ErrorInternalServer(expected))
-		So(list, ShouldBeNil)
+		c.So(err, ShouldResemble, api.ErrorInternalServer(expected))
+		c.So(list, ShouldBeNil)
 	})
 }
 
@@ -155,13 +155,13 @@ func TestSearchTriggers(t *testing.T) {
 	tags := make([]string, 0)
 	searchString := ""
 
-	Convey("No tags, no text, onlyErrors = false, ", t, func() {
-		Convey("Page is bigger than triggers number", func() {
+	Convey("No tags, no text, onlyErrors = false, ", t, func(c C) {
+		Convey("Page is bigger than triggers number", t, func(c C) {
 			mockIndex.EXPECT().SearchTriggers(tags, searchString, false, page, size).Return(triggerSearchResults, exp, nil)
 			mockDatabase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggersPointers, nil)
 			list, err := SearchTriggers(mockDatabase, mockIndex, page, size, false, tags, searchString)
-			So(err, ShouldBeNil)
-			So(list, ShouldResemble, &dto.TriggersList{
+			c.So(err, ShouldBeNil)
+			c.So(list, ShouldResemble, &dto.TriggersList{
 				List:  triggerChecks,
 				Total: &exp,
 				Page:  &page,
@@ -169,13 +169,13 @@ func TestSearchTriggers(t *testing.T) {
 			})
 		})
 
-		Convey("Must return all triggers, when size is -1", func() {
+		Convey("Must return all triggers, when size is -1", t, func(c C) {
 			size = -1
 			mockIndex.EXPECT().SearchTriggers(tags, searchString, false, page, size).Return(triggerSearchResults, exp, nil)
 			mockDatabase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggersPointers, nil)
 			list, err := SearchTriggers(mockDatabase, mockIndex, page, size, false, tags, searchString)
-			So(err, ShouldBeNil)
-			So(list, ShouldResemble, &dto.TriggersList{
+			c.So(err, ShouldBeNil)
+			c.So(list, ShouldResemble, &dto.TriggersList{
 				List:  triggerChecks,
 				Total: &exp,
 				Page:  &page,
@@ -183,26 +183,26 @@ func TestSearchTriggers(t *testing.T) {
 			})
 		})
 
-		Convey("Page is less than triggers number", func() {
+		Convey("Page is less than triggers number", t, func(c C) {
 			size = 10
 			mockIndex.EXPECT().SearchTriggers(tags, searchString, false, page, size).Return(triggerSearchResults[:10], exp, nil)
 			mockDatabase.EXPECT().GetTriggerChecks(triggerIDs[:10]).Return(triggersPointers[:10], nil)
 			list, err := SearchTriggers(mockDatabase, mockIndex, page, size, false, tags, searchString)
-			So(err, ShouldBeNil)
-			So(list, ShouldResemble, &dto.TriggersList{
+			c.So(err, ShouldBeNil)
+			c.So(list, ShouldResemble, &dto.TriggersList{
 				List:  triggerChecks[:10],
 				Total: &exp,
 				Page:  &page,
 				Size:  &size,
 			})
 
-			Convey("Second page", func() {
+			Convey("Second page", t, func(c C) {
 				page = 1
 				mockIndex.EXPECT().SearchTriggers(tags, searchString, false, page, size).Return(triggerSearchResults[10:20], exp, nil)
 				mockDatabase.EXPECT().GetTriggerChecks(triggerIDs[10:20]).Return(triggersPointers[10:20], nil)
 				list, err := SearchTriggers(mockDatabase, mockIndex, page, size, false, tags, searchString)
-				So(err, ShouldBeNil)
-				So(list, ShouldResemble, &dto.TriggersList{
+				c.So(err, ShouldBeNil)
+				c.So(list, ShouldResemble, &dto.TriggersList{
 					List:  triggerChecks[10:20],
 					Total: &exp,
 					Page:  &page,
@@ -212,31 +212,31 @@ func TestSearchTriggers(t *testing.T) {
 		})
 	})
 
-	Convey("Complex search query", t, func() {
+	Convey("Complex search query", t, func(c C) {
 		size = 10
 		page = 0
-		Convey("Only errors", func() {
+		Convey("Only errors", t, func(c C) {
 			exp = 30
 			// superTrigger31 is the only trigger without errors
 			mockIndex.EXPECT().SearchTriggers(tags, searchString, true, page, size).Return(triggerSearchResults[:10], exp, nil)
 			mockDatabase.EXPECT().GetTriggerChecks(triggerIDs[:10]).Return(triggersPointers[:10], nil)
 			list, err := SearchTriggers(mockDatabase, mockIndex, page, size, true, tags, searchString)
-			So(err, ShouldBeNil)
-			So(list, ShouldResemble, &dto.TriggersList{
+			c.So(err, ShouldBeNil)
+			c.So(list, ShouldResemble, &dto.TriggersList{
 				List:  triggerChecks[0:10],
 				Total: &exp,
 				Page:  &page,
 				Size:  &size,
 			})
 
-			Convey("Only errors with tags", func() {
+			Convey("Only errors with tags", t, func(c C) {
 				tags = []string{"encounters", "Kobold"}
 				exp = 2
 				mockIndex.EXPECT().SearchTriggers(tags, searchString, true, page, size).Return(triggerSearchResults[1:3], exp, nil)
 				mockDatabase.EXPECT().GetTriggerChecks(triggerIDs[1:3]).Return(triggersPointers[1:3], nil)
 				list, err := SearchTriggers(mockDatabase, mockIndex, page, size, true, tags, searchString)
-				So(err, ShouldBeNil)
-				So(list, ShouldResemble, &dto.TriggersList{
+				c.So(err, ShouldBeNil)
+				c.So(list, ShouldResemble, &dto.TriggersList{
 					List:  triggerChecks[1:3],
 					Total: &exp,
 					Page:  &page,
@@ -244,14 +244,14 @@ func TestSearchTriggers(t *testing.T) {
 				})
 			})
 
-			Convey("Only errors with text terms", func() {
+			Convey("Only errors with text terms", t, func(c C) {
 				searchString = "dragonshield medium"
 				exp = 1
 				mockIndex.EXPECT().SearchTriggers(tags, searchString, true, page, size).Return(triggerSearchResults[2:3], exp, nil)
 				mockDatabase.EXPECT().GetTriggerChecks(triggerIDs[2:3]).Return(triggersPointers[2:3], nil)
 				list, err := SearchTriggers(mockDatabase, mockIndex, page, size, true, tags, searchString)
-				So(err, ShouldBeNil)
-				So(list, ShouldResemble, &dto.TriggersList{
+				c.So(err, ShouldBeNil)
+				c.So(list, ShouldResemble, &dto.TriggersList{
 					List:  triggerChecks[2:3],
 					Total: &exp,
 					Page:  &page,
@@ -259,7 +259,7 @@ func TestSearchTriggers(t *testing.T) {
 				})
 			})
 
-			Convey("Only errors with tags and text terms", func() {
+			Convey("Only errors with tags and text terms", t, func(c C) {
 				tags = []string{"traps"}
 				searchString = "deadly"
 				exp = 4
@@ -291,8 +291,8 @@ func TestSearchTriggers(t *testing.T) {
 				mockIndex.EXPECT().SearchTriggers(tags, searchString, true, page, size).Return(deadlyTrapsSearchResults, exp, nil)
 				mockDatabase.EXPECT().GetTriggerChecks(deadlyTrapsTriggerIDs).Return(deadlyTrapsPointers, nil)
 				list, err := SearchTriggers(mockDatabase, mockIndex, page, size, true, tags, searchString)
-				So(err, ShouldBeNil)
-				So(list, ShouldResemble, &dto.TriggersList{
+				c.So(err, ShouldBeNil)
+				c.So(list, ShouldResemble, &dto.TriggersList{
 					List:  deadlyTraps,
 					Total: &exp,
 					Page:  &page,
@@ -302,26 +302,26 @@ func TestSearchTriggers(t *testing.T) {
 		})
 	})
 
-	Convey("Find triggers errors", t, func() {
+	Convey("Find triggers errors", t, func(c C) {
 		tags = make([]string, 0)
 		searchString = ""
 
-		Convey("Error from searcher", func() {
+		Convey("Error from searcher", t, func(c C) {
 			searcherError := fmt.Errorf("very bad request")
 			mockIndex.EXPECT().SearchTriggers(tags, searchString, false, page, size).Return(make([]*moira.SearchResult, 0), int64(0), searcherError)
 			list, err := SearchTriggers(mockDatabase, mockIndex, page, size, false, tags, searchString)
-			So(err, ShouldNotBeNil)
-			So(list, ShouldBeNil)
+			c.So(err, ShouldNotBeNil)
+			c.So(list, ShouldBeNil)
 		})
 
-		Convey("Error from database", func() {
+		Convey("Error from database", t, func(c C) {
 			size = 50
 			searcherError := fmt.Errorf("very bad request")
 			mockIndex.EXPECT().SearchTriggers(tags, searchString, false, page, size).Return(triggerSearchResults, exp, nil)
 			mockDatabase.EXPECT().GetTriggerChecks(triggerIDs).Return(nil, searcherError)
 			list, err := SearchTriggers(mockDatabase, mockIndex, page, size, false, tags, searchString)
-			So(err, ShouldNotBeNil)
-			So(list, ShouldBeNil)
+			c.So(err, ShouldNotBeNil)
+			c.So(list, ShouldBeNil)
 		})
 	})
 }

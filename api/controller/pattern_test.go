@@ -9,7 +9,7 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
-	"github.com/moira-alert/moira/mock/moira-alert"
+	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -19,17 +19,17 @@ func TestDeletePattern(t *testing.T) {
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
-	Convey("Success", t, func() {
+	Convey("Success", t, func(c C) {
 		dataBase.EXPECT().RemovePattern("super.puper.pattern").Return(nil)
 		err := DeletePattern(dataBase, "super.puper.pattern")
-		So(err, ShouldBeNil)
+		c.So(err, ShouldBeNil)
 	})
 
-	Convey("Error", t, func() {
+	Convey("Error", t, func(c C) {
 		expected := fmt.Errorf("oooops! Can not remove pattern")
 		dataBase.EXPECT().RemovePattern("super.puper.pattern").Return(expected)
 		err := DeletePattern(dataBase, "super.puper.pattern")
-		So(err, ShouldResemble, api.ErrorInternalServer(expected))
+		c.So(err, ShouldResemble, api.ErrorInternalServer(expected))
 	})
 }
 
@@ -41,19 +41,19 @@ func TestGetAllPatterns(t *testing.T) {
 	pattern1 := "my.first.pattern"
 	pattern2 := "my.second.pattern"
 
-	Convey("One pattern more triggers", t, func() {
+	Convey("One pattern more triggers", t, func(c C) {
 		triggers := []*dto.TriggerModel{{ID: uuid.Must(uuid.NewV4()).String()}, {ID: uuid.Must(uuid.NewV4()).String()}}
 		metrics := []string{"my.first.metric"}
 		dataBase.EXPECT().GetPatterns().Return([]string{pattern1}, nil)
 		expectGettingPatternList(dataBase, pattern1, triggers, metrics)
 		list, err := GetAllPatterns(dataBase, logger)
-		So(err, ShouldBeNil)
-		So(list, ShouldResemble, &dto.PatternList{
+		c.So(err, ShouldBeNil)
+		c.So(list, ShouldResemble, &dto.PatternList{
 			List: []dto.PatternData{{Metrics: metrics, Pattern: pattern1, Triggers: []dto.TriggerModel{*triggers[0], *triggers[1]}}},
 		})
 	})
 
-	Convey("Many patterns one trigger", t, func() {
+	Convey("Many patterns one trigger", t, func(c C) {
 		triggers1 := []*dto.TriggerModel{{ID: "1111"}, {ID: "111111"}}
 		triggers2 := []*dto.TriggerModel{{ID: "22222"}}
 		metrics1 := []string{"my.first.metric"}
@@ -62,25 +62,25 @@ func TestGetAllPatterns(t *testing.T) {
 		expectGettingPatternList(dataBase, pattern1, triggers1, metrics1)
 		expectGettingPatternList(dataBase, pattern2, triggers2, metrics2)
 		list, err := GetAllPatterns(dataBase, logger)
-		So(err, ShouldBeNil)
-		So(list.List, ShouldHaveLength, 2)
+		c.So(err, ShouldBeNil)
+		c.So(list.List, ShouldHaveLength, 2)
 		for _, patternStat := range list.List {
 			if patternStat.Pattern == pattern1 {
-				So(patternStat, ShouldResemble, dto.PatternData{Metrics: metrics1, Pattern: pattern1, Triggers: []dto.TriggerModel{*triggers1[0], *triggers1[1]}})
+				c.So(patternStat, ShouldResemble, dto.PatternData{Metrics: metrics1, Pattern: pattern1, Triggers: []dto.TriggerModel{*triggers1[0], *triggers1[1]}})
 			}
 			if patternStat.Pattern == pattern2 {
-				So(patternStat, ShouldResemble, dto.PatternData{Metrics: metrics2, Pattern: pattern2, Triggers: []dto.TriggerModel{*triggers2[0]}})
+				c.So(patternStat, ShouldResemble, dto.PatternData{Metrics: metrics2, Pattern: pattern2, Triggers: []dto.TriggerModel{*triggers2[0]}})
 			}
 		}
 	})
 
-	Convey("Test errors", t, func() {
-		Convey("GetPatterns error", func() {
+	Convey("Test errors", t, func(c C) {
+		Convey("GetPatterns error", t, func(c C) {
 			expected := fmt.Errorf("oh no!!!11 Cant get patterns")
 			dataBase.EXPECT().GetPatterns().Return(nil, expected)
 			list, err := GetAllPatterns(dataBase, logger)
-			So(err, ShouldResemble, api.ErrorInternalServer(expected))
-			So(list, ShouldBeNil)
+			c.So(err, ShouldResemble, api.ErrorInternalServer(expected))
+			c.So(list, ShouldBeNil)
 		})
 	})
 }

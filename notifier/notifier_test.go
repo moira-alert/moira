@@ -7,15 +7,15 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
-	"github.com/moira-alert/moira/metric_source"
+	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
-	"github.com/moira-alert/moira/mock/moira-alert"
-	"github.com/moira-alert/moira/mock/scheduler"
+	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
+	mock_scheduler "github.com/moira-alert/moira/mock/scheduler"
 )
 
 var (
@@ -33,13 +33,13 @@ var (
 )
 
 func TestGetMetricNames(t *testing.T) {
-	Convey("Test non-empty notification package", t, func() {
-		Convey("Test package with trigger events", func() {
+	Convey("Test non-empty notification package", t, func(c C) {
+		Convey("Test package with trigger events", t, func(c C) {
 			expected := []string{"metricName1", "metricName2", "metricName3", "metricName5"}
 			actual := notificationsPackage.GetMetricNames()
-			So(actual, ShouldResemble, expected)
+			c.So(actual, ShouldResemble, expected)
 		})
-		Convey("Test package with no trigger events", func() {
+		Convey("Test package with no trigger events", t, func(c C) {
 			pkg := NotificationPackage{}
 			for _, event := range notificationsPackage.Events {
 				if event.IsTriggerEvent {
@@ -49,27 +49,27 @@ func TestGetMetricNames(t *testing.T) {
 			}
 			expected := []string{"metricName1", "metricName2", "metricName3", "metricName4", "metricName5"}
 			actual := pkg.GetMetricNames()
-			So(actual, ShouldResemble, expected)
+			c.So(actual, ShouldResemble, expected)
 		})
 	})
-	Convey("Test empty notification package", t, func() {
+	Convey("Test empty notification package", t, func(c C) {
 		emptyNotificationPackage := NotificationPackage{}
 		actual := emptyNotificationPackage.GetMetricNames()
-		So(actual, ShouldHaveLength, 0)
+		c.So(actual, ShouldHaveLength, 0)
 	})
 }
 
 func TestGetWindow(t *testing.T) {
-	Convey("Test non-empty notification package", t, func() {
+	Convey("Test non-empty notification package", t, func(c C) {
 		from, to, err := notificationsPackage.GetWindow()
-		So(err, ShouldBeNil)
-		So(from, ShouldEqual, 11)
-		So(to, ShouldEqual, 179)
+		c.So(err, ShouldBeNil)
+		c.So(from, ShouldEqual, 11)
+		c.So(to, ShouldEqual, 179)
 	})
-	Convey("Test empty notification package", t, func() {
+	Convey("Test empty notification package", t, func(c C) {
 		emptyNotificationPackage := NotificationPackage{}
 		_, _, err := emptyNotificationPackage.GetWindow()
-		So(err, ShouldResemble, fmt.Errorf("not enough data to resolve package window"))
+		c.So(err, ShouldResemble, fmt.Errorf("not enough data to resolve package window"))
 	})
 }
 
@@ -163,7 +163,7 @@ func waitTestEnd() {
 	}
 }
 
-func configureNotifier(t *testing.T) {
+func ConfigureNotifier(t *testing.T) {
 	notifierMetrics := metrics.ConfigureNotifierMetrics("notifier")
 	var location, _ = time.LoadLocation("UTC")
 	dateTimeFormat := "15:04 02.01.2006"
@@ -191,8 +191,8 @@ func configureNotifier(t *testing.T) {
 
 	notif.RegisterSender(senderSettings, sender)
 
-	Convey("Should return one sender", t, func() {
-		So(notif.GetSenders(), ShouldResemble, map[string]bool{"test": true})
+	Convey("Should return one sender", t, func(c C) {
+		c.So(notif.GetSenders(), ShouldResemble, map[string]bool{"test": true})
 	})
 }
 

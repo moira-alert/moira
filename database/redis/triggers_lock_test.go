@@ -1,9 +1,10 @@
 package redis
 
 import (
+	"testing"
+
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
-	"testing"
 )
 
 func TestLock(t *testing.T) {
@@ -11,32 +12,32 @@ func TestLock(t *testing.T) {
 	dataBase := newTestDatabase(logger, config)
 	dataBase.flush()
 	defer dataBase.flush()
-	Convey("Test lock manipulation", t, func() {
+	Convey("Test lock manipulation", t, func(c C) {
 		triggerID1 := "id"
 
 		isSet, err := dataBase.SetTriggerCheckLock(triggerID1)
-		So(err, ShouldBeNil)
-		So(isSet, ShouldBeTrue)
+		c.So(err, ShouldBeNil)
+		c.So(isSet, ShouldBeTrue)
 
 		isSet, err = dataBase.SetTriggerCheckLock(triggerID1)
-		So(err, ShouldBeNil)
-		So(isSet, ShouldBeFalse)
+		c.So(err, ShouldBeNil)
+		c.So(isSet, ShouldBeFalse)
 
 		err = dataBase.AcquireTriggerCheckLock(triggerID1, 1)
-		So(err, ShouldNotBeNil)
+		c.So(err, ShouldNotBeNil)
 
 		err = dataBase.DeleteTriggerCheckLock(triggerID1)
-		So(err, ShouldBeNil)
+		c.So(err, ShouldBeNil)
 
 		err = dataBase.AcquireTriggerCheckLock(triggerID1, 1)
-		So(err, ShouldBeNil)
+		c.So(err, ShouldBeNil)
 
 		isSet, err = dataBase.SetTriggerCheckLock(triggerID1)
-		So(err, ShouldBeNil)
-		So(isSet, ShouldBeFalse)
+		c.So(err, ShouldBeNil)
+		c.So(isSet, ShouldBeFalse)
 
 		err = dataBase.DeleteTriggerCheckLock(triggerID1)
-		So(err, ShouldBeNil)
+		c.So(err, ShouldBeNil)
 	})
 }
 
@@ -45,15 +46,15 @@ func TestLockErrorConnection(t *testing.T) {
 	dataBase := newTestDatabase(logger, emptyConfig)
 	dataBase.flush()
 	defer dataBase.flush()
-	Convey("Should throw error when no connection", t, func() {
+	Convey("Should throw error when no connection", t, func(c C) {
 		err := dataBase.AcquireTriggerCheckLock("tr1", 4)
-		So(err, ShouldNotBeNil)
+		c.So(err, ShouldNotBeNil)
 
 		actual, err := dataBase.SetTriggerCheckLock("tr1")
-		So(err, ShouldNotBeNil)
-		So(actual, ShouldBeFalse)
+		c.So(err, ShouldNotBeNil)
+		c.So(actual, ShouldBeFalse)
 
 		err = dataBase.DeleteTriggerCheckLock("tr1")
-		So(err, ShouldNotBeNil)
+		c.So(err, ShouldNotBeNil)
 	})
 }

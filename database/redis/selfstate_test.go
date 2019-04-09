@@ -14,44 +14,44 @@ func TestSelfCheckWithWritesInChecker(t *testing.T) {
 	dataBase := NewDatabase(logger, config, Checker)
 	dataBase.flush()
 	defer dataBase.flush()
-	Convey("Self state triggers manipulation", t, func() {
-		Convey("Empty config", func() {
+	Convey("Self state triggers manipulation", t, func(c C) {
+		Convey("Empty config", t, func(c C) {
 			count, err := dataBase.GetMetricsUpdatesCount()
-			So(count, ShouldEqual, 0)
-			So(err, ShouldBeNil)
+			c.So(count, ShouldEqual, 0)
+			c.So(err, ShouldBeNil)
 
 			count, err = dataBase.GetChecksUpdatesCount()
-			So(count, ShouldEqual, 0)
-			So(err, ShouldBeNil)
+			c.So(count, ShouldEqual, 0)
+			c.So(err, ShouldBeNil)
 
 			count, err = dataBase.GetRemoteChecksUpdatesCount()
-			So(count, ShouldEqual, 0)
-			So(err, ShouldBeNil)
+			c.So(count, ShouldEqual, 0)
+			c.So(err, ShouldBeNil)
 		})
 
-		Convey("Update metrics heartbeat test", func() {
+		Convey("Update metrics heartbeat test", t, func(c C) {
 			err := dataBase.UpdateMetricsHeartbeat()
-			So(err, ShouldBeNil)
+			c.So(err, ShouldBeNil)
 
 			count, err := dataBase.GetMetricsUpdatesCount()
-			So(count, ShouldEqual, 1)
-			So(err, ShouldBeNil)
+			c.So(count, ShouldEqual, 1)
+			c.So(err, ShouldBeNil)
 		})
 
-		Convey("Update metrics checks updates count", func() {
+		Convey("Update metrics checks updates count", t, func(c C) {
 			err := dataBase.SetTriggerLastCheck("123", &lastCheckTest, false)
-			So(err, ShouldBeNil)
+			c.So(err, ShouldBeNil)
 
 			count, err := dataBase.GetChecksUpdatesCount()
-			So(count, ShouldEqual, 1)
-			So(err, ShouldBeNil)
+			c.So(count, ShouldEqual, 1)
+			c.So(err, ShouldBeNil)
 
 			err = dataBase.SetTriggerLastCheck("12345", &lastCheckTest, true)
-			So(err, ShouldBeNil)
+			c.So(err, ShouldBeNil)
 
 			count, err = dataBase.GetRemoteChecksUpdatesCount()
-			So(count, ShouldEqual, 1)
-			So(err, ShouldBeNil)
+			c.So(count, ShouldEqual, 1)
+			c.So(err, ShouldBeNil)
 		})
 	})
 }
@@ -68,21 +68,21 @@ func testSelfCheckWithWritesInDBSource(t *testing.T, dbSource DBSource) {
 	dataBase := NewDatabase(logger, config, dbSource)
 	dataBase.flush()
 	defer dataBase.flush()
-	Convey(fmt.Sprintf("Self state triggers manipulation in %s", dbSource), t, func() {
-		Convey("Update metrics checks updates count", func() {
+	Convey(fmt.Sprintf("Self state triggers manipulation in %s", dbSource), t, func(c C) {
+		Convey("Update metrics checks updates count", t, func(c C) {
 			err := dataBase.SetTriggerLastCheck("123", &lastCheckTest, false)
-			So(err, ShouldBeNil)
+			c.So(err, ShouldBeNil)
 
 			count, err := dataBase.GetChecksUpdatesCount()
-			So(count, ShouldEqual, 0)
-			So(err, ShouldBeNil)
+			c.So(count, ShouldEqual, 0)
+			c.So(err, ShouldBeNil)
 
 			err = dataBase.SetTriggerLastCheck("12345", &lastCheckTest, true)
-			So(err, ShouldBeNil)
+			c.So(err, ShouldBeNil)
 
 			count, err = dataBase.GetRemoteChecksUpdatesCount()
-			So(count, ShouldEqual, 0)
-			So(err, ShouldBeNil)
+			c.So(count, ShouldEqual, 0)
+			c.So(err, ShouldBeNil)
 		})
 	})
 }
@@ -92,17 +92,17 @@ func TestSelfCheckErrorConnection(t *testing.T) {
 	dataBase := newTestDatabase(logger, emptyConfig)
 	dataBase.flush()
 	defer dataBase.flush()
-	Convey("Should throw error when no connection", t, func() {
+	Convey("Should throw error when no connection", t, func(c C) {
 		count, err := dataBase.GetMetricsUpdatesCount()
-		So(count, ShouldEqual, 0)
-		So(err, ShouldNotBeNil)
+		c.So(count, ShouldEqual, 0)
+		c.So(err, ShouldNotBeNil)
 
 		count, err = dataBase.GetChecksUpdatesCount()
-		So(count, ShouldEqual, 0)
-		So(err, ShouldNotBeNil)
+		c.So(count, ShouldEqual, 0)
+		c.So(err, ShouldNotBeNil)
 
 		err = dataBase.UpdateMetricsHeartbeat()
-		So(err, ShouldNotBeNil)
+		c.So(err, ShouldNotBeNil)
 	})
 }
 
@@ -112,36 +112,36 @@ func TestNotifierState(t *testing.T) {
 	emptyDataBase := newTestDatabase(logger, emptyConfig)
 	dataBase.flush()
 	defer dataBase.flush()
-	Convey(fmt.Sprintf("Test on empty key '%v'", selfStateNotifierHealth), t, func() {
-		Convey("On empty database should return ERROR", func() {
+	Convey(fmt.Sprintf("Test on empty key '%v'", selfStateNotifierHealth), t, func(c C) {
+		Convey("On empty database should return ERROR", t, func(c C) {
 			notifierState, err := emptyDataBase.GetNotifierState()
-			So(notifierState, ShouldEqual, moira.SelfStateERROR)
-			So(err, ShouldNotBeNil)
+			c.So(notifierState, ShouldEqual, moira.SelfStateERROR)
+			c.So(err, ShouldNotBeNil)
 		})
-		Convey("On real database should return OK", func() {
+		Convey("On real database should return OK", t, func(c C) {
 			notifierState, err := dataBase.GetNotifierState()
-			So(notifierState, ShouldEqual, moira.SelfStateOK)
-			So(err, ShouldBeNil)
+			c.So(notifierState, ShouldEqual, moira.SelfStateOK)
+			c.So(err, ShouldBeNil)
 		})
 	})
 
-	Convey(fmt.Sprintf("Test setting '%v' and reading it back", selfStateNotifierHealth), t, func() {
-		Convey("Switch notifier to OK", func() {
+	Convey(fmt.Sprintf("Test setting '%v' and reading it back", selfStateNotifierHealth), t, func(c C) {
+		Convey("Switch notifier to OK", t, func(c C) {
 			err := dataBase.SetNotifierState(moira.SelfStateOK)
 			actualNotifierState, err2 := dataBase.GetNotifierState()
 
-			So(actualNotifierState, ShouldEqual, moira.SelfStateOK)
-			So(err, ShouldBeNil)
-			So(err2, ShouldBeNil)
+			c.So(actualNotifierState, ShouldEqual, moira.SelfStateOK)
+			c.So(err, ShouldBeNil)
+			c.So(err2, ShouldBeNil)
 		})
 
-		Convey("Switch notifier to ERROR", func() {
+		Convey("Switch notifier to ERROR", t, func(c C) {
 			err := dataBase.SetNotifierState(moira.SelfStateERROR)
 			actualNotifierState, err2 := dataBase.GetNotifierState()
 
-			So(actualNotifierState, ShouldEqual, moira.SelfStateERROR)
-			So(err, ShouldBeNil)
-			So(err2, ShouldBeNil)
+			c.So(actualNotifierState, ShouldEqual, moira.SelfStateERROR)
+			c.So(err, ShouldBeNil)
+			c.So(err2, ShouldBeNil)
 		})
 	})
 }

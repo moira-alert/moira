@@ -19,79 +19,79 @@ func TestTriggerIndex_Write(t *testing.T) {
 
 	triggerChecksPointers := triggerTestCases.ToTriggerChecks()
 
-	Convey("First of all, create index", t, func() {
+	Convey("First of all, create index", t, func(c C) {
 		newIndex, err = CreateTriggerIndex(triggerMapping)
-		So(newIndex, ShouldHaveSameTypeAs, &TriggerIndex{})
-		So(err, ShouldBeNil)
+		c.So(newIndex, ShouldHaveSameTypeAs, &TriggerIndex{})
+		c.So(err, ShouldBeNil)
 
 		count, err = newIndex.GetCount()
-		So(count, ShouldBeZeroValue)
-		So(err, ShouldBeNil)
+		c.So(count, ShouldBeZeroValue)
+		c.So(err, ShouldBeNil)
 	})
 
-	Convey("Test write triggers and get count", t, func() {
+	Convey("Test write triggers and get count", t, func(c C) {
 
-		Convey("Test write 0 triggers", func() {
+		Convey("Test write 0 triggers", t, func(c C) {
 			err = newIndex.Write(triggerChecksPointers[0:0])
-			So(err, ShouldBeNil)
+			c.So(err, ShouldBeNil)
 
 			count, err = newIndex.GetCount()
-			So(count, ShouldBeZeroValue)
-			So(err, ShouldBeNil)
+			c.So(count, ShouldBeZeroValue)
+			c.So(err, ShouldBeNil)
 		})
 
-		Convey("Test write 1 trigger", func() {
+		Convey("Test write 1 trigger", t, func(c C) {
 			err = newIndex.Write(triggerChecksPointers[0:1])
-			So(err, ShouldBeNil)
+			c.So(err, ShouldBeNil)
 
 			count, err = newIndex.GetCount()
-			So(count, ShouldEqual, int64(1))
-			So(err, ShouldBeNil)
+			c.So(count, ShouldEqual, int64(1))
+			c.So(err, ShouldBeNil)
 		})
 
-		Convey("Test write the same 1 trigger", func() {
+		Convey("Test write the same 1 trigger", t, func(c C) {
 			err = newIndex.Write(triggerChecksPointers[0:1])
-			So(err, ShouldBeNil)
+			c.So(err, ShouldBeNil)
 
 			count, err = newIndex.GetCount()
-			So(count, ShouldEqual, int64(1))
-			So(err, ShouldBeNil)
+			c.So(count, ShouldEqual, int64(1))
+			c.So(err, ShouldBeNil)
 		})
 
-		Convey("Test write 10 triggers", func() {
+		Convey("Test write 10 triggers", t, func(c C) {
 			err = newIndex.Write(triggerChecksPointers[0:10])
-			So(err, ShouldBeNil)
+			c.So(err, ShouldBeNil)
 
 			count, err = newIndex.GetCount()
-			So(count, ShouldEqual, int64(10))
-			So(err, ShouldBeNil)
+			c.So(count, ShouldEqual, int64(10))
+			c.So(err, ShouldBeNil)
 		})
 
-		Convey("Test write the same 10 triggers", func() {
+		Convey("Test write the same 10 triggers", t, func(c C) {
 			err = newIndex.Write(triggerChecksPointers[0:10])
-			So(err, ShouldBeNil)
+			c.So(err, ShouldBeNil)
 
 			count, err = newIndex.GetCount()
-			So(count, ShouldEqual, int64(10))
-			So(err, ShouldBeNil)
+			c.So(count, ShouldEqual, int64(10))
+			c.So(err, ShouldBeNil)
 		})
 
-		Convey("Test write all 31 triggers", func() {
+		Convey("Test write all 31 triggers", t, func(c C) {
 			err = newIndex.Write(triggerChecksPointers)
-			So(err, ShouldBeNil)
+			c.So(err, ShouldBeNil)
 
 			count, err = newIndex.GetCount()
-			So(count, ShouldEqual, int64(32))
-			So(err, ShouldBeNil)
+			c.So(count, ShouldEqual, int64(32))
+			c.So(err, ShouldBeNil)
 		})
 
-		Convey("Test write the same 31 triggers", func() {
+		Convey("Test write the same 31 triggers", t, func(c C) {
 			err = newIndex.Write(triggerChecksPointers)
-			So(err, ShouldBeNil)
+			c.So(err, ShouldBeNil)
 
 			count, err = newIndex.GetCount()
-			So(count, ShouldEqual, int64(32))
-			So(err, ShouldBeNil)
+			c.So(count, ShouldEqual, int64(32))
+			c.So(err, ShouldBeNil)
 		})
 
 	})

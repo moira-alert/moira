@@ -5,13 +5,14 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
-	"github.com/moira-alert/moira"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/moira-alert/moira"
 
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
@@ -25,7 +26,7 @@ const (
 var logger, _ = logging.GetLogger("webhook")
 
 func TestSender_SendEvents(t *testing.T) {
-	Convey("Receive test webhook", t, func() {
+	Convey("Receive test webhook", t, func(c C) {
 		ts := httptest.NewServer(
 			http.HandlerFunc(
 				func(w http.ResponseWriter, r *http.Request) {
@@ -58,10 +59,10 @@ func TestSender_SendEvents(t *testing.T) {
 		}
 		sender := Sender{}
 		err := sender.Init(senderSettings, logger, time.UTC, "")
-		So(err, ShouldBeNil)
+		c.So(err, ShouldBeNil)
 
 		err = sender.SendEvents(testEvents, testContact, testTrigger, testPlot, false)
-		So(err, ShouldBeNil)
+		c.So(err, ShouldBeNil)
 	})
 }
 

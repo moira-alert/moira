@@ -18,7 +18,7 @@ func TestParseMetric(t *testing.T) {
 		timestamp int64
 	}
 
-	Convey("Given invalid metric strings, should return errors", t, func() {
+	Convey("Given invalid metric strings, should return errors", t, func(c C) {
 		invalidMetrics := []string{
 			"Invalid.value 12g5 1234567890",
 			"No.value.two.spaces  1234567890",
@@ -47,11 +47,11 @@ func TestParseMetric(t *testing.T) {
 
 		for _, invalidMetric := range invalidMetrics {
 			_, err := ParseMetric([]byte(invalidMetric))
-			So(err, ShouldBeError)
+			c.So(err, ShouldBeError)
 		}
 	})
 
-	Convey("Given valid metric strings, should return parsed values", t, func() {
+	Convey("Given valid metric strings, should return parsed values", t, func(c C) {
 		validMetrics := []ValidMetricCase{
 			{"One.two.three 123 1234567890", "One.two.three", "One.two.three", map[string]string{}, 123, 1234567890},
 			{"One.two.three 1.23e2 1234567890", "One.two.three", "One.two.three", map[string]string{}, 123, 1234567890},
@@ -67,16 +67,16 @@ func TestParseMetric(t *testing.T) {
 
 		for _, validMetric := range validMetrics {
 			parsedMetric, err := ParseMetric([]byte(validMetric.input))
-			So(err, ShouldBeEmpty)
-			So(parsedMetric.Metric, ShouldEqual, validMetric.metric)
-			So(parsedMetric.Name, ShouldEqual, validMetric.name)
-			So(parsedMetric.Labels, ShouldResemble, validMetric.labels)
-			So(parsedMetric.Value, ShouldEqual, validMetric.value)
-			So(parsedMetric.Timestamp, ShouldEqual, validMetric.timestamp)
+			c.So(err, ShouldBeEmpty)
+			c.So(parsedMetric.Metric, ShouldEqual, validMetric.metric)
+			c.So(parsedMetric.Name, ShouldEqual, validMetric.name)
+			c.So(parsedMetric.Labels, ShouldResemble, validMetric.labels)
+			c.So(parsedMetric.Value, ShouldEqual, validMetric.value)
+			c.So(parsedMetric.Timestamp, ShouldEqual, validMetric.timestamp)
 		}
 	})
 
-	Convey("Given valid metric strings with float64 timestamp, should return parsed values", t, func() {
+	Convey("Given valid metric strings with float64 timestamp, should return parsed values", t, func(c C) {
 		var testTimestamp int64 = 1234567890
 
 		// Create and test n metrics with float64 timestamp with fractional part of length n (n=19)
@@ -95,12 +95,12 @@ func TestParseMetric(t *testing.T) {
 			rawMetric := "One.two.three 123 " + rawTimestamp
 			validMetric := ValidMetricCase{rawMetric, "One.two.three", "One.two.three", map[string]string{}, 123, testTimestamp}
 			parsedMetric, err := ParseMetric([]byte(validMetric.input))
-			So(err, ShouldBeEmpty)
-			So(parsedMetric.Metric, ShouldResemble, validMetric.metric)
-			So(parsedMetric.Name, ShouldResemble, validMetric.name)
-			So(parsedMetric.Labels, ShouldResemble, validMetric.labels)
-			So(parsedMetric.Value, ShouldEqual, validMetric.value)
-			So(parsedMetric.Timestamp, ShouldEqual, validMetric.timestamp)
+			c.So(err, ShouldBeEmpty)
+			c.So(parsedMetric.Metric, ShouldResemble, validMetric.metric)
+			c.So(parsedMetric.Name, ShouldResemble, validMetric.name)
+			c.So(parsedMetric.Labels, ShouldResemble, validMetric.labels)
+			c.So(parsedMetric.Value, ShouldEqual, validMetric.value)
+			c.So(parsedMetric.Timestamp, ShouldEqual, validMetric.timestamp)
 		}
 	})
 }

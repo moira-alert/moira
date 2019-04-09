@@ -17,7 +17,7 @@ import (
 const testLockRetryDelay = time.Millisecond * 100
 
 func Test(t *testing.T) {
-	Convey("Should stop if the lock's acquire was interrupted", t, func() {
+	Convey("Should stop if the lock's acquire was interrupted", t, func(c C) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
@@ -29,7 +29,7 @@ func Test(t *testing.T) {
 		worker.Run(stop)
 	})
 
-	Convey("Should try to reacquire the lock with delay", t, func() {
+	Convey("Should try to reacquire the lock with delay", t, func(c C) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
@@ -45,10 +45,10 @@ func Test(t *testing.T) {
 
 		start := time.Now()
 		worker.Run(stop)
-		So(time.Since(start), ShouldBeGreaterThanOrEqualTo, testLockRetryDelay)
+		c.So(time.Since(start), ShouldBeGreaterThanOrEqualTo, testLockRetryDelay)
 	})
 
-	Convey("Should interrupt the lock reacquire", t, func() {
+	Convey("Should interrupt the lock reacquire", t, func(c C) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
@@ -61,7 +61,7 @@ func Test(t *testing.T) {
 		worker.Run(stop)
 	})
 
-	Convey("Should release the lock after an error", t, func() {
+	Convey("Should release the lock after an error", t, func(c C) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
@@ -76,7 +76,7 @@ func Test(t *testing.T) {
 		worker.Run(stop)
 	})
 
-	Convey("Should release the lock after a completion", t, func() {
+	Convey("Should release the lock after a completion", t, func(c C) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
@@ -91,7 +91,7 @@ func Test(t *testing.T) {
 		worker.Run(stop)
 	})
 
-	Convey("Should release the lock after a recovery", t, func() {
+	Convey("Should release the lock after a recovery", t, func(c C) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
@@ -106,7 +106,7 @@ func Test(t *testing.T) {
 		worker.Run(stop)
 	})
 
-	Convey("Should respect lost chanel", t, func() {
+	Convey("Should respect lost chanel", t, func(c C) {
 
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
@@ -126,7 +126,7 @@ func Test(t *testing.T) {
 		worker.Run(stop)
 	})
 
-	Convey("Should respect stop chanel", t, func() {
+	Convey("Should respect stop chanel", t, func(c C) {
 
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
@@ -148,7 +148,7 @@ func Test(t *testing.T) {
 	})
 }
 
-func createTestWorkerWithDefaultAction(lock moira.Lock) *Worker {
+func CreateTestWorkerWithDefaultAction(lock moira.Lock) *Worker {
 	return createTestWorkerWithAction(
 		lock,
 		func(stop <-chan struct{}) error {
@@ -158,7 +158,7 @@ func createTestWorkerWithDefaultAction(lock moira.Lock) *Worker {
 	)
 }
 
-func createTestWorkerWithAction(lock moira.Lock, action Action) *Worker {
+func CreateTestWorkerWithAction(lock moira.Lock, action Action) *Worker {
 	worker := NewWorker(
 		"Test Worker",
 		logging.MustGetLogger("Test Worker"),

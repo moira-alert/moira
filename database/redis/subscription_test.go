@@ -17,157 +17,157 @@ func TestSubscriptionData(t *testing.T) {
 	dataBase.flush()
 	defer dataBase.flush()
 
-	Convey("SubscriptionData manipulation", t, func() {
-		Convey("Save-get-remove subscription", func() {
+	Convey("SubscriptionData manipulation", t, func(c C) {
+		Convey("Save-get-remove subscription", t, func(c C) {
 			sub := subscriptions[0]
-			Convey("No subscription", func() {
+			Convey("No subscription", t, func(c C) {
 				actual, err := dataBase.GetSubscription(sub.ID)
-				So(err, ShouldBeError)
-				So(err, ShouldResemble, database.ErrNil)
-				So(actual, ShouldResemble, moira.SubscriptionData{ThrottlingEnabled: true})
+				c.So(err, ShouldBeError)
+				c.So(err, ShouldResemble, database.ErrNil)
+				c.So(actual, ShouldResemble, moira.SubscriptionData{ThrottlingEnabled: true})
 			})
-			Convey("Save subscription", func() {
+			Convey("Save subscription", t, func(c C) {
 				err := dataBase.SaveSubscription(sub)
-				So(err, ShouldBeNil)
+				c.So(err, ShouldBeNil)
 			})
-			Convey("Get subscription by id, user and tags", func() {
+			Convey("Get subscription by id, user and tags", t, func(c C) {
 				actual, err := dataBase.GetSubscription(sub.ID)
-				So(err, ShouldBeNil)
-				So(actual, ShouldResemble, *sub)
+				c.So(err, ShouldBeNil)
+				c.So(actual, ShouldResemble, *sub)
 
 				actual1, err := dataBase.GetSubscriptions([]string{sub.ID})
-				So(err, ShouldBeNil)
-				So(actual1, ShouldResemble, []*moira.SubscriptionData{sub})
+				c.So(err, ShouldBeNil)
+				c.So(actual1, ShouldResemble, []*moira.SubscriptionData{sub})
 
 				actual2, err := dataBase.GetTagsSubscriptions([]string{tag1})
-				So(err, ShouldBeNil)
-				So(actual2, ShouldResemble, []*moira.SubscriptionData{sub})
+				c.So(err, ShouldBeNil)
+				c.So(actual2, ShouldResemble, []*moira.SubscriptionData{sub})
 
 				actual3, err := dataBase.GetTagsSubscriptions([]string{tag1, tag2, tag3})
-				So(err, ShouldBeNil)
-				So(actual3, ShouldResemble, []*moira.SubscriptionData{sub})
+				c.So(err, ShouldBeNil)
+				c.So(actual3, ShouldResemble, []*moira.SubscriptionData{sub})
 
 				actual4, err := dataBase.GetUserSubscriptionIDs(user1)
-				So(err, ShouldBeNil)
-				So(actual4, ShouldResemble, []string{sub.ID})
+				c.So(err, ShouldBeNil)
+				c.So(actual4, ShouldResemble, []string{sub.ID})
 			})
 
-			Convey("Remove sub", func() {
+			Convey("Remove sub", t, func(c C) {
 				err := dataBase.RemoveSubscription(sub.ID)
-				So(err, ShouldBeNil)
+				c.So(err, ShouldBeNil)
 			})
-			Convey("Get subscription by id, user and tags, should be empty", func() {
+			Convey("Get subscription by id, user and tags, should be empty", t, func(c C) {
 				actual, err := dataBase.GetSubscription(sub.ID)
-				So(err, ShouldResemble, database.ErrNil)
-				So(actual, ShouldResemble, moira.SubscriptionData{ThrottlingEnabled: true})
+				c.So(err, ShouldResemble, database.ErrNil)
+				c.So(actual, ShouldResemble, moira.SubscriptionData{ThrottlingEnabled: true})
 
 				actual1, err := dataBase.GetSubscriptions([]string{sub.ID})
-				So(err, ShouldBeNil)
-				So(actual1, ShouldResemble, []*moira.SubscriptionData{nil})
+				c.So(err, ShouldBeNil)
+				c.So(actual1, ShouldResemble, []*moira.SubscriptionData{nil})
 
 				actual3, err := dataBase.GetTagsSubscriptions([]string{tag1, tag2, tag3})
-				So(err, ShouldBeNil)
-				So(actual3, ShouldResemble, []*moira.SubscriptionData{})
+				c.So(err, ShouldBeNil)
+				c.So(actual3, ShouldResemble, []*moira.SubscriptionData{})
 
 				actual4, err := dataBase.GetUserSubscriptionIDs(user1)
-				So(err, ShouldBeNil)
-				So(actual4, ShouldResemble, []string{})
+				c.So(err, ShouldBeNil)
+				c.So(actual4, ShouldResemble, []string{})
 			})
 		})
 
-		Convey("Save batches and remove and check", func() {
+		Convey("Save batches and remove and check", t, func(c C) {
 			ids := make([]string, len(subscriptions))
 			for i, sub := range subscriptions {
 				ids[i] = sub.ID
 			}
 
 			err := dataBase.SaveSubscriptions(subscriptions)
-			So(err, ShouldBeNil)
+			c.So(err, ShouldBeNil)
 
 			actual, err := dataBase.GetSubscriptions(ids)
-			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, subscriptions)
+			c.So(err, ShouldBeNil)
+			c.So(actual, ShouldResemble, subscriptions)
 
 			actual1, err := dataBase.GetUserSubscriptionIDs(user1)
-			So(err, ShouldBeNil)
-			So(actual1, ShouldHaveLength, len(ids))
+			c.So(err, ShouldBeNil)
+			c.So(actual1, ShouldHaveLength, len(ids))
 
 			err = dataBase.RemoveSubscription(ids[0])
-			So(err, ShouldBeNil)
+			c.So(err, ShouldBeNil)
 
 			actual, err = dataBase.GetSubscriptions(ids)
-			So(err, ShouldBeNil)
-			So(actual, ShouldHaveLength, len(ids))
+			c.So(err, ShouldBeNil)
+			c.So(actual, ShouldHaveLength, len(ids))
 
 			actual1, err = dataBase.GetUserSubscriptionIDs(user1)
-			So(err, ShouldBeNil)
-			So(actual1, ShouldHaveLength, len(ids)-1)
+			c.So(err, ShouldBeNil)
+			c.So(actual1, ShouldHaveLength, len(ids)-1)
 		})
 
-		Convey("Test rewrite subscription", func() {
+		Convey("Test rewrite subscription", t, func(c C) {
 			dataBase.flush()
 			sub := *subscriptions[0]
 
 			err := dataBase.SaveSubscription(&sub)
-			So(err, ShouldBeNil)
+			c.So(err, ShouldBeNil)
 
 			actual, err := dataBase.GetSubscription(sub.ID)
-			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, sub)
+			c.So(err, ShouldBeNil)
+			c.So(actual, ShouldResemble, sub)
 
 			actual1, err := dataBase.GetUserSubscriptionIDs(user1)
-			So(err, ShouldBeNil)
-			So(actual1, ShouldHaveLength, 1)
+			c.So(err, ShouldBeNil)
+			c.So(actual1, ShouldHaveLength, 1)
 
 			sub.User = user2
 
 			err = dataBase.SaveSubscription(&sub)
-			So(err, ShouldBeNil)
+			c.So(err, ShouldBeNil)
 
 			actual, err = dataBase.GetSubscription(sub.ID)
-			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, sub)
+			c.So(err, ShouldBeNil)
+			c.So(actual, ShouldResemble, sub)
 
 			actual1, err = dataBase.GetUserSubscriptionIDs(user1)
-			So(err, ShouldBeNil)
-			So(actual1, ShouldHaveLength, 0)
+			c.So(err, ShouldBeNil)
+			c.So(actual1, ShouldHaveLength, 0)
 
 			actual1, err = dataBase.GetUserSubscriptionIDs(user2)
-			So(err, ShouldBeNil)
-			So(actual1, ShouldHaveLength, 1)
+			c.So(err, ShouldBeNil)
+			c.So(actual1, ShouldHaveLength, 1)
 
 			actual3, err := dataBase.GetTagsSubscriptions([]string{tag1, tag2, tag3})
-			So(err, ShouldBeNil)
-			So(actual3, ShouldResemble, []*moira.SubscriptionData{&sub})
+			c.So(err, ShouldBeNil)
+			c.So(actual3, ShouldResemble, []*moira.SubscriptionData{&sub})
 
 			actual4, err := dataBase.GetTagsSubscriptions([]string{tag1, tag3})
-			So(err, ShouldBeNil)
-			So(actual4, ShouldResemble, []*moira.SubscriptionData{&sub})
+			c.So(err, ShouldBeNil)
+			c.So(actual4, ShouldResemble, []*moira.SubscriptionData{&sub})
 
 			actual4, err = dataBase.GetTagsSubscriptions([]string{tag2})
-			So(err, ShouldBeNil)
-			So(actual4, ShouldResemble, []*moira.SubscriptionData{&sub})
+			c.So(err, ShouldBeNil)
+			c.So(actual4, ShouldResemble, []*moira.SubscriptionData{&sub})
 
 			sub.Tags = []string{tag1, tag3}
 
 			err = dataBase.SaveSubscription(&sub)
-			So(err, ShouldBeNil)
+			c.So(err, ShouldBeNil)
 
 			actual, err = dataBase.GetSubscription(sub.ID)
-			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, sub)
+			c.So(err, ShouldBeNil)
+			c.So(actual, ShouldResemble, sub)
 
 			actual4, err = dataBase.GetTagsSubscriptions([]string{tag1, tag2, tag3})
-			So(err, ShouldBeNil)
-			So(actual4, ShouldResemble, []*moira.SubscriptionData{&sub})
+			c.So(err, ShouldBeNil)
+			c.So(actual4, ShouldResemble, []*moira.SubscriptionData{&sub})
 
 			actual4, err = dataBase.GetTagsSubscriptions([]string{tag2})
-			So(err, ShouldBeNil)
-			So(actual4, ShouldResemble, []*moira.SubscriptionData{})
+			c.So(err, ShouldBeNil)
+			c.So(actual4, ShouldResemble, []*moira.SubscriptionData{})
 
 			actual4, err = dataBase.GetTagsSubscriptions([]string{tag1, tag3})
-			So(err, ShouldBeNil)
-			So(actual4, ShouldResemble, []*moira.SubscriptionData{&sub})
+			c.So(err, ShouldBeNil)
+			c.So(actual4, ShouldResemble, []*moira.SubscriptionData{&sub})
 		})
 	})
 }
@@ -177,31 +177,31 @@ func TestSubscriptionErrorConnection(t *testing.T) {
 	dataBase := newTestDatabase(logger, emptyConfig)
 	dataBase.flush()
 	defer dataBase.flush()
-	Convey("Should throw error when no connection", t, func() {
+	Convey("Should throw error when no connection", t, func(c C) {
 		actual1, err := dataBase.GetSubscription("123")
-		So(actual1, ShouldResemble, moira.SubscriptionData{ThrottlingEnabled: true})
-		So(err, ShouldNotBeNil)
+		c.So(actual1, ShouldResemble, moira.SubscriptionData{ThrottlingEnabled: true})
+		c.So(err, ShouldNotBeNil)
 
 		actual2, err := dataBase.GetSubscriptions([]string{"123"})
-		So(actual2, ShouldBeNil)
-		So(err, ShouldNotBeNil)
+		c.So(actual2, ShouldBeNil)
+		c.So(err, ShouldNotBeNil)
 
 		err = dataBase.SaveSubscriptions(subscriptions)
-		So(err, ShouldNotBeNil)
+		c.So(err, ShouldNotBeNil)
 
 		err = dataBase.SaveSubscription(subscriptions[0])
-		So(err, ShouldNotBeNil)
+		c.So(err, ShouldNotBeNil)
 
 		err = dataBase.RemoveSubscription(subscriptions[0].ID)
-		So(err, ShouldNotBeNil)
+		c.So(err, ShouldNotBeNil)
 
 		actual3, err := dataBase.GetUserSubscriptionIDs("a21213")
-		So(actual3, ShouldBeNil)
-		So(err, ShouldNotBeNil)
+		c.So(actual3, ShouldBeNil)
+		c.So(err, ShouldNotBeNil)
 
 		actual4, err := dataBase.GetTagsSubscriptions([]string{"123"})
-		So(actual4, ShouldBeNil)
-		So(err, ShouldNotBeNil)
+		c.So(actual4, ShouldBeNil)
+		c.So(err, ShouldNotBeNil)
 	})
 }
 

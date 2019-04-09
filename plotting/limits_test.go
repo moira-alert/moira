@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/moira-alert/moira/metric_source"
+	metricSource "github.com/moira-alert/moira/metric_source"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/wcharczuk/go-chart"
 
@@ -40,29 +40,29 @@ func TestResolveLimits(t *testing.T) {
 	// [519.4539685177408  6029.673742973381  243.3464382654782  2590.9614772639184
 	// [3712.024207074801  8137.757246113409  3653.0361832312265 632.2809306369263
 	// ...
-	Convey("Resolve limits for collection of random MetricDatas", t, func() {
+	Convey("Resolve limits for collection of random MetricDatas", t, func(c C) {
 		expectedFrom := moira.Int64ToTime(int64(startTime))
 		expectedTo := expectedFrom.Add(time.Duration(elementsToUse) * time.Minute)
 		expectedIncrement := percentsOfRange(float64(minValue), float64(maxValue), defaultYAxisRangePercent)
 		expectedLowest := float64(minValue) - expectedIncrement
 		expectedHighest := float64(maxValue) + expectedIncrement
 		limits := resolveLimits(metricsData)
-		So(limits.from, ShouldResemble, expectedFrom)
-		So(limits.to, ShouldResemble, expectedTo)
-		So(limits.lowest, ShouldNotEqual, 0)
-		So(limits.highest, ShouldNotEqual, 0)
-		So(limits.lowest, ShouldNotEqual, limits.highest)
-		So(limits.lowest, ShouldEqual, expectedLowest)
-		So(limits.highest, ShouldEqual, expectedHighest)
+		c.So(limits.from, ShouldResemble, expectedFrom)
+		c.So(limits.to, ShouldResemble, expectedTo)
+		c.So(limits.lowest, ShouldNotEqual, 0)
+		c.So(limits.highest, ShouldNotEqual, 0)
+		c.So(limits.lowest, ShouldNotEqual, limits.highest)
+		c.So(limits.lowest, ShouldEqual, expectedLowest)
+		c.So(limits.highest, ShouldEqual, expectedHighest)
 	})
 }
 
 // TestGetThresholdAxisRange tests getThresholdAxisRange returns correct axis range
 func TestGetThresholdAxisRange(t *testing.T) {
 	testLimits := plotLimits{highest: 100, lowest: -100}
-	Convey("Revert area between threshold line and x axis if necessary", t, func() {
+	Convey("Revert area between threshold line and x axis if necessary", t, func(c C) {
 		axisRange := testLimits.getThresholdAxisRange(moira.RisingTrigger)
-		So(axisRange, ShouldResemble, chart.ContinuousRange{
+		c.So(axisRange, ShouldResemble, chart.ContinuousRange{
 			Descending: true,
 			Max:        200,
 			Min:        0,
@@ -70,7 +70,7 @@ func TestGetThresholdAxisRange(t *testing.T) {
 		nonRisingTriggers := []string{moira.FallingTrigger, moira.ExpressionTrigger}
 		for _, triggerType := range nonRisingTriggers {
 			axisRange = testLimits.getThresholdAxisRange(triggerType)
-			So(axisRange, ShouldResemble, chart.ContinuousRange{
+			c.So(axisRange, ShouldResemble, chart.ContinuousRange{
 				Descending: false,
 				Max:        100,
 				Min:        -100,
@@ -81,7 +81,7 @@ func TestGetThresholdAxisRange(t *testing.T) {
 
 // TestFormsSetContaining tests formsSetContaining checks points correctly
 func TestFormsSetContaining(t *testing.T) {
-	Convey("check if point belongs to a given set", t, func() {
+	Convey("check if point belongs to a given set", t, func(c C) {
 		testLimits := plotLimits{highest: 100, lowest: -100}
 		points := []float64{0, 10, 50, 100, 101}
 		expectedResults := []bool{true, true, true, true, false}
@@ -90,7 +90,7 @@ func TestFormsSetContaining(t *testing.T) {
 			actualResult := testLimits.formsSetContaining(point)
 			actualResults = append(actualResults, actualResult)
 		}
-		So(len(actualResults), ShouldResemble, len(expectedResults))
-		So(actualResults, ShouldResemble, expectedResults)
+		c.So(len(actualResults), ShouldResemble, len(expectedResults))
+		c.So(actualResults, ShouldResemble, expectedResults)
 	})
 }

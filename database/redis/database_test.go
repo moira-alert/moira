@@ -20,11 +20,11 @@ func newTestDatabase(logger moira.Logger, config Config) *DbConnector {
 
 // docker run -p 6379:6379 redis
 func TestInitialization(t *testing.T) {
-	Convey("Initialization methods", t, func() {
+	Convey("Initialization methods", t, func(c C) {
 		logger, _ := logging.ConfigureLog("stdout", "info", "test")
 		database := newTestDatabase(logger, emptyConfig)
-		So(database, ShouldNotBeEmpty)
+		c.So(database, ShouldNotBeEmpty)
 		_, err := database.pool.Dial()
-		So(err, ShouldNotBeNil)
+		c.So(err, ShouldNotBeNil)
 	})
 }

@@ -14,11 +14,11 @@ import (
 
 	"github.com/gotokatsuya/ipare"
 	"github.com/gotokatsuya/ipare/util"
-	"github.com/moira-alert/moira/metric_source"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/wcharczuk/go-chart"
 
 	"github.com/moira-alert/moira"
+	metricSource "github.com/moira-alert/moira/metric_source"
 )
 
 const (
@@ -513,7 +513,7 @@ func renderTestMetricsDataToPNG(trigger moira.Trigger, plotTheme string,
 }
 
 // calculateHashDistance returns calculated hash distance of two given pictures
-func calculateHashDistance(pathToOriginal, pathToRendered string) (*int, error) {
+func CalculateHashDistance(pathToOriginal, pathToRendered string) (*int, error) {
 	hash := ipare.NewHash()
 	original, err := util.Open(pathToOriginal)
 	if err != nil {
@@ -553,7 +553,7 @@ func generateRandomTestMetricsData(numTotal int, numEmpty int) []*metricSource.M
 
 // TestGetRenderable renders plots based on test data and compares test plots hashes with plot examples hashes
 func TestGetRenderable(t *testing.T) {
-	Convey("Test plots hash distances", t, func() {
+	Convey("Test plots hash distances", t, func(c C) {
 		for _, testCase := range plotsHashDistancesTestCases {
 			trigger := moira.Trigger{
 				Name:        testCase.getTriggerName(),
@@ -591,7 +591,7 @@ func TestGetRenderable(t *testing.T) {
 				t.Fatal(err)
 			}
 			os.Remove(pathToRendered)
-			So(*hashDistance, ShouldBeLessThanOrEqualTo, testCase.expected)
+			c.So(*hashDistance, ShouldBeLessThanOrEqualTo, testCase.expected)
 		}
 	})
 }
@@ -642,7 +642,7 @@ func TestErrNoPointsToRender_Error(t *testing.T) {
 			ErrorValue:  &plotTestFallingErrorThreshold,
 		},
 	}
-	Convey("Trigger has no timeseries", t, func() {
+	Convey("Trigger has no timeseries", t, func(c C) {
 		testMetricsData := generateRandomTestMetricsData(10, 10)
 		testMetricsPoints := make([]float64, 0)
 		for _, testMetricData := range testMetricsData {
@@ -651,10 +651,10 @@ func TestErrNoPointsToRender_Error(t *testing.T) {
 		fmt.Printf("MetricsData points: %#v", testMetricsPoints)
 		for _, trigger := range testTriggers {
 			_, err = plotTemplate.GetRenderable(&trigger, testMetricsData)
-			So(err.Error(), ShouldEqual, ErrNoPointsToRender{triggerID: trigger.ID}.Error())
+			c.So(err.Error(), ShouldEqual, ErrNoPointsToRender{triggerID: trigger.ID}.Error())
 		}
 	})
-	Convey("Trigger has at least one timeserie", t, func() {
+	Convey("Trigger has at least one timeserie", t, func(c C) {
 		testMetricsData := generateRandomTestMetricsData(10, 9)
 		testMetricsPoints := make([]float64, 0)
 		for _, testMetricData := range testMetricsData {
@@ -663,7 +663,7 @@ func TestErrNoPointsToRender_Error(t *testing.T) {
 		fmt.Printf("MetricsData points: %#v", testMetricsPoints)
 		for _, trigger := range testTriggers {
 			_, err = plotTemplate.GetRenderable(&trigger, testMetricsData)
-			So(err, ShouldBeNil)
+			c.So(err, ShouldBeNil)
 		}
 	})
 }

@@ -5,41 +5,41 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/moira-alert/moira/metric_source"
+	metricSource "github.com/moira-alert/moira/metric_source"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestIsConfigured(t *testing.T) {
-	Convey("Remote is not configured", t, func() {
+	Convey("Remote is not configured", t, func(c C) {
 		remote := Create(&Config{URL: "", Enabled: true})
 		isConfigured, err := remote.IsConfigured()
-		So(isConfigured, ShouldBeFalse)
-		So(err, ShouldResemble, ErrRemoteStorageDisabled)
+		c.So(isConfigured, ShouldBeFalse)
+		c.So(err, ShouldResemble, ErrRemoteStorageDisabled)
 	})
 
-	Convey("Remote is configured", t, func() {
+	Convey("Remote is configured", t, func(c C) {
 		remote := Create(&Config{URL: "http://host", Enabled: true})
 		isConfigured, err := remote.IsConfigured()
-		So(isConfigured, ShouldBeTrue)
-		So(err, ShouldBeEmpty)
+		c.So(isConfigured, ShouldBeTrue)
+		c.So(err, ShouldBeEmpty)
 	})
 }
 
 func TestIsRemoteAvailable(t *testing.T) {
-	Convey("Is available", t, func() {
+	Convey("Is available", t, func(c C) {
 		server := createServer([]byte("Some string"), http.StatusOK)
 		remote := Remote{client: server.Client(), config: &Config{URL: server.URL}}
 		isAvailable, err := remote.IsRemoteAvailable()
-		So(isAvailable, ShouldBeTrue)
-		So(err, ShouldBeEmpty)
+		c.So(isAvailable, ShouldBeTrue)
+		c.So(err, ShouldBeEmpty)
 	})
 
-	Convey("Not available", t, func() {
+	Convey("Not available", t, func(c C) {
 		server := createServer([]byte("Some string"), http.StatusInternalServerError)
 		remote := Remote{client: server.Client(), config: &Config{URL: server.URL}}
 		isAvailable, err := remote.IsRemoteAvailable()
-		So(isAvailable, ShouldBeFalse)
-		So(err, ShouldResemble, fmt.Errorf("bad response status %d: %s", http.StatusInternalServerError, "Some string"))
+		c.So(isAvailable, ShouldBeFalse)
+		c.So(err, ShouldResemble, fmt.Errorf("bad response status %d: %s", http.StatusInternalServerError, "Some string"))
 	})
 }
 
@@ -48,35 +48,35 @@ func TestFetch(t *testing.T) {
 	var until int64 = 500
 	target := "foo.bar"
 
-	Convey("Request success but body is invalid", t, func() {
+	Convey("Request success but body is invalid", t, func(c C) {
 		server := createServer([]byte("[]"), http.StatusOK)
 		remote := Remote{client: server.Client(), config: &Config{URL: server.URL}}
 		result, err := remote.Fetch(target, from, until, false)
-		So(result, ShouldResemble, &FetchResult{MetricsData: []*metricSource.MetricData{}})
-		So(err, ShouldBeEmpty)
+		c.So(result, ShouldResemble, &FetchResult{MetricsData: []*metricSource.MetricData{}})
+		c.So(err, ShouldBeEmpty)
 	})
 
-	Convey("Request success but body is invalid", t, func() {
+	Convey("Request success but body is invalid", t, func(c C) {
 		server := createServer([]byte("Some string"), http.StatusOK)
 		remote := Remote{client: server.Client(), config: &Config{URL: server.URL}}
 		result, err := remote.Fetch(target, from, until, false)
-		So(result, ShouldBeEmpty)
-		So(err.Error(), ShouldResemble, "failed to get remote target 'foo.bar': invalid character 'S' looking for beginning of value")
+		c.So(result, ShouldBeEmpty)
+		c.So(err.Error(), ShouldResemble, "failed to get remote target 'foo.bar': invalid character 'S' looking for beginning of value")
 	})
 
-	Convey("Fail request with InternalServerError", t, func() {
+	Convey("Fail request with InternalServerError", t, func(c C) {
 		server := createServer([]byte("Some string"), http.StatusInternalServerError)
 		remote := Remote{client: server.Client(), config: &Config{URL: server.URL}}
 		result, err := remote.Fetch(target, from, until, false)
-		So(result, ShouldBeEmpty)
-		So(err.Error(), ShouldResemble, fmt.Sprintf("failed to get remote target 'foo.bar': bad response status %d: %s", http.StatusInternalServerError, "Some string"))
+		c.So(result, ShouldBeEmpty)
+		c.So(err.Error(), ShouldResemble, fmt.Sprintf("failed to get remote target 'foo.bar': bad response status %d: %s", http.StatusInternalServerError, "Some string"))
 	})
 
-	Convey("Fail make request", t, func() {
+	Convey("Fail make request", t, func(c C) {
 		url := "💩%$&TR"
 		remote := Remote{config: &Config{URL: url}}
 		result, err := remote.Fetch(target, from, until, false)
-		So(result, ShouldBeEmpty)
-		So(err.Error(), ShouldResemble, "failed to get remote target 'foo.bar': parse 💩%$&TR: invalid URL escape \"%$&\"")
+		c.So(result, ShouldBeEmpty)
+		c.So(err.Error(), ShouldResemble, "failed to get remote target 'foo.bar': parse 💩%$&TR: invalid URL escape \"%$&\"")
 	})
 }

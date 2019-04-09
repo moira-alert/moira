@@ -1,12 +1,13 @@
 package filter
 
 import (
+	"strings"
+	"testing"
+
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
 	"github.com/smartystreets/assertions/should"
 	. "github.com/smartystreets/goconvey/convey"
-	"strings"
-	"testing"
 )
 
 var testRetentions = `
@@ -169,30 +170,30 @@ func TestCacheStorage(t *testing.T) {
 	metrics2 := metrics.ConfigureFilterMetrics("test")
 	storage, err := NewCacheStorage(nil, metrics2, strings.NewReader(testRetentions))
 
-	Convey("Test good retentions", t, func() {
-		So(err, ShouldBeEmpty)
-		So(storage, ShouldNotBeNil)
+	Convey("Test good retentions", t, func(c C) {
+		c.So(err, ShouldBeEmpty)
+		c.So(storage, ShouldNotBeNil)
 		for i, retention := range storage.retentions {
-			So(retention.retention, ShouldEqual, expectedRetentionIntervals[i])
+			c.So(retention.retention, ShouldEqual, expectedRetentionIntervals[i])
 		}
 	})
 
-	Convey("Test empty buffer and different metrics, should buffer len equal to matchedMetrics len", t, func() {
+	Convey("Test empty buffer and different metrics, should buffer len equal to matchedMetrics len", t, func(c C) {
 		buffer := make(map[string]*moira.MatchedMetric)
 		for _, matchedMetric := range matchedMetrics {
 			storage.EnrichMatchedMetric(buffer, &matchedMetric)
 		}
-		So(len(buffer), ShouldEqual, len(matchedMetrics))
+		c.So(len(buffer), ShouldEqual, len(matchedMetrics))
 	})
 
 	storage, _ = NewCacheStorage(nil, metrics2, strings.NewReader(testRetentions))
 
-	Convey("Test add one metric twice, should buffer len is 1", t, func() {
+	Convey("Test add one metric twice, should buffer len is 1", t, func(c C) {
 		buffer := make(map[string]*moira.MatchedMetric)
 		storage.EnrichMatchedMetric(buffer, &matchedMetrics[0])
-		So(len(buffer), ShouldEqual, 1)
+		c.So(len(buffer), ShouldEqual, 1)
 		storage.EnrichMatchedMetric(buffer, &matchedMetrics[0])
-		So(len(buffer), ShouldEqual, 1)
+		c.So(len(buffer), ShouldEqual, 1)
 	})
 }
 
@@ -200,33 +201,33 @@ func TestRetentions(t *testing.T) {
 	metrics2 := metrics.ConfigureFilterMetrics("test")
 	storage, _ := NewCacheStorage(nil, metrics2, strings.NewReader(testRetentions))
 
-	Convey("Simple metric, should 60sec", t, func() {
+	Convey("Simple metric, should 60sec", t, func(c C) {
 		buffer := make(map[string]*moira.MatchedMetric)
 		metr := matchedMetrics[0]
 
 		storage.EnrichMatchedMetric(buffer, &metr)
-		So(len(buffer), ShouldEqual, 1)
-		So(metr.Retention, ShouldEqual, 60)
-		So(metr.RetentionTimestamp, should.Equal, 60)
+		c.So(len(buffer), ShouldEqual, 1)
+		c.So(metr.Retention, ShouldEqual, 60)
+		c.So(metr.RetentionTimestamp, should.Equal, 60)
 	})
 
-	Convey("Suf metric, should 1200sec", t, func() {
+	Convey("Suf metric, should 1200sec", t, func(c C) {
 		buffer := make(map[string]*moira.MatchedMetric)
 		metr := matchedMetrics[6]
 
 		storage.EnrichMatchedMetric(buffer, &metr)
-		So(len(buffer), ShouldEqual, 1)
-		So(metr.Retention, ShouldEqual, 1200)
-		So(metr.RetentionTimestamp, should.Equal, 1200)
+		c.So(len(buffer), ShouldEqual, 1)
+		c.So(metr.Retention, ShouldEqual, 1200)
+		c.So(metr.RetentionTimestamp, should.Equal, 1200)
 	})
 
-	Convey("Default metric, should 120sec", t, func() {
+	Convey("Default metric, should 120sec", t, func(c C) {
 		buffer := make(map[string]*moira.MatchedMetric)
 		metr := matchedMetrics[14]
 
 		storage.EnrichMatchedMetric(buffer, &metr)
-		So(len(buffer), ShouldEqual, 1)
-		So(metr.Retention, ShouldEqual, 120)
-		So(metr.RetentionTimestamp, should.Equal, 120)
+		c.So(len(buffer), ShouldEqual, 1)
+		c.So(metr.Retention, ShouldEqual, 120)
+		c.So(metr.RetentionTimestamp, should.Equal, 120)
 	})
 }

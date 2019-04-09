@@ -9,7 +9,7 @@ func TestDropCRLF(t *testing.T) {
 		output []byte
 	}
 
-	Convey("Should drop CRLF", t, func() {
+	Convey("Should drop CRLF", t, func(c C) {
 		testCases := []TestCase{
 			{[]byte{}, []byte{}},
 			{[]byte{'a'}, []byte{'a'}},
@@ -20,7 +20,7 @@ func TestDropCRLF(t *testing.T) {
 
 		for _, testCase := range testCases {
 			output := dropCRLF(testCase.input)
-			So(testCase.output, ShouldResemble, output)
+			c.So(testCase.output, ShouldResemble, output)
 		}
 	})
 }

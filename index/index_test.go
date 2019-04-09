@@ -11,7 +11,7 @@ import (
 
 	"github.com/moira-alert/moira/index/bleve"
 	"github.com/moira-alert/moira/index/fixtures"
-	"github.com/moira-alert/moira/mock/moira-alert"
+	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 )
 
 func TestIndex_CreateAndFill(t *testing.T) {
@@ -25,57 +25,57 @@ func TestIndex_CreateAndFill(t *testing.T) {
 	triggerIDs := triggerTestCases.ToTriggerIDs()
 	triggerChecksPointers := triggerTestCases.ToTriggerChecks()
 
-	Convey("Test create index", t, func() {
+	Convey("Test create index", t, func(c C) {
 		index := NewSearchIndex(logger, dataBase)
 		emptyIndex, _ := bleve.CreateTriggerIndex(bleveOriginal.NewIndexMapping())
-		So(index.triggerIndex, ShouldHaveSameTypeAs, emptyIndex)
+		c.So(index.triggerIndex, ShouldHaveSameTypeAs, emptyIndex)
 	})
 
-	Convey("Test fill index", t, func() {
+	Convey("Test fill index", t, func(c C) {
 		index := NewSearchIndex(logger, dataBase)
 		dataBase.EXPECT().GetAllTriggerIDs().Return(triggerIDs, nil)
 		dataBase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggerChecksPointers, nil)
 		err := index.fillIndex()
-		So(err, ShouldBeNil)
+		c.So(err, ShouldBeNil)
 		docCount, _ := index.triggerIndex.GetCount()
-		So(docCount, ShouldEqual, int64(32))
+		c.So(docCount, ShouldEqual, int64(32))
 	})
 
-	Convey("Test add Triggers to index", t, func() {
+	Convey("Test add Triggers to index", t, func(c C) {
 		index := NewSearchIndex(logger, dataBase)
 		dataBase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggerChecksPointers, nil)
 		err := index.writeByBatches(triggerIDs, defaultIndexBatchSize)
-		So(err, ShouldBeNil)
+		c.So(err, ShouldBeNil)
 		docCount, _ := index.triggerIndex.GetCount()
-		So(docCount, ShouldEqual, int64(32))
+		c.So(docCount, ShouldEqual, int64(32))
 	})
 
-	Convey("Test add Triggers to index, batch size is less than number of triggers", t, func() {
+	Convey("Test add Triggers to index, batch size is less than number of triggers", t, func(c C) {
 		index := NewSearchIndex(logger, dataBase)
 		dataBase.EXPECT().GetTriggerChecks(triggerIDs[:20]).Return(triggerChecksPointers[:20], nil)
 		dataBase.EXPECT().GetTriggerChecks(triggerIDs[20:]).Return(triggerChecksPointers[20:], nil)
 		err := index.writeByBatches(triggerIDs, 20)
-		So(err, ShouldBeNil)
+		c.So(err, ShouldBeNil)
 		docCount, _ := index.triggerIndex.GetCount()
-		So(docCount, ShouldEqual, int64(32))
+		c.So(docCount, ShouldEqual, int64(32))
 	})
 
-	Convey("Test add Triggers to index where triggers are already presented", t, func() {
+	Convey("Test add Triggers to index where triggers are already presented", t, func(c C) {
 		index := NewSearchIndex(logger, dataBase)
 
 		// first time
 		dataBase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggerChecksPointers, nil)
 		err := index.writeByBatches(triggerIDs, defaultIndexBatchSize)
-		So(err, ShouldBeNil)
+		c.So(err, ShouldBeNil)
 		docCount, _ := index.triggerIndex.GetCount()
-		So(docCount, ShouldEqual, int64(32))
+		c.So(docCount, ShouldEqual, int64(32))
 
 		// second time
 		dataBase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggerChecksPointers, nil)
 		err = index.writeByBatches(triggerIDs, defaultIndexBatchSize)
-		So(err, ShouldBeNil)
+		c.So(err, ShouldBeNil)
 		docCount, _ = index.triggerIndex.GetCount()
-		So(docCount, ShouldEqual, int64(32))
+		c.So(docCount, ShouldEqual, int64(32))
 	})
 }
 
@@ -91,29 +91,29 @@ func TestIndex_Start(t *testing.T) {
 	triggerIDs := triggerTestCases.ToTriggerIDs()
 	triggerChecksPointers := triggerTestCases.ToTriggerChecks()
 
-	Convey("Test start and stop index", t, func() {
+	Convey("Test start and stop index", t, func(c C) {
 		dataBase.EXPECT().GetAllTriggerIDs().Return(triggerIDs, nil)
 		dataBase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggerChecksPointers, nil)
 
 		err := index.Start()
-		So(err, ShouldBeNil)
+		c.So(err, ShouldBeNil)
 
 		err = index.Stop()
-		So(err, ShouldBeNil)
+		c.So(err, ShouldBeNil)
 	})
 
-	Convey("Test second start during index process", t, func() {
+	Convey("Test second start during index process", t, func(c C) {
 		index.inProgress = true
 		index.indexed = false
 		err := index.Start()
-		So(err, ShouldBeNil)
+		c.So(err, ShouldBeNil)
 	})
 
-	Convey("Test second start", t, func() {
+	Convey("Test second start", t, func(c C) {
 		index.inProgress = false
 		index.indexed = true
 		err := index.Start()
-		So(err, ShouldBeNil)
+		c.So(err, ShouldBeNil)
 	})
 }
 
@@ -124,9 +124,9 @@ func TestIndex_Errors(t *testing.T) {
 	logger, _ := logging.GetLogger("Test")
 	index := NewSearchIndex(logger, dataBase)
 
-	Convey("Test Start index error", t, func() {
+	Convey("Test Start index error", t, func(c C) {
 		dataBase.EXPECT().GetAllTriggerIDs().Return(make([]string, 0), fmt.Errorf("very bad error"))
 		err := index.fillIndex()
-		So(err, ShouldNotBeNil)
+		c.So(err, ShouldNotBeNil)
 	})
 }

@@ -14,15 +14,15 @@ func TestThrottlingErrorConnection(t *testing.T) {
 	dataBase := newTestDatabase(logger, emptyConfig)
 	dataBase.flush()
 	defer dataBase.flush()
-	Convey("Should throw error when no connection", t, func() {
+	Convey("Should throw error when no connection", t, func(c C) {
 		t1, t2 := dataBase.GetTriggerThrottling("")
-		So(t1, ShouldResemble, time.Unix(0, 0))
-		So(t2, ShouldResemble, time.Unix(0, 0))
+		c.So(t1, ShouldResemble, time.Unix(0, 0))
+		c.So(t2, ShouldResemble, time.Unix(0, 0))
 
 		err := dataBase.SetTriggerThrottling("", time.Now())
-		So(err, ShouldNotBeNil)
+		c.So(err, ShouldNotBeNil)
 
 		err = dataBase.DeleteTriggerThrottling("")
-		So(err, ShouldNotBeNil)
+		c.So(err, ShouldNotBeNil)
 	})
 }

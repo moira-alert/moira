@@ -13,13 +13,13 @@ func TestTriggerIndex_CreateAndGetCount(t *testing.T) {
 
 	triggerMapping := mapping.BuildIndexMapping(mapping.Trigger{})
 
-	Convey("Test create index", t, func() {
+	Convey("Test create index", t, func(c C) {
 		newIndex, err = CreateTriggerIndex(triggerMapping)
-		So(newIndex, ShouldHaveSameTypeAs, &TriggerIndex{})
-		So(err, ShouldBeNil)
+		c.So(newIndex, ShouldHaveSameTypeAs, &TriggerIndex{})
+		c.So(err, ShouldBeNil)
 
 		count, err := newIndex.GetCount()
-		So(count, ShouldBeZeroValue)
-		So(err, ShouldBeNil)
+		c.So(count, ShouldBeZeroValue)
+		c.So(err, ShouldBeNil)
 	})
 }

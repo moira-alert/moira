@@ -82,7 +82,7 @@ func generateTriggerChecks(number int) []*moira.TriggerCheck {
 	return triggersPointers
 }
 
-func chunkTriggerChecks(original []*moira.TriggerCheck, chunkSize int) (divided [][]*moira.TriggerCheck) {
+func ChunkTriggerChecks(original []*moira.TriggerCheck, chunkSize int) (divided [][]*moira.TriggerCheck) {
 	if chunkSize < 1 {
 		return
 	}

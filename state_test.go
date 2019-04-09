@@ -7,21 +7,21 @@ import (
 )
 
 func TestTtlState_ToMetricState(t *testing.T) {
-	Convey("ToMetricState test", t, func() {
-		So(TTLStateDEL.ToMetricState(), ShouldResemble, StateNODATA)
-		So(TTLStateOK.ToMetricState(), ShouldResemble, StateOK)
-		So(TTLStateWARN.ToMetricState(), ShouldResemble, StateWARN)
-		So(TTLStateERROR.ToMetricState(), ShouldResemble, StateERROR)
-		So(TTLStateNODATA.ToMetricState(), ShouldResemble, StateNODATA)
+	Convey("ToMetricState test", t, func(c C) {
+		c.So(TTLStateDEL.ToMetricState(), ShouldResemble, StateNODATA)
+		c.So(TTLStateOK.ToMetricState(), ShouldResemble, StateOK)
+		c.So(TTLStateWARN.ToMetricState(), ShouldResemble, StateWARN)
+		c.So(TTLStateERROR.ToMetricState(), ShouldResemble, StateERROR)
+		c.So(TTLStateNODATA.ToMetricState(), ShouldResemble, StateNODATA)
 	})
 }
 
 func TestTtlState_ToTriggerState(t *testing.T) {
-	Convey("ToTriggerState test", t, func() {
-		So(TTLStateDEL.ToTriggerState(), ShouldResemble, StateOK)
-		So(TTLStateOK.ToTriggerState(), ShouldResemble, StateOK)
-		So(TTLStateWARN.ToTriggerState(), ShouldResemble, StateWARN)
-		So(TTLStateERROR.ToTriggerState(), ShouldResemble, StateERROR)
-		So(TTLStateNODATA.ToTriggerState(), ShouldResemble, StateNODATA)
+	Convey("ToTriggerState test", t, func(c C) {
+		c.So(TTLStateDEL.ToTriggerState(), ShouldResemble, StateOK)
+		c.So(TTLStateOK.ToTriggerState(), ShouldResemble, StateOK)
+		c.So(TTLStateWARN.ToTriggerState(), ShouldResemble, StateWARN)
+		c.So(TTLStateERROR.ToTriggerState(), ShouldResemble, StateERROR)
+		c.So(TTLStateNODATA.ToTriggerState(), ShouldResemble, StateNODATA)
 	})
 }

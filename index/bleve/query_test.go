@@ -13,43 +13,43 @@ func TestIndex_BuildSearchQuery(t *testing.T) {
 	searchTerms := make([]string, 0)
 	onlyErrors := false
 
-	Convey("Test build search query", t, func() {
-		Convey("Empty query", func() {
+	Convey("Test build search query", t, func(c C) {
+		Convey("Empty query", t, func(c C) {
 			expected := bleve.NewMatchAllQuery()
 			actual := buildSearchQuery(tags, searchTerms, onlyErrors)
-			So(actual, ShouldResemble, expected)
+			c.So(actual, ShouldResemble, expected)
 		})
 
-		Convey("Complex query", func() {
+		Convey("Complex query", t, func(c C) {
 
-			Convey("Only errors = true", func() {
+			Convey("Only errors = true", t, func(c C) {
 				onlyErrors = true
 				qr := buildQueryForOnlyErrors(onlyErrors)
 				expected := bleve.NewConjunctionQuery(qr...)
 				actual := buildSearchQuery(tags, searchTerms, onlyErrors)
-				So(actual, ShouldResemble, expected)
+				c.So(actual, ShouldResemble, expected)
 			})
 
-			Convey("Only errors = false, several tags", func() {
+			Convey("Only errors = false, several tags", t, func(c C) {
 				onlyErrors = false
 				tags = []string{"123", "456"}
 				qr := buildQueryForTags(tags)
 				expected := bleve.NewConjunctionQuery(qr...)
 				actual := buildSearchQuery(tags, searchTerms, onlyErrors)
-				So(actual, ShouldResemble, expected)
+				c.So(actual, ShouldResemble, expected)
 			})
 
-			Convey("Only errors = false, no tags, several terms", func() {
+			Convey("Only errors = false, no tags, several terms", t, func(c C) {
 				onlyErrors = false
 				tags = make([]string, 0)
 				searchTerms = []string{"123", "456"}
 				qr := buildQueryForTerms(searchTerms)
 				expected := bleve.NewConjunctionQuery(qr...)
 				actual := buildSearchQuery(tags, searchTerms, onlyErrors)
-				So(actual, ShouldResemble, expected)
+				c.So(actual, ShouldResemble, expected)
 			})
 
-			Convey("Only errors = true, several tags, several terms", func() {
+			Convey("Only errors = true, several tags, several terms", t, func(c C) {
 				onlyErrors = false
 				tags = []string{"123", "456"}
 				searchTerms = []string{"123", "456"}
@@ -61,7 +61,7 @@ func TestIndex_BuildSearchQuery(t *testing.T) {
 				expected := bleve.NewConjunctionQuery(searchQueries...)
 
 				actual := buildSearchQuery(tags, searchTerms, onlyErrors)
-				So(actual, ShouldResemble, expected)
+				c.So(actual, ShouldResemble, expected)
 			})
 		})
 	})

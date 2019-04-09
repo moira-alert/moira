@@ -15,7 +15,7 @@ func TestBuildMessage(t *testing.T) {
 	value := float64(97.4458331200185)
 	message := "This is message"
 
-	Convey("Build Moira Message tests", t, func() {
+	Convey("Build Moira Message tests", t, func(c C) {
 		event := moira.NotificationEvent{
 			TriggerID: "TriggerID",
 			Value:     &value,
@@ -32,7 +32,7 @@ func TestBuildMessage(t *testing.T) {
 			ID:   "TriggerID",
 		}
 
-		Convey("Print moira message with one event", func() {
+		Convey("Print moira message with one event", t, func(c C) {
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, false, messageMaxCharacters)
 			expected := `💣NODATA Trigger Name [tag1][tag2] (1)
 
@@ -40,26 +40,26 @@ func TestBuildMessage(t *testing.T) {
 
 http://moira.url/trigger/TriggerID
 `
-			So(actual, ShouldResemble, expected)
+			c.So(actual, ShouldResemble, expected)
 		})
 
-		Convey("Print moira message with empty triggerID, but with trigger Name", func() {
+		Convey("Print moira message with empty triggerID, but with trigger Name", t, func(c C) {
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{Name: "Name"}, false, messageMaxCharacters)
 			expected := `💣NODATA Name  (1)
 
 02:40: Metric name = 97.4458331200185 (OK to NODATA)`
-			So(actual, ShouldResemble, expected)
+			c.So(actual, ShouldResemble, expected)
 		})
 
-		Convey("Print moira message with empty trigger", func() {
+		Convey("Print moira message with empty trigger", t, func(c C) {
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{}, false, messageMaxCharacters)
 			expected := `💣NODATA   (1)
 
 02:40: Metric name = 97.4458331200185 (OK to NODATA)`
-			So(actual, ShouldResemble, expected)
+			c.So(actual, ShouldResemble, expected)
 		})
 
-		Convey("Print moira message with one event and message", func() {
+		Convey("Print moira message with one event and message", t, func(c C) {
 			event.Message = &message
 			event.TriggerID = ""
 			trigger.ID = ""
@@ -67,10 +67,10 @@ http://moira.url/trigger/TriggerID
 			expected := `💣NODATA Trigger Name [tag1][tag2] (1)
 
 02:40: Metric name = 97.4458331200185 (OK to NODATA). This is message`
-			So(actual, ShouldResemble, expected)
+			c.So(actual, ShouldResemble, expected)
 		})
 
-		Convey("Print moira message with one event and throttled", func() {
+		Convey("Print moira message with one event and throttled", t, func(c C) {
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, true, messageMaxCharacters)
 			expected := `💣NODATA Trigger Name [tag1][tag2] (1)
 
@@ -79,11 +79,11 @@ http://moira.url/trigger/TriggerID
 http://moira.url/trigger/TriggerID
 
 Please, fix your system or tune this trigger to generate less events.`
-			So(actual, ShouldResemble, expected)
+			c.So(actual, ShouldResemble, expected)
 		})
 
 		events := make([]moira.NotificationEvent, 0)
-		Convey("Print moira message with 6 events and photo message length", func() {
+		Convey("Print moira message with 6 events and photo message length", t, func(c C) {
 			for i := 0; i < 18; i++ {
 				events = append(events, event)
 			}
@@ -108,7 +108,7 @@ http://moira.url/trigger/TriggerID
 `
 			fmt.Println(fmt.Sprintf("Bytes: %v", len(expected)))
 			fmt.Println(fmt.Sprintf("Symbols: %v", len([]rune(expected))))
-			So(actual, ShouldResemble, expected)
+			c.So(actual, ShouldResemble, expected)
 		})
 	})
 }
