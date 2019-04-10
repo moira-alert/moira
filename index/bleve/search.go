@@ -73,7 +73,7 @@ func buildSearchRequest(filterTags []string, searchString string, onlyErrors boo
 	// TriggerCheck.Score (desc)
 	// Relevance (asc)
 	// Trigger.Name (asc)
-	req.SortBy([]string{fmt.Sprintf("-%s", mapping.TriggerLastCheckScore.String()), "_score", mapping.TriggerName.String()})
+	req.SortBy([]string{fmt.Sprintf("-%s", mapping.TriggerLastCheckScore.String()), "-_score", mapping.TriggerName.String()})
 	req.Highlight = bleve.NewHighlight()
 
 	return req

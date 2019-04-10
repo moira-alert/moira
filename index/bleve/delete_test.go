@@ -33,7 +33,7 @@ func TestTriggerIndex_Delete(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		count, err = newIndex.GetCount()
-		So(count, ShouldEqual, int64(31))
+		So(count, ShouldEqual, int64(32))
 		So(err, ShouldBeNil)
 	})
 
@@ -43,7 +43,7 @@ func TestTriggerIndex_Delete(t *testing.T) {
 			So(err, ShouldBeNil)
 
 			count, err = newIndex.GetCount()
-			So(count, ShouldEqual, int64(31))
+			So(count, ShouldEqual, int64(32))
 			So(err, ShouldBeNil)
 		})
 
@@ -52,7 +52,7 @@ func TestTriggerIndex_Delete(t *testing.T) {
 			So(err, ShouldBeNil)
 
 			count, err = newIndex.GetCount()
-			So(count, ShouldEqual, int64(30))
+			So(count, ShouldEqual, int64(31))
 			So(err, ShouldBeNil)
 		})
 
@@ -61,7 +61,7 @@ func TestTriggerIndex_Delete(t *testing.T) {
 			So(err, ShouldBeNil)
 
 			count, err = newIndex.GetCount()
-			So(count, ShouldEqual, int64(30))
+			So(count, ShouldEqual, int64(31))
 			So(err, ShouldBeNil)
 		})
 
@@ -70,7 +70,7 @@ func TestTriggerIndex_Delete(t *testing.T) {
 			So(err, ShouldBeNil)
 
 			count, err = newIndex.GetCount()
-			So(count, ShouldEqual, int64(21))
+			So(count, ShouldEqual, int64(22))
 			So(err, ShouldBeNil)
 		})
 
@@ -79,11 +79,11 @@ func TestTriggerIndex_Delete(t *testing.T) {
 			So(err, ShouldBeNil)
 
 			count, err = newIndex.GetCount()
-			So(count, ShouldEqual, int64(21))
+			So(count, ShouldEqual, int64(22))
 			So(err, ShouldBeNil)
 		})
 
-		Convey("Remove all 31 trigger IDs", func() {
+		Convey("Remove all 32 trigger IDs", func() {
 			err = newIndex.Delete(triggerIDs)
 			So(err, ShouldBeNil)
 

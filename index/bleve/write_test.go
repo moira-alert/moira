@@ -81,7 +81,7 @@ func TestTriggerIndex_Write(t *testing.T) {
 			So(err, ShouldBeNil)
 
 			count, err = newIndex.GetCount()
-			So(count, ShouldEqual, int64(31))
+			So(count, ShouldEqual, int64(32))
 			So(err, ShouldBeNil)
 		})
 
@@ -90,7 +90,7 @@ func TestTriggerIndex_Write(t *testing.T) {
 			So(err, ShouldBeNil)
 
 			count, err = newIndex.GetCount()
-			So(count, ShouldEqual, int64(31))
+			So(count, ShouldEqual, int64(32))
 			So(err, ShouldBeNil)
 		})
 

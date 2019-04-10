@@ -33,7 +33,7 @@ func TestIndex_SearchTriggers(t *testing.T) {
 		index.indexed = true
 		So(err, ShouldBeNil)
 		docCount, _ := index.triggerIndex.GetCount()
-		So(docCount, ShouldEqual, int64(31))
+		So(docCount, ShouldEqual, int64(32))
 	})
 
 	Convey("Search for triggers without pagination", t, func() {
@@ -46,7 +46,7 @@ func TestIndex_SearchTriggers(t *testing.T) {
 		Convey("No tags, no searchString, onlyErrors = false", func() {
 			searchResults, count, err := index.SearchTriggers(tags, searchString, onlyErrors, page, size)
 			So(searchResults, ShouldResemble, triggerTestCases.ToSearchResults(searchString))
-			So(count, ShouldEqual, 31)
+			So(count, ShouldEqual, 32)
 			So(err, ShouldBeNil)
 		})
 
@@ -54,7 +54,7 @@ func TestIndex_SearchTriggers(t *testing.T) {
 			size = -1
 			searchResults, count, err := index.SearchTriggers(tags, searchString, onlyErrors, page, size)
 			So(searchResults, ShouldResemble, triggerTestCases.ToSearchResults(searchString))
-			So(count, ShouldEqual, 31)
+			So(count, ShouldEqual, 32)
 			So(err, ShouldBeNil)
 		})
 
@@ -81,7 +81,7 @@ func TestIndex_SearchTriggers(t *testing.T) {
 			tags = []string{"Something-extremely-new"}
 			searchResults, count, err := index.SearchTriggers(tags, searchString, onlyErrors, page, size)
 			So(searchResults, ShouldResemble, triggerTestCases.ToSearchResults(searchString)[30:])
-			So(count, ShouldEqual, 1)
+			So(count, ShouldEqual, 2)
 			So(err, ShouldBeNil)
 		})
 
@@ -133,7 +133,7 @@ func TestIndex_SearchTriggers(t *testing.T) {
 		Convey("No tags, no searchString, onlyErrors = false, page -> 0, size -> 10", func() {
 			searchResults, total, err := index.SearchTriggers(tags, searchString, onlyErrors, page, size)
 			So(searchResults, ShouldResemble, triggerTestCases.ToSearchResults(searchString)[:10])
-			So(total, ShouldEqual, 31)
+			So(total, ShouldEqual, 32)
 			So(err, ShouldBeNil)
 		})
 
@@ -141,7 +141,7 @@ func TestIndex_SearchTriggers(t *testing.T) {
 			page = 1
 			searchResults, total, err := index.SearchTriggers(tags, searchString, onlyErrors, page, size)
 			So(searchResults, ShouldResemble, triggerTestCases.ToSearchResults(searchString)[10:20])
-			So(total, ShouldEqual, 31)
+			So(total, ShouldEqual, 32)
 			So(err, ShouldBeNil)
 		})
 
@@ -150,7 +150,7 @@ func TestIndex_SearchTriggers(t *testing.T) {
 			size = 20
 			searchResults, total, err := index.SearchTriggers(tags, searchString, onlyErrors, page, size)
 			So(searchResults, ShouldResemble, triggerTestCases.ToSearchResults(searchString)[20:])
-			So(total, ShouldEqual, 31)
+			So(total, ShouldEqual, 32)
 			So(err, ShouldBeNil)
 		})
 
@@ -205,7 +205,7 @@ func TestIndex_SearchTriggers(t *testing.T) {
 
 		Convey("OnlyErrors = false, search by name and description, 3 results", func() {
 			searchString = "easy"
-			easy := []int{4, 9, 30}
+			easy := []int{4, 9, 30, 31}
 
 			easySearchResults := make([]*moira.SearchResult, 0)
 			for _, ind := range easy {
@@ -214,7 +214,7 @@ func TestIndex_SearchTriggers(t *testing.T) {
 
 			searchResults, count, err := index.SearchTriggers(tags, searchString, onlyErrors, page, size)
 			So(searchResults, ShouldResemble, easySearchResults)
-			So(count, ShouldEqual, 3)
+			So(count, ShouldEqual, 4)
 			So(err, ShouldBeNil)
 		})
 
@@ -266,7 +266,7 @@ func TestIndex_SearchErrors(t *testing.T) {
 		index.indexed = true
 		So(err, ShouldBeNil)
 		docCount, _ := index.triggerIndex.GetCount()
-		So(docCount, ShouldEqual, int64(31))
+		So(docCount, ShouldEqual, int64(32))
 	})
 
 	index.indexed = false

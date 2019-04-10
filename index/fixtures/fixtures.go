@@ -498,6 +498,42 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 		{
 			triggerID: "SuperTrigger31",
 			triggerName: fixtureIndexedField{
+				content: "Surprise easy!",
+				highlights: map[string][]moira.SearchHighlight{
+					"easy": {
+						{
+							Field: "name",
+							Value: "Surprise <mark>easy</mark>!",
+						},
+					},
+				},
+			},
+			triggerDesc: fixtureIndexedField{
+				content: `30: Easy come, easy go, will you let me go?
+				Bismillah! No, we will not let you go
+				(Let him go!) Bismillah! We will not let you go
+				(Let him go!) Bismillah! We will not let you go
+				(Let me go) Will not let you go
+				(Let me go) Will not let you go
+				(Let me go) Ah
+				No, no, no, no, no, no, no
+				(Oh mamma mia, mamma mia) Mamma mia, let me go
+				Beelzebub has a devil put aside for me, for me, for me!`,
+				highlights: map[string][]moira.SearchHighlight{
+					"easy": {
+						{
+							Field: "desc",
+							Value: "…: <mark>Easy</mark> come, <mark>easy</mark> go, will you let me go?\n\t\t\t\tBismillah! No, we will not let you go\n\t\t\t\t(Let him go!) Bismillah! We will not let you go\n\t\t\t\t(Let him go!) Bismillah! We will not let you go\n\t\t\t\t(Let me …",
+						},
+					},
+				},
+			},
+			triggerTags:  []string{"Something-extremely-new"},
+			triggerScore: 0,
+		},
+		{
+			triggerID: "SuperTrigger32",
+			triggerName: fixtureIndexedField{
 				content: "Surprise!",
 			},
 			triggerDesc: fixtureIndexedField{

@@ -9,8 +9,8 @@ import (
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
 
-	"github.com/moira-alert/moira/index/fixtures"
 	"github.com/moira-alert/moira/index/bleve"
+	"github.com/moira-alert/moira/index/fixtures"
 	"github.com/moira-alert/moira/mock/moira-alert"
 )
 
@@ -38,7 +38,7 @@ func TestIndex_CreateAndFill(t *testing.T) {
 		err := index.fillIndex()
 		So(err, ShouldBeNil)
 		docCount, _ := index.triggerIndex.GetCount()
-		So(docCount, ShouldEqual, int64(31))
+		So(docCount, ShouldEqual, int64(32))
 	})
 
 	Convey("Test add Triggers to index", t, func() {
@@ -47,7 +47,7 @@ func TestIndex_CreateAndFill(t *testing.T) {
 		err := index.writeByBatches(triggerIDs, defaultIndexBatchSize)
 		So(err, ShouldBeNil)
 		docCount, _ := index.triggerIndex.GetCount()
-		So(docCount, ShouldEqual, int64(31))
+		So(docCount, ShouldEqual, int64(32))
 	})
 
 	Convey("Test add Triggers to index, batch size is less than number of triggers", t, func() {
@@ -57,7 +57,7 @@ func TestIndex_CreateAndFill(t *testing.T) {
 		err := index.writeByBatches(triggerIDs, 20)
 		So(err, ShouldBeNil)
 		docCount, _ := index.triggerIndex.GetCount()
-		So(docCount, ShouldEqual, int64(31))
+		So(docCount, ShouldEqual, int64(32))
 	})
 
 	Convey("Test add Triggers to index where triggers are already presented", t, func() {
@@ -68,14 +68,14 @@ func TestIndex_CreateAndFill(t *testing.T) {
 		err := index.writeByBatches(triggerIDs, defaultIndexBatchSize)
 		So(err, ShouldBeNil)
 		docCount, _ := index.triggerIndex.GetCount()
-		So(docCount, ShouldEqual, int64(31))
+		So(docCount, ShouldEqual, int64(32))
 
 		// second time
 		dataBase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggerChecksPointers, nil)
 		err = index.writeByBatches(triggerIDs, defaultIndexBatchSize)
 		So(err, ShouldBeNil)
 		docCount, _ = index.triggerIndex.GetCount()
-		So(docCount, ShouldEqual, int64(31))
+		So(docCount, ShouldEqual, int64(32))
 	})
 }
 
