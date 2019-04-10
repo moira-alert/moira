@@ -43,24 +43,23 @@ func getMaintenanceInfoMessage(info moira.MaintenanceInfo) string {
 	if info.StartUser != nil || info.StartTime != nil {
 		messageBuffer.WriteString(" Maintenance was set")
 		if info.StartUser != nil {
-			messageBuffer.WriteString(" by user ")
+			messageBuffer.WriteString(" by ")
 			messageBuffer.WriteString(*info.StartUser)
 		}
 		if info.StartTime != nil {
 			messageBuffer.WriteString(" at ")
 			messageBuffer.WriteString(time.Unix(*info.StartTime, 0).Format(format))
 		}
-		messageBuffer.WriteString(".")
-	}
-	if info.StopUser != nil || info.StopTime != nil {
-		messageBuffer.WriteString(" Maintenance removed")
-		if info.StopUser != nil {
-			messageBuffer.WriteString(" by user ")
-			messageBuffer.WriteString(*info.StopUser)
-		}
-		if info.StopTime != nil {
-			messageBuffer.WriteString(" at ")
-			messageBuffer.WriteString(time.Unix(*info.StopTime, 0).Format(format))
+		if info.StopUser != nil || info.StopTime != nil {
+			messageBuffer.WriteString(" and removed")
+			if info.StopUser != nil && *info.StopUser != *info.StartUser {
+				messageBuffer.WriteString(" by ")
+				messageBuffer.WriteString(*info.StopUser)
+			}
+			if info.StopTime != nil {
+				messageBuffer.WriteString(" at ")
+				messageBuffer.WriteString(time.Unix(*info.StopTime, 0).Format(format))
+			}
 		}
 		messageBuffer.WriteString(".")
 	}
