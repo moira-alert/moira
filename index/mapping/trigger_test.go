@@ -1,12 +1,13 @@
 package mapping
 
 import (
-	"github.com/moira-alert/moira"
-	. "github.com/smartystreets/goconvey/convey"
 	"log"
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/moira-alert/moira"
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 var testTriggerFields = []FieldData{
