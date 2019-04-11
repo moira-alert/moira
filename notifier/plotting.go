@@ -48,7 +48,6 @@ func (notifier *StandardNotifier) buildNotificationPackagePlot(pkg NotificationP
 	if err != nil {
 		return buff.Bytes(), err
 	}
-
 	from, to := resolveMetricsWindow(notifier.logger, pkg.Trigger, pkg)
 	metricsData, trigger, err := notifier.evaluateTriggerMetrics(from, to, pkg.Trigger.ID)
 	if err != nil {
@@ -61,6 +60,7 @@ func (notifier *StandardNotifier) buildNotificationPackagePlot(pkg NotificationP
 		return buff.Bytes(), err
 	}
 	if err = renderable.Render(chart.PNG, buff); err != nil {
+		buff.Reset()
 		return buff.Bytes(), err
 	}
 	return buff.Bytes(), nil
