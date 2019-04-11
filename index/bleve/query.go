@@ -31,13 +31,13 @@ func buildQueryForTags(filterTags []string) (searchQueries []query.Query) {
 
 func buildQueryForTerms(searchTerms []string) (searchQueries []query.Query) {
 	for _, term := range searchTerms {
-		qr := bleve.NewFuzzyQuery(term)
-		qr.SetField(mapping.TriggerName.String())
-		qr.SetBoost(3)
-		qr1 := bleve.NewFuzzyQuery(term)
-		qr1.SetField(mapping.TriggerDesc.String())
-		qr1.SetBoost(1)
-		searchQueries = append(searchQueries, bleve.NewDisjunctionQuery(qr, qr1))
+		nameQuery, nameField := bleve.NewFuzzyQuery(term), mapping.TriggerName
+		nameQuery.SetField(nameField.String())
+		nameQuery.SetBoost(nameField.GetPriority())
+		descQuery, descField := bleve.NewFuzzyQuery(term), mapping.TriggerDesc
+		descQuery.SetField(descField.String())
+		descQuery.SetBoost(descField.GetPriority())
+		searchQueries = append(searchQueries, bleve.NewDisjunctionQuery(nameQuery, descQuery))
 	}
 	return
 }

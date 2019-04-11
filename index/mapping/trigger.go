@@ -6,33 +6,24 @@ import (
 	"github.com/moira-alert/moira"
 )
 
-// TriggerField is used as enum
-type TriggerField int
-
-// Constants used as enum
-const (
-	TriggerID TriggerField = iota
-	TriggerName
-	TriggerDesc
-	TriggerTags
-	TriggerLastCheckScore
-)
+// FieldData is container for field-related parameters
+type FieldData struct {
+	Name     string
+	NameTag  string
+	Priority float64
+}
 
 var (
-	triggerFieldNames = []string{
-		"ID",
-		"Name",
-		"Desc",
-		"Tags",
-		"LastCheckScore",
-	}
-	triggerFieldTagValues = []string{
-		"id",
-		"name",
-		"desc",
-		"tags",
-		"",
-	}
+	// TriggerID represents field data for moira.Trigger.ID
+	TriggerID = FieldData{"ID", "id", 5}
+	// TriggerName represents field data for moira.Trigger.Name
+	TriggerName = FieldData{"Name", "name", 3}
+	// TriggerDesc represents field data for moira.Trigger.Desc
+	TriggerDesc = FieldData{"Desc", "desc", 1}
+	// TriggerTags represents field data for moira.Trigger.Tags
+	TriggerTags = FieldData{"Tags", "tags", 0}
+	// TriggerLastCheckScore represents field data for moira.CheckData score
+	TriggerLastCheckScore = FieldData{"LastCheckScore", "", 0}
 )
 
 // Trigger represents Moira.Trigger type for full-text search index. It includes only indexed fields
@@ -49,14 +40,19 @@ func (Trigger) Type() string {
 	return "moira.indexed.trigger"
 }
 
-// String returns TriggerField name. It works like enum
-func (field TriggerField) String() string {
-	return triggerFieldNames[field]
+// String returns TriggerField name.
+func (field FieldData) String() string {
+	return field.Name
 }
 
-// GetTagValue returns TriggerField value used in marshalling. It works like enum
-func (field TriggerField) GetTagValue() string {
-	return triggerFieldTagValues[field]
+// GetTagValue returns TriggerField value used in marshalling.
+func (field FieldData) GetTagValue() string {
+	return field.NameTag
+}
+
+// GetPriority returns field priority
+func (field FieldData) GetPriority() float64 {
+	return field.Priority
 }
 
 // GetDocumentMapping returns Bleve.mapping.DocumentMapping for Trigger type
