@@ -161,8 +161,9 @@ type Trigger struct {
 // TriggerCheck represents trigger data with last check data and check timestamp
 type TriggerCheck struct {
 	Trigger
-	Throttling int64     `json:"throttling"`
-	LastCheck  CheckData `json:"last_check"`
+	Throttling int64             `json:"throttling"`
+	LastCheck  CheckData         `json:"last_check"`
+	Highlights map[string]string `json:"highlights"`
 }
 
 // MaintenanceCheck set maintenance user, time
@@ -229,6 +230,17 @@ func (maintenanceInfo *MaintenanceInfo) Set(startUser *string, startTime *int64,
 type MetricEvent struct {
 	Metric  string `json:"metric"`
 	Pattern string `json:"pattern"`
+}
+
+// SearchHighlight represents highlight
+type SearchHighlight struct {
+	Field, Value string
+}
+
+// SearchResult represents fulltext search result
+type SearchResult struct {
+	ObjectID   string
+	Highlights []SearchHighlight
 }
 
 // GetSubjectState returns the most critical state of events

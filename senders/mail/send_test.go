@@ -70,7 +70,7 @@ func generateTestEvents(n int, subscriptionID string) []moira.NotificationEvent 
 	return events
 }
 
-func TestEmptyTriggerID (t *testing.T){
+func TestEmptyTriggerID(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test")
 	contact := moira.ContactData{
 		ID:    "ContactID-000000000000001",
