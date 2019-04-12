@@ -7,7 +7,9 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/go-graphite/carbonapi/expr/functions"
+	"github.com/moira-alert/moira/metric_source"
+	"github.com/moira-alert/moira/metric_source/local"
+	"github.com/moira-alert/moira/metric_source/remote"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/cmd"
@@ -63,7 +65,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Can not configure log: %s\n", err.Error())
 		os.Exit(1)
 	}
-	defer logger.Infof("Moira Notifier Stopped. Version: %s", MoiraVersion)
+	defer logger.Infof("Moira Notifier stopped. Version: %s", MoiraVersion)
 
 	if config.Pprof.Listen != "" {
 		logger.Infof("Starting pprof server at: [%s]", config.Pprof.Listen)
@@ -80,23 +82,23 @@ func main() {
 	databaseSettings := config.Redis.GetSettings()
 	database := redis.NewDatabase(logger, databaseSettings, redis.Notifier)
 
-	// configure carbon-api functions
-	functions.New(make(map[string]string))
+	localSource := local.Create(database)
+	remoteConfig := config.Remote.GetRemoteSourceSettings()
+	remoteSource := remote.Create(remoteConfig)
+	metricSourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource)
 
-	remoteConfig := config.Remote.GetSettings()
-	notifierConfig := config.Notifier.getSettings(logger, remoteConfig)
+	notifierConfig := config.Notifier.getSettings(logger)
 
-	sender := notifier.NewNotifier(database, logger, notifierConfig, notifierMetrics)
+	sender := notifier.NewNotifier(database, logger, notifierConfig, notifierMetrics, metricSourceProvider)
 
 	// Register moira senders
 	if err := sender.RegisterSenders(database); err != nil {
 		logger.Fatalf("Can not configure senders: %s", err.Error())
 	}
-	defer database.DeregisterBots()
 
 	// Start moira self state checker
 	selfState := &selfstate.SelfCheckWorker{
-		Log:      logger,
+		Logger:   logger,
 		DB:       database,
 		Config:   config.Notifier.SelfState.getSettings(),
 		Notifier: sender,

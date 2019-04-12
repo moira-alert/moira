@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/garyburd/redigo/redis"
+	"github.com/gomodule/redigo/redis"
 	"gopkg.in/tomb.v2"
 
 	"github.com/moira-alert/moira"
@@ -92,6 +92,10 @@ func (connector *DbConnector) getMetricRetention(metric string) (int64, error) {
 
 // SaveMetrics saves new metrics
 func (connector *DbConnector) SaveMetrics(metrics map[string]*moira.MatchedMetric) error {
+	if len(metrics) == 0 {
+		return nil
+	}
+
 	c := connector.pool.Get()
 	defer c.Close()
 	for _, metric := range metrics {
@@ -223,7 +227,7 @@ func (connector *DbConnector) RemoveMetricValues(metric string, toTime int64) er
 	c := connector.pool.Get()
 	defer c.Close()
 	if _, err := c.Do("ZREMRANGEBYSCORE", metricDataKey(metric), "-inf", toTime); err != nil {
-		return fmt.Errorf("Failed to remove metrics from -inf to %v, error: %v", toTime, err)
+		return fmt.Errorf("failed to remove metrics from -inf to %v, error: %v", toTime, err)
 	}
 	return nil
 }
@@ -240,7 +244,7 @@ func (connector *DbConnector) RemoveMetricsValues(metrics []string, toTime int64
 		}
 	}
 	if _, err := c.Do("EXEC"); err != nil {
-		return fmt.Errorf("Failed to EXEC remove metrics: %v", err)
+		return fmt.Errorf("failed to EXEC remove metrics: %v", err)
 	}
 	return nil
 }

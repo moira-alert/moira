@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/go-graphite/carbonapi/date"
-	"github.com/satori/go.uuid"
+	"github.com/gofrs/uuid"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
@@ -37,7 +37,11 @@ func GetUserSubscriptions(database moira.Database, userLogin string) (*dto.Subsc
 // CreateSubscription create or update subscription
 func CreateSubscription(dataBase moira.Database, userLogin string, subscription *dto.Subscription) *api.ErrorResponse {
 	if subscription.ID == "" {
-		subscription.ID = uuid.NewV4().String()
+		uuid4, err := uuid.NewV4()
+		if err != nil {
+			return api.ErrorInternalServer(err)
+		}
+		subscription.ID = uuid4.String()
 	} else {
 		exists, err := isSubscriptionExists(dataBase, subscription.ID)
 		if err != nil {
@@ -82,8 +86,8 @@ func SendTestNotification(database moira.Database, subscriptionID string) *api.E
 		SubscriptionID: &subscriptionID,
 		Metric:         "Test.metric.value",
 		Value:          &value,
-		OldState:       "TEST",
-		State:          "TEST",
+		OldState:       moira.StateTEST,
+		State:          moira.StateTEST,
 		Timestamp:      date.DateParamToEpoch("now", "", time.Now().Add(-24*time.Hour).Unix(), time.UTC),
 	}
 

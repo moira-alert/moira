@@ -3,17 +3,18 @@ package filter
 import (
 	"bufio"
 	"fmt"
-	"github.com/golang/mock/gomock"
-	"github.com/moira-alert/moira/filter"
-	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
-	"github.com/moira-alert/moira/mock/moira-alert"
-	"github.com/op/go-logging"
 	"io"
 	"math/rand"
 	"os"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/golang/mock/gomock"
+	"github.com/moira-alert/moira/filter"
+	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
+	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
+	"github.com/op/go-logging"
 )
 
 func BenchmarkProcessIncomingMetric(b *testing.B) {
@@ -60,7 +61,8 @@ func generateMetrics(patterns *filter.PatternStorage, count int) []string {
 	for i < count {
 		parts := make([]string, 0, 16)
 
-		node := patterns.PatternTree.Children[rand.Intn(len(patterns.PatternTree.Children))]
+		patternTree := patterns.PatternIndex.Load().(*filter.PatternIndex).Root
+		node := patternTree.Children[rand.Intn(len(patternTree.Children))]
 		matched := rand.Float64() < 0.02
 		level := float64(0)
 		for {

@@ -3,8 +3,8 @@ package redis
 import (
 	"testing"
 
+	"github.com/gofrs/uuid"
 	"github.com/op/go-logging"
-	"github.com/satori/go.uuid"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"time"
@@ -120,9 +120,9 @@ func TestNotificationEvents(t *testing.T) {
 			now := time.Now().Unix()
 			event := moira.NotificationEvent{
 				Timestamp: now,
-				State:     "NODATA",
-				OldState:  "NODATA",
-				TriggerID: uuid.NewV4().String(),
+				State:     moira.StateNODATA,
+				OldState:  moira.StateNODATA,
+				TriggerID: uuid.Must(uuid.NewV4()).String(),
 				Metric:    "my.metric",
 			}
 
@@ -180,8 +180,8 @@ func TestNotificationEventErrorConnection(t *testing.T) {
 
 	var notificationEvent = moira.NotificationEvent{
 		Timestamp: time.Now().Unix(),
-		State:     "NODATA",
-		OldState:  "NODATA",
+		State:     moira.StateNODATA,
+		OldState:  moira.StateNODATA,
 		TriggerID: "81588c33-eab3-4ad4-aa03-82a9560adad9",
 		Metric:    "my.metric",
 	}
@@ -205,23 +205,23 @@ func TestNotificationEventErrorConnection(t *testing.T) {
 
 var notificationEvent = moira.NotificationEvent{
 	Timestamp: time.Now().Unix(),
-	State:     "NODATA",
-	OldState:  "NODATA",
+	State:     moira.StateNODATA,
+	OldState:  moira.StateNODATA,
 	TriggerID: "81588c33-eab3-4ad4-aa03-82a9560adad9",
 	Metric:    "my.metric",
 }
 
 var notificationEvent1 = moira.NotificationEvent{
 	Timestamp: time.Now().Unix(),
-	State:     "EXCEPTION",
-	OldState:  "NODATA",
-	TriggerID: uuid.NewV4().String(),
+	State:     moira.StateEXCEPTION,
+	OldState:  moira.StateNODATA,
+	TriggerID: uuid.Must(uuid.NewV4()).String(),
 	Metric:    "my.metric",
 }
 var notificationEvent2 = moira.NotificationEvent{
 	Timestamp: time.Now().Unix(),
-	State:     "OK",
-	OldState:  "WARN",
-	TriggerID: uuid.NewV4().String(),
+	State:     moira.StateOK,
+	OldState:  moira.StateWARN,
+	TriggerID: uuid.Must(uuid.NewV4()).String(),
 	Metric:    "my.metric1",
 }

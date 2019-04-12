@@ -4,29 +4,23 @@ import (
 	"bytes"
 	"fmt"
 	"math"
+	"strconv"
 	"strings"
 	"time"
 )
 
-var (
-	eventStates = [...]string{"OK", "WARN", "ERROR", "NODATA", "EXCEPTION", "TEST"}
+const (
+	// VariableContactID is used to render template with contact.ID
+	VariableContactID = "${contact_id}"
+	// VariableContactValue is used to render template with contact.Value
+	VariableContactValue = "${contact_value}"
+	// VariableContactType is used to render template with contact.Type
+	VariableContactType = "${contact_type}"
+	// VariableTriggerID is used to render template with trigger.ID
+	VariableTriggerID = "${trigger_id}"
+	// VariableTriggerName is used to render template with trigger.Name
+	VariableTriggerName = "${trigger_name}"
 )
-
-var scores = map[string]int64{
-	"OK":        0,
-	"DEL":       0,
-	"WARN":      1,
-	"ERROR":     100,
-	"NODATA":    1000,
-	"EXCEPTION": 100000,
-}
-
-var eventStateWeight = map[string]int{
-	"OK":     0,
-	"WARN":   1,
-	"ERROR":  100,
-	"NODATA": 10000,
-}
 
 // NotificationEvent represents trigger state changes event
 type NotificationEvent struct {
@@ -34,11 +28,11 @@ type NotificationEvent struct {
 	Timestamp      int64    `json:"timestamp"`
 	Metric         string   `json:"metric"`
 	Value          *float64 `json:"value,omitempty"`
-	State          string   `json:"state"`
+	State          State    `json:"state"`
 	TriggerID      string   `json:"trigger_id"`
 	SubscriptionID *string  `json:"sub_id,omitempty"`
 	ContactID      string   `json:"contactId,omitempty"`
-	OldState       string   `json:"old_state"`
+	OldState       State    `json:"old_state"`
 	Message        *string  `json:"msg,omitempty"`
 }
 
@@ -55,6 +49,14 @@ type TriggerData struct {
 	ErrorValue float64  `json:"error_value"`
 	IsRemote   bool     `json:"is_remote"`
 	Tags       []string `json:"__notifier_trigger_tags"`
+}
+
+// GetTriggerURI gets frontUri and returns triggerUrl, returns empty string on selfcheck and test notifications
+func (trigger TriggerData) GetTriggerURI(frontURI string) string {
+	if trigger.ID != "" {
+		return fmt.Sprintf("%s/trigger/%s", frontURI, trigger.ID)
+	}
+	return ""
 }
 
 // ContactData represents contact object
@@ -146,7 +148,7 @@ type Trigger struct {
 	ErrorValue       *float64      `json:"error_value"`
 	TriggerType      string        `json:"trigger_type"`
 	Tags             []string      `json:"tags"`
-	TTLState         *string       `json:"ttl_state,omitempty"`
+	TTLState         *TTLState     `json:"ttl_state,omitempty"`
 	TTL              int64         `json:"ttl,omitempty"`
 	Schedule         *ScheduleData `json:"sched,omitempty"`
 	Expression       *string       `json:"expression,omitempty"`
@@ -159,33 +161,69 @@ type Trigger struct {
 // TriggerCheck represents trigger data with last check data and check timestamp
 type TriggerCheck struct {
 	Trigger
-	Throttling int64     `json:"throttling"`
-	LastCheck  CheckData `json:"last_check"`
+	Throttling int64             `json:"throttling"`
+	LastCheck  CheckData         `json:"last_check"`
+	Highlights map[string]string `json:"highlights"`
+}
+
+// MaintenanceCheck set maintenance user, time
+type MaintenanceCheck interface {
+	SetMaintenance(maintenanceInfo *MaintenanceInfo, maintenance int64)
+	GetMaintenance() (MaintenanceInfo, int64)
 }
 
 // CheckData represents last trigger check data
 type CheckData struct {
 	Metrics                      map[string]MetricState `json:"metrics"`
 	Score                        int64                  `json:"score"`
-	State                        string                 `json:"state"`
+	State                        State                  `json:"state"`
 	Maintenance                  int64                  `json:"maintenance,omitempty"`
+	MaintenanceInfo              MaintenanceInfo        `json:"maintenance_info"`
 	Timestamp                    int64                  `json:"timestamp,omitempty"`
 	EventTimestamp               int64                  `json:"event_timestamp,omitempty"`
 	LastSuccessfulCheckTimestamp int64                  `json:"last_successful_check_timestamp"`
 	Suppressed                   bool                   `json:"suppressed,omitempty"`
-	SuppressedState              string                 `json:"suppressed_state,omitempty"`
+	SuppressedState              State                  `json:"suppressed_state,omitempty"`
 	Message                      string                 `json:"msg,omitempty"`
 }
 
 // MetricState represents metric state data for given timestamp
 type MetricState struct {
-	EventTimestamp  int64    `json:"event_timestamp"`
-	State           string   `json:"state"`
-	Suppressed      bool     `json:"suppressed"`
-	SuppressedState string   `json:"suppressed_state,omitempty"`
-	Timestamp       int64    `json:"timestamp"`
-	Value           *float64 `json:"value,omitempty"`
-	Maintenance     int64    `json:"maintenance,omitempty"`
+	EventTimestamp  int64           `json:"event_timestamp"`
+	State           State           `json:"state"`
+	Suppressed      bool            `json:"suppressed"`
+	SuppressedState State           `json:"suppressed_state,omitempty"`
+	Timestamp       int64           `json:"timestamp"`
+	Value           *float64        `json:"value,omitempty"`
+	Maintenance     int64           `json:"maintenance,omitempty"`
+	MaintenanceInfo MaintenanceInfo `json:"maintenance_info"`
+}
+
+// SetMaintenance set maintenance user, time for MetricState
+func (metricState *MetricState) SetMaintenance(maintenanceInfo *MaintenanceInfo, maintenance int64) {
+	metricState.MaintenanceInfo = *maintenanceInfo
+	metricState.Maintenance = maintenance
+}
+
+// GetMaintenance return metricState MaintenanceInfo
+func (metricState *MetricState) GetMaintenance() (MaintenanceInfo, int64) {
+	return metricState.MaintenanceInfo, metricState.Maintenance
+}
+
+// MaintenanceInfo represents user and time set/unset maintenance
+type MaintenanceInfo struct {
+	StartUser *string `json:"setup_user"`
+	StartTime *int64  `json:"setup_time"`
+	StopUser  *string `json:"remove_user"`
+	StopTime  *int64  `json:"remove_time"`
+}
+
+// Set maintanace start and stop users and times
+func (maintenanceInfo *MaintenanceInfo) Set(startUser *string, startTime *int64, stopUser *string, stopTime *int64) {
+	maintenanceInfo.StartUser = startUser
+	maintenanceInfo.StartTime = startTime
+	maintenanceInfo.StopUser = stopUser
+	maintenanceInfo.StopTime = stopTime
 }
 
 // MetricEvent represents filter metric event
@@ -194,14 +232,25 @@ type MetricEvent struct {
 	Pattern string `json:"pattern"`
 }
 
+// SearchHighlight represents highlight
+type SearchHighlight struct {
+	Field, Value string
+}
+
+// SearchResult represents fulltext search result
+type SearchResult struct {
+	ObjectID   string
+	Highlights []SearchHighlight
+}
+
 // GetSubjectState returns the most critical state of events
-func (events NotificationEvents) GetSubjectState() string {
-	result := ""
-	states := make(map[string]bool)
+func (events NotificationEvents) GetSubjectState() State {
+	result := StateOK
+	states := make(map[State]bool)
 	for _, event := range events {
 		states[event.State] = true
 	}
-	for _, state := range eventStates {
+	for _, state := range eventStatesPriority {
 		if states[state] {
 			result = state
 		}
@@ -264,8 +313,18 @@ func (schedule *ScheduleData) IsScheduleAllows(ts int64) bool {
 	return false
 }
 
-func (eventData NotificationEvent) String() string {
-	return fmt.Sprintf("TriggerId: %s, Metric: %s, Value: %v, OldState: %s, State: %s, Message: '%s', Timestamp: %v", eventData.TriggerID, eventData.Metric, UseFloat64(eventData.Value), eventData.OldState, eventData.State, UseString(eventData.Message), eventData.Timestamp)
+func (event NotificationEvent) String() string {
+	return fmt.Sprintf("TriggerId: %s, Metric: %s, Value: %v, OldState: %s, State: %s, Message: '%s', Timestamp: %v", event.TriggerID, event.Metric, UseFloat64(event.Value), event.OldState, event.State, UseString(event.Message), event.Timestamp)
+}
+
+// GetMetricValue gets event metric value and format it to human readable presentation
+func (event NotificationEvent) GetMetricValue() string {
+	return strconv.FormatFloat(UseFloat64(event.Value), 'f', -1, 64)
+}
+
+// FormatTimestamp gets event timestamp and format it using given location to human readable presentation
+func (event NotificationEvent) FormatTimestamp(location *time.Location) string {
+	return time.Unix(event.Timestamp, 0).In(location).Format("15:04")
 }
 
 // GetOrCreateMetricState gets metric state from check data or create new if CheckData has no state for given metric
@@ -277,10 +336,21 @@ func (checkData *CheckData) GetOrCreateMetricState(metric string, emptyTimestamp
 	return checkData.Metrics[metric]
 }
 
+// SetMaintenance set maintenance user, time for CheckData
+func (checkData *CheckData) SetMaintenance(maintenanceInfo *MaintenanceInfo, maintenance int64) {
+	checkData.MaintenanceInfo = *maintenanceInfo
+	checkData.Maintenance = maintenance
+}
+
+// GetMaintenance return metricState MaintenanceInfo
+func (checkData *CheckData) GetMaintenance() (MaintenanceInfo, int64) {
+	return checkData.MaintenanceInfo, checkData.Maintenance
+}
+
 func createEmptyMetricState(defaultTimestampValue int64, firstStateIsNodata bool) MetricState {
 	if firstStateIsNodata {
 		return MetricState{
-			State:     "NODATA",
+			State:     StateNODATA,
 			Timestamp: defaultTimestampValue,
 		}
 	}
@@ -288,7 +358,7 @@ func createEmptyMetricState(defaultTimestampValue int64, firstStateIsNodata bool
 	unixNow := time.Now().Unix()
 
 	return MetricState{
-		State:          "OK",
+		State:          StateOK,
 		Timestamp:      unixNow,
 		EventTimestamp: unixNow,
 	}
@@ -333,9 +403,9 @@ func (trigger *Trigger) IsSimple() bool {
 
 // UpdateScore update and return checkData score, based on metric states and checkData state
 func (checkData *CheckData) UpdateScore() int64 {
-	checkData.Score = scores[checkData.State]
+	checkData.Score = stateScores[checkData.State]
 	for _, metricData := range checkData.Metrics {
-		checkData.Score += scores[metricData.State]
+		checkData.Score += stateScores[metricData.State]
 	}
 	return checkData.Score
 }
@@ -357,4 +427,31 @@ func (subscription *SubscriptionData) MustIgnore(eventData *NotificationEvent) b
 		}
 	}
 	return false
+}
+
+// isAnonymous checks if user is Anonymous or empty
+func isAnonymous(user string) bool {
+	return user == "anonymous" || user == ""
+}
+
+// SetMaintenanceUserAndTime set startuser and starttime or stopuser and stoptime for MaintenanceInfo
+func SetMaintenanceUserAndTime(maintenanceCheck MaintenanceCheck, maintenance int64, user string, callMaintenance int64) {
+	maintenanceInfo, _ := maintenanceCheck.GetMaintenance()
+	if maintenance < callMaintenance {
+		if (maintenanceInfo.StartUser != nil && !isAnonymous(*maintenanceInfo.StartUser)) || !isAnonymous(user) {
+			maintenanceInfo.StopUser = &user
+			maintenanceInfo.StopTime = &callMaintenance
+		}
+		if isAnonymous(user) {
+			maintenanceInfo.StopUser = nil
+			maintenanceInfo.StopTime = nil
+		}
+	} else {
+		if !isAnonymous(user) {
+			maintenanceInfo.Set(&user, &callMaintenance, nil, nil)
+		} else {
+			maintenanceInfo.Set(nil, nil, nil, nil)
+		}
+	}
+	maintenanceCheck.SetMaintenance(&maintenanceInfo, maintenance)
 }

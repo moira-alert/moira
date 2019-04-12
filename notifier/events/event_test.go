@@ -13,7 +13,7 @@ import (
 	"github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
 	"github.com/moira-alert/moira/mock/moira-alert"
-	mock_scheduler "github.com/moira-alert/moira/mock/scheduler"
+	"github.com/moira-alert/moira/mock/scheduler"
 	"github.com/moira-alert/moira/notifier"
 )
 
@@ -34,7 +34,7 @@ func TestEvent(t *testing.T) {
 			Scheduler: notifier.NewScheduler(dataBase, logger, metrics2),
 		}
 		event := moira.NotificationEvent{
-			State:          "TEST",
+			State:          moira.StateTEST,
 			SubscriptionID: &subscription.ID,
 		}
 		dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Times(1).Return(subscription, nil)
@@ -56,7 +56,6 @@ func TestEvent(t *testing.T) {
 
 		err := worker.processEvent(event)
 		So(err, ShouldBeEmpty)
-		mockCtrl.Finish()
 	})
 
 	Convey("When event is TEST and has contactID", t, func() {
@@ -69,8 +68,8 @@ func TestEvent(t *testing.T) {
 
 		subID := "testSubscription"
 		event := moira.NotificationEvent{
-			State:     "TEST",
-			OldState:  "TEST",
+			State:     moira.StateTEST,
+			OldState:  moira.StateTEST,
 			Metric:    "test.metric",
 			ContactID: contact.ID,
 		}
@@ -116,8 +115,8 @@ func TestNoSubscription(t *testing.T) {
 
 		event := moira.NotificationEvent{
 			Metric:    "generate.event.1",
-			State:     "OK",
-			OldState:  "WARN",
+			State:     moira.StateOK,
+			OldState:  moira.StateWARN,
 			TriggerID: triggerData.ID,
 		}
 
@@ -145,8 +144,8 @@ func TestDisabledNotification(t *testing.T) {
 
 		event := moira.NotificationEvent{
 			Metric:    "generate.event.1",
-			State:     "OK",
-			OldState:  "WARN",
+			State:     moira.StateOK,
+			OldState:  moira.StateWARN,
 			TriggerID: triggerData.ID,
 		}
 
@@ -163,12 +162,12 @@ func TestDisabledNotification(t *testing.T) {
 }
 
 func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
-	Convey("[TRUE] Do not send WARN notifications", t, func() {
-		mockCtrl := gomock.NewController(t)
-		defer mockCtrl.Finish()
-		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-		logger := mock_moira_alert.NewMockLogger(mockCtrl)
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	logger := mock_moira_alert.NewMockLogger(mockCtrl)
 
+	Convey("[TRUE] Do not send WARN notifications", t, func() {
 		worker := FetchEventsWorker{
 			Database:  dataBase,
 			Logger:    logger,
@@ -178,8 +177,8 @@ func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
 
 		event := moira.NotificationEvent{
 			Metric:    "generate.event.1",
-			State:     "OK",
-			OldState:  "WARN",
+			State:     moira.StateOK,
+			OldState:  moira.StateWARN,
 			TriggerID: triggerData.ID,
 		}
 
@@ -194,11 +193,6 @@ func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
 		So(err, ShouldBeEmpty)
 	})
 	Convey("[TRUE] Send notifications when triggers degraded only", t, func() {
-		mockCtrl := gomock.NewController(t)
-		defer mockCtrl.Finish()
-		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-		logger := mock_moira_alert.NewMockLogger(mockCtrl)
-
 		worker := FetchEventsWorker{
 			Database:  dataBase,
 			Logger:    logger,
@@ -208,8 +202,8 @@ func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
 
 		event := moira.NotificationEvent{
 			Metric:    "generate.event.1",
-			State:     "OK",
-			OldState:  "WARN",
+			State:     moira.StateOK,
+			OldState:  moira.StateWARN,
 			TriggerID: triggerData.ID,
 		}
 
@@ -224,11 +218,6 @@ func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
 		So(err, ShouldBeEmpty)
 	})
 	Convey("[TRUE] Do not send WARN notifications & [TRUE] Send notifications when triggers degraded only", t, func() {
-		mockCtrl := gomock.NewController(t)
-		defer mockCtrl.Finish()
-		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-		logger := mock_moira_alert.NewMockLogger(mockCtrl)
-
 		worker := FetchEventsWorker{
 			Database:  dataBase,
 			Logger:    logger,
@@ -238,8 +227,8 @@ func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
 
 		event := moira.NotificationEvent{
 			Metric:    "generate.event.1",
-			State:     "OK",
-			OldState:  "WARN",
+			State:     moira.StateOK,
+			OldState:  moira.StateWARN,
 			TriggerID: triggerData.ID,
 		}
 
@@ -271,8 +260,8 @@ func TestAddNotification(t *testing.T) {
 
 		event := moira.NotificationEvent{
 			Metric:         "generate.event.1",
-			State:          "OK",
-			OldState:       "WARN",
+			State:          moira.StateOK,
+			OldState:       moira.StateWARN,
 			TriggerID:      triggerData.ID,
 			SubscriptionID: &subscription.ID,
 		}
@@ -305,8 +294,8 @@ func TestAddOneNotificationByTwoSubscriptionsWithSame(t *testing.T) {
 
 		event := moira.NotificationEvent{
 			Metric:         "generate.event.1",
-			State:          "OK",
-			OldState:       "WARN",
+			State:          moira.StateOK,
+			OldState:       moira.StateWARN,
 			TriggerID:      triggerData.ID,
 			SubscriptionID: &subscription.ID,
 		}
@@ -344,8 +333,8 @@ func TestFailReadContact(t *testing.T) {
 
 		event := moira.NotificationEvent{
 			Metric:    "generate.event.1",
-			State:     "OK",
-			OldState:  "WARN",
+			State:     moira.StateOK,
+			OldState:  moira.StateWARN,
 			TriggerID: triggerData.ID,
 		}
 
@@ -378,8 +367,8 @@ func TestEmptySubscriptions(t *testing.T) {
 
 		event := moira.NotificationEvent{
 			Metric:    "generate.event.1",
-			State:     "OK",
-			OldState:  "WARN",
+			State:     moira.StateOK,
+			OldState:  moira.StateWARN,
 			TriggerID: triggerData.ID,
 		}
 
@@ -396,7 +385,6 @@ func TestEmptySubscriptions(t *testing.T) {
 
 	Convey("When subscription is nil", t, func() {
 		mockCtrl := gomock.NewController(t)
-		defer mockCtrl.Finish()
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger := mock_moira_alert.NewMockLogger(mockCtrl)
 		worker := FetchEventsWorker{
@@ -408,8 +396,8 @@ func TestEmptySubscriptions(t *testing.T) {
 
 		event := moira.NotificationEvent{
 			Metric:    "generate.event.1",
-			State:     "OK",
-			OldState:  "WARN",
+			State:     moira.StateOK,
+			OldState:  moira.StateWARN,
 			TriggerID: triggerData.ID,
 		}
 
@@ -439,26 +427,26 @@ func TestGetNotificationSubscriptions(t *testing.T) {
 
 	Convey("Error GetSubscription", t, func() {
 		event := moira.NotificationEvent{
-			State:          "TEST",
+			State:          moira.StateTEST,
 			SubscriptionID: &subscription.ID,
 		}
 		err := fmt.Errorf("Oppps")
 		dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(moira.SubscriptionData{}, err)
 		sub, expected := worker.getNotificationSubscriptions(event)
 		So(sub, ShouldBeNil)
-		So(expected, ShouldResemble, fmt.Errorf("Error while read subscription %s: %s", *event.SubscriptionID, err.Error()))
+		So(expected, ShouldResemble, fmt.Errorf("error while read subscription %s: %s", *event.SubscriptionID, err.Error()))
 	})
 
 	Convey("Error GetContact", t, func() {
 		event := moira.NotificationEvent{
-			State:     "TEST",
+			State:     moira.StateTEST,
 			ContactID: "1233",
 		}
 		err := fmt.Errorf("Oppps")
 		dataBase.EXPECT().GetContact(event.ContactID).Return(moira.ContactData{}, err)
 		sub, expected := worker.getNotificationSubscriptions(event)
 		So(sub, ShouldBeNil)
-		So(expected, ShouldResemble, fmt.Errorf("Error while read contact %s: %s", event.ContactID, err.Error()))
+		So(expected, ShouldResemble, fmt.Errorf("error while read contact %s: %s", event.ContactID, err.Error()))
 	})
 
 }
@@ -480,13 +468,13 @@ func TestGoRoutine(t *testing.T) {
 
 		event := moira.NotificationEvent{
 			Metric:         "generate.event.1",
-			State:          "OK",
-			OldState:       "WARN",
+			State:          moira.StateOK,
+			OldState:       moira.StateWARN,
 			TriggerID:      triggerData.ID,
 			SubscriptionID: &subscription.ID,
 		}
 		emptyNotification := moira.ScheduledNotification{}
-		shutdown := make(chan bool)
+		shutdown := make(chan struct{})
 
 		dataBase.EXPECT().FetchNotificationEvent().Return(moira.NotificationEvent{}, fmt.Errorf("3433434")).Do(func(f ...interface{}) {
 			dataBase.EXPECT().FetchNotificationEvent().Return(event, nil).Do(func(f ...interface{}) {
@@ -504,7 +492,7 @@ func TestGoRoutine(t *testing.T) {
 	})
 }
 
-func waitTestEnd(shutdown chan bool, worker *FetchEventsWorker) {
+func waitTestEnd(shutdown chan struct{}, worker *FetchEventsWorker) {
 	select {
 	case <-shutdown:
 		worker.Stop()

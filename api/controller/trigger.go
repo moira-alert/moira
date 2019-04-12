@@ -7,7 +7,6 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
-	"github.com/moira-alert/moira/checker"
 	"github.com/moira-alert/moira/database"
 )
 
@@ -41,9 +40,9 @@ func saveTrigger(dataBase moira.Database, trigger *moira.Trigger, triggerID stri
 			}
 		}
 	} else {
-		triggerState := checker.NODATA
+		triggerState := moira.StateNODATA
 		if trigger.TTLState != nil {
-			triggerState = checker.ToTriggerState(*trigger.TTLState)
+			triggerState = trigger.TTLState.ToTriggerState()
 		}
 		lastCheck = moira.CheckData{
 			Metrics: make(map[string]moira.MetricState),
@@ -156,19 +155,9 @@ func DeleteTriggerThrottling(database moira.Database, triggerID string) *api.Err
 	return nil
 }
 
-// SetMetricsMaintenance sets metrics maintenance for current trigger
-// ToDo: DEPRECATED, remove in future versions
-func SetMetricsMaintenance(database moira.Database, triggerID string, metricsMaintenance dto.MetricsMaintenance) *api.ErrorResponse {
-	triggerMaintenance := dto.TriggerMaintenance{Metrics: map[string]int64(metricsMaintenance)}
-	if err := SetTriggerMaintenance(database, triggerID, triggerMaintenance); err != nil {
-		return err
-	}
-	return api.WarningDeprecatedAPI(fmt.Sprintf("deprecated API, use /trigger/%s/setMaintenance instead", triggerID))
-}
-
 // SetTriggerMaintenance sets maintenance to metrics and whole trigger
-func SetTriggerMaintenance(database moira.Database, triggerID string, triggerMaintenance dto.TriggerMaintenance) *api.ErrorResponse {
-	if err := database.SetTriggerCheckMaintenance(triggerID, triggerMaintenance.Metrics, triggerMaintenance.Trigger); err != nil {
+func SetTriggerMaintenance(database moira.Database, triggerID string, triggerMaintenance dto.TriggerMaintenance, userLogin string, timeCallMaintenance int64) *api.ErrorResponse {
+	if err := database.SetTriggerCheckMaintenance(triggerID, triggerMaintenance.Metrics, triggerMaintenance.Trigger, userLogin, timeCallMaintenance); err != nil {
 		return api.ErrorInternalServer(err)
 	}
 	return nil

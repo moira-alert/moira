@@ -3,7 +3,7 @@ package redis
 import (
 	"fmt"
 
-	"github.com/garyburd/redigo/redis"
+	"github.com/gomodule/redigo/redis"
 )
 
 // GetTagNames returns all tags from set with tag data
@@ -13,7 +13,7 @@ func (connector *DbConnector) GetTagNames() ([]string, error) {
 
 	tagNames, err := redis.Strings(c.Do("SMEMBERS", tagsKey))
 	if err != nil {
-		return nil, fmt.Errorf("Failed to retrieve tags: %s", err.Error())
+		return nil, fmt.Errorf("failed to retrieve tags: %s", err.Error())
 	}
 	return tagNames, nil
 }
@@ -29,7 +29,7 @@ func (connector *DbConnector) RemoveTag(tagName string) error {
 	c.Send("DEL", tagTriggersKey(tagName))
 	_, err := c.Do("EXEC")
 	if err != nil {
-		return fmt.Errorf("Failed to EXEC: %s", err.Error())
+		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
 	return nil
 }
@@ -44,7 +44,7 @@ func (connector *DbConnector) GetTagTriggerIDs(tagName string) ([]string, error)
 		if err == redis.ErrNil {
 			return make([]string, 0), nil
 		}
-		return nil, fmt.Errorf("Failed to retrieve tag triggers:%s, err: %s", tagName, err.Error())
+		return nil, fmt.Errorf("failed to retrieve tag triggers:%s, err: %s", tagName, err.Error())
 	}
 	return triggerIDs, nil
 }

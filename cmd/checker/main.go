@@ -8,8 +8,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/go-graphite/carbonapi/expr/functions"
-	"github.com/moira-alert/moira/remote"
+	"github.com/moira-alert/moira/metric_source"
+	"github.com/moira-alert/moira/metric_source/local"
+	"github.com/moira-alert/moira/metric_source/remote"
 	"github.com/patrickmn/go-cache"
 
 	"github.com/moira-alert/moira"
@@ -76,8 +77,13 @@ func main() {
 	databaseSettings := config.Redis.GetSettings()
 	database := redis.NewDatabase(logger, databaseSettings, redis.Checker)
 
-	remoteSettings := config.Remote.GetSettings()
-	checkerMetrics := metrics.ConfigureCheckerMetrics(serviceName, remoteSettings.IsEnabled())
+	remoteConfig := config.Remote.GetRemoteSourceSettings()
+	localSource := local.Create(database)
+	remoteSource := remote.Create(remoteConfig)
+	metricSourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource)
+
+	isConfigured, _ := remoteSource.IsConfigured()
+	checkerMetrics := metrics.ConfigureCheckerMetrics(serviceName, isConfigured)
 	graphiteSettings := config.Graphite.GetSettings()
 	if err = metrics.Init(graphiteSettings, serviceName); err != nil {
 		logger.Error(err)
@@ -85,17 +91,15 @@ func main() {
 
 	checkerSettings := config.Checker.getSettings()
 	if triggerID != nil && *triggerID != "" {
-		checkSingleTrigger(database, checkerMetrics, checkerSettings, remoteSettings)
+		checkSingleTrigger(database, checkerMetrics, checkerSettings, metricSourceProvider)
 	}
-
-	// configure carbon-api functions
-	functions.New(make(map[string]string))
 
 	checkerWorker := &worker.Checker{
 		Logger:            logger,
 		Database:          database,
 		Config:            checkerSettings,
-		RemoteConfig:      remoteSettings,
+		RemoteConfig:      remoteConfig,
+		SourceProvider:    metricSourceProvider,
 		Metrics:           checkerMetrics,
 		TriggerCache:      cache.New(checkerSettings.CheckInterval, time.Minute*60),
 		LazyTriggersCache: cache.New(time.Minute*10, time.Minute*60),
@@ -114,17 +118,8 @@ func main() {
 	logger.Infof("Moira Checker shutting down.")
 }
 
-func checkSingleTrigger(database moira.Database, metrics *graphite.CheckerMetrics, settings *checker.Config, remoteSettings *remote.Config) {
-	triggerChecker := checker.TriggerChecker{
-		TriggerID:    *triggerID,
-		Database:     database,
-		Logger:       logger,
-		Config:       settings,
-		RemoteConfig: remoteSettings,
-		Metrics:      metrics,
-	}
-
-	err := triggerChecker.InitTriggerChecker()
+func checkSingleTrigger(database moira.Database, metrics *graphite.CheckerMetrics, settings *checker.Config, sourceProvider *metricSource.SourceProvider) {
+	triggerChecker, err := checker.MakeTriggerChecker(*triggerID, database, logger, settings, sourceProvider, metrics)
 	if err != nil {
 		logger.Errorf("Failed initialize trigger checker: %s", err.Error())
 		os.Exit(1)

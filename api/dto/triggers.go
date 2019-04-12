@@ -7,11 +7,10 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/middleware"
-	"github.com/moira-alert/moira/checker"
 	"github.com/moira-alert/moira/expression"
-	"github.com/moira-alert/moira/remote"
-	"github.com/moira-alert/moira/target"
+	"github.com/moira-alert/moira/metric_source"
 )
 
 type TriggersList struct {
@@ -49,7 +48,7 @@ type TriggerModel struct {
 	// Set of tags to manipulate subscriptions
 	Tags []string `json:"tags"`
 	// When there are no metrics for trigger, Moira will switch metric to TTLState state after TTL seconds
-	TTLState *string `json:"ttl_state,omitempty"`
+	TTLState *moira.TTLState `json:"ttl_state,omitempty"`
 	// When there are no metrics for trigger, Moira will switch metric to TTLState state after TTL seconds
 	TTL int64 `json:"ttl,omitempty"`
 	// Determines when Moira should monitor trigger
@@ -109,16 +108,16 @@ func CreateTriggerModel(trigger *moira.Trigger) TriggerModel {
 func (trigger *Trigger) Bind(request *http.Request) error {
 	trigger.Tags = normalizeTags(trigger.Tags)
 	if len(trigger.Targets) == 0 {
-		return fmt.Errorf("targets is required")
+		return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("targets is required")}
 	}
 	if len(trigger.Tags) == 0 {
-		return fmt.Errorf("tags is required")
+		return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("tags is required")}
 	}
 	if trigger.Name == "" {
-		return fmt.Errorf("trigger name is required")
+		return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("trigger name is required")}
 	}
 	if err := checkWarnErrorExpression(trigger); err != nil {
-		return err
+		return api.ErrInvalidRequestContent{ValidationError: err}
 	}
 
 	triggerExpression := expression.TriggerExpression{
@@ -126,54 +125,46 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 		WarnValue:               trigger.WarnValue,
 		ErrorValue:              trigger.ErrorValue,
 		TriggerType:             trigger.TriggerType,
-		PreviousState:           checker.NODATA,
+		PreviousState:           moira.StateNODATA,
 		Expression:              &trigger.Expression,
 	}
 
-	remoteCfg := middleware.GetRemoteConfig(request)
-	if trigger.IsRemote && !remoteCfg.IsEnabled() {
-		return remote.ErrRemoteStorageDisabled
+	metricsSourceProvider := middleware.GetTriggerTargetsSourceProvider(request)
+	metricsSource, err := metricsSourceProvider.GetMetricSource(trigger.IsRemote)
+	if err != nil {
+		return err
 	}
 
-	if err := resolvePatterns(request, trigger, &triggerExpression); err != nil {
+	if err := resolvePatterns(request, trigger, &triggerExpression, metricsSource); err != nil {
 		return err
 	}
 	if _, err := triggerExpression.Evaluate(); err != nil {
 		return err
 	}
+
 	return nil
 }
 
-func resolvePatterns(request *http.Request, trigger *Trigger, expressionValues *expression.TriggerExpression) error {
+func resolvePatterns(request *http.Request, trigger *Trigger, expressionValues *expression.TriggerExpression, metricsSource metricSource.MetricSource) error {
 	now := time.Now().Unix()
 	targetNum := 1
 	trigger.Patterns = make([]string, 0)
-	timeSeriesNames := make(map[string]bool)
-
-	remoteCfg := middleware.GetRemoteConfig(request)
-	database := middleware.GetDatabase(request)
-	var err error
+	metricsDataNames := make(map[string]bool)
 
 	for _, tar := range trigger.Targets {
-		var timeSeries []*target.TimeSeries
-		if trigger.IsRemote {
-			timeSeries, err = remote.Fetch(remoteCfg, tar, now-600, now, false)
-			if err != nil {
-				return err
-			}
-		} else {
-			result, err := target.EvaluateTarget(database, tar, now-600, now, false)
-			if err != nil {
-				return err
-			}
-			trigger.Patterns = append(trigger.Patterns, result.Patterns...)
-			timeSeries = result.TimeSeries
+		fetchResult, err := metricsSource.Fetch(tar, now-600, now, false)
+		if err != nil {
+			return err
+		}
+		targetPatterns, err := fetchResult.GetPatterns()
+		if err == nil {
+			trigger.Patterns = append(trigger.Patterns, targetPatterns...)
 		}
 
 		if targetNum == 1 {
 			expressionValues.MainTargetValue = 42
-			for _, ts := range timeSeries {
-				timeSeriesNames[ts.Name] = true
+			for _, metricData := range fetchResult.GetMetricsData() {
+				metricsDataNames[metricData.Name] = true
 			}
 		} else {
 			targetName := fmt.Sprintf("t%v", targetNum)
@@ -181,7 +172,7 @@ func resolvePatterns(request *http.Request, trigger *Trigger, expressionValues *
 		}
 		targetNum++
 	}
-	middleware.SetTimeSeriesNames(request, timeSeriesNames)
+	middleware.SetTimeSeriesNames(request, metricsDataNames)
 	return nil
 }
 
@@ -223,21 +214,49 @@ func checkWarnErrorExpression(trigger *Trigger) error {
 				return fmt.Errorf("error_value should be greater than warn_value")
 			}
 		}
+		if err := checkSimpleModeFields(trigger); err != nil {
+			return err
+		}
+
 	case moira.FallingTrigger:
 		if trigger.WarnValue != nil && trigger.ErrorValue != nil {
 			if *trigger.WarnValue < *trigger.ErrorValue {
 				return fmt.Errorf("warn_value should be greater than error_value")
 			}
 		}
+		if err := checkSimpleModeFields(trigger); err != nil {
+			return err
+		}
+
 	case moira.ExpressionTrigger:
 		if trigger.Expression == "" {
 			return fmt.Errorf("trigger_type set to expression, but no expression provided")
 		}
+		if trigger.WarnValue != nil && trigger.ErrorValue != nil {
+			return fmt.Errorf("can't use 'warn_value' and 'error_value' on trigger_type: '%v'", moira.ExpressionTrigger)
+		}
+		if trigger.WarnValue != nil {
+			return fmt.Errorf("can't use 'warn_value' on trigger_type: '%v'", moira.ExpressionTrigger)
+		}
+		if trigger.ErrorValue != nil {
+			return fmt.Errorf("can't use 'error_value' on trigger_type: '%v'", moira.ExpressionTrigger)
+		}
+
 	default:
 		return fmt.Errorf("wrong trigger_type: %v, allowable values: '%v', '%v', '%v'",
 			trigger.TriggerType, moira.RisingTrigger, moira.FallingTrigger, moira.ExpressionTrigger)
 	}
 
+	return nil
+}
+
+func checkSimpleModeFields(trigger *Trigger) error {
+	if len(trigger.Targets) > 1 {
+		return fmt.Errorf("can't use trigger_type not '%v' for with multiple targets", trigger.TriggerType)
+	}
+	if trigger.Expression != "" {
+		return fmt.Errorf("can't use 'expression' to trigger_type: '%v'", trigger.TriggerType)
+	}
 	return nil
 }
 

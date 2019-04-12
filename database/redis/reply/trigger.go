@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/garyburd/redigo/redis"
+	"github.com/gomodule/redigo/redis"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
 )
@@ -20,7 +20,7 @@ type triggerStorageElement struct {
 	ErrorValue       *float64            `json:"error_value"`
 	TriggerType      string              `json:"trigger_type,omitempty"`
 	Tags             []string            `json:"tags"`
-	TTLState         *string             `json:"ttl_state,omitempty"`
+	TTLState         *moira.TTLState     `json:"ttl_state,omitempty"`
 	Schedule         *moira.ScheduleData `json:"sched,omitempty"`
 	Expression       *string             `json:"expr,omitempty"`
 	PythonExpression *string             `json:"expression,omitempty"`
@@ -91,17 +91,15 @@ func Trigger(rep interface{}, err error) (moira.Trigger, error) {
 		if err == redis.ErrNil {
 			return moira.Trigger{}, database.ErrNil
 		}
-		return moira.Trigger{}, fmt.Errorf("Failed to read trigger: %s", err.Error())
+		return moira.Trigger{}, fmt.Errorf("failed to read trigger: %s", err.Error())
 	}
 	triggerSE := &triggerStorageElement{}
 	err = json.Unmarshal(bytes, triggerSE)
 	if err != nil {
-		return moira.Trigger{}, fmt.Errorf("Failed to parse trigger json %s: %s", string(bytes), err.Error())
+		return moira.Trigger{}, fmt.Errorf("failed to parse trigger json %s: %s", string(bytes), err.Error())
 	}
 
 	trigger := triggerSE.toTrigger()
-	convertTriggerIfNecessary(&trigger)
-
 	return trigger, nil
 }
 
@@ -113,41 +111,4 @@ func GetTriggerBytes(triggerID string, trigger *moira.Trigger) ([]byte, error) {
 		return nil, fmt.Errorf("failed to marshal trigger: %s", err.Error())
 	}
 	return bytes, nil
-}
-
-// convertTriggerIfNecessary converts moira.Trigger to a new format implemented in Moira 2.3 release
-// Difference: in Moira 2.3 trigger could have 3 possible fields:
-//  - WarnValue - warning threshold
-//  - ErrorValue - error threshold
-//  - Expression - custom govaluate expression
-// In Moira 2.3 there is another field - TriggerType, it can take one of the following options:
-//  - rising: error > warning > ok
-//  - falling: error < warning < ok
-//  - expression: trigger has custom expression
-func convertTriggerIfNecessary(trigger *moira.Trigger) {
-	switch trigger.TriggerType {
-	case moira.RisingTrigger, moira.FallingTrigger, moira.ExpressionTrigger:
-		return
-	}
-	setProperTriggerType(trigger)
-}
-
-func setProperTriggerType(trigger *moira.Trigger) {
-	if trigger.Expression != nil && *trigger.Expression != "" {
-		trigger.TriggerType = moira.ExpressionTrigger
-		return
-	}
-
-	trigger.TriggerType = moira.RisingTrigger
-
-	if trigger.WarnValue != nil && trigger.ErrorValue != nil {
-		if *trigger.ErrorValue < *trigger.WarnValue {
-			trigger.TriggerType = moira.FallingTrigger
-			return
-		}
-		if *trigger.ErrorValue == *trigger.WarnValue {
-			trigger.WarnValue = nil
-			return
-		}
-	}
 }

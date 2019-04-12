@@ -6,7 +6,9 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metrics/graphite"
+	"github.com/moira-alert/moira/plotting"
 )
 
 // NotificationPackage represent sending data
@@ -51,7 +53,9 @@ func (pkg NotificationPackage) GetWindow() (from, to int64, err error) {
 func (pkg NotificationPackage) GetMetricNames() []string {
 	metricNames := make([]string, 0)
 	for _, event := range pkg.Events {
-		metricNames = append(metricNames, event.Metric)
+		if !event.IsTriggerEvent {
+			metricNames = append(metricNames, event.Metric)
+		}
 	}
 	return metricNames
 }
@@ -66,24 +70,26 @@ type Notifier interface {
 
 // StandardNotifier represent notification functionality
 type StandardNotifier struct {
-	waitGroup sync.WaitGroup
-	senders   map[string]chan NotificationPackage
-	logger    moira.Logger
-	database  moira.Database
-	scheduler Scheduler
-	config    Config
-	metrics   *graphite.NotifierMetrics
+	waitGroup            sync.WaitGroup
+	senders              map[string]chan NotificationPackage
+	logger               moira.Logger
+	database             moira.Database
+	scheduler            Scheduler
+	config               Config
+	metrics              *graphite.NotifierMetrics
+	metricSourceProvider *metricSource.SourceProvider
 }
 
 // NewNotifier is initializer for StandardNotifier
-func NewNotifier(database moira.Database, logger moira.Logger, config Config, metrics *graphite.NotifierMetrics) *StandardNotifier {
+func NewNotifier(database moira.Database, logger moira.Logger, config Config, metrics *graphite.NotifierMetrics, metricSourceProvider *metricSource.SourceProvider) *StandardNotifier {
 	return &StandardNotifier{
-		senders:   make(map[string]chan NotificationPackage),
-		logger:    logger,
-		database:  database,
-		scheduler: NewScheduler(database, logger, metrics),
-		config:    config,
-		metrics:   metrics,
+		senders:              make(map[string]chan NotificationPackage),
+		logger:               logger,
+		database:             database,
+		scheduler:            NewScheduler(database, logger, metrics),
+		config:               config,
+		metrics:              metrics,
+		metricSourceProvider: metricSourceProvider,
 	}
 }
 
@@ -144,8 +150,13 @@ func (notifier *StandardNotifier) run(sender moira.Sender, ch chan NotificationP
 	for pkg := range ch {
 		plot, err := notifier.buildNotificationPackagePlot(pkg)
 		if err != nil {
-			notifier.logger.Errorf("Can't build notification package plot for %s: %s",
-				pkg.Trigger.ID, err.Error())
+			buildErr := fmt.Sprintf("Can't build notification package plot for %s: %s", pkg.Trigger.ID, err.Error())
+			switch err.(type) {
+			case plotting.ErrNoPointsToRender:
+				notifier.logger.Debugf(buildErr)
+			default:
+				notifier.logger.Errorf(buildErr)
+			}
 		}
 		err = sender.SendEvents(pkg.Events, pkg.Contact, pkg.Trigger, plot, pkg.Throttled)
 		if err == nil {

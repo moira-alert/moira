@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/gosexy/to"
-	"github.com/moira-alert/moira/remote"
+	remoteSource "github.com/moira-alert/moira/metric_source/remote"
 	"gopkg.in/yaml.v2"
 
 	"github.com/moira-alert/moira/database/redis"
@@ -25,8 +25,9 @@ type RedisConfig struct {
 	Host string `yaml:"host"`
 	// Redis node port
 	Port string `yaml:"port"`
-	// Redis database id
-	DBID int `yaml:"dbid"`
+	// Redis database
+	DB              int `yaml:"dbid"`
+	ConnectionLimit int `yaml:"connection_limit"`
 }
 
 // GetSettings returns redis config parsed from moira config files
@@ -36,7 +37,8 @@ func (config *RedisConfig) GetSettings() redis.Config {
 		SentinelAddresses: strings.Split(config.SentinelAddrs, ","),
 		Host:              config.Host,
 		Port:              config.Port,
-		DBID:              config.DBID,
+		DB:                config.DB,
+		ConnectionLimit:   config.ConnectionLimit,
 	}
 }
 
@@ -93,9 +95,9 @@ type RemoteConfig struct {
 	Enabled bool `yaml:"enabled"`
 }
 
-// GetSettings returns remote config parsed from moira config files
-func (config *RemoteConfig) GetSettings() *remote.Config {
-	return &remote.Config{
+// GetRemoteSourceSettings returns remote config parsed from moira config files
+func (config *RemoteConfig) GetRemoteSourceSettings() *remoteSource.Config {
+	return &remoteSource.Config{
 		URL:           config.URL,
 		CheckInterval: to.Duration(config.CheckInterval),
 		Timeout:       to.Duration(config.Timeout),

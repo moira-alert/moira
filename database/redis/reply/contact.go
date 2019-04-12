@@ -3,7 +3,8 @@ package reply
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/garyburd/redigo/redis"
+
+	"github.com/gomodule/redigo/redis"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
 )
@@ -16,11 +17,11 @@ func Contact(rep interface{}, err error) (moira.ContactData, error) {
 		if err == redis.ErrNil {
 			return contact, database.ErrNil
 		}
-		return contact, fmt.Errorf("Failed to read contact: %s", err.Error())
+		return contact, fmt.Errorf("failed to read contact: %s", err.Error())
 	}
 	err = json.Unmarshal(bytes, &contact)
 	if err != nil {
-		return contact, fmt.Errorf("Failed to parse contact json %s: %s", string(bytes), err.Error())
+		return contact, fmt.Errorf("failed to parse contact json %s: %s", string(bytes), err.Error())
 	}
 	return contact, nil
 }
@@ -32,7 +33,7 @@ func Contacts(rep interface{}, err error) ([]*moira.ContactData, error) {
 		if err == redis.ErrNil {
 			return make([]*moira.ContactData, 0), nil
 		}
-		return nil, fmt.Errorf("Failed to read contacts: %s", err.Error())
+		return nil, fmt.Errorf("failed to read contacts: %s", err.Error())
 	}
 	contacts := make([]*moira.ContactData, len(values))
 	for i, value := range values {

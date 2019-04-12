@@ -1,23 +1,50 @@
 package moira
 
 import (
+	"math"
 	"testing"
 	"time"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+func TestBytesScanner(t *testing.T) {
+	type BytesScannerTestCase struct {
+		input  string
+		output []string
+	}
+	Convey("", t, func() {
+		cases := []BytesScannerTestCase{
+			{input: "", output: []string{}},
+			{input: "a", output: []string{"a"}},
+			{input: " ", output: []string{"", ""}},
+			{input: "a ", output: []string{"a", ""}},
+			{input: " a", output: []string{"", "a"}},
+			{input: " a ", output: []string{"", "a", ""}},
+			{input: "a a", output: []string{"a", "a"}},
+		}
+		for _, c := range cases {
+			actualOutput := make([]string, 0)
+			scanner := NewBytesScanner([]byte(c.input), ' ')
+			for scanner.HasNext() {
+				actualOutput = append(actualOutput, string(scanner.Next()))
+			}
+			So(actualOutput, ShouldResemble, c.output)
+		}
+	})
+}
+
 func TestInt64ToTime(t *testing.T) {
 	int64timeStamp := int64(1527330278)
-	humanReadabletimeStamp := time.Date(2018, 5, 26, 10, 24, 38, 0, time.UTC)
+	humanReadableTimestamp := time.Date(2018, 5, 26, 10, 24, 38, 0, time.UTC)
 	Convey("Convert int64 timestamp into datetime", t, func() {
 		converted := Int64ToTime(int64timeStamp)
-		So(converted, ShouldResemble, humanReadabletimeStamp)
+		So(converted, ShouldResemble, humanReadableTimestamp)
 	})
 	Convey("Convert int64 timestamp + 1 minute into datetime", t, func() {
 		int64timeStamp += 60
 		converted := Int64ToTime(int64timeStamp)
-		So(converted, ShouldResemble, humanReadabletimeStamp.Add(time.Minute))
+		So(converted, ShouldResemble, humanReadableTimestamp.Add(time.Minute))
 	})
 }
 
@@ -57,6 +84,35 @@ func TestGetStringListsDiff(t *testing.T) {
 	})
 }
 
+func TestGetStringListsUnion(t *testing.T) {
+	Convey("Test Get Union between string lists", t, func() {
+		{
+			union := GetStringListsUnion()
+			So(union, ShouldResemble, []string{})
+		}
+		{
+			union := GetStringListsUnion(nil)
+			So(union, ShouldResemble, []string{})
+		}
+		{
+			union := GetStringListsUnion(nil, nil)
+			So(union, ShouldResemble, []string{})
+		}
+		{
+			first := []string{"1", "2", "3"}
+			second := []string{"1", "2", "3"}
+			union := GetStringListsUnion(first, second)
+			So(union, ShouldResemble, []string{"1", "2", "3"})
+		}
+		{
+			first := []string{"1", "2", "3"}
+			second := []string{"4", "5", "6"}
+			union := GetStringListsUnion(first, second)
+			So(union, ShouldResemble, []string{"1", "2", "3", "4", "5", "6"})
+		}
+	})
+}
+
 func TestGetTriggerListsDiff(t *testing.T) {
 	Convey("Test Get Difference between trigger lists", t, func() {
 		first := []*Trigger{triggerVal1, triggerVal2}
@@ -69,6 +125,35 @@ func TestGetTriggerListsDiff(t *testing.T) {
 		third := []*Trigger{triggerVal3, triggerVal3, triggerVal3}
 		diff = GetTriggerListsDiff(first, second, third)
 		So(diff, ShouldResemble, []*Trigger{triggerVal1, triggerVal4})
+
+		Convey("One trigger in first array is nil", func() {
+			first = []*Trigger{nil, triggerVal2, triggerVal3, triggerVal4}
+			second = []*Trigger{triggerVal2}
+			diff = GetTriggerListsDiff(first, second)
+			So(diff, ShouldResemble, []*Trigger{triggerVal3, triggerVal4})
+		})
+
+		Convey("One trigger in additional arrays in nil", func() {
+			first = []*Trigger{triggerVal1, triggerVal2, triggerVal3, triggerVal4}
+			second = []*Trigger{nil}
+			diff = GetTriggerListsDiff(first, second)
+			So(diff, ShouldResemble, []*Trigger{triggerVal1, triggerVal2, triggerVal3, triggerVal4})
+		})
+
+		Convey("First array is empty", func() {
+			first = []*Trigger{nil, nil, nil}
+			second = []*Trigger{triggerVal1}
+			diff = GetTriggerListsDiff(first, second)
+			So(diff, ShouldResemble, []*Trigger{})
+		})
+
+		Convey("Additional arrays is empty", func() {
+			first = []*Trigger{triggerVal1}
+			second = []*Trigger{nil}
+			third = []*Trigger{nil}
+			diff = GetTriggerListsDiff(first, second, third)
+			So(diff, ShouldResemble, first)
+		})
 	})
 }
 
@@ -113,5 +198,14 @@ func TestChunkSlice(t *testing.T) {
 
 		actual = ChunkSlice(originalSlice, 0)
 		So(actual, ShouldBeEmpty)
+	})
+}
+
+func TestIsValidFloat64(t *testing.T) {
+	Convey("values +Inf -Inf and NaN is invalid", t, func() {
+		So(IsValidFloat64(math.NaN()), ShouldBeFalse)
+		So(IsValidFloat64(math.Inf(-1)), ShouldBeFalse)
+		So(IsValidFloat64(math.Inf(1)), ShouldBeFalse)
+		So(IsValidFloat64(3.14), ShouldBeTrue)
 	})
 }

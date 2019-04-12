@@ -16,6 +16,9 @@ func enablePlottingInAllSubscriptions(logger moira.Logger, database moira.Databa
 		return err
 	}
 	for _, subscription := range allSubscriptions {
+		if subscription == nil {
+			continue
+		}
 		subscription.Plotting = moira.PlottingData{
 			Enabled: true,
 			Theme:   "light",

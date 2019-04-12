@@ -10,7 +10,7 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/mock/moira-alert"
-	mock_notifier "github.com/moira-alert/moira/mock/notifier"
+	"github.com/moira-alert/moira/mock/notifier"
 	notifier2 "github.com/moira-alert/moira/notifier"
 )
 
@@ -22,7 +22,7 @@ func TestProcessScheduledEvent(t *testing.T) {
 	notification1 := moira.ScheduledNotification{
 		Event: moira.NotificationEvent{
 			SubscriptionID: &subID5,
-			State:          "TEST",
+			State:          moira.StateTEST,
 		},
 		Contact:   contact1,
 		Throttled: false,
@@ -31,7 +31,7 @@ func TestProcessScheduledEvent(t *testing.T) {
 	notification2 := moira.ScheduledNotification{
 		Event: moira.NotificationEvent{
 			SubscriptionID: &subID7,
-			State:          "TEST",
+			State:          moira.StateTEST,
 			TriggerID:      "triggerID-00000000000001",
 		},
 		Contact:   contact2,
@@ -42,7 +42,7 @@ func TestProcessScheduledEvent(t *testing.T) {
 	notification3 := moira.ScheduledNotification{
 		Event: moira.NotificationEvent{
 			SubscriptionID: &subID2,
-			State:          "TEST",
+			State:          moira.StateTEST,
 			TriggerID:      "triggerID-00000000000001",
 		},
 		Contact:   contact2,
@@ -52,6 +52,7 @@ func TestProcessScheduledEvent(t *testing.T) {
 	}
 
 	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	notifier := mock_notifier.NewMockNotifier(mockCtrl)
 	logger, _ := logging.GetLogger("Notification")
@@ -89,10 +90,9 @@ func TestProcessScheduledEvent(t *testing.T) {
 		}
 		notifier.EXPECT().Send(&pkg1, gomock.Any())
 		notifier.EXPECT().Send(&pkg2, gomock.Any())
-		dataBase.EXPECT().GetNotifierState().Return("OK", nil)
+		dataBase.EXPECT().GetNotifierState().Return(moira.SelfStateOK, nil)
 		err := worker.processScheduledNotifications()
 		So(err, ShouldBeEmpty)
-		mockCtrl.Finish()
 	})
 
 	Convey("Two same notifications, should send one package", t, func() {
@@ -114,10 +114,9 @@ func TestProcessScheduledEvent(t *testing.T) {
 		}
 
 		notifier.EXPECT().Send(&pkg, gomock.Any())
-		dataBase.EXPECT().GetNotifierState().Return("OK", nil)
+		dataBase.EXPECT().GetNotifierState().Return(moira.SelfStateOK, nil)
 		err := worker.processScheduledNotifications()
 		So(err, ShouldBeEmpty)
-		mockCtrl.Finish()
 	})
 }
 
@@ -127,7 +126,7 @@ func TestGoRoutine(t *testing.T) {
 	notification1 := moira.ScheduledNotification{
 		Event: moira.NotificationEvent{
 			SubscriptionID: &subID5,
-			State:          "TEST",
+			State:          moira.StateTEST,
 		},
 		Contact:   contact1,
 		Throttled: false,
@@ -156,18 +155,18 @@ func TestGoRoutine(t *testing.T) {
 		Notifier: notifier,
 	}
 
-	shutdown := make(chan bool)
+	shutdown := make(chan struct{})
 	dataBase.EXPECT().FetchNotifications(gomock.Any()).Return([]*moira.ScheduledNotification{&notification1}, nil)
 	notifier.EXPECT().Send(&pkg, gomock.Any()).Do(func(f ...interface{}) { close(shutdown) })
 	notifier.EXPECT().StopSenders()
-	dataBase.EXPECT().GetNotifierState().Return("OK", nil)
+	dataBase.EXPECT().GetNotifierState().Return(moira.SelfStateOK, nil)
 
 	worker.Start()
 	waitTestEnd(shutdown, worker)
 	mockCtrl.Finish()
 }
 
-func waitTestEnd(shutdown chan bool, worker *FetchNotificationsWorker) {
+func waitTestEnd(shutdown chan struct{}, worker *FetchNotificationsWorker) {
 	select {
 	case <-shutdown:
 		worker.Stop()

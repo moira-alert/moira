@@ -3,7 +3,7 @@ package worker
 import (
 	"time"
 
-	"github.com/moira-alert/moira/remote"
+	"github.com/moira-alert/moira/metric_source/remote"
 )
 
 func (worker *Checker) remoteChecker() error {
@@ -23,7 +23,11 @@ func (worker *Checker) remoteChecker() error {
 }
 
 func (worker *Checker) checkRemote() error {
-	remoteAvailable, err := remote.IsRemoteAvailable(worker.RemoteConfig)
+	source, err := worker.SourceProvider.GetRemote()
+	if err != nil {
+		return err
+	}
+	remoteAvailable, err := source.(*remote.Remote).IsRemoteAvailable()
 	if !remoteAvailable {
 		worker.Logger.Infof("Remote API is unavailable. Stop checking remote triggers. Error: %s", err.Error())
 	} else {

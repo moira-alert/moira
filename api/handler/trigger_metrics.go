@@ -21,7 +21,7 @@ func triggerMetrics(router chi.Router) {
 }
 
 func getTriggerMetrics(writer http.ResponseWriter, request *http.Request) {
-	remoteCfg := middleware.GetRemoteConfig(request)
+	metricSourceProvider := middleware.GetTriggerTargetsSourceProvider(request)
 	triggerID := middleware.GetTriggerID(request)
 	fromStr := middleware.GetFromStr(request)
 	toStr := middleware.GetToStr(request)
@@ -35,7 +35,7 @@ func getTriggerMetrics(writer http.ResponseWriter, request *http.Request) {
 		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("can not parse to: %v", to)))
 		return
 	}
-	triggerMetrics, err := controller.GetTriggerMetrics(database, remoteCfg, from, to, triggerID)
+	triggerMetrics, err := controller.GetTriggerMetrics(database, metricSourceProvider, from, to, triggerID)
 	if err != nil {
 		render.Render(writer, request, err)
 		return

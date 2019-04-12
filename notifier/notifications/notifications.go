@@ -35,7 +35,7 @@ func (worker *FetchNotificationsWorker) Start() {
 				if err := worker.processScheduledNotifications(); err != nil {
 					switch err.(type) {
 					case notifierInBadStateError:
-						worker.Logger.Warningf("Stop sending notifications for %v: %s", sleepAfterNotifierBadState, err.Error())
+						worker.Logger.Warningf("Stop sending notifications for %v: %s. Fix SelfState errors and turn on notifier in /notifications page", sleepAfterNotifierBadState, err.Error())
 						<-time.After(sleepAfterNotifierBadState)
 					default:
 						worker.Logger.Warningf("Failed to fetch scheduled notifications: %s", err.Error())
@@ -54,18 +54,17 @@ func (worker *FetchNotificationsWorker) Stop() error {
 }
 
 func (worker *FetchNotificationsWorker) processScheduledNotifications() error {
-	notifications, err := worker.Database.FetchNotifications(time.Now().Unix())
-	if err != nil {
-		return err
-	}
 	state, err := worker.Database.GetNotifierState()
 	if err != nil {
 		return notifierInBadStateError("can't get current notifier state")
 	}
-	if state != "OK" {
+	if state != moira.SelfStateOK {
 		return notifierInBadStateError(fmt.Sprintf("notifier in a bad state: %v", state))
 	}
-
+	notifications, err := worker.Database.FetchNotifications(time.Now().Unix())
+	if err != nil {
+		return err
+	}
 	notificationPackages := make(map[string]*notifier.NotificationPackage)
 	for _, notification := range notifications {
 		packageKey := fmt.Sprintf("%s:%s:%s", notification.Contact.Type, notification.Contact.Value, notification.Event.TriggerID)

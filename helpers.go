@@ -1,6 +1,57 @@
 package moira
 
-import "time"
+import (
+	"bytes"
+	"math"
+	"time"
+)
+
+// BytesScanner allows to scan for subslices separated by separator
+type BytesScanner struct {
+	source         []byte
+	index          int
+	separator      byte
+	emitEmptySlice bool
+}
+
+//HasNext checks if next subslice available or not
+func (it *BytesScanner) HasNext() bool {
+	return it.index < len(it.source) || it.emitEmptySlice
+}
+
+//Next returns available subslice and advances the scanner to next slice
+func (it *BytesScanner) Next() (result []byte) {
+	if it.emitEmptySlice {
+		it.emitEmptySlice = false
+		result = make([]byte, 0)
+		return result
+	}
+
+	scannerIndex := it.index
+	separatorIndex := bytes.IndexByte(it.source[scannerIndex:], it.separator)
+	if separatorIndex < 0 {
+		result = it.source[scannerIndex:]
+		it.index = len(it.source)
+	} else {
+		separatorIndex += scannerIndex
+		result = it.source[scannerIndex:separatorIndex]
+		if separatorIndex == len(it.source)-1 {
+			it.emitEmptySlice = true
+		}
+		it.index = separatorIndex + 1
+	}
+	return result
+}
+
+//NewBytesScanner slices bytes into all subslices separated by separator and returns a scanner which allows to scan for these subslices
+func NewBytesScanner(bytes []byte, separator byte) *BytesScanner {
+	return &BytesScanner{
+		source:         bytes,
+		index:          0,
+		separator:      separator,
+		emitEmptySlice: false,
+	}
+}
 
 // Int64ToTime returns time.Time from int64
 func Int64ToTime(timeStamp int64) time.Time {
@@ -21,6 +72,17 @@ func UseFloat64(f *float64) float64 {
 		return 0
 	}
 	return *f
+}
+
+// IsValidFloat64 checks float64 for Inf and NaN. If it is then float64 is not valid
+func IsValidFloat64(val float64) bool {
+	if math.IsNaN(val) {
+		return false
+	}
+	if math.IsInf(val, 0) {
+		return false
+	}
+	return true
 }
 
 // Subset return whether first is a subset of second
@@ -50,9 +112,7 @@ func GetStringListsDiff(stringLists ...[]string) []string {
 	}
 	for _, stringList := range stringLists[1:] {
 		for _, value := range stringList {
-			if _, ok := leftValues[value]; ok {
-				delete(leftValues, value)
-			}
+			delete(leftValues, value)
 		}
 	}
 	result := make([]string, 0)
@@ -64,6 +124,27 @@ func GetStringListsDiff(stringLists ...[]string) []string {
 	return result
 }
 
+// GetStringListsUnion returns the union set of stringLists
+func GetStringListsUnion(stringLists ...[]string) []string {
+	if len(stringLists) == 0 {
+		return []string{}
+	}
+
+	values := make([]string, 0)
+
+	uniqueValues := make(map[string]bool)
+	for _, stringList := range stringLists {
+		for _, value := range stringList {
+			if _, ok := uniqueValues[value]; !ok {
+				values = append(values, value)
+				uniqueValues[value] = true
+			}
+		}
+	}
+
+	return values
+}
+
 // GetTriggerListsDiff returns the members of the set resulting from the difference between the first set and all the successive lists.
 func GetTriggerListsDiff(triggerLists ...[]*Trigger) []*Trigger {
 	if len(triggerLists) == 0 {
@@ -71,17 +152,22 @@ func GetTriggerListsDiff(triggerLists ...[]*Trigger) []*Trigger {
 	}
 	leftValues := make(map[string]bool)
 	for _, value := range triggerLists[0] {
-		leftValues[value.ID] = true
+		if value != nil {
+			leftValues[value.ID] = true
+		}
 	}
 	for _, triggerList := range triggerLists[1:] {
 		for _, trigger := range triggerList {
-			if _, ok := leftValues[trigger.ID]; ok {
+			if trigger != nil {
 				delete(leftValues, trigger.ID)
 			}
 		}
 	}
 	result := make([]*Trigger, 0)
 	for _, value := range triggerLists[0] {
+		if value == nil {
+			continue
+		}
 		if _, ok := leftValues[value.ID]; ok {
 			result = append(result, value)
 		}

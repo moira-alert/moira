@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/garyburd/redigo/redis"
+	"github.com/gomodule/redigo/redis"
 )
 
 // GetTriggerThrottling get throttling or scheduled notifications delay for given triggerID
@@ -36,7 +36,7 @@ func (connector *DbConnector) DeleteTriggerThrottling(triggerID string) error {
 	c.Send("DEL", notifierNextKey(triggerID))
 	_, err := c.Do("EXEC")
 	if err != nil {
-		return fmt.Errorf("Failed to EXEC: %s", err.Error())
+		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
 	return nil
 }

@@ -122,7 +122,7 @@ func TestIsScheduleAllows(t *testing.T) {
 
 	Convey("Exclude business hours", t, func() {
 		schedule := getDefaultSchedule()                           // TimeZone: Asia/Ekaterinburg (YEKT)
-		schedule.StartOffset = 12000                               // 20:00
+		schedule.StartOffset = 1200                                // 20:00
 		schedule.EndOffset = 420                                   // 07:00
 		So(schedule.IsScheduleAllows(86400+129*60), ShouldBeFalse) // 02/01/1970 2:09  - 02/01/1970 07:09 (YEKT)
 		So(schedule.IsScheduleAllows(86400-239*60), ShouldBeTrue)  // 01/01/1970 20:01 - 02/01/1970 01:01 (YEKT)
@@ -132,14 +132,48 @@ func TestIsScheduleAllows(t *testing.T) {
 	})
 }
 
-func TestEventsData_GetSubjectState(t *testing.T) {
+func TestNotificationEvent_GetSubjectState(t *testing.T) {
 	Convey("Get ERROR state", t, func() {
 		message := "mes1"
 		var value float64 = 1
-		states := NotificationEvents{{State: "OK"}, {State: "ERROR", Message: &message, Value: &value}}
-		So(states.GetSubjectState(), ShouldResemble, "ERROR")
+		states := NotificationEvents{{State: StateOK}, {State: StateERROR, Message: &message, Value: &value}}
+		So(states.GetSubjectState(), ShouldResemble, StateERROR)
 		So(states[0].String(), ShouldResemble, "TriggerId: , Metric: , Value: 0, OldState: , State: OK, Message: '', Timestamp: 0")
 		So(states[1].String(), ShouldResemble, "TriggerId: , Metric: , Value: 1, OldState: , State: ERROR, Message: 'mes1', Timestamp: 0")
+	})
+}
+
+func TestNotificationEvent_FormatTimestamp(t *testing.T) {
+	Convey("Test FormatTimestamp", t, func() {
+		event := NotificationEvent{Timestamp: 150000000}
+		location, _ := time.LoadLocation("UTC")
+		location1, _ := time.LoadLocation("Europe/Moscow")
+		location2, _ := time.LoadLocation("Asia/Yekaterinburg")
+		So(event.FormatTimestamp(location), ShouldResemble, "02:40")
+		So(event.FormatTimestamp(location1), ShouldResemble, "05:40")
+		So(event.FormatTimestamp(location2), ShouldResemble, "07:40")
+	})
+}
+
+func TestNotificationEvent_GetValue(t *testing.T) {
+	event := NotificationEvent{}
+	value1 := float64(2.32)
+	value2 := float64(2.3222222)
+	value3 := float64(2)
+	value4 := float64(2.000001)
+	value5 := float64(2.33333333)
+	Convey("Test GetMetricValue", t, func() {
+		So(event.GetMetricValue(), ShouldResemble, "0")
+		event.Value = &value1
+		So(event.GetMetricValue(), ShouldResemble, "2.32")
+		event.Value = &value2
+		So(event.GetMetricValue(), ShouldResemble, "2.3222222")
+		event.Value = &value3
+		So(event.GetMetricValue(), ShouldResemble, "2")
+		event.Value = &value4
+		So(event.GetMetricValue(), ShouldResemble, "2.000001")
+		event.Value = &value5
+		So(event.GetMetricValue(), ShouldResemble, "2.33333333")
 	})
 }
 
@@ -168,7 +202,7 @@ func TestScheduledNotification_GetKey(t *testing.T) {
 	Convey("Get key", t, func() {
 		notification := ScheduledNotification{
 			Contact:   ContactData{Type: "email", Value: "my@mail.com"},
-			Event:     NotificationEvent{Value: nil, State: "NODATA", Metric: "my.metric"},
+			Event:     NotificationEvent{Value: nil, State: StateNODATA, Metric: "my.metric"},
 			Timestamp: 123456789,
 		}
 		So(notification.GetKey(), ShouldResemble, "email:my@mail.com::my.metric:NODATA:0:0.000000:0:false:123456789")
@@ -180,13 +214,13 @@ func TestCheckData_GetOrCreateMetricState(t *testing.T) {
 		checkData := CheckData{
 			Metrics: make(map[string]MetricState),
 		}
-		So(checkData.GetOrCreateMetricState("my.metric", 12343, false), ShouldResemble, MetricState{State: "NODATA", Timestamp: 12343})
+		So(checkData.GetOrCreateMetricState("my.metric", 12343, false), ShouldResemble, MetricState{State: StateNODATA, Timestamp: 12343})
 	})
 	Convey("Test no metric, notifyAboutNew = false", t, func() {
 		checkData := CheckData{
 			Metrics: make(map[string]MetricState),
 		}
-		So(checkData.GetOrCreateMetricState("my.metric", 12343, true), ShouldResemble, MetricState{State: "OK", Timestamp: time.Now().Unix(), EventTimestamp: time.Now().Unix()})
+		So(checkData.GetOrCreateMetricState("my.metric", 12343, true), ShouldResemble, MetricState{State: StateOK, Timestamp: time.Now().Unix(), EventTimestamp: time.Now().Unix()})
 	})
 	Convey("Test has metric", t, func() {
 		metricState := MetricState{Timestamp: 11211}
@@ -263,27 +297,27 @@ func TestCheckData_GetEventTimestamp(t *testing.T) {
 
 func TestCheckData_UpdateScore(t *testing.T) {
 	Convey("Update score", t, func() {
-		checkData := CheckData{State: "NODATA"}
+		checkData := CheckData{State: StateNODATA}
 		So(checkData.UpdateScore(), ShouldEqual, 1000)
 		So(checkData.Score, ShouldEqual, 1000)
 
 		checkData = CheckData{
-			State: "OK",
+			State: StateOK,
 			Metrics: map[string]MetricState{
-				"123": {State: "NODATA"},
-				"321": {State: "OK"},
-				"345": {State: "WARN"},
+				"123": {State: StateNODATA},
+				"321": {State: StateOK},
+				"345": {State: StateWARN},
 			},
 		}
 		So(checkData.UpdateScore(), ShouldEqual, 1001)
 		So(checkData.Score, ShouldEqual, 1001)
 
 		checkData = CheckData{
-			State: "NODATA",
+			State: StateNODATA,
 			Metrics: map[string]MetricState{
-				"123": {State: "NODATA"},
-				"321": {State: "OK"},
-				"345": {State: "WARN"},
+				"123": {State: StateNODATA},
+				"321": {State: StateOK},
+				"345": {State: StateWARN},
 			},
 		}
 		So(checkData.UpdateScore(), ShouldEqual, 2001)
@@ -331,8 +365,8 @@ func getDefaultSchedule() ScheduleData {
 
 func TestSubscriptionData_MustIgnore(testing *testing.T) {
 	type testCase struct {
-		State    string
-		OldState string
+		State    State
+		OldState State
 		Ignored  bool
 	}
 	assertIgnored := func(subscription SubscriptionData, eventCase testCase) {
@@ -350,18 +384,18 @@ func TestSubscriptionData_MustIgnore(testing *testing.T) {
 				IgnoreWarnings:    false,
 			}
 			testCases := []testCase{
-				{"WARN", "OK", false},
-				{"ERROR", "OK", false},
-				{"NODATA", "OK", false},
-				{"ERROR", "WARN", false},
-				{"NODATA", "WARN", false},
-				{"NODATA", "ERROR", false},
-				{"OK", "WARN", true},
-				{"OK", "ERROR", true},
-				{"OK", "NODATA", true},
-				{"WARN", "ERROR", true},
-				{"WARN", "NODATA", true},
-				{"ERROR", "NODATA", true},
+				{StateWARN, StateOK, false},
+				{StateERROR, StateOK, false},
+				{StateNODATA, StateOK, false},
+				{StateERROR, StateWARN, false},
+				{StateNODATA, StateWARN, false},
+				{StateNODATA, StateERROR, false},
+				{StateOK, StateWARN, true},
+				{StateOK, StateERROR, true},
+				{StateOK, StateNODATA, true},
+				{StateWARN, StateERROR, true},
+				{StateWARN, StateNODATA, true},
+				{StateERROR, StateNODATA, true},
 			}
 			for _, testCase := range testCases {
 				assertIgnored(subscription, testCase)
@@ -374,18 +408,18 @@ func TestSubscriptionData_MustIgnore(testing *testing.T) {
 				IgnoreWarnings:    true,
 			}
 			testCases := []testCase{
-				{"ERROR", "OK", false},
-				{"NODATA", "OK", false},
-				{"ERROR", "WARN", false},
-				{"NODATA", "WARN", false},
-				{"NODATA", "ERROR", false},
-				{"OK", "ERROR", false},
-				{"OK", "NODATA", false},
-				{"WARN", "ERROR", false},
-				{"WARN", "NODATA", false},
-				{"ERROR", "NODATA", false},
-				{"OK", "WARN", true},
-				{"WARN", "OK", true},
+				{StateERROR, StateOK, false},
+				{StateNODATA, StateOK, false},
+				{StateERROR, StateWARN, false},
+				{StateNODATA, StateWARN, false},
+				{StateNODATA, StateERROR, false},
+				{StateOK, StateERROR, false},
+				{StateOK, StateNODATA, false},
+				{StateWARN, StateERROR, false},
+				{StateWARN, StateNODATA, false},
+				{StateERROR, StateNODATA, false},
+				{StateOK, StateWARN, true},
+				{StateWARN, StateOK, true},
 			}
 			for _, testCase := range testCases {
 				assertIgnored(subscription, testCase)
@@ -399,18 +433,18 @@ func TestSubscriptionData_MustIgnore(testing *testing.T) {
 			IgnoreWarnings:    true,
 		}
 		testCases := []testCase{
-			{"ERROR", "OK", false},
-			{"NODATA", "OK", false},
-			{"ERROR", "WARN", false},
-			{"NODATA", "WARN", false},
-			{"NODATA", "ERROR", false},
-			{"OK", "WARN", true},
-			{"WARN", "OK", true},
-			{"OK", "ERROR", true},
-			{"OK", "NODATA", true},
-			{"WARN", "ERROR", true},
-			{"WARN", "NODATA", true},
-			{"ERROR", "NODATA", true},
+			{StateERROR, StateOK, false},
+			{StateNODATA, StateOK, false},
+			{StateERROR, StateWARN, false},
+			{StateNODATA, StateWARN, false},
+			{StateNODATA, StateERROR, false},
+			{StateOK, StateWARN, true},
+			{StateWARN, StateOK, true},
+			{StateOK, StateERROR, true},
+			{StateOK, StateNODATA, true},
+			{StateWARN, StateERROR, true},
+			{StateWARN, StateNODATA, true},
+			{StateERROR, StateNODATA, true},
 		}
 		for _, testCase := range testCases {
 			assertIgnored(subscription, testCase)
@@ -423,20 +457,185 @@ func TestSubscriptionData_MustIgnore(testing *testing.T) {
 			IgnoreWarnings:    false,
 		}
 		testCases := []testCase{
-			{"OK", "WARN", false},
-			{"WARN", "OK", false},
-			{"ERROR", "OK", false},
-			{"NODATA", "OK", false},
-			{"ERROR", "WARN", false},
-			{"NODATA", "WARN", false},
-			{"NODATA", "ERROR", false},
-			{"OK", "ERROR", false},
-			{"OK", "NODATA", false},
-			{"WARN", "NODATA", false},
-			{"ERROR", "NODATA", false},
+			{StateOK, StateWARN, false},
+			{StateWARN, StateOK, false},
+			{StateERROR, StateOK, false},
+			{StateNODATA, StateOK, false},
+			{StateERROR, StateWARN, false},
+			{StateNODATA, StateWARN, false},
+			{StateNODATA, StateERROR, false},
+			{StateOK, StateERROR, false},
+			{StateOK, StateNODATA, false},
+			{StateWARN, StateNODATA, false},
+			{StateERROR, StateNODATA, false},
 		}
 		for _, testCase := range testCases {
 			assertIgnored(subscription, testCase)
 		}
+	})
+}
+func TestBuildTriggerURL(t *testing.T) {
+	Convey("Sender has no moira uri", t, func() {
+		url := TriggerData{ID: "SomeID"}.GetTriggerURI("")
+		So(url, ShouldResemble, "/trigger/SomeID")
+	})
+
+	Convey("Sender uri", t, func() {
+		url := TriggerData{ID: "SomeID"}.GetTriggerURI("https://my-moira.com")
+		So(url, ShouldResemble, "https://my-moira.com/trigger/SomeID")
+	})
+
+	Convey("Empty trigger", t, func() {
+		url := TriggerData{}.GetTriggerURI("https://my-moira.com")
+		So(url, ShouldBeEmpty)
+	})
+}
+
+
+func TestSetMaintenanceUserAndTime(t *testing.T) {
+	startMaintenanceUser := "testStartMtUser"
+	startMaintenanceUserOld := "testStartMtUserOld"
+	stopMaintenanceUser := "testStopMtUser"
+	stopMaintenanceUserOld := "testStopMtUserOld"
+	callTime := int64(3000)
+
+	Convey("Test MaintenanceInfo", t, func() {
+		testStartMaintenance(
+			"Not MaintenanceInfo, user anonymous.",
+			MaintenanceInfo{},
+			"anonymous",
+			MaintenanceInfo{},
+			)
+
+		testStopMaintenance(
+			"Not MaintenanceInfo, user anonymous.",
+			MaintenanceInfo{},
+			"anonymous",
+			MaintenanceInfo{},
+			)
+
+		testStartMaintenance(
+			"Not MaintenanceInfo, user real.",
+			MaintenanceInfo{},
+			startMaintenanceUser,
+			MaintenanceInfo{&startMaintenanceUser, &callTime,nil,nil},
+		)
+
+		testStopMaintenance(
+			"Not MaintenanceInfo, user real",
+			MaintenanceInfo{},
+			stopMaintenanceUser,
+			MaintenanceInfo{nil, nil, &stopMaintenanceUser, &callTime},
+		)
+
+		testStartMaintenance(
+			"Set Start in MaintenanceInfo, user anonymous.",
+			MaintenanceInfo{},
+			"anonymous",
+			MaintenanceInfo{},
+		)
+
+		testStopMaintenance(
+			"Set Start in MaintenanceInfo, user anonymous.",
+			MaintenanceInfo{},
+			"anonymous",
+			MaintenanceInfo{},
+		)
+
+		testStartMaintenance(
+			"Set Start in MaintenanceInfo, user real.",
+			MaintenanceInfo{&startMaintenanceUserOld, &callTime, nil,nil },
+			startMaintenanceUser,
+			MaintenanceInfo{&startMaintenanceUser, &callTime,nil,nil },
+		)
+
+		testStopMaintenance(
+			"Set Start in MaintenanceInfo, user real.",
+			MaintenanceInfo{&startMaintenanceUserOld, &callTime, nil,nil },
+			stopMaintenanceUser,
+			MaintenanceInfo{&startMaintenanceUserOld, &callTime,&stopMaintenanceUser,&callTime },
+		)
+
+		testStartMaintenance(
+			"Set Stop in MaintenanceInfo, user anonymous.",
+			MaintenanceInfo{nil, nil, &stopMaintenanceUserOld,&callTime },
+			"anonymous",
+			MaintenanceInfo{},
+		)
+
+		testStopMaintenance(
+			"Set Stop in MaintenanceInfo, user anonymous.",
+			MaintenanceInfo{nil, nil, &stopMaintenanceUserOld,&callTime },
+			"anonymous",
+			MaintenanceInfo{},
+		)
+
+		testStartMaintenance(
+			"Set Stop in MaintenanceInfo, user real.",
+			MaintenanceInfo{nil, nil, &stopMaintenanceUserOld,&callTime },
+			startMaintenanceUser,
+			MaintenanceInfo{&startMaintenanceUser, &callTime,nil,nil },
+		)
+
+		testStopMaintenance(
+			"Set Stop in MaintenanceInfo, user real.",
+			MaintenanceInfo{nil, nil, &stopMaintenanceUserOld,&callTime },
+			stopMaintenanceUser,
+			MaintenanceInfo{nil, nil,&stopMaintenanceUser,&callTime },
+		)
+
+		testStartMaintenance(
+			"Set Start and Stop in MaintenanceInfo, user anonymous.",
+			MaintenanceInfo{&startMaintenanceUserOld, &callTime, &stopMaintenanceUserOld,&callTime },
+			"anonymous",
+			MaintenanceInfo{},
+		)
+
+		testStopMaintenance(
+			"Set Start and Stop in MaintenanceInfo, user anonymous.",
+			MaintenanceInfo{&startMaintenanceUserOld, &callTime, &stopMaintenanceUserOld,&callTime},
+			"anonymous",
+			MaintenanceInfo{&startMaintenanceUserOld, &callTime, nil,nil},
+		)
+
+		testStartMaintenance(
+			"Set Start and Stop in MaintenanceInfo, user real.",
+			MaintenanceInfo{&startMaintenanceUserOld, &callTime, &stopMaintenanceUserOld,&callTime},
+			startMaintenanceUser,
+			MaintenanceInfo{&startMaintenanceUser, &callTime,nil,nil },
+		)
+
+		testStopMaintenance(
+			"Set Start and Stop in MaintenanceInfo, user real.",
+			MaintenanceInfo{&startMaintenanceUserOld, &callTime, &stopMaintenanceUserOld,&callTime },
+			stopMaintenanceUser,
+			MaintenanceInfo{&startMaintenanceUserOld, &callTime,&stopMaintenanceUser,&callTime },
+		)
+	})
+}
+
+func testStartMaintenance(message string, actualInfo MaintenanceInfo, user string, expectedInfo MaintenanceInfo)  {
+	conveyMessage := fmt.Sprintf("%v Start maintenance.", message)
+	testMaintenance(conveyMessage, actualInfo, 3100, user, expectedInfo)
+}
+
+func testStopMaintenance(message string, actualInfo MaintenanceInfo, user string, expectedInfo MaintenanceInfo)  {
+	conveyMessage := fmt.Sprintf("%v Stop maintenance.", message)
+	testMaintenance(conveyMessage, actualInfo, 0, user, expectedInfo)
+}
+
+func testMaintenance(conveyMessage string, actualInfo MaintenanceInfo, maintenance int64, user string, expectedInfo MaintenanceInfo) {
+
+	Convey(conveyMessage, func(){
+		var lastCheckTest = CheckData{
+			Maintenance: 1000,
+		}
+		lastCheckTest.MaintenanceInfo = actualInfo
+
+		SetMaintenanceUserAndTime(&lastCheckTest, maintenance, user, 3000)
+
+		So(lastCheckTest.MaintenanceInfo, ShouldResemble, expectedInfo)
+		So(lastCheckTest.Maintenance, ShouldEqual, maintenance)
+
 	})
 }

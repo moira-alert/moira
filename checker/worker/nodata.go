@@ -2,15 +2,36 @@ package worker
 
 import (
 	"time"
+
+	w "github.com/moira-alert/moira/worker"
 )
 
-func (worker *Checker) noDataChecker(stop chan bool) error {
+const (
+	nodataCheckerLockName = "moira-nodata-checker"
+	nodataCheckerLockTTL  = time.Second * 15
+	nodataWorkerName      = "NODATA checker"
+)
+
+// runNodataChecker starts NODATA checker and manages its subscription in Redis
+// to make sure there is always only one working checker
+func (worker *Checker) runNodataChecker() error {
+	w.NewWorker(
+		nodataWorkerName,
+		worker.Logger,
+		worker.Database.NewLock(nodataCheckerLockName, nodataCheckerLockTTL),
+		worker.noDataChecker,
+	).Run(worker.tomb.Dying())
+
+	return nil
+}
+
+func (worker *Checker) noDataChecker(stop <-chan struct{}) error {
 	checkTicker := time.NewTicker(worker.Config.NoDataCheckInterval)
+	defer checkTicker.Stop()
 	worker.Logger.Info("NODATA checker started")
 	for {
 		select {
 		case <-stop:
-			checkTicker.Stop()
 			worker.Logger.Info("NODATA checker stopped")
 			return nil
 		case <-checkTicker.C:
@@ -34,58 +55,4 @@ func (worker *Checker) checkNoData() error {
 		worker.addTriggerIDsIfNeeded(triggerIds)
 	}
 	return nil
-}
-
-// runNodataChecker starts NODATA checker and manages its subscription in Redis
-// to make sure there is always only one working checker
-func (worker *Checker) runNodataChecker() error {
-	var databaseMutexExpiry, singleCheckerStateExpiry time.Duration
-
-	databaseMutexExpiry = time.Second * 15
-
-	if worker.Config.NoDataCheckInterval > time.Minute {
-		singleCheckerStateExpiry = time.Second * 30
-	} else {
-		singleCheckerStateExpiry = worker.Config.NoDataCheckInterval / 2
-	}
-
-	stop := make(chan bool)
-
-	firstCheck := true
-	go func() {
-		for {
-			if worker.Database.RegisterNodataCheckerIfAlreadyNot(databaseMutexExpiry) {
-				worker.Logger.Infof("Registered new NODATA checker, start checking triggers for NODATA")
-				go worker.noDataChecker(stop)
-				worker.renewRegistration(databaseMutexExpiry, stop)
-				continue
-			}
-			if firstCheck {
-				worker.Logger.Infof("NODATA checker already registered, trying for register every %v in loop", singleCheckerStateExpiry)
-				firstCheck = false
-			}
-			<-time.After(singleCheckerStateExpiry)
-		}
-	}()
-	return nil
-}
-
-// renewRegistration tries to renew NODATA-checker subscription
-// and gracefully stops NODATA checker on fail to prevent multiple checkers running
-func (worker *Checker) renewRegistration(ttl time.Duration, stop chan bool) {
-	renewTicker := time.NewTicker(ttl / 3)
-	for {
-		select {
-		case <-renewTicker.C:
-			if !worker.Database.RenewNodataCheckerRegistration() {
-				worker.Logger.Warningf("Could not renew registration for NODATA checker")
-				stop <- true
-				return
-			}
-		case <-worker.tomb.Dying():
-			renewTicker.Stop()
-			stop <- true
-			return
-		}
-	}
 }

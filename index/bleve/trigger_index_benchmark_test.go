@@ -5,10 +5,10 @@ import (
 	"math/rand"
 	"testing"
 
+	"github.com/gofrs/uuid"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/index/mapping"
 	"github.com/op/go-logging"
-	"github.com/satori/go.uuid"
 )
 
 type config struct {
@@ -69,7 +69,7 @@ func generateTriggerChecks(number int) []*moira.TriggerCheck {
 		description := randStringBytes(500)
 		triggersPointers[i] = &moira.TriggerCheck{
 			Trigger: moira.Trigger{
-				ID:   uuid.NewV4().String(),
+				ID:   uuid.Must(uuid.NewV4()).String(),
 				Name: randStringBytes(100),
 				Desc: &description,
 				Tags: []string{randStringBytes(5), randStringBytes(3)},

@@ -1,8 +1,8 @@
 package redis
 
 import (
-	"github.com/garyburd/redigo/redis"
-	"github.com/moira-alert/moira/notifier/selfstate"
+	"github.com/gomodule/redigo/redis"
+	"github.com/moira-alert/moira"
 )
 
 // UpdateMetricsHeartbeat increments redis counter
@@ -52,10 +52,10 @@ func (connector *DbConnector) GetNotifierState() (string, error) {
 	defer c.Close()
 	ts, err := redis.String(c.Do("GET", selfStateNotifierHealth))
 	if err == redis.ErrNil {
-		ts = selfstate.OK
+		ts = moira.SelfStateOK
 		err = connector.SetNotifierState(ts)
 	} else if err != nil {
-		ts = selfstate.ERROR
+		ts = moira.SelfStateERROR
 	}
 	return ts, err
 }

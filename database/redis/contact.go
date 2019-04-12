@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/garyburd/redigo/redis"
+	"github.com/gomodule/redigo/redis"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/database/redis/reply"
@@ -87,7 +87,7 @@ func (connector *DbConnector) SaveContact(contact *moira.ContactData) error {
 	c.Send("SADD", userContactsKey(contact.User), contact.ID)
 	_, err = c.Do("EXEC")
 	if err != nil {
-		return fmt.Errorf("Failed to EXEC: %s", err.Error())
+		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
 	return nil
 }
@@ -106,7 +106,7 @@ func (connector *DbConnector) RemoveContact(contactID string) error {
 	c.Send("SREM", userContactsKey(existing.User), contactID)
 	_, err = c.Do("EXEC")
 	if err != nil {
-		return fmt.Errorf("Failed to EXEC: %s", err.Error())
+		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
 	return nil
 }
@@ -118,7 +118,7 @@ func (connector *DbConnector) GetUserContactIDs(login string) ([]string, error) 
 
 	contacts, err := redis.Strings(c.Do("SMEMBERS", userContactsKey(login)))
 	if err != nil {
-		return nil, fmt.Errorf("Failed to get contacts for user login %s: %s", login, err.Error())
+		return nil, fmt.Errorf("failed to get contacts for user login %s: %s", login, err.Error())
 	}
 	return contacts, nil
 }

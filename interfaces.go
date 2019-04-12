@@ -26,8 +26,7 @@ type Database interface {
 	GetTriggerLastCheck(triggerID string) (CheckData, error)
 	SetTriggerLastCheck(triggerID string, checkData *CheckData, isRemote bool) error
 	RemoveTriggerLastCheck(triggerID string) error
-	GetTriggerCheckIDs(tags []string, onlyErrors bool) ([]string, error)
-	SetTriggerCheckMaintenance(triggerID string, metrics map[string]int64, triggerMaintenance *int64) error
+	SetTriggerCheckMaintenance(triggerID string, metrics map[string]int64, triggerMaintenance *int64, userLogin string, timeCallMaintenance int64) error
 
 	// Trigger storing
 	GetLocalTriggerIDs() ([]string, error)
@@ -93,12 +92,12 @@ type Database interface {
 	RemoveMetricValues(metric string, toTime int64) error
 	RemoveMetricsValues(metrics []string, toTime int64) error
 
-	AddTriggersToCheck(triggerIDs []string) error
-	GetTriggerToCheck() (string, error)
-	GetTriggersToCheckCount() (int64, error)
+	AddLocalTriggersToCheck(triggerIDs []string) error
+	GetLocalTriggersToCheck(count int) ([]string, error)
+	GetLocalTriggersToCheckCount() (int64, error)
 
 	AddRemoteTriggersToCheck(triggerIDs []string) error
-	GetRemoteTriggerToCheck() (string, error)
+	GetRemoteTriggersToCheck(count int) ([]string, error)
 	GetRemoteTriggersToCheckCount() (int64, error)
 
 	// TriggerCheckLock storing
@@ -110,15 +109,6 @@ type Database interface {
 	GetIDByUsername(messenger, username string) (string, error)
 	SetUsernameID(messenger, username, id string) error
 	RemoveUser(messenger, username string) error
-	RegisterBotIfAlreadyNot(messenger string, ttl time.Duration) bool
-	RenewBotRegistration(messenger string) bool
-	DeregisterBots()
-	DeregisterBot(messenger string) bool
-
-	// Service registration
-	RegisterNodataCheckerIfAlreadyNot(ttl time.Duration) bool
-	RenewNodataCheckerRegistration() bool
-	DeregisterNodataChecker() bool
 
 	// Triggers without subscription manipulation
 	MarkTriggersAsUnused(triggerIDs ...string) error
@@ -128,6 +118,15 @@ type Database interface {
 	// Triggers to reindex in full-text search index
 	FetchTriggersToReindex(from int64) ([]string, error)
 	RemoveTriggersToReindex(to int64) error
+
+	// Creates Lock
+	NewLock(name string, ttl time.Duration) Lock
+}
+
+// Lock implements lock abstraction
+type Lock interface {
+	Acquire(stop <-chan struct{}) (lost <-chan struct{}, error error)
+	Release()
 }
 
 // Logger implements logger abstraction
@@ -156,7 +155,7 @@ type Searcher interface {
 	Stop() error
 	IsReady() bool
 	SearchTriggers(filterTags []string, searchString string, onlyErrors bool,
-		page int64, size int64) (triggerIDs []string, total int64, err error)
+		page int64, size int64) (searchResults []*SearchResult, total int64, err error)
 }
 
 // PlotTheme is an interface to access plot theme styles

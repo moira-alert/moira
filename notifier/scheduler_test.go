@@ -2,14 +2,15 @@ package notifier
 
 import (
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
 	"github.com/moira-alert/moira/mock/moira-alert"
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
-	"testing"
-	"time"
 )
 
 var plottingData = moira.PlottingData{
@@ -37,13 +38,14 @@ func TestThrottling(t *testing.T) {
 
 	var event = moira.NotificationEvent{
 		Metric:         "generate.event.1",
-		State:          "OK",
-		OldState:       "WARN",
+		State:          moira.StateOK,
+		OldState:       moira.StateWARN,
 		TriggerID:      trigger.ID,
 		SubscriptionID: &subID,
 	}
 
 	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Scheduler")
 	metrics2 := metrics.ConfigureNotifierMetrics("notifier")
@@ -68,7 +70,6 @@ func TestThrottling(t *testing.T) {
 
 		notification := scheduler.ScheduleNotification(now, event, trigger, contact, plottingData, false, 1)
 		So(notification, ShouldResemble, &expected2)
-		mockCtrl.Finish()
 	})
 
 	Convey("Test sendFail more than 0, and has throttling, should send message in one minute", t, func() {
@@ -79,15 +80,14 @@ func TestThrottling(t *testing.T) {
 
 		notification := scheduler.ScheduleNotification(now, event, trigger, contact, plottingData, true, 3)
 		So(notification, ShouldResemble, &expected2)
-		mockCtrl.Finish()
 	})
 
 	Convey("Test event state is TEST and no send fails, should return now notification time", t, func() {
 		subID := "SubscriptionID-000000000000001"
 		testEvent := moira.NotificationEvent{
 			Metric:         "generate.event.1",
-			State:          "TEST",
-			OldState:       "WARN",
+			State:          moira.StateTEST,
+			OldState:       moira.StateWARN,
 			TriggerID:      trigger.ID,
 			SubscriptionID: &subID,
 		}
@@ -97,7 +97,6 @@ func TestThrottling(t *testing.T) {
 
 		notification := scheduler.ScheduleNotification(now, testEvent, trigger, contact, plottingData, false, 0)
 		So(notification, ShouldResemble, &expected3)
-		mockCtrl.Finish()
 	})
 
 	Convey("Test no throttling and no subscription, should return now notification time", t, func() {
@@ -106,7 +105,6 @@ func TestThrottling(t *testing.T) {
 
 		notification := scheduler.ScheduleNotification(now, event, trigger, contact, plottingData, false, 0)
 		So(notification, ShouldResemble, &expected)
-		mockCtrl.Finish()
 	})
 }
 
@@ -122,13 +120,14 @@ func TestSubscriptionSchedule(t *testing.T) {
 
 	var event = moira.NotificationEvent{
 		Metric:         "generate.event.1",
-		State:          "OK",
-		OldState:       "WARN",
+		State:          moira.StateOK,
+		OldState:       moira.StateWARN,
 		TriggerID:      "triggerID-0000000000001",
 		SubscriptionID: &subID,
 	}
 
 	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Scheduler")
 	metrics2 := metrics.ConfigureNotifierMetrics("notifier")
@@ -145,7 +144,6 @@ func TestSubscriptionSchedule(t *testing.T) {
 			next, throttled := scheduler.calculateNextDelivery(now, &event)
 			So(next, ShouldResemble, now)
 			So(throttled, ShouldBeFalse)
-			mockCtrl.Finish()
 		})
 
 		Convey("When allowed time is today, should send notification at the beginning of allowed interval", func() {
@@ -156,7 +154,6 @@ func TestSubscriptionSchedule(t *testing.T) {
 			next, throttled := scheduler.calculateNextDelivery(now, &event)
 			So(next, ShouldResemble, time.Unix(1441191600, 0))
 			So(throttled, ShouldBeFalse)
-			mockCtrl.Finish()
 		})
 
 		Convey("When allowed time is in a future day, should send notification at the beginning of allowed interval", func() {
@@ -168,7 +165,6 @@ func TestSubscriptionSchedule(t *testing.T) {
 			next, throttled := scheduler.calculateNextDelivery(now, &event)
 			So(next, ShouldResemble, time.Unix(1441134000, 0))
 			So(throttled, ShouldBeFalse)
-			mockCtrl.Finish()
 		})
 
 		Convey("Trigger already alarm fatigue, but now throttling disabled, should send notification now", func() {
@@ -179,7 +175,6 @@ func TestSubscriptionSchedule(t *testing.T) {
 			next, throttled := scheduler.calculateNextDelivery(now, &event)
 			So(next, ShouldResemble, now)
 			So(throttled, ShouldBeTrue)
-			mockCtrl.Finish()
 		})
 	})
 
@@ -196,7 +191,6 @@ func TestSubscriptionSchedule(t *testing.T) {
 			next, throttled := scheduler.calculateNextDelivery(now, &event)
 			So(next, ShouldResemble, now)
 			So(throttled, ShouldBeTrue)
-			mockCtrl.Finish()
 		})
 
 		Convey("Has trigger events count event more than low throttling level, should next timestamp in 30 minutes", func() {
@@ -209,7 +203,6 @@ func TestSubscriptionSchedule(t *testing.T) {
 			next, throttled := scheduler.calculateNextDelivery(now, &event)
 			So(next, ShouldResemble, time.Unix(1441135800, 0))
 			So(throttled, ShouldBeTrue)
-			mockCtrl.Finish()
 		})
 
 		Convey("Has trigger event more than high throttling level, should next timestamp in 1 hour", func() {
@@ -221,7 +214,6 @@ func TestSubscriptionSchedule(t *testing.T) {
 			next, throttled := scheduler.calculateNextDelivery(now, &event)
 			So(next, ShouldResemble, now.Add(time.Hour))
 			So(throttled, ShouldBeTrue)
-			mockCtrl.Finish()
 		})
 
 		Convey("Trigger already alarm fatigue, should has old throttled value", func() {
@@ -231,8 +223,95 @@ func TestSubscriptionSchedule(t *testing.T) {
 			next, throttled := scheduler.calculateNextDelivery(now, &event)
 			So(next, ShouldResemble, time.Unix(1441148000, 0))
 			So(throttled, ShouldBeTrue)
-			mockCtrl.Finish()
 		})
+	})
+
+	Convey("Test advanced schedule (e.g. 02:00 - 00:00)", t, func() {
+		// Schedule: 02:00 - 00:00 (GTM +3)
+		Convey("Time is out of range, nextTime should resemble now", func() {
+			// 2015-09-02, 14:00:00 GMT+03:00
+			now := time.Unix(1441191600, 0)
+			subscription.ThrottlingEnabled = false
+			subscription.Schedule = schedule3
+			dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
+			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
+
+			next, throttled := scheduler.calculateNextDelivery(now, &event)
+			// 2015-09-02, 14:00:00 GMT+03:00
+			So(next, ShouldResemble, time.Unix(1441191600, 0))
+			So(throttled, ShouldBeFalse)
+		})
+
+		Convey("Time is in range, nextTime should resemble start of new period", func() {
+			// 2015-09-02, 01:00:00 GMT+03:00
+			now := time.Unix(1441144800, 0)
+			subscription.ThrottlingEnabled = false
+			subscription.Schedule = schedule3
+			dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
+			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
+
+			next, throttled := scheduler.calculateNextDelivery(now, &event)
+			// 2015-09-02, 02:00:00 GMT+03:00
+			So(next, ShouldResemble, time.Unix(1441148400, 0))
+			So(throttled, ShouldBeFalse)
+		})
+
+		Convey("Up border case, nextTime should resemble now", func() {
+			// 2015-09-02, 02:00:00 GMT+03:00
+			now := time.Unix(1441148400, 0)
+			subscription.ThrottlingEnabled = false
+			subscription.Schedule = schedule3
+			dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
+			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
+
+			next, throttled := scheduler.calculateNextDelivery(now, &event)
+			// 2015-09-02, 02:00:00 GMT+03:00
+			So(next, ShouldResemble, time.Unix(1441148400, 0))
+			So(throttled, ShouldBeFalse)
+		})
+
+		Convey("Low border case, nextTime should resemble start of new period", func() {
+			// 2015-09-02, 00:00:00 GMT+03:00
+			now := time.Unix(1441141200, 0)
+			subscription.ThrottlingEnabled = false
+			subscription.Schedule = schedule3
+			dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
+			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
+
+			next, throttled := scheduler.calculateNextDelivery(now, &event)
+			// 2015-09-02, 02:00:00 GMT+03:00
+			So(next, ShouldResemble, time.Unix(1441148400, 0))
+			So(throttled, ShouldBeFalse)
+		})
+
+		Convey("Low border case - 1 minute, nextTime should resemble now", func() {
+			// 2015-09-01, 23:59:00 GMT+03:00
+			now := time.Unix(1441141140, 0)
+			subscription.ThrottlingEnabled = false
+			subscription.Schedule = schedule3
+			dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
+			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
+
+			next, throttled := scheduler.calculateNextDelivery(now, &event)
+			// 2015-09-01, 23:59:00 GMT+03:00
+			So(next, ShouldResemble, time.Unix(1441141140, 0))
+			So(throttled, ShouldBeFalse)
+		})
+
+		Convey("Up border case - 1 minute, nextTime should resemble start of new period", func() {
+			// 2015-09-02, 01:59:00 GMT+03:00
+			now := time.Unix(1441148340, 0)
+			subscription.ThrottlingEnabled = false
+			subscription.Schedule = schedule3
+			dataBase.EXPECT().GetTriggerThrottling(event.TriggerID).Return(time.Unix(0, 0), time.Unix(0, 0))
+			dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(subscription, nil)
+
+			next, throttled := scheduler.calculateNextDelivery(now, &event)
+			// 2015-09-02, 02:00:00 GMT+03:00
+			So(next, ShouldResemble, time.Unix(1441148400, 0))
+			So(throttled, ShouldBeFalse)
+		})
+
 	})
 }
 
@@ -263,5 +342,20 @@ var schedule2 = moira.ScheduleData{
 		{Enabled: false},
 		{Enabled: false},
 		{Enabled: false},
+	},
+}
+
+var schedule3 = moira.ScheduleData{
+	StartOffset:    120,  // 02:00
+	EndOffset:      0,    // 00:00
+	TimezoneOffset: -180, // (GMT +3)
+	Days: []moira.ScheduleDataDay{
+		{Enabled: true},
+		{Enabled: true},
+		{Enabled: true},
+		{Enabled: true},
+		{Enabled: true},
+		{Enabled: true},
+		{Enabled: true},
 	},
 }

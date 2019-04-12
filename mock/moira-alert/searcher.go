@@ -6,6 +6,7 @@ package mock_moira_alert
 
 import (
 	gomock "github.com/golang/mock/gomock"
+	moira "github.com/moira-alert/moira"
 	reflect "reflect"
 )
 
@@ -45,9 +46,9 @@ func (mr *MockSearcherMockRecorder) IsReady() *gomock.Call {
 }
 
 // SearchTriggers mocks base method
-func (m *MockSearcher) SearchTriggers(arg0 []string, arg1 string, arg2 bool, arg3, arg4 int64) ([]string, int64, error) {
+func (m *MockSearcher) SearchTriggers(arg0 []string, arg1 string, arg2 bool, arg3, arg4 int64) ([]*moira.SearchResult, int64, error) {
 	ret := m.ctrl.Call(m, "SearchTriggers", arg0, arg1, arg2, arg3, arg4)
-	ret0, _ := ret[0].([]string)
+	ret0, _ := ret[0].([]*moira.SearchResult)
 	ret1, _ := ret[1].(int64)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2

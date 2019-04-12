@@ -4,18 +4,19 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/gofrs/uuid"
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/mock/moira-alert"
 	"github.com/op/go-logging"
-	"github.com/satori/go.uuid"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestDeletePattern(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 	Convey("Success", t, func() {
@@ -41,7 +42,7 @@ func TestGetAllPatterns(t *testing.T) {
 	pattern2 := "my.second.pattern"
 
 	Convey("One pattern more triggers", t, func() {
-		triggers := []*dto.TriggerModel{{ID: uuid.NewV4().String()}, {ID: uuid.NewV4().String()}}
+		triggers := []*dto.TriggerModel{{ID: uuid.Must(uuid.NewV4()).String()}, {ID: uuid.Must(uuid.NewV4()).String()}}
 		metrics := []string{"my.first.metric"}
 		dataBase.EXPECT().GetPatterns().Return([]string{pattern1}, nil)
 		expectGettingPatternList(dataBase, pattern1, triggers, metrics)

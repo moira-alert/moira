@@ -19,7 +19,7 @@ var (
 	GoVersion    = "unknown"
 )
 
-var moiraValidVersions = []string{"2.2", "2.3"}
+var moiraValidVersions = []string{"2.3"}
 
 var (
 	configFileName         = flag.String("config", "/etc/moira/cli.yml", "Path to configuration file")
@@ -47,12 +47,6 @@ func main() {
 	if *update {
 		fromVersion := checkValidVersion(logger, updateFromVersion, true)
 		switch fromVersion {
-		case "2.2":
-			err := updateFrom22(logger, dataBase)
-			if err != nil {
-				logger.Fatalf("Fail to update from version %s: %s", fromVersion, err.Error())
-			}
-			fallthrough
 		case "2.3":
 			err := updateFrom23(logger, dataBase)
 			if err != nil {
@@ -64,15 +58,6 @@ func main() {
 	if *downgrade {
 		toVersion := checkValidVersion(logger, downgradeToVersion, false)
 		switch toVersion {
-		case "2.2":
-			err := downgradeTo23(logger, dataBase)
-			if err != nil {
-				logger.Fatalf("Fail to downgrade to version %s: %s", toVersion, err.Error())
-			}
-			err = downgradeTo22(logger, dataBase)
-			if err != nil {
-				logger.Fatalf("Fail to downgrade to version %s: %s", toVersion, err.Error())
-			}
 		case "2.3":
 			err := downgradeTo23(logger, dataBase)
 			if err != nil {
@@ -83,7 +68,7 @@ func main() {
 
 	if *plotting {
 		if err := enablePlottingInAllSubscriptions(logger, dataBase); err != nil {
-			logger.Errorf("failed to enable images in all notifications")
+			logger.Errorf("Failed to enable images in all notifications")
 		}
 	}
 }

@@ -3,17 +3,18 @@ package handler
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
+	"github.com/moira-alert/moira/metric_source/local"
+	"github.com/moira-alert/moira/metric_source/remote"
 
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/controller"
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/api/middleware"
 	"github.com/moira-alert/moira/expression"
-	"github.com/moira-alert/moira/remote"
-	"github.com/moira-alert/moira/target"
 )
 
 func trigger(router chi.Router) {
@@ -29,8 +30,6 @@ func trigger(router chi.Router) {
 	router.Route("/metrics", triggerMetrics)
 	router.Put("/setMaintenance", setTriggerMaintenance)
 	router.With(middleware.DateRange("-1hour", "now")).Get("/render", renderTrigger)
-	// deprecated
-	router.Put("/maintenance", setMetricsMaintenance)
 }
 
 func updateTrigger(writer http.ResponseWriter, request *http.Request) {
@@ -38,10 +37,12 @@ func updateTrigger(writer http.ResponseWriter, request *http.Request) {
 	trigger := &dto.Trigger{}
 	if err := render.Bind(request, trigger); err != nil {
 		switch err.(type) {
-		case target.ErrParseExpr, target.ErrEvalExpr, target.ErrUnknownFunction:
+		case local.ErrParseExpr, local.ErrEvalExpr, local.ErrUnknownFunction:
 			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("invalid graphite targets: %s", err.Error())))
 		case expression.ErrInvalidExpression:
 			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("invalid expression: %s", err.Error())))
+		case api.ErrInvalidRequestContent:
+			render.Render(writer, request, api.ErrorInvalidRequest(err))
 		case remote.ErrRemoteTriggerResponse:
 			render.Render(writer, request, api.ErrorRemoteServerUnavailable(err))
 		default:
@@ -118,20 +119,6 @@ func deleteThrottling(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-// ToDo: DEPRECATED, remove in future versions
-func setMetricsMaintenance(writer http.ResponseWriter, request *http.Request) {
-	triggerID := middleware.GetTriggerID(request)
-	metricsMaintenance := dto.MetricsMaintenance{}
-	if err := render.Bind(request, &metricsMaintenance); err != nil {
-		render.Render(writer, request, api.ErrorInvalidRequest(err))
-		return
-	}
-	err := controller.SetMetricsMaintenance(database, triggerID, metricsMaintenance)
-	if err != nil {
-		render.Render(writer, request, err)
-	}
-}
-
 func setTriggerMaintenance(writer http.ResponseWriter, request *http.Request) {
 	triggerID := middleware.GetTriggerID(request)
 	triggerMaintenance := dto.TriggerMaintenance{}
@@ -139,8 +126,10 @@ func setTriggerMaintenance(writer http.ResponseWriter, request *http.Request) {
 		render.Render(writer, request, api.ErrorInvalidRequest(err))
 		return
 	}
+	userLogin := middleware.GetLogin(request)
+	timeCallMaintenance := time.Now().Unix()
 
-	err := controller.SetTriggerMaintenance(database, triggerID, triggerMaintenance)
+	err := controller.SetTriggerMaintenance(database, triggerID, triggerMaintenance, userLogin, timeCallMaintenance)
 	if err != nil {
 		render.Render(writer, request, err)
 	}

@@ -33,34 +33,48 @@ func NewMetricsMatcher(metrics *graphite.FilterMetrics, logger moira.Logger, dat
 
 // Start process matched metrics from channel and save it in cache storage
 func (matcher *MetricsMatcher) Start(matchedMetricsChan chan *moira.MatchedMetric) {
-	flushInterval := time.Second
 	matcher.waitGroup.Add(1)
 	go func() {
 		defer matcher.waitGroup.Done()
-		buffer := make(map[string]*moira.MatchedMetric)
+
+		for batch := range matcher.receiveBatch(matchedMetricsChan) {
+			timer := time.Now()
+			matcher.save(batch)
+			matcher.metrics.SavingTimer.UpdateSince(timer)
+		}
+	}()
+	matcher.logger.Infof("Moira Filter Metrics Matcher started to save %d cached metrics every %s", matcher.cacheCapacity, time.Second.Seconds())
+}
+
+func (matcher *MetricsMatcher) receiveBatch(metrics <-chan *moira.MatchedMetric) <-chan map[string]*moira.MatchedMetric {
+	batchedMetrics := make(chan map[string]*moira.MatchedMetric, 1)
+
+	go func() {
+		defer close(batchedMetrics)
+		batchTimer := time.NewTimer(time.Second)
+		defer batchTimer.Stop()
 		for {
+			batch := make(map[string]*moira.MatchedMetric, matcher.cacheCapacity)
+		retry:
 			select {
-			case metric, ok := <-matchedMetricsChan:
+			case metric, ok := <-metrics:
 				if !ok {
+					batchedMetrics <- batch
 					matcher.logger.Info("Moira Filter Metrics Matcher stopped")
 					return
 				}
-				matcher.cacheStorage.EnrichMatchedMetric(buffer, metric)
-				if len(buffer) < matcher.cacheCapacity {
-					continue
+				matcher.cacheStorage.EnrichMatchedMetric(batch, metric)
+				if len(batch) < matcher.cacheCapacity {
+					goto retry
 				}
-			case <-time.After(flushInterval):
+				batchedMetrics <- batch
+			case <-batchTimer.C:
+				batchedMetrics <- batch
 			}
-			if len(buffer) == 0 {
-				continue
-			}
-			timer := time.Now()
-			matcher.save(buffer)
-			matcher.metrics.SavingTimer.UpdateSince(timer)
-			buffer = make(map[string]*moira.MatchedMetric)
+			batchTimer.Reset(time.Second)
 		}
 	}()
-	matcher.logger.Infof("Moira Filter Metrics Matcher started to save %d cached metrics every %s", matcher.cacheCapacity, flushInterval.String())
+	return batchedMetrics
 }
 
 // Wait waits for metric matcher instance will stop
@@ -70,6 +84,6 @@ func (matcher *MetricsMatcher) Wait() {
 
 func (matcher *MetricsMatcher) save(buffer map[string]*moira.MatchedMetric) {
 	if err := matcher.database.SaveMetrics(buffer); err != nil {
-		matcher.logger.Errorf("Failed to save value in cache storage: %s", err.Error())
+		matcher.logger.Errorf("Failed to save matched metrics: %s", err.Error())
 	}
 }

@@ -10,7 +10,6 @@ import (
 	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/notifier"
 	"github.com/moira-alert/moira/notifier/selfstate"
-	"github.com/moira-alert/moira/remote"
 )
 
 type config struct {
@@ -61,9 +60,9 @@ type selfStateConfig struct {
 func getDefault() config {
 	return config{
 		Redis: cmd.RedisConfig{
-			Host: "localhost",
-			Port: "6379",
-			DBID: 0,
+			Host:            "localhost",
+			Port:            "6379",
+			ConnectionLimit: 512,
 		},
 		Graphite: cmd.GraphiteConfig{
 			RuntimeStats: false,
@@ -97,7 +96,7 @@ func getDefault() config {
 	}
 }
 
-func (config *notifierConfig) getSettings(logger moira.Logger, remoteConfig *remote.Config) notifier.Config {
+func (config *notifierConfig) getSettings(logger moira.Logger) notifier.Config {
 	location, err := time.LoadLocation(config.Timezone)
 	if err != nil {
 		logger.Warningf("Timezone '%s' load failed: %s. Use UTC.", config.Timezone, err.Error())
@@ -121,7 +120,6 @@ func (config *notifierConfig) getSettings(logger moira.Logger, remoteConfig *rem
 		FrontURL:         config.FrontURI,
 		Location:         location,
 		DateTimeFormat:   format,
-		RemoteConfig:     remoteConfig,
 	}
 }
 

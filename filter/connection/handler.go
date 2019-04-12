@@ -13,14 +13,14 @@ import (
 type Handler struct {
 	logger    moira.Logger
 	wg        sync.WaitGroup
-	terminate chan bool
+	terminate chan struct{}
 }
 
 // NewConnectionsHandler creates new Handler
 func NewConnectionsHandler(logger moira.Logger) *Handler {
 	return &Handler{
 		logger:    logger,
-		terminate: make(chan bool, 1),
+		terminate: make(chan struct{}, 1),
 	}
 }
 
@@ -42,16 +42,18 @@ func (handler *Handler) handle(connection net.Conn, lineChan chan<- []byte) {
 	}(connection)
 
 	for {
-		lineBytes, err := buffer.ReadBytes('\n')
+		bytes, err := buffer.ReadBytes('\n')
 		if err != nil {
 			connection.Close()
 			if err != io.EOF {
-				handler.logger.Errorf("read failed: %s", err)
+				handler.logger.Errorf("Fail to read from metric connection: %s", err)
 			}
 			break
 		}
-		lineBytes = lineBytes[:len(lineBytes)-1]
-		lineChan <- lineBytes
+		bytesWithoutCRLF := dropCRLF(bytes)
+		if len(bytesWithoutCRLF) > 0 {
+			lineChan <- bytesWithoutCRLF
+		}
 	}
 }
 
@@ -59,4 +61,15 @@ func (handler *Handler) handle(connection net.Conn, lineChan chan<- []byte) {
 func (handler *Handler) StopHandlingConnections() {
 	close(handler.terminate)
 	handler.wg.Wait()
+}
+
+func dropCRLF(bytes []byte) []byte {
+	bytesLength := len(bytes)
+	if bytesLength > 0 && bytes[bytesLength-1] == '\n' {
+		bytesLength--
+	}
+	if bytesLength > 0 && bytes[bytesLength-1] == '\r' {
+		bytesLength--
+	}
+	return bytes[:bytesLength]
 }

@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/moira-alert/moira/metric_source"
+	"github.com/moira-alert/moira/metric_source/local"
 	"github.com/op/go-logging"
 
 	"github.com/moira-alert/moira"
@@ -31,7 +33,7 @@ var notifierConfig = notifier.Config{
 	DateTimeFormat:   dateTimeFormat,
 }
 
-var shutdown = make(chan bool)
+var shutdown = make(chan struct{})
 
 var notifierMetrics = metrics.ConfigureNotifierMetrics("notifier")
 var logger, _ = logging.GetLogger("Notifier_Test")
@@ -67,8 +69,8 @@ var triggerData = moira.TriggerData{
 
 var event = moira.NotificationEvent{
 	Metric:    "generate.event.1",
-	State:     "OK",
-	OldState:  "WARN",
+	State:     moira.StateOK,
+	OldState:  moira.StateWARN,
 	TriggerID: "triggerID-0000000000001",
 }
 
@@ -76,11 +78,12 @@ func TestNotifier(t *testing.T) {
 	mockCtrl = gomock.NewController(t)
 	defer mockCtrl.Finish()
 	database := redis.NewDatabase(logger, redis.Config{Port: "6379", Host: "localhost"}, redis.Notifier)
+	metricsSourceProvider := metricSource.CreateMetricSourceProvider(local.Create(database), nil)
 	database.SaveContact(&contact)
 	database.SaveSubscription(&subscription)
 	database.SaveTrigger(trigger.ID, &trigger)
 	database.PushNotificationEvent(&event, true)
-	notifier2 := notifier.NewNotifier(database, logger, notifierConfig, notifierMetrics)
+	notifier2 := notifier.NewNotifier(database, logger, notifierConfig, notifierMetrics, metricsSourceProvider)
 	sender := mock_moira_alert.NewMockSender(mockCtrl)
 	sender.EXPECT().Init(senderSettings, logger, location, dateTimeFormat).Return(nil)
 	notifier2.RegisterSender(senderSettings, sender)

@@ -3,7 +3,8 @@ package reply
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/garyburd/redigo/redis"
+
+	"github.com/gomodule/redigo/redis"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
 )
@@ -19,13 +20,12 @@ func Subscription(rep interface{}, err error) (moira.SubscriptionData, error) {
 		if err == redis.ErrNil {
 			return subscription, database.ErrNil
 		}
-		return subscription, fmt.Errorf("Failed to read subscription: %s", err.Error())
+		return subscription, fmt.Errorf("failed to read subscription: %s", err.Error())
 	}
 	err = json.Unmarshal(bytes, &subscription)
 	if err != nil {
-		return subscription, fmt.Errorf("Failed to parse subscription json %s: %s", string(bytes), err.Error())
+		return subscription, fmt.Errorf("failed to parse subscription json %s: %s", string(bytes), err.Error())
 	}
-	convertSubscriptionIfNecessary(&subscription)
 	return subscription, nil
 }
 
@@ -36,7 +36,7 @@ func Subscriptions(rep interface{}, err error) ([]*moira.SubscriptionData, error
 		if err == redis.ErrNil {
 			return make([]*moira.SubscriptionData, 0), nil
 		}
-		return nil, fmt.Errorf("Failed to read subscriptions: %s", err.Error())
+		return nil, fmt.Errorf("failed to read subscriptions: %s", err.Error())
 	}
 	subscriptions := make([]*moira.SubscriptionData, len(values))
 	for i, value := range values {
@@ -50,23 +50,4 @@ func Subscriptions(rep interface{}, err error) ([]*moira.SubscriptionData, error
 		}
 	}
 	return subscriptions, nil
-}
-
-func convertSubscriptionIfNecessary(subscription *moira.SubscriptionData) {
-	subscriptionTags := make([]string, 0)
-	for _, tag := range subscription.Tags {
-		switch tag {
-		case "ERROR":
-			if !subscription.IgnoreWarnings {
-				subscription.IgnoreWarnings = true
-			}
-		case "DEGRADATION", "HIGH DEGRADATION":
-			if !subscription.IgnoreRecoverings {
-				subscription.IgnoreRecoverings = true
-			}
-		default:
-			subscriptionTags = append(subscriptionTags, tag)
-		}
-	}
-	subscription.Tags = subscriptionTags
 }

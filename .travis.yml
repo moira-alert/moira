@@ -4,21 +4,17 @@ services:
   - redis-server
 language: go
 go:
-  - 1.11.2
+  - 1.11.5
 git:
   depth: 1000
 addons:
   apt:
     packages: rpm
 notifications:
-  webhooks:
-    urls:
-      - https://webhooks.gitter.im/e/9992cd0d36a6ba9bb40b
-    on_success: change
-    on_failure: always
-    on_start: never
   slack:
     secure: ZzUtFRyc8lJfO1+qVf/oWd3PK7x3gb/MiC4U4atMmHQX2Vr+zHBZiVijK91sBhozJ7oP0GWkgmVqbKG5GDqEGur7Nt0aNfx9GU2d6dqvFeQGY910EDK9wmdSCMk3gfZ1d1ur2NmkyxNRlbDnlHIGdTgzqrKsvlhk9BxLw1D1/1Ap57pZxkCGsu9VP/NUZhywo8T7HhLyarKO3iBhNFQqR1ifVHS0KjDS6p+4JXg74Ufq91WEWw+/L6NMSO9DPDu1i4HHp6rNE2rjR/0O5Nl8AtIApFOpdjh/9vNv9Mm/S/8PpfPo4nuhL1YGsdCd2dRf9owMQVfVgxZVNK/wyt+NxbG3IuuUf0Nve4wgnKLBaiqLgHw++uLS/+jADY/d9EN4Pb0oLQ5S0cKhFjJ63B3z0MsGoYkZCvpBvHKcOt2zWmiK+ugx2Er2KRSonGYpHHLdGxvlUFuWf5vBh/dnyxYMtnbtryW0xIabHKkXT2lr00xdNRNYYZPAfN0Rdp6BJjzel1yPnj71aNW7qmauMqiCZDjjiLZ6nvL7WEvsJoQyz84LNSv9zQK2XEaGF3bA8OOf6Mse25PWoCUjHwOQQncdLKTb0/RQOWykLAHIjagKotXV8RtTNXN3kYQwUAst7cYESYeTlqB510dKge74R6rQOrrMCInGuDfzZ3+duqVXip4=
+    on_success: never
+    on_failure: always
 before_install:
   - sudo apt-get update
   - sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
@@ -59,12 +55,6 @@ deploy:
     skip_cleanup: true
     on:
       branch: develop
-  - provider: script
-    script:
-      - make docker_latest_images
-    skip_cleanup: true
-    on:
-      branch: master
   - provider: script
     script:
       - make docker_release_images

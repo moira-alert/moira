@@ -4,50 +4,53 @@ import (
 	"fmt"
 	"time"
 
-	"gopkg.in/tucnak/telebot.v2"
-
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/worker"
+	"gopkg.in/tucnak/telebot.v2"
 )
 
-const messenger = "telegram"
+const (
+	telegramLockName = "moira-telegram-users:moira-bot-host"
+	workerName       = "Telebot"
+	messenger        = "telegram"
+	telegramLockTTL  = 30 * time.Second
+)
 
 var (
-	telegramMessageLimit    = 4096
-	pollerTimeout           = 10 * time.Second
-	databaseMutexExpiry     = 30 * time.Second
-	singlePollerStateExpiry = time.Minute
-	emojiStates             = map[string]string{
-		"OK":     "\xe2\x9c\x85",
-		"WARN":   "\xe2\x9a\xa0",
-		"ERROR":  "\xe2\xad\x95",
-		"NODATA": "\xf0\x9f\x92\xa3",
-		"TEST":   "\xf0\x9f\x98\x8a",
+	pollerTimeout = 10 * time.Second
+	emojiStates   = map[moira.State]string{
+		moira.StateOK:     "\xe2\x9c\x85",
+		moira.StateWARN:   "\xe2\x9a\xa0",
+		moira.StateERROR:  "\xe2\xad\x95",
+		moira.StateNODATA: "\xf0\x9f\x92\xa3",
+		moira.StateTEST:   "\xf0\x9f\x98\x8a",
 	}
 )
 
 // Sender implements moira sender interface via telegram
 type Sender struct {
 	DataBase moira.Database
-	APIToken string
-	FrontURI string
 	logger   moira.Logger
+	apiToken string
+	frontURI string
 	bot      *telebot.Bot
 	location *time.Location
 }
 
 // Init loads yaml config, configures and starts telegram bot
 func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
-	var err error
-	sender.APIToken = senderSettings["api_token"]
-	if sender.APIToken == "" {
+	apiToken := senderSettings["api_token"]
+	if apiToken == "" {
 		return fmt.Errorf("can not read telegram api_token from config")
 	}
-	sender.FrontURI = senderSettings["front_uri"]
+
+	sender.apiToken = apiToken
+	sender.frontURI = senderSettings["front_uri"]
 	sender.logger = logger
 	sender.location = location
-
+	var err error
 	sender.bot, err = telebot.NewBot(telebot.Settings{
-		Token:  sender.APIToken,
+		Token:  sender.apiToken,
 		Poller: &telebot.LongPoller{Timeout: pollerTimeout},
 	})
 	if err != nil {
@@ -59,46 +62,24 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 			sender.logger.Errorf("Error handling incoming message: %s", err.Error())
 		}
 	})
-
-	err = sender.runTelebot()
-	if err != nil {
-		return fmt.Errorf("error running bot: %s", err.Error())
-	}
+	go sender.runTelebot()
 	return nil
 }
 
 // runTelebot starts telegram bot and manages bot subscriptions
 // to make sure there is always only one working Poller
-func (sender *Sender) runTelebot() error {
-	firstCheck := true
-	go func() {
-		for {
-			if sender.DataBase.RegisterBotIfAlreadyNot(messenger, databaseMutexExpiry) {
-				sender.logger.Infof("Registered new %s bot, checking for new messages", messenger)
-				go sender.bot.Start()
-				sender.renewSubscription(databaseMutexExpiry)
-				continue
-			}
-			if firstCheck {
-				sender.logger.Infof("%s bot already registered, trying for register every %v in loop", messenger, singlePollerStateExpiry)
-				firstCheck = false
-			}
-			<-time.After(singlePollerStateExpiry)
-		}
-	}()
-	return nil
-}
-
-// renewSubscription tries to renew bot subscription
-// and gracefully stops bot on fail to prevent multiple Poller instances running
-func (sender *Sender) renewSubscription(ttl time.Duration) {
-	checkTicker := time.NewTicker((ttl / time.Second) / 2 * time.Second)
-	for {
-		<-checkTicker.C
-		if !sender.DataBase.RenewBotRegistration(messenger) {
-			sender.logger.Warningf("Could not renew subscription for %s bot, try to register bot again", messenger)
-			sender.bot.Stop()
-			return
-		}
+func (sender *Sender) runTelebot() {
+	workerAction := func(stop <-chan struct{}) error {
+		sender.bot.Start()
+		<-stop
+		sender.bot.Stop()
+		return nil
 	}
+
+	worker.NewWorker(
+		workerName,
+		sender.logger,
+		sender.DataBase.NewLock(telegramLockName, telegramLockTTL),
+		workerAction,
+	).Run(nil)
 }

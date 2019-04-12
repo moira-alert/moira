@@ -8,7 +8,7 @@ import (
 
 	"github.com/go-chi/render"
 	"github.com/go-graphite/carbonapi/date"
-	"github.com/go-graphite/carbonapi/expr/types"
+	"github.com/moira-alert/moira/metric_source"
 	"github.com/wcharczuk/go-chart"
 
 	"github.com/moira-alert/moira"
@@ -16,16 +16,15 @@ import (
 	"github.com/moira-alert/moira/api/controller"
 	"github.com/moira-alert/moira/api/middleware"
 	"github.com/moira-alert/moira/plotting"
-	"github.com/moira-alert/moira/remote"
 )
 
 func renderTrigger(writer http.ResponseWriter, request *http.Request) {
-	remoteCfg, from, to, triggerID, fetchRealtimeData, err := getEvaluationParameters(request)
+	sourceProvider, from, to, triggerID, fetchRealtimeData, err := getEvaluationParameters(request)
 	if err != nil {
 		render.Render(writer, request, api.ErrorInvalidRequest(err))
 		return
 	}
-	metricsData, trigger, err := evaluateTriggerMetrics(remoteCfg, from, to, triggerID, fetchRealtimeData)
+	metricsData, trigger, err := evaluateTriggerMetrics(sourceProvider, from, to, triggerID, fetchRealtimeData)
 	if err != nil {
 		render.Render(writer, request, api.ErrorInternalServer(err))
 		return
@@ -42,18 +41,19 @@ func renderTrigger(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func getEvaluationParameters(request *http.Request) (remoteCfg *remote.Config, from int64, to int64, triggerID string, fetchRealtimeData bool, err error) {
-	remoteCfg = middleware.GetRemoteConfig(request)
+func getEvaluationParameters(request *http.Request) (sourceProvider *metricSource.SourceProvider, from int64, to int64, triggerID string, fetchRealtimeData bool, err error) {
+	sourceProvider = middleware.GetTriggerTargetsSourceProvider(request)
 	triggerID = middleware.GetTriggerID(request)
 	fromStr := middleware.GetFromStr(request)
 	toStr := middleware.GetToStr(request)
 	from = date.DateParamToEpoch(fromStr, "UTC", 0, time.UTC)
 	if from == 0 {
-		return remoteCfg, 0, 0, "", false, fmt.Errorf("can not parse from: %s", fromStr)
+		return sourceProvider, 0, 0, "", false, fmt.Errorf("can not parse from: %s", fromStr)
 	}
+	from -= from % 60
 	to = date.DateParamToEpoch(toStr, "UTC", 0, time.UTC)
 	if to == 0 {
-		return remoteCfg, 0, 0, "", false, fmt.Errorf("can not parse to: %s", fromStr)
+		return sourceProvider, 0, 0, "", false, fmt.Errorf("can not parse to: %s", fromStr)
 	}
 	realtime := request.URL.Query().Get("realtime")
 	if realtime == "" {
@@ -61,27 +61,23 @@ func getEvaluationParameters(request *http.Request) (remoteCfg *remote.Config, f
 	}
 	fetchRealtimeData, err = strconv.ParseBool(realtime)
 	if err != nil {
-		return remoteCfg, 0, 0, "", false, fmt.Errorf("invalid realtime param: %s", err.Error())
+		return sourceProvider, 0, 0, "", false, fmt.Errorf("invalid realtime param: %s", err.Error())
 	}
 	return
 }
 
-func evaluateTriggerMetrics(remoteCfg *remote.Config, from, to int64, triggerID string, fetchRealtimeData bool) ([]*types.MetricData, *moira.Trigger, error) {
-	tts, trigger, err := controller.GetTriggerEvaluationResult(database, remoteCfg, from, to, triggerID, fetchRealtimeData)
+func evaluateTriggerMetrics(metricSourceProvider *metricSource.SourceProvider, from, to int64, triggerID string, fetchRealtimeData bool) ([]*metricSource.MetricData, *moira.Trigger, error) {
+	tts, trigger, err := controller.GetTriggerEvaluationResult(database, metricSourceProvider, from, to, triggerID, fetchRealtimeData)
 	if err != nil {
 		return nil, trigger, err
 	}
-	var metricsData = make([]*types.MetricData, 0, len(tts.Main)+len(tts.Additional))
-	for _, ts := range tts.Main {
-		metricsData = append(metricsData, &ts.MetricData)
-	}
-	for _, ts := range tts.Additional {
-		metricsData = append(metricsData, &ts.MetricData)
-	}
+	var metricsData = make([]*metricSource.MetricData, 0, len(tts.Main)+len(tts.Additional))
+	metricsData = append(metricsData, tts.Main...)
+	metricsData = append(metricsData, tts.Additional...)
 	return metricsData, trigger, err
 }
 
-func buildRenderable(request *http.Request, trigger *moira.Trigger, metricsData []*types.MetricData) (*chart.Chart, error) {
+func buildRenderable(request *http.Request, trigger *moira.Trigger, metricsData []*metricSource.MetricData) (*chart.Chart, error) {
 	timezone := request.URL.Query().Get("timezone")
 	location, err := time.LoadLocation(timezone)
 	if err != nil {
@@ -92,8 +88,7 @@ func buildRenderable(request *http.Request, trigger *moira.Trigger, metricsData 
 	if err != nil {
 		return nil, fmt.Errorf("can not initialize plot theme %s", err.Error())
 	}
-	var metricsWhiteList = make([]string, 0)
-	renderable, err := plotTemplate.GetRenderable(trigger, metricsData, metricsWhiteList)
+	renderable, err := plotTemplate.GetRenderable(trigger, metricsData)
 	if err != nil {
 		return nil, err
 	}

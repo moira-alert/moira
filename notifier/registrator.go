@@ -11,50 +11,50 @@ import (
 	"github.com/moira-alert/moira/senders/slack"
 	"github.com/moira-alert/moira/senders/telegram"
 	"github.com/moira-alert/moira/senders/twilio"
+	"github.com/moira-alert/moira/senders/webhook"
 	// "github.com/moira-alert/moira/senders/kontur"
+)
+
+const (
+	mailSender        = "mail"
+	pushoverSender    = "pushover"
+	scriptSender      = "script"
+	slackSender       = "slack"
+	telegramSender    = "telegram"
+	twilioSmsSender   = "twilio sms"
+	twilioVoiceSender = "twilio voice"
+	webhookSender     = "webhook"
 )
 
 // RegisterSenders watch on senders config and register all configured senders
 func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) error {
+	var err error
 	for _, senderSettings := range notifier.config.Senders {
 		senderSettings["front_uri"] = notifier.config.FrontURL
 		switch senderSettings["type"] {
-		case "pushover":
-			if err := notifier.RegisterSender(senderSettings, &pushover.Sender{}); err != nil {
-				notifier.logger.Fatalf("Can not register sender %s: %s", senderSettings["type"], err)
-			}
-		case "slack":
-			if err := notifier.RegisterSender(senderSettings, &slack.Sender{}); err != nil {
-				notifier.logger.Fatalf("Can not register sender %s: %s", senderSettings["type"], err)
-			}
-		case "mail":
-			if err := notifier.RegisterSender(senderSettings, &mail.Sender{}); err != nil {
-				notifier.logger.Fatalf("Can not register sender %s: %s", senderSettings["type"], err)
-			}
-		case "script":
-			if err := notifier.RegisterSender(senderSettings, &script.Sender{}); err != nil {
-				notifier.logger.Fatalf("Can not register sender %s: %s", senderSettings["type"], err)
-			}
-		case "telegram":
-			if err := notifier.RegisterSender(senderSettings, &telegram.Sender{DataBase: connector}); err != nil {
-				notifier.logger.Fatalf("Can not register sender %s: %s", senderSettings["type"], err)
-			}
-		case "twilio sms":
-			if err := notifier.RegisterSender(senderSettings, &twilio.Sender{}); err != nil {
-				notifier.logger.Fatalf("Can not register sender %s: %s", senderSettings["type"], err)
-			}
-		case "twilio voice":
-			if err := notifier.RegisterSender(senderSettings, &twilio.Sender{}); err != nil {
-				notifier.logger.Fatalf("Can not register sender %s: %s", senderSettings["type"], err)
-			}
+		case pushoverSender:
+			err = notifier.RegisterSender(senderSettings, &pushover.Sender{})
+		case slackSender:
+			err = notifier.RegisterSender(senderSettings, &slack.Sender{})
+		case mailSender:
+			err = notifier.RegisterSender(senderSettings, &mail.Sender{})
+		case telegramSender:
+			err = notifier.RegisterSender(senderSettings, &telegram.Sender{DataBase: connector})
+		case twilioSmsSender, twilioVoiceSender:
+			err = notifier.RegisterSender(senderSettings, &twilio.Sender{})
+		case scriptSender:
+			err = notifier.RegisterSender(senderSettings, &script.Sender{})
+		case webhookSender:
+			err = notifier.RegisterSender(senderSettings, &webhook.Sender{})
 		// case "email":
-		// 	if err := notifier.RegisterSender(senderSettings, &kontur.MailSender{}); err != nil {
-		// 	}
+		// 	err = notifier.RegisterSender(senderSettings, &kontur.MailSender{})
 		// case "phone":
-		// 	if err := notifier.RegisterSender(senderSettings, &kontur.SmsSender{}); err != nil {
-		// 	}
+		// 	err = notifier.RegisterSender(senderSettings, &kontur.SmsSender{})
 		default:
-			return fmt.Errorf("Unknown sender type [%s]", senderSettings["type"])
+			return fmt.Errorf("unknown sender type [%s]", senderSettings["type"])
+		}
+		if err != nil {
+			return err
 		}
 	}
 	return nil
@@ -63,14 +63,15 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 // RegisterSender adds sender for notification type and registers metrics
 func (notifier *StandardNotifier) RegisterSender(senderSettings map[string]string, sender moira.Sender) error {
 	var senderIdent string
-	if senderSettings["type"] == "script" {
+	switch senderSettings["type"] {
+	case scriptSender, webhookSender:
 		senderIdent = senderSettings["name"]
-	} else {
+	default:
 		senderIdent = senderSettings["type"]
 	}
 	err := sender.Init(senderSettings, notifier.logger, notifier.config.Location, notifier.config.DateTimeFormat)
 	if err != nil {
-		return fmt.Errorf("Don't initialize sender [%s], err [%s]", senderIdent, err.Error())
+		return fmt.Errorf("failed to initialize sender [%s], err [%s]", senderIdent, err.Error())
 	}
 	ch := make(chan NotificationPackage)
 	notifier.senders[senderIdent] = ch

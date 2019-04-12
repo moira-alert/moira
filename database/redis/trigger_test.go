@@ -655,6 +655,7 @@ var triggers = []moira.Trigger{
 		Tags:        []string{"test-tag-1"},
 		Patterns:    []string{"test.pattern.1"},
 		TriggerType: moira.RisingTrigger,
+		TTLState:    &moira.TTLStateNODATA,
 	},
 	{
 		ID:          "triggerID-0000000000001",

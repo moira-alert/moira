@@ -3,7 +3,8 @@ package reply
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/garyburd/redigo/redis"
+
+	"github.com/gomodule/redigo/redis"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
 )
@@ -16,11 +17,11 @@ func Event(rep interface{}, err error) (moira.NotificationEvent, error) {
 		if err == redis.ErrNil {
 			return event, database.ErrNil
 		}
-		return event, fmt.Errorf("Failed to read event: %s", err.Error())
+		return event, fmt.Errorf("failed to read event: %s", err.Error())
 	}
 	err = json.Unmarshal(bytes, &event)
 	if err != nil {
-		return event, fmt.Errorf("Failed to parse event json %s: %s", string(bytes), err.Error())
+		return event, fmt.Errorf("failed to parse event json %s: %s", string(bytes), err.Error())
 	}
 	return event, nil
 }
@@ -32,7 +33,7 @@ func Events(rep interface{}, err error) ([]*moira.NotificationEvent, error) {
 		if err == redis.ErrNil {
 			return make([]*moira.NotificationEvent, 0), nil
 		}
-		return nil, fmt.Errorf("Failed to read events: %s", err.Error())
+		return nil, fmt.Errorf("failed to read events: %s", err.Error())
 	}
 	events := make([]*moira.NotificationEvent, len(values))
 	for i, value := range values {

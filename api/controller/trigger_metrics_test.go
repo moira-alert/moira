@@ -4,8 +4,11 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/gofrs/uuid"
 	"github.com/golang/mock/gomock"
-	"github.com/satori/go.uuid"
+	"github.com/moira-alert/moira/metric_source"
+	"github.com/moira-alert/moira/metric_source/remote"
+	"github.com/moira-alert/moira/mock/metric_source"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"github.com/moira-alert/moira"
@@ -13,14 +16,13 @@ import (
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/mock/moira-alert"
-	"github.com/moira-alert/moira/remote"
 )
 
 func TestDeleteTriggerMetric(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-	triggerID := uuid.NewV4().String()
+	triggerID := uuid.Must(uuid.NewV4()).String()
 	trigger := moira.Trigger{ID: triggerID}
 	lastCheck := moira.CheckData{
 		Metrics: map[string]moira.MetricState{
@@ -125,32 +127,32 @@ func TestDeleteTriggerNodataMetrics(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-	triggerID := uuid.NewV4().String()
+	triggerID := uuid.Must(uuid.NewV4()).String()
 	trigger := moira.Trigger{ID: triggerID}
 
 	lastCheckWithManyStates := moira.CheckData{
 		Metrics: map[string]moira.MetricState{
-			"super.metric1": {State: "NODATA"},
-			"super.metric2": {State: "NODATA"},
-			"super.metric3": {State: "NODATA"},
-			"super.metric4": {State: "OK"},
-			"super.metric5": {State: "ERROR"},
-			"super.metric6": {State: "NODATA"},
+			"super.metric1": {State: moira.StateNODATA},
+			"super.metric2": {State: moira.StateNODATA},
+			"super.metric3": {State: moira.StateNODATA},
+			"super.metric4": {State: moira.StateOK},
+			"super.metric5": {State: moira.StateERROR},
+			"super.metric6": {State: moira.StateNODATA},
 		},
 		Score: 100,
 	}
 
 	lastCheckWithoutNodata := moira.CheckData{
 		Metrics: map[string]moira.MetricState{
-			"super.metric4": {State: "OK"},
-			"super.metric5": {State: "ERROR"},
+			"super.metric4": {State: moira.StateOK},
+			"super.metric5": {State: moira.StateERROR},
 		},
 		Score: 100,
 	}
 
 	lastCheckSingleNodata := moira.CheckData{
 		Metrics: map[string]moira.MetricState{
-			"super.metric1": {State: "NODATA"},
+			"super.metric1": {State: moira.StateNODATA},
 		},
 	}
 	emptyLastCheck := moira.CheckData{
@@ -159,10 +161,10 @@ func TestDeleteTriggerNodataMetrics(t *testing.T) {
 
 	lastCheckWithNodataOnly := moira.CheckData{
 		Metrics: map[string]moira.MetricState{
-			"super.metric1": {State: "NODATA"},
-			"super.metric2": {State: "NODATA"},
-			"super.metric3": {State: "NODATA"},
-			"super.metric6": {State: "NODATA"},
+			"super.metric1": {State: moira.StateNODATA},
+			"super.metric2": {State: moira.StateNODATA},
+			"super.metric3": {State: moira.StateNODATA},
+			"super.metric6": {State: moira.StateNODATA},
 		},
 	}
 
@@ -263,78 +265,66 @@ func TestGetTriggerMetrics(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-	triggerID := uuid.NewV4().String()
+	triggerID := uuid.Must(uuid.NewV4()).String()
+	localSource := mock_metric_source.NewMockMetricSource(mockCtrl)
+	remoteSource := mock_metric_source.NewMockMetricSource(mockCtrl)
+	fetchResult := mock_metric_source.NewMockFetchResult(mockCtrl)
+	sourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource)
 	pattern := "super.puper.pattern"
 	metric := "super.puper.metric"
-	dataList := map[string][]*moira.MetricValue{
-		metric: {
-			{
-				RetentionTimestamp: 20,
-				Timestamp:          23,
-				Value:              0,
-			},
-			{
-				RetentionTimestamp: 30,
-				Timestamp:          33,
-				Value:              1,
-			},
-			{
-				RetentionTimestamp: 40,
-				Timestamp:          43,
-				Value:              2,
-			},
-			{
-				RetentionTimestamp: 50,
-				Timestamp:          53,
-				Value:              3,
-			},
-			{
-				RetentionTimestamp: 60,
-				Timestamp:          63,
-				Value:              4,
-			},
-		},
-	}
 
 	var from int64 = 17
 	var until int64 = 67
 	var retention int64 = 10
-	var remoteCfg *remote.Config
+
+	Convey("Trigger is remote but remote is not configured", t, func() {
+		dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{ID: triggerID, Targets: []string{pattern}, IsRemote: true}, nil)
+		remoteSource.EXPECT().IsConfigured().Return(false, nil)
+		triggerMetrics, err := GetTriggerMetrics(dataBase, sourceProvider, from, until, triggerID)
+		So(err, ShouldResemble, api.ErrorInternalServer(metricSource.ErrMetricSourceIsNotConfigured))
+		So(triggerMetrics, ShouldBeNil)
+	})
+
+	Convey("Trigger is remote but remote has bad config", t, func() {
+		dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{ID: triggerID, Targets: []string{pattern}, IsRemote: true}, nil)
+		remoteSource.EXPECT().IsConfigured().Return(false, remote.ErrRemoteStorageDisabled)
+		triggerMetrics, err := GetTriggerMetrics(dataBase, sourceProvider, from, until, triggerID)
+		So(err, ShouldResemble, api.ErrorInternalServer(remote.ErrRemoteStorageDisabled))
+		So(triggerMetrics, ShouldBeNil)
+	})
 
 	Convey("Has metrics", t, func() {
 		dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{ID: triggerID, Targets: []string{pattern}}, nil)
-		dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
-		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
-		dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
-		triggerMetrics, err := GetTriggerMetrics(dataBase, remoteCfg, from, until, triggerID)
+		localSource.EXPECT().IsConfigured().Return(true, nil)
+		localSource.EXPECT().Fetch(pattern, from, until, false).Return(fetchResult, nil)
+		fetchResult.EXPECT().GetMetricsData().Return([]*metricSource.MetricData{metricSource.MakeMetricData(metric, []float64{0, 1, 2, 3, 4}, retention, from)})
+		triggerMetrics, err := GetTriggerMetrics(dataBase, sourceProvider, from, until, triggerID)
 		So(err, ShouldBeNil)
-		So(*triggerMetrics, ShouldResemble, dto.TriggerMetrics{Main: map[string][]*moira.MetricValue{metric: {{Value: 0, Timestamp: 17}, {Value: 1, Timestamp: 27}, {Value: 2, Timestamp: 37}, {Value: 3, Timestamp: 47}}}, Additional: make(map[string][]*moira.MetricValue)})
+		So(*triggerMetrics, ShouldResemble, dto.TriggerMetrics{Main: map[string][]*moira.MetricValue{metric: {{Value: 0, Timestamp: 17}, {Value: 1, Timestamp: 27}, {Value: 2, Timestamp: 37}, {Value: 3, Timestamp: 47}, {Value: 4, Timestamp: 57}}}, Additional: make(map[string][]*moira.MetricValue)})
 	})
 
 	Convey("GetTrigger error", t, func() {
 		expected := fmt.Errorf("get trigger error")
 		dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{}, expected)
-		triggerMetrics, err := GetTriggerMetrics(dataBase, remoteCfg, from, until, triggerID)
+		triggerMetrics, err := GetTriggerMetrics(dataBase, sourceProvider, from, until, triggerID)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 		So(triggerMetrics, ShouldBeNil)
 	})
 
 	Convey("No trigger", t, func() {
 		dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{}, database.ErrNil)
-		triggerMetrics, err := GetTriggerMetrics(dataBase, remoteCfg, from, until, triggerID)
+		triggerMetrics, err := GetTriggerMetrics(dataBase, sourceProvider, from, until, triggerID)
 		So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("trigger not found")))
 		So(triggerMetrics, ShouldBeNil)
 	})
 
-	Convey("GetMetricsValues error", t, func() {
-		expected := fmt.Errorf("getMetricsValues error")
-		dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{ID: triggerID, Targets: []string{pattern}}, nil)
-		dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
-		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
-		dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(nil, expected)
-		triggerMetrics, err := GetTriggerMetrics(dataBase, remoteCfg, from, until, triggerID)
-		So(err, ShouldResemble, api.ErrorInternalServer(expected))
+	Convey("Fetch error", t, func() {
+		expectedError := remote.ErrRemoteTriggerResponse{InternalError: fmt.Errorf("some error"), Target: pattern}
+		dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{ID: triggerID, Targets: []string{pattern}, IsRemote: true}, nil)
+		remoteSource.EXPECT().IsConfigured().Return(true, nil)
+		remoteSource.EXPECT().Fetch(pattern, from, until, false).Return(nil, expectedError)
+		triggerMetrics, err := GetTriggerMetrics(dataBase, sourceProvider, from, until, triggerID)
+		So(err, ShouldResemble, api.ErrorInternalServer(expectedError))
 		So(triggerMetrics, ShouldBeNil)
 	})
-
 }

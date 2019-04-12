@@ -3,9 +3,9 @@ package redis
 import (
 	"testing"
 
+	"github.com/gofrs/uuid"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/logging/go-logging"
-	"github.com/satori/go.uuid"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -116,7 +116,7 @@ func TestUnusedTriggers(t *testing.T) {
 			ID:                "subscriptionID-00000000000001",
 			Enabled:           true,
 			Tags:              []string{"test-tag-1"},
-			Contacts:          []string{uuid.NewV4().String()},
+			Contacts:          []string{uuid.Must(uuid.NewV4()).String()},
 			ThrottlingEnabled: true,
 			User:              "user1",
 		}
@@ -125,7 +125,7 @@ func TestUnusedTriggers(t *testing.T) {
 			ID:                "subscriptionID-00000000000001",
 			Enabled:           true,
 			Tags:              []string{"test-tag-2"},
-			Contacts:          []string{uuid.NewV4().String()},
+			Contacts:          []string{uuid.Must(uuid.NewV4()).String()},
 			ThrottlingEnabled: true,
 			User:              "user1",
 		}
@@ -233,7 +233,7 @@ func TestUnusedTriggers(t *testing.T) {
 					ID:                "new-subscriptionID-1",
 					Enabled:           true,
 					Tags:              []string{"new-tag-1"},
-					Contacts:          []string{uuid.NewV4().String()},
+					Contacts:          []string{uuid.Must(uuid.NewV4()).String()},
 					ThrottlingEnabled: true,
 					User:              "user1",
 				},
@@ -241,7 +241,7 @@ func TestUnusedTriggers(t *testing.T) {
 					ID:                "new-subscriptionID-2",
 					Enabled:           true,
 					Tags:              []string{"new-tag-2"},
-					Contacts:          []string{uuid.NewV4().String()},
+					Contacts:          []string{uuid.Must(uuid.NewV4()).String()},
 					ThrottlingEnabled: true,
 					User:              "user1",
 				},
@@ -249,7 +249,7 @@ func TestUnusedTriggers(t *testing.T) {
 					ID:                "new-subscriptionID-3",
 					Enabled:           true,
 					Tags:              []string{"new-tag-3"},
-					Contacts:          []string{uuid.NewV4().String()},
+					Contacts:          []string{uuid.Must(uuid.NewV4()).String()},
 					ThrottlingEnabled: true,
 					User:              "user1",
 				},

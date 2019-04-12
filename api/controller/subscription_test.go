@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/gofrs/uuid"
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/mock/moira-alert"
-	"github.com/satori/go.uuid"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -21,7 +21,7 @@ func TestGetUserSubscriptions(t *testing.T) {
 	login := "user"
 
 	Convey("Two subscriptions", t, func() {
-		subscriptionIDs := []string{uuid.NewV4().String(), uuid.NewV4().String()}
+		subscriptionIDs := []string{uuid.Must(uuid.NewV4()).String(), uuid.Must(uuid.NewV4()).String()}
 		subscriptions := []*moira.SubscriptionData{{ID: subscriptionIDs[0]}, {ID: subscriptionIDs[1]}}
 		database.EXPECT().GetUserSubscriptionIDs(login).Return(subscriptionIDs, nil)
 		database.EXPECT().GetSubscriptions(subscriptionIDs).Return(subscriptions, nil)
@@ -31,7 +31,7 @@ func TestGetUserSubscriptions(t *testing.T) {
 	})
 
 	Convey("Two ids, one subscription", t, func() {
-		subscriptionIDs := []string{uuid.NewV4().String(), uuid.NewV4().String()}
+		subscriptionIDs := []string{uuid.Must(uuid.NewV4()).String(), uuid.Must(uuid.NewV4()).String()}
 		subscriptions := []*moira.SubscriptionData{{ID: subscriptionIDs[1]}}
 		database.EXPECT().GetUserSubscriptionIDs(login).Return(subscriptionIDs, nil)
 		database.EXPECT().GetSubscriptions(subscriptionIDs).Return(subscriptions, nil)
@@ -51,7 +51,7 @@ func TestGetUserSubscriptions(t *testing.T) {
 
 		Convey("GetSubscriptions", func() {
 			expected := fmt.Errorf("oh no!!!11 Cant get subscriptions")
-			subscriptionIDs := []string{uuid.NewV4().String(), uuid.NewV4().String()}
+			subscriptionIDs := []string{uuid.Must(uuid.NewV4()).String(), uuid.Must(uuid.NewV4()).String()}
 			database.EXPECT().GetUserSubscriptionIDs(login).Return(subscriptionIDs, nil)
 			database.EXPECT().GetSubscriptions(subscriptionIDs).Return(nil, expected)
 			list, err := GetUserSubscriptions(database, login)
@@ -69,7 +69,7 @@ func TestUpdateSubscription(t *testing.T) {
 
 	Convey("Success update", t, func() {
 		subscriptionDTO := &dto.Subscription{}
-		subscriptionID := uuid.NewV4().String()
+		subscriptionID := uuid.Must(uuid.NewV4()).String()
 		subscription := moira.SubscriptionData{
 			ID:   subscriptionID,
 			User: userLogin,
@@ -83,7 +83,7 @@ func TestUpdateSubscription(t *testing.T) {
 
 	Convey("Error save", t, func() {
 		subscriptionDTO := &dto.Subscription{}
-		subscriptionID := uuid.NewV4().String()
+		subscriptionID := uuid.Must(uuid.NewV4()).String()
 		subscription := moira.SubscriptionData{
 			ID:   subscriptionID,
 			User: userLogin,
@@ -101,7 +101,7 @@ func TestRemoveSubscription(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	db := mock_moira_alert.NewMockDatabase(mockCtrl)
-	id := uuid.NewV4().String()
+	id := uuid.Must(uuid.NewV4()).String()
 
 	Convey("Success", t, func() {
 		db.EXPECT().RemoveSubscription(id).Return(nil)
@@ -121,7 +121,7 @@ func TestSendTestNotification(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	db := mock_moira_alert.NewMockDatabase(mockCtrl)
-	id := uuid.NewV4().String()
+	id := uuid.Must(uuid.NewV4()).String()
 
 	Convey("Success", t, func() {
 		db.EXPECT().PushNotificationEvent(gomock.Any(), false).Return(nil)
@@ -152,7 +152,7 @@ func TestCreateSubscription(t *testing.T) {
 
 	Convey("Success create subscription with id", t, func() {
 		sub := &dto.Subscription{
-			ID: uuid.NewV4().String(),
+			ID: uuid.Must(uuid.NewV4()).String(),
 		}
 		dataBase.EXPECT().GetSubscription(sub.ID).Return(moira.SubscriptionData{}, database.ErrNil)
 		dataBase.EXPECT().SaveSubscription(gomock.Any()).Return(nil)
@@ -164,7 +164,7 @@ func TestCreateSubscription(t *testing.T) {
 
 	Convey("Subscription exists by id", t, func() {
 		subscription := &dto.Subscription{
-			ID: uuid.NewV4().String(),
+			ID: uuid.Must(uuid.NewV4()).String(),
 		}
 		dataBase.EXPECT().GetSubscription(subscription.ID).Return(moira.SubscriptionData{}, nil)
 		err := CreateSubscription(dataBase, login, subscription)
@@ -173,7 +173,7 @@ func TestCreateSubscription(t *testing.T) {
 
 	Convey("Error get subscription", t, func() {
 		subscription := &dto.Subscription{
-			ID: uuid.NewV4().String(),
+			ID: uuid.Must(uuid.NewV4()).String(),
 		}
 		err := fmt.Errorf("oooops! Can not write contact")
 		dataBase.EXPECT().GetSubscription(subscription.ID).Return(moira.SubscriptionData{}, err)
@@ -194,8 +194,8 @@ func TestCheckUserPermissionsForSubscription(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-	userLogin := uuid.NewV4().String()
-	id := uuid.NewV4().String()
+	userLogin := uuid.Must(uuid.NewV4()).String()
+	id := uuid.Must(uuid.NewV4()).String()
 
 	Convey("No subscription", t, func() {
 		dataBase.EXPECT().GetSubscription(id).Return(moira.SubscriptionData{}, database.ErrNil)

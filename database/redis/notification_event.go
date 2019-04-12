@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/garyburd/redigo/redis"
+	"github.com/gomodule/redigo/redis"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
@@ -25,7 +25,7 @@ func (connector *DbConnector) GetNotificationEvents(triggerID string, start int6
 		if err == redis.ErrNil {
 			return make([]*moira.NotificationEvent, 0), nil
 		}
-		return nil, fmt.Errorf("Failed to get range for trigger events, triggerID: %s, error: %s", triggerID, err.Error())
+		return nil, fmt.Errorf("failed to get range for trigger events, triggerID: %s, error: %s", triggerID, err.Error())
 	}
 
 	return eventsData, nil
@@ -53,7 +53,7 @@ func (connector *DbConnector) PushNotificationEvent(event *moira.NotificationEve
 	}
 	_, err = c.Do("EXEC")
 	if err != nil {
-		return fmt.Errorf("Failed to EXEC: %s", err.Error())
+		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
 	return nil
 }
@@ -76,7 +76,7 @@ func (connector *DbConnector) FetchNotificationEvent() (moira.NotificationEvent,
 
 	rawRes, err := c.Do("BRPOP", notificationEventsList, 1)
 	if err != nil {
-		return event, fmt.Errorf("Failed to fetch event: %s", err.Error())
+		return event, fmt.Errorf("failed to fetch event: %s", err.Error())
 	}
 	if rawRes == nil {
 		return event, database.ErrNil
@@ -87,10 +87,10 @@ func (connector *DbConnector) FetchNotificationEvent() (moira.NotificationEvent,
 	)
 	res, _ := redis.Values(rawRes, nil)
 	if _, err = redis.Scan(res, &key, &eventBytes); err != nil {
-		return event, fmt.Errorf("Failed to parse event: %s", err.Error())
+		return event, fmt.Errorf("failed to parse event: %s", err.Error())
 	}
 	if err := json.Unmarshal(eventBytes, &event); err != nil {
-		return event, fmt.Errorf("Failed to parse event json %s: %s", eventBytes, err.Error())
+		return event, fmt.Errorf("failed to parse event json %s: %s", eventBytes, err.Error())
 	}
 	return event, nil
 }

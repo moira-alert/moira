@@ -12,10 +12,6 @@ import (
 	"github.com/moira-alert/moira/notifier"
 )
 
-const (
-	testEventState = "TEST"
-)
-
 // FetchEventsWorker checks for new events and new notifications based on it
 type FetchEventsWorker struct {
 	Logger    moira.Logger
@@ -70,7 +66,7 @@ func (worker *FetchEventsWorker) processEvent(event moira.NotificationEvent) err
 		triggerData   moira.TriggerData
 	)
 
-	if event.State != testEventState {
+	if event.State != moira.StateTEST {
 		worker.Logger.Debugf("Processing trigger id %s for metric %s == %f, %s -> %s", event.TriggerID, event.Metric, moira.UseFloat64(event.Value), event.OldState, event.State)
 
 		trigger, err := worker.Database.GetTrigger(event.TriggerID)
@@ -78,7 +74,7 @@ func (worker *FetchEventsWorker) processEvent(event moira.NotificationEvent) err
 			return err
 		}
 		if len(trigger.Tags) == 0 {
-			return fmt.Errorf("No tags found for trigger id %s", event.TriggerID)
+			return fmt.Errorf("no tags found for trigger id %s", event.TriggerID)
 		}
 
 		triggerData = moira.TriggerData{
@@ -139,14 +135,14 @@ func (worker *FetchEventsWorker) getNotificationSubscriptions(event moira.Notifi
 		sub, err := worker.Database.GetSubscription(*event.SubscriptionID)
 		if err != nil {
 			worker.Metrics.SubsMalformed.Mark(1)
-			return nil, fmt.Errorf("Error while read subscription %s: %s", *event.SubscriptionID, err.Error())
+			return nil, fmt.Errorf("error while read subscription %s: %s", *event.SubscriptionID, err.Error())
 		}
 		return &sub, nil
 	} else if event.ContactID != "" {
 		worker.Logger.Debugf("Getting contactID %s for test message", event.ContactID)
 		contact, err := worker.Database.GetContact(event.ContactID)
 		if err != nil {
-			return nil, fmt.Errorf("Error while read contact %s: %s", event.ContactID, err.Error())
+			return nil, fmt.Errorf("error while read contact %s: %s", event.ContactID, err.Error())
 		}
 		sub := &moira.SubscriptionData{
 			ID:                "testSubscription",
@@ -168,7 +164,7 @@ func (worker *FetchEventsWorker) isNotificationRequired(subscription *moira.Subs
 		worker.Logger.Debugf("Subscription is nil")
 		return false
 	}
-	if event.State != testEventState {
+	if event.State != moira.StateTEST {
 		if !subscription.Enabled {
 			worker.Logger.Debugf("Subscription %s is disabled", subscription.ID)
 			return false

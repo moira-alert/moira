@@ -7,7 +7,7 @@ import (
 	"github.com/patrickmn/go-cache"
 )
 
-func (worker *Checker) metricsChecker(metricEventsChannel <-chan *moira.MetricEvent) error {
+func (worker *Checker) newMetricsHandler(metricEventsChannel <-chan *moira.MetricEvent) error {
 	for {
 		metricEvent, ok := <-metricEventsChannel
 		if !ok {
@@ -46,37 +46,32 @@ func (worker *Checker) handleMetricEvent(pattern string) error {
 }
 
 func (worker *Checker) addTriggerIDsIfNeeded(triggerIDs []string) {
-	needToCheckTriggerIDs := make([]string, len(triggerIDs))
-	for _, triggerID := range triggerIDs {
-		if worker.needHandleTrigger(triggerID) {
-			needToCheckTriggerIDs = append(needToCheckTriggerIDs, triggerID)
-		}
-	}
+	needToCheckTriggerIDs := worker.getTriggerIDsToCheck(triggerIDs)
 	if len(needToCheckTriggerIDs) > 0 {
-		worker.Database.AddTriggersToCheck(needToCheckTriggerIDs)
+		worker.Database.AddLocalTriggersToCheck(needToCheckTriggerIDs)
 	}
 }
 
 func (worker *Checker) addRemoteTriggerIDsIfNeeded(triggerIDs []string) {
-	needToCheckRemoteTriggerIDs := make([]string, len(triggerIDs))
-	for _, triggerID := range triggerIDs {
-		if worker.needHandleTrigger(triggerID) {
-			needToCheckRemoteTriggerIDs = append(needToCheckRemoteTriggerIDs, triggerID)
-		}
-	}
+	needToCheckRemoteTriggerIDs := worker.getTriggerIDsToCheck(triggerIDs)
 	if len(needToCheckRemoteTriggerIDs) > 0 {
 		worker.Database.AddRemoteTriggersToCheck(needToCheckRemoteTriggerIDs)
 	}
 }
 
-func (worker *Checker) needHandleTrigger(triggerID string) bool {
-	if _, ok := worker.lazyTriggerIDs[triggerID]; ok {
-		randomDuration := worker.getRandomLazyCacheDuration()
-		err := worker.LazyTriggersCache.Add(triggerID, true, randomDuration)
-		if err != nil {
-			return false
+func (worker *Checker) getTriggerIDsToCheck(triggerIDs []string) []string {
+	lazyTriggerIDs := worker.lazyTriggerIDs.Load().(map[string]bool)
+	triggerIDsToCheck := make([]string, len(triggerIDs))
+	for _, triggerID := range triggerIDs {
+		if _, ok := lazyTriggerIDs[triggerID]; ok {
+			randomDuration := worker.getRandomLazyCacheDuration()
+			if err := worker.LazyTriggersCache.Add(triggerID, true, randomDuration); err != nil {
+				continue
+			}
+		}
+		if err := worker.TriggerCache.Add(triggerID, true, cache.DefaultExpiration); err == nil {
+			triggerIDsToCheck = append(triggerIDsToCheck, triggerID)
 		}
 	}
-	err := worker.TriggerCache.Add(triggerID, true, cache.DefaultExpiration)
-	return err == nil
+	return triggerIDsToCheck
 }

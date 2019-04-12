@@ -5,16 +5,16 @@ import (
 	"bytes"
 	"fmt"
 	"math"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/go-graphite/carbonapi/expr/types"
-	pb "github.com/go-graphite/protocol/carbonapi_v3_pb"
 	"github.com/gotokatsuya/ipare"
 	"github.com/gotokatsuya/ipare/util"
+	"github.com/moira-alert/moira/metric_source"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/wcharczuk/go-chart"
 
@@ -27,13 +27,13 @@ const (
 	maxAcceptableHashDistance   = 5
 )
 
-const (
-	plotHashDistanceTestOuterPointIncrement   = float64(10000)
-	plotHashDistanceTestOuterPointMultiplier  = float64(1000)
-	plotHashDistanceTestRisingWarnThreshold   = float64(43)
-	plotHashDistanceTestRisingErrorThreshold  = float64(76)
-	plotHashDistanceTestFallingWarnThreshold  = plotHashDistanceTestRisingErrorThreshold
-	plotHashDistanceTestFallingErrorThreshold = plotHashDistanceTestRisingWarnThreshold
+var (
+	plotTestOuterPointIncrement   = float64(10000)
+	plotTestOuterPointMultiplier  = float64(1000)
+	plotTestRisingWarnThreshold   = float64(43)
+	plotTestRisingErrorThreshold  = float64(76)
+	plotTestFallingWarnThreshold  = plotTestRisingErrorThreshold
+	plotTestFallingErrorThreshold = plotTestRisingWarnThreshold
 )
 
 // plotsHashDistancesTestCase is a single plot test case
@@ -130,8 +130,8 @@ var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 		useHumanizedValues: true,
 		triggerType:        moira.RisingTrigger,
 		stateOk:            true,
-		warnValue:          plotHashDistanceTestRisingWarnThreshold - plotHashDistanceTestOuterPointIncrement,
-		errorValue:         plotHashDistanceTestRisingErrorThreshold + plotHashDistanceTestOuterPointIncrement,
+		warnValue:          plotTestRisingWarnThreshold - plotTestOuterPointIncrement,
+		errorValue:         plotTestRisingErrorThreshold + plotTestOuterPointIncrement,
 		expected:           maxAcceptableHashDistance,
 	},
 	{
@@ -139,7 +139,7 @@ var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 		plotTheme:          "dark",
 		useHumanizedValues: true,
 		triggerType:        moira.RisingTrigger,
-		warnValue:          plotHashDistanceTestRisingWarnThreshold,
+		warnValue:          plotTestRisingWarnThreshold,
 		errorValue:         nil,
 		expected:           maxAcceptableHashDistance,
 	},
@@ -149,7 +149,7 @@ var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 		useHumanizedValues: true,
 		triggerType:        moira.RisingTrigger,
 		warnValue:          nil,
-		errorValue:         plotHashDistanceTestRisingErrorThreshold,
+		errorValue:         plotTestRisingErrorThreshold,
 		expected:           maxAcceptableHashDistance,
 	},
 	{
@@ -157,8 +157,8 @@ var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 		plotTheme:          "dark",
 		useHumanizedValues: true,
 		triggerType:        moira.RisingTrigger,
-		warnValue:          plotHashDistanceTestRisingWarnThreshold,
-		errorValue:         plotHashDistanceTestRisingErrorThreshold,
+		warnValue:          plotTestRisingWarnThreshold,
+		errorValue:         plotTestRisingErrorThreshold,
 		expected:           maxAcceptableHashDistance,
 	},
 	{
@@ -167,8 +167,8 @@ var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 		useHumanizedValues: false,
 		triggerType:        moira.RisingTrigger,
 		stateOk:            true,
-		warnValue:          plotHashDistanceTestRisingWarnThreshold - plotHashDistanceTestOuterPointIncrement,
-		errorValue:         plotHashDistanceTestRisingErrorThreshold + plotHashDistanceTestOuterPointIncrement,
+		warnValue:          plotTestRisingWarnThreshold - plotTestOuterPointIncrement,
+		errorValue:         plotTestRisingErrorThreshold + plotTestOuterPointIncrement,
 		expected:           maxAcceptableHashDistance,
 	},
 	{
@@ -176,7 +176,7 @@ var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 		plotTheme:          "dark",
 		useHumanizedValues: false,
 		triggerType:        moira.RisingTrigger,
-		warnValue:          plotHashDistanceTestRisingWarnThreshold,
+		warnValue:          plotTestRisingWarnThreshold,
 		errorValue:         nil,
 		expected:           maxAcceptableHashDistance,
 	},
@@ -186,7 +186,7 @@ var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 		useHumanizedValues: false,
 		triggerType:        moira.RisingTrigger,
 		warnValue:          nil,
-		errorValue:         plotHashDistanceTestRisingErrorThreshold,
+		errorValue:         plotTestRisingErrorThreshold,
 		expected:           maxAcceptableHashDistance,
 	},
 	{
@@ -194,8 +194,8 @@ var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 		plotTheme:          "dark",
 		useHumanizedValues: false,
 		triggerType:        moira.RisingTrigger,
-		warnValue:          plotHashDistanceTestRisingWarnThreshold,
-		errorValue:         plotHashDistanceTestRisingErrorThreshold,
+		warnValue:          plotTestRisingWarnThreshold,
+		errorValue:         plotTestRisingErrorThreshold,
 		expected:           maxAcceptableHashDistance,
 	},
 	{
@@ -204,8 +204,8 @@ var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 		useHumanizedValues: true,
 		triggerType:        moira.FallingTrigger,
 		stateOk:            true,
-		warnValue:          plotHashDistanceTestFallingWarnThreshold - plotHashDistanceTestOuterPointIncrement,
-		errorValue:         plotHashDistanceTestFallingErrorThreshold + plotHashDistanceTestOuterPointIncrement,
+		warnValue:          plotTestFallingWarnThreshold - plotTestOuterPointIncrement,
+		errorValue:         plotTestFallingErrorThreshold + plotTestOuterPointIncrement,
 		expected:           maxAcceptableHashDistance,
 	},
 	{
@@ -213,7 +213,7 @@ var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 		plotTheme:          "dark",
 		useHumanizedValues: true,
 		triggerType:        moira.FallingTrigger,
-		warnValue:          plotHashDistanceTestFallingWarnThreshold,
+		warnValue:          plotTestFallingWarnThreshold,
 		errorValue:         nil,
 		expected:           maxAcceptableHashDistance,
 	},
@@ -223,7 +223,7 @@ var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 		useHumanizedValues: true,
 		triggerType:        moira.FallingTrigger,
 		warnValue:          nil,
-		errorValue:         plotHashDistanceTestFallingErrorThreshold,
+		errorValue:         plotTestFallingErrorThreshold,
 		expected:           maxAcceptableHashDistance,
 	},
 	{
@@ -231,8 +231,8 @@ var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 		plotTheme:          "dark",
 		useHumanizedValues: true,
 		triggerType:        moira.FallingTrigger,
-		warnValue:          plotHashDistanceTestFallingWarnThreshold,
-		errorValue:         plotHashDistanceTestFallingErrorThreshold,
+		warnValue:          plotTestFallingWarnThreshold,
+		errorValue:         plotTestFallingErrorThreshold,
 		expected:           maxAcceptableHashDistance,
 	},
 	{
@@ -241,8 +241,8 @@ var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 		useHumanizedValues: false,
 		triggerType:        moira.FallingTrigger,
 		stateOk:            true,
-		warnValue:          plotHashDistanceTestFallingWarnThreshold - plotHashDistanceTestOuterPointIncrement,
-		errorValue:         plotHashDistanceTestFallingErrorThreshold + plotHashDistanceTestOuterPointIncrement,
+		warnValue:          plotTestFallingWarnThreshold - plotTestOuterPointIncrement,
+		errorValue:         plotTestFallingErrorThreshold + plotTestOuterPointIncrement,
 		expected:           maxAcceptableHashDistance,
 	},
 	{
@@ -250,7 +250,7 @@ var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 		plotTheme:          "dark",
 		useHumanizedValues: false,
 		triggerType:        moira.FallingTrigger,
-		warnValue:          plotHashDistanceTestFallingWarnThreshold,
+		warnValue:          plotTestFallingWarnThreshold,
 		errorValue:         nil,
 		expected:           maxAcceptableHashDistance,
 	},
@@ -260,7 +260,7 @@ var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 		useHumanizedValues: false,
 		triggerType:        moira.FallingTrigger,
 		warnValue:          nil,
-		errorValue:         plotHashDistanceTestFallingErrorThreshold,
+		errorValue:         plotTestFallingErrorThreshold,
 		expected:           maxAcceptableHashDistance,
 	},
 	{
@@ -268,8 +268,8 @@ var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 		plotTheme:          "dark",
 		useHumanizedValues: false,
 		triggerType:        moira.FallingTrigger,
-		warnValue:          plotHashDistanceTestFallingWarnThreshold,
-		errorValue:         plotHashDistanceTestFallingErrorThreshold,
+		warnValue:          plotTestFallingWarnThreshold,
+		errorValue:         plotTestFallingErrorThreshold,
 		expected:           maxAcceptableHashDistance,
 	},
 	{
@@ -296,8 +296,8 @@ var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 		useHumanizedValues: true,
 		triggerType:        moira.RisingTrigger,
 		stateOk:            true,
-		warnValue:          plotHashDistanceTestRisingWarnThreshold - plotHashDistanceTestOuterPointIncrement,
-		errorValue:         plotHashDistanceTestRisingErrorThreshold + plotHashDistanceTestOuterPointIncrement,
+		warnValue:          plotTestRisingWarnThreshold - plotTestOuterPointIncrement,
+		errorValue:         plotTestRisingErrorThreshold + plotTestOuterPointIncrement,
 		expected:           maxAcceptableHashDistance,
 	},
 	{
@@ -305,7 +305,7 @@ var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 		plotTheme:          "light",
 		useHumanizedValues: true,
 		triggerType:        moira.RisingTrigger,
-		warnValue:          plotHashDistanceTestRisingWarnThreshold,
+		warnValue:          plotTestRisingWarnThreshold,
 		errorValue:         nil,
 		expected:           maxAcceptableHashDistance,
 	},
@@ -315,7 +315,7 @@ var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 		useHumanizedValues: true,
 		triggerType:        moira.RisingTrigger,
 		warnValue:          nil,
-		errorValue:         plotHashDistanceTestRisingErrorThreshold,
+		errorValue:         plotTestRisingErrorThreshold,
 		expected:           maxAcceptableHashDistance,
 	},
 	{
@@ -323,8 +323,8 @@ var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 		plotTheme:          "light",
 		useHumanizedValues: true,
 		triggerType:        moira.RisingTrigger,
-		warnValue:          plotHashDistanceTestRisingWarnThreshold,
-		errorValue:         plotHashDistanceTestRisingErrorThreshold,
+		warnValue:          plotTestRisingWarnThreshold,
+		errorValue:         plotTestRisingErrorThreshold,
 		expected:           maxAcceptableHashDistance,
 	},
 	{
@@ -333,8 +333,8 @@ var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 		useHumanizedValues: false,
 		triggerType:        moira.RisingTrigger,
 		stateOk:            true,
-		warnValue:          plotHashDistanceTestRisingWarnThreshold - plotHashDistanceTestOuterPointIncrement,
-		errorValue:         plotHashDistanceTestRisingErrorThreshold + plotHashDistanceTestOuterPointIncrement,
+		warnValue:          plotTestRisingWarnThreshold - plotTestOuterPointIncrement,
+		errorValue:         plotTestRisingErrorThreshold + plotTestOuterPointIncrement,
 		expected:           maxAcceptableHashDistance,
 	},
 	{
@@ -342,7 +342,7 @@ var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 		plotTheme:          "light",
 		useHumanizedValues: false,
 		triggerType:        moira.RisingTrigger,
-		warnValue:          plotHashDistanceTestRisingWarnThreshold,
+		warnValue:          plotTestRisingWarnThreshold,
 		errorValue:         nil,
 		expected:           maxAcceptableHashDistance,
 	},
@@ -352,7 +352,7 @@ var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 		useHumanizedValues: false,
 		triggerType:        moira.RisingTrigger,
 		warnValue:          nil,
-		errorValue:         plotHashDistanceTestRisingErrorThreshold,
+		errorValue:         plotTestRisingErrorThreshold,
 		expected:           maxAcceptableHashDistance,
 	},
 	{
@@ -360,8 +360,8 @@ var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 		plotTheme:          "light",
 		useHumanizedValues: false,
 		triggerType:        moira.RisingTrigger,
-		warnValue:          plotHashDistanceTestRisingWarnThreshold,
-		errorValue:         plotHashDistanceTestRisingErrorThreshold,
+		warnValue:          plotTestRisingWarnThreshold,
+		errorValue:         plotTestRisingErrorThreshold,
 		expected:           maxAcceptableHashDistance,
 	},
 	{
@@ -370,8 +370,8 @@ var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 		useHumanizedValues: true,
 		triggerType:        moira.FallingTrigger,
 		stateOk:            true,
-		warnValue:          plotHashDistanceTestFallingWarnThreshold - plotHashDistanceTestOuterPointIncrement,
-		errorValue:         plotHashDistanceTestFallingErrorThreshold + plotHashDistanceTestOuterPointIncrement,
+		warnValue:          plotTestFallingWarnThreshold - plotTestOuterPointIncrement,
+		errorValue:         plotTestFallingErrorThreshold + plotTestOuterPointIncrement,
 		expected:           maxAcceptableHashDistance,
 	},
 	{
@@ -379,7 +379,7 @@ var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 		plotTheme:          "light",
 		useHumanizedValues: true,
 		triggerType:        moira.FallingTrigger,
-		warnValue:          plotHashDistanceTestFallingWarnThreshold,
+		warnValue:          plotTestFallingWarnThreshold,
 		errorValue:         nil,
 		expected:           maxAcceptableHashDistance,
 	},
@@ -389,7 +389,7 @@ var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 		useHumanizedValues: true,
 		triggerType:        moira.FallingTrigger,
 		warnValue:          nil,
-		errorValue:         plotHashDistanceTestFallingErrorThreshold,
+		errorValue:         plotTestFallingErrorThreshold,
 		expected:           maxAcceptableHashDistance,
 	},
 	{
@@ -397,8 +397,8 @@ var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 		plotTheme:          "light",
 		useHumanizedValues: true,
 		triggerType:        moira.FallingTrigger,
-		warnValue:          plotHashDistanceTestFallingWarnThreshold,
-		errorValue:         plotHashDistanceTestFallingErrorThreshold,
+		warnValue:          plotTestFallingWarnThreshold,
+		errorValue:         plotTestFallingErrorThreshold,
 		expected:           maxAcceptableHashDistance,
 	},
 	{
@@ -407,8 +407,8 @@ var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 		useHumanizedValues: false,
 		triggerType:        moira.FallingTrigger,
 		stateOk:            true,
-		warnValue:          plotHashDistanceTestFallingWarnThreshold - plotHashDistanceTestOuterPointIncrement,
-		errorValue:         plotHashDistanceTestFallingErrorThreshold + plotHashDistanceTestOuterPointIncrement,
+		warnValue:          plotTestFallingWarnThreshold - plotTestOuterPointIncrement,
+		errorValue:         plotTestFallingErrorThreshold + plotTestOuterPointIncrement,
 		expected:           maxAcceptableHashDistance,
 	},
 	{
@@ -416,7 +416,7 @@ var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 		plotTheme:          "light",
 		useHumanizedValues: false,
 		triggerType:        moira.FallingTrigger,
-		warnValue:          plotHashDistanceTestFallingWarnThreshold,
+		warnValue:          plotTestFallingWarnThreshold,
 		errorValue:         nil,
 		expected:           maxAcceptableHashDistance,
 	},
@@ -426,7 +426,7 @@ var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 		useHumanizedValues: false,
 		triggerType:        moira.FallingTrigger,
 		warnValue:          nil,
-		errorValue:         plotHashDistanceTestFallingErrorThreshold,
+		errorValue:         plotTestFallingErrorThreshold,
 		expected:           maxAcceptableHashDistance,
 	},
 	{
@@ -434,78 +434,69 @@ var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 		plotTheme:          "light",
 		useHumanizedValues: false,
 		triggerType:        moira.FallingTrigger,
-		warnValue:          plotHashDistanceTestFallingWarnThreshold,
-		errorValue:         plotHashDistanceTestFallingErrorThreshold,
+		warnValue:          plotTestFallingWarnThreshold,
+		errorValue:         plotTestFallingErrorThreshold,
 		expected:           maxAcceptableHashDistance,
 	},
 }
 
 // generateTestMetricsData generates metricData array for tests
-func generateTestMetricsData(useHumanizedValues bool) []*types.MetricData {
-	metricData := types.MetricData{
-		FetchResponse: pb.FetchResponse{
-			Name:      "MetricName",
-			StartTime: 0,
-			StepTime:  10,
-			StopTime:  100,
-			Values:    []float64{12, 34, 23, 45, 76, 64, 32, 13, 34, 130, 70},
-		},
+func generateTestMetricsData(useHumanizedValues bool) []*metricSource.MetricData {
+	metricData := metricSource.MetricData{
+		Name:      "MetricName",
+		StartTime: 0,
+		StepTime:  10,
+		StopTime:  100,
+		Values:    []float64{12, 34, 23, 45, 76, 64, 32, 13, 34, 130, 70},
 	}
-	metricData2 := types.MetricData{
-		FetchResponse: pb.FetchResponse{
-			Name:      "CategoryCounterType.MetricName",
-			StartTime: 0,
-			StepTime:  10,
-			StopTime:  100,
-			Values:    []float64{math.NaN(), 15, 32, math.NaN(), 54, 20, 43, 56, 2, 79, 76},
-		},
+	metricData2 := metricSource.MetricData{
+		Name:      "CategoryCounterType.MetricName",
+		StartTime: 0,
+		StepTime:  10,
+		StopTime:  100,
+		Values:    []float64{math.NaN(), 15, 32, math.NaN(), 54, 20, 43, 56, 2, 79, 76},
 	}
-	metricData3 := types.MetricData{
-		FetchResponse: pb.FetchResponse{
-			Name:      "CategoryCounterName.CategoryCounterType.MetricName",
-			StartTime: 0,
-			StepTime:  10,
-			StopTime:  100,
-			Values:    []float64{11, 23, 45, math.NaN(), 45, math.NaN(), 32, 65, 78, 76, 74},
-		},
+	metricData3 := metricSource.MetricData{
+		Name:      "CategoryCounterName.CategoryCounterType.MetricName",
+		StartTime: 0,
+		StepTime:  10,
+		StopTime:  100,
+		Values:    []float64{11, 23, 45, math.NaN(), 45, math.NaN(), 32, 65, 78, 76, 74},
 	}
-	metricData4 := types.MetricData{
-		FetchResponse: pb.FetchResponse{
-			Name:      "CategoryName.CategoryCounterName.CategoryCounterType.MetricName",
-			StartTime: 0,
-			StepTime:  10,
-			StopTime:  100,
-			Values:    []float64{11, 23, 10, 9, 17, 10, 25, 12, 10, 15, 30},
-		},
+	metricData4 := metricSource.MetricData{
+		Name:      "CategoryName.CategoryCounterName.CategoryCounterType.MetricName",
+		StartTime: 0,
+		StepTime:  10,
+		StopTime:  100,
+		Values:    []float64{11, 23, 10, 9, 17, 10, 25, 12, 10, 15, 30},
 	}
 	if !useHumanizedValues {
 		for valInd, value := range metricData.Values {
-			metricData.Values[valInd] = plotHashDistanceTestOuterPointMultiplier * value
+			metricData.Values[valInd] = plotTestOuterPointMultiplier * value
 		}
 		for valInd, value := range metricData2.Values {
-			metricData2.Values[valInd] = plotHashDistanceTestOuterPointMultiplier * value
+			metricData2.Values[valInd] = plotTestOuterPointMultiplier * value
 		}
 		for valInd, value := range metricData3.Values {
-			metricData3.Values[valInd] = plotHashDistanceTestOuterPointMultiplier * value
+			metricData3.Values[valInd] = plotTestOuterPointMultiplier * value
 		}
 		for valInd, value := range metricData4.Values {
-			metricData4.Values[valInd] = plotHashDistanceTestOuterPointMultiplier * value
+			metricData4.Values[valInd] = plotTestOuterPointMultiplier * value
 		}
 	}
-	metricsData := []*types.MetricData{&metricData, &metricData2, &metricData3, &metricData4}
+	metricsData := []*metricSource.MetricData{&metricData, &metricData2, &metricData3, &metricData4}
 	return metricsData
 }
 
 // renderTestMetricsDataToPNG renders and saves rendered plots to PNG
 func renderTestMetricsDataToPNG(trigger moira.Trigger, plotTheme string,
-	metricsData []*types.MetricData, filePath string) error {
-	var metricsWhiteList []string
+	metricsData []*metricSource.MetricData, filePath string) error {
 	location, _ := time.LoadLocation("UTC")
 	plotTemplate, err := GetPlotTemplate(plotTheme, location)
 	if err != nil {
 		return err
 	}
-	renderable, err := plotTemplate.GetRenderable(&trigger, metricsData, metricsWhiteList)
+	renderable, err := plotTemplate.GetRenderable(&trigger, metricsData)
 	if err != nil {
 		return err
 	}
@@ -536,6 +527,30 @@ func calculateHashDistance(pathToOriginal, pathToRendered string) (*int, error) 
 	return &distance, nil
 }
 
+// generateRandomTestMetricsData returns random test MetricsData by given numbers of values
+func generateRandomTestMetricsData(numTotal int, numEmpty int) []*metricSource.MetricData {
+	startTime := int64(0)
+	stepTime := int64(10)
+	stopTime := int64(numTotal) * stepTime
+	metricDataValues := make([]float64, 0, numTotal)
+	for valInd := 0; valInd < numTotal; valInd++ {
+		if valInd < numEmpty {
+			metricDataValues = append(metricDataValues, math.NaN())
+		} else {
+			metricDataValues = append(metricDataValues, rand.Float64())
+		}
+	}
+	return []*metricSource.MetricData{
+		{
+			Name:      "RandomTestMetric",
+			StartTime: startTime,
+			StepTime:  stepTime,
+			StopTime:  stopTime,
+			Values:    metricDataValues,
+		},
+	}
+}
+
 // TestGetRenderable renders plots based on test data and compares test plots hashes with plot examples hashes
 func TestGetRenderable(t *testing.T) {
 	Convey("Test plots hash distances", t, func() {
@@ -547,14 +562,14 @@ func TestGetRenderable(t *testing.T) {
 			if testCase.errorValue != nil {
 				errorValue := testCase.errorValue.(float64)
 				if !testCase.useHumanizedValues {
-					errorValue = errorValue * plotHashDistanceTestOuterPointMultiplier
+					errorValue = errorValue * plotTestOuterPointMultiplier
 				}
 				trigger.ErrorValue = &errorValue
 			}
 			if testCase.warnValue != nil {
 				warnValue := testCase.warnValue.(float64)
 				if !testCase.useHumanizedValues {
-					warnValue = warnValue * plotHashDistanceTestOuterPointMultiplier
+					warnValue = warnValue * plotTestOuterPointMultiplier
 				}
 				trigger.WarnValue = &warnValue
 			}
@@ -577,6 +592,78 @@ func TestGetRenderable(t *testing.T) {
 			}
 			os.Remove(pathToRendered)
 			So(*hashDistance, ShouldBeLessThanOrEqualTo, testCase.expected)
+		}
+	})
+}
+
+// TestErrNoPointsToRender_Error asserts conditions which leads to ErrNoPointsToRender
+func TestErrNoPointsToRender_Error(t *testing.T) {
+	location, _ := time.LoadLocation("UTC")
+	plotTemplate, err := GetPlotTemplate("", location)
+	if err != nil {
+		t.Fatalf("Test initialization failed: %s", err.Error())
+	}
+	triggerID := "triggerHasNoSeries"
+	testTriggers := []moira.Trigger{
+		{
+			ID:          triggerID,
+			TriggerType: moira.ExpressionTrigger,
+		},
+		{
+			ID:          triggerID,
+			TriggerType: moira.RisingTrigger,
+			WarnValue:   &plotTestRisingWarnThreshold,
+		},
+		{
+			ID:          triggerID,
+			TriggerType: moira.RisingTrigger,
+			ErrorValue:  &plotTestRisingErrorThreshold,
+		},
+		{
+			ID:          triggerID,
+			TriggerType: moira.RisingTrigger,
+			WarnValue:   &plotTestRisingWarnThreshold,
+			ErrorValue:  &plotTestFallingErrorThreshold,
+		},
+		{
+			ID:          triggerID,
+			TriggerType: moira.FallingTrigger,
+			WarnValue:   &plotTestFallingWarnThreshold,
+		},
+		{
+			ID:          triggerID,
+			TriggerType: moira.FallingTrigger,
+			ErrorValue:  &plotTestFallingErrorThreshold,
+		},
+		{
+			ID:          triggerID,
+			TriggerType: moira.FallingTrigger,
+			WarnValue:   &plotTestFallingWarnThreshold,
+			ErrorValue:  &plotTestFallingErrorThreshold,
+		},
+	}
+	Convey("Trigger has no timeseries", t, func() {
+		testMetricsData := generateRandomTestMetricsData(10, 10)
+		testMetricsPoints := make([]float64, 0)
+		for _, testMetricData := range testMetricsData {
+			testMetricsPoints = append(testMetricsPoints, testMetricData.Values...)
+		}
+		fmt.Printf("MetricsData points: %#v", testMetricsPoints)
+		for _, trigger := range testTriggers {
+			_, err = plotTemplate.GetRenderable(&trigger, testMetricsData)
+			So(err.Error(), ShouldEqual, ErrNoPointsToRender{triggerID: trigger.ID}.Error())
+		}
+	})
+	Convey("Trigger has at least one timeserie", t, func() {
+		testMetricsData := generateRandomTestMetricsData(10, 9)
+		testMetricsPoints := make([]float64, 0)
+		for _, testMetricData := range testMetricsData {
+			testMetricsPoints = append(testMetricsPoints, testMetricData.Values...)
+		}
+		fmt.Printf("MetricsData points: %#v", testMetricsPoints)
+		for _, trigger := range testTriggers {
+			_, err = plotTemplate.GetRenderable(&trigger, testMetricsData)
+			So(err, ShouldBeNil)
 		}
 	})
 }

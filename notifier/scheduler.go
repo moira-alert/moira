@@ -47,7 +47,7 @@ func (scheduler *StandardScheduler) ScheduleNotification(now time.Time, event mo
 		next = now.Add(time.Minute)
 		throttled = throttledOld
 	} else {
-		if event.State == "TEST" {
+		if event.State == moira.StateTEST {
 			next = now
 			throttled = false
 		} else {
@@ -133,17 +133,20 @@ func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *
 func calculateNextDelivery(schedule *moira.ScheduleData, nextTime time.Time) (time.Time, error) {
 
 	if len(schedule.Days) != 0 && len(schedule.Days) != 7 {
-		return nextTime, fmt.Errorf("Invalid scheduled settings: %d days defined", len(schedule.Days))
+		return nextTime, fmt.Errorf("invalid scheduled settings: %d days defined", len(schedule.Days))
 	}
 
 	if len(schedule.Days) == 0 {
 		return nextTime, nil
 	}
+	beginOffset := time.Duration(schedule.StartOffset) * time.Minute
+	endOffset := time.Duration(schedule.EndOffset) * time.Minute
+	if schedule.EndOffset < schedule.StartOffset {
+		endOffset = endOffset + (time.Hour * 24)
+	}
 
 	tzOffset := time.Duration(schedule.TimezoneOffset) * time.Minute
 	localNextTime := nextTime.Add(-tzOffset).Truncate(time.Minute)
-	beginOffset := time.Duration(schedule.StartOffset) * time.Minute
-	endOffset := time.Duration(schedule.EndOffset) * time.Minute
 	localNextTimeDay := localNextTime.Truncate(24 * time.Hour)
 	localNextWeekday := int(localNextTimeDay.Weekday()+6) % 7
 
@@ -166,5 +169,5 @@ func calculateNextDelivery(schedule *moira.ScheduleData, nextTime time.Time) (ti
 		return nextLocalDayBegin.Add(beginOffset + tzOffset), nil
 	}
 
-	return nextTime, fmt.Errorf("Can not find allowed schedule day")
+	return nextTime, fmt.Errorf("can not find allowed schedule day")
 }
