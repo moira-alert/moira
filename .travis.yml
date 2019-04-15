@@ -51,10 +51,10 @@ deploy:
       condition: $TRAVIS_PULL_REQUEST == "false" && $TRAVIS_BRANCH =~ ^(feature|hotfix).*$
   - provider: script
     script:
-      - make docker_develop_images
+      - make docker_nightly_images
     skip_cleanup: true
     on:
-      branch: develop
+      branch: master
   - provider: script
     script:
       - make docker_release_images
