@@ -27,7 +27,7 @@ before_script:
   - make lint
   - goveralls -coverprofile=coverage.txt -service=travis-ci
 script:
-  - if [[ -z "$TRAVIS_TAG" ]]; then make packages; fi
+  - if [[ ! -z "$TRAVIS_TAG" ]]; then make packages; fi
 before_deploy:
   - echo "$DOCKER_PASSWORD" | docker login -u="$DOCKER_USERNAME" --password-stdin
 deploy:
