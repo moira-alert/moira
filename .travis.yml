@@ -18,16 +18,16 @@ notifications:
 before_install:
   - sudo apt-get update
   - sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
+  - gem install fpm
+install:
   - go get -v golang.org/x/tools/cmd/cover
   - go get -v github.com/mattn/goveralls
-install:
+before_script:
   - make test
   - make lint
   - goveralls -coverprofile=coverage.txt -service=travis-ci
-before_script:
-  - gem install fpm
 script:
-  - make packages
+  - if [[ ! -z "$TRAVIS_TAG" ]]; then make packages; fi
 before_deploy:
   - echo "$DOCKER_PASSWORD" | docker login -u="$DOCKER_USERNAME" --password-stdin
 deploy:
@@ -51,10 +51,10 @@ deploy:
       condition: $TRAVIS_PULL_REQUEST == "false" && $TRAVIS_BRANCH =~ ^(feature|hotfix).*$
   - provider: script
     script:
-      - make docker_develop_images
+      - make docker_nightly_images
     skip_cleanup: true
     on:
-      branch: develop
+      branch: master
   - provider: script
     script:
       - make docker_release_images
