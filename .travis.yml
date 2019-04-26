@@ -5,6 +5,8 @@ services:
 language: go
 go:
   - 1.12.4
+env:
+  - GO111MODULE=on
 git:
   depth: 1000
 addons:
@@ -20,8 +22,8 @@ before_install:
   - sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
   - gem install fpm
 install:
-  - go get -v golang.org/x/tools/cmd/cover
-  - go get -v github.com/mattn/goveralls
+  - GO111MODULE=off go get -v golang.org/x/tools/cmd/cover
+  - GO111MODULE=off go get -v github.com/mattn/goveralls
 before_script:
   - make test
   - make lint

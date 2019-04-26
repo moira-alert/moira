@@ -2,14 +2,14 @@ FROM golang:1.12.4 as builder
 
 WORKDIR /go/src/github.com/moira-alert/moira
 COPY . /go/src/github.com/moira-alert/moira/
-RUN go get github.com/kardianos/govendor
-RUN govendor sync
+
+RUN go mod download
+
 ARG GO_VERSION="GoVersion"
 ARG GIT_COMMIT="git_Commit"
 ARG MoiraVersion="MoiraVersion"
 
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-X main.MoiraVersion=${MoiraVersion} -X main.GoVersion=${GO_VERSION} -X main.GitCommit=${GIT_COMMIT}" -o build/checker github.com/moira-alert/moira/cmd/checker
-
 
 FROM alpine
 

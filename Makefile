@@ -23,8 +23,7 @@ default: test build
 
 .PHONY: prepare
 prepare:
-	go get -u github.com/kardianos/govendor
-	govendor sync
+	go mod download
 
 .PHONY: lint
 lint: prepare
