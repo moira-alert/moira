@@ -30,7 +30,7 @@ require (
 	github.com/golang/mock v0.0.0-20190116182947-c20582278a82
 	github.com/golang/protobuf v0.0.0-20181003193544-31e0d063dd98
 	github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db
-	github.com/gomodule/redigo v1.7.0
+	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/gopherjs/gopherjs v0.0.0-20190411002643-bd77b112433e
 	github.com/gorilla/websocket v1.2.0
 	github.com/gosexy/to v0.0.0-20141221203644-c20e083e3123
@@ -61,11 +61,13 @@ require (
 	github.com/wcharczuk/go-chart v0.0.0-20180415235301-9e3a080aa3e7
 	github.com/willf/bitset v1.1.9
 	golang.org/x/image v0.0.0-20180403161127-f315e4403028
-	golang.org/x/net v0.0.0-20170629171032-1f9224279e98
+	golang.org/x/net v0.0.0-20190311183353-d8887717615a
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
-	gopkg.in/redsync.v1 v1.2.0
+	gopkg.in/redsync.v1 v1.1.1
 	gopkg.in/telegram-bot-api.v4 v4.0.0-20161125055035-0a57807db79e
 	gopkg.in/tomb.v2 v2.0.0-20161208151619-d5d1b5820637
 	gopkg.in/tucnak/telebot.v2 v2.0.0-20181115150921-4688194c178d
 	gopkg.in/yaml.v2 v2.0.0-20170721122051-25c4ec802a7d
 )
+
+replace gopkg.in/redsync.v1 => github.com/go-redsync/redsync v1.1.1
