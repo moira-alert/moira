@@ -63,7 +63,7 @@ require (
 	golang.org/x/image v0.0.0-20180403161127-f315e4403028
 	golang.org/x/net v0.0.0-20170629171032-1f9224279e98
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
-	gopkg.in/redsync.v1 v1.1.1
+	gopkg.in/redsync v1.1.1
 	gopkg.in/telegram-bot-api.v4 v4.0.0-20161125055035-0a57807db79e
 	gopkg.in/tomb.v2 v2.0.0-20161208151619-d5d1b5820637
 	gopkg.in/tucnak/telebot.v2 v2.0.0-20181115150921-4688194c178d
