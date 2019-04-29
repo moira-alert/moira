@@ -28,7 +28,7 @@ prepare:
 .PHONY: lint
 lint: prepare
 	GO111MODULE=off go get -u github.com/alecthomas/gometalinter
-	gometalinter --install
+	GO111MODULE=off gometalinter --install
 	gometalinter ./... --aggregate --vendor --skip mock --disable=errcheck --disable=gocyclo --disable=gosec --deadline=5m
 
 .PHONY: test
