@@ -10,7 +10,7 @@ type Config struct {
 type WebConfig struct {
 	SupportEmail  string       `json:"supportEmail,omitempty"`
 	RemoteAllowed bool         `json:"remoteAllowed"`
-	Contacts      []WebContact `json:"contacts,omitempty"`
+	Contacts      []WebContact `json:"contacts"`
 }
 
 // WebContact is container for web ui contact validation
