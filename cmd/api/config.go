@@ -17,23 +17,33 @@ type config struct {
 }
 
 type apiConfig struct {
-	// Api local network address. Default is ':8081' so api will be available at http://moira.company.com:8081/api
+	// Api local network address. Default is ':8081' so api will be available at http://moira.company.com:8081/api.
 	Listen string `yaml:"listen"`
 	// If true, CORS for cross-domain requests will be enabled. This option can be used only for debugging purposes.
 	EnableCORS bool `yaml:"enable_cors"`
 }
 
 type webConfig struct {
-	SupportEmail  string       `yaml:"supportEmail"`
-	RemoteAllowed bool         `yaml:"remoteAllowed"`
-	Contacts      []webContact `yaml:"contacts"`
+	// Moira administrator email address.
+	SupportEmail string `yaml:"supportEmail"`
+	// If true, users will be able to choose Graphite as trigger metrics data source
+	RemoteAllowed bool `yaml:"remoteAllowed"`
+	// List of enabled contact types
+	Contacts []webContact `yaml:"contacts"`
 }
 
 type webContact struct {
-	ContactType     string `yaml:"type"`
-	ContactLabel    string `yaml:"label"`
+	// Contact type. Use sender name for script and webhook senders, otherwise use sender type.
+	// See senders section of notifier config for more details: https://moira.readthedocs.io/en/latest/installation/configuration.html#notifier
+	ContactType string `yaml:"type"`
+	// Contact type label that will be shown in web ui
+	ContactLabel string `yaml:"label"`
+	// Regular expression to match valid contact values
 	ValidationRegex string `yaml:"validation"`
-	Placeholder     string `yaml:"placeholder"`
+	// Short description/example of valid contact value
+	Placeholder string `yaml:"placeholder"`
+	// More detailed contact description
+	Help string `yaml:"help"`
 }
 
 func (config *apiConfig) getSettings() *api.Config {
@@ -54,6 +64,7 @@ func (config *webConfig) getSettings(isRemoteEnabled bool) (*api.WebConfig, erro
 			ContactLabel:    configContact.ContactLabel,
 			ValidationRegex: configContact.ValidationRegex,
 			Placeholder:     configContact.Placeholder,
+			Help:            configContact.Help,
 		}
 		webContacts = append(webContacts, contact)
 	}

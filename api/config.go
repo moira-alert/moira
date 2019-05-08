@@ -19,4 +19,5 @@ type WebContact struct {
 	ContactLabel    string `json:"label"`
 	ValidationRegex string `json:"validation,omitempty"`
 	Placeholder     string `json:"placeholder,omitempty"`
+	Help            string `json:"help,omitempty"`
 }

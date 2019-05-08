@@ -16,7 +16,6 @@ FROM alpine
 RUN apk add --no-cache ca-certificates && update-ca-certificates
 
 COPY pkg/api/api.yml /etc/moira/api.yml
-COPY pkg/api/web.json /etc/moira/web.json
 
 COPY --from=builder /go/src/github.com/moira-alert/moira/build/api /usr/bin/api
 COPY --from=builder /usr/local/go/lib/time/zoneinfo.zip /usr/local/go/lib/time/

@@ -15,7 +15,22 @@ remote:
 api:
   listen: ":8081"
   enable_cors: false
-  web_config_path: "/etc/moira/web.json"
+web:
+  remoteAllowed: false
+  contacts:
+    - type: mail
+      label: E-mail
+    - type: pushover
+      label: Pushover
+    - type: slack
+      label: Slack
+    - type: telegram
+      label: Telegram
+      help: required to grant @MoiraBot admin privileges
+    - type: twilio sms
+      label: Twilio SMS
+    - type: twilio voice
+      label: Twilio voice
 log:
   log_file: stdout
   log_level: info
