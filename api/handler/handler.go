@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi"
@@ -22,7 +21,7 @@ const contactKey moiramiddle.ContextKey = "contact"
 const subscriptionKey moiramiddle.ContextKey = "subscription"
 
 // NewHandler creates new api handler request uris based on github.com/go-chi/chi
-func NewHandler(db moira.Database, log moira.Logger, index moira.Searcher, config *api.Config, metricSourceProvider *metricSource.SourceProvider, configFile []byte) http.Handler {
+func NewHandler(db moira.Database, log moira.Logger, index moira.Searcher, config *api.Config, metricSourceProvider *metricSource.SourceProvider, webConfig *api.WebConfig) http.Handler {
 	database = db
 	searchIndex = index
 	router := chi.NewRouter()
@@ -36,7 +35,7 @@ func NewHandler(db moira.Database, log moira.Logger, index moira.Searcher, confi
 
 	router.Route("/api", func(router chi.Router) {
 		router.Use(moiramiddle.DatabaseContext(database))
-		router.Get("/config", webConfig(configFile))
+		router.Get("/web", web(webConfig))
 		router.Route("/user", user)
 		router.Route("/trigger", triggers(metricSourceProvider, searchIndex))
 		router.Route("/tag", tag)
@@ -51,17 +50,6 @@ func NewHandler(db moira.Database, log moira.Logger, index moira.Searcher, confi
 		return cors.AllowAll().Handler(router)
 	}
 	return router
-}
-
-func webConfig(content []byte) http.HandlerFunc {
-	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		if content == nil {
-			render.Render(writer, request, api.ErrorInternalServer(fmt.Errorf("web config file was not loaded")))
-			return
-		}
-		writer.Header().Set("Content-Type", "application/json")
-		writer.Write(content)
-	})
 }
 
 func notFoundHandler(writer http.ResponseWriter, request *http.Request) {

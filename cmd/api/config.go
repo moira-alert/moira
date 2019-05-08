@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/cmd"
 )
@@ -10,6 +11,7 @@ type config struct {
 	Graphite cmd.GraphiteConfig `yaml:"graphite"`
 	Logger   cmd.LoggerConfig   `yaml:"log"`
 	API      apiConfig          `yaml:"api"`
+	Web      webConfig          `yaml:"web"`
 	Pprof    cmd.ProfilerConfig `yaml:"pprof"`
 	Remote   cmd.RemoteConfig   `yaml:"remote"`
 }
@@ -19,8 +21,19 @@ type apiConfig struct {
 	Listen string `yaml:"listen"`
 	// If true, CORS for cross-domain requests will be enabled. This option can be used only for debugging purposes.
 	EnableCORS bool `yaml:"enable_cors"`
-	// Web_UI config file path. If file not found, api will return 404 in response to "api/config"
-	WebConfigPath string `yaml:"web_config_path"`
+}
+
+type webConfig struct {
+	SupportEmail  string       `yaml:"supportEmail"`
+	RemoteAllowed bool         `yaml:"remoteAllowed"`
+	Contacts      []webContact `yaml:"contacts"`
+}
+
+type webContact struct {
+	ContactType     string `yaml:"type"`
+	ContactLabel    string `yaml:"label"`
+	ValidationRegex string `yaml:"validation"`
+	Placeholder     string `yaml:"placeholder"`
 }
 
 func (config *apiConfig) getSettings() *api.Config {
@@ -28,6 +41,27 @@ func (config *apiConfig) getSettings() *api.Config {
 		Listen:     config.Listen,
 		EnableCORS: config.EnableCORS,
 	}
+}
+
+func (config *webConfig) getSettings(isRemoteEnabled bool) (*api.WebConfig, error) {
+	if !isRemoteEnabled && config.RemoteAllowed {
+		return nil, fmt.Errorf("to allow usage of remote triggers, remote: enabled must be set to true")
+	}
+	webContacts := make([]api.WebContact, 0, len(config.Contacts))
+	for _, configContact := range config.Contacts {
+		contact := api.WebContact{
+			ContactType:     configContact.ContactType,
+			ContactLabel:    configContact.ContactLabel,
+			ValidationRegex: configContact.ValidationRegex,
+			Placeholder:     configContact.Placeholder,
+		}
+		webContacts = append(webContacts, contact)
+	}
+	return &api.WebConfig{
+		SupportEmail:  config.SupportEmail,
+		RemoteAllowed: config.RemoteAllowed,
+		Contacts:      webContacts,
+	}, nil
 }
 
 func getDefault() config {
@@ -42,9 +76,11 @@ func getDefault() config {
 			LogLevel: "info",
 		},
 		API: apiConfig{
-			Listen:        ":8081",
-			WebConfigPath: "/etc/moira/web.json",
-			EnableCORS:    false,
+			Listen:     ":8081",
+			EnableCORS: false,
+		},
+		Web: webConfig{
+			RemoteAllowed: false,
 		},
 		Graphite: cmd.GraphiteConfig{
 			RuntimeStats: false,
