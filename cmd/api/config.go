@@ -33,7 +33,7 @@ type webConfig struct {
 }
 
 type webContact struct {
-	// Contact type. Use sender name for script and webhook senders, otherwise use sender type.
+	// Contact type. Use sender name for script and webhook senders, in other cases use sender type.
 	// See senders section of notifier config for more details: https://moira.readthedocs.io/en/latest/installation/configuration.html#notifier
 	ContactType string `yaml:"type"`
 	// Contact type label that will be shown in web ui
