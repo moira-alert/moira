@@ -36,6 +36,8 @@ func NewHandler(db moira.Database, log moira.Logger, index moira.Searcher, confi
 	router.Route("/api", func(router chi.Router) {
 		router.Use(moiramiddle.DatabaseContext(database))
 		router.Get("/web", web(webConfig))
+		// TODO: remove '/config'
+		router.Get("/config", web(webConfig))
 		router.Route("/user", user)
 		router.Route("/trigger", triggers(metricSourceProvider, searchIndex))
 		router.Route("/tag", tag)
