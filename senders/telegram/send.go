@@ -54,7 +54,19 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 	buffer.WriteString(title)
 
 	var messageCharsCount, printEventsCount int
-	messageCharsCount += len([]rune(title))
+	messageCharsCount = len([]rune(buffer.String()))
+
+	if trigger.Desc != "" {
+		charsAvailableForDesc := messageMaxCharacters - messageCharsCount - 900
+		if charsAvailableForDesc < len(trigger.Desc) {
+			buffer.WriteString(trigger.Desc[0 : charsAvailableForDesc-1])
+		} else {
+			buffer.WriteString(trigger.Desc)
+		}
+		buffer.WriteString("\n")
+		messageCharsCount = len([]rune(buffer.String()))
+	}
+
 	messageLimitReached := false
 
 	for _, event := range events {
@@ -107,7 +119,7 @@ func (sender *Sender) talk(chat *telebot.Chat, message string, plot []byte, mess
 }
 
 func (sender *Sender) sendAsMessage(chat *telebot.Chat, message string) error {
-	_, err := sender.bot.Send(chat, message)
+	_, err := sender.bot.Send(chat, message, []interface{}{telebot.ModeMarkdown})
 	if err != nil {
 		return fmt.Errorf("can't send event message [%s] to %v: %s", message, chat.ID, err.Error())
 	}
@@ -116,7 +128,7 @@ func (sender *Sender) sendAsMessage(chat *telebot.Chat, message string) error {
 
 func (sender *Sender) sendAsPhoto(chat *telebot.Chat, plot []byte, caption string) error {
 	photo := telebot.Photo{File: telebot.FromReader(bytes.NewReader(plot)), Caption: caption}
-	_, err := photo.Send(sender.bot, chat, &telebot.SendOptions{})
+	_, err := photo.Send(sender.bot, chat, &telebot.SendOptions{ParseMode: telebot.ModeMarkdown})
 	if err != nil {
 		return fmt.Errorf("can't send event plot to %v: %s", chat.ID, err.Error())
 	}

@@ -89,15 +89,22 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 		message.WriteString(trigger.Name)
 	}
 
+	messageCharsCount := len([]rune(message.String()))
+
 	if trigger.Desc != "" {
 		message.WriteString("\n")
-		message.WriteString(trigger.Desc)
+		charsAvailableForDesc := messageMaxCharacters - messageCharsCount - 9000 - 1
+		if charsAvailableForDesc < len(trigger.Desc) {
+			message.WriteString(trigger.Desc[0 : charsAvailableForDesc-1])
+		} else {
+			message.WriteString(trigger.Desc)
+		}
+		messageCharsCount = len([]rune(message.String()))
 	}
 
 	message.WriteString("\n```")
 
 	var printEventsCount int
-	messageCharsCount := len([]rune(message.String()))
 	messageLimitReached := false
 
 	for _, event := range events {
