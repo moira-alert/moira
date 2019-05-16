@@ -1299,6 +1299,12 @@
 			"revisionTime": "2018-11-21T13:23:58Z"
 		},
 		{
+			"checksumSHA1": "tI/ToPDECF8HQlpJP/omBQF0igw=",
+			"path": "gopkg.in/russross/blackfriday.v2",
+			"revision": "d3b5b032dc8e8927d31a5071b56e14c89f045135",
+			"revisionTime": "2018-09-20T17:16:15Z"
+		},
+		{
 			"checksumSHA1": "AzeP9gpBdHRcPQ5ozBpkBcqfInk=",
 			"path": "gopkg.in/telegram-bot-api.v4",
 			"revision": "0a57807db79efce7f6719fbb2c0e0f83fda79aec",

@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"gopkg.in/russross/blackfriday.v2"
+
 	"github.com/moira-alert/moira"
 	"gopkg.in/gomail.v2"
 )
@@ -93,16 +95,15 @@ func (sender *Sender) makeMessage(events moira.NotificationEvents, contact moira
 }
 
 func formatDescription(desc string) template.HTML {
-	escapedDesc := template.HTMLEscapeString(desc)
-	escapedDesc = strings.Replace(escapedDesc, "\n", "\n<br/>", -1)
-
-	return template.HTML(escapedDesc)
+	htmlDesc := blackfriday.Run([]byte(desc))
+	htmlDescWithbr := strings.Replace(string(htmlDesc), "\n", "\n<br/>", -1)
+	return template.HTML(htmlDescWithbr)
 }
 
 func (sender *Sender) dialAndSend(message *gomail.Message) error {
 	d := gomail.Dialer{
-		Host: sender.SMTPHost,
-		Port: int(sender.SMTPPort),
+		Host:      sender.SMTPHost,
+		Port:      int(sender.SMTPPort),
 		LocalName: sender.SMTPHello,
 		TLSConfig: &tls.Config{
 			InsecureSkipVerify: sender.InsecureTLS,

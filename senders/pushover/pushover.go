@@ -3,9 +3,11 @@ package pushover
 import (
 	"bytes"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/moira-alert/moira"
+	blackfriday "gopkg.in/russross/blackfriday.v2"
 
 	"github.com/gregdel/pushover"
 )
@@ -52,12 +54,13 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 
 func (sender *Sender) makePushoverMessage(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) *pushover.Message {
 	pushoverMessage := &pushover.Message{
-		Message:   sender.buildMessage(events, throttled),
+		Message:   sender.buildMessage(events, throttled, trigger),
 		Title:     sender.buildTitle(events, trigger),
 		Priority:  sender.getMessagePriority(events),
 		Retry:     5 * time.Minute,
 		Expire:    time.Hour,
 		Timestamp: events[len(events)-1].Timestamp,
+		HTML:      true,
 	}
 	url := trigger.GetTriggerURI(sender.frontURI)
 	if len(url) < urlLimit {
@@ -71,8 +74,11 @@ func (sender *Sender) makePushoverMessage(events moira.NotificationEvents, conta
 	return pushoverMessage
 }
 
-func (sender *Sender) buildMessage(events moira.NotificationEvents, throttled bool) string {
+func (sender *Sender) buildMessage(events moira.NotificationEvents, throttled bool, trigger moira.TriggerData) string {
 	var message bytes.Buffer
+	htmlDesc := blackfriday.Run([]byte(trigger.Desc))
+	htmlDescWithbr := strings.Replace(string(htmlDesc), "\n", "\n<br/>", -1)
+	message.WriteString(htmlDescWithbr)
 	for i, event := range events {
 		if i > printEventsCount-1 {
 			break
