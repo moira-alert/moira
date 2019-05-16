@@ -3,6 +3,7 @@ package slack
 import (
 	"bytes"
 	"fmt"
+	"regexp"
 	"strconv"
 	"time"
 
@@ -93,11 +94,21 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 
 	if trigger.Desc != "" {
 		message.WriteString("\n")
-		charsAvailableForDesc := messageMaxCharacters - messageCharsCount - 9000 - 1
-		if charsAvailableForDesc < len(trigger.Desc) {
-			message.WriteString(trigger.Desc[0 : charsAvailableForDesc-1])
+		charsRequiredForEvents := 9000
+		charsAvailableForDesc := messageMaxCharacters - messageCharsCount - charsRequiredForEvents - 1
+
+		// Replace **bold text** with *bold text* that slack supports
+		re := regexp.MustCompile(`(?m)\*\*(?P<boldtext>[\w\s]+)\*\*`)
+		desc := re.ReplaceAllString(trigger.Desc, "*$boldtext*")
+
+		// Replace MD headers (## header text) with *header text* that slack supports
+		re = regexp.MustCompile(`(?m)^\s*#{1,}\s*(?P<headertext>[^#\n]+)$`)
+		desc = re.ReplaceAllString(desc, "*$headertext*")
+
+		if charsAvailableForDesc < len(desc) {
+			message.WriteString(desc[0 : charsAvailableForDesc-1])
 		} else {
-			message.WriteString(trigger.Desc)
+			message.WriteString(desc)
 		}
 		messageCharsCount = len([]rune(message.String()))
 	}
