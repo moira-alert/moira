@@ -2,7 +2,6 @@ package slack
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -87,8 +86,6 @@ func TestGetStateEmoji(t *testing.T) {
 func TestBuildMessage(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
 	sender := Sender{location: location, frontURI: "http://moira.url"}
-	sender.mdBoldRegex = regexp.MustCompile(`(?m)\*\*(?P<boldtext>[\w\s]+)\*\*`)
-	sender.mdHeaderRegex = regexp.MustCompile(`(?m)^\s*#{1,}\s*(?P<headertext>[^#\n]+)$`)
 	value := float64(123)
 	message := "This is message"
 
@@ -165,11 +162,11 @@ some other text _italic text_` +
 		})
 
 		events := make([]moira.NotificationEvent, 0)
-		Convey("Print moira message with 1129 events and cutoff", func() {
+		Convey("Print moira message with 1127 events and cutoff", func() {
 			for i := 0; i < 1200; i++ {
 				events = append(events, event)
 			}
-			lines := strings.Repeat("\n02:40: Metric = 123 (OK to NODATA)", 1129)
+			lines := strings.Repeat("\n02:40: Metric = 123 (OK to NODATA)", 1127)
 			actual := sender.buildMessage(events, trigger, false)
 			expected := fmt.Sprintf("*NODATA* [tag1][tag2] <http://moira.url/trigger/TriggerID|Name>\n"+
 				`*header1*

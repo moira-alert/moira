@@ -24,6 +24,11 @@ const (
 	additionalInfoCharactersCount = 400
 )
 
+var (
+	mdBoldRegex   = regexp.MustCompile(`(?m)\*\*(?P<boldtext>[\w\s]+)\*\*`)
+	mdHeaderRegex = regexp.MustCompile(`(?m)^\s*#{1,}\s*(?P<headertext>[^#\n]+)$`)
+)
+
 var stateEmoji = map[moira.State]string{
 	moira.StateOK:        okEmoji,
 	moira.StateWARN:      warnEmoji,
@@ -35,13 +40,11 @@ var stateEmoji = map[moira.State]string{
 
 // Sender implements moira sender interface via slack
 type Sender struct {
-	frontURI      string
-	useEmoji      bool
-	logger        moira.Logger
-	location      *time.Location
-	client        *slack.Client
-	mdBoldRegex   *regexp.Regexp
-	mdHeaderRegex *regexp.Regexp
+	frontURI string
+	useEmoji bool
+	logger   moira.Logger
+	location *time.Location
+	client   *slack.Client
 }
 
 // Init read yaml config
@@ -55,8 +58,6 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 	sender.frontURI = senderSettings["front_uri"]
 	sender.location = location
 	sender.client = slack.New(apiToken)
-	sender.mdBoldRegex = regexp.MustCompile(`(?m)\*\*(?P<boldtext>[\w\s]+)\*\*`)
-	sender.mdHeaderRegex = regexp.MustCompile(`(?m)^\s*#{1,}\s*(?P<headertext>[^#\n]+)$`)
 	return nil
 }
 
@@ -102,10 +103,10 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 		charsAvailableForDesc := messageMaxCharacters - messageCharsCount - charsRequiredForEvents - 1
 
 		// Replace **bold text** with *bold text* that slack supports
-		desc := sender.mdBoldRegex.ReplaceAllString(trigger.Desc, "*$boldtext*")
+		desc := mdBoldRegex.ReplaceAllString(trigger.Desc, "*$boldtext*")
 
 		// Replace MD headers (## header text) with *header text* that slack supports
-		desc = sender.mdHeaderRegex.ReplaceAllString(desc, "*$headertext*")
+		desc = mdHeaderRegex.ReplaceAllString(desc, "*$headertext*")
 
 		if charsAvailableForDesc < len(desc) {
 			message.WriteString(desc[0 : charsAvailableForDesc-1])

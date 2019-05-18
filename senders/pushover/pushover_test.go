@@ -92,20 +92,20 @@ func TestBuildMoiraMessage(t *testing.T) {
 		}
 
 		Convey("Print moira message with one event", func() {
-			actual := sender.buildMessage([]moira.NotificationEvent{event}, false)
+			actual := sender.buildMessage([]moira.NotificationEvent{event}, false, moira.TriggerData{})
 			expected := "02:40: Metric = 123 (OK to NODATA)\n"
 			So(actual, ShouldResemble, expected)
 		})
 
 		Convey("Print moira message with one event and message", func() {
 			event.Message = &message
-			actual := sender.buildMessage([]moira.NotificationEvent{event}, false)
+			actual := sender.buildMessage([]moira.NotificationEvent{event}, false, moira.TriggerData{})
 			expected := "02:40: Metric = 123 (OK to NODATA). This is message\n"
 			So(actual, ShouldResemble, expected)
 		})
 
 		Convey("Print moira message with one event and throttled", func() {
-			actual := sender.buildMessage([]moira.NotificationEvent{event}, true)
+			actual := sender.buildMessage([]moira.NotificationEvent{event}, true, moira.TriggerData{})
 			expected := `02:40: Metric = 123 (OK to NODATA)
 
 Please, fix your system or tune this trigger to generate less events.`
@@ -113,7 +113,7 @@ Please, fix your system or tune this trigger to generate less events.`
 		})
 
 		Convey("Print moira message with 6 events", func() {
-			actual := sender.buildMessage([]moira.NotificationEvent{event, event, event, event, event, event}, false)
+			actual := sender.buildMessage([]moira.NotificationEvent{event, event, event, event, event, event}, false, moira.TriggerData{})
 			expected := `02:40: Metric = 123 (OK to NODATA)
 02:40: Metric = 123 (OK to NODATA)
 02:40: Metric = 123 (OK to NODATA)
@@ -178,6 +178,7 @@ func TestMakePushoverMessage(t *testing.T) {
 			Timestamp: 150000000,
 			Retry:     5 * time.Minute,
 			Expire:    time.Hour,
+			HTML:      true,
 			URL:       "https://my-moira.com/trigger/SomeID",
 			Priority:  pushover.PriorityEmergency,
 			Title:     "ERROR TriggerName [tag1][tag2] (1)",

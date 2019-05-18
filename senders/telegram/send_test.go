@@ -13,7 +13,7 @@ import (
 func TestBuildMessage(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
 	sender := Sender{location: location, frontURI: "http://moira.url"}
-	sender.mdHeaderRegex = regexp.MustCompile(`(?m)^\s*#{1,}\s*(?P<headertext>[^#\n]+)$`)
+	mdHeaderRegex = regexp.MustCompile(`(?m)^\s*#{1,}\s*(?P<headertext>[^#\n]+)$`)
 	value := float64(97.4458331200185)
 	message := "This is message"
 

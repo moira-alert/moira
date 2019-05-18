@@ -3,6 +3,7 @@ package telegram
 import (
 	"bytes"
 	"fmt"
+	"regexp"
 
 	"gopkg.in/tucnak/telebot.v2"
 
@@ -28,6 +29,10 @@ var characterLimits = map[messageType]int{
 	Message: messageMaxCharacters,
 	Photo:   photoCaptionMaxCharacters,
 }
+
+var (
+	mdHeaderRegex = regexp.MustCompile(`(?m)^\s*#{1,}\s*(?P<headertext>[^#\n]+)$`)
+)
 
 // SendEvents implements Sender interface Send
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) error {
@@ -61,7 +66,7 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 		charsAvailableForDesc := messageMaxCharacters - messageCharsCount - charsRequiredForEvents
 
 		// Replace MD headers (## header text) with **header text** that telegram supports
-		desc := sender.mdHeaderRegex.ReplaceAllString(trigger.Desc, "**$headertext**")
+		desc := mdHeaderRegex.ReplaceAllString(trigger.Desc, "**$headertext**")
 
 		if charsAvailableForDesc < len(desc) {
 			buffer.WriteString(desc[0 : charsAvailableForDesc-1])
