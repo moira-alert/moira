@@ -91,9 +91,14 @@ func TestBuildMoiraMessage(t *testing.T) {
 			Message:   nil,
 		}
 
-		Convey("Print moira message with one event", func() {
-			actual := sender.buildMessage([]moira.NotificationEvent{event}, false, moira.TriggerData{})
-			expected := "02:40: Metric = 123 (OK to NODATA)\n"
+		mdDesc := `# header 1
+some text **bold text**
+## header 2
+some other text _italics text_`
+
+		Convey("Print moira message with one event and description", func() {
+			actual := sender.buildMessage([]moira.NotificationEvent{event}, false, moira.TriggerData{Desc: mdDesc})
+			expected := "<h1>header 1</h1>\n<br/>\n<br/><p>some text <strong>bold text</strong></p>\n<br/>\n<br/><h2>header 2</h2>\n<br/>\n<br/><p>some other text <em>italics text</em></p>\n<br/>02:40: Metric = 123 (OK to NODATA)\n"
 			So(actual, ShouldResemble, expected)
 		})
 
