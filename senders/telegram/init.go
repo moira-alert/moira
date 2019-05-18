@@ -2,6 +2,7 @@ package telegram
 
 import (
 	"fmt"
+	"regexp"
 	"time"
 
 	"github.com/moira-alert/moira"
@@ -29,12 +30,13 @@ var (
 
 // Sender implements moira sender interface via telegram
 type Sender struct {
-	DataBase moira.Database
-	logger   moira.Logger
-	apiToken string
-	frontURI string
-	bot      *telebot.Bot
-	location *time.Location
+	DataBase      moira.Database
+	logger        moira.Logger
+	apiToken      string
+	frontURI      string
+	bot           *telebot.Bot
+	location      *time.Location
+	mdHeaderRegex *regexp.Regexp
 }
 
 // Init loads yaml config, configures and starts telegram bot
@@ -48,6 +50,7 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 	sender.frontURI = senderSettings["front_uri"]
 	sender.logger = logger
 	sender.location = location
+	sender.mdHeaderRegex = regexp.MustCompile(`(?m)^\s*#{1,}\s*(?P<headertext>[^#\n]+)$`)
 	var err error
 	sender.bot, err = telebot.NewBot(telebot.Settings{
 		Token:  sender.apiToken,

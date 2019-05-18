@@ -2,6 +2,7 @@ package telegram
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 	"time"
 
@@ -12,6 +13,7 @@ import (
 func TestBuildMessage(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
 	sender := Sender{location: location, frontURI: "http://moira.url"}
+	sender.mdHeaderRegex = regexp.MustCompile(`(?m)^\s*#{1,}\s*(?P<headertext>[^#\n]+)$`)
 	value := float64(97.4458331200185)
 	message := "This is message"
 
@@ -30,11 +32,19 @@ func TestBuildMessage(t *testing.T) {
 			Tags: []string{"tag1", "tag2"},
 			Name: "Trigger Name",
 			ID:   "TriggerID",
+			Desc: `# header1
+some text **bold text**
+## header 2
+some other text _italic text_`,
 		}
 
 		Convey("Print moira message with one event", func() {
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, false, messageMaxCharacters)
 			expected := `💣NODATA Trigger Name [tag1][tag2] (1)
+**header1**
+some text **bold text**
+**header 2**
+some other text _italic text_
 
 02:40: Metric name = 97.4458331200185 (OK to NODATA)
 
@@ -65,6 +75,10 @@ http://moira.url/trigger/TriggerID
 			trigger.ID = ""
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, false, messageMaxCharacters)
 			expected := `💣NODATA Trigger Name [tag1][tag2] (1)
+**header1**
+some text **bold text**
+**header 2**
+some other text _italic text_
 
 02:40: Metric name = 97.4458331200185 (OK to NODATA). This is message`
 			So(actual, ShouldResemble, expected)
@@ -73,6 +87,10 @@ http://moira.url/trigger/TriggerID
 		Convey("Print moira message with one event and throttled", func() {
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, true, messageMaxCharacters)
 			expected := `💣NODATA Trigger Name [tag1][tag2] (1)
+**header1**
+some text **bold text**
+**header 2**
+some other text _italic text_
 
 02:40: Metric name = 97.4458331200185 (OK to NODATA)
 
@@ -89,6 +107,10 @@ Please, fix your system or tune this trigger to generate less events.`
 			}
 			actual := sender.buildMessage(events, trigger, false, photoCaptionMaxCharacters)
 			expected := `💣NODATA Trigger Name [tag1][tag2] (18)
+**header1**
+some text **bold text**
+**header 2**
+some other text _italic text_
 
 02:40: Metric name = 97.4458331200185 (OK to NODATA)
 02:40: Metric name = 97.4458331200185 (OK to NODATA)
@@ -99,10 +121,8 @@ Please, fix your system or tune this trigger to generate less events.`
 02:40: Metric name = 97.4458331200185 (OK to NODATA)
 02:40: Metric name = 97.4458331200185 (OK to NODATA)
 02:40: Metric name = 97.4458331200185 (OK to NODATA)
-02:40: Metric name = 97.4458331200185 (OK to NODATA)
-02:40: Metric name = 97.4458331200185 (OK to NODATA)
 
-...and 7 more events.
+...and 9 more events.
 
 http://moira.url/trigger/TriggerID
 `

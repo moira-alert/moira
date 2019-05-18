@@ -3,7 +3,6 @@ package telegram
 import (
 	"bytes"
 	"fmt"
-	"regexp"
 
 	"gopkg.in/tucnak/telebot.v2"
 
@@ -62,8 +61,7 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 		charsAvailableForDesc := messageMaxCharacters - messageCharsCount - charsRequiredForEvents
 
 		// Replace MD headers (## header text) with **header text** that telegram supports
-		re := regexp.MustCompile(`(?m)^\s*#{1,}\s*(?P<headertext>[^#\n]+)$`)
-		desc := re.ReplaceAllString(trigger.Desc, "**$headertext**")
+		desc := sender.mdHeaderRegex.ReplaceAllString(trigger.Desc, "**$headertext**")
 
 		if charsAvailableForDesc < len(desc) {
 			buffer.WriteString(desc[0 : charsAvailableForDesc-1])

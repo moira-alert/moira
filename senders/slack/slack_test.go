@@ -2,6 +2,7 @@ package slack
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -86,6 +87,8 @@ func TestGetStateEmoji(t *testing.T) {
 func TestBuildMessage(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
 	sender := Sender{location: location, frontURI: "http://moira.url"}
+	sender.mdBoldRegex = regexp.MustCompile(`(?m)\*\*(?P<boldtext>[\w\s]+)\*\*`)
+	sender.mdHeaderRegex = regexp.MustCompile(`(?m)^\s*#{1,}\s*(?P<headertext>[^#\n]+)$`)
 	value := float64(123)
 	message := "This is message"
 
@@ -104,11 +107,20 @@ func TestBuildMessage(t *testing.T) {
 			Tags: []string{"tag1", "tag2"},
 			Name: "Name",
 			ID:   "TriggerID",
+			Desc: `# header1
+some text **bold text**
+## header 2
+some other text _italic text_`,
 		}
 
 		Convey("Print moira message with one event", func() {
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, false)
-			expected := "*NODATA* [tag1][tag2] <http://moira.url/trigger/TriggerID|Name>\n```\n02:40: Metric = 123 (OK to NODATA)```"
+			expected := "*NODATA* [tag1][tag2] <http://moira.url/trigger/TriggerID|Name>\n" +
+				`*header1*
+some text *bold text*
+*header 2*
+some other text _italic text_` +
+				"\n```\n02:40: Metric = 123 (OK to NODATA)```"
 			So(actual, ShouldResemble, expected)
 		})
 
@@ -121,19 +133,34 @@ func TestBuildMessage(t *testing.T) {
 		Convey("Print moira message with one event and message", func() {
 			event.Message = &message
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, false)
-			expected := "*NODATA* [tag1][tag2] <http://moira.url/trigger/TriggerID|Name>\n```\n02:40: Metric = 123 (OK to NODATA). This is message```"
+			expected := "*NODATA* [tag1][tag2] <http://moira.url/trigger/TriggerID|Name>\n" +
+				`*header1*
+some text *bold text*
+*header 2*
+some other text _italic text_` +
+				"\n```\n02:40: Metric = 123 (OK to NODATA). This is message```"
 			So(actual, ShouldResemble, expected)
 		})
 
 		Convey("Print moira message with one event and throttled", func() {
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, true)
-			expected := "*NODATA* [tag1][tag2] <http://moira.url/trigger/TriggerID|Name>\n```\n02:40: Metric = 123 (OK to NODATA)```\nPlease, *fix your system or tune this trigger* to generate less events."
+			expected := "*NODATA* [tag1][tag2] <http://moira.url/trigger/TriggerID|Name>\n" +
+				`*header1*
+some text *bold text*
+*header 2*
+some other text _italic text_` +
+				"\n```\n02:40: Metric = 123 (OK to NODATA)```\nPlease, *fix your system or tune this trigger* to generate less events."
 			So(actual, ShouldResemble, expected)
 		})
 
 		Convey("Print moira message with 6 events", func() {
 			actual := sender.buildMessage([]moira.NotificationEvent{event, event, event, event, event, event}, trigger, false)
-			expected := "*NODATA* [tag1][tag2] <http://moira.url/trigger/TriggerID|Name>\n```\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)```"
+			expected := "*NODATA* [tag1][tag2] <http://moira.url/trigger/TriggerID|Name>\n" +
+				`*header1*
+some text *bold text*
+*header 2*
+some other text _italic text_` +
+				"\n```\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)```"
 			So(actual, ShouldResemble, expected)
 		})
 
@@ -144,7 +171,12 @@ func TestBuildMessage(t *testing.T) {
 			}
 			lines := strings.Repeat("\n02:40: Metric = 123 (OK to NODATA)", 1129)
 			actual := sender.buildMessage(events, trigger, false)
-			expected := fmt.Sprintf("*NODATA* [tag1][tag2] <http://moira.url/trigger/TriggerID|Name>\n```%s```\n\n...and 71 more events.", lines)
+			expected := fmt.Sprintf("*NODATA* [tag1][tag2] <http://moira.url/trigger/TriggerID|Name>\n"+
+				`*header1*
+some text *bold text*
+*header 2*
+some other text _italic text_`+
+				"\n```%s```\n\n...and 73 more events.", lines)
 			So(actual, ShouldResemble, expected)
 		})
 
