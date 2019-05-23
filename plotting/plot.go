@@ -109,6 +109,7 @@ func (plot *Plot) GetRenderable(trigger *moira.Trigger, metricsData []*metricSou
 				Max: limits.highest,
 				Min: limits.lowest,
 			},
+			EnablePrettyTicks: true,
 		},
 
 		Series: plotSeries,

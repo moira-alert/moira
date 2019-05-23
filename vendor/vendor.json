@@ -48,39 +48,39 @@
 			"revisionTime": "2017-07-27T15:54:43Z"
 		},
 		{
-			"checksumSHA1": "xc1qpskje1lGl9fDH4iKnolAyxk=",
+			"checksumSHA1": "lJvgxnk2MNkNL01vM28mW3YOk7E=",
 			"path": "github.com/beevee/go-chart",
-			"revision": "3a6bc1cbdb31d4a955a4789acd65b35f91c70822",
+			"revision": "273a59e48bccb0668388eb89faeaba1e061fc823",
 			"revisionTime": "2019-05-23T09:00:23Z"
 		},
 		{
 			"checksumSHA1": "EATdwpdmNIMoRH83jpegphBSLZ0=",
 			"path": "github.com/beevee/go-chart/drawing",
-			"revision": "3a6bc1cbdb31d4a955a4789acd65b35f91c70822",
+			"revision": "273a59e48bccb0668388eb89faeaba1e061fc823",
 			"revisionTime": "2019-05-23T09:00:23Z"
 		},
 		{
 			"checksumSHA1": "sQ45SWP3px236i69OrcwAQSY5es=",
 			"path": "github.com/beevee/go-chart/matrix",
-			"revision": "3a6bc1cbdb31d4a955a4789acd65b35f91c70822",
+			"revision": "273a59e48bccb0668388eb89faeaba1e061fc823",
 			"revisionTime": "2019-05-23T09:00:23Z"
 		},
 		{
 			"checksumSHA1": "R/SvHFvbFSZQuOO+QpozI/yV4VI=",
 			"path": "github.com/beevee/go-chart/roboto",
-			"revision": "3a6bc1cbdb31d4a955a4789acd65b35f91c70822",
+			"revision": "273a59e48bccb0668388eb89faeaba1e061fc823",
 			"revisionTime": "2019-05-23T09:00:23Z"
 		},
 		{
 			"checksumSHA1": "V7cWd6571hW+qFIs8m8zeNLenqA=",
 			"path": "github.com/beevee/go-chart/seq",
-			"revision": "3a6bc1cbdb31d4a955a4789acd65b35f91c70822",
+			"revision": "273a59e48bccb0668388eb89faeaba1e061fc823",
 			"revisionTime": "2019-05-23T09:00:23Z"
 		},
 		{
 			"checksumSHA1": "NMggTt9psQ+Vfilzg9swc4Rql3U=",
 			"path": "github.com/beevee/go-chart/util",
-			"revision": "3a6bc1cbdb31d4a955a4789acd65b35f91c70822",
+			"revision": "273a59e48bccb0668388eb89faeaba1e061fc823",
 			"revisionTime": "2019-05-23T09:00:23Z"
 		},
 		{
