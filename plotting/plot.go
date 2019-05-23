@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/moira-alert/moira/metric_source"
-	"github.com/wcharczuk/go-chart"
-
+	"github.com/beevee/go-chart"
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/metric_source"
 )
 
 // ErrNoPointsToRender is used to prevent unnecessary render calls

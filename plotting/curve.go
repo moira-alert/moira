@@ -4,10 +4,9 @@ import (
 	"math"
 	"time"
 
-	"github.com/moira-alert/moira/metric_source"
-	"github.com/wcharczuk/go-chart"
-
+	"github.com/beevee/go-chart"
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/metric_source"
 )
 
 // plotCurve is a single curve for given timeserie
