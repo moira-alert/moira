@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/cmd"
 )
@@ -53,10 +52,7 @@ func (config *apiConfig) getSettings() *api.Config {
 	}
 }
 
-func (config *webConfig) getSettings(isRemoteEnabled bool) (*api.WebConfig, error) {
-	if !isRemoteEnabled && config.RemoteAllowed {
-		return nil, fmt.Errorf("to allow usage of remote triggers, remote: enabled must be set to true")
-	}
+func (config *webConfig) getSettings(isRemoteEnabled bool) *api.WebConfig {
 	webContacts := make([]api.WebContact, 0, len(config.Contacts))
 	for _, configContact := range config.Contacts {
 		contact := api.WebContact{
@@ -70,9 +66,9 @@ func (config *webConfig) getSettings(isRemoteEnabled bool) (*api.WebConfig, erro
 	}
 	return &api.WebConfig{
 		SupportEmail:  config.SupportEmail,
-		RemoteAllowed: config.RemoteAllowed,
+		RemoteAllowed: isRemoteEnabled,
 		Contacts:      webContacts,
-	}, nil
+	}
 }
 
 func getDefault() config {

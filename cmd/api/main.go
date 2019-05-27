@@ -111,10 +111,7 @@ func main() {
 	remoteSource := remote.Create(remoteConfig)
 	metricSourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource)
 
-	webConfig, err := config.Web.getSettings(remoteConfig.Enabled)
-	if err != nil {
-		logger.Fatal(err.Error())
-	}
+	webConfig := config.Web.getSettings(remoteConfig.Enabled)
 
 	httpHandler := handler.NewHandler(database, logger, searchIndex, apiConfig, metricSourceProvider, webConfig)
 	server := &http.Server{
