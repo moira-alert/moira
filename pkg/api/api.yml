@@ -16,7 +16,6 @@ api:
   listen: ":8081"
   enable_cors: false
 web:
-  remoteAllowed: false
   contacts:
     - type: mail
       label: E-mail

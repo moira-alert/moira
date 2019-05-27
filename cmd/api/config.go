@@ -26,7 +26,7 @@ type webConfig struct {
 	// Moira administrator email address.
 	SupportEmail string `yaml:"supportEmail"`
 	// If true, users will be able to choose Graphite as trigger metrics data source
-	RemoteAllowed bool `yaml:"remoteAllowed"`
+	RemoteAllowed bool
 	// List of enabled contact types
 	Contacts []webContact `yaml:"contacts"`
 }
