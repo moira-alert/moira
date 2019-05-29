@@ -40,25 +40,25 @@ func (sender *Sender) buildEvent(events moira.NotificationEvents, contact moira.
 		details["Description"] = trigger.Desc
 	}
 
-	eventList := []string{}
+	var eventList string
 
 	for _, event := range events {
 		line := fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location), event.Metric, event.GetMetricValue(), event.OldState, event.State)
 		if len(moira.UseString(event.Message)) > 0 {
 			line += fmt.Sprintf(". %s", moira.UseString(event.Message))
 		}
-		eventList = append(eventList, line)
+		eventList += line
 	}
 
 	details["Events"] = eventList
 	if throttled {
-		details["Throttled"] = "Please, fix your system or tune this trigger to generate less events.")
+		details["Throttled"] = "Please, fix your system or tune this trigger to generate less events."
 	}
 	payload := &pagerduty.V2Payload{
 		Summary:  summary,
 		Severity: "info",
 		Source:   "moira",
-		Details: details,
+		Details:  details,
 	}
 	event := pagerduty.V2Event{
 		RoutingKey: contact.Value,
@@ -78,7 +78,11 @@ func (sender *Sender) buildSummary(events moira.NotificationEvents, trigger moir
 		summary.WriteString(" ")
 		summary.WriteString(tags)
 	}
-
+	if len(summary.String()) > summaryMaxChars {
+		summaryStr := summary.String()[:1000]
+		summaryStr += "..."
+		return summaryStr
+	}
 	return summary.String()
 }
 
