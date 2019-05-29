@@ -21,70 +21,44 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	return nil
 }
 
-func (sender *Sender) buildSummary(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
-	var summary bytes.Buffer
-
-	summary.WriteString(fmt.Sprintf("*%s*", events.GetSubjectState()))
-
-	tags := trigger.GetTags()
-	if tags != "" {
-		summary.WriteString(" ")
-		summary.WriteString(tags)
+func (sender *Sender) buildEvent(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) pagerduty.V2Event {
+	if len(plot) > 0 {
+		// attach image to the event
 	}
+	summary := sender.buildSummary(events, trigger, throttled)
+	details := make(map[string]interface{})
 
 	triggerURI := trigger.GetTriggerURI(sender.frontURI)
 	if triggerURI != "" {
-		summary.WriteString(triggerURI)
+		details["Trigger URI"] = triggerURI
 	} else if trigger.Name != "" {
-		summary.WriteString(" ")
-		summary.WriteString(trigger.Name)
+		details["Trigger URI"] = trigger.Name
 	}
 
 	if trigger.Desc != "" {
-		summary.WriteString("\n")
 		// TODO: string MD before writing
-		summary.WriteString(trigger.Desc)
+		details["Description"] = trigger.Desc
 	}
 
-	summary.WriteString("\n")
-
-	var printEventsCount int
-	summaryCharCount := len([]rune(summary.String()))
-	messageLimitReached := false
+	eventList := []string{}
 
 	for _, event := range events {
 		line := fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location), event.Metric, event.GetMetricValue(), event.OldState, event.State)
 		if len(moira.UseString(event.Message)) > 0 {
 			line += fmt.Sprintf(". %s", moira.UseString(event.Message))
 		}
-		lineCharsCount := len([]rune(line))
-		if summaryCharCount+lineCharsCount > summaryMaxChars {
-			messageLimitReached = true
-			break
-		}
-		summary.WriteString(line)
-		summaryCharCount += lineCharsCount
-		printEventsCount++
+		eventList = append(eventList, line)
 	}
 
-	if messageLimitReached {
-		summary.WriteString(fmt.Sprintf("\n\n...and %d more events.", len(events)-printEventsCount))
-	}
-
+	details["Events"] = eventList
 	if throttled {
-		summary.WriteString("\nPlease, *fix your system or tune this trigger* to generate less events.")
+		details["Throttled"] = "Please, fix your system or tune this trigger to generate less events.")
 	}
-	return summary.String()
-}
-func (sender *Sender) buildEvent(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) pagerduty.V2Event {
-	if len(plot) > 0 {
-		// attach image to the event
-	}
-	summary := sender.buildSummary(events, trigger, throttled)
 	payload := &pagerduty.V2Payload{
 		Summary:  summary,
 		Severity: "info",
 		Source:   "moira",
+		Details: details,
 	}
 	event := pagerduty.V2Event{
 		RoutingKey: contact.Value,
@@ -92,6 +66,20 @@ func (sender *Sender) buildEvent(events moira.NotificationEvents, contact moira.
 		Payload:    payload,
 	}
 	return event
+}
+
+func (sender *Sender) buildSummary(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
+	var summary bytes.Buffer
+
+	summary.WriteString(fmt.Sprintf("%s", events.GetSubjectState()))
+
+	tags := trigger.GetTags()
+	if tags != "" {
+		summary.WriteString(" ")
+		summary.WriteString(tags)
+	}
+
+	return summary.String()
 }
 
 // func (sender *Sender) sendPlot(plot []byte, channelID, threadTimestamp, triggerID string) error {

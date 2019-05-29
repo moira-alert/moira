@@ -3,18 +3,15 @@ package pagerduty
 import (
 	"time"
 
-	"github.com/PagerDuty/go-pagerduty"
 	"github.com/moira-alert/moira"
 )
 
 // Sender implements moira sender interface for pagerduty
 type Sender struct {
-	DataBase  moira.Database
-	logger    moira.Logger
-	authToken string
-	frontURI  string
-	location  *time.Location
-	client    *pagerduty.Client
+	DataBase moira.Database
+	logger   moira.Logger
+	frontURI string
+	location *time.Location
 }
 
 // Init loads yaml config, configures the pagerduty client
