@@ -29,6 +29,12 @@
 			"revisionTime": "2017-08-15T16:40:41Z"
 		},
 		{
+			"checksumSHA1": "sIwsbV7oPJ8zEEWet81hglReO+I=",
+			"path": "github.com/PagerDuty/go-pagerduty",
+			"revision": "cf1437c7c8d62e7cf711e1a5c5bbb4c01f26e178",
+			"revisionTime": "2019-05-03T23:08:06Z"
+		},
+		{
 			"checksumSHA1": "71CUlwPjyFSBuuyiQvl4YHDR5Rs=",
 			"path": "github.com/RoaringBitmap/roaring",
 			"revision": "627b662e6d11b18beaff2266712a59f8845f3d35",
@@ -558,6 +564,12 @@
 			"path": "github.com/gomodule/redigo/redisx",
 			"revision": "02dc2736dbc3a4a56907b0d5a9fead2f71b499db",
 			"revisionTime": "2018-12-13T21:05:01Z"
+		},
+		{
+			"checksumSHA1": "p3IB18uJRs4dL2K5yx24MrLYE9A=",
+			"path": "github.com/google/go-querystring/query",
+			"revision": "c8c88dbee036db4e4808d1f2ec8c2e15e11c3f80",
+			"revisionTime": "2019-03-18T16:54:38Z"
 		},
 		{
 			"checksumSHA1": "yIkYzW7bzAD81zHyuCNmEj4+oxQ=",
