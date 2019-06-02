@@ -36,23 +36,69 @@ func TestBuildEvent(t *testing.T) {
 		contact := moira.ContactData{
 			Value: "mock routing key",
 		}
-
-		Convey("Build pagerduty event with 1 moira event", func() {
-			actual := sender.buildEvent(moira.NotificationEvents{event}, contact, trigger, []byte{}, false)
-			expected := pagerduty.V2Event{
-				RoutingKey: contact.Value,
-				Action:     "trigger",
-				Payload: &pagerduty.V2Payload{
-					Summary:  "NODATA [tag1][tag2]",
-					Severity: "info",
-					Source:   "moira",
-					Details: map[string]interface{}{
-						"Events":      "\n02:40: Metric name = 97.4458331200185 (OK to NODATA)",
-						"Trigger URI": "http://moira.url/trigger/TriggerID",
-						"Description": "**bold text** _italics_ `code` regular",
-					},
+		baseExpected := pagerduty.V2Event{
+			RoutingKey: contact.Value,
+			Action:     "trigger",
+			Payload: &pagerduty.V2Payload{
+				Summary:  "NODATA [tag1][tag2]",
+				Severity: "info",
+				Source:   "moira",
+				Details: map[string]interface{}{
+					"Trigger URI": "http://moira.url/trigger/TriggerID",
+					"Description": "**bold text** _italics_ `code` regular",
 				},
+			},
+		}
+
+		Convey("Build pagerduty event with one moira event", func() {
+			actual := sender.buildEvent(moira.NotificationEvents{event}, contact, trigger, []byte{}, false)
+			expected := baseExpected
+			details := map[string]interface{}{
+				"Events":      "\n02:40: Metric name = 97.4458331200185 (OK to NODATA)",
+				"Trigger URI": "http://moira.url/trigger/TriggerID",
+				"Description": "**bold text** _italics_ `code` regular",
 			}
+			expected.Payload.Details = details
+			So(actual, ShouldResemble, expected)
+		})
+
+		Convey("Build pagerduty event with one event and throttled", func() {
+			actual := sender.buildEvent(moira.NotificationEvents{event}, contact, trigger, []byte{}, true)
+			expected := baseExpected
+			details := map[string]interface{}{
+				"Events":      "\n02:40: Metric name = 97.4458331200185 (OK to NODATA)",
+				"Throttled":   "Please, fix your system or tune this trigger to generate less events.",
+				"Trigger URI": "http://moira.url/trigger/TriggerID",
+				"Description": "**bold text** _italics_ `code` regular",
+			}
+			expected.Payload.Details = details
+			So(actual, ShouldResemble, expected)
+		})
+
+		Convey("Build pagerduty event with 10 events and throttled", func() {
+			events := make([]moira.NotificationEvent, 0)
+			for i := 0; i < 10; i++ {
+				events = append(events, event)
+			}
+			actual := sender.buildEvent(events, contact, trigger, []byte{}, true)
+			expected := baseExpected
+			details := map[string]interface{}{
+				"Events": `
+02:40: Metric name = 97.4458331200185 (OK to NODATA)
+02:40: Metric name = 97.4458331200185 (OK to NODATA)
+02:40: Metric name = 97.4458331200185 (OK to NODATA)
+02:40: Metric name = 97.4458331200185 (OK to NODATA)
+02:40: Metric name = 97.4458331200185 (OK to NODATA)
+02:40: Metric name = 97.4458331200185 (OK to NODATA)
+02:40: Metric name = 97.4458331200185 (OK to NODATA)
+02:40: Metric name = 97.4458331200185 (OK to NODATA)
+02:40: Metric name = 97.4458331200185 (OK to NODATA)
+02:40: Metric name = 97.4458331200185 (OK to NODATA)`,
+				"Throttled":   "Please, fix your system or tune this trigger to generate less events.",
+				"Trigger URI": "http://moira.url/trigger/TriggerID",
+				"Description": "**bold text** _italics_ `code` regular",
+			}
+			expected.Payload.Details = details
 			So(actual, ShouldResemble, expected)
 		})
 	})
