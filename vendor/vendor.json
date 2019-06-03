@@ -866,6 +866,12 @@
 			"revisionTime": "2018-08-01T14:34:48Z"
 		},
 		{
+			"checksumSHA1": "IGPrksV2kzWSKV1wgQq7ze+pCE0=",
+			"path": "github.com/shurcooL/sanitized_anchor_name",
+			"revision": "7bfe4c7ecddb3666a94b053b422cdd8f5aaa3615",
+			"revisionTime": "2018-12-26T21:49:07Z"
+		},
+		{
 			"checksumSHA1": "8M5kk6pT2gknOtearzxw7gagVCM=",
 			"path": "github.com/smartystreets/assertions",
 			"revision": "f487f9de1cd36ebab28235b9373028812fb47cbd",
