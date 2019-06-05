@@ -2,6 +2,8 @@ package telegram
 
 import (
 	"fmt"
+	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/moira-alert/moira"
@@ -33,6 +35,7 @@ type Sender struct {
 	logger   moira.Logger
 	apiToken string
 	frontURI string
+
 	bot      *telebot.Bot
 	location *time.Location
 }
@@ -43,14 +46,19 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 	if apiToken == "" {
 		return fmt.Errorf("can not read telegram api_token from config")
 	}
+	sender.location = location
+	sender.logger = logger
 
 	sender.apiToken = apiToken
 	sender.frontURI = senderSettings["front_uri"]
-	sender.logger = logger
-	sender.location = location
-	var err error
+	client, err := getClient(senderSettings["proxy_URL"])
+	if err != nil {
+		return nil
+	}
+
 	sender.bot, err = telebot.NewBot(telebot.Settings{
 		Token:  sender.apiToken,
+		Client: client,
 		Poller: &telebot.LongPoller{Timeout: pollerTimeout},
 	})
 	if err != nil {
@@ -64,6 +72,22 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 	})
 	go sender.runTelebot()
 	return nil
+}
+
+func getClient(proxyURLStr string) (*http.Client, error) {
+	client := *http.DefaultClient
+
+	if proxyURLStr == "" {
+		return &client, nil
+	}
+	var proxyURL, err = url.Parse(proxyURLStr)
+	if err != nil {
+		return nil, fmt.Errorf("can not parse proxy url: %s", proxyURLStr)
+	}
+	transport := &http.Transport{}
+	transport.Proxy = http.ProxyURL(proxyURL)
+	client.Transport = transport
+	return &client, err
 }
 
 // runTelebot starts telegram bot and manages bot subscriptions
