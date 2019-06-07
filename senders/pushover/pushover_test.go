@@ -102,6 +102,16 @@ some other text _italics text_`
 			So(actual, ShouldResemble, expected)
 		})
 
+		longMdDesc := ""
+		for i := 0; i < 700; i++ {
+			longMdDesc += "a"
+		}
+
+		Convey("Print moira message with one event and long description", func() {
+			actual := sender.buildMessage([]moira.NotificationEvent{event}, false, moira.TriggerData{Desc: longMdDesc})
+			expected := "<p>" + longMdDesc[:descLimit-100] + "&hellip;</p>\n<br/>" + "02:40: Metric = 123 (OK to NODATA)\n"
+			So(actual, ShouldResemble, expected)
+		})
 		Convey("Print moira message with one event and message", func() {
 			event.Message = &message
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, false, moira.TriggerData{})
@@ -124,8 +134,24 @@ Please, fix your system or tune this trigger to generate less events.`
 02:40: Metric = 123 (OK to NODATA)
 02:40: Metric = 123 (OK to NODATA)
 02:40: Metric = 123 (OK to NODATA)
+02:40: Metric = 123 (OK to NODATA)
+`
+			So(actual, ShouldResemble, expected)
+		})
 
-...and 1 more events.`
+		Convey("Print moira message with 100 events", func() {
+			eventString := "02:40: Metric = 123 (OK to NODATA)\n"
+			eventsToBePrinted := msgLimit / len(eventString)
+			expected := ""
+			for i := 0; i < eventsToBePrinted; i++ {
+				expected += eventString
+			}
+			expected += fmt.Sprintf("\n...and %d more events.", 100-eventsToBePrinted)
+			var events moira.NotificationEvents
+			for i := 0; i < 100; i++ {
+				events = append(events, event)
+			}
+			actual := sender.buildMessage(events, false, moira.TriggerData{})
 			So(actual, ShouldResemble, expected)
 		})
 	})

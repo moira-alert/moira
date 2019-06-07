@@ -12,9 +12,10 @@ import (
 	"github.com/gregdel/pushover"
 )
 
-const printEventsCount int = 5
 const titleLimit = 250
 const urlLimit = 512
+const msgLimit = 1024
+const descLimit = msgLimit / 2
 
 // Sender implements moira sender interface via pushover
 type Sender struct {
@@ -76,22 +77,32 @@ func (sender *Sender) makePushoverMessage(events moira.NotificationEvents, conta
 
 func (sender *Sender) buildMessage(events moira.NotificationEvents, throttled bool, trigger moira.TriggerData) string {
 	var message bytes.Buffer
-	htmlDesc := blackfriday.Run([]byte(trigger.Desc))
+	desc := trigger.Desc
+	if len(desc) > descLimit {
+		// trim description to fit 512 chars while leaving space for html tags
+		desc = desc[:descLimit-100] + "...\n"
+	}
+	htmlDesc := blackfriday.Run([]byte(desc))
 	htmlDescWithbr := strings.Replace(string(htmlDesc), "\n", "\n<br/>", -1)
 	message.WriteString(htmlDescWithbr)
-	for i, event := range events {
-		if i > printEventsCount-1 {
+	msgLimitReached := false
+	eventsPrinted := 0
+	for _, event := range events {
+		line := fmt.Sprintf("%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location), event.Metric, event.GetMetricValue(), event.OldState, event.State)
+		if len(moira.UseString(event.Message)) > 0 {
+			line += fmt.Sprintf(". %s\n", moira.UseString(event.Message))
+		} else {
+			line += "\n"
+		}
+		if len([]rune(message.String()+line)) > msgLimit-30 {
+			msgLimitReached = true
 			break
 		}
-		message.WriteString(fmt.Sprintf("%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location), event.Metric, event.GetMetricValue(), event.OldState, event.State))
-		if len(moira.UseString(event.Message)) > 0 {
-			message.WriteString(fmt.Sprintf(". %s\n", moira.UseString(event.Message)))
-		} else {
-			message.WriteString("\n")
-		}
+		message.WriteString(line)
+		eventsPrinted++
 	}
-	if len(events) > printEventsCount {
-		message.WriteString(fmt.Sprintf("\n...and %d more events.", len(events)-printEventsCount))
+	if msgLimitReached {
+		message.WriteString(fmt.Sprintf("\n...and %d more events.", len(events)-eventsPrinted))
 	}
 
 	if throttled {
