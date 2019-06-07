@@ -110,13 +110,14 @@ some text **bold text**
 some other text _italic text_`,
 		}
 
-		Convey("Print moira message with one event", func() {
-			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, false)
-			expected := "*NODATA* [tag1][tag2] <http://moira.url/trigger/TriggerID|Name>\n" +
-				`*header1*
+		slackCompatibleMD := `*header1*
 some text *bold text*
 *header 2*
-some other text _italic text_` +
+some other text _italic text_`
+
+		Convey("Print moira message with one event", func() {
+			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, false)
+			expected := "*NODATA* [tag1][tag2] <http://moira.url/trigger/TriggerID|Name>\n" + slackCompatibleMD +
 				"\n```\n02:40: Metric = 123 (OK to NODATA)```"
 			So(actual, ShouldResemble, expected)
 		})
@@ -130,33 +131,21 @@ some other text _italic text_` +
 		Convey("Print moira message with one event and message", func() {
 			event.Message = &message
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, false)
-			expected := "*NODATA* [tag1][tag2] <http://moira.url/trigger/TriggerID|Name>\n" +
-				`*header1*
-some text *bold text*
-*header 2*
-some other text _italic text_` +
+			expected := "*NODATA* [tag1][tag2] <http://moira.url/trigger/TriggerID|Name>\n" + slackCompatibleMD +
 				"\n```\n02:40: Metric = 123 (OK to NODATA). This is message```"
 			So(actual, ShouldResemble, expected)
 		})
 
 		Convey("Print moira message with one event and throttled", func() {
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, true)
-			expected := "*NODATA* [tag1][tag2] <http://moira.url/trigger/TriggerID|Name>\n" +
-				`*header1*
-some text *bold text*
-*header 2*
-some other text _italic text_` +
+			expected := "*NODATA* [tag1][tag2] <http://moira.url/trigger/TriggerID|Name>\n" + slackCompatibleMD +
 				"\n```\n02:40: Metric = 123 (OK to NODATA)```\nPlease, *fix your system or tune this trigger* to generate less events."
 			So(actual, ShouldResemble, expected)
 		})
 
 		Convey("Print moira message with 6 events", func() {
 			actual := sender.buildMessage([]moira.NotificationEvent{event, event, event, event, event, event}, trigger, false)
-			expected := "*NODATA* [tag1][tag2] <http://moira.url/trigger/TriggerID|Name>\n" +
-				`*header1*
-some text *bold text*
-*header 2*
-some other text _italic text_` +
+			expected := "*NODATA* [tag1][tag2] <http://moira.url/trigger/TriggerID|Name>\n" + slackCompatibleMD +
 				"\n```\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)```"
 			So(actual, ShouldResemble, expected)
 		})
@@ -168,12 +157,24 @@ some other text _italic text_` +
 			}
 			lines := strings.Repeat("\n02:40: Metric = 123 (OK to NODATA)", 1127)
 			actual := sender.buildMessage(events, trigger, false)
-			expected := fmt.Sprintf("*NODATA* [tag1][tag2] <http://moira.url/trigger/TriggerID|Name>\n"+
-				`*header1*
-some text *bold text*
-*header 2*
-some other text _italic text_`+
+			expected := fmt.Sprintf("*NODATA* [tag1][tag2] <http://moira.url/trigger/TriggerID|Name>\n"+slackCompatibleMD+
 				"\n```%s```\n\n...and 73 more events.", lines)
+			So(actual, ShouldResemble, expected)
+		})
+
+		longMdDesc := ""
+		for i := 0; i < 40000; i++ {
+			longMdDesc += "a"
+		}
+
+		Convey("Print moira message with one event and large desc", func() {
+			trigger.Desc = longMdDesc
+			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, false)
+			title := "*NODATA* [tag1][tag2] <http://moira.url/trigger/TriggerID|Name>\n"
+
+			charsAvailableForDesc := messageMaxCharacters - len(title) - charsRequiredForEvents
+			expected := title + longMdDesc[0:charsAvailableForDesc-10] + "..." +
+				"\n```\n02:40: Metric = 123 (OK to NODATA)```"
 			So(actual, ShouldResemble, expected)
 		})
 

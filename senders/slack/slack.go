@@ -22,6 +22,7 @@ const (
 
 	messageMaxCharacters          = 40000
 	additionalInfoCharactersCount = 400
+	charsRequiredForEvents        = 9000
 )
 
 var (
@@ -99,7 +100,6 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 
 	if trigger.Desc != "" {
 		message.WriteString("\n")
-		charsRequiredForEvents := 9000
 		charsAvailableForDesc := messageMaxCharacters - messageCharsCount - charsRequiredForEvents - 1
 
 		// Replace **bold text** with *bold text* that slack supports
@@ -109,7 +109,8 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 		desc = mdHeaderRegex.ReplaceAllString(desc, "*$headertext*")
 
 		if charsAvailableForDesc < len(desc) {
-			message.WriteString(desc[0 : charsAvailableForDesc-1])
+			message.WriteString(desc[0 : charsAvailableForDesc-10])
+			message.WriteString("...")
 		} else {
 			message.WriteString(desc)
 		}
