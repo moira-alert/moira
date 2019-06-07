@@ -172,7 +172,7 @@ some other text _italic text_`
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, false)
 			title := "*NODATA* [tag1][tag2] <http://moira.url/trigger/TriggerID|Name>\n"
 
-			charsAvailableForDesc := messageMaxCharacters - len(title) - charsRequiredForEvents
+			charsAvailableForDesc := messageMaxCharacters - len([]rune(title)) - charsRequiredForEvents
 			expected := title + longMdDesc[0:charsAvailableForDesc-10] + "..." +
 				"\n```\n02:40: Metric = 123 (OK to NODATA)```"
 			So(actual, ShouldResemble, expected)

@@ -141,7 +141,7 @@ Please, fix your system or tune this trigger to generate less events.`
 
 		Convey("Print moira message with 100 events", func() {
 			eventString := "02:40: Metric = 123 (OK to NODATA)\n"
-			eventsToBePrinted := msgLimit / len(eventString)
+			eventsToBePrinted := msgLimit/len([]rune(eventString)) - 1
 			expected := ""
 			for i := 0; i < eventsToBePrinted; i++ {
 				expected += eventString

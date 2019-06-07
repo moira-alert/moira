@@ -38,13 +38,14 @@ some text **bold text**
 some other text _italic text_`,
 		}
 
-		Convey("Print moira message with one event", func() {
-			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, false, messageMaxCharacters)
-			expected := `💣NODATA Trigger Name [tag1][tag2] (1)
-**header1**
+		desc := `**header1**
 some text **bold text**
 **header 2**
-some other text _italic text_
+some other text _italic text_`
+
+		Convey("Print moira message with one event", func() {
+			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, false, messageMaxCharacters)
+			expected := "💣NODATA Trigger Name [tag1][tag2] (1)\n" + desc + `
 
 02:40: Metric name = 97.4458331200185 (OK to NODATA)
 
@@ -74,11 +75,7 @@ http://moira.url/trigger/TriggerID
 			event.TriggerID = ""
 			trigger.ID = ""
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, false, messageMaxCharacters)
-			expected := `💣NODATA Trigger Name [tag1][tag2] (1)
-**header1**
-some text **bold text**
-**header 2**
-some other text _italic text_
+			expected := "💣NODATA Trigger Name [tag1][tag2] (1)\n" + desc + `
 
 02:40: Metric name = 97.4458331200185 (OK to NODATA). This is message`
 			So(actual, ShouldResemble, expected)
@@ -86,11 +83,7 @@ some other text _italic text_
 
 		Convey("Print moira message with one event and throttled", func() {
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, true, messageMaxCharacters)
-			expected := `💣NODATA Trigger Name [tag1][tag2] (1)
-**header1**
-some text **bold text**
-**header 2**
-some other text _italic text_
+			expected := "💣NODATA Trigger Name [tag1][tag2] (1)\n" + desc + `
 
 02:40: Metric name = 97.4458331200185 (OK to NODATA)
 
@@ -106,11 +99,7 @@ Please, fix your system or tune this trigger to generate less events.`
 				events = append(events, event)
 			}
 			actual := sender.buildMessage(events, trigger, false, photoCaptionMaxCharacters)
-			expected := `💣NODATA Trigger Name [tag1][tag2] (18)
-**header1**
-some text **bold text**
-**header 2**
-some other text _italic text_
+			expected := "💣NODATA Trigger Name [tag1][tag2] (18)\n" + desc + `
 
 02:40: Metric name = 97.4458331200185 (OK to NODATA)
 02:40: Metric name = 97.4458331200185 (OK to NODATA)
@@ -128,6 +117,25 @@ http://moira.url/trigger/TriggerID
 `
 			fmt.Println(fmt.Sprintf("Bytes: %v", len(expected)))
 			fmt.Println(fmt.Sprintf("Symbols: %v", len([]rune(expected))))
+			So(actual, ShouldResemble, expected)
+		})
+
+		longMdDesc := ""
+		for i := 0; i < 4096; i++ {
+			longMdDesc += "a"
+		}
+
+		Convey("Print moira message with one event and long desc", func() {
+			trigger.Desc = longMdDesc
+			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, false, messageMaxCharacters)
+			title := "💣NODATA Trigger Name [tag1][tag2] (1)\n"
+			charsAvailableForDesc := messageMaxCharacters - len([]rune(title)) - charsRequiredForEvents
+			expected := title + longMdDesc[0:charsAvailableForDesc-10] + "..." + `
+
+02:40: Metric name = 97.4458331200185 (OK to NODATA)
+
+http://moira.url/trigger/TriggerID
+`
 			So(actual, ShouldResemble, expected)
 		})
 	})

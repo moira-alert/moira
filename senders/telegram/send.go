@@ -23,6 +23,7 @@ const (
 	photoCaptionMaxCharacters     = 1024
 	messageMaxCharacters          = 4096
 	additionalInfoCharactersCount = 400
+	charsRequiredForEvents        = 900
 )
 
 var characterLimits = map[messageType]int{
@@ -62,14 +63,14 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 	messageCharsCount = len([]rune(buffer.String()))
 
 	if trigger.Desc != "" {
-		charsRequiredForEvents := 900
-		charsAvailableForDesc := messageMaxCharacters - messageCharsCount - charsRequiredForEvents
+		charsAvailableForDesc := maxChars - messageCharsCount - charsRequiredForEvents
 
 		// Replace MD headers (## header text) with **header text** that telegram supports
 		desc := mdHeaderRegex.ReplaceAllString(trigger.Desc, "**$headertext**")
 
 		if charsAvailableForDesc < len(desc) {
-			buffer.WriteString(desc[0 : charsAvailableForDesc-1])
+			buffer.WriteString(desc[0 : charsAvailableForDesc-10])
+			buffer.WriteString("...")
 		} else {
 			buffer.WriteString(desc)
 		}
