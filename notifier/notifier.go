@@ -64,6 +64,7 @@ func (pkg NotificationPackage) GetMetricNames() []string {
 type Notifier interface {
 	Send(pkg *NotificationPackage, waitGroup *sync.WaitGroup)
 	RegisterSender(senderSettings map[string]string, sender moira.Sender) error
+	InitImageStore(imageStoreSettings map[string]string) error
 	StopSenders()
 	GetSenders() map[string]bool
 }
@@ -78,6 +79,7 @@ type StandardNotifier struct {
 	config               Config
 	metrics              *graphite.NotifierMetrics
 	metricSourceProvider *metricSource.SourceProvider
+	imageStore           moira.ImageStore
 }
 
 // NewNotifier is initializer for StandardNotifier
@@ -158,7 +160,7 @@ func (notifier *StandardNotifier) run(sender moira.Sender, ch chan NotificationP
 				notifier.logger.Errorf(buildErr)
 			}
 		}
-		err = sender.SendEvents(pkg.Events, pkg.Contact, pkg.Trigger, plot, pkg.Throttled)
+		err = sender.SendEvents(pkg.Events, pkg.Contact, pkg.Trigger, plot, pkg.Throttled, notifier.imageStore)
 		if err == nil {
 			if metric, found := notifier.metrics.SendersOkMetrics.GetMetric(pkg.Contact.Type); found {
 				metric.Mark(1)

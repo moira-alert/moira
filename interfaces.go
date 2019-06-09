@@ -145,8 +145,14 @@ type Logger interface {
 
 // Sender interface for implementing specified contact type sender
 type Sender interface {
-	SendEvents(events NotificationEvents, contact ContactData, trigger TriggerData, plot []byte, throttled bool) error
+	SendEvents(events NotificationEvents, contact ContactData, trigger TriggerData, plot []byte, throttled bool, imageStore ImageStore) error
 	Init(senderSettings map[string]string, logger Logger, location *time.Location, dateTimeFormat string) error
+}
+
+// ImageStore is the interface for image storage providers
+type ImageStore interface {
+	Init(imageStoreSettings map[string]string) error
+	StoreImage(image []byte) string
 }
 
 // Searcher interface implements full-text search index functionality
