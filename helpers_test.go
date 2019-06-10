@@ -84,6 +84,35 @@ func TestGetStringListsDiff(t *testing.T) {
 	})
 }
 
+func TestGetStringListsUnion(t *testing.T) {
+	Convey("Test Get Union between string lists", t, func() {
+		{
+			union := GetStringListsUnion()
+			So(union, ShouldResemble, []string{})
+		}
+		{
+			union := GetStringListsUnion(nil)
+			So(union, ShouldResemble, []string{})
+		}
+		{
+			union := GetStringListsUnion(nil, nil)
+			So(union, ShouldResemble, []string{})
+		}
+		{
+			first := []string{"1", "2", "3"}
+			second := []string{"1", "2", "3"}
+			union := GetStringListsUnion(first, second)
+			So(union, ShouldResemble, []string{"1", "2", "3"})
+		}
+		{
+			first := []string{"1", "2", "3"}
+			second := []string{"4", "5", "6"}
+			union := GetStringListsUnion(first, second)
+			So(union, ShouldResemble, []string{"1", "2", "3", "4", "5", "6"})
+		}
+	})
+}
+
 func TestGetTriggerListsDiff(t *testing.T) {
 	Convey("Test Get Difference between trigger lists", t, func() {
 		first := []*Trigger{triggerVal1, triggerVal2}

@@ -15,7 +15,7 @@ const testBadID = "!@#$"
 var (
 	testHost     = "https://hostname.domain"
 	testTemplate = fmt.Sprintf("%s/%s/%s/%s/%s", testHost, moira.VariableTriggerID, moira.VariableContactType, moira.VariableContactID, moira.VariableContactValue)
-	testContact = moira.ContactData{
+	testContact  = moira.ContactData{
 		ID:    "contactID",
 		Type:  "contactType",
 		Value: "contactValue",

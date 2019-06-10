@@ -20,8 +20,8 @@ func getKeywordMapping() *mapping.FieldMapping {
 func getStandardMapping() *mapping.FieldMapping {
 	standardFieldMapping := bleve.NewTextFieldMapping()
 	standardFieldMapping.Analyzer = standard.Name
-	standardFieldMapping.Store = false
-	standardFieldMapping.IncludeTermVectors = false
+	standardFieldMapping.Store = true
+	standardFieldMapping.IncludeTermVectors = true
 
 	return standardFieldMapping
 }

@@ -6,6 +6,9 @@ import (
 	"strings"
 
 	"github.com/blevesearch/bleve"
+	"github.com/blevesearch/bleve/search"
+
+	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/index/mapping"
 )
 
@@ -13,7 +16,7 @@ import (
 // TriggerCheck.Score (desc)
 // Relevance (asc)
 // Trigger.Name (asc)
-func (index *TriggerIndex) Search(filterTags []string, searchString string, onlyErrors bool, page int64, size int64) (triggerIDs []string, total int64, err error) {
+func (index *TriggerIndex) Search(filterTags []string, searchString string, onlyErrors bool, page int64, size int64) (searchResults []*moira.SearchResult, total int64, err error) {
 	if size < 0 {
 		page = 0
 		docs, _ := index.index.DocCount()
@@ -30,10 +33,33 @@ func (index *TriggerIndex) Search(filterTags []string, searchString string, only
 	if searchResult.Hits.Len() == 0 {
 		return
 	}
+
 	for _, result := range searchResult.Hits {
-		triggerIDs = append(triggerIDs, result.ID)
+		highlights := getHighlights(result.Fragments, mapping.TriggerName, mapping.TriggerDesc)
+		triggerSearchResult := moira.SearchResult{
+			ObjectID:   result.ID,
+			Highlights: highlights,
+		}
+		searchResults = append(searchResults, &triggerSearchResult)
 	}
 	return
+}
+
+func getHighlights(fragmentsMap search.FieldFragmentMap, triggerFields ...mapping.TriggerField) []moira.SearchHighlight {
+	highlights := make([]moira.SearchHighlight, 0)
+	for _, triggerField := range triggerFields {
+		var highlightValue string
+		if fragments, ok := fragmentsMap[triggerField.String()]; ok {
+			for _, fragment := range fragments {
+				highlightValue += fragment
+			}
+			highlights = append(highlights, moira.SearchHighlight{
+				Field: triggerField.GetTagValue(),
+				Value: highlightValue,
+			})
+		}
+	}
+	return highlights
 }
 
 func buildSearchRequest(filterTags []string, searchString string, onlyErrors bool, page, size int) *bleve.SearchRequest {
@@ -47,7 +73,8 @@ func buildSearchRequest(filterTags []string, searchString string, onlyErrors boo
 	// TriggerCheck.Score (desc)
 	// Relevance (asc)
 	// Trigger.Name (asc)
-	req.SortBy([]string{fmt.Sprintf("-%s", mapping.TriggerLastCheckScore.String()), "_score", mapping.TriggerName.String()})
+	req.SortBy([]string{fmt.Sprintf("-%s", mapping.TriggerLastCheckScore.String()), "-_score", mapping.TriggerName.String()})
+	req.Highlight = bleve.NewHighlight()
 
 	return req
 }

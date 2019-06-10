@@ -5,11 +5,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/beevee/go-chart"
+	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/metric_source"
 	. "github.com/smartystreets/goconvey/convey"
-	"github.com/wcharczuk/go-chart"
-
-	"github.com/moira-alert/moira"
 )
 
 var (
