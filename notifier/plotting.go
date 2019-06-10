@@ -5,15 +5,16 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/beevee/go-chart"
+	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
-	"github.com/wcharczuk/go-chart"
-
-	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/plotting"
 )
 
 const (
+	// defaultTimeShift is default time shift to fetch timeseries
+	defaultTimeShift = 1 * time.Minute
 	// defaultTimeRange is default time range to fetch timeseries
 	defaultTimeRange = 30 * time.Minute
 )
@@ -46,7 +47,6 @@ func (notifier *StandardNotifier) buildNotificationPackagePlot(pkg NotificationP
 	if err != nil {
 		return buff.Bytes(), err
 	}
-
 	from, to := resolveMetricsWindow(notifier.logger, pkg.Trigger, pkg)
 	metricsData, trigger, err := notifier.evaluateTriggerMetrics(from, to, pkg.Trigger.ID)
 	if err != nil {
@@ -59,6 +59,7 @@ func (notifier *StandardNotifier) buildNotificationPackagePlot(pkg NotificationP
 		return buff.Bytes(), err
 	}
 	if err = renderable.Render(chart.PNG, buff); err != nil {
+		buff.Reset()
 		return buff.Bytes(), err
 	}
 	return buff.Bytes(), nil
@@ -87,13 +88,13 @@ func resolveMetricsWindow(logger moira.Logger, trigger moira.TriggerData, pkg No
 		if isWideWindow {
 			return alignToMinutes(fromTime.Unix()), toTime.Unix()
 		}
-		return alignToMinutes(toTime.Add(-defaultTimeRange).Unix()), toTime.Unix()
+		return alignToMinutes(toTime.Add(-defaultTimeRange + defaultTimeShift).Unix()), toTime.Add(defaultTimeShift).Unix()
 	}
 	// resolve local trigger window
 	// window is realtime: use shifted window to fetch actual data from redis
 	// window is not realtime: force realtime window
 	if isRealTimeWindow {
-		return alignToMinutes(toTime.Add(-defaultTimeRange).Unix()), toTime.Unix()
+		return alignToMinutes(toTime.Add(-defaultTimeRange + defaultTimeShift).Unix()), toTime.Add(defaultTimeShift).Unix()
 	}
 	return alignToMinutes(defaultFrom), defaultTo
 }

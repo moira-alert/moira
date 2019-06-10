@@ -7,8 +7,8 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/beevee/go-chart"
 	"github.com/dustin/go-humanize"
-	"github.com/wcharczuk/go-chart"
 )
 
 // sortedByLen represents string array to be sorted by length

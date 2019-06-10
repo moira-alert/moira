@@ -1,11 +1,30 @@
 {
   "contacts": [
-    {"type": "mail"},
-    {"type": "pushover"},
-    {"type": "slack"},
-    {"type": "telegram", "help": "required to grant @MoiraBot admin privileges"},
-    {"type": "twilio sms"},
-    {"type": "twilio voice"}
+    {
+      "type": "mail",
+      "label": "E-mail"
+    },
+    {
+      "type": "pushover",
+      "label": "Pushover"
+    },
+    {
+      "type": "slack",
+      "label": "Slack"
+    },
+    {
+      "type": "telegram",
+      "label": "Telegram",
+      "help": "required to grant @MoiraBot admin privileges"
+    },
+    {
+      "type": "twilio sms",
+      "label": "Twilio SMS"
+    },
+    {
+      "type": "twilio voice",
+      "label": "Twilio voice"
+    }
   ],
   "remoteAllowed": false
 }

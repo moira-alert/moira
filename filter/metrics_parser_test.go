@@ -23,6 +23,7 @@ func TestParseMetric(t *testing.T) {
 			"Invalid.value 12g5 1234567890",
 			"No.value.two.spaces  1234567890",
 			"No.timestamp.space.in.the.end 12 ",
+			"No.value.no.timestamp",
 			"No.timestamp 12",
 			" 12 1234567890",
 			"Non-ascii.こんにちは 12 1234567890",
@@ -37,9 +38,11 @@ func TestParseMetric(t *testing.T) {
 			"Newline.in.the.end 12 1234567890\n",
 			"Newline.in.the.end 12 1234567890\r",
 			"Newline.in.the.end 12 1234567890\r\n",
-			";empty.name.but.with.label= 1 2",
-			"no.labels.but.delimiter.in.the.end; 1 2",
-			"empty.label.name;= 1 2",
+			";Empty.name.but.with.label= 1 2",
+			"No.labels.but.delimiter.in.the.end; 1 2",
+			"Empty.label.name;= 1 2",
+			"Only.label.name;name 1 2",
+			"Too.Many.=.In.Label;name=value= 1 2",
 		}
 
 		for _, invalidMetric := range invalidMetrics {

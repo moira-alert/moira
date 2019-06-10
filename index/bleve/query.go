@@ -32,7 +32,12 @@ func buildQueryForTags(filterTags []string) (searchQueries []query.Query) {
 func buildQueryForTerms(searchTerms []string) (searchQueries []query.Query) {
 	for _, term := range searchTerms {
 		qr := bleve.NewFuzzyQuery(term)
-		searchQueries = append(searchQueries, qr)
+		qr.SetField(mapping.TriggerName.String())
+		qr.SetBoost(3)
+		qr1 := bleve.NewFuzzyQuery(term)
+		qr1.SetField(mapping.TriggerDesc.String())
+		qr1.SetBoost(1)
+		searchQueries = append(searchQueries, bleve.NewDisjunctionQuery(qr, qr1))
 	}
 	return
 }

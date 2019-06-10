@@ -3,7 +3,7 @@ package moira
 import (
 	"time"
 
-	"github.com/wcharczuk/go-chart"
+	"github.com/beevee/go-chart"
 	"gopkg.in/tomb.v2"
 )
 
@@ -26,7 +26,7 @@ type Database interface {
 	GetTriggerLastCheck(triggerID string) (CheckData, error)
 	SetTriggerLastCheck(triggerID string, checkData *CheckData, isRemote bool) error
 	RemoveTriggerLastCheck(triggerID string) error
-	SetTriggerCheckMaintenance(triggerID string, metrics map[string]int64, triggerMaintenance *int64) error
+	SetTriggerCheckMaintenance(triggerID string, metrics map[string]int64, triggerMaintenance *int64, userLogin string, timeCallMaintenance int64) error
 
 	// Trigger storing
 	GetLocalTriggerIDs() ([]string, error)
@@ -155,7 +155,7 @@ type Searcher interface {
 	Stop() error
 	IsReady() bool
 	SearchTriggers(filterTags []string, searchString string, onlyErrors bool,
-		page int64, size int64) (triggerIDs []string, total int64, err error)
+		page int64, size int64) (searchResults []*SearchResult, total int64, err error)
 }
 
 // PlotTheme is an interface to access plot theme styles

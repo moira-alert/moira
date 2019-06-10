@@ -58,9 +58,14 @@ func GetAllTriggers(database moira.Database) (*dto.TriggersList, *api.ErrorRespo
 
 // SearchTriggers gets trigger page and filter trigger by tags and search request terms
 func SearchTriggers(database moira.Database, searcher moira.Searcher, page int64, size int64, onlyErrors bool, filterTags []string, searchString string) (*dto.TriggersList, *api.ErrorResponse) {
-	triggerIDs, total, err := searcher.SearchTriggers(filterTags, searchString, onlyErrors, page, size)
+	searchResults, total, err := searcher.SearchTriggers(filterTags, searchString, onlyErrors, page, size)
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
+	}
+
+	var triggerIDs []string
+	for _, searchResult := range searchResults {
+		triggerIDs = append(triggerIDs, searchResult.ObjectID)
 	}
 
 	triggerChecks, err := database.GetTriggerChecks(triggerIDs)
@@ -74,8 +79,14 @@ func SearchTriggers(database moira.Database, searcher moira.Searcher, page int64
 		Size:  &size,
 	}
 
-	for _, triggerCheck := range triggerChecks {
+	for triggerCheckInd := range triggerChecks {
+		triggerCheck := triggerChecks[triggerCheckInd]
 		if triggerCheck != nil {
+			highlights := make(map[string]string)
+			for _, highlight := range searchResults[triggerCheckInd].Highlights {
+				highlights[highlight.Field] = highlight.Value
+			}
+			triggerCheck.Highlights = highlights
 			triggersList.List = append(triggersList.List, *triggerCheck)
 		}
 	}

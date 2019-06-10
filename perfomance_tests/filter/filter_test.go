@@ -61,7 +61,7 @@ func generateMetrics(patterns *filter.PatternStorage, count int) []string {
 	for i < count {
 		parts := make([]string, 0, 16)
 
-		patternTree := patterns.PatternTree.Load().(*filter.PatternNode)
+		patternTree := patterns.PatternIndex.Load().(*filter.PatternIndex).Root
 		node := patternTree.Children[rand.Intn(len(patternTree.Children))]
 		matched := rand.Float64() < 0.02
 		level := float64(0)

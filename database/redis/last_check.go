@@ -81,7 +81,7 @@ func (connector *DbConnector) RemoveTriggerLastCheck(triggerID string) error {
 // SetTriggerCheckMaintenance sets maintenance for whole trigger and to given metrics,
 // If during the update lastCheck was updated from another place, try update again
 // If CheckData does not contain one of given metrics it will ignore this metric
-func (connector *DbConnector) SetTriggerCheckMaintenance(triggerID string, metrics map[string]int64, triggerMaintenance *int64) error {
+func (connector *DbConnector) SetTriggerCheckMaintenance(triggerID string, metrics map[string]int64, triggerMaintenance *int64, userLogin string, timeCallMaintenance int64) error {
 	c := connector.pool.Get()
 	defer c.Close()
 	var readingErr error
@@ -103,12 +103,12 @@ func (connector *DbConnector) SetTriggerCheckMaintenance(triggerID string, metri
 				if !ok {
 					continue
 				}
-				data.Maintenance = value
+				moira.SetMaintenanceUserAndTime(&data, value, userLogin, timeCallMaintenance)
 				metricsCheck[metric] = data
 			}
 		}
 		if triggerMaintenance != nil {
-			lastCheck.Maintenance = *triggerMaintenance
+			moira.SetMaintenanceUserAndTime(&lastCheck, *triggerMaintenance, userLogin, timeCallMaintenance)
 		}
 		newLastCheck, err := json.Marshal(lastCheck)
 		if err != nil {
@@ -116,7 +116,7 @@ func (connector *DbConnector) SetTriggerCheckMaintenance(triggerID string, metri
 		}
 
 		var prev string
-		prev, readingErr = redis.String(c.Do("GETSET", metricLastCheckKey(triggerID), newLastCheck))
+		prev, readingErr = redis.String(c.Do("GETSET", metricLastCheckKey(triggerID), newLastCheck, ))
 		if readingErr != nil && readingErr != redis.ErrNil {
 			return readingErr
 		}

@@ -4,10 +4,12 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/mock/moira-alert"
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
+
+	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/index/fixtures"
+	"github.com/moira-alert/moira/mock/moira-alert"
 )
 
 func TestIndex_actualize(t *testing.T) {
@@ -17,22 +19,14 @@ func TestIndex_actualize(t *testing.T) {
 	logger, _ := logging.GetLogger("Test")
 
 	index := NewSearchIndex(logger, dataBase)
+	triggerTestCases := fixtures.IndexedTriggerTestCases
 
-	triggerIDs := make([]string, len(triggerChecks))
-	for i, trigger := range triggerChecks {
-		triggerIDs[i] = trigger.ID
-	}
-
-	triggersPointers := make([]*moira.TriggerCheck, len(triggerChecks))
-	for i, trigger := range triggerChecks {
-		newTrigger := new(moira.TriggerCheck)
-		*newTrigger = trigger
-		triggersPointers[i] = newTrigger
-	}
+	triggerIDs := triggerTestCases.ToTriggerIDs()
+	triggerChecksPointers := triggerTestCases.ToTriggerChecks()
 
 	Convey("First of all, fill index", t, func() {
 		dataBase.EXPECT().GetAllTriggerIDs().Return(triggerIDs[:20], nil)
-		dataBase.EXPECT().GetTriggerChecks(triggerIDs[:20]).Return(triggersPointers[:20], nil)
+		dataBase.EXPECT().GetTriggerChecks(triggerIDs[:20]).Return(triggerChecksPointers[:20], nil)
 
 		err := index.fillIndex()
 		index.indexed = true
@@ -56,7 +50,7 @@ func TestIndex_actualize(t *testing.T) {
 
 		Convey("Test addition", func() {
 			dataBase.EXPECT().FetchTriggersToReindex(fakeTS).Return(triggerIDs[18:20], nil)
-			dataBase.EXPECT().GetTriggerChecks(triggerIDs[18:20]).Return(triggersPointers[18:20], nil)
+			dataBase.EXPECT().GetTriggerChecks(triggerIDs[18:20]).Return(triggerChecksPointers[18:20], nil)
 
 			err := index.actualizeIndex()
 			So(err, ShouldBeNil)
@@ -66,7 +60,7 @@ func TestIndex_actualize(t *testing.T) {
 
 		Convey("Test reindexing old ones", func() {
 			dataBase.EXPECT().FetchTriggersToReindex(fakeTS).Return(triggerIDs[10:12], nil)
-			dataBase.EXPECT().GetTriggerChecks(triggerIDs[10:12]).Return(triggersPointers[10:12], nil)
+			dataBase.EXPECT().GetTriggerChecks(triggerIDs[10:12]).Return(triggerChecksPointers[10:12], nil)
 
 			err := index.actualizeIndex()
 			So(err, ShouldBeNil)
