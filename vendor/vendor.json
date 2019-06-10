@@ -48,6 +48,42 @@
 			"revisionTime": "2017-07-27T15:54:43Z"
 		},
 		{
+			"checksumSHA1": "lJvgxnk2MNkNL01vM28mW3YOk7E=",
+			"path": "github.com/beevee/go-chart",
+			"revision": "273a59e48bccb0668388eb89faeaba1e061fc823",
+			"revisionTime": "2019-05-23T09:00:23Z"
+		},
+		{
+			"checksumSHA1": "EATdwpdmNIMoRH83jpegphBSLZ0=",
+			"path": "github.com/beevee/go-chart/drawing",
+			"revision": "273a59e48bccb0668388eb89faeaba1e061fc823",
+			"revisionTime": "2019-05-23T09:00:23Z"
+		},
+		{
+			"checksumSHA1": "sQ45SWP3px236i69OrcwAQSY5es=",
+			"path": "github.com/beevee/go-chart/matrix",
+			"revision": "273a59e48bccb0668388eb89faeaba1e061fc823",
+			"revisionTime": "2019-05-23T09:00:23Z"
+		},
+		{
+			"checksumSHA1": "R/SvHFvbFSZQuOO+QpozI/yV4VI=",
+			"path": "github.com/beevee/go-chart/roboto",
+			"revision": "273a59e48bccb0668388eb89faeaba1e061fc823",
+			"revisionTime": "2019-05-23T09:00:23Z"
+		},
+		{
+			"checksumSHA1": "V7cWd6571hW+qFIs8m8zeNLenqA=",
+			"path": "github.com/beevee/go-chart/seq",
+			"revision": "273a59e48bccb0668388eb89faeaba1e061fc823",
+			"revisionTime": "2019-05-23T09:00:23Z"
+		},
+		{
+			"checksumSHA1": "NMggTt9psQ+Vfilzg9swc4Rql3U=",
+			"path": "github.com/beevee/go-chart/util",
+			"revision": "273a59e48bccb0668388eb89faeaba1e061fc823",
+			"revisionTime": "2019-05-23T09:00:23Z"
+		},
+		{
 			"checksumSHA1": "xM5+MU1gVB7+aGfVj+J57EgDcAE=",
 			"path": "github.com/blevesearch/bleve",
 			"revision": "f9afd92d0dc4463d5fa49729182fa6968ca7108a",
@@ -1033,42 +1069,6 @@
 			"path": "github.com/wangjohn/quickselect",
 			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
 			"revisionTime": "2018-07-29T13:10:59Z"
-		},
-		{
-			"checksumSHA1": "qBezoyl/lOefhEanygFUC+VBGpY=",
-			"path": "github.com/wcharczuk/go-chart",
-			"revision": "9e3a080aa3e7573281cf8d65a55305e1148d857d",
-			"revisionTime": "2018-04-15T23:53:01Z"
-		},
-		{
-			"checksumSHA1": "/Amn4XivPItINSALiV/uQF8ogNw=",
-			"path": "github.com/wcharczuk/go-chart/drawing",
-			"revision": "9e3a080aa3e7573281cf8d65a55305e1148d857d",
-			"revisionTime": "2018-04-15T23:53:01Z"
-		},
-		{
-			"checksumSHA1": "kPqs986jHunAn+grWysGPIABnQc=",
-			"path": "github.com/wcharczuk/go-chart/matrix",
-			"revision": "9e3a080aa3e7573281cf8d65a55305e1148d857d",
-			"revisionTime": "2018-04-15T23:53:01Z"
-		},
-		{
-			"checksumSHA1": "XJZ8xjTjszuaBenrG5kB+jO1w/o=",
-			"path": "github.com/wcharczuk/go-chart/roboto",
-			"revision": "9e3a080aa3e7573281cf8d65a55305e1148d857d",
-			"revisionTime": "2018-04-15T23:53:01Z"
-		},
-		{
-			"checksumSHA1": "Nvz05DuOqW3vgIJ6JekXqD0jP20=",
-			"path": "github.com/wcharczuk/go-chart/seq",
-			"revision": "9e3a080aa3e7573281cf8d65a55305e1148d857d",
-			"revisionTime": "2018-04-15T23:53:01Z"
-		},
-		{
-			"checksumSHA1": "Mzvq7OaP/22QA81qZZ48u0e6rX4=",
-			"path": "github.com/wcharczuk/go-chart/util",
-			"revision": "9e3a080aa3e7573281cf8d65a55305e1148d857d",
-			"revisionTime": "2018-04-15T23:53:01Z"
 		},
 		{
 			"checksumSHA1": "hmFg3XngBr7UwrCBQve5JW/gl88=",
