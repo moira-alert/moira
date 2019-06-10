@@ -3,7 +3,7 @@ package plotting
 import (
 	"sort"
 
-	"github.com/wcharczuk/go-chart"
+	"github.com/beevee/go-chart"
 )
 
 const (
