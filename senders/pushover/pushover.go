@@ -15,7 +15,6 @@ import (
 const titleLimit = 250
 const urlLimit = 512
 const msgLimit = 1024
-const descLimit = msgLimit / 2
 
 // Sender implements moira sender interface via pushover
 type Sender struct {
@@ -76,16 +75,16 @@ func (sender *Sender) makePushoverMessage(events moira.NotificationEvents, conta
 }
 
 func (sender *Sender) buildMessage(events moira.NotificationEvents, throttled bool, trigger moira.TriggerData) string {
-	var message bytes.Buffer
+	var message strings.Builder
 	desc := trigger.Desc
-	if len(desc) > descLimit {
-		// trim description to fit 512 chars while leaving space for html tags
-		desc = desc[:descLimit-100] + "...\n"
+	descLen := len([]rune(desc))
+	var charsForThrottleMsg int
+	if throttled {
+		charsForThrottleMsg = 70
 	}
-	htmlDesc := blackfriday.Run([]byte(desc))
-	htmlDescWithbr := strings.Replace(string(htmlDesc), "\n", "\n<br/>", -1)
-	message.WriteString(htmlDescWithbr)
-	msgLimitReached := false
+	charsLeftForEvents := msgLimit - descLen - charsForThrottleMsg
+	var eventsString string
+	eventsLenLimitReached := false
 	eventsPrinted := 0
 	for _, event := range events {
 		line := fmt.Sprintf("%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location), event.Metric, event.GetMetricValue(), event.OldState, event.State)
@@ -94,14 +93,24 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, throttled bo
 		} else {
 			line += "\n"
 		}
-		if len([]rune(message.String()+line)) > msgLimit-30 {
-			msgLimitReached = true
-			break
+		if len([]rune(eventsString+line)) > charsLeftForEvents-30 {
+			if descLen <= msgLimit/2 {
+				eventsLenLimitReached = true
+				break
+			} else {
+				desc = desc[:msgLimit/2-100]
+				descLen = len([]rune(desc))
+				charsLeftForEvents = msgLimit - descLen
+				continue
+			}
 		}
-		message.WriteString(line)
+		eventsString += line
 		eventsPrinted++
 	}
-	if msgLimitReached {
+	htmlDesc := blackfriday.Run([]byte(desc))
+	message.WriteString(string(htmlDesc))
+	message.WriteString(eventsString)
+	if eventsLenLimitReached {
 		message.WriteString(fmt.Sprintf("\n...and %d more events.", len(events)-eventsPrinted))
 	}
 

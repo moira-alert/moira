@@ -96,7 +96,7 @@ func (sender *Sender) makeMessage(events moira.NotificationEvents, contact moira
 
 func formatDescription(desc string) template.HTML {
 	htmlDesc := blackfriday.Run([]byte(desc))
-	htmlDescWithbr := strings.Replace(string(htmlDesc), "\n", "\n<br/>", -1)
+	htmlDescWithbr := strings.Replace(string(htmlDesc), "\n", "<br/>", -1)
 	return template.HTML(htmlDescWithbr)
 }
 
