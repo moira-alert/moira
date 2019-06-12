@@ -132,13 +132,13 @@ Please, fix your system or tune this trigger to generate less events.`
 		// Events list with chars less than half the message limit
 		var shortEvents moira.NotificationEvents
 		var shortEventsString string
-		for i := 0; i < (msgLimit/2)/oneEventLineLen-100; i++ {
+		for i := 0; i < (msgLimit/2-100)/oneEventLineLen; i++ {
 			shortEvents = append(shortEvents, event)
 			shortEventsString += eventLine
 		}
 		// Events list with chars greater than half the message limit
 		var longEvents moira.NotificationEvents
-		for i := 0; i < msgLimit/2+100; i++ {
+		for i := 0; i < (msgLimit/2+100)/oneEventLineLen; i++ {
 			longEvents = append(longEvents, event)
 		}
 

@@ -98,7 +98,7 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, throttled bo
 				eventsLenLimitReached = true
 				break
 			} else {
-				desc = desc[:msgLimit/2-100]
+				desc = desc[:msgLimit/2-100] + "...\n"
 				descLen = len([]rune(desc))
 				charsLeftForEvents = msgLimit - descLen
 				continue
