@@ -132,19 +132,29 @@ Please, fix your system or tune this trigger to generate less events.`
 		// Events list with chars less than half the message limit
 		var shortEvents moira.NotificationEvents
 		var shortEventsString string
-		for i := 0; i < (msgLimit/2-100)/oneEventLineLen; i++ {
+		for i := 0; i < (msgLimit/2-200)/oneEventLineLen; i++ {
 			shortEvents = append(shortEvents, event)
 			shortEventsString += eventLine
 		}
 		// Events list with chars greater than half the message limit
 		var longEvents moira.NotificationEvents
-		for i := 0; i < (msgLimit/2+100)/oneEventLineLen; i++ {
+		for i := 0; i < (msgLimit/2+200)/oneEventLineLen; i++ {
 			longEvents = append(longEvents, event)
 		}
 
-		Convey("Print moira message with short desc and short events", func() {
-			actual := sender.buildMessage(shortEvents, false, moira.TriggerData{Desc: shortMdDesc})
-			expected := "<p>" + shortMdDesc + "</p>\n" + shortEventsString
+		Convey("Print moira message with desc + events < msgLimit", func() {
+			actual := sender.buildMessage(shortEvents, false, moira.TriggerData{Desc: longMdDesc})
+			expected := "<p>" + longMdDesc + "</p>\n" + shortEventsString
+			So(actual, ShouldResemble, expected)
+		})
+		Convey("Print moira message with desc + events > msgLimit because desc > msgLimit/2", func() {
+			var shortEvents moira.NotificationEvents
+			for i := 0; i < (msgLimit/2-20)/oneEventLineLen; i++ {
+				shortEvents = append(shortEvents, event)
+				shortEventsString += eventLine
+			}
+			actual := sender.buildMessage(shortEvents, false, moira.TriggerData{Desc: longMdDesc})
+			expected := "<p>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&hellip;</p>\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n"
 			So(actual, ShouldResemble, expected)
 		})
 
