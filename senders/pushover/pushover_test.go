@@ -123,10 +123,10 @@ Please, fix your system or tune this trigger to generate less events.`
 			longMdDesc += "a"
 		}
 		// Desc with chars less than half the message limit
-		var shortMdDesc string
-		for i := 0; i < msgLimit/2-100; i++ {
-			shortMdDesc += "a"
-		}
+		// var shortMdDesc string
+		// for i := 0; i < msgLimit/2-100; i++ {
+		// 	shortMdDesc += "a"
+		// }
 		eventLine := "02:40: Metric = 123 (OK to NODATA)\n"
 		oneEventLineLen := len([]rune(eventLine))
 		// Events list with chars less than half the message limit
@@ -137,10 +137,10 @@ Please, fix your system or tune this trigger to generate less events.`
 			shortEventsString += eventLine
 		}
 		// Events list with chars greater than half the message limit
-		var longEvents moira.NotificationEvents
-		for i := 0; i < (msgLimit/2+200)/oneEventLineLen; i++ {
-			longEvents = append(longEvents, event)
-		}
+		// var longEvents moira.NotificationEvents
+		// for i := 0; i < (msgLimit/2+200)/oneEventLineLen; i++ {
+		// 	longEvents = append(longEvents, event)
+		// }
 
 		Convey("Print moira message with desc + events < msgLimit", func() {
 			actual := sender.buildMessage(shortEvents, false, moira.TriggerData{Desc: longMdDesc})
