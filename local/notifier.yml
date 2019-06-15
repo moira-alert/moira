@@ -1,0 +1,32 @@
+#See https://moira.readthedocs.io/en/latest/installation/configuration.html for config explanation
+redis:
+  host: redis
+  port: "6379"
+  dbid: 0
+graphite:
+  enabled: true
+  runtime_stats: true
+  uri: "relay:2003"
+  prefix: DevOps.Moira
+  interval: 60s
+remote:
+  enabled: true
+  timeout: 60s
+notifier:
+  sender_timeout: 10s
+  resending_timeout: "1:00"
+  senders: []
+  moira_selfstate:
+    enabled: false
+    remote_triggers_enabled: false
+    redis_disconect_delay: 60s
+    last_metric_received_delay: 120s
+    last_check_delay: 120s
+    last_remote_check_delay: 300s
+    notice_interval: 300s
+  front_uri: http://localhost
+  timezone: UTC
+  date_time_format: "15:04 02.01.2006"
+log:
+  log_file: stdout
+  log_level: info
