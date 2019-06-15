@@ -7,7 +7,7 @@ graphite:
   enabled: true
   runtime_stats: true
   uri: "relay:2003"
-  prefix: Moira
+  prefix: moira
   interval: 60s
 remote:
   enabled: true
