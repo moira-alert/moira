@@ -1,13 +1,6 @@
-# Moira 2.0  [![Documentation Status](https://readthedocs.org/projects/moira/badge/?version=latest)](http://moira.readthedocs.io/en/latest/?badge=latest) [![Telegram](https://img.shields.io/badge/telegram-join%20chat-3796cd.svg)](https://t.me/moira_alert) [![Go Report Card](https://goreportcard.com/badge/github.com/moira-alert/moira)](https://goreportcard.com/report/github.com/moira-alert/moira) 
+# Moira 2.0  [![Build Status](https://travis-ci.org/moira-alert/moira.svg?branch=master)](https://travis-ci.org/moira-alert/moira) [![Coverage Status](https://coveralls.io/repos/github/moira-alert/moira/badge.svg?branch=master)](https://coveralls.io/github/moira-alert/moira?branch=master) [![Documentation Status](https://readthedocs.org/projects/moira/badge/?version=latest)](http://moira.readthedocs.io/en/latest/?badge=latest) [![Telegram](https://img.shields.io/badge/telegram-join%20chat-3796cd.svg)](https://t.me/moira_alert) [![Go Report Card](https://goreportcard.com/badge/github.com/moira-alert/moira)](https://goreportcard.com/report/github.com/moira-alert/moira) 
 
 Moira is a real-time alerting tool, based on [Graphite](https://graphite.readthedocs.io) data.
-
-## Build status
-| branch | status |
-| ------ | ------ |
-| master | [![Build Status](https://travis-ci.org/moira-alert/moira.svg?branch=master)](https://travis-ci.org/moira-alert/moira) [![Coverage Status](https://coveralls.io/repos/github/moira-alert/moira/badge.svg?branch=master)](https://coveralls.io/github/moira-alert/moira?branch=master) |
-| develop | [![Build Status](https://travis-ci.org/moira-alert/moira.svg?branch=develop)](https://travis-ci.org/moira-alert/moira) [![Coverage Status](https://coveralls.io/repos/github/moira-alert/moira/badge.svg?branch=develop)](https://coveralls.io/github/moira-alert/moira?branch=develop) |
-
 
 ## Installation
 
@@ -30,6 +23,33 @@ Configure triggers at `localhost:8080` using your browser.
 
 Other installation methods are available, see [documentation](https://moira.readthedocs.io/en/latest/installation/index.html).
 
+## Development
+
+To build and run tests, first get all dependencies:
+
+```
+go get github.com/kardianos/govendor
+govendor sync
+```
+
+To run test use ``go test ./...`` or run [GoConvey](http://goconvey.co/):
+
+```
+go get github.com/smartystreets/goconvey
+goconvey
+```
+
+For full local deployment of all services, including web, graphite and metrics relay (may be slow on first launch) use:
+
+```
+docker-compose up
+```
+
+Before push your changes don't forget about linter:
+
+```
+make lint
+```
 
 ## Getting Started
 
