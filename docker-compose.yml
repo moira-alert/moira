@@ -45,6 +45,7 @@ services:
       dockerfile: Dockerfile.api
     volumes:
       - ./local/api.yml:/etc/moira/api.yml
+      - ./local/web.json:/etc/moira/web.json
     depends_on:
       - redis
       - checker

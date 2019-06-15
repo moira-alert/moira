@@ -11,6 +11,8 @@ graphite:
   interval: 60s
 remote:
   enabled: true
+  url: "http://graphite:80/render"
+  check_interval: 60s
   timeout: 60s
 api:
   listen: ":8081"
