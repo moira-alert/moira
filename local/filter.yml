@@ -7,7 +7,7 @@ graphite:
   enabled: true
   runtime_stats: true
   uri: "relay:2003"
-  prefix: DevOps.Moira
+  prefix: Moira
   interval: 60s
 filter:
   listen: ":2003"
@@ -16,4 +16,4 @@ filter:
   max_parallel_matches: 0
 log:
   log_file: stdout
-  log_level: info
+  log_level: debug
