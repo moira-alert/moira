@@ -34,6 +34,7 @@ func (m *MockLogger) EXPECT() *MockLoggerMockRecorder {
 
 // Debug mocks base method
 func (m *MockLogger) Debug(arg0 ...interface{}) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{}
 	for _, a := range arg0 {
 		varargs = append(varargs, a)
@@ -43,11 +44,13 @@ func (m *MockLogger) Debug(arg0 ...interface{}) {
 
 // Debug indicates an expected call of Debug
 func (mr *MockLoggerMockRecorder) Debug(arg0 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Debug", reflect.TypeOf((*MockLogger)(nil).Debug), arg0...)
 }
 
 // Debugf mocks base method
 func (m *MockLogger) Debugf(arg0 string, arg1 ...interface{}) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0}
 	for _, a := range arg1 {
 		varargs = append(varargs, a)
@@ -57,12 +60,14 @@ func (m *MockLogger) Debugf(arg0 string, arg1 ...interface{}) {
 
 // Debugf indicates an expected call of Debugf
 func (mr *MockLoggerMockRecorder) Debugf(arg0 interface{}, arg1 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0}, arg1...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Debugf", reflect.TypeOf((*MockLogger)(nil).Debugf), varargs...)
 }
 
 // Error mocks base method
 func (m *MockLogger) Error(arg0 ...interface{}) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{}
 	for _, a := range arg0 {
 		varargs = append(varargs, a)
@@ -72,11 +77,13 @@ func (m *MockLogger) Error(arg0 ...interface{}) {
 
 // Error indicates an expected call of Error
 func (mr *MockLoggerMockRecorder) Error(arg0 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Error", reflect.TypeOf((*MockLogger)(nil).Error), arg0...)
 }
 
 // Errorf mocks base method
 func (m *MockLogger) Errorf(arg0 string, arg1 ...interface{}) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0}
 	for _, a := range arg1 {
 		varargs = append(varargs, a)
@@ -86,12 +93,14 @@ func (m *MockLogger) Errorf(arg0 string, arg1 ...interface{}) {
 
 // Errorf indicates an expected call of Errorf
 func (mr *MockLoggerMockRecorder) Errorf(arg0 interface{}, arg1 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0}, arg1...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Errorf", reflect.TypeOf((*MockLogger)(nil).Errorf), varargs...)
 }
 
 // Fatal mocks base method
 func (m *MockLogger) Fatal(arg0 ...interface{}) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{}
 	for _, a := range arg0 {
 		varargs = append(varargs, a)
@@ -101,11 +110,13 @@ func (m *MockLogger) Fatal(arg0 ...interface{}) {
 
 // Fatal indicates an expected call of Fatal
 func (mr *MockLoggerMockRecorder) Fatal(arg0 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Fatal", reflect.TypeOf((*MockLogger)(nil).Fatal), arg0...)
 }
 
 // Fatalf mocks base method
 func (m *MockLogger) Fatalf(arg0 string, arg1 ...interface{}) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0}
 	for _, a := range arg1 {
 		varargs = append(varargs, a)
@@ -115,12 +126,14 @@ func (m *MockLogger) Fatalf(arg0 string, arg1 ...interface{}) {
 
 // Fatalf indicates an expected call of Fatalf
 func (mr *MockLoggerMockRecorder) Fatalf(arg0 interface{}, arg1 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0}, arg1...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Fatalf", reflect.TypeOf((*MockLogger)(nil).Fatalf), varargs...)
 }
 
 // Info mocks base method
 func (m *MockLogger) Info(arg0 ...interface{}) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{}
 	for _, a := range arg0 {
 		varargs = append(varargs, a)
@@ -130,11 +143,13 @@ func (m *MockLogger) Info(arg0 ...interface{}) {
 
 // Info indicates an expected call of Info
 func (mr *MockLoggerMockRecorder) Info(arg0 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Info", reflect.TypeOf((*MockLogger)(nil).Info), arg0...)
 }
 
 // Infof mocks base method
 func (m *MockLogger) Infof(arg0 string, arg1 ...interface{}) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0}
 	for _, a := range arg1 {
 		varargs = append(varargs, a)
@@ -144,12 +159,14 @@ func (m *MockLogger) Infof(arg0 string, arg1 ...interface{}) {
 
 // Infof indicates an expected call of Infof
 func (mr *MockLoggerMockRecorder) Infof(arg0 interface{}, arg1 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0}, arg1...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Infof", reflect.TypeOf((*MockLogger)(nil).Infof), varargs...)
 }
 
 // Warning mocks base method
 func (m *MockLogger) Warning(arg0 ...interface{}) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{}
 	for _, a := range arg0 {
 		varargs = append(varargs, a)
@@ -159,11 +176,13 @@ func (m *MockLogger) Warning(arg0 ...interface{}) {
 
 // Warning indicates an expected call of Warning
 func (mr *MockLoggerMockRecorder) Warning(arg0 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Warning", reflect.TypeOf((*MockLogger)(nil).Warning), arg0...)
 }
 
 // Warningf mocks base method
 func (m *MockLogger) Warningf(arg0 string, arg1 ...interface{}) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0}
 	for _, a := range arg1 {
 		varargs = append(varargs, a)
@@ -173,6 +192,7 @@ func (m *MockLogger) Warningf(arg0 string, arg1 ...interface{}) {
 
 // Warningf indicates an expected call of Warningf
 func (mr *MockLoggerMockRecorder) Warningf(arg0 interface{}, arg1 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0}, arg1...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Warningf", reflect.TypeOf((*MockLogger)(nil).Warningf), varargs...)
 }

@@ -35,6 +35,7 @@ func (m *MockFetchResult) EXPECT() *MockFetchResultMockRecorder {
 
 // GetMetricsData mocks base method
 func (m *MockFetchResult) GetMetricsData() []*metric_source.MetricData {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetMetricsData")
 	ret0, _ := ret[0].([]*metric_source.MetricData)
 	return ret0
@@ -42,11 +43,13 @@ func (m *MockFetchResult) GetMetricsData() []*metric_source.MetricData {
 
 // GetMetricsData indicates an expected call of GetMetricsData
 func (mr *MockFetchResultMockRecorder) GetMetricsData() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMetricsData", reflect.TypeOf((*MockFetchResult)(nil).GetMetricsData))
 }
 
 // GetPatternMetrics mocks base method
 func (m *MockFetchResult) GetPatternMetrics() ([]string, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPatternMetrics")
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
@@ -55,11 +58,13 @@ func (m *MockFetchResult) GetPatternMetrics() ([]string, error) {
 
 // GetPatternMetrics indicates an expected call of GetPatternMetrics
 func (mr *MockFetchResultMockRecorder) GetPatternMetrics() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPatternMetrics", reflect.TypeOf((*MockFetchResult)(nil).GetPatternMetrics))
 }
 
 // GetPatterns mocks base method
 func (m *MockFetchResult) GetPatterns() ([]string, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPatterns")
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
@@ -68,5 +73,6 @@ func (m *MockFetchResult) GetPatterns() ([]string, error) {
 
 // GetPatterns indicates an expected call of GetPatterns
 func (mr *MockFetchResultMockRecorder) GetPatterns() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPatterns", reflect.TypeOf((*MockFetchResult)(nil).GetPatterns))
 }
