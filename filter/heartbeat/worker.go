@@ -28,8 +28,8 @@ func NewHeartbeatWorker(database moira.Database, metrics *graphite.FilterMetrics
 
 // Start every 5 second takes TotalMetricsReceived metrics and save it to database, for self-checking
 func (worker *Worker) Start() {
-	count := worker.metrics.TotalMetricsReceived.Count()
 	worker.tomb.Go(func() error {
+		count := worker.metrics.TotalMetricsReceived.Count()
 		checkTicker := time.NewTicker(time.Second * 5)
 		for {
 			select {
@@ -38,8 +38,8 @@ func (worker *Worker) Start() {
 				return nil
 			case <-checkTicker.C:
 				newCount := worker.metrics.TotalMetricsReceived.Count()
-				worker.logger.Debugf("Update heartbeat count, old value: %v, new value: %v", count, newCount)
 				if newCount != count {
+					worker.logger.Debugf("Heartbeat was updated: %v -> %v", count, newCount)
 					if err := worker.database.UpdateMetricsHeartbeat(); err != nil {
 						worker.logger.Infof("Save state failed: %s", err.Error())
 					} else {
