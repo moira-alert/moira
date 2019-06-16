@@ -23,7 +23,7 @@ func (worker *Checker) remoteChecker() error {
 }
 
 func (worker *Checker) checkRemote() error {
-	source, err := worker.SourceProvider.GetRemote()
+	source, err := worker.SourceProvider.GetGraphite()
 	if err != nil {
 		return err
 	}
@@ -32,7 +32,7 @@ func (worker *Checker) checkRemote() error {
 		worker.Logger.Infof("Remote API is unavailable. Stop checking remote triggers. Error: %s", err.Error())
 	} else {
 		worker.Logger.Debug("Checking remote triggers")
-		triggerIds, err := worker.Database.GetRemoteTriggerIDs()
+		triggerIds, err := worker.Database.GetGraphiteTriggerIDs()
 		if err != nil {
 			return err
 		}

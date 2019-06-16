@@ -85,7 +85,7 @@ func main() {
 	localSource := local.Create(database)
 	remoteConfig := config.Remote.GetRemoteSourceSettings()
 	remoteSource := remote.Create(remoteConfig)
-	metricSourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource)
+	metricSourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource, nil)
 
 	// Initialize the image store
 	imageStoreMap := cmd.InitImageStores(config.ImageStores, logger)

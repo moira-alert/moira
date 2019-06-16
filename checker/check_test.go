@@ -1244,7 +1244,7 @@ func TestHandleTriggerCheck(t *testing.T) {
 			}
 			expected := moira.CheckData{
 				State:                        moira.StateEXCEPTION,
-				Message:                      fmt.Sprintf("Remote server unavailable. Trigger is not checked for %d seconds", checkData.Timestamp-checkData.LastSuccessfulCheckTimestamp),
+				Message:                      fmt.Sprintf("Graphite server unavailable. Trigger is not checked for %d seconds", checkData.Timestamp-checkData.LastSuccessfulCheckTimestamp),
 				Timestamp:                    now.Unix(),
 				EventTimestamp:               now.Unix(),
 				LastSuccessfulCheckTimestamp: now.Add(-10 * time.Minute).Unix(),

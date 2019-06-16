@@ -35,11 +35,22 @@ func (connector *DbConnector) GetChecksUpdatesCount() (int64, error) {
 	return ts, err
 }
 
-// GetRemoteChecksUpdatesCount return remote checks count by Moira-Checker
-func (connector *DbConnector) GetRemoteChecksUpdatesCount() (int64, error) {
+// GetGraphiteChecksUpdatesCount return graphite checks count by Moira-Checker
+func (connector *DbConnector) GetGraphiteChecksUpdatesCount() (int64, error) {
 	c := connector.pool.Get()
 	defer c.Close()
-	ts, err := redis.Int64(c.Do("GET", selfStateRemoteChecksCounterKey))
+	ts, err := redis.Int64(c.Do("GET", selfStateGraphiteChecksCounterKey))
+	if err == redis.ErrNil {
+		return 0, nil
+	}
+	return ts, err
+}
+
+// GetPrometheusChecksUpdatesCount return prometheus checks count by Moira-Checker
+func (connector *DbConnector) GetPrometheusChecksUpdatesCount() (int64, error) {
+	c := connector.pool.Get()
+	defer c.Close()
+	ts, err := redis.Int64(c.Do("GET", selfStatePrometheusChecksCounterKey))
 	if err == redis.ErrNil {
 		return 0, nil
 	}
@@ -70,5 +81,6 @@ func (connector *DbConnector) SetNotifierState(health string) error {
 
 var selfStateMetricsHeartbeatKey = "moira-selfstate:metrics-heartbeat"
 var selfStateChecksCounterKey = "moira-selfstate:checks-counter"
-var selfStateRemoteChecksCounterKey = "moira-selfstate:remote-checks-counter"
+var selfStateGraphiteChecksCounterKey = "moira-selfstate:graphite-checks-counter"
+var selfStatePrometheusChecksCounterKey = "moira-selfstate:prometheus-checks-counter"
 var selfStateNotifierHealth = "moira-selfstate:notifier-health"

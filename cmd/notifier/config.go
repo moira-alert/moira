@@ -50,7 +50,7 @@ type selfStateConfig struct {
 	LastMetricReceivedDelay string `yaml:"last_metric_received_delay"`
 	// Max Checker checks perform delay to send alert when reached
 	LastCheckDelay string `yaml:"last_check_delay"`
-	// Max Remote triggers Checker checks perform delay to send alert when reached
+	// Max Graphite triggers Checker checks perform delay to send alert when reached
 	LastRemoteCheckDelay string `yaml:"last_remote_check_delay"`
 	// Contact list for Self state monitor alerts
 	Contacts []map[string]string `yaml:"contacts"`

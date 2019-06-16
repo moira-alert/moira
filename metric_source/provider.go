@@ -11,15 +11,17 @@ var ErrMetricSourceIsNotConfigured = fmt.Errorf("metric source is not configured
 
 // SourceProvider is a provider for all known metrics sources
 type SourceProvider struct {
-	local  MetricSource
-	remote MetricSource
+	local      MetricSource
+	graphite   MetricSource
+	prometheus MetricSource
 }
 
 // CreateMetricSourceProvider just creates SourceProvider with all known metrics sources
-func CreateMetricSourceProvider(local MetricSource, remote MetricSource) *SourceProvider {
+func CreateMetricSourceProvider(local MetricSource, graphite MetricSource, prometheus MetricSource) *SourceProvider {
 	return &SourceProvider{
-		remote: remote,
-		local:  local,
+		prometheus: prometheus,
+		graphite:   graphite,
+		local:      local,
 	}
 }
 
@@ -28,22 +30,31 @@ func (provider *SourceProvider) GetLocal() (MetricSource, error) {
 	return returnSource(provider.local)
 }
 
-// GetRemote gets remote metric source. If it not configured returns not empty error
-func (provider *SourceProvider) GetRemote() (MetricSource, error) {
-	return returnSource(provider.remote)
+// GetGraphite gets graphite metric source. If it not configured returns not empty error
+func (provider *SourceProvider) GetGraphite() (MetricSource, error) {
+	return returnSource(provider.graphite)
+}
+
+// GetGraphite gets graphite metric source. If it not configured returns not empty error
+func (provider *SourceProvider) GetPrometheus() (MetricSource, error) {
+	return returnSource(provider.prometheus)
 }
 
 // GetTriggerMetricSource get metrics source by given trigger. If it not configured returns not empty error
 func (provider *SourceProvider) GetTriggerMetricSource(trigger *moira.Trigger) (MetricSource, error) {
-	return provider.GetMetricSource(trigger.IsRemote)
+	return provider.GetMetricSource(trigger.SourceType)
 }
 
-// GetMetricSource return metric source depending on trigger flag: is remote trigger or not. GetLocal if not.
-func (provider *SourceProvider) GetMetricSource(isRemote bool) (MetricSource, error) {
-	if isRemote {
-		return provider.GetRemote()
+// GetMetricSource return metric source depending on trigger flag: is graphite trigger or not. GetLocal if not.
+func (provider *SourceProvider) GetMetricSource(sourceType string) (MetricSource, error) {
+	switch sourceType {
+	case moira.Graphite:
+		return provider.GetGraphite()
+	case moira.Prometheus:
+		return provider.GetPrometheus()
+	default:
+		return provider.GetLocal()
 	}
-	return provider.GetLocal()
 }
 
 func returnSource(source MetricSource) (MetricSource, error) {

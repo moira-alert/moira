@@ -47,8 +47,8 @@ type TriggerData struct {
 	Targets    []string `json:"targets"`
 	WarnValue  float64  `json:"warn_value"`
 	ErrorValue float64  `json:"error_value"`
-	IsRemote   bool     `json:"is_remote"`
-	Tags       []string `json:"__notifier_trigger_tags"`
+	SourceType string   `json:"source_type"`
+	Tags       []string `json:"__notisfier_trigger_tags"`
 }
 
 // GetTriggerURI gets frontUri and returns triggerUrl, returns empty string on selfcheck and test notifications
@@ -130,6 +130,12 @@ type MetricValue struct {
 }
 
 const (
+	Local      = "local"
+	Graphite   = "graphite"
+	Prometheus = "prometheus"
+)
+
+const (
 	// FallingTrigger represents falling trigger type, in which OK > WARN > ERROR
 	FallingTrigger = "falling"
 	// RisingTrigger represents rising trigger type, in which OK < WARN < ERROR
@@ -154,8 +160,8 @@ type Trigger struct {
 	Expression       *string       `json:"expression,omitempty"`
 	PythonExpression *string       `json:"python_expression,omitempty"`
 	Patterns         []string      `json:"patterns"`
-	IsRemote         bool          `json:"is_remote"`
 	MuteNewMetrics   bool          `json:"mute_new_metrics"`
+	SourceType       string        `json:"source_type"`
 }
 
 // TriggerCheck represents trigger data with last check data and check timestamp

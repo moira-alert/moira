@@ -16,10 +16,11 @@ import (
 var defaultCheckInterval = time.Second * 10
 
 const (
-	redisDisconnectedErrorMessage  = "Redis disconnected"
-	filterStateErrorMessage        = "Moira-Filter does not receive metrics"
-	checkerStateErrorMessage       = "Moira-Checker does not check triggers"
-	remoteCheckerStateErrorMessage = "Moira-Remote-Checker does not check remote triggers"
+	redisDisconnectedErrorMessage      = "Redis disconnected"
+	filterStateErrorMessage            = "Moira-Filter does not receive metrics"
+	checkerStateErrorMessage           = "Moira-Checker does not check triggers"
+	graphiteCheckerStateErrorMessage   = "Moira-Graphite-Checker does not check graphite triggers"
+	prometheusCheckerStateErrorMessage = "Moira-Prometheus-Checker does not check prometheus triggers"
 )
 
 const selfStateLockName = "moira-self-state-monitor"
@@ -104,7 +105,7 @@ func (selfCheck *SelfCheckWorker) check(nowTS int64, lastMetricReceivedTS, redis
 	mc, _ := selfCheck.DB.GetMetricsUpdatesCount()
 	cc, err := selfCheck.DB.GetChecksUpdatesCount()
 	if selfCheck.Config.RemoteTriggersEnabled {
-		rcc, _ = selfCheck.DB.GetRemoteChecksUpdatesCount()
+		rcc, _ = selfCheck.DB.GetGraphiteChecksUpdatesCount()
 	}
 	if err == nil {
 		*redisLastCheckTS = nowTS
@@ -148,8 +149,8 @@ func (selfCheck *SelfCheckWorker) check(nowTS int64, lastMetricReceivedTS, redis
 		if selfCheck.Config.RemoteTriggersEnabled {
 			if *lastRemoteCheckTS < nowTS-selfCheck.Config.LastRemoteCheckDelaySeconds && err == nil {
 				interval := nowTS - *lastRemoteCheckTS
-				selfCheck.Logger.Errorf("%s more than %ds. Send message.", remoteCheckerStateErrorMessage, interval)
-				appendNotificationEvents(&events, remoteCheckerStateErrorMessage, interval)
+				selfCheck.Logger.Errorf("%s more than %ds. Send message.", graphiteCheckerStateErrorMessage, interval)
+				appendNotificationEvents(&events, graphiteCheckerStateErrorMessage, interval)
 			}
 		}
 

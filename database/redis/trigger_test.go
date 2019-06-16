@@ -517,7 +517,7 @@ func TestRemoteTrigger(t *testing.T) {
 			So(ids, ShouldResemble, []string{})
 		})
 		Convey("Trigger should be added to remote triggers collection", func() {
-			ids, err := dataBase.GetRemoteTriggerIDs()
+			ids, err := dataBase.GetGraphiteTriggerIDs()
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{trigger.ID})
 		})
@@ -554,7 +554,7 @@ func TestRemoteTrigger(t *testing.T) {
 			So(ids, ShouldResemble, []string{trigger.ID})
 		})
 		Convey("Trigger shouldn't be added to remote triggers collection", func() {
-			ids, err := dataBase.GetRemoteTriggerIDs()
+			ids, err := dataBase.GetGraphiteTriggerIDs()
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{})
 		})
@@ -593,7 +593,7 @@ func TestRemoteTrigger(t *testing.T) {
 			So(ids, ShouldResemble, []string{trigger.ID})
 		})
 		Convey("Trigger should be added to remote triggers collection", func() {
-			ids, err := dataBase.GetRemoteTriggerIDs()
+			ids, err := dataBase.GetGraphiteTriggerIDs()
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{trigger.ID})
 		})

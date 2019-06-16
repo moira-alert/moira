@@ -57,10 +57,10 @@ type TriggerModel struct {
 	Expression string `json:"expression"`
 	// Graphite patterns for trigger
 	Patterns []string `json:"patterns"`
-	// Shows if trigger is remote (graphite-backend) based or stored inside Moira-Redis DB
-	IsRemote bool `json:"is_remote"`
 	// If true, first event NODATA → OK will be omitted
 	MuteNewMetrics bool `json:"mute_new_metrics"`
+	// Shows if trigger is local(stored inside Moira), graphite and prometheus
+	SourceType string `json:"source_typse"`
 }
 
 // ToMoiraTrigger transforms TriggerModel to moira.Trigger
@@ -79,8 +79,8 @@ func (model *TriggerModel) ToMoiraTrigger() *moira.Trigger {
 		Schedule:       model.Schedule,
 		Expression:     &model.Expression,
 		Patterns:       model.Patterns,
-		IsRemote:       model.IsRemote,
 		MuteNewMetrics: model.MuteNewMetrics,
+		SourceType:     model.SourceType,
 	}
 }
 
@@ -100,8 +100,8 @@ func CreateTriggerModel(trigger *moira.Trigger) TriggerModel {
 		Schedule:       trigger.Schedule,
 		Expression:     moira.UseString(trigger.Expression),
 		Patterns:       trigger.Patterns,
-		IsRemote:       trigger.IsRemote,
 		MuteNewMetrics: trigger.MuteNewMetrics,
+		SourceType:     trigger.SourceType,
 	}
 }
 
@@ -130,7 +130,7 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 	}
 
 	metricsSourceProvider := middleware.GetTriggerTargetsSourceProvider(request)
-	metricsSource, err := metricsSourceProvider.GetMetricSource(trigger.IsRemote)
+	metricsSource, err := metricsSourceProvider.GetMetricSource(trigger.SourceType)
 	if err != nil {
 		return err
 	}

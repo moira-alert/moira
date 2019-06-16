@@ -5,7 +5,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	metricSource "github.com/moira-alert/moira/metric_source"
+	"github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/remote"
 	"github.com/patrickmn/go-cache"
 	"gopkg.in/tomb.v2"
@@ -51,7 +51,7 @@ func (worker *Checker) Start() error {
 
 	worker.tomb.Go(worker.runNodataChecker)
 
-	_, err = worker.SourceProvider.GetRemote()
+	_, err = worker.SourceProvider.GetGraphite()
 	worker.remoteEnabled = err == nil
 
 	if worker.remoteEnabled && worker.Config.MaxParallelRemoteChecks == 0 {
@@ -61,9 +61,9 @@ func (worker *Checker) Start() error {
 
 	if worker.remoteEnabled {
 		worker.tomb.Go(worker.remoteChecker)
-		worker.Logger.Info("Remote checker started")
+		worker.Logger.Info("Graphite checker started")
 	} else {
-		worker.Logger.Info("Remote checker disabled")
+		worker.Logger.Info("Graphite checker disabled")
 	}
 
 	worker.Logger.Infof("Start %v parallel local checker(s)", worker.Config.MaxParallelChecks)
@@ -82,7 +82,7 @@ func (worker *Checker) Start() error {
 		remoteTriggerIdsToCheckChan := worker.startTriggerToCheckGetter(worker.Database.GetRemoteTriggersToCheck, worker.Config.MaxParallelRemoteChecks)
 		for i := 0; i < worker.Config.MaxParallelRemoteChecks; i++ {
 			worker.tomb.Go(func() error {
-				return worker.startTriggerHandler(remoteTriggerIdsToCheckChan, worker.Metrics.RemoteMetrics)
+				return worker.startTriggerHandler(remoteTriggerIdsToCheckChan, worker.Metrics.GraphiteMetrics)
 			})
 		}
 	}
@@ -114,7 +114,7 @@ func (worker *Checker) checkTriggersToCheckCount() error {
 			if worker.remoteEnabled {
 				remoteTriggersToCheckCount, err = worker.Database.GetRemoteTriggersToCheckCount()
 				if err == nil {
-					worker.Metrics.RemoteMetrics.TriggersToCheckCount.Update(remoteTriggersToCheckCount)
+					worker.Metrics.GraphiteMetrics.TriggersToCheckCount.Update(remoteTriggersToCheckCount)
 				}
 			}
 		}

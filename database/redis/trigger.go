@@ -26,20 +26,31 @@ func (connector *DbConnector) GetAllTriggerIDs() ([]string, error) {
 func (connector *DbConnector) GetLocalTriggerIDs() ([]string, error) {
 	c := connector.pool.Get()
 	defer c.Close()
-	triggerIds, err := redis.Strings(c.Do("SDIFF", triggersListKey, remoteTriggersListKey))
+	triggerIds, err := redis.Strings(c.Do("SDIFF", triggersListKey, graphiteTriggersListKey, prometheusTriggersListKey))
 	if err != nil {
 		return nil, fmt.Errorf("failed to get triggers-list: %s", err.Error())
 	}
 	return triggerIds, nil
 }
 
-// GetRemoteTriggerIDs gets moira remote triggerIDs
-func (connector *DbConnector) GetRemoteTriggerIDs() ([]string, error) {
+// GetGraphiteTriggerIDs gets moira graphite triggerIDs
+func (connector *DbConnector) GetGraphiteTriggerIDs() ([]string, error) {
 	c := connector.pool.Get()
 	defer c.Close()
-	triggerIds, err := redis.Strings(c.Do("SMEMBERS", remoteTriggersListKey))
+	triggerIds, err := redis.Strings(c.Do("SMEMBERS", graphiteTriggersListKey))
 	if err != nil {
-		return nil, fmt.Errorf("failed to get remote triggers-list: %s", err.Error())
+		return nil, fmt.Errorf("failed to get graphite triggers-list: %s", err.Error())
+	}
+	return triggerIds, nil
+}
+
+// GetPrometheusTriggerIDs gets moira prometheus triggerIDs
+func (connector *DbConnector) GetPrometheusTriggerIDs() ([]string, error) {
+	c := connector.pool.Get()
+	defer c.Close()
+	triggerIds, err := redis.Strings(c.Do("SMEMBERS", prometheusTriggersListKey))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get prometheus triggers-list: %s", err.Error())
 	}
 	return triggerIds, nil
 }
@@ -120,7 +131,7 @@ func (connector *DbConnector) RemovePatternTriggerIDs(pattern string) error {
 // If given trigger contains new tags then create it.
 // If given trigger has no subscription on it, add it to triggers-without-subscriptions
 func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigger) error {
-	if trigger.IsRemote {
+	if trigger.SourceType != moira.Local {
 		trigger.Patterns = make([]string, 0)
 	}
 
@@ -169,8 +180,10 @@ func (connector *DbConnector) updateTrigger(triggerID string, newTrigger *moira.
 		for _, pattern := range moira.GetStringListsDiff(oldTrigger.Patterns, newTrigger.Patterns) {
 			c.Send("SREM", patternTriggersKey(pattern), triggerID)
 		}
-		if oldTrigger.IsRemote && !newTrigger.IsRemote {
-			c.Send("SREM", remoteTriggersListKey, triggerID)
+		if oldTrigger.SourceType == moira.Graphite && newTrigger.SourceType != moira.Graphite {
+			c.Send("SREM", graphiteTriggersListKey, triggerID)
+		} else if oldTrigger.SourceType == moira.Prometheus && newTrigger.SourceType != moira.Prometheus {
+			c.Send("SREM", prometheusTriggersListKey, triggerID)
 		}
 
 		for _, tag := range moira.GetStringListsDiff(oldTrigger.Tags, newTrigger.Tags) {
@@ -180,8 +193,10 @@ func (connector *DbConnector) updateTrigger(triggerID string, newTrigger *moira.
 	}
 	c.Send("SET", triggerKey(triggerID), bytes)
 	c.Send("SADD", triggersListKey, triggerID)
-	if newTrigger.IsRemote {
-		c.Send("SADD", remoteTriggersListKey, triggerID)
+	if newTrigger.SourceType == moira.Graphite {
+		c.Send("SADD", graphiteTriggersListKey, triggerID)
+	} else if newTrigger.SourceType == moira.Prometheus {
+		c.Send("SADD", prometheusTriggersListKey, triggerID)
 	} else {
 		for _, pattern := range newTrigger.Patterns {
 			c.Send("SADD", patternsListKey, pattern)
@@ -230,7 +245,7 @@ func (connector *DbConnector) removeTrigger(triggerID string, trigger *moira.Tri
 	c.Send("DEL", triggerTagsKey(triggerID))
 	c.Send("DEL", triggerEventsKey(triggerID))
 	c.Send("SREM", triggersListKey, triggerID)
-	c.Send("SREM", remoteTriggersListKey, triggerID)
+	c.Send("SREM", graphiteTriggersListKey, triggerID)
 	c.Send("SREM", unusedTriggersKey, triggerID)
 	for _, tag := range trigger.Tags {
 		c.Send("SREM", tagTriggersKey(tag), triggerID)
@@ -348,7 +363,8 @@ func (connector *DbConnector) triggerHasSubscriptions(trigger *moira.Trigger) (b
 }
 
 var triggersListKey = "moira-triggers-list"
-var remoteTriggersListKey = "moira-remote-triggers-list"
+var graphiteTriggersListKey = "moira-graphite-triggers-list"
+var prometheusTriggersListKey = "moira-prometheus-triggers-list"
 
 func triggerKey(triggerID string) string {
 	return fmt.Sprintf("moira-trigger:%s", triggerID)

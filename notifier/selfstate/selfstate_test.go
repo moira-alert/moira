@@ -215,7 +215,7 @@ func TestMoiraCheckerDoesNotChecksRemoteTriggers(t *testing.T) {
 		remoteChecksCount = 1
 
 		callingNow := now.Add(time.Second * 2)
-		appendNotificationEvents(&events, remoteCheckerStateErrorMessage, callingNow.Unix()-lastRemoteCheckTS)
+		appendNotificationEvents(&events, graphiteCheckerStateErrorMessage, callingNow.Unix()-lastRemoteCheckTS)
 		expectedPackage := configureNotificationPackage(adminContact, &events)
 
 		mock.database.EXPECT().GetNotifierState().Return(moira.SelfStateOK, nil)

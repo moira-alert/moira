@@ -5,11 +5,12 @@
 package mock_moira_alert
 
 import (
+	reflect "reflect"
+	time "time"
+
 	gomock "github.com/golang/mock/gomock"
 	moira "github.com/moira-alert/moira"
 	tomb_v2 "gopkg.in/tomb.v2"
-	reflect "reflect"
-	time "time"
 )
 
 // MockDatabase is a mock of Database interface
@@ -417,30 +418,30 @@ func (mr *MockDatabaseMockRecorder) GetPatterns() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPatterns", reflect.TypeOf((*MockDatabase)(nil).GetPatterns))
 }
 
-// GetRemoteChecksUpdatesCount mocks base method
+// GetGraphiteChecksUpdatesCount mocks base method
 func (m *MockDatabase) GetRemoteChecksUpdatesCount() (int64, error) {
-	ret := m.ctrl.Call(m, "GetRemoteChecksUpdatesCount")
+	ret := m.ctrl.Call(m, "GetGraphiteChecksUpdatesCount")
 	ret0, _ := ret[0].(int64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetRemoteChecksUpdatesCount indicates an expected call of GetRemoteChecksUpdatesCount
+// GetGraphiteChecksUpdatesCount indicates an expected call of GetGraphiteChecksUpdatesCount
 func (mr *MockDatabaseMockRecorder) GetRemoteChecksUpdatesCount() *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRemoteChecksUpdatesCount", reflect.TypeOf((*MockDatabase)(nil).GetRemoteChecksUpdatesCount))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGraphiteChecksUpdatesCount", reflect.TypeOf((*MockDatabase)(nil).GetRemoteChecksUpdatesCount))
 }
 
-// GetRemoteTriggerIDs mocks base method
-func (m *MockDatabase) GetRemoteTriggerIDs() ([]string, error) {
-	ret := m.ctrl.Call(m, "GetRemoteTriggerIDs")
+// GetGraphiteTriggerIDs mocks base method
+func (m *MockDatabase) GetGraphiteTriggerIDs() ([]string, error) {
+	ret := m.ctrl.Call(m, "GetGraphiteTriggerIDs")
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetRemoteTriggerIDs indicates an expected call of GetRemoteTriggerIDs
+// GetGraphiteTriggerIDs indicates an expected call of GetGraphiteTriggerIDs
 func (mr *MockDatabaseMockRecorder) GetRemoteTriggerIDs() *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRemoteTriggerIDs", reflect.TypeOf((*MockDatabase)(nil).GetRemoteTriggerIDs))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGraphiteTriggerIDs", reflect.TypeOf((*MockDatabase)(nil).GetGraphiteTriggerIDs))
 }
 
 // GetRemoteTriggersToCheck mocks base method

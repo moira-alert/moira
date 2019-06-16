@@ -42,7 +42,7 @@ func ConfigureCheckerMetrics(prefix string, remoteEnabled bool) *graphite.Checke
 		UnusedTriggersCount:    registerHistogram(metricNameWithPrefix(prefix, "triggers.unused")),
 	}
 	if remoteEnabled {
-		m.RemoteMetrics = configureCheckMetrics(prefix + ".remote")
+		m.GraphiteMetrics = configureCheckMetrics(prefix + ".remote")
 	}
 	return m
 }

@@ -19,8 +19,8 @@ func (connector *DbConnector) GetTriggerLastCheck(triggerID string) (moira.Check
 }
 
 // SetTriggerLastCheck sets trigger last check data
-func (connector *DbConnector) SetTriggerLastCheck(triggerID string, checkData *moira.CheckData, isRemote bool) error {
-	selfStateCheckCountKey := connector.getSelfStateCheckCountKey(isRemote)
+func (connector *DbConnector) SetTriggerLastCheck(triggerID string, checkData *moira.CheckData, sourceType string) error {
+	selfStateCheckCountKey := connector.getSelfStateCheckCountKey(sourceType)
 	bytes, err := json.Marshal(checkData)
 	if err != nil {
 		return err
@@ -51,14 +51,18 @@ func (connector *DbConnector) SetTriggerLastCheck(triggerID string, checkData *m
 	return nil
 }
 
-func (connector *DbConnector) getSelfStateCheckCountKey(isRemote bool) string {
+func (connector *DbConnector) getSelfStateCheckCountKey(sourceType string) string {
 	if connector.source != Checker {
 		return ""
 	}
-	if isRemote {
-		return selfStateRemoteChecksCounterKey
+	switch sourceType {
+	case moira.Graphite:
+		return selfStateGraphiteChecksCounterKey
+	case moira.Prometheus:
+		return selfStatePrometheusChecksCounterKey
+	default:
+		return selfStateChecksCounterKey
 	}
-	return selfStateChecksCounterKey
 }
 
 // RemoveTriggerLastCheck removes trigger last check data
@@ -116,7 +120,7 @@ func (connector *DbConnector) SetTriggerCheckMaintenance(triggerID string, metri
 		}
 
 		var prev string
-		prev, readingErr = redis.String(c.Do("GETSET", metricLastCheckKey(triggerID), newLastCheck, ))
+		prev, readingErr = redis.String(c.Do("GETSET", metricLastCheckKey(triggerID), newLastCheck))
 		if readingErr != nil && readingErr != redis.ErrNil {
 			return readingErr
 		}

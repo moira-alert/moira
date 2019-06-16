@@ -109,7 +109,7 @@ func main() {
 	localSource := local.Create(database)
 	remoteConfig := config.Remote.GetRemoteSourceSettings()
 	remoteSource := remote.Create(remoteConfig)
-	metricSourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource)
+	metricSourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource, nil)
 
 	webConfigContent, err := config.Web.getSettings(remoteConfig.Enabled)
 	if err != nil {

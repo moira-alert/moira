@@ -24,7 +24,7 @@ func TestSelfCheckWithWritesInChecker(t *testing.T) {
 			So(count, ShouldEqual, 0)
 			So(err, ShouldBeNil)
 
-			count, err = dataBase.GetRemoteChecksUpdatesCount()
+			count, err = dataBase.GetGraphiteChecksUpdatesCount()
 			So(count, ShouldEqual, 0)
 			So(err, ShouldBeNil)
 		})
@@ -49,7 +49,7 @@ func TestSelfCheckWithWritesInChecker(t *testing.T) {
 			err = dataBase.SetTriggerLastCheck("12345", &lastCheckTest, true)
 			So(err, ShouldBeNil)
 
-			count, err = dataBase.GetRemoteChecksUpdatesCount()
+			count, err = dataBase.GetGraphiteChecksUpdatesCount()
 			So(count, ShouldEqual, 1)
 			So(err, ShouldBeNil)
 		})
@@ -80,7 +80,7 @@ func testSelfCheckWithWritesInDBSource(t *testing.T, dbSource DBSource) {
 			err = dataBase.SetTriggerLastCheck("12345", &lastCheckTest, true)
 			So(err, ShouldBeNil)
 
-			count, err = dataBase.GetRemoteChecksUpdatesCount()
+			count, err = dataBase.GetGraphiteChecksUpdatesCount()
 			So(count, ShouldEqual, 0)
 			So(err, ShouldBeNil)
 		})
