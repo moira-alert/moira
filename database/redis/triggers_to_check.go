@@ -14,7 +14,12 @@ func (connector *DbConnector) AddLocalTriggersToCheck(triggerIDs []string) error
 
 // AddGraphiteTriggersToCheck gets remote trigger IDs and save it to Redis Set
 func (connector *DbConnector) AddGraphiteTriggersToCheck(triggerIDs []string) error {
-	return connector.addTriggersToCheck(remoteTriggersToCheckKey, triggerIDs)
+	return connector.addTriggersToCheck(graphiteTriggersToCheckKey, triggerIDs)
+}
+
+// AddPrometheusTriggersToCheck gets remote trigger IDs and save it to Redis Set
+func (connector *DbConnector) AddPrometheusTriggersToCheck(triggerIDs []string) error {
+	return connector.addTriggersToCheck(prometheusTriggersToCheckKey, triggerIDs)
 }
 
 // GetLocalTriggersToCheck return random trigger ID from Redis Set
@@ -23,9 +28,14 @@ func (connector *DbConnector) GetLocalTriggersToCheck(count int) ([]string, erro
 
 }
 
-// GetGraphiteTriggersToCheck return random remote trigger ID from Redis Set
+// GetGraphiteTriggersToCheck return random graphite trigger ID from Redis Set
 func (connector *DbConnector) GetGraphiteTriggersToCheck(count int) ([]string, error) {
-	return connector.getTriggersToCheck(remoteTriggersToCheckKey, count)
+	return connector.getTriggersToCheck(graphiteTriggersToCheckKey, count)
+}
+
+// GetPrometheusTriggersToCheck return random prometheus trigger ID from Redis Set
+func (connector *DbConnector) GetPrometheusTriggersToCheck(count int) ([]string, error) {
+	return connector.getTriggersToCheck(prometheusTriggersToCheckKey, count)
 }
 
 // GetLocalTriggersToCheckCount return number of triggers ID to check from Redis Set
@@ -33,9 +43,14 @@ func (connector *DbConnector) GetLocalTriggersToCheckCount() (int64, error) {
 	return connector.getTriggersToCheckCount(localTriggersToCheckKey)
 }
 
-// GetGraphiteTriggersToCheckCount return number of remote triggers ID to check from Redis Set
+// GetGraphiteTriggersToCheckCount return number of graphite triggers ID to check from Redis Set
 func (connector *DbConnector) GetGraphiteTriggersToCheckCount() (int64, error) {
-	return connector.getTriggersToCheckCount(remoteTriggersToCheckKey)
+	return connector.getTriggersToCheckCount(graphiteTriggersToCheckKey)
+}
+
+// GetPrometheusTriggersToCheckCount return number of prometheus triggers ID to check from Redis Set
+func (connector *DbConnector) GetPrometheusTriggersToCheckCount() (int64, error) {
+	return connector.getTriggersToCheckCount(prometheusTriggersToCheckKey)
 }
 
 func (connector *DbConnector) addTriggersToCheck(key string, triggerIDs []string) error {
@@ -79,5 +94,6 @@ func (connector *DbConnector) getTriggersToCheckCount(key string) (int64, error)
 	return triggersToCheckCount, nil
 }
 
-var remoteTriggersToCheckKey = "moira-remote-triggers-to-check"
+var graphiteTriggersToCheckKey = "moira-graphite-triggers-to-check"
+var prometheusTriggersToCheckKey = "moira-prometheus-triggers-to-check"
 var localTriggersToCheckKey = "moira-triggers-to-check"

@@ -102,6 +102,10 @@ type Database interface {
 	GetGraphiteTriggersToCheck(count int) ([]string, error)
 	GetGraphiteTriggersToCheckCount() (int64, error)
 
+	AddPrometheusTriggersToCheck(triggerIDs []string) error
+	GetPrometheusTriggersToCheck(count int) ([]string, error)
+	GetPrometheusTriggersToCheckCount() (int64, error)
+
 	// TriggerCheckLock storing
 	AcquireTriggerCheckLock(triggerID string, timeout int) error
 	DeleteTriggerCheckLock(triggerID string) error
