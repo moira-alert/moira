@@ -33,8 +33,8 @@ func TestResolveMetricsWindow(t *testing.T) {
 			{Timestamp: testLaunchTime.Add(-360 * time.Hour).Unix()},
 		},
 	}
-	localTrigger := moira.TriggerData{ID: "redisTrigger", IsRemote: false}
-	remoteTrigger := moira.TriggerData{ID: "remoteTrigger", IsRemote: true}
+	localTrigger := moira.TriggerData{ID: "redisTrigger", SourceType: moira.Local}
+	graphiteTrigger := moira.TriggerData{ID: "graphiteTrigger", SourceType: moira.Graphite}
 	timeRange := time.Unix(int64(defaultTimeRange.Seconds()), 0).Unix()
 	timeShift := time.Unix(int64(defaultTimeShift.Seconds()), 0).Unix()
 	var pkg NotificationPackage
@@ -61,8 +61,8 @@ func TestResolveMetricsWindow(t *testing.T) {
 			So(to, ShouldEqual, testLaunchTime.UTC().Unix())
 		})
 	})
-	Convey("REMOTE TRIGGER | Resolve remote trigger metrics window", t, func() {
-		trigger = remoteTrigger
+	Convey("GRAPHITE TRIGGER | Resolve remote trigger metrics window", t, func() {
+		trigger = graphiteTrigger
 		Convey("Window is wide: use package window to fetch limited historical data from graphite", func() {
 			pkg = oldTriggerEvents
 			expectedFrom, expectedTo, err := pkg.GetWindow()
@@ -83,7 +83,7 @@ func TestResolveMetricsWindow(t *testing.T) {
 		})
 	})
 	Convey("ANY TRIGGER | Zero time range, force default time range", t, func() {
-		allTriggers := []moira.TriggerData{localTrigger, remoteTrigger}
+		allTriggers := []moira.TriggerData{localTrigger, graphiteTrigger}
 		for _, trigger := range allTriggers {
 			pkg := emptyEventsPackage
 			from, to := resolveMetricsWindow(logger, trigger, pkg)

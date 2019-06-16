@@ -212,7 +212,7 @@ func TestTriggerStoring(t *testing.T) {
 			So(actualTriggerChecks, ShouldResemble, []*moira.TriggerCheck{triggerCheck})
 
 			//Add check data
-			err = dataBase.SetTriggerLastCheck(trigger.ID, &lastCheckTest, false)
+			err = dataBase.SetTriggerLastCheck(trigger.ID, &lastCheckTest, moira.Local)
 			So(err, ShouldBeNil)
 
 			triggerCheck.LastCheck = lastCheckTest
@@ -483,7 +483,7 @@ func TestTriggerStoring(t *testing.T) {
 	})
 }
 
-func TestRemoteTrigger(t *testing.T) {
+func TestGraphiteTrigger(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := newTestDatabase(logger, config)
 	pattern := "test.pattern.remote1"
@@ -492,13 +492,13 @@ func TestRemoteTrigger(t *testing.T) {
 		Name:        "remote",
 		Targets:     []string{"test.target.remote1"},
 		Patterns:    []string{pattern},
-		IsRemote:    true,
+		SourceType:  moira.Graphite,
 		TriggerType: moira.RisingTrigger,
 	}
 	dataBase.flush()
 	defer dataBase.flush()
 
-	Convey("Saving remote trigger", t, func() {
+	Convey("Saving graphite trigger", t, func() {
 		Convey("Trigger should be saved correctly", func() {
 			err := dataBase.SaveTrigger(trigger.ID, trigger)
 			So(err, ShouldBeNil)
@@ -516,7 +516,7 @@ func TestRemoteTrigger(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{})
 		})
-		Convey("Trigger should be added to remote triggers collection", func() {
+		Convey("Trigger should be added to graphite triggers collection", func() {
 			ids, err := dataBase.GetGraphiteTriggerIDs()
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{trigger.ID})
@@ -534,7 +534,7 @@ func TestRemoteTrigger(t *testing.T) {
 	})
 
 	Convey("Update remote trigger as local", t, func() {
-		trigger.IsRemote = false
+		trigger.SourceType = moira.Local
 		trigger.Patterns = []string{pattern}
 		Convey("Trigger should be saved correctly", func() {
 			err := dataBase.SaveTrigger(trigger.ID, trigger)
@@ -574,7 +574,7 @@ func TestRemoteTrigger(t *testing.T) {
 			So(patterns, ShouldResemble, trigger.Patterns)
 		})
 
-		trigger.IsRemote = true
+		trigger.SourceType = moira.Graphite
 		Convey("Update this trigger as remote", func() {
 			err := dataBase.SaveTrigger(trigger.ID, trigger)
 			So(err, ShouldBeNil)

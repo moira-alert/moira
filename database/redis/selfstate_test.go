@@ -39,14 +39,14 @@ func TestSelfCheckWithWritesInChecker(t *testing.T) {
 		})
 
 		Convey("Update metrics checks updates count", func() {
-			err := dataBase.SetTriggerLastCheck("123", &lastCheckTest, false)
+			err := dataBase.SetTriggerLastCheck("123", &lastCheckTest, moira.Local)
 			So(err, ShouldBeNil)
 
 			count, err := dataBase.GetChecksUpdatesCount()
 			So(count, ShouldEqual, 1)
 			So(err, ShouldBeNil)
 
-			err = dataBase.SetTriggerLastCheck("12345", &lastCheckTest, true)
+			err = dataBase.SetTriggerLastCheck("12345", &lastCheckTest, moira.Graphite)
 			So(err, ShouldBeNil)
 
 			count, err = dataBase.GetGraphiteChecksUpdatesCount()
@@ -70,14 +70,14 @@ func testSelfCheckWithWritesInDBSource(t *testing.T, dbSource DBSource) {
 	defer dataBase.flush()
 	Convey(fmt.Sprintf("Self state triggers manipulation in %s", dbSource), t, func() {
 		Convey("Update metrics checks updates count", func() {
-			err := dataBase.SetTriggerLastCheck("123", &lastCheckTest, false)
+			err := dataBase.SetTriggerLastCheck("123", &lastCheckTest, moira.Local)
 			So(err, ShouldBeNil)
 
 			count, err := dataBase.GetChecksUpdatesCount()
 			So(count, ShouldEqual, 0)
 			So(err, ShouldBeNil)
 
-			err = dataBase.SetTriggerLastCheck("12345", &lastCheckTest, true)
+			err = dataBase.SetTriggerLastCheck("12345", &lastCheckTest, moira.Graphite)
 			So(err, ShouldBeNil)
 
 			count, err = dataBase.GetGraphiteChecksUpdatesCount()

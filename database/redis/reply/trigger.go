@@ -26,7 +26,6 @@ type triggerStorageElement struct {
 	PythonExpression *string             `json:"expression,omitempty"`
 	Patterns         []string            `json:"patterns"`
 	TTL              string              `json:"ttl,omitempty"`
-	IsRemote         bool                `json:"is_remote"`
 	MuteNewMetrics   bool                `json:"mute_new_metrics,omitempty"`
 	SourceType       string              `json:"source_type"`
 }

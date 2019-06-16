@@ -23,9 +23,9 @@ func TestExpressionModeMultipleTargetsWarnValue(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		localSource := mock_metric_source.NewMockMetricSource(mockCtrl)
-		remoteSource := mock_metric_source.NewMockMetricSource(mockCtrl)
+		graphiteSource := mock_metric_source.NewMockMetricSource(mockCtrl)
 		fetchResult := mock_metric_source.NewMockFetchResult(mockCtrl)
-		sourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource)
+		sourceProvider := metricSource.CreateMetricSourceProvider(localSource, graphiteSource, nil)
 
 		localSource.EXPECT().IsConfigured().Return(true, nil).AnyTimes()
 		localSource.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fetchResult, nil).AnyTimes()
@@ -51,7 +51,7 @@ func TestExpressionModeMultipleTargetsWarnValue(t *testing.T) {
 			Tags:           tags,
 			TTLState:       &moira.TTLStateNODATA,
 			TTL:            600,
-			IsRemote:       false,
+			SourceType:     moira.Local,
 			MuteNewMetrics: false,
 		}
 
