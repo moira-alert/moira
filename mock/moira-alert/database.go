@@ -105,18 +105,18 @@ func (mr *MockDatabaseMockRecorder) AddPatternMetric(arg0, arg1 interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddPatternMetric", reflect.TypeOf((*MockDatabase)(nil).AddPatternMetric), arg0, arg1)
 }
 
-// AddRemoteTriggersToCheck mocks base method
-func (m *MockDatabase) AddRemoteTriggersToCheck(arg0 []string) error {
+// AddGraphiteTriggersToCheck mocks base method
+func (m *MockDatabase) AddGraphiteTriggersToCheck(arg0 []string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddRemoteTriggersToCheck", arg0)
+	ret := m.ctrl.Call(m, "AddGraphiteTriggersToCheck", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// AddRemoteTriggersToCheck indicates an expected call of AddRemoteTriggersToCheck
+// AddGraphiteTriggersToCheck indicates an expected call of AddGraphiteTriggersToCheck
 func (mr *MockDatabaseMockRecorder) AddRemoteTriggersToCheck(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddRemoteTriggersToCheck", reflect.TypeOf((*MockDatabase)(nil).AddRemoteTriggersToCheck), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddGraphiteTriggersToCheck", reflect.TypeOf((*MockDatabase)(nil).AddGraphiteTriggersToCheck), arg0)
 }
 
 // DeleteTriggerCheckLock mocks base method

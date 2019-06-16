@@ -123,7 +123,7 @@ func TestRemoteTriggerToCheck(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(count, ShouldEqual, 0)
 
-		err = dataBase.AddRemoteTriggersToCheck([]string{triggerID1})
+		err = dataBase.AddGraphiteTriggersToCheck([]string{triggerID1})
 		So(err, ShouldBeNil)
 
 		count, err = dataBase.GetGraphiteTriggersToCheckCount()
@@ -138,10 +138,10 @@ func TestRemoteTriggerToCheck(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(count, ShouldEqual, 0)
 
-		err = dataBase.AddRemoteTriggersToCheck([]string{triggerID1})
+		err = dataBase.AddGraphiteTriggersToCheck([]string{triggerID1})
 		So(err, ShouldBeNil)
 
-		err = dataBase.AddRemoteTriggersToCheck([]string{triggerID1})
+		err = dataBase.AddGraphiteTriggersToCheck([]string{triggerID1})
 		So(err, ShouldBeNil)
 
 		count, err = dataBase.GetGraphiteTriggersToCheckCount()
@@ -157,7 +157,7 @@ func TestRemoteTriggerToCheck(t *testing.T) {
 		So(actual, ShouldBeEmpty)
 
 		triggerArr := []string{triggerID1, triggerID2, triggerID3, triggerID4, triggerID5, triggerID6}
-		err = dataBase.AddRemoteTriggersToCheck(triggerArr)
+		err = dataBase.AddGraphiteTriggersToCheck(triggerArr)
 		So(err, ShouldBeNil)
 
 		count, err = dataBase.GetGraphiteTriggersToCheckCount()
@@ -200,7 +200,7 @@ func TestRemoteTriggerToCheckConnection(t *testing.T) {
 	dataBase.flush()
 	defer dataBase.flush()
 	Convey("Should throw error when no connection", t, func() {
-		err := dataBase.AddRemoteTriggersToCheck([]string{"123"})
+		err := dataBase.AddGraphiteTriggersToCheck([]string{"123"})
 		So(err, ShouldNotBeNil)
 
 		triggerID, err := dataBase.GetGraphiteTriggersToCheck(1)

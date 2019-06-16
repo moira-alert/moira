@@ -12,8 +12,8 @@ func (connector *DbConnector) AddLocalTriggersToCheck(triggerIDs []string) error
 	return connector.addTriggersToCheck(localTriggersToCheckKey, triggerIDs)
 }
 
-// AddRemoteTriggersToCheck gets remote trigger IDs and save it to Redis Set
-func (connector *DbConnector) AddRemoteTriggersToCheck(triggerIDs []string) error {
+// AddGraphiteTriggersToCheck gets remote trigger IDs and save it to Redis Set
+func (connector *DbConnector) AddGraphiteTriggersToCheck(triggerIDs []string) error {
 	return connector.addTriggersToCheck(remoteTriggersToCheckKey, triggerIDs)
 }
 

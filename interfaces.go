@@ -98,7 +98,7 @@ type Database interface {
 	GetLocalTriggersToCheck(count int) ([]string, error)
 	GetLocalTriggersToCheckCount() (int64, error)
 
-	AddRemoteTriggersToCheck(triggerIDs []string) error
+	AddGraphiteTriggersToCheck(triggerIDs []string) error
 	GetGraphiteTriggersToCheck(count int) ([]string, error)
 	GetGraphiteTriggersToCheckCount() (int64, error)
 
