@@ -41,7 +41,7 @@ func (config *checkerConfig) getSettings() *checker.Config {
 		NoDataCheckInterval:         to.Duration(config.NoDataCheckInterval),
 		StopCheckingIntervalSeconds: int64(to.Duration(config.StopCheckingInterval).Seconds()),
 		MaxParallelChecks:           config.MaxParallelChecks,
-		MaxParallelRemoteChecks:     config.MaxParallelRemoteChecks,
+		MaxParallelGraphiteChecks:   config.MaxParallelRemoteChecks,
 	}
 }
 

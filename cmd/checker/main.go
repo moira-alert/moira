@@ -98,7 +98,7 @@ func main() {
 		Logger:            logger,
 		Database:          database,
 		Config:            checkerSettings,
-		RemoteConfig:      remoteConfig,
+		GraphiteConfig:    remoteConfig,
 		SourceProvider:    metricSourceProvider,
 		Metrics:           checkerMetrics,
 		TriggerCache:      cache.New(checkerSettings.CheckInterval, time.Minute*60),

@@ -23,8 +23,8 @@ func (connector *DbConnector) GetLocalTriggersToCheck(count int) ([]string, erro
 
 }
 
-// GetRemoteTriggersToCheck return random remote trigger ID from Redis Set
-func (connector *DbConnector) GetRemoteTriggersToCheck(count int) ([]string, error) {
+// GetGraphiteTriggersToCheck return random remote trigger ID from Redis Set
+func (connector *DbConnector) GetGraphiteTriggersToCheck(count int) ([]string, error) {
 	return connector.getTriggersToCheck(remoteTriggersToCheckKey, count)
 }
 
@@ -33,8 +33,8 @@ func (connector *DbConnector) GetLocalTriggersToCheckCount() (int64, error) {
 	return connector.getTriggersToCheckCount(localTriggersToCheckKey)
 }
 
-// GetRemoteTriggersToCheckCount return number of remote triggers ID to check from Redis Set
-func (connector *DbConnector) GetRemoteTriggersToCheckCount() (int64, error) {
+// GetGraphiteTriggersToCheckCount return number of remote triggers ID to check from Redis Set
+func (connector *DbConnector) GetGraphiteTriggersToCheckCount() (int64, error) {
 	return connector.getTriggersToCheckCount(remoteTriggersToCheckKey)
 }
 

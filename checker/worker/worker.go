@@ -20,7 +20,7 @@ type Checker struct {
 	Logger            moira.Logger
 	Database          moira.Database
 	Config            *checker.Config
-	RemoteConfig      *remote.Config
+	GraphiteConfig    *remote.Config
 	SourceProvider    *metricSource.SourceProvider
 	Metrics           *graphite.CheckerMetrics
 	TriggerCache      *cache.Cache
@@ -29,7 +29,7 @@ type Checker struct {
 	lazyTriggerIDs    atomic.Value
 	lastData          int64
 	tomb              tomb.Tomb
-	remoteEnabled     bool
+	graphiteEnabled   bool
 }
 
 // Start start schedule new MetricEvents and check for NODATA triggers
@@ -52,15 +52,15 @@ func (worker *Checker) Start() error {
 	worker.tomb.Go(worker.runNodataChecker)
 
 	_, err = worker.SourceProvider.GetGraphite()
-	worker.remoteEnabled = err == nil
+	worker.graphiteEnabled = err == nil
 
-	if worker.remoteEnabled && worker.Config.MaxParallelRemoteChecks == 0 {
-		worker.Config.MaxParallelRemoteChecks = runtime.NumCPU()
-		worker.Logger.Infof("MaxParallelRemoteChecks is not configured, set it to the number of CPU - %d", worker.Config.MaxParallelRemoteChecks)
+	if worker.graphiteEnabled && worker.Config.MaxParallelGraphiteChecks == 0 {
+		worker.Config.MaxParallelGraphiteChecks = runtime.NumCPU()
+		worker.Logger.Infof("MaxParallelGraphiteChecks is not configured, set it to the number of CPU - %d", worker.Config.MaxParallelGraphiteChecks)
 	}
 
-	if worker.remoteEnabled {
-		worker.tomb.Go(worker.remoteChecker)
+	if worker.graphiteEnabled {
+		worker.tomb.Go(worker.graphiteChecker)
 		worker.Logger.Info("Graphite checker started")
 	} else {
 		worker.Logger.Info("Graphite checker disabled")
@@ -77,12 +77,12 @@ func (worker *Checker) Start() error {
 		})
 	}
 
-	if worker.remoteEnabled {
-		worker.Logger.Infof("Start %v parallel remote checker(s)", worker.Config.MaxParallelRemoteChecks)
-		remoteTriggerIdsToCheckChan := worker.startTriggerToCheckGetter(worker.Database.GetRemoteTriggersToCheck, worker.Config.MaxParallelRemoteChecks)
-		for i := 0; i < worker.Config.MaxParallelRemoteChecks; i++ {
+	if worker.graphiteEnabled {
+		worker.Logger.Infof("Start %v parallel graphite checker(s)", worker.Config.MaxParallelGraphiteChecks)
+		graphiteTriggerIdsToCheckChan := worker.startTriggerToCheckGetter(worker.Database.GetGraphiteTriggersToCheck, worker.Config.MaxParallelGraphiteChecks)
+		for i := 0; i < worker.Config.MaxParallelGraphiteChecks; i++ {
 			worker.tomb.Go(func() error {
-				return worker.startTriggerHandler(remoteTriggerIdsToCheckChan, worker.Metrics.GraphiteMetrics)
+				return worker.startTriggerHandler(graphiteTriggerIdsToCheckChan, worker.Metrics.GraphiteMetrics)
 			})
 		}
 	}
@@ -100,7 +100,7 @@ func (worker *Checker) Start() error {
 
 func (worker *Checker) checkTriggersToCheckCount() error {
 	checkTicker := time.NewTicker(time.Millisecond * 100)
-	var triggersToCheckCount, remoteTriggersToCheckCount int64
+	var triggersToCheckCount, graphiteTriggersToCheckCount int64
 	var err error
 	for {
 		select {
@@ -111,10 +111,10 @@ func (worker *Checker) checkTriggersToCheckCount() error {
 			if err == nil {
 				worker.Metrics.LocalMetrics.TriggersToCheckCount.Update(triggersToCheckCount)
 			}
-			if worker.remoteEnabled {
-				remoteTriggersToCheckCount, err = worker.Database.GetRemoteTriggersToCheckCount()
+			if worker.graphiteEnabled {
+				graphiteTriggersToCheckCount, err = worker.Database.GetGraphiteTriggersToCheckCount()
 				if err == nil {
-					worker.Metrics.GraphiteMetrics.TriggersToCheckCount.Update(remoteTriggersToCheckCount)
+					worker.Metrics.GraphiteMetrics.TriggersToCheckCount.Update(graphiteTriggersToCheckCount)
 				}
 			}
 		}

@@ -537,34 +537,34 @@ func (mr *MockDatabaseMockRecorder) GetPrometheusTriggerIDs() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPrometheusTriggerIDs", reflect.TypeOf((*MockDatabase)(nil).GetPrometheusTriggerIDs))
 }
 
-// GetRemoteTriggersToCheck mocks base method
-func (m *MockDatabase) GetRemoteTriggersToCheck(arg0 int) ([]string, error) {
+// GetGraphiteTriggersToCheck mocks base method
+func (m *MockDatabase) GetGraphiteTriggersToCheck(arg0 int) ([]string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetRemoteTriggersToCheck", arg0)
+	ret := m.ctrl.Call(m, "GetGraphiteTriggersToCheck", arg0)
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetRemoteTriggersToCheck indicates an expected call of GetRemoteTriggersToCheck
+// GetGraphiteTriggersToCheck indicates an expected call of GetGraphiteTriggersToCheck
 func (mr *MockDatabaseMockRecorder) GetRemoteTriggersToCheck(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRemoteTriggersToCheck", reflect.TypeOf((*MockDatabase)(nil).GetRemoteTriggersToCheck), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGraphiteTriggersToCheck", reflect.TypeOf((*MockDatabase)(nil).GetGraphiteTriggersToCheck), arg0)
 }
 
-// GetRemoteTriggersToCheckCount mocks base method
-func (m *MockDatabase) GetRemoteTriggersToCheckCount() (int64, error) {
+// GetGraphiteTriggersToCheckCount mocks base method
+func (m *MockDatabase) GetGraphiteTriggersToCheckCount() (int64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetRemoteTriggersToCheckCount")
+	ret := m.ctrl.Call(m, "GetGraphiteTriggersToCheckCount")
 	ret0, _ := ret[0].(int64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetRemoteTriggersToCheckCount indicates an expected call of GetRemoteTriggersToCheckCount
+// GetGraphiteTriggersToCheckCount indicates an expected call of GetGraphiteTriggersToCheckCount
 func (mr *MockDatabaseMockRecorder) GetRemoteTriggersToCheckCount() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRemoteTriggersToCheckCount", reflect.TypeOf((*MockDatabase)(nil).GetRemoteTriggersToCheckCount))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGraphiteTriggersToCheckCount", reflect.TypeOf((*MockDatabase)(nil).GetGraphiteTriggersToCheckCount))
 }
 
 // GetSubscription mocks base method

@@ -6,37 +6,37 @@ import (
 	"github.com/moira-alert/moira/metric_source/remote"
 )
 
-func (worker *Checker) remoteChecker() error {
-	checkTicker := time.NewTicker(worker.RemoteConfig.CheckInterval)
+func (worker *Checker) graphiteChecker() error {
+	checkTicker := time.NewTicker(worker.GraphiteConfig.CheckInterval)
 	for {
 		select {
 		case <-worker.tomb.Dying():
 			checkTicker.Stop()
-			worker.Logger.Info("Remote checker stopped")
+			worker.Logger.Info("Graphite checker stopped")
 			return nil
 		case <-checkTicker.C:
-			if err := worker.checkRemote(); err != nil {
-				worker.Logger.Errorf("Remote checker failed: %s", err.Error())
+			if err := worker.checkGraphite(); err != nil {
+				worker.Logger.Errorf("Graphite checker failed: %s", err.Error())
 			}
 		}
 	}
 }
 
-func (worker *Checker) checkRemote() error {
+func (worker *Checker) checkGraphite() error {
 	source, err := worker.SourceProvider.GetGraphite()
 	if err != nil {
 		return err
 	}
 	remoteAvailable, err := source.(*remote.Remote).IsRemoteAvailable()
 	if !remoteAvailable {
-		worker.Logger.Infof("Remote API is unavailable. Stop checking remote triggers. Error: %s", err.Error())
+		worker.Logger.Infof("Graphite API is unavailable. Stop checking graphite triggers. Error: %s", err.Error())
 	} else {
-		worker.Logger.Debug("Checking remote triggers")
+		worker.Logger.Debug("Checking graphite triggers")
 		triggerIds, err := worker.Database.GetGraphiteTriggerIDs()
 		if err != nil {
 			return err
 		}
-		worker.addRemoteTriggerIDsIfNeeded(triggerIds)
+		worker.addGraphiteTriggerIDsIfNeeded(triggerIds)
 	}
 	return nil
 }

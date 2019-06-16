@@ -99,8 +99,8 @@ type Database interface {
 	GetLocalTriggersToCheckCount() (int64, error)
 
 	AddRemoteTriggersToCheck(triggerIDs []string) error
-	GetRemoteTriggersToCheck(count int) ([]string, error)
-	GetRemoteTriggersToCheckCount() (int64, error)
+	GetGraphiteTriggersToCheck(count int) ([]string, error)
+	GetGraphiteTriggersToCheckCount() (int64, error)
 
 	// TriggerCheckLock storing
 	AcquireTriggerCheckLock(triggerID string, timeout int) error
