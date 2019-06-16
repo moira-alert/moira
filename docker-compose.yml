@@ -79,6 +79,6 @@ services:
       - filter
     volumes:
       - ./local/relay.conf:/home/relay/carbon-c-relay.conf
-    command: /usr/bin/relay -E -s -f /home/relay/carbon-c-relay.conf
+    command: /usr/bin/relay -E -s -b 64 -f /home/relay/carbon-c-relay.conf
 networks:
   balancer:
