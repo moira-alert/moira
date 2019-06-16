@@ -4,6 +4,13 @@ services:
   redis:
     image: redis:alpine
 
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - "9080:9090"
+    logging:
+      driver: "none"
+
   graphite:
     image: graphiteapp/graphite-statsd
     ports:
@@ -28,6 +35,7 @@ services:
       - redis
       - filter
       - graphite
+      - prometheus
 
   notifier:
     build:
