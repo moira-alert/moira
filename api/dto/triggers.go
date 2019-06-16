@@ -59,8 +59,8 @@ type TriggerModel struct {
 	Patterns []string `json:"patterns"`
 	// If true, first event NODATA → OK will be omitted
 	MuteNewMetrics bool `json:"mute_new_metrics"`
-	// Shows if trigger is local(stored inside Moira), graphite and prometheus
-	SourceType string `json:"source_typse"`
+	// Shows if trigger is local(stored inside Moira), graphite or prometheus
+	SourceType string `json:"source_type"`
 }
 
 // ToMoiraTrigger transforms TriggerModel to moira.Trigger
