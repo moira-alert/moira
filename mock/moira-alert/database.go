@@ -49,6 +49,20 @@ func (mr *MockDatabaseMockRecorder) AcquireTriggerCheckLock(arg0, arg1 interface
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AcquireTriggerCheckLock", reflect.TypeOf((*MockDatabase)(nil).AcquireTriggerCheckLock), arg0, arg1)
 }
 
+// AddGraphiteTriggersToCheck mocks base method
+func (m *MockDatabase) AddGraphiteTriggersToCheck(arg0 []string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddGraphiteTriggersToCheck", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddGraphiteTriggersToCheck indicates an expected call of AddGraphiteTriggersToCheck
+func (mr *MockDatabaseMockRecorder) AddGraphiteTriggersToCheck(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddGraphiteTriggersToCheck", reflect.TypeOf((*MockDatabase)(nil).AddGraphiteTriggersToCheck), arg0)
+}
+
 // AddLocalTriggersToCheck mocks base method
 func (m *MockDatabase) AddLocalTriggersToCheck(arg0 []string) error {
 	m.ctrl.T.Helper()
@@ -105,18 +119,18 @@ func (mr *MockDatabaseMockRecorder) AddPatternMetric(arg0, arg1 interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddPatternMetric", reflect.TypeOf((*MockDatabase)(nil).AddPatternMetric), arg0, arg1)
 }
 
-// AddGraphiteTriggersToCheck mocks base method
-func (m *MockDatabase) AddGraphiteTriggersToCheck(arg0 []string) error {
+// AddPrometheusTriggersToCheck mocks base method
+func (m *MockDatabase) AddPrometheusTriggersToCheck(arg0 []string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddGraphiteTriggersToCheck", arg0)
+	ret := m.ctrl.Call(m, "AddPrometheusTriggersToCheck", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// AddGraphiteTriggersToCheck indicates an expected call of AddGraphiteTriggersToCheck
-func (mr *MockDatabaseMockRecorder) AddRemoteTriggersToCheck(arg0 interface{}) *gomock.Call {
+// AddPrometheusTriggersToCheck indicates an expected call of AddPrometheusTriggersToCheck
+func (mr *MockDatabaseMockRecorder) AddPrometheusTriggersToCheck(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddGraphiteTriggersToCheck", reflect.TypeOf((*MockDatabase)(nil).AddGraphiteTriggersToCheck), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddPrometheusTriggersToCheck", reflect.TypeOf((*MockDatabase)(nil).AddPrometheusTriggersToCheck), arg0)
 }
 
 // DeleteTriggerCheckLock mocks base method
@@ -295,6 +309,36 @@ func (m *MockDatabase) GetGraphiteTriggerIDs() ([]string, error) {
 func (mr *MockDatabaseMockRecorder) GetGraphiteTriggerIDs() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGraphiteTriggerIDs", reflect.TypeOf((*MockDatabase)(nil).GetGraphiteTriggerIDs))
+}
+
+// GetGraphiteTriggersToCheck mocks base method
+func (m *MockDatabase) GetGraphiteTriggersToCheck(arg0 int) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetGraphiteTriggersToCheck", arg0)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetGraphiteTriggersToCheck indicates an expected call of GetGraphiteTriggersToCheck
+func (mr *MockDatabaseMockRecorder) GetGraphiteTriggersToCheck(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGraphiteTriggersToCheck", reflect.TypeOf((*MockDatabase)(nil).GetGraphiteTriggersToCheck), arg0)
+}
+
+// GetGraphiteTriggersToCheckCount mocks base method
+func (m *MockDatabase) GetGraphiteTriggersToCheckCount() (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetGraphiteTriggersToCheckCount")
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetGraphiteTriggersToCheckCount indicates an expected call of GetGraphiteTriggersToCheckCount
+func (mr *MockDatabaseMockRecorder) GetGraphiteTriggersToCheckCount() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGraphiteTriggersToCheckCount", reflect.TypeOf((*MockDatabase)(nil).GetGraphiteTriggersToCheckCount))
 }
 
 // GetIDByUsername mocks base method
@@ -537,34 +581,34 @@ func (mr *MockDatabaseMockRecorder) GetPrometheusTriggerIDs() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPrometheusTriggerIDs", reflect.TypeOf((*MockDatabase)(nil).GetPrometheusTriggerIDs))
 }
 
-// GetGraphiteTriggersToCheck mocks base method
-func (m *MockDatabase) GetGraphiteTriggersToCheck(arg0 int) ([]string, error) {
+// GetPrometheusTriggersToCheck mocks base method
+func (m *MockDatabase) GetPrometheusTriggersToCheck(arg0 int) ([]string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetGraphiteTriggersToCheck", arg0)
+	ret := m.ctrl.Call(m, "GetPrometheusTriggersToCheck", arg0)
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetGraphiteTriggersToCheck indicates an expected call of GetGraphiteTriggersToCheck
-func (mr *MockDatabaseMockRecorder) GetRemoteTriggersToCheck(arg0 interface{}) *gomock.Call {
+// GetPrometheusTriggersToCheck indicates an expected call of GetPrometheusTriggersToCheck
+func (mr *MockDatabaseMockRecorder) GetPrometheusTriggersToCheck(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGraphiteTriggersToCheck", reflect.TypeOf((*MockDatabase)(nil).GetGraphiteTriggersToCheck), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPrometheusTriggersToCheck", reflect.TypeOf((*MockDatabase)(nil).GetPrometheusTriggersToCheck), arg0)
 }
 
-// GetGraphiteTriggersToCheckCount mocks base method
-func (m *MockDatabase) GetGraphiteTriggersToCheckCount() (int64, error) {
+// GetPrometheusTriggersToCheckCount mocks base method
+func (m *MockDatabase) GetPrometheusTriggersToCheckCount() (int64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetGraphiteTriggersToCheckCount")
+	ret := m.ctrl.Call(m, "GetPrometheusTriggersToCheckCount")
 	ret0, _ := ret[0].(int64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetGraphiteTriggersToCheckCount indicates an expected call of GetGraphiteTriggersToCheckCount
-func (mr *MockDatabaseMockRecorder) GetRemoteTriggersToCheckCount() *gomock.Call {
+// GetPrometheusTriggersToCheckCount indicates an expected call of GetPrometheusTriggersToCheckCount
+func (mr *MockDatabaseMockRecorder) GetPrometheusTriggersToCheckCount() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGraphiteTriggersToCheckCount", reflect.TypeOf((*MockDatabase)(nil).GetGraphiteTriggersToCheckCount))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPrometheusTriggersToCheckCount", reflect.TypeOf((*MockDatabase)(nil).GetPrometheusTriggersToCheckCount))
 }
 
 // GetSubscription mocks base method
