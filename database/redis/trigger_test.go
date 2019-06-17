@@ -271,6 +271,7 @@ func TestTriggerStoring(t *testing.T) {
 				Tags:        []string{"test-tag-1"},
 				Patterns:    []string{pattern1},
 				TriggerType: moira.RisingTrigger,
+				SourceType:  moira.Local,
 			}
 
 			triggerVer2 := &moira.Trigger{
@@ -280,6 +281,7 @@ func TestTriggerStoring(t *testing.T) {
 				Tags:        []string{"test-tag-1"},
 				Patterns:    []string{pattern2},
 				TriggerType: moira.RisingTrigger,
+				SourceType:  moira.Local,
 			}
 
 			val1 := &moira.MatchedMetric{
@@ -656,6 +658,7 @@ var triggers = []moira.Trigger{
 		Patterns:    []string{"test.pattern.1"},
 		TriggerType: moira.RisingTrigger,
 		TTLState:    &moira.TTLStateNODATA,
+		SourceType:  moira.Local,
 	},
 	{
 		ID:          "triggerID-0000000000001",
@@ -664,6 +667,7 @@ var triggers = []moira.Trigger{
 		Tags:        []string{"test-tag-2", "test-tag-1"},
 		Patterns:    []string{"test.pattern.2", "test.pattern.1"},
 		TriggerType: moira.RisingTrigger,
+		SourceType:  moira.Local,
 	},
 	{
 		ID:          "triggerID-0000000000001",
@@ -672,6 +676,7 @@ var triggers = []moira.Trigger{
 		Tags:        []string{"test-tag-2", "test-tag-3"},
 		Patterns:    []string{"test.pattern.3", "test.pattern.2"},
 		TriggerType: moira.RisingTrigger,
+		SourceType:  moira.Local,
 	},
 	{
 		ID:          "triggerID-0000000000004",
@@ -679,6 +684,7 @@ var triggers = []moira.Trigger{
 		Targets:     []string{"test.target.4"},
 		Tags:        []string{"test-tag-4"},
 		TriggerType: moira.RisingTrigger,
+		SourceType:  moira.Local,
 	},
 	{
 		ID:          "triggerID-0000000000005",
@@ -686,6 +692,7 @@ var triggers = []moira.Trigger{
 		Targets:     []string{"test.target.5"},
 		Tags:        []string{"test-tag-nosub"},
 		TriggerType: moira.RisingTrigger,
+		SourceType:  moira.Local,
 	},
 	{
 		ID:          "triggerID-0000000000006",
@@ -693,6 +700,7 @@ var triggers = []moira.Trigger{
 		Targets:     []string{"test.target.6"},
 		Tags:        []string{"test-tag-throttling-disabled"},
 		TriggerType: moira.RisingTrigger,
+		SourceType:  moira.Local,
 	},
 	{
 		ID:          "triggerID-0000000000007",
@@ -700,6 +708,7 @@ var triggers = []moira.Trigger{
 		Targets:     []string{"test.target.7"},
 		Tags:        []string{"test-tag-multiple-subs"},
 		TriggerType: moira.RisingTrigger,
+		SourceType:  moira.Local,
 	},
 	{
 		ID:          "triggerID-0000000000008",
@@ -707,6 +716,7 @@ var triggers = []moira.Trigger{
 		Targets:     []string{"test.target.8"},
 		Tags:        []string{"test-tag-dup-contacts"},
 		TriggerType: moira.RisingTrigger,
+		SourceType:  moira.Local,
 	},
 	{
 		ID:          "triggerID-0000000000009",
@@ -714,5 +724,6 @@ var triggers = []moira.Trigger{
 		Targets:     []string{"test.target.9"},
 		Tags:        []string{"test-degradation"},
 		TriggerType: moira.RisingTrigger,
+		SourceType:  moira.Local,
 	},
 }
