@@ -1,0 +1,23 @@
+#See https://moira.readthedocs.io/en/latest/installation/configuration.html for config explanation
+redis:
+  host: redis
+  port: "6379"
+  dbid: 0
+graphite:
+  enabled: true
+  runtime_stats: true
+  uri: "relay:2003"
+  prefix: moira
+  interval: 60s
+remote:
+  enabled: true
+  url: "http://graphite:80/render"
+  check_interval: 60s
+  timeout: 60s
+api:
+  listen: ":8081"
+  enable_cors: false
+  web_config_path: "/etc/moira/web.json"
+log:
+  log_file: stdout
+  log_level: debug
