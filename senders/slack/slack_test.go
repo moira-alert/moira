@@ -2,7 +2,6 @@ package slack
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 	"time"
 
@@ -147,34 +146,6 @@ some other text _italic text_`
 			actual := sender.buildMessage([]moira.NotificationEvent{event, event, event, event, event, event}, trigger, false)
 			expected := "*NODATA* [tag1][tag2] <http://moira.url/trigger/TriggerID|Name>\n" + slackCompatibleMD +
 				"\n```\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)```"
-			So(actual, ShouldResemble, expected)
-		})
-
-		events := make([]moira.NotificationEvent, 0)
-		Convey("Print moira message with 1127 events and cutoff", func() {
-			for i := 0; i < 1200; i++ {
-				events = append(events, event)
-			}
-			lines := strings.Repeat("\n02:40: Metric = 123 (OK to NODATA)", 1127)
-			actual := sender.buildMessage(events, trigger, false)
-			expected := fmt.Sprintf("*NODATA* [tag1][tag2] <http://moira.url/trigger/TriggerID|Name>\n"+slackCompatibleMD+
-				"\n```%s```\n\n...and 73 more events.", lines)
-			So(actual, ShouldResemble, expected)
-		})
-
-		longMdDesc := ""
-		for i := 0; i < 40000; i++ {
-			longMdDesc += "a"
-		}
-
-		Convey("Print moira message with one event and large desc", func() {
-			trigger.Desc = longMdDesc
-			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, false)
-			title := "*NODATA* [tag1][tag2] <http://moira.url/trigger/TriggerID|Name>\n"
-
-			charsAvailableForDesc := messageMaxCharacters - len([]rune(title)) - charsRequiredForEvents
-			expected := title + longMdDesc[0:charsAvailableForDesc-10] + "..." +
-				"\n```\n02:40: Metric = 123 (OK to NODATA)```"
 			So(actual, ShouldResemble, expected)
 		})
 

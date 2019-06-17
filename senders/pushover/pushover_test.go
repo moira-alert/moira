@@ -3,6 +3,7 @@ package pushover
 import (
 	"bytes"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -117,16 +118,6 @@ Please, fix your system or tune this trigger to generate less events.`
 			So(actual, ShouldResemble, expected)
 		})
 
-		//Desc with chars greater than half the message limit
-		var longMdDesc string
-		for i := 0; i < msgLimit/2+100; i++ {
-			longMdDesc += "a"
-		}
-		// Desc with chars less than half the message limit
-		// var shortMdDesc string
-		// for i := 0; i < msgLimit/2-100; i++ {
-		// 	shortMdDesc += "a"
-		// }
 		eventLine := "02:40: Metric = 123 (OK to NODATA)\n"
 		oneEventLineLen := len([]rune(eventLine))
 		// Events list with chars less than half the message limit
@@ -137,60 +128,45 @@ Please, fix your system or tune this trigger to generate less events.`
 			shortEventsString += eventLine
 		}
 		// Events list with chars greater than half the message limit
-		// var longEvents moira.NotificationEvents
-		// for i := 0; i < (msgLimit/2+200)/oneEventLineLen; i++ {
-		// 	longEvents = append(longEvents, event)
-		// }
+		var longEvents moira.NotificationEvents
+		var longEventsString string
+		for i := 0; i < (msgLimit/2+200)/oneEventLineLen; i++ {
+			longEvents = append(longEvents, event)
+			longEventsString += eventLine
+		}
+		longDesc := strings.Repeat("a", msgLimit/2+100)
 
 		Convey("Print moira message with desc + events < msgLimit", func() {
-			actual := sender.buildMessage(shortEvents, false, moira.TriggerData{Desc: longMdDesc})
-			expected := "<p>" + longMdDesc + "</p>\n" + shortEventsString
+			actual := sender.buildMessage(shortEvents, false, moira.TriggerData{Desc: longDesc})
+			expected := "<p>" + longDesc + "</p>\n" + shortEventsString
 			So(actual, ShouldResemble, expected)
 		})
-		Convey("Print moira message with desc + events > msgLimit because desc > msgLimit/2", func() {
-			var shortEvents moira.NotificationEvents
-			for i := 0; i < (msgLimit/2-20)/oneEventLineLen; i++ {
-				shortEvents = append(shortEvents, event)
-				shortEventsString += eventLine
+
+		Convey("Print moira message desc > msgLimit/2", func() {
+			var events moira.NotificationEvents
+			var eventsString string
+			for i := 0; i < (msgLimit/2-10)/oneEventLineLen; i++ {
+				events = append(events, event)
+				eventsString += eventLine
 			}
-			actual := sender.buildMessage(shortEvents, false, moira.TriggerData{Desc: longMdDesc})
+			actual := sender.buildMessage(events, false, moira.TriggerData{Desc: longDesc})
 			expected := "<p>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&hellip;</p>\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n"
 			So(actual, ShouldResemble, expected)
 		})
 
-		// Convey("Print moira message with short desc and long events", func() {
-		// 	actual := sender.buildMessage(longEvents, false, moira.TriggerData{Desc: shortMdDesc})
-		// 	expected := "<p>" + shortMdDesc + "</p>\n" + shortEventsString
-		// 	So(actual, ShouldResemble, expected)
-		// })
+		Convey("Print moira message events string > msgLimit/2", func() {
+			desc := strings.Repeat("a", msgLimit/2-100)
+			actual := sender.buildMessage(longEvents, false, moira.TriggerData{Desc: desc})
+			expected := "<p>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</p>\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n\n...and 4 more events."
+			So(actual, ShouldResemble, expected)
+		})
 
-		// 		Convey("Print moira message with 6 events", func() {
-		// 			actual := sender.buildMessage([]moira.NotificationEvent{event, event, event, event, event, event}, false, moira.TriggerData{})
-		// 			expected := `02:40: Metric = 123 (OK to NODATA)
-		// 02:40: Metric = 123 (OK to NODATA)
-		// 02:40: Metric = 123 (OK to NODATA)
-		// 02:40: Metric = 123 (OK to NODATA)
-		// 02:40: Metric = 123 (OK to NODATA)
-		// 02:40: Metric = 123 (OK to NODATA)
-		// `
-		// 			So(actual, ShouldResemble, expected)
-		// 		})
+		Convey("Print moira message with both desc and events > msgLimit/2", func() {
+			actual := sender.buildMessage(longEvents, false, moira.TriggerData{Desc: longDesc})
+			expected := "<p>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&hellip;</p>\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n\n...and 6 more events."
+			So(actual, ShouldResemble, expected)
+		})
 
-		// 		Convey("Print moira message with 100 events", func() {
-		// 			eventString := "02:40: Metric = 123 (OK to NODATA)\n"
-		// 			eventsToBePrinted := msgLimit/len([]rune(eventString)) - 1
-		// 			expected := ""
-		// 			for i := 0; i < eventsToBePrinted; i++ {
-		// 				expected += eventString
-		// 			}
-		// 			expected += fmt.Sprintf("\n...and %d more events.", 100-eventsToBePrinted)
-		// 			var events moira.NotificationEvents
-		// 			for i := 0; i < 100; i++ {
-		// 				events = append(events, event)
-		// 			}
-		// 			actual := sender.buildMessage(events, false, moira.TriggerData{})
-		// 			So(actual, ShouldResemble, expected)
-		// 		})
 	})
 }
 

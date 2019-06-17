@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/moira-alert/moira"
@@ -20,9 +21,8 @@ const (
 	exceptionEmoji = ":moira-state-exception:"
 	testEmoji      = ":moira-state-test:"
 
-	messageMaxCharacters          = 40000
+	messageMaxCharacters          = 4000
 	additionalInfoCharactersCount = 400
-	charsRequiredForEvents        = 9000
 )
 
 var (
@@ -78,76 +78,119 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 }
 
 func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
-	var message bytes.Buffer
+	var message strings.Builder
 
-	message.WriteString(fmt.Sprintf("*%s*", events.GetSubjectState()))
+	title := sender.buildTitle(events, trigger)
+	titleLen := len([]rune(title))
+
+	desc := trigger.Desc
+	if trigger.Desc != "" {
+		// Replace **bold text** with *bold text* that slack supports
+		desc = mdBoldRegex.ReplaceAllString(desc, "*$boldtext*")
+
+		// Replace MD headers (## header text) with *header text* that slack supports
+		desc = mdHeaderRegex.ReplaceAllString(desc, "*$headertext*")
+		desc += "\n"
+	}
+	descLen := len([]rune(desc))
+
+	eventsString := sender.buildEventsString(events, -1, throttled)
+	eventsStringLen := len([]rune(eventsString))
+
+	if titleLen+descLen+eventsStringLen <= messageMaxCharacters {
+		message.WriteString(title)
+		message.WriteString(desc)
+		message.WriteString(eventsString)
+		return message.String()
+	}
+
+	charsLeftAfterTitle := messageMaxCharacters - titleLen
+	if descLen > charsLeftAfterTitle/2 && eventsStringLen > charsLeftAfterTitle/2 {
+		// Trim both desc and events string to half the charsLeftAfter title
+		desc = desc[:charsLeftAfterTitle/2-10] + "...\n"
+		eventsString = sender.buildEventsString(events, charsLeftAfterTitle/2, throttled)
+
+	} else if descLen > charsLeftAfterTitle/2 {
+		// Trim the desc to the chars left after using the whole events string
+		charsForDesc := charsLeftAfterTitle - eventsStringLen
+		desc = desc[:charsForDesc-10] + "...\n"
+
+	} else if eventsStringLen > charsLeftAfterTitle/2 {
+		// Trim the events string to the chars left after using the whole desc
+		charsForEvents := charsLeftAfterTitle/2 - descLen
+		eventsString = sender.buildEventsString(events, charsForEvents, throttled)
+
+	} else {
+		desc = desc[:charsLeftAfterTitle/2-10] + "...\n"
+		eventsString = sender.buildEventsString(events, charsLeftAfterTitle/2, throttled)
+
+	}
+	message.WriteString(title)
+	message.WriteString(desc)
+	message.WriteString(eventsString)
+	return message.String()
+}
+
+func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData) string {
+	title := fmt.Sprintf("*%s*", events.GetSubjectState())
 
 	tags := trigger.GetTags()
 	if tags != "" {
-		message.WriteString(" ")
-		message.WriteString(tags)
+		title += " " + tags
 	}
 
 	triggerURI := trigger.GetTriggerURI(sender.frontURI)
 	if triggerURI != "" {
-		message.WriteString(fmt.Sprintf(" <%s|%s>", triggerURI, trigger.Name))
+		title += fmt.Sprintf(" <%s|%s>", triggerURI, trigger.Name)
 	} else if trigger.Name != "" {
-		message.WriteString(" ")
-		message.WriteString(trigger.Name)
+		title += " " + trigger.Name
 	}
+	title += "\n"
 
-	messageCharsCount := len([]rune(message.String()))
+	return title
+}
 
-	if trigger.Desc != "" {
-		message.WriteString("\n")
-		charsAvailableForDesc := messageMaxCharacters - messageCharsCount - charsRequiredForEvents - 1
-
-		// Replace **bold text** with *bold text* that slack supports
-		desc := mdBoldRegex.ReplaceAllString(trigger.Desc, "*$boldtext*")
-
-		// Replace MD headers (## header text) with *header text* that slack supports
-		desc = mdHeaderRegex.ReplaceAllString(desc, "*$headertext*")
-
-		if charsAvailableForDesc < len(desc) {
-			message.WriteString(desc[0 : charsAvailableForDesc-10])
-			message.WriteString("...")
-		} else {
-			message.WriteString(desc)
-		}
-		messageCharsCount = len([]rune(message.String()))
+// buildEventsString builds the string from moira events and limits it to charsForEvents.
+// if n is negative buildEventsString does not limit the events string
+func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsForEvents int, throttled bool) string {
+	charsForThrottleMsg := 0
+	throttleMsg := "\nPlease, *fix your system or tune this trigger* to generate less events."
+	if throttled {
+		charsForThrottleMsg = len([]rune(throttleMsg))
 	}
+	charsLeftForEvents := charsForEvents - charsForThrottleMsg
 
-	message.WriteString("\n```")
+	var eventsString string
+	eventsString += "```"
 
-	var printEventsCount int
-	messageLimitReached := false
-
+	eventsLenLimitReached := false
+	eventsPrinted := 0
 	for _, event := range events {
 		line := fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location), event.Metric, event.GetMetricValue(), event.OldState, event.State)
 		if len(moira.UseString(event.Message)) > 0 {
 			line += fmt.Sprintf(". %s", moira.UseString(event.Message))
 		}
-		lineCharsCount := len([]rune(line))
-		if messageCharsCount+lineCharsCount > messageMaxCharacters-additionalInfoCharactersCount {
-			messageLimitReached = true
+
+		if !(charsForEvents < 0) && (len([]rune(eventsString))+len([]rune(line)) > charsLeftForEvents) {
+			eventsLenLimitReached = true
 			break
 		}
-		message.WriteString(line)
-		messageCharsCount += lineCharsCount
-		printEventsCount++
-	}
-	message.WriteString("```")
 
-	if messageLimitReached {
-		message.WriteString(fmt.Sprintf("\n\n...and %d more events.", len(events)-printEventsCount))
+		eventsString += line
+		eventsPrinted++
+	}
+	eventsString += "```"
+
+	if eventsLenLimitReached {
+		eventsString += fmt.Sprintf("\n...and %d more events.", len(events)-eventsPrinted)
 	}
 
 	if throttled {
-		message.WriteString("\nPlease, *fix your system or tune this trigger* to generate less events.")
+		eventsString += throttleMsg
 	}
-	return message.String()
-}
 
+	return eventsString
+}
 func (sender *Sender) sendMessage(message string, contact string, triggerID string, useDirectMessaging bool, emoji string) (string, string, error) {
 	params := slack.PostMessageParameters{
 		Username:  "Moira",

@@ -75,7 +75,6 @@ func (sender *Sender) makePushoverMessage(events moira.NotificationEvents, conta
 }
 
 func (sender *Sender) buildMessage(events moira.NotificationEvents, throttled bool, trigger moira.TriggerData) string {
-
 	var message strings.Builder
 
 	desc := trigger.Desc
@@ -86,7 +85,7 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, throttled bo
 	eventsString := sender.buildEventsString(events, -1, throttled)
 	eventsStringLen := len([]rune(eventsString))
 
-	if htmlDescLen+eventsStringLen < msgLimit {
+	if htmlDescLen+eventsStringLen <= msgLimit {
 		// Use both completely
 		message.WriteString(htmlDesc)
 		message.WriteString(eventsString)
@@ -107,7 +106,7 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, throttled bo
 
 	} else if eventsStringLen > msgLimit/2 {
 		// Trim the events string to the chars left after using the whole desc
-		charsForEvents := msgLimit/2 - htmlDescLen
+		charsForEvents := msgLimit - htmlDescLen
 		eventsString = sender.buildEventsString(events, charsForEvents, throttled)
 
 	} else {
@@ -144,7 +143,7 @@ func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsFo
 			line += "\n"
 		}
 
-		if !(charsForEvents < 0) && (len([]rune(eventsString))+len([]rune(line)) > charsLeftForEvents) {
+		if !(charsForEvents < 0) && (len([]rune(eventsString))+len([]rune(line)) > charsLeftForEvents-20) {
 			eventsLenLimitReached = true
 			break
 		}
