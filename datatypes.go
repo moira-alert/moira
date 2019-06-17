@@ -48,7 +48,7 @@ type TriggerData struct {
 	WarnValue  float64  `json:"warn_value"`
 	ErrorValue float64  `json:"error_value"`
 	SourceType string   `json:"source_type"`
-	Tags       []string `json:"__notisfier_trigger_tags"`
+	Tags       []string `json:"__notifier_trigger_tags"`
 }
 
 // GetTriggerURI gets frontUri and returns triggerUrl, returns empty string on selfcheck and test notifications
