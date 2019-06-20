@@ -498,6 +498,13 @@
 			"revisionTime": "2019-02-05T12:20:54Z"
 		},
 		{
+			"checksumSHA1": "4EUez9RzqISWzM3DGLdpyfiA3mg=",
+			"path": "github.com/go-graphite/carbonapi/expr/rewrite",
+			"revision": "b49de85f729f28c9434fe91caec2eb736a513a4c",
+			"revisionTime": "2019-02-05T12:20:54Z",
+			"tree": true
+		},
+		{
 			"checksumSHA1": "BHR/7PwbL8fZaNtyAvGLoVtFYB4=",
 			"path": "github.com/go-graphite/carbonapi/expr/types",
 			"revision": "b49de85f729f28c9434fe91caec2eb736a513a4c",
