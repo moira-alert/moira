@@ -86,12 +86,10 @@ func (source *PatternIndex) MatchPatterns(metric string) []string {
 	for i, c := range metric {
 		if c == '.' {
 			part := metric[index:i]
-
-			if len(part) == 0 {
-				return []string{}
-			}
-
 			index = i + 1
+			if len(part) == 0 {
+				continue
+			}
 
 			currentLevel, found = findPart(part, currentLevel)
 			if found == 0 {
