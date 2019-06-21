@@ -33,10 +33,10 @@ func NewPatternIndex(patterns []string) *PatternIndex {
 	for _, pattern := range patterns {
 		currentNode := root
 		parts := strings.Split(pattern, ".")
-		if hasEmptyParts(parts) {
-			continue
-		}
 		for _, part := range parts {
+			if part == "" {
+				continue
+			}
 			found := false
 			for _, child := range currentNode.Children {
 				if part == child.Part {
@@ -147,13 +147,4 @@ func split2(s, sep string) (string, string) {
 		return splitResult[0], ""
 	}
 	return splitResult[0], splitResult[1]
-}
-
-func hasEmptyParts(parts []string) bool {
-	for _, part := range parts {
-		if part == "" {
-			return true
-		}
-	}
-	return false
 }
