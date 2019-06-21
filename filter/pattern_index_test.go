@@ -18,6 +18,7 @@ func TestPatternIndex(t *testing.T) {
 			"Complex.*{one,two,three}suf*.pattern",
 			"Question.?at_begin",
 			"Question.at_the_end?",
+			"Two.dots..together",
 		}
 
 		index := NewPatternIndex(patterns)
@@ -41,7 +42,7 @@ func TestPatternIndex(t *testing.T) {
 			{"Complex.anything.pattern", []string{"Complex.*.*"}},
 			{"Question.1at_begin", []string{"Question.?at_begin"}},
 			{"Question.at_the_end2", []string{"Question.at_the_end?"}},
-			{"Two.dots..together", []string{}},
+			{"Two.dots..together", []string{"Two.dots..together"}},
 			{"Simple.notmatching.pattern", []string{}},
 			{"Star.nothing", []string{}},
 			{"Bracket.one.nothing", []string{}},
