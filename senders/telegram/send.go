@@ -21,10 +21,8 @@ const (
 )
 
 const (
-	photoCaptionMaxCharacters     = 1024
-	messageMaxCharacters          = 4096
-	additionalInfoCharactersCount = 400
-	charsRequiredForEvents        = 900
+	photoCaptionMaxCharacters = 1024
+	messageMaxCharacters      = 4096
 )
 
 var characterLimits = map[messageType]int{
@@ -113,14 +111,13 @@ func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsFo
 	if throttled {
 		charsForThrottleMsg = len([]rune(throttleMsg))
 	}
-	charsLeftForEvents := charsForEvents - charsForThrottleMsg
 
 	var urlString string
 	url := trigger.GetTriggerURI(sender.frontURI)
 	if url != "" {
 		urlString = fmt.Sprintf("\n\n%s\n", url)
 	}
-	charsLeftForEvents = charsForEvents - len([]rune(urlString))
+	charsLeftForEvents := charsForEvents - len([]rune(urlString)) - charsForThrottleMsg
 
 	var eventsString string
 	var tailString string

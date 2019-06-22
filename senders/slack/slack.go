@@ -21,8 +21,7 @@ const (
 	exceptionEmoji = ":moira-state-exception:"
 	testEmoji      = ":moira-state-test:"
 
-	messageMaxCharacters          = 4000
-	additionalInfoCharactersCount = 400
+	messageMaxCharacters = 4000
 )
 
 var (
