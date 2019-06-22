@@ -143,7 +143,8 @@ func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsFo
 			line += "\n"
 		}
 
-		if !(charsForEvents < 0) && (len([]rune(eventsString))+len([]rune(line)) > charsLeftForEvents-20) {
+		tailStringLen := len([]rune(fmt.Sprintf("\n...and %d more events.", len(events)-eventsPrinted)))
+		if !(charsForEvents < 0) && (len([]rune(eventsString))+len([]rune(line)) > charsLeftForEvents-tailStringLen) {
 			eventsLenLimitReached = true
 			break
 		}

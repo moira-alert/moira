@@ -117,7 +117,7 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 
 	} else if eventsStringLen > charsLeftAfterTitle/2 {
 		// Trim the events string to the chars left after using the whole desc
-		charsForEvents := charsLeftAfterTitle/2 - descLen
+		charsForEvents := charsLeftAfterTitle - descLen
 		eventsString = sender.buildEventsString(events, charsForEvents, throttled)
 
 	} else {
@@ -162,6 +162,7 @@ func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsFo
 
 	var eventsString string
 	eventsString += "```"
+	var tailString string
 
 	eventsLenLimitReached := false
 	eventsPrinted := 0
@@ -171,7 +172,9 @@ func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsFo
 			line += fmt.Sprintf(". %s", moira.UseString(event.Message))
 		}
 
-		if !(charsForEvents < 0) && (len([]rune(eventsString))+len([]rune(line)) > charsLeftForEvents) {
+		tailString = fmt.Sprintf("\n...and %d more events.", len(events)-eventsPrinted)
+		tailStringLen := len([]rune("```")) + len([]rune(tailString))
+		if !(charsForEvents < 0) && (len([]rune(eventsString))+len([]rune(line)) > charsLeftForEvents-tailStringLen) {
 			eventsLenLimitReached = true
 			break
 		}
@@ -182,7 +185,7 @@ func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsFo
 	eventsString += "```"
 
 	if eventsLenLimitReached {
-		eventsString += fmt.Sprintf("\n...and %d more events.", len(events)-eventsPrinted)
+		eventsString += tailString
 	}
 
 	if throttled {
@@ -191,6 +194,7 @@ func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsFo
 
 	return eventsString
 }
+
 func (sender *Sender) sendMessage(message string, contact string, triggerID string, useDirectMessaging bool, emoji string) (string, string, error) {
 	params := slack.PostMessageParameters{
 		Username:  "Moira",
