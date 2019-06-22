@@ -118,8 +118,15 @@ Please, fix your system or tune this trigger to generate less events.`
 		})
 
 		Convey("Print moira message with desc + events < photoMsgLimit", func() {
+			var shortEvents moira.NotificationEvents
+			var shortEventsString string
+			for i := 0; i < (photoCaptionMaxCharacters/2-200)/oneEventLineLen; i++ {
+				shortEvents = append(shortEvents, event)
+				shortEventsString += eventLine
+			}
+			longDesc := strings.Repeat("a", photoCaptionMaxCharacters/2+100)
 			actual := sender.buildMessage(shortEvents, moira.TriggerData{Desc: longDesc}, false, photoCaptionMaxCharacters)
-			expected := "💣NODATA   (34)\n" + longDesc + "\n" + shortEventsString
+			expected := "💣NODATA   (5)\n" + longDesc + "\n" + shortEventsString
 			So(actual, ShouldResemble, expected)
 		})
 

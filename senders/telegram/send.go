@@ -69,14 +69,14 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 	eventsString := sender.buildEventsString(events, -1, throttled, trigger)
 	eventsStringLen := len([]rune(eventsString))
 
-	if titleLen+descLen+eventsStringLen <= messageMaxCharacters {
+	if titleLen+descLen+eventsStringLen <= maxChars {
 		buffer.WriteString(title)
 		buffer.WriteString(desc)
 		buffer.WriteString(eventsString)
 		return buffer.String()
 	}
 
-	charsLeftAfterTitle := messageMaxCharacters - titleLen
+	charsLeftAfterTitle := maxChars - titleLen
 	if descLen > charsLeftAfterTitle/2 && eventsStringLen > charsLeftAfterTitle/2 {
 		// Trim both desc and events string to half the charsLeftAfter title
 		desc = desc[:charsLeftAfterTitle/2-10] + "...\n"
