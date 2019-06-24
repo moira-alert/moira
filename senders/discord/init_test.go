@@ -16,7 +16,7 @@ func TestInit(t *testing.T) {
 		sender := Sender{}
 		Convey("Empty map", func() {
 			err := sender.Init(map[string]string{}, logger, nil, "")
-			So(err, ShouldResemble, fmt.Errorf("Cannot read the discord token from the config"))
+			So(err, ShouldResemble, fmt.Errorf("cannot read the discord token from the config"))
 			So(sender, ShouldResemble, Sender{})
 		})
 

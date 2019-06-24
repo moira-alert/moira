@@ -21,11 +21,11 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 	var err error
 	token := senderSettings["token"]
 	if token == "" {
-		return fmt.Errorf("Cannot read the discord token from the config")
+		return fmt.Errorf("cannot read the discord token from the config")
 	}
 	sender.session, err = discordgo.New("Bot " + token)
 	if err != nil {
-		return fmt.Errorf("Error creating discord session: %s", err)
+		return fmt.Errorf("error creating discord session: %s", err)
 	}
 	sender.logger = logger
 	sender.frontURI = senderSettings["front_uri"]
