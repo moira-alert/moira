@@ -1,13 +1,13 @@
 package discord
 
 import (
-	"encoding/base64"
+	"bytes"
 	"fmt"
 	"net/http"
 	"regexp"
 	"strings"
 
-	"github.com/andersfylling/disgord"
+	"github.com/bwmarrin/discordgo"
 	"github.com/moira-alert/moira"
 )
 
@@ -21,20 +21,15 @@ var (
 
 // SendEvents implements pushover build and send message functionality
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) error {
-	webhookParams := &disgord.ExecuteWebhookParams{}
-	webhookParams.Content = sender.buildMessage(events, trigger, throttled)
+	data := &discordgo.MessageSend{}
+	data.Content = sender.buildMessage(events, trigger, throttled)
 	if len(plot) > 0 {
-		webhookParams.File = sender.buildPlot(plot)
+		data.File = sender.buildPlot(plot)
 	}
-	webhoohURL := contact.Value
-	urlParts := strings.Split(webhoohURL, "/")
-	webhookParams.WebhookID = urlParts[len(urlParts)-2]
-	webhookParams.Token = urlParts[len(urlParts)-1]
-
-	sender.logger.Debugf("Calling discord with message %s", webhookParams.Content)
-	err := sender.client.ExecuteWebhook(webhookParams)
+	sender.logger.Debugf("Calling discord with message %s", data.Content)
+	_, err := sender.session.ChannelMessageSendComplex(contact.Value, data)
 	if err != nil {
-		return fmt.Errorf("failed to send %s event message to discord webhook %s : %s", trigger.ID, webhookID, err.Error())
+		return fmt.Errorf("failed to send %s event message to discord bot : %s", trigger.ID, err.Error())
 	}
 	return nil
 }
@@ -142,8 +137,10 @@ func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsFo
 	return eventsString
 }
 
-func (sender *Sender) buildPlot(plot []byte) string {
-	contentType := http.DetectContentType(plot)
-	base64img := base64.StdEncoding.EncodeToString(plot)
-	return fmt.Sprintf("data:%s;base64,%s", contentType, base64img)
+func (sender *Sender) buildPlot(plot []byte) *discordgo.File {
+	return &discordgo.File{
+		Name:        "Plot",
+		ContentType: http.DetectContentType(plot),
+		Reader:      bytes.NewReader(plot),
+	}
 }
