@@ -42,6 +42,96 @@
 			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
+			"checksumSHA1": "S7Uxo9gtYhW6rg2XXrrnALx1R+I=",
+			"path": "github.com/andersfylling/disgord",
+			"revision": "d75bf2fcdc6471df06287d402739f328794fba0d",
+			"revisionTime": "2019-06-22T13:14:25Z"
+		},
+		{
+			"checksumSHA1": "/JByzG+ruWVeYNg1lMiFrufMnHI=",
+			"path": "github.com/andersfylling/disgord/cache/interfaces",
+			"revision": "d75bf2fcdc6471df06287d402739f328794fba0d",
+			"revisionTime": "2019-06-22T13:14:25Z"
+		},
+		{
+			"checksumSHA1": "uk0rgofCy4ACIw1H3jraFlHl5eQ=",
+			"path": "github.com/andersfylling/disgord/cache/lfu",
+			"revision": "d75bf2fcdc6471df06287d402739f328794fba0d",
+			"revisionTime": "2019-06-22T13:14:25Z"
+		},
+		{
+			"checksumSHA1": "BFD9LzsReO4ySFPTCLrmZH2rjbc=",
+			"path": "github.com/andersfylling/disgord/cache/lru",
+			"revision": "d75bf2fcdc6471df06287d402739f328794fba0d",
+			"revisionTime": "2019-06-22T13:14:25Z"
+		},
+		{
+			"checksumSHA1": "mrRcvFPqDqeCwO5OnXiScWgYEqA=",
+			"path": "github.com/andersfylling/disgord/constant",
+			"revision": "d75bf2fcdc6471df06287d402739f328794fba0d",
+			"revisionTime": "2019-06-22T13:14:25Z"
+		},
+		{
+			"checksumSHA1": "OrXQFCime7lA0RVUHogESdX0uqk=",
+			"path": "github.com/andersfylling/disgord/endpoint",
+			"revision": "d75bf2fcdc6471df06287d402739f328794fba0d",
+			"revisionTime": "2019-06-22T13:14:25Z"
+		},
+		{
+			"checksumSHA1": "fGmXQMLFAycBiTS2rIZ3AoV19zY=",
+			"path": "github.com/andersfylling/disgord/event",
+			"revision": "d75bf2fcdc6471df06287d402739f328794fba0d",
+			"revisionTime": "2019-06-22T13:14:25Z"
+		},
+		{
+			"checksumSHA1": "RM/aY3PafQn1nPjApf5ym1oDRlg=",
+			"path": "github.com/andersfylling/disgord/httd",
+			"revision": "d75bf2fcdc6471df06287d402739f328794fba0d",
+			"revisionTime": "2019-06-22T13:14:25Z"
+		},
+		{
+			"checksumSHA1": "c8SqTINnylWNcTIcsUz7p/NYtq8=",
+			"path": "github.com/andersfylling/disgord/logger",
+			"revision": "d75bf2fcdc6471df06287d402739f328794fba0d",
+			"revisionTime": "2019-06-22T13:14:25Z"
+		},
+		{
+			"checksumSHA1": "JZYNpxZOdObYilik8uVTtGMFUkA=",
+			"path": "github.com/andersfylling/disgord/ratelimit",
+			"revision": "d75bf2fcdc6471df06287d402739f328794fba0d",
+			"revisionTime": "2019-06-22T13:14:25Z"
+		},
+		{
+			"checksumSHA1": "abBPoITNukbYjsT3CvmNO6u2pNw=",
+			"path": "github.com/andersfylling/disgord/websocket",
+			"revision": "d75bf2fcdc6471df06287d402739f328794fba0d",
+			"revisionTime": "2019-06-22T13:14:25Z"
+		},
+		{
+			"checksumSHA1": "84BmRAdKNxmz88FdoOd+eA60DfM=",
+			"path": "github.com/andersfylling/disgord/websocket/cmd",
+			"revision": "d75bf2fcdc6471df06287d402739f328794fba0d",
+			"revisionTime": "2019-06-22T13:14:25Z"
+		},
+		{
+			"checksumSHA1": "C5l+1E1zz7F0PexGjCjq7l1wyzE=",
+			"path": "github.com/andersfylling/disgord/websocket/event",
+			"revision": "d75bf2fcdc6471df06287d402739f328794fba0d",
+			"revisionTime": "2019-06-22T13:14:25Z"
+		},
+		{
+			"checksumSHA1": "HMw+fCwVl8epx45BZxgAOKcCcPo=",
+			"path": "github.com/andersfylling/disgord/websocket/opcode",
+			"revision": "d75bf2fcdc6471df06287d402739f328794fba0d",
+			"revisionTime": "2019-06-22T13:14:25Z"
+		},
+		{
+			"checksumSHA1": "w8CmM436DMfk4j1WW4ezCwjCJjg=",
+			"path": "github.com/andersfylling/snowflake",
+			"revision": "0771ddc6e3cda89f2e64f0b6ea177dc1a1d023c2",
+			"revisionTime": "2019-04-17T12:44:07Z"
+		},
+		{
 			"checksumSHA1": "GCTVJ1J/SGZstNZauuLAnTFOhGA=",
 			"path": "github.com/armon/go-radix",
 			"revision": "1fca145dffbcaa8fe914309b1ec0cfc67500fe61",

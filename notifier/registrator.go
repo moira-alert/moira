@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/senders/discord"
 	"github.com/moira-alert/moira/senders/mail"
 	"github.com/moira-alert/moira/senders/pushover"
 	"github.com/moira-alert/moira/senders/script"
@@ -18,6 +19,7 @@ import (
 const (
 	mailSender        = "mail"
 	pushoverSender    = "pushover"
+	discordSender     = "discord"
 	scriptSender      = "script"
 	slackSender       = "slack"
 	telegramSender    = "telegram"
@@ -34,6 +36,8 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 		switch senderSettings["type"] {
 		case pushoverSender:
 			err = notifier.RegisterSender(senderSettings, &pushover.Sender{})
+		case discordSender:
+			err = notifier.RegisterSender(senderSettings, &discord.Sender{})
 		case slackSender:
 			err = notifier.RegisterSender(senderSettings, &slack.Sender{})
 		case mailSender:

@@ -1,11 +1,13 @@
-package main
+package discord
 
 import (
+	"encoding/base64"
 	"fmt"
+	"net/http"
 	"regexp"
 	"strings"
 
-	"github.com/bwmarrin/discordgo"
+	"github.com/andersfylling/disgord"
 	"github.com/moira-alert/moira"
 )
 
@@ -19,15 +21,18 @@ var (
 
 // SendEvents implements pushover build and send message functionality
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) error {
-	webhookParams := &discordgo.WebhookParams{}
+	webhookParams := &disgord.ExecuteWebhookParams{}
 	webhookParams.Content = sender.buildMessage(events, trigger, throttled)
-	webhookParams.Username = "Moira"
-	sender.logger.Debugf("Calling discord with message %s", webhookParams.Content)
+	if len(plot) > 0 {
+		webhookParams.File = sender.buildPlot(plot)
+	}
 	webhoohURL := contact.Value
 	urlParts := strings.Split(webhoohURL, "/")
-	webhookToken := urlParts[len(urlParts)-1]
-	webhookID := urlParts[len(urlParts)-2]
-	err := sender.session.WebhookExecute(webhookID, webhookToken, false, webhookParams)
+	webhookParams.WebhookID = urlParts[len(urlParts)-2]
+	webhookParams.Token = urlParts[len(urlParts)-1]
+
+	sender.logger.Debugf("Calling discord with message %s", webhookParams.Content)
+	err := sender.client.ExecuteWebhook(webhookParams)
 	if err != nil {
 		return fmt.Errorf("failed to send %s event message to discord webhook %s : %s", trigger.ID, webhookID, err.Error())
 	}
@@ -135,4 +140,10 @@ func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsFo
 	}
 
 	return eventsString
+}
+
+func (sender *Sender) buildPlot(plot []byte) string {
+	contentType := http.DetectContentType(plot)
+	base64img := base64.StdEncoding.EncodeToString(plot)
+	return fmt.Sprintf("data:%s;base64,%s", contentType, base64img)
 }
