@@ -33,8 +33,7 @@ lint: prepare
 	gometalinter ./... --aggregate --vendor --skip mock --disable=errcheck --disable=gocyclo --disable=gosec --deadline=5m
 
 .PHONY: test
-# test: prepare
-test:
+test: prepare
 	echo 'mode: atomic' > coverage.txt && go list ./... | grep -v "/vendor/" | xargs -n1 -I{} sh -c 'go test -v -bench=. -covermode=atomic -coverprofile=coverage.tmp {} && tail -n +2 coverage.tmp >> coverage.txt' && rm coverage.tmp
 
 .PHONY: build
