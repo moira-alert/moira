@@ -336,6 +336,12 @@
 			"revisionTime": "2018-03-02T18:00:52Z"
 		},
 		{
+			"checksumSHA1": "Q0f+9Kw7oXqAPpG/B1uWU+6W4eQ=",
+			"path": "github.com/bwmarrin/discordgo",
+			"revision": "8d8906ce4b959dacabfefbad9bacf11b6ffd8035",
+			"revisionTime": "2019-05-13T17:35:26Z"
+		},
+		{
 			"checksumSHA1": "ZmH0Y8Td1CUGfc6ywB40e2u1Kvc=",
 			"path": "github.com/carlosdp/twiliogo",
 			"revision": "b26045ebb9d15c9296ba59d94687aaf7d2080905",
