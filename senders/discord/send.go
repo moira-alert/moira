@@ -25,6 +25,11 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	data.Content = sender.buildMessage(events, trigger, throttled)
 	if len(plot) > 0 {
 		data.File = sender.buildPlot(plot)
+		data.Embed = &discordgo.MessageEmbed{
+			Image: &discordgo.MessageEmbedImage{
+				URL: "attachment://Plot.jpg",
+			},
+		}
 	}
 	sender.logger.Debugf("Calling discord with message %s", data.Content)
 	_, err := sender.session.ChannelMessageSendComplex(contact.Value, data)
@@ -139,7 +144,7 @@ func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsFo
 
 func (sender *Sender) buildPlot(plot []byte) *discordgo.File {
 	return &discordgo.File{
-		Name:        "Plot",
+		Name:        "Plot.jpg",
 		ContentType: http.DetectContentType(plot),
 		Reader:      bytes.NewReader(plot),
 	}
