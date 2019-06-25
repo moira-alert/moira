@@ -1,6 +1,9 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
+
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/cmd"
 )
@@ -52,7 +55,7 @@ func (config *apiConfig) getSettings() *api.Config {
 	}
 }
 
-func (config *webConfig) getSettings(isRemoteEnabled bool) *api.WebConfig {
+func (config *webConfig) getSettings(isRemoteEnabled bool) ([]byte, error) {
 	webContacts := make([]api.WebContact, 0, len(config.Contacts))
 	for _, configContact := range config.Contacts {
 		contact := api.WebContact{
@@ -64,11 +67,15 @@ func (config *webConfig) getSettings(isRemoteEnabled bool) *api.WebConfig {
 		}
 		webContacts = append(webContacts, contact)
 	}
-	return &api.WebConfig{
+	configContent, err := json.Marshal(api.WebConfig{
 		SupportEmail:  config.SupportEmail,
 		RemoteAllowed: isRemoteEnabled,
 		Contacts:      webContacts,
+	})
+	if err != nil {
+		return make([]byte, 0), fmt.Errorf("failed to parse web config: %s", err.Error())
 	}
+	return configContent, nil
 }
 
 func getDefault() config {
