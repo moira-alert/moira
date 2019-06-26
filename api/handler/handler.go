@@ -21,7 +21,7 @@ const contactKey moiramiddle.ContextKey = "contact"
 const subscriptionKey moiramiddle.ContextKey = "subscription"
 
 // NewHandler creates new api handler request uris based on github.com/go-chi/chi
-func NewHandler(db moira.Database, log moira.Logger, index moira.Searcher, config *api.Config, metricSourceProvider *metricSource.SourceProvider, webConfig []byte) http.Handler {
+func NewHandler(db moira.Database, log moira.Logger, index moira.Searcher, config *api.Config, metricSourceProvider *metricSource.SourceProvider, webConfigContent []byte) http.Handler {
 	database = db
 	searchIndex = index
 	router := chi.NewRouter()
@@ -35,7 +35,7 @@ func NewHandler(db moira.Database, log moira.Logger, index moira.Searcher, confi
 
 	router.Route("/api", func(router chi.Router) {
 		router.Use(moiramiddle.DatabaseContext(database))
-		router.Get("/config", web(webConfig))
+		router.Get("/config", getWebConfig(webConfigContent))
 		router.Route("/user", user)
 		router.Route("/trigger", triggers(metricSourceProvider, searchIndex))
 		router.Route("/tag", tag)
