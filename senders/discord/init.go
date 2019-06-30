@@ -84,6 +84,8 @@ func (sender *Sender) getResponse(s *discordgo.Session, m *discordgo.MessageCrea
 			s.ChannelMessageSend(m.ChannelID, "Unsupported channel type")
 		}
 	}
+
+	return nil
 }
 
 func (sender *Sender) runBot() {
