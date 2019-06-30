@@ -80,7 +80,7 @@ type ProfilerConfig struct {
 	Listen string `yaml:"listen"`
 }
 
-// GraphiteConfig is remote graphite settings structure
+// RemoteConfig is remote graphite settings structure
 type RemoteConfig struct {
 	// graphite url e.g http://graphite/render
 	URL string `yaml:"url"`

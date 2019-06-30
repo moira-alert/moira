@@ -130,8 +130,11 @@ type MetricValue struct {
 }
 
 const (
-	Local      = "local"
-	Graphite   = "graphite"
+	// Local
+	Local = "local"
+	// Graphite
+	Graphite = "graphite"
+	// Prometheus
 	Prometheus = "prometheus"
 )
 

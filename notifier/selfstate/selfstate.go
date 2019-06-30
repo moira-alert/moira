@@ -16,11 +16,10 @@ import (
 var defaultCheckInterval = time.Second * 10
 
 const (
-	redisDisconnectedErrorMessage      = "Redis disconnected"
-	filterStateErrorMessage            = "Moira-Filter does not receive metrics"
-	checkerStateErrorMessage           = "Moira-Checker does not check triggers"
-	graphiteCheckerStateErrorMessage   = "Moira-Graphite-Checker does not check graphite triggers"
-	prometheusCheckerStateErrorMessage = "Moira-Prometheus-Checker does not check prometheus triggers"
+	redisDisconnectedErrorMessage    = "Redis disconnected"
+	filterStateErrorMessage          = "Moira-Filter does not receive metrics"
+	checkerStateErrorMessage         = "Moira-Checker does not check triggers"
+	graphiteCheckerStateErrorMessage = "Moira-Graphite-Checker does not check graphite triggers"
 )
 
 const selfStateLockName = "moira-self-state-monitor"

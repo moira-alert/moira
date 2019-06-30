@@ -35,7 +35,7 @@ func (provider *SourceProvider) GetGraphite() (MetricSource, error) {
 	return returnSource(provider.graphite)
 }
 
-// GetGraphite gets graphite metric source. If it not configured returns not empty error
+// GetPrometheus gets prometheus metric source. If it not configured returns not empty error
 func (provider *SourceProvider) GetPrometheus() (MetricSource, error) {
 	return returnSource(provider.prometheus)
 }
