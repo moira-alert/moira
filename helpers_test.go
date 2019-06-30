@@ -161,27 +161,27 @@ var triggerVal1 = &Trigger{
 	ID:         "trigger-id-1",
 	Name:       "Super Trigger 1",
 	Tags:       []string{"test", "super", "1"},
-	SourceType: Local,
+	SourceType: LocalTrigger,
 }
 
 var triggerVal2 = &Trigger{
 	ID:         "trigger-id-2",
 	Name:       "Super Trigger 2",
 	Tags:       []string{"test", "2"},
-	SourceType: Local,
+	SourceType: LocalTrigger,
 }
 
 var triggerVal3 = &Trigger{
 	ID:         "trigger-id-3",
 	Name:       "Super Trigger 3",
 	Tags:       []string{"super", "3"},
-	SourceType: Local,
+	SourceType: LocalTrigger,
 }
 
 var triggerVal4 = &Trigger{
 	ID:         "trigger-id-4",
 	Name:       "Super Trigger 4",
-	SourceType: Graphite,
+	SourceType: GraphiteTrigger,
 	TTL:        600,
 	Tags:       []string{"4"},
 }

@@ -61,9 +61,9 @@ func (worker *Checker) Start() error {
 
 	if worker.graphiteEnabled {
 		worker.tomb.Go(worker.graphiteChecker)
-		worker.Logger.Info("Graphite checker started")
+		worker.Logger.Info("GraphiteTrigger checker started")
 	} else {
-		worker.Logger.Info("Graphite checker disabled")
+		worker.Logger.Info("GraphiteTrigger checker disabled")
 	}
 
 	worker.Logger.Infof("Start %v parallel local checker(s)", worker.Config.MaxParallelChecks)

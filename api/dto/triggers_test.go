@@ -38,7 +38,7 @@ func TestExpressionModeMultipleTargetsWarnValue(t *testing.T) {
 		ctx = context.WithValue(ctx, middleware.ContextKey("metricSourceProvider"), sourceProvider)
 		request = request.WithContext(ctx)
 
-		desc := "Graphite ClickHouse"
+		desc := "GraphiteTrigger ClickHouse"
 		tags := []string{"Normal", "DevOps", "DevOpsGraphite-duty"}
 		throttling := int64(0)
 		warnValue := float64(10)
@@ -46,12 +46,12 @@ func TestExpressionModeMultipleTargetsWarnValue(t *testing.T) {
 
 		trigger := TriggerModel{
 			ID:             "GraphiteStoragesFreeSpace",
-			Name:           "Graphite storage free space low",
+			Name:           "GraphiteTrigger storage free space low",
 			Desc:           &desc,
 			Tags:           tags,
 			TTLState:       &moira.TTLStateNODATA,
 			TTL:            600,
-			SourceType:     moira.Local,
+			SourceType:     moira.LocalTrigger,
 			MuteNewMetrics: false,
 		}
 

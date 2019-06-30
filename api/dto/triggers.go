@@ -37,7 +37,7 @@ type TriggerModel struct {
 	Name string `json:"name"`
 	// Description string
 	Desc *string `json:"desc,omitempty"`
-	// Graphite-like targets: t1, t2, ...
+	// GraphiteTrigger-like targets: t1, t2, ...
 	Targets []string `json:"targets"`
 	// WARN threshold
 	WarnValue *float64 `json:"warn_value"`
@@ -55,7 +55,7 @@ type TriggerModel struct {
 	Schedule *moira.ScheduleData `json:"sched,omitempty"`
 	// Used if you need more complex logic than provided by WARN/ERROR values
 	Expression string `json:"expression"`
-	// Graphite patterns for trigger
+	// GraphiteTrigger patterns for trigger
 	Patterns []string `json:"patterns"`
 	// If true, first event NODATA → OK will be omitted
 	MuteNewMetrics bool `json:"mute_new_metrics"`

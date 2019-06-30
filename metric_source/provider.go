@@ -48,9 +48,9 @@ func (provider *SourceProvider) GetTriggerMetricSource(trigger *moira.Trigger) (
 // GetMetricSource return metric source depending on trigger flag: is graphite trigger or not. GetLocal if not.
 func (provider *SourceProvider) GetMetricSource(sourceType string) (MetricSource, error) {
 	switch sourceType {
-	case moira.Graphite:
+	case moira.GraphiteTrigger:
 		return provider.GetGraphite()
-	case moira.Prometheus:
+	case moira.PrometheusTrigger:
 		return provider.GetPrometheus()
 	default:
 		return provider.GetLocal()

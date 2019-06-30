@@ -130,12 +130,12 @@ type MetricValue struct {
 }
 
 const (
-	// Local is local trigger type
-	Local = "local"
-	// Graphite is graphite trigger type
-	Graphite = "graphite"
-	// Prometheus is prometheus trigger type
-	Prometheus = "prometheus"
+	// LocalTrigger is local trigger type
+	LocalTrigger = "local"
+	// GraphiteTrigger is graphite trigger type
+	GraphiteTrigger = "graphite"
+	// PrometheusTrigger is prometheus trigger type
+	PrometheusTrigger = "prometheus"
 )
 
 const (

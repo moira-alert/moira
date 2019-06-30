@@ -33,8 +33,8 @@ func TestResolveMetricsWindow(t *testing.T) {
 			{Timestamp: testLaunchTime.Add(-360 * time.Hour).Unix()},
 		},
 	}
-	localTrigger := moira.TriggerData{ID: "redisTrigger", SourceType: moira.Local}
-	graphiteTrigger := moira.TriggerData{ID: "graphiteTrigger", SourceType: moira.Graphite}
+	localTrigger := moira.TriggerData{ID: "redisTrigger", SourceType: moira.LocalTrigger}
+	graphiteTrigger := moira.TriggerData{ID: "graphiteTrigger", SourceType: moira.GraphiteTrigger}
 	timeRange := time.Unix(int64(defaultTimeRange.Seconds()), 0).Unix()
 	timeShift := time.Unix(int64(defaultTimeShift.Seconds()), 0).Unix()
 	var pkg NotificationPackage

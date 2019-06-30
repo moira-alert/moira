@@ -131,7 +131,7 @@ func (connector *DbConnector) RemovePatternTriggerIDs(pattern string) error {
 // If given trigger contains new tags then create it.
 // If given trigger has no subscription on it, add it to triggers-without-subscriptions
 func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigger) error {
-	if trigger.SourceType != moira.Local {
+	if trigger.SourceType != moira.LocalTrigger {
 		trigger.Patterns = make([]string, 0)
 	}
 
@@ -180,9 +180,9 @@ func (connector *DbConnector) updateTrigger(triggerID string, newTrigger *moira.
 		for _, pattern := range moira.GetStringListsDiff(oldTrigger.Patterns, newTrigger.Patterns) {
 			c.Send("SREM", patternTriggersKey(pattern), triggerID)
 		}
-		if oldTrigger.SourceType == moira.Graphite && newTrigger.SourceType != moira.Graphite {
+		if oldTrigger.SourceType == moira.GraphiteTrigger && newTrigger.SourceType != moira.GraphiteTrigger {
 			c.Send("SREM", graphiteTriggersListKey, triggerID)
-		} else if oldTrigger.SourceType == moira.Prometheus && newTrigger.SourceType != moira.Prometheus {
+		} else if oldTrigger.SourceType == moira.PrometheusTrigger && newTrigger.SourceType != moira.PrometheusTrigger {
 			c.Send("SREM", prometheusTriggersListKey, triggerID)
 		}
 
@@ -193,9 +193,9 @@ func (connector *DbConnector) updateTrigger(triggerID string, newTrigger *moira.
 	}
 	c.Send("SET", triggerKey(triggerID), bytes)
 	c.Send("SADD", triggersListKey, triggerID)
-	if newTrigger.SourceType == moira.Graphite {
+	if newTrigger.SourceType == moira.GraphiteTrigger {
 		c.Send("SADD", graphiteTriggersListKey, triggerID)
-	} else if newTrigger.SourceType == moira.Prometheus {
+	} else if newTrigger.SourceType == moira.PrometheusTrigger {
 		c.Send("SADD", prometheusTriggersListKey, triggerID)
 	} else {
 		for _, pattern := range newTrigger.Patterns {

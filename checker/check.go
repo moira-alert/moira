@@ -184,7 +184,7 @@ func (triggerChecker *TriggerChecker) handleCheckResult(checkData moira.CheckDat
 		timeSinceLastSuccessfulCheck := checkData.Timestamp - checkData.LastSuccessfulCheckTimestamp
 		if timeSinceLastSuccessfulCheck >= triggerChecker.ttl {
 			checkData.State = moira.StateEXCEPTION
-			checkData.Message = fmt.Sprintf("Graphite server unavailable. Trigger is not checked for %d seconds", timeSinceLastSuccessfulCheck)
+			checkData.Message = fmt.Sprintf("GraphiteTrigger server unavailable. Trigger is not checked for %d seconds", timeSinceLastSuccessfulCheck)
 		}
 		triggerChecker.logger.Errorf("Trigger %s: %s", triggerChecker.triggerID, checkingError.Error())
 	case local.ErrUnknownFunction, local.ErrEvalExpr:

@@ -278,7 +278,7 @@ func TestGetTriggerMetrics(t *testing.T) {
 	var retention int64 = 10
 
 	Convey("Trigger is remote but remote is not configured", t, func() {
-		dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{ID: triggerID, Targets: []string{pattern}, SourceType: moira.Graphite}, nil)
+		dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{ID: triggerID, Targets: []string{pattern}, SourceType: moira.GraphiteTrigger}, nil)
 		graphiteSource.EXPECT().IsConfigured().Return(false, nil)
 		triggerMetrics, err := GetTriggerMetrics(dataBase, sourceProvider, from, until, triggerID)
 		So(err, ShouldResemble, api.ErrorInternalServer(metricSource.ErrMetricSourceIsNotConfigured))
@@ -286,7 +286,7 @@ func TestGetTriggerMetrics(t *testing.T) {
 	})
 
 	Convey("Trigger is remote but remote has bad config", t, func() {
-		dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{ID: triggerID, Targets: []string{pattern}, SourceType: moira.Graphite}, nil)
+		dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{ID: triggerID, Targets: []string{pattern}, SourceType: moira.GraphiteTrigger}, nil)
 		graphiteSource.EXPECT().IsConfigured().Return(false, remote.ErrRemoteStorageDisabled)
 		triggerMetrics, err := GetTriggerMetrics(dataBase, sourceProvider, from, until, triggerID)
 		So(err, ShouldResemble, api.ErrorInternalServer(remote.ErrRemoteStorageDisabled))
@@ -320,7 +320,7 @@ func TestGetTriggerMetrics(t *testing.T) {
 
 	Convey("Fetch error", t, func() {
 		expectedError := remote.ErrRemoteTriggerResponse{InternalError: fmt.Errorf("some error"), Target: pattern}
-		dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{ID: triggerID, Targets: []string{pattern}, SourceType: moira.Graphite}, nil)
+		dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{ID: triggerID, Targets: []string{pattern}, SourceType: moira.GraphiteTrigger}, nil)
 		graphiteSource.EXPECT().IsConfigured().Return(true, nil)
 		graphiteSource.EXPECT().Fetch(pattern, from, until, false).Return(nil, expectedError)
 		triggerMetrics, err := GetTriggerMetrics(dataBase, sourceProvider, from, until, triggerID)

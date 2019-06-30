@@ -19,7 +19,7 @@ const (
 	redisDisconnectedErrorMessage    = "Redis disconnected"
 	filterStateErrorMessage          = "Moira-Filter does not receive metrics"
 	checkerStateErrorMessage         = "Moira-Checker does not check triggers"
-	graphiteCheckerStateErrorMessage = "Moira-Graphite-Checker does not check graphite triggers"
+	graphiteCheckerStateErrorMessage = "Moira-GraphiteTrigger-Checker does not check graphite triggers"
 )
 
 const selfStateLockName = "moira-self-state-monitor"

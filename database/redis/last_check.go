@@ -56,9 +56,9 @@ func (connector *DbConnector) getSelfStateCheckCountKey(sourceType string) strin
 		return ""
 	}
 	switch sourceType {
-	case moira.Graphite:
+	case moira.GraphiteTrigger:
 		return selfStateGraphiteChecksCounterKey
-	case moira.Prometheus:
+	case moira.PrometheusTrigger:
 		return selfStatePrometheusChecksCounterKey
 	default:
 		return selfStateChecksCounterKey
