@@ -38,9 +38,11 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 	sender.location = location
 
 	handleMsg := func(s *discordgo.Session, m *discordgo.MessageCreate) {
-		if err := sender.getResponse(s, m); err != nil {
+		msg, err := sender.getResponse(s, m)
+		if err != nil {
 			sender.logger.Errorf("failed to handle incoming message: %s", err)
 		}
+		s.ChannelMessageSend(m.ChannelID, msg)
 	}
 	sender.session.AddHandler(handleMsg)
 
@@ -48,42 +50,40 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 	return nil
 }
 
-func (sender *Sender) getResponse(s *discordgo.Session, m *discordgo.MessageCreate) error {
+func (sender *Sender) getResponse(s *discordgo.Session, m *discordgo.MessageCreate) (string, error) {
 
 	// Ignore all messages created by the bot itself
 	if m.Author.ID == s.State.User.ID {
-		return nil
+		return "", nil
 	}
+
 	// If the message is "!start" update the channel ID for the user/channel
 	if m.Content == "!start" {
 		channel, err := s.Channel(m.ChannelID)
 		if err != nil {
-			return fmt.Errorf("error while getting the channel details: %s", err)
+			return "", fmt.Errorf("error while getting the channel details: %s", err)
 		}
 		switch channel.Type {
 		case discordgo.ChannelTypeDM:
 			err := sender.DataBase.SetUsernameID(messenger, "@"+m.Author.Username, channel.ID)
 			if err != nil {
-				return fmt.Errorf("error while setting the channel ID for user: %s", err)
+				return "", fmt.Errorf("error while setting the channel ID for user: %s", err)
 			}
 			msg := fmt.Sprintf("Okay, %s, your id is %s", m.Author.Username, channel.ID)
-			s.ChannelMessageSend(m.ChannelID, msg)
+			return msg, nil
 		case discordgo.ChannelTypeGuildText:
-			uuid, _ := sender.DataBase.GetIDByUsername(messenger, channel.Name)
 			err := sender.DataBase.SetUsernameID(messenger, channel.Name, channel.ID)
 			if err != nil {
-				return fmt.Errorf("error while setting the channel ID for text channel: %s", err)
+				return "", fmt.Errorf("error while setting the channel ID for text channel: %s", err)
 			}
-			if uuid == "" {
-				msg := fmt.Sprintf("Hi, all!\nI will send alerts in this group (%s).", channel.Name)
-				s.ChannelMessageSend(m.ChannelID, msg)
-			}
+			msg := fmt.Sprintf("Hi, all!\nI will send alerts in this group (%s).", channel.Name)
+			return msg, nil
 		default:
-			s.ChannelMessageSend(m.ChannelID, "Unsupported channel type")
+			return "Unsupported channel type", nil
 		}
 	}
 
-	return nil
+	return "", nil
 }
 
 func (sender *Sender) runBot() {
