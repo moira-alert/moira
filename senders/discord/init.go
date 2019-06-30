@@ -68,7 +68,6 @@ func (sender *Sender) getResponse(s *discordgo.Session, m *discordgo.MessageCrea
 			}
 			msg := fmt.Sprintf("Okay, %s, your id is %s", m.Author.Username, channel.ID)
 			s.ChannelMessageSend(m.ChannelID, msg)
-			break
 		case discordgo.ChannelTypeGuildText:
 			uuid, _ := sender.DataBase.GetIDByUsername(messenger, channel.Name)
 			err := sender.DataBase.SetUsernameID(messenger, channel.Name, channel.ID)
@@ -79,7 +78,6 @@ func (sender *Sender) getResponse(s *discordgo.Session, m *discordgo.MessageCrea
 				msg := fmt.Sprintf("Hi, all!\nI will send alerts in this group (%s).", channel.Name)
 				s.ChannelMessageSend(m.ChannelID, msg)
 			}
-			break
 		default:
 			s.ChannelMessageSend(m.ChannelID, "Unsupported channel type")
 		}
@@ -94,7 +92,7 @@ func (sender *Sender) runBot() {
 		sender.logger.Errorf("error creating a connection to discord: %s", err)
 	}
 	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
+	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	<-stop
 	defer sender.session.Close()
 }
