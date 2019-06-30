@@ -32,11 +32,23 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 		}
 	}
 	sender.logger.Debugf("Calling discord with message %s", data.Content)
-	_, err := sender.session.ChannelMessageSendComplex(contact.Value, data)
+	channelID, err := sender.getChannelID(contact.Value)
+	if err != nil {
+		return fmt.Errorf("failed to get the channel ID: %s", err)
+	}
+	_, err = sender.session.ChannelMessageSendComplex(channelID, data)
 	if err != nil {
 		return fmt.Errorf("failed to send %s event message to discord bot : %s", trigger.ID, err.Error())
 	}
 	return nil
+}
+
+func (sender *Sender) getChannelID(username string) (string, error) {
+	chid, err := sender.DataBase.GetIDByUsername(messenger, username)
+	if err != nil {
+		return "", fmt.Errorf("failed to get channel ID: %s", err.Error())
+	}
+	return chid, nil
 }
 
 func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {

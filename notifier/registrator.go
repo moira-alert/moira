@@ -37,7 +37,7 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 		case pushoverSender:
 			err = notifier.RegisterSender(senderSettings, &pushover.Sender{})
 		case discordSender:
-			err = notifier.RegisterSender(senderSettings, &discord.Sender{})
+			err = notifier.RegisterSender(senderSettings, &discord.Sender{DataBase: connector})
 		case slackSender:
 			err = notifier.RegisterSender(senderSettings, &slack.Sender{})
 		case mailSender:
