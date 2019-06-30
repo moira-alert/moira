@@ -91,8 +91,8 @@ func (sender *Sender) runBot() {
 	if err != nil {
 		sender.logger.Errorf("error creating a connection to discord: %s", err)
 	}
+	defer sender.session.Close()
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	<-stop
-	defer sender.session.Close()
 }
