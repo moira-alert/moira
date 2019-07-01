@@ -122,6 +122,7 @@ func (config *notifierConfig) getSettings(logger moira.Logger) notifier.Config {
 		FrontURL:         config.FrontURI,
 		Location:         location,
 		DateTimeFormat:   format,
+		ImageStore:       config.ImageStore,
 	}
 }
 

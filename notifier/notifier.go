@@ -79,7 +79,7 @@ type StandardNotifier struct {
 	config               Config
 	metrics              *graphite.NotifierMetrics
 	metricSourceProvider *metricSource.SourceProvider
-	imageStore           moira.ImageStore
+	imageStore           *moira.ImageStore
 }
 
 // NewNotifier is initializer for StandardNotifier
@@ -160,7 +160,7 @@ func (notifier *StandardNotifier) run(sender moira.Sender, ch chan NotificationP
 				notifier.logger.Errorf(buildErr)
 			}
 		}
-		err = sender.SendEvents(pkg.Events, pkg.Contact, pkg.Trigger, plot, pkg.Throttled, notifier.imageStore)
+		err = sender.SendEvents(pkg.Events, pkg.Contact, pkg.Trigger, plot, pkg.Throttled)
 		if err == nil {
 			if metric, found := notifier.metrics.SendersOkMetrics.GetMetric(pkg.Contact.Type); found {
 				metric.Mark(1)
