@@ -96,34 +96,26 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 	eventsString := sender.buildEventsString(events, -1, throttled)
 	eventsStringLen := len([]rune(eventsString))
 
-	if titleLen+descLen+eventsStringLen <= messageMaxCharacters {
-		message.WriteString(title)
-		message.WriteString(desc)
-		message.WriteString(eventsString)
-		return message.String()
-	}
-
 	charsLeftAfterTitle := messageMaxCharacters - titleLen
-	if descLen > charsLeftAfterTitle/2 && eventsStringLen > charsLeftAfterTitle/2 {
-		// Trim both desc and events string to half the charsLeftAfter title
-		desc = desc[:charsLeftAfterTitle/2-10] + "...\n"
-		eventsString = sender.buildEventsString(events, charsLeftAfterTitle/2, throttled)
 
-	} else if descLen > charsLeftAfterTitle/2 {
-		// Trim the desc to the chars left after using the whole events string
-		charsForDesc := charsLeftAfterTitle - eventsStringLen
-		desc = desc[:charsForDesc-10] + "...\n"
+	if !(titleLen+descLen+eventsStringLen <= messageMaxCharacters) {
+		if descLen > charsLeftAfterTitle/2 && eventsStringLen <= charsLeftAfterTitle/2 {
+			// Trim the desc to the chars left after using the whole events string
+			charsForDesc := charsLeftAfterTitle - eventsStringLen
+			desc = desc[:charsForDesc-10] + "...\n"
 
-	} else if eventsStringLen > charsLeftAfterTitle/2 {
-		// Trim the events string to the chars left after using the whole desc
-		charsForEvents := charsLeftAfterTitle - descLen
-		eventsString = sender.buildEventsString(events, charsForEvents, throttled)
+		} else if eventsStringLen > charsLeftAfterTitle/2 && descLen <= charsLeftAfterTitle/2 {
+			// Trim the events string to the chars left after using the whole desc
+			charsForEvents := charsLeftAfterTitle - descLen
+			eventsString = sender.buildEventsString(events, charsForEvents, throttled)
 
-	} else {
-		desc = desc[:charsLeftAfterTitle/2-10] + "...\n"
-		eventsString = sender.buildEventsString(events, charsLeftAfterTitle/2, throttled)
+		} else {
+			desc = desc[:charsLeftAfterTitle/2-10] + "...\n"
+			eventsString = sender.buildEventsString(events, charsLeftAfterTitle/2, throttled)
 
+		}
 	}
+
 	message.WriteString(title)
 	message.WriteString(desc)
 	message.WriteString(eventsString)

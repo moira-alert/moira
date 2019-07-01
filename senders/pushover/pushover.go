@@ -85,36 +85,25 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, throttled bo
 	eventsString := sender.buildEventsString(events, -1, throttled)
 	eventsStringLen := len([]rune(eventsString))
 
-	if htmlDescLen+eventsStringLen <= msgLimit {
-		// Use both completely
-		message.WriteString(htmlDesc)
-		message.WriteString(eventsString)
-		return message.String()
-	}
+	if !(htmlDescLen+eventsStringLen <= msgLimit) {
+		if htmlDescLen > msgLimit/2 && eventsStringLen <= msgLimit/2 {
+			// Trim the desc to the chars left after using the whole events string
+			charsForDesc := msgLimit - eventsStringLen
+			desc = desc[:charsForDesc-charsForHTMLTags-10] + "...\n"
+			htmlDesc = string(blackfriday.Run([]byte(desc)))
 
-	if htmlDescLen > msgLimit/2 && eventsStringLen > msgLimit/2 {
-		// Trim both desc and events to half the message size each
-		desc = desc[:msgLimit/2-charsForHTMLTags-10] + "...\n"
-		htmlDesc = string(blackfriday.Run([]byte(desc)))
-		eventsString = sender.buildEventsString(events, msgLimit/2, throttled)
+		} else if eventsStringLen > msgLimit/2 && htmlDescLen <= msgLimit/2 {
+			// Trim the events string to the chars left after using the whole desc
+			charsForEvents := msgLimit - htmlDescLen
+			eventsString = sender.buildEventsString(events, charsForEvents, throttled)
 
-	} else if htmlDescLen > msgLimit/2 {
-		// Trim the desc to the chars left after using the whole events string
-		charsForDesc := msgLimit - eventsStringLen
-		desc = desc[:charsForDesc-charsForHTMLTags-10] + "...\n"
-		htmlDesc = string(blackfriday.Run([]byte(desc)))
+		} else {
+			// Trim both desc and events to half the message size each
+			desc = desc[:msgLimit/2-charsForHTMLTags-10] + "...\n"
+			htmlDesc = string(blackfriday.Run([]byte(desc)))
+			eventsString = sender.buildEventsString(events, msgLimit/2, throttled)
 
-	} else if eventsStringLen > msgLimit/2 {
-		// Trim the events string to the chars left after using the whole desc
-		charsForEvents := msgLimit - htmlDescLen
-		eventsString = sender.buildEventsString(events, charsForEvents, throttled)
-
-	} else {
-		// Trim both desc and events to half the message size each
-		desc = desc[:msgLimit/2-charsForHTMLTags-10] + "...\n"
-		htmlDesc = string(blackfriday.Run([]byte(desc)))
-		eventsString = sender.buildEventsString(events, msgLimit/2, throttled)
-
+		}
 	}
 
 	message.WriteString(htmlDesc)
