@@ -70,34 +70,31 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 	eventsString := sender.buildEventsString(events, -1, throttled, trigger)
 	eventsStringLen := len([]rune(eventsString))
 
-	if titleLen+descLen+eventsStringLen <= messageMaxCharacters {
-		buffer.WriteString(title)
-		buffer.WriteString(desc)
-		buffer.WriteString(eventsString)
-		return buffer.String()
-	}
-
 	charsLeftAfterTitle := messageMaxCharacters - titleLen
-	if descLen > charsLeftAfterTitle/2 && eventsStringLen > charsLeftAfterTitle/2 {
-		// Trim both desc and events string to half the charsLeftAfter title
-		desc = desc[:charsLeftAfterTitle/2-10] + "...\n"
-		eventsString = sender.buildEventsString(events, charsLeftAfterTitle/2, throttled, trigger)
 
-	} else if descLen > charsLeftAfterTitle/2 {
-		// Trim the desc to the chars left after using the whole events string
-		charsForDesc := charsLeftAfterTitle - eventsStringLen
-		desc = desc[:charsForDesc-10] + "...\n"
+	if !(titleLen+descLen+eventsStringLen <= messageMaxCharacters) {
+		if descLen > charsLeftAfterTitle/2 && eventsStringLen > charsLeftAfterTitle/2 {
+			// Trim both desc and events string to half the charsLeftAfter title
+			desc = desc[:charsLeftAfterTitle/2-10] + "...\n"
+			eventsString = sender.buildEventsString(events, charsLeftAfterTitle/2, throttled, trigger)
 
-	} else if eventsStringLen > charsLeftAfterTitle/2 {
-		// Trim the events string to the chars left after using the whole desc
-		charsForEvents := charsLeftAfterTitle - descLen
-		eventsString = sender.buildEventsString(events, charsForEvents, throttled, trigger)
+		} else if descLen > charsLeftAfterTitle/2 {
+			// Trim the desc to the chars left after using the whole events string
+			charsForDesc := charsLeftAfterTitle - eventsStringLen
+			desc = desc[:charsForDesc-10] + "...\n"
 
-	} else {
-		desc = desc[:charsLeftAfterTitle/2-10] + "...\n"
-		eventsString = sender.buildEventsString(events, charsLeftAfterTitle/2, throttled, trigger)
+		} else if eventsStringLen > charsLeftAfterTitle/2 {
+			// Trim the events string to the chars left after using the whole desc
+			charsForEvents := charsLeftAfterTitle - descLen
+			eventsString = sender.buildEventsString(events, charsForEvents, throttled, trigger)
 
+		} else {
+			desc = desc[:charsLeftAfterTitle/2-10] + "...\n"
+			eventsString = sender.buildEventsString(events, charsLeftAfterTitle/2, throttled, trigger)
+
+		}
 	}
+
 	buffer.WriteString(title)
 	buffer.WriteString(desc)
 	buffer.WriteString(eventsString)
