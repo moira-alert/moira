@@ -2,16 +2,19 @@ package discord
 
 import (
 	"fmt"
-	"os"
-	"os/signal"
-	"syscall"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/worker"
 )
 
-const messenger = "discord"
+const (
+	messenger       = "discord"
+	discordLockName = "moira-discord-users:moira-bot-host"
+	discordLockTTL  = 30 * time.Second
+	workerName      = "DiscordBot"
+)
 
 // Sender implements moira sender interface for discord
 type Sender struct {
@@ -87,12 +90,20 @@ func (sender *Sender) getResponse(s *discordgo.Session, m *discordgo.MessageCrea
 }
 
 func (sender *Sender) runBot() {
-	err := sender.session.Open()
-	if err != nil {
-		sender.logger.Errorf("error creating a connection to discord: %s", err)
+	workerAction := func(stop <-chan struct{}) error {
+		err := sender.session.Open()
+		if err != nil {
+			sender.logger.Errorf("error creating a connection to discord: %s", err)
+		}
+		defer sender.session.Close()
+		<-stop
+		return nil
 	}
-	defer sender.session.Close()
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
-	<-stop
+
+	worker.NewWorker(
+		workerName,
+		sender.logger,
+		sender.DataBase.NewLock(discordLockName, discordLockTTL),
+		workerAction,
+	).Run(nil)
 }
