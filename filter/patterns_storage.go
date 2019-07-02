@@ -46,7 +46,7 @@ func (storage *PatternStorage) Refresh() error {
 		}
 	}
 
-	storage.PatternIndex.Store(NewPatternIndex(patterns))
+	storage.PatternIndex.Store(NewPatternIndex(storage.logger, patterns))
 	storage.SeriesByTagPatternIndex.Store(NewSeriesByTagPatternIndex(seriesByTagPatterns))
 	return nil
 }
