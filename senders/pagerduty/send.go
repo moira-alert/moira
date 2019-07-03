@@ -68,7 +68,11 @@ func (sender *Sender) buildEvent(events moira.NotificationEvents, contact moira.
 		if err != nil {
 			sender.logger.Warningf("could not store the plot image in the image store: %s", err)
 		} else {
-			event.Images = append(event.Images, imageLink)
+			imageDetails := map[string]string{
+				"src": imageLink,
+				"alt": "Plot",
+			}
+			event.Images = append(event.Images, imageDetails)
 		}
 	}
 

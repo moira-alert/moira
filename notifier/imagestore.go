@@ -16,10 +16,11 @@ func (notifier *StandardNotifier) InitImageStore(imageStoreSettings map[string]s
 	case s3ImageStore:
 		notifier.imageStore = &s3.ImageStore{}
 	default:
-		return fmt.Error("unsupported image store type")
+		return fmt.Errorf("unsupported image store type")
 	}
 	if err := notifier.imageStore.Init(imageStoreSettings); err != nil {
 		return fmt.Errorf("error while initializing image store: %s", err)
 	}
+	notifier.logger.Infof("Image store %s initialized", imageStoreSettings["type"])
 	return nil
 }

@@ -79,7 +79,7 @@ type StandardNotifier struct {
 	config               Config
 	metrics              *graphite.NotifierMetrics
 	metricSourceProvider *metricSource.SourceProvider
-	imageStore           *moira.ImageStore
+	imageStore           moira.ImageStore
 }
 
 // NewNotifier is initializer for StandardNotifier
