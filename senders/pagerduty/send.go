@@ -22,9 +22,6 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 }
 
 func (sender *Sender) buildEvent(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) pagerduty.V2Event {
-	if len(plot) > 0 {
-		// attach image to the event
-	}
 	summary := sender.buildSummary(events, trigger, throttled)
 	details := make(map[string]interface{})
 
@@ -65,6 +62,16 @@ func (sender *Sender) buildEvent(events moira.NotificationEvents, contact moira.
 		Action:     "trigger",
 		Payload:    payload,
 	}
+
+	if len(plot) > 0 {
+		imageLink, err := sender.ImageStore.StoreImage(plot)
+		if err != nil {
+			sender.logger.Warningf("could not store the plot image in the image store: %s", err)
+		} else {
+			event.Images = append(event.Images, imageLink)
+		}
+	}
+
 	return event
 }
 
