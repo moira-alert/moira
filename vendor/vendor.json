@@ -162,6 +162,12 @@
 			"revisionTime": "2019-07-02T19:20:17Z"
 		},
 		{
+			"checksumSHA1": "nNCk24/tjgUHLZtXCLM0iT0qvLE=",
+			"path": "github.com/aws/aws-sdk-go/internal/ini",
+			"revision": "e1b61fed9fc039afdef1a3ef6720e0d9b628ab84",
+			"revisionTime": "2019-07-02T19:20:17Z"
+		},
+		{
 			"checksumSHA1": "wQAjd7LQKw3iN/AZWJQXDakG7Lk=",
 			"path": "github.com/aws/aws-sdk-go/service/s3/s3manager",
 			"revision": "e1b61fed9fc039afdef1a3ef6720e0d9b628ab84",
