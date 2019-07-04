@@ -37,6 +37,7 @@ func (m *MockNotifier) EXPECT() *MockNotifierMockRecorder {
 
 // GetSenders mocks base method
 func (m *MockNotifier) GetSenders() map[string]bool {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetSenders")
 	ret0, _ := ret[0].(map[string]bool)
 	return ret0
@@ -44,11 +45,27 @@ func (m *MockNotifier) GetSenders() map[string]bool {
 
 // GetSenders indicates an expected call of GetSenders
 func (mr *MockNotifierMockRecorder) GetSenders() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSenders", reflect.TypeOf((*MockNotifier)(nil).GetSenders))
+}
+
+// InitImageStore mocks base method
+func (m *MockNotifier) InitImageStore(arg0 map[string]string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InitImageStore", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// InitImageStore indicates an expected call of InitImageStore
+func (mr *MockNotifierMockRecorder) InitImageStore(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitImageStore", reflect.TypeOf((*MockNotifier)(nil).InitImageStore), arg0)
 }
 
 // RegisterSender mocks base method
 func (m *MockNotifier) RegisterSender(arg0 map[string]string, arg1 moira.Sender) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RegisterSender", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -56,25 +73,30 @@ func (m *MockNotifier) RegisterSender(arg0 map[string]string, arg1 moira.Sender)
 
 // RegisterSender indicates an expected call of RegisterSender
 func (mr *MockNotifierMockRecorder) RegisterSender(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterSender", reflect.TypeOf((*MockNotifier)(nil).RegisterSender), arg0, arg1)
 }
 
 // Send mocks base method
 func (m *MockNotifier) Send(arg0 *notifier.NotificationPackage, arg1 *sync.WaitGroup) {
+	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "Send", arg0, arg1)
 }
 
 // Send indicates an expected call of Send
 func (mr *MockNotifierMockRecorder) Send(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Send", reflect.TypeOf((*MockNotifier)(nil).Send), arg0, arg1)
 }
 
 // StopSenders mocks base method
 func (m *MockNotifier) StopSenders() {
+	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "StopSenders")
 }
 
 // StopSenders indicates an expected call of StopSenders
 func (mr *MockNotifierMockRecorder) StopSenders() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StopSenders", reflect.TypeOf((*MockNotifier)(nil).StopSenders))
 }
