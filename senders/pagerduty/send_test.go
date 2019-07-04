@@ -10,11 +10,11 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-type ImageStoreStub struct {
+type MockImageStore struct {
 	moira.ImageStore
 }
 
-func (imageStore *ImageStoreStub) StoreImage(image []byte) (string, error) { return "test", nil }
+func (imageStore *MockImageStore) StoreImage(image []byte) (string, error) { return "test", nil }
 
 func TestBuildEvent(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
@@ -69,7 +69,7 @@ func TestBuildEvent(t *testing.T) {
 		})
 
 		Convey("Build pagerduty event with one moira event and plot", func() {
-			sender.ImageStore = &ImageStoreStub{}
+			sender.ImageStore = &MockImageStore{}
 			actual := sender.buildEvent(moira.NotificationEvents{event}, contact, trigger, []byte("test"), false)
 			expected := baseExpected
 			details := map[string]interface{}{
