@@ -5,25 +5,35 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
-
-	"github.com/moira-alert/moira/mock/moira-alert"
+	"github.com/moira-alert/moira"
 
 	"github.com/moira-alert/moira/logging/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+type MockDB struct {
+	moira.Database
+}
+type MockLock struct {
+	moira.Lock
+}
+
+func (lock *MockLock) Acquire(stop <-chan struct{}) (lost <-chan struct{}, error error) {
+	return lost, nil
+}
+func (db *MockDB) NewLock(name string, ttl time.Duration) moira.Lock {
+	return &MockLock{}
+}
+
 func TestInit(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test")
 	location, _ := time.LoadLocation("UTC")
 	Convey("Init tests", t, func() {
-		ctrl := gomock.NewController(t)
-		sender := Sender{DataBase: mock_moira_alert.NewMockDatabase(ctrl)}
-
+		sender := Sender{DataBase: &MockDB{}}
 		Convey("Empty map", func() {
 			err := sender.Init(map[string]string{}, logger, nil, "")
 			So(err, ShouldResemble, fmt.Errorf("cannot read the discord token from the config"))
-			So(sender, ShouldResemble, Sender{DataBase: mock_moira_alert.NewMockDatabase(ctrl)})
+			So(sender, ShouldResemble, Sender{DataBase: &MockDB{}})
 		})
 
 		Convey("Has settings", func() {
