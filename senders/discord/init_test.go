@@ -5,6 +5,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/mock/gomock"
+
+	"github.com/moira-alert/moira/mock/moira-alert"
+
 	"github.com/moira-alert/moira/logging/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -13,11 +17,13 @@ func TestInit(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test")
 	location, _ := time.LoadLocation("UTC")
 	Convey("Init tests", t, func() {
-		sender := Sender{}
+		ctrl := gomock.NewController(t)
+		sender := Sender{DataBase: mock_moira_alert.NewMockDatabase(ctrl)}
+
 		Convey("Empty map", func() {
 			err := sender.Init(map[string]string{}, logger, nil, "")
 			So(err, ShouldResemble, fmt.Errorf("cannot read the discord token from the config"))
-			So(sender, ShouldResemble, Sender{})
+			So(sender, ShouldResemble, Sender{DataBase: mock_moira_alert.NewMockDatabase(ctrl)})
 		})
 
 		Convey("Has settings", func() {
