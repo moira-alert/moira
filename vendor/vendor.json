@@ -1216,6 +1216,12 @@
 			"revisionTime": "2018-08-20T18:00:26Z"
 		},
 		{
+			"checksumSHA1": "mzHHuQ3dAV6lswBuYyF3oKok7aw=",
+			"path": "github.com/writeas/go-strip-markdown",
+			"revision": "5f8ba69e46917bcbf78b212886edbd4825d2bddd",
+			"revisionTime": "2019-01-14T17:09:43Z"
+		},
+		{
 			"checksumSHA1": "VrTiQbtu3FoRCY9h3HwjvtGVksw=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/go.uber.org/atomic",
 			"path": "go.uber.org/atomic",
