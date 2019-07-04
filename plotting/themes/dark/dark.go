@@ -1,10 +1,9 @@
 package dark
 
 import (
+	"github.com/beevee/go-chart"
+	"github.com/beevee/go-chart/drawing"
 	"github.com/golang/freetype/truetype"
-
-	"github.com/wcharczuk/go-chart"
-	"github.com/wcharczuk/go-chart/drawing"
 )
 
 // PlotTheme implements moira.PlotTheme interface

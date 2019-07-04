@@ -4,7 +4,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
@@ -70,11 +69,6 @@ func main() {
 	}
 	logger.Infof("Moira API stopped. Version: %s", MoiraVersion)
 
-	configFile, err := getWebConfigBytes(config.API.WebConfigPath)
-	if err != nil {
-		logger.Warningf("Failed to read web config file by path '%s', method 'api/config' will be return 404, error: %s'", config.API.WebConfigPath, err.Error())
-	}
-
 	if config.Pprof.Listen != "" {
 		logger.Infof("Starting pprof server at: [%s]", config.Pprof.Listen)
 		cmd.StartProfiling(logger, config.Pprof)
@@ -117,7 +111,12 @@ func main() {
 	remoteSource := remote.Create(remoteConfig)
 	metricSourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource)
 
-	httpHandler := handler.NewHandler(database, logger, searchIndex, apiConfig, metricSourceProvider, configFile)
+	webConfigContent, err := config.Web.getSettings(remoteConfig.Enabled)
+	if err != nil {
+		logger.Fatal(err)
+	}
+
+	httpHandler := handler.NewHandler(database, logger, searchIndex, apiConfig, metricSourceProvider, webConfigContent)
 	server := &http.Server{
 		Handler: httpHandler,
 	}
@@ -132,15 +131,6 @@ func main() {
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 	logger.Info(fmt.Sprint(<-ch))
 	logger.Infof("Moira API shutting down.")
-}
-
-func getWebConfigBytes(path string) ([]byte, error) {
-	webConfigFile, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer webConfigFile.Close()
-	return ioutil.ReadAll(webConfigFile)
 }
 
 // Stop Moira API HTTP server

@@ -23,17 +23,19 @@ type PatternNode struct {
 
 // PatternIndex helps to index patterns and allows to match them by metric
 type PatternIndex struct {
-	Root *PatternNode
+	Root   *PatternNode
+	Logger moira.Logger
 }
 
 // NewPatternIndex creates new PatternIndex using patterns
-func NewPatternIndex(patterns []string) *PatternIndex {
+func NewPatternIndex(logger moira.Logger, patterns []string) *PatternIndex {
 	root := &PatternNode{}
 
 	for _, pattern := range patterns {
 		currentNode := root
 		parts := strings.Split(pattern, ".")
 		if hasEmptyParts(parts) {
+			logger.Warningf("Pattern %s is ignored because it contains an empty part", pattern)
 			continue
 		}
 		for _, part := range parts {
@@ -76,7 +78,7 @@ func NewPatternIndex(patterns []string) *PatternIndex {
 		}
 	}
 
-	return &PatternIndex{Root: root}
+	return &PatternIndex{Logger: logger, Root: root}
 }
 
 // MatchPatterns allows to match pattern by metric
@@ -88,6 +90,7 @@ func (source *PatternIndex) MatchPatterns(metric string) []string {
 			part := metric[index:i]
 
 			if len(part) == 0 {
+				source.Logger.Warningf("Metric %s is ignored, because it contains empty parts", metric)
 				return []string{}
 			}
 

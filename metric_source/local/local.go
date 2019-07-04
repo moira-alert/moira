@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-graphite/carbonapi/expr"
 	"github.com/go-graphite/carbonapi/expr/functions"
+	"github.com/go-graphite/carbonapi/expr/rewrite"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
 	"github.com/moira-alert/moira"
@@ -20,6 +21,7 @@ type Local struct {
 // Create configures local metric source
 func Create(dataBase moira.Database) metricSource.MetricSource {
 	// configure carbon-api functions
+	rewrite.New(make(map[string]string))
 	functions.New(make(map[string]string))
 
 	return &Local{

@@ -1,9 +1,13 @@
-FROM golang:1.12.5 as builder
+FROM golang:1.12.6 as builder
 
-WORKDIR /go/src/github.com/moira-alert/moira
-COPY . /go/src/github.com/moira-alert/moira/
 RUN go get github.com/kardianos/govendor
+
+COPY ./vendor/vendor.json /go/src/github.com/moira-alert/moira/vendor/vendor.json
+WORKDIR /go/src/github.com/moira-alert/moira
 RUN govendor sync
+
+COPY . /go/src/github.com/moira-alert/moira/
+
 ARG GO_VERSION="GoVersion"
 ARG GIT_COMMIT="git_Commit"
 ARG MoiraVersion="MoiraVersion"
@@ -16,7 +20,6 @@ FROM alpine
 RUN apk add --no-cache ca-certificates && update-ca-certificates
 
 COPY pkg/api/api.yml /etc/moira/api.yml
-COPY pkg/api/web.json /etc/moira/web.json
 
 COPY --from=builder /go/src/github.com/moira-alert/moira/build/api /usr/bin/api
 COPY --from=builder /usr/local/go/lib/time/zoneinfo.zip /usr/local/go/lib/time/
