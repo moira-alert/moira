@@ -97,16 +97,3 @@ func (sender *Sender) buildSummary(events moira.NotificationEvents, trigger moir
 	}
 	return summary.String()
 }
-
-// func (sender *Sender) sendPlot(plot []byte, channelID, threadTimestamp, triggerID string) error {
-// 	reader := bytes.NewReader(plot)
-// 	uploadParameters := slack.FileUploadParameters{
-// 		Channels:        []string{channelID},
-// 		ThreadTimestamp: threadTimestamp,
-// 		Reader:          reader,
-// 		Filetype:        "png",
-// 		Filename:        fmt.Sprintf("%s.png", triggerID),
-// 	}
-// 	_, err := sender.client.UploadFile(uploadParameters)
-// 	return err
-// }
