@@ -10,6 +10,12 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+type ImageStoreStub struct {
+	moira.ImageStore
+}
+
+func (imageStore *ImageStoreStub) StoreImage(image []byte) (string, error) { return "test", nil }
+
 func TestBuildEvent(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
 	sender := Sender{location: location, frontURI: "http://moira.url"}
@@ -45,7 +51,7 @@ func TestBuildEvent(t *testing.T) {
 				Source:   "moira",
 				Details: map[string]interface{}{
 					"Trigger URI": "http://moira.url/trigger/TriggerID",
-					"Description": "**bold text** _italics_ `code` regular",
+					"Description": "bold text italics code regular",
 				},
 			},
 		}
@@ -56,9 +62,28 @@ func TestBuildEvent(t *testing.T) {
 			details := map[string]interface{}{
 				"Events":      "\n02:40: Metric name = 97.4458331200185 (OK to NODATA)",
 				"Trigger URI": "http://moira.url/trigger/TriggerID",
-				"Description": "**bold text** _italics_ `code` regular",
+				"Description": "bold text italics code regular",
 			}
 			expected.Payload.Details = details
+			So(actual, ShouldResemble, expected)
+		})
+
+		Convey("Build pagerduty event with one moira event and plot", func() {
+			sender.ImageStore = &ImageStoreStub{}
+			actual := sender.buildEvent(moira.NotificationEvents{event}, contact, trigger, []byte("test"), false)
+			expected := baseExpected
+			details := map[string]interface{}{
+				"Events":      "\n02:40: Metric name = 97.4458331200185 (OK to NODATA)",
+				"Trigger URI": "http://moira.url/trigger/TriggerID",
+				"Description": "bold text italics code regular",
+			}
+			expected.Payload.Details = details
+			expected.Images = []interface{}{
+				map[string]string{
+					"src": "test",
+					"alt": "Plot",
+				},
+			}
 			So(actual, ShouldResemble, expected)
 		})
 
@@ -69,7 +94,7 @@ func TestBuildEvent(t *testing.T) {
 				"Events":      "\n02:40: Metric name = 97.4458331200185 (OK to NODATA)",
 				"Throttled":   "Please, fix your system or tune this trigger to generate less events.",
 				"Trigger URI": "http://moira.url/trigger/TriggerID",
-				"Description": "**bold text** _italics_ `code` regular",
+				"Description": "bold text italics code regular",
 			}
 			expected.Payload.Details = details
 			So(actual, ShouldResemble, expected)
@@ -96,7 +121,7 @@ func TestBuildEvent(t *testing.T) {
 02:40: Metric name = 97.4458331200185 (OK to NODATA)`,
 				"Throttled":   "Please, fix your system or tune this trigger to generate less events.",
 				"Trigger URI": "http://moira.url/trigger/TriggerID",
-				"Description": "**bold text** _italics_ `code` regular",
+				"Description": "bold text italics code regular",
 			}
 			expected.Payload.Details = details
 			So(actual, ShouldResemble, expected)

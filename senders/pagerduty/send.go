@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"fmt"
 
+	"github.com/writeas/go-strip-markdown"
+
 	"github.com/PagerDuty/go-pagerduty"
 
 	"github.com/moira-alert/moira"
@@ -33,8 +35,7 @@ func (sender *Sender) buildEvent(events moira.NotificationEvents, contact moira.
 	}
 
 	if trigger.Desc != "" {
-		// TODO: string MD before writing
-		details["Description"] = trigger.Desc
+		details["Description"] = stripmd.Strip(trigger.Desc)
 	}
 
 	var eventList string

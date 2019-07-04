@@ -29,14 +29,6 @@ func (imageStore *ImageStore) Init(imageStoreSettings map[string]string) error {
 	if accessKey == "" {
 		return fmt.Errorf("access key not found while configuring s3 image store")
 	}
-	// err := os.Setenv("AWS_ACCESS_KEY_ID", accessKeyID)
-	// if err != nil {
-	// 	return fmt.Errorf("error while setting access key id env var: %s", err)
-	// }
-	// err = os.Setenv("AWS_SECRET_ACCESS_KEY", accessKey)
-	// if err != nil {
-	// 	return fmt.Errorf("error while setting access key env var: %s", err)
-	// }
 	config.Credentials = credentials.NewStaticCredentials(accessKeyID, accessKey, "")
 
 	region := imageStoreSettings["region"]
