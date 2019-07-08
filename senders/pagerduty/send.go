@@ -83,7 +83,7 @@ func (sender *Sender) buildEvent(events moira.NotificationEvents, contact moira.
 func (sender *Sender) buildSummary(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
 	var summary bytes.Buffer
 
-	summary.WriteString(fmt.Sprintf("%s", events.GetSubjectState()))
+	summary.WriteString(string(events.GetSubjectState()))
 
 	tags := trigger.GetTags()
 	if tags != "" {
