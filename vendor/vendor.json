@@ -837,12 +837,6 @@
 			"revisionTime": "2019-03-18T16:54:38Z"
 		},
 		{
-			"checksumSHA1": "s5tdcjh84+tiKS3oSq77mzjB970=",
-			"path": "github.com/google/uuid",
-			"revision": "c2e93f3ae59f2904160ceaab466009f965df46d6",
-			"revisionTime": "2019-04-16T17:24:45Z"
-		},
-		{
 			"checksumSHA1": "yIkYzW7bzAD81zHyuCNmEj4+oxQ=",
 			"path": "github.com/gopherjs/gopherjs/js",
 			"revision": "bd77b112433e999447bf4bc599e36214ba494a99",

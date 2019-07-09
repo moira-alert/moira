@@ -19,6 +19,39 @@ func TestInit(t *testing.T) {
 			So(imageStore, ShouldResemble, &ImageStore{})
 		})
 
+		Convey("Missing access_key", func() {
+			imageStoreSettings := map[string]string{
+				"access_key_id": "123",
+				"region":        "ap-south-1",
+				"bucket":        "testbucket",
+			}
+			err := imageStore.Init(imageStoreSettings)
+			So(err, ShouldResemble, fmt.Errorf("access key not found while configuring s3 image store"))
+			So(imageStore, ShouldResemble, &ImageStore{})
+		})
+
+		Convey("Missing region", func() {
+			imageStoreSettings := map[string]string{
+				"access_key":    "123",
+				"access_key_id": "123",
+				"bucket":        "testbucket",
+			}
+			err := imageStore.Init(imageStoreSettings)
+			So(err, ShouldResemble, fmt.Errorf("region not found while configuring s3 image store"))
+			So(imageStore, ShouldResemble, &ImageStore{})
+		})
+
+		Convey("Missing bucket", func() {
+			imageStoreSettings := map[string]string{
+				"access_key":    "123",
+				"access_key_id": "123",
+				"region":        "ap-south-1",
+			}
+			err := imageStore.Init(imageStoreSettings)
+			So(err, ShouldResemble, fmt.Errorf("bucket not found while configuring s3 image store"))
+			So(imageStore, ShouldResemble, &ImageStore{})
+		})
+
 		Convey("Has settings", func() {
 			imageStoreSettings := map[string]string{
 				"access_key":    "123",
