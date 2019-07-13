@@ -25,6 +25,9 @@ func InitImageStores(imageStores map[string]map[string]string, logger moira.Logg
 			imageStore := &s3.ImageStore{}
 			config := s3.Config{}
 			err = mapstructure.Decode(imageStoreSettings, &config)
+			if err != nil {
+				return nil, fmt.Errorf("error while decoding settings: %s", err)
+			}
 			if err = imageStore.Init(config); err != nil {
 				return nil, fmt.Errorf("error while initializing image store: %s", err)
 			}
