@@ -10,6 +10,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 )
 
+// Config is the configuration structure for s3 image store
+type Config struct {
+	AccessKey   string
+	AccessKeyID string
+	Region      string
+	Bucket      string
+}
+
 // ImageStore implements the ImageStore interface for aws s3
 type ImageStore struct {
 	sess     *session.Session
@@ -18,32 +26,29 @@ type ImageStore struct {
 }
 
 // Init initializes the s3 image store with config from the yaml file
-func (imageStore *ImageStore) Init(imageStoreSettings map[string]string) error {
-	config := &aws.Config{}
+func Init(config Config, imageStore *ImageStore) error {
+	awsconfig := &aws.Config{}
 
-	accessKeyID := imageStoreSettings["access_key_id"]
-	if accessKeyID == "" {
+	if config.AccessKeyID == "" {
 		return fmt.Errorf("access key id not found while configuring s3 image store")
 	}
-	accessKey := imageStoreSettings["access_key"]
-	if accessKey == "" {
+	if config.AccessKey == "" {
 		return fmt.Errorf("access key not found while configuring s3 image store")
 	}
-	config.Credentials = credentials.NewStaticCredentials(accessKeyID, accessKey, "")
+	awsconfig.Credentials = credentials.NewStaticCredentials(config.AccessKeyID, config.AccessKey, "")
 
-	region := imageStoreSettings["region"]
-	if region == "" {
+	if config.Region == "" {
 		return fmt.Errorf("region not found while configuring s3 image store")
 	}
-	config.Region = aws.String(region)
+	awsconfig.Region = aws.String(config.Region)
 
-	imageStore.bucket = imageStoreSettings["bucket"]
+	imageStore.bucket = config.Bucket
 	if imageStore.bucket == "" {
 		return fmt.Errorf("bucket not found while configuring s3 image store")
 	}
 
 	var err error
-	imageStore.sess, err = session.NewSession(config)
+	imageStore.sess, err = session.NewSession(awsconfig)
 	if err != nil {
 		return fmt.Errorf("could not configure s3 session: %s", err)
 	}

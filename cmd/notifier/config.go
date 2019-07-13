@@ -36,8 +36,8 @@ type notifierConfig struct {
 	Timezone string `yaml:"timezone"`
 	// Format for email sender. Default is "15:04 02.01.2006". See https://golang.org/pkg/time/#Time.Format for more details about golang time formatting.
 	DateTimeFormat string `yaml:"date_time_format"`
-	// Image store config section.
-	ImageStore map[string]string `yaml:"image_store"`
+	// Image stores config section.
+	ImageStore []map[string]string `yaml:"image_store"`
 }
 
 type selfStateConfig struct {

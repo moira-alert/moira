@@ -151,7 +151,6 @@ type Sender interface {
 
 // ImageStore is the interface for image storage providers
 type ImageStore interface {
-	Init(imageStoreSettings map[string]string) error
 	StoreImage(image []byte) (string, error)
 }
 
