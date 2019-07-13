@@ -12,10 +12,10 @@ import (
 
 // Config is the configuration structure for s3 image store
 type Config struct {
-	AccessKey   string
-	AccessKeyID string
-	Region      string
-	Bucket      string
+	AccessKey   string `mapstructure:"access_key"`
+	AccessKeyID string `mapstructure:"access_key_id"`
+	Region      string `mapstructure:"region"`
+	Bucket      string `mapstructure:"bucket"`
 }
 
 // ImageStore implements the ImageStore interface for aws s3
@@ -26,7 +26,7 @@ type ImageStore struct {
 }
 
 // Init initializes the s3 image store with config from the yaml file
-func Init(config Config, imageStore *ImageStore) error {
+func (imageStore *ImageStore) Init(config Config) error {
 	awsconfig := &aws.Config{}
 
 	if config.AccessKeyID == "" {

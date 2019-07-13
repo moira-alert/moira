@@ -64,7 +64,6 @@ func (pkg NotificationPackage) GetMetricNames() []string {
 type Notifier interface {
 	Send(pkg *NotificationPackage, waitGroup *sync.WaitGroup)
 	RegisterSender(senderSettings map[string]string, sender moira.Sender) error
-	InitImageStore(imageStoreSettings map[string]string) error
 	StopSenders()
 	GetSenders() map[string]bool
 }

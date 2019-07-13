@@ -10,7 +10,7 @@ type Config struct {
 	SendingTimeout   time.Duration
 	ResendingTimeout time.Duration
 	Senders          []map[string]string
-	ImageStores      map[string]string
+	ImageStores      map[string]map[string]string
 	LogFile          string
 	LogLevel         string
 	FrontURL         string
