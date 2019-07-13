@@ -29,7 +29,7 @@ func InitImageStores(imageStores map[string]map[string]string, logger moira.Logg
 				return nil, fmt.Errorf("error while initializing image store: %s", err)
 			}
 			imageStoreMap[s3ImageStore] = imageStore
-			logger.Infof("Image store %s initialized", imageStoreSettings["type"])
+			logger.Infof("Image store %s initialized", imageStoreID)
 		default:
 			return nil, fmt.Errorf("unsupported image store type")
 		}
