@@ -1,6 +1,7 @@
 package pagerduty
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -14,9 +15,17 @@ func TestInit(t *testing.T) {
 	Convey("Init tests", t, func() {
 		sender := Sender{}
 
-		Convey("Has settings", func() {
+		Convey("Missing image_store", func() {
 			senderSettings := map[string]string{
 				"front_uri": "http://moira.uri",
+			}
+			err := sender.Init(senderSettings, logger, location, "15:04")
+			So(err, ShouldResemble, fmt.Errorf("cannot read image_store from the config"))
+		})
+		Convey("Has settings", func() {
+			senderSettings := map[string]string{
+				"front_uri":   "http://moira.uri",
+				"image_store": "s3",
 			}
 			sender.Init(senderSettings, logger, location, "15:04")
 			So(sender.frontURI, ShouldResemble, "http://moira.uri")

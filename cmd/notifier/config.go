@@ -37,7 +37,7 @@ type notifierConfig struct {
 	// Format for email sender. Default is "15:04 02.01.2006". See https://golang.org/pkg/time/#Time.Format for more details about golang time formatting.
 	DateTimeFormat string `yaml:"date_time_format"`
 	// Image stores config section.
-	ImageStore []map[string]string `yaml:"image_store"`
+	ImageStores []map[string]string `yaml:"image_store"`
 }
 
 type selfStateConfig struct {
@@ -122,7 +122,7 @@ func (config *notifierConfig) getSettings(logger moira.Logger) notifier.Config {
 		FrontURL:         config.FrontURI,
 		Location:         location,
 		DateTimeFormat:   format,
-		ImageStore:       config.ImageStore,
+		ImageStores:      config.ImageStores,
 	}
 }
 

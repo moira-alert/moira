@@ -89,12 +89,13 @@ func main() {
 
 	notifierConfig := config.Notifier.getSettings(logger)
 
-	sender := notifier.NewNotifier(database, logger, notifierConfig, notifierMetrics, metricSourceProvider)
-
 	// Initialize the image store
-	if err := sender.InitImageStore(notifierConfig.ImageStore); err != nil {
+	imageStoreMap, err := cmd.InitImageStores(notifierConfig.ImageStores, logger)
+	if err != nil {
 		logger.Warningf("Can not configure image store: %s", err.Error())
 	}
+
+	sender := notifier.NewNotifier(database, logger, notifierConfig, notifierMetrics, metricSourceProvider, imageStoreMap)
 
 	// Register moira senders
 	if err := sender.RegisterSenders(database); err != nil {

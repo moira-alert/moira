@@ -44,7 +44,7 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 		case telegramSender:
 			err = notifier.RegisterSender(senderSettings, &telegram.Sender{DataBase: connector})
 		case pagerdutySender:
-			err = notifier.RegisterSender(senderSettings, &pagerduty.Sender{ImageStore: notifier.imageStore})
+			err = notifier.RegisterSender(senderSettings, &pagerduty.Sender{ImageStores: notifier.imageStores})
 		case twilioSmsSender, twilioVoiceSender:
 			err = notifier.RegisterSender(senderSettings, &twilio.Sender{})
 		case scriptSender:

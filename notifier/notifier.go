@@ -79,11 +79,11 @@ type StandardNotifier struct {
 	config               Config
 	metrics              *graphite.NotifierMetrics
 	metricSourceProvider *metricSource.SourceProvider
-	imageStore           moira.ImageStore
+	imageStores          map[string]moira.ImageStore
 }
 
 // NewNotifier is initializer for StandardNotifier
-func NewNotifier(database moira.Database, logger moira.Logger, config Config, metrics *graphite.NotifierMetrics, metricSourceProvider *metricSource.SourceProvider) *StandardNotifier {
+func NewNotifier(database moira.Database, logger moira.Logger, config Config, metrics *graphite.NotifierMetrics, metricSourceProvider *metricSource.SourceProvider, imageStoreMap map[string]moira.ImageStore) *StandardNotifier {
 	return &StandardNotifier{
 		senders:              make(map[string]chan NotificationPackage),
 		logger:               logger,
@@ -92,6 +92,7 @@ func NewNotifier(database moira.Database, logger moira.Logger, config Config, me
 		config:               config,
 		metrics:              metrics,
 		metricSourceProvider: metricSourceProvider,
+		imageStores:          imageStoreMap,
 	}
 }
 

@@ -69,7 +69,10 @@ func TestBuildEvent(t *testing.T) {
 		})
 
 		Convey("Build pagerduty event with one moira event and plot", func() {
-			sender.ImageStore = &MockImageStore{}
+			sender.ImageStores = map[string]moira.ImageStore{
+				"s3": &MockImageStore{},
+			}
+			sender.imageStoreID = "s3"
 			actual := sender.buildEvent(moira.NotificationEvents{event}, contact, trigger, []byte("test"), false)
 			expected := baseExpected
 			details := map[string]interface{}{

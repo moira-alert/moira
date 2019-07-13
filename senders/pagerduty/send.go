@@ -65,7 +65,7 @@ func (sender *Sender) buildEvent(events moira.NotificationEvents, contact moira.
 	}
 
 	if len(plot) > 0 {
-		imageLink, err := sender.ImageStore.StoreImage(plot)
+		imageLink, err := sender.ImageStores[sender.imageStoreID].StoreImage(plot)
 		if err != nil {
 			sender.logger.Warningf("could not store the plot image in the image store: %s", err)
 		} else {
