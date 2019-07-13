@@ -13,58 +13,58 @@ func TestInit(t *testing.T) {
 		imageStore := &ImageStore{}
 
 		Convey("Empty settings", func() {
-			imageStoreSettings := map[string]string{}
-			err := imageStore.Init(imageStoreSettings)
+			config := Config{}
+			err := imageStore.Init(config)
 			So(err, ShouldResemble, fmt.Errorf("access key id not found while configuring s3 image store"))
 			So(imageStore, ShouldResemble, &ImageStore{})
 		})
 
 		Convey("Missing access_key", func() {
-			imageStoreSettings := map[string]string{
-				"access_key_id": "123",
-				"region":        "ap-south-1",
-				"bucket":        "testbucket",
+			config := Config{
+				AccessKeyID: "123",
+				Region:      "ap-south-1",
+				Bucket:      "testbucket",
 			}
-			err := imageStore.Init(imageStoreSettings)
+			err := imageStore.Init(config)
 			So(err, ShouldResemble, fmt.Errorf("access key not found while configuring s3 image store"))
 			So(imageStore, ShouldResemble, &ImageStore{})
 		})
 
 		Convey("Missing region", func() {
-			imageStoreSettings := map[string]string{
-				"access_key":    "123",
-				"access_key_id": "123",
-				"bucket":        "testbucket",
+			config := Config{
+				AccessKeyID: "123",
+				AccessKey:   "123",
+				Bucket:      "testbucket",
 			}
-			err := imageStore.Init(imageStoreSettings)
+			err := imageStore.Init(config)
 			So(err, ShouldResemble, fmt.Errorf("region not found while configuring s3 image store"))
 			So(imageStore, ShouldResemble, &ImageStore{})
 		})
 
 		Convey("Missing bucket", func() {
-			imageStoreSettings := map[string]string{
-				"access_key":    "123",
-				"access_key_id": "123",
-				"region":        "ap-south-1",
+			config := Config{
+				AccessKeyID: "123",
+				AccessKey:   "123",
+				Region:      "ap-south-1",
 			}
-			err := imageStore.Init(imageStoreSettings)
+			err := imageStore.Init(config)
 			So(err, ShouldResemble, fmt.Errorf("bucket not found while configuring s3 image store"))
 			So(imageStore, ShouldResemble, &ImageStore{})
 		})
 
 		Convey("Has settings", func() {
-			imageStoreSettings := map[string]string{
-				"access_key":    "123",
-				"access_key_id": "123",
-				"region":        "ap-south-1",
-				"bucket":        "testbucket",
+			config := Config{
+				AccessKeyID: "123",
+				AccessKey:   "123",
+				Region:      "ap-south-1",
+				Bucket:      "testbucket",
 			}
-			imageStore.Init(imageStoreSettings)
+			imageStore.Init(config)
 			val, _ := imageStore.sess.Config.Credentials.Get()
-			So(val.AccessKeyID, ShouldResemble, imageStoreSettings["access_key_id"])
-			So(val.SecretAccessKey, ShouldResemble, imageStoreSettings["access_key"])
-			So(imageStore.sess.Config.Region, ShouldResemble, aws.String(imageStoreSettings["region"]))
-			So(imageStore.bucket, ShouldResemble, imageStoreSettings["bucket"])
+			So(val.AccessKeyID, ShouldResemble, config.AccessKeyID)
+			So(val.SecretAccessKey, ShouldResemble, config.AccessKey)
+			So(imageStore.sess.Config.Region, ShouldResemble, aws.String(config.Region))
+			So(imageStore.bucket, ShouldResemble, config.Bucket)
 		})
 	})
 }
