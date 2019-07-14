@@ -18,11 +18,12 @@ const (
 
 // Sender implements moira sender interface for discord
 type Sender struct {
-	DataBase moira.Database
-	logger   moira.Logger
-	location *time.Location
-	session  *discordgo.Session
-	frontURI string
+	DataBase  moira.Database
+	logger    moira.Logger
+	location  *time.Location
+	session   *discordgo.Session
+	frontURI  string
+	botUserID string
 }
 
 // Init reads the yaml config
@@ -41,7 +42,12 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 	sender.location = location
 
 	handleMsg := func(s *discordgo.Session, m *discordgo.MessageCreate) {
-		msg, err := sender.getResponse(s, m)
+		channel, err := s.Channel(m.ChannelID)
+		if err != nil {
+			sender.logger.Errorf("error while getting the channel details: %s", err)
+		}
+
+		msg, err := sender.getResponse(m, channel)
 		if err != nil {
 			sender.logger.Errorf("failed to handle incoming message: %s", err)
 		}
@@ -60,6 +66,7 @@ func (sender *Sender) runBot() {
 			sender.logger.Errorf("error creating a connection to discord: %s", err)
 			return nil
 		}
+		sender.botUserID = sender.session.State.User.ID
 		defer sender.session.Close()
 		<-stop
 		return nil

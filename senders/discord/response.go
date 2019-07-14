@@ -6,19 +6,15 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-func (sender *Sender) getResponse(s *discordgo.Session, m *discordgo.MessageCreate) (string, error) {
+func (sender *Sender) getResponse(m *discordgo.MessageCreate, channel *discordgo.Channel) (string, error) {
 
 	// Ignore all messages created by the bot itself
-	if m.Author.ID == s.State.User.ID {
+	if m.Author.ID == sender.botUserID {
 		return "", nil
 	}
 
 	// If the message is "!start" update the channel ID for the user/channel
 	if m.Content == "!start" {
-		channel, err := s.Channel(m.ChannelID)
-		if err != nil {
-			return "", fmt.Errorf("error while getting the channel details: %s", err)
-		}
 		switch channel.Type {
 		case discordgo.ChannelTypeDM:
 			err := sender.DataBase.SetUsernameID(messenger, "@"+m.Author.Username, channel.ID)
