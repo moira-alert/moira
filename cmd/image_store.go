@@ -1,13 +1,9 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/moira-alert/moira"
 
-	"github.com/mitchellh/mapstructure"
-
-	"github.com/moira-alert/moira/imagestores/s3"
+	"github.com/moira-alert/moira/image_store/s3"
 )
 
 const (
@@ -15,27 +11,20 @@ const (
 )
 
 // InitImageStores initializes the image storage provider with settings from the yaml config
-func InitImageStores(imageStores map[string]map[string]string, logger moira.Logger) (map[string]moira.ImageStore, error) {
+func InitImageStores(imageStores ImageStoreConfig, logger moira.Logger) map[string]moira.ImageStore {
 	var err error
 	imageStoreMap := make(map[string]moira.ImageStore)
 
-	for imageStoreID, imageStoreSettings := range imageStores {
-		switch imageStoreID {
-		case s3ImageStore:
-			imageStore := &s3.ImageStore{}
-			config := s3.Config{}
-			err = mapstructure.Decode(imageStoreSettings, &config)
-			if err != nil {
-				return nil, fmt.Errorf("error while decoding settings: %s", err)
-			}
-			if err = imageStore.Init(config); err != nil {
-				return nil, fmt.Errorf("error while initializing image store: %s", err)
-			}
-			imageStoreMap[s3ImageStore] = imageStore
-			logger.Infof("Image store %s initialized", imageStoreID)
-		default:
-			return nil, fmt.Errorf("unsupported image store type")
+	imageStore := &s3.ImageStore{}
+	if imageStores.S3 != (s3.Config{}) {
+		if err = imageStore.Init(imageStores.S3); err != nil {
+			logger.Warningf("error while initializing image store: %s", err)
+		} else {
+			imageStore.Enabled = true
+			logger.Infof("Image store %s initialized", s3ImageStore)
 		}
 	}
-	return imageStoreMap, nil
+	imageStoreMap[s3ImageStore] = imageStore
+
+	return imageStoreMap
 }

@@ -152,6 +152,7 @@ type Sender interface {
 // ImageStore is the interface for image storage providers
 type ImageStore interface {
 	StoreImage(image []byte) (string, error)
+	IsEnabled() bool
 }
 
 // Searcher interface implements full-text search index functionality

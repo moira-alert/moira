@@ -87,13 +87,10 @@ func main() {
 	remoteSource := remote.Create(remoteConfig)
 	metricSourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource)
 
-	notifierConfig := config.Notifier.getSettings(logger)
-
 	// Initialize the image store
-	imageStoreMap, err := cmd.InitImageStores(notifierConfig.ImageStores, logger)
-	if err != nil {
-		logger.Warningf("Can not configure image store: %s", err.Error())
-	}
+	imageStoreMap := cmd.InitImageStores(config.ImageStores, logger)
+
+	notifierConfig := config.Notifier.getSettings(logger)
 
 	sender := notifier.NewNotifier(database, logger, notifierConfig, notifierMetrics, metricSourceProvider, imageStoreMap)
 

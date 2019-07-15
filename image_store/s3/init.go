@@ -10,19 +10,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 )
 
-// Config is the configuration structure for s3 image store
-type Config struct {
-	AccessKey   string `mapstructure:"access_key"`
-	AccessKeyID string `mapstructure:"access_key_id"`
-	Region      string `mapstructure:"region"`
-	Bucket      string `mapstructure:"bucket"`
-}
-
 // ImageStore implements the ImageStore interface for aws s3
 type ImageStore struct {
 	sess     *session.Session
 	uploader *s3manager.Uploader
 	bucket   string
+	Enabled  bool
 }
 
 // Init initializes the s3 image store with config from the yaml file
@@ -55,4 +48,9 @@ func (imageStore *ImageStore) Init(config Config) error {
 	imageStore.uploader = s3manager.NewUploader(imageStore.sess)
 
 	return nil
+}
+
+// IsEnabled indicates whether the image store has been configured or not
+func (imageStore *ImageStore) IsEnabled() bool {
+	return imageStore.Enabled
 }

@@ -13,12 +13,13 @@ import (
 )
 
 type config struct {
-	Redis    cmd.RedisConfig    `yaml:"redis"`
-	Graphite cmd.GraphiteConfig `yaml:"graphite"`
-	Logger   cmd.LoggerConfig   `yaml:"log"`
-	Notifier notifierConfig     `yaml:"notifier"`
-	Pprof    cmd.ProfilerConfig `yaml:"pprof"`
-	Remote   cmd.RemoteConfig   `yaml:"remote"`
+	Redis       cmd.RedisConfig      `yaml:"redis"`
+	Graphite    cmd.GraphiteConfig   `yaml:"graphite"`
+	Logger      cmd.LoggerConfig     `yaml:"log"`
+	Notifier    notifierConfig       `yaml:"notifier"`
+	Pprof       cmd.ProfilerConfig   `yaml:"pprof"`
+	Remote      cmd.RemoteConfig     `yaml:"remote"`
+	ImageStores cmd.ImageStoreConfig `yaml:"image_store"`
 }
 
 type notifierConfig struct {
@@ -36,8 +37,6 @@ type notifierConfig struct {
 	Timezone string `yaml:"timezone"`
 	// Format for email sender. Default is "15:04 02.01.2006". See https://golang.org/pkg/time/#Time.Format for more details about golang time formatting.
 	DateTimeFormat string `yaml:"date_time_format"`
-	// Image stores config section.
-	ImageStores map[string]map[string]string `yaml:"image_store"`
 }
 
 type selfStateConfig struct {
@@ -95,6 +94,7 @@ func getDefault() config {
 		Remote: cmd.RemoteConfig{
 			Timeout: "60s",
 		},
+		ImageStores: cmd.ImageStoreConfig{},
 	}
 }
 
@@ -122,7 +122,6 @@ func (config *notifierConfig) getSettings(logger moira.Logger) notifier.Config {
 		FrontURL:         config.FrontURI,
 		Location:         location,
 		DateTimeFormat:   format,
-		ImageStores:      config.ImageStores,
 	}
 }
 
