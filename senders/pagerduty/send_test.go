@@ -15,6 +15,7 @@ type MockImageStore struct {
 }
 
 func (imageStore *MockImageStore) StoreImage(image []byte) (string, error) { return "test", nil }
+func (imageStore *MockImageStore) IsEnabled() bool                         { return true }
 
 func TestBuildEvent(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
