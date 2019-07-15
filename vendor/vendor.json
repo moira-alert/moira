@@ -1011,6 +1011,12 @@
 			"revisionTime": "2017-06-09T04:59:27Z"
 		},
 		{
+			"checksumSHA1": "lcHi67jxfyugNtEyr6Y+IYSlZkc=",
+			"path": "github.com/mitchellh/mapstructure",
+			"revision": "f15292f7a699fcc1a38a80977f80a046874ba8ac",
+			"revisionTime": "2018-07-15T05:01:51Z"
+		},
+		{
 			"checksumSHA1": "eglLS3h5JcUbDovEFz6+NBTZJWg=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/mjibson/go-dsp/dsputils",
 			"path": "github.com/mjibson/go-dsp/dsputils",
