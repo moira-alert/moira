@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/senders"
 
 	"github.com/nlopes/slack"
 )
@@ -90,7 +91,7 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 
 	charsLeftAfterTitle := messageMaxCharacters - titleLen
 
-	descNewLen, eventsNewLen := sender.calculateMessagePartsLength(charsLeftAfterTitle, descLen, eventsStringLen)
+	descNewLen, eventsNewLen := senders.CalculateMessagePartsLength(charsLeftAfterTitle, descLen, eventsStringLen)
 
 	if descLen != descNewLen {
 		desc = desc[:descNewLen] + "...\n"
@@ -116,19 +117,6 @@ func (sender *Sender) buildDescription(trigger moira.TriggerData) string {
 		desc += "\n"
 	}
 	return desc
-}
-
-func (sender *Sender) calculateMessagePartsLength(maxChars, descLen, eventsLen int) (descNewLen int, eventsNewLen int) {
-	if descLen+eventsLen <= maxChars {
-		return descLen, eventsLen
-	}
-	if descLen > maxChars/2 && eventsLen <= maxChars/2 {
-		return maxChars - eventsLen - 10, eventsLen
-	}
-	if eventsLen > maxChars/2 && descLen <= maxChars/2 {
-		return descLen, maxChars - descLen
-	}
-	return maxChars/2 - 10, maxChars / 2
 }
 
 func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData) string {

@@ -232,34 +232,3 @@ func TestMakePushoverMessage(t *testing.T) {
 		So(sender.makePushoverMessage(event, contact, trigger, []byte{1, 0, 1}, false), ShouldResemble, expected)
 	})
 }
-
-func TestCalculateMessagePartsLength(t *testing.T) {
-	location, _ := time.LoadLocation("UTC")
-	sender := Sender{location: location, frontURI: "http://moira.url"}
-
-	Convey("Message parts length calculation tests", t, func() {
-		Convey("descLen+eventsLen <= maxChars", func() {
-			descNewLen, eventsNewLen := sender.calculateMessagePartsLength(100, 20, 78)
-			So(descNewLen, ShouldResemble, 20)
-			So(eventsNewLen, ShouldResemble, 78)
-		})
-
-		Convey("descLen > maxChars/2 && eventsLen <= maxChars/2", func() {
-			descNewLen, eventsNewLen := sender.calculateMessagePartsLength(100, 70, 40)
-			So(descNewLen, ShouldResemble, 50)
-			So(eventsNewLen, ShouldResemble, 40)
-		})
-
-		Convey("eventsLen > maxChars/2 && descLen <= maxChars/2", func() {
-			descNewLen, eventsNewLen := sender.calculateMessagePartsLength(100, 40, 70)
-			So(descNewLen, ShouldResemble, 40)
-			So(eventsNewLen, ShouldResemble, 60)
-		})
-
-		Convey("Both greater than maxChars/2", func() {
-			descNewLen, eventsNewLen := sender.calculateMessagePartsLength(100, 70, 70)
-			So(descNewLen, ShouldResemble, 40)
-			So(eventsNewLen, ShouldResemble, 50)
-		})
-	})
-}
