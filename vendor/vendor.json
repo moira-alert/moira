@@ -336,6 +336,12 @@
 			"revisionTime": "2018-03-02T18:00:52Z"
 		},
 		{
+			"checksumSHA1": "Q0f+9Kw7oXqAPpG/B1uWU+6W4eQ=",
+			"path": "github.com/bwmarrin/discordgo",
+			"revision": "8d8906ce4b959dacabfefbad9bacf11b6ffd8035",
+			"revisionTime": "2019-05-13T17:35:26Z"
+		},
+		{
 			"checksumSHA1": "ZmH0Y8Td1CUGfc6ywB40e2u1Kvc=",
 			"path": "github.com/carlosdp/twiliogo",
 			"revision": "b26045ebb9d15c9296ba59d94687aaf7d2080905",
@@ -1140,6 +1146,30 @@
 			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
+			"checksumSHA1": "/U7f2gaH6DnEmLguVLDbipU6kXU=",
+			"path": "golang.org/x/crypto/internal/subtle",
+			"revision": "cc06ce4a13d484c0101a9e92913248488a75786d",
+			"revisionTime": "2019-06-20T21:50:31Z"
+		},
+		{
+			"checksumSHA1": "/D0Q9baFJAeXy2an6mwni/FJHzw=",
+			"path": "golang.org/x/crypto/nacl/secretbox",
+			"revision": "cc06ce4a13d484c0101a9e92913248488a75786d",
+			"revisionTime": "2019-06-20T21:50:31Z"
+		},
+		{
+			"checksumSHA1": "vWXjCp+37T1tIpGO2ymEFmcaUpo=",
+			"path": "golang.org/x/crypto/poly1305",
+			"revision": "cc06ce4a13d484c0101a9e92913248488a75786d",
+			"revisionTime": "2019-06-20T21:50:31Z"
+		},
+		{
+			"checksumSHA1": "yQNckVsxPX36aYbCk1ftg2w9ufw=",
+			"path": "golang.org/x/crypto/salsa20/salsa",
+			"revision": "cc06ce4a13d484c0101a9e92913248488a75786d",
+			"revisionTime": "2019-06-20T21:50:31Z"
+		},
+		{
 			"checksumSHA1": "UD/pejajPyS7WaWVXq2NU1eK4Ic=",
 			"path": "golang.org/x/image/bmp",
 			"revision": "f315e440302883054d0c2bd85486878cb4f8572c",
@@ -1192,6 +1222,12 @@
 			"path": "golang.org/x/net/websocket",
 			"revision": "1f9224279e98554b6a6432d4dd998a739f8b2b7c",
 			"revisionTime": "2017-06-29T16:46:45Z"
+		},
+		{
+			"checksumSHA1": "NaPKWo2/NhJLk/+GrsBiAL/V6J4=",
+			"path": "golang.org/x/sys/cpu",
+			"revision": "c5567b49c5d04a5f83870795b8c0e2df43a8ce32",
+			"revisionTime": "2019-06-24T11:44:31Z"
 		},
 		{
 			"checksumSHA1": "e66DmNWQKgI97tvj4BH7rHYnyJs=",
