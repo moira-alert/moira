@@ -59,12 +59,7 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 	title := fmt.Sprintf("%s %s %s (%d)\n", state, trigger.Name, tags, len(events))
 	titleLen := len([]rune(title))
 
-	desc := trigger.Desc
-	if trigger.Desc != "" {
-		// Replace MD headers (## header text) with **header text** that telegram supports
-		desc = mdHeaderRegex.ReplaceAllString(trigger.Desc, "**$headertext**")
-		desc += "\n"
-	}
+	desc := sender.buildDescription(trigger)
 	descLen := len([]rune(desc))
 
 	eventsString := sender.buildEventsString(events, -1, throttled, trigger)
@@ -72,33 +67,42 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 
 	charsLeftAfterTitle := messageMaxCharacters - titleLen
 
-	if !(titleLen+descLen+eventsStringLen <= messageMaxCharacters) {
-		if descLen > charsLeftAfterTitle/2 && eventsStringLen > charsLeftAfterTitle/2 {
-			// Trim both desc and events string to half the charsLeftAfter title
-			desc = desc[:charsLeftAfterTitle/2-10] + "...\n"
-			eventsString = sender.buildEventsString(events, charsLeftAfterTitle/2, throttled, trigger)
+	descNewLen, eventsNewLen := sender.calculateMessagePartsLength(charsLeftAfterTitle, descLen, eventsStringLen)
 
-		} else if descLen > charsLeftAfterTitle/2 {
-			// Trim the desc to the chars left after using the whole events string
-			charsForDesc := charsLeftAfterTitle - eventsStringLen
-			desc = desc[:charsForDesc-10] + "...\n"
-
-		} else if eventsStringLen > charsLeftAfterTitle/2 {
-			// Trim the events string to the chars left after using the whole desc
-			charsForEvents := charsLeftAfterTitle - descLen
-			eventsString = sender.buildEventsString(events, charsForEvents, throttled, trigger)
-
-		} else {
-			desc = desc[:charsLeftAfterTitle/2-10] + "...\n"
-			eventsString = sender.buildEventsString(events, charsLeftAfterTitle/2, throttled, trigger)
-
-		}
+	if descLen != descNewLen {
+		desc = desc[:descNewLen] + "...\n"
+	}
+	if eventsNewLen != eventsStringLen {
+		eventsString = sender.buildEventsString(events, eventsNewLen, throttled, trigger)
 	}
 
 	buffer.WriteString(title)
 	buffer.WriteString(desc)
 	buffer.WriteString(eventsString)
 	return buffer.String()
+}
+
+func (sender *Sender) calculateMessagePartsLength(maxChars, descLen, eventsLen int) (descNewLen int, eventsNewLen int) {
+	if descLen+eventsLen <= maxChars {
+		return descLen, eventsLen
+	}
+	if descLen > maxChars/2 && eventsLen <= maxChars/2 {
+		return maxChars - eventsLen - 10, eventsLen
+	}
+	if eventsLen > maxChars/2 && descLen <= maxChars/2 {
+		return descLen, maxChars - descLen
+	}
+	return maxChars/2 - 10, maxChars / 2
+}
+
+func (sender *Sender) buildDescription(trigger moira.TriggerData) string {
+	desc := trigger.Desc
+	if trigger.Desc != "" {
+		// Replace MD headers (## header text) with **header text** that telegram supports
+		desc = mdHeaderRegex.ReplaceAllString(trigger.Desc, "**$headertext**")
+		desc += "\n"
+	}
+	return desc
 }
 
 // buildEventsString builds the string from moira events and limits it to charsForEvents.
