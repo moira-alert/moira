@@ -149,12 +149,15 @@ type Sender interface {
 	Init(senderSettings map[string]string, logger Logger, location *time.Location, dateTimeFormat string) error
 }
 
+<<<<<<< HEAD
 // ImageStore is the interface for image storage providers
 type ImageStore interface {
 	StoreImage(image []byte) (string, error)
 	IsEnabled() bool
 }
 
+=======
+>>>>>>> c5de387006840462ba1f7a351bdb536e2f4b6fbc
 // Searcher interface implements full-text search index functionality
 type Searcher interface {
 	Start() error

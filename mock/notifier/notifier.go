@@ -5,11 +5,12 @@
 package mock_notifier
 
 import (
+	reflect "reflect"
+	sync "sync"
+
 	gomock "github.com/golang/mock/gomock"
 	moira "github.com/moira-alert/moira"
 	notifier "github.com/moira-alert/moira/notifier"
-	reflect "reflect"
-	sync "sync"
 )
 
 // MockNotifier is a mock of Notifier interface
