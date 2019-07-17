@@ -6,14 +6,20 @@ import (
 	"github.com/moira-alert/moira/api/dto"
 )
 
-// GetNotifierState return current notifier state
-func GetNotifierState(database moira.Database) (*dto.NotifierState, *api.ErrorResponse) {
+// GetAPIState returns current API state
+func GetAPIState() *dto.ServiceState {
+	state := dto.ServiceState{State: "OK"}
+	return &state
+}
+
+// GetNotifierState returns current notifier state
+func GetNotifierState(database moira.Database) (*dto.ServiceState, *api.ErrorResponse) {
 	state, err := database.GetNotifierState()
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
 
-	notifierState := dto.NotifierState{State: state}
+	notifierState := dto.ServiceState{State: state}
 	if state == moira.SelfStateERROR {
 		notifierState.Message = dto.ErrorMessage
 	}
@@ -22,7 +28,7 @@ func GetNotifierState(database moira.Database) (*dto.NotifierState, *api.ErrorRe
 }
 
 // UpdateNotifierState update current notifier state
-func UpdateNotifierState(database moira.Database, state *dto.NotifierState) *api.ErrorResponse {
+func UpdateNotifierState(database moira.Database, state *dto.ServiceState) *api.ErrorResponse {
 	err := database.SetNotifierState(state.State)
 	if err != nil {
 		return api.ErrorInternalServer(err)

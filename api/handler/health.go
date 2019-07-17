@@ -11,8 +11,14 @@ import (
 )
 
 func health(router chi.Router) {
+	router.Get("api", getAPIState)
 	router.Get("/notifier", getNotifierState)
 	router.Put("/notifier", setNotifierState)
+}
+
+func getAPIState(writer http.ResponseWriter, request *http.Request) {
+	state := controller.GetAPIState()
+	render.Render(writer, request, state)
 }
 
 func getNotifierState(writer http.ResponseWriter, request *http.Request) {
@@ -29,7 +35,7 @@ func getNotifierState(writer http.ResponseWriter, request *http.Request) {
 }
 
 func setNotifierState(writer http.ResponseWriter, request *http.Request) {
-	state := &dto.NotifierState{}
+	state := &dto.ServiceState{}
 	if err := render.Bind(request, state); err != nil {
 		render.Render(writer, request, api.ErrorInvalidRequest(err))
 		return
