@@ -91,10 +91,7 @@ func NewNotifier(database moira.Database, logger moira.Logger, config Config, me
 		config:               config,
 		metrics:              metrics,
 		metricSourceProvider: metricSourceProvider,
-<<<<<<< HEAD
 		imageStores:          imageStoreMap,
-=======
->>>>>>> c5de387006840462ba1f7a351bdb536e2f4b6fbc
 	}
 }
 

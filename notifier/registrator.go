@@ -4,11 +4,10 @@ import (
 	"fmt"
 	"strings"
 
-
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/senders/pagerduty"
 	"github.com/moira-alert/moira/senders/discord"
 	"github.com/moira-alert/moira/senders/mail"
+	"github.com/moira-alert/moira/senders/pagerduty"
 	"github.com/moira-alert/moira/senders/pushover"
 	"github.com/moira-alert/moira/senders/script"
 	"github.com/moira-alert/moira/senders/slack"
@@ -21,20 +20,14 @@ import (
 const (
 	mailSender        = "mail"
 	pushoverSender    = "pushover"
-<<<<<<< HEAD
-=======
 	discordSender     = "discord"
->>>>>>> c5de387006840462ba1f7a351bdb536e2f4b6fbc
 	scriptSender      = "script"
 	slackSender       = "slack"
 	telegramSender    = "telegram"
 	twilioSmsSender   = "twilio sms"
 	twilioVoiceSender = "twilio voice"
 	webhookSender     = "webhook"
-<<<<<<< HEAD
 	pagerdutySender   = "pagerduty"
-=======
->>>>>>> c5de387006840462ba1f7a351bdb536e2f4b6fbc
 )
 
 // RegisterSenders watch on senders config and register all configured senders
@@ -45,22 +38,16 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 		switch senderSettings["type"] {
 		case pushoverSender:
 			err = notifier.RegisterSender(senderSettings, &pushover.Sender{})
-<<<<<<< HEAD
-=======
 		case discordSender:
 			err = notifier.RegisterSender(senderSettings, &discord.Sender{DataBase: connector})
->>>>>>> c5de387006840462ba1f7a351bdb536e2f4b6fbc
 		case slackSender:
 			err = notifier.RegisterSender(senderSettings, &slack.Sender{})
 		case mailSender:
 			err = notifier.RegisterSender(senderSettings, &mail.Sender{})
 		case telegramSender:
 			err = notifier.RegisterSender(senderSettings, &telegram.Sender{DataBase: connector})
-<<<<<<< HEAD
 		case pagerdutySender:
 			err = notifier.RegisterSender(senderSettings, &pagerduty.Sender{ImageStores: notifier.imageStores})
-=======
->>>>>>> c5de387006840462ba1f7a351bdb536e2f4b6fbc
 		case twilioSmsSender, twilioVoiceSender:
 			err = notifier.RegisterSender(senderSettings, &twilio.Sender{})
 		case scriptSender:
