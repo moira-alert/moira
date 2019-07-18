@@ -11,7 +11,7 @@ import (
 )
 
 func health(router chi.Router) {
-	router.Get("api", getAPIState)
+	router.Get("/api", getAPIState)
 	router.Get("/notifier", getNotifierState)
 	router.Put("/notifier", setNotifierState)
 }

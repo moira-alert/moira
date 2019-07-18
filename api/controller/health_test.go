@@ -10,6 +10,18 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+func TestGetAPIState(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	Convey("Should always return OK", t, func() {
+		expectedState := dto.ServiceState{State: "OK"}
+		actualState := GetAPIState()
+
+		So(*actualState, ShouldResemble, expectedState)
+	})
+}
+
 func TestGetNotifierState(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
