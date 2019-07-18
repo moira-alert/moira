@@ -11,9 +11,6 @@ import (
 )
 
 func TestGetAPIState(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
 	Convey("Should always return OK", t, func() {
 		expectedState := dto.ServiceState{State: "OK"}
 		actualState := GetAPIState()
