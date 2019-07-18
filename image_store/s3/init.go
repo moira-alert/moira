@@ -15,7 +15,7 @@ type ImageStore struct {
 	sess     *session.Session
 	uploader *s3manager.Uploader
 	bucket   string
-	Enabled  bool
+	enabled  bool
 }
 
 // Init initializes the s3 image store with config from the yaml file
@@ -47,10 +47,11 @@ func (imageStore *ImageStore) Init(config Config) error {
 	}
 	imageStore.uploader = s3manager.NewUploader(imageStore.sess)
 
+	imageStore.enabled = true
 	return nil
 }
 
 // IsEnabled indicates whether the image store has been configured or not
 func (imageStore *ImageStore) IsEnabled() bool {
-	return imageStore.Enabled
+	return imageStore.enabled
 }

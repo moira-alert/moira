@@ -65,6 +65,7 @@ func TestInit(t *testing.T) {
 			So(val.SecretAccessKey, ShouldResemble, config.AccessKey)
 			So(imageStore.sess.Config.Region, ShouldResemble, aws.String(config.Region))
 			So(imageStore.bucket, ShouldResemble, config.Bucket)
+			So(imageStore.enabled, ShouldResemble, true)
 		})
 	})
 }
