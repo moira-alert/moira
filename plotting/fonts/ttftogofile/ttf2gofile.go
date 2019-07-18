@@ -1,5 +1,5 @@
-package main
 // convert file to byte array and write to variable go file
+package main
 
 import (
 	"fmt"
