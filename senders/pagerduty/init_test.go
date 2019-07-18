@@ -10,6 +10,10 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+type MockImageStoreNotConfigured struct{ moira.ImageStore }
+
+func (imageStore *MockImageStoreNotConfigured) IsEnabled() bool { return false }
+
 func TestInit(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test")
 	location, _ := time.LoadLocation("UTC")
@@ -35,6 +39,18 @@ func TestInit(t *testing.T) {
 				"front_uri":   "http://moira.uri",
 				"image_store": "s4",
 			}
+			sender.Init(senderSettings, logger, location, "15:04")
+			So(sender.imageStoreConfigured, ShouldResemble, false)
+			So(sender.imageStore, ShouldResemble, nil)
+		})
+		Convey("image store not configured", func() {
+			senderSettings := map[string]string{
+				"front_uri":   "http://moira.uri",
+				"image_store": "s3",
+			}
+			sender := Sender{ImageStores: map[string]moira.ImageStore{
+				"s3": &MockImageStoreNotConfigured{},
+			}}
 			sender.Init(senderSettings, logger, location, "15:04")
 			So(sender.imageStoreConfigured, ShouldResemble, false)
 			So(sender.imageStore, ShouldResemble, nil)
