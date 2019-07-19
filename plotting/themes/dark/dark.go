@@ -34,6 +34,7 @@ func (theme *PlotTheme) GetTitleStyle() chart.Style {
 	return chart.Style{
 		Show:        true,
 		Font:        theme.font,
+		FontSize:    15,
 		FontColor:   chart.ColorAlternateGray,
 		FillColor:   drawing.ColorFromHex(theme.bgColor),
 		StrokeColor: drawing.ColorFromHex(theme.bgColor),
