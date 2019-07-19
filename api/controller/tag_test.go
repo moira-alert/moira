@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"errors"
 	"fmt"
 	"testing"
 
@@ -81,7 +80,7 @@ func TestDeleteTag(t *testing.T) {
 		database.EXPECT().GetTagTriggerIDs(tag).Return(nil, nil)
 		database.EXPECT().GetTagsSubscriptions([]string{tag}).Return(data, nil)
 		resp, err := RemoveTag(database, tag)
-		So(err, ShouldResemble, api.ErrorInvalidRequest(errors.New("this tag is assigned to 1 subscriptions. Remove tag from subscriptions first")))
+		So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("this tag is assigned to 1 subscriptions. Remove tag from subscriptions first")))
 		So(resp, ShouldBeNil)
 	})
 
