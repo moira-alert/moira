@@ -67,6 +67,16 @@ func TestDeleteTag(t *testing.T) {
 		So(resp, ShouldBeNil)
 	})
 
+	Convey("GetTagsSubscriptions error", t, func() {
+		expected := fmt.Errorf("can not read subscriptions")
+		tag2 := "testTag2"
+		database.EXPECT().GetTagTriggerIDs(tag2).Return(nil, nil)
+		database.EXPECT().GetTagsSubscriptions([]string{tag2}).Return(nil, expected)
+		resp, err := RemoveTag(database, tag2)
+		So(err, ShouldResemble, api.ErrorInternalServer(expected))
+		So(resp, ShouldBeNil)
+	})
+
 	Convey("Error delete tag", t, func() {
 		expected := fmt.Errorf("can not delete tag")
 		database.EXPECT().GetTagTriggerIDs(tag).Return(nil, nil)
