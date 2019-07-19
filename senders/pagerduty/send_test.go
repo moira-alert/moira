@@ -47,12 +47,14 @@ func TestBuildEvent(t *testing.T) {
 			RoutingKey: contact.Value,
 			Action:     "trigger",
 			Payload: &pagerduty.V2Payload{
-				Summary:  "NODATA [tag1][tag2]",
-				Severity: "info",
-				Source:   "moira",
+				Summary:   "NODATA [tag1][tag2]",
+				Severity:  "info",
+				Source:    "moira",
+				Timestamp: "150000000",
 				Details: map[string]interface{}{
-					"Trigger URI": "http://moira.url/trigger/TriggerID",
-					"Description": "bold text italics code regular",
+					"Trigger URI":  "http://moira.url/trigger/TriggerID",
+					"Trigger Name": "Trigger Name",
+					"Description":  "bold text italics code regular",
 				},
 			},
 		}
@@ -61,9 +63,10 @@ func TestBuildEvent(t *testing.T) {
 			actual := sender.buildEvent(moira.NotificationEvents{event}, contact, trigger, []byte{}, false)
 			expected := baseExpected
 			details := map[string]interface{}{
-				"Events":      "\n02:40: Metric name = 97.4458331200185 (OK to NODATA)",
-				"Trigger URI": "http://moira.url/trigger/TriggerID",
-				"Description": "bold text italics code regular",
+				"Events":       "\n02:40: Metric name = 97.4458331200185 (OK to NODATA)",
+				"Trigger URI":  "http://moira.url/trigger/TriggerID",
+				"Trigger Name": "Trigger Name",
+				"Description":  "bold text italics code regular",
 			}
 			expected.Payload.Details = details
 			So(actual, ShouldResemble, expected)
@@ -75,9 +78,10 @@ func TestBuildEvent(t *testing.T) {
 			actual := sender.buildEvent(moira.NotificationEvents{event}, contact, trigger, []byte("test"), false)
 			expected := baseExpected
 			details := map[string]interface{}{
-				"Events":      "\n02:40: Metric name = 97.4458331200185 (OK to NODATA)",
-				"Trigger URI": "http://moira.url/trigger/TriggerID",
-				"Description": "bold text italics code regular",
+				"Events":       "\n02:40: Metric name = 97.4458331200185 (OK to NODATA)",
+				"Trigger URI":  "http://moira.url/trigger/TriggerID",
+				"Trigger Name": "Trigger Name",
+				"Description":  "bold text italics code regular",
 			}
 			expected.Payload.Details = details
 			expected.Images = []interface{}{
@@ -93,10 +97,11 @@ func TestBuildEvent(t *testing.T) {
 			actual := sender.buildEvent(moira.NotificationEvents{event}, contact, trigger, []byte{}, true)
 			expected := baseExpected
 			details := map[string]interface{}{
-				"Events":      "\n02:40: Metric name = 97.4458331200185 (OK to NODATA)",
-				"Throttled":   "Please, fix your system or tune this trigger to generate less events.",
-				"Trigger URI": "http://moira.url/trigger/TriggerID",
-				"Description": "bold text italics code regular",
+				"Events":       "\n02:40: Metric name = 97.4458331200185 (OK to NODATA)",
+				"Message":      "Please, fix your system or tune this trigger to generate less events.",
+				"Trigger URI":  "http://moira.url/trigger/TriggerID",
+				"Description":  "bold text italics code regular",
+				"Trigger Name": "Trigger Name",
 			}
 			expected.Payload.Details = details
 			So(actual, ShouldResemble, expected)
@@ -121,9 +126,10 @@ func TestBuildEvent(t *testing.T) {
 02:40: Metric name = 97.4458331200185 (OK to NODATA)
 02:40: Metric name = 97.4458331200185 (OK to NODATA)
 02:40: Metric name = 97.4458331200185 (OK to NODATA)`,
-				"Throttled":   "Please, fix your system or tune this trigger to generate less events.",
-				"Trigger URI": "http://moira.url/trigger/TriggerID",
-				"Description": "bold text italics code regular",
+				"Message":      "Please, fix your system or tune this trigger to generate less events.",
+				"Trigger URI":  "http://moira.url/trigger/TriggerID",
+				"Description":  "bold text italics code regular",
+				"Trigger Name": "Trigger Name",
 			}
 			expected.Payload.Details = details
 			So(actual, ShouldResemble, expected)

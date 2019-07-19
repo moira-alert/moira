@@ -3,6 +3,7 @@ package pagerduty
 import (
 	"bytes"
 	"fmt"
+	"strconv"
 
 	"github.com/writeas/go-strip-markdown"
 
@@ -27,11 +28,10 @@ func (sender *Sender) buildEvent(events moira.NotificationEvents, contact moira.
 	summary := sender.buildSummary(events, trigger, throttled)
 	details := make(map[string]interface{})
 
+	details["Trigger Name"] = trigger.Name
 	triggerURI := trigger.GetTriggerURI(sender.frontURI)
 	if triggerURI != "" {
 		details["Trigger URI"] = triggerURI
-	} else if trigger.Name != "" {
-		details["Trigger URI"] = trigger.Name
 	}
 
 	if trigger.Desc != "" {
@@ -50,13 +50,29 @@ func (sender *Sender) buildEvent(events moira.NotificationEvents, contact moira.
 
 	details["Events"] = eventList
 	if throttled {
-		details["Throttled"] = "Please, fix your system or tune this trigger to generate less events."
+		details["Message"] = "Please, fix your system or tune this trigger to generate less events."
+	}
+
+	var severity string
+	switch events[len(events)-1].State {
+	case moira.StateERROR:
+		severity = "error"
+	case moira.StateEXCEPTION:
+		severity = "error"
+	case moira.StateWARN:
+		severity = "warning"
+	case moira.StateOK:
+		severity = "info"
+	case moira.StateNODATA:
+		severity = "info"
+
 	}
 	payload := &pagerduty.V2Payload{
-		Summary:  summary,
-		Severity: "info",
-		Source:   "moira",
-		Details:  details,
+		Summary:   summary,
+		Severity:  severity,
+		Source:    "moira",
+		Timestamp: strconv.FormatInt(events[len(events)-1].Timestamp, 10),
+		Details:   details,
 	}
 	event := pagerduty.V2Event{
 		RoutingKey: contact.Value,
