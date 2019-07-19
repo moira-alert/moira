@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -53,7 +54,6 @@ func TestDeleteTag(t *testing.T) {
 
 	Convey("Test has trigger ids and subscriptions by tag", t, func() {
 		database.EXPECT().GetTagTriggerIDs(tag).Return([]string{"123"}, nil)
-		database.EXPECT().GetTagsSubscriptions([]string{tag}).Return([]*moira.SubscriptionData{}, nil)
 		resp, err := RemoveTag(database, tag)
 		So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("this tag is assigned to %v triggers. Remove tag from triggers first", 1)))
 		So(resp, ShouldBeNil)
@@ -67,20 +67,29 @@ func TestDeleteTag(t *testing.T) {
 		So(resp, ShouldBeNil)
 	})
 
-	Convey("GetTagsSubscriptions error", t, func() {
+	Convey("verification of error handling when receiving subscriptions", t, func() {
 		expected := fmt.Errorf("can not read subscriptions")
-		tag2 := "testTag2"
-		database.EXPECT().GetTagTriggerIDs(tag2).Return(nil, nil)
-		database.EXPECT().GetTagsSubscriptions([]string{tag2}).Return(nil, expected)
-		resp, err := RemoveTag(database, tag2)
+		database.EXPECT().GetTagTriggerIDs(tag).Return(nil, nil)
+		database.EXPECT().GetTagsSubscriptions([]string{tag}).Return(nil, expected)
+		resp, err := RemoveTag(database, tag)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 		So(resp, ShouldBeNil)
 	})
 
-	Convey("Error delete tag", t, func() {
+	Convey("check create error if subscription exists", t, func() {
+		data := []*moira.SubscriptionData{{ID: "TestSubscription"}}
+		database.EXPECT().GetTagTriggerIDs(tag).Return(nil, nil)
+		database.EXPECT().GetTagsSubscriptions([]string{tag}).Return(data, nil)
+		resp, err := RemoveTag(database, tag)
+		So(err, ShouldResemble, api.ErrorInvalidRequest(errors.New("this tag is assigned to 1 subscriptions. Remove tag from subscriptions first")))
+		So(resp, ShouldBeNil)
+	})
+
+	Convey("verification of error handling during tag removal", t, func() {
 		expected := fmt.Errorf("can not delete tag")
 		database.EXPECT().GetTagTriggerIDs(tag).Return(nil, nil)
 		database.EXPECT().RemoveTag(tag).Return(expected)
+		database.EXPECT().GetTagsSubscriptions([]string{tag}).Return(nil, nil)
 		resp, err := RemoveTag(database, tag)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 		So(resp, ShouldBeNil)
