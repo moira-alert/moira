@@ -42,16 +42,18 @@ func TestDeleteTag(t *testing.T) {
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
 	tag := "MyTag"
 
-	Convey("Test no trigger ids by tag", t, func() {
+	Convey("Test no trigger ids and subscriptions by tag", t, func() {
 		database.EXPECT().GetTagTriggerIDs(tag).Return(nil, nil)
+		database.EXPECT().GetTagsSubscriptions([]string{tag}).Return([]*moira.SubscriptionData{}, nil)
 		database.EXPECT().RemoveTag(tag).Return(nil)
 		resp, err := RemoveTag(database, tag)
 		So(err, ShouldBeNil)
 		So(resp, ShouldResemble, &dto.MessageResponse{Message: "tag deleted"})
 	})
 
-	Convey("Test has trigger ids by tag", t, func() {
+	Convey("Test has trigger ids and subscriptions by tag", t, func() {
 		database.EXPECT().GetTagTriggerIDs(tag).Return([]string{"123"}, nil)
+		database.EXPECT().GetTagsSubscriptions([]string{tag}).Return([]*moira.SubscriptionData{}, nil)
 		resp, err := RemoveTag(database, tag)
 		So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("this tag is assigned to %v triggers. Remove tag from triggers first", 1)))
 		So(resp, ShouldBeNil)
