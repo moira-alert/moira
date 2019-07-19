@@ -7,6 +7,7 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/senders/discord"
 	"github.com/moira-alert/moira/senders/mail"
+	"github.com/moira-alert/moira/senders/opsgenie"
 	"github.com/moira-alert/moira/senders/pushover"
 	"github.com/moira-alert/moira/senders/script"
 	"github.com/moira-alert/moira/senders/slack"
@@ -26,6 +27,7 @@ const (
 	twilioSmsSender   = "twilio sms"
 	twilioVoiceSender = "twilio voice"
 	webhookSender     = "webhook"
+	opsgenieSender    = "opsgenie"
 )
 
 // RegisterSenders watch on senders config and register all configured senders
@@ -50,6 +52,8 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 			err = notifier.RegisterSender(senderSettings, &script.Sender{})
 		case webhookSender:
 			err = notifier.RegisterSender(senderSettings, &webhook.Sender{})
+		case opsgenieSender:
+			err = notifier.RegisterSender(senderSettings, &opsgenie.Sender{})
 		// case "email":
 		// 	err = notifier.RegisterSender(senderSettings, &kontur.MailSender{})
 		// case "phone":

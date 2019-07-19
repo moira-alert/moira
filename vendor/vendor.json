@@ -822,6 +822,18 @@
 			"revisionTime": "2016-03-15T20:05:05Z"
 		},
 		{
+			"checksumSHA1": "UIjsRH8GeYZow40PZX0riKHIzOE=",
+			"path": "github.com/opsgenie/opsgenie-go-sdk-v2/alert",
+			"revision": "b46b0594268dad7382c89603b4815322f0e237b1",
+			"revisionTime": "2019-07-10T13:20:28Z"
+		},
+		{
+			"checksumSHA1": "AIouGZdTf/gmr0j8s2CsEExem9U=",
+			"path": "github.com/opsgenie/opsgenie-go-sdk-v2/client",
+			"revision": "b46b0594268dad7382c89603b4815322f0e237b1",
+			"revisionTime": "2019-07-10T13:20:28Z"
+		},
+		{
 			"checksumSHA1": "JVGDxPn66bpe6xEiexs1r+y6jF0=",
 			"path": "github.com/patrickmn/go-cache",
 			"revision": "a3647f8e31d79543b2d0f0ae2fe5c379d72cedc0",
@@ -870,6 +882,12 @@
 			"path": "github.com/seiflotfy/cuckoofilter",
 			"revision": "09e42b44620a3ea116a06f755fbf05fb62a1f550",
 			"revisionTime": "2018-08-01T14:34:48Z"
+		},
+		{
+			"checksumSHA1": "rdXBSMsIpX89xZS5rUwnBGZOe+Q=",
+			"path": "github.com/sirupsen/logrus",
+			"revision": "d329d24db4313262a3b0a24d8aeb1dc4bd294fb0",
+			"revisionTime": "2018-07-31T16:13:55Z"
 		},
 		{
 			"checksumSHA1": "8M5kk6pT2gknOtearzxw7gagVCM=",
