@@ -32,6 +32,13 @@ go get github.com/kardianos/govendor
 govendor sync
 ```
 
+Then you need local redis listening on port 6379.
+Easiest way to get redis is via docker:
+
+```bash
+docker run -p 6379:6379 -d redis:alpine
+```
+
 To run test use ``go test ./...`` or run [GoConvey](http://goconvey.co/):
 
 ```
