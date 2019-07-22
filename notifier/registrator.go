@@ -12,6 +12,7 @@ import (
 	"github.com/moira-alert/moira/senders/slack"
 	"github.com/moira-alert/moira/senders/telegram"
 	"github.com/moira-alert/moira/senders/twilio"
+	"github.com/moira-alert/moira/senders/victorops"
 	"github.com/moira-alert/moira/senders/webhook"
 	// "github.com/moira-alert/moira/senders/kontur"
 )
@@ -26,6 +27,7 @@ const (
 	twilioSmsSender   = "twilio sms"
 	twilioVoiceSender = "twilio voice"
 	webhookSender     = "webhook"
+	victoropsSender   = "victorops"
 )
 
 // RegisterSenders watch on senders config and register all configured senders
@@ -50,6 +52,8 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 			err = notifier.RegisterSender(senderSettings, &script.Sender{})
 		case webhookSender:
 			err = notifier.RegisterSender(senderSettings, &webhook.Sender{})
+		case victoropsSender:
+			err = notifier.RegisterSender(senderSettings, &victorops.Sender{})
 		// case "email":
 		// 	err = notifier.RegisterSender(senderSettings, &kontur.MailSender{})
 		// case "phone":
