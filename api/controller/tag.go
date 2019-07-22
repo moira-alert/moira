@@ -88,6 +88,18 @@ func RemoveTag(database moira.Database, tagName string) (*dto.MessageResponse, *
 	if len(triggerIDs) > 0 {
 		return nil, api.ErrorInvalidRequest(fmt.Errorf("this tag is assigned to %v triggers. Remove tag from triggers first", len(triggerIDs)))
 	}
+
+	subscriptions, err := database.GetTagsSubscriptions([]string{tagName})
+	if err != nil {
+		return nil, api.ErrorInternalServer(err)
+	}
+
+	for _, s := range subscriptions {
+		if s != nil {
+			return nil, api.ErrorInvalidRequest(fmt.Errorf("this tag is assigned to %v subscriptions. Remove tag from subscriptions first", len(subscriptions)))
+		}
+	}
+
 	if err = database.RemoveTag(tagName); err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
