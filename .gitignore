@@ -1,5 +1,4 @@
 log
-build/
 
 .DS_Store      
 *.coverprofile

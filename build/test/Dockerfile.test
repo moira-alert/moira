@@ -1,0 +1,13 @@
+FROM golang:1.12.6
+
+RUN go get github.com/kardianos/govendor
+RUN go get github.com/smartystreets/goconvey
+
+COPY ./vendor/vendor.json /go/src/github.com/moira-alert/moira/vendor/vendor.json
+WORKDIR /go/src/github.com/moira-alert/moira
+RUN govendor sync
+
+COPY . /go/src/github.com/moira-alert/moira/
+
+ENTRYPOINT ["/go/bin/goconvey"]
+CMD ["-host=0.0.0.0", "-launchBrowser=false", "-timeout=120s"]
