@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"os"
 	"testing"
 
 	"github.com/moira-alert/moira/logging/go-logging"
@@ -9,7 +10,10 @@ import (
 	"github.com/moira-alert/moira"
 )
 
-var config = Config{Port: "6379", Host: "0.0.0.0"}
+var redisPort = os.Getenv("REDIS_PORT")
+var redisHost = os.Getenv("REDIS_HOST")
+
+var config = Config{Port: redisPort, Host: redisHost}
 var emptyConfig = Config{}
 var testSource = DBSource("test")
 

@@ -1,0 +1,19 @@
+version: "3.7"
+
+services:
+  redis:
+    image: redis:alpine
+    expose:
+      - "6379"
+
+  goconvey:
+    build:
+      dockerfile: build/test/Dockerfile.test
+      context: .
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - redis
+    ports:
+      - "8080:8080"

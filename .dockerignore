@@ -5,5 +5,3 @@ vendor
 !vendor/vendor.json
 build
 local
-
-**/*_test.go

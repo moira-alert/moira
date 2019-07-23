@@ -2,18 +2,19 @@ package notifier
 
 import (
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
 	"github.com/golang/mock/gomock"
-	"github.com/moira-alert/moira/metric_source"
+	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
 	"github.com/op/go-logging"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database/redis"
 	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
-	"github.com/moira-alert/moira/mock/moira-alert"
+	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	"github.com/moira-alert/moira/notifier"
 	"github.com/moira-alert/moira/notifier/events"
 	"github.com/moira-alert/moira/notifier/notifications"
@@ -74,10 +75,13 @@ var event = moira.NotificationEvent{
 	TriggerID: "triggerID-0000000000001",
 }
 
+var redisPort = os.Getenv("REDIS_PORT")
+var redisHost = os.Getenv("REDIS_HOST")
+
 func TestNotifier(t *testing.T) {
 	mockCtrl = gomock.NewController(t)
 	defer mockCtrl.Finish()
-	database := redis.NewDatabase(logger, redis.Config{Port: "6379", Host: "localhost"}, redis.Notifier)
+	database := redis.NewDatabase(logger, redis.Config{Port: redisPort, Host: redisHost}, redis.Notifier)
 	metricsSourceProvider := metricSource.CreateMetricSourceProvider(local.Create(database), nil)
 	database.SaveContact(&contact)
 	database.SaveSubscription(&subscription)
