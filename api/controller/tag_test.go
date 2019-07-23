@@ -42,15 +42,16 @@ func TestDeleteTag(t *testing.T) {
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
 	tag := "MyTag"
 
-	Convey("Test no trigger ids by tag", t, func() {
+	Convey("Test no trigger ids and subscriptions by tag", t, func() {
 		database.EXPECT().GetTagTriggerIDs(tag).Return(nil, nil)
+		database.EXPECT().GetTagsSubscriptions([]string{tag}).Return([]*moira.SubscriptionData{}, nil)
 		database.EXPECT().RemoveTag(tag).Return(nil)
 		resp, err := RemoveTag(database, tag)
 		So(err, ShouldBeNil)
 		So(resp, ShouldResemble, &dto.MessageResponse{Message: "tag deleted"})
 	})
 
-	Convey("Test has trigger ids by tag", t, func() {
+	Convey("Test has trigger ids and subscriptions by tag", t, func() {
 		database.EXPECT().GetTagTriggerIDs(tag).Return([]string{"123"}, nil)
 		resp, err := RemoveTag(database, tag)
 		So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("this tag is assigned to %v triggers. Remove tag from triggers first", 1)))
@@ -65,10 +66,29 @@ func TestDeleteTag(t *testing.T) {
 		So(resp, ShouldBeNil)
 	})
 
-	Convey("Error delete tag", t, func() {
+	Convey("verification of error handling when receiving subscriptions", t, func() {
+		expected := fmt.Errorf("can not read subscriptions")
+		database.EXPECT().GetTagTriggerIDs(tag).Return(nil, nil)
+		database.EXPECT().GetTagsSubscriptions([]string{tag}).Return(nil, expected)
+		resp, err := RemoveTag(database, tag)
+		So(err, ShouldResemble, api.ErrorInternalServer(expected))
+		So(resp, ShouldBeNil)
+	})
+
+	Convey("check create error if subscription exists", t, func() {
+		data := []*moira.SubscriptionData{{ID: "TestSubscription"}}
+		database.EXPECT().GetTagTriggerIDs(tag).Return(nil, nil)
+		database.EXPECT().GetTagsSubscriptions([]string{tag}).Return(data, nil)
+		resp, err := RemoveTag(database, tag)
+		So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("this tag is assigned to 1 subscriptions. Remove tag from subscriptions first")))
+		So(resp, ShouldBeNil)
+	})
+
+	Convey("verification of error handling during tag removal", t, func() {
 		expected := fmt.Errorf("can not delete tag")
 		database.EXPECT().GetTagTriggerIDs(tag).Return(nil, nil)
 		database.EXPECT().RemoveTag(tag).Return(expected)
+		database.EXPECT().GetTagsSubscriptions([]string{tag}).Return(nil, nil)
 		resp, err := RemoveTag(database, tag)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 		So(resp, ShouldBeNil)
