@@ -33,7 +33,7 @@ const (
 // CreateAlert creates a new alert in the victorops timeline
 func (client *Client) CreateAlert(routingKey string, alert CreateAlertRequest) error {
 	if alert.MessageType == "" {
-		return fmt.Errorf("MessageType field cannot be empty")
+		return fmt.Errorf("field MessageType cannot be empty")
 	}
 
 	body := new(bytes.Buffer)
