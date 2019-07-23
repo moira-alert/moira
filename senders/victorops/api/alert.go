@@ -38,6 +38,9 @@ func (client *Client) CreateAlert(routingKey string, alert CreateAlertRequest) e
 
 	body := new(bytes.Buffer)
 	err := json.NewEncoder(body).Encode(alert)
+	if err != nil {
+		return fmt.Errorf("error while encoding json: %s", err)
+	}
 	req, err := http.NewRequest("POST", fmt.Sprintf("%s/%s", client.routingURL, routingKey), body)
 	if err != nil {
 		return err

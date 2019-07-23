@@ -50,7 +50,7 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 }
 
 func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData) string {
-	title := fmt.Sprintf("%s", events.GetSubjectState())
+	title := fmt.Sprintf("%s", string(events.GetSubjectState()))
 
 	tags := trigger.GetTags()
 	if tags != "" {
