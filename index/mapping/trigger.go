@@ -37,10 +37,10 @@ func (Trigger) Type() string {
 func (Trigger) GetDocumentMapping() *mapping.DocumentMapping {
 	triggerMapping := bleve.NewDocumentStaticMapping()
 
-	triggerMapping.AddFieldMappingsAt(TriggerName.String(), getStandardMapping())
-	triggerMapping.AddFieldMappingsAt(TriggerTags.String(), getKeywordMapping())
-	triggerMapping.AddFieldMappingsAt(TriggerDesc.String(), getStandardMapping())
-	triggerMapping.AddFieldMappingsAt(TriggerLastCheckScore.String(), getNumericMapping())
+	triggerMapping.AddFieldMappingsAt(TriggerName.GetName(), getStandardMapping())
+	triggerMapping.AddFieldMappingsAt(TriggerTags.GetName(), getKeywordMapping())
+	triggerMapping.AddFieldMappingsAt(TriggerDesc.GetName(), getStandardMapping())
+	triggerMapping.AddFieldMappingsAt(TriggerLastCheckScore.GetName(), getNumericMapping())
 
 	return triggerMapping
 

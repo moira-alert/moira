@@ -234,7 +234,8 @@ type MetricEvent struct {
 
 // SearchHighlight represents highlight
 type SearchHighlight struct {
-	Field, Value string
+	Field string
+	Value string
 }
 
 // SearchResult represents fulltext search result

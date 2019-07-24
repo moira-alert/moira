@@ -23,7 +23,7 @@ func TestTriggerField_GetPriority(t *testing.T) {
 	actual := make([]float64, 0, len(testTriggerFields))
 	Convey("Test GetPriority returns correct field priority", t, func() {
 		for _, triggerField := range testTriggerFields {
-			fieldName, fieldPriority := triggerField.String(), triggerField.GetPriority()
+			fieldName, fieldPriority := triggerField.GetName(), triggerField.GetPriority()
 			log.Printf("field: %s priority: %f", fieldName, fieldPriority)
 			actual = append(actual, triggerField.GetPriority())
 		}
@@ -36,7 +36,7 @@ func TestTriggerField_GetTagValue(t *testing.T) {
 	// SearchResult will contain highlights for actual moira.Trigger structure
 	Convey("Test GetTagValue returns correct JSON tag", t, func() {
 		for _, triggerField := range testTriggerFields {
-			actual := getTagByFieldName(triggerField.String())
+			actual := getTagByFieldName(triggerField.GetName())
 			expected := triggerField.GetTagValue()
 			So(actual, ShouldEqual, expected)
 		}

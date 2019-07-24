@@ -23,7 +23,7 @@ func buildSearchQuery(filterTags, searchTerms []string, onlyErrors bool) query.Q
 func buildQueryForTags(filterTags []string) (searchQueries []query.Query) {
 	for _, tag := range filterTags {
 		qr := bleve.NewTermQuery(tag)
-		qr.FieldVal = mapping.TriggerTags.String()
+		qr.FieldVal = mapping.TriggerTags.GetName()
 		searchQueries = append(searchQueries, qr)
 	}
 	return
@@ -32,10 +32,10 @@ func buildQueryForTags(filterTags []string) (searchQueries []query.Query) {
 func buildQueryForTerms(searchTerms []string) (searchQueries []query.Query) {
 	for _, term := range searchTerms {
 		nameQuery, nameField := bleve.NewFuzzyQuery(term), mapping.TriggerName
-		nameQuery.SetField(nameField.String())
+		nameQuery.SetField(nameField.GetName())
 		nameQuery.SetBoost(nameField.GetPriority())
 		descQuery, descField := bleve.NewFuzzyQuery(term), mapping.TriggerDesc
-		descQuery.SetField(descField.String())
+		descQuery.SetField(descField.GetName())
 		descQuery.SetBoost(descField.GetPriority())
 		searchQueries = append(searchQueries, bleve.NewDisjunctionQuery(nameQuery, descQuery))
 	}
@@ -48,6 +48,6 @@ func buildQueryForOnlyErrors(onlyErrors bool) (searchQueries []query.Query) {
 	}
 	minScore := float64(1)
 	qr := bleve.NewNumericRangeQuery(&minScore, nil)
-	qr.FieldVal = mapping.TriggerLastCheckScore.String()
+	qr.FieldVal = mapping.TriggerLastCheckScore.GetName()
 	return append(searchQueries, qr)
 }

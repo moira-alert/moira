@@ -49,7 +49,7 @@ func getHighlights(fragmentsMap search.FieldFragmentMap, triggerFields ...mappin
 	highlights := make([]moira.SearchHighlight, 0)
 	for _, triggerField := range triggerFields {
 		var highlightValue string
-		if fragments, ok := fragmentsMap[triggerField.String()]; ok {
+		if fragments, ok := fragmentsMap[triggerField.GetName()]; ok {
 			for _, fragment := range fragments {
 				highlightValue += fragment
 			}
@@ -73,7 +73,7 @@ func buildSearchRequest(filterTags []string, searchString string, onlyErrors boo
 	// TriggerCheck.Score (desc)
 	// Relevance (asc)
 	// Trigger.Name (asc)
-	req.SortBy([]string{fmt.Sprintf("-%s", mapping.TriggerLastCheckScore.String()), "-_score", mapping.TriggerName.String()})
+	req.SortBy([]string{fmt.Sprintf("-%s", mapping.TriggerLastCheckScore.GetName()), "-_score", mapping.TriggerName.GetName()})
 	req.Highlight = bleve.NewHighlight()
 
 	return req
