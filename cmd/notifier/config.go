@@ -116,12 +116,14 @@ func (config *notifierConfig) getSettings(logger moira.Logger) notifier.Config {
 	}
 
 	return notifier.Config{
-		SendingTimeout:   to.Duration(config.SenderTimeout),
-		ResendingTimeout: to.Duration(config.ResendingTimeout),
-		Senders:          config.Senders,
-		FrontURL:         config.FrontURI,
-		Location:         location,
-		DateTimeFormat:   format,
+		SelfStateEnabled:  config.SelfState.Enabled,
+		SelfStateContacts: config.SelfState.Contacts,
+		SendingTimeout:    to.Duration(config.SenderTimeout),
+		ResendingTimeout:  to.Duration(config.ResendingTimeout),
+		Senders:           config.Senders,
+		FrontURL:          config.FrontURI,
+		Location:          location,
+		DateTimeFormat:    format,
 	}
 }
 
