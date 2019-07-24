@@ -86,7 +86,7 @@ func TestFetchTriggerMetrics(t *testing.T) {
 	})
 }
 
-func TestGetTimeSeries(t *testing.T) {
+func TestFetch(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	source := mock_metric_source.NewMockMetricSource(mockCtrl)
@@ -191,7 +191,7 @@ func TestGetTimeSeries(t *testing.T) {
 				So(metrics, ShouldBeNil)
 				So(err, ShouldBeError)
 				So(err, ShouldResemble, ErrTargetHasNoMetrics{targetIndex: 2})
-				So(err.Error(), ShouldResemble, "target t3 has no timeseries")
+				So(err.Error(), ShouldResemble, "target t3 has no metrics")
 			})
 
 			Convey("get pattern metrics has no metrics", func() {
@@ -264,7 +264,7 @@ func TestGetTimeSeries(t *testing.T) {
 			actual, metrics, err := triggerChecker.fetch()
 			So(err, ShouldBeError)
 			So(err, ShouldResemble, ErrWrongTriggerTargets([]int{2}))
-			So(err.Error(), ShouldResemble, "Target t2 has more than one timeseries")
+			So(err.Error(), ShouldResemble, "Target t2 has more than one metric")
 			So(actual, ShouldBeNil)
 			So(metrics, ShouldBeNil)
 		})
@@ -303,7 +303,7 @@ func TestGetTimeSeries(t *testing.T) {
 			actual, metrics, err := triggerChecker.fetch()
 			So(err, ShouldBeError)
 			So(err, ShouldResemble, ErrWrongTriggerTargets([]int{2, 4}))
-			So(err.Error(), ShouldResemble, "Targets t2, t4 has more than one timeseries")
+			So(err.Error(), ShouldResemble, "Targets t2, t4 has more than one metric")
 			So(actual, ShouldBeNil)
 			So(metrics, ShouldBeNil)
 		})
@@ -311,7 +311,7 @@ func TestGetTimeSeries(t *testing.T) {
 }
 
 func TestGetExpressionValues(t *testing.T) {
-	Convey("Has only main timeSeries", t, func() {
+	Convey("Has only main metric data", t, func() {
 		metricData := &metricSource.MetricData{
 			Name:      "m",
 			StartTime: 17,
