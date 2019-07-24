@@ -1,6 +1,7 @@
 package index
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -48,6 +49,21 @@ func TestIndex_actualize(t *testing.T) {
 			So(docCount, ShouldEqual, int64(18))
 		})
 
+		Convey("Test verification of error handling when receiving: FetchTriggersToReindex", func() {
+			expected := fmt.Errorf("err fetch trigers to reindex")
+			dataBase.EXPECT().FetchTriggersToReindex(fakeTS).Return(nil, expected)
+
+			err := index.actualizeIndex()
+			So(err, ShouldResemble, expected)
+		})
+
+		Convey("Test handling nil len: triggerToReindexIDs", func() {
+			dataBase.EXPECT().FetchTriggersToReindex(fakeTS).Return(nil, nil)
+
+			err := index.actualizeIndex()
+			So(err, ShouldBeNil)
+		})
+
 		Convey("Test addition", func() {
 			dataBase.EXPECT().FetchTriggersToReindex(fakeTS).Return(triggerIDs[18:20], nil)
 			dataBase.EXPECT().GetTriggerChecks(triggerIDs[18:20]).Return(triggerChecksPointers[18:20], nil)
@@ -66,6 +82,15 @@ func TestIndex_actualize(t *testing.T) {
 			So(err, ShouldBeNil)
 			docCount, _ := index.triggerIndex.GetCount()
 			So(docCount, ShouldEqual, int64(20))
+		})
+
+		Convey("Test verification of error handling when receiving: GetTriggerChecks", func() {
+			expected := fmt.Errorf("test error GetTriggerChecks")
+			dataBase.EXPECT().FetchTriggersToReindex(fakeTS).Return(triggerIDs[10:12], nil)
+			dataBase.EXPECT().GetTriggerChecks(triggerIDs[10:12]).Return(nil, expected)
+
+			err := index.actualizeIndex()
+			So(err, ShouldNotBeNil)
 		})
 	})
 }
