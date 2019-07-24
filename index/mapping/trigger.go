@@ -8,9 +8,9 @@ import (
 
 // FieldData is container for field-related parameters
 type FieldData struct {
-	Name     string
-	NameTag  string
-	Priority float64
+	name     string
+	nameTag  string
+	priority float64
 }
 
 var (
@@ -42,22 +42,21 @@ func (Trigger) Type() string {
 
 // String returns TriggerField name.
 func (field FieldData) String() string {
-	return field.Name
+	return field.name
 }
 
 // GetTagValue returns TriggerField value used in marshalling.
 func (field FieldData) GetTagValue() string {
-	return field.NameTag
+	return field.nameTag
 }
 
 // GetPriority returns field priority
 func (field FieldData) GetPriority() float64 {
-	return field.Priority
+	return field.priority
 }
 
 // GetDocumentMapping returns Bleve.mapping.DocumentMapping for Trigger type
 func (Trigger) GetDocumentMapping() *mapping.DocumentMapping {
-
 	triggerMapping := bleve.NewDocumentStaticMapping()
 
 	triggerMapping.AddFieldMappingsAt(TriggerName.String(), getStandardMapping())
