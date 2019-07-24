@@ -1,10 +1,15 @@
 package filter
 
-import "testing"
+import (
+	"github.com/op/go-logging"
+	"testing"
+)
 
 import . "github.com/smartystreets/goconvey/convey"
 
 func TestPatternIndex(t *testing.T) {
+	logger, _ := logging.GetLogger("PatternIndex")
+
 	Convey("Given patterns, should build index and match patterns", t, func() {
 		patterns := []string{
 			"Simple.matching.pattern",
@@ -20,7 +25,7 @@ func TestPatternIndex(t *testing.T) {
 			"Question.at_the_end?",
 		}
 
-		index := NewPatternIndex(patterns)
+		index := NewPatternIndex(logger, patterns)
 		testCases := []struct {
 			Metric          string
 			MatchedPatterns []string

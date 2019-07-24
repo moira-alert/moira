@@ -5,7 +5,9 @@ import (
 	"strings"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/senders/discord"
 	"github.com/moira-alert/moira/senders/mail"
+	"github.com/moira-alert/moira/senders/pagerduty"
 	"github.com/moira-alert/moira/senders/pushover"
 	"github.com/moira-alert/moira/senders/script"
 	"github.com/moira-alert/moira/senders/selfstate"
@@ -19,6 +21,7 @@ import (
 const (
 	mailSender        = "mail"
 	pushoverSender    = "pushover"
+	discordSender     = "discord"
 	scriptSender      = "script"
 	selfStateSender   = "selfstate"
 	slackSender       = "slack"
@@ -26,6 +29,7 @@ const (
 	twilioSmsSender   = "twilio sms"
 	twilioVoiceSender = "twilio voice"
 	webhookSender     = "webhook"
+	pagerdutySender   = "pagerduty"
 )
 
 // RegisterSenders watch on senders config and register all configured senders
@@ -40,10 +44,14 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 			err = notifier.RegisterSender(senderSettings, &pushover.Sender{})
 		case scriptSender:
 			err = notifier.RegisterSender(senderSettings, &script.Sender{})
+		case discordSender:
+			err = notifier.RegisterSender(senderSettings, &discord.Sender{DataBase: connector})
 		case slackSender:
 			err = notifier.RegisterSender(senderSettings, &slack.Sender{})
 		case telegramSender:
 			err = notifier.RegisterSender(senderSettings, &telegram.Sender{DataBase: connector})
+		case pagerdutySender:
+			err = notifier.RegisterSender(senderSettings, &pagerduty.Sender{ImageStores: notifier.imageStores})
 		case twilioSmsSender, twilioVoiceSender:
 			err = notifier.RegisterSender(senderSettings, &twilio.Sender{})
 		case webhookSender:

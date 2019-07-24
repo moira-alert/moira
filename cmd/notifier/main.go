@@ -87,9 +87,12 @@ func main() {
 	remoteSource := remote.Create(remoteConfig)
 	metricSourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource)
 
+	// Initialize the image store
+	imageStoreMap := cmd.InitImageStores(config.ImageStores, logger)
+
 	notifierConfig := config.Notifier.getSettings(logger)
 
-	sender := notifier.NewNotifier(database, logger, notifierConfig, notifierMetrics, metricSourceProvider)
+	sender := notifier.NewNotifier(database, logger, notifierConfig, notifierMetrics, metricSourceProvider, imageStoreMap)
 
 	// Register moira senders
 	if err := sender.RegisterSenders(database); err != nil {

@@ -181,7 +181,7 @@ func configureNotifier(t *testing.T) {
 	sender = mock_moira_alert.NewMockSender(mockCtrl)
 	metricsSourceProvider := metricSource.CreateMetricSourceProvider(local.Create(dataBase), nil)
 
-	notif = NewNotifier(dataBase, logger, config, notifierMetrics, metricsSourceProvider)
+	notif = NewNotifier(dataBase, logger, config, notifierMetrics, metricsSourceProvider, map[string]moira.ImageStore{})
 	notif.scheduler = scheduler
 	senderSettings := map[string]string{
 		"type": "test",
