@@ -13,12 +13,13 @@ import (
 )
 
 type config struct {
-	Redis    cmd.RedisConfig    `yaml:"redis"`
-	Graphite cmd.GraphiteConfig `yaml:"graphite"`
-	Logger   cmd.LoggerConfig   `yaml:"log"`
-	Notifier notifierConfig     `yaml:"notifier"`
-	Pprof    cmd.ProfilerConfig `yaml:"pprof"`
-	Remote   cmd.RemoteConfig   `yaml:"remote"`
+	Redis       cmd.RedisConfig      `yaml:"redis"`
+	Graphite    cmd.GraphiteConfig   `yaml:"graphite"`
+	Logger      cmd.LoggerConfig     `yaml:"log"`
+	Notifier    notifierConfig       `yaml:"notifier"`
+	Pprof       cmd.ProfilerConfig   `yaml:"pprof"`
+	Remote      cmd.RemoteConfig     `yaml:"remote"`
+	ImageStores cmd.ImageStoreConfig `yaml:"image_store"`
 }
 
 type notifierConfig struct {
@@ -93,6 +94,7 @@ func getDefault() config {
 		Remote: cmd.RemoteConfig{
 			Timeout: "60s",
 		},
+		ImageStores: cmd.ImageStoreConfig{},
 	}
 }
 
