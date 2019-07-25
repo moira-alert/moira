@@ -1,7 +1,11 @@
 package index
 
 import (
+<<<<<<< HEAD
 	"errors"
+=======
+	"fmt"
+>>>>>>> 51b3b2558318a837d83585261d0202e30545c669
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -50,7 +54,11 @@ func TestIndex_actualize(t *testing.T) {
 		})
 
 		Convey("Test verification of error handling when receiving: FetchTriggersToReindex", func() {
+<<<<<<< HEAD
 			expected := errors.New("err fetch trigers to reindex")
+=======
+			expected := fmt.Errorf("err fetch trigers to reindex")
+>>>>>>> 51b3b2558318a837d83585261d0202e30545c669
 			dataBase.EXPECT().FetchTriggersToReindex(fakeTS).Return(nil, expected)
 
 			err := index.actualizeIndex()
@@ -85,7 +93,11 @@ func TestIndex_actualize(t *testing.T) {
 		})
 
 		Convey("Test verification of error handling when receiving: GetTriggerChecks", func() {
+<<<<<<< HEAD
 			expected := errors.New("test error GetTriggerChecks")
+=======
+			expected := fmt.Errorf("test error GetTriggerChecks")
+>>>>>>> 51b3b2558318a837d83585261d0202e30545c669
 			dataBase.EXPECT().FetchTriggersToReindex(fakeTS).Return(triggerIDs[10:12], nil)
 			dataBase.EXPECT().GetTriggerChecks(triggerIDs[10:12]).Return(nil, expected)
 
