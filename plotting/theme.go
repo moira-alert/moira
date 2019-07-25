@@ -42,7 +42,7 @@ func getPlotTheme(plotTheme string) (moira.PlotTheme, error) {
 
 // getDefaultFont returns default font
 func getDefaultFont() (*truetype.Font, error) {
-	ttf, err := truetype.Parse(fonts.SegoeUI)
+	ttf, err := truetype.Parse(fonts.DejaVuSans)
 	if err != nil {
 		return nil, err
 	}

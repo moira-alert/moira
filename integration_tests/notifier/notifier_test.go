@@ -83,7 +83,7 @@ func TestNotifier(t *testing.T) {
 	database.SaveSubscription(&subscription)
 	database.SaveTrigger(trigger.ID, &trigger)
 	database.PushNotificationEvent(&event, true)
-	notifier2 := notifier.NewNotifier(database, logger, notifierConfig, notifierMetrics, metricsSourceProvider)
+	notifier2 := notifier.NewNotifier(database, logger, notifierConfig, notifierMetrics, metricsSourceProvider, map[string]moira.ImageStore{})
 	sender := mock_moira_alert.NewMockSender(mockCtrl)
 	sender.EXPECT().Init(senderSettings, logger, location, dateTimeFormat).Return(nil)
 	notifier2.RegisterSender(senderSettings, sender)
