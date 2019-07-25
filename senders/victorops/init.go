@@ -11,10 +11,11 @@ import (
 
 // Sender implements moira sender interface for victorops
 type Sender struct {
-	DataBase moira.Database
-	logger   moira.Logger
-	frontURI string
-	location *time.Location
+	DataBase   moira.Database
+	ImageStore moira.ImageStore
+	logger     moira.Logger
+	frontURI   string
+	location   *time.Location
 
 	routingURL string
 	client     *api.Client

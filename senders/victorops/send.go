@@ -23,15 +23,17 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	case moira.StateOK:
 		messageType = api.Recovery
 	case moira.StateNODATA:
-		messageType = api.Info
+		messageType = api.Critical
 
 	}
 
+	triggerURI := trigger.GetTriggerURI(sender.frontURI)
 	createAlertRequest := api.CreateAlertRequest{
 		MessageType:       messageType,
 		StateMessage:      sender.buildMessage(events, trigger, throttled),
 		EntityDisplayName: sender.buildTitle(events, trigger),
 		StateStartTime:    events[len(events)-1].Timestamp,
+		TriggerURL:        triggerURI,
 	}
 	err := sender.client.CreateAlert(contact.Value, createAlertRequest)
 	if err != nil {
@@ -57,12 +59,7 @@ func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.
 		title += " " + tags
 	}
 
-	triggerURI := trigger.GetTriggerURI(sender.frontURI)
-	if triggerURI != "" {
-		title += fmt.Sprintf(" %s|%s", triggerURI, trigger.Name)
-	} else if trigger.Name != "" {
-		title += " " + trigger.Name
-	}
+	title += trigger.Name
 	title += "\n"
 
 	return title

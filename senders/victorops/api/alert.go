@@ -16,6 +16,8 @@ type CreateAlertRequest struct {
 	EntityDisplayName string      `json:"entity_display_name,omitempty"`
 	StateMessage      string      `json:"state_message,omitempty"`
 	StateStartTime    int64       `json:"state_start_time,omitempty"`
+	TriggerURL        string      `json:"trigger_url,omitempty"`
+	ImageURL          string      `json:"image_url,omitempty"`
 }
 
 // MessageType is the type of a victorops alert
@@ -36,12 +38,11 @@ func (client *Client) CreateAlert(routingKey string, alert CreateAlertRequest) e
 		return fmt.Errorf("field MessageType cannot be empty")
 	}
 
-	body := new(bytes.Buffer)
-	err := json.NewEncoder(body).Encode(alert)
+	body, err := json.Marshal(alert)
 	if err != nil {
 		return fmt.Errorf("error while encoding json: %s", err)
 	}
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/%s", client.routingURL, routingKey), body)
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/%s", client.routingURL, routingKey), bytes.NewReader(body))
 	if err != nil {
 		return err
 	}
