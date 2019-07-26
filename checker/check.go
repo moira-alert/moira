@@ -156,10 +156,12 @@ func (triggerChecker *TriggerChecker) checkMetricData(metricData *metricSource.M
 }
 
 func (triggerChecker *TriggerChecker) handleCheckResult(checkData moira.CheckData, checkingError error) (moira.CheckData, error) {
+	if checkData.LastSuccessfulCheckTimestamp == 0 {
+		checkData.LastSuccessfulCheckTimestamp = checkData.Timestamp
+	}
 	if checkingError == nil {
 		checkData.State = moira.StateOK
 		if checkData.LastSuccessfulCheckTimestamp == 0 {
-			checkData.LastSuccessfulCheckTimestamp = checkData.Timestamp
 			return checkData, nil
 		}
 		checkData.LastSuccessfulCheckTimestamp = checkData.Timestamp
