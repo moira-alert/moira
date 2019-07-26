@@ -18,6 +18,8 @@ type CreateAlertRequest struct {
 	StateStartTime    int64       `json:"state_start_time,omitempty"`
 	TriggerURL        string      `json:"trigger_url,omitempty"`
 	ImageURL          string      `json:"image_url,omitempty"`
+	Timestamp         int64       `json:"timestamp,omitempty"`
+	MonitoringTool    string      `json:"monitoring_tool,omitempty"`
 }
 
 // MessageType is the type of a victorops alert

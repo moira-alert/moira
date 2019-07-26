@@ -3,6 +3,7 @@ package victorops
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/writeas/go-strip-markdown"
 
@@ -12,6 +13,16 @@ import (
 
 // SendEvents implements Sender interface Send
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) error {
+	createAlertRequest := sender.buildCreateAlertRequest(events, trigger, throttled, plot, time.Now().Unix())
+	err := sender.client.CreateAlert(contact.Value, createAlertRequest)
+	if err != nil {
+		return fmt.Errorf("error while sending alert to victorops: %s", err)
+	}
+	return nil
+}
+
+func (sender *Sender) buildCreateAlertRequest(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool, plot []byte, time int64) api.CreateAlertRequest {
+
 	var messageType api.MessageType
 	switch events[len(events)-1].State {
 	case moira.StateERROR:
@@ -28,18 +39,28 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	}
 
 	triggerURI := trigger.GetTriggerURI(sender.frontURI)
+
 	createAlertRequest := api.CreateAlertRequest{
 		MessageType:       messageType,
 		StateMessage:      sender.buildMessage(events, trigger, throttled),
 		EntityDisplayName: sender.buildTitle(events, trigger),
 		StateStartTime:    events[len(events)-1].Timestamp,
 		TriggerURL:        triggerURI,
+		Timestamp:         time,
+		MonitoringTool:    "Moira",
+		EntityID:          trigger.ID,
 	}
-	err := sender.client.CreateAlert(contact.Value, createAlertRequest)
-	if err != nil {
-		return fmt.Errorf("error while sending alert to victorops: %s", err)
+
+	if len(plot) > 0 && sender.imageStoreConfigured {
+		imageLink, err := sender.imageStore.StoreImage(plot)
+		if err != nil {
+			sender.logger.Warningf("could not store the plot image in the image store: %s", err)
+		} else {
+			createAlertRequest.ImageURL = imageLink
+		}
 	}
-	return nil
+
+	return createAlertRequest
 }
 
 func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {

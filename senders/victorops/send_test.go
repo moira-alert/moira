@@ -4,9 +4,18 @@ import (
 	"testing"
 	"time"
 
+	"github.com/moira-alert/moira/senders/victorops/api"
+
 	"github.com/moira-alert/moira"
 	. "github.com/smartystreets/goconvey/convey"
 )
+
+type MockImageStore struct {
+	moira.ImageStore
+}
+
+func (imageStore *MockImageStore) StoreImage(image []byte) (string, error) { return "test", nil }
+func (imageStore *MockImageStore) IsEnabled() bool                         { return true }
 
 func TestBuildMessage(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
@@ -70,5 +79,45 @@ func TestBuildMessage(t *testing.T) {
 			So(actual, ShouldResemble, expected)
 		})
 
+	})
+}
+
+func TestBuildCreateAlertRequest(t *testing.T) {
+	location, _ := time.LoadLocation("UTC")
+	sender := Sender{location: location, frontURI: "http://moira.url", imageStore: &MockImageStore{}, imageStoreConfigured: true}
+	value := float64(123)
+
+	Convey("Build CreateAlertRequest tests", t, func() {
+		event := moira.NotificationEvent{
+			TriggerID: "TriggerID",
+			Value:     &value,
+			Timestamp: 150000000,
+			Metric:    "Metric",
+			OldState:  moira.StateOK,
+			State:     moira.StateNODATA,
+			Message:   nil,
+		}
+
+		trigger := moira.TriggerData{
+			Tags: []string{"tag1", "tag2"},
+			Name: "Name",
+			ID:   "TriggerID",
+		}
+
+		Convey("Build CreateAlertRequest with one moira event and plot", func() {
+			actual := sender.buildCreateAlertRequest(moira.NotificationEvents{event}, trigger, false, []byte("test"), 150000000)
+			expected := api.CreateAlertRequest{
+				MessageType:       api.Critical,
+				StateMessage:      sender.buildMessage(moira.NotificationEvents{event}, trigger, false),
+				EntityID:          trigger.ID,
+				Timestamp:         150000000,
+				StateStartTime:    event.Timestamp,
+				TriggerURL:        "http://moira.url/trigger/TriggerID",
+				ImageURL:          "test",
+				MonitoringTool:    "Moira",
+				EntityDisplayName: sender.buildTitle(moira.NotificationEvents{event}, trigger),
+			}
+			So(actual, ShouldResemble, expected)
+		})
 	})
 }
