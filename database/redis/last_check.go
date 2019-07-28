@@ -78,56 +78,6 @@ func (connector *DbConnector) RemoveTriggerLastCheck(triggerID string) error {
 	return nil
 }
 
-// SetTriggerCheckMaintenance sets maintenance for whole trigger and to given metrics,
-// If during the update lastCheck was updated from another place, try update again
-// If CheckData does not contain one of given metrics it will ignore this metric
-func (connector *DbConnector) SetTriggerCheckMaintenance(triggerID string, metrics map[string]int64, triggerMaintenance *int64, userLogin string, timeCallMaintenance int64) error {
-	c := connector.pool.Get()
-	defer c.Close()
-	var readingErr error
-
-	lastCheckString, readingErr := redis.String(c.Do("GET", metricLastCheckKey(triggerID)))
-	if readingErr != nil && readingErr != redis.ErrNil {
-		return readingErr
-	}
-	for readingErr != redis.ErrNil {
-		var lastCheck = moira.CheckData{}
-		err := json.Unmarshal([]byte(lastCheckString), &lastCheck)
-		if err != nil {
-			return fmt.Errorf("failed to parse lastCheck json %s: %s", lastCheckString, err.Error())
-		}
-		metricsCheck := lastCheck.Metrics
-		if len(metricsCheck) > 0 {
-			for metric, value := range metrics {
-				data, ok := metricsCheck[metric]
-				if !ok {
-					continue
-				}
-				moira.SetMaintenanceUserAndTime(&data, value, userLogin, timeCallMaintenance)
-				metricsCheck[metric] = data
-			}
-		}
-		if triggerMaintenance != nil {
-			moira.SetMaintenanceUserAndTime(&lastCheck, *triggerMaintenance, userLogin, timeCallMaintenance)
-		}
-		newLastCheck, err := json.Marshal(lastCheck)
-		if err != nil {
-			return err
-		}
-
-		var prev string
-		prev, readingErr = redis.String(c.Do("GETSET", metricLastCheckKey(triggerID), newLastCheck, ))
-		if readingErr != nil && readingErr != redis.ErrNil {
-			return readingErr
-		}
-		if prev == lastCheckString {
-			break
-		}
-		lastCheckString = prev
-	}
-	return nil
-}
-
 // checkDataScoreChanged returns true if checkData.Score changed since last check
 func (connector *DbConnector) checkDataScoreChanged(triggerID string, checkData *moira.CheckData) bool {
 	c := connector.pool.Get()

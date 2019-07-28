@@ -361,3 +361,4 @@ func triggerTagsKey(triggerID string) string {
 func patternTriggersKey(pattern string) string {
 	return fmt.Sprintf("moira-pattern-triggers:%s", pattern)
 }
+
