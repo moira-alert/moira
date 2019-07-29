@@ -4,18 +4,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira/senders/victorops/api"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
 )
-
-type MockImageStore struct {
-	moira.ImageStore
-}
-
-func (imageStore *MockImageStore) StoreImage(image []byte) (string, error) { return "test", nil }
-func (imageStore *MockImageStore) IsEnabled() bool                         { return true }
 
 func TestBuildMessage(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
@@ -84,7 +79,10 @@ func TestBuildMessage(t *testing.T) {
 
 func TestBuildCreateAlertRequest(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
-	sender := Sender{location: location, frontURI: "http://moira.url", imageStore: &MockImageStore{}, imageStoreConfigured: true}
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	imageStore := mock_moira_alert.NewMockImageStore(mockCtrl)
+	sender := Sender{location: location, frontURI: "http://moira.url", imageStore: imageStore, imageStoreConfigured: true}
 	value := float64(123)
 
 	Convey("Build CreateAlertRequest tests", t, func() {
@@ -105,9 +103,10 @@ func TestBuildCreateAlertRequest(t *testing.T) {
 		}
 
 		Convey("Build CreateAlertRequest with one moira event and plot", func() {
+			imageStore.EXPECT().StoreImage([]byte("test")).Return("test", nil)
 			actual := sender.buildCreateAlertRequest(moira.NotificationEvents{event}, trigger, false, []byte("test"), 150000000)
 			expected := api.CreateAlertRequest{
-				MessageType:       api.Critical,
+				MessageType:       api.Warning,
 				StateMessage:      sender.buildMessage(moira.NotificationEvents{event}, trigger, false),
 				EntityID:          trigger.ID,
 				Timestamp:         150000000,

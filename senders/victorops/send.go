@@ -23,25 +23,10 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 
 func (sender *Sender) buildCreateAlertRequest(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool, plot []byte, time int64) api.CreateAlertRequest {
 
-	var messageType api.MessageType
-	switch events[len(events)-1].State {
-	case moira.StateERROR:
-		messageType = api.Critical
-	case moira.StateEXCEPTION:
-		messageType = api.Critical
-	case moira.StateWARN:
-		messageType = api.Warning
-	case moira.StateOK:
-		messageType = api.Recovery
-	case moira.StateNODATA:
-		messageType = api.Critical
-
-	}
-
 	triggerURI := trigger.GetTriggerURI(sender.frontURI)
 
 	createAlertRequest := api.CreateAlertRequest{
-		MessageType:       messageType,
+		MessageType:       sender.getMessageType(events),
 		StateMessage:      sender.buildMessage(events, trigger, throttled),
 		EntityDisplayName: sender.buildTitle(events, trigger),
 		StateStartTime:    events[len(events)-1].Timestamp,
@@ -70,6 +55,19 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 	message.WriteString(desc)
 	message.WriteString(eventsString)
 	return message.String()
+}
+
+func (sender *Sender) getMessageType(events moira.NotificationEvents) api.MessageType {
+	msgType := api.Recovery
+	for _, event := range events {
+		if event.State == moira.StateERROR || event.State == moira.StateEXCEPTION {
+			msgType = api.Critical
+		}
+		if msgType != api.Critical && (event.State == moira.StateWARN || event.State == moira.StateNODATA) {
+			msgType = api.Warning
+		}
+	}
+	return msgType
 }
 
 func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData) string {
