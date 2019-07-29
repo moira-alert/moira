@@ -523,6 +523,7 @@ func TestCheckErrors(t *testing.T) {
 			EventTimestamp: triggerChecker.until,
 			Score:          0,
 			Message:        "",
+			LastSuccessfulCheckTimestamp:triggerChecker.until,
 		}
 
 		source.EXPECT().Fetch(pattern, triggerChecker.from, triggerChecker.until, true).Return(nil, metricErr)
@@ -550,7 +551,7 @@ func TestCheckErrors(t *testing.T) {
 				EventTimestamp:               triggerChecker.until,
 				Score:                        100000,
 				Message:                      messageException,
-				LastSuccessfulCheckTimestamp: 0,
+				LastSuccessfulCheckTimestamp: triggerChecker.until,
 			}
 
 			source.EXPECT().Fetch(pattern, triggerChecker.from, triggerChecker.until, true).Return(nil, unknownFunctionExc)
@@ -997,7 +998,7 @@ func TestHandleTriggerCheck(t *testing.T) {
 				Timestamp:                    checkData.Timestamp,
 				EventTimestamp:               checkData.Timestamp,
 				Message:                      "Trigger has no metrics, check your target",
-				LastSuccessfulCheckTimestamp: 0,
+				LastSuccessfulCheckTimestamp: checkData.Timestamp,
 			}
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, expected)
@@ -1014,7 +1015,6 @@ func TestHandleTriggerCheck(t *testing.T) {
 			lastCheck: &moira.CheckData{
 				Timestamp:                    time.Now().Unix(),
 				State:                        moira.StateOK,
-				LastSuccessfulCheckTimestamp: time.Now().Unix(),
 			},
 		}
 		checkData := moira.CheckData{
@@ -1029,7 +1029,7 @@ func TestHandleTriggerCheck(t *testing.T) {
 			Timestamp:                    checkData.Timestamp,
 			EventTimestamp:               checkData.Timestamp,
 			Message:                      "Trigger never received metrics",
-			LastSuccessfulCheckTimestamp: 0,
+			LastSuccessfulCheckTimestamp: checkData.Timestamp,
 		}
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, expected)
@@ -1055,7 +1055,6 @@ func TestHandleTriggerCheck(t *testing.T) {
 			},
 			State:                        moira.StateOK,
 			Timestamp:                    time.Now().Unix(),
-			LastSuccessfulCheckTimestamp: 0,
 		}
 
 		dataBase.EXPECT().PushNotificationEvent(gomock.Any(), true).Return(nil)
@@ -1066,7 +1065,7 @@ func TestHandleTriggerCheck(t *testing.T) {
 			Timestamp:                    checkData.Timestamp,
 			EventTimestamp:               checkData.Timestamp,
 			Message:                      "Trigger never received metrics",
-			LastSuccessfulCheckTimestamp: 0,
+			LastSuccessfulCheckTimestamp: checkData.Timestamp,
 		}
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, expected)
@@ -1100,7 +1099,7 @@ func TestHandleTriggerCheck(t *testing.T) {
 			Timestamp:                    checkData.Timestamp,
 			EventTimestamp:               checkData.Timestamp,
 			Message:                      "Trigger never received metrics",
-			LastSuccessfulCheckTimestamp: 0,
+			LastSuccessfulCheckTimestamp: checkData.Timestamp,
 		}
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, expected)
@@ -1134,6 +1133,7 @@ func TestHandleTriggerCheck(t *testing.T) {
 			Timestamp:      now,
 			EventTimestamp: now - 3600,
 			Message:        "Trigger never received metrics",
+			LastSuccessfulCheckTimestamp:now,
 		}
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, expected)
@@ -1166,7 +1166,7 @@ func TestHandleTriggerCheck(t *testing.T) {
 			Timestamp:                    checkData.Timestamp,
 			EventTimestamp:               checkData.Timestamp,
 			Message:                      "Unknown graphite function: \"123\"",
-			LastSuccessfulCheckTimestamp: 0,
+			LastSuccessfulCheckTimestamp: checkData.Timestamp,
 		}
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, expected)
@@ -1198,7 +1198,7 @@ func TestHandleTriggerCheck(t *testing.T) {
 			Timestamp:                    checkData.Timestamp,
 			EventTimestamp:               checkData.Timestamp,
 			Message:                      "Trigger has same metric names: first, second",
-			LastSuccessfulCheckTimestamp: 0,
+			LastSuccessfulCheckTimestamp: checkData.Timestamp,
 		}
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, expected)
@@ -1285,7 +1285,7 @@ func TestHandleTriggerCheck(t *testing.T) {
 			Timestamp:                    checkData.Timestamp,
 			EventTimestamp:               checkData.Timestamp,
 			Message:                      "Target t2 has more than one metric",
-			LastSuccessfulCheckTimestamp: 0,
+			LastSuccessfulCheckTimestamp: checkData.Timestamp,
 		}
 		So(err, ShouldBeNil)
 		So(actual, ShouldResemble, expected)
