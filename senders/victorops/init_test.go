@@ -14,10 +14,6 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-type MockImageStoreNotConfigured struct{ moira.ImageStore }
-
-func (imageStore *MockImageStoreNotConfigured) IsEnabled() bool { return false }
-
 func TestInit(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test")
 	location, _ := time.LoadLocation("UTC")

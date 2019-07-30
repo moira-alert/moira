@@ -53,23 +53,9 @@ func (sender *Sender) buildEvent(events moira.NotificationEvents, contact moira.
 		details["Message"] = "Please, fix your system or tune this trigger to generate less events."
 	}
 
-	var severity string
-	switch events[len(events)-1].State {
-	case moira.StateERROR:
-		severity = "error"
-	case moira.StateEXCEPTION:
-		severity = "error"
-	case moira.StateWARN:
-		severity = "warning"
-	case moira.StateOK:
-		severity = "info"
-	case moira.StateNODATA:
-		severity = "info"
-
-	}
 	payload := &pagerduty.V2Payload{
 		Summary:   summary,
-		Severity:  severity,
+		Severity:  sender.getSeverity(events),
 		Source:    "moira",
 		Timestamp: strconv.FormatInt(events[len(events)-1].Timestamp, 10),
 		Details:   details,
@@ -94,6 +80,19 @@ func (sender *Sender) buildEvent(events moira.NotificationEvents, contact moira.
 	}
 
 	return event
+}
+
+func (sender *Sender) getSeverity(events moira.NotificationEvents) string {
+	severity := "info"
+	for _, event := range events {
+		if event.State == moira.StateERROR || event.State == moira.StateEXCEPTION {
+			severity = "error"
+		}
+		if severity != "error" && (event.State == moira.StateWARN || event.State == moira.StateNODATA) {
+			severity = "warning"
+		}
+	}
+	return severity
 }
 
 func (sender *Sender) buildSummary(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
