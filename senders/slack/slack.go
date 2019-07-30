@@ -3,13 +3,14 @@ package slack
 import (
 	"bytes"
 	"fmt"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/karriereat/blackfriday-slack"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/senders"
+	blackfriday "gopkg.in/russross/blackfriday.v2"
 
 	"github.com/nlopes/slack"
 )
@@ -23,11 +24,6 @@ const (
 	testEmoji      = ":moira-state-test:"
 
 	messageMaxCharacters = 4000
-)
-
-var (
-	mdBoldRegex   = regexp.MustCompile(`(?m)\*\*(?P<boldtext>[\w\s]+)\*\*`)
-	mdHeaderRegex = regexp.MustCompile(`(?m)^\s*#{1,}\s*(?P<headertext>[^#\n]+)$`)
 )
 
 var stateEmoji = map[moira.State]string{
@@ -109,11 +105,7 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 func (sender *Sender) buildDescription(trigger moira.TriggerData) string {
 	desc := trigger.Desc
 	if trigger.Desc != "" {
-		// Replace **bold text** with *bold text* that slack supports
-		desc = mdBoldRegex.ReplaceAllString(desc, "*$boldtext*")
-
-		// Replace MD headers (## header text) with *header text* that slack supports
-		desc = mdHeaderRegex.ReplaceAllString(desc, "*$headertext*")
+		desc = string(blackfriday.Run([]byte(desc), blackfriday.WithRenderer(&slackdown.Renderer{})))
 		desc += "\n"
 	}
 	return desc

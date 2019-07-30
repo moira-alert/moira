@@ -732,6 +732,12 @@
 			"revisionTime": "2018-11-10T20:28:10Z"
 		},
 		{
+			"checksumSHA1": "Efb6Fw7/vcheGGqrUit6M1xuaS4=",
+			"path": "github.com/karriereat/blackfriday-slack",
+			"revision": "1989d6c6eb352e231f903425588ea86c779b1978",
+			"revisionTime": "2019-01-09T16:11:50Z"
+		},
+		{
 			"checksumSHA1": "LgQSpLMgzVNc+SfaxaGQT33ftqc=",
 			"path": "github.com/leemcloughlin/gofarmhash",
 			"revision": "0a055c5b87a8c55ce83459cbf2776b563822a942",

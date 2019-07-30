@@ -112,13 +112,15 @@ some other text _italic text_`,
 
 		slackCompatibleMD := `*header1*
 some text *bold text*
+
 *header 2*
-some other text _italic text_`
+some other text italic text
+`
 
 		Convey("Print moira message with one event", func() {
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, false)
 			expected := "*NODATA* [tag1][tag2] <http://moira.url/trigger/TriggerID|Name>\n" + slackCompatibleMD +
-				"\n```\n02:40: Metric = 123 (OK to NODATA)```"
+				"\n\n```\n02:40: Metric = 123 (OK to NODATA)```"
 			So(actual, ShouldResemble, expected)
 		})
 
@@ -132,21 +134,21 @@ some other text _italic text_`
 			event.Message = &message
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, false)
 			expected := "*NODATA* [tag1][tag2] <http://moira.url/trigger/TriggerID|Name>\n" + slackCompatibleMD +
-				"\n```\n02:40: Metric = 123 (OK to NODATA). This is message```"
+				"\n\n```\n02:40: Metric = 123 (OK to NODATA). This is message```"
 			So(actual, ShouldResemble, expected)
 		})
 
 		Convey("Print moira message with one event and throttled", func() {
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, true)
 			expected := "*NODATA* [tag1][tag2] <http://moira.url/trigger/TriggerID|Name>\n" + slackCompatibleMD +
-				"\n```\n02:40: Metric = 123 (OK to NODATA)```\nPlease, *fix your system or tune this trigger* to generate less events."
+				"\n\n```\n02:40: Metric = 123 (OK to NODATA)```\nPlease, *fix your system or tune this trigger* to generate less events."
 			So(actual, ShouldResemble, expected)
 		})
 
 		Convey("Print moira message with 6 events", func() {
 			actual := sender.buildMessage([]moira.NotificationEvent{event, event, event, event, event, event}, trigger, false)
 			expected := "*NODATA* [tag1][tag2] <http://moira.url/trigger/TriggerID|Name>\n" + slackCompatibleMD +
-				"\n```\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)```"
+				"\n\n```\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)\n02:40: Metric = 123 (OK to NODATA)```"
 			So(actual, ShouldResemble, expected)
 		})
 
