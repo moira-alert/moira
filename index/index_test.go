@@ -65,6 +65,7 @@ func TestIndex_CreateAndFill(t *testing.T) {
 
 		dataBase.EXPECT().GetTriggerChecks(triggerIDs[:20]).Return(triggerChecksPointers[:20], nil)
 		dataBase.EXPECT().GetTriggerChecks(triggerIDs[20:]).Return(triggerChecksPointers[20:], fmt.Errorf("test"))
+		dataBase.EXPECT().GetTriggerChecks(triggerIDs[20:]).Return(triggerChecksPointers[20:], fmt.Errorf("test"))
 		err := index.writeByBatches(triggerIDs, 20)
 		So(err, ShouldNotBeNil)
 	})

@@ -23,6 +23,10 @@ func (index *Index) getTriggerChecksBatches(triggerIDsBatches [][]string) (trigg
 			defer wg.Done()
 			newBatch, err := index.database.GetTriggerChecks(batch)
 			if err != nil {
+				index.logger.Errorf("Cannot get trigger checks from DB: %s", err.Error())
+				newBatch, err = index.database.GetTriggerChecks(batch)
+			}
+			if err != nil {
 				errors <- err
 				return
 			}
