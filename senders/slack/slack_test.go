@@ -223,8 +223,9 @@ some other text _italic text_`,
 
 		slackCompatibleMD := `*header1*
 some text *bold text*
+
 *header 2*
-some other text _italic text_
+some other text italic text
 `
 
 		Convey("Build empty desc", func() {
@@ -235,7 +236,7 @@ some other text _italic text_
 
 		Convey("Build desc with headers and bold", func() {
 			actual := sender.buildDescription(trigger)
-			expected := slackCompatibleMD
+			expected := slackCompatibleMD + "\n\n"
 			So(actual, ShouldResemble, expected)
 		})
 	})
