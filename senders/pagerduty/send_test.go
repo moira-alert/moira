@@ -5,22 +5,20 @@ import (
 	"time"
 
 	"github.com/PagerDuty/go-pagerduty"
+	"github.com/golang/mock/gomock"
+	"github.com/moira-alert/moira/mock/moira-alert"
 
 	"github.com/moira-alert/moira"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-type MockImageStore struct {
-	moira.ImageStore
-}
-
-func (imageStore *MockImageStore) StoreImage(image []byte) (string, error) { return "test", nil }
-func (imageStore *MockImageStore) IsEnabled() bool                         { return true }
-
 func TestBuildEvent(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
 	sender := Sender{location: location, frontURI: "http://moira.url"}
 	value := float64(97.4458331200185)
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	imageStore := mock_moira_alert.NewMockImageStore(mockCtrl)
 
 	Convey("Build pagerduty event tests", t, func() {
 		event := moira.NotificationEvent{
@@ -48,7 +46,7 @@ func TestBuildEvent(t *testing.T) {
 			Action:     "trigger",
 			Payload: &pagerduty.V2Payload{
 				Summary:   "NODATA [tag1][tag2]",
-				Severity:  "info",
+				Severity:  "warning",
 				Source:    "moira",
 				Timestamp: "150000000",
 				Details: map[string]interface{}{
@@ -73,7 +71,8 @@ func TestBuildEvent(t *testing.T) {
 		})
 
 		Convey("Build pagerduty event with one moira event and plot", func() {
-			sender.imageStore = &MockImageStore{}
+			imageStore.EXPECT().StoreImage([]byte("test")).Return("test", nil)
+			sender.imageStore = imageStore
 			sender.imageStoreConfigured = true
 			actual := sender.buildEvent(moira.NotificationEvents{event}, contact, trigger, []byte("test"), false)
 			expected := baseExpected
