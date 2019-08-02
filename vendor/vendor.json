@@ -732,6 +732,12 @@
 			"revisionTime": "2018-11-10T20:28:10Z"
 		},
 		{
+			"checksumSHA1": "Aulh7C5SVOA4Jzt5eHNH6197Mbk=",
+			"path": "github.com/konsorten/go-windows-terminal-sequences",
+			"revision": "f55edac94c9bbba5d6182a4be46d86a2c9b5b50e",
+			"revisionTime": "2019-02-26T22:47:05Z"
+		},
+		{
 			"checksumSHA1": "LgQSpLMgzVNc+SfaxaGQT33ftqc=",
 			"path": "github.com/leemcloughlin/gofarmhash",
 			"revision": "0a055c5b87a8c55ce83459cbf2776b563822a942",
@@ -884,10 +890,12 @@
 			"revisionTime": "2018-08-01T14:34:48Z"
 		},
 		{
-			"checksumSHA1": "rdXBSMsIpX89xZS5rUwnBGZOe+Q=",
+			"checksumSHA1": "RBpHbvtZq+9jxOno6YmLIFa+2Pk=",
 			"path": "github.com/sirupsen/logrus",
-			"revision": "d329d24db4313262a3b0a24d8aeb1dc4bd294fb0",
-			"revisionTime": "2018-07-31T16:13:55Z"
+			"revision": "e1e72e9de974bd926e5c56f83753fba2df402ce5",
+			"revisionTime": "2019-01-02T22:40:11Z",
+			"version": "v1.3.0",
+			"versionExact": "v1.3.0"
 		},
 		{
 			"checksumSHA1": "8M5kk6pT2gknOtearzxw7gagVCM=",
@@ -1188,6 +1196,12 @@
 			"revisionTime": "2019-06-20T21:50:31Z"
 		},
 		{
+			"checksumSHA1": "Zsm3tvgRFJOt3afwwhrGymcSZgg=",
+			"path": "golang.org/x/crypto/ssh/terminal",
+			"revision": "4def268fd1a49955bfb3dda92fe3db4f924f2285",
+			"revisionTime": "2019-07-01T08:59:26Z"
+		},
+		{
 			"checksumSHA1": "UD/pejajPyS7WaWVXq2NU1eK4Ic=",
 			"path": "golang.org/x/image/bmp",
 			"revision": "f315e440302883054d0c2bd85486878cb4f8572c",
@@ -1253,6 +1267,12 @@
 			"path": "golang.org/x/sys/unix",
 			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
 			"revisionTime": "2018-07-29T13:10:59Z"
+		},
+		{
+			"checksumSHA1": "0VuVvFVYdgGWAN/ZrRX8wTVgoDw=",
+			"path": "golang.org/x/sys/windows",
+			"revision": "cbf593c0f2f39034e9104bbf77e2ec7c48c98fc5",
+			"revisionTime": "2019-08-01T00:40:32Z"
 		},
 		{
 			"checksumSHA1": "ziMb9+ANGRJSSIuxYdRbA+cDRBQ=",
