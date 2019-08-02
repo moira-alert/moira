@@ -3,19 +3,16 @@ package pushover
 import (
 	"bytes"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/senders"
-	blackfriday "gopkg.in/russross/blackfriday.v2"
 
 	"github.com/gregdel/pushover"
 )
 
+const printEventsCount int = 5
 const titleLimit = 250
 const urlLimit = 512
-const msgLimit = 1024
 
 // Sender implements moira sender interface via pushover
 type Sender struct {
@@ -55,13 +52,12 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 
 func (sender *Sender) makePushoverMessage(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) *pushover.Message {
 	pushoverMessage := &pushover.Message{
-		Message:   sender.buildMessage(events, throttled, trigger),
+		Message:   sender.buildMessage(events, throttled),
 		Title:     sender.buildTitle(events, trigger),
 		Priority:  sender.getMessagePriority(events),
 		Retry:     5 * time.Minute,
 		Expire:    time.Hour,
 		Timestamp: events[len(events)-1].Timestamp,
-		HTML:      true,
 	}
 	url := trigger.GetTriggerURI(sender.frontURI)
 	if len(url) < urlLimit {
@@ -75,72 +71,27 @@ func (sender *Sender) makePushoverMessage(events moira.NotificationEvents, conta
 	return pushoverMessage
 }
 
-func (sender *Sender) buildMessage(events moira.NotificationEvents, throttled bool, trigger moira.TriggerData) string {
-	var message strings.Builder
-
-	desc := trigger.Desc
-	htmlDesc := string(blackfriday.Run([]byte(desc)))
-	htmlDescLen := len([]rune(htmlDesc))
-	charsForHTMLTags := htmlDescLen - len([]rune(desc))
-
-	eventsString := sender.buildEventsString(events, -1, throttled)
-	eventsStringLen := len([]rune(eventsString))
-
-	descNewLen, eventsNewLen := senders.CalculateMessagePartsLength(msgLimit, htmlDescLen, eventsStringLen)
-
-	if htmlDescLen != descNewLen {
-		desc = desc[:descNewLen-charsForHTMLTags] + "...\n"
-		htmlDesc = string(blackfriday.Run([]byte(desc)))
-	}
-	if eventsNewLen != eventsStringLen {
-		eventsString = sender.buildEventsString(events, eventsNewLen, throttled)
-	}
-
-	message.WriteString(htmlDesc)
-	message.WriteString(eventsString)
-	return message.String()
-}
-
-// buildEventsString builds the string from moira events and limits it to charsForEvents.
-// if n is negative buildEventsString does not limit the events string
-func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsForEvents int, throttled bool) string {
-	charsForThrottleMsg := 0
-	throttleMsg := "\nPlease, fix your system or tune this trigger to generate less events."
-	if throttled {
-		charsForThrottleMsg = len([]rune(throttleMsg))
-	}
-	charsLeftForEvents := charsForEvents - charsForThrottleMsg
-
-	var eventsString string
-	eventsLenLimitReached := false
-	eventsPrinted := 0
-	for _, event := range events {
-		line := fmt.Sprintf("%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location), event.Metric, event.GetMetricValue(), event.OldState, event.State)
-		if len(moira.UseString(event.Message)) > 0 {
-			line += fmt.Sprintf(". %s\n", moira.UseString(event.Message))
-		} else {
-			line += "\n"
-		}
-
-		tailStringLen := len([]rune(fmt.Sprintf("\n...and %d more events.", len(events)-eventsPrinted)))
-		if !(charsForEvents < 0) && (len([]rune(eventsString))+len([]rune(line)) > charsLeftForEvents-tailStringLen) {
-			eventsLenLimitReached = true
+func (sender *Sender) buildMessage(events moira.NotificationEvents, throttled bool) string {
+	var message bytes.Buffer
+	for i, event := range events {
+		if i > printEventsCount-1 {
 			break
 		}
-
-		eventsString += line
-		eventsPrinted++
+		message.WriteString(fmt.Sprintf("%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location), event.Metric, event.GetMetricValue(), event.OldState, event.State))
+		if len(moira.UseString(event.Message)) > 0 {
+			message.WriteString(fmt.Sprintf(". %s\n", moira.UseString(event.Message)))
+		} else {
+			message.WriteString("\n")
+		}
 	}
-
-	if eventsLenLimitReached {
-		eventsString += fmt.Sprintf("\n...and %d more events.", len(events)-eventsPrinted)
+	if len(events) > printEventsCount {
+		message.WriteString(fmt.Sprintf("\n...and %d more events.", len(events)-printEventsCount))
 	}
 
 	if throttled {
-		eventsString += throttleMsg
+		message.WriteString("\nPlease, fix your system or tune this trigger to generate less events.")
 	}
-
-	return eventsString
+	return message.String()
 }
 
 func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData) string {
