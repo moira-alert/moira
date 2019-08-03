@@ -738,6 +738,12 @@
 			"revisionTime": "2019-02-26T22:47:05Z"
 		},
 		{
+			"checksumSHA1": "Efb6Fw7/vcheGGqrUit6M1xuaS4=",
+			"path": "github.com/karriereat/blackfriday-slack",
+			"revision": "1989d6c6eb352e231f903425588ea86c779b1978",
+			"revisionTime": "2019-01-09T16:11:50Z"
+		},
+		{
 			"checksumSHA1": "LgQSpLMgzVNc+SfaxaGQT33ftqc=",
 			"path": "github.com/leemcloughlin/gofarmhash",
 			"revision": "0a055c5b87a8c55ce83459cbf2776b563822a942",
@@ -896,6 +902,12 @@
 			"revisionTime": "2019-01-02T22:40:11Z",
 			"version": "v1.3.0",
 			"versionExact": "v1.3.0"
+		},
+		{
+			"checksumSHA1": "IGPrksV2kzWSKV1wgQq7ze+pCE0=",
+			"path": "github.com/shurcooL/sanitized_anchor_name",
+			"revision": "7bfe4c7ecddb3666a94b053b422cdd8f5aaa3615",
+			"revisionTime": "2018-12-26T21:49:07Z"
 		},
 		{
 			"checksumSHA1": "8M5kk6pT2gknOtearzxw7gagVCM=",
@@ -1371,6 +1383,12 @@
 			"path": "gopkg.in/redsync.v1",
 			"revision": "89538344de92e78df4b7eeeceec1f3cf2d7c0aeb",
 			"revisionTime": "2018-11-21T13:23:58Z"
+		},
+		{
+			"checksumSHA1": "tI/ToPDECF8HQlpJP/omBQF0igw=",
+			"path": "gopkg.in/russross/blackfriday.v2",
+			"revision": "d3b5b032dc8e8927d31a5071b56e14c89f045135",
+			"revisionTime": "2018-09-20T17:16:15Z"
 		},
 		{
 			"checksumSHA1": "AzeP9gpBdHRcPQ5ozBpkBcqfInk=",
