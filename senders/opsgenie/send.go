@@ -24,7 +24,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 		return fmt.Errorf("error while creating alert: %s", err)
 	}
 	if err != nil {
-		return fmt.Errorf("failed to send %s event message to pushover user %s: %s", trigger.ID, contact.Value, err.Error())
+		return fmt.Errorf("failed to send %s event message to opsgenie: %s", trigger.ID, err.Error())
 	}
 	return nil
 }
@@ -33,15 +33,25 @@ func (sender *Sender) makeCreateAlertRequest(events moira.NotificationEvents, co
 	createAlertRequest := &alert.CreateAlertRequest{
 		Message:     sender.buildTitle(events, trigger),
 		Description: sender.buildMessage(events, throttled, trigger),
-		// Responders: []alert.Responder{
-		// 	{Type: alert.EscalationResponder, Name: "TeamA_escalation"},
-		// 	{Type: alert.ScheduleResponder, Name: "TeamB_schedule"},
-		// },
+		Responders: []alert.Responder{
+			{Type: alert.EscalationResponder, Name: contact.Value},
+		},
 		Tags:     trigger.Tags,
-		Entity:   "entity2",
 		Source:   "Moira",
 		Priority: sender.getMessagePriority(events),
 	}
+
+	if len(plot) > 0 && sender.imageStoreConfigured {
+		imageLink, err := sender.imageStore.StoreImage(plot)
+		if err != nil {
+			sender.logger.Warningf("could not store the plot image in the image store: %s", err)
+		} else {
+			createAlertRequest.Details = map[string]string{
+				"image_url": imageLink,
+			}
+		}
+	}
+
 	return createAlertRequest
 }
 

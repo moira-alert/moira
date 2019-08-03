@@ -61,7 +61,7 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 		case webhookSender:
 			err = notifier.RegisterSender(senderSettings, &webhook.Sender{})
 		case opsgenieSender:
-			err = notifier.RegisterSender(senderSettings, &opsgenie.Sender{})
+			err = notifier.RegisterSender(senderSettings, &opsgenie.Sender{ImageStores: notifier.imageStores})
 		case victoropsSender:
 			err = notifier.RegisterSender(senderSettings, &victorops.Sender{ImageStores: notifier.imageStores})
 		// case "email":
