@@ -8,11 +8,14 @@ import (
 	"github.com/moira-alert/moira/senders/discord"
 	"github.com/moira-alert/moira/senders/mail"
 	"github.com/moira-alert/moira/senders/opsgenie"
+	"github.com/moira-alert/moira/senders/pagerduty"
 	"github.com/moira-alert/moira/senders/pushover"
 	"github.com/moira-alert/moira/senders/script"
+	"github.com/moira-alert/moira/senders/selfstate"
 	"github.com/moira-alert/moira/senders/slack"
 	"github.com/moira-alert/moira/senders/telegram"
 	"github.com/moira-alert/moira/senders/twilio"
+	"github.com/moira-alert/moira/senders/victorops"
 	"github.com/moira-alert/moira/senders/webhook"
 	// "github.com/moira-alert/moira/senders/kontur"
 )
@@ -22,12 +25,15 @@ const (
 	pushoverSender    = "pushover"
 	discordSender     = "discord"
 	scriptSender      = "script"
+	selfStateSender   = "selfstate"
 	slackSender       = "slack"
 	telegramSender    = "telegram"
 	twilioSmsSender   = "twilio sms"
 	twilioVoiceSender = "twilio voice"
 	webhookSender     = "webhook"
 	opsgenieSender    = "opsgenie"
+	victoropsSender   = "victorops"
+	pagerdutySender   = "pagerduty"
 )
 
 // RegisterSenders watch on senders config and register all configured senders
@@ -36,24 +42,28 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 	for _, senderSettings := range notifier.config.Senders {
 		senderSettings["front_uri"] = notifier.config.FrontURL
 		switch senderSettings["type"] {
+		case mailSender:
+			err = notifier.RegisterSender(senderSettings, &mail.Sender{})
 		case pushoverSender:
 			err = notifier.RegisterSender(senderSettings, &pushover.Sender{})
+		case scriptSender:
+			err = notifier.RegisterSender(senderSettings, &script.Sender{})
 		case discordSender:
 			err = notifier.RegisterSender(senderSettings, &discord.Sender{DataBase: connector})
 		case slackSender:
 			err = notifier.RegisterSender(senderSettings, &slack.Sender{})
-		case mailSender:
-			err = notifier.RegisterSender(senderSettings, &mail.Sender{})
 		case telegramSender:
 			err = notifier.RegisterSender(senderSettings, &telegram.Sender{DataBase: connector})
+		case pagerdutySender:
+			err = notifier.RegisterSender(senderSettings, &pagerduty.Sender{ImageStores: notifier.imageStores})
 		case twilioSmsSender, twilioVoiceSender:
 			err = notifier.RegisterSender(senderSettings, &twilio.Sender{})
-		case scriptSender:
-			err = notifier.RegisterSender(senderSettings, &script.Sender{})
 		case webhookSender:
 			err = notifier.RegisterSender(senderSettings, &webhook.Sender{})
 		case opsgenieSender:
 			err = notifier.RegisterSender(senderSettings, &opsgenie.Sender{})
+		case victoropsSender:
+			err = notifier.RegisterSender(senderSettings, &victorops.Sender{ImageStores: notifier.imageStores})
 		// case "email":
 		// 	err = notifier.RegisterSender(senderSettings, &kontur.MailSender{})
 		// case "phone":
@@ -63,6 +73,12 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 		}
 		if err != nil {
 			return err
+		}
+	}
+	if notifier.config.SelfStateEnabled {
+		selfStateSettings := map[string]string{"type": selfStateSender}
+		if err = notifier.RegisterSender(selfStateSettings, &selfstate.Sender{Database: connector}); err != nil {
+			notifier.logger.Warningf("failed to register selfstate sender: %s", err.Error())
 		}
 	}
 	return nil

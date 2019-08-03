@@ -76,7 +76,7 @@ func (testCase *plotsHashDistancesTestCase) getFilePath(toOriginal bool) (string
 
 // getTriggerName returns test trigger name using plot test case parameters
 func (testCase *plotsHashDistancesTestCase) getTriggerName() string {
-	triggerName := bytes.NewBuffer([]byte("Test trigger ("))
+	triggerName := bytes.NewBuffer([]byte("Test trigger ☺ ЁёЙй ("))
 	triggerName.WriteString(strings.ToUpper(string(testCase.plotTheme[0])))
 	triggerName.WriteString(", ")
 	triggerName.WriteString(strings.ToUpper(string(testCase.triggerType[0])))
