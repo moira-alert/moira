@@ -22,22 +22,22 @@ func (err ErrRemoteTriggerResponse) Error() string {
 	return fmt.Sprintf("failed to get remote target '%s': %s", err.Target, err.InternalError.Error())
 }
 
-// Remote is implementation of MetricSource interface, which implements fetch metrics method from remote graphite installation
-type Remote struct {
+// Graphite is implementation of MetricSource interface, which implements fetch metrics method from remote graphite installation
+type Graphite struct {
 	config *Config
 	client *http.Client
 }
 
 // Create configures remote metric source
 func Create(config *Config) metricSource.MetricSource {
-	return &Remote{
+	return &Graphite{
 		config: config,
 		client: &http.Client{Timeout: config.Timeout},
 	}
 }
 
 // Fetch fetches remote metrics and converts them to expected format
-func (remote *Remote) Fetch(target string, from, until int64, allowRealTimeAlerting bool) (metricSource.FetchResult, error) {
+func (remote *Graphite) Fetch(target string, from, until int64, allowRealTimeAlerting bool) (metricSource.FetchResult, error) {
 	req, err := remote.prepareRequest(from, until, target)
 	if err != nil {
 		return nil, ErrRemoteTriggerResponse{
@@ -64,7 +64,7 @@ func (remote *Remote) Fetch(target string, from, until int64, allowRealTimeAlert
 }
 
 // IsConfigured returns false in cases that user does not properly configure remote settings like graphite URL
-func (remote *Remote) IsConfigured() (bool, error) {
+func (remote *Graphite) IsConfigured() (bool, error) {
 	if remote.config.isEnabled() {
 		return true, nil
 	}
@@ -72,7 +72,7 @@ func (remote *Remote) IsConfigured() (bool, error) {
 }
 
 // IsRemoteAvailable checks if graphite API is available and returns 200 response
-func (remote *Remote) IsRemoteAvailable() (bool, error) {
+func (remote *Graphite) IsRemoteAvailable() (bool, error) {
 	maxRetries := 3
 	until := time.Now().Unix()
 	from := until - 600

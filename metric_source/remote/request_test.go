@@ -14,7 +14,7 @@ func TestPrepareRequest(t *testing.T) {
 	var until int64 = 500
 	target := "foo.bar"
 	Convey("Given valid params", t, func() {
-		remote := Remote{config: &Config{
+		remote := Graphite{config: &Config{
 			URL: "http://test/",
 		}}
 		req, err := remote.prepareRequest(from, until, target)
@@ -28,7 +28,7 @@ func TestPrepareRequest(t *testing.T) {
 		})
 	})
 	Convey("Given valid params with user and password", t, func() {
-		remote := Remote{config: &Config{
+		remote := Graphite{config: &Config{
 			URL:      "http://test/",
 			User:     "foo",
 			Password: "bar",
@@ -52,7 +52,7 @@ func TestMakeRequest(t *testing.T) {
 
 	Convey("Client returns status OK", t, func() {
 		server := createServer(body, http.StatusOK)
-		remote := Remote{client: server.Client(), config: &Config{URL: server.URL}}
+		remote := Graphite{client: server.Client(), config: &Config{URL: server.URL}}
 		request, _ := remote.prepareRequest(from, until, target)
 		actual, err := remote.makeRequest(request)
 		So(err, ShouldBeNil)
@@ -61,7 +61,7 @@ func TestMakeRequest(t *testing.T) {
 
 	Convey("Client returns status InternalServerError", t, func() {
 		server := createServer(body, http.StatusInternalServerError)
-		remote := Remote{client: server.Client(), config: &Config{URL: server.URL}}
+		remote := Graphite{client: server.Client(), config: &Config{URL: server.URL}}
 		request, _ := remote.prepareRequest(from, until, target)
 		actual, err := remote.makeRequest(request)
 		So(err, ShouldResemble, fmt.Errorf("bad response status %d: %s", http.StatusInternalServerError, string(body)))
@@ -70,7 +70,7 @@ func TestMakeRequest(t *testing.T) {
 
 	Convey("Client calls bad url", t, func() {
 		server := createServer(body, http.StatusOK)
-		remote := Remote{client: server.Client(), config: &Config{URL: "http://bad/"}}
+		remote := Graphite{client: server.Client(), config: &Config{URL: "http://bad/"}}
 		request, _ := remote.prepareRequest(from, until, target)
 		actual, err := remote.makeRequest(request)
 		So(err, ShouldNotBeEmpty)

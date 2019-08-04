@@ -7,7 +7,7 @@ import (
 	"strconv"
 )
 
-func (remote *Remote) prepareRequest(from, until int64, target string) (*http.Request, error) {
+func (remote *Graphite) prepareRequest(from, until int64, target string) (*http.Request, error) {
 	req, err := http.NewRequest("GET", remote.config.URL, nil)
 	if err != nil {
 		return nil, err
@@ -24,7 +24,7 @@ func (remote *Remote) prepareRequest(from, until int64, target string) (*http.Re
 	return req, nil
 }
 
-func (remote *Remote) makeRequest(req *http.Request) ([]byte, error) {
+func (remote *Graphite) makeRequest(req *http.Request) ([]byte, error) {
 	var body []byte
 	resp, err := remote.client.Do(req)
 	if resp != nil {

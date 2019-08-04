@@ -27,7 +27,7 @@ func (worker *Checker) checkGraphite() error {
 	if err != nil {
 		return err
 	}
-	remoteAvailable, err := source.(*remote.Remote).IsRemoteAvailable()
+	remoteAvailable, err := source.(*remote.Graphite).IsRemoteAvailable()
 	if !remoteAvailable {
 		worker.Logger.Infof("Graphite API is unavailable. Stop checking graphite triggers. Error: %s", err.Error())
 	} else {
