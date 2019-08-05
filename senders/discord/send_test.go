@@ -142,3 +142,34 @@ Please, fix your system or tune this trigger to generate less events.`
 
 	})
 }
+
+func TestBuildDescription(t *testing.T) {
+	location, _ := time.LoadLocation("UTC")
+	sender := Sender{location: location, frontURI: "http://moira.url"}
+	Convey("Build desc tests", t, func() {
+		trigger := moira.TriggerData{
+			Desc: `# header1
+some text **bold text**
+## header 2
+some other text _italic text_`,
+		}
+
+		discordCompatibleMD := `**header1**
+some text **bold text**
+**header 2**
+some other text _italic text_
+`
+
+		Convey("Build empty desc", func() {
+			actual := sender.buildDescription(moira.TriggerData{Desc: ""})
+			expected := ""
+			So(actual, ShouldResemble, expected)
+		})
+
+		Convey("Build desc with headers and bold", func() {
+			actual := sender.buildDescription(trigger)
+			expected := discordCompatibleMD
+			So(actual, ShouldResemble, expected)
+		})
+	})
+}
