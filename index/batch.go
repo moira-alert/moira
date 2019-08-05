@@ -21,15 +21,19 @@ func (index *Index) getTriggerChecksBatches(triggerIDsBatches [][]string) (trigg
 		wg.Add(1)
 		go func(batch []string) {
 			defer wg.Done()
+
 			newBatch, err := index.database.GetTriggerChecks(batch)
-			if err != nil {
-				index.logger.Errorf("Cannot get trigger checks from DB: %s", err.Error())
+			for i := 0; i < 3 && err != nil; i++ {
+				if err != nil {
+					index.logger.Errorf("Cannot get trigger checks from DB: %s №%d", err.Error(), i)
+				}
 				newBatch, err = index.database.GetTriggerChecks(batch)
 			}
 			if err != nil {
 				errors <- err
 				return
 			}
+
 			index.logger.Debugf("Get %d trigger checks from DB", len(newBatch))
 			triggerChecksChan <- newBatch
 		}(triggerIDsBatch)
