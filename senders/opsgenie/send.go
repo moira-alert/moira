@@ -2,6 +2,7 @@ package opsgenie
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"strings"
 
@@ -19,7 +20,7 @@ const (
 // SendEvents sends the events as an alert to opsgenie
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) error {
 	createAlertRequest := sender.makeCreateAlertRequest(events, contact, trigger, plot, throttled)
-	_, err := sender.client.Create(nil, createAlertRequest)
+	_, err := sender.client.Create(context.Background(), createAlertRequest)
 	if err != nil {
 		return fmt.Errorf("error while creating alert: %s", err)
 	}
