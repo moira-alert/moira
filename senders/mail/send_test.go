@@ -27,6 +27,10 @@ func TestMakeMessage(t *testing.T) {
 		WarnValue:  10,
 		ErrorValue: 20,
 		Tags:       []string{"test-tag-1"},
+		Desc: `# header 1
+some text **bold text**
+## header 2
+some other text _italics text_`,
 	}
 
 	location, _ := time.LoadLocation("UTC")
@@ -52,6 +56,8 @@ func TestMakeMessage(t *testing.T) {
 		_, err := message.WriteTo(messageStr)
 		So(err, ShouldBeNil)
 		So(messageStr.String(), ShouldContainSubstring, "http://localhost/trigger/triggerID-0000000000001")
+		So(messageStr.String(), ShouldContainSubstring, "<em>italics text</em>")
+		So(messageStr.String(), ShouldContainSubstring, "<strong>bold text</strong>")
 		//fmt.Println(messageStr.String())
 
 	})
