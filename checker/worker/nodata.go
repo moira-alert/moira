@@ -12,9 +12,9 @@ const (
 	nodataWorkerName      = "NODATA checker"
 )
 
-// runNodataChecker starts NODATA checker and manages its subscription in Redis
+// localTriggerGetter starts NODATA checker and manages its subscription in Redis
 // to make sure there is always only one working checker
-func (worker *Checker) runNodataChecker() error {
+func (worker *Checker) localTriggerGetter() error {
 	w.NewWorker(
 		nodataWorkerName,
 		worker.Logger,
