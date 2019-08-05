@@ -891,6 +891,12 @@
 			"revisionTime": "2019-02-16T15:01:17Z"
 		},
 		{
+			"checksumSHA1": "AfAaa7EvuaXZ0KiN44VqvcD7hMA=",
+			"path": "github.com/hashicorp/go-retryablehttp",
+			"revision": "85a8ee556d7323a4faf0f4c17ee900e9ff1482e8",
+			"revisionTime": "2019-06-08T16:11:39Z"
+		},
+		{
 			"checksumSHA1": "HtpYAWHvd9mq+mHkpo7z8PGzMik=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/hashicorp/hcl",
 			"path": "github.com/hashicorp/hcl",
@@ -972,16 +978,16 @@
 			"revisionTime": "2018-11-10T20:28:10Z"
 		},
 		{
-			"checksumSHA1": "Aulh7C5SVOA4Jzt5eHNH6197Mbk=",
-			"path": "github.com/konsorten/go-windows-terminal-sequences",
-			"revision": "f55edac94c9bbba5d6182a4be46d86a2c9b5b50e",
-			"revisionTime": "2019-02-26T22:47:05Z"
-		},
-		{
 			"checksumSHA1": "Efb6Fw7/vcheGGqrUit6M1xuaS4=",
 			"path": "github.com/karriereat/blackfriday-slack",
 			"revision": "1989d6c6eb352e231f903425588ea86c779b1978",
 			"revisionTime": "2019-01-09T16:11:50Z"
+		},
+		{
+			"checksumSHA1": "Aulh7C5SVOA4Jzt5eHNH6197Mbk=",
+			"path": "github.com/konsorten/go-windows-terminal-sequences",
+			"revision": "f55edac94c9bbba5d6182a4be46d86a2c9b5b50e",
+			"revisionTime": "2019-02-26T22:47:05Z"
 		},
 		{
 			"checksumSHA1": "LgQSpLMgzVNc+SfaxaGQT33ftqc=",
@@ -1135,18 +1141,18 @@
 			"revisionTime": "2018-08-01T14:34:48Z"
 		},
 		{
+			"checksumSHA1": "IGPrksV2kzWSKV1wgQq7ze+pCE0=",
+			"path": "github.com/shurcooL/sanitized_anchor_name",
+			"revision": "7bfe4c7ecddb3666a94b053b422cdd8f5aaa3615",
+			"revisionTime": "2018-12-26T21:49:07Z"
+		},
+		{
 			"checksumSHA1": "RBpHbvtZq+9jxOno6YmLIFa+2Pk=",
 			"path": "github.com/sirupsen/logrus",
 			"revision": "e1e72e9de974bd926e5c56f83753fba2df402ce5",
 			"revisionTime": "2019-01-02T22:40:11Z",
 			"version": "v1.3.0",
 			"versionExact": "v1.3.0"
-		},
-		{
-			"checksumSHA1": "IGPrksV2kzWSKV1wgQq7ze+pCE0=",
-			"path": "github.com/shurcooL/sanitized_anchor_name",
-			"revision": "7bfe4c7ecddb3666a94b053b422cdd8f5aaa3615",
-			"revisionTime": "2018-12-26T21:49:07Z"
 		},
 		{
 			"checksumSHA1": "8M5kk6pT2gknOtearzxw7gagVCM=",
