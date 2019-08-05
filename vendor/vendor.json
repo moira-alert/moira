@@ -891,6 +891,12 @@
 			"revisionTime": "2019-02-16T15:01:17Z"
 		},
 		{
+			"checksumSHA1": "x3Hz3DwZpIp521DL8nh9FpOQP/4=",
+			"path": "github.com/hashicorp/go-cleanhttp",
+			"revision": "d3fcbee8e1810ecee4bdbf415f42f84cfd0e3361",
+			"revisionTime": "2019-04-06T16:20:18Z"
+		},
+		{
 			"checksumSHA1": "AfAaa7EvuaXZ0KiN44VqvcD7hMA=",
 			"path": "github.com/hashicorp/go-retryablehttp",
 			"revision": "85a8ee556d7323a4faf0f4c17ee900e9ff1482e8",
