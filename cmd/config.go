@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gosexy/to"
+	"github.com/moira-alert/moira/image_store/s3"
 	remoteSource "github.com/moira-alert/moira/metric_source/remote"
 	"gopkg.in/yaml.v2"
 
@@ -93,6 +94,11 @@ type RemoteConfig struct {
 	Password string `yaml:"password"`
 	// If true, remote worker will be enabled.
 	Enabled bool `yaml:"enabled"`
+}
+
+// ImageStoreConfig defines the configuration for all the image stores to be initialized by InitImageStores
+type ImageStoreConfig struct {
+	S3 s3.Config `yaml:"s3"`
 }
 
 // GetRemoteSourceSettings returns remote config parsed from moira config files

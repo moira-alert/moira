@@ -6,33 +6,17 @@ import (
 	"github.com/moira-alert/moira"
 )
 
-// TriggerField is used as enum
-type TriggerField int
-
-// Constants used as enum
-const (
-	TriggerID TriggerField = iota
-	TriggerName
-	TriggerDesc
-	TriggerTags
-	TriggerLastCheckScore
-)
-
 var (
-	triggerFieldNames = []string{
-		"ID",
-		"Name",
-		"Desc",
-		"Tags",
-		"LastCheckScore",
-	}
-	triggerFieldTagValues = []string{
-		"id",
-		"name",
-		"desc",
-		"tags",
-		"",
-	}
+	// TriggerID represents field data for moira.Trigger.ID
+	TriggerID = FieldData{"ID", "id", 5}
+	// TriggerName represents field data for moira.Trigger.Name
+	TriggerName = FieldData{"Name", "name", 3}
+	// TriggerDesc represents field data for moira.Trigger.Desc
+	TriggerDesc = FieldData{"Desc", "desc", 1}
+	// TriggerTags represents field data for moira.Trigger.Tags
+	TriggerTags = FieldData{"Tags", "tags", 0}
+	// TriggerLastCheckScore represents field data for moira.CheckData score
+	TriggerLastCheckScore = FieldData{"LastCheckScore", "", 0}
 )
 
 // Trigger represents Moira.Trigger type for full-text search index. It includes only indexed fields
@@ -49,25 +33,14 @@ func (Trigger) Type() string {
 	return "moira.indexed.trigger"
 }
 
-// String returns TriggerField name. It works like enum
-func (field TriggerField) String() string {
-	return triggerFieldNames[field]
-}
-
-// GetTagValue returns TriggerField value used in marshalling. It works like enum
-func (field TriggerField) GetTagValue() string {
-	return triggerFieldTagValues[field]
-}
-
 // GetDocumentMapping returns Bleve.mapping.DocumentMapping for Trigger type
 func (Trigger) GetDocumentMapping() *mapping.DocumentMapping {
-
 	triggerMapping := bleve.NewDocumentStaticMapping()
 
-	triggerMapping.AddFieldMappingsAt(TriggerName.String(), getStandardMapping())
-	triggerMapping.AddFieldMappingsAt(TriggerTags.String(), getKeywordMapping())
-	triggerMapping.AddFieldMappingsAt(TriggerDesc.String(), getStandardMapping())
-	triggerMapping.AddFieldMappingsAt(TriggerLastCheckScore.String(), getNumericMapping())
+	triggerMapping.AddFieldMappingsAt(TriggerName.GetName(), getStandardMapping())
+	triggerMapping.AddFieldMappingsAt(TriggerTags.GetName(), getKeywordMapping())
+	triggerMapping.AddFieldMappingsAt(TriggerDesc.GetName(), getStandardMapping())
+	triggerMapping.AddFieldMappingsAt(TriggerLastCheckScore.GetName(), getNumericMapping())
 
 	return triggerMapping
 
