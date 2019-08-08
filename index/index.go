@@ -69,7 +69,7 @@ func (index *Index) Start() error {
 	index.tomb.Go(index.checkIndexActualizationLag)
 	index.tomb.Go(index.checkIndexedTriggersCount)
 
-	return err
+	return nil
 }
 
 // IsReady returns boolean value which determines if index is ready to use
