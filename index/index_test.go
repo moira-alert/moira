@@ -60,6 +60,18 @@ func TestIndex_CreateAndFill(t *testing.T) {
 		So(docCount, ShouldEqual, int64(32))
 	})
 
+	Convey("Test check error handling in the handleTriggerBatches", t, func() {
+		index := NewSearchIndex(logger, dataBase)
+
+		dataBase.EXPECT().GetTriggerChecks(triggerIDs[:20]).Return(triggerChecksPointers[:20], nil)
+		dataBase.EXPECT().GetTriggerChecks(triggerIDs[20:]).Return(triggerChecksPointers[20:], fmt.Errorf("test"))
+		dataBase.EXPECT().GetTriggerChecks(triggerIDs[20:]).Return(triggerChecksPointers[20:], fmt.Errorf("test"))
+		dataBase.EXPECT().GetTriggerChecks(triggerIDs[20:]).Return(triggerChecksPointers[20:], fmt.Errorf("test"))
+		dataBase.EXPECT().GetTriggerChecks(triggerIDs[20:]).Return(triggerChecksPointers[20:], fmt.Errorf("test"))
+		err := index.writeByBatches(triggerIDs, 20)
+		So(err, ShouldNotBeNil)
+	})
+
 	Convey("Test add Triggers to index where triggers are already presented", t, func() {
 		index := NewSearchIndex(logger, dataBase)
 
