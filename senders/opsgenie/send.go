@@ -22,9 +22,6 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	createAlertRequest := sender.makeCreateAlertRequest(events, contact, trigger, plot, throttled)
 	_, err := sender.client.Create(context.Background(), createAlertRequest)
 	if err != nil {
-		return fmt.Errorf("error while creating alert: %s", err)
-	}
-	if err != nil {
 		return fmt.Errorf("failed to send %s event message to opsgenie: %s", trigger.ID, err.Error())
 	}
 	return nil

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/senders"
 	"github.com/opsgenie/opsgenie-go-sdk-v2/alert"
 	"github.com/opsgenie/opsgenie-go-sdk-v2/client"
 )
@@ -30,18 +31,8 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 		return fmt.Errorf("cannot read the api_key from the sender settings")
 	}
 
-	sender.imageStoreID, ok = senderSettings["image_store"]
-	if !ok {
-		logger.Warningf("Cannot read image_store from the config, will not be able to attach plot images to alerts")
-	} else {
-		imageStore, ok := sender.ImageStores[sender.imageStoreID]
-		if ok && imageStore.IsEnabled() {
-			sender.imageStore = imageStore
-			sender.imageStoreConfigured = true
-		} else {
-			logger.Warningf("Image store specified (%s) has not been configured", sender.imageStoreID)
-		}
-	}
+	sender.imageStoreID, sender.imageStore, sender.imageStoreConfigured =
+		senders.ReadImageStoreConfig(senderSettings, sender.ImageStores, logger)
 
 	var err error
 	sender.client, err = alert.NewClient(&client.Config{
