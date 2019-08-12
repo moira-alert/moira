@@ -4,19 +4,38 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira/metric_source/remote"
+	w "github.com/moira-alert/moira/worker"
 )
 
-func (worker *Checker) remoteChecker() error {
+const (
+	remoteTriggerLockName = "moira-remote-checker"
+	remoteTriggerName     = "Remote checker"
+)
+
+func (worker *Checker) remoteTriggerGetter() error {
+
+	w.NewWorker(
+		remoteTriggerName,
+		worker.Logger,
+		worker.Database.NewLock(remoteTriggerLockName, nodataCheckerLockTTL),
+		worker.remoteTriggerChecker,
+	).Run(worker.tomb.Dying())
+
+	return nil
+}
+
+func (worker *Checker) remoteTriggerChecker(stop <-chan struct{}) error {
 	checkTicker := time.NewTicker(worker.RemoteConfig.CheckInterval)
+	worker.Logger.Info(remoteTriggerName + " started")
 	for {
 		select {
-		case <-worker.tomb.Dying():
+		case <-stop:
+			worker.Logger.Info(remoteTriggerName + " stopped")
 			checkTicker.Stop()
-			worker.Logger.Info("Remote checker stopped")
 			return nil
 		case <-checkTicker.C:
 			if err := worker.checkRemote(); err != nil {
-				worker.Logger.Errorf("Remote checker failed: %s", err.Error())
+				worker.Logger.Errorf(remoteTriggerName+" failed: %s", err.Error())
 			}
 		}
 	}

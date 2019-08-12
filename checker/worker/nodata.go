@@ -12,9 +12,9 @@ const (
 	nodataWorkerName      = "NODATA checker"
 )
 
-// runNodataChecker starts NODATA checker and manages its subscription in Redis
+// localTriggerGetter starts NODATA checker and manages its subscription in Redis
 // to make sure there is always only one working checker
-func (worker *Checker) runNodataChecker() error {
+func (worker *Checker) localTriggerGetter() error {
 	w.NewWorker(
 		nodataWorkerName,
 		worker.Logger,
@@ -27,12 +27,12 @@ func (worker *Checker) runNodataChecker() error {
 
 func (worker *Checker) noDataChecker(stop <-chan struct{}) error {
 	checkTicker := time.NewTicker(worker.Config.NoDataCheckInterval)
-	defer checkTicker.Stop()
 	worker.Logger.Info("NODATA checker started")
 	for {
 		select {
 		case <-stop:
 			worker.Logger.Info("NODATA checker stopped")
+			checkTicker.Stop()
 			return nil
 		case <-checkTicker.C:
 			if err := worker.checkNoData(); err != nil {

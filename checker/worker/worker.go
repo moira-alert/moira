@@ -49,7 +49,7 @@ func (worker *Checker) Start() error {
 	worker.lazyTriggerIDs.Store(make(map[string]bool))
 	worker.tomb.Go(worker.lazyTriggersWorker)
 
-	worker.tomb.Go(worker.runNodataChecker)
+	worker.tomb.Go(worker.localTriggerGetter)
 
 	_, err = worker.SourceProvider.GetRemote()
 	worker.remoteEnabled = err == nil
@@ -60,7 +60,7 @@ func (worker *Checker) Start() error {
 	}
 
 	if worker.remoteEnabled {
-		worker.tomb.Go(worker.remoteChecker)
+		worker.tomb.Go(worker.remoteTriggerGetter)
 		worker.Logger.Info("Remote checker started")
 	} else {
 		worker.Logger.Info("Remote checker disabled")
