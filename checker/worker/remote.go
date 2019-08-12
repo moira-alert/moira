@@ -9,9 +9,8 @@ import (
 
 const (
 	remoteTriggerLockName = "moira-remote-checker"
-	remoteTriggerName      = "Remote checker"
+	remoteTriggerName     = "Remote checker"
 )
-
 
 func (worker *Checker) remoteTriggerGetter() error {
 
@@ -27,15 +26,16 @@ func (worker *Checker) remoteTriggerGetter() error {
 
 func (worker *Checker) remoteTriggerChecker(stop <-chan struct{}) error {
 	checkTicker := time.NewTicker(worker.RemoteConfig.CheckInterval)
-	defer checkTicker.Stop()
 	worker.Logger.Info(remoteTriggerName + " started")
 	for {
 		select {
 		case <-stop:
 			worker.Logger.Info(remoteTriggerName + " stopped")
+			checkTicker.Stop()
+			return nil
 		case <-checkTicker.C:
 			if err := worker.checkRemote(); err != nil {
-				worker.Logger.Errorf(remoteTriggerName + " failed: %s", err.Error())
+				worker.Logger.Errorf(remoteTriggerName+" failed: %s", err.Error())
 			}
 		}
 	}

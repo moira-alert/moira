@@ -27,12 +27,12 @@ func (worker *Checker) localTriggerGetter() error {
 
 func (worker *Checker) noDataChecker(stop <-chan struct{}) error {
 	checkTicker := time.NewTicker(worker.Config.NoDataCheckInterval)
-	defer checkTicker.Stop()
 	worker.Logger.Info("NODATA checker started")
 	for {
 		select {
 		case <-stop:
 			worker.Logger.Info("NODATA checker stopped")
+			checkTicker.Stop()
 			return nil
 		case <-checkTicker.C:
 			if err := worker.checkNoData(); err != nil {
