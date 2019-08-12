@@ -891,6 +891,18 @@
 			"revisionTime": "2019-02-16T15:01:17Z"
 		},
 		{
+			"checksumSHA1": "x3Hz3DwZpIp521DL8nh9FpOQP/4=",
+			"path": "github.com/hashicorp/go-cleanhttp",
+			"revision": "d3fcbee8e1810ecee4bdbf415f42f84cfd0e3361",
+			"revisionTime": "2019-04-06T16:20:18Z"
+		},
+		{
+			"checksumSHA1": "AfAaa7EvuaXZ0KiN44VqvcD7hMA=",
+			"path": "github.com/hashicorp/go-retryablehttp",
+			"revision": "85a8ee556d7323a4faf0f4c17ee900e9ff1482e8",
+			"revisionTime": "2019-06-08T16:11:39Z"
+		},
+		{
 			"checksumSHA1": "HtpYAWHvd9mq+mHkpo7z8PGzMik=",
 			"origin": "github.com/go-graphite/carbonapi/vendor/github.com/hashicorp/hcl",
 			"path": "github.com/hashicorp/hcl",
@@ -976,6 +988,12 @@
 			"path": "github.com/karriereat/blackfriday-slack",
 			"revision": "1989d6c6eb352e231f903425588ea86c779b1978",
 			"revisionTime": "2019-01-09T16:11:50Z"
+		},
+		{
+			"checksumSHA1": "Aulh7C5SVOA4Jzt5eHNH6197Mbk=",
+			"path": "github.com/konsorten/go-windows-terminal-sequences",
+			"revision": "f55edac94c9bbba5d6182a4be46d86a2c9b5b50e",
+			"revisionTime": "2019-02-26T22:47:05Z"
 		},
 		{
 			"checksumSHA1": "LgQSpLMgzVNc+SfaxaGQT33ftqc=",
@@ -1067,6 +1085,18 @@
 			"revisionTime": "2016-03-15T20:05:05Z"
 		},
 		{
+			"checksumSHA1": "UIjsRH8GeYZow40PZX0riKHIzOE=",
+			"path": "github.com/opsgenie/opsgenie-go-sdk-v2/alert",
+			"revision": "b46b0594268dad7382c89603b4815322f0e237b1",
+			"revisionTime": "2019-07-10T13:20:28Z"
+		},
+		{
+			"checksumSHA1": "AIouGZdTf/gmr0j8s2CsEExem9U=",
+			"path": "github.com/opsgenie/opsgenie-go-sdk-v2/client",
+			"revision": "b46b0594268dad7382c89603b4815322f0e237b1",
+			"revisionTime": "2019-07-10T13:20:28Z"
+		},
+		{
 			"checksumSHA1": "JVGDxPn66bpe6xEiexs1r+y6jF0=",
 			"path": "github.com/patrickmn/go-cache",
 			"revision": "a3647f8e31d79543b2d0f0ae2fe5c379d72cedc0",
@@ -1121,6 +1151,14 @@
 			"path": "github.com/shurcooL/sanitized_anchor_name",
 			"revision": "7bfe4c7ecddb3666a94b053b422cdd8f5aaa3615",
 			"revisionTime": "2018-12-26T21:49:07Z"
+		},
+		{
+			"checksumSHA1": "RBpHbvtZq+9jxOno6YmLIFa+2Pk=",
+			"path": "github.com/sirupsen/logrus",
+			"revision": "e1e72e9de974bd926e5c56f83753fba2df402ce5",
+			"revisionTime": "2019-01-02T22:40:11Z",
+			"version": "v1.3.0",
+			"versionExact": "v1.3.0"
 		},
 		{
 			"checksumSHA1": "8M5kk6pT2gknOtearzxw7gagVCM=",
@@ -1427,6 +1465,12 @@
 			"revisionTime": "2019-06-20T21:50:31Z"
 		},
 		{
+			"checksumSHA1": "Zsm3tvgRFJOt3afwwhrGymcSZgg=",
+			"path": "golang.org/x/crypto/ssh/terminal",
+			"revision": "4def268fd1a49955bfb3dda92fe3db4f924f2285",
+			"revisionTime": "2019-07-01T08:59:26Z"
+		},
+		{
 			"checksumSHA1": "UD/pejajPyS7WaWVXq2NU1eK4Ic=",
 			"path": "golang.org/x/image/bmp",
 			"revision": "f315e440302883054d0c2bd85486878cb4f8572c",
@@ -1492,6 +1536,12 @@
 			"path": "golang.org/x/sys/unix",
 			"revision": "ccac7217894801a5a6ceb8602a70ea0d79e975cf",
 			"revisionTime": "2018-07-29T13:10:59Z"
+		},
+		{
+			"checksumSHA1": "0VuVvFVYdgGWAN/ZrRX8wTVgoDw=",
+			"path": "golang.org/x/sys/windows",
+			"revision": "cbf593c0f2f39034e9104bbf77e2ec7c48c98fc5",
+			"revisionTime": "2019-08-01T00:40:32Z"
 		},
 		{
 			"checksumSHA1": "ziMb9+ANGRJSSIuxYdRbA+cDRBQ=",
