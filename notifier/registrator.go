@@ -7,6 +7,7 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/senders/discord"
 	"github.com/moira-alert/moira/senders/mail"
+	"github.com/moira-alert/moira/senders/opsgenie"
 	"github.com/moira-alert/moira/senders/pagerduty"
 	"github.com/moira-alert/moira/senders/pushover"
 	"github.com/moira-alert/moira/senders/script"
@@ -30,6 +31,7 @@ const (
 	twilioSmsSender   = "twilio sms"
 	twilioVoiceSender = "twilio voice"
 	webhookSender     = "webhook"
+	opsgenieSender    = "opsgenie"
 	victoropsSender   = "victorops"
 	pagerdutySender   = "pagerduty"
 )
@@ -58,6 +60,8 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 			err = notifier.RegisterSender(senderSettings, &twilio.Sender{})
 		case webhookSender:
 			err = notifier.RegisterSender(senderSettings, &webhook.Sender{})
+		case opsgenieSender:
+			err = notifier.RegisterSender(senderSettings, &opsgenie.Sender{ImageStores: notifier.imageStores})
 		case victoropsSender:
 			err = notifier.RegisterSender(senderSettings, &victorops.Sender{ImageStores: notifier.imageStores})
 		// case "email":
