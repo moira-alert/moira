@@ -25,7 +25,7 @@ install:
 before_script:
   - make test
   - make lint
-  - goveralls -coverprofile=coverage.txt -service=travis-ci
+  - goveralls -coverprofile=coverage.txt -service=travis-ci || true
 script:
   - if [[ ! -z "$TRAVIS_TAG" ]]; then make packages; fi
 before_deploy:
