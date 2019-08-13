@@ -101,15 +101,15 @@ func (notifier *StandardNotifier) RegisterSender(senderSettings map[string]strin
 	notifier.senders[senderIdent] = eventsChannel
 	notifier.metrics.SendersOkMetrics.AddMetric(senderIdent, fmt.Sprintf("notifier.%s.sends_ok", getGraphiteSenderIdent(senderIdent)))
 	notifier.metrics.SendersFailedMetrics.AddMetric(senderIdent, fmt.Sprintf("notifier.%s.sends_failed", getGraphiteSenderIdent(senderIdent)))
-	notifier.waitGroup.Add(1)
 	notifier.runSenders(sender, eventsChannel)
 	notifier.logger.Infof("Sender %s registered", senderIdent)
 	return nil
 }
 
 func (notifier *StandardNotifier) runSenders(sender moira.Sender, eventsChannel chan NotificationPackage) {
-	const maxParallelSendsPerSender = 8
+	const maxParallelSendsPerSender = 16
 	for i := 0; i < maxParallelSendsPerSender; i++ {
+		notifier.waitGroup.Add(1)
 		go notifier.runSender(sender, eventsChannel)
 	}
 }
