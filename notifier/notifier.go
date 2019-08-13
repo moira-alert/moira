@@ -147,7 +147,7 @@ func (notifier *StandardNotifier) resend(pkg *NotificationPackage, reason string
 	}
 }
 
-func (notifier *StandardNotifier) run(sender moira.Sender, ch chan NotificationPackage) {
+func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan NotificationPackage) {
 	defer notifier.waitGroup.Done()
 	for pkg := range ch {
 		plot, err := notifier.buildNotificationPackagePlot(pkg)

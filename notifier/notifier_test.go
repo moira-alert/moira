@@ -119,10 +119,12 @@ func TestFailSendEvent(t *testing.T) {
 
 func TestTimeout(t *testing.T) {
 	configureNotifier(t)
+	var wg sync.WaitGroup
 	defer afterTest()
 
 	var eventsData moira.NotificationEvents = []moira.NotificationEvent{event}
 
+	// Configure events with long sending time
 	pkg := NotificationPackage{
 		Events: eventsData,
 		Contact: moira.ContactData{
@@ -130,6 +132,18 @@ func TestTimeout(t *testing.T) {
 		},
 	}
 
+	sender.EXPECT().SendEvents(eventsData, pkg.Contact, pkg.Trigger, plot, pkg.Throttled).Return(nil).Do(func(f ...interface{}) {
+		fmt.Print("Trying to send for 10 second")
+		time.Sleep(time.Second * 10)
+	}).Times(maxParallelSendsPerSender)
+
+	for i := 0; i < maxParallelSendsPerSender; i++ {
+		notif.Send(&pkg, &wg)
+		wg.Wait()
+	}
+
+	// Configure timeouted event
+	notification := moira.ScheduledNotification{}
 	pkg2 := NotificationPackage{
 		Events: eventsData,
 		Contact: moira.ContactData{
@@ -137,17 +151,10 @@ func TestTimeout(t *testing.T) {
 			Value: "fail contact",
 		},
 	}
-	notification := moira.ScheduledNotification{}
-	sender.EXPECT().SendEvents(eventsData, pkg.Contact, pkg.Trigger, plot, pkg.Throttled).Return(nil).Do(func(f ...interface{}) {
-		fmt.Print("Trying to send for 10 second")
-		time.Sleep(time.Second * 10)
-	})
+
 	scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, pkg2.Trigger, pkg2.Contact, pkg.Plotting, pkg2.Throttled, pkg2.FailCount+1).Return(&notification)
 	dataBase.EXPECT().AddNotification(&notification).Return(nil).Do(func(f ...interface{}) { close(shutdown) })
 
-	var wg sync.WaitGroup
-	notif.Send(&pkg, &wg)
-	wg.Wait()
 	notif.Send(&pkg2, &wg)
 	wg.Wait()
 	waitTestEnd()
