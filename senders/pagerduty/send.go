@@ -100,6 +100,8 @@ func (sender *Sender) buildSummary(events moira.NotificationEvents, trigger moir
 	var summary bytes.Buffer
 
 	summary.WriteString(string(events.GetSubjectState()))
+	summary.WriteString(" ")
+	summary.WriteString(trigger.Name)
 
 	tags := trigger.GetTags()
 	if tags != "" {
