@@ -7,7 +7,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	logging "github.com/moira-alert/moira/logging/go-logging"
-	"github.com/moira-alert/moira/mock/moira-alert"
+	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	"github.com/opsgenie/opsgenie-go-sdk-v2/alert"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -158,6 +158,7 @@ func TestMakeCreateAlertRequest(t *testing.T) {
 		expected := &alert.CreateAlertRequest{
 			Message:     sender.buildTitle(event, trigger),
 			Description: sender.buildMessage(event, false, trigger),
+			Alias:       "SomeID",
 			Responders: []alert.Responder{
 				{Type: alert.EscalationResponder, Name: contact.Value},
 			},
