@@ -48,7 +48,7 @@ func TestBuildEvent(t *testing.T) {
 				Summary:   "NODATA [tag1][tag2]",
 				Severity:  "warning",
 				Source:    "moira",
-				Timestamp: "1974-10-03T08:10:00+05:30",
+				Timestamp: "1974-10-03T02:40:00Z",
 				Details: map[string]interface{}{
 					"Trigger URI":  "http://moira.url/trigger/TriggerID",
 					"Trigger Name": "Trigger Name",
