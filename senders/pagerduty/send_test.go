@@ -6,7 +6,7 @@ import (
 
 	"github.com/PagerDuty/go-pagerduty"
 	"github.com/golang/mock/gomock"
-	"github.com/moira-alert/moira/mock/moira-alert"
+	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 
 	"github.com/moira-alert/moira"
 	. "github.com/smartystreets/goconvey/convey"
@@ -48,7 +48,7 @@ func TestBuildEvent(t *testing.T) {
 				Summary:   "NODATA [tag1][tag2]",
 				Severity:  "warning",
 				Source:    "moira",
-				Timestamp: time.Unix(150000000, 0).Format(time.RFC3339),
+				Timestamp: "1974-10-03T08:10:00+05:30",
 				Details: map[string]interface{}{
 					"Trigger URI":  "http://moira.url/trigger/TriggerID",
 					"Trigger Name": "Trigger Name",
