@@ -45,7 +45,7 @@ func TestBuildEvent(t *testing.T) {
 			RoutingKey: contact.Value,
 			Action:     "trigger",
 			Payload: &pagerduty.V2Payload{
-				Summary:   "NODATA [tag1][tag2]",
+				Summary:   "NODATA Trigger Name [tag1][tag2]",
 				Severity:  "warning",
 				Source:    "moira",
 				Timestamp: "1974-10-03T02:40:00Z",
