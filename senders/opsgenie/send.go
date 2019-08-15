@@ -31,6 +31,7 @@ func (sender *Sender) makeCreateAlertRequest(events moira.NotificationEvents, co
 	createAlertRequest := &alert.CreateAlertRequest{
 		Message:     sender.buildTitle(events, trigger),
 		Description: sender.buildMessage(events, throttled, trigger),
+		Alias:       trigger.ID,
 		Responders: []alert.Responder{
 			{Type: alert.EscalationResponder, Name: contact.Value},
 		},
