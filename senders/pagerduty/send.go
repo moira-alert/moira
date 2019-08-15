@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/writeas/go-strip-markdown"
+	stripmd "github.com/writeas/go-strip-markdown"
 
 	"github.com/PagerDuty/go-pagerduty"
 
@@ -57,7 +57,7 @@ func (sender *Sender) buildEvent(events moira.NotificationEvents, contact moira.
 		Summary:   summary,
 		Severity:  sender.getSeverity(events),
 		Source:    "moira",
-		Timestamp: time.Unix(events[len(events)-1].Timestamp, 0).Format(time.RFC3339),
+		Timestamp: time.Unix(events[len(events)-1].Timestamp, 0).UTC().Format(time.RFC3339),
 		Details:   details,
 	}
 
