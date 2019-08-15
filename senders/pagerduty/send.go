@@ -3,7 +3,7 @@ package pagerduty
 import (
 	"bytes"
 	"fmt"
-	"strconv"
+	"time"
 
 	"github.com/writeas/go-strip-markdown"
 
@@ -57,9 +57,10 @@ func (sender *Sender) buildEvent(events moira.NotificationEvents, contact moira.
 		Summary:   summary,
 		Severity:  sender.getSeverity(events),
 		Source:    "moira",
-		Timestamp: strconv.FormatInt(events[len(events)-1].Timestamp, 10),
+		Timestamp: time.Unix(events[len(events)-1].Timestamp, 0).Format(time.RFC3339),
 		Details:   details,
 	}
+
 	event := pagerduty.V2Event{
 		RoutingKey: contact.Value,
 		Action:     "trigger",
