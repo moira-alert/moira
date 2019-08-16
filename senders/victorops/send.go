@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/writeas/go-strip-markdown"
+	stripmd "github.com/writeas/go-strip-markdown"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/senders/victorops/api"
@@ -72,15 +72,14 @@ func (sender *Sender) getMessageType(events moira.NotificationEvents) api.Messag
 
 func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData) string {
 	title := string(events.GetSubjectState())
+	title += " " + trigger.Name
 
 	tags := trigger.GetTags()
 	if tags != "" {
 		title += " " + tags
 	}
 
-	title += trigger.Name
 	title += "\n"
-
 	return title
 }
 
