@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/karriereat/blackfriday-slack"
+	slackdown "github.com/karriereat/blackfriday-slack"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/senders"
 	blackfriday "gopkg.in/russross/blackfriday.v2"
@@ -113,20 +113,19 @@ func (sender *Sender) buildDescription(trigger moira.TriggerData) string {
 
 func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData) string {
 	title := fmt.Sprintf("*%s*", events.GetSubjectState())
-
-	tags := trigger.GetTags()
-	if tags != "" {
-		title += " " + tags
-	}
-
 	triggerURI := trigger.GetTriggerURI(sender.frontURI)
 	if triggerURI != "" {
 		title += fmt.Sprintf(" <%s|%s>", triggerURI, trigger.Name)
 	} else if trigger.Name != "" {
 		title += " " + trigger.Name
 	}
-	title += "\n"
 
+	tags := trigger.GetTags()
+	if tags != "" {
+		title += " " + tags
+	}
+
+	title += "\n"
 	return title
 }
 

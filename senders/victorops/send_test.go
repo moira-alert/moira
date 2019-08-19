@@ -8,7 +8,7 @@ import (
 	"github.com/moira-alert/moira/senders/victorops/api"
 
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/mock/moira-alert"
+	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -116,6 +116,35 @@ func TestBuildCreateAlertRequest(t *testing.T) {
 				MonitoringTool:    "Moira",
 				EntityDisplayName: sender.buildTitle(moira.NotificationEvents{event}, trigger),
 			}
+			So(actual, ShouldResemble, expected)
+		})
+	})
+}
+
+func TestBuildTitle(t *testing.T) {
+	sender := Sender{}
+	value := float64(123)
+
+	Convey("Build title test", t, func() {
+		event := moira.NotificationEvent{
+			TriggerID: "TriggerID",
+			Value:     &value,
+			Timestamp: 150000000,
+			Metric:    "Metric",
+			OldState:  moira.StateOK,
+			State:     moira.StateNODATA,
+			Message:   nil,
+		}
+
+		trigger := moira.TriggerData{
+			Tags: []string{"tag1", "tag2"},
+			Name: "Name",
+			ID:   "TriggerID",
+		}
+
+		Convey("Build title", func() {
+			actual := sender.buildTitle(moira.NotificationEvents{event}, trigger)
+			expected := "NODATA Name [tag1][tag2]\n"
 			So(actual, ShouldResemble, expected)
 		})
 	})
