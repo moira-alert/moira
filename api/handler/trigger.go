@@ -44,7 +44,10 @@ func updateTrigger(writer http.ResponseWriter, request *http.Request) {
 		case api.ErrInvalidRequestContent:
 			render.Render(writer, request, api.ErrorInvalidRequest(err))
 		case remote.ErrRemoteTriggerResponse:
-			render.Render(writer, request, api.ErrorRemoteServerUnavailable(err))
+			response := api.ErrorRemoteServerUnavailable(err)
+			middleware.GetLoggerEntry(request).Error("%s : %s : %s",
+				response.StatusText, response.ErrorText, err.(remote.ErrRemoteTriggerResponse).Target)
+			render.Render(writer, request, response)
 		default:
 			render.Render(writer, request, api.ErrorInternalServer(err))
 		}
