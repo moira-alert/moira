@@ -46,7 +46,7 @@ func updateTrigger(writer http.ResponseWriter, request *http.Request) {
 			render.Render(writer, request, api.ErrorInvalidRequest(err))
 		case remote.ErrRemoteTriggerResponse:
 			response := api.ErrorRemoteServerUnavailable(err)
-			writeToLogErrorRemoteServer(err, response, middleware.GetLoggerEntry(request))
+			loggingErrorRemoteServer(err, response, middleware.GetLoggerEntry(request))
 			render.Render(writer, request, response)
 		default:
 			render.Render(writer, request, api.ErrorInternalServer(err))
@@ -67,7 +67,7 @@ func updateTrigger(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func writeToLogErrorRemoteServer(err error, response *api.ErrorResponse, log moira.Logger) {
+func loggingErrorRemoteServer(err error, response *api.ErrorResponse, log moira.Logger) {
 	if t, ok := err.(remote.ErrRemoteTriggerResponse); ok {
 		log.Error("%s : %s : %s", response.StatusText, response.ErrorText, t.Target)
 	}
