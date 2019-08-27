@@ -59,6 +59,13 @@ func (worker *Checker) addGraphiteTriggerIDsIfNeeded(triggerIDs []string) {
 	}
 }
 
+func (worker *Checker) addPrometheusTriggerIDsIfNeeded(triggerIDs []string) {
+	needToCheckPrometheusTriggerIDs := worker.getTriggerIDsToCheck(triggerIDs)
+	if len(needToCheckPrometheusTriggerIDs) > 0 {
+		worker.Database.AddPrometheusTriggersToCheck(needToCheckPrometheusTriggerIDs)
+	}
+}
+
 func (worker *Checker) getTriggerIDsToCheck(triggerIDs []string) []string {
 	lazyTriggerIDs := worker.lazyTriggerIDs.Load().(map[string]bool)
 	triggerIDsToCheck := make([]string, len(triggerIDs))
@@ -69,9 +76,9 @@ func (worker *Checker) getTriggerIDsToCheck(triggerIDs []string) []string {
 				continue
 			}
 		}
-		if err := worker.TriggerCache.Add(triggerID, true, cache.DefaultExpiration); err == nil {
-			triggerIDsToCheck = append(triggerIDsToCheck, triggerID)
-		}
+		//if err := worker.TriggerCache.Add(triggerID, true, cache.DefaultExpiration); err == nil {
+		triggerIDsToCheck = append(triggerIDsToCheck, triggerID)
+		//}
 	}
 	return triggerIDsToCheck
 }

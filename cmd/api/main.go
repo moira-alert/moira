@@ -19,6 +19,7 @@ import (
 	"github.com/moira-alert/moira/logging/go-logging"
 	"github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
+	"github.com/moira-alert/moira/metric_source/prometheus"
 	"github.com/moira-alert/moira/metric_source/remote"
 	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
 )
@@ -109,7 +110,8 @@ func main() {
 	localSource := local.Create(database)
 	remoteConfig := config.Remote.GetRemoteSourceSettings()
 	remoteSource := remote.Create(remoteConfig)
-	metricSourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource, nil)
+	prometheusSource := prometheus.Create(logger, &prometheus.Config{URL: "http://localhost:9080"})
+	metricSourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource, prometheusSource)
 
 	webConfigContent, err := config.Web.getSettings(remoteConfig.Enabled)
 	if err != nil {

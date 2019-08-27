@@ -14,6 +14,7 @@ type Config struct {
 	StopCheckingIntervalSeconds int64
 	MaxParallelChecks           int
 	MaxParallelGraphiteChecks   int
+	MaxParallelPrometheusChecks int
 	LogFile                     string
 	LogLevel                    string
 }

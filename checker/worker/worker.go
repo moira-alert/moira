@@ -30,6 +30,7 @@ type Checker struct {
 	lastData          int64
 	tomb              tomb.Tomb
 	graphiteEnabled   bool
+	prometheusEnabled bool
 }
 
 // Start start schedule new MetricEvents and check for NODATA triggers
@@ -48,15 +49,21 @@ func (worker *Checker) Start() error {
 
 	worker.lazyTriggerIDs.Store(make(map[string]bool))
 	worker.tomb.Go(worker.lazyTriggersWorker)
-
 	worker.tomb.Go(worker.runNodataChecker)
 
 	_, err = worker.SourceProvider.GetGraphite()
 	worker.graphiteEnabled = err == nil
 
+	_, err = worker.SourceProvider.GetPrometheus()
+	worker.prometheusEnabled = err == nil
+
 	if worker.graphiteEnabled && worker.Config.MaxParallelGraphiteChecks == 0 {
 		worker.Config.MaxParallelGraphiteChecks = runtime.NumCPU()
 		worker.Logger.Infof("MaxParallelGraphiteChecks is not configured, set it to the number of CPU - %d", worker.Config.MaxParallelGraphiteChecks)
+	}
+	if worker.prometheusEnabled && worker.Config.MaxParallelPrometheusChecks == 0 {
+		worker.Config.MaxParallelPrometheusChecks = runtime.NumCPU()
+		worker.Logger.Infof("MaxParallelPrometheusChecks is not configured, set it to the number of CPU - %d", worker.Config.MaxParallelPrometheusChecks)
 	}
 
 	if worker.graphiteEnabled {
@@ -64,6 +71,13 @@ func (worker *Checker) Start() error {
 		worker.Logger.Info("GraphiteTrigger checker started")
 	} else {
 		worker.Logger.Info("GraphiteTrigger checker disabled")
+	}
+
+	if worker.prometheusEnabled {
+		worker.tomb.Go(worker.prometheusChecker)
+		worker.Logger.Info("PrometheusTrigger checker started")
+	} else {
+		worker.Logger.Info("PrometheusTrigger checker disabled")
 	}
 
 	worker.Logger.Infof("Start %v parallel local checker(s)", worker.Config.MaxParallelChecks)
@@ -86,6 +100,15 @@ func (worker *Checker) Start() error {
 			})
 		}
 	}
+	if worker.prometheusEnabled {
+		worker.Logger.Infof("Start %v parallel prometheus checker(s)", worker.Config.MaxParallelPrometheusChecks)
+		prometheusTriggerIdsToCheckChan := worker.startTriggerToCheckGetter(worker.Database.GetPrometheusTriggersToCheck, worker.Config.MaxParallelPrometheusChecks)
+		for i := 0; i < worker.Config.MaxParallelPrometheusChecks; i++ {
+			worker.tomb.Go(func() error {
+				return worker.startTriggerHandler(prometheusTriggerIdsToCheckChan, worker.Metrics.PrometheusMetrics)
+			})
+		}
+	}
 	worker.Logger.Info("Checking new events started")
 
 	go func() {
@@ -100,7 +123,7 @@ func (worker *Checker) Start() error {
 
 func (worker *Checker) checkTriggersToCheckCount() error {
 	checkTicker := time.NewTicker(time.Millisecond * 100)
-	var triggersToCheckCount, graphiteTriggersToCheckCount int64
+	var triggersToCheckCount, graphiteTriggersToCheckCount, prometheusTriggersToCheckCount int64
 	var err error
 	for {
 		select {
@@ -115,6 +138,12 @@ func (worker *Checker) checkTriggersToCheckCount() error {
 				graphiteTriggersToCheckCount, err = worker.Database.GetGraphiteTriggersToCheckCount()
 				if err == nil {
 					worker.Metrics.GraphiteMetrics.TriggersToCheckCount.Update(graphiteTriggersToCheckCount)
+				}
+			}
+			if worker.prometheusEnabled {
+				prometheusTriggersToCheckCount, err = worker.Database.GetPrometheusTriggersToCheckCount()
+				if err == nil {
+					worker.Metrics.GraphiteMetrics.TriggersToCheckCount.Update(prometheusTriggersToCheckCount)
 				}
 			}
 		}

@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/moira-alert/moira/metric_source/prometheus"
 	"os"
 	"os/signal"
 	"syscall"
@@ -80,7 +81,8 @@ func main() {
 	remoteConfig := config.Remote.GetRemoteSourceSettings()
 	localSource := local.Create(database)
 	remoteSource := remote.Create(remoteConfig)
-	metricSourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource, nil)
+	prometheusSource := prometheus.Create(logger, &prometheus.Config{URL: "http://localhost:9080"})
+	metricSourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource, prometheusSource)
 
 	isConfigured, _ := remoteSource.IsConfigured()
 	checkerMetrics := metrics.ConfigureCheckerMetrics(serviceName, isConfigured)

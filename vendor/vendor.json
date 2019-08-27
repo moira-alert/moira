@@ -966,6 +966,12 @@
 			"revisionTime": "2018-02-06T20:15:40Z"
 		},
 		{
+			"checksumSHA1": "4DgEcOv2o9NyZAHCbdS76mToqpU=",
+			"path": "github.com/json-iterator/go",
+			"revision": "27518f6661eba504be5a7a9a9f6d9460d892ade3",
+			"revisionTime": "2019-06-21T16:12:01Z"
+		},
+		{
 			"checksumSHA1": "cIiyvAduLLFvu+tg1Qr5Jw3jeWo=",
 			"path": "github.com/jtolds/gls",
 			"revision": "b4936e06046bbecbb94cae9c18127ebe510a2cb9",
@@ -1037,6 +1043,18 @@
 			"revisionTime": "2018-07-29T13:10:59Z"
 		},
 		{
+			"checksumSHA1": "ZTcgWKWHsrX0RXYVXn5Xeb8Q0go=",
+			"path": "github.com/modern-go/concurrent",
+			"revision": "bacd9c7ef1dd9b15be4a9909b8ac7a4e313eec94",
+			"revisionTime": "2018-03-06T01:26:44Z"
+		},
+		{
+			"checksumSHA1": "qvH48wzTIV3QKSDqI0dLFtVjaDI=",
+			"path": "github.com/modern-go/reflect2",
+			"revision": "94122c33edd36123c84d5368cfb2b69df93a0ec8",
+			"revisionTime": "2018-07-18T01:23:57Z"
+		},
+		{
 			"checksumSHA1": "QQtjav/Dlyny0j50nAw9dsXDAIs=",
 			"path": "github.com/mschoch/smat",
 			"revision": "90eadee771aeab36e8bf796039b8c261bebebe4f",
@@ -1091,6 +1109,19 @@
 			"path": "github.com/pmezard/go-difflib/difflib",
 			"revision": "f6abca593680b2315d2075e0f5e2a9751e3f431a",
 			"revisionTime": "2017-06-01T20:57:54Z"
+		},
+		{
+			"checksumSHA1": "7u431m5QCyDoHKiJpv4zeP0qpSI=",
+			"path": "github.com/prometheus/client_golang",
+			"revision": "170205fb58decfd011f1550d4cfb737230d7ae4f",
+			"revisionTime": "2019-08-01T13:37:03Z",
+			"tree": true
+		},
+		{
+			"checksumSHA1": "ccmMs+h9Jo8kE7izqsUkWShD4d0=",
+			"path": "github.com/prometheus/common/model",
+			"revision": "637d7c34db122e2d1a25d061423098663758d2d3",
+			"revisionTime": "2019-07-30T17:58:46Z"
 		},
 		{
 			"checksumSHA1": "KAzbLjI9MzW2tjfcAsK75lVRp6I=",

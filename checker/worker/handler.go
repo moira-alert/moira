@@ -18,6 +18,7 @@ func (worker *Checker) startTriggerHandler(triggerIDsToCheck <-chan string, metr
 		if !ok {
 			return nil
 		}
+		worker.Logger.Debugf("Start handling trigger %s", triggerID)
 		err := worker.handleTrigger(triggerID, metrics)
 		if err != nil {
 			metrics.HandleError.Mark(1)
