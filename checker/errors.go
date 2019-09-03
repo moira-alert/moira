@@ -33,7 +33,7 @@ type ErrTriggerHasSameMetricNames struct {
 
 // ErrTriggerHasSameMetricNames implementation with constant error message
 func (err ErrTriggerHasSameMetricNames) Error() string {
-	return fmt.Sprintf("Trigger has same metric names: %s", strings.Join(err.names, ", "))
+	return fmt.Sprintf("Several metrics have an identical name: %s", strings.Join(err.names, ", "))
 }
 
 // ErrTargetHasNoMetrics used if additional trigger target has not metrics data after fetch from source
