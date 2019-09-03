@@ -1197,7 +1197,7 @@ func TestHandleTriggerCheck(t *testing.T) {
 			State:                        moira.StateERROR,
 			Timestamp:                    checkData.Timestamp,
 			EventTimestamp:               checkData.Timestamp,
-			Message:                      "Trigger has same metric names: first, second",
+			Message:                      "Several metrics have an identical name: first, second",
 			LastSuccessfulCheckTimestamp: 0,
 		}
 		So(err, ShouldBeNil)
