@@ -1231,7 +1231,7 @@ func TestHandleTriggerCheck(t *testing.T) {
 				EventTimestamp:               time.Now().Add(-1 * time.Hour).Unix(),
 				LastSuccessfulCheckTimestamp: now.Add(-1 * time.Minute).Unix(),
 			}
-			actual, err := triggerChecker.handleCheckResult(checkData, remote.ErrRemoteTriggerResponse{InternalError: fmt.Errorf("pain"), Target: "pain.target"})
+			actual, err := triggerChecker.handleCheckResult(checkData, remote.ErrRemoteTriggerResponse{InternalError: fmt.Errorf("pain")})
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, expected)
 		})
@@ -1250,7 +1250,7 @@ func TestHandleTriggerCheck(t *testing.T) {
 				LastSuccessfulCheckTimestamp: now.Add(-10 * time.Minute).Unix(),
 			}
 			dataBase.EXPECT().PushNotificationEvent(gomock.Any(), true).Return(nil)
-			actual, err := triggerChecker.handleCheckResult(checkData, remote.ErrRemoteTriggerResponse{InternalError: fmt.Errorf("pain"), Target: "pain.target"})
+			actual, err := triggerChecker.handleCheckResult(checkData, remote.ErrRemoteTriggerResponse{InternalError: fmt.Errorf("pain")})
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, expected)
 		})

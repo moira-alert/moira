@@ -19,7 +19,7 @@ type ErrRemoteTriggerResponse struct {
 
 // Error is a representation of Error interface method
 func (err ErrRemoteTriggerResponse) Error() string {
-	return fmt.Sprintf("failed to get remote target '%s': %s", err.Target, err.InternalError.Error())
+	return err.InternalError.Error()
 }
 
 // Remote is implementation of MetricSource interface, which implements fetch metrics method from remote graphite installation
