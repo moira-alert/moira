@@ -66,11 +66,6 @@ func updateTrigger(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-//
-//func loggingErrorRemoteServer(err error, response *api.ErrorResponse, log moira.Logger) {
-//
-//}
-
 func removeTrigger(writer http.ResponseWriter, request *http.Request) {
 	triggerID := middleware.GetTriggerID(request)
 	err := controller.RemoveTrigger(database, triggerID)
