@@ -2,7 +2,6 @@ package handler
 
 import (
 	"fmt"
-	"github.com/moira-alert/moira"
 	"net/http"
 	"time"
 
@@ -46,7 +45,9 @@ func updateTrigger(writer http.ResponseWriter, request *http.Request) {
 			render.Render(writer, request, api.ErrorInvalidRequest(err))
 		case remote.ErrRemoteTriggerResponse:
 			response := api.ErrorRemoteServerUnavailable(err)
-			loggingErrorRemoteServer(err, response, middleware.GetLoggerEntry(request))
+			if t, ok := err.(remote.ErrRemoteTriggerResponse); ok {
+				middleware.GetLoggerEntry(request).Error("%s : %s : %s", response.StatusText, response.ErrorText, t.Target)
+			}
 			render.Render(writer, request, response)
 		default:
 			render.Render(writer, request, api.ErrorInternalServer(err))
@@ -67,11 +68,10 @@ func updateTrigger(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func loggingErrorRemoteServer(err error, response *api.ErrorResponse, log moira.Logger) {
-	if t, ok := err.(remote.ErrRemoteTriggerResponse); ok {
-		log.Error("%s : %s : %s", response.StatusText, response.ErrorText, t.Target)
-	}
-}
+//
+//func loggingErrorRemoteServer(err error, response *api.ErrorResponse, log moira.Logger) {
+//
+//}
 
 func removeTrigger(writer http.ResponseWriter, request *http.Request) {
 	triggerID := middleware.GetTriggerID(request)
