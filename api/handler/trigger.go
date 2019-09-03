@@ -36,7 +36,7 @@ func updateTrigger(writer http.ResponseWriter, request *http.Request) {
 	triggerID := middleware.GetTriggerID(request)
 	trigger := &dto.Trigger{}
 	if err := render.Bind(request, trigger); err != nil {
-		switch e := err.(type) {
+		switch typeErr := err.(type) {
 		case local.ErrParseExpr, local.ErrEvalExpr, local.ErrUnknownFunction:
 			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("invalid graphite targets: %s", err.Error())))
 		case expression.ErrInvalidExpression:
@@ -45,7 +45,7 @@ func updateTrigger(writer http.ResponseWriter, request *http.Request) {
 			render.Render(writer, request, api.ErrorInvalidRequest(err))
 		case remote.ErrRemoteTriggerResponse:
 			response := api.ErrorRemoteServerUnavailable(err)
-			middleware.GetLoggerEntry(request).Error("%s : %s : %s", response.StatusText, response.ErrorText, e.Target)
+			middleware.GetLoggerEntry(request).Error("%s : %s : %s", response.StatusText, response.ErrorText, typeErr.Target)
 			render.Render(writer, request, response)
 		default:
 			render.Render(writer, request, api.ErrorInternalServer(err))
