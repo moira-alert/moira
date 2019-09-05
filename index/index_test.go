@@ -6,6 +6,7 @@ import (
 
 	bleveOriginal "github.com/blevesearch/bleve"
 	"github.com/golang/mock/gomock"
+	"github.com/moira-alert/moira"
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
 
@@ -13,6 +14,39 @@ import (
 	"github.com/moira-alert/moira/index/fixtures"
 	"github.com/moira-alert/moira/mock/moira-alert"
 )
+
+func TestGetTriggerChecksWithRetries(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	logger, _ := logging.GetLogger("Test")
+	index := NewSearchIndex(logger, dataBase)
+	randomBatch := []string{"123", "123"}
+	expectedData := []*moira.TriggerCheck{{Throttling: 123}}
+	expectedError := fmt.Errorf("random error")
+
+	Convey("Success get data from database with first try", t, func() {
+		dataBase.EXPECT().GetTriggerChecks(randomBatch).Return(expectedData, nil)
+		actualData, actualError := index.getTriggerChecksWithRetries(randomBatch)
+		So(actualData, ShouldResemble, expectedData)
+		So(actualError, ShouldBeEmpty)
+	})
+
+	Convey("Success get data from database with third try", t, func() {
+		dataBase.EXPECT().GetTriggerChecks(randomBatch).Return(nil, expectedError).Times(2)
+		dataBase.EXPECT().GetTriggerChecks(randomBatch).Return(expectedData, nil)
+		actualData, actualError := index.getTriggerChecksWithRetries(randomBatch)
+		So(actualData, ShouldResemble, expectedData)
+		So(actualError, ShouldBeEmpty)
+	})
+
+	Convey("Fail get data from database with three tries", t, func() {
+		dataBase.EXPECT().GetTriggerChecks(randomBatch).Return(nil, expectedError).Times(3)
+		actualData, actualError := index.getTriggerChecksWithRetries(randomBatch)
+		So(actualData, ShouldBeEmpty)
+		So(actualError, ShouldResemble, fmt.Errorf("cannot get trigger checks from DB after 3 tries, last error: %s", expectedError))
+	})
+}
 
 func TestIndex_CreateAndFill(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
