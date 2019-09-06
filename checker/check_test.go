@@ -426,7 +426,7 @@ func TestCheckForNODATA(t *testing.T) {
 			So(needToDeleteMetric, ShouldBeFalse)
 			So(currentState, ShouldResemble, &moira.MetricState{
 				State:       moira.StateNODATA,
-				Timestamp:   triggerChecker.lastCheck.Timestamp - triggerChecker.ttl,
+				Timestamp:   triggerChecker.lastCheck.Timestamp,
 				Value:       nil,
 				Maintenance: metricLastState.Maintenance,
 				Suppressed:  metricLastState.Suppressed,

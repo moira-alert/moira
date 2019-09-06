@@ -49,7 +49,7 @@ func newCheckData(lastCheck *moira.CheckData, checkTimeStamp int64) moira.CheckD
 	newCheckData.Timestamp = checkTimeStamp
 	newCheckData.Message = ""
 	return newCheckData
-	}
+}
 
 func newMetricState(oldMetricState moira.MetricState, newState moira.State, newTimestamp int64, newValue *float64) *moira.MetricState {
 	newMetricState := oldMetricState
@@ -170,13 +170,13 @@ func (triggerChecker *TriggerChecker) handleCheckResult(checkData moira.CheckDat
 	case ErrTriggerHasNoMetrics, ErrTriggerHasOnlyWildcards:
 		triggerChecker.logger.Debugf("Trigger %s: %s", triggerChecker.triggerID, checkingError.Error())
 		triggerState := triggerChecker.ttlState.ToTriggerState()
-			checkData.State = triggerState
-			checkData.Message = checkingError.Error()
-			if triggerChecker.ttl == 0 {
+		checkData.State = triggerState
+		checkData.Message = checkingError.Error()
+		if triggerChecker.ttl == 0 {
 			// Do not alert when user don't wanna receive
 			// NODATA state alerts, but change trigger status
-				return checkData, nil
-			}
+			return checkData, nil
+		}
 	case ErrWrongTriggerTargets, ErrTriggerHasSameMetricNames:
 		checkData.State = moira.StateERROR
 		checkData.Message = checkingError.Error()
@@ -211,10 +211,14 @@ func (triggerChecker *TriggerChecker) checkForNoData(metricData *metricSource.Me
 	if triggerChecker.ttlState == moira.TTLStateDEL && metricLastState.EventTimestamp != 0 {
 		return true, nil
 	}
+	newTimestamp := lastCheckTimeStamp - triggerChecker.ttl
+	if triggerChecker.ttlState == moira.TTLStateDEL {
+		newTimestamp = lastCheckTimeStamp
+	}
 	return false, newMetricState(
 		metricLastState,
 		triggerChecker.ttlState.ToMetricState(),
-		lastCheckTimeStamp-triggerChecker.ttl,
+		newTimestamp,
 		nil,
 	)
 }
