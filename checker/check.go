@@ -49,28 +49,19 @@ func newCheckData(lastCheck *moira.CheckData, checkTimeStamp int64) moira.CheckD
 	newCheckData.Timestamp = checkTimeStamp
 	newCheckData.Message = ""
 	return newCheckData
-	}
+}
 
-func newMetricState(oldMetricState moira.MetricState, newState moira.State, newTimestamp int64, newValue *float64) *moira.MetricState {
-	newMetricState := oldMetricState
-
+func newMetricState(metricState moira.MetricState, newState moira.State, newTimestamp int64, newValue *float64) *moira.MetricState {
 	// This field always changed in every metric check operation
-	newMetricState.State = newState
-	newMetricState.Timestamp = newTimestamp
-	newMetricState.Value = newValue
-
-	// Always set. This fields only changed by user actions
-	newMetricState.Maintenance = oldMetricState.Maintenance
-	newMetricState.MaintenanceInfo = oldMetricState.MaintenanceInfo
-
-	// Only can be change while understand that metric in maintenance or not in compareMetricStates logic
-	newMetricState.Suppressed = oldMetricState.Suppressed
+	metricState.State = newState
+	metricState.Timestamp = newTimestamp
+	metricState.Value = newValue
 
 	// This fields always set in compareMetricStates logic
 	// TODO: make sure that this logic can be moved here
-	newMetricState.EventTimestamp = 0
-	newMetricState.SuppressedState = ""
-	return &newMetricState
+	metricState.EventTimestamp = 0
+	metricState.SuppressedState = ""
+	return &metricState
 }
 
 func (triggerChecker *TriggerChecker) checkTriggerMetrics(triggerMetricsData *metricSource.TriggerMetricsData, checkData moira.CheckData) (moira.CheckData, error) {
@@ -170,13 +161,13 @@ func (triggerChecker *TriggerChecker) handleCheckResult(checkData moira.CheckDat
 	case ErrTriggerHasNoMetrics, ErrTriggerHasOnlyWildcards:
 		triggerChecker.logger.Debugf("Trigger %s: %s", triggerChecker.triggerID, checkingError.Error())
 		triggerState := triggerChecker.ttlState.ToTriggerState()
-			checkData.State = triggerState
-			checkData.Message = checkingError.Error()
-			if triggerChecker.ttl == 0 {
+		checkData.State = triggerState
+		checkData.Message = checkingError.Error()
+		if triggerChecker.ttl == 0 {
 			// Do not alert when user don't wanna receive
 			// NODATA state alerts, but change trigger status
-				return checkData, nil
-			}
+			return checkData, nil
+		}
 	case ErrWrongTriggerTargets, ErrTriggerHasSameMetricNames:
 		checkData.State = moira.StateERROR
 		checkData.Message = checkingError.Error()
