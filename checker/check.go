@@ -211,14 +211,10 @@ func (triggerChecker *TriggerChecker) checkForNoData(metricData *metricSource.Me
 	if triggerChecker.ttlState == moira.TTLStateDEL && metricLastState.EventTimestamp != 0 {
 		return true, nil
 	}
-	newTimestamp := lastCheckTimeStamp - triggerChecker.ttl
-	if triggerChecker.ttlState == moira.TTLStateDEL {
-		newTimestamp = lastCheckTimeStamp
-	}
 	return false, newMetricState(
 		metricLastState,
 		triggerChecker.ttlState.ToMetricState(),
-		newTimestamp,
+		lastCheckTimeStamp,
 		nil,
 	)
 }
