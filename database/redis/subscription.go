@@ -3,6 +3,7 @@ package redis
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/gomodule/redigo/redis"
 
@@ -194,6 +195,10 @@ func (connector *DbConnector) getSubscriptionsIDsByTags(tags []string) ([]string
 	defer c.Close()
 
 	tagKeys := make([]interface{}, 0, len(tags))
+
+	if !strings.Contains(strings.Join(tags, " "), " * ") {
+		tags = append(tags, "*")
+	}
 	for _, tag := range tags {
 		tagKeys = append(tagKeys, fmt.Sprintf("moira-tag-subscriptions:%s", tag))
 	}

@@ -93,6 +93,9 @@ func Subset(first, second []string) bool {
 	}
 
 	for _, value := range first {
+		if value == "*" {
+			return true
+		}
 		if !set[value] {
 			return false
 		}

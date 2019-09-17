@@ -1,8 +1,6 @@
 package worker
 
-import (
-	"time"
-)
+import "time"
 
 const sleepAfterGetTriggerIDError = time.Second * 1
 const sleepWhenNoTriggerToCheck = time.Millisecond * 500

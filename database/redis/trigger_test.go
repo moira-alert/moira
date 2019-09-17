@@ -62,6 +62,7 @@ func TestTriggerStoring(t *testing.T) {
 			//And tags
 			actualTags, err := dataBase.GetTagNames()
 			So(err, ShouldBeNil)
+			trigger.Tags = append(trigger.Tags, "*")
 			So(actualTags, ShouldResemble, trigger.Tags)
 
 			//Now just add tag and pattern in trigger and save it
@@ -86,7 +87,7 @@ func TestTriggerStoring(t *testing.T) {
 			//And we have new tag in tags list
 			actualTags, err = dataBase.GetTagNames()
 			So(err, ShouldBeNil)
-			So(actualTags, ShouldHaveLength, 2)
+			So(actualTags, ShouldHaveLength, 3)
 
 			//Also we can get this trigger by new pattern
 			ids, err = dataBase.GetPatternTriggerIDs(changedTrigger.Patterns[0])
@@ -130,7 +131,7 @@ func TestTriggerStoring(t *testing.T) {
 			//But we still has this tag in tags list with new one
 			actualTags, err = dataBase.GetTagNames()
 			So(err, ShouldBeNil)
-			So(actualTags, ShouldHaveLength, 3)
+			So(actualTags, ShouldHaveLength, 4)
 
 			//Same story like tags and trigger with pattern and trigger
 			ids, err = dataBase.GetPatternTriggerIDs(oldPattern)
@@ -191,7 +192,7 @@ func TestTriggerStoring(t *testing.T) {
 			//But has all tags
 			actualTags, err = dataBase.GetTagNames()
 			So(err, ShouldBeNil)
-			So(actualTags, ShouldHaveLength, 3)
+			So(actualTags, ShouldHaveLength, 4)
 		})
 
 		Convey("Save trigger with lastCheck and throttling and GetTriggerChecks", func() {
@@ -431,8 +432,8 @@ func TestTriggerStoring(t *testing.T) {
 
 		Convey("Test trigger manipulations update 'triggers to reindex' list", func() {
 			dataBase.flush()
+			triggers[0].Tags = triggers[0].Tags[:len(triggers[0].Tags)-1]
 			trigger := &triggers[0]
-
 			err := dataBase.SaveTrigger(trigger.ID, trigger)
 			So(err, ShouldBeNil)
 

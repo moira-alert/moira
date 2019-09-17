@@ -124,6 +124,12 @@ func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigg
 		trigger.Patterns = make([]string, 0)
 	}
 
+	for _, v := range trigger.Tags {
+		if v == "*" {
+			return fmt.Errorf("failed to get trigger, tag not allowed: *")
+		}
+	}
+
 	var oldTrigger *moira.Trigger
 	if existing, err := connector.GetTrigger(triggerID); err == nil {
 		oldTrigger = &existing

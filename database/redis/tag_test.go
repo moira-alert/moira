@@ -23,7 +23,7 @@ func TestTagStoring(t *testing.T) {
 
 		tags, err := dataBase.GetTagNames()
 		So(err, ShouldBeNil)
-		So(tags, ShouldHaveLength, 1)
+		So(tags, ShouldHaveLength, 2)
 
 		triggerIDs, err = dataBase.GetTagTriggerIDs(trigger.Tags[0])
 		So(err, ShouldBeNil)
@@ -34,7 +34,7 @@ func TestTagStoring(t *testing.T) {
 
 		tags, err = dataBase.GetTagNames()
 		So(err, ShouldBeNil)
-		So(tags, ShouldHaveLength, 0)
+		So(tags, ShouldHaveLength, 1)
 
 		triggerIDs, err = dataBase.GetTagTriggerIDs(trigger.Tags[0])
 		So(err, ShouldBeNil)
