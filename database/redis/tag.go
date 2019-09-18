@@ -17,7 +17,7 @@ func (connector *DbConnector) GetTagNames() ([]string, error) {
 		return nil, fmt.Errorf("failed to retrieve tags: %s", err.Error())
 	}
 
-	if !strings.Contains(strings.Join(tagNames, " "), " * ") {
+	if !strings.Contains(" "+strings.Join(tagNames, " ")+" ", " * ") {
 		tagNames = append(tagNames, "*")
 	}
 	return tagNames, nil
