@@ -1,6 +1,7 @@
 package index
 
 import (
+	"fmt"
 	"sync"
 	"sync/atomic"
 
@@ -22,13 +23,7 @@ func (index *Index) getTriggerChecksBatches(triggerIDsBatches [][]string) (trigg
 		go func(batch []string) {
 			defer wg.Done()
 
-			newBatch, err := index.database.GetTriggerChecks(batch)
-			for i := 0; i < 3 && err != nil; i++ {
-				if err != nil {
-					index.logger.Errorf("Cannot get trigger checks from DB: %s №%d", err.Error(), i)
-				}
-				newBatch, err = index.database.GetTriggerChecks(batch)
-			}
+			newBatch, err := index.getTriggerChecksWithRetries(batch)
 			if err != nil {
 				errors <- err
 				return
@@ -44,6 +39,20 @@ func (index *Index) getTriggerChecksBatches(triggerIDsBatches [][]string) (trigg
 		close(errors)
 	}()
 	return
+}
+
+func (index *Index) getTriggerChecksWithRetries(batch []string) ([]*moira.TriggerCheck, error) {
+	var err error
+	triesCount := 3
+	for i := 1; i <= triesCount; i++ {
+		var newBatch []*moira.TriggerCheck
+		newBatch, err = index.database.GetTriggerChecks(batch)
+		if err == nil {
+			return newBatch, nil
+		}
+		index.logger.Warningf("Cannot get trigger checks from DB, try %d/%d: %s", i, triesCount, err.Error())
+	}
+	return nil, fmt.Errorf("cannot get trigger checks from DB after %d tries, last error: %s", triesCount, err.Error())
 }
 
 func (index *Index) handleTriggerBatches(triggerChecksChan chan []*moira.TriggerCheck, getTriggersErrors chan error, toIndex int) error {
