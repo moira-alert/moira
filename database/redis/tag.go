@@ -2,7 +2,6 @@ package redis
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/gomodule/redigo/redis"
 )
@@ -15,10 +14,6 @@ func (connector *DbConnector) GetTagNames() ([]string, error) {
 	tagNames, err := redis.Strings(c.Do("SMEMBERS", tagsKey))
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve tags: %s", err.Error())
-	}
-
-	if !strings.Contains(" "+strings.Join(tagNames, " ")+" ", " * ") {
-		tagNames = append(tagNames, "*")
 	}
 	return tagNames, nil
 }

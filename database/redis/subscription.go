@@ -3,14 +3,14 @@ package redis
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
-
 	"github.com/gomodule/redigo/redis"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/database/redis/reply"
 )
+
+const anyTagsSubscriptions = "moira-any-tags-subscriptions"
 
 // GetSubscription returns subscription data by given id, if no value, return database.ErrNil error
 func (connector *DbConnector) GetSubscription(id string) (moira.SubscriptionData, error) {
@@ -156,6 +156,7 @@ func (connector *DbConnector) removeSubscription(subscription *moira.Subscriptio
 	for _, tag := range subscription.Tags {
 		c.Send("SREM", tagSubscriptionKey(tag), subscription.ID)
 	}
+	c.Send("SREM", anyTagsSubscriptions, subscription.ID)
 	c.Send("DEL", subscriptionKey(subscription.ID))
 	if _, err := c.Do("EXEC"); err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
@@ -196,12 +197,10 @@ func (connector *DbConnector) getSubscriptionsIDsByTags(tags []string) ([]string
 
 	tagKeys := make([]interface{}, 0, len(tags))
 
-	if !strings.Contains(" "+strings.Join(tags, " ")+" ", " * ") {
-		tags = append(tags, "*")
-	}
 	for _, tag := range tags {
 		tagKeys = append(tagKeys, fmt.Sprintf("moira-tag-subscriptions:%s", tag))
 	}
+	tagKeys = append(tagKeys, anyTagsSubscriptions)
 	values, err := redis.Values(c.Do("SUNION", tagKeys...))
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve subscriptions for tags %v: %s", tags, err.Error())
@@ -228,6 +227,9 @@ func addSendSubscriptionRequest(c redis.Conn, subscription *moira.SubscriptionDa
 	}
 	for _, tag := range subscription.Tags {
 		c.Send("SADD", tagSubscriptionKey(tag), subscription.ID)
+	}
+	if subscription.AnyTags {
+		c.Send("SADD", anyTagsSubscriptions, subscription.ID)
 	}
 	c.Send("SADD", userSubscriptionsKey(subscription.User), subscription.ID)
 	c.Send("SET", subscriptionKey(subscription.ID), bytes)

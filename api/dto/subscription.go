@@ -49,7 +49,7 @@ func (*Subscription) Render(w http.ResponseWriter, r *http.Request) error {
 
 func (subscription *Subscription) Bind(request *http.Request) error {
 	subscription.Tags = normalizeTags(subscription.Tags)
-	if len(subscription.Tags) == 0 {
+	if len(subscription.Tags) == 0 && !subscription.AnyTags {
 		return fmt.Errorf("subscription must have tags")
 	}
 	if len(subscription.Contacts) == 0 {

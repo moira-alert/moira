@@ -75,6 +75,7 @@ type SubscriptionData struct {
 	Plotting          PlottingData `json:"plotting"`
 	ID                string       `json:"id"`
 	Enabled           bool         `json:"enabled"`
+	AnyTags           bool         `json:"any_tags"`
 	IgnoreWarnings    bool         `json:"ignore_warnings,omitempty"`
 	IgnoreRecoverings bool         `json:"ignore_recoverings,omitempty"`
 	ThrottlingEnabled bool         `json:"throttling"`
