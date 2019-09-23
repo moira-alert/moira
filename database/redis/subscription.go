@@ -3,6 +3,7 @@ package redis
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/gomodule/redigo/redis"
 
 	"github.com/moira-alert/moira"
