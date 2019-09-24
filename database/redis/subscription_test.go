@@ -20,6 +20,12 @@ func TestSubscriptionData(t *testing.T) {
 	Convey("SubscriptionData manipulation", t, func() {
 		Convey("Save-get-remove subscription", func() {
 			sub := subscriptions[0]
+			subAnyTag := &moira.SubscriptionData{}
+			*subAnyTag = *sub
+			subAnyTag.Tags = nil
+			subAnyTag.AnyTags = true
+			subAnyTag.ID = "subscriptionID-00000000000002"
+
 			Convey("No subscription", func() {
 				actual, err := dataBase.GetSubscription(sub.ID)
 				So(err, ShouldBeError)
@@ -29,7 +35,39 @@ func TestSubscriptionData(t *testing.T) {
 			Convey("Save subscription", func() {
 				err := dataBase.SaveSubscription(sub)
 				So(err, ShouldBeNil)
+
+				err = dataBase.SaveSubscription(subAnyTag)
+				So(err, ShouldBeNil)
 			})
+
+			Convey("Subscription with AnyTag is true", func() {
+				Convey("Get Subscription", func() {
+					actual, err := dataBase.GetSubscription(subAnyTag.ID)
+					So(err, ShouldBeNil)
+					So(actual, ShouldResemble, *subAnyTag)
+
+					actual1, err := dataBase.GetSubscriptions([]string{subAnyTag.ID})
+					So(err, ShouldBeNil)
+					So(actual1, ShouldResemble, []*moira.SubscriptionData{subAnyTag})
+
+					actual2, err := dataBase.GetTagsSubscriptions(nil)
+					So(err, ShouldBeNil)
+					So(actual2, ShouldResemble, []*moira.SubscriptionData{subAnyTag})
+
+					actual3, err := dataBase.GetTagsSubscriptions(nil)
+					So(err, ShouldBeNil)
+					So(actual3, ShouldResemble, []*moira.SubscriptionData{subAnyTag})
+
+					actual4, err := dataBase.GetUserSubscriptionIDs(user1)
+					So(err, ShouldBeNil)
+					So(actual4, ShouldResemble, []string{sub.ID, subAnyTag.ID})
+				})
+				Convey("Remove subscription", func() {
+					err := dataBase.RemoveSubscription(subAnyTag.ID)
+					So(err, ShouldBeNil)
+				})
+			})
+
 			Convey("Get subscription by id, user and tags", func() {
 				actual, err := dataBase.GetSubscription(sub.ID)
 				So(err, ShouldBeNil)

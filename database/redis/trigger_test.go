@@ -18,6 +18,27 @@ func TestTriggerStoring(t *testing.T) {
 	defer dataBase.flush()
 
 	Convey("Trigger manipulation", t, func() {
+
+		Convey("Test trigger has subscriptions", func() {
+			trigger := &triggers[0]
+			subscription := *subscriptions[0]
+			subscription.AnyTags = true
+
+			err := dataBase.SaveSubscription(&subscription)
+			So(err, ShouldBeNil)
+
+			hasSubscriptions, err := dataBase.triggerHasSubscriptions(trigger)
+			So(err, ShouldBeNil)
+			So(hasSubscriptions, ShouldBeTrue)
+
+			err = dataBase.RemoveSubscription(subscription.ID)
+			So(err, ShouldBeNil)
+
+			hasSubscriptions, err = dataBase.triggerHasSubscriptions(trigger)
+			So(err, ShouldBeNil)
+			So(hasSubscriptions, ShouldBeFalse)
+		})
+
 		Convey("Test save-get-remove", func() {
 			trigger := &triggers[0]
 
