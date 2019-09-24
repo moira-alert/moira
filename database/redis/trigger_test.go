@@ -19,7 +19,7 @@ func TestTriggerStoring(t *testing.T) {
 
 	Convey("Trigger manipulation", t, func() {
 
-		Convey("Test trigger has subscriptions", func() {
+		Convey("Test trigger has subscriptions with AnyTag is true", func() {
 			trigger := &triggers[0]
 			subscription := *subscriptions[0]
 			subscription.AnyTags = true
