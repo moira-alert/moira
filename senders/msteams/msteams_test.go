@@ -59,7 +59,7 @@ some other text _italic text_`,
 				Sections: []Section{
 					{
 						ActivityTitle: "Description",
-						ActivityText:  "# header1  \n\nsome text **bold text**  \n\n## header 2  \n\nsome other text _italic text_",
+						ActivityText:  "<h1>header1</h1>\n\n<p>some text <strong>bold text</strong></p>\n\n<h2>header 2</h2>\n\n<p>some other text <em>italic text</em></p>\n",
 						Facts: []Fact{
 							{
 								Name:  "02:40",
@@ -118,7 +118,7 @@ some other text _italic text_`,
 				Sections: []Section{
 					{
 						ActivityTitle: "Description",
-						ActivityText:  "# header1  \n\nsome text **bold text**  \n\n## header 2  \n\nsome other text _italic text_",
+						ActivityText:  "<h1>header1</h1>\n\n<p>some text <strong>bold text</strong></p>\n\n<h2>header 2</h2>\n\n<p>some other text <em>italic text</em></p>\n",
 						Facts: []Fact{
 							{
 								Name:  "02:40",
@@ -158,7 +158,7 @@ some other text _italic text_`,
 				Sections: []Section{
 					{
 						ActivityTitle: "Description",
-						ActivityText:  "# header1  \n\nsome text **bold text**  \n\n## header 2  \n\nsome other text _italic text_",
+						ActivityText:  "<h1>header1</h1>\n\n<p>some text <strong>bold text</strong></p>\n\n<h2>header 2</h2>\n\n<p>some other text <em>italic text</em></p>\n",
 						Facts: []Fact{
 							{
 								Name:  "02:40",
