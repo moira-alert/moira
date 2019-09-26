@@ -75,49 +75,54 @@ func isValidWebhookURL(webhookURL string) (bool, error) {
 	return true, nil
 }
 
-func buildMessageCard(title string, uri string, state moira.State, data moira.TriggerData, facts []Fact) MessageCard {
-	messageCard := MessageCard{
+func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) MessageCard {
+
+	title, uri := sender.buildTitleAndUri(events, trigger)
+	var triggerDescription string
+	if trigger.Desc != "" {
+		triggerDescription = strings.ReplaceAll(trigger.Desc, "\n", "  \n\n")
+	}
+	facts := sender.buildEventsFacts(events, -1, throttled)
+	var actions []Actions
+	if uri != "" {
+		actions = append(actions, Actions{
+			Type: "OpenUri",
+			Name: "View in Moira",
+			Targets: []OpenUriTarget{
+				{
+					Os:  "default",
+					Uri: uri,
+				},
+			},
+		})
+	}
+	return MessageCard{
 		Context:     "http://schema.org/extensions",
 		MessageType: "MessageCard",
 		Summary:     "Moira Alert",
-		ThemeColor:  getColourForState(state),
+		ThemeColor:  getColourForState(events.GetSubjectState()),
 		Title:       title,
 		Sections: []Section{
 			{
 				ActivityTitle: "Description",
-				ActivityText:  strings.ReplaceAll(data.Desc, "\n", "  \n\n"),
+				ActivityText:  triggerDescription,
 				Facts:         facts,
 			},
 		},
-		PotentialAction: []Actions{
-			{
-				Type: "OpenUri",
-				Name: "View in Moira",
-				Targets: []OpenUriTarget{
-					{
-						Os:  "default",
-						Uri: uri,
-					},
-				},
-			},
-		},
+		PotentialAction: actions,
 	}
-	return messageCard
 }
 
 func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) (*http.Request, error) {
 
-	title, uri := sender.buildTitleAndUri(events, trigger)
-	facts := sender.buildEventsFacts(events, -1, throttled)
-
-	messageCard := buildMessageCard(title, uri, events.GetSubjectState(), trigger, facts)
+	messageCard := sender.buildMessage(events, trigger, throttled)
 	requestURL := contact.Value
 	requestBody, err := json.Marshal(messageCard)
 	if err != nil {
 		return nil, err
 	}
 
-	sender.logger.Infof("%s\n", requestBody)
+	sender.logger.Debugf("%s\n", requestBody)
 	request, err := http.NewRequest("POST", requestURL, bytes.NewBuffer(requestBody))
 	if err != nil {
 		return request, err
@@ -163,7 +168,6 @@ func (sender *Sender) buildEventsFacts(events moira.NotificationEvents, maxEvent
 		facts = append(facts, Fact{
 			Name:  event.FormatTimestamp(sender.location),
 			Value: "```" + line + "```",
-			state: event.State,
 		})
 
 		if maxEvents != -1 && len(facts) > maxEvents {

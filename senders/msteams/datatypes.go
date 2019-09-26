@@ -1,11 +1,8 @@
 package msteams
 
-import "github.com/moira-alert/moira"
-
 type Fact struct {
 	Name  string `json:"name"`
 	Value string `json:"value"`
-	state moira.State
 }
 
 type Section struct {
@@ -33,5 +30,5 @@ type MessageCard struct {
 	ThemeColor      string    `json:"themeColor"`
 	Title           string    `json:"title"`
 	Sections        []Section `json:"sections"`
-	PotentialAction []Actions `json:"potentialAction"`
+	PotentialAction []Actions `json:"potentialAction,omitempty"`
 }
