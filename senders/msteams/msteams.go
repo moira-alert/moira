@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/moira-alert/moira"
+	"gopkg.in/russross/blackfriday.v2"
 	"net/http"
 	"net/url"
 	"strings"
@@ -80,7 +81,7 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 	title, uri := sender.buildTitleAndUri(events, trigger)
 	var triggerDescription string
 	if trigger.Desc != "" {
-		triggerDescription = strings.ReplaceAll(trigger.Desc, "\n", "  \n\n")
+		triggerDescription = string(blackfriday.Run([]byte(trigger.Desc)))
 	}
 	facts := sender.buildEventsFacts(events, -1, throttled)
 	var actions []Actions
