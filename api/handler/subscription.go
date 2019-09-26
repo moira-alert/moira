@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"github.com/pkg/errors"
 	"net/http"
 
 	"github.com/go-chi/chi"
@@ -46,6 +47,12 @@ func createSubscription(writer http.ResponseWriter, request *http.Request) {
 	}
 	userLogin := middleware.GetLogin(request)
 
+	if subscription.AnyTags && subscription.Tags != nil {
+		writer.WriteHeader(http.StatusBadRequest)
+		render.Render(writer, request, api.ErrorInvalidRequest(
+			errors.New("if any_tags is true, then the tags must be empty")))
+		return
+	}
 	if err := controller.CreateSubscription(database, userLogin, subscription); err != nil {
 		render.Render(writer, request, err)
 		return
@@ -82,6 +89,14 @@ func updateSubscription(writer http.ResponseWriter, request *http.Request) {
 		}
 		return
 	}
+
+	if subscription.AnyTags && subscription.Tags != nil {
+		writer.WriteHeader(http.StatusBadRequest)
+		render.Render(writer, request, api.ErrorInvalidRequest(
+			errors.New("if any_tags is true, then the tags must be empty")))
+		return
+	}
+
 	subscriptionData := request.Context().Value(subscriptionKey).(moira.SubscriptionData)
 
 	if err := controller.UpdateSubscription(database, subscriptionData.ID, subscriptionData.User, subscription); err != nil {

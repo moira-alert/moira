@@ -11,8 +11,6 @@ import (
 	"github.com/moira-alert/moira/database/redis/reply"
 )
 
-const anyTagsSubscriptions = "moira-any-tags-subscriptions"
-
 // GetSubscription returns subscription data by given id, if no value, return database.ErrNil error
 func (connector *DbConnector) GetSubscription(id string) (moira.SubscriptionData, error) {
 	c := connector.pool.Get()
@@ -76,7 +74,7 @@ func (connector *DbConnector) updateSubscription(newSubscription *moira.Subscrip
 	defer c.Close()
 
 	c.Send("MULTI")
-	addSendSubscriptionRequest(c, newSubscription, oldSubscription)
+	addSendSubscriptionRequest(c, *newSubscription, oldSubscription)
 	_, err := c.Do("EXEC")
 	if err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
@@ -117,7 +115,7 @@ func (connector *DbConnector) updateSubscriptions(oldSubscriptions []*moira.Subs
 
 	c.Send("MULTI")
 	for i, newSubscription := range newSubscriptions {
-		addSendSubscriptionRequest(c, newSubscription, oldSubscriptions[i])
+		addSendSubscriptionRequest(c, *newSubscription, oldSubscriptions[i])
 	}
 	_, err := c.Do("EXEC")
 	if err != nil {
@@ -157,7 +155,7 @@ func (connector *DbConnector) removeSubscription(subscription *moira.Subscriptio
 	for _, tag := range subscription.Tags {
 		c.Send("SREM", tagSubscriptionKey(tag), subscription.ID)
 	}
-	c.Send("SREM", anyTagsSubscriptions, subscription.ID)
+	c.Send("SREM", anyTagsSubscriptionsKey, subscription.ID)
 	c.Send("DEL", subscriptionKey(subscription.ID))
 	if _, err := c.Do("EXEC"); err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
@@ -201,7 +199,7 @@ func (connector *DbConnector) getSubscriptionsIDsByTags(tags []string) ([]string
 	for _, tag := range tags {
 		tagKeys = append(tagKeys, fmt.Sprintf("moira-tag-subscriptions:%s", tag))
 	}
-	tagKeys = append(tagKeys, anyTagsSubscriptions)
+	tagKeys = append(tagKeys, anyTagsSubscriptionsKey)
 	values, err := redis.Values(c.Do("SUNION", tagKeys...))
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve subscriptions for tags %v: %s", tags, err.Error())
@@ -213,7 +211,10 @@ func (connector *DbConnector) getSubscriptionsIDsByTags(tags []string) ([]string
 	return subscriptionsIDs, nil
 }
 
-func addSendSubscriptionRequest(c redis.Conn, subscription *moira.SubscriptionData, oldSubscription *moira.SubscriptionData) error {
+func addSendSubscriptionRequest(c redis.Conn, subscription moira.SubscriptionData, oldSubscription *moira.SubscriptionData) error {
+	if subscription.AnyTags {
+		subscription.Tags = nil
+	}
 	bytes, err := json.Marshal(subscription)
 	if err != nil {
 		return err
@@ -226,12 +227,15 @@ func addSendSubscriptionRequest(c redis.Conn, subscription *moira.SubscriptionDa
 			c.Send("SREM", userSubscriptionsKey(oldSubscription.User), subscription.ID)
 		}
 	}
+
 	for _, tag := range subscription.Tags {
 		c.Send("SADD", tagSubscriptionKey(tag), subscription.ID)
 	}
+
 	if subscription.AnyTags {
-		c.Send("SADD", anyTagsSubscriptions, subscription.ID)
+		c.Send("SADD", anyTagsSubscriptionsKey, subscription.ID)
 	}
+
 	c.Send("SADD", userSubscriptionsKey(subscription.User), subscription.ID)
 	c.Send("SET", subscriptionKey(subscription.ID), bytes)
 	return nil
@@ -302,3 +306,5 @@ func subscriptionKey(id string) string {
 func userSubscriptionsKey(userName string) string {
 	return fmt.Sprintf("moira-user-subscriptions:%s", userName)
 }
+
+const anyTagsSubscriptionsKey = "moira-any-tags-subscriptions"
