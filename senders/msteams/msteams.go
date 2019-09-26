@@ -20,30 +20,10 @@ type Sender struct {
 	client   *http.Client
 }
 
-type Fact struct {
-	Name  string `json:"name"`
-	Value string `json:"value"`
-	state moira.State
-}
-
-type Section struct {
-	ActivityTitle    string `json:"activityTitle"`
-	ActivitySubtitle string `json:"activitySubtitle"`
-	Facts            []Fact `json:"facts"`
-}
-
-type MessageCard struct {
-	Context     string    `json:"@context"`
-	MessageType string    `json:"@type"`
-	Summary     string    `json:"summary"`
-	ThemeColor  string    `json:"themeColor"`
-	Title       string    `json:"title"`
-	Sections    []Section `json:"sections"`
-}
-
 func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	sender.logger = logger
 	sender.location = location
+	sender.frontURI = senderSettings["front_uri"]
 	sender.client = &http.Client{
 		Timeout:   time.Duration(30) * time.Second,
 		Transport: &http.Transport{DisableKeepAlives: true},
@@ -95,18 +75,30 @@ func isValidWebhookURL(webhookURL string) (bool, error) {
 	return true, nil
 }
 
-func buildMessageCard(title string, state moira.State, data moira.TriggerData, facts []Fact) MessageCard {
+func buildMessageCard(title string, uri string, state moira.State, data moira.TriggerData, facts []Fact) MessageCard {
 	messageCard := MessageCard{
 		Context:     "http://schema.org/extensions",
 		MessageType: "MessageCard",
-		Summary:     "Alert",
+		Summary:     "Moira Alert",
 		ThemeColor:  getColourForState(state),
 		Title:       title,
 		Sections: []Section{
 			{
-				ActivityTitle:    "tags",
-				ActivitySubtitle: data.GetTags(),
-				Facts:            facts,
+				ActivityTitle: "Description",
+				ActivityText:  strings.ReplaceAll(data.Desc, "\n", "  \n\n"),
+				Facts:         facts,
+			},
+		},
+		PotentialAction: []Actions{
+			{
+				Type: "OpenUri",
+				Name: "View in Moira",
+				Targets: []OpenUriTarget{
+					{
+						Os:  "default",
+						Uri: uri,
+					},
+				},
 			},
 		},
 	}
@@ -115,10 +107,10 @@ func buildMessageCard(title string, state moira.State, data moira.TriggerData, f
 
 func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) (*http.Request, error) {
 
-	title := sender.buildTitle(events, trigger)
+	title, uri := sender.buildTitleAndUri(events, trigger)
 	facts := sender.buildEventsFacts(events, -1, throttled)
 
-	messageCard := buildMessageCard(title, events.GetSubjectState(), trigger, facts)
+	messageCard := buildMessageCard(title, uri, events.GetSubjectState(), trigger, facts)
 	requestURL := contact.Value
 	requestBody, err := json.Marshal(messageCard)
 	if err != nil {
@@ -141,12 +133,10 @@ func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moir
 	return request, nil
 }
 
-func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData) string {
+func (sender *Sender) buildTitleAndUri(events moira.NotificationEvents, trigger moira.TriggerData) (string, string) {
 	title := fmt.Sprintf("%s", events.GetSubjectState())
-	triggerURI := trigger.GetTriggerURI(sender.frontURI)
-	if triggerURI != "" {
-		title += fmt.Sprintf(" [%s|%s]", triggerURI, trigger.Name)
-	} else if trigger.Name != "" {
+
+	if trigger.Name != "" {
 		title += " " + trigger.Name
 	}
 
@@ -154,8 +144,9 @@ func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.
 	if tags != "" {
 		title += " " + tags
 	}
+	triggerURI := trigger.GetTriggerURI(sender.frontURI)
 
-	return title
+	return title, triggerURI
 }
 
 // buildEventsFacts builds Facts from moira events
