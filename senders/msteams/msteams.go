@@ -35,23 +35,19 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 // SendEvents implements Sender interface Send
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) error {
 
-	valid, err := isValidWebhookURL(contact.Value)
-	if valid != true {
-		return err
-	}
-
+	err := sender.isValidWebhookURL(contact.Value)
 	if err != nil {
-		sender.logger.Error(err)
+		return fmt.Errorf("invalid msteams webhook url: %s", err.Error())
 	}
 
 	request, err := sender.buildRequest(events, contact, trigger, plot, throttled)
 
-	if err != nil {
-		return fmt.Errorf("failed to build request: %s", err.Error())
-	}
-
 	if request != nil {
 		defer request.Body.Close()
+	}
+
+	if err != nil {
+		return fmt.Errorf("failed to build request: %s", err.Error())
 	}
 
 	response, err := sender.client.Do(request)
@@ -180,19 +176,19 @@ func (sender *Sender) buildEventsFacts(events moira.NotificationEvents, maxEvent
 	return facts
 }
 
-func isValidWebhookURL(webhookURL string) (bool, error) {
+func (sender *Sender) isValidWebhookURL(webhookURL string) error {
 	// basic URL check
 	_, err := url.Parse(webhookURL)
 	if err != nil {
-		return false, err
+		return err
 	}
 	// only pass MS teams webhook URLs
 	hasPrefix := strings.HasPrefix(webhookURL, "https://outlook.office.com/webhook/")
 	if hasPrefix != true {
 		err = errors.New("unvalid ms teams webhook url")
-		return false, err
+		return err
 	}
-	return true, nil
+	return nil
 }
 
 func getColourForState(state moira.State) string {

@@ -22,6 +22,21 @@ func TestInit(t *testing.T) {
 	})
 }
 
+func TestValidWebhook(t *testing.T) {
+	location, _ := time.LoadLocation("UTC")
+	sender := Sender{location: location, frontURI: "http://moira.url"}
+	Convey("MS Teams Webhook validity", t, func() {
+		Convey("https://outlook.office.com/webhook/foo is valid", func() {
+			err := sender.isValidWebhookURL("https://outlook.office.com/webhook/foo")
+			So(err, ShouldResemble, nil)
+		})
+		Convey("https://moira.url is invalid", func() {
+			err := sender.isValidWebhookURL("https://moira.url")
+			So(err, ShouldNotResemble, nil)
+		})
+	})
+}
+
 func TestBuildMessage(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
 	sender := Sender{location: location, frontURI: "http://moira.url"}
