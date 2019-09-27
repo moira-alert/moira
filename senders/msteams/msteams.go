@@ -61,21 +61,6 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	return nil
 }
 
-func isValidWebhookURL(webhookURL string) (bool, error) {
-	// basic URL check
-	_, err := url.Parse(webhookURL)
-	if err != nil {
-		return false, err
-	}
-	// only pass MS teams webhook URLs
-	hasPrefix := strings.HasPrefix(webhookURL, "https://outlook.office.com/webhook/")
-	if hasPrefix != true {
-		err = errors.New("unvalid ms teams webhook url")
-		return false, err
-	}
-	return true, nil
-}
-
 func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) MessageCard {
 
 	title, uri := sender.buildTitleAndUri(events, trigger)
@@ -188,6 +173,21 @@ func (sender *Sender) buildEventsFacts(events moira.NotificationEvents, maxEvent
 		})
 	}
 	return facts
+}
+
+func isValidWebhookURL(webhookURL string) (bool, error) {
+	// basic URL check
+	_, err := url.Parse(webhookURL)
+	if err != nil {
+		return false, err
+	}
+	// only pass MS teams webhook URLs
+	hasPrefix := strings.HasPrefix(webhookURL, "https://outlook.office.com/webhook/")
+	if hasPrefix != true {
+		err = errors.New("unvalid ms teams webhook url")
+		return false, err
+	}
+	return true, nil
 }
 
 func getColourForState(state moira.State) string {
