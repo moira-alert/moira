@@ -45,6 +45,11 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	}
 
 	request, err := sender.buildRequest(events, contact, trigger, plot, throttled)
+
+	if err != nil {
+		return fmt.Errorf("failed to build request: %s", err.Error())
+	}
+
 	if request != nil {
 		defer request.Body.Close()
 	}
