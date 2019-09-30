@@ -48,7 +48,7 @@ func TestLastCheck(t *testing.T) {
 		Convey("Test set metrics check maintenance", func() {
 			Convey("While no check", func() {
 				triggerID := uuid.Must(uuid.NewV4()).String()
-				err := dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{}, nil, "",0)
+				err := dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{}, nil, "", 0)
 				So(err, ShouldBeNil)
 			})
 
@@ -70,7 +70,7 @@ func TestLastCheck(t *testing.T) {
 				err := dataBase.SetTriggerLastCheck(triggerID, &lastCheckTest, false)
 				So(err, ShouldBeNil)
 
-				err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric11": 1, "metric55": 5}, nil, "",0)
+				err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric11": 1, "metric55": 5}, nil, "", 0)
 				So(err, ShouldBeNil)
 
 				actual, err := dataBase.GetTriggerLastCheck(triggerID)
@@ -111,7 +111,7 @@ func TestLastCheck(t *testing.T) {
 				err := dataBase.SetTriggerLastCheck(triggerID, &lastCheckWithNoMetrics, false)
 				So(err, ShouldBeNil)
 
-				err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric1": 1, "metric5": 5}, nil,"", 0)
+				err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric1": 1, "metric5": 5}, nil, "", 0)
 				So(err, ShouldBeNil)
 
 				actual, err := dataBase.GetTriggerLastCheck(triggerID)
@@ -126,7 +126,7 @@ func TestLastCheck(t *testing.T) {
 
 				triggerMaintenanceTS = 1000
 
-				err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric1": 1, "metric5": 5}, &triggerMaintenanceTS, "",0)
+				err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric1": 1, "metric5": 5}, &triggerMaintenanceTS, "", 0)
 				So(err, ShouldBeNil)
 
 				actual, err := dataBase.GetTriggerLastCheck(triggerID)
@@ -139,7 +139,7 @@ func TestLastCheck(t *testing.T) {
 				err := dataBase.SetTriggerLastCheck(triggerID, &lastCheckTest, false)
 				So(err, ShouldBeNil)
 
-				err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric11": 1, "metric55": 5}, nil,"",0)
+				err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric11": 1, "metric55": 5}, nil, "", 0)
 				So(err, ShouldBeNil)
 
 				actual, err := dataBase.GetTriggerLastCheck(triggerID)
@@ -155,7 +155,7 @@ func TestLastCheck(t *testing.T) {
 				So(err, ShouldBeNil)
 
 				triggerMaintenanceTS = 1000
-				err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric11": 1, "metric55": 5}, &triggerMaintenanceTS,"anonymous", 0 )
+				err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric11": 1, "metric55": 5}, &triggerMaintenanceTS, "anonymous", 0)
 				So(err, ShouldBeNil)
 
 				actual, err := dataBase.GetTriggerLastCheck(triggerID)
@@ -212,7 +212,7 @@ func TestLastCheck(t *testing.T) {
 				So(err, ShouldBeNil)
 
 				triggerMaintenanceTS = 0
-				err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{}, &triggerMaintenanceTS,"",0)
+				err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{}, &triggerMaintenanceTS, "", 0)
 				So(err, ShouldBeNil)
 				checkData.Maintenance = 0
 
@@ -302,7 +302,7 @@ func TestRemoteLastCheck(t *testing.T) {
 		Convey("Test set trigger check maintenance", func() {
 			Convey("While no check", func() {
 				triggerID := uuid.Must(uuid.NewV4()).String()
-				err := dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{}, nil,"",0)
+				err := dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{}, nil, "", 0)
 				So(err, ShouldBeNil)
 			})
 
@@ -311,7 +311,7 @@ func TestRemoteLastCheck(t *testing.T) {
 				err := dataBase.SetTriggerLastCheck(triggerID, &lastCheckWithNoMetrics, true)
 				So(err, ShouldBeNil)
 
-				err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric1": 1, "metric5": 5}, nil,"",0)
+				err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric1": 1, "metric5": 5}, nil, "", 0)
 				So(err, ShouldBeNil)
 
 				actual, err := dataBase.GetTriggerLastCheck(triggerID)
@@ -324,7 +324,7 @@ func TestRemoteLastCheck(t *testing.T) {
 				err := dataBase.SetTriggerLastCheck(triggerID, &lastCheckTest, true)
 				So(err, ShouldBeNil)
 
-				err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric11": 1, "metric55": 5}, nil,"",0)
+				err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric11": 1, "metric55": 5}, nil, "", 0)
 				So(err, ShouldBeNil)
 
 				actual, err := dataBase.GetTriggerLastCheck(triggerID)
@@ -372,7 +372,7 @@ func TestLastCheckErrorConnection(t *testing.T) {
 		So(err, ShouldNotBeNil)
 
 		var triggerMaintenanceTS int64 = 123
-		err = dataBase.SetTriggerCheckMaintenance("123", map[string]int64{}, &triggerMaintenanceTS,"",0)
+		err = dataBase.SetTriggerCheckMaintenance("123", map[string]int64{}, &triggerMaintenanceTS, "", 0)
 		So(err, ShouldNotBeNil)
 
 		actual2, err := dataBase.GetTriggerLastCheck("123")
@@ -381,8 +381,7 @@ func TestLastCheckErrorConnection(t *testing.T) {
 	})
 }
 
-
-func TestMaintenanceUserSave (t *testing.T) {
+func TestMaintenanceUserSave(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := newTestDatabase(logger, config)
 	dataBase.flush()
@@ -393,7 +392,7 @@ func TestMaintenanceUserSave (t *testing.T) {
 		userLogin := "test"
 		newLastCheckTest := lastCheckTest
 
-		Convey("Start user and time", func(){
+		Convey("Start user and time", func() {
 			startTime := int64(500)
 			newLastCheckTest.Maintenance = 1000
 			newLastCheckTest.MaintenanceInfo.StartUser = &userLogin
@@ -403,7 +402,7 @@ func TestMaintenanceUserSave (t *testing.T) {
 			So(err, ShouldBeNil)
 
 			triggerMaintenanceTS = 1000
-			err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric11": 1, "metric55": 5}, &triggerMaintenanceTS, userLogin, startTime )
+			err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric11": 1, "metric55": 5}, &triggerMaintenanceTS, userLogin, startTime)
 			So(err, ShouldBeNil)
 
 			actual, err := dataBase.GetTriggerLastCheck(triggerID)
@@ -411,7 +410,7 @@ func TestMaintenanceUserSave (t *testing.T) {
 			So(actual, ShouldResemble, newLastCheckTest)
 		})
 
-		Convey("Stop user and time", func(){
+		Convey("Stop user and time", func() {
 			startTime := int64(5000)
 			newLastCheckTest.Maintenance = 1000
 			newLastCheckTest.MaintenanceInfo.StopUser = &userLogin
@@ -421,7 +420,7 @@ func TestMaintenanceUserSave (t *testing.T) {
 			So(err, ShouldBeNil)
 
 			triggerMaintenanceTS = 1000
-			err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric11": 1, "metric55": 5}, &triggerMaintenanceTS, userLogin, startTime )
+			err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric11": 1, "metric55": 5}, &triggerMaintenanceTS, userLogin, startTime)
 			So(err, ShouldBeNil)
 
 			actual, err := dataBase.GetTriggerLastCheck(triggerID)
@@ -468,9 +467,9 @@ func TestMaintenanceUserSave (t *testing.T) {
 }
 
 var lastCheckTest = moira.CheckData{
-	Score:     6000,
-	State:     moira.StateOK,
-	Timestamp: 1504509981,
+	Score:       6000,
+	State:       moira.StateOK,
+	Timestamp:   1504509981,
 	Maintenance: 1552723340,
 	Metrics: map[string]moira.MetricState{
 		"metric1": {
