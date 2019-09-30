@@ -2,7 +2,7 @@ package handler
 
 import (
 	"context"
-	"github.com/pkg/errors"
+	"errors"
 	"net/http"
 
 	"github.com/go-chi/chi"
