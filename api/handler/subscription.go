@@ -47,7 +47,7 @@ func createSubscription(writer http.ResponseWriter, request *http.Request) {
 	}
 	userLogin := middleware.GetLogin(request)
 
-	if subscription.AnyTags && subscription.Tags != nil {
+	if subscription.AnyTags && len(subscription.Tags) > 0 {
 		writer.WriteHeader(http.StatusBadRequest)
 		render.Render(writer, request, api.ErrorInvalidRequest(
 			errors.New("if any_tags is true, then the tags must be empty")))
@@ -90,7 +90,7 @@ func updateSubscription(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	if subscription.AnyTags && subscription.Tags != nil {
+	if subscription.AnyTags && len(subscription.Tags) > 0 {
 		writer.WriteHeader(http.StatusBadRequest)
 		render.Render(writer, request, api.ErrorInvalidRequest(
 			errors.New("if any_tags is true, then the tags must be empty")))
