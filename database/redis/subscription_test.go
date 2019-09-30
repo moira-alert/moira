@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"sort"
 	"testing"
 
 	"github.com/gofrs/uuid"
@@ -82,17 +83,27 @@ func TestSubscriptionAnyTags(t *testing.T) {
 		Convey("Get Subscription by tags", func() {
 			actual, err := dataBase.GetTagsSubscriptions([]string{tag1})
 			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, []*moira.SubscriptionData{subAnyTag, sub, &subAnyTagWithTagsClearTags})
+			So(len(actual), ShouldEqual, 3)
+			subscriptions := map[string]*moira.SubscriptionData{sub.ID: sub, subAnyTag.ID: subAnyTag, subAnyTagWithTagsClearTags.ID: &subAnyTagWithTagsClearTags}
+			for _, subscription := range actual {
+				So(subscription, ShouldResemble, subscriptions[subscription.ID])
+			}
 
 			actual2, err := dataBase.GetTagsSubscriptions(nil)
 			So(err, ShouldBeNil)
-			So(actual2, ShouldResemble, []*moira.SubscriptionData{subAnyTag, &subAnyTagWithTagsClearTags})
+
+			So(len(actual2), ShouldEqual, 2)
+			subscriptions = map[string]*moira.SubscriptionData{subAnyTag.ID: subAnyTag, subAnyTagWithTagsClearTags.ID: &subAnyTagWithTagsClearTags}
+			for _, subscription := range actual2 {
+				So(subscription, ShouldResemble, subscriptions[subscription.ID])
+			}
 		})
 
 		Convey("Get Subscription by user", func() {
 			actual4, err := dataBase.GetUserSubscriptionIDs(user1)
 			So(err, ShouldBeNil)
-			So(actual4, ShouldResemble, []string{subAnyTag.ID, sub.ID, subAnyTagWithTags.ID})
+			sort.Strings(actual4)
+			So(actual4, ShouldResemble, []string{sub.ID, subAnyTag.ID, subAnyTagWithTags.ID})
 		})
 
 		Convey("Remove subscription", func() {
