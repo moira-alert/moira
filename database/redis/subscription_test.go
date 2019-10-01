@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"sort"
 	"testing"
 
 	"github.com/gofrs/uuid"
@@ -11,6 +12,113 @@ import (
 	"github.com/moira-alert/moira/database"
 )
 
+func TestSubscriptionAnyTags(t *testing.T) {
+	logger, _ := logging.GetLogger("dataBase")
+	dataBase := newTestDatabase(logger, config)
+	dataBase.flush()
+	defer dataBase.flush()
+
+	sub := subscriptions[0]
+	subAnyTag := subscriptions[7]
+	subAnyTagWithTags := &moira.SubscriptionData{
+		ID:                "subscriptionID-00000000000009",
+		Enabled:           true,
+		Tags:              []string{tag1, tag2, tag3},
+		Contacts:          []string{uuid.Must(uuid.NewV4()).String()},
+		ThrottlingEnabled: true,
+		AnyTags:           true,
+		User:              user1,
+	}
+	subAnyTagWithTagsClearTags := *subAnyTagWithTags
+	subAnyTagWithTagsClearTags.Tags = []string{}
+
+	Convey("Subscription with AnyTag is true", t, func() {
+		Convey("No subscription", func() {
+			actual, err := dataBase.GetSubscription(sub.ID)
+			So(err, ShouldBeError)
+			So(err, ShouldResemble, database.ErrNil)
+			So(actual, ShouldResemble, moira.SubscriptionData{ThrottlingEnabled: true})
+
+			actual1, err := dataBase.GetSubscription(subAnyTag.ID)
+			So(err, ShouldBeError)
+			So(err, ShouldResemble, database.ErrNil)
+			So(actual1, ShouldResemble, moira.SubscriptionData{ThrottlingEnabled: true})
+
+			actual2, err := dataBase.GetSubscription(subAnyTagWithTags.ID)
+			So(err, ShouldBeError)
+			So(err, ShouldResemble, database.ErrNil)
+			So(actual2, ShouldResemble, moira.SubscriptionData{ThrottlingEnabled: true})
+		})
+
+		Convey("Save Subscription", func() {
+			err := dataBase.SaveSubscription(sub)
+			So(err, ShouldBeNil)
+
+			err = dataBase.SaveSubscription(subAnyTag)
+			So(err, ShouldBeNil)
+
+			err = dataBase.SaveSubscription(subAnyTagWithTags)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("Get Subscription by id", func() {
+			actual, err := dataBase.GetSubscription(sub.ID)
+			So(err, ShouldBeNil)
+			So(actual, ShouldResemble, *sub)
+
+			actual1, err := dataBase.GetSubscription(subAnyTag.ID)
+			So(err, ShouldBeNil)
+			So(actual1, ShouldResemble, *subAnyTag)
+
+			actual2, err := dataBase.GetSubscription(subAnyTagWithTags.ID)
+			So(err, ShouldBeNil)
+			So(subAnyTagWithTags.ID, ShouldEqual, actual2.ID)
+			So(&actual2, ShouldResemble, &subAnyTagWithTagsClearTags)
+
+			actual3, err := dataBase.GetSubscriptions([]string{sub.ID, subAnyTag.ID, subAnyTagWithTags.ID})
+			So(err, ShouldBeNil)
+			So(actual3, ShouldResemble, []*moira.SubscriptionData{sub, subAnyTag, &subAnyTagWithTagsClearTags})
+		})
+
+		Convey("Get Subscription by tags", func() {
+			actual, err := dataBase.GetTagsSubscriptions([]string{tag1})
+			So(err, ShouldBeNil)
+			So(len(actual), ShouldEqual, 3)
+			subscriptions := map[string]*moira.SubscriptionData{sub.ID: sub, subAnyTag.ID: subAnyTag, subAnyTagWithTagsClearTags.ID: &subAnyTagWithTagsClearTags}
+			for _, subscription := range actual {
+				So(subscription, ShouldResemble, subscriptions[subscription.ID])
+			}
+
+			actual2, err := dataBase.GetTagsSubscriptions(nil)
+			So(err, ShouldBeNil)
+
+			So(len(actual2), ShouldEqual, 2)
+			subscriptions = map[string]*moira.SubscriptionData{subAnyTag.ID: subAnyTag, subAnyTagWithTagsClearTags.ID: &subAnyTagWithTagsClearTags}
+			for _, subscription := range actual2 {
+				So(subscription, ShouldResemble, subscriptions[subscription.ID])
+			}
+		})
+
+		Convey("Get Subscription by user", func() {
+			actual4, err := dataBase.GetUserSubscriptionIDs(user1)
+			So(err, ShouldBeNil)
+			sort.Strings(actual4)
+			So(actual4, ShouldResemble, []string{sub.ID, subAnyTag.ID, subAnyTagWithTags.ID})
+		})
+
+		Convey("Remove subscription", func() {
+			err := dataBase.RemoveSubscription(sub.ID)
+			So(err, ShouldBeNil)
+
+			err = dataBase.RemoveSubscription(subAnyTag.ID)
+			So(err, ShouldBeNil)
+
+			err = dataBase.RemoveSubscription(subAnyTagWithTags.ID)
+			So(err, ShouldBeNil)
+		})
+	})
+}
+
 func TestSubscriptionData(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := newTestDatabase(logger, config)
@@ -20,16 +128,19 @@ func TestSubscriptionData(t *testing.T) {
 	Convey("SubscriptionData manipulation", t, func() {
 		Convey("Save-get-remove subscription", func() {
 			sub := subscriptions[0]
+
 			Convey("No subscription", func() {
 				actual, err := dataBase.GetSubscription(sub.ID)
 				So(err, ShouldBeError)
 				So(err, ShouldResemble, database.ErrNil)
 				So(actual, ShouldResemble, moira.SubscriptionData{ThrottlingEnabled: true})
 			})
+
 			Convey("Save subscription", func() {
 				err := dataBase.SaveSubscription(sub)
 				So(err, ShouldBeNil)
 			})
+
 			Convey("Get subscription by id, user and tags", func() {
 				actual, err := dataBase.GetSubscription(sub.ID)
 				So(err, ShouldBeNil)
@@ -76,6 +187,7 @@ func TestSubscriptionData(t *testing.T) {
 		})
 
 		Convey("Save batches and remove and check", func() {
+			subscriptions := subscriptions
 			ids := make([]string, len(subscriptions))
 			for i, sub := range subscriptions {
 				ids[i] = sub.ID
@@ -306,6 +418,15 @@ var subscriptions = []*moira.SubscriptionData{
 		Tags:              []string{tag2},
 		Contacts:          []string{uuid.Must(uuid.NewV4()).String()},
 		ThrottlingEnabled: true,
+		User:              user1,
+	},
+	{
+		ID:                "subscriptionID-00000000000008",
+		Enabled:           true,
+		Tags:              []string{},
+		Contacts:          []string{uuid.Must(uuid.NewV4()).String()},
+		ThrottlingEnabled: true,
+		AnyTags:           true,
 		User:              user1,
 	},
 }

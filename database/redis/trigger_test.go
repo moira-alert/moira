@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"github.com/gofrs/uuid"
 	"testing"
 	"time"
 
@@ -18,6 +19,34 @@ func TestTriggerStoring(t *testing.T) {
 	defer dataBase.flush()
 
 	Convey("Trigger manipulation", t, func() {
+
+		Convey("Test trigger has subscriptions with AnyTag is true", func() {
+			trigger := &triggers[0]
+			subscription := moira.SubscriptionData{
+				ID:                "subscriptionID-00000000000001",
+				Enabled:           true,
+				Tags:              []string{tag1, tag2, tag3},
+				Contacts:          []string{uuid.Must(uuid.NewV4()).String()},
+				ThrottlingEnabled: true,
+				User:              user1,
+			}
+			subscription.AnyTags = true
+
+			err := dataBase.SaveSubscription(&subscription)
+			So(err, ShouldBeNil)
+
+			hasSubscriptions, err := dataBase.triggerHasSubscriptions(trigger)
+			So(err, ShouldBeNil)
+			So(hasSubscriptions, ShouldBeTrue)
+
+			err = dataBase.RemoveSubscription(subscription.ID)
+			So(err, ShouldBeNil)
+
+			hasSubscriptions, err = dataBase.triggerHasSubscriptions(trigger)
+			So(err, ShouldBeNil)
+			So(hasSubscriptions, ShouldBeFalse)
+		})
+
 		Convey("Test save-get-remove", func() {
 			trigger := &triggers[0]
 
