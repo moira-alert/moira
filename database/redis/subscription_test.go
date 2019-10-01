@@ -30,7 +30,7 @@ func TestSubscriptionAnyTags(t *testing.T) {
 		User:              user1,
 	}
 	subAnyTagWithTagsClearTags := *subAnyTagWithTags
-	subAnyTagWithTagsClearTags.Tags = nil
+	subAnyTagWithTagsClearTags.Tags = []string{}
 
 	Convey("Subscription with AnyTag is true", t, func() {
 		Convey("No subscription", func() {
@@ -423,6 +423,7 @@ var subscriptions = []*moira.SubscriptionData{
 	{
 		ID:                "subscriptionID-00000000000008",
 		Enabled:           true,
+		Tags:              []string{},
 		Contacts:          []string{uuid.Must(uuid.NewV4()).String()},
 		ThrottlingEnabled: true,
 		AnyTags:           true,

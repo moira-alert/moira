@@ -20,6 +20,9 @@ func (connector *DbConnector) GetSubscription(id string) (moira.SubscriptionData
 	if err != nil {
 		return subscription, err
 	}
+	if subscription.Tags == nil {
+		subscription.Tags = []string{}
+	}
 	subscription.ID = id
 	return subscription, nil
 }
