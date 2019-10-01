@@ -491,7 +491,6 @@ func TestBuildTriggerURL(t *testing.T) {
 	})
 }
 
-
 func TestSetMaintenanceUserAndTime(t *testing.T) {
 	startMaintenanceUser := "testStartMtUser"
 	startMaintenanceUserOld := "testStartMtUserOld"
@@ -505,20 +504,20 @@ func TestSetMaintenanceUserAndTime(t *testing.T) {
 			MaintenanceInfo{},
 			"anonymous",
 			MaintenanceInfo{},
-			)
+		)
 
 		testStopMaintenance(
 			"Not MaintenanceInfo, user anonymous.",
 			MaintenanceInfo{},
 			"anonymous",
 			MaintenanceInfo{},
-			)
+		)
 
 		testStartMaintenance(
 			"Not MaintenanceInfo, user real.",
 			MaintenanceInfo{},
 			startMaintenanceUser,
-			MaintenanceInfo{&startMaintenanceUser, &callTime,nil,nil},
+			MaintenanceInfo{&startMaintenanceUser, &callTime, nil, nil},
 		)
 
 		testStopMaintenance(
@@ -544,89 +543,89 @@ func TestSetMaintenanceUserAndTime(t *testing.T) {
 
 		testStartMaintenance(
 			"Set Start in MaintenanceInfo, user real.",
-			MaintenanceInfo{&startMaintenanceUserOld, &callTime, nil,nil },
+			MaintenanceInfo{&startMaintenanceUserOld, &callTime, nil, nil},
 			startMaintenanceUser,
-			MaintenanceInfo{&startMaintenanceUser, &callTime,nil,nil },
+			MaintenanceInfo{&startMaintenanceUser, &callTime, nil, nil},
 		)
 
 		testStopMaintenance(
 			"Set Start in MaintenanceInfo, user real.",
-			MaintenanceInfo{&startMaintenanceUserOld, &callTime, nil,nil },
+			MaintenanceInfo{&startMaintenanceUserOld, &callTime, nil, nil},
 			stopMaintenanceUser,
-			MaintenanceInfo{&startMaintenanceUserOld, &callTime,&stopMaintenanceUser,&callTime },
+			MaintenanceInfo{&startMaintenanceUserOld, &callTime, &stopMaintenanceUser, &callTime},
 		)
 
 		testStartMaintenance(
 			"Set Stop in MaintenanceInfo, user anonymous.",
-			MaintenanceInfo{nil, nil, &stopMaintenanceUserOld,&callTime },
+			MaintenanceInfo{nil, nil, &stopMaintenanceUserOld, &callTime},
 			"anonymous",
 			MaintenanceInfo{},
 		)
 
 		testStopMaintenance(
 			"Set Stop in MaintenanceInfo, user anonymous.",
-			MaintenanceInfo{nil, nil, &stopMaintenanceUserOld,&callTime },
+			MaintenanceInfo{nil, nil, &stopMaintenanceUserOld, &callTime},
 			"anonymous",
 			MaintenanceInfo{},
 		)
 
 		testStartMaintenance(
 			"Set Stop in MaintenanceInfo, user real.",
-			MaintenanceInfo{nil, nil, &stopMaintenanceUserOld,&callTime },
+			MaintenanceInfo{nil, nil, &stopMaintenanceUserOld, &callTime},
 			startMaintenanceUser,
-			MaintenanceInfo{&startMaintenanceUser, &callTime,nil,nil },
+			MaintenanceInfo{&startMaintenanceUser, &callTime, nil, nil},
 		)
 
 		testStopMaintenance(
 			"Set Stop in MaintenanceInfo, user real.",
-			MaintenanceInfo{nil, nil, &stopMaintenanceUserOld,&callTime },
+			MaintenanceInfo{nil, nil, &stopMaintenanceUserOld, &callTime},
 			stopMaintenanceUser,
-			MaintenanceInfo{nil, nil,&stopMaintenanceUser,&callTime },
+			MaintenanceInfo{nil, nil, &stopMaintenanceUser, &callTime},
 		)
 
 		testStartMaintenance(
 			"Set Start and Stop in MaintenanceInfo, user anonymous.",
-			MaintenanceInfo{&startMaintenanceUserOld, &callTime, &stopMaintenanceUserOld,&callTime },
+			MaintenanceInfo{&startMaintenanceUserOld, &callTime, &stopMaintenanceUserOld, &callTime},
 			"anonymous",
 			MaintenanceInfo{},
 		)
 
 		testStopMaintenance(
 			"Set Start and Stop in MaintenanceInfo, user anonymous.",
-			MaintenanceInfo{&startMaintenanceUserOld, &callTime, &stopMaintenanceUserOld,&callTime},
+			MaintenanceInfo{&startMaintenanceUserOld, &callTime, &stopMaintenanceUserOld, &callTime},
 			"anonymous",
-			MaintenanceInfo{&startMaintenanceUserOld, &callTime, nil,nil},
+			MaintenanceInfo{&startMaintenanceUserOld, &callTime, nil, nil},
 		)
 
 		testStartMaintenance(
 			"Set Start and Stop in MaintenanceInfo, user real.",
-			MaintenanceInfo{&startMaintenanceUserOld, &callTime, &stopMaintenanceUserOld,&callTime},
+			MaintenanceInfo{&startMaintenanceUserOld, &callTime, &stopMaintenanceUserOld, &callTime},
 			startMaintenanceUser,
-			MaintenanceInfo{&startMaintenanceUser, &callTime,nil,nil },
+			MaintenanceInfo{&startMaintenanceUser, &callTime, nil, nil},
 		)
 
 		testStopMaintenance(
 			"Set Start and Stop in MaintenanceInfo, user real.",
-			MaintenanceInfo{&startMaintenanceUserOld, &callTime, &stopMaintenanceUserOld,&callTime },
+			MaintenanceInfo{&startMaintenanceUserOld, &callTime, &stopMaintenanceUserOld, &callTime},
 			stopMaintenanceUser,
-			MaintenanceInfo{&startMaintenanceUserOld, &callTime,&stopMaintenanceUser,&callTime },
+			MaintenanceInfo{&startMaintenanceUserOld, &callTime, &stopMaintenanceUser, &callTime},
 		)
 	})
 }
 
-func testStartMaintenance(message string, actualInfo MaintenanceInfo, user string, expectedInfo MaintenanceInfo)  {
+func testStartMaintenance(message string, actualInfo MaintenanceInfo, user string, expectedInfo MaintenanceInfo) {
 	conveyMessage := fmt.Sprintf("%v Start maintenance.", message)
 	testMaintenance(conveyMessage, actualInfo, 3100, user, expectedInfo)
 }
 
-func testStopMaintenance(message string, actualInfo MaintenanceInfo, user string, expectedInfo MaintenanceInfo)  {
+func testStopMaintenance(message string, actualInfo MaintenanceInfo, user string, expectedInfo MaintenanceInfo) {
 	conveyMessage := fmt.Sprintf("%v Stop maintenance.", message)
 	testMaintenance(conveyMessage, actualInfo, 0, user, expectedInfo)
 }
 
 func testMaintenance(conveyMessage string, actualInfo MaintenanceInfo, maintenance int64, user string, expectedInfo MaintenanceInfo) {
 
-	Convey(conveyMessage, func(){
+	Convey(conveyMessage, func() {
 		var lastCheckTest = CheckData{
 			Maintenance: 1000,
 		}

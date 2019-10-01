@@ -15,7 +15,7 @@ import (
 // Sender implements moira sender interface via pushover
 type Sender struct {
 	From           string
-	SMTPHello			 string
+	SMTPHello      string
 	SMTPHost       string
 	SMTPPort       int64
 	FrontURI       string
