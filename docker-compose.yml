@@ -3,6 +3,8 @@ version: "3.7"
 services:
   redis:
     image: redis:alpine
+    volumes:
+     - data:/data
 
   graphite:
     image: graphiteapp/graphite-statsd
@@ -81,3 +83,5 @@ services:
     command: /usr/bin/relay -E -s -f /home/relay/carbon-c-relay.conf
 networks:
   balancer:
+volumes:
+  data:
