@@ -21,6 +21,7 @@ type Sender struct {
 	client   *http.Client
 }
 
+// Initialise basic settings and HTTP client
 func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	sender.logger = logger
 	sender.location = location
@@ -64,7 +65,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 
 func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) MessageCard {
 
-	title, uri := sender.buildTitleAndUri(events, trigger)
+	title, uri := sender.buildTitleAndURI(events, trigger)
 	var triggerDescription string
 	if trigger.Desc != "" {
 		triggerDescription = string(blackfriday.Run([]byte(trigger.Desc)))
@@ -75,10 +76,10 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 		actions = append(actions, Actions{
 			Type: "OpenUri",
 			Name: "View in Moira",
-			Targets: []OpenUriTarget{
+			Targets: []OpenURITarget{
 				{
 					Os:  "default",
-					Uri: uri,
+					URI: uri,
 				},
 			},
 		})
@@ -125,8 +126,8 @@ func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moir
 	return request, nil
 }
 
-func (sender *Sender) buildTitleAndUri(events moira.NotificationEvents, trigger moira.TriggerData) (string, string) {
-	title := fmt.Sprintf("%s", events.GetSubjectState())
+func (sender *Sender) buildTitleAndURI(events moira.NotificationEvents, trigger moira.TriggerData) (string, string) {
+	title := string(events.GetSubjectState())
 
 	if trigger.Name != "" {
 		title += " " + trigger.Name
@@ -184,7 +185,7 @@ func (sender *Sender) isValidWebhookURL(webhookURL string) error {
 	}
 	// only pass MS teams webhook URLs
 	hasPrefix := strings.HasPrefix(webhookURL, "https://outlook.office.com/webhook/")
-	if hasPrefix != true {
+	if !hasPrefix {
 		err = errors.New("unvalid ms teams webhook url")
 		return err
 	}

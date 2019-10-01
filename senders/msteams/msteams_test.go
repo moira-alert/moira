@@ -87,10 +87,10 @@ some other text _italic text_`,
 					{
 						Type: "OpenUri",
 						Name: "View in Moira",
-						Targets: []OpenUriTarget{
+						Targets: []OpenURITarget{
 							{
 								Os:  "default",
-								Uri: "http://moira.url/trigger/TriggerID",
+								URI: "http://moira.url/trigger/TriggerID",
 							},
 						},
 					},
@@ -150,10 +150,10 @@ some other text _italic text_`,
 					{
 						Type: "OpenUri",
 						Name: "View in Moira",
-						Targets: []OpenUriTarget{
+						Targets: []OpenURITarget{
 							{
 								Os:  "default",
-								Uri: "http://moira.url/trigger/TriggerID",
+								URI: "http://moira.url/trigger/TriggerID",
 							},
 						},
 					},
@@ -206,10 +206,10 @@ some other text _italic text_`,
 					{
 						Type: "OpenUri",
 						Name: "View in Moira",
-						Targets: []OpenUriTarget{
+						Targets: []OpenURITarget{
 							{
 								Os:  "default",
-								Uri: "http://moira.url/trigger/TriggerID",
+								URI: "http://moira.url/trigger/TriggerID",
 							},
 						},
 					},
