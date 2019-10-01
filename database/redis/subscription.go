@@ -41,6 +41,9 @@ func (connector *DbConnector) GetSubscriptions(subscriptionIDs []string) ([]*moi
 	for i := range subscriptions {
 		if subscriptions[i] != nil {
 			subscriptions[i].ID = subscriptionIDs[i]
+			if subscriptions[i].Tags == nil {
+				subscriptions[i].Tags = []string{}
+			}
 		}
 	}
 	return subscriptions, nil
