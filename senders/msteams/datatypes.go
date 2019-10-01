@@ -1,7 +1,7 @@
 package msteams
 
 /*
-Represents a Fact in a MessageCard, contains a timestamp and trigger data
+Fact models a fact in a MessageCard, contains a timestamp and trigger data
  {
 		"name": "10:45",
     "value": "someServer = 0.11 (NODATA to WARN)"
@@ -13,7 +13,7 @@ type Fact struct {
 }
 
 /*
-Represents a Section in a MessageCard, contains Facts and the Trigger description
+Section models a section in a MessageCard, contains Facts and the Trigger description
  {
 		"activityTitle": "Description",
 		"activityText": "A trigger description",
@@ -32,7 +32,7 @@ type Section struct {
 }
 
 /*
-Represents an OpenURITarget data in a MessageCard,creates a clickable target back to the trigger URI
+OpenURITarget creates a clickable target back to the trigger URI in a MessageCard
  {
 		"os": "default",
     "value": "http://moira.tld/trigger/ABCDEF-GH"
@@ -44,7 +44,7 @@ type OpenURITarget struct {
 }
 
 /*
-Represents possible actions in a MessageCard, limited to OpenURI actions
+Actions models possible actions in a MessageCard, currently limited to OpenURI actions
  {
 		"@type": "OpenUri",
     "name": "Open in Moira"
@@ -63,7 +63,7 @@ type Actions struct {
 }
 
 /*
-Represents an MSTeams compatible MessageCard
+MessageCard models an MSTeams compatible MessageCard
  {
 		"@context": "https://schema.org/extensions",
     "@type": "MessageCard",
