@@ -21,7 +21,7 @@ type Sender struct {
 	client   *http.Client
 }
 
-// Initialise basic settings and HTTP client
+// Init initialises settings required for full functionality
 func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	sender.logger = logger
 	sender.location = location
