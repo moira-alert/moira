@@ -116,7 +116,7 @@ func (connector *DbConnector) SetTriggerCheckMaintenance(triggerID string, metri
 		}
 
 		var prev string
-		prev, readingErr = redis.String(c.Do("GETSET", metricLastCheckKey(triggerID), newLastCheck, ))
+		prev, readingErr = redis.String(c.Do("GETSET", metricLastCheckKey(triggerID), newLastCheck))
 		if readingErr != nil && readingErr != redis.ErrNil {
 			return readingErr
 		}
