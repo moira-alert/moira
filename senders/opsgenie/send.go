@@ -9,7 +9,7 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/senders"
 	"github.com/opsgenie/opsgenie-go-sdk-v2/alert"
-	blackfriday "gopkg.in/russross/blackfriday.v2"
+	blackfriday "github.com/russross/blackfriday/v2"
 )
 
 const (

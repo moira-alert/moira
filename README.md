@@ -25,14 +25,7 @@ Other installation methods are available, see [documentation](https://moira.read
 
 ## Development
 
-To build and run tests, first get all dependencies:
-
-```bash
-go get github.com/kardianos/govendor
-govendor sync
-```
-
-Then you need local redis listening on port 6379.
+To build and run tests you need local redis listening on port 6379.
 Easiest way to get redis is via docker:
 
 ```bash

@@ -7,7 +7,7 @@ import (
 
 	"github.com/gomodule/redigo/redis"
 	"github.com/patrickmn/go-cache"
-	"gopkg.in/redsync.v1"
+	"github.com/go-redsync/redsync"
 	"gopkg.in/tomb.v2"
 
 	"github.com/moira-alert/moira"

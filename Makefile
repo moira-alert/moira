@@ -13,6 +13,7 @@ VERSION_NIGHTLY := ${GIT_COMMIT_DATE}-${GIT_HASH_SHORT}
 VERSION_RELEASE := ${GIT_TAG}.${GIT_COMMIT}
 
 GO_VERSION := $(shell go version | cut -d' ' -f3)
+GO111MODULE := on
 
 VENDOR := "SKB Kontur"
 URL := "https://github.com/moira-alert/moira"
@@ -21,22 +22,17 @@ LICENSE := "MIT"
 .PHONY: default
 default: test build
 
-.PHONY: prepare
-prepare:
-	go get -u github.com/kardianos/govendor
-	govendor sync
-
 .PHONY: lint
-lint: prepare
-	GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.18.0
+lint:
+	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.18.0
 	GOGC=30 golangci-lint run
 
 .PHONY: test
-test: prepare
-	echo 'mode: atomic' > coverage.txt && go list ./... | grep -v "/vendor/" | xargs -n1 -I{} sh -c 'go test -v -bench=. -covermode=atomic -coverprofile=coverage.tmp {} && tail -n +2 coverage.tmp >> coverage.txt' && rm coverage.tmp
+test:
+	echo 'mode: atomic' > coverage.txt && go list ./... | xargs -n1 -I{} sh -c 'go test -v -bench=. -covermode=atomic -coverprofile=coverage.tmp {} && tail -n +2 coverage.tmp >> coverage.txt' && rm coverage.tmp
 
 .PHONY: build
-build: prepare
+build:
 	for service in "filter" "notifier" "api" "checker" "cli" ; do \
 		CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-X main.MoiraVersion=${VERSION_RELEASE} -X main.GoVersion=${GO_VERSION} -X main.GitCommit=${GIT_HASH}" -o build/$$service github.com/moira-alert/moira/cmd/$$service ; \
 	done

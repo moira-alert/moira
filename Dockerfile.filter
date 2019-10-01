@@ -1,10 +1,8 @@
 FROM golang:1.13.1 as builder
 
-RUN go get github.com/kardianos/govendor
-
-COPY ./vendor/vendor.json /go/src/github.com/moira-alert/moira/vendor/vendor.json
+COPY go.mod go.sum /go/src/github.com/moira-alert/moira/
 WORKDIR /go/src/github.com/moira-alert/moira
-RUN govendor sync
+RUN go mod download
 
 COPY . /go/src/github.com/moira-alert/moira/
 
