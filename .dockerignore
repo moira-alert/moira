@@ -2,7 +2,6 @@
 .idea
 
 vendor
-!vendor/vendor.json
 build
 local
 

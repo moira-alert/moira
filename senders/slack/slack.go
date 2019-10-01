@@ -10,7 +10,7 @@ import (
 	slackdown "github.com/karriereat/blackfriday-slack"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/senders"
-	blackfriday "gopkg.in/russross/blackfriday.v2"
+	blackfriday "github.com/russross/blackfriday/v2"
 
 	"github.com/nlopes/slack"
 )
