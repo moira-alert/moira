@@ -1,0 +1,41 @@
+linters-settings:
+  govet:
+    check-shadowing: true
+    settings:
+      printf:
+        funcs:
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Infof
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Warnf
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Errorf
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Fatalf
+  gocyclo:
+    min-complexity: 20
+    # min-complexity: 15
+  maligned:
+    suggest-new: true
+
+linters:
+  # inverted configuration with `enable-all` and `disable` is not scalable during updates of golangci-lint
+  disable-all: true
+  enable:
+    - bodyclose
+    - deadcode
+    # - errcheck
+    # - goconst
+    - gocyclo
+    - gosimple
+    - govet
+    - ineffassign
+    - maligned
+    - misspell
+    - staticcheck
+    - structcheck
+    - typecheck
+    # - unconvert
+    - unused
+    - varcheck
+
+run:
+  deadline: 5m
+  skip-dirs:
+    - vendor

@@ -23,8 +23,8 @@ install:
   - go get -v golang.org/x/tools/cmd/cover
   - go get -v github.com/mattn/goveralls
 before_script:
-  - make test
   - make lint
+  - make test
   - goveralls -coverprofile=coverage.txt -service=travis-ci || true
 script:
   - if [[ ! -z "$TRAVIS_TAG" ]]; then make packages; fi

@@ -28,9 +28,8 @@ prepare:
 
 .PHONY: lint
 lint: prepare
-	go get -u github.com/alecthomas/gometalinter
-	GO111MODULE=off gometalinter --install
-	GO111MODULE=off gometalinter ./... --aggregate --vendor --skip mock --disable=errcheck --disable=gocyclo --disable=gosec --deadline=5m
+	GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.18.0
+	GOGC=30 golangci-lint run
 
 .PHONY: test
 test: prepare
