@@ -1,9 +1,10 @@
 package redis
 
 import (
-	"github.com/gofrs/uuid"
 	"testing"
 	"time"
+
+	"github.com/gofrs/uuid"
 
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
@@ -50,7 +51,7 @@ func TestTriggerStoring(t *testing.T) {
 		Convey("Test save-get-remove", func() {
 			trigger := &triggers[0]
 
-			//Check for not existing not writen trigger
+			//Check for not existing not written trigger
 			actual, err := dataBase.GetTrigger(trigger.ID)
 			So(err, ShouldResemble, database.ErrNil)
 			So(actual, ShouldResemble, moira.Trigger{})

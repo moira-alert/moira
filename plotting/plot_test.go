@@ -16,7 +16,7 @@ import (
 	"github.com/gotokatsuya/ipare"
 	"github.com/gotokatsuya/ipare/util"
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/metric_source"
+	metricSource "github.com/moira-alert/moira/metric_source"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -37,11 +37,11 @@ var (
 
 // plotsHashDistancesTestCase is a single plot test case
 type plotsHashDistancesTestCase struct {
+	useHumanizedValues bool
+	stateOk            bool
 	name               string
 	plotTheme          string
-	useHumanizedValues bool
 	triggerType        string
-	stateOk            bool
 	warnValue          interface{}
 	errorValue         interface{}
 	expected           int
@@ -554,43 +554,45 @@ func generateRandomTestMetricsData(numTotal int, numEmpty int) []*metricSource.M
 func TestGetRenderable(t *testing.T) {
 	Convey("Test plots hash distances", t, func() {
 		for _, testCase := range plotsHashDistancesTestCases {
-			trigger := moira.Trigger{
-				Name:        testCase.getTriggerName(),
-				TriggerType: testCase.triggerType,
-			}
-			if testCase.errorValue != nil {
-				errorValue := testCase.errorValue.(float64)
-				if !testCase.useHumanizedValues {
-					errorValue = errorValue * plotTestOuterPointMultiplier
+			Convey(testCase.name, func() {
+				trigger := moira.Trigger{
+					Name:        testCase.getTriggerName(),
+					TriggerType: testCase.triggerType,
 				}
-				trigger.ErrorValue = &errorValue
-			}
-			if testCase.warnValue != nil {
-				warnValue := testCase.warnValue.(float64)
-				if !testCase.useHumanizedValues {
-					warnValue = warnValue * plotTestOuterPointMultiplier
+				if testCase.errorValue != nil {
+					errorValue := testCase.errorValue.(float64)
+					if !testCase.useHumanizedValues {
+						errorValue = errorValue * plotTestOuterPointMultiplier
+					}
+					trigger.ErrorValue = &errorValue
 				}
-				trigger.WarnValue = &warnValue
-			}
-			metricsData := generateTestMetricsData(testCase.useHumanizedValues)
-			pathToOriginal, err := testCase.getFilePath(true)
-			if err != nil {
-				t.Fatal(err)
-			}
-			pathToRendered, err := testCase.getFilePath(false)
-			if err != nil {
-				t.Fatal(err)
-			}
-			err = renderTestMetricsDataToPNG(trigger, testCase.plotTheme, metricsData, pathToRendered)
-			if err != nil {
-				t.Fatal(err)
-			}
-			hashDistance, err := calculateHashDistance(pathToOriginal, pathToRendered)
-			if err != nil {
-				t.Fatal(err)
-			}
-			os.Remove(pathToRendered)
-			So(*hashDistance, ShouldBeLessThanOrEqualTo, testCase.expected)
+				if testCase.warnValue != nil {
+					warnValue := testCase.warnValue.(float64)
+					if !testCase.useHumanizedValues {
+						warnValue = warnValue * plotTestOuterPointMultiplier
+					}
+					trigger.WarnValue = &warnValue
+				}
+				metricsData := generateTestMetricsData(testCase.useHumanizedValues)
+				pathToOriginal, err := testCase.getFilePath(true)
+				if err != nil {
+					t.Fatal(err)
+				}
+				pathToRendered, err := testCase.getFilePath(false)
+				if err != nil {
+					t.Fatal(err)
+				}
+				err = renderTestMetricsDataToPNG(trigger, testCase.plotTheme, metricsData, pathToRendered)
+				if err != nil {
+					t.Fatal(err)
+				}
+				hashDistance, err := calculateHashDistance(pathToOriginal, pathToRendered)
+				if err != nil {
+					t.Fatal(err)
+				}
+				os.Remove(pathToRendered)
+				So(*hashDistance, ShouldBeLessThanOrEqualTo, testCase.expected)
+			})
 		}
 	})
 }
