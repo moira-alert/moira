@@ -93,7 +93,7 @@ func (sender *Sender) getChat(username string) (*telebot.Chat, error) {
 	}
 	chat, err := sender.bot.ChatByID(uid)
 	if err != nil {
-		return nil, fmt.Errorf("can't find recepient %s: %s", uid, err.Error())
+		return nil, fmt.Errorf("can't find recipient %s: %s", uid, err.Error())
 	}
 	return chat, nil
 }

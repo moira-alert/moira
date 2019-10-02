@@ -209,7 +209,7 @@ func TestContacts(t *testing.T) {
 					So(err, ShouldBeNil)
 				})
 
-				Convey("Check it for existence in user2 contacts and now existance in user1 contacts", func() {
+				Convey("Check it for existence in user2 contacts and now existence in user1 contacts", func() {
 					actual, err := dataBase.GetContact(contact3.ID)
 					So(err, ShouldBeNil)
 					So(actual, ShouldResemble, contact3)

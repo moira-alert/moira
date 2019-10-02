@@ -16,12 +16,12 @@ func usage() {
 // reade file to byte array
 func fileBytes(filePath string) ([]byte, error) {
 	var err error
-	if f, err := os.Open(filePath); err == nil {
-		defer f.Close()
-		return ioutil.ReadAll(f)
+	f, err := os.Open(filePath)
+	if err != nil {
+		return nil, err
 	}
-
-	return nil, err
+	defer f.Close()
+	return ioutil.ReadAll(f)
 }
 
 // write to variable go file

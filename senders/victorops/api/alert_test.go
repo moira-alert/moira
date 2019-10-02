@@ -46,8 +46,9 @@ func TestCreateAlert(t *testing.T) {
 				// Send response to be tested
 			}))
 			defer server.Close()
-			client := NewClient(server.URL, server.Client())
-			err := client.CreateAlert("key", CreateAlertRequest{MessageType: Critical})
+			// TODO(e.sharifullin): Investigate why new client is created
+			newClient := NewClient(server.URL, server.Client())
+			err := newClient.CreateAlert("key", CreateAlertRequest{MessageType: Critical})
 			So(err, ShouldResemble, fmt.Errorf("victorops API request resulted in error with status %v: %v", http.StatusInternalServerError, `{"error":"test error"}`))
 		})
 		Convey("200 OK", func() {
