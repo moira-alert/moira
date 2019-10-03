@@ -178,7 +178,8 @@ func TestNotificationEventErrorConnection(t *testing.T) {
 	dataBase.flush()
 	defer dataBase.flush()
 
-	var notificationEvent = moira.NotificationEvent{
+	// TODO(litleleprikon): check why notification is event created here again
+	var newNotificationEvent = moira.NotificationEvent{
 		Timestamp: time.Now().Unix(),
 		State:     moira.StateNODATA,
 		OldState:  moira.StateNODATA,
@@ -191,7 +192,7 @@ func TestNotificationEventErrorConnection(t *testing.T) {
 		So(actual1, ShouldBeNil)
 		So(err, ShouldNotBeNil)
 
-		err = dataBase.PushNotificationEvent(&notificationEvent, true)
+		err = dataBase.PushNotificationEvent(&newNotificationEvent, true)
 		So(err, ShouldNotBeNil)
 
 		total := dataBase.GetNotificationEventCount("123", 0)
