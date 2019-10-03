@@ -13,6 +13,8 @@ docker-compose pull
 docker-compose up
 ```
 
+See more on our [documentation page](https://moira.readthedocs.io/en/latest/installation/index.html).
+
 Feed data in Graphite format to `localhost:2003`:
 
 ```bash
@@ -23,44 +25,13 @@ Configure triggers at `localhost:8080` using your browser.
 
 Other installation methods are available, see [documentation](https://moira.readthedocs.io/en/latest/installation/index.html).
 
-## Development
+## Contribution
 
-To build and run tests you need local redis listening on port 6379.
-Easiest way to get redis is via docker:
-
-```bash
-docker run -p 6379:6379 -d redis:alpine
-```
-
-To run test use ``go test ./...`` or run [GoConvey](http://goconvey.co/):
-
-```bash
-go get github.com/smartystreets/goconvey
-goconvey
-```
-
-For full local deployment of all services, including web, graphite and metrics relay (may be slow on first launch) use:
-
-```bash
-docker-compose up
-```
-
-Before push your changes don't forget about linter:
-
-```bash
-make lint
-```
+Check our [contribution guideline](.github/CONTRIBUTING.md)
 
 ## Getting Started
 
 See our [user guide](https://moira.readthedocs.io/en/latest/user_guide/index.html) that is based on a number of real-life scenarios, from simple and universal to complicated and specific.
-
-## Why 2.0
-
-Moira 2.0 is different from the first version in two important ways:
-
-1. We got rid of Python, because it was slow. Checker and API services are now written in Go, based on [carbonapi](https://github.com/go-graphite/carbonapi) implementation of Graphite functions.
-2. We got rid of Angular, because our main stack is React now. We just don't know how to do Angular anymore. We also revamped the UI.
 
 ## What is in the other repositories
 
