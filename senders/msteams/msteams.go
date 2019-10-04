@@ -9,6 +9,7 @@ import (
 	"github.com/russross/blackfriday/v2"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -26,9 +27,13 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 	sender.logger = logger
 	sender.location = location
 	sender.frontURI = senderSettings["front_uri"]
+	disableKeepAlives, err := strconv.ParseBool(senderSettings["disable_keepalives"])
+	if err != nil {
+		disableKeepAlives = false
+	}
 	sender.client = &http.Client{
 		Timeout:   time.Duration(30) * time.Second,
-		Transport: &http.Transport{DisableKeepAlives: true},
+		Transport: &http.Transport{DisableKeepAlives: disableKeepAlives},
 	}
 	return nil
 }
@@ -199,7 +204,7 @@ func getColourForState(state moira.State) string {
 	case moira.StateWARN:
 		return "ffa500" //orange
 	case moira.StateERROR:
-		return "ffa500" //red
+		return "ff0000" //red
 	case moira.StateNODATA:
 		return "000000" //black
 	default:

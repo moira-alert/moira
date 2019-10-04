@@ -2,6 +2,7 @@ package msteams
 
 import (
 	"github.com/moira-alert/moira/logging/go-logging"
+	"net/http"
 	"testing"
 	"time"
 
@@ -18,6 +19,21 @@ func TestInit(t *testing.T) {
 			err := sender.Init(senderSettings, logger, nil, "")
 			So(err, ShouldResemble, nil)
 			So(sender, ShouldNotResemble, Sender{})
+		})
+		Convey("Default value for disabling HTTP Keepalive should be false", func() {
+			err := sender.Init(senderSettings, logger, nil, "")
+			So(err, ShouldResemble, nil)
+			transport, ok := sender.client.Transport.(*http.Transport)
+			So(ok, ShouldResemble, true)
+			So(transport.DisableKeepAlives, ShouldResemble, false)
+		})
+		Convey("disabling HTTP Keepalive should be true", func() {
+			senderSettings["disable_keepalives"] = "True"
+			err := sender.Init(senderSettings, logger, nil, "")
+			So(err, ShouldResemble, nil)
+			transport, ok := sender.client.Transport.(*http.Transport)
+			So(ok, ShouldResemble, true)
+			So(transport.DisableKeepAlives, ShouldResemble, true)
 		})
 	})
 }
@@ -62,6 +78,134 @@ some text **bold text**
 ## header 2
 some other text _italic text_`,
 		}
+
+		Convey("Card uses the correct colour for subject state", func() {
+			Convey("State is RED for Error", func() {
+				actual := sender.buildMessage([]moira.NotificationEvent{{
+					TriggerID: "TriggerID",
+					Value:     &value,
+					Timestamp: 150000000,
+					Metric:    "Metric",
+					OldState:  moira.StateOK,
+					State:     moira.StateERROR,
+					Message:   nil,
+				}}, moira.TriggerData{Name: "Name"}, false)
+				expected := MessageCard{
+					Context:     "http://schema.org/extensions",
+					MessageType: "MessageCard",
+					Summary:     "Moira Alert",
+					ThemeColor:  "ff0000",
+					Title:       "ERROR Name",
+					Sections: []Section{
+						{
+							ActivityTitle: "Description",
+							ActivityText:  "",
+							Facts: []Fact{
+								{
+									Name:  "02:40",
+									Value: "```Metric = 123 (OK to ERROR)```",
+								},
+							},
+						},
+					},
+				}
+				So(actual, ShouldResemble, expected)
+			})
+			Convey("State is ORANGE for Warning", func() {
+				actual := sender.buildMessage([]moira.NotificationEvent{{
+					TriggerID: "TriggerID",
+					Value:     &value,
+					Timestamp: 150000000,
+					Metric:    "Metric",
+					OldState:  moira.StateOK,
+					State:     moira.StateWARN,
+					Message:   nil,
+				}}, moira.TriggerData{Name: "Name"}, false)
+				expected := MessageCard{
+					Context:     "http://schema.org/extensions",
+					MessageType: "MessageCard",
+					Summary:     "Moira Alert",
+					ThemeColor:  "ffa500",
+					Title:       "WARN Name",
+					Sections: []Section{
+						{
+							ActivityTitle: "Description",
+							ActivityText:  "",
+							Facts: []Fact{
+								{
+									Name:  "02:40",
+									Value: "```Metric = 123 (OK to WARN)```",
+								},
+							},
+						},
+					},
+				}
+				So(actual, ShouldResemble, expected)
+			})
+			Convey("State is GREEN for OK", func() {
+				actual := sender.buildMessage([]moira.NotificationEvent{{
+					TriggerID: "TriggerID",
+					Value:     &value,
+					Timestamp: 150000000,
+					Metric:    "Metric",
+					OldState:  moira.StateWARN,
+					State:     moira.StateOK,
+					Message:   nil,
+				}}, moira.TriggerData{Name: "Name"}, false)
+				expected := MessageCard{
+					Context:     "http://schema.org/extensions",
+					MessageType: "MessageCard",
+					Summary:     "Moira Alert",
+					ThemeColor:  "008000",
+					Title:       "OK Name",
+					Sections: []Section{
+						{
+							ActivityTitle: "Description",
+							ActivityText:  "",
+							Facts: []Fact{
+								{
+									Name:  "02:40",
+									Value: "```Metric = 123 (WARN to OK)```",
+								},
+							},
+						},
+					},
+				}
+				So(actual, ShouldResemble, expected)
+			})
+			Convey("State is BLACK for NODATA", func() {
+				actual := sender.buildMessage([]moira.NotificationEvent{{
+					TriggerID: "TriggerID",
+					Value:     &value,
+					Timestamp: 150000000,
+					Metric:    "Metric",
+					OldState:  moira.StateNODATA,
+					State:     moira.StateNODATA,
+					Message:   nil,
+				}}, moira.TriggerData{Name: "Name"}, false)
+				expected := MessageCard{
+					Context:     "http://schema.org/extensions",
+					MessageType: "MessageCard",
+					Summary:     "Moira Alert",
+					ThemeColor:  "000000",
+					Title:       "NODATA Name",
+					Sections: []Section{
+						{
+							ActivityTitle: "Description",
+							ActivityText:  "",
+							Facts: []Fact{
+								{
+									Name:  "02:40",
+									Value: "```Metric = 123 (NODATA to NODATA)```",
+								},
+							},
+						},
+					},
+				}
+				So(actual, ShouldResemble, expected)
+			})
+
+		})
 
 		Convey("Create MessageCard with one event", func() {
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, false)
