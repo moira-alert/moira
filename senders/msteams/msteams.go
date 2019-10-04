@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/moira-alert/moira"
-	"gopkg.in/russross/blackfriday.v2"
+	"github.com/russross/blackfriday/v2"
 	"net/http"
 	"net/url"
 	"strings"
