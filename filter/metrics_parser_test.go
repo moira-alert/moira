@@ -4,6 +4,7 @@ import (
 	"math/rand"
 	"strconv"
 	"testing"
+	"time"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -74,6 +75,26 @@ func TestParseMetric(t *testing.T) {
 			So(parsedMetric.Value, ShouldEqual, validMetric.value)
 			So(parsedMetric.Timestamp, ShouldEqual, validMetric.timestamp)
 		}
+
+		Convey("Check metrics with magic '-1' timestamp", func() {
+			timeStart := time.Now().Unix()
+			magicTimestampMetrics := []ValidMetricCase{
+				{"One.two.three 123 -1", "One.two.three", "One.two.three", map[string]string{}, 123, timeStart},
+				{"One.two.three 1.23e2 -1", "One.two.three", "One.two.three", map[string]string{}, 123, timeStart},
+				{"One.two.three -123 -1", "One.two.three", "One.two.three", map[string]string{}, -123, timeStart},
+			}
+
+			for _, magicMetric := range magicTimestampMetrics {
+				parsedMetric, err := ParseMetric([]byte(magicMetric.input))
+				So(err, ShouldBeEmpty)
+				So(parsedMetric.Metric, ShouldEqual, magicMetric.metric)
+				So(parsedMetric.Name, ShouldEqual, magicMetric.name)
+				So(parsedMetric.Labels, ShouldResemble, magicMetric.labels)
+				So(parsedMetric.Value, ShouldEqual, magicMetric.value)
+				// I add 5 seconds to avoid false failures
+				So(parsedMetric.Timestamp, ShouldBeBetweenOrEqual, magicMetric.timestamp, magicMetric.timestamp+5)
+			}
+		})
 	})
 
 	Convey("Given valid metric strings with float64 timestamp, should return parsed values", t, func() {

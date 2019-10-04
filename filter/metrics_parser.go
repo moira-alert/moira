@@ -3,11 +3,12 @@ package filter
 import (
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/moira-alert/moira"
 )
 
-//ParsedMetric represents a result of ParseMetric.
+// ParsedMetric represents a result of ParseMetric.
 type ParsedMetric struct {
 	Metric    string
 	Name      string
@@ -62,6 +63,9 @@ func ParseMetric(input []byte) (*ParsedMetric, error) {
 		labels,
 		value,
 		int64(timestamp),
+	}
+	if timestamp == -1 {
+		parsedMetric.Timestamp = time.Now().Unix()
 	}
 	return parsedMetric, nil
 }
