@@ -28,7 +28,6 @@ func TestBuildEvent(t *testing.T) {
 			Metric:    "Metric name",
 			OldState:  moira.StateOK,
 			State:     moira.StateNODATA,
-			Message:   nil,
 		}
 
 		trigger := moira.TriggerData{

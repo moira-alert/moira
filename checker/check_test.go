@@ -539,7 +539,6 @@ func TestCheckErrors(t *testing.T) {
 				State:          moira.StateEXCEPTION,
 				OldState:       moira.StateOK,
 				Timestamp:      67,
-				Message:        &messageException,
 				Metric:         triggerChecker.trigger.Name,
 			}
 
@@ -565,7 +564,6 @@ func TestCheckErrors(t *testing.T) {
 			triggerChecker.lastCheck.EventTimestamp = 67
 			triggerChecker.lastCheck.LastSuccessfulCheckTimestamp = triggerChecker.until
 			lastValue := float64(4)
-			message := ""
 
 			eventMetrics := map[string]moira.MetricState{
 				metric: {
@@ -584,7 +582,6 @@ func TestCheckErrors(t *testing.T) {
 				OldState:       moira.StateEXCEPTION,
 				Timestamp:      67,
 				Metric:         triggerChecker.trigger.Name,
-				Message:        &message,
 			}
 
 			lastCheck := moira.CheckData{
@@ -976,18 +973,18 @@ func TestHandleTriggerCheck(t *testing.T) {
 					LastSuccessfulCheckTimestamp: 0,
 				},
 			}
-			err1 := "This metric has been in bad state for more than 24 hours - please, fix."
+			var interval int64 = 24
 			checkData := moira.CheckData{
 				State:     moira.StateOK,
 				Timestamp: time.Now().Unix(),
 			}
 			event := &moira.NotificationEvent{
-				IsTriggerEvent: true,
-				Timestamp:      checkData.Timestamp,
-				Message:        &err1,
-				TriggerID:      triggerChecker.triggerID,
-				OldState:       moira.StateNODATA,
-				State:          moira.StateNODATA,
+				IsTriggerEvent:   true,
+				Timestamp:        checkData.Timestamp,
+				TriggerID:        triggerChecker.triggerID,
+				OldState:         moira.StateNODATA,
+				State:            moira.StateNODATA,
+				MessageEventInfo: &moira.EventInfo{Interval: &interval},
 			}
 
 			dataBase.EXPECT().PushNotificationEvent(event, true).Return(nil)

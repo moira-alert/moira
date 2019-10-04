@@ -13,7 +13,6 @@ func TestBuildMessage(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
 	sender := Sender{location: location, frontURI: "http://moira.url"}
 	value := float64(97.4458331200185)
-	message := "This is message"
 
 	Convey("Build Moira Message tests", t, func() {
 		event := moira.NotificationEvent{
@@ -23,7 +22,6 @@ func TestBuildMessage(t *testing.T) {
 			Metric:    "Metric name",
 			OldState:  moira.StateOK,
 			State:     moira.StateNODATA,
-			Message:   nil,
 		}
 
 		trigger := moira.TriggerData{
@@ -69,13 +67,14 @@ http://moira.url/trigger/TriggerID
 		})
 
 		Convey("Print moira message with one event and message", func() {
-			event.Message = &message
+			var interval int64 = 24
+			event.MessageEventInfo = &moira.EventInfo{Interval: &interval}
 			event.TriggerID = ""
 			trigger.ID = ""
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, false)
 			expected := "NODATA Trigger Name [tag1][tag2] (1)\n" + desc + `
 
-02:40: Metric name = 97.4458331200185 (OK to NODATA). This is message`
+02:40: Metric name = 97.4458331200185 (OK to NODATA). This metric has been in bad state for more than 24 hours - please, fix.`
 			So(actual, ShouldResemble, expected)
 		})
 

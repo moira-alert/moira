@@ -22,18 +22,82 @@ const (
 	VariableTriggerName = "${trigger_name}"
 )
 
+const (
+	format        = "15:04 02.01.2006"
+	remindMessage = "This metric has been in bad state for more than %v hours - please, fix."
+)
+
 // NotificationEvent represents trigger state changes event
 type NotificationEvent struct {
-	IsTriggerEvent bool     `json:"trigger_event,omitempty"`
-	Timestamp      int64    `json:"timestamp"`
-	Metric         string   `json:"metric"`
-	Value          *float64 `json:"value,omitempty"`
-	State          State    `json:"state"`
-	TriggerID      string   `json:"trigger_id"`
-	SubscriptionID *string  `json:"sub_id,omitempty"`
-	ContactID      string   `json:"contactId,omitempty"`
-	OldState       State    `json:"old_state"`
-	Message        *string  `json:"msg,omitempty"`
+	IsTriggerEvent   bool       `json:"trigger_event,omitempty"`
+	Timestamp        int64      `json:"timestamp"`
+	Metric           string     `json:"metric"`
+	Value            *float64   `json:"value,omitempty"`
+	State            State      `json:"state"`
+	TriggerID        string     `json:"trigger_id"`
+	SubscriptionID   *string    `json:"sub_id,omitempty"`
+	ContactID        string     `json:"contactId,omitempty"`
+	OldState         State      `json:"old_state"`
+	Message          *string    `json:"msg,omitempty"`
+	MessageEventInfo *EventInfo `json:"event_message"`
+}
+
+// EventInfo - a base for creating messages.
+type EventInfo struct {
+	Maintenance *MaintenanceInfo `json:"maintenance,omitempty"`
+	Interval    *int64           `json:"interval,omitempty"`
+}
+
+// CreateMessage - creates a message based on EventInfo.
+func (event *NotificationEvent) CreateMessage(location *time.Location) string {
+	// ToDo: DEPRECATED Message in NotificationEvent
+	if len(UseString(event.Message)) > 0 {
+		return *event.Message
+	}
+
+	if event.MessageEventInfo == nil {
+		return ""
+	}
+
+	if event.MessageEventInfo.Interval != nil && event.MessageEventInfo.Maintenance == nil {
+		return fmt.Sprintf(remindMessage, *event.MessageEventInfo.Interval)
+	}
+
+	if event.MessageEventInfo.Maintenance == nil {
+		return ""
+	}
+
+	messageBuffer := bytes.NewBuffer([]byte(""))
+	messageBuffer.WriteString("This metric changed its state during maintenance interval.")
+
+	if location == nil {
+		location = time.UTC
+	}
+
+	if event.MessageEventInfo.Maintenance.StartUser != nil || event.MessageEventInfo.Maintenance.StartTime != nil {
+		messageBuffer.WriteString(" Maintenance was set")
+		if event.MessageEventInfo.Maintenance.StartUser != nil {
+			messageBuffer.WriteString(" by ")
+			messageBuffer.WriteString(*event.MessageEventInfo.Maintenance.StartUser)
+		}
+		if event.MessageEventInfo.Maintenance.StartTime != nil {
+			messageBuffer.WriteString(" at ")
+			messageBuffer.WriteString(time.Unix(*event.MessageEventInfo.Maintenance.StartTime, 0).In(location).Format(format))
+		}
+		if event.MessageEventInfo.Maintenance.StopUser != nil || event.MessageEventInfo.Maintenance.StopTime != nil {
+			messageBuffer.WriteString(" and removed")
+			if event.MessageEventInfo.Maintenance.StopUser != nil && *event.MessageEventInfo.Maintenance.StopUser != *event.MessageEventInfo.Maintenance.StartUser {
+				messageBuffer.WriteString(" by ")
+				messageBuffer.WriteString(*event.MessageEventInfo.Maintenance.StopUser)
+			}
+			if event.MessageEventInfo.Maintenance.StopTime != nil {
+				messageBuffer.WriteString(" at ")
+				messageBuffer.WriteString(time.Unix(*event.MessageEventInfo.Maintenance.StopTime, 0).In(location).Format(format))
+			}
+		}
+		messageBuffer.WriteString(".")
+	}
+	return messageBuffer.String()
 }
 
 // NotificationEvents represents slice of NotificationEvent
@@ -316,7 +380,7 @@ func (schedule *ScheduleData) IsScheduleAllows(ts int64) bool {
 }
 
 func (event NotificationEvent) String() string {
-	return fmt.Sprintf("TriggerId: %s, Metric: %s, Value: %v, OldState: %s, State: %s, Message: '%s', Timestamp: %v", event.TriggerID, event.Metric, UseFloat64(event.Value), event.OldState, event.State, UseString(event.Message), event.Timestamp)
+	return fmt.Sprintf("TriggerId: %s, Metric: %s, Value: %v, OldState: %s, State: %s, Message: '%s', Timestamp: %v", event.TriggerID, event.Metric, UseFloat64(event.Value), event.OldState, event.State, event.CreateMessage(nil), event.Timestamp)
 }
 
 // GetMetricValue gets event metric value and format it to human readable presentation

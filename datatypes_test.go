@@ -46,8 +46,8 @@ func TestIsScheduleAllows(t *testing.T) {
 	}
 
 	// Date Format: dd/mm/yyyy 24h:MM
-	// 367980 - 05/01/1970 18:13 (UTC) Mon - 23:13 (YEKT)
-	// 454380 - 06/01/1970 18:13 (UTC) Tue - 23:13 (YEKT)
+	// 367980 - 05/01/1970 18:13  Mon - 23:13 (YEKT)
+	// 454380 - 06/01/1970 18:13  Tue - 23:13 (YEKT)
 
 	Convey("No schedule", t, func() {
 		var noSchedule *ScheduleData
@@ -132,14 +132,60 @@ func TestIsScheduleAllows(t *testing.T) {
 	})
 }
 
+func TestNotificationEvent_CreateMessage(t *testing.T) {
+
+	Convey("Test creating message", t, func() {
+		var (
+			startTime int64 = 100
+			startUser       = "StartUser"
+			stopUser        = "StopUser"
+			stopTime  int64 = 200
+		)
+		Convey("Test: existence message", func() {
+			message := "Test message"
+			event := NotificationEvent{Message: &message}
+			So(event.CreateMessage(nil), ShouldEqual, message)
+		})
+		Convey("Test: creating remind message", func() {
+			message := "This metric has been in bad state for more than 24 hours - please, fix."
+			var interval int64 = 24
+			event := NotificationEvent{MessageEventInfo: &EventInfo{Interval: &interval}}
+			So(event.CreateMessage(nil), ShouldEqual, message)
+		})
+		Convey("Test: check for void MaintenanceInfo", func() {
+			event := NotificationEvent{MessageEventInfo: &EventInfo{}}
+			So(event.CreateMessage(nil), ShouldEqual, "")
+		})
+		Convey("Test: check for void location", func() {
+			expected := "This metric changed its state during maintenance interval. Maintenance was set at 00:01 01.01.1970."
+			event := NotificationEvent{MessageEventInfo: &EventInfo{
+				Maintenance: &MaintenanceInfo{StartTime: &startTime},
+			}}
+			So(event.CreateMessage(nil), ShouldEqual, expected)
+		})
+		Convey("Test: was set by start user", func() {
+			expected := "This metric changed its state during maintenance interval. Maintenance was set by StartUser."
+			event := NotificationEvent{MessageEventInfo: &EventInfo{
+				Maintenance: &MaintenanceInfo{StartUser: &startUser},
+			}}
+			So(event.CreateMessage(nil), ShouldEqual, expected)
+		})
+		Convey("Test: removed by stop user and time", func() {
+			expected := "This metric changed its state during maintenance interval. Maintenance was set by StartUser and removed by StopUser at 00:03 01.01.1970."
+			event := NotificationEvent{MessageEventInfo: &EventInfo{
+				Maintenance: &MaintenanceInfo{StartUser: &startUser, StopUser: &stopUser, StopTime: &stopTime},
+			}}
+			So(event.CreateMessage(time.UTC), ShouldEqual, expected)
+		})
+	})
+}
 func TestNotificationEvent_GetSubjectState(t *testing.T) {
 	Convey("Get ERROR state", t, func() {
-		message := "mes1"
 		var value float64 = 1
-		states := NotificationEvents{{State: StateOK}, {State: StateERROR, Message: &message, Value: &value}}
+		states := NotificationEvents{{State: StateOK}, {State: StateERROR, Value: &value}}
 		So(states.GetSubjectState(), ShouldResemble, StateERROR)
 		So(states[0].String(), ShouldResemble, "TriggerId: , Metric: , Value: 0, OldState: , State: OK, Message: '', Timestamp: 0")
-		So(states[1].String(), ShouldResemble, "TriggerId: , Metric: , Value: 1, OldState: , State: ERROR, Message: 'mes1', Timestamp: 0")
+		So(states[1].String(), ShouldResemble, "TriggerId: , Metric: , Value: 1, OldState: , State: ERROR, Message: '', Timestamp: 0")
 	})
 }
 
