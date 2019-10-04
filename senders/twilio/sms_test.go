@@ -17,7 +17,6 @@ func TestBuildMoiraMessage(t *testing.T) {
 			location: location,
 		}}
 	value := float64(123)
-	message := "This is message"
 
 	Convey("Build Moira Message tests", t, func() {
 		event := moira.NotificationEvent{
@@ -26,7 +25,6 @@ func TestBuildMoiraMessage(t *testing.T) {
 			Metric:    "Metric",
 			OldState:  moira.StateOK,
 			State:     moira.StateNODATA,
-			Message:   nil,
 		}
 
 		Convey("Print moira message with one event", func() {
@@ -36,9 +34,10 @@ func TestBuildMoiraMessage(t *testing.T) {
 		})
 
 		Convey("Print moira message with one event and message", func() {
-			event.Message = &message
+			var interval int64 = 24
+			event.MessageEventInfo = &moira.EventInfo{Interval: &interval}
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{Name: "Name", Tags: []string{"tag1"}}, false)
-			expected := "NODATA Name [tag1] (1)\n\n02:40: Metric = 123 (OK to NODATA). This is message"
+			expected := "NODATA Name [tag1] (1)\n\n02:40: Metric = 123 (OK to NODATA). This metric has been in bad state for more than 24 hours - please, fix."
 			So(actual, ShouldResemble, expected)
 		})
 

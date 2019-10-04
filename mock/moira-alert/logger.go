@@ -119,18 +119,18 @@ func (mr *MockLoggerMockRecorder) Fatalf(arg0 interface{}, arg1 ...interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Fatalf", reflect.TypeOf((*MockLogger)(nil).Fatalf), varargs...)
 }
 
-// Info mocks base method
+// Maintenance mocks base method
 func (m *MockLogger) Info(arg0 ...interface{}) {
 	varargs := []interface{}{}
 	for _, a := range arg0 {
 		varargs = append(varargs, a)
 	}
-	m.ctrl.Call(m, "Info", varargs...)
+	m.ctrl.Call(m, "Maintenance", varargs...)
 }
 
-// Info indicates an expected call of Info
+// Maintenance indicates an expected call of Maintenance
 func (mr *MockLoggerMockRecorder) Info(arg0 ...interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Info", reflect.TypeOf((*MockLogger)(nil).Info), arg0...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Maintenance", reflect.TypeOf((*MockLogger)(nil).Info), arg0...)
 }
 
 // Infof mocks base method

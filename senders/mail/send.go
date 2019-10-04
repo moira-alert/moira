@@ -69,7 +69,7 @@ func (sender *Sender) makeMessage(events moira.NotificationEvents, contact moira
 			Value:      strconv.FormatFloat(moira.UseFloat64(event.Value), 'f', -1, 64),
 			WarnValue:  strconv.FormatFloat(trigger.WarnValue, 'f', -1, 64),
 			ErrorValue: strconv.FormatFloat(trigger.ErrorValue, 'f', -1, 64),
-			Message:    moira.UseString(event.Message),
+			Message:    event.CreateMessage(sender.location),
 		})
 	}
 
