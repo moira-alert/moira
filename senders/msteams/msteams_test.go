@@ -20,20 +20,12 @@ func TestInit(t *testing.T) {
 			So(err, ShouldResemble, nil)
 			So(sender, ShouldNotResemble, Sender{})
 		})
-		Convey("Default value for disabling HTTP Keepalive should be false", func() {
+		Convey("HTTP keep-alive should always be enabled", func() {
 			err := sender.Init(senderSettings, logger, nil, "")
 			So(err, ShouldResemble, nil)
 			transport, ok := sender.client.Transport.(*http.Transport)
 			So(ok, ShouldResemble, true)
 			So(transport.DisableKeepAlives, ShouldResemble, false)
-		})
-		Convey("disabling HTTP Keepalive should be true", func() {
-			senderSettings["disable_keepalives"] = "True"
-			err := sender.Init(senderSettings, logger, nil, "")
-			So(err, ShouldResemble, nil)
-			transport, ok := sender.client.Transport.(*http.Transport)
-			So(ok, ShouldResemble, true)
-			So(transport.DisableKeepAlives, ShouldResemble, true)
 		})
 	})
 }
