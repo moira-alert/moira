@@ -2,7 +2,6 @@ package msteams
 
 import (
 	"github.com/moira-alert/moira/logging/go-logging"
-	"net/http"
 	"testing"
 	"time"
 
@@ -19,13 +18,6 @@ func TestInit(t *testing.T) {
 			err := sender.Init(senderSettings, logger, nil, "")
 			So(err, ShouldResemble, nil)
 			So(sender, ShouldNotResemble, Sender{})
-		})
-		Convey("HTTP keep-alive should always be enabled", func() {
-			err := sender.Init(senderSettings, logger, nil, "")
-			So(err, ShouldResemble, nil)
-			transport, ok := sender.client.Transport.(*http.Transport)
-			So(ok, ShouldResemble, true)
-			So(transport.DisableKeepAlives, ShouldResemble, false)
 		})
 	})
 }

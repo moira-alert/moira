@@ -27,8 +27,7 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 	sender.location = location
 	sender.frontURI = senderSettings["front_uri"]
 	sender.client = &http.Client{
-		Timeout:   time.Duration(30) * time.Second,
-		Transport: &http.Transport{DisableKeepAlives: false},
+		Timeout: time.Duration(30) * time.Second,
 	}
 	return nil
 }
