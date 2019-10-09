@@ -181,11 +181,10 @@ func TestNotificationEvent_CreateMessage(t *testing.T) {
 }
 func TestNotificationEvent_GetSubjectState(t *testing.T) {
 	Convey("Get ERROR state", t, func() {
-		var value float64 = 1
-		states := NotificationEvents{{State: StateOK}, {State: StateERROR, Value: &value}}
+		states := NotificationEvents{{State: StateOK, Values: map[string]float64{"t1": 0}}, {State: StateERROR, Values: map[string]float64{"t1": 1}}}
 		So(states.GetSubjectState(), ShouldResemble, StateERROR)
-		So(states[0].String(), ShouldResemble, "TriggerId: , Metric: , Value: 0, OldState: , State: OK, Message: '', Timestamp: 0")
-		So(states[1].String(), ShouldResemble, "TriggerId: , Metric: , Value: 1, OldState: , State: ERROR, Message: '', Timestamp: 0")
+		So(states[0].String(), ShouldResemble, "TriggerId: , Metric: , Values: t1:0, OldState: , State: OK, Message: '', Timestamp: 0")
+		So(states[1].String(), ShouldResemble, "TriggerId: , Metric: , Values: t1:1, OldState: , State: ERROR, Message: '', Timestamp: 0")
 	})
 }
 
@@ -202,24 +201,28 @@ func TestNotificationEvent_FormatTimestamp(t *testing.T) {
 }
 
 func TestNotificationEvent_GetValue(t *testing.T) {
-	event := NotificationEvent{}
-	value1 := float64(2.32)
-	value2 := float64(2.3222222)
-	value3 := float64(2)
-	value4 := float64(2.000001)
-	value5 := float64(2.33333333)
-	Convey("Test GetMetricValue", t, func() {
-		So(event.GetMetricValue(), ShouldResemble, "0")
-		event.Value = &value1
-		So(event.GetMetricValue(), ShouldResemble, "2.32")
-		event.Value = &value2
-		So(event.GetMetricValue(), ShouldResemble, "2.3222222")
-		event.Value = &value3
-		So(event.GetMetricValue(), ShouldResemble, "2")
-		event.Value = &value4
-		So(event.GetMetricValue(), ShouldResemble, "2.000001")
-		event.Value = &value5
-		So(event.GetMetricValue(), ShouldResemble, "2.33333333")
+	Convey("Test GetMetricsValues", t, func() {
+		event := NotificationEvent{}
+		event.Values = make(map[string]float64)
+		Convey("One target with zero", func() {
+			event.Values["t1"] = 0
+			So(event.GetMetricsValues(), ShouldResemble, "t1:0")
+		})
+
+		Convey("One target with short fraction", func() {
+			event.Values["t1"] = 2.32
+			So(event.GetMetricsValues(), ShouldResemble, "t1:2.32")
+		})
+
+		Convey("One target with long fraction", func() {
+			event.Values["t1"] = 2.3222222
+			So(event.GetMetricsValues(), ShouldResemble, "t1:2.3222222")
+		})
+		Convey("Two targets", func() {
+			event.Values["t2"] = 0.12
+			event.Values["t1"] = 2.3222222
+			So(event.GetMetricsValues(), ShouldResemble, "t1:2.3222222, t2:0.12")
+		})
 	})
 }
 
@@ -292,10 +295,10 @@ func TestScheduledNotification_GetKey(t *testing.T) {
 	Convey("Get key", t, func() {
 		notification := ScheduledNotification{
 			Contact:   ContactData{Type: "email", Value: "my@mail.com"},
-			Event:     NotificationEvent{Value: nil, State: StateNODATA, Metric: "my.metric"},
+			Event:     NotificationEvent{Values: map[string]float64{"t1": 0}, State: StateNODATA, Metric: "my.metric"},
 			Timestamp: 123456789,
 		}
-		So(notification.GetKey(), ShouldResemble, "email:my@mail.com::my.metric:NODATA:0:0.000000:0:false:123456789")
+		So(notification.GetKey(), ShouldResemble, "email:my@mail.com::my.metric:NODATA:0:t1:0:0:false:123456789")
 	})
 }
 

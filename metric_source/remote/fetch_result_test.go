@@ -10,7 +10,7 @@ import (
 func TestFetchResult(t *testing.T) {
 	Convey("Get empty metric data", t, func() {
 		fetchResult := FetchResult{
-			MetricsData: make([]*metricSource.MetricData, 0),
+			MetricsData: make([]metricSource.MetricData, 0),
 		}
 		So(fetchResult.GetMetricsData(), ShouldBeEmpty)
 		patterns, err := fetchResult.GetPatterns()
@@ -23,7 +23,7 @@ func TestFetchResult(t *testing.T) {
 
 	Convey("Get not empty metric data", t, func() {
 		fetchResult := &FetchResult{
-			MetricsData: []*metricSource.MetricData{metricSource.MakeMetricData("123", []float64{1, 2, 3}, 60, 0)},
+			MetricsData: []metricSource.MetricData{*metricSource.MakeMetricData("123", []float64{1, 2, 3}, 60, 0)},
 		}
 		So(fetchResult.GetMetricsData(), ShouldHaveLength, 1)
 		patterns, err := fetchResult.GetPatterns()

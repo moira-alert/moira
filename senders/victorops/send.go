@@ -12,8 +12,8 @@ import (
 )
 
 // SendEvents implements Sender interface Send
-func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) error {
-	createAlertRequest := sender.buildCreateAlertRequest(events, trigger, throttled, plot, time.Now().Unix())
+func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
+	createAlertRequest := sender.buildCreateAlertRequest(events, trigger, throttled, plots, time.Now().Unix())
 	err := sender.client.CreateAlert(contact.Value, createAlertRequest)
 	if err != nil {
 		return fmt.Errorf("error while sending alert to victorops: %s", err)
@@ -21,7 +21,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	return nil
 }
 
-func (sender *Sender) buildCreateAlertRequest(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool, plot []byte, time int64) api.CreateAlertRequest {
+func (sender *Sender) buildCreateAlertRequest(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool, plots [][]byte, time int64) api.CreateAlertRequest {
 
 	triggerURI := trigger.GetTriggerURI(sender.frontURI)
 
@@ -36,8 +36,8 @@ func (sender *Sender) buildCreateAlertRequest(events moira.NotificationEvents, t
 		EntityID:          trigger.ID,
 	}
 
-	if len(plot) > 0 && sender.imageStoreConfigured {
-		imageLink, err := sender.imageStore.StoreImage(plot)
+	if len(plots) > 0 && sender.imageStoreConfigured {
+		imageLink, err := sender.imageStore.StoreImage(plots[0])
 		if err != nil {
 			sender.logger.Warningf("could not store the plot image in the image store: %s", err)
 		} else {
@@ -99,7 +99,7 @@ func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsFo
 	eventsLenLimitReached := false
 	eventsPrinted := 0
 	for _, event := range events {
-		line := fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location), event.Metric, event.GetMetricValue(), event.OldState, event.State)
+		line := fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location), event.Metric, event.GetMetricsValues(), event.OldState, event.State)
 		if msg := event.CreateMessage(sender.location); len(msg) > 0 {
 			line += fmt.Sprintf(". %s", msg)
 		}

@@ -179,3 +179,17 @@ func DateRange(defaultFrom, defaultTo string) func(next http.Handler) http.Handl
 		})
 	}
 }
+
+// TargetName is a function that gets target name value from query string and places it in context. If query does not have value sets given value.
+func TargetName(defaultTargetName string) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+			targetName := request.URL.Query().Get("target")
+			if targetName == "" {
+				targetName = defaultTargetName
+			}
+			ctx := context.WithValue(request.Context(), targetNameKey, targetName)
+			next.ServeHTTP(writer, request.WithContext(ctx))
+		})
+	}
+}

@@ -38,8 +38,8 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 }
 
 // SendEvents implements pushover build and send message functionality
-func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) error {
-	pushoverMessage := sender.makePushoverMessage(events, contact, trigger, plot, throttled)
+func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
+	pushoverMessage := sender.makePushoverMessage(events, contact, trigger, plots, throttled)
 
 	sender.logger.Debugf("Calling pushover with message title %s, body %s", pushoverMessage.Title, pushoverMessage.Message)
 	recipient := pushover.NewRecipient(contact.Value)
@@ -50,7 +50,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	return nil
 }
 
-func (sender *Sender) makePushoverMessage(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) *pushover.Message {
+func (sender *Sender) makePushoverMessage(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) *pushover.Message {
 	pushoverMessage := &pushover.Message{
 		Message:   sender.buildMessage(events, throttled),
 		Title:     sender.buildTitle(events, trigger),
@@ -63,8 +63,8 @@ func (sender *Sender) makePushoverMessage(events moira.NotificationEvents, conta
 	if len(url) < urlLimit {
 		pushoverMessage.URL = url
 	}
-	if len(plot) > 0 {
-		reader := bytes.NewReader(plot)
+	if len(plots) > 0 {
+		reader := bytes.NewReader(plots[0])
 		pushoverMessage.AddAttachment(reader)
 	}
 
@@ -77,7 +77,7 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, throttled bo
 		if i > printEventsCount-1 {
 			break
 		}
-		message.WriteString(fmt.Sprintf("%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location), event.Metric, event.GetMetricValue(), event.OldState, event.State))
+		message.WriteString(fmt.Sprintf("%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location), event.Metric, event.GetMetricsValues(), event.OldState, event.State))
 		if msg := event.CreateMessage(sender.location); len(msg) > 0 {
 			message.WriteString(fmt.Sprintf(". %s\n", msg))
 		} else {

@@ -18,14 +18,14 @@ func TestResolveLimits(t *testing.T) {
 	stepTime := 60
 	elementsToUse := 10
 	startTime := time.Now().UTC().Unix()
-	var metricsData []*metricSource.MetricData
+	var metricsData []metricSource.MetricData
 	// Fill MetricsData with random float64 values that higher than minValue and lower than maxValue
 	for i := 0; i < int(elementsToUse); i++ {
 		values := make([]float64, elementsToUse)
 		for valInd := range values {
 			values[valInd] = float64(rand.Intn(maxValue-1)) * rand.Float64()
 		}
-		metricData := metricSource.MakeMetricData("test", values, int64(stepTime), int64(startTime))
+		metricData := *metricSource.MakeMetricData("test", values, int64(stepTime), int64(startTime))
 		metricsData = append(metricsData, metricData)
 	}
 	// Change 2 first points of MetricsData to minValue and maxValue

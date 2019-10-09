@@ -15,13 +15,17 @@ import (
 func (connector *DbConnector) GetTriggerLastCheck(triggerID string) (moira.CheckData, error) {
 	c := connector.pool.Get()
 	defer c.Close()
-	return reply.Check(c.Do("GET", metricLastCheckKey(triggerID)))
+	lastCheck, err := reply.Check(c.Do("GET", metricLastCheckKey(triggerID)))
+	if err != nil {
+		return lastCheck, err
+	}
+	return lastCheck, nil
 }
 
 // SetTriggerLastCheck sets trigger last check data
 func (connector *DbConnector) SetTriggerLastCheck(triggerID string, checkData *moira.CheckData, isRemote bool) error {
 	selfStateCheckCountKey := connector.getSelfStateCheckCountKey(isRemote)
-	bytes, err := json.Marshal(checkData)
+	bytes, err := reply.GetCheckBytes(*checkData)
 	if err != nil {
 		return err
 	}

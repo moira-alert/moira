@@ -16,7 +16,7 @@ type plotCurve struct {
 }
 
 // getCurveSeriesList returns curve series list
-func getCurveSeriesList(metricsData []*metricSource.MetricData, theme moira.PlotTheme) []chart.TimeSeries {
+func getCurveSeriesList(metricsData []metricSource.MetricData, theme moira.PlotTheme) []chart.TimeSeries {
 	curveSeriesList := make([]chart.TimeSeries, 0)
 	for metricDataInd := range metricsData {
 		curveStyle, pointStyle := theme.GetSerieStyles(metricDataInd)
@@ -27,7 +27,7 @@ func getCurveSeriesList(metricsData []*metricSource.MetricData, theme moira.Plot
 }
 
 // generatePlotCurves returns go-chart timeseries to generate plot curves
-func generatePlotCurves(metricData *metricSource.MetricData, curveStyle chart.Style, pointStyle chart.Style) []chart.TimeSeries {
+func generatePlotCurves(metricData metricSource.MetricData, curveStyle chart.Style, pointStyle chart.Style) []chart.TimeSeries {
 	curves := describePlotCurves(metricData)
 	curveSeries := make([]chart.TimeSeries, 0)
 	for _, curve := range curves {
@@ -53,7 +53,7 @@ func generatePlotCurves(metricData *metricSource.MetricData, curveStyle chart.St
 }
 
 // describePlotCurves returns parameters for required curves
-func describePlotCurves(metricData *metricSource.MetricData) []plotCurve {
+func describePlotCurves(metricData metricSource.MetricData) []plotCurve {
 	curves := []plotCurve{{}}
 	curvesInd := 0
 
@@ -77,7 +77,7 @@ func describePlotCurves(metricData *metricSource.MetricData) []plotCurve {
 }
 
 // resolveFirstPoint returns first point coordinates
-func resolveFirstPoint(metricData *metricSource.MetricData) (int, int64) {
+func resolveFirstPoint(metricData metricSource.MetricData) (int, int64) {
 	start := 0
 	startTime := metricData.StartTime
 	for _, metricVal := range metricData.Values {

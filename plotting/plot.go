@@ -9,6 +9,10 @@ import (
 	metricSource "github.com/moira-alert/moira/metric_source"
 )
 
+const (
+	plotNameLen = 40
+)
+
 // ErrNoPointsToRender is used to prevent unnecessary render calls
 type ErrNoPointsToRender struct {
 	triggerID string
@@ -45,7 +49,7 @@ func GetPlotTemplate(theme string, location *time.Location) (*Plot, error) {
 }
 
 // GetRenderable returns go-chart to render
-func (plot *Plot) GetRenderable(trigger *moira.Trigger, metricsData []*metricSource.MetricData) (chart.Chart, error) {
+func (plot *Plot) GetRenderable(targetName string, trigger *moira.Trigger, metricsData []metricSource.MetricData) (chart.Chart, error) {
 	var renderable chart.Chart
 
 	plotSeries := make([]chart.Series, 0)
@@ -69,9 +73,10 @@ func (plot *Plot) GetRenderable(trigger *moira.Trigger, metricsData []*metricSou
 	yAxisValuesFormatter, maxMarkLen := getYAxisValuesFormatter(limits)
 	yAxisRange := limits.getThresholdAxisRange(trigger.TriggerType)
 
+	name := fmt.Sprintf("%s - %s", targetName, trigger.Name)
 	renderable = chart.Chart{
 
-		Title:      sanitizeLabelName(trigger.Name, 40),
+		Title:      sanitizeLabelName(name, plotNameLen),
 		TitleStyle: plot.theme.GetTitleStyle(),
 
 		Width:  plot.width,

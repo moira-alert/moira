@@ -12,27 +12,26 @@ import (
 
 // GetTriggerEvaluationResult evaluates every target in trigger and returns
 // result, separated on main and additional targets metrics
-func GetTriggerEvaluationResult(dataBase moira.Database, metricSourceProvider *metricSource.SourceProvider, from, to int64, triggerID string, fetchRealtimeData bool) (*metricSource.TriggerMetricsData, *moira.Trigger, error) {
+func GetTriggerEvaluationResult(dataBase moira.Database, metricSourceProvider *metricSource.SourceProvider, from, to int64, triggerID string, fetchRealtimeData bool) (map[string][]metricSource.MetricData, *moira.Trigger, error) {
 	trigger, err := dataBase.GetTrigger(triggerID)
 	if err != nil {
 		return nil, nil, err
 	}
-	triggerMetrics := metricSource.NewTriggerMetricsData()
+	triggerMetrics := make(map[string][]metricSource.MetricData)
 	metricsSource, err := metricSourceProvider.GetTriggerMetricSource(&trigger)
 	if err != nil {
 		return nil, &trigger, err
 	}
-	for i, tar := range trigger.Targets {
-		fetchResult, err := metricsSource.Fetch(tar, from, to, fetchRealtimeData)
+	for i, target := range trigger.Targets {
+		i++ // Increase counter to have trigger names start from t1
+		fetchResult, err := metricsSource.Fetch(target, from, to, fetchRealtimeData)
 		if err != nil {
 			return nil, &trigger, err
 		}
 		metricData := fetchResult.GetMetricsData()
-		if i == 0 {
-			triggerMetrics.Main = metricData
-		} else {
-			triggerMetrics.Additional = append(triggerMetrics.Additional, metricData...)
-		}
+
+		targetName := fmt.Sprintf("t%d", i)
+		triggerMetrics[targetName] = metricData
 	}
 	return triggerMetrics, &trigger, nil
 }
@@ -57,31 +56,22 @@ func GetTriggerMetrics(dataBase moira.Database, metricSourceProvider *metricSour
 		}
 		return nil, api.ErrorInternalServer(err)
 	}
-	triggerMetrics := dto.TriggerMetrics{
-		Main:       make(map[string][]*moira.MetricValue),
-		Additional: make(map[string][]*moira.MetricValue),
-	}
-	for _, timeSeries := range tts.Main {
-		values := make([]*moira.MetricValue, 0)
-		for i := 0; i < len(timeSeries.Values); i++ {
-			timestamp := timeSeries.StartTime + int64(i)*timeSeries.StepTime
-			value := timeSeries.GetTimestampValue(timestamp)
-			if moira.IsValidFloat64(value) {
-				values = append(values, &moira.MetricValue{Value: value, Timestamp: timestamp})
+	triggerMetrics := make(dto.TriggerMetrics)
+
+	for targetName, target := range tts {
+		targetMetrics := make(map[string][]moira.MetricValue)
+		for _, timeSeries := range target {
+			values := make([]moira.MetricValue, 0)
+			for i, l := 0, len(timeSeries.Values); i < l; i++ {
+				timestamp := timeSeries.StartTime + int64(i)*timeSeries.StepTime
+				value := timeSeries.GetTimestampValue(timestamp)
+				if moira.IsValidFloat64(value) {
+					values = append(values, moira.MetricValue{Value: value, Timestamp: timestamp})
+				}
 			}
+			targetMetrics[timeSeries.Name] = values
 		}
-		triggerMetrics.Main[timeSeries.Name] = values
-	}
-	for _, timeSeries := range tts.Additional {
-		values := make([]*moira.MetricValue, 0)
-		for i := 0; i < len(timeSeries.Values); i++ {
-			timestamp := timeSeries.StartTime + int64(i)*timeSeries.StepTime
-			value := timeSeries.GetTimestampValue(timestamp)
-			if moira.IsValidFloat64(value) {
-				values = append(values, &moira.MetricValue{Value: value, Timestamp: timestamp})
-			}
-		}
-		triggerMetrics.Additional[timeSeries.Name] = values
+		triggerMetrics[targetName] = targetMetrics
 	}
 	return &triggerMetrics, nil
 }

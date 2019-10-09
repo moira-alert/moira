@@ -125,11 +125,10 @@ func RemoveContact(database moira.Database, contactID string, userLogin string) 
 
 // SendTestContactNotification push test notification to verify the correct contact settings
 func SendTestContactNotification(dataBase moira.Database, contactID string) *api.ErrorResponse {
-	var value float64 = 1
 	eventData := &moira.NotificationEvent{
 		ContactID: contactID,
 		Metric:    "Test.metric.value",
-		Value:     &value,
+		Values:    map[string]float64{"t1": 1},
 		OldState:  moira.StateTEST,
 		State:     moira.StateTEST,
 		Timestamp: date.DateParamToEpoch("now", "", time.Now().Add(-24*time.Hour).Unix(), time.UTC),

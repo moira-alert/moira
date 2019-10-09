@@ -12,33 +12,33 @@ import (
 type messageType string
 
 const (
-	// Photo type used if notification has plot
-	Photo messageType = "photo"
+	// Album type used if notification has plots
+	Album messageType = "album"
 	// Message type used if notification has not plot
 	Message messageType = "message"
 )
 
 const (
-	photoCaptionMaxCharacters     = 1024
+	albumCaptionMaxCharacters     = 1024
 	messageMaxCharacters          = 4096
 	additionalInfoCharactersCount = 400
 )
 
 var characterLimits = map[messageType]int{
 	Message: messageMaxCharacters,
-	Photo:   photoCaptionMaxCharacters,
+	Album:   albumCaptionMaxCharacters,
 }
 
 // SendEvents implements Sender interface Send
-func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) error {
-	msgType := getMessageType(plot)
+func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
+	msgType := getMessageType(plots)
 	message := sender.buildMessage(events, trigger, throttled, characterLimits[msgType])
 	sender.logger.Debugf("Calling telegram api with chat_id %s and message body %s", contact.Value, message)
 	chat, err := sender.getChat(contact.Value)
 	if err != nil {
 		return err
 	}
-	if err := sender.talk(chat, message, plot, msgType); err != nil {
+	if err := sender.talk(chat, message, plots, msgType); err != nil {
 		return fmt.Errorf("failed to send message to telegram contact %s: %s. ", contact.Value, err)
 	}
 	return nil
@@ -58,7 +58,7 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 	messageLimitReached := false
 
 	for _, event := range events {
-		line := fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location), event.Metric, event.GetMetricValue(), event.OldState, event.State)
+		line := fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location), event.Metric, event.GetMetricsValues(), event.OldState, event.State)
 		if msg := event.CreateMessage(sender.location); len(msg) > 0 {
 			line += fmt.Sprintf(". %s", msg)
 		}
@@ -99,9 +99,9 @@ func (sender *Sender) getChat(username string) (*telebot.Chat, error) {
 }
 
 // talk processes one talk
-func (sender *Sender) talk(chat *telebot.Chat, message string, plot []byte, messageType messageType) error {
-	if messageType == Photo {
-		return sender.sendAsPhoto(chat, plot, message)
+func (sender *Sender) talk(chat *telebot.Chat, message string, plots [][]byte, messageType messageType) error {
+	if messageType == Album {
+		return sender.sendAsAlbum(chat, plots, message)
 	}
 	return sender.sendAsMessage(chat, message)
 }
@@ -114,18 +114,27 @@ func (sender *Sender) sendAsMessage(chat *telebot.Chat, message string) error {
 	return nil
 }
 
-func (sender *Sender) sendAsPhoto(chat *telebot.Chat, plot []byte, caption string) error {
-	photo := telebot.Photo{File: telebot.FromReader(bytes.NewReader(plot)), Caption: caption}
-	_, err := photo.Send(sender.bot, chat, &telebot.SendOptions{})
+func (sender *Sender) sendAsAlbum(chat *telebot.Chat, plots [][]byte, caption string) error {
+	var album telebot.Album
+	firstPhoto := true
+	for _, plot := range plots {
+		photo := &telebot.Photo{File: telebot.FromReader(bytes.NewReader(plot)), Caption: caption}
+		album = append(album, photo)
+		if firstPhoto {
+			caption = "" // Caption should be defined only for first photo
+		}
+	}
+
+	_, err := sender.bot.SendAlbum(chat, album)
 	if err != nil {
-		return fmt.Errorf("can't send event plot to %v: %s", chat.ID, err.Error())
+		return fmt.Errorf("can't send event plots to %v: %s", chat.ID, err.Error())
 	}
 	return nil
 }
 
-func getMessageType(plot []byte) messageType {
-	if len(plot) > 0 {
-		return Photo
+func getMessageType(plots [][]byte) messageType {
+	if len(plots) > 0 {
+		return Album
 	}
 	return Message
 }

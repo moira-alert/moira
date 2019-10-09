@@ -26,7 +26,7 @@ var (
 		Type: "selfstate",
 	}
 	testThrottled = false
-	testPlot      = make([]byte, 0)
+	testPlots     = make([][]byte, 0)
 )
 
 var (
@@ -52,7 +52,7 @@ func TestSender_SendEvents(t *testing.T) {
 				for _, subjectState := range ignorableSubjectStates {
 					testEvents := []moira.NotificationEvent{{State: subjectState}}
 					dataBase.EXPECT().GetNotifierState().Return(selfStateInitial, nil)
-					err := sender.SendEvents(testEvents, testContact, testTrigger, testPlot, testThrottled)
+					err := sender.SendEvents(testEvents, testContact, testTrigger, testPlots, testThrottled)
 					So(err, ShouldBeNil)
 				}
 			})
@@ -63,7 +63,7 @@ func TestSender_SendEvents(t *testing.T) {
 					dataBase.EXPECT().GetNotifierState().Return(selfStateInitial, nil)
 					dataBase.EXPECT().SetNotifierState(selfStateFinal).Return(nil)
 					testEvents := []moira.NotificationEvent{{State: subjectState}}
-					err := sender.SendEvents(testEvents, testContact, testTrigger, testPlot, testThrottled)
+					err := sender.SendEvents(testEvents, testContact, testTrigger, testPlots, testThrottled)
 					So(err, ShouldBeNil)
 				}
 			})
@@ -75,7 +75,7 @@ func TestSender_SendEvents(t *testing.T) {
 			for _, subjectState := range disablingSubjectStates {
 				testEvents := []moira.NotificationEvent{{State: subjectState}}
 				dataBase.EXPECT().GetNotifierState().Return(selfStateInitial, nil)
-				err := sender.SendEvents(testEvents, testContact, testTrigger, testPlot, testThrottled)
+				err := sender.SendEvents(testEvents, testContact, testTrigger, testPlots, testThrottled)
 				So(err, ShouldBeNil)
 			}
 		})
@@ -87,7 +87,7 @@ func TestSender_SendEvents(t *testing.T) {
 		for _, subjectState := range disablingSubjectStates {
 			testEvents := []moira.NotificationEvent{{State: subjectState}}
 			dataBase.EXPECT().GetNotifierState().Return("", fmt.Errorf("redis is down"))
-			err := sender.SendEvents(testEvents, testContact, testTrigger, testPlot, testThrottled)
+			err := sender.SendEvents(testEvents, testContact, testTrigger, testPlots, testThrottled)
 			So(err, ShouldNotBeNil)
 			So(err.Error(), ShouldEqual, "failed to get notifier state: redis is down")
 		}

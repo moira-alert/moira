@@ -28,9 +28,20 @@ type triggerStorageElement struct {
 	TTL              string              `json:"ttl,omitempty"`
 	IsRemote         bool                `json:"is_remote"`
 	MuteNewMetrics   bool                `json:"mute_new_metrics,omitempty"`
+	AloneMetrics     map[string]bool     `json:"alone_metrics"`
 }
 
 func (storageElement *triggerStorageElement) toTrigger() moira.Trigger {
+	//TODO(litleleprikon): START remove in moira v2.8.0. Compatibility with moira < v2.6.0
+	if storageElement.AloneMetrics == nil {
+		aloneMetricsLen := len(storageElement.Targets)
+		storageElement.AloneMetrics = make(map[string]bool, aloneMetricsLen)
+		for i := 2; i <= aloneMetricsLen; i++ {
+			targetName := fmt.Sprintf("t%d", i)
+			storageElement.AloneMetrics[targetName] = true
+		}
+	}
+	//TODO(litleleprikon): END remove in moira v2.8.0. Compatibility with moira < v2.6.0
 	return moira.Trigger{
 		ID:               storageElement.ID,
 		Name:             storageElement.Name,
@@ -48,6 +59,7 @@ func (storageElement *triggerStorageElement) toTrigger() moira.Trigger {
 		TTL:              getTriggerTTL(storageElement.TTL),
 		IsRemote:         storageElement.IsRemote,
 		MuteNewMetrics:   storageElement.MuteNewMetrics,
+		AloneMetrics:     storageElement.AloneMetrics,
 	}
 }
 
@@ -69,6 +81,7 @@ func toTriggerStorageElement(trigger *moira.Trigger, triggerID string) *triggerS
 		TTL:              getTriggerTTLString(trigger.TTL),
 		IsRemote:         trigger.IsRemote,
 		MuteNewMetrics:   trigger.MuteNewMetrics,
+		AloneMetrics:     trigger.AloneMetrics,
 	}
 }
 

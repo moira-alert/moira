@@ -26,7 +26,7 @@ func TestTwilioSenderVoice_SendEvents(t *testing.T) {
 	}
 
 	Convey("just send", t, func() {
-		err := sender.SendEvents(moira.NotificationEvents{}, moira.ContactData{}, moira.TriggerData{}, []byte{}, true)
+		err := sender.SendEvents(moira.NotificationEvents{}, moira.ContactData{}, moira.TriggerData{}, [][]byte{}, true)
 		So(err, ShouldNotBeNil)
 	})
 }

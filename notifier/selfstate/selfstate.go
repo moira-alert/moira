@@ -168,13 +168,13 @@ func (selfCheck *SelfCheckWorker) check(nowTS int64, lastMetricReceivedTS, redis
 }
 
 func appendNotificationEvents(events *[]moira.NotificationEvent, message string, currentValue int64) {
-	val := float64(currentValue)
+	val := map[string]float64{"t1": float64(currentValue)}
 	event := moira.NotificationEvent{
 		Timestamp: time.Now().Unix(),
 		OldState:  moira.StateNODATA,
 		State:     moira.StateERROR,
 		Metric:    message,
-		Value:     &val,
+		Values:    val,
 	}
 
 	*events = append(*events, event)

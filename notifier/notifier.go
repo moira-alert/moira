@@ -156,7 +156,7 @@ func (notifier *StandardNotifier) resend(pkg *NotificationPackage, reason string
 func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan NotificationPackage) {
 	defer notifier.waitGroup.Done()
 	for pkg := range ch {
-		plot, err := notifier.buildNotificationPackagePlot(pkg)
+		plots, err := notifier.buildNotificationPackagePlots(pkg)
 		if err != nil {
 			buildErr := fmt.Sprintf("Can't build notification package plot for %s: %s", pkg.Trigger.ID, err.Error())
 			switch err.(type) {
@@ -172,7 +172,7 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 			notifier.logger.Errorf("Error populate description: %v", err)
 		}
 
-		err = sender.SendEvents(pkg.Events, pkg.Contact, pkg.Trigger, plot, pkg.Throttled)
+		err = sender.SendEvents(pkg.Events, pkg.Contact, pkg.Trigger, plots, pkg.Throttled)
 		if err == nil {
 			if metric, found := notifier.metrics.SendersOkMetrics.GetRegisteredMeter(pkg.Contact.Type); found {
 				metric.Mark(1)

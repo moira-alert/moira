@@ -52,7 +52,7 @@ func TestFetch(t *testing.T) {
 		server := createServer([]byte("[]"), http.StatusOK)
 		remote := Remote{client: server.Client(), config: &Config{URL: server.URL}}
 		result, err := remote.Fetch(target, from, until, false)
-		So(result, ShouldResemble, &FetchResult{MetricsData: []*metricSource.MetricData{}})
+		So(result, ShouldResemble, &FetchResult{MetricsData: []metricSource.MetricData{}})
 		So(err, ShouldBeEmpty)
 	})
 

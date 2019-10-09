@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"math"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -30,17 +31,18 @@ const (
 
 // NotificationEvent represents trigger state changes event
 type NotificationEvent struct {
-	IsTriggerEvent   bool       `json:"trigger_event,omitempty"`
-	Timestamp        int64      `json:"timestamp"`
-	Metric           string     `json:"metric"`
-	Value            *float64   `json:"value,omitempty"`
-	State            State      `json:"state"`
-	TriggerID        string     `json:"trigger_id"`
-	SubscriptionID   *string    `json:"sub_id,omitempty"`
-	ContactID        string     `json:"contactId,omitempty"`
-	OldState         State      `json:"old_state"`
-	Message          *string    `json:"msg,omitempty"`
-	MessageEventInfo *EventInfo `json:"event_message"`
+	IsTriggerEvent   bool               `json:"trigger_event,omitempty"`
+	Timestamp        int64              `json:"timestamp"`
+	Metric           string             `json:"metric"`
+	Value            *float64           `json:"value,omitempty"`
+	Values           map[string]float64 `json:"values,omitempty"`
+	State            State              `json:"state"`
+	TriggerID        string             `json:"trigger_id"`
+	SubscriptionID   *string            `json:"sub_id,omitempty"`
+	ContactID        string             `json:"contactId,omitempty"`
+	OldState         State              `json:"old_state"`
+	Message          *string            `json:"msg,omitempty"`
+	MessageEventInfo *EventInfo         `json:"event_message"`
 }
 
 // EventInfo - a base for creating messages.
@@ -252,22 +254,23 @@ const (
 
 // Trigger represents trigger data object
 type Trigger struct {
-	ID               string        `json:"id"`
-	Name             string        `json:"name"`
-	Desc             *string       `json:"desc,omitempty"`
-	Targets          []string      `json:"targets"`
-	WarnValue        *float64      `json:"warn_value"`
-	ErrorValue       *float64      `json:"error_value"`
-	TriggerType      string        `json:"trigger_type"`
-	Tags             []string      `json:"tags"`
-	TTLState         *TTLState     `json:"ttl_state,omitempty"`
-	TTL              int64         `json:"ttl,omitempty"`
-	Schedule         *ScheduleData `json:"sched,omitempty"`
-	Expression       *string       `json:"expression,omitempty"`
-	PythonExpression *string       `json:"python_expression,omitempty"`
-	Patterns         []string      `json:"patterns"`
-	IsRemote         bool          `json:"is_remote"`
-	MuteNewMetrics   bool          `json:"mute_new_metrics"`
+	ID               string          `json:"id"`
+	Name             string          `json:"name"`
+	Desc             *string         `json:"desc,omitempty"`
+	Targets          []string        `json:"targets"`
+	WarnValue        *float64        `json:"warn_value"`
+	ErrorValue       *float64        `json:"error_value"`
+	TriggerType      string          `json:"trigger_type"`
+	Tags             []string        `json:"tags"`
+	TTLState         *TTLState       `json:"ttl_state,omitempty"`
+	TTL              int64           `json:"ttl,omitempty"`
+	Schedule         *ScheduleData   `json:"sched,omitempty"`
+	Expression       *string         `json:"expression,omitempty"`
+	PythonExpression *string         `json:"python_expression,omitempty"`
+	Patterns         []string        `json:"patterns"`
+	IsRemote         bool            `json:"is_remote"`
+	MuteNewMetrics   bool            `json:"mute_new_metrics"`
+	AloneMetrics     map[string]bool `json:"alone_metrics"`
 }
 
 // TriggerCheck represents trigger data with last check data and check timestamp
@@ -286,29 +289,39 @@ type MaintenanceCheck interface {
 
 // CheckData represents last trigger check data
 type CheckData struct {
-	Metrics                      map[string]MetricState `json:"metrics"`
-	Score                        int64                  `json:"score"`
-	State                        State                  `json:"state"`
-	Maintenance                  int64                  `json:"maintenance,omitempty"`
-	MaintenanceInfo              MaintenanceInfo        `json:"maintenance_info"`
-	Timestamp                    int64                  `json:"timestamp,omitempty"`
-	EventTimestamp               int64                  `json:"event_timestamp,omitempty"`
-	LastSuccessfulCheckTimestamp int64                  `json:"last_successful_check_timestamp"`
-	Suppressed                   bool                   `json:"suppressed,omitempty"`
-	SuppressedState              State                  `json:"suppressed_state,omitempty"`
-	Message                      string                 `json:"msg,omitempty"`
+	Metrics map[string]MetricState `json:"metrics"`
+	// MetricsToTargetRelation is a map that holds relation between metric names that was alone during last
+	// check and targets that fetched this metric
+	MetricsToTargetRelation      map[string]string `json:"metrics_to_target_relation"`
+	Score                        int64             `json:"score"`
+	State                        State             `json:"state"`
+	Maintenance                  int64             `json:"maintenance,omitempty"`
+	MaintenanceInfo              MaintenanceInfo   `json:"maintenance_info"`
+	Timestamp                    int64             `json:"timestamp,omitempty"`
+	EventTimestamp               int64             `json:"event_timestamp,omitempty"`
+	LastSuccessfulCheckTimestamp int64             `json:"last_successful_check_timestamp"`
+	Suppressed                   bool              `json:"suppressed,omitempty"`
+	SuppressedState              State             `json:"suppressed_state,omitempty"`
+	Message                      string            `json:"msg,omitempty"`
+}
+
+// RemoveMetricState is a function that removes MetricState from map of states.
+func (d CheckData) RemoveMetricState(metricName string) {
+	delete(d.Metrics, metricName)
 }
 
 // MetricState represents metric state data for given timestamp
 type MetricState struct {
-	EventTimestamp  int64           `json:"event_timestamp"`
-	State           State           `json:"state"`
-	Suppressed      bool            `json:"suppressed"`
-	SuppressedState State           `json:"suppressed_state,omitempty"`
-	Timestamp       int64           `json:"timestamp"`
-	Value           *float64        `json:"value,omitempty"`
-	Maintenance     int64           `json:"maintenance,omitempty"`
-	MaintenanceInfo MaintenanceInfo `json:"maintenance_info"`
+	EventTimestamp  int64              `json:"event_timestamp"`
+	State           State              `json:"state"`
+	Suppressed      bool               `json:"suppressed"`
+	SuppressedState State              `json:"suppressed_state,omitempty"`
+	Timestamp       int64              `json:"timestamp"`
+	Value           *float64           `json:"value,omitempty"`
+	Values          map[string]float64 `json:"values,omitempty"`
+	Maintenance     int64              `json:"maintenance,omitempty"`
+	MaintenanceInfo MaintenanceInfo    `json:"maintenance_info"`
+	// AloneMetrics    map[string]string  `json:"alone_metrics"` // represents a relation between name of alone metrics and their targets
 }
 
 // SetMaintenance set maintenance user, time for MetricState
@@ -382,14 +395,14 @@ func (trigger *TriggerData) GetTags() string {
 
 // GetKey return notification key to prevent duplication to the same contact
 func (notification *ScheduledNotification) GetKey() string {
-	return fmt.Sprintf("%s:%s:%s:%s:%s:%d:%f:%d:%t:%d",
+	return fmt.Sprintf("%s:%s:%s:%s:%s:%d:%s:%d:%t:%d",
 		notification.Contact.Type,
 		notification.Contact.Value,
 		notification.Event.TriggerID,
 		notification.Event.Metric,
 		notification.Event.State,
 		notification.Event.Timestamp,
-		UseFloat64(notification.Event.Value),
+		notification.Event.GetMetricsValues(),
 		notification.SendFail,
 		notification.Throttled,
 		notification.Timestamp,
@@ -427,12 +440,27 @@ func (schedule *ScheduleData) IsScheduleAllows(ts int64) bool {
 }
 
 func (event NotificationEvent) String() string {
-	return fmt.Sprintf("TriggerId: %s, Metric: %s, Value: %v, OldState: %s, State: %s, Message: '%s', Timestamp: %v", event.TriggerID, event.Metric, UseFloat64(event.Value), event.OldState, event.State, event.CreateMessage(nil), event.Timestamp)
+	return fmt.Sprintf("TriggerId: %s, Metric: %s, Values: %s, OldState: %s, State: %s, Message: '%s', Timestamp: %v", event.TriggerID, event.Metric, event.GetMetricsValues(), event.OldState, event.State, event.CreateMessage(nil), event.Timestamp)
 }
 
-// GetMetricValue gets event metric value and format it to human readable presentation
-func (event NotificationEvent) GetMetricValue() string {
-	return strconv.FormatFloat(UseFloat64(event.Value), 'f', -1, 64)
+// GetMetricsValues gets event metric value and format it to human readable presentation
+func (event NotificationEvent) GetMetricsValues() string {
+	var builder strings.Builder
+	var targetNames []string
+	for targetName := range event.Values {
+		targetNames = append(targetNames, targetName)
+	}
+	sort.Strings(targetNames)
+	for i, targetName := range targetNames {
+		builder.WriteString(targetName)
+		builder.WriteRune(':')
+		value := strconv.FormatFloat(event.Values[targetName], 'f', -1, 64)
+		builder.WriteString(value)
+		if i < len(targetNames)-1 {
+			builder.WriteString(", ")
+		}
+	}
+	return builder.String()
 }
 
 // FormatTimestamp gets event timestamp and format it using given location to human readable presentation

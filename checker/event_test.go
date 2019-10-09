@@ -90,6 +90,7 @@ func TestCompareMetricStates(t *testing.T) {
 				currentState.State = moira.StateNODATA
 				currentState.Timestamp = 1502809200
 
+				currentState.Values = map[string]float64{"t1": 0}
 				var interval int64 = 24
 				dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
 					TriggerID:        triggerChecker.triggerID,
@@ -97,7 +98,7 @@ func TestCompareMetricStates(t *testing.T) {
 					State:            moira.StateNODATA,
 					OldState:         moira.StateNODATA,
 					Metric:           "m1",
-					Value:            currentState.Value,
+					Values:           map[string]float64{"t1": 0},
 					Message:          nil,
 					MessageEventInfo: &moira.EventInfo{Interval: &interval},
 				}, true).Return(nil)
@@ -118,6 +119,7 @@ func TestCompareMetricStates(t *testing.T) {
 				lastState.State = moira.StateERROR
 				currentState.State = moira.StateERROR
 				currentState.Timestamp = 1502809200
+				currentState.Values = map[string]float64{"t1": 0}
 
 				var interval int64 = 24
 				dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
@@ -126,7 +128,7 @@ func TestCompareMetricStates(t *testing.T) {
 					State:            moira.StateERROR,
 					OldState:         moira.StateERROR,
 					Metric:           "m1",
-					Value:            currentState.Value,
+					Values:           map[string]float64{"t1": 0},
 					Message:          nil,
 					MessageEventInfo: &moira.EventInfo{Interval: &interval},
 				}, true).Return(nil)
@@ -412,6 +414,7 @@ func TestCheckMetricStateSuppressedState(t *testing.T) {
 					Timestamp:   1800,
 					Maintenance: 1500,
 					State:       moira.StateERROR,
+					Values:      map[string]float64{"t1": 0},
 				}
 
 				dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
@@ -420,7 +423,7 @@ func TestCheckMetricStateSuppressedState(t *testing.T) {
 					State:     thirdState.State,
 					OldState:  secondState.State,
 					Metric:    "super.awesome.metric",
-					Value:     thirdState.Value,
+					Values:    map[string]float64{"t1": 0},
 				}, true).Return(nil)
 				actual, err = triggerChecker.compareMetricStates("super.awesome.metric", thirdState, secondState)
 				So(err, ShouldBeNil)
@@ -450,6 +453,7 @@ func TestCheckMetricStateSuppressedState(t *testing.T) {
 				Maintenance: 1500,
 				State:       moira.StateERROR,
 				Suppressed:  true,
+				Values:      map[string]float64{"t1": 0},
 			}
 
 			Convey("No maintenance info", func() {
@@ -459,7 +463,7 @@ func TestCheckMetricStateSuppressedState(t *testing.T) {
 					State:            currentState.State,
 					OldState:         lastState.SuppressedState,
 					Metric:           "super.awesome.metric",
-					Value:            currentState.Value,
+					Values:           map[string]float64{"t1": 0},
 					MessageEventInfo: &moira.EventInfo{Maintenance: &moira.MaintenanceInfo{}},
 				}, true).Return(nil)
 				actual, err := triggerChecker.compareMetricStates("super.awesome.metric", currentState, lastState)
@@ -485,7 +489,7 @@ func TestCheckMetricStateSuppressedState(t *testing.T) {
 					State:            currentState.State,
 					OldState:         lastState.SuppressedState,
 					Metric:           "super.awesome.metric",
-					Value:            currentState.Value,
+					Values:           map[string]float64{"t1": 0},
 					MessageEventInfo: &moira.EventInfo{Maintenance: &lastState.MaintenanceInfo},
 				}, true).Return(nil)
 				actual, err := triggerChecker.compareMetricStates("super.awesome.metric", currentState, lastState)
@@ -516,7 +520,7 @@ func TestCheckMetricStateSuppressedState(t *testing.T) {
 					State:            currentState.State,
 					OldState:         lastState.SuppressedState,
 					Metric:           "super.awesome.metric",
-					Value:            currentState.Value,
+					Values:           map[string]float64{"t1": 0},
 					MessageEventInfo: &moira.EventInfo{Maintenance: &triggerChecker.lastCheck.MaintenanceInfo},
 				}, true).Return(nil)
 				actual, err := triggerChecker.compareMetricStates("super.awesome.metric", currentState, lastState)
@@ -558,6 +562,7 @@ func TestTriggerMaintenance(t *testing.T) {
 	currentMetricState := moira.MetricState{
 		Timestamp: 1000,
 		State:     moira.StateWARN,
+		Values:    map[string]float64{"t1": 0},
 	}
 
 	lastTriggerState := moira.CheckData{
@@ -593,7 +598,7 @@ func TestTriggerMaintenance(t *testing.T) {
 					State:     moira.StateWARN,
 					OldState:  moira.StateOK,
 					Metric:    "m1",
-					Value:     currentMetricState.Value,
+					Values:    map[string]float64{"t1": 0},
 				}, true).Return(nil)
 
 				actual, err := triggerChecker.compareMetricStates("m1", currentMetricState, lastMetricState)

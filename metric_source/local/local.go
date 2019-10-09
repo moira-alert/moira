@@ -87,7 +87,7 @@ func (local *Local) Fetch(target string, from int64, until int64, allowRealTimeA
 			}
 			for _, metricData := range metricsData {
 				md := *metricData
-				result.MetricsData = append(result.MetricsData, &metricSource.MetricData{
+				result.MetricsData = append(result.MetricsData, metricSource.MetricData{
 					Name:      md.Name,
 					StartTime: md.StartTime,
 					StopTime:  md.StopTime,

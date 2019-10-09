@@ -21,7 +21,7 @@ type templateRow struct {
 	Timestamp  string
 	Oldstate   moira.State
 	State      moira.State
-	Value      string
+	Values     string
 	WarnValue  string
 	ErrorValue string
 	Message    string
@@ -39,12 +39,12 @@ type triggerData struct {
 }
 
 // SendEvents implements Sender interface Send
-func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) error {
-	message := sender.makeMessage(events, contact, trigger, plot, throttled)
+func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
+	message := sender.makeMessage(events, contact, trigger, plots, throttled)
 	return sender.dialAndSend(message)
 }
 
-func (sender *Sender) makeMessage(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) *gomail.Message {
+func (sender *Sender) makeMessage(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) *gomail.Message {
 	state := events.GetSubjectState()
 	tags := trigger.GetTags()
 
@@ -66,7 +66,7 @@ func (sender *Sender) makeMessage(events moira.NotificationEvents, contact moira
 			Timestamp:  time.Unix(event.Timestamp, 0).In(sender.location).Format(sender.dateTimeFormat),
 			Oldstate:   event.OldState,
 			State:      event.State,
-			Value:      strconv.FormatFloat(moira.UseFloat64(event.Value), 'f', -1, 64),
+			Values:     event.GetMetricsValues(),
 			WarnValue:  strconv.FormatFloat(trigger.WarnValue, 'f', -1, 64),
 			ErrorValue: strconv.FormatFloat(trigger.ErrorValue, 'f', -1, 64),
 			Message:    event.CreateMessage(sender.location),
@@ -78,13 +78,15 @@ func (sender *Sender) makeMessage(events moira.NotificationEvents, contact moira
 	m.SetHeader("To", contact.Value)
 	m.SetHeader("Subject", subject)
 
-	if len(plot) > 0 {
-		plotCID := "plot.png"
-		templateData.PlotCID = plotCID
-		m.Embed(plotCID, gomail.SetCopyFunc(func(w io.Writer) error {
-			_, err := w.Write(plot)
-			return err
-		}))
+	if len(plots) > 0 {
+		for i, plot := range plots {
+			plotCID := fmt.Sprintf("plot-t%d.png", i)
+			templateData.PlotCID = plotCID
+			m.Embed(plotCID, gomail.SetCopyFunc(func(w io.Writer) error {
+				_, err := w.Write(plot)
+				return err
+			}))
+		}
 	}
 
 	m.AddAlternativeWriter("text/html", func(w io.Writer) error {

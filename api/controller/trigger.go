@@ -36,7 +36,7 @@ func saveTrigger(dataBase moira.Database, trigger *moira.Trigger, triggerID stri
 	if err != database.ErrNil {
 		for metric := range lastCheck.Metrics {
 			if _, ok := timeSeriesNames[metric]; !ok {
-				delete(lastCheck.Metrics, metric)
+				lastCheck.RemoveMetricState(metric)
 			}
 		}
 	} else {

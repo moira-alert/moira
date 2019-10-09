@@ -1,13 +1,13 @@
 package redis
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/moira-alert/moira/notifier"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/moira-alert/moira/notifier"
 
 	"github.com/gomodule/redigo/redis"
 
@@ -16,26 +16,26 @@ import (
 )
 
 const (
-	transactionTriesLimit = 10
-  transactionHeuristicLimit = 10000
+	transactionTriesLimit     = 10
+	transactionHeuristicLimit = 10000
 )
 
 // Custom error for transaction error
-type transactionError struct {}
+type transactionError struct{}
 
 func (e transactionError) Error() string {
 	return "Transaction Error"
 }
 
 // Drops all notifications with last timestamp
-func limitNotifications(notifications []*moira.ScheduledNotification) ([]*moira.ScheduledNotification) {
+func limitNotifications(notifications []*moira.ScheduledNotification) []*moira.ScheduledNotification {
 	if len(notifications) == 0 {
 		return notifications
 	}
 	i := len(notifications) - 1
 	lastTs := notifications[i].Timestamp
 
-	for ;i >= 0; i-- {
+	for ; i >= 0; i-- {
 		if notifications[i].Timestamp != lastTs {
 			break
 		}
@@ -116,7 +116,7 @@ func (connector *DbConnector) removeNotifications(notifications []*moira.Schedul
 
 	c.Send("MULTI")
 	for _, notification := range notifications {
-		notificationString, err := json.Marshal(notification)
+		notificationString, err := reply.GetNotificationBytes(*notification)
 		if err != nil {
 			return 0, err
 		}
@@ -222,9 +222,9 @@ func (connector *DbConnector) fetchNotificationsWithLimitDo(to int64, limit int6
 	// (ts 3 in our example) and then run ZRANGEBYSCORE with our new last timestamp (2 in our example).
 
 	notificationsLimited := limitNotifications(notifications)
-	lastTs := notificationsLimited[len(notificationsLimited) - 1].Timestamp
+	lastTs := notificationsLimited[len(notificationsLimited)-1].Timestamp
 
-	if (len(notifications) == len(notificationsLimited)) {
+	if len(notifications) == len(notificationsLimited) {
 		// this means that all notifications have same timestamp,
 		// we hope that all notifications with same timestamp should fit our memory
 		c.Send("UNWATCH")
@@ -268,7 +268,7 @@ func (connector *DbConnector) fetchNotificationsNoLimit(to int64) ([]*moira.Sche
 
 // AddNotification store notification at given timestamp
 func (connector *DbConnector) AddNotification(notification *moira.ScheduledNotification) error {
-	bytes, err := json.Marshal(notification)
+	bytes, err := reply.GetNotificationBytes(*notification)
 	if err != nil {
 		return err
 	}
@@ -289,7 +289,7 @@ func (connector *DbConnector) AddNotifications(notifications []*moira.ScheduledN
 
 	c.Send("MULTI")
 	for _, notification := range notifications {
-		bytes, err := json.Marshal(notification)
+		bytes, err := reply.GetNotificationBytes(*notification)
 		if err != nil {
 			return err
 		}

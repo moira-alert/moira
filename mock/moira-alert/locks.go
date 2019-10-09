@@ -5,9 +5,8 @@
 package mock_moira_alert
 
 import (
-	reflect "reflect"
-
 	gomock "github.com/golang/mock/gomock"
+	reflect "reflect"
 )
 
 // MockLock is a mock of Lock interface
@@ -35,6 +34,7 @@ func (m *MockLock) EXPECT() *MockLockMockRecorder {
 
 // Acquire mocks base method
 func (m *MockLock) Acquire(arg0 <-chan struct{}) (<-chan struct{}, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Acquire", arg0)
 	ret0, _ := ret[0].(<-chan struct{})
 	ret1, _ := ret[1].(error)
@@ -43,15 +43,18 @@ func (m *MockLock) Acquire(arg0 <-chan struct{}) (<-chan struct{}, error) {
 
 // Acquire indicates an expected call of Acquire
 func (mr *MockLockMockRecorder) Acquire(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Acquire", reflect.TypeOf((*MockLock)(nil).Acquire), arg0)
 }
 
 // Release mocks base method
 func (m *MockLock) Release() {
+	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "Release")
 }
 
 // Release indicates an expected call of Release
 func (mr *MockLockMockRecorder) Release() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Release", reflect.TypeOf((*MockLock)(nil).Release))
 }

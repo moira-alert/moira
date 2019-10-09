@@ -10,7 +10,7 @@ import (
 func TestCreateEmptyFetchResult(t *testing.T) {
 	Convey("Just create fetch empty fetch result", t, func() {
 		So(*(CreateEmptyFetchResult()), ShouldResemble, FetchResult{
-			MetricsData: make([]*metricSource.MetricData, 0),
+			MetricsData: make([]metricSource.MetricData, 0),
 			Patterns:    make([]string, 0),
 			Metrics:     make([]string, 0),
 		})
@@ -20,7 +20,7 @@ func TestCreateEmptyFetchResult(t *testing.T) {
 func TestFetchResult_GetMetricsData(t *testing.T) {
 	Convey("Get empty metric data", t, func() {
 		fetchResult := &FetchResult{
-			MetricsData: make([]*metricSource.MetricData, 0),
+			MetricsData: make([]metricSource.MetricData, 0),
 			Patterns:    make([]string, 0),
 			Metrics:     make([]string, 0),
 		}
@@ -29,7 +29,7 @@ func TestFetchResult_GetMetricsData(t *testing.T) {
 
 	Convey("Get not empty metric data", t, func() {
 		fetchResult := &FetchResult{
-			MetricsData: []*metricSource.MetricData{metricSource.MakeMetricData("123", []float64{1, 2, 3}, 60, 0)},
+			MetricsData: []metricSource.MetricData{*metricSource.MakeMetricData("123", []float64{1, 2, 3}, 60, 0)},
 			Patterns:    make([]string, 0),
 			Metrics:     make([]string, 0),
 		}
@@ -40,7 +40,7 @@ func TestFetchResult_GetMetricsData(t *testing.T) {
 func TestFetchResult_GetPatternMetrics(t *testing.T) {
 	Convey("Get empty pattern metrics", t, func() {
 		fetchResult := &FetchResult{
-			MetricsData: make([]*metricSource.MetricData, 0),
+			MetricsData: make([]metricSource.MetricData, 0),
 			Patterns:    make([]string, 0),
 			Metrics:     make([]string, 0),
 		}
@@ -51,7 +51,7 @@ func TestFetchResult_GetPatternMetrics(t *testing.T) {
 
 	Convey("Get not empty metric data", t, func() {
 		fetchResult := &FetchResult{
-			MetricsData: []*metricSource.MetricData{metricSource.MakeMetricData("123", []float64{1, 2, 3}, 60, 0)},
+			MetricsData: []metricSource.MetricData{*metricSource.MakeMetricData("123", []float64{1, 2, 3}, 60, 0)},
 			Patterns:    make([]string, 0),
 			Metrics:     []string{"123"},
 		}
@@ -64,7 +64,7 @@ func TestFetchResult_GetPatternMetrics(t *testing.T) {
 func TestFetchResult_GetPatterns(t *testing.T) {
 	Convey("Get empty pattern metrics", t, func() {
 		fetchResult := &FetchResult{
-			MetricsData: make([]*metricSource.MetricData, 0),
+			MetricsData: make([]metricSource.MetricData, 0),
 			Patterns:    make([]string, 0),
 			Metrics:     make([]string, 0),
 		}
@@ -75,7 +75,7 @@ func TestFetchResult_GetPatterns(t *testing.T) {
 
 	Convey("Get not empty metric data", t, func() {
 		fetchResult := &FetchResult{
-			MetricsData: []*metricSource.MetricData{metricSource.MakeMetricData("123", []float64{1, 2, 3}, 60, 0)},
+			MetricsData: []metricSource.MetricData{*metricSource.MakeMetricData("123", []float64{1, 2, 3}, 60, 0)},
 			Patterns:    []string{"123"},
 			Metrics:     []string{"123"},
 		}

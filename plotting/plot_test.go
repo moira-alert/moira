@@ -440,7 +440,7 @@ var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 }
 
 // generateTestMetricsData generates metricData array for tests
-func generateTestMetricsData(useHumanizedValues bool) []*metricSource.MetricData {
+func generateTestMetricsData(useHumanizedValues bool) []metricSource.MetricData {
 	metricData := metricSource.MetricData{
 		Name:      "MetricName",
 		StartTime: 0,
@@ -483,19 +483,19 @@ func generateTestMetricsData(useHumanizedValues bool) []*metricSource.MetricData
 			metricData4.Values[valInd] = plotTestOuterPointMultiplier * value
 		}
 	}
-	metricsData := []*metricSource.MetricData{&metricData, &metricData2, &metricData3, &metricData4}
+	metricsData := []metricSource.MetricData{metricData, metricData2, metricData3, metricData4}
 	return metricsData
 }
 
 // renderTestMetricsDataToPNG renders and saves rendered plots to PNG
 func renderTestMetricsDataToPNG(trigger moira.Trigger, plotTheme string,
-	metricsData []*metricSource.MetricData, filePath string) error {
+	metricsData []metricSource.MetricData, filePath string) error {
 	location, _ := time.LoadLocation("UTC")
 	plotTemplate, err := GetPlotTemplate(plotTheme, location)
 	if err != nil {
 		return err
 	}
-	renderable, err := plotTemplate.GetRenderable(&trigger, metricsData)
+	renderable, err := plotTemplate.GetRenderable("t1", &trigger, metricsData)
 	if err != nil {
 		return err
 	}
@@ -527,7 +527,7 @@ func calculateHashDistance(pathToOriginal, pathToRendered string) (*int, error) 
 }
 
 // generateRandomTestMetricsData returns random test MetricsData by given numbers of values
-func generateRandomTestMetricsData(numTotal int, numEmpty int) []*metricSource.MetricData {
+func generateRandomTestMetricsData(numTotal int, numEmpty int) []metricSource.MetricData {
 	startTime := int64(0)
 	stepTime := int64(10)
 	stopTime := int64(numTotal) * stepTime
@@ -539,7 +539,7 @@ func generateRandomTestMetricsData(numTotal int, numEmpty int) []*metricSource.M
 			metricDataValues = append(metricDataValues, rand.Float64())
 		}
 	}
-	return []*metricSource.MetricData{
+	return []metricSource.MetricData{
 		{
 			Name:      "RandomTestMetric",
 			StartTime: startTime,
@@ -651,7 +651,7 @@ func TestErrNoPointsToRender_Error(t *testing.T) {
 		}
 		fmt.Printf("MetricsData points: %#v", testMetricsPoints)
 		for _, trigger := range testTriggers {
-			_, err = plotTemplate.GetRenderable(&trigger, testMetricsData)
+			_, err = plotTemplate.GetRenderable("t1", &trigger, testMetricsData)
 			So(err.Error(), ShouldEqual, ErrNoPointsToRender{triggerID: trigger.ID}.Error())
 		}
 	})
@@ -663,7 +663,7 @@ func TestErrNoPointsToRender_Error(t *testing.T) {
 		}
 		fmt.Printf("MetricsData points: %#v", testMetricsPoints)
 		for _, trigger := range testTriggers {
-			_, err = plotTemplate.GetRenderable(&trigger, testMetricsData)
+			_, err = plotTemplate.GetRenderable("t1", &trigger, testMetricsData)
 			So(err, ShouldBeNil)
 		}
 	})

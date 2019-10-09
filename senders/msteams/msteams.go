@@ -61,14 +61,14 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 }
 
 // SendEvents implements Sender interface Send
-func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) error {
+func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
 
 	err := sender.isValidWebhookURL(contact.Value)
 	if err != nil {
 		return err
 	}
 
-	request, err := sender.buildRequest(events, contact, trigger, plot, throttled)
+	request, err := sender.buildRequest(events, contact, trigger, plots, throttled)
 
 	if err != nil {
 		return fmt.Errorf("failed to build request: %w", err)
@@ -140,7 +140,7 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 	}
 }
 
-func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) (*http.Request, error) {
+func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) (*http.Request, error) {
 
 	messageCard := sender.buildMessage(events, trigger, throttled)
 	requestURL := contact.Value
@@ -184,7 +184,7 @@ func (sender *Sender) buildEventsFacts(events moira.NotificationEvents, maxEvent
 
 	eventsPrinted := 0
 	for _, event := range events {
-		line := fmt.Sprintf("%s = %s (%s to %s)", event.Metric, event.GetMetricValue(), event.OldState, event.State)
+		line := fmt.Sprintf("%s = %s (%s to %s)", event.Metric, event.GetMetricsValues(), event.OldState, event.State)
 		if len(moira.UseString(event.Message)) > 0 {
 			line += fmt.Sprintf(". %s", moira.UseString(event.Message))
 		}
