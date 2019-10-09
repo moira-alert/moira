@@ -17,7 +17,7 @@ func GetTriggerEvaluationResult(dataBase moira.Database, metricSourceProvider *m
 	if err != nil {
 		return nil, nil, err
 	}
-	triggerMetrics := metricSource.MakeEmptyTriggerMetricsData()
+	triggerMetrics := metricSource.NewTriggerMetricsData()
 	metricsSource, err := metricSourceProvider.GetTriggerMetricSource(&trigger)
 	if err != nil {
 		return nil, &trigger, err

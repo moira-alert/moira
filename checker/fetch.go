@@ -26,7 +26,7 @@ func (triggerChecker *TriggerChecker) fetchTriggerMetrics() (*metricSource.Trigg
 
 func (triggerChecker *TriggerChecker) fetch() (*metricSource.TriggerMetricsData, []string, error) {
 	wrongTriggerTargets := make([]int, 0)
-	triggerMetricsData := metricSource.MakeEmptyTriggerMetricsData()
+	triggerMetricsData := metricSource.NewTriggerMetricsData()
 	metricsArr := make([]string, 0)
 
 	isSimpleTrigger := triggerChecker.trigger.IsSimple()
