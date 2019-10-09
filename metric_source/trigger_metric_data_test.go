@@ -7,9 +7,9 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestMakeEmptyTriggerMetricsData(t *testing.T) {
+func TestNewTriggerMetricsData(t *testing.T) {
 	Convey("Just make empty TriggerMetricsData", t, func() {
-		So(*(MakeEmptyTriggerMetricsData()), ShouldResemble, TriggerMetricsData{
+		So(*(NewTriggerMetricsData()), ShouldResemble, TriggerMetricsData{
 			Main:       make([]*MetricData, 0),
 			Additional: make([]*MetricData, 0),
 		})

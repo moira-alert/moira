@@ -8,8 +8,8 @@ type TriggerMetricsData struct {
 	Additional []*MetricData
 }
 
-// MakeEmptyTriggerMetricsData just creates TriggerMetricsData with initialized empty fields
-func MakeEmptyTriggerMetricsData() *TriggerMetricsData {
+// NewTriggerMetricsData is a constructor function that creates TriggerMetricsData with initialized empty fields
+func NewTriggerMetricsData() *TriggerMetricsData {
 	return &TriggerMetricsData{
 		Main:       make([]*MetricData, 0),
 		Additional: make([]*MetricData, 0),
