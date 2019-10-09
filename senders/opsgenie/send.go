@@ -18,8 +18,8 @@ const (
 )
 
 // SendEvents sends the events as an alert to opsgenie
-func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) error {
-	createAlertRequest := sender.makeCreateAlertRequest(events, contact, trigger, plot, throttled)
+func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
+	createAlertRequest := sender.makeCreateAlertRequest(events, contact, trigger, plots, throttled)
 	_, err := sender.client.Create(context.Background(), createAlertRequest)
 	if err != nil {
 		return fmt.Errorf("failed to send %s event message to opsgenie: %s", trigger.ID, err.Error())
@@ -27,7 +27,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	return nil
 }
 
-func (sender *Sender) makeCreateAlertRequest(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) *alert.CreateAlertRequest {
+func (sender *Sender) makeCreateAlertRequest(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) *alert.CreateAlertRequest {
 	createAlertRequest := &alert.CreateAlertRequest{
 		Message:     sender.buildTitle(events, trigger),
 		Description: sender.buildMessage(events, throttled, trigger),
@@ -40,8 +40,8 @@ func (sender *Sender) makeCreateAlertRequest(events moira.NotificationEvents, co
 		Priority: sender.getMessagePriority(events),
 	}
 
-	if len(plot) > 0 && sender.imageStoreConfigured {
-		imageLink, err := sender.imageStore.StoreImage(plot)
+	if len(plots) > 0 && sender.imageStoreConfigured {
+		imageLink, err := sender.imageStore.StoreImage(plots[0])
 		if err != nil {
 			sender.logger.Warningf("could not store the plot image in the image store: %s", err)
 		} else {
@@ -94,7 +94,7 @@ func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsFo
 	eventsLenLimitReached := false
 	eventsPrinted := 0
 	for _, event := range events {
-		line := fmt.Sprintf("%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location), event.Metric, event.GetMetricValue(), event.OldState, event.State)
+		line := fmt.Sprintf("%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location), event.Metric, event.GetMetricsValues(), event.OldState, event.State)
 		if msg := event.CreateMessage(sender.location); len(msg) > 0 {
 			line += fmt.Sprintf(". %s\n", msg)
 		} else {

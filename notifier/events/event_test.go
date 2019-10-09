@@ -152,7 +152,7 @@ func TestDisabledNotification(t *testing.T) {
 		dataBase.EXPECT().GetTrigger(event.TriggerID).Return(trigger, nil)
 		dataBase.EXPECT().GetTagsSubscriptions(triggerData.Tags).Times(1).Return([]*moira.SubscriptionData{&disabledSubscription}, nil)
 
-		logger.EXPECT().Debugf("Processing trigger id %s for metric %s == %f, %s -> %s", event.TriggerID, event.Metric, moira.UseFloat64(event.Value), event.OldState, event.State)
+		logger.EXPECT().Debugf("Processing trigger id %s for metric %s == %f, %s -> %s", event.TriggerID, event.Metric, event.GetMetricsValues(), event.OldState, event.State)
 		logger.EXPECT().Debugf("Getting subscriptions for tags %v", triggerData.Tags)
 		logger.EXPECT().Debugf("Subscription %s is disabled", disabledSubscription.ID)
 
@@ -185,7 +185,7 @@ func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
 		dataBase.EXPECT().GetTrigger(event.TriggerID).Return(trigger, nil)
 		dataBase.EXPECT().GetTagsSubscriptions(triggerData.Tags).Times(1).Return([]*moira.SubscriptionData{&subscriptionToIgnoreWarnings}, nil)
 
-		logger.EXPECT().Debugf("Processing trigger id %s for metric %s == %f, %s -> %s", event.TriggerID, event.Metric, moira.UseFloat64(event.Value), event.OldState, event.State)
+		logger.EXPECT().Debugf("Processing trigger id %s for metric %s == %f, %s -> %s", event.TriggerID, event.Metric, event.GetMetricsValues(), event.OldState, event.State)
 		logger.EXPECT().Debugf("Getting subscriptions for tags %v", triggerData.Tags)
 		logger.EXPECT().Debugf("Subscription %s is managed to ignore %s -> %s transitions", subscriptionToIgnoreWarnings.ID, event.OldState, event.State)
 
@@ -210,7 +210,7 @@ func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
 		dataBase.EXPECT().GetTrigger(event.TriggerID).Return(trigger, nil)
 		dataBase.EXPECT().GetTagsSubscriptions(triggerData.Tags).Times(1).Return([]*moira.SubscriptionData{&subscriptionToIgnoreRecoverings}, nil)
 
-		logger.EXPECT().Debugf("Processing trigger id %s for metric %s == %f, %s -> %s", event.TriggerID, event.Metric, moira.UseFloat64(event.Value), event.OldState, event.State)
+		logger.EXPECT().Debugf("Processing trigger id %s for metric %s == %f, %s -> %s", event.TriggerID, event.Metric, event.GetMetricsValues(), event.OldState, event.State)
 		logger.EXPECT().Debugf("Getting subscriptions for tags %v", triggerData.Tags)
 		logger.EXPECT().Debugf("Subscription %s is managed to ignore %s -> %s transitions", subscriptionToIgnoreRecoverings.ID, event.OldState, event.State)
 
@@ -235,7 +235,7 @@ func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
 		dataBase.EXPECT().GetTrigger(event.TriggerID).Return(trigger, nil)
 		dataBase.EXPECT().GetTagsSubscriptions(triggerData.Tags).Times(1).Return([]*moira.SubscriptionData{&subscriptionToIgnoreWarningsAndRecoverings}, nil)
 
-		logger.EXPECT().Debugf("Processing trigger id %s for metric %s == %f, %s -> %s", event.TriggerID, event.Metric, moira.UseFloat64(event.Value), event.OldState, event.State)
+		logger.EXPECT().Debugf("Processing trigger id %s for metric %s == %f, %s -> %s", event.TriggerID, event.Metric, event.GetMetricsValues(), event.OldState, event.State)
 		logger.EXPECT().Debugf("Getting subscriptions for tags %v", triggerData.Tags)
 		logger.EXPECT().Debugf("Subscription %s is managed to ignore %s -> %s transitions", subscriptionToIgnoreWarningsAndRecoverings.ID, event.OldState, event.State)
 
@@ -343,7 +343,7 @@ func TestFailReadContact(t *testing.T) {
 		getContactError := fmt.Errorf("Can not get contact")
 		dataBase.EXPECT().GetContact(contact.ID).Times(1).Return(moira.ContactData{}, getContactError)
 
-		logger.EXPECT().Debugf("Processing trigger id %s for metric %s == %f, %s -> %s", event.TriggerID, event.Metric, moira.UseFloat64(event.Value), event.OldState, event.State)
+		logger.EXPECT().Debugf("Processing trigger id %s for metric %s == %f, %s -> %s", event.TriggerID, event.Metric, event.GetMetricsValues(), event.OldState, event.State)
 		logger.EXPECT().Debugf("Getting subscriptions for tags %v", triggerData.Tags)
 		logger.EXPECT().Warningf("Failed to get contact: %s, skip handling it, error: %v", contact.ID, getContactError)
 
@@ -375,7 +375,7 @@ func TestEmptySubscriptions(t *testing.T) {
 		dataBase.EXPECT().GetTrigger(event.TriggerID).Return(trigger, nil)
 		dataBase.EXPECT().GetTagsSubscriptions(triggerData.Tags).Times(1).Return([]*moira.SubscriptionData{{ThrottlingEnabled: true}}, nil)
 
-		logger.EXPECT().Debugf("Processing trigger id %s for metric %s == %f, %s -> %s", event.TriggerID, event.Metric, moira.UseFloat64(event.Value), event.OldState, event.State)
+		logger.EXPECT().Debugf("Processing trigger id %s for metric %s == %f, %s -> %s", event.TriggerID, event.Metric, event.GetMetricsValues(), event.OldState, event.State)
 		logger.EXPECT().Debugf("Getting subscriptions for tags %v", triggerData.Tags)
 		logger.EXPECT().Debugf("Subscription %s is disabled", "")
 
@@ -404,7 +404,7 @@ func TestEmptySubscriptions(t *testing.T) {
 		dataBase.EXPECT().GetTrigger(event.TriggerID).Return(trigger, nil)
 		dataBase.EXPECT().GetTagsSubscriptions(triggerData.Tags).Times(1).Return([]*moira.SubscriptionData{nil}, nil)
 
-		logger.EXPECT().Debugf("Processing trigger id %s for metric %s == %f, %s -> %s", event.TriggerID, event.Metric, moira.UseFloat64(event.Value), event.OldState, event.State)
+		logger.EXPECT().Debugf("Processing trigger id %s for metric %s == %f, %s -> %s", event.TriggerID, event.Metric, event.GetMetricsValues(), event.OldState, event.State)
 		logger.EXPECT().Debugf("Getting subscriptions for tags %v", triggerData.Tags)
 		logger.EXPECT().Debugf("Subscription is nil")
 

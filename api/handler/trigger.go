@@ -31,7 +31,7 @@ func trigger(router chi.Router) {
 	})
 	router.Route("/metrics", triggerMetrics)
 	router.Put("/setMaintenance", setTriggerMaintenance)
-	router.With(middleware.DateRange("-1hour", "now")).Get("/render", renderTrigger)
+	router.With(middleware.DateRange("-1hour", "now")).With(middleware.TargetName("t1")).Get("/render", renderTrigger)
 }
 
 func updateTrigger(writer http.ResponseWriter, request *http.Request) {

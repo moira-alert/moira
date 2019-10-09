@@ -9,7 +9,7 @@ type MetricSource interface {
 
 // FetchResult implements moira metric sources fetching result format
 type FetchResult interface {
-	GetMetricsData() []*MetricData
+	GetMetricsData() []MetricData
 	GetPatterns() ([]string, error)
 	GetPatternMetrics() ([]string, error)
 }

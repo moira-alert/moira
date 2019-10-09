@@ -12,12 +12,11 @@ import (
 func TestBuildMessage(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
 	sender := Sender{location: location, frontURI: "http://moira.url"}
-	value := float64(97.4458331200185)
 
 	Convey("Build Moira Message tests", t, func() {
 		event := moira.NotificationEvent{
 			TriggerID: "TriggerID",
-			Value:     &value,
+			Values:    map[string]float64{"t1": 97.4458331200185},
 			Timestamp: 150000000,
 			Metric:    "Metric name",
 			OldState:  moira.StateOK,
@@ -43,7 +42,7 @@ some other text _italic text_`
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, false)
 			expected := "NODATA Trigger Name [tag1][tag2] (1)\n" + desc + `
 
-02:40: Metric name = 97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
 
 http://moira.url/trigger/TriggerID
 `
@@ -54,7 +53,7 @@ http://moira.url/trigger/TriggerID
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{Name: "Name"}, false)
 			expected := `NODATA Name  (1)
 
-02:40: Metric name = 97.4458331200185 (OK to NODATA)`
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)`
 			So(actual, ShouldResemble, expected)
 		})
 
@@ -62,7 +61,7 @@ http://moira.url/trigger/TriggerID
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{}, false)
 			expected := `NODATA   (1)
 
-02:40: Metric name = 97.4458331200185 (OK to NODATA)`
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)`
 			So(actual, ShouldResemble, expected)
 		})
 
@@ -74,7 +73,7 @@ http://moira.url/trigger/TriggerID
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, false)
 			expected := "NODATA Trigger Name [tag1][tag2] (1)\n" + desc + `
 
-02:40: Metric name = 97.4458331200185 (OK to NODATA). This metric has been in bad state for more than 24 hours - please, fix.`
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA). This metric has been in bad state for more than 24 hours - please, fix.`
 			So(actual, ShouldResemble, expected)
 		})
 
@@ -82,7 +81,7 @@ http://moira.url/trigger/TriggerID
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, true)
 			expected := "NODATA Trigger Name [tag1][tag2] (1)\n" + desc + `
 
-02:40: Metric name = 97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
 
 http://moira.url/trigger/TriggerID
 
@@ -90,7 +89,7 @@ Please, fix your system or tune this trigger to generate less events.`
 			So(actual, ShouldResemble, expected)
 		})
 
-		eventLine := "\n02:40: Metric name = 97.4458331200185 (OK to NODATA)"
+		eventLine := "\n02:40: Metric name = t1:97.4458331200185 (OK to NODATA)"
 		oneEventLineLen := len([]rune(eventLine))
 		// Events list with chars less than half the message limit
 		var shortEvents moira.NotificationEvents
@@ -110,7 +109,7 @@ Please, fix your system or tune this trigger to generate less events.`
 
 		Convey("Print moira message with desc + events < msgLimit", func() {
 			actual := sender.buildMessage(shortEvents, moira.TriggerData{Desc: longDesc}, false)
-			expected := "NODATA   (15)\n" + longDesc + "\n" + shortEventsString
+			expected := "NODATA   (14)\n" + longDesc + "\n" + shortEventsString
 			So(actual, ShouldResemble, expected)
 		})
 
@@ -122,20 +121,85 @@ Please, fix your system or tune this trigger to generate less events.`
 				eventsString += eventLine
 			}
 			actual := sender.buildMessage(events, moira.TriggerData{Desc: longDesc}, false)
-			expected := "NODATA   (18)\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...\n\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)"
+			expected := `NODATA   (17)
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...
+
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)`
+
 			So(actual, ShouldResemble, expected)
 		})
 
 		Convey("Print moira message events string > msgLimit/2", func() {
 			desc := strings.Repeat("a", messageMaxCharacters/2-100)
 			actual := sender.buildMessage(longEvents, moira.TriggerData{Desc: desc}, false)
-			expected := "NODATA   (22)\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n\n...and 2 more events."
+			expected := `NODATA   (21)
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+
+...and 3 more events.`
+
 			So(actual, ShouldResemble, expected)
 		})
 
 		Convey("Print moira message with both desc and events > msgLimit/2", func() {
 			actual := sender.buildMessage(longEvents, moira.TriggerData{Desc: longDesc}, false)
-			expected := "NODATA   (22)\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...\n\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n\n...and 4 more events."
+			expected := `NODATA   (21)
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...
+
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+
+...and 4 more events.`
+
 			So(actual, ShouldResemble, expected)
 		})
 

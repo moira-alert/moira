@@ -37,10 +37,9 @@ func TestMSTeamsHttpResponse(t *testing.T) {
 	_ = sender.Init(map[string]string{
 		"max_events": "-1",
 	}, logger, location, "")
-	value := float64(123)
 	event := moira.NotificationEvent{
 		TriggerID: "TriggerID",
-		Value:     &value,
+		Values:    map[string]float64{"t1": 123},
 		Timestamp: 150000000,
 		Metric:    "Metric",
 		OldState:  moira.StateOK,
@@ -66,7 +65,7 @@ some other text _italic text_`,
 				Reply(200).
 				BodyString("1")
 			contact := moira.ContactData{Value: "https://outlook.office.com/webhook/foo"}
-			err := sender.SendEvents([]moira.NotificationEvent{event}, contact, trigger, make([]byte, 0, 1), false)
+			err := sender.SendEvents([]moira.NotificationEvent{event}, contact, trigger, make([][]byte, 0, 1), false)
 			So(err, ShouldResemble, nil)
 			So(gock.IsDone(), ShouldBeTrue)
 		})
@@ -77,7 +76,7 @@ some other text _italic text_`,
 				Reply(200).
 				BodyString("Some error")
 			contact := moira.ContactData{Value: "https://outlook.office.com/webhook/foo"}
-			err := sender.SendEvents([]moira.NotificationEvent{event}, contact, trigger, make([]byte, 0, 1), false)
+			err := sender.SendEvents([]moira.NotificationEvent{event}, contact, trigger, make([][]byte, 0, 1), false)
 			So(err.Error(), ShouldResemble, "teams endpoint responded with an error: Some error")
 			So(gock.IsDone(), ShouldBeTrue)
 		})
@@ -88,7 +87,7 @@ some other text _italic text_`,
 				Reply(500).
 				BodyString("Some error")
 			contact := moira.ContactData{Value: "https://outlook.office.com/webhook/foo"}
-			err := sender.SendEvents([]moira.NotificationEvent{event}, contact, trigger, make([]byte, 0, 1), false)
+			err := sender.SendEvents([]moira.NotificationEvent{event}, contact, trigger, make([][]byte, 0, 1), false)
 			So(err.Error(), ShouldResemble, "server responded with a non 2xx code: 500")
 			So(gock.IsDone(), ShouldBeTrue)
 		})
@@ -113,12 +112,11 @@ func TestValidWebhook(t *testing.T) {
 func TestBuildMessage(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
 	sender := Sender{location: location, maxEvents: -1, frontURI: "http://moira.url"}
-	value := float64(123)
 
 	Convey("Build Moira Message tests", t, func() {
 		event := moira.NotificationEvent{
 			TriggerID: "TriggerID",
-			Value:     &value,
+			Values:    map[string]float64{"t1": 123},
 			Timestamp: 150000000,
 			Metric:    "Metric",
 			OldState:  moira.StateOK,
@@ -140,7 +138,7 @@ some other text _italic text_`,
 			Convey("State is Red for Error", func() {
 				actual := sender.buildMessage([]moira.NotificationEvent{{
 					TriggerID: "TriggerID",
-					Value:     &value,
+					Values:    map[string]float64{"t1": 123},
 					Timestamp: 150000000,
 					Metric:    "Metric",
 					OldState:  moira.StateOK,
@@ -160,7 +158,7 @@ some other text _italic text_`,
 							Facts: []Fact{
 								{
 									Name:  "02:40",
-									Value: "```Metric = 123 (OK to ERROR)```",
+									Value: "```Metric = t1:123 (OK to ERROR)```",
 								},
 							},
 						},
@@ -171,7 +169,7 @@ some other text _italic text_`,
 			Convey("State is Orange for Warning", func() {
 				actual := sender.buildMessage([]moira.NotificationEvent{{
 					TriggerID: "TriggerID",
-					Value:     &value,
+					Values:    map[string]float64{"t1": 123},
 					Timestamp: 150000000,
 					Metric:    "Metric",
 					OldState:  moira.StateOK,
@@ -191,7 +189,7 @@ some other text _italic text_`,
 							Facts: []Fact{
 								{
 									Name:  "02:40",
-									Value: "```Metric = 123 (OK to WARN)```",
+									Value: "```Metric = t1:123 (OK to WARN)```",
 								},
 							},
 						},
@@ -202,7 +200,7 @@ some other text _italic text_`,
 			Convey("State is Green for OK", func() {
 				actual := sender.buildMessage([]moira.NotificationEvent{{
 					TriggerID: "TriggerID",
-					Value:     &value,
+					Values:    map[string]float64{"t1": 123},
 					Timestamp: 150000000,
 					Metric:    "Metric",
 					OldState:  moira.StateWARN,
@@ -222,7 +220,7 @@ some other text _italic text_`,
 							Facts: []Fact{
 								{
 									Name:  "02:40",
-									Value: "```Metric = 123 (WARN to OK)```",
+									Value: "```Metric = t1:123 (WARN to OK)```",
 								},
 							},
 						},
@@ -233,7 +231,7 @@ some other text _italic text_`,
 			Convey("State is Black for NODATA", func() {
 				actual := sender.buildMessage([]moira.NotificationEvent{{
 					TriggerID: "TriggerID",
-					Value:     &value,
+					Values:    map[string]float64{"t1": 123},
 					Timestamp: 150000000,
 					Metric:    "Metric",
 					OldState:  moira.StateNODATA,
@@ -253,7 +251,7 @@ some other text _italic text_`,
 							Facts: []Fact{
 								{
 									Name:  "02:40",
-									Value: "```Metric = 123 (NODATA to NODATA)```",
+									Value: "```Metric = t1:123 (NODATA to NODATA)```",
 								},
 							},
 						},
@@ -279,7 +277,7 @@ some other text _italic text_`,
 						Facts: []Fact{
 							{
 								Name:  "02:40",
-								Value: "```Metric = 123 (OK to NODATA)```",
+								Value: "```Metric = t1:123 (OK to NODATA)```",
 							},
 						},
 					},
@@ -314,7 +312,7 @@ some other text _italic text_`,
 						Facts: []Fact{
 							{
 								Name:  "02:40",
-								Value: "```Metric = 123 (OK to NODATA)```",
+								Value: "```Metric = t1:123 (OK to NODATA)```",
 							},
 						},
 					},
@@ -338,7 +336,7 @@ some other text _italic text_`,
 						Facts: []Fact{
 							{
 								Name:  "02:40",
-								Value: "```Metric = 123 (OK to NODATA)```",
+								Value: "```Metric = t1:123 (OK to NODATA)```",
 							},
 							{
 								Name:  "Warning",
@@ -378,27 +376,27 @@ some other text _italic text_`,
 						Facts: []Fact{
 							{
 								Name:  "02:40",
-								Value: "```Metric = 123 (OK to NODATA)```",
+								Value: "```Metric = t1:123 (OK to NODATA)```",
 							},
 							{
 								Name:  "02:40",
-								Value: "```Metric = 123 (OK to NODATA)```",
+								Value: "```Metric = t1:123 (OK to NODATA)```",
 							},
 							{
 								Name:  "02:40",
-								Value: "```Metric = 123 (OK to NODATA)```",
+								Value: "```Metric = t1:123 (OK to NODATA)```",
 							},
 							{
 								Name:  "02:40",
-								Value: "```Metric = 123 (OK to NODATA)```",
+								Value: "```Metric = t1:123 (OK to NODATA)```",
 							},
 							{
 								Name:  "02:40",
-								Value: "```Metric = 123 (OK to NODATA)```",
+								Value: "```Metric = t1:123 (OK to NODATA)```",
 							},
 							{
 								Name:  "02:40",
-								Value: "```Metric = 123 (OK to NODATA)```",
+								Value: "```Metric = t1:123 (OK to NODATA)```",
 							},
 						},
 					},
@@ -434,7 +432,7 @@ some other text _italic text_`,
 						Facts: []Fact{
 							{
 								Name:  "02:40",
-								Value: "```Metric = 123 (OK to NODATA)```",
+								Value: "```Metric = t1:123 (OK to NODATA)```",
 							},
 						},
 					},

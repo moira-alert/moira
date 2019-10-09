@@ -34,6 +34,7 @@ require (
 	github.com/facebookgo/stack v0.0.0-20160209184415-751773369052 // indirect
 	github.com/facebookgo/subset v0.0.0-20150612182917-8dac2c3c4870 // indirect
 	github.com/glycerine/go-unsnap-stream v0.0.0-20190901134440-81cf024a9e0a // indirect
+	github.com/glycerine/goconvey v0.0.0-20190410193231-58a59202ab31
 	github.com/go-chi/chi v3.1.1-0.20170712121200-4c5a584b324b+incompatible
 	github.com/go-chi/render v1.0.0
 	github.com/go-graphite/carbonapi v0.0.0-20190604194342-5a4fa2112923

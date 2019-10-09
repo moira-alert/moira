@@ -7,7 +7,7 @@ import (
 // FetchResult is implementation of metric_source.FetchResult interface,
 // which represent fetching result from moira data source in moira format
 type FetchResult struct {
-	MetricsData []*metricSource.MetricData
+	MetricsData []metricSource.MetricData
 	Patterns    []string
 	Metrics     []string
 }
@@ -15,14 +15,14 @@ type FetchResult struct {
 // CreateEmptyFetchResult just creates FetchResult with initialized empty fields
 func CreateEmptyFetchResult() *FetchResult {
 	return &FetchResult{
-		MetricsData: make([]*metricSource.MetricData, 0),
+		MetricsData: make([]metricSource.MetricData, 0),
 		Patterns:    make([]string, 0),
 		Metrics:     make([]string, 0),
 	}
 }
 
 // GetMetricsData return all metrics data from fetch result
-func (fetchResult *FetchResult) GetMetricsData() []*metricSource.MetricData {
+func (fetchResult *FetchResult) GetMetricsData() []metricSource.MetricData {
 	return fetchResult.MetricsData
 }
 

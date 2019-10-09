@@ -16,11 +16,10 @@ func TestBuildMoiraMessage(t *testing.T) {
 		twilioSender: twilioSender{
 			location: location,
 		}}
-	value := float64(123)
 
 	Convey("Build Moira Message tests", t, func() {
 		event := moira.NotificationEvent{
-			Value:     &value,
+			Values:    map[string]float64{"t1": 123},
 			Timestamp: 150000000,
 			Metric:    "Metric",
 			OldState:  moira.StateOK,
@@ -29,7 +28,7 @@ func TestBuildMoiraMessage(t *testing.T) {
 
 		Convey("Print moira message with one event", func() {
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{Name: "Name", Tags: []string{"tag1"}}, false)
-			expected := "NODATA Name [tag1] (1)\n\n02:40: Metric = 123 (OK to NODATA)"
+			expected := "NODATA Name [tag1] (1)\n\n02:40: Metric = t1:123 (OK to NODATA)"
 			So(actual, ShouldResemble, expected)
 		})
 
@@ -37,7 +36,7 @@ func TestBuildMoiraMessage(t *testing.T) {
 			var interval int64 = 24
 			event.MessageEventInfo = &moira.EventInfo{Interval: &interval}
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{Name: "Name", Tags: []string{"tag1"}}, false)
-			expected := "NODATA Name [tag1] (1)\n\n02:40: Metric = 123 (OK to NODATA). This metric has been in bad state for more than 24 hours - please, fix."
+			expected := "NODATA Name [tag1] (1)\n\n02:40: Metric = t1:123 (OK to NODATA). This metric has been in bad state for more than 24 hours - please, fix."
 			So(actual, ShouldResemble, expected)
 		})
 
@@ -45,7 +44,7 @@ func TestBuildMoiraMessage(t *testing.T) {
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{Name: "Name", Tags: []string{"tag1"}}, true)
 			expected := `NODATA Name [tag1] (1)
 
-02:40: Metric = 123 (OK to NODATA)
+02:40: Metric = t1:123 (OK to NODATA)
 
 Please, fix your system or tune this trigger to generate less events.`
 			So(actual, ShouldResemble, expected)
@@ -55,11 +54,11 @@ Please, fix your system or tune this trigger to generate less events.`
 			actual := sender.buildMessage([]moira.NotificationEvent{event, event, event, event, event, event}, moira.TriggerData{Name: "Name", Tags: []string{"tag1"}}, false)
 			expected := `NODATA Name [tag1] (6)
 
-02:40: Metric = 123 (OK to NODATA)
-02:40: Metric = 123 (OK to NODATA)
-02:40: Metric = 123 (OK to NODATA)
-02:40: Metric = 123 (OK to NODATA)
-02:40: Metric = 123 (OK to NODATA)
+02:40: Metric = t1:123 (OK to NODATA)
+02:40: Metric = t1:123 (OK to NODATA)
+02:40: Metric = t1:123 (OK to NODATA)
+02:40: Metric = t1:123 (OK to NODATA)
+02:40: Metric = t1:123 (OK to NODATA)
 
 ...and 1 more events.`
 			So(actual, ShouldResemble, expected)
@@ -78,10 +77,9 @@ func TestTwilioSenderSms_SendEvents(t *testing.T) {
 			location:     location,
 		},
 	}
-	value := float64(123)
 
 	event := moira.NotificationEvent{
-		Value:     &value,
+		Values:    map[string]float64{"t1": 123},
 		Timestamp: 150000000,
 		Metric:    "Metric",
 		OldState:  moira.StateOK,
@@ -89,7 +87,7 @@ func TestTwilioSenderSms_SendEvents(t *testing.T) {
 	}
 
 	Convey("just send", t, func() {
-		err := sender.SendEvents([]moira.NotificationEvent{event}, moira.ContactData{}, moira.TriggerData{Name: "Name", Tags: []string{"tag1"}}, []byte{}, true)
+		err := sender.SendEvents([]moira.NotificationEvent{event}, moira.ContactData{}, moira.TriggerData{Name: "Name", Tags: []string{"tag1"}}, [][]byte{}, true)
 		So(err, ShouldNotBeNil)
 	})
 }

@@ -53,11 +53,10 @@ func TestGetPushoverPriority(t *testing.T) {
 func TestBuildMoiraMessage(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
 	sender := Sender{location: location}
-	value := float64(123)
 
 	Convey("Build Moira Message tests", t, func() {
 		event := moira.NotificationEvent{
-			Value:     &value,
+			Values:    map[string]float64{"t1": 123},
 			Timestamp: 150000000,
 			Metric:    "Metric",
 			OldState:  moira.StateOK,
@@ -71,13 +70,13 @@ func TestBuildMoiraMessage(t *testing.T) {
 
 		Convey("Print moira message with one event", func() {
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, false, moira.TriggerData{})
-			expected := "02:40: Metric = 123 (OK to NODATA)\n"
+			expected := "02:40: Metric = t1:123 (OK to NODATA)\n"
 			So(actual, ShouldResemble, expected)
 		})
 
 		Convey("Print moira message with one event and desc", func() {
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, false, trigger)
-			expected := "<h2>header</h2>\n\n<p><strong>bold text</strong> <em>italics</em>\n<code>code</code></p>\n" + "02:40: Metric = 123 (OK to NODATA)\n"
+			expected := "<h2>header</h2>\n\n<p><strong>bold text</strong> <em>italics</em>\n<code>code</code></p>\n" + "02:40: Metric = t1:123 (OK to NODATA)\n"
 			So(actual, ShouldResemble, expected)
 		})
 
@@ -85,13 +84,13 @@ func TestBuildMoiraMessage(t *testing.T) {
 			var interval int64 = 24
 			event.MessageEventInfo = &moira.EventInfo{Interval: &interval}
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, false, moira.TriggerData{})
-			expected := "02:40: Metric = 123 (OK to NODATA). This metric has been in bad state for more than 24 hours - please, fix.\n"
+			expected := "02:40: Metric = t1:123 (OK to NODATA). This metric has been in bad state for more than 24 hours - please, fix.\n"
 			So(actual, ShouldResemble, expected)
 		})
 
 		Convey("Print moira message with one event and throttled", func() {
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, true, moira.TriggerData{})
-			expected := `02:40: Metric = 123 (OK to NODATA)
+			expected := `02:40: Metric = t1:123 (OK to NODATA)
 
 Please, fix your system or tune this trigger to generate less events.`
 			So(actual, ShouldResemble, expected)
@@ -126,7 +125,6 @@ func TestMakeCreateAlertRequest(t *testing.T) {
 	defer mockCtrl.Finish()
 	imageStore := mock_moira_alert.NewMockImageStore(mockCtrl)
 
-	value := float64(123)
 	sender := Sender{
 		frontURI:             "https://my-moira.com",
 		location:             location,
@@ -137,7 +135,7 @@ func TestMakeCreateAlertRequest(t *testing.T) {
 	imageStore.EXPECT().StoreImage([]byte(`test`)).Return("testlink", nil)
 	Convey("Build CreateAlertRequest", t, func() {
 		event := []moira.NotificationEvent{{
-			Value:     &value,
+			Values:    map[string]float64{"t1": 123},
 			Timestamp: 150000000,
 			Metric:    "Metric",
 			OldState:  moira.StateOK,
@@ -152,7 +150,7 @@ func TestMakeCreateAlertRequest(t *testing.T) {
 		contact := moira.ContactData{
 			Value: "123",
 		}
-		actual := sender.makeCreateAlertRequest(event, contact, trigger, []byte(`test`), false)
+		actual := sender.makeCreateAlertRequest(event, contact, trigger, [][]byte{[]byte(`test`)}, false)
 		expected := &alert.CreateAlertRequest{
 			Message:     sender.buildTitle(event, trigger),
 			Description: sender.buildMessage(event, false, trigger),

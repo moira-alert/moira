@@ -27,15 +27,15 @@ var (
 		Desc: "triggerDescription",
 		Tags: []string{"triggerTag1", "triggerTag2"},
 	}
-	testEventsValue = float64(30)
-	testEvents      = []moira.NotificationEvent{
-		{Metric: "metricName1", Value: &testEventsValue, Timestamp: 15, IsTriggerEvent: false, State: "OK", OldState: "ERROR"},
-		{Metric: "metricName2", Value: &testEventsValue, Timestamp: 11, IsTriggerEvent: false, State: "OK", OldState: "ERROR"},
-		{Metric: "metricName3", Value: &testEventsValue, Timestamp: 31, IsTriggerEvent: false, State: "OK", OldState: "ERROR"},
-		{Metric: "metricName4", Value: &testEventsValue, Timestamp: 179, IsTriggerEvent: true, State: "OK", OldState: "ERROR"},
-		{Metric: "metricName5", Value: &testEventsValue, Timestamp: 12, IsTriggerEvent: false, State: "OK", OldState: "ERROR"},
+
+	testEvents = []moira.NotificationEvent{
+		{Metric: "metricName1", Values: map[string]float64{"t1": 30}, Timestamp: 15, IsTriggerEvent: false, State: "OK", OldState: "ERROR"},
+		{Metric: "metricName2", Values: map[string]float64{"t1": 30}, Timestamp: 11, IsTriggerEvent: false, State: "OK", OldState: "ERROR"},
+		{Metric: "metricName3", Values: map[string]float64{"t1": 30}, Timestamp: 31, IsTriggerEvent: false, State: "OK", OldState: "ERROR"},
+		{Metric: "metricName4", Values: map[string]float64{"t1": 30}, Timestamp: 179, IsTriggerEvent: true, State: "OK", OldState: "ERROR"},
+		{Metric: "metricName5", Values: map[string]float64{"t1": 30}, Timestamp: 12, IsTriggerEvent: false, State: "OK", OldState: "ERROR"},
 	}
-	testPlot      = make([]byte, 0)
+	testPlot      = [][]byte{}
 	testThrottled = false
 )
 
@@ -53,7 +53,7 @@ const expectedStateChangePayload = `
   "events": [
     {
       "metric": "metricName1",
-      "value": 30,
+      "values": {"t1":30},
       "timestamp": 15,
       "trigger_event": false,
       "state": "OK",
@@ -61,7 +61,7 @@ const expectedStateChangePayload = `
     },
     {
       "metric": "metricName2",
-      "value": 30,
+      "values": {"t1":30},
       "timestamp": 11,
       "trigger_event": false,
       "state": "OK",
@@ -69,7 +69,7 @@ const expectedStateChangePayload = `
     },
     {
       "metric": "metricName3",
-      "value": 30,
+      "values": {"t1":30},
       "timestamp": 31,
       "trigger_event": false,
       "state": "OK",
@@ -77,7 +77,7 @@ const expectedStateChangePayload = `
     },
     {
       "metric": "metricName4",
-      "value": 30,
+      "values": {"t1":30},
       "timestamp": 179,
       "trigger_event": true,
       "state": "OK",
@@ -85,7 +85,7 @@ const expectedStateChangePayload = `
     },
     {
       "metric": "metricName5",
-      "value": 30,
+      "values": {"t1":30},
       "timestamp": 12,
       "trigger_event": false,
       "state": "OK",
@@ -97,8 +97,9 @@ const expectedStateChangePayload = `
     "value": "contactValue",
     "id": "contactID",
     "user": "contactUser"
-  },
-  "plot": "",
+	},
+	"plot": "",
+  "plots": [],
   "throttled": false
 }
 `
@@ -117,8 +118,9 @@ const expectedEmptyPayload = `
         "value": "",
         "id": "",
         "user": ""
-    },
-    "plot": "",
+		},
+		"plot": "",
+    "plots": [],
     "throttled": false
 }
 `
@@ -187,8 +189,8 @@ func TestBuildRequestBody(t *testing.T) {
 			So(err, ShouldBeNil)
 		})
 		Convey("Empty notification", func() {
-			events, contact, trigger, plot, throttled := moira.NotificationEvents{}, moira.ContactData{}, moira.TriggerData{}, make([]byte, 0), false
-			requestBody, err := buildRequestBody(events, contact, trigger, plot, throttled)
+			events, contact, trigger, plots, throttled := moira.NotificationEvents{}, moira.ContactData{}, moira.TriggerData{}, make([][]byte, 0), false
+			requestBody, err := buildRequestBody(events, contact, trigger, plots, throttled)
 			actual, expected := prepareStrings(string(requestBody), expectedEmptyPayload)
 			So(actual, ShouldEqual, expected)
 			So(actual, ShouldNotContainSubstring, "null")

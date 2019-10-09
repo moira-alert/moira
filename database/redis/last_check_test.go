@@ -264,6 +264,46 @@ func TestLastCheck(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, []string{triggerID})
 		})
+
+		Convey("Test populate metric values", func() {
+			value := float64(1)
+			triggerID := uuid.Must(uuid.NewV4()).String()
+			err := dataBase.SetTriggerLastCheck(triggerID, &moira.CheckData{
+				Score:       6000,
+				State:       moira.StateOK,
+				Timestamp:   1504509981,
+				Maintenance: 1552723340,
+				Metrics: map[string]moira.MetricState{
+					"metric1": {
+						EventTimestamp: 1504463770,
+						State:          "Ok",
+						Suppressed:     false,
+						Timestamp:      1504509380,
+						Value:          &value,
+					},
+				},
+			}, false)
+			So(err, ShouldBeNil)
+
+			actual, err := dataBase.GetTriggerLastCheck(triggerID)
+			So(err, ShouldBeNil)
+			So(actual, ShouldResemble, moira.CheckData{
+				Score:       6000,
+				State:       moira.StateOK,
+				Timestamp:   1504509981,
+				Maintenance: 1552723340,
+				Metrics: map[string]moira.MetricState{
+					"metric1": {
+						EventTimestamp: 1504463770,
+						State:          "Ok",
+						Suppressed:     false,
+						Timestamp:      1504509380,
+						Values:         map[string]float64{"t1": 1},
+					},
+				},
+				MetricsToTargetRelation: map[string]string{},
+			})
+		})
 	})
 }
 
@@ -477,51 +517,67 @@ var lastCheckTest = moira.CheckData{
 			State:          moira.StateNODATA,
 			Suppressed:     false,
 			Timestamp:      1504509380,
+			Values:         map[string]float64{},
 		},
 		"metric2": {
 			EventTimestamp: 1504449789,
 			State:          moira.StateNODATA,
 			Suppressed:     false,
 			Timestamp:      1504509380,
+			Values:         map[string]float64{},
 		},
 		"metric3": {
 			EventTimestamp: 1504449789,
 			State:          moira.StateNODATA,
 			Suppressed:     false,
 			Timestamp:      1504509380,
+			Values:         map[string]float64{},
 		},
 		"metric4": {
 			EventTimestamp: 1504463770,
 			State:          moira.StateNODATA,
 			Suppressed:     false,
 			Timestamp:      1504509380,
+			Values:         map[string]float64{},
 		},
 		"metric5": {
 			EventTimestamp: 1504463770,
 			State:          moira.StateNODATA,
 			Suppressed:     false,
 			Timestamp:      1504509380,
+			Values:         map[string]float64{},
 		},
 		"metric6": {
 			EventTimestamp: 1504463770,
 			State:          "Ok",
 			Suppressed:     false,
 			Timestamp:      1504509380,
+			Values:         map[string]float64{},
+		},
+		"metric7": {
+			EventTimestamp: 1504463770,
+			State:          "Ok",
+			Suppressed:     false,
+			Timestamp:      1504509380,
+			Values:         map[string]float64{},
 		},
 	},
+	MetricsToTargetRelation: map[string]string{},
 }
 
 var lastCheckWithNoMetrics = moira.CheckData{
-	Score:     0,
-	State:     moira.StateOK,
-	Timestamp: 1504509981,
-	Metrics:   make(map[string]moira.MetricState),
+	Score:                   0,
+	State:                   moira.StateOK,
+	Timestamp:               1504509981,
+	Metrics:                 make(map[string]moira.MetricState),
+	MetricsToTargetRelation: map[string]string{},
 }
 
 var lastCheckWithNoMetricsWithMaintenance = moira.CheckData{
-	Score:       0,
-	State:       moira.StateOK,
-	Timestamp:   1504509981,
-	Maintenance: 1000,
-	Metrics:     make(map[string]moira.MetricState),
+	Score:                   0,
+	State:                   moira.StateOK,
+	Timestamp:               1504509981,
+	Maintenance:             1000,
+	Metrics:                 make(map[string]moira.MetricState),
+	MetricsToTargetRelation: map[string]string{},
 }

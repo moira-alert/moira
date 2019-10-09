@@ -109,7 +109,7 @@ func TestEvaluateTarget(t *testing.T) {
 		result, err := localSource.Fetch("aliasByNode(super.puper.pattern, 2)", from, until, true)
 		So(err, ShouldBeNil)
 		So(result, ShouldResemble, &FetchResult{
-			MetricsData: []*metricSource.MetricData{{
+			MetricsData: []metricSource.MetricData{{
 				Name:      "pattern",
 				StartTime: from,
 				StopTime:  until,
@@ -130,7 +130,7 @@ func TestEvaluateTarget(t *testing.T) {
 		result, err := localSource.Fetch("aliasByNode(super.puper.pattern, 2)", from, until, true)
 		So(err, ShouldBeNil)
 		So(result, ShouldResemble, &FetchResult{
-			MetricsData: []*metricSource.MetricData{{
+			MetricsData: []metricSource.MetricData{{
 				Name:      "metric",
 				StartTime: from,
 				StopTime:  until,
@@ -164,7 +164,7 @@ func TestEvaluateTarget(t *testing.T) {
 		result, err := localSource.Fetch("aliasByNode(super.puper.pattern, 2)", fromLongAgo, untilDistantFuture, true)
 		So(err, ShouldBeNil)
 		So(result, ShouldResemble, &FetchResult{
-			MetricsData: []*metricSource.MetricData{{
+			MetricsData: []metricSource.MetricData{{
 				Name:      "metric",
 				StartTime: untilDistantFuture - ttl,
 				StopTime:  untilDistantFuture,
@@ -185,7 +185,7 @@ func TestEvaluateTarget(t *testing.T) {
 		result, err := localSource.Fetch("super.puper.pattern | scale(100) | aliasByNode(2)", from, until, true)
 		So(err, ShouldBeNil)
 		So(result, ShouldResemble, &FetchResult{
-			MetricsData: []*metricSource.MetricData{{
+			MetricsData: []metricSource.MetricData{{
 				Name:      "metric",
 				StartTime: from,
 				StopTime:  until,

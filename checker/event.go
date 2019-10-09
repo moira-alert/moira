@@ -112,7 +112,7 @@ func (triggerChecker *TriggerChecker) compareMetricStates(metric string, current
 		Timestamp:        currentState.Timestamp,
 		Metric:           metric,
 		MessageEventInfo: eventInfo,
-		Value:            currentState.Value,
+		Values:           currentState.Values,
 	}, true)
 	return currentState, err
 }

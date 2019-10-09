@@ -10,7 +10,8 @@ type payload struct {
 	Trigger   triggerData `json:"trigger"`
 	Events    []eventData `json:"events"`
 	Contact   contactData `json:"contact"`
-	Plot      string      `json:"plot"`
+	Plot      string      `json:"plot"` // Compatibility with Moira < 2.6.0
+	Plots     []string    `json:"plots"`
 	Throttled bool        `json:"throttled"`
 }
 
@@ -22,12 +23,12 @@ type triggerData struct {
 }
 
 type eventData struct {
-	Metric         string  `json:"metric"`
-	Value          float64 `json:"value"`
-	Timestamp      int64   `json:"timestamp"`
-	IsTriggerEvent bool    `json:"trigger_event"`
-	State          string  `json:"state"`
-	OldState       string  `json:"old_state"`
+	Metric         string             `json:"metric"`
+	Values         map[string]float64 `json:"values"`
+	Timestamp      int64              `json:"timestamp"`
+	IsTriggerEvent bool               `json:"trigger_event"`
+	State          string             `json:"state"`
+	OldState       string             `json:"old_state"`
 }
 
 type contactData struct {
@@ -55,7 +56,7 @@ func toEventsData(events moira.NotificationEvents) []eventData {
 	for _, event := range events {
 		result = append(result, eventData{
 			Metric:         event.Metric,
-			Value:          moira.UseFloat64(event.Value),
+			Values:         event.Values,
 			Timestamp:      event.Timestamp,
 			IsTriggerEvent: event.IsTriggerEvent,
 			State:          event.State.String(),

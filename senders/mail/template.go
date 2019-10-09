@@ -154,7 +154,7 @@ const defaultTemplate = `
                                                         <td style="box-sizing: border-box; font-family: 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 16px; vertical-align: top; font-weight: 500;"
                                                             valign="top">
                                                             <h5 class="align-left h5-nopadding" style="font-size: 12px; font-weight: 700; color: #9B9B9B !important; margin-bottom: 0 !important; margin-top: 0 !important; text-align: left;">
-                                                                Value</h5>
+                                                                Values</h5>
                                                         </td>
                                                         <td style="box-sizing: border-box; font-family: 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 16px; vertical-align: top; font-weight: 500;"
                                                             valign="top">
@@ -179,7 +179,7 @@ const defaultTemplate = `
                                                         </td>
                                                         <td class="td-width20 td-padding" style="box-sizing: border-box; font-family: 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 16px; vertical-align: top; font-weight: 500; width: 20%; padding-bottom: 10px; padding-right: 3px;"
                                                             width="20%" valign="top">
-                                                            {{ .Value }}
+                                                            {{ .Values }}
                                                         </td>
                                                         <td class="td-width20 td-padding" style="box-sizing: border-box; font-family: 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 16px; vertical-align: top; font-weight: 500; width: 20%; padding-bottom: 10px; padding-right: 3px;"
                                                             width="20%" valign="top">

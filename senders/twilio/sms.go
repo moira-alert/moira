@@ -14,7 +14,7 @@ type twilioSenderSms struct {
 	twilioSender
 }
 
-func (sender *twilioSenderSms) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) error {
+func (sender *twilioSenderSms) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
 	message := sender.buildMessage(events, trigger, throttled)
 	sender.logger.Debugf("Calling twilio sms api to phone %s and message body %s", contact.Value, message)
 	twilioMessage, err := twilio.NewMessage(sender.client, sender.APIFromPhone, contact.Value, twilio.Body(message))
@@ -35,7 +35,7 @@ func (sender *twilioSenderSms) buildMessage(events moira.NotificationEvents, tri
 		if i > printEventsCount-1 {
 			break
 		}
-		message.WriteString(fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location), event.Metric, event.GetMetricValue(), event.OldState, event.State))
+		message.WriteString(fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location), event.Metric, event.GetMetricsValues(), event.OldState, event.State))
 		if msg := event.CreateMessage(sender.location); len(msg) > 0 {
 			message.WriteString(fmt.Sprintf(". %s", msg))
 		}

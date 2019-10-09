@@ -81,11 +81,10 @@ func RemoveSubscription(database moira.Database, subscriptionID string) *api.Err
 
 // SendTestNotification push test notification to verify the correct notification settings
 func SendTestNotification(database moira.Database, subscriptionID string) *api.ErrorResponse {
-	var value float64 = 1
 	eventData := &moira.NotificationEvent{
 		SubscriptionID: &subscriptionID,
 		Metric:         "Test.metric.value",
-		Value:          &value,
+		Values:         map[string]float64{"t1": 1},
 		OldState:       moira.StateTEST,
 		State:          moira.StateTEST,
 		Timestamp:      date.DateParamToEpoch("now", "", time.Now().Add(-24*time.Hour).Unix(), time.UTC),

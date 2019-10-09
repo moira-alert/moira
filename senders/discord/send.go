@@ -21,11 +21,11 @@ var (
 )
 
 // SendEvents implements pushover build and send message functionality
-func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) error {
+func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
 	data := &discordgo.MessageSend{}
 	data.Content = sender.buildMessage(events, trigger, throttled)
-	if len(plot) > 0 {
-		data.File = sender.buildPlot(plot)
+	if len(plots) > 0 {
+		data.File = sender.buildPlot(plots[0])
 		data.Embed = &discordgo.MessageEmbed{
 			Image: &discordgo.MessageEmbedImage{
 				URL: "attachment://Plot.jpg",
@@ -114,7 +114,7 @@ func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsFo
 	eventsLenLimitReached := false
 	eventsPrinted := 0
 	for _, event := range events {
-		line := fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location), event.Metric, event.GetMetricValue(), event.OldState, event.State)
+		line := fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location), event.Metric, event.GetMetricsValues(), event.OldState, event.State)
 		if msg := event.CreateMessage(sender.location); len(msg) > 0 {
 			line += fmt.Sprintf(". %s", msg)
 		}

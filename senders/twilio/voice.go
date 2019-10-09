@@ -17,7 +17,7 @@ type twilioSenderVoice struct {
 	twimletsEcho  bool
 }
 
-func (sender *twilioSenderVoice) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) error {
+func (sender *twilioSenderVoice) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
 	voiceURL := sender.buildVoiceURL(trigger)
 	twilioCall, err := twilio.NewCall(sender.client, sender.APIFromPhone, contact.Value, twilio.Callback(voiceURL))
 	if err != nil {

@@ -32,7 +32,7 @@ func TestGeneratePlotCurves(t *testing.T) {
 		metricName := "metric.firstValueIsAbsent"
 		metricData.Name = metricName
 		metricData.Values = firstValIsAbsentVals
-		curveSeries := generatePlotCurves(&metricData, chart.Style{}, chart.Style{})
+		curveSeries := generatePlotCurves(metricData, chart.Style{}, chart.Style{})
 		So(len(curveSeries), ShouldEqual, 2)
 		So(curveSeries[0].Name, ShouldEqual, metricName)
 		So(curveSeries[0].YValues, ShouldResemble, []float64{32})
@@ -55,7 +55,7 @@ func TestGeneratePlotCurves(t *testing.T) {
 		metricName := "metric.firstValueIsPresent"
 		metricData.Name = metricName
 		metricData.Values = firstValIsPresentVals
-		curveSeries := generatePlotCurves(&metricData, chart.Style{}, chart.Style{})
+		curveSeries := generatePlotCurves(metricData, chart.Style{}, chart.Style{})
 		So(len(curveSeries), ShouldEqual, 3)
 		So(curveSeries[0].Name, ShouldEqual, metricName)
 		So(curveSeries[0].YValues, ShouldResemble, []float64{11, 23, 45})
@@ -86,7 +86,7 @@ func TestGeneratePlotCurves(t *testing.T) {
 func TestDescribePlotCurves(t *testing.T) {
 	Convey("First value is absent", t, func() {
 		metricData.Values = firstValIsAbsentVals
-		plotCurves := describePlotCurves(&metricData)
+		plotCurves := describePlotCurves(metricData)
 		So(len(plotCurves), ShouldEqual, 2)
 		So(plotCurves[0].values, ShouldResemble, []float64{32})
 		So(plotCurves[0].timeStamps, ShouldResemble, []time.Time{
@@ -105,7 +105,7 @@ func TestDescribePlotCurves(t *testing.T) {
 	})
 	Convey("First value is present", t, func() {
 		metricData.Values = firstValIsPresentVals
-		plotCurves := describePlotCurves(&metricData)
+		plotCurves := describePlotCurves(metricData)
 		So(len(plotCurves), ShouldEqual, 3)
 		So(plotCurves[0].values, ShouldResemble, []float64{11, 23, 45})
 		So(plotCurves[0].timeStamps, ShouldResemble, []time.Time{
@@ -133,13 +133,13 @@ func TestDescribePlotCurves(t *testing.T) {
 func TestResolveFirstPoint(t *testing.T) {
 	Convey("First value is absent", t, func() {
 		metricData.Values = firstValIsAbsentVals
-		firstPointInd, startTime := resolveFirstPoint(&metricData)
+		firstPointInd, startTime := resolveFirstPoint(metricData)
 		So(firstPointInd, ShouldEqual, 2)
 		So(startTime, ShouldEqual, 20)
 	})
 	Convey("First value is present", t, func() {
 		metricData.Values = firstValIsPresentVals
-		firstPointInd, startTime := resolveFirstPoint(&metricData)
+		firstPointInd, startTime := resolveFirstPoint(metricData)
 		So(firstPointInd, ShouldEqual, 0)
 		So(startTime, ShouldEqual, 0)
 	})

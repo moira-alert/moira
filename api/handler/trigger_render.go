@@ -18,17 +18,23 @@ import (
 )
 
 func renderTrigger(writer http.ResponseWriter, request *http.Request) {
-	sourceProvider, from, to, triggerID, fetchRealtimeData, err := getEvaluationParameters(request)
+	sourceProvider, targetName, from, to, triggerID, fetchRealtimeData, err := getEvaluationParameters(request)
 	if err != nil {
 		render.Render(writer, request, api.ErrorInvalidRequest(err))
 		return
 	}
-	metricsData, trigger, err := evaluateTriggerMetrics(sourceProvider, from, to, triggerID, fetchRealtimeData)
+	metricsData, trigger, err := evaluateTargetMetrics(sourceProvider, from, to, triggerID, fetchRealtimeData)
 	if err != nil {
 		render.Render(writer, request, api.ErrorInternalServer(err))
 		return
 	}
-	renderable, err := buildRenderable(request, trigger, metricsData)
+
+	targetMetrics, ok := metricsData[targetName]
+	if !ok {
+		render.Render(writer, request, api.ErrorNotFound(fmt.Sprintf("Cannot find target %s", targetName)))
+	}
+
+	renderable, err := buildRenderable(request, trigger, targetMetrics, targetName)
 	if err != nil {
 		render.Render(writer, request, api.ErrorInternalServer(err))
 		return
@@ -40,19 +46,21 @@ func renderTrigger(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func getEvaluationParameters(request *http.Request) (sourceProvider *metricSource.SourceProvider, from int64, to int64, triggerID string, fetchRealtimeData bool, err error) {
+func getEvaluationParameters(request *http.Request) (sourceProvider *metricSource.SourceProvider, targetName string, from int64, to int64, triggerID string, fetchRealtimeData bool, err error) {
 	sourceProvider = middleware.GetTriggerTargetsSourceProvider(request)
+	targetName = middleware.GetTargetName(request)
 	triggerID = middleware.GetTriggerID(request)
 	fromStr := middleware.GetFromStr(request)
 	toStr := middleware.GetToStr(request)
 	from = date.DateParamToEpoch(fromStr, "UTC", 0, time.UTC)
+
 	if from == 0 {
-		return sourceProvider, 0, 0, "", false, fmt.Errorf("can not parse from: %s", fromStr)
+		return sourceProvider, "", 0, 0, "", false, fmt.Errorf("can not parse from: %s", fromStr)
 	}
 	from -= from % 60
 	to = date.DateParamToEpoch(toStr, "UTC", 0, time.UTC)
 	if to == 0 {
-		return sourceProvider, 0, 0, "", false, fmt.Errorf("can not parse to: %s", fromStr)
+		return sourceProvider, "", 0, 0, "", false, fmt.Errorf("can not parse to: %s", fromStr)
 	}
 	realtime := request.URL.Query().Get("realtime")
 	if realtime == "" {
@@ -60,23 +68,21 @@ func getEvaluationParameters(request *http.Request) (sourceProvider *metricSourc
 	}
 	fetchRealtimeData, err = strconv.ParseBool(realtime)
 	if err != nil {
-		return sourceProvider, 0, 0, "", false, fmt.Errorf("invalid realtime param: %s", err.Error())
+		return sourceProvider, "", 0, 0, "", false, fmt.Errorf("invalid realtime param: %s", err.Error())
 	}
 	return
 }
 
-func evaluateTriggerMetrics(metricSourceProvider *metricSource.SourceProvider, from, to int64, triggerID string, fetchRealtimeData bool) ([]*metricSource.MetricData, *moira.Trigger, error) {
+func evaluateTargetMetrics(metricSourceProvider *metricSource.SourceProvider, from, to int64, triggerID string, fetchRealtimeData bool) (map[string][]metricSource.MetricData, *moira.Trigger, error) {
 	tts, trigger, err := controller.GetTriggerEvaluationResult(database, metricSourceProvider, from, to, triggerID, fetchRealtimeData)
 	if err != nil {
 		return nil, trigger, err
 	}
-	var metricsData = make([]*metricSource.MetricData, 0, len(tts.Main)+len(tts.Additional))
-	metricsData = append(metricsData, tts.Main...)
-	metricsData = append(metricsData, tts.Additional...)
-	return metricsData, trigger, err
+
+	return tts, trigger, err
 }
 
-func buildRenderable(request *http.Request, trigger *moira.Trigger, metricsData []*metricSource.MetricData) (*chart.Chart, error) {
+func buildRenderable(request *http.Request, trigger *moira.Trigger, metricsData []metricSource.MetricData, targetName string) (*chart.Chart, error) {
 	timezone := request.URL.Query().Get("timezone")
 	location, err := time.LoadLocation(timezone)
 	if err != nil {
@@ -87,7 +93,7 @@ func buildRenderable(request *http.Request, trigger *moira.Trigger, metricsData 
 	if err != nil {
 		return nil, fmt.Errorf("can not initialize plot theme %s", err.Error())
 	}
-	renderable, err := plotTemplate.GetRenderable(trigger, metricsData)
+	renderable, err := plotTemplate.GetRenderable(targetName, trigger, metricsData)
 	if err != nil {
 		return nil, err
 	}

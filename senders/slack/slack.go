@@ -59,7 +59,7 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 }
 
 // SendEvents implements Sender interface Send
-func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) error {
+func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
 	message := sender.buildMessage(events, trigger, throttled)
 	useDirectMessaging := useDirectMessaging(contact.Value)
 	emoji := sender.getStateEmoji(events.GetSubjectState())
@@ -67,8 +67,8 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	if err != nil {
 		return err
 	}
-	if channelID != "" && len(plot) > 0 {
-		sender.sendPlot(plot, channelID, threadTimestamp, trigger.ID)
+	if channelID != "" && len(plots) > 0 {
+		sender.sendPlots(plots, channelID, threadTimestamp, trigger.ID)
 	}
 	return nil
 }
@@ -146,7 +146,7 @@ func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsFo
 	eventsLenLimitReached := false
 	eventsPrinted := 0
 	for _, event := range events {
-		line := fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location), event.Metric, event.GetMetricValue(), event.OldState, event.State)
+		line := fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location), event.Metric, event.GetMetricsValues(), event.OldState, event.State)
 		if msg := event.CreateMessage(sender.location); len(msg) > 0 {
 			line += fmt.Sprintf(". %s", msg)
 		}
@@ -189,17 +189,22 @@ func (sender *Sender) sendMessage(message string, contact string, triggerID stri
 	return channelID, threadTimestamp, nil
 }
 
-func (sender *Sender) sendPlot(plot []byte, channelID, threadTimestamp, triggerID string) error {
-	reader := bytes.NewReader(plot)
-	uploadParameters := slack.FileUploadParameters{
-		Channels:        []string{channelID},
-		ThreadTimestamp: threadTimestamp,
-		Reader:          reader,
-		Filetype:        "png",
-		Filename:        fmt.Sprintf("%s.png", triggerID),
+func (sender *Sender) sendPlots(plots [][]byte, channelID, threadTimestamp, triggerID string) error {
+	for _, plot := range plots {
+		reader := bytes.NewReader(plot)
+		uploadParameters := slack.FileUploadParameters{
+			Channels:        []string{channelID},
+			ThreadTimestamp: threadTimestamp,
+			Reader:          reader,
+			Filetype:        "png",
+			Filename:        fmt.Sprintf("%s.png", triggerID),
+		}
+		_, err := sender.client.UploadFile(uploadParameters)
+		if err != nil {
+			return err
+		}
 	}
-	_, err := sender.client.UploadFile(uploadParameters)
-	return err
+	return nil
 }
 
 // getStateEmoji returns corresponding state emoji

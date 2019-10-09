@@ -32,6 +32,7 @@ var (
 	loginKey             ContextKey = "login"
 	timeSeriesNamesKey   ContextKey = "timeSeriesNames"
 	metricSourceProvider ContextKey = "metricSourceProvider"
+	targetNameKey        ContextKey = "target"
 )
 
 // GetDatabase gets moira.Database realization from request context
@@ -113,4 +114,9 @@ func GetTimeSeriesNames(request *http.Request) map[string]bool {
 // GetTriggerTargetsSourceProvider gets trigger targets source provider
 func GetTriggerTargetsSourceProvider(request *http.Request) *metricSource.SourceProvider {
 	return request.Context().Value(metricSourceProvider).(*metricSource.SourceProvider)
+}
+
+// GetTargetName gets target name
+func GetTargetName(request *http.Request) string {
+	return request.Context().Value(targetNameKey).(string)
 }

@@ -15,8 +15,8 @@ import (
 const summaryMaxChars = 1024
 
 // SendEvents implements Sender interface Send
-func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) error {
-	event := sender.buildEvent(events, contact, trigger, plot, throttled)
+func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
+	event := sender.buildEvent(events, contact, trigger, plots, throttled)
 	_, err := pagerduty.ManageEvent(event)
 	if err != nil {
 		return fmt.Errorf("failed to post the event to the pagerduty contact %s : %s. ", contact.Value, err)
@@ -24,7 +24,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	return nil
 }
 
-func (sender *Sender) buildEvent(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) pagerduty.V2Event {
+func (sender *Sender) buildEvent(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) pagerduty.V2Event {
 	summary := sender.buildSummary(events, trigger, throttled)
 	details := make(map[string]interface{})
 
@@ -41,7 +41,7 @@ func (sender *Sender) buildEvent(events moira.NotificationEvents, contact moira.
 	var eventList string
 
 	for _, event := range events {
-		line := fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location), event.Metric, event.GetMetricValue(), event.OldState, event.State)
+		line := fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location), event.Metric, event.GetMetricsValues(), event.OldState, event.State)
 		if msg := event.CreateMessage(sender.location); len(msg) > 0 {
 			line += fmt.Sprintf(". %s", msg)
 		}
@@ -67,8 +67,8 @@ func (sender *Sender) buildEvent(events moira.NotificationEvents, contact moira.
 		Payload:    payload,
 	}
 
-	if len(plot) > 0 && sender.imageStoreConfigured {
-		imageLink, err := sender.imageStore.StoreImage(plot)
+	if len(plots) > 0 && sender.imageStoreConfigured {
+		imageLink, err := sender.imageStore.StoreImage(plots[0])
 		if err != nil {
 			sender.logger.Warningf("could not store the plot image in the image store: %s", err)
 		} else {

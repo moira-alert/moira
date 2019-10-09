@@ -15,7 +15,6 @@ import (
 func TestBuildEvent(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
 	sender := Sender{location: location, frontURI: "http://moira.url"}
-	value := float64(97.4458331200185)
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	imageStore := mock_moira_alert.NewMockImageStore(mockCtrl)
@@ -23,7 +22,7 @@ func TestBuildEvent(t *testing.T) {
 	Convey("Build pagerduty event tests", t, func() {
 		event := moira.NotificationEvent{
 			TriggerID: "TriggerID",
-			Value:     &value,
+			Values:    map[string]float64{"t1": 97.4458331200185},
 			Timestamp: 150000000,
 			Metric:    "Metric name",
 			OldState:  moira.StateOK,
@@ -57,10 +56,10 @@ func TestBuildEvent(t *testing.T) {
 		}
 
 		Convey("Build pagerduty event with one moira event", func() {
-			actual := sender.buildEvent(moira.NotificationEvents{event}, contact, trigger, []byte{}, false)
+			actual := sender.buildEvent(moira.NotificationEvents{event}, contact, trigger, [][]byte{}, false)
 			expected := baseExpected
 			details := map[string]interface{}{
-				"Events":       "\n02:40: Metric name = 97.4458331200185 (OK to NODATA)",
+				"Events":       "\n02:40: Metric name = t1:97.4458331200185 (OK to NODATA)",
 				"Trigger URI":  "http://moira.url/trigger/TriggerID",
 				"Trigger Name": "Trigger Name",
 				"Description":  "bold text italics code regular",
@@ -73,10 +72,10 @@ func TestBuildEvent(t *testing.T) {
 			imageStore.EXPECT().StoreImage([]byte("test")).Return("test", nil)
 			sender.imageStore = imageStore
 			sender.imageStoreConfigured = true
-			actual := sender.buildEvent(moira.NotificationEvents{event}, contact, trigger, []byte("test"), false)
+			actual := sender.buildEvent(moira.NotificationEvents{event}, contact, trigger, [][]byte{[]byte("test")}, false)
 			expected := baseExpected
 			details := map[string]interface{}{
-				"Events":       "\n02:40: Metric name = 97.4458331200185 (OK to NODATA)",
+				"Events":       "\n02:40: Metric name = t1:97.4458331200185 (OK to NODATA)",
 				"Trigger URI":  "http://moira.url/trigger/TriggerID",
 				"Trigger Name": "Trigger Name",
 				"Description":  "bold text italics code regular",
@@ -92,10 +91,10 @@ func TestBuildEvent(t *testing.T) {
 		})
 
 		Convey("Build pagerduty event with one event and throttled", func() {
-			actual := sender.buildEvent(moira.NotificationEvents{event}, contact, trigger, []byte{}, true)
+			actual := sender.buildEvent(moira.NotificationEvents{event}, contact, trigger, [][]byte{}, true)
 			expected := baseExpected
 			details := map[string]interface{}{
-				"Events":       "\n02:40: Metric name = 97.4458331200185 (OK to NODATA)",
+				"Events":       "\n02:40: Metric name = t1:97.4458331200185 (OK to NODATA)",
 				"Message":      "Please, fix your system or tune this trigger to generate less events.",
 				"Trigger URI":  "http://moira.url/trigger/TriggerID",
 				"Description":  "bold text italics code regular",
@@ -110,20 +109,20 @@ func TestBuildEvent(t *testing.T) {
 			for i := 0; i < 10; i++ {
 				events = append(events, event)
 			}
-			actual := sender.buildEvent(events, contact, trigger, []byte{}, true)
+			actual := sender.buildEvent(events, contact, trigger, [][]byte{}, true)
 			expected := baseExpected
 			details := map[string]interface{}{
 				"Events": `
-02:40: Metric name = 97.4458331200185 (OK to NODATA)
-02:40: Metric name = 97.4458331200185 (OK to NODATA)
-02:40: Metric name = 97.4458331200185 (OK to NODATA)
-02:40: Metric name = 97.4458331200185 (OK to NODATA)
-02:40: Metric name = 97.4458331200185 (OK to NODATA)
-02:40: Metric name = 97.4458331200185 (OK to NODATA)
-02:40: Metric name = 97.4458331200185 (OK to NODATA)
-02:40: Metric name = 97.4458331200185 (OK to NODATA)
-02:40: Metric name = 97.4458331200185 (OK to NODATA)
-02:40: Metric name = 97.4458331200185 (OK to NODATA)`,
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)
+02:40: Metric name = t1:97.4458331200185 (OK to NODATA)`,
 				"Message":      "Please, fix your system or tune this trigger to generate less events.",
 				"Trigger URI":  "http://moira.url/trigger/TriggerID",
 				"Description":  "bold text italics code regular",

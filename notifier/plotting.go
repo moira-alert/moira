@@ -33,38 +33,42 @@ func (err errFetchAvailableSeriesFailed) Error() string {
 }
 
 // buildNotificationPackagePlot returns bytes slice containing package plot
-func (notifier *StandardNotifier) buildNotificationPackagePlot(pkg NotificationPackage) ([]byte, error) {
-	buff := bytes.NewBuffer(make([]byte, 0))
+func (notifier *StandardNotifier) buildNotificationPackagePlots(pkg NotificationPackage) ([][]byte, error) {
+	result := make([][]byte, 0)
 	if !pkg.Plotting.Enabled {
-		return buff.Bytes(), nil
+		return nil, nil
 	}
 	if pkg.Trigger.ID == "" {
-		return buff.Bytes(), nil
+		return nil, nil
 	}
 	metricsToShow := pkg.GetMetricNames()
 	if len(metricsToShow) == 0 {
-		return buff.Bytes(), nil
+		return nil, nil
 	}
 	plotTemplate, err := plotting.GetPlotTemplate(pkg.Plotting.Theme, notifier.config.Location)
 	if err != nil {
-		return buff.Bytes(), err
+		return nil, err
 	}
 	from, to := resolveMetricsWindow(notifier.logger, pkg.Trigger, pkg)
 	metricsData, trigger, err := notifier.evaluateTriggerMetrics(from, to, pkg.Trigger.ID)
 	if err != nil {
-		return buff.Bytes(), err
+		return nil, err
 	}
 	metricsData = getMetricDataToShow(metricsData, metricsToShow)
 	notifier.logger.Debugf("Build plot for trigger: %s from MetricsData: %v", trigger.ID, metricsData)
-	renderable, err := plotTemplate.GetRenderable(trigger, metricsData)
-	if err != nil {
-		return buff.Bytes(), err
+	for _, targetName := range trigger.Targets {
+		metrics := metricsData[targetName]
+		renderable, err := plotTemplate.GetRenderable(targetName, trigger, metrics)
+		if err != nil {
+			return nil, err
+		}
+		buff := bytes.NewBuffer(make([]byte, 0))
+		if err = renderable.Render(chart.PNG, buff); err != nil {
+			return nil, err
+		}
+		result = append(result, buff.Bytes())
 	}
-	if err = renderable.Render(chart.PNG, buff); err != nil {
-		buff.Reset()
-		return buff.Bytes(), err
-	}
-	return buff.Bytes(), nil
+	return result, nil
 }
 
 // resolveMetricsWindow returns from, to parameters depending on trigger type
@@ -109,7 +113,7 @@ func roundToRetention(unixTime int64) int64 {
 }
 
 // evaluateTriggerMetrics returns collection of MetricData
-func (notifier *StandardNotifier) evaluateTriggerMetrics(from, to int64, triggerID string) ([]*metricSource.MetricData, *moira.Trigger, error) {
+func (notifier *StandardNotifier) evaluateTriggerMetrics(from, to int64, triggerID string) (map[string][]metricSource.MetricData, *moira.Trigger, error) {
 	trigger, err := notifier.database.GetTrigger(triggerID)
 	if err != nil {
 		return nil, nil, err
@@ -118,19 +122,21 @@ func (notifier *StandardNotifier) evaluateTriggerMetrics(from, to int64, trigger
 	if err != nil {
 		return nil, &trigger, err
 	}
-	var metricsData = make([]*metricSource.MetricData, 0)
-	for _, target := range trigger.Targets {
+	var result = make(map[string][]metricSource.MetricData)
+	for i, target := range trigger.Targets {
+		i++ // Increase
+		targetName := fmt.Sprintf("t%d", i)
 		timeSeries, fetchErr := fetchAvailableSeries(metricsSource, target, from, to)
 		if fetchErr != nil {
 			return nil, &trigger, fetchErr
 		}
-		metricsData = append(metricsData, timeSeries...)
+		result[targetName] = timeSeries
 	}
-	return metricsData, &trigger, err
+	return result, &trigger, err
 }
 
 // fetchAvailableSeries calls fetch function with realtime alerting and retries on fail without
-func fetchAvailableSeries(metricsSource metricSource.MetricSource, target string, from, to int64) ([]*metricSource.MetricData, error) {
+func fetchAvailableSeries(metricsSource metricSource.MetricSource, target string, from, to int64) ([]metricSource.MetricData, error) {
 	realtimeFetchResult, realtimeErr := metricsSource.Fetch(target, from, to, true)
 	if realtimeErr == nil {
 		return realtimeFetchResult.GetMetricsData(), realtimeErr
@@ -146,20 +152,28 @@ func fetchAvailableSeries(metricsSource metricSource.MetricSource, target string
 }
 
 // getMetricDataToShow returns MetricData limited by whitelist
-func getMetricDataToShow(metricsData []*metricSource.MetricData, metricsWhitelist []string) []*metricSource.MetricData {
+func getMetricDataToShow(metricsData map[string][]metricSource.MetricData, metricsWhitelist []string) map[string][]metricSource.MetricData {
+	result := make(map[string][]metricSource.MetricData)
 	if len(metricsWhitelist) == 0 {
 		return metricsData
 	}
-	metricsWhitelistHash := make(map[string]struct{}, len(metricsWhitelist))
+	metricsWhitelistHash := make(map[string]bool, len(metricsWhitelist))
 	for _, whiteListed := range metricsWhitelist {
-		metricsWhitelistHash[whiteListed] = struct{}{}
+		metricsWhitelistHash[whiteListed] = true
 	}
 
-	newMetricsData := make([]*metricSource.MetricData, 0, len(metricsWhitelist))
-	for _, metricData := range metricsData {
-		if _, ok := metricsWhitelistHash[metricData.Name]; ok {
-			newMetricsData = append(newMetricsData, metricData)
+	for targetName, metrics := range metricsData {
+		newMetricsData := make([]metricSource.MetricData, 0, len(metricsWhitelist))
+		if len(metrics) == 1 {
+			result[targetName] = metrics
+			continue
 		}
+		for _, metricData := range metrics {
+			if _, ok := metricsWhitelistHash[metricData.Name]; ok {
+				newMetricsData = append(newMetricsData, metricData)
+			}
+		}
+		result[targetName] = newMetricsData
 	}
-	return newMetricsData
+	return result
 }

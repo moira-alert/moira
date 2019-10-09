@@ -4,6 +4,8 @@ package dto
 import (
 	"fmt"
 	"net/http"
+	"regexp"
+	"strconv"
 	"time"
 
 	"github.com/moira-alert/moira"
@@ -12,6 +14,8 @@ import (
 	"github.com/moira-alert/moira/expression"
 	metricSource "github.com/moira-alert/moira/metric_source"
 )
+
+var targetNameRegex = regexp.MustCompile("t(\\d+)")
 
 type TriggersList struct {
 	Page  *int64               `json:"page,omitempty"`
@@ -62,6 +66,8 @@ type TriggerModel struct {
 	IsRemote bool `json:"is_remote"`
 	// If true, first event NODATA → OK will be omitted
 	MuteNewMetrics bool `json:"mute_new_metrics"`
+	// A list of targets that have only alone metrics
+	AloneMetrics map[string]bool `json:"alone_metrics"`
 }
 
 // ToMoiraTrigger transforms TriggerModel to moira.Trigger
@@ -82,6 +88,7 @@ func (model *TriggerModel) ToMoiraTrigger() *moira.Trigger {
 		Patterns:       model.Patterns,
 		IsRemote:       model.IsRemote,
 		MuteNewMetrics: model.MuteNewMetrics,
+		AloneMetrics:   model.AloneMetrics,
 	}
 }
 
@@ -119,6 +126,19 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 	}
 	if err := checkWarnErrorExpression(trigger); err != nil {
 		return api.ErrInvalidRequestContent{ValidationError: err}
+	}
+	for targetName := range trigger.AloneMetrics {
+		if !targetNameRegex.MatchString(targetName) {
+			return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("alone metrics target name should be in pattern: t\\d+")}
+		}
+		targetIndexStr := targetNameRegex.FindStringSubmatch(targetName)[0]
+		targetIndex, err := strconv.Atoi(targetIndexStr)
+		if err != nil {
+			return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("alone metrics target index should be valid number: %w", err)}
+		}
+		if targetIndex < 0 || targetIndex > len(trigger.Targets) {
+			return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("alone metrics target index should be in range from 1 to length of targets")}
+		}
 	}
 
 	triggerExpression := expression.TriggerExpression{
@@ -323,10 +343,7 @@ func (*SaveTriggerResponse) Render(w http.ResponseWriter, r *http.Request) error
 	return nil
 }
 
-type TriggerMetrics struct {
-	Main       map[string][]*moira.MetricValue `json:"main"`
-	Additional map[string][]*moira.MetricValue `json:"additional,omitempty"`
-}
+type TriggerMetrics map[string]map[string][]moira.MetricValue
 
 func (*TriggerMetrics) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil

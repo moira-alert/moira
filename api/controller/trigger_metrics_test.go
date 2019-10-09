@@ -297,10 +297,10 @@ func TestGetTriggerMetrics(t *testing.T) {
 		dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{ID: triggerID, Targets: []string{pattern}}, nil)
 		localSource.EXPECT().IsConfigured().Return(true, nil)
 		localSource.EXPECT().Fetch(pattern, from, until, false).Return(fetchResult, nil)
-		fetchResult.EXPECT().GetMetricsData().Return([]*metricSource.MetricData{metricSource.MakeMetricData(metric, []float64{0, 1, 2, 3, 4}, retention, from)})
+		fetchResult.EXPECT().GetMetricsData().Return([]metricSource.MetricData{*metricSource.MakeMetricData(metric, []float64{0, 1, 2, 3, 4}, retention, from)})
 		triggerMetrics, err := GetTriggerMetrics(dataBase, sourceProvider, from, until, triggerID)
 		So(err, ShouldBeNil)
-		So(*triggerMetrics, ShouldResemble, dto.TriggerMetrics{Main: map[string][]*moira.MetricValue{metric: {{Value: 0, Timestamp: 17}, {Value: 1, Timestamp: 27}, {Value: 2, Timestamp: 37}, {Value: 3, Timestamp: 47}, {Value: 4, Timestamp: 57}}}, Additional: make(map[string][]*moira.MetricValue)})
+		So(*triggerMetrics, ShouldResemble, dto.TriggerMetrics{"t1": map[string][]moira.MetricValue{metric: {{Value: 0, Timestamp: 17}, {Value: 1, Timestamp: 27}, {Value: 2, Timestamp: 37}, {Value: 3, Timestamp: 47}, {Value: 4, Timestamp: 57}}}})
 	})
 
 	Convey("GetTrigger error", t, func() {

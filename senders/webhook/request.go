@@ -10,12 +10,12 @@ import (
 	"github.com/moira-alert/moira"
 )
 
-func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) (*http.Request, error) {
+func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) (*http.Request, error) {
 	if sender.url == moira.VariableContactValue {
 		sender.log.Warningf("%s is potentially dangerous url template, api contact validation is advised", sender.url)
 	}
 	requestURL := buildRequestURL(sender.url, trigger, contact)
-	requestBody, err := buildRequestBody(events, contact, trigger, plot, throttled)
+	requestBody, err := buildRequestBody(events, contact, trigger, plots, throttled)
 	if err != nil {
 		return nil, err
 	}
@@ -33,7 +33,16 @@ func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moir
 	return request, nil
 }
 
-func buildRequestBody(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) ([]byte, error) {
+func buildRequestBody(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) ([]byte, error) {
+	encodedFirstPlot := ""
+	encodedPlots := make([]string, 0, len(plots))
+	for i, plot := range plots {
+		encodedPlot := bytesToBase64(plot)
+		encodedPlots = append(encodedPlots, encodedPlot)
+		if i == 0 {
+			encodedFirstPlot = encodedPlot
+		}
+	}
 	requestPayload := payload{
 		Trigger: toTriggerData(trigger),
 		Events:  toEventsData(events),
@@ -43,7 +52,8 @@ func buildRequestBody(events moira.NotificationEvents, contact moira.ContactData
 			ID:    contact.ID,
 			User:  contact.User,
 		},
-		Plot:      bytesToBase64(plot),
+		Plot:      encodedFirstPlot,
+		Plots:     encodedPlots,
 		Throttled: throttled,
 	}
 	return json.Marshal(requestPayload)

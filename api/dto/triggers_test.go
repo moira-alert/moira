@@ -31,7 +31,7 @@ func TestExpressionModeMultipleTargetsWarnValue(t *testing.T) {
 		localSource.EXPECT().GetMetricsTTLSeconds().Return(int64(3600)).AnyTimes()
 		localSource.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fetchResult, nil).AnyTimes()
 		fetchResult.EXPECT().GetPatterns().Return(make([]string, 0), nil).AnyTimes()
-		fetchResult.EXPECT().GetMetricsData().Return([]*metricSource.MetricData{metricSource.MakeMetricData("", []float64{}, 0, 0)}).AnyTimes()
+		fetchResult.EXPECT().GetMetricsData().Return([]metricSource.MetricData{*metricSource.MakeMetricData("", []float64{}, 0, 0)}).AnyTimes()
 
 		request, _ := http.NewRequest("PUT", "/api/trigger", nil)
 		request.Header.Set("Content-Type", "application/json")
