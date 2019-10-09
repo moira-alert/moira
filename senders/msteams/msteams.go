@@ -5,12 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/moira-alert/moira"
-	"github.com/russross/blackfriday/v2"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/moira-alert/moira"
+	"github.com/russross/blackfriday/v2"
 )
 
 // Sender implements moira sender interface via MS Teams
@@ -42,21 +44,31 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 
 	request, err := sender.buildRequest(events, contact, trigger, plot, throttled)
 
-	if request != nil {
-		defer request.Body.Close()
-	}
-
 	if err != nil {
 		return fmt.Errorf("failed to build request: %s", err.Error())
 	}
 
 	response, err := sender.client.Do(request)
-	if response != nil {
-		defer response.Body.Close()
-	}
 
 	if err != nil {
 		return fmt.Errorf("failed to perform request: %s", err.Error())
+	}
+	defer response.Body.Close()
+
+	// read the entire response as required by https://golang.org/pkg/net/http/#Client.Do
+	body, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return fmt.Errorf("failed to decode response: %s", err.Error())
+	}
+
+	//handle non 2xx responses
+	if response.StatusCode >= http.StatusBadRequest && response.StatusCode <= http.StatusNetworkAuthenticationRequired {
+		return fmt.Errorf("server responded with a non 2xx code: %d", response.StatusCode)
+	}
+
+	responseData := string(body)
+	if responseData != "1" {
+		return fmt.Errorf("teams endpoint responded with an error: %s", errors.New(responseData))
 	}
 
 	return nil

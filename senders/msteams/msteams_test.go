@@ -1,12 +1,13 @@
 package msteams
 
 import (
-	"github.com/moira-alert/moira/logging/go-logging"
 	"testing"
 	"time"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/logging/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
+	"gopkg.in/h2non/gock.v1"
 )
 
 func TestInit(t *testing.T) {
@@ -18,6 +19,69 @@ func TestInit(t *testing.T) {
 			err := sender.Init(senderSettings, logger, nil, "")
 			So(err, ShouldResemble, nil)
 			So(sender, ShouldNotResemble, Sender{})
+		})
+	})
+}
+
+func TestMSTeamsHttpResponse(t *testing.T) {
+	sender := Sender{}
+	logger, _ := logging.ConfigureLog("stdout", "info", "test")
+	location, _ := time.LoadLocation("UTC")
+	_ = sender.Init(map[string]string{}, logger, location, "")
+	value := float64(123)
+	event := moira.NotificationEvent{
+		TriggerID: "TriggerID",
+		Value:     &value,
+		Timestamp: 150000000,
+		Metric:    "Metric",
+		OldState:  moira.StateOK,
+		State:     moira.StateNODATA,
+		Message:   nil,
+	}
+
+	trigger := moira.TriggerData{
+		Tags: []string{"tag1", "tag2"},
+		Name: "Name",
+		ID:   "TriggerID",
+		Desc: `# header1
+some text **bold text**
+## header 2
+some other text _italic text_`,
+	}
+
+	Convey("When HTTP Response", t, func() {
+		Convey("is 200 and body is '1' there should be no error", func() {
+			defer gock.Off()
+			gock.New("https://outlook.office.com/webhook/foo").
+				Post("/").
+				Reply(200).
+				BodyString("1")
+			contact := moira.ContactData{Value: "https://outlook.office.com/webhook/foo"}
+			err := sender.SendEvents([]moira.NotificationEvent{event}, contact, trigger, make([]byte, 0, 1), false)
+			So(err, ShouldResemble, nil)
+			So(gock.IsDone(), ShouldResemble, true)
+		})
+		Convey("is 200 and body is not '1', result should be an error", func() {
+			defer gock.Off()
+			gock.New("https://outlook.office.com/webhook/foo").
+				Post("/").
+				Reply(200).
+				BodyString("Some error")
+			contact := moira.ContactData{Value: "https://outlook.office.com/webhook/foo"}
+			err := sender.SendEvents([]moira.NotificationEvent{event}, contact, trigger, make([]byte, 0, 1), false)
+			So(err.Error(), ShouldResemble, "teams endpoint responded with an error: Some error")
+			So(gock.IsDone(), ShouldResemble, true)
+		})
+		Convey("is not any of HTTP success, result should be an error", func() {
+			defer gock.Off()
+			gock.New("https://outlook.office.com/webhook/foo").
+				Post("/").
+				Reply(500).
+				BodyString("Some error")
+			contact := moira.ContactData{Value: "https://outlook.office.com/webhook/foo"}
+			err := sender.SendEvents([]moira.NotificationEvent{event}, contact, trigger, make([]byte, 0, 1), false)
+			So(err.Error(), ShouldResemble, "server responded with a non 2xx code: 500")
+			So(gock.IsDone(), ShouldResemble, true)
 		})
 	})
 }
