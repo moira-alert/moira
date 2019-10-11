@@ -31,7 +31,7 @@ install-lint:
 
 .PHONY: lint
 lint:
-	golangci-lint run
+	GOGC=50 golangci-lint run
 
 .PHONY: test
 test:
