@@ -3,11 +3,11 @@ package msteams
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -15,12 +15,24 @@ import (
 	"github.com/russross/blackfriday/v2"
 )
 
+const Context = "http://schema.org/extensions"
+const MessageType = "MessageCard"
+const Summary = "Moira Alert"
+const TeamsBaseURL = "https://outlook.office.com/webhook/"
+const TeamsOKResponse = "1"
+
+var headers = map[string]string{
+	"User-Agent":   "Moira",
+	"Content-Type": "application/json",
+}
+
 // Sender implements moira sender interface via MS Teams
 type Sender struct {
-	frontURI string
-	logger   moira.Logger
-	location *time.Location
-	client   *http.Client
+	frontURI  string
+	maxEvents int
+	logger    moira.Logger
+	location  *time.Location
+	client    *http.Client
 }
 
 // Init initialises settings required for full functionality
@@ -28,6 +40,11 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 	sender.logger = logger
 	sender.location = location
 	sender.frontURI = senderSettings["front_uri"]
+	maxEvents, err := strconv.Atoi(senderSettings["max_events"])
+	if err != nil {
+		return fmt.Errorf("max_events should be an integer: %w", err)
+	}
+	sender.maxEvents = maxEvents
 	sender.client = &http.Client{
 		Timeout: time.Duration(30) * time.Second,
 	}
@@ -39,36 +56,42 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 
 	err := sender.isValidWebhookURL(contact.Value)
 	if err != nil {
-		return fmt.Errorf("invalid msteams webhook url: %s", err.Error())
+		return err
 	}
 
 	request, err := sender.buildRequest(events, contact, trigger, plot, throttled)
 
 	if err != nil {
-		return fmt.Errorf("failed to build request: %s", err.Error())
+		return fmt.Errorf("failed to build request: %w", err)
 	}
 
 	response, err := sender.client.Do(request)
 
 	if err != nil {
-		return fmt.Errorf("failed to perform request: %s", err.Error())
+		return fmt.Errorf("failed to perform request: %w", err)
 	}
 	defer response.Body.Close()
 
 	// read the entire response as required by https://golang.org/pkg/net/http/#Client.Do
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		return fmt.Errorf("failed to decode response: %s", err.Error())
+		return fmt.Errorf("failed to decode response: %w", err)
 	}
 
 	//handle non 2xx responses
 	if response.StatusCode >= http.StatusBadRequest && response.StatusCode <= http.StatusNetworkAuthenticationRequired {
-		return fmt.Errorf("server responded with a non 2xx code: %d", response.StatusCode)
+		return &ErrTeamsError{
+			error:       strconv.Itoa(response.StatusCode),
+			description: "server responded with a non 2xx code",
+		}
 	}
 
 	responseData := string(body)
-	if responseData != "1" {
-		return fmt.Errorf("teams endpoint responded with an error: %s", errors.New(responseData))
+	if responseData != TeamsOKResponse {
+		return &ErrTeamsError{
+			error:       responseData,
+			description: "teams endpoint responded with an error",
+		}
 	}
 
 	return nil
@@ -95,10 +118,11 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 			},
 		})
 	}
+
 	return MessageCard{
-		Context:     "http://schema.org/extensions",
-		MessageType: "MessageCard",
-		Summary:     "Moira Alert",
+		Context:     Context,
+		MessageType: MessageType,
+		Summary:     Summary,
 		ThemeColor:  getColourForState(events.GetSubjectState()),
 		Title:       title,
 		Sections: []Section{
@@ -126,10 +150,7 @@ func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moir
 	if err != nil {
 		return request, err
 	}
-	headers := map[string]string{
-		"User-Agent":   "Moira",
-		"Content-Type": "application/json",
-	}
+
 	for k, v := range headers {
 		request.Header.Set(k, v)
 	}
@@ -195,10 +216,12 @@ func (sender *Sender) isValidWebhookURL(webhookURL string) error {
 		return err
 	}
 	// only pass MS teams webhook URLs
-	hasPrefix := strings.HasPrefix(webhookURL, "https://outlook.office.com/webhook/")
+	hasPrefix := strings.HasPrefix(webhookURL, TeamsBaseURL)
 	if !hasPrefix {
-		err = errors.New("unvalid ms teams webhook url")
-		return err
+		return &ErrTeamsError{
+			error:       webhookURL,
+			description: "invalid teams webhook",
+		}
 	}
 	return nil
 }

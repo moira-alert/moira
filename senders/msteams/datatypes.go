@@ -1,5 +1,9 @@
 package msteams
 
+import (
+	"fmt"
+)
+
 /*
 Fact models a fact in a MessageCard, contains a timestamp and trigger data
  {
@@ -105,3 +109,15 @@ type MessageCard struct {
 	Sections        []Section `json:"sections"`
 	PotentialAction []Actions `json:"potentialAction,omitempty"`
 }
+
+type ErrTeamsError struct {
+	error       string
+	description string
+	err         error
+}
+
+func (e *ErrTeamsError) Error() string {
+	return fmt.Sprintf("%s : %s", e.description, e.error)
+}
+
+func (e *ErrTeamsError) Unwrap() error { return e.err }
