@@ -8,8 +8,8 @@ GIT_TAG := $(shell git describe --always --tags --abbrev=0 | tail -c+2)
 GIT_COMMIT := $(shell git rev-list v${GIT_TAG}..HEAD --count)
 GIT_COMMIT_DATE := $(shell git show -s --format=%ci | cut -d\  -f1)
 
-VERSION_FEATURE := ${GIT_TAG}-${GIT_BRANCH}
-VERSION_NIGHTLY := ${GIT_COMMIT_DATE}-${GIT_HASH_SHORT}
+VERSION_FEATURE := ${GIT_TAG}-$(shell echo $(GIT_BRANCH) | cut -c1-100).${GIT_COMMIT_DATE}.${GIT_HASH_SHORT}
+VERSION_NIGHTLY := ${GIT_COMMIT_DATE}.${GIT_HASH_SHORT}
 VERSION_RELEASE := ${GIT_TAG}.${GIT_COMMIT}
 
 GO_VERSION := $(shell go version | cut -d' ' -f3)
