@@ -73,10 +73,7 @@ some other text _italic text_`,
 				BodyString("Some error")
 			contact := moira.ContactData{Value: "https://outlook.office.com/webhook/foo"}
 			err := sender.SendEvents([]moira.NotificationEvent{event}, contact, trigger, make([]byte, 0, 1), false)
-			So(err, ShouldResemble, &ErrTeamsError{
-				error:       "Some error",
-				description: "teams endpoint responded with an error",
-			})
+			So(err.Error(), ShouldResemble, "teams endpoint responded with an error: Some error")
 			So(gock.IsDone(), ShouldBeTrue)
 		})
 		Convey("is not any of HTTP success, result should be an error", func() {
@@ -87,7 +84,7 @@ some other text _italic text_`,
 				BodyString("Some error")
 			contact := moira.ContactData{Value: "https://outlook.office.com/webhook/foo"}
 			err := sender.SendEvents([]moira.NotificationEvent{event}, contact, trigger, make([]byte, 0, 1), false)
-			So(err.Error(), ShouldResemble, "server responded with a non 2xx code : 500")
+			So(err.Error(), ShouldResemble, "server responded with a non 2xx code: 500")
 			So(gock.IsDone(), ShouldBeTrue)
 		})
 	})

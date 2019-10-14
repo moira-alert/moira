@@ -80,18 +80,13 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 
 	//handle non 2xx responses
 	if response.StatusCode >= http.StatusBadRequest && response.StatusCode <= http.StatusNetworkAuthenticationRequired {
-		return &ErrTeamsError{
-			error:       strconv.Itoa(response.StatusCode),
-			description: "server responded with a non 2xx code",
-		}
+		return fmt.Errorf("server responded with a non 2xx code: %d", response.StatusCode)
+
 	}
 
 	responseData := string(body)
 	if responseData != TeamsOKResponse {
-		return &ErrTeamsError{
-			error:       responseData,
-			description: "teams endpoint responded with an error",
-		}
+		return fmt.Errorf("teams endpoint responded with an error: %s", responseData)
 	}
 
 	return nil
@@ -218,10 +213,7 @@ func (sender *Sender) isValidWebhookURL(webhookURL string) error {
 	// only pass MS teams webhook URLs
 	hasPrefix := strings.HasPrefix(webhookURL, TeamsBaseURL)
 	if !hasPrefix {
-		return &ErrTeamsError{
-			error:       webhookURL,
-			description: "invalid teams webhook",
-		}
+		return fmt.Errorf("%s is an invalid ms teams webhook url", webhookURL)
 	}
 	return nil
 }
