@@ -41,6 +41,12 @@ var (
 	plotting = flag.Bool("plotting", false, "enable images in all notifications")
 )
 
+var (
+	userDel  = flag.String("user-del", "", "Delete all contacts and subscriptions for a user")
+	fromUser = flag.String("from-user", "", "Transfer subscriptions and contacts from user.")
+	toUser   = flag.String("to-user", "", "Transfer subscriptions and contacts to user.")
+)
+
 func main() {
 	logger, dataBase := initApp()
 
@@ -70,6 +76,14 @@ func main() {
 		if err := enablePlottingInAllSubscriptions(logger, dataBase); err != nil {
 			logger.Errorf("Failed to enable images in all notifications")
 		}
+	}
+
+	if err := transferUserSubscriptionsAndContacts(dataBase); err != nil {
+		logger.Error(err)
+	}
+
+	if err := deleteUser(dataBase); err != nil {
+		logger.Error(err)
 	}
 }
 
