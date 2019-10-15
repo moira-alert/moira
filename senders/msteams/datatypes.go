@@ -1,5 +1,11 @@
 package msteams
 
+const Green = "008000"
+const Orange = "ffa500"
+const Red = "ff0000"
+const Black = "000000"
+const White = "ffffff"
+
 /*
 Fact models a fact in a MessageCard, contains a timestamp and trigger data
  {

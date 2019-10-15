@@ -137,7 +137,7 @@ some other text _italic text_`,
 		}
 
 		Convey("Card uses the correct colour for subject state", func() {
-			Convey("State is RED for Error", func() {
+			Convey("State is Red for Error", func() {
 				actual := sender.buildMessage([]moira.NotificationEvent{{
 					TriggerID: "TriggerID",
 					Value:     &value,
@@ -151,7 +151,7 @@ some other text _italic text_`,
 					Context:     "http://schema.org/extensions",
 					MessageType: "MessageCard",
 					Summary:     "Moira Alert",
-					ThemeColor:  "ff0000",
+					ThemeColor:  Red,
 					Title:       "ERROR Name",
 					Sections: []Section{
 						{
@@ -168,7 +168,7 @@ some other text _italic text_`,
 				}
 				So(actual, ShouldResemble, expected)
 			})
-			Convey("State is ORANGE for Warning", func() {
+			Convey("State is Orange for Warning", func() {
 				actual := sender.buildMessage([]moira.NotificationEvent{{
 					TriggerID: "TriggerID",
 					Value:     &value,
@@ -182,7 +182,7 @@ some other text _italic text_`,
 					Context:     "http://schema.org/extensions",
 					MessageType: "MessageCard",
 					Summary:     "Moira Alert",
-					ThemeColor:  "ffa500",
+					ThemeColor:  Orange,
 					Title:       "WARN Name",
 					Sections: []Section{
 						{
@@ -199,7 +199,7 @@ some other text _italic text_`,
 				}
 				So(actual, ShouldResemble, expected)
 			})
-			Convey("State is GREEN for OK", func() {
+			Convey("State is Green for OK", func() {
 				actual := sender.buildMessage([]moira.NotificationEvent{{
 					TriggerID: "TriggerID",
 					Value:     &value,
@@ -213,7 +213,7 @@ some other text _italic text_`,
 					Context:     "http://schema.org/extensions",
 					MessageType: "MessageCard",
 					Summary:     "Moira Alert",
-					ThemeColor:  "008000",
+					ThemeColor:  Green,
 					Title:       "OK Name",
 					Sections: []Section{
 						{
@@ -230,7 +230,7 @@ some other text _italic text_`,
 				}
 				So(actual, ShouldResemble, expected)
 			})
-			Convey("State is BLACK for NODATA", func() {
+			Convey("State is Black for NODATA", func() {
 				actual := sender.buildMessage([]moira.NotificationEvent{{
 					TriggerID: "TriggerID",
 					Value:     &value,
@@ -244,7 +244,7 @@ some other text _italic text_`,
 					Context:     "http://schema.org/extensions",
 					MessageType: "MessageCard",
 					Summary:     "Moira Alert",
-					ThemeColor:  "000000",
+					ThemeColor:  Black,
 					Title:       "NODATA Name",
 					Sections: []Section{
 						{
@@ -270,7 +270,7 @@ some other text _italic text_`,
 				Context:     "http://schema.org/extensions",
 				MessageType: "MessageCard",
 				Summary:     "Moira Alert",
-				ThemeColor:  "000000",
+				ThemeColor:  Black,
 				Title:       "NODATA Name [tag1][tag2]",
 				Sections: []Section{
 					{
@@ -305,7 +305,7 @@ some other text _italic text_`,
 				Context:     "http://schema.org/extensions",
 				MessageType: "MessageCard",
 				Summary:     "Moira Alert",
-				ThemeColor:  "000000",
+				ThemeColor:  Black,
 				Title:       "NODATA",
 				Sections: []Section{
 					{
@@ -329,7 +329,7 @@ some other text _italic text_`,
 				Context:     "http://schema.org/extensions",
 				MessageType: "MessageCard",
 				Summary:     "Moira Alert",
-				ThemeColor:  "000000",
+				ThemeColor:  Black,
 				Title:       "NODATA Name [tag1][tag2]",
 				Sections: []Section{
 					{
@@ -369,7 +369,7 @@ some other text _italic text_`,
 				Context:     "http://schema.org/extensions",
 				MessageType: "MessageCard",
 				Summary:     "Moira Alert",
-				ThemeColor:  "000000",
+				ThemeColor:  Black,
 				Title:       "NODATA Name [tag1][tag2]",
 				Sections: []Section{
 					{
@@ -425,7 +425,7 @@ some other text _italic text_`,
 				Context:     "http://schema.org/extensions",
 				MessageType: "MessageCard",
 				Summary:     "Moira Alert",
-				ThemeColor:  "000000",
+				ThemeColor:  Black,
 				Title:       "NODATA Name",
 				Sections: []Section{
 					{

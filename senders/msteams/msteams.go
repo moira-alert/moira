@@ -15,11 +15,20 @@ import (
 	"github.com/russross/blackfriday/v2"
 )
 
-const Context = "http://schema.org/extensions"
-const MessageType = "MessageCard"
-const Summary = "Moira Alert"
-const TeamsBaseURL = "https://outlook.office.com/webhook/"
-const TeamsOKResponse = "1"
+const context = "http://schema.org/extensions"
+const messageType = "MessageCard"
+const summary = "Moira Alert"
+const teamsBaseURL = "https://outlook.office.com/webhook/"
+const teamsOKResponse = "1"
+const openUri = "OpenUri"
+const openUriMessage = "View in Moira"
+const openUriOsDefault = "default"
+const activityTitleText = "Description"
+
+var throttleWarningFact = Fact{
+	Name:  "Warning",
+	Value: "Please, *fix your system or tune this trigger* to generate less events.",
+}
 
 var headers = map[string]string{
 	"User-Agent":   "Moira",
@@ -85,7 +94,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	}
 
 	responseData := string(body)
-	if responseData != TeamsOKResponse {
+	if responseData != teamsOKResponse {
 		return fmt.Errorf("teams endpoint responded with an error: %s", responseData)
 	}
 
@@ -103,11 +112,11 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 	var actions []Actions
 	if uri != "" {
 		actions = append(actions, Actions{
-			Type: "OpenUri",
-			Name: "View in Moira",
+			Type: openUri,
+			Name: openUriMessage,
 			Targets: []OpenURITarget{
 				{
-					Os:  "default",
+					Os:  openUriOsDefault,
 					URI: uri,
 				},
 			},
@@ -115,14 +124,14 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 	}
 
 	return MessageCard{
-		Context:     Context,
-		MessageType: MessageType,
-		Summary:     Summary,
+		Context:     context,
+		MessageType: messageType,
+		Summary:     summary,
 		ThemeColor:  getColourForState(events.GetSubjectState()),
 		Title:       title,
 		Sections: []Section{
 			{
-				ActivityTitle: "Description",
+				ActivityTitle: activityTitleText,
 				ActivityText:  triggerDescription,
 				Facts:         facts,
 			},
@@ -196,10 +205,7 @@ func (sender *Sender) buildEventsFacts(events moira.NotificationEvents, maxEvent
 	}
 
 	if throttled {
-		facts = append(facts, Fact{
-			Name:  "Warning",
-			Value: "Please, *fix your system or tune this trigger* to generate less events.",
-		})
+		facts = append(facts, throttleWarningFact)
 	}
 	return facts
 }
@@ -211,7 +217,7 @@ func (sender *Sender) isValidWebhookURL(webhookURL string) error {
 		return err
 	}
 	// only pass MS teams webhook URLs
-	hasPrefix := strings.HasPrefix(webhookURL, TeamsBaseURL)
+	hasPrefix := strings.HasPrefix(webhookURL, teamsBaseURL)
 	if !hasPrefix {
 		return fmt.Errorf("%s is an invalid ms teams webhook url", webhookURL)
 	}
@@ -221,14 +227,14 @@ func (sender *Sender) isValidWebhookURL(webhookURL string) error {
 func getColourForState(state moira.State) string {
 	switch state := state; state {
 	case moira.StateOK:
-		return "008000" //green
+		return Green
 	case moira.StateWARN:
-		return "ffa500" //orange
+		return Orange
 	case moira.StateERROR:
-		return "ff0000" //red
+		return Red
 	case moira.StateNODATA:
-		return "000000" //black
+		return Black
 	default:
-		return "ffffff" //unhandled state
+		return White //unhandled state
 	}
 }
