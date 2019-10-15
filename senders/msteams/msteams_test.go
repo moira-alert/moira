@@ -17,10 +17,15 @@ func TestInit(t *testing.T) {
 		senderSettings := map[string]string{
 			"max_events": "-1",
 		}
-		Convey("Empty map", func() {
+		Convey("Empty map should fail", func() {
+			err := sender.Init(map[string]string{}, logger, nil, "")
+			So(err, ShouldNotResemble, nil)
+		})
+		Convey("Minimal settings", func() {
 			err := sender.Init(senderSettings, logger, nil, "")
 			So(err, ShouldResemble, nil)
 			So(sender, ShouldNotResemble, Sender{})
+			So(sender.maxEvents, ShouldResemble, -1)
 		})
 	})
 }
