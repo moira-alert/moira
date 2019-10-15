@@ -107,7 +107,7 @@ func TestValidWebhook(t *testing.T) {
 
 func TestBuildMessage(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
-	sender := Sender{location: location, frontURI: "http://moira.url"}
+	sender := Sender{location: location, maxEvents: -1, frontURI: "http://moira.url"}
 	value := float64(123)
 
 	Convey("Build Moira Message tests", t, func() {
