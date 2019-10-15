@@ -99,7 +99,7 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 	if trigger.Desc != "" {
 		triggerDescription = string(blackfriday.Run([]byte(trigger.Desc)))
 	}
-	facts := sender.buildEventsFacts(events, -1, throttled)
+	facts := sender.buildEventsFacts(events, sender.maxEvents, throttled)
 	var actions []Actions
 	if uri != "" {
 		actions = append(actions, Actions{
@@ -141,7 +141,7 @@ func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moir
 	}
 
 	sender.logger.Debugf("%s\n", requestBody)
-	request, err := http.NewRequest("POST", requestURL, bytes.NewBuffer(requestBody))
+	request, err := http.NewRequest(http.MethodPost, requestURL, bytes.NewBuffer(requestBody))
 	if err != nil {
 		return request, err
 	}
