@@ -15,7 +15,7 @@ func getDefault() config {
 		LogFile:  "stdout",
 		LogLevel: "info",
 		Redis: cmd.RedisConfig{
-			Host:            "localhost",
+			Host:            "redis",
 			Port:            "6379",
 			ConnectionLimit: 512,
 		},
