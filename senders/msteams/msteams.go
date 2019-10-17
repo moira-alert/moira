@@ -170,7 +170,7 @@ func (sender *Sender) buildTitleAndURI(events moira.NotificationEvents, trigger 
 
 	tags := trigger.GetTags()
 	if tags != "" {
-		title += " " + tags
+		title = fmt.Sprintf("%s %s", title, tags)
 	}
 	triggerURI := trigger.GetTriggerURI(sender.frontURI)
 
