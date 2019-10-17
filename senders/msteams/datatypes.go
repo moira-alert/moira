@@ -62,7 +62,7 @@ Actions models possible actions in a MessageCard, currently limited to OpenURI a
 		]
  }
 */
-type Actions struct {
+type Action struct {
 	Type    string          `json:"@type"`
 	Name    string          `json:"name"`
 	Targets []OpenURITarget `json:"targets"`
