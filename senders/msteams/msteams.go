@@ -109,9 +109,9 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 		triggerDescription = string(blackfriday.Run([]byte(trigger.Desc)))
 	}
 	facts := sender.buildEventsFacts(events, sender.maxEvents, throttled)
-	var actions []Actions
+	var actions []Action
 	if uri != "" {
-		actions = append(actions, Actions{
+		actions = append(actions, Action{
 			Type: openUri,
 			Name: openUriMessage,
 			Targets: []OpenURITarget{

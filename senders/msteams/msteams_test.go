@@ -284,7 +284,7 @@ some other text _italic text_`,
 						},
 					},
 				},
-				PotentialAction: []Actions{
+				PotentialAction: []Action{
 					{
 						Type: "OpenUri",
 						Name: "View in Moira",
@@ -347,7 +347,7 @@ some other text _italic text_`,
 						},
 					},
 				},
-				PotentialAction: []Actions{
+				PotentialAction: []Action{
 					{
 						Type: "OpenUri",
 						Name: "View in Moira",
@@ -403,7 +403,7 @@ some other text _italic text_`,
 						},
 					},
 				},
-				PotentialAction: []Actions{
+				PotentialAction: []Action{
 					{
 						Type: "OpenUri",
 						Name: "View in Moira",

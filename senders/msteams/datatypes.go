@@ -50,7 +50,7 @@ type OpenURITarget struct {
 }
 
 /*
-Actions models possible actions in a MessageCard, currently limited to OpenURI actions
+Action models possible action in a MessageCard, currently limited to OpenURI actions
  {
 		"@type": "OpenUri",
     "name": "Open in Moira"
