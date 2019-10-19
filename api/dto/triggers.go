@@ -1,4 +1,3 @@
-// nolint
 package dto
 
 import (
@@ -187,67 +186,21 @@ func checkWarnErrorExpression(trigger *Trigger) error {
 
 	switch trigger.TriggerType {
 	case "":
-		if trigger.Expression != "" {
-			trigger.TriggerType = moira.ExpressionTrigger
-			return nil
-		}
-		if trigger.WarnValue != nil && trigger.ErrorValue != nil {
-			if *trigger.WarnValue > *trigger.ErrorValue {
-				trigger.TriggerType = moira.FallingTrigger
-				return nil
-			}
-			if *trigger.WarnValue < *trigger.ErrorValue {
-				trigger.TriggerType = moira.RisingTrigger
-				return nil
-			}
-		}
-		if trigger.WarnValue == nil {
-			return fmt.Errorf("warn_value: is empty - please fill both values or choose trigger_type: rising, falling, expression")
-		}
-		if trigger.ErrorValue == nil {
-			return fmt.Errorf("error_value: is empty - please fill both values or choose trigger_type: rising, falling, expression")
-		}
+		return checkEmptyTriggerType(trigger)
 
 	case moira.RisingTrigger:
-		if trigger.WarnValue != nil && trigger.ErrorValue != nil {
-			if *trigger.WarnValue > *trigger.ErrorValue {
-				return fmt.Errorf("error_value should be greater than warn_value")
-			}
-		}
-		if err := checkSimpleModeFields(trigger); err != nil {
-			return err
-		}
+		return checkRisingTriggerType(trigger)
 
 	case moira.FallingTrigger:
-		if trigger.WarnValue != nil && trigger.ErrorValue != nil {
-			if *trigger.WarnValue < *trigger.ErrorValue {
-				return fmt.Errorf("warn_value should be greater than error_value")
-			}
-		}
-		if err := checkSimpleModeFields(trigger); err != nil {
-			return err
-		}
+		return checkFallingTriggerType(trigger)
 
 	case moira.ExpressionTrigger:
-		if trigger.Expression == "" {
-			return fmt.Errorf("trigger_type set to expression, but no expression provided")
-		}
-		if trigger.WarnValue != nil && trigger.ErrorValue != nil {
-			return fmt.Errorf("can't use 'warn_value' and 'error_value' on trigger_type: '%v'", moira.ExpressionTrigger)
-		}
-		if trigger.WarnValue != nil {
-			return fmt.Errorf("can't use 'warn_value' on trigger_type: '%v'", moira.ExpressionTrigger)
-		}
-		if trigger.ErrorValue != nil {
-			return fmt.Errorf("can't use 'error_value' on trigger_type: '%v'", moira.ExpressionTrigger)
-		}
+		return  checkExpressionTriggerType(trigger)
 
 	default:
 		return fmt.Errorf("wrong trigger_type: %v, allowable values: '%v', '%v', '%v'",
 			trigger.TriggerType, moira.RisingTrigger, moira.FallingTrigger, moira.ExpressionTrigger)
 	}
-
-	return nil
 }
 
 func checkSimpleModeFields(trigger *Trigger) error {
@@ -256,6 +209,70 @@ func checkSimpleModeFields(trigger *Trigger) error {
 	}
 	if trigger.Expression != "" {
 		return fmt.Errorf("can't use 'expression' to trigger_type: '%v'", trigger.TriggerType)
+	}
+	return nil
+}
+
+func checkEmptyTriggerType(trigger *Trigger) error{
+	if trigger.Expression != "" {
+		trigger.TriggerType = moira.ExpressionTrigger
+		return nil
+	}
+	if trigger.WarnValue != nil && trigger.ErrorValue != nil {
+		if *trigger.WarnValue > *trigger.ErrorValue {
+			trigger.TriggerType = moira.FallingTrigger
+			return nil
+		}
+		if *trigger.WarnValue < *trigger.ErrorValue {
+			trigger.TriggerType = moira.RisingTrigger
+			return nil
+		}
+	}
+	if trigger.WarnValue == nil {
+		return fmt.Errorf("warn_value: is empty - please fill both values or choose trigger_type: rising, falling, expression")
+	}
+	if trigger.ErrorValue == nil {
+		return fmt.Errorf("error_value: is empty - please fill both values or choose trigger_type: rising, falling, expression")
+	}
+	return nil
+}
+
+func checkRisingTriggerType(trigger *Trigger) error{
+	if trigger.WarnValue != nil && trigger.ErrorValue != nil {
+		if *trigger.WarnValue > *trigger.ErrorValue {
+			return fmt.Errorf("error_value should be greater than warn_value")
+		}
+	}
+	if err := checkSimpleModeFields(trigger); err != nil {
+		return err
+	}
+	return nil
+}
+
+func checkFallingTriggerType(trigger *Trigger) error {
+	if trigger.WarnValue != nil && trigger.ErrorValue != nil {
+		if *trigger.WarnValue < *trigger.ErrorValue {
+			return fmt.Errorf("warn_value should be greater than error_value")
+		}
+	}
+	if err := checkSimpleModeFields(trigger); err != nil {
+		return err
+	}
+	return nil
+}
+
+func checkExpressionTriggerType(trigger *Trigger) error{
+	if trigger.Expression == "" {
+		return fmt.Errorf("trigger_type set to expression, but no expression provided")
+	}
+	if trigger.WarnValue != nil && trigger.ErrorValue != nil {
+		return fmt.Errorf("can't use 'warn_value' and 'error_value' on trigger_type: '%v'", moira.ExpressionTrigger)
+	}
+	if trigger.WarnValue != nil {
+		return fmt.Errorf("can't use 'warn_value' on trigger_type: '%v'", moira.ExpressionTrigger)
+	}
+	if trigger.ErrorValue != nil {
+		return fmt.Errorf("can't use 'error_value' on trigger_type: '%v'", moira.ExpressionTrigger)
 	}
 	return nil
 }

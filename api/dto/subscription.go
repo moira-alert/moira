@@ -1,4 +1,3 @@
-// nolint
 package dto
 
 import (
@@ -83,11 +82,8 @@ func (subscription *Subscription) checkContacts(request *http.Request) error {
 			return ErrProvidedContactsForbidden{contactIds: anotherUserContactIds}
 		}
 		anotherUserNames := make([]string, 0)
-		anotherContactIds := make([]string, 0)
-		for i, contact := range contacts {
-			if contact == nil {
-				anotherContactIds = append(anotherContactIds, anotherUserContactIds[i])
-			} else {
+		for _, contact := range contacts {
+			if contact != nil {
 				anotherUserNames = append(anotherUserNames, contact.Value)
 			}
 		}
