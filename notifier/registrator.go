@@ -7,6 +7,7 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/senders/discord"
 	"github.com/moira-alert/moira/senders/mail"
+	"github.com/moira-alert/moira/senders/msteams"
 	"github.com/moira-alert/moira/senders/opsgenie"
 	"github.com/moira-alert/moira/senders/pagerduty"
 	"github.com/moira-alert/moira/senders/pushover"
@@ -34,6 +35,7 @@ const (
 	opsgenieSender    = "opsgenie"
 	victoropsSender   = "victorops"
 	pagerdutySender   = "pagerduty"
+	msTeamsSender     = "msteams"
 )
 
 // RegisterSenders watch on senders config and register all configured senders
@@ -54,6 +56,8 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 			err = notifier.RegisterSender(senderSettings, &slack.Sender{})
 		case telegramSender:
 			err = notifier.RegisterSender(senderSettings, &telegram.Sender{DataBase: connector})
+		case msTeamsSender:
+			err = notifier.RegisterSender(senderSettings, &msteams.Sender{})
 		case pagerdutySender:
 			err = notifier.RegisterSender(senderSettings, &pagerduty.Sender{ImageStores: notifier.imageStores})
 		case twilioSmsSender, twilioVoiceSender:
