@@ -32,6 +32,8 @@ web:
       label: Twilio SMS
     - type: twilio voice
       label: Twilio voice
+    - type: msteams
+      label: MS Teams
 log:
   log_file: stdout
   log_level: debug
