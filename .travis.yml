@@ -22,6 +22,7 @@ before_install:
 install:
   - go get -v golang.org/x/tools/cmd/cover
   - go get -v github.com/mattn/goveralls
+  - make install-lint
 before_script:
   - make lint
   - make test
