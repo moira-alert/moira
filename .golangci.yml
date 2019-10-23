@@ -36,6 +36,6 @@ linters:
     - varcheck
 
 run:
-  deadline: 5m
+  timeout: 5m
   skip-dirs:
     - vendor
