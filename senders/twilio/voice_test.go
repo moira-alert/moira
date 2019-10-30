@@ -48,4 +48,10 @@ func TestBuildVoiceURL(t *testing.T) {
 		sender.appendMessage = true
 		So(sender.buildVoiceURL(moira.TriggerData{Name: "Name"}), ShouldResemble, "url hereHi%21+This+is+a+notification+for+Moira+trigger+Name.+Please%2C+visit+Moira+web+interface+for+details.")
 	})
+
+	Convey("twimlets echo is true", t, func() {
+		sender.twimletsEcho = true
+		So(sender.buildVoiceURL(moira.TriggerData{Name: "Name"}), ShouldResemble,
+			"https://twimlets.com/echo?Twiml=%3CResponse%3E%3CSay%3EHi%21+This+is+a+notification+for+Moira+trigger+Name.+Please%2C+visit+Moira+web+interface+for+details.%3C%2FSay%3E%3C%2FResponse%3E")
+	})
 }
