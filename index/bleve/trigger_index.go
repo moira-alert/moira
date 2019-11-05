@@ -2,6 +2,7 @@ package bleve
 
 import (
 	"github.com/blevesearch/bleve"
+	"github.com/blevesearch/bleve/index/scorch"
 	"github.com/blevesearch/bleve/mapping"
 )
 
@@ -12,7 +13,7 @@ type TriggerIndex struct {
 
 // CreateTriggerIndex returns TriggerIndex by provided mapping
 func CreateTriggerIndex(mapping mapping.IndexMapping) (*TriggerIndex, error) {
-	bleveIdx, err := bleve.NewMemOnly(mapping)
+	bleveIdx, err := bleve.NewUsing("", mapping, scorch.Name, scorch.Name, map[string]interface{}{})
 	if err != nil {
 		return nil, err
 	}
