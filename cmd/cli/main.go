@@ -42,13 +42,14 @@ var (
 )
 
 var (
+	cleanup  = flag.Bool("cleanup", false, "User Existence Check")
 	userDel  = flag.String("user-del", "", "Delete all contacts and subscriptions for a user")
 	fromUser = flag.String("from-user", "", "Transfer subscriptions and contacts from user.")
 	toUser   = flag.String("to-user", "", "Transfer subscriptions and contacts to user.")
 )
 
 func main() {
-	logger, dataBase := initApp()
+	confCleanup, logger, dataBase := initApp()
 
 	if *update {
 		fromVersion := checkValidVersion(logger, updateFromVersion, true)
@@ -77,6 +78,7 @@ func main() {
 			logger.Errorf("Failed to enable images in all notifications")
 		}
 	}
+
 	if *fromUser != "" || *toUser != "" {
 		if err := transferUserSubscriptionsAndContacts(dataBase, *fromUser, *toUser); err != nil {
 			logger.Error(err)
@@ -88,9 +90,15 @@ func main() {
 			logger.Error(err)
 		}
 	}
+
+	if *cleanup {
+		if err := handleCleanup(dataBase, confCleanup); err != nil {
+			logger.Error(err)
+		}
+	}
 }
 
-func initApp() (moira.Logger, moira.Database) {
+func initApp() (cleanupConfig, moira.Logger, moira.Database) {
 	flag.Parse()
 	if *printVersion {
 		fmt.Println("Moira - alerting system based on graphite data")
@@ -120,7 +128,7 @@ func initApp() (moira.Logger, moira.Database) {
 
 	databaseSettings := config.Redis.GetSettings()
 	dataBase := redis.NewDatabase(logger, databaseSettings, redis.Cli)
-	return logger, dataBase
+	return config.Cleanup, logger, dataBase
 }
 
 func checkValidVersion(logger moira.Logger, updateFromVersion *string, isUpdate bool) string {

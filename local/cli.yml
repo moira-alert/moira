@@ -2,6 +2,10 @@ redis:
   host: redis
   port: "6379"
   dbid: 0
+cleanup:
+  whitelist: []
+  delete: false
+  handling_anonymous: false
 log_file: stdout
 log_level: debug
 

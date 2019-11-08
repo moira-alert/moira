@@ -133,21 +133,21 @@ packages: clean build tar rpm deb
 
 .PHONY: docker_feature_images
 docker_feature_images:
-	for service in "filter" "notifier" "api" "checker" ; do \
+	for service in "filter" "notifier" "api" "checker" "cli" ; do \
 		docker build --build-arg MoiraVersion=${VERSION_FEATURE} --build-arg GO_VERSION=${GO_VERSION} --build-arg GIT_COMMIT=${GIT_HASH} -f Dockerfile.$$service -t moira/$$service-${MARK_UNSTABLE}:${VERSION_FEATURE} . ; \
 		docker push moira/$$service-${MARK_UNSTABLE}:${VERSION_FEATURE} ; \
 	done
 
 .PHONY: docker_nightly_images
 docker_nightly_images:
-	for service in "filter" "notifier" "api" "checker" ; do \
+	for service in "filter" "notifier" "api" "checker" "cli" ; do \
 		docker build --build-arg MoiraVersion=${VERSION_NIGHTLY} --build-arg GO_VERSION=${GO_VERSION} --build-arg GIT_COMMIT=${GIT_HASH} -f Dockerfile.$$service -t moira/$$service-${MARK_NIGHTLY}:${VERSION_NIGHTLY} . ; \
 		docker push moira/$$service-${MARK_NIGHTLY}:${VERSION_NIGHTLY} ; \
 	done
 
 .PHONY: docker_release_images
 docker_release_images:
-	for service in "filter" "notifier" "api" "checker" ; do \
+	for service in "filter" "notifier" "api" "checker" "cli" ; do \
 		docker build --build-arg MoiraVersion=${VERSION_RELEASE} --build-arg GO_VERSION=${GO_VERSION} --build-arg GIT_COMMIT=${GIT_HASH} -f Dockerfile.$$service -t moira/$$service:${VERSION_RELEASE} -t moira/$$service:latest . ; \
 		docker push moira/$$service:${VERSION_RELEASE} ; \
 		docker push moira/$$service:latest ; \
