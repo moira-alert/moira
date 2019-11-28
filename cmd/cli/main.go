@@ -92,7 +92,8 @@ func main() {
 	}
 
 	if *cleanup {
-		if err := handleCleanup(dataBase, confCleanup); err != nil {
+		logger.Debugf("User whitelist: %#v", confCleanup.Whitelist)
+		if err := handleCleanup(logger, dataBase, confCleanup); err != nil {
 			logger.Error(err)
 		}
 	}

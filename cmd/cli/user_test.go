@@ -40,7 +40,7 @@ func TestUpdateUsers(t *testing.T) {
 		}(t)
 
 		Convey("Test off notifications", func() {
-			So(usersCleanup(database, users, conf.Cleanup), ShouldBeNil)
+			So(usersCleanup(logger, database, users, conf.Cleanup), ShouldBeNil)
 			for _, contact := range contacts {
 				subscription, err := database.GetSubscription("subscription_" + contact.ID)
 
@@ -56,7 +56,7 @@ func TestUpdateUsers(t *testing.T) {
 
 		Convey("Verify deletion of contacts and subscriptions", func() {
 			conf.Cleanup.Delete = true
-			So(usersCleanup(database, users, conf.Cleanup), ShouldBeNil)
+			So(usersCleanup(logger, database, users, conf.Cleanup), ShouldBeNil)
 			for _, contact := range contacts {
 				if !strings.Contains(contact.User, "Another") {
 					continue

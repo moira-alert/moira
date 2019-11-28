@@ -21,6 +21,8 @@ VENDOR := "SKB Kontur"
 URL := "https://github.com/moira-alert/moira"
 LICENSE := "MIT"
 
+SERVICES := "notifier" "api" "checker" "cli"
+
 .PHONY: default
 default: test build
 
@@ -39,8 +41,9 @@ test:
 
 .PHONY: build
 build:
-	for service in "filter" "notifier" "api" "checker" "cli" ; do \
-		CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-X main.MoiraVersion=${VERSION_RELEASE} -X main.GoVersion=${GO_VERSION} -X main.GitCommit=${GIT_HASH}" -o build/$$service github.com/moira-alert/moira/cmd/$$service ; \
+	for service in $(SERVICES) ; do \
+		CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-X main.MoiraVersion=${VERSION_RELEASE} -X main.GoVersion=${GO_VERSION} -X main.GitCommit=${GIT_HASH}" -o \
+		build/$$service github.com/moira-alert/moira/cmd/$$service ; \
 	done
 
 .PHONY: clean
@@ -49,7 +52,7 @@ clean:
 
 .PHONY: tar
 tar:
-	for service in "filter" "notifier" "api" "checker" "cli" ; do \
+	for service in $(SERVICES) ; do \
 		mkdir -p build/root/$$service/usr/bin ; \
 		mkdir -p build/root/$$service/etc/moira ; \
 		cp build/$$service build/root/$$service/usr/bin/moira-$$service ; \
@@ -60,13 +63,13 @@ tar:
 		cp pkg/$$service/moira-$$service.service build/root/$$service/usr/lib/systemd/system/moira-$$service.service ; \
 	done
 	cp pkg/filter/storage-schemas.conf build/root/filter/etc/moira/storage-schemas.conf
-	for service in "filter" "notifier" "api" "checker" "cli" ; do \
+	for service in $SERVICES ; do \
 		tar -czvPf build/moira-$$service-${VERSION_RELEASE}.tar.gz -C build/root/$$service . ; \
 	done
 
 .PHONY: rpm
 rpm: tar
-	for service in "notifier" "api" "checker" "cli" ; do \
+	for service in $(SERVICES) ; do \
 		fpm -t rpm \
 			-s "tar" \
 			--description "Moira $$service" \
@@ -98,7 +101,7 @@ rpm: tar
 
 .PHONY: deb
 deb: tar
-	for service in "notifier" "api" "checker" "cli" ; do \
+	for service in $(SERVICES) ; do \
 		fpm -t deb \
 			-s "tar" \
 			--description "Moira $$service" \
@@ -133,21 +136,21 @@ packages: clean build tar rpm deb
 
 .PHONY: docker_feature_images
 docker_feature_images:
-	for service in "filter" "notifier" "api" "checker" "cli" ; do \
+	for service in "filter" $(SERVICES) ; do \
 		docker build --build-arg MoiraVersion=${VERSION_FEATURE} --build-arg GO_VERSION=${GO_VERSION} --build-arg GIT_COMMIT=${GIT_HASH} -f Dockerfile.$$service -t moira/$$service-${MARK_UNSTABLE}:${VERSION_FEATURE} . ; \
 		docker push moira/$$service-${MARK_UNSTABLE}:${VERSION_FEATURE} ; \
 	done
 
 .PHONY: docker_nightly_images
 docker_nightly_images:
-	for service in "filter" "notifier" "api" "checker" "cli" ; do \
+	for service in "filter" $(SERVICES) ; do \
 		docker build --build-arg MoiraVersion=${VERSION_NIGHTLY} --build-arg GO_VERSION=${GO_VERSION} --build-arg GIT_COMMIT=${GIT_HASH} -f Dockerfile.$$service -t moira/$$service-${MARK_NIGHTLY}:${VERSION_NIGHTLY} . ; \
 		docker push moira/$$service-${MARK_NIGHTLY}:${VERSION_NIGHTLY} ; \
 	done
 
 .PHONY: docker_release_images
 docker_release_images:
-	for service in "filter" "notifier" "api" "checker" "cli" ; do \
+	for service in "filter" $(SERVICES) ; do \
 		docker build --build-arg MoiraVersion=${VERSION_RELEASE} --build-arg GO_VERSION=${GO_VERSION} --build-arg GIT_COMMIT=${GIT_HASH} -f Dockerfile.$$service -t moira/$$service:${VERSION_RELEASE} -t moira/$$service:latest . ; \
 		docker push moira/$$service:${VERSION_RELEASE} ; \
 		docker push moira/$$service:latest ; \

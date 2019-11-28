@@ -69,7 +69,7 @@ func deleteUser(database moira.Database, user string) error {
 	return nil
 }
 
-func handleCleanup(database moira.Database, conf cleanupConfig) error {
+func handleCleanup(logger moira.Logger, database moira.Database, config cleanupConfig) error {
 	var users []string
 
 	reader := json.NewDecoder(bufio.NewReader(os.Stdin))
@@ -78,13 +78,13 @@ func handleCleanup(database moira.Database, conf cleanupConfig) error {
 		return err
 	}
 
-	return usersCleanup(database, users, conf)
+	return usersCleanup(logger, database, users, config)
 }
 
-func usersCleanup(database moira.Database, users []string, config cleanupConfig) error {
+func usersCleanup(logger moira.Logger, database moira.Database, users []string, config cleanupConfig) error {
 	usersMap := make(map[string]bool, len(users)+len(config.Whitelist))
 
-	if !config.HandlingAnonymous {
+	if config.HandlingAnonymous {
 		config.Whitelist = append(config.Whitelist, "")
 	}
 
@@ -94,7 +94,7 @@ func usersCleanup(database moira.Database, users []string, config cleanupConfig)
 
 	contacts, err := database.GetAllContacts()
 	if err != nil {
-		return nil
+		return err
 	}
 
 	var usersNotFound []string
@@ -113,6 +113,8 @@ func usersCleanup(database moira.Database, users []string, config cleanupConfig)
 		} else if err = offNotification(database, user); err != nil {
 			break
 		}
+
+		logger.Info("User cleaned:", user)
 	}
 
 	return err
