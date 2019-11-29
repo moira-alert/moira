@@ -1,0 +1,17 @@
+[general]
+# Ignore certain rules, you can reference them by their id or by their full name
+# See: http://jorisroovers.com/gitlint/rules/
+# ignore=T5, B5, B6
+
+# verbosity should be a value between 1 and 3, the commandline -v flags take precedence over this
+verbosity = 2
+
+[title-max-length]
+line-length=50
+
+[title-match-regex]
+# python like regex (https://docs.python.org/2/library/re.html) that the
+# commit-msg title must be matched to.
+# Note that the regex can contradict with other rules if not used correctly
+# (e.g. title-must-not-contain-word).
+regex=^(build|ci|docs|feat|fix|perf|refactor|style|test):\s

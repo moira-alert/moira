@@ -6,3 +6,6 @@ build
 local
 
 **/*_test.go
+
+.gitlint
+.pre-commit-config.yaml

@@ -29,6 +29,15 @@ install-lint:
 	# The recommended way to install golangci-lint into CI/CD
 	wget -O - -q https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ${GO_PATH}/bin ${GOLANGCI_LINT_VERSION}
 
+.PHONY: install-pre-commit
+install-pre-commit:
+	python3 -m pip install --user --upgrade pip
+	python3 -m pip install --user pre-commit
+	python3 -m pip install --user gitlint
+	pre-commit install -f
+	pre-commit install --hook-type commit-msg
+	pre-commit autoupdate
+
 .PHONY: lint
 lint:
 	GOGC=50 golangci-lint run
