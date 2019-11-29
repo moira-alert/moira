@@ -14,9 +14,17 @@ func transferUserSubscriptionsAndContacts(database moira.Database, from, to stri
 		return err
 	}
 
+	if len(contactIDs) == 0 {
+		return nil
+	}
+
 	contacts, err := database.GetContacts(contactIDs)
 	if err != nil {
 		return err
+	}
+
+	if len(contacts) == 0 {
+		return nil
 	}
 
 	for _, contact := range contacts {
@@ -31,9 +39,17 @@ func transferUserSubscriptionsAndContacts(database moira.Database, from, to stri
 		return err
 	}
 
+	if len(subscriptionIDs) == 0 {
+		return nil
+	}
+
 	subscriptions, err := database.GetSubscriptions(subscriptionIDs)
 	if err != nil {
 		return err
+	}
+
+	if len(subscriptions) == 0 {
+		return nil
 	}
 
 	for _, subscription := range subscriptions {
@@ -47,6 +63,10 @@ func deleteUser(database moira.Database, user string) error {
 	subscriptionIDs, err := database.GetUserSubscriptionIDs(user)
 	if err != nil {
 		return err
+	}
+
+	if len(subscriptionIDs) == 0 {
+		return nil
 	}
 
 	for _, subscriptionID := range subscriptionIDs {
@@ -97,6 +117,10 @@ func usersCleanup(logger moira.Logger, database moira.Database, users []string, 
 		return err
 	}
 
+	if len(contacts) == 0 {
+		return nil
+	}
+
 	var usersNotFound []string
 
 	for _, contact := range contacts {
@@ -110,8 +134,10 @@ func usersCleanup(logger moira.Logger, database moira.Database, users []string, 
 			if err = deleteUser(database, user); err != nil {
 				break
 			}
-		} else if err = offNotification(database, user); err != nil {
-			break
+		} else {
+			if err = offNotification(database, user); err != nil {
+				break
+			}
 		}
 
 		logger.Info("User cleaned:", user)
@@ -132,6 +158,7 @@ func offNotification(database moira.Database, user string) error {
 	}
 
 	for _, subscription := range subscriptions {
+		database.RemoveNotification(subscription.ID)
 		subscription.Enabled = false
 	}
 
