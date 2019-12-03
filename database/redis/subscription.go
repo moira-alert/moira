@@ -41,15 +41,21 @@ func (connector *DbConnector) GetSubscriptions(subscriptionIDs []string) ([]*moi
 	if err != nil {
 		return nil, fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
+
+	correctSubscriptions := make([]*moira.SubscriptionData, 0, len(subscriptions))
+
 	for i := range subscriptions {
 		if subscriptions[i] != nil {
 			subscriptions[i].ID = subscriptionIDs[i]
 			if subscriptions[i].Tags == nil {
 				subscriptions[i].Tags = []string{}
 			}
+
+			correctSubscriptions = append(correctSubscriptions, subscriptions[i])
 		}
 	}
-	return subscriptions, nil
+
+	return correctSubscriptions, nil
 }
 
 // SaveSubscription writes subscription data, updates tags subscriptions and user subscriptions
@@ -120,13 +126,23 @@ func (connector *DbConnector) updateSubscriptions(oldSubscriptions []*moira.Subs
 	defer c.Close()
 
 	c.Send("MULTI")
-	for i, newSubscription := range newSubscriptions {
+
+	i := 0
+	for _, newSubscription := range newSubscriptions {
+		if len(oldSubscriptions) < i+1 {
+			addSendSubscriptionRequest(c, *newSubscription, nil)
+			continue
+		}
+
 		addSendSubscriptionRequest(c, *newSubscription, oldSubscriptions[i])
+		i++
 	}
+
 	_, err := c.Do("EXEC")
 	if err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
+
 	return nil
 }
 

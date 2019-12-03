@@ -174,7 +174,7 @@ func TestSubscriptionData(t *testing.T) {
 
 				actual1, err := dataBase.GetSubscriptions([]string{sub.ID})
 				So(err, ShouldBeNil)
-				So(actual1, ShouldResemble, []*moira.SubscriptionData{nil})
+				So(actual1, ShouldResemble, []*moira.SubscriptionData{})
 
 				actual3, err := dataBase.GetTagsSubscriptions([]string{tag1, tag2, tag3})
 				So(err, ShouldBeNil)
@@ -209,7 +209,7 @@ func TestSubscriptionData(t *testing.T) {
 
 			actual, err = dataBase.GetSubscriptions(ids)
 			So(err, ShouldBeNil)
-			So(actual, ShouldHaveLength, len(ids))
+			So(actual, ShouldHaveLength, 7)
 
 			actual1, err = dataBase.GetUserSubscriptionIDs(user1)
 			So(err, ShouldBeNil)
