@@ -1,6 +1,9 @@
 package main
 
 import (
+	"encoding/json"
+	"os"
+
 	"github.com/moira-alert/moira"
 )
 
@@ -74,4 +77,94 @@ func deleteUser(database moira.Database, user string) error {
 	}
 
 	return nil
+}
+
+func handleCleanup(logger moira.Logger, database moira.Database, config cleanupConfig) error {
+	var users []string
+
+	reader := json.NewDecoder(os.Stdin)
+
+	if err := reader.Decode(&users); err != nil {
+		return err
+	}
+
+	return usersCleanup(logger, database, users, config)
+}
+
+func usersCleanup(logger moira.Logger, database moira.Database, users []string, config cleanupConfig) error {
+	if config.AddAnonymousToWhitelist {
+		config.Whitelist = append(config.Whitelist, "")
+	}
+
+	usersMap := make(map[string]bool, len(users)+len(config.Whitelist))
+
+	for _, user := range append(users, config.Whitelist...) {
+		usersMap[user] = true
+	}
+
+	contacts, err := database.GetAllContacts()
+	if err != nil {
+		return err
+	}
+
+	if len(contacts) == 0 {
+		return nil
+	}
+
+	usersNotFound := make(map[string]bool, len(contacts))
+
+	for _, contact := range contacts {
+		if contact == nil {
+			continue
+		}
+
+		if !usersMap[contact.User] {
+			usersNotFound[contact.User] = true
+		}
+	}
+
+	for user := range usersNotFound {
+		if config.Delete {
+			if err = deleteUser(database, user); err != nil {
+				return err
+			}
+		} else {
+			if err = offNotification(database, user); err != nil {
+				return err
+			}
+		}
+
+		logger.Debug("User cleaned:", user)
+	}
+
+	return err
+}
+
+func offNotification(database moira.Database, user string) error {
+	subscriptionIDs, err := database.GetUserSubscriptionIDs(user)
+	if err != nil {
+		return err
+	}
+
+	subscriptions, err := database.GetSubscriptions(subscriptionIDs)
+	if err != nil {
+		return err
+	}
+
+	saveSubscriptions := make([]*moira.SubscriptionData, 0, len(subscriptions))
+
+	for _, subscription := range subscriptions {
+		if subscription == nil {
+			continue
+		}
+
+		if !subscription.Enabled {
+			continue
+		}
+
+		subscription.Enabled = false
+		saveSubscriptions = append(saveSubscriptions, subscription)
+	}
+
+	return database.SaveSubscriptions(saveSubscriptions)
 }
