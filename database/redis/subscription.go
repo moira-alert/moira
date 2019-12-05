@@ -296,6 +296,9 @@ func (connector *DbConnector) getSubscriptionsTriggers(subscriptions []*moira.Su
 			return triggers, err
 		}
 		for _, trigger := range subscriptionTriggers {
+			if trigger == nil {
+				continue
+			}
 			triggersMap[trigger.ID] = trigger
 		}
 	}
