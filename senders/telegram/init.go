@@ -33,6 +33,7 @@ type Sender struct {
 	logger   moira.Logger
 	apiToken string
 	frontURI string
+	apiServer string
 	bot      *telebot.Bot
 	location *time.Location
 }
@@ -45,14 +46,19 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 	}
 
 	sender.apiToken = apiToken
+	sender.apiServer = senderSettings["apiServer"]
 	sender.frontURI = senderSettings["front_uri"]
 	sender.logger = logger
 	sender.location = location
 	var err error
-	sender.bot, err = telebot.NewBot(telebot.Settings{
-		Token:  sender.apiToken,
-		Poller: &telebot.LongPoller{Timeout: pollerTimeout},
-	})
+	settings := telebot.Settings{
+              Token:  sender.apiToken,
+              Poller: &telebot.LongPoller{Timeout: pollerTimeout},
+        }
+        if sender.apiServer != "" {
+              settings.URL = sender.apiServer
+        }
+        sender.bot, err := telebot.NewBot(settings)
 	if err != nil {
 		return err
 	}
