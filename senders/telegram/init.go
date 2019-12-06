@@ -51,7 +51,6 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 	sender.logger = logger
 	sender.location = location
 	var err error
-<<<<<<< HEAD
 	settings := telebot.Settings{
               Token:  sender.apiToken,
               Poller: &telebot.LongPoller{Timeout: pollerTimeout},
@@ -60,20 +59,6 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
               settings.URL = sender.apiServer
         }
         sender.bot, err := telebot.NewBot(settings)
-=======
-	if sender.apiServer == "" {
-           sender.bot, err = telebot.NewBot(telebot.Settings{
-               Token:  sender.apiToken,
-               Poller: &telebot.LongPoller{Timeout: pollerTimeout},
-           })
-        } else {
-           sender.bot, err = telebot.NewBot(telebot.Settings{
-               URL: sender.apiServer,
-               Token:  sender.apiToken,
-               Poller: &telebot.LongPoller{Timeout: pollerTimeout},
-           })
-        }
->>>>>>> 2e82a04d2cfaf23b92a29060c063291c57273fb8
 	if err != nil {
 		return err
 	}
