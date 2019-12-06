@@ -7,7 +7,7 @@ import (
 
 	"github.com/beevee/go-chart"
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/metric_source"
+	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
 	"github.com/moira-alert/moira/plotting"
 )
@@ -128,15 +128,17 @@ func (notifier *StandardNotifier) evaluateTriggerMetrics(from, to int64, trigger
 // fetchAvailableSeries calls fetch function with realtime alerting and retries on fail without
 func fetchAvailableSeries(metricsSource metricSource.MetricSource, target string, from, to int64) ([]*metricSource.MetricData, error) {
 	realtimeFetchResult, realtimeErr := metricsSource.Fetch(target, from, to, true)
-	switch realtimeErr.(type) {
-	case local.ErrEvaluateTargetFailedWithPanic:
+	if realtimeErr == nil {
+		return realtimeFetchResult.GetMetricsData(), realtimeErr
+	}
+	if errFailedWithPanic, ok := realtimeErr.(local.ErrEvaluateTargetFailedWithPanic); ok {
 		fetchResult, err := metricsSource.Fetch(target, from, to, false)
 		if err != nil {
-			return nil, errFetchAvailableSeriesFailed{realtimeErr: realtimeErr.Error(), storedErr: err.Error()}
+			return nil, errFetchAvailableSeriesFailed{realtimeErr: errFailedWithPanic.Error(), storedErr: err.Error()}
 		}
 		return fetchResult.GetMetricsData(), nil
 	}
-	return realtimeFetchResult.GetMetricsData(), realtimeErr
+	return nil, realtimeErr
 }
 
 // getMetricDataToShow returns MetricData limited by whitelist
