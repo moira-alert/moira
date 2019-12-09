@@ -3,7 +3,6 @@ module github.com/moira-alert/moira
 go 1.13
 
 require (
-	bitbucket.org/tebeka/strftime v0.0.0-20140926081919-2194253a23c0 // indirect
 	github.com/FZambia/sentinel v1.0.1-0.20180630101255-52eb51343b45
 	github.com/JaderDias/movingmedian v0.0.0-20170611140316-de8c410559fa // indirect
 	github.com/Knetic/govaluate v3.0.1-0.20170815164058-89a078c30383+incompatible
@@ -20,6 +19,7 @@ require (
 	github.com/boltdb/bolt v1.3.2-0.20180302180052-fd01fc79c553 // indirect
 	github.com/bwmarrin/discordgo v0.19.1-0.20190513173526-8d8906ce4b95
 	github.com/carlosdp/twiliogo v0.0.0-20161027183705-b26045ebb9d1
+	github.com/cespare/xxhash/v2 v2.1.1
 	github.com/couchbase/vellum v0.0.0-20190829182332-ef2e028c01fd // indirect
 	github.com/cyberdelia/go-metrics-graphite v0.0.0-20161219230853-39f87cc3b432
 	github.com/cznic/b v0.0.0-20181122101859-a26611c4d92d // indirect
