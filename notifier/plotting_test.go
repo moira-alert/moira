@@ -1,15 +1,18 @@
 package notifier
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 	"time"
 
-	"github.com/moira-alert/moira/metric_source"
+	"github.com/golang/mock/gomock"
+	"github.com/moira-alert/moira"
+	metricSource "github.com/moira-alert/moira/metric_source"
+	"github.com/moira-alert/moira/metric_source/local"
+	mockMetricSource "github.com/moira-alert/moira/mock/metric_source"
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
-
-	"github.com/moira-alert/moira"
 )
 
 func TestResolveMetricsWindow(t *testing.T) {
@@ -125,5 +128,59 @@ func TestGetMetricDataToShow(t *testing.T) {
 			So(metricsData[metricDataInd].Name, ShouldEqual, givenSeries[metricDataInd].Name)
 		}
 		So(len(metricsData), ShouldEqual, len(givenSeries))
+	})
+}
+
+func TestFetchAvailableSeries(t *testing.T) {
+	const (
+		target = "testTarget"
+		from   = 17
+		to     = 67
+	)
+	Convey("Run fetchAvailableSeries", t, func() {
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+		source := mockMetricSource.NewMockMetricSource(mockCtrl)
+		result := mockMetricSource.NewMockFetchResult(mockCtrl)
+
+		Convey("without errors", func() {
+			gomock.InOrder(
+				source.EXPECT().Fetch("testTarget", int64(17), int64(67), true).Return(result, nil).Times(1),
+				result.EXPECT().GetMetricsData().Return(nil).Times(1),
+			)
+			_, err := fetchAvailableSeries(source, target, from, to)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("with error ErrEvaluateTargetFailedWithPanic", func() {
+			var err error = local.ErrEvaluateTargetFailedWithPanic{}
+			gomock.InOrder(
+				source.EXPECT().Fetch("testTarget", int64(17), int64(67), true).Return(nil, err).Times(1),
+				source.EXPECT().Fetch("testTarget", int64(17), int64(67), false).Return(result, nil).Times(1),
+				result.EXPECT().GetMetricsData().Return(nil).Times(1),
+			)
+			_, err = fetchAvailableSeries(source, target, from, to)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("with error ErrEvaluateTargetFailedWithPanic and error again", func() {
+			var err error = local.ErrEvaluateTargetFailedWithPanic{}
+			var secondErr error = errors.New("Test error")
+			gomock.InOrder(
+				source.EXPECT().Fetch("testTarget", int64(17), int64(67), true).Return(nil, err).Times(1),
+				source.EXPECT().Fetch("testTarget", int64(17), int64(67), false).Return(nil, secondErr).Times(1),
+			)
+			_, err = fetchAvailableSeries(source, target, from, to)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("with unknown error", func() {
+			var err error = errors.New("Test error")
+			gomock.InOrder(
+				source.EXPECT().Fetch("testTarget", int64(17), int64(67), true).Return(nil, err).Times(1),
+			)
+			_, err = fetchAvailableSeries(source, target, from, to)
+			So(err, ShouldNotBeNil)
+		})
 	})
 }
