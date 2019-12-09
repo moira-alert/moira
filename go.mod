@@ -83,6 +83,6 @@ require (
 	gopkg.in/gemnasium/logrus-airbrake-hook.v2 v2.1.2 // indirect
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/tomb.v2 v2.0.0-20161208151619-d5d1b5820637
-	gopkg.in/tucnak/telebot.v2 v2.0.0-20181115150921-4688194c178d
+	gopkg.in/tucnak/telebot.v2 v2.0.0-20191005061224-d0707a9d73c4
 	gopkg.in/yaml.v2 v2.2.3
 )

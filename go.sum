@@ -594,6 +594,8 @@ gopkg.in/tomb.v2 v2.0.0-20161208151619-d5d1b5820637 h1:yiW+nvdHb9LVqSHQBXfZCieqV
 gopkg.in/tomb.v2 v2.0.0-20161208151619-d5d1b5820637/go.mod h1:BHsqpu/nsuzkT5BpiH1EMZPLyqSMM8JbIavyFACoFNk=
 gopkg.in/tucnak/telebot.v2 v2.0.0-20181115150921-4688194c178d h1:rwP+DFa5TQOEP7iCCc2z0ql57CtuI+divggCiXbuYR0=
 gopkg.in/tucnak/telebot.v2 v2.0.0-20181115150921-4688194c178d/go.mod h1:EmWSFwexO5JPTHiU7gDd9HMCCiyatACwO0HhuKNsOd0=
+gopkg.in/tucnak/telebot.v2 v2.0.0-20191005061224-d0707a9d73c4 h1:MSLXMclm1f+66ozQ1n4/+LRToMtonMsAySOo5TWK9aU=
+gopkg.in/tucnak/telebot.v2 v2.0.0-20191005061224-d0707a9d73c4/go.mod h1:+//wyPtHTeW2kfyEBwB05Hqnxev7AGrsLIyylSH++KU=
 gopkg.in/yaml.v2 v2.0.0-20170812160011-eb3733d160e7/go.mod h1:JAlM8MvJe8wmxCU4Bli9HhUf9+ttbYbLASfIpnQbh74=
 gopkg.in/yaml.v2 v2.2.1/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=
 gopkg.in/yaml.v2 v2.2.2/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=
