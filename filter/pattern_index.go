@@ -7,16 +7,16 @@ import (
 
 	"github.com/moira-alert/moira"
 
-	"github.com/vova616/xxhash"
+	"github.com/cespare/xxhash/v2"
 )
 
-var asteriskHash = xxhash.Checksum32([]byte("*"))
+var asteriskHash = xxhash.Sum64String("*")
 
 // PatternNode contains pattern node
 type PatternNode struct {
 	Children   []*PatternNode
 	Part       string
-	Hash       uint32
+	Hash       uint64
 	Prefix     string
 	InnerParts []string
 }
@@ -57,7 +57,7 @@ func NewPatternIndex(logger moira.Logger, patterns []string) *PatternIndex {
 				}
 
 				if part == "*" || !strings.ContainsAny(part, "{*?") {
-					newNode.Hash = xxhash.Checksum32([]byte(part))
+					newNode.Hash = xxhash.Sum64String(part)
 				} else {
 					if strings.Contains(part, "{") && strings.Contains(part, "}") {
 						prefix, bigSuffix := split2(part, "{")
@@ -121,7 +121,8 @@ func (source *PatternIndex) MatchPatterns(metric string) []string {
 
 func findPart(part string, currentLevel []*PatternNode) ([]*PatternNode, int) {
 	nextLevel := make([]*PatternNode, 0, 64)
-	hash := xxhash.Checksum32(moira.UnsafeStringToBytes(part))
+
+	hash := xxhash.Sum64String(part)
 	for _, node := range currentLevel {
 		for _, child := range node.Children {
 			match := false

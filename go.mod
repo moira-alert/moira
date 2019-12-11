@@ -17,9 +17,9 @@ require (
 	github.com/blevesearch/blevex v0.0.0-20190916190636-152f0fe5c040 // indirect
 	github.com/blevesearch/go-porterstemmer v1.0.2 // indirect
 	github.com/blevesearch/segment v0.0.0-20160915185041-762005e7a34f // indirect
-	github.com/boltdb/bolt v1.3.2-0.20180302180052-fd01fc79c553 // indirect
 	github.com/bwmarrin/discordgo v0.19.1-0.20190513173526-8d8906ce4b95
 	github.com/carlosdp/twiliogo v0.0.0-20161027183705-b26045ebb9d1
+	github.com/cespare/xxhash/v2 v2.1.1
 	github.com/couchbase/vellum v0.0.0-20190829182332-ef2e028c01fd // indirect
 	github.com/cyberdelia/go-metrics-graphite v0.0.0-20161219230853-39f87cc3b432
 	github.com/cznic/b v0.0.0-20181122101859-a26611c4d92d // indirect
@@ -73,15 +73,14 @@ require (
 	github.com/steveyen/gtreap v0.0.0-20150807155958-0abe01ef9be2 // indirect
 	github.com/syndtr/goleveldb v0.0.0-20180815032940-ae2bd5eed72d // indirect
 	github.com/tecbot/gorocksdb v0.0.0-20190930194452-65a88f08537a // indirect
-	github.com/vova616/xxhash v0.0.0-20130313230233-f0a9a8b74d48
 	github.com/wangjohn/quickselect v0.0.0-20161129230411-ed8402a42d5f // indirect
 	github.com/writeas/go-strip-markdown v2.0.1+incompatible
 	golang.org/x/sys v0.0.0-20191010194322-b09406accb47 // indirect
 	gonum.org/v1/netlib v0.0.0-20190926062253-2d6e29b73a19 // indirect
-	gopkg.in/airbrake/gobrake.v2 v2.0.9 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/gemnasium/logrus-airbrake-hook.v2 v2.1.2 // indirect
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
+	gopkg.in/h2non/gock.v1 v1.0.15
 	gopkg.in/tomb.v2 v2.0.0-20161208151619-d5d1b5820637
 	gopkg.in/tucnak/telebot.v2 v2.0.0-20181115150921-4688194c178d
 	gopkg.in/yaml.v2 v2.2.3

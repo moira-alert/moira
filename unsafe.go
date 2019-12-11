@@ -16,10 +16,11 @@ func UnsafeBytesToString(b []byte) string {
 
 // UnsafeStringToBytes converts string to source without copying
 func UnsafeStringToBytes(s string) []byte {
-	header := *(*reflect.StringHeader)(unsafe.Pointer(&s))
-	return *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{
-		Data: header.Data,
-		Len:  header.Len,
-		Cap:  header.Len,
-	}))
+	var b []byte
+	bh := (*reflect.SliceHeader)(unsafe.Pointer(&b))
+	bh.Data = (*reflect.StringHeader)(unsafe.Pointer(&s)).Data
+	bh.Len = len(s)
+	bh.Cap = len(s)
+
+	return b
 }
