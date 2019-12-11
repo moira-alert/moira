@@ -8,10 +8,13 @@ import (
 	"github.com/moira-alert/moira"
 )
 
+const twimletsEchoURL = "https://twimlets.com/echo?Twiml="
+
 type twilioSenderVoice struct {
 	twilioSender
 	voiceURL      string
 	appendMessage bool
+	twimletsEcho  bool
 }
 
 func (sender *twilioSenderVoice) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) error {
@@ -25,9 +28,14 @@ func (sender *twilioSenderVoice) SendEvents(events moira.NotificationEvents, con
 }
 
 func (sender *twilioSenderVoice) buildVoiceURL(trigger moira.TriggerData) string {
+	message := fmt.Sprintf("Hi! This is a notification for Moira trigger %s. Please, visit Moira web interface for details.", trigger.Name)
 	voiceURL := sender.voiceURL
 	if sender.appendMessage {
-		voiceURL += url.QueryEscape(fmt.Sprintf("Hi! This is a notification for Moira trigger %s. Please, visit Moira web interface for details.", trigger.Name))
+		voiceURL += url.QueryEscape(message)
+	}
+	if sender.twimletsEcho {
+		voiceURL = twimletsEchoURL
+		voiceURL += url.QueryEscape(fmt.Sprintf("<Response><Say>%s</Say></Response>", message))
 	}
 	return voiceURL
 }

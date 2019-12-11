@@ -57,15 +57,19 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 		sender.sender = &twilioSenderSms{twilioSender1}
 
 	case "twilio voice":
+		twimletsEcho := senderSettings["twimlets_echo"] == "true"
+		appendMessage := (senderSettings["append_message"] == "true") || (twimletsEcho)
+
 		voiceURL := senderSettings["voiceurl"]
-		if voiceURL == "" {
+		if voiceURL == "" && !twimletsEcho {
 			return fmt.Errorf("can not read [%s] voiceurl param from config", apiType)
 		}
 
 		sender.sender = &twilioSenderVoice{
 			twilioSender:  twilioSender1,
 			voiceURL:      voiceURL,
-			appendMessage: senderSettings["append_message"] == "true",
+			twimletsEcho:  twimletsEcho,
+			appendMessage: appendMessage,
 		}
 
 	default:
