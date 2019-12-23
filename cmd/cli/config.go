@@ -12,9 +12,8 @@ type config struct {
 }
 
 type cleanupConfig struct {
-	Whitelist               []string `yaml:"whitelist"`
-	Delete                  bool     `yaml:"delete"`
-	AddAnonymousToWhitelist bool     `json:"add_anonymous_to_whitelist"`
+	Delete                  bool `yaml:"delete"`
+	AddAnonymousToWhitelist bool `json:"add_anonymous_to_whitelist"`
 }
 
 func getDefault() config {
@@ -25,9 +24,6 @@ func getDefault() config {
 			Host:            "localhost",
 			Port:            "6379",
 			ConnectionLimit: 512,
-		},
-		Cleanup: cleanupConfig{
-			Whitelist: []string{},
 		},
 	}
 }

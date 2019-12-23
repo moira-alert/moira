@@ -7,6 +7,11 @@ import (
 	"github.com/moira-alert/moira"
 )
 
+type usersCleaning struct {
+	Users     []string `json:"users"`
+	Whitelist []string `json:"whitelist"`
+}
+
 func transferUserSubscriptionsAndContacts(database moira.Database, from, to string) error {
 	contactIDs, err := database.GetUserContactIDs(from)
 	if err != nil {
@@ -80,25 +85,26 @@ func deleteUser(database moira.Database, user string) error {
 }
 
 func handleCleanup(logger moira.Logger, database moira.Database, config cleanupConfig) error {
-	var users []string
+	var clean usersCleaning
 
 	reader := json.NewDecoder(os.Stdin)
-
-	if err := reader.Decode(&users); err != nil {
+	if err := reader.Decode(&clean); err != nil {
 		return err
 	}
 
-	return usersCleanup(logger, database, users, config)
+	logger.Debug("Whitelist:", clean.Whitelist)
+
+	return usersCleanup(logger, database, clean.Whitelist, clean.Users, config)
 }
 
-func usersCleanup(logger moira.Logger, database moira.Database, users []string, config cleanupConfig) error {
+func usersCleanup(logger moira.Logger, database moira.Database, users, whitelist []string, config cleanupConfig) error {
 	if config.AddAnonymousToWhitelist {
-		config.Whitelist = append(config.Whitelist, "")
+		whitelist = append(whitelist, "")
 	}
 
-	usersMap := make(map[string]bool, len(users)+len(config.Whitelist))
+	usersMap := make(map[string]bool, len(users)+len(whitelist))
 
-	for _, user := range append(users, config.Whitelist...) {
+	for _, user := range append(users, whitelist...) {
 		usersMap[user] = true
 	}
 

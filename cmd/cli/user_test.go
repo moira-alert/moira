@@ -24,7 +24,6 @@ func TestUpdateUsers(t *testing.T) {
 	}
 
 	database := redis.NewDatabase(logger, conf.Redis.GetSettings(), redis.Cli)
-	conf.Cleanup.Whitelist = []string{"Nikolay", ""}
 
 	users := []string{"Aleksey", "Arkadiy", "Emil"}
 
@@ -40,7 +39,7 @@ func TestUpdateUsers(t *testing.T) {
 		}(t)
 
 		Convey("Test off notifications", func() {
-			So(usersCleanup(logger, database, users, conf.Cleanup), ShouldBeNil)
+			So(usersCleanup(logger, database, users, []string{"Nikolay", ""}, conf.Cleanup), ShouldBeNil)
 			for _, contact := range contacts {
 				subscription, err := database.GetSubscription("subscription_" + contact.ID)
 
@@ -56,7 +55,7 @@ func TestUpdateUsers(t *testing.T) {
 
 		Convey("Verify deletion of contacts and subscriptions", func() {
 			conf.Cleanup.Delete = true
-			So(usersCleanup(logger, database, users, conf.Cleanup), ShouldBeNil)
+			So(usersCleanup(logger, database, []string{}, users, conf.Cleanup), ShouldBeNil)
 			for _, contact := range contacts {
 				if !strings.Contains(contact.User, "Another") {
 					continue
