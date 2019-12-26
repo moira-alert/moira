@@ -28,8 +28,8 @@ func ConfigureNotifierMetrics(prefix string) *graphite.NotifierMetrics {
 		EventsMalformed:        registerMeter(metricNameWithPrefix(prefix, "events.malformed")),
 		EventsProcessingFailed: registerMeter(metricNameWithPrefix(prefix, "events.failed")),
 		SendingFailed:          registerMeter(metricNameWithPrefix(prefix, "sending.failed")),
-		SendersOkMetrics:       newMeterMap(),
-		SendersFailedMetrics:   newMeterMap(),
+		SendersOkMetrics:       newMetersCollection(),
+		SendersFailedMetrics:   newMetersCollection(),
 	}
 }
 

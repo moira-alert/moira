@@ -2,10 +2,10 @@ package graphite
 
 import "time"
 
-// MetricsMap implements meter collection abstraction
-type MetricsMap interface {
-	AddMetric(name, path string)
-	GetMetric(name string) (Meter, bool)
+// MetersCollection implements meter collection abstraction
+type MetersCollection interface {
+	RegisterMeter(name, path string)
+	GetRegisteredMeter(name string) (Meter, bool)
 }
 
 // Meter count events to produce exponentially-weighted moving average rates

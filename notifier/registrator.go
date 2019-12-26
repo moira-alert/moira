@@ -103,8 +103,8 @@ func (notifier *StandardNotifier) RegisterSender(senderSettings map[string]strin
 	}
 	eventsChannel := make(chan NotificationPackage)
 	notifier.senders[senderIdent] = eventsChannel
-	notifier.metrics.SendersOkMetrics.AddMetric(senderIdent, fmt.Sprintf("notifier.%s.sends_ok", getGraphiteSenderIdent(senderIdent)))
-	notifier.metrics.SendersFailedMetrics.AddMetric(senderIdent, fmt.Sprintf("notifier.%s.sends_failed", getGraphiteSenderIdent(senderIdent)))
+	notifier.metrics.SendersOkMetrics.RegisterMeter(senderIdent, fmt.Sprintf("notifier.%s.sends_ok", getGraphiteSenderIdent(senderIdent)))
+	notifier.metrics.SendersFailedMetrics.RegisterMeter(senderIdent, fmt.Sprintf("notifier.%s.sends_failed", getGraphiteSenderIdent(senderIdent)))
 	notifier.runSenders(sender, eventsChannel)
 	notifier.logger.Infof("Sender %s registered", senderIdent)
 	return nil
