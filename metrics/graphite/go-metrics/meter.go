@@ -14,6 +14,10 @@ func registerMeter(name string) *Meter {
 	return &Meter{goMetrics.NewRegisteredMeter(name, goMetrics.DefaultRegistry)}
 }
 
-func (metric *Meter) Mark(value int64) {
-	metric.meter.Mark(value)
+func (meter *Meter) Count() int64 {
+	return meter.meter.Count()
+}
+
+func (meter *Meter) Mark(value int64) {
+	meter.meter.Mark(value)
 }
