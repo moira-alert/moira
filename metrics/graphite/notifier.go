@@ -7,6 +7,6 @@ type NotifierMetrics struct {
 	EventsMalformed        Meter
 	EventsProcessingFailed Meter
 	SendingFailed          Meter
-	SendersOkMetrics       MetricsMap
-	SendersFailedMetrics   MetricsMap
+	SendersOkMetrics       MetersCollection
+	SendersFailedMetrics   MetersCollection
 }

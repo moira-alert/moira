@@ -44,11 +44,8 @@ func (worker *Checker) handleTriggerInLock(triggerID string, metrics *graphite.C
 		return err
 	}
 	if acquired {
-		start := time.Now()
-		defer func() {
-			timeSinceStart := time.Since(start)
-			metrics.TriggersCheckTime.Update(timeSinceStart)
-		}()
+		startedAt := time.Now()
+		defer metrics.TriggersCheckTime.UpdateSince(startedAt)
 		if err := worker.checkTrigger(triggerID); err != nil {
 			return err
 		}

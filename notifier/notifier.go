@@ -130,7 +130,7 @@ func (notifier *StandardNotifier) resend(pkg *NotificationPackage, reason string
 		return
 	}
 	notifier.metrics.SendingFailed.Mark(1)
-	if metric, found := notifier.metrics.SendersFailedMetrics.GetMetric(pkg.Contact.Type); found {
+	if metric, found := notifier.metrics.SendersFailedMetrics.GetRegisteredMeter(pkg.Contact.Type); found {
 		metric.Mark(1)
 	}
 	notifier.logger.Warningf("Can't send message after %d try: %s. Retry again after 1 min", pkg.FailCount, reason)
@@ -162,7 +162,7 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 		}
 		err = sender.SendEvents(pkg.Events, pkg.Contact, pkg.Trigger, plot, pkg.Throttled)
 		if err == nil {
-			if metric, found := notifier.metrics.SendersOkMetrics.GetMetric(pkg.Contact.Type); found {
+			if metric, found := notifier.metrics.SendersOkMetrics.GetRegisteredMeter(pkg.Contact.Type); found {
 				metric.Mark(1)
 			}
 		} else {
