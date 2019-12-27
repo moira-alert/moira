@@ -5,10 +5,11 @@
 package mock_scheduler
 
 import (
-	gomock "github.com/golang/mock/gomock"
-	moira "github.com/moira-alert/moira"
 	reflect "reflect"
 	time "time"
+
+	gomock "github.com/golang/mock/gomock"
+	moira "github.com/moira-alert/moira"
 )
 
 // MockScheduler is a mock of Scheduler interface

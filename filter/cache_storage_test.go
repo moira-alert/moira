@@ -1,12 +1,13 @@
 package filter
 
 import (
+	"strings"
+	"testing"
+
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
 	"github.com/smartystreets/assertions/should"
 	. "github.com/smartystreets/goconvey/convey"
-	"strings"
-	"testing"
 )
 
 var testRetentions = `

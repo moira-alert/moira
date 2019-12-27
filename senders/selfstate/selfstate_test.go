@@ -9,7 +9,7 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/logging/go-logging"
-	"github.com/moira-alert/moira/mock/moira-alert"
+	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 )
 
 var (

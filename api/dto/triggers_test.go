@@ -9,8 +9,8 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/middleware"
-	"github.com/moira-alert/moira/metric_source"
-	"github.com/moira-alert/moira/mock/metric_source"
+	metricSource "github.com/moira-alert/moira/metric_source"
+	mock_metric_source "github.com/moira-alert/moira/mock/metric_source"
 
 	"github.com/golang/mock/gomock"
 	. "github.com/smartystreets/goconvey/convey"

@@ -7,7 +7,7 @@ import (
 	"github.com/beevee/go-chart"
 	"github.com/beevee/go-chart/util"
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/metric_source"
+	metricSource "github.com/moira-alert/moira/metric_source"
 )
 
 const (

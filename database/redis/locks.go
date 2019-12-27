@@ -4,9 +4,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/go-redsync/redsync"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
-	"github.com/go-redsync/redsync"
 )
 
 // NewLock returns the implementation of moira.Lock which can be used to Acquire or Release the lock

@@ -14,7 +14,7 @@ import (
 	"github.com/moira-alert/moira/filter"
 	"github.com/moira-alert/moira/filter/connection"
 	"github.com/moira-alert/moira/filter/heartbeat"
-	"github.com/moira-alert/moira/filter/matched_metrics"
+	matchedmetrics "github.com/moira-alert/moira/filter/matched_metrics"
 	"github.com/moira-alert/moira/filter/patterns"
 	"github.com/moira-alert/moira/logging/go-logging"
 	"github.com/moira-alert/moira/metrics/graphite/go-metrics"

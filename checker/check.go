@@ -5,7 +5,7 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/expression"
-	"github.com/moira-alert/moira/metric_source"
+	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
 	"github.com/moira-alert/moira/metric_source/remote"
 )

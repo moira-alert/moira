@@ -5,8 +5,9 @@
 package mock_moira_alert
 
 import (
-	gomock "github.com/golang/mock/gomock"
 	reflect "reflect"
+
+	gomock "github.com/golang/mock/gomock"
 )
 
 // MockLogger is a mock of Logger interface

@@ -1,13 +1,14 @@
 package redis
 
 import (
-	"github.com/moira-alert/moira/database"
-	"github.com/op/go-logging"
-	. "github.com/smartystreets/goconvey/convey"
 	"math/rand"
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/moira-alert/moira/database"
+	"github.com/op/go-logging"
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func Test(t *testing.T) {

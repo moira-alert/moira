@@ -17,7 +17,7 @@ import (
 	"github.com/moira-alert/moira/database/redis"
 	"github.com/moira-alert/moira/index"
 	"github.com/moira-alert/moira/logging/go-logging"
-	"github.com/moira-alert/moira/metric_source"
+	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
 	"github.com/moira-alert/moira/metric_source/remote"
 	"github.com/moira-alert/moira/metrics/graphite/go-metrics"

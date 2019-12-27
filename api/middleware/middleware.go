@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/metric_source"
+	metricSource "github.com/moira-alert/moira/metric_source"
 )
 
 // ContextKey used as key of api request context values

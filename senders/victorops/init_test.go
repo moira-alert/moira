@@ -10,7 +10,7 @@ import (
 	"github.com/moira-alert/moira/senders/victorops/api"
 
 	"github.com/moira-alert/moira/logging/go-logging"
-	"github.com/moira-alert/moira/mock/moira-alert"
+	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
 )
 

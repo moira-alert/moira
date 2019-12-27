@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/moira-alert/moira/metric_source"
+	metricSource "github.com/moira-alert/moira/metric_source"
 )
 
 // ErrRemoteStorageDisabled is used to prevent remote.Fetch calls when remote storage is disabled
