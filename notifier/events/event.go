@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/moira-alert/moira/metrics"
+
 	"gopkg.in/tomb.v2"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
-	"github.com/moira-alert/moira/metrics/graphite"
 	"github.com/moira-alert/moira/notifier"
 )
 
@@ -17,7 +18,7 @@ type FetchEventsWorker struct {
 	Logger    moira.Logger
 	Database  moira.Database
 	Scheduler notifier.Scheduler
-	Metrics   *graphite.NotifierMetrics
+	Metrics   *metrics.NotifierMetrics
 	tomb      tomb.Tomb
 }
 

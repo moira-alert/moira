@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/metrics/graphite"
+	"github.com/moira-alert/moira/metrics"
 )
 
 // Scheduler implements event scheduling functionality
@@ -18,7 +18,7 @@ type Scheduler interface {
 type StandardScheduler struct {
 	logger   moira.Logger
 	database moira.Database
-	metrics  *graphite.NotifierMetrics
+	metrics  *metrics.NotifierMetrics
 }
 
 type throttlingLevel struct {
@@ -28,7 +28,7 @@ type throttlingLevel struct {
 }
 
 // NewScheduler is initializer for StandardScheduler
-func NewScheduler(database moira.Database, logger moira.Logger, metrics *graphite.NotifierMetrics) *StandardScheduler {
+func NewScheduler(database moira.Database, logger moira.Logger, metrics *metrics.NotifierMetrics) *StandardScheduler {
 	return &StandardScheduler{
 		database: database,
 		logger:   logger,

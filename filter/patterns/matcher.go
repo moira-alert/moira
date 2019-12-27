@@ -5,7 +5,7 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/filter"
-	"github.com/moira-alert/moira/metrics/graphite"
+	"github.com/moira-alert/moira/metrics"
 	"gopkg.in/tomb.v2"
 )
 
@@ -13,12 +13,12 @@ import (
 type Matcher struct {
 	logger         moira.Logger
 	tomb           tomb.Tomb
-	metrics        *graphite.FilterMetrics
+	metrics        *metrics.FilterMetrics
 	patternStorage *filter.PatternStorage
 }
 
 // NewMatcher creates pattern matcher
-func NewMatcher(logger moira.Logger, metrics *graphite.FilterMetrics, patternsStorage *filter.PatternStorage) *Matcher {
+func NewMatcher(logger moira.Logger, metrics *metrics.FilterMetrics, patternsStorage *filter.PatternStorage) *Matcher {
 	return &Matcher{
 		logger:         logger,
 		metrics:        metrics,

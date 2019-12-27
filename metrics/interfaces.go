@@ -1,6 +1,15 @@
-package graphite
+package metrics
 
 import "time"
+
+// Registry implements meter collection abstraction
+type Registry interface {
+	NewMeter(name string) Meter
+	NewTimer(name string) Timer
+	NewHistogram(name string) Histogram
+	NewCounter(name string) Counter
+	NewMetersCollection() MetersCollection
+}
 
 // MetersCollection implements meter collection abstraction
 type MetersCollection interface {

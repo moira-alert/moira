@@ -8,7 +8,7 @@ import (
 	"gopkg.in/tomb.v2"
 
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/metrics/graphite"
+	"github.com/moira-alert/moira/metrics"
 )
 
 // MetricsListener is facade for standard net.MetricsListener and accept connection for handling it
@@ -17,11 +17,11 @@ type MetricsListener struct {
 	handler  *Handler
 	logger   moira.Logger
 	tomb     tomb.Tomb
-	metrics  *graphite.FilterMetrics
+	metrics  *metrics.FilterMetrics
 }
 
 // NewListener creates new listener
-func NewListener(port string, logger moira.Logger, metrics *graphite.FilterMetrics) (*MetricsListener, error) {
+func NewListener(port string, logger moira.Logger, metrics *metrics.FilterMetrics) (*MetricsListener, error) {
 	address, err := net.ResolveTCPAddr("tcp", port)
 	if nil != err {
 		return nil, fmt.Errorf("failed to resolve tcp address [%s]: %s", port, err.Error())

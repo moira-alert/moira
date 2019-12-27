@@ -15,7 +15,7 @@ import (
 	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/database/redis"
 	"github.com/moira-alert/moira/logging/go-logging"
-	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
+	"github.com/moira-alert/moira/metrics"
 	"github.com/moira-alert/moira/notifier"
 	"github.com/moira-alert/moira/notifier/events"
 	"github.com/moira-alert/moira/notifier/notifications"
@@ -72,13 +72,13 @@ func main() {
 		cmd.StartProfiling(logger, config.Pprof)
 	}
 
-	notifierMetrics := metrics.ConfigureNotifierMetrics(serviceName)
-
-	graphiteSettings := config.Graphite.GetSettings()
-	if err = metrics.Init(graphiteSettings, serviceName); err != nil {
-		logger.Error(err)
+	graphiteMetricsRegistry, err := metrics.NewGraphiteRegistry(config.Graphite.GetSettings(), serviceName)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Can not configure graphite metrics: %s\n", err.Error())
+		os.Exit(1)
 	}
 
+	notifierMetrics := metrics.ConfigureNotifierMetrics(graphiteMetricsRegistry, serviceName)
 	databaseSettings := config.Redis.GetSettings()
 	database := redis.NewDatabase(logger, databaseSettings, redis.Notifier)
 

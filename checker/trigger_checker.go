@@ -6,7 +6,7 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
 	metricSource "github.com/moira-alert/moira/metric_source"
-	"github.com/moira-alert/moira/metrics/graphite"
+	"github.com/moira-alert/moira/metrics"
 )
 
 // TriggerChecker represents data, used for handling new trigger state
@@ -14,7 +14,7 @@ type TriggerChecker struct {
 	database moira.Database
 	logger   moira.Logger
 	config   *Config
-	metrics  *graphite.CheckMetrics
+	metrics  *metrics.CheckMetrics
 	source   metricSource.MetricSource
 
 	from  int64
@@ -31,7 +31,7 @@ type TriggerChecker struct {
 // MakeTriggerChecker initialize new triggerChecker data
 // if trigger does not exists then return ErrTriggerNotExists error
 // if trigger metrics source does not configured then return ErrMetricSourceIsNotConfigured error.
-func MakeTriggerChecker(triggerID string, dataBase moira.Database, logger moira.Logger, config *Config, sourceProvider *metricSource.SourceProvider, metrics *graphite.CheckerMetrics) (*TriggerChecker, error) {
+func MakeTriggerChecker(triggerID string, dataBase moira.Database, logger moira.Logger, config *Config, sourceProvider *metricSource.SourceProvider, metrics *metrics.CheckerMetrics) (*TriggerChecker, error) {
 	until := time.Now().Unix()
 	trigger, err := dataBase.GetTrigger(triggerID)
 	if err != nil {

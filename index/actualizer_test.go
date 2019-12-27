@@ -4,6 +4,8 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/moira-alert/moira/metrics"
+
 	"github.com/golang/mock/gomock"
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
@@ -19,7 +21,7 @@ func TestIndex_actualize(t *testing.T) {
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Test")
 
-	index := NewSearchIndex(logger, dataBase)
+	index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry())
 	triggerTestCases := fixtures.IndexedTriggerTestCases
 
 	triggerIDs := triggerTestCases.ToTriggerIDs()

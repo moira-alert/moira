@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/moira-alert/moira/metrics"
+
 	bleveOriginal "github.com/blevesearch/bleve"
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
@@ -20,7 +22,7 @@ func TestGetTriggerChecksWithRetries(t *testing.T) {
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Test")
-	index := NewSearchIndex(logger, dataBase)
+	index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry())
 	randomBatch := []string{"123", "123"}
 	expectedData := []*moira.TriggerCheck{{Throttling: 123}}
 	expectedError := fmt.Errorf("random error")
@@ -60,13 +62,13 @@ func TestIndex_CreateAndFill(t *testing.T) {
 	triggerChecksPointers := triggerTestCases.ToTriggerChecks()
 
 	Convey("Test create index", t, func() {
-		index := NewSearchIndex(logger, dataBase)
+		index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry())
 		emptyIndex, _ := bleve.CreateTriggerIndex(bleveOriginal.NewIndexMapping())
 		So(index.triggerIndex, ShouldHaveSameTypeAs, emptyIndex)
 	})
 
 	Convey("Test fill index", t, func() {
-		index := NewSearchIndex(logger, dataBase)
+		index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry())
 		dataBase.EXPECT().GetAllTriggerIDs().Return(triggerIDs, nil)
 		dataBase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggerChecksPointers, nil)
 		err := index.fillIndex()
@@ -76,7 +78,7 @@ func TestIndex_CreateAndFill(t *testing.T) {
 	})
 
 	Convey("Test add Triggers to index", t, func() {
-		index := NewSearchIndex(logger, dataBase)
+		index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry())
 		dataBase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggerChecksPointers, nil)
 		err := index.writeByBatches(triggerIDs, defaultIndexBatchSize)
 		So(err, ShouldBeNil)
@@ -85,7 +87,7 @@ func TestIndex_CreateAndFill(t *testing.T) {
 	})
 
 	Convey("Test add Triggers to index, batch size is less than number of triggers", t, func() {
-		index := NewSearchIndex(logger, dataBase)
+		index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry())
 		dataBase.EXPECT().GetTriggerChecks(triggerIDs[:20]).Return(triggerChecksPointers[:20], nil)
 		dataBase.EXPECT().GetTriggerChecks(triggerIDs[20:]).Return(triggerChecksPointers[20:], nil)
 		err := index.writeByBatches(triggerIDs, 20)
@@ -95,7 +97,7 @@ func TestIndex_CreateAndFill(t *testing.T) {
 	})
 
 	Convey("Test check error handling in the handleTriggerBatches", t, func() {
-		index := NewSearchIndex(logger, dataBase)
+		index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry())
 		expectedError := fmt.Errorf("test")
 
 		dataBase.EXPECT().GetTriggerChecks(triggerIDs[:20]).Return(triggerChecksPointers[:20], nil)
@@ -105,7 +107,7 @@ func TestIndex_CreateAndFill(t *testing.T) {
 	})
 
 	Convey("Test add Triggers to index where triggers are already presented", t, func() {
-		index := NewSearchIndex(logger, dataBase)
+		index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry())
 
 		// first time
 		dataBase.EXPECT().GetTriggerChecks(triggerIDs).Return(triggerChecksPointers, nil)
@@ -128,7 +130,7 @@ func TestIndex_Start(t *testing.T) {
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Test")
-	index := NewSearchIndex(logger, dataBase)
+	index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry())
 
 	triggerTestCases := fixtures.IndexedTriggerTestCases
 
@@ -166,7 +168,7 @@ func TestIndex_Errors(t *testing.T) {
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Test")
-	index := NewSearchIndex(logger, dataBase)
+	index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry())
 
 	Convey("Test Start index error", t, func() {
 		dataBase.EXPECT().GetAllTriggerIDs().Return(make([]string, 0), fmt.Errorf("very bad error"))

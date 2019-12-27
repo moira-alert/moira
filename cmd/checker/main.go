@@ -19,8 +19,7 @@ import (
 	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/database/redis"
 	"github.com/moira-alert/moira/logging/go-logging"
-	"github.com/moira-alert/moira/metrics/graphite"
-	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
+	"github.com/moira-alert/moira/metrics"
 )
 
 const serviceName = "checker"
@@ -82,13 +81,14 @@ func main() {
 	remoteSource := remote.Create(remoteConfig)
 	metricSourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource)
 
-	isConfigured, _ := remoteSource.IsConfigured()
-	checkerMetrics := metrics.ConfigureCheckerMetrics(serviceName, isConfigured)
-	graphiteSettings := config.Graphite.GetSettings()
-	if err = metrics.Init(graphiteSettings, serviceName); err != nil {
-		logger.Error(err)
+	graphiteMetricsRegistry, err := metrics.NewGraphiteRegistry(config.Graphite.GetSettings(), serviceName)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Can not configure graphite metrics: %s\n", err.Error())
+		os.Exit(1)
 	}
 
+	isConfigured, _ := remoteSource.IsConfigured()
+	checkerMetrics := metrics.ConfigureCheckerMetrics(graphiteMetricsRegistry, serviceName, isConfigured)
 	checkerSettings := config.Checker.getSettings()
 	if triggerID != nil && *triggerID != "" {
 		checkSingleTrigger(database, checkerMetrics, checkerSettings, metricSourceProvider)
@@ -118,7 +118,7 @@ func main() {
 	logger.Infof("Moira Checker shutting down.")
 }
 
-func checkSingleTrigger(database moira.Database, metrics *graphite.CheckerMetrics, settings *checker.Config, sourceProvider *metricSource.SourceProvider) {
+func checkSingleTrigger(database moira.Database, metrics *metrics.CheckerMetrics, settings *checker.Config, sourceProvider *metricSource.SourceProvider) {
 	triggerChecker, err := checker.MakeTriggerChecker(*triggerID, database, logger, settings, sourceProvider, metrics)
 	if err != nil {
 		logger.Errorf("Failed initialize trigger checker: %s", err.Error())

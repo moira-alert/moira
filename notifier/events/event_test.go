@@ -11,13 +11,13 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
-	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
+	"github.com/moira-alert/moira/metrics"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	mock_scheduler "github.com/moira-alert/moira/mock/scheduler"
 	"github.com/moira-alert/moira/notifier"
 )
 
-var metrics2 = metrics.ConfigureNotifierMetrics("notifier")
+var notifierMetrics = metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), "notifier")
 
 func TestEvent(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
@@ -30,8 +30,8 @@ func TestEvent(t *testing.T) {
 		worker := FetchEventsWorker{
 			Database:  dataBase,
 			Logger:    logger,
-			Metrics:   metrics2,
-			Scheduler: notifier.NewScheduler(dataBase, logger, metrics2),
+			Metrics:   notifierMetrics,
+			Scheduler: notifier.NewScheduler(dataBase, logger, notifierMetrics),
 		}
 		event := moira.NotificationEvent{
 			State:          moira.StateTEST,
@@ -62,7 +62,7 @@ func TestEvent(t *testing.T) {
 		worker := FetchEventsWorker{
 			Database:  dataBase,
 			Logger:    logger,
-			Metrics:   metrics2,
+			Metrics:   notifierMetrics,
 			Scheduler: scheduler,
 		}
 
@@ -109,8 +109,8 @@ func TestNoSubscription(t *testing.T) {
 		worker := FetchEventsWorker{
 			Database:  dataBase,
 			Logger:    logger,
-			Metrics:   metrics2,
-			Scheduler: notifier.NewScheduler(dataBase, logger, metrics2),
+			Metrics:   notifierMetrics,
+			Scheduler: notifier.NewScheduler(dataBase, logger, notifierMetrics),
 		}
 
 		event := moira.NotificationEvent{
@@ -138,8 +138,8 @@ func TestDisabledNotification(t *testing.T) {
 		worker := FetchEventsWorker{
 			Database:  dataBase,
 			Logger:    logger,
-			Metrics:   metrics2,
-			Scheduler: notifier.NewScheduler(dataBase, logger, metrics2),
+			Metrics:   notifierMetrics,
+			Scheduler: notifier.NewScheduler(dataBase, logger, notifierMetrics),
 		}
 
 		event := moira.NotificationEvent{
@@ -171,8 +171,8 @@ func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
 		worker := FetchEventsWorker{
 			Database:  dataBase,
 			Logger:    logger,
-			Metrics:   metrics2,
-			Scheduler: notifier.NewScheduler(dataBase, logger, metrics2),
+			Metrics:   notifierMetrics,
+			Scheduler: notifier.NewScheduler(dataBase, logger, notifierMetrics),
 		}
 
 		event := moira.NotificationEvent{
@@ -196,8 +196,8 @@ func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
 		worker := FetchEventsWorker{
 			Database:  dataBase,
 			Logger:    logger,
-			Metrics:   metrics2,
-			Scheduler: notifier.NewScheduler(dataBase, logger, metrics2),
+			Metrics:   notifierMetrics,
+			Scheduler: notifier.NewScheduler(dataBase, logger, notifierMetrics),
 		}
 
 		event := moira.NotificationEvent{
@@ -221,8 +221,8 @@ func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
 		worker := FetchEventsWorker{
 			Database:  dataBase,
 			Logger:    logger,
-			Metrics:   metrics2,
-			Scheduler: notifier.NewScheduler(dataBase, logger, metrics2),
+			Metrics:   notifierMetrics,
+			Scheduler: notifier.NewScheduler(dataBase, logger, notifierMetrics),
 		}
 
 		event := moira.NotificationEvent{
@@ -254,7 +254,7 @@ func TestAddNotification(t *testing.T) {
 		worker := FetchEventsWorker{
 			Database:  dataBase,
 			Logger:    logger,
-			Metrics:   metrics2,
+			Metrics:   notifierMetrics,
 			Scheduler: scheduler,
 		}
 
@@ -288,7 +288,7 @@ func TestAddOneNotificationByTwoSubscriptionsWithSame(t *testing.T) {
 		worker := FetchEventsWorker{
 			Database:  dataBase,
 			Logger:    logger,
-			Metrics:   metrics2,
+			Metrics:   notifierMetrics,
 			Scheduler: scheduler,
 		}
 
@@ -327,8 +327,8 @@ func TestFailReadContact(t *testing.T) {
 		worker := FetchEventsWorker{
 			Database:  dataBase,
 			Logger:    logger,
-			Metrics:   metrics2,
-			Scheduler: notifier.NewScheduler(dataBase, logger, metrics2),
+			Metrics:   notifierMetrics,
+			Scheduler: notifier.NewScheduler(dataBase, logger, notifierMetrics),
 		}
 
 		event := moira.NotificationEvent{
@@ -361,8 +361,8 @@ func TestEmptySubscriptions(t *testing.T) {
 		worker := FetchEventsWorker{
 			Database:  dataBase,
 			Logger:    logger,
-			Metrics:   metrics2,
-			Scheduler: notifier.NewScheduler(dataBase, logger, metrics2),
+			Metrics:   notifierMetrics,
+			Scheduler: notifier.NewScheduler(dataBase, logger, notifierMetrics),
 		}
 
 		event := moira.NotificationEvent{
@@ -390,8 +390,8 @@ func TestEmptySubscriptions(t *testing.T) {
 		worker := FetchEventsWorker{
 			Database:  dataBase,
 			Logger:    logger,
-			Metrics:   metrics2,
-			Scheduler: notifier.NewScheduler(dataBase, logger, metrics2),
+			Metrics:   notifierMetrics,
+			Scheduler: notifier.NewScheduler(dataBase, logger, notifierMetrics),
 		}
 
 		event := moira.NotificationEvent{
@@ -421,8 +421,8 @@ func TestGetNotificationSubscriptions(t *testing.T) {
 	worker := FetchEventsWorker{
 		Database:  dataBase,
 		Logger:    logger,
-		Metrics:   metrics2,
-		Scheduler: notifier.NewScheduler(dataBase, logger, metrics2),
+		Metrics:   notifierMetrics,
+		Scheduler: notifier.NewScheduler(dataBase, logger, notifierMetrics),
 	}
 
 	Convey("Error GetSubscription", t, func() {
@@ -462,7 +462,7 @@ func TestGoRoutine(t *testing.T) {
 		worker := &FetchEventsWorker{
 			Database:  dataBase,
 			Logger:    logger,
-			Metrics:   metrics2,
+			Metrics:   notifierMetrics,
 			Scheduler: scheduler,
 		}
 

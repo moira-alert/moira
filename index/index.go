@@ -4,8 +4,7 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/index/bleve"
 	"github.com/moira-alert/moira/index/mapping"
-	"github.com/moira-alert/moira/metrics/graphite"
-	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
+	"github.com/moira-alert/moira/metrics"
 	"gopkg.in/tomb.v2"
 )
 
@@ -28,20 +27,20 @@ type Index struct {
 	logger            moira.Logger
 	database          moira.Database
 	tomb              tomb.Tomb
-	metrics           *graphite.IndexMetrics
+	metrics           *metrics.IndexMetrics
 	inProgress        bool
 	indexed           bool
 	indexActualizedTS int64
 }
 
 // NewSearchIndex return new Index object
-func NewSearchIndex(logger moira.Logger, database moira.Database) *Index {
+func NewSearchIndex(logger moira.Logger, database moira.Database, metricsRegistry metrics.Registry) *Index {
 	var err error
 	newIndex := Index{
 		logger:   logger,
 		database: database,
 	}
-	newIndex.metrics = metrics.ConfigureIndexMetrics(serviceName)
+	newIndex.metrics = metrics.ConfigureIndexMetrics(metricsRegistry, serviceName)
 	indexMapping := mapping.BuildIndexMapping(mapping.Trigger{})
 	newIndex.triggerIndex, err = bleve.CreateTriggerIndex(indexMapping)
 	if err != nil {

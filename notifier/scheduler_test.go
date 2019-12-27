@@ -7,7 +7,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
+	"github.com/moira-alert/moira/metrics"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
@@ -48,7 +48,7 @@ func TestThrottling(t *testing.T) {
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Scheduler")
-	metrics2 := metrics.ConfigureNotifierMetrics("notifier")
+	metrics2 := metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), "notifier")
 	scheduler := NewScheduler(dataBase, logger, metrics2)
 
 	now := time.Now()
@@ -130,8 +130,8 @@ func TestSubscriptionSchedule(t *testing.T) {
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Scheduler")
-	metrics2 := metrics.ConfigureNotifierMetrics("notifier")
-	scheduler := NewScheduler(dataBase, logger, metrics2)
+	notifierMetrics := metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), "notifier")
+	scheduler := NewScheduler(dataBase, logger, notifierMetrics)
 
 	Convey("Throttling disabled", t, func() {
 		now := time.Unix(1441187115, 0)

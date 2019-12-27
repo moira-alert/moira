@@ -5,20 +5,20 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/metrics/graphite"
+	"github.com/moira-alert/moira/metrics"
 )
 
 // PatternStorage contains pattern tree
 type PatternStorage struct {
 	database                moira.Database
-	metrics                 *graphite.FilterMetrics
+	metrics                 *metrics.FilterMetrics
 	logger                  moira.Logger
 	PatternIndex            atomic.Value
 	SeriesByTagPatternIndex atomic.Value
 }
 
 // NewPatternStorage creates new PatternStorage struct
-func NewPatternStorage(database moira.Database, metrics *graphite.FilterMetrics, logger moira.Logger) (*PatternStorage, error) {
+func NewPatternStorage(database moira.Database, metrics *metrics.FilterMetrics, logger moira.Logger) (*PatternStorage, error) {
 	storage := &PatternStorage{
 		database: database,
 		metrics:  metrics,

@@ -5,13 +5,14 @@ import (
 	"io/ioutil"
 	"strings"
 
+	"github.com/moira-alert/moira/metrics"
+
 	"github.com/gosexy/to"
 	"github.com/moira-alert/moira/image_store/s3"
 	remoteSource "github.com/moira-alert/moira/metric_source/remote"
 	"gopkg.in/yaml.v2"
 
 	"github.com/moira-alert/moira/database/redis"
-	"github.com/moira-alert/moira/metrics/graphite"
 )
 
 // RedisConfig is a redis config structure that initialises at the start of moira
@@ -58,8 +59,8 @@ type GraphiteConfig struct {
 }
 
 // GetSettings returns graphite metrics config parsed from moira config files
-func (graphiteConfig *GraphiteConfig) GetSettings() graphite.Config {
-	return graphite.Config{
+func (graphiteConfig *GraphiteConfig) GetSettings() metrics.GraphiteRegistryConfig {
+	return metrics.GraphiteRegistryConfig{
 		Enabled:      graphiteConfig.Enabled,
 		RuntimeStats: graphiteConfig.RuntimeStats,
 		URI:          graphiteConfig.URI,

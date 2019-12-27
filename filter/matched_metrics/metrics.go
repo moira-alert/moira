@@ -6,13 +6,13 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/filter"
-	"github.com/moira-alert/moira/metrics/graphite"
+	"github.com/moira-alert/moira/metrics"
 )
 
 // MetricsMatcher make buffer of metrics and save it
 type MetricsMatcher struct {
 	logger        moira.Logger
-	metrics       *graphite.FilterMetrics
+	metrics       *metrics.FilterMetrics
 	database      moira.Database
 	cacheStorage  *filter.Storage
 	cacheCapacity int
@@ -20,7 +20,7 @@ type MetricsMatcher struct {
 }
 
 // NewMetricsMatcher creates new MetricsMatcher
-func NewMetricsMatcher(metrics *graphite.FilterMetrics, logger moira.Logger, database moira.Database, cacheStorage *filter.Storage, cacheCapacity int) *MetricsMatcher {
+func NewMetricsMatcher(metrics *metrics.FilterMetrics, logger moira.Logger, database moira.Database, cacheStorage *filter.Storage, cacheCapacity int) *MetricsMatcher {
 	return &MetricsMatcher{
 		metrics:       metrics,
 		logger:        logger,

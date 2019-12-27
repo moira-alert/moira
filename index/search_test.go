@@ -3,6 +3,8 @@ package index
 import (
 	"testing"
 
+	"github.com/moira-alert/moira/metrics"
+
 	"github.com/golang/mock/gomock"
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
@@ -18,7 +20,7 @@ func TestIndex_SearchTriggers(t *testing.T) {
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Test")
 
-	index := NewSearchIndex(logger, dataBase)
+	index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry())
 
 	triggerTestCases := fixtures.IndexedTriggerTestCases
 
@@ -251,7 +253,7 @@ func TestIndex_SearchErrors(t *testing.T) {
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Test")
 
-	index := NewSearchIndex(logger, dataBase)
+	index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry())
 
 	triggerTestCases := fixtures.IndexedTriggerTestCases
 

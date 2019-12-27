@@ -9,7 +9,7 @@ import (
 	"github.com/moira-alert/moira/database"
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
-	"github.com/moira-alert/moira/metrics/graphite"
+	"github.com/moira-alert/moira/metrics"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
@@ -28,14 +28,14 @@ func TestInitTriggerChecker(t *testing.T) {
 		Convey("Get trigger error", func() {
 			getTriggerError := fmt.Errorf("Oppps! Can't read trigger")
 			dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{}, getTriggerError)
-			_, err := MakeTriggerChecker(triggerID, dataBase, logger, config, metricSource.CreateMetricSourceProvider(localSource, nil), &graphite.CheckerMetrics{})
+			_, err := MakeTriggerChecker(triggerID, dataBase, logger, config, metricSource.CreateMetricSourceProvider(localSource, nil), &metrics.CheckerMetrics{})
 			So(err, ShouldBeError)
 			So(err, ShouldResemble, getTriggerError)
 		})
 
 		Convey("No trigger error", func() {
 			dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{}, database.ErrNil)
-			_, err := MakeTriggerChecker(triggerID, dataBase, logger, config, metricSource.CreateMetricSourceProvider(localSource, nil), &graphite.CheckerMetrics{})
+			_, err := MakeTriggerChecker(triggerID, dataBase, logger, config, metricSource.CreateMetricSourceProvider(localSource, nil), &metrics.CheckerMetrics{})
 			So(err, ShouldBeError)
 			So(err, ShouldResemble, ErrTriggerNotExists)
 		})
@@ -44,7 +44,7 @@ func TestInitTriggerChecker(t *testing.T) {
 			readLastCheckError := fmt.Errorf("Oppps! Can't read last check")
 			dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{TriggerType: moira.RisingTrigger}, nil)
 			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, readLastCheckError)
-			_, err := MakeTriggerChecker(triggerID, dataBase, logger, config, metricSource.CreateMetricSourceProvider(localSource, nil), &graphite.CheckerMetrics{})
+			_, err := MakeTriggerChecker(triggerID, dataBase, logger, config, metricSource.CreateMetricSourceProvider(localSource, nil), &metrics.CheckerMetrics{})
 			So(err, ShouldBeError)
 			So(err, ShouldResemble, readLastCheckError)
 		})
@@ -100,7 +100,7 @@ func TestInitTriggerChecker(t *testing.T) {
 	Convey("Test trigger checker with lastCheck", t, func() {
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
 		dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(lastCheck, nil)
-		actual, err := MakeTriggerChecker(triggerID, dataBase, logger, config, metricSource.CreateMetricSourceProvider(localSource, nil), &graphite.CheckerMetrics{})
+		actual, err := MakeTriggerChecker(triggerID, dataBase, logger, config, metricSource.CreateMetricSourceProvider(localSource, nil), &metrics.CheckerMetrics{})
 		So(err, ShouldBeNil)
 
 		expected := TriggerChecker{
@@ -122,7 +122,7 @@ func TestInitTriggerChecker(t *testing.T) {
 	Convey("Test trigger checker without lastCheck", t, func() {
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
 		dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
-		actual, err := MakeTriggerChecker(triggerID, dataBase, logger, config, metricSource.CreateMetricSourceProvider(localSource, nil), &graphite.CheckerMetrics{})
+		actual, err := MakeTriggerChecker(triggerID, dataBase, logger, config, metricSource.CreateMetricSourceProvider(localSource, nil), &metrics.CheckerMetrics{})
 		So(err, ShouldBeNil)
 
 		expected := TriggerChecker{
@@ -151,7 +151,7 @@ func TestInitTriggerChecker(t *testing.T) {
 	Convey("Test trigger checker without lastCheck and ttl", t, func() {
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
 		dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, database.ErrNil)
-		actual, err := MakeTriggerChecker(triggerID, dataBase, logger, config, metricSource.CreateMetricSourceProvider(localSource, nil), &graphite.CheckerMetrics{})
+		actual, err := MakeTriggerChecker(triggerID, dataBase, logger, config, metricSource.CreateMetricSourceProvider(localSource, nil), &metrics.CheckerMetrics{})
 		So(err, ShouldBeNil)
 
 		expected := TriggerChecker{
@@ -177,7 +177,7 @@ func TestInitTriggerChecker(t *testing.T) {
 	Convey("Test trigger checker with lastCheck and without ttl", t, func() {
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
 		dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(lastCheck, nil)
-		actual, err := MakeTriggerChecker(triggerID, dataBase, logger, config, metricSource.CreateMetricSourceProvider(localSource, nil), &graphite.CheckerMetrics{})
+		actual, err := MakeTriggerChecker(triggerID, dataBase, logger, config, metricSource.CreateMetricSourceProvider(localSource, nil), &metrics.CheckerMetrics{})
 		So(err, ShouldBeNil)
 
 		expected := TriggerChecker{
