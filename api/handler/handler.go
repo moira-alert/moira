@@ -6,7 +6,7 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
-	"github.com/moira-alert/moira/metric_source"
+	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/rs/cors"
 
 	"github.com/moira-alert/moira"

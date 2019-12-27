@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/metric_source"
+	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metrics/graphite"
 	"github.com/moira-alert/moira/plotting"
 )

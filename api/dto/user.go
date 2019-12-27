@@ -2,8 +2,9 @@
 package dto
 
 import (
-	"github.com/moira-alert/moira"
 	"net/http"
+
+	"github.com/moira-alert/moira"
 )
 
 type UserSettings struct {

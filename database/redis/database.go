@@ -5,9 +5,9 @@ import (
 	"net"
 	"time"
 
+	"github.com/go-redsync/redsync"
 	"github.com/gomodule/redigo/redis"
 	"github.com/patrickmn/go-cache"
-	"github.com/go-redsync/redsync"
 	"gopkg.in/tomb.v2"
 
 	"github.com/moira-alert/moira"

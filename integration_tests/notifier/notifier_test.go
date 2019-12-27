@@ -6,14 +6,14 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
-	"github.com/moira-alert/moira/metric_source"
+	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
 	"github.com/op/go-logging"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database/redis"
 	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
-	"github.com/moira-alert/moira/mock/moira-alert"
+	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	"github.com/moira-alert/moira/notifier"
 	"github.com/moira-alert/moira/notifier/events"
 	"github.com/moira-alert/moira/notifier/notifications"

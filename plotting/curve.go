@@ -6,7 +6,7 @@ import (
 
 	"github.com/beevee/go-chart"
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/metric_source"
+	metricSource "github.com/moira-alert/moira/metric_source"
 )
 
 // plotCurve is a single curve for given timeserie

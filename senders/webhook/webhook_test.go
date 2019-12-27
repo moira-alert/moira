@@ -5,13 +5,14 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
-	"github.com/moira-alert/moira"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/moira-alert/moira"
 
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"

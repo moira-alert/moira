@@ -9,8 +9,8 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/mock/moira-alert"
-	"github.com/moira-alert/moira/mock/notifier"
+	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
+	mock_notifier "github.com/moira-alert/moira/mock/notifier"
 	notifier2 "github.com/moira-alert/moira/notifier"
 )
 

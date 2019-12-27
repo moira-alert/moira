@@ -8,9 +8,9 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/expression"
-	"github.com/moira-alert/moira/metric_source"
-	"github.com/moira-alert/moira/mock/metric_source"
-	"github.com/moira-alert/moira/mock/moira-alert"
+	metricSource "github.com/moira-alert/moira/metric_source"
+	mock_metric_source "github.com/moira-alert/moira/mock/metric_source"
+	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
 )
 

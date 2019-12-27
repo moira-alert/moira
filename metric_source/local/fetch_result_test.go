@@ -3,7 +3,7 @@ package local
 import (
 	"testing"
 
-	"github.com/moira-alert/moira/metric_source"
+	metricSource "github.com/moira-alert/moira/metric_source"
 	. "github.com/smartystreets/goconvey/convey"
 )
 

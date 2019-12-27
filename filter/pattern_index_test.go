@@ -1,8 +1,9 @@
 package filter
 
 import (
-	"github.com/op/go-logging"
 	"testing"
+
+	"github.com/op/go-logging"
 )
 
 import . "github.com/smartystreets/goconvey/convey"

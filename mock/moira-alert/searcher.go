@@ -5,9 +5,10 @@
 package mock_moira_alert
 
 import (
+	reflect "reflect"
+
 	gomock "github.com/golang/mock/gomock"
 	moira "github.com/moira-alert/moira"
-	reflect "reflect"
 )
 
 // MockSearcher is a mock of Searcher interface

@@ -109,5 +109,5 @@ type MessageCard struct {
 	ThemeColor      string    `json:"themeColor"`
 	Title           string    `json:"title"`
 	Sections        []Section `json:"sections"`
-	PotentialAction []Action `json:"potentialAction,omitempty"`
+	PotentialAction []Action  `json:"potentialAction,omitempty"`
 }

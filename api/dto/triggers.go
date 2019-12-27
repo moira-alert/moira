@@ -10,7 +10,7 @@ import (
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/middleware"
 	"github.com/moira-alert/moira/expression"
-	"github.com/moira-alert/moira/metric_source"
+	metricSource "github.com/moira-alert/moira/metric_source"
 )
 
 type TriggersList struct {

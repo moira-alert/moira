@@ -12,7 +12,7 @@ import (
 
 	"github.com/moira-alert/moira/index/bleve"
 	"github.com/moira-alert/moira/index/fixtures"
-	"github.com/moira-alert/moira/mock/moira-alert"
+	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 )
 
 func TestGetTriggerChecksWithRetries(t *testing.T) {

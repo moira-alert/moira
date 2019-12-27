@@ -6,16 +6,16 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/golang/mock/gomock"
-	"github.com/moira-alert/moira/metric_source"
+	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/remote"
-	"github.com/moira-alert/moira/mock/metric_source"
+	mock_metric_source "github.com/moira-alert/moira/mock/metric_source"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/database"
-	"github.com/moira-alert/moira/mock/moira-alert"
+	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 )
 
 func TestDeleteTriggerMetric(t *testing.T) {

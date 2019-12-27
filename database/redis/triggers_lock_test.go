@@ -1,9 +1,10 @@
 package redis
 
 import (
+	"testing"
+
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
-	"testing"
 )
 
 func TestLock(t *testing.T) {

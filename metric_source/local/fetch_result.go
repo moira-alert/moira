@@ -1,7 +1,7 @@
 package local
 
 import (
-	"github.com/moira-alert/moira/metric_source"
+	metricSource "github.com/moira-alert/moira/metric_source"
 )
 
 // FetchResult is implementation of metric_source.FetchResult interface,

@@ -5,9 +5,10 @@
 package mock_metric_source
 
 import (
+	reflect "reflect"
+
 	gomock "github.com/golang/mock/gomock"
 	metric_source "github.com/moira-alert/moira/metric_source"
-	reflect "reflect"
 )
 
 // MockMetricSource is a mock of MetricSource interface

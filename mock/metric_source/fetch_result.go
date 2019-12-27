@@ -5,9 +5,10 @@
 package mock_metric_source
 
 import (
+	reflect "reflect"
+
 	gomock "github.com/golang/mock/gomock"
 	metric_source "github.com/moira-alert/moira/metric_source"
-	reflect "reflect"
 )
 
 // MockFetchResult is a mock of FetchResult interface

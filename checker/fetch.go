@@ -1,7 +1,7 @@
 package checker
 
 import (
-	"github.com/moira-alert/moira/metric_source"
+	metricSource "github.com/moira-alert/moira/metric_source"
 )
 
 func (triggerChecker *TriggerChecker) fetchTriggerMetrics() (*metricSource.TriggerMetricsData, error) {
