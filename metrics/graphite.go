@@ -95,3 +95,7 @@ func initPrefix(prefix string) (string, error) {
 	short := strings.Split(hostname, ".")[0]
 	return strings.Replace(prefix, hostnameTmpl, short, -1), nil
 }
+
+func metricNameWithPrefix(prefix, metric string) string {
+	return fmt.Sprintf("%s.%s", prefix, metric)
+}

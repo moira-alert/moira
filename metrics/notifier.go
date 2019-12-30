@@ -1,7 +1,5 @@
 package metrics
 
-import "fmt"
-
 // NotifierMetrics is a collection of metrics used in notifier
 type NotifierMetrics struct {
 	SubsMalformed          Meter
@@ -24,8 +22,4 @@ func ConfigureNotifierMetrics(registry Registry, prefix string) *NotifierMetrics
 		SendersOkMetrics:       registry.NewMetersCollection(),
 		SendersFailedMetrics:   registry.NewMetersCollection(),
 	}
-}
-
-func metricNameWithPrefix(prefix, metric string) string {
-	return fmt.Sprintf("%s.%s", prefix, metric)
 }
