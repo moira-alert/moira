@@ -5,6 +5,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/moira-alert/moira/metrics"
+
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/remote"
 	"github.com/patrickmn/go-cache"
@@ -12,7 +14,6 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/checker"
-	"github.com/moira-alert/moira/metrics/graphite"
 )
 
 // Checker represents workers for periodically triggers checking based by new events
@@ -22,7 +23,7 @@ type Checker struct {
 	Config            *checker.Config
 	RemoteConfig      *remote.Config
 	SourceProvider    *metricSource.SourceProvider
-	Metrics           *graphite.CheckerMetrics
+	Metrics           *metrics.CheckerMetrics
 	TriggerCache      *cache.Cache
 	LazyTriggersCache *cache.Cache
 	PatternCache      *cache.Cache

@@ -11,6 +11,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/moira-alert/moira/metrics"
+
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api/handler"
 	"github.com/moira-alert/moira/cmd"
@@ -20,7 +22,6 @@ import (
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
 	"github.com/moira-alert/moira/metric_source/remote"
-	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
 )
 
 const serviceName = "api"
@@ -77,13 +78,14 @@ func main() {
 	databaseSettings := config.Redis.GetSettings()
 	database := redis.NewDatabase(logger, databaseSettings, redis.API)
 
-	graphiteSettings := config.Graphite.GetSettings()
-	if err = metrics.Init(graphiteSettings, serviceName); err != nil {
-		logger.Error(err)
+	graphiteMetricsRegistry, err := metrics.NewGraphiteRegistry(config.Graphite.GetSettings(), serviceName)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Can not configure graphite metrics: %s\n", err.Error())
+		os.Exit(1)
 	}
 
 	// Start Index right before HTTP listener. Fail if index cannot start
-	searchIndex := index.NewSearchIndex(logger, database)
+	searchIndex := index.NewSearchIndex(logger, database, graphiteMetricsRegistry)
 	if searchIndex == nil {
 		logger.Fatalf("Failed to create search index")
 	}

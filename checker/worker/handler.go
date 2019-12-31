@@ -5,14 +5,15 @@ import (
 	"runtime/debug"
 	"time"
 
+	"github.com/moira-alert/moira/metrics"
+
 	"github.com/moira-alert/moira/checker"
-	"github.com/moira-alert/moira/metrics/graphite"
 )
 
 const sleepAfterCheckingError = time.Second * 2
 
 // startTriggerHandler is blocking func
-func (worker *Checker) startTriggerHandler(triggerIDsToCheck <-chan string, metrics *graphite.CheckMetrics) error {
+func (worker *Checker) startTriggerHandler(triggerIDsToCheck <-chan string, metrics *metrics.CheckMetrics) error {
 	for {
 		triggerID, ok := <-triggerIDsToCheck
 		if !ok {
@@ -27,7 +28,7 @@ func (worker *Checker) startTriggerHandler(triggerIDsToCheck <-chan string, metr
 	}
 }
 
-func (worker *Checker) handleTrigger(triggerID string, metrics *graphite.CheckMetrics) error {
+func (worker *Checker) handleTrigger(triggerID string, metrics *metrics.CheckMetrics) error {
 	var err error
 	defer func() {
 		if r := recover(); r != nil {
@@ -38,7 +39,7 @@ func (worker *Checker) handleTrigger(triggerID string, metrics *graphite.CheckMe
 	return err
 }
 
-func (worker *Checker) handleTriggerInLock(triggerID string, metrics *graphite.CheckMetrics) error {
+func (worker *Checker) handleTriggerInLock(triggerID string, metrics *metrics.CheckMetrics) error {
 	acquired, err := worker.Database.SetTriggerCheckLock(triggerID)
 	if err != nil {
 		return err

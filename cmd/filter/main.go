@@ -17,7 +17,7 @@ import (
 	matchedmetrics "github.com/moira-alert/moira/filter/matched_metrics"
 	"github.com/moira-alert/moira/filter/patterns"
 	"github.com/moira-alert/moira/logging/go-logging"
-	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
+	"github.com/moira-alert/moira/metrics"
 )
 
 const serviceName = "filter"
@@ -75,13 +75,13 @@ func main() {
 		cmd.StartProfiling(logger, config.Pprof)
 	}
 
-	cacheMetrics := metrics.ConfigureFilterMetrics(serviceName)
-
-	graphiteSettings := config.Graphite.GetSettings()
-	if err = metrics.Init(graphiteSettings, serviceName); err != nil {
-		logger.Error(err)
+	graphiteMetricsRegistry, err := metrics.NewGraphiteRegistry(config.Graphite.GetSettings(), serviceName)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Can not configure graphite metrics: %s\n", err.Error())
+		os.Exit(1)
 	}
 
+	filterMetrics := metrics.ConfigureFilterMetrics(graphiteMetricsRegistry, serviceName)
 	database := redis.NewDatabase(logger, config.Redis.GetSettings(), redis.Filter)
 
 	retentionConfigFile, err := os.Open(config.Filter.RetentionConfig)
@@ -89,18 +89,18 @@ func main() {
 		logger.Fatalf("Error open retentions file [%s]: %s", config.Filter.RetentionConfig, err.Error())
 	}
 
-	cacheStorage, err := filter.NewCacheStorage(logger, cacheMetrics, retentionConfigFile)
+	cacheStorage, err := filter.NewCacheStorage(logger, filterMetrics, retentionConfigFile)
 	if err != nil {
 		logger.Fatalf("Failed to initialize cache storage with config [%s]: %s", config.Filter.RetentionConfig, err.Error())
 	}
 
-	patternStorage, err := filter.NewPatternStorage(database, cacheMetrics, logger)
+	patternStorage, err := filter.NewPatternStorage(database, filterMetrics, logger)
 	if err != nil {
 		logger.Fatalf("Failed to refresh pattern storage: %s", err.Error())
 	}
 
 	// Refresh Patterns on first init
-	refreshPatternWorker := patterns.NewRefreshPatternWorker(database, cacheMetrics, logger, patternStorage)
+	refreshPatternWorker := patterns.NewRefreshPatternWorker(database, filterMetrics, logger, patternStorage)
 
 	// Start patterns refresher
 	err = refreshPatternWorker.Start()
@@ -110,23 +110,23 @@ func main() {
 	defer stopRefreshPatternWorker(refreshPatternWorker)
 
 	// Start Filter heartbeat
-	heartbeatWorker := heartbeat.NewHeartbeatWorker(database, cacheMetrics, logger)
+	heartbeatWorker := heartbeat.NewHeartbeatWorker(database, filterMetrics, logger)
 	heartbeatWorker.Start()
 	defer stopHeartbeatWorker(heartbeatWorker)
 
 	// Start metrics listener
-	listener, err := connection.NewListener(config.Filter.Listen, logger, cacheMetrics)
+	listener, err := connection.NewListener(config.Filter.Listen, logger, filterMetrics)
 	if err != nil {
 		logger.Fatalf("Failed to start listen: %s", err.Error())
 	}
 	lineChan := listener.Listen()
 
-	patternMatcher := patterns.NewMatcher(logger, cacheMetrics, patternStorage)
+	patternMatcher := patterns.NewMatcher(logger, filterMetrics, patternStorage)
 	metricsChan := patternMatcher.Start(config.Filter.MaxParallelMatches, lineChan)
 
 	// Start metrics matcher
 	cacheCapacity := config.Filter.CacheCapacity
-	metricsMatcher := matchedmetrics.NewMetricsMatcher(cacheMetrics, logger, database, cacheStorage, cacheCapacity)
+	metricsMatcher := matchedmetrics.NewMetricsMatcher(filterMetrics, logger, database, cacheStorage, cacheCapacity)
 	metricsMatcher.Start(metricsChan)
 	defer metricsMatcher.Wait()  // First stop listener
 	defer stopListener(listener) // Then waiting for metrics matcher handle all received events

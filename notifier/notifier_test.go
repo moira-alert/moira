@@ -13,7 +13,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
+	"github.com/moira-alert/moira/metrics"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	mock_scheduler "github.com/moira-alert/moira/mock/scheduler"
 )
@@ -171,7 +171,7 @@ func waitTestEnd() {
 }
 
 func configureNotifier(t *testing.T) {
-	notifierMetrics := metrics.ConfigureNotifierMetrics("notifier")
+	notifierMetrics := metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), "notifier")
 	var location, _ = time.LoadLocation("UTC")
 	dateTimeFormat := "15:04 02.01.2006"
 	config := Config{

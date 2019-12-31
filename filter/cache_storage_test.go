@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
+	"github.com/moira-alert/moira/metrics"
 	"github.com/smartystreets/assertions/should"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -167,8 +167,8 @@ var matchedMetrics = []moira.MatchedMetric{
 }
 
 func TestCacheStorage(t *testing.T) {
-	metrics2 := metrics.ConfigureFilterMetrics("test")
-	storage, err := NewCacheStorage(nil, metrics2, strings.NewReader(testRetentions))
+	filterMetrics := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry(), "test")
+	storage, err := NewCacheStorage(nil, filterMetrics, strings.NewReader(testRetentions))
 
 	Convey("Test good retentions", t, func() {
 		So(err, ShouldBeEmpty)
@@ -186,7 +186,7 @@ func TestCacheStorage(t *testing.T) {
 		So(len(buffer), ShouldEqual, len(matchedMetrics))
 	})
 
-	storage, _ = NewCacheStorage(nil, metrics2, strings.NewReader(testRetentions))
+	storage, _ = NewCacheStorage(nil, filterMetrics, strings.NewReader(testRetentions))
 
 	Convey("Test add one metric twice, should buffer len is 1", t, func() {
 		buffer := make(map[string]*moira.MatchedMetric)
@@ -198,17 +198,17 @@ func TestCacheStorage(t *testing.T) {
 }
 
 func TestRetentions(t *testing.T) {
-	metrics2 := metrics.ConfigureFilterMetrics("test")
-	storage, _ := NewCacheStorage(nil, metrics2, strings.NewReader(testRetentions))
+	filterMetrics := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry(), "test")
+	storage, _ := NewCacheStorage(nil, filterMetrics, strings.NewReader(testRetentions))
 
 	Convey("Simple metric, should 60sec", t, func() {
 		buffer := make(map[string]*moira.MatchedMetric)
-		metr := matchedMetrics[0]
+		matchedMetric := matchedMetrics[0]
 
-		storage.EnrichMatchedMetric(buffer, &metr)
+		storage.EnrichMatchedMetric(buffer, &matchedMetric)
 		So(len(buffer), ShouldEqual, 1)
-		So(metr.Retention, ShouldEqual, 60)
-		So(metr.RetentionTimestamp, should.Equal, 60)
+		So(matchedMetric.Retention, ShouldEqual, 60)
+		So(matchedMetric.RetentionTimestamp, should.Equal, 60)
 	})
 
 	Convey("Suf metric, should 1200sec", t, func() {

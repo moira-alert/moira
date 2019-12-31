@@ -12,7 +12,7 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database/redis"
-	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
+	"github.com/moira-alert/moira/metrics"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	"github.com/moira-alert/moira/notifier"
 	"github.com/moira-alert/moira/notifier/events"
@@ -35,7 +35,7 @@ var notifierConfig = notifier.Config{
 
 var shutdown = make(chan struct{})
 
-var notifierMetrics = metrics.ConfigureNotifierMetrics("notifier")
+var notifierMetrics = metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), "notifier")
 var logger, _ = logging.GetLogger("Notifier_Test")
 var mockCtrl *gomock.Controller
 

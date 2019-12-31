@@ -7,7 +7,7 @@ import (
 
 	"github.com/moira-alert/moira"
 	metricSource "github.com/moira-alert/moira/metric_source"
-	"github.com/moira-alert/moira/metrics/graphite"
+	"github.com/moira-alert/moira/metrics"
 	"github.com/moira-alert/moira/plotting"
 )
 
@@ -76,13 +76,13 @@ type StandardNotifier struct {
 	database             moira.Database
 	scheduler            Scheduler
 	config               Config
-	metrics              *graphite.NotifierMetrics
+	metrics              *metrics.NotifierMetrics
 	metricSourceProvider *metricSource.SourceProvider
 	imageStores          map[string]moira.ImageStore
 }
 
 // NewNotifier is initializer for StandardNotifier
-func NewNotifier(database moira.Database, logger moira.Logger, config Config, metrics *graphite.NotifierMetrics, metricSourceProvider *metricSource.SourceProvider, imageStoreMap map[string]moira.ImageStore) *StandardNotifier {
+func NewNotifier(database moira.Database, logger moira.Logger, config Config, metrics *metrics.NotifierMetrics, metricSourceProvider *metricSource.SourceProvider, imageStoreMap map[string]moira.ImageStore) *StandardNotifier {
 	return &StandardNotifier{
 		senders:              make(map[string]chan NotificationPackage),
 		logger:               logger,

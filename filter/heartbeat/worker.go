@@ -6,19 +6,19 @@ import (
 	"gopkg.in/tomb.v2"
 
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/metrics/graphite"
+	"github.com/moira-alert/moira/metrics"
 )
 
 // Worker is heartbeat worker realization
 type Worker struct {
 	database moira.Database
-	metrics  *graphite.FilterMetrics
+	metrics  *metrics.FilterMetrics
 	logger   moira.Logger
 	tomb     tomb.Tomb
 }
 
 // NewHeartbeatWorker creates new worker
-func NewHeartbeatWorker(database moira.Database, metrics *graphite.FilterMetrics, logger moira.Logger) *Worker {
+func NewHeartbeatWorker(database moira.Database, metrics *metrics.FilterMetrics, logger moira.Logger) *Worker {
 	return &Worker{
 		database: database,
 		metrics:  metrics,

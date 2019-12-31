@@ -15,7 +15,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
+	"github.com/moira-alert/moira/metrics"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 )
 
@@ -23,9 +23,10 @@ func TestGetMetricDataState(t *testing.T) {
 	logger, _ := logging.GetLogger("Test")
 	var warnValue float64 = 10
 	var errValue float64 = 20
+	checkerMetrics := metrics.ConfigureCheckerMetrics(metrics.NewDummyRegistry(), "checker", false)
 	triggerChecker := TriggerChecker{
 		logger:  logger,
-		metrics: metrics.ConfigureCheckerMetrics("checker", false).LocalMetrics,
+		metrics: checkerMetrics.LocalMetrics,
 		until:   67,
 		from:    17,
 		trigger: &moira.Trigger{
@@ -386,8 +387,10 @@ func TestCheckForNODATA(t *testing.T) {
 	})
 
 	var ttl int64 = 600
+
+	checkerMetrics := metrics.ConfigureCheckerMetrics(metrics.NewDummyRegistry(), "checker", false)
 	triggerChecker := TriggerChecker{
-		metrics: metrics.ConfigureCheckerMetrics("checker", false).LocalMetrics,
+		metrics: checkerMetrics.LocalMetrics,
 		logger:  logger,
 		ttl:     ttl,
 		lastCheck: &moira.CheckData{
@@ -482,6 +485,7 @@ func TestCheckErrors(t *testing.T) {
 
 	var ttl int64 = 30
 
+	checkerMetrics := metrics.ConfigureCheckerMetrics(metrics.NewDummyRegistry(), "checker", false)
 	triggerChecker := TriggerChecker{
 		triggerID: "SuperId",
 		database:  dataBase,
@@ -490,7 +494,7 @@ func TestCheckErrors(t *testing.T) {
 		config: &Config{
 			MetricsTTLSeconds: 10,
 		},
-		metrics:  metrics.ConfigureCheckerMetrics("checker", false).LocalMetrics,
+		metrics:  checkerMetrics.LocalMetrics,
 		from:     17,
 		until:    67,
 		ttl:      ttl,

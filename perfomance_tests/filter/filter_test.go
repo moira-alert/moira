@@ -12,7 +12,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira/filter"
-	"github.com/moira-alert/moira/metrics/graphite/go-metrics"
+	"github.com/moira-alert/moira/metrics"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	"github.com/op/go-logging"
 )
@@ -35,14 +35,14 @@ func BenchmarkProcessIncomingMetric(b *testing.B) {
 		b.Errorf("Error reading patterns: %s", err.Error())
 	}
 
-	metrics2 := metrics.ConfigureFilterMetrics("test")
+	filterMetrics := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry(), "test")
 
 	mockCtrl := gomock.NewController(b)
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Benchmark")
 
 	database.EXPECT().GetPatterns().Return(patterns, nil)
-	patternsStorage, err := filter.NewPatternStorage(database, metrics2, logger)
+	patternsStorage, err := filter.NewPatternStorage(database, filterMetrics, logger)
 	if err != nil {
 		b.Errorf("Can not create new cache storage %s", err)
 	}

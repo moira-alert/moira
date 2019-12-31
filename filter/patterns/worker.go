@@ -7,20 +7,20 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/filter"
-	"github.com/moira-alert/moira/metrics/graphite"
+	"github.com/moira-alert/moira/metrics"
 )
 
 // RefreshPatternWorker realization
 type RefreshPatternWorker struct {
 	database       moira.Database
 	logger         moira.Logger
-	metrics        *graphite.FilterMetrics
+	metrics        *metrics.FilterMetrics
 	patternStorage *filter.PatternStorage
 	tomb           tomb.Tomb
 }
 
 // NewRefreshPatternWorker creates new RefreshPatternWorker
-func NewRefreshPatternWorker(database moira.Database, metrics *graphite.FilterMetrics, logger moira.Logger, patternStorage *filter.PatternStorage) *RefreshPatternWorker {
+func NewRefreshPatternWorker(database moira.Database, metrics *metrics.FilterMetrics, logger moira.Logger, patternStorage *filter.PatternStorage) *RefreshPatternWorker {
 	return &RefreshPatternWorker{
 		database:       database,
 		metrics:        metrics,

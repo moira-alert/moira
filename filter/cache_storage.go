@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/metrics/graphite"
+	"github.com/moira-alert/moira/metrics"
 )
 
 var defaultRetention = 60
@@ -25,7 +25,7 @@ type retentionCacheItem struct {
 
 // Storage struct to store retention matchers
 type Storage struct {
-	metrics         *graphite.FilterMetrics
+	metrics         *metrics.FilterMetrics
 	retentions      []retentionMatcher
 	retentionsCache map[string]*retentionCacheItem
 	metricsCache    map[string]*moira.MatchedMetric
@@ -33,7 +33,7 @@ type Storage struct {
 }
 
 // NewCacheStorage create new Storage
-func NewCacheStorage(logger moira.Logger, metrics *graphite.FilterMetrics, reader io.Reader) (*Storage, error) {
+func NewCacheStorage(logger moira.Logger, metrics *metrics.FilterMetrics, reader io.Reader) (*Storage, error) {
 	storage := &Storage{
 		retentionsCache: make(map[string]*retentionCacheItem),
 		metricsCache:    make(map[string]*moira.MatchedMetric),
