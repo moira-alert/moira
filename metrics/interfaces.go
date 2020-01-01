@@ -45,14 +45,14 @@ type Counter interface {
 }
 
 func NewMetersCollection(registry Registry) MetersCollection {
-	return &DefaultMetersCollection{registry: registry}
+	return &DefaultMetersCollection{registry: registry, meters: map[string]Meter{}}
 }
 
 // DefaultMetersCollection holds registered meters
 type DefaultMetersCollection struct {
 	registry Registry
-	mutex    sync.Mutex
 	meters   map[string]Meter
+	mutex    sync.Mutex
 }
 
 func (source *DefaultMetersCollection) RegisterMeter(name string, path string) {
