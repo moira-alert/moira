@@ -1,14 +1,16 @@
 package metrics
 
-import "time"
+import (
+	"sync"
+	"time"
+)
 
-// Registry implements meter collection abstraction
+// Registry implements metrics collection abstraction
 type Registry interface {
 	NewMeter(name string) Meter
 	NewTimer(name string) Timer
 	NewHistogram(name string) Histogram
 	NewCounter(name string) Counter
-	NewMetersCollection() MetersCollection
 }
 
 // MetersCollection implements meter collection abstraction
@@ -39,5 +41,31 @@ type Histogram interface {
 // Counter hold an int64 value that can be incremented and decremented.
 type Counter interface {
 	Count() int64
-	Inc(int64)
+	Inc()
+}
+
+func NewMetersCollection(registry Registry) MetersCollection {
+	return &DefaultMetersCollection{registry: registry, meters: map[string]Meter{}}
+}
+
+// DefaultMetersCollection holds registered meters
+type DefaultMetersCollection struct {
+	registry Registry
+	meters   map[string]Meter
+	mutex    sync.Mutex
+}
+
+func (source *DefaultMetersCollection) RegisterMeter(name string, path string) {
+	source.mutex.Lock()
+	defer source.mutex.Unlock()
+
+	source.meters[name] = source.registry.NewMeter(path)
+}
+
+func (source *DefaultMetersCollection) GetRegisteredMeter(name string) (Meter, bool) {
+	source.mutex.Lock()
+	defer source.mutex.Unlock()
+
+	value, found := source.meters[name]
+	return value, found
 }

@@ -53,7 +53,7 @@ func (storage *PatternStorage) Refresh() error {
 
 // ProcessIncomingMetric validates, parses and matches incoming raw string
 func (storage *PatternStorage) ProcessIncomingMetric(lineBytes []byte) *moira.MatchedMetric {
-	storage.metrics.TotalMetricsReceived.Inc(1)
+	storage.metrics.TotalMetricsReceived.Inc()
 	count := storage.metrics.TotalMetricsReceived.Count()
 
 	parsedMetric, err := ParseMetric(lineBytes)
@@ -62,7 +62,7 @@ func (storage *PatternStorage) ProcessIncomingMetric(lineBytes []byte) *moira.Ma
 		return nil
 	}
 
-	storage.metrics.ValidMetricsReceived.Inc(1)
+	storage.metrics.ValidMetricsReceived.Inc()
 
 	matchingStart := time.Now()
 	matchedPatterns := storage.matchPatterns(parsedMetric)
@@ -70,7 +70,7 @@ func (storage *PatternStorage) ProcessIncomingMetric(lineBytes []byte) *moira.Ma
 		storage.metrics.MatchingTimer.UpdateSince(matchingStart)
 	}
 	if len(matchedPatterns) > 0 {
-		storage.metrics.MatchingMetricsReceived.Inc(1)
+		storage.metrics.MatchingMetricsReceived.Inc()
 		return &moira.MatchedMetric{
 			Metric:             parsedMetric.Metric,
 			Patterns:           matchedPatterns,

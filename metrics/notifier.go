@@ -19,7 +19,7 @@ func ConfigureNotifierMetrics(registry Registry, prefix string) *NotifierMetrics
 		EventsMalformed:        registry.NewMeter(metricNameWithPrefix(prefix, "events.malformed")),
 		EventsProcessingFailed: registry.NewMeter(metricNameWithPrefix(prefix, "events.failed")),
 		SendingFailed:          registry.NewMeter(metricNameWithPrefix(prefix, "sending.failed")),
-		SendersOkMetrics:       registry.NewMetersCollection(),
-		SendersFailedMetrics:   registry.NewMetersCollection(),
+		SendersOkMetrics:       NewMetersCollection(registry),
+		SendersFailedMetrics:   NewMetersCollection(registry),
 	}
 }
