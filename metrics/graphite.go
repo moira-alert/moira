@@ -59,29 +59,11 @@ func (source *GraphiteRegistry) NewMeter(name string) Meter {
 }
 
 func (source *GraphiteRegistry) NewCounter(name string) Counter {
-	return goMetrics.NewRegisteredCounter(name, source.registry)
+	return &graphiteCounter{goMetrics.NewRegisteredCounter(name, source.registry)}
 }
 
 func (source *GraphiteRegistry) NewHistogram(name string) Histogram {
 	return goMetrics.NewRegisteredHistogram(name, source.registry, goMetrics.NewExpDecaySample(1028, 0.015))
-}
-
-func (source *GraphiteRegistry) NewMetersCollection() MetersCollection {
-	return &GraphiteMetersCollection{source.registry, make(map[string]goMetrics.Meter)}
-}
-
-type GraphiteMetersCollection struct {
-	registry goMetrics.Registry
-	metrics  map[string]goMetrics.Meter
-}
-
-func (source *GraphiteMetersCollection) RegisterMeter(name, path string) {
-	source.metrics[name] = goMetrics.NewRegisteredMeter(path, source.registry)
-}
-
-func (source *GraphiteMetersCollection) GetRegisteredMeter(name string) (Meter, bool) {
-	value, found := source.metrics[name]
-	return value, found
 }
 
 func initPrefix(prefix string) (string, error) {
@@ -98,4 +80,16 @@ func initPrefix(prefix string) (string, error) {
 
 func metricNameWithPrefix(prefix, metric string) string {
 	return fmt.Sprintf("%s.%s", prefix, metric)
+}
+
+type graphiteCounter struct {
+	counter goMetrics.Counter
+}
+
+func (source *graphiteCounter) Inc() {
+	source.counter.Inc(1)
+}
+
+func (source *graphiteCounter) Count() int64 {
+	return source.counter.Count()
 }
