@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// Registry implements meter collection abstraction
+// Registry implements metrics collection abstraction
 type Registry interface {
 	NewMeter(name string) Meter
 	NewTimer(name string) Timer
