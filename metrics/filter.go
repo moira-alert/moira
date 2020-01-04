@@ -13,15 +13,15 @@ type FilterMetrics struct {
 }
 
 // ConfigureFilterMetrics initialize metrics
-func ConfigureFilterMetrics(registry Registry, prefix string) *FilterMetrics {
+func ConfigureFilterMetrics(registry Registry) *FilterMetrics {
 	return &FilterMetrics{
-		TotalMetricsReceived:    registry.NewCounter(metricNameWithPrefix(prefix, "received.total")),
-		ValidMetricsReceived:    registry.NewCounter(metricNameWithPrefix(prefix, "received.valid")),
-		MatchingMetricsReceived: registry.NewCounter(metricNameWithPrefix(prefix, "received.matching")),
-		MatchingTimer:           registry.NewTimer(metricNameWithPrefix(prefix, "time.match")),
-		SavingTimer:             registry.NewTimer(metricNameWithPrefix(prefix, "time.save")),
-		BuildTreeTimer:          registry.NewTimer(metricNameWithPrefix(prefix, "time.buildtree")),
-		MetricChannelLen:        registry.NewHistogram(metricNameWithPrefix(prefix, "metricsToSave")),
-		LineChannelLen:          registry.NewHistogram(metricNameWithPrefix(prefix, "linesToMatch")),
+		TotalMetricsReceived:    registry.NewCounter("received", "total"),
+		ValidMetricsReceived:    registry.NewCounter("received", "valid"),
+		MatchingMetricsReceived: registry.NewCounter("received", "matching"),
+		MatchingTimer:           registry.NewTimer("time", "match"),
+		SavingTimer:             registry.NewTimer("time", "save"),
+		BuildTreeTimer:          registry.NewTimer("time", "buildtree"),
+		MetricChannelLen:        registry.NewHistogram("metricsToSave"),
+		LineChannelLen:          registry.NewHistogram("linesToMatch"),
 	}
 }

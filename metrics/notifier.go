@@ -14,11 +14,11 @@ type NotifierMetrics struct {
 // ConfigureNotifierMetrics is notifier metrics configurator
 func ConfigureNotifierMetrics(registry Registry, prefix string) *NotifierMetrics {
 	return &NotifierMetrics{
-		SubsMalformed:          registry.NewMeter(metricNameWithPrefix(prefix, "subs.malformed")),
-		EventsReceived:         registry.NewMeter(metricNameWithPrefix(prefix, "events.received")),
-		EventsMalformed:        registry.NewMeter(metricNameWithPrefix(prefix, "events.malformed")),
-		EventsProcessingFailed: registry.NewMeter(metricNameWithPrefix(prefix, "events.failed")),
-		SendingFailed:          registry.NewMeter(metricNameWithPrefix(prefix, "sending.failed")),
+		SubsMalformed:          registry.NewMeter("subs", "malformed"),
+		EventsReceived:         registry.NewMeter("events", "received"),
+		EventsMalformed:        registry.NewMeter("events", "malformed"),
+		EventsProcessingFailed: registry.NewMeter("events", "failed"),
+		SendingFailed:          registry.NewMeter("sending", "failed"),
 		SendersOkMetrics:       NewMetersCollection(registry),
 		SendersFailedMetrics:   NewMetersCollection(registry),
 	}

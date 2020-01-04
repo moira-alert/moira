@@ -40,7 +40,7 @@ func NewSearchIndex(logger moira.Logger, database moira.Database, metricsRegistr
 		logger:   logger,
 		database: database,
 	}
-	newIndex.metrics = metrics.ConfigureIndexMetrics(metricsRegistry, serviceName)
+	newIndex.metrics = metrics.ConfigureIndexMetrics(metricsRegistry)
 	indexMapping := mapping.BuildIndexMapping(mapping.Trigger{})
 	newIndex.triggerIndex, err = bleve.CreateTriggerIndex(indexMapping)
 	if err != nil {

@@ -81,7 +81,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	filterMetrics := metrics.ConfigureFilterMetrics(graphiteMetricsRegistry, serviceName)
+	filterMetrics := metrics.ConfigureFilterMetrics(graphiteMetricsRegistry)
 	database := redis.NewDatabase(logger, config.Redis.GetSettings(), redis.Filter)
 
 	retentionConfigFile, err := os.Open(config.Filter.RetentionConfig)

@@ -28,24 +28,24 @@ type CheckMetrics struct {
 }
 
 // ConfigureCheckerMetrics is checker metrics configurator
-func ConfigureCheckerMetrics(registry Registry, prefix string, remoteEnabled bool) *CheckerMetrics {
+func ConfigureCheckerMetrics(registry Registry, remoteEnabled bool) *CheckerMetrics {
 	m := &CheckerMetrics{
-		LocalMetrics:           configureCheckMetrics(registry, metricNameWithPrefix(prefix, "local")),
-		MetricEventsChannelLen: registry.NewHistogram(metricNameWithPrefix(prefix, "metricEvents")),
-		MetricEventsHandleTime: registry.NewTimer(metricNameWithPrefix(prefix, "metricEventsHandle")),
-		UnusedTriggersCount:    registry.NewHistogram(metricNameWithPrefix(prefix, "triggers.unused")),
+		LocalMetrics:           configureCheckMetrics(registry, "local"),
+		MetricEventsChannelLen: registry.NewHistogram("metricEvents"),
+		MetricEventsHandleTime: registry.NewTimer("metricEventsHandle"),
+		UnusedTriggersCount:    registry.NewHistogram("triggers", "unused"),
 	}
 	if remoteEnabled {
-		m.RemoteMetrics = configureCheckMetrics(registry, metricNameWithPrefix(prefix, "remote"))
+		m.RemoteMetrics = configureCheckMetrics(registry, "remote")
 	}
 	return m
 }
 
 func configureCheckMetrics(registry Registry, prefix string) *CheckMetrics {
 	return &CheckMetrics{
-		CheckError:           registry.NewMeter(metricNameWithPrefix(prefix, "errors.check")),
-		HandleError:          registry.NewMeter(metricNameWithPrefix(prefix, "errors.handle")),
-		TriggersCheckTime:    registry.NewTimer(metricNameWithPrefix(prefix, "triggers")),
-		TriggersToCheckCount: registry.NewHistogram(metricNameWithPrefix(prefix, "triggersToCheck")),
+		CheckError:           registry.NewMeter(prefix, "errors", "check"),
+		HandleError:          registry.NewMeter(prefix, "errors", "handle"),
+		TriggersCheckTime:    registry.NewTimer(prefix, "triggers"),
+		TriggersToCheckCount: registry.NewHistogram(prefix, "triggersToCheck"),
 	}
 }
