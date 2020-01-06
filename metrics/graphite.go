@@ -40,30 +40,29 @@ func NewGraphiteRegistry(config GraphiteRegistryConfig, serviceName string) (*Gr
 		if err != nil {
 			return nil, fmt.Errorf("can't get OS hostname %s: %s", config.Prefix, err)
 		}
-		go goMetricsGraphite.Graphite(registry, config.Interval, prefix, address)
 		if config.RuntimeStats {
-			runtimeRegistry := goMetrics.NewPrefixedChildRegistry(registry, fmt.Sprintf("%s.", serviceName))
-			goMetrics.RegisterRuntimeMemStats(runtimeRegistry)
-			go goMetrics.CaptureRuntimeMemStats(runtimeRegistry, config.Interval)
+			goMetrics.RegisterRuntimeMemStats(registry)
+			go goMetrics.CaptureRuntimeMemStats(registry, config.Interval)
 		}
+		go goMetricsGraphite.Graphite(registry, config.Interval, getMetricName(prefix, serviceName), address)
 	}
 	return &GraphiteRegistry{registry}, nil
 }
 
-func (source *GraphiteRegistry) NewTimer(name string) Timer {
-	return goMetrics.NewRegisteredTimer(name, source.registry)
+func (source *GraphiteRegistry) NewTimer(path ...string) Timer {
+	return goMetrics.NewRegisteredTimer(getMetricName(path...), source.registry)
 }
 
-func (source *GraphiteRegistry) NewMeter(name string) Meter {
-	return goMetrics.NewRegisteredMeter(name, source.registry)
+func (source *GraphiteRegistry) NewMeter(path ...string) Meter {
+	return goMetrics.NewRegisteredMeter(getMetricName(path...), source.registry)
 }
 
-func (source *GraphiteRegistry) NewCounter(name string) Counter {
-	return &graphiteCounter{goMetrics.NewRegisteredCounter(name, source.registry)}
+func (source *GraphiteRegistry) NewCounter(path ...string) Counter {
+	return &graphiteCounter{goMetrics.NewRegisteredCounter(getMetricName(path...), source.registry)}
 }
 
-func (source *GraphiteRegistry) NewHistogram(name string) Histogram {
-	return goMetrics.NewRegisteredHistogram(name, source.registry, goMetrics.NewExpDecaySample(1028, 0.015))
+func (source *GraphiteRegistry) NewHistogram(path ...string) Histogram {
+	return goMetrics.NewRegisteredHistogram(getMetricName(path...), source.registry, goMetrics.NewExpDecaySample(1028, 0.015))
 }
 
 func initPrefix(prefix string) (string, error) {
@@ -78,8 +77,8 @@ func initPrefix(prefix string) (string, error) {
 	return strings.Replace(prefix, hostnameTmpl, short, -1), nil
 }
 
-func metricNameWithPrefix(prefix, metric string) string {
-	return fmt.Sprintf("%s.%s", prefix, metric)
+func getMetricName(path ...string) string {
+	return strings.Join(path, ".")
 }
 
 type graphiteCounter struct {

@@ -7,15 +7,15 @@ import (
 
 // Registry implements metrics collection abstraction
 type Registry interface {
-	NewMeter(name string) Meter
-	NewTimer(name string) Timer
-	NewHistogram(name string) Histogram
-	NewCounter(name string) Counter
+	NewMeter(path ...string) Meter
+	NewTimer(path ...string) Timer
+	NewHistogram(path ...string) Histogram
+	NewCounter(path ...string) Counter
 }
 
 // MetersCollection implements meter collection abstraction
 type MetersCollection interface {
-	RegisterMeter(name, path string)
+	RegisterMeter(name string, path ...string)
 	GetRegisteredMeter(name string) (Meter, bool)
 }
 
@@ -55,11 +55,11 @@ type DefaultMetersCollection struct {
 	mutex    sync.Mutex
 }
 
-func (source *DefaultMetersCollection) RegisterMeter(name string, path string) {
+func (source *DefaultMetersCollection) RegisterMeter(name string, path ...string) {
 	source.mutex.Lock()
 	defer source.mutex.Unlock()
 
-	source.meters[name] = source.registry.NewMeter(path)
+	source.meters[name] = source.registry.NewMeter(path...)
 }
 
 func (source *DefaultMetersCollection) GetRegisteredMeter(name string) (Meter, bool) {

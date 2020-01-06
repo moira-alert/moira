@@ -88,7 +88,7 @@ func main() {
 	}
 
 	isConfigured, _ := remoteSource.IsConfigured()
-	checkerMetrics := metrics.ConfigureCheckerMetrics(graphiteMetricsRegistry, serviceName, isConfigured)
+	checkerMetrics := metrics.ConfigureCheckerMetrics(graphiteMetricsRegistry, isConfigured)
 	checkerSettings := config.Checker.getSettings()
 	if triggerID != nil && *triggerID != "" {
 		checkSingleTrigger(database, checkerMetrics, checkerSettings, metricSourceProvider)

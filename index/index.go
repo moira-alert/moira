@@ -8,10 +8,7 @@ import (
 	"gopkg.in/tomb.v2"
 )
 
-const (
-	defaultIndexBatchSize = 1000
-	serviceName           = "searchIndex"
-)
+const defaultIndexBatchSize = 1000
 
 // TriggerIndex is index for moira.TriggerChecks type
 type TriggerIndex interface {
@@ -40,7 +37,7 @@ func NewSearchIndex(logger moira.Logger, database moira.Database, metricsRegistr
 		logger:   logger,
 		database: database,
 	}
-	newIndex.metrics = metrics.ConfigureIndexMetrics(metricsRegistry, serviceName)
+	newIndex.metrics = metrics.ConfigureIndexMetrics(metricsRegistry)
 	indexMapping := mapping.BuildIndexMapping(mapping.Trigger{})
 	newIndex.triggerIndex, err = bleve.CreateTriggerIndex(indexMapping)
 	if err != nil {

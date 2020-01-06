@@ -1,5 +1,7 @@
 package metrics
 
+const prefix = "searchIndex"
+
 // IndexMetrics is a collection of metrics used in full-text search index
 type IndexMetrics struct {
 	IndexedTriggersCount  Histogram
@@ -7,9 +9,9 @@ type IndexMetrics struct {
 }
 
 // ConfigureIndexMetrics in full-text search index metrics configurator
-func ConfigureIndexMetrics(registry Registry, prefix string) *IndexMetrics {
+func ConfigureIndexMetrics(registry Registry) *IndexMetrics {
 	return &IndexMetrics{
-		IndexedTriggersCount:  registry.NewHistogram(metricNameWithPrefix(prefix, "indexedTriggers")),
-		IndexActualizationLag: registry.NewTimer(metricNameWithPrefix(prefix, "actualizationLag")),
+		IndexedTriggersCount:  registry.NewHistogram(prefix, "indexedTriggers"),
+		IndexActualizationLag: registry.NewTimer(prefix, "actualizationLag"),
 	}
 }
