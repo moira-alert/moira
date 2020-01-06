@@ -8,10 +8,7 @@ import (
 	"gopkg.in/tomb.v2"
 )
 
-const (
-	defaultIndexBatchSize = 1000
-	serviceName           = "searchIndex"
-)
+const defaultIndexBatchSize = 1000
 
 // TriggerIndex is index for moira.TriggerChecks type
 type TriggerIndex interface {
