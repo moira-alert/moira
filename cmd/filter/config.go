@@ -43,12 +43,6 @@ func getDefault() config {
 			CacheCapacity:      10,
 			MaxParallelMatches: 0,
 		},
-		Graphite: cmd.GraphiteConfig{
-			RuntimeStats: false,
-			URI:          "localhost:2003",
-			Prefix:       "DevOps.Moira",
-			Interval:     "60s",
-		},
 		Telemetry: cmd.TelemetryConfig{
 			Listen: ":8094",
 			Graphite: cmd.GraphiteConfig{
