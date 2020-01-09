@@ -68,9 +68,15 @@ func main() {
 	}
 	defer logger.Infof("Moira Checker stopped. Version: %s", MoiraVersion)
 
-	if config.Pprof.Listen != "" {
-		logger.Infof("Starting pprof server at: [%s]", config.Pprof.Listen)
-		cmd.StartProfiling(logger, config.Pprof)
+	stopTelemetryServer, err := cmd.StartTelemetryServer(logger, config.Telemetry.Listen, config.Telemetry.Pprof)
+	if err != nil {
+		logger.Fatalf("Can not start telemetry server: %s", err.Error())
+	}
+	defer stopTelemetryServer()
+
+	graphiteMetricsRegistry, err := metrics.NewGraphiteRegistry(config.Telemetry.Graphite.GetSettings(), serviceName)
+	if err != nil {
+		logger.Fatalf("Can not configure graphite metrics: %s", err.Error())
 	}
 
 	databaseSettings := config.Redis.GetSettings()
@@ -80,12 +86,6 @@ func main() {
 	localSource := local.Create(database)
 	remoteSource := remote.Create(remoteConfig)
 	metricSourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource)
-
-	graphiteMetricsRegistry, err := metrics.NewGraphiteRegistry(config.Graphite.GetSettings(), serviceName)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Can not configure graphite metrics: %s\n", err.Error())
-		os.Exit(1)
-	}
 
 	isConfigured, _ := remoteSource.IsConfigured()
 	checkerMetrics := metrics.ConfigureCheckerMetrics(graphiteMetricsRegistry, isConfigured)

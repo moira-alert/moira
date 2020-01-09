@@ -68,21 +68,21 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Can not configure log: %s\n", err.Error())
 		os.Exit(1)
 	}
-	logger.Infof("Moira API stopped. Version: %s", MoiraVersion)
+	defer logger.Infof("Moira API stopped. Version: %s", MoiraVersion)
 
-	if config.Pprof.Listen != "" {
-		logger.Infof("Starting pprof server at: [%s]", config.Pprof.Listen)
-		cmd.StartProfiling(logger, config.Pprof)
+	stopTelemetryServer, err := cmd.StartTelemetryServer(logger, config.Telemetry.Listen, config.Telemetry.Pprof)
+	if err != nil {
+		logger.Fatalf("Can not start telemetry server: %s", err.Error())
+	}
+	defer stopTelemetryServer()
+
+	graphiteMetricsRegistry, err := metrics.NewGraphiteRegistry(config.Telemetry.Graphite.GetSettings(), serviceName)
+	if err != nil {
+		logger.Fatalf("Can not configure graphite metrics: %s", err.Error())
 	}
 
 	databaseSettings := config.Redis.GetSettings()
 	database := redis.NewDatabase(logger, databaseSettings, redis.API)
-
-	graphiteMetricsRegistry, err := metrics.NewGraphiteRegistry(config.Graphite.GetSettings(), serviceName)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Can not configure graphite metrics: %s\n", err.Error())
-		os.Exit(1)
-	}
 
 	// Start Index right before HTTP listener. Fail if index cannot start
 	searchIndex := index.NewSearchIndex(logger, database, graphiteMetricsRegistry)

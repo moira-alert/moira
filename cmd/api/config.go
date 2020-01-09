@@ -9,13 +9,12 @@ import (
 )
 
 type config struct {
-	Redis    cmd.RedisConfig    `yaml:"redis"`
-	Graphite cmd.GraphiteConfig `yaml:"graphite"`
-	Logger   cmd.LoggerConfig   `yaml:"log"`
-	API      apiConfig          `yaml:"api"`
-	Web      webConfig          `yaml:"web"`
-	Pprof    cmd.ProfilerConfig `yaml:"pprof"`
-	Remote   cmd.RemoteConfig   `yaml:"remote"`
+	Redis     cmd.RedisConfig     `yaml:"redis"`
+	Logger    cmd.LoggerConfig    `yaml:"log"`
+	API       apiConfig           `yaml:"api"`
+	Web       webConfig           `yaml:"web"`
+	Telemetry cmd.TelemetryConfig `yaml:"telemetry"`
+	Remote    cmd.RemoteConfig    `yaml:"remote"`
 }
 
 type apiConfig struct {
@@ -96,14 +95,16 @@ func getDefault() config {
 		Web: webConfig{
 			RemoteAllowed: false,
 		},
-		Graphite: cmd.GraphiteConfig{
-			RuntimeStats: false,
-			URI:          "localhost:2003",
-			Prefix:       "DevOps.Moira",
-			Interval:     "60s",
-		},
-		Pprof: cmd.ProfilerConfig{
-			Listen: "",
+		Telemetry: cmd.TelemetryConfig{
+			Listen: ":8091",
+			Graphite: cmd.GraphiteConfig{
+				Enabled:      false,
+				RuntimeStats: false,
+				URI:          "localhost:2003",
+				Prefix:       "DevOps.Moira",
+				Interval:     "60s",
+			},
+			Pprof: cmd.ProfilerConfig{Enabled: false},
 		},
 		Remote: cmd.RemoteConfig{
 			Timeout: "60s",

@@ -75,10 +75,16 @@ type LoggerConfig struct {
 	LogLevel string `yaml:"log_level"`
 }
 
+// TelemetryConfig is settings for listener, pprof, graphite
+type TelemetryConfig struct {
+	Listen   string         `yaml:"listen"`
+	Pprof    ProfilerConfig `yaml:"pprof"`
+	Graphite GraphiteConfig `yaml:"graphite"`
+}
+
 // ProfilerConfig is pprof settings structure that initialises at the start of moira
 type ProfilerConfig struct {
-	// Define variable as valid non-empty string to enable pprof server. For example ':10000' will enable server available at http://moira.company.com:10000/debug/pprof/
-	Listen string `yaml:"listen"`
+	Enabled bool `yaml:"enabled"`
 }
 
 // RemoteConfig is remote graphite settings structure

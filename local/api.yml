@@ -3,12 +3,16 @@ redis:
   host: redis
   port: "6379"
   dbid: 0
-graphite:
-  enabled: true
-  runtime_stats: true
-  uri: "relay:2003"
-  prefix: moira
-  interval: 60s
+telemetry:
+  graphite:
+    enabled: true
+    runtime_stats: true
+    uri: "relay:2003"
+    prefix: moira
+    interval: 60s
+  pprof:
+    enabled: true
+  listen: ":8091"
 remote:
   enabled: true
   url: "http://graphite:80/render"

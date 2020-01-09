@@ -5,11 +5,10 @@ import (
 )
 
 type config struct {
-	Redis    cmd.RedisConfig    `yaml:"redis"`
-	Graphite cmd.GraphiteConfig `yaml:"graphite"`
-	Logger   cmd.LoggerConfig   `yaml:"log"`
-	Filter   filterConfig       `yaml:"filter"`
-	Pprof    cmd.ProfilerConfig `yaml:"pprof"`
+	Redis     cmd.RedisConfig     `yaml:"redis"`
+	Logger    cmd.LoggerConfig    `yaml:"log"`
+	Filter    filterConfig        `yaml:"filter"`
+	Telemetry cmd.TelemetryConfig `yaml:"telemetry"`
 }
 
 type filterConfig struct {
@@ -50,8 +49,16 @@ func getDefault() config {
 			Prefix:       "DevOps.Moira",
 			Interval:     "60s",
 		},
-		Pprof: cmd.ProfilerConfig{
-			Listen: "",
+		Telemetry: cmd.TelemetryConfig{
+			Listen: ":8094",
+			Graphite: cmd.GraphiteConfig{
+				Enabled:      false,
+				RuntimeStats: false,
+				URI:          "localhost:2003",
+				Prefix:       "DevOps.Moira",
+				Interval:     "60s",
+			},
+			Pprof: cmd.ProfilerConfig{Enabled: false},
 		},
 	}
 }

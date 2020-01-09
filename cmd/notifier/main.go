@@ -67,15 +67,15 @@ func main() {
 	}
 	defer logger.Infof("Moira Notifier stopped. Version: %s", MoiraVersion)
 
-	if config.Pprof.Listen != "" {
-		logger.Infof("Starting pprof server at: [%s]", config.Pprof.Listen)
-		cmd.StartProfiling(logger, config.Pprof)
-	}
-
-	graphiteMetricsRegistry, err := metrics.NewGraphiteRegistry(config.Graphite.GetSettings(), serviceName)
+	stopTelemetryServer, err := cmd.StartTelemetryServer(logger, config.Telemetry.Listen, config.Telemetry.Pprof)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Can not configure graphite metrics: %s\n", err.Error())
-		os.Exit(1)
+		logger.Fatalf("Can not start telemetry server: %s", err.Error())
+	}
+	defer stopTelemetryServer()
+
+	graphiteMetricsRegistry, err := metrics.NewGraphiteRegistry(config.Telemetry.Graphite.GetSettings(), serviceName)
+	if err != nil {
+		logger.Fatalf("Can not configure graphite metrics: %s", err.Error())
 	}
 
 	notifierMetrics := metrics.ConfigureNotifierMetrics(graphiteMetricsRegistry, serviceName)

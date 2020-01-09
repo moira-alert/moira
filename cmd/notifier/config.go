@@ -14,10 +14,9 @@ import (
 
 type config struct {
 	Redis       cmd.RedisConfig      `yaml:"redis"`
-	Graphite    cmd.GraphiteConfig   `yaml:"graphite"`
 	Logger      cmd.LoggerConfig     `yaml:"log"`
 	Notifier    notifierConfig       `yaml:"notifier"`
-	Pprof       cmd.ProfilerConfig   `yaml:"pprof"`
+	Telemetry   cmd.TelemetryConfig  `yaml:"telemetry"`
 	Remote      cmd.RemoteConfig     `yaml:"remote"`
 	ImageStores cmd.ImageStoreConfig `yaml:"image_store"`
 }
@@ -65,12 +64,7 @@ func getDefault() config {
 			Port:            "6379",
 			ConnectionLimit: 512,
 		},
-		Graphite: cmd.GraphiteConfig{
-			RuntimeStats: false,
-			URI:          "localhost:2003",
-			Prefix:       "DevOps.Moira",
-			Interval:     "60s",
-		},
+
 		Logger: cmd.LoggerConfig{
 			LogFile:  "stdout",
 			LogLevel: "info",
@@ -88,8 +82,16 @@ func getDefault() config {
 			FrontURI: "http://localhost",
 			Timezone: "UTC",
 		},
-		Pprof: cmd.ProfilerConfig{
-			Listen: "",
+		Telemetry: cmd.TelemetryConfig{
+			Listen: ":8093",
+			Graphite: cmd.GraphiteConfig{
+				Enabled:      false,
+				RuntimeStats: false,
+				URI:          "localhost:2003",
+				Prefix:       "DevOps.Moira",
+				Interval:     "60s",
+			},
+			Pprof: cmd.ProfilerConfig{Enabled: false},
 		},
 		Remote: cmd.RemoteConfig{
 			Timeout: "60s",
