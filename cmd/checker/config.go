@@ -7,12 +7,11 @@ import (
 )
 
 type config struct {
-	Redis    cmd.RedisConfig    `yaml:"redis"`
-	Graphite cmd.GraphiteConfig `yaml:"graphite"`
-	Logger   cmd.LoggerConfig   `yaml:"log"`
-	Checker  checkerConfig      `yaml:"checker"`
-	Pprof    cmd.ProfilerConfig `yaml:"pprof"`
-	Remote   cmd.RemoteConfig   `yaml:"remote"`
+	Redis     cmd.RedisConfig     `yaml:"redis"`
+	Logger    cmd.LoggerConfig    `yaml:"log"`
+	Checker   checkerConfig       `yaml:"checker"`
+	Telemetry cmd.TelemetryConfig `yaml:"telemetry"`
+	Remote    cmd.RemoteConfig    `yaml:"remote"`
 }
 
 type checkerConfig struct {
@@ -65,14 +64,16 @@ func getDefault() config {
 			MaxParallelChecks:         0,
 			MaxParallelRemoteChecks:   0,
 		},
-		Graphite: cmd.GraphiteConfig{
-			RuntimeStats: false,
-			URI:          "localhost:2003",
-			Prefix:       "DevOps.Moira",
-			Interval:     "60s",
-		},
-		Pprof: cmd.ProfilerConfig{
-			Listen: "",
+		Telemetry: cmd.TelemetryConfig{
+			Listen: ":8092",
+			Graphite: cmd.GraphiteConfig{
+				Enabled:      false,
+				RuntimeStats: false,
+				URI:          "localhost:2003",
+				Prefix:       "DevOps.Moira",
+				Interval:     "60s",
+			},
+			Pprof: cmd.ProfilerConfig{Enabled: false},
 		},
 		Remote: cmd.RemoteConfig{
 			CheckInterval: "60s",

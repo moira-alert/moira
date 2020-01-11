@@ -11,8 +11,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/moira-alert/moira/metrics"
-
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api/handler"
 	"github.com/moira-alert/moira/cmd"
@@ -68,24 +66,19 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Can not configure log: %s\n", err.Error())
 		os.Exit(1)
 	}
-	logger.Infof("Moira API stopped. Version: %s", MoiraVersion)
+	defer logger.Infof("Moira API stopped. Version: %s", MoiraVersion)
 
-	if config.Pprof.Listen != "" {
-		logger.Infof("Starting pprof server at: [%s]", config.Pprof.Listen)
-		cmd.StartProfiling(logger, config.Pprof)
+	telemetry, err := cmd.ConfigureTelemetry(logger, config.Telemetry, serviceName)
+	if err != nil {
+		logger.Fatalf("Can not start telemetry: %s", err.Error())
 	}
+	defer telemetry.Stop()
 
 	databaseSettings := config.Redis.GetSettings()
 	database := redis.NewDatabase(logger, databaseSettings, redis.API)
 
-	graphiteMetricsRegistry, err := metrics.NewGraphiteRegistry(config.Graphite.GetSettings(), serviceName)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Can not configure graphite metrics: %s\n", err.Error())
-		os.Exit(1)
-	}
-
 	// Start Index right before HTTP listener. Fail if index cannot start
-	searchIndex := index.NewSearchIndex(logger, database, graphiteMetricsRegistry)
+	searchIndex := index.NewSearchIndex(logger, database, telemetry.Metrics)
 	if searchIndex == nil {
 		logger.Fatalf("Failed to create search index")
 	}
