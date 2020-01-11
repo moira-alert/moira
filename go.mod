@@ -65,6 +65,7 @@ require (
 	github.com/opsgenie/opsgenie-go-sdk-v2 v0.0.0-20190710132028-b46b0594268d
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pkg/errors v0.8.1
+	github.com/prometheus/client_golang v1.3.0
 	github.com/rcrowley/go-metrics v0.0.0-20161128210544-1f30fe9094a5
 	github.com/rs/cors v0.0.0-20170801073201-eabcc6af4bbe
 	github.com/russross/blackfriday/v2 v2.0.1
@@ -75,7 +76,6 @@ require (
 	github.com/tecbot/gorocksdb v0.0.0-20190930194452-65a88f08537a // indirect
 	github.com/wangjohn/quickselect v0.0.0-20161129230411-ed8402a42d5f // indirect
 	github.com/writeas/go-strip-markdown v2.0.1+incompatible
-	golang.org/x/sys v0.0.0-20191010194322-b09406accb47 // indirect
 	gonum.org/v1/netlib v0.0.0-20190926062253-2d6e29b73a19 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/gemnasium/logrus-airbrake-hook.v2 v2.1.2 // indirect
