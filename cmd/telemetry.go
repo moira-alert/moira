@@ -28,8 +28,7 @@ func ConfigureTelemetry(logger moira.Logger, config TelemetryConfig, service str
 	if err != nil {
 		return nil, err
 	}
-	prometheusRegistry := prometheus.NewRegistry()
-	prometheusRegistry.MustRegister(prometheus.NewGoCollector(), prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{}))
+	prometheusRegistry := metrics.NewPrometheusRegistry()
 	prometheusRegistryAdapter := metrics.NewPrometheusRegistryAdapter(prometheusRegistry, service)
 	stopServer, err := startTelemetryServer(logger, config.Listen, config.Pprof, prometheusRegistry)
 	if err != nil {
