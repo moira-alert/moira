@@ -1,0 +1,16 @@
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+  - job_name: 'moira-api'
+    static_configs:
+      - targets: ['api:8091']
+  - job_name: 'moira-checker'
+    static_configs:
+      - targets: ['checker:8092']
+  - job_name: 'moira-notifier'
+    static_configs:
+      - targets: ['notifier:8093']
+  - job_name: 'moira-filter'
+    static_configs:
+      - targets: ['filter:8094']

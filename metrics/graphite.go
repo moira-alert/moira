@@ -25,10 +25,6 @@ type GraphiteRegistry struct {
 	registry goMetrics.Registry
 }
 
-func NewDummyRegistry() Registry {
-	return &GraphiteRegistry{goMetrics.NewRegistry()}
-}
-
 func NewGraphiteRegistry(config GraphiteRegistryConfig, serviceName string) (*GraphiteRegistry, error) {
 	registry := goMetrics.NewRegistry()
 	if config.Enabled {
@@ -44,25 +40,25 @@ func NewGraphiteRegistry(config GraphiteRegistryConfig, serviceName string) (*Gr
 			goMetrics.RegisterRuntimeMemStats(registry)
 			go goMetrics.CaptureRuntimeMemStats(registry, config.Interval)
 		}
-		go goMetricsGraphite.Graphite(registry, config.Interval, getMetricName(prefix, serviceName), address)
+		go goMetricsGraphite.Graphite(registry, config.Interval, getGraphiteMetricName([]string{prefix, serviceName}), address)
 	}
 	return &GraphiteRegistry{registry}, nil
 }
 
 func (source *GraphiteRegistry) NewTimer(path ...string) Timer {
-	return goMetrics.NewRegisteredTimer(getMetricName(path...), source.registry)
+	return goMetrics.NewRegisteredTimer(getGraphiteMetricName(path), source.registry)
 }
 
 func (source *GraphiteRegistry) NewMeter(path ...string) Meter {
-	return goMetrics.NewRegisteredMeter(getMetricName(path...), source.registry)
+	return goMetrics.NewRegisteredMeter(getGraphiteMetricName(path), source.registry)
 }
 
 func (source *GraphiteRegistry) NewCounter(path ...string) Counter {
-	return &graphiteCounter{goMetrics.NewRegisteredCounter(getMetricName(path...), source.registry)}
+	return &graphiteCounter{goMetrics.NewRegisteredCounter(getGraphiteMetricName(path), source.registry)}
 }
 
 func (source *GraphiteRegistry) NewHistogram(path ...string) Histogram {
-	return goMetrics.NewRegisteredHistogram(getMetricName(path...), source.registry, goMetrics.NewExpDecaySample(1028, 0.015))
+	return goMetrics.NewRegisteredHistogram(getGraphiteMetricName(path), source.registry, goMetrics.NewExpDecaySample(1028, 0.015))
 }
 
 func initPrefix(prefix string) (string, error) {
@@ -77,10 +73,6 @@ func initPrefix(prefix string) (string, error) {
 	return strings.Replace(prefix, hostnameTmpl, short, -1), nil
 }
 
-func getMetricName(path ...string) string {
-	return strings.Join(path, ".")
-}
-
 type graphiteCounter struct {
 	counter goMetrics.Counter
 }
@@ -91,4 +83,8 @@ func (source *graphiteCounter) Inc() {
 
 func (source *graphiteCounter) Count() int64 {
 	return source.counter.Count()
+}
+
+func getGraphiteMetricName(path []string) string {
+	return strings.Join(path, ".")
 }

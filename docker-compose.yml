@@ -11,6 +11,14 @@ services:
     ports:
       - "7080:80"
 
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./local/prometheus.yml:/etc/prometheus/prometheus.yml
+    command: "--config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/prometheus"
+    ports:
+      - "9080:9090"
+
   filter:
     build:
       context: .

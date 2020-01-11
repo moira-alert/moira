@@ -7,6 +7,9 @@ import (
 	"net/http/pprof"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/metrics"
 )
@@ -20,21 +23,21 @@ func (source *Telemetry) Stop() {
 	source.stopFunc()
 }
 
-func ConfigureTelemetry(logger moira.Logger, config TelemetryConfig, serviceName string) (*Telemetry, error) {
-	graphiteMetricsRegistry, err := metrics.NewGraphiteRegistry(config.Graphite.GetSettings(), serviceName)
+func ConfigureTelemetry(logger moira.Logger, config TelemetryConfig, service string) (*Telemetry, error) {
+	graphiteRegistry, err := metrics.NewGraphiteRegistry(config.Graphite.GetSettings(), service)
 	if err != nil {
 		return nil, err
 	}
-
-	stopServer, err := startTelemetryServer(logger, config.Listen, config.Pprof)
+	prometheusRegistry := prometheus.NewRegistry()
+	prometheusRegistryAdapter := metrics.NewPrometheusRegistryAdapter(prometheusRegistry, service)
+	stopServer, err := startTelemetryServer(logger, config.Listen, config.Pprof, prometheusRegistry)
 	if err != nil {
 		return nil, err
 	}
-	return &Telemetry{Metrics: graphiteMetricsRegistry, stopFunc: stopServer}, nil
+	return &Telemetry{Metrics: metrics.NewCompositeRegistry(graphiteRegistry, prometheusRegistryAdapter), stopFunc: stopServer}, nil
 }
 
-func startTelemetryServer(logger moira.Logger, listen string, pprofConfig ProfilerConfig) (func(), error) {
-
+func startTelemetryServer(logger moira.Logger, listen string, pprofConfig ProfilerConfig, prometheusRegistry *prometheus.Registry) (func(), error) {
 	listener, err := net.Listen("tcp", listen)
 	if err != nil {
 		return nil, err
@@ -47,6 +50,7 @@ func startTelemetryServer(logger moira.Logger, listen string, pprofConfig Profil
 		serverMux.HandleFunc("/pprof/symbol", pprof.Symbol)
 		serverMux.HandleFunc("/pprof/trace", pprof.Trace)
 	}
+	serverMux.Handle("/metrics", promhttp.InstrumentMetricHandler(prometheusRegistry, promhttp.HandlerFor(prometheusRegistry, promhttp.HandlerOpts{})))
 	server := &http.Server{Handler: serverMux}
 	go func() {
 		server.Serve(listener)
