@@ -11,8 +11,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/moira-alert/moira/metrics"
-
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api/handler"
 	"github.com/moira-alert/moira/cmd"
@@ -70,22 +68,17 @@ func main() {
 	}
 	defer logger.Infof("Moira API stopped. Version: %s", MoiraVersion)
 
-	stopTelemetryServer, err := cmd.StartTelemetryServer(logger, config.Telemetry.Listen, config.Telemetry.Pprof)
+	telemetry, err := cmd.ConfigureTelemetry(logger, config.Telemetry, serviceName)
 	if err != nil {
-		logger.Fatalf("Can not start telemetry server: %s", err.Error())
+		logger.Fatalf("Can not start telemetry: %s", err.Error())
 	}
-	defer stopTelemetryServer()
-
-	graphiteMetricsRegistry, err := metrics.NewGraphiteRegistry(config.Telemetry.Graphite.GetSettings(), serviceName)
-	if err != nil {
-		logger.Fatalf("Can not configure graphite metrics: %s", err.Error())
-	}
+	defer telemetry.Stop()
 
 	databaseSettings := config.Redis.GetSettings()
 	database := redis.NewDatabase(logger, databaseSettings, redis.API)
 
 	// Start Index right before HTTP listener. Fail if index cannot start
-	searchIndex := index.NewSearchIndex(logger, database, graphiteMetricsRegistry)
+	searchIndex := index.NewSearchIndex(logger, database, telemetry.Metrics)
 	if searchIndex == nil {
 		logger.Fatalf("Failed to create search index")
 	}

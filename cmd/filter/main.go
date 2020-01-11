@@ -65,23 +65,18 @@ func main() {
 	}
 	defer logger.Infof("Moira Filter stopped. Version: %s", MoiraVersion)
 
-	stopTelemetryServer, err := cmd.StartTelemetryServer(logger, config.Telemetry.Listen, config.Telemetry.Pprof)
+	telemetry, err := cmd.ConfigureTelemetry(logger, config.Telemetry, serviceName)
 	if err != nil {
-		logger.Fatalf("Can not start telemetry server: %s", err.Error())
+		logger.Fatalf("Can not configure telemetry: %s", err.Error())
 	}
-	defer stopTelemetryServer()
-
-	graphiteMetricsRegistry, err := metrics.NewGraphiteRegistry(config.Telemetry.Graphite.GetSettings(), serviceName)
-	if err != nil {
-		logger.Fatalf("Can not configure graphite metrics: %s", err.Error())
-	}
+	defer telemetry.Stop()
 
 	if config.Filter.MaxParallelMatches == 0 {
 		config.Filter.MaxParallelMatches = runtime.NumCPU()
 		logger.Infof("MaxParallelMatches is not configured, set it to the number of CPU - %d", config.Filter.MaxParallelMatches)
 	}
 
-	filterMetrics := metrics.ConfigureFilterMetrics(graphiteMetricsRegistry)
+	filterMetrics := metrics.ConfigureFilterMetrics(telemetry.Metrics)
 	database := redis.NewDatabase(logger, config.Redis.GetSettings(), redis.Filter)
 
 	retentionConfigFile, err := os.Open(config.Filter.RetentionConfig)

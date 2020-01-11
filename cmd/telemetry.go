@@ -8,20 +8,44 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/metrics"
 )
 
-func StartTelemetryServer(logger moira.Logger, listen string, profilerConfig ProfilerConfig) (func(), error) {
+type Telemetry struct {
+	Metrics  metrics.Registry
+	stopFunc func()
+}
+
+func (source *Telemetry) Stop() {
+	source.stopFunc()
+}
+
+func ConfigureTelemetry(logger moira.Logger, config TelemetryConfig, serviceName string) (*Telemetry, error) {
+	graphiteMetricsRegistry, err := metrics.NewGraphiteRegistry(config.Graphite.GetSettings(), serviceName)
+	if err != nil {
+		return nil, err
+	}
+
+	stopServer, err := startTelemetryServer(logger, config.Listen, config.Pprof)
+	if err != nil {
+		return nil, err
+	}
+	return &Telemetry{Metrics: graphiteMetricsRegistry, stopFunc: stopServer}, nil
+}
+
+func startTelemetryServer(logger moira.Logger, listen string, pprofConfig ProfilerConfig) (func(), error) {
+
 	listener, err := net.Listen("tcp", listen)
 	if err != nil {
 		return nil, err
 	}
 	serverMux := http.NewServeMux()
-	if profilerConfig.Enabled {
-		serverMux.HandleFunc("/debug/pprof/", pprof.Index)
-		serverMux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
-		serverMux.HandleFunc("/debug/pprof/profile", pprof.Profile)
-		serverMux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
-		serverMux.HandleFunc("/debug/pprof/trace", pprof.Trace)
+	if pprofConfig.Enabled {
+		serverMux.HandleFunc("/pprof/", pprof.Index)
+		serverMux.HandleFunc("/pprof/cmdline", pprof.Cmdline)
+		serverMux.HandleFunc("/pprof/profile", pprof.Profile)
+		serverMux.HandleFunc("/pprof/symbol", pprof.Symbol)
+		serverMux.HandleFunc("/pprof/trace", pprof.Trace)
 	}
 	server := &http.Server{Handler: serverMux}
 	go func() {

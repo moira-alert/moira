@@ -68,16 +68,11 @@ func main() {
 	}
 	defer logger.Infof("Moira Checker stopped. Version: %s", MoiraVersion)
 
-	stopTelemetryServer, err := cmd.StartTelemetryServer(logger, config.Telemetry.Listen, config.Telemetry.Pprof)
+	telemetry, err := cmd.ConfigureTelemetry(logger, config.Telemetry, serviceName)
 	if err != nil {
-		logger.Fatalf("Can not start telemetry server: %s", err.Error())
+		logger.Fatalf("Can not configure telemetry: %s", err.Error())
 	}
-	defer stopTelemetryServer()
-
-	graphiteMetricsRegistry, err := metrics.NewGraphiteRegistry(config.Telemetry.Graphite.GetSettings(), serviceName)
-	if err != nil {
-		logger.Fatalf("Can not configure graphite metrics: %s", err.Error())
-	}
+	defer telemetry.Stop()
 
 	databaseSettings := config.Redis.GetSettings()
 	database := redis.NewDatabase(logger, databaseSettings, redis.Checker)
@@ -88,7 +83,7 @@ func main() {
 	metricSourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource)
 
 	isConfigured, _ := remoteSource.IsConfigured()
-	checkerMetrics := metrics.ConfigureCheckerMetrics(graphiteMetricsRegistry, isConfigured)
+	checkerMetrics := metrics.ConfigureCheckerMetrics(telemetry.Metrics, isConfigured)
 	checkerSettings := config.Checker.getSettings()
 	if triggerID != nil && *triggerID != "" {
 		checkSingleTrigger(database, checkerMetrics, checkerSettings, metricSourceProvider)
