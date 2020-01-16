@@ -22,7 +22,6 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 		event.Action = "resolve"
 	}
 	event.DedupKey = trigger.ID
-	sender.logger.Infof("to pagerDuty sended folow message: %s", spew.Sdump(event))
 
 	res, err := pagerduty.ManageEvent(event)
 	if err != nil {
