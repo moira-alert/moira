@@ -17,10 +17,18 @@ const summaryMaxChars = 1024
 // SendEvents implements Sender interface Send
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) error {
 	event := sender.buildEvent(events, contact, trigger, plot, throttled)
-	_, err := pagerduty.ManageEvent(event)
+	event.Action = "trigger"
+	if events.GetSubjectState() == moira.StateOK {
+		event.Action = "resolve"
+	}
+	event.DedupKey = trigger.ID
+	sender.logger.Infof("to pagerDuty sended folow message: %s", spew.Sdump(event))
+
+	res, err := pagerduty.ManageEvent(event)
 	if err != nil {
 		return fmt.Errorf("failed to post the event to the pagerduty contact %s : %s. ", contact.Value, err)
 	}
+
 	return nil
 }
 
@@ -63,7 +71,6 @@ func (sender *Sender) buildEvent(events moira.NotificationEvents, contact moira.
 
 	event := pagerduty.V2Event{
 		RoutingKey: contact.Value,
-		Action:     "trigger",
 		Payload:    payload,
 	}
 
