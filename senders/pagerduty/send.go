@@ -17,11 +17,6 @@ const summaryMaxChars = 1024
 // SendEvents implements Sender interface Send
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plot []byte, throttled bool) error {
 	event := sender.buildEvent(events, contact, trigger, plot, throttled)
-	event.Action = "trigger"
-	if events.GetSubjectState() == moira.StateOK {
-		event.Action = "resolve"
-	}
-	event.DedupKey = trigger.ID
 
 	_, err := pagerduty.ManageEvent(event)
 	if err != nil {
@@ -68,9 +63,16 @@ func (sender *Sender) buildEvent(events moira.NotificationEvents, contact moira.
 		Details:   details,
 	}
 
+	lAction := "trigger"
+	if events.GetSubjectState() == moira.StateOK {
+		lAction = "resolve"
+	}
+
 	event := pagerduty.V2Event{
 		RoutingKey: contact.Value,
+		Action:     lAction,
 		Payload:    payload,
+		DedupKey:   trigger.ID,
 	}
 
 	if len(plot) > 0 && sender.imageStoreConfigured {
