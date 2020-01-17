@@ -23,7 +23,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	}
 	event.DedupKey = trigger.ID
 
-	res, err := pagerduty.ManageEvent(event)
+	_, err := pagerduty.ManageEvent(event)
 	if err != nil {
 		return fmt.Errorf("failed to post the event to the pagerduty contact %s : %s. ", contact.Value, err)
 	}
