@@ -62,14 +62,14 @@ func (sender *Sender) buildEvent(events moira.NotificationEvents, contact moira.
 		Details:   details,
 	}
 
-	lAction := "trigger"
+	action := "trigger"
 	if events.GetSubjectState() == moira.StateOK {
-		lAction = "resolve"
+		action = "resolve"
 	}
 
 	event := pagerduty.V2Event{
 		RoutingKey: contact.Value,
-		Action:     lAction,
+		Action:     action,
 		Payload:    payload,
 		DedupKey:   trigger.ID,
 	}
