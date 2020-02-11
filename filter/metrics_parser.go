@@ -3,6 +3,7 @@ package filter
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/moira-alert/moira"
@@ -95,7 +96,10 @@ func parseNameAndLabels(metricBytes []byte) (string, map[string]string, error) {
 		}
 		labelValueBytes = labelBytesScanner.Next()
 		if labelBytesScanner.HasNext() {
-			return "", nil, fmt.Errorf("too many equal-separated items: '%s'", labelBytes)
+			var labelString strings.Builder
+			labelString.WriteString("=")
+			labelString.Write(labelBytesScanner.Next())
+			labelValueBytes = append(labelValueBytes, labelString.String()...)
 		}
 		if len(labelNameBytes) == 0 {
 			return "", nil, fmt.Errorf("empty label name: '%s'", labelBytes)
