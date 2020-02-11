@@ -95,7 +95,7 @@ func parseNameAndLabels(metricBytes []byte) (string, map[string]string, error) {
 			return "", nil, fmt.Errorf("too few equal-separated items: '%s'", labelBytes)
 		}
 		labelValueBytes = labelBytesScanner.Next()
-		if labelBytesScanner.HasNext() {
+		for labelBytesScanner.HasNext() {
 			var labelString strings.Builder
 			labelString.WriteString("=")
 			labelString.Write(labelBytesScanner.Next())
