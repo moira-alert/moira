@@ -60,8 +60,8 @@ func TestResolveMetricsWindow(t *testing.T) {
 			_, _, err := pkg.GetWindow()
 			So(err, ShouldBeNil)
 			from, to := resolveMetricsWindow(logger, trigger, pkg)
-			So(from, ShouldEqual, alignToMinutes(testLaunchTime.Add(-defaultTimeRange).UTC().Unix()))
-			So(to, ShouldEqual, testLaunchTime.UTC().Unix())
+			So(from, ShouldEqual, alignToMinutes(testLaunchTime.Add(-defaultTimeRange-defaultTimeShift).UTC().Unix()))
+			So(to, ShouldEqual, testLaunchTime.Add(-defaultTimeShift).UTC().Unix())
 		})
 	})
 	Convey("REMOTE TRIGGER | Resolve remote trigger metrics window", t, func() {
@@ -90,8 +90,8 @@ func TestResolveMetricsWindow(t *testing.T) {
 		for _, trigger := range allTriggers {
 			pkg := emptyEventsPackage
 			from, to := resolveMetricsWindow(logger, trigger, pkg)
-			expectedFrom := testLaunchTime.Add(-defaultTimeRange).Unix()
-			expectedTo := testLaunchTime.Unix()
+			expectedFrom := testLaunchTime.Add(-defaultTimeRange - defaultTimeShift).Unix()
+			expectedTo := testLaunchTime.Add(-defaultTimeShift).Unix()
 			_, _, err := pkg.GetWindow()
 			So(err, ShouldResemble, fmt.Errorf("not enough data to resolve package window"))
 			So(from, ShouldEqual, alignToMinutes(expectedFrom))

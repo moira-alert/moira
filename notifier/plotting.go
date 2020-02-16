@@ -69,8 +69,8 @@ func (notifier *StandardNotifier) buildNotificationPackagePlot(pkg NotificationP
 func resolveMetricsWindow(logger moira.Logger, trigger moira.TriggerData, pkg NotificationPackage) (int64, int64) {
 	// resolve default realtime window for any case
 	now := time.Now()
-	defaultFrom := now.UTC().Add(-defaultTimeRange).Unix()
-	defaultTo := now.UTC().Unix()
+	defaultFrom := now.UTC().Add(-defaultTimeRange - defaultTimeShift).Unix()
+	defaultTo := now.UTC().Add(-defaultTimeShift).Unix()
 	// try to resolve package window, force default realtime window on fail for both local and remote triggers
 	from, to, err := pkg.GetWindow()
 	if err != nil {
