@@ -43,7 +43,6 @@ func TestParseMetric(t *testing.T) {
 			"No.labels.but.delimiter.in.the.end; 1 2",
 			"Empty.label.name;= 1 2",
 			"Only.label.name;name 1 2",
-			"Too.Many.=.In.Label;name=value= 1 2",
 		}
 
 		for _, invalidMetric := range invalidMetrics {
@@ -64,6 +63,11 @@ func TestParseMetric(t *testing.T) {
 			{"One.two.three;four=five 123 1234567890", "One.two.three;four=five", "One.two.three", map[string]string{"four": "five"}, 123, 1234567890},
 			{"One.two.three;four= 123 1234567890", "One.two.three;four=", "One.two.three", map[string]string{"four": ""}, 123, 1234567890},
 			{"One.two.three;four=five;six=seven 123 1234567890", "One.two.three;four=five;six=seven", "One.two.three", map[string]string{"four": "five", "six": "seven"}, 123, 1234567890},
+			{"One.two.three;four=five;six=seven=eight 123 1234567890", "One.two.three;four=five;six=seven=eight", "One.two.three", map[string]string{"four": "five", "six": "seven=eight"}, 123, 1234567890},
+			{"One.two.three;four=five;six=seven=eight=nine 123 1234567890", "One.two.three;four=five;six=seven=eight=nine",
+				"One.two.three", map[string]string{"four": "five", "six": "seven=eight=nine"}, 123, 1234567890},
+			{"One.two.three;four=five;six=seven=eight=nine= 123 1234567890", "One.two.three;four=five;six=seven=eight=nine=",
+				"One.two.three", map[string]string{"four": "five", "six": "seven=eight=nine="}, 123, 1234567890},
 		}
 
 		for _, validMetric := range validMetrics {
