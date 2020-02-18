@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira"
+	_ "github.com/moira-alert/moira/api/docs"
 	"github.com/moira-alert/moira/api/handler"
 	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/database/redis"

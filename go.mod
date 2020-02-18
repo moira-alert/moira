@@ -39,6 +39,7 @@ require (
 	github.com/go-graphite/carbonapi v0.0.0-20190604194342-5a4fa2112923
 	github.com/go-graphite/protocol v0.4.2
 	github.com/go-redsync/redsync v1.3.1
+	github.com/go-swagger/go-swagger v0.22.0 // indirect
 	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/golang/mock v1.2.1-0.20190116182947-c20582278a82
@@ -64,13 +65,13 @@ require (
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/opsgenie/opsgenie-go-sdk-v2 v0.0.0-20190710132028-b46b0594268d
 	github.com/patrickmn/go-cache v2.1.0+incompatible
-	github.com/pkg/errors v0.8.1
+	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.3.0
 	github.com/rcrowley/go-metrics v0.0.0-20161128210544-1f30fe9094a5
 	github.com/rs/cors v0.0.0-20170801073201-eabcc6af4bbe
 	github.com/russross/blackfriday/v2 v2.0.1
 	github.com/smartystreets/assertions v0.0.0-20190401211740-f487f9de1cd3
-	github.com/smartystreets/goconvey v0.0.0-20190330032615-68dc04aab96a
+	github.com/smartystreets/goconvey v1.6.4
 	github.com/steveyen/gtreap v0.0.0-20150807155958-0abe01ef9be2 // indirect
 	github.com/syndtr/goleveldb v0.0.0-20180815032940-ae2bd5eed72d // indirect
 	github.com/tecbot/gorocksdb v0.0.0-20190930194452-65a88f08537a // indirect
@@ -83,5 +84,5 @@ require (
 	gopkg.in/h2non/gock.v1 v1.0.15
 	gopkg.in/tomb.v2 v2.0.0-20161208151619-d5d1b5820637
 	gopkg.in/tucnak/telebot.v2 v2.0.0-20181115150921-4688194c178d
-	gopkg.in/yaml.v2 v2.2.3
+	gopkg.in/yaml.v2 v2.2.8
 )
