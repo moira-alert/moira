@@ -24,6 +24,8 @@ var (
 	subscriptionIDKey    ContextKey = "subscriptionID"
 	pageKey              ContextKey = "page"
 	sizeKey              ContextKey = "size"
+	pagerIDKey           ContextKey = "pagerID"
+	createPagerKey       ContextKey = "createPager"
 	fromKey              ContextKey = "from"
 	toKey                ContextKey = "to"
 	loginKey             ContextKey = "login"
@@ -69,6 +71,16 @@ func GetPage(request *http.Request) int64 {
 // GetSize gets size value from request context, which was sets in Paginate middleware
 func GetSize(request *http.Request) int64 {
 	return request.Context().Value(sizeKey).(int64)
+}
+
+// GetPagerID is a function that gets pagerID value from request context, which was sets in Pager middleware
+func GetPagerID(request *http.Request) string {
+	return request.Context().Value(pagerIDKey).(string)
+}
+
+// GetCreatePager is a function that gets createPager value from request context, which was sets in Pager middleware
+func GetCreatePager(request *http.Request) bool {
+	return request.Context().Value(createPagerKey).(bool)
 }
 
 // GetFromStr gets 'from' value from request context, which was sets in DateRange middleware
