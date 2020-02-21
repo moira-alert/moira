@@ -124,6 +124,27 @@ func Paginate(defaultPage, defaultSize int64) func(next http.Handler) http.Handl
 	}
 }
 
+// Pager is a function that takes pager id from query
+func Pager(defaultCreatePager bool, defaultPagerID string) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+			pagerID := request.URL.Query().Get("pagerID")
+			if pagerID == "" {
+				pagerID = defaultPagerID
+			}
+
+			createPager, err := strconv.ParseBool(request.URL.Query().Get("createPager"))
+			if err != nil {
+				createPager = defaultCreatePager
+			}
+
+			ctxPager := context.WithValue(request.Context(), pagerIDKey, pagerID)
+			ctxSize := context.WithValue(ctxPager, createPagerKey, createPager)
+			next.ServeHTTP(writer, request.WithContext(ctxSize))
+		})
+	}
+}
+
 // DateRange gets from and to values from URI query and set it to request context. If query has not values sets given values
 func DateRange(defaultFrom, defaultTo string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {

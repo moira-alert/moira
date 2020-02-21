@@ -40,6 +40,10 @@ type Database interface {
 	GetPatternTriggerIDs(pattern string) ([]string, error)
 	RemovePatternTriggerIDs(pattern string) error
 
+	// SearchResult storing
+	GetTriggersSearchResults(searchResultsID string, page, size int64) ([]*SearchResult, int64, error)
+	SaveTriggersSearchResults(searchResultsID string, searchResults []*SearchResult) error
+
 	// Throttling
 	GetTriggerThrottling(triggerID string) (time.Time, time.Time)
 	SetTriggerThrottling(triggerID string, next time.Time) error
