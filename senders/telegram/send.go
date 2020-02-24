@@ -3,7 +3,6 @@ package telegram
 import (
 	"bytes"
 	"fmt"
-
 	"gopkg.in/tucnak/telebot.v2"
 
 	"github.com/moira-alert/moira"
@@ -22,6 +21,7 @@ const (
 	photoCaptionMaxCharacters     = 1024
 	messageMaxCharacters          = 4096
 	additionalInfoCharactersCount = 400
+	maxDescriptionSize            = 450
 )
 
 var characterLimits = map[messageType]int{
@@ -46,11 +46,18 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 
 func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool, maxChars int) string {
 	var buffer bytes.Buffer
+	var descr string
 	state := events.GetSubjectState()
 	tags := trigger.GetTags()
 	emoji := emojiStates[state]
 
-	title := fmt.Sprintf("%s%s %s %s (%d)\n", emoji, state, trigger.Name, tags, len(events))
+	if len(trigger.Desc) > maxDescriptionSize {
+		descr = trigger.Desc[:maxDescriptionSize]
+	} else {
+		descr = trigger.Desc
+	}
+
+	title := fmt.Sprintf("%s%s %s %s (%d)\n%s\n", emoji, state, trigger.Name, tags, len(events), descr)
 	buffer.WriteString(title)
 
 	var messageCharsCount, printEventsCount int

@@ -34,6 +34,7 @@ func TestBuildMessage(t *testing.T) {
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, false, messageMaxCharacters)
 			expected := `💣NODATA Trigger Name [tag1][tag2] (1)
 
+
 02:40: Metric name = 97.4458331200185 (OK to NODATA)
 
 http://moira.url/trigger/TriggerID
@@ -45,6 +46,7 @@ http://moira.url/trigger/TriggerID
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{Name: "Name"}, false, messageMaxCharacters)
 			expected := `💣NODATA Name  (1)
 
+
 02:40: Metric name = 97.4458331200185 (OK to NODATA)`
 			So(actual, ShouldResemble, expected)
 		})
@@ -52,6 +54,7 @@ http://moira.url/trigger/TriggerID
 		Convey("Print moira message with empty trigger", func() {
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{}, false, messageMaxCharacters)
 			expected := `💣NODATA   (1)
+
 
 02:40: Metric name = 97.4458331200185 (OK to NODATA)`
 			So(actual, ShouldResemble, expected)
@@ -65,6 +68,7 @@ http://moira.url/trigger/TriggerID
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, false, messageMaxCharacters)
 			expected := `💣NODATA Trigger Name [tag1][tag2] (1)
 
+
 02:40: Metric name = 97.4458331200185 (OK to NODATA). This metric has been in bad state for more than 24 hours - please, fix.`
 			So(actual, ShouldResemble, expected)
 		})
@@ -72,6 +76,7 @@ http://moira.url/trigger/TriggerID
 		Convey("Print moira message with one event and throttled", func() {
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, true, messageMaxCharacters)
 			expected := `💣NODATA Trigger Name [tag1][tag2] (1)
+
 
 02:40: Metric name = 97.4458331200185 (OK to NODATA)
 
@@ -88,6 +93,7 @@ Please, fix your system or tune this trigger to generate less events.`
 			}
 			actual := sender.buildMessage(events, trigger, false, photoCaptionMaxCharacters)
 			expected := `💣NODATA Trigger Name [tag1][tag2] (18)
+
 
 02:40: Metric name = 97.4458331200185 (OK to NODATA)
 02:40: Metric name = 97.4458331200185 (OK to NODATA)
