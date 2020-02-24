@@ -64,13 +64,13 @@ func TestUpdateNotifierState(t *testing.T) {
 	})
 
 	Convey("Setting ERROR notifier state with user-defined message", t, func() {
-		expectedState := dto.NotifierState{State: moira.SelfStateERROR, Message: "Y u no work"}
+		expectedState := dto.NotifierState{State: moira.SelfStateERROR, Message: "Turned off for routine maintenance"}
 		dataBase.EXPECT().SetNotifierState(moira.SelfStateERROR).Return(nil)
 		dataBase.EXPECT().GetNotifierState().Return(moira.SelfStateERROR, nil)
-		dataBase.EXPECT().SetNotifierMessage("Y u no work").Return(nil)
-		dataBase.EXPECT().GetNotifierMessage().Return("Y u no work", nil)
+		dataBase.EXPECT().SetNotifierMessage("Turned off for routine maintenance").Return(nil)
+		dataBase.EXPECT().GetNotifierMessage().Return("Turned off for routine maintenance", nil)
 
-		err := UpdateNotifierState(dataBase, &dto.NotifierState{State: moira.SelfStateERROR, Message: "Y u no work"})
+		err := UpdateNotifierState(dataBase, &dto.NotifierState{State: moira.SelfStateERROR, Message: "Turned off for routine maintenance"})
 		So(err, ShouldBeNil)
 
 		actualState, err := GetNotifierState(dataBase)
