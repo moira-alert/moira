@@ -3,6 +3,7 @@ package redis
 import (
 	"github.com/gomodule/redigo/redis"
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/api/dto"
 )
 
 // UpdateMetricsHeartbeat increments redis counter
@@ -68,7 +69,25 @@ func (connector *DbConnector) SetNotifierState(health string) error {
 	return c.Send("SET", selfStateNotifierHealth, health)
 }
 
+func (connector *DbConnector) GetNotifierMessage() (string, error) {
+	c := connector.pool.Get()
+	defer c.Close()
+	message, err := redis.String(c.Do("GET", selfStateNotifierMessage))
+	if err == redis.ErrNil {
+		message = dto.DefaultMessage
+	}
+	return message, err
+}
+
+func (connector *DbConnector) SetNotifierMessage(message string) error {
+	c := connector.pool.Get()
+	defer c.Close()
+
+	return c.Send("SET", selfStateNotifierMessage, message)
+}
+
 var selfStateMetricsHeartbeatKey = "moira-selfstate:metrics-heartbeat"
 var selfStateChecksCounterKey = "moira-selfstate:checks-counter"
 var selfStateRemoteChecksCounterKey = "moira-selfstate:remote-checks-counter"
 var selfStateNotifierHealth = "moira-selfstate:notifier-health"
+var selfStateNotifierMessage = "moira-selfstate:notifier-message"
