@@ -18,7 +18,7 @@ See more on our [documentation page](https://moira.readthedocs.io/en/latest/inst
 Feed data in Graphite format to `localhost:2003`:
 
 ```bash
-echo "local.random.diceroll 4 `date +%s`" | nc localhost 2003
+echo "local.random.diceroll 4 `date +%s`" | nc -N localhost 2003
 ```
 
 Configure triggers at `localhost:8080` using your browser.
