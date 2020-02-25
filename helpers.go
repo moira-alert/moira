@@ -191,3 +191,7 @@ func ChunkSlice(original []string, chunkSize int) (divided [][]string) {
 	}
 	return
 }
+
+func RoundToNearestRetention(ts, retention int64) int64 {
+	return (ts + retention/2) / retention * retention
+}
