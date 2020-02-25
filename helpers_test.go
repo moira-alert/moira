@@ -209,3 +209,34 @@ func TestIsValidFloat64(t *testing.T) {
 		So(IsValidFloat64(3.14), ShouldBeTrue)
 	})
 }
+
+func TestRoundToNearestRetention(t *testing.T) {
+	var baseTimestamp, retentionSeconds int64
+	baseTimestamp = 1582286400 // 17:00:00
+
+	Convey("Test even retention: 60s", t, func() {
+		retentionSeconds = 60
+		testRounding(baseTimestamp, retentionSeconds)
+	})
+
+	Convey("Test odd retention: 15s", t, func() {
+		retentionSeconds = 15
+		testRounding(baseTimestamp, retentionSeconds)
+	})
+}
+
+func testRounding(baseTimestamp, retention int64) {
+	halfRetention := retention / 2
+	nextTimestamp := baseTimestamp + retention
+
+	Convey("round to self", func() {
+		So(RoundToNearestRetention(baseTimestamp, retention), ShouldEqual, baseTimestamp)
+	})
+
+	So(RoundToNearestRetention(baseTimestamp+1, retention), ShouldEqual, baseTimestamp)
+	So(RoundToNearestRetention(baseTimestamp+(halfRetention-1), retention), ShouldEqual, baseTimestamp)
+	So(RoundToNearestRetention(baseTimestamp+halfRetention+retention%2, retention), ShouldEqual, nextTimestamp)
+
+	So(RoundToNearestRetention(baseTimestamp-1, retention), ShouldEqual, baseTimestamp)
+	So(RoundToNearestRetention(baseTimestamp-halfRetention, retention), ShouldEqual, baseTimestamp)
+}

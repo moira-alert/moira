@@ -17,6 +17,8 @@ const (
 	defaultTimeShift = 1 * time.Minute
 	// defaultTimeRange is default time range to fetch timeseries
 	defaultTimeRange = 30 * time.Minute
+	// defaultRetentionSeconds is the most common metric retention
+	defaultRetentionSeconds = 60
 )
 
 // errFetchAvailableSeriesFailed is used in cases when fetchAvailableSeries failed after retry
@@ -69,14 +71,17 @@ func (notifier *StandardNotifier) buildNotificationPackagePlot(pkg NotificationP
 func resolveMetricsWindow(logger moira.Logger, trigger moira.TriggerData, pkg NotificationPackage) (int64, int64) {
 	// resolve default realtime window for any case
 	now := time.Now()
-	defaultFrom := now.UTC().Add(-defaultTimeRange).Unix()
-	defaultTo := now.UTC().Unix()
+	defaultFrom := roundToRetention(now.UTC().Add(-defaultTimeRange).Unix())
+	defaultTo := roundToRetention(now.UTC().Unix())
 	// try to resolve package window, force default realtime window on fail for both local and remote triggers
 	from, to, err := pkg.GetWindow()
 	if err != nil {
 		logger.Warningf("Failed to get trigger %s package window: %s, using default %s window", trigger.ID, err.Error(), defaultTimeRange.String())
-		return alignToMinutes(defaultFrom), defaultTo
+		return defaultFrom, defaultTo
 	}
+	// round to nearest retention to correctly fetch data from redis
+	from = roundToRetention(from)
+	to = roundToRetention(to)
 	// package window successfully resolved, test it's wide and realtime metrics window
 	fromTime, toTime := moira.Int64ToTime(from), moira.Int64ToTime(to)
 	isWideWindow := toTime.Sub(fromTime).Minutes() >= defaultTimeRange.Minutes()
@@ -86,22 +91,21 @@ func resolveMetricsWindow(logger moira.Logger, trigger moira.TriggerData, pkg No
 	// window is not wide: use shifted window to fetch extended historical data from graphite
 	if trigger.IsRemote {
 		if isWideWindow {
-			return alignToMinutes(fromTime.Unix()), toTime.Unix()
+			return fromTime.Unix(), toTime.Unix()
 		}
-		return alignToMinutes(toTime.Add(-defaultTimeRange + defaultTimeShift).Unix()), toTime.Add(defaultTimeShift).Unix()
+		return toTime.Add(-defaultTimeRange + defaultTimeShift).Unix(), toTime.Add(defaultTimeShift).Unix()
 	}
 	// resolve local trigger window
 	// window is realtime: use shifted window to fetch actual data from redis
 	// window is not realtime: force realtime window
 	if isRealTimeWindow {
-		return alignToMinutes(toTime.Add(-defaultTimeRange + defaultTimeShift).Unix()), toTime.Add(defaultTimeShift).Unix()
+		return toTime.Add(-defaultTimeRange + defaultTimeShift).Unix(), toTime.Add(defaultTimeShift).Unix()
 	}
-	return alignToMinutes(defaultFrom), defaultTo
+	return defaultFrom, defaultTo
 }
 
-func alignToMinutes(unixTime int64) int64 {
-	unixTime -= unixTime % 60
-	return unixTime
+func roundToRetention(unixTime int64) int64 {
+	return moira.RoundToNearestRetention(unixTime, defaultRetentionSeconds)
 }
 
 // evaluateTriggerMetrics returns collection of MetricData
