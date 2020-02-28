@@ -120,7 +120,7 @@ func (source *PatternIndex) MatchPatterns(metric string) []string {
 }
 
 func findPart(part string, currentLevel []*PatternNode) ([]*PatternNode, int) {
-	nextLevel := make([]*PatternNode, 0, 64)
+	nextLevel := make([]*PatternNode, 0, 5)
 
 	hash := xxhash.Sum64String(part)
 	for _, node := range currentLevel {
