@@ -18,13 +18,6 @@ const (
 
 var (
 	pollerTimeout = 10 * time.Second
-	emojiStates   = map[moira.State]string{
-		moira.StateOK:     "\xe2\x9c\x85",
-		moira.StateWARN:   "\xe2\x9a\xa0",
-		moira.StateERROR:  "\xe2\xad\x95",
-		moira.StateNODATA: "\xf0\x9f\x92\xa3",
-		moira.StateTEST:   "\xf0\x9f\x98\x8a",
-	}
 )
 
 // Sender implements moira sender interface via telegram

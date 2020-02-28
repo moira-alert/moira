@@ -26,91 +26,53 @@ func TestBuildMessage(t *testing.T) {
 
 		trigger := moira.TriggerData{
 			Tags: []string{"tag1", "tag2"},
-			Name: "Trigger Name",
+			Name: "Name",
 			ID:   "TriggerID",
 		}
 
 		Convey("Print moira message with one event", func() {
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, false, messageMaxCharacters)
-			expected := `💣NODATA Trigger Name [tag1][tag2] (1)
-
-
-02:40: Metric name = 97.4458331200185 (OK to NODATA)
-
-http://moira.url/trigger/TriggerID
-`
+			expected := "*NODATA* <http://moira.url/trigger/TriggerID|Name> [tag1][tag2]\n"+
+			"```\n02:40: Metric name = 97.4458331200185 (OK to NODATA)```"
 			So(actual, ShouldResemble, expected)
 		})
 
 		Convey("Print moira message with empty triggerID, but with trigger Name", func() {
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{Name: "Name"}, false, messageMaxCharacters)
-			expected := `💣NODATA Name  (1)
-
-
-02:40: Metric name = 97.4458331200185 (OK to NODATA)`
+			expected := "*NODATA* Name\n```\n02:40: Metric name = 97.4458331200185 (OK to NODATA)```"
 			So(actual, ShouldResemble, expected)
 		})
 
 		Convey("Print moira message with empty trigger", func() {
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{}, false, messageMaxCharacters)
-			expected := `💣NODATA   (1)
-
-
-02:40: Metric name = 97.4458331200185 (OK to NODATA)`
+			expected := "*NODATA*\n```\n02:40: Metric name = 97.4458331200185 (OK to NODATA)```"
 			So(actual, ShouldResemble, expected)
 		})
 
 		Convey("Print moira message with one event and message", func() {
-			event.TriggerID = ""
-			trigger.ID = ""
 			var interval int64 = 24
 			event.MessageEventInfo = &moira.EventInfo{Interval: &interval}
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, false, messageMaxCharacters)
-			expected := `💣NODATA Trigger Name [tag1][tag2] (1)
-
-
-02:40: Metric name = 97.4458331200185 (OK to NODATA). This metric has been in bad state for more than 24 hours - please, fix.`
+			expected := "*NODATA* <http://moira.url/trigger/TriggerID|Name> [tag1][tag2]\n" +
+				"```\n02:40: Metric name = 97.4458331200185 (OK to NODATA). This metric has been in bad state for more than 24 hours - please, fix.```"
 			So(actual, ShouldResemble, expected)
 		})
 
 		Convey("Print moira message with one event and throttled", func() {
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, trigger, true, messageMaxCharacters)
-			expected := `💣NODATA Trigger Name [tag1][tag2] (1)
-
-
-02:40: Metric name = 97.4458331200185 (OK to NODATA)
-
-http://moira.url/trigger/TriggerID
-
-Please, fix your system or tune this trigger to generate less events.`
+			expected := "*NODATA* <http://moira.url/trigger/TriggerID|Name> [tag1][tag2]\n" +
+				"```\n02:40: Metric name = 97.4458331200185 (OK to NODATA)```\nPlease, *fix your system or tune this trigger* to generate less events."
 			So(actual, ShouldResemble, expected)
 		})
 
 		events := make([]moira.NotificationEvent, 0)
 		Convey("Print moira message with 6 events and photo message length", func() {
-			for i := 0; i < 18; i++ {
+			for i := 0; i < 6; i++ {
 				events = append(events, event)
 			}
 			actual := sender.buildMessage(events, trigger, false, photoCaptionMaxCharacters)
-			expected := `💣NODATA Trigger Name [tag1][tag2] (18)
-
-
-02:40: Metric name = 97.4458331200185 (OK to NODATA)
-02:40: Metric name = 97.4458331200185 (OK to NODATA)
-02:40: Metric name = 97.4458331200185 (OK to NODATA)
-02:40: Metric name = 97.4458331200185 (OK to NODATA)
-02:40: Metric name = 97.4458331200185 (OK to NODATA)
-02:40: Metric name = 97.4458331200185 (OK to NODATA)
-02:40: Metric name = 97.4458331200185 (OK to NODATA)
-02:40: Metric name = 97.4458331200185 (OK to NODATA)
-02:40: Metric name = 97.4458331200185 (OK to NODATA)
-02:40: Metric name = 97.4458331200185 (OK to NODATA)
-02:40: Metric name = 97.4458331200185 (OK to NODATA)
-
-...and 7 more events.
-
-http://moira.url/trigger/TriggerID
-`
+			expected := "*NODATA* <http://moira.url/trigger/TriggerID|Name> [tag1][tag2]\n" +
+				"```\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)\n02:40: Metric name = 97.4458331200185 (OK to NODATA)```"
 			fmt.Println(fmt.Sprintf("Bytes: %v", len(expected)))
 			fmt.Println(fmt.Sprintf("Symbols: %v", len([]rune(expected))))
 			So(actual, ShouldResemble, expected)

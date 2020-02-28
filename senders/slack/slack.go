@@ -76,13 +76,13 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
 	var message strings.Builder
 
-	title := sender.buildTitle(events, trigger)
+	title := senders.BuildTitle(events, trigger, sender.frontURI)
 	titleLen := len([]rune(title))
 
 	desc := sender.buildDescription(trigger)
 	descLen := len([]rune(desc))
 
-	eventsString := sender.buildEventsString(events, -1, throttled)
+	eventsString := senders.BuildEventsString(events, -1, throttled, sender.location)
 	eventsStringLen := len([]rune(eventsString))
 
 	charsLeftAfterTitle := messageMaxCharacters - titleLen
@@ -93,7 +93,7 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 		desc = desc[:descNewLen] + "...\n"
 	}
 	if eventsNewLen != eventsStringLen {
-		eventsString = sender.buildEventsString(events, eventsNewLen, throttled)
+		eventsString = senders.BuildEventsString(events, eventsNewLen, throttled, sender.location)
 	}
 
 	message.WriteString(title)
@@ -109,69 +109,6 @@ func (sender *Sender) buildDescription(trigger moira.TriggerData) string {
 		desc += "\n"
 	}
 	return desc
-}
-
-func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData) string {
-	title := fmt.Sprintf("*%s*", events.GetSubjectState())
-	triggerURI := trigger.GetTriggerURI(sender.frontURI)
-	if triggerURI != "" {
-		title += fmt.Sprintf(" <%s|%s>", triggerURI, trigger.Name)
-	} else if trigger.Name != "" {
-		title += " " + trigger.Name
-	}
-
-	tags := trigger.GetTags()
-	if tags != "" {
-		title += " " + tags
-	}
-
-	title += "\n"
-	return title
-}
-
-// buildEventsString builds the string from moira events and limits it to charsForEvents.
-// if n is negative buildEventsString does not limit the events string
-func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsForEvents int, throttled bool) string {
-	charsForThrottleMsg := 0
-	throttleMsg := "\nPlease, *fix your system or tune this trigger* to generate less events."
-	if throttled {
-		charsForThrottleMsg = len([]rune(throttleMsg))
-	}
-	charsLeftForEvents := charsForEvents - charsForThrottleMsg
-
-	var eventsString string
-	eventsString += "```"
-	var tailString string
-
-	eventsLenLimitReached := false
-	eventsPrinted := 0
-	for _, event := range events {
-		line := fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location), event.Metric, event.GetMetricValue(), event.OldState, event.State)
-		if msg := event.CreateMessage(sender.location); len(msg) > 0 {
-			line += fmt.Sprintf(". %s", msg)
-		}
-
-		tailString = fmt.Sprintf("\n...and %d more events.", len(events)-eventsPrinted)
-		tailStringLen := len([]rune("```")) + len([]rune(tailString))
-		if !(charsForEvents < 0) && (len([]rune(eventsString))+len([]rune(line)) > charsLeftForEvents-tailStringLen) {
-			eventsLenLimitReached = true
-			break
-		}
-
-		eventsString += line
-		eventsPrinted++
-	}
-	eventsString += "```"
-
-	if eventsLenLimitReached {
-		eventsString += tailString
-	}
-
-	if throttled {
-		eventsString += throttleMsg
-	}
-
-	return eventsString
 }
 
 func (sender *Sender) sendMessage(message string, contact string, triggerID string, useDirectMessaging bool, emoji string) (string, string, error) {

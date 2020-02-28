@@ -3,7 +3,9 @@ package telegram
 import (
 	"bytes"
 	"fmt"
+	"github.com/moira-alert/moira/senders"
 	"gopkg.in/tucnak/telebot.v2"
+	"strings"
 
 	"github.com/moira-alert/moira"
 )
@@ -18,10 +20,8 @@ const (
 )
 
 const (
-	photoCaptionMaxCharacters     = 1024
-	messageMaxCharacters          = 4096
-	additionalInfoCharactersCount = 400
-	maxDescriptionSize            = 450
+	photoCaptionMaxCharacters = 1024
+	messageMaxCharacters      = 4096
 )
 
 var characterLimits = map[messageType]int{
@@ -45,52 +45,41 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 }
 
 func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool, maxChars int) string {
-	var buffer bytes.Buffer
-	var descr string
-	state := events.GetSubjectState()
-	tags := trigger.GetTags()
-	emoji := emojiStates[state]
+	var message strings.Builder
 
-	if len(trigger.Desc) > maxDescriptionSize {
-		descr = trigger.Desc[:maxDescriptionSize]
-	} else {
-		descr = trigger.Desc
+	title := senders.BuildTitle(events, trigger, sender.frontURI)
+	titleLen := len([]rune(title))
+
+	desc := sender.buildDescription(trigger)
+	descLen := len([]rune(desc))
+
+	eventsString := senders.BuildEventsString(events, -1, throttled, sender.location)
+	eventsStringLen := len([]rune(eventsString))
+
+	charsLeftAfterTitle := messageMaxCharacters - titleLen
+
+	descNewLen, eventsNewLen := senders.CalculateMessagePartsLength(charsLeftAfterTitle, descLen, eventsStringLen)
+
+	if descLen != descNewLen {
+		desc = desc[:descNewLen] + "...\n"
+	}
+	if eventsNewLen != eventsStringLen {
+		eventsString = senders.BuildEventsString(events, eventsNewLen, throttled, sender.location)
 	}
 
-	title := fmt.Sprintf("%s%s %s %s (%d)\n%s\n", emoji, state, trigger.Name, tags, len(events), descr)
-	buffer.WriteString(title)
+	message.WriteString(title)
+	message.WriteString(desc)
+	message.WriteString(eventsString)
+	return message.String()
+}
 
-	var messageCharsCount, printEventsCount int
-	messageCharsCount += len([]rune(title))
-	messageLimitReached := false
-
-	for _, event := range events {
-		line := fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location), event.Metric, event.GetMetricValue(), event.OldState, event.State)
-		if msg := event.CreateMessage(sender.location); len(msg) > 0 {
-			line += fmt.Sprintf(". %s", msg)
-		}
-		lineCharsCount := len([]rune(line))
-		if messageCharsCount+lineCharsCount > maxChars-additionalInfoCharactersCount {
-			messageLimitReached = true
-			break
-		}
-		buffer.WriteString(line)
-		messageCharsCount += lineCharsCount
-		printEventsCount++
+func (sender *Sender) buildDescription(trigger moira.TriggerData) string {
+	desc := trigger.Desc
+	if trigger.Desc != "" {
+		desc = trigger.Desc
+		desc += "\n"
 	}
-
-	if messageLimitReached {
-		buffer.WriteString(fmt.Sprintf("\n\n...and %d more events.", len(events)-printEventsCount))
-	}
-	url := trigger.GetTriggerURI(sender.frontURI)
-	if url != "" {
-		buffer.WriteString(fmt.Sprintf("\n\n%s\n", url))
-	}
-
-	if throttled {
-		buffer.WriteString("\nPlease, fix your system or tune this trigger to generate less events.")
-	}
-	return buffer.String()
+	return desc
 }
 
 func (sender *Sender) getChat(username string) (*telebot.Chat, error) {
