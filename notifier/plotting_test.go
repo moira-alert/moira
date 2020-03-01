@@ -49,9 +49,10 @@ func TestResolveMetricsWindow(t *testing.T) {
 			pkgs = []NotificationPackage{triggerJustCreatedEvents, realtimeTriggerEvents}
 			for _, pkg := range pkgs {
 				_, expectedTo, err := pkg.GetWindow()
+				expectedTo = roundToRetention(expectedTo)
 				So(err, ShouldBeNil)
 				from, to := resolveMetricsWindow(logger, trigger, pkg)
-				So(from, ShouldEqual, alignToMinutes(expectedTo)-timeRange+timeShift)
+				So(from, ShouldEqual, expectedTo-timeRange+timeShift)
 				So(to, ShouldEqual, expectedTo+timeShift)
 			}
 		})
@@ -60,8 +61,8 @@ func TestResolveMetricsWindow(t *testing.T) {
 			_, _, err := pkg.GetWindow()
 			So(err, ShouldBeNil)
 			from, to := resolveMetricsWindow(logger, trigger, pkg)
-			So(from, ShouldEqual, alignToMinutes(testLaunchTime.Add(-defaultTimeRange).UTC().Unix()))
-			So(to, ShouldEqual, testLaunchTime.UTC().Unix())
+			So(from, ShouldEqual, roundToRetention(testLaunchTime.Add(-defaultTimeRange).UTC().Unix()))
+			So(to, ShouldEqual, roundToRetention(testLaunchTime.UTC().Unix()))
 		})
 	})
 	Convey("REMOTE TRIGGER | Resolve remote trigger metrics window", t, func() {
@@ -69,18 +70,21 @@ func TestResolveMetricsWindow(t *testing.T) {
 		Convey("Window is wide: use package window to fetch limited historical data from graphite", func() {
 			pkg = oldTriggerEvents
 			expectedFrom, expectedTo, err := pkg.GetWindow()
+			expectedFrom = roundToRetention(expectedFrom)
+			expectedTo = roundToRetention(expectedTo)
 			So(err, ShouldBeNil)
 			from, to := resolveMetricsWindow(logger, trigger, pkg)
-			So(from, ShouldEqual, alignToMinutes(expectedFrom))
+			So(from, ShouldEqual, expectedFrom)
 			So(to, ShouldEqual, expectedTo)
 		})
 		Convey("Window is not wide: use shifted window to fetch extended historical data from graphite", func() {
 			pkgs = []NotificationPackage{triggerJustCreatedEvents, realtimeTriggerEvents}
 			for _, pkg := range pkgs {
 				_, expectedTo, err := pkg.GetWindow()
+				expectedTo = roundToRetention(expectedTo)
 				So(err, ShouldBeNil)
 				from, to := resolveMetricsWindow(logger, trigger, pkg)
-				So(from, ShouldEqual, alignToMinutes(expectedTo-timeRange+timeShift))
+				So(from, ShouldEqual, expectedTo-timeRange+timeShift)
 				So(to, ShouldEqual, expectedTo+timeShift)
 			}
 		})
@@ -90,11 +94,11 @@ func TestResolveMetricsWindow(t *testing.T) {
 		for _, trigger := range allTriggers {
 			pkg := emptyEventsPackage
 			from, to := resolveMetricsWindow(logger, trigger, pkg)
-			expectedFrom := testLaunchTime.Add(-defaultTimeRange).Unix()
-			expectedTo := testLaunchTime.Unix()
+			expectedFrom := roundToRetention(testLaunchTime.Add(-defaultTimeRange).Unix())
+			expectedTo := roundToRetention(testLaunchTime.Unix())
 			_, _, err := pkg.GetWindow()
 			So(err, ShouldResemble, fmt.Errorf("not enough data to resolve package window"))
-			So(from, ShouldEqual, alignToMinutes(expectedFrom))
+			So(from, ShouldEqual, expectedFrom)
 			So(to, ShouldEqual, expectedTo)
 		}
 	})
