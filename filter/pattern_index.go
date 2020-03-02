@@ -1,7 +1,6 @@
 package filter
 
 import (
-	"fmt"
 	"path"
 	"strings"
 
@@ -53,7 +52,7 @@ func NewPatternIndex(logger moira.Logger, patterns []string) *PatternIndex {
 				if currentNode.Prefix == "" {
 					newNode.Prefix = part
 				} else {
-					newNode.Prefix = fmt.Sprintf("%s.%s", currentNode.Prefix, part)
+					newNode.Prefix = currentNode.Prefix + "." + part
 				}
 
 				if part == "*" || !strings.ContainsAny(part, "{*?") {
@@ -66,7 +65,8 @@ func NewPatternIndex(logger moira.Logger, patterns []string) *PatternIndex {
 
 						newNode.InnerParts = make([]string, 0, len(innerParts))
 						for _, innerPart := range innerParts {
-							newNode.InnerParts = append(newNode.InnerParts, fmt.Sprintf("%s%s%s", prefix, innerPart, suffix))
+							whole := prefix + innerPart + suffix
+							newNode.InnerParts = append(newNode.InnerParts, whole)
 						}
 					} else {
 						newNode.InnerParts = []string{part}

@@ -258,13 +258,13 @@ var patternsListKey = "moira-pattern-list"
 var metricEventKey = "metric-event"
 
 func patternMetricsKey(pattern string) string {
-	return fmt.Sprintf("moira-pattern-metrics:%s", pattern)
+	return "moira-pattern-metrics:" + pattern
 }
 
 func metricDataKey(metric string) string {
-	return fmt.Sprintf("moira-metric-data:%s", metric)
+	return "moira-metric-data:" + metric
 }
 
 func metricRetentionKey(metric string) string {
-	return fmt.Sprintf("moira-metric-retention:%s", metric)
+	return "moira-metric-retention:" + metric
 }

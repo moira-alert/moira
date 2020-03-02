@@ -54,5 +54,5 @@ func (connector *DbConnector) DeleteTriggerCheckLock(triggerID string) error {
 }
 
 func metricCheckLockKey(triggerID string) string {
-	return fmt.Sprintf("moira-metric-check-lock:%s", triggerID)
+	return "moira-metric-check-lock:" + triggerID
 }
