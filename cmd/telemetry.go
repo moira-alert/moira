@@ -7,11 +7,12 @@ import (
 	"net/http/pprof"
 	"time"
 
+	moira2 "github.com/moira-alert/moira/internal/moira"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
-	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/metrics"
+	"github.com/moira-alert/moira/internal/metrics"
 )
 
 type Telemetry struct {
@@ -23,7 +24,7 @@ func (source *Telemetry) Stop() {
 	source.stopFunc()
 }
 
-func ConfigureTelemetry(logger moira.Logger, config TelemetryConfig, service string) (*Telemetry, error) {
+func ConfigureTelemetry(logger moira2.Logger, config TelemetryConfig, service string) (*Telemetry, error) {
 	graphiteRegistry, err := metrics.NewGraphiteRegistry(config.Graphite.GetSettings(), service)
 	if err != nil {
 		return nil, err
@@ -37,7 +38,7 @@ func ConfigureTelemetry(logger moira.Logger, config TelemetryConfig, service str
 	return &Telemetry{Metrics: metrics.NewCompositeRegistry(graphiteRegistry, prometheusRegistryAdapter), stopFunc: stopServer}, nil
 }
 
-func startTelemetryServer(logger moira.Logger, listen string, pprofConfig ProfilerConfig, prometheusRegistry *prometheus.Registry) (func(), error) {
+func startTelemetryServer(logger moira2.Logger, listen string, pprofConfig ProfilerConfig, prometheusRegistry *prometheus.Registry) (func(), error) {
 	listener, err := net.Listen("tcp", listen)
 	if err != nil {
 		return nil, err

@@ -2,8 +2,8 @@ package main
 
 import (
 	"github.com/gosexy/to"
-	"github.com/moira-alert/moira/checker"
 	"github.com/moira-alert/moira/cmd"
+	"github.com/moira-alert/moira/internal/checker"
 )
 
 type config struct {

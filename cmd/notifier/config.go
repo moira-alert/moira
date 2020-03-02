@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"time"
 
+	moira2 "github.com/moira-alert/moira/internal/moira"
+
 	"github.com/gosexy/to"
 
-	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/cmd"
-	"github.com/moira-alert/moira/notifier"
-	"github.com/moira-alert/moira/notifier/selfstate"
+	"github.com/moira-alert/moira/internal/notifier"
+	"github.com/moira-alert/moira/internal/notifier/selfstate"
 )
 
 type config struct {
@@ -100,7 +101,7 @@ func getDefault() config {
 	}
 }
 
-func (config *notifierConfig) getSettings(logger moira.Logger) notifier.Config {
+func (config *notifierConfig) getSettings(logger moira2.Logger) notifier.Config {
 	location, err := time.LoadLocation(config.Timezone)
 	if err != nil {
 		logger.Warningf("Timezone '%s' load failed: %s. Use UTC.", config.Timezone, err.Error())

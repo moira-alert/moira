@@ -8,22 +8,23 @@ import (
 	"runtime"
 	"syscall"
 
-	"github.com/moira-alert/moira"
+	moira2 "github.com/moira-alert/moira/internal/moira"
+
 	"github.com/moira-alert/moira/cmd"
-	"github.com/moira-alert/moira/database/redis"
-	"github.com/moira-alert/moira/filter"
-	"github.com/moira-alert/moira/filter/connection"
-	"github.com/moira-alert/moira/filter/heartbeat"
-	matchedmetrics "github.com/moira-alert/moira/filter/matched_metrics"
-	"github.com/moira-alert/moira/filter/patterns"
-	"github.com/moira-alert/moira/logging/go-logging"
-	"github.com/moira-alert/moira/metrics"
+	"github.com/moira-alert/moira/internal/database/redis"
+	"github.com/moira-alert/moira/internal/filter"
+	"github.com/moira-alert/moira/internal/filter/connection"
+	"github.com/moira-alert/moira/internal/filter/heartbeat"
+	matchedmetrics "github.com/moira-alert/moira/internal/filter/matched_metrics"
+	"github.com/moira-alert/moira/internal/filter/patterns"
+	"github.com/moira-alert/moira/internal/logging/go-logging"
+	"github.com/moira-alert/moira/internal/metrics"
 )
 
 const serviceName = "filter"
 
 var (
-	logger                 moira.Logger
+	logger                 moira2.Logger
 	configFileName         = flag.String("config", "/etc/moira/filter.yml", "path config file")
 	printVersion           = flag.Bool("version", false, "Print version and exit")
 	printDefaultConfigFlag = flag.Bool("default-config", false, "Print default config and exit")

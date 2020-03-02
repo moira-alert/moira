@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/moira-alert/moira"
+	moira2 "github.com/moira-alert/moira/internal/moira"
 )
 
-func transferUserSubscriptionsAndContacts(database moira.Database, from, to string) error {
+func transferUserSubscriptionsAndContacts(database moira2.Database, from, to string) error {
 	contactIDs, err := database.GetUserContactIDs(from)
 	if err != nil {
 		return err
@@ -39,7 +39,7 @@ func transferUserSubscriptionsAndContacts(database moira.Database, from, to stri
 		return err
 	}
 
-	subscriptions := make([]*moira.SubscriptionData, 0, len(subscriptionsTmp))
+	subscriptions := make([]*moira2.SubscriptionData, 0, len(subscriptionsTmp))
 	for _, subscription := range subscriptionsTmp {
 		if subscription != nil {
 			subscriptions = append(subscriptions, subscription)
@@ -53,7 +53,7 @@ func transferUserSubscriptionsAndContacts(database moira.Database, from, to stri
 	return database.SaveSubscriptions(subscriptions)
 }
 
-func deleteUser(database moira.Database, user string) error {
+func deleteUser(database moira2.Database, user string) error {
 	subscriptionIDs, err := database.GetUserSubscriptionIDs(user)
 	if err != nil {
 		return err
@@ -79,7 +79,7 @@ func deleteUser(database moira.Database, user string) error {
 	return nil
 }
 
-func handleCleanup(logger moira.Logger, database moira.Database, config cleanupConfig) error {
+func handleCleanup(logger moira2.Logger, database moira2.Database, config cleanupConfig) error {
 	var users []string
 
 	reader := json.NewDecoder(os.Stdin)
@@ -91,7 +91,7 @@ func handleCleanup(logger moira.Logger, database moira.Database, config cleanupC
 	return usersCleanup(logger, database, users, config)
 }
 
-func usersCleanup(logger moira.Logger, database moira.Database, users []string, config cleanupConfig) error {
+func usersCleanup(logger moira2.Logger, database moira2.Database, users []string, config cleanupConfig) error {
 	if config.AddAnonymousToWhitelist {
 		config.Whitelist = append(config.Whitelist, "")
 	}
@@ -140,7 +140,7 @@ func usersCleanup(logger moira.Logger, database moira.Database, users []string, 
 	return err
 }
 
-func offNotification(database moira.Database, user string) error {
+func offNotification(database moira2.Database, user string) error {
 	subscriptionIDs, err := database.GetUserSubscriptionIDs(user)
 	if err != nil {
 		return err
@@ -151,7 +151,7 @@ func offNotification(database moira.Database, user string) error {
 		return err
 	}
 
-	saveSubscriptions := make([]*moira.SubscriptionData, 0, len(subscriptions))
+	saveSubscriptions := make([]*moira2.SubscriptionData, 0, len(subscriptions))
 
 	for _, subscription := range subscriptions {
 		if subscription == nil {

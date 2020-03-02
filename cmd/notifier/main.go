@@ -7,25 +7,26 @@ import (
 	"os/signal"
 	"syscall"
 
-	metricSource "github.com/moira-alert/moira/metric_source"
-	"github.com/moira-alert/moira/metric_source/local"
-	"github.com/moira-alert/moira/metric_source/remote"
+	moira2 "github.com/moira-alert/moira/internal/moira"
 
-	"github.com/moira-alert/moira"
+	metricSource "github.com/moira-alert/moira/internal/metric_source"
+	"github.com/moira-alert/moira/internal/metric_source/local"
+	"github.com/moira-alert/moira/internal/metric_source/remote"
+
 	"github.com/moira-alert/moira/cmd"
-	"github.com/moira-alert/moira/database/redis"
-	"github.com/moira-alert/moira/logging/go-logging"
-	"github.com/moira-alert/moira/metrics"
-	"github.com/moira-alert/moira/notifier"
-	"github.com/moira-alert/moira/notifier/events"
-	"github.com/moira-alert/moira/notifier/notifications"
-	"github.com/moira-alert/moira/notifier/selfstate"
+	"github.com/moira-alert/moira/internal/database/redis"
+	"github.com/moira-alert/moira/internal/logging/go-logging"
+	"github.com/moira-alert/moira/internal/metrics"
+	"github.com/moira-alert/moira/internal/notifier"
+	"github.com/moira-alert/moira/internal/notifier/events"
+	"github.com/moira-alert/moira/internal/notifier/notifications"
+	"github.com/moira-alert/moira/internal/notifier/selfstate"
 )
 
 const serviceName = "notifier"
 
 var (
-	logger                 moira.Logger
+	logger                 moira2.Logger
 	configFileName         = flag.String("config", "/etc/moira/notifier.yml", "path to config file")
 	printVersion           = flag.Bool("version", false, "Print current version and exit")
 	printDefaultConfigFlag = flag.Bool("default-config", false, "Print default config and exit")

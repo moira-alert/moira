@@ -8,24 +8,25 @@ import (
 	"syscall"
 	"time"
 
-	metricSource "github.com/moira-alert/moira/metric_source"
-	"github.com/moira-alert/moira/metric_source/local"
-	"github.com/moira-alert/moira/metric_source/remote"
+	moira2 "github.com/moira-alert/moira/internal/moira"
+
+	metricSource "github.com/moira-alert/moira/internal/metric_source"
+	"github.com/moira-alert/moira/internal/metric_source/local"
+	"github.com/moira-alert/moira/internal/metric_source/remote"
 	"github.com/patrickmn/go-cache"
 
-	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/checker"
-	"github.com/moira-alert/moira/checker/worker"
 	"github.com/moira-alert/moira/cmd"
-	"github.com/moira-alert/moira/database/redis"
-	"github.com/moira-alert/moira/logging/go-logging"
-	"github.com/moira-alert/moira/metrics"
+	"github.com/moira-alert/moira/internal/checker"
+	"github.com/moira-alert/moira/internal/checker/worker"
+	"github.com/moira-alert/moira/internal/database/redis"
+	"github.com/moira-alert/moira/internal/logging/go-logging"
+	"github.com/moira-alert/moira/internal/metrics"
 )
 
 const serviceName = "checker"
 
 var (
-	logger                 moira.Logger
+	logger                 moira2.Logger
 	configFileName         = flag.String("config", "/etc/moira/checker.yml", "Path to configuration file")
 	printVersion           = flag.Bool("version", false, "Print version and exit")
 	printDefaultConfigFlag = flag.Bool("default-config", false, "Print default config and exit")
@@ -113,7 +114,7 @@ func main() {
 	logger.Infof("Moira Checker shutting down.")
 }
 
-func checkSingleTrigger(database moira.Database, metrics *metrics.CheckerMetrics, settings *checker.Config, sourceProvider *metricSource.SourceProvider) {
+func checkSingleTrigger(database moira2.Database, metrics *metrics.CheckerMetrics, settings *checker.Config, sourceProvider *metricSource.SourceProvider) {
 	triggerChecker, err := checker.MakeTriggerChecker(*triggerID, database, logger, settings, sourceProvider, metrics)
 	if err != nil {
 		logger.Errorf("Failed initialize trigger checker: %s", err.Error())

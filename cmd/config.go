@@ -5,14 +5,14 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"github.com/moira-alert/moira/metrics"
+	"github.com/moira-alert/moira/internal/metrics"
 
 	"github.com/gosexy/to"
-	"github.com/moira-alert/moira/image_store/s3"
-	remoteSource "github.com/moira-alert/moira/metric_source/remote"
+	"github.com/moira-alert/moira/internal/image_store/s3"
+	remoteSource "github.com/moira-alert/moira/internal/metric_source/remote"
 	"gopkg.in/yaml.v2"
 
-	"github.com/moira-alert/moira/database/redis"
+	"github.com/moira-alert/moira/internal/database/redis"
 )
 
 // RedisConfig is a redis config structure that initialises at the start of moira

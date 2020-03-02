@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/cmd"
+	"github.com/moira-alert/moira/internal/api"
 )
 
 type config struct {

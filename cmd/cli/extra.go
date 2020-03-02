@@ -3,10 +3,10 @@ package main
 import (
 	"strings"
 
-	"github.com/moira-alert/moira"
+	moira2 "github.com/moira-alert/moira/internal/moira"
 )
 
-func enablePlottingInAllSubscriptions(logger moira.Logger, database moira.Database) error {
+func enablePlottingInAllSubscriptions(logger moira2.Logger, database moira2.Database) error {
 	allTags, err := database.GetTagNames()
 	if err != nil {
 		return err
@@ -19,7 +19,7 @@ func enablePlottingInAllSubscriptions(logger moira.Logger, database moira.Databa
 		if subscription == nil {
 			continue
 		}
-		subscription.Plotting = moira.PlottingData{
+		subscription.Plotting = moira2.PlottingData{
 			Enabled: true,
 			Theme:   "light",
 		}

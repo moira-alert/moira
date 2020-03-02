@@ -1,9 +1,9 @@
 package cmd
 
 import (
-	"github.com/moira-alert/moira"
+	moira2 "github.com/moira-alert/moira/internal/moira"
 
-	"github.com/moira-alert/moira/image_store/s3"
+	"github.com/moira-alert/moira/internal/image_store/s3"
 )
 
 const (
@@ -11,9 +11,9 @@ const (
 )
 
 // InitImageStores initializes the image storage provider with settings from the yaml config
-func InitImageStores(imageStores ImageStoreConfig, logger moira.Logger) map[string]moira.ImageStore {
+func InitImageStores(imageStores ImageStoreConfig, logger moira2.Logger) map[string]moira2.ImageStore {
 	var err error
-	imageStoreMap := make(map[string]moira.ImageStore)
+	imageStoreMap := make(map[string]moira2.ImageStore)
 
 	imageStore := &s3.ImageStore{}
 	if imageStores.S3 != (s3.Config{}) {

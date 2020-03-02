@@ -4,10 +4,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/moira-alert/moira/database/redis"
-	"github.com/moira-alert/moira/logging/go-logging"
+	moira2 "github.com/moira-alert/moira/internal/moira"
 
-	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/internal/database/redis"
+	"github.com/moira-alert/moira/internal/logging/go-logging"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -73,8 +73,8 @@ func TestUpdateUsers(t *testing.T) {
 
 }
 
-func createDefaultData(database moira.Database) error {
-	subscriptions := make([]*moira.SubscriptionData, 0, len(contacts))
+func createDefaultData(database moira2.Database) error {
+	subscriptions := make([]*moira2.SubscriptionData, 0, len(contacts))
 
 	for _, contact := range contacts {
 		if err := database.SaveContact(contact); err != nil {
@@ -82,7 +82,7 @@ func createDefaultData(database moira.Database) error {
 		}
 
 		subscriptions = append(subscriptions,
-			&moira.SubscriptionData{ID: "subscription_" + contact.ID,
+			&moira2.SubscriptionData{ID: "subscription_" + contact.ID,
 				User:     contact.User,
 				Enabled:  true,
 				Tags:     []string{"Tag" + contact.User},
@@ -98,7 +98,7 @@ func createDefaultData(database moira.Database) error {
 	return nil
 }
 
-func cleanData(database moira.Database) error {
+func cleanData(database moira2.Database) error {
 
 	for _, contact := range contacts {
 		if err := database.RemoveContact(contact.ID); err != nil {
@@ -113,7 +113,7 @@ func cleanData(database moira.Database) error {
 	return nil
 }
 
-var contacts = []*moira.ContactData{
+var contacts = []*moira2.ContactData{
 	{ID: "cli_id_00000000000001", User: "Aleksey"},
 	{ID: "cli_id_00000000000002", User: "Arkadiy"},
 	{ID: "cli_id_00000000000003", User: "Emil"},

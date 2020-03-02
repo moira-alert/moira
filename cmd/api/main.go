@@ -11,15 +11,16 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/api/handler"
+	moira2 "github.com/moira-alert/moira/internal/moira"
+
 	"github.com/moira-alert/moira/cmd"
-	"github.com/moira-alert/moira/database/redis"
-	"github.com/moira-alert/moira/index"
-	"github.com/moira-alert/moira/logging/go-logging"
-	metricSource "github.com/moira-alert/moira/metric_source"
-	"github.com/moira-alert/moira/metric_source/local"
-	"github.com/moira-alert/moira/metric_source/remote"
+	"github.com/moira-alert/moira/internal/api/handler"
+	"github.com/moira-alert/moira/internal/database/redis"
+	"github.com/moira-alert/moira/internal/index"
+	"github.com/moira-alert/moira/internal/logging/go-logging"
+	metricSource "github.com/moira-alert/moira/internal/metric_source"
+	"github.com/moira-alert/moira/internal/metric_source/local"
+	"github.com/moira-alert/moira/internal/metric_source/remote"
 )
 
 const serviceName = "api"
@@ -129,7 +130,7 @@ func main() {
 }
 
 // Stop Moira API HTTP server
-func Stop(logger moira.Logger, server *http.Server) {
+func Stop(logger moira2.Logger, server *http.Server) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := server.Shutdown(ctx); err != nil {

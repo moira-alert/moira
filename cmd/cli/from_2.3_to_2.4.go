@@ -1,8 +1,10 @@
 package main
 
-import "github.com/moira-alert/moira"
+import (
+	moira2 "github.com/moira-alert/moira/internal/moira"
+)
 
-func updateFrom23(logger moira.Logger, dataBase moira.Database) error {
+func updateFrom23(logger moira2.Logger, dataBase moira2.Database) error {
 	logger.Info("Update 2.3 -> 2.4 start")
 
 	logger.Info("Start marking unused triggers")
@@ -14,11 +16,11 @@ func updateFrom23(logger moira.Logger, dataBase moira.Database) error {
 	return nil
 }
 
-func downgradeTo23(logger moira.Logger, dataBase moira.Database) error {
+func downgradeTo23(logger moira2.Logger, dataBase moira2.Database) error {
 	return nil
 }
 
-func resaveTriggers(database moira.Database) error {
+func resaveTriggers(database moira2.Database) error {
 	allTriggerIDs, err := database.GetAllTriggerIDs()
 	if err != nil {
 		return err

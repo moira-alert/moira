@@ -6,10 +6,11 @@ import (
 	"os"
 	"strings"
 
-	"github.com/moira-alert/moira"
+	moira2 "github.com/moira-alert/moira/internal/moira"
+
 	"github.com/moira-alert/moira/cmd"
-	"github.com/moira-alert/moira/database/redis"
-	"github.com/moira-alert/moira/logging/go-logging"
+	"github.com/moira-alert/moira/internal/database/redis"
+	"github.com/moira-alert/moira/internal/logging/go-logging"
 )
 
 // Moira version
@@ -99,7 +100,7 @@ func main() {
 	}
 }
 
-func initApp() (cleanupConfig, moira.Logger, moira.Database) {
+func initApp() (cleanupConfig, moira2.Logger, moira2.Database) {
 	flag.Parse()
 	if *printVersion {
 		fmt.Println("Moira - alerting system based on graphite data")
@@ -132,7 +133,7 @@ func initApp() (cleanupConfig, moira.Logger, moira.Database) {
 	return config.Cleanup, logger, dataBase
 }
 
-func checkValidVersion(logger moira.Logger, updateFromVersion *string, isUpdate bool) string {
+func checkValidVersion(logger moira2.Logger, updateFromVersion *string, isUpdate bool) string {
 	validFlag := "--from-version"
 	if !isUpdate {
 		validFlag = "--to-version"
