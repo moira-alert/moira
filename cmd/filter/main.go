@@ -8,6 +8,7 @@ import (
 	"runtime"
 	"syscall"
 
+	"github.com/gosexy/to"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/database/redis"
@@ -95,7 +96,7 @@ func main() {
 	}
 
 	// Refresh Patterns on first init
-	refreshPatternWorker := patterns.NewRefreshPatternWorker(database, filterMetrics, logger, patternStorage)
+	refreshPatternWorker := patterns.NewRefreshPatternWorker(database, filterMetrics, logger, patternStorage, to.Duration(config.Filter.PatternsUpdatePeriod))
 
 	// Start patterns refresher
 	err = refreshPatternWorker.Start()

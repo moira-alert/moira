@@ -24,6 +24,8 @@ type filterConfig struct {
 	CacheCapacity int `yaml:"cache_capacity"`
 	// Max concurrent metric matchers to run. Equals to the number of processor cores found on Moira host by default or when variable is defined as 0.
 	MaxParallelMatches int `yaml:"max_parallel_matches"`
+	// Period in which patterns will be reloaded from Redis.
+	PatternsUpdatePeriod string `yaml:"patterns_update_period"`
 }
 
 func getDefault() config {
@@ -38,10 +40,11 @@ func getDefault() config {
 			LogLevel: "info",
 		},
 		Filter: filterConfig{
-			Listen:             ":2003",
-			RetentionConfig:    "/etc/moira/storage-schemas.conf",
-			CacheCapacity:      10,
-			MaxParallelMatches: 0,
+			Listen:               ":2003",
+			RetentionConfig:      "/etc/moira/storage-schemas.conf",
+			CacheCapacity:        10,
+			MaxParallelMatches:   0,
+			PatternsUpdatePeriod: "1s",
 		},
 		Telemetry: cmd.TelemetryConfig{
 			Listen: ":8094",

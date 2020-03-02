@@ -17,15 +17,17 @@ type RefreshPatternWorker struct {
 	metrics        *metrics.FilterMetrics
 	patternStorage *filter.PatternStorage
 	tomb           tomb.Tomb
+	period         time.Duration
 }
 
 // NewRefreshPatternWorker creates new RefreshPatternWorker
-func NewRefreshPatternWorker(database moira.Database, metrics *metrics.FilterMetrics, logger moira.Logger, patternStorage *filter.PatternStorage) *RefreshPatternWorker {
+func NewRefreshPatternWorker(database moira.Database, metrics *metrics.FilterMetrics, logger moira.Logger, patternStorage *filter.PatternStorage, period time.Duration) *RefreshPatternWorker {
 	return &RefreshPatternWorker{
 		database:       database,
 		metrics:        metrics,
 		logger:         logger,
 		patternStorage: patternStorage,
+		period:         period,
 	}
 }
 
@@ -38,7 +40,7 @@ func (worker *RefreshPatternWorker) Start() error {
 	}
 
 	worker.tomb.Go(func() error {
-		checkTicker := time.NewTicker(time.Second)
+		checkTicker := time.NewTicker(worker.period)
 		for {
 			select {
 			case <-worker.tomb.Dying():
