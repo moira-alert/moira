@@ -111,5 +111,5 @@ var notificationEventsList = "moira-trigger-events"
 var notificationEventsUIList = "moira-trigger-events-ui"
 
 func triggerEventsKey(triggerID string) string {
-	return fmt.Sprintf("moira-trigger-events:%s", triggerID)
+	return "moira-trigger-events:" + triggerID
 }

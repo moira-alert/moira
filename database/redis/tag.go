@@ -52,9 +52,9 @@ func (connector *DbConnector) GetTagTriggerIDs(tagName string) ([]string, error)
 var tagsKey = "moira-tags"
 
 func tagTriggersKey(tagName string) string {
-	return fmt.Sprintf("moira-tag-triggers:%s", tagName)
+	return "moira-tag-triggers:" + tagName
 }
 
 func tagSubscriptionKey(tagName string) string {
-	return fmt.Sprintf("moira-tag-subscriptions:%s", tagName)
+	return "moira-tag-subscriptions:" + tagName
 }

@@ -203,7 +203,7 @@ func (connector *DbConnector) getSubscriptionsIDsByTags(tags []string) ([]string
 	tagKeys := make([]interface{}, 0, len(tags))
 
 	for _, tag := range tags {
-		tagKeys = append(tagKeys, fmt.Sprintf("moira-tag-subscriptions:%s", tag))
+		tagKeys = append(tagKeys, tagSubscriptionKey(tag))
 	}
 	tagKeys = append(tagKeys, anyTagsSubscriptionsKey)
 	values, err := redis.Values(c.Do("SUNION", tagKeys...))
@@ -309,11 +309,11 @@ func (connector *DbConnector) getSubscriptionsTriggers(subscriptions []*moira.Su
 }
 
 func subscriptionKey(id string) string {
-	return fmt.Sprintf("moira-subscription:%s", id)
+	return "moira-subscription:" + id
 }
 
 func userSubscriptionsKey(userName string) string {
-	return fmt.Sprintf("moira-user-subscriptions:%s", userName)
+	return "moira-user-subscriptions:" + userName
 }
 
 const anyTagsSubscriptionsKey = "moira-any-tags-subscriptions"

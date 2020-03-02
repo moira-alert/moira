@@ -124,9 +124,9 @@ func (connector *DbConnector) GetUserContactIDs(login string) ([]string, error) 
 }
 
 func contactKey(id string) string {
-	return fmt.Sprintf("moira-contact:%s", id)
+	return "moira-contact:" + id
 }
 
 func userContactsKey(userName string) string {
-	return fmt.Sprintf("moira-user-contacts:%s", userName)
+	return "moira-user-contacts:" + userName
 }

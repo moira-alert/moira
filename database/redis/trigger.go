@@ -354,13 +354,13 @@ var triggersListKey = "moira-triggers-list"
 var remoteTriggersListKey = "moira-remote-triggers-list"
 
 func triggerKey(triggerID string) string {
-	return fmt.Sprintf("moira-trigger:%s", triggerID)
+	return "moira-trigger:" + triggerID
 }
 
 func triggerTagsKey(triggerID string) string {
-	return fmt.Sprintf("moira-trigger-tags:%s", triggerID)
+	return "moira-trigger-tags:" + triggerID
 }
 
 func patternTriggersKey(pattern string) string {
-	return fmt.Sprintf("moira-pattern-triggers:%s", pattern)
+	return "moira-pattern-triggers:" + pattern
 }

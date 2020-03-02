@@ -145,5 +145,5 @@ var badStateTriggersKey = "moira-bad-state-triggers"
 var triggersChecksKey = "moira-triggers-checks"
 
 func metricLastCheckKey(triggerID string) string {
-	return fmt.Sprintf("moira-metric-last-check:%s", triggerID)
+	return "moira-metric-last-check:" + triggerID
 }

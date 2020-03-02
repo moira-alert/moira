@@ -42,9 +42,9 @@ func (connector *DbConnector) DeleteTriggerThrottling(triggerID string) error {
 }
 
 func notifierThrottlingBeginningKey(triggerID string) string {
-	return fmt.Sprintf("moira-notifier-throttling-beginning:%s", triggerID)
+	return "moira-notifier-throttling-beginning:" + triggerID
 }
 
 func notifierNextKey(triggerID string) string {
-	return fmt.Sprintf("moira-notifier-next:%s", triggerID)
+	return "moira-notifier-next:" + triggerID
 }
