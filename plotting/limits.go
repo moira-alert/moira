@@ -38,12 +38,8 @@ func resolveLimits(metricsData []*metricSource.MetricData) plotLimits {
 				allValues = append(allValues, metricValue)
 			}
 		}
-		if !math.IsInf(float64(metricData.StartTime), 0) {
-			allTimes = append(allTimes, moira.Int64ToTime(metricData.StartTime))
-		}
-		if !math.IsInf(float64(metricData.StopTime), 0) {
-			allTimes = append(allTimes, moira.Int64ToTime(metricData.StopTime))
-		}
+		allTimes = append(allTimes, moira.Int64ToTime(metricData.StartTime))
+		allTimes = append(allTimes, moira.Int64ToTime(metricData.StopTime))
 	}
 	from, to := util.Time.StartAndEnd(allTimes...)
 	if from == to {
