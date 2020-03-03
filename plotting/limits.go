@@ -34,14 +34,22 @@ func resolveLimits(metricsData []*metricSource.MetricData) plotLimits {
 	allTimes := make([]time.Time, 0)
 	for _, metricData := range metricsData {
 		for _, metricValue := range metricData.Values {
-			if !math.IsNaN(metricValue) {
+			if !math.IsNaN(metricValue) && !math.IsInf(metricValue, 0) {
 				allValues = append(allValues, metricValue)
 			}
 		}
-		allTimes = append(allTimes, moira.Int64ToTime(metricData.StartTime))
-		allTimes = append(allTimes, moira.Int64ToTime(metricData.StopTime))
+		if !math.IsInf(float64(metricData.StartTime), 0) {
+			allTimes = append(allTimes, moira.Int64ToTime(metricData.StartTime))
+		}
+		if !math.IsInf(float64(metricData.StopTime), 0) {
+			allTimes = append(allTimes, moira.Int64ToTime(metricData.StopTime))
+		}
 	}
 	from, to := util.Time.StartAndEnd(allTimes...)
+	if from == to {
+		from = from.Add(-1 * defaultRangeDelta * 1e9 / 2)
+		to = to.Add(defaultRangeDelta * 1e9 / 2)
+	}
 	lowest, highest := util.Math.MinAndMax(allValues...)
 	if highest == lowest {
 		highest = highest + (defaultRangeDelta / 2)

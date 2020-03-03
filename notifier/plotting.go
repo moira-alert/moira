@@ -62,7 +62,7 @@ func (notifier *StandardNotifier) buildNotificationPackagePlot(pkg NotificationP
 	}
 	if err = renderable.Render(chart.PNG, buff); err != nil {
 		buff.Reset()
-		return buff.Bytes(), err
+		return []byte{}, err
 	}
 	return buff.Bytes(), nil
 }
