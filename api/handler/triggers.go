@@ -29,7 +29,7 @@ func triggers(metricSourceProvider *metricSource.SourceProvider, searcher moira.
 		router.Route("/{triggerId}", trigger)
 		router.With(middleware.Paginate(0, 10)).With(middleware.Pager(false, "")).Get("/search", searchTriggers)
 		// ToDo: DEPRECATED method. Remove in Moira 2.6
-		router.With(middleware.Paginate(0, 10)).Get("/page", searchTriggers)
+		router.With(middleware.Paginate(0, 10)).With(middleware.Pager(false, "")).Get("/page", searchTriggers)
 	}
 }
 
