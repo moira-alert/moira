@@ -77,6 +77,6 @@ func TestFetch(t *testing.T) {
 		remote := Remote{config: &Config{URL: url}}
 		result, err := remote.Fetch(target, from, until, false)
 		So(result, ShouldBeEmpty)
-		So(err.Error(), ShouldResemble, "parse 💩%$&TR: invalid URL escape \"%$&\"")
+		So(err.Error(), ShouldResemble, "parse \"💩%$&TR\": invalid URL escape \"%$&\"")
 	})
 }
