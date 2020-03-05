@@ -1,6 +1,6 @@
 module github.com/moira-alert/moira
 
-go 1.13
+go 1.14
 
 require (
 	bitbucket.org/tebeka/strftime v0.0.0-20140926081919-2194253a23c0 // indirect
