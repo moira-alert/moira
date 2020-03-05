@@ -18,6 +18,9 @@ const (
 	// generate plotLimits lowest/highest additional increment
 	// used in plot-prettifying purposes only
 	defaultYAxisRangePercent = 10
+	// defaultFromToDelta is an additional value to
+	// cover cases with equal from/to limit values
+	defaultFromToDelta = 2
 )
 
 // plotLimits is a set of limits for given metricsData
@@ -43,8 +46,8 @@ func resolveLimits(metricsData []*metricSource.MetricData) plotLimits {
 	}
 	from, to := util.Time.StartAndEnd(allTimes...)
 	if from == to {
-		from = from.Add(-1 * defaultRangeDelta * 1e9 / 2)
-		to = to.Add(defaultRangeDelta * 1e9 / 2)
+		from = from.Add(-1 * defaultFromToDelta / 2 * time.Second)
+		to = to.Add(defaultFromToDelta / 2 * time.Second)
 	}
 	lowest, highest := util.Math.MinAndMax(allValues...)
 	if highest == lowest {

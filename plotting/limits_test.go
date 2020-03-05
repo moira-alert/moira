@@ -54,6 +54,40 @@ func TestResolveLimits(t *testing.T) {
 		So(limits.lowest, ShouldEqual, expectedLowest)
 		So(limits.highest, ShouldEqual, expectedHighest)
 	})
+
+	// MetricData containing metrics with equal from and to value
+	var equalFromToMetrics []*metricSource.MetricData
+	for i := 0; i < int(elementsToUse); i++ {
+		values := make([]float64, 1)
+		for valInd := range values {
+			values[valInd] = float64(rand.Intn(maxValue-1)) * rand.Float64()
+		}
+		metricData := metricSource.MetricData{
+			Name:      "test2",
+			Values:    values,
+			StartTime: startTime,
+			StepTime:  int64(stepTime),
+			StopTime:  startTime,
+		}
+		equalFromToMetrics = append(equalFromToMetrics, &metricData)
+	}
+	// Change 2 first points of MetricsData to minValue and maxValue
+	equalFromToMetrics[0].Values[0], equalFromToMetrics[1].Values[0] = float64(minValue), float64(maxValue)
+	Convey("Resolve limits for collection of data points with equal from and to", t, func() {
+		expectedFrom := moira.Int64ToTime(int64(startTime)).Add(-1 * defaultFromToDelta / 2 * time.Second)
+		expectedTo := moira.Int64ToTime(int64(startTime)).Add(defaultFromToDelta / 2 * time.Second)
+		expectedIncrement := percentsOfRange(float64(minValue), float64(maxValue), defaultYAxisRangePercent)
+		expectedLowest := float64(minValue) - expectedIncrement
+		expectedHighest := float64(maxValue) + expectedIncrement
+		limits := resolveLimits(equalFromToMetrics)
+		So(limits.from, ShouldResemble, expectedFrom)
+		So(limits.to, ShouldResemble, expectedTo)
+		So(limits.lowest, ShouldNotEqual, 0)
+		So(limits.highest, ShouldNotEqual, 0)
+		So(limits.lowest, ShouldNotEqual, limits.highest)
+		So(limits.lowest, ShouldEqual, expectedLowest)
+		So(limits.highest, ShouldEqual, expectedHighest)
+	})
 }
 
 // TestGetThresholdAxisRange tests getThresholdAxisRange returns correct axis range
