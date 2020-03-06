@@ -41,7 +41,7 @@ func BenchmarkProcessIncomingMetric(b *testing.B) {
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Benchmark")
 
-	database.EXPECT().GetPatterns().Return(patterns, nil)
+	database.EXPECT().IteratePatterns().Return(patterns, nil)
 	patternsStorage, err := filter.NewPatternStorage(database, filterMetrics, logger)
 	if err != nil {
 		b.Errorf("Can not create new cache storage %s", err)

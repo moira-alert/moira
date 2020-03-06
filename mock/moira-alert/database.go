@@ -748,6 +748,21 @@ func (mr *MockDatabaseMockRecorder) GetUserSubscriptionIDs(arg0 interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserSubscriptionIDs", reflect.TypeOf((*MockDatabase)(nil).GetUserSubscriptionIDs), arg0)
 }
 
+// IteratePatterns mocks base method
+func (m *MockDatabase) IteratePatterns() ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IteratePatterns")
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// IteratePatterns indicates an expected call of IteratePatterns
+func (mr *MockDatabaseMockRecorder) IteratePatterns() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IteratePatterns", reflect.TypeOf((*MockDatabase)(nil).IteratePatterns))
+}
+
 // MarkTriggersAsUnused mocks base method
 func (m *MockDatabase) MarkTriggersAsUnused(arg0 ...string) error {
 	m.ctrl.T.Helper()

@@ -192,6 +192,7 @@ func ChunkSlice(original []string, chunkSize int) (divided [][]string) {
 	return
 }
 
+// RoundToNearestRetention rounds a given unix timestamp to nearest multiple of retention
 func RoundToNearestRetention(ts, retention int64) int64 {
 	return (ts + retention/2) / retention * retention
 }

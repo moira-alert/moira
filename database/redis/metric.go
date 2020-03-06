@@ -13,7 +13,22 @@ import (
 	"github.com/patrickmn/go-cache"
 )
 
-// GetPatterns gets updated patterns array
+// IteratePatterns incrementally iterates the patterns set and returns the results
+// Keep in mind that duplicates are possible
+func (connector *DbConnector) IteratePatterns() ([]string, error) {
+	c := connector.pool.Get()
+	iter := SetIterator{
+		conn:       c,
+		dbIterator: "0",
+		setName:    patternsListKey,
+		batchSize:  500,
+	}
+	defer iter.Close()
+
+	return iter.ReadToEnd()
+}
+
+// GetPatterns fetches whole patterns set at once
 func (connector *DbConnector) GetPatterns() ([]string, error) {
 	c := connector.pool.Get()
 	defer c.Close()

@@ -83,6 +83,7 @@ type Database interface {
 
 	// Patterns and metrics storing
 	GetPatterns() ([]string, error)
+	IteratePatterns() ([]string, error)
 	AddPatternMetric(pattern, metric string) error
 	GetPatternMetrics(pattern string) ([]string, error)
 	RemovePattern(pattern string) error

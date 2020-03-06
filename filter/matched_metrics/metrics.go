@@ -43,7 +43,7 @@ func (matcher *MetricsMatcher) Start(matchedMetricsChan chan *moira.MatchedMetri
 			matcher.metrics.SavingTimer.UpdateSince(timer)
 		}
 	}()
-	matcher.logger.Infof("Moira Filter Metrics Matcher started to save %d cached metrics every %s", matcher.cacheCapacity, time.Second.Seconds())
+	matcher.logger.Infof("Moira Filter Metrics Matcher started to save %d cached metrics every %v seconds", matcher.cacheCapacity, time.Second.Seconds())
 }
 
 func (matcher *MetricsMatcher) receiveBatch(metrics <-chan *moira.MatchedMetric) <-chan map[string]*moira.MatchedMetric {

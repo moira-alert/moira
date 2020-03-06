@@ -22,13 +22,13 @@ func TestProcessIncomingMetric(t *testing.T) {
 	logger, _ := logging.GetLogger("Scheduler")
 
 	Convey("Create new pattern storage, GetPatterns returns error, should error", t, func() {
-		database.EXPECT().GetPatterns().Return(nil, fmt.Errorf("some error here"))
+		database.EXPECT().IteratePatterns().Return(nil, fmt.Errorf("some error here"))
 		metrics := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry())
 		_, err := NewPatternStorage(database, metrics, logger)
 		So(err, ShouldBeError, fmt.Errorf("some error here"))
 	})
 
-	database.EXPECT().GetPatterns().Return(testPatterns, nil)
+	database.EXPECT().IteratePatterns().Return(testPatterns, nil)
 	patternsStorage, err := NewPatternStorage(database, metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry()), logger)
 
 	Convey("Create new pattern storage, should no error", t, func() {
