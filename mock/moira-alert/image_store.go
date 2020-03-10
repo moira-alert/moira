@@ -5,9 +5,8 @@
 package mock_moira_alert
 
 import (
-	reflect "reflect"
-
 	gomock "github.com/golang/mock/gomock"
+	reflect "reflect"
 )
 
 // MockImageStore is a mock of ImageStore interface

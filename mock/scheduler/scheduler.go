@@ -5,11 +5,10 @@
 package mock_scheduler
 
 import (
-	reflect "reflect"
-	time "time"
-
 	gomock "github.com/golang/mock/gomock"
 	moira "github.com/moira-alert/moira"
+	reflect "reflect"
+	time "time"
 )
 
 // MockScheduler is a mock of Scheduler interface
@@ -37,6 +36,7 @@ func (m *MockScheduler) EXPECT() *MockSchedulerMockRecorder {
 
 // ScheduleNotification mocks base method
 func (m *MockScheduler) ScheduleNotification(arg0 time.Time, arg1 moira.NotificationEvent, arg2 moira.TriggerData, arg3 moira.ContactData, arg4 moira.PlottingData, arg5 bool, arg6 int) *moira.ScheduledNotification {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ScheduleNotification", arg0, arg1, arg2, arg3, arg4, arg5, arg6)
 	ret0, _ := ret[0].(*moira.ScheduledNotification)
 	return ret0
@@ -44,5 +44,6 @@ func (m *MockScheduler) ScheduleNotification(arg0 time.Time, arg1 moira.Notifica
 
 // ScheduleNotification indicates an expected call of ScheduleNotification
 func (mr *MockSchedulerMockRecorder) ScheduleNotification(arg0, arg1, arg2, arg3, arg4, arg5, arg6 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ScheduleNotification", reflect.TypeOf((*MockScheduler)(nil).ScheduleNotification), arg0, arg1, arg2, arg3, arg4, arg5, arg6)
 }
