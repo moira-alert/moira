@@ -5,12 +5,11 @@
 package mock_notifier
 
 import (
-	reflect "reflect"
-	sync "sync"
-
 	gomock "github.com/golang/mock/gomock"
 	moira "github.com/moira-alert/moira"
 	notifier "github.com/moira-alert/moira/notifier"
+	reflect "reflect"
+	sync "sync"
 )
 
 // MockNotifier is a mock of Notifier interface
@@ -48,20 +47,6 @@ func (m *MockNotifier) GetSenders() map[string]bool {
 func (mr *MockNotifierMockRecorder) GetSenders() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSenders", reflect.TypeOf((*MockNotifier)(nil).GetSenders))
-}
-
-// InitImageStore mocks base method
-func (m *MockNotifier) InitImageStore(arg0 map[string]string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "InitImageStore", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// InitImageStore indicates an expected call of InitImageStore
-func (mr *MockNotifierMockRecorder) InitImageStore(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitImageStore", reflect.TypeOf((*MockNotifier)(nil).InitImageStore), arg0)
 }
 
 // RegisterSender mocks base method

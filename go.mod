@@ -41,7 +41,7 @@ require (
 	github.com/go-redsync/redsync v1.3.1
 	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
-	github.com/golang/mock v1.2.1-0.20190116182947-c20582278a82
+	github.com/golang/mock v1.4.1
 	github.com/golangci/go-tools v0.0.0-20190318055746-e32c54105b7c // indirect
 	github.com/golangci/golangci-lint v1.19.1 // indirect
 	github.com/golangci/gosec v0.0.0-20190211064107-66fb7fc33547 // indirect
