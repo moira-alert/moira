@@ -9,8 +9,7 @@ linters-settings:
           - (github.com/golangci/golangci-lint/pkg/logutils.Log).Errorf
           - (github.com/golangci/golangci-lint/pkg/logutils.Log).Fatalf
   gocyclo:
-    min-complexity: 20
-    # min-complexity: 15
+    min-complexity: 15
   maligned:
     suggest-new: true
 
@@ -20,19 +19,27 @@ linters:
   enable:
     - bodyclose
     - deadcode
-    # - errcheck
-    # - goconst
+    - errcheck
+    - gochecknoglobals
+    - goconst
     - gocyclo
+    - gofmt
+    - goimports
+    - golint
+    - gomnd
     - gosimple
     - govet
     - ineffassign
     - maligned
     - misspell
+    - prealloc
     - staticcheck
     - structcheck
     - typecheck
-    # - unconvert
+    - unconvert
+    - unparam
     - unused
+    - whitespace
     - varcheck
 
 run:
