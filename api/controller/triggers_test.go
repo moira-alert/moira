@@ -337,9 +337,9 @@ func TestSearchTriggers(t *testing.T) {
 		tags = []string{}
 		Convey("Create pager", func() {
 			pagerID := ""
-			var page int64 = 0
-			var size int64 = -1
-			var exp int64 = 31
+			page = 0
+			size = -1
+			exp = 31
 			gomock.InOrder(
 				mockIndex.EXPECT().SearchTriggers(tags, searchString, false, page, int64(-1)).Return(triggerSearchResults, exp, nil),
 				mockDatabase.EXPECT().SaveTriggersSearchResults(gomock.Any(), triggerSearchResults).Return(nil).Do(func(pID string, _ interface{}) {
@@ -359,7 +359,7 @@ func TestSearchTriggers(t *testing.T) {
 		})
 		Convey("Use pager", func() {
 			pagerID := "TestPagerID"
-			var page int64 = 0
+			page = 0
 			var size int64 = -1
 			var exp int64 = 31
 			gomock.InOrder(
