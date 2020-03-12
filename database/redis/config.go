@@ -8,4 +8,5 @@ type Config struct {
 	Port              string
 	DB                int
 	ConnectionLimit   int
+	AllowSlaveReads   bool
 }
