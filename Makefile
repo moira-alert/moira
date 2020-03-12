@@ -15,7 +15,7 @@ VERSION_RELEASE := ${GIT_TAG}.${GIT_COMMIT}
 GO_VERSION := $(shell go version | cut -d' ' -f3)
 GO_PATH := $(shell go env GOPATH)
 GO111MODULE := on
-GOLANGCI_LINT_VERSION := "v1.21.0"
+GOLANGCI_LINT_VERSION := "v1.23.8"
 
 VENDOR := "SKB Kontur"
 URL := "https://github.com/moira-alert/moira"
