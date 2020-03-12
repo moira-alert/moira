@@ -40,6 +40,7 @@ const (
 // DbConnector contains redis pool
 type DbConnector struct {
 	pool                 *redis.Pool
+	slavePool            *redis.Pool
 	logger               moira.Logger
 	retentionCache       *cache.Cache
 	retentionSavingCache *cache.Cache
@@ -50,7 +51,7 @@ type DbConnector struct {
 
 // NewDatabase creates Redis pool based on config
 func NewDatabase(logger moira.Logger, config Config, source DBSource) *DbConnector {
-	poolDialer := newPoolDialer(logger, config)
+	poolDialer, slaveDialer := createPoolDialers(logger, config)
 
 	pool := &redis.Pool{
 		MaxIdle:      config.ConnectionLimit,
@@ -68,9 +69,16 @@ func NewDatabase(logger moira.Logger, config Config, source DBSource) *DbConnect
 		Dial:         poolDialer.Dial,
 		TestOnBorrow: poolDialer.Test,
 	}
+	var slavePool *redis.Pool
+	if slaveDialer != nil {
+		slavePool = &*pool
+		slavePool.Dial = slaveDialer.Dial
+		slavePool.TestOnBorrow = slaveDialer.Test
+	}
 
 	return &DbConnector{
 		pool:                 pool,
+		slavePool:            slavePool,
 		logger:               logger,
 		retentionCache:       cache.New(cacheValueExpirationDuration, cacheCleanupInterval),
 		retentionSavingCache: cache.New(cache.NoExpiration, cache.DefaultExpiration),
@@ -80,10 +88,10 @@ func NewDatabase(logger moira.Logger, config Config, source DBSource) *DbConnect
 	}
 }
 
-func newPoolDialer(logger moira.Logger, config Config) PoolDialer {
+func createPoolDialers(logger moira.Logger, config Config) (mainDialer, slaveDialer PoolDialer) {
 	if config.MasterName != "" && len(config.SentinelAddresses) > 0 {
 		logger.Infof("Redis: Sentinel for name: %v, DB: %v", config.MasterName, config.DB)
-		return NewSentinelPoolDialer(
+		sentinelDialer := NewSentinelPoolDialer(
 			logger,
 			SentinelPoolDialerConfig{
 				MasterName:        config.MasterName,
@@ -92,15 +100,23 @@ func newPoolDialer(logger moira.Logger, config Config) PoolDialer {
 				DialTimeout:       dialTimeout,
 			},
 		)
+		if !config.AllowSlaveReads {
+			return sentinelDialer, nil
+		}
+		logger.Info("Redis: Sentinel slaves pooling enabled")
+		slaveDialer := NewSentinelSlavePoolDialer(sentinelDialer)
+
+		return sentinelDialer, slaveDialer
 	}
 
 	serverAddr := net.JoinHostPort(config.Host, config.Port)
 	logger.Infof("Redis: %v, DB: %v", serverAddr, config.DB)
-	return &DirectPoolDialer{
+	mainDialer = &DirectPoolDialer{
 		serverAddress: serverAddr,
 		db:            config.DB,
 		dialTimeout:   dialTimeout,
 	}
+	return
 }
 
 func (connector *DbConnector) makePubSubConnection(channel string) (*redis.PubSubConn, error) {
