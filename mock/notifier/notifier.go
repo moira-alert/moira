@@ -35,6 +35,20 @@ func (m *MockNotifier) EXPECT() *MockNotifierMockRecorder {
 	return m.recorder
 }
 
+// GetReadBatchSize mocks base method
+func (m *MockNotifier) GetReadBatchSize() int64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetReadBatchSize")
+	ret0, _ := ret[0].(int64)
+	return ret0
+}
+
+// GetReadBatchSize indicates an expected call of GetReadBatchSize
+func (mr *MockNotifierMockRecorder) GetReadBatchSize() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetReadBatchSize", reflect.TypeOf((*MockNotifier)(nil).GetReadBatchSize))
+}
+
 // GetSenders mocks base method
 func (m *MockNotifier) GetSenders() map[string]bool {
 	m.ctrl.T.Helper()

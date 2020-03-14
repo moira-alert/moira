@@ -36,6 +36,8 @@ type notifierConfig struct {
 	Timezone string `yaml:"timezone"`
 	// Format for email sender. Default is "15:04 02.01.2006". See https://golang.org/pkg/time/#Time.Format for more details about golang time formatting.
 	DateTimeFormat string `yaml:"date_time_format"`
+	// Amount of messages notifier reads from Redis per iteration. Use notifier.NotificationsLimitUnlimited for unlimited.
+	ReadBatchSize int `yaml:"read_batch_size"`
 }
 
 type selfStateConfig struct {
@@ -80,8 +82,9 @@ func getDefault() config {
 				LastCheckDelay:          "60s",
 				NoticeInterval:          "300s",
 			},
-			FrontURI: "http://localhost",
-			Timezone: "UTC",
+			FrontURI:      "http://localhost",
+			Timezone:      "UTC",
+			ReadBatchSize: int(notifier.NotificationsLimitUnlimited),
 		},
 		Telemetry: cmd.TelemetryConfig{
 			Listen: ":8093",
@@ -119,6 +122,16 @@ func (config *notifierConfig) getSettings(logger moira.Logger) notifier.Config {
 		logger.Infof("Format '%v' parsed successfully. Current time format: %v", format, time.Now().Format(format))
 	}
 
+	readBatchSize := notifier.NotificationsLimitUnlimited
+	if config.ReadBatchSize > 0 {
+		readBatchSize = int64(config.ReadBatchSize)
+	}
+	if config.ReadBatchSize <= 0 && int64(config.ReadBatchSize) != notifier.NotificationsLimitUnlimited {
+		logger.Warningf("Current read_batch_size is %d, but it should be > 0 or %v (unlimited), value ignored",
+			config.ReadBatchSize, notifier.NotificationsLimitUnlimited)
+	}
+	logger.Infof("Current read_batch_size is %d", readBatchSize)
+
 	return notifier.Config{
 		SelfStateEnabled:  config.SelfState.Enabled,
 		SelfStateContacts: config.SelfState.Contacts,
@@ -128,6 +141,7 @@ func (config *notifierConfig) getSettings(logger moira.Logger) notifier.Config {
 		FrontURL:          config.FrontURI,
 		Location:          location,
 		DateTimeFormat:    format,
+		ReadBatchSize:     readBatchSize,
 	}
 }
 
