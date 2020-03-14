@@ -63,7 +63,7 @@ func TestProcessScheduledEvent(t *testing.T) {
 	}
 
 	Convey("Two different notifications, should send two packages", t, func() {
-		dataBase.EXPECT().FetchNotifications(gomock.Any()).Return([]*moira.ScheduledNotification{
+		dataBase.EXPECT().FetchNotifications(gomock.Any(), notifier2.NotificationsLimitUnlimited).Return([]*moira.ScheduledNotification{
 			&notification1,
 			&notification2,
 		}, nil)
@@ -90,13 +90,14 @@ func TestProcessScheduledEvent(t *testing.T) {
 		}
 		notifier.EXPECT().Send(&pkg1, gomock.Any())
 		notifier.EXPECT().Send(&pkg2, gomock.Any())
+		notifier.EXPECT().GetReadBatchSize().Return(notifier2.NotificationsLimitUnlimited)
 		dataBase.EXPECT().GetNotifierState().Return(moira.SelfStateOK, nil)
 		err := worker.processScheduledNotifications()
 		So(err, ShouldBeEmpty)
 	})
 
 	Convey("Two same notifications, should send one package", t, func() {
-		dataBase.EXPECT().FetchNotifications(gomock.Any()).Return([]*moira.ScheduledNotification{
+		dataBase.EXPECT().FetchNotifications(gomock.Any(),  notifier2.NotificationsLimitUnlimited).Return([]*moira.ScheduledNotification{
 			&notification2,
 			&notification3,
 		}, nil)
@@ -115,6 +116,7 @@ func TestProcessScheduledEvent(t *testing.T) {
 
 		notifier.EXPECT().Send(&pkg, gomock.Any())
 		dataBase.EXPECT().GetNotifierState().Return(moira.SelfStateOK, nil)
+		notifier.EXPECT().GetReadBatchSize().Return(notifier2.NotificationsLimitUnlimited)
 		err := worker.processScheduledNotifications()
 		So(err, ShouldBeEmpty)
 	})
@@ -156,9 +158,10 @@ func TestGoRoutine(t *testing.T) {
 	}
 
 	shutdown := make(chan struct{})
-	dataBase.EXPECT().FetchNotifications(gomock.Any()).Return([]*moira.ScheduledNotification{&notification1}, nil)
+	dataBase.EXPECT().FetchNotifications(gomock.Any(), notifier2.NotificationsLimitUnlimited).Return([]*moira.ScheduledNotification{&notification1}, nil)
 	notifier.EXPECT().Send(&pkg, gomock.Any()).Do(func(f ...interface{}) { close(shutdown) })
 	notifier.EXPECT().StopSenders()
+	notifier.EXPECT().GetReadBatchSize().Return(notifier2.NotificationsLimitUnlimited)
 	dataBase.EXPECT().GetNotifierState().Return(moira.SelfStateOK, nil)
 
 	worker.Start()

@@ -66,6 +66,7 @@ type Notifier interface {
 	RegisterSender(senderSettings map[string]string, sender moira.Sender) error
 	StopSenders()
 	GetSenders() map[string]bool
+	GetReadBatchSize() int64
 }
 
 // StandardNotifier represent notification functionality
@@ -123,6 +124,11 @@ func (notifier *StandardNotifier) GetSenders() map[string]bool {
 		hash[key] = true
 	}
 	return hash
+}
+
+// GetReadBatchSize returns amount of messages notifier reads from Redis per iteration
+func (notifier *StandardNotifier) GetReadBatchSize() int64 {
+	return int64(notifier.config.ReadBatchSize)
 }
 
 func (notifier *StandardNotifier) resend(pkg *NotificationPackage, reason string) {

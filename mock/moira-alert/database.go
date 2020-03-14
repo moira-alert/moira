@@ -177,18 +177,18 @@ func (mr *MockDatabaseMockRecorder) FetchNotificationEvent() *gomock.Call {
 }
 
 // FetchNotifications mocks base method
-func (m *MockDatabase) FetchNotifications(arg0 int64) ([]*moira.ScheduledNotification, error) {
+func (m *MockDatabase) FetchNotifications(arg0, arg1 int64) ([]*moira.ScheduledNotification, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FetchNotifications", arg0)
+	ret := m.ctrl.Call(m, "FetchNotifications", arg0, arg1)
 	ret0, _ := ret[0].([]*moira.ScheduledNotification)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // FetchNotifications indicates an expected call of FetchNotifications
-func (mr *MockDatabaseMockRecorder) FetchNotifications(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) FetchNotifications(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchNotifications", reflect.TypeOf((*MockDatabase)(nil).FetchNotifications), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchNotifications", reflect.TypeOf((*MockDatabase)(nil).FetchNotifications), arg0, arg1)
 }
 
 // FetchTriggersToReindex mocks base method

@@ -4,6 +4,8 @@ import (
 	"time"
 )
 
+const NotificationsLimitUnlimited = int64(-1)
+
 // Config is sending settings including log settings
 type Config struct {
 	Enabled           bool
@@ -17,4 +19,5 @@ type Config struct {
 	FrontURL          string
 	Location          *time.Location
 	DateTimeFormat    string
+	ReadBatchSize     int64
 }
