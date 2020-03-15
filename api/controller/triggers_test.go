@@ -18,9 +18,10 @@ func TestCreateTrigger(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	expr := "t1 >= 5 ? WARN : OK"
 
 	Convey("Success with trigger.ID empty", t, func() {
-		triggerModel := dto.TriggerModel{}
+		triggerModel := dto.TriggerModel{Targets: []string{"t1"}, TriggerType: "expression", Expression: expr}
 		dataBase.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 10)
 		dataBase.EXPECT().DeleteTriggerCheckLock(gomock.Any())
 		dataBase.EXPECT().GetTriggerLastCheck(gomock.Any()).Return(moira.CheckData{}, database.ErrNil)
@@ -33,7 +34,7 @@ func TestCreateTrigger(t *testing.T) {
 
 	Convey("Success with triggerID", t, func() {
 		triggerID := uuid.Must(uuid.NewV4()).String()
-		triggerModel := dto.TriggerModel{ID: triggerID}
+		triggerModel := dto.TriggerModel{ID: triggerID, Targets: []string{"t1"}, TriggerType: "expression", Expression: expr}
 		dataBase.EXPECT().GetTrigger(triggerModel.ID).Return(moira.Trigger{}, database.ErrNil)
 		dataBase.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 10)
 		dataBase.EXPECT().DeleteTriggerCheckLock(gomock.Any())
@@ -47,7 +48,7 @@ func TestCreateTrigger(t *testing.T) {
 	})
 
 	Convey("Trigger already exists", t, func() {
-		triggerModel := dto.TriggerModel{ID: uuid.Must(uuid.NewV4()).String()}
+		triggerModel := dto.TriggerModel{ID: uuid.Must(uuid.NewV4()).String(), Targets: []string{"t1"}, TriggerType: "expression", Expression: expr}
 		trigger := triggerModel.ToMoiraTrigger()
 		dataBase.EXPECT().GetTrigger(triggerModel.ID).Return(*trigger, nil)
 		resp, err := CreateTrigger(dataBase, &triggerModel, make(map[string]bool))
@@ -56,7 +57,7 @@ func TestCreateTrigger(t *testing.T) {
 	})
 
 	Convey("Get trigger error", t, func() {
-		trigger := dto.TriggerModel{ID: uuid.Must(uuid.NewV4()).String()}
+		trigger := dto.TriggerModel{ID: uuid.Must(uuid.NewV4()).String(), Targets: []string{"t1"}, TriggerType: "expression", Expression: expr}
 		expected := fmt.Errorf("soo bad trigger")
 		dataBase.EXPECT().GetTrigger(trigger.ID).Return(moira.Trigger{}, expected)
 		resp, err := CreateTrigger(dataBase, &trigger, make(map[string]bool))
@@ -65,7 +66,7 @@ func TestCreateTrigger(t *testing.T) {
 	})
 
 	Convey("Error", t, func() {
-		triggerModel := dto.TriggerModel{ID: uuid.Must(uuid.NewV4()).String()}
+		triggerModel := dto.TriggerModel{ID: uuid.Must(uuid.NewV4()).String(), Targets: []string{"t1"}, TriggerType: "expression", Expression: expr}
 		expected := fmt.Errorf("soo bad trigger")
 		dataBase.EXPECT().GetTrigger(triggerModel.ID).Return(moira.Trigger{}, database.ErrNil)
 		dataBase.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 10)

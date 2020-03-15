@@ -21,11 +21,11 @@ var exprCache = cache.New(cache.NoExpiration, cache.NoExpiration)
 
 // ErrInvalidExpression represents bad expression or its state error
 type ErrInvalidExpression struct {
-	internalError error
+	InternalError error
 }
 
 func (err ErrInvalidExpression) Error() string {
-	return err.internalError.Error()
+	return err.InternalError.Error()
 }
 
 // TriggerExpression represents trigger expression handler parameters, what can be used for trigger expression handling
@@ -79,17 +79,17 @@ func (triggerExpression TriggerExpression) Get(name string) (interface{}, error)
 func (triggerExpression *TriggerExpression) Evaluate() (moira.State, error) {
 	expr, err := getExpression(triggerExpression)
 	if err != nil {
-		return "", ErrInvalidExpression{internalError: err}
+		return "", ErrInvalidExpression{InternalError: err}
 	}
 	result, err := expr.Eval(triggerExpression)
 	if err != nil {
-		return "", ErrInvalidExpression{internalError: err}
+		return "", ErrInvalidExpression{InternalError: err}
 	}
 	switch res := result.(type) {
 	case moira.State:
 		return res, nil
 	default:
-		return "", ErrInvalidExpression{internalError: fmt.Errorf("expression result must be state value")}
+		return "", ErrInvalidExpression{InternalError: fmt.Errorf("expression result must be state value")}
 	}
 }
 

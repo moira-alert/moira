@@ -11,6 +11,7 @@ import (
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/database"
+	"github.com/moira-alert/moira/expression"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -21,7 +22,8 @@ func TestUpdateTrigger(t *testing.T) {
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 	Convey("Success update", t, func() {
-		triggerModel := dto.TriggerModel{ID: uuid.Must(uuid.NewV4()).String()}
+		expr := "t1 >= 5 ? WARN : OK"
+		triggerModel := dto.TriggerModel{ID: uuid.Must(uuid.NewV4()).String(), Targets: []string{"t1"}, TriggerType: "expression", Expression: expr}
 		trigger := triggerModel.ToMoiraTrigger()
 		dataBase.EXPECT().GetTrigger(triggerModel.ID).Return(*trigger, nil)
 		dataBase.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 10)
@@ -34,8 +36,33 @@ func TestUpdateTrigger(t *testing.T) {
 		So(resp.Message, ShouldResemble, "trigger updated")
 	})
 
+	Convey("Invalid expression: incorrect state", t, func() {
+		expr := "t1 >= 5 ? WARN : TEST"
+		triggerModel := dto.TriggerModel{ID: uuid.Must(uuid.NewV4()).String(), Targets: []string{"t1"}, TriggerType: "expression", Expression: expr}
+		trigger := triggerModel.ToMoiraTrigger()
+		expected := fmt.Errorf("no value with name TEST")
+		dataBase.EXPECT().GetTrigger(triggerModel.ID).Return(*trigger, nil)
+		dataBase.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 10)
+		resp, err := UpdateTrigger(dataBase, &triggerModel, triggerModel.ID, make(map[string]bool))
+		So(err.Err, ShouldResemble, expression.ErrInvalidExpression{InternalError: expected})
+		So(resp, ShouldBeNil)
+	})
+
+	Convey("Invalid expression: Wrong syntax", t, func() {
+		expr := "t1 >= 5 ? WARN"
+		triggerModel := dto.TriggerModel{ID: uuid.Must(uuid.NewV4()).String(), Targets: []string{"t1"}, TriggerType: "expression", Expression: expr}
+		trigger := triggerModel.ToMoiraTrigger()
+		expected := fmt.Errorf("expression result must be state value")
+		dataBase.EXPECT().GetTrigger(triggerModel.ID).Return(*trigger, nil)
+		dataBase.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 10)
+		resp, err := UpdateTrigger(dataBase, &triggerModel, triggerModel.ID, make(map[string]bool))
+		So(err.Err, ShouldResemble, expression.ErrInvalidExpression{InternalError: expected})
+		So(resp, ShouldBeNil)
+	})
+
 	Convey("Trigger does not exists", t, func() {
-		trigger := dto.TriggerModel{ID: uuid.Must(uuid.NewV4()).String()}
+		expr := "t1 >= 5 ? WARN : OK"
+		trigger := dto.TriggerModel{ID: uuid.Must(uuid.NewV4()).String(), Targets: []string{"t1"}, TriggerType: "expression", Expression: expr}
 		dataBase.EXPECT().GetTrigger(trigger.ID).Return(moira.Trigger{}, database.ErrNil)
 		resp, err := UpdateTrigger(dataBase, &trigger, trigger.ID, make(map[string]bool))
 		So(err, ShouldResemble, api.ErrorNotFound(fmt.Sprintf("trigger with ID = '%s' does not exists", trigger.ID)))
@@ -43,7 +70,8 @@ func TestUpdateTrigger(t *testing.T) {
 	})
 
 	Convey("Get trigger error", t, func() {
-		trigger := dto.TriggerModel{ID: uuid.Must(uuid.NewV4()).String()}
+		expr := "t1 >= 5 ? WARN : OK"
+		trigger := dto.TriggerModel{ID: uuid.Must(uuid.NewV4()).String(), Targets: []string{"t1"}, TriggerType: "expression", Expression: expr}
 		expected := fmt.Errorf("soo bad trigger")
 		dataBase.EXPECT().GetTrigger(trigger.ID).Return(moira.Trigger{}, expected)
 		resp, err := UpdateTrigger(dataBase, &trigger, trigger.ID, make(map[string]bool))
@@ -56,8 +84,9 @@ func TestSaveTrigger(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	expr := "t1 >= 5 ? WARN : OK"
 	triggerID := uuid.Must(uuid.NewV4()).String()
-	trigger := moira.Trigger{ID: triggerID}
+	trigger := moira.Trigger{ID: triggerID, Targets: []string{"t1"}, TriggerType: "expression", Expression: &expr}
 	lastCheck := moira.CheckData{
 		Metrics: map[string]moira.MetricState{
 			"super.metric1": {},
@@ -155,8 +184,9 @@ func TestVariousTtlState(t *testing.T) {
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
+	expr := "t1 >= 5 ? WARN : OK"
 	triggerID := uuid.Must(uuid.NewV4()).String()
-	trigger := moira.Trigger{ID: triggerID, TTLState: nil}
+	trigger := moira.Trigger{ID: triggerID, TTLState: nil, Targets: []string{"t1"}, TriggerType: "expression", Expression: &expr}
 	lastCheck := moira.CheckData{
 		Metrics: make(map[string]moira.MetricState),
 		State:   moira.StateNODATA,

@@ -8,6 +8,7 @@ import (
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/database"
+	"github.com/moira-alert/moira/expression"
 )
 
 // UpdateTrigger update trigger data and trigger metrics in last state
@@ -19,6 +20,7 @@ func UpdateTrigger(dataBase moira.Database, trigger *dto.TriggerModel, triggerID
 		}
 		return nil, api.ErrorInternalServer(err)
 	}
+
 	return saveTrigger(dataBase, trigger.ToMoiraTrigger(), triggerID, timeSeriesNames)
 }
 
@@ -26,6 +28,9 @@ func UpdateTrigger(dataBase moira.Database, trigger *dto.TriggerModel, triggerID
 func saveTrigger(dataBase moira.Database, trigger *moira.Trigger, triggerID string, timeSeriesNames map[string]bool) (*dto.SaveTriggerResponse, *api.ErrorResponse) {
 	if err := dataBase.AcquireTriggerCheckLock(triggerID, 10); err != nil {
 		return nil, api.ErrorInternalServer(err)
+	}
+	if err := checkExpressionValidity(trigger); err != nil {
+		return nil, api.ErrorInvalidRequest(err)
 	}
 	defer dataBase.DeleteTriggerCheckLock(triggerID)
 	lastCheck, err := dataBase.GetTriggerLastCheck(triggerID)
@@ -160,5 +165,24 @@ func SetTriggerMaintenance(database moira.Database, triggerID string, triggerMai
 	if err := database.SetTriggerCheckMaintenance(triggerID, triggerMaintenance.Metrics, triggerMaintenance.Trigger, userLogin, timeCallMaintenance); err != nil {
 		return api.ErrorInternalServer(err)
 	}
+	return nil
+}
+
+// checks for the validity of expression
+func checkExpressionValidity(trigger *moira.Trigger) error {
+
+	triggerExpression := expression.TriggerExpression{
+		AdditionalTargetsValues: make(map[string]float64),
+		WarnValue:               trigger.WarnValue,
+		ErrorValue:              trigger.ErrorValue,
+		TriggerType:             trigger.TriggerType,
+		PreviousState:           moira.StateNODATA,
+		Expression:              trigger.Expression,
+	}
+
+	if _, err := triggerExpression.Evaluate(); err != nil {
+		return err
+	}
+
 	return nil
 }
