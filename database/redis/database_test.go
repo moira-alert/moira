@@ -41,6 +41,20 @@ func TestAllowStale(t *testing.T) {
 			So(staleDatabase, ShouldPointTo, database)
 		})
 
+		Convey("When using sentinel with slave reads disabled, returns same db", func() {
+			sentinelConfig := Config{
+				MasterName:        "mstr",
+				SentinelAddresses: []string{"addr.ru"},
+				DB:                0,
+				AllowSlaveReads:   false,
+			}
+			database := newTestDatabase(logger, sentinelConfig)
+
+			staleDatabase := database.AllowStale()
+
+			So(staleDatabase, ShouldPointTo, database)
+		})
+
 		Convey("When using sentinel, returns slave db instance, retains references", func() {
 			sentinelConfig := Config{
 				MasterName:        "mstr",

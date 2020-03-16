@@ -30,7 +30,7 @@ func NewPatternStorage(database moira.Database, metrics *metrics.FilterMetrics, 
 
 // Refresh builds pattern's indexes from redis data
 func (storage *PatternStorage) Refresh() error {
-	newPatterns, err := storage.database.GetPatterns()
+	newPatterns, err := storage.database.AllowStale().GetPatterns()
 	if err != nil {
 		return err
 	}
