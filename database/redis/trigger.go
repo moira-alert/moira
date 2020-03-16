@@ -314,8 +314,8 @@ func (connector *DbConnector) getTriggerWithTags(triggerRaw interface{}, tagsRaw
 	return trigger, nil
 }
 
-func (connector *DbConnector) cleanupPatternsOutOfUse(pattern []string) error {
-	for _, pattern := range pattern {
+func (connector *DbConnector) cleanupPatternsOutOfUse(patterns []string) error {
+	for _, pattern := range patterns {
 		triggerIDs, err := connector.GetPatternTriggerIDs(pattern)
 		if err != nil {
 			return err
