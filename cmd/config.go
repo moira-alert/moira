@@ -28,8 +28,9 @@ type RedisConfig struct {
 	// Redis node port
 	Port string `yaml:"port"`
 	// Redis database
-	DB              int `yaml:"dbid"`
-	ConnectionLimit int `yaml:"connection_limit"`
+	DB              int  `yaml:"dbid"`
+	ConnectionLimit int  `yaml:"connection_limit"`
+	AllowSlaveReads bool `yaml:"allow_slave_reads"`
 }
 
 // GetSettings returns redis config parsed from moira config files
@@ -41,6 +42,7 @@ func (config *RedisConfig) GetSettings() redis.Config {
 		Port:              config.Port,
 		DB:                config.DB,
 		ConnectionLimit:   config.ConnectionLimit,
+		AllowSlaveReads:   config.AllowSlaveReads,
 	}
 }
 

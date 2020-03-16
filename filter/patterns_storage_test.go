@@ -19,6 +19,7 @@ func TestProcessIncomingMetric(t *testing.T) {
 
 	mockCtrl := gomock.NewController(t)
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
+	database.EXPECT().AllowStale().AnyTimes().Return(database)
 	logger, _ := logging.GetLogger("Scheduler")
 
 	Convey("Create new pattern storage, GetPatterns returns error, should error", t, func() {

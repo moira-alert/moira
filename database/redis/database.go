@@ -46,8 +46,7 @@ type DbConnector struct {
 	metricsCache         *cache.Cache
 	sync                 *redsync.Redsync
 	source               DBSource
-
-	slaveConnector *DbConnector
+	slaveConnector       *DbConnector
 }
 
 // NewDatabase creates Redis pool based on config
@@ -144,7 +143,7 @@ func createPoolDialers(logger moira.Logger, config Config) (mainDialer, slaveDia
 		db:            config.DB,
 		dialTimeout:   dialTimeout,
 	}
-	return
+	return mainDialer, nil
 }
 
 func (connector *DbConnector) makePubSubConnection(channel string) (*redis.PubSubConn, error) {
