@@ -16,6 +16,8 @@ GO_VERSION := $(shell go version | cut -d' ' -f3)
 GO_PATH := $(shell go env GOPATH)
 GO111MODULE := on
 GOLANGCI_LINT_VERSION := "v1.23.8"
+REVIEWDOG_VERSION := "v0.9.17"
+REVIEWDOG_RUNNERS ?= golangci
 
 VENDOR := "SKB Kontur"
 URL := "https://github.com/moira-alert/moira"
@@ -34,6 +36,14 @@ install-lint:
 .PHONY: lint
 lint:
 	GOGC=50 golangci-lint run
+
+.PHONY: install-reviewdog
+install-reviewdog: install-lint
+	wget -O - -q https://raw.githubusercontent.com/reviewdog/reviewdog/master/install.sh| sh  -s -- -b ${GO_PATH}/bin ${REVIEWDOG_VERSION}
+
+.PHONY: reviewdog
+reviewdog:
+	GOGC=50 reviewdog -reporter="github-check" -runners="${REVIEWDOG_RUNNERS}"
 
 .PHONY: test
 test:

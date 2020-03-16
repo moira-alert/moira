@@ -22,9 +22,9 @@ before_install:
 install:
   - go get -v golang.org/x/tools/cmd/cover
   - go get -v github.com/mattn/goveralls
-  - make install-lint
+  - make install-reviewdog
 before_script:
-  - make lint
+  - make reviewdog REVIEWDOG_RUNNERS=golangci-$([[ "$TRAVIS_PULL_REQUEST" = "false" ]] && echo "branch" || echo "pr")
   - make test
   - goveralls -coverprofile=coverage.txt -service=travis-ci || true
 script:
