@@ -22,7 +22,7 @@ func TestNotificationEvents(t *testing.T) {
 	Convey("Notification events manipulation", t, func() {
 		Convey("Test push-get-get count-fetch", func() {
 			Convey("Should no events", func() {
-				actual, err := dataBase.GetNotificationEvents(notificationEvent.TriggerID, 0, 1)
+				actual, err := dataBase.GetNotificationEvents(notificationEvent.TriggerID, 1)
 				So(err, ShouldBeNil)
 				So(actual, ShouldResemble, make([]*moira.NotificationEvent, 0))
 
@@ -39,7 +39,7 @@ func TestNotificationEvents(t *testing.T) {
 				err := dataBase.PushNotificationEvent(&notificationEvent, true)
 				So(err, ShouldBeNil)
 
-				actual, err := dataBase.GetNotificationEvents(notificationEvent.TriggerID, 0, 1)
+				actual, err := dataBase.GetNotificationEvents(notificationEvent.TriggerID, 1)
 				So(err, ShouldBeNil)
 				So(actual, ShouldResemble, []*moira.NotificationEvent{&notificationEvent})
 
@@ -52,7 +52,7 @@ func TestNotificationEvents(t *testing.T) {
 			})
 
 			Convey("Should has event by triggerID after fetch", func() {
-				actual, err := dataBase.GetNotificationEvents(notificationEvent.TriggerID, 0, 1)
+				actual, err := dataBase.GetNotificationEvents(notificationEvent.TriggerID, 1)
 				So(err, ShouldBeNil)
 				So(actual, ShouldResemble, []*moira.NotificationEvent{&notificationEvent})
 
@@ -76,14 +76,14 @@ func TestNotificationEvents(t *testing.T) {
 				err = dataBase.PushNotificationEvent(&notificationEvent2, true)
 				So(err, ShouldBeNil)
 
-				actual, err := dataBase.GetNotificationEvents(notificationEvent1.TriggerID, 0, 1)
+				actual, err := dataBase.GetNotificationEvents(notificationEvent1.TriggerID, 1)
 				So(err, ShouldBeNil)
 				So(actual, ShouldResemble, []*moira.NotificationEvent{&notificationEvent1})
 
 				total := dataBase.GetNotificationEventCount(notificationEvent1.TriggerID, 0)
 				So(total, ShouldEqual, 1)
 
-				actual, err = dataBase.GetNotificationEvents(notificationEvent2.TriggerID, 0, 1)
+				actual, err = dataBase.GetNotificationEvents(notificationEvent2.TriggerID, 1)
 				So(err, ShouldBeNil)
 				So(actual, ShouldResemble, []*moira.NotificationEvent{&notificationEvent2})
 
@@ -96,7 +96,7 @@ func TestNotificationEvents(t *testing.T) {
 				So(err, ShouldBeNil)
 				So(actual1, ShouldResemble, notificationEvent1)
 
-				actual, err := dataBase.GetNotificationEvents(notificationEvent1.TriggerID, 0, 1)
+				actual, err := dataBase.GetNotificationEvents(notificationEvent1.TriggerID, 1)
 				So(err, ShouldBeNil)
 				So(actual, ShouldResemble, []*moira.NotificationEvent{&notificationEvent1})
 
@@ -129,7 +129,7 @@ func TestNotificationEvents(t *testing.T) {
 			err := dataBase.PushNotificationEvent(&event, true)
 			So(err, ShouldBeNil)
 
-			actual, err := dataBase.GetNotificationEvents(event.TriggerID, 0, 1)
+			actual, err := dataBase.GetNotificationEvents(event.TriggerID, 1)
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, []*moira.NotificationEvent{&event})
 
@@ -144,10 +144,6 @@ func TestNotificationEvents(t *testing.T) {
 
 			total = dataBase.GetNotificationEventCount(event.TriggerID, now+1)
 			So(total, ShouldEqual, 0)
-
-			actual, err = dataBase.GetNotificationEvents(event.TriggerID, 1, 1)
-			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, make([]*moira.NotificationEvent, 0))
 		})
 
 		Convey("Test removing notification events", func() {
@@ -188,7 +184,7 @@ func TestNotificationEventErrorConnection(t *testing.T) {
 	}
 
 	Convey("Should throw error when no connection", t, func() {
-		actual1, err := dataBase.GetNotificationEvents("123", 0, 1)
+		actual1, err := dataBase.GetNotificationEvents("123", 1)
 		So(actual1, ShouldBeNil)
 		So(err, ShouldNotBeNil)
 

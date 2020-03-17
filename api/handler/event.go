@@ -17,9 +17,7 @@ func event(router chi.Router) {
 
 func getEventsList(writer http.ResponseWriter, request *http.Request) {
 	triggerID := middleware.GetTriggerID(request)
-	size := middleware.GetSize(request)
-	page := middleware.GetPage(request)
-	eventsList, err := controller.GetTriggerEvents(database, triggerID, page, size)
+	eventsList, err := controller.GetTriggerEvents(database, triggerID)
 	if err != nil {
 		render.Render(writer, request, err)
 		return

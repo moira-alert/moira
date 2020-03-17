@@ -5,11 +5,12 @@
 package mock_moira_alert
 
 import (
+	reflect "reflect"
+	time "time"
+
 	gomock "github.com/golang/mock/gomock"
 	moira "github.com/moira-alert/moira"
 	tomb "gopkg.in/tomb.v2"
-	reflect "reflect"
-	time "time"
 )
 
 // MockDatabase is a mock of Database interface
@@ -387,18 +388,18 @@ func (mr *MockDatabaseMockRecorder) GetNotificationEventCount(arg0, arg1 interfa
 }
 
 // GetNotificationEvents mocks base method
-func (m *MockDatabase) GetNotificationEvents(arg0 string, arg1, arg2 int64) ([]*moira.NotificationEvent, error) {
+func (m *MockDatabase) GetNotificationEvents(arg0 string, arg1 int64) ([]*moira.NotificationEvent, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetNotificationEvents", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "GetNotificationEvents", arg0, arg1)
 	ret0, _ := ret[0].([]*moira.NotificationEvent)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetNotificationEvents indicates an expected call of GetNotificationEvents
-func (mr *MockDatabaseMockRecorder) GetNotificationEvents(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetNotificationEvents(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNotificationEvents", reflect.TypeOf((*MockDatabase)(nil).GetNotificationEvents), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNotificationEvents", reflect.TypeOf((*MockDatabase)(nil).GetNotificationEvents), arg0, arg1)
 }
 
 // GetNotifications mocks base method

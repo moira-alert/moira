@@ -50,7 +50,7 @@ type Database interface {
 	DeleteTriggerThrottling(triggerID string) error
 
 	// NotificationEvent storing
-	GetNotificationEvents(triggerID string, start, size int64) ([]*NotificationEvent, error)
+	GetNotificationEvents(triggerID string, size int64) ([]*NotificationEvent, error)
 	PushNotificationEvent(event *NotificationEvent, ui bool) error
 	GetNotificationEventCount(triggerID string, from int64) int64
 	FetchNotificationEvent() (NotificationEvent, error)

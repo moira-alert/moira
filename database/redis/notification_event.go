@@ -15,11 +15,13 @@ import (
 var eventsTTL int64 = 3600 * 24 * 30
 
 // GetNotificationEvents gets NotificationEvents by given triggerID and interval
-func (connector *DbConnector) GetNotificationEvents(triggerID string, start int64, size int64) ([]*moira.NotificationEvent, error) {
+func (connector *DbConnector) GetNotificationEvents(triggerID string, size int64) ([]*moira.NotificationEvent, error) {
 	c := connector.pool.Get()
 	defer c.Close()
-
-	eventsData, err := reply.Events(c.Do("ZREVRANGE", triggerEventsKey(triggerID), start, start+size))
+	if size == -1 {
+		size = 0
+	}
+	eventsData, err := reply.Events(c.Do("ZREVRANGE", triggerEventsKey(triggerID), 0, size))
 
 	if err != nil {
 		if err == redis.ErrNil {
