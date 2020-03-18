@@ -14,6 +14,7 @@ func TestPatternIndex(t *testing.T) {
 	Convey("Given patterns, should build index and match patterns", t, func() {
 		patterns := []string{
 			"Simple.matching.pattern",
+			"Simple.matching.pattern.*",
 			"Star.single.*",
 			"Star.*.double.any*",
 			"Bracket.{one,two,three}.pattern",
