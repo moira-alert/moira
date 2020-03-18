@@ -18,6 +18,7 @@ type PatternNode struct {
 	Hash       uint64
 	Prefix     string
 	InnerParts []string
+	Terminal   bool
 }
 
 // PatternIndex helps to index patterns and allows to match them by metric
@@ -37,7 +38,7 @@ func NewPatternIndex(logger moira.Logger, patterns []string) *PatternIndex {
 			logger.Warningf("Pattern %s is ignored because it contains an empty part", pattern)
 			continue
 		}
-		for _, part := range parts {
+		for i, part := range parts {
 			found := false
 			for _, child := range currentNode.Children {
 				if part == child.Part {
@@ -75,6 +76,9 @@ func NewPatternIndex(logger moira.Logger, patterns []string) *PatternIndex {
 				currentNode.Children = append(currentNode.Children, newNode)
 				currentNode = newNode
 			}
+			if i == len(parts)-1 {
+				currentNode.Terminal = true
+			}
 		}
 	}
 
@@ -111,7 +115,7 @@ func (source *PatternIndex) MatchPatterns(metric string) []string {
 
 	matched := make([]string, 0, found)
 	for _, node := range currentLevel {
-		if len(node.Children) == 0 {
+		if node.Terminal {
 			matched = append(matched, node.Prefix)
 		}
 	}
