@@ -7,7 +7,9 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/database/redis"
 	"github.com/moira-alert/moira/index/mapping"
+	"github.com/moira-alert/moira/logging/go-logging"
 )
 
 func BenchmarkFillIndexFullBatch(b *testing.B) {
@@ -92,6 +94,33 @@ func BenchmarkFillAlreadyFilledIndex(b *testing.B) {
 	}
 }
 
+func BenchmarkLocalRedis(b *testing.B) {
+	logger, _ := logging.ConfigureLog("log.log", "info", "test")
+
+	triggerMapping := mapping.BuildIndexMapping(mapping.Trigger{})
+	newIndex, _ := CreateTriggerIndex(triggerMapping)
+	database := redis.NewDatabase(logger, redis.Config{
+		Host:            "localhost",
+		Port:            "6379",
+		DB:              0,
+		ConnectionLimit: 100,
+	}, redis.API)
+	logger.Info("start indexing")
+	triggerIDs, _ := database.GetAllTriggerIDs()
+	logger.Infof("%d trigger ids", len(triggerIDs))
+	triggers, _ := database.GetTriggerChecks(triggerIDs)
+	logger.Infof("%d triggers", len(triggers))
+	newIndex.Write(triggers)
+	logger.Infof("finish indexing")
+
+	b.ResetTimer()
+	b.ReportAllocs()
+
+	for n := 0; n < b.N; n++ {
+		newIndex.Search([]string{"Snitch.Auto.Prod"}, "", false, 0, 8000)
+	}
+}
+
 func BenchmarkEmptySearch(b *testing.B) {
 	type config struct {
 		triggersCount int
@@ -121,7 +150,7 @@ func BenchmarkEmptySearch(b *testing.B) {
 				b.ReportAllocs()
 
 				for n := 0; n < b.N; n++ {
-					newIndex.Search(make([]string, 0), "", false, 0, testCase.pageSize)
+					newIndex.Search([]string{"Snitch.Auto.Prod"}, "", false, 0, testCase.pageSize)
 				}
 			})
 	}
@@ -143,7 +172,7 @@ func generateTriggerChecks(number int) []*moira.TriggerCheck {
 				ID:   uuid.Must(uuid.NewV4()).String(),
 				Name: randStringBytes(100),
 				Desc: &description,
-				Tags: []string{randStringBytes(5), randStringBytes(3)},
+				Tags: []string{randStringBytes(5), randStringBytes(3), "Snitch.Auto.Prod"},
 			},
 			LastCheck: moira.CheckData{
 				Score: rand.Int63n(1000),
