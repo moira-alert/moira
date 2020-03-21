@@ -167,7 +167,7 @@ func checkForEmptyStates(expression string) bool {
 	anyReturnValueExist := false
 	for i, c := range expression {
 		if c == ':' {
-			return checkForEmptyStates(expression[i+1:])
+			return checkForEmptyStates(expression[i+1 : len(expression)])
 		}
 		if c != ' ' && c != '(' && c != ')' {
 			anyReturnValueExist = true
