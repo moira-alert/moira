@@ -98,7 +98,7 @@ func getExpression(triggerExpression *TriggerExpression) (*govaluate.EvaluableEx
 		if triggerExpression.Expression == nil || *triggerExpression.Expression == "" {
 			return nil, fmt.Errorf("trigger_type set to expression, but no expression provided")
 		}
-		return getUserExpression(*triggerExpression.Expression)
+		return getUserExpression(triggerExpression)
 	}
 	return getSimpleExpression(triggerExpression)
 }
@@ -131,19 +131,65 @@ func getSimpleExpression(triggerExpression *TriggerExpression) (*govaluate.Evalu
 		triggerExpression.WarnValue, triggerExpression.ErrorValue, triggerExpression.TriggerType)
 }
 
-func getUserExpression(triggerExpression string) (*govaluate.EvaluableExpression, error) {
-	if expr, found := exprCache.Get(triggerExpression); found {
+func getUserExpression(triggerExpression *TriggerExpression) (*govaluate.EvaluableExpression, error) {
+	if expr, found := exprCache.Get(*triggerExpression.Expression); found {
 		return expr.(*govaluate.EvaluableExpression), nil
 	}
 
-	expr, err := govaluate.NewEvaluableExpression(triggerExpression)
+	expr, err := govaluate.NewEvaluableExpression(*triggerExpression.Expression)
+
 	if err != nil {
 		if strings.Contains(err.Error(), "Undefined function") {
 			return nil, fmt.Errorf("functions is forbidden")
 		}
 		return nil, err
 	}
-
-	exprCache.Add(triggerExpression, expr, cache.NoExpiration)
+	if err := triggerExpression.expressionExtraCheckLayer(expr.Vars()); err != nil {
+		return nil, err
+	}
+	exprCache.Add(*triggerExpression.Expression, expr, cache.NoExpiration)
 	return expr, nil
+}
+
+func (triggerExpression *TriggerExpression) expressionExtraCheckLayer(vars []string) error {
+	for _, v := range vars {
+		if _, err := triggerExpression.Get(v); err != nil {
+			return err
+		}
+	}
+	if isTernaryExpression(*triggerExpression.Expression) && !checkforColon(*triggerExpression.Expression) || !checkForEmptyStates(*triggerExpression.Expression) {
+		return fmt.Errorf("Invalid syntax")
+	}
+	return nil
+}
+
+func checkForEmptyStates(expression string) bool {
+	anyReturnValueExist := false
+	for i, c := range expression {
+		if c == ':' {
+			return checkForEmptyStates(expression[i+1:])
+		}
+		if c != ' ' && c != '(' && c != ')' {
+			anyReturnValueExist = true
+		}
+	}
+	return anyReturnValueExist
+}
+
+func checkforColon(expression string) bool {
+	for _, c := range expression {
+		if c == ':' {
+			return true
+		}
+	}
+	return false
+}
+
+func isTernaryExpression(expression string) bool {
+	for _, c := range expression {
+		if c == '?' {
+			return true
+		}
+	}
+	return false
 }

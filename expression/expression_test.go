@@ -77,6 +77,21 @@ func TestExpression(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(result, ShouldResemble, moira.StateERROR)
 
+		expression = "t1 > 10 && t2 > 3 ? ERROR : foo"
+		result, err = (&TriggerExpression{Expression: &expression, MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{"t2": 4.0}, TriggerType: moira.ExpressionTrigger}).Evaluate()
+		So(err, ShouldResemble, ErrInvalidExpression{fmt.Errorf("no value with name foo")})
+		So(result, ShouldBeEmpty)
+
+		expression = "t1 > 10 && t2 > 3 ? foo : ERROR"
+		result, err = (&TriggerExpression{Expression: &expression, MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{"t2": 4.0}, TriggerType: moira.ExpressionTrigger}).Evaluate()
+		So(err, ShouldResemble, ErrInvalidExpression{fmt.Errorf("no value with name foo")})
+		So(result, ShouldBeEmpty)
+
+		expression = "t1 > 10 && t2 > 3 ? ERROR"
+		result, err = (&TriggerExpression{Expression: &expression, MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{"t2": 4.0}, TriggerType: moira.ExpressionTrigger}).Evaluate()
+		So(err, ShouldResemble, ErrInvalidExpression{fmt.Errorf("Invalid syntax")})
+		So(result, ShouldBeEmpty)
+
 		expression = "min(t1, t2) > 10 ? ERROR : OK"
 		result, err = (&TriggerExpression{Expression: &expression, MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{"t2": 4.0}, TriggerType: moira.ExpressionTrigger}).Evaluate()
 		So(err, ShouldResemble, ErrInvalidExpression{fmt.Errorf("functions is forbidden")})
