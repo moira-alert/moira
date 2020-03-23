@@ -144,14 +144,15 @@ func getUserExpression(triggerExpression *TriggerExpression) (*govaluate.Evaluab
 		}
 		return nil, err
 	}
-	if err := triggerExpression.expressionExtraCheckLayer(expr.Vars()); err != nil {
+	if err := triggerExpression.validateUserExpression(expr.Vars()); err != nil {
 		return nil, err
 	}
 	exprCache.Add(*triggerExpression.Expression, expr, cache.NoExpiration)
 	return expr, nil
 }
 
-func (triggerExpression *TriggerExpression) expressionExtraCheckLayer(vars []string) error {
+// This expression validation catches those errors which are ignored by govaluate
+func (triggerExpression *TriggerExpression) validateUserExpression(vars []string) error {
 	for _, v := range vars {
 		if _, err := triggerExpression.Get(v); err != nil {
 			return err
