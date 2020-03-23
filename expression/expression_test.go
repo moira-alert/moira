@@ -92,6 +92,11 @@ func TestExpression(t *testing.T) {
 		So(err, ShouldResemble, ErrInvalidExpression{fmt.Errorf("Invalid syntax")})
 		So(result, ShouldBeEmpty)
 
+		expression = "?:?"
+		result, err = (&TriggerExpression{Expression: &expression, MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{"t2": 4.0}, TriggerType: moira.ExpressionTrigger}).Evaluate()
+		So(err, ShouldResemble, ErrInvalidExpression{fmt.Errorf("Invalid token: '?:?'")})
+		So(result, ShouldBeEmpty)
+
 		expression = "min(t1, t2) > 10 ? ERROR : OK"
 		result, err = (&TriggerExpression{Expression: &expression, MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{"t2": 4.0}, TriggerType: moira.ExpressionTrigger}).Evaluate()
 		So(err, ShouldResemble, ErrInvalidExpression{fmt.Errorf("functions is forbidden")})
