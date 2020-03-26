@@ -136,6 +136,10 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 		return err
 	}
 
+	if err := checkTTLSanity(trigger, metricsSource); err != nil {
+		return api.ErrInvalidRequestContent{ValidationError: err}
+	}
+
 	if err := resolvePatterns(request, trigger, &triggerExpression, metricsSource); err != nil {
 		return err
 	}
@@ -143,6 +147,19 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 		return err
 	}
 
+	return nil
+}
+
+func checkTTLSanity(trigger *Trigger, metricsSource metricSource.MetricSource) error {
+	maximumAllowedTTL := metricsSource.GetMetricsTTLSeconds()
+
+	if trigger.TTL > maximumAllowedTTL {
+		triggerType := "local"
+		if trigger.IsRemote {
+			triggerType = "remote"
+		}
+		return fmt.Errorf("TTL for %s trigger can't be more than %d seconds", triggerType, maximumAllowedTTL)
+	}
 	return nil
 }
 
