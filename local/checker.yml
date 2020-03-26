@@ -3,6 +3,7 @@ redis:
   host: redis
   port: "6379"
   dbid: 0
+  metrics_ttl: 3h
 telemetry:
   graphite:
     enabled: true
@@ -18,10 +19,10 @@ remote:
   url: "http://graphite:80/render"
   check_interval: 60s
   timeout: 60s
+  metrics_ttl: 7d
 checker:
   nodata_check_interval: 60s
   check_interval: 10s
-  metrics_ttl: 3h
   stop_checking_interval: 30s
 log:
   log_file: stdout

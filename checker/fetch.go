@@ -69,7 +69,7 @@ func (triggerChecker *TriggerChecker) fetch() (*metricSource.TriggerMetricsData,
 
 func (triggerChecker *TriggerChecker) cleanupMetricsValues(metrics []string, until int64) {
 	if len(metrics) > 0 {
-		if err := triggerChecker.database.RemoveMetricsValues(metrics, until-triggerChecker.config.MetricsTTLSeconds); err != nil {
+		if err := triggerChecker.database.RemoveMetricsValues(metrics, until-triggerChecker.database.GetMetricsTTLSeconds()); err != nil {
 			triggerChecker.logger.Error(err.Error())
 		}
 	}

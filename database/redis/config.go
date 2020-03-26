@@ -1,5 +1,7 @@
 package redis
 
+import "time"
+
 // Config - Redis database connection config
 type Config struct {
 	MasterName        string
@@ -9,4 +11,5 @@ type Config struct {
 	DB                int
 	ConnectionLimit   int
 	AllowSlaveReads   bool
+	MetricsTTL        time.Duration
 }

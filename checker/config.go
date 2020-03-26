@@ -10,7 +10,6 @@ type Config struct {
 	NoDataCheckInterval         time.Duration
 	CheckInterval               time.Duration
 	LazyTriggersCheckInterval   time.Duration
-	MetricsTTLSeconds           int64
 	StopCheckingIntervalSeconds int64
 	MaxParallelChecks           int
 	MaxParallelRemoteChecks     int

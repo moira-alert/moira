@@ -45,6 +45,7 @@ type DbConnector struct {
 	retentionSavingCache *cache.Cache
 	metricsCache         *cache.Cache
 	sync                 *redsync.Redsync
+	metricsTTLSeconds    int64
 	source               DBSource
 	slaveConnector       *DbConnector
 }
@@ -88,6 +89,7 @@ func NewDatabase(logger moira.Logger, config Config, source DBSource) *DbConnect
 		retentionSavingCache: cache.New(cache.NoExpiration, cache.DefaultExpiration),
 		metricsCache:         cache.New(cacheValueExpirationDuration, cacheCleanupInterval),
 		sync:                 redsync.New([]redsync.Pool{syncPool}),
+		metricsTTLSeconds:    int64(config.MetricsTTL.Seconds()),
 		source:               source,
 	}
 

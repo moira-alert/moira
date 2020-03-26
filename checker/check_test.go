@@ -491,14 +491,12 @@ func TestCheckErrors(t *testing.T) {
 		database:  dataBase,
 		source:    source,
 		logger:    logger,
-		config: &Config{
-			MetricsTTLSeconds: 10,
-		},
-		metrics:  checkerMetrics.LocalMetrics,
-		from:     17,
-		until:    67,
-		ttl:      ttl,
-		ttlState: moira.TTLStateNODATA,
+		config:    &Config{},
+		metrics:   checkerMetrics.LocalMetrics,
+		from:      17,
+		until:     67,
+		ttl:       ttl,
+		ttlState:  moira.TTLStateNODATA,
 		trigger: &moira.Trigger{
 			Name:        "Super trigger",
 			ErrorValue:  &errValue,
@@ -530,6 +528,7 @@ func TestCheckErrors(t *testing.T) {
 		}
 
 		source.EXPECT().Fetch(pattern, triggerChecker.from, triggerChecker.until, true).Return(nil, metricErr)
+		dataBase.EXPECT().GetMetricsTTLSeconds().Return(int64(10))
 		dataBase.EXPECT().SetTriggerLastCheck(triggerChecker.triggerID, &lastCheck, triggerChecker.trigger.IsRemote).Return(nil)
 		err := triggerChecker.Check()
 		So(err, ShouldBeNil)
@@ -619,6 +618,7 @@ func TestIgnoreNodataToOk(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	var retention int64 = 10
+	var metricsTTL int64 = 3600
 	var warnValue float64 = 10
 	var errValue float64 = 20
 	pattern := "super.puper.pattern"
@@ -634,13 +634,11 @@ func TestIgnoreNodataToOk(t *testing.T) {
 		database:  dataBase,
 		source:    source,
 		logger:    logger,
-		config: &Config{
-			MetricsTTLSeconds: 3600,
-		},
-		from:     3617,
-		until:    3667,
-		ttl:      ttl,
-		ttlState: moira.TTLStateNODATA,
+		config:    &Config{},
+		from:      3617,
+		until:     3667,
+		ttl:       ttl,
+		ttlState:  moira.TTLStateNODATA,
 		trigger: &moira.Trigger{
 			ErrorValue:  &errValue,
 			WarnValue:   &warnValue,
@@ -656,7 +654,8 @@ func TestIgnoreNodataToOk(t *testing.T) {
 		source.EXPECT().Fetch(pattern, triggerChecker.from, triggerChecker.until, true).Return(fetchResult, nil)
 		fetchResult.EXPECT().GetMetricsData().Return([]*metricSource.MetricData{metricSource.MakeMetricData(metric, []float64{0, 1, 2, 3, 4}, retention, triggerChecker.from)})
 		fetchResult.EXPECT().GetPatternMetrics().Return([]string{metric}, nil)
-		dataBase.EXPECT().RemoveMetricsValues([]string{metric}, triggerChecker.until-triggerChecker.config.MetricsTTLSeconds)
+		dataBase.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
+		dataBase.EXPECT().RemoveMetricsValues([]string{metric}, triggerChecker.until-3600)
 		checkData, err := triggerChecker.checkTrigger()
 		So(err, ShouldBeNil)
 		So(checkData, ShouldResemble, moira.CheckData{
@@ -685,6 +684,7 @@ func TestHandleTrigger(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	var retention int64 = 10
+	var metricsTTL int64 = 3600
 	var warnValue float64 = 10
 	var errValue float64 = 20
 	pattern := "super.puper.pattern"
@@ -700,13 +700,11 @@ func TestHandleTrigger(t *testing.T) {
 		database:  dataBase,
 		source:    source,
 		logger:    logger,
-		config: &Config{
-			MetricsTTLSeconds: 3600,
-		},
-		from:     3617,
-		until:    3667,
-		ttl:      ttl,
-		ttlState: moira.TTLStateNODATA,
+		config:    &Config{},
+		from:      3617,
+		until:     3667,
+		ttl:       ttl,
+		ttlState:  moira.TTLStateNODATA,
 		trigger: &moira.Trigger{
 			ErrorValue:  &errValue,
 			WarnValue:   &warnValue,
@@ -723,7 +721,8 @@ func TestHandleTrigger(t *testing.T) {
 		fetchResult.EXPECT().GetPatternMetrics().Return([]string{metric}, nil)
 		var val float64
 		var val1 float64 = 4
-		dataBase.EXPECT().RemoveMetricsValues([]string{metric}, triggerChecker.until-triggerChecker.config.MetricsTTLSeconds)
+		dataBase.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
+		dataBase.EXPECT().RemoveMetricsValues([]string{metric}, triggerChecker.until-3600)
 		dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
 			TriggerID: triggerChecker.triggerID,
 			Timestamp: 3617,
@@ -767,7 +766,8 @@ func TestHandleTrigger(t *testing.T) {
 		source.EXPECT().Fetch(pattern, triggerChecker.from, triggerChecker.until, true).Return(fetchResult, nil)
 		fetchResult.EXPECT().GetMetricsData().Return([]*metricSource.MetricData{metricSource.MakeMetricData(metric, []float64{0, 1, 2, 3, 4}, retention, triggerChecker.from)})
 		fetchResult.EXPECT().GetPatternMetrics().Return([]string{metric}, nil)
-		dataBase.EXPECT().RemoveMetricsValues([]string{metric}, triggerChecker.until-triggerChecker.config.MetricsTTLSeconds)
+		dataBase.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
+		dataBase.EXPECT().RemoveMetricsValues([]string{metric}, triggerChecker.until-3600)
 		checkData, err := triggerChecker.checkTrigger()
 		So(err, ShouldBeNil)
 		var val1 float64 = 4
@@ -793,7 +793,8 @@ func TestHandleTrigger(t *testing.T) {
 		source.EXPECT().Fetch(pattern, triggerChecker.from, triggerChecker.until, true).Return(fetchResult, nil)
 		fetchResult.EXPECT().GetMetricsData().Return([]*metricSource.MetricData{metricSource.MakeMetricData(metric, []float64{}, retention, triggerChecker.from)})
 		fetchResult.EXPECT().GetPatternMetrics().Return([]string{metric}, nil)
-		dataBase.EXPECT().RemoveMetricsValues([]string{metric}, triggerChecker.until-triggerChecker.config.MetricsTTLSeconds)
+		dataBase.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
+		dataBase.EXPECT().RemoveMetricsValues([]string{metric}, triggerChecker.until-3600)
 		dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
 			TriggerID: triggerChecker.triggerID,
 			Timestamp: lastCheck.Timestamp,
@@ -830,13 +831,11 @@ func TestHandleTrigger(t *testing.T) {
 			database:  dataBase,
 			source:    source,
 			logger:    logger,
-			config: &Config{
-				MetricsTTLSeconds: 3600,
-			},
-			from:     3617,
-			until:    3667,
-			ttl:      ttl,
-			ttlState: moira.TTLStateNODATA,
+			config:    &Config{},
+			from:      3617,
+			until:     3667,
+			ttl:       ttl,
+			ttlState:  moira.TTLStateNODATA,
 			trigger: &moira.Trigger{
 				ErrorValue:  &errValue,
 				WarnValue:   &warnValue,
@@ -857,6 +856,7 @@ func TestHandleTrigger(t *testing.T) {
 			metricSource.MakeMetricData("super", []float64{0, 1, 2, 3}, retention, triggerChecker1.from),
 		})
 		fetchResult.EXPECT().GetPatternMetrics().Return([]string{metric1, metric2}, nil)
+		dataBase.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
 		dataBase.EXPECT().RemoveMetricsValues([]string{metric1, metric2}, gomock.Any())
 		dataBase.EXPECT().PushNotificationEvent(gomock.Any(), true).Return(nil)
 		checkData, err := triggerChecker1.checkTrigger()
@@ -890,7 +890,8 @@ func TestHandleTrigger(t *testing.T) {
 		source.EXPECT().Fetch(pattern, triggerChecker.from, triggerChecker.until, true).Return(fetchResult, nil)
 		fetchResult.EXPECT().GetMetricsData().Return([]*metricSource.MetricData{metricSource.MakeMetricData(metric, []float64{}, retention, triggerChecker.from)})
 		fetchResult.EXPECT().GetPatternMetrics().Return([]string{metric}, nil)
-		dataBase.EXPECT().RemoveMetricsValues([]string{metric}, triggerChecker.until-triggerChecker.config.MetricsTTLSeconds)
+		dataBase.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
+		dataBase.EXPECT().RemoveMetricsValues([]string{metric}, triggerChecker.until-3600)
 		dataBase.EXPECT().RemovePatternsMetrics(triggerChecker.trigger.Patterns).Return(nil)
 
 		checkData, err := triggerChecker.checkTrigger()
