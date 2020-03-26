@@ -106,6 +106,11 @@ func (local *Local) Fetch(target string, from int64, until int64, allowRealTimeA
 	return result, nil
 }
 
+// GetMetricsTTLSeconds returns metrics lifetime in Redis
+func (local *Local) GetMetricsTTLSeconds() int64 {
+	return local.dataBase.GetMetricsTTLSeconds()
+}
+
 // IsConfigured always returns true. It easy to configure local source =)
 func (local *Local) IsConfigured() (bool, error) {
 	return true, nil

@@ -68,6 +68,11 @@ func (remote *Remote) Fetch(target string, from, until int64, allowRealTimeAlert
 	return &fetchResult, nil
 }
 
+// GetMetricsTTLSeconds returns maximum time interval that we are allowed to fetch from remote
+func (remote *Remote) GetMetricsTTLSeconds() int64 {
+	return int64(remote.config.MetricsTTL.Seconds())
+}
+
 // IsConfigured returns false in cases that user does not properly configure remote settings like graphite URL
 func (remote *Remote) IsConfigured() (bool, error) {
 	if remote.config.isEnabled() {

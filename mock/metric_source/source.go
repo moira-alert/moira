@@ -48,6 +48,20 @@ func (mr *MockMetricSourceMockRecorder) Fetch(arg0, arg1, arg2, arg3 interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Fetch", reflect.TypeOf((*MockMetricSource)(nil).Fetch), arg0, arg1, arg2, arg3)
 }
 
+// GetMetricsTTLSeconds mocks base method
+func (m *MockMetricSource) GetMetricsTTLSeconds() int64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMetricsTTLSeconds")
+	ret0, _ := ret[0].(int64)
+	return ret0
+}
+
+// GetMetricsTTLSeconds indicates an expected call of GetMetricsTTLSeconds
+func (mr *MockMetricSourceMockRecorder) GetMetricsTTLSeconds() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMetricsTTLSeconds", reflect.TypeOf((*MockMetricSource)(nil).GetMetricsTTLSeconds))
+}
+
 // IsConfigured mocks base method
 func (m *MockMetricSource) IsConfigured() (bool, error) {
 	m.ctrl.T.Helper()
