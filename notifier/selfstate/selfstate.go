@@ -135,14 +135,14 @@ func (selfCheck *SelfCheckWorker) check(nowTS int64, lastMetricReceivedTS, redis
 			interval := nowTS - *lastMetricReceivedTS
 			selfCheck.Logger.Errorf("%s more than %ds. Send message.", filterStateErrorMessage, interval)
 			appendNotificationEvents(&events, filterStateErrorMessage, interval)
-			selfCheck.setNotifierState(moira.SelfStateERROR)
+			selfCheck.setNotifierState(moira.SelfStateERROR, filterStateErrorMessage)
 		}
 
 		if *lastCheckTS < nowTS-selfCheck.Config.LastCheckDelaySeconds && err == nil {
 			interval := nowTS - *lastCheckTS
 			selfCheck.Logger.Errorf("%s more than %ds. Send message.", checkerStateErrorMessage, interval)
 			appendNotificationEvents(&events, checkerStateErrorMessage, interval)
-			selfCheck.setNotifierState(moira.SelfStateERROR)
+			selfCheck.setNotifierState(moira.SelfStateERROR, checkerStateErrorMessage)
 		}
 
 		if selfCheck.Config.RemoteTriggersEnabled {
@@ -153,7 +153,7 @@ func (selfCheck *SelfCheckWorker) check(nowTS int64, lastMetricReceivedTS, redis
 			}
 		}
 
-		if notifierState, _ := selfCheck.DB.GetNotifierState(); notifierState != moira.SelfStateOK {
+		if notifierState, _, _ := selfCheck.DB.GetNotifierState(); notifierState != moira.SelfStateOK {
 			selfCheck.Logger.Errorf("%s. Send message.", notifierStateErrorMessage(notifierState))
 			appendNotificationEvents(&events, notifierStateErrorMessage(notifierState), 0)
 		}
@@ -200,8 +200,8 @@ func (selfCheck *SelfCheckWorker) sendErrorMessages(events *[]moira.Notification
 	}
 }
 
-func (selfCheck *SelfCheckWorker) setNotifierState(state string) {
-	err := selfCheck.DB.SetNotifierState(state)
+func (selfCheck *SelfCheckWorker) setNotifierState(state, message string) {
+	err := selfCheck.DB.SetNotifierState(state, message)
 	if err != nil {
 		selfCheck.Logger.Errorf("Can't set notifier state: %v", err)
 	}

@@ -47,28 +47,43 @@ func (connector *DbConnector) GetRemoteChecksUpdatesCount() (int64, error) {
 }
 
 // GetNotifierState return current notifier state: <OK|ERROR>
-func (connector *DbConnector) GetNotifierState() (string, error) {
+func (connector *DbConnector) GetNotifierState() (string, string, error) {
 	c := connector.pool.Get()
 	defer c.Close()
-	ts, err := redis.String(c.Do("GET", selfStateNotifierHealth))
-	if err == redis.ErrNil {
-		ts = moira.SelfStateOK
-		err = connector.SetNotifierState(ts)
-	} else if err != nil {
-		ts = moira.SelfStateERROR
+
+	var state, message string
+	stateArgs := []interface{} {selfStateNotifierHealth, selfStateNotifierMessage }
+	values, err := redis.Strings(c.Do("MGET", stateArgs...))
+	if err != nil {
+		state = moira.SelfStateERROR
+		message = moira.SelfStateErrorMessage
+	} else {
+		state = values[0]
+		message = values[1]
+		if state == "" && message == "" {
+			state = moira.SelfStateOK
+			message = moira.SelfStateOKMessage
+			err = connector.SetNotifierState(state, message)
+		} else if state == moira.SelfStateERROR && message == "" {
+			message = moira.SelfStateErrorMessage
+		}
 	}
-	return ts, err
+	return state, message, err
 }
 
-// SetNotifierState update current notifier state: <OK|ERROR>
-func (connector *DbConnector) SetNotifierState(health string) error {
+// SetNotifierState update current notifier state (<OK|ERROR>) and the appropriate message
+func (connector *DbConnector) SetNotifierState(state, message string) error {
+	if message == "" && state == moira.SelfStateERROR{
+		message = moira.SelfStateErrorMessage
+	}
 	c := connector.pool.Get()
 	defer c.Close()
 
-	return c.Send("SET", selfStateNotifierHealth, health)
+	return c.Send("MSET", selfStateNotifierHealth, state, selfStateNotifierMessage, message)
 }
 
 var selfStateMetricsHeartbeatKey = "moira-selfstate:metrics-heartbeat"
 var selfStateChecksCounterKey = "moira-selfstate:checks-counter"
 var selfStateRemoteChecksCounterKey = "moira-selfstate:remote-checks-counter"
 var selfStateNotifierHealth = "moira-selfstate:notifier-health"
+var selfStateNotifierMessage = "moira-selfstate:notifier-message"

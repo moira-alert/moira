@@ -50,7 +50,7 @@ func TestDatabaseDisconnected(t *testing.T) {
 			err := fmt.Errorf("DataBase doesn't work")
 			mock.database.EXPECT().GetMetricsUpdatesCount().Return(int64(1), nil)
 			mock.database.EXPECT().GetChecksUpdatesCount().Return(int64(1), err)
-			mock.database.EXPECT().GetNotifierState().Return(moira.SelfStateERROR, err)
+			mock.database.EXPECT().GetNotifierState().Return(moira.SelfStateERROR, moira.SelfStateErrorMessage, err)
 
 			now := time.Now()
 			redisLastCheckTS = now.Add(-time.Second * 11).Unix()
@@ -113,8 +113,8 @@ func TestMoiraCacheDoesNotReceivedNewMetrics(t *testing.T) {
 		appendNotificationEvents(&events, notifierStateErrorMessage(moira.SelfStateERROR), 0)
 		expectedPackage := configureNotificationPackage(adminContact, &events)
 
-		mock.database.EXPECT().SetNotifierState(moira.SelfStateERROR).Return(nil)
-		mock.database.EXPECT().GetNotifierState().Return(moira.SelfStateERROR, nil)
+		mock.database.EXPECT().SetNotifierState(moira.SelfStateERROR, filterStateErrorMessage).Return(nil)
+		mock.database.EXPECT().GetNotifierState().Return(moira.SelfStateERROR, filterStateErrorMessage, nil)
 		mock.notif.EXPECT().Send(&expectedPackage, &sendingWG)
 		mock.selfCheckWorker.check(callingNow.Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS, &lastRemoteCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount, &remoteChecksCount)
 
@@ -164,9 +164,8 @@ func TestMoiraCheckerDoesNotChecksTriggers(t *testing.T) {
 		appendNotificationEvents(&events, checkerStateErrorMessage, callingNow.Unix()-lastCheckTS)
 		appendNotificationEvents(&events, notifierStateErrorMessage(moira.SelfStateERROR), 0)
 		expectedPackage := configureNotificationPackage(adminContact, &events)
-
-		mock.database.EXPECT().SetNotifierState(moira.SelfStateERROR).Return(nil)
-		mock.database.EXPECT().GetNotifierState().Return(moira.SelfStateERROR, nil)
+		mock.database.EXPECT().SetNotifierState(moira.SelfStateERROR, checkerStateErrorMessage).Return(nil)
+		mock.database.EXPECT().GetNotifierState().Return(moira.SelfStateERROR, checkerStateErrorMessage, nil)
 		mock.notif.EXPECT().Send(&expectedPackage, &sendingWG)
 		mock.selfCheckWorker.check(callingNow.Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS, &lastRemoteCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount, &remoteChecksCount)
 
@@ -218,7 +217,7 @@ func TestMoiraCheckerDoesNotChecksRemoteTriggers(t *testing.T) {
 		appendNotificationEvents(&events, remoteCheckerStateErrorMessage, callingNow.Unix()-lastRemoteCheckTS)
 		expectedPackage := configureNotificationPackage(adminContact, &events)
 
-		mock.database.EXPECT().GetNotifierState().Return(moira.SelfStateOK, nil)
+		mock.database.EXPECT().GetNotifierState().Return(moira.SelfStateOK, moira.SelfStateOKMessage, nil)
 		mock.notif.EXPECT().Send(&expectedPackage, &sendingWG)
 		mock.selfCheckWorker.check(callingNow.Unix(), &lastMetricReceivedTS, &redisLastCheckTS, &lastCheckTS, &lastRemoteCheckTS, &nextSendErrorMessage, &metricsCount, &checksCount, &remoteChecksCount)
 
@@ -274,7 +273,7 @@ func TestRunGoRoutine(t *testing.T) {
 		err := fmt.Errorf("DataBase doesn't work")
 		database.EXPECT().GetMetricsUpdatesCount().Return(int64(1), nil).Times(11)
 		database.EXPECT().GetChecksUpdatesCount().Return(int64(1), err).Times(11)
-		database.EXPECT().GetNotifierState().Return(moira.SelfStateERROR, err).Times(3)
+		database.EXPECT().GetNotifierState().Return(moira.SelfStateERROR, moira.SelfStateErrorMessage, err).Times(3)
 		notif.EXPECT().Send(gomock.Any(), gomock.Any()).Times(3)
 		selfStateWorker.Start()
 		time.Sleep(time.Second*11 + time.Millisecond*500)

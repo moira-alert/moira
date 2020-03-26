@@ -10,6 +10,8 @@ type TTLState string
 const (
 	SelfStateOK    = "OK"    // OK means notifier is healthy
 	SelfStateERROR = "ERROR" // ERROR means notifier is stopped, admin intervention is required
+	SelfStateOKMessage = ""
+	SelfStateErrorMessage = "Something unexpected happened to Moira, so we temporarily turned off the notification mailing."
 )
 
 // Moira trigger and metric states

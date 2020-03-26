@@ -14,8 +14,8 @@ type Database interface {
 	GetMetricsUpdatesCount() (int64, error)
 	GetChecksUpdatesCount() (int64, error)
 	GetRemoteChecksUpdatesCount() (int64, error)
-	GetNotifierState() (string, error)
-	SetNotifierState(string) error
+	GetNotifierState() (state, message string, err error)
+	SetNotifierState(state, message string) error
 
 	// Tag storing
 	GetTagNames() ([]string, error)

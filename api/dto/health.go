@@ -8,10 +8,6 @@ import (
 	"github.com/moira-alert/moira"
 )
 
-const (
-	ErrorMessage = "Something unexpected happened to Moira, so we temporarily turned off the notification mailing. We are already working on the problem and will fix it in the near future."
-)
-
 type NotifierState struct {
 	State   string `json:"state"`
 	Message string `json:"message,omitempty"`

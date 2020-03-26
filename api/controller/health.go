@@ -8,14 +8,14 @@ import (
 
 // GetNotifierState return current notifier state
 func GetNotifierState(database moira.Database) (*dto.NotifierState, *api.ErrorResponse) {
-	state, err := database.GetNotifierState()
+	state, message, err := database.GetNotifierState()
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
 
-	notifierState := dto.NotifierState{State: state}
-	if state == moira.SelfStateERROR {
-		notifierState.Message = dto.ErrorMessage
+	notifierState := dto.NotifierState{State: state, Message: message}
+	if state == moira.SelfStateERROR && message == "" {
+		notifierState.Message = moira.SelfStateErrorMessage
 	}
 
 	return &notifierState, nil
@@ -23,7 +23,10 @@ func GetNotifierState(database moira.Database) (*dto.NotifierState, *api.ErrorRe
 
 // UpdateNotifierState update current notifier state
 func UpdateNotifierState(database moira.Database, state *dto.NotifierState) *api.ErrorResponse {
-	err := database.SetNotifierState(state.State)
+	if state.State == moira.SelfStateERROR && state.Message == "" {
+		state.Message = moira.SelfStateErrorMessage
+	}
+	err := database.SetNotifierState(state.State, state.Message)
 	if err != nil {
 		return api.ErrorInternalServer(err)
 	}

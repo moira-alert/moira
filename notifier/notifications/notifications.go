@@ -54,12 +54,12 @@ func (worker *FetchNotificationsWorker) Stop() error {
 }
 
 func (worker *FetchNotificationsWorker) processScheduledNotifications() error {
-	state, err := worker.Database.GetNotifierState()
+	state, message, err := worker.Database.GetNotifierState()
 	if err != nil {
 		return notifierInBadStateError("can't get current notifier state")
 	}
 	if state != moira.SelfStateOK {
-		return notifierInBadStateError(fmt.Sprintf("notifier in a bad state: %v", state))
+		return notifierInBadStateError(fmt.Sprintf("notifier in error state: %v", message))
 	}
 	notifications, err := worker.Database.FetchNotifications(time.Now().Unix())
 	if err != nil {

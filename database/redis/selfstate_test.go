@@ -114,32 +114,36 @@ func TestNotifierState(t *testing.T) {
 	defer dataBase.flush()
 	Convey(fmt.Sprintf("Test on empty key '%v'", selfStateNotifierHealth), t, func() {
 		Convey("On empty database should return ERROR", func() {
-			notifierState, err := emptyDataBase.GetNotifierState()
+			notifierState, notifierMessage, err := emptyDataBase.GetNotifierState()
 			So(notifierState, ShouldEqual, moira.SelfStateERROR)
+			So(notifierMessage, ShouldEqual, moira.SelfStateErrorMessage)
 			So(err, ShouldNotBeNil)
 		})
 		Convey("On real database should return OK", func() {
-			notifierState, err := dataBase.GetNotifierState()
+			notifierState, notifierMessage, err := dataBase.GetNotifierState()
 			So(notifierState, ShouldEqual, moira.SelfStateOK)
+			So(notifierMessage, ShouldEqual, moira.SelfStateOKMessage)
 			So(err, ShouldBeNil)
 		})
 	})
 
 	Convey(fmt.Sprintf("Test setting '%v' and reading it back", selfStateNotifierHealth), t, func() {
 		Convey("Switch notifier to OK", func() {
-			err := dataBase.SetNotifierState(moira.SelfStateOK)
-			actualNotifierState, err2 := dataBase.GetNotifierState()
+			err := dataBase.SetNotifierState(moira.SelfStateOK, moira.SelfStateOKMessage)
+			actualNotifierState, actualNotifierMessage, err2 := dataBase.GetNotifierState()
 
 			So(actualNotifierState, ShouldEqual, moira.SelfStateOK)
+			So(actualNotifierMessage, ShouldEqual, moira.SelfStateOKMessage)
 			So(err, ShouldBeNil)
 			So(err2, ShouldBeNil)
 		})
 
 		Convey("Switch notifier to ERROR", func() {
-			err := dataBase.SetNotifierState(moira.SelfStateERROR)
-			actualNotifierState, err2 := dataBase.GetNotifierState()
+			err := dataBase.SetNotifierState(moira.SelfStateERROR, moira.SelfStateErrorMessage)
+			actualNotifierState, actualNotifierMessage, err2 := dataBase.GetNotifierState()
 
 			So(actualNotifierState, ShouldEqual, moira.SelfStateERROR)
+			So(actualNotifierMessage, ShouldEqual, moira.SelfStateErrorMessage)
 			So(err, ShouldBeNil)
 			So(err2, ShouldBeNil)
 		})

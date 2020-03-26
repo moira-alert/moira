@@ -418,12 +418,13 @@ func (mr *MockDatabaseMockRecorder) GetNotifications(arg0, arg1 interface{}) *go
 }
 
 // GetNotifierState mocks base method
-func (m *MockDatabase) GetNotifierState() (string, error) {
+func (m *MockDatabase) GetNotifierState() (string, string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetNotifierState")
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(string)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // GetNotifierState indicates an expected call of GetNotifierState
@@ -1122,17 +1123,17 @@ func (mr *MockDatabaseMockRecorder) SaveTriggersSearchResults(arg0, arg1 interfa
 }
 
 // SetNotifierState mocks base method
-func (m *MockDatabase) SetNotifierState(arg0 string) error {
+func (m *MockDatabase) SetNotifierState(arg0, arg1 string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetNotifierState", arg0)
+	ret := m.ctrl.Call(m, "SetNotifierState", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SetNotifierState indicates an expected call of SetNotifierState
-func (mr *MockDatabaseMockRecorder) SetNotifierState(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) SetNotifierState(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetNotifierState", reflect.TypeOf((*MockDatabase)(nil).SetNotifierState), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetNotifierState", reflect.TypeOf((*MockDatabase)(nil).SetNotifierState), arg0, arg1)
 }
 
 // SetTriggerCheckLock mocks base method

@@ -90,7 +90,7 @@ func TestProcessScheduledEvent(t *testing.T) {
 		}
 		notifier.EXPECT().Send(&pkg1, gomock.Any())
 		notifier.EXPECT().Send(&pkg2, gomock.Any())
-		dataBase.EXPECT().GetNotifierState().Return(moira.SelfStateOK, nil)
+		dataBase.EXPECT().GetNotifierState().Return(moira.SelfStateOK, moira.SelfStateOKMessage, nil)
 		err := worker.processScheduledNotifications()
 		So(err, ShouldBeEmpty)
 	})
@@ -114,7 +114,7 @@ func TestProcessScheduledEvent(t *testing.T) {
 		}
 
 		notifier.EXPECT().Send(&pkg, gomock.Any())
-		dataBase.EXPECT().GetNotifierState().Return(moira.SelfStateOK, nil)
+		dataBase.EXPECT().GetNotifierState().Return(moira.SelfStateOK, moira.SelfStateOKMessage, nil)
 		err := worker.processScheduledNotifications()
 		So(err, ShouldBeEmpty)
 	})
@@ -159,7 +159,7 @@ func TestGoRoutine(t *testing.T) {
 	dataBase.EXPECT().FetchNotifications(gomock.Any()).Return([]*moira.ScheduledNotification{&notification1}, nil)
 	notifier.EXPECT().Send(&pkg, gomock.Any()).Do(func(f ...interface{}) { close(shutdown) })
 	notifier.EXPECT().StopSenders()
-	dataBase.EXPECT().GetNotifierState().Return(moira.SelfStateOK, nil)
+	dataBase.EXPECT().GetNotifierState().Return(moira.SelfStateOK, moira.SelfStateOKMessage, nil)
 
 	worker.Start()
 	waitTestEnd(shutdown, worker)
