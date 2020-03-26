@@ -25,6 +25,7 @@ func getDefault() config {
 			Host:            "localhost",
 			Port:            "6379",
 			ConnectionLimit: 512,
+			MetricsTTL:      "1h",
 		},
 		Cleanup: cleanupConfig{
 			Whitelist: []string{},

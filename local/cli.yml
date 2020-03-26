@@ -2,6 +2,7 @@ redis:
   host: redis
   port: "6379"
   dbid: 0
+  metrics_ttl: 3h
 log_file: stdout
 log_level: debug
 

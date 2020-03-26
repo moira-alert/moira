@@ -232,6 +232,11 @@ func (connector *DbConnector) RemoveMetricValues(metric string, toTime int64) er
 	return nil
 }
 
+// GetMetricsTTLSeconds returns maximum time in seconds to store metrics in Redis
+func (connector *DbConnector) GetMetricsTTLSeconds() int64 {
+	return connector.metricsTTLSeconds
+}
+
 // RemoveMetricsValues remove metrics timestamps values from 0 to given time
 func (connector *DbConnector) RemoveMetricsValues(metrics []string, toTime int64) error {
 	c := connector.pool.Get()

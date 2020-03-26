@@ -59,10 +59,12 @@ func TestEvaluateTarget(t *testing.T) {
 	var from int64 = 17
 	var until int64 = 67
 	var retention int64 = 10
+	var metricsTTL int64 = 3600
 	metricErr := fmt.Errorf("Ooops, metric error")
 
 	Convey("Errors tests", t, func() {
 		Convey("Error while ParseExpr", func() {
+			dataBase.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
 			result, err := localSource.Fetch("", from, until, true)
 			So(err, ShouldResemble, ErrParseExpr{target: "", internalError: parser.ErrMissingExpr})
 			So(err.Error(), ShouldResemble, "failed to parse target '': missing expression")
@@ -73,6 +75,7 @@ func TestEvaluateTarget(t *testing.T) {
 			dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
 			dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 			dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(nil, metricErr)
+			dataBase.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
 			result, err := localSource.Fetch("super.puper.pattern", from, until, true)
 			So(err, ShouldResemble, metricErr)
 			So(result, ShouldBeNil)
@@ -82,6 +85,7 @@ func TestEvaluateTarget(t *testing.T) {
 			dataBase.EXPECT().GetPatternMetrics("super.puper.pattern").Return([]string{metric}, nil)
 			dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 			dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
+			dataBase.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
 			result, err := localSource.Fetch("aliasByNoe(super.puper.pattern, 2)", from, until, true)
 			So(err.Error(), ShouldResemble, "Unknown graphite function: \"aliasByNoe\"")
 			So(result, ShouldBeNil)
@@ -91,6 +95,7 @@ func TestEvaluateTarget(t *testing.T) {
 			dataBase.EXPECT().GetPatternMetrics("super.puper.pattern").Return([]string{metric}, nil)
 			dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 			dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
+			dataBase.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
 			result, err := localSource.Fetch("movingAverage(super.puper.pattern, -1)", from, until, true)
 			expectedErrSubstring := strings.Split(ErrEvaluateTargetFailedWithPanic{target: "movingAverage(super.puper.pattern, -1)"}.Error(), ":")[0]
 			So(err.Error(), ShouldStartWith, expectedErrSubstring)
@@ -100,6 +105,7 @@ func TestEvaluateTarget(t *testing.T) {
 
 	Convey("Test no metrics", t, func() {
 		dataBase.EXPECT().GetPatternMetrics("super.puper.pattern").Return([]string{}, nil)
+		dataBase.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
 		result, err := localSource.Fetch("aliasByNode(super.puper.pattern, 2)", from, until, true)
 		So(err, ShouldBeNil)
 		So(result, ShouldResemble, &FetchResult{
@@ -120,6 +126,7 @@ func TestEvaluateTarget(t *testing.T) {
 		dataBase.EXPECT().GetPatternMetrics("super.puper.pattern").Return([]string{metric}, nil)
 		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 		dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
+		dataBase.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
 		result, err := localSource.Fetch("aliasByNode(super.puper.pattern, 2)", from, until, true)
 		So(err, ShouldBeNil)
 		So(result, ShouldResemble, &FetchResult{
@@ -136,10 +143,45 @@ func TestEvaluateTarget(t *testing.T) {
 		})
 	})
 
+	Convey("Test enormous fetch interval", t, func() {
+		var fromLongAgo int64 = 0
+		var untilDistantFuture int64 = 1e15
+		var ttl = retention - 1
+		var distantFutureDataList = map[string][]*moira.MetricValue{
+			metric: {
+				{
+					RetentionTimestamp: untilDistantFuture,
+					Timestamp:          untilDistantFuture,
+					Value:              0,
+				},
+			},
+		}
+
+		dataBase.EXPECT().GetPatternMetrics("super.puper.pattern").Return([]string{metric}, nil)
+		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
+		dataBase.EXPECT().GetMetricsValues([]string{metric}, untilDistantFuture-ttl, untilDistantFuture).Return(distantFutureDataList, nil)
+		dataBase.EXPECT().GetMetricsTTLSeconds().Return(ttl)
+		result, err := localSource.Fetch("aliasByNode(super.puper.pattern, 2)", fromLongAgo, untilDistantFuture, true)
+		So(err, ShouldBeNil)
+		So(result, ShouldResemble, &FetchResult{
+			MetricsData: []*metricSource.MetricData{{
+				Name:      "metric",
+				StartTime: untilDistantFuture - ttl,
+				StopTime:  untilDistantFuture,
+				StepTime:  retention,
+				Values:    []float64{0},
+			},
+			},
+			Metrics:  []string{metric},
+			Patterns: []string{"super.puper.pattern"},
+		})
+	})
+
 	Convey("Test success evaluate pipe target", t, func() {
 		dataBase.EXPECT().GetPatternMetrics("super.puper.pattern").Return([]string{metric}, nil)
 		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 		dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
+		dataBase.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
 		result, err := localSource.Fetch("super.puper.pattern | scale(100) | aliasByNode(2)", from, until, true)
 		So(err, ShouldBeNil)
 		So(result, ShouldResemble, &FetchResult{

@@ -356,6 +356,20 @@ func (mr *MockDatabaseMockRecorder) GetMetricRetention(arg0 interface{}) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMetricRetention", reflect.TypeOf((*MockDatabase)(nil).GetMetricRetention), arg0)
 }
 
+// GetMetricsTTLSeconds mocks base method
+func (m *MockDatabase) GetMetricsTTLSeconds() int64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMetricsTTLSeconds")
+	ret0, _ := ret[0].(int64)
+	return ret0
+}
+
+// GetMetricsTTLSeconds indicates an expected call of GetMetricsTTLSeconds
+func (mr *MockDatabaseMockRecorder) GetMetricsTTLSeconds() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMetricsTTLSeconds", reflect.TypeOf((*MockDatabase)(nil).GetMetricsTTLSeconds))
+}
+
 // GetMetricsUpdatesCount mocks base method
 func (m *MockDatabase) GetMetricsUpdatesCount() (int64, error) {
 	m.ctrl.T.Helper()

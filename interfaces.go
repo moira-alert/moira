@@ -98,6 +98,7 @@ type Database interface {
 	GetMetricsValues(metrics []string, from int64, until int64) (map[string][]*MetricValue, error)
 	RemoveMetricValues(metric string, toTime int64) error
 	RemoveMetricsValues(metrics []string, toTime int64) error
+	GetMetricsTTLSeconds() int64
 
 	AddLocalTriggersToCheck(triggerIDs []string) error
 	GetLocalTriggersToCheck(count int) ([]string, error)
