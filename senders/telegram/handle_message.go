@@ -41,8 +41,10 @@ func (sender *Sender) getResponseMessage(message *telebot.Message) (string, erro
 			}
 			return fmt.Sprintf("Hi, all!\nI will send alerts in this group (%s).", message.Chat.Title), nil
 		}
-		return fmt.Sprintf("Hi, all!\nGroup with name (%s) is already registered.", message.Chat.Title), nil
-
+		if message.Text == "/start" {
+			return fmt.Sprintf("Hi, all!\nGroup with name (%s) is already registered.", message.Chat.Title), nil
+		}
+		return "", nil
 	}
 	return "I don't understand you :(", nil
 }
