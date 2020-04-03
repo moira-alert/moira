@@ -1,8 +1,6 @@
 package plotting
 
 import (
-	"sort"
-
 	"github.com/beevee/go-chart"
 )
 
@@ -15,15 +13,18 @@ const (
 	maxLabelLength   = 30
 )
 
+type plotLine struct {
+	label string
+	style chart.Style
+}
+
 // getPlotLegend returns plot legend
 func getPlotLegend(c *chart.Chart, legendStyle chart.Style, plotWidth int) chart.Renderable {
 	// TODO: Simplify this method
 	return func(r chart.Renderer, cb chart.Box, chartDefaults chart.Style) {
 		foundLabels := make(map[string]bool)
+		lines := make([]plotLine, 0, maxLabelsCount)
 
-		labelsCount := 0
-		var labels []string
-		var lines []chart.Style
 		for _, s := range c.Series {
 			if s.GetStyle().IsZero() || s.GetStyle().Show {
 				if _, isAnnotationSeries := s.(chart.AnnotationSeries); !isAnnotationSeries {
@@ -31,22 +32,24 @@ func getPlotLegend(c *chart.Chart, legendStyle chart.Style, plotWidth int) chart
 					_, isFound := foundLabels[legendLabel]
 					if !isFound && legendLabel != thresholdSerie {
 						foundLabels[legendLabel] = true
+
 						legendLabel = sanitizeLabelName(legendLabel, maxLabelLength)
-						labels = append(labels, legendLabel)
-						lines = append(lines, inheritFrom(s.GetStyle()))
-						if labelsCount == maxLabelsCount-1 {
+						lines = append(lines, plotLine{
+							label: legendLabel,
+							style: inheritFrom(s.GetStyle()),
+						})
+
+						if len(lines) == maxLabelsCount {
 							break
 						}
-						labelsCount++
 					}
 				}
 			}
 		}
 
-		sort.Sort(sortedByLen(labels))
-		if len(labels) == maxLabelsCount {
-			labels[len(labels)-1] = "other series"
-			lines[len(lines)-1].StrokeColor = chart.ColorAlternateGray
+		if len(lines) == maxLabelsCount {
+			lines[len(lines)-1].label = "other series"
+			lines[len(lines)-1].style.StrokeColor = chart.ColorAlternateGray
 		}
 
 		legendStyle.GetTextOptions().WriteToRenderer(r)
@@ -55,11 +58,9 @@ func getPlotLegend(c *chart.Chart, legendStyle chart.Style, plotWidth int) chart
 		labelY := c.Height - 15
 		markerY := labelY - int(legendStyle.FontSize/2)
 
-		var label string
-		for x := 0; x < len(labels); x++ {
-			label = labels[x]
-			if len(label) > 0 {
-				textBoxForMeasure := r.MeasureText(label)
+		for _, line := range lines {
+			if len(line.label) > 0 {
+				textBoxForMeasure := r.MeasureText(line.label)
 				itemXShiftForMeasure := textBoxForMeasure.Width() + deltaLabels
 				labelX += itemXShiftForMeasure
 			}
@@ -68,21 +69,20 @@ func getPlotLegend(c *chart.Chart, legendStyle chart.Style, plotWidth int) chart
 		labelX = ((plotWidth - (labelX - deltaLabels)) / 2) + (markerLength / 2)
 		markerX := labelX + deltaMarkerLabel
 
-		for x := 0; x < len(labels); x++ {
-			label = labels[x]
-			if len(label) > 0 {
+		for _, line := range lines {
+			if len(line.label) > 0 {
 				// Plotting markers
-				r.SetStrokeColor(lines[x].GetStrokeColor())
+				r.SetStrokeColor(line.style.GetStrokeColor())
 				r.SetStrokeWidth(9)
 				r.MoveTo(markerX-deltaLabels, markerY)
 				r.LineTo(markerX-deltaMarker, markerY)
 				r.Stroke()
 				// Calculate marker and label shifts
-				textBox := r.MeasureText(label)
+				textBox := r.MeasureText(line.label)
 				itemXShift := textBox.Width() + deltaLabels
 				markerX += itemXShift
 				// Plotting labels
-				r.Text(label, labelX, labelY)
+				r.Text(line.label, labelX, labelY)
 				labelX += itemXShift
 			}
 		}
