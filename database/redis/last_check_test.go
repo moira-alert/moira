@@ -9,6 +9,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/api/controller"
 	"github.com/moira-alert/moira/database"
 )
 
@@ -17,7 +18,6 @@ func TestLastCheck(t *testing.T) {
 	dataBase := newTestDatabase(logger, config)
 	dataBase.flush()
 	defer dataBase.flush()
-	var triggerMaintenanceTS int64
 
 	Convey("LastCheck manipulation", t, func() {
 		Convey("Test read write delete", func() {
@@ -43,183 +43,6 @@ func TestLastCheck(t *testing.T) {
 			So(err, ShouldBeError)
 			So(err, ShouldResemble, database.ErrNil)
 			So(actual, ShouldResemble, moira.CheckData{})
-		})
-
-		Convey("Test set metrics check maintenance", func() {
-			Convey("While no check", func() {
-				triggerID := uuid.Must(uuid.NewV4()).String()
-				err := dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{}, nil, "", 0)
-				So(err, ShouldBeNil)
-			})
-
-			Convey("While no metrics", func() {
-				triggerID := uuid.Must(uuid.NewV4()).String()
-				err := dataBase.SetTriggerLastCheck(triggerID, &lastCheckWithNoMetrics, false)
-				So(err, ShouldBeNil)
-
-				err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric1": 1, "metric5": 5}, nil, "", 0)
-				So(err, ShouldBeNil)
-
-				actual, err := dataBase.GetTriggerLastCheck(triggerID)
-				So(err, ShouldBeNil)
-				So(actual, ShouldResemble, lastCheckWithNoMetrics)
-			})
-
-			Convey("While no metrics to change", func() {
-				triggerID := uuid.Must(uuid.NewV4()).String()
-				err := dataBase.SetTriggerLastCheck(triggerID, &lastCheckTest, false)
-				So(err, ShouldBeNil)
-
-				err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric11": 1, "metric55": 5}, nil, "", 0)
-				So(err, ShouldBeNil)
-
-				actual, err := dataBase.GetTriggerLastCheck(triggerID)
-				So(err, ShouldBeNil)
-				So(actual, ShouldResemble, lastCheckTest)
-			})
-
-			Convey("Has metrics to change", func() {
-				checkData := lastCheckTest
-				triggerID := uuid.Must(uuid.NewV4()).String()
-				err := dataBase.SetTriggerLastCheck(triggerID, &checkData, false)
-				So(err, ShouldBeNil)
-
-				err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric1": 1, "metric5": 5}, nil, "", 0)
-				So(err, ShouldBeNil)
-				metric1 := checkData.Metrics["metric1"]
-				metric5 := checkData.Metrics["metric5"]
-				metric1.Maintenance = 1
-				metric5.Maintenance = 5
-				checkData.Metrics["metric1"] = metric1
-				checkData.Metrics["metric5"] = metric5
-
-				actual, err := dataBase.GetTriggerLastCheck(triggerID)
-				So(err, ShouldBeNil)
-				So(actual, ShouldResemble, checkData)
-			})
-		})
-
-		Convey("Test set Trigger and metrics check maintenance", func() {
-			Convey("While no check", func() {
-				triggerID := uuid.Must(uuid.NewV4()).String()
-				err := dataBase.SetTriggerCheckMaintenance(triggerID, make(map[string]int64), nil, "", 0)
-				So(err, ShouldBeNil)
-			})
-
-			Convey("Set metrics maintenance while no metrics", func() {
-				triggerID := uuid.Must(uuid.NewV4()).String()
-				err := dataBase.SetTriggerLastCheck(triggerID, &lastCheckWithNoMetrics, false)
-				So(err, ShouldBeNil)
-
-				err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric1": 1, "metric5": 5}, nil, "", 0)
-				So(err, ShouldBeNil)
-
-				actual, err := dataBase.GetTriggerLastCheck(triggerID)
-				So(err, ShouldBeNil)
-				So(actual, ShouldResemble, lastCheckWithNoMetrics)
-			})
-
-			Convey("Set trigger maintenance while no metrics", func() {
-				triggerID := uuid.Must(uuid.NewV4()).String()
-				err := dataBase.SetTriggerLastCheck(triggerID, &lastCheckWithNoMetrics, false)
-				So(err, ShouldBeNil)
-
-				triggerMaintenanceTS = 1000
-
-				err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric1": 1, "metric5": 5}, &triggerMaintenanceTS, "", 0)
-				So(err, ShouldBeNil)
-
-				actual, err := dataBase.GetTriggerLastCheck(triggerID)
-				So(err, ShouldBeNil)
-				So(actual, ShouldResemble, lastCheckWithNoMetricsWithMaintenance)
-			})
-
-			Convey("Set metrics maintenance while no metrics to change", func() {
-				triggerID := uuid.Must(uuid.NewV4()).String()
-				err := dataBase.SetTriggerLastCheck(triggerID, &lastCheckTest, false)
-				So(err, ShouldBeNil)
-
-				err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric11": 1, "metric55": 5}, nil, "", 0)
-				So(err, ShouldBeNil)
-
-				actual, err := dataBase.GetTriggerLastCheck(triggerID)
-				So(err, ShouldBeNil)
-				So(actual, ShouldResemble, lastCheckTest)
-			})
-
-			Convey("Set trigger maintenance while no metrics to change", func() {
-				newLastCheckTest := lastCheckTest
-				newLastCheckTest.Maintenance = 1000
-				triggerID := uuid.Must(uuid.NewV4()).String()
-				err := dataBase.SetTriggerLastCheck(triggerID, &lastCheckTest, false)
-				So(err, ShouldBeNil)
-
-				triggerMaintenanceTS = 1000
-				err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric11": 1, "metric55": 5}, &triggerMaintenanceTS, "anonymous", 0)
-				So(err, ShouldBeNil)
-
-				actual, err := dataBase.GetTriggerLastCheck(triggerID)
-				So(err, ShouldBeNil)
-				So(actual, ShouldResemble, newLastCheckTest)
-			})
-
-			Convey("Set metrics maintenance while has metrics to change", func() {
-				checkData := lastCheckTest
-				triggerID := uuid.Must(uuid.NewV4()).String()
-				err := dataBase.SetTriggerLastCheck(triggerID, &checkData, false)
-				So(err, ShouldBeNil)
-
-				err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric1": 1, "metric5": 5}, nil, "", 0)
-				So(err, ShouldBeNil)
-				metric1 := checkData.Metrics["metric1"]
-				metric5 := checkData.Metrics["metric5"]
-				metric1.Maintenance = 1
-				metric5.Maintenance = 5
-				checkData.Metrics["metric1"] = metric1
-				checkData.Metrics["metric5"] = metric5
-
-				actual, err := dataBase.GetTriggerLastCheck(triggerID)
-				So(err, ShouldBeNil)
-				So(actual, ShouldResemble, checkData)
-			})
-
-			Convey("Set trigger and metrics maintenance while has metrics to change", func() {
-				checkData := lastCheckTest
-				triggerID := uuid.Must(uuid.NewV4()).String()
-				err := dataBase.SetTriggerLastCheck(triggerID, &checkData, false)
-				So(err, ShouldBeNil)
-
-				triggerMaintenanceTS = 1000
-				err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric1": 1, "metric5": 5}, &triggerMaintenanceTS, "", 0)
-				So(err, ShouldBeNil)
-				metric1 := checkData.Metrics["metric1"]
-				metric5 := checkData.Metrics["metric5"]
-				metric1.Maintenance = 1
-				metric5.Maintenance = 5
-				checkData.Metrics["metric1"] = metric1
-				checkData.Metrics["metric5"] = metric5
-				checkData.Maintenance = 1000
-
-				actual, err := dataBase.GetTriggerLastCheck(triggerID)
-				So(err, ShouldBeNil)
-				So(actual, ShouldResemble, checkData)
-			})
-
-			Convey("Set trigger maintenance to 0 and metrics maintenance", func() {
-				checkData := lastCheckTest
-				triggerID := uuid.Must(uuid.NewV4()).String()
-				err := dataBase.SetTriggerLastCheck(triggerID, &checkData, false)
-				So(err, ShouldBeNil)
-
-				triggerMaintenanceTS = 0
-				err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{}, &triggerMaintenanceTS, "", 0)
-				So(err, ShouldBeNil)
-				checkData.Maintenance = 0
-
-				actual, err := dataBase.GetTriggerLastCheck(triggerID)
-				So(err, ShouldBeNil)
-				So(actual, ShouldResemble, checkData)
-			})
 		})
 
 		Convey("Test last check manipulations update 'triggers to reindex' list", func() {
@@ -339,59 +162,6 @@ func TestRemoteLastCheck(t *testing.T) {
 			So(actual, ShouldResemble, moira.CheckData{})
 		})
 
-		Convey("Test set trigger check maintenance", func() {
-			Convey("While no check", func() {
-				triggerID := uuid.Must(uuid.NewV4()).String()
-				err := dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{}, nil, "", 0)
-				So(err, ShouldBeNil)
-			})
-
-			Convey("While no metrics", func() {
-				triggerID := uuid.Must(uuid.NewV4()).String()
-				err := dataBase.SetTriggerLastCheck(triggerID, &lastCheckWithNoMetrics, true)
-				So(err, ShouldBeNil)
-
-				err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric1": 1, "metric5": 5}, nil, "", 0)
-				So(err, ShouldBeNil)
-
-				actual, err := dataBase.GetTriggerLastCheck(triggerID)
-				So(err, ShouldBeNil)
-				So(actual, ShouldResemble, lastCheckWithNoMetrics)
-			})
-
-			Convey("While no metrics to change", func() {
-				triggerID := uuid.Must(uuid.NewV4()).String()
-				err := dataBase.SetTriggerLastCheck(triggerID, &lastCheckTest, true)
-				So(err, ShouldBeNil)
-
-				err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric11": 1, "metric55": 5}, nil, "", 0)
-				So(err, ShouldBeNil)
-
-				actual, err := dataBase.GetTriggerLastCheck(triggerID)
-				So(err, ShouldBeNil)
-				So(actual, ShouldResemble, lastCheckTest)
-			})
-
-			Convey("Has metrics to change", func() {
-				checkData := lastCheckTest
-				triggerID := uuid.Must(uuid.NewV4()).String()
-				err := dataBase.SetTriggerLastCheck(triggerID, &checkData, true)
-				So(err, ShouldBeNil)
-
-				err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric1": 1, "metric5": 5}, nil, "", 0)
-				So(err, ShouldBeNil)
-				metric1 := checkData.Metrics["metric1"]
-				metric5 := checkData.Metrics["metric5"]
-				metric1.Maintenance = 1
-				metric5.Maintenance = 5
-				checkData.Metrics["metric1"] = metric1
-				checkData.Metrics["metric5"] = metric5
-
-				actual, err := dataBase.GetTriggerLastCheck(triggerID)
-				So(err, ShouldBeNil)
-				So(actual, ShouldResemble, checkData)
-			})
-		})
 	})
 }
 
@@ -412,8 +182,8 @@ func TestLastCheckErrorConnection(t *testing.T) {
 		So(err, ShouldNotBeNil)
 
 		var triggerMaintenanceTS int64 = 123
-		err = dataBase.SetTriggerCheckMaintenance("123", map[string]int64{}, &triggerMaintenanceTS, "", 0)
-		So(err, ShouldNotBeNil)
+		err1 := controller.SetTriggerMaintenance(dataBase,"123", map[string]int64{}, &triggerMaintenanceTS, "", 0)
+		So(err1, ShouldNotBeNil)
 
 		actual2, err := dataBase.GetTriggerLastCheck("123")
 		So(actual2, ShouldResemble, moira.CheckData{})
@@ -442,8 +212,8 @@ func TestMaintenanceUserSave(t *testing.T) {
 			So(err, ShouldBeNil)
 
 			triggerMaintenanceTS = 1000
-			err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric11": 1, "metric55": 5}, &triggerMaintenanceTS, userLogin, startTime)
-			So(err, ShouldBeNil)
+			err1 := controller.SetTriggerMaintenance(dataBase, triggerID, map[string]int64{"metric11": 1, "metric55": 5}, &triggerMaintenanceTS, userLogin, startTime)
+			So(err1, ShouldBeNil)
 
 			actual, err := dataBase.GetTriggerLastCheck(triggerID)
 			So(err, ShouldBeNil)
@@ -460,8 +230,8 @@ func TestMaintenanceUserSave(t *testing.T) {
 			So(err, ShouldBeNil)
 
 			triggerMaintenanceTS = 1000
-			err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric11": 1, "metric55": 5}, &triggerMaintenanceTS, userLogin, startTime)
-			So(err, ShouldBeNil)
+			err1 := controller.SetTriggerMaintenance(dataBase, triggerID, map[string]int64{"metric11": 1, "metric55": 5}, &triggerMaintenanceTS, userLogin, startTime)
+			So(err1, ShouldBeNil)
 
 			actual, err := dataBase.GetTriggerLastCheck(triggerID)
 			So(err, ShouldBeNil)
@@ -479,8 +249,8 @@ func TestMaintenanceUserSave(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		triggerMaintenanceTS = 1000
-		err = dataBase.SetTriggerCheckMaintenance(triggerID, map[string]int64{"metric1": 1, "metric5": 5}, &triggerMaintenanceTS, userLogin, timeCallMaintenance)
-		So(err, ShouldBeNil)
+		err1 := controller.SetTriggerMaintenance(dataBase, triggerID, map[string]int64{"metric1": 1, "metric5": 5}, &triggerMaintenanceTS, userLogin, timeCallMaintenance)
+		So(err1, ShouldBeNil)
 
 		metric1 := checkData.Metrics["metric1"]
 		metric1.MaintenanceInfo = moira.MaintenanceInfo{}
@@ -569,15 +339,6 @@ var lastCheckWithNoMetrics = moira.CheckData{
 	Score:                   0,
 	State:                   moira.StateOK,
 	Timestamp:               1504509981,
-	Metrics:                 make(map[string]moira.MetricState),
-	MetricsToTargetRelation: map[string]string{},
-}
-
-var lastCheckWithNoMetricsWithMaintenance = moira.CheckData{
-	Score:                   0,
-	State:                   moira.StateOK,
-	Timestamp:               1504509981,
-	Maintenance:             1000,
 	Metrics:                 make(map[string]moira.MetricState),
 	MetricsToTargetRelation: map[string]string{},
 }

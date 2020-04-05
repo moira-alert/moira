@@ -1178,20 +1178,6 @@ func (mr *MockDatabaseMockRecorder) SetTriggerCheckLock(arg0 interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTriggerCheckLock", reflect.TypeOf((*MockDatabase)(nil).SetTriggerCheckLock), arg0)
 }
 
-// SetTriggerCheckMaintenance mocks base method
-func (m *MockDatabase) SetTriggerCheckMaintenance(arg0 string, arg1 map[string]int64, arg2 *int64, arg3 string, arg4 int64) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetTriggerCheckMaintenance", arg0, arg1, arg2, arg3, arg4)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SetTriggerCheckMaintenance indicates an expected call of SetTriggerCheckMaintenance
-func (mr *MockDatabaseMockRecorder) SetTriggerCheckMaintenance(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTriggerCheckMaintenance", reflect.TypeOf((*MockDatabase)(nil).SetTriggerCheckMaintenance), arg0, arg1, arg2, arg3, arg4)
-}
-
 // SetTriggerLastCheck mocks base method
 func (m *MockDatabase) SetTriggerLastCheck(arg0 string, arg1 *moira.CheckData, arg2 bool) error {
 	m.ctrl.T.Helper()

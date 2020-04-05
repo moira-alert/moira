@@ -2,7 +2,6 @@ package controller
 
 import (
 	"fmt"
-
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
@@ -113,6 +112,51 @@ func deleteTriggerMetrics(dataBase moira.Database, metricName string, triggerID 
 	if err = dataBase.RemovePatternsMetrics(trigger.Patterns); err != nil {
 		return api.ErrorInternalServer(err)
 	}
+	if err = dataBase.SetTriggerLastCheck(triggerID, &lastCheck, trigger.IsRemote); err != nil {
+		return api.ErrorInternalServer(err)
+	}
+	return nil
+}
+
+
+// setTriggerCheckMaintenance sets maintenance for whole trigger and to given metrics,
+// If during the update lastCheck was updated from another place, try update again
+// If CheckData does not contain one of given metrics it will ignore this metric
+func setTriggerCheckMaintenance (dataBase moira.Database, triggerID string, metrics map[string]int64, triggerMaintenance *int64, userLogin string, timeCallMaintenance int64) *api.ErrorResponse {
+	trigger, err := dataBase.GetTrigger(triggerID)
+	if err != nil && err != database.ErrNil {
+		return api.ErrorInternalServer(err)
+	}
+
+	if err = dataBase.AcquireTriggerCheckLock(triggerID, 10); err != nil {
+		return api.ErrorInternalServer(err)
+	}
+
+	defer dataBase.DeleteTriggerCheckLock(triggerID)
+
+	lastCheck, err := dataBase.GetTriggerLastCheck(triggerID)
+	if err != nil {
+		if err == database.ErrNil {
+			return api.ErrorInvalidRequest(fmt.Errorf("trigger check not found"))
+		}
+		return api.ErrorInternalServer(err)
+	}
+
+  metricsCheck := lastCheck.Metrics
+	if len(metricsCheck) > 0 {
+		for metric, value := range metrics {
+			data, ok := metricsCheck[metric]
+			if !ok {
+				continue
+			}
+			moira.SetMaintenanceUserAndTime(&data, value, userLogin, timeCallMaintenance)
+			metricsCheck[metric] = data
+		}
+	}
+	if triggerMaintenance != nil {
+		moira.SetMaintenanceUserAndTime(&lastCheck, *triggerMaintenance, userLogin, timeCallMaintenance)
+	}
+
 	if err = dataBase.SetTriggerLastCheck(triggerID, &lastCheck, trigger.IsRemote); err != nil {
 		return api.ErrorInternalServer(err)
 	}

@@ -328,3 +328,209 @@ func TestGetTriggerMetrics(t *testing.T) {
 		So(triggerMetrics, ShouldBeNil)
 	})
 }
+
+func TestSetTriggerCheckMaintenance(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+
+	triggerID := uuid.Must(uuid.NewV4()).String()
+	trigger := moira.Trigger{ID: triggerID}
+
+	emptyLastCheck := moira.CheckData{
+		Metrics: make(map[string]moira.MetricState),
+	}
+	Convey("SetTriggerLastCheck manipulation", t, func() {
+		Convey("Test set metrics check maintenance", func() {
+			Convey("While no check", func() {
+
+				expectedLastCheck := emptyLastCheck
+				dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
+				dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10).Return(nil)
+				dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
+				dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(expectedLastCheck, nil)
+				dataBase.EXPECT().SetTriggerLastCheck(triggerID, &expectedLastCheck, trigger.IsRemote)
+
+				err := setTriggerCheckMaintenance(dataBase, triggerID, map[string]int64{}, nil, "", 0)
+				So(err, ShouldBeNil)
+			})
+
+			Convey("While no metrics", func() {
+				expectedLastCheck := lastCheckWithNoMetrics
+				dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
+				dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10).Return(nil)
+				dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
+				dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(expectedLastCheck, nil)
+				dataBase.EXPECT().SetTriggerLastCheck(triggerID, &expectedLastCheck, trigger.IsRemote)
+
+				err := setTriggerCheckMaintenance(dataBase, triggerID, map[string]int64{"metric1": 1, "metric5": 5}, nil, "", 0)
+				So(err, ShouldBeNil)
+			})
+
+			Convey("While no metrics to change", func() {
+				expectedLastCheck := lastCheckTest
+				dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
+				dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10).Return(nil)
+				dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
+				dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(expectedLastCheck, nil)
+				dataBase.EXPECT().SetTriggerLastCheck(triggerID, &expectedLastCheck, trigger.IsRemote)
+
+				err := setTriggerCheckMaintenance(dataBase, triggerID, map[string]int64{"metric11": 1, "metric55": 5}, nil, "", 0)
+				So(err, ShouldBeNil)
+			})
+
+			Convey("Has metrics to change", func() {
+				checkData := lastCheckTest
+				metric1 := checkData.Metrics["metric1"]
+				metric5 := checkData.Metrics["metric5"]
+				metric1.Maintenance = 1
+				metric5.Maintenance = 5
+				checkData.Metrics["metric1"] = metric1
+				checkData.Metrics["metric5"] = metric5
+
+				expectedLastCheck := checkData
+				dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
+				dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10).Return(nil)
+				dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
+				dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(expectedLastCheck, nil)
+				dataBase.EXPECT().SetTriggerLastCheck(triggerID, &expectedLastCheck, trigger.IsRemote)
+
+				err := setTriggerCheckMaintenance(dataBase, triggerID, map[string]int64{"metric1": 1, "metric5": 5}, nil, "", 0)
+				So(err, ShouldBeNil)
+			})
+		})
+
+		Convey("Test set Trigger and metrics check maintenance", func() {
+			Convey("Set trigger maintenance while no metrics", func() {
+				triggerMaintenanceTS := int64(1000)
+				expectedLastCheck := lastCheckWithNoMetricsWithMaintenance
+				dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
+				dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10).Return(nil)
+				dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
+				dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(expectedLastCheck, nil)
+				dataBase.EXPECT().SetTriggerLastCheck(triggerID, &expectedLastCheck, trigger.IsRemote)
+				err := setTriggerCheckMaintenance(dataBase, triggerID, map[string]int64{"metric1": 1, "metric5": 5}, &triggerMaintenanceTS, "", 0)
+				So(err, ShouldBeNil)
+			})
+
+			Convey("Set metrics maintenance while no metrics to change", func() {
+				expectedLastCheck := lastCheckTest
+				dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
+				dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10).Return(nil)
+				dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
+				dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(expectedLastCheck, nil)
+				dataBase.EXPECT().SetTriggerLastCheck(triggerID, &expectedLastCheck, trigger.IsRemote)
+				err := setTriggerCheckMaintenance(dataBase, triggerID, map[string]int64{"metric11": 1, "metric55": 5}, nil, "", 0)
+				So(err, ShouldBeNil)
+			})
+
+			Convey("Set trigger maintenance while no metrics to change", func() {
+				triggerMaintenanceTS := int64(1000)
+				newLastCheckTest := lastCheckTest
+				newLastCheckTest.Maintenance = 1000
+				expectedLastCheck := newLastCheckTest
+				dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
+				dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10).Return(nil)
+				dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
+				dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(expectedLastCheck, nil)
+				dataBase.EXPECT().SetTriggerLastCheck(triggerID, &expectedLastCheck, trigger.IsRemote)
+				err := setTriggerCheckMaintenance(dataBase, triggerID, map[string]int64{"metric11": 1, "metric55": 5}, &triggerMaintenanceTS, "anonymous", 0)
+				So(err, ShouldBeNil)
+			})
+
+			Convey("Set trigger and metrics maintenance while has metrics to change", func() {
+				checkData := lastCheckTest
+				metric1 := checkData.Metrics["metric1"]
+				metric5 := checkData.Metrics["metric5"]
+				metric1.Maintenance = 1
+				metric5.Maintenance = 5
+				checkData.Metrics["metric1"] = metric1
+				checkData.Metrics["metric5"] = metric5
+				checkData.Maintenance = 1000
+				triggerMaintenanceTS := int64(1000)
+				expectedLastCheck := checkData
+				dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
+				dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10).Return(nil)
+				dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
+				dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(expectedLastCheck, nil)
+				dataBase.EXPECT().SetTriggerLastCheck(triggerID, &expectedLastCheck, trigger.IsRemote)
+				err := setTriggerCheckMaintenance(dataBase, triggerID, map[string]int64{"metric1": 1, "metric5": 5}, &triggerMaintenanceTS, "", 0)
+				So(err, ShouldBeNil)
+			})
+
+			Convey("Set trigger maintenance to 0 and metrics maintenance", func() {
+				checkData := lastCheckTest
+				checkData.Maintenance = 0
+				triggerMaintenanceTS := int64(0)
+				expectedLastCheck := checkData
+				dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
+				dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10).Return(nil)
+				dataBase.EXPECT().DeleteTriggerCheckLock(triggerID)
+				dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(expectedLastCheck, nil)
+				dataBase.EXPECT().SetTriggerLastCheck(triggerID, &expectedLastCheck, trigger.IsRemote)
+				err := setTriggerCheckMaintenance(dataBase, triggerID, map[string]int64{}, &triggerMaintenanceTS, "", 0)
+				So(err, ShouldBeNil)
+			})
+		})
+	})
+}
+
+var lastCheckTest = moira.CheckData{
+	Score:       6000,
+	State:       moira.StateOK,
+	Timestamp:   1504509981,
+	Maintenance: 1552723340,
+	Metrics: map[string]moira.MetricState{
+		"metric1": {
+			EventTimestamp: 1504449789,
+			State:          moira.StateNODATA,
+			Suppressed:     false,
+			Timestamp:      1504509380,
+		},
+		"metric2": {
+			EventTimestamp: 1504449789,
+			State:          moira.StateNODATA,
+			Suppressed:     false,
+			Timestamp:      1504509380,
+		},
+		"metric3": {
+			EventTimestamp: 1504449789,
+			State:          moira.StateNODATA,
+			Suppressed:     false,
+			Timestamp:      1504509380,
+		},
+		"metric4": {
+			EventTimestamp: 1504463770,
+			State:          moira.StateNODATA,
+			Suppressed:     false,
+			Timestamp:      1504509380,
+		},
+		"metric5": {
+			EventTimestamp: 1504463770,
+			State:          moira.StateNODATA,
+			Suppressed:     false,
+			Timestamp:      1504509380,
+		},
+		"metric6": {
+			EventTimestamp: 1504463770,
+			State:          "Ok",
+			Suppressed:     false,
+			Timestamp:      1504509380,
+		},
+	},
+}
+
+var lastCheckWithNoMetrics = moira.CheckData{
+	Score:     0,
+	State:     moira.StateOK,
+	Timestamp: 1504509981,
+	Metrics:   make(map[string]moira.MetricState),
+}
+
+var lastCheckWithNoMetricsWithMaintenance = moira.CheckData{
+	Score:       0,
+	State:       moira.StateOK,
+	Timestamp:   1504509981,
+	Maintenance: 1000,
+	Metrics:     make(map[string]moira.MetricState),
+}

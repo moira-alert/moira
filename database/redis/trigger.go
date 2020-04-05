@@ -364,3 +364,4 @@ func triggerTagsKey(triggerID string) string {
 func patternTriggersKey(pattern string) string {
 	return "moira-pattern-triggers:" + pattern
 }
+
