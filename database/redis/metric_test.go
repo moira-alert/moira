@@ -14,7 +14,7 @@ import (
 
 func TestMetricsStoring(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, config)
+	dataBase := NewTestDatabase(logger, config, testSource)
 	dataBase.flush()
 	metric1 := "my.test.super.metric"
 	metric2 := "my.test.super.metric2"
@@ -185,7 +185,7 @@ func TestMetricsStoring(t *testing.T) {
 
 func TestRemoveMetricValues(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, config)
+	dataBase := NewTestDatabase(logger, config, testSource)
 	dataBase.metricsCache = cache.New(time.Second*2, time.Minute*60)
 	dataBase.flush()
 	defer dataBase.flush()
@@ -337,7 +337,7 @@ func TestRemoveMetricValues(t *testing.T) {
 
 func TestMetricSubscription(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, config)
+	dataBase := NewTestDatabase(logger, config, testSource)
 	dataBase.flush()
 	defer dataBase.flush()
 	metric1 := "my.test.super.metric"
@@ -402,7 +402,7 @@ func TestMetricSubscription(t *testing.T) {
 
 func TestMetricsStoringErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, emptyConfig)
+	dataBase := NewTestDatabase(logger, emptyConfig, testSource)
 	dataBase.flush()
 	defer dataBase.flush()
 	Convey("Should throw error when no connection", t, func() {

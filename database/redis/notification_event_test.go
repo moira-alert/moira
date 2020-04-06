@@ -15,7 +15,7 @@ import (
 
 func TestNotificationEvents(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, config)
+	dataBase := NewTestDatabase(logger, config, testSource)
 	dataBase.flush()
 	defer dataBase.flush()
 
@@ -174,7 +174,7 @@ func TestNotificationEvents(t *testing.T) {
 
 func TestNotificationEventErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, emptyConfig)
+	dataBase := NewTestDatabase(logger, emptyConfig, testSource)
 	dataBase.flush()
 	defer dataBase.flush()
 

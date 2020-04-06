@@ -9,7 +9,7 @@ import (
 
 func TestLock(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, config)
+	dataBase := NewTestDatabase(logger, config, testSource)
 	dataBase.flush()
 	defer dataBase.flush()
 	Convey("Test lock manipulation", t, func() {
@@ -43,7 +43,7 @@ func TestLock(t *testing.T) {
 
 func TestLockErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, emptyConfig)
+	dataBase := NewTestDatabase(logger, emptyConfig, testSource)
 	dataBase.flush()
 	defer dataBase.flush()
 	Convey("Should throw error when no connection", t, func() {

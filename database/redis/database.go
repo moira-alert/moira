@@ -80,6 +80,12 @@ func NewDatabase(logger moira.Logger, config Config, source DBSource) *DbConnect
 	}
 }
 
+// NewTestDatabase use it only for tests
+func NewTestDatabase(logger moira.Logger, config Config, source DBSource) *DbConnector {
+	config.DB = 1
+	return NewDatabase(logger,config,source)
+}
+
 func newPoolDialer(logger moira.Logger, config Config) PoolDialer {
 	if config.MasterName != "" && len(config.SentinelAddresses) > 0 {
 		logger.Infof("Redis: Sentinel for name: %v, DB: %v", config.MasterName, config.DB)

@@ -12,7 +12,7 @@ import (
 
 func TestTriggersToReindex(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test")
-	dataBase := newTestDatabase(logger, config)
+	dataBase := NewTestDatabase(logger, config, testSource)
 	dataBase.flush()
 	defer dataBase.flush()
 
@@ -119,7 +119,7 @@ func TestTriggersToReindex(t *testing.T) {
 
 func TestTriggerToReindexConnection(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test")
-	dataBase := newTestDatabase(logger, emptyConfig)
+	dataBase := NewTestDatabase(logger, emptyConfig, testSource)
 	dataBase.flush()
 	defer dataBase.flush()
 
