@@ -6,6 +6,7 @@ type NotifierMetrics struct {
 	EventsReceived         Meter
 	EventsMalformed        Meter
 	EventsProcessingFailed Meter
+	EventsByState          MetersCollection
 	SendingFailed          Meter
 	SendersOkMetrics       MetersCollection
 	SendersFailedMetrics   MetersCollection
@@ -18,6 +19,7 @@ func ConfigureNotifierMetrics(registry Registry, prefix string) *NotifierMetrics
 		EventsReceived:         registry.NewMeter("events", "received"),
 		EventsMalformed:        registry.NewMeter("events", "malformed"),
 		EventsProcessingFailed: registry.NewMeter("events", "failed"),
+		EventsByState:          NewMetersCollection(registry),
 		SendingFailed:          registry.NewMeter("sending", "failed"),
 		SendersOkMetrics:       NewMetersCollection(registry),
 		SendersFailedMetrics:   NewMetersCollection(registry),
