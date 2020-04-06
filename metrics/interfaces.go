@@ -15,7 +15,7 @@ type Registry interface {
 
 // MetersCollection implements meter collection abstraction
 type MetersCollection interface {
-	RegisterMeter(name string, path ...string)
+	RegisterMeter(name string, path ...string) Meter
 	GetRegisteredMeter(name string) (Meter, bool)
 }
 
@@ -55,11 +55,12 @@ type DefaultMetersCollection struct {
 	mutex    sync.Mutex
 }
 
-func (source *DefaultMetersCollection) RegisterMeter(name string, path ...string) {
+func (source *DefaultMetersCollection) RegisterMeter(name string, path ...string) Meter {
 	source.mutex.Lock()
 	defer source.mutex.Unlock()
 
 	source.meters[name] = source.registry.NewMeter(path...)
+	return source.meters[name]
 }
 
 func (source *DefaultMetersCollection) GetRegisteredMeter(name string) (Meter, bool) {

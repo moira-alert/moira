@@ -43,7 +43,15 @@ func (worker *FetchEventsWorker) Start() {
 						}
 						continue
 					}
+
 					worker.Metrics.EventsReceived.Mark(1)
+					stateMeterName := event.OldState.String() + "_to_" + event.State.String()
+					stateMeter, found := worker.Metrics.EventsByState.GetRegisteredMeter(stateMeterName)
+					if !found {
+						stateMeter = worker.Metrics.EventsByState.RegisterMeter(stateMeterName, "events", "bystate", stateMeterName)
+					}
+					stateMeter.Mark(1)
+
 					if err := worker.processEvent(event); err != nil {
 						worker.Metrics.EventsProcessingFailed.Mark(1)
 						worker.Logger.Errorf("Failed processEvent. %s", err)
