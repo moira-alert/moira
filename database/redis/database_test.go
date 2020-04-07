@@ -11,10 +11,10 @@ import (
 
 var config = Config{Port: "6379", Host: "0.0.0.0"}
 var emptyConfig = Config{}
-var testSource = DBSource("test")
 
-// use it only for tests
+// use it only for tests in redis package
 func newTestDatabase(logger moira.Logger, config Config) *DbConnector {
+	config.DB = testDB
 	return NewDatabase(logger, config, testSource)
 }
 

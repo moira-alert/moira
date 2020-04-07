@@ -30,12 +30,16 @@ type DBSource string
 
 // All types of database instances users
 const (
-	API      DBSource = "API"
-	Checker  DBSource = "Checker"
-	Filter   DBSource = "Filter"
-	Notifier DBSource = "Notifier"
-	Cli      DBSource = "Cli"
+	API        DBSource = "API"
+	Checker    DBSource = "Checker"
+	Filter     DBSource = "Filter"
+	Notifier   DBSource = "Notifier"
+	Cli        DBSource = "Cli"
+	testSource DBSource = "test"
 )
+
+// Test data for configuration
+const testDB = 1
 
 // DbConnector contains redis pool
 type DbConnector struct {
@@ -106,6 +110,11 @@ func NewDatabase(logger moira.Logger, config Config, source DBSource) *DbConnect
 	}
 
 	return connector
+}
+
+// NewTestDatabase use it only for tests
+func NewTestDatabase(logger moira.Logger) *DbConnector {
+	return NewDatabase(logger, Config{Port: "6379", Host: "0.0.0.0", DB: testDB}, testSource)
 }
 
 // AllowStale returns a database instance, that prioritizes connections to slave nodes

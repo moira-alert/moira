@@ -77,7 +77,7 @@ var event = moira.NotificationEvent{
 func TestNotifier(t *testing.T) {
 	mockCtrl = gomock.NewController(t)
 	defer mockCtrl.Finish()
-	database := redis.NewDatabase(logger, redis.Config{Port: "6379", Host: "localhost"}, redis.Notifier)
+	database := redis.NewTestDatabase(logger)
 	metricsSourceProvider := metricSource.CreateMetricSourceProvider(local.Create(database), nil)
 	database.SaveContact(&contact)
 	database.SaveSubscription(&subscription)
