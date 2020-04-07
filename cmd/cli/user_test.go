@@ -23,7 +23,7 @@ func TestUpdateUsers(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	database := redis.NewDatabase(logger, conf.Redis.GetSettings(), redis.Cli)
+	database := redis.NewTestDatabase(logger)
 	conf.Cleanup.Whitelist = []string{"Nikolay", ""}
 
 	users := []string{"Aleksey", "Arkadiy", "Emil"}
