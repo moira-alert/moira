@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/moira-alert/moira"
 	metricSource "github.com/moira-alert/moira/metric_source"
 )
 
@@ -38,6 +39,10 @@ func Create(config *Config) metricSource.MetricSource {
 
 // Fetch fetches remote metrics and converts them to expected format
 func (remote *Remote) Fetch(target string, from, until int64, allowRealTimeAlerting bool) (metricSource.FetchResult, error) {
+	// Don't fetch intervals larger than metrics TTL to prevent OOM errors
+	// See https://github.com/moira-alert/moira/pull/519
+	from = moira.MaxInt64(from, until-int64(remote.config.MetricsTTL.Seconds()))
+
 	req, err := remote.prepareRequest(from, until, target)
 	if err != nil {
 		return nil, ErrRemoteTriggerResponse{
@@ -61,6 +66,11 @@ func (remote *Remote) Fetch(target string, from, until int64, allowRealTimeAlert
 	}
 	fetchResult := convertResponse(resp, allowRealTimeAlerting)
 	return &fetchResult, nil
+}
+
+// GetMetricsTTLSeconds returns maximum time interval that we are allowed to fetch from remote
+func (remote *Remote) GetMetricsTTLSeconds() int64 {
+	return int64(remote.config.MetricsTTL.Seconds())
 }
 
 // IsConfigured returns false in cases that user does not properly configure remote settings like graphite URL

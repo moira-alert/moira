@@ -105,6 +105,64 @@ func (dialer *SentinelPoolDialer) Test(c redis.Conn, t time.Time) error {
 	return nil
 }
 
+//NewSentinelPoolDialer returns new SentinelPoolDialer
+func NewSentinelSlavePoolDialer(sentinelDialer *SentinelPoolDialer) *SentinelSlavePoolDialer {
+	slaveDialer := &SentinelSlavePoolDialer{
+		SentinelPoolDialer: sentinelDialer,
+	}
+	return slaveDialer
+}
+
+// SentinelSlavePoolDialer connects to Redis via sentinel prioritizing slave servers
+type SentinelSlavePoolDialer struct {
+	*SentinelPoolDialer
+}
+
+// Dial tries connecting to slaves
+// If there are no slaves available, a connection to master is returned
+func (dialer *SentinelSlavePoolDialer) Dial() (redis.Conn, error) {
+	slaves, err := dialer.sentinel.SlaveAddrs()
+	if err != nil {
+		return nil, err
+	}
+	if len(slaves) == 0 {
+		dialer.logger.Debug("No redis slaves available, connecting to master")
+		return dialer.SentinelPoolDialer.Dial()
+	}
+
+	var conn redis.Conn
+	for _, slaveAddr := range slaves {
+		conn, err = redis.Dial(
+			"tcp",
+			slaveAddr,
+			redis.DialDatabase(dialer.config.DB),
+			redis.DialConnectTimeout(dialer.config.DialTimeout),
+		)
+		if err == nil {
+			dialer.logger.Debugf("Connected to slave node %s", slaveAddr)
+			break
+		} else {
+			dialer.logger.Warningf("Connecting to slave %s failed, error: %s", slaveAddr, err.Error())
+		}
+	}
+	if err != nil {
+		return dialer.SentinelPoolDialer.Dial()
+	}
+
+	// required for redis cluster, but will fail for simple replicas
+	_, err = redis.String(conn.Do("READONLY"))
+	if err != nil && err.Error() != "ERR This instance has cluster support disabled" {
+		dialer.logger.Warning("Switching to readonly mode failed, error: %s", err.Error())
+	}
+
+	return conn, nil
+}
+
+// Test checks if connection is alive
+func (dialer *SentinelSlavePoolDialer) Test(c redis.Conn, t time.Time) error {
+	return c.Err()
+}
+
 func (dialer *SentinelPoolDialer) discoverLoop() {
 	checkTicker := time.NewTicker(30 * time.Second)
 	defer checkTicker.Stop()

@@ -45,12 +45,14 @@ type DbConnector struct {
 	retentionSavingCache *cache.Cache
 	metricsCache         *cache.Cache
 	sync                 *redsync.Redsync
+	metricsTTLSeconds    int64
 	source               DBSource
+	slaveConnector       *DbConnector
 }
 
 // NewDatabase creates Redis pool based on config
 func NewDatabase(logger moira.Logger, config Config, source DBSource) *DbConnector {
-	poolDialer := newPoolDialer(logger, config)
+	poolDialer, slaveDialer := createPoolDialers(logger, config)
 
 	pool := &redis.Pool{
 		MaxIdle:      config.ConnectionLimit,
@@ -68,22 +70,57 @@ func NewDatabase(logger moira.Logger, config Config, source DBSource) *DbConnect
 		Dial:         poolDialer.Dial,
 		TestOnBorrow: poolDialer.Test,
 	}
+	var slavePool *redis.Pool
+	if slaveDialer != nil {
+		slavePool = &redis.Pool{
+			MaxIdle:      config.ConnectionLimit,
+			MaxActive:    config.ConnectionLimit,
+			Wait:         true,
+			IdleTimeout:  240 * time.Second,
+			Dial:         slaveDialer.Dial,
+			TestOnBorrow: slaveDialer.Test,
+		}
+	}
 
-	return &DbConnector{
+	connector := &DbConnector{
 		pool:                 pool,
 		logger:               logger,
 		retentionCache:       cache.New(cacheValueExpirationDuration, cacheCleanupInterval),
 		retentionSavingCache: cache.New(cache.NoExpiration, cache.DefaultExpiration),
 		metricsCache:         cache.New(cacheValueExpirationDuration, cacheCleanupInterval),
 		sync:                 redsync.New([]redsync.Pool{syncPool}),
+		metricsTTLSeconds:    int64(config.MetricsTTL.Seconds()),
 		source:               source,
 	}
+
+	if slavePool != nil {
+		slaveConnector := &DbConnector{
+			pool:                 slavePool,
+			retentionCache:       connector.retentionCache,
+			retentionSavingCache: connector.retentionSavingCache,
+			metricsCache:         connector.metricsCache,
+			sync:                 connector.sync,
+			source:               connector.source,
+		}
+		connector.slaveConnector = slaveConnector
+	}
+
+	return connector
 }
 
-func newPoolDialer(logger moira.Logger, config Config) PoolDialer {
+// AllowStale returns a database instance, that prioritizes connections to slave nodes
+// Should only be used for read accesses when data actuality is not needed
+func (connector *DbConnector) AllowStale() moira.Database {
+	if connector.slaveConnector == nil {
+		return connector
+	}
+	return connector.slaveConnector
+}
+
+func createPoolDialers(logger moira.Logger, config Config) (mainDialer, slaveDialer PoolDialer) {
 	if config.MasterName != "" && len(config.SentinelAddresses) > 0 {
 		logger.Infof("Redis: Sentinel for name: %v, DB: %v", config.MasterName, config.DB)
-		return NewSentinelPoolDialer(
+		sentinelDialer := NewSentinelPoolDialer(
 			logger,
 			SentinelPoolDialerConfig{
 				MasterName:        config.MasterName,
@@ -92,15 +129,23 @@ func newPoolDialer(logger moira.Logger, config Config) PoolDialer {
 				DialTimeout:       dialTimeout,
 			},
 		)
+		if !config.AllowSlaveReads {
+			return sentinelDialer, nil
+		}
+		logger.Info("Redis: Sentinel slaves pooling enabled")
+		slaveDialer := NewSentinelSlavePoolDialer(sentinelDialer)
+
+		return sentinelDialer, slaveDialer
 	}
 
 	serverAddr := net.JoinHostPort(config.Host, config.Port)
 	logger.Infof("Redis: %v, DB: %v", serverAddr, config.DB)
-	return &DirectPoolDialer{
+	mainDialer = &DirectPoolDialer{
 		serverAddress: serverAddr,
 		db:            config.DB,
 		dialTimeout:   dialTimeout,
 	}
+	return mainDialer, nil
 }
 
 func (connector *DbConnector) makePubSubConnection(channel string) (*redis.PubSubConn, error) {

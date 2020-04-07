@@ -28,6 +28,7 @@ func TestExpressionModeMultipleTargetsWarnValue(t *testing.T) {
 		sourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource)
 
 		localSource.EXPECT().IsConfigured().Return(true, nil).AnyTimes()
+		localSource.EXPECT().GetMetricsTTLSeconds().Return(int64(3600)).AnyTimes()
 		localSource.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fetchResult, nil).AnyTimes()
 		fetchResult.EXPECT().GetPatterns().Return(make([]string, 0), nil).AnyTimes()
 		fetchResult.EXPECT().GetMetricsData().Return([]*metricSource.MetricData{metricSource.MakeMetricData("", []float64{}, 0, 0)}).AnyTimes()

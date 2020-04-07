@@ -9,6 +9,9 @@ import (
 
 // Database implements DB functionality
 type Database interface {
+	// Get database instance for requests that do not require realtime data
+	AllowStale() Database
+
 	// SelfState
 	UpdateMetricsHeartbeat() error
 	GetMetricsUpdatesCount() (int64, error)
@@ -95,6 +98,7 @@ type Database interface {
 	GetMetricsValues(metrics []string, from int64, until int64) (map[string][]*MetricValue, error)
 	RemoveMetricValues(metric string, toTime int64) error
 	RemoveMetricsValues(metrics []string, toTime int64) error
+	GetMetricsTTLSeconds() int64
 
 	AddLocalTriggersToCheck(triggerIDs []string) error
 	GetLocalTriggersToCheck(count int) ([]string, error)

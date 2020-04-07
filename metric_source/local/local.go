@@ -31,6 +31,10 @@ func Create(dataBase moira.Database) metricSource.MetricSource {
 
 // Fetch is analogue of evaluateTarget method in graphite-web, that gets target metrics value from DB and Evaluate it using carbon-api eval package
 func (local *Local) Fetch(target string, from int64, until int64, allowRealTimeAlerting bool) (metricSource.FetchResult, error) {
+	// Don't fetch intervals larger than metrics TTL to prevent OOM errors
+	// See https://github.com/moira-alert/moira/pull/519
+	from = moira.MaxInt64(from, until-local.dataBase.GetMetricsTTLSeconds())
+
 	result := CreateEmptyFetchResult()
 
 	targets := []string{target}
@@ -100,6 +104,11 @@ func (local *Local) Fetch(target string, from int64, until int64, allowRealTimeA
 	}
 
 	return result, nil
+}
+
+// GetMetricsTTLSeconds returns metrics lifetime in Redis
+func (local *Local) GetMetricsTTLSeconds() int64 {
+	return local.dataBase.GetMetricsTTLSeconds()
 }
 
 // IsConfigured always returns true. It easy to configure local source =)

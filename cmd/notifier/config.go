@@ -63,6 +63,7 @@ func getDefault() config {
 			Host:            "localhost",
 			Port:            "6379",
 			ConnectionLimit: 512,
+			MetricsTTL:      "1h",
 		},
 
 		Logger: cmd.LoggerConfig{
@@ -94,7 +95,8 @@ func getDefault() config {
 			Pprof: cmd.ProfilerConfig{Enabled: false},
 		},
 		Remote: cmd.RemoteConfig{
-			Timeout: "60s",
+			Timeout:    "60s",
+			MetricsTTL: "24h",
 		},
 		ImageStores: cmd.ImageStoreConfig{},
 	}

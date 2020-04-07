@@ -28,3 +28,50 @@ func TestInitialization(t *testing.T) {
 		So(err, ShouldNotBeNil)
 	})
 }
+
+func TestAllowStale(t *testing.T) {
+	logger, _ := logging.ConfigureLog("stdout", "info", "test")
+
+	Convey("Allow stale", t, func() {
+		Convey("When using redis directly, returns same db", func() {
+			database := newTestDatabase(logger, emptyConfig)
+
+			staleDatabase := database.AllowStale()
+
+			So(staleDatabase, ShouldPointTo, database)
+		})
+
+		Convey("When using sentinel with slave reads disabled, returns same db", func() {
+			sentinelConfig := Config{
+				MasterName:        "mstr",
+				SentinelAddresses: []string{"addr.ru"},
+				DB:                0,
+				AllowSlaveReads:   false,
+			}
+			database := newTestDatabase(logger, sentinelConfig)
+
+			staleDatabase := database.AllowStale()
+
+			So(staleDatabase, ShouldPointTo, database)
+		})
+
+		Convey("When using sentinel, returns slave db instance, retains references", func() {
+			sentinelConfig := Config{
+				MasterName:        "mstr",
+				SentinelAddresses: []string{"addr.ru"},
+				DB:                0,
+				AllowSlaveReads:   true,
+			}
+			database := newTestDatabase(logger, sentinelConfig)
+
+			staleDatabase := database.AllowStale()
+
+			So(staleDatabase, ShouldNotPointTo, database)
+			staleConnector := staleDatabase.(*DbConnector)
+			So(staleConnector.metricsCache, ShouldPointTo, database.metricsCache)
+			So(staleConnector.retentionCache, ShouldPointTo, database.retentionCache)
+			So(staleConnector.retentionSavingCache, ShouldPointTo, database.retentionSavingCache)
+			So(staleConnector.sync, ShouldPointTo, database.sync)
+		})
+	})
+}

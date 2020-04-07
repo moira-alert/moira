@@ -24,8 +24,6 @@ type checkerConfig struct {
 	// Max period to perform lazy triggers re-check. Note: lazy triggers are triggers which has no subscription for it. Moira will check its state less frequently.
 	// Delay for check lazy trigger is random between LazyTriggersCheckInterval/2 and LazyTriggersCheckInterval.
 	LazyTriggersCheckInterval string `yaml:"lazy_triggers_check_interval"`
-	// Time interval to store metrics. Note: Increasing of this value leads to increasing of Redis memory consumption value
-	MetricsTTL string `yaml:"metrics_ttl"`
 	// Max concurrent checkers to run. Equals to the number of processor cores found on Moira host by default or when variable is defined as 0.
 	MaxParallelChecks int `yaml:"max_parallel_checks"`
 	// Max concurrent remote checkers to run. Equals to the number of processor cores found on Moira host by default or when variable is defined as 0.
@@ -34,7 +32,6 @@ type checkerConfig struct {
 
 func (config *checkerConfig) getSettings() *checker.Config {
 	return &checker.Config{
-		MetricsTTLSeconds:           int64(to.Duration(config.MetricsTTL).Seconds()),
 		CheckInterval:               to.Duration(config.CheckInterval),
 		LazyTriggersCheckInterval:   to.Duration(config.LazyTriggersCheckInterval),
 		NoDataCheckInterval:         to.Duration(config.NoDataCheckInterval),
@@ -50,6 +47,7 @@ func getDefault() config {
 			Host:            "localhost",
 			Port:            "6379",
 			ConnectionLimit: 512,
+			MetricsTTL:      "1h",
 		},
 		Logger: cmd.LoggerConfig{
 			LogFile:  "stdout",
@@ -59,7 +57,6 @@ func getDefault() config {
 			NoDataCheckInterval:       "60s",
 			CheckInterval:             "5s",
 			LazyTriggersCheckInterval: "10m",
-			MetricsTTL:                "1h",
 			StopCheckingInterval:      "30s",
 			MaxParallelChecks:         0,
 			MaxParallelRemoteChecks:   0,
@@ -78,6 +75,7 @@ func getDefault() config {
 		Remote: cmd.RemoteConfig{
 			CheckInterval: "60s",
 			Timeout:       "60s",
+			MetricsTTL:    "7d",
 		},
 	}
 }

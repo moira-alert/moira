@@ -119,6 +119,20 @@ func (mr *MockDatabaseMockRecorder) AddRemoteTriggersToCheck(arg0 interface{}) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddRemoteTriggersToCheck", reflect.TypeOf((*MockDatabase)(nil).AddRemoteTriggersToCheck), arg0)
 }
 
+// AllowStale mocks base method
+func (m *MockDatabase) AllowStale() moira.Database {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AllowStale")
+	ret0, _ := ret[0].(moira.Database)
+	return ret0
+}
+
+// AllowStale indicates an expected call of AllowStale
+func (mr *MockDatabaseMockRecorder) AllowStale() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AllowStale", reflect.TypeOf((*MockDatabase)(nil).AllowStale))
+}
+
 // DeleteTriggerCheckLock mocks base method
 func (m *MockDatabase) DeleteTriggerCheckLock(arg0 string) error {
 	m.ctrl.T.Helper()
@@ -340,6 +354,20 @@ func (m *MockDatabase) GetMetricRetention(arg0 string) (int64, error) {
 func (mr *MockDatabaseMockRecorder) GetMetricRetention(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMetricRetention", reflect.TypeOf((*MockDatabase)(nil).GetMetricRetention), arg0)
+}
+
+// GetMetricsTTLSeconds mocks base method
+func (m *MockDatabase) GetMetricsTTLSeconds() int64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMetricsTTLSeconds")
+	ret0, _ := ret[0].(int64)
+	return ret0
+}
+
+// GetMetricsTTLSeconds indicates an expected call of GetMetricsTTLSeconds
+func (mr *MockDatabaseMockRecorder) GetMetricsTTLSeconds() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMetricsTTLSeconds", reflect.TypeOf((*MockDatabase)(nil).GetMetricsTTLSeconds))
 }
 
 // GetMetricsUpdatesCount mocks base method
