@@ -160,6 +160,12 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 				notifier.logger.Errorf(buildErr)
 			}
 		}
+
+		pkg.Trigger.Desc, err = pkg.Trigger.GetPopulatedDescription(pkg.Events)
+		if err != nil {
+			notifier.logger.Errorf("Error populate description: %v", err)
+		}
+
 		err = sender.SendEvents(pkg.Events, pkg.Contact, pkg.Trigger, plot, pkg.Throttled)
 		if err == nil {
 			if metric, found := notifier.metrics.SendersOkMetrics.GetRegisteredMeter(pkg.Contact.Type); found {
