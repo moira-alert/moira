@@ -145,6 +145,21 @@ func Pager(defaultCreatePager bool, defaultPagerID string) func(next http.Handle
 	}
 }
 
+// Populate gets bool value populate from URI query and set it to request context. If query has not values sets given values
+func Populate(defaultPopulated bool) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+			populate, err := strconv.ParseBool(request.URL.Query().Get("populated"))
+			if err != nil {
+				populate = defaultPopulated
+			}
+
+			ctxTemplate := context.WithValue(request.Context(), populateKey, populate)
+			next.ServeHTTP(writer, request.WithContext(ctxTemplate))
+		})
+	}
+}
+
 // DateRange gets from and to values from URI query and set it to request context. If query has not values sets given values
 func DateRange(defaultFrom, defaultTo string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
