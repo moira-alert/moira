@@ -13,3 +13,4 @@ mockgen -destination=mock/scheduler/scheduler.go -package=mock_scheduler github.
 mockgen -destination=mock/moira-alert/searcher.go -package=mock_moira_alert github.com/moira-alert/moira Searcher
 mockgen -destination=mock/metric_source/source.go  -package=mock_metric_source github.com/moira-alert/moira/metric_source MetricSource
 mockgen -destination=mock/metric_source/fetch_result.go -package=mock_metric_source github.com/moira-alert/moira/metric_source FetchResult
+mockgen -destination=mock/heartbeat/heartbeat.go -package=mock_heartbeat github.com/moira-alert/moira/notifier/selfstate/heartbeat Heartbeater
