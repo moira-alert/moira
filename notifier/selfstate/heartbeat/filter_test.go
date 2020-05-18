@@ -36,7 +36,8 @@ func TestFilter(t *testing.T) {
 		})
 
 		Convey("Filter error handling test", func() {
-			database.EXPECT().GetMetricsUpdatesCount().Return(int64(1), err)
+			database.EXPECT().GetMetricsUpdatesCount().Return(int64(1), nil)
+			database.EXPECT().GetLocalTriggersToCheckCount().Return(int64(1), err)
 
 			value, needSend, errActual := check.Check(now)
 			So(errActual, ShouldEqual, err)
@@ -47,6 +48,7 @@ func TestFilter(t *testing.T) {
 		Convey("Test update lastSuccessfulCheck", func() {
 			now += 1000
 			database.EXPECT().GetMetricsUpdatesCount().Return(int64(1), nil)
+			database.EXPECT().GetLocalTriggersToCheckCount().Return(int64(1), nil)
 
 			value, needSend, errActual := check.Check(now)
 			So(errActual, ShouldBeNil)
@@ -60,6 +62,7 @@ func TestFilter(t *testing.T) {
 
 			database.EXPECT().GetMetricsUpdatesCount().Return(int64(0), nil)
 			database.EXPECT().SetNotifierState(moira.SelfStateERROR).Return(err)
+			database.EXPECT().GetLocalTriggersToCheckCount().Return(int64(1), nil)
 
 			value, needSend, errActual := check.Check(now)
 			So(errActual, ShouldBeNil)
@@ -69,6 +72,7 @@ func TestFilter(t *testing.T) {
 
 		Convey("Exit without action", func() {
 			database.EXPECT().GetMetricsUpdatesCount().Return(int64(0), nil)
+			database.EXPECT().GetLocalTriggersToCheckCount().Return(int64(1), nil)
 
 			value, needSend, errActual := check.Check(now)
 			So(errActual, ShouldBeNil)

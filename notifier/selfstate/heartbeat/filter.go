@@ -27,12 +27,13 @@ func GetFilter(delay int64, logger moira.Logger, database moira.Database) Heartb
 }
 
 func (check *filter) Check(nowTS int64) (int64, bool, error) {
-	metricsCount, err := check.database.GetMetricsUpdatesCount()
+	triggersCount, err := check.database.GetLocalTriggersToCheckCount()
 	if err != nil {
 		return 0, false, err
 	}
 
-	if check.count != metricsCount {
+	metricsCount, _ := check.database.GetMetricsUpdatesCount()
+	if check.count != metricsCount || triggersCount == 0 {
 		check.count = metricsCount
 		check.lastSuccessfulCheck = nowTS
 		return 0, false, nil
@@ -46,13 +47,9 @@ func (check *filter) Check(nowTS int64) (int64, bool, error) {
 	return 0, false, nil
 }
 
+// NeedTurnOffNotifier: turn off notifications if at least once the filter check was successful
 func (check filter) NeedTurnOffNotifier() bool {
-	if !check.firstCheckWasSuccessful {
-		return false
-	}
-
-	metricsCount, _ := check.database.GetMetricsUpdatesCount()
-	return metricsCount > 0
+	return check.firstCheckWasSuccessful
 }
 
 func (check filter) NeedToCheckOthers() bool {

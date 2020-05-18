@@ -35,6 +35,8 @@ func TestSelfCheckWorker_selfStateChecker(t *testing.T) {
 		mock.database.EXPECT().GetMetricsUpdatesCount().Return(int64(1), nil)
 		mock.database.EXPECT().GetRemoteChecksUpdatesCount().Return(int64(1), nil)
 		mock.database.EXPECT().GetNotifierState().Return(moira.SelfStateOK, nil)
+		mock.database.EXPECT().GetRemoteTriggersToCheckCount().Return(int64(1), nil)
+		mock.database.EXPECT().GetLocalTriggersToCheckCount().Return(int64(1), nil).Times(2)
 		mock.notif.EXPECT().Send(gomock.Any(), gomock.Any())
 
 		mock.selfCheckWorker.sendErrorMessages(events)

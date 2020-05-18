@@ -27,11 +27,11 @@ func (selfCheck *SelfCheckWorker) selfStateChecker(stop <-chan struct{}) error {
 		selfCheck.Heartbeats = append(selfCheck.Heartbeats, heartbeat)
 	}
 
-	if heartbeat := heartbeat.GetGraphiteLocalChecker(selfCheck.Config.LastCheckDelaySeconds, selfCheck.Logger, selfCheck.Database); heartbeat != nil && heartbeat.NeedToCheckOthers() {
+	if heartbeat := heartbeat.GetLocalChecker(selfCheck.Config.LastCheckDelaySeconds, selfCheck.Logger, selfCheck.Database); heartbeat != nil && heartbeat.NeedToCheckOthers() {
 		selfCheck.Heartbeats = append(selfCheck.Heartbeats, heartbeat)
 	}
 
-	if heartbeat := heartbeat.GetGraphiteRemoteChecker(selfCheck.Config.LastRemoteCheckDelaySeconds, selfCheck.Logger, selfCheck.Database); heartbeat != nil && heartbeat.NeedToCheckOthers() {
+	if heartbeat := heartbeat.GetRemoteChecker(selfCheck.Config.LastRemoteCheckDelaySeconds, selfCheck.Logger, selfCheck.Database); heartbeat != nil && heartbeat.NeedToCheckOthers() {
 		selfCheck.Heartbeats = append(selfCheck.Heartbeats, heartbeat)
 	}
 
