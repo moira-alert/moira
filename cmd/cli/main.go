@@ -9,7 +9,9 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/database/redis"
+	"github.com/moira-alert/moira/logging/go-logging"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
+	"github.com/moira-alert/moira/metric_source/local"
 )
 
 // Moira version
@@ -46,6 +48,15 @@ var (
 	userDel  = flag.String("user-del", "", "Delete all contacts and subscriptions for a user")
 	fromUser = flag.String("from-user", "", "Transfer subscriptions and contacts from user.")
 	toUser   = flag.String("to-user", "", "Transfer subscriptions and contacts to user.")
+)
+
+var (
+	pullTrigger        = flag.String("pull-trigger", "", "Get trigger from redis and save it to file")
+	pullTriggerMetrics = flag.String("pull-trigger-metrics", "", "Get trigger patterns and metrics from redis and save it to file")
+	pushTrigger        = flag.Bool("push-trigger", false, "Get trigger in JSON from file and save it to redis")
+	pushTriggerMetrics = flag.String("push-trigger-metrics", "", "Get trigger patterns and metrics in JSON from strdin and save it to redis")
+	triggerFile        = flag.String("trigger-file", "", "File that holds trigger JSON")
+	triggerMetricsFile = flag.String("trigger-metrics-file", "", "File that holds trigger metrics JSON")
 )
 
 func main() { //nolint
@@ -95,6 +106,35 @@ func main() { //nolint
 		logger.Debugf("User whitelist: %#v", confCleanup.Whitelist)
 		if err := handleCleanup(logger, dataBase, confCleanup); err != nil {
 			logger.Error(err)
+		}
+	}
+
+	if *pullTrigger != "" {
+		err := handlePullTrigger(logger, dataBase, *pullTrigger, *triggerFile)
+		if err != nil {
+			logger.Fatal(err)
+		}
+	}
+
+	if *pullTriggerMetrics != "" {
+		localSource := local.Create(dataBase)
+		err := handlePullTriggerMetrics(localSource, logger, dataBase, *pullTriggerMetrics, *triggerMetricsFile)
+		if err != nil {
+			logger.Fatal(err)
+		}
+	}
+
+	if *pushTrigger {
+		err := handlePushTrigger(logger, dataBase, *triggerFile)
+		if err != nil {
+			logger.Fatal(err)
+		}
+	}
+
+	if *pushTriggerMetrics != "" {
+		err := handlePushTriggerMetrics(logger, dataBase, *pushTriggerMetrics, *triggerMetricsFile)
+		if err != nil {
+			logger.Fatal(err)
 		}
 	}
 }
