@@ -157,7 +157,6 @@ func checkDateTimeFormat(format string) error {
 func (config *selfStateConfig) getSettings() selfstate.Config {
 	return selfstate.Config{
 		Enabled:                        config.Enabled,
-		RemoteTriggersEnabled:          config.RemoteTriggersEnabled,
 		RedisDisconnectDelaySeconds:    int64(to.Duration(config.RedisDisconnectDelay).Seconds()),
 		LastMetricReceivedDelaySeconds: int64(to.Duration(config.LastMetricReceivedDelay).Seconds()),
 		LastCheckDelaySeconds:          int64(to.Duration(config.LastCheckDelay).Seconds()),
