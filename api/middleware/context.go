@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
@@ -156,6 +157,17 @@ func Populate(defaultPopulated bool) func(next http.Handler) http.Handler {
 
 			ctxTemplate := context.WithValue(request.Context(), populateKey, populate)
 			next.ServeHTTP(writer, request.WithContext(ctxTemplate))
+		})
+	}
+}
+
+// Triggers gets string value target from URI query and set it to request context. If query has not values sets given values
+func Triggers(LocalMetricTTL, RemoteMetricTTL time.Duration) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+			localTTL := context.WithValue(request.Context(), localMetricTTLKey, LocalMetricTTL)
+			remoteTTL := context.WithValue(localTTL, remoteMetricTTLKey, RemoteMetricTTL)
+			next.ServeHTTP(writer, request.WithContext(remoteTTL))
 		})
 	}
 }

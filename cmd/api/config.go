@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/xiam/to"
+
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/cmd"
 )
@@ -47,10 +49,12 @@ type webContact struct {
 	Help string `yaml:"help"`
 }
 
-func (config *apiConfig) getSettings() *api.Config {
+func (config *apiConfig) getSettings(localMetricTTL, remoteMetricTTL string) *api.Config {
 	return &api.Config{
-		Listen:     config.Listen,
-		EnableCORS: config.EnableCORS,
+		EnableCORS:      config.EnableCORS,
+		Listen:          config.Listen,
+		LocalMetricTTL:  to.Duration(localMetricTTL),
+		RemoteMetricTTL: to.Duration(remoteMetricTTL),
 	}
 }
 

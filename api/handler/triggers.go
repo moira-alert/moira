@@ -27,6 +27,7 @@ func triggers(metricSourceProvider *metricSource.SourceProvider, searcher moira.
 		router.Use(middleware.SearchIndexContext(searcher))
 		router.Get("/", getAllTriggers)
 		router.Put("/", createTrigger)
+		router.Get("/check", triggerCheck)
 		router.Route("/{triggerId}", trigger)
 		router.With(middleware.Paginate(0, 10)).With(middleware.Pager(false, "")).Get("/search", searchTriggers)
 		// ToDo: DEPRECATED method. Remove in Moira 2.6
@@ -48,20 +49,9 @@ func getAllTriggers(writer http.ResponseWriter, request *http.Request) {
 }
 
 func createTrigger(writer http.ResponseWriter, request *http.Request) {
-	trigger := &dto.Trigger{}
-	if err := render.Bind(request, trigger); err != nil {
-		switch err.(type) {
-		case local.ErrParseExpr, local.ErrEvalExpr, local.ErrUnknownFunction:
-			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("invalid graphite targets: %s", err.Error()))) //nolint
-		case expression.ErrInvalidExpression:
-			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("invalid expression: %s", err.Error()))) //nolint
-		case api.ErrInvalidRequestContent:
-			render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
-		case remote.ErrRemoteTriggerResponse:
-			render.Render(writer, request, api.ErrorRemoteServerUnavailable(err)) //nolint
-		default:
-			render.Render(writer, request, api.ErrorInternalServer(err)) //nolint
-		}
+	trigger, err := getTriggerFromRequest(request)
+	if err != nil {
+		render.Render(writer, request, err) //nolint
 		return
 	}
 
@@ -74,6 +64,7 @@ func createTrigger(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	timeSeriesNames := middleware.GetTimeSeriesNames(request)
+
 	response, err := controller.CreateTrigger(database, &trigger.TriggerModel, timeSeriesNames)
 	if err != nil {
 		render.Render(writer, request, err) //nolint
@@ -84,6 +75,49 @@ func createTrigger(writer http.ResponseWriter, request *http.Request) {
 		render.Render(writer, request, api.ErrorRender(err)) //nolint
 		return
 	}
+}
+
+func getTriggerFromRequest(request *http.Request) (*dto.Trigger, *api.ErrorResponse) {
+	trigger := &dto.Trigger{}
+	if err := render.Bind(request, trigger); err != nil {
+		switch err.(type) {
+		case local.ErrParseExpr, local.ErrEvalExpr, local.ErrUnknownFunction:
+			return nil, api.ErrorInvalidRequest(fmt.Errorf("invalid graphite targets: %s", err.Error()))
+		case expression.ErrInvalidExpression:
+			return nil, api.ErrorInvalidRequest(fmt.Errorf("invalid expression: %s", err.Error()))
+		case api.ErrInvalidRequestContent:
+			return nil, api.ErrorInvalidRequest(err)
+		case remote.ErrRemoteTriggerResponse:
+			response := api.ErrorRemoteServerUnavailable(err)
+			middleware.GetLoggerEntry(request).Error("%s : %s : %s", response.StatusText, response.ErrorText, err)
+			return nil, response
+		default:
+			return nil, api.ErrorInternalServer(err)
+		}
+	}
+
+	return trigger, nil
+}
+
+func triggerCheck(writer http.ResponseWriter, request *http.Request) {
+	ttl := middleware.GetLocalMetricTTL(request)
+	trigger := &dto.Trigger{}
+	response := dto.TriggerCheckResponse{}
+
+	if err := render.Bind(request, trigger); err != nil {
+		switch err.(type) {
+		case expression.ErrInvalidExpression, local.ErrParseExpr, local.ErrEvalExpr, local.ErrUnknownFunction:
+		default:
+			render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
+			return
+		}
+	}
+
+	if len(trigger.Targets) > 0 {
+		response.Targets = dto.TargetVerification(trigger.Targets, ttl, trigger.IsRemote)
+	}
+
+	render.JSON(writer, request, response)
 }
 
 func searchTriggers(writer http.ResponseWriter, request *http.Request) {

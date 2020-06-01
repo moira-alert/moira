@@ -37,7 +37,7 @@ func NewHandler(db moira.Database, log moira.Logger, index moira.Searcher, confi
 		router.Use(moiramiddle.DatabaseContext(database))
 		router.Get("/config", getWebConfig(webConfigContent))
 		router.Route("/user", user)
-		router.Route("/trigger", triggers(metricSourceProvider, searchIndex))
+		router.With(moiramiddle.Triggers(config.LocalMetricTTL, config.RemoteMetricTTL)).Route("/trigger", triggers(metricSourceProvider, searchIndex))
 		router.Route("/tag", tag)
 		router.Route("/pattern", pattern)
 		router.Route("/event", event)
