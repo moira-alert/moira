@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/moira-alert/moira"
 	metricSource "github.com/moira-alert/moira/metric_source"
@@ -19,6 +20,8 @@ var (
 	databaseKey          ContextKey = "database"
 	searcherKey          ContextKey = "searcher"
 	triggerIDKey         ContextKey = "triggerID"
+	localMetricTTLKey    ContextKey = "localMetricTTL"
+	remoteMetricTTLKey   ContextKey = "remoteMetricTTL"
 	populateKey          ContextKey = "populated"
 	contactIDKey         ContextKey = "contactID"
 	tagKey               ContextKey = "tag"
@@ -48,6 +51,16 @@ func GetLogin(request *http.Request) string {
 // GetTriggerID gets TriggerID string from request context, which was sets in TriggerContext middleware
 func GetTriggerID(request *http.Request) string {
 	return request.Context().Value(triggerIDKey).(string)
+}
+
+// GetLocalMetricTTL gets local metric ttl duration time from request context, which was sets in TriggerContext middleware
+func GetLocalMetricTTL(request *http.Request) time.Duration {
+	return request.Context().Value(localMetricTTLKey).(time.Duration)
+}
+
+// GetRemoteMetricTTL gets remote metric ttl duration time from request context, which was sets in TriggerContext middleware
+func GetRemoteMetricTTL(request *http.Request) time.Duration {
+	return request.Context().Value(remoteMetricTTLKey).(time.Duration)
 }
 
 // GetPopulated get populate bool from request context, which was sets in TriggerContext middleware

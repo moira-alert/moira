@@ -178,6 +178,7 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 	}
 
 	middleware.SetTimeSeriesNames(request, metricsDataNames)
+
 	if _, err := triggerExpression.Evaluate(); err != nil {
 		return err
 	}
@@ -330,6 +331,11 @@ func (trigger *Trigger) PopulatedDescription(events moira.NotificationEvents) er
 	*trigger.Desc = description
 
 	return nil
+}
+
+type TriggerCheckResponse struct {
+	// Graphite-like targets: t1, t2, ...
+	Targets []TreeOfProblems `json:"targets,omitempty"`
 }
 
 type TriggerCheck struct {

@@ -1,27 +1,22 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
-	"github.com/moira-alert/moira/metric_source/local"
-	"github.com/moira-alert/moira/metric_source/remote"
 
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/controller"
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/api/middleware"
-	"github.com/moira-alert/moira/expression"
 )
 
 func trigger(router chi.Router) {
 	router.Use(middleware.TriggerContext)
 	router.Put("/", updateTrigger)
-	router.With(middleware.TriggerContext,
-		middleware.Populate(false)).Get("/", getTrigger)
+	router.With(middleware.TriggerContext, middleware.Populate(false)).Get("/", getTrigger)
 	router.Delete("/", removeTrigger)
 	router.Get("/state", getTriggerState)
 	router.Route("/throttling", func(router chi.Router) {
@@ -35,28 +30,15 @@ func trigger(router chi.Router) {
 
 func updateTrigger(writer http.ResponseWriter, request *http.Request) {
 	triggerID := middleware.GetTriggerID(request)
-	trigger := &dto.Trigger{}
 
-	if err := render.Bind(request, trigger); err != nil {
-		switch err := err.(type) {
-		case local.ErrParseExpr, local.ErrEvalExpr, local.ErrUnknownFunction:
-			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("invalid graphite targets: %s", err.Error()))) //nolint
-		case expression.ErrInvalidExpression:
-			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("invalid expression: %s", err.Error()))) //nolint
-		case api.ErrInvalidRequestContent:
-			render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
-		case remote.ErrRemoteTriggerResponse:
-			response := api.ErrorRemoteServerUnavailable(err)
-			middleware.GetLoggerEntry(request).Error("%s : %s : %s", response.StatusText, response.ErrorText, err.Target)
-			render.Render(writer, request, response) //nolint
-		default:
-			render.Render(writer, request, api.ErrorInternalServer(err)) //nolint
-		}
+	trigger, err := getTriggerFromRequest(request)
+	if err != nil {
+		render.Render(writer, request, err) //nolint
+		return
+	}
 
-		if err := checkingTemplateFilling(request, *trigger); err != nil {
-			render.Render(writer, request, err) //nolint
-		}
-
+	if err = checkingTemplateFilling(request, *trigger); err != nil {
+		render.Render(writer, request, err) //nolint
 		return
 	}
 

@@ -59,7 +59,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	apiConfig := config.API.getSettings()
+	apiConfig := config.API.getSettings(config.Redis.MetricsTTL, config.Remote.MetricsTTL)
 
 	logger, err := logging.ConfigureLog(config.Logger.LogFile, config.Logger.LogLevel, serviceName)
 	if err != nil {

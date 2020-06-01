@@ -1,9 +1,13 @@
 package api
 
+import "time"
+
 // Config for api configuration variables
 type Config struct {
-	EnableCORS bool
-	Listen     string
+	EnableCORS      bool
+	Listen          string
+	LocalMetricTTL  time.Duration
+	RemoteMetricTTL time.Duration
 }
 
 // WebConfig is container for web ui configuration parameters
