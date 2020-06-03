@@ -251,7 +251,7 @@ func TestTriggerData_TemplateDescription(t *testing.T) {
 
 	Convey("Test templates", t, func() {
 		var trigger = TriggerData{Name: "TestName"}
-		trigger.Desc = "\n" +
+		trigger.Desc = "" +
 			"Trigger name: {{.Trigger.Name}}\n" +
 			"{{range $v := .Events }}\n" +
 			"Metric: {{$v.Metric}}\n" +
@@ -260,34 +260,81 @@ func TestTriggerData_TemplateDescription(t *testing.T) {
 			"Value: {{$v.Value}}\n" +
 			"State: {{$v.State}}\n" +
 			"{{end}}\n" +
-			"https://grafana.yourhost.com/some-dashboard{{ range $i, $v := .Events }}{{ if ne $i 0 }}&{{ else }}?{{ end }}var-host={{ $v.Metric }}{{ end }}\n"
+			"https://grafana.yourhost.com/some-dashboard{{ range $i, $v := .Events }}{{ if ne $i 0 }}&{{ else }}?{{ end }}var-host={{ $v.Metric }}{{ end }}"
 
-		var data = NotificationEvents{{Metric: "1"}, {Metric: "2"}}
+		var testUnixTime = time.Now().Unix()
+		var data = NotificationEvents{{Metric: "1", Timestamp: testUnixTime}, {Metric: "2", Timestamp: testUnixTime}}
 
 		Convey("Test nil data", func() {
-
 			expected, err := trigger.GetPopulatedDescription(nil)
 			So(err, ShouldBeNil)
-			So(`
-Trigger name: TestName
+			So(`Trigger name: TestName
 
-https://grafana.yourhost.com/some-dashboard
-`, ShouldResemble, expected)
+https://grafana.yourhost.com/some-dashboard`,
+				ShouldResemble, expected)
 		})
 
 		Convey("Test data", func() {
 			expected, err := trigger.GetPopulatedDescription(data)
 			So(err, ShouldBeNil)
-			So("\nTrigger name: TestName\n\nMetric: 1\nMetricElements: [1]\nTimestamp: 0\nValue: &lt;nil&gt;\nState: \n\nMetric: 2\nMetricElements: [2]\nTimestamp: 0\nValue: &lt;nil&gt;\nState: \n\nhttps://grafana.yourhost.com/some-dashboard?var-host=1&var-host=2\n", ShouldResemble, expected)
+			So(fmt.Sprintf("Trigger name: TestName\n\nMetric: 1\nMetricElements: [1]\nTimestamp: %d\nValue: &lt;nil&gt;"+
+				"\nState: \n\nMetric: 2\nMetricElements: [2]\nTimestamp: %d\nValue: &lt;nil&gt;"+
+				"\nState: \n\nhttps://grafana.yourhost.com/some-dashboard?var-host=1&var-host=2", testUnixTime, testUnixTime), ShouldResemble, expected)
 		})
 
 		Convey("Test description without templates", func() {
 			anotherText := "Another text"
 			trigger.Desc = anotherText
+
 			expected, err := trigger.GetPopulatedDescription(data)
 			So(err, ShouldBeNil)
 			So(anotherText, ShouldEqual, expected)
 		})
+
+		Convey("Test method Date", func() {
+			formatDate := time.Unix(testUnixTime, 0).Format(eventTimeFormat)
+			actual := fmt.Sprintf("%s | %s |", formatDate, formatDate)
+			trigger.Desc = "{{ range .Events }}{{ date .Timestamp }} | {{ end }}"
+
+			expected, err := trigger.GetPopulatedDescription(data)
+			So(err, ShouldBeNil)
+			So(actual, ShouldEqual, expected)
+		})
+
+		Convey("Test method formatted Date", func() {
+			formatedDate := time.Unix(testUnixTime, 0).Format("2006-01-02 15:04:05")
+			actual := fmt.Sprintf("%s | %s |", formatedDate, formatedDate)
+			trigger.Desc = "{{ range .Events }}{{ formatDate .Timestamp \"2006-01-02 15:04:05\" }} | {{ end }}"
+
+			expected, err := trigger.GetPopulatedDescription(data)
+			So(err, ShouldBeNil)
+			So(actual, ShouldEqual, expected)
+		})
+
+		Convey("Test method decrease and increase Date", func() {
+			var timeOffset int64 = 300
+
+			Convey("Date increase", func() {
+				increase := testUnixTime + timeOffset
+				actual := fmt.Sprintf("%d | %d |", increase, increase)
+				trigger.Desc = fmt.Sprintf("{{ range .Events }}{{ .TimestampIncrease %d }} | {{ end }}", timeOffset)
+
+				expected, err := trigger.GetPopulatedDescription(data)
+				So(err, ShouldBeNil)
+				So(actual, ShouldEqual, expected)
+			})
+
+			Convey("Date decrease", func() {
+				increase := testUnixTime - timeOffset
+				actual := fmt.Sprintf("%d | %d |", increase, increase)
+				trigger.Desc = fmt.Sprintf("{{ range .Events }}{{ .TimestampDecrease %d }} | {{ end }}", timeOffset)
+
+				expected, err := trigger.GetPopulatedDescription(data)
+				So(err, ShouldBeNil)
+				So(actual, ShouldEqual, expected)
+			})
+		})
+
 	})
 }
 

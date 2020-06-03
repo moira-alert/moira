@@ -25,8 +25,9 @@ const (
 )
 
 const (
-	format        = "15:04 02.01.2006"
-	remindMessage = "This metric has been in bad state for more than %v hours - please, fix."
+	eventTimeFormat = "2006-01-02 15:04:05"
+	format          = "15:04 02.01.2006"
+	remindMessage   = "This metric has been in bad state for more than %v hours - please, fix."
 )
 
 // NotificationEvent represents trigger state changes event
@@ -119,24 +120,33 @@ type templateEvent struct {
 	State          State
 }
 
+func date(unixTime int64) string {
+	return time.Unix(unixTime, 0).Format(eventTimeFormat)
+}
+
+func formatDate(unixTime int64, format string) string {
+	return time.Unix(unixTime, 0).Format(format)
+}
+
+func (event templateEvent) TimestampDecrease(second int64) int64 {
+	return event.Timestamp - second
+}
+
+func (event templateEvent) TimestampIncrease(second int64) int64 {
+	return event.Timestamp + second
+}
+
 type templateTrigger struct {
 	Name string `json:"name"`
 }
 
-// TriggerData represents trigger object
-type TriggerData struct {
-	ID         string   `json:"id"`
-	Name       string   `json:"name"`
-	Desc       string   `json:"desc"`
-	Targets    []string `json:"targets"`
-	WarnValue  float64  `json:"warn_value"`
-	ErrorValue float64  `json:"error_value"`
-	IsRemote   bool     `json:"is_remote"`
-	Tags       []string `json:"__notifier_trigger_tags"`
-}
-
 func (trigger TriggerData) GetPopulatedDescription(events NotificationEvents) (string, error) {
 	buffer := new(bytes.Buffer)
+	funcMap := template.FuncMap{
+		"date":       date,
+		"formatDate": formatDate,
+	}
+
 	templateEvents := make([]templateEvent, 0, len(events))
 
 	for _, data := range events {
@@ -156,12 +166,30 @@ func (trigger TriggerData) GetPopulatedDescription(events NotificationEvents) (s
 		Events:  templateEvents,
 	}
 
-	triggerTemplate := template.Must(template.New("populate-description").Parse(trigger.Desc))
-	if err := triggerTemplate.Execute(buffer, dataToExecute); err != nil {
+	triggerTemplate := template.New("populate-description").Funcs(funcMap)
+	triggerTemplate, err := triggerTemplate.Parse(trigger.Desc)
+	if err != nil {
 		return "", err
 	}
 
-	return buffer.String(), nil
+	err = triggerTemplate.Execute(buffer, dataToExecute)
+	if err != nil {
+		return "", err
+	}
+
+	return strings.TrimSpace(buffer.String()), nil
+}
+
+// TriggerData represents trigger object
+type TriggerData struct {
+	ID         string   `json:"id"`
+	Name       string   `json:"name"`
+	Desc       string   `json:"desc"`
+	Targets    []string `json:"targets"`
+	WarnValue  float64  `json:"warn_value"`
+	ErrorValue float64  `json:"error_value"`
+	IsRemote   bool     `json:"is_remote"`
+	Tags       []string `json:"__notifier_trigger_tags"`
 }
 
 // GetTriggerURI gets frontUri and returns triggerUrl, returns empty string on selfcheck and test notifications
