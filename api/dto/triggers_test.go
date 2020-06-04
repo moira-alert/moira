@@ -130,7 +130,6 @@ func TestExpressionModeMultipleTargetsWarnValue(t *testing.T) {
 				err := tr.Bind(request)
 				So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("can't use trigger_type not 'rising' for with multiple targets")})
 			})
-
 		})
 		Convey("Test ExpressionTrigger", func() {
 			trigger.TriggerType = moira.ExpressionTrigger
@@ -159,6 +158,35 @@ func TestExpressionModeMultipleTargetsWarnValue(t *testing.T) {
 				tr := Trigger{trigger, throttling}
 				err := tr.Bind(request)
 				So(err, ShouldBeNil)
+			})
+		})
+
+		Convey("Test alone metrics", func() {
+			trigger.Targets = []string{"test target"}
+			trigger.Expression = "OK"
+			Convey("are empty", func() {
+				trigger.AloneMetrics = map[string]bool{}
+				tr := Trigger{trigger, throttling}
+				err := tr.Bind(request)
+				So(err, ShouldBeNil)
+			})
+			Convey("are valid", func() {
+				trigger.AloneMetrics = map[string]bool{"t1": true}
+				tr := Trigger{trigger, throttling}
+				err := tr.Bind(request)
+				So(err, ShouldBeNil)
+			})
+			Convey("have invalid metric name", func() {
+				trigger.AloneMetrics = map[string]bool{"ttt": true}
+				tr := Trigger{trigger, throttling}
+				err := tr.Bind(request)
+				So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("alone metrics target name should be in pattern: t\\d+")})
+			})
+			Convey("have target higher than total amount of targets", func() {
+				trigger.AloneMetrics = map[string]bool{"t3": true}
+				tr := Trigger{trigger, throttling}
+				err := tr.Bind(request)
+				So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("alone metrics target index should be in range from 1 to length of targets")})
 			})
 		})
 	})
