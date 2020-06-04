@@ -131,7 +131,7 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 		if !targetNameRegex.MatchString(targetName) {
 			return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("alone metrics target name should be in pattern: t\\d+")}
 		}
-		targetIndexStr := targetNameRegex.FindStringSubmatch(targetName)[0]
+		targetIndexStr := targetNameRegex.FindStringSubmatch(targetName)[1]
 		targetIndex, err := strconv.Atoi(targetIndexStr)
 		if err != nil {
 			return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("alone metrics target index should be valid number: %w", err)}
