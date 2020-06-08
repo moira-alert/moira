@@ -7,7 +7,6 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
-	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/metric_source/local"
 	"github.com/moira-alert/moira/metric_source/remote"
 
@@ -54,16 +53,11 @@ func updateTrigger(writer http.ResponseWriter, request *http.Request) {
 			render.Render(writer, request, api.ErrorInternalServer(err)) //nolint
 		}
 
-		return
-	}
-
-	if trigger.Desc != nil {
-		triggerData := moira.TriggerData{Desc: *trigger.Desc, Name: trigger.Name}
-		if _, err := triggerData.GetPopulatedDescription(moira.NotificationEvents{}); err != nil {
-			render.Render(writer, request, api.ErrorRender( //nolint
-				fmt.Errorf("You have an error in your Go template: %v", err)))
-			return
+		if err := checkingTemplateFilling(request, *trigger); err != nil {
+			render.Render(writer, request, err) //nolint
 		}
+
+		return
 	}
 
 	timeSeriesNames := middleware.GetTimeSeriesNames(request)
@@ -92,26 +86,37 @@ func getTrigger(writer http.ResponseWriter, request *http.Request) {
 	if triggerID == "testlog" {
 		panic("Test for multi line logs")
 	}
+
 	trigger, err := controller.GetTrigger(database, triggerID)
 	if err != nil {
 		render.Render(writer, request, err) //nolint
 		return
 	}
 
-	if needToPopulate := middleware.GetPopulated(request); needToPopulate && trigger.Desc != nil {
-		triggerData := moira.TriggerData{Desc: *trigger.Desc, Name: trigger.Name}
-
-		eventsList, err := controller.GetTriggerEvents(database, triggerID, 0, 3)
-		if err != nil {
-			render.Render(writer, request, err) //nolint
-		}
-
-		*trigger.Desc, _ = triggerData.GetPopulatedDescription(eventsList.List)
+	if err := checkingTemplateFilling(request, *trigger); err != nil {
+		middleware.GetLoggerEntry(request).Warning(err)
 	}
 
 	if err := render.Render(writer, request, trigger); err != nil {
 		render.Render(writer, request, api.ErrorRender(err)) //nolint
 	}
+}
+
+func checkingTemplateFilling(request *http.Request, trigger dto.Trigger) *api.ErrorResponse {
+	if !middleware.GetPopulated(request) {
+		return nil
+	}
+
+	eventsList, err := controller.GetTriggerEvents(database, trigger.ID, 0, 3)
+	if err != nil {
+		return err
+	}
+
+	if err := trigger.PopulatedDescription(eventsList.List); err != nil {
+		return api.ErrorRender(err)
+	}
+
+	return nil
 }
 
 func getTriggerState(writer http.ResponseWriter, request *http.Request) {
