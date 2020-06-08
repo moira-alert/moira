@@ -64,6 +64,15 @@ func createTrigger(writer http.ResponseWriter, request *http.Request) {
 		}
 		return
 	}
+
+	if trigger.Desc != nil {
+		err := trigger.PopulatedDescription(moira.NotificationEvents{{}})
+		if err != nil {
+			render.Render(writer, request, api.ErrorRender(err)) //nolint
+			return
+		}
+	}
+
 	timeSeriesNames := middleware.GetTimeSeriesNames(request)
 	response, err := controller.CreateTrigger(database, &trigger.TriggerModel, timeSeriesNames)
 	if err != nil {

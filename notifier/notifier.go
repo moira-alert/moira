@@ -154,7 +154,13 @@ func (notifier *StandardNotifier) resend(pkg *NotificationPackage, reason string
 }
 
 func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan NotificationPackage) {
+	defer func() {
+		if err := recover(); err != nil {
+			notifier.logger.Warningf("Panic notifier: %v, ", err)
+		}
+	}()
 	defer notifier.waitGroup.Done()
+
 	for pkg := range ch {
 		plots, err := notifier.buildNotificationPackagePlots(pkg)
 		if err != nil {
@@ -167,9 +173,9 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 			}
 		}
 
-		pkg.Trigger.Desc, err = pkg.Trigger.GetPopulatedDescription(pkg.Events)
+		err = pkg.Trigger.PopulatedDescription(pkg.Events)
 		if err != nil {
-			notifier.logger.Errorf("Error populate description: %v", err)
+			notifier.logger.Warningf("Error populate description:\n%v", err)
 		}
 
 		err = sender.SendEvents(pkg.Events, pkg.Contact, pkg.Trigger, plots, pkg.Throttled)
