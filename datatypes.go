@@ -459,7 +459,7 @@ func (event NotificationEvent) GetMetricsValues() string {
 	sort.Strings(targetNames)
 	for i, targetName := range targetNames {
 		builder.WriteString(targetName)
-		builder.WriteRune(':')
+		builder.WriteString(": ")
 		value := strconv.FormatFloat(event.Values[targetName], 'f', -1, 64)
 		builder.WriteString(value)
 		if i < len(targetNames)-1 {
