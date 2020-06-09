@@ -110,6 +110,7 @@ func CreateTriggerModel(trigger *moira.Trigger) TriggerModel {
 		Patterns:       trigger.Patterns,
 		IsRemote:       trigger.IsRemote,
 		MuteNewMetrics: trigger.MuteNewMetrics,
+		AloneMetrics:   trigger.AloneMetrics,
 	}
 }
 
