@@ -158,7 +158,7 @@ some other text _italic text_`,
 							Facts: []Fact{
 								{
 									Name:  "02:40",
-									Value: "```Metric = t1:123 (OK to ERROR)```",
+									Value: "```Metric = 123 (OK to ERROR)```",
 								},
 							},
 						},
@@ -189,7 +189,7 @@ some other text _italic text_`,
 							Facts: []Fact{
 								{
 									Name:  "02:40",
-									Value: "```Metric = t1:123 (OK to WARN)```",
+									Value: "```Metric = 123 (OK to WARN)```",
 								},
 							},
 						},
@@ -220,7 +220,7 @@ some other text _italic text_`,
 							Facts: []Fact{
 								{
 									Name:  "02:40",
-									Value: "```Metric = t1:123 (WARN to OK)```",
+									Value: "```Metric = 123 (WARN to OK)```",
 								},
 							},
 						},
@@ -251,7 +251,7 @@ some other text _italic text_`,
 							Facts: []Fact{
 								{
 									Name:  "02:40",
-									Value: "```Metric = t1:123 (NODATA to NODATA)```",
+									Value: "```Metric = 123 (NODATA to NODATA)```",
 								},
 							},
 						},
@@ -277,7 +277,7 @@ some other text _italic text_`,
 						Facts: []Fact{
 							{
 								Name:  "02:40",
-								Value: "```Metric = t1:123 (OK to NODATA)```",
+								Value: "```Metric = 123 (OK to NODATA)```",
 							},
 						},
 					},
@@ -312,7 +312,7 @@ some other text _italic text_`,
 						Facts: []Fact{
 							{
 								Name:  "02:40",
-								Value: "```Metric = t1:123 (OK to NODATA)```",
+								Value: "```Metric = 123 (OK to NODATA)```",
 							},
 						},
 					},
@@ -336,7 +336,7 @@ some other text _italic text_`,
 						Facts: []Fact{
 							{
 								Name:  "02:40",
-								Value: "```Metric = t1:123 (OK to NODATA)```",
+								Value: "```Metric = 123 (OK to NODATA)```",
 							},
 							{
 								Name:  "Warning",
@@ -376,27 +376,27 @@ some other text _italic text_`,
 						Facts: []Fact{
 							{
 								Name:  "02:40",
-								Value: "```Metric = t1:123 (OK to NODATA)```",
+								Value: "```Metric = 123 (OK to NODATA)```",
 							},
 							{
 								Name:  "02:40",
-								Value: "```Metric = t1:123 (OK to NODATA)```",
+								Value: "```Metric = 123 (OK to NODATA)```",
 							},
 							{
 								Name:  "02:40",
-								Value: "```Metric = t1:123 (OK to NODATA)```",
+								Value: "```Metric = 123 (OK to NODATA)```",
 							},
 							{
 								Name:  "02:40",
-								Value: "```Metric = t1:123 (OK to NODATA)```",
+								Value: "```Metric = 123 (OK to NODATA)```",
 							},
 							{
 								Name:  "02:40",
-								Value: "```Metric = t1:123 (OK to NODATA)```",
+								Value: "```Metric = 123 (OK to NODATA)```",
 							},
 							{
 								Name:  "02:40",
-								Value: "```Metric = t1:123 (OK to NODATA)```",
+								Value: "```Metric = 123 (OK to NODATA)```",
 							},
 						},
 					},
@@ -432,7 +432,7 @@ some other text _italic text_`,
 						Facts: []Fact{
 							{
 								Name:  "02:40",
-								Value: "```Metric = t1:123 (OK to NODATA)```",
+								Value: "```Metric = 123 (OK to NODATA)```",
 							},
 						},
 					},

@@ -445,11 +445,17 @@ func (event NotificationEvent) String() string {
 
 // GetMetricsValues gets event metric value and format it to human readable presentation
 func (event NotificationEvent) GetMetricsValues() string {
-	var builder strings.Builder
 	var targetNames []string
 	for targetName := range event.Values {
 		targetNames = append(targetNames, targetName)
 	}
+	if len(targetNames) == 0 {
+		return "—"
+	}
+	if len(targetNames) == 1 {
+		return strconv.FormatFloat(event.Values[targetNames[0]], 'f', -1, 64)
+	}
+	var builder strings.Builder
 	sort.Strings(targetNames)
 	for i, targetName := range targetNames {
 		builder.WriteString(targetName)

@@ -206,17 +206,17 @@ func TestNotificationEvent_GetValue(t *testing.T) {
 		event.Values = make(map[string]float64)
 		Convey("One target with zero", func() {
 			event.Values["t1"] = 0
-			So(event.GetMetricsValues(), ShouldResemble, "t1:0")
+			So(event.GetMetricsValues(), ShouldResemble, "0")
 		})
 
 		Convey("One target with short fraction", func() {
 			event.Values["t1"] = 2.32
-			So(event.GetMetricsValues(), ShouldResemble, "t1:2.32")
+			So(event.GetMetricsValues(), ShouldResemble, "2.32")
 		})
 
 		Convey("One target with long fraction", func() {
 			event.Values["t1"] = 2.3222222
-			So(event.GetMetricsValues(), ShouldResemble, "t1:2.3222222")
+			So(event.GetMetricsValues(), ShouldResemble, "2.3222222")
 		})
 		Convey("Two targets", func() {
 			event.Values["t2"] = 0.12
