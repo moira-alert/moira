@@ -61,7 +61,7 @@ func TestFetchTriggerMetrics(t *testing.T) {
 				fetchResult.EXPECT().GetPatternMetrics().Return([]string{}, nil)
 
 				actual, err := triggerChecker.fetchTriggerMetrics()
-				So(err, ShouldResemble, ErrTargetHasNoMetrics{targetIndex: 1})
+				So(err, ShouldResemble, ErrTriggerHasEmptyTargets{targets: []string{"t1"}})
 				So(actual, ShouldBeNil)
 			})
 		})
@@ -79,7 +79,7 @@ func TestFetchTriggerMetrics(t *testing.T) {
 
 				actual, err := triggerChecker.fetchTriggerMetrics()
 				So(err, ShouldBeEmpty)
-				So(actual, ShouldResemble, map[string][]metricSource.MetricData{"t1": []metricSource.MetricData{{Name: pattern, Wildcard: true}}})
+				So(actual, ShouldResemble, map[string][]metricSource.MetricData{"t1": {{Name: pattern, Wildcard: true}}})
 			})
 
 			Convey("fetch returns no metrics", func() {
@@ -88,8 +88,8 @@ func TestFetchTriggerMetrics(t *testing.T) {
 				fetchResult.EXPECT().GetPatternMetrics().Return([]string{}, nil)
 
 				actual, err := triggerChecker.fetchTriggerMetrics()
-				So(err, ShouldResemble, ErrTargetHasNoMetrics{targetIndex: 1})
-				So(actual, ShouldBeNil)
+				So(err, ShouldBeNil)
+				So(actual, ShouldResemble, map[string][]metricSource.MetricData{"t1": {}})
 			})
 		})
 	})
@@ -148,9 +148,9 @@ func TestFetch(t *testing.T) {
 		fetchResult.EXPECT().GetMetricsData().Return([]metricSource.MetricData{metricData})
 		fetchResult.EXPECT().GetPatternMetrics().Return([]string{}, nil)
 		actual, metrics, err := triggerChecker.fetch()
-		So(actual, ShouldBeNil)
+		So(actual, ShouldResemble, map[string][]metricSource.MetricData{"t1": {metricData}})
 		So(metrics, ShouldBeEmpty)
-		So(err, ShouldResemble, ErrTargetHasNoMetrics{targetIndex: 1})
+		So(err, ShouldBeNil)
 	})
 
 	Convey("Test has metrics", t, func() {
@@ -166,7 +166,7 @@ func TestFetch(t *testing.T) {
 				StepTime:  retention,
 				Values:    []float64{0, 1, 2, 3, 4},
 			}
-			expected := map[string][]metricSource.MetricData{"t1": []metricSource.MetricData{metricData}}
+			expected := map[string][]metricSource.MetricData{"t1": {metricData}}
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, expected)
 			So(metrics, ShouldResemble, []string{metric})
