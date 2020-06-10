@@ -98,8 +98,9 @@ Please, fix your system or tune this trigger to generate less events.`
 02:40: Metric name = 97.4458331200185 (OK to NODATA)
 02:40: Metric name = 97.4458331200185 (OK to NODATA)
 02:40: Metric name = 97.4458331200185 (OK to NODATA)
+02:40: Metric name = 97.4458331200185 (OK to NODATA)
 
-...and 8 more events.
+...and 7 more events.
 
 http://moira.url/trigger/TriggerID
 `
