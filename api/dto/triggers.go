@@ -161,13 +161,14 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 		return api.ErrInvalidRequestContent{ValidationError: err}
 	}
 
-	if err := resolvePatterns(request, trigger, &triggerExpression, metricsSource); err != nil {
+	metricsDataNames, err := resolvePatterns(request, trigger, &triggerExpression, metricsSource)
+	if err != nil {
 		return err
 	}
+	middleware.SetTimeSeriesNames(request, metricsDataNames)
 	if _, err := triggerExpression.Evaluate(); err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -184,7 +185,7 @@ func checkTTLSanity(trigger *Trigger, metricsSource metricSource.MetricSource) e
 	return nil
 }
 
-func resolvePatterns(request *http.Request, trigger *Trigger, expressionValues *expression.TriggerExpression, metricsSource metricSource.MetricSource) error {
+func resolvePatterns(request *http.Request, trigger *Trigger, expressionValues *expression.TriggerExpression, metricsSource metricSource.MetricSource) (map[string]bool, error) {
 	now := time.Now().Unix()
 	targetNum := 1
 	trigger.Patterns = make([]string, 0)
@@ -193,7 +194,7 @@ func resolvePatterns(request *http.Request, trigger *Trigger, expressionValues *
 	for _, tar := range trigger.Targets {
 		fetchResult, err := metricsSource.Fetch(tar, now-600, now, false)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		targetPatterns, err := fetchResult.GetPatterns()
 		if err == nil {
@@ -202,17 +203,16 @@ func resolvePatterns(request *http.Request, trigger *Trigger, expressionValues *
 
 		if targetNum == 1 {
 			expressionValues.MainTargetValue = 42
-			for _, metricData := range fetchResult.GetMetricsData() {
-				metricsDataNames[metricData.Name] = true
-			}
 		} else {
 			targetName := fmt.Sprintf("t%v", targetNum)
 			expressionValues.AdditionalTargetsValues[targetName] = 42
 		}
+		for _, metricData := range fetchResult.GetMetricsData() {
+			metricsDataNames[metricData.Name] = true
+		}
 		targetNum++
 	}
-	middleware.SetTimeSeriesNames(request, metricsDataNames)
-	return nil
+	return metricsDataNames, nil
 }
 
 func checkWarnErrorExpression(trigger *Trigger) error {
