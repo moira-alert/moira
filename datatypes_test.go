@@ -298,7 +298,7 @@ func TestScheduledNotification_GetKey(t *testing.T) {
 			Event:     NotificationEvent{Values: map[string]float64{"t1": 0}, State: StateNODATA, Metric: "my.metric"},
 			Timestamp: 123456789,
 		}
-		So(notification.GetKey(), ShouldResemble, "email:my@mail.com::my.metric:NODATA:0:t1:0:0:false:123456789")
+		So(notification.GetKey(), ShouldResemble, "email:my@mail.com::my.metric:NODATA:0:0:0:false:123456789")
 	})
 }
 
