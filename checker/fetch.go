@@ -15,6 +15,9 @@ func (triggerChecker *TriggerChecker) fetchTriggerMetrics() (map[string][]metric
 	triggerChecker.cleanupMetricsValues(metrics, triggerChecker.until)
 
 	if len(triggerChecker.lastCheck.Metrics) == 0 {
+		if hasEmptyTargets, emptyTargets := conversion.HasEmptyTargets(triggerMetricsData); hasEmptyTargets {
+			return nil, ErrTriggerHasEmptyTargets{targets: emptyTargets}
+		}
 		if conversion.HasOnlyWildcards(triggerMetricsData) {
 			return triggerMetricsData, ErrTriggerHasOnlyWildcards{}
 		}
@@ -38,9 +41,6 @@ func (triggerChecker *TriggerChecker) fetch() (map[string][]metricSource.MetricD
 
 		metricsFetchResult, metricsErr := fetchResult.GetPatternMetrics()
 
-		if len(metricsFetchResult) == 0 {
-			return nil, nil, ErrTargetHasNoMetrics{targetIndex: targetIndex}
-		}
 		if metricsErr == nil {
 			metricsArr = append(metricsArr, metricsFetchResult...)
 		}

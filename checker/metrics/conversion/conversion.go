@@ -64,3 +64,14 @@ func HasOnlyWildcards(metrics map[string][]metricSource.MetricData) bool {
 	}
 	return true
 }
+
+// HasEmptyTargets is a function that checks if there is exist targets withhout metrics.
+func HasEmptyTargets(metrics map[string][]metricSource.MetricData) (bool, []string) {
+	result := []string{}
+	for targetName, targetMetrics := range metrics {
+		if len(targetMetrics) == 0 {
+			result = append(result, targetName)
+		}
+	}
+	return len(result) > 0, result
+}
