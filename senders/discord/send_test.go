@@ -140,6 +140,7 @@ aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 02:40: Metric name = 97.4458331200185 (OK to NODATA)
 02:40: Metric name = 97.4458331200185 (OK to NODATA)
 02:40: Metric name = 97.4458331200185 (OK to NODATA)
+02:40: Metric name = 97.4458331200185 (OK to NODATA)
 02:40: Metric name = 97.4458331200185 (OK to NODATA)`
 
 			So(actual, ShouldResemble, expected)
