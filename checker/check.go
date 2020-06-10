@@ -81,7 +81,7 @@ func (triggerChecker *TriggerChecker) handlePrepareError(checkData moira.CheckDa
 // handleFetchError is a function that checks error returned from fetchTriggerMetrics function.
 func (triggerChecker *TriggerChecker) handleFetchError(checkData moira.CheckData, err error) error {
 	switch err.(type) {
-	case ErrTargetHasNoMetrics, ErrTriggerHasOnlyWildcards:
+	case ErrTriggerHasEmptyTargets, ErrTriggerHasOnlyWildcards:
 		triggerChecker.logger.Debugf("Trigger %s: %s", triggerChecker.triggerID, err.Error())
 		triggerState := triggerChecker.ttlState.ToTriggerState()
 		checkData.State = triggerState

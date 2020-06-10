@@ -41,14 +41,14 @@ func (err ErrTriggerHasSameMetricNames) Error() string {
 	return builder.String()
 }
 
-// ErrTargetHasNoMetrics used if additional trigger target has not metrics data after fetch from source
-type ErrTargetHasNoMetrics struct {
-	targetIndex int
+// ErrTriggerHasEmptyTargets used if additional trigger target has not metrics data after fetch from source
+type ErrTriggerHasEmptyTargets struct {
+	targets []string
 }
 
-// ErrTargetHasNoMetrics implementation with constant error message
-func (err ErrTargetHasNoMetrics) Error() string {
-	return fmt.Sprintf("target t%v has no metrics", err.targetIndex+1)
+// ErrTriggerHasEmptyTargets implementation with error message
+func (err ErrTriggerHasEmptyTargets) Error() string {
+	return fmt.Sprintf("target t%v has no metrics", strings.Join(err.targets, ", "))
 }
 
 // ErrUnexpectedAloneMetric is an error that fired by checker if alone metrics do not
