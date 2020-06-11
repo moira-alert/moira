@@ -2,6 +2,7 @@ package checker
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 )
 
@@ -70,17 +71,34 @@ func NewErrUnexpectedAloneMetric(expected map[string]bool, actual map[string]str
 func (err ErrUnexpectedAloneMetric) Error() string {
 	var builder strings.Builder
 
-	builder.WriteString("Unexpected to have some targets with only one pattern.\nExpected targets with only one pattern:\n")
+	builder.WriteString("Unexpected to have some targets with only one metric.\n")
+	builder.WriteString("Expected targets with only one metric:\n")
+	expectedArray := make([]string, 0, len(err.expected))
 	for targetName := range err.expected {
-		builder.WriteString(targetName)
-		builder.WriteRune('\n')
+		expectedArray = append(expectedArray, targetName)
 	}
-	builder.WriteString("Actual targets with only one pattern:\n")
-	for targetName, patternName := range err.actual {
+	sort.Strings(expectedArray)
+	for i, targetName := range expectedArray {
 		builder.WriteString(targetName)
-		builder.WriteRune('-')
-		builder.WriteString(patternName)
-		builder.WriteRune('\n')
+		if len(expectedArray) > i+1 {
+			builder.WriteString(", ")
+		}
+	}
+	builder.WriteRune('\n')
+
+	builder.WriteString("Actual targets with only one pattern:\n")
+	actualArray := make([]string, 0, len(err.actual))
+	for targetName := range err.actual {
+		actualArray = append(actualArray, targetName)
+	}
+	sort.Strings(expectedArray)
+	for i, targetName := range actualArray {
+		builder.WriteString(targetName)
+		builder.WriteString(" — ")
+		builder.WriteString(err.actual[targetName])
+		if len(expectedArray) > i+1 {
+			builder.WriteRune('\n')
+		}
 	}
 
 	return builder.String()
