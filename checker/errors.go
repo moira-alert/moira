@@ -72,7 +72,7 @@ func (err ErrUnexpectedAloneMetric) Error() string {
 	var builder strings.Builder
 
 	builder.WriteString("Unexpected to have some targets with only one metric.\n")
-	builder.WriteString("Expected targets with only one metric:")
+	builder.WriteString("Expected targets with only one metric: ")
 	expectedArray := make([]string, 0, len(err.expected))
 	for targetName := range err.expected {
 		expectedArray = append(expectedArray, targetName)
