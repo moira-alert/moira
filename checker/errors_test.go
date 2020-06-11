@@ -26,7 +26,7 @@ func TestErrUnexpectedAloneMetric_Error(t *testing.T) {
 				},
 			},
 			want: strings.ReplaceAll(`Unexpected to have some targets with only one metric.
-			Expected targets with only one metric:
+			Expected targets with only one metric: 
 			Actual targets with only one metric:
 				t1 — metric.test.1`, "\n\t\t\t", "\n"),
 		},
