@@ -321,7 +321,7 @@ func (triggerChecker *TriggerChecker) getMetricStepsStates(metricName string, me
 
 	previousState := last
 	for valueTimestamp := startTime; valueTimestamp < triggerChecker.until+stepTime; valueTimestamp += stepTime {
-		metricNewState, err := triggerChecker.getMetricDataState(metricName, metrics, previousState, valueTimestamp, checkPoint)
+		metricNewState, err := triggerChecker.getMetricDataState(&metricName, &metrics, &previousState, &valueTimestamp, &checkPoint)
 		if err != nil {
 			return last, current, err
 		}
@@ -334,8 +334,8 @@ func (triggerChecker *TriggerChecker) getMetricStepsStates(metricName string, me
 	return last, current, nil
 }
 
-func (triggerChecker *TriggerChecker) getMetricDataState(metricName string, metrics map[string]metricSource.MetricData, lastState moira.MetricState, valueTimestamp, checkPoint int64) (*moira.MetricState, error) {
-	if valueTimestamp <= checkPoint {
+func (triggerChecker *TriggerChecker) getMetricDataState(metricName *string, metrics *map[string]metricSource.MetricData, lastState *moira.MetricState, valueTimestamp, checkPoint *int64) (*moira.MetricState, error) {
+	if *valueTimestamp <= *checkPoint {
 		return nil, nil
 	}
 	triggerExpression, values, noEmptyValues := getExpressionValues(metrics, valueTimestamp)
@@ -356,23 +356,23 @@ func (triggerChecker *TriggerChecker) getMetricDataState(metricName string, metr
 	}
 
 	return newMetricState(
-		lastState,
+		*lastState,
 		expressionState,
-		valueTimestamp,
+		*valueTimestamp,
 		values,
 	), nil
 }
 
-func getExpressionValues(metrics map[string]metricSource.MetricData, valueTimestamp int64) (*expression.TriggerExpression, map[string]float64, bool) {
+func getExpressionValues(metrics *map[string]metricSource.MetricData, valueTimestamp *int64) (*expression.TriggerExpression, map[string]float64, bool) {
 	expression := &expression.TriggerExpression{
-		AdditionalTargetsValues: make(map[string]float64, len(metrics)-1),
+		AdditionalTargetsValues: make(map[string]float64, len(*metrics)-1),
 	}
-	values := make(map[string]float64, len(metrics))
+	values := make(map[string]float64, len(*metrics))
 
-	for i := 0; i < len(metrics); i++ {
+	for i := 0; i < len(*metrics); i++ {
 		targetName := fmt.Sprintf("t%d", i+1)
-		metric := metrics[targetName]
-		value := metric.GetTimestampValue(valueTimestamp)
+		metric := (*metrics)[targetName]
+		value := metric.GetTimestampValue(*valueTimestamp)
 		values[targetName] = value
 		if !moira.IsValidFloat64(value) {
 			return expression, values, false
