@@ -72,7 +72,7 @@ func (err ErrUnexpectedAloneMetric) Error() string {
 	var builder strings.Builder
 
 	builder.WriteString("Unexpected to have some targets with only one metric.\n")
-	builder.WriteString("Expected targets with only one metric:\n")
+	builder.WriteString("Expected targets with only one metric:")
 	expectedArray := make([]string, 0, len(err.expected))
 	for targetName := range err.expected {
 		expectedArray = append(expectedArray, targetName)
@@ -86,19 +86,18 @@ func (err ErrUnexpectedAloneMetric) Error() string {
 	}
 	builder.WriteRune('\n')
 
-	builder.WriteString("Actual targets with only one pattern:\n")
+	builder.WriteString("Actual targets with only one pattern:")
 	actualArray := make([]string, 0, len(err.actual))
 	for targetName := range err.actual {
 		actualArray = append(actualArray, targetName)
 	}
 	sort.Strings(expectedArray)
-	for i, targetName := range actualArray {
+	for _, targetName := range actualArray {
+		builder.WriteRune('\n')
+		builder.WriteRune('\t')
 		builder.WriteString(targetName)
 		builder.WriteString(" — ")
 		builder.WriteString(err.actual[targetName])
-		if len(expectedArray) > i+1 {
-			builder.WriteRune('\n')
-		}
 	}
 
 	return builder.String()
