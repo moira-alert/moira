@@ -319,8 +319,17 @@ func (triggerChecker *TriggerChecker) getMetricStepsStates(metricName string, me
 
 	current = make([]moira.MetricState, 0)
 
+	// DO NOT CHANGE
+	// Specific optimization magic
 	previousState := last
-	for valueTimestamp := startTime; valueTimestamp < triggerChecker.until+stepTime; valueTimestamp += stepTime {
+	difference := moira.MaxInt64(checkPoint-startTime, 0)
+	stepsDifference := difference / stepTime
+	if (difference % stepTime) > 0 {
+		stepsDifference++
+	}
+	valueTimestamp := startTime + stepTime*stepsDifference
+	endTimestamp := triggerChecker.until + stepTime
+	for ; valueTimestamp < endTimestamp; valueTimestamp += stepTime {
 		metricNewState, err := triggerChecker.getMetricDataState(&metricName, &metrics, &previousState, &valueTimestamp, &checkPoint)
 		if err != nil {
 			return last, current, err
