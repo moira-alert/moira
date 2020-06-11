@@ -86,7 +86,7 @@ func (err ErrUnexpectedAloneMetric) Error() string {
 	}
 	builder.WriteRune('\n')
 
-	builder.WriteString("Actual targets with only one pattern:")
+	builder.WriteString("Actual targets with only one metric:")
 	actualArray := make([]string, 0, len(err.actual))
 	for targetName := range err.actual {
 		actualArray = append(actualArray, targetName)

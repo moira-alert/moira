@@ -25,7 +25,7 @@ func TestErrUnexpectedAloneMetric_Error(t *testing.T) {
 					"t1": "metric.test.1",
 				},
 			},
-			want: strings.ReplaceAll(`Unexpected to have some targets with only one pattern.
+			want: strings.ReplaceAll(`Unexpected to have some targets with only one metric.
 			Expected targets with only one metric:
 			Actual targets with only one metric:
 				t1-metric.test.1`, "\n\t\t\t", "\n"),
@@ -38,7 +38,7 @@ func TestErrUnexpectedAloneMetric_Error(t *testing.T) {
 				},
 				actual: map[string]string{},
 			},
-			want: strings.ReplaceAll(`Unexpected to have some targets with only one pattern.
+			want: strings.ReplaceAll(`Unexpected to have some targets with only one metric.
 			Expected targets with only one metric: t1
 			Actual targets with only one metric:`, "\n\t\t\t", "\n"),
 		},
@@ -52,7 +52,7 @@ func TestErrUnexpectedAloneMetric_Error(t *testing.T) {
 					"t2": "metric.test.1",
 				},
 			},
-			want: strings.ReplaceAll(`Unexpected to have some targets with only one pattern.
+			want: strings.ReplaceAll(`Unexpected to have some targets with only one metric.
 			Expected targets with only one metric: t1
 			Actual targets with only one metric:
 				t2 — metric.test.1`, "\n\t\t\t", "\n"),
