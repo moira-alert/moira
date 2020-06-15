@@ -40,7 +40,7 @@ func TestSelfCheckWorker_selfStateChecker(t *testing.T) {
 		mock.notif.EXPECT().Send(gomock.Any(), gomock.Any())
 
 		mock.selfCheckWorker.sendErrorMessages(events)
-		time.Sleep(time.Millisecond)
+		time.Sleep(time.Second / 2)
 		mock.selfCheckWorker.check(time.Now().Unix(), nextSendErrorMessage)
 
 		So(len(mock.selfCheckWorker.Heartbeats), ShouldEqual, 5)
