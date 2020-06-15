@@ -161,7 +161,7 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 		return api.ErrInvalidRequestContent{ValidationError: err}
 	}
 
-	metricsDataNames, err := resolvePatterns(request, trigger, &triggerExpression, metricsSource)
+	metricsDataNames, err := resolvePatterns(trigger, &triggerExpression, metricsSource)
 	if err != nil {
 		return err
 	}
@@ -185,7 +185,7 @@ func checkTTLSanity(trigger *Trigger, metricsSource metricSource.MetricSource) e
 	return nil
 }
 
-func resolvePatterns(request *http.Request, trigger *Trigger, expressionValues *expression.TriggerExpression, metricsSource metricSource.MetricSource) (map[string]bool, error) {
+func resolvePatterns(trigger *Trigger, expressionValues *expression.TriggerExpression, metricsSource metricSource.MetricSource) (map[string]bool, error) {
 	now := time.Now().Unix()
 	targetNum := 1
 	trigger.Patterns = make([]string, 0)
