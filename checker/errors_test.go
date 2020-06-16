@@ -25,7 +25,12 @@ func TestErrUnexpectedAloneMetric_Error(t *testing.T) {
 					"t1": "metric.test.1",
 				},
 			},
-			want: "Unexpected to have some targets with only one metric.\n" + "Expected targets with only one metric: \n" + "Actual targets with only one metric:\n" + "\tt1 — metric.test.1",
+			want: strings.ReplaceAll(`Unexpected to have some targets with only one metric.
+			Expected targets with only one metric:
+			Actual targets with only one metric:
+				t1 — metric.test.1
+
+			Probably you want to set "Single" flag for following targets: t1`, "\n\t\t\t", "\n"),
 		},
 		{
 			name: "expected is not empty and actual is empty",
@@ -37,7 +42,9 @@ func TestErrUnexpectedAloneMetric_Error(t *testing.T) {
 			},
 			want: strings.ReplaceAll(`Unexpected to have some targets with only one metric.
 			Expected targets with only one metric: t1
-			Actual targets with only one metric:`, "\n\t\t\t", "\n"),
+			Actual targets with only one metric:
+
+			Probably you want to switch off "Single" flag for following targets: t1`, "\n\t\t\t", "\n"),
 		},
 		{
 			name: "expected  and actual are not empty",
@@ -52,7 +59,42 @@ func TestErrUnexpectedAloneMetric_Error(t *testing.T) {
 			want: strings.ReplaceAll(`Unexpected to have some targets with only one metric.
 			Expected targets with only one metric: t1
 			Actual targets with only one metric:
-				t2 — metric.test.1`, "\n\t\t\t", "\n"),
+				t2 — metric.test.1
+
+			Probably you want to set "Single" flag for following targets: t2
+
+			Probably you want to switch off "Single" flag for following targets: t1`, "\n\t\t\t", "\n"),
+		},
+		{
+			name: "check sorting",
+			fields: fields{
+				expected: map[string]bool{
+					"t1": true,
+					"t2": true,
+					"t3": true,
+					"t4": true,
+					"t5": true,
+				},
+				actual: map[string]string{
+					"t6":  "metric.test.1",
+					"t7":  "metric.test.2",
+					"t8":  "metric.test.3",
+					"t9":  "metric.test.4",
+					"t10": "metric.test.5",
+				},
+			},
+			want: strings.ReplaceAll(`Unexpected to have some targets with only one metric.
+			Expected targets with only one metric: t1, t2, t3, t4, t5
+			Actual targets with only one metric:
+				t10 — metric.test.5
+				t6 — metric.test.1
+				t7 — metric.test.2
+				t8 — metric.test.3
+				t9 — metric.test.4
+
+			Probably you want to set "Single" flag for following targets: t10, t6, t7, t8, t9
+
+			Probably you want to switch off "Single" flag for following targets: t1, t2, t3, t4, t5`, "\n\t\t\t", "\n"),
 		},
 	}
 	Convey("ErrUnexpectedAloneMetric message", t, func() {
