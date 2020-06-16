@@ -72,6 +72,7 @@ func TestEvaluateTarget(t *testing.T) {
 		})
 
 		Convey("Error in fetch data", func() {
+			dataBase.EXPECT().AllowStale().Return(dataBase)
 			dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
 			dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 			dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(nil, metricErr)
@@ -82,6 +83,7 @@ func TestEvaluateTarget(t *testing.T) {
 		})
 
 		Convey("Error evaluate target", func() {
+			dataBase.EXPECT().AllowStale().Return(dataBase)
 			dataBase.EXPECT().GetPatternMetrics("super.puper.pattern").Return([]string{metric}, nil)
 			dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 			dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
@@ -92,6 +94,7 @@ func TestEvaluateTarget(t *testing.T) {
 		})
 
 		Convey("Panic while evaluate target", func() {
+			dataBase.EXPECT().AllowStale().Return(dataBase)
 			dataBase.EXPECT().GetPatternMetrics("super.puper.pattern").Return([]string{metric}, nil)
 			dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 			dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
@@ -104,6 +107,7 @@ func TestEvaluateTarget(t *testing.T) {
 	})
 
 	Convey("Test no metrics", t, func() {
+		dataBase.EXPECT().AllowStale().Return(dataBase)
 		dataBase.EXPECT().GetPatternMetrics("super.puper.pattern").Return([]string{}, nil)
 		dataBase.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
 		result, err := localSource.Fetch("aliasByNode(super.puper.pattern, 2)", from, until, true)
@@ -123,6 +127,7 @@ func TestEvaluateTarget(t *testing.T) {
 	})
 
 	Convey("Test success evaluate", t, func() {
+		dataBase.EXPECT().AllowStale().Return(dataBase)
 		dataBase.EXPECT().GetPatternMetrics("super.puper.pattern").Return([]string{metric}, nil)
 		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 		dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
@@ -157,6 +162,7 @@ func TestEvaluateTarget(t *testing.T) {
 			},
 		}
 
+		dataBase.EXPECT().AllowStale().Return(dataBase)
 		dataBase.EXPECT().GetPatternMetrics("super.puper.pattern").Return([]string{metric}, nil)
 		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 		dataBase.EXPECT().GetMetricsValues([]string{metric}, untilDistantFuture-ttl, untilDistantFuture).Return(distantFutureDataList, nil)
@@ -178,6 +184,7 @@ func TestEvaluateTarget(t *testing.T) {
 	})
 
 	Convey("Test success evaluate pipe target", t, func() {
+		dataBase.EXPECT().AllowStale().Return(dataBase)
 		dataBase.EXPECT().GetPatternMetrics("super.puper.pattern").Return([]string{metric}, nil)
 		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 		dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
