@@ -72,17 +72,18 @@ func (err ErrUnexpectedAloneMetric) Error() string {
 	var builder strings.Builder
 
 	builder.WriteString("Unexpected to have some targets with only one metric.\n")
-	builder.WriteString("Expected targets with only one metric: ")
+	builder.WriteString("Expected targets with only one metric:")
 	expectedArray := make([]string, 0, len(err.expected))
 	for targetName := range err.expected {
 		expectedArray = append(expectedArray, targetName)
 	}
 	sort.Strings(expectedArray)
 	for i, targetName := range expectedArray {
-		builder.WriteString(targetName)
-		if len(expectedArray) > i+1 {
-			builder.WriteString(", ")
+		if i > 0 {
+			builder.WriteRune(',')
 		}
+		builder.WriteRune(' ')
+		builder.WriteString(targetName)
 	}
 	builder.WriteRune('\n')
 
@@ -91,13 +92,41 @@ func (err ErrUnexpectedAloneMetric) Error() string {
 	for targetName := range err.actual {
 		actualArray = append(actualArray, targetName)
 	}
-	sort.Strings(expectedArray)
+	sort.Strings(actualArray)
 	for _, targetName := range actualArray {
 		builder.WriteRune('\n')
 		builder.WriteRune('\t')
 		builder.WriteString(targetName)
 		builder.WriteString(" — ")
 		builder.WriteString(err.actual[targetName])
+	}
+
+	addColon := false
+	for _, targetName := range actualArray {
+		if _, ok := err.expected[targetName]; !ok {
+			if addColon {
+				builder.WriteRune(',')
+			} else {
+				builder.WriteString("\n\nProbably you want to set \"Single\" flag for following targets:")
+			}
+			builder.WriteRune(' ')
+			builder.WriteString(targetName)
+			addColon = true
+		}
+	}
+
+	addColon = false
+	for _, targetName := range expectedArray {
+		if _, ok := err.actual[targetName]; !ok {
+			if addColon {
+				builder.WriteRune(',')
+			} else {
+				builder.WriteString("\n\nProbably you want to switch off \"Single\" flag for following targets:")
+			}
+			builder.WriteRune(' ')
+			builder.WriteString(targetName)
+			addColon = true
+		}
 	}
 
 	return builder.String()
