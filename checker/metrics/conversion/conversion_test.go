@@ -84,7 +84,17 @@ func TestMetricName(t *testing.T) {
 					"t2": metricSource.MetricData{Name: "metric.test.1"},
 				},
 			},
-			want: "metric.test.1",
+			want: "metric.test.2",
+		},
+		{
+			name: "origin is not empty, metrics have different names and there is no t1",
+			args: args{
+				metrics: map[string]metricSource.MetricData{
+					"t2": metricSource.MetricData{Name: "metric.test.2"},
+					"t3": metricSource.MetricData{Name: "metric.test.1"},
+				},
+			},
+			want: "",
 		},
 	}
 	Convey("MetricName", t, func() {

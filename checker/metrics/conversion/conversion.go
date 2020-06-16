@@ -1,10 +1,10 @@
 package conversion
 
 import (
-	"sort"
-
 	metricSource "github.com/moira-alert/moira/metric_source"
 )
+
+const firstTarget = "t1"
 
 // isOneMetricMap is a function that checks that map have only one metric and if so returns that metric key.
 func isOneMetricMap(metrics map[string]metricSource.MetricData) (bool, string) {
@@ -16,18 +16,13 @@ func isOneMetricMap(metrics map[string]metricSource.MetricData) (bool, string) {
 	return false, ""
 }
 
-// MetricName is a function that returns a metric name from random metric in MetricsToCheck.
+// MetricName is a function that returns a metric name from first target metric in MetricsToCheck.
 // Should be used with care if MetricsToCheck have metrics with different names.
 func MetricName(metrics map[string]metricSource.MetricData) string {
-	if len(metrics) == 0 {
-		return ""
+	if metric, ok := metrics[firstTarget]; ok {
+		return metric.Name
 	}
-	var metricNames []string
-	for _, metric := range metrics {
-		metricNames = append(metricNames, metric.Name)
-	}
-	sort.Strings(metricNames)
-	return metricNames[0]
+	return ""
 }
 
 // GetRelations is a function that returns a map with relation between target name and metric
