@@ -3,6 +3,7 @@ package checker
 import (
 	"fmt"
 	"math"
+	"reflect"
 	"testing"
 	"time"
 
@@ -1407,4 +1408,64 @@ func TestTriggerChecker_validateAloneMetrics(t *testing.T) {
 			})
 		}
 	})
+}
+
+func TestTriggerChecker_handlePrepareError(t *testing.T) {
+	type fields struct {
+		database  moira.Database
+		logger    moira.Logger
+		config    *Config
+		metrics   *metrics.CheckMetrics
+		source    metricSource.MetricSource
+		from      int64
+		until     int64
+		triggerID string
+		trigger   *moira.Trigger
+		lastCheck *moira.CheckData
+		ttl       int64
+		ttlState  moira.TTLState
+	}
+	type args struct {
+		checkData moira.CheckData
+		err       error
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    bool
+		want1   moira.CheckData
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			triggerChecker := &TriggerChecker{
+				database:  tt.fields.database,
+				logger:    tt.fields.logger,
+				config:    tt.fields.config,
+				metrics:   tt.fields.metrics,
+				source:    tt.fields.source,
+				from:      tt.fields.from,
+				until:     tt.fields.until,
+				triggerID: tt.fields.triggerID,
+				trigger:   tt.fields.trigger,
+				lastCheck: tt.fields.lastCheck,
+				ttl:       tt.fields.ttl,
+				ttlState:  tt.fields.ttlState,
+			}
+			got, got1, err := triggerChecker.handlePrepareError(tt.args.checkData, tt.args.err)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("TriggerChecker.handlePrepareError() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("TriggerChecker.handlePrepareError() got = %v, want %v", got, tt.want)
+			}
+			if !reflect.DeepEqual(got1, tt.want1) {
+				t.Errorf("TriggerChecker.handlePrepareError() got1 = %v, want %v", got1, tt.want1)
+			}
+		})
+	}
 }
