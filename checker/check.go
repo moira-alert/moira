@@ -34,7 +34,7 @@ func (triggerChecker *TriggerChecker) Check() error {
 		}
 	}
 
-	checkData.MetricsToTargetRelation = conversion.GetRelations(aloneMetrics)
+	checkData.MetricsToTargetRelation = conversion.GetRelations(aloneMetrics, triggerChecker.trigger.AloneMetrics)
 	checkData, err = triggerChecker.check(preparedMetrics, aloneMetrics, checkData)
 	if err != nil {
 		return triggerChecker.handleUndefinedError(checkData, err)
@@ -192,9 +192,9 @@ func (triggerChecker *TriggerChecker) prepareMetrics(fetchedMetrics map[string][
 		}
 	}
 
-	populated := preparedPatternMetrics.Populate(*triggerChecker.lastCheck, triggerChecker.from, triggerChecker.until)
+	populated := preparedPatternMetrics.Populate(*triggerChecker.lastCheck, triggerChecker.trigger.AloneMetrics, triggerChecker.from, triggerChecker.until)
 
-	multiMetricTargets, aloneMetrics := populated.FilterAloneMetrics()
+	multiMetricTargets, aloneMetrics := populated.FilterAloneMetrics(triggerChecker.trigger.AloneMetrics)
 
 	if err := triggerChecker.validateAloneMetrics(aloneMetrics); err != nil {
 		return nil, nil, err
@@ -214,13 +214,9 @@ func (triggerChecker *TriggerChecker) validateAloneMetrics(aloneMetrics map[stri
 		return nil
 	}
 
-	if len(aloneMetrics) != len(triggerChecker.trigger.AloneMetrics) {
-		return NewErrUnexpectedAloneMetric(triggerChecker.trigger.AloneMetrics, conversion.GetRelations(aloneMetrics))
-	}
-
-	for targetName := range conversion.GetRelations(aloneMetrics) {
-		if !triggerChecker.trigger.AloneMetrics[targetName] {
-			return NewErrUnexpectedAloneMetric(triggerChecker.trigger.AloneMetrics, conversion.GetRelations(aloneMetrics))
+	for targetName := range triggerChecker.trigger.AloneMetrics {
+		if _, ok := aloneMetrics[targetName]; !ok {
+			return NewErrUnexpectedAloneMetric(triggerChecker.trigger.AloneMetrics, conversion.GetRelations(aloneMetrics, triggerChecker.trigger.AloneMetrics))
 		}
 	}
 	return nil
