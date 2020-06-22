@@ -27,10 +27,10 @@ func MetricName(metrics map[string]metricSource.MetricData) string {
 
 // GetRelations is a function that returns a map with relation between target name and metric
 // name for this target.
-func GetRelations(metrics map[string]metricSource.MetricData) map[string]string {
+func GetRelations(metrics map[string]metricSource.MetricData, declaredAloneMetrics map[string]bool) map[string]string {
 	result := make(map[string]string, len(metrics))
-	for targetName, metric := range metrics {
-		result[targetName] = metric.Name
+	for targetName := range declaredAloneMetrics {
+		result[targetName] = metrics[targetName].Name
 	}
 	return result
 }
