@@ -16,8 +16,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestExpressionModeMultipleTargetsWarnValue(t *testing.T) {
-
+func TestTriggerValidation(t *testing.T) {
 	Convey("Tests targets, values and expression validation", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
@@ -26,12 +25,6 @@ func TestExpressionModeMultipleTargetsWarnValue(t *testing.T) {
 		remoteSource := mock_metric_source.NewMockMetricSource(mockCtrl)
 		fetchResult := mock_metric_source.NewMockFetchResult(mockCtrl)
 		sourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource)
-
-		localSource.EXPECT().IsConfigured().Return(true, nil).AnyTimes()
-		localSource.EXPECT().GetMetricsTTLSeconds().Return(int64(3600)).AnyTimes()
-		localSource.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fetchResult, nil).AnyTimes()
-		fetchResult.EXPECT().GetPatterns().Return(make([]string, 0), nil).AnyTimes()
-		fetchResult.EXPECT().GetMetricsData().Return([]metricSource.MetricData{*metricSource.MakeMetricData("", []float64{}, 0, 0)}).AnyTimes()
 
 		request, _ := http.NewRequest("PUT", "/api/trigger", nil)
 		request.Header.Set("Content-Type", "application/json")
@@ -57,6 +50,13 @@ func TestExpressionModeMultipleTargetsWarnValue(t *testing.T) {
 		}
 
 		Convey("Test FallingTrigger", func() {
+
+			localSource.EXPECT().IsConfigured().Return(true, nil).AnyTimes()
+			localSource.EXPECT().GetMetricsTTLSeconds().Return(int64(3600)).AnyTimes()
+			localSource.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fetchResult, nil).AnyTimes()
+			fetchResult.EXPECT().GetPatterns().Return(make([]string, 0), nil).AnyTimes()
+			fetchResult.EXPECT().GetMetricsData().Return([]metricSource.MetricData{*metricSource.MakeMetricData("", []float64{}, 0, 0)}).AnyTimes()
+
 			trigger.TriggerType = moira.FallingTrigger
 
 			Convey("and one target", func() {
@@ -95,6 +95,13 @@ func TestExpressionModeMultipleTargetsWarnValue(t *testing.T) {
 
 		})
 		Convey("Test RisingTrigger", func() {
+
+			localSource.EXPECT().IsConfigured().Return(true, nil).AnyTimes()
+			localSource.EXPECT().GetMetricsTTLSeconds().Return(int64(3600)).AnyTimes()
+			localSource.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fetchResult, nil).AnyTimes()
+			fetchResult.EXPECT().GetPatterns().Return(make([]string, 0), nil).AnyTimes()
+			fetchResult.EXPECT().GetMetricsData().Return([]metricSource.MetricData{*metricSource.MakeMetricData("", []float64{}, 0, 0)}).AnyTimes()
+
 			trigger.TriggerType = moira.RisingTrigger
 
 			Convey("and one target", func() {
@@ -132,6 +139,13 @@ func TestExpressionModeMultipleTargetsWarnValue(t *testing.T) {
 			})
 		})
 		Convey("Test ExpressionTrigger", func() {
+
+			localSource.EXPECT().IsConfigured().Return(true, nil).AnyTimes()
+			localSource.EXPECT().GetMetricsTTLSeconds().Return(int64(3600)).AnyTimes()
+			localSource.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fetchResult, nil).AnyTimes()
+			fetchResult.EXPECT().GetPatterns().Return(make([]string, 0), nil).AnyTimes()
+			fetchResult.EXPECT().GetMetricsData().Return([]metricSource.MetricData{*metricSource.MakeMetricData("", []float64{}, 0, 0)}).AnyTimes()
+
 			trigger.TriggerType = moira.ExpressionTrigger
 			trigger.Expression = "(t1 < 10 && t2 < 10) ? WARN:OK"
 			trigger.Targets = []string{
@@ -162,6 +176,12 @@ func TestExpressionModeMultipleTargetsWarnValue(t *testing.T) {
 		})
 
 		Convey("Test alone metrics", func() {
+			localSource.EXPECT().IsConfigured().Return(true, nil).AnyTimes()
+			localSource.EXPECT().GetMetricsTTLSeconds().Return(int64(3600)).AnyTimes()
+			localSource.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fetchResult, nil).AnyTimes()
+			fetchResult.EXPECT().GetPatterns().Return(make([]string, 0), nil).AnyTimes()
+			fetchResult.EXPECT().GetMetricsData().Return([]metricSource.MetricData{*metricSource.MakeMetricData("", []float64{}, 0, 0)}).AnyTimes()
+
 			trigger.Targets = []string{"test target"}
 			trigger.Expression = "OK"
 			Convey("are empty", func() {
@@ -187,6 +207,29 @@ func TestExpressionModeMultipleTargetsWarnValue(t *testing.T) {
 				tr := Trigger{trigger, throttling}
 				err := tr.Bind(request)
 				So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("alone metrics target index should be in range from 1 to length of targets")})
+			})
+		})
+
+		Convey("Test patterns", func() {
+			localSource.EXPECT().IsConfigured().Return(true, nil).AnyTimes()
+			localSource.EXPECT().GetMetricsTTLSeconds().Return(int64(3600)).AnyTimes()
+			localSource.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fetchResult, nil).AnyTimes()
+			fetchResult.EXPECT().GetMetricsData().Return([]metricSource.MetricData{*metricSource.MakeMetricData("", []float64{}, 0, 0)}).AnyTimes()
+
+			trigger.Expression = "OK"
+			Convey("do not have asterisk", func() {
+				trigger.Targets = []string{"sumSeries(some.test.series.*)"}
+				tr := Trigger{trigger, throttling}
+				fetchResult.EXPECT().GetPatterns().Return([]string{"some.test.series.*"}, nil).AnyTimes()
+				err := tr.Bind(request)
+				So(err, ShouldBeNil)
+			})
+			Convey("have asterisk", func() {
+				trigger.Targets = []string{"sumSeries(*)"}
+				tr := Trigger{trigger, throttling}
+				fetchResult.EXPECT().GetPatterns().Return([]string{"*"}, nil).AnyTimes()
+				err := tr.Bind(request)
+				So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("pattern \"*\" is not allowed to use")})
 			})
 		})
 	})

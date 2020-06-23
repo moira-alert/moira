@@ -17,6 +17,9 @@ import (
 
 var targetNameRegex = regexp.MustCompile("t(\\d+)")
 
+// TODO(litleleprikon): Remove after https://github.com/moira-alert/moira/issues/550 will be resolved
+var asteriskPattern = "*"
+
 type TriggersList struct {
 	Page  *int64               `json:"page,omitempty"`
 	Size  *int64               `json:"size,omitempty"`
@@ -164,6 +167,12 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 	metricsDataNames, err := resolvePatterns(trigger, &triggerExpression, metricsSource)
 	if err != nil {
 		return err
+	}
+	// TODO(litleleprikon): Remove after https://github.com/moira-alert/moira/issues/550 will be resolved
+	for _, pattern := range trigger.Patterns {
+		if pattern == asteriskPattern {
+			return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("pattern \"*\" is not allowed to use")}
+		}
 	}
 	middleware.SetTimeSeriesNames(request, metricsDataNames)
 	if _, err := triggerExpression.Evaluate(); err != nil {
