@@ -46,25 +46,29 @@ func (remote *Remote) Fetch(target string, from, until int64, allowRealTimeAlert
 	req, err := remote.prepareRequest(from, until, target)
 	if err != nil {
 		return nil, ErrRemoteTriggerResponse{
-			InternalError: err,
+			InternalError: fmt.Errorf("FINDEXCEPTION - remote.prepareRequest: %v, from: %d, until: %d, target: %s", err, from, until, target),
 			Target:        target,
 		}
 	}
+
 	body, err := remote.makeRequest(req)
 	if err != nil {
 		return nil, ErrRemoteTriggerResponse{
-			InternalError: err,
+			InternalError: fmt.Errorf("FINDEXCEPTION - makeRequest: %v, request: %#v", err, req),
 			Target:        target,
 		}
 	}
+
 	resp, err := decodeBody(body)
 	if err != nil {
 		return nil, ErrRemoteTriggerResponse{
-			InternalError: err,
+			InternalError: fmt.Errorf("FINDEXCEPTION - decodeBody: %v, body: %s", err, string(body)),
 			Target:        target,
 		}
 	}
+
 	fetchResult := convertResponse(resp, allowRealTimeAlerting)
+
 	return &fetchResult, nil
 }
 
