@@ -76,7 +76,7 @@ func (triggerChecker *TriggerChecker) handlePrepareError(checkData moira.CheckDa
 		return false, checkData, err
 	}
 	checkData.UpdateScore()
-	return true, checkData, triggerChecker.database.SetTriggerLastCheck(triggerChecker.triggerID, &checkData, triggerChecker.trigger.IsRemote)
+	return false, checkData, triggerChecker.database.SetTriggerLastCheck(triggerChecker.triggerID, &checkData, triggerChecker.trigger.IsRemote)
 }
 
 // handleFetchError is a function that checks error returned from fetchTriggerMetrics function.
