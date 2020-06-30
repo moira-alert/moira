@@ -31,11 +31,11 @@ func (remote *Remote) makeRequest(req *http.Request) ([]byte, error) {
 		defer resp.Body.Close()
 	}
 	if err != nil {
-		return body, err
+		return body, fmt.Errorf("remote.client.Do: %v", err)
 	}
 	body, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return body, err
+		return body, fmt.Errorf("ioutil.ReadAll: %v", err)
 	}
 	if resp.StatusCode != 200 {
 		return body, fmt.Errorf("bad response status %d: %s", resp.StatusCode, string(body))
