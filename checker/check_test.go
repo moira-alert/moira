@@ -1413,12 +1413,14 @@ func TestTriggerChecker_handlePrepareError(t *testing.T) {
 	Convey("Test handlePrepareError", t, func() {
 		mockCtrl := gomock.NewController(t)
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+		logger, _ := logging.GetLogger("Test")
 
 		trigger := &moira.Trigger{}
 		triggerChecker := TriggerChecker{
 			triggerID: "test trigger",
 			trigger:   trigger,
 			database:  dataBase,
+			logger:    logger,
 		}
 		checkData := moira.CheckData{}
 
