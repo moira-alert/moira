@@ -31,7 +31,7 @@ func (remote *Remote) makeRequest(req *http.Request) ([]byte, error) {
 		defer resp.Body.Close()
 	}
 	if err != nil {
-		return body, fmt.Errorf("remote.client.Do: %v", err)
+		return body, fmt.Errorf("remote.client.Do RESPONSE: %#v ERROR: %v ", resp, err)
 	}
 	body, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
