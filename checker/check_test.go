@@ -1408,3 +1408,60 @@ func TestTriggerChecker_validateAloneMetrics(t *testing.T) {
 		}
 	})
 }
+
+func TestTriggerChecker_handlePrepareError(t *testing.T) {
+	Convey("Test handlePrepareError", t, func() {
+		mockCtrl := gomock.NewController(t)
+		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+
+		trigger := &moira.Trigger{}
+		triggerChecker := TriggerChecker{
+			triggerID: "test trigger",
+			trigger:   trigger,
+			database:  dataBase,
+		}
+		checkData := moira.CheckData{}
+
+		Convey("with ErrTriggerHasSameMetricNames", func() {
+			err := ErrTriggerHasSameMetricNames{}
+			pass, checkDataReturn, errReturn := triggerChecker.handlePrepareError(checkData, err)
+			So(errReturn, ShouldBeNil)
+			So(pass, ShouldBeTrue)
+			So(checkDataReturn, ShouldResemble, moira.CheckData{
+				State:   moira.StateERROR,
+				Message: err.Error(),
+			})
+		})
+		Convey("with ErrUnexpectedAloneMetric", func() {
+			err := ErrUnexpectedAloneMetric{
+				expected: map[string]bool{"t1": true},
+				actual:   map[string]string{"t2": "test.metric.name"},
+			}
+			triggerChecker.lastCheck = &moira.CheckData{
+				State:          moira.StateOK,
+				EventTimestamp: 10,
+			}
+			expectedCheckData := moira.CheckData{
+				Score:           100000,
+				State:           moira.StateEXCEPTION,
+				SuppressedState: moira.StateOK,
+				Suppressed:      true,
+				Message:         err.Error(),
+			}
+			dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
+				IsTriggerEvent:   true,
+				TriggerID:        triggerChecker.triggerID,
+				State:            moira.StateERROR,
+				OldState:         getEventOldState(moira.StateOK, "", false),
+				Timestamp:        10,
+				Metric:           triggerChecker.trigger.Name,
+				MessageEventInfo: nil,
+			}, true)
+			dataBase.EXPECT().SetTriggerLastCheck("test trigger", &expectedCheckData, false)
+			pass, checkDataReturn, errReturn := triggerChecker.handlePrepareError(checkData, err)
+			So(errReturn, ShouldBeNil)
+			So(pass, ShouldBeFalse)
+			So(checkDataReturn, ShouldResemble, expectedCheckData)
+		})
+	})
+}
