@@ -66,7 +66,7 @@ func (triggerChecker *TriggerChecker) handlePrepareError(checkData moira.CheckDa
 	case ErrUnexpectedAloneMetric:
 		checkData.State = moira.StateEXCEPTION
 		checkData.Message = err.Error()
-		triggerChecker.logger.Warning(formatTriggerCheckException("ErrUnexpectedAloneMetric", triggerChecker.triggerID, err))
+		triggerChecker.logger.Warning(formatTriggerCheckException(triggerChecker.triggerID, err))
 	default:
 		return false, checkData, triggerChecker.handleUndefinedError(checkData, err)
 	}
@@ -100,19 +100,11 @@ func (triggerChecker *TriggerChecker) handleFetchError(checkData moira.CheckData
 			checkData.Message = fmt.Sprintf("Remote server unavailable. Trigger is not checked for %d seconds", timeSinceLastSuccessfulCheck)
 			checkData, err = triggerChecker.compareTriggerStates(checkData)
 		}
-		triggerChecker.logger.Warning(formatTriggerCheckException("remote.ErrRemoteTriggerResponse", triggerChecker.triggerID, err))
+		triggerChecker.logger.Warning(formatTriggerCheckException(triggerChecker.triggerID, err))
 	case local.ErrUnknownFunction, local.ErrEvalExpr:
-		errorType := ""
-		switch err.(type) {
-		case local.ErrUnknownFunction:
-			errorType = "local.ErrUnknownFunction"
-		case local.ErrEvalExpr:
-			errorType = "local.ErrEvalExpr"
-		}
-
 		checkData.State = moira.StateEXCEPTION
 		checkData.Message = err.Error()
-		triggerChecker.logger.Warning(formatTriggerCheckException(errorType, triggerChecker.triggerID, err))
+		triggerChecker.logger.Warning(formatTriggerCheckException(triggerChecker.triggerID, err))
 	default:
 		return triggerChecker.handleUndefinedError(checkData, err)
 	}
@@ -136,8 +128,8 @@ func (triggerChecker *TriggerChecker) handleUndefinedError(checkData moira.Check
 	return triggerChecker.database.SetTriggerLastCheck(triggerChecker.triggerID, &checkData, triggerChecker.trigger.IsRemote)
 }
 
-func formatTriggerCheckException(errorType string, triggerId string, err error) string {
-	return fmt.Sprintf("TriggerCheckException %s Trigger %s: %v", errorType, triggerId, err)
+func formatTriggerCheckException(triggerId string, err error) string {
+	return fmt.Sprintf("TriggerCheckException %T Trigger %s: %v", err, triggerId, err)
 }
 
 // Set new last check timestamp that equal to "until" targets fetch interval
