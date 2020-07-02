@@ -61,17 +61,15 @@ func TestFetch(t *testing.T) {
 		remote := Remote{client: server.Client(), config: &Config{URL: server.URL}}
 		result, err := remote.Fetch(target, from, until, false)
 		So(result, ShouldBeEmpty)
-		//So(err.Error(), ShouldResemble, "invalid character 'S' looking for beginning of value")
-		So(err.Error(), ShouldResemble, "FINDEXCEPTION - decodeBody: invalid character 'S' looking for beginning of value, body: Some string")
+		So(err.Error(), ShouldResemble, "invalid character 'S' looking for beginning of value")
 	})
 
 	Convey("Fail request with InternalServerError", t, func() {
 		server := createServer([]byte("Some string"), http.StatusInternalServerError)
 		remote := Remote{client: server.Client(), config: &Config{URL: server.URL}}
-		//result, err := remote.Fetch(target, from, until, false)
-		result, _ := remote.Fetch(target, from, until, false)
+		result, err := remote.Fetch(target, from, until, false)
 		So(result, ShouldBeEmpty)
-		//So(err.Error(), ShouldResemble, fmt.Sprintf("bad response status %d: %s", http.StatusInternalServerError, "Some string"))
+		So(err.Error(), ShouldResemble, fmt.Sprintf("bad response status %d: %s", http.StatusInternalServerError, "Some string"))
 	})
 
 	Convey("Fail make request", t, func() {
@@ -79,7 +77,6 @@ func TestFetch(t *testing.T) {
 		remote := Remote{config: &Config{URL: url}}
 		result, err := remote.Fetch(target, from, until, false)
 		So(result, ShouldBeEmpty)
-		//So(err.Error(), ShouldResemble, "parse \"💩%$&TR\": invalid URL escape \"%$&\"")
-		So(err.Error(), ShouldResemble, "FINDEXCEPTION - remote.prepareRequest: parse \"💩%$&TR\": invalid URL escape \"%$&\", from: 500, until: 500, target: foo.bar")
+		So(err.Error(), ShouldResemble, "parse \"💩%$&TR\": invalid URL escape \"%$&\"")
 	})
 }
