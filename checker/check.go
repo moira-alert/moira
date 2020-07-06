@@ -66,6 +66,7 @@ func (triggerChecker *TriggerChecker) handlePrepareError(checkData moira.CheckDa
 	case ErrUnexpectedAloneMetric:
 		checkData.State = moira.StateEXCEPTION
 		checkData.Message = err.Error()
+		triggerChecker.logger.Warning(formatTriggerCheckException(triggerChecker.triggerID, err))
 	default:
 		return false, checkData, triggerChecker.handleUndefinedError(checkData, err)
 	}
@@ -99,11 +100,11 @@ func (triggerChecker *TriggerChecker) handleFetchError(checkData moira.CheckData
 			checkData.Message = fmt.Sprintf("Remote server unavailable. Trigger is not checked for %d seconds", timeSinceLastSuccessfulCheck)
 			checkData, err = triggerChecker.compareTriggerStates(checkData)
 		}
-		triggerChecker.logger.Errorf("Trigger %s: %s", triggerChecker.triggerID, err.Error())
+		triggerChecker.logger.Warning(formatTriggerCheckException(triggerChecker.triggerID, err))
 	case local.ErrUnknownFunction, local.ErrEvalExpr:
 		checkData.State = moira.StateEXCEPTION
 		checkData.Message = err.Error()
-		triggerChecker.logger.Warningf("Trigger %s: %s", triggerChecker.triggerID, err.Error())
+		triggerChecker.logger.Warning(formatTriggerCheckException(triggerChecker.triggerID, err))
 	default:
 		return triggerChecker.handleUndefinedError(checkData, err)
 	}
@@ -125,6 +126,10 @@ func (triggerChecker *TriggerChecker) handleUndefinedError(checkData moira.Check
 	}
 	checkData.UpdateScore()
 	return triggerChecker.database.SetTriggerLastCheck(triggerChecker.triggerID, &checkData, triggerChecker.trigger.IsRemote)
+}
+
+func formatTriggerCheckException(triggerId string, err error) string {
+	return fmt.Sprintf("TriggerCheckException %T Trigger %s: %v", err, triggerId, err)
 }
 
 // Set new last check timestamp that equal to "until" targets fetch interval
