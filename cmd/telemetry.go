@@ -50,6 +50,7 @@ func startTelemetryServer(logger moira.Logger, listen string, pprofConfig Profil
 		serverMux.HandleFunc("/pprof/symbol", pprof.Symbol)
 		serverMux.HandleFunc("/pprof/trace", pprof.Trace)
 		serverMux.HandleFunc("/pprof/heap", pprof.Handler("heap").ServeHTTP)
+		serverMux.HandleFunc("/pprof/goroutine", pprof.Handler("goroutine").ServeHTTP)
 	}
 	serverMux.Handle("/metrics", promhttp.InstrumentMetricHandler(prometheusRegistry, promhttp.HandlerFor(prometheusRegistry, promhttp.HandlerOpts{})))
 	server := &http.Server{Handler: serverMux}
