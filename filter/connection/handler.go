@@ -48,7 +48,8 @@ func (handler *Handler) handle(connection net.Conn, lineChan chan<- []byte) {
 			if err != io.EOF {
 				handler.logger.Errorf("Fail to read from metric connection: %s", err)
 			}
-			break
+			handler.terminate <- struct{}{}
+			return
 		}
 		bytesWithoutCRLF := dropCRLF(bytes)
 		if len(bytesWithoutCRLF) > 0 {
