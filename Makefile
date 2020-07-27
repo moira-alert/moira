@@ -153,8 +153,9 @@ docker_feature_images:
 .PHONY: docker_nightly_images
 docker_nightly_images:
 	for service in "filter" $(SERVICES) ; do \
-		docker build --build-arg MoiraVersion=${VERSION_NIGHTLY} --build-arg GO_VERSION=${GO_VERSION} --build-arg GIT_COMMIT=${GIT_HASH} -f Dockerfile.$$service -t moira/$$service-${MARK_NIGHTLY}:${VERSION_NIGHTLY} . ; \
+		docker build --build-arg MoiraVersion=${VERSION_NIGHTLY} --build-arg GO_VERSION=${GO_VERSION} --build-arg GIT_COMMIT=${GIT_HASH} -f Dockerfile.$$service -t moira/$$service-${MARK_NIGHTLY}:${VERSION_NIGHTLY} -t moira/$$service-${MARK_NIGHTLY}:latest . ; \
 		docker push moira/$$service-${MARK_NIGHTLY}:${VERSION_NIGHTLY} ; \
+		docker push moira/$$service-${MARK_NIGHTLY}:latest ; \
 	done
 
 .PHONY: docker_release_images
