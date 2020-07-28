@@ -17,6 +17,7 @@ type MetricsMatcher struct {
 	cacheStorage  *filter.Storage
 	cacheCapacity int
 	waitGroup     *sync.WaitGroup
+	closeRequest  chan struct{}
 }
 
 // NewMetricsMatcher creates new MetricsMatcher
@@ -28,6 +29,7 @@ func NewMetricsMatcher(metrics *metrics.FilterMetrics, logger moira.Logger, data
 		cacheStorage:  cacheStorage,
 		cacheCapacity: cacheCapacity,
 		waitGroup:     &sync.WaitGroup{},
+		closeRequest:  make(chan struct{}),
 	}
 }
 
@@ -43,7 +45,7 @@ func (matcher *MetricsMatcher) Start(matchedMetricsChan chan *moira.MatchedMetri
 			matcher.metrics.SavingTimer.UpdateSince(timer)
 		}
 	}()
-	matcher.logger.Infof("Moira Filter Metrics Matcher started to save %d cached metrics every %s", matcher.cacheCapacity, time.Second.Seconds())
+	matcher.logger.Infof("Moira Filter Metrics Matcher started to save %d cached metrics every %.4f", matcher.cacheCapacity, time.Second.Seconds())
 }
 
 func (matcher *MetricsMatcher) receiveBatch(metrics <-chan *moira.MatchedMetric) <-chan map[string]*moira.MatchedMetric {
@@ -57,10 +59,12 @@ func (matcher *MetricsMatcher) receiveBatch(metrics <-chan *moira.MatchedMetric)
 			batch := make(map[string]*moira.MatchedMetric, matcher.cacheCapacity)
 		retry:
 			select {
+			case <-matcher.closeRequest:
+				batchedMetrics <- batch
+				return
 			case metric, ok := <-metrics:
 				if !ok {
 					batchedMetrics <- batch
-					matcher.logger.Info("Moira Filter Metrics Matcher stopped")
 					return
 				}
 				matcher.cacheStorage.EnrichMatchedMetric(batch, metric)
@@ -79,7 +83,9 @@ func (matcher *MetricsMatcher) receiveBatch(metrics <-chan *moira.MatchedMetric)
 
 // Wait waits for metric matcher instance will stop
 func (matcher *MetricsMatcher) Wait() {
+	close(matcher.closeRequest)
 	matcher.waitGroup.Wait()
+	matcher.logger.Info("Moira Filter Metrics Matcher stopped")
 }
 
 func (matcher *MetricsMatcher) save(buffer map[string]*moira.MatchedMetric) {
