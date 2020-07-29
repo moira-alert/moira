@@ -45,6 +45,7 @@ func NewHandler(db moira.Database, log moira.Logger, index moira.Searcher, confi
 		router.Route("/subscription", subscription)
 		router.Route("/notification", notification)
 		router.Route("/health", health)
+		router.Route("/teams", teams)
 	})
 	if config.EnableCORS {
 		return cors.AllowAll().Handler(router)
