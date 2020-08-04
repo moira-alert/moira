@@ -35,10 +35,13 @@ func (handler *Handler) HandleConnection(connection net.Conn, lineChan chan<- []
 
 func (handler *Handler) handle(connection net.Conn, lineChan chan<- []byte) {
 	buffer := bufio.NewReader(connection)
-
+	closeConnection := make(chan struct{})
 	go func(conn net.Conn) {
-		<-handler.terminate
-		conn.Close()
+		select {
+		case <-handler.terminate:
+			conn.Close()
+		case <-closeConnection:
+		}
 	}(connection)
 
 	for {
@@ -48,7 +51,7 @@ func (handler *Handler) handle(connection net.Conn, lineChan chan<- []byte) {
 			if err != io.EOF {
 				handler.logger.Errorf("Fail to read from metric connection: %s", err)
 			}
-			handler.terminate <- struct{}{}
+			close(closeConnection)
 			return
 		}
 		bytesWithoutCRLF := dropCRLF(bytes)
