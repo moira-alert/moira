@@ -129,6 +129,14 @@ type Database interface {
 
 	// Creates Lock
 	NewLock(name string, ttl time.Duration) Lock
+
+	// Teams management
+	SaveTeam(teamID string, team Team) error
+	GetTeam(teamID string) (Team, error)
+	SaveTeamsAndUsers(teamID string, users []string, usersTeams map[string][]string) error
+	GetUserTeams(userID string) ([]string, error)
+	GetTeamUsers(teamID string) ([]string, error)
+	IsTeamContainUser(teamID, userID string) (bool, error)
 }
 
 // Lock implements lock abstraction

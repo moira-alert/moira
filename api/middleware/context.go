@@ -211,7 +211,7 @@ func TeamContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		teamID := chi.URLParam(request, "teamId")
 		if teamID == "" {
-			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("teamId must be set")))
+			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("teamId must be set"))) //nolint:errcheck
 			return
 		}
 		ctx := context.WithValue(request.Context(), teamIDKey, teamID)
@@ -224,7 +224,7 @@ func TeamUserIDContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		userID := chi.URLParam(request, "userId")
 		if userID == "" {
-			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("userId must be set")))
+			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("userId must be set"))) //nolint:errcheck
 			return
 		}
 		ctx := context.WithValue(request.Context(), teamUserIDKey, userID)

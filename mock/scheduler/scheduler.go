@@ -5,36 +5,37 @@
 package mock_scheduler
 
 import (
-	gomock "github.com/golang/mock/gomock"
-	moira "github.com/moira-alert/moira"
 	reflect "reflect"
 	time "time"
+
+	gomock "github.com/golang/mock/gomock"
+	moira "github.com/moira-alert/moira"
 )
 
-// MockScheduler is a mock of Scheduler interface
+// MockScheduler is a mock of Scheduler interface.
 type MockScheduler struct {
 	ctrl     *gomock.Controller
 	recorder *MockSchedulerMockRecorder
 }
 
-// MockSchedulerMockRecorder is the mock recorder for MockScheduler
+// MockSchedulerMockRecorder is the mock recorder for MockScheduler.
 type MockSchedulerMockRecorder struct {
 	mock *MockScheduler
 }
 
-// NewMockScheduler creates a new mock instance
+// NewMockScheduler creates a new mock instance.
 func NewMockScheduler(ctrl *gomock.Controller) *MockScheduler {
 	mock := &MockScheduler{ctrl: ctrl}
 	mock.recorder = &MockSchedulerMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockScheduler) EXPECT() *MockSchedulerMockRecorder {
 	return m.recorder
 }
 
-// ScheduleNotification mocks base method
+// ScheduleNotification mocks base method.
 func (m *MockScheduler) ScheduleNotification(arg0 time.Time, arg1 moira.NotificationEvent, arg2 moira.TriggerData, arg3 moira.ContactData, arg4 moira.PlottingData, arg5 bool, arg6 int, arg7 moira.Logger) *moira.ScheduledNotification {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ScheduleNotification", arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
@@ -42,7 +43,7 @@ func (m *MockScheduler) ScheduleNotification(arg0 time.Time, arg1 moira.Notifica
 	return ret0
 }
 
-// ScheduleNotification indicates an expected call of ScheduleNotification
+// ScheduleNotification indicates an expected call of ScheduleNotification.
 func (mr *MockSchedulerMockRecorder) ScheduleNotification(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ScheduleNotification", reflect.TypeOf((*MockScheduler)(nil).ScheduleNotification), arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7)

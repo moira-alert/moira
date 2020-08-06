@@ -5,34 +5,35 @@
 package mock_moira_alert
 
 import (
-	gomock "github.com/golang/mock/gomock"
 	reflect "reflect"
+
+	gomock "github.com/golang/mock/gomock"
 )
 
-// MockLock is a mock of Lock interface
+// MockLock is a mock of Lock interface.
 type MockLock struct {
 	ctrl     *gomock.Controller
 	recorder *MockLockMockRecorder
 }
 
-// MockLockMockRecorder is the mock recorder for MockLock
+// MockLockMockRecorder is the mock recorder for MockLock.
 type MockLockMockRecorder struct {
 	mock *MockLock
 }
 
-// NewMockLock creates a new mock instance
+// NewMockLock creates a new mock instance.
 func NewMockLock(ctrl *gomock.Controller) *MockLock {
 	mock := &MockLock{ctrl: ctrl}
 	mock.recorder = &MockLockMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockLock) EXPECT() *MockLockMockRecorder {
 	return m.recorder
 }
 
-// Acquire mocks base method
+// Acquire mocks base method.
 func (m *MockLock) Acquire(arg0 <-chan struct{}) (<-chan struct{}, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Acquire", arg0)
@@ -41,19 +42,19 @@ func (m *MockLock) Acquire(arg0 <-chan struct{}) (<-chan struct{}, error) {
 	return ret0, ret1
 }
 
-// Acquire indicates an expected call of Acquire
+// Acquire indicates an expected call of Acquire.
 func (mr *MockLockMockRecorder) Acquire(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Acquire", reflect.TypeOf((*MockLock)(nil).Acquire), arg0)
 }
 
-// Release mocks base method
+// Release mocks base method.
 func (m *MockLock) Release() {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "Release")
 }
 
-// Release indicates an expected call of Release
+// Release indicates an expected call of Release.
 func (mr *MockLockMockRecorder) Release() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Release", reflect.TypeOf((*MockLock)(nil).Release))
