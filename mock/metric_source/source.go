@@ -5,35 +5,36 @@
 package mock_metric_source
 
 import (
+	reflect "reflect"
+
 	gomock "github.com/golang/mock/gomock"
 	metricsource "github.com/moira-alert/moira/metric_source"
-	reflect "reflect"
 )
 
-// MockMetricSource is a mock of MetricSource interface
+// MockMetricSource is a mock of MetricSource interface.
 type MockMetricSource struct {
 	ctrl     *gomock.Controller
 	recorder *MockMetricSourceMockRecorder
 }
 
-// MockMetricSourceMockRecorder is the mock recorder for MockMetricSource
+// MockMetricSourceMockRecorder is the mock recorder for MockMetricSource.
 type MockMetricSourceMockRecorder struct {
 	mock *MockMetricSource
 }
 
-// NewMockMetricSource creates a new mock instance
+// NewMockMetricSource creates a new mock instance.
 func NewMockMetricSource(ctrl *gomock.Controller) *MockMetricSource {
 	mock := &MockMetricSource{ctrl: ctrl}
 	mock.recorder = &MockMetricSourceMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockMetricSource) EXPECT() *MockMetricSourceMockRecorder {
 	return m.recorder
 }
 
-// Fetch mocks base method
+// Fetch mocks base method.
 func (m *MockMetricSource) Fetch(arg0 string, arg1, arg2 int64, arg3 bool) (metricsource.FetchResult, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Fetch", arg0, arg1, arg2, arg3)
@@ -42,13 +43,13 @@ func (m *MockMetricSource) Fetch(arg0 string, arg1, arg2 int64, arg3 bool) (metr
 	return ret0, ret1
 }
 
-// Fetch indicates an expected call of Fetch
+// Fetch indicates an expected call of Fetch.
 func (mr *MockMetricSourceMockRecorder) Fetch(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Fetch", reflect.TypeOf((*MockMetricSource)(nil).Fetch), arg0, arg1, arg2, arg3)
 }
 
-// GetMetricsTTLSeconds mocks base method
+// GetMetricsTTLSeconds mocks base method.
 func (m *MockMetricSource) GetMetricsTTLSeconds() int64 {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetMetricsTTLSeconds")
@@ -56,13 +57,13 @@ func (m *MockMetricSource) GetMetricsTTLSeconds() int64 {
 	return ret0
 }
 
-// GetMetricsTTLSeconds indicates an expected call of GetMetricsTTLSeconds
+// GetMetricsTTLSeconds indicates an expected call of GetMetricsTTLSeconds.
 func (mr *MockMetricSourceMockRecorder) GetMetricsTTLSeconds() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMetricsTTLSeconds", reflect.TypeOf((*MockMetricSource)(nil).GetMetricsTTLSeconds))
 }
 
-// IsConfigured mocks base method
+// IsConfigured mocks base method.
 func (m *MockMetricSource) IsConfigured() (bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IsConfigured")
@@ -71,7 +72,7 @@ func (m *MockMetricSource) IsConfigured() (bool, error) {
 	return ret0, ret1
 }
 
-// IsConfigured indicates an expected call of IsConfigured
+// IsConfigured indicates an expected call of IsConfigured.
 func (mr *MockMetricSourceMockRecorder) IsConfigured() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsConfigured", reflect.TypeOf((*MockMetricSource)(nil).IsConfigured))

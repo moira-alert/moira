@@ -5,34 +5,35 @@
 package mock_heartbeat
 
 import (
-	gomock "github.com/golang/mock/gomock"
 	reflect "reflect"
+
+	gomock "github.com/golang/mock/gomock"
 )
 
-// MockHeartbeater is a mock of Heartbeater interface
+// MockHeartbeater is a mock of Heartbeater interface.
 type MockHeartbeater struct {
 	ctrl     *gomock.Controller
 	recorder *MockHeartbeaterMockRecorder
 }
 
-// MockHeartbeaterMockRecorder is the mock recorder for MockHeartbeater
+// MockHeartbeaterMockRecorder is the mock recorder for MockHeartbeater.
 type MockHeartbeaterMockRecorder struct {
 	mock *MockHeartbeater
 }
 
-// NewMockHeartbeater creates a new mock instance
+// NewMockHeartbeater creates a new mock instance.
 func NewMockHeartbeater(ctrl *gomock.Controller) *MockHeartbeater {
 	mock := &MockHeartbeater{ctrl: ctrl}
 	mock.recorder = &MockHeartbeaterMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockHeartbeater) EXPECT() *MockHeartbeaterMockRecorder {
 	return m.recorder
 }
 
-// Check mocks base method
+// Check mocks base method.
 func (m *MockHeartbeater) Check(arg0 int64) (int64, bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Check", arg0)
@@ -42,13 +43,13 @@ func (m *MockHeartbeater) Check(arg0 int64) (int64, bool, error) {
 	return ret0, ret1, ret2
 }
 
-// Check indicates an expected call of Check
+// Check indicates an expected call of Check.
 func (mr *MockHeartbeaterMockRecorder) Check(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Check", reflect.TypeOf((*MockHeartbeater)(nil).Check), arg0)
 }
 
-// GetErrorMessage mocks base method
+// GetErrorMessage mocks base method.
 func (m *MockHeartbeater) GetErrorMessage() string {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetErrorMessage")
@@ -56,13 +57,13 @@ func (m *MockHeartbeater) GetErrorMessage() string {
 	return ret0
 }
 
-// GetErrorMessage indicates an expected call of GetErrorMessage
+// GetErrorMessage indicates an expected call of GetErrorMessage.
 func (mr *MockHeartbeaterMockRecorder) GetErrorMessage() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetErrorMessage", reflect.TypeOf((*MockHeartbeater)(nil).GetErrorMessage))
 }
 
-// NeedToCheckOthers mocks base method
+// NeedToCheckOthers mocks base method.
 func (m *MockHeartbeater) NeedToCheckOthers() bool {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "NeedToCheckOthers")
@@ -70,13 +71,13 @@ func (m *MockHeartbeater) NeedToCheckOthers() bool {
 	return ret0
 }
 
-// NeedToCheckOthers indicates an expected call of NeedToCheckOthers
+// NeedToCheckOthers indicates an expected call of NeedToCheckOthers.
 func (mr *MockHeartbeaterMockRecorder) NeedToCheckOthers() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NeedToCheckOthers", reflect.TypeOf((*MockHeartbeater)(nil).NeedToCheckOthers))
 }
 
-// NeedTurnOffNotifier mocks base method
+// NeedTurnOffNotifier mocks base method.
 func (m *MockHeartbeater) NeedTurnOffNotifier() bool {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "NeedTurnOffNotifier")
@@ -84,7 +85,7 @@ func (m *MockHeartbeater) NeedTurnOffNotifier() bool {
 	return ret0
 }
 
-// NeedTurnOffNotifier indicates an expected call of NeedTurnOffNotifier
+// NeedTurnOffNotifier indicates an expected call of NeedTurnOffNotifier.
 func (mr *MockHeartbeaterMockRecorder) NeedTurnOffNotifier() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NeedTurnOffNotifier", reflect.TypeOf((*MockHeartbeater)(nil).NeedTurnOffNotifier))
