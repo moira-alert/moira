@@ -640,6 +640,36 @@ func (mr *MockDatabaseMockRecorder) GetTagsSubscriptions(arg0 interface{}) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTagsSubscriptions", reflect.TypeOf((*MockDatabase)(nil).GetTagsSubscriptions), arg0)
 }
 
+// GetTeam mocks base method
+func (m *MockDatabase) GetTeam(arg0 string) (moira.Team, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTeam", arg0)
+	ret0, _ := ret[0].(moira.Team)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTeam indicates an expected call of GetTeam
+func (mr *MockDatabaseMockRecorder) GetTeam(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTeam", reflect.TypeOf((*MockDatabase)(nil).GetTeam), arg0)
+}
+
+// GetTeamUsers mocks base method
+func (m *MockDatabase) GetTeamUsers(arg0 string) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTeamUsers", arg0)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTeamUsers indicates an expected call of GetTeamUsers
+func (mr *MockDatabaseMockRecorder) GetTeamUsers(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTeamUsers", reflect.TypeOf((*MockDatabase)(nil).GetTeamUsers), arg0)
+}
+
 // GetTrigger mocks base method
 func (m *MockDatabase) GetTrigger(arg0 string) (moira.Trigger, error) {
 	m.ctrl.T.Helper()
@@ -774,6 +804,21 @@ func (m *MockDatabase) GetUserSubscriptionIDs(arg0 string) ([]string, error) {
 func (mr *MockDatabaseMockRecorder) GetUserSubscriptionIDs(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserSubscriptionIDs", reflect.TypeOf((*MockDatabase)(nil).GetUserSubscriptionIDs), arg0)
+}
+
+// GetUserTeams mocks base method
+func (m *MockDatabase) GetUserTeams(arg0 string) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserTeams", arg0)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserTeams indicates an expected call of GetUserTeams
+func (mr *MockDatabaseMockRecorder) GetUserTeams(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserTeams", reflect.TypeOf((*MockDatabase)(nil).GetUserTeams), arg0)
 }
 
 // MarkTriggersAsUnused mocks base method
@@ -1119,6 +1164,34 @@ func (m *MockDatabase) SaveSubscriptions(arg0 []*moira.SubscriptionData) error {
 func (mr *MockDatabaseMockRecorder) SaveSubscriptions(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveSubscriptions", reflect.TypeOf((*MockDatabase)(nil).SaveSubscriptions), arg0)
+}
+
+// SaveTeam mocks base method
+func (m *MockDatabase) SaveTeam(arg0 string, arg1 moira.Team) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SaveTeam", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SaveTeam indicates an expected call of SaveTeam
+func (mr *MockDatabaseMockRecorder) SaveTeam(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveTeam", reflect.TypeOf((*MockDatabase)(nil).SaveTeam), arg0, arg1)
+}
+
+// SaveTeamsAndUsers mocks base method
+func (m *MockDatabase) SaveTeamsAndUsers(arg0 string, arg1 []string, arg2 map[string][]string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SaveTeamsAndUsers", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SaveTeamsAndUsers indicates an expected call of SaveTeamsAndUsers
+func (mr *MockDatabaseMockRecorder) SaveTeamsAndUsers(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveTeamsAndUsers", reflect.TypeOf((*MockDatabase)(nil).SaveTeamsAndUsers), arg0, arg1, arg2)
 }
 
 // SaveTrigger mocks base method
