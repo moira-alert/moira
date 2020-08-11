@@ -25,7 +25,11 @@ func renderTrigger(writer http.ResponseWriter, request *http.Request) {
 	}
 	metricsData, trigger, err := evaluateTargetMetrics(sourceProvider, from, to, triggerID, fetchRealtimeData)
 	if err != nil {
-		render.Render(writer, request, api.ErrorInternalServer(err))
+		if trigger == nil {
+			render.Render(writer, request, api.ErrorNotFound(fmt.Sprintf("trigger with ID = '%s' does not exists", triggerID)))
+		} else {
+			render.Render(writer, request, api.ErrorInternalServer(err))
+		}
 		return
 	}
 
