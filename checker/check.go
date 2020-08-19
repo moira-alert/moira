@@ -135,7 +135,6 @@ func formatTriggerCheckException(triggerId string, err error) string {
 // Set new last check timestamp that equal to "until" targets fetch interval
 // Do not copy message, it will be set if needed
 func newCheckData(lastCheck *moira.CheckData, checkTimeStamp int64) moira.CheckData {
-
 	lastMetrics := make(map[string]moira.MetricState, len(lastCheck.Metrics))
 	for k, v := range lastCheck.Metrics {
 		lastMetrics[k] = v
@@ -271,19 +270,27 @@ func (triggerChecker *TriggerChecker) checkTargets(metricName string, metrics ma
 	if err != nil {
 		return lastState, needToDeleteMetric, err
 	}
+
 	for _, currentState := range metricStates {
-		lastState, err = triggerChecker.compareMetricStates(metricName, currentState, lastState)
+		state, err := triggerChecker.compareMetricStates(metricName, currentState, lastState)
 		if err != nil {
 			return lastState, needToDeleteMetric, err
 		}
+
+		if len(state.Values) > 0 {
+			lastState = state
+		}
 	}
+
 	needToDeleteMetric, noDataState := triggerChecker.checkForNoData(metricName, lastState)
 	if needToDeleteMetric {
 		return lastState, needToDeleteMetric, err
 	}
+
 	if noDataState != nil {
 		lastState, err = triggerChecker.compareMetricStates(metricName, *noDataState, lastState)
 	}
+
 	return lastState, needToDeleteMetric, err
 }
 
@@ -329,22 +336,28 @@ func (triggerChecker *TriggerChecker) getMetricStepsStates(metricName string, me
 	previousState := last
 	difference := moira.MaxInt64(checkPoint-startTime, 0)
 	stepsDifference := difference / stepTime
+
 	if (difference % stepTime) > 0 {
 		stepsDifference++
 	}
+
 	valueTimestamp := startTime + stepTime*stepsDifference
 	endTimestamp := triggerChecker.until + stepTime
+
 	for ; valueTimestamp < endTimestamp; valueTimestamp += stepTime {
 		metricNewState, err := triggerChecker.getMetricDataState(&metricName, &metrics, &previousState, &valueTimestamp, &checkPoint)
 		if err != nil {
 			return last, current, err
 		}
+
 		if metricNewState == nil {
 			continue
 		}
+
 		previousState = *metricNewState
 		current = append(current, *metricNewState)
 	}
+
 	return last, current, nil
 }
 
@@ -352,10 +365,12 @@ func (triggerChecker *TriggerChecker) getMetricDataState(metricName *string, met
 	if *valueTimestamp <= *checkPoint {
 		return nil, nil
 	}
-	triggerExpression, values, noEmptyValues := getExpressionValues(metrics, valueTimestamp)
+
+	triggerExpression, values, noEmptyValues := getExpressionValues(len(lastState.Values) == 0, metrics, valueTimestamp)
 	if !noEmptyValues {
 		return nil, nil
 	}
+
 	triggerChecker.logger.Debugf("[TriggerID:%s][MetricName:%s] Values for ts %v: MainTargetValue: %v, additionalTargetValues: %v", triggerChecker.triggerID, metricName, valueTimestamp, triggerExpression.MainTargetValue, triggerExpression.AdditionalTargetsValues)
 
 	triggerExpression.WarnValue = triggerChecker.trigger.WarnValue
@@ -377,7 +392,7 @@ func (triggerChecker *TriggerChecker) getMetricDataState(metricName *string, met
 	), nil
 }
 
-func getExpressionValues(metrics *map[string]metricSource.MetricData, valueTimestamp *int64) (*expression.TriggerExpression, map[string]float64, bool) {
+func getExpressionValues(lastNoExistsValues bool, metrics *map[string]metricSource.MetricData, valueTimestamp *int64) (*expression.TriggerExpression, map[string]float64, bool) {
 	expression := &expression.TriggerExpression{
 		AdditionalTargetsValues: make(map[string]float64, len(*metrics)-1),
 	}
@@ -387,15 +402,23 @@ func getExpressionValues(metrics *map[string]metricSource.MetricData, valueTimes
 		targetName := fmt.Sprintf("t%d", i+1)
 		metric := (*metrics)[targetName]
 		value := metric.GetTimestampValue(*valueTimestamp)
-		values[targetName] = value
+
 		if !moira.IsValidFloat64(value) {
+			if lastNoExistsValues {
+				continue
+			}
 			return expression, values, false
 		}
+
+		values[targetName] = value
+
 		if i == 0 {
 			expression.MainTargetValue = value
 			continue
 		}
+
 		expression.AdditionalTargetsValues[targetName] = value
 	}
+
 	return expression, values, true
 }
