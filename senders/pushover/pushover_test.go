@@ -167,9 +167,6 @@ func TestMakePushoverMessage(t *testing.T) {
 			Name: "TriggerName",
 			Tags: []string{"tag1", "tag2"},
 		}
-		contact := moira.ContactData{
-			Value: "123",
-		}
 		expected := &pushover.Message{
 			Timestamp: 150000000,
 			Retry:     5 * time.Minute,
@@ -180,6 +177,6 @@ func TestMakePushoverMessage(t *testing.T) {
 			Message:   "02:40: Metric = 123 (OK to ERROR)\n",
 		}
 		expected.AddAttachment(bytes.NewReader([]byte{1, 0, 1}))
-		So(sender.makePushoverMessage(event, contact, trigger, [][]byte{[]byte{1, 0, 1}}, false), ShouldResemble, expected)
+		So(sender.makePushoverMessage(event, trigger, [][]byte{[]byte{1, 0, 1}}, false), ShouldResemble, expected)
 	})
 }

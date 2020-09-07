@@ -67,7 +67,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 		return err
 	}
 
-	request, err := sender.buildRequest(events, contact, trigger, plots, throttled)
+	request, err := sender.buildRequest(events, contact, trigger, throttled)
 
 	if err != nil {
 		return fmt.Errorf("failed to build request: %w", err)
@@ -137,7 +137,7 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 	}
 }
 
-func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) (*http.Request, error) {
+func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, throttled bool) (*http.Request, error) {
 	messageCard := sender.buildMessage(events, trigger, throttled)
 	requestURL := contact.Value
 	requestBody, err := json.Marshal(messageCard)

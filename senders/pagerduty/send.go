@@ -25,7 +25,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 }
 
 func (sender *Sender) buildEvent(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) pagerduty.V2Event {
-	summary := sender.buildSummary(events, trigger, throttled)
+	summary := sender.buildSummary(events, trigger)
 	details := make(map[string]interface{})
 
 	details["Trigger Name"] = trigger.Name
@@ -96,7 +96,7 @@ func (sender *Sender) getSeverity(events moira.NotificationEvents) string {
 	return severity
 }
 
-func (sender *Sender) buildSummary(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
+func (sender *Sender) buildSummary(events moira.NotificationEvents, trigger moira.TriggerData) string {
 	var summary bytes.Buffer
 
 	summary.WriteString(string(events.GetSubjectState()))

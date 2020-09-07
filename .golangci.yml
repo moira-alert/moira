@@ -13,6 +13,8 @@ linters-settings:
     # min-complexity: 15
   maligned:
     suggest-new: true
+  unparam:
+    check-exported: false
 
 linters:
   # inverted configuration with `enable-all` and `disable` is not scalable during updates of golangci-lint
@@ -32,6 +34,7 @@ linters:
     - structcheck
     - typecheck
     # - unconvert
+    - unparam
     - unused
     - whitespace
     - varcheck
