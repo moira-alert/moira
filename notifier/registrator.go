@@ -39,7 +39,7 @@ const (
 )
 
 // RegisterSenders watch on senders config and register all configured senders
-func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) error {
+func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) error { //nolint
 	var err error
 	for _, senderSettings := range notifier.config.Senders {
 		senderSettings["front_uri"] = notifier.config.FrontURL
