@@ -109,7 +109,7 @@ func TestIndex_SearchTriggers(t *testing.T) {
 		Convey("OnlyErrors = true, several tags, several text terms", func() {
 			onlyErrors = true
 			tags = []string{"traps"}
-			searchString = "deadly"
+			searchString = "deadly" //nolint
 
 			deadlyTraps := []int{10, 14, 18, 19}
 

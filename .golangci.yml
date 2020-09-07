@@ -23,7 +23,7 @@ linters:
     - bodyclose
     - deadcode
     - errcheck
-    # - goconst
+    - goconst
     - gocyclo
     - golint
     - gomnd

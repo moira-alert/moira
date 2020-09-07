@@ -34,7 +34,7 @@ func TestGetResponseMessage(t *testing.T) {
 		})
 
 		Convey("Message is not !start", func() {
-			message.Author.ID = "456"
+			message.Author.ID = "456" //nolint
 			message.Content = "not !start"
 			response, err := sender.getResponse(message, channel)
 			So(err, ShouldBeNil)

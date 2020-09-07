@@ -34,7 +34,7 @@ func TestThrottling(t *testing.T) {
 		Value: "mail1@example.com",
 	}
 
-	subID := "SubscriptionID-000000000000001"
+	subID := "SubscriptionID-000000000000001" //nolint
 
 	var event = moira.NotificationEvent{
 		Metric:         "generate.event.1",

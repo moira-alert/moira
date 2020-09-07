@@ -63,7 +63,7 @@ func TestTriggerValidation(t *testing.T) {
 					"aliasByNode(DevOps.system.graphite01.disk._mnt_data.gigabyte_percentfree, 2, 4)",
 				}
 				Convey("and expression", func() {
-					trigger.Expression = "(t1 < 10 && t2 < 10) ? WARN:OK"
+					trigger.Expression = "(t1 < 10 && t2 < 10) ? WARN:OK" //nolint
 					tr := Trigger{trigger, throttling}
 					err := tr.Bind(request)
 					So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("can't use 'expression' to trigger_type: 'falling'")})

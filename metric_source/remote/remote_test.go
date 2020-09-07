@@ -46,7 +46,7 @@ func TestIsRemoteAvailable(t *testing.T) {
 func TestFetch(t *testing.T) {
 	var from int64 = 300
 	var until int64 = 500
-	target := "foo.bar"
+	target := "foo.bar" //nolint
 
 	Convey("Request success but body is invalid", t, func() {
 		server := createServer([]byte("[]"), http.StatusOK)

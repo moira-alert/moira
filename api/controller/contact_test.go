@@ -62,7 +62,7 @@ func TestCreateContact(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	defer mockCtrl.Finish()
-	userLogin := "user"
+	userLogin := "user" //nolint
 
 	Convey("Success create", t, func() {
 		contact := &dto.Contact{

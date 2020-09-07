@@ -13,7 +13,7 @@ func (sender *Sender) getResponse(m *discordgo.MessageCreate, channel *discordgo
 	}
 
 	// If the message is "!start" update the channel ID for the user/channel
-	if m.Content == "!start" {
+	if m.Content == "!start" { //nolint
 		switch channel.Type {
 		case discordgo.ChannelTypeDM:
 			err := sender.DataBase.SetUsernameID(messenger, "@"+m.Author.Username, channel.ID)
