@@ -51,7 +51,7 @@ func (selfCheck *SelfCheckWorker) selfStateChecker(stop <-chan struct{}) error {
 }
 
 func (selfCheck *SelfCheckWorker) handleCheckServices(nowTS int64) []moira.NotificationEvent {
-	var events []moira.NotificationEvent
+	var events []moira.NotificationEvent //nolint
 
 	for _, heartbeat := range selfCheck.Heartbeats {
 		currentValue, needSend, err := heartbeat.Check(nowTS)
