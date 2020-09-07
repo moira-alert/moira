@@ -77,21 +77,21 @@ func TestInitTriggerChecker(t *testing.T) {
 				Timestamp:      1502694427,
 				State:          moira.StateOK,
 				Suppressed:     false,
-				Values:          map[string]float64{"t1": value},
+				Values:          map[string]float64{"t1": value}, //nolint
 				EventTimestamp: 1501680428,
 			},
 			"2": {
 				Timestamp:      1502694427,
 				State:          moira.StateOK,
 				Suppressed:     false,
-				Values:          map[string]float64{"t1": value},
+				Values:          map[string]float64{"t1": value}, //nolint
 				EventTimestamp: 1501679827,
 			},
 			"3": {
 				Timestamp:      1502694427,
 				State:          moira.StateOK,
 				Suppressed:     false,
-				Values:          map[string]float64{"t1": value},
+				Values:          map[string]float64{"t1": value}, //nolint
 				EventTimestamp: 1501679887,
 			},
 		},

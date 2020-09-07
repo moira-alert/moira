@@ -15,11 +15,11 @@ import (
 const triggerID = "81588c33-eab3-4ad4-aa03-82a9560adad9"
 const triggerID1 = "7854DE02-0E4B-4430-A570-B0C0162755E4"
 const triggerID2 = "26D3C4E4-507E-4930-9B1E-FD5AD369445C"
-const triggerID3 = "F0F4A5B9-637C-4933-AA0D-88B9798A2630"
+const triggerID3 = "F0F4A5B9-637C-4933-AA0D-88B9798A2630" //nolint
 var now = time.Now().Unix()
 var value = float64(0)
 
-
+ //nolint
 func TestNotificationEvents(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := newTestDatabase(logger, config)
@@ -55,7 +55,7 @@ func TestNotificationEvents(t *testing.T) {
 
 				actual, err := dataBase.GetNotificationEvents(triggerID, 0, 1)
 				So(err, ShouldBeNil)
-				So(actual, ShouldResemble, []*moira.NotificationEvent{&moira.NotificationEvent{
+				So(actual, ShouldResemble, []*moira.NotificationEvent{&moira.NotificationEvent{ //nolint
 					Timestamp: now,
 					State:     moira.StateNODATA,
 					OldState:  moira.StateNODATA,
@@ -82,7 +82,7 @@ func TestNotificationEvents(t *testing.T) {
 			Convey("Should has event by triggerID after fetch", func() {
 				actual, err := dataBase.GetNotificationEvents(triggerID, 0, 1)
 				So(err, ShouldBeNil)
-				So(actual, ShouldResemble, []*moira.NotificationEvent{&moira.NotificationEvent{
+				So(actual, ShouldResemble, []*moira.NotificationEvent{&moira.NotificationEvent{ //nolint
 					Timestamp: now,
 					State:     moira.StateNODATA,
 					OldState:  moira.StateNODATA,
@@ -126,7 +126,7 @@ func TestNotificationEvents(t *testing.T) {
 
 				actual, err := dataBase.GetNotificationEvents(triggerID1, 0, 1)
 				So(err, ShouldBeNil)
-				So(actual, ShouldResemble, []*moira.NotificationEvent{&moira.NotificationEvent{
+				So(actual, ShouldResemble, []*moira.NotificationEvent{&moira.NotificationEvent{ //nolint
 					Timestamp: now,
 					State:     moira.StateEXCEPTION,
 					OldState:  moira.StateNODATA,
@@ -140,7 +140,7 @@ func TestNotificationEvents(t *testing.T) {
 
 				actual, err = dataBase.GetNotificationEvents(triggerID2, 0, 1)
 				So(err, ShouldBeNil)
-				So(actual, ShouldResemble, []*moira.NotificationEvent{&moira.NotificationEvent{
+				So(actual, ShouldResemble, []*moira.NotificationEvent{&moira.NotificationEvent{ //nolint
 					Timestamp: now,
 					State:     moira.StateOK,
 					OldState:  moira.StateWARN,
@@ -167,7 +167,7 @@ func TestNotificationEvents(t *testing.T) {
 
 				actual, err := dataBase.GetNotificationEvents(triggerID1, 0, 1)
 				So(err, ShouldBeNil)
-				So(actual, ShouldResemble, []*moira.NotificationEvent{&moira.NotificationEvent{
+				So(actual, ShouldResemble, []*moira.NotificationEvent{&moira.NotificationEvent{ //nolint
 					Timestamp: now,
 					State:     moira.StateEXCEPTION,
 					OldState:  moira.StateNODATA,
@@ -211,7 +211,7 @@ func TestNotificationEvents(t *testing.T) {
 
 			actual, err := dataBase.GetNotificationEvents(triggerID3, 0, 1)
 			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, []*moira.NotificationEvent{&moira.NotificationEvent{
+			So(actual, ShouldResemble, []*moira.NotificationEvent{&moira.NotificationEvent{ //nolint
 				Timestamp: now,
 				State:     moira.StateNODATA,
 				OldState:  moira.StateNODATA,
@@ -245,7 +245,7 @@ func TestNotificationEvents(t *testing.T) {
 					OldState:  moira.StateNODATA,
 					TriggerID: triggerID,
 					Metric:    "my.metric",
-					Value:    &value,
+					Value:    &value, //nolint
 				}, true)
 				So(err, ShouldBeNil)
 

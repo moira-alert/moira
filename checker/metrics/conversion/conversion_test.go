@@ -70,7 +70,7 @@ func TestMetricName(t *testing.T) {
 			name: "origin is not empty and all metrics have same name",
 			args: args{
 				metrics: map[string]metricSource.MetricData{
-					"t1": metricSource.MetricData{Name: "metric.test.1"},
+					"t1": metricSource.MetricData{Name: "metric.test.1"}, //nolint
 					"t2": metricSource.MetricData{Name: "metric.test.1"},
 				},
 			},
@@ -80,7 +80,7 @@ func TestMetricName(t *testing.T) {
 			name: "origin is not empty and metrics have different names",
 			args: args{
 				metrics: map[string]metricSource.MetricData{
-					"t1": metricSource.MetricData{Name: "metric.test.2"},
+					"t1": metricSource.MetricData{Name: "metric.test.2"}, //nolint
 					"t2": metricSource.MetricData{Name: "metric.test.1"},
 				},
 			},
@@ -90,7 +90,7 @@ func TestMetricName(t *testing.T) {
 			name: "origin is not empty, metrics have different names and there is no t1",
 			args: args{
 				metrics: map[string]metricSource.MetricData{
-					"t2": metricSource.MetricData{Name: "metric.test.2"},
+					"t2": metricSource.MetricData{Name: "metric.test.2"}, //nolint
 					"t3": metricSource.MetricData{Name: "metric.test.1"},
 				},
 			},
@@ -128,7 +128,7 @@ func TestGetRelations(t *testing.T) {
 			name: "origin is not empty",
 			args: args{
 				metrics: map[string]metricSource.MetricData{
-					"t1": metricSource.MetricData{Name: "metric.test.1"},
+					"t1": metricSource.MetricData{Name: "metric.test.1"}, //nolint
 					"t2": metricSource.MetricData{Name: "metric.test.2"},
 				},
 			},
@@ -170,25 +170,25 @@ func TestMerge(t *testing.T) {
 			name: "origin is empty and other is not",
 			args: args{
 				metrics: map[string]metricSource.MetricData{},
-				other:   map[string]metricSource.MetricData{"t1": metricSource.MetricData{Name: "metric.test.1"}},
+				other:   map[string]metricSource.MetricData{"t1": metricSource.MetricData{Name: "metric.test.1"}}, //nolint
 			},
-			want: map[string]metricSource.MetricData{"t1": metricSource.MetricData{Name: "metric.test.1"}},
+			want: map[string]metricSource.MetricData{"t1": metricSource.MetricData{Name: "metric.test.1"}}, //nolint
 		},
 		{
 			name: "origin is not empty and other is empty",
 			args: args{
-				metrics: map[string]metricSource.MetricData{"t1": metricSource.MetricData{Name: "metric.test.1"}},
+				metrics: map[string]metricSource.MetricData{"t1": metricSource.MetricData{Name: "metric.test.1"}}, //nolint
 				other:   map[string]metricSource.MetricData{},
 			},
-			want: map[string]metricSource.MetricData{"t1": metricSource.MetricData{Name: "metric.test.1"}},
+			want: map[string]metricSource.MetricData{"t1": metricSource.MetricData{Name: "metric.test.1"}}, //nolint
 		},
 		{
 			name: "origin and other have same targets",
 			args: args{
-				metrics: map[string]metricSource.MetricData{"t1": metricSource.MetricData{Name: "metric.test.1"}},
+				metrics: map[string]metricSource.MetricData{"t1": metricSource.MetricData{Name: "metric.test.1"}}, //nolint
 				other:   map[string]metricSource.MetricData{"t1": metricSource.MetricData{Name: "metric.test.2"}},
 			},
-			want: map[string]metricSource.MetricData{"t1": metricSource.MetricData{Name: "metric.test.2"}},
+			want: map[string]metricSource.MetricData{"t1": metricSource.MetricData{Name: "metric.test.2"}}, //nolint
 		},
 	}
 

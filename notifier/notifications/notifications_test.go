@@ -97,7 +97,7 @@ func TestProcessScheduledEvent(t *testing.T) {
 	})
 
 	Convey("Two same notifications, should send one package", t, func() {
-		dataBase.EXPECT().FetchNotifications(gomock.Any(),  notifier2.NotificationsLimitUnlimited).Return([]*moira.ScheduledNotification{
+		dataBase.EXPECT().FetchNotifications(gomock.Any(),  notifier2.NotificationsLimitUnlimited).Return([]*moira.ScheduledNotification{ //nolint
 			&notification2,
 			&notification3,
 		}, nil)

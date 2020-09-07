@@ -107,7 +107,7 @@ func TestResolveMetricsWindow(t *testing.T) {
 // TestGetMetricDataToShow tests to limited metricsData returns only necessary metricsData
 func TestGetMetricDataToShow(t *testing.T) {
 	givenSeries := map[string][]metricSource.MetricData{
-		"t1": []metricSource.MetricData{
+		"t1": []metricSource.MetricData{ //nolint
 			*metricSource.MakeMetricData("metricPrefix.metricName1", []float64{1}, 1, 1),
 			*metricSource.MakeMetricData("metricPrefix.metricName2", []float64{2}, 2, 2),
 			*metricSource.MakeMetricData("metricPrefix.metricName3", []float64{3}, 3, 3),
