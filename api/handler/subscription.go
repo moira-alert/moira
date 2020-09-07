@@ -30,11 +30,11 @@ func getUserSubscriptions(writer http.ResponseWriter, request *http.Request) {
 	userLogin := middleware.GetLogin(request)
 	contacts, err := controller.GetUserSubscriptions(database, userLogin)
 	if err != nil {
-		render.Render(writer, request, err)
+		render.Render(writer, request, err) //nolint
 		return
 	}
 	if err := render.Render(writer, request, contacts); err != nil {
-		render.Render(writer, request, api.ErrorRender(err))
+		render.Render(writer, request, api.ErrorRender(err)) //nolint
 		return
 	}
 }
@@ -42,23 +42,23 @@ func getUserSubscriptions(writer http.ResponseWriter, request *http.Request) {
 func createSubscription(writer http.ResponseWriter, request *http.Request) {
 	subscription := &dto.Subscription{}
 	if err := render.Bind(request, subscription); err != nil {
-		render.Render(writer, request, api.ErrorInvalidRequest(err))
+		render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
 		return
 	}
 	userLogin := middleware.GetLogin(request)
 
 	if subscription.AnyTags && len(subscription.Tags) > 0 {
 		writer.WriteHeader(http.StatusBadRequest)
-		render.Render(writer, request, api.ErrorInvalidRequest(
+		render.Render(writer, request, api.ErrorInvalidRequest( //nolint
 			errors.New("if any_tags is true, then the tags must be empty")))
 		return
 	}
 	if err := controller.CreateSubscription(database, userLogin, subscription); err != nil {
-		render.Render(writer, request, err)
+		render.Render(writer, request, err) //nolint
 		return
 	}
 	if err := render.Render(writer, request, subscription); err != nil {
-		render.Render(writer, request, api.ErrorRender(err))
+		render.Render(writer, request, api.ErrorRender(err)) //nolint
 		return
 	}
 }
@@ -70,7 +70,7 @@ func subscriptionFilter(next http.Handler) http.Handler {
 		userLogin := middleware.GetLogin(request)
 		subscriptionData, err := controller.CheckUserPermissionsForSubscription(database, contactID, userLogin)
 		if err != nil {
-			render.Render(writer, request, err)
+			render.Render(writer, request, err) //nolint
 			return
 		}
 		ctx := context.WithValue(request.Context(), subscriptionKey, subscriptionData)
@@ -83,16 +83,16 @@ func updateSubscription(writer http.ResponseWriter, request *http.Request) {
 	if err := render.Bind(request, subscription); err != nil {
 		switch err.(type) {
 		case dto.ErrProvidedContactsForbidden:
-			render.Render(writer, request, api.ErrorForbidden(err.Error()))
+			render.Render(writer, request, api.ErrorForbidden(err.Error())) //nolint
 		default:
-			render.Render(writer, request, api.ErrorInvalidRequest(err))
+			render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
 		}
 		return
 	}
 
 	if subscription.AnyTags && len(subscription.Tags) > 0 {
 		writer.WriteHeader(http.StatusBadRequest)
-		render.Render(writer, request, api.ErrorInvalidRequest(
+		render.Render(writer, request, api.ErrorInvalidRequest( //nolint
 			errors.New("if any_tags is true, then the tags must be empty")))
 		return
 	}
@@ -100,11 +100,11 @@ func updateSubscription(writer http.ResponseWriter, request *http.Request) {
 	subscriptionData := request.Context().Value(subscriptionKey).(moira.SubscriptionData)
 
 	if err := controller.UpdateSubscription(database, subscriptionData.ID, subscriptionData.User, subscription); err != nil {
-		render.Render(writer, request, err)
+		render.Render(writer, request, err) //nolint
 		return
 	}
 	if err := render.Render(writer, request, subscription); err != nil {
-		render.Render(writer, request, api.ErrorRender(err))
+		render.Render(writer, request, api.ErrorRender(err)) //nolint
 		return
 	}
 }
@@ -112,13 +112,13 @@ func updateSubscription(writer http.ResponseWriter, request *http.Request) {
 func removeSubscription(writer http.ResponseWriter, request *http.Request) {
 	subscriptionID := middleware.GetSubscriptionID(request)
 	if err := controller.RemoveSubscription(database, subscriptionID); err != nil {
-		render.Render(writer, request, err)
+		render.Render(writer, request, err) //nolint
 	}
 }
 
 func sendTestNotification(writer http.ResponseWriter, request *http.Request) {
 	subscriptionID := middleware.GetSubscriptionID(request)
 	if err := controller.SendTestNotification(database, subscriptionID); err != nil {
-		render.Render(writer, request, err)
+		render.Render(writer, request, err) //nolint
 	}
 }

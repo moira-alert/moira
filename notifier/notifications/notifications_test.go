@@ -172,7 +172,7 @@ func TestGoRoutine(t *testing.T) {
 func waitTestEnd(shutdown chan struct{}, worker *FetchNotificationsWorker) {
 	select {
 	case <-shutdown:
-		worker.Stop()
+		worker.Stop() //nolint
 		break
 	case <-time.After(time.Second * 10):
 		close(shutdown)

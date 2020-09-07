@@ -30,9 +30,9 @@ func (connector *DbConnector) GetContact(id string) (moira.ContactData, error) {
 func (connector *DbConnector) GetContacts(contactIDs []string) ([]*moira.ContactData, error) {
 	c := connector.pool.Get()
 	defer c.Close()
-	c.Send("MULTI")
+	c.Send("MULTI") //nolint
 	for _, id := range contactIDs {
-		c.Send("GET", contactKey(id))
+		c.Send("GET", contactKey(id)) //nolint
 	}
 
 	contacts, err := reply.Contacts(c.Do("EXEC"))
@@ -79,12 +79,12 @@ func (connector *DbConnector) SaveContact(contact *moira.ContactData) error {
 	c := connector.pool.Get()
 	defer c.Close()
 
-	c.Send("MULTI")
-	c.Send("SET", contactKey(contact.ID), contactString)
+	c.Send("MULTI") //nolint
+	c.Send("SET", contactKey(contact.ID), contactString) //nolint
 	if getContactErr != database.ErrNil && contact.User != existing.User {
-		c.Send("SREM", userContactsKey(existing.User), contact.ID)
+		c.Send("SREM", userContactsKey(existing.User), contact.ID) //nolint
 	}
-	c.Send("SADD", userContactsKey(contact.User), contact.ID)
+	c.Send("SADD", userContactsKey(contact.User), contact.ID) //nolint
 	_, err = c.Do("EXEC")
 	if err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
@@ -101,9 +101,9 @@ func (connector *DbConnector) RemoveContact(contactID string) error {
 	c := connector.pool.Get()
 	defer c.Close()
 
-	c.Send("MULTI")
-	c.Send("DEL", contactKey(contactID))
-	c.Send("SREM", userContactsKey(existing.User), contactID)
+	c.Send("MULTI") //nolint
+	c.Send("DEL", contactKey(contactID)) //nolint
+	c.Send("SREM", userContactsKey(existing.User), contactID) //nolint
 	_, err = c.Do("EXEC")
 	if err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())

@@ -22,7 +22,7 @@ linters:
   enable:
     - bodyclose
     - deadcode
-    # - errcheck
+    - errcheck
     # - goconst
     - gocyclo
     - golint

@@ -36,12 +36,12 @@ func triggers(metricSourceProvider *metricSource.SourceProvider, searcher moira.
 func getAllTriggers(writer http.ResponseWriter, request *http.Request) {
 	triggersList, errorResponse := controller.GetAllTriggers(database)
 	if errorResponse != nil {
-		render.Render(writer, request, errorResponse)
+		render.Render(writer, request, errorResponse) //nolint
 		return
 	}
 
 	if err := render.Render(writer, request, triggersList); err != nil {
-		render.Render(writer, request, api.ErrorRender(err))
+		render.Render(writer, request, api.ErrorRender(err)) //nolint
 		return
 	}
 }
@@ -51,33 +51,33 @@ func createTrigger(writer http.ResponseWriter, request *http.Request) {
 	if err := render.Bind(request, trigger); err != nil {
 		switch err.(type) {
 		case local.ErrParseExpr, local.ErrEvalExpr, local.ErrUnknownFunction:
-			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("invalid graphite targets: %s", err.Error())))
+			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("invalid graphite targets: %s", err.Error()))) //nolint
 		case expression.ErrInvalidExpression:
-			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("invalid expression: %s", err.Error())))
+			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("invalid expression: %s", err.Error()))) //nolint
 		case api.ErrInvalidRequestContent:
-			render.Render(writer, request, api.ErrorInvalidRequest(err))
+			render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
 		case remote.ErrRemoteTriggerResponse:
-			render.Render(writer, request, api.ErrorRemoteServerUnavailable(err))
+			render.Render(writer, request, api.ErrorRemoteServerUnavailable(err)) //nolint
 		default:
-			render.Render(writer, request, api.ErrorInternalServer(err))
+			render.Render(writer, request, api.ErrorInternalServer(err)) //nolint
 		}
 		return
 	}
 	timeSeriesNames := middleware.GetTimeSeriesNames(request)
 	response, err := controller.CreateTrigger(database, &trigger.TriggerModel, timeSeriesNames)
 	if err != nil {
-		render.Render(writer, request, err)
+		render.Render(writer, request, err) //nolint
 		return
 	}
 
 	if err := render.Render(writer, request, response); err != nil {
-		render.Render(writer, request, api.ErrorRender(err))
+		render.Render(writer, request, api.ErrorRender(err)) //nolint
 		return
 	}
 }
 
 func searchTriggers(writer http.ResponseWriter, request *http.Request) {
-	request.ParseForm()
+	request.ParseForm() //nolint
 	onlyErrors := getOnlyProblemsFlag(request)
 	filterTags := getRequestTags(request)
 	searchString := getSearchRequestString(request)
@@ -90,12 +90,12 @@ func searchTriggers(writer http.ResponseWriter, request *http.Request) {
 
 	triggersList, errorResponse := controller.SearchTriggers(database, searchIndex, page, size, onlyErrors, filterTags, searchString, createPager, pagerID)
 	if errorResponse != nil {
-		render.Render(writer, request, errorResponse)
+		render.Render(writer, request, errorResponse) //nolint
 		return
 	}
 
 	if err := render.Render(writer, request, triggersList); err != nil {
-		render.Render(writer, request, api.ErrorRender(err))
+		render.Render(writer, request, api.ErrorRender(err)) //nolint
 		return
 	}
 }

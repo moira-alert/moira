@@ -176,7 +176,7 @@ func (connector *DbConnector) manageSubscriptions(tomb *tomb.Tomb, channel strin
 	go func() {
 		<-tomb.Dying()
 		connector.logger.Infof("Calling shutdown, unsubscribe from '%s' redis channels...", channel)
-		psc.Unsubscribe()
+		psc.Unsubscribe() //nolint
 	}()
 
 	dataChan := make(chan []byte, pubSubWorkerChannelSize)
@@ -224,7 +224,7 @@ func (connector *DbConnector) manageSubscriptions(tomb *tomb.Tomb, channel strin
 func (connector *DbConnector) flush() {
 	c := connector.pool.Get()
 	defer c.Close()
-	c.Do("FLUSHDB")
+	c.Do("FLUSHDB") //nolint
 }
 
 // GET KEY TTL! USE IT ONLY FOR TESTING!!!
@@ -242,5 +242,5 @@ func (connector *DbConnector) getTTL(key string) int {
 func (connector *DbConnector) delete(key string) {
 	c := connector.pool.Get()
 	defer c.Close()
-	c.Do("DEL", key)
+	c.Do("DEL", key) //nolint
 }

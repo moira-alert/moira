@@ -27,7 +27,7 @@ type selfCheckWorkerMock struct {
 
 func TestSelfCheckWorker_selfStateChecker(t *testing.T) {
 	mock := configureWorker(t, true)
-	mock.selfCheckWorker.Start()
+	mock.selfCheckWorker.Start() //nolint
 	Convey("Test creation all heartbeat", t, func() {
 		var nextSendErrorMessage int64
 		var events []moira.NotificationEvent
@@ -46,7 +46,7 @@ func TestSelfCheckWorker_selfStateChecker(t *testing.T) {
 		So(len(mock.selfCheckWorker.Heartbeats), ShouldEqual, 5)
 	})
 
-	mock.selfCheckWorker.Stop()
+	mock.selfCheckWorker.Stop() //nolint
 	mock.mockCtrl.Finish()
 }
 
@@ -56,13 +56,13 @@ func TestSelfCheckWorker_Start(t *testing.T) {
 	Convey("Test start selfCheckWorkerMock", t, func() {
 		Convey("Test enabled is false", func() {
 			mock.selfCheckWorker.Config.Enabled = false
-			mock.selfCheckWorker.Start()
+			mock.selfCheckWorker.Start() //nolint
 			So(mock.selfCheckWorker.Heartbeats, ShouldBeNil)
 		})
 		Convey("Check for error from checkConfig", func() {
 			mock.selfCheckWorker.Config.Enabled = true
 			mock.notif.EXPECT().GetSenders().Return(nil)
-			mock.selfCheckWorker.Start()
+			mock.selfCheckWorker.Start() //nolint
 			So(mock.selfCheckWorker.Heartbeats, ShouldBeNil)
 		})
 	})

@@ -51,7 +51,7 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 		if err != nil {
 			sender.logger.Errorf("failed to handle incoming message: %s", err)
 		}
-		s.ChannelMessageSend(m.ChannelID, msg)
+		s.ChannelMessageSend(m.ChannelID, msg) //nolint
 	}
 	sender.session.AddHandler(handleMsg)
 

@@ -41,9 +41,9 @@ func (connector *DbConnector) addTriggersToCheck(key string, triggerIDs []string
 	c := connector.pool.Get()
 	defer c.Close()
 
-	c.Send("MULTI")
+	c.Send("MULTI") //nolint
 	for _, triggerID := range triggerIDs {
-		c.Send("SADD", key, triggerID)
+		c.Send("SADD", key, triggerID) //nolint
 	}
 	_, err := redis.Values(c.Do("EXEC"))
 	if err != nil {

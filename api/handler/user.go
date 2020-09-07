@@ -19,7 +19,7 @@ func user(router chi.Router) {
 func getUserName(writer http.ResponseWriter, request *http.Request) {
 	userLogin := middleware.GetLogin(request)
 	if err := render.Render(writer, request, &dto.User{Login: userLogin}); err != nil {
-		render.Render(writer, request, api.ErrorRender(err))
+		render.Render(writer, request, api.ErrorRender(err)) //nolint
 		return
 	}
 }
@@ -28,12 +28,12 @@ func getUserSettings(writer http.ResponseWriter, request *http.Request) {
 	userLogin := middleware.GetLogin(request)
 	userSettings, err := controller.GetUserSettings(database, userLogin)
 	if err != nil {
-		render.Render(writer, request, err)
+		render.Render(writer, request, err) //nolint
 		return
 	}
 
 	if err := render.Render(writer, request, userSettings); err != nil {
-		render.Render(writer, request, api.ErrorRender(err))
+		render.Render(writer, request, api.ErrorRender(err)) //nolint
 		return
 	}
 }

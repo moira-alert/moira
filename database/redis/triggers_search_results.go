@@ -53,9 +53,9 @@ func (connector *DbConnector) GetTriggersSearchResults(searchResultsID string, p
 
 	resultsID := triggersSearchResultsKey(searchResultsID)
 
-	c.Send("MULTI")
-	c.Send("LRANGE", resultsID, from, to)
-	c.Send("LLEN", resultsID)
+	c.Send("MULTI") //nolint
+	c.Send("LRANGE", resultsID, from, to) //nolint
+	c.Send("LLEN", resultsID) //nolint
 	response, err := redis.Values(c.Do("EXEC"))
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to EXEC: %w", err)

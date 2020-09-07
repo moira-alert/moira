@@ -95,7 +95,7 @@ func SearchTriggers(database moira.Database, searcher moira.Searcher, page int64
 			return nil, api.ErrorInternalServer(err)
 		}
 		pagerID = uuid4.String()
-		database.SaveTriggersSearchResults(pagerID, searchResults)
+		database.SaveTriggersSearchResults(pagerID, searchResults) //nolint
 	}
 
 	if createPager {

@@ -42,7 +42,7 @@ func RequestLogger(logger moira.Logger) func(next http.Handler) http.Handler {
 			t1 := time.Now()
 			defer func() {
 				if rvr := recover(); rvr != nil {
-					render.Render(wrapWriter, request, api.ErrorInternalServer(fmt.Errorf("internal Server Error")))
+					render.Render(wrapWriter, request, api.ErrorInternalServer(fmt.Errorf("internal Server Error"))) //nolint
 					entry.writePanic(wrapWriter.Status(), wrapWriter.BytesWritten(), time.Since(t1), rvr, debug.Stack())
 				} else {
 					entry.write(wrapWriter.Status(), wrapWriter.BytesWritten(), time.Since(t1), wrapWriter.Unwrap())
@@ -58,7 +58,7 @@ func RequestLogger(logger moira.Logger) func(next http.Handler) http.Handler {
 func getErrorResponseIfItHas(writer http.ResponseWriter) *api.ErrorResponse {
 	writerWithBody := writer.(*responseWriterWithBody)
 	var errResp = &api.ErrorResponse{}
-	json.NewDecoder(&writerWithBody.body).Decode(errResp)
+	json.NewDecoder(&writerWithBody.body).Decode(errResp) //nolint
 	return errResp
 }
 

@@ -16,9 +16,9 @@ func (connector *DbConnector) MarkTriggersAsUnused(triggerIDs ...string) error {
 	c := connector.pool.Get()
 	defer c.Close()
 
-	c.Send("MULTI")
+	c.Send("MULTI") //nolint
 	for _, triggerID := range triggerIDs {
-		c.Send("SADD", unusedTriggersKey, triggerID)
+		c.Send("SADD", unusedTriggersKey, triggerID) //nolint
 	}
 	_, err := redis.Values(c.Do("EXEC"))
 	if err != nil {
@@ -51,9 +51,9 @@ func (connector *DbConnector) MarkTriggersAsUsed(triggerIDs ...string) error {
 	c := connector.pool.Get()
 	defer c.Close()
 
-	c.Send("MULTI")
+	c.Send("MULTI") //nolint
 	for _, triggerID := range triggerIDs {
-		c.Send("SREM", unusedTriggersKey, triggerID)
+		c.Send("SREM", unusedTriggersKey, triggerID) //nolint
 	}
 	_, err := redis.Values(c.Do("EXEC"))
 	if err != nil {

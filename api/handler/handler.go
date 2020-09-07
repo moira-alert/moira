@@ -56,11 +56,11 @@ func notFoundHandler(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("X-Content-Type-Options", "nosniff")
 	writer.Header().Set("Content-Type", "application/json")
 	writer.WriteHeader(404) //nolint
-	render.Render(writer, request, api.ErrNotFound)
+	render.Render(writer, request, api.ErrNotFound) //nolint
 }
 
 func methodNotAllowedHandler(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "application/json")
 	writer.WriteHeader(405) //nolint
-	render.Render(writer, request, api.ErrMethodNotAllowed)
+	render.Render(writer, request, api.ErrMethodNotAllowed) //nolint
 }

@@ -52,7 +52,7 @@ func TestMetricsStoring(t *testing.T) {
 		So(actual, ShouldBeEmpty)
 
 		//Now save trigger with this pattern
-		dataBase.SaveTrigger(trigger.ID, &trigger)
+		dataBase.SaveTrigger(trigger.ID, &trigger) //nolint
 
 		actual, err = dataBase.GetPatterns()
 		So(err, ShouldBeNil)
@@ -391,10 +391,10 @@ func TestMetricSubscription(t *testing.T) {
 			}
 		})
 
-		dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric1: met1})
-		dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric2: met2})
+		dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric1: met1}) //nolint
+		dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric2: met2}) //nolint
 		tomb1.Kill(nil)
-		tomb1.Wait()
+		tomb1.Wait() //nolint
 
 		So(numberOfChecks, ShouldEqual, 3)
 	})

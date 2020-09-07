@@ -65,7 +65,7 @@ func (sender *Sender) makePushoverMessage(events moira.NotificationEvents, trigg
 	}
 	if len(plots) > 0 {
 		reader := bytes.NewReader(plots[0])
-		pushoverMessage.AddAttachment(reader)
+		pushoverMessage.AddAttachment(reader) //nolint
 	}
 
 	return pushoverMessage

@@ -22,12 +22,12 @@ func tag(router chi.Router) {
 func getAllTags(writer http.ResponseWriter, request *http.Request) {
 	tagData, err := controller.GetAllTags(database)
 	if err != nil {
-		render.Render(writer, request, err)
+		render.Render(writer, request, err) //nolint
 		return
 	}
 
 	if err := render.Render(writer, request, tagData); err != nil {
-		render.Render(writer, request, api.ErrorRender(err))
+		render.Render(writer, request, api.ErrorRender(err)) //nolint
 		return
 	}
 }
@@ -36,11 +36,11 @@ func getAllTagsAndSubscriptions(writer http.ResponseWriter, request *http.Reques
 	logger := middleware.GetLoggerEntry(request)
 	data, err := controller.GetAllTagsAndSubscriptions(database, logger)
 	if err != nil {
-		render.Render(writer, request, err)
+		render.Render(writer, request, err) //nolint
 		return
 	}
 	if err := render.Render(writer, request, data); err != nil {
-		render.Render(writer, request, api.ErrorRender(err))
+		render.Render(writer, request, api.ErrorRender(err)) //nolint
 		return
 	}
 }
@@ -49,11 +49,11 @@ func removeTag(writer http.ResponseWriter, request *http.Request) {
 	tagName := middleware.GetTag(request)
 	response, err := controller.RemoveTag(database, tagName)
 	if err != nil {
-		render.Render(writer, request, err)
+		render.Render(writer, request, err) //nolint
 		return
 	}
 	if err := render.Render(writer, request, response); err != nil {
-		render.Render(writer, request, api.ErrorRender(err))
+		render.Render(writer, request, api.ErrorRender(err)) //nolint
 		return
 	}
 }

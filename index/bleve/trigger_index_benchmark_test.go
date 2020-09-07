@@ -59,7 +59,7 @@ func runBenchmark(b *testing.B, triggersSize int, batchSize int) {
 func fillIndexWithTriggers(index *TriggerIndex, triggerChecksToIndex []*moira.TriggerCheck, batchSize int) {
 	chunkedTriggersToIndex := chunkTriggerChecks(triggerChecksToIndex, batchSize)
 	for _, slice := range chunkedTriggersToIndex {
-		index.Write(slice)
+		index.Write(slice) //nolint
 	}
 }
 

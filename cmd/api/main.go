@@ -87,7 +87,7 @@ func main() {
 	if err != nil {
 		logger.Fatalf("Failed to start search index: %s", err.Error())
 	}
-	defer searchIndex.Stop()
+	defer searchIndex.Stop() //nolint
 
 	if !searchIndex.IsReady() {
 		logger.Fatalf("Search index is not ready, exit")
@@ -117,7 +117,7 @@ func main() {
 	}
 
 	go func() {
-		server.Serve(listener)
+		server.Serve(listener) //nolint
 	}()
 	defer Stop(logger, server)
 

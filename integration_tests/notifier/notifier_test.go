@@ -80,14 +80,14 @@ func TestNotifier(t *testing.T) {
 	defer mockCtrl.Finish()
 	database := redis.NewTestDatabase(logger)
 	metricsSourceProvider := metricSource.CreateMetricSourceProvider(local.Create(database), nil)
-	database.SaveContact(&contact)
-	database.SaveSubscription(&subscription)
-	database.SaveTrigger(trigger.ID, &trigger)
-	database.PushNotificationEvent(&event, true)
+	database.SaveContact(&contact) //nolint
+	database.SaveSubscription(&subscription) //nolint
+	database.SaveTrigger(trigger.ID, &trigger) //nolint
+	database.PushNotificationEvent(&event, true) //nolint
 	notifier2 := notifier.NewNotifier(database, logger, notifierConfig, notifierMetrics, metricsSourceProvider, map[string]moira.ImageStore{})
 	sender := mock_moira_alert.NewMockSender(mockCtrl)
 	sender.EXPECT().Init(senderSettings, logger, location, dateTimeFormat).Return(nil)
-	notifier2.RegisterSender(senderSettings, sender)
+	notifier2.RegisterSender(senderSettings, sender) //nolint
 	sender.EXPECT().SendEvents(gomock.Any(), contact, triggerData, gomock.Any(), false).Return(nil).Do(func(f ...interface{}) {
 		fmt.Print("SendEvents called. End test")
 		close(shutdown)
@@ -111,8 +111,8 @@ func TestNotifier(t *testing.T) {
 
 	waitTestEnd()
 
-	fetchEventsWorker.Stop()
-	fetchNotificationsWorker.Stop()
+	fetchEventsWorker.Stop() //nolint
+	fetchNotificationsWorker.Stop() //nolint
 }
 
 func waitTestEnd() {

@@ -29,33 +29,33 @@ func getNotification(writer http.ResponseWriter, request *http.Request) {
 
 	notifications, errorResponse := controller.GetNotifications(database, start, end)
 	if errorResponse != nil {
-		render.Render(writer, request, errorResponse)
+		render.Render(writer, request, errorResponse) //nolint
 		return
 	}
 	if err := render.Render(writer, request, notifications); err != nil {
-		render.Render(writer, request, api.ErrorRender(err))
+		render.Render(writer, request, api.ErrorRender(err)) //nolint
 	}
 }
 
 func deleteNotification(writer http.ResponseWriter, request *http.Request) {
 	notificationKey := request.URL.Query().Get("id")
 	if notificationKey == "" {
-		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("notification id can not be empty")))
+		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("notification id can not be empty"))) //nolint
 		return
 	}
 
 	notifications, errorResponse := controller.DeleteNotification(database, notificationKey)
 	if errorResponse != nil {
-		render.Render(writer, request, errorResponse)
+		render.Render(writer, request, errorResponse) //nolint
 		return
 	}
 	if err := render.Render(writer, request, notifications); err != nil {
-		render.Render(writer, request, api.ErrorRender(err))
+		render.Render(writer, request, api.ErrorRender(err)) //nolint
 	}
 }
 
 func deleteAllNotifications(writer http.ResponseWriter, request *http.Request) {
 	if errorResponse := controller.DeleteAllNotifications(database); errorResponse != nil {
-		render.Render(writer, request, errorResponse)
+		render.Render(writer, request, errorResponse) //nolint
 	}
 }
