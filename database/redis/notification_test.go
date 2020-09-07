@@ -2,15 +2,15 @@ package redis
 
 import (
 	"fmt"
-	"github.com/moira-alert/moira/notifier"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/op/go-logging"
-	. "github.com/smartystreets/goconvey/convey"
-
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/notifier"
+	"github.com/op/go-logging"
+
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestScheduledNotification(t *testing.T) {

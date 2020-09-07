@@ -1,7 +1,10 @@
 package connection
 
-import "testing"
-import . "github.com/smartystreets/goconvey/convey"
+import (
+	"testing"
+
+	. "github.com/smartystreets/goconvey/convey"
+)
 
 func TestDropCRLF(t *testing.T) {
 	type TestCase struct {

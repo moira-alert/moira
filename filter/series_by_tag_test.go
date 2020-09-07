@@ -3,8 +3,9 @@ package filter
 import (
 	"sort"
 	"testing"
+
+	. "github.com/smartystreets/goconvey/convey"
 )
-import . "github.com/smartystreets/goconvey/convey"
 
 func TestParseSeriesByTag(t *testing.T) {
 	type ValidSeriesByTagCase struct {

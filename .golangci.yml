@@ -24,8 +24,9 @@ linters:
     - deadcode
     - errcheck
     - goconst
-    - gofmt
     - gocyclo
+    - gofmt
+    - goimports
     - golint
     - gomnd
     - gosimple
