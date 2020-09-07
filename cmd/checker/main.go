@@ -96,9 +96,9 @@ func main() {
 		RemoteConfig:      remoteConfig,
 		SourceProvider:    metricSourceProvider,
 		Metrics:           checkerMetrics,
-		TriggerCache:      cache.New(checkerSettings.CheckInterval, time.Minute*60),
-		LazyTriggersCache: cache.New(time.Minute*10, time.Minute*60),
-		PatternCache:      cache.New(checkerSettings.CheckInterval, time.Minute*60),
+		TriggerCache:      cache.New(checkerSettings.CheckInterval, time.Minute*60), //nolint
+		LazyTriggersCache: cache.New(time.Minute*10, time.Minute*60), //nolint
+		PatternCache:      cache.New(checkerSettings.CheckInterval, time.Minute*60), //nolint
 	}
 	err = checkerWorker.Start()
 	if err != nil {

@@ -94,7 +94,7 @@ func (storage *Storage) buildRetentions(retentionScanner *bufio.Scanner) error {
 		line2 := retentionScanner.Text()
 		splitted := strings.Split(line2, "=")
 
-		if len(splitted) < 2 {
+		if len(splitted) < 2 { //nolint
 			storage.logger.Errorf("Invalid pattern found: '%s'", patternString)
 			continue
 		}
@@ -124,13 +124,13 @@ func rawRetentionToSeconds(rawRetention string) (int, error) {
 	case strings.HasSuffix(rawRetention, "m"):
 		multiplier = 60
 	case strings.HasSuffix(rawRetention, "h"):
-		multiplier = 60 * 60
+		multiplier = 60 * 60 //nolint
 	case strings.HasSuffix(rawRetention, "d"):
-		multiplier = 60 * 60 * 24
+		multiplier = 60 * 60 * 24 //nolint
 	case strings.HasSuffix(rawRetention, "w"):
-		multiplier = 60 * 60 * 24 * 7
+		multiplier = 60 * 60 * 24 * 7 //nolint
 	case strings.HasSuffix(rawRetention, "y"):
-		multiplier = 60 * 60 * 24 * 365
+		multiplier = 60 * 60 * 24 * 365 //nolint
 	}
 
 	retention, err = strconv.Atoi(rawRetention[0 : len(rawRetention)-1])

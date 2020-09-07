@@ -36,7 +36,7 @@ type TagSpec struct {
 // ParseSeriesByTag parses seriesByTag pattern and returns tags specs
 func ParseSeriesByTag(input string) ([]TagSpec, error) {
 	matchedSeriesByTagIndexes := seriesByTagRegex.FindStringSubmatchIndex(input)
-	if len(matchedSeriesByTagIndexes) != 4 {
+	if len(matchedSeriesByTagIndexes) != 4 { //nolint
 		return nil, ErrNotSeriesByTag
 	}
 
@@ -47,14 +47,14 @@ func ParseSeriesByTag(input string) ([]TagSpec, error) {
 	for len(input) > 0 {
 		if len(tagSpecs) > 0 {
 			matchedTagSpecDelimiterIndexes := tagSpecDelimiterRegex.FindStringSubmatchIndex(input)
-			if len(matchedTagSpecDelimiterIndexes) != 2 {
+			if len(matchedTagSpecDelimiterIndexes) != 2 { //nolint
 				return nil, ErrNotSeriesByTag
 			}
 			input = input[matchedTagSpecDelimiterIndexes[1]:]
 		}
 
 		matchedTagSpecIndexes := tagSpecRegex.FindStringSubmatchIndex(input)
-		if len(matchedTagSpecIndexes) != 8 {
+		if len(matchedTagSpecIndexes) != 8 { //nolint
 			return nil, ErrNotSeriesByTag
 		}
 		if input[matchedTagSpecIndexes[0]] != input[matchedTagSpecIndexes[1]-1] {

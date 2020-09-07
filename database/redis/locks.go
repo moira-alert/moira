@@ -44,7 +44,7 @@ func (lock *Lock) Acquire(stop <-chan struct{}) (<-chan struct{}, error) {
 			{
 				return nil, database.ErrLockAcquireInterrupted
 			}
-		case <-time.After(lock.ttl / 3):
+		case <-time.After(lock.ttl / 3): //nolint
 			{
 				continue
 			}
@@ -87,7 +87,7 @@ func (lock *Lock) tryAcquire() (<-chan struct{}, error) {
 
 func extendMutex(mutex *redsync.Mutex, ttl time.Duration, done chan struct{}, stop <-chan struct{}) {
 	defer close(done)
-	extendTicker := time.NewTicker(ttl / 3)
+	extendTicker := time.NewTicker(ttl / 3) //nolint
 	defer extendTicker.Stop()
 
 	for {

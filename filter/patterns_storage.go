@@ -77,7 +77,7 @@ func (storage *PatternStorage) ProcessIncomingMetric(lineBytes []byte) *moira.Ma
 			Value:              parsedMetric.Value,
 			Timestamp:          parsedMetric.Timestamp,
 			RetentionTimestamp: parsedMetric.Timestamp,
-			Retention:          60,
+			Retention:          60, //nolint
 		}
 	}
 	return nil

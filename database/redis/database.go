@@ -62,15 +62,15 @@ func NewDatabase(logger moira.Logger, config Config, source DBSource) *DbConnect
 		MaxIdle:      config.ConnectionLimit,
 		MaxActive:    config.ConnectionLimit,
 		Wait:         true,
-		IdleTimeout:  240 * time.Second,
+		IdleTimeout:  240 * time.Second, //nolint
 		Dial:         poolDialer.Dial,
 		TestOnBorrow: poolDialer.Test,
 	}
 	syncPool := &redis.Pool{
-		MaxIdle:      3,
-		MaxActive:    10,
+		MaxIdle:      3, //nolint
+		MaxActive:    10, //nolint
 		Wait:         true,
-		IdleTimeout:  240 * time.Second,
+		IdleTimeout:  240 * time.Second, //nolint
 		Dial:         poolDialer.Dial,
 		TestOnBorrow: poolDialer.Test,
 	}
@@ -80,7 +80,7 @@ func NewDatabase(logger moira.Logger, config Config, source DBSource) *DbConnect
 			MaxIdle:      config.ConnectionLimit,
 			MaxActive:    config.ConnectionLimit,
 			Wait:         true,
-			IdleTimeout:  240 * time.Second,
+			IdleTimeout:  240 * time.Second, //nolint
 			Dial:         slaveDialer.Dial,
 			TestOnBorrow: slaveDialer.Test,
 		}

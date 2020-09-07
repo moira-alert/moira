@@ -43,8 +43,8 @@ func GetPlotTemplate(theme string, location *time.Location) (*Plot, error) {
 	return &Plot{
 		theme:    plotTheme,
 		location: location,
-		width:    800,
-		height:   400,
+		width:    800, //nolint
+		height:   400, //nolint
 	}, nil
 }
 

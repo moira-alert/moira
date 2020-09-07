@@ -85,7 +85,7 @@ func (remote *Remote) IsConfigured() (bool, error) {
 func (remote *Remote) IsRemoteAvailable() (bool, error) {
 	maxRetries := 3
 	until := time.Now().Unix()
-	from := until - 600
+	from := until - 600 //nolint
 	req, err := remote.prepareRequest(from, until, "NonExistingTarget")
 	if err != nil {
 		return false, err

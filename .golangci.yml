@@ -26,6 +26,7 @@ linters:
     # - goconst
     - gocyclo
     - golint
+    - gomnd
     - gosimple
     - govet
     - ineffassign

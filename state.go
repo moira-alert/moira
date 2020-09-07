@@ -36,15 +36,15 @@ var (
 	stateScores         = map[State]int64{
 		StateOK:        0,
 		StateWARN:      1,
-		StateERROR:     100,
-		StateNODATA:    1000,
-		StateEXCEPTION: 100000,
+		StateERROR:     100, //nolint
+		StateNODATA:    1000, //nolint
+		StateEXCEPTION: 100000, //nolint
 	}
 	eventStateWeight = map[State]int{
 		StateOK:     0,
 		StateWARN:   1,
-		StateERROR:  100,
-		StateNODATA: 10000,
+		StateERROR:  100, //nolint
+		StateNODATA: 10000, //nolint
 	}
 )
 

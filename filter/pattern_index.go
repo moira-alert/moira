@@ -153,7 +153,7 @@ func findPart(part string, currentLevel []*PatternNode) ([]*PatternNode, int) {
 
 func split2(s, sep string) (string, string) {
 	splitResult := strings.SplitN(s, sep, 2)
-	if len(splitResult) < 2 {
+	if len(splitResult) < 2 { //nolint
 		return splitResult[0], ""
 	}
 	return splitResult[0], splitResult[1]

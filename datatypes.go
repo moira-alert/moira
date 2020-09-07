@@ -416,11 +416,11 @@ func (schedule *ScheduleData) IsScheduleAllows(ts int64) bool {
 	}
 	endOffset, startOffset := schedule.EndOffset, schedule.StartOffset
 	if schedule.EndOffset < schedule.StartOffset {
-		endOffset = schedule.EndOffset + 24*60
+		endOffset = schedule.EndOffset + 24*60 //nolint
 	}
-	timestamp := ts - ts%60 - schedule.TimezoneOffset*60
+	timestamp := ts - ts%60 - schedule.TimezoneOffset*60 //nolint
 	date := time.Unix(timestamp, 0).UTC()
-	if !schedule.Days[int(date.Weekday()+6)%7].Enabled {
+	if !schedule.Days[int(date.Weekday()+6)%7].Enabled { //nolint
 		return false
 	}
 	dayStart := time.Unix(timestamp-timestamp%(24*3600), 0).UTC()
@@ -431,7 +431,7 @@ func (schedule *ScheduleData) IsScheduleAllows(ts int64) bool {
 			return true
 		}
 	} else {
-		endDayTime = endDayTime.Add(-time.Hour * 24)
+		endDayTime = endDayTime.Add(-time.Hour * 24) //nolint
 		if date.Before(endDayTime) || date.After(startDayTime) {
 			return true
 		}

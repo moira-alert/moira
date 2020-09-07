@@ -75,7 +75,7 @@ func (storage locationStorage) formatTimeWithLocation(v interface{}, dateFormat 
 func getYAxisValuesFormatter(limits plotLimits) (func(v interface{}) string, int) {
 	var formatter func(v interface{}) string
 	deltaLimits := int64(limits.highest) - int64(limits.lowest)
-	if deltaLimits > 10 {
+	if deltaLimits > 10 { //nolint
 		formatter = floatToHumanizedValueFormatter
 	} else {
 		formatter = chart.FloatValueFormatter
@@ -91,7 +91,7 @@ func getYAxisValuesFormatter(limits plotLimits) (func(v interface{}) string, int
 // floatToHumanizedValueFormatter converts floats into humanized strings on y axis of plot
 func floatToHumanizedValueFormatter(v interface{}) string {
 	if typed, isTyped := v.(float64); isTyped {
-		if math.Abs(typed) < 1000 {
+		if math.Abs(typed) < 1000 { //nolint
 			return fmt.Sprintf("%.f", typed)
 		}
 		humanized, postfix := humanize.ComputeSI(typed)

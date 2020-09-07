@@ -39,7 +39,7 @@ func createGoFile(fileName string, dataTTF []byte) error {
 }
 
 func main() {
-	if len(os.Args) < 2 {
+	if len(os.Args) < 2 { //nolint
 		usage()
 		os.Exit(1)
 	}

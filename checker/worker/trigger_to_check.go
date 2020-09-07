@@ -8,7 +8,7 @@ const sleepAfterGetTriggerIDError = time.Second * 1
 const sleepWhenNoTriggerToCheck = time.Millisecond * 500
 
 func (worker *Checker) startTriggerToCheckGetter(fetch func(int) ([]string, error), batchSize int) <-chan string {
-	triggerIDsToCheck := make(chan string, batchSize*2)
+	triggerIDsToCheck := make(chan string, batchSize*2) //nolint
 	worker.tomb.Go(func() error { return worker.triggerToCheckGetter(fetch, batchSize, triggerIDsToCheck) })
 	return triggerIDsToCheck
 }
