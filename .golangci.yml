@@ -14,6 +14,11 @@ linters-settings:
     suggest-new: true
   unparam:
     check-exported: false
+  gomnd:
+    settings:
+      mnd:
+        # don't include the "operation" and "assign"
+        checks: argument,case,condition,return
 
 linters:
   # inverted configuration with `enable-all` and `disable` is not scalable during updates of golangci-lint
