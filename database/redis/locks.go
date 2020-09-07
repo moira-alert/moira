@@ -29,7 +29,6 @@ type Lock struct {
 // Providing a non-nil stop channel can be used to abort the acquire attempt
 // Returns lost channel that is closed if the lock is lost or an error
 func (lock *Lock) Acquire(stop <-chan struct{}) (<-chan struct{}, error) {
-
 	for {
 		lost, err := lock.tryAcquire()
 		if err == nil {

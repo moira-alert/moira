@@ -13,7 +13,6 @@ import (
 )
 
 func TestFetchTriggerMetrics(t *testing.T) {
-
 	Convey("Test fetch trigger metrics", t, func() {
 		mockCtrl := gomock.NewController(t)
 		source := mock_metric_source.NewMockMetricSource(mockCtrl)

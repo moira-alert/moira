@@ -20,7 +20,6 @@ func TestTriggerStoring(t *testing.T) {
 	defer dataBase.flush()
 
 	Convey("Trigger manipulation", t, func() {
-
 		Convey("Test trigger has subscriptions with AnyTag is true", func() {
 			trigger := &triggers[0]
 			subscription := moira.SubscriptionData{

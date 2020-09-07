@@ -20,7 +20,6 @@ func (connector *DbConnector) AddRemoteTriggersToCheck(triggerIDs []string) erro
 // GetLocalTriggersToCheck return random trigger ID from Redis Set
 func (connector *DbConnector) GetLocalTriggersToCheck(count int) ([]string, error) {
 	return connector.getTriggersToCheck(localTriggersToCheckKey, count)
-
 }
 
 // GetRemoteTriggersToCheck return random remote trigger ID from Redis Set

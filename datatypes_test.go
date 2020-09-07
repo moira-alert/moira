@@ -133,7 +133,6 @@ func TestIsScheduleAllows(t *testing.T) {
 }
 
 func TestNotificationEvent_CreateMessage(t *testing.T) {
-
 	Convey("Test creating message", t, func() {
 		var (
 			startTime int64 = 100
@@ -248,7 +247,6 @@ func TestTriggerData_GetTags(t *testing.T) {
 }
 
 func TestTriggerData_TemplateDescription(t *testing.T) {
-
 	Convey("Test templates", t, func() {
 		var trigger = TriggerData{Name: "TestName"}
 		trigger.Desc = "\n" +
@@ -265,7 +263,6 @@ func TestTriggerData_TemplateDescription(t *testing.T) {
 		var data = NotificationEvents{{Metric: "1"}, {Metric: "2"}}
 
 		Convey("Test nil data", func() {
-
 			expected, err := trigger.GetPopulatedDescription(nil)
 			So(err, ShouldBeNil)
 			So(`
@@ -717,7 +714,6 @@ func testStopMaintenance(message string, actualInfo MaintenanceInfo, user string
 }
 
 func testMaintenance(conveyMessage string, actualInfo MaintenanceInfo, maintenance int64, user string, expectedInfo MaintenanceInfo) {
-
 	Convey(conveyMessage, func() {
 		var lastCheckTest = CheckData{
 			Maintenance: 1000,
@@ -728,6 +724,5 @@ func testMaintenance(conveyMessage string, actualInfo MaintenanceInfo, maintenan
 
 		So(lastCheckTest.MaintenanceInfo, ShouldResemble, expectedInfo)
 		So(lastCheckTest.Maintenance, ShouldEqual, maintenance)
-
 	})
 }

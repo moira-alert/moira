@@ -54,7 +54,6 @@ func TestBotDataStoring(t *testing.T) {
 				So(err, ShouldResemble, database.ErrNil)
 				So(actual, ShouldBeEmpty)
 			})
-
 		})
 	})
 }

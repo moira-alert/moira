@@ -107,7 +107,6 @@ func Test(t *testing.T) {
 	})
 
 	Convey("Should respect lost chanel", t, func() {
-
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
@@ -127,7 +126,6 @@ func Test(t *testing.T) {
 	})
 
 	Convey("Should respect stop chanel", t, func() {
-
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 

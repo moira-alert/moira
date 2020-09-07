@@ -57,5 +57,4 @@ func TestUpdateNotifierState(t *testing.T) {
 		So(*actualState, ShouldResemble, expectedState)
 		So(err, ShouldBeNil)
 	})
-
 }

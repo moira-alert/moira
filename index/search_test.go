@@ -284,5 +284,4 @@ func TestIndex_SearchErrors(t *testing.T) {
 		So(total, ShouldBeZeroValue)
 		So(err, ShouldNotBeNil)
 	})
-
 }

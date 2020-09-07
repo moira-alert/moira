@@ -259,7 +259,6 @@ some other text _italic text_`,
 				}
 				So(actual, ShouldResemble, expected)
 			})
-
 		})
 
 		Convey("Create MessageCard with one event", func() {

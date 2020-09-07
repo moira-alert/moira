@@ -43,7 +43,6 @@ func TestSender_SendEvents(t *testing.T) {
 	sender := Sender{Database: dataBase, logger: logger}
 
 	Convey("Has connection to database", t, func() {
-
 		Convey("SelfState is OK", func() {
 			selfStateInitial := moira.SelfStateOK
 			selfStateFinal := moira.SelfStateERROR
@@ -58,7 +57,6 @@ func TestSender_SendEvents(t *testing.T) {
 			})
 
 			Convey("Should disable notifications", func() {
-
 				for _, subjectState := range disablingSubjectStates {
 					dataBase.EXPECT().GetNotifierState().Return(selfStateInitial, nil)
 					dataBase.EXPECT().SetNotifierState(selfStateFinal).Return(nil)

@@ -131,7 +131,6 @@ func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *
 }
 
 func calculateNextDelivery(schedule *moira.ScheduleData, nextTime time.Time) (time.Time, error) {
-
 	if len(schedule.Days) != 0 && len(schedule.Days) != 7 {
 		return nextTime, fmt.Errorf("invalid scheduled settings: %d days defined", len(schedule.Days))
 	}

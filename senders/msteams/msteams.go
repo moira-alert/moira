@@ -62,7 +62,6 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 
 // SendEvents implements Sender interface Send
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
-
 	err := sender.isValidWebhookURL(contact.Value)
 	if err != nil {
 		return err
@@ -90,7 +89,6 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	//handle non 2xx responses
 	if response.StatusCode >= http.StatusBadRequest && response.StatusCode <= http.StatusNetworkAuthenticationRequired {
 		return fmt.Errorf("server responded with a non 2xx code: %d", response.StatusCode)
-
 	}
 
 	responseData := string(body)
@@ -102,7 +100,6 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 }
 
 func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) MessageCard {
-
 	title, uri := sender.buildTitleAndURI(events, trigger)
 	var triggerDescription string
 	if trigger.Desc != "" {
@@ -141,7 +138,6 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 }
 
 func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) (*http.Request, error) {
-
 	messageCard := sender.buildMessage(events, trigger, throttled)
 	requestURL := contact.Value
 	requestBody, err := json.Marshal(messageCard)

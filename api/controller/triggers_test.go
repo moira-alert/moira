@@ -303,7 +303,6 @@ func TestSearchTriggers(t *testing.T) {
 	})
 
 	Convey("Find triggers errors", t, func() {
-
 		Convey("Error from searcher", func() {
 			searcherError := fmt.Errorf("very bad request")
 			mockIndex.EXPECT().SearchTriggers(tags, searchString, false, page, size).Return(make([]*moira.SearchResult, 0), int64(0), searcherError)

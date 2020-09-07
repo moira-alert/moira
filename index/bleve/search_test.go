@@ -246,7 +246,6 @@ func TestTriggerIndex_Search(t *testing.T) {
 			So(err, ShouldBeNil)
 		})
 	})
-
 }
 
 func TestStringsManipulations(t *testing.T) {
