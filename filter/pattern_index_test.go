@@ -4,9 +4,8 @@ import (
 	"testing"
 
 	"github.com/op/go-logging"
+	. "github.com/smartystreets/goconvey/convey"
 )
-
-import . "github.com/smartystreets/goconvey/convey"
 
 func TestPatternIndex(t *testing.T) {
 	logger, _ := logging.GetLogger("PatternIndex")
