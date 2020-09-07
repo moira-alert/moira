@@ -20,12 +20,12 @@ func TestResolveLimits(t *testing.T) {
 	startTime := time.Now().UTC().Unix()
 	var metricsData []metricSource.MetricData
 	// Fill MetricsData with random float64 values that higher than minValue and lower than maxValue
-	for i := 0; i < int(elementsToUse); i++ {
+	for i := 0; i < elementsToUse; i++ {
 		values := make([]float64, elementsToUse)
 		for valInd := range values {
 			values[valInd] = float64(rand.Intn(maxValue-1)) * rand.Float64()
 		}
-		metricData := *metricSource.MakeMetricData("test", values, int64(stepTime), int64(startTime))
+		metricData := *metricSource.MakeMetricData("test", values, int64(stepTime), startTime)
 		metricsData = append(metricsData, metricData)
 	}
 	// Change 2 first points of MetricsData to minValue and maxValue
@@ -40,7 +40,7 @@ func TestResolveLimits(t *testing.T) {
 	// [3712.024207074801  8137.757246113409  3653.0361832312265 632.2809306369263
 	// ...
 	Convey("Resolve limits for collection of random MetricDatas", t, func() {
-		expectedFrom := moira.Int64ToTime(int64(startTime))
+		expectedFrom := moira.Int64ToTime(startTime)
 		expectedTo := expectedFrom.Add(time.Duration(elementsToUse) * time.Minute)
 		expectedIncrement := percentsOfRange(float64(minValue), float64(maxValue), defaultYAxisRangePercent)
 		expectedLowest := float64(minValue) - expectedIncrement

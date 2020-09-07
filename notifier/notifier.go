@@ -128,7 +128,7 @@ func (notifier *StandardNotifier) GetSenders() map[string]bool {
 
 // GetReadBatchSize returns amount of messages notifier reads from Redis per iteration
 func (notifier *StandardNotifier) GetReadBatchSize() int64 {
-	return int64(notifier.config.ReadBatchSize)
+	return notifier.config.ReadBatchSize
 }
 
 func (notifier *StandardNotifier) resend(pkg *NotificationPackage, reason string) {
