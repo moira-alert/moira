@@ -135,7 +135,6 @@ func (connector *DbConnector) removeNotifications(notifications []*moira.Schedul
 
 // FetchNotifications fetch notifications by given timestamp and delete it
 func (connector *DbConnector) FetchNotifications(to int64, limit int64) ([]*moira.ScheduledNotification, error) {
-
 	if limit == 0 {
 		return nil, fmt.Errorf("limit mustn't be 0")
 	}

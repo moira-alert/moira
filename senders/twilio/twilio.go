@@ -26,7 +26,6 @@ type twilioSender struct {
 
 // Init read yaml config
 func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
-
 	apiType := senderSettings["type"]
 
 	apiASID := senderSettings["api_asid"]

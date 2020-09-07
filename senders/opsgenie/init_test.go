@@ -73,6 +73,5 @@ func TestInit(t *testing.T) {
 			So(sender.imageStoreConfigured, ShouldResemble, false)
 			So(sender.imageStore, ShouldResemble, nil)
 		})
-
 	})
 }

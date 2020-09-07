@@ -50,7 +50,6 @@ func TestTriggerValidation(t *testing.T) {
 		}
 
 		Convey("Test FallingTrigger", func() {
-
 			localSource.EXPECT().IsConfigured().Return(true, nil).AnyTimes()
 			localSource.EXPECT().GetMetricsTTLSeconds().Return(int64(3600)).AnyTimes()
 			localSource.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fetchResult, nil).AnyTimes()
@@ -92,10 +91,8 @@ func TestTriggerValidation(t *testing.T) {
 				err := tr.Bind(request)
 				So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("can't use trigger_type not 'falling' for with multiple targets")})
 			})
-
 		})
 		Convey("Test RisingTrigger", func() {
-
 			localSource.EXPECT().IsConfigured().Return(true, nil).AnyTimes()
 			localSource.EXPECT().GetMetricsTTLSeconds().Return(int64(3600)).AnyTimes()
 			localSource.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fetchResult, nil).AnyTimes()
@@ -139,7 +136,6 @@ func TestTriggerValidation(t *testing.T) {
 			})
 		})
 		Convey("Test ExpressionTrigger", func() {
-
 			localSource.EXPECT().IsConfigured().Return(true, nil).AnyTimes()
 			localSource.EXPECT().GetMetricsTTLSeconds().Return(int64(3600)).AnyTimes()
 			localSource.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fetchResult, nil).AnyTimes()

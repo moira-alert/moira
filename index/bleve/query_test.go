@@ -21,7 +21,6 @@ func TestIndex_BuildSearchQuery(t *testing.T) {
 		})
 
 		Convey("Complex query", func() {
-
 			Convey("Only errors = true", func() {
 				onlyErrors = true
 				qr := buildQueryForOnlyErrors(onlyErrors)

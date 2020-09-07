@@ -11,7 +11,6 @@ import (
 )
 
 func TestCreateAlert(t *testing.T) {
-
 	// Start a test server
 	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		// Test request parameters

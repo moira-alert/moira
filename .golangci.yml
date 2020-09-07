@@ -33,6 +33,7 @@ linters:
     - typecheck
     # - unconvert
     - unused
+    - whitespace
     - varcheck
 
 run:

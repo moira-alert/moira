@@ -71,7 +71,6 @@ func TestBuildMessage(t *testing.T) {
 			expected := "\n02:40: Metric = 123 (OK to NODATA)"
 			So(actual, ShouldResemble, expected)
 		})
-
 	})
 }
 

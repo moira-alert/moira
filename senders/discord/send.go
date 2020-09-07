@@ -127,7 +127,6 @@ func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsFo
 
 		eventsString += line
 		eventsPrinted++
-
 	}
 
 	if eventsLenLimitReached {

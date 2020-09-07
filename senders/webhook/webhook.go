@@ -22,7 +22,6 @@ type Sender struct {
 
 // Init read yaml config
 func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
-
 	if senderSettings["name"] == "" {
 		return fmt.Errorf("required name for sender type webhook")
 	}
@@ -58,7 +57,6 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 
 // SendEvents implements Sender interface Send
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
-
 	request, err := sender.buildRequest(events, contact, trigger, plots, throttled)
 	if request != nil {
 		defer request.Body.Close()

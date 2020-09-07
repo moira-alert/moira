@@ -22,7 +22,6 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 }
 
 func (sender *Sender) buildCreateAlertRequest(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool, plots [][]byte, time int64) api.CreateAlertRequest {
-
 	triggerURI := trigger.GetTriggerURI(sender.frontURI)
 
 	createAlertRequest := api.CreateAlertRequest{

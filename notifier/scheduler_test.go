@@ -311,7 +311,6 @@ func TestSubscriptionSchedule(t *testing.T) {
 			So(next, ShouldResemble, time.Unix(1441148400, 0))
 			So(throttled, ShouldBeFalse)
 		})
-
 	})
 }
 

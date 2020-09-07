@@ -13,7 +13,6 @@ const (
 )
 
 func (worker *Checker) remoteTriggerGetter() error {
-
 	w.NewWorker(
 		remoteTriggerName,
 		worker.Logger,

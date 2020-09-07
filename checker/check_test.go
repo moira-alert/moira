@@ -227,7 +227,6 @@ func TestTriggerChecker_PrepareMetrics(t *testing.T) {
 					So(aloneMetric.StopTime, ShouldResemble, int64(60))
 
 					So(err, ShouldBeNil)
-
 				})
 			})
 			Convey("fetched metrics is empty", func() {
@@ -1330,7 +1329,6 @@ func TestGetExpressionValues(t *testing.T) {
 }
 
 func TestTriggerChecker_validateAloneMetrics(t *testing.T) {
-
 	tests := []struct {
 		name         string
 		trigger      moira.Trigger

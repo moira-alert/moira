@@ -59,7 +59,6 @@ some other text _italics text_`,
 		So(messageStr.String(), ShouldContainSubstring, "<em>italics text</em>")
 		So(messageStr.String(), ShouldContainSubstring, "<strong>bold text</strong>")
 		//fmt.Println(messageStr.String())
-
 	})
 }
 

@@ -7,7 +7,6 @@ import (
 )
 
 func TestCalculateMessagePartsLength(t *testing.T) {
-
 	Convey("Message parts length calculation tests", t, func() {
 		Convey("descLen+eventsLen <= maxChars", func() {
 			descNewLen, eventsNewLen := CalculateMessagePartsLength(100, 20, 78)

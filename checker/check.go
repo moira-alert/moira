@@ -135,7 +135,6 @@ func formatTriggerCheckException(triggerId string, err error) string {
 // Set new last check timestamp that equal to "until" targets fetch interval
 // Do not copy message, it will be set if needed
 func newCheckData(lastCheck *moira.CheckData, checkTimeStamp int64) moira.CheckData {
-
 	lastMetrics := make(map[string]moira.MetricState, len(lastCheck.Metrics))
 	for k, v := range lastCheck.Metrics {
 		lastMetrics[k] = v

@@ -43,7 +43,6 @@ func (Trigger) GetDocumentMapping() *mapping.DocumentMapping {
 	triggerMapping.AddFieldMappingsAt(TriggerLastCheckScore.GetName(), getNumericMapping())
 
 	return triggerMapping
-
 }
 
 // CreateIndexedTrigger creates mapping.Trigger object out of moira.TriggerCheck

@@ -63,7 +63,6 @@ func BenchmarkUnpackMetricValues(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		unpackMetricValues(metricsValues, until, false, getTimeSlot)
 	}
-
 }
 
 func TestFetchData(t *testing.T) {

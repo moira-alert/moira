@@ -30,7 +30,6 @@ func TestTriggerIndex_Write(t *testing.T) {
 	})
 
 	Convey("Test write triggers and get count", t, func() {
-
 		Convey("Test write 0 triggers", func() {
 			err = newIndex.Write(triggerChecksPointers[0:0])
 			So(err, ShouldBeNil)
@@ -93,6 +92,5 @@ func TestTriggerIndex_Write(t *testing.T) {
 			So(count, ShouldEqual, int64(32))
 			So(err, ShouldBeNil)
 		})
-
 	})
 }

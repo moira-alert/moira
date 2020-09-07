@@ -44,5 +44,4 @@ func setNotifierState(writer http.ResponseWriter, request *http.Request) {
 		render.Render(writer, request, api.ErrorRender(err))
 		return
 	}
-
 }

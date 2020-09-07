@@ -63,7 +63,6 @@ func getHighlights(fragmentsMap search.FieldFragmentMap, triggerFields ...mappin
 }
 
 func buildSearchRequest(filterTags []string, searchString string, onlyErrors bool, page, size int) *bleve.SearchRequest {
-
 	searchTerms := splitStringToTerms(searchString)
 	searchQuery := buildSearchQuery(filterTags, searchTerms, onlyErrors)
 

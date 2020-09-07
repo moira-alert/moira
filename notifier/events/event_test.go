@@ -448,7 +448,6 @@ func TestGetNotificationSubscriptions(t *testing.T) {
 		So(sub, ShouldBeNil)
 		So(expected, ShouldResemble, fmt.Errorf("error while read contact %s: %s", event.ContactID, err.Error()))
 	})
-
 }
 
 func TestGoRoutine(t *testing.T) {

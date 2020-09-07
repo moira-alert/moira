@@ -70,7 +70,6 @@ func TestUpdateUsers(t *testing.T) {
 			}
 		})
 	})
-
 }
 
 func createDefaultData(database moira.Database) error {
@@ -99,7 +98,6 @@ func createDefaultData(database moira.Database) error {
 }
 
 func cleanData(database moira.Database) error {
-
 	for _, contact := range contacts {
 		if err := database.RemoveContact(contact.ID); err != nil {
 			return err

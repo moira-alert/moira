@@ -135,7 +135,6 @@ func TestGetMetricDataToShow(t *testing.T) {
 			So(len(metricsData["t1"]), ShouldEqual, 2)
 			So(len(metricsData["t2"]), ShouldEqual, 1)
 		})
-
 	})
 	Convey("Limit series by an empty whitelist", t, func() {
 		metricsWhiteList := make([]string, 0)

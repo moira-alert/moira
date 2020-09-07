@@ -206,7 +206,6 @@ aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 
 			So(actual, ShouldResemble, expected)
 		})
-
 	})
 }
 

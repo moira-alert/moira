@@ -71,6 +71,5 @@ func TestGetResponseMessage(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(response, ShouldResemble, "Unsupported channel type")
 		})
-
 	})
 }

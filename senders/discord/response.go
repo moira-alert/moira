@@ -7,7 +7,6 @@ import (
 )
 
 func (sender *Sender) getResponse(m *discordgo.MessageCreate, channel *discordgo.Channel) (string, error) {
-
 	// Ignore all messages created by the bot itself
 	if m.Author.ID == sender.botUserID {
 		return "", nil
