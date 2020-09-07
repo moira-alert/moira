@@ -41,7 +41,7 @@ func TestInit(t *testing.T) {
 				"token":     "123",
 				"front_uri": "http://moira.uri",
 			}
-			sender.Init(senderSettings, logger, location, "15:04")
+			sender.Init(senderSettings, logger, location, "15:04") //nolint
 			So(sender.frontURI, ShouldResemble, "http://moira.uri")
 			So(sender.session.Token, ShouldResemble, "Bot 123")
 			So(sender.logger, ShouldResemble, logger)

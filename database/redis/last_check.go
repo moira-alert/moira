@@ -34,19 +34,19 @@ func (connector *DbConnector) SetTriggerLastCheck(triggerID string, checkData *m
 
 	c := connector.pool.Get()
 	defer c.Close()
-	c.Send("MULTI")
-	c.Send("SET", metricLastCheckKey(triggerID), bytes)
-	c.Send("ZADD", triggersChecksKey, checkData.Score, triggerID)
+	c.Send("MULTI") //nolint
+	c.Send("SET", metricLastCheckKey(triggerID), bytes) //nolint
+	c.Send("ZADD", triggersChecksKey, checkData.Score, triggerID) //nolint
 	if selfStateCheckCountKey != "" {
-		c.Send("INCR", selfStateCheckCountKey)
+		c.Send("INCR", selfStateCheckCountKey) //nolint
 	}
 	if checkData.Score > 0 {
-		c.Send("SADD", badStateTriggersKey, triggerID)
+		c.Send("SADD", badStateTriggersKey, triggerID) //nolint
 	} else {
-		c.Send("SREM", badStateTriggersKey, triggerID)
+		c.Send("SREM", badStateTriggersKey, triggerID) //nolint
 	}
 	if triggerNeedToReindex {
-		c.Send("ZADD", triggersToReindexKey, time.Now().Unix(), triggerID)
+		c.Send("ZADD", triggersToReindexKey, time.Now().Unix(), triggerID) //nolint
 	}
 	_, err = c.Do("EXEC")
 	if err != nil {
@@ -69,11 +69,11 @@ func (connector *DbConnector) getSelfStateCheckCountKey(isRemote bool) string {
 func (connector *DbConnector) RemoveTriggerLastCheck(triggerID string) error {
 	c := connector.pool.Get()
 	defer c.Close()
-	c.Send("MULTI")
-	c.Send("DEL", metricLastCheckKey(triggerID))
-	c.Send("ZREM", triggersChecksKey, triggerID)
-	c.Send("SREM", badStateTriggersKey, triggerID)
-	c.Send("ZADD", triggersToReindexKey, time.Now().Unix(), triggerID)
+	c.Send("MULTI") //nolint
+	c.Send("DEL", metricLastCheckKey(triggerID)) //nolint
+	c.Send("ZREM", triggersChecksKey, triggerID) //nolint
+	c.Send("SREM", badStateTriggersKey, triggerID) //nolint
+	c.Send("ZADD", triggersToReindexKey, time.Now().Unix(), triggerID) //nolint
 	_, err := c.Do("EXEC")
 	if err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())

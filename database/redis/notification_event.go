@@ -41,15 +41,15 @@ func (connector *DbConnector) PushNotificationEvent(event *moira.NotificationEve
 
 	c := connector.pool.Get()
 	defer c.Close()
-	c.Send("MULTI")
-	c.Send("LPUSH", notificationEventsList, eventBytes)
+	c.Send("MULTI") //nolint
+	c.Send("LPUSH", notificationEventsList, eventBytes) //nolint
 	if event.TriggerID != "" {
-		c.Send("ZADD", triggerEventsKey(event.TriggerID), event.Timestamp, eventBytes)
-		c.Send("ZREMRANGEBYSCORE", triggerEventsKey(event.TriggerID), "-inf", time.Now().Unix()-eventsTTL)
+		c.Send("ZADD", triggerEventsKey(event.TriggerID), event.Timestamp, eventBytes) //nolint
+		c.Send("ZREMRANGEBYSCORE", triggerEventsKey(event.TriggerID), "-inf", time.Now().Unix()-eventsTTL) //nolint
 	}
 	if ui {
-		c.Send("LPUSH", notificationEventsUIList, eventBytes)
-		c.Send("LTRIM", notificationEventsUIList, 0, 100)
+		c.Send("LPUSH", notificationEventsUIList, eventBytes) //nolint
+		c.Send("LTRIM", notificationEventsUIList, 0, 100) //nolint
 	}
 	_, err = c.Do("EXEC")
 	if err != nil {

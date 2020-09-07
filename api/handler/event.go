@@ -21,16 +21,16 @@ func getEventsList(writer http.ResponseWriter, request *http.Request) {
 	page := middleware.GetPage(request)
 	eventsList, err := controller.GetTriggerEvents(database, triggerID, page, size)
 	if err != nil {
-		render.Render(writer, request, err)
+		render.Render(writer, request, err) //nolint
 		return
 	}
 	if err := render.Render(writer, request, eventsList); err != nil {
-		render.Render(writer, request, api.ErrorRender(err))
+		render.Render(writer, request, api.ErrorRender(err)) //nolint
 	}
 }
 
 func deleteAllEvents(writer http.ResponseWriter, request *http.Request) {
 	if errorResponse := controller.DeleteAllEvents(database); errorResponse != nil {
-		render.Render(writer, request, errorResponse)
+		render.Render(writer, request, errorResponse) //nolint
 	}
 }

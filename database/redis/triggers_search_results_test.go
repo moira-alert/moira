@@ -164,7 +164,7 @@ func BenchmarkSaveTriggersSearchResults(b *testing.B) {
 		dataBase.flush()
 		b.Run(fmt.Sprintf("Benchmark%d", limit), func(b *testing.B) {
 			for n := 0; n < b.N; n++ {
-				dataBase.SaveTriggersSearchResults(fmt.Sprintf("test_%d_%d", limit, n), data)
+				dataBase.SaveTriggersSearchResults(fmt.Sprintf("test_%d_%d", limit, n), data) //nolint
 			}
 		})
 	}

@@ -41,7 +41,7 @@ func TestCreateAlert(t *testing.T) {
 				json, _ := json.Marshal(map[string]string{
 					"error": "test error",
 				})
-				res.Write(json)
+				res.Write(json) //nolint
 				// Send response to be tested
 			}))
 			defer server.Close()

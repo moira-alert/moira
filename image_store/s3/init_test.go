@@ -59,7 +59,7 @@ func TestInit(t *testing.T) {
 				Region:      "ap-south-1",
 				Bucket:      "testbucket",
 			}
-			imageStore.Init(config)
+			imageStore.Init(config) //nolint
 			val, _ := imageStore.sess.Config.Credentials.Get()
 			So(val.AccessKeyID, ShouldResemble, config.AccessKeyID)
 			So(val.SecretAccessKey, ShouldResemble, config.AccessKey)

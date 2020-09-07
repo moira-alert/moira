@@ -23,10 +23,10 @@ func (connector *DbConnector) RemoveTag(tagName string) error {
 	c := connector.pool.Get()
 	defer c.Close()
 
-	c.Send("MULTI")
-	c.Send("SREM", tagsKey, tagName)
+	c.Send("MULTI") //nolint
+	c.Send("SREM", tagsKey, tagName) //nolint
 	c.Send("DEL", tagSubscriptionKey(tagName))
-	c.Send("DEL", tagTriggersKey(tagName))
+	c.Send("DEL", tagTriggersKey(tagName)) //nolint
 	_, err := c.Do("EXEC")
 	if err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())

@@ -30,7 +30,7 @@ func TestInit(t *testing.T) {
 				"front_uri":   "http://moira.uri",
 				"image_store": "s3",
 			}
-			sender.Init(senderSettings, logger, location, "15:04")
+			sender.Init(senderSettings, logger, location, "15:04") //nolint
 			So(sender.frontURI, ShouldResemble, "http://moira.uri")
 			So(sender.logger, ShouldResemble, logger)
 			So(sender.location, ShouldResemble, location)
@@ -42,7 +42,7 @@ func TestInit(t *testing.T) {
 				"front_uri":   "http://moira.uri",
 				"image_store": "s4",
 			}
-			sender.Init(senderSettings, logger, location, "15:04")
+			sender.Init(senderSettings, logger, location, "15:04") //nolint
 			So(sender.imageStoreConfigured, ShouldResemble, false)
 			So(sender.imageStore, ShouldResemble, nil)
 		})
@@ -55,7 +55,7 @@ func TestInit(t *testing.T) {
 			sender := Sender{ImageStores: map[string]moira.ImageStore{
 				"s3": imageStore,
 			}}
-			sender.Init(senderSettings, logger, location, "15:04")
+			sender.Init(senderSettings, logger, location, "15:04") //nolint
 			So(sender.imageStoreConfigured, ShouldResemble, false)
 			So(sender.imageStore, ShouldResemble, nil)
 		})

@@ -81,6 +81,6 @@ func TestMakeRequest(t *testing.T) {
 func createServer(body []byte, statusCode int) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		rw.WriteHeader(statusCode)
-		rw.Write(body)
+		rw.Write(body) //nolint
 	}))
 }

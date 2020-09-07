@@ -68,7 +68,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 		return err
 	}
 	if channelID != "" && len(plots) > 0 {
-		sender.sendPlots(plots, channelID, threadTimestamp, trigger.ID)
+		sender.sendPlots(plots, channelID, threadTimestamp, trigger.ID) //nolint
 	}
 	return nil
 }

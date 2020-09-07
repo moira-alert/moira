@@ -141,9 +141,9 @@ func addTriggersToReindex(connector *DbConnector, triggerIDs ...string) error {
 	c := connector.pool.Get()
 	defer c.Close()
 
-	c.Send("MULTI")
+	c.Send("MULTI") //nolint
 	for _, triggerID := range triggerIDs {
-		c.Send("ZADD", triggersToReindexKey, time.Now().Unix(), triggerID)
+		c.Send("ZADD", triggersToReindexKey, time.Now().Unix(), triggerID) //nolint
 	}
 
 	_, err := c.Do("EXEC")

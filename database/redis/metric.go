@@ -30,7 +30,7 @@ func (connector *DbConnector) GetMetricsValues(metrics []string, from int64, unt
 	defer c.Close()
 
 	for _, metric := range metrics {
-		c.Send("ZRANGEBYSCORE", metricDataKey(metric), from, until, "WITHSCORES")
+		c.Send("ZRANGEBYSCORE", metricDataKey(metric), from, until, "WITHSCORES") //nolint
 	}
 	resultByMetrics, err := redis.Values(c.Do(""))
 	if err != nil {
@@ -100,14 +100,14 @@ func (connector *DbConnector) SaveMetrics(metrics map[string]*moira.MatchedMetri
 	defer c.Close()
 	for _, metric := range metrics {
 		metricValue := fmt.Sprintf("%v %v", metric.Timestamp, metric.Value)
-		c.Send("ZADD", metricDataKey(metric.Metric), metric.RetentionTimestamp, metricValue)
+		c.Send("ZADD", metricDataKey(metric.Metric), metric.RetentionTimestamp, metricValue) //nolint
 
 		if err := connector.retentionSavingCache.Add(metric.Metric, true, cache.DefaultExpiration); err == nil {
-			c.Send("SET", metricRetentionKey(metric.Metric), metric.Retention)
+			c.Send("SET", metricRetentionKey(metric.Metric), metric.Retention) //nolint
 		}
 
 		for _, pattern := range metric.Patterns {
-			c.Send("SADD", patternMetricsKey(pattern), metric.Metric)
+			c.Send("SADD", patternMetricsKey(pattern), metric.Metric) //nolint
 			event, err := json.Marshal(&moira.MetricEvent{
 				Metric:  metric.Metric,
 				Pattern: pattern,
@@ -115,7 +115,7 @@ func (connector *DbConnector) SaveMetrics(metrics map[string]*moira.MatchedMetri
 			if err != nil {
 				continue
 			}
-			c.Send("PUBLISH", metricEventKey, event)
+			c.Send("PUBLISH", metricEventKey, event) //nolint
 		}
 	}
 	return c.Flush()
@@ -188,9 +188,9 @@ func (connector *DbConnector) RemovePattern(pattern string) error {
 func (connector *DbConnector) RemovePatternsMetrics(patterns []string) error {
 	c := connector.pool.Get()
 	defer c.Close()
-	c.Send("MULTI")
+	c.Send("MULTI") //nolint
 	for _, pattern := range patterns {
-		c.Send("DEL", patternMetricsKey(pattern))
+		c.Send("DEL", patternMetricsKey(pattern)) //nolint
 	}
 	if _, err := c.Do("EXEC"); err != nil {
 		return fmt.Errorf("failed to EXEC: %v", err)
@@ -206,13 +206,13 @@ func (connector *DbConnector) RemovePatternWithMetrics(pattern string) error {
 	}
 	c := connector.pool.Get()
 	defer c.Close()
-	c.Send("MULTI")
-	c.Send("SREM", patternsListKey, pattern)
+	c.Send("MULTI") //nolint
+	c.Send("SREM", patternsListKey, pattern) //nolint
 	for _, metric := range metrics {
-		c.Send("DEL", metricDataKey(metric))
-		c.Send("DEL", metricRetentionKey(metric))
+		c.Send("DEL", metricDataKey(metric)) //nolint
+		c.Send("DEL", metricRetentionKey(metric)) //nolint
 	}
-	c.Send("DEL", patternMetricsKey(pattern))
+	c.Send("DEL", patternMetricsKey(pattern)) //nolint
 	if _, err = c.Do("EXEC"); err != nil {
 		return fmt.Errorf("failed to EXEC: %v", err)
 	}
@@ -242,10 +242,10 @@ func (connector *DbConnector) RemoveMetricsValues(metrics []string, toTime int64
 	c := connector.pool.Get()
 	defer c.Close()
 
-	c.Send("MULTI")
+	c.Send("MULTI") //nolint
 	for _, metric := range metrics {
 		if connector.needRemoveMetrics(metric) {
-			c.Send("ZREMRANGEBYSCORE", metricDataKey(metric), "-inf", toTime)
+			c.Send("ZREMRANGEBYSCORE", metricDataKey(metric), "-inf", toTime) //nolint
 		}
 	}
 	if _, err := c.Do("EXEC"); err != nil {

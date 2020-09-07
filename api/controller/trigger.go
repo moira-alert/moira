@@ -27,7 +27,7 @@ func saveTrigger(dataBase moira.Database, trigger *moira.Trigger, triggerID stri
 	if err := dataBase.AcquireTriggerCheckLock(triggerID, 10); err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
-	defer dataBase.DeleteTriggerCheckLock(triggerID)
+	defer dataBase.DeleteTriggerCheckLock(triggerID) //nolint
 	lastCheck, err := dataBase.GetTriggerLastCheck(triggerID)
 	if err != nil && err != database.ErrNil {
 		return nil, api.ErrorInternalServer(err)

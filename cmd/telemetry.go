@@ -55,7 +55,7 @@ func startTelemetryServer(logger moira.Logger, listen string, pprofConfig Profil
 	serverMux.Handle("/metrics", promhttp.InstrumentMetricHandler(prometheusRegistry, promhttp.HandlerFor(prometheusRegistry, promhttp.HandlerOpts{})))
 	server := &http.Server{Handler: serverMux}
 	go func() {
-		server.Serve(listener)
+		server.Serve(listener) //nolint
 	}()
 	stopServer := func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second) //nolint

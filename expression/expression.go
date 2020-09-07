@@ -144,6 +144,6 @@ func getUserExpression(triggerExpression string) (*govaluate.EvaluableExpression
 		return nil, err
 	}
 
-	exprCache.Add(triggerExpression, expr, cache.NoExpiration)
+	exprCache.Add(triggerExpression, expr, cache.NoExpiration) //nolint
 	return expr, nil
 }

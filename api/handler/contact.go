@@ -29,12 +29,12 @@ func contact(router chi.Router) {
 func getAllContacts(writer http.ResponseWriter, request *http.Request) {
 	contacts, err := controller.GetAllContacts(database)
 	if err != nil {
-		render.Render(writer, request, err)
+		render.Render(writer, request, err) //nolint
 		return
 	}
 
 	if err := render.Render(writer, request, contacts); err != nil {
-		render.Render(writer, request, api.ErrorRender(err))
+		render.Render(writer, request, api.ErrorRender(err)) //nolint
 		return
 	}
 }
@@ -42,18 +42,18 @@ func getAllContacts(writer http.ResponseWriter, request *http.Request) {
 func createNewContact(writer http.ResponseWriter, request *http.Request) {
 	contact := &dto.Contact{}
 	if err := render.Bind(request, contact); err != nil {
-		render.Render(writer, request, api.ErrorInvalidRequest(err))
+		render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
 		return
 	}
 	userLogin := middleware.GetLogin(request)
 
 	if err := controller.CreateContact(database, contact, userLogin); err != nil {
-		render.Render(writer, request, err)
+		render.Render(writer, request, err) //nolint
 		return
 	}
 
 	if err := render.Render(writer, request, contact); err != nil {
-		render.Render(writer, request, api.ErrorRender(err))
+		render.Render(writer, request, api.ErrorRender(err)) //nolint
 		return
 	}
 }
@@ -65,7 +65,7 @@ func contactFilter(next http.Handler) http.Handler {
 		userLogin := middleware.GetLogin(request)
 		contactData, err := controller.CheckUserPermissionsForContact(database, contactID, userLogin)
 		if err != nil {
-			render.Render(writer, request, err)
+			render.Render(writer, request, err) //nolint
 			return
 		}
 		ctx := context.WithValue(request.Context(), contactKey, contactData)
@@ -76,18 +76,18 @@ func contactFilter(next http.Handler) http.Handler {
 func updateContact(writer http.ResponseWriter, request *http.Request) {
 	contactDTO := dto.Contact{}
 	if err := render.Bind(request, &contactDTO); err != nil {
-		render.Render(writer, request, api.ErrorInvalidRequest(err))
+		render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
 		return
 	}
 	contactData := request.Context().Value(contactKey).(moira.ContactData)
 
 	contactDTO, err := controller.UpdateContact(database, contactDTO, contactData)
 	if err != nil {
-		render.Render(writer, request, err)
+		render.Render(writer, request, err) //nolint
 		return
 	}
 	if err := render.Render(writer, request, &contactDTO); err != nil {
-		render.Render(writer, request, api.ErrorRender(err))
+		render.Render(writer, request, api.ErrorRender(err)) //nolint
 	}
 }
 
@@ -95,7 +95,7 @@ func removeContact(writer http.ResponseWriter, request *http.Request) {
 	contactData := request.Context().Value(contactKey).(moira.ContactData)
 	err := controller.RemoveContact(database, contactData.ID, contactData.User)
 	if err != nil {
-		render.Render(writer, request, err)
+		render.Render(writer, request, err) //nolint
 	}
 }
 
@@ -103,6 +103,6 @@ func sendTestContactNotification(writer http.ResponseWriter, request *http.Reque
 	contactID := middleware.GetContactID(request)
 	err := controller.SendTestContactNotification(database, contactID)
 	if err != nil {
-		render.Render(writer, request, err)
+		render.Render(writer, request, err) //nolint
 	}
 }

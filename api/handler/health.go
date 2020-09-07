@@ -18,12 +18,12 @@ func health(router chi.Router) {
 func getNotifierState(writer http.ResponseWriter, request *http.Request) {
 	state, err := controller.GetNotifierState(database)
 	if err != nil {
-		render.Render(writer, request, err)
+		render.Render(writer, request, err) //nolint
 		return
 	}
 
 	if err := render.Render(writer, request, state); err != nil {
-		render.Render(writer, request, api.ErrorRender(err))
+		render.Render(writer, request, api.ErrorRender(err)) //nolint
 		return
 	}
 }
@@ -31,17 +31,17 @@ func getNotifierState(writer http.ResponseWriter, request *http.Request) {
 func setNotifierState(writer http.ResponseWriter, request *http.Request) {
 	state := &dto.NotifierState{}
 	if err := render.Bind(request, state); err != nil {
-		render.Render(writer, request, api.ErrorInvalidRequest(err))
+		render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
 		return
 	}
 
 	if err := controller.UpdateNotifierState(database, state); err != nil {
-		render.Render(writer, request, err)
+		render.Render(writer, request, err) //nolint
 		return
 	}
 
 	if err := render.Render(writer, request, state); err != nil {
-		render.Render(writer, request, api.ErrorRender(err))
+		render.Render(writer, request, api.ErrorRender(err)) //nolint
 		return
 	}
 }

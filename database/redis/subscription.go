@@ -33,9 +33,9 @@ func (connector *DbConnector) GetSubscriptions(subscriptionIDs []string) ([]*moi
 	c := connector.pool.Get()
 	defer c.Close()
 
-	c.Send("MULTI")
+	c.Send("MULTI") //nolint
 	for _, id := range subscriptionIDs {
-		c.Send("GET", subscriptionKey(id))
+		c.Send("GET", subscriptionKey(id)) //nolint
 	}
 	subscriptions, err := reply.Subscriptions(c.Do("EXEC"))
 	if err != nil {
@@ -79,8 +79,8 @@ func (connector *DbConnector) updateSubscription(newSubscription *moira.Subscrip
 	c := connector.pool.Get()
 	defer c.Close()
 
-	c.Send("MULTI")
-	addSendSubscriptionRequest(c, *newSubscription, oldSubscription)
+	c.Send("MULTI") //nolint
+	addSendSubscriptionRequest(c, *newSubscription, oldSubscription) //nolint
 	_, err := c.Do("EXEC")
 	if err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
@@ -119,9 +119,9 @@ func (connector *DbConnector) updateSubscriptions(oldSubscriptions []*moira.Subs
 	c := connector.pool.Get()
 	defer c.Close()
 
-	c.Send("MULTI")
+	c.Send("MULTI") //nolint
 	for i, newSubscription := range newSubscriptions {
-		addSendSubscriptionRequest(c, *newSubscription, oldSubscriptions[i])
+		addSendSubscriptionRequest(c, *newSubscription, oldSubscriptions[i]) //nolint
 	}
 	_, err := c.Do("EXEC")
 	if err != nil {
@@ -156,13 +156,13 @@ func (connector *DbConnector) removeSubscription(subscription *moira.Subscriptio
 	c := connector.pool.Get()
 	defer c.Close()
 
-	c.Send("MULTI")
-	c.Send("SREM", userSubscriptionsKey(subscription.User), subscription.ID)
+	c.Send("MULTI") //nolint
+	c.Send("SREM", userSubscriptionsKey(subscription.User), subscription.ID) //nolint
 	for _, tag := range subscription.Tags {
-		c.Send("SREM", tagSubscriptionKey(tag), subscription.ID)
+		c.Send("SREM", tagSubscriptionKey(tag), subscription.ID) //nolint
 	}
-	c.Send("SREM", anyTagsSubscriptionsKey, subscription.ID)
-	c.Send("DEL", subscriptionKey(subscription.ID))
+	c.Send("SREM", anyTagsSubscriptionsKey, subscription.ID) //nolint
+	c.Send("DEL", subscriptionKey(subscription.ID)) //nolint
 	if _, err := c.Do("EXEC"); err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
@@ -227,23 +227,23 @@ func addSendSubscriptionRequest(c redis.Conn, subscription moira.SubscriptionDat
 	}
 	if oldSubscription != nil {
 		for _, tag := range oldSubscription.Tags {
-			c.Send("SREM", tagSubscriptionKey(tag), subscription.ID)
+			c.Send("SREM", tagSubscriptionKey(tag), subscription.ID) //nolint
 		}
 		if oldSubscription.User != subscription.User {
-			c.Send("SREM", userSubscriptionsKey(oldSubscription.User), subscription.ID)
+			c.Send("SREM", userSubscriptionsKey(oldSubscription.User), subscription.ID) //nolint
 		}
 	}
 
 	for _, tag := range subscription.Tags {
-		c.Send("SADD", tagSubscriptionKey(tag), subscription.ID)
+		c.Send("SADD", tagSubscriptionKey(tag), subscription.ID) //nolint
 	}
 
 	if subscription.AnyTags {
-		c.Send("SADD", anyTagsSubscriptionsKey, subscription.ID)
+		c.Send("SADD", anyTagsSubscriptionsKey, subscription.ID) //nolint
 	}
 
-	c.Send("SADD", userSubscriptionsKey(subscription.User), subscription.ID)
-	c.Send("SET", subscriptionKey(subscription.ID), bytes)
+	c.Send("SADD", userSubscriptionsKey(subscription.User), subscription.ID) //nolint
+	c.Send("SET", subscriptionKey(subscription.ID), bytes) //nolint
 	return nil
 }
 

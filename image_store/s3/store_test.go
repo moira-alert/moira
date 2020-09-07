@@ -10,7 +10,7 @@ import (
 
 func TestBuildUploadInput(t *testing.T) {
 	imageStore := &ImageStore{}
-	imageStore.Init(Config{
+	imageStore.Init(Config{ //nolint
 		AccessKeyID: "123",
 		AccessKey:   "123",
 		Region:      "ap-south-1",

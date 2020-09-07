@@ -47,7 +47,7 @@ func TriggerContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		triggerID := chi.URLParam(request, "triggerId")
 		if triggerID == "" {
-			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("triggerID must be set")))
+			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("triggerID must be set"))) //nolint
 			return
 		}
 		ctx := context.WithValue(request.Context(), triggerIDKey, triggerID)
@@ -60,7 +60,7 @@ func ContactContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		contactID := chi.URLParam(request, "contactId")
 		if contactID == "" {
-			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("contactID must be set")))
+			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("contactID must be set"))) //nolint
 			return
 		}
 		ctx := context.WithValue(request.Context(), contactIDKey, contactID)
@@ -73,7 +73,7 @@ func TagContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		tag := chi.URLParam(request, "tag")
 		if tag == "" {
-			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("tag must be set")))
+			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("tag must be set"))) //nolint
 			return
 		}
 		ctx := context.WithValue(request.Context(), tagKey, tag)
@@ -86,7 +86,7 @@ func SubscriptionContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		subscriptionID := chi.URLParam(request, "subscriptionId")
 		if subscriptionID == "" {
-			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("subscriptionId must be set")))
+			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("subscriptionId must be set"))) //nolint
 			return
 		}
 		ctx := context.WithValue(request.Context(), subscriptionIDKey, subscriptionID)

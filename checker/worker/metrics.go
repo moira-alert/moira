@@ -48,14 +48,14 @@ func (worker *Checker) handleMetricEvent(pattern string) error {
 func (worker *Checker) addTriggerIDsIfNeeded(triggerIDs []string) {
 	needToCheckTriggerIDs := worker.getTriggerIDsToCheck(triggerIDs)
 	if len(needToCheckTriggerIDs) > 0 {
-		worker.Database.AddLocalTriggersToCheck(needToCheckTriggerIDs)
+		worker.Database.AddLocalTriggersToCheck(needToCheckTriggerIDs) //nolint
 	}
 }
 
 func (worker *Checker) addRemoteTriggerIDsIfNeeded(triggerIDs []string) {
 	needToCheckRemoteTriggerIDs := worker.getTriggerIDsToCheck(triggerIDs)
 	if len(needToCheckRemoteTriggerIDs) > 0 {
-		worker.Database.AddRemoteTriggersToCheck(needToCheckRemoteTriggerIDs)
+		worker.Database.AddRemoteTriggersToCheck(needToCheckRemoteTriggerIDs) //nolint
 	}
 }
 

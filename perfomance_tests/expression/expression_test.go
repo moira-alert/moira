@@ -15,7 +15,7 @@ func BenchmarkDefault1Expr(b *testing.B) {
 		ErrorValue:      &errorValue,
 	}
 	for i := 0; i < b.N; i++ {
-		(expr).Evaluate()
+		(expr).Evaluate() //nolint
 	}
 }
 
@@ -28,7 +28,7 @@ func BenchmarkDefault2Expr(b *testing.B) {
 		ErrorValue:      &errorValue,
 	}
 	for i := 0; i < b.N; i++ {
-		(expr).Evaluate()
+		(expr).Evaluate() //nolint
 	}
 }
 
@@ -39,6 +39,6 @@ func BenchmarkCustomExpr(b *testing.B) {
 		MainTargetValue:         11.0,
 		AdditionalTargetsValues: map[string]float64{"t2": 4.0}}
 	for i := 0; i < b.N; i++ {
-		(expr).Evaluate()
+		(expr).Evaluate() //nolint
 	}
 }
