@@ -48,7 +48,7 @@ var (
 	toUser   = flag.String("to-user", "", "Transfer subscriptions and contacts to user.")
 )
 
-func main() {
+func main() { //nolint
 	confCleanup, logger, dataBase := initApp()
 
 	if *update {
