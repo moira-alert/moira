@@ -23,8 +23,8 @@ func BenchmarkUnpackMetricsValues(b *testing.B) {
 
 	for i := from + retention; i <= until; i += retention {
 		metricsValues = append(metricsValues, &moira.MetricValue{
-			RetentionTimestamp: int64((i / retention) * retention),
-			Timestamp:          int64(i),
+			RetentionTimestamp: (i / retention) * retention,
+			Timestamp:          i,
 			Value:              float64(i),
 		})
 	}
@@ -48,8 +48,8 @@ func BenchmarkUnpackMetricValues(b *testing.B) {
 
 	for i := from + retention; i <= until; i += retention {
 		metricsValues = append(metricsValues, &moira.MetricValue{
-			RetentionTimestamp: int64((i / retention) * retention),
-			Timestamp:          int64(i),
+			RetentionTimestamp: (i / retention) * retention,
+			Timestamp:          i,
 			Value:              float64(i),
 		})
 	}
