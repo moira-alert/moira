@@ -39,7 +39,7 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 
 // SendEvents implements pushover build and send message functionality
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
-	pushoverMessage := sender.makePushoverMessage(events, contact, trigger, plots, throttled)
+	pushoverMessage := sender.makePushoverMessage(events, trigger, plots, throttled)
 
 	sender.logger.Debugf("Calling pushover with message title %s, body %s", pushoverMessage.Title, pushoverMessage.Message)
 	recipient := pushover.NewRecipient(contact.Value)
@@ -50,7 +50,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	return nil
 }
 
-func (sender *Sender) makePushoverMessage(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) *pushover.Message {
+func (sender *Sender) makePushoverMessage(events moira.NotificationEvents, trigger moira.TriggerData, plots [][]byte, throttled bool) *pushover.Message {
 	pushoverMessage := &pushover.Message{
 		Message:   sender.buildMessage(events, throttled),
 		Title:     sender.buildTitle(events, trigger),
