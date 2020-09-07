@@ -36,6 +36,8 @@ install-lint:
 .PHONY: lint
 lint:
 	GOGC=50 golangci-lint run
+lint2:
+	go vet -vettool /Users/zhelyabuzhsky/go/bin/mnd ./...
 
 .PHONY: install-reviewdog
 install-reviewdog: install-lint
