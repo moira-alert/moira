@@ -51,7 +51,7 @@ func TestFetchTriggerMetrics(t *testing.T) {
 				)
 				actual, err := triggerChecker.fetchTriggerMetrics()
 				So(err, ShouldResemble, ErrTriggerHasOnlyWildcards{})
-				So(actual, ShouldResemble, map[string][]metricSource.MetricData{"t1": []metricSource.MetricData{{Name: pattern, Wildcard: true}}})
+				So(actual, ShouldResemble, map[string][]metricSource.MetricData{"t1": []metricSource.MetricData{{Name: pattern, Wildcard: true}}}) //nolint
 			})
 
 			Convey("fetch returns no metrics", func() {

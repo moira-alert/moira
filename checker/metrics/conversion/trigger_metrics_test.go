@@ -533,10 +533,10 @@ func TestTriggerMetrics_ConvertForCheck(t *testing.T) {
 				},
 			},
 			want: map[string]map[string]metricSource.MetricData{
-				"metric.test.1": map[string]metricSource.MetricData{
+				"metric.test.1": map[string]metricSource.MetricData{ //nolint
 					"t1": {Name: "metric.test.1"},
 				},
-				"metric.test.2": map[string]metricSource.MetricData{
+				"metric.test.2": map[string]metricSource.MetricData{ //nolint
 					"t1": {Name: "metric.test.2"},
 				},
 			},
@@ -553,11 +553,11 @@ func TestTriggerMetrics_ConvertForCheck(t *testing.T) {
 				},
 			},
 			want: map[string]map[string]metricSource.MetricData{
-				"metric.test.1": map[string]metricSource.MetricData{
+				"metric.test.1": map[string]metricSource.MetricData{ //nolint
 					"t1": {Name: "metric.test.1"},
 					"t2": {Name: "metric.test.3"},
 				},
-				"metric.test.2": map[string]metricSource.MetricData{
+				"metric.test.2": map[string]metricSource.MetricData{ //nolint
 					"t1": {Name: "metric.test.2"},
 					"t2": {Name: "metric.test.3"},
 				},

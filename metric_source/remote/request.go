@@ -33,7 +33,7 @@ func (remote *Remote) makeRequest(req *http.Request) ([]byte, error) {
 	}
 
 	if err != nil {
-		return body, fmt.Errorf("The remote server is not available or the response was reset by timeout. " +
+		return body, fmt.Errorf("The remote server is not available or the response was reset by timeout. " + //nolint
 			"TTL: %s, PATH: %s, ERROR: %v ", remote.client.Timeout.String(), req.URL.RawPath, err)
 	}
 

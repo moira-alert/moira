@@ -53,7 +53,7 @@ func TestScheduledNotification(t *testing.T) {
 		})
 
 		Convey("Test fetch notifications", func() {
-			actual, err := dataBase.FetchNotifications(now - 3600, notifier.NotificationsLimitUnlimited)
+			actual, err := dataBase.FetchNotifications(now - 3600, notifier.NotificationsLimitUnlimited) //nolint
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notificationOld})
 
@@ -62,7 +62,7 @@ func TestScheduledNotification(t *testing.T) {
 			So(total, ShouldEqual, 2)
 			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notification, &notificationNew})
 
-			actual, err = dataBase.FetchNotifications(now + 3600, notifier.NotificationsLimitUnlimited)
+			actual, err = dataBase.FetchNotifications(now + 3600, notifier.NotificationsLimitUnlimited) //nolint
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notification, &notificationNew})
 
@@ -73,9 +73,9 @@ func TestScheduledNotification(t *testing.T) {
 		})
 
 		Convey("Test fetch notifications limit 0", func() {
-			actual, err := dataBase.FetchNotifications(now - 3600, 0)
+			actual, err := dataBase.FetchNotifications(now - 3600, 0) //nolint
 			So(err, ShouldBeError)
-			So(actual, ShouldBeNil )
+			So(actual, ShouldBeNil ) //nolint
 		})
 
 		Convey("Test remove notifications by key", func() {
@@ -113,7 +113,7 @@ func TestScheduledNotification(t *testing.T) {
 			So(total, ShouldEqual, 1)
 			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notification3})
 
-			total, err = dataBase.RemoveNotification(strings.Join([]string{fmt.Sprintf("%v", now + 3600), id1, id1}, ""))
+			total, err = dataBase.RemoveNotification(strings.Join([]string{fmt.Sprintf("%v", now + 3600), id1, id1}, "")) //nolint
 			So(err, ShouldBeNil)
 			So(total, ShouldEqual, 1)
 
@@ -122,7 +122,7 @@ func TestScheduledNotification(t *testing.T) {
 			So(total, ShouldEqual, 0)
 			So(actual, ShouldResemble, []*moira.ScheduledNotification{})
 
-			actual, err = dataBase.FetchNotifications(now + 3600, notifier.NotificationsLimitUnlimited)
+			actual, err = dataBase.FetchNotifications(now + 3600, notifier.NotificationsLimitUnlimited) //nolint
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, []*moira.ScheduledNotification{})
 		})
@@ -161,7 +161,7 @@ func TestScheduledNotification(t *testing.T) {
 			So(total, ShouldEqual, 0)
 			So(actual, ShouldResemble, []*moira.ScheduledNotification{})
 
-			actual, err = dataBase.FetchNotifications(now + 3600, notifier.NotificationsLimitUnlimited)
+			actual, err = dataBase.FetchNotifications(now + 3600, notifier.NotificationsLimitUnlimited) //nolint
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, []*moira.ScheduledNotification{})
 		})
@@ -230,7 +230,7 @@ func TestFetchNotifications(t *testing.T) {
 
 		Convey("Test fetch notifications with limit if all notifications has diff timestamp", func() {
 			addNotifications(dataBase, []moira.ScheduledNotification{notification, notificationNew, notificationOld})
-			actual, err := dataBase.FetchNotifications(now + 6000, 1)
+			actual, err := dataBase.FetchNotifications(now + 6000, 1) //nolint
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notificationOld})
 
@@ -245,7 +245,7 @@ func TestFetchNotifications(t *testing.T) {
 
 		Convey("Test fetch notifications with limit little bit greater than count if all notifications has diff timestamp", func() {
 			addNotifications(dataBase, []moira.ScheduledNotification{notification, notificationNew, notificationOld})
-			actual, err := dataBase.FetchNotifications(now + 6000, 4)
+			actual, err := dataBase.FetchNotifications(now + 6000, 4) //nolint
 			So(err, ShouldBeNil)
 
 			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notificationOld, &notification})
@@ -261,7 +261,7 @@ func TestFetchNotifications(t *testing.T) {
 
 		Convey("Test fetch notifications with limit greater than count if all notifications has diff timestamp", func() {
 			addNotifications(dataBase, []moira.ScheduledNotification{notification, notificationNew, notificationOld})
-			actual, err := dataBase.FetchNotifications(now + 6000, 200000)
+			actual, err := dataBase.FetchNotifications(now + 6000, 200000) //nolint
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notificationOld, &notification, &notificationNew})
 
@@ -276,7 +276,7 @@ func TestFetchNotifications(t *testing.T) {
 
 		Convey("Test fetch notifications without limit", func() {
 			addNotifications(dataBase, []moira.ScheduledNotification{notification, notificationNew, notificationOld})
-			actual, err := dataBase.FetchNotifications(now + 6000, notifier.NotificationsLimitUnlimited)
+			actual, err := dataBase.FetchNotifications(now + 6000, notifier.NotificationsLimitUnlimited) //nolint
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notificationOld, &notification, &notificationNew})
 
@@ -381,7 +381,7 @@ func TestFetchNotificationsWithLimitDo(t *testing.T) {
 
 		Convey("Test all notification with ts and limit in db", func() {
 			addNotifications(dataBase, []moira.ScheduledNotification{notification, notificationNew, notificationOld})
-			actual, err := dataBase.fetchNotificationsWithLimitDo(now + 6000, 1)
+			actual, err := dataBase.fetchNotificationsWithLimitDo(now + 6000, 1) //nolint
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notificationOld})
 
@@ -391,7 +391,7 @@ func TestFetchNotificationsWithLimitDo(t *testing.T) {
 
 		Convey("Test 0 notification with ts and limit in empty db", func() {
 			addNotifications(dataBase, []moira.ScheduledNotification{})
-			actual, err := dataBase.fetchNotificationsWithLimitDo(now + 6000, 10)
+			actual, err := dataBase.fetchNotificationsWithLimitDo(now + 6000, 10) //nolint
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, []*moira.ScheduledNotification{})
 
@@ -401,7 +401,7 @@ func TestFetchNotificationsWithLimitDo(t *testing.T) {
 
 		Convey("Test all notification with ts and big limit in db", func() {
 			addNotifications(dataBase, []moira.ScheduledNotification{notification, notificationNew, notificationOld})
-			actual, err := dataBase.fetchNotificationsWithLimitDo(now + 6000, 100)
+			actual, err := dataBase.fetchNotificationsWithLimitDo(now + 6000, 100) //nolint
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notificationOld, &notification})
 
@@ -411,7 +411,7 @@ func TestFetchNotificationsWithLimitDo(t *testing.T) {
 
 		Convey("Test notification with ts and small limit in db", func() {
 			addNotifications(dataBase, []moira.ScheduledNotification{notification, notificationNew, notificationOld, notification4})
-			actual, err := dataBase.fetchNotificationsWithLimitDo(now + 6000, 3)
+			actual, err := dataBase.fetchNotificationsWithLimitDo(now + 6000, 3) //nolint
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notificationOld, &notification4})
 
@@ -421,7 +421,7 @@ func TestFetchNotificationsWithLimitDo(t *testing.T) {
 
 		Convey("Test notification with ts and limit = count", func() {
 			addNotifications(dataBase, []moira.ScheduledNotification{notification, notificationNew, notificationOld})
-			actual, err := dataBase.fetchNotificationsWithLimitDo(now + 6000, 3)
+			actual, err := dataBase.fetchNotificationsWithLimitDo(now + 6000, 3) //nolint
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, []*moira.ScheduledNotification{&notificationOld, &notification})
 
@@ -431,7 +431,7 @@ func TestFetchNotificationsWithLimitDo(t *testing.T) {
 	})
 }
 
-func TestLimitNotifications(t *testing.T)  {
+func TestLimitNotifications(t *testing.T)  { //nolint
 	Convey("limitNotifications manipulation", t, func() {
 		now := time.Now().Unix()
 		notificationNew := moira.ScheduledNotification{
