@@ -68,7 +68,7 @@ func (sender *Sender) fillSettings(senderSettings map[string]string, logger moir
 
 func parseTemplate(templateFilePath string) (name string, parsedTemplate *template.Template, err error) {
 	if templateFilePath == "" {
-		templateName := "mail"
+		templateName := "mail" //nolint
 		parsedTemplate, err = template.New(templateName).Parse(defaultTemplate)
 		return templateName, parsedTemplate, err
 	}

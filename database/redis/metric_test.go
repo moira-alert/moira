@@ -16,9 +16,9 @@ func TestMetricsStoring(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := newTestDatabase(logger, config)
 	dataBase.flush()
-	metric1 := "my.test.super.metric"
+	metric1 := "my.test.super.metric" //nolint
 	metric2 := "my.test.super.metric2"
-	pattern := "my.test.*.metric*"
+	pattern := "my.test.*.metric*" //nolint
 	Convey("GetPatterns works only if you add new trigger with this pattern", t, func() {
 		trigger := moira.Trigger{
 			ID:       "id",

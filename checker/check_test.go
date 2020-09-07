@@ -609,8 +609,8 @@ func TestCheck(t *testing.T) {
 		var metricsTTL int64 = 3600
 		var warnValue float64 = 10
 		var errValue float64 = 20
-		pattern := "super.puper.pattern"
-		metric := "super.puper.metric"
+		pattern := "super.puper.pattern" //nolint
+		metric := "super.puper.metric" //nolint
 		message := "ooops, metric error"
 		metricErr := fmt.Errorf(message)
 		messageException := `Unknown graphite function: "WrongFunction"`

@@ -56,7 +56,7 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 		sender.sender = &twilioSenderSms{twilioSender1}
 
 	case "twilio voice":
-		twimletsEcho := senderSettings["twimlets_echo"] == "true"
+		twimletsEcho := senderSettings["twimlets_echo"] == "true" //nolint
 		appendMessage := (senderSettings["append_message"] == "true") || (twimletsEcho)
 
 		voiceURL := senderSettings["voiceurl"]
