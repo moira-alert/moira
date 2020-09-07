@@ -107,7 +107,7 @@ func SearchTriggers(database moira.Database, searcher moira.Searcher, page int64
 		searchResults = searchResults[from:to]
 	}
 
-	var triggerIDs []string
+	var triggerIDs []string //nolint
 	for _, searchResult := range searchResults {
 		triggerIDs = append(triggerIDs, searchResult.ObjectID)
 	}

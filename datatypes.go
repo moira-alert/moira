@@ -445,7 +445,7 @@ func (event NotificationEvent) String() string {
 
 // GetMetricsValues gets event metric value and format it to human readable presentation
 func (event NotificationEvent) GetMetricsValues() string {
-	var targetNames []string
+	var targetNames []string //nolint
 	for targetName := range event.Values {
 		targetNames = append(targetNames, targetName)
 	}
