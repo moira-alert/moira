@@ -25,6 +25,7 @@ linters:
     # - errcheck
     # - goconst
     - gocyclo
+    - golint
     - gosimple
     - govet
     - ineffassign

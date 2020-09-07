@@ -1,4 +1,4 @@
-package metricSource
+package metricsource
 
 // MetricSource implements graphite metrics source abstraction
 type MetricSource interface {
