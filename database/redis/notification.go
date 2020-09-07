@@ -186,7 +186,7 @@ func (connector *DbConnector) fetchNotificationsWithLimit(to int64, limit int64)
 			return nil, err
 		}
 
-		time.Sleep(200 * time.Millisecond)
+		time.Sleep(200 * time.Millisecond) //nolint
 	}
 
 	return nil, fmt.Errorf("Transaction tries limit exceeded")

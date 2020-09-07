@@ -58,7 +58,7 @@ func (source *GraphiteRegistry) NewCounter(path ...string) Counter {
 }
 
 func (source *GraphiteRegistry) NewHistogram(path ...string) Histogram {
-	return goMetrics.NewRegisteredHistogram(getGraphiteMetricName(path), source.registry, goMetrics.NewExpDecaySample(1028, 0.015))
+	return goMetrics.NewRegisteredHistogram(getGraphiteMetricName(path), source.registry, goMetrics.NewExpDecaySample(1028, 0.015)) //nolint
 }
 
 func initPrefix(prefix string) (string, error) {

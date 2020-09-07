@@ -96,7 +96,7 @@ func (entry *apiLoggerEntry) write(status, bytes int, elapsed time.Duration, res
 	fmt.Fprintf(entry.buf, " %dB", bytes)
 	entry.buf.WriteString(" in ")
 	fmt.Fprintf(entry.buf, "%s", elapsed)
-	if status >= 500 {
+	if status >= 500 { //nolint
 		errorResponse := getErrorResponseIfItHas(response)
 		if errorResponse != nil {
 			fmt.Fprintf(entry.buf, " - Error : %s", errorResponse.ErrorText)

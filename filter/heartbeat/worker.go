@@ -30,7 +30,7 @@ func NewHeartbeatWorker(database moira.Database, metrics *metrics.FilterMetrics,
 func (worker *Worker) Start() {
 	worker.tomb.Go(func() error {
 		count := worker.metrics.TotalMetricsReceived.Count()
-		checkTicker := time.NewTicker(time.Second * 5)
+		checkTicker := time.NewTicker(time.Second * 5) //nolint
 		for {
 			select {
 			case <-worker.tomb.Dying():

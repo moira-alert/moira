@@ -100,7 +100,7 @@ func (worker *Checker) Start() error {
 }
 
 func (worker *Checker) checkTriggersToCheckCount() error {
-	checkTicker := time.NewTicker(time.Millisecond * 100)
+	checkTicker := time.NewTicker(time.Millisecond * 100) //nolint
 	var triggersToCheckCount, remoteTriggersToCheckCount int64
 	var err error
 	for {
@@ -123,7 +123,7 @@ func (worker *Checker) checkTriggersToCheckCount() error {
 }
 
 func (worker *Checker) checkMetricEventsChannelLen(ch <-chan *moira.MetricEvent) error {
-	checkTicker := time.NewTicker(time.Millisecond * 100)
+	checkTicker := time.NewTicker(time.Millisecond * 100) //nolint
 	for {
 		select {
 		case <-worker.tomb.Dying():

@@ -164,7 +164,7 @@ func (dialer *SentinelSlavePoolDialer) Test(c redis.Conn, t time.Time) error {
 }
 
 func (dialer *SentinelPoolDialer) discoverLoop() {
-	checkTicker := time.NewTicker(30 * time.Second)
+	checkTicker := time.NewTicker(30 * time.Second) //nolint
 	defer checkTicker.Stop()
 
 	for range checkTicker.C {

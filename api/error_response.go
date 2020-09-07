@@ -26,7 +26,7 @@ func (e *ErrorResponse) Render(w http.ResponseWriter, r *http.Request) error {
 func ErrorInternalServer(err error) *ErrorResponse {
 	return &ErrorResponse{
 		Err:            err,
-		HTTPStatusCode: 500,
+		HTTPStatusCode: 500, //nolint
 		StatusText:     "Internal Server Error",
 		ErrorText:      err.Error(),
 	}
@@ -36,7 +36,7 @@ func ErrorInternalServer(err error) *ErrorResponse {
 func ErrorInvalidRequest(err error) *ErrorResponse {
 	return &ErrorResponse{
 		Err:            err,
-		HTTPStatusCode: 400,
+		HTTPStatusCode: 400, //nolint
 		StatusText:     "Invalid request",
 		ErrorText:      err.Error(),
 	}
@@ -46,7 +46,7 @@ func ErrorInvalidRequest(err error) *ErrorResponse {
 func ErrorRender(err error) *ErrorResponse {
 	return &ErrorResponse{
 		Err:            err,
-		HTTPStatusCode: 422,
+		HTTPStatusCode: 422, //nolint
 		StatusText:     "Error rendering response",
 		ErrorText:      err.Error(),
 	}
@@ -55,7 +55,7 @@ func ErrorRender(err error) *ErrorResponse {
 // ErrorNotFound return 404 with given error text
 func ErrorNotFound(errorText string) *ErrorResponse {
 	return &ErrorResponse{
-		HTTPStatusCode: 404,
+		HTTPStatusCode: 404, //nolint
 		StatusText:     "Resource not found",
 		ErrorText:      errorText,
 	}
@@ -64,7 +64,7 @@ func ErrorNotFound(errorText string) *ErrorResponse {
 // ErrorForbidden return 403 with given error text
 func ErrorForbidden(errorText string) *ErrorResponse {
 	return &ErrorResponse{
-		HTTPStatusCode: 403,
+		HTTPStatusCode: 403, //nolint
 		StatusText:     "Forbidden",
 		ErrorText:      errorText,
 	}
@@ -74,14 +74,14 @@ func ErrorForbidden(errorText string) *ErrorResponse {
 func ErrorRemoteServerUnavailable(err error) *ErrorResponse {
 	return &ErrorResponse{
 		Err:            err,
-		HTTPStatusCode: 503,
+		HTTPStatusCode: 503, //nolint
 		StatusText:     "Remote server unavailable.",
 		ErrorText:      fmt.Sprintf("Remote server error, please contact administrator. Raw error: %s", err.Error()),
 	}
 }
 
 // ErrNotFound is default router page not found
-var ErrNotFound = &ErrorResponse{HTTPStatusCode: 404, StatusText: "Page not found."}
+var ErrNotFound = &ErrorResponse{HTTPStatusCode: 404, StatusText: "Page not found."} //nolint
 
 // ErrMethodNotAllowed is default 405 router method not allowed
-var ErrMethodNotAllowed = &ErrorResponse{HTTPStatusCode: 405, StatusText: "Method not allowed."}
+var ErrMethodNotAllowed = &ErrorResponse{HTTPStatusCode: 405, StatusText: "Method not allowed."} //nolint

@@ -42,7 +42,7 @@ func (remote *Remote) makeRequest(req *http.Request) ([]byte, error) {
 		return body, err
 	}
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != 200 { //nolint
 		return body, fmt.Errorf("bad response status %d: %s", resp.StatusCode, string(body))
 	}
 

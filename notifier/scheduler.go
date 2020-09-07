@@ -146,8 +146,8 @@ func calculateNextDelivery(schedule *moira.ScheduleData, nextTime time.Time) (ti
 
 	tzOffset := time.Duration(schedule.TimezoneOffset) * time.Minute
 	localNextTime := nextTime.Add(-tzOffset).Truncate(time.Minute)
-	localNextTimeDay := localNextTime.Truncate(24 * time.Hour)
-	localNextWeekday := int(localNextTimeDay.Weekday()+6) % 7
+	localNextTimeDay := localNextTime.Truncate(24 * time.Hour) //nolint
+	localNextWeekday := int(localNextTimeDay.Weekday()+6) % 7 //nolint
 
 	if schedule.Days[localNextWeekday].Enabled &&
 		(localNextTime.Equal(localNextTimeDay.Add(beginOffset)) || localNextTime.After(localNextTimeDay.Add(beginOffset))) &&
@@ -157,8 +157,8 @@ func calculateNextDelivery(schedule *moira.ScheduleData, nextTime time.Time) (ti
 
 	// find first allowed day
 	for i := 0; i < 8; i++ {
-		nextLocalDayBegin := localNextTimeDay.Add(time.Duration(i*24) * time.Hour)
-		nextLocalWeekDay := int(nextLocalDayBegin.Weekday()+6) % 7
+		nextLocalDayBegin := localNextTimeDay.Add(time.Duration(i*24) * time.Hour) //nolint
+		nextLocalWeekDay := int(nextLocalDayBegin.Weekday()+6) % 7 //nolint
 		if localNextTime.After(nextLocalDayBegin.Add(beginOffset)) {
 			continue
 		}

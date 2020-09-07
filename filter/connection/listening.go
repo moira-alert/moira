@@ -42,7 +42,7 @@ func NewListener(port string, logger moira.Logger, metrics *metrics.FilterMetric
 // Listen waits for new data in connection and handles it in ConnectionHandler
 // All handled data sets to lineChan
 func (listener *MetricsListener) Listen() chan []byte {
-	lineChan := make(chan []byte, 16384)
+	lineChan := make(chan []byte, 16384) //nolint
 	listener.tomb.Go(func() error {
 		for {
 			select {
@@ -57,7 +57,7 @@ func (listener *MetricsListener) Listen() chan []byte {
 				}
 			default:
 			}
-			listener.listener.SetDeadline(time.Now().Add(1e9))
+			listener.listener.SetDeadline(time.Now().Add(1e9)) //nolint
 			conn, err := listener.listener.Accept()
 			if nil != err {
 				if opErr, ok := err.(*net.OpError); ok && opErr.Timeout() {
@@ -76,7 +76,7 @@ func (listener *MetricsListener) Listen() chan []byte {
 }
 
 func (listener *MetricsListener) checkNewLinesChannelLen(channel <-chan []byte) error {
-	checkTicker := time.NewTicker(time.Millisecond * 100)
+	checkTicker := time.NewTicker(time.Millisecond * 100) //nolint
 	for {
 		select {
 		case <-listener.tomb.Dying():

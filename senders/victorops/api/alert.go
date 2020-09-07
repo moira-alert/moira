@@ -57,7 +57,7 @@ func (client *Client) CreateAlert(routingKey string, alert CreateAlertRequest) e
 		return fmt.Errorf("error while making the request to victorops: %s", err)
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != 200 { //nolint
 		body, _ := ioutil.ReadAll(resp.Body)
 		return fmt.Errorf("victorops API request resulted in error with status %v: %v", resp.StatusCode, string(body))
 	}

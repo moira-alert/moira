@@ -39,7 +39,7 @@ func (worker *FetchEventsWorker) Start() {
 						if err != database.ErrNil {
 							worker.Metrics.EventsMalformed.Mark(1)
 							worker.Logger.Warning(err)
-							time.Sleep(time.Second * 5)
+							time.Sleep(time.Second * 5) //nolint
 						}
 						continue
 					}

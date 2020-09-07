@@ -5,8 +5,8 @@ import (
 )
 
 var badStateReminder = map[moira.State]int64{
-	moira.StateERROR:  86400,
-	moira.StateNODATA: 86400,
+	moira.StateERROR:  86400, //nolint
+	moira.StateNODATA: 86400, //nolint
 }
 
 func (triggerChecker *TriggerChecker) compareTriggerStates(currentCheck moira.CheckData) (moira.CheckData, error) {
@@ -139,7 +139,7 @@ func isStateChanged(currentStateValue moira.State, lastStateValue moira.State, c
 
 	remindInterval, ok := badStateReminder[currentStateValue]
 	if ok && needRemindAgain(currentStateTimestamp, lastStateEventTimestamp, remindInterval) {
-		interval := remindInterval / 3600
+		interval := remindInterval / 3600 //nolint
 		return &moira.EventInfo{Interval: &interval}, true
 	}
 	return nil, false

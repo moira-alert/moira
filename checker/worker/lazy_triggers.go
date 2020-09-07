@@ -48,7 +48,7 @@ func (worker *Checker) fillLazyTriggerIDs() error {
 
 func (worker *Checker) getRandomLazyCacheDuration() time.Duration {
 	maxLazyCacheSeconds := worker.Config.LazyTriggersCheckInterval.Seconds()
-	min := maxLazyCacheSeconds / 2
+	min := maxLazyCacheSeconds / 2 //nolint
 	i := rand.Float64()*min + min
 	return time.Duration(i) * time.Second
 }

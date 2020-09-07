@@ -82,7 +82,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 				content: "0: Is this the real life? Is this just fantasy?",
 			},
 			triggerTags:  []string{"DND-generator", "common"},
-			triggerScore: 30,
+			triggerScore: 30, //nolint
 		},
 		{
 			triggerID: "SuperTrigger2",
@@ -93,7 +93,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 				content: "1: Caught in a landslide, no escape from reality",
 			},
 			triggerTags:  []string{"DND-generator", "Kobold", "Sorcerer", "encounters"},
-			triggerScore: 29,
+			triggerScore: 29, //nolint
 		},
 		{
 			triggerID: "SuperTrigger3",
@@ -112,7 +112,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 				content: "2: Open your eyes, look up to the skies and see",
 			},
 			triggerTags:  []string{"DND-generator", "Kobold", "Dragonshield", "encounters"},
-			triggerScore: 28,
+			triggerScore: 28, //nolint
 		},
 		{
 			triggerID: "SuperTrigger4",
@@ -123,7 +123,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 				content: "3: I'm just a poor boy, I need no sympathy",
 			},
 			triggerTags:  []string{"DND-generator", "Orc", "encounters"},
-			triggerScore: 27,
+			triggerScore: 27, //nolint
 		},
 		{
 			triggerID: "SuperTrigger5",
@@ -162,7 +162,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 				},
 			},
 			triggerTags:  []string{"DND-generator", "Rust-Monster", "encounters"},
-			triggerScore: 26,
+			triggerScore: 26, //nolint
 		},
 		{
 			triggerID: "SuperTrigger6",
@@ -173,7 +173,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 				content: "5: Any way the wind blows doesn't really matter to me, to me",
 			},
 			triggerTags:  []string{"Giant", "DND-generator", "Snake", "encounters"},
-			triggerScore: 25,
+			triggerScore: 25, //nolint
 		},
 		{
 			triggerID: "SuperTrigger7",
@@ -184,7 +184,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 				content: "6",
 			},
 			triggerTags:  []string{"Darkling", "DND-generator", "encounters"},
-			triggerScore: 24,
+			triggerScore: 24, //nolint
 		},
 		{
 			triggerID: "SuperTrigger8",
@@ -195,7 +195,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 				content: "7: Mama, just killed a man",
 			},
 			triggerTags:  []string{"Ghost", "DND-generator", "encounters"},
-			triggerScore: 23,
+			triggerScore: 23, //nolint
 		},
 		{
 			triggerID: "SuperTrigger9",
@@ -206,7 +206,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 				content: "8: Put a gun against his head, pulled my trigger, now he's dead",
 			},
 			triggerTags:  []string{"Spectator", "DND-generator", "encounters"},
-			triggerScore: 22,
+			triggerScore: 22, //nolint
 		},
 		{
 			triggerID: "SuperTrigger10",
@@ -225,7 +225,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 				content: "9: Mama, life had just begun",
 			},
 			triggerTags:  []string{"Gibbering-Mouther", "DND-generator", "encounters"},
-			triggerScore: 21,
+			triggerScore: 21, //nolint
 		},
 		{
 			triggerID: "SuperTrigger11",
@@ -244,7 +244,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 				content: "10: But now I've gone and thrown it all away",
 			},
 			triggerTags:  []string{"Scythe Blade", "DND-generator", "traps"},
-			triggerScore: 20,
+			triggerScore: 20, //nolint
 		},
 		{
 			triggerID: "SuperTrigger12",
@@ -263,7 +263,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 				},
 			},
 			triggerTags:  []string{"Falling-Block", "DND-generator", "traps"},
-			triggerScore: 19,
+			triggerScore: 19, //nolint
 		},
 		{
 			triggerID: "SuperTrigger13",
@@ -274,7 +274,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 				content: "12: If I'm not back again this time tomorrow",
 			},
 			triggerTags:  []string{"Thunderstone-Mine", "DND-generator", "traps"},
-			triggerScore: 18,
+			triggerScore: 18, //nolint
 		},
 		{
 			triggerID: "SuperTrigger14",
@@ -285,7 +285,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 				content: "13: Carry on, carry on as if nothing really matters",
 			},
 			triggerTags:  []string{"Falling-Block", "DND-generator", "traps"},
-			triggerScore: 17,
+			triggerScore: 17, //nolint
 		},
 		{
 			triggerID: "SuperTrigger15",
@@ -304,7 +304,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 				content: "14",
 			},
 			triggerTags:  []string{"Chain-Flail", "DND-generator", "traps"},
-			triggerScore: 16,
+			triggerScore: 16, //nolint
 		},
 		{
 			triggerID: "SuperTrigger16",
@@ -315,7 +315,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 				content: "15: Too late, my time has come",
 			},
 			triggerTags:  []string{"Falling-Block", "DND-generator", "traps"},
-			triggerScore: 15,
+			triggerScore: 15, //nolint
 		},
 		{
 			triggerID: "SuperTrigger17",
@@ -326,7 +326,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 				content: "16: Sends shivers down my spine, body's aching all the time",
 			},
 			triggerTags:  []string{"Electrified-Floortile", "DND-generator", "traps"},
-			triggerScore: 14,
+			triggerScore: 14, //nolint
 		},
 		{
 			triggerID: "SuperTrigger18",
@@ -337,7 +337,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 				content: "17: Goodbye, everybody, I've got to go",
 			},
 			triggerTags:  []string{"Earthmaw-Trap", "DND-generator", "traps"},
-			triggerScore: 13,
+			triggerScore: 13, //nolint
 		},
 		{
 			triggerID: "SuperTrigger19",
@@ -356,7 +356,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 				content: "18: Gotta leave you all behind and face the truth",
 			},
 			triggerTags:  []string{"Thunderstone-Mine", "DND-generator", "traps"},
-			triggerScore: 12,
+			triggerScore: 12, //nolint
 		},
 		{
 			triggerID: "SuperTrigger20",
@@ -383,7 +383,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 				},
 			},
 			triggerTags:  []string{"Scythe-Blade", "DND-generator", "traps"},
-			triggerScore: 11,
+			triggerScore: 11, //nolint
 		},
 		{
 			triggerID: "SuperTrigger21",
@@ -394,7 +394,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 				content: "20: I don't wanna die",
 			},
 			triggerTags:  []string{"Female", "DND-generator", "Elf", "Monk", "NPCs"},
-			triggerScore: 10,
+			triggerScore: 10, //nolint
 		},
 		{
 			triggerID: "SuperTrigger22",
@@ -405,7 +405,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 				content: "21: I sometimes wish I'd never been born at all",
 			},
 			triggerTags:  []string{"Female", "DND-generator", "Halfling", "Cleric", "NPCs"},
-			triggerScore: 9,
+			triggerScore: 9, //nolint
 		},
 		{
 			triggerID: "SuperTrigger23",
@@ -416,7 +416,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 				content: "22",
 			},
 			triggerTags:  []string{"Male", "DND-generator", "Human", "Soldier", "NPCs"},
-			triggerScore: 8,
+			triggerScore: 8, //nolint
 		},
 		{
 			triggerID: "SuperTrigger24",
@@ -427,7 +427,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 				content: "23: I see a little silhouetto of a man",
 			},
 			triggerTags:  []string{"Female", "DND-generator", "Human", "Barbarian", "NPCs"},
-			triggerScore: 7,
+			triggerScore: 7, //nolint
 		},
 		{
 			triggerID: "SuperTrigger25",
@@ -438,7 +438,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 				content: "24: Scaramouche, Scaramouche, will you do the Fandango?",
 			},
 			triggerTags:  []string{"Male", "DND-generator", "Half-elf", "Monk", "NPCs"},
-			triggerScore: 6,
+			triggerScore: 6, //nolint
 		},
 		{
 			triggerID: "SuperTrigger26",
@@ -449,7 +449,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 				content: "25: Thunderbolt and lightning, very, very fright'ning me",
 			},
 			triggerTags:  []string{"Male", "DND-generator", "Elf", "Servant", "NPCs"},
-			triggerScore: 5,
+			triggerScore: 5, //nolint
 		},
 		{
 			triggerID: "SuperTrigger27",
@@ -460,7 +460,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 				content: "26: (Galileo) Galileo, (Galileo) Galileo, Galileo Figaro magnifico",
 			},
 			triggerTags:  []string{"Male", "DND-generator", "Elf", "Sorcerer", "NPCs"},
-			triggerScore: 4,
+			triggerScore: 4, //nolint
 		},
 		{
 			triggerID: "SuperTrigger28",
@@ -471,7 +471,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 				content: "27: I'm just a poor boy, nobody loves me",
 			},
 			triggerTags:  []string{"Female", "DND-generator", "Human", "Bard", "NPCs"},
-			triggerScore: 3,
+			triggerScore: 3, //nolint
 		},
 		{
 			triggerID: "SuperTrigger29",
@@ -482,7 +482,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 				content: "28: He's just a poor boy from a poor family",
 			},
 			triggerTags:  []string{"Female", "DND-generator", "Gnome", "Druid", "NPCs"},
-			triggerScore: 2,
+			triggerScore: 2, //nolint
 		},
 		{
 			triggerID: "SuperTrigger30",

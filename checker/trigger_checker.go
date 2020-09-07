@@ -46,7 +46,7 @@ func MakeTriggerChecker(triggerID string, dataBase moira.Database, logger moira.
 		return nil, err
 	}
 
-	lastCheck, err := getLastCheck(dataBase, triggerID, until-3600)
+	lastCheck, err := getLastCheck(dataBase, triggerID, until-3600) //nolint
 	if err != nil {
 		return nil, err
 	}

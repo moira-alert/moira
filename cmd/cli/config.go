@@ -24,7 +24,7 @@ func getDefault() config {
 		Redis: cmd.RedisConfig{
 			Host:            "localhost",
 			Port:            "6379",
-			ConnectionLimit: 512,
+			ConnectionLimit: 512, //nolint
 			MetricsTTL:      "1h",
 		},
 		Cleanup: cleanupConfig{

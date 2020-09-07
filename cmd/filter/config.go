@@ -33,7 +33,7 @@ func getDefault() config {
 		Redis: cmd.RedisConfig{
 			Host:            "localhost",
 			Port:            "6379",
-			ConnectionLimit: 512,
+			ConnectionLimit: 512, //nolint
 			MetricsTTL:      "1h",
 		},
 		Logger: cmd.LoggerConfig{
@@ -43,7 +43,7 @@ func getDefault() config {
 		Filter: filterConfig{
 			Listen:               ":2003",
 			RetentionConfig:      "/etc/moira/storage-schemas.conf",
-			CacheCapacity:        10,
+			CacheCapacity:        10, //nolint
 			MaxParallelMatches:   0,
 			PatternsUpdatePeriod: "1s",
 		},

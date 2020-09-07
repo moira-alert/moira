@@ -55,8 +55,8 @@ func getPlotLegend(c *chart.Chart, legendStyle chart.Style, plotWidth int) chart
 		legendStyle.GetTextOptions().WriteToRenderer(r)
 
 		labelX := 0
-		labelY := c.Height - 15
-		markerY := labelY - int(legendStyle.FontSize/2)
+		labelY := c.Height - 15 //nolint
+		markerY := labelY - int(legendStyle.FontSize/2) //nolint
 
 		for _, line := range lines {
 			if len(line.label) > 0 {
@@ -73,7 +73,7 @@ func getPlotLegend(c *chart.Chart, legendStyle chart.Style, plotWidth int) chart
 			if len(line.label) > 0 {
 				// Plotting markers
 				r.SetStrokeColor(line.style.GetStrokeColor())
-				r.SetStrokeWidth(9)
+				r.SetStrokeWidth(9) //nolint
 				r.MoveTo(markerX-deltaLabels, markerY)
 				r.LineTo(markerX-deltaMarker, markerY)
 				r.Stroke()

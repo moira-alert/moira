@@ -16,7 +16,7 @@ func (connector *DbConnector) AcquireTriggerCheckLock(triggerID string, timeout 
 	count := 0
 	for !acquired && count < timeout {
 		count++
-		<-time.After(time.Millisecond * 500)
+		<-time.After(time.Millisecond * 500) //nolint
 		acquired, err = connector.SetTriggerCheckLock(triggerID)
 		if err != nil {
 			return err

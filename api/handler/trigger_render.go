@@ -61,7 +61,7 @@ func getEvaluationParameters(request *http.Request) (sourceProvider *metricSourc
 	if from == 0 {
 		return sourceProvider, "", 0, 0, "", false, fmt.Errorf("can not parse from: %s", fromStr)
 	}
-	from -= from % 60
+	from -= from % 60 //nolint
 	to = date.DateParamToEpoch(toStr, "UTC", 0, time.UTC)
 	if to == 0 {
 		return sourceProvider, "", 0, 0, "", false, fmt.Errorf("can not parse to: %s", fromStr)

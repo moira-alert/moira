@@ -18,14 +18,14 @@ func MetricValues(values interface{}) ([]*moira.MetricValue, error) {
 		}
 		return nil, fmt.Errorf("failed to read metricValues: %s", err.Error())
 	}
-	metricsValues := make([]*moira.MetricValue, 0, len(resultByMetricArr)/2)
+	metricsValues := make([]*moira.MetricValue, 0, len(resultByMetricArr)/2) //nolint
 	for i := 0; i < len(resultByMetricArr); i += 2 {
 		val, err := redis.String(resultByMetricArr[i], nil)
 		if err != nil {
 			return nil, err
 		}
 		valuesArr := strings.Split(val, " ")
-		if len(valuesArr) != 2 {
+		if len(valuesArr) != 2 { //nolint
 			return nil, fmt.Errorf("value format is not valid: %s", val)
 		}
 		timestamp, err := strconv.ParseInt(valuesArr[0], 10, 64)
