@@ -128,8 +128,8 @@ func (triggerChecker *TriggerChecker) handleUndefinedError(checkData moira.Check
 	return triggerChecker.database.SetTriggerLastCheck(triggerChecker.triggerID, &checkData, triggerChecker.trigger.IsRemote)
 }
 
-func formatTriggerCheckException(triggerId string, err error) string {
-	return fmt.Sprintf("TriggerCheckException %T Trigger %s: %v", err, triggerId, err)
+func formatTriggerCheckException(triggerID string, err error) string {
+	return fmt.Sprintf("TriggerCheckException %T Trigger %s: %v", err, triggerID, err)
 }
 
 // Set new last check timestamp that equal to "until" targets fetch interval

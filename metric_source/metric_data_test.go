@@ -1,4 +1,4 @@
-package metricSource
+package metricsource
 
 import (
 	"fmt"

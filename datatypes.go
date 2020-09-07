@@ -306,8 +306,8 @@ type CheckData struct {
 }
 
 // RemoveMetricState is a function that removes MetricState from map of states.
-func (d CheckData) RemoveMetricState(metricName string) {
-	delete(d.Metrics, metricName)
+func (checkData CheckData) RemoveMetricState(metricName string) {
+	delete(checkData.Metrics, metricName)
 }
 
 // MetricState represents metric state data for given timestamp

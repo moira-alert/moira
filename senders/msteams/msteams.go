@@ -20,9 +20,9 @@ const messageType = "MessageCard"
 const summary = "Moira Alert"
 const teamsBaseURL = "https://outlook.office.com/webhook/"
 const teamsOKResponse = "1"
-const openUri = "OpenUri"
-const openUriMessage = "View in Moira"
-const openUriOsDefault = "default"
+const openURI = "OpenUri"
+const openURIMessage = "View in Moira"
+const openURIOsDefault = "default"
 const activityTitleText = "Description"
 
 var throttleWarningFact = Fact{
@@ -109,11 +109,11 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 	var actions []Action
 	if uri != "" {
 		actions = append(actions, Action{
-			Type: openUri,
-			Name: openUriMessage,
+			Type: openURI,
+			Name: openURIMessage,
 			Targets: []OpenURITarget{
 				{
-					Os:  openUriOsDefault,
+					Os:  openURIOsDefault,
 					URI: uri,
 				},
 			},
