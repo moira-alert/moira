@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
@@ -125,6 +126,7 @@ func getOnlyProblemsFlag(request *http.Request) bool {
 
 func getSearchRequestString(request *http.Request) string {
 	searchText := request.FormValue("text")
+	searchText = strings.ToLower(searchText)
 	searchText, _ = url.PathUnescape(searchText)
 	return searchText
 }
