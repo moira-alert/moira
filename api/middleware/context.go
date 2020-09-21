@@ -222,7 +222,7 @@ func TeamContext(next http.Handler) http.Handler {
 // TeamUserIDContext gets userId from parsed URI corresponding to team routes and set it to request context
 func TeamUserIDContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		userID := chi.URLParam(request, "userId")
+		userID := chi.URLParam(request, "teamUserId")
 		if userID == "" {
 			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("userId must be set"))) //nolint:errcheck
 			return
