@@ -110,3 +110,17 @@ http://moira.url/trigger/TriggerID
 		})
 	})
 }
+
+func TestGetChatUID(t *testing.T) {
+	location, _ := time.LoadLocation("UTC")
+	sender := Sender{location: location, frontURI: "http://moira.url"}
+
+	Convey("Get Telegram chat's UID", t, func() {
+		Convey("For private channel with % prefix should return with -100 prefix", func() {
+			actual, err := sender.getChatUID("%1494975744")
+			expected := "-1001494975744"
+			So(actual, ShouldResemble, expected)
+			So(err, ShouldBeNil)
+		})
+	})
+}

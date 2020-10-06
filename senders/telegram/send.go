@@ -3,6 +3,7 @@ package telegram
 import (
 	"bytes"
 	"fmt"
+	"strings"
 
 	"gopkg.in/tucnak/telebot.v2"
 
@@ -86,10 +87,24 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 	return buffer.String()
 }
 
+func (sender *Sender) getChatUID(username string) (string, error) {
+	var uid string
+	if strings.HasPrefix(username, "%") {
+		uid = "-100" + username[1:]
+	} else {
+		var err error
+		uid, err = sender.DataBase.GetIDByUsername(messenger, username)
+		if err != nil {
+			return "", fmt.Errorf("failed to get username uuid: %s", err.Error())
+		}
+	}
+	return uid, nil
+}
+
 func (sender *Sender) getChat(username string) (*telebot.Chat, error) {
-	uid, err := sender.DataBase.GetIDByUsername(messenger, username)
+	uid, err := sender.getChatUID(username)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get username uuid: %s", err.Error())
+		return nil, err
 	}
 	chat, err := sender.bot.ChatByID(uid)
 	if err != nil {
