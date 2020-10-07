@@ -5,7 +5,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/database"
+	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -107,6 +110,38 @@ http://moira.url/trigger/TriggerID
 			fmt.Printf("Bytes: %v\n", len(expected))
 			fmt.Printf("Symbols: %v\n", len([]rune(expected)))
 			So(actual, ShouldResemble, expected)
+		})
+	})
+}
+
+func TestGetChatUID(t *testing.T) {
+	location, _ := time.LoadLocation("UTC")
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	sender := Sender{location: location, frontURI: "http://moira.url", DataBase: dataBase}
+
+	Convey("Get Telegram chat's UID", t, func() {
+		Convey("For private channel with % prefix should return with -100 prefix", func() {
+			actual, err := sender.getChatUID("%1494975744")
+			expected := "-1001494975744"
+			So(actual, ShouldResemble, expected)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("For public channel with # prefix should return with @ prefix", func() {
+			dataBase.EXPECT().GetIDByUsername(messenger, "#MyPublicChannel").Return("@MyPublicChannel", nil)
+			actual, err := sender.getChatUID("#MyPublicChannel")
+			expected := "@MyPublicChannel"
+			So(actual, ShouldResemble, expected)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("If no UID exists in database for this username", func() {
+			dataBase.EXPECT().GetIDByUsername(messenger, "@durov").Return("", database.ErrNil)
+			actual, err := sender.getChatUID("@durov")
+			So(err, ShouldResemble, fmt.Errorf("failed to get username uuid: nil returned"))
+			So(actual, ShouldBeEmpty)
 		})
 	})
 }
