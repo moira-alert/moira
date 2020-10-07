@@ -34,7 +34,6 @@ require (
 	github.com/facebookgo/stack v0.0.0-20160209184415-751773369052 // indirect
 	github.com/facebookgo/subset v0.0.0-20150612182917-8dac2c3c4870 // indirect
 	github.com/glycerine/go-unsnap-stream v0.0.0-20190901134440-81cf024a9e0a // indirect
-	github.com/glycerine/goconvey v0.0.0-20190410193231-58a59202ab31
 	github.com/go-chi/chi v3.1.1-0.20170712121200-4c5a584b324b+incompatible
 	github.com/go-chi/render v1.0.0
 	github.com/go-graphite/carbonapi v0.0.0-20190604194342-5a4fa2112923
@@ -43,9 +42,6 @@ require (
 	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/golang/mock v1.4.1
-	github.com/golangci/go-tools v0.0.0-20190318055746-e32c54105b7c // indirect
-	github.com/golangci/golangci-lint v1.19.1 // indirect
-	github.com/golangci/gosec v0.0.0-20190211064107-66fb7fc33547 // indirect
 	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/google/go-querystring v1.0.1-0.20190318165438-c8c88dbee036 // indirect
 	github.com/gosexy/to v0.0.0-20141221203644-c20e083e3123
@@ -56,12 +52,15 @@ require (
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/karriereat/blackfriday-slack v0.1.0
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
+	github.com/lib/pq v1.2.0 // indirect
 	github.com/lomik/og-rek v0.0.0-20170411191824-628eefeb8d80 // indirect
 	github.com/lomik/zapwriter v0.0.0-20180906104450-2ec2b9a61680 // indirect
 	github.com/lusis/go-slackbot v0.0.0-20180109053408-401027ccfef5 // indirect
 	github.com/lusis/slack-test v0.0.0-20190426140909-c40012f20018 // indirect
 	github.com/mjibson/go-dsp v0.0.0-20180508042940-11479a337f12 // indirect
 	github.com/nlopes/slack v0.4.1-0.20181123205743-38ac5e8c495b
+	github.com/onsi/ginkgo v1.10.1 // indirect
+	github.com/onsi/gomega v1.7.0 // indirect
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/opsgenie/opsgenie-go-sdk-v2 v0.0.0-20190710132028-b46b0594268d
 	github.com/patrickmn/go-cache v2.1.0+incompatible
@@ -72,15 +71,20 @@ require (
 	github.com/russross/blackfriday/v2 v2.0.1
 	github.com/smartystreets/assertions v0.0.0-20190401211740-f487f9de1cd3
 	github.com/smartystreets/goconvey v0.0.0-20190330032615-68dc04aab96a
+	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/spf13/viper v1.4.0 // indirect
 	github.com/steveyen/gtreap v0.0.0-20150807155958-0abe01ef9be2 // indirect
-	github.com/stretchr/testify v1.4.0
+	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/syndtr/goleveldb v0.0.0-20180815032940-ae2bd5eed72d // indirect
 	github.com/tecbot/gorocksdb v0.0.0-20190930194452-65a88f08537a // indirect
 	github.com/wangjohn/quickselect v0.0.0-20161129230411-ed8402a42d5f // indirect
 	github.com/writeas/go-strip-markdown v2.0.1+incompatible
+	golang.org/x/crypto v0.0.0-20190911031432-227b76d455e7 // indirect
+	golang.org/x/net v0.0.0-20190909003024-a7b16738d86b // indirect
+	golang.org/x/text v0.3.2 // indirect
 	gonum.org/v1/netlib v0.0.0-20190926062253-2d6e29b73a19 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
-	gopkg.in/gemnasium/logrus-airbrake-hook.v2 v2.1.2 // indirect
+	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/h2non/gock.v1 v1.0.15
 	gopkg.in/tomb.v2 v2.0.0-20161208151619-d5d1b5820637
