@@ -7,9 +7,9 @@ import (
 
 	"github.com/moira-alert/moira/metrics"
 
-	"github.com/gosexy/to"
 	"github.com/moira-alert/moira/image_store/s3"
 	remoteSource "github.com/moira-alert/moira/metric_source/remote"
+	"github.com/xiam/to"
 	"gopkg.in/yaml.v2"
 
 	"github.com/moira-alert/moira/database/redis"
