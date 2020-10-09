@@ -3,17 +3,61 @@ package notifier
 import (
 	"errors"
 	"fmt"
+	"math"
 	"testing"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
 	mockMetricSource "github.com/moira-alert/moira/mock/metric_source"
+	"github.com/moira-alert/moira/plotting"
 	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
 )
+
+// generateTestMetricsData generates metricsData map for tests
+func generateTestMetricsData() map[string][]metricSource.MetricData {
+	metricData1 := metricSource.MetricData{
+		Name:      "MetricName",
+		StartTime: 0,
+		StepTime:  10,
+		StopTime:  100,
+		Values:    []float64{12, 34, 23, 45, 76, 64, 32, 13, 34, 130, 70},
+	}
+	metricData2 := metricSource.MetricData{
+		Name:      "CategoryCounterType.MetricName",
+		StartTime: 0,
+		StepTime:  10,
+		StopTime:  100,
+		Values:    []float64{math.NaN(), 15, 32, math.NaN(), 54, 20, 43, 56, 2, 79, 76},
+	}
+	metricData3 := metricSource.MetricData{
+		Name:      "CategoryCounterName.CategoryCounterType.MetricName",
+		StartTime: 0,
+		StepTime:  10,
+		StopTime:  100,
+		Values:    []float64{11, 23, 45, math.NaN(), 45, math.NaN(), 32, 65, 78, 76, 74},
+	}
+	metricData4 := metricSource.MetricData{
+		Name:      "CategoryName.CategoryCounterName.CategoryCounterType.MetricName",
+		StartTime: 0,
+		StepTime:  10,
+		StopTime:  100,
+		Values:    []float64{11, 23, 10, 9, 17, 10, 25, 12, 10, 15, 30},
+	}
+
+	var result = make(map[string][]metricSource.MetricData)
+
+	result["t1"] = []metricSource.MetricData{metricData1}
+	result["t2"] = []metricSource.MetricData{metricData2}
+	result["t3"] = []metricSource.MetricData{metricData3}
+	result["t4"] = []metricSource.MetricData{metricData4}
+
+	return result
+}
 
 func TestResolveMetricsWindow(t *testing.T) {
 	testLaunchTime := time.Now().UTC()
@@ -196,6 +240,22 @@ func TestFetchAvailableSeries(t *testing.T) {
 			)
 			_, err = fetchAvailableSeries(source, target, from, to)
 			So(err, ShouldNotBeNil)
+		})
+	})
+}
+
+func TestBuildTriggerPlots(t *testing.T) {
+	Convey("Run buildTriggerPlots", t, func() {
+		triggerID := uuid.Must(uuid.NewV4()).String()
+		trigger := moira.Trigger{ID: triggerID}
+		location, _ := time.LoadLocation("UTC")
+		plotTemplate, _ := plotting.GetPlotTemplate("", location)
+
+		Convey("without errors", func() {
+			testMetricsData := generateTestMetricsData()
+			result, err := buildTriggerPlots(&trigger, testMetricsData, plotTemplate)
+			So(len(result), ShouldResemble, 4)
+			So(err, ShouldBeNil)
 		})
 	})
 }

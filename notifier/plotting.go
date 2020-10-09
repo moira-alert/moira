@@ -32,9 +32,25 @@ func (err errFetchAvailableSeriesFailed) Error() string {
 	return fmt.Sprintf("Failed to fetch both realtime and stored data: [realtime]: %s, [stored]: %s", err.realtimeErr, err.storedErr)
 }
 
-// buildNotificationPackagePlot returns bytes slice containing package plot
-func (notifier *StandardNotifier) buildNotificationPackagePlots(pkg NotificationPackage) ([][]byte, error) {
+// buildTriggerPlots returns bytes slices containing trigger plots
+func buildTriggerPlots(trigger *moira.Trigger, metricsData map[string][]metricSource.MetricData, plotTemplate *plotting.Plot) ([][]byte, error) {
 	result := make([][]byte, 0)
+	for targetName, metrics := range metricsData {
+		renderable, err := plotTemplate.GetRenderable(targetName, trigger, metrics)
+		if err != nil {
+			return nil, err
+		}
+		buff := bytes.NewBuffer(make([]byte, 0))
+		if err = renderable.Render(chart.PNG, buff); err != nil {
+			return nil, err
+		}
+		result = append(result, buff.Bytes())
+	}
+	return result, nil
+}
+
+// buildNotificationPackagePlots returns bytes slices containing package plots
+func (notifier *StandardNotifier) buildNotificationPackagePlots(pkg NotificationPackage) ([][]byte, error) {
 	if !pkg.Plotting.Enabled {
 		return nil, nil
 	}
@@ -56,19 +72,8 @@ func (notifier *StandardNotifier) buildNotificationPackagePlots(pkg Notification
 	}
 	metricsData = getMetricDataToShow(metricsData, metricsToShow)
 	notifier.logger.Debugf("Build plot for trigger: %s from MetricsData: %v", trigger.ID, metricsData)
-	for _, targetName := range trigger.Targets {
-		metrics := metricsData[targetName]
-		renderable, err := plotTemplate.GetRenderable(targetName, trigger, metrics)
-		if err != nil {
-			return nil, err
-		}
-		buff := bytes.NewBuffer(make([]byte, 0))
-		if err = renderable.Render(chart.PNG, buff); err != nil {
-			return nil, err
-		}
-		result = append(result, buff.Bytes())
-	}
-	return result, nil
+	result, err := buildTriggerPlots(trigger, metricsData, plotTemplate)
+	return result, err
 }
 
 // resolveMetricsWindow returns from, to parameters depending on trigger type
