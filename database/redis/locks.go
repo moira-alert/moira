@@ -63,7 +63,7 @@ func (lock *Lock) Release() {
 
 	lock.isHeld = false
 	close(lock.extend)
-	lock.mutex.Unlock()
+	lock.mutex.Unlock() //nolint
 }
 
 func (lock *Lock) tryAcquire() (<-chan struct{}, error) {
@@ -95,7 +95,8 @@ func extendMutex(mutex *redsync.Mutex, ttl time.Duration, done chan struct{}, st
 		case <-stop:
 			return
 		case <-extendTicker.C:
-			if !mutex.Extend() {
+			result, _ := mutex.Extend()
+			if !result {
 				return
 			}
 		}

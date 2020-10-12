@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gosexy/to"
+	"github.com/xiam/to"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/cmd"
