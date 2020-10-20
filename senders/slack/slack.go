@@ -180,6 +180,8 @@ func (sender *Sender) sendMessage(message string, contact string, triggerID stri
 		AsUser:    useDirectMessaging,
 		IconEmoji: emoji,
 		Markdown:  true,
+		Parse: "full",
+		LinkNames: 1,
 	}
 	sender.logger.Debugf("Calling slack with message body %s", message)
 	channelID, threadTimestamp, err := sender.client.PostMessage(contact, slack.MsgOptionText(message, false), slack.MsgOptionPostMessageParameters(params))
