@@ -148,7 +148,7 @@ func TestFetchData(t *testing.T) {
 			StepTime:  60,
 			Values:    []float64{},
 		}
-		expected := &types.MetricData{FetchResponse: fetchResponse}
+		expected := &types.MetricData{FetchResponse: fetchResponse, Tags: map[string]string{"name": pattern}}
 		So(metricData, ShouldResemble, []*types.MetricData{expected})
 		So(metrics, ShouldBeEmpty)
 		So(err, ShouldBeNil)
@@ -167,7 +167,7 @@ func TestFetchData(t *testing.T) {
 			StepTime:  retention,
 			Values:    []float64{0, 1, 2, 3},
 		}
-		expected := &types.MetricData{FetchResponse: fetchResponse}
+		expected := &types.MetricData{FetchResponse: fetchResponse, Tags: map[string]string{"name": metric}}
 		So(metricData, ShouldResemble, []*types.MetricData{expected})
 		So(metrics, ShouldResemble, []string{metric})
 		So(err, ShouldBeNil)
@@ -186,7 +186,7 @@ func TestFetchData(t *testing.T) {
 			StepTime:  retention,
 			Values:    []float64{0, 1, 2, 3, 4},
 		}
-		expected := &types.MetricData{FetchResponse: fetchResponse}
+		expected := &types.MetricData{FetchResponse: fetchResponse, Tags: map[string]string{"name": metric}}
 		So(metricData, ShouldResemble, []*types.MetricData{expected})
 		So(metrics, ShouldResemble, []string{metric})
 		So(err, ShouldBeNil)
@@ -234,9 +234,10 @@ func TestFetchData(t *testing.T) {
 			StepTime:  retention,
 			Values:    []float64{0, 1, 2, 3, 4},
 		}
-		expected := types.MetricData{FetchResponse: fetchResponse}
+		expected := types.MetricData{FetchResponse: fetchResponse, Tags: map[string]string{"name": metric}}
 		expected2 := expected
 		expected2.Name = metric2
+		expected2.Tags = map[string]string{"name": metric2}
 		So(metricData, ShouldResemble, []*types.MetricData{&expected, &expected2})
 		So(metrics, ShouldResemble, []string{metric, metric2})
 		So(err, ShouldBeNil)
