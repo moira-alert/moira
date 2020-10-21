@@ -8,7 +8,6 @@ import (
 	"runtime"
 	"syscall"
 
-	"github.com/gosexy/to"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/database/redis"
@@ -19,6 +18,7 @@ import (
 	"github.com/moira-alert/moira/filter/patterns"
 	"github.com/moira-alert/moira/logging/go-logging"
 	"github.com/moira-alert/moira/metrics"
+	"github.com/xiam/to"
 )
 
 const serviceName = "filter"
