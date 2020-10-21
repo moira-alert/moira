@@ -129,16 +129,18 @@ func (sender *Sender) sendAsMessage(chat *telebot.Chat, message string) error {
 	return nil
 }
 
-func (sender *Sender) sendAsAlbum(chat *telebot.Chat, plots [][]byte, caption string) error {
+func prepareAlbum(plots [][]byte, caption string) telebot.Album {
 	var album telebot.Album
-	firstPhoto := true
 	for _, plot := range plots {
 		photo := &telebot.Photo{File: telebot.FromReader(bytes.NewReader(plot)), Caption: caption}
 		album = append(album, photo)
-		if firstPhoto {
-			caption = "" // Caption should be defined only for first photo
-		}
+		caption = "" // Caption should be defined only for first photo
 	}
+	return album
+}
+
+func (sender *Sender) sendAsAlbum(chat *telebot.Chat, plots [][]byte, caption string) error {
+	album := prepareAlbum(plots, caption)
 
 	_, err := sender.bot.SendAlbum(chat, album)
 	if err != nil {

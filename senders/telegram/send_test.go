@@ -10,6 +10,7 @@ import (
 	"github.com/moira-alert/moira/database"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
+	"gopkg.in/tucnak/telebot.v2"
 )
 
 func TestBuildMessage(t *testing.T) {
@@ -142,6 +143,28 @@ func TestGetChatUID(t *testing.T) {
 			actual, err := sender.getChatUID("@durov")
 			So(err, ShouldResemble, fmt.Errorf("failed to get username uuid: nil returned"))
 			So(actual, ShouldBeEmpty)
+		})
+	})
+}
+
+func TestPrepareAlbum(t *testing.T) {
+	Convey("Prepare album", t, func() {
+		Convey("Only the first photo of the album has a caption", func() {
+			Convey("An album with one photo", func() {
+				plots := [][]byte{{1, 0, 1}}
+				album := prepareAlbum(plots, "caption")
+
+				So(album[0].(*telebot.Photo).Caption, ShouldEqual, "caption")
+			})
+
+			Convey("An album with several photos", func() {
+				plots := [][]byte{{1, 0, 1}, {1, 0, 0}, {0, 0, 1}}
+				album := prepareAlbum(plots, "caption")
+
+				So(album[0].(*telebot.Photo).Caption, ShouldEqual, "caption")
+				So(album[1].(*telebot.Photo).Caption, ShouldEqual, "")
+				So(album[2].(*telebot.Photo).Caption, ShouldEqual, "")
+			})
 		})
 	})
 }
