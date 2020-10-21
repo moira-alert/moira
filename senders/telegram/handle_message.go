@@ -34,12 +34,15 @@ func (sender *Sender) getResponseMessage(message *telebot.Message) (string, erro
 		return fmt.Sprintf("Okay, %s, your id is %s", strings.Trim(fmt.Sprintf("%s %s", message.Sender.FirstName, message.Sender.LastName), " "), chatID), nil
 	case message.Chat.Type == telebot.ChatSuperGroup || message.Chat.Type == telebot.ChatGroup:
 		uuid, _ := sender.DataBase.GetIDByUsername(messenger, message.Chat.Title)
-		err := sender.DataBase.SetUsernameID(messenger, message.Chat.Title, chatID)
-		if err != nil {
-			return "", err
-		}
 		if uuid == "" {
+			err := sender.DataBase.SetUsernameID(messenger, message.Chat.Title, chatID)
+			if err != nil {
+				return "", err
+			}
 			return fmt.Sprintf("Hi, all!\nI will send alerts in this group (%s).", message.Chat.Title), nil
+		}
+		if message.Text == "/start" {
+			return fmt.Sprintf("Hi, all!\nGroup with name (%s) is already registered.", message.Chat.Title), nil
 		}
 		return "", nil
 	}

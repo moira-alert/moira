@@ -84,6 +84,7 @@ func TestGetResponseMessage(t *testing.T) {
 					Type:  telebot.ChatSuperGroup,
 					Title: "MyGroup",
 				},
+				Text: "/start",
 			}
 
 			Convey("GetIDByUsername returns error", func() {
@@ -115,18 +116,10 @@ func TestGetResponseMessage(t *testing.T) {
 			Convey("GetIDByUsername return uuid", func() {
 				dataBase.EXPECT().GetIDByUsername(messenger, message.Chat.Title).Return("123", nil)
 
-				Convey("SetUsernameID returns error", func() {
-					dataBase.EXPECT().SetUsernameID(messenger, message.Chat.Title, "123").Return(fmt.Errorf("error"))
-					response, err := sender.getResponseMessage(message)
-					So(err, ShouldResemble, fmt.Errorf("error"))
-					So(response, ShouldBeEmpty)
-				})
-
-				Convey("SetUsernameID returns empty error", func() {
-					dataBase.EXPECT().SetUsernameID(messenger, message.Chat.Title, "123").Return(nil)
+				Convey("Group name already exists", func() {
 					response, err := sender.getResponseMessage(message)
 					So(err, ShouldBeNil)
-					So(response, ShouldBeEmpty)
+					So(response, ShouldResemble, fmt.Sprintf("Hi, all!\nGroup with name (%s) is already registered.", message.Chat.Title))
 				})
 			})
 		})
