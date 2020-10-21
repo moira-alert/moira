@@ -77,57 +77,39 @@ func TestGetResponseMessage(t *testing.T) {
 			})
 		})
 
-		Convey("SuperGroup", func() {
-			message := &telebot.Message{
+		Convey("Group and SuperGroup", func() {
+			groupMessage := &telebot.Message{
 				Chat: &telebot.Chat{
 					ID:    123,
-					Type:  telebot.ChatSuperGroup,
+					Type:  telebot.ChatGroup,
 					Title: "MyGroup",
 				},
 			}
+			superGroupMessage := &telebot.Message{
+				Chat: &telebot.Chat{
+					ID:    124,
+					Type:  telebot.ChatSuperGroup,
+					Title: "MySuperGroup",
+				},
+			}
+			messages := []*telebot.Message{groupMessage, superGroupMessage}
 
-			Convey("GetIDByUsername returns error", func() {
-				dataBase.EXPECT().GetIDByUsername(messenger, message.Chat.Title).Return("", fmt.Errorf("error"))
-				dataBase.EXPECT().SetUsernameID(messenger, message.Chat.Title, "123").Return(nil)
-				response, err := sender.getResponseMessage(message)
-				So(err, ShouldBeNil)
-				So(response, ShouldResemble, fmt.Sprintf("Hi, all!\nI will send alerts in this group (%s).", message.Chat.Title))
-			})
-
-			Convey("GetIDByUsername returns empty uuid", func() {
-				dataBase.EXPECT().GetIDByUsername(messenger, message.Chat.Title).Return("", nil)
-
-				Convey("SetUsernameID returns error", func() {
-					dataBase.EXPECT().SetUsernameID(messenger, message.Chat.Title, "123").Return(fmt.Errorf("error"))
+			Convey("SetUsernameID returns error", func() {
+				for _, message := range messages {
+					dataBase.EXPECT().SetUsernameID(messenger, message.Chat.Title, fmt.Sprint(message.Chat.ID)).Return(fmt.Errorf("error"))
 					response, err := sender.getResponseMessage(message)
 					So(err, ShouldResemble, fmt.Errorf("error"))
 					So(response, ShouldBeEmpty)
-				})
+				}
+			})
 
-				Convey("SetUsernameID returns empty error", func() {
-					dataBase.EXPECT().SetUsernameID(messenger, message.Chat.Title, "123").Return(nil)
+			Convey("SetUsernameID returns empty error", func() {
+				for _, message := range messages {
+					dataBase.EXPECT().SetUsernameID(messenger, message.Chat.Title, fmt.Sprint(message.Chat.ID)).Return(nil)
 					response, err := sender.getResponseMessage(message)
 					So(err, ShouldBeNil)
 					So(response, ShouldResemble, fmt.Sprintf("Hi, all!\nI will send alerts in this group (%s).", message.Chat.Title))
-				})
-			})
-
-			Convey("GetIDByUsername return uuid", func() {
-				dataBase.EXPECT().GetIDByUsername(messenger, message.Chat.Title).Return("123", nil)
-
-				Convey("SetUsernameID returns error", func() {
-					dataBase.EXPECT().SetUsernameID(messenger, message.Chat.Title, "123").Return(fmt.Errorf("error"))
-					response, err := sender.getResponseMessage(message)
-					So(err, ShouldResemble, fmt.Errorf("error"))
-					So(response, ShouldBeEmpty)
-				})
-
-				Convey("SetUsernameID returns empty error", func() {
-					dataBase.EXPECT().SetUsernameID(messenger, message.Chat.Title, "123").Return(nil)
-					response, err := sender.getResponseMessage(message)
-					So(err, ShouldBeNil)
-					So(response, ShouldBeEmpty)
-				})
+				}
 			})
 		})
 	})
