@@ -3,6 +3,7 @@ package local
 import (
 	"math"
 
+	"github.com/go-graphite/carbonapi/expr/tags"
 	"github.com/go-graphite/carbonapi/expr/types"
 	pb "github.com/go-graphite/protocol/carbonapi_v3_pb"
 	"github.com/moira-alert/moira"
@@ -46,7 +47,7 @@ func createMetricData(metric string, from int64, until int64, retention int64, v
 		StepTime:  retention,
 		Values:    values,
 	}
-	return &types.MetricData{FetchResponse: fetchResponse}
+	return &types.MetricData{FetchResponse: fetchResponse, Tags: tags.ExtractTags(metric)}
 }
 
 func unpackMetricsValues(metricsData map[string][]*moira.MetricValue, retention int64, from int64, until int64, allowRealTimeAlerting bool) map[string][]float64 {

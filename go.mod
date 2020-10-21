@@ -3,13 +3,10 @@ module github.com/moira-alert/moira
 go 1.15
 
 require (
-	bitbucket.org/tebeka/strftime v0.0.0-20140926081919-2194253a23c0 // indirect
 	github.com/FZambia/sentinel v1.1.0
-	github.com/JaderDias/movingmedian v0.0.0-20170611140316-de8c410559fa // indirect
 	github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible
 	github.com/PagerDuty/go-pagerduty v1.3.0
 	github.com/RoaringBitmap/roaring v0.5.1 // indirect
-	github.com/aclements/go-moremath v0.0.0-20190830160640-d16893ddf098 // indirect
 	github.com/aws/aws-sdk-go v1.35.4
 	github.com/beevee/go-chart v2.0.2-0.20190523110126-273a59e48bcc+incompatible
 	github.com/blend/go-sdk v2.0.0+incompatible // indirect
@@ -25,19 +22,14 @@ require (
 	github.com/cznic/b v0.0.0-20181122101859-a26611c4d92d // indirect
 	github.com/cznic/mathutil v0.0.0-20181122101859-297441e03548 // indirect
 	github.com/cznic/strutil v0.0.0-20181122101858-275e90344537 // indirect
-	github.com/dgryski/go-onlinestats v0.0.0-20170612111826-1c7d19468768 // indirect
 	github.com/disintegration/imaging v1.6.2 // indirect
 	github.com/dustin/go-humanize v1.0.0
 	github.com/etcd-io/bbolt v1.3.3 // indirect
-	github.com/evmar/gocairo v0.0.0-20160222165215-ddd30f837497 // indirect
-	github.com/facebookgo/ensure v0.0.0-20200202191622-63f1cf65ac4c // indirect
-	github.com/facebookgo/stack v0.0.0-20160209184415-751773369052 // indirect
-	github.com/facebookgo/subset v0.0.0-20200203212716-c811ad88dec4 // indirect
 	github.com/fatih/color v1.9.0 // indirect
 	github.com/glycerine/go-unsnap-stream v0.0.0-20190901134440-81cf024a9e0a // indirect
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/go-chi/render v1.0.1
-	github.com/go-graphite/carbonapi v0.0.0-20190604194342-5a4fa2112923
+	github.com/go-graphite/carbonapi v0.0.0-20201019162650-b789c0eaed8a
 	github.com/go-graphite/protocol v0.4.3
 	github.com/go-redsync/redsync v1.4.2
 	github.com/gofrs/uuid v3.3.0+incompatible
@@ -60,12 +52,10 @@ require (
 	github.com/karriereat/blackfriday-slack v0.1.0
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lib/pq v1.8.0 // indirect
-	github.com/lomik/og-rek v0.0.0-20170411191824-628eefeb8d80 // indirect
 	github.com/lomik/zapwriter v0.0.0-20201002100138-f85a75186af0 // indirect
 	github.com/magiconair/properties v1.8.4 // indirect
 	github.com/mattn/go-colorable v0.1.8 // indirect
 	github.com/mitchellh/mapstructure v1.3.3 // indirect
-	github.com/mjibson/go-dsp v0.0.0-20180508042940-11479a337f12 // indirect
 	github.com/mschoch/smat v0.2.0 // indirect
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/nlopes/slack v0.6.0
@@ -97,8 +87,6 @@ require (
 	github.com/stretchr/testify v1.6.1 // indirect
 	github.com/syndtr/goleveldb v1.0.0 // indirect
 	github.com/tecbot/gorocksdb v0.0.0-20191217155057-f0fad39f321c // indirect
-	github.com/tinylib/msgp v1.1.2 // indirect
-	github.com/wangjohn/quickselect v0.0.0-20161129230411-ed8402a42d5f // indirect
 	github.com/willf/bitset v1.1.11 // indirect
 	github.com/writeas/go-strip-markdown v2.0.1+incompatible
 	github.com/xiam/to v0.0.0-20200126224905-d60d31e03561

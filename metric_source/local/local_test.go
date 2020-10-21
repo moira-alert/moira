@@ -2,6 +2,7 @@ package local
 
 import (
 	"fmt"
+	"math"
 	"strings"
 	"testing"
 
@@ -145,6 +146,118 @@ func TestEvaluateTarget(t *testing.T) {
 			},
 			Metrics:  []string{metric},
 			Patterns: []string{"super.puper.pattern"},
+		})
+	})
+
+	Convey("Test success evaluate multiple metrics with pow function", t, func() {
+		metrics := []string{
+			"apps.server1.process.cpu.usage",
+			"apps.server2.process.cpu.usage",
+			"apps.server3.process.cpu.usage",
+		}
+
+		multipleDataList := make(map[string][]*moira.MetricValue)
+		multipleDataList["apps.server1.process.cpu.usage"] = []*moira.MetricValue{
+			{
+				RetentionTimestamp: 20,
+				Timestamp:          23,
+				Value:              0.5,
+			},
+			{
+				RetentionTimestamp: 30,
+				Timestamp:          33,
+				Value:              0.4,
+			},
+			{
+				RetentionTimestamp: 40,
+				Timestamp:          43,
+				Value:              0.5,
+			},
+			{
+				RetentionTimestamp: 50,
+				Timestamp:          53,
+				Value:              0.5,
+			},
+			{
+				RetentionTimestamp: 60,
+				Timestamp:          63,
+				Value:              0.5,
+			},
+		}
+		multipleDataList["apps.server2.process.cpu.usage"] = []*moira.MetricValue{
+			{
+				RetentionTimestamp: 20,
+				Timestamp:          23,
+				Value:              math.NaN(),
+			},
+			{
+				RetentionTimestamp: 30,
+				Timestamp:          33,
+				Value:              math.NaN(),
+			},
+			{
+				RetentionTimestamp: 40,
+				Timestamp:          43,
+				Value:              math.NaN(),
+			},
+			{
+				RetentionTimestamp: 50,
+				Timestamp:          53,
+				Value:              math.NaN(),
+			},
+			{
+				RetentionTimestamp: 60,
+				Timestamp:          63,
+				Value:              math.NaN(),
+			},
+		}
+		multipleDataList["apps.server3.process.cpu.usage"] = []*moira.MetricValue{
+			{
+				RetentionTimestamp: 20,
+				Timestamp:          23,
+				Value:              0.5,
+			},
+			{
+				RetentionTimestamp: 30,
+				Timestamp:          33,
+				Value:              0.5,
+			},
+			{
+				RetentionTimestamp: 40,
+				Timestamp:          43,
+				Value:              0.5,
+			},
+			{
+				RetentionTimestamp: 50,
+				Timestamp:          53,
+				Value:              0.4,
+			},
+			{
+				RetentionTimestamp: 60,
+				Timestamp:          63,
+				Value:              0.5,
+			},
+		}
+
+		dataBase.EXPECT().AllowStale().Return(dataBase)
+		dataBase.EXPECT().GetPatternMetrics("apps.*.process.cpu.usage").Return(metrics, nil)
+		dataBase.EXPECT().GetMetricRetention(metrics[0]).Return(retention, nil)
+		dataBase.EXPECT().GetMetricsValues(metrics, gomock.Any(), until).Return(multipleDataList, nil)
+		dataBase.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
+
+		result, err := localSource.Fetch("alias(sumSeries(pow(apps.*.process.cpu.usage, 0)), 'alive replicas')", from, until, true)
+		So(err, ShouldBeNil)
+		So(result, ShouldResemble, &FetchResult{
+			MetricsData: []metricSource.MetricData{{
+				Name:      "alive replicas",
+				StartTime: from,
+				StopTime:  until,
+				StepTime:  retention,
+				Values:    []float64{2, 2, 2, 2, 2},
+			},
+			},
+			Metrics:  metrics,
+			Patterns: []string{"apps.*.process.cpu.usage"},
 		})
 	})
 

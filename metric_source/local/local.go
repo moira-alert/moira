@@ -1,6 +1,7 @@
 package local
 
 import (
+	"context"
 	"fmt"
 	"runtime/debug"
 
@@ -54,7 +55,7 @@ func (local *Local) Fetch(target string, from int64, until int64, allowRealTimeA
 		if err != nil {
 			return nil, err
 		}
-		rewritten, newTargets, err := expr.RewriteExpr(expr2, from, until, metricsMap)
+		rewritten, newTargets, err := expr.RewriteExpr(context.Background(), expr2, from, until, metricsMap)
 		if err != nil && err != parser.ErrSeriesDoesNotExist {
 			return nil, fmt.Errorf("failed RewriteExpr: %s", err.Error())
 		} else if rewritten {
@@ -67,7 +68,7 @@ func (local *Local) Fetch(target string, from int64, until int64, allowRealTimeA
 						err = ErrEvaluateTargetFailedWithPanic{target: target, recoverMessage: r, stackRecord: debug.Stack()}
 					}
 				}()
-				result, err = expr.EvalExpr(expr2, from, until, metricsMap)
+				result, err = expr.EvalExpr(context.Background(), expr2, from, until, metricsMap)
 				if err != nil {
 					if err == parser.ErrSeriesDoesNotExist {
 						err = nil
