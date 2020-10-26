@@ -180,7 +180,7 @@ func (sender *Sender) sendMessage(message string, contact string, triggerID stri
 		AsUser:    useDirectMessaging,
 		IconEmoji: emoji,
 		Markdown:  true,
-		Parse: "full",
+		Parse:     "full",
 		LinkNames: 1,
 	}
 	sender.logger.Debugf("Calling slack with message body %s", message)
