@@ -15,7 +15,7 @@ VERSION_RELEASE := ${GIT_TAG}.${GIT_COMMIT}
 GO_VERSION := $(shell go version | cut -d' ' -f3)
 GO_PATH := $(shell go env GOPATH)
 GO111MODULE := on
-GOLANGCI_LINT_VERSION := "v1.23.8"
+GOLANGCI_LINT_VERSION := "v1.32.0"
 REVIEWDOG_VERSION := "v0.9.17"
 REVIEWDOG_RUNNERS ?= golangci
 
