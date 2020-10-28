@@ -14,9 +14,10 @@ func TestGetResponseMessage(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	bot := telebot.Bot{Me: &telebot.User{Username: "MoiraBot"}}
 
 	Convey("Test get response message", t, func() {
-		sender := Sender{DataBase: dataBase}
+		sender := Sender{DataBase: dataBase, bot: &bot}
 		Convey("Private chat and bad message", func() {
 			message := &telebot.Message{
 				Chat: &telebot.Chat{
@@ -84,6 +85,7 @@ func TestGetResponseMessage(t *testing.T) {
 					Type:  telebot.ChatGroup,
 					Title: "MyGroup",
 				},
+				Text: "/start@MoiraBot",
 			}
 			superGroupMessage := &telebot.Message{
 				Chat: &telebot.Chat{
@@ -91,6 +93,7 @@ func TestGetResponseMessage(t *testing.T) {
 					Type:  telebot.ChatSuperGroup,
 					Title: "MySuperGroup",
 				},
+				Text: "/start@MoiraBot",
 			}
 			messages := []*telebot.Message{groupMessage, superGroupMessage}
 
@@ -109,6 +112,32 @@ func TestGetResponseMessage(t *testing.T) {
 					response, err := sender.getResponseMessage(message)
 					So(err, ShouldBeNil)
 					So(response, ShouldResemble, fmt.Sprintf("Hi, all!\nI will send alerts in this group (%s).", message.Chat.Title))
+				}
+			})
+
+			Convey("Wrong text", func() {
+				wrongGroupMessage := &telebot.Message{
+					Chat: &telebot.Chat{
+						ID:    123,
+						Type:  telebot.ChatGroup,
+						Title: "MyGroup",
+					},
+					Text: "/start!!111",
+				}
+				wrongSuperGroupMessage := &telebot.Message{
+					Chat: &telebot.Chat{
+						ID:    124,
+						Type:  telebot.ChatSuperGroup,
+						Title: "MySuperGroup",
+					},
+					Text: "/start!!111",
+				}
+				wrongMessages := []*telebot.Message{wrongGroupMessage, wrongSuperGroupMessage}
+				for _, message := range wrongMessages {
+					dataBase.EXPECT().SetUsernameID(messenger, message.Chat.Title, fmt.Sprint(message.Chat.ID)).Return(nil)
+					response, err := sender.getResponseMessage(message)
+					So(err, ShouldBeNil)
+					So(response, ShouldResemble, "I don't understand you :(")
 				}
 			})
 		})
