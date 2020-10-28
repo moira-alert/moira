@@ -122,7 +122,7 @@ func TestGetResponseMessage(t *testing.T) {
 						Type:  telebot.ChatGroup,
 						Title: "MyGroup",
 					},
-					Text: "/start!!111",
+					Text: "please don't answer me",
 				}
 				wrongSuperGroupMessage := &telebot.Message{
 					Chat: &telebot.Chat{
@@ -130,14 +130,14 @@ func TestGetResponseMessage(t *testing.T) {
 						Type:  telebot.ChatSuperGroup,
 						Title: "MySuperGroup",
 					},
-					Text: "/start!!111",
+					Text: "please don't answer me",
 				}
 				wrongMessages := []*telebot.Message{wrongGroupMessage, wrongSuperGroupMessage}
 				for _, message := range wrongMessages {
 					dataBase.EXPECT().SetUsernameID(messenger, message.Chat.Title, fmt.Sprint(message.Chat.ID)).Return(nil)
 					response, err := sender.getResponseMessage(message)
 					So(err, ShouldBeNil)
-					So(response, ShouldResemble, "I don't understand you :(")
+					So(response, ShouldResemble, "")
 				}
 			})
 		})
