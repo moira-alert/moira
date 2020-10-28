@@ -37,7 +37,9 @@ func (sender *Sender) getResponseMessage(message *telebot.Message) (string, erro
 		if err != nil {
 			return "", err
 		}
-		return fmt.Sprintf("Hi, all!\nI will send alerts in this group (%s).", message.Chat.Title), nil
+		if message.Text == fmt.Sprintf("/start@%s", sender.bot.Me.Username) {
+			return fmt.Sprintf("Hi, all!\nI will send alerts in this group (%s).", message.Chat.Title), nil
+		}
 	}
 	return "I don't understand you :(", nil
 }
