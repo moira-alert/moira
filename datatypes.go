@@ -292,6 +292,11 @@ func (checkData CheckData) RemoveMetricState(metricName string) {
 	delete(checkData.Metrics, metricName)
 }
 
+// RemoveMetricsToTargetRelation is a function that sets an empty map to MetricsToTargetRelation.
+func (checkData *CheckData) RemoveMetricsToTargetRelation() {
+	checkData.MetricsToTargetRelation = make(map[string]string)
+}
+
 // MetricState represents metric state data for given timestamp
 type MetricState struct {
 	EventTimestamp  int64              `json:"event_timestamp"`

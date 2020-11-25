@@ -39,6 +39,7 @@ func saveTrigger(dataBase moira.Database, trigger *moira.Trigger, triggerID stri
 				lastCheck.RemoveMetricState(metric)
 			}
 		}
+		lastCheck.RemoveMetricsToTargetRelation()
 	} else {
 		triggerState := moira.StateNODATA
 		if trigger.TTLState != nil {
