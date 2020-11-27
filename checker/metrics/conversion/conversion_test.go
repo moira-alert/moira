@@ -109,7 +109,8 @@ func TestMetricName(t *testing.T) {
 
 func TestGetRelations(t *testing.T) {
 	type args struct {
-		metrics map[string]metricSource.MetricData
+		metrics              map[string]metricSource.MetricData
+		declaredAloneMetrics map[string]bool
 	}
 	tests := []struct {
 		name string
@@ -119,8 +120,8 @@ func TestGetRelations(t *testing.T) {
 		{
 			name: "origin is empty",
 			args: args{
-
-				metrics: map[string]metricSource.MetricData{},
+				metrics:              map[string]metricSource.MetricData{},
+				declaredAloneMetrics: map[string]bool{},
 			},
 			want: map[string]string{},
 		},
@@ -128,8 +129,12 @@ func TestGetRelations(t *testing.T) {
 			name: "origin is not empty",
 			args: args{
 				metrics: map[string]metricSource.MetricData{
-					"t1": metricSource.MetricData{Name: "metric.test.1"}, //nolint
-					"t2": metricSource.MetricData{Name: "metric.test.2"},
+					"t1": {Name: "metric.test.1"},
+					"t2": {Name: "metric.test.2"},
+				},
+				declaredAloneMetrics: map[string]bool{
+					"t1": true,
+					"t2": true,
 				},
 			},
 			want: map[string]string{
@@ -137,11 +142,26 @@ func TestGetRelations(t *testing.T) {
 				"t2": "metric.test.2",
 			},
 		},
+		{
+			name: "origin is not empty and declared different targets",
+			args: args{
+				metrics: map[string]metricSource.MetricData{
+					"t1": {Name: "metric.test.1"},
+					"t2": {Name: "metric.test.2"},
+				},
+				declaredAloneMetrics: map[string]bool{
+					"t1": true,
+				},
+			},
+			want: map[string]string{
+				"t1": "metric.test.1",
+			},
+		},
 	}
 	Convey("GetRelations", t, func() {
 		for _, tt := range tests {
 			Convey(tt.name, func() {
-				actual := GetRelations(tt.args.metrics)
+				actual := GetRelations(tt.args.metrics, tt.args.declaredAloneMetrics)
 				So(actual, ShouldResemble, tt.want)
 			})
 		}

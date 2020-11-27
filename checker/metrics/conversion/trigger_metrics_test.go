@@ -112,9 +112,10 @@ func TestNewTriggerMetricsWithCapacity(t *testing.T) {
 
 func TestTriggerMetrics_Populate(t *testing.T) {
 	type args struct {
-		lastCheck moira.CheckData
-		from      int64
-		to        int64
+		lastCheck            moira.CheckData
+		declaredAloneMetrics map[string]bool
+		from                 int64
+		to                   int64
 	}
 	tests := []struct {
 		name string
@@ -137,8 +138,9 @@ func TestTriggerMetrics_Populate(t *testing.T) {
 						"metric.test.2": {Values: map[string]float64{"t1": 0}},
 					},
 				},
-				from: 17,
-				to:   67,
+				declaredAloneMetrics: map[string]bool{},
+				from:                 17,
+				to:                   67,
 			},
 			want: TriggerMetrics{
 				"t1": TriggerTargetMetrics{
@@ -163,8 +165,9 @@ func TestTriggerMetrics_Populate(t *testing.T) {
 						"metric.test.2": {Values: map[string]float64{"t1": 0, "t2": 0}},
 					},
 				},
-				from: 17,
-				to:   67,
+				declaredAloneMetrics: map[string]bool{},
+				from:                 17,
+				to:                   67,
 			},
 			want: TriggerMetrics{
 				"t1": TriggerTargetMetrics{
@@ -190,8 +193,9 @@ func TestTriggerMetrics_Populate(t *testing.T) {
 						"metric.test.2": {Values: map[string]float64{"t1": 0}},
 					},
 				},
-				from: 17,
-				to:   67,
+				declaredAloneMetrics: map[string]bool{},
+				from:                 17,
+				to:                   67,
 			},
 			want: TriggerMetrics{
 				"t1": TriggerTargetMetrics{
@@ -218,8 +222,9 @@ func TestTriggerMetrics_Populate(t *testing.T) {
 						"metric.test.2": {Values: map[string]float64{"t1": 0, "t2": 0}},
 					},
 				},
-				from: 17,
-				to:   67,
+				declaredAloneMetrics: map[string]bool{"t2": true},
+				from:                 17,
+				to:                   67,
 			},
 			want: TriggerMetrics{
 				"t1": TriggerTargetMetrics{
@@ -254,11 +259,11 @@ func TestTriggerMetrics_Populate(t *testing.T) {
 						"metric.test.1": {Values: map[string]float64{"t1": 0, "t2": 0, "t3": 0}},
 						"metric.test.2": {Values: map[string]float64{"t1": 0, "t2": 0, "t3": 0}},
 						"metric.test.3": {Values: map[string]float64{"t1": 0, "t2": 0, "t3": 0}},
-						"metric.test.4": {Values: map[string]float64{"t1": 0, "t2": 0, "t3": 0}},
 					},
 				},
-				from: 17,
-				to:   67,
+				declaredAloneMetrics: map[string]bool{"t2": true},
+				from:                 17,
+				to:                   67,
 			},
 			want: TriggerMetrics{
 				"t1": TriggerTargetMetrics{
@@ -276,11 +281,46 @@ func TestTriggerMetrics_Populate(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "in last check exist metric with name of alone metric",
+			m: TriggerMetrics{
+				"t1": TriggerTargetMetrics{
+					"metric.test.1": {Name: "metric.test.1"},
+					"metric.test.2": {Name: "metric.test.2"},
+				},
+				"t2": TriggerTargetMetrics{
+					"metric.test.3": {Name: "metric.test.3"},
+				},
+			},
+			args: args{
+				lastCheck: moira.CheckData{
+					MetricsToTargetRelation: map[string]string{"t2": "metric.test.3"},
+					Metrics: map[string]moira.MetricState{
+						"metric.test.1": {Values: map[string]float64{"t1": 0, "t2": 0}},
+						"metric.test.2": {Values: map[string]float64{"t1": 0, "t2": 0}},
+						"metric.test.3": {Values: map[string]float64{"t1": 0, "t2": 0}},
+					},
+				},
+				declaredAloneMetrics: map[string]bool{"t2": true},
+				from:                 17,
+				to:                   67,
+			},
+			want: TriggerMetrics{
+				"t1": TriggerTargetMetrics{
+					"metric.test.1": {Name: "metric.test.1"},
+					"metric.test.2": {Name: "metric.test.2"},
+					"metric.test.3": {Name: "metric.test.3", StartTime: 17, StopTime: 67, StepTime: 60, Values: []float64{math.NaN()}},
+				},
+				"t2": TriggerTargetMetrics{
+					"metric.test.3": {Name: "metric.test.3"},
+				},
+			},
+		},
 	}
 	Convey("Populate", t, func() {
 		for _, tt := range tests {
 			Convey(tt.name, func() {
-				actual := tt.m.Populate(tt.args.lastCheck, tt.args.from, tt.args.to)
+				actual := tt.m.Populate(tt.args.lastCheck, tt.args.declaredAloneMetrics, tt.args.from, tt.args.to)
 				So(actual, ShouldHaveLength, len(tt.want))
 				for targetName, metrics := range actual {
 					wantMetrics, ok := tt.want[targetName]
@@ -303,10 +343,11 @@ func TestTriggerMetrics_Populate(t *testing.T) {
 
 func TestTriggerMetrics_FilterAloneMetrics(t *testing.T) {
 	tests := []struct {
-		name  string
-		m     TriggerMetrics
-		want  TriggerMetrics
-		want1 map[string]metricSource.MetricData
+		name     string
+		m        TriggerMetrics
+		declared map[string]bool
+		want     TriggerMetrics
+		want1    map[string]metricSource.MetricData
 	}{
 		{
 			name: "origin does not have alone metrics",
@@ -316,6 +357,7 @@ func TestTriggerMetrics_FilterAloneMetrics(t *testing.T) {
 					"metric.test.2": {Name: "metric.test.2"},
 				},
 			},
+			declared: map[string]bool{},
 			want: TriggerMetrics{
 				"t1": TriggerTargetMetrics{
 					"metric.test.1": {Name: "metric.test.1"},
@@ -335,6 +377,9 @@ func TestTriggerMetrics_FilterAloneMetrics(t *testing.T) {
 					"metric.test.3": {Name: "metric.test.3"},
 				},
 			},
+			declared: map[string]bool{
+				"t2": true,
+			},
 			want: TriggerMetrics{
 				"t1": TriggerTargetMetrics{
 					"metric.test.1": {Name: "metric.test.1"},
@@ -343,11 +388,34 @@ func TestTriggerMetrics_FilterAloneMetrics(t *testing.T) {
 			},
 			want1: map[string]metricSource.MetricData{"t2": {Name: "metric.test.3"}},
 		},
+		{
+			name: "origin has alone metrics but it is not declared",
+			m: TriggerMetrics{
+				"t1": TriggerTargetMetrics{
+					"metric.test.1": {Name: "metric.test.1"},
+					"metric.test.2": {Name: "metric.test.2"},
+				},
+				"t2": TriggerTargetMetrics{
+					"metric.test.3": {Name: "metric.test.3"},
+				},
+			},
+			declared: map[string]bool{},
+			want: TriggerMetrics{
+				"t1": TriggerTargetMetrics{
+					"metric.test.1": {Name: "metric.test.1"},
+					"metric.test.2": {Name: "metric.test.2"},
+				},
+				"t2": TriggerTargetMetrics{
+					"metric.test.3": {Name: "metric.test.3"},
+				},
+			},
+			want1: map[string]metricSource.MetricData{},
+		},
 	}
 	Convey("FilterAloneMetrics", t, func() {
 		for _, tt := range tests {
 			Convey(tt.name, func() {
-				filtered, alone := tt.m.FilterAloneMetrics()
+				filtered, alone := tt.m.FilterAloneMetrics(tt.declared)
 				So(filtered, ShouldResemble, tt.want)
 				So(alone, ShouldResemble, tt.want1)
 			})
@@ -357,9 +425,10 @@ func TestTriggerMetrics_FilterAloneMetrics(t *testing.T) {
 
 func TestTriggerMetrics_Diff(t *testing.T) {
 	tests := []struct {
-		name string
-		m    TriggerMetrics
-		want map[string]map[string]bool
+		name                 string
+		m                    TriggerMetrics
+		declaredAloneMetrics map[string]bool
+		want                 map[string]map[string]bool
 	}{
 		{
 			name: "all targets have same metrics",
@@ -375,7 +444,8 @@ func TestTriggerMetrics_Diff(t *testing.T) {
 					"metric.test.3": {Name: "metric.test.3"},
 				},
 			},
-			want: map[string]map[string]bool{},
+			declaredAloneMetrics: map[string]bool{},
+			want:                 map[string]map[string]bool{},
 		},
 		{
 			name: "one target have missed metric",
@@ -390,7 +460,8 @@ func TestTriggerMetrics_Diff(t *testing.T) {
 					"metric.test.2": {Name: "metric.test.2"},
 				},
 			},
-			want: map[string]map[string]bool{"t2": {"metric.test.3": true}},
+			declaredAloneMetrics: map[string]bool{},
+			want:                 map[string]map[string]bool{"t2": {"metric.test.3": true}},
 		},
 		{
 			name: "one target is alone metric",
@@ -404,7 +475,8 @@ func TestTriggerMetrics_Diff(t *testing.T) {
 					"metric.test.1": {Name: "metric.test.1"},
 				},
 			},
-			want: map[string]map[string]bool{},
+			declaredAloneMetrics: map[string]bool{"t2": true},
+			want:                 map[string]map[string]bool{},
 		},
 		{
 			name: "another target have missed metric",
@@ -421,7 +493,8 @@ func TestTriggerMetrics_Diff(t *testing.T) {
 					"metric.test.4": {Name: "metric.test.4"},
 				},
 			},
-			want: map[string]map[string]bool{"t1": {"metric.test.4": true}},
+			declaredAloneMetrics: map[string]bool{},
+			want:                 map[string]map[string]bool{"t1": {"metric.test.4": true}},
 		},
 		{
 			name: "one target is empty",
@@ -434,6 +507,7 @@ func TestTriggerMetrics_Diff(t *testing.T) {
 					"metric.test.4": {Name: "metric.test.4"},
 				},
 			},
+			declaredAloneMetrics: map[string]bool{},
 			want: map[string]map[string]bool{"t1": {
 				"metric.test.1": true,
 				"metric.test.2": true,
@@ -465,6 +539,7 @@ func TestTriggerMetrics_Diff(t *testing.T) {
 					"metric.test.3": {Name: "metric.test.3"},
 				},
 			},
+			declaredAloneMetrics: map[string]bool{},
 			want: map[string]map[string]bool{
 				"t1": {
 					"metric.test.1": true,
@@ -484,7 +559,7 @@ func TestTriggerMetrics_Diff(t *testing.T) {
 	Convey("Diff", t, func() {
 		for _, tt := range tests {
 			Convey(tt.name, func() {
-				actual := tt.m.Diff()
+				actual := tt.m.Diff(tt.declaredAloneMetrics)
 				So(actual, ShouldResemble, tt.want)
 			})
 		}
@@ -502,7 +577,7 @@ func TestTriggerMetrics_multiMetricsTarget(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got1 := tt.m.multiMetricsTarget()
+			got, got1 := tt.m.getTargetMetrics()
 			if got != tt.want {
 				t.Errorf("TriggerMetrics.multiMetricsTarget() got = %v, want %v", got, tt.want)
 			}
@@ -533,10 +608,10 @@ func TestTriggerMetrics_ConvertForCheck(t *testing.T) {
 				},
 			},
 			want: map[string]map[string]metricSource.MetricData{
-				"metric.test.1": map[string]metricSource.MetricData{ //nolint
+				"metric.test.1": {
 					"t1": {Name: "metric.test.1"},
 				},
-				"metric.test.2": map[string]metricSource.MetricData{ //nolint
+				"metric.test.2": {
 					"t1": {Name: "metric.test.2"},
 				},
 			},
@@ -553,11 +628,11 @@ func TestTriggerMetrics_ConvertForCheck(t *testing.T) {
 				},
 			},
 			want: map[string]map[string]metricSource.MetricData{
-				"metric.test.1": map[string]metricSource.MetricData{ //nolint
+				"metric.test.1": {
 					"t1": {Name: "metric.test.1"},
 					"t2": {Name: "metric.test.3"},
 				},
-				"metric.test.2": map[string]metricSource.MetricData{ //nolint
+				"metric.test.2": {
 					"t1": {Name: "metric.test.2"},
 					"t2": {Name: "metric.test.3"},
 				},
