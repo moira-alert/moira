@@ -50,8 +50,9 @@ func getDefault() config {
 			MetricsTTL:      "1h",
 		},
 		Logger: cmd.LoggerConfig{
-			LogFile:  "stdout",
-			LogLevel: "info",
+			LogFile:         "stdout",
+			LogLevel:        "info",
+			LogPrettyFormat: false,
 		},
 		Checker: checkerConfig{
 			NoDataCheckInterval:       "60s",

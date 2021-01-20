@@ -5,4 +5,4 @@ redis:
   metrics_ttl: 3h
 log_file: stdout
 log_level: debug
-
+log_pretty_format: true

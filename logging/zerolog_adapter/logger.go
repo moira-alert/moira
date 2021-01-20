@@ -17,7 +17,7 @@ const (
 )
 
 // ConfigureLog creates new logger based on github.com/rs/zerolog package
-func ConfigureLog(logFile, logLevel, module string) (*Logger, error) {
+func ConfigureLog(logFile, logLevel, module string, pretty bool) (*Logger, error) {
 	level, err := zerolog.ParseLevel(logLevel)
 	if err != nil {
 		level = zerolog.DebugLevel
@@ -28,14 +28,16 @@ func ConfigureLog(logFile, logLevel, module string) (*Logger, error) {
 		return nil, err
 	}
 
-	logger := zerolog.New(
-		zerolog.ConsoleWriter{
+	if pretty {
+		logWriter = zerolog.ConsoleWriter{
 			Out:        logWriter,
-			NoColor:    true,
+			NoColor:    false,
 			TimeFormat: "2006-01-02 15:04:05.000",
 			PartsOrder: []string{zerolog.TimestampFieldName, moduleFieldName, zerolog.LevelFieldName, zerolog.MessageFieldName},
-		},
-	).Level(level).With().Str(moduleFieldName, module).Logger()
+		}
+	}
+
+	logger := zerolog.New(logWriter).Level(level).With().Str(moduleFieldName, module).Logger()
 	return &Logger{logger}, nil
 }
 

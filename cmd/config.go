@@ -77,8 +77,9 @@ func (graphiteConfig *GraphiteConfig) GetSettings() metrics.GraphiteRegistryConf
 
 // LoggerConfig is logger settings structure that initialises at the start of moira
 type LoggerConfig struct {
-	LogFile  string `yaml:"log_file"`
-	LogLevel string `yaml:"log_level"`
+	LogFile         string `yaml:"log_file"`
+	LogLevel        string `yaml:"log_level"`
+	LogPrettyFormat bool   `yaml:"log_pretty_format"`
 }
 
 // TelemetryConfig is settings for listener, pprof, graphite
