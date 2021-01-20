@@ -2,6 +2,7 @@ package logging
 
 import (
 	"fmt"
+	"github.com/moira-alert/moira"
 	"github.com/rs/zerolog"
 	"io"
 	"os"
@@ -95,4 +96,56 @@ func (l Logger) Warning(args ...interface{}) {
 
 func (l Logger) Warningf(format string, args ...interface{}) {
 	l.Logger.Warn().Timestamp().Msgf(format, args)
+}
+
+func (l Logger) Level(s string) (moira.Logger, error) {
+	level, error := zerolog.ParseLevel(s)
+	return Logger{l.Logger.Level(level)}, error
+}
+
+func (l Logger) DebugEvent() moira.LogEvent {
+	return &LogEvent{l.Logger.Debug()}
+}
+
+func (l Logger) InfoEvent() moira.LogEvent {
+	return &LogEvent{l.Logger.Info()}
+}
+
+func (l Logger) WarningEvent() moira.LogEvent {
+	return &LogEvent{l.Logger.Warn()}
+}
+
+func (l Logger) ErrorEvent() moira.LogEvent {
+	return &LogEvent{l.Logger.Error()}
+}
+
+func (l Logger) FatalEvent() moira.LogEvent {
+	return &LogEvent{l.Logger.Fatal()}
+}
+
+type LogEvent struct {
+	*zerolog.Event
+}
+
+func (l *LogEvent) String(key, value string) moira.LogEvent {
+	l.Event = l.Event.Str(key, value)
+	return l
+}
+
+func (l *LogEvent) Int(key string, value int) moira.LogEvent {
+	l.Event = l.Event.Int(key, value)
+	return l
+}
+
+func (l *LogEvent) Fields(fields map[string]interface{}) moira.LogEvent {
+	l.Event = l.Event.Fields(fields)
+	return l
+}
+
+func (l *LogEvent) Message(message string) {
+	l.Event.Msg(message)
+}
+
+func (l *LogEvent) Messagef(format string, args ...interface{}) {
+	l.Event.Msgf(format, args)
 }
