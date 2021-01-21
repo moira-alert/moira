@@ -14,7 +14,8 @@ type Logger struct {
 }
 
 const (
-	ModuleFieldName = "module"
+	ModuleFieldName   = "module"
+	DefaultTimeFormat = "2006-01-02 15:04:05.000"
 )
 
 // ConfigureLog creates new logger based on github.com/rs/zerolog package
@@ -37,12 +38,13 @@ func newLog(logFile, logLevel, module string, pretty, colorOff bool) (*Logger, e
 	if err != nil {
 		return nil, err
 	}
+	zerolog.TimeFieldFormat = DefaultTimeFormat
 
 	if pretty {
 		logWriter = zerolog.ConsoleWriter{
 			Out:        logWriter,
 			NoColor:    colorOff,
-			TimeFormat: "2006-01-02 15:04:05.000",
+			TimeFormat: DefaultTimeFormat,
 			PartsOrder: []string{zerolog.TimestampFieldName, ModuleFieldName, zerolog.LevelFieldName, zerolog.MessageFieldName},
 		}
 	}
