@@ -98,54 +98,26 @@ func (l Logger) Warningf(format string, args ...interface{}) {
 	l.Logger.Warn().Timestamp().Msgf(format, args)
 }
 
-func (l Logger) Level(s string) (moira.Logger, error) {
-	level, error := zerolog.ParseLevel(s)
-	return Logger{l.Logger.Level(level)}, error
-}
-
-func (l Logger) DebugEvent() moira.LogEvent {
-	return &LogEvent{l.Logger.Debug()}
-}
-
-func (l Logger) InfoEvent() moira.LogEvent {
-	return &LogEvent{l.Logger.Info()}
-}
-
-func (l Logger) WarningEvent() moira.LogEvent {
-	return &LogEvent{l.Logger.Warn()}
-}
-
-func (l Logger) ErrorEvent() moira.LogEvent {
-	return &LogEvent{l.Logger.Error()}
-}
-
-func (l Logger) FatalEvent() moira.LogEvent {
-	return &LogEvent{l.Logger.Fatal()}
-}
-
-type LogEvent struct {
-	*zerolog.Event
-}
-
-func (l *LogEvent) String(key, value string) moira.LogEvent {
-	l.Event = l.Event.Str(key, value)
+func (l *Logger) String(key, value string) moira.Logger {
+	l.Logger = l.Logger.With().Str(key, value).Logger()
 	return l
 }
 
-func (l *LogEvent) Int(key string, value int) moira.LogEvent {
-	l.Event = l.Event.Int(key, value)
+func (l *Logger) Int(key string, value int) moira.Logger {
+	l.Logger = l.Logger.With().Int(key, value).Logger()
 	return l
 }
 
-func (l *LogEvent) Fields(fields map[string]interface{}) moira.LogEvent {
-	l.Event = l.Event.Fields(fields)
+func (l *Logger) Fields(fields map[string]interface{}) moira.Logger {
+	l.Logger = l.Logger.With().Fields(fields).Logger()
 	return l
 }
 
-func (l *LogEvent) Message(message string) {
-	l.Event.Msg(message)
-}
-
-func (l *LogEvent) Messagef(format string, args ...interface{}) {
-	l.Event.Msgf(format, args)
+func (l *Logger) Level(s string) (moira.Logger, error) {
+	level, err := zerolog.ParseLevel(s)
+	if err != nil {
+		return l, err
+	}
+	l.Logger = l.Logger.Level(level)
+	return l, nil
 }

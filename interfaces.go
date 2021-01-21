@@ -150,24 +150,13 @@ type Logger interface {
 	Warning(args ...interface{})
 	Warningf(format string, args ...interface{})
 
+	// Structured logging methods, use to add context fields
+	String(key, value string) Logger
+	Int(key string, value int) Logger
+	Fields(fields map[string]interface{}) Logger
+
 	// Get child logger with the minimum accepted level set to level.
 	Level(string) (Logger, error)
-
-	// Structured logging methods
-	DebugEvent() LogEvent
-	InfoEvent() LogEvent
-	WarningEvent() LogEvent
-	ErrorEvent() LogEvent
-	FatalEvent() LogEvent
-}
-
-// LogEvent implements log event abstraction, need to write structured logging fields and finalized by the Message method
-type LogEvent interface {
-	String(key, value string) LogEvent
-	Int(key string, value int) LogEvent
-	Fields(fields map[string]interface{}) LogEvent
-	Message(message string)
-	Messagef(format string, args ...interface{})
 }
 
 // Sender interface for implementing specified contact type sender
