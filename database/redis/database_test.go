@@ -3,7 +3,7 @@ package redis
 import (
 	"testing"
 
-	"github.com/moira-alert/moira/logging/go-logging"
+	"github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"github.com/moira-alert/moira"
@@ -21,7 +21,7 @@ func newTestDatabase(logger moira.Logger, config Config) *DbConnector {
 // docker run -p 6379:6379 redis
 func TestInitialization(t *testing.T) {
 	Convey("Initialization methods", t, func() {
-		logger, _ := logging.ConfigureLog("stdout", "info", "test")
+		logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
 		database := newTestDatabase(logger, emptyConfig)
 		So(database, ShouldNotBeEmpty)
 		_, err := database.pool.Dial()
@@ -30,7 +30,7 @@ func TestInitialization(t *testing.T) {
 }
 
 func TestAllowStale(t *testing.T) {
-	logger, _ := logging.ConfigureLog("stdout", "info", "test")
+	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
 
 	Convey("Allow stale", t, func() {
 		Convey("When using redis directly, returns same db", func() {

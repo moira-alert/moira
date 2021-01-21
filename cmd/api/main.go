@@ -16,7 +16,7 @@ import (
 	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/database/redis"
 	"github.com/moira-alert/moira/index"
-	"github.com/moira-alert/moira/logging/go-logging"
+	"github.com/moira-alert/moira/logging/zerolog_adapter"
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
 	"github.com/moira-alert/moira/metric_source/remote"
@@ -61,7 +61,8 @@ func main() {
 
 	apiConfig := config.API.getSettings(config.Redis.MetricsTTL, config.Remote.MetricsTTL)
 
-	logger, err := logging.ConfigureLog(config.Logger.LogFile, config.Logger.LogLevel, serviceName)
+	logger, err := logging.ConfigureLog(config.Logger.LogFile, config.Logger.LogLevel, serviceName, config.Logger.LogPrettyFormat)
+
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Can not configure log: %s\n", err.Error())
 		os.Exit(1)

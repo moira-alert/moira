@@ -14,7 +14,7 @@ import (
 
 	"github.com/moira-alert/moira"
 
-	"github.com/op/go-logging"
+	"github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
 )
 

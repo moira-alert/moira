@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/moira-alert/moira/database/redis"
-	"github.com/moira-alert/moira/logging/go-logging"
+	"github.com/moira-alert/moira/logging/zerolog_adapter"
 
 	"github.com/moira-alert/moira"
 
@@ -18,7 +18,7 @@ func TestUpdateUsers(t *testing.T) {
 	}
 
 	conf := getDefault()
-	logger, err := logging.ConfigureLog(conf.LogFile, conf.LogLevel, "cli")
+	logger, err := logging.ConfigureLog(conf.LogFile, conf.LogLevel, "cli", conf.LogPrettyFormat)
 	if err != nil {
 		t.Fatal(err)
 	}

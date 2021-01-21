@@ -14,11 +14,20 @@ type Logger struct {
 }
 
 const (
-	moduleFieldName = "module"
+	ModuleFieldName = "module"
 )
 
 // ConfigureLog creates new logger based on github.com/rs/zerolog package
 func ConfigureLog(logFile, logLevel, module string, pretty bool) (*Logger, error) {
+	return newLog(logFile, logLevel, module, pretty, false)
+}
+
+// GetLogger need only for backward compatibility in tests
+func GetLogger(module string) (moira.Logger, error) {
+	return newLog("stdout", "info", module, true, true)
+}
+
+func newLog(logFile, logLevel, module string, pretty, colorOff bool) (*Logger, error) {
 	level, err := zerolog.ParseLevel(logLevel)
 	if err != nil {
 		level = zerolog.DebugLevel
@@ -32,13 +41,13 @@ func ConfigureLog(logFile, logLevel, module string, pretty bool) (*Logger, error
 	if pretty {
 		logWriter = zerolog.ConsoleWriter{
 			Out:        logWriter,
-			NoColor:    false,
+			NoColor:    colorOff,
 			TimeFormat: "2006-01-02 15:04:05.000",
-			PartsOrder: []string{zerolog.TimestampFieldName, moduleFieldName, zerolog.LevelFieldName, zerolog.MessageFieldName},
+			PartsOrder: []string{zerolog.TimestampFieldName, ModuleFieldName, zerolog.LevelFieldName, zerolog.MessageFieldName},
 		}
 	}
 
-	logger := zerolog.New(logWriter).Level(level).With().Str(moduleFieldName, module).Logger()
+	logger := zerolog.New(logWriter).Level(level).With().Str(ModuleFieldName, module).Logger()
 	return &Logger{logger}, nil
 }
 
@@ -59,43 +68,43 @@ func getLogWriter(logFileName string) (io.Writer, error) {
 }
 
 func (l Logger) Debug(args ...interface{}) {
-	l.Logger.Debug().Timestamp().Msg(fmt.Sprint(args))
+	l.Logger.Debug().Timestamp().Msg(fmt.Sprint(args...))
 }
 
 func (l Logger) Debugf(format string, args ...interface{}) {
-	l.Logger.Debug().Timestamp().Msgf(format, args)
+	l.Logger.Debug().Timestamp().Msgf(format, args...)
 }
 
 func (l Logger) Info(args ...interface{}) {
-	l.Logger.Info().Timestamp().Msg(fmt.Sprint(args))
+	l.Logger.Info().Timestamp().Msg(fmt.Sprint(args...))
 }
 
 func (l Logger) Infof(format string, args ...interface{}) {
-	l.Logger.Info().Timestamp().Msgf(format, args)
+	l.Logger.Info().Timestamp().Msgf(format, args...)
 }
 
 func (l Logger) Error(args ...interface{}) {
-	l.Logger.Error().Timestamp().Msgf(fmt.Sprint(args))
+	l.Logger.Error().Timestamp().Msgf(fmt.Sprint(args...))
 }
 
 func (l Logger) Errorf(format string, args ...interface{}) {
-	l.Logger.Error().Timestamp().Msgf(format, args)
+	l.Logger.Error().Timestamp().Msgf(format, args...)
 }
 
 func (l Logger) Fatal(args ...interface{}) {
-	l.Logger.Fatal().Timestamp().Msg(fmt.Sprint(args))
+	l.Logger.Fatal().Timestamp().Msg(fmt.Sprint(args...))
 }
 
 func (l Logger) Fatalf(format string, args ...interface{}) {
-	l.Logger.Fatal().Timestamp().Msgf(format, args)
+	l.Logger.Fatal().Timestamp().Msgf(format, args...)
 }
 
 func (l Logger) Warning(args ...interface{}) {
-	l.Logger.Warn().Timestamp().Msg(fmt.Sprint(args))
+	l.Logger.Warn().Timestamp().Msg(fmt.Sprint(args...))
 }
 
 func (l Logger) Warningf(format string, args ...interface{}) {
-	l.Logger.Warn().Timestamp().Msgf(format, args)
+	l.Logger.Warn().Timestamp().Msgf(format, args...)
 }
 
 func (l *Logger) String(key, value string) moira.Logger {

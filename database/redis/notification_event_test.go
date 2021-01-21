@@ -3,7 +3,7 @@ package redis
 import (
 	"testing"
 
-	"github.com/op/go-logging"
+	"github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"time"
@@ -19,7 +19,7 @@ const triggerID3 = "F0F4A5B9-637C-4933-AA0D-88B9798A2630" //nolint
 var now = time.Now().Unix()
 var value = float64(0)
 
- //nolint
+//nolint
 func TestNotificationEvents(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := newTestDatabase(logger, config)
@@ -245,7 +245,7 @@ func TestNotificationEvents(t *testing.T) {
 					OldState:  moira.StateNODATA,
 					TriggerID: triggerID,
 					Metric:    "my.metric",
-					Value:    &value, //nolint
+					Value:     &value, //nolint
 				}, true)
 				So(err, ShouldBeNil)
 

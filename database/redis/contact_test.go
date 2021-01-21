@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
+	"github.com/moira-alert/moira/logging/zerolog_adapter"
 )
 
 var user1 = "user1"
@@ -16,6 +16,7 @@ var user2 = "user2"
 
 func TestContacts(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
+
 	dataBase := newTestDatabase(logger, config)
 	dataBase.flush()
 	defer dataBase.flush()

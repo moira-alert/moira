@@ -6,8 +6,8 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/logging/zerolog_adapter"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
-	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
 )
 

@@ -4,15 +4,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/moira-alert/moira/logging/go-logging"
+	"github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-var logger, _ = logging.ConfigureLog("stdout", "debug", "test")
+var logger, _ = logging.ConfigureLog("stdout", "debug", "test", true)
 
 var sentinelConfig = SentinelPoolDialerConfig{
-	MasterName: "master01", //nolint
-	DB: 0,
+	MasterName:  "master01", //nolint
+	DB:          0,
 	DialTimeout: time.Millisecond,
 	SentinelAddresses: []string{
 		"fake-sentinel:26379",
@@ -22,28 +22,28 @@ var sentinelConfig = SentinelPoolDialerConfig{
 func TestDirectDialer(t *testing.T) {
 	Convey("Direct dialer", t, func() {
 		Convey("Tries dial and fails", func() {
-			dialer := DirectPoolDialer { //nolint
+			dialer := DirectPoolDialer{ //nolint
 				serverAddress: "fake-redis:6379",
-				db: 0, //nolint
-				dialTimeout: time.Millisecond,
+				db:            0, //nolint
+				dialTimeout:   time.Millisecond,
 			}
 
 			_, err := dialer.Dial()
 
 			So(err.Error(), ShouldEqual, "dial tcp: i/o timeout")
 		})
- //nolint
+		//nolint
 		Convey("Test dials successfully", func() {
-			dialer := DirectPoolDialer { //nolint
+			dialer := DirectPoolDialer{ //nolint
 				serverAddress: "localhost:6379",
-				db: 0, //nolint
-				dialTimeout: 5 * time.Second,
+				db:            0, //nolint
+				dialTimeout:   5 * time.Second,
 			}
 
 			conn, err := dialer.Dial()
 
 			So(err, ShouldBeNil)
- //nolint
+			//nolint
 			err = dialer.Test(conn, time.Now())
 			So(err, ShouldBeNil)
 		})

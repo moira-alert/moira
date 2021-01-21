@@ -6,7 +6,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
-	logging "github.com/moira-alert/moira/logging/go-logging"
+	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	"github.com/opsgenie/opsgenie-go-sdk-v2/alert"
 	. "github.com/smartystreets/goconvey/convey"
@@ -120,7 +120,7 @@ func TestBuildTitle(t *testing.T) {
 
 func TestMakeCreateAlertRequest(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
-	logger, _ := logging.ConfigureLog("stdout", "debug", "test")
+	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	imageStore := mock_moira_alert.NewMockImageStore(mockCtrl)

@@ -8,7 +8,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/index/mapping"
-	"github.com/op/go-logging"
+	"github.com/moira-alert/moira/logging/zerolog_adapter"
 )
 
 type config struct {

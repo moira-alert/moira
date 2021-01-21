@@ -6,12 +6,12 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-	"github.com/moira-alert/moira/logging/go-logging"
+	"github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestTriggersToReindex(t *testing.T) {
-	logger, _ := logging.ConfigureLog("stdout", "info", "test")
+	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
 	dataBase := newTestDatabase(logger, config)
 	dataBase.flush()
 	defer dataBase.flush()
@@ -118,7 +118,7 @@ func TestTriggersToReindex(t *testing.T) {
 }
 
 func TestTriggerToReindexConnection(t *testing.T) {
-	logger, _ := logging.ConfigureLog("stdout", "info", "test")
+	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
 	dataBase := newTestDatabase(logger, emptyConfig)
 	dataBase.flush()
 	defer dataBase.flush()

@@ -14,7 +14,7 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/database/redis"
-	"github.com/moira-alert/moira/logging/go-logging"
+	"github.com/moira-alert/moira/logging/zerolog_adapter"
 	"github.com/moira-alert/moira/metrics"
 	"github.com/moira-alert/moira/notifier"
 	"github.com/moira-alert/moira/notifier/events"
@@ -60,7 +60,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	logger, err = logging.ConfigureLog(config.Logger.LogFile, config.Logger.LogLevel, serviceName)
+	logger, err = logging.ConfigureLog(config.Logger.LogFile, config.Logger.LogLevel, serviceName, config.Logger.LogPrettyFormat)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Can not configure log: %s\n", err.Error())
 		os.Exit(1)

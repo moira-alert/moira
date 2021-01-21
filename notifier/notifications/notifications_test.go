@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
-	"github.com/op/go-logging"
+	"github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"github.com/moira-alert/moira"
@@ -97,7 +97,7 @@ func TestProcessScheduledEvent(t *testing.T) {
 	})
 
 	Convey("Two same notifications, should send one package", t, func() {
-		dataBase.EXPECT().FetchNotifications(gomock.Any(),  notifier2.NotificationsLimitUnlimited).Return([]*moira.ScheduledNotification{ //nolint
+		dataBase.EXPECT().FetchNotifications(gomock.Any(), notifier2.NotificationsLimitUnlimited).Return([]*moira.ScheduledNotification{ //nolint
 			&notification2,
 			&notification3,
 		}, nil)

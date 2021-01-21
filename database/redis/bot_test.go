@@ -6,11 +6,11 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 
 	"github.com/moira-alert/moira/database"
-	"github.com/moira-alert/moira/logging/go-logging"
+	"github.com/moira-alert/moira/logging/zerolog_adapter"
 )
 
 func TestBotDataStoring(t *testing.T) {
-	logger, _ := logging.ConfigureLog("stdout", "info", "test")
+	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
 	dataBase := newTestDatabase(logger, config)
 	dataBase.flush()
 	defer dataBase.flush()
@@ -59,7 +59,7 @@ func TestBotDataStoring(t *testing.T) {
 }
 
 func TestBotDataStoringErrorConnection(t *testing.T) {
-	logger, _ := logging.ConfigureLog("stdout", "info", "test")
+	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
 	dataBase := newTestDatabase(logger, emptyConfig)
 	dataBase.flush()
 	defer dataBase.flush()

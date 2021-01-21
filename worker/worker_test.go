@@ -9,8 +9,8 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
+	"github.com/moira-alert/moira/logging/zerolog_adapter"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
-	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -157,9 +157,10 @@ func createTestWorkerWithDefaultAction(lock moira.Lock) *Worker {
 }
 
 func createTestWorkerWithAction(lock moira.Lock, action Action) *Worker {
+	log, _ := logging.GetLogger("Test Worker")
 	worker := NewWorker(
 		"Test Worker",
-		logging.MustGetLogger("Test Worker"),
+		log,
 		lock,
 		action,
 	)

@@ -6,6 +6,7 @@ package mock_moira_alert
 
 import (
 	gomock "github.com/golang/mock/gomock"
+	"github.com/moira-alert/moira"
 	reflect "reflect"
 )
 
@@ -131,6 +132,20 @@ func (mr *MockLoggerMockRecorder) Fatalf(arg0 interface{}, arg1 ...interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Fatalf", reflect.TypeOf((*MockLogger)(nil).Fatalf), varargs...)
 }
 
+// Fields mocks base method
+func (m *MockLogger) Fields(arg0 map[string]interface{}) moira.Logger {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Fields", arg0)
+	ret0, _ := ret[0].(moira.Logger)
+	return ret0
+}
+
+// Fields indicates an expected call of Fields
+func (mr *MockLoggerMockRecorder) Fields(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Fields", reflect.TypeOf((*MockLogger)(nil).Fields), arg0)
+}
+
 // Info mocks base method
 func (m *MockLogger) Info(arg0 ...interface{}) {
 	m.ctrl.T.Helper()
@@ -162,6 +177,49 @@ func (mr *MockLoggerMockRecorder) Infof(arg0 interface{}, arg1 ...interface{}) *
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0}, arg1...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Infof", reflect.TypeOf((*MockLogger)(nil).Infof), varargs...)
+}
+
+// Int mocks base method
+func (m *MockLogger) Int(arg0 string, arg1 int) moira.Logger {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Int", arg0, arg1)
+	ret0, _ := ret[0].(moira.Logger)
+	return ret0
+}
+
+// Int indicates an expected call of Int
+func (mr *MockLoggerMockRecorder) Int(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Int", reflect.TypeOf((*MockLogger)(nil).Int), arg0, arg1)
+}
+
+// Level mocks base method
+func (m *MockLogger) Level(arg0 string) (moira.Logger, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Level", arg0)
+	ret0, _ := ret[0].(moira.Logger)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Level indicates an expected call of Level
+func (mr *MockLoggerMockRecorder) Level(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Level", reflect.TypeOf((*MockLogger)(nil).Level), arg0)
+}
+
+// String mocks base method
+func (m *MockLogger) String(arg0, arg1 string) moira.Logger {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "String", arg0, arg1)
+	ret0, _ := ret[0].(moira.Logger)
+	return ret0
+}
+
+// String indicates an expected call of String
+func (mr *MockLoggerMockRecorder) String(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "String", reflect.TypeOf((*MockLogger)(nil).String), arg0, arg1)
 }
 
 // Warning mocks base method

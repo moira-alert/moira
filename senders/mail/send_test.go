@@ -8,12 +8,12 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/logging/go-logging"
+	"github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestMakeMessage(t *testing.T) {
-	logger, _ := logging.ConfigureLog("stdout", "debug", "test")
+	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 	contact := moira.ContactData{
 		ID:    "ContactID-000000000000001",
 		Type:  "email",
@@ -76,7 +76,7 @@ func generateTestEvents(n int, subscriptionID string) []moira.NotificationEvent 
 }
 
 func TestEmptyTriggerID(t *testing.T) {
-	logger, _ := logging.ConfigureLog("stdout", "debug", "test")
+	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 	contact := moira.ContactData{
 		ID:    "ContactID-000000000000001",
 		Type:  "email",

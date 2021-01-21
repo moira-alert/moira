@@ -2,12 +2,12 @@ package redis
 
 import (
 	"fmt"
-	"log"
+	"github.com/rs/zerolog"
 	"strings"
 	"testing"
 
 	"github.com/moira-alert/moira"
-	"github.com/op/go-logging"
+	"github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -131,8 +131,9 @@ func TestTriggersSearchResultsStoring(t *testing.T) {
 }
 
 func BenchmarkSaveTriggersSearchResults(b *testing.B) {
-	logger, _ := logging.GetLogger("dataBase")
-	logging.SetBackend(logging.NewLogBackend(&strings.Builder{}, "", log.LstdFlags))
+	logger = &logging.Logger{
+		Logger: zerolog.New(&strings.Builder{}).With().Str(logging.ModuleFieldName, "dataBase").Logger(),
+	}
 
 	dataBase := newTestDatabase(logger, config)
 	dataBase.flush()

@@ -6,7 +6,7 @@ import (
 
 	twilio "github.com/carlosdp/twiliogo"
 	"github.com/moira-alert/moira"
-	logging "github.com/moira-alert/moira/logging/go-logging"
+	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -67,7 +67,7 @@ Please, fix your system or tune this trigger to generate less events.`
 }
 
 func TestTwilioSenderSms_SendEvents(t *testing.T) {
-	logger, _ := logging.ConfigureLog("stdout", "debug", "test")
+	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 	location, _ := time.LoadLocation("UTC")
 	sender := twilioSenderSms{
 		twilioSender: twilioSender{

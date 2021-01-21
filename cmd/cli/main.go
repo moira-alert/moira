@@ -9,7 +9,7 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/database/redis"
-	"github.com/moira-alert/moira/logging/go-logging"
+	"github.com/moira-alert/moira/logging/zerolog_adapter"
 )
 
 // Moira version
@@ -121,7 +121,7 @@ func initApp() (cleanupConfig, moira.Logger, moira.Database) {
 		os.Exit(1)
 	}
 
-	logger, err := logging.ConfigureLog(config.LogFile, config.LogLevel, "cli")
+	logger, err := logging.ConfigureLog(config.LogFile, config.LogLevel, "cli", config.LogPrettyFormat)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Can't configure main logger: %v\n", err)
 		os.Exit(1)

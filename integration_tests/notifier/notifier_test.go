@@ -8,10 +8,10 @@ import (
 	"github.com/golang/mock/gomock"
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
-	"github.com/op/go-logging"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database/redis"
+	"github.com/moira-alert/moira/logging/zerolog_adapter"
 	"github.com/moira-alert/moira/metrics"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	"github.com/moira-alert/moira/notifier"
@@ -80,9 +80,9 @@ func TestNotifier(t *testing.T) {
 	defer mockCtrl.Finish()
 	database := redis.NewTestDatabase(logger)
 	metricsSourceProvider := metricSource.CreateMetricSourceProvider(local.Create(database), nil)
-	database.SaveContact(&contact) //nolint
-	database.SaveSubscription(&subscription) //nolint
-	database.SaveTrigger(trigger.ID, &trigger) //nolint
+	database.SaveContact(&contact)               //nolint
+	database.SaveSubscription(&subscription)     //nolint
+	database.SaveTrigger(trigger.ID, &trigger)   //nolint
 	database.PushNotificationEvent(&event, true) //nolint
 	notifier2 := notifier.NewNotifier(database, logger, notifierConfig, notifierMetrics, metricsSourceProvider, map[string]moira.ImageStore{})
 	sender := mock_moira_alert.NewMockSender(mockCtrl)
@@ -111,7 +111,7 @@ func TestNotifier(t *testing.T) {
 
 	waitTestEnd()
 
-	fetchEventsWorker.Stop() //nolint
+	fetchEventsWorker.Stop()        //nolint
 	fetchNotificationsWorker.Stop() //nolint
 }
 

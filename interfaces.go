@@ -155,7 +155,7 @@ type Logger interface {
 	Int(key string, value int) Logger
 	Fields(fields map[string]interface{}) Logger
 
-	// Get child logger with the minimum accepted level set to level.
+	// Get child logger with the minimum accepted level
 	Level(string) (Logger, error)
 }
 

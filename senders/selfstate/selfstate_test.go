@@ -8,7 +8,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/logging/go-logging"
+	"github.com/moira-alert/moira/logging/zerolog_adapter"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 )
 
@@ -39,7 +39,7 @@ func TestSender_SendEvents(t *testing.T) {
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 
-	logger, _ := logging.ConfigureLog("stdout", "debug", "test")
+	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 	sender := Sender{Database: dataBase, logger: logger}
 
 	Convey("Has connection to database", t, func() {
