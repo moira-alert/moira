@@ -8,7 +8,7 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
-	"github.com/moira-alert/moira/logging/zerolog_adapter"
+	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 )
 
 var user1 = "user1"

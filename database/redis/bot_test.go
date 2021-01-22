@@ -6,7 +6,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 
 	"github.com/moira-alert/moira/database"
-	"github.com/moira-alert/moira/logging/zerolog_adapter"
+	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 )
 
 func TestBotDataStoring(t *testing.T) {

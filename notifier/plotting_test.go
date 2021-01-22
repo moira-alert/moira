@@ -10,7 +10,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/logging/zerolog_adapter"
+	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
 	mockMetricSource "github.com/moira-alert/moira/mock/metric_source"

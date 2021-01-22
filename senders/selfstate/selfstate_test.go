@@ -8,7 +8,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/logging/zerolog_adapter"
+	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 )
 

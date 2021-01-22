@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/logging/zerolog_adapter"
+	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	"github.com/moira-alert/moira/notifier"
 
 	. "github.com/smartystreets/goconvey/convey"

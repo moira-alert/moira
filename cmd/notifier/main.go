@@ -14,7 +14,7 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/database/redis"
-	"github.com/moira-alert/moira/logging/zerolog_adapter"
+	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	"github.com/moira-alert/moira/metrics"
 	"github.com/moira-alert/moira/notifier"
 	"github.com/moira-alert/moira/notifier/events"

@@ -2,11 +2,13 @@ package logging
 
 import (
 	"fmt"
-	"github.com/moira-alert/moira"
-	"github.com/rs/zerolog"
 	"io"
 	"os"
 	"path/filepath"
+
+	"github.com/rs/zerolog"
+
+	"github.com/moira-alert/moira"
 )
 
 type Logger struct {

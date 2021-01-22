@@ -16,7 +16,7 @@ import (
 	"github.com/moira-alert/moira/filter/heartbeat"
 	matchedmetrics "github.com/moira-alert/moira/filter/matched_metrics"
 	"github.com/moira-alert/moira/filter/patterns"
-	"github.com/moira-alert/moira/logging/zerolog_adapter"
+	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	"github.com/moira-alert/moira/metrics"
 	"github.com/xiam/to"
 )

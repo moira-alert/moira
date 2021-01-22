@@ -2,12 +2,12 @@ package redis
 
 import (
 	"fmt"
-	"github.com/rs/zerolog"
 	"strings"
 	"testing"
 
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/logging/zerolog_adapter"
+	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
+	"github.com/rs/zerolog"
 	. "github.com/smartystreets/goconvey/convey"
 )
 

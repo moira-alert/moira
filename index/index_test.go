@@ -14,7 +14,7 @@ import (
 
 	"github.com/moira-alert/moira/index/bleve"
 	"github.com/moira-alert/moira/index/fixtures"
-	"github.com/moira-alert/moira/logging/zerolog_adapter"
+	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 )
 

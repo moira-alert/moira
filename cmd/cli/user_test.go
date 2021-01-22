@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/moira-alert/moira/database/redis"
-	"github.com/moira-alert/moira/logging/zerolog_adapter"
+	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 
 	"github.com/moira-alert/moira"
 

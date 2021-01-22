@@ -10,7 +10,7 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/checker/metrics/conversion"
 	"github.com/moira-alert/moira/expression"
-	"github.com/moira-alert/moira/logging/zerolog_adapter"
+	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
 	"github.com/moira-alert/moira/metrics"
@@ -322,7 +322,7 @@ func TestTriggerChecker_PrepareMetrics(t *testing.T) {
 
 func TestGetMetricStepsStates(t *testing.T) {
 	logger, _ := logging.GetLogger("Test")
-	logger.Level("info")
+	logger.Level("info") // nolint: errcheck
 	var warnValue float64 = 10
 	var errValue float64 = 20
 
@@ -503,7 +503,7 @@ func TestGetMetricStepsStates(t *testing.T) {
 
 func TestCheckForNODATA(t *testing.T) {
 	logger, _ := logging.GetLogger("Test")
-	logger.Level("info")
+	logger.Level("info") // nolint: errcheck
 	metricLastState := moira.MetricState{
 		EventTimestamp: 11,
 		Maintenance:    11111,
@@ -907,7 +907,7 @@ func TestCheck(t *testing.T) {
 func TestIgnoreNodataToOk(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	logger, _ := logging.GetLogger("Test")
-	logger.Level("info")
+	logger.Level("info") // nolint: errcheck
 	defer mockCtrl.Finish()
 
 	var retention int64 = 10
@@ -970,7 +970,7 @@ func TestHandleTrigger(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	logger, _ := logging.GetLogger("Test")
-	logger.Level("info")
+	logger.Level("info") // nolint: errcheck
 	defer mockCtrl.Finish()
 
 	var retention int64 = 10

@@ -16,7 +16,7 @@ import (
 	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/database/redis"
 	"github.com/moira-alert/moira/index"
-	"github.com/moira-alert/moira/logging/zerolog_adapter"
+	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
 	"github.com/moira-alert/moira/metric_source/remote"

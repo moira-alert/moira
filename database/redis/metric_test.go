@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/moira-alert/moira/logging/zerolog_adapter"
+	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	"github.com/patrickmn/go-cache"
 	. "github.com/smartystreets/goconvey/convey"
 	"gopkg.in/tomb.v2"
