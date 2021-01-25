@@ -134,3 +134,9 @@ func (l *Logger) Level(s string) (moira.Logger, error) {
 	l.Logger = l.Logger.Level(level)
 	return l, nil
 }
+
+func (l Logger) Clone() moira.Logger {
+	return &Logger{
+		Logger: l.Logger.With().Logger(),
+	}
+}

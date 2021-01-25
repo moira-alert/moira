@@ -157,6 +157,8 @@ type Logger interface {
 
 	// Get child logger with the minimum accepted level
 	Level(string) (Logger, error)
+	// Returns new copy of log, when need to avoid context duplication
+	Clone() Logger
 }
 
 // Sender interface for implementing specified contact type sender
