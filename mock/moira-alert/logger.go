@@ -33,6 +33,20 @@ func (m *MockLogger) EXPECT() *MockLoggerMockRecorder {
 	return m.recorder
 }
 
+// Clone mocks base method
+func (m *MockLogger) Clone() moira.Logger {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Clone")
+	ret0, _ := ret[0].(moira.Logger)
+	return ret0
+}
+
+// Clone indicates an expected call of Clone
+func (mr *MockLoggerMockRecorder) Clone() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Clone", reflect.TypeOf((*MockLogger)(nil).Clone))
+}
+
 // Debug mocks base method
 func (m *MockLogger) Debug(arg0 ...interface{}) {
 	m.ctrl.T.Helper()
