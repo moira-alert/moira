@@ -22,7 +22,8 @@ func (worker *Checker) startTriggerHandler(triggerIDsToCheck <-chan string, metr
 		err := worker.handleTrigger(triggerID, metrics)
 		if err != nil {
 			metrics.HandleError.Mark(1)
-			worker.Logger.Errorf("Failed to handle trigger %s: %s", triggerID, err.Error())
+			worker.Logger.Clone().String(checker.LogFieldNameTriggerId, triggerID).
+				Errorf("Failed to handle trigger %s: %s", triggerID, err.Error())
 			<-time.After(sleepAfterCheckingError)
 		}
 	}

@@ -15,4 +15,5 @@ type Config struct {
 	MaxParallelRemoteChecks     int
 	LogFile                     string
 	LogLevel                    string
+	LogTriggersToLevel          map[string]string
 }

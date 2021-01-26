@@ -28,6 +28,11 @@ type TriggerChecker struct {
 	ttlState moira.TTLState
 }
 
+const (
+	LogFieldNameTriggerId  = "moira.trigger_id"
+	LogFieldNameMetricName = "moira.metric_name"
+)
+
 // MakeTriggerChecker initialize new triggerChecker data
 // if trigger does not exists then return ErrTriggerNotExists error
 // if trigger metrics source does not configured then return ErrMetricSourceIsNotConfigured error.
@@ -51,9 +56,16 @@ func MakeTriggerChecker(triggerID string, dataBase moira.Database, logger moira.
 		return nil, err
 	}
 
+	triggerLogger := logger.Clone().String(LogFieldNameTriggerId, triggerID)
+	if logLevel, ok := config.LogTriggersToLevel[triggerID]; ok {
+		if _, err := logger.Level(logLevel); err != nil {
+			logger.Warningf("Incorrect log level %s for %d", logLevel, triggerID)
+		}
+	}
+
 	triggerChecker := &TriggerChecker{
 		database: dataBase,
-		logger:   logger,
+		logger:   triggerLogger,
 		config:   config,
 		metrics:  metrics.GetCheckMetrics(&trigger),
 		source:   source,
