@@ -243,7 +243,7 @@ func (triggerChecker *TriggerChecker) check(metrics map[string]map[string]metric
 		metrics[metricName] = make(map[string]metricSource.MetricData)
 	}
 	for metricName, targets := range metrics {
-		logger := triggerChecker.logger.Clone().String(LogFieldNameMetricName, metricName)
+		logger := triggerChecker.logger.Clone().String(moira.LogFieldNameMetricName, metricName)
 		logger.Debugf("Checking metrics %s", metricName)
 		targets = conversion.Merge(targets, aloneMetrics)
 		metricState, needToDeleteMetric, err := triggerChecker.checkTargets(metricName, targets)
@@ -292,7 +292,7 @@ func (triggerChecker *TriggerChecker) checkForNoData(metricName string, metricLa
 	if metricLastState.Timestamp+triggerChecker.ttl >= lastCheckTimeStamp {
 		return false, nil
 	}
-	triggerChecker.logger.Clone().String(LogFieldNameMetricName, metricName).
+	triggerChecker.logger.Clone().String(moira.LogFieldNameMetricName, metricName).
 		Debugf("Metric TTL expired for state %v", metricLastState)
 	if triggerChecker.ttlState == moira.TTLStateDEL && metricLastState.EventTimestamp != 0 {
 		return true, nil
@@ -317,7 +317,7 @@ func (triggerChecker *TriggerChecker) getMetricStepsStates(metricName string, me
 	}
 
 	checkPoint := last.GetCheckPoint(checkPointGap)
-	triggerChecker.logger.Clone().String(LogFieldNameMetricName, metricName).
+	triggerChecker.logger.Clone().String(moira.LogFieldNameMetricName, metricName).
 		Debugf("Checkpoint: %v", checkPoint)
 
 	current = make([]moira.MetricState, 0)
@@ -354,7 +354,7 @@ func (triggerChecker *TriggerChecker) getMetricDataState(metricName *string, met
 	if !noEmptyValues {
 		return nil, nil
 	}
-	triggerChecker.logger.Clone().String(LogFieldNameMetricName, *metricName).
+	triggerChecker.logger.Clone().String(moira.LogFieldNameMetricName, *metricName).
 		Debugf("Values for ts %v: MainTargetValue: %v, additionalTargetValues: %v",
 			valueTimestamp, triggerExpression.MainTargetValue, triggerExpression.AdditionalTargetsValues)
 

@@ -115,7 +115,7 @@ func main() {
 
 func checkSingleTrigger(database moira.Database, metrics *metrics.CheckerMetrics, settings *checker.Config, sourceProvider *metricSource.SourceProvider) {
 	triggerChecker, err := checker.MakeTriggerChecker(*triggerID, database, logger, settings, sourceProvider, metrics)
-	logger.String(checker.LogFieldNameTriggerId, *triggerID)
+	logger.String(moira.LogFieldNameTriggerId, *triggerID)
 	if err != nil {
 		logger.Errorf("Failed initialize trigger checker: %s", err.Error())
 		os.Exit(1)

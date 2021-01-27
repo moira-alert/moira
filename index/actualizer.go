@@ -42,7 +42,8 @@ func (index *Index) actualizeIndex() error {
 		return nil
 	}
 
-	index.logger.Debugf("[Index actualizer]: got %d triggers to actualize", len(triggerToReindexIDs))
+	log := index.logger.Clone().String(moira.LogFieldNameContext, "Index actualizer")
+	log.Debugf("Got %d triggers to actualize", len(triggerToReindexIDs))
 
 	triggersToReindex, err := index.database.GetTriggerChecks(triggerToReindexIDs)
 	if err != nil {
@@ -53,12 +54,14 @@ func (index *Index) actualizeIndex() error {
 
 	for i, triggerID := range triggerToReindexIDs {
 		trigger := triggersToReindex[i]
+
+		triggerLog := log.Clone().String(moira.LogFieldNameTriggerId, triggerID)
 		if trigger == nil {
 			triggersToDelete = append(triggersToDelete, triggerID)
-			index.logger.Debugf("[Index actualizer] [triggerID: %s] is nil, remove from index", triggerID)
+			triggerLog.Debugf("Trigger %s is nil, remove from index", triggerID)
 		} else {
 			triggersToUpdate = append(triggersToUpdate, trigger)
-			index.logger.Debugf("[Index actualizer] [triggerID: %s] need to be reindexed...", triggerID)
+			triggerLog.Debugf("Trigger %s need to be reindexed...", triggerID)
 		}
 	}
 
@@ -67,7 +70,7 @@ func (index *Index) actualizeIndex() error {
 		if err2 != nil {
 			return err2
 		}
-		index.logger.Debugf("[Index actualizer] %d triggers deleted", len(triggersToDelete))
+		log.Debugf("%d triggers deleted", len(triggersToDelete))
 	}
 
 	if len(triggersToUpdate) > 0 {
@@ -75,7 +78,7 @@ func (index *Index) actualizeIndex() error {
 		if err2 != nil {
 			return err2
 		}
-		index.logger.Debugf("[Index actualizer] %d triggers reindexed", len(triggersToUpdate))
+		log.Debugf("%d triggers reindexed", len(triggersToUpdate))
 	}
 	return nil
 }

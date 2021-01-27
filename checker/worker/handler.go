@@ -2,6 +2,7 @@ package worker
 
 import (
 	"fmt"
+	"github.com/moira-alert/moira"
 	"runtime/debug"
 	"time"
 
@@ -22,7 +23,7 @@ func (worker *Checker) startTriggerHandler(triggerIDsToCheck <-chan string, metr
 		err := worker.handleTrigger(triggerID, metrics)
 		if err != nil {
 			metrics.HandleError.Mark(1)
-			worker.Logger.Clone().String(checker.LogFieldNameTriggerId, triggerID).
+			worker.Logger.Clone().String(moira.LogFieldNameTriggerId, triggerID).
 				Errorf("Failed to handle trigger %s: %s", triggerID, err.Error())
 			<-time.After(sleepAfterCheckingError)
 		}
