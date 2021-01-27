@@ -55,7 +55,7 @@ func (index *Index) actualizeIndex() error {
 	for i, triggerID := range triggerToReindexIDs {
 		trigger := triggersToReindex[i]
 
-		triggerLog := log.Clone().String(moira.LogFieldNameTriggerId, triggerID)
+		triggerLog := log.Clone().String(moira.LogFieldNameTriggerID, triggerID)
 		if trigger == nil {
 			triggersToDelete = append(triggersToDelete, triggerID)
 			triggerLog.Debugf("Trigger %s is nil, remove from index", triggerID)

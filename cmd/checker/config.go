@@ -15,7 +15,7 @@ type config struct {
 }
 
 type triggerLogConfig struct {
-	Id    string `yaml:"id"`
+	ID    string `yaml:"id"`
 	Level string `yaml:"level"`
 }
 
@@ -44,7 +44,7 @@ type checkerConfig struct {
 func (config *checkerConfig) getSettings() *checker.Config {
 	logTriggersToLevel := make(map[string]string)
 	for _, v := range config.SetLogLevel.TriggersToLevel {
-		logTriggersToLevel[v.Id] = v.Level
+		logTriggersToLevel[v.ID] = v.Level
 	}
 
 	return &checker.Config{
