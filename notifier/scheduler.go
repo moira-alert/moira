@@ -63,10 +63,12 @@ func (scheduler *StandardScheduler) ScheduleNotification(now time.Time, event mo
 		Timestamp: next.Unix(),
 		Plotting:  plotting,
 	}
-	scheduler.logger.Debugf(
-		"Scheduled notification for contact %s:%s trigger %s at %s (%d)",
-		contact.Type, contact.Value, trigger.Name,
-		next.Format("2006/01/02 15:04:05"), next.Unix())
+	scheduler.logger.Clone().
+		String(moira.LogFieldNameContactID, contact.ID).
+		String(moira.LogFieldNameTriggerID, trigger.ID).
+		Debugf("Scheduled notification for contact %s:%s trigger %s at %s (%d)",
+			contact.Type, contact.Value, trigger.Name,
+			next.Format("2006/01/02 15:04:05"), next.Unix())
 
 	return notification
 }
@@ -92,13 +94,15 @@ func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *
 	subscription, err := scheduler.database.GetSubscription(moira.UseString(event.SubscriptionID))
 	if err != nil {
 		scheduler.metrics.SubsMalformed.Mark(1)
-		scheduler.logger.Debugf("Failed get subscription by id: %s. %s", moira.UseString(event.SubscriptionID), err.Error())
+		getLogWithEventContext(&scheduler.logger, event).
+			Debugf("Failed get subscription by id: %s. %s", moira.UseString(event.SubscriptionID), err.Error())
 		return next, alarmFatigue
 	}
 
 	if subscription.ThrottlingEnabled {
 		if next.After(now) {
-			scheduler.logger.Debugf("Using existing throttling for trigger %s: %s", event.TriggerID, next)
+			getLogWithEventContext(&scheduler.logger, event).
+				Debugf("Using existing throttling for trigger %s: %s", event.TriggerID, next)
 		} else {
 			for _, level := range throttlingLevels {
 				from := now.Add(-level.duration)
@@ -108,10 +112,12 @@ func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *
 				count := scheduler.database.GetNotificationEventCount(event.TriggerID, from.Unix())
 				if count >= level.count {
 					next = now.Add(level.delay)
-					scheduler.logger.Debugf("Trigger %s switched %d times in last %s, delaying next notification for %s",
-						event.TriggerID, count, level.duration, level.delay)
+					getLogWithEventContext(&scheduler.logger, event).
+						Debugf("Trigger %s switched %d times in last %s, delaying next notification for %s",
+							event.TriggerID, count, level.duration, level.delay)
 					if err = scheduler.database.SetTriggerThrottling(event.TriggerID, next); err != nil {
-						scheduler.logger.Errorf("Failed to set trigger throttling timestamp: %s", err)
+						getLogWithEventContext(&scheduler.logger, event).
+							Errorf("Failed to set trigger throttling timestamp: %s", err)
 					}
 					alarmFatigue = true
 					break
@@ -125,7 +131,8 @@ func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *
 	}
 	next, err = calculateNextDelivery(&subscription.Schedule, next)
 	if err != nil {
-		scheduler.logger.Errorf("Failed to apply schedule for subscriptionID: %s. %s.", moira.UseString(event.SubscriptionID), err)
+		getLogWithEventContext(&scheduler.logger, event).
+			Errorf("Failed to apply schedule for subscriptionID: %s. %s.", moira.UseString(event.SubscriptionID), err)
 	}
 	return next, alarmFatigue
 }
@@ -147,7 +154,7 @@ func calculateNextDelivery(schedule *moira.ScheduleData, nextTime time.Time) (ti
 	tzOffset := time.Duration(schedule.TimezoneOffset) * time.Minute
 	localNextTime := nextTime.Add(-tzOffset).Truncate(time.Minute)
 	localNextTimeDay := localNextTime.Truncate(24 * time.Hour) //nolint
-	localNextWeekday := int(localNextTimeDay.Weekday()+6) % 7 //nolint
+	localNextWeekday := int(localNextTimeDay.Weekday()+6) % 7  //nolint
 
 	if schedule.Days[localNextWeekday].Enabled &&
 		(localNextTime.Equal(localNextTimeDay.Add(beginOffset)) || localNextTime.After(localNextTimeDay.Add(beginOffset))) &&
@@ -158,7 +165,7 @@ func calculateNextDelivery(schedule *moira.ScheduleData, nextTime time.Time) (ti
 	// find first allowed day
 	for i := 0; i < 8; i++ {
 		nextLocalDayBegin := localNextTimeDay.Add(time.Duration(i*24) * time.Hour) //nolint
-		nextLocalWeekDay := int(nextLocalDayBegin.Weekday()+6) % 7 //nolint
+		nextLocalWeekDay := int(nextLocalDayBegin.Weekday()+6) % 7                 //nolint
 		if localNextTime.After(nextLocalDayBegin.Add(beginOffset)) {
 			continue
 		}

@@ -71,7 +71,8 @@ func (notifier *StandardNotifier) buildNotificationPackagePlots(pkg Notification
 		return nil, err
 	}
 	metricsData = getMetricDataToShow(metricsData, metricsToShow)
-	notifier.logger.Debugf("Build plot for trigger: %s from MetricsData: %v", trigger.ID, metricsData)
+	getLogWithPackageContext(&notifier.logger, &pkg).
+		Debugf("Build plot for trigger: %s from MetricsData: %v", trigger.ID, metricsData)
 	result, err := buildTriggerPlots(trigger, metricsData, plotTemplate)
 	return result, err
 }
@@ -85,7 +86,9 @@ func resolveMetricsWindow(logger moira.Logger, trigger moira.TriggerData, pkg No
 	// try to resolve package window, force default realtime window on fail for both local and remote triggers
 	from, to, err := pkg.GetWindow()
 	if err != nil {
-		logger.Warningf("Failed to get trigger %s package window: %s, using default %s window", trigger.ID, err.Error(), defaultTimeRange.String())
+		getLogWithPackageContext(&logger, &pkg).
+			Warningf("Failed to get trigger %s package window: %s, using default %s window",
+				trigger.ID, err.Error(), defaultTimeRange.String())
 		return defaultFrom, defaultTo
 	}
 	// round to nearest retention to correctly fetch data from redis
