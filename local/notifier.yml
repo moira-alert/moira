@@ -38,3 +38,4 @@ notifier:
 log:
   log_file: stdout
   log_level: info
+  log_pretty_format: true

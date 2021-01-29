@@ -149,6 +149,16 @@ type Logger interface {
 	Fatalf(format string, args ...interface{})
 	Warning(args ...interface{})
 	Warningf(format string, args ...interface{})
+
+	// Structured logging methods, use to add context fields
+	String(key, value string) Logger
+	Int(key string, value int) Logger
+	Fields(fields map[string]interface{}) Logger
+
+	// Get child logger with the minimum accepted level
+	Level(string) (Logger, error)
+	// Returns new copy of log, when need to avoid context duplication
+	Clone() Logger
 }
 
 // Sender interface for implementing specified contact type sender

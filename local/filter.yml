@@ -22,3 +22,4 @@ filter:
 log:
   log_file: stdout
   log_level: debug
+  log_pretty_format: true

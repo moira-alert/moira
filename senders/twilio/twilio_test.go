@@ -6,14 +6,14 @@ import (
 	"time"
 
 	twilio "github.com/carlosdp/twiliogo"
-	"github.com/moira-alert/moira/logging/go-logging"
+	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestInit(t *testing.T) {
 	Convey("Tests init twilio sender", t, func() {
 		sender := Sender{}
-		logger, _ := logging.ConfigureLog("stdout", "debug", "test")
+		logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 		location, _ := time.LoadLocation("UTC")
 		settings := map[string]string{}
 		Convey("no api asid", func() {

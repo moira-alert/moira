@@ -18,7 +18,7 @@ import (
 	"github.com/moira-alert/moira/checker/worker"
 	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/database/redis"
-	"github.com/moira-alert/moira/logging/go-logging"
+	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	"github.com/moira-alert/moira/metrics"
 )
 
@@ -61,7 +61,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	logger, err = logging.ConfigureLog(config.Logger.LogFile, config.Logger.LogLevel, serviceName)
+	logger, err = logging.ConfigureLog(config.Logger.LogFile, config.Logger.LogLevel, serviceName, config.Logger.LogPrettyFormat)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Can not configure log: %s\n", err.Error())
 		os.Exit(1)
@@ -97,7 +97,7 @@ func main() {
 		SourceProvider:    metricSourceProvider,
 		Metrics:           checkerMetrics,
 		TriggerCache:      cache.New(checkerSettings.CheckInterval, time.Minute*60), //nolint
-		LazyTriggersCache: cache.New(time.Minute*10, time.Minute*60), //nolint
+		LazyTriggersCache: cache.New(time.Minute*10, time.Minute*60),                //nolint
 		PatternCache:      cache.New(checkerSettings.CheckInterval, time.Minute*60), //nolint
 	}
 	err = checkerWorker.Start()

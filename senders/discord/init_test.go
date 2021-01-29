@@ -7,7 +7,7 @@ import (
 
 	"github.com/moira-alert/moira"
 
-	"github.com/moira-alert/moira/logging/go-logging"
+	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -26,7 +26,7 @@ func (db *MockDB) NewLock(name string, ttl time.Duration) moira.Lock {
 }
 
 func TestInit(t *testing.T) {
-	logger, _ := logging.ConfigureLog("stdout", "debug", "test")
+	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 	location, _ := time.LoadLocation("UTC")
 	Convey("Init tests", t, func() {
 		sender := Sender{DataBase: &MockDB{}}

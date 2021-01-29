@@ -5,10 +5,11 @@ import (
 )
 
 type config struct {
-	LogFile  string          `yaml:"log_file"`
-	LogLevel string          `yaml:"log_level"`
-	Redis    cmd.RedisConfig `yaml:"redis"`
-	Cleanup  cleanupConfig   `yaml:"cleanup"`
+	LogFile         string          `yaml:"log_file"`
+	LogLevel        string          `yaml:"log_level"`
+	LogPrettyFormat bool            `yaml:"log_pretty_format"`
+	Redis           cmd.RedisConfig `yaml:"redis"`
+	Cleanup         cleanupConfig   `yaml:"cleanup"`
 }
 
 type cleanupConfig struct {
@@ -19,8 +20,9 @@ type cleanupConfig struct {
 
 func getDefault() config {
 	return config{
-		LogFile:  "stdout",
-		LogLevel: "info",
+		LogFile:         "stdout",
+		LogLevel:        "info",
+		LogPrettyFormat: false,
 		Redis: cmd.RedisConfig{
 			Host:            "localhost",
 			Port:            "6379",

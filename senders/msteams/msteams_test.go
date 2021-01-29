@@ -5,13 +5,13 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/logging/go-logging"
+	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
 	"gopkg.in/h2non/gock.v1"
 )
 
 func TestInit(t *testing.T) {
-	logger, _ := logging.ConfigureLog("stdout", "debug", "test")
+	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 	Convey("Init tests", t, func() {
 		sender := Sender{}
 		senderSettings := map[string]string{
@@ -32,7 +32,7 @@ func TestInit(t *testing.T) {
 
 func TestMSTeamsHttpResponse(t *testing.T) {
 	sender := Sender{}
-	logger, _ := logging.ConfigureLog("stdout", "info", "test")
+	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
 	location, _ := time.LoadLocation("UTC")
 	_ = sender.Init(map[string]string{
 		"max_events": "-1",

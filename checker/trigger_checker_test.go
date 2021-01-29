@@ -7,11 +7,11 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
+	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
 	"github.com/moira-alert/moira/metrics"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
-	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -77,21 +77,21 @@ func TestInitTriggerChecker(t *testing.T) {
 				Timestamp:      1502694427,
 				State:          moira.StateOK,
 				Suppressed:     false,
-				Values:          map[string]float64{"t1": value}, //nolint
+				Values:         map[string]float64{"t1": value}, //nolint
 				EventTimestamp: 1501680428,
 			},
 			"2": {
 				Timestamp:      1502694427,
 				State:          moira.StateOK,
 				Suppressed:     false,
-				Values:          map[string]float64{"t1": value}, //nolint
+				Values:         map[string]float64{"t1": value}, //nolint
 				EventTimestamp: 1501679827,
 			},
 			"3": {
 				Timestamp:      1502694427,
 				State:          moira.StateOK,
 				Suppressed:     false,
-				Values:          map[string]float64{"t1": value}, //nolint
+				Values:         map[string]float64{"t1": value}, //nolint
 				EventTimestamp: 1501679887,
 			},
 		},

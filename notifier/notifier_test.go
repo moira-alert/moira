@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
-	"github.com/op/go-logging"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"github.com/moira-alert/moira"

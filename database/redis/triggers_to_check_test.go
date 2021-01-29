@@ -6,11 +6,11 @@ import (
 	"github.com/gofrs/uuid"
 	. "github.com/smartystreets/goconvey/convey"
 
-	"github.com/moira-alert/moira/logging/go-logging"
+	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 )
 
 func TestTriggerToCheck(t *testing.T) {
-	logger, _ := logging.ConfigureLog("stdout", "info", "test")
+	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
 	dataBase := newTestDatabase(logger, config)
 	dataBase.flush()
 	defer dataBase.flush()
@@ -103,7 +103,7 @@ func TestTriggerToCheck(t *testing.T) {
 }
 
 func TestRemoteTriggerToCheck(t *testing.T) {
-	logger, _ := logging.ConfigureLog("stdout", "info", "test")
+	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
 	dataBase := newTestDatabase(logger, config)
 	dataBase.flush()
 	defer dataBase.flush()
@@ -195,7 +195,7 @@ func TestRemoteTriggerToCheck(t *testing.T) {
 }
 
 func TestRemoteTriggerToCheckConnection(t *testing.T) {
-	logger, _ := logging.ConfigureLog("stdout", "info", "test")
+	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
 	dataBase := newTestDatabase(logger, emptyConfig)
 	dataBase.flush()
 	defer dataBase.flush()
@@ -210,7 +210,7 @@ func TestRemoteTriggerToCheckConnection(t *testing.T) {
 }
 
 func TestTriggerToCheckConnection(t *testing.T) {
-	logger, _ := logging.ConfigureLog("stdout", "info", "test")
+	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
 	dataBase := newTestDatabase(logger, emptyConfig)
 	dataBase.flush()
 	defer dataBase.flush()

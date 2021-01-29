@@ -12,9 +12,9 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira/filter"
+	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	"github.com/moira-alert/moira/metrics"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
-	"github.com/op/go-logging"
 )
 
 func BenchmarkProcessIncomingMetric(b *testing.B) {

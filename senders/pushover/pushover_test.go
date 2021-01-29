@@ -8,12 +8,12 @@ import (
 
 	"github.com/gregdel/pushover"
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/logging/go-logging"
+	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestSender_Init(t *testing.T) {
-	logger, _ := logging.ConfigureLog("stdout", "debug", "test")
+	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 	Convey("Empty map", t, func() {
 		sender := Sender{}
 		err := sender.Init(map[string]string{}, logger, nil, "")
@@ -146,7 +146,7 @@ func TestBuildTitle(t *testing.T) {
 
 func TestMakePushoverMessage(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
-	logger, _ := logging.ConfigureLog("stdout", "debug", "test")
+	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 
 	sender := Sender{
 		frontURI: "https://my-moira.com",
