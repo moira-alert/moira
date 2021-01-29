@@ -1,10 +1,12 @@
 package logging
 
 import (
-	"github.com/golang/mock/gomock"
-	mocks "github.com/moira-alert/moira/mock/moira-alert"
-	. "github.com/smartystreets/goconvey/convey"
 	"testing"
+
+	mocks "github.com/moira-alert/moira/mock/moira-alert"
+
+	"github.com/golang/mock/gomock"
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestDynamicLogger(t *testing.T) {
