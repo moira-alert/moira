@@ -35,6 +35,15 @@ notifier:
   front_uri: http://localhost
   timezone: UTC
   date_time_format: "15:04 02.01.2006"
+  #  todo: replace to doc
+  set_log_level:
+    level: "debug"
+    contacts: [
+        id: "1234",
+        id: "666"
+    ]
+    subscriptions:
+      - id: "999"
 log:
   log_file: stdout
   log_level: info

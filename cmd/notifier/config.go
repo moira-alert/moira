@@ -21,6 +21,16 @@ type config struct {
 	ImageStores cmd.ImageStoreConfig `yaml:"image_store"`
 }
 
+type entityLogConfig struct {
+	ID string `yaml:"id"`
+}
+
+type setLogLevelConfig struct {
+	Level         string            `yaml:"level"`
+	Contacts      []entityLogConfig `yaml:"contacts"`
+	Subscriptions []entityLogConfig `yaml:"subscriptions"`
+}
+
 type notifierConfig struct {
 	// Soft timeout to start retrying to send notification after single failed attempt
 	SenderTimeout string `yaml:"sender_timeout"`
@@ -38,6 +48,8 @@ type notifierConfig struct {
 	DateTimeFormat string `yaml:"date_time_format"`
 	// Amount of messages notifier reads from Redis per iteration. Use notifier.NotificationsLimitUnlimited for unlimited.
 	ReadBatchSize int `yaml:"read_batch_size"`
+	// Specify log level by entities
+	SetLogLevel setLogLevelConfig `yaml:"set_log_level"`
 }
 
 type selfStateConfig struct {
@@ -133,16 +145,32 @@ func (config *notifierConfig) getSettings(logger moira.Logger) notifier.Config {
 	}
 	logger.Infof("Current read_batch_size is %d", readBatchSize)
 
+	logFields := make(map[string]interface{})
+	contacts := []string{}
+	for _, v := range config.SetLogLevel.Contacts {
+		contacts = append(contacts, v.ID)
+	}
+	logFields[moira.LogFieldNameContactID] = contacts
+
+	subscriptions := []string{}
+	for _, v := range config.SetLogLevel.Subscriptions {
+		subscriptions = append(subscriptions, v.ID)
+	}
+	logFields[moira.LogFieldNameSubscriptionID] = subscriptions
+	logger.Infof("Found dynamic log rules in config for %d contacts and %d subscriptions", len(contacts), len(subscriptions))
+
 	return notifier.Config{
-		SelfStateEnabled:  config.SelfState.Enabled,
-		SelfStateContacts: config.SelfState.Contacts,
-		SendingTimeout:    to.Duration(config.SenderTimeout),
-		ResendingTimeout:  to.Duration(config.ResendingTimeout),
-		Senders:           config.Senders,
-		FrontURL:          config.FrontURI,
-		Location:          location,
-		DateTimeFormat:    format,
-		ReadBatchSize:     readBatchSize,
+		SelfStateEnabled:    config.SelfState.Enabled,
+		SelfStateContacts:   config.SelfState.Contacts,
+		SendingTimeout:      to.Duration(config.SenderTimeout),
+		ResendingTimeout:    to.Duration(config.ResendingTimeout),
+		Senders:             config.Senders,
+		FrontURL:            config.FrontURI,
+		Location:            location,
+		DateTimeFormat:      format,
+		ReadBatchSize:       readBatchSize,
+		SetLogLevel:         config.SetLogLevel.Level,
+		SetLogLevelByFields: logFields,
 	}
 }
 
