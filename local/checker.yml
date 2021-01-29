@@ -24,13 +24,6 @@ checker:
   nodata_check_interval: 60s
   check_interval: 10s
   stop_checking_interval: 30s
-#  todo: replace to doc
-  set_log_level:
-    triggers:
-      - id: "1234"
-        level: "debug"
-      - id: "666"
-        level: "fatal"
 log:
   log_file: stdout
   log_level: debug
