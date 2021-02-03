@@ -152,6 +152,8 @@ func TestDisabledNotification(t *testing.T) {
 		dataBase.EXPECT().GetTrigger(event.TriggerID).Return(trigger, nil)
 		dataBase.EXPECT().GetTagsSubscriptions(triggerData.Tags).Times(1).Return([]*moira.SubscriptionData{&disabledSubscription}, nil)
 
+		logger.EXPECT().Clone().Return(logger).AnyTimes()
+		logger.EXPECT().String(gomock.Any(), gomock.Any()).Return(logger).AnyTimes()
 		logger.EXPECT().Debugf("Processing trigger id %s for metric %s == %f, %s -> %s", event.TriggerID, event.Metric, event.GetMetricsValues(), event.OldState, event.State)
 		logger.EXPECT().Debugf("Getting subscriptions for tags %v", triggerData.Tags)
 		logger.EXPECT().Debugf("Subscription %s is disabled", disabledSubscription.ID)
@@ -185,6 +187,8 @@ func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
 		dataBase.EXPECT().GetTrigger(event.TriggerID).Return(trigger, nil)
 		dataBase.EXPECT().GetTagsSubscriptions(triggerData.Tags).Times(1).Return([]*moira.SubscriptionData{&subscriptionToIgnoreWarnings}, nil)
 
+		logger.EXPECT().Clone().Return(logger).AnyTimes()
+		logger.EXPECT().String(gomock.Any(), gomock.Any()).Return(logger).AnyTimes()
 		logger.EXPECT().Debugf("Processing trigger id %s for metric %s == %f, %s -> %s", event.TriggerID, event.Metric, event.GetMetricsValues(), event.OldState, event.State)
 		logger.EXPECT().Debugf("Getting subscriptions for tags %v", triggerData.Tags)
 		logger.EXPECT().Debugf("Subscription %s is managed to ignore %s -> %s transitions", subscriptionToIgnoreWarnings.ID, event.OldState, event.State)
@@ -343,6 +347,8 @@ func TestFailReadContact(t *testing.T) {
 		getContactError := fmt.Errorf("Can not get contact")
 		dataBase.EXPECT().GetContact(contact.ID).Times(1).Return(moira.ContactData{}, getContactError)
 
+		logger.EXPECT().Clone().Return(logger).AnyTimes()
+		logger.EXPECT().String(gomock.Any(), gomock.Any()).Return(logger).AnyTimes()
 		logger.EXPECT().Debugf("Processing trigger id %s for metric %s == %f, %s -> %s", event.TriggerID, event.Metric, event.GetMetricsValues(), event.OldState, event.State)
 		logger.EXPECT().Debugf("Getting subscriptions for tags %v", triggerData.Tags)
 		logger.EXPECT().Warningf("Failed to get contact: %s, skip handling it, error: %v", contact.ID, getContactError)
@@ -358,6 +364,7 @@ func TestEmptySubscriptions(t *testing.T) {
 		defer mockCtrl.Finish()
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger := mock_moira_alert.NewMockLogger(mockCtrl)
+
 		worker := FetchEventsWorker{
 			Database:  dataBase,
 			Logger:    logger,
@@ -375,6 +382,8 @@ func TestEmptySubscriptions(t *testing.T) {
 		dataBase.EXPECT().GetTrigger(event.TriggerID).Return(trigger, nil)
 		dataBase.EXPECT().GetTagsSubscriptions(triggerData.Tags).Times(1).Return([]*moira.SubscriptionData{{ThrottlingEnabled: true}}, nil)
 
+		logger.EXPECT().Clone().Return(logger).AnyTimes()
+		logger.EXPECT().String(gomock.Any(), gomock.Any()).Return(logger).AnyTimes()
 		logger.EXPECT().Debugf("Processing trigger id %s for metric %s == %f, %s -> %s", event.TriggerID, event.Metric, event.GetMetricsValues(), event.OldState, event.State)
 		logger.EXPECT().Debugf("Getting subscriptions for tags %v", triggerData.Tags)
 		logger.EXPECT().Debugf("Subscription %s is disabled", "")
@@ -404,6 +413,8 @@ func TestEmptySubscriptions(t *testing.T) {
 		dataBase.EXPECT().GetTrigger(event.TriggerID).Return(trigger, nil)
 		dataBase.EXPECT().GetTagsSubscriptions(triggerData.Tags).Times(1).Return([]*moira.SubscriptionData{nil}, nil)
 
+		logger.EXPECT().Clone().Return(logger).AnyTimes()
+		logger.EXPECT().String(gomock.Any(), gomock.Any()).Return(logger).AnyTimes()
 		logger.EXPECT().Debugf("Processing trigger id %s for metric %s == %f, %s -> %s", event.TriggerID, event.Metric, event.GetMetricsValues(), event.OldState, event.State)
 		logger.EXPECT().Debugf("Getting subscriptions for tags %v", triggerData.Tags)
 		logger.EXPECT().Debugf("Subscription is nil")

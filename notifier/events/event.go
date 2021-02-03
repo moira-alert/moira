@@ -79,7 +79,7 @@ func (worker *FetchEventsWorker) processEvent(event moira.NotificationEvent) err
 		log := worker.Logger.Clone().
 			String(moira.LogFieldNameTriggerID, event.TriggerID).
 			String(moira.LogFieldNameContactID, event.ContactID).
-			String(moira.LogFieldNameSubscriptionID, *event.SubscriptionID)
+			String(moira.LogFieldNameSubscriptionID, moira.UseString(event.SubscriptionID))
 		log.Debugf("Processing trigger id %s for metric %s == %f, %s -> %s",
 			event.TriggerID, event.Metric, event.GetMetricsValues(), event.OldState, event.State)
 
