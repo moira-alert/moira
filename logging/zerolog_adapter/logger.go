@@ -72,43 +72,83 @@ func getLogWriter(logFileName string) (io.Writer, error) {
 }
 
 func (l Logger) Debug(args ...interface{}) {
-	l.Logger.Debug().Timestamp().Msg(fmt.Sprint(args...))
+	event := l.Logger.Debug()
+	if event == nil {
+		return
+	}
+	event.Timestamp().Msg(fmt.Sprint(args...))
 }
 
 func (l Logger) Debugf(format string, args ...interface{}) {
-	l.Logger.Debug().Timestamp().Msgf(format, args...)
+	event := l.Logger.Debug()
+	if event == nil {
+		return
+	}
+	event.Timestamp().Msgf(format, args...)
 }
 
 func (l Logger) Info(args ...interface{}) {
-	l.Logger.Info().Timestamp().Msg(fmt.Sprint(args...))
+	event := l.Logger.Info()
+	if event == nil {
+		return
+	}
+	event.Timestamp().Msg(fmt.Sprint(args...))
 }
 
 func (l Logger) Infof(format string, args ...interface{}) {
-	l.Logger.Info().Timestamp().Msgf(format, args...)
+	event := l.Logger.Info()
+	if event == nil {
+		return
+	}
+	event.Timestamp().Msgf(format, args...)
 }
 
 func (l Logger) Error(args ...interface{}) {
-	l.Logger.Error().Timestamp().Msgf(fmt.Sprint(args...))
+	event := l.Logger.Error()
+	if event == nil {
+		return
+	}
+	event.Timestamp().Msgf(fmt.Sprint(args...))
 }
 
 func (l Logger) Errorf(format string, args ...interface{}) {
-	l.Logger.Error().Timestamp().Msgf(format, args...)
+	event := l.Logger.Error()
+	if event == nil {
+		return
+	}
+	event.Timestamp().Msgf(format, args...)
 }
 
 func (l Logger) Fatal(args ...interface{}) {
-	l.Logger.Fatal().Timestamp().Msg(fmt.Sprint(args...))
+	event := l.Logger.Fatal()
+	if event == nil {
+		return
+	}
+	event.Timestamp().Msg(fmt.Sprint(args...))
 }
 
 func (l Logger) Fatalf(format string, args ...interface{}) {
-	l.Logger.Fatal().Timestamp().Msgf(format, args...)
+	event := l.Logger.Fatal()
+	if event == nil {
+		return
+	}
+	event.Timestamp().Msgf(format, args...)
 }
 
 func (l Logger) Warning(args ...interface{}) {
-	l.Logger.Warn().Timestamp().Msg(fmt.Sprint(args...))
+	event := l.Logger.Warn()
+	if event == nil {
+		return
+	}
+	event.Timestamp().Msg(fmt.Sprint(args...))
 }
 
 func (l Logger) Warningf(format string, args ...interface{}) {
-	l.Logger.Warn().Timestamp().Msgf(format, args...)
+	event := l.Logger.Warn()
+	if event == nil {
+		return
+	}
+	event.Timestamp().Msgf(format, args...)
 }
 
 func (l *Logger) String(key, value string) moira.Logger {
