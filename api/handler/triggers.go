@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -102,17 +103,19 @@ func getTriggerFromRequest(request *http.Request) (*dto.Trigger, *api.ErrorRespo
 func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 	ttl := middleware.GetLocalMetricTTL(request)
 	trigger := &dto.Trigger{}
-	response := dto.TriggerCheckResponse{}
 
-	if err := render.Bind(request, trigger); err != nil {
-		switch err.(type) {
-		case expression.ErrInvalidExpression, local.ErrParseExpr, local.ErrEvalExpr, local.ErrUnknownFunction:
-		default:
-			render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
-			return
-		}
+	query := request.URL.Query()
+	rawTargets := query.Get("targets")
+	if err := json.Unmarshal([]byte(rawTargets), &trigger.Targets); err != nil {
+		render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
+		return
 	}
 
+	if isRemote := strings.ToLower(query.Get("remote")); isRemote == "true" {
+		trigger.IsRemote = true
+	}
+
+	response := dto.TriggerCheckResponse{}
 	if len(trigger.Targets) > 0 {
 		response.Targets = dto.TargetVerification(trigger.Targets, ttl, trigger.IsRemote)
 	}
