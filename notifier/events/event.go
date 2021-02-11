@@ -157,8 +157,9 @@ func (worker *FetchEventsWorker) getNotificationSubscriptions(event moira.Notifi
 		}
 		return &sub, nil
 	} else if event.ContactID != "" {
-		log := worker.Logger.Clone().String(moira.LogFieldNameContactID, event.ContactID)
-		log.Debugf("Getting contactID %s for test message", event.ContactID)
+		worker.Logger.Clone().
+			String(moira.LogFieldNameContactID, event.ContactID).
+			Debug("Getting contact for test message")
 		contact, err := worker.Database.GetContact(event.ContactID)
 		if err != nil {
 			return nil, fmt.Errorf("error while read contact %s: %s", event.ContactID, err.Error())
@@ -185,15 +186,17 @@ func (worker *FetchEventsWorker) isNotificationRequired(subscription *moira.Subs
 	}
 	if event.State != moira.StateTEST {
 		if !subscription.Enabled {
-			worker.Logger.Clone().String(moira.LogFieldNameSubscriptionID, subscription.ID).
+			worker.Logger.Clone().
+				String(moira.LogFieldNameSubscriptionID, subscription.ID).
 				String(moira.LogFieldNameTriggerID, trigger.ID).
-				Debugf("Subscription %s is disabled", subscription.ID)
+				Debugf("Subscription is disabled")
 			return false
 		}
 		if subscription.MustIgnore(&event) {
-			worker.Logger.Clone().String(moira.LogFieldNameSubscriptionID, subscription.ID).
+			worker.Logger.Clone().
+				String(moira.LogFieldNameSubscriptionID, subscription.ID).
 				String(moira.LogFieldNameTriggerID, trigger.ID).
-				Debugf("Subscription %s is managed to ignore %s -> %s transitions", subscription.ID, event.OldState, event.State)
+				Debugf("Subscription is managed to ignore %s -> %s transitions", event.OldState, event.State)
 			return false
 		}
 		if !moira.Subset(subscription.Tags, trigger.Tags) {

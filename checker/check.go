@@ -244,11 +244,11 @@ func (triggerChecker *TriggerChecker) check(metrics map[string]map[string]metric
 	}
 	for metricName, targets := range metrics {
 		logger := triggerChecker.logger.Clone().String(moira.LogFieldNameMetricName, metricName)
-		logger.Debugf("Checking metrics %s", metricName)
+		logger.Debug("Checking metrics")
 		targets = conversion.Merge(targets, aloneMetrics)
 		metricState, needToDeleteMetric, err := triggerChecker.checkTargets(metricName, targets)
 		if needToDeleteMetric {
-			logger.Infof("Remove metric: '%s'", metricName)
+			logger.Info("Remove metric")
 			checkData.RemoveMetricState(metricName)
 			err = triggerChecker.database.RemovePatternsMetrics(triggerChecker.trigger.Patterns)
 		} else {

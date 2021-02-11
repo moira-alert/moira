@@ -1,9 +1,12 @@
 package moira
 
 const (
+	LogFieldNameContactID      = "moira.contact.id"
+	LogFieldNameContactType    = "moira.contact.type"
+	LogFieldNameContactValue   = "moira.contact.value"
 	LogFieldNameContext        = "moira.context"
-	LogFieldNameTriggerID      = "moira.trigger_id"
-	LogFieldNameMetricName     = "moira.metric_name"
-	LogFieldNameContactID      = "moira.contact_id"
-	LogFieldNameSubscriptionID = "moira.subscription_id"
+	LogFieldNameMetricName     = "moira.metric.name"
+	LogFieldNameTriggerID      = "moira.trigger.id"
+	LogFieldNameTriggerName    = "moira.trigger.name"
+	LogFieldNameSubscriptionID = "moira.subscription.id"
 )

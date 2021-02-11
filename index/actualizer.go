@@ -58,10 +58,10 @@ func (index *Index) actualizeIndex() error {
 		triggerLog := log.Clone().String(moira.LogFieldNameTriggerID, triggerID)
 		if trigger == nil {
 			triggersToDelete = append(triggersToDelete, triggerID)
-			triggerLog.Debugf("Trigger %s is nil, remove from index", triggerID)
+			triggerLog.Debug("Trigger is nil, remove from index")
 		} else {
 			triggersToUpdate = append(triggersToUpdate, trigger)
-			triggerLog.Debugf("Trigger %s need to be reindexed...", triggerID)
+			triggerLog.Debug("Trigger need to be reindexed...")
 		}
 	}
 

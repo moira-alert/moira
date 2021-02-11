@@ -65,10 +65,11 @@ func (scheduler *StandardScheduler) ScheduleNotification(now time.Time, event mo
 	}
 	scheduler.logger.Clone().
 		String(moira.LogFieldNameContactID, contact.ID).
+		String(moira.LogFieldNameContactType, contact.Type).
+		String(moira.LogFieldNameContactValue, contact.Value).
 		String(moira.LogFieldNameTriggerID, trigger.ID).
-		Debugf("Scheduled notification for contact %s:%s trigger %s at %s (%d)",
-			contact.Type, contact.Value, trigger.Name,
-			next.Format("2006/01/02 15:04:05"), next.Unix())
+		String(moira.LogFieldNameTriggerName, trigger.Name).
+		Debugf("Scheduled notification at %s (%d)", next.Format("2006/01/02 15:04:05"), next.Unix())
 
 	return notification
 }
@@ -95,14 +96,14 @@ func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *
 	if err != nil {
 		scheduler.metrics.SubsMalformed.Mark(1)
 		getLogWithEventContext(&scheduler.logger, event).
-			Debugf("Failed get subscription by id: %s. %s", moira.UseString(event.SubscriptionID), err.Error())
+			Debugf("Failed get subscription: %s", err.Error())
 		return next, alarmFatigue
 	}
 
 	if subscription.ThrottlingEnabled {
 		if next.After(now) {
 			getLogWithEventContext(&scheduler.logger, event).
-				Debugf("Using existing throttling for trigger %s: %s", event.TriggerID, next)
+				Debugf("Using existing throttling, next at: %s", next)
 		} else {
 			for _, level := range throttlingLevels {
 				from := now.Add(-level.duration)
@@ -113,8 +114,8 @@ func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *
 				if count >= level.count {
 					next = now.Add(level.delay)
 					getLogWithEventContext(&scheduler.logger, event).
-						Debugf("Trigger %s switched %d times in last %s, delaying next notification for %s",
-							event.TriggerID, count, level.duration, level.delay)
+						Debugf("Trigger switched %d times in last %s, delaying next notification for %s",
+							count, level.duration, level.delay)
 					if err = scheduler.database.SetTriggerThrottling(event.TriggerID, next); err != nil {
 						getLogWithEventContext(&scheduler.logger, event).
 							Errorf("Failed to set trigger throttling timestamp: %s", err)
@@ -132,7 +133,7 @@ func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *
 	next, err = calculateNextDelivery(&subscription.Schedule, next)
 	if err != nil {
 		getLogWithEventContext(&scheduler.logger, event).
-			Errorf("Failed to apply schedule for subscriptionID: %s. %s.", moira.UseString(event.SubscriptionID), err)
+			Errorf("Failed to apply schedule: %s.", err)
 	}
 	return next, alarmFatigue
 }
