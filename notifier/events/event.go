@@ -70,18 +70,16 @@ func (worker *FetchEventsWorker) Stop() error {
 }
 
 func (worker *FetchEventsWorker) processEvent(event moira.NotificationEvent) error {
+	log := worker.Logger.Clone().
+		String(moira.LogFieldNameTriggerID, event.TriggerID)
+
 	var (
 		subscriptions []*moira.SubscriptionData
 		triggerData   moira.TriggerData
 	)
-
 	if event.State != moira.StateTEST {
-		log := worker.Logger.Clone().
-			String(moira.LogFieldNameTriggerID, event.TriggerID).
-			String(moira.LogFieldNameContactID, event.ContactID).
-			String(moira.LogFieldNameSubscriptionID, moira.UseString(event.SubscriptionID))
-		log.Debugf("Processing trigger id %s for metric %s == %f, %s -> %s",
-			event.TriggerID, event.Metric, event.GetMetricsValues(), event.OldState, event.State)
+		log.Debugf("Processing trigger for metric %s == %f, %s -> %s",
+			event.Metric, event.GetMetricsValues(), event.OldState, event.State)
 
 		trigger, err := worker.Database.GetTrigger(event.TriggerID)
 		if err != nil {
@@ -108,7 +106,7 @@ func (worker *FetchEventsWorker) processEvent(event moira.NotificationEvent) err
 			return err
 		}
 	} else {
-		sub, err := worker.getNotificationSubscriptions(event)
+		sub, err := worker.getNotificationSubscriptions(event, log)
 		if err != nil {
 			return err
 		}
@@ -118,19 +116,20 @@ func (worker *FetchEventsWorker) processEvent(event moira.NotificationEvent) err
 	duplications := make(map[string]bool)
 
 	for _, subscription := range subscriptions {
-		if worker.isNotificationRequired(subscription, triggerData, event) {
+		subLogger := log.Clone().
+			String(moira.LogFieldNameSubscriptionID, subscription.ID)
+		if worker.isNotificationRequired(subscription, triggerData, event, subLogger) {
 			for _, contactID := range subscription.Contacts {
-				contactLogger := worker.Logger.
-					String(moira.LogFieldNameContactID, contactID).
-					String(moira.LogFieldNameSubscriptionID, subscription.ID)
+				contactLogger := subLogger.Clone().
+					String(moira.LogFieldNameContactID, contactID)
 				contact, err := worker.Database.GetContact(contactID)
 				if err != nil {
-					contactLogger.Warningf("Failed to get contact: %s, skip handling it, error: %v", contactID, err)
+					contactLogger.Warningf("Failed to get contact, skip handling it, error: %v", err)
 					continue
 				}
 				event.SubscriptionID = &subscription.ID
 				notification := worker.Scheduler.ScheduleNotification(time.Now(), event, triggerData,
-					contact, subscription.Plotting, false, 0)
+					contact, subscription.Plotting, false, 0, contactLogger)
 				key := notification.GetKey()
 				if _, exist := duplications[key]; !exist {
 					if err := worker.Database.AddNotification(notification); err != nil {
@@ -146,10 +145,11 @@ func (worker *FetchEventsWorker) processEvent(event moira.NotificationEvent) err
 	return nil
 }
 
-func (worker *FetchEventsWorker) getNotificationSubscriptions(event moira.NotificationEvent) (*moira.SubscriptionData, error) {
+func (worker *FetchEventsWorker) getNotificationSubscriptions(event moira.NotificationEvent, logger moira.Logger) (*moira.SubscriptionData, error) {
 	if event.SubscriptionID != nil {
-		log := worker.Logger.Clone().String(moira.LogFieldNameSubscriptionID, *event.SubscriptionID)
-		log.Debugf("Getting subscriptionID %s for test message", *event.SubscriptionID)
+		logger.Clone().
+			String(moira.LogFieldNameSubscriptionID, moira.UseString(event.SubscriptionID)).
+			Debug("Getting subscription for test message")
 		sub, err := worker.Database.GetSubscription(*event.SubscriptionID)
 		if err != nil {
 			worker.Metrics.SubsMalformed.Mark(1)
@@ -157,7 +157,7 @@ func (worker *FetchEventsWorker) getNotificationSubscriptions(event moira.Notifi
 		}
 		return &sub, nil
 	} else if event.ContactID != "" {
-		worker.Logger.Clone().
+		logger.Clone().
 			String(moira.LogFieldNameContactID, event.ContactID).
 			Debug("Getting contact for test message")
 		contact, err := worker.Database.GetContact(event.ContactID)
@@ -179,24 +179,19 @@ func (worker *FetchEventsWorker) getNotificationSubscriptions(event moira.Notifi
 	return nil, nil
 }
 
-func (worker *FetchEventsWorker) isNotificationRequired(subscription *moira.SubscriptionData, trigger moira.TriggerData, event moira.NotificationEvent) bool {
+func (worker *FetchEventsWorker) isNotificationRequired(subscription *moira.SubscriptionData, trigger moira.TriggerData,
+	event moira.NotificationEvent, logger moira.Logger) bool {
 	if subscription == nil {
-		worker.Logger.Debugf("Subscription is nil")
+		logger.Debugf("Subscription is nil")
 		return false
 	}
 	if event.State != moira.StateTEST {
 		if !subscription.Enabled {
-			worker.Logger.Clone().
-				String(moira.LogFieldNameSubscriptionID, subscription.ID).
-				String(moira.LogFieldNameTriggerID, trigger.ID).
-				Debugf("Subscription is disabled")
+			logger.Debugf("Subscription is disabled")
 			return false
 		}
 		if subscription.MustIgnore(&event) {
-			worker.Logger.Clone().
-				String(moira.LogFieldNameSubscriptionID, subscription.ID).
-				String(moira.LogFieldNameTriggerID, trigger.ID).
-				Debugf("Subscription is managed to ignore %s -> %s transitions", event.OldState, event.State)
+			logger.Debugf("Subscription is managed to ignore %s -> %s transitions", event.OldState, event.State)
 			return false
 		}
 		if !moira.Subset(subscription.Tags, trigger.Tags) {

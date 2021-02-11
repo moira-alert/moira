@@ -11,12 +11,11 @@ import (
 // Scheduler implements event scheduling functionality
 type Scheduler interface {
 	ScheduleNotification(now time.Time, event moira.NotificationEvent, trigger moira.TriggerData,
-		contact moira.ContactData, plotting moira.PlottingData, throttledOld bool, sendfail int) *moira.ScheduledNotification
+		contact moira.ContactData, plotting moira.PlottingData, throttledOld bool, sendFail int, logger moira.Logger) *moira.ScheduledNotification
 }
 
 // StandardScheduler represents standard event scheduling
 type StandardScheduler struct {
-	logger   moira.Logger
 	database moira.Database
 	metrics  *metrics.NotifierMetrics
 }
@@ -31,19 +30,19 @@ type throttlingLevel struct {
 func NewScheduler(database moira.Database, logger moira.Logger, metrics *metrics.NotifierMetrics) *StandardScheduler {
 	return &StandardScheduler{
 		database: database,
-		logger:   logger,
 		metrics:  metrics,
 	}
 }
 
 // ScheduleNotification is realization of scheduling event, based on trigger and subscription time intervals and triggers settings
 func (scheduler *StandardScheduler) ScheduleNotification(now time.Time, event moira.NotificationEvent, trigger moira.TriggerData,
-	contact moira.ContactData, plotting moira.PlottingData, throttledOld bool, sendfail int) *moira.ScheduledNotification {
+	contact moira.ContactData, plotting moira.PlottingData, throttledOld bool, sendFail int, logger moira.Logger) *moira.ScheduledNotification {
+
 	var (
 		next      time.Time
 		throttled bool
 	)
-	if sendfail > 0 {
+	if sendFail > 0 {
 		next = now.Add(time.Minute)
 		throttled = throttledOld
 	} else {
@@ -51,7 +50,7 @@ func (scheduler *StandardScheduler) ScheduleNotification(now time.Time, event mo
 			next = now
 			throttled = false
 		} else {
-			next, throttled = scheduler.calculateNextDelivery(now, &event)
+			next, throttled = scheduler.calculateNextDelivery(now, &event, logger)
 		}
 	}
 	notification := &moira.ScheduledNotification{
@@ -59,22 +58,17 @@ func (scheduler *StandardScheduler) ScheduleNotification(now time.Time, event mo
 		Trigger:   trigger,
 		Contact:   contact,
 		Throttled: throttled,
-		SendFail:  sendfail,
+		SendFail:  sendFail,
 		Timestamp: next.Unix(),
 		Plotting:  plotting,
 	}
-	scheduler.logger.Clone().
-		String(moira.LogFieldNameContactID, contact.ID).
-		String(moira.LogFieldNameContactType, contact.Type).
-		String(moira.LogFieldNameContactValue, contact.Value).
-		String(moira.LogFieldNameTriggerID, trigger.ID).
-		String(moira.LogFieldNameTriggerName, trigger.Name).
-		Debugf("Scheduled notification at %s (%d)", next.Format("2006/01/02 15:04:05"), next.Unix())
 
+	logger.Debugf("Scheduled notification at %s (%d)", next.Format("2006/01/02 15:04:05"), next.Unix())
 	return notification
 }
 
-func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *moira.NotificationEvent) (time.Time, bool) {
+func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *moira.NotificationEvent,
+	logger moira.Logger) (time.Time, bool) {
 	// if trigger switches more than .count times in .length seconds, delay next delivery for .delay seconds
 	// processing stops after first condition matches
 	throttlingLevels := []throttlingLevel{
@@ -95,15 +89,13 @@ func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *
 	subscription, err := scheduler.database.GetSubscription(moira.UseString(event.SubscriptionID))
 	if err != nil {
 		scheduler.metrics.SubsMalformed.Mark(1)
-		getLogWithEventContext(&scheduler.logger, event).
-			Debugf("Failed get subscription: %s", err.Error())
+		logger.Debugf("Failed get subscription: %s", err.Error())
 		return next, alarmFatigue
 	}
 
 	if subscription.ThrottlingEnabled {
 		if next.After(now) {
-			getLogWithEventContext(&scheduler.logger, event).
-				Debugf("Using existing throttling, next at: %s", next)
+			logger.Debugf("Using existing throttling, next at: %s", next)
 		} else {
 			for _, level := range throttlingLevels {
 				from := now.Add(-level.duration)
@@ -113,12 +105,10 @@ func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *
 				count := scheduler.database.GetNotificationEventCount(event.TriggerID, from.Unix())
 				if count >= level.count {
 					next = now.Add(level.delay)
-					getLogWithEventContext(&scheduler.logger, event).
-						Debugf("Trigger switched %d times in last %s, delaying next notification for %s",
-							count, level.duration, level.delay)
+					logger.Debugf("Trigger switched %d times in last %s, delaying next notification for %s",
+						count, level.duration, level.delay)
 					if err = scheduler.database.SetTriggerThrottling(event.TriggerID, next); err != nil {
-						getLogWithEventContext(&scheduler.logger, event).
-							Errorf("Failed to set trigger throttling timestamp: %s", err)
+						logger.Errorf("Failed to set trigger throttling timestamp: %s", err)
 					}
 					alarmFatigue = true
 					break
@@ -132,8 +122,7 @@ func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *
 	}
 	next, err = calculateNextDelivery(&subscription.Schedule, next)
 	if err != nil {
-		getLogWithEventContext(&scheduler.logger, event).
-			Errorf("Failed to apply schedule: %s.", err)
+		logger.Errorf("Failed to apply schedule: %s.", err)
 	}
 	return next, alarmFatigue
 }

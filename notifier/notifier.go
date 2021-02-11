@@ -140,16 +140,17 @@ func (notifier *StandardNotifier) resend(pkg *NotificationPackage, reason string
 		metric.Mark(1)
 	}
 
-	log := getLogWithPackageContext(&notifier.logger, pkg)
-	log.Warningf("Can't send message after %d try: %s. Retry again after 1 min", pkg.FailCount, reason)
+	logger := getLogWithPackageContext(&notifier.logger, pkg)
+	logger.Warningf("Can't send message after %d try: %s. Retry again after 1 min", pkg.FailCount, reason)
 	if time.Duration(pkg.FailCount)*time.Minute > notifier.config.ResendingTimeout {
-		log.Error("Stop resending. Notification interval is timed out")
+		logger.Error("Stop resending. Notification interval is timed out")
 	} else {
 		for _, event := range pkg.Events {
+			eventLogger := logger.Clone().String(moira.LogFieldNameSubscriptionID, moira.UseString(event.SubscriptionID))
 			notification := notifier.scheduler.ScheduleNotification(time.Now(), event,
-				pkg.Trigger, pkg.Contact, pkg.Plotting, pkg.Throttled, pkg.FailCount+1)
+				pkg.Trigger, pkg.Contact, pkg.Plotting, pkg.Throttled, pkg.FailCount+1, eventLogger)
 			if err := notifier.database.AddNotification(notification); err != nil {
-				log.Errorf("Failed to save scheduled notification: %s", err)
+				eventLogger.Errorf("Failed to save scheduled notification: %s", err)
 			}
 		}
 	}
@@ -164,10 +165,10 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 	defer notifier.waitGroup.Done()
 
 	for pkg := range ch {
-		plots, err := notifier.buildNotificationPackagePlots(pkg)
+		log := getLogWithPackageContext(&notifier.logger, &pkg)
+		plots, err := notifier.buildNotificationPackagePlots(pkg, log)
 		if err != nil {
 			buildErr := fmt.Sprintf("Can't build notification package plot for %s: %s", pkg.Trigger.ID, err.Error())
-			log := getLogWithPackageContext(&notifier.logger, &pkg)
 			switch err.(type) {
 			case plotting.ErrNoPointsToRender:
 				log.Debugf(buildErr)
@@ -178,7 +179,7 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 
 		err = pkg.Trigger.PopulatedDescription(pkg.Events)
 		if err != nil {
-			getLogWithPackageContext(&notifier.logger, &pkg).Warningf("Error populate description:\n%v", err)
+			log.Warningf("Error populate description:\n%v", err)
 		}
 
 		err = sender.SendEvents(pkg.Events, pkg.Contact, pkg.Trigger, plots, pkg.Throttled)

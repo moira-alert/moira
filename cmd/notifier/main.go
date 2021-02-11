@@ -14,7 +14,6 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/database/redis"
-	log "github.com/moira-alert/moira/logging"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	"github.com/moira-alert/moira/metrics"
 	"github.com/moira-alert/moira/notifier"
@@ -87,7 +86,6 @@ func main() {
 	imageStoreMap := cmd.InitImageStores(config.ImageStores, logger)
 
 	notifierConfig := config.Notifier.getSettings(logger)
-	logger = log.ConfigureDynamicLog(logger, notifierConfig.SetLogLevelByFields, notifierConfig.SetLogLevel)
 
 	sender := notifier.NewNotifier(database, logger, notifierConfig, notifierMetrics, metricSourceProvider, imageStoreMap)
 
