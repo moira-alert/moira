@@ -37,11 +37,6 @@ func updateTrigger(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	if err = checkingTemplateFilling(request, *trigger); err != nil {
-		render.Render(writer, request, err) //nolint
-		return
-	}
-
 	timeSeriesNames := middleware.GetTimeSeriesNames(request)
 	response, err := controller.UpdateTrigger(database, &trigger.TriggerModel, triggerID, timeSeriesNames)
 	if err != nil {
