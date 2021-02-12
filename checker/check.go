@@ -319,8 +319,9 @@ func (triggerChecker *TriggerChecker) getMetricStepsStates(metricName string, me
 	}
 
 	checkPoint := last.GetCheckPoint(checkPointGap)
-	triggerChecker.logger.Clone().String(moira.LogFieldNameMetricName, metricName).
-		Debugf("Checkpoint: %v", checkPoint)
+	logger.
+		Int64(moira.LogFieldNameCheckpoint, checkPoint).
+		Debug("Checkpoint got")
 
 	current = make([]moira.MetricState, 0)
 

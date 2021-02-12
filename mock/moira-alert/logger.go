@@ -207,6 +207,20 @@ func (mr *MockLoggerMockRecorder) Int(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Int", reflect.TypeOf((*MockLogger)(nil).Int), arg0, arg1)
 }
 
+// Int64 mocks base method
+func (m *MockLogger) Int64(arg0 string, arg1 int64) moira.Logger {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Int64", arg0, arg1)
+	ret0, _ := ret[0].(moira.Logger)
+	return ret0
+}
+
+// Int64 indicates an expected call of Int64
+func (mr *MockLoggerMockRecorder) Int64(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Int64", reflect.TypeOf((*MockLogger)(nil).Int64), arg0, arg1)
+}
+
 // Level mocks base method
 func (m *MockLogger) Level(arg0 string) (moira.Logger, error) {
 	m.ctrl.T.Helper()

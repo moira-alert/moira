@@ -1,6 +1,7 @@
 package moira
 
 const (
+	LogFieldNameCheckpoint     = "moira.checkpoint"
 	LogFieldNameContactID      = "moira.contact.id"
 	LogFieldNameContactType    = "moira.contact.type"
 	LogFieldNameContactValue   = "moira.contact.value"

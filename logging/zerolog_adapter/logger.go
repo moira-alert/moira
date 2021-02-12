@@ -161,6 +161,11 @@ func (l *Logger) Int(key string, value int) moira.Logger {
 	return l
 }
 
+func (l *Logger) Int64(key string, value int64) moira.Logger {
+	l.Logger = l.Logger.With().Int64(key, value).Logger()
+	return l
+}
+
 func (l *Logger) Fields(fields map[string]interface{}) moira.Logger {
 	l.Logger = l.Logger.With().Fields(fields).Logger()
 	return l

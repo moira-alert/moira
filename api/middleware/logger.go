@@ -106,7 +106,7 @@ func (entry *apiLoggerEntry) write(status, bytes int, elapsed time.Duration, res
 	log := entry.logger
 	log.Int("http.http_status", status)
 	log.Int("http.content_length", bytes)
-	log.Int("elapsed_time_ms", int(elapsed.Milliseconds()))
+	log.Int64("elapsed_time_ms", elapsed.Milliseconds())
 
 	fmt.Fprintf(entry.buf, "%03d", status)
 	fmt.Fprintf(entry.buf, " %dB", bytes)

@@ -153,6 +153,7 @@ type Logger interface {
 	// Structured logging methods, use to add context fields
 	String(key, value string) Logger
 	Int(key string, value int) Logger
+	Int64(key string, value int64) Logger
 	Fields(fields map[string]interface{}) Logger
 
 	// Get child logger with the minimum accepted level
