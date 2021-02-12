@@ -6,7 +6,7 @@ package mock_moira_alert
 
 import (
 	gomock "github.com/golang/mock/gomock"
-	"github.com/moira-alert/moira"
+	moira "github.com/moira-alert/moira"
 	reflect "reflect"
 )
 
