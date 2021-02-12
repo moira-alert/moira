@@ -32,6 +32,7 @@ func TestEvent(t *testing.T) {
 			Logger:    logger,
 			Metrics:   notifierMetrics,
 			Scheduler: notifier.NewScheduler(dataBase, logger, notifierMetrics),
+			Config:    emptyNotifierConfig,
 		}
 		event := moira.NotificationEvent{
 			State:          moira.StateTEST,
@@ -64,6 +65,7 @@ func TestEvent(t *testing.T) {
 			Logger:    logger,
 			Metrics:   notifierMetrics,
 			Scheduler: scheduler,
+			Config:    emptyNotifierConfig,
 		}
 
 		subID := "testSubscription"
@@ -91,7 +93,7 @@ func TestEvent(t *testing.T) {
 		}
 		event2 := event
 		event2.SubscriptionID = &subID
-		scheduler.EXPECT().ScheduleNotification(gomock.Any(), event2, moira.TriggerData{}, contact, notification.Plotting, false, 0).Return(&notification)
+		scheduler.EXPECT().ScheduleNotification(gomock.Any(), event2, moira.TriggerData{}, contact, notification.Plotting, false, 0, gomock.Any()).Return(&notification)
 		dataBase.EXPECT().AddNotification(&notification)
 
 		err := worker.processEvent(event)
@@ -111,6 +113,7 @@ func TestNoSubscription(t *testing.T) {
 			Logger:    logger,
 			Metrics:   notifierMetrics,
 			Scheduler: notifier.NewScheduler(dataBase, logger, notifierMetrics),
+			Config:    emptyNotifierConfig,
 		}
 
 		event := moira.NotificationEvent{
@@ -140,6 +143,7 @@ func TestDisabledNotification(t *testing.T) {
 			Logger:    logger,
 			Metrics:   notifierMetrics,
 			Scheduler: notifier.NewScheduler(dataBase, logger, notifierMetrics),
+			Config:    emptyNotifierConfig,
 		}
 
 		event := moira.NotificationEvent{
@@ -154,9 +158,9 @@ func TestDisabledNotification(t *testing.T) {
 
 		logger.EXPECT().Clone().Return(logger).AnyTimes()
 		logger.EXPECT().String(gomock.Any(), gomock.Any()).Return(logger).AnyTimes()
-		logger.EXPECT().Debugf("Processing trigger id %s for metric %s == %f, %s -> %s", event.TriggerID, event.Metric, event.GetMetricsValues(), event.OldState, event.State)
+		logger.EXPECT().Debugf("Processing trigger for metric %s == %f, %s -> %s", event.Metric, event.GetMetricsValues(), event.OldState, event.State)
 		logger.EXPECT().Debugf("Getting subscriptions for tags %v", triggerData.Tags)
-		logger.EXPECT().Debugf("Subscription %s is disabled", disabledSubscription.ID)
+		logger.EXPECT().Debug("Subscription is disabled")
 
 		err := worker.processEvent(event)
 		So(err, ShouldBeEmpty)
@@ -175,6 +179,7 @@ func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
 			Logger:    logger,
 			Metrics:   notifierMetrics,
 			Scheduler: notifier.NewScheduler(dataBase, logger, notifierMetrics),
+			Config:    emptyNotifierConfig,
 		}
 
 		event := moira.NotificationEvent{
@@ -189,9 +194,11 @@ func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
 
 		logger.EXPECT().Clone().Return(logger).AnyTimes()
 		logger.EXPECT().String(gomock.Any(), gomock.Any()).Return(logger).AnyTimes()
-		logger.EXPECT().Debugf("Processing trigger id %s for metric %s == %f, %s -> %s", event.TriggerID, event.Metric, event.GetMetricsValues(), event.OldState, event.State)
+		logger.EXPECT().Debugf("Processing trigger for metric %s == %f, %s -> %s",
+			event.Metric, event.GetMetricsValues(), event.OldState, event.State)
 		logger.EXPECT().Debugf("Getting subscriptions for tags %v", triggerData.Tags)
-		logger.EXPECT().Debugf("Subscription %s is managed to ignore %s -> %s transitions", subscriptionToIgnoreWarnings.ID, event.OldState, event.State)
+		logger.EXPECT().Debugf("Subscription is managed to ignore %s -> %s transitions",
+			event.OldState, event.State)
 
 		err := worker.processEvent(event)
 		So(err, ShouldBeEmpty)
@@ -202,6 +209,7 @@ func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
 			Logger:    logger,
 			Metrics:   notifierMetrics,
 			Scheduler: notifier.NewScheduler(dataBase, logger, notifierMetrics),
+			Config:    emptyNotifierConfig,
 		}
 
 		event := moira.NotificationEvent{
@@ -214,9 +222,9 @@ func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
 		dataBase.EXPECT().GetTrigger(event.TriggerID).Return(trigger, nil)
 		dataBase.EXPECT().GetTagsSubscriptions(triggerData.Tags).Times(1).Return([]*moira.SubscriptionData{&subscriptionToIgnoreRecoverings}, nil)
 
-		logger.EXPECT().Debugf("Processing trigger id %s for metric %s == %f, %s -> %s", event.TriggerID, event.Metric, event.GetMetricsValues(), event.OldState, event.State)
+		logger.EXPECT().Debugf("Processing trigger for metric %s == %f, %s -> %s", event.Metric, event.GetMetricsValues(), event.OldState, event.State)
 		logger.EXPECT().Debugf("Getting subscriptions for tags %v", triggerData.Tags)
-		logger.EXPECT().Debugf("Subscription %s is managed to ignore %s -> %s transitions", subscriptionToIgnoreRecoverings.ID, event.OldState, event.State)
+		logger.EXPECT().Debugf("Subscription is managed to ignore %s -> %s transitions", event.OldState, event.State)
 
 		err := worker.processEvent(event)
 		So(err, ShouldBeEmpty)
@@ -227,6 +235,7 @@ func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
 			Logger:    logger,
 			Metrics:   notifierMetrics,
 			Scheduler: notifier.NewScheduler(dataBase, logger, notifierMetrics),
+			Config:    emptyNotifierConfig,
 		}
 
 		event := moira.NotificationEvent{
@@ -239,9 +248,10 @@ func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
 		dataBase.EXPECT().GetTrigger(event.TriggerID).Return(trigger, nil)
 		dataBase.EXPECT().GetTagsSubscriptions(triggerData.Tags).Times(1).Return([]*moira.SubscriptionData{&subscriptionToIgnoreWarningsAndRecoverings}, nil)
 
-		logger.EXPECT().Debugf("Processing trigger id %s for metric %s == %f, %s -> %s", event.TriggerID, event.Metric, event.GetMetricsValues(), event.OldState, event.State)
+		logger.EXPECT().Debugf("Processing trigger for metric %s == %f, %s -> %s",
+			event.Metric, event.GetMetricsValues(), event.OldState, event.State)
 		logger.EXPECT().Debugf("Getting subscriptions for tags %v", triggerData.Tags)
-		logger.EXPECT().Debugf("Subscription %s is managed to ignore %s -> %s transitions", subscriptionToIgnoreWarningsAndRecoverings.ID, event.OldState, event.State)
+		logger.EXPECT().Debugf("Subscription is managed to ignore %s -> %s transitions", event.OldState, event.State)
 
 		err := worker.processEvent(event)
 		So(err, ShouldBeEmpty)
@@ -260,6 +270,7 @@ func TestAddNotification(t *testing.T) {
 			Logger:    logger,
 			Metrics:   notifierMetrics,
 			Scheduler: scheduler,
+			Config:    emptyNotifierConfig,
 		}
 
 		event := moira.NotificationEvent{
@@ -274,7 +285,7 @@ func TestAddNotification(t *testing.T) {
 		dataBase.EXPECT().GetTrigger(event.TriggerID).Return(trigger, nil)
 		dataBase.EXPECT().GetTagsSubscriptions(triggerData.Tags).Times(1).Return([]*moira.SubscriptionData{&subscription}, nil)
 		dataBase.EXPECT().GetContact(contact.ID).Times(1).Return(contact, nil)
-		scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, triggerData, contact, emptyNotification.Plotting, false, 0).Times(1).Return(&emptyNotification)
+		scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, triggerData, contact, emptyNotification.Plotting, false, 0, gomock.Any()).Times(1).Return(&emptyNotification)
 		dataBase.EXPECT().AddNotification(&emptyNotification).Times(1).Return(nil)
 
 		err := worker.processEvent(event)
@@ -294,6 +305,7 @@ func TestAddOneNotificationByTwoSubscriptionsWithSame(t *testing.T) {
 			Logger:    logger,
 			Metrics:   notifierMetrics,
 			Scheduler: scheduler,
+			Config:    emptyNotifierConfig,
 		}
 
 		event := moira.NotificationEvent{
@@ -312,8 +324,8 @@ func TestAddOneNotificationByTwoSubscriptionsWithSame(t *testing.T) {
 		dataBase.EXPECT().GetTagsSubscriptions(triggerData.Tags).Times(1).Return([]*moira.SubscriptionData{&subscription, &subscription4}, nil)
 		dataBase.EXPECT().GetContact(contact.ID).Times(2).Return(contact, nil)
 
-		scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, triggerData, contact, notification2.Plotting, false, 0).Times(1).Return(&notification2)
-		scheduler.EXPECT().ScheduleNotification(gomock.Any(), event2, triggerData, contact, notification2.Plotting, false, 0).Times(1).Return(&notification2)
+		scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, triggerData, contact, notification2.Plotting, false, 0, gomock.Any()).Times(1).Return(&notification2)
+		scheduler.EXPECT().ScheduleNotification(gomock.Any(), event2, triggerData, contact, notification2.Plotting, false, 0, gomock.Any()).Times(1).Return(&notification2)
 
 		dataBase.EXPECT().AddNotification(&notification2).Times(1).Return(nil)
 
@@ -333,6 +345,7 @@ func TestFailReadContact(t *testing.T) {
 			Logger:    logger,
 			Metrics:   notifierMetrics,
 			Scheduler: notifier.NewScheduler(dataBase, logger, notifierMetrics),
+			Config:    emptyNotifierConfig,
 		}
 
 		event := moira.NotificationEvent{
@@ -349,9 +362,9 @@ func TestFailReadContact(t *testing.T) {
 
 		logger.EXPECT().Clone().Return(logger).AnyTimes()
 		logger.EXPECT().String(gomock.Any(), gomock.Any()).Return(logger).AnyTimes()
-		logger.EXPECT().Debugf("Processing trigger id %s for metric %s == %f, %s -> %s", event.TriggerID, event.Metric, event.GetMetricsValues(), event.OldState, event.State)
+		logger.EXPECT().Debugf("Processing trigger for metric %s == %f, %s -> %s", event.Metric, event.GetMetricsValues(), event.OldState, event.State)
 		logger.EXPECT().Debugf("Getting subscriptions for tags %v", triggerData.Tags)
-		logger.EXPECT().Warningf("Failed to get contact: %s, skip handling it, error: %v", contact.ID, getContactError)
+		logger.EXPECT().Warningf("Failed to get contact, skip handling it, error: %v", getContactError)
 
 		err := worker.processEvent(event)
 		So(err, ShouldBeEmpty)
@@ -370,6 +383,7 @@ func TestEmptySubscriptions(t *testing.T) {
 			Logger:    logger,
 			Metrics:   notifierMetrics,
 			Scheduler: notifier.NewScheduler(dataBase, logger, notifierMetrics),
+			Config:    emptyNotifierConfig,
 		}
 
 		event := moira.NotificationEvent{
@@ -384,9 +398,9 @@ func TestEmptySubscriptions(t *testing.T) {
 
 		logger.EXPECT().Clone().Return(logger).AnyTimes()
 		logger.EXPECT().String(gomock.Any(), gomock.Any()).Return(logger).AnyTimes()
-		logger.EXPECT().Debugf("Processing trigger id %s for metric %s == %f, %s -> %s", event.TriggerID, event.Metric, event.GetMetricsValues(), event.OldState, event.State)
+		logger.EXPECT().Debugf("Processing trigger for metric %s == %f, %s -> %s", event.Metric, event.GetMetricsValues(), event.OldState, event.State)
 		logger.EXPECT().Debugf("Getting subscriptions for tags %v", triggerData.Tags)
-		logger.EXPECT().Debugf("Subscription %s is disabled", "")
+		logger.EXPECT().Debug("Subscription is disabled")
 
 		err := worker.processEvent(event)
 		So(err, ShouldBeEmpty)
@@ -401,6 +415,7 @@ func TestEmptySubscriptions(t *testing.T) {
 			Logger:    logger,
 			Metrics:   notifierMetrics,
 			Scheduler: notifier.NewScheduler(dataBase, logger, notifierMetrics),
+			Config:    emptyNotifierConfig,
 		}
 
 		event := moira.NotificationEvent{
@@ -415,9 +430,10 @@ func TestEmptySubscriptions(t *testing.T) {
 
 		logger.EXPECT().Clone().Return(logger).AnyTimes()
 		logger.EXPECT().String(gomock.Any(), gomock.Any()).Return(logger).AnyTimes()
-		logger.EXPECT().Debugf("Processing trigger id %s for metric %s == %f, %s -> %s", event.TriggerID, event.Metric, event.GetMetricsValues(), event.OldState, event.State)
+		logger.EXPECT().Debugf("Processing trigger for metric %s == %f, %s -> %s",
+			event.Metric, event.GetMetricsValues(), event.OldState, event.State)
 		logger.EXPECT().Debugf("Getting subscriptions for tags %v", triggerData.Tags)
-		logger.EXPECT().Debugf("Subscription is nil")
+		logger.EXPECT().Debug("Subscription is nil")
 
 		err := worker.processEvent(event)
 		So(err, ShouldBeEmpty)
@@ -434,6 +450,7 @@ func TestGetNotificationSubscriptions(t *testing.T) {
 		Logger:    logger,
 		Metrics:   notifierMetrics,
 		Scheduler: notifier.NewScheduler(dataBase, logger, notifierMetrics),
+		Config:    emptyNotifierConfig,
 	}
 
 	Convey("Error GetSubscription", t, func() {
@@ -443,7 +460,7 @@ func TestGetNotificationSubscriptions(t *testing.T) {
 		}
 		err := fmt.Errorf("Oppps")
 		dataBase.EXPECT().GetSubscription(*event.SubscriptionID).Return(moira.SubscriptionData{}, err)
-		sub, expected := worker.getNotificationSubscriptions(event)
+		sub, expected := worker.getNotificationSubscriptions(event, logger)
 		So(sub, ShouldBeNil)
 		So(expected, ShouldResemble, fmt.Errorf("error while read subscription %s: %s", *event.SubscriptionID, err.Error()))
 	})
@@ -455,7 +472,7 @@ func TestGetNotificationSubscriptions(t *testing.T) {
 		}
 		err := fmt.Errorf("Oppps")
 		dataBase.EXPECT().GetContact(event.ContactID).Return(moira.ContactData{}, err)
-		sub, expected := worker.getNotificationSubscriptions(event)
+		sub, expected := worker.getNotificationSubscriptions(event, logger)
 		So(sub, ShouldBeNil)
 		So(expected, ShouldResemble, fmt.Errorf("error while read contact %s: %s", event.ContactID, err.Error()))
 	})
@@ -474,6 +491,7 @@ func TestGoRoutine(t *testing.T) {
 			Logger:    logger,
 			Metrics:   notifierMetrics,
 			Scheduler: scheduler,
+			Config:    emptyNotifierConfig,
 		}
 
 		event := moira.NotificationEvent{
@@ -494,7 +512,7 @@ func TestGoRoutine(t *testing.T) {
 		dataBase.EXPECT().GetTrigger(event.TriggerID).Times(1).Return(trigger, nil)
 		dataBase.EXPECT().GetTagsSubscriptions(triggerData.Tags).Times(1).Return([]*moira.SubscriptionData{&subscription}, nil)
 		dataBase.EXPECT().GetContact(contact.ID).Times(1).Return(contact, nil)
-		scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, triggerData, contact, emptyNotification.Plotting, false, 0).Times(1).Return(&emptyNotification)
+		scheduler.EXPECT().ScheduleNotification(gomock.Any(), event, triggerData, contact, emptyNotification.Plotting, false, 0, gomock.Any()).Times(1).Return(&emptyNotification)
 		dataBase.EXPECT().AddNotification(&emptyNotification).Times(1).Return(nil).Do(func(f ...interface{}) { close(shutdown) })
 
 		worker.Start()
@@ -590,4 +608,9 @@ var subscriptionToIgnoreWarningsAndRecoverings = moira.SubscriptionData{
 	ThrottlingEnabled: true,
 	IgnoreWarnings:    true,
 	IgnoreRecoverings: true,
+}
+
+var emptyNotifierConfig = notifier.Config{
+	LogContactsToLevel:      map[string]string{},
+	LogSubscriptionsToLevel: map[string]string{},
 }

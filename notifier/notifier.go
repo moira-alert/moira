@@ -147,9 +147,9 @@ func (notifier *StandardNotifier) resend(pkg *NotificationPackage, reason string
 		logger.Error("Stop resending. Notification interval is timed out")
 	} else {
 		for _, event := range pkg.Events {
-			subId := moira.UseString(event.SubscriptionID)
-			eventLogger := logger.Clone().String(moira.LogFieldNameSubscriptionID, subId)
-			SetLogLevelByConfig(notifier.config.LogSubscriptionsToLevel, subId, &eventLogger)
+			subID := moira.UseString(event.SubscriptionID)
+			eventLogger := logger.Clone().String(moira.LogFieldNameSubscriptionID, subID)
+			SetLogLevelByConfig(notifier.config.LogSubscriptionsToLevel, subID, &eventLogger)
 			notification := notifier.scheduler.ScheduleNotification(time.Now(), event,
 				pkg.Trigger, pkg.Contact, pkg.Plotting, pkg.Throttled, pkg.FailCount+1, eventLogger)
 			if err := notifier.database.AddNotification(notification); err != nil {

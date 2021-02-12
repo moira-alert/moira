@@ -2,6 +2,7 @@ package checker
 
 import (
 	"fmt"
+
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/checker/metrics/conversion"
 	"github.com/moira-alert/moira/expression"
@@ -243,12 +244,12 @@ func (triggerChecker *TriggerChecker) check(metrics map[string]map[string]metric
 		metrics[metricName] = make(map[string]metricSource.MetricData)
 	}
 	for metricName, targets := range metrics {
-		logger := logger.Clone().String(moira.LogFieldNameMetricName, metricName)
-		logger.Debug("Checking metrics")
+		log := logger.Clone().String(moira.LogFieldNameMetricName, metricName)
+		log.Debug("Checking metrics")
 		targets = conversion.Merge(targets, aloneMetrics)
-		metricState, needToDeleteMetric, err := triggerChecker.checkTargets(metricName, targets, logger)
+		metricState, needToDeleteMetric, err := triggerChecker.checkTargets(metricName, targets, log)
 		if needToDeleteMetric {
-			logger.Info("Remove metric")
+			log.Info("Remove metric")
 			checkData.RemoveMetricState(metricName)
 			err = triggerChecker.database.RemovePatternsMetrics(triggerChecker.trigger.Patterns)
 		} else {

@@ -117,9 +117,11 @@ func (worker *FetchEventsWorker) processEvent(event moira.NotificationEvent) err
 	duplications := make(map[string]bool)
 
 	for _, subscription := range subscriptions {
-		subLogger := log.Clone().
-			String(moira.LogFieldNameSubscriptionID, subscription.ID)
-		notifier.SetLogLevelByConfig(worker.Config.LogSubscriptionsToLevel, subscription.ID, &subLogger)
+		subLogger := log.Clone()
+		if subscription != nil {
+			subLogger.String(moira.LogFieldNameSubscriptionID, subscription.ID)
+			notifier.SetLogLevelByConfig(worker.Config.LogSubscriptionsToLevel, subscription.ID, &subLogger)
+		}
 		if worker.isNotificationRequired(subscription, triggerData, event, subLogger) {
 			for _, contactID := range subscription.Contacts {
 				contactLogger := subLogger.Clone().
@@ -150,11 +152,11 @@ func (worker *FetchEventsWorker) processEvent(event moira.NotificationEvent) err
 
 func (worker *FetchEventsWorker) getNotificationSubscriptions(event moira.NotificationEvent, logger moira.Logger) (*moira.SubscriptionData, error) {
 	if event.SubscriptionID != nil {
-		subId := moira.UseString(event.SubscriptionID)
+		subID := moira.UseString(event.SubscriptionID)
 		logger.Clone().
-			String(moira.LogFieldNameSubscriptionID, subId).
+			String(moira.LogFieldNameSubscriptionID, subID).
 			Debug("Getting subscription for test message")
-		notifier.SetLogLevelByConfig(worker.Config.LogSubscriptionsToLevel, subId, &logger)
+		notifier.SetLogLevelByConfig(worker.Config.LogSubscriptionsToLevel, subID, &logger)
 		sub, err := worker.Database.GetSubscription(*event.SubscriptionID)
 		if err != nil {
 			worker.Metrics.SubsMalformed.Mark(1)
@@ -189,12 +191,12 @@ func (worker *FetchEventsWorker) getNotificationSubscriptions(event moira.Notifi
 func (worker *FetchEventsWorker) isNotificationRequired(subscription *moira.SubscriptionData, trigger moira.TriggerData,
 	event moira.NotificationEvent, logger moira.Logger) bool {
 	if subscription == nil {
-		logger.Debugf("Subscription is nil")
+		logger.Debug("Subscription is nil")
 		return false
 	}
 	if event.State != moira.StateTEST {
 		if !subscription.Enabled {
-			logger.Debugf("Subscription is disabled")
+			logger.Debug("Subscription is disabled")
 			return false
 		}
 		if subscription.MustIgnore(&event) {

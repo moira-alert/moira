@@ -13,8 +13,8 @@ func getLogWithPackageContext(log *moira.Logger, pkg *NotificationPackage, confi
 	return logger
 }
 
-func SetLogLevelByConfig(entityToLevel map[string]string, entityId string, logger *moira.Logger) {
-	if v, ok := entityToLevel[entityId]; ok {
+func SetLogLevelByConfig(entityToLevel map[string]string, entityID string, logger *moira.Logger) {
+	if v, ok := entityToLevel[entityID]; ok {
 		if _, err := (*logger).Level(v); err != nil {
 			(*logger).Warningf("Couldn't set log level: %s", err)
 		}
