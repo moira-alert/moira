@@ -121,6 +121,7 @@ func main() {
 		Database:  database,
 		Scheduler: notifier.NewScheduler(database, logger, notifierMetrics),
 		Metrics:   notifierMetrics,
+		Config:    notifierConfig,
 	}
 	fetchEventsWorker.Start()
 	defer stopFetchEvents(fetchEventsWorker)

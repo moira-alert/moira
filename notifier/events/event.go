@@ -19,6 +19,7 @@ type FetchEventsWorker struct {
 	Database  moira.Database
 	Scheduler notifier.Scheduler
 	Metrics   *metrics.NotifierMetrics
+	Config    notifier.Config
 	tomb      tomb.Tomb
 }
 
@@ -118,10 +119,12 @@ func (worker *FetchEventsWorker) processEvent(event moira.NotificationEvent) err
 	for _, subscription := range subscriptions {
 		subLogger := log.Clone().
 			String(moira.LogFieldNameSubscriptionID, subscription.ID)
+		notifier.SetLogLevelByConfig(worker.Config.LogSubscriptionsToLevel, subscription.ID, &subLogger)
 		if worker.isNotificationRequired(subscription, triggerData, event, subLogger) {
 			for _, contactID := range subscription.Contacts {
 				contactLogger := subLogger.Clone().
 					String(moira.LogFieldNameContactID, contactID)
+				notifier.SetLogLevelByConfig(worker.Config.LogContactsToLevel, contactID, &contactLogger)
 				contact, err := worker.Database.GetContact(contactID)
 				if err != nil {
 					contactLogger.Warningf("Failed to get contact, skip handling it, error: %v", err)
@@ -147,9 +150,11 @@ func (worker *FetchEventsWorker) processEvent(event moira.NotificationEvent) err
 
 func (worker *FetchEventsWorker) getNotificationSubscriptions(event moira.NotificationEvent, logger moira.Logger) (*moira.SubscriptionData, error) {
 	if event.SubscriptionID != nil {
+		subId := moira.UseString(event.SubscriptionID)
 		logger.Clone().
-			String(moira.LogFieldNameSubscriptionID, moira.UseString(event.SubscriptionID)).
+			String(moira.LogFieldNameSubscriptionID, subId).
 			Debug("Getting subscription for test message")
+		notifier.SetLogLevelByConfig(worker.Config.LogSubscriptionsToLevel, subId, &logger)
 		sub, err := worker.Database.GetSubscription(*event.SubscriptionID)
 		if err != nil {
 			worker.Metrics.SubsMalformed.Mark(1)
@@ -160,6 +165,8 @@ func (worker *FetchEventsWorker) getNotificationSubscriptions(event moira.Notifi
 		logger.Clone().
 			String(moira.LogFieldNameContactID, event.ContactID).
 			Debug("Getting contact for test message")
+		notifier.SetLogLevelByConfig(worker.Config.LogContactsToLevel, event.ContactID, &logger)
+
 		contact, err := worker.Database.GetContact(event.ContactID)
 		if err != nil {
 			return nil, fmt.Errorf("error while read contact %s: %s", event.ContactID, err.Error())

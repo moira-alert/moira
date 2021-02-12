@@ -106,7 +106,8 @@ func (notifier *StandardNotifier) Send(pkg *NotificationPackage, waitGroup *sync
 	waitGroup.Add(1)
 	go func(pkg *NotificationPackage) {
 		defer waitGroup.Done()
-		getLogWithPackageContext(&notifier.logger, pkg).Debugf("Start sending %s", pkg)
+		getLogWithPackageContext(&notifier.logger, pkg, &notifier.config).
+			Debugf("Start sending %s", pkg)
 		select {
 		case ch <- *pkg:
 			break
@@ -140,13 +141,15 @@ func (notifier *StandardNotifier) resend(pkg *NotificationPackage, reason string
 		metric.Mark(1)
 	}
 
-	logger := getLogWithPackageContext(&notifier.logger, pkg)
+	logger := getLogWithPackageContext(&notifier.logger, pkg, &notifier.config)
 	logger.Warningf("Can't send message after %d try: %s. Retry again after 1 min", pkg.FailCount, reason)
 	if time.Duration(pkg.FailCount)*time.Minute > notifier.config.ResendingTimeout {
 		logger.Error("Stop resending. Notification interval is timed out")
 	} else {
 		for _, event := range pkg.Events {
-			eventLogger := logger.Clone().String(moira.LogFieldNameSubscriptionID, moira.UseString(event.SubscriptionID))
+			subId := moira.UseString(event.SubscriptionID)
+			eventLogger := logger.Clone().String(moira.LogFieldNameSubscriptionID, subId)
+			SetLogLevelByConfig(notifier.config.LogSubscriptionsToLevel, subId, &eventLogger)
 			notification := notifier.scheduler.ScheduleNotification(time.Now(), event,
 				pkg.Trigger, pkg.Contact, pkg.Plotting, pkg.Throttled, pkg.FailCount+1, eventLogger)
 			if err := notifier.database.AddNotification(notification); err != nil {
@@ -165,7 +168,7 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 	defer notifier.waitGroup.Done()
 
 	for pkg := range ch {
-		log := getLogWithPackageContext(&notifier.logger, &pkg)
+		log := getLogWithPackageContext(&notifier.logger, &pkg, &notifier.config)
 		plots, err := notifier.buildNotificationPackagePlots(pkg, log)
 		if err != nil {
 			buildErr := fmt.Sprintf("Can't build notification package plot for %s: %s", pkg.Trigger.ID, err.Error())

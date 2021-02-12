@@ -22,11 +22,11 @@ type config struct {
 }
 
 type entityLogConfig struct {
-	ID string `yaml:"id"`
+	ID    string `yaml:"id"`
+	Level string `yaml:"level"`
 }
 
 type setLogLevelConfig struct {
-	Level         string            `yaml:"level"`
 	Contacts      []entityLogConfig `yaml:"contacts"`
 	Subscriptions []entityLogConfig `yaml:"subscriptions"`
 }
@@ -145,32 +145,28 @@ func (config *notifierConfig) getSettings(logger moira.Logger) notifier.Config {
 	}
 	logger.Infof("Current read_batch_size is %d", readBatchSize)
 
-	logFields := make(map[string]interface{})
-	contacts := []string{}
+	contacts := map[string]string{}
 	for _, v := range config.SetLogLevel.Contacts {
-		contacts = append(contacts, v.ID)
+		contacts[v.ID] = v.Level
 	}
-	logFields[moira.LogFieldNameContactID] = contacts
-
-	subscriptions := []string{}
+	subscriptions := map[string]string{}
 	for _, v := range config.SetLogLevel.Subscriptions {
-		subscriptions = append(subscriptions, v.ID)
+		subscriptions[v.ID] = v.Level
 	}
-	logFields[moira.LogFieldNameSubscriptionID] = subscriptions
 	logger.Infof("Found dynamic log rules in config for %d contacts and %d subscriptions", len(contacts), len(subscriptions))
 
 	return notifier.Config{
-		SelfStateEnabled:    config.SelfState.Enabled,
-		SelfStateContacts:   config.SelfState.Contacts,
-		SendingTimeout:      to.Duration(config.SenderTimeout),
-		ResendingTimeout:    to.Duration(config.ResendingTimeout),
-		Senders:             config.Senders,
-		FrontURL:            config.FrontURI,
-		Location:            location,
-		DateTimeFormat:      format,
-		ReadBatchSize:       readBatchSize,
-		SetLogLevel:         config.SetLogLevel.Level,
-		SetLogLevelByFields: logFields,
+		SelfStateEnabled:        config.SelfState.Enabled,
+		SelfStateContacts:       config.SelfState.Contacts,
+		SendingTimeout:          to.Duration(config.SenderTimeout),
+		ResendingTimeout:        to.Duration(config.ResendingTimeout),
+		Senders:                 config.Senders,
+		FrontURL:                config.FrontURI,
+		Location:                location,
+		DateTimeFormat:          format,
+		ReadBatchSize:           readBatchSize,
+		LogContactsToLevel:      contacts,
+		LogSubscriptionsToLevel: subscriptions,
 	}
 }
 
