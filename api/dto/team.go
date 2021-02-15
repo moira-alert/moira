@@ -94,3 +94,13 @@ func (m TeamMembers) Bind(request *http.Request) error {
 func (TeamMembers) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
+
+type TeamSettings struct {
+	TeamID        string                   `json:"team_id"`
+	Contacts      []moira.ContactData      `json:"contacts"`
+	Subscriptions []moira.SubscriptionData `json:"subscriptions"`
+}
+
+func (TeamSettings) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}

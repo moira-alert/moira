@@ -67,7 +67,7 @@ func TestTeamStoring(t *testing.T) {
 		So(actualTeams, ShouldHaveLength, 1)
 		So(actualTeams, ShouldContain, teamID)
 
-		// Remove user 2from team 1
+		// Remove user 2 from team 1
 		err = dataBase.SaveTeamsAndUsers(
 			teamID,
 			[]string{userID},
@@ -122,5 +122,28 @@ func TestTeamStoring(t *testing.T) {
 		actualTeams, err = dataBase.GetUserTeams("nonexistentUser")
 		So(err, ShouldBeNil)
 		So(actualTeams, ShouldResemble, []string{})
+
+		// Add user to new team and delete this team
+		const teamToDeleteID = "teamToDeleteID"
+		const userOfTeamToDeleteID = "userOfTeamToDeleteID"
+		teamToDelete := moira.Team{
+			Name:        "TeamName",
+			Description: "Team Description",
+		}
+		err = dataBase.SaveTeam(teamToDeleteID, teamToDelete)
+		So(err, ShouldBeNil)
+		err = dataBase.SaveTeamsAndUsers(teamToDeleteID, []string{userOfTeamToDeleteID}, map[string][]string{teamToDeleteID: {userOfTeamToDeleteID}})
+		So(err, ShouldBeNil)
+		err = dataBase.DeleteTeam(teamToDeleteID, userOfTeamToDeleteID)
+		So(err, ShouldBeNil)
+		actualTeam, err = dataBase.GetTeam(teamToDeleteID)
+		So(err, ShouldResemble, database.ErrNil)
+		So(actualTeam, ShouldResemble, moira.Team{})
+		actualTeams, err = dataBase.GetUserTeams(userOfTeamToDeleteID)
+		So(err, ShouldBeNil)
+		So(actualTeams, ShouldHaveLength, 0)
+		actualUsers, err = dataBase.GetTeamUsers(teamToDeleteID)
+		So(err, ShouldBeNil)
+		So(actualUsers, ShouldHaveLength, 0)
 	})
 }

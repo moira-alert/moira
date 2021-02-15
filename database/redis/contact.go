@@ -79,12 +79,20 @@ func (connector *DbConnector) SaveContact(contact *moira.ContactData) error {
 	c := connector.pool.Get()
 	defer c.Close()
 
-	c.Send("MULTI") //nolint
+	c.Send("MULTI")                                      //nolint
 	c.Send("SET", contactKey(contact.ID), contactString) //nolint
 	if getContactErr != database.ErrNil && contact.User != existing.User {
 		c.Send("SREM", userContactsKey(existing.User), contact.ID) //nolint
 	}
-	c.Send("SADD", userContactsKey(contact.User), contact.ID) //nolint
+	if getContactErr != database.ErrNil && contact.Team != existing.Team {
+		c.Send("SREM", teamContactsKey(existing.Team), contact.ID) //nolint
+	}
+	if contact.User != "" {
+		c.Send("SADD", userContactsKey(contact.User), contact.ID) //nolint
+	}
+	if contact.Team != "" {
+		c.Send("SADD", teamContactsKey(contact.Team), contact.ID) //nolint
+	}
 	_, err = c.Do("EXEC")
 	if err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
@@ -101,9 +109,10 @@ func (connector *DbConnector) RemoveContact(contactID string) error {
 	c := connector.pool.Get()
 	defer c.Close()
 
-	c.Send("MULTI") //nolint
-	c.Send("DEL", contactKey(contactID)) //nolint
+	c.Send("MULTI")                                           //nolint
+	c.Send("DEL", contactKey(contactID))                      //nolint
 	c.Send("SREM", userContactsKey(existing.User), contactID) //nolint
+	c.Send("SREM", teamContactsKey(existing.Team), contactID) //nolint
 	_, err = c.Do("EXEC")
 	if err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
@@ -123,10 +132,26 @@ func (connector *DbConnector) GetUserContactIDs(login string) ([]string, error) 
 	return contacts, nil
 }
 
+// GetTeamContactIDs returns contacts ids by given team
+func (connector *DbConnector) GetTeamContactIDs(login string) ([]string, error) {
+	c := connector.pool.Get()
+	defer c.Close()
+
+	contacts, err := redis.Strings(c.Do("SMEMBERS", teamContactsKey(login)))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get contacts for team login %s: %s", login, err.Error())
+	}
+	return contacts, nil
+}
+
 func contactKey(id string) string {
 	return "moira-contact:" + id
 }
 
 func userContactsKey(userName string) string {
 	return "moira-user-contacts:" + userName
+}
+
+func teamContactsKey(userName string) string {
+	return "moira-team-contacts:" + userName
 }

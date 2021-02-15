@@ -51,6 +51,7 @@ func buildRequestBody(events moira.NotificationEvents, contact moira.ContactData
 			Value: contact.Value,
 			ID:    contact.ID,
 			User:  contact.User,
+			Team:  contact.Team,
 		},
 		Plot:      encodedFirstPlot,
 		Plots:     encodedPlots,

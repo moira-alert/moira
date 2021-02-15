@@ -1,27 +1,27 @@
 package redis
 
 import (
-	"fmt"
 	"testing"
-
-	. "github.com/smartystreets/goconvey/convey"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
+	. "github.com/smartystreets/goconvey/convey"
 )
 
-var user1 = "user1"
-var user2 = "user2"
+const user1 = "user1"
+const user2 = "user2"
+const team1 = "team1"
+const team2 = "team2"
 
 func TestContacts(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-
 	dataBase := newTestDatabase(logger, config)
-	dataBase.flush()
-	defer dataBase.flush()
 
 	Convey("Contacts manipulation", t, func() {
+		dataBase.flush()
+		defer dataBase.flush()
+
 		Convey("While no data then get contacts should be empty", func() {
 			Convey("GetAllContacts should be empty", func() {
 				actual1, err := dataBase.GetAllContacts()
@@ -39,10 +39,27 @@ func TestContacts(t *testing.T) {
 				So(actual2, ShouldHaveLength, 0)
 			})
 
+			Convey("GetTeamContactIDs should be empty", func() {
+				actual1, err := dataBase.GetTeamContactIDs(team1)
+				So(err, ShouldBeNil)
+				So(actual1, ShouldHaveLength, 0)
+
+				actual2, err := dataBase.GetUserContactIDs(user2)
+				So(err, ShouldBeNil)
+				So(actual2, ShouldHaveLength, 0)
+			})
+
 			Convey("GetContacts should be empty", func() {
 				actual1, err := dataBase.GetContacts([]string{user1Contacts[0].ID, user2Contacts[1].ID})
 				So(err, ShouldBeNil)
 				So(actual1, ShouldHaveLength, 2)
+				for _, contact := range actual1 {
+					So(contact, ShouldBeNil)
+				}
+
+				actual2, err := dataBase.GetContacts([]string{team1Contacts[0].ID, team2Contacts[1].ID})
+				So(err, ShouldBeNil)
+				So(actual2, ShouldHaveLength, 2)
 				for _, contact := range actual1 {
 					So(contact, ShouldBeNil)
 				}
@@ -52,6 +69,9 @@ func TestContacts(t *testing.T) {
 				actual1, err := dataBase.GetContact(user1Contacts[0].ID)
 				So(err, ShouldResemble, database.ErrNil)
 				So(actual1, ShouldResemble, moira.ContactData{})
+				actual2, err := dataBase.GetContact(team1Contacts[0].ID)
+				So(err, ShouldResemble, database.ErrNil)
+				So(actual2, ShouldResemble, moira.ContactData{})
 			})
 		})
 
@@ -59,14 +79,12 @@ func TestContacts(t *testing.T) {
 			ids := make([]string, len(user1Contacts))
 			for i, contact := range user1Contacts {
 				ids[i] = contact.ID
-				Convey(fmt.Sprintf("Write contact %s and try read", contact.ID), func() {
-					err := dataBase.SaveContact(contact)
-					So(err, ShouldBeNil)
+				err := dataBase.SaveContact(contact)
+				So(err, ShouldBeNil)
 
-					actual, err := dataBase.GetContact(contact.ID)
-					So(err, ShouldBeNil)
-					So(actual, ShouldResemble, *contact)
-				})
+				actual, err := dataBase.GetContact(contact.ID)
+				So(err, ShouldBeNil)
+				So(actual, ShouldResemble, *contact)
 			}
 
 			Convey("Read all contacts by id", func() {
@@ -88,6 +106,37 @@ func TestContacts(t *testing.T) {
 			})
 		})
 
+		Convey("Write all contacts for team1 and check it for success write", func() {
+			ids := make([]string, len(team1Contacts))
+			for i, contact := range team1Contacts {
+				ids[i] = contact.ID
+				err := dataBase.SaveContact(contact)
+				So(err, ShouldBeNil)
+
+				actual, err := dataBase.GetContact(contact.ID)
+				So(err, ShouldBeNil)
+				So(actual, ShouldResemble, *contact)
+			}
+
+			Convey("Read all contacts by id", func() {
+				actual, err := dataBase.GetContacts(ids)
+				So(err, ShouldBeNil)
+				So(actual, ShouldResemble, team1Contacts)
+			})
+
+			Convey("Read all team contacts ids", func() {
+				actual, err := dataBase.GetTeamContactIDs(team1)
+				So(err, ShouldBeNil)
+				So(actual, ShouldHaveLength, len(ids))
+			})
+
+			Convey("Get all contacts", func() {
+				actual, err := dataBase.GetAllContacts()
+				So(err, ShouldBeNil)
+				So(actual, ShouldHaveLength, len(ids))
+			})
+		})
+
 		Convey("Write and remove user2 contacts by different strategies", func() {
 			ids := make([]string, len(user2Contacts))
 			for i, contact := range user2Contacts {
@@ -96,169 +145,284 @@ func TestContacts(t *testing.T) {
 
 			contact1 := user2Contacts[0]
 			Convey("Save-write contact", func() {
-				Convey("Save contact", func() {
-					err := dataBase.SaveContact(contact1)
-					So(err, ShouldBeNil)
+				err := dataBase.SaveContact(contact1)
+				So(err, ShouldBeNil)
 
-					actual, err := dataBase.GetContact(contact1.ID)
-					So(err, ShouldBeNil)
-					So(actual, ShouldResemble, *contact1)
+				actual, err := dataBase.GetContact(contact1.ID)
+				So(err, ShouldBeNil)
+				So(actual, ShouldResemble, *contact1)
 
-					actual1, err := dataBase.GetUserContactIDs(user2)
-					So(err, ShouldBeNil)
-					So(actual1, ShouldResemble, []string{contact1.ID})
-				})
-
-				Convey("Check contacts by read set of contacts", func() {
-					actual, err := dataBase.GetContacts(ids)
-					So(err, ShouldBeNil)
-					So(actual, ShouldHaveLength, len(ids))
-					expected := make([]*moira.ContactData, len(ids))
-					expected[0] = contact1
-					So(actual, ShouldResemble, expected)
-				})
+				actual1, err := dataBase.GetUserContactIDs(user2)
+				So(err, ShouldBeNil)
+				So(actual1, ShouldResemble, []string{contact1.ID})
+				actual2, err := dataBase.GetContacts(ids)
+				So(err, ShouldBeNil)
+				So(actual2, ShouldHaveLength, len(ids))
+				expected := make([]*moira.ContactData, len(ids))
+				expected[0] = contact1
+				So(actual2, ShouldResemble, expected)
 			})
 
 			contact2 := user2Contacts[1]
 			Convey("Save-remove contact", func() {
-				Convey("Just save new contact", func() {
-					err := dataBase.SaveContact(contact2)
-					So(err, ShouldBeNil)
-				})
+				err := dataBase.SaveContact(contact2)
+				So(err, ShouldBeNil)
 
-				Convey("Check it for existence", func() {
-					actual, err := dataBase.GetContact(contact2.ID)
-					So(err, ShouldBeNil)
-					So(actual, ShouldResemble, *contact2)
+				actual, err := dataBase.GetContact(contact2.ID)
+				So(err, ShouldBeNil)
+				So(actual, ShouldResemble, *contact2)
 
-					actual1, err := dataBase.GetUserContactIDs(user2)
-					So(err, ShouldBeNil)
-					So(actual1, ShouldHaveLength, 2)
-				})
+				actual1, err := dataBase.GetUserContactIDs(user2)
+				So(err, ShouldBeNil)
+				So(actual1, ShouldHaveLength, 1)
 
-				Convey("Remove contact", func() {
-					err := dataBase.RemoveContact(contact2.ID)
-					So(err, ShouldBeNil)
-				})
+				err = dataBase.RemoveContact(contact2.ID)
+				So(err, ShouldBeNil)
 
-				Convey("Check it for not existence", func() {
-					actual, err := dataBase.GetContact(contact2.ID)
-					So(err, ShouldResemble, database.ErrNil)
-					So(actual, ShouldResemble, moira.ContactData{})
+				err = dataBase.SaveContact(contact1)
+				So(err, ShouldBeNil)
 
-					actual1, err := dataBase.GetUserContactIDs(user2)
-					So(err, ShouldBeNil)
-					So(actual1, ShouldHaveLength, 1)
-					So(actual1, ShouldResemble, []string{contact1.ID})
+				actual, err = dataBase.GetContact(contact2.ID)
+				So(err, ShouldResemble, database.ErrNil)
+				So(actual, ShouldResemble, moira.ContactData{})
 
-					actual2, err := dataBase.GetContacts(ids)
-					expected := make([]*moira.ContactData, len(ids))
-					expected[0] = contact1
-					So(err, ShouldBeNil)
-					So(actual2, ShouldResemble, expected)
-				})
+				actual1, err = dataBase.GetUserContactIDs(user2)
+				So(err, ShouldBeNil)
+				So(actual1, ShouldHaveLength, 1)
+				So(actual1, ShouldResemble, []string{contact1.ID})
 
-				Convey("And save again...", func() {
-					err := dataBase.SaveContact(contact2)
-					So(err, ShouldBeNil)
-				})
+				actual2, err := dataBase.GetContacts(ids)
+				expected := make([]*moira.ContactData, len(ids))
+				expected[0] = contact1
+				So(err, ShouldBeNil)
+				So(actual2, ShouldResemble, expected)
 
-				Convey("And check it for existence again", func() {
-					actual, err := dataBase.GetContact(contact2.ID)
-					So(err, ShouldBeNil)
-					So(actual, ShouldResemble, *contact2)
+				err = dataBase.SaveContact(contact2)
+				So(err, ShouldBeNil)
 
-					actual1, err := dataBase.GetUserContactIDs(user2)
-					So(err, ShouldBeNil)
-					So(actual1, ShouldHaveLength, 2)
+				actual, err = dataBase.GetContact(contact2.ID)
+				So(err, ShouldBeNil)
+				So(actual, ShouldResemble, *contact2)
 
-					actual2, err := dataBase.GetContacts(ids)
-					expected := make([]*moira.ContactData, len(ids))
-					expected[0] = contact1
-					expected[1] = contact2
-					So(err, ShouldBeNil)
-					So(actual2, ShouldResemble, expected)
-				})
+				actual1, err = dataBase.GetUserContactIDs(user2)
+				So(err, ShouldBeNil)
+				So(actual1, ShouldHaveLength, 2)
+
+				actual2, err = dataBase.GetContacts(ids)
+				expected = make([]*moira.ContactData, len(ids))
+				expected[0] = contact1
+				expected[1] = contact2
+				So(err, ShouldBeNil)
+				So(actual2, ShouldResemble, expected)
 			})
 
 			contact3 := *user2Contacts[2]
 			contact3.User = user1
 			Convey("Update contact with another user", func() {
-				Convey("Just save new contact with user1", func() {
-					err := dataBase.SaveContact(&contact3)
-					So(err, ShouldBeNil)
-				})
+				err := dataBase.SaveContact(&contact3)
+				So(err, ShouldBeNil)
 
-				Convey("Check it for existence in user1 contacts", func() {
-					actual, err := dataBase.GetContact(contact3.ID)
-					So(err, ShouldBeNil)
-					So(actual, ShouldResemble, contact3)
+				actual, err := dataBase.GetContact(contact3.ID)
+				So(err, ShouldBeNil)
+				So(actual, ShouldResemble, contact3)
 
-					actual1, err := dataBase.GetUserContactIDs(user2)
-					So(err, ShouldBeNil)
-					So(actual1, ShouldHaveLength, 2)
+				actual1, err := dataBase.GetUserContactIDs(user2)
+				So(err, ShouldBeNil)
+				So(actual1, ShouldHaveLength, 0)
 
-					actual2, err := dataBase.GetUserContactIDs(user1)
-					So(err, ShouldBeNil)
-					So(actual2, ShouldHaveLength, 5)
-				})
+				actual2, err := dataBase.GetUserContactIDs(user1)
+				So(err, ShouldBeNil)
+				So(actual2, ShouldHaveLength, 1)
 
 				contact3.User = user2
 
-				Convey("Now save it with user2", func() {
-					err := dataBase.SaveContact(&contact3)
-					So(err, ShouldBeNil)
-				})
+				err = dataBase.SaveContact(&contact3)
+				So(err, ShouldBeNil)
 
-				Convey("Check it for existence in user2 contacts and now existence in user1 contacts", func() {
-					actual, err := dataBase.GetContact(contact3.ID)
-					So(err, ShouldBeNil)
-					So(actual, ShouldResemble, contact3)
+				actual, err = dataBase.GetContact(contact3.ID)
+				So(err, ShouldBeNil)
+				So(actual, ShouldResemble, contact3)
 
-					actual1, err := dataBase.GetUserContactIDs(user2)
-					So(err, ShouldBeNil)
-					So(actual1, ShouldHaveLength, 3)
+				actual1, err = dataBase.GetUserContactIDs(user2)
+				So(err, ShouldBeNil)
+				So(actual1, ShouldHaveLength, 1)
 
-					actual2, err := dataBase.GetUserContactIDs(user1)
-					So(err, ShouldBeNil)
-					So(actual2, ShouldHaveLength, 4)
-				})
+				actual2, err = dataBase.GetUserContactIDs(user1)
+				So(err, ShouldBeNil)
+				So(actual2, ShouldHaveLength, 0)
+
 			})
 
 			contact4 := user2Contacts[3]
 			Convey("Save-update contact", func() {
-				Convey("Just save new contact", func() {
-					err := dataBase.SaveContact(contact4)
-					So(err, ShouldBeNil)
-				})
+				err := dataBase.SaveContact(contact4)
+				So(err, ShouldBeNil)
 
-				Convey("Check it for existence", func() {
-					actual, err := dataBase.GetContact(contact4.ID)
-					So(err, ShouldBeNil)
-					So(actual, ShouldResemble, *contact4)
+				actual, err := dataBase.GetContact(contact4.ID)
+				So(err, ShouldBeNil)
+				So(actual, ShouldResemble, *contact4)
 
-					actual1, err := dataBase.GetUserContactIDs(user2)
-					So(err, ShouldBeNil)
-					So(actual1, ShouldHaveLength, 4)
-				})
+				actual1, err := dataBase.GetUserContactIDs(user2)
+				So(err, ShouldBeNil)
+				So(actual1, ShouldHaveLength, 1)
 
 				contact2Changed := *contact4
 				contact2Changed.Value = "new@email.com"
 
-				Convey("Save updated contact data", func() {
-					err := dataBase.SaveContact(&contact2Changed)
-					So(err, ShouldBeNil)
-				})
+				err = dataBase.SaveContact(&contact2Changed)
+				So(err, ShouldBeNil)
 
-				Convey("Check it for new data", func() {
-					actual, err := dataBase.GetContact(contact2Changed.ID)
-					So(err, ShouldBeNil)
-					So(actual, ShouldResemble, contact2Changed)
+				actual, err = dataBase.GetContact(contact2Changed.ID)
+				So(err, ShouldBeNil)
+				So(actual, ShouldResemble, contact2Changed)
 
-					actual1, err := dataBase.GetUserContactIDs(user2)
-					So(err, ShouldBeNil)
-					So(actual1, ShouldHaveLength, 4)
-				})
+				actual1, err = dataBase.GetUserContactIDs(user2)
+				So(err, ShouldBeNil)
+				So(actual1, ShouldHaveLength, 1)
+			})
+		})
+
+		Convey("Write and remove team2 contacts by different strategies", func() {
+			ids := make([]string, len(team2Contacts))
+			for i, contact := range team2Contacts {
+				ids[i] = contact.ID
+			}
+
+			contact1 := team2Contacts[0]
+			Convey("Save-write contact", func() {
+				err := dataBase.SaveContact(contact1)
+				So(err, ShouldBeNil)
+
+				actual, err := dataBase.GetContact(contact1.ID)
+				So(err, ShouldBeNil)
+				So(actual, ShouldResemble, *contact1)
+
+				actual1, err := dataBase.GetTeamContactIDs(team2)
+				So(err, ShouldBeNil)
+				So(actual1, ShouldResemble, []string{contact1.ID})
+				actual2, err := dataBase.GetContacts(ids)
+				So(err, ShouldBeNil)
+				So(actual2, ShouldHaveLength, len(ids))
+				expected := make([]*moira.ContactData, len(ids))
+				expected[0] = contact1
+				So(actual2, ShouldResemble, expected)
+			})
+
+			contact2 := team2Contacts[1]
+			Convey("Save-remove contact", func() {
+				err := dataBase.SaveContact(contact2)
+				So(err, ShouldBeNil)
+
+				actual, err := dataBase.GetContact(contact2.ID)
+				So(err, ShouldBeNil)
+				So(actual, ShouldResemble, *contact2)
+
+				actual1, err := dataBase.GetTeamContactIDs(team2)
+				So(err, ShouldBeNil)
+				So(actual1, ShouldHaveLength, 1)
+
+				err = dataBase.RemoveContact(contact2.ID)
+				So(err, ShouldBeNil)
+
+				err = dataBase.SaveContact(contact1)
+				So(err, ShouldBeNil)
+
+				actual, err = dataBase.GetContact(contact2.ID)
+				So(err, ShouldResemble, database.ErrNil)
+				So(actual, ShouldResemble, moira.ContactData{})
+
+				actual1, err = dataBase.GetTeamContactIDs(team2)
+				So(err, ShouldBeNil)
+				So(actual1, ShouldHaveLength, 1)
+				So(actual1, ShouldResemble, []string{contact1.ID})
+
+				actual2, err := dataBase.GetContacts(ids)
+				expected := make([]*moira.ContactData, len(ids))
+				expected[0] = contact1
+				So(err, ShouldBeNil)
+				So(actual2, ShouldResemble, expected)
+
+				err = dataBase.SaveContact(contact2)
+				So(err, ShouldBeNil)
+
+				actual, err = dataBase.GetContact(contact2.ID)
+				So(err, ShouldBeNil)
+				So(actual, ShouldResemble, *contact2)
+
+				actual1, err = dataBase.GetTeamContactIDs(team2)
+				So(err, ShouldBeNil)
+				So(actual1, ShouldHaveLength, 2)
+
+				actual2, err = dataBase.GetContacts(ids)
+				expected = make([]*moira.ContactData, len(ids))
+				expected[0] = contact1
+				expected[1] = contact2
+				So(err, ShouldBeNil)
+				So(actual2, ShouldResemble, expected)
+			})
+
+			contact3 := *team2Contacts[2]
+			contact3.Team = team1
+			Convey("Update contact with another team", func() {
+				err := dataBase.SaveContact(&contact3)
+				So(err, ShouldBeNil)
+
+				actual, err := dataBase.GetContact(contact3.ID)
+				So(err, ShouldBeNil)
+				So(actual, ShouldResemble, contact3)
+
+				actual1, err := dataBase.GetTeamContactIDs(team2)
+				So(err, ShouldBeNil)
+				So(actual1, ShouldHaveLength, 0)
+
+				actual2, err := dataBase.GetTeamContactIDs(team1)
+				So(err, ShouldBeNil)
+				So(actual2, ShouldHaveLength, 1)
+
+				contact3.Team = team2
+
+				err = dataBase.SaveContact(&contact3)
+				So(err, ShouldBeNil)
+
+				actual, err = dataBase.GetContact(contact3.ID)
+				So(err, ShouldBeNil)
+				So(actual, ShouldResemble, contact3)
+
+				actual1, err = dataBase.GetTeamContactIDs(team2)
+				So(err, ShouldBeNil)
+				So(actual1, ShouldHaveLength, 1)
+
+				actual2, err = dataBase.GetTeamContactIDs(team1)
+				So(err, ShouldBeNil)
+				So(actual2, ShouldHaveLength, 0)
+			})
+
+			contact4 := team2Contacts[3]
+			Convey("Save-update contact", func() {
+				err := dataBase.SaveContact(contact4)
+				So(err, ShouldBeNil)
+
+				actual, err := dataBase.GetContact(contact4.ID)
+				So(err, ShouldBeNil)
+				So(actual, ShouldResemble, *contact4)
+
+				actual1, err := dataBase.GetTeamContactIDs(team2)
+				So(err, ShouldBeNil)
+				So(actual1, ShouldHaveLength, 1)
+
+				contact2Changed := *contact4
+				contact2Changed.Value = "new@email.com"
+
+				err = dataBase.SaveContact(&contact2Changed)
+				So(err, ShouldBeNil)
+
+				actual, err = dataBase.GetContact(contact2Changed.ID)
+				So(err, ShouldBeNil)
+				So(actual, ShouldResemble, contact2Changed)
+
+				actual1, err = dataBase.GetTeamContactIDs(team2)
+				So(err, ShouldBeNil)
+				So(actual1, ShouldHaveLength, 1)
 			})
 		})
 	})
@@ -350,5 +514,59 @@ var user2Contacts = []*moira.ContactData{
 		Type:  "slack",
 		Value: "#devops",
 		User:  user2,
+	},
+}
+
+var team1Contacts = []*moira.ContactData{
+	{
+		ID:    "TeamContactID-000000000000001",
+		Type:  "email",
+		Value: "mail1@example.com",
+		Team:  team1,
+	},
+	{
+		ID:    "TeamContactID-000000000000004",
+		Type:  "email",
+		Value: "mail4@example.com",
+		Team:  team1,
+	},
+	{
+		ID:    "TeamContactID-000000000000006",
+		Type:  "unknown",
+		Value: "no matter",
+		Team:  team1,
+	},
+	{
+		ID:    "TeamContactID-000000000000008",
+		Type:  "slack",
+		Value: "#devops",
+		Team:  team1,
+	},
+}
+
+var team2Contacts = []*moira.ContactData{
+	{
+		ID:    "TeamContactID-000000000000002",
+		Type:  "email",
+		Value: "failed@example.com",
+		Team:  team2,
+	},
+	{
+		ID:    "TeamContactID-000000000000003",
+		Type:  "email",
+		Value: "mail3@example.com",
+		Team:  team2,
+	},
+	{
+		ID:    "TeamContactID-000000000000005",
+		Type:  "slack",
+		Value: "#devops",
+		Team:  team2,
+	},
+	{
+		ID:    "TeamContactID-000000000000007",
+		Type:  "slack",
+		Value: "#devops",
+		Team:  team2,
 	},
 }
