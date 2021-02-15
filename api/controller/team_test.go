@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/gofrs/uuid"
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
@@ -80,6 +81,81 @@ func TestCreateTeam(t *testing.T) {
 			response, err := CreateTeam(dataBase, team, user)
 			So(response, ShouldResemble, dto.SaveTeamResponse{})
 			So(err, ShouldResemble, api.ErrorInternalServer(fmt.Errorf("cannot save team: %w", returnErr)))
+		})
+	})
+}
+
+func TestDeleteTeam(t *testing.T) {
+	Convey("DeleteTeam", t, func() {
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+
+		const teamID = "temaID"
+		const userID = "userID"
+		errReturned := fmt.Errorf("test error")
+
+		Convey("delete successfully", func() {
+			gomock.InOrder(
+				dataBase.EXPECT().GetTeamUsers(teamID).Return([]string{userID}, nil),
+				dataBase.EXPECT().GetTeamContactIDs(teamID).Return([]string{}, nil),
+				dataBase.EXPECT().GetTeamSubscriptionIDs(teamID).Return([]string{}, nil),
+				dataBase.EXPECT().DeleteTeam(teamID, userID).Return(nil),
+			)
+			response, err := DeleteTeam(dataBase, teamID, userID)
+			So(err, ShouldBeNil)
+			So(response, ShouldResemble, dto.SaveTeamResponse{ID: teamID})
+		})
+
+		Convey("team have subscriptions", func() {
+			gomock.InOrder(
+				dataBase.EXPECT().GetTeamUsers(teamID).Return([]string{userID}, nil),
+				dataBase.EXPECT().GetTeamContactIDs(teamID).Return([]string{}, nil),
+				dataBase.EXPECT().GetTeamSubscriptionIDs(teamID).Return([]string{"subscriptionID"}, nil),
+			)
+			response, err := DeleteTeam(dataBase, teamID, userID)
+			So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("cannot delete team: team have subscriptions: subscriptionID")))
+			So(response, ShouldResemble, dto.SaveTeamResponse{})
+		})
+		Convey("error in get team subscriptions", func() {
+			gomock.InOrder(
+				dataBase.EXPECT().GetTeamUsers(teamID).Return([]string{userID}, nil),
+				dataBase.EXPECT().GetTeamContactIDs(teamID).Return([]string{}, nil),
+				dataBase.EXPECT().GetTeamSubscriptionIDs(teamID).Return([]string{}, errReturned),
+			)
+			response, err := DeleteTeam(dataBase, teamID, userID)
+			So(err, ShouldResemble, api.ErrorInternalServer(fmt.Errorf("cannot get team subscriptions: %w", errReturned)))
+			So(response, ShouldResemble, dto.SaveTeamResponse{})
+		})
+		Convey("team have contacts", func() {
+			gomock.InOrder(
+				dataBase.EXPECT().GetTeamUsers(teamID).Return([]string{userID}, nil),
+				dataBase.EXPECT().GetTeamContactIDs(teamID).Return([]string{"contactID"}, nil),
+			)
+			response, err := DeleteTeam(dataBase, teamID, userID)
+			So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("cannot delete team: team have contacts: contactID")))
+			So(response, ShouldResemble, dto.SaveTeamResponse{})
+		})
+		Convey("error in get team contacts", func() {
+			gomock.InOrder(
+				dataBase.EXPECT().GetTeamUsers(teamID).Return([]string{userID}, nil),
+				dataBase.EXPECT().GetTeamContactIDs(teamID).Return([]string{}, errReturned),
+			)
+			response, err := DeleteTeam(dataBase, teamID, userID)
+			So(err, ShouldResemble, api.ErrorInternalServer(fmt.Errorf("cannot get team contacts: %w", errReturned)))
+			So(response, ShouldResemble, dto.SaveTeamResponse{})
+		})
+		Convey("team have more than one user", func() {
+			dataBase.EXPECT().GetTeamUsers(teamID).Return([]string{userID, "anotherUserID"}, nil)
+			response, err := DeleteTeam(dataBase, teamID, userID)
+			So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("cannot delete team: team have users: userID, anotherUserID")))
+			So(response, ShouldResemble, dto.SaveTeamResponse{})
+		})
+		Convey("error in get team users", func() {
+			dataBase.EXPECT().GetTeamUsers(teamID).Return([]string{}, errReturned)
+			response, err := DeleteTeam(dataBase, teamID, userID)
+			So(err, ShouldResemble, api.ErrorInternalServer(fmt.Errorf("cannot get team users: %w", errReturned)))
+			So(response, ShouldResemble, dto.SaveTeamResponse{})
 		})
 	})
 }
@@ -309,11 +385,11 @@ func TestDeleteTeamUser(t *testing.T) {
 		Convey("user exists", func() {
 			gomock.InOrder(
 				dataBase.EXPECT().GetTeamUsers(teamID).Return([]string{userID, userID2, userID3}, nil),
-				dataBase.EXPECT().GetUserTeams(userID).Return([]string{teamID}, nil),
+				dataBase.EXPECT().GetUserTeams(userID).Return([]string{teamID, "team2"}, nil),
 				dataBase.EXPECT().GetUserTeams(userID2).Return([]string{teamID}, nil),
 				dataBase.EXPECT().GetUserTeams(userID3).Return([]string{teamID}, nil),
 				dataBase.EXPECT().SaveTeamsAndUsers(teamID, []string{userID2, userID3}, map[string][]string{
-					userID:  {},
+					userID:  {"team2"},
 					userID2: {teamID},
 					userID3: {teamID},
 				}).Return(nil),
@@ -550,6 +626,85 @@ func TestCheckUserPermissionsForTeam(t *testing.T) {
 			dataBase.EXPECT().GetTeam(teamID).Return(moira.Team{}, database.ErrNil)
 			err := CheckUserPermissionsForTeam(dataBase, teamID, userID)
 			So(err, ShouldResemble, api.ErrorNotFound("team with ID 'testTeam' does not exists"))
+		})
+	})
+}
+
+func TestGetTeamSettings(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	database := mock_moira_alert.NewMockDatabase(mockCtrl)
+	teamID := "testTeam"
+
+	Convey("Success get team settings", t, func() {
+		subscriptionIDs := []string{uuid.Must(uuid.NewV4()).String(), uuid.Must(uuid.NewV4()).String()}
+		subscriptions := []*moira.SubscriptionData{{ID: subscriptionIDs[0]}, {ID: subscriptionIDs[1]}}
+		contactIDs := []string{uuid.Must(uuid.NewV4()).String(), uuid.Must(uuid.NewV4()).String()}
+		contacts := []*moira.ContactData{{ID: contactIDs[0]}, {ID: contactIDs[1]}}
+		database.EXPECT().GetTeamSubscriptionIDs(teamID).Return(subscriptionIDs, nil)
+		database.EXPECT().GetSubscriptions(subscriptionIDs).Return(subscriptions, nil)
+		database.EXPECT().GetTeamContactIDs(teamID).Return(contactIDs, nil)
+		database.EXPECT().GetContacts(contactIDs).Return(contacts, nil)
+		settings, err := GetTeamSettings(database, teamID)
+		So(err, ShouldBeNil)
+		So(settings, ShouldResemble, dto.TeamSettings{
+			TeamID:        teamID,
+			Contacts:      []moira.ContactData{*contacts[0], *contacts[1]},
+			Subscriptions: []moira.SubscriptionData{*subscriptions[0], *subscriptions[1]},
+		})
+	})
+
+	Convey("No contacts and subscriptions", t, func() {
+		database.EXPECT().GetTeamSubscriptionIDs(teamID).Return(make([]string, 0), nil)
+		database.EXPECT().GetSubscriptions(make([]string, 0)).Return(make([]*moira.SubscriptionData, 0), nil)
+		database.EXPECT().GetTeamContactIDs(teamID).Return(make([]string, 0), nil)
+		database.EXPECT().GetContacts(make([]string, 0)).Return(make([]*moira.ContactData, 0), nil)
+		settings, err := GetTeamSettings(database, teamID)
+		So(err, ShouldBeNil)
+		So(settings, ShouldResemble, dto.TeamSettings{
+			TeamID:        teamID,
+			Contacts:      make([]moira.ContactData, 0),
+			Subscriptions: make([]moira.SubscriptionData, 0),
+		})
+	})
+
+	Convey("Errors", t, func() {
+		Convey("GetTeamSubscriptionIDs", func() {
+			expected := fmt.Errorf("can not read ids")
+			database.EXPECT().GetTeamSubscriptionIDs(teamID).Return(nil, expected)
+			settings, err := GetTeamSettings(database, teamID)
+			So(err, ShouldResemble, api.ErrorInternalServer(expected))
+			So(settings, ShouldResemble, dto.TeamSettings{})
+		})
+		Convey("GetSubscriptions", func() {
+			expected := fmt.Errorf("can not read subscriptions")
+			database.EXPECT().GetTeamSubscriptionIDs(teamID).Return(make([]string, 0), nil)
+			database.EXPECT().GetSubscriptions(make([]string, 0)).Return(nil, expected)
+			settings, err := GetTeamSettings(database, teamID)
+			So(err, ShouldResemble, api.ErrorInternalServer(expected))
+			So(settings, ShouldResemble, dto.TeamSettings{})
+		})
+		Convey("GetTeamContactIDs", func() {
+			expected := fmt.Errorf("can not read contact ids")
+			database.EXPECT().GetTeamSubscriptionIDs(teamID).Return(make([]string, 0), nil)
+			database.EXPECT().GetSubscriptions(make([]string, 0)).Return(make([]*moira.SubscriptionData, 0), nil)
+			database.EXPECT().GetTeamContactIDs(teamID).Return(nil, expected)
+			settings, err := GetTeamSettings(database, teamID)
+			So(err, ShouldResemble, api.ErrorInternalServer(expected))
+			So(settings, ShouldResemble, dto.TeamSettings{})
+		})
+		Convey("GetContacts", func() {
+			expected := fmt.Errorf("can not read contacts")
+			subscriptionIDs := []string{uuid.Must(uuid.NewV4()).String(), uuid.Must(uuid.NewV4()).String()}
+			subscriptions := []*moira.SubscriptionData{{ID: subscriptionIDs[0]}, {ID: subscriptionIDs[1]}}
+			contactIDs := []string{uuid.Must(uuid.NewV4()).String(), uuid.Must(uuid.NewV4()).String()}
+			database.EXPECT().GetTeamSubscriptionIDs(teamID).Return(subscriptionIDs, nil)
+			database.EXPECT().GetSubscriptions(subscriptionIDs).Return(subscriptions, nil)
+			database.EXPECT().GetTeamContactIDs(teamID).Return(contactIDs, nil)
+			database.EXPECT().GetContacts(contactIDs).Return(nil, expected)
+			settings, err := GetTeamSettings(database, teamID)
+			So(err, ShouldResemble, api.ErrorInternalServer(expected))
+			So(settings, ShouldResemble, dto.TeamSettings{})
 		})
 	})
 }

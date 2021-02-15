@@ -109,6 +109,7 @@ func (connector *DbConnector) GetTeamUsers(teamID string) ([]string, error) {
 	return teams, nil
 }
 
+// IsTeamContainUser is a method to check if user is in team.
 func (connector *DbConnector) IsTeamContainUser(teamID, userID string) (bool, error) {
 	c := connector.pool.Get()
 	defer c.Close()
@@ -119,6 +120,39 @@ func (connector *DbConnector) IsTeamContainUser(teamID, userID string) (bool, er
 		return false, fmt.Errorf("failed to check if team contains user: %w", err)
 	}
 	return result, nil
+}
+
+// DeleteTeam is a method to delete all information about team and remove team from last user's teams.
+func (connector *DbConnector) DeleteTeam(teamID, userID string) error {
+	c := connector.pool.Get()
+	defer c.Close()
+
+	err := c.Send("MULTI")
+	if err != nil {
+		return fmt.Errorf("cannot open transaction %w", err)
+	}
+
+	err = c.Send("SREM", userTeamsKey(userID), teamID)
+	if err != nil {
+		return fmt.Errorf("failed to remove team from user's teams: %w", err)
+	}
+
+	err = c.Send("DEL", teamUsersKey(teamID))
+	if err != nil {
+		return fmt.Errorf("failed to remove team users: %w", err)
+	}
+
+	err = c.Send("HDEL", teamsKey, teamID)
+	if err != nil {
+		return fmt.Errorf("failed to remove team metadata: %w", err)
+	}
+
+	_, err = c.Do("EXEC")
+	if err != nil {
+		return fmt.Errorf("cannot commit transaction and delete team: %w", err)
+	}
+
+	return nil
 }
 
 const teamsKey = "moira-teams"

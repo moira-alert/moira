@@ -116,6 +116,26 @@ func TestSubscriptionAnyTags(t *testing.T) {
 			err = dataBase.RemoveSubscription(subAnyTagWithTags.ID)
 			So(err, ShouldBeNil)
 		})
+
+		Convey("Save Subscription for team", func() {
+			err := dataBase.SaveSubscription(subscriptions[8])
+			So(err, ShouldBeNil)
+		})
+
+		Convey("Get Subscription by team", func() {
+			actual, err := dataBase.GetTeamSubscriptionIDs(team1)
+			So(err, ShouldBeNil)
+			So(actual, ShouldResemble, []string{subscriptions[8].ID})
+		})
+
+		Convey("Remove Subscription for team", func() {
+			err := dataBase.RemoveSubscription(subscriptions[8].ID)
+			So(err, ShouldBeNil)
+			actual, err := dataBase.GetTeamSubscriptionIDs(team1)
+			So(err, ShouldBeNil)
+			sort.Strings(actual)
+			So(actual, ShouldResemble, []string{})
+		})
 	})
 }
 
@@ -202,7 +222,7 @@ func TestSubscriptionData(t *testing.T) {
 
 			actual1, err := dataBase.GetUserSubscriptionIDs(user1)
 			So(err, ShouldBeNil)
-			So(actual1, ShouldHaveLength, len(ids))
+			So(actual1, ShouldHaveLength, len(ids)-1) // except the team subscription
 
 			err = dataBase.RemoveSubscription(ids[0])
 			So(err, ShouldBeNil)
@@ -213,7 +233,7 @@ func TestSubscriptionData(t *testing.T) {
 
 			actual1, err = dataBase.GetUserSubscriptionIDs(user1)
 			So(err, ShouldBeNil)
-			So(actual1, ShouldHaveLength, len(ids)-1)
+			So(actual1, ShouldHaveLength, len(ids)-2) // except the team subscription and removed subscrition
 		})
 
 		Convey("Test rewrite subscription", func() {
@@ -428,5 +448,13 @@ var subscriptions = []*moira.SubscriptionData{
 		ThrottlingEnabled: true,
 		AnyTags:           true,
 		User:              user1,
+	},
+	{
+		ID:                "teamSubscriptionID-00000000000001",
+		Enabled:           true,
+		Tags:              []string{tag1},
+		Contacts:          []string{uuid.Must(uuid.NewV4()).String()},
+		TeamID:            team1,
+		ThrottlingEnabled: true,
 	},
 }

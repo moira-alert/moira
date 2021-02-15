@@ -47,7 +47,7 @@ func createNewContact(writer http.ResponseWriter, request *http.Request) {
 	}
 	userLogin := middleware.GetLogin(request)
 
-	if err := controller.CreateContact(database, contact, userLogin); err != nil {
+	if err := controller.CreateContact(database, contact, userLogin, ""); err != nil {
 		render.Render(writer, request, err) //nolint
 		return
 	}
@@ -93,7 +93,7 @@ func updateContact(writer http.ResponseWriter, request *http.Request) {
 
 func removeContact(writer http.ResponseWriter, request *http.Request) {
 	contactData := request.Context().Value(contactKey).(moira.ContactData)
-	err := controller.RemoveContact(database, contactData.ID, contactData.User)
+	err := controller.RemoveContact(database, contactData.ID, contactData.User, "")
 	if err != nil {
 		render.Render(writer, request, err) //nolint
 	}

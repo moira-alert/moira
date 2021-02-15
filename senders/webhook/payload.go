@@ -36,6 +36,7 @@ type contactData struct {
 	Value string `json:"value"`
 	ID    string `json:"id"`
 	User  string `json:"user"`
+	Team  string `json:"team"`
 }
 
 // toTriggerData returns correct triggerData structure to marshall JSON

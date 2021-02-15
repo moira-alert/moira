@@ -19,12 +19,16 @@ func teams(router chi.Router) {
 		router.Use(usersFilterForTeams)
 		router.Get("/", getTeam)
 		router.Patch("/", updateTeam)
+		router.Delete("/", deleteTeam)
 		router.Route("/users", func(router chi.Router) {
 			router.Get("/", getTeamUsers)
 			router.Put("/", setTeamUsers)
 			router.Post("/", addTeamUsers)
 			router.With(middleware.TeamUserIDContext).Delete("/{teamUserId}", deleteTeamUser)
 		})
+		router.Get("/settings", getTeamSettings)
+		router.Route("/subscriptions", teamSubscription)
+		router.Route("/contacts", teamContact)
 	})
 }
 
@@ -111,6 +115,21 @@ func updateTeam(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
+func deleteTeam(writer http.ResponseWriter, request *http.Request) {
+	userLogin := middleware.GetLogin(request)
+	teamID := middleware.GetTeamID(request)
+
+	response, apiErr := controller.DeleteTeam(database, teamID, userLogin)
+	if apiErr != nil {
+		render.Render(writer, request, apiErr) //nolint:errcheck
+		return
+	}
+	if err := render.Render(writer, request, response); err != nil {
+		render.Render(writer, request, api.ErrorRender(err)) //nolint:errcheck
+		return
+	}
+}
+
 func getTeamUsers(writer http.ResponseWriter, request *http.Request) {
 	teamID := middleware.GetTeamID(request)
 
@@ -181,6 +200,20 @@ func deleteTeamUser(writer http.ResponseWriter, request *http.Request) {
 
 	if err := render.Render(writer, request, response); err != nil {
 		render.Render(writer, request, api.ErrorRender(err)) // nolint:errcheck
+		return
+	}
+}
+
+func getTeamSettings(writer http.ResponseWriter, request *http.Request) {
+	teamID := middleware.GetTeamID(request)
+	teamSettings, err := controller.GetTeamSettings(database, teamID)
+	if err != nil {
+		render.Render(writer, request, err) //nolint:errcheck
+		return
+	}
+
+	if err := render.Render(writer, request, teamSettings); err != nil {
+		render.Render(writer, request, api.ErrorRender(err)) //nolint:errcheck
 		return
 	}
 }

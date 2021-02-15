@@ -134,6 +134,20 @@ func (mr *MockDatabaseMockRecorder) AllowStale() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AllowStale", reflect.TypeOf((*MockDatabase)(nil).AllowStale))
 }
 
+// DeleteTeam mocks base method.
+func (m *MockDatabase) DeleteTeam(arg0, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteTeam", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteTeam indicates an expected call of DeleteTeam.
+func (mr *MockDatabaseMockRecorder) DeleteTeam(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteTeam", reflect.TypeOf((*MockDatabase)(nil).DeleteTeam), arg0, arg1)
+}
+
 // DeleteTriggerCheckLock mocks base method.
 func (m *MockDatabase) DeleteTriggerCheckLock(arg0 string) error {
 	m.ctrl.T.Helper()
@@ -654,6 +668,36 @@ func (m *MockDatabase) GetTeam(arg0 string) (moira.Team, error) {
 func (mr *MockDatabaseMockRecorder) GetTeam(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTeam", reflect.TypeOf((*MockDatabase)(nil).GetTeam), arg0)
+}
+
+// GetTeamContactIDs mocks base method.
+func (m *MockDatabase) GetTeamContactIDs(arg0 string) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTeamContactIDs", arg0)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTeamContactIDs indicates an expected call of GetTeamContactIDs.
+func (mr *MockDatabaseMockRecorder) GetTeamContactIDs(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTeamContactIDs", reflect.TypeOf((*MockDatabase)(nil).GetTeamContactIDs), arg0)
+}
+
+// GetTeamSubscriptionIDs mocks base method.
+func (m *MockDatabase) GetTeamSubscriptionIDs(arg0 string) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTeamSubscriptionIDs", arg0)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTeamSubscriptionIDs indicates an expected call of GetTeamSubscriptionIDs.
+func (mr *MockDatabaseMockRecorder) GetTeamSubscriptionIDs(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTeamSubscriptionIDs", reflect.TypeOf((*MockDatabase)(nil).GetTeamSubscriptionIDs), arg0)
 }
 
 // GetTeamUsers mocks base method.

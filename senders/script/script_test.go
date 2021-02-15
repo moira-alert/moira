@@ -86,7 +86,7 @@ func TestBuildCommandData(t *testing.T) {
 		So(scriptFile, ShouldResemble, "script.go")
 		So(args, ShouldResemble, []string{"first", "second"})
 		So(err, ShouldBeNil)
-		So(string(scriptBody), ShouldResemble, "{\n\t\"events\": [\n\t\t{\n\t\t\t\"timestamp\": 0,\n\t\t\t\"metric\": \"New metric\",\n\t\t\t\"state\": \"\",\n\t\t\t\"trigger_id\": \"\",\n\t\t\t\"old_state\": \"\",\n\t\t\t\"event_message\": null\n\t\t}\n\t],\n\t\"trigger\": {\n\t\t\"id\": \"TriggerID\",\n\t\t\"name\": \"\",\n\t\t\"desc\": \"\",\n\t\t\"targets\": null,\n\t\t\"warn_value\": 0,\n\t\t\"error_value\": 0,\n\t\t\"is_remote\": false,\n\t\t\"__notifier_trigger_tags\": null\n\t},\n\t\"contact\": {\n\t\t\"type\": \"\",\n\t\t\"value\": \"\",\n\t\t\"id\": \"ContactID\",\n\t\t\"user\": \"\"\n\t},\n\t\"throttled\": true,\n\t\"timestamp\": 0\n}")
+		So(string(scriptBody), ShouldResemble, "{\n\t\"events\": [\n\t\t{\n\t\t\t\"timestamp\": 0,\n\t\t\t\"metric\": \"New metric\",\n\t\t\t\"state\": \"\",\n\t\t\t\"trigger_id\": \"\",\n\t\t\t\"old_state\": \"\",\n\t\t\t\"event_message\": null\n\t\t}\n\t],\n\t\"trigger\": {\n\t\t\"id\": \"TriggerID\",\n\t\t\"name\": \"\",\n\t\t\"desc\": \"\",\n\t\t\"targets\": null,\n\t\t\"warn_value\": 0,\n\t\t\"error_value\": 0,\n\t\t\"is_remote\": false,\n\t\t\"__notifier_trigger_tags\": null\n\t},\n\t\"contact\": {\n\t\t\"type\": \"\",\n\t\t\"value\": \"\",\n\t\t\"id\": \"ContactID\",\n\t\t\"user\": \"\",\n\t\t\"team\": \"\"\n\t},\n\t\"throttled\": true,\n\t\"timestamp\": 0\n}")
 	})
 
 	Convey("Test file not found", t, func() {
