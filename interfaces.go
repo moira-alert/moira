@@ -66,6 +66,7 @@ type Database interface {
 	RemoveContact(contactID string) error
 	SaveContact(contact *ContactData) error
 	GetUserContactIDs(userLogin string) ([]string, error)
+	GetTeamContactIDs(teamID string) ([]string, error)
 
 	// SubscriptionData storing
 	GetSubscription(id string) (SubscriptionData, error)
@@ -74,6 +75,7 @@ type Database interface {
 	SaveSubscriptions(subscriptions []*SubscriptionData) error
 	RemoveSubscription(subscriptionID string) error
 	GetUserSubscriptionIDs(userLogin string) ([]string, error)
+	GetTeamSubscriptionIDs(teamID string) ([]string, error)
 	GetTagsSubscriptions(tags []string) ([]*SubscriptionData, error)
 
 	// ScheduledNotification storing
@@ -137,6 +139,7 @@ type Database interface {
 	GetUserTeams(userID string) ([]string, error)
 	GetTeamUsers(teamID string) ([]string, error)
 	IsTeamContainUser(teamID, userID string) (bool, error)
+	DeleteTeam(teamID, userID string) error
 }
 
 // Lock implements lock abstraction

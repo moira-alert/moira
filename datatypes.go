@@ -167,6 +167,7 @@ type ContactData struct {
 	Value string `json:"value"`
 	ID    string `json:"id"`
 	User  string `json:"user"`
+	Team  string `json:"team"`
 }
 
 // SubscriptionData represents user subscription
@@ -182,6 +183,7 @@ type SubscriptionData struct {
 	IgnoreRecoverings bool         `json:"ignore_recoverings,omitempty"`
 	ThrottlingEnabled bool         `json:"throttling"`
 	User              string       `json:"user"`
+	TeamID            string       `json:"team_id"`
 }
 
 // PlottingData represents plotting settings

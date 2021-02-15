@@ -138,10 +138,19 @@ func GetTargetName(request *http.Request) string {
 
 // GetTeamID gets team id
 func GetTeamID(request *http.Request) string {
-	return request.Context().Value(teamIDKey).(string)
+	teamID := request.Context().Value(teamIDKey)
+	if teamID == nil {
+		return ""
+	}
+	return teamID.(string)
 }
 
 // GetTeamUserID gets team user id
 func GetTeamUserID(request *http.Request) string {
 	return request.Context().Value(teamUserIDKey).(string)
+}
+
+// SetContextValueForTest is a helper function that is needed for testing purposes and sets context values with local ContextKey type
+func SetContextValueForTest(ctx context.Context, key string, value interface{}) context.Context {
+	return context.WithValue(ctx, ContextKey(key), value)
 }

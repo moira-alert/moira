@@ -79,7 +79,7 @@ func (connector *DbConnector) updateSubscription(newSubscription *moira.Subscrip
 	c := connector.pool.Get()
 	defer c.Close()
 
-	c.Send("MULTI") //nolint
+	c.Send("MULTI")                                                  //nolint
 	addSendSubscriptionRequest(c, *newSubscription, oldSubscription) //nolint
 	_, err := c.Do("EXEC")
 	if err != nil {
@@ -156,13 +156,14 @@ func (connector *DbConnector) removeSubscription(subscription *moira.Subscriptio
 	c := connector.pool.Get()
 	defer c.Close()
 
-	c.Send("MULTI") //nolint
-	c.Send("SREM", userSubscriptionsKey(subscription.User), subscription.ID) //nolint
+	c.Send("MULTI")                                                            //nolint
+	c.Send("SREM", userSubscriptionsKey(subscription.User), subscription.ID)   //nolint
+	c.Send("SREM", teamSubscriptionsKey(subscription.TeamID), subscription.ID) //nolint
 	for _, tag := range subscription.Tags {
 		c.Send("SREM", tagSubscriptionKey(tag), subscription.ID) //nolint
 	}
 	c.Send("SREM", anyTagsSubscriptionsKey, subscription.ID) //nolint
-	c.Send("DEL", subscriptionKey(subscription.ID)) //nolint
+	c.Send("DEL", subscriptionKey(subscription.ID))          //nolint
 	if _, err := c.Do("EXEC"); err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
@@ -177,6 +178,18 @@ func (connector *DbConnector) GetUserSubscriptionIDs(login string) ([]string, er
 	subscriptions, err := redis.Strings(c.Do("SMEMBERS", userSubscriptionsKey(login)))
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve subscriptions for user login %s: %s", login, err.Error())
+	}
+	return subscriptions, nil
+}
+
+// GetTeamSubscriptionIDs returns subscriptions ids by given team id
+func (connector *DbConnector) GetTeamSubscriptionIDs(teamID string) ([]string, error) {
+	c := connector.pool.Get()
+	defer c.Close()
+
+	subscriptions, err := redis.Strings(c.Do("SMEMBERS", teamSubscriptionsKey(teamID)))
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve subscriptions for team id %s: %w", teamID, err)
 	}
 	return subscriptions, nil
 }
@@ -232,6 +245,9 @@ func addSendSubscriptionRequest(c redis.Conn, subscription moira.SubscriptionDat
 		if oldSubscription.User != subscription.User {
 			c.Send("SREM", userSubscriptionsKey(oldSubscription.User), subscription.ID) //nolint
 		}
+		if oldSubscription.TeamID != subscription.TeamID {
+			c.Send("SREM", teamSubscriptionsKey(oldSubscription.TeamID), subscription.ID) //nolint
+		}
 	}
 
 	for _, tag := range subscription.Tags {
@@ -242,7 +258,12 @@ func addSendSubscriptionRequest(c redis.Conn, subscription moira.SubscriptionDat
 		c.Send("SADD", anyTagsSubscriptionsKey, subscription.ID) //nolint
 	}
 
-	c.Send("SADD", userSubscriptionsKey(subscription.User), subscription.ID) //nolint
+	if subscription.User != "" {
+		c.Send("SADD", userSubscriptionsKey(subscription.User), subscription.ID) //nolint
+	}
+	if subscription.TeamID != "" {
+		c.Send("SADD", teamSubscriptionsKey(subscription.TeamID), subscription.ID) //nolint
+	}
 	c.Send("SET", subscriptionKey(subscription.ID), bytes) //nolint
 	return nil
 }
@@ -314,6 +335,10 @@ func subscriptionKey(id string) string {
 
 func userSubscriptionsKey(userName string) string {
 	return "moira-user-subscriptions:" + userName
+}
+
+func teamSubscriptionsKey(teamID string) string {
+	return fmt.Sprintf("moira-team-subscriptions:%s", teamID)
 }
 
 const anyTagsSubscriptionsKey = "moira-any-tags-subscriptions"

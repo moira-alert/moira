@@ -2,6 +2,7 @@ package controller
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/gofrs/uuid"
 	"github.com/gomodule/redigo/redis"
@@ -299,6 +300,36 @@ func UpdateTeam(dataBase moira.Database, teamID string, team dto.TeamModel) (dto
 	return dto.SaveTeamResponse{ID: teamID}, nil
 }
 
+// DeleteTeam is a controller function that removes an existing team in Moira
+func DeleteTeam(dataBase moira.Database, teamID, userLogin string) (dto.SaveTeamResponse, *api.ErrorResponse) {
+	teamUsers, err := dataBase.GetTeamUsers(teamID)
+	if err != nil {
+		return dto.SaveTeamResponse{}, api.ErrorInternalServer(fmt.Errorf("cannot get team users: %w", err))
+	}
+	if len(teamUsers) > 1 {
+		return dto.SaveTeamResponse{}, api.ErrorInvalidRequest(fmt.Errorf("cannot delete team: team have users: %s", strings.Join(teamUsers, ", ")))
+	}
+	teamContacts, err := dataBase.GetTeamContactIDs(teamID)
+	if err != nil {
+		return dto.SaveTeamResponse{}, api.ErrorInternalServer(fmt.Errorf("cannot get team contacts: %w", err))
+	}
+	if len(teamContacts) > 0 {
+		return dto.SaveTeamResponse{}, api.ErrorInvalidRequest(fmt.Errorf("cannot delete team: team have contacts: %s", strings.Join(teamContacts, ", ")))
+	}
+	teamSubscriptions, err := dataBase.GetTeamSubscriptionIDs(teamID)
+	if err != nil {
+		return dto.SaveTeamResponse{}, api.ErrorInternalServer(fmt.Errorf("cannot get team subscriptions: %w", err))
+	}
+	if len(teamSubscriptions) > 0 {
+		return dto.SaveTeamResponse{}, api.ErrorInvalidRequest(fmt.Errorf("cannot delete team: team have subscriptions: %s", strings.Join(teamSubscriptions, ", ")))
+	}
+	err = dataBase.DeleteTeam(teamID, userLogin)
+	if err != nil {
+		return dto.SaveTeamResponse{}, api.ErrorInternalServer(fmt.Errorf("cannot delete team: %w", err))
+	}
+	return dto.SaveTeamResponse{ID: teamID}, nil
+}
+
 // DeleteTeamUser is a controller function that removes a user from certain team
 func DeleteTeamUser(dataBase moira.Database, teamID string, removeUserID string) (dto.TeamMembers, *api.ErrorResponse) {
 	existingUsers, err := dataBase.GetTeamUsers(teamID)
@@ -384,4 +415,43 @@ func CheckUserPermissionsForTeam(dataBase moira.Database, teamID, userID string)
 		return api.ErrorForbidden("you are not permitted to manipulate with this team")
 	}
 	return nil
+}
+
+// GetTeamSettings gets team contacts and subscriptions
+func GetTeamSettings(database moira.Database, teamID string) (dto.TeamSettings, *api.ErrorResponse) {
+	teamSettings := dto.TeamSettings{
+		TeamID:        teamID,
+		Contacts:      make([]moira.ContactData, 0),
+		Subscriptions: make([]moira.SubscriptionData, 0),
+	}
+
+	subscriptionIDs, err := database.GetTeamSubscriptionIDs(teamID)
+	if err != nil {
+		return dto.TeamSettings{}, api.ErrorInternalServer(err)
+	}
+
+	subscriptions, err := database.GetSubscriptions(subscriptionIDs)
+	if err != nil {
+		return dto.TeamSettings{}, api.ErrorInternalServer(err)
+	}
+	for _, subscription := range subscriptions {
+		if subscription != nil {
+			teamSettings.Subscriptions = append(teamSettings.Subscriptions, *subscription)
+		}
+	}
+	contactIDs, err := database.GetTeamContactIDs(teamID)
+	if err != nil {
+		return dto.TeamSettings{}, api.ErrorInternalServer(err)
+	}
+
+	contacts, err := database.GetContacts(contactIDs)
+	if err != nil {
+		return dto.TeamSettings{}, api.ErrorInternalServer(err)
+	}
+	for _, contact := range contacts {
+		if contact != nil {
+			teamSettings.Contacts = append(teamSettings.Contacts, *contact)
+		}
+	}
+	return teamSettings, nil
 }

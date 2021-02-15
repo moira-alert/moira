@@ -20,6 +20,7 @@ var (
 		Type:  "contactType",
 		Value: "contactValue",
 		User:  "contactUser",
+		Team:  "contactTeam",
 	}
 	testTrigger = moira.TriggerData{
 		ID:   "triggerID",
@@ -96,7 +97,8 @@ const expectedStateChangePayload = `
     "type": "contactType",
     "value": "contactValue",
     "id": "contactID",
-    "user": "contactUser"
+    "user": "contactUser",
+    "team": "contactTeam"
 	},
 	"plot": "",
   "plots": [],
@@ -117,7 +119,8 @@ const expectedEmptyPayload = `
         "type": "",
         "value": "",
         "id": "",
-        "user": ""
+        "user": "",
+        "team": ""
 		},
 		"plot": "",
     "plots": [],
