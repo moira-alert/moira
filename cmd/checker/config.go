@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/checker"
 	"github.com/moira-alert/moira/cmd"
 	"github.com/xiam/to"
@@ -41,11 +42,12 @@ type checkerConfig struct {
 	SetLogLevel triggersLogConfig `yaml:"set_log_level"`
 }
 
-func (config *checkerConfig) getSettings() *checker.Config {
+func (config *checkerConfig) getSettings(logger moira.Logger) *checker.Config {
 	logTriggersToLevel := make(map[string]string)
 	for _, v := range config.SetLogLevel.TriggersToLevel {
 		logTriggersToLevel[v.ID] = v.Level
 	}
+	logger.Infof("Found dynamic log rules in config for %d triggers", len(logTriggersToLevel))
 
 	return &checker.Config{
 		CheckInterval:               to.Duration(config.CheckInterval),

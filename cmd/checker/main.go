@@ -84,7 +84,7 @@ func main() {
 
 	isConfigured, _ := remoteSource.IsConfigured()
 	checkerMetrics := metrics.ConfigureCheckerMetrics(telemetry.Metrics, isConfigured)
-	checkerSettings := config.Checker.getSettings()
+	checkerSettings := config.Checker.getSettings(logger)
 	if triggerID != nil && *triggerID != "" {
 		checkSingleTrigger(database, checkerMetrics, checkerSettings, metricSourceProvider)
 	}
