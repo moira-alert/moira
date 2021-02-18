@@ -17,6 +17,7 @@ import (
 	"github.com/moira-alert/moira/checker"
 	"github.com/moira-alert/moira/checker/worker"
 	"github.com/moira-alert/moira/cmd"
+	db "github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/database/redis"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	"github.com/moira-alert/moira/metrics"
@@ -75,7 +76,8 @@ func main() {
 	defer telemetry.Stop()
 
 	databaseSettings := config.Redis.GetSettings()
-	database := redis.NewDatabase(logger, databaseSettings, redis.Checker)
+	redis := redis.NewDatabase(logger, databaseSettings, redis.Checker)
+	database := db.NewDatabaseWithMetrics(redis, "redis", &telemetry.Metrics)
 
 	remoteConfig := config.Remote.GetRemoteSourceSettings()
 	localSource := local.Create(database)

@@ -1,0 +1,45 @@
+import (
+  "sync"
+  "time"
+
+  "github.com/moira-alert/moira/metrics"
+)
+
+{{ $decorator := (or .Vars.DecoratorName (printf "%sWithMetrics" .Interface.Name)) }}
+{{ $metric_name := (or .Vars.MetricName (printf "%s_duration" (down .Interface.Name))) }}
+
+// {{$decorator}} implements {{.Interface.Type}} interface with all methods wrapped by moira metrics
+type {{$decorator}} struct {
+  base {{.Interface.Type}}
+	metricsPrefix string
+	registry      *metrics.Registry
+	timers        *[{{ (len .Interface.Methods) }}]*metrics.Timer
+    mutex         sync.Mutex
+}
+
+// New{{.Interface.Name}}WithMetrics returns an instance of the {{.Interface.Type}} decorated with duration metric
+func New{{$decorator}}(base {{.Interface.Type}}, metricsPrefix string, registry *metrics.Registry) *{{$decorator}} {
+  return &{{$decorator}} {
+    base: base,
+    metricsPrefix: metricsPrefix,
+    registry: registry,
+    timers: &[{{ (len .Interface.Methods) }}]*metrics.Timer{},
+  }
+}
+
+{{range $i, $method := .Interface.MethodsList}}
+  // {{$method.Name}} implements {{$.Interface.Type}}
+  func (d *{{$decorator}}) {{$method.Declaration}} {
+    since := time.Now()
+    if d.timers[{{ $i }}] == nil {
+	  d.mutex.Lock()
+	  defer d.mutex.Unlock()
+	  if d.timers[{{ $i }}] == nil {
+        t := (*d.registry).NewTimer(d.metricsPrefix, "{{ $.Interface.Name }}", "method", "{{ $method.Name }}", "duration")
+        d.timers[{{ $i }}] = &t
+      }
+    }
+    defer (*d.timers[{{ $i }}]).UpdateSince(since)
+    {{$method.Pass "d.base."}}
+  }
+{{end}}
