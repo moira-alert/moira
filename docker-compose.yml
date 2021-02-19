@@ -110,7 +110,24 @@ services:
       - ./local/relay.conf:/home/relay/carbon-c-relay.conf
     command: /usr/bin/relay -E -s -f /home/relay/carbon-c-relay.conf
     restart: always
+
+  grafana:
+    image: grafana/grafana:7.4.2
+    ports:
+      - "3000:3000"
+    networks:
+      - default
+    volumes:
+      - grafana_data:/var/lib/grafana
+      #      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./local/grafana/datasources:/etc/grafana/provisioning/datasources
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    restart: unless-stopped
+
 networks:
   balancer:
 volumes:
   data:
+  grafana_data: {}
