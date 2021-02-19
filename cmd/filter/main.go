@@ -10,6 +10,7 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/cmd"
+	db "github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/database/redis"
 	"github.com/moira-alert/moira/filter"
 	"github.com/moira-alert/moira/filter/connection"
@@ -78,7 +79,8 @@ func main() {
 	}
 
 	filterMetrics := metrics.ConfigureFilterMetrics(telemetry.Metrics)
-	database := redis.NewDatabase(logger, config.Redis.GetSettings(), redis.Filter)
+	redis := redis.NewDatabase(logger, config.Redis.GetSettings(), redis.Filter)
+	database := db.NewDatabaseWithMetrics(redis, "redis", &telemetry.Metrics)
 
 	retentionConfigFile, err := os.Open(config.Filter.RetentionConfig)
 	if err != nil {

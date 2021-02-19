@@ -13,6 +13,7 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/cmd"
+	db "github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/database/redis"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	"github.com/moira-alert/moira/metrics"
@@ -75,7 +76,8 @@ func main() {
 
 	notifierMetrics := metrics.ConfigureNotifierMetrics(telemetry.Metrics, serviceName)
 	databaseSettings := config.Redis.GetSettings()
-	database := redis.NewDatabase(logger, databaseSettings, redis.Notifier)
+	redis := redis.NewDatabase(logger, databaseSettings, redis.Notifier)
+	database := db.NewDatabaseWithMetrics(redis, "redis", &telemetry.Metrics)
 
 	localSource := local.Create(database)
 	remoteConfig := config.Remote.GetRemoteSourceSettings()

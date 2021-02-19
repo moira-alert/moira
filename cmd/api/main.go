@@ -14,6 +14,7 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api/handler"
 	"github.com/moira-alert/moira/cmd"
+	db "github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/database/redis"
 	"github.com/moira-alert/moira/index"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
@@ -76,7 +77,8 @@ func main() {
 	defer telemetry.Stop()
 
 	databaseSettings := config.Redis.GetSettings()
-	database := redis.NewDatabase(logger, databaseSettings, redis.API)
+	redis := redis.NewDatabase(logger, databaseSettings, redis.API)
+	database := db.NewDatabaseWithMetrics(redis, "redis", &telemetry.Metrics)
 
 	// Start Index right before HTTP listener. Fail if index cannot start
 	searchIndex := index.NewSearchIndex(logger, database, telemetry.Metrics)
