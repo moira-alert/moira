@@ -180,6 +180,7 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 
 		err = sender.SendEvents(pkg.Events, pkg.Contact, pkg.Trigger, plots, pkg.Throttled)
 		if err == nil {
+			notifier.logger.String("contactID", pkg.Contact.ID).String("sender", pkg.Contact.Type).Errorf("cannot send notification: %s", err.Error())
 			if metric, found := notifier.metrics.SendersOkMetrics.GetRegisteredMeter(pkg.Contact.Type); found {
 				metric.Mark(1)
 			}
