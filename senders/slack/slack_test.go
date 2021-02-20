@@ -8,7 +8,7 @@ import (
 
 	"github.com/moira-alert/moira"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
-	"github.com/nlopes/slack"
+	"github.com/slack-go/slack"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
