@@ -12,7 +12,7 @@ import (
 	"github.com/moira-alert/moira/senders"
 	blackfriday "github.com/russross/blackfriday/v2"
 
-	"github.com/nlopes/slack"
+	"github.com/slack-go/slack"
 )
 
 const (
