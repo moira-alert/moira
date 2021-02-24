@@ -1,9 +1,0 @@
-runner:
-  golangci: &runner-config
-    cmd: golangci-lint run --out-format=line-number ./...
-    errorformat:
-      - "%E%f:%l:%c: %m"
-      - "%E%f:%l: %m"
-      - "%C%.%#"
-  golangci-branch: *runner-config
-  golangci-pr: *runner-config
