@@ -52,14 +52,14 @@ func buildTriggerPlots(trigger *moira.Trigger, metricsData map[string][]metricSo
 
 // buildNotificationPackagePlots returns bytes slices containing package plots
 func (notifier *StandardNotifier) buildNotificationPackagePlots(pkg NotificationPackage, logger moira.Logger) ([][]byte, error) {
-	logger.Info("Start build plots for package")
-	startTime := time.Now()
 	if !pkg.Plotting.Enabled {
 		return nil, nil
 	}
 	if pkg.Trigger.ID == "" {
 		return nil, nil
 	}
+	logger.Info("Start build plots for package")
+	startTime := time.Now()
 	metricsToShow := pkg.GetMetricNames()
 	if len(metricsToShow) == 0 {
 		return nil, nil
