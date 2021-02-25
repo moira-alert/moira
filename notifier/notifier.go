@@ -169,14 +169,15 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 
 	for pkg := range ch {
 		log := getLogWithPackageContext(&notifier.logger, &pkg, &notifier.config)
-		plots, err := notifier.buildNotificationPackagePlots(pkg, log)
+		plottingLog := log.Clone().String(moira.LogFieldNameContext, "plotting")
+		plots, err := notifier.buildNotificationPackagePlots(pkg, plottingLog)
 		if err != nil {
 			buildErr := fmt.Sprintf("Can't build notification package plot for %s: %s", pkg.Trigger.ID, err.Error())
 			switch err.(type) {
 			case plotting.ErrNoPointsToRender:
-				log.Debugf(buildErr)
+				plottingLog.Debugf(buildErr)
 			default:
-				log.Errorf(buildErr)
+				plottingLog.Errorf(buildErr)
 			}
 		}
 
@@ -191,7 +192,7 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 				metric.Mark(1)
 			}
 		} else {
-			notifier.logger.Clone().String("contactID", pkg.Contact.ID).String("sender", pkg.Contact.Type).Errorf("cannot send notification: %s", err.Error())
+			log.Errorf("Cannot send notification: %s", err.Error())
 			notifier.resend(&pkg, err.Error())
 		}
 	}

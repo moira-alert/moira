@@ -52,6 +52,8 @@ func buildTriggerPlots(trigger *moira.Trigger, metricsData map[string][]metricSo
 
 // buildNotificationPackagePlots returns bytes slices containing package plots
 func (notifier *StandardNotifier) buildNotificationPackagePlots(pkg NotificationPackage, logger moira.Logger) ([][]byte, error) {
+	logger.Info("Start build plots for package")
+	startTime := time.Now()
 	if !pkg.Plotting.Enabled {
 		return nil, nil
 	}
@@ -74,6 +76,9 @@ func (notifier *StandardNotifier) buildNotificationPackagePlots(pkg Notification
 	metricsData = getMetricDataToShow(metricsData, metricsToShow)
 	logger.Debugf("Build plot from MetricsData: %v", metricsData)
 	result, err := buildTriggerPlots(trigger, metricsData, plotTemplate)
+	logger.Clone().
+		Int64("moira.plots.build_duration_ms", time.Since(startTime).Milliseconds()).
+		Info("Finished build plots for package")
 	return result, err
 }
 
