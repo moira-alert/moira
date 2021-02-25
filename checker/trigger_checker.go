@@ -51,9 +51,16 @@ func MakeTriggerChecker(triggerID string, dataBase moira.Database, logger moira.
 		return nil, err
 	}
 
+	triggerLogger := logger.Clone().String(moira.LogFieldNameTriggerID, triggerID)
+	if logLevel, ok := config.LogTriggersToLevel[triggerID]; ok {
+		if _, err := triggerLogger.Level(logLevel); err != nil {
+			triggerLogger.Warningf("Incorrect log level '%s'", logLevel)
+		}
+	}
+
 	triggerChecker := &TriggerChecker{
 		database: dataBase,
-		logger:   logger,
+		logger:   triggerLogger,
 		config:   config,
 		metrics:  metrics.GetCheckMetrics(&trigger),
 		source:   source,

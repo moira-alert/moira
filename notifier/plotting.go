@@ -33,7 +33,8 @@ func (err errFetchAvailableSeriesFailed) Error() string {
 }
 
 // buildTriggerPlots returns bytes slices containing trigger plots
-func buildTriggerPlots(trigger *moira.Trigger, metricsData map[string][]metricSource.MetricData, plotTemplate *plotting.Plot) ([][]byte, error) {
+func buildTriggerPlots(trigger *moira.Trigger, metricsData map[string][]metricSource.MetricData,
+	plotTemplate *plotting.Plot) ([][]byte, error) {
 	result := make([][]byte, 0)
 	for targetName, metrics := range metricsData {
 		renderable, err := plotTemplate.GetRenderable(targetName, trigger, metrics)
@@ -50,7 +51,9 @@ func buildTriggerPlots(trigger *moira.Trigger, metricsData map[string][]metricSo
 }
 
 // buildNotificationPackagePlots returns bytes slices containing package plots
-func (notifier *StandardNotifier) buildNotificationPackagePlots(pkg NotificationPackage) ([][]byte, error) {
+func (notifier *StandardNotifier) buildNotificationPackagePlots(pkg NotificationPackage, logger moira.Logger) ([][]byte, error) {
+	logger.Info("Start build plots for package")
+	startTime := time.Now()
 	if !pkg.Plotting.Enabled {
 		return nil, nil
 	}
@@ -65,14 +68,17 @@ func (notifier *StandardNotifier) buildNotificationPackagePlots(pkg Notification
 	if err != nil {
 		return nil, err
 	}
-	from, to := resolveMetricsWindow(notifier.logger, pkg.Trigger, pkg)
+	from, to := resolveMetricsWindow(logger, pkg.Trigger, pkg)
 	metricsData, trigger, err := notifier.evaluateTriggerMetrics(from, to, pkg.Trigger.ID)
 	if err != nil {
 		return nil, err
 	}
 	metricsData = getMetricDataToShow(metricsData, metricsToShow)
-	notifier.logger.Debugf("Build plot for trigger: %s from MetricsData: %v", trigger.ID, metricsData)
+	logger.Debugf("Build plot from MetricsData: %v", metricsData)
 	result, err := buildTriggerPlots(trigger, metricsData, plotTemplate)
+	logger.Clone().
+		Int64("moira.plots.build_duration_ms", time.Since(startTime).Milliseconds()).
+		Info("Finished build plots for package")
 	return result, err
 }
 
@@ -85,7 +91,8 @@ func resolveMetricsWindow(logger moira.Logger, trigger moira.TriggerData, pkg No
 	// try to resolve package window, force default realtime window on fail for both local and remote triggers
 	from, to, err := pkg.GetWindow()
 	if err != nil {
-		logger.Warningf("Failed to get trigger %s package window: %s, using default %s window", trigger.ID, err.Error(), defaultTimeRange.String())
+		logger.Warningf("Failed to get trigger package window: %s, using default %s window",
+			err.Error(), defaultTimeRange.String())
 		return defaultFrom, defaultTo
 	}
 	// round to nearest retention to correctly fetch data from redis

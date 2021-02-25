@@ -84,7 +84,7 @@ func main() {
 
 	isConfigured, _ := remoteSource.IsConfigured()
 	checkerMetrics := metrics.ConfigureCheckerMetrics(telemetry.Metrics, isConfigured)
-	checkerSettings := config.Checker.getSettings()
+	checkerSettings := config.Checker.getSettings(logger)
 	if triggerID != nil && *triggerID != "" {
 		checkSingleTrigger(database, checkerMetrics, checkerSettings, metricSourceProvider)
 	}
@@ -115,6 +115,7 @@ func main() {
 
 func checkSingleTrigger(database moira.Database, metrics *metrics.CheckerMetrics, settings *checker.Config, sourceProvider *metricSource.SourceProvider) {
 	triggerChecker, err := checker.MakeTriggerChecker(*triggerID, database, logger, settings, sourceProvider, metrics)
+	logger.String(moira.LogFieldNameTriggerID, *triggerID)
 	if err != nil {
 		logger.Errorf("Failed initialize trigger checker: %s", err.Error())
 		os.Exit(1)

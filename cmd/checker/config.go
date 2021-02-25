@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/checker"
 	"github.com/moira-alert/moira/cmd"
 	"github.com/xiam/to"
@@ -12,6 +13,15 @@ type config struct {
 	Checker   checkerConfig       `yaml:"checker"`
 	Telemetry cmd.TelemetryConfig `yaml:"telemetry"`
 	Remote    cmd.RemoteConfig    `yaml:"remote"`
+}
+
+type triggerLogConfig struct {
+	ID    string `yaml:"id"`
+	Level string `yaml:"level"`
+}
+
+type triggersLogConfig struct {
+	TriggersToLevel []triggerLogConfig `yaml:"triggers"`
 }
 
 type checkerConfig struct {
@@ -28,9 +38,17 @@ type checkerConfig struct {
 	MaxParallelChecks int `yaml:"max_parallel_checks"`
 	// Max concurrent remote checkers to run. Equals to the number of processor cores found on Moira host by default or when variable is defined as 0.
 	MaxParallelRemoteChecks int `yaml:"max_parallel_remote_checks"`
+	// Specify log level by entities
+	SetLogLevel triggersLogConfig `yaml:"set_log_level"`
 }
 
-func (config *checkerConfig) getSettings() *checker.Config {
+func (config *checkerConfig) getSettings(logger moira.Logger) *checker.Config {
+	logTriggersToLevel := make(map[string]string)
+	for _, v := range config.SetLogLevel.TriggersToLevel {
+		logTriggersToLevel[v.ID] = v.Level
+	}
+	logger.Infof("Found dynamic log rules in config for %d triggers", len(logTriggersToLevel))
+
 	return &checker.Config{
 		CheckInterval:               to.Duration(config.CheckInterval),
 		LazyTriggersCheckInterval:   to.Duration(config.LazyTriggersCheckInterval),
@@ -38,6 +56,7 @@ func (config *checkerConfig) getSettings() *checker.Config {
 		StopCheckingIntervalSeconds: int64(to.Duration(config.StopCheckingInterval).Seconds()),
 		MaxParallelChecks:           config.MaxParallelChecks,
 		MaxParallelRemoteChecks:     config.MaxParallelRemoteChecks,
+		LogTriggersToLevel:          logTriggersToLevel,
 	}
 }
 

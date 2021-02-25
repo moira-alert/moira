@@ -64,13 +64,11 @@ func getErrorResponseIfItHas(writer http.ResponseWriter) *api.ErrorResponse {
 
 func newLogEntry(logger moira.Logger, request *http.Request) *apiLoggerEntry {
 	entry := &apiLoggerEntry{
-		logger:  logger,
+		logger:  logger.Clone(),
 		request: request,
 		buf:     &bytes.Buffer{},
 	}
 
-	entry.buf.WriteString("\"")
-	fmt.Fprintf(entry.buf, "%s ", request.Method)
 	scheme := "http"
 	if request.TLS != nil {
 		scheme = "https"
@@ -79,12 +77,25 @@ func newLogEntry(logger moira.Logger, request *http.Request) *apiLoggerEntry {
 	if userName == "" {
 		userName = "anonymous"
 	}
-	fmt.Fprintf(entry.buf, "%s:// %s%s %s\"", scheme, request.Host, request.RequestURI, request.Proto)
+	uri := fmt.Sprintf("%s://%s%s", scheme, request.Host, request.RequestURI)
+
+	log := entry.logger
+	log.String("context", "http")
+	log.String("http.method", request.Method)
+	log.String("http.uri", uri)
+	log.String("http.protocol", request.Proto)
+	log.String("http.remote_addr", request.RemoteAddr)
+	log.String("username", userName)
+
+	entry.buf.WriteString("\"")
+	fmt.Fprintf(entry.buf, "%s ", request.Method)
+	fmt.Fprintf(entry.buf, "%s %s\"", uri, request.Proto)
 	entry.buf.WriteString(" from ")
 	entry.buf.WriteString(request.RemoteAddr)
 	entry.buf.WriteString(" by ")
 	entry.buf.WriteString(userName)
 	entry.buf.WriteString(" - ")
+
 	return entry
 }
 
@@ -92,6 +103,11 @@ func (entry *apiLoggerEntry) write(status, bytes int, elapsed time.Duration, res
 	if status == 0 {
 		status = 200
 	}
+	log := entry.logger
+	log.Int("http.http_status", status)
+	log.Int("http.content_length", bytes)
+	log.Int64("elapsed_time_ms", elapsed.Milliseconds())
+
 	fmt.Fprintf(entry.buf, "%03d", status)
 	fmt.Fprintf(entry.buf, " %dB", bytes)
 	entry.buf.WriteString(" in ")
@@ -101,13 +117,18 @@ func (entry *apiLoggerEntry) write(status, bytes int, elapsed time.Duration, res
 		if errorResponse != nil {
 			fmt.Fprintf(entry.buf, " - Error : %s", errorResponse.ErrorText)
 		}
-		entry.logger.Error(entry.buf.String())
+		log.Error(entry.buf.String())
 	} else {
-		entry.logger.Info(entry.buf.String())
+		log.Info(entry.buf.String())
 	}
 }
 
 func (entry *apiLoggerEntry) writePanic(status, bytes int, elapsed time.Duration, v interface{}, stack []byte) {
+	log := entry.logger
+	log.Int("http.http_status", status)
+	log.Int("http.content_length", bytes)
+	log.Int("elapsed_time_ms", int(elapsed.Milliseconds()))
+
 	fmt.Fprintf(entry.buf, "%03d", status)
 	fmt.Fprintf(entry.buf, " %dB", bytes)
 	entry.buf.WriteString(" in ")
@@ -115,7 +136,7 @@ func (entry *apiLoggerEntry) writePanic(status, bytes int, elapsed time.Duration
 	fmt.Fprintf(entry.buf, " - Panic: %+v", v)
 	entry.buf.WriteString("\n")
 	entry.buf.WriteString(string(stack))
-	entry.logger.Error(entry.buf.String())
+	log.Error(entry.buf.String())
 }
 
 type responseWriterWithBody struct {

@@ -6,7 +6,7 @@ package mock_metric_source
 
 import (
 	gomock "github.com/golang/mock/gomock"
-	metricSource "github.com/moira-alert/moira/metric_source"
+	metricsource "github.com/moira-alert/moira/metric_source"
 	reflect "reflect"
 )
 
@@ -34,10 +34,10 @@ func (m *MockMetricSource) EXPECT() *MockMetricSourceMockRecorder {
 }
 
 // Fetch mocks base method
-func (m *MockMetricSource) Fetch(arg0 string, arg1, arg2 int64, arg3 bool) (metricSource.FetchResult, error) {
+func (m *MockMetricSource) Fetch(arg0 string, arg1, arg2 int64, arg3 bool) (metricsource.FetchResult, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Fetch", arg0, arg1, arg2, arg3)
-	ret0, _ := ret[0].(metricSource.FetchResult)
+	ret0, _ := ret[0].(metricsource.FetchResult)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
