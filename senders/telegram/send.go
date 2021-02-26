@@ -125,7 +125,9 @@ func (sender *Sender) sendAsMessage(chat *telebot.Chat, message string) error {
 	_, err := sender.bot.Send(chat, message)
 	if err != nil {
 		if e, ok := err.(*telebot.APIError); ok {
-			if e == telebot.ErrBlockedByUser {
+			if e.Code == 401 || e.Code == 400 && (e.Message == telebot.ErrBlockedByUser.Message ||
+				e.Message == telebot.ErrEmptyChatID.Message ||
+				e.Message == telebot.ErrChatNotFound.Message) {
 				return &moira.SenderBrokenContactError{SenderError: e}
 			}
 		}
