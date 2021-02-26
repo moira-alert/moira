@@ -192,8 +192,14 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 				metric.Mark(1)
 			}
 		} else {
-			log.Errorf("Cannot send notification: %s", err.Error())
-			notifier.resend(&pkg, err.Error())
+			switch e := err.(type) {
+			case *SenderBrokenContactError:
+				log.Errorf("Cannot send to broken contact: %s", e.Error())
+
+			default:
+				log.Errorf("Cannot send notification: %s", err.Error())
+				notifier.resend(&pkg, err.Error())
+			}
 		}
 	}
 }
