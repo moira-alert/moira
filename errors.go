@@ -1,4 +1,4 @@
-package notifier
+package moira
 
 //SenderBrokenContactError means than sender has no way to send message to contact.
 // Maybe receive contact was deleted, blocked or archived.

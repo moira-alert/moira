@@ -3,7 +3,6 @@ package telegram
 import (
 	"bytes"
 	"fmt"
-	"github.com/moira-alert/moira/notifier"
 	"strings"
 
 	"gopkg.in/tucnak/telebot.v2"
@@ -127,7 +126,7 @@ func (sender *Sender) sendAsMessage(chat *telebot.Chat, message string) error {
 	if err != nil {
 		if e, ok := err.(*telebot.APIError); ok {
 			if e == telebot.ErrBlockedByUser {
-				return &notifier.SenderBrokenContactError{SenderError: e}
+				return &moira.SenderBrokenContactError{SenderError: e}
 			}
 		}
 		return fmt.Errorf("can't send event message [%s] to %v: %s", message, chat.ID, err.Error())
