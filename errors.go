@@ -7,5 +7,5 @@ type SenderBrokenContactError struct {
 }
 
 func (e *SenderBrokenContactError) Error() string {
-	return e.Error()
+	return e.SenderError.Error()
 }
