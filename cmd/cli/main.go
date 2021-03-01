@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/moira-alert/moira/support"
 	"os"
 	"strings"
 
@@ -109,30 +110,50 @@ func main() { //nolint
 	}
 
 	if *pullTrigger != "" {
-		err := handlePullTrigger(logger, dataBase, *pullTrigger, *triggerFile)
+		f, err := openFile(*triggerFile)
 		if err != nil {
+			logger.Fatal(err)
+		}
+		defer f.Close()
+
+		if err = support.HandlePullTrigger(logger, dataBase, *pullTrigger, f); err != nil {
 			logger.Fatal(err)
 		}
 	}
 
 	if *pullTriggerMetrics != "" {
-		localSource := local.Create(dataBase)
-		err := handlePullTriggerMetrics(localSource, logger, dataBase, *pullTriggerMetrics, *triggerMetricsFile)
+		f, err := openFile(*triggerMetricsFile)
 		if err != nil {
+			logger.Fatal(err)
+		}
+		defer f.Close()
+
+		localSource := local.Create(dataBase)
+		if err := support.HandlePullTriggerMetrics(localSource, logger, dataBase, *pullTriggerMetrics, f); err != nil {
 			logger.Fatal(err)
 		}
 	}
 
 	if *pushTrigger {
-		err := handlePushTrigger(logger, dataBase, *triggerFile)
+		f, err := openFile(*triggerFile)
 		if err != nil {
+			logger.Fatal(err)
+		}
+		defer f.Close()
+
+		if err := support.HandlePushTrigger(logger, dataBase, f); err != nil {
 			logger.Fatal(err)
 		}
 	}
 
 	if *pushTriggerMetrics != "" {
-		err := handlePushTriggerMetrics(logger, dataBase, *pushTriggerMetrics, *triggerMetricsFile)
+		f, err := openFile(*triggerMetricsFile)
 		if err != nil {
+			logger.Fatal(err)
+		}
+		defer f.Close()
+
+		if err := support.HandlePushTriggerMetrics(logger, dataBase, *pushTriggerMetrics, f); err != nil {
 			logger.Fatal(err)
 		}
 	}
@@ -190,4 +211,15 @@ func contains(s []string, e string) bool {
 		}
 	}
 	return false
+}
+
+func openFile(filePath string) (*os.File, error) {
+	if filePath == "" {
+		return nil, fmt.Errorf("file is not specified")
+	}
+	file, err := os.Create(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("cannot create file: %w", err)
+	}
+	return file, nil
 }

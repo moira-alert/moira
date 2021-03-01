@@ -1,9 +1,9 @@
-package main
+package support
 
 import (
 	"encoding/json"
 	"fmt"
-	"os"
+	"io"
 	"time"
 
 	"github.com/moira-alert/moira"
@@ -18,18 +18,10 @@ type patternMetrics struct {
 
 const defaultRetention = 10
 
-func handlePullTrigger(logger moira.Logger, database moira.Database, triggerID string, filePath string) error {
+func HandlePullTrigger(logger moira.Logger, database moira.Database, triggerID string, out io.Writer) error {
 	logger.Infof("Save info about trigger %s", triggerID)
 
-	if filePath == "" {
-		return fmt.Errorf("file is not specified")
-	}
-	file, err := os.Create(filePath)
-	if err != nil {
-		return fmt.Errorf("cannot create file: %w", err)
-	}
-	defer file.Close()
-	encoder := json.NewEncoder(file)
+	encoder := json.NewEncoder(out)
 
 	trigger, err := database.GetTrigger(triggerID)
 	if err != nil {
@@ -42,18 +34,11 @@ func handlePullTrigger(logger moira.Logger, database moira.Database, triggerID s
 	return nil
 }
 
-func handlePullTriggerMetrics(source metricSource.MetricSource, logger moira.Logger, database moira.Database, triggerID string, filePath string) error {
+func HandlePullTriggerMetrics(source metricSource.MetricSource, logger moira.Logger, database moira.Database,
+	triggerID string, out io.Writer) error {
 	logger.Infof("Pulling info about trigger %s metrics", triggerID)
 
-	if filePath == "" {
-		return fmt.Errorf("file is not specified")
-	}
-	file, err := os.Create(filePath)
-	if err != nil {
-		return fmt.Errorf("cannot create file: %w", err)
-	}
-	defer file.Close()
-	encoder := json.NewEncoder(file)
+	encoder := json.NewEncoder(out)
 
 	trigger, err := database.GetTrigger(triggerID)
 	if err != nil {
@@ -104,20 +89,13 @@ func handlePullTriggerMetrics(source metricSource.MetricSource, logger moira.Log
 	return nil
 }
 
-func handlePushTrigger(logger moira.Logger, database moira.Database, filePath string) error {
+func HandlePushTrigger(logger moira.Logger, database moira.Database, in io.Reader) error {
 	logger.Info("Reading trigger JSON from file")
-	if filePath == "" {
-		return fmt.Errorf("file is not specified")
-	}
-	file, err := os.Open(filePath)
-	if err != nil {
-		return fmt.Errorf("cannot open file: %w", err)
-	}
-	defer file.Close()
-	decoder := json.NewDecoder(file)
+
+	decoder := json.NewDecoder(in)
 
 	trigger := &moira.Trigger{}
-	err = decoder.Decode(trigger)
+	err := decoder.Decode(trigger)
 	if err != nil {
 		return fmt.Errorf("cannot decode trigger: %w", err)
 	}
@@ -129,20 +107,12 @@ func handlePushTrigger(logger moira.Logger, database moira.Database, filePath st
 	return nil
 }
 
-func handlePushTriggerMetrics(logger moira.Logger, database moira.Database, triggerID string, filePath string) error {
+func HandlePushTriggerMetrics(logger moira.Logger, database moira.Database, triggerID string, in io.Reader) error {
 	logger.Infof("Reading trigger metrics JSON from stdin")
 
-	if filePath == "" {
-		return fmt.Errorf("file is not specified")
-	}
-	file, err := os.Open(filePath)
-	if err != nil {
-		return fmt.Errorf("cannot open file: %w", err)
-	}
-	defer file.Close()
-	decoder := json.NewDecoder(file)
+	decoder := json.NewDecoder(in)
 
-	_, err = database.GetTrigger(triggerID)
+	_, err := database.GetTrigger(triggerID)
 	if err != nil {
 		return fmt.Errorf("cannot get trigger: %w", err)
 	}
