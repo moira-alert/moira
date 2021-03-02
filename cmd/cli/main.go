@@ -53,7 +53,7 @@ var (
 var (
 	pullTrigger        = flag.String("pull-trigger", "", "Get trigger from redis and save it to file")
 	pullTriggerMetrics = flag.String("pull-trigger-metrics", "", "Get trigger patterns and metrics from redis and save it to file")
-	pushTrigger        = flag.Bool("push-trigger", false, "Get trigger in JSON from file and save it to redis")
+	pushTrigger        = flag.String("push-trigger", "", "Get trigger in JSON from file and save it to redis")
 	pushTriggerMetrics = flag.String("push-trigger-metrics", "", "Get trigger patterns and metrics in JSON from strdin and save it to redis")
 	triggerFile        = flag.String("trigger-file", "", "File that holds trigger JSON")
 	triggerMetricsFile = flag.String("trigger-metrics-file", "", "File that holds trigger metrics JSON")
@@ -110,7 +110,7 @@ func main() { //nolint
 	}
 
 	if *pullTrigger != "" {
-		f, err := openFile(*triggerFile)
+		f, err := openFile(*triggerFile, os.O_RDWR|os.O_CREATE)
 		if err != nil {
 			logger.Fatal(err)
 		}
@@ -121,12 +121,12 @@ func main() { //nolint
 			logger.Fatal(err)
 		}
 		if err := json.NewEncoder(f).Encode(t); err != nil {
-			logger.Fatalf("cannot marshall trigger: %w", err)
+			logger.Fatal("cannot marshall trigger: ", err.Error())
 		}
 	}
 
 	if *pullTriggerMetrics != "" {
-		f, err := openFile(*triggerMetricsFile)
+		f, err := openFile(*triggerMetricsFile, os.O_RDWR|os.O_CREATE)
 		if err != nil {
 			logger.Fatal(err)
 		}
@@ -137,12 +137,12 @@ func main() { //nolint
 			logger.Fatal(err)
 		}
 		if err := json.NewEncoder(f).Encode(m); err != nil {
-			logger.Fatalf("cannot marshall trigger metrics: %w", err)
+			logger.Fatal("cannot marshall trigger metrics: ", err.Error())
 		}
 	}
 
-	if *pushTrigger {
-		f, err := openFile(*triggerFile)
+	if *pushTrigger != "" {
+		f, err := openFile(*triggerFile, os.O_RDONLY)
 		if err != nil {
 			logger.Fatal(err)
 		}
@@ -151,7 +151,7 @@ func main() { //nolint
 		trigger := &moira.Trigger{}
 		errDecode := json.NewDecoder(f).Decode(trigger)
 		if errDecode != nil {
-			logger.Fatalf("cannot decode trigger: %w", err)
+			logger.Fatal("cannot decode trigger: ", err.Error())
 		}
 
 		if err := support.HandlePushTrigger(logger, dataBase, trigger); err != nil {
@@ -160,7 +160,7 @@ func main() { //nolint
 	}
 
 	if *pushTriggerMetrics != "" {
-		f, err := openFile(*triggerMetricsFile)
+		f, err := openFile(*triggerMetricsFile, os.O_RDONLY)
 		if err != nil {
 			logger.Fatal(err)
 		}
@@ -169,7 +169,7 @@ func main() { //nolint
 		metrics := []support.PatternMetrics{}
 		err = json.NewDecoder(f).Decode(&metrics)
 		if err != nil {
-			logger.Fatalf("cannot decode trigger metrics: %w", err)
+			logger.Fatal("cannot decode trigger metrics: ", err.Error())
 		}
 
 		if err := support.HandlePushTriggerMetrics(logger, dataBase, *pushTriggerMetrics, metrics); err != nil {
@@ -232,13 +232,13 @@ func contains(s []string, e string) bool {
 	return false
 }
 
-func openFile(filePath string) (*os.File, error) {
+func openFile(filePath string, mode int) (*os.File, error) {
 	if filePath == "" {
 		return nil, fmt.Errorf("file is not specified")
 	}
-	file, err := os.Create(filePath)
+	file, err := os.OpenFile(filePath, mode, 0666)
 	if err != nil {
-		return nil, fmt.Errorf("cannot create file: %w", err)
+		return nil, fmt.Errorf("cannot open file: %w", err)
 	}
 	return file, nil
 }
