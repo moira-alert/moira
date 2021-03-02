@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/moira-alert/moira/support"
 	"os"
 	"strings"
 
@@ -12,6 +11,7 @@ import (
 	"github.com/moira-alert/moira/database/redis"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	"github.com/moira-alert/moira/metric_source/local"
+	"github.com/moira-alert/moira/support"
 )
 
 // Moira version

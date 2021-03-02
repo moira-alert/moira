@@ -49,33 +49,33 @@ func HandlePullTriggerMetrics(source metricSource.MetricSource, logger moira.Log
 	from := until - ttl
 	result := []patternMetrics{}
 	for _, target := range trigger.Targets {
-		fetchResult, err := source.Fetch(target, from, until, trigger.IsSimple())
-		if err != nil {
-			return fmt.Errorf("cannot fetch metrics for target %s: %w", target, err)
+		fetchResult, errFetch := source.Fetch(target, from, until, trigger.IsSimple())
+		if errFetch != nil {
+			return fmt.Errorf("cannot fetch metrics for target %s: %w", target, errFetch)
 		}
-		patterns, err := fetchResult.GetPatterns()
-		if err != nil {
-			return fmt.Errorf("cannot get patterns for target %s: %w", target, err)
+		patterns, errPatterns := fetchResult.GetPatterns()
+		if errPatterns != nil {
+			return fmt.Errorf("cannot get patterns for target %s: %w", target, errPatterns)
 		}
 		for _, pattern := range patterns {
 			patternResult := patternMetrics{
 				Pattern:    pattern,
 				Retentions: make(map[string]int64),
 			}
-			metrics, err := database.GetPatternMetrics(pattern)
-			if err != nil {
-				return fmt.Errorf("cannot get metrics for pattern %s, target %s: %w", pattern, target, err)
+			metrics, errMetrics := database.GetPatternMetrics(pattern)
+			if errMetrics != nil {
+				return fmt.Errorf("cannot get metrics for pattern %s, target %s: %w", pattern, target, errMetrics)
 			}
 			for _, metric := range metrics {
-				retention, err := database.GetMetricRetention(metric)
-				if err != nil {
-					return fmt.Errorf("cannot get metric %s retention: %w", metric, err)
+				retention, errRetention := database.GetMetricRetention(metric)
+				if errRetention != nil {
+					return fmt.Errorf("cannot get metric %s retention: %w", metric, errRetention)
 				}
 				patternResult.Retentions[metric] = retention
 			}
-			values, err := database.GetMetricsValues(metrics, from, until)
-			if err != nil {
-				return fmt.Errorf("cannot get values for pattern %s metrics, target %s: %w", pattern, target, err)
+			values, errValues := database.GetMetricsValues(metrics, from, until)
+			if errValues != nil {
+				return fmt.Errorf("cannot get values for pattern %s metrics, target %s: %w", pattern, target, errValues)
 			}
 			patternResult.Metrics = values
 			result = append(result, patternResult)
