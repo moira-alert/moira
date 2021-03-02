@@ -128,7 +128,7 @@ func (sender *Sender) sendAsMessage(chat *telebot.Chat, message string) error {
 			if e.Code == 401 || e.Code == 400 && (e.Message == telebot.ErrBlockedByUser.Message ||
 				e.Message == telebot.ErrEmptyChatID.Message ||
 				e.Message == telebot.ErrChatNotFound.Message) {
-				return &moira.SenderBrokenContactError{SenderError: e}
+				return moira.NewSenderBrokenContactError(err)
 			}
 		}
 		return fmt.Errorf("can't send event message [%s] to %v: %s", message, chat.ID, err.Error())

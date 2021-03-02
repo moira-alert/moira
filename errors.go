@@ -6,6 +6,12 @@ type SenderBrokenContactError struct {
 	SenderError error
 }
 
-func (e *SenderBrokenContactError) Error() string {
+func NewSenderBrokenContactError(senderError error) SenderBrokenContactError {
+	return SenderBrokenContactError{
+		SenderError: senderError,
+	}
+}
+
+func (e SenderBrokenContactError) Error() string {
 	return e.SenderError.Error()
 }

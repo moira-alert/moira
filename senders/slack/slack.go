@@ -193,7 +193,7 @@ func (sender *Sender) sendMessage(message string, contact string, triggerID stri
 		errorText := err.Error()
 		if errorText == ErrorTextChannelArchived || errorText == ErrorTextNotInChannel ||
 			errorText == ErrorTextChannelNotFound {
-			return channelID, threadTimestamp, &moira.SenderBrokenContactError{SenderError: err}
+			return channelID, threadTimestamp, moira.NewSenderBrokenContactError(err)
 		}
 		return channelID, threadTimestamp, fmt.Errorf("failed to send %s event message to slack [%s]: %s",
 			triggerID, contact, errorText)
