@@ -148,7 +148,13 @@ func main() { //nolint
 		}
 		defer f.Close()
 
-		if err := support.HandlePushTrigger(logger, dataBase, f); err != nil {
+		trigger := &moira.Trigger{}
+		errDecode := json.NewDecoder(f).Decode(trigger)
+		if errDecode != nil {
+			logger.Fatalf("cannot decode trigger: %w", err)
+		}
+
+		if err := support.HandlePushTrigger(logger, dataBase, trigger); err != nil {
 			logger.Fatal(err)
 		}
 	}
@@ -160,7 +166,13 @@ func main() { //nolint
 		}
 		defer f.Close()
 
-		if err := support.HandlePushTriggerMetrics(logger, dataBase, *pushTriggerMetrics, f); err != nil {
+		metrics := []support.PatternMetrics{}
+		err = json.NewDecoder(f).Decode(&metrics)
+		if err != nil {
+			logger.Fatalf("cannot decode trigger metrics: %w", err)
+		}
+
+		if err := support.HandlePushTriggerMetrics(logger, dataBase, *pushTriggerMetrics, metrics); err != nil {
 			logger.Fatal(err)
 		}
 	}

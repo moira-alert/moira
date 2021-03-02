@@ -1,9 +1,7 @@
 package support
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
 	"time"
 
 	"github.com/moira-alert/moira"
@@ -76,17 +74,9 @@ func HandlePullTriggerMetrics(logger moira.Logger, database moira.Database, trig
 	return result, nil
 }
 
-func HandlePushTrigger(logger moira.Logger, database moira.Database, in io.Reader) error {
-	logger.Info("Reading trigger JSON from file")
-
-	decoder := json.NewDecoder(in)
-
-	trigger := &moira.Trigger{}
-	err := decoder.Decode(trigger)
-	if err != nil {
-		return fmt.Errorf("cannot decode trigger: %w", err)
-	}
-	err = database.SaveTrigger(trigger.ID, trigger)
+func HandlePushTrigger(logger moira.Logger, database moira.Database, trigger *moira.Trigger) error {
+	logger.Info("Save trigger")
+	err := database.SaveTrigger(trigger.ID, trigger)
 	if err != nil {
 		return fmt.Errorf("cannot save trigger: %w", err)
 	}
@@ -94,20 +84,9 @@ func HandlePushTrigger(logger moira.Logger, database moira.Database, in io.Reade
 	return nil
 }
 
-func HandlePushTriggerMetrics(logger moira.Logger, database moira.Database, triggerID string, in io.Reader) error {
-	logger.Infof("Reading trigger metrics JSON from stdin")
+func HandlePushTriggerMetrics(logger moira.Logger, database moira.Database, triggerID string, patternsMetrics []PatternMetrics) error {
+	logger.Infof("Save trigger metrics")
 
-	decoder := json.NewDecoder(in)
-
-	_, err := database.GetTrigger(triggerID)
-	if err != nil {
-		return fmt.Errorf("cannot get trigger: %w", err)
-	}
-	patternsMetrics := []PatternMetrics{}
-	err = decoder.Decode(&patternsMetrics)
-	if err != nil {
-		return fmt.Errorf("cannot decode trigger: %w", err)
-	}
 	buffer := make(map[string]*moira.MatchedMetric, len(patternsMetrics))
 	i := 0
 	for _, patternMetrics := range patternsMetrics {
@@ -132,7 +111,7 @@ func HandlePushTriggerMetrics(logger moira.Logger, database moira.Database, trig
 			}
 		}
 	}
-	err = database.SaveMetrics(buffer)
+	err := database.SaveMetrics(buffer)
 	if err != nil {
 		return fmt.Errorf("cannot save trigger metrics: %w", err)
 	}
