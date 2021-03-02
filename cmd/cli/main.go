@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -10,7 +11,6 @@ import (
 	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/database/redis"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
-	"github.com/moira-alert/moira/metric_source/local"
 	"github.com/moira-alert/moira/support"
 )
 
@@ -116,8 +116,12 @@ func main() { //nolint
 		}
 		defer f.Close()
 
-		if err = support.HandlePullTrigger(logger, dataBase, *pullTrigger, f); err != nil {
+		t, err := support.HandlePullTrigger(logger, dataBase, *pullTrigger)
+		if err != nil {
 			logger.Fatal(err)
+		}
+		if err := json.NewEncoder(f).Encode(t); err != nil {
+			logger.Fatalf("cannot marshall trigger: %w", err)
 		}
 	}
 
@@ -128,9 +132,12 @@ func main() { //nolint
 		}
 		defer f.Close()
 
-		localSource := local.Create(dataBase)
-		if err := support.HandlePullTriggerMetrics(localSource, logger, dataBase, *pullTriggerMetrics, f); err != nil {
+		m, err := support.HandlePullTriggerMetrics(logger, dataBase, *pullTriggerMetrics)
+		if err != nil {
 			logger.Fatal(err)
+		}
+		if err := json.NewEncoder(f).Encode(m); err != nil {
+			logger.Fatalf("cannot marshall trigger metrics: %w", err)
 		}
 	}
 

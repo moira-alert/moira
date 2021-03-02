@@ -36,6 +36,7 @@ func NewHandler(db moira.Database, log moira.Logger, index moira.Searcher, confi
 	router.Route("/api", func(router chi.Router) {
 		router.Use(moiramiddle.DatabaseContext(database))
 		router.Get("/config", getWebConfig(webConfigContent))
+		router.Route("/debug", debug)
 		router.Route("/user", user)
 		router.With(moiramiddle.Triggers(config.LocalMetricTTL, config.RemoteMetricTTL)).Route("/trigger", triggers(metricSourceProvider, searchIndex))
 		router.Route("/tag", tag)
@@ -55,12 +56,12 @@ func NewHandler(db moira.Database, log moira.Logger, index moira.Searcher, confi
 func notFoundHandler(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("X-Content-Type-Options", "nosniff")
 	writer.Header().Set("Content-Type", "application/json")
-	writer.WriteHeader(404) //nolint
+	writer.WriteHeader(404)                         //nolint
 	render.Render(writer, request, api.ErrNotFound) //nolint
 }
 
 func methodNotAllowedHandler(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "application/json")
-	writer.WriteHeader(405) //nolint
+	writer.WriteHeader(405)                                 //nolint
 	render.Render(writer, request, api.ErrMethodNotAllowed) //nolint
 }

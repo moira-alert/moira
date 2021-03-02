@@ -7,10 +7,10 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira"
-	metricSource "github.com/moira-alert/moira/metric_source"
+	"github.com/moira-alert/moira/metric_source/local"
 )
 
-type patternMetrics struct {
+type PatternMetrics struct {
 	Pattern    string                          `json:"pattern"`
 	Metrics    map[string][]*moira.MetricValue `json:"metrics"`
 	Retentions map[string]int64                `json:"retention"`
@@ -18,75 +18,62 @@ type patternMetrics struct {
 
 const defaultRetention = 10
 
-func HandlePullTrigger(logger moira.Logger, database moira.Database, triggerID string, out io.Writer) error {
-	logger.Infof("Save info about trigger %s", triggerID)
-
-	encoder := json.NewEncoder(out)
+func HandlePullTrigger(logger moira.Logger, database moira.Database, triggerID string) (*moira.Trigger, error) {
+	logger.Infof("Pull database info about trigger %s", triggerID)
 
 	trigger, err := database.GetTrigger(triggerID)
 	if err != nil {
-		return fmt.Errorf("cannot get trigger: %w", err)
+		return nil, fmt.Errorf("cannot get trigger: %w", err)
 	}
-	err = encoder.Encode(trigger)
-	if err != nil {
-		return fmt.Errorf("cannot marshall trigger: %w", err)
-	}
-	return nil
+	return &trigger, nil
 }
 
-func HandlePullTriggerMetrics(source metricSource.MetricSource, logger moira.Logger, database moira.Database,
-	triggerID string, out io.Writer) error {
+func HandlePullTriggerMetrics(logger moira.Logger, database moira.Database, triggerID string) ([]PatternMetrics, error) {
 	logger.Infof("Pulling info about trigger %s metrics", triggerID)
-
-	encoder := json.NewEncoder(out)
+	source := local.Create(database)
 
 	trigger, err := database.GetTrigger(triggerID)
 	if err != nil {
-		return fmt.Errorf("cannot get trigger: %w", err)
+		return nil, fmt.Errorf("cannot get trigger: %w", err)
 	}
 	ttl := database.GetMetricsTTLSeconds()
 	until := time.Now().Unix()
 	from := until - ttl
-	result := []patternMetrics{}
+	result := []PatternMetrics{}
 	for _, target := range trigger.Targets {
 		fetchResult, errFetch := source.Fetch(target, from, until, trigger.IsSimple())
 		if errFetch != nil {
-			return fmt.Errorf("cannot fetch metrics for target %s: %w", target, errFetch)
+			return nil, fmt.Errorf("cannot fetch metrics for target %s: %w", target, errFetch)
 		}
 		patterns, errPatterns := fetchResult.GetPatterns()
 		if errPatterns != nil {
-			return fmt.Errorf("cannot get patterns for target %s: %w", target, errPatterns)
+			return nil, fmt.Errorf("cannot get patterns for target %s: %w", target, errPatterns)
 		}
 		for _, pattern := range patterns {
-			patternResult := patternMetrics{
+			patternResult := PatternMetrics{
 				Pattern:    pattern,
 				Retentions: make(map[string]int64),
 			}
 			metrics, errMetrics := database.GetPatternMetrics(pattern)
 			if errMetrics != nil {
-				return fmt.Errorf("cannot get metrics for pattern %s, target %s: %w", pattern, target, errMetrics)
+				return nil, fmt.Errorf("cannot get metrics for pattern %s, target %s: %w", pattern, target, errMetrics)
 			}
 			for _, metric := range metrics {
 				retention, errRetention := database.GetMetricRetention(metric)
 				if errRetention != nil {
-					return fmt.Errorf("cannot get metric %s retention: %w", metric, errRetention)
+					return nil, fmt.Errorf("cannot get metric %s retention: %w", metric, errRetention)
 				}
 				patternResult.Retentions[metric] = retention
 			}
 			values, errValues := database.GetMetricsValues(metrics, from, until)
 			if errValues != nil {
-				return fmt.Errorf("cannot get values for pattern %s metrics, target %s: %w", pattern, target, errValues)
+				return nil, fmt.Errorf("cannot get values for pattern %s metrics, target %s: %w", pattern, target, errValues)
 			}
 			patternResult.Metrics = values
 			result = append(result, patternResult)
 		}
 	}
-	err = encoder.Encode(result)
-	if err != nil {
-		return fmt.Errorf("cannot marshall trigger metrics: %w", err)
-	}
-	logger.Info("Metrics pulled")
-	return nil
+	return result, nil
 }
 
 func HandlePushTrigger(logger moira.Logger, database moira.Database, in io.Reader) error {
@@ -116,7 +103,7 @@ func HandlePushTriggerMetrics(logger moira.Logger, database moira.Database, trig
 	if err != nil {
 		return fmt.Errorf("cannot get trigger: %w", err)
 	}
-	patternsMetrics := []patternMetrics{}
+	patternsMetrics := []PatternMetrics{}
 	err = decoder.Decode(&patternsMetrics)
 	if err != nil {
 		return fmt.Errorf("cannot decode trigger: %w", err)
