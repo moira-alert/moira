@@ -117,6 +117,27 @@ func TestFailSendEvent(t *testing.T) {
 	time.Sleep(time.Second * 2)
 }
 
+func TestNoResendForSendToBrokenContact(t *testing.T) {
+	configureNotifier(t)
+	defer afterTest()
+
+	var eventsData moira.NotificationEvents = []moira.NotificationEvent{event}
+
+	pkg := NotificationPackage{
+		Events: eventsData,
+		Contact: moira.ContactData{
+			Type: "test",
+		},
+	}
+	sender.EXPECT().SendEvents(eventsData, pkg.Contact, pkg.Trigger, plots, pkg.Throttled).
+		Return(moira.NewSenderBrokenContactError(fmt.Errorf("some sender reason")))
+
+	var wg sync.WaitGroup
+	notif.Send(&pkg, &wg)
+	wg.Wait()
+	time.Sleep(time.Second * 2)
+}
+
 func TestTimeout(t *testing.T) {
 	configureNotifier(t)
 	var wg sync.WaitGroup
