@@ -1,12 +1,14 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 
+	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/controller"
 	"github.com/moira-alert/moira/api/dto"
@@ -26,6 +28,7 @@ func trigger(router chi.Router) {
 	router.Route("/metrics", triggerMetrics)
 	router.Put("/setMaintenance", setTriggerMaintenance)
 	router.With(middleware.DateRange("-1hour", "now")).With(middleware.TargetName("t1")).Get("/render", renderTrigger)
+	router.Get("/dump", triggerDump)
 }
 
 func updateTrigger(writer http.ResponseWriter, request *http.Request) {
@@ -142,4 +145,39 @@ func setTriggerMaintenance(writer http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		render.Render(writer, request, err) //nolint
 	}
+}
+
+func triggerDump(writer http.ResponseWriter, request *http.Request) {
+	triggerID, log := prepareTriggerContext(request)
+	response := map[string]interface{}{}
+	errors := []string{}
+
+	if trigger, err := controller.PullTrigger(database, log, triggerID); err != nil {
+		errors = append(errors, fmt.Sprintf("get_trigger_error: %s", err.ErrorText))
+	} else {
+		response["trigger"] = trigger
+	}
+
+	if metrics, err := controller.PullTriggerMetrics(database, log, triggerID); err != nil {
+		errors = append(errors, fmt.Sprintf("get_metrics_error: %s", err.ErrorText))
+	} else {
+		response["metrics"] = metrics
+	}
+
+	if lastCheck, err := controller.GetTriggerLastCheck(database, triggerID); err != nil {
+		errors = append(errors, fmt.Sprintf("get_last_check_error: %s", err.ErrorText))
+	} else {
+		response["last_check"] = lastCheck.CheckData
+	}
+
+	response["errors"] = errors
+	response["created"] = time.Now().UTC()
+	render.JSON(writer, request, response)
+}
+
+func prepareTriggerContext(request *http.Request) (triggerID string, log moira.Logger) {
+	logger := middleware.GetLoggerEntry(request)
+	triggerID = middleware.GetTriggerID(request)
+	log = logger.Clone().String(moira.LogFieldNameTriggerID, triggerID)
+	return triggerID, log
 }
