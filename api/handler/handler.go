@@ -36,7 +36,6 @@ func NewHandler(db moira.Database, log moira.Logger, index moira.Searcher, confi
 	router.Route("/api", func(router chi.Router) {
 		router.Use(moiramiddle.DatabaseContext(database))
 		router.Get("/config", getWebConfig(webConfigContent))
-		router.Route("/debug", debug)
 		router.Route("/user", user)
 		router.With(moiramiddle.Triggers(config.LocalMetricTTL, config.RemoteMetricTTL)).Route("/trigger", triggers(metricSourceProvider, searchIndex))
 		router.Route("/tag", tag)
