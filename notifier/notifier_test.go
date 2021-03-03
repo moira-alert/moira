@@ -118,6 +118,10 @@ func TestFailSendEvent(t *testing.T) {
 }
 
 func TestNoResendForSendToBrokenContact(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+	}
+
 	configureNotifier(t)
 	defer afterTest()
 

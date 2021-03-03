@@ -37,16 +37,10 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	sender.logger.Debugf("Calling telegram api with chat_id %s and message body %s", contact.Value, message)
 	chat, err := sender.getChat(contact.Value)
 	if err != nil {
-		if ok, errorBrokenContact := checkBrokenContactError(sender.logger, err); ok {
-			return errorBrokenContact
-		}
-		return err
+		return checkBrokenContactError(sender.logger, err)
 	}
 	if err := sender.talk(chat, message, plots, msgType); err != nil {
-		if ok, errorBrokenContact := checkBrokenContactError(sender.logger, err); ok {
-			return errorBrokenContact
-		}
-		return fmt.Errorf("failed to send message to telegram contact %s: %s. ", contact.Value, err)
+		return checkBrokenContactError(sender.logger, err)
 	}
 	return nil
 }
@@ -137,22 +131,22 @@ func (sender *Sender) sendAsMessage(chat *telebot.Chat, message string) error {
 	return err
 }
 
-func checkBrokenContactError(logger moira.Logger, err error) (bool, error) {
-	logger.Info("Check broken contact")
+func checkBrokenContactError(logger moira.Logger, err error) error {
+	logger.Debug("Check broken contact")
 	if err == nil {
-		return false, nil
+		return nil
 	}
 	if e, ok := err.(*telebot.APIError); ok {
 		logger.Debug("It's telebot.APIError from talk(): code = %d, msg = %s, desc = %s", e.Code, e.Message, e.Description)
 		if e.Code == telebot.ErrUnauthorized.Code { // all forbid errors
-			return true, moira.NewSenderBrokenContactError(err)
+			return moira.NewSenderBrokenContactError(err)
 		}
 	}
 	if strings.HasPrefix(err.Error(), "failed to get username uuid") {
 		logger.Debug("It's error from getChat(): ", err)
-		return true, moira.NewSenderBrokenContactError(err)
+		return moira.NewSenderBrokenContactError(err)
 	}
-	return false, nil
+	return err
 }
 
 func prepareAlbum(plots [][]byte, caption string) telebot.Album {
