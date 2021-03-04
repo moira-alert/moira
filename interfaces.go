@@ -75,6 +75,7 @@ type Database interface {
 	RemoveSubscription(subscriptionID string) error
 	GetUserSubscriptionIDs(userLogin string) ([]string, error)
 	GetTagsSubscriptions(tags []string) ([]*SubscriptionData, error)
+	GetSubscriptionsByContact(contactID string) ([]*SubscriptionData, error)
 
 	// ScheduledNotification storing
 	GetNotifications(start, end int64) ([]*ScheduledNotification, int64, error)

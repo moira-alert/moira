@@ -196,10 +196,42 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 			case moira.SenderBrokenContactError:
 				log.Errorf("Cannot send to broken contact: %s", e.Error())
 
+				brokenContact := pkg.Contact.ID
+				if err := disableBrokenContactSubscriptions(brokenContact, notifier.database, log); err != nil {
+					log.Errorf("Failed to disable subscriptions for broken contact: ", err)
+				}
+
 			default:
 				log.Errorf("Cannot send notification: %s", err.Error())
 				notifier.resend(&pkg, err.Error())
 			}
 		}
 	}
+}
+
+func disableBrokenContactSubscriptions(brokenContact string, database moira.Database, log moira.Logger) error {
+	subs, err := database.GetSubscriptionsByContact(brokenContact)
+	if err != nil {
+		return err
+	}
+
+	disableSubs := []*moira.SubscriptionData{}
+	for _, s := range subs {
+		if len(s.Contacts) == 1 {
+			if s.Contacts[0] == brokenContact {
+				s.Enabled = false
+				disableSubs = append(disableSubs, s)
+			}
+		} else {
+			log.Warningf("Skipped disable subscription with broken contact, "+
+				"contacts more than 1, contacts = %v", s.Contacts)
+		}
+	}
+	if len(disableSubs) > 0 {
+		if err := database.SaveSubscriptions(disableSubs); err != nil {
+			return err
+		}
+		// todo add metric
+	}
+	return nil
 }
