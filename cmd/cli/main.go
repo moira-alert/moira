@@ -116,7 +116,7 @@ func main() { //nolint
 		if err != nil {
 			logger.Fatal(err)
 		}
-		defer f.Close()
+		defer closeFile(f, logger)
 
 		t, err := support.HandlePullTrigger(logger, dataBase, *pullTrigger)
 		if err != nil {
@@ -132,7 +132,7 @@ func main() { //nolint
 		if err != nil {
 			logger.Fatal(err)
 		}
-		defer f.Close()
+		defer closeFile(f, logger)
 
 		m, err := support.HandlePullTriggerMetrics(logger, dataBase, *pullTriggerMetrics)
 		if err != nil {
@@ -148,33 +148,32 @@ func main() { //nolint
 		if err != nil {
 			logger.Fatal(err)
 		}
-		defer f.Close()
+		defer closeFile(f, logger)
 
-		trigger := &moira.Trigger{}
-		errDecode := json.NewDecoder(f).Decode(trigger)
-		if errDecode != nil {
+		var trigger moira.Trigger
+		if err := json.NewDecoder(f).Decode(&trigger); err != nil {
 			logger.Fatal("cannot decode trigger: ", err.Error())
 		}
 
-		if err := support.HandlePushTrigger(logger, dataBase, trigger); err != nil {
+		if err := support.HandlePushTrigger(logger, dataBase, &trigger); err != nil {
 			logger.Fatal(err)
 		}
 	}
 
-	if *pushTriggerMetrics != "" {
+	if *pushTriggerMetricsByID != "" {
 		f, err := openFile(*triggerMetricsFile, os.O_RDONLY)
 		if err != nil {
 			logger.Fatal(err)
 		}
-		defer f.Close()
+		defer closeFile(f, logger)
 
-		metrics := []support.PatternMetrics{}
+		var metrics []support.PatternMetrics
 		err = json.NewDecoder(f).Decode(&metrics)
 		if err != nil {
 			logger.Fatal("cannot decode trigger metrics: ", err.Error())
 		}
 
-		if err := support.HandlePushTriggerMetrics(logger, dataBase, *pushTriggerMetrics, metrics); err != nil {
+		if err := support.HandlePushTriggerMetrics(logger, dataBase, *pushTriggerMetricsByID, metrics); err != nil {
 			logger.Fatal(err)
 		}
 	}
@@ -185,16 +184,15 @@ func main() { //nolint
 		if err != nil {
 			logger.Fatal(err)
 		}
-		defer f.Close()
+		defer closeFile(f, logger)
 
 		dump := &TriggerDump{}
-		decoder := json.NewDecoder(f)
-		err = decoder.Decode(dump)
+		err = json.NewDecoder(f).Decode(dump)
 		if err != nil {
 			logger.Fatal("cannot decode trigger dump: ", err.Error())
 		}
 		if len(dump.Errors) > 0 {
-			logger.Error("Dump has errors, please check it or use --force to ignore.\n")
+			logger.Error("Dump has errors, please check it.\n")
 			for _, e := range dump.Errors {
 				logger.Error(e)
 			}
@@ -250,15 +248,14 @@ func initApp() (cleanupConfig, moira.Logger, moira.Database) {
 		os.Exit(0)
 	}
 
-	err := cmd.ReadConfig(*configFileName, &config)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Can't read settings: %v\n", err)
+	if err := cmd.ReadConfig(*configFileName, &config); err != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "Can't read settings: %v\n", err)
 		os.Exit(1)
 	}
 
 	logger, err := logging.ConfigureLog(config.LogFile, config.LogLevel, "cli", config.LogPrettyFormat)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Can't configure main logger: %v\n", err)
+		_, _ = fmt.Fprintf(os.Stderr, "Can't configure main logger: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -276,7 +273,7 @@ func checkValidVersion(logger moira.Logger, updateFromVersion *string, isUpdate 
 	if updateFromVersion == nil || *updateFromVersion == "" || !contains(moiraValidVersions, *updateFromVersion) {
 		logger.Fatalf("You must set valid '%s' flag. Valid versions is %s", validFlag, strings.Join(moiraValidVersions, ", "))
 	}
-	return *updateFromVersion
+	return moira.UseString(updateFromVersion)
 }
 
 func contains(s []string, e string) bool {
@@ -297,4 +294,12 @@ func openFile(filePath string, mode int) (*os.File, error) {
 		return nil, fmt.Errorf("cannot open file: %w", err)
 	}
 	return file, nil
+}
+
+func closeFile(f *os.File, logger moira.Logger) {
+	if f != nil {
+		if err := f.Close(); err != nil {
+			logger.Fatal(err)
+		}
+	}
 }
