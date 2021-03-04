@@ -55,8 +55,10 @@ var (
 	pullTriggerMetrics = flag.String("pull-trigger-metrics", "", "Get trigger patterns and metrics from redis and save it to file")
 	pushTrigger        = flag.String("push-trigger", "", "Get trigger in JSON from file and save it to redis")
 	pushTriggerMetrics = flag.String("push-trigger-metrics", "", "Get trigger patterns and metrics in JSON from strdin and save it to redis")
+	pushTriggerDump    = flag.String("push-trigger-dump", "", "Get trigger dump in JSON from strdin and save it to redis")
 	triggerFile        = flag.String("trigger-file", "", "File that holds trigger JSON")
 	triggerMetricsFile = flag.String("trigger-metrics-file", "", "File that holds trigger metrics JSON")
+	triggerDumpFile    = flag.String("trigger-dump-file", "", "File that holds trigger dump JSON from api method response")
 )
 
 func main() { //nolint
@@ -176,6 +178,60 @@ func main() { //nolint
 			logger.Fatal(err)
 		}
 	}
+
+	if *pushTriggerDump != "" {
+		logger.Info("Dump push started")
+		f, err := openFile(*triggerDumpFile, os.O_RDONLY)
+		if err != nil {
+			logger.Fatal(err)
+		}
+		defer f.Close()
+
+		dump := &TriggerDump{}
+		decoder := json.NewDecoder(f)
+		err = decoder.Decode(dump)
+		if err != nil {
+			logger.Fatal("cannot decode trigger dump: ", err.Error())
+		}
+		if len(dump.Errors) > 0 {
+			logger.Error("Dump has errors, please check it or use --force to ignore.\n")
+			for _, e := range dump.Errors {
+				logger.Error(e)
+			}
+			return
+		}
+
+		logger.Info(dump.GetBriefInfo())
+		if err := support.HandlePushTrigger(logger, dataBase, &dump.Trigger); err != nil {
+			logger.Fatal(err)
+		}
+		if err := support.HandlePushTriggerMetrics(logger, dataBase, dump.Trigger.ID, dump.Metrics); err != nil {
+			logger.Fatal(err)
+		}
+		if err := support.HandlePushTriggerLastCheck(logger, dataBase, dump.Trigger.ID, &dump.LastCheck,
+			dump.Trigger.IsRemote); err != nil {
+			logger.Fatal(err)
+		}
+		logger.Info("Dump was pushed")
+	}
+}
+
+type TriggerDump struct {
+	Created   string                   `json:"created"`
+	Errors    []string                 `json:"errors,omitempty"`
+	LastCheck moira.CheckData          `json:"last_check,omitempty"`
+	Trigger   moira.Trigger            `json:"trigger,omitempty"`
+	Metrics   []support.PatternMetrics `json:"metrics,omitempty"`
+}
+
+func (dump TriggerDump) GetBriefInfo() string {
+	return fmt.Sprintf("\nDump info:\n"+
+		" - created: %s\n"+
+		" - trigger.id: %s\n"+
+		" - metrics count: %d\n"+
+		" - last_succesfull_check: %d\n"+
+		" - errors count: %d\n",
+		dump.Created, dump.Trigger.ID, len(dump.Metrics), dump.LastCheck.LastSuccessfulCheckTimestamp, len(dump.Errors))
 }
 
 func initApp() (cleanupConfig, moira.Logger, moira.Database) {

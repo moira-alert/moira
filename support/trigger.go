@@ -85,7 +85,7 @@ func HandlePushTrigger(logger moira.Logger, database moira.Database, trigger *mo
 }
 
 func HandlePushTriggerMetrics(logger moira.Logger, database moira.Database, triggerID string, patternsMetrics []PatternMetrics) error {
-	logger.Infof("Save trigger metrics")
+	logger.Info("Save trigger metrics")
 
 	buffer := make(map[string]*moira.MatchedMetric, len(patternsMetrics))
 	i := 0
@@ -116,5 +116,15 @@ func HandlePushTriggerMetrics(logger moira.Logger, database moira.Database, trig
 		return fmt.Errorf("cannot save trigger metrics: %w", err)
 	}
 	logger.Infof("Trigger %s metrics was saved", triggerID)
+	return nil
+}
+
+func HandlePushTriggerLastCheck(logger moira.Logger, database moira.Database, triggerID string,
+	lastCheck *moira.CheckData, isRemoteTrigger bool) error {
+	logger.Info("Save trigger last check")
+	if err := database.SetTriggerLastCheck(triggerID, lastCheck, isRemoteTrigger); err != nil {
+		return fmt.Errorf("cannot set trigger last check: %w", err)
+	}
+	logger.Info("Trigger last check was saved")
 	return nil
 }
