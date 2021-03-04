@@ -51,14 +51,14 @@ var (
 )
 
 var (
-	pullTrigger        = flag.String("pull-trigger", "", "Get trigger from redis and save it to file")
-	pullTriggerMetrics = flag.String("pull-trigger-metrics", "", "Get trigger patterns and metrics from redis and save it to file")
-	pushTrigger        = flag.String("push-trigger", "", "Get trigger in JSON from file and save it to redis")
-	pushTriggerMetrics = flag.String("push-trigger-metrics", "", "Get trigger patterns and metrics in JSON from strdin and save it to redis")
-	pushTriggerDump    = flag.String("push-trigger-dump", "", "Get trigger dump in JSON from strdin and save it to redis")
-	triggerFile        = flag.String("trigger-file", "", "File that holds trigger JSON")
-	triggerMetricsFile = flag.String("trigger-metrics-file", "", "File that holds trigger metrics JSON")
-	triggerDumpFile    = flag.String("trigger-dump-file", "", "File that holds trigger dump JSON from api method response")
+	pullTrigger            = flag.String("pull-trigger", "", "Get trigger from redis and save it to file")
+	pullTriggerMetrics     = flag.String("pull-trigger-metrics", "", "Get trigger patterns and metrics from redis and save it to file")
+	pushTrigger            = flag.Bool("push-trigger", false, "Get trigger in JSON from file and save it to redis")
+	pushTriggerMetricsByID = flag.String("push-trigger-metrics", "", "Get trigger patterns and metrics in JSON from stdin and save it to redis")
+	pushTriggerDump        = flag.Bool("push-trigger-dump", false, "Get trigger dump in JSON from stdin and save it to redis")
+	triggerFile            = flag.String("trigger-file", "", "File that holds trigger JSON")
+	triggerMetricsFile     = flag.String("trigger-metrics-file", "", "File that holds trigger metrics JSON")
+	triggerDumpFile        = flag.String("trigger-dump-file", "", "File that holds trigger dump JSON from api method response")
 )
 
 func main() { //nolint
@@ -143,7 +143,7 @@ func main() { //nolint
 		}
 	}
 
-	if *pushTrigger != "" {
+	if *pushTrigger {
 		f, err := openFile(*triggerFile, os.O_RDONLY)
 		if err != nil {
 			logger.Fatal(err)
@@ -179,7 +179,7 @@ func main() { //nolint
 		}
 	}
 
-	if *pushTriggerDump != "" {
+	if *pushTriggerDump {
 		logger.Info("Dump push started")
 		f, err := openFile(*triggerDumpFile, os.O_RDONLY)
 		if err != nil {
