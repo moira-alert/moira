@@ -197,7 +197,8 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 				log.Errorf("Cannot send to broken contact: %s", e.Error())
 
 				brokenContact := pkg.Contact.ID
-				if err := disableBrokenContactSubscriptions(brokenContact, notifier.database, log); err != nil {
+				if err := disableBrokenContactSubscriptions(brokenContact, notifier.database, log,
+					&notifier.metrics.SubsBrokenDisabled); err != nil {
 					log.Errorf("Failed to disable subscriptions for broken contact: ", err)
 				}
 
@@ -209,7 +210,8 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 	}
 }
 
-func disableBrokenContactSubscriptions(brokenContact string, database moira.Database, log moira.Logger) error {
+func disableBrokenContactSubscriptions(brokenContact string, database moira.Database, log moira.Logger,
+	metric *metrics.Meter) error {
 	subs, err := database.GetSubscriptionsByContact(brokenContact)
 	if err != nil {
 		return err
@@ -227,11 +229,14 @@ func disableBrokenContactSubscriptions(brokenContact string, database moira.Data
 				"contacts more than 1, contacts = %v", s.Contacts)
 		}
 	}
-	if len(disableSubs) > 0 {
+	disabledCount := len(disableSubs)
+	if disabledCount > 0 {
 		if err := database.SaveSubscriptions(disableSubs); err != nil {
 			return err
 		}
-		// todo add metric
+		if metric != nil {
+			(*metric).Mark(int64(disabledCount))
+		}
 	}
 	return nil
 }

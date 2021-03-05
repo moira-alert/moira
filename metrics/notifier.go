@@ -3,6 +3,7 @@ package metrics
 // NotifierMetrics is a collection of metrics used in notifier
 type NotifierMetrics struct {
 	SubsMalformed          Meter
+	SubsBrokenDisabled     Meter
 	EventsReceived         Meter
 	EventsMalformed        Meter
 	EventsProcessingFailed Meter
@@ -16,6 +17,7 @@ type NotifierMetrics struct {
 func ConfigureNotifierMetrics(registry Registry, prefix string) *NotifierMetrics {
 	return &NotifierMetrics{
 		SubsMalformed:          registry.NewMeter("subs", "malformed"),
+		SubsBrokenDisabled:     registry.NewMeter("subs", "broken_disabled"),
 		EventsReceived:         registry.NewMeter("events", "received"),
 		EventsMalformed:        registry.NewMeter("events", "malformed"),
 		EventsProcessingFailed: registry.NewMeter("events", "failed"),
