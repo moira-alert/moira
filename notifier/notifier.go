@@ -197,9 +197,9 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 				log.Errorf("Cannot send to broken contact: %s", e.Error())
 
 				brokenContact := pkg.Contact.ID
-				if err := disableBrokenContactSubscriptions(brokenContact, notifier.database, log,
-					&notifier.metrics.SubsBrokenDisabled); err != nil {
-					log.Errorf("Failed to disable subscriptions for broken contact: ", err)
+				if errorDisabling := disableBrokenContactSubscriptions(brokenContact, notifier.database, log,
+					&notifier.metrics.SubsBrokenDisabled); errorDisabling != nil {
+					log.Errorf("Failed to disable subscriptions for broken contact: ", errorDisabling)
 				}
 
 			default:
