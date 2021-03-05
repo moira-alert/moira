@@ -216,6 +216,10 @@ func disableBrokenContactSubscriptions(brokenContact *moira.ContactData, databas
 	if err != nil {
 		return 0, err
 	}
+	if len(subsIDs) == 0 {
+		return 0, nil
+	}
+
 	subs, e := database.GetSubscriptions(subsIDs)
 	if e != nil {
 		return 0, e
