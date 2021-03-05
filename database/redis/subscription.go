@@ -79,7 +79,7 @@ func (connector *DbConnector) updateSubscription(newSubscription *moira.Subscrip
 	c := connector.pool.Get()
 	defer c.Close()
 
-	c.Send("MULTI")                                                  //nolint
+	c.Send("MULTI") //nolint
 	addSendSubscriptionRequest(c, *newSubscription, oldSubscription) //nolint
 	_, err := c.Do("EXEC")
 	if err != nil {
@@ -156,13 +156,13 @@ func (connector *DbConnector) removeSubscription(subscription *moira.Subscriptio
 	c := connector.pool.Get()
 	defer c.Close()
 
-	c.Send("MULTI")                                                          //nolint
+	c.Send("MULTI") //nolint
 	c.Send("SREM", userSubscriptionsKey(subscription.User), subscription.ID) //nolint
 	for _, tag := range subscription.Tags {
 		c.Send("SREM", tagSubscriptionKey(tag), subscription.ID) //nolint
 	}
 	c.Send("SREM", anyTagsSubscriptionsKey, subscription.ID) //nolint
-	c.Send("DEL", subscriptionKey(subscription.ID))          //nolint
+	c.Send("DEL", subscriptionKey(subscription.ID)) //nolint
 	if _, err := c.Do("EXEC"); err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
@@ -243,7 +243,7 @@ func addSendSubscriptionRequest(c redis.Conn, subscription moira.SubscriptionDat
 	}
 
 	c.Send("SADD", userSubscriptionsKey(subscription.User), subscription.ID) //nolint
-	c.Send("SET", subscriptionKey(subscription.ID), bytes)                   //nolint
+	c.Send("SET", subscriptionKey(subscription.ID), bytes) //nolint
 	return nil
 }
 
