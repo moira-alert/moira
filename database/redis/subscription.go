@@ -196,10 +196,6 @@ func (connector *DbConnector) GetTagsSubscriptions(tags []string) ([]*moira.Subs
 	return connector.GetSubscriptions(subscriptionsIDs)
 }
 
-func (connector *DbConnector) GetSubscriptionsByContact(contactID string) ([]*moira.SubscriptionData, error) {
-	return nil, fmt.Errorf("not implemented yet") //TODO
-}
-
 func (connector *DbConnector) getSubscriptionsIDsByTags(tags []string) ([]string, error) {
 	c := connector.pool.Get()
 	defer c.Close()

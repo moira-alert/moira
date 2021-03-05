@@ -595,22 +595,7 @@ func (mr *MockDatabaseMockRecorder) GetSubscriptions(arg0 interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSubscriptions", reflect.TypeOf((*MockDatabase)(nil).GetSubscriptions), arg0)
 }
 
-// GetSubscriptionsByContact mocks base method.
-func (m *MockDatabase) GetSubscriptionsByContact(arg0 string) ([]*moira.SubscriptionData, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSubscriptionsByContact", arg0)
-	ret0, _ := ret[0].([]*moira.SubscriptionData)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetSubscriptionsByContact indicates an expected call of GetSubscriptionsByContact.
-func (mr *MockDatabaseMockRecorder) GetSubscriptionsByContact(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSubscriptionsByContact", reflect.TypeOf((*MockDatabase)(nil).GetSubscriptionsByContact), arg0)
-}
-
-// GetTagNames mocks base method.
+// GetTagNames mocks base method
 func (m *MockDatabase) GetTagNames() ([]string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetTagNames")
