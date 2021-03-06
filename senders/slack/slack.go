@@ -24,6 +24,11 @@ const (
 	testEmoji      = ":moira-state-test:"
 
 	messageMaxCharacters = 4000
+
+	//see errors https://api.slack.com/methods/chat.postMessage
+	ErrorTextChannelArchived = "is_archived"
+	ErrorTextChannelNotFound = "channel_not_found"
+	ErrorTextNotInChannel    = "not_in_channel"
 )
 
 var stateEmoji = map[moira.State]string{
@@ -185,7 +190,13 @@ func (sender *Sender) sendMessage(message string, contact string, triggerID stri
 	sender.logger.Debugf("Calling slack with message body %s", message)
 	channelID, threadTimestamp, err := sender.client.PostMessage(contact, slack.MsgOptionText(message, false), slack.MsgOptionPostMessageParameters(params))
 	if err != nil {
-		return channelID, threadTimestamp, fmt.Errorf("failed to send %s event message to slack [%s]: %s", triggerID, contact, err.Error())
+		errorText := err.Error()
+		if errorText == ErrorTextChannelArchived || errorText == ErrorTextNotInChannel ||
+			errorText == ErrorTextChannelNotFound {
+			return channelID, threadTimestamp, moira.NewSenderBrokenContactError(err)
+		}
+		return channelID, threadTimestamp, fmt.Errorf("failed to send %s event message to slack [%s]: %s",
+			triggerID, contact, errorText)
 	}
 	return channelID, threadTimestamp, nil
 }

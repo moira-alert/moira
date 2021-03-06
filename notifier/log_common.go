@@ -6,9 +6,13 @@ func getLogWithPackageContext(log *moira.Logger, pkg *NotificationPackage, confi
 	logger := (*log).Clone().
 		String(moira.LogFieldNameContactID, pkg.Contact.ID).
 		String(moira.LogFieldNameContactType, pkg.Contact.Type).
-		String(moira.LogFieldNameContactValue, pkg.Contact.Value).
-		String(moira.LogFieldNameTriggerID, pkg.Trigger.ID).
-		String(moira.LogFieldNameTriggerName, pkg.Trigger.Name)
+		String(moira.LogFieldNameContactValue, pkg.Contact.Value)
+	if pkg.Trigger.ID != "" { // note: test notification without trigger info
+		logger.
+			String(moira.LogFieldNameTriggerID, pkg.Trigger.ID).
+			String(moira.LogFieldNameTriggerName, pkg.Trigger.Name)
+	}
+
 	SetLogLevelByConfig(config.LogContactsToLevel, pkg.Contact.ID, &logger)
 	return logger
 }

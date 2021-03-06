@@ -37,10 +37,10 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	sender.logger.Debugf("Calling telegram api with chat_id %s and message body %s", contact.Value, message)
 	chat, err := sender.getChat(contact.Value)
 	if err != nil {
-		return err
+		return checkBrokenContactError(sender.logger, err)
 	}
 	if err := sender.talk(chat, message, plots, msgType); err != nil {
-		return fmt.Errorf("failed to send message to telegram contact %s: %s. ", contact.Value, err)
+		return checkBrokenContactError(sender.logger, err)
 	}
 	return nil
 }
@@ -116,17 +116,37 @@ func (sender *Sender) getChat(username string) (*telebot.Chat, error) {
 // talk processes one talk
 func (sender *Sender) talk(chat *telebot.Chat, message string, plots [][]byte, messageType messageType) error {
 	if messageType == Album {
+		sender.logger.Debug("talk as album")
 		return sender.sendAsAlbum(chat, plots, message)
 	}
+	sender.logger.Debug("talk as send message")
 	return sender.sendAsMessage(chat, message)
 }
 
 func (sender *Sender) sendAsMessage(chat *telebot.Chat, message string) error {
 	_, err := sender.bot.Send(chat, message)
 	if err != nil {
-		return fmt.Errorf("can't send event message [%s] to %v: %s", message, chat.ID, err.Error())
+		sender.logger.Debugf("can't send event message [%s] to %v: %s", message, chat.ID, err.Error())
 	}
-	return nil
+	return err
+}
+
+func checkBrokenContactError(logger moira.Logger, err error) error {
+	logger.Debug("Check broken contact")
+	if err == nil {
+		return nil
+	}
+	if e, ok := err.(*telebot.APIError); ok {
+		logger.Debug("It's telebot.APIError from talk(): code = %d, msg = %s, desc = %s", e.Code, e.Message, e.Description)
+		if e.Code == telebot.ErrUnauthorized.Code { // all forbid errors
+			return moira.NewSenderBrokenContactError(err)
+		}
+	}
+	if strings.HasPrefix(err.Error(), "failed to get username uuid") {
+		logger.Debug("It's error from getChat(): ", err)
+		return moira.NewSenderBrokenContactError(err)
+	}
+	return err
 }
 
 func prepareAlbum(plots [][]byte, caption string) telebot.Album {
@@ -144,9 +164,9 @@ func (sender *Sender) sendAsAlbum(chat *telebot.Chat, plots [][]byte, caption st
 
 	_, err := sender.bot.SendAlbum(chat, album)
 	if err != nil {
-		return fmt.Errorf("can't send event plots to %v: %s", chat.ID, err.Error())
+		sender.logger.Debugf("can't send event plots to %v: %s", chat.ID, err.Error())
 	}
-	return nil
+	return err
 }
 
 func getMessageType(plots [][]byte) messageType {
