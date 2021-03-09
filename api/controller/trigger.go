@@ -166,19 +166,26 @@ func SetTriggerMaintenance(database moira.Database, triggerID string, triggerMai
 }
 
 //PullTrigger returns raw trigger from database
-func PullTrigger(database moira.Database, logger moira.Logger, triggerID string) (*moira.Trigger, *api.ErrorResponse) {
+func GetTriggerDump(database moira.Database, logger moira.Logger, triggerID string) (*dto.TriggerDump, *api.ErrorResponse) {
 	trigger, err := support.HandlePullTrigger(logger, database, triggerID)
 	if err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
-	return trigger, nil
-}
 
-//PullTrigger returns raw trigger metrics from database
-func PullTriggerMetrics(database moira.Database, logger moira.Logger, triggerID string) ([]support.PatternMetrics, *api.ErrorResponse) {
-	metrics, err := support.HandlePullTriggerMetrics(logger, database, triggerID)
-	if err != nil {
-		return nil, api.ErrorInternalServer(err)
+	metrics, errMetrics := support.HandlePullTriggerMetrics(logger, database, triggerID)
+	if errMetrics != nil {
+		return nil, api.ErrorInternalServer(errMetrics)
 	}
-	return metrics, nil
+
+	lastCheck, errLastCheck := GetTriggerLastCheck(database, triggerID)
+	if errLastCheck != nil {
+		return nil, errLastCheck
+	}
+
+	return &dto.TriggerDump{
+		Created:   time.Now().UTC().String(),
+		LastCheck: *lastCheck.CheckData,
+		Trigger:   *trigger,
+		Metrics:   metrics,
+	}, nil
 }

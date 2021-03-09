@@ -384,3 +384,16 @@ type TriggerMetrics map[string]map[string][]moira.MetricValue
 func (*TriggerMetrics) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
+
+type PatternMetrics struct {
+	Pattern    string                          `json:"pattern"`
+	Metrics    map[string][]*moira.MetricValue `json:"metrics"`
+	Retentions map[string]int64                `json:"retention"`
+}
+
+type TriggerDump struct {
+	Created   string           `json:"created"`
+	LastCheck moira.CheckData  `json:"last_check,omitempty"`
+	Trigger   moira.Trigger    `json:"trigger"`
+	Metrics   []PatternMetrics `json:"metrics"`
+}

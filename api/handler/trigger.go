@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
@@ -149,30 +148,12 @@ func setTriggerMaintenance(writer http.ResponseWriter, request *http.Request) {
 
 func triggerDump(writer http.ResponseWriter, request *http.Request) {
 	triggerID, log := prepareTriggerContext(request)
-	response := map[string]interface{}{}
-	errors := []string{}
 
-	if trigger, err := controller.PullTrigger(database, log, triggerID); err != nil {
-		errors = append(errors, fmt.Sprintf("get_trigger_error: %s", err.ErrorText))
+	if dump, err := controller.GetTriggerDump(database, log, triggerID); err != nil {
+		render.Render(writer, request, err) //nolint
 	} else {
-		response["trigger"] = trigger
+		render.JSON(writer, request, dump)
 	}
-
-	if metrics, err := controller.PullTriggerMetrics(database, log, triggerID); err != nil {
-		errors = append(errors, fmt.Sprintf("get_metrics_error: %s", err.ErrorText))
-	} else {
-		response["metrics"] = metrics
-	}
-
-	if lastCheck, err := controller.GetTriggerLastCheck(database, triggerID); err != nil {
-		errors = append(errors, fmt.Sprintf("get_last_check_error: %s", err.ErrorText))
-	} else {
-		response["last_check"] = lastCheck.CheckData
-	}
-
-	response["errors"] = errors
-	response["created"] = time.Now().UTC()
-	render.JSON(writer, request, response)
 }
 
 func prepareTriggerContext(request *http.Request) (triggerID string, log moira.Logger) {

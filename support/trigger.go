@@ -5,14 +5,9 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/metric_source/local"
 )
-
-type PatternMetrics struct {
-	Pattern    string                          `json:"pattern"`
-	Metrics    map[string][]*moira.MetricValue `json:"metrics"`
-	Retentions map[string]int64                `json:"retention"`
-}
 
 const defaultRetention = 10
 
@@ -26,7 +21,7 @@ func HandlePullTrigger(logger moira.Logger, database moira.Database, triggerID s
 	return &trigger, nil
 }
 
-func HandlePullTriggerMetrics(logger moira.Logger, database moira.Database, triggerID string) ([]PatternMetrics, error) {
+func HandlePullTriggerMetrics(logger moira.Logger, database moira.Database, triggerID string) ([]dto.PatternMetrics, error) {
 	logger.Infof("Pulling info about trigger %s metrics", triggerID)
 	source := local.Create(database)
 
@@ -37,7 +32,7 @@ func HandlePullTriggerMetrics(logger moira.Logger, database moira.Database, trig
 	ttl := database.GetMetricsTTLSeconds()
 	until := time.Now().Unix()
 	from := until - ttl
-	result := []PatternMetrics{}
+	result := []dto.PatternMetrics{}
 	for _, target := range trigger.Targets {
 		fetchResult, errFetch := source.Fetch(target, from, until, trigger.IsSimple())
 		if errFetch != nil {
@@ -48,7 +43,7 @@ func HandlePullTriggerMetrics(logger moira.Logger, database moira.Database, trig
 			return nil, fmt.Errorf("cannot get patterns for target %s: %w", target, errPatterns)
 		}
 		for _, pattern := range patterns {
-			patternResult := PatternMetrics{
+			patternResult := dto.PatternMetrics{
 				Pattern:    pattern,
 				Retentions: make(map[string]int64),
 			}
@@ -84,7 +79,7 @@ func HandlePushTrigger(logger moira.Logger, database moira.Database, trigger *mo
 	return nil
 }
 
-func HandlePushTriggerMetrics(logger moira.Logger, database moira.Database, triggerID string, patternsMetrics []PatternMetrics) error {
+func HandlePushTriggerMetrics(logger moira.Logger, database moira.Database, triggerID string, patternsMetrics []dto.PatternMetrics) error {
 	logger.Info("Save trigger metrics")
 
 	buffer := make(map[string]*moira.MatchedMetric, len(patternsMetrics))

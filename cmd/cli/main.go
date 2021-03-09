@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/database/redis"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
@@ -51,14 +52,8 @@ var (
 )
 
 var (
-	pullTrigger            = flag.String("pull-trigger", "", "Get trigger from redis and save it to file")
-	pullTriggerMetrics     = flag.String("pull-trigger-metrics", "", "Get trigger patterns and metrics from redis and save it to file")
-	pushTrigger            = flag.Bool("push-trigger", false, "Get trigger in JSON from file and save it to redis")
-	pushTriggerMetricsByID = flag.String("push-trigger-metrics", "", "Get trigger patterns and metrics in JSON from stdin and save it to redis")
-	pushTriggerDump        = flag.Bool("push-trigger-dump", false, "Get trigger dump in JSON from stdin and save it to redis")
-	triggerFile            = flag.String("trigger-file", "", "File that holds trigger JSON")
-	triggerMetricsFile     = flag.String("trigger-metrics-file", "", "File that holds trigger metrics JSON")
-	triggerDumpFile        = flag.String("trigger-dump-file", "", "File that holds trigger dump JSON from api method response")
+	pushTriggerDump = flag.Bool("push-trigger-dump", false, "Get trigger dump in JSON from stdin and save it to redis")
+	triggerDumpFile = flag.String("trigger-dump-file", "", "File that holds trigger dump JSON from api method response")
 )
 
 func main() { //nolint
@@ -111,73 +106,6 @@ func main() { //nolint
 		}
 	}
 
-	if *pullTrigger != "" {
-		f, err := openFile(*triggerFile, os.O_RDWR|os.O_CREATE)
-		if err != nil {
-			logger.Fatal(err)
-		}
-		defer closeFile(f, logger)
-
-		t, err := support.HandlePullTrigger(logger, dataBase, *pullTrigger)
-		if err != nil {
-			logger.Fatal(err)
-		}
-		if err := json.NewEncoder(f).Encode(t); err != nil {
-			logger.Fatal("cannot marshall trigger: ", err.Error())
-		}
-	}
-
-	if *pullTriggerMetrics != "" {
-		f, err := openFile(*triggerMetricsFile, os.O_RDWR|os.O_CREATE)
-		if err != nil {
-			logger.Fatal(err)
-		}
-		defer closeFile(f, logger)
-
-		m, err := support.HandlePullTriggerMetrics(logger, dataBase, *pullTriggerMetrics)
-		if err != nil {
-			logger.Fatal(err)
-		}
-		if err := json.NewEncoder(f).Encode(m); err != nil {
-			logger.Fatal("cannot marshall trigger metrics: ", err.Error())
-		}
-	}
-
-	if *pushTrigger {
-		f, err := openFile(*triggerFile, os.O_RDONLY)
-		if err != nil {
-			logger.Fatal(err)
-		}
-		defer closeFile(f, logger)
-
-		var trigger moira.Trigger
-		if err := json.NewDecoder(f).Decode(&trigger); err != nil {
-			logger.Fatal("cannot decode trigger: ", err.Error())
-		}
-
-		if err := support.HandlePushTrigger(logger, dataBase, &trigger); err != nil {
-			logger.Fatal(err)
-		}
-	}
-
-	if *pushTriggerMetricsByID != "" {
-		f, err := openFile(*triggerMetricsFile, os.O_RDONLY)
-		if err != nil {
-			logger.Fatal(err)
-		}
-		defer closeFile(f, logger)
-
-		var metrics []support.PatternMetrics
-		err = json.NewDecoder(f).Decode(&metrics)
-		if err != nil {
-			logger.Fatal("cannot decode trigger metrics: ", err.Error())
-		}
-
-		if err := support.HandlePushTriggerMetrics(logger, dataBase, *pushTriggerMetricsByID, metrics); err != nil {
-			logger.Fatal(err)
-		}
-	}
-
 	if *pushTriggerDump {
 		logger.Info("Dump push started")
 		f, err := openFile(*triggerDumpFile, os.O_RDONLY)
@@ -186,20 +114,13 @@ func main() { //nolint
 		}
 		defer closeFile(f, logger)
 
-		dump := &TriggerDump{}
+		dump := &dto.TriggerDump{}
 		err = json.NewDecoder(f).Decode(dump)
 		if err != nil {
 			logger.Fatal("cannot decode trigger dump: ", err.Error())
 		}
-		if len(dump.Errors) > 0 {
-			logger.Error("Dump has errors, please check it.\n")
-			for _, e := range dump.Errors {
-				logger.Error(e)
-			}
-			return
-		}
 
-		logger.Info(dump.GetBriefInfo())
+		logger.Info(GetDumpBriefInfo(dump))
 		if err := support.HandlePushTrigger(logger, dataBase, &dump.Trigger); err != nil {
 			logger.Fatal(err)
 		}
@@ -214,22 +135,13 @@ func main() { //nolint
 	}
 }
 
-type TriggerDump struct {
-	Created   string                   `json:"created"`
-	Errors    []string                 `json:"errors,omitempty"`
-	LastCheck moira.CheckData          `json:"last_check,omitempty"`
-	Trigger   moira.Trigger            `json:"trigger,omitempty"`
-	Metrics   []support.PatternMetrics `json:"metrics,omitempty"`
-}
-
-func (dump TriggerDump) GetBriefInfo() string {
+func GetDumpBriefInfo(dump *dto.TriggerDump) string {
 	return fmt.Sprintf("\nDump info:\n"+
 		" - created: %s\n"+
 		" - trigger.id: %s\n"+
 		" - metrics count: %d\n"+
-		" - last_succesfull_check: %d\n"+
-		" - errors count: %d\n",
-		dump.Created, dump.Trigger.ID, len(dump.Metrics), dump.LastCheck.LastSuccessfulCheckTimestamp, len(dump.Errors))
+		" - last_succesfull_check: %d\n",
+		dump.Created, dump.Trigger.ID, len(dump.Metrics), dump.LastCheck.LastSuccessfulCheckTimestamp)
 }
 
 func initApp() (cleanupConfig, moira.Logger, moira.Database) {
