@@ -165,7 +165,7 @@ func SetTriggerMaintenance(database moira.Database, triggerID string, triggerMai
 	return nil
 }
 
-//PullTrigger returns raw trigger from database
+//GetTriggerDump returns raw trigger from database
 func GetTriggerDump(database moira.Database, logger moira.Logger, triggerID string) (*dto.TriggerDump, *api.ErrorResponse) {
 	trigger, err := support.HandlePullTrigger(logger, database, triggerID)
 	if err != nil {

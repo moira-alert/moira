@@ -393,7 +393,7 @@ type PatternMetrics struct {
 
 type TriggerDump struct {
 	Created   string           `json:"created"`
-	LastCheck moira.CheckData  `json:"last_check,omitempty"`
+	LastCheck moira.CheckData  `json:"last_check"`
 	Trigger   moira.Trigger    `json:"trigger"`
 	Metrics   []PatternMetrics `json:"metrics"`
 }
