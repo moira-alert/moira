@@ -1,15 +1,18 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
 	"strings"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/cmd"
 	"github.com/moira-alert/moira/database/redis"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
+	"github.com/moira-alert/moira/support"
 )
 
 // Moira version
@@ -46,6 +49,11 @@ var (
 	userDel  = flag.String("user-del", "", "Delete all contacts and subscriptions for a user")
 	fromUser = flag.String("from-user", "", "Transfer subscriptions and contacts from user.")
 	toUser   = flag.String("to-user", "", "Transfer subscriptions and contacts to user.")
+)
+
+var (
+	pushTriggerDump = flag.Bool("push-trigger-dump", false, "Get trigger dump in JSON from stdin and save it to redis")
+	triggerDumpFile = flag.String("trigger-dump-file", "", "File that holds trigger dump JSON from api method response")
 )
 
 func main() { //nolint
@@ -97,6 +105,43 @@ func main() { //nolint
 			logger.Error(err)
 		}
 	}
+
+	if *pushTriggerDump {
+		logger.Info("Dump push started")
+		f, err := openFile(*triggerDumpFile, os.O_RDONLY)
+		if err != nil {
+			logger.Fatal(err)
+		}
+		defer closeFile(f, logger)
+
+		dump := &dto.TriggerDump{}
+		err = json.NewDecoder(f).Decode(dump)
+		if err != nil {
+			logger.Fatal("cannot decode trigger dump: ", err.Error())
+		}
+
+		logger.Info(GetDumpBriefInfo(dump))
+		if err := support.HandlePushTrigger(logger, dataBase, &dump.Trigger); err != nil {
+			logger.Fatal(err)
+		}
+		if err := support.HandlePushTriggerMetrics(logger, dataBase, dump.Trigger.ID, dump.Metrics); err != nil {
+			logger.Fatal(err)
+		}
+		if err := support.HandlePushTriggerLastCheck(logger, dataBase, dump.Trigger.ID, &dump.LastCheck,
+			dump.Trigger.IsRemote); err != nil {
+			logger.Fatal(err)
+		}
+		logger.Info("Dump was pushed")
+	}
+}
+
+func GetDumpBriefInfo(dump *dto.TriggerDump) string {
+	return fmt.Sprintf("\nDump info:\n"+
+		" - created: %s\n"+
+		" - trigger.id: %s\n"+
+		" - metrics count: %d\n"+
+		" - last_succesfull_check: %d\n",
+		dump.Created, dump.Trigger.ID, len(dump.Metrics), dump.LastCheck.LastSuccessfulCheckTimestamp)
 }
 
 func initApp() (cleanupConfig, moira.Logger, moira.Database) {
@@ -115,15 +160,14 @@ func initApp() (cleanupConfig, moira.Logger, moira.Database) {
 		os.Exit(0)
 	}
 
-	err := cmd.ReadConfig(*configFileName, &config)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Can't read settings: %v\n", err)
+	if err := cmd.ReadConfig(*configFileName, &config); err != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "Can't read settings: %v\n", err)
 		os.Exit(1)
 	}
 
 	logger, err := logging.ConfigureLog(config.LogFile, config.LogLevel, "cli", config.LogPrettyFormat)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Can't configure main logger: %v\n", err)
+		_, _ = fmt.Fprintf(os.Stderr, "Can't configure main logger: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -141,7 +185,7 @@ func checkValidVersion(logger moira.Logger, updateFromVersion *string, isUpdate 
 	if updateFromVersion == nil || *updateFromVersion == "" || !contains(moiraValidVersions, *updateFromVersion) {
 		logger.Fatalf("You must set valid '%s' flag. Valid versions is %s", validFlag, strings.Join(moiraValidVersions, ", "))
 	}
-	return *updateFromVersion
+	return moira.UseString(updateFromVersion)
 }
 
 func contains(s []string, e string) bool {
@@ -151,4 +195,23 @@ func contains(s []string, e string) bool {
 		}
 	}
 	return false
+}
+
+func openFile(filePath string, mode int) (*os.File, error) {
+	if filePath == "" {
+		return nil, fmt.Errorf("file is not specified")
+	}
+	file, err := os.OpenFile(filePath, mode, 0666)
+	if err != nil {
+		return nil, fmt.Errorf("cannot open file: %w", err)
+	}
+	return file, nil
+}
+
+func closeFile(f *os.File, logger moira.Logger) {
+	if f != nil {
+		if err := f.Close(); err != nil {
+			logger.Fatal(err)
+		}
+	}
 }

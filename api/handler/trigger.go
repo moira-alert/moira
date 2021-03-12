@@ -7,6 +7,7 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 
+	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/controller"
 	"github.com/moira-alert/moira/api/dto"
@@ -26,6 +27,7 @@ func trigger(router chi.Router) {
 	router.Route("/metrics", triggerMetrics)
 	router.Put("/setMaintenance", setTriggerMaintenance)
 	router.With(middleware.DateRange("-1hour", "now")).With(middleware.TargetName("t1")).Get("/render", renderTrigger)
+	router.Get("/dump", triggerDump)
 }
 
 func updateTrigger(writer http.ResponseWriter, request *http.Request) {
@@ -142,4 +144,21 @@ func setTriggerMaintenance(writer http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		render.Render(writer, request, err) //nolint
 	}
+}
+
+func triggerDump(writer http.ResponseWriter, request *http.Request) {
+	triggerID, log := prepareTriggerContext(request)
+
+	if dump, err := controller.GetTriggerDump(database, log, triggerID); err != nil {
+		render.Render(writer, request, err) //nolint
+	} else {
+		render.JSON(writer, request, dump)
+	}
+}
+
+func prepareTriggerContext(request *http.Request) (triggerID string, log moira.Logger) {
+	logger := middleware.GetLoggerEntry(request)
+	triggerID = middleware.GetTriggerID(request)
+	log = logger.Clone().String(moira.LogFieldNameTriggerID, triggerID)
+	return triggerID, log
 }
