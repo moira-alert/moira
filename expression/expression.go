@@ -43,28 +43,30 @@ type TriggerExpression struct {
 
 // Get realizing govaluate.Parameters interface used in evaluable expression
 func (triggerExpression TriggerExpression) Get(name string) (interface{}, error) {
+	name = strings.ToLower(name)
+
 	switch name {
-	case "OK":
+	case "ok":
 		return moira.StateOK, nil
-	case "WARN", "WARNING":
+	case "warn", "warning":
 		return moira.StateWARN, nil
-	case "ERROR":
+	case "error":
 		return moira.StateERROR, nil
-	case "NODATA":
+	case "nodata":
 		return moira.StateNODATA, nil
-	case "WARN_VALUE":
+	case "warn_value":
 		if triggerExpression.WarnValue == nil {
 			return nil, fmt.Errorf("no value with name WARN_VALUE")
 		}
 		return *triggerExpression.WarnValue, nil
-	case "ERROR_VALUE":
+	case "error_value":
 		if triggerExpression.ErrorValue == nil {
 			return nil, fmt.Errorf("no value with name ERROR_VALUE")
 		}
 		return *triggerExpression.ErrorValue, nil
 	case "t1":
 		return triggerExpression.MainTargetValue, nil
-	case "PREV_STATE":
+	case "prev_state":
 		return triggerExpression.PreviousState, nil
 	default:
 		value, ok := triggerExpression.AdditionalTargetsValues[name]
