@@ -63,10 +63,14 @@ func (triggerChecker *TriggerChecker) handlePrepareError(checkData moira.CheckDa
 		checkData.State = moira.StateERROR
 		checkData.Message = err.Error()
 		return true, checkData, nil
-	case ErrUnexpectedAloneMetric:
+	case conversion.ErrUnexpectedAloneMetric:
 		checkData.State = moira.StateEXCEPTION
 		checkData.Message = err.Error()
 		triggerChecker.logger.Warning(formatTriggerCheckException(triggerChecker.triggerID, err))
+	case conversion.ErrEmptyAloneMetricsTarget:
+		checkData.State = moira.StateNODATA
+		triggerChecker.logger.Warning(err.Error())
+
 	default:
 		return false, checkData, triggerChecker.handleUndefinedError(checkData, err)
 	}
@@ -181,6 +185,8 @@ func newMetricState(oldMetricState moira.MetricState, newState moira.State, newT
 // Check that targets with alone metrics declared in trigger ->
 // Convert to TriggerMetricsToCheck
 func (triggerChecker *TriggerChecker) prepareMetrics(fetchedMetrics map[string][]metricSource.MetricData) (map[string]map[string]metricSource.MetricData, map[string]metricSource.MetricData, error) {
+	from := triggerChecker.from
+	to := triggerChecker.until
 	preparedPatternMetrics := conversion.NewTriggerMetricsWithCapacity(len(fetchedMetrics))
 	duplicates := make(map[string][]string)
 
@@ -192,34 +198,24 @@ func (triggerChecker *TriggerChecker) prepareMetrics(fetchedMetrics map[string][
 		}
 	}
 
-	populated := preparedPatternMetrics.Populate(*triggerChecker.lastCheck, triggerChecker.trigger.AloneMetrics, triggerChecker.from, triggerChecker.until)
+	multiMetricTargets, aloneMetrics, err := preparedPatternMetrics.FilterAloneMetrics(triggerChecker.trigger.AloneMetrics)
 
-	multiMetricTargets, aloneMetrics := populated.FilterAloneMetrics(triggerChecker.trigger.AloneMetrics)
-
-	if err := triggerChecker.validateAloneMetrics(aloneMetrics); err != nil {
+	if err != nil {
 		return nil, nil, err
 	}
 
-	converted := multiMetricTargets.ConvertForCheck()
+	populatedAloneMetrics, err := aloneMetrics.Populate(triggerChecker.lastCheck.MetricsToTargetRelation, triggerChecker.trigger.AloneMetrics, from, to)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	populated := multiMetricTargets.Populate(triggerChecker.lastCheck.Metrics, triggerChecker.trigger.AloneMetrics, from, to)
+
+	converted := populated.ConvertForCheck()
 	if len(duplicates) > 0 {
-		return converted, aloneMetrics, NewErrTriggerHasSameMetricNames(duplicates)
+		return converted, populatedAloneMetrics, NewErrTriggerHasSameMetricNames(duplicates)
 	}
-	return converted, aloneMetrics, nil
-}
-
-// validateAloneMetrics is a function that checks that alone metrics received by Moira for this trigger are fit
-// the alone metrics defined for this trigger by user.
-func (triggerChecker *TriggerChecker) validateAloneMetrics(aloneMetrics map[string]metricSource.MetricData) error {
-	if len(triggerChecker.trigger.Targets) <= 1 {
-		return nil
-	}
-
-	for targetName := range triggerChecker.trigger.AloneMetrics {
-		if _, ok := aloneMetrics[targetName]; !ok {
-			return NewErrUnexpectedAloneMetric(triggerChecker.trigger.AloneMetrics, conversion.GetRelations(aloneMetrics, triggerChecker.trigger.AloneMetrics))
-		}
-	}
-	return nil
+	return converted, populatedAloneMetrics, nil
 }
 
 // preparePatternMetrics is a function that takes PatternMetrics and applies following operations on it:
@@ -240,6 +236,9 @@ func (triggerChecker *TriggerChecker) preparePatternMetrics(fetchedMetrics conve
 func (triggerChecker *TriggerChecker) check(metrics map[string]map[string]metricSource.MetricData,
 	aloneMetrics map[string]metricSource.MetricData, checkData moira.CheckData, logger moira.Logger) (moira.CheckData, error) {
 	if len(metrics) == 0 { // Case when trigger have only alone metrics
+		if metrics == nil {
+			metrics = make(map[string]map[string]metricSource.MetricData, 1)
+		}
 		metricName := conversion.MetricName(aloneMetrics)
 		metrics[metricName] = make(map[string]metricSource.MetricData)
 	}

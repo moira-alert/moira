@@ -112,7 +112,7 @@ func TestNewTriggerMetricsWithCapacity(t *testing.T) {
 
 func TestTriggerMetrics_Populate(t *testing.T) {
 	type args struct {
-		lastCheck            moira.CheckData
+		lastCheck            map[string]moira.MetricState
 		declaredAloneMetrics map[string]bool
 		from                 int64
 		to                   int64
@@ -132,11 +132,9 @@ func TestTriggerMetrics_Populate(t *testing.T) {
 				},
 			},
 			args: args{
-				lastCheck: moira.CheckData{
-					Metrics: map[string]moira.MetricState{
-						"metric.test.1": {Values: map[string]float64{"t1": 0}},
-						"metric.test.2": {Values: map[string]float64{"t1": 0}},
-					},
+				lastCheck: map[string]moira.MetricState{
+					"metric.test.1": {Values: map[string]float64{"t1": 0}},
+					"metric.test.2": {Values: map[string]float64{"t1": 0}},
 				},
 				declaredAloneMetrics: map[string]bool{},
 				from:                 17,
@@ -146,36 +144,6 @@ func TestTriggerMetrics_Populate(t *testing.T) {
 				"t1": TriggerTargetMetrics{
 					"metric.test.1": {Name: "metric.test.1"},
 					"metric.test.2": {Name: "metric.test.2"},
-				},
-			},
-		},
-		{
-			name: "origin have missing alone metric",
-			m: TriggerMetrics{
-				"t1": TriggerTargetMetrics{
-					"metric.test.1": {Name: "metric.test.1"},
-					"metric.test.2": {Name: "metric.test.2"},
-				},
-			},
-			args: args{
-				lastCheck: moira.CheckData{
-					MetricsToTargetRelation: map[string]string{"t2": "metric.test.3"},
-					Metrics: map[string]moira.MetricState{
-						"metric.test.1": {Values: map[string]float64{"t1": 0, "t2": 0}},
-						"metric.test.2": {Values: map[string]float64{"t1": 0, "t2": 0}},
-					},
-				},
-				declaredAloneMetrics: map[string]bool{},
-				from:                 17,
-				to:                   67,
-			},
-			want: TriggerMetrics{
-				"t1": TriggerTargetMetrics{
-					"metric.test.1": {Name: "metric.test.1"},
-					"metric.test.2": {Name: "metric.test.2"},
-				},
-				"t2": {
-					"metric.test.3": {Name: "metric.test.3", StartTime: 17, StopTime: 67, StepTime: 60, Values: []float64{math.NaN()}},
 				},
 			},
 		},
@@ -187,11 +155,9 @@ func TestTriggerMetrics_Populate(t *testing.T) {
 				},
 			},
 			args: args{
-				lastCheck: moira.CheckData{
-					Metrics: map[string]moira.MetricState{
-						"metric.test.1": {Values: map[string]float64{"t1": 0}},
-						"metric.test.2": {Values: map[string]float64{"t1": 0}},
-					},
+				lastCheck: map[string]moira.MetricState{
+					"metric.test.1": {Values: map[string]float64{"t1": 0}},
+					"metric.test.2": {Values: map[string]float64{"t1": 0}},
 				},
 				declaredAloneMetrics: map[string]bool{},
 				from:                 17,
@@ -201,118 +167,6 @@ func TestTriggerMetrics_Populate(t *testing.T) {
 				"t1": TriggerTargetMetrics{
 					"metric.test.1": {Name: "metric.test.1"},
 					"metric.test.2": {Name: "metric.test.2", StartTime: 17, StopTime: 67, StepTime: 60, Values: []float64{math.NaN()}},
-				},
-			},
-		},
-		{
-			name: "origin have missing metrics and alone metrics",
-			m: TriggerMetrics{
-				"t1": TriggerTargetMetrics{
-					"metric.test.1": {Name: "metric.test.1"},
-				},
-				"t2": TriggerTargetMetrics{
-					"metric.test.3": {Name: "metric.test.3"},
-				},
-			},
-			args: args{
-				lastCheck: moira.CheckData{
-					MetricsToTargetRelation: map[string]string{"t2": "metric.test.3"},
-					Metrics: map[string]moira.MetricState{
-						"metric.test.1": {Values: map[string]float64{"t1": 0, "t2": 0}},
-						"metric.test.2": {Values: map[string]float64{"t1": 0, "t2": 0}},
-					},
-				},
-				declaredAloneMetrics: map[string]bool{"t2": true},
-				from:                 17,
-				to:                   67,
-			},
-			want: TriggerMetrics{
-				"t1": TriggerTargetMetrics{
-					"metric.test.1": {Name: "metric.test.1"},
-					"metric.test.2": {Name: "metric.test.2", StartTime: 17, StopTime: 67, StepTime: 60, Values: []float64{math.NaN()}},
-				},
-				"t2": TriggerTargetMetrics{
-					"metric.test.3": {Name: "metric.test.3"},
-				},
-			},
-		},
-		{
-			name: "origin have target with missing metrics and alone metrics",
-			m: TriggerMetrics{
-				"t1": TriggerTargetMetrics{
-					"metric.test.1": {Name: "metric.test.1"},
-					"metric.test.2": {Name: "metric.test.2"},
-					"metric.test.3": {Name: "metric.test.3"},
-				},
-				"t2": TriggerTargetMetrics{
-					"metric.test.4": {Name: "metric.test.4"},
-				},
-				"t3": TriggerTargetMetrics{
-					"metric.test.1": {Name: "metric.test.1"},
-					"metric.test.2": {Name: "metric.test.2"},
-				},
-			},
-			args: args{
-				lastCheck: moira.CheckData{
-					MetricsToTargetRelation: map[string]string{"t2": "metric.test.4"},
-					Metrics: map[string]moira.MetricState{
-						"metric.test.1": {Values: map[string]float64{"t1": 0, "t2": 0, "t3": 0}},
-						"metric.test.2": {Values: map[string]float64{"t1": 0, "t2": 0, "t3": 0}},
-						"metric.test.3": {Values: map[string]float64{"t1": 0, "t2": 0, "t3": 0}},
-					},
-				},
-				declaredAloneMetrics: map[string]bool{"t2": true},
-				from:                 17,
-				to:                   67,
-			},
-			want: TriggerMetrics{
-				"t1": TriggerTargetMetrics{
-					"metric.test.1": {Name: "metric.test.1"},
-					"metric.test.2": {Name: "metric.test.2"},
-					"metric.test.3": {Name: "metric.test.3"},
-				},
-				"t2": TriggerTargetMetrics{
-					"metric.test.4": {Name: "metric.test.4"},
-				},
-				"t3": TriggerTargetMetrics{
-					"metric.test.1": {Name: "metric.test.1"},
-					"metric.test.2": {Name: "metric.test.2"},
-					"metric.test.3": {Name: "metric.test.3", StartTime: 17, StopTime: 67, StepTime: 60, Values: []float64{math.NaN()}},
-				},
-			},
-		},
-		{
-			name: "in last check exist metric with name of alone metric",
-			m: TriggerMetrics{
-				"t1": TriggerTargetMetrics{
-					"metric.test.1": {Name: "metric.test.1"},
-					"metric.test.2": {Name: "metric.test.2"},
-				},
-				"t2": TriggerTargetMetrics{
-					"metric.test.3": {Name: "metric.test.3"},
-				},
-			},
-			args: args{
-				lastCheck: moira.CheckData{
-					MetricsToTargetRelation: map[string]string{"t2": "metric.test.3"},
-					Metrics: map[string]moira.MetricState{
-						"metric.test.1": {Values: map[string]float64{"t1": 0, "t2": 0}},
-						"metric.test.2": {Values: map[string]float64{"t1": 0, "t2": 0}},
-						"metric.test.3": {Values: map[string]float64{"t1": 0, "t2": 0}},
-					},
-				},
-				declaredAloneMetrics: map[string]bool{"t2": true},
-				from:                 17,
-				to:                   67,
-			},
-			want: TriggerMetrics{
-				"t1": TriggerTargetMetrics{
-					"metric.test.1": {Name: "metric.test.1"},
-					"metric.test.2": {Name: "metric.test.2"},
-					"metric.test.3": {Name: "metric.test.3", StartTime: 17, StopTime: 67, StepTime: 60, Values: []float64{math.NaN()}},
-				},
-				"t2": TriggerTargetMetrics{
-					"metric.test.3": {Name: "metric.test.3"},
 				},
 			},
 		},
@@ -342,84 +196,110 @@ func TestTriggerMetrics_Populate(t *testing.T) {
 }
 
 func TestTriggerMetrics_FilterAloneMetrics(t *testing.T) {
-	tests := []struct {
-		name     string
-		m        TriggerMetrics
-		declared map[string]bool
-		want     TriggerMetrics
-		want1    map[string]metricSource.MetricData
-	}{
-		{
-			name: "origin does not have alone metrics",
-			m: TriggerMetrics{
-				"t1": TriggerTargetMetrics{
-					"metric.test.1": {Name: "metric.test.1"},
-					"metric.test.2": {Name: "metric.test.2"},
-				},
-			},
-			declared: map[string]bool{},
-			want: TriggerMetrics{
-				"t1": TriggerTargetMetrics{
-					"metric.test.1": {Name: "metric.test.1"},
-					"metric.test.2": {Name: "metric.test.2"},
-				},
-			},
-			want1: map[string]metricSource.MetricData{},
-		},
-		{
-			name: "origin has alone metrics",
-			m: TriggerMetrics{
-				"t1": TriggerTargetMetrics{
-					"metric.test.1": {Name: "metric.test.1"},
-					"metric.test.2": {Name: "metric.test.2"},
-				},
-				"t2": TriggerTargetMetrics{
-					"metric.test.3": {Name: "metric.test.3"},
-				},
-			},
-			declared: map[string]bool{
-				"t2": true,
-			},
-			want: TriggerMetrics{
-				"t1": TriggerTargetMetrics{
-					"metric.test.1": {Name: "metric.test.1"},
-					"metric.test.2": {Name: "metric.test.2"},
-				},
-			},
-			want1: map[string]metricSource.MetricData{"t2": {Name: "metric.test.3"}},
-		},
-		{
-			name: "origin has alone metrics but it is not declared",
-			m: TriggerMetrics{
-				"t1": TriggerTargetMetrics{
-					"metric.test.1": {Name: "metric.test.1"},
-					"metric.test.2": {Name: "metric.test.2"},
-				},
-				"t2": TriggerTargetMetrics{
-					"metric.test.3": {Name: "metric.test.3"},
-				},
-			},
-			declared: map[string]bool{},
-			want: TriggerMetrics{
-				"t1": TriggerTargetMetrics{
-					"metric.test.1": {Name: "metric.test.1"},
-					"metric.test.2": {Name: "metric.test.2"},
-				},
-				"t2": TriggerTargetMetrics{
-					"metric.test.3": {Name: "metric.test.3"},
-				},
-			},
-			want1: map[string]metricSource.MetricData{},
-		},
-	}
 	Convey("FilterAloneMetrics", t, func() {
-		for _, tt := range tests {
-			Convey(tt.name, func() {
-				filtered, alone := tt.m.FilterAloneMetrics(tt.declared)
-				So(filtered, ShouldResemble, tt.want)
-				So(alone, ShouldResemble, tt.want1)
+		Convey("origin does not have alone metrics", func() {
+			m := TriggerMetrics{
+				"t1": TriggerTargetMetrics{
+					"metric.test.1": {Name: "metric.test.1"},
+					"metric.test.2": {Name: "metric.test.2"},
+				},
+			}
+			declared := map[string]bool{}
+			filtered, alone, err := m.FilterAloneMetrics(declared)
+			So(filtered, ShouldResemble, TriggerMetrics{
+				"t1": TriggerTargetMetrics{
+					"metric.test.1": {Name: "metric.test.1"},
+					"metric.test.2": {Name: "metric.test.2"},
+				},
 			})
-		}
+			So(alone, ShouldBeEmpty)
+			So(err, ShouldBeNil)
+		})
+		Convey("origin has alone metrics", func() {
+			m := TriggerMetrics{
+				"t1": TriggerTargetMetrics{
+					"metric.test.1": {Name: "metric.test.1"},
+					"metric.test.2": {Name: "metric.test.2"},
+				},
+				"t2": TriggerTargetMetrics{
+					"metric.test.3": {Name: "metric.test.3"},
+				},
+			}
+			declared := map[string]bool{"t2": true}
+			filtered, alone, err := m.FilterAloneMetrics(declared)
+			So(filtered, ShouldResemble, TriggerMetrics{
+				"t1": TriggerTargetMetrics{
+					"metric.test.1": {Name: "metric.test.1"},
+					"metric.test.2": {Name: "metric.test.2"},
+				},
+			})
+			So(alone, ShouldResemble, AloneMetrics{"t2": {Name: "metric.test.3"}})
+			So(err, ShouldBeNil)
+		})
+		Convey("origin has alone metrics but it is not declared", func() {
+			m := TriggerMetrics{
+				"t1": TriggerTargetMetrics{
+					"metric.test.1": {Name: "metric.test.1"},
+					"metric.test.2": {Name: "metric.test.2"},
+				},
+				"t2": TriggerTargetMetrics{
+					"metric.test.3": {Name: "metric.test.3"},
+				},
+			}
+			declared := map[string]bool{}
+			filtered, alone, err := m.FilterAloneMetrics(declared)
+			So(filtered, ShouldResemble, TriggerMetrics{
+				"t1": TriggerTargetMetrics{
+					"metric.test.1": {Name: "metric.test.1"},
+					"metric.test.2": {Name: "metric.test.2"},
+				},
+				"t2": TriggerTargetMetrics{
+					"metric.test.3": {Name: "metric.test.3"},
+				},
+			})
+			So(alone, ShouldBeEmpty)
+			So(err, ShouldBeNil)
+		})
+		Convey("origin has targets that declared as alone metrics but it contains multiple metrics", func() {
+			m := TriggerMetrics{
+				"t1": TriggerTargetMetrics{
+					"metric.test.1": {Name: "metric.test.1"},
+					"metric.test.2": {Name: "metric.test.2"},
+				},
+				"t2": TriggerTargetMetrics{
+					"metric.test.3": {Name: "metric.test.3"},
+					"metric.test.4": {Name: "metric.test.4"},
+				},
+			}
+			declared := map[string]bool{"t2": true}
+			filtered, alone, err := m.FilterAloneMetrics(declared)
+			So(filtered, ShouldBeEmpty)
+			So(alone, ShouldBeEmpty)
+			So(err, ShouldBeError)
+			So(err.(ErrUnexpectedAloneMetric).unexpected, ShouldContainKey, "t2")
+			So(err.(ErrUnexpectedAloneMetric).unexpected["t2"], ShouldHaveLength, 2)
+			So(err.(ErrUnexpectedAloneMetric).unexpected["t2"], ShouldContain, "metric.test.3")
+			So(err.(ErrUnexpectedAloneMetric).unexpected["t2"], ShouldContain, "metric.test.4")
+		})
+		Convey("origin has targets that declared as alone metrics but it is empty", func() {
+			m := TriggerMetrics{
+				"t1": TriggerTargetMetrics{
+					"metric.test.1": {Name: "metric.test.1"},
+					"metric.test.2": {Name: "metric.test.2"},
+				},
+				"t2": TriggerTargetMetrics{},
+			}
+			declared := map[string]bool{"t2": true}
+			filtered, alone, err := m.FilterAloneMetrics(declared)
+			So(filtered, ShouldResemble, TriggerMetrics{
+				"t1": TriggerTargetMetrics{
+					"metric.test.1": {Name: "metric.test.1"},
+					"metric.test.2": {Name: "metric.test.2"},
+				},
+			})
+			So(alone, ShouldBeEmpty)
+			So(err, ShouldBeNil)
+		})
 	})
 }
 
@@ -643,6 +523,9 @@ func TestTriggerMetrics_ConvertForCheck(t *testing.T) {
 		for _, tt := range tests {
 			Convey(tt.name, func() {
 				actual := tt.m.ConvertForCheck()
+				if actual == nil {
+					t.Log("actual is nil")
+				}
 				So(actual, ShouldResemble, tt.want)
 			})
 		}
