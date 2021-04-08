@@ -62,22 +62,14 @@ func NewTriggerMetricsWithCapacity(capacity int) TriggerMetrics {
 // Populate is a function that takes TriggerMetrics and populate targets
 // that is missing metrics that appear in another targets except the targets that have
 // only alone metrics.
-func (m TriggerMetrics) Populate(lastCheck moira.CheckData, declaredAloneMetrics map[string]bool, from int64, to int64) TriggerMetrics {
+func (m TriggerMetrics) Populate(lastMetrics map[string]moira.MetricState, declaredAloneMetrics map[string]bool, from int64, to int64) TriggerMetrics {
 	// This one have all metrics that should be in final TriggerMetrics.
 	// This structure filled with metrics from last check,
 	// current received metrics alone metrics from last check.
 	allMetrics := make(map[string]map[string]bool, len(m))
 
-	// Gathering alone metrics that were at last check
-	for targetName, metricName := range lastCheck.MetricsToTargetRelation {
-		allMetrics[targetName] = map[string]bool{metricName: true}
-	}
-
-	for metricName, metricState := range lastCheck.Metrics {
+	for metricName, metricState := range lastMetrics {
 		for targetName := range metricState.Values {
-			if _, ok := lastCheck.MetricsToTargetRelation[targetName]; ok {
-				continue
-			}
 			if _, ok := allMetrics[targetName]; !ok {
 				allMetrics[targetName] = make(map[string]bool)
 			}
@@ -104,6 +96,10 @@ func (m TriggerMetrics) Populate(lastCheck moira.CheckData, declaredAloneMetrics
 
 	result := NewTriggerMetricsWithCapacity(len(allMetrics))
 	for targetName, metrics := range allMetrics {
+		// // We do not populate metrics
+		// if declaredAloneMetrics[targetName] {
+		// 	continue
+		// }
 		targetMetrics, ok := m[targetName]
 		if !ok {
 			targetMetrics = newTriggerTargetMetricsWithCapacity(len(metrics))
@@ -116,19 +112,56 @@ func (m TriggerMetrics) Populate(lastCheck moira.CheckData, declaredAloneMetrics
 
 // FilterAloneMetrics is a function that remove alone metrics targets from TriggerMetrics
 // and return this metrics in format map[targetName]MetricData.
-func (m TriggerMetrics) FilterAloneMetrics(declaredAloneMetrics map[string]bool) (TriggerMetrics, map[string]metricSource.MetricData) {
+// We split targets that declared as targets with alone metrics
+// from targets with multiple metrics.
+// For example we have a targets with metrics:
+//	{
+//		"t1": {"m1": {metrics}, "m2": {metrics}, "m3": {metrics}},
+//		"t2": {"m1": {metrics}, "m2": {metrics}, "m3": {metrics}},
+//		"t3": {"m4": {metrics}},
+//	}
+// and declared alone metrics
+//	{"t3": true}
+// This methos will return
+//	{
+//		"t1": {"m1", "m2", "m3"},
+//		"t2": {"m1", "m2", "m3"},
+//	}
+// and
+//	{
+//	"t3": {metrics},
+//	}
+func (m TriggerMetrics) FilterAloneMetrics(declaredAloneMetrics map[string]bool) (TriggerMetrics, AloneMetrics, error) {
+	if len(declaredAloneMetrics) == 0 {
+		return m, NewAloneMetricsWithCapacity(0), nil
+	}
+
 	result := NewTriggerMetricsWithCapacity(len(m))
-	aloneMetrics := make(map[string]metricSource.MetricData)
+	aloneMetrics := NewAloneMetricsWithCapacity(len(m)) // Just use len of m for optimization
+
+	errorBuilder := newErrUnexpectedAloneMetricBuilder()
+	errorBuilder.setDeclared(declaredAloneMetrics)
 
 	for targetName, targetMetrics := range m {
-		oneMetricMap, metricName := isOneMetricMap(targetMetrics)
-		if declaredAloneMetrics[targetName] && oneMetricMap {
-			aloneMetrics[targetName] = targetMetrics[metricName]
+		if !declaredAloneMetrics[targetName] {
+			result[targetName] = m[targetName]
 			continue
 		}
-		result[targetName] = m[targetName]
+
+		oneMetricMap, metricName := isOneMetricMap(targetMetrics)
+		if !oneMetricMap {
+			if len(targetMetrics) == 0 {
+				continue
+			}
+			errorBuilder.addUnexpected(targetName, targetMetrics)
+			continue
+		}
+		aloneMetrics[targetName] = targetMetrics[metricName]
 	}
-	return result, aloneMetrics
+	if err := errorBuilder.build(); err != nil {
+		return TriggerMetrics{}, AloneMetrics{}, err
+	}
+	return result, aloneMetrics, nil
 }
 
 // Diff is a function that returns a map of target names with metric names that are absent in
@@ -183,10 +216,6 @@ func (m TriggerMetrics) getTargetMetrics() (string, setHelper) {
 func (m TriggerMetrics) ConvertForCheck() map[string]map[string]metricSource.MetricData {
 	result := make(map[string]map[string]metricSource.MetricData)
 	_, commonMetrics := m.getTargetMetrics()
-
-	if commonMetrics != nil && len(commonMetrics) <= 1 {
-		return nil
-	}
 
 	for targetName, targetMetrics := range m {
 		oneMetricTarget, oneMetricName := isOneMetricMap(targetMetrics)
