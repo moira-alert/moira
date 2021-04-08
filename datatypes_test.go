@@ -325,6 +325,7 @@ func TestTrigger_IsSimple(t *testing.T) {
 			{Patterns: []string{"1{23"}, Targets: []string{"123"}},
 			{Patterns: []string{"[123"}, Targets: []string{"123"}},
 			{Patterns: []string{"[12*3"}, Targets: []string{"123"}},
+			{Patterns: []string{"seriesByTag('test=test_value')"}, Targets: []string{"seriesByTag('test=test_value')"}},
 		}
 
 		for _, trigger := range triggers {
