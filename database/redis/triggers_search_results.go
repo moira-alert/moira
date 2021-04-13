@@ -53,9 +53,9 @@ func (connector *DbConnector) GetTriggersSearchResults(searchResultsID string, p
 
 	resultsID := triggersSearchResultsKey(searchResultsID)
 
-	c.Send("MULTI") //nolint
+	c.Send("MULTI")                       //nolint
 	c.Send("LRANGE", resultsID, from, to) //nolint
-	c.Send("LLEN", resultsID) //nolint
+	c.Send("LLEN", resultsID)             //nolint
 	response, err := redis.Values(c.Do("EXEC"))
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to EXEC: %w", err)
@@ -64,6 +64,35 @@ func (connector *DbConnector) GetTriggersSearchResults(searchResultsID string, p
 		return make([]*moira.SearchResult, 0), 0, nil
 	}
 	return reply.SearchResults(response[0], response[1], nil)
+}
+
+// IsTriggersSearchResultsExist is a function that checks if there exists pager for triggers search by it's ID
+func (connector *DbConnector) IsTriggersSearchResultsExist(pagerID string) (bool, error) {
+	c := connector.pool.Get()
+	defer c.Close()
+
+	pagerIDKey := triggersSearchResultsKey(pagerID)
+	reply, err := c.Do("EXISTS", pagerIDKey)
+
+	result, err := redis.Bool(reply, err)
+	if err != nil {
+		return false, fmt.Errorf("failed to check if pager exists: %w", err)
+	}
+	return result, nil
+}
+
+// DeleteTriggersSearchResults is a function that checks if there exists pager for triggers search by it's ID
+func (connector *DbConnector) DeleteTriggersSearchResults(pagerID string) error {
+	c := connector.pool.Get()
+	defer c.Close()
+
+	pagerIDKey := triggersSearchResultsKey(pagerID)
+	_, err := c.Do("DEL", pagerIDKey)
+
+	if err != nil {
+		return fmt.Errorf("failed to check if pager exists: %w", err)
+	}
+	return nil
 }
 
 func triggersSearchResultsKey(searchResultsID string) string {

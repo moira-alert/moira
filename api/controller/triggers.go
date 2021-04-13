@@ -145,6 +145,21 @@ func SearchTriggers(database moira.Database, searcher moira.Searcher, page int64
 	return &triggersList, nil
 }
 
+func DeleteTriggersPager(dataBase moira.Database, pagerID string) (dto.TriggersSearchResultDeleteResponse, *api.ErrorResponse) {
+	exists, err := dataBase.IsTriggersSearchResultsExist(pagerID)
+	if err != nil {
+		return dto.TriggersSearchResultDeleteResponse{}, api.ErrorInternalServer(err)
+	}
+	if !exists {
+		return dto.TriggersSearchResultDeleteResponse{}, api.ErrorNotFound(fmt.Sprintf("pager with id %s not found", pagerID))
+	}
+	err = dataBase.DeleteTriggersSearchResults(pagerID)
+	if err != nil {
+		return dto.TriggersSearchResultDeleteResponse{}, api.ErrorInternalServer(err)
+	}
+	return dto.TriggersSearchResultDeleteResponse{PagerID: pagerID}, nil
+}
+
 func triggerExists(dataBase moira.Database, triggerID string) (bool, error) {
 	_, err := dataBase.GetTrigger(triggerID)
 	if err == database.ErrNil {

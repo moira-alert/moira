@@ -176,6 +176,20 @@ func (mr *MockDatabaseMockRecorder) DeleteTriggerThrottling(arg0 interface{}) *g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteTriggerThrottling", reflect.TypeOf((*MockDatabase)(nil).DeleteTriggerThrottling), arg0)
 }
 
+// DeleteTriggersSearchResults mocks base method.
+func (m *MockDatabase) DeleteTriggersSearchResults(arg0 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteTriggersSearchResults", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteTriggersSearchResults indicates an expected call of DeleteTriggersSearchResults.
+func (mr *MockDatabaseMockRecorder) DeleteTriggersSearchResults(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteTriggersSearchResults", reflect.TypeOf((*MockDatabase)(nil).DeleteTriggersSearchResults), arg0)
+}
+
 // FetchNotificationEvent mocks base method.
 func (m *MockDatabase) FetchNotificationEvent() (moira.NotificationEvent, error) {
 	m.ctrl.T.Helper()
@@ -879,6 +893,21 @@ func (m *MockDatabase) IsTeamContainUser(arg0, arg1 string) (bool, error) {
 func (mr *MockDatabaseMockRecorder) IsTeamContainUser(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsTeamContainUser", reflect.TypeOf((*MockDatabase)(nil).IsTeamContainUser), arg0, arg1)
+}
+
+// IsTriggersSearchResultsExist mocks base method.
+func (m *MockDatabase) IsTriggersSearchResultsExist(arg0 string) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsTriggersSearchResultsExist", arg0)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// IsTriggersSearchResultsExist indicates an expected call of IsTriggersSearchResultsExist.
+func (mr *MockDatabaseMockRecorder) IsTriggersSearchResultsExist(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsTriggersSearchResultsExist", reflect.TypeOf((*MockDatabase)(nil).IsTriggersSearchResultsExist), arg0)
 }
 
 // MarkTriggersAsUnused mocks base method.

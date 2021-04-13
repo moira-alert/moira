@@ -43,9 +43,11 @@ type Database interface {
 	GetPatternTriggerIDs(pattern string) ([]string, error)
 	RemovePatternTriggerIDs(pattern string) error
 
-	// SearchResult storing
+	// SearchResult AKA pager storing
 	GetTriggersSearchResults(searchResultsID string, page, size int64) ([]*SearchResult, int64, error)
 	SaveTriggersSearchResults(searchResultsID string, searchResults []*SearchResult) error
+	IsTriggersSearchResultsExist(pagerID string) (bool, error)
+	DeleteTriggersSearchResults(pagerID string) error
 
 	// Throttling
 	GetTriggerThrottling(triggerID string) (time.Time, time.Time)

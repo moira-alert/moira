@@ -397,3 +397,11 @@ type TriggerDump struct {
 	Trigger   moira.Trigger    `json:"trigger"`
 	Metrics   []PatternMetrics `json:"metrics"`
 }
+
+type TriggersSearchResultDeleteResponse struct {
+	PagerID string `json:"pager_id"`
+}
+
+func (TriggersSearchResultDeleteResponse) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
