@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -741,3 +742,44 @@ var triggerChecks = []moira.TriggerCheck{
 }
 
 var testHighlightsMap = map[string]string{"testField": "testHighlight"}
+
+func TestDeleteTriggersPager(t *testing.T) {
+	Convey("DeleteTriggersPager", t, func() {
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+		const pagerID = "pagerID"
+
+		Convey("Pager exists", func() {
+			dataBase.EXPECT().IsTriggersSearchResultsExist(pagerID).Return(true, nil)
+			dataBase.EXPECT().DeleteTriggersSearchResults(pagerID).Return(nil)
+			response, err := DeleteTriggersPager(dataBase, pagerID)
+			So(err, ShouldBeNil)
+			So(response, ShouldResemble, dto.TriggersSearchResultDeleteResponse{PagerID: pagerID})
+		})
+
+		Convey("Pager is not exist", func() {
+			dataBase.EXPECT().IsTriggersSearchResultsExist(pagerID).Return(false, nil)
+			response, err := DeleteTriggersPager(dataBase, pagerID)
+			So(err, ShouldResemble, api.ErrorNotFound("pager with id pagerID not found"))
+			So(response, ShouldResemble, dto.TriggersSearchResultDeleteResponse{})
+		})
+
+		Convey("Error while checking pager existence", func() {
+			errReturning := errors.New("example error")
+			dataBase.EXPECT().IsTriggersSearchResultsExist(pagerID).Return(false, errReturning)
+			response, err := DeleteTriggersPager(dataBase, pagerID)
+			So(err, ShouldResemble, api.ErrorInternalServer(errReturning))
+			So(response, ShouldResemble, dto.TriggersSearchResultDeleteResponse{})
+		})
+
+		Convey("Error while deleting pager", func() {
+			errReturning := errors.New("example error")
+			dataBase.EXPECT().IsTriggersSearchResultsExist(pagerID).Return(true, nil)
+			dataBase.EXPECT().DeleteTriggersSearchResults(pagerID).Return(errReturning)
+			response, err := DeleteTriggersPager(dataBase, pagerID)
+			So(err, ShouldResemble, api.ErrorInternalServer(errReturning))
+			So(response, ShouldResemble, dto.TriggersSearchResultDeleteResponse{})
+		})
+	})
+}
