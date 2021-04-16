@@ -31,10 +31,6 @@ func formatDate(unixTime int64, format string) string {
 	return time.Unix(unixTime, 0).Format(format)
 }
 
-func stringsReplace(s, old, new string, n int) string {
-	return strings.Replace(s, old, new, n)
-}
-
 func (event Event) TimestampDecrease(second int64) int64 {
 	return event.Timestamp - second
 }
@@ -58,9 +54,13 @@ func Populate(name, description string, events []Event) (desc string, err error)
 
 	buffer := bytes.Buffer{}
 	funcMap := template.FuncMap{
-		"date":       date,
-		"formatDate": formatDate,
-		"stringsReplace": stringsReplace,
+		"date":              date,
+		"formatDate":        formatDate,
+		"stringsReplace":    strings.Replace,
+		"stringsToLower":    strings.ToLower,
+		"stringsToUpper":    strings.ToUpper,
+		"stringsTrimPrefix": strings.TrimPrefix,
+		"stringsTrimSuffix": strings.TrimSuffix,
 	}
 
 	dataToExecute := notification{
