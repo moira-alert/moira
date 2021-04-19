@@ -13,6 +13,8 @@ import (
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
+
+	//"github.com/moira-alert/moira/metric_source/local"
 	"github.com/moira-alert/moira/metrics"
 	mock_metric_source "github.com/moira-alert/moira/mock/metric_source"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
@@ -669,16 +671,24 @@ func TestCheck(t *testing.T) {
 		Convey("Fetch error", func() {
 			lastCheck := moira.CheckData{
 				Metrics:                 triggerChecker.lastCheck.Metrics,
-				State:                   moira.StateOK,
+				State:                   moira.StateEXCEPTION,
 				Timestamp:               triggerChecker.until,
 				EventTimestamp:          triggerChecker.until,
-				Score:                   0,
-				Message:                 "",
+				Score:                   int64(100000),
+				Message:                 metricErr.Error(),
 				MetricsToTargetRelation: map[string]string{},
 			}
 
 			gomock.InOrder(
 				source.EXPECT().Fetch(pattern, triggerChecker.from, triggerChecker.until, true).Return(nil, metricErr),
+				dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
+					IsTriggerEvent: true,
+					TriggerID:      triggerChecker.triggerID,
+					State:          moira.StateEXCEPTION,
+					OldState:       moira.StateOK,
+					Timestamp:      int64(67),
+					Metric:         triggerChecker.trigger.Name,
+				}, true).Return(nil),
 				dataBase.EXPECT().SetTriggerLastCheck(triggerChecker.triggerID, &lastCheck, triggerChecker.trigger.IsRemote).Return(nil),
 			)
 			err := triggerChecker.Check()
