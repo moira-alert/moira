@@ -137,6 +137,9 @@ func checkExpression(expression parser.Expr, ttl time.Duration, isRemote bool) *
 	target := expression.Target()
 	problemFunction := checkFunction(target, isRemote)
 
+	if !expression.IsFunc() {
+		return &problemOfTarget{Argument: target}
+	}
 	if argument, ok := functionArgumentsInTheRangeTTL(expression, ttl); !ok {
 		if problemFunction == nil {
 			problemFunction = &problemOfTarget{Argument: target}
@@ -153,10 +156,6 @@ func checkExpression(expression parser.Expr, ttl time.Duration, isRemote bool) *
 	}
 
 	for position, argument := range expression.Args() {
-		if !argument.IsFunc() {
-			continue
-		}
-
 		if badFunc := checkExpression(argument, ttl, isRemote); badFunc != nil {
 			badFunc.Position = position
 

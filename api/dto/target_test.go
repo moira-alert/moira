@@ -9,6 +9,18 @@ import (
 
 	. "github.com/smartystreets/goconvey/convey"
 )
+//
+//func TestTest(t *testing.T) {
+//	Convey("Target verification", t, func() {
+//		target := "seriesByTag('test=test_value') | groupByTags('sum', 'another_tag') "
+//		expr, _, err := parser.Parse(target)
+//		So(err, ShouldBeNil)
+//		So(expr.Target(), ShouldResemble, "seriesByTag")
+//		So(expr.IsName(), ShouldBeTrue)
+//		args := expr.Args()
+//		print(args)
+//	})
+//}
 
 func TestTargetVerification(t *testing.T) {
 	Convey("Target verification", t, func() {
@@ -16,6 +28,20 @@ func TestTargetVerification(t *testing.T) {
 			targets := []string{`alias(test.one,'One'`}
 			expected := TargetVerification(targets, 10, false)
 			So(len(expected), ShouldEqual, 1)
+			So(expected[0].SyntaxOk, ShouldBeFalse)
+		})
+
+		Convey("Check tag expression", func() {
+			targets := []string{`seriesByTag('test=test_value') | groupByTags('sum', 'another_tag')`}
+			expected := TargetVerification(targets, 10, false)
+			So(expected, ShouldHaveLength, 1)
+			So(expected[0].SyntaxOk, ShouldBeTrue)
+		})
+
+		Convey("Check invalid tag expression", func() {
+			targets := []string{`seriesByTag('test=test_value') | groupByTags('sum', 'another_tag`}
+			expected := TargetVerification(targets, 10, false)
+			So(expected, ShouldHaveLength, 1)
 			So(expected[0].SyntaxOk, ShouldBeFalse)
 		})
 
