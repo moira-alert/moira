@@ -96,7 +96,10 @@ func updateSubscription(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	if err := controller.UpdateSubscription(database, subscription.ID, subscription.User, subscription); err != nil {
+	subscriptionID := middleware.GetSubscriptionID(request)
+	login := middleware.GetLogin(request)
+
+	if err := controller.UpdateSubscription(database, subscriptionID, login, subscription); err != nil {
 		render.Render(writer, request, err) //nolint
 		return
 	}
