@@ -216,7 +216,7 @@ func TestBuildRequestURL(t *testing.T) {
 var testContactWithURL = moira.ContactData{
 	ID:    "contactID",
 	Type:  "contactType",
-	Value: "https://test/moirahook",
+	Value: "https://test.org/moirahook",
 	User:  "contactUser",
 	Team:  "contactTeam",
 }
@@ -224,7 +224,7 @@ var testContactWithURL = moira.ContactData{
 func TestBuildRequestURL_FromContactValueWithURL(t *testing.T) {
 	Convey("URL should contain variables values", t, func() {
 		actual := buildRequestURL("${contact_value}", testTrigger, testContactWithURL)
-		So(actual, ShouldEqual, "https://test/moirahook")
+		So(actual, ShouldEqual, "https://test.org/moirahook")
 	})
 }
 
