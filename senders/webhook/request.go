@@ -68,7 +68,12 @@ func buildRequestURL(template string, trigger moira.TriggerData, contact moira.C
 		moira.VariableTriggerID:    trigger.ID,
 	}
 	for k, v := range templateVariables {
-		template = strings.Replace(template, k, url.PathEscape(v), -1)
+		value := url.PathEscape(v)
+		if k == moira.VariableContactValue &&
+			(strings.HasPrefix(v, "http:/") || strings.HasPrefix(v, "https://")) {
+			value = v
+		}
+		template = strings.Replace(template, k, value, -1)
 	}
 	return template
 }

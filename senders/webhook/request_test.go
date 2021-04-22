@@ -213,6 +213,21 @@ func TestBuildRequestURL(t *testing.T) {
 	})
 }
 
+var testContactWithUrl = moira.ContactData{
+	ID:    "contactID",
+	Type:  "contactType",
+	Value: "https://test/moirahook",
+	User:  "contactUser",
+	Team:  "contactTeam",
+}
+
+func TestBuildRequestURL_FromContactValueWithURL(t *testing.T) {
+	Convey("URL should contain variables values", t, func() {
+		actual := buildRequestURL("${contact_value}", testTrigger, testContactWithUrl)
+		So(actual, ShouldEqual, "https://test/moirahook")
+	})
+}
+
 func prepareStrings(actual, expected string) (string, string) {
 	return strings.Join(strings.Fields(actual), ""), strings.Join(strings.Fields(expected), "")
 }
