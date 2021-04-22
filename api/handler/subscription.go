@@ -7,7 +7,6 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
-	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/controller"
 	"github.com/moira-alert/moira/api/dto"
@@ -97,9 +96,7 @@ func updateSubscription(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	subscriptionData := request.Context().Value(subscriptionKey).(moira.SubscriptionData)
-
-	if err := controller.UpdateSubscription(database, subscriptionData.ID, subscriptionData.User, subscription); err != nil {
+	if err := controller.UpdateSubscription(database, subscription.ID, subscription.User, subscription); err != nil {
 		render.Render(writer, request, err) //nolint
 		return
 	}
