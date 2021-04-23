@@ -178,13 +178,21 @@ func TestTriggerValidation(t *testing.T) {
 			fetchResult.EXPECT().GetPatterns().Return(make([]string, 0), nil).AnyTimes()
 			fetchResult.EXPECT().GetMetricsData().Return([]metricSource.MetricData{*metricSource.MakeMetricData("", []float64{}, 0, 0)}).AnyTimes()
 
-			trigger.Targets = []string{"test target"}
+			trigger.Targets = []string{"test target", "test target 2"}
 			trigger.Expression = "OK"
 			Convey("are empty", func() {
 				trigger.AloneMetrics = map[string]bool{}
 				tr := Trigger{trigger, throttling}
 				err := tr.Bind(request)
 				So(err, ShouldBeNil)
+			})
+			Convey("trigger with only one target", func() {
+				trigger.Targets = []string{"test target"}
+				trigger.AloneMetrics = map[string]bool{"t1": true}
+				tr := Trigger{trigger, throttling}
+				err := tr.Bind(request)
+				So(err, ShouldBeNil)
+				So(tr.AloneMetrics, ShouldResemble, map[string]bool{})
 			})
 			Convey("are valid", func() {
 				trigger.AloneMetrics = map[string]bool{"t1": true}
