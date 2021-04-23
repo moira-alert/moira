@@ -306,7 +306,7 @@ func TestCheckUserPermissionsForSubscription(t *testing.T) {
 		dataBase.EXPECT().GetSubscription(id).Return(actualSub, nil)
 		expectedSub, expected := CheckUserPermissionsForSubscription(dataBase, id, userLogin)
 		So(expected, ShouldBeNil)
-		So(expectedSub, ShouldResemble, moira.SubscriptionData{})
+		So(expectedSub, ShouldResemble, actualSub)
 	})
 
 	Convey("Error get contact", t, func() {
