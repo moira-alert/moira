@@ -122,7 +122,7 @@ func CheckUserPermissionsForSubscription(dataBase moira.Database, subscriptionID
 		}
 	}
 	if subscription.User == userLogin {
-		return moira.SubscriptionData{}, nil
+		return subscription, nil
 	}
 	return moira.SubscriptionData{}, api.ErrorForbidden("you are not permitted")
 }
