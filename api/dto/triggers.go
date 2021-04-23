@@ -133,6 +133,9 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 	if err := checkWarnErrorExpression(trigger); err != nil {
 		return api.ErrInvalidRequestContent{ValidationError: err}
 	}
+	if len(trigger.Targets) <= 1 { // we should have empty alone metrics dictionary when there is only one target
+		trigger.AloneMetrics = map[string]bool{}
+	}
 	for targetName := range trigger.AloneMetrics {
 		if !targetNameRegex.MatchString(targetName) {
 			return api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("alone metrics target name should be in pattern: t\\d+")}
