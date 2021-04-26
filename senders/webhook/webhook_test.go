@@ -130,3 +130,57 @@ func getLastLine(longString string) (string, error) {
 	}
 	return lastLine, nil
 }
+
+func TestSender_SendsReturnError(t *testing.T) {
+	var statusCode int
+	ts := httptest.NewServer(
+		http.HandlerFunc(
+			func(w http.ResponseWriter, _ *http.Request) {
+				code := &statusCode
+				w.WriteHeader(*code)
+			},
+		),
+	)
+	defer ts.Close()
+
+	senderSettings := map[string]string{
+		"name":     "testWebhook",
+		"url":      fmt.Sprintf("%s/%s", ts.URL, moira.VariableTriggerID),
+		"user":     testUser,
+		"password": testPass,
+	}
+	sender := Sender{}
+	err := sender.Init(senderSettings, logger, time.UTC, "")
+
+	Convey("Sending returns error about broken contact", t, func() {
+		statusCode = http.StatusNotFound
+		err = sender.SendEvents(testEvents, testContact, testTrigger, testPlot, false)
+		So(err, ShouldBeError)
+		_, ok := err.(moira.SenderBrokenContactError)
+		So(ok, ShouldBeTrue)
+	})
+
+	Convey("Sending returns error about broken contact 2", t, func() {
+		statusCode = http.StatusBadGateway
+		err = sender.SendEvents(testEvents, testContact, testTrigger, testPlot, false)
+		So(err, ShouldBeError)
+		_, ok := err.(moira.SenderBrokenContactError)
+		So(ok, ShouldBeTrue)
+	})
+
+	Convey("Sending return simple error", t, func() {
+		statusCode = http.StatusServiceUnavailable
+		err = sender.SendEvents(testEvents, testContact, testTrigger, testPlot, false)
+		So(err, ShouldBeError)
+		_, ok := err.(moira.SenderBrokenContactError)
+		So(ok, ShouldBeFalse)
+	})
+
+	Convey("Sending return simple error 2", t, func() {
+		statusCode = http.StatusTooManyRequests
+		err = sender.SendEvents(testEvents, testContact, testTrigger, testPlot, false)
+		So(err, ShouldBeError)
+		_, ok := err.(moira.SenderBrokenContactError)
+		So(ok, ShouldBeFalse)
+	})
+}
