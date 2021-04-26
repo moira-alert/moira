@@ -33,16 +33,16 @@ func TestSender_SendEvents(t *testing.T) {
 					status, err := testRequestURL(r)
 					if err != nil {
 						w.WriteHeader(status)
-						w.Write([]byte(err.Error())) //nolint
+						_, _ = w.Write([]byte(err.Error())) //nolint
 					}
 					status, err = testRequestHeaders(r)
 					if err != nil {
 						w.WriteHeader(status)
-						w.Write([]byte(err.Error())) //nolint
+						_, _ = w.Write([]byte(err.Error())) //nolint
 					}
 					status, err = testRequestBody(r)
 					if err != nil {
-						w.Write([]byte(err.Error())) //nolint
+						_, _ = w.Write([]byte(err.Error())) //nolint
 						w.WriteHeader(status)
 					}
 					w.WriteHeader(status)
