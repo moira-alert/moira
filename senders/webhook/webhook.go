@@ -83,10 +83,21 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 		} else {
 			serverResponse = string(responseBody)
 		}
-		return fmt.Errorf("invalid status code: %d, server response: %s", response.StatusCode, serverResponse)
+
+		statusCode := response.StatusCode
+		err = fmt.Errorf("invalid status code: %d, server response: %s", statusCode, serverResponse)
+		if isRetryableResponseCode(statusCode) {
+			return err
+		}
+		return moira.NewSenderBrokenContactError(err)
 	}
 
 	return nil
+}
+
+func isRetryableResponseCode(statusCode int) bool {
+	return statusCode == http.StatusServiceUnavailable ||
+		statusCode == http.StatusTooManyRequests
 }
 
 func isAllowedResponseCode(responseCode int) bool {
