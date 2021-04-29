@@ -330,3 +330,49 @@ func TestLocal_IsConfigured(t *testing.T) {
 		So(actual, ShouldBeTrue)
 	})
 }
+
+func Test_getPatternsMetricData(t *testing.T) {
+	Convey("getPatternsMetricData", t, func() {
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+		Convey("fetch error-different time ranges between patterns", func() {
+			patterns := []parser.MetricRequest{
+				{
+					Metric: "test.pattern.1",
+					From:   0,
+					Until:  0,
+				},
+				{
+					Metric: "test.pattern.2",
+					From:   -60,
+					Until:  0,
+				},
+			}
+			metricData, metrics, err := getPatternsMetricData(dataBase, patterns, int64(0), int64(60), false)
+			So(err, ShouldResemble, ErrDifferentPatternsTimeRanges{patterns: []string{"test.pattern.1: from: 0, until: 0", "test.pattern.2: from: -60, until: 0"}})
+			So(metricData, ShouldBeNil)
+			So(metrics, ShouldBeNil)
+		})
+		Convey("fetch successful-different time ranges between patterns but difference is the same", func() {
+			patterns := []parser.MetricRequest{
+				{
+					Metric: "test.pattern.1",
+					From:   0,
+					Until:  60,
+				},
+				{
+					Metric: "test.pattern.2",
+					From:   -60,
+					Until:  0,
+				},
+			}
+			dataBase.EXPECT().AllowStale().Return(dataBase)
+			dataBase.EXPECT().GetPatternMetrics("test.pattern.1").Return([]string{}, nil)
+			dataBase.EXPECT().AllowStale().Return(dataBase)
+			dataBase.EXPECT().GetPatternMetrics("test.pattern.2").Return([]string{}, nil)
+			_, _, err := getPatternsMetricData(dataBase, patterns, int64(0), int64(60), false)
+			So(err, ShouldBeNil)
+		})
+	})
+}

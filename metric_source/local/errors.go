@@ -73,3 +73,48 @@ type ErrEvaluateTargetFailedWithPanic struct {
 func (err ErrEvaluateTargetFailedWithPanic) Error() string {
 	return fmt.Sprintf("panic while evaluate target %s: message: '%s' stack: %s", err.target, err.recoverMessage, err.stackRecord)
 }
+
+// errDifferentPatternsTimeRangesBuilder is a builder pattern implementation for Error different patterns time ranges
+type errDifferentPatternsTimeRangesBuilder struct {
+	result      *ErrDifferentPatternsTimeRanges
+	returnError bool
+}
+
+// newErrDifferentPatternsTimeRangesBuilder is a constructor function for errDifferentPatternsTimeRangesBuilder
+func newErrDifferentPatternsTimeRangesBuilder() errDifferentPatternsTimeRangesBuilder {
+	return errDifferentPatternsTimeRangesBuilder{
+		result:      &ErrDifferentPatternsTimeRanges{},
+		returnError: false,
+	}
+}
+
+// addPatterns is a method that adds a patterns with time ranges to error
+func (b *errDifferentPatternsTimeRangesBuilder) addPattern(pattern string, from, until int64) {
+	b.returnError = true
+	b.result.patterns = append(b.result.patterns, fmt.Sprintf("%s: from: %d, until: %d", pattern, from, until))
+}
+
+// addCommon is a function that add to error initial time ranges with which we will compare patterns all paterns
+func (b *errDifferentPatternsTimeRangesBuilder) addCommon(pattern string, from, until int64) {
+	b.result.patterns = append(b.result.patterns, fmt.Sprintf("%s: from: %d, until: %d", pattern, from, until))
+}
+
+// build is a function that returns error if there exists patterns with inconsistency in time ranges
+func (b *errDifferentPatternsTimeRangesBuilder) build() error {
+	if b.returnError {
+		return *(b.result)
+	}
+	return nil
+}
+
+// ErrDifferentPatternsTimeRanges is a type that represents error for situation in which one target have couple patterns
+// and this patterns have different time ranges. That behavior can appear if some patterns have aggregation functions or
+// scale function with different time arguments
+type ErrDifferentPatternsTimeRanges struct {
+	patterns []string
+}
+
+// Error is an error interface implementation method
+func (err ErrDifferentPatternsTimeRanges) Error() string {
+	return fmt.Sprintf("Some of patterns have different time ranges in the same target:\n%s", strings.Join(err.patterns, "\n"))
+}

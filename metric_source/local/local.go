@@ -120,6 +120,20 @@ func (local *Local) IsConfigured() (bool, error) {
 func getPatternsMetricData(database moira.Database, patterns []parser.MetricRequest, from int64, until int64, allowRealTimeAlerting bool) (map[parser.MetricRequest][]*types.MetricData, []string, error) {
 	metrics := make([]string, 0)
 	metricsMap := make(map[parser.MetricRequest][]*types.MetricData)
+	var commonTimeRange int64
+	errorBuilder := newErrDifferentPatternsTimeRangesBuilder()
+	if len(patterns) > 0 {
+		commonTimeRange = patterns[0].Until - patterns[0].From
+		errorBuilder.addCommon(patterns[0].Metric, patterns[0].From, patterns[0].Until)
+	}
+	for _, pattern := range patterns {
+		if pattern.Until-pattern.From != commonTimeRange {
+			errorBuilder.addPattern(pattern.Metric, pattern.From, pattern.Until)
+		}
+	}
+	if err := errorBuilder.build(); err != nil {
+		return nil, nil, err
+	}
 	for _, pattern := range patterns {
 		pattern.From += from
 		pattern.Until += until
