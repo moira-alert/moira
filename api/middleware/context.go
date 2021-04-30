@@ -205,3 +205,29 @@ func TargetName(defaultTargetName string) func(next http.Handler) http.Handler {
 		})
 	}
 }
+
+// TeamContext gets teamId from parsed URI corresponding to team routes and set it to request context
+func TeamContext(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		teamID := chi.URLParam(request, "teamId")
+		if teamID == "" {
+			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("teamId must be set"))) //nolint:errcheck
+			return
+		}
+		ctx := context.WithValue(request.Context(), teamIDKey, teamID)
+		next.ServeHTTP(writer, request.WithContext(ctx))
+	})
+}
+
+// TeamUserIDContext gets userId from parsed URI corresponding to team routes and set it to request context
+func TeamUserIDContext(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		userID := chi.URLParam(request, "teamUserId")
+		if userID == "" {
+			render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("userId must be set"))) //nolint:errcheck
+			return
+		}
+		ctx := context.WithValue(request.Context(), teamUserIDKey, userID)
+		next.ServeHTTP(writer, request.WithContext(ctx))
+	})
+}

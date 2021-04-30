@@ -5,34 +5,35 @@
 package mock_moira_alert
 
 import (
-	gomock "github.com/golang/mock/gomock"
 	reflect "reflect"
+
+	gomock "github.com/golang/mock/gomock"
 )
 
-// MockImageStore is a mock of ImageStore interface
+// MockImageStore is a mock of ImageStore interface.
 type MockImageStore struct {
 	ctrl     *gomock.Controller
 	recorder *MockImageStoreMockRecorder
 }
 
-// MockImageStoreMockRecorder is the mock recorder for MockImageStore
+// MockImageStoreMockRecorder is the mock recorder for MockImageStore.
 type MockImageStoreMockRecorder struct {
 	mock *MockImageStore
 }
 
-// NewMockImageStore creates a new mock instance
+// NewMockImageStore creates a new mock instance.
 func NewMockImageStore(ctrl *gomock.Controller) *MockImageStore {
 	mock := &MockImageStore{ctrl: ctrl}
 	mock.recorder = &MockImageStoreMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockImageStore) EXPECT() *MockImageStoreMockRecorder {
 	return m.recorder
 }
 
-// IsEnabled mocks base method
+// IsEnabled mocks base method.
 func (m *MockImageStore) IsEnabled() bool {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IsEnabled")
@@ -40,13 +41,13 @@ func (m *MockImageStore) IsEnabled() bool {
 	return ret0
 }
 
-// IsEnabled indicates an expected call of IsEnabled
+// IsEnabled indicates an expected call of IsEnabled.
 func (mr *MockImageStoreMockRecorder) IsEnabled() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsEnabled", reflect.TypeOf((*MockImageStore)(nil).IsEnabled))
 }
 
-// StoreImage mocks base method
+// StoreImage mocks base method.
 func (m *MockImageStore) StoreImage(arg0 []byte) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "StoreImage", arg0)
@@ -55,7 +56,7 @@ func (m *MockImageStore) StoreImage(arg0 []byte) (string, error) {
 	return ret0, ret1
 }
 
-// StoreImage indicates an expected call of StoreImage
+// StoreImage indicates an expected call of StoreImage.
 func (mr *MockImageStoreMockRecorder) StoreImage(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StoreImage", reflect.TypeOf((*MockImageStore)(nil).StoreImage), arg0)

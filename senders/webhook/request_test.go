@@ -20,6 +20,7 @@ var (
 		Type:  "contactType",
 		Value: "contactValue",
 		User:  "contactUser",
+		Team:  "contactTeam",
 	}
 	testTrigger = moira.TriggerData{
 		ID:   "triggerID",
@@ -96,7 +97,8 @@ const expectedStateChangePayload = `
     "type": "contactType",
     "value": "contactValue",
     "id": "contactID",
-    "user": "contactUser"
+    "user": "contactUser",
+    "team": "contactTeam"
 	},
 	"plot": "",
   "plots": [],
@@ -117,7 +119,8 @@ const expectedEmptyPayload = `
         "type": "",
         "value": "",
         "id": "",
-        "user": ""
+        "user": "",
+        "team": ""
 		},
 		"plot": "",
     "plots": [],
@@ -207,6 +210,21 @@ func TestBuildRequestURL(t *testing.T) {
 				So(actual, ShouldEqual, expected)
 			}
 		}
+	})
+}
+
+var testContactWithURL = moira.ContactData{
+	ID:    "contactID",
+	Type:  "contactType",
+	Value: "https://test.org/moirahook",
+	User:  "contactUser",
+	Team:  "contactTeam",
+}
+
+func TestBuildRequestURL_FromContactValueWithURL(t *testing.T) {
+	Convey("URL should contain variables values", t, func() {
+		actual := buildRequestURL("${contact_value}", testTrigger, testContactWithURL)
+		So(actual, ShouldEqual, "https://test.org/moirahook")
 	})
 }
 

@@ -30,6 +30,7 @@ func triggers(metricSourceProvider *metricSource.SourceProvider, searcher moira.
 		router.Put("/check", triggerCheck)
 		router.Route("/{triggerId}", trigger)
 		router.With(middleware.Paginate(0, 10)).With(middleware.Pager(false, "")).Get("/search", searchTriggers)
+		router.With(middleware.Pager(false, "")).Delete("/search/pager", deletePager)
 		// ToDo: DEPRECATED method. Remove in Moira 2.6
 		router.With(middleware.Paginate(0, 10)).With(middleware.Pager(false, "")).Get("/page", searchTriggers)
 	}
@@ -139,6 +140,21 @@ func searchTriggers(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	if err := render.Render(writer, request, triggersList); err != nil {
+		render.Render(writer, request, api.ErrorRender(err)) //nolint
+		return
+	}
+}
+
+func deletePager(writer http.ResponseWriter, request *http.Request) {
+	pagerID := middleware.GetPagerID(request)
+
+	response, errorResponse := controller.DeleteTriggersPager(database, pagerID)
+	if errorResponse != nil {
+		render.Render(writer, request, errorResponse) //nolint
+		return
+	}
+
+	if err := render.Render(writer, request, response); err != nil {
 		render.Render(writer, request, api.ErrorRender(err)) //nolint
 		return
 	}

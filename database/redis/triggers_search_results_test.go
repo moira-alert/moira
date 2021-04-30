@@ -127,6 +127,21 @@ func TestTriggersSearchResultsStoring(t *testing.T) {
 		So(actual, ShouldHaveLength, 3)
 		So(actual, ShouldResemble, searchResults[3:6])
 		So(total, ShouldResemble, int64(8))
+
+		actualExists, err := dataBase.IsTriggersSearchResultsExist(searchResultsID)
+		So(err, ShouldBeNil)
+		So(actualExists, ShouldBeTrue)
+
+		actualExists, err = dataBase.IsTriggersSearchResultsExist("nonexistentPagerID")
+		So(err, ShouldBeNil)
+		So(actualExists, ShouldBeFalse)
+
+		err = dataBase.DeleteTriggersSearchResults(searchResultsID)
+		So(err, ShouldBeNil)
+
+		actualExists, err = dataBase.IsTriggersSearchResultsExist(searchResultsID)
+		So(err, ShouldBeNil)
+		So(actualExists, ShouldBeFalse)
 	})
 }
 

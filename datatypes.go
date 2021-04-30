@@ -154,12 +154,20 @@ func (trigger TriggerData) GetTriggerURI(frontURI string) string {
 	return ""
 }
 
+// Team is a structure that represents a group of users that share a subscriptions and contacts
+type Team struct {
+	ID          string
+	Name        string
+	Description string
+}
+
 // ContactData represents contact object
 type ContactData struct {
 	Type  string `json:"type"`
 	Value string `json:"value"`
 	ID    string `json:"id"`
 	User  string `json:"user"`
+	Team  string `json:"team"`
 }
 
 // SubscriptionData represents user subscription
@@ -175,6 +183,7 @@ type SubscriptionData struct {
 	IgnoreRecoverings bool         `json:"ignore_recoverings,omitempty"`
 	ThrottlingEnabled bool         `json:"throttling"`
 	User              string       `json:"user"`
+	TeamID            string       `json:"team_id"`
 }
 
 // PlottingData represents plotting settings

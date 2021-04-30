@@ -113,6 +113,26 @@ func TestGetExpressionValue(t *testing.T) {
 				name:          "NODATA",
 				expectedValue: moira.StateNODATA,
 			},
+			{
+				name:          "ok",
+				expectedValue: moira.StateOK,
+			},
+			{
+				name:          "warn",
+				expectedValue: moira.StateWARN,
+			},
+			{
+				name:          "warning",
+				expectedValue: moira.StateWARN,
+			},
+			{
+				name:          "error",
+				expectedValue: moira.StateERROR,
+			},
+			{
+				name:          "nodata",
+				expectedValue: moira.StateNODATA,
+			},
 		}
 		runGetExpressionValuesTest(getExpressionValuesTests)
 	})
@@ -136,13 +156,28 @@ func TestGetExpressionValue(t *testing.T) {
 					expectedValue: 11.0,
 				},
 				{
+					values:        TriggerExpression{MainTargetValue: 11.0},
+					name:          "T1",
+					expectedValue: 11.0,
+				},
+				{
 					values:        TriggerExpression{AdditionalTargetsValues: map[string]float64{"t2": 1.0}},
 					name:          "t2",
 					expectedValue: 1.0,
 				},
 				{
+					values:        TriggerExpression{AdditionalTargetsValues: map[string]float64{"t2": 1.0}},
+					name:          "T2",
+					expectedValue: 1.0,
+				},
+				{
 					values:        TriggerExpression{AdditionalTargetsValues: map[string]float64{"t3": 4.0, "t2": 6.0}},
 					name:          "t3",
+					expectedValue: 4.0,
+				},
+				{
+					values:        TriggerExpression{AdditionalTargetsValues: map[string]float64{"t3": 4.0, "t2": 6.0}},
+					name:          "T3",
 					expectedValue: 4.0,
 				},
 				{

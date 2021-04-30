@@ -54,8 +54,13 @@ func Populate(name, description string, events []Event) (desc string, err error)
 
 	buffer := bytes.Buffer{}
 	funcMap := template.FuncMap{
-		"date":       date,
-		"formatDate": formatDate,
+		"date":              date,
+		"formatDate":        formatDate,
+		"stringsReplace":    strings.Replace,
+		"stringsToLower":    strings.ToLower,
+		"stringsToUpper":    strings.ToUpper,
+		"stringsTrimPrefix": strings.TrimPrefix,
+		"stringsTrimSuffix": strings.TrimSuffix,
 	}
 
 	dataToExecute := notification{

@@ -43,9 +43,11 @@ type Database interface {
 	GetPatternTriggerIDs(pattern string) ([]string, error)
 	RemovePatternTriggerIDs(pattern string) error
 
-	// SearchResult storing
+	// SearchResult AKA pager storing
 	GetTriggersSearchResults(searchResultsID string, page, size int64) ([]*SearchResult, int64, error)
 	SaveTriggersSearchResults(searchResultsID string, searchResults []*SearchResult) error
+	IsTriggersSearchResultsExist(pagerID string) (bool, error)
+	DeleteTriggersSearchResults(pagerID string) error
 
 	// Throttling
 	GetTriggerThrottling(triggerID string) (time.Time, time.Time)
@@ -66,6 +68,7 @@ type Database interface {
 	RemoveContact(contactID string) error
 	SaveContact(contact *ContactData) error
 	GetUserContactIDs(userLogin string) ([]string, error)
+	GetTeamContactIDs(teamID string) ([]string, error)
 
 	// SubscriptionData storing
 	GetSubscription(id string) (SubscriptionData, error)
@@ -74,6 +77,7 @@ type Database interface {
 	SaveSubscriptions(subscriptions []*SubscriptionData) error
 	RemoveSubscription(subscriptionID string) error
 	GetUserSubscriptionIDs(userLogin string) ([]string, error)
+	GetTeamSubscriptionIDs(teamID string) ([]string, error)
 	GetTagsSubscriptions(tags []string) ([]*SubscriptionData, error)
 
 	// ScheduledNotification storing
@@ -129,6 +133,15 @@ type Database interface {
 
 	// Creates Lock
 	NewLock(name string, ttl time.Duration) Lock
+
+	// Teams management
+	SaveTeam(teamID string, team Team) error
+	GetTeam(teamID string) (Team, error)
+	SaveTeamsAndUsers(teamID string, users []string, usersTeams map[string][]string) error
+	GetUserTeams(userID string) ([]string, error)
+	GetTeamUsers(teamID string) ([]string, error)
+	IsTeamContainUser(teamID, userID string) (bool, error)
+	DeleteTeam(teamID, userID string) error
 }
 
 // Lock implements lock abstraction

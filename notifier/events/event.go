@@ -176,6 +176,7 @@ func (worker *FetchEventsWorker) getNotificationSubscriptions(event moira.Notifi
 		sub := &moira.SubscriptionData{
 			ID:                "testSubscription",
 			User:              contact.User,
+			TeamID:            contact.Team,
 			ThrottlingEnabled: false,
 			Enabled:           true,
 			Tags:              make([]string, 0),
