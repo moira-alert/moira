@@ -206,10 +206,10 @@ func (connector *DbConnector) RemovePatternWithMetrics(pattern string) error {
 	}
 	c := connector.pool.Get()
 	defer c.Close()
-	c.Send("MULTI") //nolint
+	c.Send("MULTI")                          //nolint
 	c.Send("SREM", patternsListKey, pattern) //nolint
 	for _, metric := range metrics {
-		c.Send("DEL", metricDataKey(metric)) //nolint
+		c.Send("DEL", metricDataKey(metric))      //nolint
 		c.Send("DEL", metricRetentionKey(metric)) //nolint
 	}
 	c.Send("DEL", patternMetricsKey(pattern)) //nolint
@@ -272,4 +272,38 @@ func metricDataKey(metric string) string {
 
 func metricRetentionKey(metric string) string {
 	return "moira-metric-retention:" + metric
+}
+
+type MetricsDatabaseCursor struct {
+	cursor     DbCursor
+	log        moira.Logger
+	countLimit int
+}
+
+func NewMetricsDatabaseCursor(connector *DbConnector) moira.MetricsDatabaseCursor {
+	const countLimit = 100 // todo: from config
+	return &MetricsDatabaseCursor{
+		cursor:     connector.NewCursor("COUNT", countLimit, "MATCH", "moira-metric-data:*", "TYPE", "zset"),
+		countLimit: countLimit,
+	}
+}
+
+func (c *MetricsDatabaseCursor) Next() ([]string, error) {
+	resp, err := c.cursor.Next()
+	if err != nil {
+		return nil, err
+	}
+	metricsKeys := make([]string, 0, len(resp))
+	for _, elem := range resp {
+		metricsKeys = append(metricsKeys, string(elem.([]byte)))
+	}
+	return metricsKeys, err
+}
+
+func (c *MetricsDatabaseCursor) Free() error {
+	return c.Free()
+}
+
+func (connector *DbConnector) ScanMetricNames() moira.MetricsDatabaseCursor {
+	return NewMetricsDatabaseCursor(connector)
 }

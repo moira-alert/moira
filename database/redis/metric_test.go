@@ -446,3 +446,38 @@ func TestMetricsStoringErrorConnection(t *testing.T) {
 		So(ch, ShouldBeNil)
 	})
 }
+
+func TestMetricsCursor(t *testing.T) {
+	logger, _ := logging.GetLogger("database")
+	db := newTestDatabase(logger, config)
+	db.flush()
+	defer db.flush()
+	metric1 := "my.test.super.metric"
+	metric2 := "my.test.super.metric2"
+
+	metricValue1 := &moira.MatchedMetric{
+		Patterns:           []string{"my.test.*.metric*"},
+		Metric:             metric1,
+		Retention:          10,
+		RetentionTimestamp: 10,
+		Timestamp:          15,
+		Value:              1,
+	}
+	metricValue2 := &moira.MatchedMetric{
+		Patterns:           []string{"my.test.*.metric*"},
+		Metric:             metric2,
+		Retention:          10,
+		RetentionTimestamp: 10,
+		Timestamp:          15,
+		Value:              1,
+	}
+	_ = db.SaveMetrics(map[string]*moira.MatchedMetric{metric1: metricValue1})
+	_ = db.SaveMetrics(map[string]*moira.MatchedMetric{metric2: metricValue2})
+
+	Convey("Extract metrics keys", t, func() {
+		cursor := NewMetricsDatabaseCursor(db)
+		data, err := cursor.Next()
+		So(err, ShouldBeNil)
+		So(len(data), ShouldEqual, 2)
+	})
+}
