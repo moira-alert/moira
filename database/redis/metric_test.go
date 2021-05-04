@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"errors"
 	"testing"
 	"time"
 
@@ -443,5 +444,153 @@ func TestMetricsStoringErrorConnection(t *testing.T) {
 		ch, err := dataBase.SubscribeMetricEvents(&tomb1)
 		So(err, ShouldNotBeNil)
 		So(ch, ShouldBeNil)
+	})
+}
+
+func TestCleanupOutdatedMetrics(t *testing.T) {
+	logger, _ := logging.ConfigureLog("stdout", "warn", "test", true)
+	dataBase := NewTestDatabase(logger)
+	dataBase.Flush()
+	defer dataBase.Flush()
+
+	const metric1 = "my.test.super.metric"
+	const metric2 = "my.test.super.metric2"
+	const pattern = "my.test.*.metric*"
+
+	Convey("Given 2 metrics with 2 values older then 1 minute and 2 values younger then 1 minute", t, func() {
+		tsOlder1 := time.Now().UTC().Add(-80 * time.Second).Unix()
+		tsOlder2 := time.Now().UTC().Add(-70 * time.Second).Unix()
+		tsYounger1 := time.Now().UTC().Add(-50 * time.Second).Unix()
+		tsYounger2 := time.Now().UTC().Add(-40 * time.Second).Unix()
+		tsNow := time.Now().UTC().Unix()
+		metric1Value1 := &moira.MatchedMetric{
+			Patterns:           []string{pattern},
+			Metric:             metric1,
+			Retention:          10,
+			RetentionTimestamp: tsOlder1,
+			Timestamp:          tsOlder1 + 5,
+			Value:              1,
+		}
+		metric1Value2 := &moira.MatchedMetric{
+			Patterns:           []string{pattern},
+			Metric:             metric1,
+			Retention:          10,
+			RetentionTimestamp: tsOlder2,
+			Timestamp:          tsOlder2 + 5,
+			Value:              2,
+		}
+		metric1Value3 := &moira.MatchedMetric{
+			Patterns:           []string{pattern},
+			Metric:             metric1,
+			Retention:          10,
+			RetentionTimestamp: tsYounger1,
+			Timestamp:          tsYounger1 + 5,
+			Value:              3,
+		}
+		metric1Value4 := &moira.MatchedMetric{
+			Patterns:           []string{pattern},
+			Metric:             metric1,
+			Retention:          10,
+			RetentionTimestamp: tsYounger2,
+			Timestamp:          tsYounger2 + 5,
+			Value:              4,
+		}
+
+		metric2Value1 := &moira.MatchedMetric{
+			Patterns:           []string{pattern},
+			Metric:             metric2,
+			Retention:          10,
+			RetentionTimestamp: tsOlder1,
+			Timestamp:          tsOlder1 + 5,
+			Value:              1,
+		}
+		metric2Value2 := &moira.MatchedMetric{
+			Patterns:           []string{pattern},
+			Metric:             metric2,
+			Retention:          10,
+			RetentionTimestamp: tsOlder2,
+			Timestamp:          tsOlder2 + 5,
+			Value:              2,
+		}
+		metric2Value3 := &moira.MatchedMetric{
+			Patterns:           []string{pattern},
+			Metric:             metric2,
+			Retention:          10,
+			RetentionTimestamp: tsYounger1,
+			Timestamp:          tsYounger1 + 5,
+			Value:              3,
+		}
+		metric2Value4 := &moira.MatchedMetric{
+			Patterns:           []string{pattern},
+			Metric:             metric2,
+			Retention:          10,
+			RetentionTimestamp: tsYounger2,
+			Timestamp:          tsYounger2 + 5,
+			Value:              4,
+		}
+
+		err := dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric1: metric1Value1})
+		So(err, ShouldBeNil)
+		err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric1: metric1Value2})
+		So(err, ShouldBeNil)
+		err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric1: metric1Value3})
+		So(err, ShouldBeNil)
+		err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric1: metric1Value4})
+		So(err, ShouldBeNil)
+
+		err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric2: metric2Value1})
+		So(err, ShouldBeNil)
+		err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric2: metric2Value2})
+		So(err, ShouldBeNil)
+		err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric2: metric2Value3})
+		So(err, ShouldBeNil)
+		err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric2: metric2Value4})
+		So(err, ShouldBeNil)
+
+		actualValues, err := dataBase.GetMetricsValues([]string{metric1, metric2}, 0, tsNow)
+		So(err, ShouldBeNil)
+		So(actualValues, ShouldResemble, map[string][]*moira.MetricValue{
+			metric1: {
+				&moira.MetricValue{Timestamp: tsOlder1 + 5, RetentionTimestamp: tsOlder1, Value: 1},
+				&moira.MetricValue{Timestamp: tsOlder2 + 5, RetentionTimestamp: tsOlder2, Value: 2},
+				&moira.MetricValue{Timestamp: tsYounger1 + 5, RetentionTimestamp: tsYounger1, Value: 3},
+				&moira.MetricValue{Timestamp: tsYounger2 + 5, RetentionTimestamp: tsYounger2, Value: 4},
+			},
+			metric2: {
+				&moira.MetricValue{Timestamp: tsOlder1 + 5, RetentionTimestamp: tsOlder1, Value: 1},
+				&moira.MetricValue{Timestamp: tsOlder2 + 5, RetentionTimestamp: tsOlder2, Value: 2},
+				&moira.MetricValue{Timestamp: tsYounger1 + 5, RetentionTimestamp: tsYounger1, Value: 3},
+				&moira.MetricValue{Timestamp: tsYounger2 + 5, RetentionTimestamp: tsYounger2, Value: 4},
+			},
+		})
+
+		Convey("When clean up metrics with wrong value of duration was called (positive number)", func() {
+			err = dataBase.CleanUpOutdatedMetrics(time.Hour)
+			So(
+				err,
+				ShouldResemble,
+				errors.New("clean up duration value must be less than zero, otherwise all metrics will be removed"),
+			)
+		})
+
+		Convey("When clean up metrics older then 1 minute was called", func() {
+			err = dataBase.CleanUpOutdatedMetrics(-time.Minute)
+			So(err, ShouldBeNil)
+
+			Convey("No metrics older then 1 minute should be in database", func() {
+				actualValues, err = dataBase.GetMetricsValues([]string{metric1, metric2}, 0, tsNow)
+				So(err, ShouldBeNil)
+				So(actualValues, ShouldResemble, map[string][]*moira.MetricValue{
+					metric1: {
+						&moira.MetricValue{Timestamp: tsYounger1 + 5, RetentionTimestamp: tsYounger1, Value: 3},
+						&moira.MetricValue{Timestamp: tsYounger2 + 5, RetentionTimestamp: tsYounger2, Value: 4},
+					},
+					metric2: {
+						&moira.MetricValue{Timestamp: tsYounger1 + 5, RetentionTimestamp: tsYounger1, Value: 3},
+						&moira.MetricValue{Timestamp: tsYounger2 + 5, RetentionTimestamp: tsYounger2, Value: 4},
+					},
+				})
+			})
+		})
 	})
 }
