@@ -53,6 +53,10 @@ var (
 )
 
 var (
+	cleanUpMetrics = flag.Bool("cleanup-outdated-metrics", false, "Delete outdated metrics by duration.")
+)
+
+var (
 	pushTriggerDump = flag.Bool("push-trigger-dump", false, "Get trigger dump in JSON from stdin and save it to redis")
 	triggerDumpFile = flag.String("trigger-dump-file", "", "File that holds trigger dump JSON from api method response")
 )
@@ -143,6 +147,17 @@ func main() { //nolint
 			logger.Fatal(err)
 		}
 		logger.Info("Dump was pushed")
+	}
+
+	if *cleanUpMetrics {
+		log := logger.String(moira.LogFieldNameContext, "cleanup")
+		log.Info("Cleanup outdated metrics started")
+		err := cleanUpOutdatedMetrics(confCleanup, dataBase)
+		if err != nil {
+			log.Error(err)
+		}
+
+		log.Info("Cleanup outdated metrics finished")
 	}
 }
 

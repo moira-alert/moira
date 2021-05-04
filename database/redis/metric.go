@@ -1,10 +1,13 @@
 package redis
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/rand"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -266,6 +269,63 @@ func (connector *DbConnector) RemoveMetricsValues(metrics []string, toTime int64
 func (connector *DbConnector) needRemoveMetrics(metric string) bool {
 	err := connector.metricsCache.Add(metric, true, 0)
 	return err == nil
+}
+
+func cleanUpOutdatedMetricsOnRedisNode(connector *DbConnector, client redis.UniversalClient, duration time.Duration) (int, error) {
+	metricCounter := 0
+	metricsIterator := client.ScanType(connector.context, 0, metricDataKey("*"), 0, "zset").Iterator()
+	for metricsIterator.Next(connector.context) {
+		metricCounter++
+		metricKey := metricsIterator.Val()
+		metric := strings.TrimPrefix(metricKey, metricDataKey(""))
+		err := flushMetric(connector, metric, duration)
+		if err != nil {
+			return metricCounter, err
+		}
+	}
+	return metricCounter, nil
+}
+
+func (connector *DbConnector) CleanUpOutdatedMetrics(duration time.Duration) error {
+	metricCounter := 0
+	client := *connector.client
+
+	if duration >= 0 {
+		return errors.New("clean up duration value must be less than zero, otherwise all metrics will be removed")
+	}
+
+	switch c := client.(type) {
+	case *redis.ClusterClient:
+		err := c.ForEachMaster(connector.context, func(ctx context.Context, shard *redis.Client) error {
+			cleanedUpMetricsCount, err := cleanUpOutdatedMetricsOnRedisNode(connector, shard, duration)
+			if err != nil {
+				return err
+			}
+			metricCounter += cleanedUpMetricsCount
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+	default:
+		cleanedUpMetricsCount, err := cleanUpOutdatedMetricsOnRedisNode(connector, c, duration)
+		if err != nil {
+			return err
+		}
+		metricCounter = cleanedUpMetricsCount
+	}
+
+	connector.logger.Infof("Total cleaned up %d metrics", metricCounter)
+	return nil
+}
+
+func flushMetric(database moira.Database, metric string, duration time.Duration) error {
+	lastTs := time.Now().UTC()
+	toTs := lastTs.Add(duration).Unix()
+	if err := database.RemoveMetricValues(metric, toTs); err != nil {
+		return err
+	}
+	return nil
 }
 
 var patternsListKey = "moira-pattern-list"
