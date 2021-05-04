@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api/dto"
@@ -49,6 +50,10 @@ var (
 	userDel  = flag.String("user-del", "", "Delete all contacts and subscriptions for a user")
 	fromUser = flag.String("from-user", "", "Transfer subscriptions and contacts from user.")
 	toUser   = flag.String("to-user", "", "Transfer subscriptions and contacts to user.")
+)
+
+var (
+	cleanupMetrics = flag.Bool("cleanup-outdated-metrics", false, "Delete outdated metrics by duration. Control this via cleanup config.")
 )
 
 var (
@@ -132,6 +137,20 @@ func main() { //nolint
 			logger.Fatal(err)
 		}
 		logger.Info("Dump was pushed")
+	}
+
+	if *cleanupMetrics {
+		log := logger.String(moira.LogFieldNameContext, "cleanup outdated metrics")
+		log.Info("Cleanup outdated metrics started")
+
+		duration := time.Hour                   // todo
+		metricsConfig := cleanupMetricsConfig{} // todo
+
+		if err := cleanupOutdatedMetrics(metricsConfig, dataBase, duration, log); err != nil {
+			log.Error(err)
+		}
+
+		log.Info("Cleanup outdated metrics finished")
 	}
 }
 
