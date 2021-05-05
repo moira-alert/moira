@@ -1311,6 +1311,20 @@ func (mr *MockDatabaseMockRecorder) SaveTriggersSearchResults(arg0, arg1 interfa
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveTriggersSearchResults", reflect.TypeOf((*MockDatabase)(nil).SaveTriggersSearchResults), arg0, arg1)
 }
 
+// ScanMetricNames mocks base method.
+func (m *MockDatabase) ScanMetricNames() moira.MetricsDatabaseCursor {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ScanMetricNames")
+	ret0, _ := ret[0].(moira.MetricsDatabaseCursor)
+	return ret0
+}
+
+// ScanMetricNames indicates an expected call of ScanMetricNames.
+func (mr *MockDatabaseMockRecorder) ScanMetricNames() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ScanMetricNames", reflect.TypeOf((*MockDatabase)(nil).ScanMetricNames))
+}
+
 // SetNotifierState mocks base method.
 func (m *MockDatabase) SetNotifierState(arg0 string) error {
 	m.ctrl.T.Helper()
