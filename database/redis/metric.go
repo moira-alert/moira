@@ -280,7 +280,7 @@ type MetricsDatabaseCursor struct {
 }
 
 func NewMetricsDatabaseCursor(connector *DbConnector) moira.MetricsDatabaseCursor {
-	const countLimit = 100 // todo: from config
+	const countLimit = 100
 	return &MetricsDatabaseCursor{
 		cursor:     connector.NewCursor("COUNT", countLimit, "MATCH", "moira-metric-data:*", "TYPE", "zset"),
 		countLimit: countLimit,
@@ -297,6 +297,10 @@ func (c *MetricsDatabaseCursor) Next() ([]string, error) {
 		metricsKeys = append(metricsKeys, string(elem.([]byte)))
 	}
 	return metricsKeys, err
+}
+
+func (c *MetricsDatabaseCursor) SetCountLimit(count int) {
+	c.countLimit = count
 }
 
 func (c *MetricsDatabaseCursor) Free() error {

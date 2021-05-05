@@ -148,6 +148,8 @@ type Database interface {
 // MetricsDatabaseCursor implements DB cursor abstraction for metrics names
 type MetricsDatabaseCursor interface {
 	Next() ([]string, error)
+	SetCountLimit(int)
+	Free() error
 }
 
 // Lock implements lock abstraction

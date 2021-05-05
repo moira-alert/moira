@@ -46,5 +46,15 @@ func getDefault() config {
 		Cleanup: cleanupConfig{
 			Whitelist: []string{},
 		},
+		CleanupMetrics: cleanupMetricsConfig{
+			DryRunMode: true,
+			DebugMode:  false,
+			HotParams: cleanupMetricsHotParams{
+				CleanupDuration:            "-3600s",
+				CleanupBatchCount:          100,
+				CleanupKeyScanBatchCount:   1000,
+				CleanupBatchTimeoutSeconds: 10,
+			},
+		},
 	}
 }

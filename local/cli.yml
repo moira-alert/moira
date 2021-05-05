@@ -6,3 +6,10 @@ redis:
 log_file: stdout
 log_level: debug
 log_pretty_format: true
+
+# When you need you can adjust this params on-the-fly to control clean process.
+hot_params:
+  cleanup_duration: "-3600s"
+  cleanup_batch: 100
+  cleanup_batch_timeout_seconds: 10
+  cleanup_keyscan_batch: 1000

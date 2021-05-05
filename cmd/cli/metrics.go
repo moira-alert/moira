@@ -19,15 +19,26 @@ func cleanupOutdatedMetrics(config cleanupMetricsConfig, database moira.Database
 	keysBatch := make([]string, 0, config.HotParams.CleanupBatchCount)
 	currentParams := config.HotParams
 	cursor := database.ScanMetricNames()
+	cursor.SetCountLimit(config.HotParams.CleanupKeyScanBatchCount)
 
 	for {
-		if hotParams, err := getConfigHotParams(logger); err == nil {
-			logger.Debugf("Hot params: %v", hotParams)
-			if currentParams.CleanupDuration != hotParams.CleanupDuration {
+		if newHotParams, err := getConfigHotParams(logger); err == nil {
+			logger.Debugf("Hot params: %v", newHotParams)
+			if currentParams.CleanupDuration != newHotParams.CleanupDuration {
 				logger.Infof("Cleanup duration was changed '%s' to '%s', process will be restarted",
-					currentParams.CleanupDuration, hotParams.CleanupDuration)
+					currentParams.CleanupDuration, newHotParams.CleanupDuration)
+				totalCounter = 0
+				if err := cursor.Free(); err != nil {
+					logger.Warning(err)
+				}
+				cursor = database.ScanMetricNames()
 			}
-			currentParams = hotParams
+			if currentParams.CleanupKeyScanBatchCount != newHotParams.CleanupKeyScanBatchCount {
+				logger.Infof("Cleanup key scan count was changed '%s' to '%s'", currentParams.CleanupKeyScanBatchCount,
+					newHotParams.CleanupKeyScanBatchCount)
+				cursor.SetCountLimit(newHotParams.CleanupKeyScanBatchCount)
+			}
+			currentParams = newHotParams
 		}
 
 		logger.Debug("Scan keys started")
