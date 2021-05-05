@@ -9,8 +9,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-func cleanupOutdatedMetrics(config cleanupMetricsConfig, database moira.Database, duration time.Duration,
-	logger moira.Logger) error {
+func cleanupOutdatedMetrics(config cleanupMetricsConfig, database moira.Database, logger moira.Logger) error {
 	duration, err := parseDuration(config.HotParams.CleanupDuration)
 	if err != nil {
 		return err

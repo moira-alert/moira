@@ -16,7 +16,7 @@ func TestCursor(t *testing.T) {
 	cursor := db.NewCursor("MATCH", "moira-metric-data:*")
 
 	Convey("Prepare data", t, func() {
-		metric := "my.test.super.metric"
+		const metric = "my.test.super.metric"
 		metricValues := &moira.MatchedMetric{
 			Patterns:           []string{"my.test.*.metric*"},
 			Metric:             metric,

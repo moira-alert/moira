@@ -276,7 +276,6 @@ func metricRetentionKey(metric string) string {
 
 type MetricsDatabaseCursor struct {
 	cursor     DbCursor
-	log        moira.Logger
 	countLimit int
 }
 
@@ -301,7 +300,7 @@ func (c *MetricsDatabaseCursor) Next() ([]string, error) {
 }
 
 func (c *MetricsDatabaseCursor) Free() error {
-	return c.Free()
+	return c.cursor.Free()
 }
 
 func (connector *DbConnector) ScanMetricNames() moira.MetricsDatabaseCursor {

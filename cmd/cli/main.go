@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api/dto"
@@ -143,10 +142,9 @@ func main() { //nolint
 		log := logger.String(moira.LogFieldNameContext, "cleanup outdated metrics")
 		log.Info("Cleanup outdated metrics started")
 
-		duration := time.Hour                   // todo
 		metricsConfig := cleanupMetricsConfig{} // todo
 
-		if err := cleanupOutdatedMetrics(metricsConfig, dataBase, duration, log); err != nil {
+		if err := cleanupOutdatedMetrics(metricsConfig, dataBase, log); err != nil {
 			log.Error(err)
 		}
 
