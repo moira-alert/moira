@@ -19,6 +19,7 @@ func TestCleanupOutdatedMetrics(t *testing.T) {
 	conf.CleanupMetrics.HotParams.CleanupBatchTimeoutSeconds = int(time.Second.Seconds())
 	conf.CleanupMetrics.HotParams.CleanupDuration = "-3600s"
 	conf.CleanupMetrics.HotParams.CleanupKeyScanBatchCount = 1000
+	conf.CleanupMetrics.DryRunMode = false
 	viper.Set("hot_params", conf.CleanupMetrics.HotParams)
 
 	logger, err := logging.ConfigureLog(conf.LogFile, conf.LogLevel, "cli", conf.LogPrettyFormat)
@@ -33,6 +34,7 @@ func TestCleanupOutdatedMetrics(t *testing.T) {
 	Convey("Test simple cleanup", t, func() {
 		db.EXPECT().ScanMetricNames().Return(cursor)
 		metricsKeys := []string{"testing.metric1"}
+		cursor.EXPECT().SetCountLimit(conf.CleanupMetrics.HotParams.CleanupKeyScanBatchCount).Times(1)
 		cursor.EXPECT().Next().Return(metricsKeys, nil).Times(1)
 		cursor.EXPECT().Next().Return(nil, errors.New("end reached")).Times(1)
 		db.EXPECT().RemoveMetricsValues(gomock.Any(), gomock.Any()).Return(nil).Times(1)
@@ -44,6 +46,7 @@ func TestCleanupOutdatedMetrics(t *testing.T) {
 	Convey("Test batched cleanup", t, func() {
 		db.EXPECT().ScanMetricNames().Return(cursor)
 		metricsKeys := make([]string, 4)
+		cursor.EXPECT().SetCountLimit(conf.CleanupMetrics.HotParams.CleanupKeyScanBatchCount).Times(1)
 		cursor.EXPECT().Next().Return(metricsKeys, nil).Times(1)
 		cursor.EXPECT().Next().Return(nil, errors.New("end reached")).Times(1)
 		db.EXPECT().RemoveMetricsValues(gomock.Any(), gomock.Any()).Return(nil).Times(2)
