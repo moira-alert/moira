@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"testing"
+	"time"
 
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	mocks "github.com/moira-alert/moira/mock/moira-alert"
@@ -15,6 +16,9 @@ import (
 func TestCleanupOutdatedMetrics(t *testing.T) {
 	conf := getDefault()
 	conf.CleanupMetrics.HotParams.CleanupBatchCount = 2
+	conf.CleanupMetrics.HotParams.CleanupBatchTimeoutSeconds = int(time.Second.Seconds())
+	conf.CleanupMetrics.HotParams.CleanupDuration = "-3600s"
+	conf.CleanupMetrics.HotParams.CleanupKeyScanBatchCount = 1000
 	viper.Set("hot_params", "hot_params:\n  cleanup_duration: \"-3600s\"\n  cleanup_batch: 2\n"+
 		"  cleanup_batch_timeout_seconds: 1\n  cleanup_keyscan_batch: 1000")
 
