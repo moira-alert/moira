@@ -48,11 +48,17 @@ func cleanupOutdatedMetrics(config cleanupMetricsConfig, database moira.Database
 				if err := flushBatch(database, keysBatch, duration, config.DebugMode); err != nil {
 					return err
 				}
+				totalCounter += batchCounter
+				batchCounter = 0
 			}
 		}
+	}
+
+	if batchCounter > 0 {
 		if err := flushBatch(database, keysBatch, duration, config.DebugMode); err != nil {
 			return err
 		}
+		totalCounter += batchCounter
 	}
 	logger.Infof("Cleanup was finished, %d metrics processed", totalCounter)
 	return nil
