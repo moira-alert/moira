@@ -54,5 +54,4 @@ func (c *DbCursor) Next() ([]interface{}, error) {
 
 func (c *DbCursor) Free() error {
 	return c.connection.Close()
-	// todo: maybe tomb?
 }

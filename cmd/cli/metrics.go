@@ -55,7 +55,7 @@ func cleanupOutdatedMetrics(config cleanupMetricsConfig, database moira.Database
 			// todo: add elapsed time metric
 			batchCounter++
 			if batchCounter >= currentParams.CleanupBatchCount {
-				if err := flushBatch(database, keysBatch, duration, config.DebugMode); err != nil {
+				if err := flushBatch(database, keysBatch, duration, config.DebugMode, config.DryRunMode); err != nil {
 					return err
 				}
 				totalCounter += batchCounter
@@ -65,7 +65,7 @@ func cleanupOutdatedMetrics(config cleanupMetricsConfig, database moira.Database
 	}
 
 	if batchCounter > 0 {
-		if err := flushBatch(database, keysBatch, duration, config.DebugMode); err != nil {
+		if err := flushBatch(database, keysBatch, duration, config.DebugMode, config.DryRunMode); err != nil {
 			return err
 		}
 		totalCounter += batchCounter
@@ -78,8 +78,11 @@ func parseDuration(durationString string) (time.Duration, error) {
 	return time.ParseDuration(durationString)
 }
 
-func flushBatch(database moira.Database, keysBatch []string, duration time.Duration, debugMode bool) error {
+func flushBatch(database moira.Database, keysBatch []string, duration time.Duration, debugMode bool, dryRunMode bool) error {
 	toTs := getTimestampWithCleanupDuration(debugMode, duration)
+	if dryRunMode {
+		return nil
+	}
 	if err := database.RemoveMetricsValues(keysBatch, toTs); err != nil {
 		return err
 	}
@@ -87,7 +90,7 @@ func flushBatch(database moira.Database, keysBatch []string, duration time.Durat
 }
 
 func getTimestampWithCleanupDuration(debugMode bool, duration time.Duration) int64 {
-	lastTs := time.Now().UTC() // todo: check that eq moira writes
+	lastTs := time.Now().UTC()
 	if debugMode {
 		now := "1618491240" // for debug with dump only
 		i, err := strconv.ParseInt(now, 10, 64)
