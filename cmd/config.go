@@ -2,18 +2,17 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/fsnotify/fsnotify"
-	"github.com/spf13/viper"
 	"strings"
 
+	"github.com/moira-alert/moira/database/redis"
 	"github.com/moira-alert/moira/metrics"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/moira-alert/moira/image_store/s3"
 	remoteSource "github.com/moira-alert/moira/metric_source/remote"
+	"github.com/spf13/viper"
 	"github.com/xiam/to"
 	"gopkg.in/yaml.v2"
-
-	"github.com/moira-alert/moira/database/redis"
 )
 
 // RedisConfig is a redis config structure that initialises at the start of moira

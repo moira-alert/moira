@@ -33,6 +33,20 @@ func (m *MockMetricsDatabaseCursor) EXPECT() *MockMetricsDatabaseCursorMockRecor
 	return m.recorder
 }
 
+// Free mocks base method.
+func (m *MockMetricsDatabaseCursor) Free() error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Free")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Free indicates an expected call of Free.
+func (mr *MockMetricsDatabaseCursorMockRecorder) Free() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Free", reflect.TypeOf((*MockMetricsDatabaseCursor)(nil).Free))
+}
+
 // Next mocks base method.
 func (m *MockMetricsDatabaseCursor) Next() ([]string, error) {
 	m.ctrl.T.Helper()
@@ -46,4 +60,16 @@ func (m *MockMetricsDatabaseCursor) Next() ([]string, error) {
 func (mr *MockMetricsDatabaseCursorMockRecorder) Next() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Next", reflect.TypeOf((*MockMetricsDatabaseCursor)(nil).Next))
+}
+
+// SetCountLimit mocks base method.
+func (m *MockMetricsDatabaseCursor) SetCountLimit(arg0 int) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetCountLimit", arg0)
+}
+
+// SetCountLimit indicates an expected call of SetCountLimit.
+func (mr *MockMetricsDatabaseCursorMockRecorder) SetCountLimit(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetCountLimit", reflect.TypeOf((*MockMetricsDatabaseCursor)(nil).SetCountLimit), arg0)
 }

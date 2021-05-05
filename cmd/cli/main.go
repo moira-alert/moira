@@ -61,7 +61,7 @@ var (
 )
 
 func main() { //nolint
-	config, logger, dataBase := initApp()
+	mainConfig, logger, dataBase := initApp()
 
 	if *update {
 		fromVersion := checkValidVersion(logger, updateFromVersion, true)
@@ -104,8 +104,8 @@ func main() { //nolint
 	}
 
 	if *cleanup {
-		logger.Debugf("User whitelist: %#v", config.Cleanup.Whitelist)
-		if err := handleCleanup(logger, dataBase, config.Cleanup); err != nil {
+		logger.Debugf("User whitelist: %#v", mainConfig.Cleanup.Whitelist)
+		if err := handleCleanup(logger, dataBase, mainConfig.Cleanup); err != nil {
 			logger.Error(err)
 		}
 	}
@@ -141,7 +141,7 @@ func main() { //nolint
 	if *cleanupMetrics {
 		log := logger.String(moira.LogFieldNameContext, "cleanup")
 		log.Info("Cleanup outdated metrics started")
-		if err := cleanupOutdatedMetrics(config.CleanupMetrics, dataBase, log); err != nil {
+		if err := cleanupOutdatedMetrics(mainConfig.CleanupMetrics, dataBase, log); err != nil {
 			log.Error(err)
 		}
 
