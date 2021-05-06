@@ -50,7 +50,7 @@ func cleanupOutdatedMetrics(config cleanupMetricsConfig, database moira.Database
 			keysBatch = append(keysBatch, metric)
 			batchCounter++
 			if batchCounter >= currentParams.CleanupBatchCount {
-				logger.Infof("Cleanup batch: size %d, keys: %q", len(keysBatch), keysBatch)
+				logger.Debugf("Cleanup batch: size %d, keys: %q", len(keysBatch), keysBatch)
 				if err := flushBatch(database, keysBatch, duration, config.DebugMode, config.DryRunMode); err != nil {
 					return err
 				}

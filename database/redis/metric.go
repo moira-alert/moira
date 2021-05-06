@@ -3,15 +3,15 @@ package redis
 import (
 	"encoding/json"
 	"fmt"
-
-	"github.com/gomodule/redigo/redis"
-	"gopkg.in/tomb.v2"
 	"strings"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/database/redis/reply"
+
+	"github.com/gomodule/redigo/redis"
 	"github.com/patrickmn/go-cache"
+	"gopkg.in/tomb.v2"
 )
 
 // GetPatterns gets updated patterns array
