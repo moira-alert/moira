@@ -61,15 +61,3 @@ func (mr *MockMetricsDatabaseCursorMockRecorder) Next() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Next", reflect.TypeOf((*MockMetricsDatabaseCursor)(nil).Next))
 }
-
-// SetCountLimit mocks base method.
-func (m *MockMetricsDatabaseCursor) SetCountLimit(arg0 int) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetCountLimit", arg0)
-}
-
-// SetCountLimit indicates an expected call of SetCountLimit.
-func (mr *MockMetricsDatabaseCursorMockRecorder) SetCountLimit(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetCountLimit", reflect.TypeOf((*MockMetricsDatabaseCursor)(nil).SetCountLimit), arg0)
-}

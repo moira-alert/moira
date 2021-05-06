@@ -19,7 +19,6 @@ func cleanupOutdatedMetrics(config cleanupMetricsConfig, database moira.Database
 	currentParams := config.HotParams
 	keysBatch := make([]string, 0, currentParams.CleanupBatchCount)
 	cursor := database.ScanMetricNames()
-	cursor.SetCountLimit(currentParams.CleanupKeyScanBatchCount)
 
 	for {
 		if newHotParams, err := getConfigHotParams(logger); err == nil {
@@ -32,11 +31,6 @@ func cleanupOutdatedMetrics(config cleanupMetricsConfig, database moira.Database
 					logger.Warning(err)
 				}
 				cursor = database.ScanMetricNames()
-			}
-			if currentParams.CleanupKeyScanBatchCount != newHotParams.CleanupKeyScanBatchCount {
-				logger.Infof("Cleanup key scan count was changed '%s' to '%s'", currentParams.CleanupKeyScanBatchCount,
-					newHotParams.CleanupKeyScanBatchCount)
-				cursor.SetCountLimit(newHotParams.CleanupKeyScanBatchCount)
 			}
 			currentParams = newHotParams
 		}

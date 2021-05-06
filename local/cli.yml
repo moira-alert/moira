@@ -16,4 +16,3 @@ cleanup_metrics:
     cleanup_duration: "-168h"
     cleanup_batch: 100
     cleanup_batch_timeout_seconds: 10
-    cleanup_keyscan_batch: 1000

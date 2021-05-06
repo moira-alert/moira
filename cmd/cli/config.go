@@ -28,7 +28,6 @@ type cleanupMetricsConfig struct {
 type cleanupMetricsHotParams struct {
 	CleanupDuration            string `mapstructure:"cleanup_duration"`
 	CleanupBatchCount          int    `mapstructure:"cleanup_batch"`
-	CleanupKeyScanBatchCount   int    `mapstructure:"cleanup_keyscan_batch"`
 	CleanupBatchTimeoutSeconds int    `mapstructure:"cleanup_batch_timeout_seconds"`
 }
 
@@ -50,9 +49,8 @@ func getDefault() config {
 			DryRunMode: true,
 			DebugMode:  false,
 			HotParams: cleanupMetricsHotParams{
-				CleanupDuration:            "-3600s",
+				CleanupDuration:            "-168h",
 				CleanupBatchCount:          100,
-				CleanupKeyScanBatchCount:   1000,
 				CleanupBatchTimeoutSeconds: 10,
 			},
 		},
