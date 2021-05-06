@@ -20,7 +20,7 @@ func TestCleanupOutdatedMetrics(t *testing.T) {
 	conf.CleanupMetrics.HotParams.CleanupDuration = "-3600s"
 	conf.CleanupMetrics.HotParams.CleanupKeyScanBatchCount = 1000
 	conf.CleanupMetrics.DryRunMode = false
-	viper.Set("hot_params", conf.CleanupMetrics.HotParams)
+	viper.Set("cleanup_metrics.hot_params", conf.CleanupMetrics.HotParams)
 
 	logger, err := logging.ConfigureLog(conf.LogFile, conf.LogLevel, "cli", conf.LogPrettyFormat)
 	if err != nil {

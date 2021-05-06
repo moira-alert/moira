@@ -10,16 +10,16 @@ import (
 )
 
 func cleanupOutdatedMetrics(config cleanupMetricsConfig, database moira.Database, logger moira.Logger) error {
-	duration, err := parseDuration(config.HotParams.CleanupDuration)
+	duration, err := time.ParseDuration(config.HotParams.CleanupDuration)
 	if err != nil {
 		return err
 	}
 
 	batchCounter, totalCounter := 0, 0
-	keysBatch := make([]string, 0, config.HotParams.CleanupBatchCount)
 	currentParams := config.HotParams
+	keysBatch := make([]string, 0, currentParams.CleanupBatchCount)
 	cursor := database.ScanMetricNames()
-	cursor.SetCountLimit(config.HotParams.CleanupKeyScanBatchCount)
+	cursor.SetCountLimit(currentParams.CleanupKeyScanBatchCount)
 
 	for {
 		if newHotParams, err := getConfigHotParams(logger); err == nil {
@@ -60,6 +60,7 @@ func cleanupOutdatedMetrics(config cleanupMetricsConfig, database moira.Database
 				}
 				totalCounter += batchCounter
 				batchCounter = 0
+				keysBatch = make([]string, 0, currentParams.CleanupBatchCount)
 			}
 		}
 	}
@@ -72,10 +73,6 @@ func cleanupOutdatedMetrics(config cleanupMetricsConfig, database moira.Database
 	}
 	logger.Infof("Cleanup was finished, %d metrics processed", totalCounter)
 	return nil
-}
-
-func parseDuration(durationString string) (time.Duration, error) {
-	return time.ParseDuration(durationString)
 }
 
 func flushBatch(database moira.Database, keysBatch []string, duration time.Duration, debugMode bool, dryRunMode bool) error {
@@ -105,7 +102,7 @@ func getTimestampWithCleanupDuration(debugMode bool, duration time.Duration) int
 
 func getConfigHotParams(logger moira.Logger) (cleanupMetricsHotParams, error) {
 	hp := cleanupMetricsHotParams{}
-	if err := viper.UnmarshalKey("hot_params", &hp); err != nil {
+	if err := viper.UnmarshalKey("cleanup_metrics.hot_params", &hp); err != nil {
 		logger.Error("Failed to unmarshall config hot_params: ", err.Error())
 		return cleanupMetricsHotParams{}, err
 	}
