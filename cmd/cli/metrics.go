@@ -48,7 +48,6 @@ func cleanupOutdatedMetrics(config cleanupMetricsConfig, database moira.Database
 
 		for _, metric := range metricsKeys {
 			keysBatch = append(keysBatch, metric)
-			// todo: add elapsed time metric
 			batchCounter++
 			if batchCounter >= currentParams.CleanupBatchCount {
 				logger.Infof("Cleanup batch: size %d, keys: %q", len(keysBatch), keysBatch)
@@ -58,7 +57,8 @@ func cleanupOutdatedMetrics(config cleanupMetricsConfig, database moira.Database
 				totalCounter += batchCounter
 				batchCounter = 0
 				keysBatch = make([]string, 0, currentParams.CleanupBatchCount)
-				logger.Infof("Sleep between batches for %d seconds...", currentParams.CleanupBatchTimeoutSeconds)
+				logger.Infof("Total processed %d keys. Sleep between batches for %d seconds...", totalCounter,
+					currentParams.CleanupBatchTimeoutSeconds)
 				time.Sleep(time.Second * time.Duration(currentParams.CleanupBatchTimeoutSeconds))
 			}
 		}
@@ -88,7 +88,7 @@ func flushBatch(database moira.Database, keysBatch []string, duration time.Durat
 func getTimestampWithCleanupDuration(debugMode bool, duration time.Duration) int64 {
 	lastTs := time.Now().UTC()
 	if debugMode {
-		now := "1618491240" // for debug with dump only
+		now := "1618560000" // for debug with dump only
 		i, err := strconv.ParseInt(now, 10, 64)
 		if err != nil {
 			panic(err)

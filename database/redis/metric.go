@@ -6,6 +6,7 @@ import (
 
 	"github.com/gomodule/redigo/redis"
 	"gopkg.in/tomb.v2"
+	"strings"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
@@ -290,11 +291,12 @@ func (c *MetricsDatabaseCursor) Next() ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	metricsKeys := make([]string, 0, len(resp))
+	metrics := make([]string, 0, len(resp))
 	for _, elem := range resp {
-		metricsKeys = append(metricsKeys, string(elem.([]byte)))
+		metric := strings.TrimPrefix(string(elem.([]byte)), "moira-metric-data:")
+		metrics = append(metrics, metric)
 	}
-	return metricsKeys, err
+	return metrics, err
 }
 
 func (c *MetricsDatabaseCursor) Free() error {
