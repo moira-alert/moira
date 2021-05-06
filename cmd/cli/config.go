@@ -5,18 +5,18 @@ import (
 )
 
 type config struct {
-	LogFile         string               `yaml:"log_file"`
-	LogLevel        string               `yaml:"log_level"`
-	LogPrettyFormat bool                 `yaml:"log_pretty_format"`
-	Redis           cmd.RedisConfig      `yaml:"redis"`
-	Cleanup         cleanupConfig        `yaml:"cleanup"`
+	LogFile         string               `mapstructure:"log_file"`
+	LogLevel        string               `mapstructure:"log_level"`
+	LogPrettyFormat bool                 `mapstructure:"log_pretty_format"`
+	Redis           cmd.RedisConfig      `mapstructure:"redis"`
+	Cleanup         cleanupConfig        `mapstructure:"cleanup"`
 	CleanupMetrics  cleanupMetricsConfig `mapstructure:"cleanup_metrics"`
 }
 
 type cleanupConfig struct {
-	Whitelist               []string `yaml:"whitelist"`
-	Delete                  bool     `yaml:"delete"`
-	AddAnonymousToWhitelist bool     `json:"add_anonymous_to_whitelist"`
+	Whitelist               []string `mapstructure:"whitelist"`
+	Delete                  bool     `mapstructure:"delete"`
+	AddAnonymousToWhitelist bool     `mapstructure:"add_anonymous_to_whitelist"`
 }
 
 type cleanupMetricsConfig struct {

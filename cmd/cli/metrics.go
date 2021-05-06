@@ -32,6 +32,9 @@ func cleanupOutdatedMetrics(config cleanupMetricsConfig, database moira.Database
 				}
 				cursor = database.ScanMetricNames()
 			}
+			if currentParams.CleanupBatchCount != newHotParams.CleanupBatchCount {
+				logger.Info("Cleanup batch count was changed to: ", newHotParams.CleanupDuration)
+			}
 			currentParams = newHotParams
 		}
 
@@ -41,20 +44,22 @@ func cleanupOutdatedMetrics(config cleanupMetricsConfig, database moira.Database
 			logger.Error(err)
 			break
 		}
-		logger.Info("keys: ", metricsKeys)
+		logger.Debugf("Found %d keys", len(metricsKeys))
 
-		logger.Debug("Cleanup was started")
 		for _, metric := range metricsKeys {
 			keysBatch = append(keysBatch, metric)
 			// todo: add elapsed time metric
 			batchCounter++
 			if batchCounter >= currentParams.CleanupBatchCount {
+				logger.Infof("Cleanup batch: size %d, keys: %q", len(keysBatch), keysBatch)
 				if err := flushBatch(database, keysBatch, duration, config.DebugMode, config.DryRunMode); err != nil {
 					return err
 				}
 				totalCounter += batchCounter
 				batchCounter = 0
 				keysBatch = make([]string, 0, currentParams.CleanupBatchCount)
+				logger.Infof("Sleep between batches for %d seconds...", currentParams.CleanupBatchTimeoutSeconds)
+				time.Sleep(time.Second * time.Duration(currentParams.CleanupBatchTimeoutSeconds))
 			}
 		}
 	}
