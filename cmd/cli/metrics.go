@@ -2,6 +2,7 @@ package main
 
 import (
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/moira-alert/moira"
@@ -33,7 +34,7 @@ func cleanupOutdatedMetrics(config cleanupMetricsConfig, database moira.Database
 				cursor = database.ScanMetricNames()
 			}
 			if currentParams.CleanupBatchCount != newHotParams.CleanupBatchCount {
-				logger.Info("Cleanup batch count was changed to: ", newHotParams.CleanupDuration)
+				logger.Info("Cleanup batch count was changed to: ", newHotParams.CleanupBatchCount)
 			}
 			currentParams = newHotParams
 		}
@@ -41,7 +42,9 @@ func cleanupOutdatedMetrics(config cleanupMetricsConfig, database moira.Database
 		logger.Debug("Scan keys started")
 		metricsKeys, err := cursor.Next()
 		if err != nil {
-			logger.Error(err)
+			if !strings.Contains(err.Error(), "end") {
+				logger.Error(err)
+			}
 			break
 		}
 		logger.Debugf("Found %d keys", len(metricsKeys))
