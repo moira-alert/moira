@@ -9,18 +9,19 @@ import (
 
 	. "github.com/smartystreets/goconvey/convey"
 )
-//
-//func TestTest(t *testing.T) {
-//	Convey("Target verification", t, func() {
-//		target := "seriesByTag('test=test_value') | groupByTags('sum', 'another_tag') "
-//		expr, _, err := parser.Parse(target)
-//		So(err, ShouldBeNil)
-//		So(expr.Target(), ShouldResemble, "seriesByTag")
-//		So(expr.IsName(), ShouldBeTrue)
-//		args := expr.Args()
-//		print(args)
-//	})
-//}
+
+func TestTest(t *testing.T) {
+	Convey("Target verification", t, func() {
+		target := "seriesByTag('test=test_value') | groupdByTags('sum', 'another_tag') "
+		expr, _, err := parser.ParseExpr(target)
+		So(err, ShouldBeNil)
+		So(expr.Target(), ShouldResemble, "groupdByTags")
+		So(expr.IsFunc(), ShouldBeTrue)
+		args := expr.Args()
+		So(args[0].IsName(), ShouldBeTrue)
+		print(args)
+	})
+}
 
 func TestTargetVerification(t *testing.T) {
 	Convey("Target verification", t, func() {

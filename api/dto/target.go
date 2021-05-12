@@ -21,6 +21,20 @@ const (
 	isBad  typeOfProblem = "bad"
 )
 
+type checkTimedArgumentsFunc func(args parser.Expr) error
+
+func checkTimedArgumentsSoFar(funcName string, ttl time.Duration, args ...parser.Expr) error {
+	const argsCount = 2
+	if l := len(args); l > argsCount {
+		return fmt.Errorf("function %s should have only one timed argument, but have %d", funcName, l)
+	}
+
+	argument, argumentDuration := positiveDuration(args[1])
+	if argumentDuration >= ttl && ttl != 0 {
+		return argument
+	}
+}
+
 var (
 	unstableFunctions = map[string]bool{
 		"removeAbovePercentile": true,
@@ -75,12 +89,11 @@ var (
 		"useSeriesAbove":           true,
 	}
 
-	timedFunctions = map[string]bool{
-		"delay":                    true,
-		"divideSeries":             true,
-		"exponentialMovingAverage": true,
-		"integralByInterval":       true,
-		"linearRegression":         true,
+	timedFunctions = map[string][]int{
+		"delay":                    {1},
+		"exponentialMovingAverage": {1},
+		"integralByInterval":       {1},
+		"linearRegression":         {1, 2},
 		"movingAverage":            true,
 		"movingMax":                true,
 		"movingMedian":             true,
@@ -134,12 +147,53 @@ func TargetVerification(targets []string, ttl time.Duration, isRemote bool) []Tr
 }
 
 func checkExpression(expression parser.Expr, ttl time.Duration, isRemote bool) *problemOfTarget {
-	target := expression.Target()
-	problemFunction := checkFunction(target, isRemote)
-
-	if !expression.IsFunc() {
-		return &problemOfTarget{Argument: target}
+	switch {
+	case expression.IsFunc():
+		return checkFunction(expression, ttl, isRemote)
+	case expression.IsName():
+		// checkName
+	default:
+		return &problemOfTarget{Argument: expression.Target()}
 	}
+}
+
+func checkFunction(expression parser.Expr, ttl time.Duration, isRemote bool) *problemOfTarget {
+	funcName := expression.Target()
+
+	if _, isUnstable := unstableFunctions[funcName]; isUnstable {
+		return &problemOfTarget{
+			Argument:    funcName,
+			Type:        isBad,
+			Description: fmt.Sprintf("Function %s is unstable: it can return different historical values with each evaluation. Moira will show unexpected values that you don't see on your graphs.", funcName),
+		}
+	}
+
+	if _, isFalseNotification := falseNotificationsFunctions[funcName]; isFalseNotification {
+		return &problemOfTarget{
+			Argument:    funcName,
+			Type:        isWarn,
+			Description: fmt.Sprintf("Function %s shows and hides entire metric series based on their values. Moira will send frequent false NODATA notifications.", funcName),
+		}
+	}
+
+	if _, isVisual := visualFunctions[funcName]; isVisual {
+		return &problemOfTarget{
+			Argument:    funcName,
+			Type:        isWarn,
+			Description: fmt.Sprintf("Function %s affects only visual graph representation. It is meaningless in Moira.", funcName),
+		}
+	}
+
+	if !isRemote && !funcIsSupported(funcName) {
+		return &problemOfTarget{
+			Argument:    funcName,
+			Type:        isBad,
+			Description: fmt.Sprintf("Function %s is not supported, if you want to use it, switch to remote", funcName),
+			Position:    0,
+			Problems:    nil,
+		}
+	}
+
 	if argument, ok := functionArgumentsInTheRangeTTL(expression, ttl); !ok {
 		if problemFunction == nil {
 			problemFunction = &problemOfTarget{Argument: target}
@@ -164,44 +218,6 @@ func checkExpression(expression parser.Expr, ttl time.Duration, isRemote bool) *
 			}
 
 			problemFunction.Problems = append(problemFunction.Problems, *badFunc)
-		}
-	}
-
-	return problemFunction
-}
-
-func checkFunction(funcName string, isRemote bool) *problemOfTarget {
-	if _, isUnstable := unstableFunctions[funcName]; isUnstable {
-		return &problemOfTarget{
-			Argument:    funcName,
-			Type:        isBad,
-			Description: "This function is unstable: it can return different historical values with each evaluation. Moira will show unexpected values that you don't see on your graphs.",
-		}
-	}
-
-	if _, isFalseNotification := falseNotificationsFunctions[funcName]; isFalseNotification {
-		return &problemOfTarget{
-			Argument:    funcName,
-			Type:        isWarn,
-			Description: "This function shows and hides entire metric series based on their values. Moira will send frequent false NODATA notifications.",
-		}
-	}
-
-	if _, isVisual := visualFunctions[funcName]; isVisual {
-		return &problemOfTarget{
-			Argument:    funcName,
-			Type:        isWarn,
-			Description: "This function affects only visual graph representation. It is meaningless in Moira.",
-		}
-	}
-
-	if !isRemote && !funcIsSupported(funcName) {
-		return &problemOfTarget{
-			Argument:    funcName,
-			Type:        isBad,
-			Description: "Function is not supported, if you want to use it, switch to remote",
-			Position:    0,
-			Problems:    nil,
 		}
 	}
 
