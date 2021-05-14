@@ -1,16 +1,52 @@
 package main
 
 import (
-	"github.com/moira-alert/moira/cmd"
+	"strings"
+
+	"github.com/moira-alert/moira/database/redis"
+
+	"github.com/xiam/to"
 )
 
 type config struct {
 	LogFile         string               `mapstructure:"log_file"`
 	LogLevel        string               `mapstructure:"log_level"`
 	LogPrettyFormat bool                 `mapstructure:"log_pretty_format"`
-	Redis           cmd.RedisConfig      `mapstructure:"redis"`
+	Redis           cliRedisConfig       `mapstructure:"redis"`
 	Cleanup         cleanupConfig        `mapstructure:"cleanup"`
 	CleanupMetrics  cleanupMetricsConfig `mapstructure:"cleanup_metrics"`
+}
+
+// Need temporally for viper config reads
+type cliRedisConfig struct {
+	// Redis Sentinel cluster name
+	MasterName string `mapstructure:"master_name"`
+	// Redis Sentinel address list, format: {host1_name:port};{ip:port}
+	SentinelAddrs string `mapstructure:"sentinel_addrs"`
+	// Redis node ip-address or host name
+	Host string `mapstructure:"host"`
+	// Redis node port
+	Port string `mapstructure:"port"`
+	// Redis database
+	DB              int  `mapstructure:"dbid"`
+	ConnectionLimit int  `mapstructure:"connection_limit"`
+	AllowSlaveReads bool `mapstructure:"allow_slave_reads"`
+	// Moira will delete metrics older than this value from Redis. Large values will lead to various problems everywhere.
+	// See https://github.com/moira-alert/moira/pull/519
+	MetricsTTL string `mapstructure:"metrics_ttl"`
+}
+
+func (config *cliRedisConfig) GetSettings() redis.Config {
+	return redis.Config{
+		MasterName:        config.MasterName,
+		SentinelAddresses: strings.Split(config.SentinelAddrs, ","),
+		Host:              config.Host,
+		Port:              config.Port,
+		DB:                config.DB,
+		ConnectionLimit:   config.ConnectionLimit,
+		AllowSlaveReads:   config.AllowSlaveReads,
+		MetricsTTL:        to.Duration(config.MetricsTTL),
+	}
 }
 
 type cleanupConfig struct {
@@ -36,7 +72,7 @@ func getDefault() config {
 		LogFile:         "stdout",
 		LogLevel:        "info",
 		LogPrettyFormat: false,
-		Redis: cmd.RedisConfig{
+		Redis: cliRedisConfig{
 			Host:            "localhost",
 			Port:            "6379",
 			ConnectionLimit: 512, //nolint
