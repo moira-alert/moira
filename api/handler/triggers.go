@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
@@ -101,7 +102,6 @@ func getTriggerFromRequest(request *http.Request) (*dto.Trigger, *api.ErrorRespo
 }
 
 func triggerCheck(writer http.ResponseWriter, request *http.Request) {
-	ttl := middleware.GetLocalMetricTTL(request)
 	trigger := &dto.Trigger{}
 	response := dto.TriggerCheckResponse{}
 
@@ -112,6 +112,13 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 			render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
 			return
 		}
+	}
+
+	var ttl time.Duration
+	if trigger.IsRemote {
+		ttl = middleware.GetRemoteMetricTTL(request)
+	} else {
+		ttl = middleware.GetLocalMetricTTL(request)
 	}
 
 	if len(trigger.Targets) > 0 {
