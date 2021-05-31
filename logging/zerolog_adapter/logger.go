@@ -16,8 +16,9 @@ type Logger struct {
 }
 
 const (
-	ModuleFieldName   = "module"
-	DefaultTimeFormat = "2006-01-02 15:04:05.000"
+	ModuleFieldName          = "module"
+	MessageTemplateFieldName = "messageTemplate"
+	DefaultTimeFormat        = "2006-01-02 15:04:05.000"
 )
 
 // ConfigureLog creates new logger based on github.com/rs/zerolog package
@@ -84,7 +85,7 @@ func (l Logger) Debugf(format string, args ...interface{}) {
 	if event == nil {
 		return
 	}
-	event.Timestamp().Msgf(format, args...)
+	event.Timestamp().Str(MessageTemplateFieldName, format).Msgf(format, args...)
 }
 
 func (l Logger) Info(args ...interface{}) {
@@ -100,7 +101,7 @@ func (l Logger) Infof(format string, args ...interface{}) {
 	if event == nil {
 		return
 	}
-	event.Timestamp().Msgf(format, args...)
+	event.Timestamp().Str(MessageTemplateFieldName, format).Msgf(format, args...)
 }
 
 func (l Logger) Error(args ...interface{}) {
@@ -116,7 +117,7 @@ func (l Logger) Errorf(format string, args ...interface{}) {
 	if event == nil {
 		return
 	}
-	event.Timestamp().Msgf(format, args...)
+	event.Timestamp().Str(MessageTemplateFieldName, format).Msgf(format, args...)
 }
 
 func (l Logger) Fatal(args ...interface{}) {
@@ -132,7 +133,7 @@ func (l Logger) Fatalf(format string, args ...interface{}) {
 	if event == nil {
 		return
 	}
-	event.Timestamp().Msgf(format, args...)
+	event.Timestamp().Str(MessageTemplateFieldName, format).Msgf(format, args...)
 }
 
 func (l Logger) Warning(args ...interface{}) {
@@ -148,7 +149,7 @@ func (l Logger) Warningf(format string, args ...interface{}) {
 	if event == nil {
 		return
 	}
-	event.Timestamp().Msgf(format, args...)
+	event.Timestamp().Str(MessageTemplateFieldName, format).Msgf(format, args...)
 }
 
 func (l *Logger) String(key, value string) moira.Logger {
