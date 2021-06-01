@@ -115,7 +115,7 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	if len(trigger.Targets) > 0 {
-		response.Targets = dto.TargetVerification(trigger.Targets, ttl, trigger.IsRemote)
+		response.Targets = dto.TargetValidation(trigger.Targets, ttl, trigger.IsRemote)
 	}
 
 	render.JSON(writer, request, response)
