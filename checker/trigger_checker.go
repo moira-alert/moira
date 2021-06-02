@@ -40,7 +40,7 @@ func MakeTriggerChecker(triggerID string, dataBase moira.Database, logger moira.
 		}
 		return nil, err
 	}
-
+	trigger.IsRemote = true
 	source, err := sourceProvider.GetTriggerMetricSource(&trigger)
 	if err != nil {
 		return nil, err
