@@ -5,6 +5,7 @@ import (
 	"net"
 	"time"
 
+	goredis "github.com/go-redis/redis/v8"
 	"github.com/go-redsync/redsync"
 	"github.com/gomodule/redigo/redis"
 	"github.com/patrickmn/go-cache"
@@ -43,6 +44,7 @@ const testDB = 1
 
 // DbConnector contains redis pool
 type DbConnector struct {
+	client               redisClient
 	pool                 *redis.Pool
 	logger               moira.Logger
 	retentionCache       *cache.Cache
@@ -58,6 +60,28 @@ type DbConnector struct {
 func NewDatabase(logger moira.Logger, config Config, source DBSource) *DbConnector {
 	poolDialer, slaveDialer := createPoolDialers(logger, config)
 
+	var client redisClient
+
+	switch config.RedisMode {
+	case ClusteringModeStandalone:
+		serverAddr := net.JoinHostPort(config.Host, config.Port)
+		logger.Infof("Redis: %v, DB: %v", serverAddr, config.DB)
+		client = goredis.NewClient(&goredis.Options{
+			Addr: serverAddr,
+			DB:   config.DB,
+		})
+	case ClusteringModeSentinel:
+		client = goredis.NewFailoverClient(&goredis.FailoverOptions{
+			MasterName:    config.MasterName,
+			SentinelAddrs: config.SentinelAddresses,
+			DB:            config.DB,
+		})
+	case ClusteringModeCluster:
+		client = goredis.NewClusterClient(&goredis.ClusterOptions{
+			Addrs: config.ClusterAddrs,
+		})
+	}
+
 	pool := &redis.Pool{
 		MaxIdle:      config.ConnectionLimit,
 		MaxActive:    config.ConnectionLimit,
@@ -67,7 +91,7 @@ func NewDatabase(logger moira.Logger, config Config, source DBSource) *DbConnect
 		TestOnBorrow: poolDialer.Test,
 	}
 	syncPool := &redis.Pool{
-		MaxIdle:      3, //nolint
+		MaxIdle:      3,  //nolint
 		MaxActive:    10, //nolint
 		Wait:         true,
 		IdleTimeout:  240 * time.Second, //nolint
@@ -87,6 +111,7 @@ func NewDatabase(logger moira.Logger, config Config, source DBSource) *DbConnect
 	}
 
 	connector := &DbConnector{
+		client:               client,
 		pool:                 pool,
 		logger:               logger,
 		retentionCache:       cache.New(cacheValueExpirationDuration, cacheCleanupInterval),

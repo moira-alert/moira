@@ -1,6 +1,6 @@
 module github.com/moira-alert/moira
 
-go 1.15
+go 1.16
 
 require (
 	github.com/FZambia/sentinel v1.1.0
@@ -20,8 +20,6 @@ require (
 	github.com/couchbase/vellum v1.0.2 // indirect
 	github.com/cyberdelia/go-metrics-graphite v0.0.0-20161219230853-39f87cc3b432
 	github.com/cznic/b v0.0.0-20181122101859-a26611c4d92d // indirect
-	github.com/cznic/mathutil v0.0.0-20181122101859-297441e03548 // indirect
-	github.com/cznic/strutil v0.0.0-20181122101858-275e90344537 // indirect
 	github.com/disintegration/imaging v1.6.2 // indirect
 	github.com/dustin/go-humanize v1.0.0
 	github.com/etcd-io/bbolt v1.3.3 // indirect
@@ -31,6 +29,7 @@ require (
 	github.com/go-chi/render v1.0.1
 	github.com/go-graphite/carbonapi v0.0.0-20201019162650-b789c0eaed8a
 	github.com/go-graphite/protocol v0.4.3
+	github.com/go-redis/redis/v8 v8.10.0
 	github.com/go-redsync/redsync v1.4.2
 	github.com/gofrs/uuid v3.3.0+incompatible
 	github.com/gogo/protobuf v1.3.1 // indirect
@@ -38,7 +37,6 @@ require (
 	github.com/golang/mock v1.4.4
 	github.com/golang/snappy v0.0.2 // indirect
 	github.com/gomodule/redigo v2.0.0+incompatible
-	github.com/google/go-cmp v0.5.2 // indirect
 	github.com/google/go-querystring v1.0.1-0.20190318165438-c8c88dbee036 // indirect
 	github.com/gopherjs/gopherjs v0.0.0-20200217142428-fce0ec30dd00 // indirect
 	github.com/gotokatsuya/ipare v0.0.0-20161202043954-fd52c5b6c44b
@@ -59,9 +57,6 @@ require (
 	github.com/mschoch/smat v0.2.0 // indirect
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/nxadm/tail v1.4.5 // indirect
-	github.com/onsi/ginkgo v1.14.1 // indirect
-	github.com/onsi/gomega v1.10.2 // indirect
-	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/opsgenie/opsgenie-go-sdk-v2 v1.2.1
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pelletier/go-toml v1.8.1 // indirect
@@ -70,7 +65,6 @@ require (
 	github.com/prometheus/common v0.14.0 // indirect
 	github.com/prometheus/procfs v0.2.0 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20200313005456-10cdbea86bc0
-	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect
 	github.com/rs/cors v1.7.0
 	github.com/rs/zerolog v1.20.0
 	github.com/russross/blackfriday/v2 v2.0.1
@@ -85,7 +79,6 @@ require (
 	github.com/spf13/viper v1.7.1 // indirect
 	github.com/steveyen/gtreap v0.1.0 // indirect
 	github.com/stretchr/objx v0.3.0 // indirect
-	github.com/stretchr/testify v1.6.1 // indirect
 	github.com/syndtr/goleveldb v1.0.0 // indirect
 	github.com/tecbot/gorocksdb v0.0.0-20191217155057-f0fad39f321c // indirect
 	github.com/willf/bitset v1.1.11 // indirect
@@ -97,9 +90,6 @@ require (
 	golang.org/x/exp v0.0.0-20200924195034-c827fd4f18b9 // indirect
 	golang.org/x/image v0.0.0-20200927104501-e162460cd6b5 // indirect
 	golang.org/x/lint v0.0.0-20200302205851-738671d3881b // indirect
-	golang.org/x/net v0.0.0-20201006153459-a7d1128ccaa0 // indirect
-	golang.org/x/sys v0.0.0-20201007082116-8445cc04cbdf // indirect
-	golang.org/x/tools v0.0.0-20201007032633-0806396f153e // indirect
 	gonum.org/v1/netlib v0.0.0-20200824093956-f0ca4b3a5ef5 // indirect
 	google.golang.org/protobuf v1.25.0 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect

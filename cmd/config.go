@@ -19,9 +19,14 @@ import (
 // Use fields MasterName and SentinelAddrs to enable Redis Sentinel support,
 // use Host and Port fields otherwise.
 type RedisConfig struct {
+	// RedisMode is a string that specifies in which mode redis is running: standalone, sentinel or cluster.
+	// Possible values: standalone, sentinel or cluster
+	RedisMode string `yaml:"redis_mode"`
+	// ClusterAddrs is a list of addresses of all nodes of redis cluster. Format: {host1_name:port};{ip:port}
+	ClusterAddrs string `yaml:"cluster_addrs"`
 	// Redis Sentinel cluster name
 	MasterName string `yaml:"master_name"`
-	// Redis Sentinel address list, format: {host1_name:port};{ip:port}
+	// Redis Sentinel address list, format: {host1_name:port},{ip:port}
 	SentinelAddrs string `yaml:"sentinel_addrs"`
 	// Redis node ip-address or host name
 	Host string `yaml:"host"`
@@ -39,6 +44,8 @@ type RedisConfig struct {
 // GetSettings returns redis config parsed from moira config files
 func (config *RedisConfig) GetSettings() redis.Config {
 	return redis.Config{
+		RedisMode:         redis.ClusteringMode(config.RedisMode),
+		ClusterAddrs:      strings.Split(config.ClusterAddrs, ","),
 		MasterName:        config.MasterName,
 		SentinelAddresses: strings.Split(config.SentinelAddrs, ","),
 		Host:              config.Host,
