@@ -2,6 +2,7 @@ package remote
 
 import (
 	"fmt"
+	"github.com/hashicorp/go-retryablehttp"
 	"net/http"
 	"time"
 
@@ -31,9 +32,14 @@ type Remote struct {
 
 // Create configures remote metric source
 func Create(config *Config) metricSource.MetricSource {
+	retryClient := retryablehttp.NewClient()
+	// Need add to config
+	retryClient.RetryMax = 3
+	retryClient.RetryWaitMax = 60 * time.Second
+
 	return &Remote{
 		config: config,
-		client: &http.Client{Timeout: config.Timeout},
+		client: retryClient.StandardClient(),
 	}
 }
 
