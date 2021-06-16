@@ -47,7 +47,7 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.2-0.20190406162018-d3fcbee8e181 // indirect
 	github.com/hashicorp/go-hclog v0.14.1 // indirect
 	github.com/hashicorp/go-multierror v1.1.0 // indirect
-	github.com/hashicorp/go-retryablehttp v0.6.7 // indirect
+	github.com/hashicorp/go-retryablehttp v0.6.7
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/karriereat/blackfriday-slack v0.1.0
 	github.com/kr/text v0.2.0 // indirect
