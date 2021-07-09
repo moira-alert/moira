@@ -14,7 +14,6 @@ import (
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
 
-	//"github.com/moira-alert/moira/metric_source/local"
 	"github.com/moira-alert/moira/metrics"
 	mock_metric_source "github.com/moira-alert/moira/mock/metric_source"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
@@ -1427,6 +1426,7 @@ func TestGetExpressionValues(t *testing.T) {
 func TestTriggerChecker_handlePrepareError(t *testing.T) {
 	Convey("Test handlePrepareError", t, func() {
 		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger, _ := logging.GetLogger("Test")
 
@@ -1451,23 +1451,24 @@ func TestTriggerChecker_handlePrepareError(t *testing.T) {
 		})
 		Convey("with ErrUnexpectedAloneMetric", func() {
 			err := conversion.ErrUnexpectedAloneMetric{}
+			checkData.Timestamp = int64(15)
 			triggerChecker.lastCheck = &moira.CheckData{
 				State:          moira.StateOK,
 				EventTimestamp: 10,
 			}
 			expectedCheckData := moira.CheckData{
-				Score:           100000,
-				State:           moira.StateEXCEPTION,
-				SuppressedState: moira.StateOK,
-				Suppressed:      true,
-				Message:         err.Error(),
+				Score:          100000,
+				State:          moira.StateEXCEPTION,
+				Message:        err.Error(),
+				Timestamp:      int64(15),
+				EventTimestamp: int64(15),
 			}
 			dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
 				IsTriggerEvent:   true,
 				TriggerID:        triggerChecker.triggerID,
-				State:            moira.StateERROR,
+				State:            moira.StateEXCEPTION,
 				OldState:         getEventOldState(moira.StateOK, "", false),
-				Timestamp:        10,
+				Timestamp:        15,
 				Metric:           triggerChecker.trigger.Name,
 				MessageEventInfo: nil,
 			}, true)
