@@ -157,7 +157,7 @@ func TestTimeout(t *testing.T) {
 		},
 	}
 
-	sender.EXPECT().SendEvents(eventsData, pkg.Contact, pkg.Trigger, plots, pkg.Throttled).Return(nil).Do(func(f ...interface{}) {
+	sender.EXPECT().SendEvents(eventsData, pkg.Contact, pkg.Trigger, plots, pkg.Throttled).Return(nil).Do(func(arg0, arg1, arg2, arg3, arg4 interface{}) {
 		fmt.Print("Trying to send for 10 second")
 		time.Sleep(time.Second * 10)
 	}).Times(maxParallelSendsPerSender)

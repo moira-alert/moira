@@ -32,7 +32,10 @@ func (check *filter) Check(nowTS int64) (int64, bool, error) {
 		return 0, false, err
 	}
 
-	metricsCount, _ := check.database.GetMetricsUpdatesCount()
+	metricsCount, err := check.database.GetMetricsUpdatesCount()
+	if err != nil {
+		return 0, false, err
+	}
 	if check.count != metricsCount || triggersCount == 0 {
 		check.count = metricsCount
 		check.lastSuccessfulCheck = nowTS

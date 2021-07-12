@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/moira-alert/moira"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 
 	"github.com/golang/mock/gomock"
@@ -17,7 +16,8 @@ func TestCheckDelay_Check(t *testing.T) {
 	Convey("Test local checker heartbeat", t, func() {
 		err := errors.New("test error localChecker")
 		now := time.Now().Unix()
-		check := createGraphiteLocalCheckerTest(t)
+		check, mockCtrl := createGraphiteLocalCheckerTest(t)
+		defer mockCtrl.Finish()
 		database := check.database.(*mock_moira_alert.MockDatabase)
 
 		Convey("Test creation localChecker", func() {
@@ -27,7 +27,6 @@ func TestCheckDelay_Check(t *testing.T) {
 		})
 
 		Convey("GraphiteLocalChecker error handling test", func() {
-			database.EXPECT().GetChecksUpdatesCount().Return(int64(1), nil)
 			database.EXPECT().GetLocalTriggersToCheckCount().Return(int64(1), err)
 
 			value, needSend, errActual := check.Check(now)
@@ -52,7 +51,6 @@ func TestCheckDelay_Check(t *testing.T) {
 			check.lastSuccessfulCheck = now - check.delay - 1
 			database.EXPECT().GetChecksUpdatesCount().Return(int64(0), nil)
 			database.EXPECT().GetLocalTriggersToCheckCount().Return(int64(1), nil)
-			database.EXPECT().SetNotifierState(moira.SelfStateERROR)
 
 			value, needSend, errActual := check.Check(now)
 			So(errActual, ShouldBeNil)
@@ -71,13 +69,8 @@ func TestCheckDelay_Check(t *testing.T) {
 		})
 
 		Convey("Test NeedToCheckOthers and NeedTurnOffNotifier", func() {
-			database.EXPECT().GetChecksUpdatesCount().Return(int64(1), nil)
-			database.EXPECT().GetLocalTriggersToCheckCount().Return(int64(0), nil)
+			//TODO(litleleprikon): seems that this test checks nothing. Seems that NeedToCheckOthers and NeedTurnOffNotifier do not work.
 			needCheck := check.NeedToCheckOthers()
-			So(needCheck, ShouldBeTrue)
-
-			database.EXPECT().GetChecksUpdatesCount().Return(int64(0), nil)
-			needCheck = check.NeedToCheckOthers()
 			So(needCheck, ShouldBeTrue)
 
 			So(check.NeedTurnOffNotifier(), ShouldBeFalse)
@@ -85,9 +78,9 @@ func TestCheckDelay_Check(t *testing.T) {
 	})
 }
 
-func createGraphiteLocalCheckerTest(t *testing.T) *localChecker {
+func createGraphiteLocalCheckerTest(t *testing.T) (*localChecker, *gomock.Controller) {
 	mockCtrl := gomock.NewController(t)
 	logger, _ := logging.GetLogger("CheckDelay")
 
-	return GetLocalChecker(120, logger, mock_moira_alert.NewMockDatabase(mockCtrl)).(*localChecker)
+	return GetLocalChecker(120, logger, mock_moira_alert.NewMockDatabase(mockCtrl)).(*localChecker), mockCtrl
 }
