@@ -2,7 +2,6 @@ package conversion
 
 import (
 	"math"
-	"reflect"
 	"testing"
 
 	"github.com/moira-alert/moira"
@@ -446,28 +445,6 @@ func TestTriggerMetrics_Diff(t *testing.T) {
 	})
 }
 
-func TestTriggerMetrics_multiMetricsTarget(t *testing.T) {
-	tests := []struct {
-		name  string
-		m     TriggerMetrics
-		want  string
-		want1 setHelper
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, got1 := tt.m.getTargetMetrics()
-			if got != tt.want {
-				t.Errorf("TriggerMetrics.multiMetricsTarget() got = %v, want %v", got, tt.want)
-			}
-			if !reflect.DeepEqual(got1, tt.want1) {
-				t.Errorf("TriggerMetrics.multiMetricsTarget() got1 = %v, want %v", got1, tt.want1)
-			}
-		})
-	}
-}
-
 func TestTriggerMetrics_ConvertForCheck(t *testing.T) {
 	tests := []struct {
 		name string
@@ -493,28 +470,6 @@ func TestTriggerMetrics_ConvertForCheck(t *testing.T) {
 				},
 				"metric.test.2": {
 					"t1": {Name: "metric.test.2"},
-				},
-			},
-		},
-		{
-			name: "origin have metrics and target with empty metrics",
-			m: TriggerMetrics{
-				"t1": TriggerTargetMetrics{
-					"metric.test.1": {Name: "metric.test.1"},
-					"metric.test.2": {Name: "metric.test.2"},
-				},
-				"t2": TriggerTargetMetrics{
-					"metric.test.3": {Name: "metric.test.3"},
-				},
-			},
-			want: map[string]map[string]metricSource.MetricData{
-				"metric.test.1": {
-					"t1": {Name: "metric.test.1"},
-					"t2": {Name: "metric.test.3"},
-				},
-				"metric.test.2": {
-					"t1": {Name: "metric.test.2"},
-					"t2": {Name: "metric.test.3"},
 				},
 			},
 		},

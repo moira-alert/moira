@@ -196,40 +196,16 @@ func (m TriggerMetrics) Diff(declaredAloneMetrics map[string]bool) map[string]ma
 	return result
 }
 
-// getTargetMetrics is a function that returns metrics of any target.
-func (m TriggerMetrics) getTargetMetrics() (string, setHelper) {
-	commonMetrics := make(setHelper)
-	for targetName, metrics := range m {
-		for metricName := range metrics {
-			commonMetrics[metricName] = true
-		}
-		return targetName, commonMetrics
-	}
-	return "", nil
-}
-
 // ConvertForCheck is a function that converts TriggerMetrics with structure
 // map[TargetName]map[MetricName]MetricData to ConvertedTriggerMetrics
-// with structure map[MetricName]map[TargetName]MetricData and fill with
-// duplicated metrics targets that have only one metric. Second return value is
-// a map with names of targets that had only one metric as key and original metric name as value.
+// with structure map[MetricName]map[TargetName]MetricData.
 func (m TriggerMetrics) ConvertForCheck() map[string]map[string]metricSource.MetricData {
 	result := make(map[string]map[string]metricSource.MetricData)
-	_, commonMetrics := m.getTargetMetrics()
-
 	for targetName, targetMetrics := range m {
-		oneMetricTarget, oneMetricName := isOneMetricMap(targetMetrics)
-
-		for metricName := range commonMetrics {
+		for metricName := range targetMetrics {
 			if _, ok := result[metricName]; !ok {
 				result[metricName] = make(map[string]metricSource.MetricData, len(m))
 			}
-
-			if oneMetricTarget {
-				result[metricName][targetName] = m[targetName][oneMetricName]
-				continue
-			}
-
 			result[metricName][targetName] = m[targetName][metricName]
 		}
 	}
