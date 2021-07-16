@@ -15,6 +15,7 @@ type PatternStorage struct {
 	logger                  moira.Logger
 	PatternIndex            atomic.Value
 	SeriesByTagPatternIndex atomic.Value
+	tierPool                *tierPool
 }
 
 // NewPatternStorage creates new PatternStorage struct
@@ -23,6 +24,7 @@ func NewPatternStorage(database moira.Database, metrics *metrics.FilterMetrics, 
 		database: database,
 		metrics:  metrics,
 		logger:   logger,
+		tierPool: newTierPool(),
 	}
 	err := storage.Refresh()
 	return storage, err
@@ -46,7 +48,7 @@ func (storage *PatternStorage) Refresh() error {
 		}
 	}
 
-	storage.PatternIndex.Store(NewPatternIndex(storage.logger, patterns))
+	storage.PatternIndex.Store(NewPatternIndex(storage.logger, patterns, storage.tierPool))
 	storage.SeriesByTagPatternIndex.Store(NewSeriesByTagPatternIndex(seriesByTagPatterns))
 	return nil
 }
