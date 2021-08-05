@@ -20,11 +20,11 @@ func Subscription(rep interface{}, err error) (moira.SubscriptionData, error) {
 		if err == redis.ErrNil {
 			return subscription, database.ErrNil
 		}
-		return subscription, fmt.Errorf("failed to read subscription: %s", err.Error())
+		return subscription, fmt.Errorf("failed to read subscription: %w", err)
 	}
 	err = json.Unmarshal(bytes, &subscription)
 	if err != nil {
-		return subscription, fmt.Errorf("failed to parse subscription json %s: %s", string(bytes), err.Error())
+		return subscription, fmt.Errorf("failed to parse subscription json %s: %w", string(bytes), err)
 	}
 	return subscription, nil
 }
@@ -36,7 +36,7 @@ func Subscriptions(rep interface{}, err error) ([]*moira.SubscriptionData, error
 		if err == redis.ErrNil {
 			return make([]*moira.SubscriptionData, 0), nil
 		}
-		return nil, fmt.Errorf("failed to read subscriptions: %s", err.Error())
+		return nil, fmt.Errorf("failed to read subscriptions: %w", err)
 	}
 	subscriptions := make([]*moira.SubscriptionData, len(values))
 	for i, value := range values {

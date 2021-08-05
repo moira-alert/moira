@@ -39,7 +39,7 @@ func (connector *DbConnector) GetSubscriptions(subscriptionIDs []string) ([]*moi
 	}
 	subscriptions, err := reply.Subscriptions(c.Do("EXEC"))
 	if err != nil {
-		return nil, fmt.Errorf("failed to EXEC: %s", err.Error())
+		return nil, fmt.Errorf("failed to EXEC: %w", err)
 	}
 	for i := range subscriptions {
 		if subscriptions[i] != nil {
@@ -63,14 +63,14 @@ func (connector *DbConnector) SaveSubscription(subscription *moira.SubscriptionD
 	}
 	oldTriggers, err := connector.getSubscriptionTriggers(oldSubscription)
 	if err != nil {
-		return fmt.Errorf("failed to get triggers by subscription: %s", err.Error())
+		return fmt.Errorf("failed to get triggers by subscription: %w", err)
 	}
 	if err = connector.updateSubscription(subscription, oldSubscription); err != nil {
-		return fmt.Errorf("failed to update subscription: %s", err.Error())
+		return fmt.Errorf("failed to update subscription: %w", err)
 	}
 	newTriggers, err := connector.getSubscriptionTriggers(subscription)
 	if err != nil {
-		return fmt.Errorf("failed to get triggers by subscription: %s", err.Error())
+		return fmt.Errorf("failed to get triggers by subscription: %w", err)
 	}
 	return connector.refreshUnusedTriggers(newTriggers, oldTriggers)
 }
@@ -83,7 +83,7 @@ func (connector *DbConnector) updateSubscription(newSubscription *moira.Subscrip
 	addSendSubscriptionRequest(c, *newSubscription, oldSubscription) //nolint
 	_, err := c.Do("EXEC")
 	if err != nil {
-		return fmt.Errorf("failed to EXEC: %s", err.Error())
+		return fmt.Errorf("failed to EXEC: %w", err)
 	}
 	return nil
 }
@@ -110,7 +110,7 @@ func (connector *DbConnector) SaveSubscriptions(newSubscriptions []*moira.Subscr
 		return err
 	}
 	if err := connector.refreshUnusedTriggers(newTriggers, oldTriggers); err != nil {
-		return fmt.Errorf("failed to update triggers by subscription: %s", err.Error())
+		return fmt.Errorf("failed to update triggers by subscription: %w", err)
 	}
 	return nil
 }
@@ -125,7 +125,7 @@ func (connector *DbConnector) updateSubscriptions(oldSubscriptions []*moira.Subs
 	}
 	_, err := c.Do("EXEC")
 	if err != nil {
-		return fmt.Errorf("failed to EXEC: %s", err.Error())
+		return fmt.Errorf("failed to EXEC: %w", err)
 	}
 	return nil
 }
@@ -141,13 +141,13 @@ func (connector *DbConnector) RemoveSubscription(subscriptionID string) error {
 	}
 	triggers, err := connector.getSubscriptionTriggers(&subscription)
 	if err != nil {
-		return fmt.Errorf("failed to get triggers by subscription: %s", err.Error())
+		return fmt.Errorf("failed to get triggers by subscription: %w", err)
 	}
 	if err := connector.removeSubscription(&subscription); err != nil {
-		return fmt.Errorf("failed to remove subscription: %s", err.Error())
+		return fmt.Errorf("failed to remove subscription: %w", err)
 	}
 	if err := connector.refreshUnusedTriggers([]*moira.Trigger{}, triggers); err != nil {
-		return fmt.Errorf("failed to update triggers by subscription: %s", err.Error())
+		return fmt.Errorf("failed to update triggers by subscription: %w", err)
 	}
 	return nil
 }
@@ -165,7 +165,7 @@ func (connector *DbConnector) removeSubscription(subscription *moira.Subscriptio
 	c.Send("SREM", anyTagsSubscriptionsKey, subscription.ID) //nolint
 	c.Send("DEL", subscriptionKey(subscription.ID))          //nolint
 	if _, err := c.Do("EXEC"); err != nil {
-		return fmt.Errorf("failed to EXEC: %s", err.Error())
+		return fmt.Errorf("failed to EXEC: %w", err)
 	}
 	return nil
 }
@@ -177,7 +177,7 @@ func (connector *DbConnector) GetUserSubscriptionIDs(login string) ([]string, er
 
 	subscriptions, err := redis.Strings(c.Do("SMEMBERS", userSubscriptionsKey(login)))
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve subscriptions for user login %s: %s", login, err.Error())
+		return nil, fmt.Errorf("failed to retrieve subscriptions for user login %s: %w", login, err)
 	}
 	return subscriptions, nil
 }
@@ -221,11 +221,11 @@ func (connector *DbConnector) getSubscriptionsIDsByTags(tags []string) ([]string
 	tagKeys = append(tagKeys, anyTagsSubscriptionsKey)
 	values, err := redis.Values(c.Do("SUNION", tagKeys...))
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve subscriptions for tags %v: %s", tags, err.Error())
+		return nil, fmt.Errorf("failed to retrieve subscriptions for tags %v: %w", tags, err)
 	}
 	var subscriptionsIDs []string
 	if err = redis.ScanSlice(values, &subscriptionsIDs); err != nil {
-		return nil, fmt.Errorf("failed to retrieve subscriptions for tags %v: %s", tags, err.Error())
+		return nil, fmt.Errorf("failed to retrieve subscriptions for tags %v: %w", tags, err)
 	}
 	return subscriptionsIDs, nil
 }
@@ -283,12 +283,12 @@ func (connector *DbConnector) getTriggersIdsByTags(tags []string) ([]string, err
 
 	values, err := redis.Values(c.Do("SINTER", tagKeys...))
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve triggers for tags %v: %s", tags, err.Error())
+		return nil, fmt.Errorf("failed to retrieve triggers for tags %v: %w", tags, err)
 	}
 
 	var triggerIDs []string
 	if err = redis.ScanSlice(values, &triggerIDs); err != nil {
-		return nil, fmt.Errorf("failed to retrieve triggers for tags %v: %s", tags, err.Error())
+		return nil, fmt.Errorf("failed to retrieve triggers for tags %v: %w", tags, err)
 	}
 	return triggerIDs, nil
 }

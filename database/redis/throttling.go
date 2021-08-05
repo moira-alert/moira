@@ -31,12 +31,12 @@ func (connector *DbConnector) DeleteTriggerThrottling(triggerID string) error {
 	c := connector.pool.Get()
 	defer c.Close()
 
-	c.Send("MULTI") //nolint
+	c.Send("MULTI")                                                             //nolint
 	c.Send("SET", notifierThrottlingBeginningKey(triggerID), time.Now().Unix()) //nolint
-	c.Send("DEL", notifierNextKey(triggerID)) //nolint
+	c.Send("DEL", notifierNextKey(triggerID))                                   //nolint
 	_, err := c.Do("EXEC")
 	if err != nil {
-		return fmt.Errorf("failed to EXEC: %s", err.Error())
+		return fmt.Errorf("failed to EXEC: %w", err)
 	}
 	return nil
 }

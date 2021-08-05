@@ -79,7 +79,7 @@ func GetEventBytes(event moira.NotificationEvent) ([]byte, error) {
 	eventSE := toNotificationEventStorageElement(event)
 	bytes, err := json.Marshal(eventSE)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal notification event: %s", err.Error())
+		return nil, fmt.Errorf("failed to marshal notification event: %w", err)
 	}
 	return bytes, nil
 }
@@ -91,12 +91,12 @@ func Event(rep interface{}, err error) (moira.NotificationEvent, error) {
 		if err == redis.ErrNil {
 			return moira.NotificationEvent{}, database.ErrNil
 		}
-		return moira.NotificationEvent{}, fmt.Errorf("failed to read event: %s", err.Error())
+		return moira.NotificationEvent{}, fmt.Errorf("failed to read event: %w", err)
 	}
 	eventSE := notificationEventStorageElement{}
 	err = json.Unmarshal(bytes, &eventSE)
 	if err != nil {
-		return moira.NotificationEvent{}, fmt.Errorf("failed to parse event json %s: %s", string(bytes), err.Error())
+		return moira.NotificationEvent{}, fmt.Errorf("failed to parse event json %s: %w", string(bytes), err)
 	}
 	return eventSE.toNotificationEvent(), nil
 }
@@ -108,7 +108,7 @@ func Events(rep interface{}, err error) ([]*moira.NotificationEvent, error) {
 		if err == redis.ErrNil {
 			return make([]*moira.NotificationEvent, 0), nil
 		}
-		return nil, fmt.Errorf("failed to read events: %s", err.Error())
+		return nil, fmt.Errorf("failed to read events: %w", err)
 	}
 	events := make([]*moira.NotificationEvent, len(values))
 	for i, value := range values {

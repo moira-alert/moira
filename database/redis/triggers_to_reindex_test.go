@@ -148,7 +148,7 @@ func addTriggersToReindex(connector *DbConnector, triggerIDs ...string) error {
 
 	_, err := c.Do("EXEC")
 	if err != nil {
-		return fmt.Errorf("failed to add triggers to reindex: %s", err.Error())
+		return fmt.Errorf("failed to add triggers to reindex: %w", err)
 	}
 	return nil
 }

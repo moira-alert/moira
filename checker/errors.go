@@ -50,3 +50,13 @@ type ErrTriggerHasEmptyTargets struct {
 func (err ErrTriggerHasEmptyTargets) Error() string {
 	return fmt.Sprintf("target t%v has no metrics", strings.Join(err.targets, ", "))
 }
+
+// ErrNetwork used if network error occurred during fetch
+type ErrNetwork struct {
+	networkError error
+}
+
+// ErrNetwork implementation with error message
+func (err ErrNetwork) Error() string {
+	return fmt.Sprintf("network error during fetch: %s", err.networkError.Error())
+}

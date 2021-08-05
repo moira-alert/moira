@@ -19,7 +19,7 @@ func (connector *DbConnector) GetPatterns() ([]string, error) {
 	defer c.Close()
 	patterns, err := redis.Strings(c.Do("SMEMBERS", patternsListKey))
 	if err != nil {
-		return nil, fmt.Errorf("failed to get moira patterns, error: %v", err)
+		return nil, fmt.Errorf("failed to get moira patterns, error: %w", err)
 	}
 	return patterns, nil
 }
@@ -34,7 +34,7 @@ func (connector *DbConnector) GetMetricsValues(metrics []string, from int64, unt
 	}
 	resultByMetrics, err := redis.Values(c.Do(""))
 	if err != nil {
-		return nil, fmt.Errorf("failed to get metric values: %v", err)
+		return nil, fmt.Errorf("failed to get metric values: %w", err)
 	}
 
 	res := make(map[string][]*moira.MetricValue, len(resultByMetrics))
@@ -85,7 +85,7 @@ func (connector *DbConnector) getMetricRetention(metric string) (int64, error) {
 		if err == redis.ErrNil {
 			return 60, database.ErrNil //nolint
 		}
-		return 0, fmt.Errorf("failed GET metric retention:%s, error: %v", metric, err)
+		return 0, fmt.Errorf("failed GET metric retention:%s, error: %w", metric, err)
 	}
 	return retention, nil
 }
@@ -139,7 +139,7 @@ func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb) (<-chan *mo
 			}
 			metricEvent := &moira.MetricEvent{}
 			if err := json.Unmarshal(data, metricEvent); err != nil {
-				connector.logger.Errorf("Failed to parse MetricEvent: %s, error : %v", string(data), err)
+				connector.logger.Errorf("Failed to parse MetricEvent: %s, error : %w", string(data), err)
 				continue
 			}
 			metricsChannel <- metricEvent
@@ -154,7 +154,7 @@ func (connector *DbConnector) AddPatternMetric(pattern, metric string) error {
 	c := connector.pool.Get()
 	defer c.Close()
 	if _, err := c.Do("SADD", patternMetricsKey(pattern), metric); err != nil {
-		return fmt.Errorf("failed to SADD pattern-metrics, pattern: %s, metric: %s, error: %v", pattern, metric, err)
+		return fmt.Errorf("failed to SADD pattern-metrics, pattern: %s, metric: %s, error: %w", pattern, metric, err)
 	}
 	return nil
 }
@@ -169,7 +169,7 @@ func (connector *DbConnector) GetPatternMetrics(pattern string) ([]string, error
 		if err == redis.ErrNil {
 			return make([]string, 0), nil
 		}
-		return nil, fmt.Errorf("failed to get pattern metrics for pattern %s, error: %v", pattern, err)
+		return nil, fmt.Errorf("failed to get pattern metrics for pattern %s, error: %w", pattern, err)
 	}
 	return metrics, nil
 }
@@ -179,7 +179,7 @@ func (connector *DbConnector) RemovePattern(pattern string) error {
 	c := connector.pool.Get()
 	defer c.Close()
 	if _, err := c.Do("SREM", patternsListKey, pattern); err != nil {
-		return fmt.Errorf("failed to remove pattern: %s, error: %v", pattern, err)
+		return fmt.Errorf("failed to remove pattern: %s, error: %w", pattern, err)
 	}
 	return nil
 }
@@ -206,15 +206,15 @@ func (connector *DbConnector) RemovePatternWithMetrics(pattern string) error {
 	}
 	c := connector.pool.Get()
 	defer c.Close()
-	c.Send("MULTI") //nolint
+	c.Send("MULTI")                          //nolint
 	c.Send("SREM", patternsListKey, pattern) //nolint
 	for _, metric := range metrics {
-		c.Send("DEL", metricDataKey(metric)) //nolint
+		c.Send("DEL", metricDataKey(metric))      //nolint
 		c.Send("DEL", metricRetentionKey(metric)) //nolint
 	}
 	c.Send("DEL", patternMetricsKey(pattern)) //nolint
 	if _, err = c.Do("EXEC"); err != nil {
-		return fmt.Errorf("failed to EXEC: %v", err)
+		return fmt.Errorf("failed to EXEC: %w", err)
 	}
 	return nil
 }
@@ -227,7 +227,7 @@ func (connector *DbConnector) RemoveMetricValues(metric string, toTime int64) er
 	c := connector.pool.Get()
 	defer c.Close()
 	if _, err := c.Do("ZREMRANGEBYSCORE", metricDataKey(metric), "-inf", toTime); err != nil {
-		return fmt.Errorf("failed to remove metrics from -inf to %v, error: %v", toTime, err)
+		return fmt.Errorf("failed to remove metrics from -inf to %v, error: %w", toTime, err)
 	}
 	return nil
 }
@@ -249,7 +249,7 @@ func (connector *DbConnector) RemoveMetricsValues(metrics []string, toTime int64
 		}
 	}
 	if _, err := c.Do("EXEC"); err != nil {
-		return fmt.Errorf("failed to EXEC remove metrics: %v", err)
+		return fmt.Errorf("failed to EXEC remove metrics: %w", err)
 	}
 	return nil
 }

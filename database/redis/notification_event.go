@@ -25,7 +25,7 @@ func (connector *DbConnector) GetNotificationEvents(triggerID string, start int6
 		if err == redis.ErrNil {
 			return make([]*moira.NotificationEvent, 0), nil
 		}
-		return nil, fmt.Errorf("failed to get range for trigger events, triggerID: %s, error: %s", triggerID, err.Error())
+		return nil, fmt.Errorf("failed to get range for trigger events, triggerID: %s, error: %w", triggerID, err)
 	}
 
 	return eventsData, nil
@@ -41,19 +41,19 @@ func (connector *DbConnector) PushNotificationEvent(event *moira.NotificationEve
 
 	c := connector.pool.Get()
 	defer c.Close()
-	c.Send("MULTI") //nolint
+	c.Send("MULTI")                                     //nolint
 	c.Send("LPUSH", notificationEventsList, eventBytes) //nolint
 	if event.TriggerID != "" {
-		c.Send("ZADD", triggerEventsKey(event.TriggerID), event.Timestamp, eventBytes) //nolint
+		c.Send("ZADD", triggerEventsKey(event.TriggerID), event.Timestamp, eventBytes)                     //nolint
 		c.Send("ZREMRANGEBYSCORE", triggerEventsKey(event.TriggerID), "-inf", time.Now().Unix()-eventsTTL) //nolint
 	}
 	if ui {
 		c.Send("LPUSH", notificationEventsUIList, eventBytes) //nolint
-		c.Send("LTRIM", notificationEventsUIList, 0, 100) //nolint
+		c.Send("LTRIM", notificationEventsUIList, 0, 100)     //nolint
 	}
 	_, err = c.Do("EXEC")
 	if err != nil {
-		return fmt.Errorf("failed to EXEC: %s", err.Error())
+		return fmt.Errorf("failed to EXEC: %w", err)
 	}
 	return nil
 }
@@ -76,7 +76,7 @@ func (connector *DbConnector) FetchNotificationEvent() (moira.NotificationEvent,
 
 	rawRes, err := c.Do("BRPOP", notificationEventsList, 1)
 	if err != nil {
-		return event, fmt.Errorf("failed to fetch event: %s", err.Error())
+		return event, fmt.Errorf("failed to fetch event: %w", err)
 	}
 	if rawRes == nil {
 		return event, database.ErrNil
@@ -87,10 +87,10 @@ func (connector *DbConnector) FetchNotificationEvent() (moira.NotificationEvent,
 	)
 	res, _ := redis.Values(rawRes, nil)
 	if _, err = redis.Scan(res, &key, &eventBytes); err != nil {
-		return event, fmt.Errorf("failed to parse event: %s", err.Error())
+		return event, fmt.Errorf("failed to parse event: %w", err)
 	}
 	if err := json.Unmarshal(eventBytes, &event); err != nil {
-		return event, fmt.Errorf("failed to parse event json %s: %s", eventBytes, err.Error())
+		return event, fmt.Errorf("failed to parse event json %s: %w", eventBytes, err)
 	}
 	if event.Values == nil { //TODO(litleleprikon): remove in moira v2.8.0. Compatibility with moira < v2.6.0
 		event.Values = make(map[string]float64)
@@ -108,7 +108,7 @@ func (connector *DbConnector) RemoveAllNotificationEvents() error {
 	defer c.Close()
 
 	if _, err := c.Do("DEL", notificationEventsList); err != nil {
-		return fmt.Errorf("failed to remove %s: %s", notificationEventsList, err.Error())
+		return fmt.Errorf("failed to remove %s: %w", notificationEventsList, err)
 	}
 
 	return nil

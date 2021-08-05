@@ -16,7 +16,7 @@ func MetricValues(values interface{}) ([]*moira.MetricValue, error) {
 		if err == redis.ErrNil {
 			return make([]*moira.MetricValue, 0), nil
 		}
-		return nil, fmt.Errorf("failed to read metricValues: %s", err.Error())
+		return nil, fmt.Errorf("failed to read metricValues: %w", err)
 	}
 	metricsValues := make([]*moira.MetricValue, 0, len(resultByMetricArr)/2) //nolint
 	for i := 0; i < len(resultByMetricArr); i += 2 {
@@ -28,17 +28,17 @@ func MetricValues(values interface{}) ([]*moira.MetricValue, error) {
 		if len(valuesArr) != 2 { //nolint
 			return nil, fmt.Errorf("value format is not valid: %s", val)
 		}
-		timestamp, err := strconv.ParseInt(valuesArr[0], 10, 64)
+		timestamp, err := strconv.ParseInt(valuesArr[0], 10, 64) // nolint
 		if err != nil {
-			return nil, fmt.Errorf("metric timestamp format is not valid: %s", err.Error())
+			return nil, fmt.Errorf("metric timestamp format is not valid: %w", err)
 		}
-		value, err := strconv.ParseFloat(valuesArr[1], 64)
+		value, err := strconv.ParseFloat(valuesArr[1], 64) // nolint
 		if err != nil {
-			return nil, fmt.Errorf("metric value format is not valid: %s", err.Error())
+			return nil, fmt.Errorf("metric value format is not valid: %w", err)
 		}
 		retentionTimestamp, err := redis.Int64(resultByMetricArr[i+1], nil)
 		if err != nil {
-			return nil, fmt.Errorf("retention timestamp format is not valid: %s", err.Error())
+			return nil, fmt.Errorf("retention timestamp format is not valid: %w", err)
 		}
 		metricValue := moira.MetricValue{
 			RetentionTimestamp: retentionTimestamp,

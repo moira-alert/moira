@@ -37,7 +37,7 @@ func (connector *DbConnector) RemoveUser(messenger, username string) error {
 	defer c.Close()
 	_, err := c.Do("DEL", usernameKey(messenger, username))
 	if err != nil {
-		return fmt.Errorf("failed to delete username '%s' from messenger '%s', error: %s", username, messenger, err.Error())
+		return fmt.Errorf("failed to delete username '%s' from messenger '%s', error: %w", username, messenger, err)
 	}
 	return nil
 }

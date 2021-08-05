@@ -95,12 +95,12 @@ func Check(rep interface{}, err error) (moira.CheckData, error) {
 		if err == redis.ErrNil {
 			return moira.CheckData{}, database.ErrNil
 		}
-		return moira.CheckData{}, fmt.Errorf("failed to read lastCheck: %s", err.Error())
+		return moira.CheckData{}, fmt.Errorf("failed to read lastCheck: %w", err)
 	}
 	checkSE := checkDataStorageElement{}
 	err = json.Unmarshal(bytes, &checkSE)
 	if err != nil {
-		return moira.CheckData{}, fmt.Errorf("failed to parse lastCheck json %s: %s", string(bytes), err.Error())
+		return moira.CheckData{}, fmt.Errorf("failed to parse lastCheck json %s: %w", string(bytes), err)
 	}
 	return checkSE.toCheckData(), nil
 }
@@ -110,7 +110,7 @@ func GetCheckBytes(check moira.CheckData) ([]byte, error) {
 	checkSE := toCheckDataStorageElement(check)
 	bytes, err := json.Marshal(checkSE)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal check data: %s", err.Error())
+		return nil, fmt.Errorf("failed to marshal check data: %w", err)
 	}
 	return bytes, nil
 }

@@ -1,7 +1,9 @@
 package checker
 
 import (
+	"errors"
 	"fmt"
+	"net"
 
 	"github.com/moira-alert/moira/checker/metrics/conversion"
 	metricSource "github.com/moira-alert/moira/metric_source"
@@ -35,6 +37,10 @@ func (triggerChecker *TriggerChecker) fetch() (map[string][]metricSource.MetricD
 		targetIndex++ // increasing target index to have target names started from 1 instead of 0
 		fetchResult, err := triggerChecker.source.Fetch(target, triggerChecker.from, triggerChecker.until, isSimpleTrigger)
 		if err != nil {
+			var e *net.OpError
+			if errors.As(err, &e) {
+				return nil, nil, err
+			}
 			return nil, nil, err
 		}
 		metricsData := fetchResult.GetMetricsData()

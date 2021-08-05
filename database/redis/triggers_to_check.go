@@ -47,7 +47,7 @@ func (connector *DbConnector) addTriggersToCheck(key string, triggerIDs []string
 	}
 	_, err := redis.Values(c.Do("EXEC"))
 	if err != nil {
-		return fmt.Errorf("failed to add triggers to check: %s", err.Error())
+		return fmt.Errorf("failed to add triggers to check: %w", err)
 	}
 	return nil
 }
@@ -60,7 +60,7 @@ func (connector *DbConnector) getTriggersToCheck(key string, count int) ([]strin
 		if err == redis.ErrNil {
 			return make([]string, 0), database.ErrNil
 		}
-		return make([]string, 0), fmt.Errorf("failed to pop trigger to check: %s", err.Error())
+		return make([]string, 0), fmt.Errorf("failed to pop trigger to check: %w", err)
 	}
 	return triggerIDs, err
 }
@@ -73,7 +73,7 @@ func (connector *DbConnector) getTriggersToCheckCount(key string) (int64, error)
 		if err == redis.ErrNil {
 			return 0, nil
 		}
-		return 0, fmt.Errorf("failed to get trigger to check count: %s", err.Error())
+		return 0, fmt.Errorf("failed to get trigger to check count: %w", err)
 	}
 	return triggersToCheckCount, nil
 }

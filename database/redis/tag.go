@@ -13,7 +13,7 @@ func (connector *DbConnector) GetTagNames() ([]string, error) {
 
 	tagNames, err := redis.Strings(c.Do("SMEMBERS", tagsKey))
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve tags: %s", err.Error())
+		return nil, fmt.Errorf("failed to retrieve tags: %w", err)
 	}
 	return tagNames, nil
 }
@@ -23,13 +23,13 @@ func (connector *DbConnector) RemoveTag(tagName string) error {
 	c := connector.pool.Get()
 	defer c.Close()
 
-	c.Send("MULTI") //nolint
+	c.Send("MULTI")                  //nolint
 	c.Send("SREM", tagsKey, tagName) //nolint
 	c.Send("DEL", tagSubscriptionKey(tagName))
 	c.Send("DEL", tagTriggersKey(tagName)) //nolint
 	_, err := c.Do("EXEC")
 	if err != nil {
-		return fmt.Errorf("failed to EXEC: %s", err.Error())
+		return fmt.Errorf("failed to EXEC: %w", err)
 	}
 	return nil
 }
@@ -44,7 +44,7 @@ func (connector *DbConnector) GetTagTriggerIDs(tagName string) ([]string, error)
 		if err == redis.ErrNil {
 			return make([]string, 0), nil
 		}
-		return nil, fmt.Errorf("failed to retrieve tag triggers:%s, err: %s", tagName, err.Error())
+		return nil, fmt.Errorf("failed to retrieve tag triggers:%s, err: %w", tagName, err)
 	}
 	return triggerIDs, nil
 }

@@ -109,6 +109,8 @@ func (triggerChecker *TriggerChecker) handleFetchError(checkData moira.CheckData
 		checkData.State = moira.StateEXCEPTION
 		checkData.Message = err.Error()
 		triggerChecker.logger.Warning(formatTriggerCheckException(triggerChecker.triggerID, err))
+	case ErrNetwork:
+		triggerChecker.logger.Error(err.Error())
 	default:
 		return triggerChecker.handleUndefinedError(checkData, err)
 	}

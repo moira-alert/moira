@@ -95,7 +95,7 @@ func (connector *DbConnector) SaveContact(contact *moira.ContactData) error {
 	}
 	_, err = c.Do("EXEC")
 	if err != nil {
-		return fmt.Errorf("failed to EXEC: %s", err.Error())
+		return fmt.Errorf("failed to EXEC: %w", err)
 	}
 	return nil
 }
@@ -115,7 +115,7 @@ func (connector *DbConnector) RemoveContact(contactID string) error {
 	c.Send("SREM", teamContactsKey(existing.Team), contactID) //nolint
 	_, err = c.Do("EXEC")
 	if err != nil {
-		return fmt.Errorf("failed to EXEC: %s", err.Error())
+		return fmt.Errorf("failed to EXEC: %w", err)
 	}
 	return nil
 }
@@ -127,7 +127,7 @@ func (connector *DbConnector) GetUserContactIDs(login string) ([]string, error) 
 
 	contacts, err := redis.Strings(c.Do("SMEMBERS", userContactsKey(login)))
 	if err != nil {
-		return nil, fmt.Errorf("failed to get contacts for user login %s: %s", login, err.Error())
+		return nil, fmt.Errorf("failed to get contacts for user login %s: %w", login, err)
 	}
 	return contacts, nil
 }
@@ -139,7 +139,7 @@ func (connector *DbConnector) GetTeamContactIDs(login string) ([]string, error) 
 
 	contacts, err := redis.Strings(c.Do("SMEMBERS", teamContactsKey(login)))
 	if err != nil {
-		return nil, fmt.Errorf("failed to get contacts for team login %s: %s", login, err.Error())
+		return nil, fmt.Errorf("failed to get contacts for team login %s: %w", login, err)
 	}
 	return contacts, nil
 }

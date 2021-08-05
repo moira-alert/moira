@@ -104,12 +104,12 @@ func Trigger(rep interface{}, err error) (moira.Trigger, error) {
 		if err == redis.ErrNil {
 			return moira.Trigger{}, database.ErrNil
 		}
-		return moira.Trigger{}, fmt.Errorf("failed to read trigger: %s", err.Error())
+		return moira.Trigger{}, fmt.Errorf("failed to read trigger: %w", err)
 	}
 	triggerSE := &triggerStorageElement{}
 	err = json.Unmarshal(bytes, triggerSE)
 	if err != nil {
-		return moira.Trigger{}, fmt.Errorf("failed to parse trigger json %s: %s", string(bytes), err.Error())
+		return moira.Trigger{}, fmt.Errorf("failed to parse trigger json %s: %w", string(bytes), err)
 	}
 
 	trigger := triggerSE.toTrigger()
@@ -121,7 +121,7 @@ func GetTriggerBytes(triggerID string, trigger *moira.Trigger) ([]byte, error) {
 	triggerSE := toTriggerStorageElement(trigger, triggerID)
 	bytes, err := json.Marshal(triggerSE)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal trigger: %s", err.Error())
+		return nil, fmt.Errorf("failed to marshal trigger: %w", err)
 	}
 	return bytes, nil
 }

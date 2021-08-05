@@ -34,8 +34,8 @@ func (connector *DbConnector) SetTriggerLastCheck(triggerID string, checkData *m
 
 	c := connector.pool.Get()
 	defer c.Close()
-	c.Send("MULTI") //nolint
-	c.Send("SET", metricLastCheckKey(triggerID), bytes) //nolint
+	c.Send("MULTI")                                               //nolint
+	c.Send("SET", metricLastCheckKey(triggerID), bytes)           //nolint
 	c.Send("ZADD", triggersChecksKey, checkData.Score, triggerID) //nolint
 	if selfStateCheckCountKey != "" {
 		c.Send("INCR", selfStateCheckCountKey) //nolint
@@ -50,7 +50,7 @@ func (connector *DbConnector) SetTriggerLastCheck(triggerID string, checkData *m
 	}
 	_, err = c.Do("EXEC")
 	if err != nil {
-		return fmt.Errorf("failed to EXEC: %s", err.Error())
+		return fmt.Errorf("failed to EXEC: %w", err)
 	}
 	return nil
 }
@@ -69,14 +69,14 @@ func (connector *DbConnector) getSelfStateCheckCountKey(isRemote bool) string {
 func (connector *DbConnector) RemoveTriggerLastCheck(triggerID string) error {
 	c := connector.pool.Get()
 	defer c.Close()
-	c.Send("MULTI") //nolint
-	c.Send("DEL", metricLastCheckKey(triggerID)) //nolint
-	c.Send("ZREM", triggersChecksKey, triggerID) //nolint
-	c.Send("SREM", badStateTriggersKey, triggerID) //nolint
+	c.Send("MULTI")                                                    //nolint
+	c.Send("DEL", metricLastCheckKey(triggerID))                       //nolint
+	c.Send("ZREM", triggersChecksKey, triggerID)                       //nolint
+	c.Send("SREM", badStateTriggersKey, triggerID)                     //nolint
 	c.Send("ZADD", triggersToReindexKey, time.Now().Unix(), triggerID) //nolint
 	_, err := c.Do("EXEC")
 	if err != nil {
-		return fmt.Errorf("failed to EXEC: %s", err.Error())
+		return fmt.Errorf("failed to EXEC: %w", err)
 	}
 
 	return nil
@@ -98,7 +98,7 @@ func (connector *DbConnector) SetTriggerCheckMaintenance(triggerID string, metri
 		var lastCheck = moira.CheckData{}
 		err := json.Unmarshal([]byte(lastCheckString), &lastCheck)
 		if err != nil {
-			return fmt.Errorf("failed to parse lastCheck json %s: %s", lastCheckString, err.Error())
+			return fmt.Errorf("failed to parse lastCheck json %s: %w", lastCheckString, err)
 		}
 		metricsCheck := lastCheck.Metrics
 		if len(metricsCheck) > 0 {

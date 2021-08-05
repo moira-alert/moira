@@ -67,7 +67,7 @@ func NewDatabase(logger moira.Logger, config Config, source DBSource) *DbConnect
 		TestOnBorrow: poolDialer.Test,
 	}
 	syncPool := &redis.Pool{
-		MaxIdle:      3, //nolint
+		MaxIdle:      3,  //nolint
 		MaxActive:    10, //nolint
 		Wait:         true,
 		IdleTimeout:  240 * time.Second, //nolint
@@ -162,7 +162,7 @@ func (connector *DbConnector) makePubSubConnection(channel string) (*redis.PubSu
 	psc := redis.PubSubConn{Conn: c}
 	if err := psc.Subscribe(channel); err != nil {
 		c.Close()
-		return nil, fmt.Errorf("failed to subscribe to '%s', error: %v", channel, err)
+		return nil, fmt.Errorf("failed to subscribe to '%s', error: %w", channel, err)
 	}
 	return &psc, nil
 }
@@ -205,7 +205,7 @@ func (connector *DbConnector) manageSubscriptions(tomb *tomb.Tomb, channel strin
 				connector.logger.Infof("psc.Receive() returned *net.OpError: %s. Reconnecting...", n.Err.Error())
 				newPsc, err := connector.makePubSubConnection(metricEventKey)
 				if err != nil {
-					connector.logger.Errorf("Failed to reconnect to subscription: %v", err)
+					connector.logger.Errorf("Failed to reconnect to subscription: %w", err)
 					<-time.After(receiveErrorSleepDuration)
 					continue
 				}

@@ -15,7 +15,7 @@ func (connector *DbConnector) FetchTriggersToReindex(from int64) ([]string, erro
 	response, err := redis.Strings(c.Do("ZRANGEBYSCORE", triggersToReindexKey, from, "+inf"))
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch triggers to reindex: %s", err.Error())
+		return nil, fmt.Errorf("failed to fetch triggers to reindex: %w", err)
 	}
 	if len(response) == 0 {
 		return make([]string, 0), nil
@@ -34,7 +34,7 @@ func (connector *DbConnector) RemoveTriggersToReindex(to int64) error {
 		if err == redis.ErrNil {
 			return nil
 		}
-		return fmt.Errorf("failed to remove triggers to reindex: %s", err.Error())
+		return fmt.Errorf("failed to remove triggers to reindex: %w", err)
 	}
 	return nil
 }

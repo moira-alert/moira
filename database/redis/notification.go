@@ -53,12 +53,12 @@ func (connector *DbConnector) GetNotifications(start, end int64) ([]*moira.Sched
 	c := connector.pool.Get()
 	defer c.Close()
 
-	c.Send("MULTI") //nolint
+	c.Send("MULTI")                                        //nolint
 	c.Send("ZRANGE", notifierNotificationsKey, start, end) //nolint
-	c.Send("ZCARD", notifierNotificationsKey) //nolint
+	c.Send("ZCARD", notifierNotificationsKey)              //nolint
 	rawResponse, err := redis.Values(c.Do("EXEC"))
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to EXEC: %s", err.Error())
+		return nil, 0, fmt.Errorf("failed to EXEC: %w", err)
 	}
 	if len(rawResponse) == 0 {
 		return make([]*moira.ScheduledNotification, 0), 0, nil
@@ -80,7 +80,7 @@ func (connector *DbConnector) RemoveAllNotifications() error {
 	defer c.Close()
 
 	if _, err := c.Do("DEL", notifierNotificationsKey); err != nil {
-		return fmt.Errorf("failed to remove %s: %s", notifierNotificationsKey, err.Error())
+		return fmt.Errorf("failed to remove %s: %w", notifierNotificationsKey, err)
 	}
 
 	return nil
@@ -124,7 +124,7 @@ func (connector *DbConnector) removeNotifications(notifications []*moira.Schedul
 	}
 	response, err := redis.Ints(c.Do("EXEC"))
 	if err != nil {
-		return 0, fmt.Errorf("failed to remove notifier-notification: %s", err.Error())
+		return 0, fmt.Errorf("failed to remove notifier-notification: %w", err)
 	}
 	total := 0
 	for _, val := range response {
@@ -203,7 +203,7 @@ func (connector *DbConnector) fetchNotificationsWithLimitDo(to int64, limit int6
 	c.Send("WATCH", notifierNotificationsKey) //nolint
 	response, err := redis.Values(c.Do("ZRANGEBYSCORE", notifierNotificationsKey, "-inf", to, "LIMIT", 0, limit))
 	if err != nil {
-		return nil, fmt.Errorf("failed to ZRANGEBYSCORE: %s", err)
+		return nil, fmt.Errorf("failed to ZRANGEBYSCORE: %w", err)
 	}
 
 	if len(response) == 0 {
@@ -212,7 +212,7 @@ func (connector *DbConnector) fetchNotificationsWithLimitDo(to int64, limit int6
 
 	notifications, err := reply.Notifications(response, nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to EXEC: %s", err)
+		return nil, fmt.Errorf("failed to EXEC: %w", err)
 	}
 
 	// ZRANGEBYSCORE with LIMIT may return not all notification with last timestamp
@@ -230,7 +230,7 @@ func (connector *DbConnector) fetchNotificationsWithLimitDo(to int64, limit int6
 		return connector.fetchNotificationsNoLimit(lastTs)
 	}
 
-	c.Send("MULTI") //nolint
+	c.Send("MULTI")                                                      //nolint
 	c.Send("ZREMRANGEBYSCORE", notifierNotificationsKey, "-inf", lastTs) //nolint
 	deleteCount, errDelete := redis.Values(c.Do("EXEC"))
 	if errDelete != nil {
@@ -252,12 +252,12 @@ func (connector *DbConnector) fetchNotificationsNoLimit(to int64) ([]*moira.Sche
 	c := connector.pool.Get()
 	defer c.Close()
 
-	c.Send("MULTI") //nolint
-	c.Send("ZRANGEBYSCORE", notifierNotificationsKey, "-inf", to) //nolint
+	c.Send("MULTI")                                                  //nolint
+	c.Send("ZRANGEBYSCORE", notifierNotificationsKey, "-inf", to)    //nolint
 	c.Send("ZREMRANGEBYSCORE", notifierNotificationsKey, "-inf", to) //nolint
 	response, err := redis.Values(c.Do("EXEC"))
 	if err != nil {
-		return nil, fmt.Errorf("failed to EXEC: %s", err)
+		return nil, fmt.Errorf("failed to EXEC: %w", err)
 	}
 	if len(response) == 0 {
 		return make([]*moira.ScheduledNotification, 0), nil
@@ -276,7 +276,7 @@ func (connector *DbConnector) AddNotification(notification *moira.ScheduledNotif
 
 	_, err = c.Do("ZADD", notifierNotificationsKey, notification.Timestamp, bytes)
 	if err != nil {
-		return fmt.Errorf("failed to add scheduled notification: %s, error: %s", string(bytes), err.Error())
+		return fmt.Errorf("failed to add scheduled notification: %s, error: %w", string(bytes), err)
 	}
 	return err
 }
@@ -296,7 +296,7 @@ func (connector *DbConnector) AddNotifications(notifications []*moira.ScheduledN
 	}
 	_, err := c.Do("EXEC")
 	if err != nil {
-		return fmt.Errorf("failed to EXEC: %s", err.Error())
+		return fmt.Errorf("failed to EXEC: %w", err)
 	}
 	return nil
 }

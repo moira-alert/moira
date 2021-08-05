@@ -13,7 +13,6 @@ import (
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
-
 	"github.com/moira-alert/moira/metrics"
 	mock_metric_source "github.com/moira-alert/moira/mock/metric_source"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
@@ -1425,6 +1424,81 @@ func TestGetExpressionValues(t *testing.T) {
 
 func TestTriggerChecker_handlePrepareError(t *testing.T) {
 	Convey("Test handlePrepareError", t, func() {
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+		logger, _ := logging.GetLogger("Test")
+
+		trigger := &moira.Trigger{}
+		triggerChecker := TriggerChecker{
+			triggerID: "test trigger",
+			trigger:   trigger,
+			database:  dataBase,
+			logger:    logger,
+		}
+		checkData := moira.CheckData{}
+
+		Convey("with ErrTriggerHasSameMetricNames", func() {
+			err := ErrTriggerHasSameMetricNames{}
+			pass, checkDataReturn, errReturn := triggerChecker.handlePrepareError(checkData, err)
+			So(errReturn, ShouldBeNil)
+			So(pass, ShouldBeTrue)
+			So(checkDataReturn, ShouldResemble, moira.CheckData{
+				State:   moira.StateERROR,
+				Message: err.Error(),
+			})
+		})
+		Convey("with ErrUnexpectedAloneMetric", func() {
+			err := conversion.ErrUnexpectedAloneMetric{}
+			checkData.Timestamp = int64(15)
+			triggerChecker.lastCheck = &moira.CheckData{
+				State:          moira.StateOK,
+				EventTimestamp: 10,
+			}
+			expectedCheckData := moira.CheckData{
+				Score:          100000,
+				State:          moira.StateEXCEPTION,
+				Message:        err.Error(),
+				Timestamp:      int64(15),
+				EventTimestamp: int64(15),
+			}
+			dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
+				IsTriggerEvent:   true,
+				TriggerID:        triggerChecker.triggerID,
+				State:            moira.StateEXCEPTION,
+				OldState:         getEventOldState(moira.StateOK, "", false),
+				Timestamp:        15,
+				Metric:           triggerChecker.trigger.Name,
+				MessageEventInfo: nil,
+			}, true)
+			dataBase.EXPECT().SetTriggerLastCheck("test trigger", &expectedCheckData, false)
+			pass, checkDataReturn, errReturn := triggerChecker.handlePrepareError(checkData, err)
+			So(errReturn, ShouldBeNil)
+			So(pass, ShouldBeFalse)
+			So(checkDataReturn, ShouldResemble, expectedCheckData)
+		})
+		Convey("with ErrEmptyAloneMetricsTarget-this error is handled as NODATA", func() {
+			err := conversion.NewErrEmptyAloneMetricsTarget("t2")
+			triggerChecker.lastCheck = &moira.CheckData{
+				State:          moira.StateNODATA,
+				EventTimestamp: 10,
+			}
+			expectedCheckData := moira.CheckData{
+				Score:          1000,
+				State:          moira.StateNODATA,
+				EventTimestamp: 10,
+			}
+			dataBase.EXPECT().SetTriggerLastCheck("test trigger", &expectedCheckData, false)
+			pass, checkDataReturn, errReturn := triggerChecker.handlePrepareError(checkData, err)
+			So(errReturn, ShouldBeNil)
+			So(pass, ShouldBeFalse)
+			So(checkDataReturn, ShouldResemble, expectedCheckData)
+		})
+	})
+}
+
+func TestTriggerChecker_handleFetchError(t *testing.T) {
+	Convey("Test handleFetchError", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)

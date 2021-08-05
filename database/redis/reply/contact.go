@@ -17,11 +17,11 @@ func Contact(rep interface{}, err error) (moira.ContactData, error) {
 		if err == redis.ErrNil {
 			return contact, database.ErrNil
 		}
-		return contact, fmt.Errorf("failed to read contact: %s", err.Error())
+		return contact, fmt.Errorf("failed to read contact: %w", err)
 	}
 	err = json.Unmarshal(bytes, &contact)
 	if err != nil {
-		return contact, fmt.Errorf("failed to parse contact json %s: %s", string(bytes), err.Error())
+		return contact, fmt.Errorf("failed to parse contact json %s: %w", string(bytes), err)
 	}
 	return contact, nil
 }
@@ -33,7 +33,7 @@ func Contacts(rep interface{}, err error) ([]*moira.ContactData, error) {
 		if err == redis.ErrNil {
 			return make([]*moira.ContactData, 0), nil
 		}
-		return nil, fmt.Errorf("failed to read contacts: %s", err.Error())
+		return nil, fmt.Errorf("failed to read contacts: %w", err)
 	}
 	contacts := make([]*moira.ContactData, len(values))
 	for i, value := range values {
