@@ -9,11 +9,11 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/checker/metrics/conversion"
+	"github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/expression"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
-
 	"github.com/moira-alert/moira/metrics"
 	mock_metric_source "github.com/moira-alert/moira/mock/metric_source"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
@@ -1494,6 +1494,86 @@ func TestTriggerChecker_handlePrepareError(t *testing.T) {
 			So(errReturn, ShouldBeNil)
 			So(pass, ShouldBeFalse)
 			So(checkDataReturn, ShouldResemble, expectedCheckData)
+		})
+	})
+}
+
+func TestTriggerChecker_handleFetchError(t *testing.T) {
+	Convey("Test handleFetchError", t, func() {
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+		logger := mock_moira_alert.NewMockLogger(mockCtrl)
+
+		trigger := &moira.Trigger{}
+		triggerChecker := TriggerChecker{
+			triggerID: "test trigger",
+			trigger:   trigger,
+			database:  dataBase,
+			logger:    logger,
+		}
+		checkData := moira.CheckData{}
+
+		Convey("with ErrDatabase", func() {
+			err := database.ErrDatabase{Err: fmt.Errorf("failed GET metric retention: local.random.diceroll, redis error: EOF")}
+			checkData.Timestamp = int64(15)
+			triggerChecker.lastCheck = &moira.CheckData{
+				State:          moira.StateOK,
+				EventTimestamp: 10,
+			}
+			expectedCheckData := moira.CheckData{
+				Score:     100000,
+				Timestamp: int64(15),
+				State:     moira.StateEXCEPTION,
+				Message:   "error: failed GET metric retention: local.random.diceroll, redis error: EOF",
+			}
+
+			gomock.InOrder(
+				logger.EXPECT().Error(
+					"TriggerCheckException database.ErrDatabase Trigger test trigger: "+
+						"error: failed GET metric retention: local.random.diceroll, redis error: EOF",
+				),
+				dataBase.EXPECT().SetTriggerLastCheck("test trigger", &expectedCheckData, false),
+			)
+
+			errReturn := triggerChecker.handleFetchError(checkData, err)
+			So(errReturn, ShouldBeNil)
+		})
+		Convey("with another error", func() {
+			err := fmt.Errorf("ooops, redis error")
+			checkData.Timestamp = int64(15)
+
+			triggerChecker.lastCheck = &moira.CheckData{
+				State:          moira.StateOK,
+				EventTimestamp: 10,
+			}
+			checkerMetrics := metrics.ConfigureCheckerMetrics(metrics.NewDummyRegistry(), false)
+			triggerChecker.metrics = checkerMetrics.LocalMetrics
+
+			expectedCheckData := moira.CheckData{
+				Score:          100000,
+				Timestamp:      int64(15),
+				EventTimestamp: int64(15),
+				State:          moira.StateEXCEPTION,
+				Message:        "ooops, redis error",
+			}
+
+			gomock.InOrder(
+				logger.EXPECT().Errorf("Trigger %s check failed: %s", triggerChecker.triggerID, err.Error()),
+				dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
+					IsTriggerEvent:   true,
+					TriggerID:        triggerChecker.triggerID,
+					OldState:         moira.StateOK,
+					State:            moira.StateEXCEPTION,
+					Timestamp:        int64(15),
+					Metric:           triggerChecker.trigger.Name,
+					MessageEventInfo: nil,
+				}, true),
+				dataBase.EXPECT().SetTriggerLastCheck("test trigger", &expectedCheckData, false),
+			)
+
+			errReturn := triggerChecker.handleFetchError(checkData, err)
+			So(errReturn, ShouldBeNil)
 		})
 	})
 }

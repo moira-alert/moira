@@ -1,15 +1,16 @@
 package redis
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
+	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/database"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	"github.com/patrickmn/go-cache"
 	. "github.com/smartystreets/goconvey/convey"
 	"gopkg.in/tomb.v2"
-
-	"github.com/moira-alert/moira"
 )
 
 func TestMetricsStoring(t *testing.T) {
@@ -417,9 +418,16 @@ func TestMetricsStoringErrorConnection(t *testing.T) {
 		err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{"metric1": {Value: 1, RetentionTimestamp: 1, Timestamp: 1, Retention: 60, Patterns: []string{"12"}, Metric: "123"}})
 		So(err, ShouldNotBeNil)
 
-		actual2, err := dataBase.GetMetricRetention("123")
-		So(actual2, ShouldEqual, 0)
-		So(err, ShouldNotBeNil)
+		Convey("GetMetricRetention should return ErrDatabase", func() {
+			actualRetention, actualErr := dataBase.GetMetricRetention("123")
+			So(actualRetention, ShouldEqual, 0)
+			expectedErr := database.ErrDatabase{
+				Err: fmt.Errorf(
+					"failed GET metric retention: 123, redis error: dial tcp :0: connect: can't assign requested address",
+				),
+			}
+			So(actualErr, ShouldHaveSameTypeAs, expectedErr)
+		})
 
 		err = dataBase.AddPatternMetric("123", "123234")
 		So(err, ShouldNotBeNil)

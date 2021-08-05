@@ -81,11 +81,14 @@ func (connector *DbConnector) getMetricRetention(metric string) (int64, error) {
 	defer c.Close()
 
 	retention, err := redis.Int64(c.Do("GET", metricRetentionKey(metric)))
+
 	if err != nil {
 		if err == redis.ErrNil {
 			return 60, database.ErrNil //nolint
 		}
-		return 0, fmt.Errorf("failed GET metric retention:%s, error: %v", metric, err)
+		return 0, database.ErrDatabase{
+			Err: fmt.Errorf("failed GET metric retention: %s, redis error: %v", metric, err),
+		}
 	}
 	return retention, nil
 }
@@ -206,10 +209,10 @@ func (connector *DbConnector) RemovePatternWithMetrics(pattern string) error {
 	}
 	c := connector.pool.Get()
 	defer c.Close()
-	c.Send("MULTI") //nolint
+	c.Send("MULTI")                          //nolint
 	c.Send("SREM", patternsListKey, pattern) //nolint
 	for _, metric := range metrics {
-		c.Send("DEL", metricDataKey(metric)) //nolint
+		c.Send("DEL", metricDataKey(metric))      //nolint
 		c.Send("DEL", metricRetentionKey(metric)) //nolint
 	}
 	c.Send("DEL", patternMetricsKey(pattern)) //nolint

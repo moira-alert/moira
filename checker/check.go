@@ -2,9 +2,9 @@ package checker
 
 import (
 	"fmt"
-
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/checker/metrics/conversion"
+	"github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/expression"
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
@@ -109,6 +109,13 @@ func (triggerChecker *TriggerChecker) handleFetchError(checkData moira.CheckData
 		checkData.State = moira.StateEXCEPTION
 		checkData.Message = err.Error()
 		triggerChecker.logger.Warning(formatTriggerCheckException(triggerChecker.triggerID, err))
+	case database.ErrDatabase:
+		// Do not send notifications, but change trigger status to EXCEPTION
+		checkData.State = moira.StateEXCEPTION
+		checkData.Message = err.Error()
+		checkData.UpdateScore()
+		triggerChecker.logger.Error(formatTriggerCheckException(triggerChecker.triggerID, err))
+		return triggerChecker.database.SetTriggerLastCheck(triggerChecker.triggerID, &checkData, triggerChecker.trigger.IsRemote)
 	default:
 		return triggerChecker.handleUndefinedError(checkData, err)
 	}

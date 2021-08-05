@@ -2,10 +2,12 @@ package checker
 
 import (
 	"fmt"
+
 	"testing"
 
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/database"
 	metricSource "github.com/moira-alert/moira/metric_source"
 	mock_metric_source "github.com/moira-alert/moira/mock/metric_source"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
@@ -123,14 +125,25 @@ func TestFetch(t *testing.T) {
 		},
 	}
 
-	Convey("Error test", t, func() {
-		metricErr := fmt.Errorf("ooops, metric error")
-		source.EXPECT().Fetch(pattern, from, until, true).Return(nil, metricErr)
-		actual, metrics, err := triggerChecker.fetch()
-		So(actual, ShouldBeNil)
-		So(metrics, ShouldBeNil)
-		So(err, ShouldBeError)
-		So(err, ShouldResemble, metricErr)
+	Convey("Test error return", t, func() {
+		Convey("with ErrDatabase error", func() {
+			metricErr := database.ErrDatabase{Err: fmt.Errorf("dial tcp 192.168.0.1:6379: i/o timeout")}
+			source.EXPECT().Fetch(pattern, from, until, true).Return(nil, &metricErr)
+			actual, metrics, err := triggerChecker.fetch()
+			So(actual, ShouldBeNil)
+			So(metrics, ShouldBeNil)
+			So(err, ShouldBeError)
+			So(err, ShouldResemble, &metricErr)
+		})
+		Convey("with another error", func() {
+			metricErr := fmt.Errorf("ooops, metric error")
+			source.EXPECT().Fetch(pattern, from, until, true).Return(nil, metricErr)
+			actual, metrics, err := triggerChecker.fetch()
+			So(actual, ShouldBeNil)
+			So(metrics, ShouldBeNil)
+			So(err, ShouldBeError)
+			So(err, ShouldResemble, metricErr)
+		})
 	})
 
 	Convey("Test no metrics in target", t, func() {

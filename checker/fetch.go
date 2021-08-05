@@ -2,7 +2,6 @@ package checker
 
 import (
 	"fmt"
-
 	"github.com/moira-alert/moira/checker/metrics/conversion"
 	metricSource "github.com/moira-alert/moira/metric_source"
 )
