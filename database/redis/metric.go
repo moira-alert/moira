@@ -34,7 +34,7 @@ func (connector *DbConnector) GetMetricsValues(metrics []string, from int64, unt
 	}
 	resultByMetrics, err := redis.Values(c.Do(""))
 	if err != nil {
-		return nil, fmt.Errorf("failed to get metric values: %v", err)
+		return nil, database.ErrDatabase{Err: fmt.Errorf("failed to get metric values: %v", err)}
 	}
 
 	res := make(map[string][]*moira.MetricValue, len(resultByMetrics))
@@ -172,7 +172,9 @@ func (connector *DbConnector) GetPatternMetrics(pattern string) ([]string, error
 		if err == redis.ErrNil {
 			return make([]string, 0), nil
 		}
-		return nil, fmt.Errorf("failed to get pattern metrics for pattern %s, error: %v", pattern, err)
+		return nil, database.ErrDatabase{
+			Err: fmt.Errorf("failed to get pattern metrics for pattern %s, error: %v", pattern, err),
+		}
 	}
 	return metrics, nil
 }

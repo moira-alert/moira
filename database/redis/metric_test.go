@@ -1,7 +1,6 @@
 package redis
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -411,9 +410,12 @@ func TestMetricsStoringErrorConnection(t *testing.T) {
 		So(actual, ShouldBeEmpty)
 		So(err, ShouldNotBeNil)
 
-		actual1, err := dataBase.GetMetricsValues([]string{"123"}, 0, 1)
-		So(actual1, ShouldBeEmpty)
-		So(err, ShouldNotBeNil)
+		Convey("GetMetricsValues should return ErrDatabase", func() {
+			actualValues, actualErr := dataBase.GetMetricsValues([]string{"123"}, 0, 1)
+			So(actualValues, ShouldBeEmpty)
+			So(err, ShouldNotBeNil)
+			So(actualErr, ShouldHaveSameTypeAs, database.ErrDatabase{})
+		})
 
 		err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{"metric1": {Value: 1, RetentionTimestamp: 1, Timestamp: 1, Retention: 60, Patterns: []string{"12"}, Metric: "123"}})
 		So(err, ShouldNotBeNil)
@@ -421,20 +423,19 @@ func TestMetricsStoringErrorConnection(t *testing.T) {
 		Convey("GetMetricRetention should return ErrDatabase", func() {
 			actualRetention, actualErr := dataBase.GetMetricRetention("123")
 			So(actualRetention, ShouldEqual, 0)
-			expectedErr := database.ErrDatabase{
-				Err: fmt.Errorf(
-					"failed GET metric retention: 123, redis error: dial tcp :0: connect: can't assign requested address",
-				),
-			}
-			So(actualErr, ShouldHaveSameTypeAs, expectedErr)
+			So(err, ShouldNotBeNil)
+			So(actualErr, ShouldHaveSameTypeAs, database.ErrDatabase{})
 		})
 
 		err = dataBase.AddPatternMetric("123", "123234")
 		So(err, ShouldNotBeNil)
 
-		actual, err = dataBase.GetPatternMetrics("123")
-		So(actual, ShouldBeEmpty)
-		So(err, ShouldNotBeNil)
+		Convey("GetPatternMetrics should return ErrDatabase", func() {
+			actualMetrics, actualErr := dataBase.GetPatternMetrics("123")
+			So(actualMetrics, ShouldBeEmpty)
+			So(err, ShouldNotBeNil)
+			So(actualErr, ShouldHaveSameTypeAs, database.ErrDatabase{})
+		})
 
 		err = dataBase.RemovePattern("123")
 		So(err, ShouldNotBeNil)
@@ -445,8 +446,11 @@ func TestMetricsStoringErrorConnection(t *testing.T) {
 		err = dataBase.RemovePatternWithMetrics("123")
 		So(err, ShouldNotBeNil)
 
-		err = dataBase.RemoveMetricValues("123", 1)
-		So(err, ShouldNotBeNil)
+		Convey("RemoveMetricValues should return error", func() {
+			actualErr := dataBase.RemoveMetricValues("123", 1)
+			So(actualErr, ShouldNotBeNil)
+			So(actualErr, ShouldBeError)
+		})
 
 		var tomb1 tomb.Tomb
 		ch, err := dataBase.SubscribeMetricEvents(&tomb1)
