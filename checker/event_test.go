@@ -225,56 +225,117 @@ func TestCompareTriggerStates(t *testing.T) {
 		})
 	})
 
-	triggerChecker.trigger.Schedule = &moira.ScheduleData{
-		TimezoneOffset: -300,
-		StartOffset:    0,
-		EndOffset:      1439,
-		Days: []moira.ScheduleDataDay{
-			{
-				Name:    "Mon",
-				Enabled: false,
-			},
-			{
-				Name:    "Tue",
-				Enabled: false,
-			},
-			{
-				Name:    "Wed",
-				Enabled: false,
-			},
-			{
-				Name:    "Thu",
-				Enabled: false,
-			},
-			{
-				Name:    "Fri",
-				Enabled: false,
-			},
-			{
-				Name:    "Sat",
-				Enabled: false,
-			},
-			{
-				Name:    "Sun",
-				Enabled: false,
-			},
-		},
-	}
-
-	Convey("Different states", t, func() {
-		Convey("Schedule does not allows", func() {
-			lastCheck := lastCheckExample
-			currentCheck := currentCheckExample
-			triggerChecker.lastCheck = &lastCheck
+	Convey("There are different states", t, func() {
+		lastCheck := lastCheckExample
+		currentCheck := currentCheckExample
+		triggerChecker.lastCheck = &lastCheck
+		currentCheck.EventTimestamp = currentCheck.Timestamp
+		Convey("When OK to ERROR transition", func() {
 			lastCheck.State = moira.StateOK
-			currentCheck.State = moira.StateNODATA
-			currentCheck.SuppressedState = lastCheck.State
-			actual, err := triggerChecker.compareTriggerStates(currentCheck)
+			currentCheck.State = moira.StateERROR
+			Convey("Should send notification", func() {
+				dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
+					TriggerID:      triggerChecker.triggerID,
+					Timestamp:      currentCheck.Timestamp,
+					State:          moira.StateERROR,
+					OldState:       moira.StateOK,
+					Metric:         "",
+					IsTriggerEvent: true,
+				}, true).Return(nil)
 
-			So(err, ShouldBeNil)
-			currentCheck.EventTimestamp = currentCheck.Timestamp
-			currentCheck.Suppressed = true
-			So(actual, ShouldResemble, currentCheck)
+				actual, err := triggerChecker.compareTriggerStates(currentCheck)
+
+				So(err, ShouldBeNil)
+				So(actual, ShouldResemble, currentCheck)
+			})
+			Convey("When schedule does not allows", func() {
+				triggerChecker.trigger.Schedule = &moira.ScheduleData{
+					TimezoneOffset: -300,
+					StartOffset:    0,
+					EndOffset:      1439,
+					Days: []moira.ScheduleDataDay{
+						{
+							Name:    "Mon",
+							Enabled: false,
+						},
+						{
+							Name:    "Tue",
+							Enabled: false,
+						},
+						{
+							Name:    "Wed",
+							Enabled: false,
+						},
+						{
+							Name:    "Thu",
+							Enabled: false,
+						},
+						{
+							Name:    "Fri",
+							Enabled: false,
+						},
+						{
+							Name:    "Sat",
+							Enabled: false,
+						},
+						{
+							Name:    "Sun",
+							Enabled: false,
+						},
+					},
+				}
+
+				Convey("Should not send notification", func() {
+					actual, err := triggerChecker.compareTriggerStates(currentCheck)
+
+					So(err, ShouldBeNil)
+					currentCheck.EventTimestamp = currentCheck.Timestamp
+					currentCheck.SuppressedState = lastCheck.State
+					currentCheck.Suppressed = true
+					So(actual, ShouldResemble, currentCheck)
+				})
+
+				triggerChecker.trigger.Schedule = nil
+			})
+		})
+		Convey("When ERROR to OK transition", func() {
+			lastCheck.State = moira.StateERROR
+			currentCheck.State = moira.StateOK
+			Convey("Should send notification", func() {
+				dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
+					TriggerID:      triggerChecker.triggerID,
+					Timestamp:      currentCheck.Timestamp,
+					State:          moira.StateOK,
+					OldState:       moira.StateERROR,
+					Metric:         "",
+					IsTriggerEvent: true,
+				}, true).Return(nil)
+
+				actual, err := triggerChecker.compareTriggerStates(currentCheck)
+
+				So(err, ShouldBeNil)
+				So(actual, ShouldResemble, currentCheck)
+			})
+		})
+		Convey("When OK to EXCEPTION transition", func() {
+			lastCheck.State = moira.StateOK
+			currentCheck.State = moira.StateEXCEPTION
+			Convey("Should not send notification", func() {
+				actual, err := triggerChecker.compareTriggerStates(currentCheck)
+
+				So(err, ShouldBeNil)
+				So(actual, ShouldResemble, currentCheck)
+			})
+		})
+		Convey("When EXCEPTION to OK transition", func() {
+			lastCheck.State = moira.StateEXCEPTION
+			currentCheck.State = moira.StateOK
+			Convey("Should not send notification", func() {
+				actual, err := triggerChecker.compareTriggerStates(currentCheck)
+
+				So(err, ShouldBeNil)
+				So(actual, ShouldResemble, currentCheck)
+			})
 		})
 	})
 }

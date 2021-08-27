@@ -680,14 +680,6 @@ func TestCheck(t *testing.T) {
 
 			gomock.InOrder(
 				source.EXPECT().Fetch(pattern, triggerChecker.from, triggerChecker.until, true).Return(nil, metricErr),
-				dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
-					IsTriggerEvent: true,
-					TriggerID:      triggerChecker.triggerID,
-					State:          moira.StateEXCEPTION,
-					OldState:       moira.StateOK,
-					Timestamp:      int64(67),
-					Metric:         triggerChecker.trigger.Name,
-				}, true).Return(nil),
 				dataBase.EXPECT().SetTriggerLastCheck(triggerChecker.triggerID, &lastCheck, triggerChecker.trigger.IsRemote).Return(nil),
 			)
 			err := triggerChecker.Check()
@@ -695,16 +687,7 @@ func TestCheck(t *testing.T) {
 		})
 
 		Convey("Switch trigger to EXCEPTION and back", func() {
-			Convey("Switch state to EXCEPTION. Event should be created", func() {
-				event := moira.NotificationEvent{
-					IsTriggerEvent: true,
-					TriggerID:      triggerChecker.triggerID,
-					State:          moira.StateEXCEPTION,
-					OldState:       moira.StateOK,
-					Timestamp:      67,
-					Metric:         triggerChecker.trigger.Name,
-				}
-
+			Convey("Switch state to EXCEPTION. Event should not be created", func() {
 				lastCheck := moira.CheckData{
 					Metrics:                      triggerChecker.lastCheck.Metrics,
 					State:                        moira.StateEXCEPTION,
@@ -718,14 +701,13 @@ func TestCheck(t *testing.T) {
 
 				gomock.InOrder(
 					source.EXPECT().Fetch(pattern, triggerChecker.from, triggerChecker.until, true).Return(nil, unknownFunctionExc),
-					dataBase.EXPECT().PushNotificationEvent(&event, true).Return(nil),
 					dataBase.EXPECT().SetTriggerLastCheck(triggerChecker.triggerID, &lastCheck, triggerChecker.trigger.IsRemote).Return(nil),
 				)
 				err := triggerChecker.Check()
 				So(err, ShouldBeNil)
 			})
 
-			Convey("Switch state to OK. Event should be created", func() {
+			Convey("Switch state to OK. Event should not be created", func() {
 				triggerChecker.lastCheck.State = moira.StateEXCEPTION
 				triggerChecker.lastCheck.EventTimestamp = 67
 				triggerChecker.lastCheck.LastSuccessfulCheckTimestamp = triggerChecker.until
@@ -737,15 +719,6 @@ func TestCheck(t *testing.T) {
 						Timestamp:      57,
 						Values:         map[string]float64{"t1": 4},
 					},
-				}
-
-				event := moira.NotificationEvent{
-					IsTriggerEvent: true,
-					TriggerID:      triggerChecker.triggerID,
-					State:          moira.StateOK,
-					OldState:       moira.StateEXCEPTION,
-					Timestamp:      67,
-					Metric:         triggerChecker.trigger.Name,
 				}
 
 				lastCheck := moira.CheckData{
@@ -763,7 +736,6 @@ func TestCheck(t *testing.T) {
 					fetchResult.EXPECT().GetPatternMetrics().Return([]string{metric}, nil),
 					dataBase.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL),
 					dataBase.EXPECT().RemoveMetricsValues([]string{metric}, triggerChecker.until-metricsTTL).Return(nil),
-					dataBase.EXPECT().PushNotificationEvent(&event, true).Return(nil),
 					dataBase.EXPECT().SetTriggerLastCheck(triggerChecker.triggerID, &lastCheck, triggerChecker.trigger.IsRemote).Return(nil),
 				)
 				err := triggerChecker.Check()
@@ -1463,15 +1435,6 @@ func TestTriggerChecker_handlePrepareError(t *testing.T) {
 				Timestamp:      int64(15),
 				EventTimestamp: int64(15),
 			}
-			dataBase.EXPECT().PushNotificationEvent(&moira.NotificationEvent{
-				IsTriggerEvent:   true,
-				TriggerID:        triggerChecker.triggerID,
-				State:            moira.StateEXCEPTION,
-				OldState:         getEventOldState(moira.StateOK, "", false),
-				Timestamp:        15,
-				Metric:           triggerChecker.trigger.Name,
-				MessageEventInfo: nil,
-			}, true)
 			dataBase.EXPECT().SetTriggerLastCheck("test trigger", &expectedCheckData, false)
 			pass, checkDataReturn, errReturn := triggerChecker.handlePrepareError(checkData, err)
 			So(errReturn, ShouldBeNil)
