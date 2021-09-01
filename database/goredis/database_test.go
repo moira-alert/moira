@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/moira-alert/moira"
+
 	"github.com/go-redis/redis/v8"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 
@@ -11,6 +13,10 @@ import (
 )
 
 var config = Config{Addrs: []string{"0.0.0.0:6379"}}
+
+func newTestDatabase(logger moira.Logger, config Config) *DbConnector {
+	return NewDatabase(logger, config, testSource)
+}
 
 func TestNewDatabase(t *testing.T) {
 	Convey("NewDatabase should return correct DBConnector", t, func() {
