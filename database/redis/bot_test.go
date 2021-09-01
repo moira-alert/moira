@@ -11,9 +11,9 @@ import (
 
 func TestBotDataStoring(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
-	dataBase := newTestDatabase(logger, config)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase := NewTestDatabase(logger)
+	dataBase.Flush()
+	defer dataBase.Flush()
 
 	Convey("Messengers manipulation", t, func() {
 		Convey("Get-set usernames", func() {
@@ -60,9 +60,9 @@ func TestBotDataStoring(t *testing.T) {
 
 func TestBotDataStoringErrorConnection(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
-	dataBase := newTestDatabase(logger, emptyConfig)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
+	dataBase.Flush()
+	defer dataBase.Flush()
 	Convey("Should throw error when no connection", t, func() {
 		actual1, err := dataBase.GetIDByUsername(messenger1, user1)
 		So(actual1, ShouldBeEmpty)

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/gomodule/redigo/redis"
+	"github.com/go-redis/redis/v8"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
 )
@@ -54,11 +54,10 @@ func GetNotificationBytes(notification moira.ScheduledNotification) ([]byte, err
 	return bytes, nil
 }
 
-// Notification converts redis DB reply to moira.ScheduledNotification object
-func Notification(rep interface{}, err error) (moira.ScheduledNotification, error) {
-	bytes, err := redis.Bytes(rep, err)
+// unmarshalNotification converts JSON to moira.ScheduledNotification object
+func unmarshalNotification(bytes []byte, err error) (moira.ScheduledNotification, error) {
 	if err != nil {
-		if err == redis.ErrNil {
+		if err == redis.Nil {
 			return moira.ScheduledNotification{}, database.ErrNil
 		}
 		return moira.ScheduledNotification{}, fmt.Errorf("failed to read scheduledNotification: %s", err.Error())
@@ -72,17 +71,19 @@ func Notification(rep interface{}, err error) (moira.ScheduledNotification, erro
 }
 
 // Notifications converts redis DB reply to moira.ScheduledNotification objects array
-func Notifications(rep interface{}, err error) ([]*moira.ScheduledNotification, error) {
-	values, err := redis.Values(rep, err)
+func Notifications(responses *redis.StringSliceCmd) ([]*moira.ScheduledNotification, error) {
+	if responses == nil || responses.Err() == redis.Nil {
+		return make([]*moira.ScheduledNotification, 0), nil
+	}
+
+	data, err := responses.Result()
 	if err != nil {
-		if err == redis.ErrNil {
-			return make([]*moira.ScheduledNotification, 0), nil
-		}
 		return nil, fmt.Errorf("failed to read ScheduledNotifications: %s", err.Error())
 	}
-	notifications := make([]*moira.ScheduledNotification, len(values))
-	for i, value := range values {
-		notification, err2 := Notification(value, err)
+
+	notifications := make([]*moira.ScheduledNotification, len(data))
+	for i, value := range data {
+		notification, err2 := unmarshalNotification([]byte(value), err)
 		if err2 != nil && err2 != database.ErrNil {
 			return nil, err2
 		} else if err2 == database.ErrNil {
