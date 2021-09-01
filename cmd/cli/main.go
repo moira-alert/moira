@@ -42,6 +42,7 @@ var (
 
 var (
 	plotting = flag.Bool("plotting", false, "enable images in all notifications")
+	toLocal  = flag.Bool("make-all-triggers-datasource-local", false, "make all triggers datasource local")
 )
 
 var (
@@ -54,6 +55,11 @@ var (
 var (
 	pushTriggerDump = flag.Bool("push-trigger-dump", false, "Get trigger dump in JSON from stdin and save it to redis")
 	triggerDumpFile = flag.String("trigger-dump-file", "", "File that holds trigger dump JSON from api method response")
+)
+
+var (
+	toClusterForwards = flag.Bool("move-to-cluster-forwards", false, "Transform database to work on cluster forwards")
+	toClusterReverse  = flag.Bool("move-to-cluster-reverse", false, "Transform database to work on cluster reverse")
 )
 
 func main() { //nolint
@@ -132,6 +138,30 @@ func main() { //nolint
 			logger.Fatal(err)
 		}
 		logger.Info("Dump was pushed")
+	}
+
+	if *toClusterForwards {
+		logger.Info("Moving to cluster forwards")
+		err := moveToClusterForwards(logger, dataBase)
+		if err != nil {
+			logger.Fatalf("Failed to move to cluster forwards: %s", err.Error())
+		}
+	}
+
+	if *toClusterReverse {
+		logger.Info("Moving to cluster reverse")
+		err := moveToClusterReverse(logger, dataBase)
+		if err != nil {
+			logger.Fatalf("Failed to move to cluster reverse: %s", err.Error())
+		}
+	}
+
+	if *toLocal {
+		logger.Info("Making all triggers datasource local")
+		err := makeAllTriggersDataSourceLocal(logger, dataBase)
+		if err != nil {
+			logger.Fatalf("Failed to make all triggers datasource local: %s", err.Error())
+		}
 	}
 }
 

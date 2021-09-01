@@ -3,7 +3,6 @@ module github.com/moira-alert/moira
 go 1.16
 
 require (
-	github.com/FZambia/sentinel v1.1.0
 	github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible
 	github.com/PagerDuty/go-pagerduty v1.3.0
 	github.com/RoaringBitmap/roaring v0.5.1 // indirect
@@ -16,7 +15,7 @@ require (
 	github.com/blevesearch/segment v0.9.0 // indirect
 	github.com/bwmarrin/discordgo v0.22.0
 	github.com/carlosdp/twiliogo v0.0.0-20161027183705-b26045ebb9d1
-	github.com/cespare/xxhash/v2 v2.1.1
+	github.com/cespare/xxhash/v2 v2.1.2
 	github.com/couchbase/vellum v1.0.2 // indirect
 	github.com/cyberdelia/go-metrics-graphite v0.0.0-20161219230853-39f87cc3b432
 	github.com/cznic/b v0.0.0-20181122101859-a26611c4d92d // indirect
@@ -24,20 +23,19 @@ require (
 	github.com/dustin/go-humanize v1.0.0
 	github.com/etcd-io/bbolt v1.3.3 // indirect
 	github.com/fatih/color v1.9.0 // indirect
-	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/glycerine/go-unsnap-stream v0.0.0-20190901134440-81cf024a9e0a // indirect
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/go-chi/render v1.0.1
 	github.com/go-graphite/carbonapi v0.0.0-20201019162650-b789c0eaed8a
 	github.com/go-graphite/protocol v0.4.3
-	github.com/go-redsync/redsync v1.4.2
+	github.com/go-redis/redis/v8 v8.11.4
+	github.com/go-redsync/redsync/v4 v4.4.4
 	github.com/gofrs/uuid v3.3.0+incompatible
 	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/golang/mock v1.6.0
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/gomodule/redigo v2.0.0+incompatible
-	github.com/google/go-cmp v0.5.2 // indirect
 	github.com/google/go-querystring v1.0.1-0.20190318165438-c8c88dbee036 // indirect
 	github.com/gopherjs/gopherjs v0.0.0-20200217142428-fce0ec30dd00 // indirect
 	github.com/gotokatsuya/ipare v0.0.0-20161202043954-fd52c5b6c44b
@@ -45,7 +43,6 @@ require (
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2-0.20190406162018-d3fcbee8e181 // indirect
 	github.com/hashicorp/go-hclog v0.14.1 // indirect
-	github.com/hashicorp/go-multierror v1.1.0 // indirect
 	github.com/hashicorp/go-retryablehttp v0.6.7 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/karriereat/blackfriday-slack v0.1.0
@@ -92,7 +89,6 @@ require (
 	golang.org/x/image v0.0.0-20200927104501-e162460cd6b5 // indirect
 	golang.org/x/lint v0.0.0-20200302205851-738671d3881b // indirect
 	gonum.org/v1/netlib v0.0.0-20200824093956-f0ca4b3a5ef5 // indirect
-	google.golang.org/protobuf v1.25.0 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/check.v1 v1.0.0-20200902074654-038fdea0a05b // indirect
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
@@ -100,7 +96,7 @@ require (
 	gopkg.in/ini.v1 v1.62.0 // indirect
 	gopkg.in/tomb.v2 v2.0.0-20161208151619-d5d1b5820637
 	gopkg.in/tucnak/telebot.v2 v2.3.4
-	gopkg.in/yaml.v2 v2.3.0
+	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 // indirect
 	honnef.co/go/tools v0.0.1-2020.1.5 // indirect
 )
