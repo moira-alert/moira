@@ -14,9 +14,9 @@ import (
 
 func TestLastCheck(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, config)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase := NewTestDatabase(logger)
+	dataBase.Flush()
+	defer dataBase.Flush()
 	var triggerMaintenanceTS int64
 
 	Convey("LastCheck manipulation", t, func() {
@@ -223,7 +223,7 @@ func TestLastCheck(t *testing.T) {
 		})
 
 		Convey("Test last check manipulations update 'triggers to reindex' list", func() {
-			dataBase.flush()
+			dataBase.Flush()
 			triggerID := uuid.Must(uuid.NewV4()).String()
 
 			// there was no trigger with such ID, so function should return true
@@ -309,9 +309,9 @@ func TestLastCheck(t *testing.T) {
 
 func TestRemoteLastCheck(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, config)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase := NewTestDatabase(logger)
+	dataBase.Flush()
+	defer dataBase.Flush()
 
 	Convey("LastCheck manipulation", t, func() {
 		Convey("Test read write delete", func() {
@@ -397,9 +397,9 @@ func TestRemoteLastCheck(t *testing.T) {
 
 func TestLastCheckErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, emptyConfig)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
+	dataBase.Flush()
+	defer dataBase.Flush()
 	Convey("Should throw error when no connection", t, func() {
 		actual1, err := dataBase.GetTriggerLastCheck("123")
 		So(actual1, ShouldResemble, moira.CheckData{})
@@ -423,9 +423,9 @@ func TestLastCheckErrorConnection(t *testing.T) {
 
 func TestMaintenanceUserSave(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, config)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase := NewTestDatabase(logger)
+	dataBase.Flush()
+	defer dataBase.Flush()
 	var triggerMaintenanceTS int64
 
 	Convey("Check user saving for trigger maintenance", t, func() {

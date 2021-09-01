@@ -1,8 +1,6 @@
 #See https://moira.readthedocs.io/en/latest/installation/configuration.html for config explanation
 redis:
-  host: redis
-  port: "6379"
-  dbid: 0
+  addrs: "redis:6379"
   metrics_ttl: 3h
 telemetry:
   graphite:

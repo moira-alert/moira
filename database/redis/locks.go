@@ -4,14 +4,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/go-redsync/redsync"
+	"github.com/go-redsync/redsync/v4"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
 )
 
 // NewLock returns the implementation of moira.Lock which can be used to Acquire or Release the lock
 func (connector *DbConnector) NewLock(name string, ttl time.Duration) moira.Lock {
-	mutex := connector.sync.NewMutex(name, redsync.SetExpiry(ttl), redsync.SetTries(1))
+	mutex := connector.sync.NewMutex(name, redsync.WithExpiry(ttl), redsync.WithTries(1))
 	return &Lock{name: name, ttl: ttl, mutex: mutex}
 }
 
@@ -19,7 +19,7 @@ func (connector *DbConnector) NewLock(name string, ttl time.Duration) moira.Lock
 type Lock struct {
 	name   string
 	ttl    time.Duration
-	mutex  *redsync.Mutex
+	mutex  moira.Mutex
 	extend chan struct{}
 	m      sync.Mutex
 	isHeld bool
@@ -37,6 +37,10 @@ func (lock *Lock) Acquire(stop <-chan struct{}) (<-chan struct{}, error) {
 
 		if err == database.ErrLockAlreadyHeld {
 			return nil, database.ErrLockAlreadyHeld
+		}
+
+		if err == database.ErrLockNotAcquired {
+			return nil, database.ErrLockNotAcquired
 		}
 
 		select {
@@ -85,7 +89,7 @@ func (lock *Lock) tryAcquire() (<-chan struct{}, error) {
 	return lost, nil
 }
 
-func extendMutex(mutex *redsync.Mutex, ttl time.Duration, done chan struct{}, stop <-chan struct{}) {
+func extendMutex(mutex moira.Mutex, ttl time.Duration, done chan struct{}, stop <-chan struct{}) {
 	defer close(done)
 	extendTicker := time.NewTicker(ttl / 3) //nolint
 	defer extendTicker.Stop()
