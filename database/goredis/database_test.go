@@ -13,6 +13,7 @@ import (
 )
 
 var config = Config{Addrs: []string{"0.0.0.0:6379"}}
+var wrongConfig = Config{Addrs: []string{"0.0.0.0:8379"}}
 
 func newTestDatabase(logger moira.Logger, config Config) *DbConnector {
 	return NewDatabase(logger, config, testSource)
