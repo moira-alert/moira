@@ -2,7 +2,9 @@ package goredis
 
 import (
 	"fmt"
+
 	"github.com/go-redis/redis/v8"
+
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/database/goredis/reply"
