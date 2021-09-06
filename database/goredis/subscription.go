@@ -89,7 +89,7 @@ func (connector *DbConnector) updateSubscription(newSubscription *moira.Subscrip
 	c := *connector.client
 
 	pipe := c.TxPipeline()                                                  //nolint
-	addSendSubscriptionRequest(pipe, connector.context, *newSubscription, oldSubscription) //nolint
+	addSendSubscriptionRequest(connector.context, pipe, *newSubscription, oldSubscription) //nolint
 	_, err := pipe.Exec(connector.context)
 	if err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
@@ -129,7 +129,7 @@ func (connector *DbConnector) updateSubscriptions(oldSubscriptions []*moira.Subs
 
 	pipe := c.TxPipeline()
 	for i, newSubscription := range newSubscriptions {
-		addSendSubscriptionRequest(pipe, connector.context, *newSubscription, oldSubscriptions[i]) //nolint
+		addSendSubscriptionRequest(connector.context, pipe, *newSubscription, oldSubscriptions[i]) //nolint
 	}
 	_, err := pipe.Exec(connector.context)
 	if err != nil {
@@ -230,7 +230,7 @@ func (connector *DbConnector) getSubscriptionsIDsByTags(tags []string) ([]string
 	return values, nil
 }
 
-func addSendSubscriptionRequest(pipe redis.Pipeliner, context context.Context, subscription moira.SubscriptionData, oldSubscription *moira.SubscriptionData) error {
+func addSendSubscriptionRequest(context context.Context, pipe redis.Pipeliner, subscription moira.SubscriptionData, oldSubscription *moira.SubscriptionData) error {
 	if subscription.AnyTags {
 		subscription.Tags = nil
 	}
