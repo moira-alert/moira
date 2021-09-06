@@ -306,7 +306,7 @@ func TestSubscriptionData(t *testing.T) {
 
 func TestSubscriptionErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, wrongConfig)
+	dataBase := newTestDatabase(logger, incorrectConfig)
 	dataBase.flush()
 	defer dataBase.flush()
 	Convey("Should throw error when no connection", t, func() {
