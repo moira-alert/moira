@@ -83,13 +83,13 @@ func Notifications(responses *redis.StringSliceCmd) ([]*moira.ScheduledNotificat
 
 	notifications := make([]*moira.ScheduledNotification, len(data))
 	for i, value := range data {
-		nf, err2 := unmarshalNotification([]byte(value), err)
+		notification, err2 := unmarshalNotification([]byte(value), err)
 		if err2 != nil && err2 != database.ErrNil {
 			return nil, err2
 		} else if err2 == database.ErrNil {
 			notifications[i] = nil
 		} else {
-			notifications[i] = &nf
+			notifications[i] = &notification
 		}
 	}
 	return notifications, nil
