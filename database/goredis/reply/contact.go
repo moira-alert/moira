@@ -10,10 +10,8 @@ import (
 	"github.com/moira-alert/moira"
 )
 
-// Contact converts redis DB reply to moira.ContactData object
-func Contact(rep *redis.StringCmd) (moira.ContactData, error) {
+func unmarshalContact(bytes []byte, err error) (moira.ContactData, error) {
 	contact := moira.ContactData{}
-	bytes, err := rep.Bytes()
 	if err != nil {
 		if err == redis.Nil {
 			return contact, database.ErrNil
@@ -29,14 +27,19 @@ func Contact(rep *redis.StringCmd) (moira.ContactData, error) {
 	return contact, nil
 }
 
+// Contact converts redis DB reply to moira.ContactData object
+func Contact(rep *redis.StringCmd) (moira.ContactData, error) {
+	return unmarshalContact(rep.Bytes())
+}
+
 // Contacts converts redis DB reply to moira.ContactData objects array
 func Contacts(rep []*redis.StringCmd) ([]*moira.ContactData, error) {
 	contacts := make([]*moira.ContactData, len(rep))
 	for i, value := range rep {
-		contact, err2 := Contact(value)
-		if err2 != nil && err2 != database.ErrNil {
-			return nil, err2
-		} else if err2 == database.ErrNil {
+		contact, err := unmarshalContact(value.Bytes())
+		if err != nil && err != database.ErrNil {
+			return nil, err
+		} else if err == database.ErrNil {
 			contacts[i] = nil
 		} else {
 			contacts[i] = &contact
