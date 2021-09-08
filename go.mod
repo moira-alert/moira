@@ -23,6 +23,7 @@ require (
 	github.com/go-graphite/protocol v0.4.3
 	github.com/go-redis/redis/v8 v8.11.3
 	github.com/go-redsync/redsync v1.4.2
+	github.com/go-redsync/redsync/v4 v4.4.1
 	github.com/gofrs/uuid v3.3.0+incompatible
 	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
@@ -36,7 +37,6 @@ require (
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2-0.20190406162018-d3fcbee8e181 // indirect
 	github.com/hashicorp/go-hclog v0.14.1 // indirect
-	github.com/hashicorp/go-multierror v1.1.0 // indirect
 	github.com/hashicorp/go-retryablehttp v0.6.7 // indirect
 	github.com/karriereat/blackfriday-slack v0.1.0
 	github.com/kr/text v0.2.0 // indirect
@@ -67,7 +67,6 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.7.1 // indirect
 	github.com/stretchr/objx v0.3.0 // indirect
-	github.com/stretchr/testify v1.6.1 // indirect
 	github.com/writeas/go-strip-markdown v2.0.1+incompatible
 	github.com/xiam/to v0.0.0-20200126224905-d60d31e03561
 	go.uber.org/multierr v1.6.0 // indirect
