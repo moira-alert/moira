@@ -31,6 +31,7 @@ require (
 	github.com/go-graphite/protocol v0.4.3
 	github.com/go-redis/redis/v8 v8.11.3
 	github.com/go-redsync/redsync v1.4.2
+	github.com/go-redsync/redsync/v4 v4.4.1
 	github.com/gofrs/uuid v3.3.0+incompatible
 	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
@@ -44,7 +45,6 @@ require (
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2-0.20190406162018-d3fcbee8e181 // indirect
 	github.com/hashicorp/go-hclog v0.14.1 // indirect
-	github.com/hashicorp/go-multierror v1.1.0 // indirect
 	github.com/hashicorp/go-retryablehttp v0.6.7 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/karriereat/blackfriday-slack v0.1.0
@@ -78,7 +78,6 @@ require (
 	github.com/spf13/viper v1.7.1 // indirect
 	github.com/steveyen/gtreap v0.1.0 // indirect
 	github.com/stretchr/objx v0.3.0 // indirect
-	github.com/stretchr/testify v1.6.1 // indirect
 	github.com/syndtr/goleveldb v1.0.0 // indirect
 	github.com/tecbot/gorocksdb v0.0.0-20191217155057-f0fad39f321c // indirect
 	github.com/willf/bitset v1.1.11 // indirect
