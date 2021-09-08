@@ -20,7 +20,7 @@ func (connector *DbConnector) GetContact(id string) (moira.ContactData, error) {
 	if result.Err() == redis.Nil {
 		return contact, database.ErrNil
 	}
-	contact, err := reply.Contact(*result)
+	contact, err := reply.Contact(result)
 	if err != nil {
 		return contact, err
 	}
@@ -31,15 +31,12 @@ func (connector *DbConnector) GetContact(id string) (moira.ContactData, error) {
 // GetContacts returns contacts data by given ids, len of contactIDs is equal to len of returned values array.
 // If there is no object by current ID, then nil is returned
 func (connector *DbConnector) GetContacts(contactIDs []string) ([]*moira.ContactData, error) {
-	contacts := make([]*moira.ContactData, 0, len(contactIDs))
 	results := make([]*redis.StringCmd, 0, len(contactIDs))
 
 	c := *connector.client
 	pipe := c.TxPipeline()
-
 	for _, id := range contactIDs {
 		result := pipe.Get(connector.context, contactKey(id))
-
 		results = append(results, result)
 	}
 	_, err := pipe.Exec(connector.context)
@@ -47,17 +44,9 @@ func (connector *DbConnector) GetContacts(contactIDs []string) ([]*moira.Contact
 		return nil, err
 	}
 
-	for i := range results {
-		result := results[i]
-		if result.Val() != "" {
-			contact, err := reply.Contact(*result)
-			if err != nil {
-				return nil, err
-			}
-			contacts = append(contacts, &contact)
-		} else {
-			contacts = append(contacts, nil)
-		}
+	contacts, err := reply.Contacts(results)
+	if err != nil {
+		return nil, err
 	}
 
 	for i := range contacts {
