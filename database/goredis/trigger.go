@@ -49,7 +49,7 @@ func (connector *DbConnector) GetTrigger(triggerID string) (moira.Trigger, error
 	triggerTags := pipe.SMembers(connector.context, triggerTagsKey(triggerID))
 	_, err := pipe.Exec(connector.context)
 	if err != nil {
-		if err == redis.Nil  {
+		if err == redis.Nil {
 			return moira.Trigger{}, database.ErrNil
 		}
 		return moira.Trigger{}, fmt.Errorf("failed to EXEC: %s", err.Error())

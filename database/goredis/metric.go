@@ -3,12 +3,12 @@ package goredis
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/database/goredis/reply"
-	"github.com/patrickmn/go-cache"
 	"strconv"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/database/goredis/reply"
+	"github.com/patrickmn/go-cache"
 )
 
 // GetPatterns gets updated patterns array
