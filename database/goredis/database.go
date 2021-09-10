@@ -8,6 +8,7 @@ import (
 	"github.com/go-redsync/redsync/v4"
 	"github.com/go-redsync/redsync/v4/redis/goredis/v8"
 	"github.com/moira-alert/moira"
+	"github.com/patrickmn/go-cache"
 )
 
 // DBSource is type for describing who create database instance
@@ -27,6 +28,7 @@ const (
 type DbConnector struct {
 	client  *redis.UniversalClient
 	logger  moira.Logger
+	retentionSavingCache *cache.Cache
 	context context.Context
 	sync    *redsync.Redsync
 	source  DBSource
@@ -45,6 +47,7 @@ func NewDatabase(logger moira.Logger, config Config, source DBSource) *DbConnect
 		client:  &client,
 		logger:  logger,
 		context: ctx,
+		retentionSavingCache: cache.New(cache.NoExpiration, cache.DefaultExpiration),
 		source:  source,
 		sync:    redsync.New(syncPool),
 	}
