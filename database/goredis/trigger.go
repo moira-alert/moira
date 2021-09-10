@@ -267,7 +267,8 @@ func (connector *DbConnector) GetTriggerChecks(triggerIDs []string) ([]*moira.Tr
 	triggerChecks := make([]*moira.TriggerCheck, len(slices))
 	for i, slice := range slices {
 		triggerID := slice[0].(string)
-		trigger, err := connector.getTriggerWithTags(slice[1].(*redis.StringCmd), slice[2].(*redis.StringSliceCmd), triggerID)
+		triggerCmd, tagCmd := slice[1].(*redis.StringCmd), slice[2].(*redis.StringSliceCmd)
+		trigger, err := connector.getTriggerWithTags(triggerCmd, tagCmd, triggerID)
 		if err != nil {
 			if err == database.ErrNil {
 				continue
