@@ -657,9 +657,9 @@ func TestTriggerErrorConnection(t *testing.T) {
 		So(err, ShouldNotBeNil)
 		So(actual1, ShouldResemble, moira.Trigger{})
 
-		actual2, err := dataBase.GetTriggers([]string{})
-		So(err, ShouldBeNil)
-		So(actual2, ShouldResemble, []*moira.Trigger{})
+		actual2, err := dataBase.GetTriggers([]string{""})
+		So(err, ShouldNotBeNil)
+		So(actual2, ShouldBeNil)
 
 		actual3, err := dataBase.GetTriggerChecks([]string{})
 		So(err, ShouldNotBeNil)
