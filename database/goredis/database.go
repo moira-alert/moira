@@ -26,12 +26,12 @@ const (
 
 // DbConnector contains redis client
 type DbConnector struct {
-	client  *redis.UniversalClient
-	logger  moira.Logger
+	client               *redis.UniversalClient
+	logger               moira.Logger
 	retentionSavingCache *cache.Cache
-	context context.Context
-	sync    *redsync.Redsync
-	source  DBSource
+	context              context.Context
+	sync                 *redsync.Redsync
+	source               DBSource
 }
 
 func NewDatabase(logger moira.Logger, config Config, source DBSource) *DbConnector {
@@ -44,12 +44,12 @@ func NewDatabase(logger moira.Logger, config Config, source DBSource) *DbConnect
 	syncPool := goredis.NewPool(client)
 
 	connector := DbConnector{
-		client:  &client,
-		logger:  logger,
-		context: ctx,
+		client:               &client,
+		logger:               logger,
+		context:              ctx,
 		retentionSavingCache: cache.New(cache.NoExpiration, cache.DefaultExpiration),
-		source:  source,
-		sync:    redsync.New(syncPool),
+		source:               source,
+		sync:                 redsync.New(syncPool),
 	}
 	return &connector
 }
