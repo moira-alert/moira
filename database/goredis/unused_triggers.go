@@ -3,6 +3,7 @@ package goredis
 import (
 	"fmt"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/moira-alert/moira"
 )
 
@@ -23,6 +24,21 @@ func (connector *DbConnector) MarkTriggersAsUnused(triggerIDs ...string) error {
 		return fmt.Errorf("failed to mark triggers as unused: %s", err.Error())
 	}
 	return nil
+}
+
+// GetUnusedTriggerIDs returns all unused trigger IDs
+func (connector *DbConnector) GetUnusedTriggerIDs() ([]string, error) {
+	ctx := connector.context
+	c := *connector.client
+
+	triggerIds, err := c.SMembers(ctx, unusedTriggersKey).Result()
+	if err != nil {
+		if err == redis.Nil {
+			return make([]string, 0), nil
+		}
+		return nil, fmt.Errorf("failed to get all unused triggers: %s", err.Error())
+	}
+	return triggerIds, nil
 }
 
 // MarkTriggersAsUsed removes trigger IDs from Redis set
