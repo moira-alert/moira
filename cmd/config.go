@@ -2,9 +2,10 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/moira-alert/moira/metrics"
 	"io/ioutil"
 	"strings"
+
+	"github.com/moira-alert/moira/metrics"
 
 	"github.com/moira-alert/moira/image_store/s3"
 	remoteSource "github.com/moira-alert/moira/metric_source/remote"

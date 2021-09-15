@@ -106,7 +106,7 @@ func (connector *DbConnector) manageSubscriptions(tomb *tomb.Tomb, channel strin
 	go func() {
 		for {
 			n, _ := c.Receive(connector.context)
-			switch n.(type) {
+			switch n.(type) { // nolint
 			case redis.Message:
 				if len(n.(redis.Message).Payload) == 0 {
 					continue
