@@ -100,26 +100,41 @@ func (connector *DbConnector) SaveMetrics(metrics map[string]*moira.MatchedMetri
 		return nil
 	}
 
+	var err error
 	c := *connector.client
+	ctx := connector.context
+
 	for _, metric := range metrics {
 		metricValue := fmt.Sprintf("%v %v", metric.Timestamp, metric.Value)
 		z := &redis.Z{Score: float64(metric.RetentionTimestamp), Member: metricValue}
-		c.ZAdd(connector.context, metricDataKey(metric.Metric), z)
+		if err = c.ZAdd(ctx, metricDataKey(metric.Metric), z).Err(); err != nil {
+			return err
+		}
 
-		if err := connector.retentionSavingCache.Add(metric.Metric, true, cache.DefaultExpiration); err == nil {
-			c.Set(connector.context, metricRetentionKey(metric.Metric), metric.Retention, redis.KeepTTL)
+		if err = connector.retentionSavingCache.Add(metric.Metric, true, cache.DefaultExpiration); err == nil {
+			if err = c.Set(ctx, metricRetentionKey(metric.Metric), metric.Retention, redis.KeepTTL).Err(); err != nil {
+				return err
+			}
 		}
 
 		for _, pattern := range metric.Patterns {
-			c.SAdd(connector.context, patternMetricsKey(pattern), metric.Metric)
-			event, err := json.Marshal(&moira.MetricEvent{
+			if err = c.SAdd(ctx, patternMetricsKey(pattern), metric.Metric).Err(); err != nil {
+				return err
+			}
+
+			var event []byte
+			event, err = json.Marshal(&moira.MetricEvent{
 				Metric:  metric.Metric,
 				Pattern: pattern,
 			})
+
 			if err != nil {
 				continue
 			}
-			c.Publish(connector.context, metricEventKey, event)
+
+			if err = c.Publish(ctx, metricEventKey, event).Err(); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -222,7 +237,7 @@ func (connector *DbConnector) RemoveMetricValues(metric string, toTime int64) er
 		return nil
 	}
 	c := *connector.client
-	if _, err := c.ZRemRangeByScore(connector.context, metricDataKey(metric), "-inf", strconv.FormatInt(toTime,10)).Result(); err != nil {
+	if _, err := c.ZRemRangeByScore(connector.context, metricDataKey(metric), "-inf", strconv.FormatInt(toTime, 10)).Result(); err != nil {
 		return fmt.Errorf("failed to remove metrics from -inf to %v, error: %v", toTime, err)
 	}
 	return nil

@@ -100,36 +100,40 @@ func (connector *DbConnector) manageSubscriptions(tomb *tomb.Tomb, channel strin
 	dataChan := make(chan []byte, pubSubWorkerChannelSize)
 	go func() {
 		for {
-			n, _ := c.Receive(connector.context)
-			switch n.(type) {
-			case redis.Message:
-				if len(n.(redis.Message).Payload) == 0 {
+			raw, _ := c.Receive(connector.context)
+			switch raw.(type) {
+			case *redis.Message:
+				msg := raw.(*redis.Message)
+				if len(msg.Payload) == 0 {
 					continue
 				}
-				//dataChan <- n.Data
-			case redis.Subscription:
-				switch n.(redis.Subscription).Kind {
+				dataChan <- []byte(msg.Payload)
+			case *redis.Subscription:
+				msg := raw.(*redis.Subscription)
+				switch msg.Kind {
 				case "subscribe":
-					connector.logger.Infof("Subscribe to %s channel, current subscriptions is %v", n.(redis.Subscription).Channel, n.(redis.Subscription).Count)
+					connector.logger.Infof("Subscribe to %s channel, current subscriptions is %v", msg.Channel, msg.Count)
 				case "unsubscribe":
-					connector.logger.Infof("Unsubscribe from %s channel, current subscriptions is %v", n.(redis.Subscription).Channel, n.(redis.Subscription).Count)
-					if n.(redis.Subscription).Count == 0 {
+					connector.logger.Infof("Unsubscribe from %s channel, current subscriptions is %v", msg.Channel, msg.Count)
+					if msg.Count == 0 {
 						connector.logger.Infof("No more subscriptions, exit...")
 						close(dataChan)
 						return
 					}
 				}
 			case *net.OpError:
-				connector.logger.Infof("psc.Receive() returned *net.OpError: %s. Reconnecting...", n.(*net.OpError).Err.Error())
+				msg := raw.(*net.OpError)
+				connector.logger.Infof("psc.Receive() returned *net.OpError: %s. Reconnecting...", msg.Err.Error())
 				c = (*connector.client).Subscribe(connector.context, channel)
 				<-time.After(receiveErrorSleepDuration)
 			default:
-				connector.logger.Errorf("Can not receive message of type '%T': %v", n, n)
+				connector.logger.Errorf("Can not receive message of type '%T': %v", raw, raw)
 				<-time.After(receiveErrorSleepDuration)
 			}
 		}
 	}()
-	return dataChan, nil
+
+	return dataChan, c.Ping(connector.context)
 }
 
 // Deletes all the keys of the DB, use it only for tests
