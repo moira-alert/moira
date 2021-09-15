@@ -101,29 +101,26 @@ func (connector *DbConnector) manageSubscriptions(tomb *tomb.Tomb, channel strin
 	go func() {
 		for {
 			raw, _ := c.Receive(connector.context)
-			switch raw.(type) {
+			switch data := raw.(type) {
 			case *redis.Message:
-				msg := raw.(*redis.Message)
-				if len(msg.Payload) == 0 {
+				if len(data.Payload) == 0 {
 					continue
 				}
-				dataChan <- []byte(msg.Payload)
+				dataChan <- []byte(data.Payload)
 			case *redis.Subscription:
-				msg := raw.(*redis.Subscription)
-				switch msg.Kind {
+				switch data.Kind {
 				case "subscribe":
-					connector.logger.Infof("Subscribe to %s channel, current subscriptions is %v", msg.Channel, msg.Count)
+					connector.logger.Infof("Subscribe to %s channel, current subscriptions is %v", data.Channel, data.Count)
 				case "unsubscribe":
-					connector.logger.Infof("Unsubscribe from %s channel, current subscriptions is %v", msg.Channel, msg.Count)
-					if msg.Count == 0 {
+					connector.logger.Infof("Unsubscribe from %s channel, current subscriptions is %v", data.Channel, data.Count)
+					if data.Count == 0 {
 						connector.logger.Infof("No more subscriptions, exit...")
 						close(dataChan)
 						return
 					}
 				}
 			case *net.OpError:
-				msg := raw.(*net.OpError)
-				connector.logger.Infof("psc.Receive() returned *net.OpError: %s. Reconnecting...", msg.Err.Error())
+				connector.logger.Infof("psc.Receive() returned *net.OpError: %s. Reconnecting...", data.Err.Error())
 				c = (*connector.client).Subscribe(connector.context, channel)
 				<-time.After(receiveErrorSleepDuration)
 			default:
