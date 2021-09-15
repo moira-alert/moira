@@ -9,7 +9,7 @@ import (
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 )
 
-func TestBotDataStoring(t *testing.T) {
+func TestGetIDByUsername(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
 	dataBase := newTestDatabase(logger, config)
 	dataBase.flush()
@@ -55,24 +55,6 @@ func TestBotDataStoring(t *testing.T) {
 				So(actual, ShouldBeEmpty)
 			})
 		})
-	})
-}
-
-func TestBotDataStoringErrorConnection(t *testing.T) {
-	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
-	dataBase := newTestDatabase(logger, emptyConfig)
-	dataBase.flush()
-	defer dataBase.flush()
-	Convey("Should throw error when no connection", t, func() {
-		actual1, err := dataBase.GetIDByUsername(messenger1, user1)
-		So(actual1, ShouldBeEmpty)
-		So(err, ShouldNotBeNil)
-
-		err = dataBase.SetUsernameID(messenger2, user1, "id1")
-		So(err, ShouldNotBeNil)
-
-		err = dataBase.RemoveUser(messenger2, user1)
-		So(err, ShouldNotBeNil)
 	})
 }
 

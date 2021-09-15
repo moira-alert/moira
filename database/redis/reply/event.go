@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/gomodule/redigo/redis"
+	"github.com/go-redis/redis/v8"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
 )
@@ -84,35 +84,44 @@ func GetEventBytes(event moira.NotificationEvent) ([]byte, error) {
 	return bytes, nil
 }
 
-// Event converts redis DB reply to moira.NotificationEvent object
-func Event(rep interface{}, err error) (moira.NotificationEvent, error) {
-	bytes, err := redis.Bytes(rep, err)
+func unmarshalEvent(data string, err error) (moira.NotificationEvent, error) {
 	if err != nil {
-		if err == redis.ErrNil {
+		if err == redis.Nil {
 			return moira.NotificationEvent{}, database.ErrNil
 		}
 		return moira.NotificationEvent{}, fmt.Errorf("failed to read event: %s", err.Error())
 	}
+
 	eventSE := notificationEventStorageElement{}
-	err = json.Unmarshal(bytes, &eventSE)
+	err = json.Unmarshal([]byte(data), &eventSE)
 	if err != nil {
-		return moira.NotificationEvent{}, fmt.Errorf("failed to parse event json %s: %s", string(bytes), err.Error())
+		return moira.NotificationEvent{}, fmt.Errorf("failed to parse event json %s: %s", data, err.Error())
 	}
+
 	return eventSE.toNotificationEvent(), nil
 }
 
+// BRPopToEvent converts redis DB reply to moira.NotificationEvent object
+func BRPopToEvent(response *redis.StringSliceCmd) (moira.NotificationEvent, error) {
+	data, err := response.Result()
+
+	return unmarshalEvent(data[1], err)
+}
+
 // Events converts redis DB reply to moira.NotificationEvent objects array
-func Events(rep interface{}, err error) ([]*moira.NotificationEvent, error) {
-	values, err := redis.Values(rep, err)
+func Events(response *redis.StringSliceCmd) ([]*moira.NotificationEvent, error) {
+	values, err := response.Result()
+
 	if err != nil {
-		if err == redis.ErrNil {
+		if err == redis.Nil {
 			return make([]*moira.NotificationEvent, 0), nil
 		}
 		return nil, fmt.Errorf("failed to read events: %s", err.Error())
 	}
+
 	events := make([]*moira.NotificationEvent, len(values))
 	for i, value := range values {
-		event, err2 := Event(value, err)
+		event, err2 := unmarshalEvent(value, err)
 		if err2 != nil && err2 != database.ErrNil {
 			return nil, err2
 		} else if err2 == database.ErrNil {
