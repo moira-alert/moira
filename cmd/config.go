@@ -41,6 +41,7 @@ func (config *RedisConfig) GetSettings() redis.Config {
 	return redis.Config{
 		MasterName: config.MasterName,
 		Addrs:      strings.Split(config.SentinelAddrs, ","),
+		MetricsTTL: to.Duration(config.MetricsTTL),
 	}
 }
 

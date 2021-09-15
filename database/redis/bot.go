@@ -8,7 +8,7 @@ import (
 	"github.com/moira-alert/moira/database"
 )
 
-// GetIDByUsername read id of user by messenger username
+// GetIDByUsername read ID of user by messenger username
 func (connector *DbConnector) GetIDByUsername(messenger, username string) (string, error) {
 	if strings.HasPrefix(username, "#") {
 		result := "@" + username[1:]
