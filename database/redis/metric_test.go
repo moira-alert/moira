@@ -8,6 +8,7 @@ import (
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	"github.com/patrickmn/go-cache"
 	. "github.com/smartystreets/goconvey/convey"
+	"gopkg.in/tomb.v2"
 )
 
 func TestMetricsStoring(t *testing.T) {
@@ -333,114 +334,114 @@ func TestRemoveMetricValues(t *testing.T) {
 	})
 }
 
-//func TestMetricSubscription(t *testing.T) {
-//	logger, _ := logging.GetLogger("dataBase")
-//	dataBase := newTestDatabase(logger, config)
-//	dataBase.flush()
-//	defer dataBase.flush()
-//	metric1 := "my.test.super.metric"
-//	metric2 := "my.test.super.metric2"
-//	pattern := "my.test.*.metric*"
-//	Convey("Subscription manipulation", t, func() {
-//		var tomb1 tomb.Tomb
-//		ch, err := dataBase.SubscribeMetricEvents(&tomb1)
-//		So(err, ShouldBeNil)
-//		So(ch, ShouldNotBeNil)
-//
-//		met1 := &moira.MatchedMetric{
-//			Patterns:           []string{pattern},
-//			Metric:             metric1,
-//			Retention:          10,
-//			RetentionTimestamp: 10,
-//			Timestamp:          15,
-//			Value:              1,
-//		}
-//
-//		met2 := &moira.MatchedMetric{
-//			Patterns:           []string{pattern},
-//			Metric:             metric2,
-//			Retention:          20,
-//			RetentionTimestamp: 20,
-//			Timestamp:          25,
-//			Value:              2,
-//		}
-//		numberOfChecks := 0
-//
-//		tomb1.Go(func() error {
-//			for {
-//				metricEvent, ok := <-ch
-//				if !ok {
-//					numberOfChecks++
-//					logger.Info("Channel closed, end test")
-//					return nil
-//				}
-//				if metricEvent.Metric == metric1 {
-//					Convey("Test", t, func() {
-//						numberOfChecks++
-//						So(metricEvent, ShouldResemble, &moira.MetricEvent{Pattern: pattern, Metric: metric1})
-//					})
-//				}
-//				if metricEvent.Metric == metric2 {
-//					Convey("Test", t, func() {
-//						numberOfChecks++
-//						So(metricEvent, ShouldResemble, &moira.MetricEvent{Pattern: pattern, Metric: metric2})
-//					})
-//				}
-//			}
-//		})
-//
-//		dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric1: met1}) //nolint
-//		dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric2: met2}) //nolint
-//		tomb1.Kill(nil)
-//		tomb1.Wait() //nolint
-//
-//		So(numberOfChecks, ShouldEqual, 3)
-//	})
-//}
+func TestMetricSubscription(t *testing.T) {
+	logger, _ := logging.GetLogger("dataBase")
+	dataBase := newTestDatabase(logger, config)
+	dataBase.flush()
+	defer dataBase.flush()
+	metric1 := "my.test.super.metric"
+	metric2 := "my.test.super.metric2"
+	pattern := "my.test.*.metric*"
+	Convey("Subscription manipulation", t, func() {
+		var tomb1 tomb.Tomb
+		ch, err := dataBase.SubscribeMetricEvents(&tomb1)
+		So(err, ShouldBeNil)
+		So(ch, ShouldNotBeNil)
 
-//func TestMetricsStoringErrorConnection(t *testing.T) {
-//	logger, _ := logging.GetLogger("dataBase")
-//	dataBase := newTestDatabase(logger, incorrectConfig)
-//	dataBase.flush()
-//	defer dataBase.flush()
-//	Convey("Should throw error when no connection", t, func() {
-//		actual, err := dataBase.GetPatterns()
-//		So(actual, ShouldBeEmpty)
-//		So(err, ShouldNotBeNil)
-//
-//		actual1, err := dataBase.GetMetricsValues([]string{"123"}, 0, 1)
-//		So(actual1, ShouldBeEmpty)
-//		So(err, ShouldNotBeNil)
-//
-//		err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{"metric1": {Value: 1, RetentionTimestamp: 1, Timestamp: 1, Retention: 60, Patterns: []string{"12"}, Metric: "123"}})
-//		So(err, ShouldNotBeNil)
-//
-//		actual2, err := dataBase.GetMetricRetention("123")
-//		So(actual2, ShouldEqual, 0)
-//		So(err, ShouldNotBeNil)
-//
-//		err = dataBase.AddPatternMetric("123", "123234")
-//		So(err, ShouldNotBeNil)
-//
-//		actual, err = dataBase.GetPatternMetrics("123")
-//		So(actual, ShouldBeEmpty)
-//		So(err, ShouldNotBeNil)
-//
-//		err = dataBase.RemovePattern("123")
-//		So(err, ShouldNotBeNil)
-//
-//		err = dataBase.RemovePatternsMetrics([]string{"123"})
-//		So(err, ShouldNotBeNil)
-//
-//		err = dataBase.RemovePatternWithMetrics("123")
-//		So(err, ShouldNotBeNil)
-//
-//		err = dataBase.RemoveMetricValues("123", 1)
-//		So(err, ShouldNotBeNil)
-//
-//		var tomb1 tomb.Tomb
-//		ch, err := dataBase.SubscribeMetricEvents(&tomb1)
-//		So(err, ShouldNotBeNil)
-//		So(ch, ShouldBeNil)
-//	})
-//}
+		met1 := &moira.MatchedMetric{
+			Patterns:           []string{pattern},
+			Metric:             metric1,
+			Retention:          10,
+			RetentionTimestamp: 10,
+			Timestamp:          15,
+			Value:              1,
+		}
+
+		met2 := &moira.MatchedMetric{
+			Patterns:           []string{pattern},
+			Metric:             metric2,
+			Retention:          20,
+			RetentionTimestamp: 20,
+			Timestamp:          25,
+			Value:              2,
+		}
+		numberOfChecks := 0
+
+		tomb1.Go(func() error {
+			for {
+				metricEvent, ok := <-ch
+				if !ok {
+					numberOfChecks++
+					logger.Info("Channel closed, end test")
+					return nil
+				}
+				if metricEvent.Metric == metric1 {
+					Convey("Test", t, func() {
+						numberOfChecks++
+						So(metricEvent, ShouldResemble, &moira.MetricEvent{Pattern: pattern, Metric: metric1})
+					})
+				}
+				if metricEvent.Metric == metric2 {
+					Convey("Test", t, func() {
+						numberOfChecks++
+						So(metricEvent, ShouldResemble, &moira.MetricEvent{Pattern: pattern, Metric: metric2})
+					})
+				}
+			}
+		})
+
+		dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric1: met1}) //nolint
+		dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric2: met2}) //nolint
+		tomb1.Kill(nil)
+		tomb1.Wait() //nolint
+
+		So(numberOfChecks, ShouldEqual, 3)
+	})
+}
+
+func TestMetricsStoringErrorConnection(t *testing.T) {
+	logger, _ := logging.GetLogger("dataBase")
+	dataBase := newTestDatabase(logger, incorrectConfig)
+	dataBase.flush()
+	defer dataBase.flush()
+	Convey("Should throw error when no connection", t, func() {
+		actual, err := dataBase.GetPatterns()
+		So(actual, ShouldBeEmpty)
+		So(err, ShouldNotBeNil)
+
+		actual1, err := dataBase.GetMetricsValues([]string{"123"}, 0, 1)
+		So(actual1, ShouldBeEmpty)
+		So(err, ShouldNotBeNil)
+
+		err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{"metric1": {Value: 1, RetentionTimestamp: 1, Timestamp: 1, Retention: 60, Patterns: []string{"12"}, Metric: "123"}})
+		So(err, ShouldNotBeNil)
+
+		actual2, err := dataBase.GetMetricRetention("123")
+		So(actual2, ShouldEqual, 0)
+		So(err, ShouldNotBeNil)
+
+		err = dataBase.AddPatternMetric("123", "123234")
+		So(err, ShouldNotBeNil)
+
+		actual, err = dataBase.GetPatternMetrics("123")
+		So(actual, ShouldBeEmpty)
+		So(err, ShouldNotBeNil)
+
+		err = dataBase.RemovePattern("123")
+		So(err, ShouldNotBeNil)
+
+		err = dataBase.RemovePatternsMetrics([]string{"123"})
+		So(err, ShouldNotBeNil)
+
+		err = dataBase.RemovePatternWithMetrics("123")
+		So(err, ShouldNotBeNil)
+
+		err = dataBase.RemoveMetricValues("123", 1)
+		So(err, ShouldNotBeNil)
+
+		var tomb1 tomb.Tomb
+		ch, err := dataBase.SubscribeMetricEvents(&tomb1)
+		So(err, ShouldNotBeNil)
+		So(ch, ShouldBeNil)
+	})
+}

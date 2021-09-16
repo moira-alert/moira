@@ -68,9 +68,9 @@ func NewDatabase(logger moira.Logger, config Config, source DBSource) *DbConnect
 		retentionCache:       cache.New(cacheValueExpirationDuration, cacheCleanupInterval),
 		retentionSavingCache: cache.New(cache.NoExpiration, cache.DefaultExpiration),
 		metricsCache:         cache.New(cacheValueExpirationDuration, cacheCleanupInterval),
-		source:               source,
-		metricsTTLSeconds:    int64(config.MetricsTTL.Seconds()),
 		sync:                 redsync.New(syncPool),
+		metricsTTLSeconds:    int64(config.MetricsTTL.Seconds()),
+		source:               source,
 	}
 	return &connector
 }
@@ -105,36 +105,37 @@ func (connector *DbConnector) manageSubscriptions(tomb *tomb.Tomb, channel strin
 	dataChan := make(chan []byte, pubSubWorkerChannelSize)
 	go func() {
 		for {
-			n, _ := c.Receive(connector.context)
-			switch n.(type) { // nolint
-			case redis.Message:
-				if len(n.(redis.Message).Payload) == 0 {
+			raw, _ := c.Receive(connector.context)
+			switch data := raw.(type) {
+			case *redis.Message:
+				if len(data.Payload) == 0 {
 					continue
 				}
-				//dataChan <- n.Data
-			case redis.Subscription:
-				switch n.(redis.Subscription).Kind {
+				dataChan <- []byte(data.Payload)
+			case *redis.Subscription:
+				switch data.Kind {
 				case "subscribe":
-					connector.logger.Infof("Subscribe to %s channel, current subscriptions is %v", n.(redis.Subscription).Channel, n.(redis.Subscription).Count)
+					connector.logger.Infof("Subscribe to %s channel, current subscriptions is %v", data.Channel, data.Count)
 				case "unsubscribe":
-					connector.logger.Infof("Unsubscribe from %s channel, current subscriptions is %v", n.(redis.Subscription).Channel, n.(redis.Subscription).Count)
-					if n.(redis.Subscription).Count == 0 {
+					connector.logger.Infof("Unsubscribe from %s channel, current subscriptions is %v", data.Channel, data.Count)
+					if data.Count == 0 {
 						connector.logger.Infof("No more subscriptions, exit...")
 						close(dataChan)
 						return
 					}
 				}
 			case *net.OpError:
-				connector.logger.Infof("psc.Receive() returned *net.OpError: %s. Reconnecting...", n.(*net.OpError).Err.Error())
+				connector.logger.Infof("psc.Receive() returned *net.OpError: %s. Reconnecting...", data.Err.Error())
 				c = (*connector.client).Subscribe(connector.context, channel)
 				<-time.After(receiveErrorSleepDuration)
 			default:
-				connector.logger.Errorf("Can not receive message of type '%T': %v", n, n)
+				connector.logger.Errorf("Can not receive message of type '%T': %v", raw, raw)
 				<-time.After(receiveErrorSleepDuration)
 			}
 		}
 	}()
-	return dataChan, nil
+
+	return dataChan, c.Ping(connector.context)
 }
 
 // Deletes all the keys of the DB, use it only for tests
