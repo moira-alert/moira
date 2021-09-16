@@ -86,9 +86,6 @@ func (connector *DbConnector) getMetricRetention(metric string) (int64, error) {
 	}
 	retention, err := strconv.ParseInt(retentionStr, 10, 64)
 	if err != nil {
-		if err == redis.Nil {
-			return 60, database.ErrNil //nolint
-		}
 		return 0, fmt.Errorf("failed GET metric retention:%s, error: %v", metric, err)
 	}
 	return retention, nil
