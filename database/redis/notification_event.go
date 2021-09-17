@@ -1,12 +1,11 @@
 package redis
 
 import (
-	"encoding/json"
 	"fmt"
+	"strconv"
 	"time"
 
-	"github.com/gomodule/redigo/redis"
-
+	"github.com/go-redis/redis/v8"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/database/redis/reply"
@@ -16,13 +15,13 @@ var eventsTTL int64 = 3600 * 24 * 30
 
 // GetNotificationEvents gets NotificationEvents by given triggerID and interval
 func (connector *DbConnector) GetNotificationEvents(triggerID string, start int64, size int64) ([]*moira.NotificationEvent, error) {
-	c := connector.pool.Get()
-	defer c.Close()
+	ctx := connector.context
+	c := *connector.client
 
-	eventsData, err := reply.Events(c.Do("ZREVRANGE", triggerEventsKey(triggerID), start, start+size))
+	eventsData, err := reply.Events(c.ZRevRange(ctx, triggerEventsKey(triggerID), start, start+size))
 
 	if err != nil {
-		if err == redis.ErrNil {
+		if err == redis.Nil {
 			return make([]*moira.NotificationEvent, 0), nil
 		}
 		return nil, fmt.Errorf("failed to get range for trigger events, triggerID: %s, error: %s", triggerID, err.Error())
@@ -39,75 +38,77 @@ func (connector *DbConnector) PushNotificationEvent(event *moira.NotificationEve
 		return err
 	}
 
-	c := connector.pool.Get()
-	defer c.Close()
-	c.Send("MULTI") //nolint
-	c.Send("LPUSH", notificationEventsList, eventBytes) //nolint
+	ctx := connector.context
+	pipe := (*connector.client).TxPipeline()
+	pipe.LPush(ctx, notificationEventsList, eventBytes)
 	if event.TriggerID != "" {
-		c.Send("ZADD", triggerEventsKey(event.TriggerID), event.Timestamp, eventBytes) //nolint
-		c.Send("ZREMRANGEBYSCORE", triggerEventsKey(event.TriggerID), "-inf", time.Now().Unix()-eventsTTL) //nolint
+		z := &redis.Z{Score: float64(event.Timestamp), Member: eventBytes}
+		to := int(time.Now().Unix() - eventsTTL)
+
+		pipe.ZAdd(ctx, triggerEventsKey(event.TriggerID), z)
+		pipe.ZRemRangeByScore(ctx, triggerEventsKey(event.TriggerID), "-inf", strconv.Itoa(to))
 	}
+
 	if ui {
-		c.Send("LPUSH", notificationEventsUIList, eventBytes) //nolint
-		c.Send("LTRIM", notificationEventsUIList, 0, 100) //nolint
+		pipe.LPush(ctx, notificationEventsUIList, eventBytes)
+		pipe.LTrim(ctx, notificationEventsUIList, 0, 100)
 	}
-	_, err = c.Do("EXEC")
+
+	_, err = pipe.Exec(ctx)
+
 	if err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
+
 	return nil
 }
 
 // GetNotificationEventCount returns planned notifications count from given timestamp
 func (connector *DbConnector) GetNotificationEventCount(triggerID string, from int64) int64 {
-	c := connector.pool.Get()
-	defer c.Close()
+	ctx := connector.context
+	c := *connector.client
 
-	count, _ := redis.Int64(c.Do("ZCOUNT", triggerEventsKey(triggerID), from, "+inf"))
+	count, _ := c.ZCount(ctx, triggerEventsKey(triggerID), strconv.FormatInt(from, 10), "+inf").Result()
 	return count
 }
 
 // FetchNotificationEvent waiting for event in events list
 func (connector *DbConnector) FetchNotificationEvent() (moira.NotificationEvent, error) {
-	c := connector.pool.Get()
-	defer c.Close()
-
 	var event moira.NotificationEvent
+	ctx := connector.context
+	c := *connector.client
 
-	rawRes, err := c.Do("BRPOP", notificationEventsList, 1)
+	response := c.BRPop(ctx, time.Second, notificationEventsList)
+	err := response.Err()
+
+	if err == redis.Nil {
+		return event, database.ErrNil
+	}
+
 	if err != nil {
 		return event, fmt.Errorf("failed to fetch event: %s", err.Error())
 	}
-	if rawRes == nil {
-		return event, database.ErrNil
-	}
-	var (
-		eventBytes []byte
-		key        []byte
-	)
-	res, _ := redis.Values(rawRes, nil)
-	if _, err = redis.Scan(res, &key, &eventBytes); err != nil {
-		return event, fmt.Errorf("failed to parse event: %s", err.Error())
-	}
-	if err := json.Unmarshal(eventBytes, &event); err != nil {
-		return event, fmt.Errorf("failed to parse event json %s: %s", eventBytes, err.Error())
-	}
+
+	event, _ = reply.BRPopToEvent(response)
+
 	if event.Values == nil { //TODO(litleleprikon): remove in moira v2.8.0. Compatibility with moira < v2.6.0
 		event.Values = make(map[string]float64)
 	}
+
 	if event.Value != nil {
 		event.Values["t1"] = *event.Value
 		event.Value = nil
 	}
+
 	return event, nil
 }
 
 // RemoveAllNotificationEvents removes all notification events from database
 func (connector *DbConnector) RemoveAllNotificationEvents() error {
-	c := connector.pool.Get()
-	defer c.Close()
+	ctx := connector.context
+	c := *connector.client
 
-	if _, err := c.Do("DEL", notificationEventsList); err != nil {
+	if _, err := c.Del(ctx, notificationEventsList).Result(); err != nil {
 		return fmt.Errorf("failed to remove %s: %s", notificationEventsList, err.Error())
 	}
 
