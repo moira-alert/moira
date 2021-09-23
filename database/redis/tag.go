@@ -3,15 +3,13 @@ package redis
 import (
 	"fmt"
 
-	"github.com/gomodule/redigo/redis"
+	"github.com/go-redis/redis/v8"
 )
 
 // GetTagNames returns all tags from set with tag data
 func (connector *DbConnector) GetTagNames() ([]string, error) {
-	c := connector.pool.Get()
-	defer c.Close()
-
-	tagNames, err := redis.Strings(c.Do("SMEMBERS", tagsKey))
+	c := *connector.client
+	tagNames, err := c.SMembers(connector.context, tagsKey).Result()
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve tags: %s", err.Error())
 	}
@@ -20,14 +18,12 @@ func (connector *DbConnector) GetTagNames() ([]string, error) {
 
 // RemoveTag deletes tag from tags list, deletes triggerIDs and subscriptionsIDs lists by given tag
 func (connector *DbConnector) RemoveTag(tagName string) error {
-	c := connector.pool.Get()
-	defer c.Close()
+	pipe := (*connector.client).TxPipeline()
+	pipe.SRem(connector.context, tagsKey, tagName)
+	pipe.Del(connector.context, tagSubscriptionKey(tagName))
+	pipe.Del(connector.context, tagTriggersKey(tagName))
 
-	c.Send("MULTI") //nolint
-	c.Send("SREM", tagsKey, tagName) //nolint
-	c.Send("DEL", tagSubscriptionKey(tagName))
-	c.Send("DEL", tagTriggersKey(tagName)) //nolint
-	_, err := c.Do("EXEC")
+	_, err := pipe.Exec(connector.context)
 	if err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
@@ -36,12 +32,11 @@ func (connector *DbConnector) RemoveTag(tagName string) error {
 
 // GetTagTriggerIDs gets all triggersIDs by given tagName
 func (connector *DbConnector) GetTagTriggerIDs(tagName string) ([]string, error) {
-	c := connector.pool.Get()
-	defer c.Close()
+	c := *connector.client
 
-	triggerIDs, err := redis.Strings(c.Do("SMEMBERS", tagTriggersKey(tagName)))
+	triggerIDs, err := c.SMembers(connector.context, tagTriggersKey(tagName)).Result()
 	if err != nil {
-		if err == redis.ErrNil {
+		if err == redis.Nil {
 			return make([]string, 0), nil
 		}
 		return nil, fmt.Errorf("failed to retrieve tag triggers:%s, err: %s", tagName, err.Error())

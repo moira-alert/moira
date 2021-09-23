@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/gomodule/redigo/redis"
+	"github.com/go-redis/redis/v8"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
 )
@@ -98,10 +98,10 @@ func getTriggerTTLString(ttl int64) string {
 }
 
 // Trigger converts redis DB reply to moira.Trigger object
-func Trigger(rep interface{}, err error) (moira.Trigger, error) {
-	bytes, err := redis.Bytes(rep, err)
+func Trigger(rep *redis.StringCmd) (moira.Trigger, error) {
+	bytes, err := rep.Bytes()
 	if err != nil {
-		if err == redis.ErrNil {
+		if err == redis.Nil {
 			return moira.Trigger{}, database.ErrNil
 		}
 		return moira.Trigger{}, fmt.Errorf("failed to read trigger: %s", err.Error())

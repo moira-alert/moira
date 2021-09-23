@@ -645,7 +645,7 @@ func TestRemoteTrigger(t *testing.T) {
 
 func TestTriggerErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, emptyConfig)
+	dataBase := newTestDatabase(logger, incorrectConfig)
 	dataBase.flush()
 	defer dataBase.flush()
 	Convey("Should throw error when no connection", t, func() {
@@ -657,7 +657,7 @@ func TestTriggerErrorConnection(t *testing.T) {
 		So(err, ShouldNotBeNil)
 		So(actual1, ShouldResemble, moira.Trigger{})
 
-		actual2, err := dataBase.GetTriggers([]string{})
+		actual2, err := dataBase.GetTriggers([]string{""})
 		So(err, ShouldNotBeNil)
 		So(actual2, ShouldBeNil)
 

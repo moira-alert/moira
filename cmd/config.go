@@ -39,14 +39,9 @@ type RedisConfig struct {
 // GetSettings returns redis config parsed from moira config files
 func (config *RedisConfig) GetSettings() redis.Config {
 	return redis.Config{
-		MasterName:        config.MasterName,
-		SentinelAddresses: strings.Split(config.SentinelAddrs, ","),
-		Host:              config.Host,
-		Port:              config.Port,
-		DB:                config.DB,
-		ConnectionLimit:   config.ConnectionLimit,
-		AllowSlaveReads:   config.AllowSlaveReads,
-		MetricsTTL:        to.Duration(config.MetricsTTL),
+		MasterName: config.MasterName,
+		Addrs:      strings.Split(config.SentinelAddrs, ","),
+		MetricsTTL: to.Duration(config.MetricsTTL),
 	}
 }
 

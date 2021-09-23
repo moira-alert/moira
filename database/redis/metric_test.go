@@ -4,12 +4,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/moira-alert/moira"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	"github.com/patrickmn/go-cache"
 	. "github.com/smartystreets/goconvey/convey"
 	"gopkg.in/tomb.v2"
-
-	"github.com/moira-alert/moira"
 )
 
 func TestMetricsStoring(t *testing.T) {
@@ -402,7 +401,7 @@ func TestMetricSubscription(t *testing.T) {
 
 func TestMetricsStoringErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, emptyConfig)
+	dataBase := newTestDatabase(logger, incorrectConfig)
 	dataBase.flush()
 	defer dataBase.flush()
 	Convey("Should throw error when no connection", t, func() {
