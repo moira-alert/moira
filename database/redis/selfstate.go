@@ -1,24 +1,22 @@
 package redis
 
 import (
-	"github.com/gomodule/redigo/redis"
+	"github.com/go-redis/redis/v8"
 	"github.com/moira-alert/moira"
 )
 
 // UpdateMetricsHeartbeat increments redis counter
 func (connector *DbConnector) UpdateMetricsHeartbeat() error {
-	c := connector.pool.Get()
-	defer c.Close()
-	err := c.Send("INCR", selfStateMetricsHeartbeatKey)
+	c := *connector.client
+	err := c.Incr(connector.context, selfStateMetricsHeartbeatKey).Err()
 	return err
 }
 
 // GetMetricsUpdatesCount return metrics count received by Moira-Filter
 func (connector *DbConnector) GetMetricsUpdatesCount() (int64, error) {
-	c := connector.pool.Get()
-	defer c.Close()
-	ts, err := redis.Int64(c.Do("GET", selfStateMetricsHeartbeatKey))
-	if err == redis.ErrNil {
+	c := *connector.client
+	ts, err := c.Get(connector.context, selfStateMetricsHeartbeatKey).Int64()
+	if err == redis.Nil {
 		return 0, nil
 	}
 	return ts, err
@@ -26,10 +24,9 @@ func (connector *DbConnector) GetMetricsUpdatesCount() (int64, error) {
 
 // GetChecksUpdatesCount return checks count by Moira-Checker
 func (connector *DbConnector) GetChecksUpdatesCount() (int64, error) {
-	c := connector.pool.Get()
-	defer c.Close()
-	ts, err := redis.Int64(c.Do("GET", selfStateChecksCounterKey))
-	if err == redis.ErrNil {
+	c := *connector.client
+	ts, err := c.Get(connector.context, selfStateChecksCounterKey).Int64()
+	if err == redis.Nil {
 		return 0, nil
 	}
 	return ts, err
@@ -37,10 +34,9 @@ func (connector *DbConnector) GetChecksUpdatesCount() (int64, error) {
 
 // GetRemoteChecksUpdatesCount return remote checks count by Moira-Checker
 func (connector *DbConnector) GetRemoteChecksUpdatesCount() (int64, error) {
-	c := connector.pool.Get()
-	defer c.Close()
-	ts, err := redis.Int64(c.Do("GET", selfStateRemoteChecksCounterKey))
-	if err == redis.ErrNil {
+	c := *connector.client
+	ts, err := c.Get(connector.context, selfStateRemoteChecksCounterKey).Int64()
+	if err == redis.Nil {
 		return 0, nil
 	}
 	return ts, err
@@ -48,10 +44,9 @@ func (connector *DbConnector) GetRemoteChecksUpdatesCount() (int64, error) {
 
 // GetNotifierState return current notifier state: <OK|ERROR>
 func (connector *DbConnector) GetNotifierState() (string, error) {
-	c := connector.pool.Get()
-	defer c.Close()
-	ts, err := redis.String(c.Do("GET", selfStateNotifierHealth))
-	if err == redis.ErrNil {
+	c := *connector.client
+	ts, err := c.Get(connector.context, selfStateNotifierHealth).Result()
+	if err == redis.Nil {
 		ts = moira.SelfStateOK
 		err = connector.SetNotifierState(ts)
 	} else if err != nil {
@@ -62,10 +57,8 @@ func (connector *DbConnector) GetNotifierState() (string, error) {
 
 // SetNotifierState update current notifier state: <OK|ERROR>
 func (connector *DbConnector) SetNotifierState(health string) error {
-	c := connector.pool.Get()
-	defer c.Close()
-
-	return c.Send("SET", selfStateNotifierHealth, health)
+	c := *connector.client
+	return c.Set(connector.context, selfStateNotifierHealth, health, redis.KeepTTL).Err()
 }
 
 var selfStateMetricsHeartbeatKey = "moira-selfstate:metrics-heartbeat"
