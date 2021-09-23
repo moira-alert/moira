@@ -3,22 +3,20 @@ package redis
 import (
 	"fmt"
 
-	"github.com/gomodule/redigo/redis"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database/redis/reply"
 )
 
 // SaveTeam saves team into redis
 func (connector *DbConnector) SaveTeam(teamID string, team moira.Team) error {
-	c := connector.pool.Get()
-	defer c.Close()
+	c := *connector.client
 
 	teamBytes, err := reply.MarshallTeam(team)
 	if err != nil {
 		return fmt.Errorf("save team error: %w", err)
 	}
 
-	_, err = c.Do("HSET", teamsKey, teamID, teamBytes)
+	err = c.HSet(connector.context, teamsKey, teamID, teamBytes).Err()
 	if err != nil {
 		return fmt.Errorf("save team redis error: %w", err)
 	}
@@ -27,15 +25,10 @@ func (connector *DbConnector) SaveTeam(teamID string, team moira.Team) error {
 
 // GetTeam retrieves team from redis by it's id
 func (connector *DbConnector) GetTeam(teamID string) (moira.Team, error) {
-	c := connector.pool.Get()
-	defer c.Close()
+	c := *connector.client
 
-	response, err := c.Do("HGET", teamsKey, teamID)
-	if err != nil {
-		return moira.Team{}, fmt.Errorf("failed to retrieve team: %w", err)
-	}
-
-	team, err := reply.NewTeam(response, err)
+	response := c.HGet(connector.context, teamsKey, teamID)
+	team, err := reply.NewTeam(response)
 	if err != nil {
 		return moira.Team{}, err
 	}
@@ -46,39 +39,34 @@ func (connector *DbConnector) GetTeam(teamID string) (moira.Team, error) {
 
 // SaveTeamsAndUsers is a function that saves users for one team and teams for bunch of users in one transaction.
 func (connector *DbConnector) SaveTeamsAndUsers(teamID string, users []string, teams map[string][]string) error {
-	c := connector.pool.Get()
-	defer c.Close()
+	c := *connector.client
 
-	err := c.Send("MULTI")
-	if err != nil {
-		return fmt.Errorf("cannot open transaction %w", err)
-	}
-
-	err = c.Send("DEL", teamUsersKey(teamID))
+	pipe := c.TxPipeline()
+	err := pipe.Del(connector.context, teamUsersKey(teamID)).Err()
 	if err != nil {
 		return fmt.Errorf("cannot clear users set for team: %s, %w", teamID, err)
 	}
 	for _, userID := range users {
-		err = c.Send("SADD", teamUsersKey(teamID), userID)
+		err = pipe.SAdd(connector.context, teamUsersKey(teamID), userID).Err()
 		if err != nil {
 			return fmt.Errorf("cannot save users for team: %s, %w", teamID, err)
 		}
 	}
 
 	for userID, userTeams := range teams {
-		err = c.Send("DEL", userTeamsKey(userID))
+		err = pipe.Del(connector.context, userTeamsKey(userID)).Err()
 		if err != nil {
 			return fmt.Errorf("cannot clear teams set for user: %s, %w", userID, err)
 		}
 		for _, teamID := range userTeams {
-			err = c.Send("SADD", userTeamsKey(userID), teamID)
+			err = pipe.SAdd(connector.context, userTeamsKey(userID), teamID).Err()
 			if err != nil {
 				return fmt.Errorf("cannot save teams for user: %s, %w", userID, err)
 			}
 		}
 	}
 
-	_, err = c.Do("EXEC")
+	_, err = pipe.Exec(connector.context)
 	if err != nil {
 		return fmt.Errorf("cannot commit transaction and save team: %w", err)
 	}
@@ -87,10 +75,9 @@ func (connector *DbConnector) SaveTeamsAndUsers(teamID string, users []string, t
 }
 
 func (connector *DbConnector) GetUserTeams(userID string) ([]string, error) {
-	c := connector.pool.Get()
-	defer c.Close()
+	c := *connector.client
 
-	teams, err := redis.Strings(c.Do("SMEMBERS", userTeamsKey(userID)))
+	teams, err := c.SMembers(connector.context, userTeamsKey(userID)).Result()
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve user teams: %w", err)
 	}
@@ -99,10 +86,9 @@ func (connector *DbConnector) GetUserTeams(userID string) ([]string, error) {
 
 // GetTeamUsers returns all users of certain team
 func (connector *DbConnector) GetTeamUsers(teamID string) ([]string, error) {
-	c := connector.pool.Get()
-	defer c.Close()
+	c := *connector.client
 
-	teams, err := redis.Strings(c.Do("SMEMBERS", teamUsersKey(teamID)))
+	teams, err := c.SMembers(connector.context, teamUsersKey(teamID)).Result()
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve user teams: %w", err)
 	}
@@ -111,11 +97,9 @@ func (connector *DbConnector) GetTeamUsers(teamID string) ([]string, error) {
 
 // IsTeamContainUser is a method to check if user is in team.
 func (connector *DbConnector) IsTeamContainUser(teamID, userID string) (bool, error) {
-	c := connector.pool.Get()
-	defer c.Close()
+	c := *connector.client
 
-	reply, err := c.Do("SISMEMBER", teamUsersKey(teamID), userID)
-	result, err := redis.Bool(reply, err)
+	result, err := c.SIsMember(connector.context, teamUsersKey(teamID), userID).Result()
 	if err != nil {
 		return false, fmt.Errorf("failed to check if team contains user: %w", err)
 	}
@@ -124,30 +108,26 @@ func (connector *DbConnector) IsTeamContainUser(teamID, userID string) (bool, er
 
 // DeleteTeam is a method to delete all information about team and remove team from last user's teams.
 func (connector *DbConnector) DeleteTeam(teamID, userID string) error {
-	c := connector.pool.Get()
-	defer c.Close()
+	c := *connector.client
 
-	err := c.Send("MULTI")
-	if err != nil {
-		return fmt.Errorf("cannot open transaction %w", err)
-	}
+	pipe := c.TxPipeline()
 
-	err = c.Send("SREM", userTeamsKey(userID), teamID)
+	err := pipe.SRem(connector.context, userTeamsKey(userID), teamID).Err()
 	if err != nil {
 		return fmt.Errorf("failed to remove team from user's teams: %w", err)
 	}
 
-	err = c.Send("DEL", teamUsersKey(teamID))
+	err = pipe.Del(connector.context, teamUsersKey(teamID)).Err()
 	if err != nil {
 		return fmt.Errorf("failed to remove team users: %w", err)
 	}
 
-	err = c.Send("HDEL", teamsKey, teamID)
+	err = pipe.HDel(connector.context, teamsKey, teamID).Err()
 	if err != nil {
 		return fmt.Errorf("failed to remove team metadata: %w", err)
 	}
 
-	_, err = c.Do("EXEC")
+	_, err = pipe.Exec(connector.context)
 	if err != nil {
 		return fmt.Errorf("cannot commit transaction and delete team: %w", err)
 	}

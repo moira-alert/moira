@@ -4,43 +4,42 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/gomodule/redigo/redis"
-	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
+
+	"github.com/go-redis/redis/v8"
+	"github.com/moira-alert/moira"
 )
 
-// Contact converts redis DB reply to moira.ContactData object
-func Contact(rep interface{}, err error) (moira.ContactData, error) {
+func unmarshalContact(bytes []byte, err error) (moira.ContactData, error) {
 	contact := moira.ContactData{}
-	bytes, err := redis.Bytes(rep, err)
 	if err != nil {
-		if err == redis.ErrNil {
+		if err == redis.Nil {
 			return contact, database.ErrNil
 		}
 		return contact, fmt.Errorf("failed to read contact: %s", err.Error())
 	}
+
 	err = json.Unmarshal(bytes, &contact)
 	if err != nil {
 		return contact, fmt.Errorf("failed to parse contact json %s: %s", string(bytes), err.Error())
 	}
+
 	return contact, nil
 }
 
+// Contact converts redis DB reply to moira.ContactData object
+func Contact(rep *redis.StringCmd) (moira.ContactData, error) {
+	return unmarshalContact(rep.Bytes())
+}
+
 // Contacts converts redis DB reply to moira.ContactData objects array
-func Contacts(rep interface{}, err error) ([]*moira.ContactData, error) {
-	values, err := redis.Values(rep, err)
-	if err != nil {
-		if err == redis.ErrNil {
-			return make([]*moira.ContactData, 0), nil
-		}
-		return nil, fmt.Errorf("failed to read contacts: %s", err.Error())
-	}
-	contacts := make([]*moira.ContactData, len(values))
-	for i, value := range values {
-		contact, err2 := Contact(value, err)
-		if err2 != nil && err2 != database.ErrNil {
-			return nil, err2
-		} else if err2 == database.ErrNil {
+func Contacts(rep []*redis.StringCmd) ([]*moira.ContactData, error) {
+	contacts := make([]*moira.ContactData, len(rep))
+	for i, value := range rep {
+		contact, err := unmarshalContact(value.Bytes())
+		if err != nil && err != database.ErrNil {
+			return nil, err
+		} else if err == database.ErrNil {
 			contacts[i] = nil
 		} else {
 			contacts[i] = &contact

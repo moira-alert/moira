@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/gomodule/redigo/redis"
+	"github.com/go-redis/redis/v8"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
 )
@@ -53,13 +53,13 @@ func toSearchResult(storageElement searchResultStorageElement) moira.SearchResul
 	return result
 }
 
-// SearchResult is a function that converts redis reply to SearchResult.
-func SearchResult(rep interface{}, err error) (moira.SearchResult, error) {
+// unmarshalSearchResult is a function that converts redis reply to unmarshalSearchResult.
+func unmarshalSearchResult(bytes []byte, err error) (moira.SearchResult, error) {
 	var searchResult moira.SearchResult
 	storageElement := searchResultStorageElement{}
-	bytes, err := redis.Bytes(rep, err)
+
 	if err != nil {
-		if err == redis.ErrNil {
+		if err == redis.Nil {
 			return searchResult, database.ErrNil
 		}
 		return searchResult, fmt.Errorf("failed to read searchResult: %w", err)
@@ -73,18 +73,18 @@ func SearchResult(rep interface{}, err error) (moira.SearchResult, error) {
 }
 
 // SearchResults is a function that converts redis reply to slice of SearchResults.
-func SearchResults(rep interface{}, repTotal interface{}, err error) ([]*moira.SearchResult, int64, error) {
-	total := repTotal.(int64)
-	values, err := redis.Values(rep, err)
+func SearchResults(rep *redis.StringSliceCmd, repTotal *redis.IntCmd) ([]*moira.SearchResult, int64, error) {
+	total := repTotal.Val()
+	values, err := rep.Result()
 	if err != nil {
-		if err == redis.ErrNil {
+		if err == redis.Nil {
 			return make([]*moira.SearchResult, 0), 0, nil
 		}
 		return nil, 0, fmt.Errorf("failed to read SearchResults: %w", err)
 	}
 	searchResults := make([]*moira.SearchResult, len(values))
 	for i, value := range values {
-		searchResult, err2 := SearchResult(value, err)
+		searchResult, err2 := unmarshalSearchResult([]byte(value), err)
 		if err2 != nil && err2 != database.ErrNil {
 			return nil, 0, err2
 		} else if err2 == database.ErrNil {
