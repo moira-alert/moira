@@ -1,10 +1,11 @@
 package redis
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
-	"github.com/gomodule/redigo/redis"
+	"github.com/go-redis/redis/v8"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
@@ -13,10 +14,9 @@ import (
 
 // GetSubscription returns subscription data by given id, if no value, return database.ErrNil error
 func (connector *DbConnector) GetSubscription(id string) (moira.SubscriptionData, error) {
-	c := connector.pool.Get()
-	defer c.Close()
+	c := *connector.client
 
-	subscription, err := reply.Subscription(c.Do("GET", subscriptionKey(id)))
+	subscription, err := reply.Subscription(c.Get(connector.context, subscriptionKey(id)))
 	if err != nil {
 		return subscription, err
 	}
@@ -30,23 +30,33 @@ func (connector *DbConnector) GetSubscription(id string) (moira.SubscriptionData
 // GetSubscriptions returns subscriptions data by given ids, len of subscriptionIDs is equal to len of returned values array.
 // If there is no object by current ID, then nil is returned
 func (connector *DbConnector) GetSubscriptions(subscriptionIDs []string) ([]*moira.SubscriptionData, error) {
-	c := connector.pool.Get()
-	defer c.Close()
+	c := *connector.client
+	subscriptions := make([]*moira.SubscriptionData, 0, len(subscriptionIDs))
+	results := make([]*redis.StringCmd, 0, len(subscriptionIDs))
 
-	c.Send("MULTI") //nolint
+	pipe := c.TxPipeline()
 	for _, id := range subscriptionIDs {
-		c.Send("GET", subscriptionKey(id)) //nolint
+		result := pipe.Get(connector.context, subscriptionKey(id))
+		results = append(results, result)
 	}
-	subscriptions, err := reply.Subscriptions(c.Do("EXEC"))
-	if err != nil {
+	_, err := pipe.Exec(connector.context)
+
+	if err != nil && err != redis.Nil {
 		return nil, fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
-	for i := range subscriptions {
-		if subscriptions[i] != nil {
-			subscriptions[i].ID = subscriptionIDs[i]
-			if subscriptions[i].Tags == nil {
-				subscriptions[i].Tags = []string{}
+	for i, result := range results {
+		if result.Val() != "" {
+			subscription, err := reply.Subscription(result)
+			if err != nil {
+				return nil, err
 			}
+			subscription.ID = subscriptionIDs[i]
+			if subscription.Tags == nil {
+				subscription.Tags = []string{}
+			}
+			subscriptions = append(subscriptions, &subscription)
+		} else {
+			subscriptions = append(subscriptions, nil)
 		}
 	}
 	return subscriptions, nil
@@ -76,12 +86,11 @@ func (connector *DbConnector) SaveSubscription(subscription *moira.SubscriptionD
 }
 
 func (connector *DbConnector) updateSubscription(newSubscription *moira.SubscriptionData, oldSubscription *moira.SubscriptionData) error {
-	c := connector.pool.Get()
-	defer c.Close()
+	c := *connector.client
 
-	c.Send("MULTI")                                                  //nolint
-	addSendSubscriptionRequest(c, *newSubscription, oldSubscription) //nolint
-	_, err := c.Do("EXEC")
+	pipe := c.TxPipeline()                                                                 //nolint
+	addSendSubscriptionRequest(connector.context, pipe, *newSubscription, oldSubscription) //nolint
+	_, err := pipe.Exec(connector.context)
 	if err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
@@ -116,14 +125,13 @@ func (connector *DbConnector) SaveSubscriptions(newSubscriptions []*moira.Subscr
 }
 
 func (connector *DbConnector) updateSubscriptions(oldSubscriptions []*moira.SubscriptionData, newSubscriptions []*moira.SubscriptionData) error {
-	c := connector.pool.Get()
-	defer c.Close()
+	c := *connector.client
 
-	c.Send("MULTI") //nolint
+	pipe := c.TxPipeline()
 	for i, newSubscription := range newSubscriptions {
-		addSendSubscriptionRequest(c, *newSubscription, oldSubscriptions[i]) //nolint
+		addSendSubscriptionRequest(connector.context, pipe, *newSubscription, oldSubscriptions[i]) //nolint
 	}
-	_, err := c.Do("EXEC")
+	_, err := pipe.Exec(connector.context)
 	if err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
@@ -153,18 +161,17 @@ func (connector *DbConnector) RemoveSubscription(subscriptionID string) error {
 }
 
 func (connector *DbConnector) removeSubscription(subscription *moira.SubscriptionData) error {
-	c := connector.pool.Get()
-	defer c.Close()
+	c := *connector.client
 
-	c.Send("MULTI")                                                            //nolint
-	c.Send("SREM", userSubscriptionsKey(subscription.User), subscription.ID)   //nolint
-	c.Send("SREM", teamSubscriptionsKey(subscription.TeamID), subscription.ID) //nolint
+	pipe := c.TxPipeline()
+	pipe.SRem(connector.context, userSubscriptionsKey(subscription.User), subscription.ID)   //nolint
+	pipe.SRem(connector.context, teamSubscriptionsKey(subscription.TeamID), subscription.ID) //nolint
 	for _, tag := range subscription.Tags {
-		c.Send("SREM", tagSubscriptionKey(tag), subscription.ID) //nolint
+		c.SRem(connector.context, tagSubscriptionKey(tag), subscription.ID) //nolint
 	}
-	c.Send("SREM", anyTagsSubscriptionsKey, subscription.ID) //nolint
-	c.Send("DEL", subscriptionKey(subscription.ID))          //nolint
-	if _, err := c.Do("EXEC"); err != nil {
+	pipe.SRem(connector.context, anyTagsSubscriptionsKey, subscription.ID) //nolint
+	pipe.Del(connector.context, subscriptionKey(subscription.ID))          //nolint
+	if _, err := pipe.Exec(connector.context); err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
 	return nil
@@ -172,10 +179,9 @@ func (connector *DbConnector) removeSubscription(subscription *moira.Subscriptio
 
 // GetUserSubscriptionIDs returns subscriptions ids by given login
 func (connector *DbConnector) GetUserSubscriptionIDs(login string) ([]string, error) {
-	c := connector.pool.Get()
-	defer c.Close()
+	c := *connector.client
 
-	subscriptions, err := redis.Strings(c.Do("SMEMBERS", userSubscriptionsKey(login)))
+	subscriptions, err := c.SMembers(connector.context, userSubscriptionsKey(login)).Result()
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve subscriptions for user login %s: %s", login, err.Error())
 	}
@@ -184,10 +190,9 @@ func (connector *DbConnector) GetUserSubscriptionIDs(login string) ([]string, er
 
 // GetTeamSubscriptionIDs returns subscriptions ids by given team id
 func (connector *DbConnector) GetTeamSubscriptionIDs(teamID string) ([]string, error) {
-	c := connector.pool.Get()
-	defer c.Close()
+	c := *connector.client
 
-	subscriptions, err := redis.Strings(c.Do("SMEMBERS", teamSubscriptionsKey(teamID)))
+	subscriptions, err := c.SMembers(connector.context, teamSubscriptionsKey(teamID)).Result()
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve subscriptions for team id %s: %w", teamID, err)
 	}
@@ -210,27 +215,22 @@ func (connector *DbConnector) GetTagsSubscriptions(tags []string) ([]*moira.Subs
 }
 
 func (connector *DbConnector) getSubscriptionsIDsByTags(tags []string) ([]string, error) {
-	c := connector.pool.Get()
-	defer c.Close()
+	c := *connector.client
 
-	tagKeys := make([]interface{}, 0, len(tags))
+	tagKeys := make([]string, 0, len(tags))
 
 	for _, tag := range tags {
 		tagKeys = append(tagKeys, tagSubscriptionKey(tag))
 	}
 	tagKeys = append(tagKeys, anyTagsSubscriptionsKey)
-	values, err := redis.Values(c.Do("SUNION", tagKeys...))
+	values, err := c.SUnion(connector.context, tagKeys...).Result()
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve subscriptions for tags %v: %s", tags, err.Error())
 	}
-	var subscriptionsIDs []string
-	if err = redis.ScanSlice(values, &subscriptionsIDs); err != nil {
-		return nil, fmt.Errorf("failed to retrieve subscriptions for tags %v: %s", tags, err.Error())
-	}
-	return subscriptionsIDs, nil
+	return values, nil
 }
 
-func addSendSubscriptionRequest(c redis.Conn, subscription moira.SubscriptionData, oldSubscription *moira.SubscriptionData) error {
+func addSendSubscriptionRequest(context context.Context, pipe redis.Pipeliner, subscription moira.SubscriptionData, oldSubscription *moira.SubscriptionData) error {
 	if subscription.AnyTags {
 		subscription.Tags = nil
 	}
@@ -240,31 +240,31 @@ func addSendSubscriptionRequest(c redis.Conn, subscription moira.SubscriptionDat
 	}
 	if oldSubscription != nil {
 		for _, tag := range oldSubscription.Tags {
-			c.Send("SREM", tagSubscriptionKey(tag), subscription.ID) //nolint
+			pipe.SRem(context, tagSubscriptionKey(tag), subscription.ID) //nolint
 		}
 		if oldSubscription.User != subscription.User {
-			c.Send("SREM", userSubscriptionsKey(oldSubscription.User), subscription.ID) //nolint
+			pipe.SRem(context, userSubscriptionsKey(oldSubscription.User), subscription.ID) //nolint
 		}
 		if oldSubscription.TeamID != subscription.TeamID {
-			c.Send("SREM", teamSubscriptionsKey(oldSubscription.TeamID), subscription.ID) //nolint
+			pipe.SRem(context, teamSubscriptionsKey(oldSubscription.TeamID), subscription.ID) //nolint
 		}
 	}
 
 	for _, tag := range subscription.Tags {
-		c.Send("SADD", tagSubscriptionKey(tag), subscription.ID) //nolint
+		pipe.SAdd(context, tagSubscriptionKey(tag), subscription.ID) //nolint
 	}
 
 	if subscription.AnyTags {
-		c.Send("SADD", anyTagsSubscriptionsKey, subscription.ID) //nolint
+		pipe.SAdd(context, anyTagsSubscriptionsKey, subscription.ID) //nolint
 	}
 
 	if subscription.User != "" {
-		c.Send("SADD", userSubscriptionsKey(subscription.User), subscription.ID) //nolint
+		pipe.SAdd(context, userSubscriptionsKey(subscription.User), subscription.ID) //nolint
 	}
 	if subscription.TeamID != "" {
-		c.Send("SADD", teamSubscriptionsKey(subscription.TeamID), subscription.ID) //nolint
+		pipe.SAdd(context, teamSubscriptionsKey(subscription.TeamID), subscription.ID) //nolint
 	}
-	c.Send("SET", subscriptionKey(subscription.ID), bytes) //nolint
+	pipe.Set(context, subscriptionKey(subscription.ID), bytes, redis.KeepTTL) //nolint
 	return nil
 }
 
@@ -273,24 +273,19 @@ func (connector *DbConnector) getTriggersIdsByTags(tags []string) ([]string, err
 		return make([]string, 0), nil
 	}
 
-	c := connector.pool.Get()
-	defer c.Close()
+	c := *connector.client
 
-	tagKeys := make([]interface{}, 0, len(tags))
+	tagKeys := make([]string, 0, len(tags))
 	for _, tag := range tags {
 		tagKeys = append(tagKeys, tagTriggersKey(tag))
 	}
 
-	values, err := redis.Values(c.Do("SINTER", tagKeys...))
+	values, err := c.SInter(connector.context, tagKeys...).Result()
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve triggers for tags %v: %s", tags, err.Error())
 	}
 
-	var triggerIDs []string
-	if err = redis.ScanSlice(values, &triggerIDs); err != nil {
-		return nil, fmt.Errorf("failed to retrieve triggers for tags %v: %s", tags, err.Error())
-	}
-	return triggerIDs, nil
+	return values, nil
 }
 
 func (connector *DbConnector) getSubscriptionTriggers(subscription *moira.SubscriptionData) ([]*moira.Trigger, error) {
