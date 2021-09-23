@@ -146,7 +146,7 @@ func TestTriggersSearchResultsStoring(t *testing.T) {
 }
 
 func BenchmarkSaveTriggersSearchResults(b *testing.B) {
-	logger = &logging.Logger{
+	logger := &logging.Logger{
 		Logger: zerolog.New(&strings.Builder{}).With().Str(logging.ModuleFieldName, "dataBase").Logger(),
 	}
 

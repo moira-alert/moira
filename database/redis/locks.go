@@ -4,14 +4,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/go-redsync/redsync"
+	"github.com/go-redsync/redsync/v4"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
 )
 
 // NewLock returns the implementation of moira.Lock which can be used to Acquire or Release the lock
 func (connector *DbConnector) NewLock(name string, ttl time.Duration) moira.Lock {
-	mutex := connector.sync.NewMutex(name, redsync.SetExpiry(ttl), redsync.SetTries(1))
+	mutex := connector.sync.NewMutex(name, redsync.WithExpiry(ttl), redsync.WithTries(1))
 	return &Lock{name: name, ttl: ttl, mutex: mutex}
 }
 

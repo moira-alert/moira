@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/gofrs/uuid"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
@@ -119,7 +120,7 @@ func TestTriggersToReindex(t *testing.T) {
 
 func TestTriggerToReindexConnection(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
-	dataBase := newTestDatabase(logger, emptyConfig)
+	dataBase := newTestDatabase(logger, incorrectConfig)
 	dataBase.flush()
 	defer dataBase.flush()
 
@@ -138,17 +139,19 @@ func addTriggersToReindex(connector *DbConnector, triggerIDs ...string) error {
 		return nil
 	}
 
-	c := connector.pool.Get()
-	defer c.Close()
+	ctx := connector.context
+	pipe := (*connector.client).TxPipeline()
 
-	c.Send("MULTI") //nolint
 	for _, triggerID := range triggerIDs {
-		c.Send("ZADD", triggersToReindexKey, time.Now().Unix(), triggerID) //nolint
+		z := &redis.Z{Score: float64(time.Now().Unix()), Member: triggerID}
+		pipe.ZAdd(ctx, triggersToReindexKey, z)
 	}
 
-	_, err := c.Do("EXEC")
+	_, err := pipe.Exec(ctx)
+
 	if err != nil {
 		return fmt.Errorf("failed to add triggers to reindex: %s", err.Error())
 	}
+
 	return nil
 }
