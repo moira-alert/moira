@@ -196,7 +196,7 @@ func TestRemoteTriggerToCheck(t *testing.T) {
 
 func TestRemoteTriggerToCheckConnection(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
-	dataBase := newTestDatabase(logger, emptyConfig)
+	dataBase := newTestDatabase(logger, incorrectConfig)
 	dataBase.flush()
 	defer dataBase.flush()
 	Convey("Should throw error when no connection", t, func() {
@@ -211,7 +211,7 @@ func TestRemoteTriggerToCheckConnection(t *testing.T) {
 
 func TestTriggerToCheckConnection(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
-	dataBase := newTestDatabase(logger, emptyConfig)
+	dataBase := newTestDatabase(logger, incorrectConfig)
 	dataBase.flush()
 	defer dataBase.flush()
 	Convey("Should throw error when no connection", t, func() {
