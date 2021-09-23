@@ -3,21 +3,20 @@ package redis
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 
-	"github.com/gomodule/redigo/redis"
-	"gopkg.in/tomb.v2"
-
+	"github.com/go-redis/redis/v8"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/database/redis/reply"
 	"github.com/patrickmn/go-cache"
+	"gopkg.in/tomb.v2"
 )
 
 // GetPatterns gets updated patterns array
 func (connector *DbConnector) GetPatterns() ([]string, error) {
-	c := connector.pool.Get()
-	defer c.Close()
-	patterns, err := redis.Strings(c.Do("SMEMBERS", patternsListKey))
+	c := *connector.client
+	patterns, err := c.SMembers(connector.context, patternsListKey).Result()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get moira patterns, error: %v", err)
 	}
@@ -26,15 +25,13 @@ func (connector *DbConnector) GetPatterns() ([]string, error) {
 
 // GetMetricsValues gets metrics values for given interval
 func (connector *DbConnector) GetMetricsValues(metrics []string, from int64, until int64) (map[string][]*moira.MetricValue, error) {
-	c := connector.pool.Get()
-	defer c.Close()
+	c := *connector.client
+	resultByMetrics := make([]*redis.ZSliceCmd, 0, len(metrics))
 
 	for _, metric := range metrics {
-		c.Send("ZRANGEBYSCORE", metricDataKey(metric), from, until, "WITHSCORES") //nolint
-	}
-	resultByMetrics, err := redis.Values(c.Do(""))
-	if err != nil {
-		return nil, fmt.Errorf("failed to get metric values: %v", err)
+		rng := &redis.ZRangeBy{Min: strconv.FormatInt(from, 10), Max: strconv.FormatInt(until, 10)}
+		result := c.ZRangeByScoreWithScores(connector.context, metricDataKey(metric), rng)
+		resultByMetrics = append(resultByMetrics, result)
 	}
 
 	res := make(map[string][]*moira.MetricValue, len(resultByMetrics))
@@ -77,14 +74,17 @@ func (connector *DbConnector) getCachedRetention(metric string) (int64, bool) {
 }
 
 func (connector *DbConnector) getMetricRetention(metric string) (int64, error) {
-	c := connector.pool.Get()
-	defer c.Close()
+	c := *connector.client
 
-	retention, err := redis.Int64(c.Do("GET", metricRetentionKey(metric)))
+	retentionStr, err := c.Get(connector.context, metricRetentionKey(metric)).Result()
 	if err != nil {
-		if err == redis.ErrNil {
+		if err == redis.Nil {
 			return 60, database.ErrNil //nolint
 		}
+		return 0, fmt.Errorf("failed GET metric retention:%s, error: %v", metric, err)
+	}
+	retention, err := strconv.ParseInt(retentionStr, 10, 64)
+	if err != nil {
 		return 0, fmt.Errorf("failed GET metric retention:%s, error: %v", metric, err)
 	}
 	return retention, nil
@@ -96,29 +96,44 @@ func (connector *DbConnector) SaveMetrics(metrics map[string]*moira.MatchedMetri
 		return nil
 	}
 
-	c := connector.pool.Get()
-	defer c.Close()
+	var err error
+	c := *connector.client
+	ctx := connector.context
+
 	for _, metric := range metrics {
 		metricValue := fmt.Sprintf("%v %v", metric.Timestamp, metric.Value)
-		c.Send("ZADD", metricDataKey(metric.Metric), metric.RetentionTimestamp, metricValue) //nolint
+		z := &redis.Z{Score: float64(metric.RetentionTimestamp), Member: metricValue}
+		if err = c.ZAdd(ctx, metricDataKey(metric.Metric), z).Err(); err != nil {
+			return err
+		}
 
-		if err := connector.retentionSavingCache.Add(metric.Metric, true, cache.DefaultExpiration); err == nil {
-			c.Send("SET", metricRetentionKey(metric.Metric), metric.Retention) //nolint
+		if err = connector.retentionSavingCache.Add(metric.Metric, true, cache.DefaultExpiration); err == nil {
+			if err = c.Set(ctx, metricRetentionKey(metric.Metric), metric.Retention, redis.KeepTTL).Err(); err != nil {
+				return err
+			}
 		}
 
 		for _, pattern := range metric.Patterns {
-			c.Send("SADD", patternMetricsKey(pattern), metric.Metric) //nolint
-			event, err := json.Marshal(&moira.MetricEvent{
+			if err = c.SAdd(ctx, patternMetricsKey(pattern), metric.Metric).Err(); err != nil {
+				return err
+			}
+
+			var event []byte
+			event, err = json.Marshal(&moira.MetricEvent{
 				Metric:  metric.Metric,
 				Pattern: pattern,
 			})
+
 			if err != nil {
 				continue
 			}
-			c.Send("PUBLISH", metricEventKey, event) //nolint
+
+			if err = c.Publish(ctx, metricEventKey, event).Err(); err != nil {
+				return err
+			}
 		}
 	}
-	return c.Flush()
+	return nil
 }
 
 // SubscribeMetricEvents creates subscription for new metrics and return channel for this events
@@ -151,9 +166,8 @@ func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb) (<-chan *mo
 
 // AddPatternMetric adds new metrics by given pattern
 func (connector *DbConnector) AddPatternMetric(pattern, metric string) error {
-	c := connector.pool.Get()
-	defer c.Close()
-	if _, err := c.Do("SADD", patternMetricsKey(pattern), metric); err != nil {
+	c := *connector.client
+	if _, err := c.SAdd(connector.context, patternMetricsKey(pattern), metric).Result(); err != nil {
 		return fmt.Errorf("failed to SADD pattern-metrics, pattern: %s, metric: %s, error: %v", pattern, metric, err)
 	}
 	return nil
@@ -161,12 +175,11 @@ func (connector *DbConnector) AddPatternMetric(pattern, metric string) error {
 
 // GetPatternMetrics gets all metrics by given pattern
 func (connector *DbConnector) GetPatternMetrics(pattern string) ([]string, error) {
-	c := connector.pool.Get()
-	defer c.Close()
+	c := *connector.client
 
-	metrics, err := redis.Strings(c.Do("SMEMBERS", patternMetricsKey(pattern)))
+	metrics, err := c.SMembers(connector.context, patternMetricsKey(pattern)).Result()
 	if err != nil {
-		if err == redis.ErrNil {
+		if err == redis.Nil {
 			return make([]string, 0), nil
 		}
 		return nil, fmt.Errorf("failed to get pattern metrics for pattern %s, error: %v", pattern, err)
@@ -176,9 +189,8 @@ func (connector *DbConnector) GetPatternMetrics(pattern string) ([]string, error
 
 // RemovePattern removes pattern from patterns list
 func (connector *DbConnector) RemovePattern(pattern string) error {
-	c := connector.pool.Get()
-	defer c.Close()
-	if _, err := c.Do("SREM", patternsListKey, pattern); err != nil {
+	c := *connector.client
+	if _, err := c.SRem(connector.context, patternsListKey, pattern).Result(); err != nil {
 		return fmt.Errorf("failed to remove pattern: %s, error: %v", pattern, err)
 	}
 	return nil
@@ -186,13 +198,11 @@ func (connector *DbConnector) RemovePattern(pattern string) error {
 
 // RemovePatternsMetrics removes metrics by given patterns
 func (connector *DbConnector) RemovePatternsMetrics(patterns []string) error {
-	c := connector.pool.Get()
-	defer c.Close()
-	c.Send("MULTI") //nolint
+	pipe := (*connector.client).TxPipeline()
 	for _, pattern := range patterns {
-		c.Send("DEL", patternMetricsKey(pattern)) //nolint
+		pipe.Del(connector.context, patternMetricsKey(pattern)) //nolint
 	}
-	if _, err := c.Do("EXEC"); err != nil {
+	if _, err := pipe.Exec(connector.context); err != nil {
 		return fmt.Errorf("failed to EXEC: %v", err)
 	}
 	return nil
@@ -204,16 +214,14 @@ func (connector *DbConnector) RemovePatternWithMetrics(pattern string) error {
 	if err != nil {
 		return err
 	}
-	c := connector.pool.Get()
-	defer c.Close()
-	c.Send("MULTI") //nolint
-	c.Send("SREM", patternsListKey, pattern) //nolint
+	pipe := (*connector.client).TxPipeline()
+	pipe.SRem(connector.context, patternsListKey, pattern)
 	for _, metric := range metrics {
-		c.Send("DEL", metricDataKey(metric)) //nolint
-		c.Send("DEL", metricRetentionKey(metric)) //nolint
+		pipe.Del(connector.context, metricDataKey(metric))
+		pipe.Del(connector.context, metricRetentionKey(metric))
 	}
-	c.Send("DEL", patternMetricsKey(pattern)) //nolint
-	if _, err = c.Do("EXEC"); err != nil {
+	pipe.Del(connector.context, patternMetricsKey(pattern))
+	if _, err = pipe.Exec(connector.context); err != nil {
 		return fmt.Errorf("failed to EXEC: %v", err)
 	}
 	return nil
@@ -224,9 +232,8 @@ func (connector *DbConnector) RemoveMetricValues(metric string, toTime int64) er
 	if !connector.needRemoveMetrics(metric) {
 		return nil
 	}
-	c := connector.pool.Get()
-	defer c.Close()
-	if _, err := c.Do("ZREMRANGEBYSCORE", metricDataKey(metric), "-inf", toTime); err != nil {
+	c := *connector.client
+	if _, err := c.ZRemRangeByScore(connector.context, metricDataKey(metric), "-inf", strconv.FormatInt(toTime, 10)).Result(); err != nil {
 		return fmt.Errorf("failed to remove metrics from -inf to %v, error: %v", toTime, err)
 	}
 	return nil
@@ -239,16 +246,13 @@ func (connector *DbConnector) GetMetricsTTLSeconds() int64 {
 
 // RemoveMetricsValues remove metrics timestamps values from 0 to given time
 func (connector *DbConnector) RemoveMetricsValues(metrics []string, toTime int64) error {
-	c := connector.pool.Get()
-	defer c.Close()
-
-	c.Send("MULTI") //nolint
+	pipe := (*connector.client).TxPipeline()
 	for _, metric := range metrics {
 		if connector.needRemoveMetrics(metric) {
-			c.Send("ZREMRANGEBYSCORE", metricDataKey(metric), "-inf", toTime) //nolint
+			pipe.ZRemRangeByScore(connector.context, metricDataKey(metric), "-inf", strconv.FormatInt(toTime, 10)) //nolint
 		}
 	}
-	if _, err := c.Do("EXEC"); err != nil {
+	if _, err := pipe.Exec(connector.context); err != nil {
 		return fmt.Errorf("failed to EXEC remove metrics: %v", err)
 	}
 	return nil

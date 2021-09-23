@@ -3,7 +3,7 @@ package redis
 import (
 	"fmt"
 
-	"github.com/gomodule/redigo/redis"
+	"github.com/go-redis/redis/v8"
 	"github.com/moira-alert/moira/database"
 )
 
@@ -38,14 +38,14 @@ func (connector *DbConnector) GetRemoteTriggersToCheckCount() (int64, error) {
 }
 
 func (connector *DbConnector) addTriggersToCheck(key string, triggerIDs []string) error {
-	c := connector.pool.Get()
-	defer c.Close()
+	ctx := connector.context
+	pipe := (*connector.client).TxPipeline()
 
-	c.Send("MULTI") //nolint
 	for _, triggerID := range triggerIDs {
-		c.Send("SADD", key, triggerID) //nolint
+		pipe.SAdd(ctx, key, triggerID)
 	}
-	_, err := redis.Values(c.Do("EXEC"))
+
+	_, err := pipe.Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to add triggers to check: %s", err.Error())
 	}
@@ -53,11 +53,12 @@ func (connector *DbConnector) addTriggersToCheck(key string, triggerIDs []string
 }
 
 func (connector *DbConnector) getTriggersToCheck(key string, count int) ([]string, error) {
-	c := connector.pool.Get()
-	defer c.Close()
-	triggerIDs, err := redis.Strings(c.Do("SPOP", key, count))
+	ctx := connector.context
+	c := *connector.client
+
+	triggerIDs, err := c.SPopN(ctx, key, int64(count)).Result()
 	if err != nil {
-		if err == redis.ErrNil {
+		if err == redis.Nil {
 			return make([]string, 0), database.ErrNil
 		}
 		return make([]string, 0), fmt.Errorf("failed to pop trigger to check: %s", err.Error())
@@ -66,11 +67,12 @@ func (connector *DbConnector) getTriggersToCheck(key string, count int) ([]strin
 }
 
 func (connector *DbConnector) getTriggersToCheckCount(key string) (int64, error) {
-	c := connector.pool.Get()
-	defer c.Close()
-	triggersToCheckCount, err := redis.Int64(c.Do("SCARD", key))
+	ctx := connector.context
+	c := *connector.client
+
+	triggersToCheckCount, err := c.SCard(ctx, key).Result()
 	if err != nil {
-		if err == redis.ErrNil {
+		if err == redis.Nil {
 			return 0, nil
 		}
 		return 0, fmt.Errorf("failed to get trigger to check count: %s", err.Error())

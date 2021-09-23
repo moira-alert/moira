@@ -9,9 +9,6 @@ import (
 
 // Database implements DB functionality
 type Database interface {
-	// Get database instance for requests that do not require realtime data
-	AllowStale() Database
-
 	// SelfState
 	UpdateMetricsHeartbeat() error
 	GetMetricsUpdatesCount() (int64, error)

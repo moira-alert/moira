@@ -3,8 +3,9 @@ package redis
 import (
 	"testing"
 
-	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
+
+	"github.com/moira-alert/moira"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -250,7 +251,6 @@ func TestContacts(t *testing.T) {
 				actual2, err = dataBase.GetUserContactIDs(user1)
 				So(err, ShouldBeNil)
 				So(actual2, ShouldHaveLength, 0)
-
 			})
 
 			contact4 := user2Contacts[3]
@@ -430,7 +430,7 @@ func TestContacts(t *testing.T) {
 
 func TestErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, emptyConfig)
+	dataBase := newTestDatabase(logger, incorrectConfig)
 	dataBase.flush()
 	defer dataBase.flush()
 
