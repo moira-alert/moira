@@ -168,7 +168,7 @@ func TestScheduledNotification(t *testing.T) {
 	})
 }
 
-func addNotifications(dataBase moira.Database, notifications []moira.ScheduledNotification) {
+func addNotifications(dataBase *DbConnector, notifications []moira.ScheduledNotification) {
 	for _, notification := range notifications {
 		err := dataBase.AddNotification(&notification)
 		So(err, ShouldBeNil)
@@ -177,7 +177,7 @@ func addNotifications(dataBase moira.Database, notifications []moira.ScheduledNo
 
 func TestScheduledNotificationErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, emptyConfig)
+	dataBase := newTestDatabase(logger, incorrectConfig)
 	dataBase.flush()
 	defer dataBase.flush()
 

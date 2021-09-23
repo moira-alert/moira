@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/gomodule/redigo/redis"
+	"github.com/go-redis/redis/v8"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
 )
@@ -40,10 +40,10 @@ func MarshallTeam(team moira.Team) ([]byte, error) {
 }
 
 // NewTeam is a function that creates a team entity from a bytes received from database
-func NewTeam(rep interface{}, err error) (moira.Team, error) {
-	bytes, err := redis.Bytes(rep, err)
+func NewTeam(rep *redis.StringCmd) (moira.Team, error) {
+	bytes, err := rep.Bytes()
 	if err != nil {
-		if err == redis.ErrNil {
+		if err == redis.Nil {
 			return moira.Team{}, database.ErrNil
 		}
 		return moira.Team{}, fmt.Errorf("failed to read team: %w", err)

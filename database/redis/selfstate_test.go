@@ -89,7 +89,7 @@ func testSelfCheckWithWritesInDBSource(t *testing.T, dbSource DBSource) {
 
 func TestSelfCheckErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, emptyConfig)
+	dataBase := newTestDatabase(logger, incorrectConfig)
 	dataBase.flush()
 	defer dataBase.flush()
 	Convey("Should throw error when no connection", t, func() {
@@ -109,7 +109,7 @@ func TestSelfCheckErrorConnection(t *testing.T) {
 func TestNotifierState(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := newTestDatabase(logger, config)
-	emptyDataBase := newTestDatabase(logger, emptyConfig)
+	emptyDataBase := newTestDatabase(logger, incorrectConfig)
 	dataBase.flush()
 	defer dataBase.flush()
 	Convey(fmt.Sprintf("Test on empty key '%v'", selfStateNotifierHealth), t, func() {
