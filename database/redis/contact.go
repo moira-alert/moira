@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/gomodule/redigo/redis"
+	"github.com/go-redis/redis/v8"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/database/redis/reply"
@@ -12,12 +12,15 @@ import (
 
 // GetContact returns contact data by given id, if no value, return database.ErrNil error
 func (connector *DbConnector) GetContact(id string) (moira.ContactData, error) {
-	c := connector.pool.Get()
-	defer c.Close()
+	c := *connector.client
 
 	var contact moira.ContactData
 
-	contact, err := reply.Contact(c.Do("GET", contactKey(id)))
+	result := c.Get(connector.context, contactKey(id))
+	if result.Err() == redis.Nil {
+		return contact, database.ErrNil
+	}
+	contact, err := reply.Contact(result)
 	if err != nil {
 		return contact, err
 	}
@@ -28,17 +31,24 @@ func (connector *DbConnector) GetContact(id string) (moira.ContactData, error) {
 // GetContacts returns contacts data by given ids, len of contactIDs is equal to len of returned values array.
 // If there is no object by current ID, then nil is returned
 func (connector *DbConnector) GetContacts(contactIDs []string) ([]*moira.ContactData, error) {
-	c := connector.pool.Get()
-	defer c.Close()
-	c.Send("MULTI") //nolint
+	results := make([]*redis.StringCmd, 0, len(contactIDs))
+
+	c := *connector.client
+	pipe := c.TxPipeline()
 	for _, id := range contactIDs {
-		c.Send("GET", contactKey(id)) //nolint
+		result := pipe.Get(connector.context, contactKey(id))
+		results = append(results, result)
+	}
+	_, err := pipe.Exec(connector.context)
+	if err != nil && err != redis.Nil {
+		return nil, err
 	}
 
-	contacts, err := reply.Contacts(c.Do("EXEC"))
+	contacts, err := reply.Contacts(results)
 	if err != nil {
 		return nil, err
 	}
+
 	for i := range contacts {
 		if contacts[i] != nil {
 			contacts[i].ID = contactIDs[i]
@@ -49,10 +59,8 @@ func (connector *DbConnector) GetContacts(contactIDs []string) ([]*moira.Contact
 
 // GetAllContacts returns full contact list
 func (connector *DbConnector) GetAllContacts() ([]*moira.ContactData, error) {
-	c := connector.pool.Get()
-	defer c.Close()
-
-	keys, err := redis.Strings(c.Do("KEYS", contactKey("*")))
+	c := *connector.client
+	keys, err := c.Keys(connector.context, contactKey("*")).Result()
 	if err != nil {
 		return nil, err
 	}
@@ -76,24 +84,23 @@ func (connector *DbConnector) SaveContact(contact *moira.ContactData) error {
 		return err
 	}
 
-	c := connector.pool.Get()
-	defer c.Close()
+	c := *connector.client
 
-	c.Send("MULTI")                                      //nolint
-	c.Send("SET", contactKey(contact.ID), contactString) //nolint
+	pipe := c.TxPipeline()
+	pipe.Set(connector.context, contactKey(contact.ID), contactString, redis.KeepTTL)
 	if getContactErr != database.ErrNil && contact.User != existing.User {
-		c.Send("SREM", userContactsKey(existing.User), contact.ID) //nolint
+		pipe.SRem(connector.context, userContactsKey(existing.User), contact.ID)
 	}
 	if getContactErr != database.ErrNil && contact.Team != existing.Team {
-		c.Send("SREM", teamContactsKey(existing.Team), contact.ID) //nolint
+		pipe.SRem(connector.context, teamContactsKey(existing.Team), contact.ID)
 	}
 	if contact.User != "" {
-		c.Send("SADD", userContactsKey(contact.User), contact.ID) //nolint
+		pipe.SAdd(connector.context, userContactsKey(contact.User), contact.ID)
 	}
 	if contact.Team != "" {
-		c.Send("SADD", teamContactsKey(contact.Team), contact.ID) //nolint
+		pipe.SAdd(connector.context, teamContactsKey(contact.Team), contact.ID)
 	}
-	_, err = c.Do("EXEC")
+	_, err = pipe.Exec(connector.context)
 	if err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
@@ -106,14 +113,13 @@ func (connector *DbConnector) RemoveContact(contactID string) error {
 	if err != nil && err != database.ErrNil {
 		return err
 	}
-	c := connector.pool.Get()
-	defer c.Close()
+	c := *connector.client
 
-	c.Send("MULTI")                                           //nolint
-	c.Send("DEL", contactKey(contactID))                      //nolint
-	c.Send("SREM", userContactsKey(existing.User), contactID) //nolint
-	c.Send("SREM", teamContactsKey(existing.Team), contactID) //nolint
-	_, err = c.Do("EXEC")
+	pipe := c.TxPipeline()
+	pipe.Del(connector.context, contactKey(contactID))
+	pipe.SRem(connector.context, userContactsKey(existing.User), contactID)
+	pipe.SRem(connector.context, teamContactsKey(existing.Team), contactID)
+	_, err = pipe.Exec(connector.context)
 	if err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
@@ -122,10 +128,9 @@ func (connector *DbConnector) RemoveContact(contactID string) error {
 
 // GetUserContactIDs returns contacts ids by given login
 func (connector *DbConnector) GetUserContactIDs(login string) ([]string, error) {
-	c := connector.pool.Get()
-	defer c.Close()
+	c := *connector.client
 
-	contacts, err := redis.Strings(c.Do("SMEMBERS", userContactsKey(login)))
+	contacts, err := c.SMembers(connector.context, userContactsKey(login)).Result()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get contacts for user login %s: %s", login, err.Error())
 	}
@@ -134,10 +139,8 @@ func (connector *DbConnector) GetUserContactIDs(login string) ([]string, error) 
 
 // GetTeamContactIDs returns contacts ids by given team
 func (connector *DbConnector) GetTeamContactIDs(login string) ([]string, error) {
-	c := connector.pool.Get()
-	defer c.Close()
-
-	contacts, err := redis.Strings(c.Do("SMEMBERS", teamContactsKey(login)))
+	c := *connector.client
+	contacts, err := c.SMembers(connector.context, teamContactsKey(login)).Result()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get contacts for team login %s: %s", login, err.Error())
 	}

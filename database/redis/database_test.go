@@ -1,77 +1,68 @@
 package redis
 
 import (
+	"context"
 	"testing"
 
-	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
-	. "github.com/smartystreets/goconvey/convey"
-
 	"github.com/moira-alert/moira"
+
+	"github.com/go-redis/redis/v8"
+	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
+
+	. "github.com/smartystreets/goconvey/convey"
 )
 
-var config = Config{Port: "6379", Host: "0.0.0.0"}
-var emptyConfig = Config{}
+var config = Config{Addrs: []string{"0.0.0.0:6379"}}
+var incorrectConfig = Config{Addrs: []string{"0.0.0.0:0000"}}
 
-// use it only for tests in redis package
 func newTestDatabase(logger moira.Logger, config Config) *DbConnector {
-	config.DB = testDB
 	return NewDatabase(logger, config, testSource)
 }
 
-// docker run -p 6379:6379 redis
-func TestInitialization(t *testing.T) {
-	Convey("Initialization methods", t, func() {
+func TestNewDatabase(t *testing.T) {
+	Convey("NewDatabase should return correct DBConnector", t, func() {
 		logger, _ := logging.ConfigureLog("stdout", "info", "test", true) // nolint: govet
-		database := newTestDatabase(logger, emptyConfig)
+		database := NewDatabase(logger, config, testSource)
 		So(database, ShouldNotBeEmpty)
-		_, err := database.pool.Dial()
-		So(err, ShouldNotBeNil)
-	})
-}
+		So(database.source, ShouldEqual, "test")
+		So(database.logger, ShouldEqual, logger)
+		So(database.context, ShouldEqual, context.Background())
 
-func TestAllowStale(t *testing.T) {
-	logger, _ := logging.ConfigureLog("stdout", "info", "test", true) // nolint: govet
+		database.flush()
+		defer database.flush()
 
-	Convey("Allow stale", t, func() {
-		Convey("When using redis directly, returns same db", func() {
-			database := newTestDatabase(logger, emptyConfig)
+		Convey("Redis client must be workable", func() {
+			var ctx = context.Background()
 
-			staleDatabase := database.AllowStale()
+			Convey("Can get the value of key that does not exists", func() {
+				err := (*database.client).Get(ctx, "key").Err()
+				So(err, ShouldEqual, redis.Nil)
+			})
 
-			So(staleDatabase, ShouldPointTo, database)
-		})
+			Convey("Can set key to hold the string value", func() {
+				err := (*database.client).Set(ctx, "key", "value", 0).Err()
+				So(err, ShouldBeNil)
+			})
 
-		Convey("When using sentinel with slave reads disabled, returns same db", func() {
-			sentinelConfig := Config{
-				MasterName:        "mstr",
-				SentinelAddresses: []string{"addr.ru"},
-				DB:                0,
-				AllowSlaveReads:   false,
-			}
-			database := newTestDatabase(logger, sentinelConfig)
+			Convey("Can get the value of key that exists", func() {
+				(*database.client).Set(ctx, "key", "value", 0)
 
-			staleDatabase := database.AllowStale()
+				val, err := (*database.client).Get(ctx, "key").Result()
+				So(err, ShouldBeNil)
+				So(val, ShouldEqual, "value")
+			})
 
-			So(staleDatabase, ShouldPointTo, database)
-		})
+			Convey("Can remove key", func() {
+				(*database.client).Set(ctx, "key", "value", 0)
+				val := (*database.client).Get(ctx, "key").Val()
+				So(val, ShouldEqual, "value")
 
-		Convey("When using sentinel, returns slave db instance, retains references", func() {
-			sentinelConfig := Config{
-				MasterName:        "mstr",
-				SentinelAddresses: []string{"addr.ru"},
-				DB:                0,
-				AllowSlaveReads:   true,
-			}
-			database := newTestDatabase(logger, sentinelConfig)
+				err := (*database.client).Del(ctx, "key").Err()
+				So(err, ShouldBeNil)
 
-			staleDatabase := database.AllowStale()
-
-			So(staleDatabase, ShouldNotPointTo, database)
-			staleConnector := staleDatabase.(*DbConnector)
-			So(staleConnector.metricsCache, ShouldPointTo, database.metricsCache)
-			So(staleConnector.retentionCache, ShouldPointTo, database.retentionCache)
-			So(staleConnector.retentionSavingCache, ShouldPointTo, database.retentionSavingCache)
-			So(staleConnector.sync, ShouldPointTo, database.sync)
+				err = (*database.client).Get(ctx, "key").Err()
+				So(err, ShouldEqual, redis.Nil)
+			})
 		})
 	})
 }

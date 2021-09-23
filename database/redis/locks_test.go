@@ -34,8 +34,7 @@ func Test(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		time.Sleep(2 * time.Second)
-
-		So(db.getTTL(lockName), ShouldBeBetween, 0, time.Second)
+		So(db.getTTL(lockName), ShouldBeBetweenOrEqual, 0, time.Second)
 	})
 
 	Convey("Lost must be signalled", t, func() {

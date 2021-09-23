@@ -2,11 +2,10 @@ package redis
 
 import (
 	"testing"
+	"time"
 
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
-
-	"time"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
@@ -282,7 +281,7 @@ func TestNotificationEvents(t *testing.T) {
 
 func TestNotificationEventErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, emptyConfig)
+	dataBase := newTestDatabase(logger, incorrectConfig)
 	dataBase.flush()
 	defer dataBase.flush()
 
