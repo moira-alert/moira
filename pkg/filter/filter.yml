@@ -1,8 +1,6 @@
 #See https://moira.readthedocs.io/en/latest/installation/configuration.html for config explanation
 redis:
-  host: localhost
-  port: "6379"
-  dbid: 0
+  addrs: "redis:6379"
 graphite:
   enabled: false
   runtime_stats: false
