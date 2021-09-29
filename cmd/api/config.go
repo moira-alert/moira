@@ -84,10 +84,8 @@ func (config *webConfig) getSettings(isRemoteEnabled bool) ([]byte, error) {
 func getDefault() config {
 	return config{
 		Redis: cmd.RedisConfig{
-			Host:            "localhost",
-			Port:            "6379",
-			ConnectionLimit: 512, //nolint
-			MetricsTTL:      "1h",
+			Addrs:      "localhost:6379",
+			MetricsTTL: "1h",
 		},
 		Logger: cmd.LoggerConfig{
 			LogFile:         "stdout",
