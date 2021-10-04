@@ -95,6 +95,10 @@ func newClient(opts *redis.UniversalOptions) redis.UniversalClient {
 
 func (connector *DbConnector) manageSubscriptions(tomb *tomb.Tomb, channel string) (<-chan []byte, error) {
 	c := (*connector.client).Subscribe(connector.context, channel)
+	err := c.Ping(connector.context)
+	if err != nil {
+		return nil, err
+	}
 
 	go func() {
 		<-tomb.Dying()
@@ -124,6 +128,8 @@ func (connector *DbConnector) manageSubscriptions(tomb *tomb.Tomb, channel strin
 						return
 					}
 				}
+			case *redis.Pong:
+				connector.logger.Infof("Received PONG message")
 			case *net.OpError:
 				connector.logger.Infof("psc.Receive() returned *net.OpError: %s. Reconnecting...", data.Err.Error())
 				c = (*connector.client).Subscribe(connector.context, channel)
@@ -135,7 +141,7 @@ func (connector *DbConnector) manageSubscriptions(tomb *tomb.Tomb, channel strin
 		}
 	}()
 
-	return dataChan, c.Ping(connector.context)
+	return dataChan, nil
 }
 
 // Deletes all the keys of the DB, use it only for tests
