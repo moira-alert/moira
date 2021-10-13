@@ -241,10 +241,6 @@ func (connector *DbConnector) removeTrigger(triggerID string, trigger *moira.Tri
 // Len of triggerIDs is equal to len of returned values array.
 // If there is no object by current ID, then nil is returned
 func (connector *DbConnector) GetTriggerChecks(triggerIDs []string) ([]*moira.TriggerCheck, error) {
-	if len(triggerIDs) == 0 {
-		return nil, database.ErrNil
-	}
-
 	pipe := (*connector.client).TxPipeline()
 	for _, triggerID := range triggerIDs {
 		pipe.Get(connector.context, triggerKey(triggerID))
