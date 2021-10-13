@@ -648,6 +648,13 @@ func TestTriggerErrorConnection(t *testing.T) {
 	dataBase := newTestDatabase(logger, incorrectConfig)
 	dataBase.flush()
 	defer dataBase.flush()
+
+	Convey("Should not throw error when no connection", t, func() {
+		actual, err := dataBase.GetTriggerChecks([]string{})
+		So(err, ShouldBeNil)
+		So(actual, ShouldBeEmpty)
+	})
+
 	Convey("Should throw error when no connection", t, func() {
 		actual, err := dataBase.GetLocalTriggerIDs()
 		So(err, ShouldNotBeNil)
@@ -660,10 +667,6 @@ func TestTriggerErrorConnection(t *testing.T) {
 		actual2, err := dataBase.GetTriggers([]string{""})
 		So(err, ShouldNotBeNil)
 		So(actual2, ShouldBeNil)
-
-		actual3, err := dataBase.GetTriggerChecks([]string{})
-		So(err, ShouldNotBeNil)
-		So(actual3, ShouldBeNil)
 
 		err = dataBase.SaveTrigger("", &triggers[0])
 		So(err, ShouldNotBeNil)
