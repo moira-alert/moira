@@ -51,7 +51,7 @@ type DbConnector struct {
 }
 
 func NewDatabase(logger moira.Logger, config Config, source DBSource) *DbConnector {
-	client := newClient(&redis.UniversalOptions{
+	client := redis.NewUniversalClient(&redis.UniversalOptions{
 		MasterName:     config.MasterName,
 		Addrs:          config.Addrs,
 		RouteByLatency: true, // for Sentinel or Redis Cluster only to route readonly commands to slave nodes
@@ -78,19 +78,6 @@ func NewDatabase(logger moira.Logger, config Config, source DBSource) *DbConnect
 // NewTestDatabase use it only for tests
 func NewTestDatabase(logger moira.Logger) *DbConnector {
 	return NewDatabase(logger, Config{Addrs: []string{"0.0.0.0:6379"}}, testSource)
-}
-
-// newClient returns a new multi client. The type of the returned client depends
-// on the following conditions:
-//
-// 1. If the MasterName option is specified, a sentinel-backed FailoverClusterClient is returned.
-// 2. Otherwise, a single-node Client is returned.
-// This is modification of go-redis/redis's NewUniversalClient function
-func newClient(opts *redis.UniversalOptions) redis.UniversalClient {
-	if opts.MasterName != "" {
-		return redis.NewFailoverClusterClient(opts.Failover())
-	}
-	return redis.NewClient(opts.Simple())
 }
 
 func (connector *DbConnector) manageSubscriptions(tomb *tomb.Tomb, channel string) (<-chan []byte, error) {
