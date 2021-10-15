@@ -6,5 +6,7 @@ import "time"
 type Config struct {
 	MasterName string
 	Addrs      []string
+	Username   string
+	Password   string
 	MetricsTTL time.Duration
 }
