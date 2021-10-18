@@ -54,6 +54,8 @@ func NewDatabase(logger moira.Logger, config Config, source DBSource) *DbConnect
 	client := redis.NewUniversalClient(&redis.UniversalOptions{
 		MasterName:     config.MasterName,
 		Addrs:          config.Addrs,
+		Username:       config.Username,
+		Password:       config.Password,
 		RouteByLatency: true, // for Sentinel or Redis Cluster only to route readonly commands to slave nodes
 	})
 
