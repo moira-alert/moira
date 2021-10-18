@@ -21,8 +21,12 @@ import (
 type RedisConfig struct {
 	// Redis Sentinel cluster name
 	MasterName string `yaml:"master_name"`
-	// Redis Sentinel address list, format: {host1_name:port};{ip:port}
+	// Redis address list, format: {host1_name:port};{ip:port}
 	Addrs string `yaml:"addrs"`
+	// Redis username
+	Username string `yaml:"username"`
+	// Redis password
+	Password string `yaml:"password"`
 	// Moira will delete metrics older than this value from Redis. Large values will lead to various problems everywhere.
 	// See https://github.com/moira-alert/moira/pull/519
 	MetricsTTL string `yaml:"metrics_ttl"`
@@ -33,6 +37,8 @@ func (config *RedisConfig) GetSettings() redis.Config {
 	return redis.Config{
 		MasterName: config.MasterName,
 		Addrs:      strings.Split(config.Addrs, ","),
+		Username:   config.Username,
+		Password:   config.Password,
 		MetricsTTL: to.Duration(config.MetricsTTL),
 	}
 }
