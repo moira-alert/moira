@@ -17,6 +17,7 @@ func TestSubscriptions(t *testing.T) {
 	dataBase := newTestDatabase(logger, config)
 	dataBase.flush()
 	defer dataBase.flush()
+	client := *dataBase.client
 
 	sub := subscriptions[0]
 	subAnyTag := subscriptions[7]
@@ -61,11 +62,25 @@ func TestSubscriptions(t *testing.T) {
 			Convey("Default subscription", func() {
 				err := dataBase.SaveSubscription(sub)
 				So(err, ShouldBeNil)
+				countOfKeys := len(client.Keys(dataBase.context, "*{moira-tag-subscriptions}*").Val())
+				So(countOfKeys, ShouldResemble, 3)
+				valueStoredAtKey := client.SMembers(dataBase.context, "{moira-tag-subscriptions}:moira-any-tags-subscriptions").Val()
+				So(valueStoredAtKey, ShouldBeEmpty)
+				valueStoredAtKey = client.SMembers(dataBase.context, "{moira-tag-subscriptions}:tag1").Val()
+				So(valueStoredAtKey, ShouldResemble, []string{"subscriptionID-00000000000001"})
+				valueStoredAtKey = client.SMembers(dataBase.context, "{moira-tag-subscriptions}:tag2").Val()
+				So(valueStoredAtKey, ShouldResemble, []string{"subscriptionID-00000000000001"})
+				valueStoredAtKey = client.SMembers(dataBase.context, "{moira-tag-subscriptions}:tag3").Val()
+				So(valueStoredAtKey, ShouldResemble, []string{"subscriptionID-00000000000001"})
 			})
 			Convey("When AnyTag is true", func() {
 				Convey("When tags don't exist", func() {
 					err := dataBase.SaveSubscription(subAnyTag)
 					So(err, ShouldBeNil)
+					countOfKeys := len(client.Keys(dataBase.context, "*{moira-tag-subscriptions}*").Val())
+					So(countOfKeys, ShouldResemble, 4)
+					valueStoredAtKey := client.SMembers(dataBase.context, "{moira-tag-subscriptions}:moira-any-tags-subscriptions").Val()
+					So(valueStoredAtKey, ShouldResemble, []string{"subscriptionID-00000000000008"})
 				})
 				Convey("When tags exist", func() {
 					err := dataBase.SaveSubscription(subAnyTagWithTags)
