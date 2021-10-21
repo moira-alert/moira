@@ -51,5 +51,5 @@ func tagTriggersKey(tagName string) string {
 }
 
 func tagSubscriptionKey(tagName string) string {
-	return "moira-tag-subscriptions:" + tagName
+	return "{moira-tag-subscriptions}:" + tagName
 }
