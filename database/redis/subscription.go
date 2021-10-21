@@ -336,4 +336,4 @@ func teamSubscriptionsKey(teamID string) string {
 	return fmt.Sprintf("moira-team-subscriptions:%s", teamID)
 }
 
-const anyTagsSubscriptionsKey = "moira-any-tags-subscriptions"
+const anyTagsSubscriptionsKey = "{moira-tag-subscriptions}:moira-any-tags-subscriptions"
