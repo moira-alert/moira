@@ -39,7 +39,6 @@ func BenchmarkProcessIncomingMetric(b *testing.B) {
 
 	mockCtrl := gomock.NewController(b)
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
-	database.EXPECT().AllowStale().AnyTimes().Return(database)
 	logger, _ := logging.GetLogger("Benchmark")
 
 	database.EXPECT().GetPatterns().Return(patterns, nil)
