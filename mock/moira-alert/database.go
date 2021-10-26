@@ -120,20 +120,6 @@ func (mr *MockDatabaseMockRecorder) AddRemoteTriggersToCheck(arg0 interface{}) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddRemoteTriggersToCheck", reflect.TypeOf((*MockDatabase)(nil).AddRemoteTriggersToCheck), arg0)
 }
 
-// AllowStale mocks base method.
-func (m *MockDatabase) AllowStale() moira.Database {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AllowStale")
-	ret0, _ := ret[0].(moira.Database)
-	return ret0
-}
-
-// AllowStale indicates an expected call of AllowStale.
-func (mr *MockDatabaseMockRecorder) AllowStale() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AllowStale", reflect.TypeOf((*MockDatabase)(nil).AllowStale))
-}
-
 // DeleteTeam mocks base method.
 func (m *MockDatabase) DeleteTeam(arg0, arg1 string) error {
 	m.ctrl.T.Helper()
