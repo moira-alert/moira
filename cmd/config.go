@@ -16,12 +16,14 @@ import (
 )
 
 // RedisConfig is a redis config structure that initialises at the start of moira
-// Use fields MasterName and SentinelAddrs to enable Redis Sentinel support,
-// use Host and Port fields otherwise.
+// Redis configuration depends on fields specified in redis config section:
+// 1. Use fields MasterName and Addrs to enable Redis Sentinel support
+// 2. Specify two or more comma-separated Addrs to enable cluster support
+// 3. Otherwise, standalone configuration is enabled
 type RedisConfig struct {
-	// Redis Sentinel cluster name
+	// Redis Sentinel master name
 	MasterName string `yaml:"master_name"`
-	// Redis address list, format: {host1_name:port};{ip:port}
+	// Redis address list, format: {host1_name:port},{ip:port}
 	Addrs string `yaml:"addrs"`
 	// Redis username
 	Username string `yaml:"username"`
