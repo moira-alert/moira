@@ -101,14 +101,14 @@ services:
     restart: always
 
   relay:
-    image: bodsch/docker-carbon-c-relay
+    image: openmetric/carbon-c-relay
     ports:
       - "2003:2003"
     depends_on:
       - graphite
     volumes:
-      - ./local/relay.conf:/home/relay/carbon-c-relay.conf
-    command: /usr/bin/relay -E -s -f /home/relay/carbon-c-relay.conf
+      - ./local/relay.conf:/openmetric/conf/relay.conf
+    command: /usr/bin/relay -E -s -f /openmetric/conf/relay.conf
     restart: always
 networks:
   balancer:
