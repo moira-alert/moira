@@ -19,7 +19,7 @@ func (connector *DbConnector) NewLock(name string, ttl time.Duration) moira.Lock
 type Lock struct {
 	name   string
 	ttl    time.Duration
-	mutex  *redsync.Mutex
+	mutex  moira.Mutex
 	extend chan struct{}
 	m      sync.Mutex
 	isHeld bool
@@ -37,6 +37,10 @@ func (lock *Lock) Acquire(stop <-chan struct{}) (<-chan struct{}, error) {
 
 		if err == database.ErrLockAlreadyHeld {
 			return nil, database.ErrLockAlreadyHeld
+		}
+
+		if err == database.ErrLockNotAcquired {
+			return nil, database.ErrLockNotAcquired
 		}
 
 		select {
@@ -85,7 +89,7 @@ func (lock *Lock) tryAcquire() (<-chan struct{}, error) {
 	return lost, nil
 }
 
-func extendMutex(mutex *redsync.Mutex, ttl time.Duration, done chan struct{}, stop <-chan struct{}) {
+func extendMutex(mutex moira.Mutex, ttl time.Duration, done chan struct{}, stop <-chan struct{}) {
 	defer close(done)
 	extendTicker := time.NewTicker(ttl / 3) //nolint
 	defer extendTicker.Stop()
