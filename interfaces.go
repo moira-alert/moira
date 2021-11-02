@@ -147,6 +147,13 @@ type Lock interface {
 	Release()
 }
 
+// Mutex implements mutex abstraction
+type Mutex interface {
+	Lock() error
+	Unlock() (bool, error)
+	Extend() (bool, error)
+}
+
 // Logger implements logger abstraction
 type Logger interface {
 	Debug(args ...interface{})
