@@ -47,7 +47,7 @@ func (connector *DbConnector) GetTagTriggerIDs(tagName string) ([]string, error)
 var tagsKey = "moira-tags"
 
 func tagTriggersKey(tagName string) string {
-	return "moira-tag-triggers:" + tagName
+	return "{moira-tag-triggers}:" + tagName
 }
 
 func tagSubscriptionKey(tagName string) string {
