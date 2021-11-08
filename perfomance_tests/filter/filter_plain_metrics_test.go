@@ -55,14 +55,13 @@ func BenchmarkProcessIncomingMetric(b *testing.B) {
 	}
 }
 
-func generateMetrics(patterns *filter.PatternStorage, count int) []string {
+func generateMetrics(patternStorage *filter.PatternStorage, count int) []string {
 	result := make([]string, 0, count)
 	timestamp := time.Now()
-	i := 0
-	for i < count {
+	patternTree := patternStorage.PatternIndex.Load().(*filter.PatternIndex).Root
+	for i := 0; i < count; i++ {
 		parts := make([]string, 0, 16)
 
-		patternTree := patterns.PatternIndex.Load().(*filter.PatternIndex).Root
 		node := patternTree.Children[rand.Intn(len(patternTree.Children))]
 		matched := rand.Float64() < 0.02
 		level := float64(0)
@@ -87,7 +86,6 @@ func generateMetrics(patterns *filter.PatternStorage, count int) []string {
 		path := strings.Join(parts, ".")
 		metric := strings.Join([]string{path, v, ts}, " ")
 		result = append(result, metric)
-		i++
 		timestamp = timestamp.Add(time.Microsecond)
 	}
 
