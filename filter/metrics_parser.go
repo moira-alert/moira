@@ -71,6 +71,11 @@ func ParseMetric(input []byte) (*ParsedMetric, error) {
 	return parsedMetric, nil
 }
 
+// IsTagged checks that metric is tagged
+func (metric ParsedMetric) IsTagged() bool {
+	return len(metric.Labels) > 0
+}
+
 func parseNameAndLabels(metricBytes []byte) (string, map[string]string, error) {
 	metricBytesScanner := moira.NewBytesScanner(metricBytes, ';')
 	if !metricBytesScanner.HasNext() {
