@@ -12,33 +12,46 @@ func TestTagStoring(t *testing.T) {
 	dataBase := newTestDatabase(logger, config)
 	dataBase.flush()
 	defer dataBase.flush()
+	client := *dataBase.client
+
 	Convey("Tags manipulation", t, func() {
 		trigger := triggers[0]
-		triggerIDs, err := dataBase.GetTagTriggerIDs(trigger.Tags[0])
-		So(err, ShouldBeNil)
-		So(triggerIDs, ShouldHaveLength, 0)
 
-		err = dataBase.SaveTrigger(trigger.ID, &trigger)
-		So(err, ShouldBeNil)
+		Convey("Get tags when they don't exist", func() {
+			triggerIDs, err := dataBase.GetTagTriggerIDs(trigger.Tags[0])
+			So(err, ShouldBeNil)
+			So(triggerIDs, ShouldHaveLength, 0)
+			valueStoredAtKey := client.SMembers(dataBase.context, "{moira-tag-triggers}:test-tag-1").Val()
+			So(valueStoredAtKey, ShouldBeEmpty)
+		})
 
-		tags, err := dataBase.GetTagNames()
-		So(err, ShouldBeNil)
-		So(tags, ShouldHaveLength, 1)
+		Convey("Get tags after the trigger was created with one tag", func() {
+			err := dataBase.SaveTrigger(trigger.ID, &trigger)
+			So(err, ShouldBeNil)
 
-		triggerIDs, err = dataBase.GetTagTriggerIDs(trigger.Tags[0])
-		So(err, ShouldBeNil)
-		So(triggerIDs, ShouldHaveLength, 1)
+			tags, err := dataBase.GetTagNames()
+			So(err, ShouldBeNil)
+			So(tags, ShouldHaveLength, 1)
 
-		err = dataBase.RemoveTag(trigger.Tags[0])
-		So(err, ShouldBeNil)
+			triggerIDs, err := dataBase.GetTagTriggerIDs(trigger.Tags[0])
+			So(err, ShouldBeNil)
+			So(triggerIDs, ShouldHaveLength, 1)
+			valueStoredAtKey := client.SMembers(dataBase.context, "{moira-tag-triggers}:test-tag-1").Val()
+			So(valueStoredAtKey, ShouldResemble, []string{trigger.ID})
+		})
 
-		tags, err = dataBase.GetTagNames()
-		So(err, ShouldBeNil)
-		So(tags, ShouldHaveLength, 0)
+		Convey("Get tags after the only tag of the only trigger was removed", func() {
+			err := dataBase.RemoveTag(trigger.Tags[0])
+			So(err, ShouldBeNil)
 
-		triggerIDs, err = dataBase.GetTagTriggerIDs(trigger.Tags[0])
-		So(err, ShouldBeNil)
-		So(triggerIDs, ShouldHaveLength, 0)
+			tags, err := dataBase.GetTagNames()
+			So(err, ShouldBeNil)
+			So(tags, ShouldHaveLength, 0)
+
+			triggerIDs, err := dataBase.GetTagTriggerIDs(trigger.Tags[0])
+			So(err, ShouldBeNil)
+			So(triggerIDs, ShouldHaveLength, 0)
+		})
 	})
 }
 
