@@ -530,6 +530,7 @@ func TestRemoteTrigger(t *testing.T) {
 	}
 	dataBase.flush()
 	defer dataBase.flush()
+	client := *dataBase.client
 
 	Convey("Saving remote trigger", t, func() {
 		Convey("Trigger should be saved correctly", func() {
@@ -543,6 +544,8 @@ func TestRemoteTrigger(t *testing.T) {
 			ids, err := dataBase.GetAllTriggerIDs()
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{trigger.ID})
+			valueStoredAtKey := client.SMembers(dataBase.context, "{moira-triggers-list}:moira-triggers-list").Val()
+			So(valueStoredAtKey, ShouldResemble, []string{trigger.ID})
 		})
 		Convey("Trigger should not be added to local triggers collection", func() {
 			ids, err := dataBase.GetLocalTriggerIDs()
@@ -553,6 +556,8 @@ func TestRemoteTrigger(t *testing.T) {
 			ids, err := dataBase.GetRemoteTriggerIDs()
 			So(err, ShouldBeNil)
 			So(ids, ShouldResemble, []string{trigger.ID})
+			valueStoredAtKey := client.SMembers(dataBase.context, "{moira-triggers-list}:moira-remote-triggers-list").Val()
+			So(valueStoredAtKey, ShouldResemble, []string{trigger.ID})
 		})
 		Convey("Trigger should not be added to patterns collection", func() {
 			ids, err := dataBase.GetPatternTriggerIDs(pattern)
