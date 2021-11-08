@@ -342,8 +342,8 @@ func (connector *DbConnector) triggerHasSubscriptions(trigger *moira.Trigger) (b
 	return false, nil
 }
 
-var triggersListKey = "moira-triggers-list"
-var remoteTriggersListKey = "moira-remote-triggers-list"
+var triggersListKey = "{moira-triggers-list}:moira-triggers-list"
+var remoteTriggersListKey = "{moira-triggers-list}:moira-remote-triggers-list"
 
 func triggerKey(triggerID string) string {
 	return "moira-trigger:" + triggerID
