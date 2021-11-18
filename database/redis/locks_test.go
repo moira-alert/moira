@@ -18,7 +18,7 @@ import (
 
 func Test(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	db := newTestDatabase(logger, config)
+	db := NewTestDatabase(logger)
 	db.flush()
 	defer db.flush()
 

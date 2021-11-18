@@ -11,7 +11,7 @@ import (
 
 func TestBotDataStoring(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
-	dataBase := newTestDatabase(logger, config)
+	dataBase := NewTestDatabase(logger)
 	dataBase.flush()
 	defer dataBase.flush()
 
@@ -60,7 +60,7 @@ func TestBotDataStoring(t *testing.T) {
 
 func TestBotDataStoringErrorConnection(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
-	dataBase := newTestDatabase(logger, incorrectConfig)
+	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
 	dataBase.flush()
 	defer dataBase.flush()
 	Convey("Should throw error when no connection", t, func() {

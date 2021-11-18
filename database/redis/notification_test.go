@@ -15,7 +15,7 @@ import (
 
 func TestScheduledNotification(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, config)
+	dataBase := NewTestDatabase(logger)
 	dataBase.flush()
 	defer dataBase.flush()
 
@@ -177,7 +177,7 @@ func addNotifications(dataBase *DbConnector, notifications []moira.ScheduledNoti
 
 func TestScheduledNotificationErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, incorrectConfig)
+	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
 	dataBase.flush()
 	defer dataBase.flush()
 
@@ -209,7 +209,7 @@ func TestScheduledNotificationErrorConnection(t *testing.T) {
 
 func TestFetchNotifications(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, config)
+	dataBase := NewTestDatabase(logger)
 	dataBase.flush()
 	defer dataBase.flush()
 
@@ -293,7 +293,7 @@ func TestFetchNotifications(t *testing.T) {
 
 func TestNotificationsCount(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, config)
+	dataBase := NewTestDatabase(logger)
 	dataBase.flush()
 	defer dataBase.flush()
 
@@ -356,7 +356,7 @@ func TestNotificationsCount(t *testing.T) {
 
 func TestFetchNotificationsWithLimitDo(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, config)
+	dataBase := NewTestDatabase(logger)
 	dataBase.flush()
 	defer dataBase.flush()
 
@@ -489,7 +489,7 @@ func TestLimitNotifications(t *testing.T) { //nolint
 
 func TestFetchNotificationsNoLimit(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, config)
+	dataBase := NewTestDatabase(logger)
 	dataBase.flush()
 	defer dataBase.flush()
 
