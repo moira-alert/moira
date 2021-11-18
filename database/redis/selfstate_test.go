@@ -67,6 +67,7 @@ func TestSelfCheckWithWritesNotInChecker(t *testing.T) {
 func testSelfCheckWithWritesInDBSource(t *testing.T, dbSource DBSource) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabase(logger)
+	dataBase.source = dbSource
 	dataBase.flush()
 	defer dataBase.flush()
 	Convey(fmt.Sprintf("Self state triggers manipulation in %s", dbSource), t, func() {
