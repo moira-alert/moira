@@ -4,25 +4,16 @@ import (
 	"context"
 	"testing"
 
-	"github.com/moira-alert/moira"
-
 	"github.com/go-redis/redis/v8"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-var config = Config{Addrs: []string{"0.0.0.0:6379"}}
-var incorrectConfig = Config{Addrs: []string{"0.0.0.0:0000"}}
-
-func newTestDatabase(logger moira.Logger, config Config) *DbConnector {
-	return NewDatabase(logger, config, testSource)
-}
-
 func TestNewDatabase(t *testing.T) {
 	Convey("NewDatabase should return correct DBConnector", t, func() {
 		logger, _ := logging.ConfigureLog("stdout", "info", "test", true) // nolint: govet
-		database := NewDatabase(logger, config, testSource)
+		database := NewTestDatabase(logger)
 		So(database, ShouldNotBeEmpty)
 		So(database.source, ShouldEqual, "test")
 		So(database.logger, ShouldEqual, logger)
