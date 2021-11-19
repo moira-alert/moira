@@ -17,7 +17,7 @@ const team2 = "team2"
 
 func TestContacts(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, config)
+	dataBase := NewTestDatabase(logger)
 
 	Convey("Contacts manipulation", t, func() {
 		dataBase.flush()
@@ -430,7 +430,7 @@ func TestContacts(t *testing.T) {
 
 func TestErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, incorrectConfig)
+	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
 	dataBase.flush()
 	defer dataBase.flush()
 
