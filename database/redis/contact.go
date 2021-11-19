@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -59,10 +60,29 @@ func (connector *DbConnector) GetContacts(contactIDs []string) ([]*moira.Contact
 
 // GetAllContacts returns full contact list
 func (connector *DbConnector) GetAllContacts() ([]*moira.ContactData, error) {
-	c := *connector.client
-	keys, err := c.Keys(connector.context, contactKey("*")).Result()
-	if err != nil {
-		return nil, err
+	client := *connector.client
+	var keys []string
+
+	switch c := client.(type) {
+	case *redis.ClusterClient:
+		err := c.ForEachMaster(connector.context, func(ctx context.Context, shard *redis.Client) error {
+			iter := shard.Scan(ctx, 0, contactKey("*"), 0).Iterator()
+			for iter.Next(ctx) {
+				keys = append(keys, iter.Val())
+			}
+			return iter.Err()
+		})
+		if err != nil {
+			return nil, err
+		}
+	default:
+		iter := c.Scan(connector.context, 0, contactKey("*"), 0).Iterator()
+		for iter.Next(connector.context) {
+			keys = append(keys, iter.Val())
+		}
+		if err := iter.Err(); err != nil {
+			return nil, err
+		}
 	}
 
 	contactIDs := make([]string, 0, len(keys))
