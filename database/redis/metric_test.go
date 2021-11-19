@@ -13,7 +13,7 @@ import (
 
 func TestMetricsStoring(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, config)
+	dataBase := NewTestDatabase(logger)
 	dataBase.flush()
 	metric1 := "my.test.super.metric" //nolint
 	metric2 := "my.test.super.metric2"
@@ -184,7 +184,7 @@ func TestMetricsStoring(t *testing.T) {
 
 func TestRemoveMetricValues(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, config)
+	dataBase := NewTestDatabase(logger)
 	dataBase.metricsCache = cache.New(time.Second*2, time.Minute*60)
 	dataBase.flush()
 	defer dataBase.flush()
@@ -336,7 +336,7 @@ func TestRemoveMetricValues(t *testing.T) {
 
 func TestMetricSubscription(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, config)
+	dataBase := NewTestDatabase(logger)
 	dataBase.flush()
 	defer dataBase.flush()
 	metric1 := "my.test.super.metric"
@@ -401,7 +401,7 @@ func TestMetricSubscription(t *testing.T) {
 
 func TestMetricsStoringErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, incorrectConfig)
+	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
 	dataBase.flush()
 	defer dataBase.flush()
 	Convey("Should throw error when no connection", t, func() {

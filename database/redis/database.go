@@ -79,7 +79,14 @@ func NewDatabase(logger moira.Logger, config Config, source DBSource) *DbConnect
 
 // NewTestDatabase use it only for tests
 func NewTestDatabase(logger moira.Logger) *DbConnector {
-	return NewDatabase(logger, Config{Addrs: []string{"0.0.0.0:6379"}}, testSource)
+	return NewDatabase(logger, Config{
+		Addrs: []string{"0.0.0.0:6379"},
+	}, testSource)
+}
+
+// NewTestDatabaseWithIncorrectConfig use it only for tests
+func NewTestDatabaseWithIncorrectConfig(logger moira.Logger) *DbConnector {
+	return NewDatabase(logger, Config{Addrs: []string{"0.0.0.0:0000"}}, testSource)
 }
 
 func (connector *DbConnector) manageSubscriptions(tomb *tomb.Tomb, channel string) (<-chan []byte, error) {
