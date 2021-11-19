@@ -15,7 +15,7 @@ import (
 
 func TestTriggerStoring(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, config)
+	dataBase := NewTestDatabase(logger)
 	dataBase.flush()
 	defer dataBase.flush()
 
@@ -517,7 +517,7 @@ func TestTriggerStoring(t *testing.T) {
 
 func TestRemoteTrigger(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, config)
+	dataBase := NewTestDatabase(logger)
 	pattern := "test.pattern.remote1"
 	trigger := &moira.Trigger{
 		ID:           "triggerID-0000000000010",
@@ -650,7 +650,7 @@ func TestRemoteTrigger(t *testing.T) {
 
 func TestTriggerErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, incorrectConfig)
+	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
 	dataBase.flush()
 	defer dataBase.flush()
 

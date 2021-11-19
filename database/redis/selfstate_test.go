@@ -11,7 +11,8 @@ import (
 
 func TestSelfCheckWithWritesInChecker(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewDatabase(logger, config, Checker)
+	dataBase := NewTestDatabase(logger)
+	dataBase.source = Checker
 	dataBase.flush()
 	defer dataBase.flush()
 	Convey("Self state triggers manipulation", t, func() {
@@ -65,7 +66,8 @@ func TestSelfCheckWithWritesNotInChecker(t *testing.T) {
 
 func testSelfCheckWithWritesInDBSource(t *testing.T, dbSource DBSource) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewDatabase(logger, config, dbSource)
+	dataBase := NewTestDatabase(logger)
+	dataBase.source = dbSource
 	dataBase.flush()
 	defer dataBase.flush()
 	Convey(fmt.Sprintf("Self state triggers manipulation in %s", dbSource), t, func() {
@@ -89,7 +91,7 @@ func testSelfCheckWithWritesInDBSource(t *testing.T, dbSource DBSource) {
 
 func TestSelfCheckErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, incorrectConfig)
+	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
 	dataBase.flush()
 	defer dataBase.flush()
 	Convey("Should throw error when no connection", t, func() {
@@ -108,8 +110,8 @@ func TestSelfCheckErrorConnection(t *testing.T) {
 
 func TestNotifierState(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, config)
-	emptyDataBase := newTestDatabase(logger, incorrectConfig)
+	dataBase := NewTestDatabase(logger)
+	emptyDataBase := NewTestDatabaseWithIncorrectConfig(logger)
 	dataBase.flush()
 	defer dataBase.flush()
 	Convey(fmt.Sprintf("Test on empty key '%v'", selfStateNotifierHealth), t, func() {

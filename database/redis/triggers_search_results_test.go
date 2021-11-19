@@ -93,7 +93,7 @@ func TestTriggersSearchResultsStoring(t *testing.T) {
 		t.Skip("Skipping database test in short mode")
 	}
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, config)
+	dataBase := NewTestDatabase(logger)
 	dataBase.flush()
 	defer dataBase.flush()
 
@@ -150,7 +150,7 @@ func BenchmarkSaveTriggersSearchResults(b *testing.B) {
 		Logger: zerolog.New(&strings.Builder{}).With().Str(logging.ModuleFieldName, "dataBase").Logger(),
 	}
 
-	dataBase := newTestDatabase(logger, config)
+	dataBase := NewTestDatabase(logger)
 	dataBase.flush()
 	defer dataBase.flush()
 

@@ -9,7 +9,7 @@ import (
 
 func TestTagStoring(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, config)
+	dataBase := NewTestDatabase(logger)
 	dataBase.flush()
 	defer dataBase.flush()
 	client := *dataBase.client
@@ -57,7 +57,7 @@ func TestTagStoring(t *testing.T) {
 
 func TestTagErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, incorrectConfig)
+	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
 	dataBase.flush()
 	defer dataBase.flush()
 	Convey("Should throw error when no connection", t, func() {
