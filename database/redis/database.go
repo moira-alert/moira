@@ -135,7 +135,19 @@ func (connector *DbConnector) manageSubscriptions(tomb *tomb.Tomb, channel strin
 
 // Deletes all the keys of the DB, use it only for tests
 func (connector *DbConnector) flush() {
-	(*connector.client).FlushDB(connector.context)
+	client := *connector.client
+
+	switch c := client.(type) {
+	case *redis.ClusterClient:
+		err := c.ForEachMaster(connector.context, func(ctx context.Context, shard *redis.Client) error {
+			return shard.FlushDB(ctx).Err()
+		})
+		if err != nil {
+			return
+		}
+	default:
+		(*connector.client).FlushDB(connector.context)
+	}
 }
 
 // Get key ttl, use it only for tests
