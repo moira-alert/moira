@@ -84,11 +84,11 @@ func (storage *PatternStorage) ProcessIncomingMetric(lineBytes []byte) *moira.Ma
 }
 
 func (storage *PatternStorage) matchPatterns(metric *ParsedMetric) []string {
-	patternIndex := storage.PatternIndex.Load().(*PatternIndex)
-	seriesByTagPatternIndex := storage.SeriesByTagPatternIndex.Load().(*SeriesByTagPatternIndex)
+	if metric.IsTagged() {
+		seriesByTagPatternIndex := storage.SeriesByTagPatternIndex.Load().(*SeriesByTagPatternIndex)
+		return seriesByTagPatternIndex.MatchPatterns(metric.Name, metric.Labels)
+	}
 
-	matchedPatterns := make([]string, 0)
-	matchedPatterns = append(matchedPatterns, patternIndex.MatchPatterns(metric.Name)...)
-	matchedPatterns = append(matchedPatterns, seriesByTagPatternIndex.MatchPatterns(metric.Name, metric.Labels)...)
-	return matchedPatterns
+	patternIndex := storage.PatternIndex.Load().(*PatternIndex)
+	return patternIndex.MatchPatterns(metric.Name)
 }
