@@ -1,9 +1,11 @@
 package redis
 
 import (
+	"context"
 	"sort"
 	"testing"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/gofrs/uuid"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
@@ -62,7 +64,7 @@ func TestSubscriptions(t *testing.T) {
 			Convey("Default subscription", func() {
 				err := dataBase.SaveSubscription(sub)
 				So(err, ShouldBeNil)
-				countOfKeys := len(client.Keys(dataBase.context, "*{moira-tag-subscriptions}*").Val())
+				countOfKeys := getCountOfTagSubscriptionsKeys(dataBase.context, client)
 				So(countOfKeys, ShouldResemble, 3)
 				valueStoredAtKey := client.SMembers(dataBase.context, "{moira-tag-subscriptions}:moira-any-tags-subscriptions").Val()
 				So(valueStoredAtKey, ShouldBeEmpty)
@@ -77,7 +79,7 @@ func TestSubscriptions(t *testing.T) {
 				Convey("When tags don't exist", func() {
 					err := dataBase.SaveSubscription(subAnyTag)
 					So(err, ShouldBeNil)
-					countOfKeys := len(client.Keys(dataBase.context, "*{moira-tag-subscriptions}*").Val())
+					countOfKeys := getCountOfTagSubscriptionsKeys(dataBase.context, client)
 					So(countOfKeys, ShouldResemble, 4)
 					valueStoredAtKey := client.SMembers(dataBase.context, "{moira-tag-subscriptions}:moira-any-tags-subscriptions").Val()
 					So(valueStoredAtKey, ShouldResemble, []string{"subscriptionID-00000000000008"})
@@ -504,4 +506,24 @@ var subscriptions = []*moira.SubscriptionData{
 		TeamID:            team1,
 		ThrottlingEnabled: true,
 	},
+}
+
+func getCountOfTagSubscriptionsKeys(ctx context.Context, client redis.UniversalClient) int {
+	var keys []string
+	switch c := client.(type) {
+	case *redis.ClusterClient:
+		_ = c.ForEachMaster(ctx, func(ctx context.Context, shard *redis.Client) error {
+			iter := shard.Scan(ctx, 0, "*{moira-tag-subscriptions}*", 0).Iterator()
+			for iter.Next(ctx) {
+				keys = append(keys, iter.Val())
+			}
+			return iter.Err()
+		})
+	default:
+		iter := c.Scan(ctx, 0, "*{moira-tag-subscriptions}*", 0).Iterator()
+		for iter.Next(ctx) {
+			keys = append(keys, iter.Val())
+		}
+	}
+	return len(keys)
 }
