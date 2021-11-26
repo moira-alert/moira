@@ -14,8 +14,8 @@ import (
 func TestTriggersToReindex(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
 	dataBase := NewTestDatabase(logger)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase.Flush()
+	defer dataBase.Flush()
 
 	Convey("Test on empty DB", t, func() {
 		actual, err := dataBase.FetchTriggersToReindex(time.Now().Unix())
@@ -121,8 +121,8 @@ func TestTriggersToReindex(t *testing.T) {
 func TestTriggerToReindexConnection(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
 	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase.Flush()
+	defer dataBase.Flush()
 
 	Convey("Should throw error when no connection", t, func() {
 		triggerID, err := dataBase.FetchTriggersToReindex(time.Now().Unix())
