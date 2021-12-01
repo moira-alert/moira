@@ -20,8 +20,8 @@ func TestContacts(t *testing.T) {
 	dataBase := NewTestDatabase(logger)
 
 	Convey("Contacts manipulation", t, func() {
-		dataBase.flush()
-		defer dataBase.flush()
+		dataBase.Flush()
+		defer dataBase.Flush()
 
 		Convey("While no data then get contacts should be empty", func() {
 			Convey("GetAllContacts should be empty", func() {
@@ -431,8 +431,8 @@ func TestContacts(t *testing.T) {
 func TestErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase.Flush()
+	defer dataBase.Flush()
 
 	Convey("Should throw error when no connection", t, func() {
 		actual1, err := dataBase.GetAllContacts()
