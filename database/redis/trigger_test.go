@@ -16,8 +16,8 @@ import (
 func TestTriggerStoring(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabase(logger)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase.Flush()
+	defer dataBase.Flush()
 
 	Convey("Trigger manipulation", t, func() {
 		Convey("Test trigger has subscriptions with AnyTag is true", func() {
@@ -462,7 +462,7 @@ func TestTriggerStoring(t *testing.T) {
 		})
 
 		Convey("Test trigger manipulations update 'triggers to reindex' list", func() {
-			dataBase.flush()
+			dataBase.Flush()
 			trigger := &triggers[0]
 
 			err := dataBase.SaveTrigger(trigger.ID, trigger)
@@ -528,8 +528,8 @@ func TestRemoteTrigger(t *testing.T) {
 		TriggerType:  moira.RisingTrigger,
 		AloneMetrics: map[string]bool{},
 	}
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase.Flush()
+	defer dataBase.Flush()
 	client := *dataBase.client
 
 	Convey("Saving remote trigger", t, func() {
@@ -651,8 +651,8 @@ func TestRemoteTrigger(t *testing.T) {
 func TestTriggerErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase.Flush()
+	defer dataBase.Flush()
 
 	Convey("Should not throw error when no connection", t, func() {
 		actual, err := dataBase.GetTriggerChecks([]string{})

@@ -14,7 +14,7 @@ import (
 func TestMetricsStoring(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabase(logger)
-	dataBase.flush()
+	dataBase.Flush()
 	metric1 := "my.test.super.metric" //nolint
 	metric2 := "my.test.super.metric2"
 	pattern := "my.test.*.metric*" //nolint
@@ -186,8 +186,8 @@ func TestRemoveMetricValues(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabase(logger)
 	dataBase.metricsCache = cache.New(time.Second*2, time.Minute*60)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase.Flush()
+	defer dataBase.Flush()
 	metric1 := "my.test.super.metric"
 	pattern := "my.test.*.metric*"
 	met1 := &moira.MatchedMetric{
@@ -337,8 +337,8 @@ func TestRemoveMetricValues(t *testing.T) {
 func TestMetricSubscription(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabase(logger)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase.Flush()
+	defer dataBase.Flush()
 	metric1 := "my.test.super.metric"
 	metric2 := "my.test.super.metric2"
 	pattern := "my.test.*.metric*"
@@ -402,8 +402,8 @@ func TestMetricSubscription(t *testing.T) {
 func TestMetricsStoringErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase.Flush()
+	defer dataBase.Flush()
 	Convey("Should throw error when no connection", t, func() {
 		actual, err := dataBase.GetPatterns()
 		So(actual, ShouldBeEmpty)

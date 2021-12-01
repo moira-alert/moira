@@ -56,6 +56,11 @@ var (
 	triggerDumpFile = flag.String("trigger-dump-file", "", "File that holds trigger dump JSON from api method response")
 )
 
+var (
+	toClusterForwards = flag.Bool("move-to-cluster-forwards", false, "Transform database to work on cluster forwards")
+	toClusterReverse  = flag.Bool("move-to-cluster-reverse", false, "Transform database to work on cluster reverse")
+)
+
 func main() { //nolint
 	confCleanup, logger, dataBase := initApp()
 
@@ -132,6 +137,22 @@ func main() { //nolint
 			logger.Fatal(err)
 		}
 		logger.Info("Dump was pushed")
+	}
+
+	if *toClusterForwards {
+		logger.Info("Moving to cluster forwards")
+		err := moveToClusterForwards(logger, dataBase)
+		if err != nil {
+			logger.Fatalf("Failed to move to cluster forwards: %s", err.Error())
+		}
+	}
+
+	if *toClusterReverse {
+		logger.Info("Moving to cluster reverse")
+		err := moveToClusterReverse(logger, dataBase)
+		if err != nil {
+			logger.Fatalf("Failed to move to cluster reverse: %s", err.Error())
+		}
 	}
 }
 
