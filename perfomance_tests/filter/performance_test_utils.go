@@ -38,7 +38,6 @@ func loadPatterns(filename string) (*[]string, error) {
 func createPatternsStorage(patterns *[]string, b *testing.B) (*filter.PatternStorage, error) {
 	mockCtrl := gomock.NewController(b)
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
-	database.EXPECT().AllowStale().AnyTimes().Return(database)
 	database.EXPECT().GetPatterns().Return(*patterns, nil)
 
 	filterMetrics := metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry())
