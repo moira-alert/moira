@@ -19,8 +19,8 @@ func TestNewDatabase(t *testing.T) {
 		So(database.logger, ShouldEqual, logger)
 		So(database.context, ShouldEqual, context.Background())
 
-		database.flush()
-		defer database.flush()
+		database.Flush()
+		defer database.Flush()
 
 		Convey("Redis client must be workable", func() {
 			var ctx = context.Background()

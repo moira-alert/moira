@@ -12,8 +12,8 @@ import (
 func TestThrottlingErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase.Flush()
+	defer dataBase.Flush()
 	Convey("Should throw error when no connection", t, func() {
 		t1, t2 := dataBase.GetTriggerThrottling("")
 		So(t1, ShouldResemble, time.Unix(0, 0))

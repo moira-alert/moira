@@ -16,8 +16,8 @@ import (
 func TestScheduledNotification(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabase(logger)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase.Flush()
+	defer dataBase.Flush()
 
 	Convey("ScheduledNotification manipulation", t, func() {
 		now := time.Now().Unix()
@@ -178,8 +178,8 @@ func addNotifications(dataBase *DbConnector, notifications []moira.ScheduledNoti
 func TestScheduledNotificationErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase.Flush()
+	defer dataBase.Flush()
 
 	Convey("Should throw error when no connection", t, func() {
 		actual1, total, err := dataBase.GetNotifications(0, 1)
@@ -210,8 +210,8 @@ func TestScheduledNotificationErrorConnection(t *testing.T) {
 func TestFetchNotifications(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabase(logger)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase.Flush()
+	defer dataBase.Flush()
 
 	Convey("FetchNotifications manipulation", t, func() {
 		now := time.Now().Unix()
@@ -294,8 +294,8 @@ func TestFetchNotifications(t *testing.T) {
 func TestNotificationsCount(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabase(logger)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase.Flush()
+	defer dataBase.Flush()
 
 	Convey("notificationsCount in db", t, func() {
 		now := time.Now().Unix()
@@ -357,8 +357,8 @@ func TestNotificationsCount(t *testing.T) {
 func TestFetchNotificationsWithLimitDo(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabase(logger)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase.Flush()
+	defer dataBase.Flush()
 
 	Convey("notificationsCount in db", t, func() {
 		now := time.Now().Unix()
@@ -490,8 +490,8 @@ func TestLimitNotifications(t *testing.T) { //nolint
 func TestFetchNotificationsNoLimit(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabase(logger)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase.Flush()
+	defer dataBase.Flush()
 
 	Convey("fetchNotificationsNoLimit manipulation", t, func() {
 		now := time.Now().Unix()

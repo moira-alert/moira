@@ -19,8 +19,8 @@ import (
 func Test(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	db := NewTestDatabase(logger)
-	db.flush()
-	defer db.flush()
+	db.Flush()
+	defer db.Flush()
 
 	Convey("Acquire/Release", t, func() {
 		lockName := "test:" + strconv.Itoa(rand.Int())
