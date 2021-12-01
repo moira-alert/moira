@@ -22,8 +22,8 @@ var value = float64(0)
 func TestNotificationEvents(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabase(logger)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase.Flush()
+	defer dataBase.Flush()
 
 	Convey("Notification events manipulation", t, func() {
 		Convey("Test push-get-get count-fetch", func() {
@@ -282,8 +282,8 @@ func TestNotificationEvents(t *testing.T) {
 func TestNotificationEventErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase.Flush()
+	defer dataBase.Flush()
 
 	// TODO(litleleprikon): check why notification is event created here again
 	var newNotificationEvent = moira.NotificationEvent{

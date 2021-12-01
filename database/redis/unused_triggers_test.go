@@ -12,8 +12,8 @@ import (
 func TestUnusedTriggers(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
 	dataBase := NewTestDatabase(logger)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase.Flush()
+	defer dataBase.Flush()
 
 	Convey("Check marking unused", t, func() {
 		// Check it before any trigger is marked unused
@@ -131,7 +131,7 @@ func TestUnusedTriggers(t *testing.T) {
 		}
 
 		Convey("Very simple trigger-subscription test", func() {
-			dataBase.flush()
+			dataBase.Flush()
 
 			err := dataBase.SaveTrigger(trigger1Ver1.ID, trigger1Ver1)
 			So(err, ShouldBeNil)
@@ -176,7 +176,7 @@ func TestUnusedTriggers(t *testing.T) {
 		})
 
 		Convey("Mass operations with triggers and subscriptions", func() {
-			dataBase.flush()
+			dataBase.Flush()
 
 			triggers := []*moira.Trigger{
 				{
@@ -279,8 +279,8 @@ func TestUnusedTriggers(t *testing.T) {
 func TestUnusedTriggersConnection(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
 	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase.Flush()
+	defer dataBase.Flush()
 	Convey("Should throw error when no connection", t, func() {
 		err := dataBase.MarkTriggersAsUnused("123")
 		So(err, ShouldNotBeNil)
