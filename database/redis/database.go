@@ -140,8 +140,8 @@ func (connector *DbConnector) manageSubscriptions(tomb *tomb.Tomb, channel strin
 	return dataChan, nil
 }
 
-// Deletes all the keys of the DB, use it only for tests
-func (connector *DbConnector) flush() {
+// Flush deletes all the keys of the DB, use it only for tests
+func (connector *DbConnector) Flush() {
 	client := *connector.client
 
 	switch c := client.(type) {
@@ -165,4 +165,12 @@ func (connector *DbConnector) getTTL(key string) time.Duration {
 // Delete the key, use it only for tests
 func (connector *DbConnector) delete(key string) {
 	(*connector.client).Del(connector.context, key)
+}
+
+func (connector *DbConnector) Client() redis.UniversalClient {
+	return *connector.client
+}
+
+func (connector *DbConnector) Context() context.Context {
+	return connector.context
 }

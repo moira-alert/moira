@@ -17,8 +17,8 @@ import (
 func TestSubscriptions(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabase(logger)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase.Flush()
+	defer dataBase.Flush()
 	client := *dataBase.client
 
 	sub := subscriptions[0]
@@ -191,8 +191,8 @@ func TestSubscriptions(t *testing.T) {
 func TestSubscriptionData(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabase(logger)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase.Flush()
+	defer dataBase.Flush()
 
 	Convey("SubscriptionData manipulation", t, func() {
 		Convey("Save-get-remove subscription", func() {
@@ -286,7 +286,7 @@ func TestSubscriptionData(t *testing.T) {
 		})
 
 		Convey("Test rewrite subscription", func() {
-			dataBase.flush()
+			dataBase.Flush()
 			sub := *subscriptions[0]
 
 			err := dataBase.SaveSubscription(&sub)
@@ -356,8 +356,8 @@ func TestSubscriptionData(t *testing.T) {
 func TestSubscriptionErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase.Flush()
+	defer dataBase.Flush()
 	Convey("Should throw error when no connection", t, func() {
 		actual1, err := dataBase.GetSubscription("123")
 		So(actual1, ShouldResemble, moira.SubscriptionData{ThrottlingEnabled: true})
