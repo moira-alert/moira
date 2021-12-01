@@ -94,8 +94,8 @@ func TestTriggersSearchResultsStoring(t *testing.T) {
 	}
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabase(logger)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase.Flush()
+	defer dataBase.Flush()
 
 	Convey("Search Results Manipulation", t, func() {
 		err := dataBase.SaveTriggersSearchResults(searchResultsID, searchResults)
@@ -151,8 +151,8 @@ func BenchmarkSaveTriggersSearchResults(b *testing.B) {
 	}
 
 	dataBase := NewTestDatabase(logger)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase.Flush()
+	defer dataBase.Flush()
 
 	b.ReportAllocs()
 	limits := []int{10, 100, 1000, 10000, 100000}
@@ -177,7 +177,7 @@ func BenchmarkSaveTriggersSearchResults(b *testing.B) {
 				},
 			}
 		}
-		dataBase.flush()
+		dataBase.Flush()
 		b.Run(fmt.Sprintf("Benchmark%d", limit), func(b *testing.B) {
 			for n := 0; n < b.N; n++ {
 				dataBase.SaveTriggersSearchResults(fmt.Sprintf("test_%d_%d", limit, n), data) //nolint

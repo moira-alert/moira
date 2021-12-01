@@ -15,8 +15,8 @@ func TestTeamStoring(t *testing.T) {
 	}
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabase(logger)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase.Flush()
+	defer dataBase.Flush()
 
 	teamID := "testTeam"
 	teamID2 := "testTeam2"
