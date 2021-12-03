@@ -42,6 +42,7 @@ var (
 
 var (
 	plotting = flag.Bool("plotting", false, "enable images in all notifications")
+	toLocal  = flag.Bool("make-all-triggers-datasource-local", false, "make all triggers datasource local")
 )
 
 var (
@@ -152,6 +153,14 @@ func main() { //nolint
 		err := moveToClusterReverse(logger, dataBase)
 		if err != nil {
 			logger.Fatalf("Failed to move to cluster reverse: %s", err.Error())
+		}
+	}
+
+	if *toLocal {
+		logger.Info("Making all triggers datasource local")
+		err := makeAllTriggersDataSourceLocal(logger, dataBase)
+		if err != nil {
+			logger.Fatalf("Failed to make all triggers datasource local: %s", err.Error())
 		}
 	}
 }
