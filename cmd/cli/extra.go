@@ -30,3 +30,27 @@ func enablePlottingInAllSubscriptions(logger moira.Logger, database moira.Databa
 	}
 	return nil
 }
+
+func makeAllTriggersDataSourceLocal(logger moira.Logger, database moira.Database) error {
+	remoteTriggerIds, err := database.GetRemoteTriggerIDs()
+	if err != nil {
+		return err
+	}
+
+	remoteTriggers, err := database.GetTriggers(remoteTriggerIds)
+	if err != nil {
+		return err
+	}
+
+	for _, trigger := range remoteTriggers {
+		trigger.IsRemote = false
+		err := database.SaveTrigger(trigger.ID, trigger)
+		if err != nil {
+			return err
+		}
+	}
+
+	logger.Info("Making all triggers Datasource local is done")
+
+	return nil
+}
