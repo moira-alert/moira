@@ -3,7 +3,6 @@ module github.com/moira-alert/moira
 go 1.16
 
 require (
-	github.com/FZambia/sentinel v1.1.0
 	github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible
 	github.com/PagerDuty/go-pagerduty v1.3.0
 	github.com/RoaringBitmap/roaring v0.5.1 // indirect
@@ -16,7 +15,7 @@ require (
 	github.com/blevesearch/segment v0.9.0 // indirect
 	github.com/bwmarrin/discordgo v0.22.0
 	github.com/carlosdp/twiliogo v0.0.0-20161027183705-b26045ebb9d1
-	github.com/cespare/xxhash/v2 v2.1.1
+	github.com/cespare/xxhash/v2 v2.1.2
 	github.com/couchbase/vellum v1.0.2 // indirect
 	github.com/cyberdelia/go-metrics-graphite v0.0.0-20161219230853-39f87cc3b432
 	github.com/cznic/b v0.0.0-20181122101859-a26611c4d92d // indirect
@@ -29,9 +28,8 @@ require (
 	github.com/go-chi/render v1.0.1
 	github.com/go-graphite/carbonapi v0.0.0-20201019162650-b789c0eaed8a
 	github.com/go-graphite/protocol v0.4.3
-	github.com/go-redis/redis/v8 v8.11.3
-	github.com/go-redsync/redsync v1.4.2
-	github.com/go-redsync/redsync/v4 v4.4.1
+	github.com/go-redis/redis/v8 v8.11.4
+	github.com/go-redsync/redsync/v4 v4.4.4
 	github.com/gofrs/uuid v3.3.0+incompatible
 	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
@@ -78,6 +76,7 @@ require (
 	github.com/spf13/viper v1.7.1 // indirect
 	github.com/steveyen/gtreap v0.1.0 // indirect
 	github.com/stretchr/objx v0.3.0 // indirect
+	github.com/stretchr/testify v1.6.1 // indirect
 	github.com/syndtr/goleveldb v1.0.0 // indirect
 	github.com/tecbot/gorocksdb v0.0.0-20191217155057-f0fad39f321c // indirect
 	github.com/willf/bitset v1.1.11 // indirect
