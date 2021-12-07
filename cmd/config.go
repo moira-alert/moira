@@ -32,16 +32,25 @@ type RedisConfig struct {
 	// Moira will delete metrics older than this value from Redis. Large values will lead to various problems everywhere.
 	// See https://github.com/moira-alert/moira/pull/519
 	MetricsTTL string `yaml:"metrics_ttl"`
+	// Dial connection timeout. Default is 500ms.
+	DialTimeout string `yaml:"dial_timeout"`
+	// Read-operation timeout. Default is 3000ms.
+	ReadTimeout string `yaml:"read_timeout"`
+	// Write-operation timeout. Default is ReadTimeout seconds.
+	WriteTimeout string `yaml:"write_timeout"`
 }
 
 // GetSettings returns redis config parsed from moira config files
 func (config *RedisConfig) GetSettings() redis.Config {
 	return redis.Config{
-		MasterName: config.MasterName,
-		Addrs:      strings.Split(config.Addrs, ","),
-		Username:   config.Username,
-		Password:   config.Password,
-		MetricsTTL: to.Duration(config.MetricsTTL),
+		MasterName:   config.MasterName,
+		Addrs:        strings.Split(config.Addrs, ","),
+		Username:     config.Username,
+		Password:     config.Password,
+		MetricsTTL:   to.Duration(config.MetricsTTL),
+		DialTimeout:  to.Duration(config.DialTimeout),
+		ReadTimeout:  to.Duration(config.ReadTimeout),
+		WriteTimeout: to.Duration(config.WriteTimeout),
 	}
 }
 
