@@ -24,8 +24,9 @@ func getDefault() config {
 		LogLevel:        "info",
 		LogPrettyFormat: false,
 		Redis: cmd.RedisConfig{
-			Addrs:      "localhost:6379",
-			MetricsTTL: "1h",
+			Addrs:       "localhost:6379",
+			MetricsTTL:  "1h",
+			DialTimeout: "500ms",
 		},
 		Cleanup: cleanupConfig{
 			Whitelist: []string{},
