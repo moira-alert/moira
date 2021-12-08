@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/go-redis/redis/v8"
+
 	"github.com/gofrs/uuid"
-	"github.com/gomodule/redigo/redis"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
@@ -267,7 +268,7 @@ func AddTeamUsers(dataBase moira.Database, teamID string, newUsers []string) (dt
 		}
 
 		userTeams, err := dataBase.GetUserTeams(userID) //nolint:shadow
-		if err != nil && err != redis.ErrNil {
+		if err != nil && err != redis.Nil {
 			return dto.TeamMembers{}, api.ErrorInternalServer(fmt.Errorf("cannot get user teams from database: %w", err))
 		}
 
