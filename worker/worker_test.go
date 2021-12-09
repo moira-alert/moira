@@ -38,7 +38,7 @@ func Test(t *testing.T) {
 		worker := createTestWorkerWithDefaultAction(lock)
 
 		gomock.InOrder(
-			lock.EXPECT().Acquire(gomock.Any()).Return(nil, database.ErrLockNotAcquired),
+			lock.EXPECT().Acquire(gomock.Any()).Return(nil, &database.ErrLockNotAcquired{}),
 			lock.EXPECT().Acquire(gomock.Any()).Return(nil, nil).Do(func(_ interface{}) { close(stop) }),
 			lock.EXPECT().Release(),
 		)
@@ -56,7 +56,7 @@ func Test(t *testing.T) {
 		lock := mock_moira_alert.NewMockLock(mockCtrl)
 		worker := createTestWorkerWithDefaultAction(lock)
 
-		lock.EXPECT().Acquire(gomock.Any()).Return(nil, database.ErrLockNotAcquired).Do(func(_ interface{}) { close(stop) })
+		lock.EXPECT().Acquire(gomock.Any()).Return(nil, &database.ErrLockNotAcquired{}).Do(func(_ interface{}) { close(stop) })
 
 		worker.Run(stop)
 	})
