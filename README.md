@@ -48,6 +48,6 @@ If you have any questions, you can ask us on [Telegram](https://t.me/moira_alert
 
 ## Thanks
 
-![SKB Kontur](https://kontur.ru/theme/ver-1652188951/common/images/logo_english.png)
+![SKB Kontur](https://kontur-inc.com/theme/ver-1633004215/images/logo/kontur-en-36.svg)
 
 Moira was originally developed and is supported by [SKB Kontur](https://kontur.ru/eng/about), a B2G company based in Ekaterinburg, Russia. We express gratitude to our company for encouraging us to opensource Moira and for giving back to the community that created [Graphite](https://graphite.readthedocs.io) and many other useful DevOps tools.
