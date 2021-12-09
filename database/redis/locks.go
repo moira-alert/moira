@@ -39,8 +39,9 @@ func (lock *Lock) Acquire(stop <-chan struct{}) (<-chan struct{}, error) {
 			return nil, database.ErrLockAlreadyHeld
 		}
 
-		if err == database.ErrLockNotAcquired {
-			return nil, database.ErrLockNotAcquired
+		switch err.(type) {
+		case *database.ErrLockNotAcquired:
+			return nil, err
 		}
 
 		select {
@@ -79,7 +80,7 @@ func (lock *Lock) tryAcquire() (<-chan struct{}, error) {
 	}
 
 	if err := lock.mutex.Lock(); err != nil {
-		return nil, database.ErrLockNotAcquired
+		return nil, &database.ErrLockNotAcquired{Err: err}
 	}
 
 	lost := make(chan struct{})

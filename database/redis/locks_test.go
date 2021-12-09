@@ -3,7 +3,8 @@ package redis
 import (
 	"strconv"
 
-	"github.com/go-redsync/redsync/v4"
+	"errors"
+
 	"github.com/moira-alert/moira/database"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 
@@ -78,13 +79,13 @@ func Test(t *testing.T) {
 		defer ctrl.Finish()
 
 		mutex := mock_moira_alert.NewMockMutex(ctrl)
-		mutex.EXPECT().Lock().Return(redsync.ErrFailed).AnyTimes()
+		mutex.EXPECT().Lock().Return(errors.New("some error")).AnyTimes()
 
 		lockName := "test:" + strconv.Itoa(rand.Int())
 		lock := &Lock{name: lockName, ttl: time.Second, mutex: mutex}
 
 		_, err := lock.Acquire(nil)
 		defer lock.Release()
-		So(err, ShouldEqual, database.ErrLockNotAcquired)
+		So(err.Error(), ShouldEqual, "lock was not acquired: some error")
 	})
 }
