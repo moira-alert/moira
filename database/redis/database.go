@@ -59,7 +59,7 @@ func NewDatabase(logger moira.Logger, config Config, source DBSource) *DbConnect
 		DialTimeout:    config.DialTimeout,
 		ReadTimeout:    config.ReadTimeout,
 		WriteTimeout:   config.WriteTimeout,
-		RouteByLatency: true,
+		RouteByLatency: true, // for Sentinel or Redis Cluster only to route readonly commands to slave nodes
 	})
 
 	ctx := context.Background()
