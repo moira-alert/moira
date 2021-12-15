@@ -1,6 +1,7 @@
 package filter
 
 import (
+	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	"sort"
 	"testing"
 
@@ -47,8 +48,9 @@ func TestParseSeriesByTag(t *testing.T) {
 }
 
 func TestSeriesByTagPatternIndex(t *testing.T) {
+	var logger, _ = logging.GetLogger("SeriesByTag")
 	Convey("Given empty patterns with tagspecs, should build index and match patterns", t, func(c C) {
-		index := NewSeriesByTagPatternIndex(map[string][]TagSpec{})
+		index := NewSeriesByTagPatternIndex(logger, map[string][]TagSpec{})
 		c.So(index.MatchPatterns("", nil), ShouldResemble, []string{})
 	})
 
@@ -92,7 +94,98 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 			{"cpu1", map[string]string{"machine": "machine"}, []string{"name=cpu1", "name~=cpu", "name~=cpu;dc=", "name~=cpu;dc~="}},
 		}
 
-		index := NewSeriesByTagPatternIndex(tagSpecsByPattern)
+		index := NewSeriesByTagPatternIndex(logger, tagSpecsByPattern)
+		for _, testCase := range testCases {
+			patterns := index.MatchPatterns(testCase.Name, testCase.Labels)
+			sort.Strings(patterns)
+			c.So(patterns, ShouldResemble, testCase.MatchedPatterns)
+		}
+	})
+
+	Convey("Given related patterns with tagspecs, should build index and match patterns", t, func(c C) {
+		tagSpecsByPattern := map[string][]TagSpec{
+			"name=cpu.test1.test2": {{"name", EqualOperator, "cpu.test1.test2"}},
+			"name=cpu.*.test2":     {{"name", EqualOperator, "cpu.*.test2"}},
+			"name=cpu.test1.*":     {{"name", EqualOperator, "cpu.test1.*"}},
+			"name=cpu.*.*":         {{"name", EqualOperator, "cpu.*.*"}},
+
+			"name=cpu.*.test2;tag1=val1": {
+				{"name", EqualOperator, "cpu.*.test2"},
+				{"tag1", EqualOperator, "val1"}},
+			"name=cpu.*.test2;tag2=val2": {
+				{"name", EqualOperator, "cpu.*.test2"},
+				{"tag2", EqualOperator, "val2"}},
+			"name=cpu.*.test2;tag1=val1;tag2=val2": {
+				{"name", EqualOperator, "cpu.*.test2"},
+				{"tag1", EqualOperator, "val1"},
+				{"tag2", EqualOperator, "val2"}},
+
+			"name!=cpu.test1.test2;tag1=val1;tag2=val2": {
+				{"name", NotEqualOperator, "cpu.test1.test2"},
+				{"tag1", EqualOperator, "val1"},
+				{"tag2", EqualOperator, "val2"}},
+			"name=~cpu;tag1=val1": {
+				{"name", MatchOperator, "cpu"},
+				{"tag1", EqualOperator, "val1"}},
+			"tag1=val1;tag2=val2": {
+				{"tag1", EqualOperator, "val1"},
+				{"tag2", EqualOperator, "val2"}},
+		}
+
+		testCases := []struct {
+			Name            string
+			Labels          map[string]string
+			MatchedPatterns []string
+		}{
+			{"cpu.test1.test2",
+				map[string]string{},
+				[]string{"name=cpu.*.*", "name=cpu.*.test2", "name=cpu.test1.*", "name=cpu.test1.test2"}},
+			{"cpu.test1.test2",
+				map[string]string{"tag": "val"},
+				[]string{"name=cpu.*.*", "name=cpu.*.test2", "name=cpu.test1.*", "name=cpu.test1.test2"}},
+
+			{"cpu.test1.test2",
+				map[string]string{"tag1": "val1"},
+				[]string{
+					"name=cpu.*.*", "name=cpu.*.test2",
+					"name=cpu.*.test2;tag1=val1",
+					"name=cpu.test1.*",
+					"name=cpu.test1.test2",
+					"name=~cpu;tag1=val1"}},
+			{"cpu.test1.test2",
+				map[string]string{"tag1": "val2"},
+				[]string{"name=cpu.*.*", "name=cpu.*.test2", "name=cpu.test1.*", "name=cpu.test1.test2"}},
+			{"cpu.test1.test2",
+				map[string]string{"tag1": "val1", "tag2": "val1"},
+				[]string{
+					"name=cpu.*.*", "name=cpu.*.test2",
+					"name=cpu.*.test2;tag1=val1",
+					"name=cpu.test1.*",
+					"name=cpu.test1.test2",
+					"name=~cpu;tag1=val1"}},
+			{"cpu.test1.test2",
+				map[string]string{"tag2": "val2"},
+				[]string{"name=cpu.*.*",
+					"name=cpu.*.test2",
+					"name=cpu.*.test2;tag2=val2",
+					"name=cpu.test1.*",
+					"name=cpu.test1.test2"}},
+			{"cpu.test1.test2",
+				map[string]string{"tag1": "val1", "tag2": "val2"},
+				[]string{
+					"name=cpu.*.*",
+					"name=cpu.*.test2",
+					"name=cpu.*.test2;tag1=val1",
+					"name=cpu.*.test2;tag1=val1;tag2=val2",
+					"name=cpu.*.test2;tag2=val2",
+					"name=cpu.test1.*",
+					"name=cpu.test1.test2",
+					"name=~cpu;tag1=val1",
+					"tag1=val1;tag2=val2",
+				}},
+		}
+
+		index := NewSeriesByTagPatternIndex(logger, tagSpecsByPattern)
 		for _, testCase := range testCases {
 			patterns := index.MatchPatterns(testCase.Name, testCase.Labels)
 			sort.Strings(patterns)

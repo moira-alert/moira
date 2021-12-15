@@ -2,6 +2,7 @@ package filter
 
 import (
 	"fmt"
+	"github.com/moira-alert/moira"
 	"regexp"
 )
 
@@ -72,7 +73,7 @@ func ParseSeriesByTag(input string) ([]TagSpec, error) {
 	return tagSpecs, nil
 }
 
-func createMatcher(spec TagSpec) func(string, map[string]string) bool {
+func createMatcher(spec TagSpec) MatchingFunc {
 	var matcherCondition func(string) bool
 	allowMatchEmpty := false
 	switch spec.Operator {
@@ -114,21 +115,37 @@ func createMatcher(spec TagSpec) func(string, map[string]string) bool {
 	}
 }
 
+type MatchingFunc func(string, map[string]string) bool
+
 // SeriesByTagPatternIndex helps to index the seriesByTag patterns and allows to match them by metric
 type SeriesByTagPatternIndex struct {
-	patternToMatcher map[string]func(string, map[string]string) bool
+	namesPatternIndex      *PatternIndex
+	nameToPatternMatchers  map[string]map[string]MatchingFunc
+	specialPatternMatchers map[string]MatchingFunc
 }
 
 // NewSeriesByTagPatternIndex creates new SeriesByTagPatternIndex using seriesByTag patterns and parsed specs comes from ParseSeriesByTag
-func NewSeriesByTagPatternIndex(tagSpecsByPattern map[string][]TagSpec) *SeriesByTagPatternIndex {
-	patternToMatcher := make(map[string]func(string, map[string]string) bool)
+func NewSeriesByTagPatternIndex(logger moira.Logger, tagSpecsByPattern map[string][]TagSpec) *SeriesByTagPatternIndex {
+	names := make(map[string]bool)
+	nameToPatternMatchers := make(map[string]map[string]MatchingFunc)
+	specialPatternsToMatcher := make(map[string]MatchingFunc)
+
 	for pattern, tagSpecs := range tagSpecsByPattern {
-		matchers := make([]func(string, map[string]string) bool, 0)
+		matchers := make([]MatchingFunc, 0)
+		var nameTagValue string
+		var hasNameTagWithEqualOperationValue bool
+
 		for _, tagSpec := range tagSpecs {
-			matchers = append(matchers, createMatcher(tagSpec))
+			if tagSpec.Name == "name" && tagSpec.Operator == EqualOperator {
+				nameTagValue = tagSpec.Value
+				names[nameTagValue] = true
+				hasNameTagWithEqualOperationValue = true
+			} else {
+				matchers = append(matchers, createMatcher(tagSpec))
+			}
 		}
 
-		patternToMatcher[pattern] = func(metric string, labels map[string]string) bool {
+		matchingFunc := func(metric string, labels map[string]string) bool {
 			for _, matcher := range matchers {
 				if !matcher(metric, labels) {
 					return false
@@ -136,20 +153,57 @@ func NewSeriesByTagPatternIndex(tagSpecsByPattern map[string][]TagSpec) *SeriesB
 			}
 			return true
 		}
+
+		if hasNameTagWithEqualOperationValue {
+			if _, ok := nameToPatternMatchers[nameTagValue]; ok {
+				nameToPatternMatchers[nameTagValue][pattern] = matchingFunc
+			} else {
+				nameToPatternMatchers[nameTagValue] = map[string]MatchingFunc{pattern: matchingFunc}
+			}
+		} else {
+			specialPatternsToMatcher[pattern] = matchingFunc
+		}
 	}
 
-	return &SeriesByTagPatternIndex{patternToMatcher: patternToMatcher}
+	namePatternIndex := NewPatternIndex(logger, getMapKeys(names))
+	return &SeriesByTagPatternIndex{
+		namesPatternIndex:      namePatternIndex,
+		nameToPatternMatchers:  nameToPatternMatchers,
+		specialPatternMatchers: specialPatternsToMatcher}
 }
 
 // MatchPatterns allows to match patterns by metric name and its labels
 func (index *SeriesByTagPatternIndex) MatchPatterns(name string, labels map[string]string) []string {
+	matchers := getMatchingFunctionsFilteredByName(index, name)
 	matchedPatterns := make([]string, 0)
-
-	for pattern, matcher := range index.patternToMatcher {
+	for pattern, matcher := range matchers {
 		if matcher(name, labels) {
 			matchedPatterns = append(matchedPatterns, pattern)
 		}
 	}
-
 	return matchedPatterns
+}
+
+func getMatchingFunctionsFilteredByName(index *SeriesByTagPatternIndex, name string) map[string]MatchingFunc {
+	patternsToMatchers := make(map[string]MatchingFunc)
+	namesPatterns := index.namesPatternIndex.MatchPatterns(name)
+	for _, name := range namesPatterns {
+		for pattern, matchers := range index.nameToPatternMatchers[name] {
+			patternsToMatchers[pattern] = matchers
+		}
+	}
+	for pattern, matchers := range index.specialPatternMatchers {
+		patternsToMatchers[pattern] = matchers
+	}
+	return patternsToMatchers
+}
+
+func getMapKeys(dict map[string]bool) []string {
+	keys := make([]string, len(dict))
+	i := 0
+	for key := range dict {
+		keys[i] = key
+		i++
+	}
+	return keys
 }
