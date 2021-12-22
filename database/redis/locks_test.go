@@ -3,6 +3,8 @@ package redis
 import (
 	"strconv"
 
+	"github.com/go-redsync/redsync/v4"
+
 	"errors"
 
 	"github.com/moira-alert/moira/database"
@@ -78,14 +80,34 @@ func Test(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		mutex := mock_moira_alert.NewMockMutex(ctrl)
-		mutex.EXPECT().Lock().Return(errors.New("some error")).AnyTimes()
+		Convey("Lock returns ErrFailed", func() {
+			mutex := mock_moira_alert.NewMockMutex(ctrl)
 
-		lockName := "test:" + strconv.Itoa(rand.Int())
-		lock := &Lock{name: lockName, ttl: time.Second, mutex: mutex}
+			gomock.InOrder(
+				mutex.EXPECT().Lock().Return(redsync.ErrFailed),
+				mutex.EXPECT().Lock().Return(nil),
+				mutex.EXPECT().Unlock(),
+			)
 
-		_, err := lock.Acquire(nil)
-		defer lock.Release()
-		So(err.Error(), ShouldEqual, "lock was not acquired: some error")
+			lockName := "test:" + strconv.Itoa(rand.Int())
+			lock := &Lock{name: lockName, ttl: time.Second, mutex: mutex}
+
+			_, err := lock.Acquire(nil)
+			defer lock.Release()
+			So(err, ShouldBeNil)
+		})
+
+		Convey("Lock returns another error", func() {
+			mutex := mock_moira_alert.NewMockMutex(ctrl)
+
+			mutex.EXPECT().Lock().Return(errors.New("another error")).AnyTimes()
+
+			lockName := "test:" + strconv.Itoa(rand.Int())
+			lock := &Lock{name: lockName, ttl: time.Second, mutex: mutex}
+
+			_, err := lock.Acquire(nil)
+			defer lock.Release()
+			So(err.Error(), ShouldEqual, "lock was not acquired: another error")
+		})
 	})
 }
