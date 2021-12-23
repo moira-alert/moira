@@ -39,9 +39,11 @@ func (lock *Lock) Acquire(stop <-chan struct{}) (<-chan struct{}, error) {
 			return nil, database.ErrLockAlreadyHeld
 		}
 
-		switch err.(type) {
+		switch e := err.(type) {
 		case *database.ErrLockNotAcquired:
-			return nil, err
+			if e.Err != redsync.ErrFailed {
+				return nil, err
+			}
 		}
 
 		select {
