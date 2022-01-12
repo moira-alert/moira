@@ -131,10 +131,12 @@ func TestNoResendForSendToBrokenContact(t *testing.T) {
 		Events: eventsData,
 		Contact: moira.ContactData{
 			Type: "test",
+			User: "someuser",
 		},
 	}
 	sender.EXPECT().SendEvents(eventsData, pkg.Contact, pkg.Trigger, plots, pkg.Throttled).
 		Return(moira.NewSenderBrokenContactError(fmt.Errorf("some sender reason")))
+	dataBase.EXPECT().GetUserSubscriptionIDs(pkg.Contact.User).Return([]string{}, nil)
 
 	var wg sync.WaitGroup
 	notif.Send(&pkg, &wg)
@@ -236,7 +238,8 @@ func afterTest() {
 var subID = "SubscriptionID-000000000000001"
 
 var event = moira.NotificationEvent{
-	Metric:         "generate.event.1",
+	Metric: "generate.event.1",
+
 	State:          moira.StateOK,
 	OldState:       moira.StateWARN,
 	TriggerID:      "triggerID-0000000000001",

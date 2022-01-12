@@ -195,6 +195,12 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 			switch e := err.(type) {
 			case moira.SenderBrokenContactError:
 				log.Errorf("Cannot send to broken contact: %s", e.Error())
+				if count, errorDisabling := disableBrokenContactSubscriptions(&pkg.Contact, notifier.database, log); errorDisabling != nil {
+					log.Errorf("Failed to disable broken subscriptions: ", errorDisabling)
+				} else {
+					notifier.metrics.SubsBrokenDisabled.Mark(int64(count))
+					log.Infof("Disabled %d broken subscriptions", count)
+				}
 
 			default:
 				log.Errorf("Cannot send notification: %s", err.Error())
@@ -202,4 +208,41 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 			}
 		}
 	}
+}
+
+func disableBrokenContactSubscriptions(brokenContact *moira.ContactData, database moira.Database, log moira.Logger) (
+	disabledCount int, e error) {
+	subsIDs, err := database.GetUserSubscriptionIDs(brokenContact.User)
+	if err != nil {
+		return 0, err
+	}
+	if len(subsIDs) == 0 {
+		return 0, nil
+	}
+
+	subs, e := database.GetSubscriptions(subsIDs)
+	if e != nil {
+		return 0, e
+	}
+
+	disableSubs := []*moira.SubscriptionData{}
+	for _, s := range subs {
+		if len(s.Contacts) == 1 {
+			if s.Contacts[0] == brokenContact.ID {
+				s.Enabled = false
+				disableSubs = append(disableSubs, s)
+			}
+		} else {
+			log.Warningf("Skipped disable subscription with broken contact, "+
+				"contacts more than 1, contacts = %v", s.Contacts)
+		}
+	}
+	disableCount := len(disableSubs)
+	if disableCount > 0 {
+		if err := database.SaveSubscriptions(disableSubs); err != nil {
+			return 0, err
+		}
+		return disableCount, nil
+	}
+	return 0, nil
 }
