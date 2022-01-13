@@ -6,7 +6,7 @@ import (
 
 	"github.com/moira-alert/moira/metrics"
 
-	bleveOriginal "github.com/blevesearch/bleve"
+	bleveOriginal "github.com/blevesearch/bleve/v2"
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 

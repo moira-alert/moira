@@ -1,7 +1,7 @@
 package bleve
 
 import (
-	"github.com/blevesearch/bleve"
+	"github.com/blevesearch/bleve/v2"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/index/mapping"
 )

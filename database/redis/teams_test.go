@@ -14,9 +14,9 @@ func TestTeamStoring(t *testing.T) {
 		t.Skip("Skipping database test in short mode")
 	}
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, config)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase := NewTestDatabase(logger)
+	dataBase.Flush()
+	defer dataBase.Flush()
 
 	teamID := "testTeam"
 	teamID2 := "testTeam2"
