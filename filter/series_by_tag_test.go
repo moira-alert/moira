@@ -1,10 +1,10 @@
 package filter
 
 import (
-	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	"sort"
 	"testing"
 
+	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -66,14 +66,14 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 			"dc!~=ru":          {{"dc", NotMatchOperator, "ru"}},
 			"invalid operator": {{"dc", TagSpecOperator("invalid operator"), "ru"}},
 
-			"name=cpu1;dc=ru1": {{"name", MatchOperator, "cpu1"}, {"dc", EqualOperator, "ru1"}},
-			"name=cpu1;dc=ru2": {{"name", MatchOperator, "cpu1"}, {"dc", EqualOperator, "ru2"}},
-			"name=cpu2;dc=ru1": {{"name", MatchOperator, "cpu2"}, {"dc", EqualOperator, "ru1"}},
-			"name=cpu2;dc=ru2": {{"name", MatchOperator, "cpu2"}, {"dc", EqualOperator, "ru2"}},
-			"name=disk;dc=ru1": {{"name", MatchOperator, "disk"}, {"dc", EqualOperator, "ru1"}},
-			"name=disk;dc=ru2": {{"name", MatchOperator, "disk"}, {"dc", EqualOperator, "ru2"}},
-			"name=cpu1;dc=us":  {{"name", MatchOperator, "cpu1"}, {"dc", EqualOperator, "us"}},
-			"name=cpu2;dc=us":  {{"name", MatchOperator, "cpu2"}, {"dc", EqualOperator, "us"}},
+			"name=cpu1;dc=ru1": {{"name", EqualOperator, "cpu1"}, {"dc", EqualOperator, "ru1"}},
+			"name=cpu1;dc=ru2": {{"name", EqualOperator, "cpu1"}, {"dc", EqualOperator, "ru2"}},
+			"name=cpu2;dc=ru1": {{"name", EqualOperator, "cpu2"}, {"dc", EqualOperator, "ru1"}},
+			"name=cpu2;dc=ru2": {{"name", EqualOperator, "cpu2"}, {"dc", EqualOperator, "ru2"}},
+			"name=disk;dc=ru1": {{"name", EqualOperator, "disk"}, {"dc", EqualOperator, "ru1"}},
+			"name=disk;dc=ru2": {{"name", EqualOperator, "disk"}, {"dc", EqualOperator, "ru2"}},
+			"name=cpu1;dc=us":  {{"name", EqualOperator, "cpu1"}, {"dc", EqualOperator, "us"}},
+			"name=cpu2;dc=us":  {{"name", EqualOperator, "cpu2"}, {"dc", EqualOperator, "us"}},
 
 			"name~=cpu;dc=":   {{"name", MatchOperator, "cpu"}, {"dc", EqualOperator, ""}},
 			"name~=cpu;dc!=":  {{"name", MatchOperator, "cpu"}, {"dc", NotEqualOperator, ""}},
