@@ -194,7 +194,7 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 		} else {
 			switch e := err.(type) {
 			case moira.SenderBrokenContactError:
-				log.Errorf("Cannot send to broken contact: %s", e.Error())
+				log.Warningf("Cannot send to broken contact: %s", e.Error())
 
 			default:
 				log.Errorf("Cannot send notification: %s", err.Error())
