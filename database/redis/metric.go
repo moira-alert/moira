@@ -264,7 +264,7 @@ func (connector *DbConnector) needRemoveMetrics(metric string) bool {
 }
 
 var patternsListKey = "moira-pattern-list"
-var metricEventKey = "metric-event"
+var metricEventKey = "{channel}:metric-event"
 
 func patternMetricsKey(pattern string) string {
 	return "moira-pattern-metrics:" + pattern
