@@ -3,7 +3,9 @@ package redis
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"strconv"
+	"time"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/moira-alert/moira"
@@ -128,7 +130,9 @@ func (connector *DbConnector) SaveMetrics(metrics map[string]*moira.MatchedMetri
 				continue
 			}
 
-			if err = c.Publish(ctx, metricEventKey, event).Err(); err != nil {
+			rand.Seed(time.Now().UnixNano())
+			var metricEventsChannel = metricEventsChannels[rand.Intn(len(metricEventsChannels))]
+			if err = c.Publish(ctx, metricEventsChannel, event).Err(); err != nil {
 				return err
 			}
 		}
@@ -139,7 +143,7 @@ func (connector *DbConnector) SaveMetrics(metrics map[string]*moira.MatchedMetri
 // SubscribeMetricEvents creates subscription for new metrics and return channel for this events
 func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb) (<-chan *moira.MetricEvent, error) {
 	metricsChannel := make(chan *moira.MetricEvent, pubSubWorkerChannelSize)
-	dataChannel, err := connector.manageSubscriptions(tomb, metricEventKey)
+	dataChannel, err := connector.manageSubscriptions(tomb, metricEventsChannels)
 	if err != nil {
 		return nil, err
 	}
@@ -264,7 +268,13 @@ func (connector *DbConnector) needRemoveMetrics(metric string) bool {
 }
 
 var patternsListKey = "moira-pattern-list"
-var metricEventKey = "metric-event"
+
+var metricEventsChannels = []string{
+	"metric-event-0",
+	"metric-event-1",
+	"metric-event-2",
+	"metric-event-3",
+}
 
 func patternMetricsKey(pattern string) string {
 	return "moira-pattern-metrics:" + pattern
