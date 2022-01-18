@@ -2,6 +2,7 @@ package notifier
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -79,7 +80,24 @@ func (notifier *StandardNotifier) buildNotificationPackagePlots(pkg Notification
 	logger.Clone().
 		Int64("moira.plots.build_duration_ms", time.Since(startTime).Milliseconds()).
 		Info("Finished build plots for package")
+	if err != nil {
+		logPlotErrorMetrics(metricsData, logger.Clone())
+	}
 	return result, err
+}
+
+// logPlotErrorMetrics marshals metrics data to json and log it
+func logPlotErrorMetrics(metricsData map[string][]metricSource.MetricData, logger moira.Logger) {
+	metricsDataBytes, marshalError := json.Marshal(metricsData)
+	if marshalError == nil {
+		logger.
+			String("metricsData", string(metricsDataBytes)).
+			Warning("Building plot error")
+	} else {
+		logger.Warningf(
+			"Building plot error. Metrics marshalling error: %s", marshalError.Error(),
+		)
+	}
 }
 
 // resolveMetricsWindow returns from, to parameters depending on trigger type
