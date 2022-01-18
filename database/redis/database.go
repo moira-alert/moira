@@ -91,8 +91,8 @@ func NewTestDatabaseWithIncorrectConfig(logger moira.Logger) *DbConnector {
 	return NewDatabase(logger, Config{Addrs: []string{"0.0.0.0:0000"}}, testSource)
 }
 
-func (connector *DbConnector) manageSubscriptions(tomb *tomb.Tomb, channel string) (<-chan []byte, error) {
-	c := (*connector.client).Subscribe(connector.context, channel)
+func (connector *DbConnector) manageSubscriptions(tomb *tomb.Tomb, channels []string) (<-chan []byte, error) {
+	c := (*connector.client).Subscribe(connector.context, channels...)
 	err := c.Ping(connector.context)
 	if err != nil {
 		return nil, err
@@ -100,7 +100,7 @@ func (connector *DbConnector) manageSubscriptions(tomb *tomb.Tomb, channel strin
 
 	go func() {
 		<-tomb.Dying()
-		connector.logger.Infof("Calling shutdown, unsubscribe from '%s' redis channels...", channel)
+		connector.logger.Infof("Calling shutdown, unsubscribe from '%s' redis channels...", channels)
 		c.Unsubscribe(connector.context) //nolint
 	}()
 
@@ -130,7 +130,7 @@ func (connector *DbConnector) manageSubscriptions(tomb *tomb.Tomb, channel strin
 				connector.logger.Infof("Received PONG message")
 			case *net.OpError:
 				connector.logger.Infof("psc.Receive() returned *net.OpError: %s. Reconnecting...", data.Err.Error())
-				c = (*connector.client).Subscribe(connector.context, channel)
+				c = (*connector.client).Subscribe(connector.context, channels...)
 				<-time.After(receiveErrorSleepDuration)
 			default:
 				connector.logger.Errorf("Can not receive message of type '%T': %v", raw, raw)
