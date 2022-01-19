@@ -13,6 +13,7 @@ import (
 	"github.com/moira-alert/moira/database/redis"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	"github.com/moira-alert/moira/support"
+	_ "go.uber.org/automaxprocs"
 )
 
 // Moira version

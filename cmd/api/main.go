@@ -20,6 +20,7 @@ import (
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
 	"github.com/moira-alert/moira/metric_source/remote"
+	_ "go.uber.org/automaxprocs"
 )
 
 const serviceName = "api"
