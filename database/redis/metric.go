@@ -130,7 +130,7 @@ func (connector *DbConnector) SaveMetrics(metrics map[string]*moira.MatchedMetri
 				continue
 			}
 
-			rand.Seed(time.Now().Unix())
+			rand.Seed(time.Now().UnixNano())
 			var metricEventsChannel = metricEventsChannels[rand.Intn(len(metricEventsChannels))]
 			if err = c.Publish(ctx, metricEventsChannel, event).Err(); err != nil {
 				return err
@@ -268,19 +268,12 @@ func (connector *DbConnector) needRemoveMetrics(metric string) bool {
 }
 
 var patternsListKey = "moira-pattern-list"
-var metricEventKey = "{channel}:metric-event"
 
 var metricEventsChannels = []string{
 	"metric-event-0",
 	"metric-event-1",
 	"metric-event-2",
 	"metric-event-3",
-	"metric-event-4",
-	"metric-event-5",
-	"metric-event-6",
-	"metric-event-7",
-	"metric-event-8",
-	"metric-event-9",
 }
 
 func patternMetricsKey(pattern string) string {
