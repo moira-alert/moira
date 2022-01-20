@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -68,6 +70,14 @@ func TestUpdateUsers(t *testing.T) {
 				_, err = database.GetContact(contact.ID)
 				So(err, ShouldNotBeNil)
 			}
+		})
+
+		Convey("Test too many users", func() {
+			var manyUsers []string
+			for i := 0; i < 100000; i++ {
+				manyUsers = append(manyUsers, fmt.Sprintf("User%v", i))
+			}
+			So(usersCleanup(logger, database, manyUsers, conf.Cleanup), ShouldResemble, errors.New("users count is too large"))
 		})
 	})
 }
