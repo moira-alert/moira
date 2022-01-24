@@ -2,7 +2,8 @@ package redis
 
 import (
 	"context"
-	"net"
+	"fmt"
+	"io"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -91,9 +92,17 @@ func NewTestDatabaseWithIncorrectConfig(logger moira.Logger) *DbConnector {
 	return NewDatabase(logger, Config{Addrs: []string{"0.0.0.0:0000"}}, testSource)
 }
 
+func (connector *DbConnector) makePubSubConnection(channels []string) (*redis.PubSub, error) {
+	psc := (*connector.client).Subscribe(connector.context, channels...)
+	err := psc.Ping(connector.context)
+	if err != nil {
+		return nil, fmt.Errorf("failed to subscribe to '%s', error: %v", channels, err)
+	}
+	return psc, nil
+}
+
 func (connector *DbConnector) manageSubscriptions(tomb *tomb.Tomb, channels []string) (<-chan []byte, error) {
-	c := (*connector.client).Subscribe(connector.context, channels...)
-	err := c.Ping(connector.context)
+	psc, err := connector.makePubSubConnection(channels)
 	if err != nil {
 		return nil, err
 	}
@@ -101,13 +110,29 @@ func (connector *DbConnector) manageSubscriptions(tomb *tomb.Tomb, channels []st
 	go func() {
 		<-tomb.Dying()
 		connector.logger.Infof("Calling shutdown, unsubscribe from '%s' redis channels...", channels)
-		c.Unsubscribe(connector.context) //nolint
+		psc.Unsubscribe(connector.context) //nolint
 	}()
 
 	dataChan := make(chan []byte, pubSubWorkerChannelSize)
 	go func() {
 		for {
-			raw, _ := c.Receive(connector.context)
+			raw, err := psc.Receive(connector.context)
+			if err != nil {
+				if err == io.ErrUnexpectedEOF {
+					connector.logger.Infof("Receive() returned error: %s", err.Error())
+					continue
+				}
+				connector.logger.Infof("Receive() returned error: %s. Reconnecting...", err.Error())
+				newPsc, err := connector.makePubSubConnection(channels)
+				if err != nil {
+					connector.logger.Errorf("Failed to reconnect to subscription: %v", err)
+					<-time.After(receiveErrorSleepDuration)
+					continue
+				}
+				connector.logger.Info("Reconnected to subscription")
+				psc = newPsc
+				<-time.After(receiveErrorSleepDuration)
+			}
 			switch data := raw.(type) {
 			case *redis.Message:
 				if len(data.Payload) == 0 {
@@ -128,10 +153,6 @@ func (connector *DbConnector) manageSubscriptions(tomb *tomb.Tomb, channels []st
 				}
 			case *redis.Pong:
 				connector.logger.Infof("Received PONG message")
-			case *net.OpError:
-				connector.logger.Infof("psc.Receive() returned *net.OpError: %s. Reconnecting...", data.Err.Error())
-				c = (*connector.client).Subscribe(connector.context, channels...)
-				<-time.After(receiveErrorSleepDuration)
 			default:
 				connector.logger.Errorf("Can not receive message of type '%T': %v", raw, raw)
 				<-time.After(receiveErrorSleepDuration)
