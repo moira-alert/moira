@@ -132,6 +132,7 @@ func (connector *DbConnector) manageSubscriptions(tomb *tomb.Tomb, channels []st
 				connector.logger.Info("Reconnected to subscription")
 				psc = newPsc
 				<-time.After(receiveErrorSleepDuration)
+				continue
 			}
 			switch data := raw.(type) {
 			case *redis.Message:
