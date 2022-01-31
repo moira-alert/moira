@@ -102,6 +102,8 @@ func (connector *DbConnector) SaveMetrics(metrics map[string]*moira.MatchedMetri
 	c := *connector.client
 	ctx := connector.context
 
+	rand.Seed(time.Now().UnixNano())
+
 	for _, metric := range metrics {
 		metricValue := fmt.Sprintf("%v %v", metric.Timestamp, metric.Value)
 		z := &redis.Z{Score: float64(metric.RetentionTimestamp), Member: metricValue}
@@ -130,7 +132,6 @@ func (connector *DbConnector) SaveMetrics(metrics map[string]*moira.MatchedMetri
 				continue
 			}
 
-			rand.Seed(time.Now().UnixNano())
 			var metricEventsChannel = metricEventsChannels[rand.Intn(len(metricEventsChannels))]
 			if err = c.Publish(ctx, metricEventsChannel, event).Err(); err != nil {
 				return err
