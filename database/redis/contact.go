@@ -58,6 +58,29 @@ func (connector *DbConnector) GetContacts(contactIDs []string) ([]*moira.Contact
 	return contacts, nil
 }
 
+func getContactsKeysOnRedisNode(ctx context.Context, client redis.UniversalClient) ([]string, error) {
+	var cursor uint64
+	var keys []string
+	const scanCount = 10000
+
+	for {
+		var keysResult []string
+		var err error
+		keysResult, cursor, err = client.Scan(ctx, cursor, contactKey("*"), scanCount).Result()
+
+		if err != nil {
+			return nil, err
+		}
+
+		keys = append(keys, keysResult...)
+
+		if cursor == 0 {
+			break
+		}
+	}
+	return keys, nil
+}
+
 // GetAllContacts returns full contact list
 func (connector *DbConnector) GetAllContacts() ([]*moira.ContactData, error) {
 	client := *connector.client
@@ -66,23 +89,23 @@ func (connector *DbConnector) GetAllContacts() ([]*moira.ContactData, error) {
 	switch c := client.(type) {
 	case *redis.ClusterClient:
 		err := c.ForEachMaster(connector.context, func(ctx context.Context, shard *redis.Client) error {
-			iter := shard.Scan(ctx, 0, contactKey("*"), 0).Iterator()
-			for iter.Next(ctx) {
-				keys = append(keys, iter.Val())
+			keysResult, err := getContactsKeysOnRedisNode(ctx, shard)
+			if err != nil {
+				return err
 			}
-			return iter.Err()
+			keys = append(keys, keysResult...)
+			return nil
 		})
+
 		if err != nil {
 			return nil, err
 		}
 	default:
-		iter := c.Scan(connector.context, 0, contactKey("*"), 0).Iterator()
-		for iter.Next(connector.context) {
-			keys = append(keys, iter.Val())
-		}
-		if err := iter.Err(); err != nil {
+		keysResult, err := getContactsKeysOnRedisNode(connector.context, c)
+		if err != nil {
 			return nil, err
 		}
+		keys = keysResult
 	}
 
 	contactIDs := make([]string, 0, len(keys))
