@@ -3,8 +3,6 @@ package filter
 import (
 	"fmt"
 	"regexp"
-
-	"github.com/moira-alert/moira"
 )
 
 var tagSpecRegex = regexp.MustCompile(`^["']([^,!=]+)\s*(!?=~?)\s*([^,]*)["']`)
@@ -74,7 +72,35 @@ func ParseSeriesByTag(input string) ([]TagSpec, error) {
 	return tagSpecs, nil
 }
 
-func createMatchingHandler(spec TagSpec) MatchingHandler {
+// MatchingHandler is a function for pattern matching
+type MatchingHandler func(string, map[string]string) bool
+
+// CreateMatchingHandlerForPattern creates function for matching by tag list
+func CreateMatchingHandlerForPattern(tagSpecs []TagSpec) (string, MatchingHandler) {
+	matchingHandlers := make([]MatchingHandler, 0)
+	var nameTagValue string
+
+	for _, tagSpec := range tagSpecs {
+		if tagSpec.Name == "name" && tagSpec.Operator == EqualOperator {
+			nameTagValue = tagSpec.Value
+		} else {
+			matchingHandlers = append(matchingHandlers, createMatchingHandlerForOneTag(tagSpec))
+		}
+	}
+
+	matchingHandler := func(metric string, labels map[string]string) bool {
+		for _, matchingHandler := range matchingHandlers {
+			if !matchingHandler(metric, labels) {
+				return false
+			}
+		}
+		return true
+	}
+
+	return nameTagValue, matchingHandler
+}
+
+func createMatchingHandlerForOneTag(spec TagSpec) MatchingHandler {
 	var matchingHandlerCondition func(string) bool
 	allowMatchEmpty := false
 	switch spec.Operator {
@@ -114,105 +140,4 @@ func createMatchingHandler(spec TagSpec) MatchingHandler {
 		}
 		return allowMatchEmpty && matchEmpty
 	}
-}
-
-type MatchingHandler func(string, map[string]string) bool
-
-// SeriesByTagPatternIndex helps to index the seriesByTag patterns and allows to match them by metric
-type SeriesByTagPatternIndex struct {
-	// namesPatternIndex stores name tag values
-	namesPatternIndex *PatternIndex
-	// nameToPatternMatchers stores MatchingHandler's for name tag values
-	nameToPatternMatchers map[string]map[string]MatchingHandler
-	// withoutStrictNameTagPatternMatchers stores MatchingHandler's for patterns that have no name tag
-	withoutStrictNameTagPatternMatchers map[string]MatchingHandler
-}
-
-// NewSeriesByTagPatternIndex creates new SeriesByTagPatternIndex using seriesByTag patterns and parsed specs comes from ParseSeriesByTag
-func NewSeriesByTagPatternIndex(logger moira.Logger, tagSpecsByPattern map[string][]TagSpec) *SeriesByTagPatternIndex {
-	names := make(map[string]bool)
-	nameToPatternMatchers := make(map[string]map[string]MatchingHandler)
-	withoutStrictNameTagPatternMatchers := make(map[string]MatchingHandler)
-
-	for pattern, tagSpecs := range tagSpecsByPattern {
-		matchingHandlers := make([]MatchingHandler, 0)
-		var nameTagValue string
-
-		for _, tagSpec := range tagSpecs {
-			if tagSpec.Name == "name" && tagSpec.Operator == EqualOperator {
-				nameTagValue = tagSpec.Value
-				names[nameTagValue] = true
-			} else {
-				matchingHandlers = append(matchingHandlers, createMatchingHandler(tagSpec))
-			}
-		}
-
-		matchingHandler := func(metric string, labels map[string]string) bool {
-			for _, matchingHandler := range matchingHandlers {
-				if !matchingHandler(metric, labels) {
-					return false
-				}
-			}
-			return true
-		}
-
-		// Splitting all patterns into two maps: nameToPatternMatchers stores patterns with strict name tag and
-		// withoutStrictNameTagPatternMatchers stores other patterns
-		if nameTagValue == "" {
-			withoutStrictNameTagPatternMatchers[pattern] = matchingHandler
-		} else {
-			if _, ok := nameToPatternMatchers[nameTagValue]; ok {
-				nameToPatternMatchers[nameTagValue][pattern] = matchingHandler
-			} else {
-				nameToPatternMatchers[nameTagValue] = map[string]MatchingHandler{pattern: matchingHandler}
-			}
-		}
-	}
-
-	namePatternIndex := NewPatternIndex(logger, getMapKeys(names))
-	return &SeriesByTagPatternIndex{
-		namesPatternIndex:                   namePatternIndex,
-		nameToPatternMatchers:               nameToPatternMatchers,
-		withoutStrictNameTagPatternMatchers: withoutStrictNameTagPatternMatchers}
-}
-
-// MatchPatterns allows to match patterns by metric name and its labels
-func (index *SeriesByTagPatternIndex) MatchPatterns(name string, labels map[string]string) []string {
-	matchedPatterns := make([]string, 0)
-
-	matchingHandlersWithCorrespondingNameTag := getMatchingHandlersWithCorrespondingNameTag(index, name)
-	for pattern, matchingHandler := range matchingHandlersWithCorrespondingNameTag {
-		if matchingHandler(name, labels) {
-			matchedPatterns = append(matchedPatterns, pattern)
-		}
-	}
-
-	for pattern, matchingHandler := range index.withoutStrictNameTagPatternMatchers {
-		if (matchingHandler)(name, labels) {
-			matchedPatterns = append(matchedPatterns, pattern)
-		}
-	}
-
-	return matchedPatterns
-}
-
-func getMatchingHandlersWithCorrespondingNameTag(index *SeriesByTagPatternIndex, metricName string) map[string]MatchingHandler {
-	patternsToMatchingHandlers := make(map[string]MatchingHandler)
-	patternNames := index.namesPatternIndex.MatchPatterns(metricName)
-	for _, patternName := range patternNames {
-		for pattern, matchingHandlers := range index.nameToPatternMatchers[patternName] {
-			patternsToMatchingHandlers[pattern] = matchingHandlers
-		}
-	}
-	return patternsToMatchingHandlers
-}
-
-func getMapKeys(dict map[string]bool) []string {
-	keys := make([]string, len(dict))
-	i := 0
-	for key := range dict {
-		keys[i] = key
-		i++
-	}
-	return keys
 }
