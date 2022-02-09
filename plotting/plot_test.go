@@ -441,49 +441,75 @@ var plotsHashDistancesTestCases = []plotsHashDistancesTestCase{
 
 // generateTestMetricsData generates metricData array for tests
 func generateTestMetricsData(useHumanizedValues bool) []metricSource.MetricData {
-	metricData := metricSource.MetricData{
-		Name:      "MetricName",
-		StartTime: 0,
-		StepTime:  10,
-		StopTime:  100,
-		Values:    []float64{12, 34, 23, 45, 76, 64, 32, 13, 34, 130, 70},
-	}
-	metricData2 := metricSource.MetricData{
-		Name:      "CategoryCounterType.MetricName",
-		StartTime: 0,
-		StepTime:  10,
-		StopTime:  100,
-		Values:    []float64{math.NaN(), 15, 32, math.NaN(), 54, 20, 43, 56, 2, 79, 76},
-	}
-	metricData3 := metricSource.MetricData{
-		Name:      "CategoryCounterName.CategoryCounterType.MetricName",
-		StartTime: 0,
-		StepTime:  10,
-		StopTime:  100,
-		Values:    []float64{11, 23, 45, math.NaN(), 45, math.NaN(), 32, 65, 78, 76, 74},
-	}
-	metricData4 := metricSource.MetricData{
-		Name:      "CategoryName.CategoryCounterName.CategoryCounterType.MetricName",
-		StartTime: 0,
-		StepTime:  10,
-		StopTime:  100,
-		Values:    []float64{11, 23, 10, 9, 17, 10, 25, 12, 10, 15, 30},
+	metricsData := []metricSource.MetricData{
+		{
+			Name:      "MetricName",
+			StartTime: 0,
+			StepTime:  10,
+			StopTime:  100,
+			Values:    []float64{12, 34, 23, 45, 76, 64, 32, 13, 34, 130, 70, math.Inf(-1)},
+		},
+		{
+			Name:      "CategoryCounterType.MetricName",
+			StartTime: 0,
+			StepTime:  10,
+			StopTime:  100,
+			Values:    []float64{math.NaN(), 15, 32, math.NaN(), 54, 20, 43, 56, 2, 79, 76},
+		},
+		{
+			Name:      "CategoryCounterName.CategoryCounterType.MetricName",
+			StartTime: 0,
+			StepTime:  10,
+			StopTime:  100,
+			Values:    []float64{11, 23, 45, math.NaN(), 45, math.NaN(), 32, 65, 78, 76, 74},
+		},
+		{
+			Name:      "CategoryName.CategoryCounterName.CategoryCounterType.MetricName",
+			StartTime: 0,
+			StepTime:  10,
+			StopTime:  100,
+			Values:    []float64{11, 23, 10, 9, 17, 10, 25, 12, 10, 15, 30},
+		},
+		{
+			Name:      "CategoryName.CategoryCounterName.CategoryCounterType.MetricType.MetricName",
+			StartTime: 0,
+			StepTime:  10,
+			StopTime:  100,
+			Values:    []float64{math.Inf(-1), 23, 10, 9, 17, 10, 25, 12, math.Inf(1), 15, 30},
+		},
+		{
+			Name:      "CategoryName.CategoryCounterName.MetricType.MetricName",
+			StartTime: 0,
+			StepTime:  10,
+			StopTime:  100,
+			Values:    []float64{23, 10, 9, math.Inf(-1), 10, math.NaN(), 12, 15, 30, 45},
+		},
+		{
+			Name:      "CategoryCounterName.MetricName",
+			StartTime: 0,
+			StepTime:  10,
+			StopTime:  100,
+			Values: []float64{
+				math.NaN(), math.NaN(), math.NaN(), math.NaN(), math.NaN(), math.NaN(), math.NaN(), math.NaN(), math.NaN(), math.NaN(), math.NaN(),
+			},
+		},
+		{
+			Name:      "CategoryCounterType.MetricType.MetricName",
+			StartTime: 0,
+			StepTime:  10,
+			StopTime:  100,
+			Values: []float64{
+				math.Inf(1), math.Inf(1), math.Inf(1), math.Inf(1), math.Inf(-1), math.Inf(-1), math.Inf(-1), math.Inf(1), math.Inf(-1), math.Inf(1), math.Inf(-1),
+			},
+		},
 	}
 	if !useHumanizedValues {
-		for valInd, value := range metricData.Values {
-			metricData.Values[valInd] = plotTestOuterPointMultiplier * value
-		}
-		for valInd, value := range metricData2.Values {
-			metricData2.Values[valInd] = plotTestOuterPointMultiplier * value
-		}
-		for valInd, value := range metricData3.Values {
-			metricData3.Values[valInd] = plotTestOuterPointMultiplier * value
-		}
-		for valInd, value := range metricData4.Values {
-			metricData4.Values[valInd] = plotTestOuterPointMultiplier * value
+		for _, metricData := range metricsData {
+			for valInd, value := range metricData.Values {
+				metricData.Values[valInd] = plotTestOuterPointMultiplier * value
+			}
 		}
 	}
-	metricsData := []metricSource.MetricData{metricData, metricData2, metricData3, metricData4}
 	return metricsData
 }
 
