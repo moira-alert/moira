@@ -162,7 +162,7 @@ func renameTagTriggersKeyKeyReverse(logger moira.Logger, database moira.Database
 	return nil
 }
 
-func moveToClusterForwards(logger moira.Logger, database moira.Database) error {
+func addRedisClusterSupport(logger moira.Logger, database moira.Database) error {
 	err := renameAnyTagsSubscriptionsKeyForwards(logger, database)
 	if err != nil {
 		return err
@@ -188,12 +188,12 @@ func moveToClusterForwards(logger moira.Logger, database moira.Database) error {
 		return err
 	}
 
-	logger.Info("moveToClusterForwards done")
+	logger.Info("addRedisClusterSupport done")
 
 	return nil
 }
 
-func moveToClusterReverse(logger moira.Logger, database moira.Database) error {
+func removeRedisClusterSupport(logger moira.Logger, database moira.Database) error {
 	err := renameAnyTagsSubscriptionsKeyReverse(logger, database)
 	if err != nil {
 		return err
@@ -219,7 +219,7 @@ func moveToClusterReverse(logger moira.Logger, database moira.Database) error {
 		return err
 	}
 
-	logger.Info("moveToClusterReverse done")
+	logger.Info("removeRedisClusterSupport done")
 
 	return nil
 }
