@@ -1,20 +1,20 @@
 package redis
 
 import (
+	"context"
 	"fmt"
-	"net"
+	"io"
 	"time"
 
-	"github.com/go-redsync/redsync"
-	"github.com/gomodule/redigo/redis"
+	"github.com/go-redis/redis/v8"
+	"github.com/go-redsync/redsync/v4"
+	"github.com/go-redsync/redsync/v4/redis/goredis/v8"
+	"github.com/moira-alert/moira"
 	"github.com/patrickmn/go-cache"
 	"gopkg.in/tomb.v2"
-
-	"github.com/moira-alert/moira"
 )
 
 const pubSubWorkerChannelSize = 16384
-const dialTimeout = time.Millisecond * 500
 
 const (
 	cacheCleanupInterval         = time.Minute * 60
@@ -28,7 +28,7 @@ const (
 // DBSource is type for describing who create database instance
 type DBSource string
 
-// All types of database instances users
+// All types of database users
 const (
 	API        DBSource = "API"
 	Checker    DBSource = "Checker"
@@ -38,209 +38,163 @@ const (
 	testSource DBSource = "test"
 )
 
-// Test data for configuration
-const testDB = 1
-
-// DbConnector contains redis pool
+// DbConnector contains redis client
 type DbConnector struct {
-	pool                 *redis.Pool
+	client               *redis.UniversalClient
 	logger               moira.Logger
 	retentionCache       *cache.Cache
 	retentionSavingCache *cache.Cache
 	metricsCache         *cache.Cache
 	sync                 *redsync.Redsync
 	metricsTTLSeconds    int64
+	context              context.Context
 	source               DBSource
-	slaveConnector       *DbConnector
 }
 
-// NewDatabase creates Redis pool based on config
 func NewDatabase(logger moira.Logger, config Config, source DBSource) *DbConnector {
-	poolDialer, slaveDialer := createPoolDialers(logger, config)
+	client := redis.NewUniversalClient(&redis.UniversalOptions{
+		MasterName:   config.MasterName,
+		Addrs:        config.Addrs,
+		Username:     config.Username,
+		Password:     config.Password,
+		DialTimeout:  config.DialTimeout,
+		ReadTimeout:  config.ReadTimeout,
+		WriteTimeout: config.WriteTimeout,
+	})
 
-	pool := &redis.Pool{
-		MaxIdle:      config.ConnectionLimit,
-		MaxActive:    config.ConnectionLimit,
-		Wait:         true,
-		IdleTimeout:  240 * time.Second, //nolint
-		Dial:         poolDialer.Dial,
-		TestOnBorrow: poolDialer.Test,
-	}
-	syncPool := &redis.Pool{
-		MaxIdle:      3, //nolint
-		MaxActive:    10, //nolint
-		Wait:         true,
-		IdleTimeout:  240 * time.Second, //nolint
-		Dial:         poolDialer.Dial,
-		TestOnBorrow: poolDialer.Test,
-	}
-	var slavePool *redis.Pool
-	if slaveDialer != nil {
-		slavePool = &redis.Pool{
-			MaxIdle:      config.ConnectionLimit,
-			MaxActive:    config.ConnectionLimit,
-			Wait:         true,
-			IdleTimeout:  240 * time.Second, //nolint
-			Dial:         slaveDialer.Dial,
-			TestOnBorrow: slaveDialer.Test,
-		}
-	}
+	ctx := context.Background()
 
-	connector := &DbConnector{
-		pool:                 pool,
+	syncPool := goredis.NewPool(client)
+
+	connector := DbConnector{
+		client:               &client,
 		logger:               logger,
+		context:              ctx,
 		retentionCache:       cache.New(cacheValueExpirationDuration, cacheCleanupInterval),
 		retentionSavingCache: cache.New(cache.NoExpiration, cache.DefaultExpiration),
 		metricsCache:         cache.New(cacheValueExpirationDuration, cacheCleanupInterval),
-		sync:                 redsync.New([]redsync.Pool{syncPool}),
+		sync:                 redsync.New(syncPool),
 		metricsTTLSeconds:    int64(config.MetricsTTL.Seconds()),
 		source:               source,
 	}
-
-	if slavePool != nil {
-		slaveConnector := &DbConnector{
-			pool:                 slavePool,
-			retentionCache:       connector.retentionCache,
-			retentionSavingCache: connector.retentionSavingCache,
-			metricsCache:         connector.metricsCache,
-			sync:                 connector.sync,
-			source:               connector.source,
-		}
-		connector.slaveConnector = slaveConnector
-	}
-
-	return connector
+	return &connector
 }
 
 // NewTestDatabase use it only for tests
 func NewTestDatabase(logger moira.Logger) *DbConnector {
-	return NewDatabase(logger, Config{Port: "6379", Host: "0.0.0.0", DB: testDB}, testSource)
+	return NewDatabase(logger, Config{
+		Addrs: []string{"0.0.0.0:6379"},
+	}, testSource)
 }
 
-// AllowStale returns a database instance, that prioritizes connections to slave nodes
-// Should only be used for read accesses when data actuality is not needed
-func (connector *DbConnector) AllowStale() moira.Database {
-	if connector.slaveConnector == nil {
-		return connector
-	}
-	return connector.slaveConnector
+// NewTestDatabaseWithIncorrectConfig use it only for tests
+func NewTestDatabaseWithIncorrectConfig(logger moira.Logger) *DbConnector {
+	return NewDatabase(logger, Config{Addrs: []string{"0.0.0.0:0000"}}, testSource)
 }
 
-func createPoolDialers(logger moira.Logger, config Config) (mainDialer, slaveDialer PoolDialer) {
-	if config.MasterName != "" && len(config.SentinelAddresses) > 0 {
-		logger.Infof("Redis: Sentinel for name: %v, DB: %v", config.MasterName, config.DB)
-		sentinelDialer := NewSentinelPoolDialer(
-			logger,
-			SentinelPoolDialerConfig{
-				MasterName:        config.MasterName,
-				SentinelAddresses: config.SentinelAddresses,
-				DB:                config.DB,
-				DialTimeout:       dialTimeout,
-			},
-		)
-		if !config.AllowSlaveReads {
-			return sentinelDialer, nil
-		}
-		logger.Info("Redis: Sentinel slaves pooling enabled")
-		slaveDialer := NewSentinelSlavePoolDialer(sentinelDialer)
-
-		return sentinelDialer, slaveDialer
+func (connector *DbConnector) makePubSubConnection(channels []string) (*redis.PubSub, error) {
+	psc := (*connector.client).Subscribe(connector.context, channels...)
+	err := psc.Ping(connector.context)
+	if err != nil {
+		return nil, fmt.Errorf("failed to subscribe to '%s', error: %v", channels, err)
 	}
-
-	serverAddr := net.JoinHostPort(config.Host, config.Port)
-	logger.Infof("Redis: %v, DB: %v", serverAddr, config.DB)
-	mainDialer = &DirectPoolDialer{
-		serverAddress: serverAddr,
-		db:            config.DB,
-		dialTimeout:   dialTimeout,
-	}
-	return mainDialer, nil
+	return psc, nil
 }
 
-func (connector *DbConnector) makePubSubConnection(channel string) (*redis.PubSubConn, error) {
-	c := connector.pool.Get()
-	psc := redis.PubSubConn{Conn: c}
-	if err := psc.Subscribe(channel); err != nil {
-		c.Close()
-		return nil, fmt.Errorf("failed to subscribe to '%s', error: %v", channel, err)
-	}
-	return &psc, nil
-}
-
-func (connector *DbConnector) manageSubscriptions(tomb *tomb.Tomb, channel string) (<-chan []byte, error) {
-	psc, err := connector.makePubSubConnection(channel)
+func (connector *DbConnector) manageSubscriptions(tomb *tomb.Tomb, channels []string) (<-chan []byte, error) {
+	psc, err := connector.makePubSubConnection(channels)
 	if err != nil {
 		return nil, err
 	}
 
 	go func() {
 		<-tomb.Dying()
-		connector.logger.Infof("Calling shutdown, unsubscribe from '%s' redis channels...", channel)
-		psc.Unsubscribe() //nolint
+		connector.logger.Infof("Calling shutdown, unsubscribe from '%s' redis channels...", channels)
+		psc.Unsubscribe(connector.context) //nolint
 	}()
 
 	dataChan := make(chan []byte, pubSubWorkerChannelSize)
 	go func() {
-		defer psc.Close()
 		for {
-			switch n := psc.Receive().(type) {
-			case redis.Message:
-				if len(n.Data) == 0 {
+			raw, err := psc.Receive(connector.context)
+			if err != nil {
+				if err == io.ErrUnexpectedEOF {
+					connector.logger.Infof("Receive() returned error: %s", err.Error())
 					continue
 				}
-				dataChan <- n.Data
-			case redis.Subscription:
-				switch n.Kind {
-				case "subscribe":
-					connector.logger.Infof("Subscribe to %s channel, current subscriptions is %v", n.Channel, n.Count)
-				case "unsubscribe":
-					connector.logger.Infof("Unsubscribe from %s channel, current subscriptions is %v", n.Channel, n.Count)
-					if n.Count == 0 {
-						connector.logger.Infof("No more subscriptions, exit...")
-						close(dataChan)
-						return
-					}
-				}
-			case *net.OpError:
-				connector.logger.Infof("psc.Receive() returned *net.OpError: %s. Reconnecting...", n.Err.Error())
-				newPsc, err := connector.makePubSubConnection(metricEventKey)
+				connector.logger.Infof("Receive() returned error: %s. Reconnecting...", err.Error())
+				newPsc, err := connector.makePubSubConnection(channels)
 				if err != nil {
 					connector.logger.Errorf("Failed to reconnect to subscription: %v", err)
 					<-time.After(receiveErrorSleepDuration)
 					continue
 				}
+				connector.logger.Info("Reconnected to subscription")
 				psc = newPsc
 				<-time.After(receiveErrorSleepDuration)
+				continue
+			}
+			switch data := raw.(type) {
+			case *redis.Message:
+				if len(data.Payload) == 0 {
+					continue
+				}
+				dataChan <- []byte(data.Payload)
+			case *redis.Subscription:
+				switch data.Kind {
+				case "subscribe":
+					connector.logger.Infof("Subscribe to %s channel, current subscriptions is %v", data.Channel, data.Count)
+				case "unsubscribe":
+					connector.logger.Infof("Unsubscribe from %s channel, current subscriptions is %v", data.Channel, data.Count)
+					if data.Count == 0 {
+						connector.logger.Infof("No more subscriptions, exit...")
+						close(dataChan)
+						return
+					}
+				}
+			case *redis.Pong:
+				connector.logger.Infof("Received PONG message")
 			default:
-				connector.logger.Errorf("Can not receive message of type '%T': %v", n, n)
+				connector.logger.Errorf("Can not receive message of type '%T': %v", raw, raw)
 				<-time.After(receiveErrorSleepDuration)
 			}
 		}
 	}()
+
 	return dataChan, nil
 }
 
-// CLEAN DATABASE! USE IT ONLY FOR TESTING!!!
-func (connector *DbConnector) flush() {
-	c := connector.pool.Get()
-	defer c.Close()
-	c.Do("FLUSHDB") //nolint
-}
+// Flush deletes all the keys of the DB, use it only for tests
+func (connector *DbConnector) Flush() {
+	client := *connector.client
 
-// GET KEY TTL! USE IT ONLY FOR TESTING!!!
-func (connector *DbConnector) getTTL(key string) int {
-	c := connector.pool.Get()
-	defer c.Close()
-	ttl, err := redis.Int(c.Do("PTTL", key))
-	if err != nil {
-		return 0
+	switch c := client.(type) {
+	case *redis.ClusterClient:
+		err := c.ForEachMaster(connector.context, func(ctx context.Context, shard *redis.Client) error {
+			return shard.FlushDB(ctx).Err()
+		})
+		if err != nil {
+			return
+		}
+	default:
+		(*connector.client).FlushDB(connector.context)
 	}
-	return ttl
 }
 
-// DELETE KEY! USE IT ONLY FOR TESTING!!!
+// Get key ttl, use it only for tests
+func (connector *DbConnector) getTTL(key string) time.Duration {
+	return (*connector.client).PTTL(connector.context, key).Val()
+}
+
+// Delete the key, use it only for tests
 func (connector *DbConnector) delete(key string) {
-	c := connector.pool.Get()
-	defer c.Close()
-	c.Do("DEL", key) //nolint
+	(*connector.client).Del(connector.context, key)
+}
+
+func (connector *DbConnector) Client() redis.UniversalClient {
+	return *connector.client
+}
+
+func (connector *DbConnector) Context() context.Context {
+	return connector.context
 }

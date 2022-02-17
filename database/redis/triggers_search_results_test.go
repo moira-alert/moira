@@ -93,9 +93,9 @@ func TestTriggersSearchResultsStoring(t *testing.T) {
 		t.Skip("Skipping database test in short mode")
 	}
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, config)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase := NewTestDatabase(logger)
+	dataBase.Flush()
+	defer dataBase.Flush()
 
 	Convey("Search Results Manipulation", t, func() {
 		err := dataBase.SaveTriggersSearchResults(searchResultsID, searchResults)
@@ -146,13 +146,13 @@ func TestTriggersSearchResultsStoring(t *testing.T) {
 }
 
 func BenchmarkSaveTriggersSearchResults(b *testing.B) {
-	logger = &logging.Logger{
+	logger := &logging.Logger{
 		Logger: zerolog.New(&strings.Builder{}).With().Str(logging.ModuleFieldName, "dataBase").Logger(),
 	}
 
-	dataBase := newTestDatabase(logger, config)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase := NewTestDatabase(logger)
+	dataBase.Flush()
+	defer dataBase.Flush()
 
 	b.ReportAllocs()
 	limits := []int{10, 100, 1000, 10000, 100000}
@@ -177,7 +177,7 @@ func BenchmarkSaveTriggersSearchResults(b *testing.B) {
 				},
 			}
 		}
-		dataBase.flush()
+		dataBase.Flush()
 		b.Run(fmt.Sprintf("Benchmark%d", limit), func(b *testing.B) {
 			for n := 0; n < b.N; n++ {
 				dataBase.SaveTriggersSearchResults(fmt.Sprintf("test_%d_%d", limit, n), data) //nolint
