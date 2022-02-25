@@ -9,9 +9,6 @@ import (
 
 // Database implements DB functionality
 type Database interface {
-	// Get database instance for requests that do not require realtime data
-	AllowStale() Database
-
 	// SelfState
 	UpdateMetricsHeartbeat() error
 	GetMetricsUpdatesCount() (int64, error)
@@ -148,6 +145,13 @@ type Database interface {
 type Lock interface {
 	Acquire(stop <-chan struct{}) (lost <-chan struct{}, error error)
 	Release()
+}
+
+// Mutex implements mutex abstraction
+type Mutex interface {
+	Lock() error
+	Unlock() (bool, error)
+	Extend() (bool, error)
 }
 
 // Logger implements logger abstraction

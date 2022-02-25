@@ -10,6 +10,13 @@ var (
 	ErrLockAlreadyHeld = fmt.Errorf("lock was already held")
 	// ErrLockAcquireInterrupted is returned if we cancel the acquire
 	ErrLockAcquireInterrupted = fmt.Errorf("lock's request was interrupted")
-	// ErrLockNotAcquired if we cannot acquire
-	ErrLockNotAcquired = fmt.Errorf("lock was not acquired")
 )
+
+// ErrLockNotAcquired if we cannot acquire
+type ErrLockNotAcquired struct {
+	Err error
+}
+
+func (e *ErrLockNotAcquired) Error() string {
+	return fmt.Sprintf("lock was not acquired: %v", e.Err)
+}

@@ -2,11 +2,10 @@ package redis
 
 import (
 	"testing"
+	"time"
 
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
-
-	"time"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
@@ -22,9 +21,9 @@ var value = float64(0)
 //nolint
 func TestNotificationEvents(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, config)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase := NewTestDatabase(logger)
+	dataBase.Flush()
+	defer dataBase.Flush()
 
 	Convey("Notification events manipulation", t, func() {
 		Convey("Test push-get-get count-fetch", func() {
@@ -282,9 +281,9 @@ func TestNotificationEvents(t *testing.T) {
 
 func TestNotificationEventErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, emptyConfig)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
+	dataBase.Flush()
+	defer dataBase.Flush()
 
 	// TODO(litleleprikon): check why notification is event created here again
 	var newNotificationEvent = moira.NotificationEvent{

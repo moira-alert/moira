@@ -16,37 +16,41 @@ import (
 )
 
 // RedisConfig is a redis config structure that initialises at the start of moira
-// Use fields MasterName and SentinelAddrs to enable Redis Sentinel support,
-// use Host and Port fields otherwise.
+// Redis configuration depends on fields specified in redis config section:
+// 1. Use fields MasterName and Addrs to enable Redis Sentinel support
+// 2. Specify two or more comma-separated Addrs to enable cluster support
+// 3. Otherwise, standalone configuration is enabled
 type RedisConfig struct {
-	// Redis Sentinel cluster name
+	// Redis Sentinel master name
 	MasterName string `yaml:"master_name"`
-	// Redis Sentinel address list, format: {host1_name:port};{ip:port}
-	SentinelAddrs string `yaml:"sentinel_addrs"`
-	// Redis node ip-address or host name
-	Host string `yaml:"host"`
-	// Redis node port
-	Port string `yaml:"port"`
-	// Redis database
-	DB              int  `yaml:"dbid"`
-	ConnectionLimit int  `yaml:"connection_limit"`
-	AllowSlaveReads bool `yaml:"allow_slave_reads"`
+	// Redis address list, format: {host1_name:port},{ip:port}
+	Addrs string `yaml:"addrs"`
+	// Redis username
+	Username string `yaml:"username"`
+	// Redis password
+	Password string `yaml:"password"`
 	// Moira will delete metrics older than this value from Redis. Large values will lead to various problems everywhere.
 	// See https://github.com/moira-alert/moira/pull/519
 	MetricsTTL string `yaml:"metrics_ttl"`
+	// Dial connection timeout. Default is 500ms.
+	DialTimeout string `yaml:"dial_timeout"`
+	// Read-operation timeout. Default is 3000ms.
+	ReadTimeout string `yaml:"read_timeout"`
+	// Write-operation timeout. Default is ReadTimeout seconds.
+	WriteTimeout string `yaml:"write_timeout"`
 }
 
 // GetSettings returns redis config parsed from moira config files
 func (config *RedisConfig) GetSettings() redis.Config {
 	return redis.Config{
-		MasterName:        config.MasterName,
-		SentinelAddresses: strings.Split(config.SentinelAddrs, ","),
-		Host:              config.Host,
-		Port:              config.Port,
-		DB:                config.DB,
-		ConnectionLimit:   config.ConnectionLimit,
-		AllowSlaveReads:   config.AllowSlaveReads,
-		MetricsTTL:        to.Duration(config.MetricsTTL),
+		MasterName:   config.MasterName,
+		Addrs:        strings.Split(config.Addrs, ","),
+		Username:     config.Username,
+		Password:     config.Password,
+		MetricsTTL:   to.Duration(config.MetricsTTL),
+		DialTimeout:  to.Duration(config.DialTimeout),
+		ReadTimeout:  to.Duration(config.ReadTimeout),
+		WriteTimeout: to.Duration(config.WriteTimeout),
 	}
 }
 
