@@ -28,7 +28,7 @@ func BenchmarkProcessIncomingPlainMetric(b *testing.B) {
 func generateMetrics(patternStorage *filter.PatternStorage, count int) *[]string {
 	result := make([]string, 0, count)
 	timestamp := time.Now()
-	patternTree := patternStorage.PatternIndex.Load().(*filter.PatternIndex).Root
+	patternTree := patternStorage.PatternIndex.Load().(*filter.PatternIndex).Tree.Root
 	for i := 0; i < count; i++ {
 		parts := make([]string, 0, 16)
 
