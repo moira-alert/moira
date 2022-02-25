@@ -74,7 +74,7 @@ func TestCluster(t *testing.T) {
 			So(valueStoredAtKey, ShouldBeEmpty)
 
 			Convey("When migration was applied", func() {
-				err := moveToClusterForwards(logger, database)
+				err := addRedisClusterSupport(logger, database)
 				So(err, ShouldBeNil)
 
 				Convey("Database should be new", func() {
@@ -163,7 +163,7 @@ func TestCluster(t *testing.T) {
 				So(valueStoredAtKey, ShouldBeEmpty)
 
 				Convey("When migration was reversed", func() {
-					err := moveToClusterReverse(logger, database)
+					err := removeRedisClusterSupport(logger, database)
 					So(err, ShouldBeNil)
 
 					Convey("Database should be old", func() {
