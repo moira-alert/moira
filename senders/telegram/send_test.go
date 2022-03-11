@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
+
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
@@ -165,6 +167,53 @@ func TestPrepareAlbum(t *testing.T) {
 				So(album[1].(*telebot.Photo).Caption, ShouldEqual, "")
 				So(album[2].(*telebot.Photo).Caption, ShouldEqual, "")
 			})
+		})
+	})
+}
+
+func TestCheckBrokenContactError(t *testing.T) {
+	logger, _ := logging.ConfigureLog("stdout", "warn", "test", true)
+	Convey("Check broken contact error", t, func() {
+		Convey("Nil error is nil", func() {
+			err := checkBrokenContactError(logger, nil)
+			So(err, ShouldBeNil)
+		})
+		Convey("Broken contact error is properly recognized", func() {
+			brokenContactErrorsList := []*telebot.APIError{
+				telebot.ErrNoRightsToSendPhoto,
+				telebot.ErrChatNotFound,
+				telebot.ErrNoRightsToSend,
+				telebot.ErrUnauthorized,
+				telebot.ErrBlockedByUser,
+				telebot.ErrUserIsDeactivated,
+				telebot.ErrBotKickedFromGroup,
+				telebot.ErrBotKickedFromSuperGroup,
+			}
+			for _, brokenContactError := range brokenContactErrorsList {
+				err := checkBrokenContactError(logger, brokenContactError)
+				So(err, ShouldHaveSameTypeAs, moira.SenderBrokenContactError{})
+				So(err.(moira.SenderBrokenContactError).SenderError, ShouldEqual, brokenContactError)
+			}
+		})
+		Convey("Other errors are returned as is", func() {
+			otherTelebotErrors := []*telebot.APIError{
+				telebot.ErrInternal,
+				telebot.ErrTooLarge,
+				telebot.ErrEmptyMessage,
+				telebot.ErrWrongFileID,
+				telebot.ErrNoRightsToDelete,
+				telebot.ErrKickingChatOwner,
+			}
+			for _, otherError := range otherTelebotErrors {
+				err := checkBrokenContactError(logger, otherError)
+				So(err, ShouldEqual, otherError)
+			}
+		})
+		Convey("Error on getting username is broken contact error", func() {
+			userNotFoundError := fmt.Errorf("failed to get username uuid: nil returned")
+			err := checkBrokenContactError(logger, userNotFoundError)
+			So(err, ShouldHaveSameTypeAs, moira.SenderBrokenContactError{})
+			So(err.(moira.SenderBrokenContactError).SenderError, ShouldEqual, userNotFoundError)
 		})
 	})
 }
