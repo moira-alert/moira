@@ -150,13 +150,13 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 					"easy": {
 						{
 							Field: "desc",
-							Value: "4: Because I'm <mark>easy</mark> come, <mark>easy</mark> go, little high, little low",
+							Value: "4: Because I&#39;m <mark>easy</mark> come, <mark>easy</mark> go, little high, little low",
 						},
 					},
 					"little monster": {
 						{
 							Field: "desc",
-							Value: "4: Because I'm easy come, easy go, <mark>little</mark> high, <mark>little</mark> low",
+							Value: "4: Because I&#39;m easy come, easy go, <mark>little</mark> high, <mark>little</mark> low",
 						},
 					},
 				},
@@ -257,7 +257,7 @@ var IndexedTriggerTestCases = fixtureIndexedTriggers{
 					"mama": {
 						{
 							Field: "desc",
-							Value: "11: <mark>Mama</mark>, ooh, didn't mean to make you cry",
+							Value: "11: <mark>Mama</mark>, ooh, didn&#39;t mean to make you cry",
 						},
 					},
 				},

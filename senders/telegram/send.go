@@ -137,16 +137,34 @@ func checkBrokenContactError(logger moira.Logger, err error) error {
 		return nil
 	}
 	if e, ok := err.(*telebot.APIError); ok {
-		logger.Debug("It's telebot.APIError from talk(): code = %d, msg = %s, desc = %s", e.Code, e.Message, e.Description)
-		if e.Code == telebot.ErrUnauthorized.Code { // all forbid errors
+		logger.Debugf("It's telebot.APIError from talk(): code = %d, msg = %s, desc = %s", e.Code, e.Message, e.Description)
+		if isBrokenContactAPIError(e) {
 			return moira.NewSenderBrokenContactError(err)
 		}
 	}
 	if strings.HasPrefix(err.Error(), "failed to get username uuid") {
-		logger.Debug("It's error from getChat(): ", err)
+		logger.Debugf("It's error from getChat(): %s", err)
 		return moira.NewSenderBrokenContactError(err)
 	}
 	return err
+}
+
+func isBrokenContactAPIError(err *telebot.APIError) bool {
+	if err.Code == telebot.ErrUnauthorized.Code {
+		return true
+	}
+	if err.Code == telebot.ErrNoRightsToSendPhoto.Code &&
+		(err.Description == telebot.ErrNoRightsToSendPhoto.Description ||
+			err.Description == telebot.ErrChatNotFound.Description ||
+			err.Description == telebot.ErrNoRightsToSend.Description) {
+		return true
+	}
+	if err.Code == telebot.ErrBotKickedFromGroup.Code &&
+		(err.Description == telebot.ErrBotKickedFromGroup.Description ||
+			err.Description == telebot.ErrBotKickedFromSuperGroup.Description) {
+		return true
+	}
+	return false
 }
 
 func prepareAlbum(plots [][]byte, caption string) telebot.Album {

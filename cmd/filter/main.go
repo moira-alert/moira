@@ -19,6 +19,7 @@ import (
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	"github.com/moira-alert/moira/metrics"
 	"github.com/xiam/to"
+	_ "go.uber.org/automaxprocs"
 )
 
 const serviceName = "filter"

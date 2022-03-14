@@ -1,8 +1,8 @@
 package mapping
 
 import (
-	"github.com/blevesearch/bleve"
-	"github.com/blevesearch/bleve/mapping"
+	"github.com/blevesearch/bleve/v2"
+	"github.com/blevesearch/bleve/v2/mapping"
 )
 
 // DocumentMapping implements mapping.DocumentMapping functionality

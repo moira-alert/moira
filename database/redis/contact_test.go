@@ -3,8 +3,9 @@ package redis
 import (
 	"testing"
 
-	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
+
+	"github.com/moira-alert/moira"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -16,11 +17,11 @@ const team2 = "team2"
 
 func TestContacts(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, config)
+	dataBase := NewTestDatabase(logger)
 
 	Convey("Contacts manipulation", t, func() {
-		dataBase.flush()
-		defer dataBase.flush()
+		dataBase.Flush()
+		defer dataBase.Flush()
 
 		Convey("While no data then get contacts should be empty", func() {
 			Convey("GetAllContacts should be empty", func() {
@@ -250,7 +251,6 @@ func TestContacts(t *testing.T) {
 				actual2, err = dataBase.GetUserContactIDs(user1)
 				So(err, ShouldBeNil)
 				So(actual2, ShouldHaveLength, 0)
-
 			})
 
 			contact4 := user2Contacts[3]
@@ -430,9 +430,9 @@ func TestContacts(t *testing.T) {
 
 func TestErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, emptyConfig)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
+	dataBase.Flush()
+	defer dataBase.Flush()
 
 	Convey("Should throw error when no connection", t, func() {
 		actual1, err := dataBase.GetAllContacts()

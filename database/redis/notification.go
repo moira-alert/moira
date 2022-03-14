@@ -9,7 +9,7 @@ import (
 
 	"github.com/moira-alert/moira/notifier"
 
-	"github.com/gomodule/redigo/redis"
+	"github.com/go-redis/redis/v8"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database/redis/reply"
@@ -50,36 +50,39 @@ func limitNotifications(notifications []*moira.ScheduledNotification) []*moira.S
 
 // GetNotifications gets ScheduledNotifications in given range and full range
 func (connector *DbConnector) GetNotifications(start, end int64) ([]*moira.ScheduledNotification, int64, error) {
-	c := connector.pool.Get()
-	defer c.Close()
+	ctx := connector.context
+	pipe := (*connector.client).TxPipeline()
+	pipe.ZRange(ctx, notifierNotificationsKey, start, end)
+	pipe.ZCard(ctx, notifierNotificationsKey)
+	response, err := pipe.Exec(ctx)
 
-	c.Send("MULTI") //nolint
-	c.Send("ZRANGE", notifierNotificationsKey, start, end) //nolint
-	c.Send("ZCARD", notifierNotificationsKey) //nolint
-	rawResponse, err := redis.Values(c.Do("EXEC"))
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
-	if len(rawResponse) == 0 {
+
+	if len(response) == 0 {
 		return make([]*moira.ScheduledNotification, 0), 0, nil
 	}
-	total, err := redis.Int64(rawResponse[1], nil)
+
+	total, err := response[1].(*redis.IntCmd).Result()
 	if err != nil {
 		return nil, 0, err
 	}
-	notifications, err := reply.Notifications(rawResponse[0], nil)
+
+	notifications, err := reply.Notifications(response[0].(*redis.StringSliceCmd))
 	if err != nil {
 		return nil, 0, err
 	}
+
 	return notifications, total, nil
 }
 
 // RemoveAllNotifications delete all notifications
 func (connector *DbConnector) RemoveAllNotifications() error {
-	c := connector.pool.Get()
-	defer c.Close()
+	ctx := connector.context
+	c := *connector.client
 
-	if _, err := c.Do("DEL", notifierNotificationsKey); err != nil {
+	if _, err := c.Del(ctx, notifierNotificationsKey).Result(); err != nil {
 		return fmt.Errorf("failed to remove %s: %s", notifierNotificationsKey, err.Error())
 	}
 
@@ -111,26 +114,28 @@ func (connector *DbConnector) removeNotifications(notifications []*moira.Schedul
 		return 0, nil
 	}
 
-	c := connector.pool.Get()
-	defer c.Close()
-
-	c.Send("MULTI") //nolint
+	ctx := connector.context
+	pipe := (*connector.client).TxPipeline()
 	for _, notification := range notifications {
 		notificationString, err := reply.GetNotificationBytes(*notification)
 		if err != nil {
 			return 0, err
 		}
-		c.Send("ZREM", notifierNotificationsKey, notificationString) //nolint
+		pipe.ZRem(ctx, notifierNotificationsKey, notificationString)
 	}
-	response, err := redis.Ints(c.Do("EXEC"))
+	response, err := pipe.Exec(ctx)
+
 	if err != nil {
 		return 0, fmt.Errorf("failed to remove notifier-notification: %s", err.Error())
 	}
-	total := 0
+
+	total := int64(0)
 	for _, val := range response {
-		total += val
+		intVal, _ := val.(*redis.IntCmd).Result()
+		total += intVal
 	}
-	return int64(total), nil
+
+	return total, nil
 }
 
 // FetchNotifications fetch notifications by given timestamp and delete it
@@ -158,10 +163,10 @@ func (connector *DbConnector) FetchNotifications(to int64, limit int64) ([]*moir
 }
 
 func (connector *DbConnector) notificationsCount(to int64) (int64, error) {
-	c := connector.pool.Get()
-	defer c.Close()
+	ctx := connector.context
+	c := *connector.client
 
-	count, err := redis.Int64(c.Do("ZCOUNT", notifierNotificationsKey, "-inf", to))
+	count, err := c.ZCount(ctx, notifierNotificationsKey, "-inf", strconv.FormatInt(to, 10)).Result()
 
 	if err != nil {
 		return 0, fmt.Errorf("failed to ZCOUNT to notificationsCount: %w", err)
@@ -196,23 +201,30 @@ func (connector *DbConnector) fetchNotificationsWithLimit(to int64, limit int64)
 func (connector *DbConnector) fetchNotificationsWithLimitDo(to int64, limit int64) ([]*moira.ScheduledNotification, error) {
 	// see https://redis.io/topics/transactions
 
-	c := connector.pool.Get()
-	defer c.Close()
+	ctx := connector.context
+	c := *connector.client
 
 	// start optimistic transaction and get notifications with LIMIT
-	c.Send("WATCH", notifierNotificationsKey) //nolint
-	response, err := redis.Values(c.Do("ZRANGEBYSCORE", notifierNotificationsKey, "-inf", to, "LIMIT", 0, limit))
+	var response *redis.StringSliceCmd
+
+	err := c.Watch(ctx, func(tx *redis.Tx) error {
+		rng := &redis.ZRangeBy{Min: "-inf", Max: strconv.FormatInt(to, 10), Offset: 0, Count: limit}
+		response = tx.ZRangeByScore(ctx, notifierNotificationsKey, rng)
+
+		return response.Err()
+	}, notifierNotificationsKey)
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to ZRANGEBYSCORE: %s", err)
 	}
 
-	if len(response) == 0 {
-		return make([]*moira.ScheduledNotification, 0), nil
-	}
-
-	notifications, err := reply.Notifications(response, nil)
+	notifications, err := reply.Notifications(response)
 	if err != nil {
 		return nil, fmt.Errorf("failed to EXEC: %s", err)
+	}
+
+	if len(notifications) == 0 {
+		return notifications, nil
 	}
 
 	// ZRANGEBYSCORE with LIMIT may return not all notification with last timestamp
@@ -226,22 +238,22 @@ func (connector *DbConnector) fetchNotificationsWithLimitDo(to int64, limit int6
 	if len(notifications) == len(notificationsLimited) {
 		// this means that all notifications have same timestamp,
 		// we hope that all notifications with same timestamp should fit our memory
-		c.Send("UNWATCH") //nolint
 		return connector.fetchNotificationsNoLimit(lastTs)
 	}
 
-	c.Send("MULTI") //nolint
-	c.Send("ZREMRANGEBYSCORE", notifierNotificationsKey, "-inf", lastTs) //nolint
-	deleteCount, errDelete := redis.Values(c.Do("EXEC"))
+	pipe := c.TxPipeline()
+	pipe.ZRemRangeByScore(ctx, notifierNotificationsKey, "-inf", strconv.FormatInt(lastTs, 10))
+	rangeResponse, errDelete := pipe.Exec(ctx)
+
 	if errDelete != nil {
 		return nil, fmt.Errorf("failed to EXEC: %w", errDelete)
 	}
 
 	// someone has changed notifierNotificationsKey while we do our job
 	// and transaction fail (no notifications were deleted) :(
-	if deleteCount == nil {
-		tr := transactionError{}
-		return nil, &tr
+	deleteCount, errConvert := rangeResponse[0].(*redis.IntCmd).Result()
+	if errConvert != nil || deleteCount == 0 {
+		return nil, &transactionError{}
 	}
 
 	return notificationsLimited, nil
@@ -249,20 +261,17 @@ func (connector *DbConnector) fetchNotificationsWithLimitDo(to int64, limit int6
 
 // FetchNotifications fetch notifications by given timestamp and delete it
 func (connector *DbConnector) fetchNotificationsNoLimit(to int64) ([]*moira.ScheduledNotification, error) {
-	c := connector.pool.Get()
-	defer c.Close()
+	ctx := connector.context
+	pipe := (*connector.client).TxPipeline()
+	pipe.ZRangeByScore(ctx, notifierNotificationsKey, &redis.ZRangeBy{Min: "-inf", Max: strconv.FormatInt(to, 10)})
+	pipe.ZRemRangeByScore(ctx, notifierNotificationsKey, "-inf", strconv.FormatInt(to, 10))
+	response, err := pipe.Exec(ctx)
 
-	c.Send("MULTI") //nolint
-	c.Send("ZRANGEBYSCORE", notifierNotificationsKey, "-inf", to) //nolint
-	c.Send("ZREMRANGEBYSCORE", notifierNotificationsKey, "-inf", to) //nolint
-	response, err := redis.Values(c.Do("EXEC"))
 	if err != nil {
 		return nil, fmt.Errorf("failed to EXEC: %s", err)
 	}
-	if len(response) == 0 {
-		return make([]*moira.ScheduledNotification, 0), nil
-	}
-	return reply.Notifications(response[0], nil)
+
+	return reply.Notifications(response[0].(*redis.StringSliceCmd))
 }
 
 // AddNotification store notification at given timestamp
@@ -271,33 +280,38 @@ func (connector *DbConnector) AddNotification(notification *moira.ScheduledNotif
 	if err != nil {
 		return err
 	}
-	c := connector.pool.Get()
-	defer c.Close()
 
-	_, err = c.Do("ZADD", notifierNotificationsKey, notification.Timestamp, bytes)
+	ctx := connector.context
+	c := *connector.client
+
+	z := &redis.Z{Score: float64(notification.Timestamp), Member: bytes}
+	_, err = c.ZAdd(ctx, notifierNotificationsKey, z).Result()
 	if err != nil {
 		return fmt.Errorf("failed to add scheduled notification: %s, error: %s", string(bytes), err.Error())
 	}
+
 	return err
 }
 
 // AddNotifications store notification at given timestamp
 func (connector *DbConnector) AddNotifications(notifications []*moira.ScheduledNotification, timestamp int64) error {
-	c := connector.pool.Get()
-	defer c.Close()
-
-	c.Send("MULTI") //nolint
+	ctx := connector.context
+	pipe := (*connector.client).TxPipeline()
 	for _, notification := range notifications {
 		bytes, err := reply.GetNotificationBytes(*notification)
 		if err != nil {
 			return err
 		}
-		c.Send("ZADD", notifierNotificationsKey, timestamp, bytes) //nolint
+
+		z := &redis.Z{Score: float64(timestamp), Member: bytes}
+		pipe.ZAdd(ctx, notifierNotificationsKey, z)
 	}
-	_, err := c.Do("EXEC")
+	_, err := pipe.Exec(ctx)
+
 	if err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
+
 	return nil
 }
 

@@ -20,6 +20,7 @@ import (
 	"github.com/moira-alert/moira/notifier/events"
 	"github.com/moira-alert/moira/notifier/notifications"
 	"github.com/moira-alert/moira/notifier/selfstate"
+	_ "go.uber.org/automaxprocs"
 )
 
 const serviceName = "notifier"

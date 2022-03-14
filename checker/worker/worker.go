@@ -1,6 +1,7 @@
 package worker
 
 import (
+	"errors"
 	"runtime"
 	"sync/atomic"
 	"time"
@@ -67,7 +68,13 @@ func (worker *Checker) Start() error {
 		worker.Logger.Info("Remote checker disabled")
 	}
 
+	const maxParallelChecksMaxValue = 1024 * 8
+	if worker.Config.MaxParallelChecks > maxParallelChecksMaxValue {
+		return errors.New("MaxParallelChecks value is too large")
+	}
+
 	worker.Logger.Infof("Start %v parallel local checker(s)", worker.Config.MaxParallelChecks)
+
 	localTriggerIdsToCheckChan := worker.startTriggerToCheckGetter(worker.Database.GetLocalTriggersToCheck, worker.Config.MaxParallelChecks)
 	for i := 0; i < worker.Config.MaxParallelChecks; i++ {
 		worker.tomb.Go(func() error {
@@ -79,6 +86,11 @@ func (worker *Checker) Start() error {
 	}
 
 	if worker.remoteEnabled {
+		const maxParallelRemoteChecksMaxValue = 1024 * 8
+		if worker.Config.MaxParallelRemoteChecks > maxParallelRemoteChecksMaxValue {
+			return errors.New("MaxParallelRemoteChecks value is too large")
+		}
+
 		worker.Logger.Infof("Start %v parallel remote checker(s)", worker.Config.MaxParallelRemoteChecks)
 		remoteTriggerIdsToCheckChan := worker.startTriggerToCheckGetter(worker.Database.GetRemoteTriggersToCheck, worker.Config.MaxParallelRemoteChecks)
 		for i := 0; i < worker.Config.MaxParallelRemoteChecks; i++ {

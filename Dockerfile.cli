@@ -1,4 +1,4 @@
-FROM golang:1.15.2 as builder
+FROM golang:1.17.7 as builder
 
 COPY go.mod go.sum /go/src/github.com/moira-alert/moira/
 WORKDIR /go/src/github.com/moira-alert/moira

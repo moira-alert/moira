@@ -3,7 +3,7 @@ package redis
 import (
 	"fmt"
 
-	"github.com/gomodule/redigo/redis"
+	"github.com/go-redis/redis/v8"
 	"github.com/moira-alert/moira"
 )
 
@@ -13,14 +13,13 @@ func (connector *DbConnector) MarkTriggersAsUnused(triggerIDs ...string) error {
 		return nil
 	}
 
-	c := connector.pool.Get()
-	defer c.Close()
+	c := *connector.client
+	pipe := c.TxPipeline()
 
-	c.Send("MULTI") //nolint
 	for _, triggerID := range triggerIDs {
-		c.Send("SADD", unusedTriggersKey, triggerID) //nolint
+		pipe.SAdd(connector.context, unusedTriggersKey, triggerID) //nolint
 	}
-	_, err := redis.Values(c.Do("EXEC"))
+	_, err := pipe.Exec(connector.context)
 	if err != nil {
 		return fmt.Errorf("failed to mark triggers as unused: %s", err.Error())
 	}
@@ -29,12 +28,12 @@ func (connector *DbConnector) MarkTriggersAsUnused(triggerIDs ...string) error {
 
 // GetUnusedTriggerIDs returns all unused trigger IDs
 func (connector *DbConnector) GetUnusedTriggerIDs() ([]string, error) {
-	c := connector.pool.Get()
-	defer c.Close()
+	ctx := connector.context
+	c := *connector.client
 
-	triggerIds, err := redis.Strings(c.Do("SMEMBERS", unusedTriggersKey))
+	triggerIds, err := c.SMembers(ctx, unusedTriggersKey).Result()
 	if err != nil {
-		if err == redis.ErrNil {
+		if err == redis.Nil {
 			return make([]string, 0), nil
 		}
 		return nil, fmt.Errorf("failed to get all unused triggers: %s", err.Error())
@@ -48,14 +47,12 @@ func (connector *DbConnector) MarkTriggersAsUsed(triggerIDs ...string) error {
 		return nil
 	}
 
-	c := connector.pool.Get()
-	defer c.Close()
-
-	c.Send("MULTI") //nolint
+	c := *connector.client
+	pipe := c.TxPipeline()
 	for _, triggerID := range triggerIDs {
-		c.Send("SREM", unusedTriggersKey, triggerID) //nolint
+		pipe.SRem(connector.context, unusedTriggersKey, triggerID) //nolint
 	}
-	_, err := redis.Values(c.Do("EXEC"))
+	_, err := pipe.Exec(connector.context)
 	if err != nil {
 		return fmt.Errorf("failed to mark triggers as used: %s", err.Error())
 	}

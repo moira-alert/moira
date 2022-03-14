@@ -11,9 +11,10 @@ import (
 
 func TestSelfCheckWithWritesInChecker(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewDatabase(logger, config, Checker)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase := NewTestDatabase(logger)
+	dataBase.source = Checker
+	dataBase.Flush()
+	defer dataBase.Flush()
 	Convey("Self state triggers manipulation", t, func() {
 		Convey("Empty config", func() {
 			count, err := dataBase.GetMetricsUpdatesCount()
@@ -65,9 +66,10 @@ func TestSelfCheckWithWritesNotInChecker(t *testing.T) {
 
 func testSelfCheckWithWritesInDBSource(t *testing.T, dbSource DBSource) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := NewDatabase(logger, config, dbSource)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase := NewTestDatabase(logger)
+	dataBase.source = dbSource
+	dataBase.Flush()
+	defer dataBase.Flush()
 	Convey(fmt.Sprintf("Self state triggers manipulation in %s", dbSource), t, func() {
 		Convey("Update metrics checks updates count", func() {
 			err := dataBase.SetTriggerLastCheck("123", &lastCheckTest, false)
@@ -89,9 +91,9 @@ func testSelfCheckWithWritesInDBSource(t *testing.T, dbSource DBSource) {
 
 func TestSelfCheckErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, emptyConfig)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
+	dataBase.Flush()
+	defer dataBase.Flush()
 	Convey("Should throw error when no connection", t, func() {
 		count, err := dataBase.GetMetricsUpdatesCount()
 		So(count, ShouldEqual, 0)
@@ -108,10 +110,10 @@ func TestSelfCheckErrorConnection(t *testing.T) {
 
 func TestNotifierState(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, config)
-	emptyDataBase := newTestDatabase(logger, emptyConfig)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase := NewTestDatabase(logger)
+	emptyDataBase := NewTestDatabaseWithIncorrectConfig(logger)
+	dataBase.Flush()
+	defer dataBase.Flush()
 	Convey(fmt.Sprintf("Test on empty key '%v'", selfStateNotifierHealth), t, func() {
 		Convey("On empty database should return ERROR", func() {
 			notifierState, err := emptyDataBase.GetNotifierState()

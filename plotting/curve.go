@@ -1,7 +1,6 @@
 package plotting
 
 import (
-	"math"
 	"time"
 
 	"github.com/beevee/go-chart"
@@ -61,7 +60,7 @@ func describePlotCurves(metricData metricSource.MetricData) []plotCurve {
 
 	for valInd := start; valInd < len(metricData.Values); valInd++ {
 		pointValue := metricData.Values[valInd]
-		if !math.IsNaN(pointValue) {
+		if moira.IsValidFloat64(pointValue) {
 			timeStampValue := moira.Int64ToTime(timeStamp)
 			curves[curvesInd].timeStamps = append(curves[curvesInd].timeStamps, timeStampValue)
 			curves[curvesInd].values = append(curves[curvesInd].values, pointValue)
@@ -81,7 +80,7 @@ func resolveFirstPoint(metricData metricSource.MetricData) (int, int64) {
 	start := 0
 	startTime := metricData.StartTime
 	for _, metricVal := range metricData.Values {
-		if math.IsNaN(metricVal) {
+		if !moira.IsValidFloat64(metricVal) {
 			start++
 			startTime += metricData.StepTime
 		} else {

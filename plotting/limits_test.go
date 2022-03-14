@@ -1,6 +1,7 @@
 package plotting
 
 import (
+	"math"
 	"math/rand"
 	"testing"
 	"time"
@@ -51,6 +52,30 @@ func TestResolveLimits(t *testing.T) {
 		So(limits.lowest, ShouldNotEqual, 0)
 		So(limits.highest, ShouldNotEqual, 0)
 		So(limits.lowest, ShouldNotEqual, limits.highest)
+		So(limits.lowest, ShouldEqual, expectedLowest)
+		So(limits.highest, ShouldEqual, expectedHighest)
+	})
+
+	metricsData[0].Values[2], metricsData[0].Values[3], metricsData[0].Values[4] = math.NaN(), math.Inf(-1), math.Inf(1)
+	// So we're actually using elementsToUse x elementsToUse MetricsData with values like:
+	// [-1                 10000              NaN                -Inf                +Inf
+	// [1491.4815658695925 3528.452470599303  296.78548099273524 2048.473675536235
+	// [1961.4869744066652 574.2827161848164  1757.8304749568863 2406.1508870508073
+	// [2075.6933900571207 3393.385674988974  3234.9526818050126 5602.5371761246915
+	// [384.016924791711   9066.931651012908  563.0027804705013  5100.243298996324
+	// [519.4539685177408  6029.673742973381  243.3464382654782  2590.9614772639184
+	// [3712.024207074801  8137.757246113409  3653.0361832312265 632.2809306369263
+	// ...
+	Convey("Resolve limits for collection of random MetricData which includes NaN and Inf", t, func() {
+		expectedFrom := moira.Int64ToTime(startTime)
+		expectedTo := expectedFrom.Add(time.Duration(elementsToUse) * time.Minute)
+		expectedIncrement := percentsOfRange(float64(minValue), float64(maxValue), defaultYAxisRangePercent)
+		expectedLowest := float64(minValue) - expectedIncrement
+		expectedHighest := float64(maxValue) + expectedIncrement
+		limits := resolveLimits(metricsData)
+		So(limits.from, ShouldResemble, expectedFrom)
+		So(limits.to, ShouldResemble, expectedTo)
+		So(limits.lowest, ShouldNotEqual, 0)
 		So(limits.lowest, ShouldEqual, expectedLowest)
 		So(limits.highest, ShouldEqual, expectedHighest)
 	})

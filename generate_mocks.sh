@@ -4,6 +4,7 @@ go get -u github.com/golang/mock/gomock
 go install github.com/golang/mock/mockgen
 
 mockgen -destination=mock/moira-alert/locks.go -package=mock_moira_alert github.com/moira-alert/moira Lock
+mockgen -destination=mock/moira-alert/mutex.go -package=mock_moira_alert github.com/moira-alert/moira Mutex
 mockgen -destination=mock/moira-alert/database.go -package=mock_moira_alert github.com/moira-alert/moira Database
 mockgen -destination=mock/moira-alert/metrics_db_cursor.go -package=mock_moira_alert github.com/moira-alert/moira MetricsDatabaseCursor
 mockgen -destination=mock/moira-alert/image_store.go -package=mock_moira_alert github.com/moira-alert/moira ImageStore

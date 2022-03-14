@@ -63,10 +63,9 @@ func (config *checkerConfig) getSettings(logger moira.Logger) *checker.Config {
 func getDefault() config {
 	return config{
 		Redis: cmd.RedisConfig{
-			Host:            "localhost",
-			Port:            "6379",
-			ConnectionLimit: 512, //nolint
-			MetricsTTL:      "1h",
+			Addrs:       "localhost:6379",
+			MetricsTTL:  "1h",
+			DialTimeout: "500ms",
 		},
 		Logger: cmd.LoggerConfig{
 			LogFile:         "stdout",

@@ -504,8 +504,8 @@ func TestGoRoutine(t *testing.T) {
 		emptyNotification := moira.ScheduledNotification{}
 		shutdown := make(chan struct{})
 
-		dataBase.EXPECT().FetchNotificationEvent().Return(moira.NotificationEvent{}, fmt.Errorf("3433434")).Do(func(f ...interface{}) {
-			dataBase.EXPECT().FetchNotificationEvent().Return(event, nil).Do(func(f ...interface{}) {
+		dataBase.EXPECT().FetchNotificationEvent().Return(moira.NotificationEvent{}, fmt.Errorf("3433434")).Do(func() {
+			dataBase.EXPECT().FetchNotificationEvent().Return(event, nil).Do(func() {
 				dataBase.EXPECT().FetchNotificationEvent().AnyTimes().Return(moira.NotificationEvent{}, database.ErrNil)
 			})
 		})

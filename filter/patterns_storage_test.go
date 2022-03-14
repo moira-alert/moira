@@ -14,12 +14,14 @@ import (
 func TestProcessIncomingMetric(t *testing.T) {
 	testPatterns := []string{
 		"cpu.used",
+		"plain.metric",
 		"seriesByTag(\"name=cpu.used\")",
+		"seriesByTag(\"name=tag.metric\", \"tag1=val1\")",
+		"seriesByTag(\"name=name.metric\")",
 	}
 
 	mockCtrl := gomock.NewController(t)
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
-	database.EXPECT().AllowStale().AnyTimes().Return(database)
 	logger, _ := logging.GetLogger("Scheduler")
 
 	Convey("Create new pattern storage, GetPatterns returns error, should error", t, func() {
@@ -46,20 +48,71 @@ func TestProcessIncomingMetric(t *testing.T) {
 
 	Convey("When valid non-matching metric arrives", t, func() {
 		patternsStorage.metrics = metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry())
-		matchedMetrics := patternsStorage.ProcessIncomingMetric([]byte("disk.used 12 1234567890"))
-		So(matchedMetrics, ShouldBeNil)
-		So(patternsStorage.metrics.TotalMetricsReceived.Count(), ShouldEqual, 1)
-		So(patternsStorage.metrics.ValidMetricsReceived.Count(), ShouldEqual, 1)
-		So(patternsStorage.metrics.MatchingMetricsReceived.Count(), ShouldEqual, 0)
+		Convey("For plain metric", func() {
+			matchedMetrics := patternsStorage.ProcessIncomingMetric([]byte("disk.used 12 1234567890"))
+			So(matchedMetrics, ShouldBeNil)
+			So(patternsStorage.metrics.TotalMetricsReceived.Count(), ShouldEqual, 1)
+			So(patternsStorage.metrics.ValidMetricsReceived.Count(), ShouldEqual, 1)
+			So(patternsStorage.metrics.MatchingMetricsReceived.Count(), ShouldEqual, 0)
+		})
+
+		Convey("For tag metric", func() {
+			matchedMetrics := patternsStorage.ProcessIncomingMetric([]byte("disk.used;tag1=val1 12 1234567890"))
+			So(matchedMetrics, ShouldBeNil)
+			So(patternsStorage.metrics.TotalMetricsReceived.Count(), ShouldEqual, 1)
+			So(patternsStorage.metrics.ValidMetricsReceived.Count(), ShouldEqual, 1)
+			So(patternsStorage.metrics.MatchingMetricsReceived.Count(), ShouldEqual, 0)
+		})
+
+		Convey("For plain metric which has the same pattern like name tag in tagged pattern", func() {
+			matchedMetrics := patternsStorage.ProcessIncomingMetric([]byte("tag.metric 12 1234567890"))
+			So(matchedMetrics, ShouldBeNil)
+			So(patternsStorage.metrics.TotalMetricsReceived.Count(), ShouldEqual, 1)
+			So(patternsStorage.metrics.ValidMetricsReceived.Count(), ShouldEqual, 1)
+			So(patternsStorage.metrics.MatchingMetricsReceived.Count(), ShouldEqual, 0)
+		})
+
+		Convey("For tagged metric which body matches plain metric trigger pattern", func() {
+			matchedMetrics := patternsStorage.ProcessIncomingMetric([]byte("plain.metric;tag1=val1 12 1234567890"))
+			So(matchedMetrics, ShouldBeNil)
+			So(patternsStorage.metrics.TotalMetricsReceived.Count(), ShouldEqual, 1)
+			So(patternsStorage.metrics.ValidMetricsReceived.Count(), ShouldEqual, 1)
+			So(patternsStorage.metrics.MatchingMetricsReceived.Count(), ShouldEqual, 0)
+		})
+
+		Convey("For plain metric which matches to tagged pattern which contains only name tag", func() {
+			matchedMetrics := patternsStorage.ProcessIncomingMetric([]byte("name.metric 12 1234567890"))
+			So(matchedMetrics, ShouldBeNil)
+			So(patternsStorage.metrics.TotalMetricsReceived.Count(), ShouldEqual, 1)
+			So(patternsStorage.metrics.ValidMetricsReceived.Count(), ShouldEqual, 1)
+			So(patternsStorage.metrics.MatchingMetricsReceived.Count(), ShouldEqual, 0)
+		})
 	})
 
 	Convey("When valid matching metric arrives", t, func() {
 		patternsStorage.metrics = metrics.ConfigureFilterMetrics(metrics.NewDummyRegistry())
-		matchedMetrics := patternsStorage.ProcessIncomingMetric([]byte("cpu.used 12 1234567890"))
-		So(matchedMetrics, ShouldNotBeNil)
-		So(patternsStorage.metrics.TotalMetricsReceived.Count(), ShouldEqual, 1)
-		So(patternsStorage.metrics.ValidMetricsReceived.Count(), ShouldEqual, 1)
-		So(patternsStorage.metrics.MatchingMetricsReceived.Count(), ShouldEqual, 1)
+		Convey("For plain metric", func() {
+			matchedMetrics := patternsStorage.ProcessIncomingMetric([]byte("plain.metric 12 1234567890"))
+			So(matchedMetrics, ShouldNotBeNil)
+			So(patternsStorage.metrics.TotalMetricsReceived.Count(), ShouldEqual, 1)
+			So(patternsStorage.metrics.ValidMetricsReceived.Count(), ShouldEqual, 1)
+			So(patternsStorage.metrics.MatchingMetricsReceived.Count(), ShouldEqual, 1)
+		})
+		Convey("For tagged metric", func() {
+			matchedMetrics := patternsStorage.ProcessIncomingMetric([]byte("tag.metric;tag1=val1 12 1234567890"))
+			So(matchedMetrics, ShouldNotBeNil)
+			So(patternsStorage.metrics.TotalMetricsReceived.Count(), ShouldEqual, 1)
+			So(patternsStorage.metrics.ValidMetricsReceived.Count(), ShouldEqual, 1)
+			So(patternsStorage.metrics.MatchingMetricsReceived.Count(), ShouldEqual, 1)
+		})
+
+		Convey("For tagged metric which matches to tagged pattern which contains only name tag", func() {
+			matchedMetrics := patternsStorage.ProcessIncomingMetric([]byte("name.metric;tag1=val1 12 1234567890"))
+			So(matchedMetrics, ShouldNotBeNil)
+			So(patternsStorage.metrics.TotalMetricsReceived.Count(), ShouldEqual, 1)
+			So(patternsStorage.metrics.ValidMetricsReceived.Count(), ShouldEqual, 1)
+			So(patternsStorage.metrics.MatchingMetricsReceived.Count(), ShouldEqual, 1)
+		})
 	})
 
 	Convey("When ten valid metrics arrive match timer should be updated", t, func() {
