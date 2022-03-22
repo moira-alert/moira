@@ -100,7 +100,6 @@ type Database interface {
 	RemoveMetricValues(metric string, toTime int64) error
 	RemoveMetricsValues(metrics []string, toTime int64) error
 	GetMetricsTTLSeconds() int64
-	ScanMetricNames() MetricsDatabaseCursor
 
 	AddLocalTriggersToCheck(triggerIDs []string) error
 	GetLocalTriggersToCheck(count int) ([]string, error)
@@ -140,6 +139,16 @@ type Database interface {
 	GetTeamUsers(teamID string) ([]string, error)
 	IsTeamContainUser(teamID, userID string) (bool, error)
 	DeleteTeam(teamID, userID string) error
+
+	// Metrics management
+	CleanupOutdatedMetrics(duration time.Duration) error
+}
+
+// MetricsIterator implements DB iterator abstraction for metrics names
+type MetricsIterator interface {
+	Next() bool
+	Err() error
+	Val() string
 }
 
 // MetricsDatabaseCursor implements DB cursor abstraction for metrics names

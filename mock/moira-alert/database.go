@@ -120,6 +120,20 @@ func (mr *MockDatabaseMockRecorder) AddRemoteTriggersToCheck(arg0 interface{}) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddRemoteTriggersToCheck", reflect.TypeOf((*MockDatabase)(nil).AddRemoteTriggersToCheck), arg0)
 }
 
+// CleanupOutdatedMetrics mocks base method.
+func (m *MockDatabase) CleanupOutdatedMetrics(arg0 time.Duration) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CleanupOutdatedMetrics", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CleanupOutdatedMetrics indicates an expected call of CleanupOutdatedMetrics.
+func (mr *MockDatabaseMockRecorder) CleanupOutdatedMetrics(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CleanupOutdatedMetrics", reflect.TypeOf((*MockDatabase)(nil).CleanupOutdatedMetrics), arg0)
+}
+
 // DeleteTeam mocks base method.
 func (m *MockDatabase) DeleteTeam(arg0, arg1 string) error {
 	m.ctrl.T.Helper()
@@ -1295,20 +1309,6 @@ func (m *MockDatabase) SaveTriggersSearchResults(arg0 string, arg1 []*moira.Sear
 func (mr *MockDatabaseMockRecorder) SaveTriggersSearchResults(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveTriggersSearchResults", reflect.TypeOf((*MockDatabase)(nil).SaveTriggersSearchResults), arg0, arg1)
-}
-
-// ScanMetricNames mocks base method.
-func (m *MockDatabase) ScanMetricNames() moira.MetricsDatabaseCursor {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ScanMetricNames")
-	ret0, _ := ret[0].(moira.MetricsDatabaseCursor)
-	return ret0
-}
-
-// ScanMetricNames indicates an expected call of ScanMetricNames.
-func (mr *MockDatabaseMockRecorder) ScanMetricNames() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ScanMetricNames", reflect.TypeOf((*MockDatabase)(nil).ScanMetricNames))
 }
 
 // SetNotifierState mocks base method.

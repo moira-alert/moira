@@ -3,9 +3,9 @@ package redis
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 	"math/rand"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -270,6 +270,32 @@ func (connector *DbConnector) needRemoveMetrics(metric string) bool {
 	return err == nil
 }
 
+func (connector *DbConnector) CleanupOutdatedMetrics(duration time.Duration) error {
+	metricCounter := 0
+	c := *connector.client
+	metricsIterator := c.ScanType(connector.context, 0, metricDataKey("*"), 0, "zset").Iterator()
+	for metricsIterator.Next(connector.context) {
+		metricCounter++
+		metricKey := metricsIterator.Val()
+		metric := strings.TrimPrefix(metricKey, metricDataKey(""))
+		err := flushMetric(connector, metric, duration)
+		if err != nil {
+			return err
+		}
+	}
+	connector.logger.Infof("Total cleaned up %d metrics", metricCounter)
+	return nil
+}
+
+func flushMetric(database moira.Database, metric string, duration time.Duration) error {
+	lastTs := time.Now().UTC()
+	toTs := lastTs.Add(duration).Unix()
+	if err := database.RemoveMetricValues(metric, toTs); err != nil {
+		return err
+	}
+	return nil
+}
+
 var patternsListKey = "moira-pattern-list"
 
 var metricEventsChannels = []string{
@@ -289,36 +315,4 @@ func metricDataKey(metric string) string {
 
 func metricRetentionKey(metric string) string {
 	return "moira-metric-retention:" + metric
-}
-
-type MetricsDatabaseCursor struct {
-	cursor DbCursor
-}
-
-func NewMetricsDatabaseCursor(connector *DbConnector) moira.MetricsDatabaseCursor {
-	const countLimit = 100
-	return &MetricsDatabaseCursor{
-		cursor: connector.NewCursor("COUNT", countLimit, "MATCH", "moira-metric-data:*", "TYPE", "zset"),
-	}
-}
-
-func (c *MetricsDatabaseCursor) Next() ([]string, error) {
-	resp, err := c.cursor.Next()
-	if err != nil {
-		return nil, err
-	}
-	metrics := make([]string, 0, len(resp))
-	for _, elem := range resp {
-		metric := strings.TrimPrefix(string(elem.([]byte)), "moira-metric-data:")
-		metrics = append(metrics, metric)
-	}
-	return metrics, err
-}
-
-func (c *MetricsDatabaseCursor) Free() error {
-	return c.cursor.Free()
-}
-
-func (connector *DbConnector) ScanMetricNames() moira.MetricsDatabaseCursor {
-	return NewMetricsDatabaseCursor(connector)
 }

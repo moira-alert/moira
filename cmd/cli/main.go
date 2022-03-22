@@ -152,7 +152,8 @@ func main() { //nolint
 	if *cleanupMetrics {
 		log := logger.String(moira.LogFieldNameContext, "cleanup")
 		log.Info("Cleanup outdated metrics started")
-		if err := cleanupOutdatedMetrics(mainConfig.CleanupMetrics, dataBase, log); err != nil {
+		err := cleanupOutdatedMetrics(mainConfig.Cleanup, dataBase)
+		if err != nil {
 			log.Error(err)
 		}
 

@@ -13,12 +13,10 @@ type config struct {
 }
 
 type cleanupConfig struct {
-	Whitelist                         []string `yaml:"whitelist"`
-	Delete                            bool     `yaml:"delete"`
-	AddAnonymousToWhitelist           bool     `json:"add_anonymous_to_whitelist"`
-	CleanupMetricsDuration            string   `yaml:"cleanup_metrics_duration"`
-	CleanupMetricsBatchCount          int      `yaml:"cleanup_metrics_batch"`
-	CleanupMetricsBatchTimeoutSeconds int      `yaml:"cleanup_metrics_batch_timeout_seconds"`
+	Whitelist               []string `yaml:"whitelist"`
+	Delete                  bool     `yaml:"delete"`
+	AddAnonymousToWhitelist bool     `json:"add_anonymous_to_whitelist"`
+	CleanupMetricsDuration  string   `yaml:"cleanup_metrics_duration"`
 }
 
 func getDefault() config {
@@ -32,10 +30,8 @@ func getDefault() config {
 			DialTimeout: "500ms",
 		},
 		Cleanup: cleanupConfig{
-			Whitelist:                         []string{},
-			CleanupMetricsDuration:            "-168h",
-			CleanupMetricsBatchCount:          100,
-			CleanupMetricsBatchTimeoutSeconds: 10,
+			Whitelist:              []string{},
+			CleanupMetricsDuration: "-168h",
 		},
 	}
 }
