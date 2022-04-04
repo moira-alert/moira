@@ -88,7 +88,7 @@ func TestEvaluateTarget(t *testing.T) {
 			dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
 			dataBase.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
 			result, err := localSource.Fetch("aliasByNoe(super.puper.pattern, 2)", from, until, true)
-			So(err.Error(), ShouldResemble, "Unknown graphite function: \"aliasByNoe\"")
+			So(err.Error(), ShouldResemble, "failed to evaluate target 'aliasByNoe(super.puper.pattern, 2)': unknown function in evalExpr: \"aliasByNoe\"")
 			So(result, ShouldBeNil)
 		})
 
