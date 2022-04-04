@@ -94,6 +94,8 @@ func (connector *DbConnector) RemoveTriggerLastCheck(triggerID string) error {
 func (connector *DbConnector) SetTriggerCheckMaintenance(triggerID string, metrics map[string]int64, triggerMaintenance *int64, userLogin string, timeCallMaintenance int64) error {
 	ctx := connector.context
 	c := *connector.client
+	logger := connector.logger.Clone().String(moira.LogFieldNameTriggerID, triggerID)
+	logger.Infof("Setting maintenance, maintenance metrics count: %d", len(metrics))
 	var readingErr error
 
 	lastCheckString, readingErr := c.Get(ctx, metricLastCheckKey(triggerID)).Result()
@@ -107,6 +109,7 @@ func (connector *DbConnector) SetTriggerCheckMaintenance(triggerID string, metri
 		if err != nil {
 			return fmt.Errorf("failed to parse lastCheck json %s: %s", lastCheckString, err.Error())
 		}
+		logger.Infof("Metrics count: %d, lastCheckBytes length: %d", len(lastCheck.Metrics), len(lastCheckString))
 		metricsCheck := lastCheck.Metrics
 		if len(metricsCheck) > 0 {
 			for metric, value := range metrics {
@@ -134,8 +137,12 @@ func (connector *DbConnector) SetTriggerCheckMaintenance(triggerID string, metri
 		if prev == lastCheckString {
 			break
 		}
+		logger.Clone().String("lastCheckString", lastCheckString).String(
+			"prevLstCheckString", prev,
+		).Info("set maintenance check failed")
 		lastCheckString = prev
 	}
+	logger.Info("Maintenance has been successfully set")
 
 	return nil
 }
