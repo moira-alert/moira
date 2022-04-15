@@ -3,6 +3,7 @@ package filter
 import (
 	"fmt"
 	"regexp"
+	"strings"
 )
 
 var tagSpecRegex = regexp.MustCompile(`^["']([^,!=]+)\s*(!?=~?)\s*([^,]*)["']`)
@@ -33,6 +34,32 @@ type TagSpec struct {
 	Value    string
 }
 
+func transformWildcardToRegexpInSeriesByTag(input string) string {
+	var result = input
+	var re = regexp.MustCompile(`\{(.*?)\}`)
+	var correctLengthOfMatchedWildcardIndexesSlice = 4
+
+	for {
+		matchedWildcardIndexes := re.FindStringSubmatchIndex(result)
+		if len(matchedWildcardIndexes) != correctLengthOfMatchedWildcardIndexesSlice {
+			break
+		}
+
+		wildcardExpression := result[matchedWildcardIndexes[0]:matchedWildcardIndexes[1]]
+		regularExpression := strings.ReplaceAll(wildcardExpression, "{", "(")
+		regularExpression = strings.ReplaceAll(regularExpression, "}", ")")
+		slc := strings.Split(regularExpression, ",")
+		for i := range slc {
+			slc[i] = strings.TrimSpace(slc[i])
+		}
+		regularExpression = strings.Join(slc, "|")
+		regularExpression = "~" + regularExpression + "$"
+		result = result[:matchedWildcardIndexes[0]] + regularExpression + result[matchedWildcardIndexes[1]:]
+	}
+
+	return result
+}
+
 // ParseSeriesByTag parses seriesByTag pattern and returns tags specs
 func ParseSeriesByTag(input string) ([]TagSpec, error) {
 	matchedSeriesByTagIndexes := seriesByTagRegex.FindStringSubmatchIndex(input)
@@ -41,6 +68,8 @@ func ParseSeriesByTag(input string) ([]TagSpec, error) {
 	}
 
 	input = input[matchedSeriesByTagIndexes[2]:matchedSeriesByTagIndexes[3]]
+
+	input = transformWildcardToRegexpInSeriesByTag(input)
 
 	tagSpecs := make([]TagSpec, 0)
 
