@@ -450,14 +450,15 @@ func TestMetricsStoringErrorConnection(t *testing.T) {
 func TestCleanupOutdatedMetrics(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "warn", "test", true)
 	dataBase := NewTestDatabase(logger)
-	dataBase.Flush()
-	defer dataBase.Flush()
 
 	const metric1 = "my.test.super.metric"
 	const metric2 = "my.test.super.metric2"
 	const pattern = "my.test.*.metric*"
 
 	Convey("Given 2 metrics with 2 values older then 1 minute and 2 values younger then 1 minute", t, func() {
+		dataBase.Flush()
+		defer dataBase.Flush()
+
 		tsOlder1 := time.Now().UTC().Add(-80 * time.Second).Unix()
 		tsOlder2 := time.Now().UTC().Add(-70 * time.Second).Unix()
 		tsYounger1 := time.Now().UTC().Add(-50 * time.Second).Unix()
