@@ -3,7 +3,6 @@ package redis
 import (
 	"context"
 	"fmt"
-	"io"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -101,64 +100,19 @@ func (connector *DbConnector) makePubSubConnection(channels []string) (*redis.Pu
 	return psc, nil
 }
 
-func (connector *DbConnector) manageSubscriptions(tomb *tomb.Tomb, channels []string) (<-chan []byte, error) {
+func (connector *DbConnector) manageSubscriptions(tomb *tomb.Tomb, channels []string) (<-chan *redis.Message, error) {
 	psc, err := connector.makePubSubConnection(channels)
 	if err != nil {
 		return nil, err
 	}
 
+	dataChan := psc.Channel(redis.WithChannelSize(pubSubWorkerChannelSize))
+
 	go func() {
 		<-tomb.Dying()
 		connector.logger.Infof("Calling shutdown, unsubscribe from '%s' redis channels...", channels)
 		psc.Unsubscribe(connector.context) //nolint
-	}()
-
-	dataChan := make(chan []byte, pubSubWorkerChannelSize)
-	go func() {
-		for {
-			raw, err := psc.Receive(connector.context)
-			if err != nil {
-				if err == io.ErrUnexpectedEOF {
-					connector.logger.Infof("Receive() returned error: %s", err.Error())
-					continue
-				}
-				connector.logger.Infof("Receive() returned error: %s. Reconnecting...", err.Error())
-				newPsc, err := connector.makePubSubConnection(channels)
-				if err != nil {
-					connector.logger.Errorf("Failed to reconnect to subscription: %v", err)
-					<-time.After(receiveErrorSleepDuration)
-					continue
-				}
-				connector.logger.Info("Reconnected to subscription")
-				psc = newPsc
-				<-time.After(receiveErrorSleepDuration)
-				continue
-			}
-			switch data := raw.(type) {
-			case *redis.Message:
-				if len(data.Payload) == 0 {
-					continue
-				}
-				dataChan <- []byte(data.Payload)
-			case *redis.Subscription:
-				switch data.Kind {
-				case "subscribe":
-					connector.logger.Infof("Subscribe to %s channel, current subscriptions is %v", data.Channel, data.Count)
-				case "unsubscribe":
-					connector.logger.Infof("Unsubscribe from %s channel, current subscriptions is %v", data.Channel, data.Count)
-					if data.Count == 0 {
-						connector.logger.Infof("No more subscriptions, exit...")
-						close(dataChan)
-						return
-					}
-				}
-			case *redis.Pong:
-				connector.logger.Infof("Received PONG message")
-			default:
-				connector.logger.Errorf("Can not receive message of type '%T': %v", raw, raw)
-				<-time.After(receiveErrorSleepDuration)
-			}
-		}
+		psc.Close()                        //nolint
 	}()
 
 	return dataChan, nil
