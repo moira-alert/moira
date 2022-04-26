@@ -11,6 +11,8 @@ import (
 	"github.com/moira-alert/moira/support"
 )
 
+const maxTriggerLockAttempts = 10
+
 // UpdateTrigger update trigger data and trigger metrics in last state
 func UpdateTrigger(dataBase moira.Database, trigger *dto.TriggerModel, triggerID string, timeSeriesNames map[string]bool) (*dto.SaveTriggerResponse, *api.ErrorResponse) {
 	_, err := dataBase.GetTrigger(triggerID)
@@ -25,7 +27,7 @@ func UpdateTrigger(dataBase moira.Database, trigger *dto.TriggerModel, triggerID
 
 // saveTrigger create or update trigger data and update trigger metrics in last state
 func saveTrigger(dataBase moira.Database, trigger *moira.Trigger, triggerID string, timeSeriesNames map[string]bool) (*dto.SaveTriggerResponse, *api.ErrorResponse) {
-	if err := dataBase.AcquireTriggerCheckLock(triggerID, 10); err != nil {
+	if err := dataBase.AcquireTriggerCheckLock(triggerID, maxTriggerLockAttempts); err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
 	defer dataBase.DeleteTriggerCheckLock(triggerID) //nolint
@@ -159,6 +161,10 @@ func DeleteTriggerThrottling(database moira.Database, triggerID string) *api.Err
 
 // SetTriggerMaintenance sets maintenance to metrics and whole trigger
 func SetTriggerMaintenance(database moira.Database, triggerID string, triggerMaintenance dto.TriggerMaintenance, userLogin string, timeCallMaintenance int64) *api.ErrorResponse {
+	if err := database.AcquireTriggerCheckLock(triggerID, maxTriggerLockAttempts); err != nil {
+		return api.ErrorInternalServer(err)
+	}
+	defer database.DeleteTriggerCheckLock(triggerID) //nolint
 	if err := database.SetTriggerCheckMaintenance(triggerID, triggerMaintenance.Metrics, triggerMaintenance.Trigger, userLogin, timeCallMaintenance); err != nil {
 		return api.ErrorInternalServer(err)
 	}

@@ -8,14 +8,14 @@ import (
 )
 
 // AcquireTriggerCheckLock sets trigger lock by given id. If lock does not take, try again and repeat it for given attempts
-func (connector *DbConnector) AcquireTriggerCheckLock(triggerID string, timeout int) error {
+func (connector *DbConnector) AcquireTriggerCheckLock(triggerID string, maxAttemptsCount int) error {
 	acquired, err := connector.SetTriggerCheckLock(triggerID)
 	if err != nil {
 		return err
 	}
-	count := 0
-	for !acquired && count < timeout {
-		count++
+	attemptsCount := 0
+	for !acquired && attemptsCount < maxAttemptsCount {
+		attemptsCount++
 		<-time.After(time.Millisecond * 500) //nolint
 		acquired, err = connector.SetTriggerCheckLock(triggerID)
 		if err != nil {
@@ -23,7 +23,7 @@ func (connector *DbConnector) AcquireTriggerCheckLock(triggerID string, timeout 
 		}
 	}
 	if !acquired {
-		return fmt.Errorf("can not acquire trigger lock in %v seconds", timeout)
+		return fmt.Errorf("can not acquire trigger lock in %v attempts", maxAttemptsCount)
 	}
 	return nil
 }

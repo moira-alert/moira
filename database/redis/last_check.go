@@ -97,47 +97,38 @@ func (connector *DbConnector) SetTriggerCheckMaintenance(triggerID string, metri
 	var readingErr error
 
 	lastCheckString, readingErr := c.Get(ctx, metricLastCheckKey(triggerID)).Result()
-	if readingErr != nil && readingErr != redis.Nil {
-		return readingErr
-	}
-
-	for readingErr != redis.Nil {
-		var lastCheck = moira.CheckData{}
-		err := json.Unmarshal([]byte(lastCheckString), &lastCheck)
-		if err != nil {
-			return fmt.Errorf("failed to parse lastCheck json %s: %s", lastCheckString, err.Error())
-		}
-		metricsCheck := lastCheck.Metrics
-		if len(metricsCheck) > 0 {
-			for metric, value := range metrics {
-				data, ok := metricsCheck[metric]
-				if !ok {
-					continue
-				}
-				moira.SetMaintenanceUserAndTime(&data, value, userLogin, timeCallMaintenance)
-				metricsCheck[metric] = data
-			}
-		}
-		if triggerMaintenance != nil {
-			moira.SetMaintenanceUserAndTime(&lastCheck, *triggerMaintenance, userLogin, timeCallMaintenance)
-		}
-		newLastCheck, err := json.Marshal(lastCheck)
-		if err != nil {
-			return err
-		}
-
-		var prev string
-		prev, readingErr = c.GetSet(ctx, metricLastCheckKey(triggerID), newLastCheck).Result()
-		if readingErr != nil && readingErr != redis.Nil {
+	if readingErr != nil {
+		if readingErr != redis.Nil {
 			return readingErr
 		}
-		if prev == lastCheckString {
-			break
-		}
-		lastCheckString = prev
+		return nil
 	}
 
-	return nil
+	var lastCheck = moira.CheckData{}
+	err := json.Unmarshal([]byte(lastCheckString), &lastCheck)
+	if err != nil {
+		return fmt.Errorf("failed to parse lastCheck json %s: %s", lastCheckString, err.Error())
+	}
+	metricsCheck := lastCheck.Metrics
+	if len(metricsCheck) > 0 {
+		for metric, value := range metrics {
+			data, ok := metricsCheck[metric]
+			if !ok {
+				continue
+			}
+			moira.SetMaintenanceUserAndTime(&data, value, userLogin, timeCallMaintenance)
+			metricsCheck[metric] = data
+		}
+	}
+	if triggerMaintenance != nil {
+		moira.SetMaintenanceUserAndTime(&lastCheck, *triggerMaintenance, userLogin, timeCallMaintenance)
+	}
+	newLastCheck, err := json.Marshal(lastCheck)
+	if err != nil {
+		return err
+	}
+
+	return c.Set(ctx, metricLastCheckKey(triggerID), newLastCheck, redis.KeepTTL).Err()
 }
 
 // checkDataScoreChanged returns true if checkData.Score changed since last check
