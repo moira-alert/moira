@@ -8,6 +8,37 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+func TestTransformTaggedWildCardToMatchOperator(t *testing.T) {
+	Convey("Given valid seriesByTag patterns, should return parsed tag specs", t, func() {
+		testCases := []struct {
+			PatternWithWildcard string
+			PatternWithRegexp   string
+		}{
+			{
+				`"responseCode={405,406,407,411,413,414,415}"`,
+				`"responseCode=~(405|406|407|411|413|414|415)$"`,
+			},
+			{
+				`"a=b, responseCode={405,406,407,411,413,414,415}"`,
+				`"a=b, responseCode=~(405|406|407|411|413|414|415)$"`,
+			},
+			{
+				`"responseCode={405,406,407,411,413,414,415}, a=b"`,
+				`"responseCode=~(405|406|407|411|413|414|415)$, a=b"`,
+			},
+			{
+				`"responseCode={405,406,407,411,413,414,415}, returnValue={1, 2, 3}"`,
+				`"responseCode=~(405|406|407|411|413|414|415)$, returnValue=~(1|2|3)$"`,
+			},
+		}
+
+		for _, testCase := range testCases {
+			result := transformWildcardToRegexpInSeriesByTag(testCase.PatternWithWildcard)
+			So(result, ShouldEqual, testCase.PatternWithRegexp)
+		}
+	})
+}
+
 func TestParseSeriesByTag(t *testing.T) {
 	type ValidSeriesByTagCase struct {
 		pattern  string
@@ -25,6 +56,7 @@ func TestParseSeriesByTag(t *testing.T) {
 			{"seriesByTag(\"a=\")", []TagSpec{{"a", EqualOperator, ""}}},
 			{"seriesByTag(\"a=b\",\"a=c\")", []TagSpec{{"a", EqualOperator, "b"}, {"a", EqualOperator, "c"}}},
 			{"seriesByTag(\"a=b\",\"b=c\",\"c=d\")", []TagSpec{{"a", EqualOperator, "b"}, {"b", EqualOperator, "c"}, {"c", EqualOperator, "d"}}},
+			{`seriesByTag("a={b,c,d}")`, []TagSpec{{"a", MatchOperator, "(b|c|d)$"}}},
 		}
 
 		for _, validCase := range validSeriesByTagCases {
