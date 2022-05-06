@@ -68,14 +68,35 @@ func (notifier *StandardNotifier) buildNotificationPackagePlots(pkg Notification
 	if err != nil {
 		return nil, err
 	}
+
+	startTimeResolveMetricsWindow := time.Now()
 	from, to := resolveMetricsWindow(logger, pkg.Trigger, pkg)
+	logger.Clone().
+		Int64("moira.plots.resolve_metrics_window_ms", time.Since(startTimeResolveMetricsWindow).Milliseconds()).
+		Debug("Finished resolve metrics window")
+
+	startTimeEvaluateTriggerMetrics := time.Now()
 	metricsData, trigger, err := notifier.evaluateTriggerMetrics(from, to, pkg.Trigger.ID)
 	if err != nil {
 		return nil, err
 	}
+	logger.Clone().
+		Int64("moira.plots.evaluate_trigger_metrics_ms", time.Since(startTimeEvaluateTriggerMetrics).Milliseconds()).
+		Debug("Finished evaluate trigger metrics")
+
+	startTimeGetMetricDataToShow := time.Now()
 	metricsData = getMetricDataToShow(metricsData, metricsToShow)
+	logger.Clone().
+		Int64("moira.plots.get_metric_data_to_show_ms", time.Since(startTimeGetMetricDataToShow).Milliseconds()).
+		Debug("Finished get metric data to show")
+
 	logger.Debugf("Build plot from MetricsData: %v", metricsData)
+	startTimeBuildTriggerPlots := time.Now()
 	result, err := buildTriggerPlots(trigger, metricsData, plotTemplate)
+	logger.Clone().
+		Int64("moira.plots.build_trigger_plots_ms", time.Since(startTimeBuildTriggerPlots).Milliseconds()).
+		Debug("Finished build trigger plots")
+
 	logger.Clone().
 		Int64("moira.plots.build_duration_ms", time.Since(startTime).Milliseconds()).
 		Info("Finished build plots for package")
