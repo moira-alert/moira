@@ -60,6 +60,7 @@ func (index *Index) actualizeIndex() error {
 			triggersToDelete = append(triggersToDelete, triggerID)
 			triggerLog.Debug("Trigger is nil, remove from index")
 		} else {
+			triggersToDelete = append(triggersToDelete, triggerID)
 			triggersToUpdate = append(triggersToUpdate, trigger)
 			triggerLog.Debug("Trigger need to be reindexed...")
 		}
