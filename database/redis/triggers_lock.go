@@ -51,6 +51,13 @@ func (connector *DbConnector) DeleteTriggerCheckLock(triggerID string) error {
 	return nil
 }
 
+// ReleaseTriggerCheckLock deletes trigger check lock for given triggerID and logs an error if needed
+func (connector *DbConnector) ReleaseTriggerCheckLock(triggerID string) {
+	if err := connector.DeleteTriggerCheckLock(triggerID); err != nil {
+		connector.logger.Warningf("Error on releasing trigger check lock: %s", err)
+	}
+}
+
 func metricCheckLockKey(triggerID string) string {
 	return "moira-metric-check-lock:" + triggerID
 }

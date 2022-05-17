@@ -17,7 +17,7 @@ func TestCleanUpOutdatedMetrics(t *testing.T) {
 	db := mocks.NewMockDatabase(mockCtrl)
 
 	Convey("Test cleanup", t, func() {
-		db.EXPECT().CleanupOutdatedMetrics(-168 * time.Hour).Return(nil)
+		db.EXPECT().CleanUpOutdatedMetrics(-168 * time.Hour).Return(nil)
 		err := cleanUpOutdatedMetrics(conf.Cleanup, db)
 		So(err, ShouldBeNil)
 	})

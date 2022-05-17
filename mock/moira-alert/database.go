@@ -120,7 +120,7 @@ func (mr *MockDatabaseMockRecorder) AddRemoteTriggersToCheck(arg0 interface{}) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddRemoteTriggersToCheck", reflect.TypeOf((*MockDatabase)(nil).AddRemoteTriggersToCheck), arg0)
 }
 
-// CleanupOutdatedMetrics mocks base method.
+// CleanUpOutdatedMetrics mocks base method.
 func (m *MockDatabase) CleanUpOutdatedMetrics(arg0 time.Duration) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CleanUpOutdatedMetrics", arg0)
@@ -128,8 +128,8 @@ func (m *MockDatabase) CleanUpOutdatedMetrics(arg0 time.Duration) error {
 	return ret0
 }
 
-// CleanupOutdatedMetrics indicates an expected call of CleanupOutdatedMetrics.
-func (mr *MockDatabaseMockRecorder) CleanupOutdatedMetrics(arg0 interface{}) *gomock.Call {
+// CleanUpOutdatedMetrics indicates an expected call of CleanUpOutdatedMetrics.
+func (mr *MockDatabaseMockRecorder) CleanUpOutdatedMetrics(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CleanUpOutdatedMetrics", reflect.TypeOf((*MockDatabase)(nil).CleanUpOutdatedMetrics), arg0)
 }
@@ -972,6 +972,18 @@ func (m *MockDatabase) PushNotificationEvent(arg0 *moira.NotificationEvent, arg1
 func (mr *MockDatabaseMockRecorder) PushNotificationEvent(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PushNotificationEvent", reflect.TypeOf((*MockDatabase)(nil).PushNotificationEvent), arg0, arg1)
+}
+
+// ReleaseTriggerCheckLock mocks base method.
+func (m *MockDatabase) ReleaseTriggerCheckLock(arg0 string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "ReleaseTriggerCheckLock", arg0)
+}
+
+// ReleaseTriggerCheckLock indicates an expected call of ReleaseTriggerCheckLock.
+func (mr *MockDatabaseMockRecorder) ReleaseTriggerCheckLock(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReleaseTriggerCheckLock", reflect.TypeOf((*MockDatabase)(nil).ReleaseTriggerCheckLock), arg0)
 }
 
 // RemoveAllNotificationEvents mocks base method.

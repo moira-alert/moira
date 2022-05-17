@@ -3,6 +3,9 @@ package redis
 import (
 	"testing"
 
+	"github.com/golang/mock/gomock"
+	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
+
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -56,5 +59,17 @@ func TestLockErrorConnection(t *testing.T) {
 
 		err = dataBase.DeleteTriggerCheckLock("tr1")
 		So(err, ShouldNotBeNil)
+	})
+}
+
+func TestLockErrorLogging(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	logger := mock_moira_alert.NewMockLogger(mockCtrl)
+	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
+	dataBase.Flush()
+	defer dataBase.Flush()
+	Convey("Should log error on releasing the lock", t, func() {
+		logger.EXPECT().Warningf(gomock.Any(), gomock.Any())
+		dataBase.ReleaseTriggerCheckLock("tr1")
 	})
 }

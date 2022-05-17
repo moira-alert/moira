@@ -164,7 +164,7 @@ func SetTriggerMaintenance(database moira.Database, triggerID string, triggerMai
 	if err := database.AcquireTriggerCheckLock(triggerID, maxTriggerLockAttempts); err != nil {
 		return api.ErrorInternalServer(err)
 	}
-	defer database.DeleteTriggerCheckLock(triggerID) //nolint
+	defer database.ReleaseTriggerCheckLock(triggerID)
 	if err := database.SetTriggerCheckMaintenance(triggerID, triggerMaintenance.Metrics, triggerMaintenance.Trigger, userLogin, timeCallMaintenance); err != nil {
 		return api.ErrorInternalServer(err)
 	}

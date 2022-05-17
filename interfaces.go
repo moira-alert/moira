@@ -113,6 +113,7 @@ type Database interface {
 	AcquireTriggerCheckLock(triggerID string, maxAttemptsCount int) error
 	DeleteTriggerCheckLock(triggerID string) error
 	SetTriggerCheckLock(triggerID string) (bool, error)
+	ReleaseTriggerCheckLock(triggerID string)
 
 	// Bot data storing
 	GetIDByUsername(messenger, username string) (string, error)
