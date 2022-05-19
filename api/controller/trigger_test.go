@@ -420,6 +420,8 @@ func TestSetTriggerMaintenance(t *testing.T) {
 	var maintenanceTS int64 = 12347
 
 	Convey("Success setting metrics maintenance only", t, func() {
+		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10)
+		dataBase.EXPECT().ReleaseTriggerCheckLock(triggerID)
 		dataBase.EXPECT().SetTriggerCheckMaintenance(triggerID, triggerMaintenance.Metrics, triggerMaintenance.Trigger, "", int64(0)).Return(nil)
 		err := SetTriggerMaintenance(dataBase, triggerID, triggerMaintenance, "", 0)
 		So(err, ShouldBeNil)
@@ -428,6 +430,8 @@ func TestSetTriggerMaintenance(t *testing.T) {
 	Convey("Success setting trigger maintenance only", t, func() {
 		triggerMaintenance.Trigger = &maintenanceTS
 		triggerMaintenance.Metrics = dto.MetricsMaintenance{}
+		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10)
+		dataBase.EXPECT().ReleaseTriggerCheckLock(triggerID)
 		dataBase.EXPECT().SetTriggerCheckMaintenance(triggerID, triggerMaintenance.Metrics, triggerMaintenance.Trigger, "", int64(0)).Return(nil)
 		err := SetTriggerMaintenance(dataBase, triggerID, triggerMaintenance, "", 0)
 		So(err, ShouldBeNil)
@@ -436,6 +440,8 @@ func TestSetTriggerMaintenance(t *testing.T) {
 	Convey("Success setting metrics and trigger maintenance at once", t, func() {
 		triggerMaintenance.Trigger = &maintenanceTS
 		triggerMaintenance.Metrics = metricsMaintenance
+		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10)
+		dataBase.EXPECT().ReleaseTriggerCheckLock(triggerID)
 		dataBase.EXPECT().SetTriggerCheckMaintenance(triggerID, triggerMaintenance.Metrics, triggerMaintenance.Trigger, "", int64(0)).Return(nil)
 		err := SetTriggerMaintenance(dataBase, triggerID, triggerMaintenance, "", 0)
 		So(err, ShouldBeNil)
@@ -443,6 +449,8 @@ func TestSetTriggerMaintenance(t *testing.T) {
 
 	Convey("Error", t, func() {
 		expected := fmt.Errorf("oooops! Error set")
+		dataBase.EXPECT().AcquireTriggerCheckLock(triggerID, 10)
+		dataBase.EXPECT().ReleaseTriggerCheckLock(triggerID)
 		dataBase.EXPECT().SetTriggerCheckMaintenance(triggerID, triggerMaintenance.Metrics, triggerMaintenance.Trigger, "", int64(0)).Return(expected)
 		err := SetTriggerMaintenance(dataBase, triggerID, triggerMaintenance, "", 0)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))

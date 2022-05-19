@@ -110,9 +110,10 @@ type Database interface {
 	GetRemoteTriggersToCheckCount() (int64, error)
 
 	// TriggerCheckLock storing
-	AcquireTriggerCheckLock(triggerID string, timeout int) error
+	AcquireTriggerCheckLock(triggerID string, maxAttemptsCount int) error
 	DeleteTriggerCheckLock(triggerID string) error
 	SetTriggerCheckLock(triggerID string) (bool, error)
+	ReleaseTriggerCheckLock(triggerID string)
 
 	// Bot data storing
 	GetIDByUsername(messenger, username string) (string, error)
