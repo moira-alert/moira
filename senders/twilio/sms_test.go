@@ -13,6 +13,7 @@ import (
 func TestBuildMoiraMessage(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
 	sender := twilioSenderSms{
+		smsPrefix: "Moira notifications service: ",
 		twilioSender: twilioSender{
 			location: location,
 		}}
@@ -28,7 +29,7 @@ func TestBuildMoiraMessage(t *testing.T) {
 
 		Convey("Print moira message with one event", func() {
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{Name: "Name", Tags: []string{"tag1"}}, false)
-			expected := "NODATA Name [tag1] (1)\n\n02:40: Metric = 123 (OK to NODATA)"
+			expected := "Moira notifications service: NODATA Name [tag1] (1)\n\n02:40: Metric = 123 (OK to NODATA)"
 			So(actual, ShouldResemble, expected)
 		})
 
@@ -36,13 +37,13 @@ func TestBuildMoiraMessage(t *testing.T) {
 			var interval int64 = 24
 			event.MessageEventInfo = &moira.EventInfo{Interval: &interval}
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{Name: "Name", Tags: []string{"tag1"}}, false)
-			expected := "NODATA Name [tag1] (1)\n\n02:40: Metric = 123 (OK to NODATA). This metric has been in bad state for more than 24 hours - please, fix."
+			expected := "Moira notifications service: NODATA Name [tag1] (1)\n\n02:40: Metric = 123 (OK to NODATA). This metric has been in bad state for more than 24 hours - please, fix."
 			So(actual, ShouldResemble, expected)
 		})
 
 		Convey("Print moira message with one event and throttled", func() {
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, moira.TriggerData{Name: "Name", Tags: []string{"tag1"}}, true)
-			expected := `NODATA Name [tag1] (1)
+			expected := `Moira notifications service: NODATA Name [tag1] (1)
 
 02:40: Metric = 123 (OK to NODATA)
 
@@ -52,7 +53,7 @@ Please, fix your system or tune this trigger to generate less events.`
 
 		Convey("Print moira message with 6 events", func() {
 			actual := sender.buildMessage([]moira.NotificationEvent{event, event, event, event, event, event}, moira.TriggerData{Name: "Name", Tags: []string{"tag1"}}, false)
-			expected := `NODATA Name [tag1] (6)
+			expected := `Moira notifications service: NODATA Name [tag1] (6)
 
 02:40: Metric = 123 (OK to NODATA)
 02:40: Metric = 123 (OK to NODATA)

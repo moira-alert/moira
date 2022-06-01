@@ -48,10 +48,12 @@ func TestInit(t *testing.T) {
 
 		Convey("config sms", func() {
 			settings["type"] = "twilio sms"
+			settings["sms_prefix"] = "some text before message: "
 			err := sender.Init(settings, logger, location, "15:04")
 			So(err, ShouldBeNil)
 			So(sender, ShouldResemble, Sender{sender: &twilioSenderSms{
-				twilioSender{
+				smsPrefix: "some text before message: ",
+				twilioSender: twilioSender{
 					client:       twilio.NewClient("123", "321"),
 					APIFromPhone: "12345678989",
 					logger:       logger,

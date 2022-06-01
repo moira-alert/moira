@@ -12,6 +12,7 @@ const printEventsCount int = 5
 
 type twilioSenderSms struct {
 	twilioSender
+	smsPrefix string
 }
 
 func (sender *twilioSenderSms) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
@@ -30,7 +31,7 @@ func (sender *twilioSenderSms) SendEvents(events moira.NotificationEvents, conta
 func (sender *twilioSenderSms) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
 	var message bytes.Buffer
 
-	message.WriteString(fmt.Sprintf("%s %s %s (%d)\n", events.GetSubjectState(), trigger.Name, trigger.GetTags(), len(events)))
+	message.WriteString(fmt.Sprintf("%s%s %s %s (%d)\n", sender.smsPrefix, events.GetSubjectState(), trigger.Name, trigger.GetTags(), len(events)))
 	for i, event := range events {
 		if i > printEventsCount-1 {
 			break

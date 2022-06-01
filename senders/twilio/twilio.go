@@ -53,7 +53,7 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 	}
 	switch apiType {
 	case "twilio sms":
-		sender.sender = &twilioSenderSms{twilioSender1}
+		sender.sender = &twilioSenderSms{twilioSender1, senderSettings["sms_prefix"]}
 
 	case "twilio voice":
 		twimletsEcho := senderSettings["twimlets_echo"] == "true" //nolint
