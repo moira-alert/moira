@@ -19,3 +19,7 @@ func cleanUpOutdatedMetrics(config cleanupConfig, database moira.Database) error
 
 	return nil
 }
+
+func cleanUpAbandonedTriggerLastCheck(database moira.Database) error {
+	return database.CleanUpAbandonedTriggerLastCheck()
+}

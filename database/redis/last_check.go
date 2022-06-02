@@ -1,9 +1,13 @@
 package redis
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
+
+	"github.com/moira-alert/moira/database"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/moira-alert/moira"
@@ -83,6 +87,49 @@ func (connector *DbConnector) RemoveTriggerLastCheck(triggerID string) error {
 
 	if err != nil {
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
+	}
+
+	return nil
+}
+
+func cleanUpAbandonedTriggerLastCheckOnRedisNode(connector *DbConnector, client redis.UniversalClient) error {
+	lastCheckIterator := client.Scan(connector.context, 0, metricLastCheckKey("*"), 0).Iterator()
+	for lastCheckIterator.Next(connector.context) {
+		lastCheckKey := lastCheckIterator.Val()
+		triggerID := strings.TrimPrefix(lastCheckKey, metricLastCheckKey(""))
+		_, err := connector.GetTrigger(triggerID)
+		if err == database.ErrNil {
+			err := connector.RemoveTriggerLastCheck(triggerID)
+			if err != nil {
+				return err
+			}
+			connector.logger.Infof("Cleaned up last check for trigger %s", triggerID)
+		}
+	}
+	return nil
+}
+
+// CleanUpAbandonedTriggerLastCheck cleans up abandoned triggers last check.
+func (connector *DbConnector) CleanUpAbandonedTriggerLastCheck() error {
+	client := *connector.client
+
+	switch c := client.(type) {
+	case *redis.ClusterClient:
+		err := c.ForEachMaster(connector.context, func(ctx context.Context, shard *redis.Client) error {
+			err := cleanUpAbandonedTriggerLastCheckOnRedisNode(connector, shard)
+			if err != nil {
+				return err
+			}
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+	default:
+		err := cleanUpAbandonedTriggerLastCheckOnRedisNode(connector, c)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
