@@ -6,6 +6,8 @@ import (
 	"io"
 	"time"
 
+	"github.com/moira-alert/moira/clock"
+
 	"github.com/go-redis/redis/v8"
 	"github.com/go-redsync/redsync/v4"
 	"github.com/go-redsync/redsync/v4/redis/goredis/v8"
@@ -49,6 +51,7 @@ type DbConnector struct {
 	metricsTTLSeconds    int64
 	context              context.Context
 	source               DBSource
+	clock                moira.Clock
 }
 
 func NewDatabase(logger moira.Logger, config Config, source DBSource) *DbConnector {
@@ -76,6 +79,7 @@ func NewDatabase(logger moira.Logger, config Config, source DBSource) *DbConnect
 		sync:                 redsync.New(syncPool),
 		metricsTTLSeconds:    int64(config.MetricsTTL.Seconds()),
 		source:               source,
+		clock:                clock.NewSystemClock(),
 	}
 	return &connector
 }

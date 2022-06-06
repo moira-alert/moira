@@ -29,6 +29,8 @@ type triggerStorageElement struct {
 	IsRemote         bool                `json:"is_remote"`
 	MuteNewMetrics   bool                `json:"mute_new_metrics,omitempty"`
 	AloneMetrics     map[string]bool     `json:"alone_metrics"`
+	CreatedAt        *int64              `json:"created_at"`
+	UpdatedAt        *int64              `json:"updated_at"`
 }
 
 func (storageElement *triggerStorageElement) toTrigger() moira.Trigger {
@@ -60,6 +62,8 @@ func (storageElement *triggerStorageElement) toTrigger() moira.Trigger {
 		IsRemote:         storageElement.IsRemote,
 		MuteNewMetrics:   storageElement.MuteNewMetrics,
 		AloneMetrics:     storageElement.AloneMetrics,
+		CreatedAt:        storageElement.CreatedAt,
+		UpdatedAt:        storageElement.UpdatedAt,
 	}
 }
 
@@ -82,6 +86,8 @@ func toTriggerStorageElement(trigger *moira.Trigger, triggerID string) *triggerS
 		IsRemote:         trigger.IsRemote,
 		MuteNewMetrics:   trigger.MuteNewMetrics,
 		AloneMetrics:     trigger.AloneMetrics,
+		CreatedAt:        trigger.CreatedAt,
+		UpdatedAt:        trigger.UpdatedAt,
 	}
 }
 

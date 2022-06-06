@@ -114,16 +114,14 @@ func (connector *DbConnector) RemovePatternTriggerIDs(pattern string) error {
 // If given trigger contains new tags then create it.
 // If given trigger has no subscription on it, add it to triggers-without-subscriptions
 func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigger) error {
-	if trigger.IsRemote {
-		trigger.Patterns = make([]string, 0)
-	}
-
 	var oldTrigger *moira.Trigger
 	if existing, err := connector.GetTrigger(triggerID); err == nil {
 		oldTrigger = &existing
 	} else if err != database.ErrNil {
 		return fmt.Errorf("failed to get trigger: %s", err.Error())
 	}
+
+	connector.preSaveTrigger(trigger, oldTrigger)
 
 	err := connector.updateTrigger(triggerID, trigger, oldTrigger)
 	if err != nil {
@@ -193,6 +191,20 @@ func (connector *DbConnector) updateTrigger(triggerID string, newTrigger *moira.
 		return fmt.Errorf("failed to EXEC: %s", err.Error())
 	}
 	return nil
+}
+
+func (connector *DbConnector) preSaveTrigger(newTrigger *moira.Trigger, oldTrigger *moira.Trigger) {
+	if newTrigger.IsRemote {
+		newTrigger.Patterns = make([]string, 0)
+	}
+
+	now := connector.clock.Now().Unix()
+	newTrigger.UpdatedAt = &now
+	if oldTrigger != nil {
+		newTrigger.CreatedAt = oldTrigger.CreatedAt
+	} else {
+		newTrigger.CreatedAt = &now
+	}
 }
 
 // RemoveTrigger deletes trigger data by given triggerID, delete trigger tag list,

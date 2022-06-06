@@ -4,6 +4,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/mock/gomock"
+
+	mock_clock "github.com/moira-alert/moira/mock/clock"
+
 	"github.com/gofrs/uuid"
 
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
@@ -236,6 +240,8 @@ func TestTriggerStoring(t *testing.T) {
 			actual, err := dataBase.GetTrigger(trigger.ID)
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, trigger)
+
+			triggerCheck.Trigger = actual
 
 			actualTriggerChecks, err := dataBase.GetTriggerChecks([]string{trigger.ID})
 			So(err, ShouldBeNil)
@@ -522,6 +528,10 @@ func TestTriggerStoring(t *testing.T) {
 func TestRemoteTrigger(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabase(logger)
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	systemClock := mock_clock.NewMockClock(mockCtrl)
+	dataBase.clock = systemClock
 	pattern := "test.pattern.remote1"
 	trigger := &moira.Trigger{
 		ID:           "triggerID-0000000000010",
@@ -538,11 +548,15 @@ func TestRemoteTrigger(t *testing.T) {
 
 	Convey("Saving remote trigger", t, func() {
 		Convey("Trigger should be saved correctly", func() {
+			systemClock.EXPECT().Now().Return(time.Date(2022, time.June, 7, 10, 0, 0, 0, time.UTC))
+
 			err := dataBase.SaveTrigger(trigger.ID, trigger)
 			So(err, ShouldBeNil)
 			actual, err := dataBase.GetTrigger(trigger.ID)
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, *trigger)
+			So(*actual.CreatedAt, ShouldResemble, time.Date(2022, time.June, 7, 10, 0, 0, 0, time.UTC).Unix())
+			So(*actual.UpdatedAt, ShouldResemble, time.Date(2022, time.June, 7, 10, 0, 0, 0, time.UTC).Unix())
 		})
 		Convey("Trigger should be added to triggers collection", func() {
 			ids, err := dataBase.GetAllTriggerIDs()
@@ -563,6 +577,7 @@ func TestRemoteTrigger(t *testing.T) {
 			valueStoredAtKey := client.SMembers(dataBase.context, "{moira-triggers-list}:moira-remote-triggers-list").Val()
 			So(valueStoredAtKey, ShouldResemble, []string{trigger.ID})
 		})
+
 		Convey("Trigger should not be added to patterns collection", func() {
 			ids, err := dataBase.GetPatternTriggerIDs(pattern)
 			So(err, ShouldBeNil)
@@ -579,11 +594,14 @@ func TestRemoteTrigger(t *testing.T) {
 		trigger.IsRemote = false
 		trigger.Patterns = []string{pattern}
 		Convey("Trigger should be saved correctly", func() {
+			systemClock.EXPECT().Now().Return(time.Date(2022, time.June, 7, 10, 0, 0, 0, time.UTC))
+
 			err := dataBase.SaveTrigger(trigger.ID, trigger)
 			So(err, ShouldBeNil)
 			actual, err := dataBase.GetTrigger(trigger.ID)
 			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, *trigger)
+			So(*actual.UpdatedAt, ShouldResemble, time.Date(2022, time.June, 7, 10, 0, 0, 0, time.UTC).Unix())
+			So(*actual.CreatedAt, ShouldResemble, time.Date(2022, time.June, 7, 10, 0, 0, 0, time.UTC).Unix())
 		})
 		Convey("Trigger should be added to triggers collection", func() {
 			ids, err := dataBase.GetLocalTriggerIDs()
@@ -618,11 +636,15 @@ func TestRemoteTrigger(t *testing.T) {
 
 		trigger.IsRemote = true
 		Convey("Update this trigger as remote", func() {
+			systemClock.EXPECT().Now().Return(time.Date(2022, time.June, 7, 10, 0, 0, 0, time.UTC))
+
 			err := dataBase.SaveTrigger(trigger.ID, trigger)
 			So(err, ShouldBeNil)
 			actual, err := dataBase.GetTrigger(trigger.ID)
 			So(err, ShouldBeNil)
 			So(actual, ShouldResemble, *trigger)
+			So(*actual.CreatedAt, ShouldResemble, time.Date(2022, time.June, 7, 10, 0, 0, 0, time.UTC).Unix())
+			So(*actual.UpdatedAt, ShouldResemble, time.Date(2022, time.June, 7, 10, 0, 0, 0, time.UTC).Unix())
 		})
 		Convey("Trigger should be deleted from local triggers collection", func() {
 			ids, err := dataBase.GetLocalTriggerIDs()
@@ -689,6 +711,57 @@ func TestTriggerErrorConnection(t *testing.T) {
 
 		err = dataBase.RemovePatternTriggerIDs("")
 		So(err, ShouldNotBeNil)
+	})
+}
+
+func TestDbConnector_preSaveTrigger(t *testing.T) {
+	testTime := time.Date(2022, time.June, 6, 10, 0, 0, 0, time.UTC)
+
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	systemClock := mock_clock.NewMockClock(mockCtrl)
+	systemClock.EXPECT().Now().Return(testTime).Times(4)
+	connector := &DbConnector{clock: systemClock}
+	patterns := []string{"pattern-1", "pattern-2"}
+
+	Convey("When a local trigger", t, func() {
+		trigger := &moira.Trigger{ID: "trigger-id", Patterns: patterns}
+
+		Convey("UpdatedAt CreatedAt fields should be set `now` on creation.", func() {
+			connector.preSaveTrigger(trigger, nil)
+			So(trigger.Patterns, ShouldResemble, patterns)
+			So(trigger.UpdatedAt, ShouldResemble, trigger.CreatedAt)
+			So(*trigger.UpdatedAt, ShouldResemble, time.Date(2022, time.June, 6, 10, 0, 0, 0, time.UTC).Unix())
+		})
+
+		Convey("UpdatedAt field should be set `now` on creation; Nothing changes with CreatedAt field.", func() {
+			dayAgo := testTime.Add(-24 * time.Hour).Unix()
+			oldTrigger := &moira.Trigger{ID: "trigger-id", Patterns: patterns, CreatedAt: &dayAgo, UpdatedAt: &dayAgo}
+			connector.preSaveTrigger(trigger, oldTrigger)
+			So(trigger.Patterns, ShouldResemble, patterns)
+			So(*trigger.CreatedAt, ShouldResemble, time.Date(2022, time.June, 5, 10, 0, 0, 0, time.UTC).Unix())
+			So(*trigger.UpdatedAt, ShouldResemble, time.Date(2022, time.June, 6, 10, 0, 0, 0, time.UTC).Unix())
+		})
+	})
+
+	Convey("When a remote trigger", t, func() {
+		trigger := &moira.Trigger{ID: "trigger-id", Patterns: patterns, IsRemote: true}
+
+		Convey("UpdatedAt CreatedAt fields should be set `now` on creation; patterns should be empty.", func() {
+			connector.preSaveTrigger(trigger, nil)
+			So(trigger.Patterns, ShouldBeEmpty)
+			So(trigger.UpdatedAt, ShouldResemble, trigger.CreatedAt)
+			So(*trigger.UpdatedAt, ShouldResemble, time.Date(2022, time.June, 6, 10, 0, 0, 0, time.UTC).Unix())
+		})
+
+		Convey("UpdatedAt field should be set `now` on creation; Nothing changes with CreatedAt field; patterns should be empty.", func() {
+			dayAgo := testTime.Add(-24 * time.Hour).Unix()
+			oldTrigger := &moira.Trigger{ID: "trigger-id", Patterns: patterns, CreatedAt: &dayAgo, UpdatedAt: &dayAgo}
+			connector.preSaveTrigger(trigger, oldTrigger)
+			So(trigger.Patterns, ShouldBeEmpty)
+			So(*trigger.CreatedAt, ShouldResemble, time.Date(2022, time.June, 5, 10, 0, 0, 0, time.UTC).Unix())
+			So(*trigger.UpdatedAt, ShouldResemble, time.Date(2022, time.June, 6, 10, 0, 0, 0, time.UTC).Unix())
+		})
 	})
 }
 

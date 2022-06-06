@@ -73,6 +73,10 @@ type TriggerModel struct {
 	MuteNewMetrics bool `json:"mute_new_metrics"`
 	// A list of targets that have only alone metrics
 	AloneMetrics map[string]bool `json:"alone_metrics"`
+	// Datetime when the trigger was created
+	CreatedAt *time.Time `json:"created_at"`
+	// Datetime  when the trigger was updated
+	UpdatedAt *time.Time `json:"updated_at"`
 }
 
 // ToMoiraTrigger transforms TriggerModel to moira.Trigger
@@ -116,6 +120,8 @@ func CreateTriggerModel(trigger *moira.Trigger) TriggerModel {
 		IsRemote:       trigger.IsRemote,
 		MuteNewMetrics: trigger.MuteNewMetrics,
 		AloneMetrics:   trigger.AloneMetrics,
+		CreatedAt:      getDateTime(trigger.CreatedAt),
+		UpdatedAt:      getDateTime(trigger.UpdatedAt),
 	}
 }
 
@@ -187,6 +193,16 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 	}
 
 	return nil
+}
+
+func getDateTime(timestamp *int64) *time.Time {
+	if timestamp == nil {
+		return nil
+	}
+
+	datetime := time.Unix(*timestamp, 0).UTC()
+
+	return &datetime
 }
 
 func checkTTLSanity(trigger *Trigger, metricsSource metricSource.MetricSource) error {
