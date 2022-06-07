@@ -53,7 +53,8 @@ var (
 )
 
 var (
-	cleanUpMetrics = flag.Bool("cleanup-outdated-metrics", false, "Delete outdated metrics by duration.")
+	cleanUpMetrics   = flag.Bool("cleanup-outdated-metrics", false, "Delete outdated metrics by duration.")
+	cleanUpLastCheck = flag.Bool("cleanup-abandoned-trigger-last-checks", false, "Delete abandoned trigger last checks.")
 )
 
 var (
@@ -158,6 +159,18 @@ func main() { //nolint
 		}
 
 		log.Info("Cleanup outdated metrics finished")
+	}
+
+	if *cleanUpLastCheck {
+		log := logger.String(moira.LogFieldNameContext, "cleanup")
+		log.Info("Cleanup abandoned triggers last checks started")
+
+		err := cleanUpAbandonedTriggerLastCheck(dataBase)
+		if err != nil {
+			log.Error(err)
+		}
+
+		log.Info("Cleanup abandoned triggers last checks finished")
 	}
 }
 

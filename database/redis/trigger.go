@@ -231,6 +231,8 @@ func (connector *DbConnector) removeTrigger(triggerID string, trigger *moira.Tri
 	z := &redis.Z{Score: float64(time.Now().Unix()), Member: triggerID}
 	pipe.ZAdd(connector.context, triggersToReindexKey, z)
 
+	pipe = appendRemoveTriggerLastCheckToRedisPipeline(connector.context, pipe, triggerID)
+
 	if _, err := pipe.Exec(connector.context); err != nil {
 		return fmt.Errorf("failed to remove trigger %s", err.Error())
 	}

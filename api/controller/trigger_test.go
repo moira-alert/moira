@@ -304,7 +304,6 @@ func TestRemoveTrigger(t *testing.T) {
 
 	Convey("Success", t, func() {
 		dataBase.EXPECT().RemoveTrigger(triggerID).Return(nil)
-		dataBase.EXPECT().RemoveTriggerLastCheck(triggerID).Return(nil)
 		err := RemoveTrigger(dataBase, triggerID)
 		So(err, ShouldBeNil)
 	})
@@ -318,8 +317,7 @@ func TestRemoveTrigger(t *testing.T) {
 
 	Convey("Error remove last check", t, func() {
 		expected := fmt.Errorf("oooops! Error delete")
-		dataBase.EXPECT().RemoveTrigger(triggerID).Return(nil)
-		dataBase.EXPECT().RemoveTriggerLastCheck(triggerID).Return(expected)
+		dataBase.EXPECT().RemoveTrigger(triggerID).Return(expected)
 		err := RemoveTrigger(dataBase, triggerID)
 		So(err, ShouldResemble, api.ErrorInternalServer(expected))
 	})

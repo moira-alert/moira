@@ -307,6 +307,54 @@ func TestLastCheck(t *testing.T) {
 	})
 }
 
+func TestCleanUpAbandonedTriggerLastCheck(t *testing.T) {
+	logger, _ := logging.ConfigureLog("stdout", "warn", "test", true)
+	dataBase := NewTestDatabase(logger)
+	dataBase.Flush()
+	defer dataBase.Flush()
+	Convey("Test clean up abandoned trigger last check", t, func() {
+		Convey("Given trigger with last check", func() {
+			trigger := moira.Trigger{
+				ID:           "triggerID-0000000000001",
+				Name:         "test trigger 1 v1.0",
+				Targets:      []string{"test.target.1"},
+				Tags:         []string{"test-tag-1"},
+				Patterns:     []string{"test.pattern.1"},
+				TriggerType:  moira.RisingTrigger,
+				TTLState:     &moira.TTLStateNODATA,
+				AloneMetrics: map[string]bool{},
+			}
+			_ = dataBase.SaveTrigger(trigger.ID, &trigger)
+
+			_ = dataBase.SetTriggerLastCheck(trigger.ID, &lastCheckTest, false)
+			_, err := dataBase.GetTriggerLastCheck(trigger.ID)
+			So(err, ShouldBeNil)
+
+			Convey("Given abandoned last check (without saved trigger)", func() {
+				removedTriggerID := uuid.Must(uuid.NewV4()).String()
+				err = dataBase.SetTriggerLastCheck(removedTriggerID, &lastCheckTest, false)
+				So(err, ShouldBeNil)
+
+				_, err = dataBase.GetTriggerLastCheck(removedTriggerID)
+				So(err, ShouldBeNil)
+
+				Convey("When CleanUpAbandonedTriggerLastCheck was called", func() {
+					err = dataBase.CleanUpAbandonedTriggerLastCheck()
+					So(err, ShouldBeNil)
+
+					Convey("Abandoned last check should be deleted", func() {
+						_, err = dataBase.GetTriggerLastCheck(removedTriggerID)
+						So(err, ShouldResemble, database.ErrNil)
+
+						_, err = dataBase.GetTrigger(trigger.ID)
+						So(err, ShouldBeNil)
+					})
+				})
+			})
+		})
+	})
+}
+
 func TestRemoteLastCheck(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabase(logger)
