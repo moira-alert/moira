@@ -75,14 +75,20 @@ func (connector *DbConnector) getSelfStateCheckCountKey(isRemote bool) string {
 	return selfStateChecksCounterKey
 }
 
-// RemoveTriggerLastCheck removes trigger last check data
-func (connector *DbConnector) RemoveTriggerLastCheck(triggerID string) error {
-	ctx := connector.context
-	pipe := (*connector.client).TxPipeline()
+func appendRemoveTriggerLastCheckToRedisPipeline(ctx context.Context, pipe redis.Pipeliner, triggerID string) redis.Pipeliner {
 	pipe.Del(ctx, metricLastCheckKey(triggerID))
 	pipe.ZRem(ctx, triggersChecksKey, triggerID)
 	pipe.SRem(ctx, badStateTriggersKey, triggerID)
 	pipe.ZAdd(ctx, triggersToReindexKey, &redis.Z{Score: float64(time.Now().Unix()), Member: triggerID})
+
+	return pipe
+}
+
+// RemoveTriggerLastCheck removes trigger last check data
+func (connector *DbConnector) RemoveTriggerLastCheck(triggerID string) error {
+	ctx := connector.context
+	pipe := (*connector.client).TxPipeline()
+	pipe = appendRemoveTriggerLastCheckToRedisPipeline(ctx, pipe, triggerID)
 	_, err := pipe.Exec(ctx)
 
 	if err != nil {

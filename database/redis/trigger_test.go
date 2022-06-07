@@ -285,6 +285,10 @@ func TestTriggerStoring(t *testing.T) {
 			actualTriggerChecks, err = dataBase.GetTriggerChecks([]string{trigger.ID})
 			So(err, ShouldBeNil)
 			So(actualTriggerChecks, ShouldResemble, []*moira.TriggerCheck{nil})
+
+			//Trigger last is also removed with trigger
+			_, err = dataBase.GetTriggerLastCheck(trigger.ID)
+			So(err, ShouldResemble, database.ErrNil)
 		})
 
 		Convey("Save trigger with metrics and get metrics", func() {

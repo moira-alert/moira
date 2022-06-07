@@ -99,9 +99,6 @@ func RemoveTrigger(database moira.Database, triggerID string) *api.ErrorResponse
 	if err := database.RemoveTrigger(triggerID); err != nil {
 		return api.ErrorInternalServer(err)
 	}
-	if err := database.RemoveTriggerLastCheck(triggerID); err != nil {
-		return api.ErrorInternalServer(err)
-	}
 	return nil
 }
 
