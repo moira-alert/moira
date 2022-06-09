@@ -244,6 +244,7 @@ func (connector *DbConnector) RemoveMetricValues(metric string, toTime int64) er
 	if _, err := c.ZRemRangeByScore(connector.context, metricDataKey(metric), "-inf", strconv.FormatInt(toTime, 10)).Result(); err != nil {
 		return fmt.Errorf("failed to remove metrics from -inf to %v, error: %v", toTime, err)
 	}
+
 	return nil
 }
 
@@ -316,6 +317,66 @@ func (connector *DbConnector) CleanUpOutdatedMetrics(duration time.Duration) err
 	}
 
 	connector.logger.Infof("Total cleaned up %d metrics", metricCounter)
+	return nil
+}
+
+func removeMetricsByPrefixOnRedisNode(connector *DbConnector, client redis.UniversalClient, prefix string) error {
+	metricDataIterator := client.Scan(connector.context, 0, metricDataKey(fmt.Sprintf("%s*", prefix)), 0).Iterator()
+	for metricDataIterator.Next(connector.context) {
+		err := client.Del(connector.context, metricDataIterator.Val()).Err()
+		if err != nil {
+			return err
+		}
+	}
+
+	metricRetentionIterator := client.Scan(connector.context, 0, metricRetentionKey(fmt.Sprintf("%s*", prefix)), 0).Iterator()
+	for metricRetentionIterator.Next(connector.context) {
+		err := client.Del(connector.context, metricRetentionIterator.Val()).Err()
+		if err != nil {
+			return err
+		}
+	}
+
+	patternMetricsIterator := client.Scan(connector.context, 0, patternMetricsKey("*"), 0).Iterator()
+	for patternMetricsIterator.Next(connector.context) {
+		patternMetricsSetKey := patternMetricsIterator.Val()
+		patternMetrics := client.SMembers(connector.context, patternMetricsSetKey).Val()
+		for _, patternMetric := range patternMetrics {
+			if strings.HasPrefix(patternMetric, prefix) {
+				err := client.SRem(connector.context, patternMetricsSetKey, patternMetric).Err()
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+// RemoveMetricsByPrefix remove metrics by their prefix e.g. "my.super.metric."
+func (connector *DbConnector) RemoveMetricsByPrefix(prefix string) error {
+	client := *connector.client
+
+	switch c := client.(type) {
+	case *redis.ClusterClient:
+		err := c.ForEachMaster(connector.context, func(ctx context.Context, shard *redis.Client) error {
+			err := removeMetricsByPrefixOnRedisNode(connector, shard, prefix)
+			if err != nil {
+				return err
+			}
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+	default:
+		err := removeMetricsByPrefixOnRedisNode(connector, c, prefix)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

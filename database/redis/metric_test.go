@@ -2,6 +2,7 @@ package redis
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
@@ -590,6 +591,71 @@ func TestCleanupOutdatedMetrics(t *testing.T) {
 						&moira.MetricValue{Timestamp: tsYounger2 + 5, RetentionTimestamp: tsYounger2, Value: 4},
 					},
 				})
+			})
+		})
+	})
+}
+
+func TestRemoveMetricsByPrefix(t *testing.T) {
+	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
+	dataBase := NewTestDatabase(logger)
+	dataBase.Flush()
+	defer dataBase.Flush()
+	client := *dataBase.client
+	const pattern = "my.test.*.metric*"
+
+	Convey("Given metrics with pattern my.test.*", t, func() {
+		for i := 1; i <= 10; i++ {
+			err := dataBase.SaveMetrics(
+				map[string]*moira.MatchedMetric{
+					fmt.Sprintf("my.test.super.metric%d", i): {
+						Patterns:           []string{pattern},
+						Metric:             fmt.Sprintf("my.test.super.metric%d", i),
+						Retention:          10,
+						RetentionTimestamp: 10,
+						Timestamp:          5,
+						Value:              1,
+					}})
+			So(err, ShouldBeNil)
+		}
+
+		for i := 1; i <= 10; i++ {
+			err := dataBase.SaveMetrics(
+				map[string]*moira.MatchedMetric{
+					fmt.Sprintf("my.test.mega.metric%d", i): {
+						Patterns:           []string{pattern},
+						Metric:             fmt.Sprintf("my.test.mega.metric%d", i),
+						Retention:          10,
+						RetentionTimestamp: 10,
+						Timestamp:          5,
+						Value:              1,
+					}})
+			So(err, ShouldBeNil)
+		}
+
+		result := client.Keys(dataBase.context, "moira-metric-data:my.test*").Val()
+		So(len(result), ShouldResemble, 20)
+		result = client.Keys(dataBase.context, "moira-metric-retention:my.test*").Val()
+		So(len(result), ShouldResemble, 20)
+
+		patternMetricsCount := client.SCard(dataBase.context, "moira-pattern-metrics:my.test.*.metric*").Val()
+		So(patternMetricsCount, ShouldResemble, int64(20))
+
+		Convey("When remove metrics by prefix my.test.super. was called", func() {
+			err := dataBase.RemoveMetricsByPrefix("my.test.super.")
+			So(err, ShouldBeNil)
+
+			Convey("No metric data for metrics with this prefix should not exist", func() {
+				result = client.Keys(dataBase.context, "moira-metric-data:my.test*").Val()
+				So(len(result), ShouldResemble, 10)
+				result = client.Keys(dataBase.context, "moira-metric-retention:my.test*").Val()
+				So(len(result), ShouldResemble, 10)
+				result = client.Keys(dataBase.context, "moira-metric-data:my.test.mega.*").Val()
+				So(len(result), ShouldResemble, 10)
+				result = client.Keys(dataBase.context, "moira-metric-retention:my.test.mega.*").Val()
+				So(len(result), ShouldResemble, 10)
+				patternMetricsCount := client.SCard(dataBase.context, "moira-pattern-metrics:my.test.*.metric*").Val()
+				So(patternMetricsCount, ShouldResemble, int64(10))
 			})
 		})
 	})

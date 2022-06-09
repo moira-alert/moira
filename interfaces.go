@@ -144,6 +144,7 @@ type Database interface {
 
 	// Metrics management
 	CleanUpOutdatedMetrics(duration time.Duration) error
+	RemoveMetricsByPrefix(pattern string) error
 }
 
 // Lock implements lock abstraction
