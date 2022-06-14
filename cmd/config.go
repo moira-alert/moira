@@ -38,6 +38,8 @@ type RedisConfig struct {
 	ReadTimeout string `yaml:"read_timeout"`
 	// Write-operation timeout. Default is ReadTimeout seconds.
 	WriteTimeout string `yaml:"write_timeout"`
+	// MaxRetries count of retries.
+	MaxRetries int `yaml:"max_retries"`
 }
 
 // GetSettings returns redis config parsed from moira config files
@@ -47,6 +49,7 @@ func (config *RedisConfig) GetSettings() redis.Config {
 		Addrs:        strings.Split(config.Addrs, ","),
 		Username:     config.Username,
 		Password:     config.Password,
+		MaxRetries:   config.MaxRetries,
 		MetricsTTL:   to.Duration(config.MetricsTTL),
 		DialTimeout:  to.Duration(config.DialTimeout),
 		ReadTimeout:  to.Duration(config.ReadTimeout),
