@@ -262,6 +262,8 @@ type Trigger struct {
 	IsRemote         bool            `json:"is_remote"`
 	MuteNewMetrics   bool            `json:"mute_new_metrics"`
 	AloneMetrics     map[string]bool `json:"alone_metrics"`
+	CreatedAt        *int64          `json:"created_at"`
+	UpdatedAt        *int64          `json:"updated_at"`
 }
 
 // TriggerCheck represents trigger data with last check data and check timestamp

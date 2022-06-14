@@ -218,3 +218,8 @@ type PlotTheme interface {
 	GetXAxisStyle() chart.Style
 	GetYAxisStyle() chart.Style
 }
+
+// Clock is an interface to work with Time.
+type Clock interface {
+	Now() time.Time
+}
