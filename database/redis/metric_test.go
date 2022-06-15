@@ -339,6 +339,7 @@ func TestRemoveMetricValues(t *testing.T) {
 func TestMetricSubscription(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabase(logger)
+
 	dataBase.Flush()
 	defer dataBase.Flush()
 	metric1 := "my.test.super.metric"
@@ -392,10 +393,13 @@ func TestMetricSubscription(t *testing.T) {
 			}
 		})
 
-		dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric1: met1}) //nolint
-		dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric2: met2}) //nolint
+		err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric1: met1})
+		So(err, ShouldBeNil)
+		err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric2: met2})
+		So(err, ShouldBeNil)
 		tomb1.Kill(nil)
-		tomb1.Wait() //nolint
+		err = tomb1.Wait()
+		So(err, ShouldBeNil)
 
 		So(numberOfChecks, ShouldEqual, 3)
 	})
@@ -454,11 +458,13 @@ func TestCleanupOutdatedMetrics(t *testing.T) {
 	dataBase.Flush()
 	defer dataBase.Flush()
 
-	const metric1 = "my.test.super.metric"
-	const metric2 = "my.test.super.metric2"
-	const pattern = "my.test.*.metric*"
-
 	Convey("Given 2 metrics with 2 values older then 1 minute and 2 values younger then 1 minute", t, func() {
+		const (
+			metric1 = "my.test.super.metric"
+			metric2 = "my.test.super.metric2"
+			pattern = "my.test.*.metric*"
+		)
+
 		tsOlder1 := time.Now().UTC().Add(-80 * time.Second).Unix()
 		tsOlder2 := time.Now().UTC().Add(-70 * time.Second).Unix()
 		tsYounger1 := time.Now().UTC().Add(-50 * time.Second).Unix()

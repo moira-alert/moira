@@ -94,6 +94,11 @@ func (metric ParsedMetric) IsTagged() bool {
 	return len(metric.Labels) > 0
 }
 
+// IsTooOld checks that metric is old to parse it.
+func (metric ParsedMetric) IsTooOld(maxTTL time.Duration, now time.Time) bool {
+	return moira.Int64ToTime(metric.Timestamp).Add(maxTTL).Before(now)
+}
+
 func parseNameAndLabels(metricBytes []byte) (string, map[string]string, error) {
 	metricBytesScanner := moira.NewBytesScanner(metricBytes, ';')
 	if !metricBytesScanner.HasNext() {

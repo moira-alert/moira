@@ -21,7 +21,13 @@ type MetricsMatcher struct {
 }
 
 // NewMetricsMatcher creates new MetricsMatcher
-func NewMetricsMatcher(metrics *metrics.FilterMetrics, logger moira.Logger, database moira.Database, cacheStorage *filter.Storage, cacheCapacity int) *MetricsMatcher {
+func NewMetricsMatcher(
+	metrics *metrics.FilterMetrics,
+	logger moira.Logger,
+	database moira.Database,
+	cacheStorage *filter.Storage,
+	cacheCapacity int,
+) *MetricsMatcher {
 	return &MetricsMatcher{
 		metrics:       metrics,
 		logger:        logger,

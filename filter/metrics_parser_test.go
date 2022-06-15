@@ -204,3 +204,23 @@ func TestRestoreMetricStringByNameAndLabels(t *testing.T) {
 		})
 	})
 }
+
+func TestParsedMetric_IsTooOld(t *testing.T) {
+	now := time.Date(2022, 6, 16, 10, 0, 0, 0, time.UTC)
+	maxTTL := time.Hour
+
+	Convey("When metric is old, return true", t, func() {
+		metric := ParsedMetric{
+			Name:      "too old metric",
+			Timestamp: time.Date(2022, 6, 16, 8, 59, 0, 0, time.UTC).Unix(),
+		}
+		So(metric.IsTooOld(maxTTL, now), ShouldBeTrue)
+	})
+	Convey("When metric is young, return false", t, func() {
+		metric := ParsedMetric{
+			Name:      "too old metric",
+			Timestamp: time.Date(2022, 6, 16, 9, 00, 0, 0, time.UTC).Unix(),
+		}
+		So(metric.IsTooOld(maxTTL, now), ShouldBeFalse)
+	})
+}

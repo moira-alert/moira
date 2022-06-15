@@ -26,6 +26,8 @@ type filterConfig struct {
 	MaxParallelMatches int `yaml:"max_parallel_matches"`
 	// Period in which patterns will be reloaded from Redis.
 	PatternsUpdatePeriod string `yaml:"patterns_update_period"`
+	// DropMetricsTTL this is time window how older metric we can get from now.
+	DropMetricsTTL string `yaml:"drop_metrics_ttl"`
 }
 
 func getDefault() config {
@@ -46,6 +48,7 @@ func getDefault() config {
 			CacheCapacity:        10, //nolint
 			MaxParallelMatches:   0,
 			PatternsUpdatePeriod: "1s",
+			DropMetricsTTL:       "1h",
 		},
 		Telemetry: cmd.TelemetryConfig{
 			Listen: ":8094",
