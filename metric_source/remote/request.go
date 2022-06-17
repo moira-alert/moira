@@ -50,7 +50,7 @@ func (remote *Remote) makeRequest(req *http.Request) (body []byte, isRemoteAvail
 			"the remote server is not available. Response status %d: %s", resp.StatusCode, string(body),
 		)
 	} else if resp.StatusCode != http.StatusOK {
-		return body, true, fmt.Errorf("bad response status %d: %s", resp.StatusCode, string(body))
+		return body, true, fmt.Errorf("remote server response status %d: %s", resp.StatusCode, string(body))
 	}
 
 	return body, true, nil
