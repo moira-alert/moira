@@ -1,10 +1,12 @@
 package remote
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 func (remote *Remote) prepareRequest(from, until int64, target string) (*http.Request, error) {
@@ -24,27 +26,73 @@ func (remote *Remote) prepareRequest(from, until int64, target string) (*http.Re
 	return req, nil
 }
 
-func (remote *Remote) makeRequest(req *http.Request) ([]byte, error) {
-	var body []byte
-
+func (remote *Remote) makeRequest(req *http.Request) (body []byte, isRemoteAvailable bool, err error) {
 	resp, err := remote.client.Do(req)
 	if resp != nil {
 		defer resp.Body.Close()
 	}
 
 	if err != nil {
-		return body, fmt.Errorf("The remote server is not available or the response was reset by timeout. " + //nolint
-			"TTL: %s, PATH: %s, ERROR: %v ", remote.client.Timeout.String(), req.URL.RawPath, err)
+		return body, false, fmt.Errorf(
+			"the remote server is not available or the response was reset by timeout. Url: %s, Error: %v ",
+			req.URL.String(),
+			err,
+		)
 	}
 
 	body, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return body, err
+		return body, false, err
 	}
 
-	if resp.StatusCode != 200 { //nolint
-		return body, fmt.Errorf("bad response status %d: %s", resp.StatusCode, string(body))
+	if isRemoteUnavailableStatusCode(resp.StatusCode) {
+		return body, false, fmt.Errorf(
+			"the remote server is not available. Response status %d: %s", resp.StatusCode, string(body),
+		)
+	} else if resp.StatusCode != http.StatusOK {
+		return body, true, fmt.Errorf("bad response status %d: %s", resp.StatusCode, string(body))
 	}
 
-	return body, nil
+	return body, true, nil
+}
+
+func isRemoteUnavailableStatusCode(statusCode int) bool {
+	switch statusCode {
+	case http.StatusUnauthorized,
+		http.StatusBadGateway,
+		http.StatusServiceUnavailable,
+		http.StatusGatewayTimeout:
+		return true
+	default:
+		return false
+	}
+}
+
+func (remote *Remote) makeRequestWithRetries(
+	req *http.Request,
+	requestTimeout time.Duration,
+	retrySeconds []time.Duration,
+) (body []byte, isRemoteAvailable bool, err error) {
+	for attemptIndex := 0; attemptIndex < len(retrySeconds)+1; attemptIndex++ {
+		body, isRemoteAvailable, err = remote.makeRequestWithTimeout(req, requestTimeout)
+		if err == nil || isRemoteAvailable {
+			return body, true, err
+		}
+		if attemptIndex < len(retrySeconds) {
+			remote.clock.Sleep(retrySeconds[attemptIndex])
+		}
+	}
+	return nil, false, err
+}
+
+func (remote *Remote) makeRequestWithTimeout(
+	req *http.Request,
+	requestTimeout time.Duration,
+) (body []byte, isRemoteAvailable bool, err error) {
+	if requestTimeout > 0 {
+		ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
+		defer cancel()
+		req = req.WithContext(ctx)
+	}
+	return remote.makeRequest(req)
 }

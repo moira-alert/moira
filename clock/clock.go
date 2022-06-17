@@ -14,3 +14,8 @@ func NewSystemClock() *SystemClock {
 func (t *SystemClock) Now() time.Time {
 	return time.Now().UTC()
 }
+
+// Sleep pauses the current goroutine for at least the passed duration
+func (t *SystemClock) Sleep(duration time.Duration) {
+	time.Sleep(duration)
+}
