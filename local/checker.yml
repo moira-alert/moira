@@ -16,8 +16,11 @@ remote:
   enabled: true
   url: "http://graphite:80/render"
   check_interval: 60s
+  metrics_ttl: 168h
   timeout: 60s
-  metrics_ttl: 7d
+  retry_seconds: 1 1 1
+  health_check_timeout: 6s
+  health_check_retry_seconds: 1 1 1
 checker:
   nodata_check_interval: 60s
   check_interval: 10s

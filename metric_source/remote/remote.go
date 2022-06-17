@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/moira-alert/moira/clock"
+
 	"github.com/moira-alert/moira"
 	metricSource "github.com/moira-alert/moira/metric_source"
 )
@@ -23,10 +25,22 @@ func (err ErrRemoteTriggerResponse) Error() string {
 	return err.InternalError.Error()
 }
 
+// ErrRemoteUnavailable is a custom error when remote trigger check fails
+type ErrRemoteUnavailable struct {
+	InternalError error
+	Target        string
+}
+
+// Error is a representation of Error interface method
+func (err ErrRemoteUnavailable) Error() string {
+	return err.InternalError.Error()
+}
+
 // Remote is implementation of MetricSource interface, which implements fetch metrics method from remote graphite installation
 type Remote struct {
 	config *Config
 	client *http.Client
+	clock  moira.Clock
 }
 
 // Create configures remote metric source
@@ -34,6 +48,7 @@ func Create(config *Config) metricSource.MetricSource {
 	return &Remote{
 		config: config,
 		client: &http.Client{Timeout: config.Timeout},
+		clock:  clock.NewSystemClock(),
 	}
 }
 
@@ -50,9 +65,15 @@ func (remote *Remote) Fetch(target string, from, until int64, allowRealTimeAlert
 			Target:        target,
 		}
 	}
-	body, err := remote.makeRequest(req)
+	body, isRemoteAvailable, err := remote.makeRequestWithRetries(req, remote.config.Timeout, remote.config.RetrySeconds)
 	if err != nil {
-		return nil, ErrRemoteTriggerResponse{
+		if isRemoteAvailable {
+			return nil, ErrRemoteTriggerResponse{
+				InternalError: err,
+				Target:        target,
+			}
+		}
+		return nil, ErrRemoteUnavailable{
 			InternalError: err,
 			Target:        target,
 		}
@@ -83,18 +104,14 @@ func (remote *Remote) IsConfigured() (bool, error) {
 
 // IsRemoteAvailable checks if graphite API is available and returns 200 response
 func (remote *Remote) IsRemoteAvailable() (bool, error) {
-	maxRetries := 3
 	until := time.Now().Unix()
 	from := until - 600 //nolint
 	req, err := remote.prepareRequest(from, until, "NonExistingTarget")
 	if err != nil {
 		return false, err
 	}
-	for attempt := 0; attempt < maxRetries; attempt++ {
-		_, err = remote.makeRequest(req)
-		if err == nil {
-			return true, nil
-		}
-	}
-	return false, err
+	_, isRemoteAvailable, err := remote.makeRequestWithRetries(
+		req, remote.config.HealthCheckTimeout, remote.config.HealthCheckRetrySeconds,
+	)
+	return isRemoteAvailable, err
 }
