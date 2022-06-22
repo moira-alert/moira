@@ -660,3 +660,64 @@ func TestRemoveMetricsByPrefix(t *testing.T) {
 		})
 	})
 }
+
+func TestRemoveAllMetrics(t *testing.T) {
+	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
+	dataBase := NewTestDatabase(logger)
+	dataBase.Flush()
+	defer dataBase.Flush()
+	client := *dataBase.client
+	const pattern = "my.test.*.metric*"
+
+	Convey("Given metrics with pattern my.test.*", t, func() {
+		for i := 1; i <= 10; i++ {
+			err := dataBase.SaveMetrics(
+				map[string]*moira.MatchedMetric{
+					fmt.Sprintf("my.test.super.metric%d", i): {
+						Patterns:           []string{pattern},
+						Metric:             fmt.Sprintf("my.test.super.metric%d", i),
+						Retention:          10,
+						RetentionTimestamp: 10,
+						Timestamp:          5,
+						Value:              1,
+					}})
+			So(err, ShouldBeNil)
+		}
+
+		for i := 1; i <= 10; i++ {
+			err := dataBase.SaveMetrics(
+				map[string]*moira.MatchedMetric{
+					fmt.Sprintf("my.test.mega.metric%d", i): {
+						Patterns:           []string{pattern},
+						Metric:             fmt.Sprintf("my.test.mega.metric%d", i),
+						Retention:          10,
+						RetentionTimestamp: 10,
+						Timestamp:          5,
+						Value:              1,
+					}})
+			So(err, ShouldBeNil)
+		}
+
+		result := client.Keys(dataBase.context, "moira-metric-data:my.test*").Val()
+		So(len(result), ShouldResemble, 20)
+		result = client.Keys(dataBase.context, "moira-metric-retention:my.test*").Val()
+		So(len(result), ShouldResemble, 20)
+
+		patternMetricsCount := client.SCard(dataBase.context, "moira-pattern-metrics:my.test.*.metric*").Val()
+		So(patternMetricsCount, ShouldResemble, int64(20))
+
+		Convey("When remove all metrics was called", func() {
+			err := dataBase.RemoveAllMetrics()
+			So(err, ShouldBeNil)
+
+			Convey("No metric data should not exist", func() {
+				result = client.Keys(dataBase.context, "moira-metric-data:*").Val()
+				So(len(result), ShouldResemble, 0)
+				result = client.Keys(dataBase.context, "moira-metric-retention:*").Val()
+				So(len(result), ShouldResemble, 0)
+				result = client.Keys(dataBase.context, "moira-pattern-metrics*").Val()
+				So(len(result), ShouldResemble, 0)
+			})
+		})
+	})
+}

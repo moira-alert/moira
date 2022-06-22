@@ -1000,6 +1000,20 @@ func (mr *MockDatabaseMockRecorder) ReleaseTriggerCheckLock(arg0 interface{}) *g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReleaseTriggerCheckLock", reflect.TypeOf((*MockDatabase)(nil).ReleaseTriggerCheckLock), arg0)
 }
 
+// RemoveAllMetrics mocks base method.
+func (m *MockDatabase) RemoveAllMetrics() error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveAllMetrics")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveAllMetrics indicates an expected call of RemoveAllMetrics.
+func (mr *MockDatabaseMockRecorder) RemoveAllMetrics() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveAllMetrics", reflect.TypeOf((*MockDatabase)(nil).RemoveAllMetrics))
+}
+
 // RemoveAllNotificationEvents mocks base method.
 func (m *MockDatabase) RemoveAllNotificationEvents() error {
 	m.ctrl.T.Helper()

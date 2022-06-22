@@ -354,7 +354,7 @@ func removeMetricsByPrefixOnRedisNode(connector *DbConnector, client redis.Unive
 	return nil
 }
 
-// RemoveMetricsByPrefix remove metrics by their prefix e.g. "my.super.metric."
+// RemoveMetricsByPrefix removes metrics by their prefix e.g. "my.super.metric.".
 func (connector *DbConnector) RemoveMetricsByPrefix(prefix string) error {
 	client := *connector.client
 
@@ -372,6 +372,60 @@ func (connector *DbConnector) RemoveMetricsByPrefix(prefix string) error {
 		}
 	default:
 		err := removeMetricsByPrefixOnRedisNode(connector, c, prefix)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func removeAllMetricsOnRedisNode(connector *DbConnector, client redis.UniversalClient) error {
+	metricDataIterator := client.Scan(connector.context, 0, metricDataKey("*"), 0).Iterator()
+	for metricDataIterator.Next(connector.context) {
+		err := client.Del(connector.context, metricDataIterator.Val()).Err()
+		if err != nil {
+			return err
+		}
+	}
+
+	metricRetentionIterator := client.Scan(connector.context, 0, metricRetentionKey("*"), 0).Iterator()
+	for metricRetentionIterator.Next(connector.context) {
+		err := client.Del(connector.context, metricRetentionIterator.Val()).Err()
+		if err != nil {
+			return err
+		}
+	}
+
+	patternMetricsIterator := client.Scan(connector.context, 0, patternMetricsKey("*"), 0).Iterator()
+	for patternMetricsIterator.Next(connector.context) {
+		err := client.Del(connector.context, patternMetricsIterator.Val()).Err()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// RemoveAllMetrics removes all metrics.
+func (connector *DbConnector) RemoveAllMetrics() error {
+	client := *connector.client
+
+	switch c := client.(type) {
+	case *redis.ClusterClient:
+		err := c.ForEachMaster(connector.context, func(ctx context.Context, shard *redis.Client) error {
+			err := removeAllMetricsOnRedisNode(connector, shard)
+			if err != nil {
+				return err
+			}
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+	default:
+		err := removeAllMetricsOnRedisNode(connector, c)
 		if err != nil {
 			return err
 		}

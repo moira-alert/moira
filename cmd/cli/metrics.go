@@ -32,3 +32,12 @@ func handleRemoveMetricsByPrefix(database moira.Database, prefix string) error {
 
 	return nil
 }
+
+func handleRemoveAllMetrics(database moira.Database) error {
+	err := database.RemoveAllMetrics()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
