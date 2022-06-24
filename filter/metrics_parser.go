@@ -2,6 +2,7 @@ package filter
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -59,7 +60,7 @@ func ParseMetric(input []byte) (*ParsedMetric, error) {
 	}
 
 	parsedMetric := &ParsedMetric{
-		moira.UnsafeBytesToString(metricBytes),
+		restoreMetricStringByNameAndLabels(name, labels),
 		name,
 		labels,
 		value,
@@ -69,6 +70,23 @@ func ParseMetric(input []byte) (*ParsedMetric, error) {
 		parsedMetric.Timestamp = time.Now().Unix()
 	}
 	return parsedMetric, nil
+}
+
+func restoreMetricStringByNameAndLabels(name string, labels map[string]string) string {
+	var builder strings.Builder
+	keys := make([]string, 0, len(labels))
+	for key := range labels {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+
+	builder.WriteString(name)
+
+	for _, key := range keys {
+		builder.WriteString(fmt.Sprintf(";%s=%s", key, labels[key]))
+	}
+
+	return builder.String()
 }
 
 // IsTagged checks that metric is tagged
