@@ -1000,6 +1000,20 @@ func (mr *MockDatabaseMockRecorder) ReleaseTriggerCheckLock(arg0 interface{}) *g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReleaseTriggerCheckLock", reflect.TypeOf((*MockDatabase)(nil).ReleaseTriggerCheckLock), arg0)
 }
 
+// RemoveAllMetrics mocks base method.
+func (m *MockDatabase) RemoveAllMetrics() error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveAllMetrics")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveAllMetrics indicates an expected call of RemoveAllMetrics.
+func (mr *MockDatabaseMockRecorder) RemoveAllMetrics() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveAllMetrics", reflect.TypeOf((*MockDatabase)(nil).RemoveAllMetrics))
+}
+
 // RemoveAllNotificationEvents mocks base method.
 func (m *MockDatabase) RemoveAllNotificationEvents() error {
 	m.ctrl.T.Helper()
@@ -1054,6 +1068,20 @@ func (m *MockDatabase) RemoveMetricValues(arg0 string, arg1 int64) error {
 func (mr *MockDatabaseMockRecorder) RemoveMetricValues(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveMetricValues", reflect.TypeOf((*MockDatabase)(nil).RemoveMetricValues), arg0, arg1)
+}
+
+// RemoveMetricsByPrefix mocks base method.
+func (m *MockDatabase) RemoveMetricsByPrefix(arg0 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveMetricsByPrefix", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveMetricsByPrefix indicates an expected call of RemoveMetricsByPrefix.
+func (mr *MockDatabaseMockRecorder) RemoveMetricsByPrefix(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveMetricsByPrefix", reflect.TypeOf((*MockDatabase)(nil).RemoveMetricsByPrefix), arg0)
 }
 
 // RemoveMetricsValues mocks base method.

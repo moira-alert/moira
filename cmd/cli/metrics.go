@@ -23,3 +23,21 @@ func cleanUpOutdatedMetrics(config cleanupConfig, database moira.Database) error
 func cleanUpAbandonedTriggerLastCheck(database moira.Database) error {
 	return database.CleanUpAbandonedTriggerLastCheck()
 }
+
+func handleRemoveMetricsByPrefix(database moira.Database, prefix string) error {
+	err := database.RemoveMetricsByPrefix(prefix)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func handleRemoveAllMetrics(database moira.Database) error {
+	err := database.RemoveAllMetrics()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

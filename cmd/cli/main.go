@@ -53,8 +53,10 @@ var (
 )
 
 var (
-	cleanUpMetrics   = flag.Bool("cleanup-outdated-metrics", false, "Delete outdated metrics by duration.")
-	cleanUpLastCheck = flag.Bool("cleanup-abandoned-trigger-last-checks", false, "Delete abandoned trigger last checks.")
+	cleanUpMetrics        = flag.Bool("cleanup-outdated-metrics", false, "Delete outdated metrics by duration.")
+	cleanUpLastCheck      = flag.Bool("cleanup-abandoned-trigger-last-checks", false, "Delete abandoned trigger last checks.")
+	removeMetricsByPrefix = flag.String("remove-metrics-by-prefix", "", "Remove metrics by prefix (e.g. my.super.metric.")
+	removeAllMetrics      = flag.Bool("remove-all-metrics", false, "Remove all metrics.")
 )
 
 var (
@@ -113,6 +115,24 @@ func main() { //nolint
 		if err := deleteUser(dataBase, *userDel); err != nil {
 			logger.Error(err)
 		}
+	}
+
+	if *removeMetricsByPrefix != "" {
+		log := logger.String(moira.LogFieldNameContext, "cleanup")
+		log.Infof("Removing metrics by prefix %s started", *removeMetricsByPrefix)
+		if err := handleRemoveMetricsByPrefix(dataBase, *removeMetricsByPrefix); err != nil {
+			log.Error(err)
+		}
+		log.Infof("Removing metrics by prefix %s finished", *removeMetricsByPrefix)
+	}
+
+	if *removeAllMetrics {
+		log := logger.String(moira.LogFieldNameContext, "cleanup")
+		log.Info("Removing all metrics started")
+		if err := handleRemoveAllMetrics(dataBase); err != nil {
+			log.Error(err)
+		}
+		log.Info("Removing all metrics finished")
 	}
 
 	if *cleanup {
