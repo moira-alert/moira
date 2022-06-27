@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"runtime/debug"
+	"strings"
 
 	"github.com/go-graphite/carbonapi/expr"
 	"github.com/go-graphite/carbonapi/expr/functions"
@@ -43,49 +44,32 @@ func (local *Local) Fetch(target string, from int64, until int64, allowRealTimeA
 	for targetIdx < len(targets) {
 		target := targets[targetIdx]
 		targetIdx++
-		expr2, _, err := parser.ParseExpr(target)
+
+		parseExpr, _, err := parser.ParseExpr(target)
 		if err != nil {
 			return nil, ErrParseExpr{
 				internalError: err,
 				target:        target,
 			}
 		}
-		patterns := expr2.Metrics()
+
+		patterns := parseExpr.Metrics()
 		metricsMap, metrics, err := getPatternsMetricData(local.dataBase, patterns, from, until, allowRealTimeAlerting)
 		if err != nil {
 			return nil, err
 		}
-		rewritten, newTargets, err := expr.RewriteExpr(context.Background(), expr2, from, until, metricsMap)
+
+		rewritten, newTargets, err := expr.RewriteExpr(context.Background(), parseExpr, from, until, metricsMap)
 		if err != nil && err != parser.ErrSeriesDoesNotExist {
 			return nil, fmt.Errorf("failed RewriteExpr: %s", err.Error())
 		} else if rewritten {
 			targets = append(targets, newTargets...)
 		} else {
-			metricsData, err := func() (result []*types.MetricData, err error) {
-				defer func() {
-					if r := recover(); r != nil {
-						result = nil
-						err = ErrEvaluateTargetFailedWithPanic{target: target, recoverMessage: r, stackRecord: debug.Stack()}
-					}
-				}()
-				result, err = expr.EvalExpr(context.Background(), expr2, from, until, metricsMap)
-				if err != nil {
-					if err == parser.ErrSeriesDoesNotExist {
-						err = nil
-					} else if isErrUnknownFunction(err) {
-						err = ErrorUnknownFunction(err)
-					} else {
-						err = ErrEvalExpr{
-							target:        target,
-							internalError: err,
-						}
-					}
-				}
-				return result, err
-			}()
+			metricsData, err := getMetricData(target, parseExpr, from, until, metricsMap)
 			if err != nil {
 				return nil, err
 			}
+
 			for _, metricData := range metricsData {
 				md := *metricData
 				result.MetricsData = append(result.MetricsData, metricSource.MetricData{
@@ -97,7 +81,9 @@ func (local *Local) Fetch(target string, from int64, until int64, allowRealTimeA
 					Wildcard:  len(metrics) == 0,
 				})
 			}
+
 			result.Metrics = append(result.Metrics, metrics...)
+
 			for _, pattern := range patterns {
 				result.Patterns = append(result.Patterns, pattern.Metric)
 			}
@@ -131,4 +117,30 @@ func getPatternsMetricData(database moira.Database, patterns []parser.MetricRequ
 		metrics = append(metrics, patternMetrics...)
 	}
 	return metricsMap, metrics, nil
+}
+
+func getMetricData(target string, expression parser.Expr, from, until int64, metricsMap map[parser.MetricRequest][]*types.MetricData) (result []*types.MetricData, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			result = nil
+			err = ErrEvaluateTargetFailedWithPanic{target: target, recoverMessage: r, stackRecord: debug.Stack()}
+		}
+	}()
+
+	result, err = expr.EvalExpr(context.Background(), expression, from, until, metricsMap)
+	if err != nil {
+		switch {
+		case strings.Contains(err.Error(), parser.ErrSeriesDoesNotExist.Error()):
+			break
+		case isErrUnknownFunction(err):
+			return nil, err
+		default:
+			return nil, ErrEvalExpr{
+				target:        target,
+				internalError: err,
+			}
+		}
+	}
+
+	return result, nil
 }

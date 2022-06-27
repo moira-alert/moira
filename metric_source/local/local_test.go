@@ -5,6 +5,7 @@ import (
 	"math"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/go-graphite/carbonapi/expr/functions"
 	"github.com/go-graphite/carbonapi/pkg/parser"
@@ -88,7 +89,7 @@ func TestEvaluateTarget(t *testing.T) {
 			dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
 			dataBase.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
 			result, err := localSource.Fetch("aliasByNoe(super.puper.pattern, 2)", from, until, true)
-			So(err.Error(), ShouldResemble, "failed to evaluate target 'aliasByNoe(super.puper.pattern, 2)': unknown function in evalExpr: \"aliasByNoe\"")
+			So(err.Error(), ShouldResemble, "unknown function in evalExpr: \"aliasByNoe\"")
 			So(result, ShouldBeNil)
 		})
 
@@ -320,5 +321,46 @@ func TestLocal_IsConfigured(t *testing.T) {
 		actual, err := localSource.IsConfigured()
 		So(err, ShouldBeNil)
 		So(actual, ShouldBeTrue)
+	})
+}
+
+func TestLocal_getMetricData(t *testing.T) {
+	Convey("When all is correct, we dont return any error", t, func() {
+		expression, _, err := parser.ParseExpr(`seriesByTag('name=k8s.dev-cl1.kube_pod_status_ready', 'condition!=true', 'namespace=default', 'pod=~*')`)
+		So(err, ShouldBeNil)
+		res, err := getMetricData("target", expression, time.Now().Add(-1*time.Hour).Unix(), time.Now().Unix(), nil)
+		So(err, ShouldBeNil)
+		So(res, ShouldBeNil)
+	})
+
+	Convey("When get panic, it should correct work", t, func() {
+		expression, _, _ := parser.ParseExpr(`;fg`)
+		res, err := getMetricData("target", expression, 0, 0, nil)
+		So(err.Error(), ShouldContainSubstring, "panic while evaluate target target: message: 'runtime error: invalid memory address or nil pointer dereference")
+		So(res, ShouldBeNil)
+	})
+
+	Convey("When haven't got metric, we dont return any error", t, func() {
+		expression, _, err := parser.ParseExpr(`alias( divideSeries( alias( sumSeries( exclude( groupByNode( OFD.Production.{ofd-api,ofd-front}.*.fns-service-client.v120.*.GetCashboxRegistrationInformationAsync.ResponseCode.*.Meter.Rate-15-min-Requests-per-s, 9, "sum" ), "Ok" ) ), "bad" ), alias( sumSeries( OFD.Production.{ofd-api,ofd-front}.*.fns-service-client.v120.*.GetCashboxRegistrationInformationAsync.ResponseCode.*.Meter.Rate-15-min-Requests-per-s ), "total" ) ), "Result" )`)
+		So(err, ShouldBeNil)
+		res, err := getMetricData("target", expression, time.Now().Add(-1*time.Hour).Unix(), time.Now().Unix(), nil)
+		So(err, ShouldBeNil)
+		So(res, ShouldBeNil)
+	})
+
+	Convey("When give unknown func, return it", t, func() {
+		expression, _, _ := parser.ParseExpr(`vf('name=k8s.dev-cl1.kube_pod_status_ready', 'condition!=true', 'namespace=default', 'pod=~*')`)
+		res, err := getMetricData("target", expression, time.Now().Add(-1*time.Hour).Unix(), time.Now().Unix(), nil)
+		So(err, ShouldBeError)
+		So(err.Error(), ShouldResemble, `unknown function in evalExpr: "vf"`)
+		So(res, ShouldBeNil)
+	})
+
+	Convey("When have other error, return internal error ", t, func() {
+		expression, _, _ := parser.ParseExpr(`sumSeries(pow(devops.service.*.filter.received.*.count))`)
+		res, err := getMetricData("target", expression, time.Now().Add(-1*time.Hour).Unix(), time.Now().Unix(), nil)
+		So(err, ShouldBeError)
+		So(err.Error(), ShouldResemble, `failed to evaluate target 'target': function=sumSeries: function=pow: missing argument`)
+		So(res, ShouldBeNil)
 	})
 }

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/ansel1/merry"
+
 	"github.com/go-graphite/carbonapi/expr/helper"
 )
 
@@ -33,7 +35,7 @@ func (err ErrUnknownFunction) Error() string {
 
 // isErrUnknownFunction checks error for carbonapi.errUnknownFunction
 func isErrUnknownFunction(err error) bool {
-	switch err.(type) {
+	switch merry.Unwrap(err).(type) {
 	case helper.ErrUnknownFunction:
 		return true
 	}
