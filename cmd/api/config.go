@@ -87,6 +87,7 @@ func getDefault() config {
 			Addrs:       "localhost:6379",
 			MetricsTTL:  "1h",
 			DialTimeout: "500ms",
+			MaxRetries:  3,
 		},
 		Logger: cmd.LoggerConfig{
 			LogFile:         "stdout",

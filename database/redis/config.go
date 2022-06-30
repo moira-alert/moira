@@ -12,4 +12,5 @@ type Config struct {
 	DialTimeout  time.Duration
 	ReadTimeout  time.Duration
 	WriteTimeout time.Duration
+	MaxRetries   int
 }

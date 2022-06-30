@@ -63,6 +63,7 @@ func NewDatabase(logger moira.Logger, config Config, source DBSource) *DbConnect
 		DialTimeout:  config.DialTimeout,
 		ReadTimeout:  config.ReadTimeout,
 		WriteTimeout: config.WriteTimeout,
+		MaxRetries:   config.MaxRetries,
 	})
 
 	ctx := context.Background()
