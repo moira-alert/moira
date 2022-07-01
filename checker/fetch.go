@@ -35,11 +35,6 @@ func (triggerChecker *TriggerChecker) fetch() (map[string][]metricSource.MetricD
 		targetIndex++ // increasing target index to have target names started from 1 instead of 0
 		fetchResult, err := triggerChecker.source.Fetch(target, triggerChecker.from, triggerChecker.until, isSimpleTrigger)
 		if err != nil {
-			triggerChecker.logger.Clone().
-				String("expression", fmt.Sprint(target)).
-				String("from", fmt.Sprint(triggerChecker.from)).
-				String("until", fmt.Sprint(triggerChecker.until)).
-				Error("panic was detected")
 			return nil, nil, err
 		}
 		metricsData := fetchResult.GetMetricsData()
