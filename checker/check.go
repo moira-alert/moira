@@ -110,11 +110,6 @@ func (triggerChecker *TriggerChecker) handleFetchError(checkData moira.CheckData
 		checkData.Message = err.Error()
 		triggerChecker.logger.Warning(formatTriggerCheckException(triggerChecker.triggerID, err))
 	default:
-		triggerChecker.logger.Clone().
-			String("expression", fmt.Sprint(triggerChecker.trigger.Targets)).
-			String("from", fmt.Sprint(triggerChecker.from)).
-			String("until", fmt.Sprint(triggerChecker.until)).
-			Error("panic was detected")
 		return triggerChecker.handleUndefinedError(checkData, err)
 	}
 	checkData, err = triggerChecker.compareTriggerStates(checkData)

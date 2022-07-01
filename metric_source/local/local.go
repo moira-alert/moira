@@ -65,6 +65,9 @@ func (local *Local) Fetch(target string, from int64, until int64, allowRealTimeA
 				defer func() {
 					if r := recover(); r != nil {
 						result = nil
+						fmt.Println("expression", target)
+						fmt.Println("from", from)
+						fmt.Println("until", until)
 						err = ErrEvaluateTargetFailedWithPanic{target: target, recoverMessage: r, stackRecord: debug.Stack()}
 					}
 				}()
