@@ -68,6 +68,7 @@ func (local *Local) Fetch(target string, from int64, until int64, allowRealTimeA
 						fmt.Println("expression", target)
 						fmt.Println("from", from)
 						fmt.Println("until", until)
+						fmt.Println("metricsMap", metricsMap)
 						err = ErrEvaluateTargetFailedWithPanic{target: target, recoverMessage: r, stackRecord: debug.Stack()}
 					}
 				}()
