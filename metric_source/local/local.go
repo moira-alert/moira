@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"runtime/debug"
 
+	"github.com/rs/zerolog"
+
 	"github.com/go-graphite/carbonapi/expr"
 	"github.com/go-graphite/carbonapi/expr/functions"
 	"github.com/go-graphite/carbonapi/expr/rewrite"
@@ -65,6 +67,15 @@ func (local *Local) Fetch(target string, from int64, until int64, allowRealTimeA
 				defer func() {
 					if r := recover(); r != nil {
 						result = nil
+						l := &zerolog.Logger{}
+						l.Level(zerolog.ErrorLevel)
+						l.Err(err).
+							Str("expression", fmt.Sprint(expr2)).
+							Str("from", fmt.Sprint(from)).
+							Str("until", fmt.Sprint(until)).
+							Str("metricsMap", fmt.Sprint(metricsMap)).
+							Msg("panic was detected")
+
 						err = ErrEvaluateTargetFailedWithPanic{target: target, recoverMessage: r, stackRecord: debug.Stack()}
 					}
 				}()
