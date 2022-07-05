@@ -593,6 +593,39 @@ func TestCleanupOutdatedMetrics(t *testing.T) {
 				})
 			})
 		})
+
+		Convey("When clean up metrics was called with existent \"metric-retention\" and non-existent \"metric-data\" in database", func() {
+			client := *dataBase.client
+			iter := client.Scan(dataBase.context, 0, metricDataKey(metric1), 0).Iterator()
+			for iter.Next(dataBase.context) {
+				client.Del(dataBase.context, iter.Val())
+			}
+
+			err = dataBase.CleanUpOutdatedMetrics(-time.Minute)
+			So(err, ShouldBeNil)
+
+			actualValues, err = dataBase.GetMetricsValues([]string{metric1, metric2}, 0, tsNow)
+			So(err, ShouldBeNil)
+			So(actualValues, ShouldResemble, map[string][]*moira.MetricValue{
+				metric1: {},
+				metric2: {
+					&moira.MetricValue{Timestamp: tsOlder1 + 5, RetentionTimestamp: tsOlder1, Value: 1},
+					&moira.MetricValue{Timestamp: tsOlder2 + 5, RetentionTimestamp: tsOlder2, Value: 2},
+					&moira.MetricValue{Timestamp: tsYounger1 + 5, RetentionTimestamp: tsYounger1, Value: 3},
+					&moira.MetricValue{Timestamp: tsYounger2 + 5, RetentionTimestamp: tsYounger2, Value: 4},
+				},
+			})
+
+			Convey("No \"metric-retention\" for metric1 should be in database", func() {
+				iter := client.Scan(dataBase.context, 0, metricRetentionKey(metric1), 0).Iterator()
+				client.Keys(dataBase.context, metricRetentionKey(metric1))
+				var count int
+				for iter.Next(dataBase.context) {
+					count++
+				}
+				So(count, ShouldBeZeroValue)
+			})
+		})
 	})
 }
 
