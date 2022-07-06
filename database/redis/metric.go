@@ -235,6 +235,16 @@ func (connector *DbConnector) RemovePatternWithMetrics(pattern string) error {
 	return nil
 }
 
+// RemoveMetricRetention remove metric retentions from 0 to given time
+func (connector *DbConnector) RemoveMetricRetention(metric string) error {
+	c := *connector.client
+	if _, err := c.Del(connector.context, metricRetentionKey(metric)).Result(); err != nil {
+		return fmt.Errorf("failed to remove retention, error: %v", err)
+	}
+
+	return nil
+}
+
 // RemoveMetricValues remove metric timestamps values from 0 to given time
 func (connector *DbConnector) RemoveMetricValues(metric string, toTime int64) error {
 	if !connector.needRemoveMetrics(metric) {
@@ -276,6 +286,7 @@ func cleanUpOutdatedMetricsOnRedisNode(connector *DbConnector, client redis.Univ
 	metricCounter := 0
 	metricsIterator := client.ScanType(connector.context, 0, metricDataKey("*"), 0, "zset").Iterator()
 	for metricsIterator.Next(connector.context) {
+		// TODO почему инкремент здесь, а не после успешного flush?
 		metricCounter++
 		metricKey := metricsIterator.Val()
 		metric := strings.TrimPrefix(metricKey, metricDataKey(""))
@@ -284,6 +295,21 @@ func cleanUpOutdatedMetricsOnRedisNode(connector *DbConnector, client redis.Univ
 			return metricCounter, err
 		}
 	}
+
+	retentionIterator := client.Scan(connector.context, 0, metricRetentionKey("*"), 0).Iterator()
+	for retentionIterator.Next(connector.context) {
+		metricKey := retentionIterator.Val()
+		metric := strings.TrimPrefix(metricKey, metricRetentionKey(""))
+
+		metricExists := client.ScanType(connector.context, 0, metricDataKey(metric), 0, "zset").Iterator().Next(connector.context)
+		if !metricExists {
+			err := flushRetention(connector, metric)
+			if err != nil {
+				return metricCounter, err
+			}
+		}
+	}
+
 	return metricCounter, nil
 }
 
@@ -438,6 +464,13 @@ func flushMetric(database moira.Database, metric string, duration time.Duration)
 	lastTs := time.Now().UTC()
 	toTs := lastTs.Add(duration).Unix()
 	if err := database.RemoveMetricValues(metric, toTs); err != nil {
+		return err
+	}
+	return nil
+}
+
+func flushRetention(database moira.Database, metric string) error {
+	if err := database.RemoveMetricRetention(metric); err != nil {
 		return err
 	}
 	return nil
