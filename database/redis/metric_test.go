@@ -184,6 +184,52 @@ func TestMetricsStoring(t *testing.T) {
 	})
 }
 
+func TestRemoveMetricRetention(t *testing.T) {
+	logger, _ := logging.ConfigureLog("stdout", "warn", "test", true)
+	dataBase := NewTestDatabase(logger)
+	dataBase.Flush()
+	defer dataBase.Flush()
+
+	Convey("Given metric", t, func() {
+		const metric = "my.test.super.metric"
+
+		tsOlder := time.Now().UTC().Add(-80 * time.Second).Unix()
+		tsNow := time.Now().UTC().Unix()
+		metric1Value := &moira.MatchedMetric{
+			Metric:             metric,
+			Retention:          10,
+			RetentionTimestamp: tsOlder,
+			Timestamp:          tsOlder,
+		}
+
+		err := dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric: metric1Value})
+		So(err, ShouldBeNil)
+
+		actualValues, err := dataBase.GetMetricsValues([]string{metric}, 0, tsNow)
+		So(err, ShouldBeNil)
+		So(actualValues, ShouldResemble, map[string][]*moira.MetricValue{
+			metric: {
+				&moira.MetricValue{
+					RetentionTimestamp: tsOlder,
+					Timestamp:          tsOlder,
+				},
+			},
+		})
+
+		Convey("When remove metric retention", func() {
+			client := *dataBase.client
+
+			err = dataBase.RemoveMetricRetention(metric)
+			So(err, ShouldBeNil)
+
+			Convey("metric retention key shouldn't be in database", func() {
+				isMetricRetentionExists := client.Exists(dataBase.context, metricRetentionKey(metric)).Val() == 1
+				So(isMetricRetentionExists, ShouldBeFalse)
+			})
+		})
+	})
+}
+
 func TestRemoveMetricValues(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabase(logger)
@@ -597,6 +643,87 @@ func TestCleanupOutdatedMetrics(t *testing.T) {
 						&moira.MetricValue{Timestamp: tsYounger2 + 5, RetentionTimestamp: tsYounger2, Value: 4},
 					},
 				})
+			})
+		})
+	})
+}
+
+func TestCleanupAbandonedRetention(t *testing.T) {
+	logger, _ := logging.ConfigureLog("stdout", "warn", "test", true)
+	dataBase := NewTestDatabase(logger)
+	dataBase.Flush()
+	defer dataBase.Flush()
+
+	Convey("Given 2 metrics", t, func() {
+		const (
+			metric1 = "my.test.super.metric"
+			metric2 = "my.test.super.metric2"
+		)
+
+		tsOlder := time.Now().UTC().Add(-80 * time.Second).Unix()
+		tsNow := time.Now().UTC().Unix()
+		metric1Value := &moira.MatchedMetric{
+			Metric:             metric1,
+			Retention:          10,
+			RetentionTimestamp: tsOlder,
+			Timestamp:          tsOlder,
+		}
+		metric2Value := &moira.MatchedMetric{
+			Metric:             metric2,
+			Retention:          10,
+			RetentionTimestamp: tsOlder,
+			Timestamp:          tsOlder,
+		}
+
+		err := dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric1: metric1Value})
+		So(err, ShouldBeNil)
+
+		err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric2: metric2Value})
+		So(err, ShouldBeNil)
+
+		actualValues, err := dataBase.GetMetricsValues([]string{metric1, metric2}, 0, tsNow)
+		So(err, ShouldBeNil)
+		So(actualValues, ShouldResemble, map[string][]*moira.MetricValue{
+			metric1: {
+				&moira.MetricValue{
+					RetentionTimestamp: tsOlder,
+					Timestamp:          tsOlder,
+				},
+			},
+			metric2: {
+				&moira.MetricValue{
+					RetentionTimestamp: tsOlder,
+					Timestamp:          tsOlder,
+				},
+			},
+		})
+
+		Convey("When clean up retentions was called with existent retention and non-existent metric-data in database", func() {
+			client := *dataBase.client
+
+			client.Del(dataBase.context, metricDataKey(metric1))
+
+			actualValues, err = dataBase.GetMetricsValues([]string{metric1, metric2}, 0, tsNow)
+			So(err, ShouldBeNil)
+			So(actualValues, ShouldResemble, map[string][]*moira.MetricValue{
+				metric1: {},
+				metric2: {
+					&moira.MetricValue{
+						RetentionTimestamp: tsOlder,
+						Timestamp:          tsOlder,
+					},
+				},
+			})
+
+			err = dataBase.CleanUpAbandonedRetentions()
+			So(err, ShouldBeNil)
+
+			Convey("metric1 retention key shouldn't be and metric2 retention key should be in database", func() {
+				isMetric1RetentionExists := client.Exists(dataBase.context, metricRetentionKey(metric1)).Val() == 1
+				So(isMetric1RetentionExists, ShouldBeFalse)
+
+				isMetric2RetentionExists := client.Exists(dataBase.context, metricRetentionKey(metric2)).Val() == 1
+				So(isMetric2RetentionExists, ShouldBeTrue)
 			})
 		})
 	})

@@ -18,7 +18,7 @@ func TestCleanUpOutdatedMetrics(t *testing.T) {
 
 	Convey("Test cleanup", t, func() {
 		db.EXPECT().CleanUpOutdatedMetrics(-168 * time.Hour).Return(nil)
-		err := cleanUpOutdatedMetrics(conf.Cleanup, db)
+		err := handleCleanUpOutdatedMetrics(conf.Cleanup, db)
 		So(err, ShouldBeNil)
 	})
 }
