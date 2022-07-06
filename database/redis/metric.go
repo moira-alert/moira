@@ -282,17 +282,14 @@ func (connector *DbConnector) needRemoveMetrics(metric string) bool {
 	return err == nil
 }
 
-func cleanUpOutdatedMetricsOnRedisNode(connector *DbConnector, client redis.UniversalClient, duration time.Duration) (int, error) {
-	metricCounter := 0
+func cleanUpOutdatedMetricsOnRedisNode(connector *DbConnector, client redis.UniversalClient, duration time.Duration) error {
 	metricsIterator := client.ScanType(connector.context, 0, metricDataKey("*"), 0, "zset").Iterator()
 	for metricsIterator.Next(connector.context) {
-		// TODO почему инкремент здесь, а не после успешного flush?
-		metricCounter++
 		metricKey := metricsIterator.Val()
 		metric := strings.TrimPrefix(metricKey, metricDataKey(""))
 		err := flushMetric(connector, metric, duration)
 		if err != nil {
-			return metricCounter, err
+			return err
 		}
 	}
 
@@ -305,16 +302,15 @@ func cleanUpOutdatedMetricsOnRedisNode(connector *DbConnector, client redis.Univ
 		if !metricExists {
 			err := flushRetention(connector, metric)
 			if err != nil {
-				return metricCounter, err
+				return err
 			}
 		}
 	}
 
-	return metricCounter, nil
+	return nil
 }
 
 func (connector *DbConnector) CleanUpOutdatedMetrics(duration time.Duration) error {
-	metricCounter := 0
 	client := *connector.client
 
 	if duration >= 0 {
@@ -324,25 +320,22 @@ func (connector *DbConnector) CleanUpOutdatedMetrics(duration time.Duration) err
 	switch c := client.(type) {
 	case *redis.ClusterClient:
 		err := c.ForEachMaster(connector.context, func(ctx context.Context, shard *redis.Client) error {
-			cleanedUpMetricsCount, err := cleanUpOutdatedMetricsOnRedisNode(connector, shard, duration)
+			err := cleanUpOutdatedMetricsOnRedisNode(connector, shard, duration)
 			if err != nil {
 				return err
 			}
-			metricCounter += cleanedUpMetricsCount
 			return nil
 		})
 		if err != nil {
 			return err
 		}
 	default:
-		cleanedUpMetricsCount, err := cleanUpOutdatedMetricsOnRedisNode(connector, c, duration)
+		err := cleanUpOutdatedMetricsOnRedisNode(connector, c, duration)
 		if err != nil {
 			return err
 		}
-		metricCounter = cleanedUpMetricsCount
 	}
 
-	connector.logger.Infof("Total cleaned up %d metrics", metricCounter)
 	return nil
 }
 
