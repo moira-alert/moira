@@ -53,7 +53,7 @@ func runBenchmark(b *testing.B, patternsStorage *filter.PatternStorage, testMetr
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		testMetricLine := (*testMetricsLines)[rand.Intn(len(*testMetricsLines))]
-		patternsStorage.ProcessIncomingMetric([]byte(testMetricLine))
+		patternsStorage.ProcessIncomingMetric([]byte(testMetricLine), time.Hour)
 	}
 }
 

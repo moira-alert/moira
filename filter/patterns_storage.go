@@ -1,8 +1,11 @@
 package filter
 
 import (
+	"fmt"
 	"sync/atomic"
 	"time"
+
+	"github.com/moira-alert/moira/clock"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/metrics"
@@ -12,6 +15,7 @@ import (
 type PatternStorage struct {
 	database                moira.Database
 	metrics                 *metrics.FilterMetrics
+	clock                   moira.Clock
 	logger                  moira.Logger
 	PatternIndex            atomic.Value
 	SeriesByTagPatternIndex atomic.Value
@@ -23,6 +27,7 @@ func NewPatternStorage(database moira.Database, metrics *metrics.FilterMetrics, 
 		database: database,
 		metrics:  metrics,
 		logger:   logger,
+		clock:    clock.NewSystemClock(),
 	}
 	err := storage.Refresh()
 	return storage, err
@@ -52,13 +57,21 @@ func (storage *PatternStorage) Refresh() error {
 }
 
 // ProcessIncomingMetric validates, parses and matches incoming raw string
-func (storage *PatternStorage) ProcessIncomingMetric(lineBytes []byte) *moira.MatchedMetric {
+func (storage *PatternStorage) ProcessIncomingMetric(lineBytes []byte, maxTTL time.Duration) *moira.MatchedMetric {
 	storage.metrics.TotalMetricsReceived.Inc()
 	count := storage.metrics.TotalMetricsReceived.Count()
 
 	parsedMetric, err := ParseMetric(lineBytes)
 	if err != nil {
 		storage.logger.Infof("cannot parse input: %v", err)
+		return nil
+	}
+
+	if parsedMetric.IsTooOld(maxTTL, storage.clock.Now()) {
+		storage.logger.Clone().
+			String(moira.LogFieldNameMetricName, parsedMetric.Name).
+			String(moira.LogFieldNameMetricTimestamp, fmt.Sprint(parsedMetric.Timestamp)).
+			Info("metric is too old")
 		return nil
 	}
 

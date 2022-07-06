@@ -118,7 +118,7 @@ func main() {
 	}
 	lineChan := listener.Listen()
 
-	patternMatcher := patterns.NewMatcher(logger, filterMetrics, patternStorage)
+	patternMatcher := patterns.NewMatcher(logger, filterMetrics, patternStorage, to.Duration(config.Filter.DropMetricsTTL))
 	metricsChan := patternMatcher.Start(config.Filter.MaxParallelMatches, lineChan)
 
 	// Start metrics matcher
