@@ -86,7 +86,7 @@ type prometheusTimer struct {
 }
 
 func (source *prometheusTimer) UpdateSince(ts time.Time) {
-	source.histogram.Observe(float64(int64(time.Since(ts))))
+	source.histogram.Observe(float64(time.Since(ts)))
 	atomic.AddInt64(&source.count, 1)
 }
 

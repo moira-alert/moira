@@ -79,7 +79,12 @@ func HandlePushTrigger(logger moira.Logger, database moira.Database, trigger *mo
 	return nil
 }
 
-func HandlePushTriggerMetrics(logger moira.Logger, database moira.Database, triggerID string, patternsMetrics []dto.PatternMetrics) error {
+func HandlePushTriggerMetrics(
+	logger moira.Logger,
+	database moira.Database,
+	triggerID string,
+	patternsMetrics []dto.PatternMetrics,
+) error {
 	logger.Info("Save trigger metrics")
 
 	buffer := make(map[string]*moira.MatchedMetric, len(patternsMetrics))
