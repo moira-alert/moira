@@ -235,7 +235,7 @@ func (connector *DbConnector) RemovePatternWithMetrics(pattern string) error {
 	return nil
 }
 
-// RemoveMetricRetention remove metric retentions from 0 to given time
+// RemoveMetricRetention remove metric retention
 func (connector *DbConnector) RemoveMetricRetention(metric string) error {
 	c := *connector.client
 	if _, err := c.Del(connector.context, metricRetentionKey(metric)).Result(); err != nil {
