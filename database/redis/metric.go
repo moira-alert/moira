@@ -235,6 +235,16 @@ func (connector *DbConnector) RemovePatternWithMetrics(pattern string) error {
 	return nil
 }
 
+// RemoveMetricRetention remove metric retention.
+func (connector *DbConnector) RemoveMetricRetention(metric string) error {
+	c := *connector.client
+	if _, err := c.Del(connector.context, metricRetentionKey(metric)).Result(); err != nil {
+		return fmt.Errorf("failed to remove retention, error: %v", err)
+	}
+
+	return nil
+}
+
 // RemoveMetricValues remove metric timestamps values from 0 to given time
 func (connector *DbConnector) RemoveMetricValues(metric string, toTime int64) error {
 	if !connector.needRemoveMetrics(metric) {
@@ -272,23 +282,42 @@ func (connector *DbConnector) needRemoveMetrics(metric string) bool {
 	return err == nil
 }
 
-func cleanUpOutdatedMetricsOnRedisNode(connector *DbConnector, client redis.UniversalClient, duration time.Duration) (int, error) {
-	metricCounter := 0
+func cleanUpOutdatedMetricsOnRedisNode(connector *DbConnector, client redis.UniversalClient, duration time.Duration) error {
 	metricsIterator := client.ScanType(connector.context, 0, metricDataKey("*"), 0, "zset").Iterator()
 	for metricsIterator.Next(connector.context) {
-		metricCounter++
-		metricKey := metricsIterator.Val()
-		metric := strings.TrimPrefix(metricKey, metricDataKey(""))
+		key := metricsIterator.Val()
+		metric := strings.TrimPrefix(key, metricDataKey(""))
 		err := flushMetric(connector, metric, duration)
 		if err != nil {
-			return metricCounter, err
+			return err
 		}
 	}
-	return metricCounter, nil
+
+	return nil
+}
+
+func cleanUpAbandonedRetentionsOnRedisNode(connector *DbConnector, client redis.UniversalClient) error {
+	iter := client.Scan(connector.context, 0, metricRetentionKey("*"), 0).Iterator()
+	for iter.Next(connector.context) {
+		key := iter.Val()
+		metric := strings.TrimPrefix(key, metricRetentionKey(""))
+
+		result, err := (*connector.client).Exists(connector.context, metricDataKey(metric)).Result()
+		if err != nil {
+			return fmt.Errorf("failed to check metric data existence, error: %v", err)
+		}
+		if isMetricExists := result == 1; !isMetricExists {
+			err = connector.RemoveMetricRetention(metric)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 func (connector *DbConnector) CleanUpOutdatedMetrics(duration time.Duration) error {
-	metricCounter := 0
 	client := *connector.client
 
 	if duration >= 0 {
@@ -298,25 +327,48 @@ func (connector *DbConnector) CleanUpOutdatedMetrics(duration time.Duration) err
 	switch c := client.(type) {
 	case *redis.ClusterClient:
 		err := c.ForEachMaster(connector.context, func(ctx context.Context, shard *redis.Client) error {
-			cleanedUpMetricsCount, err := cleanUpOutdatedMetricsOnRedisNode(connector, shard, duration)
+			err := cleanUpOutdatedMetricsOnRedisNode(connector, shard, duration)
 			if err != nil {
 				return err
 			}
-			metricCounter += cleanedUpMetricsCount
 			return nil
 		})
 		if err != nil {
 			return err
 		}
 	default:
-		cleanedUpMetricsCount, err := cleanUpOutdatedMetricsOnRedisNode(connector, c, duration)
+		err := cleanUpOutdatedMetricsOnRedisNode(connector, c, duration)
 		if err != nil {
 			return err
 		}
-		metricCounter = cleanedUpMetricsCount
 	}
 
-	connector.logger.Infof("Total cleaned up %d metrics", metricCounter)
+	return nil
+}
+
+// CleanUpAbandonedRetentions removes metric retention keys that have no corresponding metric data.
+func (connector *DbConnector) CleanUpAbandonedRetentions() error {
+	client := *connector.client
+
+	switch c := client.(type) {
+	case *redis.ClusterClient:
+		err := c.ForEachMaster(connector.context, func(ctx context.Context, shard *redis.Client) error {
+			err := cleanUpAbandonedRetentionsOnRedisNode(connector, shard)
+			if err != nil {
+				return err
+			}
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+	default:
+		err := cleanUpAbandonedRetentionsOnRedisNode(connector, c)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

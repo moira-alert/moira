@@ -6,7 +6,7 @@ import (
 	"github.com/moira-alert/moira"
 )
 
-func cleanUpOutdatedMetrics(config cleanupConfig, database moira.Database) error {
+func handleCleanUpOutdatedMetrics(config cleanupConfig, database moira.Database) error {
 	duration, err := time.ParseDuration(config.CleanupMetricsDuration)
 	if err != nil {
 		return err
@@ -20,24 +20,18 @@ func cleanUpOutdatedMetrics(config cleanupConfig, database moira.Database) error
 	return nil
 }
 
-func cleanUpAbandonedTriggerLastCheck(database moira.Database) error {
+func handleCleanUpAbandonedRetentions(database moira.Database) error {
+	return database.CleanUpAbandonedRetentions()
+}
+
+func handleCleanUpAbandonedTriggerLastCheck(database moira.Database) error {
 	return database.CleanUpAbandonedTriggerLastCheck()
 }
 
 func handleRemoveMetricsByPrefix(database moira.Database, prefix string) error {
-	err := database.RemoveMetricsByPrefix(prefix)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return database.RemoveMetricsByPrefix(prefix)
 }
 
 func handleRemoveAllMetrics(database moira.Database) error {
-	err := database.RemoveAllMetrics()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return database.RemoveAllMetrics()
 }
