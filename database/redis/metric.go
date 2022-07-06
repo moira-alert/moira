@@ -293,6 +293,10 @@ func cleanUpOutdatedMetricsOnRedisNode(connector *DbConnector, client redis.Univ
 		}
 	}
 
+	return nil
+}
+
+func cleanUpAbandonedRetentionsOnRedisNode(connector *DbConnector, client redis.UniversalClient) error {
 	retentionIterator := client.Scan(connector.context, 0, metricRetentionKey("*"), 0).Iterator()
 	for retentionIterator.Next(connector.context) {
 		metricKey := retentionIterator.Val()
@@ -331,6 +335,32 @@ func (connector *DbConnector) CleanUpOutdatedMetrics(duration time.Duration) err
 		}
 	default:
 		err := cleanUpOutdatedMetricsOnRedisNode(connector, c, duration)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (connector *DbConnector) CleanUpAbandonedRetentions() error {
+	client := *connector.client
+
+	// TODO DRY switch-case
+	switch c := client.(type) {
+	case *redis.ClusterClient:
+		err := c.ForEachMaster(connector.context, func(ctx context.Context, shard *redis.Client) error {
+			err := cleanUpAbandonedRetentionsOnRedisNode(connector, shard)
+			if err != nil {
+				return err
+			}
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+	default:
+		err := cleanUpAbandonedRetentionsOnRedisNode(connector, c)
 		if err != nil {
 			return err
 		}

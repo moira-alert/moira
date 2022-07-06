@@ -172,20 +172,26 @@ func main() { //nolint
 
 	if *cleanUpMetrics {
 		log := logger.String(moira.LogFieldNameContext, "cleanup")
-		log.Info("Cleanup outdated metrics started")
-		err := cleanUpOutdatedMetrics(confCleanup, dataBase)
+		log.Info("Cleanup started")
+
+		err := handleCleanUpOutdatedMetrics(confCleanup, dataBase)
 		if err != nil {
 			log.Error(err)
 		}
 
-		log.Info("Cleanup outdated metrics finished")
+		err = handleCleanUpAbandonedRetentions(dataBase)
+		if err != nil {
+			log.Error(err)
+		}
+
+		log.Info("Cleanup finished")
 	}
 
 	if *cleanUpLastCheck {
 		log := logger.String(moira.LogFieldNameContext, "cleanup")
 		log.Info("Cleanup abandoned triggers last checks started")
 
-		err := cleanUpAbandonedTriggerLastCheck(dataBase)
+		err := handleCleanUpAbandonedTriggerLastCheck(dataBase)
 		if err != nil {
 			log.Error(err)
 		}

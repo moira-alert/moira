@@ -120,6 +120,20 @@ func (mr *MockDatabaseMockRecorder) AddRemoteTriggersToCheck(arg0 interface{}) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddRemoteTriggersToCheck", reflect.TypeOf((*MockDatabase)(nil).AddRemoteTriggersToCheck), arg0)
 }
 
+// CleanUpAbandonedRetentions mocks base method.
+func (m *MockDatabase) CleanUpAbandonedRetentions() error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CleanUpAbandonedRetentions")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CleanUpAbandonedRetentions indicates an expected call of CleanUpAbandonedRetentions.
+func (mr *MockDatabaseMockRecorder) CleanUpAbandonedRetentions() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CleanUpAbandonedRetentions", reflect.TypeOf((*MockDatabase)(nil).CleanUpAbandonedRetentions))
+}
+
 // CleanUpAbandonedTriggerLastCheck mocks base method.
 func (m *MockDatabase) CleanUpAbandonedTriggerLastCheck() error {
 	m.ctrl.T.Helper()
