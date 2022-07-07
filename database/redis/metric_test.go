@@ -652,7 +652,7 @@ func TestCleanupAbandonedRetention(t *testing.T) {
 			},
 		})
 
-		Convey("When clean up metrics was called with existent metric-retention and non-existent metric-data in database", func() {
+		Convey("When clean up retentions was called with existent retention and non-existent metric-data in database", func() {
 			client := *dataBase.client
 
 			client.Del(dataBase.context, metricDataKey(metric1))
