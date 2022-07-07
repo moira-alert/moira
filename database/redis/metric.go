@@ -285,8 +285,8 @@ func (connector *DbConnector) needRemoveMetrics(metric string) bool {
 func cleanUpOutdatedMetricsOnRedisNode(connector *DbConnector, client redis.UniversalClient, duration time.Duration) error {
 	metricsIterator := client.ScanType(connector.context, 0, metricDataKey("*"), 0, "zset").Iterator()
 	for metricsIterator.Next(connector.context) {
-		metricKey := metricsIterator.Val()
-		metric := strings.TrimPrefix(metricKey, metricDataKey(""))
+		key := metricsIterator.Val()
+		metric := strings.TrimPrefix(key, metricDataKey(""))
 		err := flushMetric(connector, metric, duration)
 		if err != nil {
 			return err
@@ -297,14 +297,14 @@ func cleanUpOutdatedMetricsOnRedisNode(connector *DbConnector, client redis.Univ
 }
 
 func cleanUpAbandonedRetentionsOnRedisNode(connector *DbConnector, client redis.UniversalClient) error {
-	retentionIterator := client.Scan(connector.context, 0, metricRetentionKey("*"), 0).Iterator()
-	for retentionIterator.Next(connector.context) {
-		metricKey := retentionIterator.Val()
-		metric := strings.TrimPrefix(metricKey, metricRetentionKey(""))
+	iter := client.Scan(connector.context, 0, metricRetentionKey("*"), 0).Iterator()
+	for iter.Next(connector.context) {
+		key := iter.Val()
+		metric := strings.TrimPrefix(key, metricRetentionKey(""))
 
 		metricExists := client.ScanType(connector.context, 0, metricDataKey(metric), 0, "zset").Iterator().Next(connector.context)
 		if !metricExists {
-			err := flushRetention(connector, metric)
+			err := connector.RemoveMetricRetention(metric)
 			if err != nil {
 				return err
 			}
@@ -487,13 +487,6 @@ func flushMetric(database moira.Database, metric string, duration time.Duration)
 	lastTs := time.Now().UTC()
 	toTs := lastTs.Add(duration).Unix()
 	if err := database.RemoveMetricValues(metric, toTs); err != nil {
-		return err
-	}
-	return nil
-}
-
-func flushRetention(database moira.Database, metric string) error {
-	if err := database.RemoveMetricRetention(metric); err != nil {
 		return err
 	}
 	return nil
