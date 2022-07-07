@@ -71,7 +71,7 @@ func (storage *PatternStorage) ProcessIncomingMetric(lineBytes []byte, maxTTL ti
 		storage.logger.Clone().
 			String(moira.LogFieldNameMetricName, parsedMetric.Name).
 			String(moira.LogFieldNameMetricTimestamp, fmt.Sprint(parsedMetric.Timestamp)).
-			Info("metric is too old")
+			Debug("metric is too old")
 		return nil
 	}
 
