@@ -120,6 +120,20 @@ func (mr *MockDatabaseMockRecorder) AddRemoteTriggersToCheck(arg0 interface{}) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddRemoteTriggersToCheck", reflect.TypeOf((*MockDatabase)(nil).AddRemoteTriggersToCheck), arg0)
 }
 
+// CleanUpAbandonedPatternMetrics mocks base method.
+func (m *MockDatabase) CleanUpAbandonedPatternMetrics() error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CleanUpAbandonedPatternMetrics")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CleanUpAbandonedPatternMetrics indicates an expected call of CleanUpAbandonedPatternMetrics.
+func (mr *MockDatabaseMockRecorder) CleanUpAbandonedPatternMetrics() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CleanUpAbandonedPatternMetrics", reflect.TypeOf((*MockDatabase)(nil).CleanUpAbandonedPatternMetrics))
+}
+
 // CleanUpAbandonedRetentions mocks base method.
 func (m *MockDatabase) CleanUpAbandonedRetentions() error {
 	m.ctrl.T.Helper()

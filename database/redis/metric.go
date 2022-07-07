@@ -317,6 +317,31 @@ func cleanUpAbandonedRetentionsOnRedisNode(connector *DbConnector, client redis.
 	return nil
 }
 
+func cleanUpAbandonedPatternMetricsOnRedisNode(connector *DbConnector, client redis.UniversalClient) error {
+	keysIter := client.Scan(connector.context, 0, patternMetricsKey("*"), 0).Iterator()
+	for keysIter.Next(connector.context) {
+		key := keysIter.Val()
+
+		metricsIter := client.SScan(connector.context, key, 0, "*", 0).Iterator()
+		for metricsIter.Next(connector.context) {
+			metric := metricsIter.Val()
+
+			existsResult, err := (*connector.client).Exists(connector.context, metricDataKey(metric)).Result()
+			if err != nil {
+				return fmt.Errorf("failed to check metric data existence, error: %v", err)
+			}
+			if isMetricExists := existsResult == 1; !isMetricExists {
+				_, err := client.SRem(connector.context, key, metric).Result()
+				if err != nil {
+					return fmt.Errorf("failed to remove pattern data, error: %v", err)
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
 func (connector *DbConnector) CleanUpOutdatedMetrics(duration time.Duration) error {
 	client := *connector.client
 
@@ -364,6 +389,32 @@ func (connector *DbConnector) CleanUpAbandonedRetentions() error {
 		}
 	default:
 		err := cleanUpAbandonedRetentionsOnRedisNode(connector, c)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// CleanUpAbandonedPatternMetrics removes members of pattern metrics Set if no corresponding metric data.
+func (connector *DbConnector) CleanUpAbandonedPatternMetrics() error {
+	client := *connector.client
+
+	switch c := client.(type) {
+	case *redis.ClusterClient:
+		err := c.ForEachMaster(connector.context, func(ctx context.Context, shard *redis.Client) error {
+			err := cleanUpAbandonedPatternMetricsOnRedisNode(connector, shard)
+			if err != nil {
+				return err
+			}
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+	default:
+		err := cleanUpAbandonedPatternMetricsOnRedisNode(connector, c)
 		if err != nil {
 			return err
 		}
