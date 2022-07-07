@@ -184,6 +184,11 @@ func main() { //nolint
 			log.Error(err)
 		}
 
+		err = handleCleanUpAbandonedPatternMetrics(dataBase)
+		if err != nil {
+			log.Error(err)
+		}
+
 		log.Info("Cleanup finished")
 	}
 
