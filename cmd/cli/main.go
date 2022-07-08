@@ -46,15 +46,14 @@ var (
 )
 
 var (
-	cleanup  = flag.Bool("cleanup", false, "Disable/delete contacts and subscriptions of missing users")
-	userDel  = flag.String("user-del", "", "Delete all contacts and subscriptions for a user")
-	fromUser = flag.String("from-user", "", "Transfer subscriptions and contacts from user.")
-	toUser   = flag.String("to-user", "", "Transfer subscriptions and contacts to user.")
+	cleanupUsers         = flag.Bool("cleanup-users", false, "Disable/delete contacts and subscriptions of missing users")
+	cleanupAbandonedKeys = flag.Bool("cleanup-abandoned-keys", false, "Delete abandoned keys of inconsistent database.")
+	userDel              = flag.String("user-del", "", "Delete all contacts and subscriptions for a user")
+	fromUser             = flag.String("from-user", "", "Transfer subscriptions and contacts from user.")
+	toUser               = flag.String("to-user", "", "Transfer subscriptions and contacts to user.")
 )
 
 var (
-	cleanUpMetrics        = flag.Bool("cleanup-outdated-metrics", false, "Delete outdated metrics by duration.")
-	cleanUpLastCheck      = flag.Bool("cleanup-abandoned-trigger-last-checks", false, "Delete abandoned trigger last checks.")
 	removeMetricsByPrefix = flag.String("remove-metrics-by-prefix", "", "Remove metrics by prefix (e.g. my.super.metric.")
 	removeAllMetrics      = flag.Bool("remove-all-metrics", false, "Remove all metrics.")
 )
@@ -135,11 +134,47 @@ func main() { //nolint
 		log.Info("Removing all metrics finished")
 	}
 
-	if *cleanup {
-		logger.Debugf("User whitelist: %#v", confCleanup.Whitelist)
+	if *cleanupUsers {
+		log := logger.String(moira.LogFieldNameContext, "cleanup-users")
+
+		log.Info("Cleanup started")
+		log.Infof("User whitelist: %#v", confCleanup.Whitelist)
 		if err := handleCleanup(logger, dataBase, confCleanup); err != nil {
 			logger.Error(err)
 		}
+		log.Info("Cleanup finished")
+	}
+
+	if *cleanupAbandonedKeys {
+		log := logger.String(moira.LogFieldNameContext, "cleanup-abandoned-keys")
+
+		log.Info("Cleanup of outdated metrics started")
+		err := handleCleanUpOutdatedMetrics(confCleanup, dataBase)
+		if err != nil {
+			log.Error(err)
+		}
+		log.Info("Cleanup outdated metrics finished")
+
+		log.Info("Cleanup of abandoned retentions started")
+		err = handleCleanUpAbandonedRetentions(dataBase)
+		if err != nil {
+			log.Error(err)
+		}
+		log.Info("Cleanup of abandoned retentions finished")
+
+		log.Info("Cleanup of abandoned pattern metrics started")
+		err = handleCleanUpAbandonedPatternMetrics(dataBase)
+		if err != nil {
+			log.Error(err)
+		}
+		log.Info("Cleanup of abandoned pattern metrics finished")
+
+		log.Info("Cleanup abandoned triggers last checks started")
+		err = handleCleanUpAbandonedTriggerLastCheck(dataBase)
+		if err != nil {
+			log.Error(err)
+		}
+		log.Info("Cleanup abandoned triggers last checks finished")
 	}
 
 	if *pushTriggerDump {
@@ -168,40 +203,6 @@ func main() { //nolint
 			logger.Fatal(err)
 		}
 		logger.Info("Dump was pushed")
-	}
-
-	if *cleanUpMetrics {
-		log := logger.String(moira.LogFieldNameContext, "cleanup")
-		log.Info("Cleanup started")
-
-		err := handleCleanUpOutdatedMetrics(confCleanup, dataBase)
-		if err != nil {
-			log.Error(err)
-		}
-
-		err = handleCleanUpAbandonedRetentions(dataBase)
-		if err != nil {
-			log.Error(err)
-		}
-
-		err = handleCleanUpAbandonedPatternMetrics(dataBase)
-		if err != nil {
-			log.Error(err)
-		}
-
-		log.Info("Cleanup finished")
-	}
-
-	if *cleanUpLastCheck {
-		log := logger.String(moira.LogFieldNameContext, "cleanup")
-		log.Info("Cleanup abandoned triggers last checks started")
-
-		err := handleCleanUpAbandonedTriggerLastCheck(dataBase)
-		if err != nil {
-			log.Error(err)
-		}
-
-		log.Info("Cleanup abandoned triggers last checks finished")
 	}
 }
 
