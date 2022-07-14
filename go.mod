@@ -32,7 +32,7 @@ require (
 	github.com/rcrowley/go-metrics v0.0.0-20200313005456-10cdbea86bc0
 	github.com/rs/cors v1.7.0
 	github.com/rs/zerolog v1.20.0
-	github.com/russross/blackfriday/v2 v2.0.1
+	github.com/russross/blackfriday/v2 v2.1.0
 	github.com/slack-go/slack v0.8.1
 	github.com/smartystreets/assertions v1.2.0
 	github.com/smartystreets/goconvey v1.6.4

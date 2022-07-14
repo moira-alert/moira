@@ -247,13 +247,22 @@ func (connector *DbConnector) RemoveMetricRetention(metric string) error {
 
 // RemoveMetricValues remove metric timestamps values from 0 to given time
 func (connector *DbConnector) RemoveMetricValues(metric string, toTime int64) error {
+	if strings.Contains(metricDataKey(metric), "moira-metric-data:KE.snitch.prototype.topology.spanaggr.rpsPerResponseCode.") {
+		connector.logger.
+			String("metricDataKey", metricDataKey(metric)).
+			String("toTime", fmt.Sprint(strconv.FormatInt(toTime, 10))).
+			String("needRemoveMetrics", fmt.Sprint(connector.needRemoveMetrics(metric))).
+			Infof("")
+	}
+
 	if !connector.needRemoveMetrics(metric) {
 		return nil
 	}
-	c := *connector.client
-	if _, err := c.ZRemRangeByScore(connector.context, metricDataKey(metric), "-inf", strconv.FormatInt(toTime, 10)).Result(); err != nil {
-		return fmt.Errorf("failed to remove metrics from -inf to %v, error: %v", toTime, err)
-	}
+
+	//c := *connector.client
+	//if _, err := c.ZRemRangeByScore(connector.context, metricDataKey(metric), "-inf", strconv.FormatInt(toTime, 10)).Result(); err != nil {
+	//	return fmt.Errorf("failed to remove metrics from -inf to %v, error: %v", toTime, err)
+	//}
 
 	return nil
 }
@@ -283,13 +292,18 @@ func (connector *DbConnector) needRemoveMetrics(metric string) bool {
 }
 
 func cleanUpOutdatedMetricsOnRedisNode(connector *DbConnector, client redis.UniversalClient, duration time.Duration) error {
-	metricsIterator := client.ScanType(connector.context, 0, metricDataKey("*"), 0, "zset").Iterator()
+	metricsIterator := client.
+		ScanType(connector.context, 0, metricDataKey("*"), 0, "zset").
+		Iterator()
+
 	for metricsIterator.Next(connector.context) {
 		key := metricsIterator.Val()
 		metric := strings.TrimPrefix(key, metricDataKey(""))
-		err := flushMetric(connector, metric, duration)
-		if err != nil {
-			return err
+		if strings.Contains(metricDataKey(metric), "moira-metric-data:KE.snitch.prototype.topology.spanaggr.rpsPerResponseCode.") {
+			err := flushMetric(connector, metric, duration)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -348,6 +362,8 @@ func (connector *DbConnector) CleanUpOutdatedMetrics(duration time.Duration) err
 	if duration >= 0 {
 		return errors.New("clean up duration value must be less than zero, otherwise all metrics will be removed")
 	}
+
+	connector.logger.Infof("casted duration is %v", duration.String())
 
 	switch c := client.(type) {
 	case *redis.ClusterClient:

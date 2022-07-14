@@ -155,26 +155,26 @@ func main() { //nolint
 		}
 		log.Info("Cleanup outdated metrics finished")
 
-		log.Info("Cleanup of abandoned retentions started")
-		err = handleCleanUpAbandonedRetentions(dataBase)
-		if err != nil {
-			log.Error(err)
-		}
-		log.Info("Cleanup of abandoned retentions finished")
-
-		log.Info("Cleanup of abandoned pattern metrics started")
-		err = handleCleanUpAbandonedPatternMetrics(dataBase)
-		if err != nil {
-			log.Error(err)
-		}
-		log.Info("Cleanup of abandoned pattern metrics finished")
-
-		log.Info("Cleanup abandoned triggers last checks started")
-		err = handleCleanUpAbandonedTriggerLastCheck(dataBase)
-		if err != nil {
-			log.Error(err)
-		}
-		log.Info("Cleanup abandoned triggers last checks finished")
+		//log.Info("Cleanup of abandoned retentions started")
+		//err = handleCleanUpAbandonedRetentions(dataBase)
+		//if err != nil {
+		//	log.Error(err)
+		//}
+		//log.Info("Cleanup of abandoned retentions finished")
+		//
+		//log.Info("Cleanup of abandoned pattern metrics started")
+		//err = handleCleanUpAbandonedPatternMetrics(dataBase)
+		//if err != nil {
+		//	log.Error(err)
+		//}
+		//log.Info("Cleanup of abandoned pattern metrics finished")
+		//
+		//log.Info("Cleanup abandoned triggers last checks started")
+		//err = handleCleanUpAbandonedTriggerLastCheck(dataBase)
+		//if err != nil {
+		//	log.Error(err)
+		//}
+		//log.Info("Cleanup abandoned triggers last checks finished")
 	}
 
 	if *pushTriggerDump {
