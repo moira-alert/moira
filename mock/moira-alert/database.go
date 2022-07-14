@@ -120,6 +120,20 @@ func (mr *MockDatabaseMockRecorder) AddRemoteTriggersToCheck(arg0 interface{}) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddRemoteTriggersToCheck", reflect.TypeOf((*MockDatabase)(nil).AddRemoteTriggersToCheck), arg0)
 }
 
+// AddTag mocks base method.
+func (m *MockDatabase) AddTag(arg0 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddTag", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddTag indicates an expected call of AddTag.
+func (mr *MockDatabaseMockRecorder) AddTag(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddTag", reflect.TypeOf((*MockDatabase)(nil).AddTag), arg0)
+}
+
 // CleanUpAbandonedPatternMetrics mocks base method.
 func (m *MockDatabase) CleanUpAbandonedPatternMetrics() error {
 	m.ctrl.T.Helper()
@@ -146,6 +160,21 @@ func (m *MockDatabase) CleanUpAbandonedRetentions() error {
 func (mr *MockDatabaseMockRecorder) CleanUpAbandonedRetentions() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CleanUpAbandonedRetentions", reflect.TypeOf((*MockDatabase)(nil).CleanUpAbandonedRetentions))
+}
+
+// CleanUpAbandonedTags mocks base method.
+func (m *MockDatabase) CleanUpAbandonedTags() (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CleanUpAbandonedTags")
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CleanUpAbandonedTags indicates an expected call of CleanUpAbandonedTags.
+func (mr *MockDatabaseMockRecorder) CleanUpAbandonedTags() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CleanUpAbandonedTags", reflect.TypeOf((*MockDatabase)(nil).CleanUpAbandonedTags))
 }
 
 // CleanUpAbandonedTriggerLastCheck mocks base method.

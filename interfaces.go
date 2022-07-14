@@ -20,7 +20,9 @@ type Database interface {
 	// Tag storing
 	GetTagNames() ([]string, error)
 	RemoveTag(tagName string) error
+	AddTag(tagName string) error
 	GetTagTriggerIDs(tagName string) ([]string, error)
+	CleanUpAbandonedTags() (int, error)
 
 	// LastCheck storing
 	GetTriggerLastCheck(triggerID string) (CheckData, error)

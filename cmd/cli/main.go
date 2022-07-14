@@ -175,6 +175,14 @@ func main() { //nolint
 			log.Error(err)
 		}
 		log.Info("Cleanup abandoned triggers last checks finished")
+
+		log.Info("Cleanup abandoned tags started")
+		count, err := handleCleanUpAbandonedTags(dataBase)
+		if err != nil {
+			log.Info(fmt.Sprintf("Count of deleted tags is %d", count))
+			log.Error(err)
+		}
+		log.Info("Cleanup abandoned tags finished")
 	}
 
 	if *pushTriggerDump {

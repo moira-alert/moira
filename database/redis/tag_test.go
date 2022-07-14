@@ -73,3 +73,78 @@ func TestTagErrorConnection(t *testing.T) {
 		So(actual, ShouldBeNil)
 	})
 }
+
+func TestAddTag(t *testing.T) {
+	logger, _ := logging.ConfigureLog("stdout", "warn", "test", true)
+	dataBase := NewTestDatabase(logger)
+	dataBase.Flush()
+	defer dataBase.Flush()
+
+	Convey("When AddTag was called", t, func() {
+		client := *dataBase.client
+
+		const tag = "tag"
+
+		err := dataBase.AddTag(tag)
+		So(err, ShouldBeNil)
+
+		Convey("Tag with trigger should be and abandoned tag shouldn't be in database ", func() {
+			isExists, err := client.SIsMember(dataBase.context, "moira-tags", tag).Result()
+			So(err, ShouldBeNil)
+			So(isExists, ShouldBeTrue)
+		})
+	})
+}
+
+func TestCleanUpAbandonedTags(t *testing.T) {
+	logger, _ := logging.ConfigureLog("stdout", "warn", "test", true)
+	dataBase := NewTestDatabase(logger)
+	dataBase.Flush()
+	defer dataBase.Flush()
+
+	Convey("Given tag with trigger and abandoned tag (tag without trigger)", t, func() {
+		client := *dataBase.client
+
+		const (
+			triggerID         = "triggerID"
+			tagWithTrigger    = "tagWithTrigger"
+			tagWithoutTrigger = "tagWithoutTrigger"
+		)
+
+		client.SAdd(dataBase.context, tagTriggersKey(tagWithTrigger), triggerID)
+		err := dataBase.AddTag(tagWithTrigger)
+		So(err, ShouldBeNil)
+		err = dataBase.AddTag(tagWithoutTrigger)
+		So(err, ShouldBeNil)
+
+		isExists, err := client.SIsMember(dataBase.context, "{moira-tag-triggers}:"+tagWithTrigger, triggerID).Result()
+		So(err, ShouldBeNil)
+		So(isExists, ShouldBeTrue)
+		isExists, err = client.SIsMember(dataBase.context, "moira-tags", tagWithTrigger).Result()
+		So(err, ShouldBeNil)
+		So(isExists, ShouldBeTrue)
+		isExists, err = client.SIsMember(dataBase.context, "moira-tags", tagWithoutTrigger).Result()
+		So(err, ShouldBeNil)
+		So(isExists, ShouldBeTrue)
+
+		Convey("When clean up tags was called", func() {
+			count, err := dataBase.CleanUpAbandonedTags()
+			So(err, ShouldBeNil)
+			So(count, ShouldEqual, 1)
+
+			Convey("Tag with trigger should be and abandoned tag shouldn't be in database ", func() {
+				isExists, err = client.SIsMember(dataBase.context, "moira-tags", tagWithoutTrigger).Result()
+				So(err, ShouldBeNil)
+				So(isExists, ShouldBeFalse)
+
+				isExists, err = client.SIsMember(dataBase.context, "{moira-tag-triggers}:"+tagWithTrigger, triggerID).Result()
+				So(err, ShouldBeNil)
+				So(isExists, ShouldBeTrue)
+
+				isExists, err = client.SIsMember(dataBase.context, "moira-tags", tagWithTrigger).Result()
+				So(err, ShouldBeNil)
+				So(isExists, ShouldBeTrue)
+			})
+		})
+	})
+}
