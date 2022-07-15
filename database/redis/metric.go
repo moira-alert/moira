@@ -297,11 +297,9 @@ func cleanUpOutdatedMetricsOnRedisNode(connector *DbConnector, client redis.Univ
 	for metricsIterator.Next(connector.context) {
 		key := metricsIterator.Val()
 		metric := strings.TrimPrefix(key, metricDataKey(""))
-		if strings.Contains(metricDataKey(metric), "moira-metric-data:KE.snitch.prototype.topology.spanaggr.rpsPerResponseCode.") {
-			err := flushMetric(connector, metric, duration)
-			if err != nil {
-				return err
-			}
+		err := flushMetric(connector, metric, duration)
+		if err != nil {
+			return err
 		}
 	}
 
