@@ -247,13 +247,11 @@ func (connector *DbConnector) RemoveMetricRetention(metric string) error {
 
 // RemoveMetricValues remove metric timestamps values from 0 to given time
 func (connector *DbConnector) RemoveMetricValues(metric string, toTime int64) error {
-	if strings.Contains(metricDataKey(metric), "moira-metric-data:KE.snitch.prototype.topology.spanaggr.rpsPerResponseCode.") {
-		connector.logger.
-			String("metricDataKey", metricDataKey(metric)).
-			String("toTime", fmt.Sprint(strconv.FormatInt(toTime, 10))).
-			String("needRemoveMetrics", fmt.Sprint(connector.needRemoveMetrics(metric))).
-			Infof("")
-	}
+	connector.logger.
+		String("metricDataKey", metricDataKey(metric)).
+		String("toTime", fmt.Sprint(strconv.FormatInt(toTime, 10))).
+		String("needRemoveMetrics", fmt.Sprint(connector.needRemoveMetrics(metric))).
+		Infof("")
 
 	if !connector.needRemoveMetrics(metric) {
 		return nil
