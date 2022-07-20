@@ -7,7 +7,6 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/notifier"
-	"github.com/moira-alert/moira/notifier/selfstate/heartbeat"
 )
 
 func (selfCheck *SelfCheckWorker) selfStateChecker(stop <-chan struct{}) error {
@@ -17,27 +16,6 @@ func (selfCheck *SelfCheckWorker) selfStateChecker(stop <-chan struct{}) error {
 	defer checkTicker.Stop()
 
 	nextSendErrorMessage := time.Now().Unix()
-
-	selfCheck.Heartbeats = make([]heartbeat.Heartbeater, 0, 5)
-	if heartbeat := heartbeat.GetDatabase(selfCheck.Config.RedisDisconnectDelaySeconds, selfCheck.Logger, selfCheck.Database); heartbeat != nil {
-		selfCheck.Heartbeats = append(selfCheck.Heartbeats, heartbeat)
-	}
-
-	if heartbeat := heartbeat.GetFilter(selfCheck.Config.LastMetricReceivedDelaySeconds, selfCheck.Logger, selfCheck.Database); heartbeat != nil {
-		selfCheck.Heartbeats = append(selfCheck.Heartbeats, heartbeat)
-	}
-
-	if heartbeat := heartbeat.GetLocalChecker(selfCheck.Config.LastCheckDelaySeconds, selfCheck.Logger, selfCheck.Database); heartbeat != nil && heartbeat.NeedToCheckOthers() {
-		selfCheck.Heartbeats = append(selfCheck.Heartbeats, heartbeat)
-	}
-
-	if heartbeat := heartbeat.GetRemoteChecker(selfCheck.Config.LastRemoteCheckDelaySeconds, selfCheck.Logger, selfCheck.Database); heartbeat != nil && heartbeat.NeedToCheckOthers() {
-		selfCheck.Heartbeats = append(selfCheck.Heartbeats, heartbeat)
-	}
-
-	if heartbeat := heartbeat.GetNotifier(selfCheck.Logger, selfCheck.Database); heartbeat != nil {
-		selfCheck.Heartbeats = append(selfCheck.Heartbeats, heartbeat)
-	}
 
 	for {
 		select {
@@ -53,7 +31,7 @@ func (selfCheck *SelfCheckWorker) selfStateChecker(stop <-chan struct{}) error {
 func (selfCheck *SelfCheckWorker) handleCheckServices(nowTS int64) []moira.NotificationEvent {
 	var events []moira.NotificationEvent //nolint
 
-	for _, heartbeat := range selfCheck.Heartbeats {
+	for _, heartbeat := range selfCheck.heartbeats {
 		currentValue, needSend, err := heartbeat.Check(nowTS)
 		if err != nil {
 			selfCheck.Logger.Error(err)
