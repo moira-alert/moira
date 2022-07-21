@@ -88,10 +88,12 @@ func TestIndex_CreateAndFill(t *testing.T) {
 	})
 
 	Convey("Test add Triggers to index, batch size is less than number of triggers", t, func() {
+		const batchSize = 20
+		dataBase.EXPECT().GetTriggerChecks(triggerIDs[:batchSize]).Return(triggerChecksPointers[:batchSize], nil)
+		dataBase.EXPECT().GetTriggerChecks(triggerIDs[batchSize:]).Return(triggerChecksPointers[batchSize:], nil)
+
 		index := NewSearchIndex(logger, dataBase, metrics.NewDummyRegistry())
-		dataBase.EXPECT().GetTriggerChecks(triggerIDs[:20]).Return(triggerChecksPointers[:20], nil)
-		dataBase.EXPECT().GetTriggerChecks(triggerIDs[20:]).Return(triggerChecksPointers[20:], nil)
-		err := index.writeByBatches(triggerIDs, 20)
+		err := index.writeByBatches(triggerIDs, batchSize)
 		So(err, ShouldBeNil)
 		docCount, _ := index.triggerIndex.GetCount()
 		So(docCount, ShouldEqual, int64(32))
