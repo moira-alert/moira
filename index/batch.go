@@ -76,7 +76,7 @@ func (index *Index) handleTriggerBatches(triggerChecksChan chan []*moira.Trigger
 					indexErrors <- err2
 					return
 				}
-				index.logger.Debugf("[%d triggers of %d] added to index", count, toIndex)
+				index.logger.Debugf("[%d triggers of %d] added to index", atomic.LoadInt64(&count), toIndex)
 			}(batch)
 		case err, ok := <-getTriggersErrors:
 			if ok {
