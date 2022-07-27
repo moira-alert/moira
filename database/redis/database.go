@@ -171,18 +171,11 @@ func (connector *DbConnector) manageSubscriptions(tomb *tomb.Tomb, channels []st
 
 // Flush deletes all the keys of the DB, use it only for tests
 func (connector *DbConnector) Flush() {
-	client := *connector.client
-
-	switch c := client.(type) {
-	case *redis.ClusterClient:
-		err := c.ForEachMaster(connector.context, func(ctx context.Context, shard *redis.Client) error {
-			return shard.FlushDB(ctx).Err()
-		})
-		if err != nil {
-			return
-		}
-	default:
-		(*connector.client).FlushDB(connector.context)
+	err := connector.runDependent(func(connector *DbConnector, client redis.UniversalClient) error {
+		return client.FlushDB(connector.context).Err()
+	})
+	if err != nil {
+		return
 	}
 }
 
@@ -202,4 +195,23 @@ func (connector *DbConnector) Client() redis.UniversalClient {
 
 func (connector *DbConnector) Context() context.Context {
 	return connector.context
+}
+
+// runDependent calls the fn dependent of Redis client type (cluster or standalone).
+func (connector *DbConnector) runDependent(fn func(connector *DbConnector, client redis.UniversalClient) error) error {
+	client := *connector.client
+
+	switch c := client.(type) {
+	case *redis.ClusterClient:
+		return c.ForEachMaster(connector.context, func(ctx context.Context, shard *redis.Client) error {
+			return fn(connector, shard)
+		})
+	default:
+		err := fn(connector, client)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
