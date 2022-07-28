@@ -504,6 +504,15 @@ func TestCleanupOutdatedMetrics(t *testing.T) {
 	dataBase.Flush()
 	defer dataBase.Flush()
 
+	Convey("When clean up metrics with wrong value of duration was called (positive number)", t, func() {
+		err := dataBase.CleanUpOutdatedMetrics(time.Hour)
+		So(
+			err,
+			ShouldResemble,
+			errors.New("clean up duration value must be less than zero, otherwise all metrics will be removed"),
+		)
+	})
+
 	Convey("Given 2 metrics with 2 values older then 1 minute and 2 values younger then 1 minute", t, func() {
 		const (
 			metric1 = "my.test.super.metric"
@@ -615,15 +624,6 @@ func TestCleanupOutdatedMetrics(t *testing.T) {
 				&moira.MetricValue{Timestamp: tsYounger1 + 5, RetentionTimestamp: tsYounger1, Value: 3},
 				&moira.MetricValue{Timestamp: tsYounger2 + 5, RetentionTimestamp: tsYounger2, Value: 4},
 			},
-		})
-
-		Convey("When clean up metrics with wrong value of duration was called (positive number)", func() {
-			err = dataBase.CleanUpOutdatedMetrics(time.Hour)
-			So(
-				err,
-				ShouldResemble,
-				errors.New("clean up duration value must be less than zero, otherwise all metrics will be removed"),
-			)
 		})
 
 		Convey("When clean up metrics older then 1 minute was called", func() {
