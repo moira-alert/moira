@@ -871,7 +871,7 @@ func TestRemoveMetricsByPrefix(t *testing.T) {
 	client := *dataBase.client
 	const pattern = "my.test.*.metric*"
 
-	Convey("Given metrics with pattern my.test.*", t, func() {
+	Convey("Given metrics with pattern my.test.*", t, func(c C) {
 		for i := 1; i <= 10; i++ {
 			err := dataBase.SaveMetrics(
 				map[string]*moira.MatchedMetric{
@@ -900,29 +900,110 @@ func TestRemoveMetricsByPrefix(t *testing.T) {
 			So(err, ShouldBeNil)
 		}
 
-		result := client.Keys(dataBase.context, "moira-metric-data:my.test*").Val()
-		So(len(result), ShouldResemble, 20)
-		result = client.Keys(dataBase.context, "moira-metric-retention:my.test*").Val()
-		So(len(result), ShouldResemble, 20)
+		var metricsCount int32
+		incrementMetric := func(ctx context.Context, shard redis.UniversalClient) {
+			result := len(shard.Keys(ctx, "moira-metric-data:my.test*").Val())
+			atomic.AddInt32(&metricsCount, int32(result))
+		}
+		switch cl := client.(type) {
+		case *redis.ClusterClient:
+			err := cl.ForEachMaster(dataBase.context, func(ctx context.Context, shard *redis.Client) error {
+				incrementMetric(ctx, shard)
+				return nil
+			})
+			So(err, ShouldBeNil)
+		default:
+			incrementMetric(dataBase.context, cl)
+		}
+		So(atomic.LoadInt32(&metricsCount), ShouldEqual, 20)
+
+		var retentionsCount int32
+		incrementRetention := func(ctx context.Context, shard redis.UniversalClient) {
+			result := len(shard.Keys(ctx, "moira-metric-retention:my.test*").Val())
+			atomic.AddInt32(&retentionsCount, int32(result))
+		}
+		switch cl := client.(type) {
+		case *redis.ClusterClient:
+			err := cl.ForEachMaster(dataBase.context, func(ctx context.Context, shard *redis.Client) error {
+				incrementRetention(ctx, shard)
+				return nil
+			})
+			So(err, ShouldBeNil)
+		default:
+			incrementRetention(dataBase.context, cl)
+		}
+		So(atomic.LoadInt32(&retentionsCount), ShouldEqual, 20)
 
 		patternMetricsCount := client.SCard(dataBase.context, "moira-pattern-metrics:my.test.*.metric*").Val()
-		So(patternMetricsCount, ShouldResemble, int64(20))
+		So(patternMetricsCount, ShouldEqual, int64(20))
 
 		Convey("When remove metrics by prefix my.test.super. was called", func() {
 			err := dataBase.RemoveMetricsByPrefix("my.test.super.")
 			So(err, ShouldBeNil)
 
-			Convey("No metric data for metrics with this prefix should not exist", func() {
-				result = client.Keys(dataBase.context, "moira-metric-data:my.test*").Val()
-				So(len(result), ShouldResemble, 10)
-				result = client.Keys(dataBase.context, "moira-metric-retention:my.test*").Val()
-				So(len(result), ShouldResemble, 10)
-				result = client.Keys(dataBase.context, "moira-metric-data:my.test.mega.*").Val()
-				So(len(result), ShouldResemble, 10)
-				result = client.Keys(dataBase.context, "moira-metric-retention:my.test.mega.*").Val()
-				So(len(result), ShouldResemble, 10)
+			Convey("No metric data for metrics with this prefix should exist", func() {
+				var allMetricsCount int
+				switch cl := client.(type) {
+				case *redis.ClusterClient:
+					err = cl.ForEachMaster(dataBase.context, func(ctx context.Context, shard *redis.Client) error {
+						result := shard.Keys(ctx, "moira-metric-data:my.test*").Val()
+						allMetricsCount += len(result)
+						return nil
+					})
+					So(err, ShouldBeNil)
+				default:
+					result := client.Keys(dataBase.context, "moira-metric-data:my.test*").Val()
+					allMetricsCount += len(result)
+				}
+				So(allMetricsCount, ShouldEqual, 10)
+
+				var allRetentionsCount int
+				switch cl := client.(type) {
+				case *redis.ClusterClient:
+					err = cl.ForEachMaster(dataBase.context, func(ctx context.Context, shard *redis.Client) error {
+						result := shard.Keys(ctx, "moira-metric-retention:my.test*").Val()
+						allRetentionsCount += len(result)
+						return nil
+					})
+					So(err, ShouldBeNil)
+				default:
+					result := client.Keys(dataBase.context, "moira-metric-retention:my.test*").Val()
+					allRetentionsCount += len(result)
+				}
+				So(allRetentionsCount, ShouldEqual, 10)
+
+				var megaMetricsCount int
+				switch cl := client.(type) {
+				case *redis.ClusterClient:
+					err = cl.ForEachMaster(dataBase.context, func(ctx context.Context, shard *redis.Client) error {
+						result := shard.Keys(ctx, "moira-metric-data:my.test.mega.*").Val()
+						megaMetricsCount += len(result)
+						return nil
+					})
+					So(err, ShouldBeNil)
+				default:
+					result := client.Keys(dataBase.context, "moira-metric-data:my.test.mega.*").Val()
+					megaMetricsCount += len(result)
+				}
+				So(megaMetricsCount, ShouldEqual, 10)
+
+				var megaRetentionsCount int
+				switch cl := client.(type) {
+				case *redis.ClusterClient:
+					err = cl.ForEachMaster(dataBase.context, func(ctx context.Context, shard *redis.Client) error {
+						result := shard.Keys(ctx, "moira-metric-retention:my.test.mega.*").Val()
+						megaRetentionsCount += len(result)
+						return nil
+					})
+					So(err, ShouldBeNil)
+				default:
+					result := client.Keys(dataBase.context, "moira-metric-retention:my.test.mega.*").Val()
+					megaRetentionsCount += len(result)
+				}
+				So(megaRetentionsCount, ShouldEqual, 10)
+
 				patternMetricsCount := client.SCard(dataBase.context, "moira-pattern-metrics:my.test.*.metric*").Val()
-				So(patternMetricsCount, ShouldResemble, int64(10))
+				So(patternMetricsCount, ShouldEqual, int64(10))
 			})
 		})
 	})
