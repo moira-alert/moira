@@ -1,11 +1,14 @@
 package redis
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"sync/atomic"
 	"testing"
 	"time"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/moira-alert/moira"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	"github.com/patrickmn/go-cache"
@@ -933,7 +936,7 @@ func TestRemoveAllMetrics(t *testing.T) {
 	client := *dataBase.client
 	const pattern = "my.test.*.metric*"
 
-	Convey("Given metrics with pattern my.test.*", t, func() {
+	Convey("Given metrics with pattern my.test.*", t, func(c C) {
 		for i := 1; i <= 10; i++ {
 			err := dataBase.SaveMetrics(
 				map[string]*moira.MatchedMetric{
@@ -962,25 +965,92 @@ func TestRemoveAllMetrics(t *testing.T) {
 			So(err, ShouldBeNil)
 		}
 
-		result := client.Keys(dataBase.context, "moira-metric-data:my.test*").Val()
-		So(len(result), ShouldResemble, 20)
-		result = client.Keys(dataBase.context, "moira-metric-retention:my.test*").Val()
-		So(len(result), ShouldResemble, 20)
+		var metricsCount int32
+		incrementMetric := func(ctx context.Context, shard redis.UniversalClient) {
+			result := len(shard.Keys(ctx, "moira-metric-data:my.test*").Val())
+			atomic.AddInt32(&metricsCount, int32(result))
+		}
+		switch cl := client.(type) {
+		case *redis.ClusterClient:
+			err := cl.ForEachMaster(dataBase.context, func(ctx context.Context, shard *redis.Client) error {
+				incrementMetric(ctx, shard)
+				return nil
+			})
+			So(err, ShouldBeNil)
+		default:
+			incrementMetric(dataBase.context, cl)
+		}
+		So(atomic.LoadInt32(&metricsCount), ShouldEqual, 20)
+
+		var retentionsCount int32
+		incrementRetention := func(ctx context.Context, shard redis.UniversalClient) {
+			result := len(shard.Keys(ctx, "moira-metric-retention:my.test*").Val())
+			atomic.AddInt32(&retentionsCount, int32(result))
+		}
+		switch cl := client.(type) {
+		case *redis.ClusterClient:
+			err := cl.ForEachMaster(dataBase.context, func(ctx context.Context, shard *redis.Client) error {
+				incrementRetention(ctx, shard)
+				return nil
+			})
+			So(err, ShouldBeNil)
+		default:
+			incrementRetention(dataBase.context, cl)
+		}
+		So(atomic.LoadInt32(&retentionsCount), ShouldEqual, 20)
 
 		patternMetricsCount := client.SCard(dataBase.context, "moira-pattern-metrics:my.test.*.metric*").Val()
-		So(patternMetricsCount, ShouldResemble, int64(20))
+		So(patternMetricsCount, ShouldEqual, int64(20))
 
 		Convey("When remove all metrics was called", func() {
 			err := dataBase.RemoveAllMetrics()
 			So(err, ShouldBeNil)
 
 			Convey("No metric data should not exist", func() {
-				result = client.Keys(dataBase.context, "moira-metric-data:*").Val()
-				So(len(result), ShouldResemble, 0)
-				result = client.Keys(dataBase.context, "moira-metric-retention:*").Val()
-				So(len(result), ShouldResemble, 0)
-				result = client.Keys(dataBase.context, "moira-pattern-metrics*").Val()
-				So(len(result), ShouldResemble, 0)
+				var metricsCount int
+				switch cl := client.(type) {
+				case *redis.ClusterClient:
+					err = cl.ForEachMaster(dataBase.context, func(ctx context.Context, shard *redis.Client) error {
+						result := shard.Keys(ctx, "moira-metric-data:*").Val()
+						metricsCount += len(result)
+						return nil
+					})
+					So(err, ShouldBeNil)
+				default:
+					result := client.Keys(dataBase.context, "moira-metric-data:*").Val()
+					metricsCount += len(result)
+				}
+				So(metricsCount, ShouldEqual, 0)
+
+				var retentionsCount int
+				switch cl := client.(type) {
+				case *redis.ClusterClient:
+					err = cl.ForEachMaster(dataBase.context, func(ctx context.Context, shard *redis.Client) error {
+						result := shard.Keys(ctx, "moira-metric-retention:*").Val()
+						retentionsCount += len(result)
+						return nil
+					})
+					So(err, ShouldBeNil)
+				default:
+					result := client.Keys(dataBase.context, "moira-metric-retention:*").Val()
+					retentionsCount += len(result)
+				}
+				So(retentionsCount, ShouldEqual, 0)
+
+				var patternsCount int
+				switch cl := client.(type) {
+				case *redis.ClusterClient:
+					err = cl.ForEachMaster(dataBase.context, func(ctx context.Context, shard *redis.Client) error {
+						result := shard.Keys(ctx, "moira-pattern-metrics*").Val()
+						patternsCount += len(result)
+						return nil
+					})
+					So(err, ShouldBeNil)
+				default:
+					result := client.Keys(dataBase.context, "moira-pattern-metrics*").Val()
+					patternsCount += len(result)
+				}
+				So(patternsCount, ShouldEqual, 0)
 			})
 		})
 	})
