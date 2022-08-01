@@ -100,7 +100,7 @@ func main() {
 	selfState := selfstate.NewSelfCheckWorker(logger, database, sender, config.Notifier.SelfState.getSettings())
 	if err := selfState.Start(); err != nil {
 		if errors.Is(err, selfstate.ErrDisabled) {
-			logger.Warning(err.Error())
+			logger.Info(err.Error())
 		} else {
 			logger.Fatalf("Failed to start self check worker: %v", err)
 		}
