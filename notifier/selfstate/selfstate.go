@@ -44,7 +44,7 @@ func (selfCheck *SelfCheckWorker) Start() error {
 
 	senders := selfCheck.Notifier.GetSenders()
 	if err := selfCheck.Config.checkConfig(senders); err != nil {
-		selfCheck.Logger.Errorf(ErrWrongConfig.Error())
+		selfCheck.Logger.Error(ErrWrongConfig)
 		return ErrWrongConfig
 	}
 
