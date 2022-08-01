@@ -39,7 +39,6 @@ func NewSelfCheckWorker(logger moira.Logger, database moira.Database, notifier n
 // Start self check worker
 func (selfCheck *SelfCheckWorker) Start() error {
 	if !selfCheck.Config.Enabled {
-		selfCheck.Logger.Debugf(ErrDisabled.Error())
 		return ErrDisabled
 	}
 
