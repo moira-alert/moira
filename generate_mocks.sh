@@ -1,4 +1,8 @@
-#!/bin/sh
+##!/bin/sh
+
+# For windows users: Run this script via "Git bash"
+
+rm -r ./mock/*
 
 go get -u github.com/golang/mock/gomock
 go install github.com/golang/mock/mockgen
