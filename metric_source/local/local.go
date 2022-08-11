@@ -2,6 +2,7 @@ package local
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"runtime/debug"
 
@@ -43,46 +44,25 @@ func (local *Local) Fetch(target string, from int64, until int64, allowRealTimeA
 	for targetIdx < len(targets) {
 		target := targets[targetIdx]
 		targetIdx++
-		expr2, _, err := parser.ParseExpr(target)
+		parsedExpr, _, err := parser.ParseExpr(target)
 		if err != nil {
 			return nil, ErrParseExpr{
 				internalError: err,
 				target:        target,
 			}
 		}
-		patterns := expr2.Metrics()
-		metricsMap, metrics, err := getPatternsMetricData(local.dataBase, patterns, from, until, allowRealTimeAlerting)
+		metricRequests := parsedExpr.Metrics()
+		metricsMap, metrics, err := getPatternsMetricData(local.dataBase, metricRequests, from, until, allowRealTimeAlerting)
 		if err != nil {
 			return nil, err
 		}
-		rewritten, newTargets, err := expr.RewriteExpr(context.Background(), expr2, from, until, metricsMap)
+		rewritten, newTargets, err := expr.RewriteExpr(context.Background(), parsedExpr, from, until, metricsMap)
 		if err != nil && err != parser.ErrSeriesDoesNotExist {
 			return nil, fmt.Errorf("failed RewriteExpr: %s", err.Error())
 		} else if rewritten {
 			targets = append(targets, newTargets...)
 		} else {
-			metricsData, err := func() (result []*types.MetricData, err error) {
-				defer func() {
-					if r := recover(); r != nil {
-						result = nil
-						err = ErrEvaluateTargetFailedWithPanic{target: target, recoverMessage: r, stackRecord: debug.Stack()}
-					}
-				}()
-				result, err = expr.EvalExpr(context.Background(), expr2, from, until, metricsMap)
-				if err != nil {
-					if err == parser.ErrSeriesDoesNotExist {
-						err = nil
-					} else if isErrUnknownFunction(err) {
-						err = ErrorUnknownFunction(err)
-					} else {
-						err = ErrEvalExpr{
-							target:        target,
-							internalError: err,
-						}
-					}
-				}
-				return result, err
-			}()
+			metricsData, err := evalExpr(target, parsedExpr, from, until, metricsMap)
 			if err != nil {
 				return nil, err
 			}
@@ -98,13 +78,37 @@ func (local *Local) Fetch(target string, from int64, until int64, allowRealTimeA
 				})
 			}
 			result.Metrics = append(result.Metrics, metrics...)
-			for _, pattern := range patterns {
-				result.Patterns = append(result.Patterns, pattern.Metric)
+			for _, mr := range metricRequests {
+				result.Patterns = append(result.Patterns, mr.Metric)
 			}
 		}
 	}
 
 	return result, nil
+}
+
+func evalExpr(target string, expression parser.Expr, from, until int64, metricsMap map[parser.MetricRequest][]*types.MetricData) (result []*types.MetricData, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			result = nil
+			err = ErrEvaluateTargetFailedWithPanic{target: target, recoverMessage: r, stackRecord: debug.Stack()}
+		}
+	}()
+	result, err = expr.EvalExpr(context.Background(), expression, from, until, metricsMap)
+	if err != nil {
+		if errors.Is(err, parser.ErrSeriesDoesNotExist) {
+			err = nil
+		} else if isErrUnknownFunction(err) {
+			err = ErrorUnknownFunction(err)
+		} else {
+			err = ErrEvalExpr{
+				target:        target,
+				internalError: err,
+			}
+		}
+	}
+
+	return result, err
 }
 
 // GetMetricsTTLSeconds returns metrics lifetime in Redis
@@ -117,17 +121,17 @@ func (local *Local) IsConfigured() (bool, error) {
 	return true, nil
 }
 
-func getPatternsMetricData(database moira.Database, patterns []parser.MetricRequest, from int64, until int64, allowRealTimeAlerting bool) (map[parser.MetricRequest][]*types.MetricData, []string, error) {
+func getPatternsMetricData(database moira.Database, metricRequests []parser.MetricRequest, from int64, until int64, allowRealTimeAlerting bool) (map[parser.MetricRequest][]*types.MetricData, []string, error) {
 	metrics := make([]string, 0)
 	metricsMap := make(map[parser.MetricRequest][]*types.MetricData)
-	for _, pattern := range patterns {
-		pattern.From += from
-		pattern.Until += until
-		metricsData, patternMetrics, err := FetchData(database, pattern.Metric, pattern.From, pattern.Until, allowRealTimeAlerting)
+	for _, mr := range metricRequests {
+		mr.From += from
+		mr.Until += until
+		metricsData, patternMetrics, err := FetchData(database, mr.Metric, mr.From, mr.Until, allowRealTimeAlerting)
 		if err != nil {
 			return nil, nil, err
 		}
-		metricsMap[pattern] = metricsData
+		metricsMap[mr] = metricsData
 		metrics = append(metrics, patternMetrics...)
 	}
 	return metricsMap, metrics, nil
