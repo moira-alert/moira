@@ -46,11 +46,14 @@ var (
 )
 
 var (
-	cleanupUsers         = flag.Bool("cleanup-users", false, "Disable/delete contacts and subscriptions of missing users")
-	cleanupAbandonedKeys = flag.Bool("cleanup-abandoned-keys", false, "Delete abandoned keys of inconsistent database.")
-	userDel              = flag.String("user-del", "", "Delete all contacts and subscriptions for a user")
-	fromUser             = flag.String("from-user", "", "Transfer subscriptions and contacts from user.")
-	toUser               = flag.String("to-user", "", "Transfer subscriptions and contacts to user.")
+	cleanupUsers      = flag.Bool("cleanup-users", false, "Disable/delete contacts and subscriptions of missing users")
+	cleanupLastChecks = flag.Bool("cleanup-last-checks", false, "Delete abandoned triggers last checks.")
+	cleanupMetrics    = flag.Bool("cleanup-metrics", false, "Delete outdated metrics.")
+	cleanupRetentions = flag.Bool("cleanup-retentions", false, "Delete abandoned retentions.")
+	cleanupPatterns   = flag.Bool("cleanup-patterns", false, "Delete abandoned patterns.")
+	userDel           = flag.String("user-del", "", "Delete all contacts and subscriptions for a user")
+	fromUser          = flag.String("from-user", "", "Transfer subscriptions and contacts from user.")
+	toUser            = flag.String("to-user", "", "Transfer subscriptions and contacts to user.")
 )
 
 var (
@@ -145,8 +148,8 @@ func main() { //nolint
 		log.Info("Cleanup finished")
 	}
 
-	if *cleanupAbandonedKeys {
-		log := logger.String(moira.LogFieldNameContext, "cleanup-abandoned-keys")
+	if *cleanupMetrics {
+		log := logger.String(moira.LogFieldNameContext, "cleanup-metrics")
 
 		log.Info("Cleanup of outdated metrics started")
 		err := handleCleanUpOutdatedMetrics(confCleanup, dataBase)
@@ -154,27 +157,39 @@ func main() { //nolint
 			log.Error(err)
 		}
 		log.Info("Cleanup outdated metrics finished")
+	}
 
-		log.Info("Cleanup of abandoned retentions started")
-		err = handleCleanUpAbandonedRetentions(dataBase)
-		if err != nil {
-			log.Error(err)
-		}
-		log.Info("Cleanup of abandoned retentions finished")
-
-		log.Info("Cleanup of abandoned pattern metrics started")
-		err = handleCleanUpAbandonedPatternMetrics(dataBase)
-		if err != nil {
-			log.Error(err)
-		}
-		log.Info("Cleanup of abandoned pattern metrics finished")
+	if *cleanupLastChecks {
+		log := logger.String(moira.LogFieldNameContext, "cleanup-last-checks")
 
 		log.Info("Cleanup abandoned triggers last checks started")
-		err = handleCleanUpAbandonedTriggerLastCheck(dataBase)
+		err := handleCleanUpAbandonedTriggerLastCheck(dataBase)
 		if err != nil {
 			log.Error(err)
 		}
 		log.Info("Cleanup abandoned triggers last checks finished")
+	}
+
+	if *cleanupRetentions {
+		log := logger.String(moira.LogFieldNameContext, "cleanup-retentions")
+
+		log.Info("Cleanup of abandoned retentions started")
+		err := handleCleanUpAbandonedRetentions(dataBase)
+		if err != nil {
+			log.Error(err)
+		}
+		log.Info("Cleanup of abandoned retentions finished")
+	}
+
+	if *cleanupPatterns {
+		log := logger.String(moira.LogFieldNameContext, "cleanup-patterns")
+
+		log.Info("Cleanup of abandoned pattern metrics started")
+		err := handleCleanUpAbandonedPatternMetrics(dataBase)
+		if err != nil {
+			log.Error(err)
+		}
+		log.Info("Cleanup of abandoned pattern metrics finished")
 	}
 
 	if *pushTriggerDump {
