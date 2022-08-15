@@ -736,6 +736,8 @@ func TestCleanupAbandonedPatternMetrics(t *testing.T) {
 	defer dataBase.Flush()
 
 	Convey("Given 3 metrics matched with pattern", t, func() {
+		client := *dataBase.client
+
 		const (
 			pattern = "my.test.metric*"
 			metric1 = "my.test.metric1"
@@ -800,8 +802,6 @@ func TestCleanupAbandonedPatternMetrics(t *testing.T) {
 		})
 
 		Convey("When clean up pattern metrics was called with non-existent metric-data in database", func() {
-			client := *dataBase.client
-
 			client.Del(dataBase.context, metricDataKey(metric1))
 			client.Del(dataBase.context, metricDataKey(metric2))
 			client.Del(dataBase.context, metricDataKey(metric3))
@@ -817,16 +817,14 @@ func TestCleanupAbandonedPatternMetrics(t *testing.T) {
 			err = dataBase.CleanUpAbandonedPatternMetrics()
 			So(err, ShouldBeNil)
 
-			Convey("pattern metric Set shouldn't be in database", func() {
-				key := patternMetricsKey(pattern)
-				isKeyExists := client.Exists(dataBase.context, key).Val() == 1
-				So(isKeyExists, ShouldBeFalse)
+			Convey("pattern shouldn't be in database", func() {
+				patternKey := patternMetricsKey(pattern)
+				isPatternExists := client.Exists(dataBase.context, patternKey).Val() == 1
+				So(isPatternExists, ShouldBeFalse)
 			})
 		})
 
-		Convey("When clean up pattern metrics was called with existent and non-existent metric-data in database", func() {
-			client := *dataBase.client
-
+		Convey("When clean up pattern metrics was called with existent and non-existent metric-data's in database", func() {
 			client.Del(dataBase.context, metricDataKey(metric1))
 			client.Del(dataBase.context, metricDataKey(metric2))
 
@@ -846,7 +844,7 @@ func TestCleanupAbandonedPatternMetrics(t *testing.T) {
 			err = dataBase.CleanUpAbandonedPatternMetrics()
 			So(err, ShouldBeNil)
 
-			Convey("metric1 and metric2 values of set shouldn't be and metric3 value should be in database", func() {
+			Convey("metric1 and metric2 values of pattern set shouldn't be and metric3 value should be in database", func() {
 				key := patternMetricsKey(pattern)
 				isKeyExists := client.Exists(dataBase.context, key).Val() == 1
 				So(isKeyExists, ShouldBeTrue)
