@@ -62,8 +62,9 @@ var (
 )
 
 var (
-	pushTriggerDump = flag.Bool("push-trigger-dump", false, "Get trigger dump in JSON from stdin and save it to redis")
-	triggerDumpFile = flag.String("trigger-dump-file", "", "File that holds trigger dump JSON from api method response")
+	pushTriggerDump   = flag.Bool("push-trigger-dump", false, "Get trigger dump in JSON from stdin and save it to redis")
+	triggerDumpFile   = flag.String("trigger-dump-file", "", "File that holds trigger dump JSON from api method response")
+	updatePatternList = flag.Bool("update-pattern-list", false, "Will update smth triggers")
 )
 
 func main() { //nolint
@@ -218,6 +219,16 @@ func main() { //nolint
 			logger.Fatal(err)
 		}
 		logger.Info("Dump was pushed")
+	}
+
+	if *updatePatternList {
+		logger.Info("Begin update triggers")
+		err := dataBase.UpdatePatternList()
+		if err != nil {
+			logger.Fatal(err)
+		}
+
+		logger.Info("End update triggers")
 	}
 }
 

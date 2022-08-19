@@ -149,6 +149,9 @@ type Database interface {
 	CleanUpAbandonedPatternMetrics() error
 	RemoveMetricsByPrefix(pattern string) error
 	RemoveAllMetrics() error
+
+	// once call func will be removed
+	UpdatePatternList() error
 }
 
 // Lock implements lock abstraction

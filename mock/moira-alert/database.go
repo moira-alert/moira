@@ -1520,3 +1520,17 @@ func (mr *MockDatabaseMockRecorder) UpdateMetricsHeartbeat() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateMetricsHeartbeat", reflect.TypeOf((*MockDatabase)(nil).UpdateMetricsHeartbeat))
 }
+
+// UpdatePatternList mocks base method.
+func (m *MockDatabase) UpdatePatternList() error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdatePatternList")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdatePatternList indicates an expected call of UpdatePatternList.
+func (mr *MockDatabaseMockRecorder) UpdatePatternList() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePatternList", reflect.TypeOf((*MockDatabase)(nil).UpdatePatternList))
+}
