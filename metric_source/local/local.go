@@ -94,6 +94,11 @@ func evalExpr(target string, expression parser.Expr, from, until int64, metricsM
 			err = ErrEvaluateTargetFailedWithPanic{target: target, recoverMessage: r, stackRecord: debug.Stack()}
 		}
 	}()
+
+	if target == "aliasByNode(movingAverage(transformNull(consolidateBy(KE.snitch.prototype.topology.Singular.rpsPerResponseCodeAndReplica.450.*, 'max'), 0), '5min'), 7)" {
+		fmt.Println(expression, from, until, metricsMap)
+	}
+
 	result, err = expr.EvalExpr(context.Background(), expression, from, until, metricsMap)
 	if err != nil {
 		if errors.Is(err, parser.ErrSeriesDoesNotExist) {
