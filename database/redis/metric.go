@@ -320,22 +320,24 @@ func cleanUpAbandonedRetentionsOnRedisNode(connector *DbConnector, client redis.
 func cleanUpAbandonedPatternMetricsOnRedisNode(connector *DbConnector, client redis.UniversalClient) error {
 	keysIter := client.Scan(connector.context, 0, patternMetricsKey("*"), 0).Iterator()
 	for keysIter.Next(connector.context) {
+		pipe := client.TxPipeline()
 		key := keysIter.Val()
-
 		metricsIter := client.SScan(connector.context, key, 0, "*", 0).Iterator()
 		for metricsIter.Next(connector.context) {
 			metric := metricsIter.Val()
 
 			existsResult, err := (*connector.client).Exists(connector.context, metricDataKey(metric)).Result()
 			if err != nil {
-				return fmt.Errorf("failed to check metric data existence, error: %v", err)
+				return fmt.Errorf("failed to check metric-data %v existence, error: %v", metric, err)
 			}
 			if isMetricExists := existsResult == 1; !isMetricExists {
-				_, err := client.SRem(connector.context, key, metric).Result()
-				if err != nil {
-					return fmt.Errorf("failed to remove pattern data, error: %v", err)
-				}
+				pipe.SRem(connector.context, key, metric)
 			}
+		}
+
+		_, err := pipe.Exec(connector.context)
+		if err != nil {
+			return fmt.Errorf("failed to remove pattern-metrics in pipe, error: %v", err)
 		}
 	}
 
