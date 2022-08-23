@@ -93,6 +93,10 @@ func (storage *PatternStorage) ProcessIncomingMetric(lineBytes []byte, maxTTL ti
 			Retention:          60, //nolint
 		}
 	}
+
+	storage.logger.Clone().
+		Debugf("metric %s is not matched with prefix tree", parsedMetric.Metric)
+
 	return nil
 }
 
