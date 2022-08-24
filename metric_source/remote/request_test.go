@@ -69,7 +69,7 @@ func TestMakeRequest(t *testing.T) {
 		remote := Remote{client: server.Client(), config: &Config{URL: server.URL}}
 		request, _ := remote.prepareRequest(from, until, target)
 		actual, isRemoteAvailable, err := remote.makeRequest(request)
-		So(err, ShouldResemble, fmt.Errorf("bad response status %d: %s", http.StatusInternalServerError, string(body)))
+		So(err, ShouldResemble, fmt.Errorf("remote server response status %d: %s", http.StatusInternalServerError, string(body)))
 		So(isRemoteAvailable, ShouldBeTrue)
 		So(actual, ShouldResemble, body)
 	})
@@ -157,7 +157,7 @@ func TestMakeRequestWithRetries(t *testing.T) {
 					remote.config.Timeout,
 					remote.config.RetrySeconds,
 				)
-				So(err, ShouldResemble, fmt.Errorf("bad response status %d: %s", http.StatusInternalServerError, string(body)))
+				So(err, ShouldResemble, fmt.Errorf("remote server response status %d: %s", http.StatusInternalServerError, string(body)))
 				So(isRemoteAvailable, ShouldBeTrue)
 				So(actual, ShouldResemble, body)
 			}

@@ -4,11 +4,12 @@ import "github.com/moira-alert/moira"
 
 // CheckerMetrics is a collection of metrics used in checker
 type CheckerMetrics struct {
-	LocalMetrics           *CheckMetrics
-	RemoteMetrics          *CheckMetrics
-	MetricEventsChannelLen Histogram
-	UnusedTriggersCount    Histogram
-	MetricEventsHandleTime Timer
+	LocalMetrics                  *CheckMetrics
+	RemoteMetrics                 *CheckMetrics
+	MetricEventsChannelLen        Histogram
+	UnusedTriggersCount           Histogram
+	MetricEventsHandleTime        Timer
+	RemoteAvailabilityCheckFailed Meter
 }
 
 // GetCheckMetrics return check metrics dependent on given trigger type
@@ -37,6 +38,7 @@ func ConfigureCheckerMetrics(registry Registry, remoteEnabled bool) *CheckerMetr
 	}
 	if remoteEnabled {
 		m.RemoteMetrics = configureCheckMetrics(registry, "remote")
+		m.RemoteAvailabilityCheckFailed = registry.NewMeter("remote", "unavailable")
 	}
 	return m
 }

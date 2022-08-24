@@ -75,7 +75,7 @@ func ErrorRemoteServerUnavailable(err error) *ErrorResponse {
 	return &ErrorResponse{
 		Err:            err,
 		HTTPStatusCode: 503, //nolint
-		StatusText:     "Remote server unavailable.",
+		StatusText:     "Remote server unavailable",
 		ErrorText:      fmt.Sprintf("Remote server error, please contact administrator. Raw error: %s", err.Error()),
 	}
 }

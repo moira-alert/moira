@@ -148,7 +148,7 @@ func TestFetch(t *testing.T) {
 			remote.config = &config
 			result, err := remote.Fetch(target, from, until, false)
 			So(result, ShouldBeEmpty)
-			So(err.Error(), ShouldResemble, fmt.Sprintf("bad response status %d: %s", http.StatusInternalServerError, "Some string"))
+			So(err.Error(), ShouldResemble, fmt.Sprintf("remote server response status %d: %s", http.StatusInternalServerError, "Some string"))
 			_, ok := err.(ErrRemoteTriggerResponse)
 			So(ok, ShouldBeTrue)
 		}
