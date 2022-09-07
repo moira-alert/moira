@@ -113,6 +113,7 @@ type TreeOfProblems struct {
 	TreeOfProblems *problemOfTarget `json:"tree_of_problems,omitempty"`
 }
 
+// TargetVerification validates trigger targets.
 func TargetVerification(targets []string, ttl time.Duration, isRemote bool) []TreeOfProblems {
 	functionsOfTargets := make([]TreeOfProblems, 0)
 
@@ -126,20 +127,25 @@ func TargetVerification(targets []string, ttl time.Duration, isRemote bool) []Tr
 			continue
 		}
 
-		functionsOfTarget.TreeOfProblems = checkExpression(expr, ttl, isRemote)
+		if expr.IsFunc() {
+			functionsOfTarget.TreeOfProblems = checkFuncExpression(expr, ttl, isRemote)
+		}
+
 		functionsOfTargets = append(functionsOfTargets, functionsOfTarget)
 	}
 
 	return functionsOfTargets
 }
 
-func checkExpression(expression parser.Expr, ttl time.Duration, isRemote bool) *problemOfTarget {
-	target := expression.Target()
-	problemFunction := checkFunction(target, isRemote)
+// checkFuncExpression validates function expression.
+func checkFuncExpression(expression parser.Expr, ttl time.Duration, isRemote bool) *problemOfTarget {
+	funcName := expression.Target()
+
+	problemFunction := checkFunction(funcName, isRemote)
 
 	if argument, ok := functionArgumentsInTheRangeTTL(expression, ttl); !ok {
 		if problemFunction == nil {
-			problemFunction = &problemOfTarget{Argument: target}
+			problemFunction = &problemOfTarget{Argument: funcName}
 		}
 
 		problemFunction.Problems = append(problemFunction.Problems, problemOfTarget{
@@ -148,7 +154,7 @@ func checkExpression(expression parser.Expr, ttl time.Duration, isRemote bool) *
 			Position: 1,
 			Description: fmt.Sprintf(
 				"The function %s has a time sampling parameter %s larger than allowed by the config:%s",
-				target, expression.Args()[1].StringValue(), ttl.String()),
+				funcName, expression.Args()[1].StringValue(), ttl.String()),
 		})
 	}
 
@@ -157,11 +163,11 @@ func checkExpression(expression parser.Expr, ttl time.Duration, isRemote bool) *
 			continue
 		}
 
-		if badFunc := checkExpression(argument, ttl, isRemote); badFunc != nil {
+		if badFunc := checkFuncExpression(argument, ttl, isRemote); badFunc != nil {
 			badFunc.Position = position
 
 			if problemFunction == nil {
-				problemFunction = &problemOfTarget{Argument: target}
+				problemFunction = &problemOfTarget{Argument: funcName}
 			}
 
 			problemFunction.Problems = append(problemFunction.Problems, *badFunc)

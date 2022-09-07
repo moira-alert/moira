@@ -84,6 +84,13 @@ func TestTargetVerification(t *testing.T) {
 			So(problems[0].SyntaxOk, ShouldBeTrue)
 			So(problems[0].TreeOfProblems.Problems[0].Argument, ShouldEqual, "myUnsupportedFunction")
 		})
+
+		Convey("Check target only with metric (without Graphite-function)", func() {
+			targets := []string{"my.metric"}
+			problems := TargetVerification(targets, 0, false)
+			So(problems[0].SyntaxOk, ShouldBeTrue)
+			So(problems[0].TreeOfProblems, ShouldBeNil)
+		})
 	})
 }
 
