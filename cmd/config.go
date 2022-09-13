@@ -3,7 +3,9 @@ package cmd
 import (
 	"fmt"
 	"io/ioutil"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/moira-alert/moira/metrics"
 
@@ -113,6 +115,12 @@ type RemoteConfig struct {
 	MetricsTTL string `yaml:"metrics_ttl"`
 	// Timeout for remote requests
 	Timeout string `yaml:"timeout"`
+	// Retry seconds for remote requests divided by spaces
+	RetrySeconds string `yaml:"retry_seconds"`
+	// HealthCheckTimeout is timeout for remote api health check requests
+	HealthCheckTimeout string `yaml:"health_check_timeout"`
+	// Retry seconds for remote api health check requests  divided by spaces
+	HealthCheckRetrySeconds string `yaml:"health_check_retry_seconds"`
 	// Username for basic auth
 	User string `yaml:"user"`
 	// Password for basic auth
@@ -129,14 +137,32 @@ type ImageStoreConfig struct {
 // GetRemoteSourceSettings returns remote config parsed from moira config files
 func (config *RemoteConfig) GetRemoteSourceSettings() *remoteSource.Config {
 	return &remoteSource.Config{
-		URL:           config.URL,
-		CheckInterval: to.Duration(config.CheckInterval),
-		MetricsTTL:    to.Duration(config.MetricsTTL),
-		Timeout:       to.Duration(config.Timeout),
-		User:          config.User,
-		Password:      config.Password,
-		Enabled:       config.Enabled,
+		URL:                     config.URL,
+		CheckInterval:           to.Duration(config.CheckInterval),
+		MetricsTTL:              to.Duration(config.MetricsTTL),
+		Timeout:                 to.Duration(config.Timeout),
+		RetrySeconds:            ParseRetrySeconds(config.RetrySeconds),
+		HealthCheckTimeout:      to.Duration(config.HealthCheckTimeout),
+		HealthCheckRetrySeconds: ParseRetrySeconds(config.HealthCheckRetrySeconds),
+		User:                    config.User,
+		Password:                config.Password,
+		Enabled:                 config.Enabled,
 	}
+}
+
+// ParseRetrySeconds parses config value string into array of integers
+func ParseRetrySeconds(retrySecondsString string) []time.Duration {
+	secondsStringList := strings.Fields(retrySecondsString)
+	retrySecondsIntList := make([]time.Duration, len(secondsStringList))
+
+	for index, secondsString := range secondsStringList {
+		secondsInt, err := strconv.Atoi(secondsString)
+		if err != nil {
+			panic(err)
+		}
+		retrySecondsIntList[index] = time.Second * time.Duration(secondsInt)
+	}
+	return retrySecondsIntList
 }
 
 // ReadConfig parses config file by the given path into Moira-used type

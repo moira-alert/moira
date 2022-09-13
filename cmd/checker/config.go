@@ -92,9 +92,11 @@ func getDefault() config {
 			Pprof: cmd.ProfilerConfig{Enabled: false},
 		},
 		Remote: cmd.RemoteConfig{
-			CheckInterval: "60s",
-			Timeout:       "60s",
-			MetricsTTL:    "7d",
+			CheckInterval:           "60s",
+			Timeout:                 "60s",
+			MetricsTTL:              "168h",
+			HealthCheckTimeout:      "60s",
+			HealthCheckRetrySeconds: "1 1",
 		},
 	}
 }
