@@ -801,6 +801,21 @@ func (mr *MockDatabaseMockRecorder) GetTriggerChecks(arg0 interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggerChecks", reflect.TypeOf((*MockDatabase)(nil).GetTriggerChecks), arg0)
 }
 
+// GetTriggerIDsStartWith mocks base method.
+func (m *MockDatabase) GetTriggerIDsStartWith(arg0 string) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTriggerIDsStartWith", arg0)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTriggerIDsStartWith indicates an expected call of GetTriggerIDsStartWith.
+func (mr *MockDatabaseMockRecorder) GetTriggerIDsStartWith(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggerIDsStartWith", reflect.TypeOf((*MockDatabase)(nil).GetTriggerIDsStartWith), arg0)
+}
+
 // GetTriggerLastCheck mocks base method.
 func (m *MockDatabase) GetTriggerLastCheck(arg0 string) (moira.CheckData, error) {
 	m.ctrl.T.Helper()

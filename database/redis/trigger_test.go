@@ -765,6 +765,50 @@ func TestDbConnector_preSaveTrigger(t *testing.T) {
 	})
 }
 
+func TestDbConnector_GetTriggerIDsStartWith(t *testing.T) {
+	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
+	db := NewTestDatabase(logger)
+	db.Flush()
+	defer db.Flush()
+
+	Convey("Given 3 triggers in DB", t, func() {
+		const prefix = "prefix"
+		var triggerWithPrefix1 = moira.Trigger{
+			ID: prefix + "1",
+		}
+		var triggerWithPrefix2 = moira.Trigger{
+			ID: prefix + "2",
+		}
+		var triggerWithoutPrefix = moira.Trigger{
+			ID: "without-prefix",
+		}
+		var triggers = []moira.Trigger{
+			triggerWithPrefix1,
+			triggerWithPrefix2,
+			triggerWithoutPrefix,
+		}
+
+		for _, trigger := range triggers {
+			err := db.SaveTrigger(trigger.ID, &trigger)
+			So(err, ShouldBeNil)
+		}
+
+		Convey("When GetTriggerIDsStartWith was called", func() {
+			matchedTriggers, err := db.GetTriggerIDsStartWith(prefix)
+
+			Convey("Returned triggers should resemble triggers with prefix", func() {
+				So(err, ShouldBeNil)
+				expected := []string{triggerWithPrefix1.ID, triggerWithPrefix2.ID}
+
+				So(matchedTriggers, ShouldHaveLength, len(expected))
+				for _, trigger := range expected {
+					So(matchedTriggers, ShouldContain, trigger)
+				}
+			})
+		})
+	})
+}
+
 var triggers = []moira.Trigger{
 	{
 		ID:           "triggerID-0000000000001",

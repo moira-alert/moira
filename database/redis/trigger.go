@@ -3,6 +3,7 @@ package redis
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -147,6 +148,23 @@ func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigg
 	}
 
 	return nil
+}
+
+// GetTriggerIDsStartWith returns triggers which have ID starting with "prefix" parameter.
+func (connector *DbConnector) GetTriggerIDsStartWith(prefix string) ([]string, error) {
+	triggers, err := connector.GetAllTriggerIDs()
+	if err != nil {
+		return nil, err
+	}
+
+	var matchedTriggers []string
+	for _, id := range triggers {
+		if strings.HasPrefix(id, prefix) {
+			matchedTriggers = append(matchedTriggers, id)
+		}
+	}
+
+	return matchedTriggers, nil
 }
 
 func (connector *DbConnector) updateTrigger(triggerID string, newTrigger *moira.Trigger, oldTrigger *moira.Trigger) error {
