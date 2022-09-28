@@ -25,7 +25,7 @@ func TestTriggerStoring(t *testing.T) {
 
 	Convey("Trigger manipulation", t, func() {
 		Convey("Test trigger has subscriptions with AnyTag is true", func() {
-			trigger := &triggers[0]
+			trigger := &testTriggers[0]
 			subscription := moira.SubscriptionData{
 				ID:                "subscriptionID-00000000000001",
 				Enabled:           true,
@@ -52,7 +52,7 @@ func TestTriggerStoring(t *testing.T) {
 		})
 
 		Convey("Test save-get-remove", func() {
-			trigger := &triggers[0]
+			trigger := &testTriggers[0]
 
 			//Check for not existing not written trigger
 			actual, err := dataBase.GetTrigger(trigger.ID)
@@ -99,7 +99,7 @@ func TestTriggerStoring(t *testing.T) {
 
 			//Now just add tag and pattern in trigger and save it
 			trigger = nil
-			changedTrigger := &triggers[1]
+			changedTrigger := &testTriggers[1]
 			err = dataBase.SaveTrigger(changedTrigger.ID, changedTrigger)
 			So(err, ShouldBeNil)
 
@@ -139,7 +139,7 @@ func TestTriggerStoring(t *testing.T) {
 			oldTag := changedTrigger.Tags[1]
 			oldPattern := changedTrigger.Patterns[1]
 			changedTrigger = nil
-			changedAgainTrigger := &triggers[2]
+			changedAgainTrigger := &testTriggers[2]
 			err = dataBase.SaveTrigger(changedAgainTrigger.ID, changedAgainTrigger)
 			So(err, ShouldBeNil)
 
@@ -228,7 +228,7 @@ func TestTriggerStoring(t *testing.T) {
 		})
 
 		Convey("Save trigger with lastCheck and throttling and GetTriggerChecks", func() {
-			trigger := triggers[5]
+			trigger := testTriggers[5]
 			triggerCheck := &moira.TriggerCheck{
 				Trigger:   trigger,
 				LastCheck: moira.CheckData{},
@@ -473,7 +473,7 @@ func TestTriggerStoring(t *testing.T) {
 
 		Convey("Test trigger manipulations update 'triggers to reindex' list", func() {
 			dataBase.Flush()
-			trigger := &triggers[0]
+			trigger := &testTriggers[0]
 
 			err := dataBase.SaveTrigger(trigger.ID, trigger)
 			So(err, ShouldBeNil)
@@ -487,7 +487,7 @@ func TestTriggerStoring(t *testing.T) {
 			So(actual, ShouldResemble, []string{trigger.ID})
 
 			// Now update trigger
-			trigger = &triggers[1]
+			trigger = &testTriggers[1]
 
 			err = dataBase.SaveTrigger(trigger.ID, trigger)
 			So(err, ShouldBeNil)
@@ -497,7 +497,7 @@ func TestTriggerStoring(t *testing.T) {
 			So(actual, ShouldResemble, []string{trigger.ID})
 
 			// Add new trigger
-			trigger = &triggers[5]
+			trigger = &testTriggers[5]
 
 			err = dataBase.SaveTrigger(trigger.ID, trigger)
 			So(err, ShouldBeNil)
@@ -699,7 +699,7 @@ func TestTriggerErrorConnection(t *testing.T) {
 		So(err, ShouldNotBeNil)
 		So(actual2, ShouldBeNil)
 
-		err = dataBase.SaveTrigger("", &triggers[0])
+		err = dataBase.SaveTrigger("", &testTriggers[0])
 		So(err, ShouldNotBeNil)
 
 		err = dataBase.RemoveTrigger("")
@@ -809,7 +809,7 @@ func TestDbConnector_GetTriggerIDsStartWith(t *testing.T) {
 	})
 }
 
-var triggers = []moira.Trigger{
+var testTriggers = []moira.Trigger{
 	{
 		ID:           "triggerID-0000000000001",
 		Name:         "test trigger 1 v1.0",

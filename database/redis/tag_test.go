@@ -15,7 +15,7 @@ func TestTagStoring(t *testing.T) {
 	client := *dataBase.client
 
 	Convey("Tags manipulation", t, func() {
-		trigger := triggers[0]
+		trigger := testTriggers[0]
 
 		Convey("Get tags when they don't exist", func() {
 			triggerIDs, err := dataBase.GetTagTriggerIDs(trigger.Tags[0])
