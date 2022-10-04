@@ -40,6 +40,7 @@ type Database interface {
 	RemoveTrigger(triggerID string) error
 	GetPatternTriggerIDs(pattern string) ([]string, error)
 	RemovePatternTriggerIDs(pattern string) error
+	GetTriggerIDsStartWith(prefix string) ([]string, error)
 
 	// SearchResult AKA pager storing
 	GetTriggersSearchResults(searchResultsID string, page, size int64) ([]*SearchResult, int64, error)

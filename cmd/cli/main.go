@@ -66,6 +66,8 @@ var (
 	triggerDumpFile = flag.String("trigger-dump-file", "", "File that holds trigger dump JSON from api method response")
 )
 
+var removeTriggersStartWith = flag.String("remove-triggers-start-with", "", "Remove triggers which have ID starting with string parameter")
+
 func main() { //nolint
 	confCleanup, logger, dataBase := initApp()
 
@@ -135,6 +137,13 @@ func main() { //nolint
 			log.Error(err)
 		}
 		log.Info("Removing all metrics finished")
+	}
+
+	if *removeTriggersStartWith != "" {
+		log := logger.String(moira.LogFieldNameContext, "remove-triggers-start-with")
+		if err := handleRemoveTriggersStartWith(logger, dataBase, *removeTriggersStartWith); err != nil {
+			log.Error(err)
+		}
 	}
 
 	if *cleanupUsers {
