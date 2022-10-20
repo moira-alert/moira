@@ -7,6 +7,7 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/senders/discord"
 	"github.com/moira-alert/moira/senders/mail"
+	"github.com/moira-alert/moira/senders/mattermost"
 	"github.com/moira-alert/moira/senders/msteams"
 	"github.com/moira-alert/moira/senders/opsgenie"
 	"github.com/moira-alert/moira/senders/pagerduty"
@@ -36,6 +37,7 @@ const (
 	victoropsSender   = "victorops"
 	pagerdutySender   = "pagerduty"
 	msTeamsSender     = "msteams"
+	mattermostSender  = "mattermost"
 )
 
 // RegisterSenders watch on senders config and register all configured senders
@@ -68,6 +70,8 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 			err = notifier.RegisterSender(senderSettings, &opsgenie.Sender{ImageStores: notifier.imageStores})
 		case victoropsSender:
 			err = notifier.RegisterSender(senderSettings, &victorops.Sender{ImageStores: notifier.imageStores})
+		case mattermostSender:
+			err = notifier.RegisterSender(senderSettings, &mattermost.Sender{})
 		// case "email":
 		// 	err = notifier.RegisterSender(senderSettings, &kontur.MailSender{})
 		// case "phone":
