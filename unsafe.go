@@ -7,11 +7,7 @@ import (
 
 // UnsafeBytesToString converts source to string without copying
 func UnsafeBytesToString(b []byte) string {
-	hdr := *(*reflect.SliceHeader)(unsafe.Pointer(&b))
-	return *(*string)(unsafe.Pointer(&reflect.StringHeader{
-		Data: hdr.Data,
-		Len:  hdr.Len,
-	}))
+	return *(*string)(unsafe.Pointer(&b))
 }
 
 // UnsafeStringToBytes converts string to source without copying

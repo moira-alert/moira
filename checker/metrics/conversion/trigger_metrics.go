@@ -114,20 +114,27 @@ func (m TriggerMetrics) Populate(lastMetrics map[string]moira.MetricState, decla
 // and return this metrics in format map[targetName]MetricData.
 // We split targets that declared as targets with alone metrics
 // from targets with multiple metrics.
-// For example we have a targets with metrics:
+//
+//	For example, we have a targets with metrics:
 //	{
 //		"t1": {"m1": {metrics}, "m2": {metrics}, "m3": {metrics}},
 //		"t2": {"m1": {metrics}, "m2": {metrics}, "m3": {metrics}},
 //		"t3": {"m4": {metrics}},
 //	}
+//
 // and declared alone metrics
+//
 //	{"t3": true}
-// This methos will return
+//
+// These methods will return
+//
 //	{
 //		"t1": {"m1", "m2", "m3"},
 //		"t2": {"m1", "m2", "m3"},
 //	}
+//
 // and
+//
 //	{
 //	"t3": {metrics},
 //	}

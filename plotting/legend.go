@@ -55,7 +55,7 @@ func getPlotLegend(c *chart.Chart, legendStyle chart.Style, plotWidth int) chart
 		legendStyle.GetTextOptions().WriteToRenderer(r)
 
 		labelX := 0
-		labelY := c.Height - 15 //nolint
+		labelY := c.Height - 15                         //nolint
 		markerY := labelY - int(legendStyle.FontSize/2) //nolint
 
 		for _, line := range lines {

@@ -2,7 +2,7 @@ package webhook
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 	"time"
@@ -77,7 +77,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 
 	if !isAllowedResponseCode(response.StatusCode) {
 		var serverResponse string
-		responseBody, err := ioutil.ReadAll(response.Body)
+		responseBody, err := io.ReadAll(response.Body)
 		if err != nil {
 			serverResponse = fmt.Sprintf("failed to read response body: %s", err.Error())
 		} else {
