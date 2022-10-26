@@ -101,7 +101,7 @@ func newLogEntry(logger moira.Logger, request *http.Request) *apiLoggerEntry {
 
 func (entry *apiLoggerEntry) write(status, bytes int, elapsed time.Duration, response http.ResponseWriter) {
 	if status == 0 {
-		status = 200
+		status = http.StatusOK
 	}
 	log := entry.logger
 	log.Int("http.http_status", status)
@@ -112,7 +112,7 @@ func (entry *apiLoggerEntry) write(status, bytes int, elapsed time.Duration, res
 	fmt.Fprintf(entry.buf, " %dB", bytes)
 	entry.buf.WriteString(" in ")
 	fmt.Fprintf(entry.buf, "%s", elapsed)
-	if status >= 500 { //nolint
+	if status >= http.StatusInternalServerError {
 		errorResponse := getErrorResponseIfItHas(response)
 		if errorResponse != nil {
 			fmt.Fprintf(entry.buf, " - Error : %s", errorResponse.ErrorText)
