@@ -1,6 +1,7 @@
 package msteams
 
 import (
+	"net/http"
 	"testing"
 	"time"
 
@@ -62,7 +63,7 @@ some other text _italic text_`,
 			defer gock.Off()
 			gock.New("https://outlook.office.com/webhook/foo").
 				Post("/").
-				Reply(200).
+				Reply(http.StatusOK).
 				BodyString("1")
 			contact := moira.ContactData{Value: "https://outlook.office.com/webhook/foo"}
 			err := sender.SendEvents([]moira.NotificationEvent{event}, contact, trigger, make([][]byte, 0, 1), false)
@@ -73,7 +74,7 @@ some other text _italic text_`,
 			defer gock.Off()
 			gock.New("https://outlook.office.com/webhook/foo").
 				Post("/").
-				Reply(200).
+				Reply(http.StatusOK).
 				BodyString("Some error")
 			contact := moira.ContactData{Value: "https://outlook.office.com/webhook/foo"}
 			err := sender.SendEvents([]moira.NotificationEvent{event}, contact, trigger, make([][]byte, 0, 1), false)
@@ -84,7 +85,7 @@ some other text _italic text_`,
 			defer gock.Off()
 			gock.New("https://outlook.office.com/webhook/foo").
 				Post("/").
-				Reply(500).
+				Reply(http.StatusInternalServerError).
 				BodyString("Some error")
 			contact := moira.ContactData{Value: "https://outlook.office.com/webhook/foo"}
 			err := sender.SendEvents([]moira.NotificationEvent{event}, contact, trigger, make([][]byte, 0, 1), false)

@@ -90,5 +90,5 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 }
 
 func isAllowedResponseCode(responseCode int) bool {
-	return (responseCode >= 200) && (responseCode <= 299)
+	return (responseCode >= http.StatusOK) && (responseCode < http.StatusMultipleChoices)
 }
