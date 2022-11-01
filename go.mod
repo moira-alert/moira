@@ -7,7 +7,7 @@ require (
 	github.com/PagerDuty/go-pagerduty v1.3.0
 	github.com/aws/aws-sdk-go v1.35.4
 	github.com/beevee/go-chart v2.0.2-0.20190523110126-273a59e48bcc+incompatible
-	github.com/blevesearch/bleve/v2 v2.3.2
+	github.com/blevesearch/bleve/v2 v2.3.5
 	github.com/bwmarrin/discordgo v0.22.0
 	github.com/carlosdp/twiliogo v0.0.0-20161027183705-b26045ebb9d1
 	github.com/cespare/xxhash/v2 v2.1.2
@@ -55,20 +55,21 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bits-and-blooms/bitset v1.2.2 // indirect
 	github.com/blend/go-sdk v2.0.0+incompatible // indirect
-	github.com/blevesearch/bleve_index_api v1.0.1 // indirect
+	github.com/blevesearch/bleve_index_api v1.0.4 // indirect
+	github.com/blevesearch/geo v0.1.15 // indirect
 	github.com/blevesearch/go-porterstemmer v1.0.3 // indirect
 	github.com/blevesearch/gtreap v0.1.1 // indirect
-	github.com/blevesearch/mmap-go v1.0.3 // indirect
-	github.com/blevesearch/scorch_segment_api/v2 v2.1.0 // indirect
+	github.com/blevesearch/mmap-go v1.0.4 // indirect
+	github.com/blevesearch/scorch_segment_api/v2 v2.1.3 // indirect
 	github.com/blevesearch/segment v0.9.0 // indirect
 	github.com/blevesearch/snowballstem v0.9.0 // indirect
 	github.com/blevesearch/upsidedown_store_api v1.0.1 // indirect
-	github.com/blevesearch/vellum v1.0.7 // indirect
-	github.com/blevesearch/zapx/v11 v11.3.3 // indirect
-	github.com/blevesearch/zapx/v12 v12.3.3 // indirect
-	github.com/blevesearch/zapx/v13 v13.3.3 // indirect
-	github.com/blevesearch/zapx/v14 v14.3.3 // indirect
-	github.com/blevesearch/zapx/v15 v15.3.3 // indirect
+	github.com/blevesearch/vellum v1.0.9 // indirect
+	github.com/blevesearch/zapx/v11 v11.3.6 // indirect
+	github.com/blevesearch/zapx/v12 v12.3.6 // indirect
+	github.com/blevesearch/zapx/v13 v13.3.6 // indirect
+	github.com/blevesearch/zapx/v14 v14.3.6 // indirect
+	github.com/blevesearch/zapx/v15 v15.3.6 // indirect
 	github.com/bradfitz/gomemcache v0.0.0-20190913173617-a41fca850d0b // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgryski/go-expirecache v0.0.0-20170314133854-743ef98b2adb // indirect
@@ -81,6 +82,7 @@ require (
 	github.com/fatih/color v1.9.0 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/golang/geo v0.0.0-20210211234256-740aa86cb551 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/gomodule/redigo v1.8.8 // indirect
@@ -95,6 +97,7 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.6.7 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
+	github.com/json-iterator/go v1.1.10 // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lib/pq v1.10.1 // indirect
@@ -106,6 +109,8 @@ require (
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
 	github.com/mjibson/go-dsp v0.0.0-20180508042940-11479a337f12 // indirect
+	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
+	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/mschoch/smat v0.2.0 // indirect
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/pelletier/go-toml v1.9.0 // indirect
@@ -121,7 +126,7 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.7.1 // indirect
 	github.com/stretchr/objx v0.3.0 // indirect
-	github.com/stretchr/testify v1.7.0 // indirect
+	github.com/stretchr/testify v1.7.1 // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
 	github.com/wangjohn/quickselect v0.0.0-20161129230411-ed8402a42d5f // indirect
 	go.etcd.io/bbolt v1.3.6 // indirect
@@ -132,7 +137,7 @@ require (
 	golang.org/x/exp v0.0.0-20200924195034-c827fd4f18b9 // indirect
 	golang.org/x/image v0.0.0-20210216034530-4410531fe030 // indirect
 	golang.org/x/net v0.0.0-20210428140749-89ef3d95e781 // indirect
-	golang.org/x/sys v0.0.0-20220406163625-3f8b81556e12 // indirect
+	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	gonum.org/v1/gonum v0.9.1 // indirect
