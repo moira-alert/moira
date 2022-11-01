@@ -39,37 +39,3 @@ func TestInit(t *testing.T) {
 		})
 	})
 }
-
-//TestSender is integration test, run it manually with your Url, Token and Channel ID.
-//func TestSender(t *testing.T) {
-//	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
-//
-//	Convey("Init tests", t, func() {
-//		sender := &mattermost.Sender{}
-//
-//		Convey("With url and api_token", func() {
-//			senderSettings := map[string]string{"url": "http://localhost:8065", "api_token": "8pdo6yoiutgidgxs9qxhbo7w4h", "front_uri": "http://moira.url"}
-//			location, _ := time.LoadLocation("UTC")
-//			err := sender.Init(senderSettings, logger, location, "")
-//			So(err, ShouldBeNil)
-//
-//			event := moira.NotificationEvent{
-//				TriggerID: "TriggerID",
-//				Values:    map[string]float64{"t1": 123},
-//				Timestamp: 150000000,
-//				Metric:    "Metric",
-//				OldState:  moira.StateOK,
-//				State:     moira.StateNODATA,
-//			}
-//			events, contact, trigger, plots, throttled := moira.NotificationEvents{event}, moira.ContactData{
-//				Value: "3y6ab8rptfdr9m1hzskghpxwsc",
-//			}, moira.TriggerData{
-//				ID:   "ID",
-//				Name: "Name",
-//			}, make([][]byte, 0), false
-//
-//			err = sender.SendEvents(events, contact, trigger, plots, throttled)
-//			So(err, ShouldBeNil)
-//		})
-//	})
-//}
