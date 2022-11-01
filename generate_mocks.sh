@@ -4,8 +4,7 @@
 
 rm -r ./mock/*
 
-go get -u github.com/golang/mock/gomock
-go install github.com/golang/mock/mockgen
+go install github.com/golang/mock/mockgen@v1.6.0
 
 mockgen -destination=mock/moira-alert/locks.go -package=mock_moira_alert github.com/moira-alert/moira Lock
 mockgen -destination=mock/moira-alert/mutex.go -package=mock_moira_alert github.com/moira-alert/moira Mutex
