@@ -112,43 +112,48 @@ func TestBuildMessage(t *testing.T) {
 		})
 
 		Convey("Long message parts", func() {
-			const messageMaxCharacters = 4_000
+			const (
+				msgLimit        = 4_000
+				halfLimit       = msgLimit / 2
+				greaterThanHalf = halfLimit + 100
+				lessThanHalf    = halfLimit - 100
+			)
 
 			const eventLine = "\n02:40: Metric = 123 (OK to NODATA)"
 			oneEventLineLen := len([]rune(eventLine))
 
-			longDesc := strings.Repeat("a", messageMaxCharacters/2+100)
+			longDesc := strings.Repeat("a", greaterThanHalf)
 
-			// Events list with chars greater than half the message limit
+			// Events list with chars greater than half of the message limit
 			var longEvents moira.NotificationEvents
-			for i := 0; i < (messageMaxCharacters/2+200)/oneEventLineLen; i++ {
+			for i := 0; i < greaterThanHalf/oneEventLineLen; i++ {
 				longEvents = append(longEvents, event)
 			}
 
 			Convey("Long description. desc > msgLimit/2", func() {
 				var events moira.NotificationEvents
-				for i := 0; i < (messageMaxCharacters/2-10)/oneEventLineLen; i++ {
+				for i := 0; i < lessThanHalf/oneEventLineLen; i++ {
 					events = append(events, event)
 				}
 
 				actual := sender.buildMessage(events, moira.TriggerData{Desc: longDesc}, false)
 				expected := "**NODATA**\n" +
-					strings.Repeat("a", 2013) + "...\n" +
+					strings.Repeat("a", 2083) + "...\n" +
 					"```\n" +
-					strings.Repeat("02:40: Metric = 123 (OK to NODATA)\n", 55) +
+					strings.Repeat("02:40: Metric = 123 (OK to NODATA)\n", 53) +
 					"02:40: Metric = 123 (OK to NODATA)```"
 				So(actual, ShouldResemble, expected)
 			})
 
 			Convey("Many events. eventString > msgLimit/2", func() {
-				desc := strings.Repeat("a", messageMaxCharacters/2-100)
+				desc := strings.Repeat("a", lessThanHalf)
 				actual := sender.buildMessage(longEvents, moira.TriggerData{Desc: desc}, false)
 				expected := "**NODATA**\n" +
 					desc + "\n" +
 					"```\n" +
 					strings.Repeat("02:40: Metric = 123 (OK to NODATA)\n", 57) +
 					"02:40: Metric = 123 (OK to NODATA)```\n" +
-					"...and 4 more events."
+					"...and 2 more events."
 				So(actual, ShouldResemble, expected)
 			})
 
@@ -159,7 +164,7 @@ func TestBuildMessage(t *testing.T) {
 					"```\n" +
 					strings.Repeat("02:40: Metric = 123 (OK to NODATA)\n", 55) +
 					"02:40: Metric = 123 (OK to NODATA)```\n" +
-					"...and 6 more events."
+					"...and 4 more events."
 				So(actual, ShouldResemble, expected)
 			})
 		})
