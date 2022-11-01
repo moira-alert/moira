@@ -8,8 +8,9 @@ import (
 
 	"github.com/moira-alert/moira"
 
-	"github.com/mattermost/mattermost-server/v6/model"
+	"github.com/golang/mock/gomock"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
+	mock "github.com/moira-alert/moira/mock/notifier/mattermost"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -23,7 +24,10 @@ func TestSendEvents(t *testing.T) {
 		So(err, ShouldBeNil)
 
 		Convey("When client return error, SendEvents should return error", func() {
-			sender.client = &TestClient4Error{}
+			ctrl := gomock.NewController(t)
+			client := mock.NewMockClient(ctrl)
+			client.EXPECT().CreatePost(gomock.Any()).Return(nil, nil, errors.New(""))
+			sender.client = client
 
 			events, contact, trigger, plots, throttled := moira.NotificationEvents{}, moira.ContactData{}, moira.TriggerData{}, make([][]byte, 0), false
 			err = sender.SendEvents(events, contact, trigger, plots, throttled)
@@ -31,29 +35,16 @@ func TestSendEvents(t *testing.T) {
 		})
 
 		Convey("When client CreatePost is success, SendEvents should not return error", func() {
-			sender.client = &TestClient4{}
+			ctrl := gomock.NewController(t)
+			client := mock.NewMockClient(ctrl)
+			client.EXPECT().CreatePost(gomock.Any()).Return(nil, nil, nil)
+			sender.client = client
 
 			events, contact, trigger, plots, throttled := moira.NotificationEvents{}, moira.ContactData{}, moira.TriggerData{}, make([][]byte, 0), false
 			err = sender.SendEvents(events, contact, trigger, plots, throttled)
 			So(err, ShouldBeNil)
 		})
 	})
-}
-
-type TestClient4Error struct {
-	Client
-}
-
-func (c *TestClient4Error) CreatePost(*model.Post) (*model.Post, *model.Response, error) {
-	return nil, nil, errors.New("")
-}
-
-type TestClient4 struct {
-	Client
-}
-
-func (c *TestClient4) CreatePost(*model.Post) (*model.Post, *model.Response, error) {
-	return nil, nil, nil
 }
 
 func TestBuildMessage(t *testing.T) {
