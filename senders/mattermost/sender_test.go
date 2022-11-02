@@ -15,7 +15,11 @@ func TestInit(t *testing.T) {
 		sender := &mattermost.Sender{}
 
 		Convey("Empty url", func() {
-			senderSettings := map[string]string{"api_token": "qwerty", "front_uri": "qwerty"}
+			senderSettings := map[string]string{
+				"api_token":    "qwerty",
+				"front_uri":    "qwerty",
+				"insecure_tls": "true",
+			}
 			err := sender.Init(senderSettings, logger, nil, "")
 			So(err, ShouldNotBeNil)
 		})
@@ -33,7 +37,11 @@ func TestInit(t *testing.T) {
 		})
 
 		Convey("Full config", func() {
-			senderSettings := map[string]string{"url": "qwerty", "api_token": "qwerty", "front_uri": "qwerty"}
+			senderSettings := map[string]string{"url": "qwerty",
+				"api_token":    "qwerty",
+				"front_uri":    "qwerty",
+				"insecure_tls": "true",
+			}
 			err := sender.Init(senderSettings, logger, nil, "")
 			So(err, ShouldBeNil)
 		})

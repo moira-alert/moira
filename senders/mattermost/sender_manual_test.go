@@ -27,7 +27,12 @@ func TestSender(t *testing.T) {
 		sender := &mattermost.Sender{}
 
 		Convey("With url and apiToken", func() {
-			senderSettings := map[string]string{"url": url, "apiToken": apiToken, "front_uri": "http://moira.url"}
+			senderSettings := map[string]string{
+				"url":          url,
+				"api_token":    apiToken,
+				"front_uri":    "http://moira.url",
+				"insecure_tls": "true",
+			}
 			location, _ := time.LoadLocation("UTC")
 			err := sender.Init(senderSettings, logger, location, "")
 			So(err, ShouldBeNil)

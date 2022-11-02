@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -29,11 +30,18 @@ func (sender *Sender) Init(senderSettings map[string]string, _ moira.Logger, loc
 		return fmt.Errorf("can not read Mattermost url from config")
 	}
 	client := model.NewAPIv4Client(url)
-	// TODO make only secure connections, now it is for tests
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+
+	insecureTLS, err := strconv.ParseBool(senderSettings["insecure_tls"])
+	if err != nil {
+		return fmt.Errorf("can not parse insecure_tls: %v", err)
 	}
-	client.HTTPClient = &http.Client{Transport: tr}
+	client.HTTPClient = &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: insecureTLS,
+			},
+		},
+	}
 	sender.client = client
 
 	token := senderSettings["api_token"]
