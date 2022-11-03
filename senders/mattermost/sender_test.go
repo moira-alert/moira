@@ -14,7 +14,7 @@ func TestInit(t *testing.T) {
 	Convey("Init tests", t, func() {
 		sender := &mattermost.Sender{}
 
-		Convey("Empty url", func() {
+		Convey("No url", func() {
 			senderSettings := map[string]string{
 				"api_token":    "qwerty",
 				"front_uri":    "qwerty",
@@ -24,20 +24,44 @@ func TestInit(t *testing.T) {
 			So(err, ShouldNotBeNil)
 		})
 
-		Convey("Empty api_token", func() {
+		Convey("Empty url", func() {
+			senderSettings := map[string]string{
+				"url":          "",
+				"api_token":    "qwerty",
+				"front_uri":    "qwerty",
+				"insecure_tls": "true",
+			}
+			err := sender.Init(senderSettings, logger, nil, "")
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("No api_token", func() {
 			senderSettings := map[string]string{"url": "qwerty", "front_uri": "qwerty"}
 			err := sender.Init(senderSettings, logger, nil, "")
 			So(err, ShouldNotBeNil)
 		})
 
-		Convey("Empty front_uri", func() {
+		Convey("Empty api_token", func() {
+			senderSettings := map[string]string{"url": "qwerty", "front_uri": "qwerty", "api_token": ""}
+			err := sender.Init(senderSettings, logger, nil, "")
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("No front_uri", func() {
 			senderSettings := map[string]string{"url": "qwerty", "api_token": "qwerty"}
 			err := sender.Init(senderSettings, logger, nil, "")
 			So(err, ShouldNotBeNil)
 		})
 
+		Convey("Empty front_uri", func() {
+			senderSettings := map[string]string{"url": "qwerty", "api_token": "qwerty", "front_uri": ""}
+			err := sender.Init(senderSettings, logger, nil, "")
+			So(err, ShouldNotBeNil)
+		})
+
 		Convey("Full config", func() {
-			senderSettings := map[string]string{"url": "qwerty",
+			senderSettings := map[string]string{
+				"url":          "qwerty",
 				"api_token":    "qwerty",
 				"front_uri":    "qwerty",
 				"insecure_tls": "true",
