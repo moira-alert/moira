@@ -2,6 +2,7 @@ package telegram
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/moira-alert/moira"
@@ -17,8 +18,8 @@ const (
 )
 
 var (
-	pollerTimeout = 10 * time.Second
-	emojiStates   = map[moira.State]string{
+	defaultPollerTimeout = 10 * time.Second
+	emojiStates          = map[moira.State]string{
 		moira.StateOK:     "\xe2\x9c\x85",
 		moira.StateWARN:   "\xe2\x9a\xa0",
 		moira.StateERROR:  "\xe2\xad\x95",
@@ -51,7 +52,7 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 	var err error
 	sender.bot, err = telebot.NewBot(telebot.Settings{
 		Token:  sender.apiToken,
-		Poller: &telebot.LongPoller{Timeout: pollerTimeout},
+		Poller: &telebot.LongPoller{Timeout: sender.getPollerTimeout(senderSettings["poller_timeout_sec"])},
 	})
 	if err != nil {
 		return err
@@ -82,4 +83,21 @@ func (sender *Sender) runTelebot() {
 		sender.DataBase.NewLock(telegramLockName, telegramLockTTL),
 		workerAction,
 	).Run(nil)
+}
+
+func (sender *Sender) getPollerTimeout(pollerTimeoutSecStr string) time.Duration {
+	if pollerTimeoutSecStr == "" {
+		sender.logger.Infof("Not set poller timeout, use default")
+
+		return defaultPollerTimeout
+	}
+
+	pollerTimeoutSec, err := strconv.Atoi(pollerTimeoutSecStr)
+	if err != nil {
+		sender.logger.Warningf("Error cast poller timeout : %s. Will use default value", err.Error())
+
+		return defaultPollerTimeout
+	}
+
+	return time.Duration(pollerTimeoutSec) * time.Second
 }

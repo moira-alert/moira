@@ -25,11 +25,33 @@ func TestInit(t *testing.T) {
 				"api_token": "123",
 				"front_uri": "http://moira.uri",
 			}
-			sender.Init(senderSettings, logger, location, "15:04") //nolint
+			_ = sender.Init(senderSettings, logger, location, "15:04")
 			So(sender.apiToken, ShouldResemble, "123")
 			So(sender.frontURI, ShouldResemble, "http://moira.uri")
 			So(sender.logger, ShouldResemble, logger)
 			So(sender.location, ShouldResemble, location)
+		})
+	})
+}
+
+func TestSender_getPollerTimeout(t *testing.T) {
+	logger, _ := logging.ConfigureLog("stdout", "error", "test", true)
+	Convey("Check getPollerTimeout", t, func() {
+		sender := Sender{logger: logger}
+
+		Convey("Not set timeout, should use default value", func() {
+			timeout := sender.getPollerTimeout("")
+			So(timeout, ShouldResemble, defaultPollerTimeout)
+		})
+
+		Convey("Error set, should use default value", func() {
+			timeout := sender.getPollerTimeout(";zfrk")
+			So(timeout, ShouldResemble, defaultPollerTimeout)
+		})
+
+		Convey("Successfully set timeout", func() {
+			timeout := sender.getPollerTimeout("60")
+			So(timeout, ShouldResemble, time.Minute)
 		})
 	})
 }
