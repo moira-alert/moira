@@ -1,0 +1,13 @@
+<component name="ProjectRunConfigurationManager">
+    <configuration default="false" name="go test moira" type="GoTestRunConfiguration" factoryName="Go Test" nameIsGenerated="true">
+        <module name="moira" />
+        <working_directory value="$PROJECT_DIR$" />
+        <parameters value="-p 1" />
+        <kind value="DIRECTORY" />
+        <package value="github.com/moira-alert/moira" />
+        <directory value="$PROJECT_DIR$" />
+        <filePath value="$PROJECT_DIR$" />
+        <framework value="gotest" />
+        <method v="2" />
+    </configuration>
+</component>
