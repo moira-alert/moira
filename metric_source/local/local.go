@@ -61,11 +61,7 @@ func (local *Local) Fetch(target string, from int64, until int64, allowRealTimeA
 		}
 
 		metricRequests := parsedExpr.Metrics()
-		startGetPatternsMetricData := time.Now()
-		metricsMap, metrics, err := getPatternsMetricData(local.dataBase, metricRequests, from, until, allowRealTimeAlerting)
-		local.logger.Clone().
-			Int64("moira.plots.get_patterns_metric_data_ms", time.Since(startGetPatternsMetricData).Milliseconds()).
-			Debug("Finished get patterns metric data")
+		metricsMap, metrics, err := local.getPatternsMetricData(local.dataBase, metricRequests, from, until, allowRealTimeAlerting)
 		if err != nil {
 			return nil, err
 		}
@@ -146,9 +142,11 @@ func (local *Local) IsConfigured() (bool, error) {
 	return true, nil
 }
 
-func getPatternsMetricData(database moira.Database, metricRequests []parser.MetricRequest, from int64, until int64, allowRealTimeAlerting bool) (map[parser.MetricRequest][]*types.MetricData, []string, error) {
+func (local *Local) getPatternsMetricData(database moira.Database, metricRequests []parser.MetricRequest, from int64, until int64, allowRealTimeAlerting bool) (map[parser.MetricRequest][]*types.MetricData, []string, error) {
 	metrics := make([]string, 0)
 	metricsMap := make(map[parser.MetricRequest][]*types.MetricData)
+	startGetPatternsMetricData := time.Now()
+
 	for _, mr := range metricRequests {
 		mr.From += from
 		mr.Until += until
@@ -159,5 +157,10 @@ func getPatternsMetricData(database moira.Database, metricRequests []parser.Metr
 		metricsMap[mr] = metricsData
 		metrics = append(metrics, patternMetrics...)
 	}
+
+	local.logger.Clone().
+		Int64("moira.plots.get_patterns_metric_data_ms", time.Since(startGetPatternsMetricData).Milliseconds()).
+		Debug("Finished get patterns metric data")
+
 	return metricsMap, metrics, nil
 }
