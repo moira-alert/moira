@@ -20,7 +20,7 @@ func TestInitTriggerChecker(t *testing.T) {
 	logger, _ := logging.GetLogger("Test")
 	config := &Config{}
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-	localSource := local.Create(dataBase)
+	localSource := local.Create(dataBase, logger)
 	triggerID := "superId"
 	defer mockCtrl.Finish()
 

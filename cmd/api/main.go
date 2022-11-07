@@ -103,7 +103,7 @@ func main() {
 
 	logger.Infof("Start listening by address: [%s]", apiConfig.Listen)
 
-	localSource := local.Create(database)
+	localSource := local.Create(database, logger)
 	remoteConfig := config.Remote.GetRemoteSourceSettings()
 	remoteSource := remote.Create(remoteConfig)
 	metricSourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource)

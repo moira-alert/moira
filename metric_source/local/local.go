@@ -7,8 +7,6 @@ import (
 	"runtime/debug"
 	"time"
 
-	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
-
 	"github.com/go-graphite/carbonapi/expr"
 	"github.com/go-graphite/carbonapi/expr/functions"
 	"github.com/go-graphite/carbonapi/expr/rewrite"
@@ -25,12 +23,10 @@ type Local struct {
 }
 
 // Create configures local metric source
-func Create(dataBase moira.Database) metricSource.MetricSource {
+func Create(dataBase moira.Database, logger moira.Logger) metricSource.MetricSource {
 	// configure carbon-api functions
 	rewrite.New(make(map[string]string))
 	functions.New(make(map[string]string))
-
-	logger, _ := logging.ConfigureLog("stdout", "debug", "notifier", true)
 
 	return &Local{
 		dataBase: dataBase,

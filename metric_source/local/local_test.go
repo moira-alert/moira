@@ -25,7 +25,8 @@ func init() {
 func TestEvaluateTarget(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-	localSource := Create(dataBase)
+	logger, _ := logging.GetLogger("MetricSource")
+	localSource := Create(dataBase, logger)
 	defer mockCtrl.Finish()
 
 	pattern := "super.puper.pattern"
@@ -317,7 +318,8 @@ func TestLocal_IsConfigured(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-	localSource := Create(dataBase)
+	logger, _ := logging.GetLogger("MetricSource")
+	localSource := Create(dataBase, logger)
 
 	Convey("Always true", t, func() {
 		actual, err := localSource.IsConfigured()
@@ -327,7 +329,7 @@ func TestLocal_IsConfigured(t *testing.T) {
 }
 
 func TestLocal_evalExpr(t *testing.T) {
-	logger, _ := logging.GetLogger("Test")
+	logger, _ := logging.GetLogger("MetricSource")
 	local := Local{logger: logger}
 	Convey("When everything is correct, we don't return any error", t, func() {
 		expression, _, err := parser.ParseExpr(`seriesByTag('name=k8s.dev-cl1.kube_pod_status_ready', 'condition!=true', 'namespace=default', 'pod=~*')`)

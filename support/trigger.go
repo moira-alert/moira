@@ -23,7 +23,7 @@ func HandlePullTrigger(logger moira.Logger, database moira.Database, triggerID s
 
 func HandlePullTriggerMetrics(logger moira.Logger, database moira.Database, triggerID string) ([]dto.PatternMetrics, error) {
 	logger.Infof("Pulling info about trigger %s metrics", triggerID)
-	source := local.Create(database)
+	source := local.Create(database, logger)
 
 	trigger, err := database.GetTrigger(triggerID)
 	if err != nil {
