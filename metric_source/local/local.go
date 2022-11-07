@@ -5,6 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"runtime/debug"
+	"time"
+
+	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 
 	"github.com/go-graphite/carbonapi/expr"
 	"github.com/go-graphite/carbonapi/expr/functions"
@@ -18,6 +21,7 @@ import (
 // Local is implementation of MetricSource interface, which implements fetch metrics method from moira database installation
 type Local struct {
 	dataBase moira.Database
+	logger   moira.Logger
 }
 
 // Create configures local metric source
@@ -26,8 +30,11 @@ func Create(dataBase moira.Database) metricSource.MetricSource {
 	rewrite.New(make(map[string]string))
 	functions.New(make(map[string]string))
 
+	logger, _ := logging.ConfigureLog("stdout", "debug", "notifier", true)
+
 	return &Local{
 		dataBase: dataBase,
+		logger:   logger,
 	}
 }
 
@@ -35,6 +42,7 @@ func Create(dataBase moira.Database) metricSource.MetricSource {
 func (local *Local) Fetch(target string, from int64, until int64, allowRealTimeAlerting bool) (metricSource.FetchResult, error) {
 	// Don't fetch intervals larger than metrics TTL to prevent OOM errors
 	// See https://github.com/moira-alert/moira/pull/519
+	startFetch := time.Now()
 	from = moira.MaxInt64(from, until-local.dataBase.GetMetricsTTLSeconds())
 
 	result := CreateEmptyFetchResult()
@@ -51,21 +59,28 @@ func (local *Local) Fetch(target string, from int64, until int64, allowRealTimeA
 				target:        target,
 			}
 		}
+
 		metricRequests := parsedExpr.Metrics()
+		startGetPatternsMetricData := time.Now()
 		metricsMap, metrics, err := getPatternsMetricData(local.dataBase, metricRequests, from, until, allowRealTimeAlerting)
+		local.logger.Clone().
+			Int64("moira.plots.get_patterns_metric_data_ms", time.Since(startGetPatternsMetricData).Milliseconds()).
+			Debug("Finished get patterns metric data")
 		if err != nil {
 			return nil, err
 		}
+
 		rewritten, newTargets, err := expr.RewriteExpr(context.Background(), parsedExpr, from, until, metricsMap)
 		if err != nil && err != parser.ErrSeriesDoesNotExist {
 			return nil, fmt.Errorf("failed RewriteExpr: %s", err.Error())
 		} else if rewritten {
 			targets = append(targets, newTargets...)
 		} else {
-			metricsData, err := evalExpr(target, parsedExpr, from, until, metricsMap)
+			metricsData, err := local.evalExpr(target, parsedExpr, from, until, metricsMap)
 			if err != nil {
 				return nil, err
 			}
+
 			for _, metricData := range metricsData {
 				md := *metricData
 				result.MetricsData = append(result.MetricsData, metricSource.MetricData{
@@ -84,17 +99,27 @@ func (local *Local) Fetch(target string, from int64, until int64, allowRealTimeA
 		}
 	}
 
+	local.logger.Clone().
+		Int64("moira.plots.fetch_ms", time.Since(startFetch).Milliseconds()).
+		Debug("Finished fetch")
+
 	return result, nil
 }
 
-func evalExpr(target string, expression parser.Expr, from, until int64, metricsMap map[parser.MetricRequest][]*types.MetricData) (result []*types.MetricData, err error) {
+func (local *Local) evalExpr(target string, expression parser.Expr, from, until int64, metricsMap map[parser.MetricRequest][]*types.MetricData) (result []*types.MetricData, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			result = nil
 			err = ErrEvaluateTargetFailedWithPanic{target: target, recoverMessage: r, stackRecord: debug.Stack()}
 		}
 	}()
+
+	startEvalExpr := time.Now()
 	result, err = expr.EvalExpr(context.Background(), expression, from, until, metricsMap)
+	local.logger.Clone().
+		Int64("moira.plots.eval_expr_ms", time.Since(startEvalExpr).Milliseconds()).
+		Debug("Finished eval expr")
+
 	if err != nil {
 		if errors.Is(err, parser.ErrSeriesDoesNotExist) {
 			err = nil

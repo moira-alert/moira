@@ -71,7 +71,7 @@ func (notifier *StandardNotifier) buildNotificationPackagePlots(pkg Notification
 
 	from, to := resolveMetricsWindow(logger, pkg.Trigger, pkg)
 
-	metricsData, trigger, err := notifier.evaluateTriggerMetrics(from, to, pkg.Trigger.ID, logger)
+	metricsData, trigger, err := notifier.evaluateTriggerMetrics(from, to, pkg.Trigger.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -130,47 +130,29 @@ func roundToRetention(unixTime int64) int64 {
 }
 
 // evaluateTriggerMetrics returns collection of MetricData
-func (notifier *StandardNotifier) evaluateTriggerMetrics(from, to int64, triggerID string, logger moira.Logger) (map[string][]metricSource.MetricData, *moira.Trigger, error) {
-	startEvaluateTriggerMetrics := time.Now()
-
-	startGetTrigger := time.Now()
+func (notifier *StandardNotifier) evaluateTriggerMetrics(from, to int64, triggerID string) (map[string][]metricSource.MetricData, *moira.Trigger, error) {
 	trigger, err := notifier.database.GetTrigger(triggerID)
 	if err != nil {
 		return nil, nil, err
 	}
-	logger.Clone().
-		Int64("moira.plots.get_trigger_ms", time.Since(startGetTrigger).Milliseconds()).
-		Debug("Finished get trigger")
 
-	startGetTriggerMetricSource := time.Now()
 	metricsSource, err := notifier.metricSourceProvider.GetTriggerMetricSource(&trigger)
 	if err != nil {
 		return nil, &trigger, err
 	}
-	logger.Clone().
-		Int64("moira.plots.get_trigger_metric_source_ms", time.Since(startGetTriggerMetricSource).Milliseconds()).
-		Debug("Finished get trigger metric source")
-
 	var result = make(map[string][]metricSource.MetricData)
 	for i, target := range trigger.Targets {
 		i++ // Increase
 		targetName := fmt.Sprintf("t%d", i)
 
-		startFetchAvailableSeries := time.Now()
 		timeSeries, fetchErr := fetchAvailableSeries(metricsSource, target, from, to)
 		if fetchErr != nil {
 			return nil, &trigger, fetchErr
 		}
-		logger.Clone().
-			Int64("moira.plots.fetch_available_series_ms", time.Since(startFetchAvailableSeries).Milliseconds()).
-			Debug("Finished fetch available series")
 
 		result[targetName] = timeSeries
 	}
 
-	logger.Clone().
-		Int64("moira.plots.evaluate_trigger_metrics_ms", time.Since(startEvaluateTriggerMetrics).Milliseconds()).
-		Debug("Finished evaluate trigger metrics")
 	return result, &trigger, err
 }
 
