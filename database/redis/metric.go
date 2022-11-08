@@ -106,6 +106,7 @@ func (connector *DbConnector) SaveMetrics(metrics map[string]*moira.MatchedMetri
 	ctx := connector.context
 
 	rand.Seed(time.Now().UnixNano())
+	pipe := c.TxPipeline()
 
 	for _, metric := range metrics {
 		metricValue := fmt.Sprintf("%v %v", metric.Timestamp, metric.Value)
@@ -135,37 +136,62 @@ func (connector *DbConnector) SaveMetrics(metrics map[string]*moira.MatchedMetri
 				continue
 			}
 
+			connector.logger.Info(fmt.Sprintf("New metric event. Metric: %v, Pattern: %v;", metric.Metric, pattern))
+
 			var metricEventsChannel = metricEventsChannels[rand.Intn(len(metricEventsChannels))]
-			if err = c.Publish(ctx, metricEventsChannel, event).Err(); err != nil {
-				return err
-			}
+			pipe.SAdd(ctx, metricEventsChannel, event)
 		}
 	}
+
+	if _, err = pipe.Exec(ctx); err != nil {
+		connector.logger.Errorf("Sending metric event error. Error: %v;", err)
+		return err
+	}
+
 	return nil
 }
+
+const (
+	metricEventPopBatchSize = 10
+)
 
 // SubscribeMetricEvents creates subscription for new metrics and return channel for this events
 func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb) (<-chan *moira.MetricEvent, error) {
 	metricsChannel := make(chan *moira.MetricEvent, pubSubWorkerChannelSize)
-	dataChannel, err := connector.manageSubscriptions(tomb, metricEventsChannels)
-	if err != nil {
-		return nil, err
-	}
 
 	go func() {
+		rand.Seed(time.Now().UnixNano())
+
+		ctx := connector.context
+		c := *connector.client
+
 		for {
-			data, ok := <-dataChannel
-			if !ok {
-				connector.logger.Info("No more subscriptions, channel is closed. Stop process data...")
-				close(metricsChannel)
-				return
+			metricEventsChannel := metricEventsChannels[rand.Intn(len(metricEventsChannels))]
+			data, err := c.SPopN(ctx, metricEventsChannel, metricEventPopBatchSize).Result()
+
+			if err != nil {
+				if err == redis.Nil {
+					<-time.After(receiveErrorSleepDuration)
+					continue
+				} else {
+					connector.logger.Errorf("Receiving metric event error: %v", err)
+					connector.logger.Info("No more subscriptions, channel is closed. Stop process data...")
+					return
+				}
 			}
-			metricEvent := &moira.MetricEvent{}
-			if err := json.Unmarshal(data, metricEvent); err != nil {
-				connector.logger.Errorf("Failed to parse MetricEvent: %s, error : %v", string(data), err)
-				continue
+
+			for _, metric := range data {
+				metricEvent := &moira.MetricEvent{}
+				if err := json.Unmarshal([]byte(metric), metricEvent); err != nil {
+					connector.logger.Errorf("Failed to parse MetricEvent: %s, error : %v", string(metric), err)
+					continue
+				}
+
+				connector.logger.Info(fmt.Sprintf("Metric event have been received: %s %s", metricEvent.Metric, metricEvent.Pattern))
+				metricsChannel <- metricEvent
 			}
-			metricsChannel <- metricEvent
+
+			<-time.After(receiveErrorSleepDuration)
 		}
 	}()
 
