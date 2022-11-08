@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -81,7 +81,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	defer response.Body.Close()
 
 	// read the entire response as required by https://golang.org/pkg/net/http/#Client.Do
-	body, err := ioutil.ReadAll(response.Body)
+	body, err := io.ReadAll(response.Body)
 	if err != nil {
 		return fmt.Errorf("failed to decode response: %w", err)
 	}

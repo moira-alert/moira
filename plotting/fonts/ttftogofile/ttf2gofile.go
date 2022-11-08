@@ -3,7 +3,7 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"strings"
 )
@@ -21,7 +21,7 @@ func fileBytes(filePath string) ([]byte, error) {
 		return nil, err
 	}
 	defer f.Close()
-	return ioutil.ReadAll(f)
+	return io.ReadAll(f)
 }
 
 // write to variable go file
@@ -33,7 +33,7 @@ func createGoFile(fileName string, dataTTF []byte) error {
 	defer f.Close()
 
 	_, err = f.WriteString(fmt.Sprintf("package fonts\n\nvar %s = %#v\n",
-		strings.Title(fileName), dataTTF))
+		strings.Title(fileName), dataTTF)) // nolint: staticcheck
 
 	return err
 }

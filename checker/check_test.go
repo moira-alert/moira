@@ -1317,7 +1317,7 @@ func BenchmarkTriggerChecker_Check(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		err := triggerChecker.Check()
 		if err != nil {
-			b.Errorf("Check() returned error: %w", err)
+			b.Errorf("Check() returned error: %v", err)
 		}
 	}
 }

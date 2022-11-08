@@ -14,12 +14,12 @@ type BytesScanner struct {
 	emitEmptySlice bool
 }
 
-//HasNext checks if next subslice available or not
+// HasNext checks if next subslice available or not
 func (it *BytesScanner) HasNext() bool {
 	return it.index < len(it.source) || it.emitEmptySlice
 }
 
-//Next returns available subslice and advances the scanner to next slice
+// Next returns available subslice and advances the scanner to next slice
 func (it *BytesScanner) Next() (result []byte) {
 	if it.emitEmptySlice {
 		it.emitEmptySlice = false
@@ -43,7 +43,8 @@ func (it *BytesScanner) Next() (result []byte) {
 	return result
 }
 
-//NewBytesScanner slices bytes into all subslices separated by separator and returns a scanner which allows to scan for these subslices
+// NewBytesScanner slices bytes into all subslices separated by separator and returns a scanner
+// which allows scanning for these subslices
 func NewBytesScanner(bytes []byte, separator byte) *BytesScanner {
 	return &BytesScanner{
 		source:         bytes,
