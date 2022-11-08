@@ -15,8 +15,8 @@ require (
 	github.com/dustin/go-humanize v1.0.0
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/go-chi/render v1.0.1
-	github.com/go-graphite/carbonapi v0.0.0-20201019162650-b789c0eaed8a
-	github.com/go-graphite/protocol v0.4.3
+	github.com/go-graphite/carbonapi v0.15.6
+	github.com/go-graphite/protocol v1.0.0
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/go-redsync/redsync/v4 v4.4.4
 	github.com/gofrs/uuid v3.3.0+incompatible
@@ -101,6 +101,7 @@ require (
 	github.com/lomik/og-rek v0.0.0-20170411191824-628eefeb8d80 // indirect
 	github.com/lomik/zapwriter v0.0.0-20201002100138-f85a75186af0 // indirect
 	github.com/magiconair/properties v1.8.5 // indirect
+	github.com/maruel/natural v1.0.0 // indirect
 	github.com/mattn/go-colorable v0.1.8 // indirect
 	github.com/mattn/go-isatty v0.0.12 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
@@ -131,7 +132,7 @@ require (
 	golang.org/x/crypto v0.0.0-20201002170205-7f63de1d35b0 // indirect
 	golang.org/x/exp v0.0.0-20200924195034-c827fd4f18b9 // indirect
 	golang.org/x/image v0.0.0-20210216034530-4410531fe030 // indirect
-	golang.org/x/net v0.0.0-20210428140749-89ef3d95e781 // indirect
+	golang.org/x/net v0.0.0-20220520000938-2e3eb7b945c2 // indirect
 	golang.org/x/sys v0.0.0-20220406163625-3f8b81556e12 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
