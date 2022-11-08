@@ -56,12 +56,12 @@ func NewHandler(db moira.Database, log moira.Logger, index moira.Searcher, confi
 func notFoundHandler(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("X-Content-Type-Options", "nosniff")
 	writer.Header().Set("Content-Type", "application/json")
-	writer.WriteHeader(404)                         //nolint
+	writer.WriteHeader(http.StatusNotFound)
 	render.Render(writer, request, api.ErrNotFound) //nolint
 }
 
 func methodNotAllowedHandler(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "application/json")
-	writer.WriteHeader(405)                                 //nolint
+	writer.WriteHeader(http.StatusMethodNotAllowed)
 	render.Render(writer, request, api.ErrMethodNotAllowed) //nolint
 }
