@@ -114,7 +114,7 @@ func (plot *Plot) GetRenderable(targetName string, trigger *moira.Trigger, metri
 				Max: limits.highest,
 				Min: limits.lowest,
 			},
-			EnablePrettyTicks: true,
+			EnablePrettyTicks: false, //nolint todo set it true
 		},
 
 		Series: plotSeries,
