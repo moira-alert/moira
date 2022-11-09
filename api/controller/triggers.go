@@ -3,6 +3,7 @@ package controller
 import (
 	"fmt"
 	"math"
+	"regexp"
 
 	"github.com/gofrs/uuid"
 
@@ -13,6 +14,8 @@ import (
 )
 
 const pageSizeUnlimited int64 = -1
+
+var idValidationPattern = regexp.MustCompile(`^[a-zA-Z0-9\-_]+$`)
 
 // CreateTrigger creates new trigger
 func CreateTrigger(dataBase moira.Database, trigger *dto.TriggerModel, timeSeriesNames map[string]bool) (*dto.SaveTriggerResponse, *api.ErrorResponse) {
@@ -29,6 +32,9 @@ func CreateTrigger(dataBase moira.Database, trigger *dto.TriggerModel, timeSerie
 		}
 		if exists {
 			return nil, api.ErrorInvalidRequest(fmt.Errorf("trigger with this ID already exists"))
+		}
+		if !idValidationPattern.MatchString(trigger.ID) {
+			return nil, api.ErrorInvalidRequest(fmt.Errorf("trigger ID contains invalid characters"))
 		}
 	}
 	resp, err := saveTrigger(dataBase, trigger.ToMoiraTrigger(), trigger.ID, timeSeriesNames)
