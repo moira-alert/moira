@@ -136,8 +136,6 @@ func (connector *DbConnector) SaveMetrics(metrics map[string]*moira.MatchedMetri
 				continue
 			}
 
-			connector.logger.Info(fmt.Sprintf("New metric event. Metric: %v, Pattern: %v;", metric.Metric, pattern))
-
 			var metricEventsChannel = metricEventsChannels[rand.Intn(len(metricEventsChannels))]
 			pipe.SAdd(ctx, metricEventsChannel, event)
 		}
@@ -174,8 +172,7 @@ func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb) (<-chan *mo
 					<-time.After(receiveErrorSleepDuration)
 					continue
 				} else {
-					connector.logger.Errorf("Receiving metric event error: %v", err)
-					connector.logger.Info("No more subscriptions, channel is closed. Stop process data...")
+					connector.logger.Errorf("Error happened: %s. No more subscriptions, channel is closed. Stop process data...", err)
 					return
 				}
 			}
@@ -187,7 +184,6 @@ func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb) (<-chan *mo
 					continue
 				}
 
-				connector.logger.Info(fmt.Sprintf("Metric event have been received: %s %s", metricEvent.Metric, metricEvent.Pattern))
 				metricsChannel <- metricEvent
 			}
 
