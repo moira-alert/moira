@@ -34,8 +34,11 @@ func (worker *Checker) startHandleMetricEvents(stop <-chan struct{}) error {
 	}
 
 	for i := 0; i < worker.Config.MaxParallelChecks; i++ {
-		go func() error {
-			return worker.newMetricsHandler(metricEventsChannel, stop)
+		go func() {
+			err := worker.newMetricsHandler(metricEventsChannel)
+			if err != nil {
+				worker.Logger.Errorf("Failed to start handling metric events: %s", err.Error())
+			}
 		}()
 	}
 
