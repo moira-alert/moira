@@ -180,7 +180,7 @@ func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb) (<-chan *mo
 			for _, metric := range data {
 				metricEvent := &moira.MetricEvent{}
 				if err := json.Unmarshal([]byte(metric), metricEvent); err != nil {
-					connector.logger.Errorf("Failed to parse MetricEvent: %s, error : %v", string(metric), err)
+					connector.logger.Errorf("Failed to parse MetricEvent: %s, error : %v", metric, err)
 					continue
 				}
 
