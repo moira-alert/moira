@@ -7,7 +7,7 @@ import (
 	"github.com/patrickmn/go-cache"
 )
 
-func (worker *Checker) newMetricsHandler(metricEventsChannel <-chan *moira.MetricEvent) error {
+func (worker *Checker) newMetricsHandler(metricEventsChannel <-chan *moira.MetricEvent, stop <-chan struct{}) error {
 	for {
 		metricEvent, ok := <-metricEventsChannel
 		if !ok {
@@ -18,6 +18,13 @@ func (worker *Checker) newMetricsHandler(metricEventsChannel <-chan *moira.Metri
 			if err := worker.handleMetricEvent(pattern); err != nil {
 				worker.Logger.Errorf("Failed to handle metricEvent: %s", err.Error())
 			}
+		}
+
+		select {
+		case <-stop:
+			return nil
+		default:
+			continue
 		}
 	}
 }
@@ -61,7 +68,7 @@ func (worker *Checker) addRemoteTriggerIDsIfNeeded(triggerIDs []string) {
 
 func (worker *Checker) getTriggerIDsToCheck(triggerIDs []string) []string {
 	lazyTriggerIDs := worker.lazyTriggerIDs.Load().(map[string]bool)
-	triggerIDsToCheck := make([]string, len(triggerIDs))
+	triggerIDsToCheck := make([]string, 0)
 	for _, triggerID := range triggerIDs {
 		if _, ok := lazyTriggerIDs[triggerID]; ok {
 			randomDuration := worker.getRandomLazyCacheDuration()

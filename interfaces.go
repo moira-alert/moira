@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/beevee/go-chart"
-	"gopkg.in/tomb.v2"
 )
 
 // Database implements DB functionality
@@ -95,7 +94,7 @@ type Database interface {
 	RemovePatternsMetrics(pattern []string) error
 	RemovePatternWithMetrics(pattern string) error
 
-	SubscribeMetricEvents(tomb *tomb.Tomb) (<-chan *MetricEvent, error)
+	SubscribeMetricEvents(stop <-chan struct{}) (<-chan *MetricEvent, error)
 	SaveMetrics(buffer map[string]*MatchedMetric) error
 	GetMetricRetention(metric string) (int64, error)
 	GetMetricsValues(metrics []string, from int64, until int64) (map[string][]*MetricValue, error)

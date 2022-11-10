@@ -13,7 +13,6 @@ import (
 	"github.com/go-redsync/redsync/v4/redis/goredis/v8"
 	"github.com/moira-alert/moira"
 	"github.com/patrickmn/go-cache"
-	"gopkg.in/tomb.v2"
 )
 
 const pubSubWorkerChannelSize = 16384
@@ -106,14 +105,14 @@ func (connector *DbConnector) makePubSubConnection(channels []string) (*redis.Pu
 	return psc, nil
 }
 
-func (connector *DbConnector) manageSubscriptions(tomb *tomb.Tomb, channels []string) (<-chan []byte, error) {
+func (connector *DbConnector) manageSubscriptions(stop <-chan struct{}, channels []string) (<-chan []byte, error) {
 	psc, err := connector.makePubSubConnection(channels)
 	if err != nil {
 		return nil, err
 	}
 
 	go func() {
-		<-tomb.Dying()
+		<-stop
 		connector.logger.Infof("Calling shutdown, unsubscribe from '%s' redis channels...", channels)
 		psc.Unsubscribe(connector.context) //nolint
 	}()

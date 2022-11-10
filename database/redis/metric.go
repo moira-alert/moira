@@ -15,7 +15,6 @@ import (
 	"github.com/moira-alert/moira/database"
 	"github.com/moira-alert/moira/database/redis/reply"
 	"github.com/patrickmn/go-cache"
-	"gopkg.in/tomb.v2"
 )
 
 // GetPatterns gets updated patterns array
@@ -145,9 +144,9 @@ func (connector *DbConnector) SaveMetrics(metrics map[string]*moira.MatchedMetri
 }
 
 // SubscribeMetricEvents creates subscription for new metrics and return channel for this events
-func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb) (<-chan *moira.MetricEvent, error) {
+func (connector *DbConnector) SubscribeMetricEvents(stop <-chan struct{}) (<-chan *moira.MetricEvent, error) {
 	metricsChannel := make(chan *moira.MetricEvent, pubSubWorkerChannelSize)
-	dataChannel, err := connector.manageSubscriptions(tomb, metricEventsChannels)
+	dataChannel, err := connector.manageSubscriptions(stop, metricEventsChannels)
 	if err != nil {
 		return nil, err
 	}

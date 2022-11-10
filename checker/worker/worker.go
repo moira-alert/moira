@@ -43,17 +43,13 @@ func (worker *Checker) Start() error {
 
 	worker.lastData = time.Now().UTC().Unix()
 
-	metricEventsChannel, err := worker.Database.SubscribeMetricEvents(&worker.tomb)
-	if err != nil {
-		return err
-	}
-
 	worker.lazyTriggerIDs.Store(make(map[string]bool))
 	worker.tomb.Go(worker.lazyTriggersWorker)
 
 	worker.tomb.Go(worker.localTriggerGetter)
+	worker.tomb.Go(worker.handleMetricEvents)
 
-	_, err = worker.SourceProvider.GetRemote()
+	_, err := worker.SourceProvider.GetRemote()
 	worker.remoteEnabled = err == nil
 
 	if worker.remoteEnabled && worker.Config.MaxParallelRemoteChecks == 0 {
@@ -77,9 +73,6 @@ func (worker *Checker) Start() error {
 
 	localTriggerIdsToCheckChan := worker.startTriggerToCheckGetter(worker.Database.GetLocalTriggersToCheck, worker.Config.MaxParallelChecks)
 	for i := 0; i < worker.Config.MaxParallelChecks; i++ {
-		worker.tomb.Go(func() error {
-			return worker.newMetricsHandler(metricEventsChannel)
-		})
 		worker.tomb.Go(func() error {
 			return worker.startTriggerHandler(localTriggerIdsToCheckChan, worker.Metrics.LocalMetrics)
 		})
@@ -106,7 +99,6 @@ func (worker *Checker) Start() error {
 		worker.Logger.Info("Checking for new events stopped")
 	}()
 
-	worker.tomb.Go(func() error { return worker.checkMetricEventsChannelLen(metricEventsChannel) })
 	worker.tomb.Go(worker.checkTriggersToCheckCount)
 	return nil
 }
@@ -130,18 +122,6 @@ func (worker *Checker) checkTriggersToCheckCount() error {
 					worker.Metrics.RemoteMetrics.TriggersToCheckCount.Update(remoteTriggersToCheckCount)
 				}
 			}
-		}
-	}
-}
-
-func (worker *Checker) checkMetricEventsChannelLen(ch <-chan *moira.MetricEvent) error {
-	checkTicker := time.NewTicker(time.Millisecond * 100) //nolint
-	for {
-		select {
-		case <-worker.tomb.Dying():
-			return nil
-		case <-checkTicker.C:
-			worker.Metrics.MetricEventsChannelLen.Update(int64(len(ch)))
 		}
 	}
 }

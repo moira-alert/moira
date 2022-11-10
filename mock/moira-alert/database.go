@@ -10,7 +10,6 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 	moira "github.com/moira-alert/moira"
-	tomb "gopkg.in/tomb.v2"
 )
 
 // MockDatabase is a mock of Database interface.
@@ -1508,7 +1507,7 @@ func (mr *MockDatabaseMockRecorder) SetUsernameID(arg0, arg1, arg2 interface{}) 
 }
 
 // SubscribeMetricEvents mocks base method.
-func (m *MockDatabase) SubscribeMetricEvents(arg0 *tomb.Tomb) (<-chan *moira.MetricEvent, error) {
+func (m *MockDatabase) SubscribeMetricEvents(arg0 <-chan struct{}) (<-chan *moira.MetricEvent, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SubscribeMetricEvents", arg0)
 	ret0, _ := ret[0].(<-chan *moira.MetricEvent)

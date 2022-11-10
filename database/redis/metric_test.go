@@ -393,7 +393,7 @@ func TestMetricSubscription(t *testing.T) {
 	pattern := "my.test.*.metric*"
 	Convey("Subscription manipulation", t, func() {
 		var tomb1 tomb.Tomb
-		ch, err := dataBase.SubscribeMetricEvents(&tomb1)
+		ch, err := dataBase.SubscribeMetricEvents(tomb1.Dying())
 		So(err, ShouldBeNil)
 		So(ch, ShouldNotBeNil)
 
@@ -492,7 +492,7 @@ func TestMetricsStoringErrorConnection(t *testing.T) {
 		So(err, ShouldNotBeNil)
 
 		var tomb1 tomb.Tomb
-		ch, err := dataBase.SubscribeMetricEvents(&tomb1)
+		ch, err := dataBase.SubscribeMetricEvents(tomb1.Dying())
 		So(err, ShouldNotBeNil)
 		So(ch, ShouldBeNil)
 	})
