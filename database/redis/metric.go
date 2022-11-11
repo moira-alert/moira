@@ -151,20 +151,24 @@ func (connector *DbConnector) SaveMetrics(metrics map[string]*moira.MatchedMetri
 
 const (
 	metricEventPopBatchSize = 10
+	receiveSleepDuration    = time.Second
 )
 
 // SubscribeMetricEvents creates subscription for new metrics and return channel for this events
 func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb) (<-chan *moira.MetricEvent, error) {
 	metricsChannel := make(chan *moira.MetricEvent, pubSubWorkerChannelSize)
+	ctx := connector.context
+	c := *connector.client
+
+	if err := c.Ping(ctx).Err(); err != nil {
+		return nil, err
+	}
 
 	go func() {
-		rand.Seed(time.Now().UnixNano())
-
-		ctx := connector.context
-		c := *connector.client
-
+		idx := 0
 		for {
-			metricEventsChannel := metricEventsChannels[rand.Intn(len(metricEventsChannels))]
+			idx = (idx + 1) % len(metricEventsChannels)
+			metricEventsChannel := metricEventsChannels[idx]
 			data, err := c.SPopN(ctx, metricEventsChannel, metricEventPopBatchSize).Result()
 
 			if err != nil {
@@ -187,7 +191,13 @@ func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb) (<-chan *mo
 				metricsChannel <- metricEvent
 			}
 
-			<-time.After(receiveErrorSleepDuration)
+			select {
+			case <-tomb.Dying():
+				close(metricsChannel)
+				return
+			case <-time.After(receiveSleepDuration):
+				continue
+			}
 		}
 	}()
 
