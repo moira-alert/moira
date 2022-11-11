@@ -10,7 +10,8 @@ import (
 	"github.com/moira-alert/moira"
 )
 
-// Sender implements moira sender interface via webhook
+// Sender implements moira sender interface via Webhook.
+// Use NewSender to create instance.
 type Sender struct {
 	url      string
 	user     string
@@ -20,15 +21,17 @@ type Sender struct {
 	log      moira.Logger
 }
 
-// Init read yaml config
-func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+// NewSender creates Sender instance.
+func NewSender(senderSettings map[string]string, logger moira.Logger) (*Sender, error) {
+	sender := &Sender{}
+
 	if senderSettings["name"] == "" {
-		return fmt.Errorf("required name for sender type webhook")
+		return nil, fmt.Errorf("required name for sender type webhook")
 	}
 
 	sender.url = senderSettings["url"]
 	if sender.url == "" {
-		return fmt.Errorf("can not read url from config")
+		return nil, fmt.Errorf("can not read url from config")
 	}
 
 	sender.user, sender.password = senderSettings["user"], senderSettings["password"]
@@ -43,7 +46,7 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 		var err error
 		timeout, err = strconv.Atoi(timeoutRaw)
 		if err != nil {
-			return fmt.Errorf("can not read timeout from config: %s", err.Error())
+			return nil, fmt.Errorf("can not read timeout from config: %s", err.Error())
 		}
 	}
 
@@ -52,7 +55,8 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 		Timeout:   time.Duration(timeout) * time.Second,
 		Transport: &http.Transport{DisableKeepAlives: true},
 	}
-	return nil
+
+	return sender, nil
 }
 
 // SendEvents implements Sender interface Send

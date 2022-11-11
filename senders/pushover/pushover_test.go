@@ -12,28 +12,25 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestSender_Init(t *testing.T) {
+func TestSender_NewSender(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 	Convey("Empty map", t, func() {
-		sender := Sender{}
-		err := sender.Init(map[string]string{}, logger, nil, "")
+		sender, err := NewSender(map[string]string{}, logger, nil)
 		So(err, ShouldResemble, fmt.Errorf("can not read pushover api_token from config"))
-		So(sender, ShouldResemble, Sender{})
+		So(sender, ShouldBeNil)
 	})
 
 	Convey("Settings has api_token", t, func() {
-		sender := Sender{}
-		err := sender.Init(map[string]string{"api_token": "123"}, logger, nil, "")
+		sender, err := NewSender(map[string]string{"api_token": "123"}, logger, nil)
 		So(err, ShouldBeNil)
-		So(sender, ShouldResemble, Sender{apiToken: "123", client: pushover.New("123"), logger: logger})
+		So(sender, ShouldResemble, &Sender{apiToken: "123", client: pushover.New("123"), logger: logger})
 	})
 
 	Convey("Settings has all data", t, func() {
-		sender := Sender{}
 		location, _ := time.LoadLocation("UTC")
-		err := sender.Init(map[string]string{"api_token": "123", "front_uri": "321"}, logger, location, "")
+		sender, err := NewSender(map[string]string{"api_token": "123", "front_uri": "321"}, logger, location)
 		So(err, ShouldBeNil)
-		So(sender, ShouldResemble, Sender{apiToken: "123", client: pushover.New("123"), frontURI: "321", logger: logger, location: location})
+		So(sender, ShouldResemble, &Sender{apiToken: "123", client: pushover.New("123"), frontURI: "321", logger: logger, location: location})
 	})
 }
 
@@ -176,7 +173,8 @@ func TestMakePushoverMessage(t *testing.T) {
 			Title:     "ERROR TriggerName [tag1][tag2] (1)",
 			Message:   "02:40: Metric = 123 (OK to ERROR)\n",
 		}
-		expected.AddAttachment(bytes.NewReader([]byte{1, 0, 1})) //nolint
-		So(sender.makePushoverMessage(event, trigger, [][]byte{[]byte{1, 0, 1}}, false), ShouldResemble, expected)
+		err := expected.AddAttachment(bytes.NewReader([]byte{1, 0, 1}))
+		So(err, ShouldBeNil)
+		So(sender.makePushoverMessage(event, trigger, [][]byte{{1, 0, 1}}, false), ShouldResemble, expected)
 	})
 }

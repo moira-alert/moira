@@ -12,7 +12,8 @@ import (
 	"github.com/moira-alert/moira"
 )
 
-// Sender implements moira sender interface via pushover
+// Sender implements moira sender interface via Email.
+// Use NewSender to create instance.
 type Sender struct {
 	From           string
 	SMTPHello      string
@@ -30,18 +31,24 @@ type Sender struct {
 	dateTimeFormat string
 }
 
-// Init read yaml config
-func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+// NewSender creates Sender instance.
+func NewSender(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) (*Sender, error) {
+	sender := &Sender{}
+
 	err := sender.fillSettings(senderSettings, logger, location, dateTimeFormat)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	sender.TemplateName, sender.Template, err = parseTemplate(sender.TemplateFile)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	err = sender.tryDial()
-	return err
+	if err != nil {
+		return nil, err
+	}
+
+	return sender, nil
 }
 
 func (sender *Sender) fillSettings(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {

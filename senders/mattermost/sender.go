@@ -23,17 +23,19 @@ type Sender struct {
 	client   Client
 }
 
-// Init configures Sender.
-func (sender *Sender) Init(senderSettings map[string]string, _ moira.Logger, location *time.Location, _ string) error {
+// NewSender creates Sender instance.
+func NewSender(senderSettings map[string]string, location *time.Location) (*Sender, error) {
+	sender := &Sender{}
+
 	url := senderSettings["url"]
 	if url == "" {
-		return fmt.Errorf("can not read Mattermost url from config")
+		return nil, fmt.Errorf("can not read Mattermost url from config")
 	}
 	client := model.NewAPIv4Client(url)
 
 	insecureTLS, err := strconv.ParseBool(senderSettings["insecure_tls"])
 	if err != nil {
-		return fmt.Errorf("can not parse insecure_tls: %v", err)
+		return nil, fmt.Errorf("can not parse insecure_tls: %v", err)
 	}
 	client.HTTPClient = &http.Client{
 		Transport: &http.Transport{
@@ -46,18 +48,18 @@ func (sender *Sender) Init(senderSettings map[string]string, _ moira.Logger, loc
 
 	token := senderSettings["api_token"]
 	if token == "" {
-		return fmt.Errorf("can not read Mattermost api_token from config")
+		return nil, fmt.Errorf("can not read Mattermost api_token from config")
 	}
 	sender.client.SetToken(token)
 
 	frontURI := senderSettings["front_uri"]
 	if frontURI == "" {
-		return fmt.Errorf("can not read Mattermost front_uri from config")
+		return nil, fmt.Errorf("can not read Mattermost front_uri from config")
 	}
 	sender.frontURI = frontURI
 	sender.location = location
 
-	return nil
+	return sender, nil
 }
 
 // SendEvents implements moira.Sender interface.

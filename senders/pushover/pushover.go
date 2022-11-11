@@ -14,7 +14,8 @@ const printEventsCount int = 5
 const titleLimit = 250
 const urlLimit = 512
 
-// Sender implements moira sender interface via pushover
+// Sender implements moira sender interface via Pushover.
+// Use NewSender to create instance.
 type Sender struct {
 	logger   moira.Logger
 	location *time.Location
@@ -24,17 +25,20 @@ type Sender struct {
 	frontURI string
 }
 
-// Init read yaml config
-func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+// NewSender creates Sender instance.
+func NewSender(senderSettings map[string]string, logger moira.Logger, location *time.Location) (*Sender, error) {
+	sender := &Sender{}
+
 	sender.apiToken = senderSettings["api_token"]
 	if sender.apiToken == "" {
-		return fmt.Errorf("can not read pushover api_token from config")
+		return nil, fmt.Errorf("can not read pushover api_token from config")
 	}
 	sender.client = pushover.New(sender.apiToken)
 	sender.logger = logger
 	sender.frontURI = senderSettings["front_uri"]
 	sender.location = location
-	return nil
+
+	return sender, nil
 }
 
 // SendEvents implements pushover build and send message functionality

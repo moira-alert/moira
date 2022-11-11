@@ -14,61 +14,72 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestInit(t *testing.T) {
+func TestNewSender(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 	location, _ := time.LoadLocation("UTC")
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
-	imageStore := mock_moira_alert.NewMockImageStore(mockCtrl)
 
 	Convey("Init tests", t, func() {
-		sender := Sender{ImageStores: map[string]moira.ImageStore{
-			"s3": imageStore,
-		}}
 		Convey("Empty map", func() {
-			err := sender.Init(map[string]string{}, logger, nil, "")
+			imageStore := mock_moira_alert.NewMockImageStore(mockCtrl)
+			imageStores := map[string]moira.ImageStore{
+				"s3": imageStore,
+			}
+			sender, err := NewSender(map[string]string{}, logger, nil, imageStores)
 			So(err, ShouldResemble, fmt.Errorf("cannot read the routing url from the yaml config"))
-			So(sender, ShouldResemble, Sender{
-				ImageStores: map[string]moira.ImageStore{
-					"s3": imageStore,
-				}})
+			So(sender, ShouldBeNil)
 		})
 
 		Convey("Has settings", func() {
+			imageStore := mock_moira_alert.NewMockImageStore(mockCtrl)
 			imageStore.EXPECT().IsEnabled().Return(true)
+			imageStores := map[string]moira.ImageStore{
+				"s3": imageStore,
+			}
 			senderSettings := map[string]string{
 				"routing_url": "https://testurl.com",
 				"front_uri":   "http://moira.uri",
 				"image_store": "s3",
 			}
-			sender.Init(senderSettings, logger, location, "15:04") //nolint
+			sender, err := NewSender(senderSettings, logger, location, imageStores)
+			So(err, ShouldBeNil)
 			So(sender.routingURL, ShouldResemble, "https://testurl.com")
 			So(sender.frontURI, ShouldResemble, "http://moira.uri")
 			So(sender.logger, ShouldResemble, logger)
 			So(sender.location, ShouldResemble, location)
 			So(sender.client, ShouldResemble, api.NewClient("https://testurl.com", nil))
 		})
+
 		Convey("Wrong image_store name", func() {
+			imageStore := mock_moira_alert.NewMockImageStore(mockCtrl)
+			imageStores := map[string]moira.ImageStore{
+				"s3": imageStore,
+			}
 			senderSettings := map[string]string{
 				"front_uri":   "http://moira.uri",
 				"routing_url": "https://testurl.com",
 				"image_store": "s4",
 			}
-			sender.Init(senderSettings, logger, location, "15:04") //nolint
+			sender, err := NewSender(senderSettings, logger, location, imageStores)
+			So(err, ShouldBeNil)
 			So(sender.imageStoreConfigured, ShouldResemble, false)
 			So(sender.imageStore, ShouldResemble, nil)
 		})
+
 		Convey("image store not configured", func() {
+			imageStore := mock_moira_alert.NewMockImageStore(mockCtrl)
 			imageStore.EXPECT().IsEnabled().Return(false)
+			imageStores := map[string]moira.ImageStore{
+				"s3": imageStore,
+			}
 			senderSettings := map[string]string{
 				"front_uri":   "http://moira.uri",
 				"routing_url": "https://testurl.com",
 				"image_store": "s3",
 			}
-			sender := Sender{ImageStores: map[string]moira.ImageStore{
-				"s3": imageStore,
-			}}
-			sender.Init(senderSettings, logger, location, "15:04") //nolint
+			sender, err := NewSender(senderSettings, logger, location, imageStores)
+			So(err, ShouldBeNil)
 			So(sender.imageStoreConfigured, ShouldResemble, false)
 			So(sender.imageStore, ShouldResemble, nil)
 		})

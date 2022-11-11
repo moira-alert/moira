@@ -35,7 +35,8 @@ var headers = map[string]string{
 	"Content-Type": "application/json",
 }
 
-// Sender implements moira sender interface via MS Teams
+// Sender implements moira sender interface via MS Teams.
+// Use NewSender to create instance.
 type Sender struct {
 	frontURI  string
 	maxEvents int
@@ -44,24 +45,27 @@ type Sender struct {
 	client    *http.Client
 }
 
-// Init initialises settings required for full functionality
-func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+// NewSender creates Sender instance.
+func NewSender(senderSettings map[string]string, logger moira.Logger, location *time.Location) (*Sender, error) {
+	sender := &Sender{}
+
 	sender.logger = logger
 	sender.location = location
 	sender.frontURI = senderSettings["front_uri"]
 	maxEvents, err := strconv.Atoi(senderSettings["max_events"])
 	if err != nil {
-		return fmt.Errorf("max_events should be an integer: %w", err)
+		return nil, fmt.Errorf("max_events should be an integer: %w", err)
 	}
 	sender.maxEvents = maxEvents
 	sender.client = &http.Client{
 		Timeout: time.Duration(30) * time.Second, //nolint
 	}
-	return nil
+
+	return sender, nil
 }
 
 // SendEvents implements Sender interface Send
-func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
+func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, _ [][]byte, throttled bool) error {
 	err := sender.isValidWebhookURL(contact.Value)
 	if err != nil {
 		return err

@@ -9,7 +9,8 @@ import (
 	"github.com/moira-alert/moira"
 )
 
-// Sender implements moira sender interface for victorops
+// Sender implements moira sender interface for VictorOps.
+// Use NewSender to create instance.
 type Sender struct {
 	DataBase             moira.Database
 	ImageStores          map[string]moira.ImageStore
@@ -24,12 +25,16 @@ type Sender struct {
 	client     *api.Client
 }
 
-// Init loads yaml config, configures the victorops sender
-func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+// NewSender creates Sender instance.
+func NewSender(senderSettings map[string]string, logger moira.Logger, location *time.Location, imageStores map[string]moira.ImageStore) (*Sender, error) {
+	sender := &Sender{
+		ImageStores: imageStores,
+	}
+
 	var ok bool
 	sender.routingURL, ok = senderSettings["routing_url"]
 	if !ok {
-		return fmt.Errorf("cannot read the routing url from the yaml config")
+		return nil, fmt.Errorf("cannot read the routing url from the yaml config")
 	}
 
 	sender.imageStoreID, ok = senderSettings["image_store"]
@@ -50,5 +55,5 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 	sender.logger = logger
 	sender.location = location
 
-	return nil
+	return sender, nil
 }

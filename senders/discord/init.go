@@ -16,7 +16,8 @@ const (
 	workerName      = "DiscordBot"
 )
 
-// Sender implements moira sender interface for discord
+// Sender implements moira sender interface for Discord.
+// Use NewSender to create instance.
 type Sender struct {
 	DataBase  moira.Database
 	logger    moira.Logger
@@ -26,16 +27,20 @@ type Sender struct {
 	botUserID string
 }
 
-// Init reads the yaml config
-func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+// NewSender creates Sender instance.
+func NewSender(senderSettings map[string]string, logger moira.Logger, location *time.Location, db moira.Database) (*Sender, error) {
+	sender := &Sender{
+		DataBase: db,
+	}
+
 	var err error
 	token := senderSettings["token"]
 	if token == "" {
-		return fmt.Errorf("cannot read the discord token from the config")
+		return nil, fmt.Errorf("cannot read the discord token from the config")
 	}
 	sender.session, err = discordgo.New("Bot " + token)
 	if err != nil {
-		return fmt.Errorf("error creating discord session: %s", err)
+		return nil, fmt.Errorf("error creating discord session: %s", err)
 	}
 	sender.logger = logger
 	sender.frontURI = senderSettings["front_uri"]
@@ -56,7 +61,8 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 	sender.session.AddHandler(handleMsg)
 
 	go sender.runBot()
-	return nil
+
+	return sender, nil
 }
 
 func (sender *Sender) runBot() {

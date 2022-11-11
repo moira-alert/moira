@@ -11,20 +11,20 @@ import (
 	"gopkg.in/h2non/gock.v1"
 )
 
-func TestInit(t *testing.T) {
+func TestNewSender(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 	Convey("Init tests", t, func() {
-		sender := Sender{}
 		senderSettings := map[string]string{
 			"max_events": "-1",
 		}
 		Convey("Empty map should fail", func() {
-			err := sender.Init(map[string]string{}, logger, nil, "")
-			So(err, ShouldNotResemble, nil)
+			sender, err := NewSender(map[string]string{}, logger, nil)
+			So(sender, ShouldBeNil)
+			So(err, ShouldNotBeNil)
 		})
 		Convey("Minimal settings", func() {
-			err := sender.Init(senderSettings, logger, nil, "")
-			So(err, ShouldResemble, nil)
+			sender, err := NewSender(senderSettings, logger, nil)
+			So(err, ShouldBeNil)
 			So(sender, ShouldNotResemble, Sender{})
 			So(sender.maxEvents, ShouldResemble, -1)
 		})
@@ -32,12 +32,11 @@ func TestInit(t *testing.T) {
 }
 
 func TestMSTeamsHttpResponse(t *testing.T) {
-	sender := Sender{}
 	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
 	location, _ := time.LoadLocation("UTC")
-	_ = sender.Init(map[string]string{
+	senderSettings := map[string]string{
 		"max_events": "-1",
-	}, logger, location, "")
+	}
 	event := moira.NotificationEvent{
 		TriggerID: "TriggerID",
 		Values:    map[string]float64{"t1": 123},
@@ -59,6 +58,9 @@ some other text _italic text_`,
 	}
 
 	Convey("When HTTP Response", t, func() {
+		sender, err := NewSender(senderSettings, logger, location)
+		So(err, ShouldBeNil)
+
 		Convey("is 200 and body is '1' there should be no error", func() {
 			defer gock.Off()
 			gock.New("https://outlook.office.com/webhook/foo").

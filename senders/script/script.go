@@ -7,15 +7,32 @@ import (
 	"os"
 	"os/exec"
 	"strings"
-	"time"
 
 	"github.com/moira-alert/moira"
 )
 
-// Sender implements moira sender interface via script execution
+// Sender implements moira sender interface via script execution.
+// Use NewSender to create instance.
 type Sender struct {
 	exec   string
 	logger moira.Logger
+}
+
+// NewSender creates Sender instance.
+func NewSender(senderSettings map[string]string, logger moira.Logger) (*Sender, error) {
+	sender := &Sender{}
+
+	if senderSettings["name"] == "" {
+		return nil, fmt.Errorf("required name for sender type script")
+	}
+	_, _, err := parseExec(senderSettings["exec"])
+	if err != nil {
+		return nil, err
+	}
+	sender.exec = senderSettings["exec"]
+	sender.logger = logger
+
+	return sender, nil
 }
 
 type scriptNotification struct {
@@ -26,22 +43,8 @@ type scriptNotification struct {
 	Timestamp int64                     `json:"timestamp"`
 }
 
-// Init read yaml config
-func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
-	if senderSettings["name"] == "" {
-		return fmt.Errorf("required name for sender type script")
-	}
-	_, _, err := parseExec(senderSettings["exec"])
-	if err != nil {
-		return err
-	}
-	sender.exec = senderSettings["exec"]
-	sender.logger = logger
-	return nil
-}
-
 // SendEvents implements Sender interface Send
-func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
+func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, _ [][]byte, throttled bool) error {
 	scriptFile, args, scriptBody, err := sender.buildCommandData(events, contact, trigger, throttled)
 	if err != nil {
 		return err

@@ -7,7 +7,8 @@ import (
 	"github.com/moira-alert/moira/senders"
 )
 
-// Sender implements moira sender interface for pagerduty
+// Sender implements moira sender interface for PagerDuty.
+// Use NewSender to create instance.
 type Sender struct {
 	ImageStores          map[string]moira.ImageStore
 	imageStoreID         string
@@ -18,8 +19,12 @@ type Sender struct {
 	location             *time.Location
 }
 
-// Init loads yaml config, configures the pagerduty client
-func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+// NewSender creates Sender instance.
+func NewSender(senderSettings map[string]string, logger moira.Logger, location *time.Location, imageStores map[string]moira.ImageStore) *Sender {
+	sender := &Sender{
+		ImageStores: imageStores,
+	}
+
 	sender.frontURI = senderSettings["front_uri"]
 
 	sender.imageStoreID, sender.imageStore, sender.imageStoreConfigured =
@@ -27,5 +32,6 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 
 	sender.logger = logger
 	sender.location = location
-	return nil
+
+	return sender
 }

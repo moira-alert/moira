@@ -9,27 +9,24 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestInit(t *testing.T) {
+func TestNewSender(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 	location, _ := time.LoadLocation("UTC")
 	Convey("Init tests", t, func() {
-		sender := Sender{}
 		Convey("Empty map", func() {
-			err := sender.Init(map[string]string{}, logger, nil, "")
+			sender, err := NewSender(map[string]string{}, logger, nil, nil)
 			So(err, ShouldResemble, fmt.Errorf("can not read telegram api_token from config"))
-			So(sender, ShouldResemble, Sender{})
+			So(sender, ShouldBeNil)
 		})
 
-		Convey("Has settings", func() {
+		Convey("Incorrect api token", func() {
 			senderSettings := map[string]string{
 				"api_token": "123",
 				"front_uri": "http://moira.uri",
 			}
-			sender.Init(senderSettings, logger, location, "15:04") //nolint
-			So(sender.apiToken, ShouldResemble, "123")
-			So(sender.frontURI, ShouldResemble, "http://moira.uri")
-			So(sender.logger, ShouldResemble, logger)
-			So(sender.location, ShouldResemble, location)
+			sender, err := NewSender(senderSettings, logger, location, nil)
+			So(sender, ShouldBeNil)
+			So(err, ShouldNotBeNil)
 		})
 	})
 }

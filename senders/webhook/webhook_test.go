@@ -10,10 +10,8 @@ import (
 	"net/url"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/moira-alert/moira"
-
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -33,16 +31,19 @@ func TestSender_SendEvents(t *testing.T) {
 					status, err := testRequestURL(r)
 					if err != nil {
 						w.WriteHeader(status)
-						w.Write([]byte(err.Error())) //nolint
+						_, err = w.Write([]byte(err.Error()))
+						So(err, ShouldBeNil)
 					}
 					status, err = testRequestHeaders(r)
 					if err != nil {
 						w.WriteHeader(status)
-						w.Write([]byte(err.Error())) //nolint
+						_, err = w.Write([]byte(err.Error()))
+						So(err, ShouldBeNil)
 					}
 					status, err = testRequestBody(r)
 					if err != nil {
-						w.Write([]byte(err.Error())) //nolint
+						_, err = w.Write([]byte(err.Error())) //nolint
+						So(err, ShouldBeNil)
 						w.WriteHeader(status)
 					}
 					w.WriteHeader(status)
@@ -57,8 +58,8 @@ func TestSender_SendEvents(t *testing.T) {
 			"user":     testUser,
 			"password": testPass,
 		}
-		sender := Sender{}
-		err := sender.Init(senderSettings, logger, time.UTC, "")
+
+		sender, err := NewSender(senderSettings, logger)
 		So(err, ShouldBeNil)
 
 		err = sender.SendEvents(testEvents, testContact, testTrigger, testPlot, false)

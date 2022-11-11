@@ -37,11 +37,15 @@ type Sender struct {
 	location *time.Location
 }
 
-// Init loads yaml config, configures and starts telegram bot
-func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+// NewSender creates Sender instance, configures and starts Telegram bot.
+func NewSender(senderSettings map[string]string, logger moira.Logger, location *time.Location, db moira.Database) (*Sender, error) {
+	sender := &Sender{
+		DataBase: db,
+	}
+
 	apiToken := senderSettings["api_token"]
 	if apiToken == "" {
-		return fmt.Errorf("can not read telegram api_token from config")
+		return nil, fmt.Errorf("can not read telegram api_token from config")
 	}
 
 	sender.apiToken = apiToken
@@ -54,7 +58,7 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 		Poller: &telebot.LongPoller{Timeout: pollerTimeout},
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	sender.bot.Handle(telebot.OnText, func(message *telebot.Message) {
@@ -63,7 +67,8 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 		}
 	})
 	go sender.runTelebot()
-	return nil
+
+	return sender, nil
 }
 
 // runTelebot starts telegram bot and manages bot subscriptions

@@ -12,7 +12,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestInit(t *testing.T) {
+func TestNewSender(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 	location, _ := time.LoadLocation("UTC")
 	mockCtrl := gomock.NewController(t)
@@ -20,17 +20,16 @@ func TestInit(t *testing.T) {
 	imageStore := mock_moira_alert.NewMockImageStore(mockCtrl)
 
 	Convey("Init tests", t, func() {
-		sender := Sender{ImageStores: map[string]moira.ImageStore{
-			"s3": imageStore,
-		}}
-
 		Convey("Has settings", func() {
 			imageStore.EXPECT().IsEnabled().Return(true)
 			senderSettings := map[string]string{
 				"front_uri":   "http://moira.uri",
 				"image_store": "s3",
 			}
-			sender.Init(senderSettings, logger, location, "15:04") //nolint
+			imageStores := map[string]moira.ImageStore{
+				"s3": imageStore,
+			}
+			sender := NewSender(senderSettings, logger, location, imageStores)
 			So(sender.frontURI, ShouldResemble, "http://moira.uri")
 			So(sender.logger, ShouldResemble, logger)
 			So(sender.location, ShouldResemble, location)
@@ -42,9 +41,13 @@ func TestInit(t *testing.T) {
 				"front_uri":   "http://moira.uri",
 				"image_store": "s4",
 			}
-			sender.Init(senderSettings, logger, location, "15:04") //nolint
-			So(sender.imageStoreConfigured, ShouldResemble, false)
-			So(sender.imageStore, ShouldResemble, nil)
+			imageStores := map[string]moira.ImageStore{
+				"s3": imageStore,
+			}
+			sender := NewSender(senderSettings, logger, location, imageStores)
+			So(sender, ShouldNotBeNil)
+			So(sender.imageStoreConfigured, ShouldEqual, false)
+			So(sender.imageStore, ShouldBeNil)
 		})
 		Convey("image store not configured", func() {
 			imageStore.EXPECT().IsEnabled().Return(false)
@@ -52,12 +55,13 @@ func TestInit(t *testing.T) {
 				"front_uri":   "http://moira.uri",
 				"image_store": "s3",
 			}
-			sender := Sender{ImageStores: map[string]moira.ImageStore{
+			imageStores := map[string]moira.ImageStore{
 				"s3": imageStore,
-			}}
-			sender.Init(senderSettings, logger, location, "15:04") //nolint
-			So(sender.imageStoreConfigured, ShouldResemble, false)
-			So(sender.imageStore, ShouldResemble, nil)
+			}
+			sender := NewSender(senderSettings, logger, location, imageStores)
+			So(sender, ShouldNotBeNil)
+			So(sender.imageStoreConfigured, ShouldEqual, false)
+			So(sender.imageStore, ShouldBeNil)
 		})
 	})
 }

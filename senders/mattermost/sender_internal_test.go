@@ -9,15 +9,11 @@ import (
 	"github.com/moira-alert/moira"
 
 	"github.com/golang/mock/gomock"
-	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	mock "github.com/moira-alert/moira/mock/notifier/mattermost"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestSendEvents(t *testing.T) {
-	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
-	sender := &Sender{}
-
 	Convey("Given configured sender", t, func() {
 		senderSettings := map[string]string{ // redundant, but necessary config
 			"url":          "qwerty",
@@ -25,7 +21,7 @@ func TestSendEvents(t *testing.T) {
 			"front_uri":    "qwerty",
 			"insecure_tls": "true",
 		}
-		err := sender.Init(senderSettings, logger, nil, "")
+		sender, err := NewSender(senderSettings, nil)
 		So(err, ShouldBeNil)
 
 		Convey("When client return error, SendEvents should return error", func() {
@@ -53,9 +49,6 @@ func TestSendEvents(t *testing.T) {
 }
 
 func TestBuildMessage(t *testing.T) {
-	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
-	sender := &Sender{}
-
 	Convey("Given configured sender", t, func() {
 		senderSettings := map[string]string{
 			"url": "qwerty", "api_token": "qwerty", // redundant, but necessary config
@@ -63,7 +56,7 @@ func TestBuildMessage(t *testing.T) {
 			"insecure_tls": "true",
 		}
 		location, _ := time.LoadLocation("UTC")
-		err := sender.Init(senderSettings, logger, location, "")
+		sender, err := NewSender(senderSettings, location)
 		So(err, ShouldBeNil)
 
 		event := moira.NotificationEvent{

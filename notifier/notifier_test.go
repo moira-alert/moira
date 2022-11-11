@@ -219,11 +219,10 @@ func configureNotifier(t *testing.T) {
 		"type": "test",
 	}
 
-	sender.EXPECT().Init(senderSettings, logger, location, "15:04 02.01.2006").Return(nil)
-
-	notif.RegisterSender(senderSettings, sender) //nolint
-
 	Convey("Should return one sender", t, func() {
+		err := notif.RegisterSender(senderSettings, sender)
+		So(err, ShouldBeNil)
+
 		So(notif.GetSenders(), ShouldResemble, map[string]bool{"test": true})
 	})
 }

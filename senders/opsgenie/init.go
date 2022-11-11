@@ -10,7 +10,8 @@ import (
 	"github.com/opsgenie/opsgenie-go-sdk-v2/client"
 )
 
-// Sender implements the Sender interface for opsgenie
+// Sender implements the Sender interface for Opsgenie.
+// Use NewSender to create instance.
 type Sender struct {
 	apiKey               string
 	client               *alert.Client
@@ -23,12 +24,16 @@ type Sender struct {
 	frontURI             string
 }
 
-// Init initializes the opsgenie sender
-func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+// NewSender creates Sender instance.
+func NewSender(senderSettings map[string]string, logger moira.Logger, location *time.Location, imageStores map[string]moira.ImageStore) (*Sender, error) {
+	sender := &Sender{
+		ImageStores: imageStores,
+	}
+
 	var ok bool
 
 	if sender.apiKey, ok = senderSettings["api_key"]; !ok {
-		return fmt.Errorf("cannot read the api_key from the sender settings")
+		return nil, fmt.Errorf("cannot read the api_key from the sender settings")
 	}
 
 	sender.imageStoreID, sender.imageStore, sender.imageStoreConfigured =
@@ -39,11 +44,12 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 		ApiKey: sender.apiKey,
 	})
 	if err != nil {
-		return fmt.Errorf("error while creating opsgenie client: %s", err)
+		return nil, fmt.Errorf("error while creating opsgenie client: %s", err)
 	}
 
 	sender.frontURI = senderSettings["front_uri"]
 	sender.logger = logger
 	sender.location = location
-	return nil
+
+	return sender, nil
 }

@@ -40,7 +40,8 @@ var stateEmoji = map[moira.State]string{
 	moira.StateTEST:      testEmoji,
 }
 
-// Sender implements moira sender interface via slack
+// Sender implements moira sender interface via Slack.
+// Use NewSender to create instance.
 type Sender struct {
 	frontURI string
 	useEmoji bool
@@ -49,18 +50,21 @@ type Sender struct {
 	client   *slack.Client
 }
 
-// Init read yaml config
-func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+// NewSender creates Sender instance.
+func NewSender(senderSettings map[string]string, logger moira.Logger, location *time.Location) (*Sender, error) {
+	sender := &Sender{}
+
 	apiToken := senderSettings["api_token"]
 	if apiToken == "" {
-		return fmt.Errorf("can not read slack api_token from config")
+		return nil, fmt.Errorf("can not read slack api_token from config")
 	}
 	sender.useEmoji, _ = strconv.ParseBool(senderSettings["use_emoji"])
 	sender.logger = logger
 	sender.frontURI = senderSettings["front_uri"]
 	sender.location = location
 	sender.client = slack.New(apiToken)
-	return nil
+
+	return sender, nil
 }
 
 // SendEvents implements Sender interface Send

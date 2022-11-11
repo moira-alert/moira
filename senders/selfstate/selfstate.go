@@ -2,25 +2,30 @@ package selfstate
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/moira-alert/moira"
 )
 
-// Sender implements moira sender interface via selfstate
+// Sender implements moira sender interface via selfstate.
+// Use NewSender to create instance.
 type Sender struct {
 	Database moira.Database
 	logger   moira.Logger
 }
 
-// Init read yaml config
-func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+// NewSender creates Sender instance.
+func NewSender(logger moira.Logger, db moira.Database) *Sender {
+	sender := &Sender{
+		Database: db,
+	}
+
 	sender.logger = logger
-	return nil
+
+	return sender
 }
 
 // SendEvents implements Sender interface Send
-func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
+func (sender *Sender) SendEvents(events moira.NotificationEvents, _ moira.ContactData, trigger moira.TriggerData, _ [][]byte, _ bool) error {
 	selfState, err := sender.Database.GetNotifierState()
 	if err != nil {
 		return fmt.Errorf("failed to get notifier state: %s", err.Error())

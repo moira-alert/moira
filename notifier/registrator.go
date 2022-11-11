@@ -40,52 +40,60 @@ const (
 	mattermostSender  = "mattermost"
 )
 
-// RegisterSenders watch on senders config and register all configured senders
+// RegisterSenders creates all senders and registers them.
 func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) error { //nolint
 	var err error
 	for _, senderSettings := range notifier.config.Senders {
 		senderSettings["front_uri"] = notifier.config.FrontURL
+
+		var sender moira.Sender
+
 		switch senderSettings["type"] {
 		case mailSender:
-			err = notifier.RegisterSender(senderSettings, &mail.Sender{})
+			sender, err = mail.NewSender(senderSettings, notifier.logger, notifier.config.Location, notifier.config.DateTimeFormat)
 		case pushoverSender:
-			err = notifier.RegisterSender(senderSettings, &pushover.Sender{})
+			sender, err = pushover.NewSender(senderSettings, notifier.logger, notifier.config.Location)
 		case scriptSender:
-			err = notifier.RegisterSender(senderSettings, &script.Sender{})
+			sender, err = script.NewSender(senderSettings, notifier.logger)
 		case discordSender:
-			err = notifier.RegisterSender(senderSettings, &discord.Sender{DataBase: connector})
+			sender, err = discord.NewSender(senderSettings, notifier.logger, notifier.config.Location, connector)
 		case slackSender:
-			err = notifier.RegisterSender(senderSettings, &slack.Sender{})
+			sender, err = slack.NewSender(senderSettings, notifier.logger, notifier.config.Location)
 		case telegramSender:
-			err = notifier.RegisterSender(senderSettings, &telegram.Sender{DataBase: connector})
+			sender, err = telegram.NewSender(senderSettings, notifier.logger, notifier.config.Location, connector)
 		case msTeamsSender:
-			err = notifier.RegisterSender(senderSettings, &msteams.Sender{})
+			sender, err = msteams.NewSender(senderSettings, notifier.logger, notifier.config.Location)
 		case pagerdutySender:
-			err = notifier.RegisterSender(senderSettings, &pagerduty.Sender{ImageStores: notifier.imageStores})
+			sender = pagerduty.NewSender(senderSettings, notifier.logger, notifier.config.Location, notifier.imageStores)
 		case twilioSmsSender, twilioVoiceSender:
-			err = notifier.RegisterSender(senderSettings, &twilio.Sender{})
+			sender, err = twilio.NewSender(senderSettings, notifier.logger, notifier.config.Location)
 		case webhookSender:
-			err = notifier.RegisterSender(senderSettings, &webhook.Sender{})
+			sender, err = webhook.NewSender(senderSettings, notifier.logger)
 		case opsgenieSender:
-			err = notifier.RegisterSender(senderSettings, &opsgenie.Sender{ImageStores: notifier.imageStores})
+			sender, err = opsgenie.NewSender(senderSettings, notifier.logger, notifier.config.Location, notifier.imageStores)
 		case victoropsSender:
-			err = notifier.RegisterSender(senderSettings, &victorops.Sender{ImageStores: notifier.imageStores})
+			sender, err = victorops.NewSender(senderSettings, notifier.logger, notifier.config.Location, notifier.imageStores)
 		case mattermostSender:
-			err = notifier.RegisterSender(senderSettings, &mattermost.Sender{})
+			sender, err = mattermost.NewSender(senderSettings, notifier.config.Location)
 		// case "email":
-		// 	err = notifier.RegisterSender(senderSettings, &kontur.MailSender{})
+		// sender = kontur.NewMailSender(senderSettings, notifier.logger, notifier.config.Location, notifier.config.DateTimeFormat)
 		// case "phone":
-		// 	err = notifier.RegisterSender(senderSettings, &kontur.SmsSender{})
+		// sender = kontur.NewSmsSender(senderSettings, notifier.logger, notifier.config.Location)
 		default:
 			return fmt.Errorf("unknown sender type [%s]", senderSettings["type"])
 		}
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to initialize sender [%s], err [%s]", senderSettings["type"], err.Error())
+		}
+		err = notifier.RegisterSender(senderSettings, sender)
+		if err != nil {
+			return fmt.Errorf("failed to register sender [%s], err [%s]", senderSettings["type"], err.Error())
 		}
 	}
 	if notifier.config.SelfStateEnabled {
 		selfStateSettings := map[string]string{"type": selfStateSender}
-		if err = notifier.RegisterSender(selfStateSettings, &selfstate.Sender{Database: connector}); err != nil {
+		sender := selfstate.NewSender(notifier.logger, connector)
+		if err = notifier.RegisterSender(selfStateSettings, sender); err != nil {
 			notifier.logger.Warningf("failed to register selfstate sender: %s", err.Error())
 		}
 	}
@@ -101,10 +109,7 @@ func (notifier *StandardNotifier) RegisterSender(senderSettings map[string]strin
 	default:
 		senderIdent = senderSettings["type"]
 	}
-	err := sender.Init(senderSettings, notifier.logger, notifier.config.Location, notifier.config.DateTimeFormat)
-	if err != nil {
-		return fmt.Errorf("failed to initialize sender [%s], err [%s]", senderIdent, err.Error())
-	}
+
 	eventsChannel := make(chan NotificationPackage)
 	notifier.senders[senderIdent] = eventsChannel
 	notifier.metrics.SendersOkMetrics.RegisterMeter(senderIdent, getGraphiteSenderIdent(senderIdent), "sends_ok")

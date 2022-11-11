@@ -18,22 +18,21 @@ type MockLock struct {
 	moira.Lock
 }
 
-func (lock *MockLock) Acquire(stop <-chan struct{}) (lost <-chan struct{}, error error) {
+func (lock *MockLock) Acquire(<-chan struct{}) (lost <-chan struct{}, error error) {
 	return lost, nil
 }
-func (db *MockDB) NewLock(name string, ttl time.Duration) moira.Lock {
+func (db *MockDB) NewLock(string, time.Duration) moira.Lock {
 	return &MockLock{}
 }
 
-func TestInit(t *testing.T) {
+func TestNewSender(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 	location, _ := time.LoadLocation("UTC")
 	Convey("Init tests", t, func() {
-		sender := Sender{DataBase: &MockDB{}}
 		Convey("Empty map", func() {
-			err := sender.Init(map[string]string{}, logger, nil, "")
+			sender, err := NewSender(map[string]string{}, logger, nil, &MockDB{})
 			So(err, ShouldResemble, fmt.Errorf("cannot read the discord token from the config"))
-			So(sender, ShouldResemble, Sender{DataBase: &MockDB{}})
+			So(sender, ShouldBeNil)
 		})
 
 		Convey("Has settings", func() {
@@ -41,7 +40,8 @@ func TestInit(t *testing.T) {
 				"token":     "123",
 				"front_uri": "http://moira.uri",
 			}
-			sender.Init(senderSettings, logger, location, "15:04") //nolint
+			sender, err := NewSender(senderSettings, logger, location, &MockDB{})
+			So(err, ShouldBeNil)
 			So(sender.frontURI, ShouldResemble, "http://moira.uri")
 			So(sender.session.Token, ShouldResemble, "Bot 123")
 			So(sender.logger, ShouldResemble, logger)

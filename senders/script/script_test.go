@@ -44,36 +44,35 @@ var execStringTestCases = []execStringTestCase{
 	},
 }
 
-func TestInit(t *testing.T) {
+func TestNewSender(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 	Convey("Init tests", t, func() {
-		sender := Sender{}
 		settings := map[string]string{}
 		Convey("Empty map", func() {
-			err := sender.Init(settings, logger, nil, "")
+			sender, err := NewSender(settings, logger)
 			So(err, ShouldResemble, fmt.Errorf("required name for sender type script"))
-			So(sender, ShouldResemble, Sender{})
+			So(sender, ShouldBeNil)
 		})
 
 		settings["name"] = "script_name"
 		Convey("Empty exec", func() {
-			err := sender.Init(settings, logger, nil, "")
+			sender, err := NewSender(settings, logger)
 			So(err, ShouldResemble, fmt.Errorf("file  not found"))
-			So(sender, ShouldResemble, Sender{})
+			So(sender, ShouldBeNil)
 		})
 
 		Convey("Exec with not exists file", func() {
 			settings["exec"] = "./test_file1"
-			err := sender.Init(settings, logger, nil, "")
+			sender, err := NewSender(settings, logger)
 			So(err, ShouldResemble, fmt.Errorf("file ./test_file1 not found"))
-			So(sender, ShouldResemble, Sender{})
+			So(sender, ShouldBeNil)
 		})
 
 		Convey("Exec with exists file", func() {
 			settings["exec"] = "script.go"
-			err := sender.Init(settings, logger, nil, "")
+			sender, err := NewSender(settings, logger)
 			So(err, ShouldBeNil)
-			So(sender, ShouldResemble, Sender{exec: "script.go", logger: logger})
+			So(sender, ShouldResemble, &Sender{exec: "script.go", logger: logger})
 		})
 	})
 }
