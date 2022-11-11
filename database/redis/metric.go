@@ -150,13 +150,15 @@ func (connector *DbConnector) SaveMetrics(metrics map[string]*moira.MatchedMetri
 }
 
 const (
-	metricEventPopBatchSize = 10
-	receiveSleepDuration    = time.Millisecond * 100
+	metricEventPopBatchSize   = 100
+	receiveEmptySleepDuration = time.Second
 )
 
 // SubscribeMetricEvents creates subscription for new metrics and return channel for this events
 func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb) (<-chan *moira.MetricEvent, error) {
-	metricsChannel := make(chan *moira.MetricEvent, pubSubWorkerChannelSize)
+	responesChannel := make(chan string, pubSubWorkerChannelSize)
+	metricChannel := make(chan *moira.MetricEvent, pubSubWorkerChannelSize)
+
 	ctx := connector.context
 	c := *connector.client
 
@@ -165,43 +167,62 @@ func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb) (<-chan *mo
 	}
 
 	go func() {
-		idx := -1
+		<-tomb.Dying()
+		close(responesChannel)
+	}()
+
+	go func() {
 		for {
-			idx = (idx + 1) % len(metricEventsChannels)
-			metricEventsChannel := metricEventsChannels[idx]
-			data, err := c.SPopN(ctx, metricEventsChannel, metricEventPopBatchSize).Result()
-
-			if err != nil {
-				if err == redis.Nil {
-					<-time.After(receiveErrorSleepDuration)
-					continue
-				} else {
-					connector.logger.Errorf("Error happened: %s. No more subscriptions, channel is closed. Stop process data...", err)
-					return
-				}
-			}
-
-			for _, metric := range data {
-				metricEvent := &moira.MetricEvent{}
-				if err := json.Unmarshal([]byte(metric), metricEvent); err != nil {
-					connector.logger.Errorf("Failed to parse MetricEvent: %s, error : %v", metric, err)
-					continue
-				}
-
-				metricsChannel <- metricEvent
-			}
-
-			select {
-			case <-tomb.Dying():
-				close(metricsChannel)
+			response, ok := <-responesChannel
+			if !ok {
+				close(metricChannel)
 				return
-			case <-time.After(receiveSleepDuration):
+			}
+
+			metricEvent := &moira.MetricEvent{}
+			if err := json.Unmarshal([]byte(response), metricEvent); err != nil {
+				connector.logger.Errorf("Failed to parse MetricEvent: %s, error : %v", response, err)
 				continue
 			}
+			metricChannel <- metricEvent
 		}
 	}()
 
-	return metricsChannel, nil
+	for channelIdx := 0; channelIdx < len(metricEventsChannels); channelIdx++ {
+		metricEventsChannel := metricEventsChannels[channelIdx]
+		go func() {
+			var popDelay time.Duration
+			for {
+				startPop := time.After(popDelay)
+				select {
+				case <-tomb.Dying():
+					return
+				case <-startPop:
+					data, err := c.SPopN(ctx, metricEventsChannel, metricEventPopBatchSize).Result()
+					popDelay = connector.handlePopResponse(data, err, responesChannel)
+				}
+			}
+		}()
+	}
+
+	return metricChannel, nil
+}
+
+func (connector *DbConnector) handlePopResponse(data []string, popError error, responseChannel chan string) time.Duration {
+	if popError != nil {
+		if popError != redis.Nil {
+			connector.logger.Errorf("Error happened: %s.", popError)
+		}
+		return receiveErrorSleepDuration
+	} else if len(data) == 0 {
+		return receiveEmptySleepDuration
+	}
+
+	for _, response := range data {
+		responseChannel <- response
+	}
+
+	return time.Duration(0)
 }
 
 // AddPatternMetric adds new metrics by given pattern
