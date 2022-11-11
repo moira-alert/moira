@@ -1,4 +1,4 @@
-package telegram
+package telegram_test
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 	"time"
 
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
+	"github.com/moira-alert/moira/senders/telegram"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -14,7 +15,7 @@ func TestNewSender(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
 	Convey("Init tests", t, func() {
 		Convey("Empty map", func() {
-			sender, err := NewSender(map[string]string{}, logger, nil, nil)
+			sender, err := telegram.NewSender(map[string]string{}, logger, nil, nil)
 			So(err, ShouldResemble, fmt.Errorf("can not read telegram api_token from config"))
 			So(sender, ShouldBeNil)
 		})
@@ -24,7 +25,7 @@ func TestNewSender(t *testing.T) {
 				"api_token": "123",
 				"front_uri": "http://moira.uri",
 			}
-			sender, err := NewSender(senderSettings, logger, location, nil)
+			sender, err := telegram.NewSender(senderSettings, logger, location, nil)
 			So(sender, ShouldBeNil)
 			So(err, ShouldNotBeNil)
 		})
