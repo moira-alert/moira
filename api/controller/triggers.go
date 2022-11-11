@@ -15,7 +15,7 @@ import (
 
 const pageSizeUnlimited int64 = -1
 
-var idValidationPattern = regexp.MustCompile(`^[a-zA-Z0-9\-_]+$`)
+var idValidationPattern = regexp.MustCompile(`^[ \p{L}0-9\.\-\|_~:]+$`)
 
 // CreateTrigger creates new trigger
 func CreateTrigger(dataBase moira.Database, trigger *dto.TriggerModel, timeSeriesNames map[string]bool) (*dto.SaveTriggerResponse, *api.ErrorResponse) {
