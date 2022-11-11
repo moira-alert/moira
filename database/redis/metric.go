@@ -151,7 +151,7 @@ func (connector *DbConnector) SaveMetrics(metrics map[string]*moira.MatchedMetri
 
 const (
 	metricEventPopBatchSize = 10
-	receiveSleepDuration    = time.Second
+	receiveSleepDuration    = time.Millisecond * 100
 )
 
 // SubscribeMetricEvents creates subscription for new metrics and return channel for this events
@@ -165,7 +165,7 @@ func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb) (<-chan *mo
 	}
 
 	go func() {
-		idx := 0
+		idx := -1
 		for {
 			idx = (idx + 1) % len(metricEventsChannels)
 			metricEventsChannel := metricEventsChannels[idx]
