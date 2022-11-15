@@ -25,6 +25,7 @@ const (
 
 const (
 	receiveErrorSleepDuration = time.Second
+	receiveEmptySleepDuration = time.Second
 )
 
 // DBSource is type for describing who create database instance

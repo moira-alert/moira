@@ -356,6 +356,12 @@ type MetricEvent struct {
 	Pattern string `json:"pattern"`
 }
 
+// SubscribeMetricEventsParams represents params of subscription
+type SubscribeMetricEventsParams struct {
+	BatchSize int64
+	Delay     time.Duration
+}
+
 // SearchHighlight represents highlight
 type SearchHighlight struct {
 	Field string

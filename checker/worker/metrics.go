@@ -61,7 +61,7 @@ func (worker *Checker) addRemoteTriggerIDsIfNeeded(triggerIDs []string) {
 
 func (worker *Checker) getTriggerIDsToCheck(triggerIDs []string) []string {
 	lazyTriggerIDs := worker.lazyTriggerIDs.Load().(map[string]bool)
-	var triggerIDsToCheck []string
+	var triggerIDsToCheck []string = make([]string, 0, len(triggerIDs))
 	for _, triggerID := range triggerIDs {
 		if _, ok := lazyTriggerIDs[triggerID]; ok {
 			randomDuration := worker.getRandomLazyCacheDuration()

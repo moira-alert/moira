@@ -95,7 +95,7 @@ type Database interface {
 	RemovePatternsMetrics(pattern []string) error
 	RemovePatternWithMetrics(pattern string) error
 
-	SubscribeMetricEvents(tomb *tomb.Tomb) (<-chan *MetricEvent, error)
+	SubscribeMetricEvents(tomb *tomb.Tomb, params *SubscribeMetricEventsParams) (<-chan *MetricEvent, error)
 	SaveMetrics(buffer map[string]*MatchedMetric) error
 	GetMetricRetention(metric string) (int64, error)
 	GetMetricsValues(metrics []string, from int64, until int64) (map[string][]*MetricValue, error)

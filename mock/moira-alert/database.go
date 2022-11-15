@@ -1508,18 +1508,18 @@ func (mr *MockDatabaseMockRecorder) SetUsernameID(arg0, arg1, arg2 interface{}) 
 }
 
 // SubscribeMetricEvents mocks base method.
-func (m *MockDatabase) SubscribeMetricEvents(arg0 *tomb.Tomb) (<-chan *moira.MetricEvent, error) {
+func (m *MockDatabase) SubscribeMetricEvents(arg0 *tomb.Tomb, arg1 *moira.SubscribeMetricEventsParams) (<-chan *moira.MetricEvent, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SubscribeMetricEvents", arg0)
+	ret := m.ctrl.Call(m, "SubscribeMetricEvents", arg0, arg1)
 	ret0, _ := ret[0].(<-chan *moira.MetricEvent)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // SubscribeMetricEvents indicates an expected call of SubscribeMetricEvents.
-func (mr *MockDatabaseMockRecorder) SubscribeMetricEvents(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) SubscribeMetricEvents(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SubscribeMetricEvents", reflect.TypeOf((*MockDatabase)(nil).SubscribeMetricEvents), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SubscribeMetricEvents", reflect.TypeOf((*MockDatabase)(nil).SubscribeMetricEvents), arg0, arg1)
 }
 
 // UpdateMetricsHeartbeat mocks base method.

@@ -443,7 +443,7 @@ func TestMetricSubscription(t *testing.T) {
 		So(err, ShouldBeNil)
 		err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric2: met2})
 		So(err, ShouldBeNil)
-		<-time.After(time.Second * 6)
+		time.Sleep(time.Second * 6)
 		tomb1.Kill(nil)
 		err = tomb1.Wait()
 		So(err, ShouldBeNil)

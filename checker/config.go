@@ -16,4 +16,6 @@ type Config struct {
 	LogFile                     string
 	LogLevel                    string
 	LogTriggersToLevel          map[string]string
+	MetricEventPopBatchSize     int
+	MetricEventPopDelay         time.Duration
 }

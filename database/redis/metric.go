@@ -149,13 +149,8 @@ func (connector *DbConnector) SaveMetrics(metrics map[string]*moira.MatchedMetri
 	return nil
 }
 
-const (
-	metricEventPopBatchSize   = 100
-	receiveEmptySleepDuration = time.Second
-)
-
 // SubscribeMetricEvents creates subscription for new metrics and return channel for this events
-func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb) (<-chan *moira.MetricEvent, error) {
+func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb, params *moira.SubscribeMetricEventsParams) (<-chan *moira.MetricEvent, error) {
 	responesChannel := make(chan string, pubSubWorkerChannelSize)
 	metricChannel := make(chan *moira.MetricEvent, pubSubWorkerChannelSize)
 
@@ -198,8 +193,8 @@ func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb) (<-chan *mo
 				case <-tomb.Dying():
 					return
 				case <-startPop:
-					data, err := c.SPopN(ctx, metricEventsChannel, metricEventPopBatchSize).Result()
-					popDelay = connector.handlePopResponse(data, err, responesChannel)
+					data, err := c.SPopN(ctx, metricEventsChannel, params.BatchSize).Result()
+					popDelay = connector.handlePopResponse(data, err, responesChannel, params.Delay)
 				}
 			}
 		}()
@@ -208,10 +203,10 @@ func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb) (<-chan *mo
 	return metricChannel, nil
 }
 
-func (connector *DbConnector) handlePopResponse(data []string, popError error, responseChannel chan string) time.Duration {
+func (connector *DbConnector) handlePopResponse(data []string, popError error, responseChannel chan string, defaultDelay time.Duration) time.Duration {
 	if popError != nil {
 		if popError != redis.Nil {
-			connector.logger.Errorf("Error happened: %s.", popError)
+			connector.logger.Errorf("Failed to pop new metric events. Error: %s.", popError)
 		}
 		return receiveErrorSleepDuration
 	} else if len(data) == 0 {
@@ -222,7 +217,7 @@ func (connector *DbConnector) handlePopResponse(data []string, popError error, r
 		responseChannel <- response
 	}
 
-	return time.Duration(0)
+	return defaultDelay
 }
 
 // AddPatternMetric adds new metrics by given pattern
