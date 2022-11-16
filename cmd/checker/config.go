@@ -61,7 +61,7 @@ func (config *checkerConfig) getSettings(logger moira.Logger) *checker.Config {
 		MaxParallelChecks:           config.MaxParallelChecks,
 		MaxParallelRemoteChecks:     config.MaxParallelRemoteChecks,
 		LogTriggersToLevel:          logTriggersToLevel,
-		MetricEventPopBatchSize:     config.MetricEventPopBatchSize,
+		MetricEventPopBatchSize:     int64(config.MetricEventPopBatchSize),
 		MetricEventPopDelay:         to.Duration(config.MetricEventPopDelay),
 	}
 }

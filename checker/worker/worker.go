@@ -50,7 +50,7 @@ func (worker *Checker) Start() error {
 	}
 
 	subscribeMetricEventsParams := moira.SubscribeMetricEventsParams{
-		BatchSize: int64(worker.Config.MetricEventPopBatchSize),
+		BatchSize: worker.Config.MetricEventPopBatchSize,
 		Delay:     worker.Config.MetricEventPopDelay,
 	}
 
