@@ -3,7 +3,7 @@ package mattermost_test
 import (
 	"testing"
 
-	"github.com/moira-alert/moira/senders/mattermost"
+	"github.com/moira-alert/moira/notifier/senders/mattermost"
 
 	. "github.com/smartystreets/goconvey/convey"
 )

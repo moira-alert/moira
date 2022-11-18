@@ -7,9 +7,10 @@ import (
 	"strings"
 
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/senders"
+	"github.com/moira-alert/moira/notifier/senders"
+
 	"github.com/opsgenie/opsgenie-go-sdk-v2/alert"
-	blackfriday "github.com/russross/blackfriday/v2"
+	"github.com/russross/blackfriday/v2"
 )
 
 const (

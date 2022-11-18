@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/moira-alert/moira/senders/victorops/api"
-
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/notifier/senders/victorops/api"
 )
 
 // Sender implements moira sender interface for VictorOps.

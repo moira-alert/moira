@@ -8,7 +8,7 @@ import (
 	stripmd "github.com/writeas/go-strip-markdown"
 
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/senders/victorops/api"
+	"github.com/moira-alert/moira/notifier/senders/victorops/api"
 )
 
 // SendEvents implements Sender interface Send

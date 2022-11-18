@@ -7,11 +7,11 @@ import (
 	"strings"
 	"time"
 
-	slackdown "github.com/karriereat/blackfriday-slack"
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/senders"
-	blackfriday "github.com/russross/blackfriday/v2"
+	"github.com/moira-alert/moira/notifier/senders"
 
+	slackdown "github.com/karriereat/blackfriday-slack"
+	"github.com/russross/blackfriday/v2"
 	"github.com/slack-go/slack"
 )
 

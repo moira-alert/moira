@@ -9,7 +9,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/senders"
+	"github.com/moira-alert/moira/notifier/senders"
 )
 
 const (

@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/senders"
+	"github.com/moira-alert/moira/notifier/senders"
 
 	"github.com/mattermost/mattermost-server/v6/model"
 )

@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira"
-	"github.com/moira-alert/moira/senders"
+	"github.com/moira-alert/moira/notifier/senders"
 )
 
 // Sender implements moira sender interface for PagerDuty.
