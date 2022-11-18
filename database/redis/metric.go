@@ -151,8 +151,8 @@ func (connector *DbConnector) SaveMetrics(metrics map[string]*moira.MatchedMetri
 
 // SubscribeMetricEvents creates subscription for new metrics and return channel for this events
 func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb, params *moira.SubscribeMetricEventsParams) (<-chan *moira.MetricEvent, error) {
-	responesChannel := make(chan string, pubSubWorkerChannelSize)
-	metricChannel := make(chan *moira.MetricEvent, pubSubWorkerChannelSize)
+	responseChannel := make(chan string, metricEventChannelSize)
+	metricChannel := make(chan *moira.MetricEvent, metricEventChannelSize)
 
 	ctx := connector.context
 	c := *connector.client
@@ -163,12 +163,12 @@ func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb, params *moi
 
 	go func() {
 		<-tomb.Dying()
-		close(responesChannel)
+		close(responseChannel)
 	}()
 
 	go func() {
 		for {
-			response, ok := <-responesChannel
+			response, ok := <-responseChannel
 			if !ok {
 				close(metricChannel)
 				return
@@ -194,7 +194,7 @@ func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb, params *moi
 					return
 				case <-startPop:
 					data, err := c.SPopN(ctx, metricEventsChannel, params.BatchSize).Result()
-					popDelay = connector.handlePopResponse(data, err, responesChannel, params.Delay)
+					popDelay = connector.handlePopResponse(data, err, responseChannel, params.Delay)
 				}
 			}
 		}()
@@ -202,6 +202,11 @@ func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb, params *moi
 
 	return metricChannel, nil
 }
+
+const (
+	receiveErrorSleepDuration = time.Second
+	receiveEmptySleepDuration = time.Second
+)
 
 func (connector *DbConnector) handlePopResponse(data []string, popError error, responseChannel chan string, defaultDelay time.Duration) time.Duration {
 	if popError != nil {
