@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -93,6 +94,8 @@ func getTriggerFromRequest(request *http.Request) (*dto.Trigger, *api.ErrorRespo
 			response := api.ErrorRemoteServerUnavailable(err)
 			middleware.GetLoggerEntry(request).Error("%s : %s : %s", response.StatusText, response.ErrorText, err)
 			return nil, response
+		case *json.UnmarshalTypeError:
+			return nil, api.ErrorInvalidRequest(fmt.Errorf("invalid payload: %s", err.Error()))
 		default:
 			return nil, api.ErrorInternalServer(err)
 		}
