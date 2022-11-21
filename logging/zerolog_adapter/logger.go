@@ -87,6 +87,10 @@ func (l Logger) Debugf(format string, args ...interface{}) {
 	event.Timestamp().Msgf(format, args...)
 }
 
+func (l Logger) Debugb() moira.EventBuilder {
+	return EventBuilder{Event: l.Logger.Debug()}
+}
+
 func (l Logger) Info(args ...interface{}) {
 	event := l.Logger.Info()
 	if event == nil {
@@ -101,6 +105,10 @@ func (l Logger) Infof(format string, args ...interface{}) {
 		return
 	}
 	event.Timestamp().Msgf(format, args...)
+}
+
+func (l Logger) Infob() moira.EventBuilder {
+	return EventBuilder{Event: l.Logger.Info()}
 }
 
 func (l Logger) Error(args ...interface{}) {
@@ -119,6 +127,10 @@ func (l Logger) Errorf(format string, args ...interface{}) {
 	event.Timestamp().Msgf(format, args...)
 }
 
+func (l Logger) Errorb() moira.EventBuilder {
+	return EventBuilder{Event: l.Logger.Error()}
+}
+
 func (l Logger) Fatal(args ...interface{}) {
 	event := l.Logger.Fatal()
 	if event == nil {
@@ -135,6 +147,10 @@ func (l Logger) Fatalf(format string, args ...interface{}) {
 	event.Timestamp().Msgf(format, args...)
 }
 
+func (l Logger) Fatalb() moira.EventBuilder {
+	return EventBuilder{Event: l.Logger.Fatal()}
+}
+
 func (l Logger) Warning(args ...interface{}) {
 	event := l.Logger.Warn()
 	if event == nil {
@@ -149,6 +165,10 @@ func (l Logger) Warningf(format string, args ...interface{}) {
 		return
 	}
 	event.Timestamp().Msgf(format, args...)
+}
+
+func (l Logger) Warningb() moira.EventBuilder {
+	return EventBuilder{Event: l.Logger.Warn()}
 }
 
 func (l *Logger) String(key, value string) moira.Logger {

@@ -169,14 +169,23 @@ type Mutex interface {
 type Logger interface {
 	Debug(args ...interface{})
 	Debugf(format string, args ...interface{})
+	Debugb() EventBuilder
+
 	Info(args ...interface{})
 	Infof(format string, args ...interface{})
+	Infob() EventBuilder
+
 	Error(args ...interface{})
 	Errorf(format string, args ...interface{})
+	Errorb() EventBuilder
+
 	Fatal(args ...interface{})
 	Fatalf(format string, args ...interface{})
+	Fatalb() EventBuilder
+
 	Warning(args ...interface{})
 	Warningf(format string, args ...interface{})
+	Warningb() EventBuilder
 
 	// Structured logging methods, use to add context fields
 	String(key, value string) Logger
@@ -188,6 +197,14 @@ type Logger interface {
 	Level(string) (Logger, error)
 	// Returns new copy of log, when need to avoid context duplication
 	Clone() Logger
+}
+
+type EventBuilder interface {
+	String(key, value string) EventBuilder
+	Int(key string, value int) EventBuilder
+	Int64(key string, value int64) EventBuilder
+	Fields(fields map[string]interface{}) EventBuilder
+	Msg(message string)
 }
 
 // Sender interface for implementing specified contact type sender
