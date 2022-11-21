@@ -64,6 +64,20 @@ func (mr *MockLoggerMockRecorder) Debug(arg0 ...interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Debug", reflect.TypeOf((*MockLogger)(nil).Debug), arg0...)
 }
 
+// Debugb mocks base method.
+func (m *MockLogger) Debugb() moira.EventBuilder {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Debugb")
+	ret0, _ := ret[0].(moira.EventBuilder)
+	return ret0
+}
+
+// Debugb indicates an expected call of Debugb.
+func (mr *MockLoggerMockRecorder) Debugb() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Debugb", reflect.TypeOf((*MockLogger)(nil).Debugb))
+}
+
 // Debugf mocks base method.
 func (m *MockLogger) Debugf(arg0 string, arg1 ...interface{}) {
 	m.ctrl.T.Helper()
@@ -97,6 +111,20 @@ func (mr *MockLoggerMockRecorder) Error(arg0 ...interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Error", reflect.TypeOf((*MockLogger)(nil).Error), arg0...)
 }
 
+// Errorb mocks base method.
+func (m *MockLogger) Errorb() moira.EventBuilder {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Errorb")
+	ret0, _ := ret[0].(moira.EventBuilder)
+	return ret0
+}
+
+// Errorb indicates an expected call of Errorb.
+func (mr *MockLoggerMockRecorder) Errorb() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Errorb", reflect.TypeOf((*MockLogger)(nil).Errorb))
+}
+
 // Errorf mocks base method.
 func (m *MockLogger) Errorf(arg0 string, arg1 ...interface{}) {
 	m.ctrl.T.Helper()
@@ -128,6 +156,20 @@ func (m *MockLogger) Fatal(arg0 ...interface{}) {
 func (mr *MockLoggerMockRecorder) Fatal(arg0 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Fatal", reflect.TypeOf((*MockLogger)(nil).Fatal), arg0...)
+}
+
+// Fatalb mocks base method.
+func (m *MockLogger) Fatalb() moira.EventBuilder {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Fatalb")
+	ret0, _ := ret[0].(moira.EventBuilder)
+	return ret0
+}
+
+// Fatalb indicates an expected call of Fatalb.
+func (mr *MockLoggerMockRecorder) Fatalb() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Fatalb", reflect.TypeOf((*MockLogger)(nil).Fatalb))
 }
 
 // Fatalf mocks base method.
@@ -175,6 +217,20 @@ func (m *MockLogger) Info(arg0 ...interface{}) {
 func (mr *MockLoggerMockRecorder) Info(arg0 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Info", reflect.TypeOf((*MockLogger)(nil).Info), arg0...)
+}
+
+// Infob mocks base method.
+func (m *MockLogger) Infob() moira.EventBuilder {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Infob")
+	ret0, _ := ret[0].(moira.EventBuilder)
+	return ret0
+}
+
+// Infob indicates an expected call of Infob.
+func (mr *MockLoggerMockRecorder) Infob() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Infob", reflect.TypeOf((*MockLogger)(nil).Infob))
 }
 
 // Infof mocks base method.
@@ -265,6 +321,20 @@ func (m *MockLogger) Warning(arg0 ...interface{}) {
 func (mr *MockLoggerMockRecorder) Warning(arg0 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Warning", reflect.TypeOf((*MockLogger)(nil).Warning), arg0...)
+}
+
+// Warningb mocks base method.
+func (m *MockLogger) Warningb() moira.EventBuilder {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Warningb")
+	ret0, _ := ret[0].(moira.EventBuilder)
+	return ret0
+}
+
+// Warningb indicates an expected call of Warningb.
+func (mr *MockLoggerMockRecorder) Warningb() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Warningb", reflect.TypeOf((*MockLogger)(nil).Warningb))
 }
 
 // Warningf mocks base method.
