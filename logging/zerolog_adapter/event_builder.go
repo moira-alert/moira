@@ -11,34 +11,34 @@ type EventBuilder struct {
 
 func (e EventBuilder) Msg(msg string) {
 	if e.Event != nil {
-		e.Msg(msg)
+		e.Event.Msg(msg)
 	}
 }
 
 func (e EventBuilder) String(key, value string) moira.EventBuilder {
 	if e.Event != nil {
-		e.Str(key, value)
+		e.Event.Str(key, value)
 	}
 	return e
 }
 
 func (e EventBuilder) Int(key string, value int) moira.EventBuilder {
 	if e.Event != nil {
-		e.Int(key, value)
+		e.Event.Int(key, value)
 	}
 	return e
 }
 
 func (e EventBuilder) Int64(key string, value int64) moira.EventBuilder {
 	if e.Event != nil {
-		e.Int64(key, value)
+		e.Event.Int64(key, value)
 	}
 	return e
 }
 
 func (e EventBuilder) Fields(fields map[string]interface{}) moira.EventBuilder {
 	if e.Event != nil {
-		e.Fields(fields)
+		e.Event.Fields(fields)
 	}
 	return e
 }

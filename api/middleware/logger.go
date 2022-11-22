@@ -9,6 +9,7 @@ import (
 	"runtime/debug"
 	"time"
 
+	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
 
@@ -19,12 +20,13 @@ import (
 type apiLoggerEntry struct {
 	logger  moira.Logger
 	request *http.Request
-	buf     *bytes.Buffer
+	msg     string
 }
 
 // GetLoggerEntry gets logger entry with configured logger
 func GetLoggerEntry(request *http.Request) moira.Logger {
-	return request.Context().Value(middleware.LogEntryCtxKey).(*apiLoggerEntry).logger
+	apiLoggerEntry := request.Context().Value(middleware.LogEntryCtxKey).(*apiLoggerEntry)
+	return apiLoggerEntry.logger
 }
 
 // WithLogEntry sets to context configured logger entry
@@ -41,7 +43,10 @@ func RequestLogger(logger moira.Logger) func(next http.Handler) http.Handler {
 
 			t1 := time.Now()
 			defer func() {
-				if rvr := recover(); rvr != nil {
+				rvr := recover()
+				entry.fillMsg(request)
+
+				if rvr != nil {
 					render.Render(wrapWriter, request, api.ErrorInternalServer(fmt.Errorf("internal Server Error"))) //nolint
 					entry.writePanic(wrapWriter.Status(), wrapWriter.BytesWritten(), time.Since(t1), rvr, debug.Stack())
 				} else {
@@ -66,7 +71,7 @@ func newLogEntry(logger moira.Logger, request *http.Request) *apiLoggerEntry {
 	entry := &apiLoggerEntry{
 		logger:  logger.Clone(),
 		request: request,
-		buf:     &bytes.Buffer{},
+		msg:     "",
 	}
 
 	scheme := "http"
@@ -77,6 +82,7 @@ func newLogEntry(logger moira.Logger, request *http.Request) *apiLoggerEntry {
 	if userName == "" {
 		userName = "anonymous"
 	}
+
 	uri := fmt.Sprintf("%s://%s%s", scheme, request.Host, request.RequestURI)
 
 	log := entry.logger
@@ -87,16 +93,31 @@ func newLogEntry(logger moira.Logger, request *http.Request) *apiLoggerEntry {
 	log.String("http.remote_addr", request.RemoteAddr)
 	log.String("username", userName)
 
-	entry.buf.WriteString("\"")
-	fmt.Fprintf(entry.buf, "%s ", request.Method)
-	fmt.Fprintf(entry.buf, "%s %s\"", uri, request.Proto)
-	entry.buf.WriteString(" from ")
-	entry.buf.WriteString(request.RemoteAddr)
-	entry.buf.WriteString(" by ")
-	entry.buf.WriteString(userName)
-	entry.buf.WriteString(" - ")
+	// entry.buf.WriteString("\"")
+	// fmt.Fprintf(entry.buf, "%s ", request.Method)
+	// fmt.Fprintf(entry.buf, "%s %s\"", uri, request.Proto)
+	// entry.buf.WriteString(" from ")
+	// entry.buf.WriteString(request.RemoteAddr)
+	// entry.buf.WriteString(" by ")
+	// entry.buf.WriteString(userName)
+	// entry.buf.WriteString(" - ")
 
 	return entry
+}
+
+func (entry *apiLoggerEntry) fillMsg(request *http.Request) {
+	pattern := chi.RouteContext(request.Context()).RoutePattern()
+	if pattern == "" {
+		return
+	}
+
+	scheme := "http"
+	if request.TLS != nil {
+		scheme = "https"
+	}
+
+	uri := fmt.Sprintf("%s://%s%s", scheme, request.Host, pattern)
+	entry.msg = fmt.Sprintf("%s %s %s", request.Method, uri, request.Proto)
 }
 
 func (entry *apiLoggerEntry) write(status, bytes int, elapsed time.Duration, response http.ResponseWriter) {
@@ -107,19 +128,21 @@ func (entry *apiLoggerEntry) write(status, bytes int, elapsed time.Duration, res
 	log.Int("http.http_status", status)
 	log.Int("http.content_length", bytes)
 	log.Int64("elapsed_time_ms", elapsed.Milliseconds())
+	log.String("elapsed_time", elapsed.String())
 
-	fmt.Fprintf(entry.buf, "%03d", status)
-	fmt.Fprintf(entry.buf, " %dB", bytes)
-	entry.buf.WriteString(" in ")
-	fmt.Fprintf(entry.buf, "%s", elapsed)
+	// fmt.Fprintf(entry.buf, "%03d", status)
+	// fmt.Fprintf(entry.buf, " %dB", bytes)
+	// entry.buf.WriteString(" in ")
+	// fmt.Fprintf(entry.buf, "%s", elapsed)
 	if status >= http.StatusInternalServerError {
 		errorResponse := getErrorResponseIfItHas(response)
 		if errorResponse != nil {
-			fmt.Fprintf(entry.buf, " - Error : %s", errorResponse.ErrorText)
+			log.String("error_text", errorResponse.ErrorText)
+			// fmt.Fprintf(entry.buf, " - Error : %s", errorResponse.ErrorText)
 		}
-		log.Error(entry.buf.String())
+		log.Error(entry.msg)
 	} else {
-		log.Info(entry.buf.String())
+		log.Info(entry.msg)
 	}
 }
 
@@ -129,14 +152,16 @@ func (entry *apiLoggerEntry) writePanic(status, bytes int, elapsed time.Duration
 	log.Int("http.content_length", bytes)
 	log.Int("elapsed_time_ms", int(elapsed.Milliseconds()))
 
-	fmt.Fprintf(entry.buf, "%03d", status)
-	fmt.Fprintf(entry.buf, " %dB", bytes)
-	entry.buf.WriteString(" in ")
-	fmt.Fprintf(entry.buf, "%s", elapsed)
-	fmt.Fprintf(entry.buf, " - Panic: %+v", v)
-	entry.buf.WriteString("\n")
-	entry.buf.WriteString(string(stack))
-	log.Error(entry.buf.String())
+	// fmt.Fprintf(entry.buf, "%03d", status)
+	// fmt.Fprintf(entry.buf, " %dB", bytes)
+	// entry.buf.WriteString(" in ")
+	// fmt.Fprintf(entry.buf, "%s", elapsed)
+	// fmt.Fprintf(entry.buf, " - Panic: %+v", v)
+	// entry.buf.WriteString("\n")
+	// entry.buf.WriteString(string(stack))
+	// log.Error(entry.buf.String())
+
+	log.Error(entry.msg)
 }
 
 type responseWriterWithBody struct {
