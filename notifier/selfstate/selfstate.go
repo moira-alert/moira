@@ -31,6 +31,7 @@ type SelfCheckWorker struct {
 	heartbeats []heartbeat.Heartbeater
 }
 
+// NewSelfCheckWorker creates SelfCheckWorker.
 func NewSelfCheckWorker(logger moira.Logger, database moira.Database, notifier notifier.Notifier, config Config) *SelfCheckWorker {
 	heartbeats := createStandardHeartbeats(logger, database, config)
 	return &SelfCheckWorker{Logger: logger, Database: database, Notifier: notifier, Config: config, heartbeats: heartbeats}
