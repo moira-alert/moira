@@ -93,15 +93,6 @@ func newLogEntry(logger moira.Logger, request *http.Request) *apiLoggerEntry {
 	log.String("http.remote_addr", request.RemoteAddr)
 	log.String("username", userName)
 
-	// entry.buf.WriteString("\"")
-	// fmt.Fprintf(entry.buf, "%s ", request.Method)
-	// fmt.Fprintf(entry.buf, "%s %s\"", uri, request.Proto)
-	// entry.buf.WriteString(" from ")
-	// entry.buf.WriteString(request.RemoteAddr)
-	// entry.buf.WriteString(" by ")
-	// entry.buf.WriteString(userName)
-	// entry.buf.WriteString(" - ")
-
 	return entry
 }
 
@@ -130,15 +121,10 @@ func (entry *apiLoggerEntry) write(status, bytes int, elapsed time.Duration, res
 	log.Int64("elapsed_time_ms", elapsed.Milliseconds())
 	log.String("elapsed_time", elapsed.String())
 
-	// fmt.Fprintf(entry.buf, "%03d", status)
-	// fmt.Fprintf(entry.buf, " %dB", bytes)
-	// entry.buf.WriteString(" in ")
-	// fmt.Fprintf(entry.buf, "%s", elapsed)
 	if status >= http.StatusInternalServerError {
 		errorResponse := getErrorResponseIfItHas(response)
 		if errorResponse != nil {
 			log.String("error_text", errorResponse.ErrorText)
-			// fmt.Fprintf(entry.buf, " - Error : %s", errorResponse.ErrorText)
 		}
 		log.Error(entry.msg)
 	} else {
@@ -152,16 +138,9 @@ func (entry *apiLoggerEntry) writePanic(status, bytes int, elapsed time.Duration
 	log.Int("http.content_length", bytes)
 	log.Int("elapsed_time_ms", int(elapsed.Milliseconds()))
 
-	// fmt.Fprintf(entry.buf, "%03d", status)
-	// fmt.Fprintf(entry.buf, " %dB", bytes)
-	// entry.buf.WriteString(" in ")
-	// fmt.Fprintf(entry.buf, "%s", elapsed)
-	// fmt.Fprintf(entry.buf, " - Panic: %+v", v)
-	// entry.buf.WriteString("\n")
-	// entry.buf.WriteString(string(stack))
-	// log.Error(entry.buf.String())
+	log.String("stackTrace", string(stack))
 
-	log.Error(entry.msg)
+	log.Error(fmt.Sprintf("%s: panic", entry.msg))
 }
 
 type responseWriterWithBody struct {
