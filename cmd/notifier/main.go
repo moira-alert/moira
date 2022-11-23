@@ -149,7 +149,7 @@ func stopNotificationsFetcher(worker *notifications.FetchNotificationsWorker) {
 func stopSelfStateChecker(checker *selfstate.SelfCheckWorker) {
 	if err := checker.Stop(); err != nil {
 		if errors.Is(err, selfstate.ErrDisabled) {
-			logger.Warning(err.Error())
+			logger.Warning(err)
 		} else {
 			logger.Errorf("Failed to stop self check worker: %v", err)
 		}
