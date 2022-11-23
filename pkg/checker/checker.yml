@@ -16,6 +16,8 @@ checker:
   check_interval: 10s
   metrics_ttl: 3h
   stop_checking_interval: 30s
+  metric_event_pop_delay: 0s
+  metric_event_pop_batch_size: 100
 log:
   log_file: stdout
   log_level: info

@@ -393,7 +393,8 @@ func TestMetricSubscription(t *testing.T) {
 	pattern := "my.test.*.metric*"
 	Convey("Subscription manipulation", t, func() {
 		var tomb1 tomb.Tomb
-		ch, err := dataBase.SubscribeMetricEvents(&tomb1)
+		ch, err := dataBase.SubscribeMetricEvents(&tomb1,
+			&moira.SubscribeMetricEventsParams{BatchSize: 100, Delay: time.Duration(0)})
 		So(err, ShouldBeNil)
 		So(ch, ShouldNotBeNil)
 
@@ -443,6 +444,7 @@ func TestMetricSubscription(t *testing.T) {
 		So(err, ShouldBeNil)
 		err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric2: met2})
 		So(err, ShouldBeNil)
+		time.Sleep(time.Second * 6)
 		tomb1.Kill(nil)
 		err = tomb1.Wait()
 		So(err, ShouldBeNil)
@@ -492,7 +494,8 @@ func TestMetricsStoringErrorConnection(t *testing.T) {
 		So(err, ShouldNotBeNil)
 
 		var tomb1 tomb.Tomb
-		ch, err := dataBase.SubscribeMetricEvents(&tomb1)
+		ch, err := dataBase.SubscribeMetricEvents(&tomb1,
+			&moira.SubscribeMetricEventsParams{BatchSize: 100, Delay: time.Duration(0)})
 		So(err, ShouldNotBeNil)
 		So(ch, ShouldBeNil)
 	})
