@@ -3,7 +3,7 @@ package moira
 import (
 	"time"
 
-	"github.com/beevee/go-chart"
+	"github.com/moira-alert/go-chart"
 	"gopkg.in/tomb.v2"
 )
 
