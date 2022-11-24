@@ -55,7 +55,7 @@ func (worker *FetchEventsWorker) Start() {
 
 					if err := worker.processEvent(event); err != nil {
 						worker.Metrics.EventsProcessingFailed.Mark(1)
-						worker.Logger.Errorf("Failed processEvent. %s", err)
+						worker.Logger.ErrorWithError("Failed processEvent", err)
 					}
 				}
 			}
@@ -138,7 +138,7 @@ func (worker *FetchEventsWorker) processEvent(event moira.NotificationEvent) err
 				key := notification.GetKey()
 				if _, exist := duplications[key]; !exist {
 					if err := worker.Database.AddNotification(notification); err != nil {
-						contactLogger.Errorf("Failed to save scheduled notification: %s", err)
+						contactLogger.ErrorWithError("Failed to save scheduled notification", err)
 					}
 					duplications[key] = true
 				} else {

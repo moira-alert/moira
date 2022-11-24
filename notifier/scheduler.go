@@ -107,7 +107,7 @@ func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *
 					logger.Debugf("Trigger switched %d times in last %s, delaying next notification for %s",
 						count, level.duration, level.delay)
 					if err = scheduler.database.SetTriggerThrottling(event.TriggerID, next); err != nil {
-						logger.Errorf("Failed to set trigger throttling timestamp: %s", err)
+						logger.ErrorWithError("Failed to set trigger throttling timestamp", err)
 					}
 					alarmFatigue = true
 					break
@@ -121,7 +121,7 @@ func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *
 	}
 	next, err = calculateNextDelivery(&subscription.Schedule, next)
 	if err != nil {
-		logger.Errorf("Failed to apply schedule: %s.", err)
+		logger.ErrorWithError("Failed to apply schedule", err)
 	}
 	return next, alarmFatigue
 }

@@ -34,7 +34,7 @@ func (worker *Checker) remoteTriggerChecker(stop <-chan struct{}) error {
 			return nil
 		case <-checkTicker.C:
 			if err := worker.checkRemote(); err != nil {
-				worker.Logger.Errorf(remoteTriggerName+" failed: %s", err.Error())
+				worker.Logger.ErrorWithError(remoteTriggerName+" failed", err)
 			}
 		}
 	}

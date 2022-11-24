@@ -78,7 +78,10 @@ func (selfCheck *SelfCheckWorker) handleCheckServices(nowTS int64) []moira.Notif
 
 func (selfCheck *SelfCheckWorker) sendNotification(events []moira.NotificationEvent, nowTS int64) int64 {
 	eventsJSON, _ := json.Marshal(events)
-	selfCheck.Logger.Errorf("Health check. Send package of %v notification events: %s", len(events), eventsJSON)
+	selfCheck.Logger.Errorb().
+		Int("number_of_events", len(events)).
+		String("events_json", string(eventsJSON)).
+		Msg("Health check. Send package notification events")
 	selfCheck.sendErrorMessages(events)
 	return nowTS + selfCheck.Config.NoticeIntervalSeconds
 }
@@ -130,6 +133,6 @@ func generateNotificationEvent(message string, currentValue int64) moira.Notific
 func (selfCheck *SelfCheckWorker) setNotifierState(state string) {
 	err := selfCheck.Database.SetNotifierState(state)
 	if err != nil {
-		selfCheck.Logger.Errorf("Can't set notifier state: %v", err)
+		selfCheck.Logger.ErrorWithError("Can't set notifier state", err)
 	}
 }

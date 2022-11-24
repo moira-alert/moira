@@ -137,18 +137,18 @@ func main() {
 
 func stopListener(listener *connection.MetricsListener) {
 	if err := listener.Stop(); err != nil {
-		logger.Errorf("Failed to stop listener: %v", err)
+		logger.ErrorWithError("Failed to stop listener", err)
 	}
 }
 
 func stopHeartbeatWorker(heartbeatWorker *heartbeat.Worker) {
 	if err := heartbeatWorker.Stop(); err != nil {
-		logger.Errorf("Failed to stop heartbeat worker: %v", err)
+		logger.ErrorWithError("Failed to stop heartbeat worker", err)
 	}
 }
 
 func stopRefreshPatternWorker(refreshPatternWorker *patterns.RefreshPatternWorker) {
 	if err := refreshPatternWorker.Stop(); err != nil {
-		logger.Errorf("Failed to stop refresh pattern worker: %v", err)
+		logger.ErrorWithError("Failed to stop refresh pattern worker", err)
 	}
 }

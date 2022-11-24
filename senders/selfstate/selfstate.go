@@ -31,8 +31,10 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 		sender.logger.Infof("current notifier state: %s", selfState)
 		return nil
 	case moira.StateOK, moira.StateEXCEPTION:
-		sender.logger.Clone().String(moira.LogFieldNameTriggerID, trigger.ID).
-			Errorf("state %s is ignorable", subjectState.String())
+		sender.logger.Errorb().
+			String(moira.LogFieldNameTriggerID, trigger.ID).
+			String("state", subjectState.String()).
+			Msg("State is ignorable")
 		return nil
 	default:
 		if selfState != subjectState.ToSelfState() {

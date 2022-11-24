@@ -136,18 +136,18 @@ func main() {
 
 func stopFetchEvents(worker *events.FetchEventsWorker) {
 	if err := worker.Stop(); err != nil {
-		logger.Errorf("Failed to stop events fetcher: %v", err)
+		logger.ErrorWithError("Failed to stop events fetcher", err)
 	}
 }
 
 func stopNotificationsFetcher(worker *notifications.FetchNotificationsWorker) {
 	if err := worker.Stop(); err != nil {
-		logger.Errorf("Failed to stop notifications fetcher: %v", err)
+		logger.ErrorWithError("Failed to stop notifications fetcher", err)
 	}
 }
 
 func stopSelfStateChecker(checker *selfstate.SelfCheckWorker) {
 	if err := checker.Stop(); err != nil {
-		logger.Errorf("Failed to stop self check worker: %v", err)
+		logger.ErrorWithError("Failed to stop self check worker", err)
 	}
 }

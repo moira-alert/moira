@@ -36,7 +36,7 @@ func (worker *Checker) noDataChecker(stop <-chan struct{}) error {
 			return nil
 		case <-checkTicker.C:
 			if err := worker.checkNoData(); err != nil {
-				worker.Logger.Errorf("NODATA check failed: %s", err.Error())
+				worker.Logger.ErrorWithError("NODATA check failed", err)
 			}
 		}
 	}

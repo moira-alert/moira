@@ -26,7 +26,7 @@ func (worker *Checker) lazyTriggersWorker() error {
 		case <-checkTicker.C:
 			err := worker.fillLazyTriggerIDs()
 			if err != nil {
-				worker.Logger.Errorf("Failed to get lazy triggers: %s", err.Error())
+				worker.Logger.ErrorWithError("Failed to get lazy triggers", err)
 			}
 		}
 	}

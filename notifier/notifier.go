@@ -153,7 +153,7 @@ func (notifier *StandardNotifier) resend(pkg *NotificationPackage, reason string
 			notification := notifier.scheduler.ScheduleNotification(time.Now(), event,
 				pkg.Trigger, pkg.Contact, pkg.Plotting, pkg.Throttled, pkg.FailCount+1, eventLogger)
 			if err := notifier.database.AddNotification(notification); err != nil {
-				eventLogger.Errorf("Failed to save scheduled notification: %s", err)
+				eventLogger.ErrorWithError("Failed to save scheduled notification", err)
 			}
 		}
 	}
@@ -172,13 +172,17 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 		plottingLog := log.Clone().String(moira.LogFieldNameContext, "plotting")
 		plots, err := notifier.buildNotificationPackagePlots(pkg, plottingLog)
 		if err != nil {
-			buildErr := fmt.Sprintf("Can't build notification package plot for %s: %s", pkg.Trigger.ID, err.Error())
+			var buildErr moira.EventBuilder
 			switch err.(type) {
 			case plotting.ErrNoPointsToRender:
-				plottingLog.Debugf(buildErr)
+				buildErr = plottingLog.Debugb()
 			default:
-				plottingLog.Errorf(buildErr)
+				buildErr = plottingLog.Errorb()
 			}
+			buildErr.
+				String(moira.LogFieldNameTriggerID, pkg.Trigger.ID).
+				Error(err).
+				Msg("Can't build notification package plot for trigger")
 		}
 
 		err = pkg.Trigger.PopulatedDescription(pkg.Events)
@@ -197,7 +201,7 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 				log.Warningf("Cannot send to broken contact: %s", e.Error())
 
 			default:
-				log.Errorf("Cannot send notification: %s", err.Error())
+				log.ErrorWithError("Cannot send notification", err)
 				notifier.resend(&pkg, err.Error())
 			}
 		}

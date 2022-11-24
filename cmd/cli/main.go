@@ -105,7 +105,7 @@ func main() { //nolint
 
 	if *plotting {
 		if err := enablePlottingInAllSubscriptions(logger, dataBase); err != nil {
-			logger.Errorf("Failed to enable images in all notifications")
+			logger.ErrorWithError("Failed to enable images in all notifications", err)
 		}
 	}
 

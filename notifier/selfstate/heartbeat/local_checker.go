@@ -37,6 +37,7 @@ func (check *localChecker) Check(nowTS int64) (int64, bool, error) {
 	}
 
 	if check.lastSuccessfulCheck < nowTS-check.delay {
+		// TODO
 		check.logger.Errorf(templateMoreThanMessage, check.GetErrorMessage(), nowTS-check.lastSuccessfulCheck)
 		return nowTS - check.lastSuccessfulCheck, true, nil
 	}

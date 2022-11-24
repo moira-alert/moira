@@ -130,7 +130,7 @@ func (connector *DbConnector) manageSubscriptions(tomb *tomb.Tomb, channels []st
 				connector.logger.Infof("Receive() returned error: %s. Reconnecting...", err.Error())
 				newPsc, err := connector.makePubSubConnection(channels)
 				if err != nil {
-					connector.logger.Errorf("Failed to reconnect to subscription: %v", err)
+					connector.logger.ErrorWithError("Failed to reconnect to subscription", err)
 					<-time.After(receiveErrorSleepDuration)
 					continue
 				}
@@ -160,7 +160,10 @@ func (connector *DbConnector) manageSubscriptions(tomb *tomb.Tomb, channels []st
 			case *redis.Pong:
 				connector.logger.Infof("Received PONG message")
 			default:
-				connector.logger.Errorf("Can not receive message of type '%T': %v", raw, raw)
+				connector.logger.Errorb().
+					String("message_type", fmt.Sprintf("%T", raw)).
+					String("message_content", fmt.Sprintf("%v", raw)).
+					Msg("Can not receive message of this type")
 				<-time.After(receiveErrorSleepDuration)
 			}
 		}

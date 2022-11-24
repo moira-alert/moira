@@ -111,6 +111,18 @@ func (mr *MockLoggerMockRecorder) Error(arg0 ...interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Error", reflect.TypeOf((*MockLogger)(nil).Error), arg0...)
 }
 
+// ErrorWithError mocks base method.
+func (m *MockLogger) ErrorWithError(arg0 string, arg1 error) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "ErrorWithError", arg0, arg1)
+}
+
+// ErrorWithError indicates an expected call of ErrorWithError.
+func (mr *MockLoggerMockRecorder) ErrorWithError(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ErrorWithError", reflect.TypeOf((*MockLogger)(nil).ErrorWithError), arg0, arg1)
+}
+
 // Errorb mocks base method.
 func (m *MockLogger) Errorb() moira.EventBuilder {
 	m.ctrl.T.Helper()

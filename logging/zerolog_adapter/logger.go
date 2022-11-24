@@ -119,6 +119,12 @@ func (l Logger) Error(args ...interface{}) {
 	event.Timestamp().Msgf(fmt.Sprint(args...))
 }
 
+func (l Logger) ErrorWithError(msg string, err error) {
+	l.Errorb().
+		Error(err).
+		Msg(msg)
+}
+
 func (l Logger) Errorf(format string, args ...interface{}) {
 	event := l.Logger.Error()
 	if event == nil {

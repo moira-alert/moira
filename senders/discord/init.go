@@ -44,12 +44,12 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 	handleMsg := func(s *discordgo.Session, m *discordgo.MessageCreate) {
 		channel, err := s.Channel(m.ChannelID)
 		if err != nil {
-			sender.logger.Errorf("error while getting the channel details: %s", err)
+			sender.logger.ErrorWithError("error while getting the channel details", err)
 		}
 
 		msg, err := sender.getResponse(m, channel)
 		if err != nil {
-			sender.logger.Errorf("failed to handle incoming message: %s", err)
+			sender.logger.ErrorWithError("failed to handle incoming message", err)
 		}
 		s.ChannelMessageSend(m.ChannelID, msg) //nolint
 	}
@@ -63,7 +63,7 @@ func (sender *Sender) runBot() {
 	workerAction := func(stop <-chan struct{}) error {
 		err := sender.session.Open()
 		if err != nil {
-			sender.logger.Errorf("error creating a connection to discord: %s", err)
+			sender.logger.ErrorWithError("error creating a connection to discord", err)
 			return nil
 		}
 		sender.botUserID = sender.session.State.User.ID

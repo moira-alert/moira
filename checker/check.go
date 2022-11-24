@@ -125,7 +125,12 @@ func (triggerChecker *TriggerChecker) handleUndefinedError(checkData moira.Check
 	triggerChecker.metrics.CheckError.Mark(1)
 	checkData.State = moira.StateEXCEPTION
 	checkData.Message = err.Error()
-	triggerChecker.logger.Errorf("Trigger %s check failed: %s", triggerChecker.triggerID, err.Error())
+
+	triggerChecker.logger.Errorb().
+		String(moira.LogFieldNameTriggerID, triggerChecker.triggerID).
+		Error(err).
+		Msg("Trigger check failed")
+
 	checkData, err = triggerChecker.compareTriggerStates(checkData)
 	if err != nil {
 		return err

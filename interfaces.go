@@ -176,6 +176,7 @@ type Logger interface {
 	Infob() EventBuilder
 
 	Error(args ...interface{})
+	ErrorWithError(msg string, err error)
 	Errorf(format string, args ...interface{})
 	Errorb() EventBuilder
 
@@ -201,6 +202,7 @@ type Logger interface {
 
 type EventBuilder interface {
 	String(key, value string) EventBuilder
+	Error(err error) EventBuilder
 	Int(key string, value int) EventBuilder
 	Int64(key string, value int64) EventBuilder
 	Fields(fields map[string]interface{}) EventBuilder

@@ -162,7 +162,10 @@ func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb) (<-chan *mo
 			}
 			metricEvent := &moira.MetricEvent{}
 			if err := json.Unmarshal(data, metricEvent); err != nil {
-				connector.logger.Errorf("Failed to parse MetricEvent: %s, error : %v", string(data), err)
+				connector.logger.Errorb().
+					String("metric_event", string(data)).
+					Error(err).
+					Msg("Failed to parse MetricEvent")
 				continue
 			}
 			metricsChannel <- metricEvent

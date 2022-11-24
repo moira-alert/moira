@@ -118,11 +118,11 @@ func checkSingleTrigger(database moira.Database, metrics *metrics.CheckerMetrics
 	triggerChecker, err := checker.MakeTriggerChecker(*triggerID, database, logger, settings, sourceProvider, metrics)
 	logger.String(moira.LogFieldNameTriggerID, *triggerID)
 	if err != nil {
-		logger.Errorf("Failed initialize trigger checker: %s", err.Error())
+		logger.ErrorWithError("Failed initialize trigger checker", err)
 		os.Exit(1)
 	}
 	if err = triggerChecker.Check(); err != nil {
-		logger.Errorf("Failed check trigger: %s", err)
+		logger.ErrorWithError("Failed check trigger", err)
 		os.Exit(1)
 	}
 	os.Exit(0)
@@ -130,6 +130,6 @@ func checkSingleTrigger(database moira.Database, metrics *metrics.CheckerMetrics
 
 func stopChecker(service *worker.Checker) {
 	if err := service.Stop(); err != nil {
-		logger.Errorf("Failed to Stop Moira Checker: %v", err)
+		logger.ErrorWithError("Failed to Stop Moira Checker", err)
 	}
 }

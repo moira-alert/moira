@@ -22,6 +22,13 @@ func (e EventBuilder) String(key, value string) moira.EventBuilder {
 	return e
 }
 
+func (e EventBuilder) Error(err error) moira.EventBuilder {
+	if e.Event != nil {
+		e.Event.Str("error", err.Error())
+	}
+	return e
+}
+
 func (e EventBuilder) Int(key string, value int) moira.EventBuilder {
 	if e.Event != nil {
 		e.Event.Int(key, value)

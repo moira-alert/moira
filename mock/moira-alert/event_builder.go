@@ -34,6 +34,20 @@ func (m *MockEventBuilder) EXPECT() *MockEventBuilderMockRecorder {
 	return m.recorder
 }
 
+// Error mocks base method.
+func (m *MockEventBuilder) Error(arg0 error) moira.EventBuilder {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Error", arg0)
+	ret0, _ := ret[0].(moira.EventBuilder)
+	return ret0
+}
+
+// Error indicates an expected call of Error.
+func (mr *MockEventBuilderMockRecorder) Error(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Error", reflect.TypeOf((*MockEventBuilder)(nil).Error), arg0)
+}
+
 // Fields mocks base method.
 func (m *MockEventBuilder) Fields(arg0 map[string]interface{}) moira.EventBuilder {
 	m.ctrl.T.Helper()

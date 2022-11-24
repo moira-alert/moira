@@ -1,6 +1,7 @@
 package worker
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/moira-alert/moira"
@@ -41,7 +42,10 @@ func (worker *Worker) Run(stop <-chan struct{}) {
 			case database.ErrLockAcquireInterrupted:
 				return
 			default:
-				worker.logger.Errorf("%s failed to acquire the lock: %s", worker.name, err.Error())
+				worker.logger.Errorb().
+					String("worker_name", worker.name).
+					Error(err).
+					Msg("Worker failed to acquire the lock")
 				select {
 				case <-stop:
 					return
@@ -60,12 +64,19 @@ func (worker *Worker) Run(stop <-chan struct{}) {
 
 			defer func() {
 				if r := recover(); r != nil {
-					logger.Errorf("%s panicked during the execution: %s", worker.name, r)
+					logger.Errorb().
+						String("worker_name", worker.name).
+						// TODO
+						String("recover", fmt.Sprintf("%v", r)).
+						Msg("Worker panicked during the execution")
 				}
 			}()
 
 			if err := action(stop); err != nil {
-				logger.Errorf("%s failed during the execution: %s", worker.name, err.Error())
+				logger.Errorb().
+					String("worker_name", worker.name).
+					Error(err).
+					Msg("Worker failed during the execution")
 			}
 		}(worker.action, worker.logger, actionDone, actionStop)
 
