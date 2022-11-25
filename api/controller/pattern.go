@@ -22,17 +22,17 @@ func GetAllPatterns(database moira.Database, logger moira.Logger) (*dto.PatternL
 		go func(pattern string) {
 			triggerIDs, err := database.GetPatternTriggerIDs(pattern)
 			if err != nil {
-				logger.Error(err.Error())
+				logger.ErrorWithError("Failed to get pattern trigger IDs", err)
 				rch <- nil
 			}
 			triggers, err := database.GetTriggers(triggerIDs)
 			if err != nil {
-				logger.Error(err.Error())
+				logger.ErrorWithError("Failed to get trigger", err)
 				rch <- nil
 			}
 			metrics, err := database.GetPatternMetrics(pattern)
 			if err != nil {
-				logger.Error(err.Error())
+				logger.ErrorWithError("Failed to get pattern metrics", err)
 				rch <- nil
 			}
 			patternData := dto.PatternData{

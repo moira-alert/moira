@@ -56,7 +56,7 @@ func (selfCheck *SelfCheckWorker) handleCheckServices(nowTS int64) []moira.Notif
 	for _, heartbeat := range selfCheck.Heartbeats {
 		currentValue, needSend, err := heartbeat.Check(nowTS)
 		if err != nil {
-			selfCheck.Logger.Error(err)
+			selfCheck.Logger.ErrorWithError("Heartbeat failed", err)
 		}
 
 		if !needSend {

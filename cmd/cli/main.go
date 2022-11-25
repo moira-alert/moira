@@ -111,13 +111,13 @@ func main() { //nolint
 
 	if *fromUser != "" || *toUser != "" {
 		if err := transferUserSubscriptionsAndContacts(dataBase, *fromUser, *toUser); err != nil {
-			logger.Error(err)
+			logger.ErrorWithError("Failed to transfer user subscriptions and contacts", err)
 		}
 	}
 
 	if *userDel != "" {
 		if err := deleteUser(dataBase, *userDel); err != nil {
-			logger.Error(err)
+			logger.ErrorWithError("Failed to delete user", err)
 		}
 	}
 
@@ -125,7 +125,7 @@ func main() { //nolint
 		log := logger.String(moira.LogFieldNameContext, "cleanup")
 		log.Infof("Removing metrics by prefix %s started", *removeMetricsByPrefix)
 		if err := handleRemoveMetricsByPrefix(dataBase, *removeMetricsByPrefix); err != nil {
-			log.Error(err)
+			log.ErrorWithError("Failed to remove metrics by prefix", err)
 		}
 		log.Infof("Removing metrics by prefix %s finished", *removeMetricsByPrefix)
 	}
@@ -134,7 +134,7 @@ func main() { //nolint
 		log := logger.String(moira.LogFieldNameContext, "cleanup")
 		log.Info("Removing all metrics started")
 		if err := handleRemoveAllMetrics(dataBase); err != nil {
-			log.Error(err)
+			log.ErrorWithError("Failed to remove all metrics", err)
 		}
 		log.Info("Removing all metrics finished")
 	}
@@ -142,7 +142,7 @@ func main() { //nolint
 	if *removeTriggersStartWith != "" {
 		log := logger.String(moira.LogFieldNameContext, "remove-triggers-start-with")
 		if err := handleRemoveTriggersStartWith(logger, dataBase, *removeTriggersStartWith); err != nil {
-			log.Error(err)
+			log.ErrorWithError("Failed to remove triggers by prefix", err)
 		}
 	}
 
@@ -152,7 +152,7 @@ func main() { //nolint
 		log.Info("Cleanup started")
 		log.Infof("User whitelist: %#v", confCleanup.Whitelist)
 		if err := handleCleanup(logger, dataBase, confCleanup); err != nil {
-			logger.Error(err)
+			log.ErrorWithError("Failed to cleanup", err)
 		}
 		log.Info("Cleanup finished")
 	}
@@ -163,7 +163,7 @@ func main() { //nolint
 		log.Info("Cleanup of outdated metrics started")
 		err := handleCleanUpOutdatedMetrics(confCleanup, dataBase)
 		if err != nil {
-			log.Error(err)
+			log.ErrorWithError("Failed to cleanup outdated metrics", err)
 		}
 		log.Info("Cleanup outdated metrics finished")
 	}
@@ -174,7 +174,8 @@ func main() { //nolint
 		log.Info("Cleanup abandoned triggers last checks started")
 		err := handleCleanUpAbandonedTriggerLastCheck(dataBase)
 		if err != nil {
-			log.Error(err)
+			// TODO
+			log.ErrorWithError("Failed to cleanup abandoned triggers last checks", err)
 		}
 		log.Info("Cleanup abandoned triggers last checks finished")
 	}
@@ -185,7 +186,7 @@ func main() { //nolint
 		log.Info("Cleanup of abandoned retentions started")
 		err := handleCleanUpAbandonedRetentions(dataBase)
 		if err != nil {
-			log.Error(err)
+			log.ErrorWithError("Failed to cleanup abandoned retentions", err)
 		}
 		log.Info("Cleanup of abandoned retentions finished")
 	}
@@ -196,7 +197,7 @@ func main() { //nolint
 		log.Info("Cleanup of abandoned pattern metrics started")
 		err := handleCleanUpAbandonedPatternMetrics(dataBase)
 		if err != nil {
-			log.Error(err)
+			log.ErrorWithError("Failed to cleanup abandoned pattern metrics", err)
 		}
 		log.Info("Cleanup of abandoned pattern metrics finished")
 	}
