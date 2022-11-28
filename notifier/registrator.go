@@ -42,11 +42,13 @@ const (
 
 // RegisterSenders creates all senders and registers them.
 func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) error { //nolint
-	var err error
+	var (
+		sender moira.Sender
+		err    error
+	)
+
 	for _, senderSettings := range notifier.config.Senders {
 		senderSettings["front_uri"] = notifier.config.FrontURL
-
-		var sender moira.Sender
 
 		switch senderSettings["type"] {
 		case mailSender:
