@@ -88,23 +88,6 @@ func TestSelfCheckWorker_Start(t *testing.T) {
 	})
 }
 
-func TestSelfCheckWorker_Stop(t *testing.T) {
-	Convey("Test stop selfCheckWorkerMock", t, func() {
-		mock := configureWorker(t, false)
-		Convey("Test enabled is false", func() {
-			mock.selfCheckWorker.Config.Enabled = false
-			err := mock.selfCheckWorker.Stop()
-			So(errors.Is(err, ErrDisabled), ShouldBeTrue)
-		})
-		Convey("Check for error from checkConfig", func() {
-			mock.selfCheckWorker.Config.Enabled = true
-			mock.notif.EXPECT().GetSenders().Return(nil)
-			err := mock.selfCheckWorker.Stop()
-			So(errors.Is(err, ErrWrongConfig), ShouldBeTrue)
-		})
-	})
-}
-
 func TestSelfCheckWorker(t *testing.T) {
 	Convey("Test checked heartbeat", t, func() {
 		err := errors.New("test error")

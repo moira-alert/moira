@@ -63,14 +63,6 @@ func (selfCheck *SelfCheckWorker) Start() error {
 
 // Stop self check worker and wait for finish
 func (selfCheck *SelfCheckWorker) Stop() error {
-	if !selfCheck.Config.Enabled {
-		return ErrDisabled
-	}
-	senders := selfCheck.Notifier.GetSenders()
-	if err := selfCheck.Config.checkConfig(senders); err != nil {
-		return ErrWrongConfig
-	}
-
 	selfCheck.tomb.Kill(nil)
 	return selfCheck.tomb.Wait()
 }
