@@ -72,18 +72,12 @@ func TestSelfCheckWorker_sendErrorMessages(t *testing.T) {
 
 func TestSelfCheckWorker_Start(t *testing.T) {
 	mock := configureWorker(t, false)
+	Convey("When Contact not corresponds to any Sender", t, func() {
+		mock.notif.EXPECT().GetSenders().Return(nil)
 
-	Convey("Test start selfCheckWorkerMock", t, func() {
-		Convey("Test enabled is false", func() {
-			mock.selfCheckWorker.Config.Enabled = false
+		Convey("Start should return error", func() {
 			err := mock.selfCheckWorker.Start()
-			So(errors.Is(err, ErrDisabled), ShouldBeTrue)
-		})
-		Convey("Check for error from checkConfig", func() {
-			mock.selfCheckWorker.Config.Enabled = true
-			mock.notif.EXPECT().GetSenders().Return(nil)
-			err := mock.selfCheckWorker.Start()
-			So(errors.Is(err, ErrWrongConfig), ShouldBeTrue)
+			So(err, ShouldNotBeNil)
 		})
 	})
 }

@@ -1,7 +1,6 @@
 package selfstate
 
 import (
-	"errors"
 	"time"
 
 	"github.com/moira-alert/moira/notifier/selfstate/heartbeat"
@@ -12,9 +11,6 @@ import (
 	"github.com/moira-alert/moira/notifier"
 	w "github.com/moira-alert/moira/worker"
 )
-
-var ErrDisabled = errors.New("moira Self State Monitoring disabled")
-var ErrWrongConfig = errors.New("moira Self State Monitoring config is wrong")
 
 var defaultCheckInterval = time.Second * 10
 
@@ -39,13 +35,9 @@ func NewSelfCheckWorker(logger moira.Logger, database moira.Database, notifier n
 
 // Start self check worker
 func (selfCheck *SelfCheckWorker) Start() error {
-	if !selfCheck.Config.Enabled {
-		return ErrDisabled
-	}
-
 	senders := selfCheck.Notifier.GetSenders()
 	if err := selfCheck.Config.checkConfig(senders); err != nil {
-		return ErrWrongConfig
+		return err
 	}
 
 	selfCheck.tomb.Go(func() error {

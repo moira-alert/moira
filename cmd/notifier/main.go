@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -97,15 +96,13 @@ func main() {
 	}
 
 	// Start moira self state checker
-	selfState := selfstate.NewSelfCheckWorker(logger, database, sender, config.Notifier.SelfState.getSettings())
-	if err := selfState.Start(); err != nil {
-		if errors.Is(err, selfstate.ErrDisabled) {
-			logger.Info(err)
-		} else {
+	if config.Notifier.SelfState.getSettings().Enabled {
+		selfState := selfstate.NewSelfCheckWorker(logger, database, sender, config.Notifier.SelfState.getSettings())
+		if err := selfState.Start(); err != nil {
 			logger.Fatalf("Failed to start self check worker: %v", err)
 		}
+		defer stopSelfStateChecker(selfState)
 	}
-	defer stopSelfStateChecker(selfState)
 
 	// Start moira notification fetcher
 	fetchNotificationsWorker := &notifications.FetchNotificationsWorker{
