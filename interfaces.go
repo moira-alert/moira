@@ -181,6 +181,7 @@ type Logger interface {
 	Errorb() EventBuilder
 
 	Fatal(args ...interface{})
+	FatalWithError(msg string, err error)
 	Fatalf(format string, args ...interface{})
 	Fatalb() EventBuilder
 

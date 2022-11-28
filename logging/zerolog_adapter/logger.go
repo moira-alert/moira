@@ -145,6 +145,12 @@ func (l Logger) Fatal(args ...interface{}) {
 	event.Timestamp().Msg(fmt.Sprint(args...))
 }
 
+func (l Logger) FatalWithError(msg string, err error) {
+	l.Fatalb().
+		Error(err).
+		Msg(msg)
+}
+
 func (l Logger) Fatalf(format string, args ...interface{}) {
 	event := l.Logger.Fatal()
 	if event == nil {

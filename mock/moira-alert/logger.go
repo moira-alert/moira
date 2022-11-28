@@ -170,6 +170,18 @@ func (mr *MockLoggerMockRecorder) Fatal(arg0 ...interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Fatal", reflect.TypeOf((*MockLogger)(nil).Fatal), arg0...)
 }
 
+// FatalWithError mocks base method.
+func (m *MockLogger) FatalWithError(arg0 string, arg1 error) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "FatalWithError", arg0, arg1)
+}
+
+// FatalWithError indicates an expected call of FatalWithError.
+func (mr *MockLoggerMockRecorder) FatalWithError(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FatalWithError", reflect.TypeOf((*MockLogger)(nil).FatalWithError), arg0, arg1)
+}
+
 // Fatalb mocks base method.
 func (m *MockLogger) Fatalb() moira.EventBuilder {
 	m.ctrl.T.Helper()

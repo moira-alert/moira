@@ -72,7 +72,7 @@ func main() {
 
 	telemetry, err := cmd.ConfigureTelemetry(logger, config.Telemetry, serviceName)
 	if err != nil {
-		logger.Fatalf("Can not start telemetry: %s", err.Error())
+		logger.FatalWithError("Can not start telemetry", err)
 	}
 	defer telemetry.Stop()
 
@@ -82,23 +82,23 @@ func main() {
 	// Start Index right before HTTP listener. Fail if index cannot start
 	searchIndex := index.NewSearchIndex(logger, database, telemetry.Metrics)
 	if searchIndex == nil {
-		logger.Fatalf("Failed to create search index")
+		logger.Fatal("Failed to create search index")
 	}
 
 	err = searchIndex.Start()
 	if err != nil {
-		logger.Fatalf("Failed to start search index: %s", err.Error())
+		logger.FatalWithError("Failed to start search index", err)
 	}
 	defer searchIndex.Stop() //nolint
 
 	if !searchIndex.IsReady() {
-		logger.Fatalf("Search index is not ready, exit")
+		logger.Fatal("Search index is not ready, exit")
 	}
 
 	// Start listener only after index is ready
 	listener, err := net.Listen("tcp", apiConfig.Listen)
 	if err != nil {
-		logger.Fatal(err)
+		logger.FatalWithError("Failed to start listening", err)
 	}
 
 	logger.Infof("Start listening by address: [%s]", apiConfig.Listen)
@@ -110,7 +110,7 @@ func main() {
 
 	webConfigContent, err := config.Web.getSettings(remoteConfig.Enabled)
 	if err != nil {
-		logger.Fatal(err)
+		logger.FatalWithError("Failed to get web config content ", err)
 	}
 
 	httpHandler := handler.NewHandler(database, logger, searchIndex, apiConfig, metricSourceProvider, webConfigContent)

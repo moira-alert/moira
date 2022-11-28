@@ -69,7 +69,7 @@ func main() {
 
 	telemetry, err := cmd.ConfigureTelemetry(logger, config.Telemetry, serviceName)
 	if err != nil {
-		logger.Fatalf("Can not configure telemetry: %s", err.Error())
+		logger.FatalWithError("Can not configure telemetry", err)
 	}
 	defer telemetry.Stop()
 
@@ -83,17 +83,23 @@ func main() {
 
 	retentionConfigFile, err := os.Open(config.Filter.RetentionConfig)
 	if err != nil {
-		logger.Fatalf("Error open retentions file [%s]: %s", config.Filter.RetentionConfig, err.Error())
+		logger.Fatalb().
+			String("file_name", config.Filter.RetentionConfig).
+			Error(err).
+			Msg("Error open retentions file")
 	}
 
 	cacheStorage, err := filter.NewCacheStorage(logger, filterMetrics, retentionConfigFile)
 	if err != nil {
-		logger.Fatalf("Failed to initialize cache storage with config [%s]: %s", config.Filter.RetentionConfig, err.Error())
+		logger.Fatalb().
+			String("file_name", config.Filter.RetentionConfig).
+			Error(err).
+			Msg("Failed to initialize cache storage with given config")
 	}
 
 	patternStorage, err := filter.NewPatternStorage(database, filterMetrics, logger)
 	if err != nil {
-		logger.Fatalf("Failed to refresh pattern storage: %s", err.Error())
+		logger.FatalWithError("Failed to refresh pattern storage", err)
 	}
 
 	// Refresh Patterns on first init
@@ -102,7 +108,7 @@ func main() {
 	// Start patterns refresher
 	err = refreshPatternWorker.Start()
 	if err != nil {
-		logger.Fatalf("Failed to refresh pattern storage: %s", err.Error())
+		logger.FatalWithError("Failed to refresh pattern storage", err)
 	}
 	defer stopRefreshPatternWorker(refreshPatternWorker)
 
@@ -114,7 +120,7 @@ func main() {
 	// Start metrics listener
 	listener, err := connection.NewListener(config.Filter.Listen, logger, filterMetrics)
 	if err != nil {
-		logger.Fatalf("Failed to start listen: %s", err.Error())
+		logger.FatalWithError("Failed to start listening", err)
 	}
 	lineChan := listener.Listen()
 

@@ -70,7 +70,7 @@ func main() {
 
 	telemetry, err := cmd.ConfigureTelemetry(logger, config.Telemetry, serviceName)
 	if err != nil {
-		logger.Fatalf("Can not configure telemetry: %s", err.Error())
+		logger.FatalWithError("Can not configure telemetry", err)
 	}
 	defer telemetry.Stop()
 
@@ -92,7 +92,7 @@ func main() {
 
 	// Register moira senders
 	if err := sender.RegisterSenders(database); err != nil {
-		logger.Fatalf("Can not configure senders: %s", err.Error())
+		logger.FatalWithError("Can not configure senders", err)
 	}
 
 	// Start moira self state checker
@@ -103,7 +103,7 @@ func main() {
 		Notifier: sender,
 	}
 	if err := selfState.Start(); err != nil {
-		logger.Fatalf("SelfState failed: %v", err)
+		logger.FatalWithError("SelfState failed", err)
 	}
 	defer stopSelfStateChecker(selfState)
 

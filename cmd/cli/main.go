@@ -77,12 +77,12 @@ func main() { //nolint
 		case "2.3":
 			err := updateFrom23(logger, dataBase)
 			if err != nil {
-				logger.Fatalf("Fail to update from version %s: %s", fromVersion, err.Error())
+				logger.FatalWithError("Fail to update from version 2.3", err)
 			}
 		case "2.6":
 			err := updateFrom26(logger, dataBase)
 			if err != nil {
-				logger.Fatalf("Fail to update from version %s: %s", fromVersion, err.Error())
+				logger.FatalWithError("Fail to update from version 2.6", err)
 			}
 		}
 	}
@@ -93,12 +93,12 @@ func main() { //nolint
 		case "2.3":
 			err := downgradeTo23(logger, dataBase)
 			if err != nil {
-				logger.Fatalf("Fail to update to version %s: %s", toVersion, err.Error())
+				logger.FatalWithError("Fail to update to version 2.3", err)
 			}
 		case "2.6":
 			err := downgradeTo26(logger, dataBase)
 			if err != nil {
-				logger.Fatalf("Fail to update to version %s: %s", toVersion, err.Error())
+				logger.FatalWithError("Fail to update to version 2.6", err)
 			}
 		}
 	}
@@ -206,26 +206,26 @@ func main() { //nolint
 		logger.Info("Dump push started")
 		f, err := openFile(*triggerDumpFile, os.O_RDONLY)
 		if err != nil {
-			logger.Fatal(err)
+			logger.FatalWithError("Failed to open triggerDumpFile", err)
 		}
 		defer closeFile(f, logger)
 
 		dump := &dto.TriggerDump{}
 		err = json.NewDecoder(f).Decode(dump)
 		if err != nil {
-			logger.Fatal("cannot decode trigger dump: ", err.Error())
+			logger.FatalWithError("cannot decode trigger dump", err)
 		}
 
 		logger.Info(GetDumpBriefInfo(dump))
 		if err := support.HandlePushTrigger(logger, dataBase, &dump.Trigger); err != nil {
-			logger.Fatal(err)
+			logger.FatalWithError("Failed to handle puch trigger", err)
 		}
 		if err := support.HandlePushTriggerMetrics(logger, dataBase, dump.Trigger.ID, dump.Metrics); err != nil {
-			logger.Fatal(err)
+			logger.FatalWithError("Failed to hanle push trigger metrics", err)
 		}
 		if err := support.HandlePushTriggerLastCheck(logger, dataBase, dump.Trigger.ID, &dump.LastCheck,
 			dump.Trigger.IsRemote); err != nil {
-			logger.Fatal(err)
+			logger.FatalWithError("Failed to hanle push trigger last check", err)
 		}
 		logger.Info("Dump was pushed")
 	}
@@ -279,7 +279,9 @@ func checkValidVersion(logger moira.Logger, updateFromVersion *string, isUpdate 
 	}
 
 	if updateFromVersion == nil || *updateFromVersion == "" || !contains(moiraValidVersions, *updateFromVersion) {
-		logger.Fatalf("You must set valid '%s' flag. Valid versions is %s", validFlag, strings.Join(moiraValidVersions, ", "))
+		logger.Fatalb().
+			String("valid_version", strings.Join(moiraValidVersions, ", ")).
+			Msg(fmt.Sprintf("You must set valid '%s' flag", validFlag))
 	}
 	return moira.UseString(updateFromVersion)
 }
@@ -307,7 +309,7 @@ func openFile(filePath string, mode int) (*os.File, error) {
 func closeFile(f *os.File, logger moira.Logger) {
 	if f != nil {
 		if err := f.Close(); err != nil {
-			logger.Fatal(err)
+			logger.FatalWithError("Failed to close file", err)
 		}
 	}
 }

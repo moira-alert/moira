@@ -71,7 +71,7 @@ func main() {
 
 	telemetry, err := cmd.ConfigureTelemetry(logger, config.Telemetry, serviceName)
 	if err != nil {
-		logger.Fatalf("Can not configure telemetry: %s", err.Error())
+		logger.FatalWithError("Can not configure telemetry", err)
 	}
 	defer telemetry.Stop()
 
@@ -103,7 +103,7 @@ func main() {
 	}
 	err = checkerWorker.Start()
 	if err != nil {
-		logger.Fatal(err)
+		logger.FatalWithError("Failed to start worker check", err)
 	}
 	defer stopChecker(checkerWorker)
 
