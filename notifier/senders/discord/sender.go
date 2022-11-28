@@ -29,27 +29,26 @@ type Sender struct {
 
 // NewSender creates Sender instance.
 func NewSender(senderSettings map[string]string, logger moira.Logger, location *time.Location, db moira.Database) (*Sender, error) {
-	sender := &Sender{
-		DataBase: db,
-	}
-
-	var err error
 	token := senderSettings["token"]
 	if token == "" {
 		return nil, fmt.Errorf("cannot read the discord token from the config")
 	}
-	sender.session, err = discordgo.New("Bot " + token)
+	session, err := discordgo.New("Bot " + token)
 	if err != nil {
 		return nil, fmt.Errorf("error creating discord session: %s", err)
 	}
-	sender.logger = logger
-	sender.frontURI = senderSettings["front_uri"]
-	sender.location = location
 
+	sender := &Sender{
+		DataBase: db,
+		session:  session,
+		logger:   logger,
+		frontURI: senderSettings["front_uri"],
+		location: location,
+	}
 	handleMsg := func(s *discordgo.Session, m *discordgo.MessageCreate) {
 		channel, err := s.Channel(m.ChannelID)
 		if err != nil {
-			sender.logger.Errorf("error while getting the channel details: %s", err)
+			logger.Errorf("error while getting the channel details: %s", err)
 		}
 
 		msg, err := sender.getResponse(m, channel)
