@@ -171,6 +171,12 @@ func (l Logger) Warning(args ...interface{}) {
 	event.Timestamp().Msg(fmt.Sprint(args...))
 }
 
+func (l Logger) WarningWithError(msg string, err error) {
+	l.Warningb().
+		Error(err).
+		Msg(msg)
+}
+
 func (l Logger) Warningf(format string, args ...interface{}) {
 	event := l.Logger.Warn()
 	if event == nil {

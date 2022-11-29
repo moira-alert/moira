@@ -43,7 +43,7 @@ func (sender *Sender) makeCreateAlertRequest(events moira.NotificationEvents, co
 	if len(plots) > 0 && sender.imageStoreConfigured {
 		imageLink, err := sender.imageStore.StoreImage(plots[0])
 		if err != nil {
-			sender.logger.Warningf("could not store the plot image in the image store: %s", err)
+			sender.logger.WarningWithError("Could not store the plot image in the image store", err)
 		} else {
 			createAlertRequest.Details = map[string]string{
 				"image_url": imageLink,

@@ -120,7 +120,10 @@ func getDefault() config {
 func (config *notifierConfig) getSettings(logger moira.Logger) notifier.Config {
 	location, err := time.LoadLocation(config.Timezone)
 	if err != nil {
-		logger.Warningf("Timezone '%s' load failed: %s. Use UTC.", config.Timezone, err.Error())
+		logger.Warningb().
+			String("timezone", config.Timezone).
+			Error(err).
+			Msg("Timezone load failed. Use UTC.")
 		location, _ = time.LoadLocation("UTC")
 	} else {
 		logger.Infof("Timezone '%s' loaded.", config.Timezone)
@@ -128,7 +131,10 @@ func (config *notifierConfig) getSettings(logger moira.Logger) notifier.Config {
 
 	format := "15:04 02.01.2006"
 	if err := checkDateTimeFormat(config.DateTimeFormat); err != nil {
-		logger.Warningf("%v. Current time format: %v", err.Error(), time.Now().Format(format))
+		logger.Warningb().
+			String("current_time_format", time.Now().Format(format)).
+			Error(err).
+			Msg("Failed to change time format")
 	} else {
 		format = config.DateTimeFormat
 		logger.Infof("Format '%v' parsed successfully. Current time format: %v", format, time.Now().Format(format))
@@ -139,8 +145,10 @@ func (config *notifierConfig) getSettings(logger moira.Logger) notifier.Config {
 		readBatchSize = int64(config.ReadBatchSize)
 	}
 	if config.ReadBatchSize <= 0 && int64(config.ReadBatchSize) != notifier.NotificationsLimitUnlimited {
-		logger.Warningf("Current read_batch_size is %d, but it should be > 0 or %v (unlimited), value ignored",
-			config.ReadBatchSize, notifier.NotificationsLimitUnlimited)
+		logger.Warningb().
+			Int("read_batch_size", config.ReadBatchSize).
+			Int64("notification_limit_unlimited", notifier.NotificationsLimitUnlimited).
+			Msg("Current config's read_batch_size is invalid, value ignored")
 	}
 	logger.Infof("Current read_batch_size is %d", readBatchSize)
 

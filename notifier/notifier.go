@@ -2,6 +2,7 @@ package notifier
 
 import (
 	"fmt"
+	"runtime/debug"
 	"sync"
 	"time"
 
@@ -142,7 +143,11 @@ func (notifier *StandardNotifier) resend(pkg *NotificationPackage, reason string
 	}
 
 	logger := getLogWithPackageContext(&notifier.logger, pkg, &notifier.config)
-	logger.Warningf("Can't send message after %d try: %s. Retry again after 1 min", pkg.FailCount, reason)
+	logger.Warningb().
+		Int("number_of_retires", pkg.FailCount).
+		String("reason", reason).
+		Msg("Can't send message. Retry again in 1 min")
+
 	if time.Duration(pkg.FailCount)*time.Minute > notifier.config.ResendingTimeout {
 		logger.Error("Stop resending. Notification interval is timed out")
 	} else {
@@ -162,7 +167,10 @@ func (notifier *StandardNotifier) resend(pkg *NotificationPackage, reason string
 func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan NotificationPackage) {
 	defer func() {
 		if err := recover(); err != nil {
-			notifier.logger.Warningf("Panic notifier: %v, ", err)
+			notifier.logger.Warningb().
+				String("stackTrace", string(debug.Stack())).
+				String("recovered_err", fmt.Sprintf("%v", err)).
+				Msg("Notifier panicked")
 		}
 	}()
 	defer notifier.waitGroup.Done()
@@ -187,7 +195,7 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 
 		err = pkg.Trigger.PopulatedDescription(pkg.Events)
 		if err != nil {
-			log.Warningf("Error populate description:\n%v", err)
+			log.WarningWithError("Error populate description", err)
 		}
 
 		err = sender.SendEvents(pkg.Events, pkg.Contact, pkg.Trigger, plots, pkg.Throttled)
@@ -198,7 +206,7 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 		} else {
 			switch e := err.(type) {
 			case moira.SenderBrokenContactError:
-				log.Warningf("Cannot send to broken contact: %s", e.Error())
+				log.WarningWithError("Cannot send to broken contact", e)
 
 			default:
 				log.ErrorWithError("Cannot send notification", err)

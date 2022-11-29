@@ -50,7 +50,10 @@ func (index *Index) getTriggerChecksWithRetries(batch []string) ([]*moira.Trigge
 		if err == nil {
 			return newBatch, nil
 		}
-		index.logger.Warningf("Cannot get trigger checks from DB, try %d/%d: %s", i, triesCount, err.Error())
+		index.logger.Warningb().
+			String("try_number", fmt.Sprintf("%d/%d", i, triesCount)).
+			Error(err).
+			Msg("Cannot get trigger checks from DB")
 	}
 	return nil, fmt.Errorf("cannot get trigger checks from DB after %d tries, last error: %s", triesCount, err.Error())
 }

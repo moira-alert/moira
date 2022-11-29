@@ -186,6 +186,7 @@ type Logger interface {
 	Fatalb() EventBuilder
 
 	Warning(args ...interface{})
+	WarningWithError(msg string, err error)
 	Warningf(format string, args ...interface{})
 	Warningb() EventBuilder
 

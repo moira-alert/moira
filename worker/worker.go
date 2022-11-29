@@ -91,7 +91,9 @@ func (worker *Worker) Run(stop <-chan struct{}) {
 				continue
 			}
 		case <-lost:
-			worker.logger.Warningf("%s lost the lock", worker.name)
+			worker.logger.Warningb().
+				String("worker_name", worker.name).
+				Msg("Worker lost the lock")
 			close(actionStop)
 			<-actionDone
 			worker.lock.Release()

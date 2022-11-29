@@ -347,6 +347,18 @@ func (mr *MockLoggerMockRecorder) Warning(arg0 ...interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Warning", reflect.TypeOf((*MockLogger)(nil).Warning), arg0...)
 }
 
+// WarningWithError mocks base method.
+func (m *MockLogger) WarningWithError(arg0 string, arg1 error) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "WarningWithError", arg0, arg1)
+}
+
+// WarningWithError indicates an expected call of WarningWithError.
+func (mr *MockLoggerMockRecorder) WarningWithError(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WarningWithError", reflect.TypeOf((*MockLogger)(nil).WarningWithError), arg0, arg1)
+}
+
 // Warningb mocks base method.
 func (m *MockLogger) Warningb() moira.EventBuilder {
 	m.ctrl.T.Helper()

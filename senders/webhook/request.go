@@ -12,6 +12,7 @@ import (
 
 func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) (*http.Request, error) {
 	if sender.url == moira.VariableContactValue {
+		// TODO
 		sender.log.Warningf("%s is potentially dangerous url template, api contact validation is advised", sender.url)
 	}
 	requestURL := buildRequestURL(sender.url, trigger, contact)
