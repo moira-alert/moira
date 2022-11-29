@@ -39,7 +39,7 @@ func (worker *FetchEventsWorker) Start() {
 					if err != nil {
 						if err != database.ErrNil {
 							worker.Metrics.EventsMalformed.Mark(1)
-							worker.Logger.Warning(err)
+							worker.Logger.WarningWithError("Failed to fetch notification event", err)
 							time.Sleep(time.Second * 5) //nolint
 						}
 						continue

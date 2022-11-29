@@ -66,11 +66,10 @@ func (triggerChecker *TriggerChecker) handlePrepareError(checkData moira.CheckDa
 	case conversion.ErrUnexpectedAloneMetric:
 		checkData.State = moira.StateEXCEPTION
 		checkData.Message = err.Error()
-		triggerChecker.logger.Warning(formatTriggerCheckException(triggerChecker.triggerID, err))
+		logTriggerCheckException(triggerChecker.logger, triggerChecker.triggerID, err)
 	case conversion.ErrEmptyAloneMetricsTarget:
 		checkData.State = moira.StateNODATA
-		triggerChecker.logger.Warning(err.Error())
-
+		triggerChecker.logger.WarningWithError("Trigger check failed", err)
 	default:
 		return false, checkData, triggerChecker.handleUndefinedError(checkData, err)
 	}
@@ -104,11 +103,11 @@ func (triggerChecker *TriggerChecker) handleFetchError(checkData moira.CheckData
 			checkData.Message = fmt.Sprintf("Remote server unavailable. Trigger is not checked for %d seconds", timeSinceLastSuccessfulCheck)
 			checkData, err = triggerChecker.compareTriggerStates(checkData)
 		}
-		triggerChecker.logger.Warning(formatTriggerCheckException(triggerChecker.triggerID, err))
+		logTriggerCheckException(triggerChecker.logger, triggerChecker.triggerID, err)
 	case local.ErrUnknownFunction, local.ErrEvalExpr:
 		checkData.State = moira.StateEXCEPTION
 		checkData.Message = err.Error()
-		triggerChecker.logger.Warning(formatTriggerCheckException(triggerChecker.triggerID, err))
+		logTriggerCheckException(triggerChecker.logger, triggerChecker.triggerID, err)
 	default:
 		return triggerChecker.handleUndefinedError(checkData, err)
 	}
@@ -139,8 +138,11 @@ func (triggerChecker *TriggerChecker) handleUndefinedError(checkData moira.Check
 	return triggerChecker.database.SetTriggerLastCheck(triggerChecker.triggerID, &checkData, triggerChecker.trigger.IsRemote)
 }
 
-func formatTriggerCheckException(triggerID string, err error) string {
-	return fmt.Sprintf("TriggerCheckException %T Trigger %s: %v", err, triggerID, err)
+func logTriggerCheckException(logger moira.Logger, triggerID string, err error) {
+	logger.Warningb().
+		Error(err).
+		String("trigger_id", triggerID).
+		Msg(fmt.Sprintf("Trigger check failed: %T", err))
 }
 
 // Set new last check timestamp that equal to "until" targets fetch interval
