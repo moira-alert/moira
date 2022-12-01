@@ -42,7 +42,7 @@ func TestSender_SendEvents(t *testing.T) {
 					}
 					status, err = testRequestBody(r)
 					if err != nil {
-						_, err = w.Write([]byte(err.Error())) //nolint
+						_, err = w.Write([]byte(err.Error()))
 						So(err, ShouldBeNil)
 						w.WriteHeader(status)
 					}
