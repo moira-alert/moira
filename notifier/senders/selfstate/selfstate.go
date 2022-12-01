@@ -15,13 +15,10 @@ type Sender struct {
 
 // NewSender creates Sender instance.
 func NewSender(logger moira.Logger, db moira.Database) *Sender {
-	sender := &Sender{
+	return &Sender{
 		Database: db,
+		logger:   logger,
 	}
-
-	sender.logger = logger
-
-	return sender
 }
 
 // SendEvents implements Sender interface Send
