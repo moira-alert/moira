@@ -57,8 +57,9 @@ func NewSender(senderSettings map[string]string, logger moira.Logger, location *
 		return nil, fmt.Errorf("max_events should be an integer: %w", err)
 	}
 	sender.maxEvents = maxEvents
+	const timeout = time.Duration(30) * time.Second
 	sender.client = &http.Client{
-		Timeout: time.Duration(30) * time.Second, //nolint
+		Timeout: timeout,
 	}
 
 	return sender, nil
