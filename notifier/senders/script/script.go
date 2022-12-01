@@ -20,8 +20,6 @@ type Sender struct {
 
 // NewSender creates Sender instance.
 func NewSender(senderSettings map[string]string, logger moira.Logger) (*Sender, error) {
-	sender := &Sender{}
-
 	if senderSettings["name"] == "" {
 		return nil, fmt.Errorf("required name for sender type script")
 	}
@@ -29,8 +27,11 @@ func NewSender(senderSettings map[string]string, logger moira.Logger) (*Sender, 
 	if err != nil {
 		return nil, err
 	}
-	sender.exec = senderSettings["exec"]
-	sender.logger = logger
+
+	sender := &Sender{
+		exec:   senderSettings["exec"],
+		logger: logger,
+	}
 
 	return sender, nil
 }
