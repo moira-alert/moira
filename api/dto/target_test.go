@@ -91,6 +91,13 @@ func TestTargetVerification(t *testing.T) {
 			So(problems[0].SyntaxOk, ShouldBeTrue)
 			So(problems[0].TreeOfProblems, ShouldBeNil)
 		})
+
+		Convey("Check target with space symbol in metric name", func() {
+			targets := []string{"a b"}
+			problems := TargetVerification(targets, 0, false)
+			So(problems[0].SyntaxOk, ShouldBeFalse)
+			So(problems[0].TreeOfProblems, ShouldBeNil)
+		})
 	})
 }
 
