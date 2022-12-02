@@ -340,6 +340,7 @@ func TestFailReadContact(t *testing.T) {
 		defer mockCtrl.Finish()
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger := mock_moira_alert.NewMockLogger(mockCtrl)
+		// eventBuilder := mock_moira_alert.NewMockEventBuilder(mockCtrl)
 		worker := FetchEventsWorker{
 			Database:  dataBase,
 			Logger:    logger,
@@ -364,7 +365,7 @@ func TestFailReadContact(t *testing.T) {
 		logger.EXPECT().String(gomock.Any(), gomock.Any()).Return(logger).AnyTimes()
 		logger.EXPECT().Debugf("Processing trigger for metric %s == %f, %s -> %s", event.Metric, event.GetMetricsValues(), event.OldState, event.State)
 		logger.EXPECT().Debugf("Getting subscriptions for tags %v", triggerData.Tags)
-		logger.EXPECT().Warningf("Failed to get contact, skip handling it, error: %v", getContactError)
+		logger.EXPECT().WarningWithError("Failed to get contact, skip handling it", getContactError)
 
 		err := worker.processEvent(event)
 		So(err, ShouldBeEmpty)

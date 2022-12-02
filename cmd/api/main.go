@@ -104,7 +104,7 @@ func main() {
 	}
 
 	logger.Infob().
-		String("listen_adress", apiConfig.Listen).
+		String("listen_address", apiConfig.Listen).
 		Msg("Start listening")
 
 	localSource := local.Create(database)

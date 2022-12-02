@@ -129,7 +129,7 @@ func (worker *FetchEventsWorker) processEvent(event moira.NotificationEvent) err
 				notifier.SetLogLevelByConfig(worker.Config.LogContactsToLevel, contactID, &contactLogger)
 				contact, err := worker.Database.GetContact(contactID)
 				if err != nil {
-					contactLogger.WarningWithError("Failed to get contact, skip handling it, error", err)
+					contactLogger.WarningWithError("Failed to get contact, skip handling it", err)
 					continue
 				}
 				event.SubscriptionID = &subscription.ID
