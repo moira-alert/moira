@@ -91,12 +91,18 @@ func (l Logger) Debugb() moira.EventBuilder {
 	return EventBuilder{Event: l.Logger.Debug()}
 }
 
-func (l Logger) Info(args ...interface{}) {
+func (l Logger) Info(msg string) {
 	event := l.Logger.Info()
 	if event == nil {
 		return
 	}
-	event.Timestamp().Msg(fmt.Sprint(args...))
+	event.Timestamp().Msg(msg)
+}
+
+func (l Logger) InfoWithError(msg string, err error) {
+	l.Infob().
+		Error(err).
+		Msg(msg)
 }
 
 func (l Logger) Infof(format string, args ...interface{}) {

@@ -45,7 +45,9 @@ func (worker *Checker) noDataChecker(stop <-chan struct{}) error {
 func (worker *Checker) checkNoData() error {
 	now := time.Now().UTC().Unix()
 	if worker.lastData+worker.Config.StopCheckingIntervalSeconds < now {
-		worker.Logger.Infof("Checking NODATA disabled. No metrics for %v seconds", now-worker.lastData)
+		worker.Logger.Infob().
+			Int64("no_metrics_for_sec", now-worker.lastData).
+			Msg("Checking NODATA disabled. No metrics for some seconds")
 	} else {
 		worker.Logger.Info("Checking NODATA")
 		triggerIds, err := worker.Database.GetLocalTriggerIDs()

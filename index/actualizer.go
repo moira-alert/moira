@@ -1,6 +1,7 @@
 package index
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/moira-alert/moira"
@@ -10,7 +11,9 @@ const actualizerRunInterval = time.Second
 
 func (index *Index) runIndexActualizer() error {
 	ticker := time.NewTicker(actualizerRunInterval)
-	index.logger.Infof("Start index actualizer: reindex changed triggers every %v", actualizerRunInterval)
+	index.logger.Infob().
+		String("actualizer_interval", fmt.Sprintf("%v", actualizerRunInterval)).
+		Msg("Start index actualizer: reindex changed triggers in loop with given interval")
 
 	for {
 		select {

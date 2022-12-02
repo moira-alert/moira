@@ -1,6 +1,7 @@
 package worker
 
 import (
+	"fmt"
 	"math/rand"
 	"time"
 )
@@ -11,12 +12,18 @@ const (
 
 func (worker *Checker) lazyTriggersWorker() error {
 	if worker.Config.LazyTriggersCheckInterval <= worker.Config.CheckInterval {
-		worker.Logger.Infof("Lazy triggers worker won't start because lazy triggers interval '%v' is less or equal to check interval '%v'", worker.Config.LazyTriggersCheckInterval, worker.Config.CheckInterval)
+		worker.Logger.Infob().
+			String("lazy_triggers_check_interval", fmt.Sprintf("%v", worker.Config.LazyTriggersCheckInterval)).
+			String("check_interval", fmt.Sprintf("%v", worker.Config.CheckInterval)).
+			Msg("Lazy triggers worker won't start because lazy triggers interval is less or equal to check interval")
 		return nil
 	}
 	checkTicker := time.NewTicker(lazyTriggersWorkerTicker)
-	worker.Logger.Infof("Start lazy triggers worker. Update lazy triggers list every %v", lazyTriggersWorkerTicker)
-	worker.Logger.Infof("Check lazy triggers every %v", worker.Config.LazyTriggersCheckInterval)
+	worker.Logger.Infob().
+		String("lazy_triggers_check_interval", fmt.Sprintf("%v", worker.Config.LazyTriggersCheckInterval)).
+		String("update_lazy_triggers_every", fmt.Sprintf("%v", lazyTriggersWorkerTicker)).
+		Msg("Start lazy triggers worker")
+
 	for {
 		select {
 		case <-worker.tomb.Dying():

@@ -68,7 +68,9 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Can not configure log: %s\n", err.Error())
 		os.Exit(1)
 	}
-	defer logger.Infof("Moira API stopped. Version: %s", MoiraVersion)
+	defer logger.Infob().
+		String("moira_version", MoiraVersion).
+		Msg("Moira API stopped")
 
 	telemetry, err := cmd.ConfigureTelemetry(logger, config.Telemetry, serviceName)
 	if err != nil {
@@ -101,7 +103,9 @@ func main() {
 		logger.FatalWithError("Failed to start listening", err)
 	}
 
-	logger.Infof("Start listening by address: [%s]", apiConfig.Listen)
+	logger.Infob().
+		String("listen_adress", apiConfig.Listen).
+		Msg("Start listening")
 
 	localSource := local.Create(database)
 	remoteConfig := config.Remote.GetRemoteSourceSettings()
@@ -123,11 +127,16 @@ func main() {
 	}()
 	defer Stop(logger, server)
 
-	logger.Infof("Moira Api Started (version: %s)", MoiraVersion)
+	logger.Infob().
+		String("moira_version", MoiraVersion).
+		Msg("Moira Api Started")
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
+
+	// TODO
+
 	logger.Info(fmt.Sprint(<-ch))
-	logger.Infof("Moira API shutting down.")
+	logger.Info("Moira API shutting down.")
 }
 
 // Stop Moira API HTTP server

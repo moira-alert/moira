@@ -123,11 +123,16 @@ func main() { //nolint
 
 	if *removeMetricsByPrefix != "" {
 		log := logger.String(moira.LogFieldNameContext, "cleanup")
-		log.Infof("Removing metrics by prefix %s started", *removeMetricsByPrefix)
+		log.Infob().
+			String("prefix", *removeMetricsByPrefix).
+			Msg("Removing metrics by prefix started")
+
 		if err := handleRemoveMetricsByPrefix(dataBase, *removeMetricsByPrefix); err != nil {
 			log.ErrorWithError("Failed to remove metrics by prefix", err)
 		}
-		log.Infof("Removing metrics by prefix %s finished", *removeMetricsByPrefix)
+		log.Infob().
+			String("prefix", *removeMetricsByPrefix).
+			Msg("Removing metrics by prefix finished")
 	}
 
 	if *removeAllMetrics {
@@ -149,8 +154,10 @@ func main() { //nolint
 	if *cleanupUsers {
 		log := logger.String(moira.LogFieldNameContext, "cleanup-users")
 
-		log.Info("Cleanup started")
-		log.Infof("User whitelist: %#v", confCleanup.Whitelist)
+		log.Infob().
+			String("user_whitelist", fmt.Sprintf("%#v", confCleanup.Whitelist)).
+			Msg("Cleanup started")
+
 		if err := handleCleanup(logger, dataBase, confCleanup); err != nil {
 			log.ErrorWithError("Failed to cleanup", err)
 		}

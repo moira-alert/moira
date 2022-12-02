@@ -47,7 +47,9 @@ func (config *checkerConfig) getSettings(logger moira.Logger) *checker.Config {
 	for _, v := range config.SetLogLevel.TriggersToLevel {
 		logTriggersToLevel[v.ID] = v.Level
 	}
-	logger.Infof("Found dynamic log rules in config for %d triggers", len(logTriggersToLevel))
+	logger.Infob().
+		Int("number_of_triggers", len(logTriggersToLevel)).
+		Msg("Found dynamic log rules in config for some triggers")
 
 	return &checker.Config{
 		CheckInterval:               to.Duration(config.CheckInterval),

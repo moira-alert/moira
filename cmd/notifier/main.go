@@ -66,7 +66,9 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Can not configure log: %s\n", err.Error())
 		os.Exit(1)
 	}
-	defer logger.Infof("Moira Notifier stopped. Version: %s", MoiraVersion)
+	defer logger.Infob().
+		String("moira_version", MoiraVersion).
+		Msg("Moira Notifier stopped. Version")
 
 	telemetry, err := cmd.ConfigureTelemetry(logger, config.Telemetry, serviceName)
 	if err != nil {
@@ -127,11 +129,13 @@ func main() {
 	fetchEventsWorker.Start()
 	defer stopFetchEvents(fetchEventsWorker)
 
-	logger.Infof("Moira Notifier Started. Version: %s", MoiraVersion)
+	logger.Infob().
+		String("moira_version", MoiraVersion).
+		Msg("Moira Notifier Started")
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 	logger.Info(fmt.Sprint(<-ch))
-	logger.Infof("Moira Notifier shutting down.")
+	logger.Info("Moira Notifier shutting down.")
 }
 
 func stopFetchEvents(worker *events.FetchEventsWorker) {

@@ -67,7 +67,9 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Can not configure log: %s\n", err.Error())
 		os.Exit(1)
 	}
-	defer logger.Infof("Moira Checker stopped. Version: %s", MoiraVersion)
+	defer logger.Infob().
+		String("moira_version", MoiraVersion).
+		Msg("Moira Checker stopped")
 
 	telemetry, err := cmd.ConfigureTelemetry(logger, config.Telemetry, serviceName)
 	if err != nil {
@@ -107,11 +109,16 @@ func main() {
 	}
 	defer stopChecker(checkerWorker)
 
-	logger.Infof("Moira Checker started. Version: %s", MoiraVersion)
+	logger.Infob().
+		String("moira_version", MoiraVersion).
+		Msg("Moira Checker started")
+
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
+
+	// TODO
 	logger.Info(fmt.Sprint(<-ch))
-	logger.Infof("Moira Checker shutting down.")
+	logger.Info("Moira Checker shutting down.")
 }
 
 func checkSingleTrigger(database moira.Database, metrics *metrics.CheckerMetrics, settings *checker.Config, sourceProvider *metricSource.SourceProvider) {

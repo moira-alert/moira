@@ -114,7 +114,9 @@ func (connector *DbConnector) manageSubscriptions(tomb *tomb.Tomb, channels []st
 
 	go func() {
 		<-tomb.Dying()
-		connector.logger.Infof("Calling shutdown, unsubscribe from '%s' redis channels...", channels)
+		connector.logger.Infob().
+			String("redis_channels", fmt.Sprintf("%s", channels)).
+			Msg("Calling shutdown, unsubscribe from some redis channels...")
 		psc.Unsubscribe(connector.context) //nolint
 	}()
 
@@ -124,10 +126,10 @@ func (connector *DbConnector) manageSubscriptions(tomb *tomb.Tomb, channels []st
 			raw, err := psc.Receive(connector.context)
 			if err != nil {
 				if err == io.ErrUnexpectedEOF {
-					connector.logger.Infof("Receive() returned error: %s", err.Error())
+					connector.logger.InfoWithError("Receive() returned error", err)
 					continue
 				}
-				connector.logger.Infof("Receive() returned error: %s. Reconnecting...", err.Error())
+				connector.logger.InfoWithError("Receive() returned error. Reconnecting...", err)
 				newPsc, err := connector.makePubSubConnection(channels)
 				if err != nil {
 					connector.logger.ErrorWithError("Failed to reconnect to subscription", err)
@@ -148,17 +150,24 @@ func (connector *DbConnector) manageSubscriptions(tomb *tomb.Tomb, channels []st
 			case *redis.Subscription:
 				switch data.Kind {
 				case "subscribe":
-					connector.logger.Infof("Subscribe to %s channel, current subscriptions is %v", data.Channel, data.Count)
+					connector.logger.Infob().
+						String("channel", data.Channel).
+						Int("current_subscriptions_count", data.Count).
+						Msg("Subscribe to the channel")
 				case "unsubscribe":
-					connector.logger.Infof("Unsubscribe from %s channel, current subscriptions is %v", data.Channel, data.Count)
+					connector.logger.Infob().
+						String("channel", data.Channel).
+						Int("current_subscriptions_count", data.Count).
+						Msg("Unsubscribe from the channel")
+
 					if data.Count == 0 {
-						connector.logger.Infof("No more subscriptions, exit...")
+						connector.logger.Info("No more subscriptions, exit...")
 						close(dataChan)
 						return
 					}
 				}
 			case *redis.Pong:
-				connector.logger.Infof("Received PONG message")
+				connector.logger.Info("Received PONG message")
 			default:
 				connector.logger.Errorb().
 					String("message_type", fmt.Sprintf("%T", raw)).

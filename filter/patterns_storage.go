@@ -63,7 +63,7 @@ func (storage *PatternStorage) ProcessIncomingMetric(lineBytes []byte, maxTTL ti
 
 	parsedMetric, err := ParseMetric(lineBytes)
 	if err != nil {
-		storage.logger.Infof("cannot parse input: %v", err)
+		storage.logger.InfoWithError("Cannot parse input", err)
 		return nil
 	}
 

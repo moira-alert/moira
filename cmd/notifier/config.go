@@ -126,7 +126,9 @@ func (config *notifierConfig) getSettings(logger moira.Logger) notifier.Config {
 			Msg("Timezone load failed. Use UTC.")
 		location, _ = time.LoadLocation("UTC")
 	} else {
-		logger.Infof("Timezone '%s' loaded.", config.Timezone)
+		logger.Infob().
+			String("timezone", config.Timezone).
+			Msg("Timezone loaded")
 	}
 
 	format := "15:04 02.01.2006"
@@ -137,7 +139,10 @@ func (config *notifierConfig) getSettings(logger moira.Logger) notifier.Config {
 			Msg("Failed to change time format")
 	} else {
 		format = config.DateTimeFormat
-		logger.Infof("Format '%v' parsed successfully. Current time format: %v", format, time.Now().Format(format))
+		logger.Infob().
+			String("format", format).
+			String("current_time_format", time.Now().Format(format)).
+			Msg("Format parsed successfully")
 	}
 
 	readBatchSize := notifier.NotificationsLimitUnlimited
@@ -150,7 +155,9 @@ func (config *notifierConfig) getSettings(logger moira.Logger) notifier.Config {
 			Int64("notification_limit_unlimited", notifier.NotificationsLimitUnlimited).
 			Msg("Current config's read_batch_size is invalid, value ignored")
 	}
-	logger.Infof("Current read_batch_size is %d", readBatchSize)
+	logger.Infob().
+		Int64("read_batch_size", readBatchSize).
+		Msg("Current read_batch_size")
 
 	contacts := map[string]string{}
 	for _, v := range config.SetLogLevel.Contacts {
@@ -160,7 +167,10 @@ func (config *notifierConfig) getSettings(logger moira.Logger) notifier.Config {
 	for _, v := range config.SetLogLevel.Subscriptions {
 		subscriptions[v.ID] = v.Level
 	}
-	logger.Infof("Found dynamic log rules in config for %d contacts and %d subscriptions", len(contacts), len(subscriptions))
+	logger.Infob().
+		Int("contacts_count", len(contacts)).
+		Int("subscriptions_count", len(subscriptions)).
+		Msg("Found dynamic log rules in config for some contacts and subscriptions")
 
 	return notifier.Config{
 		SelfStateEnabled:        config.SelfState.Enabled,

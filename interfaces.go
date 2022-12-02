@@ -171,7 +171,8 @@ type Logger interface {
 	Debugf(format string, args ...interface{})
 	Debugb() EventBuilder
 
-	Info(args ...interface{})
+	Info(msg string)
+	InfoWithError(msg string, err error)
 	Infof(format string, args ...interface{})
 	Infob() EventBuilder
 

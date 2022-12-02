@@ -1,6 +1,7 @@
 package matchedmetrics
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
@@ -51,7 +52,10 @@ func (matcher *MetricsMatcher) Start(matchedMetricsChan chan *moira.MatchedMetri
 			matcher.metrics.SavingTimer.UpdateSince(timer)
 		}
 	}()
-	matcher.logger.Infof("Moira Filter Metrics Matcher started to save %d cached metrics every %.4f", matcher.cacheCapacity, time.Second.Seconds())
+	matcher.logger.Infob().
+		Int("cached_metrics_count", matcher.cacheCapacity).
+		String("cooldown", fmt.Sprintf("%.4f", time.Second.Seconds())).
+		Msg("Moira Filter Metrics Matcher started to save cached metrics with cooldown")
 }
 
 func (matcher *MetricsMatcher) receiveBatch(metrics <-chan *moira.MatchedMetric) <-chan map[string]*moira.MatchedMetric {

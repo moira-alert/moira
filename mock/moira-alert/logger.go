@@ -228,19 +228,27 @@ func (mr *MockLoggerMockRecorder) Fields(arg0 interface{}) *gomock.Call {
 }
 
 // Info mocks base method.
-func (m *MockLogger) Info(arg0 ...interface{}) {
+func (m *MockLogger) Info(arg0 string) {
 	m.ctrl.T.Helper()
-	varargs := []interface{}{}
-	for _, a := range arg0 {
-		varargs = append(varargs, a)
-	}
-	m.ctrl.Call(m, "Info", varargs...)
+	m.ctrl.Call(m, "Info", arg0)
 }
 
 // Info indicates an expected call of Info.
-func (mr *MockLoggerMockRecorder) Info(arg0 ...interface{}) *gomock.Call {
+func (mr *MockLoggerMockRecorder) Info(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Info", reflect.TypeOf((*MockLogger)(nil).Info), arg0...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Info", reflect.TypeOf((*MockLogger)(nil).Info), arg0)
+}
+
+// InfoWithError mocks base method.
+func (m *MockLogger) InfoWithError(arg0 string, arg1 error) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "InfoWithError", arg0, arg1)
+}
+
+// InfoWithError indicates an expected call of InfoWithError.
+func (mr *MockLoggerMockRecorder) InfoWithError(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InfoWithError", reflect.TypeOf((*MockLogger)(nil).InfoWithError), arg0, arg1)
 }
 
 // Infob mocks base method.

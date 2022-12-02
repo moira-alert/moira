@@ -35,7 +35,9 @@ type Worker struct {
 // Run the worker
 func (worker *Worker) Run(stop <-chan struct{}) {
 	for {
-		worker.logger.Infof("%s tries to acquire the lock...", worker.name)
+		worker.logger.Infob().
+			String("worker_name", worker.name).
+			Msg("Worker tries to acquire the lock...")
 		lost, err := worker.lock.Acquire(stop)
 		if err != nil {
 			switch err {
@@ -55,7 +57,9 @@ func (worker *Worker) Run(stop <-chan struct{}) {
 			}
 		}
 
-		worker.logger.Infof("%s acquired the lock", worker.name)
+		worker.logger.Infob().
+			String("worker_name", worker.name).
+			Msg("Worker acquired the lock")
 
 		actionStop := make(chan struct{})
 		actionDone := make(chan struct{})
@@ -83,7 +87,9 @@ func (worker *Worker) Run(stop <-chan struct{}) {
 		select {
 		case <-actionDone:
 			worker.lock.Release()
-			worker.logger.Infof("%s released the lock", worker.name)
+			worker.logger.Infob().
+				String("worker_name", worker.name).
+				Msg("Worker released the lock")
 			select {
 			case <-stop:
 				return
@@ -101,7 +107,9 @@ func (worker *Worker) Run(stop <-chan struct{}) {
 			close(actionStop)
 			<-actionDone
 			worker.lock.Release()
-			worker.logger.Infof("%s released the lock", worker.name)
+			worker.logger.Infob().
+				String("worker_name", worker.name).
+				Msg("Worker released the lock")
 			return
 		}
 	}

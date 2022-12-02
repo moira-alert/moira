@@ -65,7 +65,9 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Can not configure log: %s\n", err.Error())
 		os.Exit(1)
 	}
-	defer logger.Infof("Moira Filter stopped. Version: %s", MoiraVersion)
+	defer logger.Infob().
+		String("moira_version", MoiraVersion).
+		Msg("Moira Filter stopped. Version")
 
 	telemetry, err := cmd.ConfigureTelemetry(logger, config.Telemetry, serviceName)
 	if err != nil {
@@ -75,7 +77,9 @@ func main() {
 
 	if config.Filter.MaxParallelMatches == 0 {
 		config.Filter.MaxParallelMatches = runtime.NumCPU()
-		logger.Infof("MaxParallelMatches is not configured, set it to the number of CPU - %d", config.Filter.MaxParallelMatches)
+		logger.Infob().
+			Int("number_of_cpu", config.Filter.MaxParallelMatches).
+			Msg("MaxParallelMatches is not configured, set it to the number of CPU")
 	}
 
 	filterMetrics := metrics.ConfigureFilterMetrics(telemetry.Metrics)
@@ -134,11 +138,17 @@ func main() {
 	defer metricsMatcher.Wait()  // First stop listener
 	defer stopListener(listener) // Then waiting for metrics matcher handle all received events
 
-	logger.Infof("Moira Filter started. Version: %s", MoiraVersion)
+	logger.Infob().
+		String("moira_version", MoiraVersion).
+		Msg("Moira Filter started")
+
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
+
+	// TODO
 	logger.Info(fmt.Sprint(<-ch))
-	logger.Infof("Moira Filter shutting down.")
+
+	logger.Info("Moira Filter shutting down.")
 }
 
 func stopListener(listener *connection.MetricsListener) {
