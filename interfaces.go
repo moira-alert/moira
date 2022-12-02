@@ -176,17 +176,17 @@ type Logger interface {
 	Infof(format string, args ...interface{})
 	Infob() EventBuilder
 
-	Error(args ...interface{})
+	Error(msg string)
 	ErrorWithError(msg string, err error)
 	Errorf(format string, args ...interface{})
 	Errorb() EventBuilder
 
-	Fatal(args ...interface{})
+	Fatal(msg string)
 	FatalWithError(msg string, err error)
 	Fatalf(format string, args ...interface{})
 	Fatalb() EventBuilder
 
-	Warning(args ...interface{})
+	Warning(msg string)
 	WarningWithError(msg string, err error)
 	Warningf(format string, args ...interface{})
 	Warningb() EventBuilder
