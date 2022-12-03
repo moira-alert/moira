@@ -50,7 +50,9 @@ func (index *Index) actualizeIndex() error {
 	}
 
 	log := index.logger.Clone().String(moira.LogFieldNameContext, "Index actualizer")
-	log.Debugf("Got %d triggers to actualize", len(triggerToReindexIDs))
+	log.Debugb().
+		Int("triggers_count", len(triggerToReindexIDs)).
+		Msg("Got triggers to actualize")
 
 	triggersToReindex, err := index.database.GetTriggerChecks(triggerToReindexIDs)
 	if err != nil {
@@ -77,7 +79,9 @@ func (index *Index) actualizeIndex() error {
 		if err2 != nil {
 			return err2
 		}
-		log.Debugf("%d triggers deleted", len(triggersToDelete))
+		log.Debugb().
+			Int("triggers_count", len(triggersToDelete)).
+			Msg("Some triggers deleted")
 	}
 
 	if len(triggersToUpdate) > 0 {
@@ -85,7 +89,9 @@ func (index *Index) actualizeIndex() error {
 		if err2 != nil {
 			return err2
 		}
-		log.Debugf("%d triggers reindexed", len(triggersToUpdate))
+		log.Debugb().
+			Int("triggers_count", len(triggersToUpdate)).
+			Msg("Some triggers reindexed")
 	}
 	return nil
 }

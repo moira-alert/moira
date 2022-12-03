@@ -115,3 +115,17 @@ func (mr *MockEventBuilderMockRecorder) String(arg0, arg1 interface{}) *gomock.C
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "String", reflect.TypeOf((*MockEventBuilder)(nil).String), arg0, arg1)
 }
+
+// Value mocks base method.
+func (m *MockEventBuilder) Value(arg0 string, arg1 interface{}) moira.EventBuilder {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Value", arg0, arg1)
+	ret0, _ := ret[0].(moira.EventBuilder)
+	return ret0
+}
+
+// Value indicates an expected call of Value.
+func (mr *MockEventBuilderMockRecorder) Value(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Value", reflect.TypeOf((*MockEventBuilder)(nil).Value), arg0, arg1)
+}

@@ -74,11 +74,15 @@ func (notifier *StandardNotifier) buildNotificationPackagePlots(pkg Notification
 		return nil, err
 	}
 	metricsData = getMetricDataToShow(metricsData, metricsToShow)
-	logger.Debugf("Build plot from MetricsData: %v", metricsData)
+	logger.Debugb().
+		Value("metrics_data", metricsData).
+		Msg("Build plot from MetricsData")
+
 	result, err := buildTriggerPlots(trigger, metricsData, plotTemplate)
-	logger.Clone().
+	logger.Infob().
 		Int64("moira.plots.build_duration_ms", time.Since(startTime).Milliseconds()).
-		Info("Finished build plots for package")
+		Msg("Finished build plots for package")
+
 	return result, err
 }
 

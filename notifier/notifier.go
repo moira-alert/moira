@@ -108,7 +108,10 @@ func (notifier *StandardNotifier) Send(pkg *NotificationPackage, waitGroup *sync
 	go func(pkg *NotificationPackage) {
 		defer waitGroup.Done()
 		getLogWithPackageContext(&notifier.logger, pkg, &notifier.config).
-			Debugf("Start sending %s", pkg)
+			Debugb().
+			Value("package", pkg).
+			Msg("Start sending")
+
 		select {
 		case ch <- *pkg:
 			break

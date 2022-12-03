@@ -34,7 +34,11 @@ var characterLimits = map[messageType]int{
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
 	msgType := getMessageType(plots)
 	message := sender.buildMessage(events, trigger, throttled, characterLimits[msgType])
-	sender.logger.Debugf("Calling telegram api with chat_id %s and message body %s", contact.Value, message)
+	sender.logger.Debugb().
+		String("chat_id", contact.Value).
+		String("message", message).
+		Msg("Calling telegram api")
+
 	chat, err := sender.getChat(contact.Value)
 	if err != nil {
 		return checkBrokenContactError(sender.logger, err)
@@ -126,7 +130,11 @@ func (sender *Sender) talk(chat *telebot.Chat, message string, plots [][]byte, m
 func (sender *Sender) sendAsMessage(chat *telebot.Chat, message string) error {
 	_, err := sender.bot.Send(chat, message)
 	if err != nil {
-		sender.logger.Debugf("can't send event message [%s] to %v: %s", message, chat.ID, err.Error())
+		sender.logger.Debugb().
+			String("message", message).
+			Int64("chat_id", chat.ID).
+			Error(err).
+			Msg("Can't send event message to telegram")
 	}
 	return err
 }
@@ -137,13 +145,18 @@ func checkBrokenContactError(logger moira.Logger, err error) error {
 		return nil
 	}
 	if e, ok := err.(*telebot.APIError); ok {
-		logger.Debugf("It's telebot.APIError from talk(): code = %d, msg = %s, desc = %s", e.Code, e.Message, e.Description)
+		logger.Debugb().
+			Int("code", e.Code).
+			String("msg", e.Message).
+			String("desc", e.Description).
+			Msg("It's telebot.APIError from talk()")
+
 		if isBrokenContactAPIError(e) {
 			return moira.NewSenderBrokenContactError(err)
 		}
 	}
 	if strings.HasPrefix(err.Error(), "failed to get username uuid") {
-		logger.Debugf("It's error from getChat(): %s", err)
+		logger.DebugWithError("It's error from getChat()", err)
 		return moira.NewSenderBrokenContactError(err)
 	}
 	return err
@@ -182,7 +195,10 @@ func (sender *Sender) sendAsAlbum(chat *telebot.Chat, plots [][]byte, caption st
 
 	_, err := sender.bot.SendAlbum(chat, album)
 	if err != nil {
-		sender.logger.Debugf("can't send event plots to %v: %s", chat.ID, err.Error())
+		sender.logger.Debugb().
+			Int64("chat_id", chat.ID).
+			Error(err).
+			Msg("Can't send event plots to telegram chat")
 	}
 	return err
 }

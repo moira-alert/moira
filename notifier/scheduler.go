@@ -62,7 +62,10 @@ func (scheduler *StandardScheduler) ScheduleNotification(now time.Time, event mo
 		Plotting:  plotting,
 	}
 
-	logger.Debugf("Scheduled notification at %s (%d)", next.Format("2006/01/02 15:04:05"), next.Unix())
+	logger.Debugb().
+		String("notification_timestamp", next.Format("2006/01/02 15:04:05")).
+		Int64("notification_timestamt_unix", next.Unix()).
+		Msg("Scheduled notification")
 	return notification
 }
 
@@ -88,13 +91,15 @@ func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *
 	subscription, err := scheduler.database.GetSubscription(moira.UseString(event.SubscriptionID))
 	if err != nil {
 		scheduler.metrics.SubsMalformed.Mark(1)
-		logger.Debugf("Failed get subscription: %s", err.Error())
+		logger.DebugWithError("Failed get subscription", err)
 		return next, alarmFatigue
 	}
 
 	if subscription.ThrottlingEnabled {
 		if next.After(now) {
-			logger.Debugf("Using existing throttling, next at: %s", next)
+			logger.Debugb().
+				String("next_at", next.String()).
+				Msg("Using existing throttling")
 		} else {
 			for _, level := range throttlingLevels {
 				from := now.Add(-level.duration)
@@ -104,8 +109,12 @@ func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *
 				count := scheduler.database.GetNotificationEventCount(event.TriggerID, from.Unix())
 				if count >= level.count {
 					next = now.Add(level.delay)
-					logger.Debugf("Trigger switched %d times in last %s, delaying next notification for %s",
-						count, level.duration, level.delay)
+					logger.Debugb().
+						Int64("trigger_switched_times", count).
+						String("in_duration", level.duration.String()).
+						String("delaying_for", level.delay.String()).
+						Msg("Trigger switched many times, delaying next notification for some time")
+
 					if err = scheduler.database.SetTriggerThrottling(event.TriggerID, next); err != nil {
 						logger.ErrorWithError("Failed to set trigger throttling timestamp", err)
 					}

@@ -86,7 +86,11 @@ func (triggerChecker *TriggerChecker) handlePrepareError(checkData moira.CheckDa
 func (triggerChecker *TriggerChecker) handleFetchError(checkData moira.CheckData, err error) error {
 	switch err.(type) {
 	case ErrTriggerHasEmptyTargets, ErrTriggerHasOnlyWildcards:
-		triggerChecker.logger.Debugf("Trigger %s: %s", triggerChecker.triggerID, err.Error())
+		triggerChecker.logger.Debugb().
+			String("trigger_id", triggerChecker.triggerID).
+			Error(err).
+			Msg("Trigger fetch")
+
 		triggerState := triggerChecker.ttlState.ToTriggerState()
 		checkData.State = triggerState
 		checkData.Message = err.Error()
@@ -303,7 +307,10 @@ func (triggerChecker *TriggerChecker) checkForNoData(metricLastState moira.Metri
 	if metricLastState.Timestamp+triggerChecker.ttl >= lastCheckTimeStamp {
 		return false, nil
 	}
-	logger.Debugf("Metric TTL expired for state %v", metricLastState)
+	logger.Debugb().
+		Value("metric_last_state", metricLastState).
+		Msg("Metric TTL expired for state")
+
 	if triggerChecker.ttlState == moira.TTLStateDEL && metricLastState.EventTimestamp != 0 {
 		return true, nil
 	}
@@ -367,8 +374,11 @@ func (triggerChecker *TriggerChecker) getMetricDataState(metrics *map[string]met
 	if !noEmptyValues {
 		return nil, nil
 	}
-	logger.Debugf("Values for ts %v: MainTargetValue: %v, additionalTargetValues: %v",
-		valueTimestamp, triggerExpression.MainTargetValue, triggerExpression.AdditionalTargetsValues)
+	logger.Debugb().
+		Value("timestamp", valueTimestamp).
+		Value("main_target_value", triggerExpression.MainTargetValue).
+		Value("additional_target_values", triggerExpression.AdditionalTargetsValues).
+		Msg("Getting metric data state")
 
 	triggerExpression.WarnValue = triggerChecker.trigger.WarnValue
 	triggerExpression.ErrorValue = triggerChecker.trigger.ErrorValue

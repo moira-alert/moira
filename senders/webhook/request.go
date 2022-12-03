@@ -30,7 +30,12 @@ func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moir
 	for k, v := range sender.headers {
 		request.Header.Set(k, v)
 	}
-	sender.log.Debugf("%s %s '%s'", request.Method, request.URL.String(), bytes.NewBuffer(requestBody).String())
+	sender.log.Debugb().
+		String("method", request.Method).
+		String("url", request.URL.String()).
+		String("bosy", bytes.NewBuffer(requestBody).String()).
+		Msg("Created request")
+
 	return request, nil
 }
 

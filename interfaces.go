@@ -168,6 +168,7 @@ type Mutex interface {
 // Logger implements logger abstraction
 type Logger interface {
 	Debug(args ...interface{})
+	DebugWithError(msg string, err error)
 	Debugf(format string, args ...interface{})
 	Debugb() EventBuilder
 
@@ -208,6 +209,7 @@ type EventBuilder interface {
 	Error(err error) EventBuilder
 	Int(key string, value int) EventBuilder
 	Int64(key string, value int64) EventBuilder
+	Value(key string, value interface{}) EventBuilder
 	Fields(fields map[string]interface{}) EventBuilder
 	Msg(message string)
 }

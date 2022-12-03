@@ -29,7 +29,10 @@ func (index *Index) getTriggerChecksBatches(triggerIDsBatches [][]string) (trigg
 				return
 			}
 
-			index.logger.Debugf("Get %d trigger checks from DB", len(newBatch))
+			index.logger.Debugb().
+				Int("triggers_count", len(newBatch)).
+				Msg("Get some trigger checks from DB")
+
 			triggerChecksChan <- newBatch
 		}(triggerIDsBatch)
 	}
@@ -79,7 +82,11 @@ func (index *Index) handleTriggerBatches(triggerChecksChan chan []*moira.Trigger
 					indexErrors <- err2
 					return
 				}
-				index.logger.Debugf("[%d triggers of %d] added to index", count, toIndex)
+				index.logger.Debugb().
+					Int64("batch_size", count).
+					Int("triggers_total", toIndex).
+					Msg("Batch of triggers added to index")
+
 			}(batch)
 		case err, ok := <-getTriggersErrors:
 			if ok {

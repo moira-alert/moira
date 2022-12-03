@@ -64,6 +64,18 @@ func (mr *MockLoggerMockRecorder) Debug(arg0 ...interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Debug", reflect.TypeOf((*MockLogger)(nil).Debug), arg0...)
 }
 
+// DebugWithError mocks base method.
+func (m *MockLogger) DebugWithError(arg0 string, arg1 error) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "DebugWithError", arg0, arg1)
+}
+
+// DebugWithError indicates an expected call of DebugWithError.
+func (mr *MockLoggerMockRecorder) DebugWithError(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DebugWithError", reflect.TypeOf((*MockLogger)(nil).DebugWithError), arg0, arg1)
+}
+
 // Debugb mocks base method.
 func (m *MockLogger) Debugb() moira.EventBuilder {
 	m.ctrl.T.Helper()

@@ -1,6 +1,8 @@
 package logging
 
 import (
+	"fmt"
+
 	"github.com/moira-alert/moira"
 	"github.com/rs/zerolog"
 )
@@ -41,6 +43,10 @@ func (e EventBuilder) Int64(key string, value int64) moira.EventBuilder {
 		e.Event.Int64(key, value)
 	}
 	return e
+}
+
+func (e EventBuilder) Value(key string, value interface{}) moira.EventBuilder {
+	return e.String(key, fmt.Sprintf("%v", value))
 }
 
 func (e EventBuilder) Fields(fields map[string]interface{}) moira.EventBuilder {

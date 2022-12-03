@@ -79,6 +79,12 @@ func (l Logger) Debug(args ...interface{}) {
 	event.Timestamp().Msg(fmt.Sprint(args...))
 }
 
+func (l Logger) DebugWithError(msg string, err error) {
+	l.Debugb().
+		Error(err).
+		Msg(msg)
+}
+
 func (l Logger) Debugf(format string, args ...interface{}) {
 	event := l.Logger.Debug()
 	if event == nil {
