@@ -12,6 +12,8 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/api"
 	metricSource "github.com/moira-alert/moira/metric_source"
 	mock_metric_source "github.com/moira-alert/moira/mock/metric_source"
 
@@ -38,6 +40,95 @@ func TestGetSearchRequestString(t *testing.T) {
 				searchRequest := getSearchRequestString(req)
 				So(searchRequest, ShouldEqual, testCase.expectedSearchRequest)
 			}
+		})
+	})
+}
+
+func TestGetTriggerFromRequest(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	localSource := mock_metric_source.NewMockMetricSource(mockCtrl)
+	remoteSource := mock_metric_source.NewMockMetricSource(mockCtrl)
+	fetchResult := mock_metric_source.NewMockFetchResult(mockCtrl)
+	sourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource)
+
+	localSource.EXPECT().IsConfigured().Return(true, nil).AnyTimes()
+	localSource.EXPECT().GetMetricsTTLSeconds().Return(int64(3600)).AnyTimes()
+	localSource.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fetchResult, nil).AnyTimes()
+	fetchResult.EXPECT().GetPatterns().Return(make([]string, 0), nil).AnyTimes()
+	fetchResult.EXPECT().GetMetricsData().Return([]metricSource.MetricData{*metricSource.MakeMetricData("", []float64{}, 0, 0)}).AnyTimes()
+
+	Convey("Given a correct payload", t, func() {
+		triggerWarnValue := 0.0
+		triggerErrorValue := 1.0
+		ttlState := moira.TTLState("NODATA")
+		triggerDTO := dto.Trigger{
+			TriggerModel: dto.TriggerModel{
+				ID:             "test_id",
+				Name:           "Test trigger",
+				Desc:           new(string),
+				Targets:        []string{"foo.bar"},
+				WarnValue:      &triggerWarnValue,
+				ErrorValue:     &triggerErrorValue,
+				TriggerType:    "rising",
+				Tags:           []string{"Normal", "DevOps", "DevOpsGraphite-duty"},
+				TTLState:       &ttlState,
+				TTL:            0,
+				Schedule:       &moira.ScheduleData{},
+				Expression:     "",
+				Patterns:       []string{},
+				IsRemote:       false,
+				MuteNewMetrics: false,
+				AloneMetrics:   map[string]bool{},
+				CreatedAt:      &time.Time{},
+				UpdatedAt:      &time.Time{},
+			},
+		}
+		body, _ := json.Marshal(triggerDTO)
+
+		request := httptest.NewRequest(http.MethodPut, "/trigger", bytes.NewReader(body))
+		request.Header.Add("content-type", "application/json")
+		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", sourceProvider))
+
+		Convey("It should be parsed successfully", func() {
+			trigger, err := getTriggerFromRequest(request)
+			So(err, ShouldBeNil)
+			So(trigger, ShouldResemble, &triggerDTO)
+		})
+	})
+
+	Convey("Given an incorrect payload", t, func() {
+		body := `{
+			"name": "test",
+			"desc": "",
+			"targets": ["foo.bar"],
+			"tags": ["test"],
+			"patterns": [],
+			"expression": "",
+			"ttl": 600,
+			"ttl_state": "NODATA",
+			"sched": {
+				"startOffset": 0,
+				"endOffset": 1439,
+				"tzOffset": -240,
+				"days": null
+			},
+			"is_remote": false,
+			"error_value": 1,
+			"warn_value": 0,
+			"trigger_type": "rising",
+			"mute_new_metrics": false,
+			"alone_metrics": "beliberda"
+		}`
+
+		request := httptest.NewRequest(http.MethodPut, "/trigger", strings.NewReader(body))
+		request.Header.Add("content-type", "application/json")
+		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", sourceProvider))
+
+		Convey("Parser should return en error", func() {
+			_, err := getTriggerFromRequest(request)
+			So(err, ShouldHaveSameTypeAs, api.ErrorInvalidRequest(fmt.Errorf("")))
 		})
 	})
 }
