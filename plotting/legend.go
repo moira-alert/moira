@@ -1,7 +1,7 @@
 package plotting
 
 import (
-	"github.com/beevee/go-chart"
+	"github.com/moira-alert/go-chart"
 )
 
 const (

@@ -43,7 +43,18 @@ func (worker *Checker) Start() error {
 
 	worker.lastData = time.Now().UTC().Unix()
 
-	metricEventsChannel, err := worker.Database.SubscribeMetricEvents(&worker.tomb)
+	if worker.Config.MetricEventPopBatchSize == 0 {
+		worker.Config.MetricEventPopBatchSize = 100
+	} else if worker.Config.MetricEventPopBatchSize < 0 {
+		return errors.New("MetricEventPopBatchSize param less than zero")
+	}
+
+	subscribeMetricEventsParams := moira.SubscribeMetricEventsParams{
+		BatchSize: worker.Config.MetricEventPopBatchSize,
+		Delay:     worker.Config.MetricEventPopDelay,
+	}
+
+	metricEventsChannel, err := worker.Database.SubscribeMetricEvents(&worker.tomb, &subscribeMetricEventsParams)
 	if err != nil {
 		return err
 	}

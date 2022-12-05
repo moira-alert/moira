@@ -40,6 +40,10 @@ type checkerConfig struct {
 	MaxParallelRemoteChecks int `yaml:"max_parallel_remote_checks"`
 	// Specify log level by entities
 	SetLogLevel triggersLogConfig `yaml:"set_log_level"`
+	// Metric event pop operation batch size
+	MetricEventPopBatchSize int `yaml:"metric_event_pop_batch_size"`
+	// Metric event pop operation delay
+	MetricEventPopDelay string `yaml:"metric_event_pop_delay"`
 }
 
 func (config *checkerConfig) getSettings(logger moira.Logger) *checker.Config {
@@ -57,6 +61,8 @@ func (config *checkerConfig) getSettings(logger moira.Logger) *checker.Config {
 		MaxParallelChecks:           config.MaxParallelChecks,
 		MaxParallelRemoteChecks:     config.MaxParallelRemoteChecks,
 		LogTriggersToLevel:          logTriggersToLevel,
+		MetricEventPopBatchSize:     int64(config.MetricEventPopBatchSize),
+		MetricEventPopDelay:         to.Duration(config.MetricEventPopDelay),
 	}
 }
 

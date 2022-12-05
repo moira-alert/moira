@@ -6,7 +6,6 @@ require (
 	github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible
 	github.com/PagerDuty/go-pagerduty v1.3.0
 	github.com/aws/aws-sdk-go v1.43.31
-	github.com/beevee/go-chart v2.0.2-0.20190523110126-273a59e48bcc+incompatible
 	github.com/blevesearch/bleve/v2 v2.3.2
 	github.com/bwmarrin/discordgo v0.22.0
 	github.com/carlosdp/twiliogo v0.0.0-20161027183705-b26045ebb9d1
@@ -26,6 +25,7 @@ require (
 	github.com/gregdel/pushover v0.0.0-20200820121613-505cfd60a340
 	github.com/karriereat/blackfriday-slack v0.1.0
 	github.com/mattermost/mattermost-server/v6 v6.7.2
+	github.com/moira-alert/go-chart v0.0.0-20221123053500-da6c12c008d3
 	github.com/opsgenie/opsgenie-go-sdk-v2 v1.2.1
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pkg/errors v0.9.1
@@ -150,10 +150,10 @@ require (
 	go.uber.org/zap v1.17.0 // indirect
 	golang.org/x/crypto v0.0.0-20220331220935-ae2d96664a29 // indirect
 	golang.org/x/exp v0.0.0-20200924195034-c827fd4f18b9 // indirect
-	golang.org/x/image v0.0.0-20220321031419-a8550c1d254a // indirect
-	golang.org/x/net v0.0.0-20220403103023-749bd193bc2b // indirect
-	golang.org/x/sys v0.0.0-20220406163625-3f8b81556e12 // indirect
-	golang.org/x/text v0.3.7 // indirect
+	golang.org/x/image v0.1.0 // indirect
+	golang.org/x/net v0.0.0-20220722155237-a158d28d115b // indirect
+	golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f // indirect
+	golang.org/x/text v0.4.0 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	gonum.org/v1/gonum v0.9.3 // indirect
 	gonum.org/v1/netlib v0.0.0-20200824093956-f0ca4b3a5ef5 // indirect

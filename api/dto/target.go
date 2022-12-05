@@ -120,8 +120,14 @@ func TargetVerification(targets []string, ttl time.Duration, isRemote bool) []Tr
 	for _, target := range targets {
 		functionsOfTarget := TreeOfProblems{SyntaxOk: true}
 
-		expr, _, err := parser.ParseExpr(target)
+		expr, nestedExpr, err := parser.ParseExpr(target)
 		if err != nil {
+			functionsOfTarget.SyntaxOk = false
+			functionsOfTargets = append(functionsOfTargets, functionsOfTarget)
+			continue
+		}
+		isSpaceInMetricName := nestedExpr != ""
+		if isSpaceInMetricName {
 			functionsOfTarget.SyntaxOk = false
 			functionsOfTargets = append(functionsOfTargets, functionsOfTarget)
 			continue

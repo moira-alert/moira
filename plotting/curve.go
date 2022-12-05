@@ -3,7 +3,7 @@ package plotting
 import (
 	"time"
 
-	"github.com/beevee/go-chart"
+	"github.com/moira-alert/go-chart"
 	"github.com/moira-alert/moira"
 	metricSource "github.com/moira-alert/moira/metric_source"
 )
