@@ -50,9 +50,15 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	var scriptOutput bytes.Buffer
 	command.Stdin = bytes.NewReader(scriptBody)
 	command.Stdout = &scriptOutput
-	sender.logger.Debugf("Executing script: %s", scriptFile)
+	sender.logger.Debugb().
+		String("script", scriptFile).
+		Msg("Executing script")
+
 	err = command.Run()
-	sender.logger.Debugf("Finished executing: %s", scriptFile)
+	sender.logger.Debugb().
+		String("script", scriptFile).
+		Msg("Finished executing script")
+
 	if err != nil {
 		return fmt.Errorf("failed exec [%s] Error [%s] Output: [%s]", sender.exec, err.Error(), scriptOutput.String())
 	}
