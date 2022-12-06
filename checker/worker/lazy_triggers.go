@@ -11,12 +11,18 @@ const (
 
 func (worker *Checker) lazyTriggersWorker() error {
 	if worker.Config.LazyTriggersCheckInterval <= worker.Config.CheckInterval {
-		worker.Logger.Infof("Lazy triggers worker won't start because lazy triggers interval '%v' is less or equal to check interval '%v'", worker.Config.LazyTriggersCheckInterval, worker.Config.CheckInterval)
+		worker.Logger.Infob().
+			Value("lazy_triggers_check_interval", worker.Config.LazyTriggersCheckInterval).
+			Value("check_interval", worker.Config.CheckInterval).
+			Msg("Lazy triggers worker won't start because lazy triggers interval is less or equal to check interval")
 		return nil
 	}
 	checkTicker := time.NewTicker(lazyTriggersWorkerTicker)
-	worker.Logger.Infof("Start lazy triggers worker. Update lazy triggers list every %v", lazyTriggersWorkerTicker)
-	worker.Logger.Infof("Check lazy triggers every %v", worker.Config.LazyTriggersCheckInterval)
+	worker.Logger.Infob().
+		Value("lazy_triggers_check_interval", worker.Config.LazyTriggersCheckInterval).
+		Value("update_lazy_triggers_every", lazyTriggersWorkerTicker).
+		Msg("Start lazy triggers worker")
+
 	for {
 		select {
 		case <-worker.tomb.Dying():
@@ -26,7 +32,7 @@ func (worker *Checker) lazyTriggersWorker() error {
 		case <-checkTicker.C:
 			err := worker.fillLazyTriggerIDs()
 			if err != nil {
-				worker.Logger.Errorf("Failed to get lazy triggers: %s", err.Error())
+				worker.Logger.ErrorWithError("Failed to get lazy triggers", err)
 			}
 		}
 	}
