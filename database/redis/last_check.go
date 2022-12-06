@@ -109,7 +109,9 @@ func cleanUpAbandonedTriggerLastCheckOnRedisNode(connector *DbConnector, client 
 			if err != nil {
 				return err
 			}
-			connector.logger.Infof("Cleaned up last check for trigger %s", triggerID)
+			connector.logger.Infob().
+				String("trigger_id", triggerID).
+				Msg("Cleaned up last check for trigger %s")
 		}
 	}
 	return nil

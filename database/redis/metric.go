@@ -176,7 +176,10 @@ func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb, params *moi
 
 			metricEvent := &moira.MetricEvent{}
 			if err := json.Unmarshal([]byte(response), metricEvent); err != nil {
-				connector.logger.Errorf("Failed to parse MetricEvent: %s, error : %v", response, err)
+				connector.logger.Errorb().
+					String("metric_event", response).
+					Error(err).
+					Msg("Failed to parse MetricEvent")
 				continue
 			}
 			metricChannel <- metricEvent
