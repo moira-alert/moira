@@ -9,7 +9,10 @@ const (
 
 func (index *Index) runTriggersToReindexSweepper() error {
 	ticker := time.NewTicker(sweeperRunInterval)
-	index.logger.Infof("Start triggers to reindex sweepper: remove outdated (> %v) triggers from redis every %v", sweeperTimeToKeep, sweeperRunInterval)
+	index.logger.Infob().
+		String("trigger_time_to_keep", sweeperTimeToKeep.String()).
+		String("time_between_sweeps", sweeperRunInterval.String()).
+		Msg("Start triggers to reindex sweepper: remove outdated triggers from redis")
 
 	for {
 		select {
@@ -19,7 +22,7 @@ func (index *Index) runTriggersToReindexSweepper() error {
 		case <-ticker.C:
 			timeToDelete := time.Now().Add(-sweeperTimeToKeep).Unix()
 			if err := index.database.RemoveTriggersToReindex(timeToDelete); err != nil {
-				index.logger.Warningf("Cannot sweep triggers to reindex from redis: %s", err.Error())
+				index.logger.WarningWithError("Cannot sweep triggers to reindex from redis", err)
 			}
 		}
 	}
