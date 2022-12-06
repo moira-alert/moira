@@ -79,12 +79,22 @@ func (l Logger) Debug(args ...interface{}) {
 	event.Timestamp().Msg(fmt.Sprint(args...))
 }
 
+func (l Logger) DebugWithError(msg string, err error) {
+	l.Debugb().
+		Error(err).
+		Msg(msg)
+}
+
 func (l Logger) Debugf(format string, args ...interface{}) {
 	event := l.Logger.Debug()
 	if event == nil {
 		return
 	}
 	event.Timestamp().Msgf(format, args...)
+}
+
+func (l Logger) Debugb() moira.EventBuilder {
+	return EventBuilder{Event: l.Logger.Debug()}
 }
 
 func (l Logger) Info(args ...interface{}) {
@@ -95,6 +105,12 @@ func (l Logger) Info(args ...interface{}) {
 	event.Timestamp().Msg(fmt.Sprint(args...))
 }
 
+func (l Logger) InfoWithError(msg string, err error) {
+	l.Infob().
+		Error(err).
+		Msg(msg)
+}
+
 func (l Logger) Infof(format string, args ...interface{}) {
 	event := l.Logger.Info()
 	if event == nil {
@@ -103,12 +119,22 @@ func (l Logger) Infof(format string, args ...interface{}) {
 	event.Timestamp().Msgf(format, args...)
 }
 
+func (l Logger) Infob() moira.EventBuilder {
+	return EventBuilder{Event: l.Logger.Info()}
+}
+
 func (l Logger) Error(args ...interface{}) {
 	event := l.Logger.Error()
 	if event == nil {
 		return
 	}
-	event.Timestamp().Msgf(fmt.Sprint(args...))
+	event.Timestamp().Msg(fmt.Sprint(args...))
+}
+
+func (l Logger) ErrorWithError(msg string, err error) {
+	l.Errorb().
+		Error(err).
+		Msg(msg)
 }
 
 func (l Logger) Errorf(format string, args ...interface{}) {
@@ -119,12 +145,22 @@ func (l Logger) Errorf(format string, args ...interface{}) {
 	event.Timestamp().Msgf(format, args...)
 }
 
+func (l Logger) Errorb() moira.EventBuilder {
+	return EventBuilder{Event: l.Logger.Error()}
+}
+
 func (l Logger) Fatal(args ...interface{}) {
 	event := l.Logger.Fatal()
 	if event == nil {
 		return
 	}
 	event.Timestamp().Msg(fmt.Sprint(args...))
+}
+
+func (l Logger) FatalWithError(msg string, err error) {
+	l.Fatalb().
+		Error(err).
+		Msg(msg)
 }
 
 func (l Logger) Fatalf(format string, args ...interface{}) {
@@ -135,6 +171,10 @@ func (l Logger) Fatalf(format string, args ...interface{}) {
 	event.Timestamp().Msgf(format, args...)
 }
 
+func (l Logger) Fatalb() moira.EventBuilder {
+	return EventBuilder{Event: l.Logger.Fatal()}
+}
+
 func (l Logger) Warning(args ...interface{}) {
 	event := l.Logger.Warn()
 	if event == nil {
@@ -143,12 +183,22 @@ func (l Logger) Warning(args ...interface{}) {
 	event.Timestamp().Msg(fmt.Sprint(args...))
 }
 
+func (l Logger) WarningWithError(msg string, err error) {
+	l.Warningb().
+		Error(err).
+		Msg(msg)
+}
+
 func (l Logger) Warningf(format string, args ...interface{}) {
 	event := l.Logger.Warn()
 	if event == nil {
 		return
 	}
 	event.Timestamp().Msgf(format, args...)
+}
+
+func (l Logger) Warningb() moira.EventBuilder {
+	return EventBuilder{Event: l.Logger.Warn()}
 }
 
 func (l *Logger) String(key, value string) moira.Logger {
