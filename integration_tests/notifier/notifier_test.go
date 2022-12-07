@@ -14,7 +14,7 @@ import (
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	"github.com/moira-alert/moira/metrics"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
-	"github.com/moira-alert/moira/notifier"
+	. "github.com/moira-alert/moira/notifier"
 	"github.com/moira-alert/moira/notifier/events"
 	"github.com/moira-alert/moira/notifier/notifications"
 	. "github.com/smartystreets/goconvey/convey"
@@ -27,12 +27,12 @@ var senderSettings = map[string]string{
 var location, _ = time.LoadLocation("UTC")
 var dateTimeFormat = "15:04 02.01.2006"
 
-var notifierConfig = notifier.Config{
+var notifierConfig = Config{
 	SendingTimeout:   time.Millisecond * 10,
 	ResendingTimeout: time.Hour * 24,
 	Location:         location,
 	DateTimeFormat:   dateTimeFormat,
-	ReadBatchSize:    notifier.NotificationsLimitUnlimited,
+	ReadBatchSize:    NotificationsLimitUnlimited,
 }
 
 var shutdown = make(chan struct{})
@@ -92,9 +92,9 @@ func TestNotifier(t *testing.T) {
 		err = database.PushNotificationEvent(&event, true)
 		So(err, ShouldBeNil)
 
-		notifier2 := notifier.NewNotifier(database, logger, notifierConfig, notifierMetrics, metricsSourceProvider, map[string]moira.ImageStore{})
+		notifier := NewNotifier(database, logger, notifierConfig, notifierMetrics, metricsSourceProvider, map[string]moira.ImageStore{})
 		sender := mock_moira_alert.NewMockSender(mockCtrl)
-		err = notifier2.RegisterSender(senderSettings, sender)
+		err = notifier.RegisterSender(senderSettings, sender)
 		So(err, ShouldBeNil)
 		sender.EXPECT().SendEvents(gomock.Any(), contact, triggerData, gomock.Any(), false).Return(nil).Do(func(arg0, arg1, arg2, arg3, arg4 interface{}) {
 			fmt.Print("SendEvents called. End test")
@@ -105,13 +105,13 @@ func TestNotifier(t *testing.T) {
 			Database:  database,
 			Logger:    logger,
 			Metrics:   notifierMetrics,
-			Scheduler: notifier.NewScheduler(database, logger, notifierMetrics),
+			Scheduler: NewScheduler(database, logger, notifierMetrics),
 		}
 
 		fetchNotificationsWorker := notifications.FetchNotificationsWorker{
 			Database: database,
 			Logger:   logger,
-			Notifier: notifier2,
+			Notifier: notifier,
 		}
 
 		fetchEventsWorker.Start()
