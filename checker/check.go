@@ -87,9 +87,9 @@ func (triggerChecker *TriggerChecker) handleFetchError(checkData moira.CheckData
 	switch err.(type) {
 	case ErrTriggerHasEmptyTargets, ErrTriggerHasOnlyWildcards:
 		triggerChecker.logger.Debugb().
-			String("trigger_id", triggerChecker.triggerID).
+			String(moira.LogFieldNameTriggerID, triggerChecker.triggerID).
 			Error(err).
-			Msg("Trigger fetch")
+			Msg("Trigger was fetched")
 
 		triggerState := triggerChecker.ttlState.ToTriggerState()
 		checkData.State = triggerState
@@ -145,8 +145,8 @@ func (triggerChecker *TriggerChecker) handleUndefinedError(checkData moira.Check
 func logTriggerCheckException(logger moira.Logger, triggerID string, err error) {
 	logger.Warningb().
 		Error(err).
-		String("trigger_id", triggerID).
-		Msg(fmt.Sprintf("Trigger check failed: %T", err))
+		String(moira.LogFieldNameTriggerID, triggerID).
+		Msg("Trigger check failed")
 }
 
 // Set new last check timestamp that equal to "until" targets fetch interval
