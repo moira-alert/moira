@@ -34,7 +34,7 @@ func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moir
 	sender.log.Debugb().
 		String("method", request.Method).
 		String("url", request.URL.String()).
-		String("bosy", bytes.NewBuffer(requestBody).String()).
+		String("body", bytes.NewBuffer(requestBody).String()).
 		Msg("Created request")
 
 	return request, nil
