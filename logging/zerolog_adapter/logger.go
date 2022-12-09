@@ -1,4 +1,4 @@
-package logging
+package zerolog_dapter
 
 import (
 	"fmt"
@@ -9,6 +9,7 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/logging"
 )
 
 type Logger struct {
@@ -93,7 +94,7 @@ func (l Logger) Debugf(format string, args ...interface{}) {
 	event.Timestamp().Msgf(format, args...)
 }
 
-func (l Logger) Debugb() moira.EventBuilder {
+func (l Logger) Debugb() logging.EventBuilder {
 	return EventBuilder{Event: l.Logger.Debug()}
 }
 
@@ -119,7 +120,7 @@ func (l Logger) Infof(format string, args ...interface{}) {
 	event.Timestamp().Msgf(format, args...)
 }
 
-func (l Logger) Infob() moira.EventBuilder {
+func (l Logger) Infob() logging.EventBuilder {
 	return EventBuilder{Event: l.Logger.Info()}
 }
 
@@ -145,7 +146,7 @@ func (l Logger) Errorf(format string, args ...interface{}) {
 	event.Timestamp().Msgf(format, args...)
 }
 
-func (l Logger) Errorb() moira.EventBuilder {
+func (l Logger) Errorb() logging.EventBuilder {
 	return EventBuilder{Event: l.Logger.Error()}
 }
 
@@ -171,7 +172,7 @@ func (l Logger) Fatalf(format string, args ...interface{}) {
 	event.Timestamp().Msgf(format, args...)
 }
 
-func (l Logger) Fatalb() moira.EventBuilder {
+func (l Logger) Fatalb() logging.EventBuilder {
 	return EventBuilder{Event: l.Logger.Fatal()}
 }
 
@@ -197,7 +198,7 @@ func (l Logger) Warningf(format string, args ...interface{}) {
 	event.Timestamp().Msgf(format, args...)
 }
 
-func (l Logger) Warningb() moira.EventBuilder {
+func (l Logger) Warningb() logging.EventBuilder {
 	return EventBuilder{Event: l.Logger.Warn()}
 }
 

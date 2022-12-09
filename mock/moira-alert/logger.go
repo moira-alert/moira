@@ -9,6 +9,7 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 	moira "github.com/moira-alert/moira"
+	logging "github.com/moira-alert/moira/logging"
 )
 
 // MockLogger is a mock of Logger interface.
@@ -77,10 +78,10 @@ func (mr *MockLoggerMockRecorder) DebugWithError(arg0, arg1 interface{}) *gomock
 }
 
 // Debugb mocks base method.
-func (m *MockLogger) Debugb() moira.EventBuilder {
+func (m *MockLogger) Debugb() logging.EventBuilder {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Debugb")
-	ret0, _ := ret[0].(moira.EventBuilder)
+	ret0, _ := ret[0].(logging.EventBuilder)
 	return ret0
 }
 
@@ -136,10 +137,10 @@ func (mr *MockLoggerMockRecorder) ErrorWithError(arg0, arg1 interface{}) *gomock
 }
 
 // Errorb mocks base method.
-func (m *MockLogger) Errorb() moira.EventBuilder {
+func (m *MockLogger) Errorb() logging.EventBuilder {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Errorb")
-	ret0, _ := ret[0].(moira.EventBuilder)
+	ret0, _ := ret[0].(logging.EventBuilder)
 	return ret0
 }
 
@@ -195,10 +196,10 @@ func (mr *MockLoggerMockRecorder) FatalWithError(arg0, arg1 interface{}) *gomock
 }
 
 // Fatalb mocks base method.
-func (m *MockLogger) Fatalb() moira.EventBuilder {
+func (m *MockLogger) Fatalb() logging.EventBuilder {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Fatalb")
-	ret0, _ := ret[0].(moira.EventBuilder)
+	ret0, _ := ret[0].(logging.EventBuilder)
 	return ret0
 }
 
@@ -268,10 +269,10 @@ func (mr *MockLoggerMockRecorder) InfoWithError(arg0, arg1 interface{}) *gomock.
 }
 
 // Infob mocks base method.
-func (m *MockLogger) Infob() moira.EventBuilder {
+func (m *MockLogger) Infob() logging.EventBuilder {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Infob")
-	ret0, _ := ret[0].(moira.EventBuilder)
+	ret0, _ := ret[0].(logging.EventBuilder)
 	return ret0
 }
 
@@ -384,10 +385,10 @@ func (mr *MockLoggerMockRecorder) WarningWithError(arg0, arg1 interface{}) *gomo
 }
 
 // Warningb mocks base method.
-func (m *MockLogger) Warningb() moira.EventBuilder {
+func (m *MockLogger) Warningb() logging.EventBuilder {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Warningb")
-	ret0, _ := ret[0].(moira.EventBuilder)
+	ret0, _ := ret[0].(logging.EventBuilder)
 	return ret0
 }
 
