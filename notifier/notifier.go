@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/logging"
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metrics"
 	"github.com/moira-alert/moira/plotting"
@@ -183,14 +184,14 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 		plottingLog := log.Clone().String(moira.LogFieldNameContext, "plotting")
 		plots, err := notifier.buildNotificationPackagePlots(pkg, plottingLog)
 		if err != nil {
-			var buildErr moira.EventBuilder
+			var event logging.EventBuilder
 			switch err.(type) {
 			case plotting.ErrNoPointsToRender:
-				buildErr = plottingLog.Debugb()
+				event = plottingLog.Debugb()
 			default:
-				buildErr = plottingLog.Errorb()
+				event = plottingLog.Errorb()
 			}
-			buildErr.
+			event.
 				String(moira.LogFieldNameTriggerID, pkg.Trigger.ID).
 				Error(err).
 				Msg("Can't build notification package plot for trigger")
