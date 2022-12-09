@@ -204,6 +204,7 @@ type Logger interface {
 	Clone() Logger
 }
 
+// EventBuilder interface is an abstraction over logger.EventBuilder that allows to build log events with custom tags
 type EventBuilder interface {
 	String(key, value string) EventBuilder
 	Error(err error) EventBuilder
