@@ -102,6 +102,8 @@ func main() {
 			logger.Fatalf("Failed to start self check worker: %v", err)
 		}
 		defer stopSelfStateChecker(selfState)
+	} else {
+		logger.Debug("Moira Self State Monitoring disabled")
 	}
 
 	// Start moira notification fetcher
