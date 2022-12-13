@@ -12,7 +12,9 @@ import (
 const defaultRetention = 10
 
 func HandlePullTrigger(logger moira.Logger, database moira.Database, triggerID string) (*moira.Trigger, error) {
-	logger.Infof("Pull database info about trigger %s", triggerID)
+	logger.Infob().
+		String("trigger_id", triggerID).
+		Msg("Pull database info about given trigger")
 
 	trigger, err := database.GetTrigger(triggerID)
 	if err != nil {
@@ -22,7 +24,10 @@ func HandlePullTrigger(logger moira.Logger, database moira.Database, triggerID s
 }
 
 func HandlePullTriggerMetrics(logger moira.Logger, database moira.Database, triggerID string) ([]dto.PatternMetrics, error) {
-	logger.Infof("Pulling info about trigger %s metrics", triggerID)
+	logger.Infob().
+		String("trigger_id", triggerID).
+		Msg("Pull database info about given trigger metrics")
+
 	source := local.Create(database)
 
 	trigger, err := database.GetTrigger(triggerID)
@@ -75,7 +80,9 @@ func HandlePushTrigger(logger moira.Logger, database moira.Database, trigger *mo
 	if err != nil {
 		return fmt.Errorf("cannot save trigger: %w", err)
 	}
-	logger.Infof("Trigger %s was saved", trigger.ID)
+	logger.Infob().
+		String("trigger_id", trigger.ID).
+		Msg("Trigger was saved")
 	return nil
 }
 
@@ -115,7 +122,10 @@ func HandlePushTriggerMetrics(
 	if err != nil {
 		return fmt.Errorf("cannot save trigger metrics: %w", err)
 	}
-	logger.Infof("Trigger %s metrics was saved", triggerID)
+	logger.Infob().
+		String("trigger_id", triggerID).
+		Msg("Trigger metrics was saved")
+
 	return nil
 }
 
