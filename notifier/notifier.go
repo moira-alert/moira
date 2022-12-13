@@ -172,7 +172,7 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 	defer func() {
 		if err := recover(); err != nil {
 			notifier.logger.Warningb().
-				String("stackTrace", string(debug.Stack())).
+				String(moira.LogFieldNameStackTrace, string(debug.Stack())).
 				Value("recovered_err", err).
 				Msg("Notifier panicked")
 		}
