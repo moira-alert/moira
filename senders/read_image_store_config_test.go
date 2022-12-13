@@ -14,13 +14,15 @@ func TestReadImageStoreConfig(t *testing.T) {
 	defer mockCtrl.Finish()
 	mockimageStore := mock_moira_alert.NewMockImageStore(mockCtrl)
 	logger := mock_moira_alert.NewMockLogger(mockCtrl)
+	eventBuilder := mock_moira_alert.NewMockEventBuilder(mockCtrl)
 	imageStores := map[string]moira.ImageStore{
 		"s3": mockimageStore,
 	}
 
 	Convey("Read image store config tests", t, func() {
 		Convey("no image_store in settings", func() {
-			logger.EXPECT().Warningf("Cannot read image_store from the config, will not be able to attach plot images to alerts")
+			logger.EXPECT().Warning("Cannot read image_store from the config, will not be able to attach plot images to alerts")
+
 			imageStoreID, imageStore, imageStoreConfigured :=
 				ReadImageStoreConfig(map[string]string{}, imageStores, logger)
 			So(imageStoreConfigured, ShouldResemble, false)
@@ -29,7 +31,10 @@ func TestReadImageStoreConfig(t *testing.T) {
 		})
 
 		Convey("wrong image store name", func() {
-			logger.EXPECT().Warningf("Image store specified (%s) has not been configured", "s4")
+			logger.EXPECT().Warningb().Return(eventBuilder)
+			eventBuilder.EXPECT().String("image_store_id", "s4").Return(eventBuilder)
+			eventBuilder.EXPECT().Msg("Image store specified has not been configured")
+
 			imageStoreID, imageStore, imageStoreConfigured :=
 				ReadImageStoreConfig(map[string]string{"image_store": "s4"}, imageStores, logger)
 			So(imageStoreConfigured, ShouldResemble, false)
@@ -38,7 +43,10 @@ func TestReadImageStoreConfig(t *testing.T) {
 		})
 
 		Convey("image store not configured", func() {
-			logger.EXPECT().Warningf("Image store specified (%s) has not been configured", "s3")
+			logger.EXPECT().Warningb().Return(eventBuilder)
+			eventBuilder.EXPECT().String("image_store_id", "s3").Return(eventBuilder)
+			eventBuilder.EXPECT().Msg("Image store specified has not been configured")
+
 			mockimageStore.EXPECT().IsEnabled().Return(false)
 			imageStoreID, imageStore, imageStoreConfigured :=
 				ReadImageStoreConfig(map[string]string{"image_store": "s3"}, imageStores, logger)

@@ -59,7 +59,7 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 
 	sender.bot.Handle(telebot.OnText, func(message *telebot.Message) {
 		if err = sender.handleMessage(message); err != nil {
-			sender.logger.Errorf("Error handling incoming message: %s", err.Error())
+			sender.logger.ErrorWithError("Error handling incoming message: %s", err)
 		}
 	})
 	go sender.runTelebot()
