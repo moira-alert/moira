@@ -66,11 +66,10 @@ func (triggerChecker *TriggerChecker) handlePrepareError(checkData moira.CheckDa
 	case conversion.ErrUnexpectedAloneMetric:
 		checkData.State = moira.StateEXCEPTION
 		checkData.Message = err.Error()
-		triggerChecker.logger.Warning(formatTriggerCheckException(triggerChecker.triggerID, err))
+		logTriggerCheckException(triggerChecker.logger, triggerChecker.triggerID, err)
 	case conversion.ErrEmptyAloneMetricsTarget:
 		checkData.State = moira.StateNODATA
-		triggerChecker.logger.Warning(err.Error())
-
+		triggerChecker.logger.WarningWithError("Trigger check failed", err)
 	default:
 		return false, checkData, triggerChecker.handleUndefinedError(checkData, err)
 	}
@@ -87,7 +86,11 @@ func (triggerChecker *TriggerChecker) handlePrepareError(checkData moira.CheckDa
 func (triggerChecker *TriggerChecker) handleFetchError(checkData moira.CheckData, err error) error {
 	switch err.(type) {
 	case ErrTriggerHasEmptyTargets, ErrTriggerHasOnlyWildcards:
-		triggerChecker.logger.Debugf("Trigger %s: %s", triggerChecker.triggerID, err.Error())
+		triggerChecker.logger.Debugb().
+			String(moira.LogFieldNameTriggerID, triggerChecker.triggerID).
+			Error(err).
+			Msg("Trigger was fetched")
+
 		triggerState := triggerChecker.ttlState.ToTriggerState()
 		checkData.State = triggerState
 		checkData.Message = err.Error()
@@ -104,11 +107,11 @@ func (triggerChecker *TriggerChecker) handleFetchError(checkData moira.CheckData
 			checkData.Message = fmt.Sprintf("Remote server unavailable. Trigger is not checked for %d seconds", timeSinceLastSuccessfulCheck)
 			checkData, err = triggerChecker.compareTriggerStates(checkData)
 		}
-		triggerChecker.logger.Warning(formatTriggerCheckException(triggerChecker.triggerID, err))
+		logTriggerCheckException(triggerChecker.logger, triggerChecker.triggerID, err)
 	case local.ErrUnknownFunction, local.ErrEvalExpr:
 		checkData.State = moira.StateEXCEPTION
 		checkData.Message = err.Error()
-		triggerChecker.logger.Warning(formatTriggerCheckException(triggerChecker.triggerID, err))
+		logTriggerCheckException(triggerChecker.logger, triggerChecker.triggerID, err)
 	default:
 		return triggerChecker.handleUndefinedError(checkData, err)
 	}
@@ -125,7 +128,12 @@ func (triggerChecker *TriggerChecker) handleUndefinedError(checkData moira.Check
 	triggerChecker.metrics.CheckError.Mark(1)
 	checkData.State = moira.StateEXCEPTION
 	checkData.Message = err.Error()
-	triggerChecker.logger.Errorf("Trigger %s check failed: %s", triggerChecker.triggerID, err.Error())
+
+	triggerChecker.logger.Errorb().
+		String(moira.LogFieldNameTriggerID, triggerChecker.triggerID).
+		Error(err).
+		Msg("Trigger check failed")
+
 	checkData, err = triggerChecker.compareTriggerStates(checkData)
 	if err != nil {
 		return err
@@ -134,8 +142,11 @@ func (triggerChecker *TriggerChecker) handleUndefinedError(checkData moira.Check
 	return triggerChecker.database.SetTriggerLastCheck(triggerChecker.triggerID, &checkData, triggerChecker.trigger.IsRemote)
 }
 
-func formatTriggerCheckException(triggerID string, err error) string {
-	return fmt.Sprintf("TriggerCheckException %T Trigger %s: %v", err, triggerID, err)
+func logTriggerCheckException(logger moira.Logger, triggerID string, err error) {
+	logger.Warningb().
+		Error(err).
+		String(moira.LogFieldNameTriggerID, triggerID).
+		Msg("Trigger check failed")
 }
 
 // Set new last check timestamp that equal to "until" targets fetch interval
@@ -296,7 +307,10 @@ func (triggerChecker *TriggerChecker) checkForNoData(metricLastState moira.Metri
 	if metricLastState.Timestamp+triggerChecker.ttl >= lastCheckTimeStamp {
 		return false, nil
 	}
-	logger.Debugf("Metric TTL expired for state %v", metricLastState)
+	logger.Debugb().
+		Value("metric_last_state", metricLastState).
+		Msg("Metric TTL expired for state")
+
 	if triggerChecker.ttlState == moira.TTLStateDEL && metricLastState.EventTimestamp != 0 {
 		return true, nil
 	}
@@ -360,8 +374,11 @@ func (triggerChecker *TriggerChecker) getMetricDataState(metrics *map[string]met
 	if !noEmptyValues {
 		return nil, nil
 	}
-	logger.Debugf("Values for ts %v: MainTargetValue: %v, additionalTargetValues: %v",
-		valueTimestamp, triggerExpression.MainTargetValue, triggerExpression.AdditionalTargetsValues)
+	logger.Debugb().
+		Value("timestamp", valueTimestamp).
+		Value("main_target_value", triggerExpression.MainTargetValue).
+		Value("additional_target_values", triggerExpression.AdditionalTargetsValues).
+		Msg("Getting metric data state")
 
 	triggerExpression.WarnValue = triggerChecker.trigger.WarnValue
 	triggerExpression.ErrorValue = triggerChecker.trigger.ErrorValue
