@@ -39,7 +39,7 @@ func (worker *FetchEventsWorker) Start() {
 					if err != nil {
 						if err != database.ErrNil {
 							worker.Metrics.EventsMalformed.Mark(1)
-							worker.Logger.Warning(err)
+							worker.Logger.WarningWithError("Failed to fetch notification event", err)
 							time.Sleep(time.Second * 5) //nolint
 						}
 						continue
@@ -55,7 +55,7 @@ func (worker *FetchEventsWorker) Start() {
 
 					if err := worker.processEvent(event); err != nil {
 						worker.Metrics.EventsProcessingFailed.Mark(1)
-						worker.Logger.Errorf("Failed processEvent. %s", err)
+						worker.Logger.ErrorWithError("Failed processEvent", err)
 					}
 				}
 			}
@@ -79,8 +79,11 @@ func (worker *FetchEventsWorker) processEvent(event moira.NotificationEvent) err
 		triggerData   moira.TriggerData
 	)
 	if event.State != moira.StateTEST {
-		log.Debugf("Processing trigger for metric %s == %f, %s -> %s",
-			event.Metric, event.GetMetricsValues(), event.OldState, event.State)
+		log.Debugb().
+			String("metric", fmt.Sprintf("%s == %s", event.Metric, event.GetMetricsValues())).
+			String("old_state", event.OldState.String()).
+			String("new_state", event.State.String()).
+			Msg("Processing trigger for metric")
 
 		trigger, err := worker.Database.GetTrigger(event.TriggerID)
 		if err != nil {
@@ -101,7 +104,10 @@ func (worker *FetchEventsWorker) processEvent(event moira.NotificationEvent) err
 			Tags:       trigger.Tags,
 		}
 
-		log.Debugf("Getting subscriptions for tags %v", trigger.Tags)
+		log.Debugb().
+			Value("trigger_tags", trigger.Tags).
+			Msg("Getting subscriptions for given tags")
+
 		subscriptions, err = worker.Database.GetTagsSubscriptions(trigger.Tags)
 		if err != nil {
 			return err
@@ -129,7 +135,7 @@ func (worker *FetchEventsWorker) processEvent(event moira.NotificationEvent) err
 				notifier.SetLogLevelByConfig(worker.Config.LogContactsToLevel, contactID, &contactLogger)
 				contact, err := worker.Database.GetContact(contactID)
 				if err != nil {
-					contactLogger.Warningf("Failed to get contact, skip handling it, error: %v", err)
+					contactLogger.WarningWithError("Failed to get contact, skip handling it", err)
 					continue
 				}
 				event.SubscriptionID = &subscription.ID
@@ -138,11 +144,13 @@ func (worker *FetchEventsWorker) processEvent(event moira.NotificationEvent) err
 				key := notification.GetKey()
 				if _, exist := duplications[key]; !exist {
 					if err := worker.Database.AddNotification(notification); err != nil {
-						contactLogger.Errorf("Failed to save scheduled notification: %s", err)
+						contactLogger.ErrorWithError("Failed to save scheduled notification", err)
 					}
 					duplications[key] = true
 				} else {
-					contactLogger.Debugf("Skip duplicated notification for contact %s", notification.Contact)
+					contactLogger.Debugb().
+						Value("contact", notification.Contact).
+						Msg("Skip duplicated notification for a contact")
 				}
 			}
 		}
@@ -153,9 +161,10 @@ func (worker *FetchEventsWorker) processEvent(event moira.NotificationEvent) err
 func (worker *FetchEventsWorker) getNotificationSubscriptions(event moira.NotificationEvent, logger moira.Logger) (*moira.SubscriptionData, error) {
 	if event.SubscriptionID != nil {
 		subID := moira.UseString(event.SubscriptionID)
-		logger.Clone().
+		logger.Debugb().
 			String(moira.LogFieldNameSubscriptionID, subID).
-			Debug("Getting subscription for test message")
+			Msg("Getting subscription for test message")
+
 		notifier.SetLogLevelByConfig(worker.Config.LogSubscriptionsToLevel, subID, &logger)
 		sub, err := worker.Database.GetSubscription(*event.SubscriptionID)
 		if err != nil {
@@ -164,9 +173,10 @@ func (worker *FetchEventsWorker) getNotificationSubscriptions(event moira.Notifi
 		}
 		return &sub, nil
 	} else if event.ContactID != "" {
-		logger.Clone().
+		logger.Debugb().
 			String(moira.LogFieldNameContactID, event.ContactID).
-			Debug("Getting contact for test message")
+			Msg("Getting contact for test message")
+
 		notifier.SetLogLevelByConfig(worker.Config.LogContactsToLevel, event.ContactID, &logger)
 
 		contact, err := worker.Database.GetContact(event.ContactID)
@@ -201,7 +211,9 @@ func (worker *FetchEventsWorker) isNotificationRequired(subscription *moira.Subs
 			return false
 		}
 		if subscription.MustIgnore(&event) {
-			logger.Debugf("Subscription is managed to ignore %s -> %s transitions", event.OldState, event.State)
+			logger.Debugb().
+				String("ignored_transaction", fmt.Sprintf("%s -> %s", event.OldState, event.State)).
+				Msg("Subscription is managed to ignore specific transitions")
 			return false
 		}
 		if !moira.Subset(subscription.Tags, trigger.Tags) {
