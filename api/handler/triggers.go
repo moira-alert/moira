@@ -92,7 +92,11 @@ func getTriggerFromRequest(request *http.Request) (*dto.Trigger, *api.ErrorRespo
 			return nil, api.ErrorInvalidRequest(err)
 		case remote.ErrRemoteTriggerResponse:
 			response := api.ErrorRemoteServerUnavailable(err)
-			middleware.GetLoggerEntry(request).Error("%s : %s : %s", response.StatusText, response.ErrorText, err)
+			middleware.GetLoggerEntry(request).Errorb().
+				String("status", response.StatusText).
+				String("error_text", response.ErrorText).
+				Error(err).
+				Msg("Remote server unavailable")
 			return nil, response
 		case *json.UnmarshalTypeError:
 			return nil, api.ErrorInvalidRequest(fmt.Errorf("invalid payload: %s", err.Error()))
