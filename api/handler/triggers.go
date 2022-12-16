@@ -51,11 +51,34 @@ func getAllTriggers(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
+// createTrigger handler creates moira.Trigger.
 func createTrigger(writer http.ResponseWriter, request *http.Request) {
 	trigger, err := getTriggerFromRequest(request)
 	if err != nil {
 		render.Render(writer, request, err) //nolint
 		return
+	}
+
+	const validateFlag = "validate"
+	needValidate := request.URL.Query().Has(validateFlag)
+	if needValidate {
+		ttl := getMetricTTLByTrigger(request, trigger)
+		treesOfProblems := dto.TargetVerification(trigger.Targets, ttl, trigger.IsRemote)
+		var isInvalid bool
+		for _, tree := range treesOfProblems {
+			if tree.TreeOfProblems != nil {
+				isInvalid = true
+			}
+		}
+		if isInvalid {
+			result := dto.TriggerCheckResult{
+				Targets: treesOfProblems,
+			}
+			writer.WriteHeader(http.StatusBadRequest)
+			render.JSON(writer, request, result)
+
+			return
+		}
 	}
 
 	if trigger.Desc != nil {

@@ -272,81 +272,91 @@ func TestCreateTriggerHandler(t *testing.T) {
 	fetchResult.EXPECT().GetPatterns().Return(make([]string, 0), nil).AnyTimes()
 	fetchResult.EXPECT().GetMetricsData().Return([]metricSource.MetricData{*metricSource.MakeMetricData("", []float64{}, 0, 0)}).AnyTimes()
 
+	const validateFlag = "validate"
+
 	mockDb := mock_moira_alert.NewMockDatabase(mockCtrl)
 	database = mockDb
 
 	Convey("When createTrigger was called with normal input", t, func() {
-		mockDb.EXPECT().AcquireTriggerCheckLock(gomock.Any(), gomock.Any()).Return(nil)
-		mockDb.EXPECT().DeleteTriggerCheckLock(gomock.Any())
-		mockDb.EXPECT().GetTriggerLastCheck(gomock.Any())
-		mockDb.EXPECT().SetTriggerLastCheck(gomock.Any(), gomock.Any(), gomock.Any())
-		mockDb.EXPECT().SaveTrigger(gomock.Any(), gomock.Any())
-
-		triggerWarnValue := float64(10)
-		triggerErrorValue := float64(15)
-		triggerDTO := dto.Trigger{
-			TriggerModel: dto.TriggerModel{
-				Name:       "Test trigger",
-				Tags:       []string{"123"},
-				WarnValue:  &triggerWarnValue,
-				ErrorValue: &triggerErrorValue,
-				Targets:    []string{"my.metric"},
-				IsRemote:   false,
-			},
+		urls := []string{
+			"/",
+			fmt.Sprintf("/trigger?%s", validateFlag),
 		}
-		jsonTrigger, _ := json.Marshal(triggerDTO)
-		testRequest := httptest.NewRequest("", "/", bytes.NewBuffer(jsonTrigger))
-		testRequest.Header.Add("content-type", "application/json")
-		testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "metricSourceProvider", sourceProvider))
-		testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "localMetricTTL", to.Duration("65m")))
 
-		responseWriter := httptest.NewRecorder()
-		createTrigger(responseWriter, testRequest)
+		for _, url := range urls {
+			mockDb.EXPECT().AcquireTriggerCheckLock(gomock.Any(), gomock.Any()).Return(nil)
+			mockDb.EXPECT().DeleteTriggerCheckLock(gomock.Any())
+			mockDb.EXPECT().GetTriggerLastCheck(gomock.Any())
+			mockDb.EXPECT().SetTriggerLastCheck(gomock.Any(), gomock.Any(), gomock.Any())
+			mockDb.EXPECT().SaveTrigger(gomock.Any(), gomock.Any())
 
-		Convey("should return success message", func() {
-			response := responseWriter.Result()
-			defer response.Body.Close()
-			So(response.StatusCode, ShouldEqual, http.StatusOK)
-			So(isTriggerCreated(response), ShouldBeTrue)
-		})
+			triggerWarnValue := float64(10)
+			triggerErrorValue := float64(15)
+			triggerDTO := dto.Trigger{
+				TriggerModel: dto.TriggerModel{
+					Name:       "Test trigger",
+					Tags:       []string{"123"},
+					WarnValue:  &triggerWarnValue,
+					ErrorValue: &triggerErrorValue,
+					Targets:    []string{"my.metric"},
+					IsRemote:   false,
+				},
+			}
+			jsonTrigger, _ := json.Marshal(triggerDTO)
+			testRequest := httptest.NewRequest("", url, bytes.NewBuffer(jsonTrigger))
+			testRequest.Header.Add("content-type", "application/json")
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "metricSourceProvider", sourceProvider))
+			testRequest = testRequest.WithContext(middleware.SetContextValueForTest(testRequest.Context(), "localMetricTTL", to.Duration("65m")))
+
+			responseWriter := httptest.NewRecorder()
+			createTrigger(responseWriter, testRequest)
+
+			Convey(fmt.Sprintf("should return success message, url=%s", url), func() {
+				response := responseWriter.Result()
+				defer response.Body.Close()
+				So(response.StatusCode, ShouldEqual, http.StatusOK)
+				So(isTriggerCreated(response), ShouldBeTrue)
+			})
+		}
 	})
 
 	Convey("When createTrigger was called with empty targets", t, func() {
-		triggerWarnValue := float64(10)
-		triggerErrorValue := float64(15)
-		triggerDTO := dto.Trigger{
-			TriggerModel: dto.TriggerModel{
-				Name:       "Test trigger",
-				Tags:       []string{"123"},
-				WarnValue:  &triggerWarnValue,
-				ErrorValue: &triggerErrorValue,
-				Targets:    []string{},
-				IsRemote:   false,
-			},
+		urls := []string{
+			"/",
+			fmt.Sprintf("/trigger?%s", validateFlag),
 		}
-		jsonTrigger, _ := json.Marshal(triggerDTO)
-		request := httptest.NewRequest("", "/", bytes.NewBuffer(jsonTrigger))
-		request.Header.Add("content-type", "application/json")
-		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", sourceProvider))
-		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "localMetricTTL", to.Duration("65m")))
 
-		responseWriter := httptest.NewRecorder()
-		createTrigger(responseWriter, request)
+		for _, url := range urls {
+			triggerWarnValue := float64(10)
+			triggerErrorValue := float64(15)
+			triggerDTO := dto.Trigger{
+				TriggerModel: dto.TriggerModel{
+					Name:       "Test trigger",
+					Tags:       []string{"123"},
+					WarnValue:  &triggerWarnValue,
+					ErrorValue: &triggerErrorValue,
+					Targets:    []string{},
+					IsRemote:   false,
+				},
+			}
+			jsonTrigger, _ := json.Marshal(triggerDTO)
+			request := httptest.NewRequest("", url, bytes.NewBuffer(jsonTrigger))
+			request.Header.Add("content-type", "application/json")
+			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", sourceProvider))
+			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "localMetricTTL", to.Duration("65m")))
 
-		Convey("should return 400", func() {
-			response := responseWriter.Result()
-			defer response.Body.Close()
-			So(response.StatusCode, ShouldEqual, http.StatusBadRequest)
-		})
+			responseWriter := httptest.NewRecorder()
+			createTrigger(responseWriter, request)
+
+			Convey(fmt.Sprintf("should return 400, url=%s", url), func() {
+				response := responseWriter.Result()
+				defer response.Body.Close()
+				So(response.StatusCode, ShouldEqual, http.StatusBadRequest)
+			})
+		}
 	})
 
 	Convey("When createTrigger was called with target with warning function", t, func() {
-		mockDb.EXPECT().AcquireTriggerCheckLock(gomock.Any(), gomock.Any()).Return(nil)
-		mockDb.EXPECT().DeleteTriggerCheckLock(gomock.Any())
-		mockDb.EXPECT().GetTriggerLastCheck(gomock.Any())
-		mockDb.EXPECT().SetTriggerLastCheck(gomock.Any(), gomock.Any(), gomock.Any())
-		mockDb.EXPECT().SaveTrigger(gomock.Any(), gomock.Any())
-
 		triggerWarnValue := float64(10)
 		triggerErrorValue := float64(15)
 		triggerDTO := dto.Trigger{
@@ -360,29 +370,71 @@ func TestCreateTriggerHandler(t *testing.T) {
 			},
 		}
 		jsonTrigger, _ := json.Marshal(triggerDTO)
-		request := httptest.NewRequest("", "/", bytes.NewBuffer(jsonTrigger))
-		request.Header.Add("content-type", "application/json")
-		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", sourceProvider))
-		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "localMetricTTL", to.Duration("65m")))
 
-		responseWriter := httptest.NewRecorder()
-		createTrigger(responseWriter, request)
+		Convey("without validate like before", func() {
+			mockDb.EXPECT().AcquireTriggerCheckLock(gomock.Any(), gomock.Any()).Return(nil)
+			mockDb.EXPECT().DeleteTriggerCheckLock(gomock.Any())
+			mockDb.EXPECT().GetTriggerLastCheck(gomock.Any())
+			mockDb.EXPECT().SetTriggerLastCheck(gomock.Any(), gomock.Any(), gomock.Any())
+			mockDb.EXPECT().SaveTrigger(gomock.Any(), gomock.Any())
 
-		Convey("should return 200", func() {
-			response := responseWriter.Result()
-			defer response.Body.Close()
-			So(response.StatusCode, ShouldEqual, http.StatusOK)
-			So(isTriggerCreated(response), ShouldBeTrue)
+			request := httptest.NewRequest("", "/", bytes.NewBuffer(jsonTrigger))
+			request.Header.Add("content-type", "application/json")
+			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", sourceProvider))
+			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "localMetricTTL", to.Duration("65m")))
+
+			responseWriter := httptest.NewRecorder()
+			createTrigger(responseWriter, request)
+
+			Convey("should return 200", func() {
+				response := responseWriter.Result()
+				defer response.Body.Close()
+				So(response.StatusCode, ShouldEqual, http.StatusOK)
+				So(isTriggerCreated(response), ShouldBeTrue)
+			})
+		})
+
+		Convey("with validate", func() {
+			request := httptest.NewRequest("", fmt.Sprintf("/trigger?%s", validateFlag), bytes.NewBuffer(jsonTrigger))
+			request.Header.Add("content-type", "application/json")
+			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", sourceProvider))
+			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "localMetricTTL", to.Duration("65m")))
+
+			responseWriter := httptest.NewRecorder()
+			createTrigger(responseWriter, request)
+
+			Convey("should return 400 and tree of problems", func() {
+				response := responseWriter.Result()
+				defer response.Body.Close()
+
+				So(response.StatusCode, ShouldEqual, http.StatusBadRequest)
+
+				contentBytes, _ := io.ReadAll(response.Body)
+				contents := string(contentBytes)
+				fmt.Println(contents)
+
+				actual := dto.TriggerCheckResult{}
+				_ = json.Unmarshal(contentBytes, &actual)
+
+				expected := dto.TriggerCheckResult{
+					Targets: []dto.TreeOfProblems{
+						{
+							SyntaxOk: true,
+							TreeOfProblems: &dto.ProblemOfTarget{
+								Argument:    "consolidateBy",
+								Type:        "warn",
+								Description: "This function affects only visual graph representation. It is meaningless in Moira.",
+								Position:    0,
+							},
+						},
+					},
+				}
+				So(actual, ShouldResemble, expected)
+			})
 		})
 	})
 
 	Convey("When createTrigger was called with target with bad (error) function", t, func() {
-		mockDb.EXPECT().AcquireTriggerCheckLock(gomock.Any(), gomock.Any()).Return(nil)
-		mockDb.EXPECT().DeleteTriggerCheckLock(gomock.Any())
-		mockDb.EXPECT().GetTriggerLastCheck(gomock.Any())
-		mockDb.EXPECT().SetTriggerLastCheck(gomock.Any(), gomock.Any(), gomock.Any())
-		mockDb.EXPECT().SaveTrigger(gomock.Any(), gomock.Any())
-
 		triggerWarnValue := float64(10)
 		triggerErrorValue := float64(15)
 		triggerDTO := dto.Trigger{
@@ -396,19 +448,67 @@ func TestCreateTriggerHandler(t *testing.T) {
 			},
 		}
 		jsonTrigger, _ := json.Marshal(triggerDTO)
-		request := httptest.NewRequest("", "/", bytes.NewBuffer(jsonTrigger))
-		request.Header.Add("content-type", "application/json")
-		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", sourceProvider))
-		request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "localMetricTTL", to.Duration("65m")))
 
-		responseWriter := httptest.NewRecorder()
-		createTrigger(responseWriter, request)
+		Convey("without validate like before", func() {
+			mockDb.EXPECT().AcquireTriggerCheckLock(gomock.Any(), gomock.Any()).Return(nil)
+			mockDb.EXPECT().DeleteTriggerCheckLock(gomock.Any())
+			mockDb.EXPECT().GetTriggerLastCheck(gomock.Any())
+			mockDb.EXPECT().SetTriggerLastCheck(gomock.Any(), gomock.Any(), gomock.Any())
+			mockDb.EXPECT().SaveTrigger(gomock.Any(), gomock.Any())
 
-		Convey("should return 200", func() {
-			response := responseWriter.Result()
-			defer response.Body.Close()
-			So(response.StatusCode, ShouldEqual, http.StatusOK)
-			So(isTriggerCreated(response), ShouldBeTrue)
+			request := httptest.NewRequest("", "/", bytes.NewBuffer(jsonTrigger))
+			request.Header.Add("content-type", "application/json")
+			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", sourceProvider))
+			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "localMetricTTL", to.Duration("65m")))
+
+			responseWriter := httptest.NewRecorder()
+			createTrigger(responseWriter, request)
+
+			Convey("should return 200", func() {
+				response := responseWriter.Result()
+				defer response.Body.Close()
+				So(response.StatusCode, ShouldEqual, http.StatusOK)
+				So(isTriggerCreated(response), ShouldBeTrue)
+			})
+		})
+
+		Convey("with validate", func() {
+			request := httptest.NewRequest("", fmt.Sprintf("/trigger?%s", validateFlag), bytes.NewBuffer(jsonTrigger))
+			request.Header.Add("content-type", "application/json")
+			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", sourceProvider))
+			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "localMetricTTL", to.Duration("65m")))
+
+			responseWriter := httptest.NewRecorder()
+			createTrigger(responseWriter, request)
+
+			Convey("should return 400 and tree of problems", func() {
+				response := responseWriter.Result()
+				defer response.Body.Close()
+
+				So(response.StatusCode, ShouldEqual, http.StatusBadRequest)
+
+				contentBytes, _ := io.ReadAll(response.Body)
+				contents := string(contentBytes)
+				fmt.Println(contents)
+
+				actual := dto.TriggerCheckResult{}
+				_ = json.Unmarshal(contentBytes, &actual)
+
+				expected := dto.TriggerCheckResult{
+					Targets: []dto.TreeOfProblems{
+						{
+							SyntaxOk: true,
+							TreeOfProblems: &dto.ProblemOfTarget{
+								Argument:    "summarize",
+								Type:        "bad",
+								Description: "This function is unstable: it can return different historical values with each evaluation. Moira will show unexpected values that you don't see on your graphs.",
+								Position:    0,
+							},
+						},
+					},
+				}
+				So(actual, ShouldResemble, expected)
+			})
 		})
 	})
 }
