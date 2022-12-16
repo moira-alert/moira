@@ -120,24 +120,20 @@ func getMetricTTLByTrigger(request *http.Request, trigger *dto.Trigger) time.Dur
 
 func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 	trigger := &dto.Trigger{}
-	response := dto.TriggerCheckResponse{}
+	result := dto.TriggerCheckResult{}
 
 	if err := render.Bind(request, trigger); err != nil {
-		switch err.(type) {
-		case expression.ErrInvalidExpression, local.ErrParseExpr, local.ErrEvalExpr, local.ErrUnknownFunction:
-		default:
-			render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
-			return
-		}
+		render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
+		return
 	}
 
 	ttl := getMetricTTLByTrigger(request, trigger)
 
 	if len(trigger.Targets) > 0 {
-		response.Targets = dto.TargetVerification(trigger.Targets, ttl, trigger.IsRemote)
+		result.Targets = dto.TargetVerification(trigger.Targets, ttl, trigger.IsRemote)
 	}
 
-	render.JSON(writer, request, response)
+	render.JSON(writer, request, result)
 }
 
 func searchTriggers(writer http.ResponseWriter, request *http.Request) {
