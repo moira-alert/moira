@@ -16,7 +16,9 @@ func (worker *Checker) newMetricsHandler(metricEventsChannel <-chan *moira.Metri
 		pattern := metricEvent.Pattern
 		if worker.needHandlePattern(pattern) {
 			if err := worker.handleMetricEvent(pattern); err != nil {
-				worker.Logger.ErrorWithError("Failed to handle metricEvent", err)
+				worker.Logger.Errorb().
+					Error(err).
+					Msg("Failed to handle metricEvent")
 			}
 		}
 	}

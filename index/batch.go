@@ -89,12 +89,16 @@ func (index *Index) handleTriggerBatches(triggerChecksChan chan []*moira.Trigger
 			}(batch)
 		case err, ok := <-getTriggersErrors:
 			if ok {
-				index.logger.ErrorWithError("Cannot get trigger checks from DB", err)
+				index.logger.Errorb().
+					Error(err).
+					Msg("Cannot get trigger checks from DB")
 			}
 			return err
 		case err, ok := <-indexErrors:
 			if ok {
-				index.logger.ErrorWithError("Cannot index trigger checks", err)
+				index.logger.Errorb().
+					Error(err).
+					Msg("Cannot index trigger checks")
 			}
 			return err
 		}

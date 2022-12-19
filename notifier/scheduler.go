@@ -91,7 +91,9 @@ func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *
 	subscription, err := scheduler.database.GetSubscription(moira.UseString(event.SubscriptionID))
 	if err != nil {
 		scheduler.metrics.SubsMalformed.Mark(1)
-		logger.DebugWithError("Failed get subscription", err)
+		logger.Debugb().
+			Error(err).
+			Msg("Failed get subscription")
 		return next, alarmFatigue
 	}
 
@@ -116,7 +118,9 @@ func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *
 						Msg("Trigger switched many times, delaying next notification for some time")
 
 					if err = scheduler.database.SetTriggerThrottling(event.TriggerID, next); err != nil {
-						logger.ErrorWithError("Failed to set trigger throttling timestamp", err)
+						logger.Errorb().
+							Error(err).
+							Msg("Failed to set trigger throttling timestamp")
 					}
 					alarmFatigue = true
 					break
@@ -130,7 +134,9 @@ func (scheduler *StandardScheduler) calculateNextDelivery(now time.Time, event *
 	}
 	next, err = calculateNextDelivery(&subscription.Schedule, next)
 	if err != nil {
-		logger.ErrorWithError("Failed to apply schedule", err)
+		logger.Errorb().
+			Error(err).
+			Msg("Failed to apply schedule")
 	}
 	return next, alarmFatigue
 }

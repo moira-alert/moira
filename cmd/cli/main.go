@@ -77,12 +77,16 @@ func main() { //nolint
 		case "2.3":
 			err := updateFrom23(logger, dataBase)
 			if err != nil {
-				logger.FatalWithError("Fail to update from version 2.3", err)
+				logger.Fatalb().
+					Error(err).
+					Msg("Fail to update from version 2.3")
 			}
 		case "2.6":
 			err := updateFrom26(logger, dataBase)
 			if err != nil {
-				logger.FatalWithError("Fail to update from version 2.6", err)
+				logger.Fatalb().
+					Error(err).
+					Msg("Fail to update from version 2.6")
 			}
 		}
 	}
@@ -93,31 +97,41 @@ func main() { //nolint
 		case "2.3":
 			err := downgradeTo23(logger, dataBase)
 			if err != nil {
-				logger.FatalWithError("Fail to update to version 2.3", err)
+				logger.Fatalb().
+					Error(err).
+					Msg("Fail to update to version 2.3")
 			}
 		case "2.6":
 			err := downgradeTo26(logger, dataBase)
 			if err != nil {
-				logger.FatalWithError("Fail to update to version 2.6", err)
+				logger.Fatalb().
+					Error(err).
+					Msg("Fail to update to version 2.6")
 			}
 		}
 	}
 
 	if *plotting {
 		if err := enablePlottingInAllSubscriptions(logger, dataBase); err != nil {
-			logger.ErrorWithError("Failed to enable images in all notifications", err)
+			logger.Errorb().
+				Error(err).
+				Msg("Failed to enable images in all notifications")
 		}
 	}
 
 	if *fromUser != "" || *toUser != "" {
 		if err := transferUserSubscriptionsAndContacts(dataBase, *fromUser, *toUser); err != nil {
-			logger.ErrorWithError("Failed to transfer user subscriptions and contacts", err)
+			logger.Errorb().
+				Error(err).
+				Msg("Failed to transfer user subscriptions and contacts")
 		}
 	}
 
 	if *userDel != "" {
 		if err := deleteUser(dataBase, *userDel); err != nil {
-			logger.ErrorWithError("Failed to delete user", err)
+			logger.Errorb().
+				Error(err).
+				Msg("Failed to delete user")
 		}
 	}
 
@@ -128,7 +142,9 @@ func main() { //nolint
 			Msg("Removing metrics by prefix started")
 
 		if err := handleRemoveMetricsByPrefix(dataBase, *removeMetricsByPrefix); err != nil {
-			log.ErrorWithError("Failed to remove metrics by prefix", err)
+			log.Errorb().
+				Error(err).
+				Msg("Failed to remove metrics by prefix")
 		}
 		log.Infob().
 			String("prefix", *removeMetricsByPrefix).
@@ -139,7 +155,9 @@ func main() { //nolint
 		log := logger.String(moira.LogFieldNameContext, "cleanup")
 		log.Info("Removing all metrics started")
 		if err := handleRemoveAllMetrics(dataBase); err != nil {
-			log.ErrorWithError("Failed to remove all metrics", err)
+			log.Errorb().
+				Error(err).
+				Msg("Failed to remove all metrics")
 		}
 		log.Info("Removing all metrics finished")
 	}
@@ -147,7 +165,9 @@ func main() { //nolint
 	if *removeTriggersStartWith != "" {
 		log := logger.String(moira.LogFieldNameContext, "remove-triggers-start-with")
 		if err := handleRemoveTriggersStartWith(logger, dataBase, *removeTriggersStartWith); err != nil {
-			log.ErrorWithError("Failed to remove triggers by prefix", err)
+			log.Errorb().
+				Error(err).
+				Msg("Failed to remove triggers by prefix")
 		}
 	}
 
@@ -159,7 +179,9 @@ func main() { //nolint
 			Msg("Cleanup started")
 
 		if err := handleCleanup(logger, dataBase, confCleanup); err != nil {
-			log.ErrorWithError("Failed to cleanup", err)
+			log.Errorb().
+				Error(err).
+				Msg("Failed to cleanup")
 		}
 		log.Info("Cleanup finished")
 	}
@@ -170,7 +192,9 @@ func main() { //nolint
 		log.Info("Cleanup of outdated metrics started")
 		err := handleCleanUpOutdatedMetrics(confCleanup, dataBase)
 		if err != nil {
-			log.ErrorWithError("Failed to cleanup outdated metrics", err)
+			log.Errorb().
+				Error(err).
+				Msg("Failed to cleanup outdated metrics")
 		}
 		log.Info("Cleanup outdated metrics finished")
 	}
@@ -181,7 +205,9 @@ func main() { //nolint
 		log.Info("Cleanup abandoned triggers last checks started")
 		err := handleCleanUpAbandonedTriggerLastCheck(dataBase)
 		if err != nil {
-			log.ErrorWithError("Failed to cleanup abandoned triggers last checks", err)
+			log.Errorb().
+				Error(err).
+				Msg("Failed to cleanup abandoned triggers last checks")
 		}
 		log.Info("Cleanup abandoned triggers last checks finished")
 	}
@@ -192,7 +218,9 @@ func main() { //nolint
 		log.Info("Cleanup of abandoned retentions started")
 		err := handleCleanUpAbandonedRetentions(dataBase)
 		if err != nil {
-			log.ErrorWithError("Failed to cleanup abandoned retentions", err)
+			log.Errorb().
+				Error(err).
+				Msg("Failed to cleanup abandoned retentions")
 		}
 		log.Info("Cleanup of abandoned retentions finished")
 	}
@@ -203,7 +231,9 @@ func main() { //nolint
 		log.Info("Cleanup of abandoned pattern metrics started")
 		err := handleCleanUpAbandonedPatternMetrics(dataBase)
 		if err != nil {
-			log.ErrorWithError("Failed to cleanup abandoned pattern metrics", err)
+			log.Errorb().
+				Error(err).
+				Msg("Failed to cleanup abandoned pattern metrics")
 		}
 		log.Info("Cleanup of abandoned pattern metrics finished")
 	}
@@ -212,26 +242,36 @@ func main() { //nolint
 		logger.Info("Dump push started")
 		f, err := openFile(*triggerDumpFile, os.O_RDONLY)
 		if err != nil {
-			logger.FatalWithError("Failed to open triggerDumpFile", err)
+			logger.Fatalb().
+				Error(err).
+				Msg("Failed to open triggerDumpFile")
 		}
 		defer closeFile(f, logger)
 
 		dump := &dto.TriggerDump{}
 		err = json.NewDecoder(f).Decode(dump)
 		if err != nil {
-			logger.FatalWithError("cannot decode trigger dump", err)
+			logger.Fatalb().
+				Error(err).
+				Msg("cannot decode trigger dump")
 		}
 
 		logger.Info(GetDumpBriefInfo(dump))
 		if err := support.HandlePushTrigger(logger, dataBase, &dump.Trigger); err != nil {
-			logger.FatalWithError("Failed to handle puch trigger", err)
+			logger.Fatalb().
+				Error(err).
+				Msg("Failed to handle puch trigger")
 		}
 		if err := support.HandlePushTriggerMetrics(logger, dataBase, dump.Trigger.ID, dump.Metrics); err != nil {
-			logger.FatalWithError("Failed to hanle push trigger metrics", err)
+			logger.Fatalb().
+				Error(err).
+				Msg("Failed to hanle push trigger metrics")
 		}
 		if err := support.HandlePushTriggerLastCheck(logger, dataBase, dump.Trigger.ID, &dump.LastCheck,
 			dump.Trigger.IsRemote); err != nil {
-			logger.FatalWithError("Failed to hanle push trigger last check", err)
+			logger.Fatalb().
+				Error(err).
+				Msg("Failed to hanle push trigger last check")
 		}
 		logger.Info("Dump was pushed")
 	}
@@ -316,7 +356,9 @@ func openFile(filePath string, mode int) (*os.File, error) {
 func closeFile(f *os.File, logger moira.Logger) {
 	if f != nil {
 		if err := f.Close(); err != nil {
-			logger.FatalWithError("Failed to close file", err)
+			logger.Fatalb().
+				Error(err).
+				Msg("Failed to close file")
 		}
 	}
 }

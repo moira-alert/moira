@@ -73,7 +73,9 @@ func main() {
 
 	telemetry, err := cmd.ConfigureTelemetry(logger, config.Telemetry, serviceName)
 	if err != nil {
-		logger.FatalWithError("Can not configure telemetry", err)
+		logger.Fatalb().
+			Error(err).
+			Msg("Can not configure telemetry")
 	}
 	defer telemetry.Stop()
 
@@ -105,7 +107,9 @@ func main() {
 	}
 	err = checkerWorker.Start()
 	if err != nil {
-		logger.FatalWithError("Failed to start worker check", err)
+		logger.Fatalb().
+			Error(err).
+			Msg("Failed to start worker check")
 	}
 	defer stopChecker(checkerWorker)
 
@@ -126,11 +130,15 @@ func checkSingleTrigger(database moira.Database, metrics *metrics.CheckerMetrics
 	triggerChecker, err := checker.MakeTriggerChecker(*triggerID, database, logger, settings, sourceProvider, metrics)
 	logger.String(moira.LogFieldNameTriggerID, *triggerID)
 	if err != nil {
-		logger.ErrorWithError("Failed initialize trigger checker", err)
+		logger.Errorb().
+			Error(err).
+			Msg("Failed initialize trigger checker")
 		os.Exit(1)
 	}
 	if err = triggerChecker.Check(); err != nil {
-		logger.ErrorWithError("Failed check trigger", err)
+		logger.Errorb().
+			Error(err).
+			Msg("Failed check trigger")
 		os.Exit(1)
 	}
 	os.Exit(0)
@@ -138,6 +146,8 @@ func checkSingleTrigger(database moira.Database, metrics *metrics.CheckerMetrics
 
 func stopChecker(service *worker.Checker) {
 	if err := service.Stop(); err != nil {
-		logger.ErrorWithError("Failed to Stop Moira Checker", err)
+		logger.Errorb().
+			Error(err).
+			Msg("Failed to Stop Moira Checker")
 	}
 }

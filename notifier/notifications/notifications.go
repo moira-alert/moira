@@ -41,7 +41,9 @@ func (worker *FetchNotificationsWorker) Start() {
 							Msg("Stop sending notifications for some time. Fix SelfState errors and turn on notifier in /notifications page")
 						<-time.After(sleepAfterNotifierBadState)
 					default:
-						worker.Logger.WarningWithError("Failed to fetch scheduled notifications", err)
+						worker.Logger.Warningb().
+							Error(err).
+							Msg("Failed to fetch scheduled notifications")
 					}
 				}
 			}

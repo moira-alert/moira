@@ -156,7 +156,9 @@ func checkBrokenContactError(logger moira.Logger, err error) error {
 		}
 	}
 	if strings.HasPrefix(err.Error(), "failed to get username uuid") {
-		logger.DebugWithError("It's error from getChat()", err)
+		logger.Debugb().
+			Error(err).
+			Msg("It's error from getChat()")
 		return moira.NewSenderBrokenContactError(err)
 	}
 	return err

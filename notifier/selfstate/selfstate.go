@@ -35,7 +35,9 @@ func (selfCheck *SelfCheckWorker) Start() error {
 	}
 	senders := selfCheck.Notifier.GetSenders()
 	if err := selfCheck.Config.checkConfig(senders); err != nil {
-		selfCheck.Logger.ErrorWithError("Can't configure Moira Self State Monitoring", err)
+		selfCheck.Logger.Errorb().
+			Error(err).
+			Msg("Can't configure Moira Self State Monitoring")
 		return nil
 	}
 

@@ -56,7 +56,9 @@ func (selfCheck *SelfCheckWorker) handleCheckServices(nowTS int64) []moira.Notif
 	for _, heartbeat := range selfCheck.Heartbeats {
 		currentValue, needSend, err := heartbeat.Check(nowTS)
 		if err != nil {
-			selfCheck.Logger.ErrorWithError("Heartbeat failed", err)
+			selfCheck.Logger.Errorb().
+				Error(err).
+				Msg("Heartbeat failed")
 		}
 
 		if !needSend {
@@ -133,6 +135,8 @@ func generateNotificationEvent(message string, currentValue int64) moira.Notific
 func (selfCheck *SelfCheckWorker) setNotifierState(state string) {
 	err := selfCheck.Database.SetNotifierState(state)
 	if err != nil {
-		selfCheck.Logger.ErrorWithError("Can't set notifier state", err)
+		selfCheck.Logger.Errorb().
+			Error(err).
+			Msg("Can't set notifier state")
 	}
 }

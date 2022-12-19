@@ -55,7 +55,9 @@ func (triggerChecker *TriggerChecker) cleanupMetricsValues(metrics []string, unt
 	if len(metrics) > 0 {
 		err := triggerChecker.database.RemoveMetricsValues(metrics, until-triggerChecker.database.GetMetricsTTLSeconds())
 		if err != nil {
-			triggerChecker.logger.ErrorWithError("Failed to remove metric values", err)
+			triggerChecker.logger.Errorb().
+				Error(err).
+				Msg("Failed to remove metric values")
 		}
 	}
 }

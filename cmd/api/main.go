@@ -74,7 +74,9 @@ func main() {
 
 	telemetry, err := cmd.ConfigureTelemetry(logger, config.Telemetry, serviceName)
 	if err != nil {
-		logger.FatalWithError("Can not start telemetry", err)
+		logger.Fatalb().
+			Error(err).
+			Msg("Can not start telemetry")
 	}
 	defer telemetry.Stop()
 
@@ -89,7 +91,9 @@ func main() {
 
 	err = searchIndex.Start()
 	if err != nil {
-		logger.FatalWithError("Failed to start search index", err)
+		logger.Fatalb().
+			Error(err).
+			Msg("Failed to start search index")
 	}
 	defer searchIndex.Stop() //nolint
 
@@ -100,7 +104,9 @@ func main() {
 	// Start listener only after index is ready
 	listener, err := net.Listen("tcp", apiConfig.Listen)
 	if err != nil {
-		logger.FatalWithError("Failed to start listening", err)
+		logger.Fatalb().
+			Error(err).
+			Msg("Failed to start listening")
 	}
 
 	logger.Infob().
@@ -114,7 +120,9 @@ func main() {
 
 	webConfigContent, err := config.Web.getSettings(remoteConfig.Enabled)
 	if err != nil {
-		logger.FatalWithError("Failed to get web config content ", err)
+		logger.Fatalb().
+			Error(err).
+			Msg("Failed to get web config content ")
 	}
 
 	httpHandler := handler.NewHandler(database, logger, searchIndex, apiConfig, metricSourceProvider, webConfigContent)
@@ -144,6 +152,8 @@ func Stop(logger moira.Logger, server *http.Server) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second) //nolint
 	defer cancel()
 	if err := server.Shutdown(ctx); err != nil {
-		logger.ErrorWithError("Can't stop Moira API correctly", err)
+		logger.Errorb().
+			Error(err).
+			Msg("Can't stop Moira API correctly")
 	}
 }

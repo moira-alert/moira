@@ -414,9 +414,12 @@ func TestFailReadContact(t *testing.T) {
 		eventBuilder.EXPECT().Value("trigger_tags", triggerData.Tags).Return(eventBuilder)
 		eventBuilder.EXPECT().Msg("Getting subscriptions for given tags")
 
-		logger.EXPECT().WarningWithError("Failed to get contact, skip handling it", getContactError)
+		logger.EXPECT().Warningb().Return(eventBuilder)
+		eventBuilder.EXPECT().Error(getContactError).Return(eventBuilder)
+		eventBuilder.EXPECT().Msg("Failed to get contact, skip handling it")
 
 		err := worker.processEvent(event)
+
 		So(err, ShouldBeEmpty)
 	})
 }

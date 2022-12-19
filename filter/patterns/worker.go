@@ -35,7 +35,9 @@ func NewRefreshPatternWorker(database moira.Database, metrics *metrics.FilterMet
 func (worker *RefreshPatternWorker) Start() error {
 	err := worker.patternStorage.Refresh()
 	if err != nil {
-		worker.logger.ErrorWithError("pattern refresh failed", err)
+		worker.logger.Errorb().
+			Error(err).
+			Msg("pattern refresh failed")
 		return err
 	}
 
@@ -50,7 +52,9 @@ func (worker *RefreshPatternWorker) Start() error {
 				timer := time.Now()
 				err := worker.patternStorage.Refresh()
 				if err != nil {
-					worker.logger.ErrorWithError("Pattern refresh failed", err)
+					worker.logger.Errorb().
+						Error(err).
+						Msg("Pattern refresh failed")
 				}
 				worker.metrics.BuildTreeTimer.UpdateSince(timer)
 			}

@@ -39,7 +39,9 @@ func (worker *FetchEventsWorker) Start() {
 					if err != nil {
 						if err != database.ErrNil {
 							worker.Metrics.EventsMalformed.Mark(1)
-							worker.Logger.WarningWithError("Failed to fetch notification event", err)
+							worker.Logger.Warningb().
+								Error(err).
+								Msg("Failed to fetch notification event")
 							time.Sleep(time.Second * 5) //nolint
 						}
 						continue
@@ -55,7 +57,9 @@ func (worker *FetchEventsWorker) Start() {
 
 					if err := worker.processEvent(event); err != nil {
 						worker.Metrics.EventsProcessingFailed.Mark(1)
-						worker.Logger.ErrorWithError("Failed processEvent", err)
+						worker.Logger.Errorb().
+							Error(err).
+							Msg("Failed processEvent")
 					}
 				}
 			}
@@ -135,7 +139,9 @@ func (worker *FetchEventsWorker) processEvent(event moira.NotificationEvent) err
 				notifier.SetLogLevelByConfig(worker.Config.LogContactsToLevel, contactID, &contactLogger)
 				contact, err := worker.Database.GetContact(contactID)
 				if err != nil {
-					contactLogger.WarningWithError("Failed to get contact, skip handling it", err)
+					contactLogger.Warningb().
+						Error(err).
+						Msg("Failed to get contact, skip handling it")
 					continue
 				}
 				event.SubscriptionID = &subscription.ID
@@ -144,7 +150,9 @@ func (worker *FetchEventsWorker) processEvent(event moira.NotificationEvent) err
 				key := notification.GetKey()
 				if _, exist := duplications[key]; !exist {
 					if err := worker.Database.AddNotification(notification); err != nil {
-						contactLogger.ErrorWithError("Failed to save scheduled notification", err)
+						contactLogger.Errorb().
+							Error(err).
+							Msg("Failed to save scheduled notification")
 					}
 					duplications[key] = true
 				} else {

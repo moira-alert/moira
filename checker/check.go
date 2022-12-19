@@ -69,7 +69,9 @@ func (triggerChecker *TriggerChecker) handlePrepareError(checkData moira.CheckDa
 		logTriggerCheckException(triggerChecker.logger, triggerChecker.triggerID, err)
 	case conversion.ErrEmptyAloneMetricsTarget:
 		checkData.State = moira.StateNODATA
-		triggerChecker.logger.WarningWithError("Trigger check failed", err)
+		triggerChecker.logger.Warningb().
+			Error(err).
+			Msg("Trigger check failed")
 	default:
 		return false, checkData, triggerChecker.handleUndefinedError(checkData, err)
 	}

@@ -162,7 +162,9 @@ func (notifier *StandardNotifier) resend(pkg *NotificationPackage, reason string
 			notification := notifier.scheduler.ScheduleNotification(time.Now(), event,
 				pkg.Trigger, pkg.Contact, pkg.Plotting, pkg.Throttled, pkg.FailCount+1, eventLogger)
 			if err := notifier.database.AddNotification(notification); err != nil {
-				eventLogger.ErrorWithError("Failed to save scheduled notification", err)
+				eventLogger.Errorb().
+					Error(err).
+					Msg("Failed to save scheduled notification")
 			}
 		}
 	}
@@ -199,7 +201,9 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 
 		err = pkg.Trigger.PopulatedDescription(pkg.Events)
 		if err != nil {
-			log.WarningWithError("Error populate description", err)
+			log.Warningb().
+				Error(err).
+				Msg("Error populate description")
 		}
 
 		err = sender.SendEvents(pkg.Events, pkg.Contact, pkg.Trigger, plots, pkg.Throttled)
@@ -210,10 +214,14 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 		} else {
 			switch e := err.(type) {
 			case moira.SenderBrokenContactError:
-				log.WarningWithError("Cannot send to broken contact", e)
+				log.Warningb().
+					Error(e).
+					Msg("Cannot send to broken contact")
 
 			default:
-				log.ErrorWithError("Cannot send notification", err)
+				log.Errorb().
+					Error(err).
+					Msg("Cannot send notification")
 				notifier.resend(&pkg, err.Error())
 			}
 		}

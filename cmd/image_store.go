@@ -18,7 +18,9 @@ func InitImageStores(imageStores ImageStoreConfig, logger moira.Logger) map[stri
 	imageStore := &s3.ImageStore{}
 	if imageStores.S3 != (s3.Config{}) {
 		if err = imageStore.Init(imageStores.S3); err != nil {
-			logger.WarningWithError("Failed to initialize image store", err)
+			logger.Warningb().
+				Error(err).
+				Msg("Failed to initialize image store")
 		} else {
 			logger.Infob().
 				String("image_storage", s3ImageStore).

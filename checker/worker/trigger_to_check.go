@@ -30,7 +30,9 @@ func (worker *Checker) triggerToCheckGetter(fetch func(int) ([]string, error), b
 
 func (worker *Checker) handleFetchResponse(triggerIDs []string, fetchError error, triggerIDsToCheck chan<- string) time.Duration {
 	if fetchError != nil {
-		worker.Logger.ErrorWithError("Failed to handle trigger loop", fetchError)
+		worker.Logger.Errorb().
+			Error(fetchError).
+			Msg("Failed to handle trigger loop")
 		return sleepAfterGetTriggerIDError
 	}
 	if len(triggerIDs) == 0 {

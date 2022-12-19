@@ -100,6 +100,8 @@ func (matcher *MetricsMatcher) Wait() {
 
 func (matcher *MetricsMatcher) save(buffer map[string]*moira.MatchedMetric) {
 	if err := matcher.database.SaveMetrics(buffer); err != nil {
-		matcher.logger.ErrorWithError("Failed to save matched metrics", err)
+		matcher.logger.Errorb().
+			Error(err).
+			Msg("Failed to save matched metrics")
 	}
 }

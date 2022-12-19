@@ -30,7 +30,9 @@ func (index *Index) runIndexActualizer() error {
 					Msg("Index was actualized too far ago. Restart moira-API service to solve this issue")
 			}
 			if err := index.actualizeIndex(); err != nil {
-				index.logger.WarningWithError("Cannot actualize triggers", err)
+				index.logger.Warningb().
+					Error(err).
+					Msg("Cannot actualize triggers")
 				continue
 			}
 			index.indexActualizedTS = newTime

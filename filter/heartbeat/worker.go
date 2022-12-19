@@ -45,7 +45,9 @@ func (worker *Worker) Start() {
 						Msg("Heartbeat was updated")
 
 					if err := worker.database.UpdateMetricsHeartbeat(); err != nil {
-						worker.logger.InfoWithError("Save state failed", err)
+						worker.logger.Infob().
+							Error(err).
+							Msg("Save state failed")
 					} else {
 						count = newCount
 					}

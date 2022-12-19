@@ -80,12 +80,6 @@ func (l Logger) Debug(args ...interface{}) {
 	event.Timestamp().Msg(fmt.Sprint(args...))
 }
 
-func (l Logger) DebugWithError(msg string, err error) {
-	l.Debugb().
-		Error(err).
-		Msg(msg)
-}
-
 func (l Logger) Debugf(format string, args ...interface{}) {
 	event := l.Logger.Debug()
 	if event == nil {
@@ -104,12 +98,6 @@ func (l Logger) Info(args ...interface{}) {
 		return
 	}
 	event.Timestamp().Msg(fmt.Sprint(args...))
-}
-
-func (l Logger) InfoWithError(msg string, err error) {
-	l.Infob().
-		Error(err).
-		Msg(msg)
 }
 
 func (l Logger) Infof(format string, args ...interface{}) {
@@ -132,12 +120,6 @@ func (l Logger) Error(args ...interface{}) {
 	event.Timestamp().Msg(fmt.Sprint(args...))
 }
 
-func (l Logger) ErrorWithError(msg string, err error) {
-	l.Errorb().
-		Error(err).
-		Msg(msg)
-}
-
 func (l Logger) Errorf(format string, args ...interface{}) {
 	event := l.Logger.Error()
 	if event == nil {
@@ -158,12 +140,6 @@ func (l Logger) Fatal(args ...interface{}) {
 	event.Timestamp().Msg(fmt.Sprint(args...))
 }
 
-func (l Logger) FatalWithError(msg string, err error) {
-	l.Fatalb().
-		Error(err).
-		Msg(msg)
-}
-
 func (l Logger) Fatalf(format string, args ...interface{}) {
 	event := l.Logger.Fatal()
 	if event == nil {
@@ -182,12 +158,6 @@ func (l Logger) Warning(args ...interface{}) {
 		return
 	}
 	event.Timestamp().Msg(fmt.Sprint(args...))
-}
-
-func (l Logger) WarningWithError(msg string, err error) {
-	l.Warningb().
-		Error(err).
-		Msg(msg)
 }
 
 func (l Logger) Warningf(format string, args ...interface{}) {

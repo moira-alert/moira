@@ -71,7 +71,9 @@ func main() {
 
 	telemetry, err := cmd.ConfigureTelemetry(logger, config.Telemetry, serviceName)
 	if err != nil {
-		logger.FatalWithError("Can not configure telemetry", err)
+		logger.Fatalb().
+			Error(err).
+			Msg("Can not configure telemetry")
 	}
 	defer telemetry.Stop()
 
@@ -103,7 +105,9 @@ func main() {
 
 	patternStorage, err := filter.NewPatternStorage(database, filterMetrics, logger)
 	if err != nil {
-		logger.FatalWithError("Failed to refresh pattern storage", err)
+		logger.Fatalb().
+			Error(err).
+			Msg("Failed to refresh pattern storage")
 	}
 
 	// Refresh Patterns on first init
@@ -112,7 +116,9 @@ func main() {
 	// Start patterns refresher
 	err = refreshPatternWorker.Start()
 	if err != nil {
-		logger.FatalWithError("Failed to refresh pattern storage", err)
+		logger.Fatalb().
+			Error(err).
+			Msg("Failed to refresh pattern storage")
 	}
 	defer stopRefreshPatternWorker(refreshPatternWorker)
 
@@ -124,7 +130,9 @@ func main() {
 	// Start metrics listener
 	listener, err := connection.NewListener(config.Filter.Listen, logger, filterMetrics)
 	if err != nil {
-		logger.FatalWithError("Failed to start listening", err)
+		logger.Fatalb().
+			Error(err).
+			Msg("Failed to start listening")
 	}
 	lineChan := listener.Listen()
 
@@ -153,18 +161,24 @@ func main() {
 
 func stopListener(listener *connection.MetricsListener) {
 	if err := listener.Stop(); err != nil {
-		logger.ErrorWithError("Failed to stop listener", err)
+		logger.Errorb().
+			Error(err).
+			Msg("Failed to stop listener")
 	}
 }
 
 func stopHeartbeatWorker(heartbeatWorker *heartbeat.Worker) {
 	if err := heartbeatWorker.Stop(); err != nil {
-		logger.ErrorWithError("Failed to stop heartbeat worker", err)
+		logger.Errorb().
+			Error(err).
+			Msg("Failed to stop heartbeat worker")
 	}
 }
 
 func stopRefreshPatternWorker(refreshPatternWorker *patterns.RefreshPatternWorker) {
 	if err := refreshPatternWorker.Stop(); err != nil {
-		logger.ErrorWithError("Failed to stop refresh pattern worker", err)
+		logger.Errorb().
+			Error(err).
+			Msg("Failed to stop refresh pattern worker")
 	}
 }

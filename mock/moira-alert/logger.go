@@ -65,18 +65,6 @@ func (mr *MockLoggerMockRecorder) Debug(arg0 ...interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Debug", reflect.TypeOf((*MockLogger)(nil).Debug), arg0...)
 }
 
-// DebugWithError mocks base method.
-func (m *MockLogger) DebugWithError(arg0 string, arg1 error) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "DebugWithError", arg0, arg1)
-}
-
-// DebugWithError indicates an expected call of DebugWithError.
-func (mr *MockLoggerMockRecorder) DebugWithError(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DebugWithError", reflect.TypeOf((*MockLogger)(nil).DebugWithError), arg0, arg1)
-}
-
 // Debugb mocks base method.
 func (m *MockLogger) Debugb() logging.EventBuilder {
 	m.ctrl.T.Helper()
@@ -124,18 +112,6 @@ func (mr *MockLoggerMockRecorder) Error(arg0 ...interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Error", reflect.TypeOf((*MockLogger)(nil).Error), arg0...)
 }
 
-// ErrorWithError mocks base method.
-func (m *MockLogger) ErrorWithError(arg0 string, arg1 error) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "ErrorWithError", arg0, arg1)
-}
-
-// ErrorWithError indicates an expected call of ErrorWithError.
-func (mr *MockLoggerMockRecorder) ErrorWithError(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ErrorWithError", reflect.TypeOf((*MockLogger)(nil).ErrorWithError), arg0, arg1)
-}
-
 // Errorb mocks base method.
 func (m *MockLogger) Errorb() logging.EventBuilder {
 	m.ctrl.T.Helper()
@@ -181,18 +157,6 @@ func (m *MockLogger) Fatal(arg0 ...interface{}) {
 func (mr *MockLoggerMockRecorder) Fatal(arg0 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Fatal", reflect.TypeOf((*MockLogger)(nil).Fatal), arg0...)
-}
-
-// FatalWithError mocks base method.
-func (m *MockLogger) FatalWithError(arg0 string, arg1 error) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "FatalWithError", arg0, arg1)
-}
-
-// FatalWithError indicates an expected call of FatalWithError.
-func (mr *MockLoggerMockRecorder) FatalWithError(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FatalWithError", reflect.TypeOf((*MockLogger)(nil).FatalWithError), arg0, arg1)
 }
 
 // Fatalb mocks base method.
@@ -254,18 +218,6 @@ func (m *MockLogger) Info(arg0 ...interface{}) {
 func (mr *MockLoggerMockRecorder) Info(arg0 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Info", reflect.TypeOf((*MockLogger)(nil).Info), arg0...)
-}
-
-// InfoWithError mocks base method.
-func (m *MockLogger) InfoWithError(arg0 string, arg1 error) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "InfoWithError", arg0, arg1)
-}
-
-// InfoWithError indicates an expected call of InfoWithError.
-func (mr *MockLoggerMockRecorder) InfoWithError(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InfoWithError", reflect.TypeOf((*MockLogger)(nil).InfoWithError), arg0, arg1)
 }
 
 // Infob mocks base method.
@@ -370,18 +322,6 @@ func (m *MockLogger) Warning(arg0 ...interface{}) {
 func (mr *MockLoggerMockRecorder) Warning(arg0 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Warning", reflect.TypeOf((*MockLogger)(nil).Warning), arg0...)
-}
-
-// WarningWithError mocks base method.
-func (m *MockLogger) WarningWithError(arg0 string, arg1 error) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "WarningWithError", arg0, arg1)
-}
-
-// WarningWithError indicates an expected call of WarningWithError.
-func (mr *MockLoggerMockRecorder) WarningWithError(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WarningWithError", reflect.TypeOf((*MockLogger)(nil).WarningWithError), arg0, arg1)
 }
 
 // Warningb mocks base method.

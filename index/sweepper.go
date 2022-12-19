@@ -22,7 +22,9 @@ func (index *Index) runTriggersToReindexSweepper() error {
 		case <-ticker.C:
 			timeToDelete := time.Now().Add(-sweeperTimeToKeep).Unix()
 			if err := index.database.RemoveTriggersToReindex(timeToDelete); err != nil {
-				index.logger.WarningWithError("Cannot sweep triggers to reindex from redis", err)
+				index.logger.Warningb().
+					Error(err).
+					Msg("Cannot sweep triggers to reindex from redis")
 			}
 		}
 	}

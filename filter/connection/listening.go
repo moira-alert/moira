@@ -63,7 +63,9 @@ func (listener *MetricsListener) Listen() chan []byte {
 				if opErr, ok := err.(*net.OpError); ok && opErr.Timeout() {
 					continue
 				}
-				listener.logger.InfoWithError("Failed to accept connection", err)
+				listener.logger.Infob().
+					Error(err).
+					Msg("Failed to accept connection")
 				continue
 			}
 			listener.logger.Infob().
