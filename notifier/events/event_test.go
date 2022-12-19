@@ -170,7 +170,7 @@ func TestDisabledNotification(t *testing.T) {
 		eventBuilder.EXPECT().Value("trigger_tags", triggerData.Tags).Return(eventBuilder)
 		eventBuilder.EXPECT().Msg("Getting subscriptions for given tags")
 
-		logger.EXPECT().Debug("Subscription is disabled")
+		eventBuilder.EXPECT().Msg("Subscription is disabled")
 
 		err := worker.processEvent(event)
 		So(err, ShouldBeEmpty)
@@ -464,7 +464,7 @@ func TestEmptySubscriptions(t *testing.T) {
 		eventBuilder.EXPECT().Value("trigger_tags", triggerData.Tags).Return(eventBuilder)
 		eventBuilder.EXPECT().Msg("Getting subscriptions for given tags")
 
-		logger.EXPECT().Debug("Subscription is disabled")
+		eventBuilder.EXPECT().Msg("Subscription is disabled")
 
 		err := worker.processEvent(event)
 		So(err, ShouldBeEmpty)
@@ -499,7 +499,7 @@ func TestEmptySubscriptions(t *testing.T) {
 		eventBuilder.EXPECT().Value("trigger_tags", triggerData.Tags).Return(eventBuilder)
 		eventBuilder.EXPECT().Msg("Getting subscriptions for given tags")
 
-		logger.EXPECT().Debug("Subscription is nil")
+		eventBuilder.EXPECT().Msg("Subscription is nil")
 
 		err := worker.processEvent(event)
 		So(err, ShouldBeEmpty)

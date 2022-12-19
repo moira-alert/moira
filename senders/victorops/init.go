@@ -34,7 +34,7 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 
 	sender.imageStoreID, ok = senderSettings["image_store"]
 	if !ok {
-		logger.Warning("Cannot read image_store from the config, will not be able to attach plot images to events")
+		logger.Warningb().Msg("Cannot read image_store from the config, will not be able to attach plot images to events")
 	} else {
 		imageStore, ok := sender.ImageStores[sender.imageStoreID]
 		if ok && imageStore.IsEnabled() {

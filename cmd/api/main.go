@@ -86,7 +86,7 @@ func main() {
 	// Start Index right before HTTP listener. Fail if index cannot start
 	searchIndex := index.NewSearchIndex(logger, database, telemetry.Metrics)
 	if searchIndex == nil {
-		logger.Fatal("Failed to create search index")
+		logger.Fatalb().Msg("Failed to create search index")
 	}
 
 	err = searchIndex.Start()
@@ -98,7 +98,7 @@ func main() {
 	defer searchIndex.Stop() //nolint
 
 	if !searchIndex.IsReady() {
-		logger.Fatal("Search index is not ready, exit")
+		logger.Fatalb().Msg("Search index is not ready, exit")
 	}
 
 	// Start listener only after index is ready

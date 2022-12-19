@@ -19,7 +19,7 @@ const (
 // Check handle trigger and last check and write new state of trigger, if state were change then write new NotificationEvent
 func (triggerChecker *TriggerChecker) Check() error {
 	passError := false
-	triggerChecker.logger.Debug("Checking trigger")
+	triggerChecker.logger.Debugb().Msg("Checking trigger")
 	checkData := newCheckData(triggerChecker.lastCheck, triggerChecker.until)
 	triggerMetricsData, err := triggerChecker.fetchTriggerMetrics()
 	if err != nil {
@@ -259,11 +259,11 @@ func (triggerChecker *TriggerChecker) check(metrics map[string]map[string]metric
 	}
 	for metricName, targets := range metrics {
 		log := logger.Clone().String(moira.LogFieldNameMetricName, metricName)
-		log.Debug("Checking metrics")
+		log.Debugb().Msg("Checking metrics")
 		targets = conversion.Merge(targets, aloneMetrics)
 		metricState, needToDeleteMetric, err := triggerChecker.checkTargets(metricName, targets, log)
 		if needToDeleteMetric {
-			log.Info("Remove metric")
+			log.Infob().Msg("Remove metric")
 			checkData.RemoveMetricState(metricName)
 			err = triggerChecker.database.RemovePatternsMetrics(triggerChecker.trigger.Patterns)
 		} else {
@@ -337,9 +337,9 @@ func (triggerChecker *TriggerChecker) getMetricStepsStates(metricName string, me
 	}
 
 	checkPoint := last.GetCheckPoint(checkPointGap)
-	logger.
+	logger.Debugb().
 		Int64(moira.LogFieldNameCheckpoint, checkPoint).
-		Debug("Checkpoint got")
+		Msg("Checkpoint got")
 
 	current = make([]moira.MetricState, 0)
 

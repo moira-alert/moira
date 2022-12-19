@@ -20,7 +20,7 @@ func handleRemoveTriggersStartWith(logger moira.Logger, database moira.Database,
 		String("prefix", prefix).
 		String("delay", delay.String()).
 		Msg("Triggers that start with given prefix would be removed after delay")
-	logger.Info("You can cancel execution by Ctrl+C")
+	logger.Infob().Msg("You can cancel execution by Ctrl+C")
 	time.Sleep(delay)
 
 	logger.Infob().

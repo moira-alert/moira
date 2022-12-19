@@ -27,7 +27,7 @@ func (worker *Checker) lazyTriggersWorker() error {
 		select {
 		case <-worker.tomb.Dying():
 			checkTicker.Stop()
-			worker.Logger.Info("Lazy triggers worker stopped")
+			worker.Logger.Infob().Msg("Lazy triggers worker stopped")
 			return nil
 		case <-checkTicker.C:
 			err := worker.fillLazyTriggerIDs()

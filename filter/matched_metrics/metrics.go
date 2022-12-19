@@ -95,7 +95,7 @@ func (matcher *MetricsMatcher) receiveBatch(metrics <-chan *moira.MatchedMetric)
 func (matcher *MetricsMatcher) Wait() {
 	close(matcher.closeRequest)
 	matcher.waitGroup.Wait()
-	matcher.logger.Info("Moira Filter Metrics Matcher stopped")
+	matcher.logger.Infob().Msg("Moira Filter Metrics Matcher stopped")
 }
 
 func (matcher *MetricsMatcher) save(buffer map[string]*moira.MatchedMetric) {

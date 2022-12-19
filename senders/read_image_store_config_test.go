@@ -21,7 +21,8 @@ func TestReadImageStoreConfig(t *testing.T) {
 
 	Convey("Read image store config tests", t, func() {
 		Convey("no image_store in settings", func() {
-			logger.EXPECT().Warning("Cannot read image_store from the config, will not be able to attach plot images to alerts")
+			logger.EXPECT().Warningb().Return(eventBuilder)
+			eventBuilder.EXPECT().Msg("Cannot read image_store from the config, will not be able to attach plot images to alerts")
 
 			imageStoreID, imageStore, imageStoreConfigured :=
 				ReadImageStoreConfig(map[string]string{}, imageStores, logger)

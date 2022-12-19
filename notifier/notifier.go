@@ -153,7 +153,7 @@ func (notifier *StandardNotifier) resend(pkg *NotificationPackage, reason string
 		Msg("Can't send message. Retry again in 1 min")
 
 	if time.Duration(pkg.FailCount)*time.Minute > notifier.config.ResendingTimeout {
-		logger.Error("Stop resending. Notification interval is timed out")
+		logger.Errorb().Msg("Stop resending. Notification interval is timed out")
 	} else {
 		for _, event := range pkg.Events {
 			subID := moira.UseString(event.SubscriptionID)

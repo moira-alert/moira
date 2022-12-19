@@ -17,7 +17,7 @@ func (index *Index) runIndexActualizer() error {
 	for {
 		select {
 		case <-index.tomb.Dying():
-			index.logger.Info("Stop index actualizer")
+			index.logger.Infob().Msg("Stop index actualizer")
 			return nil
 		case <-ticker.C:
 			newTime := time.Now().Unix()
@@ -68,10 +68,10 @@ func (index *Index) actualizeIndex() error {
 		triggerLog := log.Clone().String(moira.LogFieldNameTriggerID, triggerID)
 		if trigger == nil {
 			triggersToDelete = append(triggersToDelete, triggerID)
-			triggerLog.Debug("Trigger is nil, remove from index")
+			triggerLog.Debugb().Msg("Trigger is nil, remove from index")
 		} else {
 			triggersToUpdate = append(triggersToUpdate, trigger)
-			triggerLog.Debug("Trigger need to be reindexed...")
+			triggerLog.Debugb().Msg("Trigger need to be reindexed...")
 		}
 	}
 

@@ -140,8 +140,8 @@ func main() {
 		Msg("Moira Notifier Started")
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
-	logger.Info(fmt.Sprint(<-ch))
-	logger.Info("Moira Notifier shutting down.")
+	logger.Infob().Msg(fmt.Sprint(<-ch))
+	logger.Infob().Msg("Moira Notifier shutting down.")
 }
 
 func stopFetchEvents(worker *events.FetchEventsWorker) {

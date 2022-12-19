@@ -17,7 +17,7 @@ func (index *Index) runTriggersToReindexSweepper() error {
 	for {
 		select {
 		case <-index.tomb.Dying():
-			index.logger.Info("Stop index sweepper")
+			index.logger.Infob().Msg("Stop index sweepper")
 			return nil
 		case <-ticker.C:
 			timeToDelete := time.Now().Add(-sweeperTimeToKeep).Unix()

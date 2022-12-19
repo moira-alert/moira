@@ -42,9 +42,9 @@ func (m *Matcher) Start(matchersCount int, lineChan <-chan []byte) chan *moira.M
 	}
 	go func() {
 		<-m.tomb.Dying()
-		m.logger.Info("Stopping pattern matcher...")
+		m.logger.Infob().Msg("Stopping pattern matcher...")
 		close(matchedMetricsChan)
-		m.logger.Info("Moira pattern matcher stopped")
+		m.logger.Infob().Msg("Moira pattern matcher stopped")
 	}()
 
 	m.tomb.Go(func() error { return m.checkNewMetricsChannelLen(matchedMetricsChan) })

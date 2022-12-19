@@ -11,7 +11,7 @@ import (
 )
 
 func (selfCheck *SelfCheckWorker) selfStateChecker(stop <-chan struct{}) error {
-	selfCheck.Logger.Info("Moira Notifier Self State Monitor started")
+	selfCheck.Logger.Infob().Msg("Moira Notifier Self State Monitor started")
 
 	checkTicker := time.NewTicker(defaultCheckInterval)
 	defer checkTicker.Stop()
@@ -42,7 +42,7 @@ func (selfCheck *SelfCheckWorker) selfStateChecker(stop <-chan struct{}) error {
 	for {
 		select {
 		case <-stop:
-			selfCheck.Logger.Info("Moira Notifier Self State Monitor stopped")
+			selfCheck.Logger.Infob().Msg("Moira Notifier Self State Monitor stopped")
 			return nil
 		case <-checkTicker.C:
 			nextSendErrorMessage = selfCheck.check(time.Now().Unix(), nextSendErrorMessage)

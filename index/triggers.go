@@ -19,7 +19,7 @@ var (
 )
 
 func (index *Index) fillIndex() error {
-	index.logger.Debug("Start filling index with triggers")
+	index.logger.Debugb().Msg("Start filling index with triggers")
 
 	index.inProgress = true
 	index.indexActualizedTS = time.Now().Unix()

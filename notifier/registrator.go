@@ -133,9 +133,9 @@ func (notifier *StandardNotifier) StopSenders() {
 		close(ch)
 	}
 	notifier.senders = make(map[string]chan NotificationPackage)
-	notifier.logger.Info("Waiting senders finish...")
+	notifier.logger.Infob().Msg("Waiting senders finish...")
 	notifier.waitGroup.Wait()
-	notifier.logger.Info("Moira Notifier Senders stopped")
+	notifier.logger.Infob().Msg("Moira Notifier Senders stopped")
 }
 
 func getGraphiteSenderIdent(ident string) string {

@@ -153,13 +153,13 @@ func main() { //nolint
 
 	if *removeAllMetrics {
 		log := logger.String(moira.LogFieldNameContext, "cleanup")
-		log.Info("Removing all metrics started")
+		log.Infob().Msg("Removing all metrics started")
 		if err := handleRemoveAllMetrics(dataBase); err != nil {
 			log.Errorb().
 				Error(err).
 				Msg("Failed to remove all metrics")
 		}
-		log.Info("Removing all metrics finished")
+		log.Infob().Msg("Removing all metrics finished")
 	}
 
 	if *removeTriggersStartWith != "" {
@@ -183,63 +183,63 @@ func main() { //nolint
 				Error(err).
 				Msg("Failed to cleanup")
 		}
-		log.Info("Cleanup finished")
+		log.Infob().Msg("Cleanup finished")
 	}
 
 	if *cleanupMetrics {
 		log := logger.String(moira.LogFieldNameContext, "cleanup-metrics")
 
-		log.Info("Cleanup of outdated metrics started")
+		log.Infob().Msg("Cleanup of outdated metrics started")
 		err := handleCleanUpOutdatedMetrics(confCleanup, dataBase)
 		if err != nil {
 			log.Errorb().
 				Error(err).
 				Msg("Failed to cleanup outdated metrics")
 		}
-		log.Info("Cleanup outdated metrics finished")
+		log.Infob().Msg("Cleanup outdated metrics finished")
 	}
 
 	if *cleanupLastChecks {
 		log := logger.String(moira.LogFieldNameContext, "cleanup-last-checks")
 
-		log.Info("Cleanup abandoned triggers last checks started")
+		log.Infob().Msg("Cleanup abandoned triggers last checks started")
 		err := handleCleanUpAbandonedTriggerLastCheck(dataBase)
 		if err != nil {
 			log.Errorb().
 				Error(err).
 				Msg("Failed to cleanup abandoned triggers last checks")
 		}
-		log.Info("Cleanup abandoned triggers last checks finished")
+		log.Infob().Msg("Cleanup abandoned triggers last checks finished")
 	}
 
 	if *cleanupRetentions {
 		log := logger.String(moira.LogFieldNameContext, "cleanup-retentions")
 
-		log.Info("Cleanup of abandoned retentions started")
+		log.Infob().Msg("Cleanup of abandoned retentions started")
 		err := handleCleanUpAbandonedRetentions(dataBase)
 		if err != nil {
 			log.Errorb().
 				Error(err).
 				Msg("Failed to cleanup abandoned retentions")
 		}
-		log.Info("Cleanup of abandoned retentions finished")
+		log.Infob().Msg("Cleanup of abandoned retentions finished")
 	}
 
 	if *cleanupPatterns {
 		log := logger.String(moira.LogFieldNameContext, "cleanup-patterns")
 
-		log.Info("Cleanup of abandoned pattern metrics started")
+		log.Infob().Msg("Cleanup of abandoned pattern metrics started")
 		err := handleCleanUpAbandonedPatternMetrics(dataBase)
 		if err != nil {
 			log.Errorb().
 				Error(err).
 				Msg("Failed to cleanup abandoned pattern metrics")
 		}
-		log.Info("Cleanup of abandoned pattern metrics finished")
+		log.Infob().Msg("Cleanup of abandoned pattern metrics finished")
 	}
 
 	if *pushTriggerDump {
-		logger.Info("Dump push started")
+		logger.Infob().Msg("Dump push started")
 		f, err := openFile(*triggerDumpFile, os.O_RDONLY)
 		if err != nil {
 			logger.Fatalb().
@@ -256,7 +256,7 @@ func main() { //nolint
 				Msg("cannot decode trigger dump")
 		}
 
-		logger.Info(GetDumpBriefInfo(dump))
+		logger.Infob().Msg(GetDumpBriefInfo(dump))
 		if err := support.HandlePushTrigger(logger, dataBase, &dump.Trigger); err != nil {
 			logger.Fatalb().
 				Error(err).
@@ -273,7 +273,7 @@ func main() { //nolint
 				Error(err).
 				Msg("Failed to hanle push trigger last check")
 		}
-		logger.Info("Dump was pushed")
+		logger.Infob().Msg("Dump was pushed")
 	}
 }
 

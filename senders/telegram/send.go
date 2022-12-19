@@ -120,10 +120,10 @@ func (sender *Sender) getChat(username string) (*telebot.Chat, error) {
 // talk processes one talk
 func (sender *Sender) talk(chat *telebot.Chat, message string, plots [][]byte, messageType messageType) error {
 	if messageType == Album {
-		sender.logger.Debug("talk as album")
+		sender.logger.Debugb().Msg("talk as album")
 		return sender.sendAsAlbum(chat, plots, message)
 	}
-	sender.logger.Debug("talk as send message")
+	sender.logger.Debugb().Msg("talk as send message")
 	return sender.sendAsMessage(chat, message)
 }
 
@@ -140,7 +140,7 @@ func (sender *Sender) sendAsMessage(chat *telebot.Chat, message string) error {
 }
 
 func checkBrokenContactError(logger moira.Logger, err error) error {
-	logger.Debug("Check broken contact")
+	logger.Debugb().Msg("Check broken contact")
 	if err == nil {
 		return nil
 	}

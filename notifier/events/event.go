@@ -30,7 +30,7 @@ func (worker *FetchEventsWorker) Start() {
 			select {
 			case <-worker.tomb.Dying():
 				{
-					worker.Logger.Info("Moira Notifier Fetching events stopped")
+					worker.Logger.Infob().Msg("Moira Notifier Fetching events stopped")
 					return nil
 				}
 			default:
@@ -65,7 +65,7 @@ func (worker *FetchEventsWorker) Start() {
 			}
 		}
 	})
-	worker.Logger.Info("Moira Notifier Fetching events started")
+	worker.Logger.Infob().Msg("Moira Notifier Fetching events started")
 }
 
 // Stop stops new event fetching and wait for finish
@@ -210,12 +210,12 @@ func (worker *FetchEventsWorker) getNotificationSubscriptions(event moira.Notifi
 func (worker *FetchEventsWorker) isNotificationRequired(subscription *moira.SubscriptionData, trigger moira.TriggerData,
 	event moira.NotificationEvent, logger moira.Logger) bool {
 	if subscription == nil {
-		logger.Debug("Subscription is nil")
+		logger.Debugb().Msg("Subscription is nil")
 		return false
 	}
 	if event.State != moira.StateTEST {
 		if !subscription.Enabled {
-			logger.Debug("Subscription is disabled")
+			logger.Debugb().Msg("Subscription is disabled")
 			return false
 		}
 		if subscription.MustIgnore(&event) {

@@ -58,7 +58,7 @@ func (notifier *StandardNotifier) buildNotificationPackagePlots(pkg Notification
 	if pkg.Trigger.ID == "" {
 		return nil, nil
 	}
-	logger.Info("Start build plots for package")
+	logger.Infob().Msg("Start build plots for package")
 	startTime := time.Now()
 	metricsToShow := pkg.GetMetricNames()
 	if len(metricsToShow) == 0 {

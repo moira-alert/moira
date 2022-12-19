@@ -168,19 +168,10 @@ type Mutex interface {
 
 // Logger implements logger abstraction
 type Logger interface {
-	Debug(args ...interface{})
 	Debugb() logging.EventBuilder
-
-	Info(args ...interface{})
 	Infob() logging.EventBuilder
-
-	Error(args ...interface{})
 	Errorb() logging.EventBuilder
-
-	Fatal(args ...interface{})
 	Fatalb() logging.EventBuilder
-
-	Warning(args ...interface{})
 	Warningb() logging.EventBuilder
 
 	// Structured logging methods, use to add context fields

@@ -79,9 +79,9 @@ func (worker *Checker) Start() error {
 
 	if worker.remoteEnabled {
 		worker.tomb.Go(worker.remoteTriggerGetter)
-		worker.Logger.Info("Remote checker started")
+		worker.Logger.Infob().Msg("Remote checker started")
 	} else {
-		worker.Logger.Info("Remote checker disabled")
+		worker.Logger.Infob().Msg("Remote checker disabled")
 	}
 
 	const maxParallelChecksMaxValue = 1024 * 8
@@ -120,11 +120,11 @@ func (worker *Checker) Start() error {
 			})
 		}
 	}
-	worker.Logger.Info("Checking new events started")
+	worker.Logger.Infob().Msg("Checking new events started")
 
 	go func() {
 		<-worker.tomb.Dying()
-		worker.Logger.Info("Checking for new events stopped")
+		worker.Logger.Infob().Msg("Checking for new events stopped")
 	}()
 
 	worker.tomb.Go(func() error { return worker.checkMetricEventsChannelLen(metricEventsChannel) })
