@@ -142,7 +142,9 @@ func (connector *DbConnector) SaveMetrics(metrics map[string]*moira.MatchedMetri
 	}
 
 	if _, err = pipe.Exec(ctx); err != nil {
-		connector.logger.Errorf("Sending metric event error. Error: %v;", err)
+		connector.logger.Errorb().
+			Error(err).
+			Msg("Sending metric event error")
 		return err
 	}
 
@@ -214,7 +216,9 @@ const (
 func (connector *DbConnector) handlePopResponse(data []string, popError error, responseChannel chan string, defaultDelay time.Duration) time.Duration {
 	if popError != nil {
 		if popError != redis.Nil {
-			connector.logger.Errorf("Failed to pop new metric events. Error: %s.", popError)
+			connector.logger.Errorb().
+				Error(popError).
+				Msg("Failed to pop new metric events")
 		}
 		return receiveErrorSleepDuration
 	} else if len(data) == 0 {
