@@ -1,4 +1,4 @@
-package zerolog_dapter
+package zerolog_adapter
 
 import (
 	"fmt"
@@ -72,64 +72,24 @@ func getLogWriter(logFileName string) (io.Writer, error) {
 	return logFile, nil
 }
 
-func (l Logger) Debug(args ...interface{}) {
-	event := l.Logger.Debug()
-	if event == nil {
-		return
-	}
-	event.Timestamp().Msg(fmt.Sprint(args...))
-}
-
 func (l Logger) Debugb() logging.EventBuilder {
-	return EventBuilder{Event: l.Logger.Debug()}
-}
-
-func (l Logger) Info(args ...interface{}) {
-	event := l.Logger.Info()
-	if event == nil {
-		return
-	}
-	event.Timestamp().Msg(fmt.Sprint(args...))
+	return EventBuilder{event: l.Logger.Debug()}
 }
 
 func (l Logger) Infob() logging.EventBuilder {
-	return EventBuilder{Event: l.Logger.Info()}
-}
-
-func (l Logger) Error(args ...interface{}) {
-	event := l.Logger.Error()
-	if event == nil {
-		return
-	}
-	event.Timestamp().Msg(fmt.Sprint(args...))
+	return EventBuilder{event: l.Logger.Info()}
 }
 
 func (l Logger) Errorb() logging.EventBuilder {
-	return EventBuilder{Event: l.Logger.Error()}
-}
-
-func (l Logger) Fatal(args ...interface{}) {
-	event := l.Logger.Fatal()
-	if event == nil {
-		return
-	}
-	event.Timestamp().Msg(fmt.Sprint(args...))
+	return EventBuilder{event: l.Logger.Error()}
 }
 
 func (l Logger) Fatalb() logging.EventBuilder {
-	return EventBuilder{Event: l.Logger.Fatal()}
-}
-
-func (l Logger) Warning(args ...interface{}) {
-	event := l.Logger.Warn()
-	if event == nil {
-		return
-	}
-	event.Timestamp().Msg(fmt.Sprint(args...))
+	return EventBuilder{event: l.Logger.Fatal()}
 }
 
 func (l Logger) Warningb() logging.EventBuilder {
-	return EventBuilder{Event: l.Logger.Warn()}
+	return EventBuilder{event: l.Logger.Warn()}
 }
 
 func (l *Logger) String(key, value string) moira.Logger {

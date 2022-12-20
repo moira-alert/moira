@@ -36,7 +36,7 @@ func handleRemoveTriggersStartWith(logger moira.Logger, database moira.Database,
 	logger.Infob().
 		String("prefix", prefix).
 		Int("deleted_triggers_count", len(triggers)).
-		Value("deleted_triggers", triggers).
+		Interface("deleted_triggers", triggers).
 		Msg("Removing triggers start with given prefix has finished")
 
 	return nil

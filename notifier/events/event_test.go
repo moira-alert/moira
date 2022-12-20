@@ -167,7 +167,7 @@ func TestDisabledNotification(t *testing.T) {
 		eventBuilder.EXPECT().String("new_state", event.State.String()).Return(eventBuilder)
 		eventBuilder.EXPECT().Msg("Processing trigger for metric")
 
-		eventBuilder.EXPECT().Value("trigger_tags", triggerData.Tags).Return(eventBuilder)
+		eventBuilder.EXPECT().Interface("trigger_tags", triggerData.Tags).Return(eventBuilder)
 		eventBuilder.EXPECT().Msg("Getting subscriptions for given tags")
 
 		eventBuilder.EXPECT().Msg("Subscription is disabled")
@@ -214,7 +214,7 @@ func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
 		eventBuilder.EXPECT().String("new_state", event.State.String()).Return(eventBuilder)
 		eventBuilder.EXPECT().Msg("Processing trigger for metric")
 
-		eventBuilder.EXPECT().Value("trigger_tags", triggerData.Tags).Return(eventBuilder)
+		eventBuilder.EXPECT().Interface("trigger_tags", triggerData.Tags).Return(eventBuilder)
 		eventBuilder.EXPECT().Msg("Getting subscriptions for given tags")
 
 		ignoredTransaction := fmt.Sprintf("%s -> %s", event.OldState, event.State)
@@ -250,7 +250,7 @@ func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
 		eventBuilder.EXPECT().String("new_state", event.State.String()).Return(eventBuilder)
 		eventBuilder.EXPECT().Msg("Processing trigger for metric")
 
-		eventBuilder.EXPECT().Value("trigger_tags", triggerData.Tags).Return(eventBuilder)
+		eventBuilder.EXPECT().Interface("trigger_tags", triggerData.Tags).Return(eventBuilder)
 		eventBuilder.EXPECT().Msg("Getting subscriptions for given tags")
 
 		ignoredTransaction := fmt.Sprintf("%s -> %s", event.OldState, event.State)
@@ -285,7 +285,7 @@ func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
 		eventBuilder.EXPECT().String("new_state", event.State.String()).Return(eventBuilder)
 		eventBuilder.EXPECT().Msg("Processing trigger for metric")
 
-		eventBuilder.EXPECT().Value("trigger_tags", triggerData.Tags).Return(eventBuilder)
+		eventBuilder.EXPECT().Interface("trigger_tags", triggerData.Tags).Return(eventBuilder)
 		eventBuilder.EXPECT().Msg("Getting subscriptions for given tags")
 
 		ignoredTransaction := fmt.Sprintf("%s -> %s", event.OldState, event.State)
@@ -411,7 +411,7 @@ func TestFailReadContact(t *testing.T) {
 		eventBuilder.EXPECT().String("new_state", event.State.String()).Return(eventBuilder)
 		eventBuilder.EXPECT().Msg("Processing trigger for metric")
 
-		eventBuilder.EXPECT().Value("trigger_tags", triggerData.Tags).Return(eventBuilder)
+		eventBuilder.EXPECT().Interface("trigger_tags", triggerData.Tags).Return(eventBuilder)
 		eventBuilder.EXPECT().Msg("Getting subscriptions for given tags")
 
 		logger.EXPECT().Warningb().Return(eventBuilder)
@@ -461,7 +461,7 @@ func TestEmptySubscriptions(t *testing.T) {
 		eventBuilder.EXPECT().String("new_state", event.State.String()).Return(eventBuilder)
 		eventBuilder.EXPECT().Msg("Processing trigger for metric")
 
-		eventBuilder.EXPECT().Value("trigger_tags", triggerData.Tags).Return(eventBuilder)
+		eventBuilder.EXPECT().Interface("trigger_tags", triggerData.Tags).Return(eventBuilder)
 		eventBuilder.EXPECT().Msg("Getting subscriptions for given tags")
 
 		eventBuilder.EXPECT().Msg("Subscription is disabled")
@@ -496,7 +496,7 @@ func TestEmptySubscriptions(t *testing.T) {
 		eventBuilder.EXPECT().String("new_state", event.State.String()).Return(eventBuilder)
 		eventBuilder.EXPECT().Msg("Processing trigger for metric")
 
-		eventBuilder.EXPECT().Value("trigger_tags", triggerData.Tags).Return(eventBuilder)
+		eventBuilder.EXPECT().Interface("trigger_tags", triggerData.Tags).Return(eventBuilder)
 		eventBuilder.EXPECT().Msg("Getting subscriptions for given tags")
 
 		eventBuilder.EXPECT().Msg("Subscription is nil")

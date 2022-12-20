@@ -69,7 +69,7 @@ func (worker *Worker) Run(stop <-chan struct{}) {
 				if r := recover(); r != nil {
 					logger.Errorb().
 						String("worker_name", worker.name).
-						Value("recover", r).
+						Interface("recover", r).
 						Msg("Worker panicked during the execution")
 				}
 			}()

@@ -310,7 +310,7 @@ func (triggerChecker *TriggerChecker) checkForNoData(metricLastState moira.Metri
 		return false, nil
 	}
 	logger.Debugb().
-		Value("metric_last_state", metricLastState).
+		Interface("metric_last_state", metricLastState).
 		Msg("Metric TTL expired for state")
 
 	if triggerChecker.ttlState == moira.TTLStateDEL && metricLastState.EventTimestamp != 0 {
@@ -377,9 +377,9 @@ func (triggerChecker *TriggerChecker) getMetricDataState(metrics *map[string]met
 		return nil, nil
 	}
 	logger.Debugb().
-		Value("timestamp", valueTimestamp).
-		Value("main_target_value", triggerExpression.MainTargetValue).
-		Value("additional_target_values", triggerExpression.AdditionalTargetsValues).
+		Interface("timestamp", valueTimestamp).
+		Interface("main_target_value", triggerExpression.MainTargetValue).
+		Interface("additional_target_values", triggerExpression.AdditionalTargetsValues).
 		Msg("Getting metric data state")
 
 	triggerExpression.WarnValue = triggerChecker.trigger.WarnValue

@@ -141,7 +141,7 @@ func (entry *apiLoggerEntry) writePanic(status, bytes int, elapsed time.Duration
 		Int("http_status", status).
 		Int("http_content_length", bytes).
 		Int("elapsed_time_ms", int(elapsed.Milliseconds())).
-		Value("recovered_err", v).
+		Interface("recovered_err", v).
 		String(moira.LogFieldNameStackTrace, string(stack)).
 		Msg(fmt.Sprintf("%s: panic", entry.msg))
 }

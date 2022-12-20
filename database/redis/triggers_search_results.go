@@ -35,7 +35,7 @@ func (connector *DbConnector) SaveTriggersSearchResults(searchResultsID string, 
 		return fmt.Errorf("failed to EXEC: %w", err)
 	}
 	connector.logger.Debugb().
-		Value("response", response).
+		Interface("response", response).
 		Msg("EXEC response")
 	return nil
 }

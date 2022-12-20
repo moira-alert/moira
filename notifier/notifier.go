@@ -110,7 +110,7 @@ func (notifier *StandardNotifier) Send(pkg *NotificationPackage, waitGroup *sync
 		defer waitGroup.Done()
 		getLogWithPackageContext(&notifier.logger, pkg, &notifier.config).
 			Debugb().
-			Value("package", pkg).
+			Interface("package", pkg).
 			Msg("Start sending")
 
 		select {
@@ -175,7 +175,7 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 		if err := recover(); err != nil {
 			notifier.logger.Warningb().
 				String(moira.LogFieldNameStackTrace, string(debug.Stack())).
-				Value("recovered_err", err).
+				Interface("recovered_err", err).
 				Msg("Notifier panicked")
 		}
 	}()

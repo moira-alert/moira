@@ -1,57 +1,58 @@
-package zerolog_dapter
+package zerolog_adapter
 
 import (
-	"fmt"
-
 	"github.com/moira-alert/moira/logging"
 	"github.com/rs/zerolog"
 )
 
 type EventBuilder struct {
-	*zerolog.Event
+	event *zerolog.Event
 }
 
 func (e EventBuilder) Msg(msg string) {
-	if e.Event != nil {
-		e.Event.Msg(msg)
+	if e.event != nil {
+		e.event.Timestamp().Msg(msg)
 	}
 }
 
 func (e EventBuilder) String(key, value string) logging.EventBuilder {
-	if e.Event != nil {
-		e.Event.Str(key, value)
+	if e.event != nil {
+		e.event.Str(key, value)
 	}
 	return e
 }
 
 func (e EventBuilder) Error(err error) logging.EventBuilder {
-	if e.Event != nil {
-		e.Event.Str("error", err.Error())
+	if e.event != nil {
+		e.event.Err(err)
 	}
 	return e
 }
 
 func (e EventBuilder) Int(key string, value int) logging.EventBuilder {
-	if e.Event != nil {
-		e.Event.Int(key, value)
+	if e.event != nil {
+		e.event.Int(key, value)
 	}
 	return e
 }
 
 func (e EventBuilder) Int64(key string, value int64) logging.EventBuilder {
-	if e.Event != nil {
-		e.Event.Int64(key, value)
+	if e.event != nil {
+		e.event.Int64(key, value)
 	}
 	return e
 }
 
-func (e EventBuilder) Value(key string, value interface{}) logging.EventBuilder {
-	return e.String(key, fmt.Sprintf("%v", value))
+func (e EventBuilder) Interface(key string, value interface{}) logging.EventBuilder {
+	if e.event != nil {
+		e.event.Interface(key, value)
+	}
+	return e
 }
 
 func (e EventBuilder) Fields(fields map[string]interface{}) logging.EventBuilder {
-	if e.Event != nil {
-		e.Event.Fields(fields)
+	if e.event != nil {
+		e.event.Fields(fields)
 	}
 	return e
 }

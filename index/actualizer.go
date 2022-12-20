@@ -11,7 +11,7 @@ const actualizerRunInterval = time.Second
 func (index *Index) runIndexActualizer() error {
 	ticker := time.NewTicker(actualizerRunInterval)
 	index.logger.Infob().
-		Value("actualizer_interval", actualizerRunInterval).
+		Interface("actualizer_interval", actualizerRunInterval).
 		Msg("Start index actualizer: reindex changed triggers in loop with given interval")
 
 	for {

@@ -175,7 +175,7 @@ func main() { //nolint
 		log := logger.String(moira.LogFieldNameContext, "cleanup-users")
 
 		log.Infob().
-			Value("user_whitelist", confCleanup.Whitelist).
+			Interface("user_whitelist", confCleanup.Whitelist).
 			Msg("Cleanup started")
 
 		if err := handleCleanup(logger, dataBase, confCleanup); err != nil {

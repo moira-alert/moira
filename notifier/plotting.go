@@ -75,7 +75,7 @@ func (notifier *StandardNotifier) buildNotificationPackagePlots(pkg Notification
 	}
 	metricsData = getMetricDataToShow(metricsData, metricsToShow)
 	logger.Debugb().
-		Value("metrics_data", metricsData).
+		Interface("metrics_data", metricsData).
 		Msg("Build plot from MetricsData")
 
 	result, err := buildTriggerPlots(trigger, metricsData, plotTemplate)

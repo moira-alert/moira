@@ -109,7 +109,7 @@ func (worker *FetchEventsWorker) processEvent(event moira.NotificationEvent) err
 		}
 
 		log.Debugb().
-			Value("trigger_tags", trigger.Tags).
+			Interface("trigger_tags", trigger.Tags).
 			Msg("Getting subscriptions for given tags")
 
 		subscriptions, err = worker.Database.GetTagsSubscriptions(trigger.Tags)
@@ -157,7 +157,7 @@ func (worker *FetchEventsWorker) processEvent(event moira.NotificationEvent) err
 					duplications[key] = true
 				} else {
 					contactLogger.Debugb().
-						Value("contact", notification.Contact).
+						Interface("contact", notification.Contact).
 						Msg("Skip duplicated notification for a contact")
 				}
 			}
