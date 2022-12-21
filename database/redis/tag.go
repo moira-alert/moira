@@ -58,22 +58,23 @@ func (connector *DbConnector) CleanUpAbandonedTags() (int, error) {
 		if err != nil {
 			return count, fmt.Errorf("failed to check tag triggers existence, error: %v", err)
 		}
-		isTriggerExists := result == 1
+		if isTriggerExists := result == 1; isTriggerExists {
+			continue
+		}
 
 		result, err = client.Exists(connector.context, tagSubscriptionKey(tag)).Result()
 		if err != nil {
 			return count, fmt.Errorf("failed to check tag subscription existence, error: %v", err)
 		}
-		isSubscriptionExists := result == 1
-
-		if !isTriggerExists && !isSubscriptionExists {
-			err = client.SRem(connector.context, tagsKey, tag).Err()
-			if err != nil {
-				return count, err
-			}
-
-			count++
+		if isSubscriptionExists := result == 1; isSubscriptionExists {
+			continue
 		}
+
+		err = client.SRem(connector.context, tagsKey, tag).Err()
+		if err != nil {
+			return count, err
+		}
+		count++
 	}
 
 	return count, nil
