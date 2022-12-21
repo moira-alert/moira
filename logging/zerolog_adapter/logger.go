@@ -13,7 +13,7 @@ import (
 )
 
 type Logger struct {
-	zerolog.Logger
+	logger zerolog.Logger
 }
 
 const (
@@ -73,42 +73,42 @@ func getLogWriter(logFileName string) (io.Writer, error) {
 }
 
 func (l Logger) Debugb() logging.EventBuilder {
-	return EventBuilder{event: l.Logger.Debug()}
+	return EventBuilder{event: l.logger.Debug()}
 }
 
 func (l Logger) Infob() logging.EventBuilder {
-	return EventBuilder{event: l.Logger.Info()}
+	return EventBuilder{event: l.logger.Info()}
 }
 
 func (l Logger) Errorb() logging.EventBuilder {
-	return EventBuilder{event: l.Logger.Error()}
+	return EventBuilder{event: l.logger.Error()}
 }
 
 func (l Logger) Fatalb() logging.EventBuilder {
-	return EventBuilder{event: l.Logger.Fatal()}
+	return EventBuilder{event: l.logger.Fatal()}
 }
 
 func (l Logger) Warningb() logging.EventBuilder {
-	return EventBuilder{event: l.Logger.Warn()}
+	return EventBuilder{event: l.logger.Warn()}
 }
 
 func (l *Logger) String(key, value string) moira.Logger {
-	l.Logger = l.Logger.With().Str(key, value).Logger()
+	l.logger = l.logger.With().Str(key, value).Logger()
 	return l
 }
 
 func (l *Logger) Int(key string, value int) moira.Logger {
-	l.Logger = l.Logger.With().Int(key, value).Logger()
+	l.logger = l.logger.With().Int(key, value).Logger()
 	return l
 }
 
 func (l *Logger) Int64(key string, value int64) moira.Logger {
-	l.Logger = l.Logger.With().Int64(key, value).Logger()
+	l.logger = l.logger.With().Int64(key, value).Logger()
 	return l
 }
 
 func (l *Logger) Fields(fields map[string]interface{}) moira.Logger {
-	l.Logger = l.Logger.With().Fields(fields).Logger()
+	l.logger = l.logger.With().Fields(fields).Logger()
 	return l
 }
 
@@ -117,12 +117,12 @@ func (l *Logger) Level(s string) (moira.Logger, error) {
 	if err != nil {
 		return l, err
 	}
-	l.Logger = l.Logger.Level(level)
+	l.logger = l.logger.Level(level)
 	return l, nil
 }
 
 func (l Logger) Clone() moira.Logger {
 	return &Logger{
-		Logger: l.Logger.With().Logger(),
+		logger: l.logger.With().Logger(),
 	}
 }
