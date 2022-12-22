@@ -22,6 +22,7 @@ type Database interface {
 	GetTagNames() ([]string, error)
 	RemoveTag(tagName string) error
 	GetTagTriggerIDs(tagName string) ([]string, error)
+	CleanUpAbandonedTags() (int, error)
 
 	// LastCheck storing
 	GetTriggerLastCheck(triggerID string) (CheckData, error)

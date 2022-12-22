@@ -210,6 +210,17 @@ func main() { //nolint
 				Msg("Failed to cleanup abandoned triggers last checks")
 		}
 		log.Infob().Msg("Cleanup abandoned triggers last checks finished")
+
+		log.Infob().Msg("Cleanup abandoned tags started")
+		count, err := handleCleanUpAbandonedTags(dataBase)
+		if err != nil {
+			log.Errorb().
+				Error(err).
+				Msg("Failed to cleanup abandoned tags")
+		}
+		log.Infob().
+			Int("abandoned_tags_deleted", count).
+			Msg("Cleanup abandoned tags finished")
 	}
 
 	if *cleanupRetentions {
