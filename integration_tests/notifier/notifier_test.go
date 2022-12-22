@@ -14,9 +14,10 @@ import (
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	"github.com/moira-alert/moira/metrics"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
-	"github.com/moira-alert/moira/notifier"
+	. "github.com/moira-alert/moira/notifier"
 	"github.com/moira-alert/moira/notifier/events"
 	"github.com/moira-alert/moira/notifier/notifications"
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 var senderSettings = map[string]string{
@@ -26,12 +27,12 @@ var senderSettings = map[string]string{
 var location, _ = time.LoadLocation("UTC")
 var dateTimeFormat = "15:04 02.01.2006"
 
-var notifierConfig = notifier.Config{
+var notifierConfig = Config{
 	SendingTimeout:   time.Millisecond * 10,
 	ResendingTimeout: time.Hour * 24,
 	Location:         location,
 	DateTimeFormat:   dateTimeFormat,
-	ReadBatchSize:    notifier.NotificationsLimitUnlimited,
+	ReadBatchSize:    NotificationsLimitUnlimited,
 }
 
 var shutdown = make(chan struct{})
@@ -78,41 +79,51 @@ var event = moira.NotificationEvent{
 func TestNotifier(t *testing.T) {
 	mockCtrl = gomock.NewController(t)
 	defer mockCtrl.Finish()
-	database := redis.NewTestDatabase(logger)
-	metricsSourceProvider := metricSource.CreateMetricSourceProvider(local.Create(database), nil)
-	database.SaveContact(&contact)               //nolint
-	database.SaveSubscription(&subscription)     //nolint
-	database.SaveTrigger(trigger.ID, &trigger)   //nolint
-	database.PushNotificationEvent(&event, true) //nolint
-	notifier2 := notifier.NewNotifier(database, logger, notifierConfig, notifierMetrics, metricsSourceProvider, map[string]moira.ImageStore{})
-	sender := mock_moira_alert.NewMockSender(mockCtrl)
-	sender.EXPECT().Init(senderSettings, logger, location, dateTimeFormat).Return(nil)
-	notifier2.RegisterSender(senderSettings, sender) //nolint
-	sender.EXPECT().SendEvents(gomock.Any(), contact, triggerData, gomock.Any(), false).Return(nil).Do(func(arg0, arg1, arg2, arg3, arg4 interface{}) {
-		fmt.Print("SendEvents called. End test")
-		close(shutdown)
+
+	Convey("TestNotifier", t, func() {
+		database := redis.NewTestDatabase(logger)
+		metricsSourceProvider := metricSource.CreateMetricSourceProvider(local.Create(database), nil)
+		err := database.SaveContact(&contact)
+		So(err, ShouldBeNil)
+		err = database.SaveSubscription(&subscription)
+		So(err, ShouldBeNil)
+		err = database.SaveTrigger(trigger.ID, &trigger)
+		So(err, ShouldBeNil)
+		err = database.PushNotificationEvent(&event, true)
+		So(err, ShouldBeNil)
+
+		notifier := NewNotifier(database, logger, notifierConfig, notifierMetrics, metricsSourceProvider, map[string]moira.ImageStore{})
+		sender := mock_moira_alert.NewMockSender(mockCtrl)
+		err = notifier.RegisterSender(senderSettings, sender)
+		So(err, ShouldBeNil)
+		sender.EXPECT().SendEvents(gomock.Any(), contact, triggerData, gomock.Any(), false).Return(nil).Do(func(arg0, arg1, arg2, arg3, arg4 interface{}) {
+			fmt.Print("SendEvents called. End test")
+			close(shutdown)
+		})
+
+		fetchEventsWorker := events.FetchEventsWorker{
+			Database:  database,
+			Logger:    logger,
+			Metrics:   notifierMetrics,
+			Scheduler: NewScheduler(database, logger, notifierMetrics),
+		}
+
+		fetchNotificationsWorker := notifications.FetchNotificationsWorker{
+			Database: database,
+			Logger:   logger,
+			Notifier: notifier,
+		}
+
+		fetchEventsWorker.Start()
+		fetchNotificationsWorker.Start()
+
+		waitTestEnd()
+
+		err = fetchEventsWorker.Stop()
+		So(err, ShouldBeNil)
+		err = fetchNotificationsWorker.Stop()
+		So(err, ShouldBeNil)
 	})
-
-	fetchEventsWorker := events.FetchEventsWorker{
-		Database:  database,
-		Logger:    logger,
-		Metrics:   notifierMetrics,
-		Scheduler: notifier.NewScheduler(database, logger, notifierMetrics),
-	}
-
-	fetchNotificationsWorker := notifications.FetchNotificationsWorker{
-		Database: database,
-		Logger:   logger,
-		Notifier: notifier2,
-	}
-
-	fetchEventsWorker.Start()
-	fetchNotificationsWorker.Start()
-
-	waitTestEnd()
-
-	fetchEventsWorker.Stop()        //nolint
-	fetchNotificationsWorker.Stop() //nolint
 }
 
 func waitTestEnd() {
