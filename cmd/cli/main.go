@@ -177,6 +177,13 @@ func main() { //nolint
 			log.Error(err)
 		}
 		log.Info("Cleanup abandoned triggers last checks finished")
+
+		log.Info("Cleanup abandoned tags started")
+		count, err := handleCleanUpAbandonedTags(dataBase)
+		if err != nil {
+			log.Error(err)
+		}
+		log.Info("Cleanup abandoned tags finished. ", fmt.Sprintf("Count of deleted tags is %d", count))
 	}
 
 	if *cleanupRetentions {

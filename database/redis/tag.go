@@ -44,6 +44,42 @@ func (connector *DbConnector) GetTagTriggerIDs(tagName string) ([]string, error)
 	return triggerIDs, nil
 }
 
+// CleanUpAbandonedTags deletes tags for which triggers and subscriptions don't exist.
+// Returns count of deleted tags.
+func (connector *DbConnector) CleanUpAbandonedTags() (int, error) {
+	var count int
+	client := *connector.client
+
+	iter := client.SScan(connector.context, tagsKey, 0, "*", 0).Iterator()
+	for iter.Next(connector.context) {
+		tag := iter.Val()
+
+		result, err := client.Exists(connector.context, tagTriggersKey(tag)).Result()
+		if err != nil {
+			return count, fmt.Errorf("failed to check tag triggers existence, error: %v", err)
+		}
+		if isTriggerExists := result == 1; isTriggerExists {
+			continue
+		}
+
+		result, err = client.Exists(connector.context, tagSubscriptionKey(tag)).Result()
+		if err != nil {
+			return count, fmt.Errorf("failed to check tag subscription existence, error: %v", err)
+		}
+		if isSubscriptionExists := result == 1; isSubscriptionExists {
+			continue
+		}
+
+		err = client.SRem(connector.context, tagsKey, tag).Err()
+		if err != nil {
+			return count, err
+		}
+		count++
+	}
+
+	return count, nil
+}
+
 var tagsKey = "moira-tags"
 
 func tagTriggersKey(tagName string) string {
