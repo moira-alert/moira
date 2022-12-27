@@ -59,24 +59,10 @@ func createTrigger(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	const validateFlag = "validate"
-	needValidate := request.URL.Query().Has(validateFlag)
-	if needValidate {
-		ttl := getMetricTTLByTrigger(request, trigger)
-		treesOfProblems := dto.TargetVerification(trigger.Targets, ttl, trigger.IsRemote)
-		var isInvalid bool
-		for _, tree := range treesOfProblems {
-			if tree.TreeOfProblems != nil {
-				isInvalid = true
-			}
-		}
-		if isInvalid {
-			result := dto.TriggerCheckResult{
-				Targets: treesOfProblems,
-			}
-			writer.WriteHeader(http.StatusBadRequest)
-			render.JSON(writer, request, result)
-
+	if isNeedValidate(request) {
+		problems := validateTargets(request, trigger)
+		if problems != nil {
+			writeProblems(writer, request, problems)
 			return
 		}
 	}

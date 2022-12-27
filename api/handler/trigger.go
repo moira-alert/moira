@@ -39,24 +39,10 @@ func updateTrigger(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	const validateFlag = "validate"
-	needValidate := request.URL.Query().Has(validateFlag)
-	if needValidate {
-		ttl := getMetricTTLByTrigger(request, trigger)
-		treesOfProblems := dto.TargetVerification(trigger.Targets, ttl, trigger.IsRemote)
-		var isInvalid bool
-		for _, tree := range treesOfProblems {
-			if tree.TreeOfProblems != nil {
-				isInvalid = true
-			}
-		}
-		if isInvalid {
-			result := dto.TriggerCheckResult{
-				Targets: treesOfProblems,
-			}
-			writer.WriteHeader(http.StatusBadRequest)
-			render.JSON(writer, request, result)
-
+	if isNeedValidate(request) {
+		problems := validateTargets(request, trigger)
+		if problems != nil {
+			writeProblems(writer, request, problems)
 			return
 		}
 	}
@@ -72,6 +58,34 @@ func updateTrigger(writer http.ResponseWriter, request *http.Request) {
 		render.Render(writer, request, api.ErrorRender(err)) //nolint
 		return
 	}
+}
+
+func isNeedValidate(request *http.Request) bool {
+	const validateFlag = "validate"
+	return request.URL.Query().Has(validateFlag)
+}
+
+// validateTargets checks targets of trigger.
+// Returns tree of problems if there is any invalid child, else returns nil.
+func validateTargets(request *http.Request, trigger *dto.Trigger) (problems []dto.TreeOfProblems) {
+	ttl := getMetricTTLByTrigger(request, trigger)
+	treesOfProblems := dto.TargetVerification(trigger.Targets, ttl, trigger.IsRemote)
+
+	for _, tree := range treesOfProblems {
+		if tree.TreeOfProblems != nil {
+			return treesOfProblems
+		}
+	}
+
+	return nil
+}
+
+func writeProblems(writer http.ResponseWriter, request *http.Request, treesOfProblems []dto.TreeOfProblems) {
+	result := dto.TriggerCheckResult{
+		Targets: treesOfProblems,
+	}
+	writer.WriteHeader(http.StatusBadRequest)
+	render.JSON(writer, request, result)
 }
 
 func removeTrigger(writer http.ResponseWriter, request *http.Request) {
