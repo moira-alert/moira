@@ -39,6 +39,28 @@ func updateTrigger(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	const validateFlag = "validate"
+	needValidate := request.URL.Query().Has(validateFlag)
+	if needValidate {
+		ttl := getMetricTTLByTrigger(request, trigger)
+		treesOfProblems := dto.TargetVerification(trigger.Targets, ttl, trigger.IsRemote)
+		var isInvalid bool
+		for _, tree := range treesOfProblems {
+			if tree.TreeOfProblems != nil {
+				isInvalid = true
+			}
+		}
+		if isInvalid {
+			result := dto.TriggerCheckResult{
+				Targets: treesOfProblems,
+			}
+			writer.WriteHeader(http.StatusBadRequest)
+			render.JSON(writer, request, result)
+
+			return
+		}
+	}
+
 	timeSeriesNames := middleware.GetTimeSeriesNames(request)
 	response, err := controller.UpdateTrigger(database, &trigger.TriggerModel, triggerID, timeSeriesNames)
 	if err != nil {
