@@ -53,8 +53,11 @@ func (triggerChecker *TriggerChecker) fetch() (map[string][]metricSource.MetricD
 
 func (triggerChecker *TriggerChecker) cleanupMetricsValues(metrics []string, until int64) {
 	if len(metrics) > 0 {
-		if err := triggerChecker.database.RemoveMetricsValues(metrics, until-triggerChecker.database.GetMetricsTTLSeconds()); err != nil {
-			triggerChecker.logger.Error(err.Error())
+		err := triggerChecker.database.RemoveMetricsValues(metrics, until-triggerChecker.database.GetMetricsTTLSeconds())
+		if err != nil {
+			triggerChecker.logger.Errorb().
+				Error(err).
+				Msg("Failed to remove metric values")
 		}
 	}
 }

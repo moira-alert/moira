@@ -153,7 +153,11 @@ func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moir
 	for k, v := range headers {
 		request.Header.Set(k, v)
 	}
-	sender.logger.Debugf("created payload '%s' for teams endpoint %s", string(requestBody), request.URL.String())
+	sender.logger.Debugb().
+		String("payload", string(requestBody)).
+		String("endpoint", request.URL.String()).
+		Msg("Created payload for teams endpoint")
+
 	return request, nil
 }
 

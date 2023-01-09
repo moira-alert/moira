@@ -95,7 +95,9 @@ func (storage *Storage) buildRetentions(retentionScanner *bufio.Scanner) error {
 		splitted := strings.Split(line2, "=")
 
 		if len(splitted) < 2 { //nolint
-			storage.logger.Errorf("Invalid pattern found: '%s'", patternString)
+			storage.logger.Errorb().
+				String("pattern", patternString).
+				Msg("Invalid pattern found")
 			continue
 		}
 

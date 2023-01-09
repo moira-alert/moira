@@ -10,7 +10,7 @@ import (
 func ReadImageStoreConfig(senderSettings map[string]string, imageStores map[string]moira.ImageStore, logger moira.Logger) (string, moira.ImageStore, bool) {
 	imageStoreID, ok := senderSettings["image_store"]
 	if !ok {
-		logger.Warningf("Cannot read image_store from the config, will not be able to attach plot images to alerts")
+		logger.Warningb().Msg("Cannot read image_store from the config, will not be able to attach plot images to alerts")
 		return "", nil, false
 	}
 
@@ -19,7 +19,9 @@ func ReadImageStoreConfig(senderSettings map[string]string, imageStores map[stri
 	if ok && imageStore.IsEnabled() {
 		imageStoreConfigured = true
 	} else {
-		logger.Warningf("Image store specified (%s) has not been configured", imageStoreID)
+		logger.Warningb().
+			String("image_store_id", imageStoreID).
+			Msg("Image store specified has not been configured")
 		return "", nil, false
 	}
 

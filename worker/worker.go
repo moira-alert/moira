@@ -34,14 +34,19 @@ type Worker struct {
 // Run the worker
 func (worker *Worker) Run(stop <-chan struct{}) {
 	for {
-		worker.logger.Infof("%s tries to acquire the lock...", worker.name)
+		worker.logger.Infob().
+			String("worker_name", worker.name).
+			Msg("Worker tries to acquire the lock...")
 		lost, err := worker.lock.Acquire(stop)
 		if err != nil {
 			switch err {
 			case database.ErrLockAcquireInterrupted:
 				return
 			default:
-				worker.logger.Errorf("%s failed to acquire the lock: %s", worker.name, err.Error())
+				worker.logger.Errorb().
+					String("worker_name", worker.name).
+					Error(err).
+					Msg("Worker failed to acquire the lock")
 				select {
 				case <-stop:
 					return
@@ -51,7 +56,9 @@ func (worker *Worker) Run(stop <-chan struct{}) {
 			}
 		}
 
-		worker.logger.Infof("%s acquired the lock", worker.name)
+		worker.logger.Infob().
+			String("worker_name", worker.name).
+			Msg("Worker acquired the lock")
 
 		actionStop := make(chan struct{})
 		actionDone := make(chan struct{})
@@ -60,19 +67,27 @@ func (worker *Worker) Run(stop <-chan struct{}) {
 
 			defer func() {
 				if r := recover(); r != nil {
-					logger.Errorf("%s panicked during the execution: %s", worker.name, r)
+					logger.Errorb().
+						String("worker_name", worker.name).
+						Interface("recover", r).
+						Msg("Worker panicked during the execution")
 				}
 			}()
 
 			if err := action(stop); err != nil {
-				logger.Errorf("%s failed during the execution: %s", worker.name, err.Error())
+				logger.Errorb().
+					String("worker_name", worker.name).
+					Error(err).
+					Msg("Worker failed during the execution")
 			}
 		}(worker.action, worker.logger, actionDone, actionStop)
 
 		select {
 		case <-actionDone:
 			worker.lock.Release()
-			worker.logger.Infof("%s released the lock", worker.name)
+			worker.logger.Infob().
+				String("worker_name", worker.name).
+				Msg("Worker released the lock")
 			select {
 			case <-stop:
 				return
@@ -80,7 +95,9 @@ func (worker *Worker) Run(stop <-chan struct{}) {
 				continue
 			}
 		case <-lost:
-			worker.logger.Warningf("%s lost the lock", worker.name)
+			worker.logger.Warningb().
+				String("worker_name", worker.name).
+				Msg("Worker lost the lock")
 			close(actionStop)
 			<-actionDone
 			worker.lock.Release()
@@ -88,7 +105,9 @@ func (worker *Worker) Run(stop <-chan struct{}) {
 			close(actionStop)
 			<-actionDone
 			worker.lock.Release()
-			worker.logger.Infof("%s released the lock", worker.name)
+			worker.logger.Infob().
+				String("worker_name", worker.name).
+				Msg("Worker released the lock")
 			return
 		}
 	}

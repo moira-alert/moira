@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/moira-alert/go-chart"
+	"github.com/moira-alert/moira/logging"
 	"gopkg.in/tomb.v2"
 )
 
@@ -168,16 +169,11 @@ type Mutex interface {
 
 // Logger implements logger abstraction
 type Logger interface {
-	Debug(args ...interface{})
-	Debugf(format string, args ...interface{})
-	Info(args ...interface{})
-	Infof(format string, args ...interface{})
-	Error(args ...interface{})
-	Errorf(format string, args ...interface{})
-	Fatal(args ...interface{})
-	Fatalf(format string, args ...interface{})
-	Warning(args ...interface{})
-	Warningf(format string, args ...interface{})
+	Debugb() logging.EventBuilder
+	Infob() logging.EventBuilder
+	Errorb() logging.EventBuilder
+	Fatalb() logging.EventBuilder
+	Warningb() logging.EventBuilder
 
 	// Structured logging methods, use to add context fields
 	String(key, value string) Logger

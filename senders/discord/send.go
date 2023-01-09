@@ -32,7 +32,10 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 			},
 		}
 	}
-	sender.logger.Debugf("Calling discord with message %s", data.Content)
+	sender.logger.Debugb().
+		String("message", data.Content).
+		Msg("Calling discord with message")
+
 	channelID, err := sender.getChannelID(contact.Value)
 	if err != nil {
 		return fmt.Errorf("failed to get the channel ID: %s", err)

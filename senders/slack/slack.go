@@ -187,7 +187,10 @@ func (sender *Sender) sendMessage(message string, contact string, triggerID stri
 		Markdown:  true,
 		LinkNames: 1,
 	}
-	sender.logger.Debugf("Calling slack with message body %s", message)
+	sender.logger.Debugb().
+		String("message", message).
+		Msg("Calling slack")
+
 	channelID, threadTimestamp, err := sender.client.PostMessage(contact, slack.MsgOptionText(message, false), slack.MsgOptionPostMessageParameters(params))
 	if err != nil {
 		errorText := err.Error()
