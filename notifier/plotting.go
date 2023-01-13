@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/beevee/go-chart"
+	"github.com/moira-alert/go-chart"
 	"github.com/moira-alert/moira"
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
@@ -58,7 +58,7 @@ func (notifier *StandardNotifier) buildNotificationPackagePlots(pkg Notification
 	if pkg.Trigger.ID == "" {
 		return nil, nil
 	}
-	logger.Info("Start build plots for package")
+	logger.Infob().Msg("Start build plots for package")
 	startTime := time.Now()
 	metricsToShow := pkg.GetMetricNames()
 	if len(metricsToShow) == 0 {
@@ -74,11 +74,15 @@ func (notifier *StandardNotifier) buildNotificationPackagePlots(pkg Notification
 		return nil, err
 	}
 	metricsData = getMetricDataToShow(metricsData, metricsToShow)
-	logger.Debugf("Build plot from MetricsData: %v", metricsData)
+	logger.Debugb().
+		Interface("metrics_data", metricsData).
+		Msg("Build plot from MetricsData")
+
 	result, err := buildTriggerPlots(trigger, metricsData, plotTemplate)
-	logger.Clone().
+	logger.Infob().
 		Int64("moira.plots.build_duration_ms", time.Since(startTime).Milliseconds()).
-		Info("Finished build plots for package")
+		Msg("Finished build plots for package")
+
 	return result, err
 }
 
@@ -91,8 +95,10 @@ func resolveMetricsWindow(logger moira.Logger, trigger moira.TriggerData, pkg No
 	// try to resolve package window, force default realtime window on fail for both local and remote triggers
 	from, to, err := pkg.GetWindow()
 	if err != nil {
-		logger.Warningf("Failed to get trigger package window: %s, using default %s window",
-			err.Error(), defaultTimeRange.String())
+		logger.Warningb().
+			String("defailt_window", defaultTimeRange.String()).
+			Error(err).
+			Msg("Failed to get trigger package window, using default window")
 		return defaultFrom, defaultTo
 	}
 	// round to nearest retention to correctly fetch data from redis

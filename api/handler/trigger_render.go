@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/beevee/go-chart"
 	"github.com/go-chi/render"
 	"github.com/go-graphite/carbonapi/date"
+	"github.com/moira-alert/go-chart"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/controller"

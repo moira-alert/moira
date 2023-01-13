@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/gomodule/redigo/redis"
+	"github.com/go-redis/redis/v8"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
 )
@@ -29,6 +29,8 @@ type triggerStorageElement struct {
 	IsRemote         bool                `json:"is_remote"`
 	MuteNewMetrics   bool                `json:"mute_new_metrics,omitempty"`
 	AloneMetrics     map[string]bool     `json:"alone_metrics"`
+	CreatedAt        *int64              `json:"created_at"`
+	UpdatedAt        *int64              `json:"updated_at"`
 }
 
 func (storageElement *triggerStorageElement) toTrigger() moira.Trigger {
@@ -60,6 +62,8 @@ func (storageElement *triggerStorageElement) toTrigger() moira.Trigger {
 		IsRemote:         storageElement.IsRemote,
 		MuteNewMetrics:   storageElement.MuteNewMetrics,
 		AloneMetrics:     storageElement.AloneMetrics,
+		CreatedAt:        storageElement.CreatedAt,
+		UpdatedAt:        storageElement.UpdatedAt,
 	}
 }
 
@@ -82,6 +86,8 @@ func toTriggerStorageElement(trigger *moira.Trigger, triggerID string) *triggerS
 		IsRemote:         trigger.IsRemote,
 		MuteNewMetrics:   trigger.MuteNewMetrics,
 		AloneMetrics:     trigger.AloneMetrics,
+		CreatedAt:        trigger.CreatedAt,
+		UpdatedAt:        trigger.UpdatedAt,
 	}
 }
 
@@ -98,10 +104,10 @@ func getTriggerTTLString(ttl int64) string {
 }
 
 // Trigger converts redis DB reply to moira.Trigger object
-func Trigger(rep interface{}, err error) (moira.Trigger, error) {
-	bytes, err := redis.Bytes(rep, err)
+func Trigger(rep *redis.StringCmd) (moira.Trigger, error) {
+	bytes, err := rep.Bytes()
 	if err != nil {
-		if err == redis.ErrNil {
+		if err == redis.Nil {
 			return moira.Trigger{}, database.ErrNil
 		}
 		return moira.Trigger{}, fmt.Errorf("failed to read trigger: %s", err.Error())

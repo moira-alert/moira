@@ -3,6 +3,7 @@ package filter
 import (
 	"fmt"
 	"regexp"
+	"strings"
 )
 
 var tagSpecRegex = regexp.MustCompile(`^["']([^,!=]+)\s*(!?=~?)\s*([^,]*)["']`)
@@ -33,6 +34,32 @@ type TagSpec struct {
 	Value    string
 }
 
+func transformWildcardToRegexpInSeriesByTag(input string) string {
+	var result = input
+	var re = regexp.MustCompile(`\{(.*?)\}`)
+	var correctLengthOfMatchedWildcardIndexesSlice = 4
+
+	for {
+		matchedWildcardIndexes := re.FindStringSubmatchIndex(result)
+		if len(matchedWildcardIndexes) != correctLengthOfMatchedWildcardIndexesSlice {
+			break
+		}
+
+		wildcardExpression := result[matchedWildcardIndexes[0]:matchedWildcardIndexes[1]]
+		regularExpression := strings.ReplaceAll(wildcardExpression, "{", "(")
+		regularExpression = strings.ReplaceAll(regularExpression, "}", ")")
+		slc := strings.Split(regularExpression, ",")
+		for i := range slc {
+			slc[i] = strings.TrimSpace(slc[i])
+		}
+		regularExpression = strings.Join(slc, "|")
+		regularExpression = "~" + regularExpression + "$"
+		result = result[:matchedWildcardIndexes[0]] + regularExpression + result[matchedWildcardIndexes[1]:]
+	}
+
+	return result
+}
+
 // ParseSeriesByTag parses seriesByTag pattern and returns tags specs
 func ParseSeriesByTag(input string) ([]TagSpec, error) {
 	matchedSeriesByTagIndexes := seriesByTagRegex.FindStringSubmatchIndex(input)
@@ -41,6 +68,8 @@ func ParseSeriesByTag(input string) ([]TagSpec, error) {
 	}
 
 	input = input[matchedSeriesByTagIndexes[2]:matchedSeriesByTagIndexes[3]]
+
+	input = transformWildcardToRegexpInSeriesByTag(input)
 
 	tagSpecs := make([]TagSpec, 0)
 
@@ -72,84 +101,72 @@ func ParseSeriesByTag(input string) ([]TagSpec, error) {
 	return tagSpecs, nil
 }
 
-func createMatcher(spec TagSpec) func(string, map[string]string) bool {
-	var matcherCondition func(string) bool
+// MatchingHandler is a function for pattern matching
+type MatchingHandler func(string, map[string]string) bool
+
+// CreateMatchingHandlerForPattern creates function for matching by tag list
+func CreateMatchingHandlerForPattern(tagSpecs []TagSpec) (string, MatchingHandler) {
+	matchingHandlers := make([]MatchingHandler, 0)
+	var nameTagValue string
+
+	for _, tagSpec := range tagSpecs {
+		if tagSpec.Name == "name" && tagSpec.Operator == EqualOperator {
+			nameTagValue = tagSpec.Value
+		} else {
+			matchingHandlers = append(matchingHandlers, createMatchingHandlerForOneTag(tagSpec))
+		}
+	}
+
+	matchingHandler := func(metric string, labels map[string]string) bool {
+		for _, matchingHandler := range matchingHandlers {
+			if !matchingHandler(metric, labels) {
+				return false
+			}
+		}
+		return true
+	}
+
+	return nameTagValue, matchingHandler
+}
+
+func createMatchingHandlerForOneTag(spec TagSpec) MatchingHandler {
+	var matchingHandlerCondition func(string) bool
 	allowMatchEmpty := false
 	switch spec.Operator {
 	case EqualOperator:
 		allowMatchEmpty = true
-		matcherCondition = func(value string) bool {
+		matchingHandlerCondition = func(value string) bool {
 			return value == spec.Value
 		}
 	case NotEqualOperator:
-		matcherCondition = func(value string) bool {
+		matchingHandlerCondition = func(value string) bool {
 			return value != spec.Value
 		}
 	case MatchOperator:
 		allowMatchEmpty = true
 		matchRegex := regexp.MustCompile("^" + spec.Value)
-		matcherCondition = func(value string) bool {
+		matchingHandlerCondition = func(value string) bool {
 			return matchRegex.MatchString(value)
 		}
 	case NotMatchOperator:
 		matchRegex := regexp.MustCompile("^" + spec.Value)
-		matcherCondition = func(value string) bool {
+		matchingHandlerCondition = func(value string) bool {
 			return !matchRegex.MatchString(value)
 		}
 	default:
-		matcherCondition = func(_ string) bool {
+		matchingHandlerCondition = func(_ string) bool {
 			return false
 		}
 	}
 
-	matchEmpty := matcherCondition("")
+	matchEmpty := matchingHandlerCondition("")
 	return func(metric string, labels map[string]string) bool {
 		if spec.Name == "name" {
-			return matcherCondition(metric)
+			return matchingHandlerCondition(metric)
 		}
 		if value, found := labels[spec.Name]; found {
-			return matcherCondition(value)
+			return matchingHandlerCondition(value)
 		}
 		return allowMatchEmpty && matchEmpty
 	}
-}
-
-// SeriesByTagPatternIndex helps to index the seriesByTag patterns and allows to match them by metric
-type SeriesByTagPatternIndex struct {
-	patternToMatcher map[string]func(string, map[string]string) bool
-}
-
-// NewSeriesByTagPatternIndex creates new SeriesByTagPatternIndex using seriesByTag patterns and parsed specs comes from ParseSeriesByTag
-func NewSeriesByTagPatternIndex(tagSpecsByPattern map[string][]TagSpec) *SeriesByTagPatternIndex {
-	patternToMatcher := make(map[string]func(string, map[string]string) bool)
-	for pattern, tagSpecs := range tagSpecsByPattern {
-		matchers := make([]func(string, map[string]string) bool, 0)
-		for _, tagSpec := range tagSpecs {
-			matchers = append(matchers, createMatcher(tagSpec))
-		}
-
-		patternToMatcher[pattern] = func(metric string, labels map[string]string) bool {
-			for _, matcher := range matchers {
-				if !matcher(metric, labels) {
-					return false
-				}
-			}
-			return true
-		}
-	}
-
-	return &SeriesByTagPatternIndex{patternToMatcher: patternToMatcher}
-}
-
-// MatchPatterns allows to match patterns by metric name and its labels
-func (index *SeriesByTagPatternIndex) MatchPatterns(name string, labels map[string]string) []string {
-	matchedPatterns := make([]string, 0)
-
-	for pattern, matcher := range index.patternToMatcher {
-		if matcher(name, labels) {
-			matchedPatterns = append(matchedPatterns, pattern)
-		}
-	}
-
-	return matchedPatterns
 }

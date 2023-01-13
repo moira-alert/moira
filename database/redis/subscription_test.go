@@ -1,9 +1,11 @@
 package redis
 
 import (
+	"context"
 	"sort"
 	"testing"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/gofrs/uuid"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
@@ -12,11 +14,12 @@ import (
 	"github.com/moira-alert/moira/database"
 )
 
-func TestSubscriptionAnyTags(t *testing.T) {
+func TestSubscriptions(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, config)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase := NewTestDatabase(logger)
+	dataBase.Flush()
+	defer dataBase.Flush()
+	client := *dataBase.client
 
 	sub := subscriptions[0]
 	subAnyTag := subscriptions[7]
@@ -31,99 +34,165 @@ func TestSubscriptionAnyTags(t *testing.T) {
 	}
 	subAnyTagWithTagsClearTags := *subAnyTagWithTags
 	subAnyTagWithTagsClearTags.Tags = []string{}
+	subTeam := subscriptions[8]
 
-	Convey("Subscription with AnyTag is true", t, func() {
-		Convey("No subscription", func() {
-			actual, err := dataBase.GetSubscription(sub.ID)
-			So(err, ShouldBeError)
-			So(err, ShouldResemble, database.ErrNil)
-			So(actual, ShouldResemble, moira.SubscriptionData{ThrottlingEnabled: true})
-
-			actual1, err := dataBase.GetSubscription(subAnyTag.ID)
-			So(err, ShouldBeError)
-			So(err, ShouldResemble, database.ErrNil)
-			So(actual1, ShouldResemble, moira.SubscriptionData{ThrottlingEnabled: true})
-
-			actual2, err := dataBase.GetSubscription(subAnyTagWithTags.ID)
-			So(err, ShouldBeError)
-			So(err, ShouldResemble, database.ErrNil)
-			So(actual2, ShouldResemble, moira.SubscriptionData{ThrottlingEnabled: true})
+	Convey("Subscriptions manipulating", t, func() {
+		Convey("Get subscription by id when it doesn't exists", func() {
+			Convey("Default subscription", func() {
+				actual, err := dataBase.GetSubscription(sub.ID)
+				So(err, ShouldBeError)
+				So(err, ShouldResemble, database.ErrNil)
+				So(actual, ShouldResemble, moira.SubscriptionData{ThrottlingEnabled: true})
+			})
+			Convey("When AnyTag is true", func() {
+				Convey("When tags don't exist", func() {
+					actual, err := dataBase.GetSubscription(subAnyTag.ID)
+					So(err, ShouldBeError)
+					So(err, ShouldResemble, database.ErrNil)
+					So(actual, ShouldResemble, moira.SubscriptionData{ThrottlingEnabled: true})
+				})
+				Convey("When tags exist", func() {
+					actual, err := dataBase.GetSubscription(subAnyTagWithTags.ID)
+					So(err, ShouldBeError)
+					So(err, ShouldResemble, database.ErrNil)
+					So(actual, ShouldResemble, moira.SubscriptionData{ThrottlingEnabled: true})
+				})
+			})
 		})
 
-		Convey("Save Subscription", func() {
-			err := dataBase.SaveSubscription(sub)
-			So(err, ShouldBeNil)
-
-			err = dataBase.SaveSubscription(subAnyTag)
-			So(err, ShouldBeNil)
-
-			err = dataBase.SaveSubscription(subAnyTagWithTags)
-			So(err, ShouldBeNil)
+		Convey("Save subscription", func() {
+			Convey("Default subscription", func() {
+				err := dataBase.SaveSubscription(sub)
+				So(err, ShouldBeNil)
+				countOfKeys := getCountOfTagSubscriptionsKeys(dataBase.context, client)
+				So(countOfKeys, ShouldResemble, 3)
+				valueStoredAtKey := client.SMembers(dataBase.context, "{moira-tag-subscriptions}:moira-any-tags-subscriptions").Val()
+				So(valueStoredAtKey, ShouldBeEmpty)
+				valueStoredAtKey = client.SMembers(dataBase.context, "{moira-tag-subscriptions}:tag1").Val()
+				So(valueStoredAtKey, ShouldResemble, []string{"subscriptionID-00000000000001"})
+				valueStoredAtKey = client.SMembers(dataBase.context, "{moira-tag-subscriptions}:tag2").Val()
+				So(valueStoredAtKey, ShouldResemble, []string{"subscriptionID-00000000000001"})
+				valueStoredAtKey = client.SMembers(dataBase.context, "{moira-tag-subscriptions}:tag3").Val()
+				So(valueStoredAtKey, ShouldResemble, []string{"subscriptionID-00000000000001"})
+			})
+			Convey("When AnyTag is true", func() {
+				Convey("When tags don't exist", func() {
+					err := dataBase.SaveSubscription(subAnyTag)
+					So(err, ShouldBeNil)
+					countOfKeys := getCountOfTagSubscriptionsKeys(dataBase.context, client)
+					So(countOfKeys, ShouldResemble, 4)
+					valueStoredAtKey := client.SMembers(dataBase.context, "{moira-tag-subscriptions}:moira-any-tags-subscriptions").Val()
+					So(valueStoredAtKey, ShouldResemble, []string{"subscriptionID-00000000000008"})
+				})
+				Convey("When tags exist", func() {
+					err := dataBase.SaveSubscription(subAnyTagWithTags)
+					So(err, ShouldBeNil)
+				})
+			})
+			Convey("When TeamID is set", func() {
+				err := dataBase.SaveSubscription(subTeam)
+				So(err, ShouldBeNil)
+			})
 		})
 
-		Convey("Get Subscription by id", func() {
-			actual, err := dataBase.GetSubscription(sub.ID)
-			So(err, ShouldBeNil)
-			So(actual, ShouldResemble, *sub)
-
-			actual1, err := dataBase.GetSubscription(subAnyTag.ID)
-			So(err, ShouldBeNil)
-			So(actual1, ShouldResemble, *subAnyTag)
-
-			actual2, err := dataBase.GetSubscription(subAnyTagWithTags.ID)
-			So(err, ShouldBeNil)
-			So(subAnyTagWithTags.ID, ShouldEqual, actual2.ID)
-			So(&actual2, ShouldResemble, &subAnyTagWithTagsClearTags)
-
-			actual3, err := dataBase.GetSubscriptions([]string{sub.ID, subAnyTag.ID, subAnyTagWithTags.ID})
-			So(err, ShouldBeNil)
-			So(actual3, ShouldResemble, []*moira.SubscriptionData{sub, subAnyTag, &subAnyTagWithTagsClearTags})
+		Convey("Get subscription by id when it exists", func() {
+			Convey("Default subscription", func() {
+				actual, err := dataBase.GetSubscription(sub.ID)
+				So(err, ShouldBeNil)
+				So(actual, ShouldResemble, *sub)
+			})
+			Convey("When AnyTag is true", func() {
+				Convey("When tags don't exist", func() {
+					actual, err := dataBase.GetSubscription(subAnyTag.ID)
+					So(err, ShouldBeNil)
+					So(actual, ShouldResemble, *subAnyTag)
+				})
+				Convey("When tags exist", func() {
+					actual, err := dataBase.GetSubscription(subAnyTagWithTags.ID)
+					So(err, ShouldBeNil)
+					So(subAnyTagWithTags.ID, ShouldEqual, actual.ID)
+					So(&actual, ShouldResemble, &subAnyTagWithTagsClearTags)
+				})
+			})
+			Convey("When TeamID is set", func() {
+				actual, err := dataBase.GetTeamSubscriptionIDs(team1)
+				So(err, ShouldBeNil)
+				So(actual, ShouldResemble, []string{subTeam.ID})
+			})
 		})
 
-		Convey("Get Subscription by tags", func() {
-			actual, err := dataBase.GetTagsSubscriptions([]string{tag1})
+		Convey("Get subscriptions by id", func() {
+			actual, err := dataBase.GetSubscriptions([]string{sub.ID, subAnyTag.ID, subAnyTagWithTags.ID})
 			So(err, ShouldBeNil)
-			So(len(actual), ShouldEqual, 3)
-			subscriptions := map[string]*moira.SubscriptionData{sub.ID: sub, subAnyTag.ID: subAnyTag, subAnyTagWithTagsClearTags.ID: &subAnyTagWithTagsClearTags}
-			for _, subscription := range actual {
-				So(subscription, ShouldResemble, subscriptions[subscription.ID])
-			}
-
-			actual2, err := dataBase.GetTagsSubscriptions(nil)
-			So(err, ShouldBeNil)
-
-			So(len(actual2), ShouldEqual, 2)
-			subscriptions = map[string]*moira.SubscriptionData{subAnyTag.ID: subAnyTag, subAnyTagWithTagsClearTags.ID: &subAnyTagWithTagsClearTags}
-			for _, subscription := range actual2 {
-				So(subscription, ShouldResemble, subscriptions[subscription.ID])
-			}
+			So(actual, ShouldResemble, []*moira.SubscriptionData{sub, subAnyTag, &subAnyTagWithTagsClearTags})
 		})
 
-		Convey("Get Subscription by user", func() {
-			actual4, err := dataBase.GetUserSubscriptionIDs(user1)
+		Convey("Get subscriptions by tags", func() {
+			Convey("When one tag passed", func() {
+				actual, err := dataBase.GetTagsSubscriptions([]string{tag1})
+				So(err, ShouldBeNil)
+				So(len(actual), ShouldEqual, 4)
+				subscriptions := map[string]*moira.SubscriptionData{
+					sub.ID:                        sub,
+					subAnyTag.ID:                  subAnyTag,
+					subTeam.ID:                    subTeam,
+					subAnyTagWithTagsClearTags.ID: &subAnyTagWithTagsClearTags,
+				}
+				for _, subscription := range actual {
+					So(subscription, ShouldResemble, subscriptions[subscription.ID])
+				}
+			})
+
+			Convey("When no tags passed", func() {
+				actual, err := dataBase.GetTagsSubscriptions(nil)
+				So(err, ShouldBeNil)
+				So(len(actual), ShouldEqual, 2)
+				subscriptions := map[string]*moira.SubscriptionData{subAnyTag.ID: subAnyTag, subAnyTagWithTagsClearTags.ID: &subAnyTagWithTagsClearTags}
+				for _, subscription := range actual {
+					So(subscription, ShouldResemble, subscriptions[subscription.ID])
+				}
+			})
+		})
+
+		Convey("Get subscriptions by user", func() {
+			actual, err := dataBase.GetUserSubscriptionIDs(user1)
 			So(err, ShouldBeNil)
-			sort.Strings(actual4)
-			So(actual4, ShouldResemble, []string{sub.ID, subAnyTag.ID, subAnyTagWithTags.ID})
+			sort.Strings(actual)
+			So(actual, ShouldResemble, []string{sub.ID, subAnyTag.ID, subAnyTagWithTags.ID})
 		})
 
 		Convey("Remove subscription", func() {
-			err := dataBase.RemoveSubscription(sub.ID)
-			So(err, ShouldBeNil)
-
-			err = dataBase.RemoveSubscription(subAnyTag.ID)
-			So(err, ShouldBeNil)
-
-			err = dataBase.RemoveSubscription(subAnyTagWithTags.ID)
-			So(err, ShouldBeNil)
+			Convey("Default subscription", func() {
+				err := dataBase.RemoveSubscription(sub.ID)
+				So(err, ShouldBeNil)
+			})
+			Convey("When AnyTag is true", func() {
+				Convey("When tags don't exist", func() {
+					err := dataBase.RemoveSubscription(subAnyTag.ID)
+					So(err, ShouldBeNil)
+				})
+				Convey("When tags exist", func() {
+					err := dataBase.RemoveSubscription(subAnyTagWithTags.ID)
+					So(err, ShouldBeNil)
+				})
+			})
+			Convey("When TeamID is set", func() {
+				err := dataBase.RemoveSubscription(subTeam.ID)
+				So(err, ShouldBeNil)
+				actual, err := dataBase.GetTeamSubscriptionIDs(team1)
+				So(err, ShouldBeNil)
+				sort.Strings(actual)
+				So(actual, ShouldResemble, []string{})
+			})
 		})
 	})
 }
 
 func TestSubscriptionData(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, config)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase := NewTestDatabase(logger)
+	dataBase.Flush()
+	defer dataBase.Flush()
 
 	Convey("SubscriptionData manipulation", t, func() {
 		Convey("Save-get-remove subscription", func() {
@@ -202,7 +271,7 @@ func TestSubscriptionData(t *testing.T) {
 
 			actual1, err := dataBase.GetUserSubscriptionIDs(user1)
 			So(err, ShouldBeNil)
-			So(actual1, ShouldHaveLength, len(ids))
+			So(actual1, ShouldHaveLength, len(ids)-1) // except the team subscription
 
 			err = dataBase.RemoveSubscription(ids[0])
 			So(err, ShouldBeNil)
@@ -213,11 +282,11 @@ func TestSubscriptionData(t *testing.T) {
 
 			actual1, err = dataBase.GetUserSubscriptionIDs(user1)
 			So(err, ShouldBeNil)
-			So(actual1, ShouldHaveLength, len(ids)-1)
+			So(actual1, ShouldHaveLength, len(ids)-2) // except the team subscription and removed subscrition
 		})
 
 		Convey("Test rewrite subscription", func() {
-			dataBase.flush()
+			dataBase.Flush()
 			sub := *subscriptions[0]
 
 			err := dataBase.SaveSubscription(&sub)
@@ -286,9 +355,9 @@ func TestSubscriptionData(t *testing.T) {
 
 func TestSubscriptionErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, emptyConfig)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
+	dataBase.Flush()
+	defer dataBase.Flush()
 	Convey("Should throw error when no connection", t, func() {
 		actual1, err := dataBase.GetSubscription("123")
 		So(actual1, ShouldResemble, moira.SubscriptionData{ThrottlingEnabled: true})
@@ -429,4 +498,32 @@ var subscriptions = []*moira.SubscriptionData{
 		AnyTags:           true,
 		User:              user1,
 	},
+	{
+		ID:                "teamSubscriptionID-00000000000001",
+		Enabled:           true,
+		Tags:              []string{tag1},
+		Contacts:          []string{uuid.Must(uuid.NewV4()).String()},
+		TeamID:            team1,
+		ThrottlingEnabled: true,
+	},
+}
+
+func getCountOfTagSubscriptionsKeys(ctx context.Context, client redis.UniversalClient) int {
+	var keys []string
+	switch c := client.(type) {
+	case *redis.ClusterClient:
+		_ = c.ForEachMaster(ctx, func(ctx context.Context, shard *redis.Client) error {
+			iter := shard.Scan(ctx, 0, "*{moira-tag-subscriptions}*", 0).Iterator()
+			for iter.Next(ctx) {
+				keys = append(keys, iter.Val())
+			}
+			return iter.Err()
+		})
+	default:
+		iter := c.Scan(ctx, 0, "*{moira-tag-subscriptions}*", 0).Iterator()
+		for iter.Next(ctx) {
+			keys = append(keys, iter.Val())
+		}
+	}
+	return len(keys)
 }

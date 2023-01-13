@@ -4,8 +4,6 @@ import (
 	"github.com/moira-alert/moira"
 )
 
-const templateMoreThanMessage = "%s more than %ds. Send message."
-
 // Heartbeater is the interface for simplified events verification.
 type Heartbeater interface {
 	Check(int64) (int64, bool, error)

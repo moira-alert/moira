@@ -26,15 +26,16 @@ type filterConfig struct {
 	MaxParallelMatches int `yaml:"max_parallel_matches"`
 	// Period in which patterns will be reloaded from Redis.
 	PatternsUpdatePeriod string `yaml:"patterns_update_period"`
+	// DropMetricsTTL this is time window how older metric we can get from now.
+	DropMetricsTTL string `yaml:"drop_metrics_ttl"`
 }
 
 func getDefault() config {
 	return config{
 		Redis: cmd.RedisConfig{
-			Host:            "localhost",
-			Port:            "6379",
-			ConnectionLimit: 512, //nolint
-			MetricsTTL:      "1h",
+			Addrs:       "localhost:6379",
+			MetricsTTL:  "1h",
+			DialTimeout: "500ms",
 		},
 		Logger: cmd.LoggerConfig{
 			LogFile:         "stdout",
@@ -47,6 +48,7 @@ func getDefault() config {
 			CacheCapacity:        10, //nolint
 			MaxParallelMatches:   0,
 			PatternsUpdatePeriod: "1s",
+			DropMetricsTTL:       "1h",
 		},
 		Telemetry: cmd.TelemetryConfig{
 			Listen: ":8094",

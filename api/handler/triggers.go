@@ -1,11 +1,13 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
@@ -30,6 +32,7 @@ func triggers(metricSourceProvider *metricSource.SourceProvider, searcher moira.
 		router.Put("/check", triggerCheck)
 		router.Route("/{triggerId}", trigger)
 		router.With(middleware.Paginate(0, 10)).With(middleware.Pager(false, "")).Get("/search", searchTriggers)
+		router.With(middleware.Pager(false, "")).Delete("/search/pager", deletePager)
 		// ToDo: DEPRECATED method. Remove in Moira 2.6
 		router.With(middleware.Paginate(0, 10)).With(middleware.Pager(false, "")).Get("/page", searchTriggers)
 	}
@@ -89,8 +92,14 @@ func getTriggerFromRequest(request *http.Request) (*dto.Trigger, *api.ErrorRespo
 			return nil, api.ErrorInvalidRequest(err)
 		case remote.ErrRemoteTriggerResponse:
 			response := api.ErrorRemoteServerUnavailable(err)
-			middleware.GetLoggerEntry(request).Error("%s : %s : %s", response.StatusText, response.ErrorText, err)
+			middleware.GetLoggerEntry(request).Errorb().
+				String("status", response.StatusText).
+				String("error_text", response.ErrorText).
+				Error(err).
+				Msg("Remote server unavailable")
 			return nil, response
+		case *json.UnmarshalTypeError:
+			return nil, api.ErrorInvalidRequest(fmt.Errorf("invalid payload: %s", err.Error()))
 		default:
 			return nil, api.ErrorInternalServer(err)
 		}
@@ -99,8 +108,18 @@ func getTriggerFromRequest(request *http.Request) (*dto.Trigger, *api.ErrorRespo
 	return trigger, nil
 }
 
+// getMetricTTLByTrigger gets metric ttl duration time from request context for local or remote trigger.
+func getMetricTTLByTrigger(request *http.Request, trigger *dto.Trigger) time.Duration {
+	var ttl time.Duration
+	if trigger.IsRemote {
+		ttl = middleware.GetRemoteMetricTTL(request)
+	} else {
+		ttl = middleware.GetLocalMetricTTL(request)
+	}
+	return ttl
+}
+
 func triggerCheck(writer http.ResponseWriter, request *http.Request) {
-	ttl := middleware.GetLocalMetricTTL(request)
 	trigger := &dto.Trigger{}
 	response := dto.TriggerCheckResponse{}
 
@@ -112,6 +131,8 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 			return
 		}
 	}
+
+	ttl := getMetricTTLByTrigger(request, trigger)
 
 	if len(trigger.Targets) > 0 {
 		response.Targets = dto.TargetVerification(trigger.Targets, ttl, trigger.IsRemote)
@@ -139,6 +160,21 @@ func searchTriggers(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	if err := render.Render(writer, request, triggersList); err != nil {
+		render.Render(writer, request, api.ErrorRender(err)) //nolint
+		return
+	}
+}
+
+func deletePager(writer http.ResponseWriter, request *http.Request) {
+	pagerID := middleware.GetPagerID(request)
+
+	response, errorResponse := controller.DeleteTriggersPager(database, pagerID)
+	if errorResponse != nil {
+		render.Render(writer, request, errorResponse) //nolint
+		return
+	}
+
+	if err := render.Render(writer, request, response); err != nil {
 		render.Render(writer, request, api.ErrorRender(err)) //nolint
 		return
 	}

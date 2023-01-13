@@ -1,8 +1,6 @@
 #See https://moira.readthedocs.io/en/latest/installation/configuration.html for config explanation
 redis:
-  host: redis
-  port: "6379"
-  dbid: 0
+  addrs: "redis:6379"
   metrics_ttl: 3h
 telemetry:
   graphite:
@@ -19,7 +17,7 @@ remote:
   url: "http://graphite:80/render"
   check_interval: 60s
   timeout: 60s
-  metrics_ttl: 7d
+  metrics_ttl: 168h
 api:
   listen: ":8081"
   enable_cors: false
@@ -40,6 +38,8 @@ web:
       label: Twilio voice
     - type: msteams
       label: MS Teams
+    - type: mattermost
+      label: Mattermost
 log:
   log_file: stdout
   log_level: debug

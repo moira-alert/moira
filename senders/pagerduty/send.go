@@ -68,15 +68,19 @@ func (sender *Sender) buildEvent(events moira.NotificationEvents, contact moira.
 	}
 
 	if len(plots) > 0 && sender.imageStoreConfigured {
-		imageLink, err := sender.imageStore.StoreImage(plots[0])
-		if err != nil {
-			sender.logger.Warningf("could not store the plot image in the image store: %s", err)
-		} else {
-			imageDetails := map[string]string{
-				"src": imageLink,
-				"alt": "Plot",
+		for i, plot := range plots {
+			imageLink, err := sender.imageStore.StoreImage(plot)
+			if err != nil {
+				sender.logger.Warningb().
+					Error(err).
+					Msg("could not store the plot image in the image store")
+			} else {
+				imageDetails := map[string]string{
+					"src": imageLink,
+					"alt": fmt.Sprintf("Plot-%d", i),
+				}
+				event.Images = append(event.Images, imageDetails)
 			}
-			event.Images = append(event.Images, imageDetails)
 		}
 	}
 

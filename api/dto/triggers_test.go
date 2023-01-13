@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
@@ -178,13 +179,21 @@ func TestTriggerValidation(t *testing.T) {
 			fetchResult.EXPECT().GetPatterns().Return(make([]string, 0), nil).AnyTimes()
 			fetchResult.EXPECT().GetMetricsData().Return([]metricSource.MetricData{*metricSource.MakeMetricData("", []float64{}, 0, 0)}).AnyTimes()
 
-			trigger.Targets = []string{"test target"}
+			trigger.Targets = []string{"test target", "test target 2"}
 			trigger.Expression = "OK"
 			Convey("are empty", func() {
 				trigger.AloneMetrics = map[string]bool{}
 				tr := Trigger{trigger, throttling}
 				err := tr.Bind(request)
 				So(err, ShouldBeNil)
+			})
+			Convey("trigger with only one target", func() {
+				trigger.Targets = []string{"test target"}
+				trigger.AloneMetrics = map[string]bool{"t1": true}
+				tr := Trigger{trigger, throttling}
+				err := tr.Bind(request)
+				So(err, ShouldBeNil)
+				So(tr.AloneMetrics, ShouldResemble, map[string]bool{})
 			})
 			Convey("are valid", func() {
 				trigger.AloneMetrics = map[string]bool{"t1": true}
@@ -228,5 +237,152 @@ func TestTriggerValidation(t *testing.T) {
 				So(err, ShouldResemble, api.ErrInvalidRequestContent{ValidationError: fmt.Errorf("pattern \"*\" is not allowed to use")})
 			})
 		})
+	})
+}
+
+func TestTriggerModel_ToMoiraTrigger(t *testing.T) {
+	Convey("Test transforms TriggerModel to moira.Trigger", t, func() {
+		expression := "t1 >0 ? OK : ERROR"
+		warnValue := 1.0
+		errorValue := 2.0
+		desc := "description of trigger"
+		now := time.Date(2022, time.June, 7, 10, 0, 0, 0, time.UTC).Unix()
+		triggerModel := &TriggerModel{
+			ID:          "trigger-id",
+			Name:        "trigger-name",
+			Desc:        &desc,
+			Targets:     []string{"t1", "t2"},
+			WarnValue:   &warnValue,
+			ErrorValue:  &errorValue,
+			TriggerType: moira.FallingTrigger,
+			Tags:        []string{"tag-1", "tag-2"},
+			TTLState:    &moira.TTLStateOK,
+			TTL:         1,
+			Schedule: &moira.ScheduleData{
+				Days: []moira.ScheduleDataDay{
+					{
+						Enabled: true,
+						Name:    "mon",
+					},
+				},
+				TimezoneOffset: 1,
+				StartOffset:    1,
+				EndOffset:      1,
+			},
+			Expression:     expression,
+			Patterns:       []string{"pattern-1", "pattern-2"},
+			IsRemote:       true,
+			MuteNewMetrics: true,
+			AloneMetrics: map[string]bool{
+				"t1": true,
+			},
+			CreatedAt: getDateTime(&now),
+			UpdatedAt: getDateTime(&now),
+		}
+
+		expTrigger := &moira.Trigger{
+			ID:          "trigger-id",
+			Name:        "trigger-name",
+			Desc:        &desc,
+			Targets:     []string{"t1", "t2"},
+			WarnValue:   &warnValue,
+			ErrorValue:  &errorValue,
+			TriggerType: moira.FallingTrigger,
+			Tags:        []string{"tag-1", "tag-2"},
+			TTLState:    &moira.TTLStateOK,
+			TTL:         1,
+			Schedule: &moira.ScheduleData{
+				Days: []moira.ScheduleDataDay{
+					{
+						Enabled: true,
+						Name:    "mon",
+					},
+				},
+				TimezoneOffset: 1,
+				StartOffset:    1,
+				EndOffset:      1,
+			},
+			Expression:     &expression,
+			Patterns:       []string{"pattern-1", "pattern-2"},
+			IsRemote:       true,
+			MuteNewMetrics: true,
+			AloneMetrics: map[string]bool{
+				"t1": true,
+			},
+		}
+
+		So(triggerModel.ToMoiraTrigger(), ShouldResemble, expTrigger)
+	})
+}
+
+func TestCreateTriggerModel(t *testing.T) {
+	Convey("Test TriggerModel creation", t, func() {
+		expression := "t1 >0 ? OK : ERROR"
+		warnValue := 1.0
+		errorValue := 2.0
+		desc := "description of trigger"
+		trigger := &moira.Trigger{
+			ID:          "trigger-id",
+			Name:        "trigger-name",
+			Desc:        &desc,
+			Targets:     []string{"t1", "t2"},
+			WarnValue:   &warnValue,
+			ErrorValue:  &errorValue,
+			TriggerType: moira.FallingTrigger,
+			Tags:        []string{"tag-1", "tag-2"},
+			TTLState:    &moira.TTLStateOK,
+			TTL:         1,
+			Schedule: &moira.ScheduleData{
+				Days: []moira.ScheduleDataDay{
+					{
+						Enabled: true,
+						Name:    "mon",
+					},
+				},
+				TimezoneOffset: 1,
+				StartOffset:    1,
+				EndOffset:      1,
+			},
+			Expression:     &expression,
+			Patterns:       []string{"pattern-1", "pattern-2"},
+			IsRemote:       true,
+			MuteNewMetrics: true,
+			AloneMetrics: map[string]bool{
+				"t1": true,
+			},
+		}
+
+		expTriggerModel := TriggerModel{
+			ID:          "trigger-id",
+			Name:        "trigger-name",
+			Desc:        &desc,
+			Targets:     []string{"t1", "t2"},
+			WarnValue:   &warnValue,
+			ErrorValue:  &errorValue,
+			TriggerType: moira.FallingTrigger,
+			Tags:        []string{"tag-1", "tag-2"},
+			TTLState:    &moira.TTLStateOK,
+			TTL:         1,
+			Schedule: &moira.ScheduleData{
+				Days: []moira.ScheduleDataDay{
+					{
+						Enabled: true,
+						Name:    "mon",
+					},
+				},
+				TimezoneOffset: 1,
+				StartOffset:    1,
+				EndOffset:      1,
+			},
+			Expression:     expression,
+			Patterns:       []string{"pattern-1", "pattern-2"},
+			IsRemote:       true,
+			MuteNewMetrics: true,
+			AloneMetrics: map[string]bool{
+				"t1": true,
+			},
+		}
+
+		So(CreateTriggerModel(trigger), ShouldResemble, expTriggerModel)
 	})
 }

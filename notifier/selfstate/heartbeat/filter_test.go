@@ -5,8 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/moira-alert/moira"
-
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 
 	"github.com/golang/mock/gomock"
@@ -18,7 +16,8 @@ func TestFilter(t *testing.T) {
 	Convey("Test filter heartbeat", t, func() {
 		err := errors.New("test filter error")
 		now := time.Now().Unix()
-		check := createFilterTest(t)
+		check, mockCtrl := createFilterTest(t)
+		defer mockCtrl.Finish()
 		database := check.database.(*mock_moira_alert.MockDatabase)
 
 		Convey("Checking the created filter", func() {
@@ -36,7 +35,6 @@ func TestFilter(t *testing.T) {
 		})
 
 		Convey("Filter error handling test", func() {
-			database.EXPECT().GetMetricsUpdatesCount().Return(int64(1), nil)
 			database.EXPECT().GetLocalTriggersToCheckCount().Return(int64(1), err)
 
 			value, needSend, errActual := check.Check(now)
@@ -61,7 +59,6 @@ func TestFilter(t *testing.T) {
 			check.lastSuccessfulCheck = now - check.delay - 1
 
 			database.EXPECT().GetMetricsUpdatesCount().Return(int64(0), nil)
-			database.EXPECT().SetNotifierState(moira.SelfStateERROR).Return(err)
 			database.EXPECT().GetLocalTriggersToCheckCount().Return(int64(1), nil)
 
 			value, needSend, errActual := check.Check(now)
@@ -81,10 +78,7 @@ func TestFilter(t *testing.T) {
 		})
 
 		Convey("Test NeedToCheckOthers and NeedTurnOffNotifier", func() {
-			database.EXPECT().GetMetricsUpdatesCount().Return(int64(1), nil)
-			So(check.NeedToCheckOthers(), ShouldBeTrue)
-
-			database.EXPECT().GetMetricsUpdatesCount().Return(int64(0), nil)
+			//TODO(litleleprikon): seems that this test checks nothing. Seems that NeedToCheckOthers and NeedTurnOffNotifier do not work.
 			So(check.NeedToCheckOthers(), ShouldBeTrue)
 
 			So(check.NeedTurnOffNotifier(), ShouldBeFalse)
@@ -92,9 +86,9 @@ func TestFilter(t *testing.T) {
 	})
 }
 
-func createFilterTest(t *testing.T) *filter {
+func createFilterTest(t *testing.T) (*filter, *gomock.Controller) {
 	mockCtrl := gomock.NewController(t)
 	logger, _ := logging.GetLogger("MetricDelay")
 
-	return GetFilter(60, logger, mock_moira_alert.NewMockDatabase(mockCtrl)).(*filter)
+	return GetFilter(60, logger, mock_moira_alert.NewMockDatabase(mockCtrl)).(*filter), mockCtrl
 }

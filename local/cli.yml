@@ -1,8 +1,9 @@
 redis:
-  host: redis
-  port: "6379"
-  dbid: 0
+  addrs: "redis:6379"
   metrics_ttl: 3h
 log_file: stdout
 log_level: debug
 log_pretty_format: true
+cleanup:
+  # Default cleanup duration according to max TTL for metrics = 7 days
+  cleanup_metrics_duration: "-168h"

@@ -36,6 +36,8 @@ var (
 	timeSeriesNamesKey   ContextKey = "timeSeriesNames"
 	metricSourceProvider ContextKey = "metricSourceProvider"
 	targetNameKey        ContextKey = "target"
+	teamIDKey            ContextKey = "teamID"
+	teamUserIDKey        ContextKey = "teamUserIDKey"
 )
 
 // GetDatabase gets moira.Database realization from request context
@@ -132,4 +134,23 @@ func GetTriggerTargetsSourceProvider(request *http.Request) *metricSource.Source
 // GetTargetName gets target name
 func GetTargetName(request *http.Request) string {
 	return request.Context().Value(targetNameKey).(string)
+}
+
+// GetTeamID gets team id
+func GetTeamID(request *http.Request) string {
+	teamID := request.Context().Value(teamIDKey)
+	if teamID == nil {
+		return ""
+	}
+	return teamID.(string)
+}
+
+// GetTeamUserID gets team user id
+func GetTeamUserID(request *http.Request) string {
+	return request.Context().Value(teamUserIDKey).(string)
+}
+
+// SetContextValueForTest is a helper function that is needed for testing purposes and sets context values with local ContextKey type
+func SetContextValueForTest(ctx context.Context, key string, value interface{}) context.Context {
+	return context.WithValue(ctx, ContextKey(key), value)
 }

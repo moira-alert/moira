@@ -19,7 +19,7 @@ const (
 // Check handle trigger and last check and write new state of trigger, if state were change then write new NotificationEvent
 func (triggerChecker *TriggerChecker) Check() error {
 	passError := false
-	triggerChecker.logger.Debug("Checking trigger")
+	triggerChecker.logger.Debugb().Msg("Checking trigger")
 	checkData := newCheckData(triggerChecker.lastCheck, triggerChecker.until)
 	triggerMetricsData, err := triggerChecker.fetchTriggerMetrics()
 	if err != nil {
@@ -63,10 +63,15 @@ func (triggerChecker *TriggerChecker) handlePrepareError(checkData moira.CheckDa
 		checkData.State = moira.StateERROR
 		checkData.Message = err.Error()
 		return true, checkData, nil
-	case ErrUnexpectedAloneMetric:
+	case conversion.ErrUnexpectedAloneMetric:
 		checkData.State = moira.StateEXCEPTION
 		checkData.Message = err.Error()
-		triggerChecker.logger.Warning(formatTriggerCheckException(triggerChecker.triggerID, err))
+		logTriggerCheckException(triggerChecker.logger, triggerChecker.triggerID, err)
+	case conversion.ErrEmptyAloneMetricsTarget:
+		checkData.State = moira.StateNODATA
+		triggerChecker.logger.Warningb().
+			Error(err).
+			Msg("Trigger check failed")
 	default:
 		return false, checkData, triggerChecker.handleUndefinedError(checkData, err)
 	}
@@ -83,7 +88,11 @@ func (triggerChecker *TriggerChecker) handlePrepareError(checkData moira.CheckDa
 func (triggerChecker *TriggerChecker) handleFetchError(checkData moira.CheckData, err error) error {
 	switch err.(type) {
 	case ErrTriggerHasEmptyTargets, ErrTriggerHasOnlyWildcards:
-		triggerChecker.logger.Debugf("Trigger %s: %s", triggerChecker.triggerID, err.Error())
+		triggerChecker.logger.Debugb().
+			String(moira.LogFieldNameTriggerID, triggerChecker.triggerID).
+			Error(err).
+			Msg("Trigger was fetched")
+
 		triggerState := triggerChecker.ttlState.ToTriggerState()
 		checkData.State = triggerState
 		checkData.Message = err.Error()
@@ -100,11 +109,11 @@ func (triggerChecker *TriggerChecker) handleFetchError(checkData moira.CheckData
 			checkData.Message = fmt.Sprintf("Remote server unavailable. Trigger is not checked for %d seconds", timeSinceLastSuccessfulCheck)
 			checkData, err = triggerChecker.compareTriggerStates(checkData)
 		}
-		triggerChecker.logger.Warning(formatTriggerCheckException(triggerChecker.triggerID, err))
+		logTriggerCheckException(triggerChecker.logger, triggerChecker.triggerID, err)
 	case local.ErrUnknownFunction, local.ErrEvalExpr:
 		checkData.State = moira.StateEXCEPTION
 		checkData.Message = err.Error()
-		triggerChecker.logger.Warning(formatTriggerCheckException(triggerChecker.triggerID, err))
+		logTriggerCheckException(triggerChecker.logger, triggerChecker.triggerID, err)
 	default:
 		return triggerChecker.handleUndefinedError(checkData, err)
 	}
@@ -119,7 +128,14 @@ func (triggerChecker *TriggerChecker) handleFetchError(checkData moira.CheckData
 // handleUndefinedError is a function that check error with undefined type.
 func (triggerChecker *TriggerChecker) handleUndefinedError(checkData moira.CheckData, err error) error {
 	triggerChecker.metrics.CheckError.Mark(1)
-	triggerChecker.logger.Errorf("Trigger %s check failed: %s", triggerChecker.triggerID, err.Error())
+	checkData.State = moira.StateEXCEPTION
+	checkData.Message = err.Error()
+
+	triggerChecker.logger.Errorb().
+		String(moira.LogFieldNameTriggerID, triggerChecker.triggerID).
+		Error(err).
+		Msg("Trigger check failed")
+
 	checkData, err = triggerChecker.compareTriggerStates(checkData)
 	if err != nil {
 		return err
@@ -128,8 +144,11 @@ func (triggerChecker *TriggerChecker) handleUndefinedError(checkData moira.Check
 	return triggerChecker.database.SetTriggerLastCheck(triggerChecker.triggerID, &checkData, triggerChecker.trigger.IsRemote)
 }
 
-func formatTriggerCheckException(triggerID string, err error) string {
-	return fmt.Sprintf("TriggerCheckException %T Trigger %s: %v", err, triggerID, err)
+func logTriggerCheckException(logger moira.Logger, triggerID string, err error) {
+	logger.Warningb().
+		Error(err).
+		String(moira.LogFieldNameTriggerID, triggerID).
+		Msg("Trigger check failed")
 }
 
 // Set new last check timestamp that equal to "until" targets fetch interval
@@ -181,6 +200,8 @@ func newMetricState(oldMetricState moira.MetricState, newState moira.State, newT
 // Check that targets with alone metrics declared in trigger ->
 // Convert to TriggerMetricsToCheck
 func (triggerChecker *TriggerChecker) prepareMetrics(fetchedMetrics map[string][]metricSource.MetricData) (map[string]map[string]metricSource.MetricData, map[string]metricSource.MetricData, error) {
+	from := triggerChecker.from
+	to := triggerChecker.until
 	preparedPatternMetrics := conversion.NewTriggerMetricsWithCapacity(len(fetchedMetrics))
 	duplicates := make(map[string][]string)
 
@@ -192,34 +213,24 @@ func (triggerChecker *TriggerChecker) prepareMetrics(fetchedMetrics map[string][
 		}
 	}
 
-	populated := preparedPatternMetrics.Populate(*triggerChecker.lastCheck, triggerChecker.trigger.AloneMetrics, triggerChecker.from, triggerChecker.until)
+	multiMetricTargets, aloneMetrics, err := preparedPatternMetrics.FilterAloneMetrics(triggerChecker.trigger.AloneMetrics)
 
-	multiMetricTargets, aloneMetrics := populated.FilterAloneMetrics(triggerChecker.trigger.AloneMetrics)
-
-	if err := triggerChecker.validateAloneMetrics(aloneMetrics); err != nil {
+	if err != nil {
 		return nil, nil, err
 	}
 
-	converted := multiMetricTargets.ConvertForCheck()
+	populatedAloneMetrics, err := aloneMetrics.Populate(triggerChecker.lastCheck.MetricsToTargetRelation, triggerChecker.trigger.AloneMetrics, from, to)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	populated := multiMetricTargets.Populate(triggerChecker.lastCheck.Metrics, triggerChecker.trigger.AloneMetrics, from, to)
+
+	converted := populated.ConvertForCheck()
 	if len(duplicates) > 0 {
-		return converted, aloneMetrics, NewErrTriggerHasSameMetricNames(duplicates)
+		return converted, populatedAloneMetrics, NewErrTriggerHasSameMetricNames(duplicates)
 	}
-	return converted, aloneMetrics, nil
-}
-
-// validateAloneMetrics is a function that checks that alone metrics received by Moira for this trigger are fit
-// the alone metrics defined for this trigger by user.
-func (triggerChecker *TriggerChecker) validateAloneMetrics(aloneMetrics map[string]metricSource.MetricData) error {
-	if len(triggerChecker.trigger.Targets) <= 1 {
-		return nil
-	}
-
-	for targetName := range triggerChecker.trigger.AloneMetrics {
-		if _, ok := aloneMetrics[targetName]; !ok {
-			return NewErrUnexpectedAloneMetric(triggerChecker.trigger.AloneMetrics, conversion.GetRelations(aloneMetrics, triggerChecker.trigger.AloneMetrics))
-		}
-	}
-	return nil
+	return converted, populatedAloneMetrics, nil
 }
 
 // preparePatternMetrics is a function that takes PatternMetrics and applies following operations on it:
@@ -240,16 +251,19 @@ func (triggerChecker *TriggerChecker) preparePatternMetrics(fetchedMetrics conve
 func (triggerChecker *TriggerChecker) check(metrics map[string]map[string]metricSource.MetricData,
 	aloneMetrics map[string]metricSource.MetricData, checkData moira.CheckData, logger moira.Logger) (moira.CheckData, error) {
 	if len(metrics) == 0 { // Case when trigger have only alone metrics
+		if metrics == nil {
+			metrics = make(map[string]map[string]metricSource.MetricData, 1)
+		}
 		metricName := conversion.MetricName(aloneMetrics)
 		metrics[metricName] = make(map[string]metricSource.MetricData)
 	}
 	for metricName, targets := range metrics {
 		log := logger.Clone().String(moira.LogFieldNameMetricName, metricName)
-		log.Debug("Checking metrics")
+		log.Debugb().Msg("Checking metrics")
 		targets = conversion.Merge(targets, aloneMetrics)
 		metricState, needToDeleteMetric, err := triggerChecker.checkTargets(metricName, targets, log)
 		if needToDeleteMetric {
-			log.Info("Remove metric")
+			log.Infob().Msg("Remove metric")
 			checkData.RemoveMetricState(metricName)
 			err = triggerChecker.database.RemovePatternsMetrics(triggerChecker.trigger.Patterns)
 		} else {
@@ -295,7 +309,10 @@ func (triggerChecker *TriggerChecker) checkForNoData(metricLastState moira.Metri
 	if metricLastState.Timestamp+triggerChecker.ttl >= lastCheckTimeStamp {
 		return false, nil
 	}
-	logger.Debugf("Metric TTL expired for state %v", metricLastState)
+	logger.Debugb().
+		Interface("metric_last_state", metricLastState).
+		Msg("Metric TTL expired for state")
+
 	if triggerChecker.ttlState == moira.TTLStateDEL && metricLastState.EventTimestamp != 0 {
 		return true, nil
 	}
@@ -320,9 +337,9 @@ func (triggerChecker *TriggerChecker) getMetricStepsStates(metricName string, me
 	}
 
 	checkPoint := last.GetCheckPoint(checkPointGap)
-	logger.
+	logger.Debugb().
 		Int64(moira.LogFieldNameCheckpoint, checkPoint).
-		Debug("Checkpoint got")
+		Msg("Checkpoint got")
 
 	current = make([]moira.MetricState, 0)
 
@@ -359,8 +376,11 @@ func (triggerChecker *TriggerChecker) getMetricDataState(metrics *map[string]met
 	if !noEmptyValues {
 		return nil, nil
 	}
-	logger.Debugf("Values for ts %v: MainTargetValue: %v, additionalTargetValues: %v",
-		valueTimestamp, triggerExpression.MainTargetValue, triggerExpression.AdditionalTargetsValues)
+	logger.Debugb().
+		Interface("timestamp", valueTimestamp).
+		Interface("main_target_value", triggerExpression.MainTargetValue).
+		Interface("additional_target_values", triggerExpression.AdditionalTargetsValues).
+		Msg("Getting metric data state")
 
 	triggerExpression.WarnValue = triggerChecker.trigger.WarnValue
 	triggerExpression.ErrorValue = triggerChecker.trigger.ErrorValue

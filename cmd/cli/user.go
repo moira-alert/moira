@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
 
 	"github.com/moira-alert/moira"
@@ -96,7 +97,12 @@ func usersCleanup(logger moira.Logger, database moira.Database, users []string, 
 		config.Whitelist = append(config.Whitelist, "")
 	}
 
-	usersMap := make(map[string]bool, len(users)+len(config.Whitelist))
+	usersMapLength := len(users) + len(config.Whitelist)
+	const usersMapMaxLength = 100000
+	if usersMapLength > usersMapMaxLength {
+		return errors.New("users count is too large")
+	}
+	usersMap := make(map[string]bool, usersMapLength)
 
 	for _, user := range append(users, config.Whitelist...) {
 		usersMap[user] = true
@@ -134,7 +140,9 @@ func usersCleanup(logger moira.Logger, database moira.Database, users []string, 
 			}
 		}
 
-		logger.Debug("User cleaned:", user)
+		logger.Debugb().
+			String("user", user).
+			Msg("User cleaned")
 	}
 
 	return err

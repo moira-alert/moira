@@ -12,7 +12,9 @@ import (
 
 func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) (*http.Request, error) {
 	if sender.url == moira.VariableContactValue {
-		sender.log.Warningf("%s is potentially dangerous url template, api contact validation is advised", sender.url)
+		sender.log.Warningb().
+			String("potentially_dangerous_url", sender.url).
+			Msg("Found potentially dangerous url template, api contact validation is advised")
 	}
 	requestURL := buildRequestURL(sender.url, trigger, contact)
 	requestBody, err := buildRequestBody(events, contact, trigger, plots, throttled)
@@ -29,7 +31,12 @@ func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moir
 	for k, v := range sender.headers {
 		request.Header.Set(k, v)
 	}
-	sender.log.Debugf("%s %s '%s'", request.Method, request.URL.String(), bytes.NewBuffer(requestBody).String())
+	sender.log.Debugb().
+		String("method", request.Method).
+		String("url", request.URL.String()).
+		String("body", bytes.NewBuffer(requestBody).String()).
+		Msg("Created request")
+
 	return request, nil
 }
 
@@ -51,6 +58,7 @@ func buildRequestBody(events moira.NotificationEvents, contact moira.ContactData
 			Value: contact.Value,
 			ID:    contact.ID,
 			User:  contact.User,
+			Team:  contact.Team,
 		},
 		Plot:      encodedFirstPlot,
 		Plots:     encodedPlots,
@@ -67,7 +75,12 @@ func buildRequestURL(template string, trigger moira.TriggerData, contact moira.C
 		moira.VariableTriggerID:    trigger.ID,
 	}
 	for k, v := range templateVariables {
-		template = strings.Replace(template, k, url.PathEscape(v), -1)
+		value := url.PathEscape(v)
+		if k == moira.VariableContactValue &&
+			(strings.HasPrefix(v, "http://") || strings.HasPrefix(v, "https://")) {
+			value = v
+		}
+		template = strings.Replace(template, k, value, -1)
 	}
 	return template
 }

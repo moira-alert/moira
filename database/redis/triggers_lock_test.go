@@ -3,15 +3,18 @@ package redis
 import (
 	"testing"
 
+	"github.com/golang/mock/gomock"
+	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
+
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestLock(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, config)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase := NewTestDatabase(logger)
+	dataBase.Flush()
+	defer dataBase.Flush()
 	Convey("Test lock manipulation", t, func() {
 		triggerID1 := "id"
 
@@ -43,9 +46,9 @@ func TestLock(t *testing.T) {
 
 func TestLockErrorConnection(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
-	dataBase := newTestDatabase(logger, emptyConfig)
-	dataBase.flush()
-	defer dataBase.flush()
+	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
+	dataBase.Flush()
+	defer dataBase.Flush()
 	Convey("Should throw error when no connection", t, func() {
 		err := dataBase.AcquireTriggerCheckLock("tr1", 4)
 		So(err, ShouldNotBeNil)
@@ -56,5 +59,22 @@ func TestLockErrorConnection(t *testing.T) {
 
 		err = dataBase.DeleteTriggerCheckLock("tr1")
 		So(err, ShouldNotBeNil)
+	})
+}
+
+func TestLockErrorLogging(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	logger := mock_moira_alert.NewMockLogger(mockCtrl)
+	eventBuilder := mock_moira_alert.NewMockEventBuilder(mockCtrl)
+	dataBase := NewTestDatabaseWithIncorrectConfig(logger)
+
+	dataBase.Flush()
+	defer dataBase.Flush()
+	Convey("Should log error on releasing the lock", t, func() {
+		logger.EXPECT().Warningb().Return(eventBuilder).AnyTimes()
+		eventBuilder.EXPECT().Error(gomock.Any()).Return(eventBuilder)
+		eventBuilder.EXPECT().Msg(gomock.Any())
+
+		dataBase.ReleaseTriggerCheckLock("tr1")
 	})
 }

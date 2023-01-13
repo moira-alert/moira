@@ -68,26 +68,66 @@ func TestBuildEvent(t *testing.T) {
 			So(actual, ShouldResemble, expected)
 		})
 
-		Convey("Build pagerduty event with one moira event and plot", func() {
-			imageStore.EXPECT().StoreImage([]byte("test")).Return("test", nil)
-			sender.imageStore = imageStore
-			sender.imageStoreConfigured = true
-			actual := sender.buildEvent(moira.NotificationEvents{event}, contact, trigger, [][]byte{[]byte("test")}, false)
-			expected := baseExpected
-			details := map[string]interface{}{
-				"Events":       "\n02:40: Metric name = 97.4458331200185 (OK to NODATA)",
-				"Trigger URI":  "http://moira.url/trigger/TriggerID",
-				"Trigger Name": "Trigger Name",
-				"Description":  "bold text italics code regular",
-			}
-			expected.Payload.Details = details
-			expected.Images = []interface{}{
-				map[string]string{
-					"src": "test",
-					"alt": "Plot",
-				},
-			}
-			So(actual, ShouldResemble, expected)
+		Convey("Build pagerduty event with one moira event and plots", func() {
+			Convey("One plot", func() {
+				imageStore.EXPECT().StoreImage([]byte("test")).Return("test", nil)
+				sender.imageStore = imageStore
+				sender.imageStoreConfigured = true
+				actual := sender.buildEvent(moira.NotificationEvents{event}, contact, trigger, [][]byte{[]byte("test")}, false)
+				expected := baseExpected
+				details := map[string]interface{}{
+					"Events":       "\n02:40: Metric name = 97.4458331200185 (OK to NODATA)",
+					"Trigger URI":  "http://moira.url/trigger/TriggerID",
+					"Trigger Name": "Trigger Name",
+					"Description":  "bold text italics code regular",
+				}
+				expected.Payload.Details = details
+				expected.Images = []interface{}{
+					map[string]string{
+						"src": "test",
+						"alt": "Plot-0",
+					},
+				}
+				So(actual, ShouldResemble, expected)
+			})
+
+			Convey("Several plots", func() {
+				imageStore.EXPECT().StoreImage([]byte("plot0")).Return("plot0", nil)
+				imageStore.EXPECT().StoreImage([]byte("plot1")).Return("plot1", nil)
+				imageStore.EXPECT().StoreImage([]byte("plot2")).Return("plot2", nil)
+				sender.imageStore = imageStore
+				sender.imageStoreConfigured = true
+				actual := sender.buildEvent(
+					moira.NotificationEvents{event},
+					contact,
+					trigger,
+					[][]byte{[]byte("plot0"), []byte("plot1"), []byte("plot2")},
+					false,
+				)
+				expected := baseExpected
+				details := map[string]interface{}{
+					"Events":       "\n02:40: Metric name = 97.4458331200185 (OK to NODATA)",
+					"Trigger URI":  "http://moira.url/trigger/TriggerID",
+					"Trigger Name": "Trigger Name",
+					"Description":  "bold text italics code regular",
+				}
+				expected.Payload.Details = details
+				expected.Images = []interface{}{
+					map[string]string{
+						"src": "plot0",
+						"alt": "Plot-0",
+					},
+					map[string]string{
+						"src": "plot1",
+						"alt": "Plot-1",
+					},
+					map[string]string{
+						"src": "plot2",
+						"alt": "Plot-2",
+					},
+				}
+				So(actual, ShouldResemble, expected)
+			})
 		})
 
 		Convey("Build pagerduty event with one event and throttled", func() {

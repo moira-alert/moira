@@ -25,16 +25,19 @@ func (worker *Checker) remoteTriggerGetter() error {
 
 func (worker *Checker) remoteTriggerChecker(stop <-chan struct{}) error {
 	checkTicker := time.NewTicker(worker.RemoteConfig.CheckInterval)
-	worker.Logger.Info(remoteTriggerName + " started")
+	worker.Logger.Infob().Msg(remoteTriggerName + " started")
 	for {
 		select {
 		case <-stop:
-			worker.Logger.Info(remoteTriggerName + " stopped")
+			worker.Logger.Infob().Msg(remoteTriggerName + " stopped")
 			checkTicker.Stop()
 			return nil
 		case <-checkTicker.C:
 			if err := worker.checkRemote(); err != nil {
-				worker.Logger.Errorf(remoteTriggerName+" failed: %s", err.Error())
+				worker.Logger.Errorb().
+					Error(err).
+					String("remote_trigger_name", remoteTriggerName).
+					Msg("Remote trigger failed")
 			}
 		}
 	}
@@ -47,9 +50,11 @@ func (worker *Checker) checkRemote() error {
 	}
 	remoteAvailable, err := source.(*remote.Remote).IsRemoteAvailable()
 	if !remoteAvailable {
-		worker.Logger.Infof("Remote API is unavailable. Stop checking remote triggers. Error: %s", err.Error())
+		worker.Logger.Infob().
+			Error(err).
+			Msg("Remote API is unavailable. Stop checking remote triggers")
 	} else {
-		worker.Logger.Debug("Checking remote triggers")
+		worker.Logger.Debugb().Msg("Checking remote triggers")
 		triggerIds, err := worker.Database.GetRemoteTriggerIDs()
 		if err != nil {
 			return err

@@ -20,6 +20,7 @@ import (
 	"github.com/moira-alert/moira/notifier/events"
 	"github.com/moira-alert/moira/notifier/notifications"
 	"github.com/moira-alert/moira/notifier/selfstate"
+	_ "go.uber.org/automaxprocs"
 )
 
 const serviceName = "notifier"
@@ -65,11 +66,15 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Can not configure log: %s\n", err.Error())
 		os.Exit(1)
 	}
-	defer logger.Infof("Moira Notifier stopped. Version: %s", MoiraVersion)
+	defer logger.Infob().
+		String("moira_version", MoiraVersion).
+		Msg("Moira Notifier stopped. Version")
 
 	telemetry, err := cmd.ConfigureTelemetry(logger, config.Telemetry, serviceName)
 	if err != nil {
-		logger.Fatalf("Can not configure telemetry: %s", err.Error())
+		logger.Fatalb().
+			Error(err).
+			Msg("Can not configure telemetry")
 	}
 	defer telemetry.Stop()
 
@@ -91,7 +96,9 @@ func main() {
 
 	// Register moira senders
 	if err := sender.RegisterSenders(database); err != nil {
-		logger.Fatalf("Can not configure senders: %s", err.Error())
+		logger.Fatalb().
+			Error(err).
+			Msg("Can not configure senders")
 	}
 
 	// Start moira self state checker
@@ -102,7 +109,9 @@ func main() {
 		Notifier: sender,
 	}
 	if err := selfState.Start(); err != nil {
-		logger.Fatalf("SelfState failed: %v", err)
+		logger.Fatalb().
+			Error(err).
+			Msg("SelfState failed")
 	}
 	defer stopSelfStateChecker(selfState)
 
@@ -126,27 +135,35 @@ func main() {
 	fetchEventsWorker.Start()
 	defer stopFetchEvents(fetchEventsWorker)
 
-	logger.Infof("Moira Notifier Started. Version: %s", MoiraVersion)
+	logger.Infob().
+		String("moira_version", MoiraVersion).
+		Msg("Moira Notifier Started")
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
-	logger.Info(fmt.Sprint(<-ch))
-	logger.Infof("Moira Notifier shutting down.")
+	logger.Infob().Msg(fmt.Sprint(<-ch))
+	logger.Infob().Msg("Moira Notifier shutting down.")
 }
 
 func stopFetchEvents(worker *events.FetchEventsWorker) {
 	if err := worker.Stop(); err != nil {
-		logger.Errorf("Failed to stop events fetcher: %v", err)
+		logger.Errorb().
+			Error(err).
+			Msg("Failed to stop events fetcher")
 	}
 }
 
 func stopNotificationsFetcher(worker *notifications.FetchNotificationsWorker) {
 	if err := worker.Stop(); err != nil {
-		logger.Errorf("Failed to stop notifications fetcher: %v", err)
+		logger.Errorb().
+			Error(err).
+			Msg("Failed to stop notifications fetcher")
 	}
 }
 
 func stopSelfStateChecker(checker *selfstate.SelfCheckWorker) {
 	if err := checker.Stop(); err != nil {
-		logger.Errorf("Failed to stop self check worker: %v", err)
+		logger.Errorb().
+			Error(err).
+			Msg("Failed to stop self check worker")
 	}
 }

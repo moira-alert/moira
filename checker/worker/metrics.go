@@ -16,7 +16,9 @@ func (worker *Checker) newMetricsHandler(metricEventsChannel <-chan *moira.Metri
 		pattern := metricEvent.Pattern
 		if worker.needHandlePattern(pattern) {
 			if err := worker.handleMetricEvent(pattern); err != nil {
-				worker.Logger.Errorf("Failed to handle metricEvent: %s", err.Error())
+				worker.Logger.Errorb().
+					Error(err).
+					Msg("Failed to handle metricEvent")
 			}
 		}
 	}
@@ -61,7 +63,7 @@ func (worker *Checker) addRemoteTriggerIDsIfNeeded(triggerIDs []string) {
 
 func (worker *Checker) getTriggerIDsToCheck(triggerIDs []string) []string {
 	lazyTriggerIDs := worker.lazyTriggerIDs.Load().(map[string]bool)
-	triggerIDsToCheck := make([]string, len(triggerIDs))
+	var triggerIDsToCheck []string = make([]string, 0, len(triggerIDs))
 	for _, triggerID := range triggerIDs {
 		if _, ok := lazyTriggerIDs[triggerID]; ok {
 			randomDuration := worker.getRandomLazyCacheDuration()

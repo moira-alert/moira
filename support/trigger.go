@@ -12,7 +12,9 @@ import (
 const defaultRetention = 10
 
 func HandlePullTrigger(logger moira.Logger, database moira.Database, triggerID string) (*moira.Trigger, error) {
-	logger.Infof("Pull database info about trigger %s", triggerID)
+	logger.Infob().
+		String("trigger_id", triggerID).
+		Msg("Pull database info about given trigger")
 
 	trigger, err := database.GetTrigger(triggerID)
 	if err != nil {
@@ -22,7 +24,10 @@ func HandlePullTrigger(logger moira.Logger, database moira.Database, triggerID s
 }
 
 func HandlePullTriggerMetrics(logger moira.Logger, database moira.Database, triggerID string) ([]dto.PatternMetrics, error) {
-	logger.Infof("Pulling info about trigger %s metrics", triggerID)
+	logger.Infob().
+		String("trigger_id", triggerID).
+		Msg("Pull database info about given trigger metrics")
+
 	source := local.Create(database)
 
 	trigger, err := database.GetTrigger(triggerID)
@@ -70,17 +75,24 @@ func HandlePullTriggerMetrics(logger moira.Logger, database moira.Database, trig
 }
 
 func HandlePushTrigger(logger moira.Logger, database moira.Database, trigger *moira.Trigger) error {
-	logger.Info("Save trigger")
+	logger.Infob().Msg("Save trigger")
 	err := database.SaveTrigger(trigger.ID, trigger)
 	if err != nil {
 		return fmt.Errorf("cannot save trigger: %w", err)
 	}
-	logger.Infof("Trigger %s was saved", trigger.ID)
+	logger.Infob().
+		String("trigger_id", trigger.ID).
+		Msg("Trigger was saved")
 	return nil
 }
 
-func HandlePushTriggerMetrics(logger moira.Logger, database moira.Database, triggerID string, patternsMetrics []dto.PatternMetrics) error {
-	logger.Info("Save trigger metrics")
+func HandlePushTriggerMetrics(
+	logger moira.Logger,
+	database moira.Database,
+	triggerID string,
+	patternsMetrics []dto.PatternMetrics,
+) error {
+	logger.Infob().Msg("Save trigger metrics")
 
 	buffer := make(map[string]*moira.MatchedMetric, len(patternsMetrics))
 	i := 0
@@ -110,16 +122,19 @@ func HandlePushTriggerMetrics(logger moira.Logger, database moira.Database, trig
 	if err != nil {
 		return fmt.Errorf("cannot save trigger metrics: %w", err)
 	}
-	logger.Infof("Trigger %s metrics was saved", triggerID)
+	logger.Infob().
+		String("trigger_id", triggerID).
+		Msg("Trigger metrics was saved")
+
 	return nil
 }
 
 func HandlePushTriggerLastCheck(logger moira.Logger, database moira.Database, triggerID string,
 	lastCheck *moira.CheckData, isRemoteTrigger bool) error {
-	logger.Info("Save trigger last check")
+	logger.Infob().Msg("Save trigger last check")
 	if err := database.SetTriggerLastCheck(triggerID, lastCheck, isRemoteTrigger); err != nil {
 		return fmt.Errorf("cannot set trigger last check: %w", err)
 	}
-	logger.Info("Trigger last check was saved")
+	logger.Infob().Msg("Trigger last check was saved")
 	return nil
 }

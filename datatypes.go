@@ -154,12 +154,20 @@ func (trigger TriggerData) GetTriggerURI(frontURI string) string {
 	return ""
 }
 
+// Team is a structure that represents a group of users that share a subscriptions and contacts
+type Team struct {
+	ID          string
+	Name        string
+	Description string
+}
+
 // ContactData represents contact object
 type ContactData struct {
 	Type  string `json:"type"`
 	Value string `json:"value"`
 	ID    string `json:"id"`
 	User  string `json:"user"`
+	Team  string `json:"team"`
 }
 
 // SubscriptionData represents user subscription
@@ -175,6 +183,7 @@ type SubscriptionData struct {
 	IgnoreRecoverings bool         `json:"ignore_recoverings,omitempty"`
 	ThrottlingEnabled bool         `json:"throttling"`
 	User              string       `json:"user"`
+	TeamID            string       `json:"team_id"`
 }
 
 // PlottingData represents plotting settings
@@ -253,6 +262,8 @@ type Trigger struct {
 	IsRemote         bool            `json:"is_remote"`
 	MuteNewMetrics   bool            `json:"mute_new_metrics"`
 	AloneMetrics     map[string]bool `json:"alone_metrics"`
+	CreatedAt        *int64          `json:"created_at"`
+	UpdatedAt        *int64          `json:"updated_at"`
 }
 
 // TriggerCheck represents trigger data with last check data and check timestamp
@@ -274,6 +285,7 @@ type CheckData struct {
 	Metrics map[string]MetricState `json:"metrics"`
 	// MetricsToTargetRelation is a map that holds relation between metric names that was alone during last
 	// check and targets that fetched this metric
+	//	{"t1": "metric.name.1", "t2": "metric.name.2"}
 	MetricsToTargetRelation      map[string]string `json:"metrics_to_target_relation"`
 	Score                        int64             `json:"score"`
 	State                        State             `json:"state"`
@@ -342,6 +354,12 @@ func (maintenanceInfo *MaintenanceInfo) Set(startUser *string, startTime *int64,
 type MetricEvent struct {
 	Metric  string `json:"metric"`
 	Pattern string `json:"pattern"`
+}
+
+// SubscribeMetricEventsParams represents params of subscription
+type SubscribeMetricEventsParams struct {
+	BatchSize int64
+	Delay     time.Duration
 }
 
 // SearchHighlight represents highlight
@@ -528,7 +546,7 @@ func (trigger *Trigger) IsSimple() bool {
 		return false
 	}
 	for _, pattern := range trigger.Patterns {
-		if strings.ContainsAny(pattern, "*{?[") {
+		if strings.ContainsAny(pattern, "*{?[") || strings.Contains(pattern, "seriesByTag") {
 			return false
 		}
 	}

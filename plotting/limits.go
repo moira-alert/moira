@@ -1,11 +1,10 @@
 package plotting
 
 import (
-	"math"
 	"time"
 
-	"github.com/beevee/go-chart"
-	"github.com/beevee/go-chart/util"
+	"github.com/moira-alert/go-chart"
+	"github.com/moira-alert/go-chart/util"
 	"github.com/moira-alert/moira"
 	metricSource "github.com/moira-alert/moira/metric_source"
 )
@@ -34,7 +33,7 @@ func resolveLimits(metricsData []metricSource.MetricData) plotLimits {
 	allTimes := make([]time.Time, 0)
 	for _, metricData := range metricsData {
 		for _, metricValue := range metricData.Values {
-			if !math.IsNaN(metricValue) {
+			if moira.IsValidFloat64(metricValue) {
 				allValues = append(allValues, metricValue)
 			}
 		}

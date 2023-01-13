@@ -15,21 +15,26 @@ type Matcher struct {
 	tomb           tomb.Tomb
 	metrics        *metrics.FilterMetrics
 	patternStorage *filter.PatternStorage
+	metricTTL      time.Duration
 }
 
 // NewMatcher creates pattern matcher
-func NewMatcher(logger moira.Logger, metrics *metrics.FilterMetrics, patternsStorage *filter.PatternStorage) *Matcher {
+func NewMatcher(logger moira.Logger, metrics *metrics.FilterMetrics, patternsStorage *filter.PatternStorage, metricTTL time.Duration) *Matcher {
 	return &Matcher{
 		logger:         logger,
 		metrics:        metrics,
 		patternStorage: patternsStorage,
+		metricTTL:      metricTTL,
 	}
 }
 
 // Start spawns pattern matcher workers
 func (m *Matcher) Start(matchersCount int, lineChan <-chan []byte) chan *moira.MatchedMetric {
 	matchedMetricsChan := make(chan *moira.MatchedMetric, 16384) //nolint
-	m.logger.Infof("Start %d pattern matcher workers", matchersCount)
+	m.logger.Infob().
+		Int("matchers_count", matchersCount).
+		Msg("Start pattern matcher workers")
+
 	for i := 0; i < matchersCount; i++ {
 		m.tomb.Go(func() error {
 			return m.worker(lineChan, matchedMetricsChan)
@@ -37,9 +42,9 @@ func (m *Matcher) Start(matchersCount int, lineChan <-chan []byte) chan *moira.M
 	}
 	go func() {
 		<-m.tomb.Dying()
-		m.logger.Info("Stopping pattern matcher...")
+		m.logger.Infob().Msg("Stopping pattern matcher...")
 		close(matchedMetricsChan)
-		m.logger.Info("Moira pattern matcher stopped")
+		m.logger.Infob().Msg("Moira pattern matcher stopped")
 	}()
 
 	m.tomb.Go(func() error { return m.checkNewMetricsChannelLen(matchedMetricsChan) })
@@ -48,7 +53,7 @@ func (m *Matcher) Start(matchersCount int, lineChan <-chan []byte) chan *moira.M
 
 func (m *Matcher) worker(metricsChan <-chan []byte, matchedMetricsChan chan<- *moira.MatchedMetric) error {
 	for line := range metricsChan {
-		if metric := m.patternStorage.ProcessIncomingMetric(line); metric != nil {
+		if metric := m.patternStorage.ProcessIncomingMetric(line, m.metricTTL); metric != nil {
 			matchedMetricsChan <- metric
 		}
 	}

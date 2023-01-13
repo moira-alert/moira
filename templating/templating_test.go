@@ -136,5 +136,49 @@ https://grafana.yourhost.com/some-dashboard`,
 				So(Desc, ShouldEqual, expected)
 			})
 		})
+
+		Convey("Test strings functions", func() {
+			Convey("Test replace", func() {
+				Desc = "{{ stringsReplace \"my.metrics.path\" \".\" \"_\" -1 }} "
+				expected, err := Populate(Name, Desc, events)
+				So(err, ShouldBeNil)
+				So("my_metrics_path", ShouldEqual, expected)
+			})
+
+			Convey("Test replace limited to 1", func() {
+				Desc = "{{ stringsReplace \"my.metrics.path\" \".\" \"_\" 1 }} "
+				expected, err := Populate(Name, Desc, events)
+				So(err, ShouldBeNil)
+				So("my_metrics.path", ShouldEqual, expected)
+			})
+
+			Convey("Test trim suffix", func() {
+				Desc = "{{ stringsTrimSuffix \"my.metrics.path\" \".path\" }} "
+				expected, err := Populate(Name, Desc, events)
+				So(err, ShouldBeNil)
+				So("my.metrics", ShouldEqual, expected)
+			})
+
+			Convey("Test trim prefix", func() {
+				Desc = "{{ stringsTrimPrefix \"my.metrics.path\" \"my.\" }} "
+				expected, err := Populate(Name, Desc, events)
+				So(err, ShouldBeNil)
+				So("metrics.path", ShouldEqual, expected)
+			})
+
+			Convey("Test lower case", func() {
+				Desc = "{{ stringsToLower \"MY.PATH\" }} "
+				expected, err := Populate(Name, Desc, events)
+				So(err, ShouldBeNil)
+				So("my.path", ShouldEqual, expected)
+			})
+
+			Convey("Test upper case", func() {
+				Desc = "{{ stringsToUpper \"my.path\" }} "
+				expected, err := Populate(Name, Desc, events)
+				So(err, ShouldBeNil)
+				So("MY.PATH", ShouldEqual, expected)
+			})
+		})
 	})
 }

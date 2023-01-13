@@ -13,6 +13,7 @@ import (
 	"github.com/moira-alert/moira/database/redis"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	"github.com/moira-alert/moira/support"
+	_ "go.uber.org/automaxprocs"
 )
 
 // Moira version
@@ -22,7 +23,7 @@ var (
 	GoVersion    = "unknown"
 )
 
-var moiraValidVersions = []string{"2.3"}
+var moiraValidVersions = []string{"2.3", "2.6"}
 
 var (
 	configFileName         = flag.String("config", "/etc/moira/cli.yml", "Path to configuration file")
@@ -45,16 +46,27 @@ var (
 )
 
 var (
-	cleanup  = flag.Bool("cleanup", false, "Disable/delete contacts and subscriptions of missing users")
-	userDel  = flag.String("user-del", "", "Delete all contacts and subscriptions for a user")
-	fromUser = flag.String("from-user", "", "Transfer subscriptions and contacts from user.")
-	toUser   = flag.String("to-user", "", "Transfer subscriptions and contacts to user.")
+	cleanupUsers      = flag.Bool("cleanup-users", false, "Disable/delete contacts and subscriptions of missing users")
+	cleanupLastChecks = flag.Bool("cleanup-last-checks", false, "Delete abandoned triggers last checks.")
+	cleanupMetrics    = flag.Bool("cleanup-metrics", false, "Delete outdated metrics.")
+	cleanupRetentions = flag.Bool("cleanup-retentions", false, "Delete abandoned retentions.")
+	cleanupPatterns   = flag.Bool("cleanup-patterns", false, "Delete abandoned patterns.")
+	userDel           = flag.String("user-del", "", "Delete all contacts and subscriptions for a user")
+	fromUser          = flag.String("from-user", "", "Transfer subscriptions and contacts from user.")
+	toUser            = flag.String("to-user", "", "Transfer subscriptions and contacts to user.")
+)
+
+var (
+	removeMetricsByPrefix = flag.String("remove-metrics-by-prefix", "", "Remove metrics by prefix (e.g. my.super.metric.")
+	removeAllMetrics      = flag.Bool("remove-all-metrics", false, "Remove all metrics.")
 )
 
 var (
 	pushTriggerDump = flag.Bool("push-trigger-dump", false, "Get trigger dump in JSON from stdin and save it to redis")
 	triggerDumpFile = flag.String("trigger-dump-file", "", "File that holds trigger dump JSON from api method response")
 )
+
+var removeTriggersStartWith = flag.String("remove-triggers-start-with", "", "Remove triggers which have ID starting with string parameter")
 
 func main() { //nolint
 	confCleanup, logger, dataBase := initApp()
@@ -65,7 +77,16 @@ func main() { //nolint
 		case "2.3":
 			err := updateFrom23(logger, dataBase)
 			if err != nil {
-				logger.Fatalf("Fail to update from version %s: %s", fromVersion, err.Error())
+				logger.Fatalb().
+					Error(err).
+					Msg("Fail to update from version 2.3")
+			}
+		case "2.6":
+			err := updateFrom26(logger, dataBase)
+			if err != nil {
+				logger.Fatalb().
+					Error(err).
+					Msg("Fail to update from version 2.6")
 			}
 		}
 	}
@@ -76,62 +97,194 @@ func main() { //nolint
 		case "2.3":
 			err := downgradeTo23(logger, dataBase)
 			if err != nil {
-				logger.Fatalf("Fail to update to version %s: %s", toVersion, err.Error())
+				logger.Fatalb().
+					Error(err).
+					Msg("Fail to update to version 2.3")
+			}
+		case "2.6":
+			err := downgradeTo26(logger, dataBase)
+			if err != nil {
+				logger.Fatalb().
+					Error(err).
+					Msg("Fail to update to version 2.6")
 			}
 		}
 	}
 
 	if *plotting {
 		if err := enablePlottingInAllSubscriptions(logger, dataBase); err != nil {
-			logger.Errorf("Failed to enable images in all notifications")
+			logger.Errorb().
+				Error(err).
+				Msg("Failed to enable images in all notifications")
 		}
 	}
 
 	if *fromUser != "" || *toUser != "" {
 		if err := transferUserSubscriptionsAndContacts(dataBase, *fromUser, *toUser); err != nil {
-			logger.Error(err)
+			logger.Errorb().
+				Error(err).
+				Msg("Failed to transfer user subscriptions and contacts")
 		}
 	}
 
 	if *userDel != "" {
 		if err := deleteUser(dataBase, *userDel); err != nil {
-			logger.Error(err)
+			logger.Errorb().
+				Error(err).
+				Msg("Failed to delete user")
 		}
 	}
 
-	if *cleanup {
-		logger.Debugf("User whitelist: %#v", confCleanup.Whitelist)
-		if err := handleCleanup(logger, dataBase, confCleanup); err != nil {
-			logger.Error(err)
+	if *removeMetricsByPrefix != "" {
+		log := logger.String(moira.LogFieldNameContext, "cleanup")
+		log.Infob().
+			String("prefix", *removeMetricsByPrefix).
+			Msg("Removing metrics by prefix started")
+
+		if err := handleRemoveMetricsByPrefix(dataBase, *removeMetricsByPrefix); err != nil {
+			log.Errorb().
+				Error(err).
+				Msg("Failed to remove metrics by prefix")
 		}
+		log.Infob().
+			String("prefix", *removeMetricsByPrefix).
+			Msg("Removing metrics by prefix finished")
+	}
+
+	if *removeAllMetrics {
+		log := logger.String(moira.LogFieldNameContext, "cleanup")
+		log.Infob().Msg("Removing all metrics started")
+		if err := handleRemoveAllMetrics(dataBase); err != nil {
+			log.Errorb().
+				Error(err).
+				Msg("Failed to remove all metrics")
+		}
+		log.Infob().Msg("Removing all metrics finished")
+	}
+
+	if *removeTriggersStartWith != "" {
+		log := logger.String(moira.LogFieldNameContext, "remove-triggers-start-with")
+		if err := handleRemoveTriggersStartWith(logger, dataBase, *removeTriggersStartWith); err != nil {
+			log.Errorb().
+				Error(err).
+				Msg("Failed to remove triggers by prefix")
+		}
+	}
+
+	if *cleanupUsers {
+		log := logger.String(moira.LogFieldNameContext, "cleanup-users")
+
+		log.Infob().
+			Interface("user_whitelist", confCleanup.Whitelist).
+			Msg("Cleanup started")
+
+		if err := handleCleanup(logger, dataBase, confCleanup); err != nil {
+			log.Errorb().
+				Error(err).
+				Msg("Failed to cleanup")
+		}
+		log.Infob().Msg("Cleanup finished")
+	}
+
+	if *cleanupMetrics {
+		log := logger.String(moira.LogFieldNameContext, "cleanup-metrics")
+
+		log.Infob().Msg("Cleanup of outdated metrics started")
+		err := handleCleanUpOutdatedMetrics(confCleanup, dataBase)
+		if err != nil {
+			log.Errorb().
+				Error(err).
+				Msg("Failed to cleanup outdated metrics")
+		}
+		log.Infob().Msg("Cleanup outdated metrics finished")
+	}
+
+	if *cleanupLastChecks {
+		log := logger.String(moira.LogFieldNameContext, "cleanup-last-checks")
+
+		log.Infob().Msg("Cleanup abandoned triggers last checks started")
+		err := handleCleanUpAbandonedTriggerLastCheck(dataBase)
+		if err != nil {
+			log.Errorb().
+				Error(err).
+				Msg("Failed to cleanup abandoned triggers last checks")
+		}
+		log.Infob().Msg("Cleanup abandoned triggers last checks finished")
+
+		log.Infob().Msg("Cleanup abandoned tags started")
+		count, err := handleCleanUpAbandonedTags(dataBase)
+		if err != nil {
+			log.Errorb().
+				Error(err).
+				Msg("Failed to cleanup abandoned tags")
+		}
+		log.Infob().
+			Int("abandoned_tags_deleted", count).
+			Msg("Cleanup abandoned tags finished")
+	}
+
+	if *cleanupRetentions {
+		log := logger.String(moira.LogFieldNameContext, "cleanup-retentions")
+
+		log.Infob().Msg("Cleanup of abandoned retentions started")
+		err := handleCleanUpAbandonedRetentions(dataBase)
+		if err != nil {
+			log.Errorb().
+				Error(err).
+				Msg("Failed to cleanup abandoned retentions")
+		}
+		log.Infob().Msg("Cleanup of abandoned retentions finished")
+	}
+
+	if *cleanupPatterns {
+		log := logger.String(moira.LogFieldNameContext, "cleanup-patterns")
+
+		log.Infob().Msg("Cleanup of abandoned pattern metrics started")
+		err := handleCleanUpAbandonedPatternMetrics(dataBase)
+		if err != nil {
+			log.Errorb().
+				Error(err).
+				Msg("Failed to cleanup abandoned pattern metrics")
+		}
+		log.Infob().Msg("Cleanup of abandoned pattern metrics finished")
 	}
 
 	if *pushTriggerDump {
-		logger.Info("Dump push started")
+		logger.Infob().Msg("Dump push started")
 		f, err := openFile(*triggerDumpFile, os.O_RDONLY)
 		if err != nil {
-			logger.Fatal(err)
+			logger.Fatalb().
+				Error(err).
+				Msg("Failed to open triggerDumpFile")
 		}
 		defer closeFile(f, logger)
 
 		dump := &dto.TriggerDump{}
 		err = json.NewDecoder(f).Decode(dump)
 		if err != nil {
-			logger.Fatal("cannot decode trigger dump: ", err.Error())
+			logger.Fatalb().
+				Error(err).
+				Msg("cannot decode trigger dump")
 		}
 
-		logger.Info(GetDumpBriefInfo(dump))
+		logger.Infob().Msg(GetDumpBriefInfo(dump))
 		if err := support.HandlePushTrigger(logger, dataBase, &dump.Trigger); err != nil {
-			logger.Fatal(err)
+			logger.Fatalb().
+				Error(err).
+				Msg("Failed to handle puch trigger")
 		}
 		if err := support.HandlePushTriggerMetrics(logger, dataBase, dump.Trigger.ID, dump.Metrics); err != nil {
-			logger.Fatal(err)
+			logger.Fatalb().
+				Error(err).
+				Msg("Failed to hanle push trigger metrics")
 		}
 		if err := support.HandlePushTriggerLastCheck(logger, dataBase, dump.Trigger.ID, &dump.LastCheck,
 			dump.Trigger.IsRemote); err != nil {
-			logger.Fatal(err)
+			logger.Fatalb().
+				Error(err).
+				Msg("Failed to hanle push trigger last check")
 		}
-		logger.Info("Dump was pushed")
+		logger.Infob().Msg("Dump was pushed")
 	}
 }
 
@@ -183,7 +336,10 @@ func checkValidVersion(logger moira.Logger, updateFromVersion *string, isUpdate 
 	}
 
 	if updateFromVersion == nil || *updateFromVersion == "" || !contains(moiraValidVersions, *updateFromVersion) {
-		logger.Fatalf("You must set valid '%s' flag. Valid versions is %s", validFlag, strings.Join(moiraValidVersions, ", "))
+		logger.Fatalb().
+			String("valid_version", strings.Join(moiraValidVersions, ", ")).
+			String("flag", validFlag).
+			Msg("You must set valid flag")
 	}
 	return moira.UseString(updateFromVersion)
 }
@@ -211,7 +367,9 @@ func openFile(filePath string, mode int) (*os.File, error) {
 func closeFile(f *os.File, logger moira.Logger) {
 	if f != nil {
 		if err := f.Close(); err != nil {
-			logger.Fatal(err)
+			logger.Fatalb().
+				Error(err).
+				Msg("Failed to close file")
 		}
 	}
 }

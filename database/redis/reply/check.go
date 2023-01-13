@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/gomodule/redigo/redis"
+	"github.com/go-redis/redis/v8"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/database"
 )
 
-//TODO(litleleprikon): START remove in moira v2.8.0. Compatibility with moira < v2.6.0
+// TODO(litleleprikon): START remove in moira v2.8.0. Compatibility with moira < v2.6.0
 const firstTarget = "t1"
 
 //TODO(litleleprikon): END remove in moira v2.8.0. Compatibility with moira < v2.6.0
@@ -89,19 +89,24 @@ func (d checkDataStorageElement) toCheckData() moira.CheckData {
 }
 
 // Check converts redis DB reply to moira.CheckData
-func Check(rep interface{}, err error) (moira.CheckData, error) {
-	bytes, err := redis.Bytes(rep, err)
+func Check(rep *redis.StringCmd) (moira.CheckData, error) {
+	bytes, err := rep.Bytes()
+
 	if err != nil {
-		if err == redis.ErrNil {
+		if err == redis.Nil {
 			return moira.CheckData{}, database.ErrNil
 		}
+
 		return moira.CheckData{}, fmt.Errorf("failed to read lastCheck: %s", err.Error())
 	}
+
 	checkSE := checkDataStorageElement{}
 	err = json.Unmarshal(bytes, &checkSE)
+
 	if err != nil {
 		return moira.CheckData{}, fmt.Errorf("failed to parse lastCheck json %s: %s", string(bytes), err.Error())
 	}
+
 	return checkSE.toCheckData(), nil
 }
 

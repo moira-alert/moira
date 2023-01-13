@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -81,7 +81,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	defer response.Body.Close()
 
 	// read the entire response as required by https://golang.org/pkg/net/http/#Client.Do
-	body, err := ioutil.ReadAll(response.Body)
+	body, err := io.ReadAll(response.Body)
 	if err != nil {
 		return fmt.Errorf("failed to decode response: %w", err)
 	}
@@ -153,7 +153,11 @@ func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moir
 	for k, v := range headers {
 		request.Header.Set(k, v)
 	}
-	sender.logger.Debugf("created payload '%s' for teams endpoint %s", string(requestBody), request.URL.String())
+	sender.logger.Debugb().
+		String("payload", string(requestBody)).
+		String("endpoint", request.URL.String()).
+		Msg("Created payload for teams endpoint")
+
 	return request, nil
 }
 

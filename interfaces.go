@@ -3,15 +3,13 @@ package moira
 import (
 	"time"
 
-	"github.com/beevee/go-chart"
+	"github.com/moira-alert/go-chart"
+	"github.com/moira-alert/moira/logging"
 	"gopkg.in/tomb.v2"
 )
 
 // Database implements DB functionality
 type Database interface {
-	// Get database instance for requests that do not require realtime data
-	AllowStale() Database
-
 	// SelfState
 	UpdateMetricsHeartbeat() error
 	GetMetricsUpdatesCount() (int64, error)
@@ -24,12 +22,14 @@ type Database interface {
 	GetTagNames() ([]string, error)
 	RemoveTag(tagName string) error
 	GetTagTriggerIDs(tagName string) ([]string, error)
+	CleanUpAbandonedTags() (int, error)
 
 	// LastCheck storing
 	GetTriggerLastCheck(triggerID string) (CheckData, error)
 	SetTriggerLastCheck(triggerID string, checkData *CheckData, isRemote bool) error
 	RemoveTriggerLastCheck(triggerID string) error
 	SetTriggerCheckMaintenance(triggerID string, metrics map[string]int64, triggerMaintenance *int64, userLogin string, timeCallMaintenance int64) error
+	CleanUpAbandonedTriggerLastCheck() error
 
 	// Trigger storing
 	GetLocalTriggerIDs() ([]string, error)
@@ -42,10 +42,13 @@ type Database interface {
 	RemoveTrigger(triggerID string) error
 	GetPatternTriggerIDs(pattern string) ([]string, error)
 	RemovePatternTriggerIDs(pattern string) error
+	GetTriggerIDsStartWith(prefix string) ([]string, error)
 
-	// SearchResult storing
+	// SearchResult AKA pager storing
 	GetTriggersSearchResults(searchResultsID string, page, size int64) ([]*SearchResult, int64, error)
 	SaveTriggersSearchResults(searchResultsID string, searchResults []*SearchResult) error
+	IsTriggersSearchResultsExist(pagerID string) (bool, error)
+	DeleteTriggersSearchResults(pagerID string) error
 
 	// Throttling
 	GetTriggerThrottling(triggerID string) (time.Time, time.Time)
@@ -66,6 +69,7 @@ type Database interface {
 	RemoveContact(contactID string) error
 	SaveContact(contact *ContactData) error
 	GetUserContactIDs(userLogin string) ([]string, error)
+	GetTeamContactIDs(teamID string) ([]string, error)
 
 	// SubscriptionData storing
 	GetSubscription(id string) (SubscriptionData, error)
@@ -74,6 +78,7 @@ type Database interface {
 	SaveSubscriptions(subscriptions []*SubscriptionData) error
 	RemoveSubscription(subscriptionID string) error
 	GetUserSubscriptionIDs(userLogin string) ([]string, error)
+	GetTeamSubscriptionIDs(teamID string) ([]string, error)
 	GetTagsSubscriptions(tags []string) ([]*SubscriptionData, error)
 
 	// ScheduledNotification storing
@@ -92,10 +97,11 @@ type Database interface {
 	RemovePatternsMetrics(pattern []string) error
 	RemovePatternWithMetrics(pattern string) error
 
-	SubscribeMetricEvents(tomb *tomb.Tomb) (<-chan *MetricEvent, error)
+	SubscribeMetricEvents(tomb *tomb.Tomb, params *SubscribeMetricEventsParams) (<-chan *MetricEvent, error)
 	SaveMetrics(buffer map[string]*MatchedMetric) error
 	GetMetricRetention(metric string) (int64, error)
 	GetMetricsValues(metrics []string, from int64, until int64) (map[string][]*MetricValue, error)
+	RemoveMetricRetention(metric string) error
 	RemoveMetricValues(metric string, toTime int64) error
 	RemoveMetricsValues(metrics []string, toTime int64) error
 	GetMetricsTTLSeconds() int64
@@ -109,9 +115,10 @@ type Database interface {
 	GetRemoteTriggersToCheckCount() (int64, error)
 
 	// TriggerCheckLock storing
-	AcquireTriggerCheckLock(triggerID string, timeout int) error
+	AcquireTriggerCheckLock(triggerID string, maxAttemptsCount int) error
 	DeleteTriggerCheckLock(triggerID string) error
 	SetTriggerCheckLock(triggerID string) (bool, error)
+	ReleaseTriggerCheckLock(triggerID string)
 
 	// Bot data storing
 	GetIDByUsername(messenger, username string) (string, error)
@@ -129,6 +136,22 @@ type Database interface {
 
 	// Creates Lock
 	NewLock(name string, ttl time.Duration) Lock
+
+	// Teams management
+	SaveTeam(teamID string, team Team) error
+	GetTeam(teamID string) (Team, error)
+	SaveTeamsAndUsers(teamID string, users []string, usersTeams map[string][]string) error
+	GetUserTeams(userID string) ([]string, error)
+	GetTeamUsers(teamID string) ([]string, error)
+	IsTeamContainUser(teamID, userID string) (bool, error)
+	DeleteTeam(teamID, userID string) error
+
+	// Metrics management
+	CleanUpOutdatedMetrics(duration time.Duration) error
+	CleanUpAbandonedRetentions() error
+	CleanUpAbandonedPatternMetrics() error
+	RemoveMetricsByPrefix(pattern string) error
+	RemoveAllMetrics() error
 }
 
 // Lock implements lock abstraction
@@ -137,18 +160,20 @@ type Lock interface {
 	Release()
 }
 
+// Mutex implements mutex abstraction
+type Mutex interface {
+	Lock() error
+	Unlock() (bool, error)
+	Extend() (bool, error)
+}
+
 // Logger implements logger abstraction
 type Logger interface {
-	Debug(args ...interface{})
-	Debugf(format string, args ...interface{})
-	Info(args ...interface{})
-	Infof(format string, args ...interface{})
-	Error(args ...interface{})
-	Errorf(format string, args ...interface{})
-	Fatal(args ...interface{})
-	Fatalf(format string, args ...interface{})
-	Warning(args ...interface{})
-	Warningf(format string, args ...interface{})
+	Debugb() logging.EventBuilder
+	Infob() logging.EventBuilder
+	Errorb() logging.EventBuilder
+	Fatalb() logging.EventBuilder
+	Warningb() logging.EventBuilder
 
 	// Structured logging methods, use to add context fields
 	String(key, value string) Logger
@@ -164,6 +189,7 @@ type Logger interface {
 
 // Sender interface for implementing specified contact type sender
 type Sender interface {
+	// TODO refactor: https://github.com/moira-alert/moira/issues/794
 	SendEvents(events NotificationEvents, contact ContactData, trigger TriggerData, plot [][]byte, throttled bool) error
 	Init(senderSettings map[string]string, logger Logger, location *time.Location, dateTimeFormat string) error
 }
@@ -195,4 +221,9 @@ type PlotTheme interface {
 	GetLegendStyle() chart.Style
 	GetXAxisStyle() chart.Style
 	GetYAxisStyle() chart.Style
+}
+
+// Clock is an interface to work with Time.
+type Clock interface {
+	Now() time.Time
 }

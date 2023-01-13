@@ -1,4 +1,4 @@
-# Moira 2.0 ![Build Status](https://github.com/moira-alert/moira/actions/workflows/test.yml/badge.svg?branch=master) [![Coverage Status](https://coveralls.io/repos/github/moira-alert/moira/badge.svg?branch=master)](https://coveralls.io/github/moira-alert/moira?branch=master) [![Documentation Status](https://readthedocs.org/projects/moira/badge/?version=latest)](http://moira.readthedocs.io/en/latest/?badge=latest) [![Telegram](https://img.shields.io/badge/telegram-join%20chat-3796cd.svg)](https://t.me/moira_alert) [![Go Report Card](https://goreportcard.com/badge/github.com/moira-alert/moira)](https://goreportcard.com/report/github.com/moira-alert/moira)
+# Moira 2.0 ![Build Status](https://github.com/moira-alert/moira/actions/workflows/test.yml/badge.svg?branch=master) [![codecov](https://codecov.io/gh/moira-alert/moira/branch/master/graph/badge.svg)](https://codecov.io/gh/moira-alert/moira) [![Documentation Status](https://readthedocs.org/projects/moira/badge/?version=latest)](http://moira.readthedocs.io/en/latest/?badge=latest) [![Telegram](https://img.shields.io/badge/telegram-join%20chat-3796cd.svg)](https://t.me/moira_alert) [![Go Report Card](https://goreportcard.com/badge/github.com/moira-alert/moira)](https://goreportcard.com/report/github.com/moira-alert/moira)
 
 Moira is a real-time alerting tool, based on [Graphite](https://graphite.readthedocs.io) data.
 
@@ -48,6 +48,6 @@ If you have any questions, you can ask us on [Telegram](https://t.me/moira_alert
 
 ## Thanks
 
-![SKB Kontur](https://kontur.ru/theme/ver-1652188951/common/images/logo_english.png)
+![SKB Kontur](https://kontur-inc.com/theme/ver-1633004215/images/logo/kontur-en-36.svg)
 
 Moira was originally developed and is supported by [SKB Kontur](https://kontur.ru/eng/about), a B2G company based in Ekaterinburg, Russia. We express gratitude to our company for encouraging us to opensource Moira and for giving back to the community that created [Graphite](https://graphite.readthedocs.io) and many other useful DevOps tools.

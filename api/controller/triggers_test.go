@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -44,6 +45,32 @@ func TestCreateTrigger(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(resp.Message, ShouldResemble, "trigger created")
 		So(resp.ID, ShouldResemble, triggerID)
+	})
+
+	Convey("Success with custom valid trigger", t, func() {
+		triggerID := "Valid.Custom_Trig ger~Na|me-4:2"
+		triggerModel := dto.TriggerModel{ID: triggerID}
+		dataBase.EXPECT().GetTrigger(triggerModel.ID).Return(moira.Trigger{}, database.ErrNil)
+		dataBase.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 10)
+		dataBase.EXPECT().DeleteTriggerCheckLock(gomock.Any())
+		dataBase.EXPECT().GetTriggerLastCheck(gomock.Any()).Return(moira.CheckData{}, database.ErrNil)
+		dataBase.EXPECT().SetTriggerLastCheck(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+		dataBase.EXPECT().SaveTrigger(gomock.Any(), triggerModel.ToMoiraTrigger()).Return(nil)
+		resp, err := CreateTrigger(dataBase, &triggerModel, make(map[string]bool))
+		So(err, ShouldBeNil)
+		So(resp.Message, ShouldResemble, "trigger created")
+		So(resp.ID, ShouldResemble, triggerID)
+	})
+
+	Convey("Error with invalid triggerID", t, func() {
+		for _, triggerID := range []string{"Foo#", "Foo%", "Foo^"} {
+			triggerModel := dto.TriggerModel{ID: triggerID}
+			dataBase.EXPECT().GetTrigger(triggerModel.ID).Return(moira.Trigger{}, database.ErrNil)
+			resp, err := CreateTrigger(dataBase, &triggerModel, make(map[string]bool))
+			expected := api.ErrorInvalidRequest(fmt.Errorf("trigger ID contains invalid characters"))
+			So(err, ShouldResemble, expected)
+			So(resp, ShouldBeNil)
+		}
 	})
 
 	Convey("Trigger already exists", t, func() {
@@ -741,3 +768,44 @@ var triggerChecks = []moira.TriggerCheck{
 }
 
 var testHighlightsMap = map[string]string{"testField": "testHighlight"}
+
+func TestDeleteTriggersPager(t *testing.T) {
+	Convey("DeleteTriggersPager", t, func() {
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+		const pagerID = "pagerID"
+
+		Convey("Pager exists", func() {
+			dataBase.EXPECT().IsTriggersSearchResultsExist(pagerID).Return(true, nil)
+			dataBase.EXPECT().DeleteTriggersSearchResults(pagerID).Return(nil)
+			response, err := DeleteTriggersPager(dataBase, pagerID)
+			So(err, ShouldBeNil)
+			So(response, ShouldResemble, dto.TriggersSearchResultDeleteResponse{PagerID: pagerID})
+		})
+
+		Convey("Pager is not exist", func() {
+			dataBase.EXPECT().IsTriggersSearchResultsExist(pagerID).Return(false, nil)
+			response, err := DeleteTriggersPager(dataBase, pagerID)
+			So(err, ShouldResemble, api.ErrorNotFound("pager with id pagerID not found"))
+			So(response, ShouldResemble, dto.TriggersSearchResultDeleteResponse{})
+		})
+
+		Convey("Error while checking pager existence", func() {
+			errReturning := errors.New("example error")
+			dataBase.EXPECT().IsTriggersSearchResultsExist(pagerID).Return(false, errReturning)
+			response, err := DeleteTriggersPager(dataBase, pagerID)
+			So(err, ShouldResemble, api.ErrorInternalServer(errReturning))
+			So(response, ShouldResemble, dto.TriggersSearchResultDeleteResponse{})
+		})
+
+		Convey("Error while deleting pager", func() {
+			errReturning := errors.New("example error")
+			dataBase.EXPECT().IsTriggersSearchResultsExist(pagerID).Return(true, nil)
+			dataBase.EXPECT().DeleteTriggersSearchResults(pagerID).Return(errReturning)
+			response, err := DeleteTriggersPager(dataBase, pagerID)
+			So(err, ShouldResemble, api.ErrorInternalServer(errReturning))
+			So(response, ShouldResemble, dto.TriggersSearchResultDeleteResponse{})
+		})
+	})
+}

@@ -16,6 +16,7 @@ type cleanupConfig struct {
 	Whitelist               []string `yaml:"whitelist"`
 	Delete                  bool     `yaml:"delete"`
 	AddAnonymousToWhitelist bool     `json:"add_anonymous_to_whitelist"`
+	CleanupMetricsDuration  string   `yaml:"cleanup_metrics_duration"`
 }
 
 func getDefault() config {
@@ -24,13 +25,13 @@ func getDefault() config {
 		LogLevel:        "info",
 		LogPrettyFormat: false,
 		Redis: cmd.RedisConfig{
-			Host:            "localhost",
-			Port:            "6379",
-			ConnectionLimit: 512, //nolint
-			MetricsTTL:      "1h",
+			Addrs:       "localhost:6379",
+			MetricsTTL:  "1h",
+			DialTimeout: "500ms",
 		},
 		Cleanup: cleanupConfig{
-			Whitelist: []string{},
+			Whitelist:              []string{},
+			CleanupMetricsDuration: "-168h",
 		},
 	}
 }

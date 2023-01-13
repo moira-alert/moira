@@ -5,8 +5,10 @@ import (
 	"math"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/go-graphite/carbonapi/expr/functions"
+	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
@@ -73,7 +75,6 @@ func TestEvaluateTarget(t *testing.T) {
 		})
 
 		Convey("Error in fetch data", func() {
-			dataBase.EXPECT().AllowStale().Return(dataBase)
 			dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
 			dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 			dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(nil, metricErr)
@@ -84,7 +85,6 @@ func TestEvaluateTarget(t *testing.T) {
 		})
 
 		Convey("Error evaluate target", func() {
-			dataBase.EXPECT().AllowStale().Return(dataBase)
 			dataBase.EXPECT().GetPatternMetrics("super.puper.pattern").Return([]string{metric}, nil)
 			dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 			dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
@@ -95,7 +95,6 @@ func TestEvaluateTarget(t *testing.T) {
 		})
 
 		Convey("Panic while evaluate target", func() {
-			dataBase.EXPECT().AllowStale().Return(dataBase)
 			dataBase.EXPECT().GetPatternMetrics("super.puper.pattern").Return([]string{metric}, nil)
 			dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 			dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
@@ -108,7 +107,6 @@ func TestEvaluateTarget(t *testing.T) {
 	})
 
 	Convey("Test no metrics", t, func() {
-		dataBase.EXPECT().AllowStale().Return(dataBase)
 		dataBase.EXPECT().GetPatternMetrics("super.puper.pattern").Return([]string{}, nil)
 		dataBase.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
 		result, err := localSource.Fetch("aliasByNode(super.puper.pattern, 2)", from, until, true)
@@ -128,7 +126,6 @@ func TestEvaluateTarget(t *testing.T) {
 	})
 
 	Convey("Test success evaluate", t, func() {
-		dataBase.EXPECT().AllowStale().Return(dataBase)
 		dataBase.EXPECT().GetPatternMetrics("super.puper.pattern").Return([]string{metric}, nil)
 		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 		dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
@@ -239,7 +236,6 @@ func TestEvaluateTarget(t *testing.T) {
 			},
 		}
 
-		dataBase.EXPECT().AllowStale().Return(dataBase)
 		dataBase.EXPECT().GetPatternMetrics("apps.*.process.cpu.usage").Return(metrics, nil)
 		dataBase.EXPECT().GetMetricRetention(metrics[0]).Return(retention, nil)
 		dataBase.EXPECT().GetMetricsValues(metrics, gomock.Any(), until).Return(multipleDataList, nil)
@@ -275,7 +271,6 @@ func TestEvaluateTarget(t *testing.T) {
 			},
 		}
 
-		dataBase.EXPECT().AllowStale().Return(dataBase)
 		dataBase.EXPECT().GetPatternMetrics("super.puper.pattern").Return([]string{metric}, nil)
 		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 		dataBase.EXPECT().GetMetricsValues([]string{metric}, untilDistantFuture-ttl, untilDistantFuture).Return(distantFutureDataList, nil)
@@ -297,7 +292,6 @@ func TestEvaluateTarget(t *testing.T) {
 	})
 
 	Convey("Test success evaluate pipe target", t, func() {
-		dataBase.EXPECT().AllowStale().Return(dataBase)
 		dataBase.EXPECT().GetPatternMetrics("super.puper.pattern").Return([]string{metric}, nil)
 		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 		dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
@@ -328,5 +322,38 @@ func TestLocal_IsConfigured(t *testing.T) {
 		actual, err := localSource.IsConfigured()
 		So(err, ShouldBeNil)
 		So(actual, ShouldBeTrue)
+	})
+}
+
+func TestLocal_evalExpr(t *testing.T) {
+	Convey("When everything is correct, we don't return any error", t, func() {
+		expression, _, err := parser.ParseExpr(`seriesByTag('name=k8s.dev-cl1.kube_pod_status_ready', 'condition!=true', 'namespace=default', 'pod=~*')`)
+		So(err, ShouldBeNil)
+		res, err := evalExpr("target", expression, time.Now().Add(-1*time.Hour).Unix(), time.Now().Unix(), nil)
+		So(err, ShouldBeNil)
+		So(res, ShouldBeNil)
+	})
+
+	Convey("When get panic, it should return error", t, func() {
+		expression, _, _ := parser.ParseExpr(`;fg`)
+		res, err := evalExpr("target", expression, 0, 0, nil)
+		So(err.Error(), ShouldContainSubstring, "panic while evaluate target target: message: 'runtime error: invalid memory address or nil pointer dereference")
+		So(res, ShouldBeNil)
+	})
+
+	Convey("When no metrics, should not return error", t, func() {
+		expression, _, err := parser.ParseExpr(`alias( divideSeries( alias( sumSeries( exclude( groupByNode( OFD.Production.{ofd-api,ofd-front}.*.fns-service-client.v120.*.GetCashboxRegistrationInformationAsync.ResponseCode.*.Meter.Rate-15-min-Requests-per-s, 9, "sum" ), "Ok" ) ), "bad" ), alias( sumSeries( OFD.Production.{ofd-api,ofd-front}.*.fns-service-client.v120.*.GetCashboxRegistrationInformationAsync.ResponseCode.*.Meter.Rate-15-min-Requests-per-s ), "total" ) ), "Result" )`)
+		So(err, ShouldBeNil)
+		res, err := evalExpr("target", expression, time.Now().Add(-1*time.Hour).Unix(), time.Now().Unix(), make(map[parser.MetricRequest][]*types.MetricData))
+		So(err, ShouldBeNil)
+		So(res, ShouldBeNil)
+	})
+
+	Convey("When got unknown func, should return error", t, func() {
+		expression, _, _ := parser.ParseExpr(`vf('name=k8s.dev-cl1.kube_pod_status_ready', 'condition!=true', 'namespace=default', 'pod=~*')`)
+		res, err := evalExpr("target", expression, time.Now().Add(-1*time.Hour).Unix(), time.Now().Unix(), nil)
+		So(err, ShouldBeError)
+		So(err.Error(), ShouldResemble, `Unknown graphite function: "vf"`)
+		So(res, ShouldBeNil)
 	})
 }

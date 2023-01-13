@@ -4,12 +4,13 @@ import "time"
 
 // Config - Redis database connection config
 type Config struct {
-	MasterName        string
-	SentinelAddresses []string
-	Host              string
-	Port              string
-	DB                int
-	ConnectionLimit   int
-	AllowSlaveReads   bool
-	MetricsTTL        time.Duration
+	MasterName   string
+	Addrs        []string
+	Username     string
+	Password     string
+	MetricsTTL   time.Duration
+	DialTimeout  time.Duration
+	ReadTimeout  time.Duration
+	WriteTimeout time.Duration
+	MaxRetries   int
 }

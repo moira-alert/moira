@@ -2,10 +2,12 @@ package notifier
 
 import (
 	"fmt"
+	"runtime/debug"
 	"sync"
 	"time"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/logging"
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metrics"
 	"github.com/moira-alert/moira/plotting"
@@ -107,7 +109,10 @@ func (notifier *StandardNotifier) Send(pkg *NotificationPackage, waitGroup *sync
 	go func(pkg *NotificationPackage) {
 		defer waitGroup.Done()
 		getLogWithPackageContext(&notifier.logger, pkg, &notifier.config).
-			Debugf("Start sending %s", pkg)
+			Debugb().
+			Interface("package", pkg).
+			Msg("Start sending")
+
 		select {
 		case ch <- *pkg:
 			break
@@ -142,9 +147,13 @@ func (notifier *StandardNotifier) resend(pkg *NotificationPackage, reason string
 	}
 
 	logger := getLogWithPackageContext(&notifier.logger, pkg, &notifier.config)
-	logger.Warningf("Can't send message after %d try: %s. Retry again after 1 min", pkg.FailCount, reason)
+	logger.Warningb().
+		Int("number_of_retires", pkg.FailCount).
+		String("reason", reason).
+		Msg("Can't send message. Retry again in 1 min")
+
 	if time.Duration(pkg.FailCount)*time.Minute > notifier.config.ResendingTimeout {
-		logger.Error("Stop resending. Notification interval is timed out")
+		logger.Errorb().Msg("Stop resending. Notification interval is timed out")
 	} else {
 		for _, event := range pkg.Events {
 			subID := moira.UseString(event.SubscriptionID)
@@ -153,7 +162,9 @@ func (notifier *StandardNotifier) resend(pkg *NotificationPackage, reason string
 			notification := notifier.scheduler.ScheduleNotification(time.Now(), event,
 				pkg.Trigger, pkg.Contact, pkg.Plotting, pkg.Throttled, pkg.FailCount+1, eventLogger)
 			if err := notifier.database.AddNotification(notification); err != nil {
-				eventLogger.Errorf("Failed to save scheduled notification: %s", err)
+				eventLogger.Errorb().
+					Error(err).
+					Msg("Failed to save scheduled notification")
 			}
 		}
 	}
@@ -162,7 +173,10 @@ func (notifier *StandardNotifier) resend(pkg *NotificationPackage, reason string
 func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan NotificationPackage) {
 	defer func() {
 		if err := recover(); err != nil {
-			notifier.logger.Warningf("Panic notifier: %v, ", err)
+			notifier.logger.Warningb().
+				String(moira.LogFieldNameStackTrace, string(debug.Stack())).
+				Interface("recovered_err", err).
+				Msg("Notifier panicked")
 		}
 	}()
 	defer notifier.waitGroup.Done()
@@ -172,18 +186,24 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 		plottingLog := log.Clone().String(moira.LogFieldNameContext, "plotting")
 		plots, err := notifier.buildNotificationPackagePlots(pkg, plottingLog)
 		if err != nil {
-			buildErr := fmt.Sprintf("Can't build notification package plot for %s: %s", pkg.Trigger.ID, err.Error())
+			var event logging.EventBuilder
 			switch err.(type) {
 			case plotting.ErrNoPointsToRender:
-				plottingLog.Debugf(buildErr)
+				event = plottingLog.Debugb()
 			default:
-				plottingLog.Errorf(buildErr)
+				event = plottingLog.Errorb()
 			}
+			event.
+				String(moira.LogFieldNameTriggerID, pkg.Trigger.ID).
+				Error(err).
+				Msg("Can't build notification package plot for trigger")
 		}
 
 		err = pkg.Trigger.PopulatedDescription(pkg.Events)
 		if err != nil {
-			log.Warningf("Error populate description:\n%v", err)
+			log.Warningb().
+				Error(err).
+				Msg("Error populate description")
 		}
 
 		err = sender.SendEvents(pkg.Events, pkg.Contact, pkg.Trigger, plots, pkg.Throttled)
@@ -194,10 +214,14 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 		} else {
 			switch e := err.(type) {
 			case moira.SenderBrokenContactError:
-				log.Errorf("Cannot send to broken contact: %s", e.Error())
+				log.Warningb().
+					Error(e).
+					Msg("Cannot send to broken contact")
 
 			default:
-				log.Errorf("Cannot send notification: %s", err.Error())
+				log.Errorb().
+					Error(err).
+					Msg("Cannot send notification")
 				notifier.resend(&pkg, err.Error())
 			}
 		}

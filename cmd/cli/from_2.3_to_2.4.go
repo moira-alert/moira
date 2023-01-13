@@ -3,14 +3,14 @@ package main
 import "github.com/moira-alert/moira"
 
 func updateFrom23(logger moira.Logger, dataBase moira.Database) error {
-	logger.Info("Update 2.3 -> 2.4 start")
+	logger.Infob().Msg("Update 2.3 -> 2.4 start")
 
-	logger.Info("Start marking unused triggers")
+	logger.Infob().Msg("Start marking unused triggers")
 	if err := resaveTriggers(dataBase); err != nil {
 		return err
 	}
 
-	logger.Info("Update 2.3 -> 2.4 finish")
+	logger.Infob().Msg("Update 2.3 -> 2.4 finish")
 	return nil
 }
 

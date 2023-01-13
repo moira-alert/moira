@@ -62,7 +62,7 @@ func TestParseMetric(t *testing.T) {
 			{"One.two.three .123 1234567890", "One.two.three", "One.two.three", map[string]string{}, 0.123, 1234567890},
 			{"One.two.three;four=five 123 1234567890", "One.two.three;four=five", "One.two.three", map[string]string{"four": "five"}, 123, 1234567890},
 			{"One.two.three;four= 123 1234567890", "One.two.three;four=", "One.two.three", map[string]string{"four": ""}, 123, 1234567890},
-			{"One.two.three;four=five;six=seven 123 1234567890", "One.two.three;four=five;six=seven", "One.two.three", map[string]string{"four": "five", "six": "seven"}, 123, 1234567890},
+			{"One.two.three;six=seven;four=five 123 1234567890", "One.two.three;four=five;six=seven", "One.two.three", map[string]string{"four": "five", "six": "seven"}, 123, 1234567890},
 			{"One.two.three;four=five;six=seven=eight 123 1234567890", "One.two.three;four=five;six=seven=eight", "One.two.three", map[string]string{"four": "five", "six": "seven=eight"}, 123, 1234567890},
 			{"One.two.three;four=five;six=seven=eight=nine 123 1234567890", "One.two.three;four=five;six=seven=eight=nine",
 				"One.two.three", map[string]string{"four": "five", "six": "seven=eight=nine"}, 123, 1234567890},
@@ -181,5 +181,46 @@ func TestParseMetric(t *testing.T) {
 			So(parsedMetric.Value, ShouldEqual, validMetric.value)
 			So(parsedMetric.Timestamp, ShouldEqual, validMetric.timestamp)
 		}
+	})
+}
+
+func TestRestoreMetricStringByNameAndLabels(t *testing.T) {
+	Convey("Test function restoreMetricStringByNameAndLabels", t, func() {
+		Convey("Given two metrics with the same labels but in a different order", func() {
+			testCases := []struct {
+				name   string
+				labels map[string]string
+			}{
+				{"One.two.three", map[string]string{"one": "two", "four": "five", "six": "seven"}},
+				{"One.two.three", map[string]string{"six": "seven", "four": "five", "one": "two"}},
+			}
+			expected := "One.two.three;four=five;one=two;six=seven"
+			Convey("Result of restored metric should be equal", func() {
+				for _, testCase := range testCases {
+					actual := restoreMetricStringByNameAndLabels(testCase.name, testCase.labels)
+					So(actual, ShouldEqual, expected)
+				}
+			})
+		})
+	})
+}
+
+func TestParsedMetric_IsTooOld(t *testing.T) {
+	now := time.Date(2022, 6, 16, 10, 0, 0, 0, time.UTC)
+	maxTTL := time.Hour
+
+	Convey("When metric is old, return true", t, func() {
+		metric := ParsedMetric{
+			Name:      "too old metric",
+			Timestamp: time.Date(2022, 6, 16, 8, 59, 0, 0, time.UTC).Unix(),
+		}
+		So(metric.IsTooOld(maxTTL, now), ShouldBeTrue)
+	})
+	Convey("When metric is young, return false", t, func() {
+		metric := ParsedMetric{
+			Name:      "too old metric",
+			Timestamp: time.Date(2022, 6, 16, 9, 00, 0, 0, time.UTC).Unix(),
+		}
+		So(metric.IsTooOld(maxTTL, now), ShouldBeFalse)
 	})
 }

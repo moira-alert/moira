@@ -75,7 +75,7 @@ func (index *Index) IsReady() bool {
 
 // Stop stops checks triggers
 func (index *Index) Stop() error {
-	index.logger.Info("Stop search index")
+	index.logger.Infob().Msg("Stop search index")
 	index.tomb.Kill(nil)
 	return index.tomb.Wait()
 }

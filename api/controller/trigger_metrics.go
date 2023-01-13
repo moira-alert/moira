@@ -85,7 +85,7 @@ func deleteTriggerMetrics(dataBase moira.Database, metricName string, triggerID 
 		return api.ErrorInternalServer(err)
 	}
 
-	if err = dataBase.AcquireTriggerCheckLock(triggerID, 10); err != nil {
+	if err = dataBase.AcquireTriggerCheckLock(triggerID, maxTriggerLockAttempts); err != nil {
 		return api.ErrorInternalServer(err)
 	}
 	defer dataBase.DeleteTriggerCheckLock(triggerID) //nolint

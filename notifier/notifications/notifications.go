@@ -28,23 +28,28 @@ func (worker *FetchNotificationsWorker) Start() {
 		for {
 			select {
 			case <-worker.tomb.Dying():
-				worker.Logger.Info("Moira Notifier Fetching scheduled notifications stopped")
+				worker.Logger.Infob().Msg("Moira Notifier Fetching scheduled notifications stopped")
 				worker.Notifier.StopSenders()
 				return nil
 			case <-checkTicker.C:
 				if err := worker.processScheduledNotifications(); err != nil {
 					switch err.(type) {
 					case notifierInBadStateError:
-						worker.Logger.Warningf("Stop sending notifications for %v: %s. Fix SelfState errors and turn on notifier in /notifications page", sleepAfterNotifierBadState, err.Error())
+						worker.Logger.Warningb().
+							String("stop_sending_notofocations_for", sleepAfterNotifierBadState.String()).
+							Error(err).
+							Msg("Stop sending notifications for some time. Fix SelfState errors and turn on notifier in /notifications page")
 						<-time.After(sleepAfterNotifierBadState)
 					default:
-						worker.Logger.Warningf("Failed to fetch scheduled notifications: %s", err.Error())
+						worker.Logger.Warningb().
+							Error(err).
+							Msg("Failed to fetch scheduled notifications")
 					}
 				}
 			}
 		}
 	})
-	worker.Logger.Info("Moira Notifier Fetching scheduled notifications started")
+	worker.Logger.Infob().Msg("Moira Notifier Fetching scheduled notifications started")
 }
 
 // Stop stops new notifications fetching and wait for finish
