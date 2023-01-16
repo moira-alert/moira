@@ -109,7 +109,7 @@ func (notifier *StandardNotifier) Send(pkg *NotificationPackage, waitGroup *sync
 	go func(pkg *NotificationPackage) {
 		defer waitGroup.Done()
 		getLogWithPackageContext(&notifier.logger, pkg, &notifier.config).
-			Debugb().
+			Debug().
 			Interface("package", pkg).
 			Msg("Start sending")
 
@@ -147,13 +147,13 @@ func (notifier *StandardNotifier) resend(pkg *NotificationPackage, reason string
 	}
 
 	logger := getLogWithPackageContext(&notifier.logger, pkg, &notifier.config)
-	logger.Warningb().
+	logger.Warning().
 		Int("number_of_retires", pkg.FailCount).
 		String("reason", reason).
 		Msg("Can't send message. Retry again in 1 min")
 
 	if time.Duration(pkg.FailCount)*time.Minute > notifier.config.ResendingTimeout {
-		logger.Errorb().Msg("Stop resending. Notification interval is timed out")
+		logger.Error().Msg("Stop resending. Notification interval is timed out")
 	} else {
 		for _, event := range pkg.Events {
 			subID := moira.UseString(event.SubscriptionID)
@@ -162,7 +162,7 @@ func (notifier *StandardNotifier) resend(pkg *NotificationPackage, reason string
 			notification := notifier.scheduler.ScheduleNotification(time.Now(), event,
 				pkg.Trigger, pkg.Contact, pkg.Plotting, pkg.Throttled, pkg.FailCount+1, eventLogger)
 			if err := notifier.database.AddNotification(notification); err != nil {
-				eventLogger.Errorb().
+				eventLogger.Error().
 					Error(err).
 					Msg("Failed to save scheduled notification")
 			}
@@ -173,7 +173,7 @@ func (notifier *StandardNotifier) resend(pkg *NotificationPackage, reason string
 func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan NotificationPackage) {
 	defer func() {
 		if err := recover(); err != nil {
-			notifier.logger.Warningb().
+			notifier.logger.Warning().
 				String(moira.LogFieldNameStackTrace, string(debug.Stack())).
 				Interface("recovered_err", err).
 				Msg("Notifier panicked")
@@ -189,9 +189,9 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 			var event logging.EventBuilder
 			switch err.(type) {
 			case plotting.ErrNoPointsToRender:
-				event = plottingLog.Debugb()
+				event = plottingLog.Debug()
 			default:
-				event = plottingLog.Errorb()
+				event = plottingLog.Error()
 			}
 			event.
 				String(moira.LogFieldNameTriggerID, pkg.Trigger.ID).
@@ -201,7 +201,7 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 
 		err = pkg.Trigger.PopulatedDescription(pkg.Events)
 		if err != nil {
-			log.Warningb().
+			log.Warning().
 				Error(err).
 				Msg("Error populate description")
 		}
@@ -214,12 +214,12 @@ func (notifier *StandardNotifier) runSender(sender moira.Sender, ch chan Notific
 		} else {
 			switch e := err.(type) {
 			case moira.SenderBrokenContactError:
-				log.Warningb().
+				log.Warning().
 					Error(e).
 					Msg("Cannot send to broken contact")
 
 			default:
-				log.Errorb().
+				log.Error().
 					Error(err).
 					Msg("Cannot send notification")
 				notifier.resend(&pkg, err.Error())

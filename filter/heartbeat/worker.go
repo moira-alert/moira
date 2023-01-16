@@ -34,18 +34,18 @@ func (worker *Worker) Start() {
 		for {
 			select {
 			case <-worker.tomb.Dying():
-				worker.logger.Infob().Msg("Moira Filter Heartbeat stopped")
+				worker.logger.Info().Msg("Moira Filter Heartbeat stopped")
 				return nil
 			case <-checkTicker.C:
 				newCount := worker.metrics.TotalMetricsReceived.Count()
 				if newCount != count {
-					worker.logger.Debugb().
+					worker.logger.Debug().
 						Int64("from", count).
 						Int64("to", newCount).
 						Msg("Heartbeat was updated")
 
 					if err := worker.database.UpdateMetricsHeartbeat(); err != nil {
-						worker.logger.Infob().
+						worker.logger.Info().
 							Error(err).
 							Msg("Save state failed")
 					} else {
@@ -55,7 +55,7 @@ func (worker *Worker) Start() {
 			}
 		}
 	})
-	worker.logger.Infob().Msg("Moira Filter Heartbeat started")
+	worker.logger.Info().Msg("Moira Filter Heartbeat started")
 }
 
 // Stop heartbeat worker

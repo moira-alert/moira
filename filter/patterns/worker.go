@@ -35,7 +35,7 @@ func NewRefreshPatternWorker(database moira.Database, metrics *metrics.FilterMet
 func (worker *RefreshPatternWorker) Start() error {
 	err := worker.patternStorage.Refresh()
 	if err != nil {
-		worker.logger.Errorb().
+		worker.logger.Error().
 			Error(err).
 			Msg("pattern refresh failed")
 		return err
@@ -46,13 +46,13 @@ func (worker *RefreshPatternWorker) Start() error {
 		for {
 			select {
 			case <-worker.tomb.Dying():
-				worker.logger.Infob().Msg("Moira Filter Pattern Updater stopped")
+				worker.logger.Info().Msg("Moira Filter Pattern Updater stopped")
 				return nil
 			case <-checkTicker.C:
 				timer := time.Now()
 				err := worker.patternStorage.Refresh()
 				if err != nil {
-					worker.logger.Errorb().
+					worker.logger.Error().
 						Error(err).
 						Msg("Pattern refresh failed")
 				}
@@ -60,7 +60,7 @@ func (worker *RefreshPatternWorker) Start() error {
 			}
 		}
 	})
-	worker.logger.Infob().Msg("Moira Filter Pattern Updater started")
+	worker.logger.Info().Msg("Moira Filter Pattern Updater started")
 	return nil
 }
 

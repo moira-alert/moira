@@ -65,13 +65,13 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Can not configure log: %s\n", err.Error())
 		os.Exit(1)
 	}
-	defer logger.Infob().
+	defer logger.Info().
 		String("moira_version", MoiraVersion).
 		Msg("Moira Filter stopped. Version")
 
 	telemetry, err := cmd.ConfigureTelemetry(logger, config.Telemetry, serviceName)
 	if err != nil {
-		logger.Fatalb().
+		logger.Fatal().
 			Error(err).
 			Msg("Can not configure telemetry")
 	}
@@ -79,7 +79,7 @@ func main() {
 
 	if config.Filter.MaxParallelMatches == 0 {
 		config.Filter.MaxParallelMatches = runtime.NumCPU()
-		logger.Infob().
+		logger.Info().
 			Int("number_of_cpu", config.Filter.MaxParallelMatches).
 			Msg("MaxParallelMatches is not configured, set it to the number of CPU")
 	}
@@ -89,7 +89,7 @@ func main() {
 
 	retentionConfigFile, err := os.Open(config.Filter.RetentionConfig)
 	if err != nil {
-		logger.Fatalb().
+		logger.Fatal().
 			String("file_name", config.Filter.RetentionConfig).
 			Error(err).
 			Msg("Error open retentions file")
@@ -97,7 +97,7 @@ func main() {
 
 	cacheStorage, err := filter.NewCacheStorage(logger, filterMetrics, retentionConfigFile)
 	if err != nil {
-		logger.Fatalb().
+		logger.Fatal().
 			String("file_name", config.Filter.RetentionConfig).
 			Error(err).
 			Msg("Failed to initialize cache storage with given config")
@@ -105,7 +105,7 @@ func main() {
 
 	patternStorage, err := filter.NewPatternStorage(database, filterMetrics, logger)
 	if err != nil {
-		logger.Fatalb().
+		logger.Fatal().
 			Error(err).
 			Msg("Failed to refresh pattern storage")
 	}
@@ -116,7 +116,7 @@ func main() {
 	// Start patterns refresher
 	err = refreshPatternWorker.Start()
 	if err != nil {
-		logger.Fatalb().
+		logger.Fatal().
 			Error(err).
 			Msg("Failed to refresh pattern storage")
 	}
@@ -130,7 +130,7 @@ func main() {
 	// Start metrics listener
 	listener, err := connection.NewListener(config.Filter.Listen, logger, filterMetrics)
 	if err != nil {
-		logger.Fatalb().
+		logger.Fatal().
 			Error(err).
 			Msg("Failed to start listening")
 	}
@@ -146,7 +146,7 @@ func main() {
 	defer metricsMatcher.Wait()  // First stop listener
 	defer stopListener(listener) // Then waiting for metrics matcher handle all received events
 
-	logger.Infob().
+	logger.Info().
 		String("moira_version", MoiraVersion).
 		Msg("Moira Filter started")
 
@@ -154,14 +154,14 @@ func main() {
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
 
 	signal := fmt.Sprint(<-ch)
-	logger.Infob().
+	logger.Info().
 		String("signal", signal).
 		Msg("Moira Filter shutting down.")
 }
 
 func stopListener(listener *connection.MetricsListener) {
 	if err := listener.Stop(); err != nil {
-		logger.Errorb().
+		logger.Error().
 			Error(err).
 			Msg("Failed to stop listener")
 	}
@@ -169,7 +169,7 @@ func stopListener(listener *connection.MetricsListener) {
 
 func stopHeartbeatWorker(heartbeatWorker *heartbeat.Worker) {
 	if err := heartbeatWorker.Stop(); err != nil {
-		logger.Errorb().
+		logger.Error().
 			Error(err).
 			Msg("Failed to stop heartbeat worker")
 	}
@@ -177,7 +177,7 @@ func stopHeartbeatWorker(heartbeatWorker *heartbeat.Worker) {
 
 func stopRefreshPatternWorker(refreshPatternWorker *patterns.RefreshPatternWorker) {
 	if err := refreshPatternWorker.Stop(); err != nil {
-		logger.Errorb().
+		logger.Error().
 			Error(err).
 			Msg("Failed to stop refresh pattern worker")
 	}

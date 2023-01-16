@@ -71,7 +71,7 @@ func TestLockErrorLogging(t *testing.T) {
 	dataBase.Flush()
 	defer dataBase.Flush()
 	Convey("Should log error on releasing the lock", t, func() {
-		logger.EXPECT().Warningb().Return(eventBuilder).AnyTimes()
+		logger.EXPECT().Warning().Return(eventBuilder).AnyTimes()
 		eventBuilder.EXPECT().Error(gomock.Any()).Return(eventBuilder)
 		eventBuilder.EXPECT().Msg(gomock.Any())
 

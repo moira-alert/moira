@@ -19,13 +19,13 @@ var (
 )
 
 func (index *Index) fillIndex() error {
-	index.logger.Debugb().Msg("Start filling index with triggers")
+	index.logger.Debug().Msg("Start filling index with triggers")
 
 	index.inProgress = true
 	index.indexActualizedTS = time.Now().Unix()
 	allTriggerIDs, err := index.database.GetAllTriggerIDs()
 
-	index.logger.Debugb().
+	index.logger.Debug().
 		Int("Quantity", len(allTriggerIDs)).
 		Msg("Triggers IDs fetched from database")
 
@@ -39,7 +39,7 @@ func (index *Index) fillIndex() error {
 
 	err = index.writeByBatches(allTriggerIDs, defaultIndexBatchSize)
 
-	index.logger.Infob().
+	index.logger.Info().
 		Int("Quantity", len(allTriggerIDs)).
 		Msg("Added triggers to index")
 

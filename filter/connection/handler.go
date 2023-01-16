@@ -49,7 +49,7 @@ func (handler *Handler) handle(connection net.Conn, lineChan chan<- []byte) {
 		if err != nil {
 			connection.Close()
 			if err != io.EOF {
-				handler.logger.Errorb().
+				handler.logger.Error().
 					Error(err).
 					Msg("Fail to read from metric connection")
 			}

@@ -11,14 +11,14 @@ const (
 
 func (worker *Checker) lazyTriggersWorker() error {
 	if worker.Config.LazyTriggersCheckInterval <= worker.Config.CheckInterval {
-		worker.Logger.Infob().
+		worker.Logger.Info().
 			Interface("lazy_triggers_check_interval", worker.Config.LazyTriggersCheckInterval).
 			Interface("check_interval", worker.Config.CheckInterval).
 			Msg("Lazy triggers worker won't start because lazy triggers interval is less or equal to check interval")
 		return nil
 	}
 	checkTicker := time.NewTicker(lazyTriggersWorkerTicker)
-	worker.Logger.Infob().
+	worker.Logger.Info().
 		Interface("lazy_triggers_check_interval", worker.Config.LazyTriggersCheckInterval).
 		Interface("update_lazy_triggers_every", lazyTriggersWorkerTicker).
 		Msg("Start lazy triggers worker")
@@ -27,12 +27,12 @@ func (worker *Checker) lazyTriggersWorker() error {
 		select {
 		case <-worker.tomb.Dying():
 			checkTicker.Stop()
-			worker.Logger.Infob().Msg("Lazy triggers worker stopped")
+			worker.Logger.Info().Msg("Lazy triggers worker stopped")
 			return nil
 		case <-checkTicker.C:
 			err := worker.fillLazyTriggerIDs()
 			if err != nil {
-				worker.Logger.Errorb().
+				worker.Logger.Error().
 					Error(err).
 					Msg("Failed to get lazy triggers")
 			}

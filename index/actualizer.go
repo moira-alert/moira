@@ -10,19 +10,19 @@ const actualizerRunInterval = time.Second
 
 func (index *Index) runIndexActualizer() error {
 	ticker := time.NewTicker(actualizerRunInterval)
-	index.logger.Infob().
+	index.logger.Info().
 		Interface("actualizer_interval", actualizerRunInterval).
 		Msg("Start index actualizer: reindex changed triggers in loop with given interval")
 
 	for {
 		select {
 		case <-index.tomb.Dying():
-			index.logger.Infob().Msg("Stop index actualizer")
+			index.logger.Info().Msg("Stop index actualizer")
 			return nil
 		case <-ticker.C:
 			newTime := time.Now().Unix()
 			if float64(newTime-index.indexActualizedTS) > sweeperTimeToKeep.Seconds() {
-				index.logger.Errorb().
+				index.logger.Error().
 					String("index_actualized_at", time.Unix(index.indexActualizedTS, 0).Format(time.RFC3339)).
 					String("current_time", time.Now().Format(time.RFC3339)).
 					String("actualization_interval", actualizerRunInterval.String()).
@@ -30,7 +30,7 @@ func (index *Index) runIndexActualizer() error {
 					Msg("Index was actualized too far ago. Restart moira-API service to solve this issue")
 			}
 			if err := index.actualizeIndex(); err != nil {
-				index.logger.Warningb().
+				index.logger.Warning().
 					Error(err).
 					Msg("Cannot actualize triggers")
 				continue
@@ -51,7 +51,7 @@ func (index *Index) actualizeIndex() error {
 	}
 
 	log := index.logger.Clone().String(moira.LogFieldNameContext, "Index actualizer")
-	log.Debugb().
+	log.Debug().
 		Int("triggers_count", len(triggerToReindexIDs)).
 		Msg("Got triggers to actualize")
 
@@ -68,10 +68,10 @@ func (index *Index) actualizeIndex() error {
 		triggerLog := log.Clone().String(moira.LogFieldNameTriggerID, triggerID)
 		if trigger == nil {
 			triggersToDelete = append(triggersToDelete, triggerID)
-			triggerLog.Debugb().Msg("Trigger is nil, remove from index")
+			triggerLog.Debug().Msg("Trigger is nil, remove from index")
 		} else {
 			triggersToUpdate = append(triggersToUpdate, trigger)
-			triggerLog.Debugb().Msg("Trigger need to be reindexed...")
+			triggerLog.Debug().Msg("Trigger need to be reindexed...")
 		}
 	}
 
@@ -80,7 +80,7 @@ func (index *Index) actualizeIndex() error {
 		if err2 != nil {
 			return err2
 		}
-		log.Debugb().
+		log.Debug().
 			Int("triggers_count", len(triggersToDelete)).
 			Msg("Some triggers deleted")
 	}
@@ -90,7 +90,7 @@ func (index *Index) actualizeIndex() error {
 		if err2 != nil {
 			return err2
 		}
-		log.Debugb().
+		log.Debug().
 			Int("triggers_count", len(triggersToUpdate)).
 			Msg("Some triggers reindexed")
 	}

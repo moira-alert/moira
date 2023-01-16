@@ -27,16 +27,16 @@ func (worker *Checker) localTriggerGetter() error {
 
 func (worker *Checker) noDataChecker(stop <-chan struct{}) error {
 	checkTicker := time.NewTicker(worker.Config.NoDataCheckInterval)
-	worker.Logger.Infob().Msg("NODATA checker started")
+	worker.Logger.Info().Msg("NODATA checker started")
 	for {
 		select {
 		case <-stop:
-			worker.Logger.Infob().Msg("NODATA checker stopped")
+			worker.Logger.Info().Msg("NODATA checker stopped")
 			checkTicker.Stop()
 			return nil
 		case <-checkTicker.C:
 			if err := worker.checkNoData(); err != nil {
-				worker.Logger.Errorb().
+				worker.Logger.Error().
 					Error(err).
 					Msg("NODATA check failed")
 			}
@@ -47,11 +47,11 @@ func (worker *Checker) noDataChecker(stop <-chan struct{}) error {
 func (worker *Checker) checkNoData() error {
 	now := time.Now().UTC().Unix()
 	if worker.lastData+worker.Config.StopCheckingIntervalSeconds < now {
-		worker.Logger.Infob().
+		worker.Logger.Info().
 			Int64("no_metrics_for_sec", now-worker.lastData).
 			Msg("Checking NODATA disabled. No metrics for some seconds")
 	} else {
-		worker.Logger.Infob().Msg("Checking NODATA")
+		worker.Logger.Info().Msg("Checking NODATA")
 		triggerIds, err := worker.Database.GetLocalTriggerIDs()
 		if err != nil {
 			return err

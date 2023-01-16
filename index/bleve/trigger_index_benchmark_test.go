@@ -50,14 +50,14 @@ func runBenchmark(b *testing.B, triggersSize int, batchSize int) {
 
 	for n := 0; n < b.N; n++ {
 		newIndex, _ := CreateTriggerIndex(triggerMapping)
-		logger.Infob().
+		logger.Info().
 			Int("batch_size", batchSize).
 			Int("triggers_count", triggersSize).
 			Msg("[Benchmark] Start")
 
 		fillIndexWithTriggers(newIndex, triggersPointers, batchSize)
 
-		logger.Infob().
+		logger.Info().
 			Int("batch_size", batchSize).
 			Int("triggers_count", triggersSize).
 			Msg("[Benchmark] Finish")

@@ -48,11 +48,11 @@ func (listener *MetricsListener) Listen() chan []byte {
 			select {
 			case <-listener.tomb.Dying():
 				{
-					listener.logger.Infob().Msg("Stopping listener...")
+					listener.logger.Info().Msg("Stopping listener...")
 					listener.listener.Close()
 					listener.handler.StopHandlingConnections()
 					close(lineChan)
-					listener.logger.Infob().Msg("Moira Filter Listener stopped")
+					listener.logger.Info().Msg("Moira Filter Listener stopped")
 					return nil
 				}
 			default:
@@ -63,12 +63,12 @@ func (listener *MetricsListener) Listen() chan []byte {
 				if opErr, ok := err.(*net.OpError); ok && opErr.Timeout() {
 					continue
 				}
-				listener.logger.Infob().
+				listener.logger.Info().
 					Error(err).
 					Msg("Failed to accept connection")
 				continue
 			}
-			listener.logger.Infob().
+			listener.logger.Info().
 				String("remote_address", conn.RemoteAddr().String()).
 				Msg("Someone connected")
 
@@ -76,7 +76,7 @@ func (listener *MetricsListener) Listen() chan []byte {
 		}
 	})
 	listener.tomb.Go(func() error { return listener.checkNewLinesChannelLen(lineChan) })
-	listener.logger.Infob().Msg("Moira Filter Listener Started")
+	listener.logger.Info().Msg("Moira Filter Listener Started")
 	return lineChan
 }
 
