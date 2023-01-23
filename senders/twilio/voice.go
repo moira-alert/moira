@@ -25,7 +25,7 @@ func (sender *twilioSenderVoice) SendEvents(events moira.NotificationEvents, con
 	}
 	sender.logger.Debug().
 		String("status", twilioCall.Status).
-		String("callbacl_url", voiceURL).
+		String("callback_url", voiceURL).
 		Msg("Call queued to twilio")
 
 	return nil
