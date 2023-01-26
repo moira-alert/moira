@@ -20,7 +20,7 @@ func getLogWithPackageContext(log *moira.Logger, pkg *NotificationPackage, confi
 func SetLogLevelByConfig(entityToLevel map[string]string, entityID string, logger *moira.Logger) {
 	if v, ok := entityToLevel[entityID]; ok {
 		if _, err := (*logger).Level(v); err != nil {
-			(*logger).Warningb().
+			(*logger).Warning().
 				Error(err).
 				Msg("Couldn't set log level")
 		}

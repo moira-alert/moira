@@ -43,7 +43,7 @@ func (check *filter) Check(nowTS int64) (int64, bool, error) {
 	}
 
 	if check.lastSuccessfulCheck < nowTS-check.heartbeat.delay {
-		check.logger.Errorb().
+		check.logger.Error().
 			String("error", check.GetErrorMessage()).
 			Int64("time_since_successful_check", nowTS-check.heartbeat.lastSuccessfulCheck).
 			Msg("Send message")

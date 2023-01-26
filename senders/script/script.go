@@ -50,12 +50,12 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	var scriptOutput bytes.Buffer
 	command.Stdin = bytes.NewReader(scriptBody)
 	command.Stdout = &scriptOutput
-	sender.logger.Debugb().
+	sender.logger.Debug().
 		String("script", scriptFile).
 		Msg("Executing script")
 
 	err = command.Run()
-	sender.logger.Debugb().
+	sender.logger.Debug().
 		String("script", scriptFile).
 		Msg("Finished executing script")
 
@@ -68,7 +68,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 func (sender *Sender) buildCommandData(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, throttled bool) (scriptFile string, args []string, scriptBody []byte, err error) {
 	// TODO: Remove moira.VariableTriggerName from buildExecString in 2.6
 	if strings.Contains(sender.exec, moira.VariableTriggerName) {
-		sender.logger.Warningb().
+		sender.logger.Warning().
 			String("variable_name", moira.VariableTriggerName).
 			Msg("Variable is deprecated and will be removed in 2.6 release")
 	}

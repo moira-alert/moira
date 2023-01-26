@@ -16,7 +16,7 @@ type twilioSenderSms struct {
 
 func (sender *twilioSenderSms) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
 	message := sender.buildMessage(events, trigger, throttled)
-	sender.logger.Debugb().
+	sender.logger.Debug().
 		String("phone", contact.Value).
 		String("message", message).
 		Msg("Calling twilio sms api to phone %s and message body %s")
@@ -27,7 +27,7 @@ func (sender *twilioSenderSms) SendEvents(events moira.NotificationEvents, conta
 		return fmt.Errorf("failed to send message to contact %s: %s", contact.Value, err)
 	}
 
-	sender.logger.Debugb().
+	sender.logger.Debug().
 		String("status", twilioMessage.Status).
 		Msg("Message send to twilio with status")
 

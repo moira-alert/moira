@@ -71,7 +71,7 @@ func (sender *Sender) buildEvent(events moira.NotificationEvents, contact moira.
 		for i, plot := range plots {
 			imageLink, err := sender.imageStore.StoreImage(plot)
 			if err != nil {
-				sender.logger.Warningb().
+				sender.logger.Warning().
 					Error(err).
 					Msg("could not store the plot image in the image store")
 			} else {

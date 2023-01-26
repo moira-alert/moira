@@ -23,7 +23,7 @@ func (worker *Checker) startTriggerHandler(triggerIDsToCheck <-chan string, metr
 		if err != nil {
 			metrics.HandleError.Mark(1)
 
-			worker.Logger.Errorb().
+			worker.Logger.Error().
 				String(moira.LogFieldNameTriggerID, triggerID).
 				Error(err).
 				Msg("Failed to handle trigger")

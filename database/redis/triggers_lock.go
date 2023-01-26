@@ -54,7 +54,7 @@ func (connector *DbConnector) DeleteTriggerCheckLock(triggerID string) error {
 // ReleaseTriggerCheckLock deletes trigger check lock for given triggerID and logs an error if needed
 func (connector *DbConnector) ReleaseTriggerCheckLock(triggerID string) {
 	if err := connector.DeleteTriggerCheckLock(triggerID); err != nil {
-		connector.logger.Warningb().
+		connector.logger.Warning().
 			Error(err).
 			Msg("Error on releasing trigger check lock")
 	}

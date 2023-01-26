@@ -66,13 +66,13 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Can not configure log: %s\n", err.Error())
 		os.Exit(1)
 	}
-	defer logger.Infob().
+	defer logger.Info().
 		String("moira_version", MoiraVersion).
 		Msg("Moira Notifier stopped. Version")
 
 	telemetry, err := cmd.ConfigureTelemetry(logger, config.Telemetry, serviceName)
 	if err != nil {
-		logger.Fatalb().
+		logger.Fatal().
 			Error(err).
 			Msg("Can not configure telemetry")
 	}
@@ -96,7 +96,7 @@ func main() {
 
 	// Register moira senders
 	if err := sender.RegisterSenders(database); err != nil {
-		logger.Fatalb().
+		logger.Fatal().
 			Error(err).
 			Msg("Can not configure senders")
 	}
@@ -109,7 +109,7 @@ func main() {
 		Notifier: sender,
 	}
 	if err := selfState.Start(); err != nil {
-		logger.Fatalb().
+		logger.Fatal().
 			Error(err).
 			Msg("SelfState failed")
 	}
@@ -135,18 +135,18 @@ func main() {
 	fetchEventsWorker.Start()
 	defer stopFetchEvents(fetchEventsWorker)
 
-	logger.Infob().
+	logger.Info().
 		String("moira_version", MoiraVersion).
 		Msg("Moira Notifier Started")
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
-	logger.Infob().Msg(fmt.Sprint(<-ch))
-	logger.Infob().Msg("Moira Notifier shutting down.")
+	logger.Info().Msg(fmt.Sprint(<-ch))
+	logger.Info().Msg("Moira Notifier shutting down.")
 }
 
 func stopFetchEvents(worker *events.FetchEventsWorker) {
 	if err := worker.Stop(); err != nil {
-		logger.Errorb().
+		logger.Error().
 			Error(err).
 			Msg("Failed to stop events fetcher")
 	}
@@ -154,7 +154,7 @@ func stopFetchEvents(worker *events.FetchEventsWorker) {
 
 func stopNotificationsFetcher(worker *notifications.FetchNotificationsWorker) {
 	if err := worker.Stop(); err != nil {
-		logger.Errorb().
+		logger.Error().
 			Error(err).
 			Msg("Failed to stop notifications fetcher")
 	}
@@ -162,7 +162,7 @@ func stopNotificationsFetcher(worker *notifications.FetchNotificationsWorker) {
 
 func stopSelfStateChecker(checker *selfstate.SelfCheckWorker) {
 	if err := checker.Stop(); err != nil {
-		logger.Errorb().
+		logger.Error().
 			Error(err).
 			Msg("Failed to stop self check worker")
 	}

@@ -328,7 +328,7 @@ func (connector *DbConnector) getTriggerWithTags(triggerRaw *redis.StringCmd, ta
 	}
 	triggerTags, err := tagsRaw.Result()
 	if err != nil {
-		connector.logger.Errorb().
+		connector.logger.Error().
 			String(moira.LogFieldNameTriggerID, triggerID).
 			Error(err).
 			Msg("Error getting trigger tags")

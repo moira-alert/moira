@@ -58,7 +58,7 @@ func renameAnyTagsSubscriptionsKeyForwards(logger moira.Logger, database moira.D
 		return err
 	}
 
-	logger.Infob().Msg("renameAnyTagsSubscriptionsKeyForwards done")
+	logger.Info().Msg("renameAnyTagsSubscriptionsKeyForwards done")
 
 	return nil
 }
@@ -69,7 +69,7 @@ func renameAnyTagsSubscriptionsKeyReverse(logger moira.Logger, database moira.Da
 		return err
 	}
 
-	logger.Infob().Msg("renameAnyTagsSubscriptionsKeyReverse done")
+	logger.Info().Msg("renameAnyTagsSubscriptionsKeyReverse done")
 
 	return nil
 }
@@ -80,7 +80,7 @@ func renameTriggersListKeyForwards(logger moira.Logger, database moira.Database)
 		return err
 	}
 
-	logger.Infob().Msg("renameTriggersListKeyForwards done")
+	logger.Info().Msg("renameTriggersListKeyForwards done")
 
 	return nil
 }
@@ -91,7 +91,7 @@ func renameTriggersListKeyReverse(logger moira.Logger, database moira.Database) 
 		return err
 	}
 
-	logger.Infob().Msg("renameTriggersListKeyReverse done")
+	logger.Info().Msg("renameTriggersListKeyReverse done")
 
 	return nil
 }
@@ -102,7 +102,7 @@ func renameRemoteTriggersListKeyForwards(logger moira.Logger, database moira.Dat
 		return err
 	}
 
-	logger.Infob().Msg("renameRemoteTriggersListKeyForwards done")
+	logger.Info().Msg("renameRemoteTriggersListKeyForwards done")
 
 	return nil
 }
@@ -113,7 +113,7 @@ func renameRemoteTriggersListKeyReverse(logger moira.Logger, database moira.Data
 		return err
 	}
 
-	logger.Infob().Msg("renameRemoteTriggersListKeyReverse done")
+	logger.Info().Msg("renameRemoteTriggersListKeyReverse done")
 
 	return nil
 }
@@ -124,7 +124,7 @@ func renameTagSubscriptionsKeyForwards(logger moira.Logger, database moira.Datab
 		return err
 	}
 
-	logger.Infob().Msg("renameTagSubscriptionsKeyForwards done")
+	logger.Info().Msg("renameTagSubscriptionsKeyForwards done")
 
 	return nil
 }
@@ -135,7 +135,7 @@ func renameTagSubscriptionsKeyReverse(logger moira.Logger, database moira.Databa
 		return err
 	}
 
-	logger.Infob().Msg("renameTagSubscriptionsKeyReverse done")
+	logger.Info().Msg("renameTagSubscriptionsKeyReverse done")
 
 	return nil
 }
@@ -146,7 +146,7 @@ func renameTagTriggersKeyKeyForwards(logger moira.Logger, database moira.Databas
 		return err
 	}
 
-	logger.Infob().Msg("renameTagTriggersKeyKeyForwards done")
+	logger.Info().Msg("renameTagTriggersKeyKeyForwards done")
 
 	return nil
 }
@@ -157,7 +157,7 @@ func renameTagTriggersKeyKeyReverse(logger moira.Logger, database moira.Database
 		return err
 	}
 
-	logger.Infob().Msg("renameTagTriggersKeyKeyReverse done")
+	logger.Info().Msg("renameTagTriggersKeyKeyReverse done")
 
 	return nil
 }
@@ -188,7 +188,7 @@ func addRedisClusterSupport(logger moira.Logger, database moira.Database) error 
 		return err
 	}
 
-	logger.Infob().Msg("addRedisClusterSupport done")
+	logger.Info().Msg("addRedisClusterSupport done")
 
 	return nil
 }
@@ -219,7 +219,7 @@ func removeRedisClusterSupport(logger moira.Logger, database moira.Database) err
 		return err
 	}
 
-	logger.Infob().Msg("removeRedisClusterSupport done")
+	logger.Info().Msg("removeRedisClusterSupport done")
 
 	return nil
 }

@@ -36,7 +36,7 @@ func (source *PrefixTree) AddWithPayload(pattern string, payloadKey string, payl
 	currentNode := source.Root
 	parts := strings.Split(pattern, ".")
 	if hasEmptyParts(parts) {
-		source.Logger.Warningb().
+		source.Logger.Warning().
 			String("pattern", pattern).
 			Msg("Pattern is ignored because it contains an empty part")
 		return
@@ -138,7 +138,7 @@ func (source *PrefixTree) findNodes(metric string) ([]*PatternNode, int) {
 			part := metric[index:i]
 
 			if len(part) == 0 {
-				source.Logger.Warningb().
+				source.Logger.Warning().
 					String("metric", metric).
 					Msg("Metric is ignored, because it contains empty parts")
 				return nil, 0

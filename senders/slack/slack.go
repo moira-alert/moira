@@ -187,7 +187,7 @@ func (sender *Sender) sendMessage(message string, contact string, triggerID stri
 		Markdown:  true,
 		LinkNames: 1,
 	}
-	sender.logger.Debugb().
+	sender.logger.Debug().
 		String("message", message).
 		Msg("Calling slack")
 

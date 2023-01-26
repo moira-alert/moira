@@ -38,7 +38,7 @@ type Checker struct {
 func (worker *Checker) Start() error {
 	if worker.Config.MaxParallelChecks == 0 {
 		worker.Config.MaxParallelChecks = runtime.NumCPU()
-		worker.Logger.Infob().
+		worker.Logger.Info().
 			Int("number_of_cpu", worker.Config.MaxParallelChecks).
 			Msg("MaxParallelChecks is not configured, set it to the number of CPU")
 	}
@@ -72,16 +72,16 @@ func (worker *Checker) Start() error {
 	if worker.remoteEnabled && worker.Config.MaxParallelRemoteChecks == 0 {
 		worker.Config.MaxParallelRemoteChecks = runtime.NumCPU()
 
-		worker.Logger.Infob().
+		worker.Logger.Info().
 			Int("number_of_cpu", worker.Config.MaxParallelRemoteChecks).
 			Msg("MaxParallelRemoteChecks is not configured, set it to the number of CPU")
 	}
 
 	if worker.remoteEnabled {
 		worker.tomb.Go(worker.remoteTriggerGetter)
-		worker.Logger.Infob().Msg("Remote checker started")
+		worker.Logger.Info().Msg("Remote checker started")
 	} else {
-		worker.Logger.Infob().Msg("Remote checker disabled")
+		worker.Logger.Info().Msg("Remote checker disabled")
 	}
 
 	const maxParallelChecksMaxValue = 1024 * 8
@@ -89,7 +89,7 @@ func (worker *Checker) Start() error {
 		return errors.New("MaxParallelChecks value is too large")
 	}
 
-	worker.Logger.Infob().
+	worker.Logger.Info().
 		Int("number_of_checkers", worker.Config.MaxParallelChecks).
 		Msg("Start parallel local checkers")
 
@@ -109,7 +109,7 @@ func (worker *Checker) Start() error {
 			return errors.New("MaxParallelRemoteChecks value is too large")
 		}
 
-		worker.Logger.Infob().
+		worker.Logger.Info().
 			Int("number_of_checkers", worker.Config.MaxParallelChecks).
 			Msg("Start parallel remote checkers")
 
@@ -120,11 +120,11 @@ func (worker *Checker) Start() error {
 			})
 		}
 	}
-	worker.Logger.Infob().Msg("Checking new events started")
+	worker.Logger.Info().Msg("Checking new events started")
 
 	go func() {
 		<-worker.tomb.Dying()
-		worker.Logger.Infob().Msg("Checking for new events stopped")
+		worker.Logger.Info().Msg("Checking for new events stopped")
 	}()
 
 	worker.tomb.Go(func() error { return worker.checkMetricEventsChannelLen(metricEventsChannel) })

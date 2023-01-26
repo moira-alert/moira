@@ -41,7 +41,7 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
 	pushoverMessage := sender.makePushoverMessage(events, trigger, plots, throttled)
 
-	sender.logger.Debugb().
+	sender.logger.Debug().
 		String("message_title", pushoverMessage.Title).
 		String("message", pushoverMessage.Message).
 		Msg("Calling pushover with message title")

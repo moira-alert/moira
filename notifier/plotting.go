@@ -58,7 +58,7 @@ func (notifier *StandardNotifier) buildNotificationPackagePlots(pkg Notification
 	if pkg.Trigger.ID == "" {
 		return nil, nil
 	}
-	logger.Infob().Msg("Start build plots for package")
+	logger.Info().Msg("Start build plots for package")
 	startTime := time.Now()
 	metricsToShow := pkg.GetMetricNames()
 	if len(metricsToShow) == 0 {
@@ -74,12 +74,12 @@ func (notifier *StandardNotifier) buildNotificationPackagePlots(pkg Notification
 		return nil, err
 	}
 	metricsData = getMetricDataToShow(metricsData, metricsToShow)
-	logger.Debugb().
+	logger.Debug().
 		Interface("metrics_data", metricsData).
 		Msg("Build plot from MetricsData")
 
 	result, err := buildTriggerPlots(trigger, metricsData, plotTemplate)
-	logger.Infob().
+	logger.Info().
 		Int64("moira.plots.build_duration_ms", time.Since(startTime).Milliseconds()).
 		Msg("Finished build plots for package")
 
@@ -95,7 +95,7 @@ func resolveMetricsWindow(logger moira.Logger, trigger moira.TriggerData, pkg No
 	// try to resolve package window, force default realtime window on fail for both local and remote triggers
 	from, to, err := pkg.GetWindow()
 	if err != nil {
-		logger.Warningb().
+		logger.Warning().
 			String("defailt_window", defaultTimeRange.String()).
 			Error(err).
 			Msg("Failed to get trigger package window, using default window")

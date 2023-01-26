@@ -29,7 +29,7 @@ func (index *Index) getTriggerChecksBatches(triggerIDsBatches [][]string) (trigg
 				return
 			}
 
-			index.logger.Debugb().
+			index.logger.Debug().
 				Int("triggers_count", len(newBatch)).
 				Msg("Get some trigger checks from DB")
 
@@ -53,7 +53,7 @@ func (index *Index) getTriggerChecksWithRetries(batch []string) ([]*moira.Trigge
 		if err == nil {
 			return newBatch, nil
 		}
-		index.logger.Warningb().
+		index.logger.Warning().
 			String("try_count", fmt.Sprintf("%d/%d", i, triesCount)).
 			Error(err).
 			Msg("Cannot get trigger checks from DB")
@@ -82,21 +82,21 @@ func (index *Index) handleTriggerBatches(triggerChecksChan chan []*moira.Trigger
 					indexErrors <- err2
 					return
 				}
-				index.logger.Debugb().
+				index.logger.Debug().
 					Int64("batch_size", count).
 					Int("triggers_total", toIndex).
 					Msg("Batch of triggers added to index")
 			}(batch)
 		case err, ok := <-getTriggersErrors:
 			if ok {
-				index.logger.Errorb().
+				index.logger.Error().
 					Error(err).
 					Msg("Cannot get trigger checks from DB")
 			}
 			return err
 		case err, ok := <-indexErrors:
 			if ok {
-				index.logger.Errorb().
+				index.logger.Error().
 					Error(err).
 					Msg("Cannot index trigger checks")
 			}

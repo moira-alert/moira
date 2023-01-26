@@ -26,7 +26,7 @@ func enablePlottingInAllSubscriptions(logger moira.Logger, database moira.Databa
 		if err := database.SaveSubscription(subscription); err != nil {
 			return err
 		}
-		logger.Debugb().
+		logger.Debug().
 			String("subscription_id", subscription.ID).
 			String("contacts", strings.Join(subscription.Contacts, ", ")).
 			Msg("Successfully enabled plotting")

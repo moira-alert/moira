@@ -12,7 +12,7 @@ import (
 
 func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) (*http.Request, error) {
 	if sender.url == moira.VariableContactValue {
-		sender.log.Warningb().
+		sender.log.Warning().
 			String("potentially_dangerous_url", sender.url).
 			Msg("Found potentially dangerous url template, api contact validation is advised")
 	}
@@ -31,7 +31,7 @@ func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moir
 	for k, v := range sender.headers {
 		request.Header.Set(k, v)
 	}
-	sender.log.Debugb().
+	sender.log.Debug().
 		String("method", request.Method).
 		String("url", request.URL.String()).
 		String("body", bytes.NewBuffer(requestBody).String()).

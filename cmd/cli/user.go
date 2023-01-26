@@ -140,7 +140,7 @@ func usersCleanup(logger moira.Logger, database moira.Database, users []string, 
 			}
 		}
 
-		logger.Debugb().
+		logger.Debug().
 			String("user", user).
 			Msg("User cleaned")
 	}

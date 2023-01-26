@@ -28,13 +28,13 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	subjectState := events.GetSubjectState()
 	switch subjectState {
 	case moira.StateTEST:
-		sender.logger.Infob().
+		sender.logger.Info().
 			String("notifier_state", selfState).
 			Msg("Current notifier state")
 
 		return nil
 	case moira.StateOK, moira.StateEXCEPTION:
-		sender.logger.Errorb().
+		sender.logger.Error().
 			String(moira.LogFieldNameTriggerID, trigger.ID).
 			String("state", subjectState.String()).
 			Msg("State is ignorable")
