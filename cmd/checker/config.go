@@ -51,7 +51,7 @@ func (config *checkerConfig) getSettings(logger moira.Logger) *checker.Config {
 	for _, v := range config.SetLogLevel.TriggersToLevel {
 		logTriggersToLevel[v.ID] = v.Level
 	}
-	logger.Infob().
+	logger.Info().
 		Int("number_of_triggers", len(logTriggersToLevel)).
 		Msg("Found dynamic log rules in config for some triggers")
 

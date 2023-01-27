@@ -61,7 +61,7 @@ func startTelemetryServer(logger moira.Logger, listen string, pprofConfig Profil
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second) //nolint
 		defer cancel()
 		if err := server.Shutdown(ctx); err != nil {
-			logger.Errorb().
+			logger.Error().
 				Error(err).
 				Msg("Can't stop telemetry server correctly")
 		}

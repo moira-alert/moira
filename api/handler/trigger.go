@@ -73,8 +73,8 @@ func getTrigger(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	if err := checkingTemplateFilling(request, *trigger); err != nil {
-		middleware.GetLoggerEntry(request).Warningb().
-			Interface("error", err).
+		middleware.GetLoggerEntry(request).Warning().
+			Error(err.Err).
 			Msg("Failed to check template")
 	}
 

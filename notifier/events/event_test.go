@@ -159,7 +159,7 @@ func TestDisabledNotification(t *testing.T) {
 
 		logger.EXPECT().Clone().Return(logger).AnyTimes()
 		logger.EXPECT().String(gomock.Any(), gomock.Any()).Return(logger).AnyTimes()
-		logger.EXPECT().Debugb().Return(eventBuilder).AnyTimes()
+		logger.EXPECT().Debug().Return(eventBuilder).AnyTimes()
 
 		metricString := fmt.Sprintf("%s == %s", event.Metric, event.GetMetricsValues())
 		eventBuilder.EXPECT().String("metric", metricString).Return(eventBuilder)
@@ -186,7 +186,7 @@ func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
 
 	logger.EXPECT().Clone().Return(logger).AnyTimes()
 	logger.EXPECT().String(gomock.Any(), gomock.Any()).Return(logger).AnyTimes()
-	logger.EXPECT().Debugb().Return(eventBuilder).AnyTimes()
+	logger.EXPECT().Debug().Return(eventBuilder).AnyTimes()
 
 	Convey("[TRUE] Do not send WARN notifications", t, func() {
 		worker := FetchEventsWorker{
@@ -403,7 +403,7 @@ func TestFailReadContact(t *testing.T) {
 
 		logger.EXPECT().Clone().Return(logger).AnyTimes()
 		logger.EXPECT().String(gomock.Any(), gomock.Any()).Return(logger).AnyTimes()
-		logger.EXPECT().Debugb().Return(eventBuilder).AnyTimes()
+		logger.EXPECT().Debug().Return(eventBuilder).AnyTimes()
 
 		metricString := fmt.Sprintf("%s == %s", event.Metric, event.GetMetricsValues())
 		eventBuilder.EXPECT().String("metric", metricString).Return(eventBuilder)
@@ -414,7 +414,7 @@ func TestFailReadContact(t *testing.T) {
 		eventBuilder.EXPECT().Interface("trigger_tags", triggerData.Tags).Return(eventBuilder)
 		eventBuilder.EXPECT().Msg("Getting subscriptions for given tags")
 
-		logger.EXPECT().Warningb().Return(eventBuilder)
+		logger.EXPECT().Warning().Return(eventBuilder)
 		eventBuilder.EXPECT().Error(getContactError).Return(eventBuilder)
 		eventBuilder.EXPECT().Msg("Failed to get contact, skip handling it")
 
@@ -431,7 +431,7 @@ func TestEmptySubscriptions(t *testing.T) {
 
 	logger.EXPECT().Clone().Return(logger).AnyTimes()
 	logger.EXPECT().String(gomock.Any(), gomock.Any()).Return(logger).AnyTimes()
-	logger.EXPECT().Debugb().Return(eventBuilder).AnyTimes()
+	logger.EXPECT().Debug().Return(eventBuilder).AnyTimes()
 
 	Convey("When subscription is empty value object", t, func() {
 		defer mockCtrl.Finish()

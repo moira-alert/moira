@@ -49,46 +49,46 @@ func (mr *MockLoggerMockRecorder) Clone() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Clone", reflect.TypeOf((*MockLogger)(nil).Clone))
 }
 
-// Debugb mocks base method.
-func (m *MockLogger) Debugb() logging.EventBuilder {
+// Debug mocks base method.
+func (m *MockLogger) Debug() logging.EventBuilder {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Debugb")
+	ret := m.ctrl.Call(m, "Debug")
 	ret0, _ := ret[0].(logging.EventBuilder)
 	return ret0
 }
 
-// Debugb indicates an expected call of Debugb.
-func (mr *MockLoggerMockRecorder) Debugb() *gomock.Call {
+// Debug indicates an expected call of Debug.
+func (mr *MockLoggerMockRecorder) Debug() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Debugb", reflect.TypeOf((*MockLogger)(nil).Debugb))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Debug", reflect.TypeOf((*MockLogger)(nil).Debug))
 }
 
-// Errorb mocks base method.
-func (m *MockLogger) Errorb() logging.EventBuilder {
+// Error mocks base method.
+func (m *MockLogger) Error() logging.EventBuilder {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Errorb")
+	ret := m.ctrl.Call(m, "Error")
 	ret0, _ := ret[0].(logging.EventBuilder)
 	return ret0
 }
 
-// Errorb indicates an expected call of Errorb.
-func (mr *MockLoggerMockRecorder) Errorb() *gomock.Call {
+// Error indicates an expected call of Error.
+func (mr *MockLoggerMockRecorder) Error() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Errorb", reflect.TypeOf((*MockLogger)(nil).Errorb))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Error", reflect.TypeOf((*MockLogger)(nil).Error))
 }
 
-// Fatalb mocks base method.
-func (m *MockLogger) Fatalb() logging.EventBuilder {
+// Fatal mocks base method.
+func (m *MockLogger) Fatal() logging.EventBuilder {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Fatalb")
+	ret := m.ctrl.Call(m, "Fatal")
 	ret0, _ := ret[0].(logging.EventBuilder)
 	return ret0
 }
 
-// Fatalb indicates an expected call of Fatalb.
-func (mr *MockLoggerMockRecorder) Fatalb() *gomock.Call {
+// Fatal indicates an expected call of Fatal.
+func (mr *MockLoggerMockRecorder) Fatal() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Fatalb", reflect.TypeOf((*MockLogger)(nil).Fatalb))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Fatal", reflect.TypeOf((*MockLogger)(nil).Fatal))
 }
 
 // Fields mocks base method.
@@ -105,18 +105,18 @@ func (mr *MockLoggerMockRecorder) Fields(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Fields", reflect.TypeOf((*MockLogger)(nil).Fields), arg0)
 }
 
-// Infob mocks base method.
-func (m *MockLogger) Infob() logging.EventBuilder {
+// Info mocks base method.
+func (m *MockLogger) Info() logging.EventBuilder {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Infob")
+	ret := m.ctrl.Call(m, "Info")
 	ret0, _ := ret[0].(logging.EventBuilder)
 	return ret0
 }
 
-// Infob indicates an expected call of Infob.
-func (mr *MockLoggerMockRecorder) Infob() *gomock.Call {
+// Info indicates an expected call of Info.
+func (mr *MockLoggerMockRecorder) Info() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Infob", reflect.TypeOf((*MockLogger)(nil).Infob))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Info", reflect.TypeOf((*MockLogger)(nil).Info))
 }
 
 // Int mocks base method.
@@ -176,16 +176,16 @@ func (mr *MockLoggerMockRecorder) String(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "String", reflect.TypeOf((*MockLogger)(nil).String), arg0, arg1)
 }
 
-// Warningb mocks base method.
-func (m *MockLogger) Warningb() logging.EventBuilder {
+// Warning mocks base method.
+func (m *MockLogger) Warning() logging.EventBuilder {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Warningb")
+	ret := m.ctrl.Call(m, "Warning")
 	ret0, _ := ret[0].(logging.EventBuilder)
 	return ret0
 }
 
-// Warningb indicates an expected call of Warningb.
-func (mr *MockLoggerMockRecorder) Warningb() *gomock.Call {
+// Warning indicates an expected call of Warning.
+func (mr *MockLoggerMockRecorder) Warning() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Warningb", reflect.TypeOf((*MockLogger)(nil).Warningb))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Warning", reflect.TypeOf((*MockLogger)(nil).Warning))
 }

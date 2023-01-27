@@ -34,7 +34,7 @@ type Worker struct {
 // Run the worker
 func (worker *Worker) Run(stop <-chan struct{}) {
 	for {
-		worker.logger.Infob().
+		worker.logger.Info().
 			String("worker_name", worker.name).
 			Msg("Worker tries to acquire the lock...")
 		lost, err := worker.lock.Acquire(stop)
@@ -43,7 +43,7 @@ func (worker *Worker) Run(stop <-chan struct{}) {
 			case database.ErrLockAcquireInterrupted:
 				return
 			default:
-				worker.logger.Errorb().
+				worker.logger.Error().
 					String("worker_name", worker.name).
 					Error(err).
 					Msg("Worker failed to acquire the lock")
@@ -56,7 +56,7 @@ func (worker *Worker) Run(stop <-chan struct{}) {
 			}
 		}
 
-		worker.logger.Infob().
+		worker.logger.Info().
 			String("worker_name", worker.name).
 			Msg("Worker acquired the lock")
 
@@ -67,7 +67,7 @@ func (worker *Worker) Run(stop <-chan struct{}) {
 
 			defer func() {
 				if r := recover(); r != nil {
-					logger.Errorb().
+					logger.Error().
 						String("worker_name", worker.name).
 						Interface("recover", r).
 						Msg("Worker panicked during the execution")
@@ -75,7 +75,7 @@ func (worker *Worker) Run(stop <-chan struct{}) {
 			}()
 
 			if err := action(stop); err != nil {
-				logger.Errorb().
+				logger.Error().
 					String("worker_name", worker.name).
 					Error(err).
 					Msg("Worker failed during the execution")
@@ -85,7 +85,7 @@ func (worker *Worker) Run(stop <-chan struct{}) {
 		select {
 		case <-actionDone:
 			worker.lock.Release()
-			worker.logger.Infob().
+			worker.logger.Info().
 				String("worker_name", worker.name).
 				Msg("Worker released the lock")
 			select {
@@ -95,7 +95,7 @@ func (worker *Worker) Run(stop <-chan struct{}) {
 				continue
 			}
 		case <-lost:
-			worker.logger.Warningb().
+			worker.logger.Warning().
 				String("worker_name", worker.name).
 				Msg("Worker lost the lock")
 			close(actionStop)
@@ -105,7 +105,7 @@ func (worker *Worker) Run(stop <-chan struct{}) {
 			close(actionStop)
 			<-actionDone
 			worker.lock.Release()
-			worker.logger.Infob().
+			worker.logger.Info().
 				String("worker_name", worker.name).
 				Msg("Worker released the lock")
 			return

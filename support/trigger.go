@@ -12,7 +12,7 @@ import (
 const defaultRetention = 10
 
 func HandlePullTrigger(logger moira.Logger, database moira.Database, triggerID string) (*moira.Trigger, error) {
-	logger.Infob().
+	logger.Info().
 		String("trigger_id", triggerID).
 		Msg("Pull database info about given trigger")
 
@@ -24,7 +24,7 @@ func HandlePullTrigger(logger moira.Logger, database moira.Database, triggerID s
 }
 
 func HandlePullTriggerMetrics(logger moira.Logger, database moira.Database, triggerID string) ([]dto.PatternMetrics, error) {
-	logger.Infob().
+	logger.Info().
 		String("trigger_id", triggerID).
 		Msg("Pull database info about given trigger metrics")
 
@@ -75,12 +75,12 @@ func HandlePullTriggerMetrics(logger moira.Logger, database moira.Database, trig
 }
 
 func HandlePushTrigger(logger moira.Logger, database moira.Database, trigger *moira.Trigger) error {
-	logger.Infob().Msg("Save trigger")
+	logger.Info().Msg("Save trigger")
 	err := database.SaveTrigger(trigger.ID, trigger)
 	if err != nil {
 		return fmt.Errorf("cannot save trigger: %w", err)
 	}
-	logger.Infob().
+	logger.Info().
 		String("trigger_id", trigger.ID).
 		Msg("Trigger was saved")
 	return nil
@@ -92,7 +92,7 @@ func HandlePushTriggerMetrics(
 	triggerID string,
 	patternsMetrics []dto.PatternMetrics,
 ) error {
-	logger.Infob().Msg("Save trigger metrics")
+	logger.Info().Msg("Save trigger metrics")
 
 	buffer := make(map[string]*moira.MatchedMetric, len(patternsMetrics))
 	i := 0
@@ -122,7 +122,7 @@ func HandlePushTriggerMetrics(
 	if err != nil {
 		return fmt.Errorf("cannot save trigger metrics: %w", err)
 	}
-	logger.Infob().
+	logger.Info().
 		String("trigger_id", triggerID).
 		Msg("Trigger metrics was saved")
 
@@ -131,10 +131,10 @@ func HandlePushTriggerMetrics(
 
 func HandlePushTriggerLastCheck(logger moira.Logger, database moira.Database, triggerID string,
 	lastCheck *moira.CheckData, isRemoteTrigger bool) error {
-	logger.Infob().Msg("Save trigger last check")
+	logger.Info().Msg("Save trigger last check")
 	if err := database.SetTriggerLastCheck(triggerID, lastCheck, isRemoteTrigger); err != nil {
 		return fmt.Errorf("cannot set trigger last check: %w", err)
 	}
-	logger.Infob().Msg("Trigger last check was saved")
+	logger.Info().Msg("Trigger last check was saved")
 	return nil
 }

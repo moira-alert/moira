@@ -23,9 +23,9 @@ func (sender *twilioSenderVoice) SendEvents(events moira.NotificationEvents, con
 	if err != nil {
 		return fmt.Errorf("failed to make call to contact %s: %s", contact.Value, err.Error())
 	}
-	sender.logger.Debugb().
+	sender.logger.Debug().
 		String("status", twilioCall.Status).
-		String("callbacl_url", voiceURL).
+		String("callback_url", voiceURL).
 		Msg("Call queued to twilio")
 
 	return nil

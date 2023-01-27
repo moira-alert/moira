@@ -63,14 +63,14 @@ func (storage *PatternStorage) ProcessIncomingMetric(lineBytes []byte, maxTTL ti
 
 	parsedMetric, err := ParseMetric(lineBytes)
 	if err != nil {
-		storage.logger.Infob().
+		storage.logger.Info().
 			Error(err).
 			Msg("Cannot parse input")
 		return nil
 	}
 
 	if parsedMetric.IsTooOld(maxTTL, storage.clock.Now()) {
-		storage.logger.Debugb().
+		storage.logger.Debug().
 			String(moira.LogFieldNameMetricName, parsedMetric.Name).
 			String(moira.LogFieldNameMetricTimestamp, fmt.Sprint(parsedMetric.Timestamp)).
 			Msg("Metric is too old")
@@ -96,7 +96,7 @@ func (storage *PatternStorage) ProcessIncomingMetric(lineBytes []byte, maxTTL ti
 		}
 	}
 
-	storage.logger.Debugb().
+	storage.logger.Debug().
 		String("metric", parsedMetric.Metric).
 		Msg("Metric is not matched with prefix tree")
 

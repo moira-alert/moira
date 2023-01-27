@@ -32,7 +32,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 			},
 		}
 	}
-	sender.logger.Debugb().
+	sender.logger.Debug().
 		String("message", data.Content).
 		Msg("Calling discord with message")
 

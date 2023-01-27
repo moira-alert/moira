@@ -72,23 +72,23 @@ func getLogWriter(logFileName string) (io.Writer, error) {
 	return logFile, nil
 }
 
-func (l Logger) Debugb() logging.EventBuilder {
+func (l Logger) Debug() logging.EventBuilder {
 	return EventBuilder{event: l.logger.Debug()}
 }
 
-func (l Logger) Infob() logging.EventBuilder {
+func (l Logger) Info() logging.EventBuilder {
 	return EventBuilder{event: l.logger.Info()}
 }
 
-func (l Logger) Errorb() logging.EventBuilder {
+func (l Logger) Error() logging.EventBuilder {
 	return EventBuilder{event: l.logger.Error()}
 }
 
-func (l Logger) Fatalb() logging.EventBuilder {
+func (l Logger) Fatal() logging.EventBuilder {
 	return EventBuilder{event: l.logger.Fatal()}
 }
 
-func (l Logger) Warningb() logging.EventBuilder {
+func (l Logger) Warning() logging.EventBuilder {
 	return EventBuilder{event: l.logger.Warn()}
 }
 

@@ -30,12 +30,12 @@ type SelfCheckWorker struct {
 // Start self check worker
 func (selfCheck *SelfCheckWorker) Start() error {
 	if !selfCheck.Config.Enabled {
-		selfCheck.Logger.Debugb().Msg("Moira Self State Monitoring disabled")
+		selfCheck.Logger.Debug().Msg("Moira Self State Monitoring disabled")
 		return nil
 	}
 	senders := selfCheck.Notifier.GetSenders()
 	if err := selfCheck.Config.checkConfig(senders); err != nil {
-		selfCheck.Logger.Errorb().
+		selfCheck.Logger.Error().
 			Error(err).
 			Msg("Can't configure Moira Self State Monitoring")
 		return nil

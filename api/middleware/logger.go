@@ -119,14 +119,14 @@ func (entry *apiLoggerEntry) write(status, bytes int, elapsed time.Duration, res
 		status = http.StatusOK
 	}
 	if status >= http.StatusInternalServerError {
-		event = entry.logger.Errorb()
+		event = entry.logger.Error()
 
 		errorResponse := getErrorResponseIfItHas(response)
 		if errorResponse != nil {
-			event.String("error_text", errorResponse.ErrorText)
+			event.Error(errorResponse.Err)
 		}
 	} else {
-		event = entry.logger.Infob()
+		event = entry.logger.Info()
 	}
 
 	event.Int("http.status", status).
@@ -137,7 +137,7 @@ func (entry *apiLoggerEntry) write(status, bytes int, elapsed time.Duration, res
 }
 
 func (entry *apiLoggerEntry) writePanic(status, bytes int, elapsed time.Duration, v interface{}, stack []byte) {
-	entry.logger.Errorb().
+	entry.logger.Error().
 		Int("http_status", status).
 		Int("http_content_length", bytes).
 		Int("elapsed_time_ms", int(elapsed.Milliseconds())).

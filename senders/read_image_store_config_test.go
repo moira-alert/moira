@@ -21,7 +21,7 @@ func TestReadImageStoreConfig(t *testing.T) {
 
 	Convey("Read image store config tests", t, func() {
 		Convey("no image_store in settings", func() {
-			logger.EXPECT().Warningb().Return(eventBuilder)
+			logger.EXPECT().Warning().Return(eventBuilder)
 			eventBuilder.EXPECT().Msg("Cannot read image_store from the config, will not be able to attach plot images to alerts")
 
 			imageStoreID, imageStore, imageStoreConfigured :=
@@ -32,7 +32,7 @@ func TestReadImageStoreConfig(t *testing.T) {
 		})
 
 		Convey("wrong image store name", func() {
-			logger.EXPECT().Warningb().Return(eventBuilder)
+			logger.EXPECT().Warning().Return(eventBuilder)
 			eventBuilder.EXPECT().String("image_store_id", "s4").Return(eventBuilder)
 			eventBuilder.EXPECT().Msg("Image store specified has not been configured")
 
@@ -44,7 +44,7 @@ func TestReadImageStoreConfig(t *testing.T) {
 		})
 
 		Convey("image store not configured", func() {
-			logger.EXPECT().Warningb().Return(eventBuilder)
+			logger.EXPECT().Warning().Return(eventBuilder)
 			eventBuilder.EXPECT().String("image_store_id", "s3").Return(eventBuilder)
 			eventBuilder.EXPECT().Msg("Image store specified has not been configured")
 
