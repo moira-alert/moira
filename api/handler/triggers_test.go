@@ -359,17 +359,17 @@ func TestCreateTriggerHandler(t *testing.T) {
 	Convey("When createTrigger was called with target with warning function", t, func() {
 		triggerWarnValue := float64(10)
 		triggerErrorValue := float64(15)
-		triggerDTO := dto.Trigger{
+		trigger := dto.Trigger{
 			TriggerModel: dto.TriggerModel{
 				Name:       "Test trigger",
 				Tags:       []string{"123"},
 				WarnValue:  &triggerWarnValue,
 				ErrorValue: &triggerErrorValue,
-				Targets:    []string{"consolidateBy(Sales.widgets.largeBlue, 'sum')"},
+				Targets:    []string{"alias(consolidateBy(Sales.widgets.largeBlue, 'sum'), 'alias to test nesting')"},
 				IsRemote:   false,
 			},
 		}
-		jsonTrigger, _ := json.Marshal(triggerDTO)
+		jsonTrigger, _ := json.Marshal(trigger)
 
 		Convey("without validate like before", func() {
 			mockDb.EXPECT().AcquireTriggerCheckLock(gomock.Any(), gomock.Any()).Return(nil)
@@ -395,6 +395,12 @@ func TestCreateTriggerHandler(t *testing.T) {
 		})
 
 		Convey("with validate", func() {
+			mockDb.EXPECT().AcquireTriggerCheckLock(gomock.Any(), gomock.Any()).Return(nil)
+			mockDb.EXPECT().DeleteTriggerCheckLock(gomock.Any())
+			mockDb.EXPECT().GetTriggerLastCheck(gomock.Any())
+			mockDb.EXPECT().SetTriggerLastCheck(gomock.Any(), gomock.Any(), gomock.Any())
+			mockDb.EXPECT().SaveTrigger(gomock.Any(), gomock.Any())
+
 			request := httptest.NewRequest("", fmt.Sprintf("/trigger?%s", validateFlag), bytes.NewBuffer(jsonTrigger))
 			request.Header.Add("content-type", "application/json")
 			request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", sourceProvider))
@@ -403,33 +409,37 @@ func TestCreateTriggerHandler(t *testing.T) {
 			responseWriter := httptest.NewRecorder()
 			createTrigger(responseWriter, request)
 
-			Convey("should return 400 and tree of problems", func() {
+			Convey("should return 200 and tree of problems", func() {
 				response := responseWriter.Result()
 				defer response.Body.Close()
 
-				So(response.StatusCode, ShouldEqual, http.StatusBadRequest)
+				So(response.StatusCode, ShouldEqual, http.StatusOK)
 
 				contentBytes, _ := io.ReadAll(response.Body)
 				contents := string(contentBytes)
 				fmt.Println(contents)
 
-				actual := dto.TriggerCheckResult{}
+				actual := dto.SaveTriggerResponse{}
 				_ = json.Unmarshal(contentBytes, &actual)
 
-				expected := dto.TriggerCheckResult{
-					Targets: []dto.TreeOfProblems{
-						{
-							SyntaxOk: true,
-							TreeOfProblems: &dto.ProblemOfTarget{
-								Argument:    "consolidateBy",
-								Type:        "warn",
-								Description: "This function affects only visual graph representation. It is meaningless in Moira.",
-								Position:    0,
+				expectedTargets := []dto.TreeOfProblems{
+					{
+						SyntaxOk: true,
+						TreeOfProblems: &dto.ProblemOfTarget{
+							Argument: "alias",
+							Problems: []dto.ProblemOfTarget{
+								{
+									Argument:    "consolidateBy",
+									Type:        "warn",
+									Description: "This function affects only visual graph representation. It is meaningless in Moira.",
+								},
 							},
 						},
 					},
 				}
-				So(actual, ShouldResemble, expected)
+				So(actual.Targets, ShouldResemble, expectedTargets)
+				const expected = "trigger created"
+				So(actual.Message, ShouldEqual, expected)
 			})
 		})
 	})
@@ -443,7 +453,7 @@ func TestCreateTriggerHandler(t *testing.T) {
 				Tags:       []string{"123"},
 				WarnValue:  &triggerWarnValue,
 				ErrorValue: &triggerErrorValue,
-				Targets:    []string{"summarize(my.metric, '5min')"},
+				Targets:    []string{"alias(summarize(my.metric, '5min'), 'alias to test nesting')"},
 				IsRemote:   false,
 			},
 		}
@@ -499,10 +509,14 @@ func TestCreateTriggerHandler(t *testing.T) {
 						{
 							SyntaxOk: true,
 							TreeOfProblems: &dto.ProblemOfTarget{
-								Argument:    "summarize",
-								Type:        "bad",
-								Description: "This function is unstable: it can return different historical values with each evaluation. Moira will show unexpected values that you don't see on your graphs.",
-								Position:    0,
+								Argument: "alias",
+								Problems: []dto.ProblemOfTarget{
+									{
+										Argument:    "summarize",
+										Type:        "bad",
+										Description: "This function is unstable: it can return different historical values with each evaluation. Moira will show unexpected values that you don't see on your graphs.",
+									},
+								},
 							},
 						},
 					},

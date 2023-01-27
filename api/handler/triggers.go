@@ -59,11 +59,14 @@ func createTrigger(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	var problems []dto.TreeOfProblems
 	if isNeedValidate(request) {
-		problems := validateTargets(request, trigger)
+		problems = validateTargets(request, trigger)
 		if problems != nil {
-			writeProblems(writer, request, problems)
-			return
+			if dto.AreTreesHaveError(problems) {
+				writeTargets(writer, request, problems)
+				return
+			}
 		}
 	}
 
@@ -81,6 +84,10 @@ func createTrigger(writer http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		render.Render(writer, request, err) //nolint
 		return
+	}
+
+	if problems != nil {
+		response.Targets = problems
 	}
 
 	if err := render.Render(writer, request, response); err != nil {

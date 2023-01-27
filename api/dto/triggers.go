@@ -392,6 +392,7 @@ func (*ThrottlingResponse) Render(http.ResponseWriter, *http.Request) error {
 type SaveTriggerResponse struct {
 	ID      string `json:"id"`
 	Message string `json:"message"`
+	Targets []TreeOfProblems
 }
 
 func (*SaveTriggerResponse) Render(http.ResponseWriter, *http.Request) error {
