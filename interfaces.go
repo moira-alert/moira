@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/moira-alert/go-chart"
+	"github.com/moira-alert/moira/logging"
 	"gopkg.in/tomb.v2"
 )
 
@@ -21,6 +22,7 @@ type Database interface {
 	GetTagNames() ([]string, error)
 	RemoveTag(tagName string) error
 	GetTagTriggerIDs(tagName string) ([]string, error)
+	CleanUpAbandonedTags() (int, error)
 
 	// LastCheck storing
 	GetTriggerLastCheck(triggerID string) (CheckData, error)
@@ -167,16 +169,11 @@ type Mutex interface {
 
 // Logger implements logger abstraction
 type Logger interface {
-	Debug(args ...interface{})
-	Debugf(format string, args ...interface{})
-	Info(args ...interface{})
-	Infof(format string, args ...interface{})
-	Error(args ...interface{})
-	Errorf(format string, args ...interface{})
-	Fatal(args ...interface{})
-	Fatalf(format string, args ...interface{})
-	Warning(args ...interface{})
-	Warningf(format string, args ...interface{})
+	Debug() logging.EventBuilder
+	Info() logging.EventBuilder
+	Error() logging.EventBuilder
+	Fatal() logging.EventBuilder
+	Warning() logging.EventBuilder
 
 	// Structured logging methods, use to add context fields
 	String(key, value string) Logger

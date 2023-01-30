@@ -86,7 +86,9 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 	if notifier.config.SelfStateEnabled {
 		selfStateSettings := map[string]string{"type": selfStateSender}
 		if err = notifier.RegisterSender(selfStateSettings, &selfstate.Sender{Database: connector}); err != nil {
-			notifier.logger.Warningf("failed to register selfstate sender: %s", err.Error())
+			notifier.logger.Warning().
+				Error(err).
+				Msg("Failed to register selfstate sender")
 		}
 	}
 	return nil
@@ -110,7 +112,9 @@ func (notifier *StandardNotifier) RegisterSender(senderSettings map[string]strin
 	notifier.metrics.SendersOkMetrics.RegisterMeter(senderIdent, getGraphiteSenderIdent(senderIdent), "sends_ok")
 	notifier.metrics.SendersFailedMetrics.RegisterMeter(senderIdent, getGraphiteSenderIdent(senderIdent), "sends_failed")
 	notifier.runSenders(sender, eventsChannel)
-	notifier.logger.Infof("Sender %s registered", senderIdent)
+	notifier.logger.Info().
+		String("sender_id", senderIdent).
+		Msg("Sender registered")
 	return nil
 }
 
@@ -129,9 +133,9 @@ func (notifier *StandardNotifier) StopSenders() {
 		close(ch)
 	}
 	notifier.senders = make(map[string]chan NotificationPackage)
-	notifier.logger.Info("Waiting senders finish...")
+	notifier.logger.Info().Msg("Waiting senders finish...")
 	notifier.waitGroup.Wait()
-	notifier.logger.Info("Moira Notifier Senders stopped")
+	notifier.logger.Info().Msg("Moira Notifier Senders stopped")
 }
 
 func getGraphiteSenderIdent(ident string) string {

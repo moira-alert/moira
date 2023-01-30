@@ -73,3 +73,142 @@ func TestTagErrorConnection(t *testing.T) {
 		So(actual, ShouldBeNil)
 	})
 }
+
+func TestCleanUpAbandonedTags(t *testing.T) {
+	logger, _ := logging.ConfigureLog("stdout", "warn", "test", true)
+	dataBase := NewTestDatabase(logger)
+	dataBase.Flush()
+	defer dataBase.Flush()
+
+	client := *dataBase.client
+
+	const (
+		triggerID      = "triggerID"
+		subscriptionID = "subscriptionID"
+		tag            = "tag"
+	)
+
+	Convey("Given tag with trigger and subscription", t, func() {
+		defer dataBase.Flush()
+
+		client.SAdd(dataBase.context, tagTriggersKey(tag), triggerID)
+		client.SAdd(dataBase.context, tagSubscriptionKey(tag), subscriptionID)
+		client.SAdd(dataBase.context, tagsKey, tag)
+
+		isExists, err := client.SIsMember(dataBase.context, tagTriggersKey(tag), triggerID).Result()
+		So(err, ShouldBeNil)
+		So(isExists, ShouldBeTrue)
+
+		isExists, err = client.SIsMember(dataBase.context, tagSubscriptionKey(tag), subscriptionID).Result()
+		So(err, ShouldBeNil)
+		So(isExists, ShouldBeTrue)
+
+		isExists, err = client.SIsMember(dataBase.context, tagsKey, tag).Result()
+		So(err, ShouldBeNil)
+		So(isExists, ShouldBeTrue)
+
+		Convey("When clean up tags was called", func() {
+			count, err := dataBase.CleanUpAbandonedTags()
+			So(err, ShouldBeNil)
+			So(count, ShouldEqual, 0)
+
+			Convey("Tag should be in database ", func() {
+				isExists, err = client.SIsMember(dataBase.context, tagsKey, tag).Result()
+				So(err, ShouldBeNil)
+				So(isExists, ShouldBeTrue)
+			})
+		})
+	})
+
+	Convey("Given tag with trigger and without subscription", t, func() {
+		defer dataBase.Flush()
+
+		client.SAdd(dataBase.context, tagTriggersKey(tag), triggerID)
+		client.SAdd(dataBase.context, tagsKey, tag)
+
+		isExists, err := client.SIsMember(dataBase.context, tagTriggersKey(tag), triggerID).Result()
+		So(err, ShouldBeNil)
+		So(isExists, ShouldBeTrue)
+
+		isExists, err = client.SIsMember(dataBase.context, tagSubscriptionKey(tag), subscriptionID).Result()
+		So(err, ShouldBeNil)
+		So(isExists, ShouldBeFalse)
+
+		isExists, err = client.SIsMember(dataBase.context, tagsKey, tag).Result()
+		So(err, ShouldBeNil)
+		So(isExists, ShouldBeTrue)
+
+		Convey("When clean up tags was called", func() {
+			count, err := dataBase.CleanUpAbandonedTags()
+			So(err, ShouldBeNil)
+			So(count, ShouldEqual, 0)
+
+			Convey("Tag should be in database ", func() {
+				isExists, err = client.SIsMember(dataBase.context, tagsKey, tag).Result()
+				So(err, ShouldBeNil)
+				So(isExists, ShouldBeTrue)
+			})
+		})
+	})
+
+	Convey("Given tag with subscription and without trigger", t, func() {
+		defer dataBase.Flush()
+
+		client.SAdd(dataBase.context, tagSubscriptionKey(tag), subscriptionID)
+		client.SAdd(dataBase.context, tagsKey, tag)
+
+		isExists, err := client.SIsMember(dataBase.context, tagTriggersKey(tag), triggerID).Result()
+		So(err, ShouldBeNil)
+		So(isExists, ShouldBeFalse)
+
+		isExists, err = client.SIsMember(dataBase.context, tagSubscriptionKey(tag), subscriptionID).Result()
+		So(err, ShouldBeNil)
+		So(isExists, ShouldBeTrue)
+
+		isExists, err = client.SIsMember(dataBase.context, tagsKey, tag).Result()
+		So(err, ShouldBeNil)
+		So(isExists, ShouldBeTrue)
+
+		Convey("When clean up tags was called", func() {
+			count, err := dataBase.CleanUpAbandonedTags()
+			So(err, ShouldBeNil)
+			So(count, ShouldEqual, 0)
+
+			Convey("Tag should be in database ", func() {
+				isExists, err = client.SIsMember(dataBase.context, tagsKey, tag).Result()
+				So(err, ShouldBeNil)
+				So(isExists, ShouldBeTrue)
+			})
+		})
+	})
+
+	Convey("Given tag without trigger and subscription", t, func() {
+		defer dataBase.Flush()
+
+		client.SAdd(dataBase.context, tagsKey, tag)
+
+		isExists, err := client.SIsMember(dataBase.context, tagTriggersKey(tag), triggerID).Result()
+		So(err, ShouldBeNil)
+		So(isExists, ShouldBeFalse)
+
+		isExists, err = client.SIsMember(dataBase.context, tagSubscriptionKey(tag), subscriptionID).Result()
+		So(err, ShouldBeNil)
+		So(isExists, ShouldBeFalse)
+
+		isExists, err = client.SIsMember(dataBase.context, tagsKey, tag).Result()
+		So(err, ShouldBeNil)
+		So(isExists, ShouldBeTrue)
+
+		Convey("When clean up tags was called", func() {
+			count, err := dataBase.CleanUpAbandonedTags()
+			So(err, ShouldBeNil)
+			So(count, ShouldEqual, 1)
+
+			Convey("Tag shouldn't be in database ", func() {
+				isExists, err = client.SIsMember(dataBase.context, tagsKey, tag).Result()
+				So(err, ShouldBeNil)
+				So(isExists, ShouldBeFalse)
+			})
+		})
+	})
+}

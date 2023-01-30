@@ -422,7 +422,7 @@ func TestMetricSubscription(t *testing.T) {
 				metricEvent, ok := <-ch
 				if !ok {
 					numberOfChecks++
-					logger.Info("Channel closed, end test")
+					logger.Info().Msg("Channel closed, end test")
 					return nil
 				}
 				if metricEvent.Metric == metric1 {

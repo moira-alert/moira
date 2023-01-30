@@ -1,4 +1,4 @@
-package logging
+package zerolog_adapter
 
 import (
 	"fmt"
@@ -9,10 +9,11 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/moira-alert/moira"
+	"github.com/moira-alert/moira/logging"
 )
 
 type Logger struct {
-	zerolog.Logger
+	logger zerolog.Logger
 }
 
 const (
@@ -71,103 +72,43 @@ func getLogWriter(logFileName string) (io.Writer, error) {
 	return logFile, nil
 }
 
-func (l Logger) Debug(args ...interface{}) {
-	event := l.Logger.Debug()
-	if event == nil {
-		return
-	}
-	event.Timestamp().Msg(fmt.Sprint(args...))
+func (l Logger) Debug() logging.EventBuilder {
+	return EventBuilder{event: l.logger.Debug()}
 }
 
-func (l Logger) Debugf(format string, args ...interface{}) {
-	event := l.Logger.Debug()
-	if event == nil {
-		return
-	}
-	event.Timestamp().Msgf(format, args...)
+func (l Logger) Info() logging.EventBuilder {
+	return EventBuilder{event: l.logger.Info()}
 }
 
-func (l Logger) Info(args ...interface{}) {
-	event := l.Logger.Info()
-	if event == nil {
-		return
-	}
-	event.Timestamp().Msg(fmt.Sprint(args...))
+func (l Logger) Error() logging.EventBuilder {
+	return EventBuilder{event: l.logger.Error()}
 }
 
-func (l Logger) Infof(format string, args ...interface{}) {
-	event := l.Logger.Info()
-	if event == nil {
-		return
-	}
-	event.Timestamp().Msgf(format, args...)
+func (l Logger) Fatal() logging.EventBuilder {
+	return EventBuilder{event: l.logger.Fatal()}
 }
 
-func (l Logger) Error(args ...interface{}) {
-	event := l.Logger.Error()
-	if event == nil {
-		return
-	}
-	event.Timestamp().Msgf(fmt.Sprint(args...))
-}
-
-func (l Logger) Errorf(format string, args ...interface{}) {
-	event := l.Logger.Error()
-	if event == nil {
-		return
-	}
-	event.Timestamp().Msgf(format, args...)
-}
-
-func (l Logger) Fatal(args ...interface{}) {
-	event := l.Logger.Fatal()
-	if event == nil {
-		return
-	}
-	event.Timestamp().Msg(fmt.Sprint(args...))
-}
-
-func (l Logger) Fatalf(format string, args ...interface{}) {
-	event := l.Logger.Fatal()
-	if event == nil {
-		return
-	}
-	event.Timestamp().Msgf(format, args...)
-}
-
-func (l Logger) Warning(args ...interface{}) {
-	event := l.Logger.Warn()
-	if event == nil {
-		return
-	}
-	event.Timestamp().Msg(fmt.Sprint(args...))
-}
-
-func (l Logger) Warningf(format string, args ...interface{}) {
-	event := l.Logger.Warn()
-	if event == nil {
-		return
-	}
-	event.Timestamp().Msgf(format, args...)
+func (l Logger) Warning() logging.EventBuilder {
+	return EventBuilder{event: l.logger.Warn()}
 }
 
 func (l *Logger) String(key, value string) moira.Logger {
-	l.Logger = l.Logger.With().Str(key, value).Logger()
+	l.logger = l.logger.With().Str(key, value).Logger()
 	return l
 }
 
 func (l *Logger) Int(key string, value int) moira.Logger {
-	l.Logger = l.Logger.With().Int(key, value).Logger()
+	l.logger = l.logger.With().Int(key, value).Logger()
 	return l
 }
 
 func (l *Logger) Int64(key string, value int64) moira.Logger {
-	l.Logger = l.Logger.With().Int64(key, value).Logger()
+	l.logger = l.logger.With().Int64(key, value).Logger()
 	return l
 }
 
 func (l *Logger) Fields(fields map[string]interface{}) moira.Logger {
-	l.Logger = l.Logger.With().Fields(fields).Logger()
+	l.logger = l.logger.With().Fields(fields).Logger()
 	return l
 }
 
@@ -176,12 +117,12 @@ func (l *Logger) Level(s string) (moira.Logger, error) {
 	if err != nil {
 		return l, err
 	}
-	l.Logger = l.Logger.Level(level)
+	l.logger = l.logger.Level(level)
 	return l, nil
 }
 
 func (l Logger) Clone() moira.Logger {
 	return &Logger{
-		Logger: l.Logger.With().Logger(),
+		logger: l.logger.With().Logger(),
 	}
 }

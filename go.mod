@@ -25,7 +25,7 @@ require (
 	github.com/gregdel/pushover v0.0.0-20200820121613-505cfd60a340
 	github.com/karriereat/blackfriday-slack v0.1.0
 	github.com/mattermost/mattermost-server/v6 v6.7.2
-	github.com/moira-alert/go-chart v0.0.0-20221123053500-da6c12c008d3
+	github.com/moira-alert/go-chart v0.0.0-20230113111021-3521c680325b
 	github.com/opsgenie/opsgenie-go-sdk-v2 v1.2.1
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pkg/errors v0.9.1

@@ -148,6 +148,21 @@ func (mr *MockDatabaseMockRecorder) CleanUpAbandonedRetentions() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CleanUpAbandonedRetentions", reflect.TypeOf((*MockDatabase)(nil).CleanUpAbandonedRetentions))
 }
 
+// CleanUpAbandonedTags mocks base method.
+func (m *MockDatabase) CleanUpAbandonedTags() (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CleanUpAbandonedTags")
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CleanUpAbandonedTags indicates an expected call of CleanUpAbandonedTags.
+func (mr *MockDatabaseMockRecorder) CleanUpAbandonedTags() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CleanUpAbandonedTags", reflect.TypeOf((*MockDatabase)(nil).CleanUpAbandonedTags))
+}
+
 // CleanUpAbandonedTriggerLastCheck mocks base method.
 func (m *MockDatabase) CleanUpAbandonedTriggerLastCheck() error {
 	m.ctrl.T.Helper()

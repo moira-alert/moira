@@ -15,20 +15,29 @@ func handleRemoveTriggersStartWith(logger moira.Logger, database moira.Database,
 
 	// Added delay because command is potentially dangerous and can delete unwanted triggers
 	const delay = 10 * time.Second
-	logger.Infof("%d triggers start with %s would be removed after %s", len(triggers), prefix, delay)
-	logger.Info("You can cancel execution by Ctrl+C")
+	logger.Info().
+		Int("triggers_to_delete", len(triggers)).
+		String("prefix", prefix).
+		String("delay", delay.String()).
+		Msg("Triggers that start with given prefix would be removed after delay")
+	logger.Info().Msg("You can cancel execution by Ctrl+C")
 	time.Sleep(delay)
 
-	logger.Infof("Removing triggers start with prefix %s has started", prefix)
+	logger.Info().
+		String("prefix", prefix).
+		Msg("Removing triggers start with given prefix has started")
+
 	for _, id := range triggers {
 		err := database.RemoveTrigger(id)
 		if err != nil {
 			return fmt.Errorf("can't remove trigger with id %s: %w", id, err)
 		}
 	}
-	logger.Infof("Removing triggers start with prefix %s has finished", prefix)
-	logger.Infof("Count of deleted is %d", len(triggers))
-	logger.Infof("Removed triggers: %s", triggers)
+	logger.Info().
+		String("prefix", prefix).
+		Int("deleted_triggers_count", len(triggers)).
+		Interface("deleted_triggers", triggers).
+		Msg("Removing triggers start with given prefix has finished")
 
 	return nil
 }

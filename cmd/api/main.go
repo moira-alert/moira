@@ -68,11 +68,15 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Can not configure log: %s\n", err.Error())
 		os.Exit(1)
 	}
-	defer logger.Infof("Moira API stopped. Version: %s", MoiraVersion)
+	defer logger.Info().
+		String("moira_version", MoiraVersion).
+		Msg("Moira API stopped")
 
 	telemetry, err := cmd.ConfigureTelemetry(logger, config.Telemetry, serviceName)
 	if err != nil {
-		logger.Fatalf("Can not start telemetry: %s", err.Error())
+		logger.Fatal().
+			Error(err).
+			Msg("Can not start telemetry")
 	}
 	defer telemetry.Stop()
 
@@ -82,26 +86,32 @@ func main() {
 	// Start Index right before HTTP listener. Fail if index cannot start
 	searchIndex := index.NewSearchIndex(logger, database, telemetry.Metrics)
 	if searchIndex == nil {
-		logger.Fatalf("Failed to create search index")
+		logger.Fatal().Msg("Failed to create search index")
 	}
 
 	err = searchIndex.Start()
 	if err != nil {
-		logger.Fatalf("Failed to start search index: %s", err.Error())
+		logger.Fatal().
+			Error(err).
+			Msg("Failed to start search index")
 	}
 	defer searchIndex.Stop() //nolint
 
 	if !searchIndex.IsReady() {
-		logger.Fatalf("Search index is not ready, exit")
+		logger.Fatal().Msg("Search index is not ready, exit")
 	}
 
 	// Start listener only after index is ready
 	listener, err := net.Listen("tcp", apiConfig.Listen)
 	if err != nil {
-		logger.Fatal(err)
+		logger.Fatal().
+			Error(err).
+			Msg("Failed to start listening")
 	}
 
-	logger.Infof("Start listening by address: [%s]", apiConfig.Listen)
+	logger.Info().
+		String("listen_address", apiConfig.Listen).
+		Msg("Start listening")
 
 	localSource := local.Create(database)
 	remoteConfig := config.Remote.GetRemoteSourceSettings()
@@ -110,7 +120,9 @@ func main() {
 
 	webConfigContent, err := config.Web.getSettings(remoteConfig.Enabled)
 	if err != nil {
-		logger.Fatal(err)
+		logger.Fatal().
+			Error(err).
+			Msg("Failed to get web config content ")
 	}
 
 	httpHandler := handler.NewHandler(database, logger, searchIndex, apiConfig, metricSourceProvider, webConfigContent)
@@ -123,11 +135,16 @@ func main() {
 	}()
 	defer Stop(logger, server)
 
-	logger.Infof("Moira Api Started (version: %s)", MoiraVersion)
+	logger.Info().
+		String("moira_version", MoiraVersion).
+		Msg("Moira Api Started")
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
-	logger.Info(fmt.Sprint(<-ch))
-	logger.Infof("Moira API shutting down.")
+
+	signal := fmt.Sprint(<-ch)
+	logger.Info().
+		String("signal", signal).
+		Msg("Moira API shutting down.")
 }
 
 // Stop Moira API HTTP server
@@ -135,6 +152,8 @@ func Stop(logger moira.Logger, server *http.Server) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second) //nolint
 	defer cancel()
 	if err := server.Shutdown(ctx); err != nil {
-		logger.Errorf("Can't stop Moira API correctly: %v", err)
+		logger.Error().
+			Error(err).
+			Msg("Can't stop Moira API correctly")
 	}
 }

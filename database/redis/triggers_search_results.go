@@ -34,7 +34,9 @@ func (connector *DbConnector) SaveTriggersSearchResults(searchResultsID string, 
 	if err != nil {
 		return fmt.Errorf("failed to EXEC: %w", err)
 	}
-	connector.logger.Debugf("EXEC response: %v", response)
+	connector.logger.Debug().
+		Interface("response", response).
+		Msg("EXEC response")
 	return nil
 }
 

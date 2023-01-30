@@ -10,7 +10,7 @@ import (
 )
 
 func (selfCheck *SelfCheckWorker) selfStateChecker(stop <-chan struct{}) error {
-	selfCheck.Logger.Info("Moira Notifier Self State Monitor started")
+	selfCheck.Logger.Info().Msg("Moira Notifier Self State Monitor started")
 
 	checkTicker := time.NewTicker(defaultCheckInterval)
 	defer checkTicker.Stop()
@@ -20,7 +20,7 @@ func (selfCheck *SelfCheckWorker) selfStateChecker(stop <-chan struct{}) error {
 	for {
 		select {
 		case <-stop:
-			selfCheck.Logger.Info("Moira Notifier Self State Monitor stopped")
+			selfCheck.Logger.Info().Msg("Moira Notifier Self State Monitor stopped")
 			return nil
 		case <-checkTicker.C:
 			nextSendErrorMessage = selfCheck.check(time.Now().Unix(), nextSendErrorMessage)
@@ -34,7 +34,9 @@ func (selfCheck *SelfCheckWorker) handleCheckServices(nowTS int64) []moira.Notif
 	for _, heartbeat := range selfCheck.heartbeats {
 		currentValue, needSend, err := heartbeat.Check(nowTS)
 		if err != nil {
-			selfCheck.Logger.Error(err)
+			selfCheck.Logger.Error().
+				Error(err).
+				Msg("Heartbeat failed")
 		}
 
 		if !needSend {
@@ -56,7 +58,10 @@ func (selfCheck *SelfCheckWorker) handleCheckServices(nowTS int64) []moira.Notif
 
 func (selfCheck *SelfCheckWorker) sendNotification(events []moira.NotificationEvent, nowTS int64) int64 {
 	eventsJSON, _ := json.Marshal(events)
-	selfCheck.Logger.Errorf("Health check. Send package of %v notification events: %s", len(events), eventsJSON)
+	selfCheck.Logger.Error().
+		Int("number_of_events", len(events)).
+		String("events_json", string(eventsJSON)).
+		Msg("Health check. Send package notification events")
 	selfCheck.sendErrorMessages(events)
 	return nowTS + selfCheck.Config.NoticeIntervalSeconds
 }
@@ -108,6 +113,8 @@ func generateNotificationEvent(message string, currentValue int64) moira.Notific
 func (selfCheck *SelfCheckWorker) setNotifierState(state string) {
 	err := selfCheck.Database.SetNotifierState(state)
 	if err != nil {
-		selfCheck.Logger.Errorf("Can't set notifier state: %v", err)
+		selfCheck.Logger.Error().
+			Error(err).
+			Msg("Can't set notifier state")
 	}
 }
