@@ -61,7 +61,7 @@ func (index *Index) getTriggerChecksWithRetries(batch []string) ([]*moira.Trigge
 	return nil, fmt.Errorf("cannot get trigger checks from DB after %d tries, last error: %s", triesCount, err.Error())
 }
 
-func (index *Index) handleTriggerBatches(triggerChecksChan chan []*moira.TriggerCheck, getTriggersErrors chan error, toIndex int) error {
+func (index *Index) handleTriggerBatches(triggerChecksChan chan []*moira.TriggerCheck, getTriggersErrors chan error, triggersTotal int) error {
 	indexErrors := make(chan error)
 	wg := &sync.WaitGroup{}
 	defer wg.Wait()
@@ -83,8 +83,9 @@ func (index *Index) handleTriggerBatches(triggerChecksChan chan []*moira.Trigger
 					return
 				}
 				index.logger.Debug().
-					Int64("batch_size", count).
-					Int("triggers_total", toIndex).
+					Int("batch_size", len(batch)).
+					Int64("count", atomic.LoadInt64(&count)).
+					Int("triggers_total", triggersTotal).
 					Msg("Batch of triggers added to index")
 			}(batch)
 		case err, ok := <-getTriggersErrors:
