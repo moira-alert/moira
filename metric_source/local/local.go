@@ -57,7 +57,7 @@ func (local *Local) Fetch(target string, from int64, until int64, allowRealTimeA
 			return nil, err
 		}
 		rewritten, newTargets, err := expr.RewriteExpr(context.Background(), parsedExpr, from, until, metricsMap)
-		if err != nil && err != parser.ErrSeriesDoesNotExist {
+		if err != nil && err != parser.ErrMissingTimeseries {
 			return nil, fmt.Errorf("failed RewriteExpr: %s", err.Error())
 		} else if rewritten {
 			targets = append(targets, newTargets...)
@@ -96,7 +96,7 @@ func evalExpr(target string, expression parser.Expr, from, until int64, metricsM
 	}()
 	result, err = expr.EvalExpr(context.Background(), expression, from, until, metricsMap)
 	if err != nil {
-		if errors.Is(err, parser.ErrSeriesDoesNotExist) {
+		if errors.Is(err, parser.ErrMissingTimeseries) {
 			err = nil
 		} else if isErrUnknownFunction(err) {
 			err = ErrorUnknownFunction(err)

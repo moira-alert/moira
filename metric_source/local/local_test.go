@@ -90,7 +90,7 @@ func TestEvaluateTarget(t *testing.T) {
 			dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
 			dataBase.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
 			result, err := localSource.Fetch("aliasByNoe(super.puper.pattern, 2)", from, until, true)
-			So(err.Error(), ShouldResemble, "Unknown graphite function: \"aliasByNoe\"")
+			So(err.Error(), ShouldResemble, "failed to evaluate target 'aliasByNoe(super.puper.pattern, 2)': unknown function in evalExpr: \"aliasByNoe\"")
 			So(result, ShouldBeNil)
 		})
 
@@ -346,14 +346,14 @@ func TestLocal_evalExpr(t *testing.T) {
 		So(err, ShouldBeNil)
 		res, err := evalExpr("target", expression, time.Now().Add(-1*time.Hour).Unix(), time.Now().Unix(), make(map[parser.MetricRequest][]*types.MetricData))
 		So(err, ShouldBeNil)
-		So(res, ShouldBeNil)
+		So(res, ShouldBeEmpty)
 	})
 
 	Convey("When got unknown func, should return error", t, func() {
 		expression, _, _ := parser.ParseExpr(`vf('name=k8s.dev-cl1.kube_pod_status_ready', 'condition!=true', 'namespace=default', 'pod=~*')`)
 		res, err := evalExpr("target", expression, time.Now().Add(-1*time.Hour).Unix(), time.Now().Unix(), nil)
 		So(err, ShouldBeError)
-		So(err.Error(), ShouldResemble, `Unknown graphite function: "vf"`)
+		So(err.Error(), ShouldResemble, `failed to evaluate target 'target': unknown function in evalExpr: "vf"`)
 		So(res, ShouldBeNil)
 	})
 }
