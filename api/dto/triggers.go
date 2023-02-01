@@ -392,7 +392,7 @@ func (*ThrottlingResponse) Render(http.ResponseWriter, *http.Request) error {
 type SaveTriggerResponse struct {
 	ID      string               `json:"id"`
 	Message string               `json:"message"`
-	Check   TriggerCheckResponse `json:"checkResult,omitempty"`
+	Check   TriggerCheckResponse `json:"check,omitempty"`
 }
 
 func (*SaveTriggerResponse) Render(http.ResponseWriter, *http.Request) error {
