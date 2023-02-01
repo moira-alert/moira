@@ -437,7 +437,7 @@ func TestCreateTriggerHandler(t *testing.T) {
 						},
 					},
 				}
-				So(actual.CheckResult.Targets, ShouldResemble, expectedTargets)
+				So(actual.Check.Targets, ShouldResemble, expectedTargets)
 				const expected = "trigger created"
 				So(actual.Message, ShouldEqual, expected)
 			})
@@ -501,10 +501,10 @@ func TestCreateTriggerHandler(t *testing.T) {
 				contents := string(contentBytes)
 				fmt.Println(contents)
 
-				actual := dto.TriggerCheckResult{}
+				actual := dto.TriggerCheckResponse{}
 				_ = json.Unmarshal(contentBytes, &actual)
 
-				expected := dto.TriggerCheckResult{
+				expected := dto.TriggerCheckResponse{
 					Targets: []dto.TreeOfProblems{
 						{
 							SyntaxOk: true,

@@ -63,7 +63,7 @@ func createTrigger(writer http.ResponseWriter, request *http.Request) {
 	if isNeedValidate(request) {
 		problems = validateTargets(request, trigger)
 		if problems != nil && dto.AreTreesHaveError(problems) {
-			writeTargets(writer, request, problems)
+			writeErrorSaveResponse(writer, request, problems)
 			return
 		}
 	}
@@ -85,7 +85,7 @@ func createTrigger(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	if problems != nil {
-		response.CheckResult.Targets = problems
+		response.Check.Targets = problems
 	}
 
 	if err := render.Render(writer, request, response); err != nil {
@@ -134,7 +134,7 @@ func getMetricTTLByTrigger(request *http.Request, trigger *dto.Trigger) time.Dur
 
 func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 	trigger := &dto.Trigger{}
-	result := dto.TriggerCheckResult{}
+	result := dto.TriggerCheckResponse{}
 
 	if err := render.Bind(request, trigger); err != nil {
 		switch err.(type) {

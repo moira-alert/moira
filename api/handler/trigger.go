@@ -43,7 +43,7 @@ func updateTrigger(writer http.ResponseWriter, request *http.Request) {
 	if isNeedValidate(request) {
 		problems = validateTargets(request, trigger)
 		if problems != nil && dto.AreTreesHaveError(problems) {
-			writeTargets(writer, request, problems)
+			writeErrorSaveResponse(writer, request, problems)
 			return
 		}
 	}
@@ -56,7 +56,7 @@ func updateTrigger(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	if problems != nil {
-		response.CheckResult.Targets = problems
+		response.Check.Targets = problems
 	}
 
 	if err := render.Render(writer, request, response); err != nil {
@@ -85,12 +85,14 @@ func validateTargets(request *http.Request, trigger *dto.Trigger) (problems []dt
 	return nil
 }
 
-func writeTargets(writer http.ResponseWriter, request *http.Request, treesOfProblems []dto.TreeOfProblems) {
-	result := dto.TriggerCheckResult{
-		Targets: treesOfProblems,
+func writeErrorSaveResponse(writer http.ResponseWriter, request *http.Request, treesOfProblems []dto.TreeOfProblems) {
+	response := dto.SaveTriggerResponse{
+		Check: dto.TriggerCheckResponse{
+			Targets: treesOfProblems,
+		},
 	}
 	writer.WriteHeader(http.StatusBadRequest)
-	render.JSON(writer, request, result)
+	render.JSON(writer, request, response)
 }
 
 func removeTrigger(writer http.ResponseWriter, request *http.Request) {

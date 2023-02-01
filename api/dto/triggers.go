@@ -352,7 +352,7 @@ func (trigger *Trigger) PopulatedDescription(events moira.NotificationEvents) er
 	return nil
 }
 
-type TriggerCheckResult struct {
+type TriggerCheckResponse struct {
 	// Graphite-like targets: t1, t2, ...
 	Targets []TreeOfProblems `json:"targets,omitempty"`
 }
@@ -390,9 +390,9 @@ func (*ThrottlingResponse) Render(http.ResponseWriter, *http.Request) error {
 }
 
 type SaveTriggerResponse struct {
-	ID          string             `json:"id"`
-	Message     string             `json:"message"`
-	CheckResult TriggerCheckResult `json:"checkResult,omitempty"`
+	ID      string               `json:"id"`
+	Message string               `json:"message"`
+	Check   TriggerCheckResponse `json:"checkResult,omitempty"`
 }
 
 func (*SaveTriggerResponse) Render(http.ResponseWriter, *http.Request) error {
