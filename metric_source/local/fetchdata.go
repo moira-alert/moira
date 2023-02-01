@@ -73,7 +73,7 @@ func unpackMetricValues(metricData []*moira.MetricValue, until int64, allowRealT
 
 	values := make([]float64, 0, lastTimeSlot+1)
 	// note that right boundary is exclusive
-	for timeSlot := int64(0); timeSlot < lastTimeSlot; timeSlot++ {
+	for timeSlot := int64(0); timeSlot <= lastTimeSlot; timeSlot++ {
 		val, ok := points[timeSlot]
 		values = append(values, getMathFloat64(val, ok))
 	}
