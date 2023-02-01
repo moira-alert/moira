@@ -139,8 +139,14 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 	result := dto.TriggerCheckResult{}
 
 	if err := render.Bind(request, trigger); err != nil {
-		render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
-		return
+		switch err.(type) {
+		case expression.ErrInvalidExpression, local.ErrParseExpr, local.ErrEvalExpr, local.ErrUnknownFunction:
+			// TODO write comment, why errors are ignored, it is not obvious.
+			// In getTriggerFromRequest these types of errors lead to 400.
+		default:
+			render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
+			return
+		}
 	}
 
 	ttl := getMetricTTLByTrigger(request, trigger)
