@@ -501,20 +501,22 @@ func TestCreateTriggerHandler(t *testing.T) {
 				contents := string(contentBytes)
 				fmt.Println(contents)
 
-				actual := dto.TriggerCheckResponse{}
+				actual := dto.SaveTriggerResponse{}
 				_ = json.Unmarshal(contentBytes, &actual)
 
-				expected := dto.TriggerCheckResponse{
-					Targets: []dto.TreeOfProblems{
-						{
-							SyntaxOk: true,
-							TreeOfProblems: &dto.ProblemOfTarget{
-								Argument: "alias",
-								Problems: []dto.ProblemOfTarget{
-									{
-										Argument:    "summarize",
-										Type:        "bad",
-										Description: "This function is unstable: it can return different historical values with each evaluation. Moira will show unexpected values that you don't see on your graphs.",
+				expected := dto.SaveTriggerResponse{
+					Check: dto.TriggerCheckResponse{
+						Targets: []dto.TreeOfProblems{
+							{
+								SyntaxOk: true,
+								TreeOfProblems: &dto.ProblemOfTarget{
+									Argument: "alias",
+									Problems: []dto.ProblemOfTarget{
+										{
+											Argument:    "summarize",
+											Type:        "bad",
+											Description: "This function is unstable: it can return different historical values with each evaluation. Moira will show unexpected values that you don't see on your graphs.",
+										},
 									},
 								},
 							},
