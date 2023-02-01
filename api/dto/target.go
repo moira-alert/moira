@@ -17,8 +17,8 @@ func init() {
 type typeOfProblem string
 
 const (
-	IsWarn typeOfProblem = "warn"
-	IsBad  typeOfProblem = "bad"
+	isWarn typeOfProblem = "warn"
+	isBad  typeOfProblem = "bad"
 )
 
 var (
@@ -156,7 +156,7 @@ func checkExpression(expression parser.Expr, ttl time.Duration, isRemote bool) *
 
 		problemFunction.Problems = append(problemFunction.Problems, ProblemOfTarget{
 			Argument: argument,
-			Type:     IsBad,
+			Type:     isBad,
 			Position: 1,
 			Description: fmt.Sprintf(
 				"The function %s has a time sampling parameter %s larger than allowed by the config:%s",
@@ -187,7 +187,7 @@ func checkFunction(funcName string, isRemote bool) *ProblemOfTarget {
 	if _, isUnstable := unstableFunctions[funcName]; isUnstable {
 		return &ProblemOfTarget{
 			Argument:    funcName,
-			Type:        IsBad,
+			Type:        isBad,
 			Description: "This function is unstable: it can return different historical values with each evaluation. Moira will show unexpected values that you don't see on your graphs.",
 		}
 	}
@@ -195,7 +195,7 @@ func checkFunction(funcName string, isRemote bool) *ProblemOfTarget {
 	if _, isFalseNotification := falseNotificationsFunctions[funcName]; isFalseNotification {
 		return &ProblemOfTarget{
 			Argument:    funcName,
-			Type:        IsWarn,
+			Type:        isWarn,
 			Description: "This function shows and hides entire metric series based on their values. Moira will send frequent false NODATA notifications.",
 		}
 	}
@@ -203,7 +203,7 @@ func checkFunction(funcName string, isRemote bool) *ProblemOfTarget {
 	if _, isVisual := visualFunctions[funcName]; isVisual {
 		return &ProblemOfTarget{
 			Argument:    funcName,
-			Type:        IsWarn,
+			Type:        isWarn,
 			Description: "This function affects only visual graph representation. It is meaningless in Moira.",
 		}
 	}
@@ -211,7 +211,7 @@ func checkFunction(funcName string, isRemote bool) *ProblemOfTarget {
 	if !isRemote && !funcIsSupported(funcName) {
 		return &ProblemOfTarget{
 			Argument:    funcName,
-			Type:        IsBad,
+			Type:        isBad,
 			Description: "Function is not supported, if you want to use it, switch to remote",
 			Position:    0,
 			Problems:    nil,
@@ -273,7 +273,7 @@ func AreTreesHaveError(trees []TreeOfProblems) bool {
 }
 
 func isTreeHasError(tree *ProblemOfTarget) bool {
-	if tree.Type == IsBad {
+	if tree.Type == isBad {
 		return true
 	}
 
