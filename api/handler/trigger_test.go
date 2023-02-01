@@ -270,9 +270,6 @@ func TestUpdateTrigger(t *testing.T) {
 				So(response.StatusCode, ShouldEqual, http.StatusOK)
 
 				contentBytes, _ := io.ReadAll(response.Body)
-				contents := string(contentBytes)
-				fmt.Println(contents)
-
 				actual := dto.SaveTriggerResponse{}
 				_ = json.Unmarshal(contentBytes, &actual)
 
@@ -354,9 +351,6 @@ func TestUpdateTrigger(t *testing.T) {
 				So(response.StatusCode, ShouldEqual, http.StatusBadRequest)
 
 				contentBytes, _ := io.ReadAll(response.Body)
-				contents := string(contentBytes)
-				fmt.Println(contents)
-
 				actual := dto.SaveTriggerResponse{}
 				_ = json.Unmarshal(contentBytes, &actual)
 
