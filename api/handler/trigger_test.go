@@ -292,7 +292,7 @@ func TestUpdateTrigger(t *testing.T) {
 						},
 					},
 				}
-				So(actual.Targets, ShouldResemble, expectedTargets)
+				So(actual.CheckResult.Targets, ShouldResemble, expectedTargets)
 				const expected = "trigger updated"
 				So(actual.Message, ShouldEqual, expected)
 			})

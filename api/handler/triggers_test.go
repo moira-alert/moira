@@ -437,7 +437,7 @@ func TestCreateTriggerHandler(t *testing.T) {
 						},
 					},
 				}
-				So(actual.Targets, ShouldResemble, expectedTargets)
+				So(actual.CheckResult.Targets, ShouldResemble, expectedTargets)
 				const expected = "trigger created"
 				So(actual.Message, ShouldEqual, expected)
 			})

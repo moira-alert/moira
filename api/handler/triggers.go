@@ -87,7 +87,7 @@ func createTrigger(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	if problems != nil {
-		response.Targets = problems
+		response.CheckResult.Targets = problems
 	}
 
 	if err := render.Render(writer, request, response); err != nil {
