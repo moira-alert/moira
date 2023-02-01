@@ -42,7 +42,7 @@ func updateTrigger(writer http.ResponseWriter, request *http.Request) {
 	var problems []dto.TreeOfProblems
 	if isNeedValidate(request) {
 		problems = validateTargets(request, trigger)
-		if problems != nil && dto.AreTreesHaveError(problems) {
+		if problems != nil && dto.HaveTreesError(problems) {
 			writeErrorSaveResponse(writer, request, problems)
 			return
 		}

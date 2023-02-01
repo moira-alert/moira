@@ -108,6 +108,20 @@ type ProblemOfTarget struct {
 	Problems    []ProblemOfTarget `json:"problems,omitempty"`
 }
 
+func (p *ProblemOfTarget) hasError() bool {
+	if p.Type == isBad {
+		return true
+	}
+
+	for _, pp := range p.Problems {
+		if pp.hasError() {
+			return true
+		}
+	}
+
+	return false
+}
+
 type TreeOfProblems struct {
 	SyntaxOk       bool             `json:"syntax_ok"`
 	TreeOfProblems *ProblemOfTarget `json:"tree_of_problems,omitempty"`
@@ -138,6 +152,18 @@ func TargetVerification(targets []string, ttl time.Duration, isRemote bool) []Tr
 	}
 
 	return functionsOfTargets
+}
+
+// HaveTreesError checks that at least one node of tree has a problem with error type.
+// It is wrapper to handle slice of trees.
+func HaveTreesError(trees []TreeOfProblems) bool {
+	for _, tree := range trees {
+		if tree.TreeOfProblems.hasError() {
+			return true
+		}
+	}
+
+	return false
 }
 
 // checkExpression validates expression.
@@ -260,28 +286,4 @@ func positiveDuration(argument parser.Expr) (string, time.Duration) {
 	}
 
 	return value, secondTimeDuration
-}
-
-func AreTreesHaveError(trees []TreeOfProblems) bool {
-	for _, problem := range trees {
-		if isTreeHasError(problem.TreeOfProblems) {
-			return true
-		}
-	}
-
-	return false
-}
-
-func isTreeHasError(tree *ProblemOfTarget) bool {
-	if tree.Type == isBad {
-		return true
-	}
-
-	for _, t := range tree.Problems {
-		if isTreeHasError(&t) {
-			return true
-		}
-	}
-
-	return false
 }
