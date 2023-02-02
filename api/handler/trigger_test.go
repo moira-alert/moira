@@ -289,7 +289,7 @@ func TestUpdateTrigger(t *testing.T) {
 						},
 					},
 				}
-				So(actual.Check.Targets, ShouldResemble, expectedTargets)
+				So(actual.CheckResult.Targets, ShouldResemble, expectedTargets)
 				const expected = "trigger updated"
 				So(actual.Message, ShouldEqual, expected)
 			})
@@ -355,7 +355,7 @@ func TestUpdateTrigger(t *testing.T) {
 				_ = json.Unmarshal(contentBytes, &actual)
 
 				expected := dto.SaveTriggerResponse{
-					Check: dto.TriggerCheckResponse{
+					CheckResult: dto.TriggerCheckResponse{
 						Targets: []dto.TreeOfProblems{
 							{
 								SyntaxOk: true,

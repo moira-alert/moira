@@ -56,7 +56,7 @@ func updateTrigger(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	if problems != nil {
-		response.Check.Targets = problems
+		response.CheckResult.Targets = problems
 	}
 
 	if err := render.Render(writer, request, response); err != nil {
@@ -87,7 +87,7 @@ func validateTargets(request *http.Request, trigger *dto.Trigger) (problems []dt
 
 func writeErrorSaveResponse(writer http.ResponseWriter, request *http.Request, treesOfProblems []dto.TreeOfProblems) {
 	response := dto.SaveTriggerResponse{
-		Check: dto.TriggerCheckResponse{
+		CheckResult: dto.TriggerCheckResponse{
 			Targets: treesOfProblems,
 		},
 	}
