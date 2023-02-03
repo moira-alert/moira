@@ -154,9 +154,9 @@ func TargetVerification(targets []string, ttl time.Duration, isRemote bool) []Tr
 	return functionsOfTargets
 }
 
-// HaveTreesError checks that at least one node of tree has a problem with error type.
+// DoesAnyTreeHaveError checks that at least one node of tree has a problem with error type.
 // It is wrapper to handle slice of trees.
-func HaveTreesError(trees []TreeOfProblems) bool {
+func DoesAnyTreeHaveError(trees []TreeOfProblems) bool {
 	for _, tree := range trees {
 		if tree.TreeOfProblems.hasError() {
 			return true

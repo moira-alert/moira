@@ -60,9 +60,9 @@ func createTrigger(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	var problems []dto.TreeOfProblems
-	if isNeedValidate(request) {
+	if needValidate(request) {
 		problems = validateTargets(request, trigger)
-		if problems != nil && dto.HaveTreesError(problems) {
+		if problems != nil && dto.DoesAnyTreeHaveError(problems) {
 			writeErrorSaveResponse(writer, request, problems)
 			return
 		}

@@ -40,9 +40,9 @@ func updateTrigger(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	var problems []dto.TreeOfProblems
-	if isNeedValidate(request) {
+	if needValidate(request) {
 		problems = validateTargets(request, trigger)
-		if problems != nil && dto.HaveTreesError(problems) {
+		if problems != nil && dto.DoesAnyTreeHaveError(problems) {
 			writeErrorSaveResponse(writer, request, problems)
 			return
 		}
@@ -65,7 +65,7 @@ func updateTrigger(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func isNeedValidate(request *http.Request) bool {
+func needValidate(request *http.Request) bool {
 	const validateFlag = "validate"
 	return request.URL.Query().Has(validateFlag)
 }
