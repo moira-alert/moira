@@ -492,6 +492,7 @@ func TestCreateTriggerHandler(t *testing.T) {
 				response := responseWriter.Result()
 				defer response.Body.Close()
 
+				So(response.Header.Get("Content-Type"), ShouldEqual, "application/json; charset=utf-8")
 				So(response.StatusCode, ShouldEqual, http.StatusBadRequest)
 
 				contentBytes, _ := io.ReadAll(response.Body)

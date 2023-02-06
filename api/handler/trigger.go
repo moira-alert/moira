@@ -86,12 +86,12 @@ func validateTargets(request *http.Request, trigger *dto.Trigger) (problems []dt
 }
 
 func writeErrorSaveResponse(writer http.ResponseWriter, request *http.Request, treesOfProblems []dto.TreeOfProblems) {
+	render.Status(request, http.StatusBadRequest)
 	response := dto.SaveTriggerResponse{
 		CheckResult: dto.TriggerCheckResponse{
 			Targets: treesOfProblems,
 		},
 	}
-	writer.WriteHeader(http.StatusBadRequest)
 	render.JSON(writer, request, response)
 }
 
