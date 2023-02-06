@@ -51,11 +51,21 @@ func getAllTriggers(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
+// createTrigger handler creates moira.Trigger.
 func createTrigger(writer http.ResponseWriter, request *http.Request) {
 	trigger, err := getTriggerFromRequest(request)
 	if err != nil {
 		render.Render(writer, request, err) //nolint
 		return
+	}
+
+	var problems []dto.TreeOfProblems
+	if needValidate(request) {
+		problems = validateTargets(request, trigger)
+		if problems != nil && dto.DoesAnyTreeHaveError(problems) {
+			writeErrorSaveResponse(writer, request, problems)
+			return
+		}
 	}
 
 	if trigger.Desc != nil {
@@ -72,6 +82,10 @@ func createTrigger(writer http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		render.Render(writer, request, err) //nolint
 		return
+	}
+
+	if problems != nil {
+		response.CheckResult.Targets = problems
 	}
 
 	if err := render.Render(writer, request, response); err != nil {
@@ -125,6 +139,8 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 	if err := render.Bind(request, trigger); err != nil {
 		switch err.(type) {
 		case expression.ErrInvalidExpression, local.ErrParseExpr, local.ErrEvalExpr, local.ErrUnknownFunction:
+			// TODO write comment, why errors are ignored, it is not obvious.
+			// In getTriggerFromRequest these types of errors lead to 400.
 		default:
 			render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
 			return
