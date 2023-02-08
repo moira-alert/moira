@@ -35,7 +35,6 @@ func FetchData(database moira.Database, pattern string, from, until int64, allow
 		return nil, nil, err
 	}
 	return metricsData, metrics, nil
-
 }
 
 func fetchDataNoMetrics(timer Timer, pattern string) []*types.MetricData {
