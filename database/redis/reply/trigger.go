@@ -31,6 +31,8 @@ type triggerStorageElement struct {
 	AloneMetrics     map[string]bool     `json:"alone_metrics"`
 	CreatedAt        *int64              `json:"created_at"`
 	UpdatedAt        *int64              `json:"updated_at"`
+	CreatedBy        string              `json:"created_by"`
+	UpdatedBy        string              `json:"updated_by"`
 }
 
 func (storageElement *triggerStorageElement) toTrigger() moira.Trigger {
@@ -64,6 +66,8 @@ func (storageElement *triggerStorageElement) toTrigger() moira.Trigger {
 		AloneMetrics:     storageElement.AloneMetrics,
 		CreatedAt:        storageElement.CreatedAt,
 		UpdatedAt:        storageElement.UpdatedAt,
+		CreatedBy:        storageElement.CreatedBy,
+		UpdatedBy:        storageElement.UpdatedBy,
 	}
 }
 
@@ -88,6 +92,8 @@ func toTriggerStorageElement(trigger *moira.Trigger, triggerID string) *triggerS
 		AloneMetrics:     trigger.AloneMetrics,
 		CreatedAt:        trigger.CreatedAt,
 		UpdatedAt:        trigger.UpdatedAt,
+		CreatedBy:        trigger.CreatedBy,
+		UpdatedBy:        trigger.UpdatedBy,
 	}
 }
 

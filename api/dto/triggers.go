@@ -77,6 +77,10 @@ type TriggerModel struct {
 	CreatedAt *time.Time `json:"created_at"`
 	// Datetime  when the trigger was updated
 	UpdatedAt *time.Time `json:"updated_at"`
+	// Username who created trigger
+	CreatedBy string `json:"created_by"`
+	// Username who updated trigger
+	UpdatedBy string `json:"updated_by"`
 }
 
 // ToMoiraTrigger transforms TriggerModel to moira.Trigger
@@ -98,6 +102,7 @@ func (model *TriggerModel) ToMoiraTrigger() *moira.Trigger {
 		IsRemote:       model.IsRemote,
 		MuteNewMetrics: model.MuteNewMetrics,
 		AloneMetrics:   model.AloneMetrics,
+		UpdatedBy:      model.UpdatedBy,
 	}
 }
 
@@ -122,6 +127,8 @@ func CreateTriggerModel(trigger *moira.Trigger) TriggerModel {
 		AloneMetrics:   trigger.AloneMetrics,
 		CreatedAt:      getDateTime(trigger.CreatedAt),
 		UpdatedAt:      getDateTime(trigger.UpdatedAt),
+		CreatedBy:      trigger.CreatedBy,
+		UpdatedBy:      trigger.UpdatedBy,
 	}
 }
 
