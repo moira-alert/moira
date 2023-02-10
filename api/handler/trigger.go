@@ -39,6 +39,15 @@ func updateTrigger(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	var problems []dto.TreeOfProblems
+	if needValidate(request) {
+		problems = validateTargets(request, trigger)
+		if problems != nil && dto.DoesAnyTreeHaveError(problems) {
+			writeErrorSaveResponse(writer, request, problems)
+			return
+		}
+	}
+
 	timeSeriesNames := middleware.GetTimeSeriesNames(request)
 	response, err := controller.UpdateTrigger(database, &trigger.TriggerModel, triggerID, timeSeriesNames)
 	if err != nil {
@@ -46,10 +55,44 @@ func updateTrigger(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	if problems != nil {
+		response.CheckResult.Targets = problems
+	}
+
 	if err := render.Render(writer, request, response); err != nil {
 		render.Render(writer, request, api.ErrorRender(err)) //nolint
 		return
 	}
+}
+
+func needValidate(request *http.Request) bool {
+	const validateFlag = "validate"
+	return request.URL.Query().Has(validateFlag)
+}
+
+// validateTargets checks targets of trigger.
+// Returns tree of problems if there is any invalid child, else returns nil.
+func validateTargets(request *http.Request, trigger *dto.Trigger) (problems []dto.TreeOfProblems) {
+	ttl := getMetricTTLByTrigger(request, trigger)
+	treesOfProblems := dto.TargetVerification(trigger.Targets, ttl, trigger.IsRemote)
+
+	for _, tree := range treesOfProblems {
+		if tree.TreeOfProblems != nil {
+			return treesOfProblems
+		}
+	}
+
+	return nil
+}
+
+func writeErrorSaveResponse(writer http.ResponseWriter, request *http.Request, treesOfProblems []dto.TreeOfProblems) {
+	render.Status(request, http.StatusBadRequest)
+	response := dto.SaveTriggerResponse{
+		CheckResult: dto.TriggerCheckResponse{
+			Targets: treesOfProblems,
+		},
+	}
+	render.JSON(writer, request, response)
 }
 
 func removeTrigger(writer http.ResponseWriter, request *http.Request) {
