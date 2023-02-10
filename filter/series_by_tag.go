@@ -6,9 +6,12 @@ import (
 	"strings"
 )
 
-var tagSpecRegex = regexp.MustCompile(`^["']([^,!=]+)\s*(!?=~?)\s*([^,]*)["']`)
-var tagSpecDelimiterRegex = regexp.MustCompile(`^\s*,\s*`)
-var seriesByTagRegex = regexp.MustCompile(`^seriesByTag\(([^)]+)\)$`)
+var (
+	tagSpecRegex          = regexp.MustCompile(`^["']([^,!=]+)\s*(!?=~?)\s*([^"]*)["']`)
+	tagSpecDelimiterRegex = regexp.MustCompile(`^\s*,\s*`)
+	seriesByTagRegex      = regexp.MustCompile(`^seriesByTag\((.+)\)$`)
+	wildcardExprRegex     = regexp.MustCompile(`\{(.*?)\}`)
+)
 
 // ErrNotSeriesByTag is returned if the pattern is not seriesByTag
 var ErrNotSeriesByTag = fmt.Errorf("not seriesByTag pattern")
@@ -34,13 +37,15 @@ type TagSpec struct {
 	Value    string
 }
 
-func transformWildcardToRegexpInSeriesByTag(input string) string {
-	var result = input
-	var re = regexp.MustCompile(`\{(.*?)\}`)
-	var correctLengthOfMatchedWildcardIndexesSlice = 4
+func transformWildcardToRegexpInSeriesByTag(input string) (string, bool) {
+	var (
+		result                                     = input
+		correctLengthOfMatchedWildcardIndexesSlice = 4
+		isTransformed                              = false
+	)
 
 	for {
-		matchedWildcardIndexes := re.FindStringSubmatchIndex(result)
+		matchedWildcardIndexes := wildcardExprRegex.FindStringSubmatchIndex(result)
 		if len(matchedWildcardIndexes) != correctLengthOfMatchedWildcardIndexesSlice {
 			break
 		}
@@ -53,11 +58,15 @@ func transformWildcardToRegexpInSeriesByTag(input string) string {
 			slc[i] = strings.TrimSpace(slc[i])
 		}
 		regularExpression = strings.Join(slc, "|")
-		regularExpression = "~" + regularExpression + "$"
 		result = result[:matchedWildcardIndexes[0]] + regularExpression + result[matchedWildcardIndexes[1]:]
+		isTransformed = true
 	}
 
-	return result
+	if isTransformed {
+		result += "$"
+	}
+
+	return result, isTransformed
 }
 
 // ParseSeriesByTag parses seriesByTag pattern and returns tags specs
@@ -68,8 +77,6 @@ func ParseSeriesByTag(input string) ([]TagSpec, error) {
 	}
 
 	input = input[matchedSeriesByTagIndexes[2]:matchedSeriesByTagIndexes[3]]
-
-	input = transformWildcardToRegexpInSeriesByTag(input)
 
 	tagSpecs := make([]TagSpec, 0)
 
@@ -94,10 +101,23 @@ func ParseSeriesByTag(input string) ([]TagSpec, error) {
 		operator := TagSpecOperator(input[matchedTagSpecIndexes[4]:matchedTagSpecIndexes[5]])
 		spec := input[matchedTagSpecIndexes[6]:matchedTagSpecIndexes[7]]
 
-		tagSpecs = append(tagSpecs, TagSpec{name, operator, spec})
+		if operator != MatchOperator && operator != NotMatchOperator {
+			var isTransformed bool
 
+			// if got spec like '{a,b}' we must transform it to regex and change operator from 'equal' to 'match'
+			if spec, isTransformed = transformWildcardToRegexpInSeriesByTag(spec); isTransformed {
+				if operator == EqualOperator {
+					operator = MatchOperator
+				} else {
+					operator = NotMatchOperator
+				}
+			}
+		}
+
+		tagSpecs = append(tagSpecs, TagSpec{name, operator, spec})
 		input = input[matchedTagSpecIndexes[1]:]
 	}
+
 	return tagSpecs, nil
 }
 
