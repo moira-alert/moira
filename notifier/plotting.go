@@ -58,6 +58,7 @@ func (notifier *StandardNotifier) buildNotificationPackagePlots(pkg Notification
 	if pkg.Trigger.ID == "" {
 		return nil, nil
 	}
+
 	logger.Info().Msg("Start build plots for package")
 	startTime := time.Now()
 	metricsToShow := pkg.GetMetricNames()
@@ -68,17 +69,24 @@ func (notifier *StandardNotifier) buildNotificationPackagePlots(pkg Notification
 	if err != nil {
 		return nil, err
 	}
+
 	from, to := resolveMetricsWindow(logger, pkg.Trigger, pkg)
+	evaluateTriggerStartTime := time.Now()
 	metricsData, trigger, err := notifier.evaluateTriggerMetrics(from, to, pkg.Trigger.ID)
 	if err != nil {
 		return nil, err
 	}
+	notifier.metrics.PlotsEvaluateTriggerDurationMs.Update(time.Since(evaluateTriggerStartTime).Milliseconds())
+
 	metricsData = getMetricDataToShow(metricsData, metricsToShow)
 	logger.Debug().
 		Interface("metrics_data", metricsData).
 		Msg("Build plot from MetricsData")
 
+	buildPlotStartTime := time.Now()
 	result, err := buildTriggerPlots(trigger, metricsData, plotTemplate)
+	notifier.metrics.PlotsBuildDurationMs.Update(time.Since(buildPlotStartTime).Milliseconds())
+
 	logger.Info().
 		Int64("moira.plots.build_duration_ms", time.Since(startTime).Milliseconds()).
 		Msg("Finished build plots for package")
@@ -96,19 +104,19 @@ func resolveMetricsWindow(logger moira.Logger, trigger moira.TriggerData, pkg No
 	from, to, err := pkg.GetWindow()
 	if err != nil {
 		logger.Warning().
-			String("defailt_window", defaultTimeRange.String()).
+			String("default_window", defaultTimeRange.String()).
 			Error(err).
 			Msg("Failed to get trigger package window, using default window")
 		return defaultFrom, defaultTo
 	}
-	// round to nearest retention to correctly fetch data from redis
+	// round to the nearest retention to correctly fetch data from redis
 	from = roundToRetention(from)
 	to = roundToRetention(to)
 	// package window successfully resolved, test it's wide and realtime metrics window
 	fromTime, toTime := moira.Int64ToTime(from), moira.Int64ToTime(to)
 	isWideWindow := toTime.Sub(fromTime).Minutes() >= defaultTimeRange.Minutes()
 	isRealTimeWindow := now.UTC().Sub(fromTime).Minutes() <= defaultTimeRange.Minutes()
-	// resolve remote trigger window
+	// resolve remote trigger window.
 	// window is wide: use package window to fetch limited historical data from graphite
 	// window is not wide: use shifted window to fetch extended historical data from graphite
 	if trigger.IsRemote {
@@ -117,7 +125,7 @@ func resolveMetricsWindow(logger moira.Logger, trigger moira.TriggerData, pkg No
 		}
 		return toTime.Add(-defaultTimeRange + defaultTimeShift).Unix(), toTime.Add(defaultTimeShift).Unix()
 	}
-	// resolve local trigger window
+	// resolve local trigger window.
 	// window is realtime: use shifted window to fetch actual data from redis
 	// window is not realtime: force realtime window
 	if isRealTimeWindow {
