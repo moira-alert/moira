@@ -59,6 +59,8 @@ func (worker *FetchEventsWorker) Start() {
 						worker.Metrics.EventsProcessingFailed.Mark(1)
 						worker.Logger.Error().
 							Error(err).
+							String("trigger_id", event.TriggerID).
+							String("contact_id", event.ContactID).
 							Msg("Failed processEvent")
 					}
 				}
