@@ -39,7 +39,7 @@ type TagSpec struct {
 
 func transformWildcardToRegexpInSeriesByTag(input string) (string, bool) {
 	var (
-		result                                     = input
+		result := input
 		correctLengthOfMatchedWildcardIndexesSlice = 4
 		isTransformed                              = false
 	)
