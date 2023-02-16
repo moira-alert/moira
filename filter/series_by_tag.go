@@ -28,6 +28,8 @@ const (
 	MatchOperator TagSpecOperator = "=~"
 	// NotMatchOperator is a non-match operator which helps not to match metric by regex
 	NotMatchOperator TagSpecOperator = "!=~"
+
+	correctLengthOfMatchedWildcardIndexesSlice = 4
 )
 
 // TagSpec is a filter expression inside seriesByTag pattern
@@ -38,11 +40,9 @@ type TagSpec struct {
 }
 
 func transformWildcardToRegexpInSeriesByTag(input string) (string, bool) {
-	var (
-		result := input
-		correctLengthOfMatchedWildcardIndexesSlice = 4
-		isTransformed                              = false
-	)
+	var isTransformed = false
+
+	result := input
 
 	for {
 		matchedWildcardIndexes := wildcardExprRegex.FindStringSubmatchIndex(result)
