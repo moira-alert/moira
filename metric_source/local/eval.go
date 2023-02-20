@@ -25,7 +25,7 @@ func (ctx *evalCtx) FetchAndEval(database moira.Database, target string, result 
 		return err
 	}
 
-	fetchedMetrics, err := ctx.GetMetricData(database, expr)
+	fetchedMetrics, retention, err := ctx.GetMetricsData(database, expr)
 	if err != nil {
 		return err
 	}
@@ -44,6 +44,10 @@ func (ctx *evalCtx) FetchAndEval(database moira.Database, target string, result 
 		}
 		return nil
 	}
+
+	timer := NewTimerRoundingTimestamps(ctx.from, ctx.until, retention)
+	ctx.from = timer.from
+	ctx.until = timer.until
 
 	metricsData, err := ctx.Eval(target, expr, fetchedMetrics)
 	if err != nil {
@@ -74,27 +78,39 @@ func (ctx *evalCtx) Parse(target string) (parser.Expr, error) {
 	return parsedExpr, nil
 }
 
-func (ctx *evalCtx) GetMetricData(database moira.Database, parsedExpr parser.Expr) (*fetchedMetrics, error) {
+func (ctx *evalCtx) GetMetricsData(database moira.Database, parsedExpr parser.Expr) (*fetchedMetrics, int64, error) {
 	metricRequests := parsedExpr.Metrics()
+
 	metrics := make([]string, 0)
 	metricsMap := make(map[parser.MetricRequest][]*types.MetricData)
+
+	fetchData := fetchData{database}
+
+	maxRetention := int64(0)
 	for _, mr := range metricRequests {
-		mr.From += ctx.from
-		mr.Until += ctx.until
-		metricsData, patternMetrics, err := FetchData(
-			database,
-			mr.Metric,
-			mr.From,
-			mr.Until,
-			ctx.allowRealTimeAlerting,
-		)
+		from := mr.From + ctx.from
+		until := mr.Until + ctx.until
+
+		metricNames, err := fetchData.fetchMetricNames(mr.Metric)
 		if err != nil {
-			return nil, err
+			return nil, 0, err
 		}
+
+		timer := NewTimerRoundingTimestamps(from, until, metricNames.retention)
+
+		metricsData, err := fetchData.fetchMetricValues(mr.Metric, metricNames, timer)
+		if err != nil {
+			return nil, 0, err
+		}
+
 		metricsMap[mr] = metricsData
-		metrics = append(metrics, patternMetrics...)
+		metrics = append(metrics, metricNames.metrics...)
+
+		if metricNames.retention > maxRetention {
+			maxRetention = metricNames.retention
+		}
 	}
-	return &fetchedMetrics{metricsMap, metrics}, nil
+	return &fetchedMetrics{metricsMap, metrics}, maxRetention, nil
 }
 
 type fetchedMetrics struct {

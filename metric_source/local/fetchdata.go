@@ -9,35 +9,54 @@ import (
 	"github.com/moira-alert/moira"
 )
 
-// FetchData gets values of given pattern metrics from given interval and returns values and all found pattern metrics
-func FetchData(database moira.Database, pattern string, from, until int64, allowRealTimeAlerting bool) ([]*types.MetricData, []string, error) {
-	metrics, err := database.GetPatternMetrics(pattern)
+type fetchData struct {
+	database moira.Database
+}
+
+type metricsWithRetention struct {
+	retention int64
+	metrics   []string
+}
+
+func (fd *fetchData) fetchMetricNames(pattern string) (*metricsWithRetention, error) {
+	metrics, err := fd.database.GetPatternMetrics(pattern)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	if len(metrics) == 0 {
-		timer := MakeTimer(from, until, 60, allowRealTimeAlerting)
-		return fetchDataNoMetrics(timer, pattern), metrics, nil
+		return &metricsWithRetention{retention: 60, metrics: metrics}, nil
 	}
 
-	ctx := &FetchDataCtx{
-		database:              database,
-		pattern:               pattern,
-		from:                  from,
-		until:                 until,
-		metrics:               metrics,
-		allowRealTimeAlerting: allowRealTimeAlerting,
-	}
-
-	metricsData, err := ctx.fetchDataWithMetrics()
+	retention, err := fd.database.GetMetricRetention(metrics[0])
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	return metricsData, metrics, nil
+
+	return &metricsWithRetention{retention, metrics}, nil
 }
 
-func fetchDataNoMetrics(timer Timer, pattern string) []*types.MetricData {
+func (fd *fetchData) fetchMetricValues(pattern string, metrics *metricsWithRetention, timer *Timer) ([]*types.MetricData, error) {
+	if len(metrics.metrics) == 0 {
+		return fetchDataNoMetrics(timer, pattern), nil
+	}
+
+	dataList, err := fd.database.GetMetricsValues(metrics.metrics, timer.from, timer.until)
+	if err != nil {
+		return nil, err
+	}
+
+	valuesMap := unpackMetricsValues(dataList, timer)
+
+	metricsData := make([]*types.MetricData, 0, len(metrics.metrics))
+	for _, metric := range metrics.metrics {
+		metricsData = append(metricsData, createMetricData(metric, timer, valuesMap[metric]))
+	}
+
+	return metricsData, nil
+}
+
+func fetchDataNoMetrics(timer *Timer, pattern string) []*types.MetricData {
 	dataList := map[string][]*moira.MetricValue{pattern: make([]*moira.MetricValue, 0)}
 	valuesMap := unpackMetricsValues(dataList, timer)
 	metricsData := createMetricData(pattern, timer, valuesMap[pattern])
@@ -45,46 +64,7 @@ func fetchDataNoMetrics(timer Timer, pattern string) []*types.MetricData {
 	return []*types.MetricData{metricsData}
 }
 
-type FetchDataCtx struct {
-	database              moira.Database
-	pattern               string
-	metrics               []string
-	from                  int64
-	until                 int64
-	allowRealTimeAlerting bool
-}
-
-func (ctx *FetchDataCtx) fetchDataWithMetrics() ([]*types.MetricData, error) {
-	timer, err := ctx.makeTimer()
-	if err != nil {
-		return nil, err
-	}
-
-	dataList, err := ctx.database.GetMetricsValues(ctx.metrics, ctx.from, ctx.until)
-	if err != nil {
-		return nil, err
-	}
-
-	valuesMap := unpackMetricsValues(dataList, timer)
-
-	metricsData := make([]*types.MetricData, 0, len(ctx.metrics))
-	for _, metric := range ctx.metrics {
-		metricsData = append(metricsData, createMetricData(metric, timer, valuesMap[metric]))
-	}
-
-	return metricsData, nil
-}
-
-func (ctx *FetchDataCtx) makeTimer() (Timer, error) {
-	firstMetric := ctx.metrics[0]
-	retention, err := ctx.database.GetMetricRetention(firstMetric)
-	if err != nil {
-		return Timer{}, err
-	}
-	return MakeTimer(ctx.from, ctx.until, retention, ctx.allowRealTimeAlerting), nil
-}
-
-func createMetricData(metric string, timer Timer, values []float64) *types.MetricData {
+func createMetricData(metric string, timer *Timer, values []float64) *types.MetricData {
 	fetchResponse := pb.FetchResponse{
 		Name:      metric,
 		StartTime: timer.from,
@@ -95,7 +75,7 @@ func createMetricData(metric string, timer Timer, values []float64) *types.Metri
 	return &types.MetricData{FetchResponse: fetchResponse, Tags: tags.ExtractTags(metric)}
 }
 
-func unpackMetricsValues(metricsData map[string][]*moira.MetricValue, timer Timer) map[string][]float64 {
+func unpackMetricsValues(metricsData map[string][]*moira.MetricValue, timer *Timer) map[string][]float64 {
 	valuesMap := make(map[string][]float64, len(metricsData))
 	for metric, metricData := range metricsData {
 		valuesMap[metric] = unpackMetricValues(metricData, timer)
@@ -103,7 +83,7 @@ func unpackMetricsValues(metricsData map[string][]*moira.MetricValue, timer Time
 	return valuesMap
 }
 
-func unpackMetricValues(metricData []*moira.MetricValue, timer Timer) []float64 {
+func unpackMetricValues(metricData []*moira.MetricValue, timer *Timer) []float64 {
 	points := make(map[int]*moira.MetricValue, len(metricData))
 	for _, metricValue := range metricData {
 		points[timer.GetTimeSlot(metricValue.RetentionTimestamp)] = metricValue
@@ -117,12 +97,6 @@ func unpackMetricValues(metricData []*moira.MetricValue, timer Timer) []float64 
 	for timeSlot := 0; timeSlot < numberOfTimeSlots; timeSlot++ {
 		val, ok := points[timeSlot]
 		values = append(values, getMathFloat64(val, ok))
-	}
-
-	// TODO: Handle allowRealTimeAlerting correctly
-	lastPoint, ok := points[numberOfTimeSlots]
-	if timer.allowRealTimeAlerting && ok {
-		values = append(values, getMathFloat64(lastPoint, ok))
 	}
 
 	return values
