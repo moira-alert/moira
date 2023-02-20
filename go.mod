@@ -25,7 +25,7 @@ require (
 	github.com/gregdel/pushover v0.0.0-20200820121613-505cfd60a340
 	github.com/karriereat/blackfriday-slack v0.1.0
 	github.com/mattermost/mattermost-server/v6 v6.7.2
-	github.com/moira-alert/go-chart v0.0.0-20230113111021-3521c680325b
+	github.com/moira-alert/go-chart v0.0.0-20230220064910-812fb2829b9b
 	github.com/opsgenie/opsgenie-go-sdk-v2 v1.2.1
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pkg/errors v0.9.1
@@ -150,10 +150,10 @@ require (
 	go.uber.org/zap v1.17.0 // indirect
 	golang.org/x/crypto v0.0.0-20220331220935-ae2d96664a29 // indirect
 	golang.org/x/exp v0.0.0-20200924195034-c827fd4f18b9 // indirect
-	golang.org/x/image v0.1.0 // indirect
+	golang.org/x/image v0.5.0 // indirect
 	golang.org/x/net v0.0.0-20220722155237-a158d28d115b // indirect
 	golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f // indirect
-	golang.org/x/text v0.4.0 // indirect
+	golang.org/x/text v0.7.0 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	gonum.org/v1/gonum v0.9.3 // indirect
 	gonum.org/v1/netlib v0.0.0-20200824093956-f0ca4b3a5ef5 // indirect
