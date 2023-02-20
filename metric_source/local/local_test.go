@@ -326,32 +326,44 @@ func TestLocal_IsConfigured(t *testing.T) {
 }
 
 func TestLocal_evalExpr(t *testing.T) {
+
 	Convey("When everything is correct, we don't return any error", t, func() {
-		expression, _, err := parser.ParseExpr(`seriesByTag('name=k8s.dev-cl1.kube_pod_status_ready', 'condition!=true', 'namespace=default', 'pod=~*')`)
+		ctx := evalCtx{from: time.Now().Add(-1 * time.Hour).Unix(), until: time.Now().Unix()}
+		target := `seriesByTag('name=k8s.dev-cl1.kube_pod_status_ready', 'condition!=true', 'namespace=default', 'pod=~*')`
+
+		expression, err := ctx.Parse(target)
 		So(err, ShouldBeNil)
-		res, err := evalExpr("target", expression, time.Now().Add(-1*time.Hour).Unix(), time.Now().Unix(), nil)
+		res, err := ctx.Eval("target", expression, &fetchedMetrics{metricsMap: nil})
 		So(err, ShouldBeNil)
 		So(res, ShouldBeNil)
 	})
 
 	Convey("When get panic, it should return error", t, func() {
-		expression, _, _ := parser.ParseExpr(`;fg`)
-		res, err := evalExpr("target", expression, 0, 0, nil)
+		ctx := evalCtx{from: 0, until: 0}
+
+		expression, _ := ctx.Parse(`;fg`)
+		res, err := ctx.Eval("target", expression, &fetchedMetrics{metricsMap: nil})
 		So(err.Error(), ShouldContainSubstring, "panic while evaluate target target: message: 'runtime error: invalid memory address or nil pointer dereference")
 		So(res, ShouldBeNil)
 	})
 
 	Convey("When no metrics, should not return error", t, func() {
-		expression, _, err := parser.ParseExpr(`alias( divideSeries( alias( sumSeries( exclude( groupByNode( OFD.Production.{ofd-api,ofd-front}.*.fns-service-client.v120.*.GetCashboxRegistrationInformationAsync.ResponseCode.*.Meter.Rate-15-min-Requests-per-s, 9, "sum" ), "Ok" ) ), "bad" ), alias( sumSeries( OFD.Production.{ofd-api,ofd-front}.*.fns-service-client.v120.*.GetCashboxRegistrationInformationAsync.ResponseCode.*.Meter.Rate-15-min-Requests-per-s ), "total" ) ), "Result" )`)
+		ctx := evalCtx{from: time.Now().Add(-1 * time.Hour).Unix(), until: time.Now().Unix()}
+		target := `alias( divideSeries( alias( sumSeries( exclude( groupByNode( OFD.Production.{ofd-api,ofd-front}.*.fns-service-client.v120.*.GetCashboxRegistrationInformationAsync.ResponseCode.*.Meter.Rate-15-min-Requests-per-s, 9, "sum" ), "Ok" ) ), "bad" ), alias( sumSeries( OFD.Production.{ofd-api,ofd-front}.*.fns-service-client.v120.*.GetCashboxRegistrationInformationAsync.ResponseCode.*.Meter.Rate-15-min-Requests-per-s ), "total" ) ), "Result" )`
+
+		expression, err := ctx.Parse(target)
 		So(err, ShouldBeNil)
-		res, err := evalExpr("target", expression, time.Now().Add(-1*time.Hour).Unix(), time.Now().Unix(), make(map[parser.MetricRequest][]*types.MetricData))
+		res, err := ctx.Eval("target", expression, &fetchedMetrics{metricsMap: make(map[parser.MetricRequest][]*types.MetricData)})
 		So(err, ShouldBeNil)
 		So(res, ShouldBeEmpty)
 	})
 
 	Convey("When got unknown func, should return error", t, func() {
-		expression, _, _ := parser.ParseExpr(`vf('name=k8s.dev-cl1.kube_pod_status_ready', 'condition!=true', 'namespace=default', 'pod=~*')`)
-		res, err := evalExpr("target", expression, time.Now().Add(-1*time.Hour).Unix(), time.Now().Unix(), nil)
+		ctx := evalCtx{from: time.Now().Add(-1 * time.Hour).Unix(), until: time.Now().Unix()}
+		target := `vf('name=k8s.dev-cl1.kube_pod_status_ready', 'condition!=true', 'namespace=default', 'pod=~*')`
+
+		expression, _ := ctx.Parse(target)
+		res, err := ctx.Eval("target", expression, &fetchedMetrics{metricsMap: nil})
 		So(err, ShouldBeError)
 		So(err.Error(), ShouldResemble, `failed to evaluate target 'target': unknown function in evalExpr: "vf"`)
 		So(res, ShouldBeNil)
