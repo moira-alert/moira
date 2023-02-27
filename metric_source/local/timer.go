@@ -6,10 +6,15 @@ type Timer struct {
 	retention int64
 }
 
+func RoundTimestamps(from, until, retention int64) (roundedFrom, roundedUntil int64) {
+	return CeilToMultiplier(from, retention), FloorToMultiplier(until, retention) + retention
+}
+
 func NewTimerRoundingTimestamps(from int64, until int64, retention int64) *Timer {
+	from, until = RoundTimestamps(from, until, retention)
 	return &Timer{
-		from:      CeilToMultiplier(from, retention),
-		until:     FloorToMultiplier(until, retention) + retention,
+		from:      from,
+		until:     until,
 		retention: retention,
 	}
 }

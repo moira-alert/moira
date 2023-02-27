@@ -7,6 +7,7 @@ import (
 	"runtime/debug"
 
 	"github.com/go-graphite/carbonapi/expr"
+	"github.com/go-graphite/carbonapi/expr/helper"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
 	"github.com/moira-alert/moira"
@@ -14,9 +15,8 @@ import (
 )
 
 type evalCtx struct {
-	from                  int64
-	until                 int64
-	allowRealTimeAlerting bool
+	from  int64
+	until int64
 }
 
 func (ctx *evalCtx) FetchAndEval(database moira.Database, target string, result *FetchResult) error {
@@ -25,10 +25,13 @@ func (ctx *evalCtx) FetchAndEval(database moira.Database, target string, result 
 		return err
 	}
 
-	fetchedMetrics, retention, err := ctx.GetMetricsData(database, expr)
+	fetchedMetrics, err := ctx.GetMetricsData(database, expr)
 	if err != nil {
 		return err
 	}
+
+	commonStep := fetchedMetrics.CalculateCommonStep()
+	ctx.ScaleToCommonStep(commonStep, fetchedMetrics)
 
 	rewritten, newTargets, err := ctx.RewriteExpr(expr, fetchedMetrics)
 	if err != nil {
@@ -44,10 +47,6 @@ func (ctx *evalCtx) FetchAndEval(database moira.Database, target string, result 
 		}
 		return nil
 	}
-
-	timer := NewTimerRoundingTimestamps(ctx.from, ctx.until, retention)
-	ctx.from = timer.from
-	ctx.until = timer.until
 
 	metricsData, err := ctx.Eval(target, expr, fetchedMetrics)
 	if err != nil {
@@ -78,7 +77,7 @@ func (ctx *evalCtx) Parse(target string) (parser.Expr, error) {
 	return parsedExpr, nil
 }
 
-func (ctx *evalCtx) GetMetricsData(database moira.Database, parsedExpr parser.Expr) (*fetchedMetrics, int64, error) {
+func (ctx *evalCtx) GetMetricsData(database moira.Database, parsedExpr parser.Expr) (*fetchedMetrics, error) {
 	metricRequests := parsedExpr.Metrics()
 
 	metrics := make([]string, 0)
@@ -86,40 +85,42 @@ func (ctx *evalCtx) GetMetricsData(database moira.Database, parsedExpr parser.Ex
 
 	fetchData := fetchData{database}
 
-	maxRetention := int64(0)
 	for _, mr := range metricRequests {
 		from := mr.From + ctx.from
 		until := mr.Until + ctx.until
 
 		metricNames, err := fetchData.fetchMetricNames(mr.Metric)
 		if err != nil {
-			return nil, 0, err
+			return nil, err
 		}
 
 		timer := NewTimerRoundingTimestamps(from, until, metricNames.retention)
 
 		metricsData, err := fetchData.fetchMetricValues(mr.Metric, metricNames, timer)
 		if err != nil {
-			return nil, 0, err
+			return nil, err
 		}
 
 		metricsMap[mr] = metricsData
 		metrics = append(metrics, metricNames.metrics...)
-
-		if metricNames.retention > maxRetention {
-			maxRetention = metricNames.retention
-		}
 	}
-	return &fetchedMetrics{metricsMap, metrics}, maxRetention, nil
+	return &fetchedMetrics{metricsMap, metrics}, nil
 }
 
-type fetchedMetrics struct {
-	metricsMap map[parser.MetricRequest][]*types.MetricData
-	metrics    []string
-}
+func (ctx *evalCtx) ScaleToCommonStep(retention int64, fetchedMetrics *fetchedMetrics) {
+	from, until := RoundTimestamps(ctx.from, ctx.until, retention)
+	ctx.from, ctx.until = from, until
 
-func (m *fetchedMetrics) HasWildcard() bool {
-	return len(m.metrics) == 0
+	metricMap := make(map[parser.MetricRequest][]*types.MetricData)
+	for metricRequest, metricData := range fetchedMetrics.metricsMap {
+		metricRequest.From += from
+		metricRequest.Until += until
+
+		metricData = helper.ScaleToCommonStep(metricData, retention)
+		metricMap[metricRequest] = metricData
+	}
+
+	fetchedMetrics.metricsMap = metricMap
 }
 
 func (ctx *evalCtx) RewriteExpr(parsedExpr parser.Expr, metrics *fetchedMetrics) (bool, []string, error) {
@@ -175,4 +176,23 @@ func MetricDataFromGraphit(md *types.MetricData, wildcard bool) metricSource.Met
 		Values:    md.Values,
 		Wildcard:  wildcard,
 	}
+}
+
+type fetchedMetrics struct {
+	metricsMap map[parser.MetricRequest][]*types.MetricData
+	metrics    []string
+}
+
+func (m *fetchedMetrics) HasWildcard() bool {
+	return len(m.metrics) == 0
+}
+
+func (m *fetchedMetrics) CalculateCommonStep() int64 {
+	commonStep := int64(1)
+	for _, metricsData := range m.metricsMap {
+		for _, metricData := range metricsData {
+			commonStep = helper.LCM(commonStep, metricData.StepTime)
+		}
+	}
+	return commonStep
 }

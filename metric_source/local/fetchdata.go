@@ -41,7 +41,7 @@ func (fd *fetchData) fetchMetricValues(pattern string, metrics *metricsWithReten
 		return fetchDataNoMetrics(timer, pattern), nil
 	}
 
-	dataList, err := fd.database.GetMetricsValues(metrics.metrics, timer.from, timer.until)
+	dataList, err := fd.database.GetMetricsValues(metrics.metrics, timer.from, timer.until-1)
 	if err != nil {
 		return nil, err
 	}
