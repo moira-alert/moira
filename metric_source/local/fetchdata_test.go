@@ -130,8 +130,16 @@ func TestFetchData(t *testing.T) {
 	pattern := "super-puper-pattern"
 	metric := "super-puper-metric"
 
+	metricValues := []*moira.MetricValue{
+		{RetentionTimestamp: 20, Timestamp: 23, Value: 0},
+		{RetentionTimestamp: 30, Timestamp: 33, Value: 1},
+		{RetentionTimestamp: 40, Timestamp: 43, Value: 2},
+		{RetentionTimestamp: 50, Timestamp: 53, Value: 3},
+		{RetentionTimestamp: 60, Timestamp: 63, Value: 4},
+	}
+
 	dataList := map[string][]*moira.MetricValue{
-		metric: generateMetricValues(20, 23, 10, 5),
+		metric: metricValues,
 	}
 
 	var from int64 = 17
@@ -188,7 +196,7 @@ func TestFetchData(t *testing.T) {
 	})
 
 	metric2 := "super-puper-mega-metric"
-	dataList[metric2] = generateMetricValues(20, 23, 10, 5)
+	dataList[metric2] = metricValues
 
 	Convey("Test multiple metrics", t, func() {
 		dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric, metric2}, nil)
@@ -222,20 +230,292 @@ func TestFetchData(t *testing.T) {
 	})
 }
 
-func generateMetricValues(from, retentionFrom, retention int64, count int) []*moira.MetricValue {
-	values := make([]*moira.MetricValue, 0, count)
+func TestUnpackMetricValuesNoData(t *testing.T) {
+	var retention int64 = 10
 
-	for i := 0; i < count; i++ {
-		values = append(values, &moira.MetricValue{
-			RetentionTimestamp: retentionFrom,
-			Timestamp:          from,
-			Value:              float64(i),
-		})
-		retentionFrom += retention
-		from += retention
+	metricData := map[string][]*moira.MetricValue{"metric": make([]*moira.MetricValue, 0)}
+
+	Convey("From 1 until 1", t, func() {
+		timer := NewTimerRoundingTimestamps(1, 1, retention)
+		val := unpackMetricsValues(metricData, timer)
+		expected := []float64{}
+		So(val["metric"], shouldHaveTheSameValuesAs, expected)
+	})
+
+	Convey("From 0 until 0", t, func() {
+		timer := NewTimerRoundingTimestamps(0, 0, retention)
+		val := unpackMetricsValues(metricData, timer)
+		expected := []float64{math.NaN()}
+		So(val["metric"], shouldHaveTheSameValuesAs, expected)
+	})
+
+	Convey("From 0 until 10", t, func() {
+		timer := NewTimerRoundingTimestamps(0, 10, retention)
+		val := unpackMetricsValues(metricData, timer)
+		expected := []float64{math.NaN(), math.NaN()}
+		So(val["metric"], shouldHaveTheSameValuesAs, expected)
+	})
+
+	Convey("From 1 until 11", t, func() {
+		timer := NewTimerRoundingTimestamps(1, 11, retention)
+		val := unpackMetricsValues(metricData, timer)
+		expected := []float64{math.NaN()}
+		So(val["metric"], shouldHaveTheSameValuesAs, expected)
+	})
+}
+
+func TestUnpackMetricValues(t *testing.T) {
+	var retention int64 = 10
+
+	metricData := map[string][]*moira.MetricValue{"metric": {
+		{Timestamp: 0, RetentionTimestamp: 0, Value: 100.00},
+		{Timestamp: 10, RetentionTimestamp: 10, Value: 200.00},
+		{Timestamp: 20, RetentionTimestamp: 20, Value: 300.00},
+	}}
+
+	Convey("From 1 until 1", t, func() {
+		timer := NewTimerRoundingTimestamps(1, 1, retention)
+		val := unpackMetricsValues(metricData, timer)
+
+		So(val["metric"], shouldHaveTheSameValuesAs, []float64{})
+	})
+
+	Convey("From 0 until 0", t, func() {
+		timer := NewTimerRoundingTimestamps(0, 0, retention)
+		val := unpackMetricsValues(metricData, timer)
+
+		So(val["metric"], shouldHaveTheSameValuesAs, []float64{100.0})
+	})
+
+	Convey("From 1 until 11", t, func() {
+		timer := NewTimerRoundingTimestamps(1, 11, retention)
+		val := unpackMetricsValues(metricData, timer)
+
+		So(val["metric"], shouldHaveTheSameValuesAs, []float64{200.0})
+	})
+
+	Convey("From 0 until 10", t, func() {
+		timer := NewTimerRoundingTimestamps(0, 10, retention)
+		val := unpackMetricsValues(metricData, timer)
+
+		So(val["metric"], shouldHaveTheSameValuesAs, []float64{100.00, 200.0})
+	})
+
+	Convey("From 0 until 11", t, func() {
+		timer := NewTimerRoundingTimestamps(0, 11, retention)
+		val := unpackMetricsValues(metricData, timer)
+
+		So(val["metric"], shouldHaveTheSameValuesAs, []float64{100.00, 200.00})
+	})
+
+	Convey("From 0 until 19", t, func() {
+		timer := NewTimerRoundingTimestamps(0, 19, retention)
+		val := unpackMetricsValues(metricData, timer)
+
+		So(val["metric"], shouldHaveTheSameValuesAs, []float64{100.00, 200.00})
+	})
+
+	Convey("From 1 until 30", t, func() {
+		timer := NewTimerRoundingTimestamps(1, 30, retention)
+		val := unpackMetricsValues(metricData, timer)
+
+		So(val["metric"], shouldHaveTheSameValuesAs, []float64{200.00, 300.00, math.NaN()})
+	})
+}
+
+func TestMultipleSeriesNoData(t *testing.T) {
+	var retention int64 = 10
+	metricData := map[string][]*moira.MetricValue{
+		"metric1": {},
+		"metric2": {},
 	}
 
-	return values
+	Convey("From 1 until 1", t, func() {
+		timer := NewTimerRoundingTimestamps(1, 1, retention)
+
+		val := unpackMetricsValues(metricData, timer)
+		So(val["metric1"], shouldHaveTheSameValuesAs, []float64{})
+		So(val["metric2"], shouldHaveTheSameValuesAs, []float64{})
+	})
+
+	Convey("From 0 until 0", t, func() {
+		timer := NewTimerRoundingTimestamps(0, 0, retention)
+
+		val := unpackMetricsValues(metricData, timer)
+		So(val["metric1"], shouldHaveTheSameValuesAs, []float64{math.NaN()})
+		So(val["metric2"], shouldHaveTheSameValuesAs, []float64{math.NaN()})
+	})
+
+	Convey("From 1 until 5", t, func() {
+		timer := NewTimerRoundingTimestamps(1, 5, retention)
+
+		val1 := unpackMetricsValues(metricData, timer)
+		So(val1["metric1"], shouldHaveTheSameValuesAs, []float64{})
+		So(val1["metric2"], shouldHaveTheSameValuesAs, []float64{})
+	})
+
+	Convey("From 0 until 5", t, func() {
+		timer := NewTimerRoundingTimestamps(0, 5, retention)
+
+		val1 := unpackMetricsValues(metricData, timer)
+		So(val1["metric1"], shouldHaveTheSameValuesAs, []float64{math.NaN()})
+		So(val1["metric2"], shouldHaveTheSameValuesAs, []float64{math.NaN()})
+	})
+
+	Convey("From 5 until 30", t, func() {
+		timer := NewTimerRoundingTimestamps(5, 30, retention)
+
+		val1 := unpackMetricsValues(metricData, timer)
+		So(val1["metric1"], shouldHaveTheSameValuesAs, []float64{math.NaN(), math.NaN(), math.NaN()})
+		So(val1["metric2"], shouldHaveTheSameValuesAs, []float64{math.NaN(), math.NaN(), math.NaN()})
+	})
+}
+
+func TestMultipleSeries(t *testing.T) {
+	var retention int64 = 10
+
+	metricData := map[string][]*moira.MetricValue{
+		"metric1": {
+			{Timestamp: 0, RetentionTimestamp: 0, Value: 100.00},
+			{Timestamp: 10, RetentionTimestamp: 10, Value: 200.00},
+			{Timestamp: 20, RetentionTimestamp: 20, Value: 300.00},
+		},
+		"metric2": {
+			{Timestamp: 0, RetentionTimestamp: 0, Value: 150.00},
+			{Timestamp: 10, RetentionTimestamp: 10, Value: 250.00},
+			{Timestamp: 20, RetentionTimestamp: 20, Value: 350.00},
+		},
+	}
+
+	Convey("From 1 until 1", t, func() {
+		timer := NewTimerRoundingTimestamps(1, 1, retention)
+
+		val := unpackMetricsValues(metricData, timer)
+		So(val["metric1"], shouldHaveTheSameValuesAs, []float64{})
+		So(val["metric2"], shouldHaveTheSameValuesAs, []float64{})
+	})
+
+	Convey("From 0 until 0", t, func() {
+		timer := NewTimerRoundingTimestamps(0, 0, retention)
+
+		val := unpackMetricsValues(metricData, timer)
+		So(val["metric1"], shouldHaveTheSameValuesAs, []float64{100.0})
+		So(val["metric2"], shouldHaveTheSameValuesAs, []float64{150.0})
+	})
+
+	Convey("From 1 until 5", t, func() {
+		timer := NewTimerRoundingTimestamps(1, 5, retention)
+
+		val1 := unpackMetricsValues(metricData, timer)
+		So(val1["metric1"], shouldHaveTheSameValuesAs, []float64{})
+		So(val1["metric2"], shouldHaveTheSameValuesAs, []float64{})
+	})
+
+	Convey("From 0 until 5", t, func() {
+		timer := NewTimerRoundingTimestamps(0, 5, retention)
+
+		val1 := unpackMetricsValues(metricData, timer)
+		So(val1["metric1"], shouldHaveTheSameValuesAs, []float64{100.0})
+		So(val1["metric2"], shouldHaveTheSameValuesAs, []float64{150.0})
+	})
+
+	Convey("From 0 until 9", t, func() {
+		timer := NewTimerRoundingTimestamps(0, 9, retention)
+
+		val1 := unpackMetricsValues(metricData, timer)
+		So(val1["metric1"], shouldHaveTheSameValuesAs, []float64{100.00})
+		So(val1["metric2"], shouldHaveTheSameValuesAs, []float64{150.00})
+	})
+
+	Convey("From 0 until 10", t, func() {
+		timer := NewTimerRoundingTimestamps(0, 10, retention)
+
+		val1 := unpackMetricsValues(metricData, timer)
+		So(val1["metric1"], shouldHaveTheSameValuesAs, []float64{100.00, 200.00})
+		So(val1["metric2"], shouldHaveTheSameValuesAs, []float64{150.00, 250.00})
+	})
+
+	Convey("From 1 until 11", t, func() {
+		timer := NewTimerRoundingTimestamps(1, 11, retention)
+
+		val1 := unpackMetricsValues(metricData, timer)
+		So(val1["metric1"], shouldHaveTheSameValuesAs, []float64{200.00})
+		So(val1["metric2"], shouldHaveTheSameValuesAs, []float64{250.00})
+	})
+
+	Convey("From 0 until 30", t, func() {
+		timer := NewTimerRoundingTimestamps(0, 30, retention)
+
+		val1 := unpackMetricsValues(metricData, timer)
+		So(val1["metric1"], shouldHaveTheSameValuesAs, []float64{100.00, 200.00, 300.00, math.NaN()})
+		So(val1["metric2"], shouldHaveTheSameValuesAs, []float64{150.00, 250.00, 350.00, math.NaN()})
+	})
+
+	Convey("From 5 until 30", t, func() {
+		timer := NewTimerRoundingTimestamps(5, 30, retention)
+
+		val1 := unpackMetricsValues(metricData, timer)
+		So(val1["metric1"], shouldHaveTheSameValuesAs, []float64{200.00, 300.00, math.NaN()})
+		So(val1["metric2"], shouldHaveTheSameValuesAs, []float64{250.00, 350.00, math.NaN()})
+	})
+}
+
+func TestShiftedSeries(t *testing.T) {
+	var retention int64 = 10
+	metricData := map[string][]*moira.MetricValue{"metric": {
+		{Timestamp: 4, RetentionTimestamp: 0, Value: 100.00},
+		{Timestamp: 15, RetentionTimestamp: 10, Value: 200.00},
+		{Timestamp: 25, RetentionTimestamp: 20, Value: 300.00},
+	}}
+
+	Convey("From 1 until 1", t, func() {
+		timer := NewTimerRoundingTimestamps(1, 1, retention)
+		val := unpackMetricsValues(metricData, timer)
+
+		So(val["metric"], shouldHaveTheSameValuesAs, []float64{})
+	})
+
+	Convey("From 0 until 0", t, func() {
+		timer := NewTimerRoundingTimestamps(0, 0, retention)
+		val := unpackMetricsValues(metricData, timer)
+
+		So(val["metric"], shouldHaveTheSameValuesAs, []float64{100.0})
+	})
+
+	Convey("From 1 until 11", t, func() {
+		timer := NewTimerRoundingTimestamps(1, 11, retention)
+		val := unpackMetricsValues(metricData, timer)
+
+		So(val["metric"], shouldHaveTheSameValuesAs, []float64{200.0})
+	})
+
+	Convey("From 0 until 10", t, func() {
+		timer := NewTimerRoundingTimestamps(0, 10, retention)
+		val := unpackMetricsValues(metricData, timer)
+
+		So(val["metric"], shouldHaveTheSameValuesAs, []float64{100.00, 200.0})
+	})
+
+	Convey("From 0 until 11", t, func() {
+		timer := NewTimerRoundingTimestamps(0, 11, retention)
+		val := unpackMetricsValues(metricData, timer)
+
+		So(val["metric"], shouldHaveTheSameValuesAs, []float64{100.00, 200.00})
+	})
+
+	Convey("From 0 until 19", t, func() {
+		timer := NewTimerRoundingTimestamps(0, 19, retention)
+		val := unpackMetricsValues(metricData, timer)
+
+		So(val["metric"], shouldHaveTheSameValuesAs, []float64{100.00, 200.00})
+	})
+
+	Convey("From 1 until 30", t, func() {
+		timer := NewTimerRoundingTimestamps(1, 30, retention)
+		val := unpackMetricsValues(metricData, timer)
+
+		So(val["metric"], shouldHaveTheSameValuesAs, []float64{200.00, 300.00, math.NaN()})
+	})
 }
 
 func shouldHaveTheSameValuesAs(actual interface{}, expected ...interface{}) string {
@@ -255,478 +535,4 @@ func shouldHaveTheSameValuesAs(actual interface{}, expected ...interface{}) stri
 	}
 
 	return ""
-}
-
-// ************************************************************
-// ************************************************************
-// ************************************************************
-
-func TestUnpackMetricValuesNoData(t *testing.T) {
-	var retention int64 = 10
-
-	metricData := map[string][]*moira.MetricValue{"metric": make([]*moira.MetricValue, 0)}
-
-	Convey("Time == 0", t, func() {
-		Convey("With no metrics", func() {
-			timer := NewTimerRoundingTimestamps(0, 0, retention)
-			val := unpackMetricsValues(metricData, timer)
-			expected := []float64{math.NaN()}
-			So(val["metric"], shouldHaveTheSameValuesAs, expected)
-		})
-
-		Convey("With one value", func() {
-			value := 100.0
-
-			metricData["metric"] = []*moira.MetricValue{
-				{
-					RetentionTimestamp: 0,
-					Timestamp:          0,
-					Value:              value,
-				},
-			}
-
-			timer := NewTimerRoundingTimestamps(0, 0, retention)
-			val := unpackMetricsValues(metricData, timer)
-			expected := []float64{value}
-			So(val["metric"], ShouldResemble, expected)
-		})
-	})
-
-	return
-	Convey("Time == 9", t, func() {
-		timer := NewTimerRoundingTimestamps(0, 9, retention)
-		val := unpackMetricsValues(metricData, timer)
-		expected := make([]float64, 0)
-		So(val["metric"], ShouldResemble, expected)
-	})
-
-	Convey("Time == 10", t, func() {
-		timer := NewTimerRoundingTimestamps(0, 10, retention)
-		val := unpackMetricsValues(metricData, timer)
-		expected := []float64{100.00}
-		So(val["metric"], ShouldResemble, expected)
-	})
-
-	metricData["metric"] = append(metricData["metric"], &moira.MetricValue{Timestamp: 10, RetentionTimestamp: 10, Value: 200.00})
-	metricData["metric"] = append(metricData["metric"], &moira.MetricValue{Timestamp: 20, RetentionTimestamp: 20, Value: 300.00})
-
-	Convey("Time == 20", t, func() {
-		timer := NewTimerRoundingTimestamps(0, 20, retention)
-		val := unpackMetricsValues(metricData, timer)
-		expected := []float64{100.00, 200.00}
-		So(val["metric"], ShouldResemble, expected)
-	})
-
-	Convey("Time == 29", t, func() {
-		timer := NewTimerRoundingTimestamps(0, 29, retention)
-		val := unpackMetricsValues(metricData, timer)
-		expected := []float64{100.00, 200.00}
-		So(val["metric"], ShouldResemble, expected)
-	})
-
-	Convey("Time == 30", t, func() {
-		timer := NewTimerRoundingTimestamps(0, 30, retention)
-		val := unpackMetricsValues(metricData, timer)
-		expected := []float64{100.00, 200.00, 300.00}
-		So(val["metric"], ShouldResemble, expected)
-	})
-}
-
-func TestUnpackMetricValues(t *testing.T) {
-	var retention int64 = 10
-
-	metricData := map[string][]*moira.MetricValue{"metric": make([]*moira.MetricValue, 0)}
-
-	Convey("Time == 0", t, func() {
-		Convey("With one value", func() {
-			value := 100.0
-
-			metricData["metric"] = []*moira.MetricValue{
-				{
-					RetentionTimestamp: 0,
-					Timestamp:          0,
-					Value:              value,
-				},
-			}
-
-			timer := NewTimerRoundingTimestamps(0, 0, retention)
-			val := unpackMetricsValues(metricData, timer)
-			expected := []float64{value}
-			So(val["metric"], ShouldResemble, expected)
-		})
-	})
-}
-
-// ************************************************************
-// ************************************************************
-// ************************************************************
-
-func TestNoDataSeries(t *testing.T) {
-	var retention int64 = 10
-	var from int64
-	metricData := map[string][]*moira.MetricValue{"metric": make([]*moira.MetricValue, 0)}
-
-	Convey("AllowRealTimeAlerting == true", t, func() {
-		Convey("Time == 0", func() {
-			timer := NewTimerRoundingTimestamps(from, 0, retention)
-			val := unpackMetricsValues(metricData, timer)
-			expected := make([]float64, 0)
-			So(val["metric"], ShouldResemble, expected)
-		})
-
-		Convey("Time == 9", func() {
-			timer := NewTimerRoundingTimestamps(from, 9, retention)
-			val := unpackMetricsValues(metricData, timer)
-			expected := make([]float64, 0)
-			So(val["metric"], ShouldResemble, expected)
-		})
-
-		Convey("Time == 10", func() {
-			timer := NewTimerRoundingTimestamps(from, 10, retention)
-			val := unpackMetricsValues(metricData, timer)
-			expected := []float64{math.NaN()}
-			So(arrToString(val["metric"]), ShouldResemble, arrToString(expected))
-		})
-
-		Convey("Time == 11", func() {
-			timer := NewTimerRoundingTimestamps(from, 11, retention)
-			val := unpackMetricsValues(metricData, timer)
-			expected := []float64{math.NaN()}
-			So(
-				arrToString(val["metric"]),
-				ShouldResemble,
-				arrToString(expected),
-			)
-		})
-
-		Convey("Time == 20", func() {
-			timer := NewTimerRoundingTimestamps(from, 20, retention)
-			val := unpackMetricsValues(metricData, timer)
-			expected := []float64{math.NaN(), math.NaN()}
-			So(arrToString(val["metric"]), ShouldResemble, arrToString(expected))
-		})
-	})
-
-	Convey("AllowRealTimeAlerting == false", t, func() {
-		Convey("Time == 0", func() {
-			timer := NewTimerRoundingTimestamps(from, 0, retention)
-			val := unpackMetricsValues(metricData, timer)
-			expected := make([]float64, 0)
-			So(val["metric"], ShouldResemble, expected)
-		})
-
-		Convey("Time == 9", func() {
-			timer := NewTimerRoundingTimestamps(from, 9, retention)
-			val := unpackMetricsValues(metricData, timer)
-			expected := make([]float64, 0)
-			So(val["metric"], ShouldResemble, expected)
-		})
-
-		Convey("Time == 10", func() {
-			timer := NewTimerRoundingTimestamps(from, 10, retention)
-			val := unpackMetricsValues(metricData, timer)
-			expected := []float64{math.NaN()}
-			So(arrToString(val["metric"]), ShouldResemble, arrToString(expected))
-		})
-
-		Convey("Time == 11", func() {
-			timer := NewTimerRoundingTimestamps(from, 11, retention)
-			val := unpackMetricsValues(metricData, timer)
-			expected := []float64{math.NaN()}
-			So(arrToString(val["metric"]), ShouldResemble, arrToString(expected))
-		})
-
-		Convey("Time == 20", func() {
-			timer := NewTimerRoundingTimestamps(from, 20, retention)
-			val := unpackMetricsValues(metricData, timer)
-			expected := []float64{math.NaN(), math.NaN()}
-			So(arrToString(val["metric"]), ShouldResemble, arrToString(expected))
-		})
-	})
-}
-
-func TestConservativeMultipleSeries(t *testing.T) {
-	var retention int64 = 10
-	var from int64
-	metricData := map[string][]*moira.MetricValue{
-		"metric1": make([]*moira.MetricValue, 0),
-		"metric2": make([]*moira.MetricValue, 0),
-	}
-
-	Convey("Time == 0", t, func() {
-		timerNotRealTime := NewTimerRoundingTimestamps(from, 0, retention)
-		timerRealTime := NewTimerRoundingTimestamps(from, 0, retention)
-
-		val := unpackMetricsValues(metricData, timerNotRealTime)
-		So(val["metric1"], ShouldResemble, make([]float64, 0))
-		So(val["metric2"], ShouldResemble, make([]float64, 0))
-
-		val1 := unpackMetricsValues(metricData, timerRealTime)
-		So(val1["metric1"], ShouldResemble, make([]float64, 0))
-		So(val1["metric2"], ShouldResemble, make([]float64, 0))
-
-		metricData["metric1"] = append(metricData["metric1"], &moira.MetricValue{Timestamp: 0, RetentionTimestamp: 0, Value: 100.00})
-
-		val2 := unpackMetricsValues(metricData, timerNotRealTime)
-		So(val2["metric1"], ShouldResemble, make([]float64, 0))
-		So(val2["metric2"], ShouldResemble, make([]float64, 0))
-
-		val3 := unpackMetricsValues(metricData, timerRealTime)
-		So(val3["metric1"], ShouldResemble, []float64{100.00})
-		So(val3["metric2"], ShouldResemble, make([]float64, 0))
-	})
-
-	metricData["metric2"] = append(metricData["metric2"], &moira.MetricValue{Timestamp: 5, RetentionTimestamp: 5, Value: 150.00})
-
-	Convey("Time == 5", t, func() {
-		timerNotRealTime := NewTimerRoundingTimestamps(from, 5, retention)
-		timerRealTime := NewTimerRoundingTimestamps(from, 5, retention)
-
-		val1 := unpackMetricsValues(metricData, timerNotRealTime)
-		So(val1["metric1"], ShouldResemble, make([]float64, 0))
-		So(val1["metric2"], ShouldResemble, make([]float64, 0))
-
-		val3 := unpackMetricsValues(metricData, timerRealTime)
-		So(val3["metric1"], ShouldResemble, []float64{100.00})
-		So(val3["metric2"], ShouldResemble, []float64{150.00})
-	})
-
-	Convey("Time == 9", t, func() {
-		timerNotRealTime := NewTimerRoundingTimestamps(from, 9, retention)
-		timerRealTime := NewTimerRoundingTimestamps(from, 9, retention)
-
-		val1 := unpackMetricsValues(metricData, timerNotRealTime)
-		So(val1["metric1"], ShouldResemble, make([]float64, 0))
-		So(val1["metric2"], ShouldResemble, make([]float64, 0))
-
-		val3 := unpackMetricsValues(metricData, timerRealTime)
-		So(val3["metric1"], ShouldResemble, []float64{100.00})
-		So(val3["metric2"], ShouldResemble, []float64{150.00})
-	})
-
-	Convey("Time == 10", t, func() {
-		timerNotRealTime := NewTimerRoundingTimestamps(from, 10, retention)
-		timerRealTime := NewTimerRoundingTimestamps(from, 10, retention)
-
-		val1 := unpackMetricsValues(metricData, timerNotRealTime)
-		So(val1["metric1"], ShouldResemble, []float64{100.00})
-		So(val1["metric2"], ShouldResemble, []float64{150.00})
-
-		val3 := unpackMetricsValues(metricData, timerRealTime)
-		So(val3["metric1"], ShouldResemble, []float64{100.00})
-		So(val3["metric2"], ShouldResemble, []float64{150.00})
-	})
-
-	metricData["metric1"] = append(metricData["metric1"], &moira.MetricValue{Timestamp: 10, RetentionTimestamp: 10, Value: 200.00})
-	metricData["metric2"] = append(metricData["metric2"], &moira.MetricValue{Timestamp: 15, RetentionTimestamp: 15, Value: 250.00})
-	metricData["metric1"] = append(metricData["metric1"], &moira.MetricValue{Timestamp: 20, RetentionTimestamp: 20, Value: 300.00})
-
-	Convey("Time == 20", t, func() {
-		timerNotRealTime := NewTimerRoundingTimestamps(from, 20, retention)
-		timerRealTime := NewTimerRoundingTimestamps(from, 20, retention)
-
-		val1 := unpackMetricsValues(metricData, timerNotRealTime)
-		So(val1["metric1"], ShouldResemble, []float64{100.00, 200.00})
-		So(val1["metric2"], ShouldResemble, []float64{150.00, 250.00})
-
-		val3 := unpackMetricsValues(metricData, timerRealTime)
-		So(val3["metric1"], ShouldResemble, []float64{100.00, 200.00, 300.00})
-		So(val3["metric2"], ShouldResemble, []float64{150.00, 250.00})
-	})
-
-	metricData["metric2"] = append(metricData["metric2"], &moira.MetricValue{Timestamp: 25, RetentionTimestamp: 25, Value: 350.00})
-
-	Convey("Time == 29", t, func() {
-		timerNotRealTime := NewTimerRoundingTimestamps(from, 29, retention)
-		timerRealTime := NewTimerRoundingTimestamps(from, 29, retention)
-
-		val1 := unpackMetricsValues(metricData, timerNotRealTime)
-		So(val1["metric1"], ShouldResemble, []float64{100.00, 200.00})
-		So(val1["metric2"], ShouldResemble, []float64{150.00, 250.00})
-
-		val3 := unpackMetricsValues(metricData, timerRealTime)
-		So(val3["metric1"], ShouldResemble, []float64{100.00, 200.00, 300.00})
-		So(val3["metric2"], ShouldResemble, []float64{150.00, 250.00, 350.00})
-	})
-
-	Convey("Time == 30", t, func() {
-		timerNotRealTime := NewTimerRoundingTimestamps(from, 30, retention)
-		timerRealTime := NewTimerRoundingTimestamps(from, 30, retention)
-
-		val1 := unpackMetricsValues(metricData, timerNotRealTime)
-		So(val1["metric1"], ShouldResemble, []float64{100.00, 200.00, 300.00})
-		So(val1["metric2"], ShouldResemble, []float64{150.00, 250.00, 350.00})
-
-		val3 := unpackMetricsValues(metricData, timerRealTime)
-		So(val3["metric1"], ShouldResemble, []float64{100.00, 200.00, 300.00})
-		So(val3["metric2"], ShouldResemble, []float64{150.00, 250.00, 350.00})
-	})
-}
-
-func TestNonZeroStartTimeSeries(t *testing.T) {
-	var retention int64 = 10
-	var from int64 = 2
-	metricData := map[string][]*moira.MetricValue{"metric": make([]*moira.MetricValue, 0)}
-
-	Convey("Time == 11", t, func() {
-		timerNotRealTime := NewTimerRoundingTimestamps(from, 11, retention)
-		timerRealTime := NewTimerRoundingTimestamps(from, 11, retention)
-
-		val1 := unpackMetricsValues(metricData, timerNotRealTime)
-		So(val1["metric"], ShouldResemble, make([]float64, 0))
-		val2 := unpackMetricsValues(metricData, timerRealTime)
-		So(val2["metric"], ShouldResemble, make([]float64, 0))
-
-		metricData["metric"] = append(metricData["metric"], &moira.MetricValue{Timestamp: 11, RetentionTimestamp: 10, Value: 100.00})
-
-		val3 := unpackMetricsValues(metricData, timerNotRealTime)
-		So(val3["metric"], ShouldResemble, make([]float64, 0))
-		val4 := unpackMetricsValues(metricData, timerRealTime)
-		So(val4["metric"], ShouldResemble, []float64{100.00})
-	})
-
-	Convey("Time == 12", t, func() {
-		timer := NewTimerRoundingTimestamps(from, 12, retention)
-
-		val1 := unpackMetricsValues(metricData, timer)
-		So(val1["metric"], ShouldResemble, make([]float64, 0))
-	})
-}
-
-func TestConservativeShiftedSeries(t *testing.T) {
-	var retention int64 = 10
-	var from int64
-	metricData := map[string][]*moira.MetricValue{"metric": make([]*moira.MetricValue, 0)}
-
-	Convey("Time == 0", t, func() {
-		timer := NewTimerRoundingTimestamps(from, 0, retention)
-
-		val1 := unpackMetricsValues(metricData, timer)
-		So(val1["metric"], ShouldResemble, make([]float64, 0))
-	})
-
-	metricData["metric"] = append(metricData["metric"], &moira.MetricValue{Timestamp: 4, RetentionTimestamp: 0, Value: 100.00})
-
-	Convey("Time == 5", t, func() {
-		timer := NewTimerRoundingTimestamps(from, 5, retention)
-
-		val1 := unpackMetricsValues(metricData, timer)
-		So(val1["metric"], ShouldResemble, make([]float64, 0))
-	})
-
-	Convey("Time == 9", t, func() {
-		timer := NewTimerRoundingTimestamps(from, 9, retention)
-
-		val1 := unpackMetricsValues(metricData, timer)
-		So(val1["metric"], ShouldResemble, make([]float64, 0))
-	})
-
-	Convey("Time == 10", t, func() {
-		timer := NewTimerRoundingTimestamps(from, 10, retention)
-
-		val1 := unpackMetricsValues(metricData, timer)
-		So(val1["metric"], ShouldResemble, []float64{100.00})
-	})
-
-	Convey("Time == 11", t, func() {
-		timer := NewTimerRoundingTimestamps(from, 11, retention)
-
-		val1 := unpackMetricsValues(metricData, timer)
-		So(val1["metric"], ShouldResemble, []float64{100.00})
-	})
-
-	metricData["metric"] = append(metricData["metric"], &moira.MetricValue{Timestamp: 15, RetentionTimestamp: 10, Value: 200.00})
-	metricData["metric"] = append(metricData["metric"], &moira.MetricValue{Timestamp: 25, RetentionTimestamp: 20, Value: 300.00})
-
-	Convey("Time == 25", t, func() {
-		timer := NewTimerRoundingTimestamps(from, 25, retention)
-
-		val1 := unpackMetricsValues(metricData, timer)
-		So(val1["metric"], ShouldResemble, []float64{100.00, 200.00})
-	})
-
-	Convey("Time == 29", t, func() {
-		timer := NewTimerRoundingTimestamps(from, 29, retention)
-
-		val1 := unpackMetricsValues(metricData, timer)
-		So(val1["metric"], ShouldResemble, []float64{100.00, 200.00})
-	})
-
-	Convey("Time == 30", t, func() {
-		timer := NewTimerRoundingTimestamps(from, 30, retention)
-
-		val1 := unpackMetricsValues(metricData, timer)
-		So(val1["metric"], ShouldResemble, []float64{100.00, 200.00, 300.00})
-	})
-}
-
-func TestRealTimeShiftedSeries(t *testing.T) {
-	var retention int64 = 10
-	var from int64
-	metricData := map[string][]*moira.MetricValue{"metric": make([]*moira.MetricValue, 0)}
-
-	Convey("Time == 0", t, func() {
-		timer := NewTimerRoundingTimestamps(from, 0, retention)
-
-		val1 := unpackMetricsValues(metricData, timer)
-		So(val1["metric"], ShouldResemble, make([]float64, 0))
-	})
-
-	metricData["metric"] = append(metricData["metric"], &moira.MetricValue{Timestamp: 4, RetentionTimestamp: 0, Value: 100.00})
-
-	Convey("Time == 5", t, func() {
-		timer := NewTimerRoundingTimestamps(from, 5, retention)
-
-		val1 := unpackMetricsValues(metricData, timer)
-		So(val1["metric"], ShouldResemble, []float64{100.00})
-	})
-
-	Convey("Time == 9", t, func() {
-		timer := NewTimerRoundingTimestamps(from, 9, retention)
-
-		val1 := unpackMetricsValues(metricData, timer)
-		So(val1["metric"], ShouldResemble, []float64{100.00})
-	})
-
-	Convey("Time == 10", t, func() {
-		timer := NewTimerRoundingTimestamps(from, 10, retention)
-
-		val1 := unpackMetricsValues(metricData, timer)
-		So(val1["metric"], ShouldResemble, []float64{100.00})
-	})
-
-	Convey("Time == 11", t, func() {
-		timer := NewTimerRoundingTimestamps(from, 11, retention)
-
-		val1 := unpackMetricsValues(metricData, timer)
-		So(val1["metric"], ShouldResemble, []float64{100.00})
-	})
-
-	metricData["metric"] = append(metricData["metric"], &moira.MetricValue{Timestamp: 15, RetentionTimestamp: 10, Value: 200.00})
-	metricData["metric"] = append(metricData["metric"], &moira.MetricValue{Timestamp: 25, RetentionTimestamp: 20, Value: 300.00})
-
-	Convey("Time == 25", t, func() {
-		timer := NewTimerRoundingTimestamps(from, 25, retention)
-
-		val1 := unpackMetricsValues(metricData, timer)
-		So(val1["metric"], ShouldResemble, []float64{100.00, 200.00, 300.00})
-	})
-
-	Convey("Time == 29", t, func() {
-		timer := NewTimerRoundingTimestamps(from, 29, retention)
-
-		val1 := unpackMetricsValues(metricData, timer)
-		So(val1["metric"], ShouldResemble, []float64{100.00, 200.00, 300.00})
-	})
-
-	Convey("Time == 30", t, func() {
-		timer := NewTimerRoundingTimestamps(from, 30, retention)
-
-		val1 := unpackMetricsValues(metricData, timer)
-		So(val1["metric"], ShouldResemble, []float64{100.00, 200.00, 300.00})
-	})
-}
-
-func arrToString(arr []float64) string {
-	return fmt.Sprintf("%v", arr)
 }
