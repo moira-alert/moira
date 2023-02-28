@@ -89,6 +89,7 @@ func (ctx *evalCtx) GetMetricsData(database moira.Database, parsedExpr parser.Ex
 		from := mr.From + ctx.from
 		until := mr.Until + ctx.until
 
+		// TODO: Scale to common step before fetching the values
 		metricNames, err := fetchData.fetchMetricNames(mr.Metric)
 		if err != nil {
 			return nil, err

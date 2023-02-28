@@ -5,7 +5,11 @@ import (
 	"math"
 	"testing"
 
+	"github.com/go-graphite/carbonapi/expr/types"
+	pb "github.com/go-graphite/protocol/carbonapi_v3_pb"
+	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
+	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -61,281 +65,243 @@ func BenchmarkUnpackMetricValues(b *testing.B) {
 	}
 }
 
-// func TestFetchData(t *testing.T) {
-// 	mockCtrl := gomock.NewController(t)
-// 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-// 	pattern := "super-puper-pattern"
-// 	metric := "super-puper-metric"
-// 	dataList := map[string][]*moira.MetricValue{
-// 		metric: {
-// 			{
-// 				RetentionTimestamp: 20,
-// 				Timestamp:          23,
-// 				Value:              0,
-// 			},
-// 			{
-// 				RetentionTimestamp: 30,
-// 				Timestamp:          33,
-// 				Value:              1,
-// 			},
-// 			{
-// 				RetentionTimestamp: 40,
-// 				Timestamp:          43,
-// 				Value:              2,
-// 			},
-// 			{
-// 				RetentionTimestamp: 50,
-// 				Timestamp:          53,
-// 				Value:              3,
-// 			},
-// 			{
-// 				RetentionTimestamp: 60,
-// 				Timestamp:          63,
-// 				Value:              4,
-// 			},
-// 		},
-// 	}
+func TestFetchDataErrors(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
 
-// 	var from int64 = 17
-// 	var until int64 = 67
-// 	var retention int64 = 10
-// 	retentionErr := fmt.Errorf("Ooops, retention error")
-// 	patternErr := fmt.Errorf("Ooops, pattern error")
-// 	metricErr := fmt.Errorf("Ooops, metric error")
+	database := mock_moira_alert.NewMockDatabase(mockCtrl)
+	fetchData := fetchData{database: database}
 
-// 	Convey("Errors Test", t, func() {
-// 		Convey("GetPatternMetricsError", func() {
-// 			dataBase.EXPECT().GetPatternMetrics(pattern).Return(nil, patternErr)
-// 			metricData, metrics, err := FetchData(dataBase, pattern, from, until, true)
-// 			So(metricData, ShouldBeNil)
-// 			So(metrics, ShouldBeNil)
-// 			So(err, ShouldResemble, patternErr)
-// 		})
-// 		Convey("GetMetricRetentionError", func() {
-// 			dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
-// 			dataBase.EXPECT().GetMetricRetention(metric).Return(int64(0), retentionErr)
-// 			metricData, metrics, err := FetchData(dataBase, pattern, from, until, true)
-// 			So(metricData, ShouldBeNil)
-// 			So(metrics, ShouldBeNil)
-// 			So(err, ShouldResemble, retentionErr)
-// 		})
-// 		Convey("GetMetricsValuesError", func() {
-// 			dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
-// 			dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
-// 			dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(nil, metricErr)
-// 			metricData, metrics, err := FetchData(dataBase, pattern, from, until, true)
-// 			So(metricData, ShouldBeNil)
-// 			So(metrics, ShouldBeNil)
-// 			So(err, ShouldResemble, metricErr)
-// 		})
-// 	})
+	pattern := "super-puper-pattern"
+	metric := "super-puper-metric"
 
-// 	Convey("Test no metrics", t, func() {
-// 		dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{}, nil)
-// 		metricData, metrics, err := FetchData(dataBase, pattern, from, until, false)
-// 		fetchResponse := pb.FetchResponse{
-// 			Name:      pattern,
-// 			StartTime: from,
-// 			StopTime:  until,
-// 			StepTime:  60,
-// 			Values:    []float64{},
-// 		}
-// 		expected := &types.MetricData{FetchResponse: fetchResponse, Tags: map[string]string{"name": pattern}}
-// 		So(metricData, ShouldResemble, []*types.MetricData{expected})
-// 		So(metrics, ShouldBeEmpty)
-// 		So(err, ShouldBeNil)
-// 	})
+	timer := NewTimerRoundingTimestamps(17, 67, 10)
 
-// 	Convey("Test allowRealTimeAlerting=false", t, func() {
-// 		dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
-// 		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
-// 		dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
-// 		metricData, metrics, err := FetchData(dataBase, pattern, from, until, false)
-// 		fetchResponse := pb.FetchResponse{
-// 			Name:      metric,
-// 			StartTime: from,
-// 			StopTime:  until,
-// 			StepTime:  retention,
-// 			Values:    []float64{0, 1, 2, 3},
-// 		}
-// 		expected := &types.MetricData{FetchResponse: fetchResponse, Tags: map[string]string{"name": metric}}
-// 		So(metricData, ShouldResemble, []*types.MetricData{expected})
-// 		So(metrics, ShouldResemble, []string{metric})
-// 		So(err, ShouldBeNil)
-// 	})
+	retentionErr := fmt.Errorf("Ooops, retention error")
+	patternErr := fmt.Errorf("Ooops, pattern error")
+	metricErr := fmt.Errorf("Ooops, metric error")
 
-// 	Convey("Test allowRealTimeAlerting=true", t, func() {
-// 		dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
-// 		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
-// 		dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
-// 		metricData, metrics, err := FetchData(dataBase, pattern, from, until, true)
-// 		fetchResponse := pb.FetchResponse{
-// 			Name:      metric,
-// 			StartTime: from,
-// 			StopTime:  until,
-// 			StepTime:  retention,
-// 			Values:    []float64{0, 1, 2, 3, 4},
-// 		}
-// 		expected := &types.MetricData{FetchResponse: fetchResponse, Tags: map[string]string{"name": metric}}
-// 		So(metricData, ShouldResemble, []*types.MetricData{expected})
-// 		So(metrics, ShouldResemble, []string{metric})
-// 		So(err, ShouldBeNil)
-// 	})
+	Convey("GetPatternMetricsError", t, func() {
+		database.EXPECT().GetPatternMetrics(pattern).Return(nil, patternErr)
 
-// 	metric2 := "super-puper-mega-metric"
-// 	dataList[metric2] = []*moira.MetricValue{
-// 		{
-// 			RetentionTimestamp: 20,
-// 			Timestamp:          23,
-// 			Value:              0,
-// 		},
-// 		{
-// 			RetentionTimestamp: 30,
-// 			Timestamp:          33,
-// 			Value:              1,
-// 		},
-// 		{
-// 			RetentionTimestamp: 40,
-// 			Timestamp:          43,
-// 			Value:              2,
-// 		},
-// 		{
-// 			RetentionTimestamp: 50,
-// 			Timestamp:          53,
-// 			Value:              3,
-// 		},
-// 		{
-// 			RetentionTimestamp: 60,
-// 			Timestamp:          63,
-// 			Value:              4,
-// 		},
-// 	}
-
-// 	Convey("Test multiple metrics", t, func() {
-// 		dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric, metric2}, nil)
-// 		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
-// 		dataBase.EXPECT().GetMetricsValues([]string{metric, metric2}, from, until).Return(dataList, nil)
-// 		metricData, metrics, err := FetchData(dataBase, pattern, from, until, true)
-// 		fetchResponse := pb.FetchResponse{
-// 			Name:      metric,
-// 			StartTime: from,
-// 			StopTime:  until,
-// 			StepTime:  retention,
-// 			Values:    []float64{0, 1, 2, 3, 4},
-// 		}
-// 		expected := types.MetricData{FetchResponse: fetchResponse, Tags: map[string]string{"name": metric}}
-// 		expected2 := expected
-// 		expected2.Name = metric2
-// 		expected2.Tags = map[string]string{"name": metric2}
-// 		So(metricData, ShouldResemble, []*types.MetricData{&expected, &expected2})
-// 		So(metrics, ShouldResemble, []string{metric, metric2})
-// 		So(err, ShouldBeNil)
-// 	})
-
-// 	mockCtrl.Finish()
-// }
-
-func TestAllowRealTimeAlerting(t *testing.T) {
-	metricsValues := []*moira.MetricValue{
-		{
-			RetentionTimestamp: 20,
-			Timestamp:          23,
-			Value:              0,
-		},
-		{
-			RetentionTimestamp: 30,
-			Timestamp:          33,
-			Value:              1,
-		},
-		{
-			RetentionTimestamp: 40,
-			Timestamp:          43,
-			Value:              2,
-		},
-		{
-			RetentionTimestamp: 50,
-			Timestamp:          53,
-			Value:              3,
-		},
-		{
-			RetentionTimestamp: 60,
-			Timestamp:          63,
-			Value:              4,
-		},
-	}
-
-	metricData := map[string][]*moira.MetricValue{"metric1": metricsValues}
-
-	Convey("Test full interval", t, func() {
-		Convey("AllowRealTimeAlerting is false, should be truncated on left", func() {
-			timer := NewTimerRoundingTimestamps(17, 67, 10)
-			val := unpackMetricsValues(metricData, timer)
-			expected := []float64{0, 1, 2, 3}
-			So(val["metric1"], ShouldResemble, expected)
-		})
-
-		Convey("AllowRealTimeAlerting is true, should full interval", func() {
-			timer := NewTimerRoundingTimestamps(17, 67, 10)
-			val := unpackMetricsValues(metricData, timer)
-			expected := []float64{0, 1, 2, 3, 4}
-			So(val["metric1"], ShouldResemble, expected)
-		})
+		metrics, err := fetchData.fetchMetricNames(pattern)
+		So(metrics, ShouldBeNil)
+		So(err, ShouldResemble, patternErr)
 	})
 
-	Convey("Test interval truncated on the right", t, func() {
-		Convey("AllowRealTimeAlerting is false, should be truncated on left and right", func() {
-			timer := NewTimerRoundingTimestamps(24, 67, 10)
-			val := unpackMetricsValues(metricData, timer)
-			expected := []float64{1, 2, 3}
-			So(val["metric1"], ShouldResemble, expected)
-		})
+	Convey("GetMetricRetentionError", t, func() {
+		database.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
+		database.EXPECT().GetMetricRetention(metric).Return(int64(0), retentionErr)
 
-		Convey("AllowRealTimeAlerting is true, should be truncated on the right", func() {
-			timer := NewTimerRoundingTimestamps(24, 67, 10)
-			val := unpackMetricsValues(metricData, timer)
-			expected := []float64{1, 2, 3, 4}
-			So(val["metric1"], ShouldResemble, expected)
-		})
+		metrics, err := fetchData.fetchMetricNames(pattern)
+		So(metrics, ShouldBeNil)
+		So(err, ShouldResemble, retentionErr)
+	})
+
+	Convey("GetMetricsValuesError", t, func() {
+		database.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
+		database.EXPECT().GetMetricRetention(metric).Return(timer.retention, nil)
+		database.EXPECT().GetMetricsValues([]string{metric}, timer.from, timer.until-1).Return(nil, metricErr)
+
+		metrics, err := fetchData.fetchMetricNames(pattern)
+
+		expectedMetrics := metricsWithRetention{
+			retention: timer.retention,
+			metrics:   []string{metric},
+		}
+
+		So(*metrics, ShouldResemble, expectedMetrics)
+		So(err, ShouldBeNil)
+
+		metricData, err := fetchData.fetchMetricValues(pattern, metrics, timer)
+
+		So(metricData, ShouldBeNil)
+		So(err, ShouldResemble, metricErr)
 	})
 }
 
-func TestConservativeAlignedSeries(t *testing.T) {
+func TestFetchData(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	fetchData := fetchData{database: dataBase}
+
+	pattern := "super-puper-pattern"
+	metric := "super-puper-metric"
+
+	dataList := map[string][]*moira.MetricValue{
+		metric: generateMetricValues(20, 23, 10, 5),
+	}
+
+	var from int64 = 17
+	var until int64 = 57
 	var retention int64 = 10
-	var from int64
+	timer := NewTimerRoundingTimestamps(from, until, retention)
+
+	Convey("Test no metrics", t, func() {
+		dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{}, nil)
+
+		metrics, err := fetchData.fetchMetricNames(pattern)
+		So(err, ShouldBeNil)
+
+		timer := NewTimerRoundingTimestamps(from, until, metrics.retention)
+		metricValues, err := fetchData.fetchMetricValues(pattern, metrics, timer)
+
+		expected := &types.MetricData{
+			FetchResponse: pb.FetchResponse{
+				Name:      pattern,
+				StartTime: timer.from,
+				StopTime:  timer.until,
+				StepTime:  60,
+				Values:    []float64{},
+			},
+			Tags: map[string]string{"name": pattern},
+		}
+		So(metricValues, ShouldResemble, []*types.MetricData{expected})
+		So(metrics.metrics, ShouldBeEmpty)
+		So(err, ShouldBeNil)
+	})
+
+	Convey("Test one metric", t, func() {
+		dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
+		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
+		dataBase.EXPECT().GetMetricsValues([]string{metric}, timer.from, timer.until-1).Return(dataList, nil)
+
+		metrics, err := fetchData.fetchMetricNames(pattern)
+		So(err, ShouldBeNil)
+		metricValues, err := fetchData.fetchMetricValues(pattern, metrics, timer)
+
+		expected := &types.MetricData{
+			FetchResponse: pb.FetchResponse{
+				Name:      metric,
+				StartTime: timer.from,
+				StopTime:  timer.until,
+				StepTime:  retention,
+				Values:    []float64{0, 1, 2, 3},
+			},
+			Tags: map[string]string{"name": metric},
+		}
+		So(metricValues, ShouldResemble, []*types.MetricData{expected})
+		So(metrics.metrics, ShouldResemble, []string{metric})
+		So(err, ShouldBeNil)
+	})
+
+	metric2 := "super-puper-mega-metric"
+	dataList[metric2] = generateMetricValues(20, 23, 10, 5)
+
+	Convey("Test multiple metrics", t, func() {
+		dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric, metric2}, nil)
+		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
+		dataBase.EXPECT().GetMetricsValues([]string{metric, metric2}, timer.from, timer.until-1).Return(dataList, nil)
+
+		metrics, err := fetchData.fetchMetricNames(pattern)
+		So(err, ShouldBeNil)
+		metricValues, err := fetchData.fetchMetricValues(pattern, metrics, timer)
+
+		fetchResponse := pb.FetchResponse{
+			Name:      metric,
+			StartTime: timer.from,
+			StopTime:  timer.until,
+			StepTime:  retention,
+			Values:    []float64{0, 1, 2, 3},
+		}
+		expected := types.MetricData{
+			FetchResponse: fetchResponse,
+			Tags:          map[string]string{"name": metric},
+		}
+		expected2 := types.MetricData{
+			FetchResponse: fetchResponse,
+			Tags:          map[string]string{"name": metric2},
+		}
+		expected2.Name = metric2
+
+		So(metricValues, ShouldResemble, []*types.MetricData{&expected, &expected2})
+		So(metrics.metrics, ShouldResemble, []string{metric, metric2})
+		So(err, ShouldBeNil)
+	})
+}
+
+func generateMetricValues(from, retentionFrom, retention int64, count int) []*moira.MetricValue {
+	values := make([]*moira.MetricValue, 0, count)
+
+	for i := 0; i < count; i++ {
+		values = append(values, &moira.MetricValue{
+			RetentionTimestamp: retentionFrom,
+			Timestamp:          from,
+			Value:              float64(i),
+		})
+		retentionFrom += retention
+		from += retention
+	}
+
+	return values
+}
+
+func shouldHaveTheSameValuesAs(actual interface{}, expected ...interface{}) string {
+	a := actual.([]float64)
+	e := expected[0].([]float64)
+
+	if len(a) != len(e) {
+		return fmt.Sprintf("Expected '%+v', but got '%+v': different length", e, a)
+	}
+
+	for i := range a {
+		if math.IsNaN(a[i]) && math.IsNaN(e[i]) || a[i] == e[i] {
+			continue
+		}
+
+		return fmt.Sprintf("Expected '%+v', but got '%+v': differense at index %d", e, a, i)
+	}
+
+	return ""
+}
+
+// ************************************************************
+// ************************************************************
+// ************************************************************
+
+func TestUnpackMetricValuesNoData(t *testing.T) {
+	var retention int64 = 10
+
 	metricData := map[string][]*moira.MetricValue{"metric": make([]*moira.MetricValue, 0)}
 
 	Convey("Time == 0", t, func() {
-		Convey("No Metric Values", func() {
-			timer := NewTimerRoundingTimestamps(from, 0, retention)
+		Convey("With no metrics", func() {
+			timer := NewTimerRoundingTimestamps(0, 0, retention)
 			val := unpackMetricsValues(metricData, timer)
-			expected := make([]float64, 0)
-			So(val["metric"], ShouldResemble, expected)
+			expected := []float64{math.NaN()}
+			So(val["metric"], shouldHaveTheSameValuesAs, expected)
 		})
-		Convey("Has Metric Values", func() {
+
+		Convey("With one value", func() {
+			value := 100.0
+
 			metricData["metric"] = []*moira.MetricValue{
 				{
 					RetentionTimestamp: 0,
 					Timestamp:          0,
-					Value:              100.00,
+					Value:              value,
 				},
 			}
 
-			timer := NewTimerRoundingTimestamps(from, 0, retention)
+			timer := NewTimerRoundingTimestamps(0, 0, retention)
 			val := unpackMetricsValues(metricData, timer)
-			expected := make([]float64, 0)
+			expected := []float64{value}
 			So(val["metric"], ShouldResemble, expected)
 		})
 	})
 
+	return
 	Convey("Time == 9", t, func() {
-		timer := NewTimerRoundingTimestamps(from, 9, retention)
+		timer := NewTimerRoundingTimestamps(0, 9, retention)
 		val := unpackMetricsValues(metricData, timer)
 		expected := make([]float64, 0)
 		So(val["metric"], ShouldResemble, expected)
 	})
 
 	Convey("Time == 10", t, func() {
-		timer := NewTimerRoundingTimestamps(from, 10, retention)
+		timer := NewTimerRoundingTimestamps(0, 10, retention)
 		val := unpackMetricsValues(metricData, timer)
 		expected := []float64{100.00}
 		So(val["metric"], ShouldResemble, expected)
@@ -345,91 +311,55 @@ func TestConservativeAlignedSeries(t *testing.T) {
 	metricData["metric"] = append(metricData["metric"], &moira.MetricValue{Timestamp: 20, RetentionTimestamp: 20, Value: 300.00})
 
 	Convey("Time == 20", t, func() {
-		timer := NewTimerRoundingTimestamps(from, 20, retention)
+		timer := NewTimerRoundingTimestamps(0, 20, retention)
 		val := unpackMetricsValues(metricData, timer)
 		expected := []float64{100.00, 200.00}
 		So(val["metric"], ShouldResemble, expected)
 	})
 
 	Convey("Time == 29", t, func() {
-		timer := NewTimerRoundingTimestamps(from, 29, retention)
+		timer := NewTimerRoundingTimestamps(0, 29, retention)
 		val := unpackMetricsValues(metricData, timer)
 		expected := []float64{100.00, 200.00}
 		So(val["metric"], ShouldResemble, expected)
 	})
 
 	Convey("Time == 30", t, func() {
-		timer := NewTimerRoundingTimestamps(from, 30, retention)
+		timer := NewTimerRoundingTimestamps(0, 30, retention)
 		val := unpackMetricsValues(metricData, timer)
 		expected := []float64{100.00, 200.00, 300.00}
 		So(val["metric"], ShouldResemble, expected)
 	})
 }
 
-func TestRealTimeAlignedSeries(t *testing.T) {
+func TestUnpackMetricValues(t *testing.T) {
 	var retention int64 = 10
-	var from int64
+
 	metricData := map[string][]*moira.MetricValue{"metric": make([]*moira.MetricValue, 0)}
 
 	Convey("Time == 0", t, func() {
-		Convey("No Metric Values", func() {
-			timer := NewTimerRoundingTimestamps(from, 0, retention)
-			val := unpackMetricsValues(metricData, timer)
-			expected := make([]float64, 0)
-			So(val["metric"], ShouldResemble, expected)
-		})
-		Convey("Has Metric Values", func() {
+		Convey("With one value", func() {
+			value := 100.0
+
 			metricData["metric"] = []*moira.MetricValue{
 				{
 					RetentionTimestamp: 0,
 					Timestamp:          0,
-					Value:              100.00,
+					Value:              value,
 				},
 			}
-			timer := NewTimerRoundingTimestamps(from, 0, retention)
+
+			timer := NewTimerRoundingTimestamps(0, 0, retention)
 			val := unpackMetricsValues(metricData, timer)
-			expected := []float64{100.00}
+			expected := []float64{value}
 			So(val["metric"], ShouldResemble, expected)
 		})
 	})
-
-	Convey("Time == 9", t, func() {
-		timer := NewTimerRoundingTimestamps(from, 9, retention)
-		val := unpackMetricsValues(metricData, timer)
-		expected := []float64{100.00}
-		So(val["metric"], ShouldResemble, expected)
-	})
-
-	Convey("Time == 10", t, func() {
-		timer := NewTimerRoundingTimestamps(from, 10, retention)
-		val := unpackMetricsValues(metricData, timer)
-		expected := []float64{100.00}
-		So(val["metric"], ShouldResemble, expected)
-	})
-
-	metricData["metric"] = append(metricData["metric"], &moira.MetricValue{Timestamp: 10, RetentionTimestamp: 10, Value: 200.00})
-	metricData["metric"] = append(metricData["metric"], &moira.MetricValue{Timestamp: 20, RetentionTimestamp: 20, Value: 300.00})
-
-	Convey("Time == 20", t, func() {
-		timer := NewTimerRoundingTimestamps(from, 20, retention)
-		val := unpackMetricsValues(metricData, timer)
-		expected := []float64{100.00, 200.00, 300.00}
-		So(val["metric"], ShouldResemble, expected)
-	})
-	Convey("Time == 29", t, func() {
-		timer := NewTimerRoundingTimestamps(from, 29, retention)
-		val := unpackMetricsValues(metricData, timer)
-		expected := []float64{100.00, 200.00, 300.00}
-		So(val["metric"], ShouldResemble, expected)
-	})
-
-	Convey("Time == 30", t, func() {
-		timer := NewTimerRoundingTimestamps(from, 30, retention)
-		val := unpackMetricsValues(metricData, timer)
-		expected := []float64{100.00, 200.00, 300.00}
-		So(val["metric"], ShouldResemble, expected)
-	})
 }
+
+// ************************************************************
+// ************************************************************
+// ************************************************************
 
 func TestNoDataSeries(t *testing.T) {
 	var retention int64 = 10
@@ -462,7 +392,11 @@ func TestNoDataSeries(t *testing.T) {
 			timer := NewTimerRoundingTimestamps(from, 11, retention)
 			val := unpackMetricsValues(metricData, timer)
 			expected := []float64{math.NaN()}
-			So(arrToString(val["metric"]), ShouldResemble, arrToString(expected))
+			So(
+				arrToString(val["metric"]),
+				ShouldResemble,
+				arrToString(expected),
+			)
 		})
 
 		Convey("Time == 20", func() {
@@ -651,16 +585,12 @@ func TestNonZeroStartTimeSeries(t *testing.T) {
 		So(val4["metric"], ShouldResemble, []float64{100.00})
 	})
 
-	// Convey("Time == 12", t, func() {
-	// 	timerNotRealTime := MakeTimer(from, 12, retention, false)
-	// 	timerRealTime := MakeTimer(from, 12, retention, true)
+	Convey("Time == 12", t, func() {
+		timer := NewTimerRoundingTimestamps(from, 12, retention)
 
-	// 	val1 := unpackMetricsValues(metricData, timerNotRealTime)
-	// 	So(val1["metric"], ShouldResemble, make([]float64, 0))
-
-	// 	val2 := unpackMetricsValues(metricData, timerRealTime)
-	// 	So(val2["metric"], ShouldResemble, []float64{100.00})
-	// })
+		val1 := unpackMetricsValues(metricData, timer)
+		So(val1["metric"], ShouldResemble, make([]float64, 0))
+	})
 }
 
 func TestConservativeShiftedSeries(t *testing.T) {

@@ -20,6 +20,14 @@ func TestTimerNumberOfTimeSlots(t *testing.T) {
 		}
 	})
 
+	Convey("Given `from` is divisible by retention", t, func() {
+		from := int64(0)
+		until := int64(0)
+		timer := NewTimerRoundingTimestamps(from, until, retention)
+
+		So(timer.NumberOfTimeSlots(), ShouldEqual, 1)
+	})
+
 	Convey("Given `from` is not divisible by retention", t, func() {
 		for from := int64(1); from < retention; from++ {
 			until := from + retention*steps
