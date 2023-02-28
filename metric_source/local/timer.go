@@ -24,8 +24,7 @@ func (t Timer) NumberOfTimeSlots() int {
 }
 
 func (t Timer) GetTimeSlot(timestamp int64) int {
-	retentionFrom := CeilToMultiplier(t.from, t.retention)
-	timeSlot := int((timestamp - retentionFrom) / t.retention)
+	timeSlot := int((timestamp - t.from) / t.retention)
 	return timeSlot
 }
 
