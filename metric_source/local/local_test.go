@@ -11,6 +11,7 @@ import (
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
 	"github.com/golang/mock/gomock"
+	"github.com/google/go-cmp/cmp"
 	"github.com/moira-alert/moira"
 	metricSource "github.com/moira-alert/moira/metric_source"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
@@ -21,130 +22,165 @@ func init() {
 	functions.New(make(map[string]string))
 }
 
-func TestEvaluateTarget(t *testing.T) {
+func TestLocalSourceFetchErrors(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
-	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-	localSource := Create(dataBase)
+	database := mock_moira_alert.NewMockDatabase(mockCtrl)
+	localSource := Create(database)
 	defer mockCtrl.Finish()
 
 	pattern := "super.puper.pattern"
 	metric := "super.puper.metric"
 	dataList := map[string][]*moira.MetricValue{
 		metric: {
-			{
-				RetentionTimestamp: 20,
-				Timestamp:          23,
-				Value:              0,
-			},
-			{
-				RetentionTimestamp: 30,
-				Timestamp:          33,
-				Value:              1,
-			},
-			{
-				RetentionTimestamp: 40,
-				Timestamp:          43,
-				Value:              2,
-			},
-			{
-				RetentionTimestamp: 50,
-				Timestamp:          53,
-				Value:              3,
-			},
-			{
-				RetentionTimestamp: 60,
-				Timestamp:          63,
-				Value:              4,
-			},
+			{RetentionTimestamp: 20, Timestamp: 23, Value: 0},
+			{RetentionTimestamp: 30, Timestamp: 33, Value: 1},
+			{RetentionTimestamp: 40, Timestamp: 43, Value: 2},
+			{RetentionTimestamp: 50, Timestamp: 53, Value: 3},
+			{RetentionTimestamp: 60, Timestamp: 63, Value: 4},
 		},
 	}
 
 	var from int64 = 17
 	var until int64 = 67
+	var retentionFrom int64 = 20
+	var retentionUntil int64 = 70
 	var retention int64 = 10
 	var metricsTTL int64 = 3600
 	metricErr := fmt.Errorf("Ooops, metric error")
 
-	Convey("Errors tests", t, func() {
-		Convey("Error while ParseExpr", func() {
-			dataBase.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
-			result, err := localSource.Fetch("", from, until, true)
-			So(err, ShouldResemble, ErrParseExpr{target: "", internalError: parser.ErrMissingExpr})
-			So(err.Error(), ShouldResemble, "failed to parse target '': missing expression")
-			So(result, ShouldBeNil)
-		})
+	Convey("Error while ParseExpr", t, func() {
+		database.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
 
-		Convey("Error in fetch data", func() {
-			dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
-			dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
-			dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(nil, metricErr)
-			dataBase.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
-			result, err := localSource.Fetch("super.puper.pattern", from, until, true)
-			So(err, ShouldResemble, metricErr)
-			So(result, ShouldBeNil)
-		})
+		result, err := localSource.Fetch("", from, until, true)
 
-		Convey("Error evaluate target", func() {
-			dataBase.EXPECT().GetPatternMetrics("super.puper.pattern").Return([]string{metric}, nil)
-			dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
-			dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
-			dataBase.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
-			result, err := localSource.Fetch("aliasByNoe(super.puper.pattern, 2)", from, until, true)
-			So(err.Error(), ShouldResemble, "failed to evaluate target 'aliasByNoe(super.puper.pattern, 2)': unknown function in evalExpr: \"aliasByNoe\"")
-			So(result, ShouldBeNil)
-		})
-
-		Convey("Panic while evaluate target", func() {
-			dataBase.EXPECT().GetPatternMetrics("super.puper.pattern").Return([]string{metric}, nil)
-			dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
-			dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
-			dataBase.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
-			result, err := localSource.Fetch("movingAverage(super.puper.pattern, -1)", from, until, true)
-			expectedErrSubstring := strings.Split(ErrEvaluateTargetFailedWithPanic{target: "movingAverage(super.puper.pattern, -1)"}.Error(), ":")[0]
-			So(err.Error(), ShouldStartWith, expectedErrSubstring)
-			So(result, ShouldBeNil)
-		})
+		So(err, ShouldResemble, ErrParseExpr{target: "", internalError: parser.ErrMissingExpr})
+		So(err.Error(), ShouldResemble, "failed to parse target '': missing expression")
+		So(result, ShouldBeNil)
 	})
 
-	Convey("Test no metrics", t, func() {
-		dataBase.EXPECT().GetPatternMetrics("super.puper.pattern").Return([]string{}, nil)
-		dataBase.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
-		result, err := localSource.Fetch("aliasByNode(super.puper.pattern, 2)", from, until, true)
+	Convey("Error in fetch data", t, func() {
+		database.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
+		database.EXPECT().GetMetricRetention(metric).Return(retention, nil)
+		database.EXPECT().GetMetricsValues([]string{metric}, retentionFrom, retentionUntil-1).Return(nil, metricErr)
+		database.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
+
+		result, err := localSource.Fetch("super.puper.pattern", from, until, true)
+
+		So(err, ShouldResemble, metricErr)
+		So(result, ShouldBeNil)
+	})
+
+	Convey("Error evaluate target", t, func() {
+		database.EXPECT().GetPatternMetrics("super.puper.pattern").Return([]string{metric}, nil)
+		database.EXPECT().GetMetricRetention(metric).Return(retention, nil)
+		database.EXPECT().GetMetricsValues([]string{metric}, retentionFrom, retentionUntil-1).Return(dataList, nil)
+		database.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
+
+		result, err := localSource.Fetch("aliasByNoe(super.puper.pattern, 2)", from, until, true)
+
+		So(err.Error(), ShouldResemble, "failed to evaluate target 'aliasByNoe(super.puper.pattern, 2)': unknown function in evalExpr: \"aliasByNoe\"")
+		So(result, ShouldBeNil)
+	})
+
+	Convey("Panic while evaluate target", t, func() {
+		database.EXPECT().GetPatternMetrics("super.puper.pattern").Return([]string{metric}, nil)
+		database.EXPECT().GetMetricRetention(metric).Return(retention, nil)
+		database.EXPECT().GetMetricsValues([]string{metric}, retentionFrom, retentionUntil-1).Return(dataList, nil)
+		database.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
+
+		result, err := localSource.Fetch("movingAverage(super.puper.pattern, -1)", from, until, true)
+		expectedErrSubstring := strings.Split(ErrEvaluateTargetFailedWithPanic{target: "movingAverage(super.puper.pattern, -1)"}.Error(), ":")[0]
+
+		So(err.Error(), ShouldStartWith, expectedErrSubstring)
+		So(result, ShouldBeNil)
+	})
+}
+
+func TestLocalSourceFetchNoMetrics(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	database := mock_moira_alert.NewMockDatabase(mockCtrl)
+	localSource := Create(database)
+	defer mockCtrl.Finish()
+
+	pattern := "super.puper.pattern"
+	pattern2 := "super.duper.pattern"
+
+	var metricsTTL int64 = 3600
+
+	Convey("Single pattern, from 17 until 67", t, func() {
+		database.EXPECT().GetPatternMetrics(pattern).Return([]string{}, nil)
+		database.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
+
+		result, err := localSource.Fetch("aliasByNode(super.puper.pattern, 2)", 17, 67, true)
+
 		So(err, ShouldBeNil)
-		So(result, ShouldResemble, &FetchResult{
+		So(result, shouldEqualIfNaNsEqual, &FetchResult{
 			MetricsData: []metricSource.MetricData{{
 				Name:      "pattern",
-				StartTime: from,
-				StopTime:  until,
-				StepTime:  60,
-				Values:    []float64{},
-				Wildcard:  true,
+				StartTime: 60,
+				StopTime:  120,
+				StepTime:  60, Values: []float64{math.NaN()},
+				Wildcard: true,
 			}},
-			Metrics:  make([]string, 0),
-			Patterns: []string{"super.puper.pattern"},
+			Metrics:  []string{},
+			Patterns: []string{pattern},
 		})
 	})
 
-	Convey("Test success evaluate", t, func() {
-		dataBase.EXPECT().GetPatternMetrics("super.puper.pattern").Return([]string{metric}, nil)
-		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
-		dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
-		dataBase.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
-		result, err := localSource.Fetch("aliasByNode(super.puper.pattern, 2)", from, until, true)
+	Convey("Single pattern, from 7 until 57", t, func() {
+		database.EXPECT().GetPatternMetrics(pattern).Return([]string{}, nil)
+		database.EXPECT().GetPatternMetrics(pattern2).Return([]string{}, nil)
+		database.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
+
+		result, err := localSource.Fetch("aliasByNode(super.puper.pattern, 2)", 7, 57, true)
+
 		So(err, ShouldBeNil)
-		So(result, ShouldResemble, &FetchResult{
+		So(result, shouldEqualIfNaNsEqual, &FetchResult{
 			MetricsData: []metricSource.MetricData{{
-				Name:      "metric",
-				StartTime: from,
-				StopTime:  until,
-				StepTime:  retention,
-				Values:    []float64{0, 1, 2, 3, 4},
-			},
-			},
-			Metrics:  []string{metric},
-			Patterns: []string{"super.puper.pattern"},
+				Name:      "pattern",
+				StartTime: 60,
+				StopTime:  60,
+				StepTime:  60, Values: []float64{},
+				Wildcard: true,
+			}},
+			Metrics:  []string{},
+			Patterns: []string{pattern},
 		})
 	})
+
+	Convey("Two patterns, from 17 until 67", t, func() {
+		database.EXPECT().GetPatternMetrics(pattern).Return([]string{}, nil)
+		database.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
+
+		result, err := localSource.Fetch("alias(sum(super.puper.pattern, super.duper.pattern), 'pattern')", 17, 67, true)
+
+		So(err, ShouldBeNil)
+		So(result, shouldEqualIfNaNsEqual, &FetchResult{
+			MetricsData: []metricSource.MetricData{{
+				Name:      "pattern",
+				StartTime: 60,
+				StopTime:  120,
+				StepTime:  60, Values: []float64{math.NaN()},
+				Wildcard: true,
+			}},
+			Metrics:  []string{},
+			Patterns: []string{pattern, pattern2},
+		})
+	})
+}
+
+func TestLocalSourceFetchMultipleMetrics(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	database := mock_moira_alert.NewMockDatabase(mockCtrl)
+	localSource := Create(database)
+	defer mockCtrl.Finish()
+
+	var from int64 = 17
+	var until int64 = 67
+	var retentionFrom int64 = 20
+	var retentionUntil int64 = 70
+	var retention int64 = 10
+	var metricsTTL int64 = 3600
 
 	Convey("Test success evaluate multiple metrics with pow function", t, func() {
 		metrics := []string{
@@ -155,99 +191,40 @@ func TestEvaluateTarget(t *testing.T) {
 
 		multipleDataList := make(map[string][]*moira.MetricValue)
 		multipleDataList["apps.server1.process.cpu.usage"] = []*moira.MetricValue{
-			{
-				RetentionTimestamp: 20,
-				Timestamp:          23,
-				Value:              0.5,
-			},
-			{
-				RetentionTimestamp: 30,
-				Timestamp:          33,
-				Value:              0.4,
-			},
-			{
-				RetentionTimestamp: 40,
-				Timestamp:          43,
-				Value:              0.5,
-			},
-			{
-				RetentionTimestamp: 50,
-				Timestamp:          53,
-				Value:              0.5,
-			},
-			{
-				RetentionTimestamp: 60,
-				Timestamp:          63,
-				Value:              0.5,
-			},
+			{RetentionTimestamp: 20, Timestamp: 23, Value: 0.5},
+			{RetentionTimestamp: 30, Timestamp: 33, Value: 0.4},
+			{RetentionTimestamp: 40, Timestamp: 43, Value: 0.5},
+			{RetentionTimestamp: 50, Timestamp: 53, Value: 0.5},
+			{RetentionTimestamp: 60, Timestamp: 63, Value: 0.5},
 		}
 		multipleDataList["apps.server2.process.cpu.usage"] = []*moira.MetricValue{
-			{
-				RetentionTimestamp: 20,
-				Timestamp:          23,
-				Value:              math.NaN(),
-			},
-			{
-				RetentionTimestamp: 30,
-				Timestamp:          33,
-				Value:              math.NaN(),
-			},
-			{
-				RetentionTimestamp: 40,
-				Timestamp:          43,
-				Value:              math.NaN(),
-			},
-			{
-				RetentionTimestamp: 50,
-				Timestamp:          53,
-				Value:              math.NaN(),
-			},
-			{
-				RetentionTimestamp: 60,
-				Timestamp:          63,
-				Value:              math.NaN(),
-			},
+			{RetentionTimestamp: 20, Timestamp: 23, Value: math.NaN()},
+			{RetentionTimestamp: 30, Timestamp: 33, Value: math.NaN()},
+			{RetentionTimestamp: 40, Timestamp: 43, Value: math.NaN()},
+			{RetentionTimestamp: 50, Timestamp: 53, Value: math.NaN()},
+			{RetentionTimestamp: 60, Timestamp: 63, Value: math.NaN()},
 		}
 		multipleDataList["apps.server3.process.cpu.usage"] = []*moira.MetricValue{
-			{
-				RetentionTimestamp: 20,
-				Timestamp:          23,
-				Value:              0.5,
-			},
-			{
-				RetentionTimestamp: 30,
-				Timestamp:          33,
-				Value:              0.5,
-			},
-			{
-				RetentionTimestamp: 40,
-				Timestamp:          43,
-				Value:              0.5,
-			},
-			{
-				RetentionTimestamp: 50,
-				Timestamp:          53,
-				Value:              0.4,
-			},
-			{
-				RetentionTimestamp: 60,
-				Timestamp:          63,
-				Value:              0.5,
-			},
+			{RetentionTimestamp: 20, Timestamp: 23, Value: 0.5},
+			{RetentionTimestamp: 30, Timestamp: 33, Value: 0.5},
+			{RetentionTimestamp: 40, Timestamp: 43, Value: 0.5},
+			{RetentionTimestamp: 50, Timestamp: 53, Value: 0.4},
+			{RetentionTimestamp: 60, Timestamp: 63, Value: 0.5},
 		}
 
-		dataBase.EXPECT().GetPatternMetrics("apps.*.process.cpu.usage").Return(metrics, nil)
-		dataBase.EXPECT().GetMetricRetention(metrics[0]).Return(retention, nil)
-		dataBase.EXPECT().GetMetricsValues(metrics, gomock.Any(), until).Return(multipleDataList, nil)
-		dataBase.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
+		database.EXPECT().GetPatternMetrics("apps.*.process.cpu.usage").Return(metrics, nil)
+		database.EXPECT().GetMetricRetention(metrics[0]).Return(retention, nil)
+		database.EXPECT().GetMetricsValues(metrics, retentionFrom, retentionUntil-1).Return(multipleDataList, nil)
+		database.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
 
 		result, err := localSource.Fetch("alias(sumSeries(pow(apps.*.process.cpu.usage, 0)), 'alive replicas')", from, until, true)
+
 		So(err, ShouldBeNil)
-		So(result, ShouldResemble, &FetchResult{
+		So(result, shouldEqualIfNaNsEqual, &FetchResult{
 			MetricsData: []metricSource.MetricData{{
 				Name:      "alive replicas",
-				StartTime: from,
-				StopTime:  until,
+				StartTime: retentionFrom,
+				StopTime:  retentionUntil,
 				StepTime:  retention,
 				Values:    []float64{2, 2, 2, 2, 2},
 			},
@@ -256,34 +233,81 @@ func TestEvaluateTarget(t *testing.T) {
 			Patterns: []string{"apps.*.process.cpu.usage"},
 		})
 	})
+}
+
+func TestLocalSourceFetch(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	database := mock_moira_alert.NewMockDatabase(mockCtrl)
+	localSource := Create(database)
+	defer mockCtrl.Finish()
+
+	pattern := "super.puper.pattern"
+	metric := "super.puper.metric"
+	dataList := map[string][]*moira.MetricValue{
+		metric: {
+			{RetentionTimestamp: 20, Timestamp: 23, Value: 0},
+			{RetentionTimestamp: 30, Timestamp: 33, Value: 1},
+			{RetentionTimestamp: 40, Timestamp: 43, Value: 2},
+			{RetentionTimestamp: 50, Timestamp: 53, Value: 3},
+			{RetentionTimestamp: 60, Timestamp: 63, Value: 4},
+		},
+	}
+
+	var from int64 = 17
+	var until int64 = 67
+	var retentionFrom int64 = 20
+	var retentionUntil int64 = 70
+	var retention int64 = 10
+	var metricsTTL int64 = 3600
+
+	Convey("Test success evaluate", t, func() {
+		database.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
+		database.EXPECT().GetMetricRetention(metric).Return(retention, nil)
+		database.EXPECT().GetMetricsValues([]string{metric}, retentionFrom, retentionUntil-1).Return(dataList, nil)
+		database.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
+
+		result, err := localSource.Fetch("aliasByNode(super.puper.pattern, 2)", from, until, true)
+		So(err, ShouldBeNil)
+		So(result, shouldEqualIfNaNsEqual, &FetchResult{
+			MetricsData: []metricSource.MetricData{{
+				Name:      "metric",
+				StartTime: retentionFrom,
+				StopTime:  retentionUntil,
+				StepTime:  retention, Values: []float64{0, 1, 2, 3, 4},
+			},
+			},
+			Metrics:  []string{metric},
+			Patterns: []string{pattern},
+		})
+	})
 
 	Convey("Test enormous fetch interval", t, func() {
-		var fromLongAgo int64 = 0
-		var untilDistantFuture int64 = 1e15
-		var ttl = retention - 1
+		var fromPast int64 = 0
+		var toFuture int64 = 1e15
+		var ttl = 2*retention - 1
+
 		var distantFutureDataList = map[string][]*moira.MetricValue{
 			metric: {
-				{
-					RetentionTimestamp: untilDistantFuture,
-					Timestamp:          untilDistantFuture,
-					Value:              0,
-				},
+				{RetentionTimestamp: toFuture, Timestamp: toFuture, Value: 0},
+				{RetentionTimestamp: toFuture - retention, Timestamp: toFuture - retention, Value: 0},
 			},
 		}
 
-		dataBase.EXPECT().GetPatternMetrics("super.puper.pattern").Return([]string{metric}, nil)
-		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
-		dataBase.EXPECT().GetMetricsValues([]string{metric}, untilDistantFuture-ttl, untilDistantFuture).Return(distantFutureDataList, nil)
-		dataBase.EXPECT().GetMetricsTTLSeconds().Return(ttl)
-		result, err := localSource.Fetch("aliasByNode(super.puper.pattern, 2)", fromLongAgo, untilDistantFuture, true)
+		database.EXPECT().GetPatternMetrics("super.puper.pattern").Return([]string{metric}, nil)
+		database.EXPECT().GetMetricRetention(metric).Return(retention, nil)
+		database.EXPECT().GetMetricsValues([]string{metric}, toFuture-retention, toFuture+retention-1).Return(distantFutureDataList, nil)
+		database.EXPECT().GetMetricsTTLSeconds().Return(ttl)
+
+		result, err := localSource.Fetch("aliasByNode(super.puper.pattern, 2)", fromPast, toFuture, true)
+
 		So(err, ShouldBeNil)
-		So(result, ShouldResemble, &FetchResult{
+		So(result, shouldEqualIfNaNsEqual, &FetchResult{
 			MetricsData: []metricSource.MetricData{{
 				Name:      "metric",
-				StartTime: untilDistantFuture - ttl,
-				StopTime:  untilDistantFuture,
+				StartTime: toFuture - retention,
+				StopTime:  toFuture + retention,
 				StepTime:  retention,
-				Values:    []float64{0},
+				Values:    []float64{0, 0},
 			},
 			},
 			Metrics:  []string{metric},
@@ -292,17 +316,19 @@ func TestEvaluateTarget(t *testing.T) {
 	})
 
 	Convey("Test success evaluate pipe target", t, func() {
-		dataBase.EXPECT().GetPatternMetrics("super.puper.pattern").Return([]string{metric}, nil)
-		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
-		dataBase.EXPECT().GetMetricsValues([]string{metric}, from, until).Return(dataList, nil)
-		dataBase.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
+		database.EXPECT().GetPatternMetrics("super.puper.pattern").Return([]string{metric}, nil)
+		database.EXPECT().GetMetricRetention(metric).Return(retention, nil)
+		database.EXPECT().GetMetricsValues([]string{metric}, retentionFrom, retentionUntil-1).Return(dataList, nil)
+		database.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
+
 		result, err := localSource.Fetch("super.puper.pattern | scale(100) | aliasByNode(2)", from, until, true)
+
 		So(err, ShouldBeNil)
 		So(result, ShouldResemble, &FetchResult{
 			MetricsData: []metricSource.MetricData{{
 				Name:      "metric",
-				StartTime: from,
-				StopTime:  until,
+				StartTime: retentionFrom,
+				StopTime:  retentionUntil,
 				StepTime:  retention,
 				Values:    []float64{0, 100, 200, 300, 400},
 			}},
@@ -368,4 +394,23 @@ func TestLocal_evalExpr(t *testing.T) {
 		So(err.Error(), ShouldResemble, `failed to evaluate target 'target': unknown function in evalExpr: "vf"`)
 		So(res, ShouldBeNil)
 	})
+}
+
+func shouldEqualIfNaNsEqual(actual interface{}, expected ...interface{}) string {
+	allowUnexportedOption := cmp.AllowUnexported(types.MetricData{})
+
+	floatOption := cmp.Comparer(func(a, b float64) bool {
+		return math.IsNaN(a) && math.IsNaN(b) || a == b
+	})
+	metricDataOption := cmp.Comparer(func(a, b *types.MetricData) bool {
+		return cmp.Equal(*a, *b, floatOption, allowUnexportedOption)
+	})
+
+	return cmp.Diff(
+		actual,
+		expected[0],
+		floatOption,
+		metricDataOption,
+		allowUnexportedOption,
+	)
 }
