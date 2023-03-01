@@ -13,7 +13,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-//TestSender is integration manual test. Paste your Url, Token and Channel ID and check message in Mattermost.
+// TestSender is integration manual test. Paste your Url, Token and Channel ID and check message in Mattermost.
 func TestSender(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 
