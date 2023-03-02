@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	tagSpecRegex          = regexp.MustCompile(`^["']([^,!=]+)\s*(!?=~?)\s*([^"]*)["']`)
+	tagSpecRegex          = regexp.MustCompile(`^["']([^,!=]+)\s*(!?=~?)\s*([^"']*)["']`)
 	tagSpecDelimiterRegex = regexp.MustCompile(`^\s*,\s*`)
 	seriesByTagRegex      = regexp.MustCompile(`^seriesByTag\((.+)\)$`)
 	wildcardExprRegex     = regexp.MustCompile(`\{(.*?)\}`)
