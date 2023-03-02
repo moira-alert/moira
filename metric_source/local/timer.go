@@ -24,8 +24,8 @@ func (t Timer) NumberOfTimeSlots() int {
 }
 
 func (t Timer) GetTimeSlot(timestamp int64) int {
-	timeSlot := int((timestamp - t.from) / t.retention)
-	return timeSlot
+	timeSlot := FloorToMultiplier(timestamp-t.from, t.retention) / t.retention
+	return int(timeSlot)
 }
 
 func CeilToMultiplier(ts, retention int64) int64 {
@@ -36,5 +36,8 @@ func CeilToMultiplier(ts, retention int64) int64 {
 }
 
 func FloorToMultiplier(ts, retention int64) int64 {
-	return ts / retention * retention
+	if ts < 0 {
+		ts -= retention - 1
+	}
+	return ts - ts%retention
 }

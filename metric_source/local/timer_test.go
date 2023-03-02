@@ -49,6 +49,7 @@ func TestTimerGetTimeSlot(t *testing.T) {
 			timestamp int64
 			timeSlot  int
 		}{
+			{5, -1},
 			{10, 0},
 			{15, 0},
 			{19, 0},

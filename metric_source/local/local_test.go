@@ -338,6 +338,117 @@ func TestLocalSourceFetch(t *testing.T) {
 	})
 }
 
+func TestLocalSourceFetchNoRealTimeAlerting(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	database := mock_moira_alert.NewMockDatabase(mockCtrl)
+	localSource := Create(database)
+	defer mockCtrl.Finish()
+
+	pattern := "super.puper.pattern"
+	metric := "super.puper.metric"
+	dataList := map[string][]*moira.MetricValue{
+		metric: {
+			{RetentionTimestamp: 20, Timestamp: 23, Value: 0},
+			{RetentionTimestamp: 30, Timestamp: 33, Value: 1},
+			{RetentionTimestamp: 40, Timestamp: 43, Value: 2},
+			{RetentionTimestamp: 50, Timestamp: 53, Value: 3},
+			{RetentionTimestamp: 60, Timestamp: 63, Value: 4},
+		},
+	}
+
+	var from int64 = 17
+	var until int64 = 67
+	var retentionFrom int64 = 20
+	var retentionUntil int64 = 70
+	var retention int64 = 10
+	var metricsTTL int64 = 3600
+
+	Convey("Test success evaluate without realtime alerting", t, func() {
+		database.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
+		database.EXPECT().GetMetricRetention(metric).Return(retention, nil)
+		database.EXPECT().GetMetricsValues([]string{metric}, retentionFrom, retentionUntil-1).Return(dataList, nil)
+		database.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
+
+		result, err := localSource.Fetch("aliasByNode(super.puper.pattern, 2)", from, until, false)
+		So(err, ShouldBeNil)
+		So(result, shouldEqualIfNaNsEqual, &FetchResult{
+			MetricsData: []metricSource.MetricData{{
+				Name:      "metric",
+				StartTime: retentionFrom,
+				StopTime:  retentionUntil,
+				StepTime:  retention, Values: []float64{0, 1, 2, 3},
+			},
+			},
+			Metrics:  []string{metric},
+			Patterns: []string{pattern},
+		})
+	})
+}
+
+func TestLocalSourceFetchWithMultiplePatterns(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	database := mock_moira_alert.NewMockDatabase(mockCtrl)
+	localSource := Create(database)
+	defer mockCtrl.Finish()
+
+	metricsTTL := int64(3600)
+
+	retention1 := int64(10)
+	pattern1 := "super.puper.pattern"
+	metric1 := "super.puper.metric"
+	dataList1 := map[string][]*moira.MetricValue{
+		metric1: {
+			{RetentionTimestamp: 20, Timestamp: 23, Value: 0.1},
+			{RetentionTimestamp: 30, Timestamp: 33, Value: 1.1},
+			{RetentionTimestamp: 40, Timestamp: 43, Value: 2.1},
+			{RetentionTimestamp: 50, Timestamp: 53, Value: 3.1},
+			{RetentionTimestamp: 60, Timestamp: 63, Value: 4.1},
+			{RetentionTimestamp: 70, Timestamp: 73, Value: 5.1},
+		},
+	}
+
+	retention2 := int64(20)
+	pattern2 := "super.duper.pattern"
+	metric2 := "super.duper.metric"
+	dataList2 := map[string][]*moira.MetricValue{
+		metric2: {
+			{RetentionTimestamp: 0, Timestamp: 3, Value: 0.5},
+			{RetentionTimestamp: 20, Timestamp: 23, Value: 1.5},
+			{RetentionTimestamp: 40, Timestamp: 43, Value: 2.5},
+			{RetentionTimestamp: 60, Timestamp: 63, Value: 3.5},
+			{RetentionTimestamp: 80, Timestamp: 83, Value: 4.5},
+		},
+	}
+
+	Convey("Test success evaluate", t, func() {
+		database.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL).AnyTimes()
+
+		database.EXPECT().GetPatternMetrics(pattern1).Return([]string{metric1}, nil).AnyTimes()
+		database.EXPECT().GetMetricRetention(metric1).Return(retention1, nil).AnyTimes()
+		database.EXPECT().GetMetricsValues([]string{metric1}, gomock.Any(), gomock.Any()).Return(dataList1, nil).AnyTimes()
+
+		database.EXPECT().GetPatternMetrics(pattern2).Return([]string{metric2}, nil).AnyTimes()
+		database.EXPECT().GetMetricRetention(metric2).Return(retention2, nil).AnyTimes()
+		database.EXPECT().GetMetricsValues([]string{metric2}, gomock.Any(), gomock.Any()).Return(dataList2, nil).AnyTimes().AnyTimes()
+
+		result, err := localSource.Fetch("alias(sum(super.puper.pattern, super.duper.pattern), 'metric')", 17, 77, true)
+
+		So(err, ShouldBeNil)
+		So(result, shouldEqualIfNaNsEqual, &FetchResult{
+			MetricsData: []metricSource.MetricData{{
+				Name:      "metric",
+				StartTime: 20,
+				StopTime:  80,
+				StepTime:  20,
+				Values:    []float64{2.1, 5.1, 8.1},
+			},
+			},
+			Metrics:  []string{metric1, metric2},
+			Patterns: []string{pattern1, pattern2},
+		})
+	})
+}
+
 func TestLocal_IsConfigured(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
