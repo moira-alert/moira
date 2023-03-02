@@ -61,3 +61,55 @@ func TestPatternIndex(t *testing.T) {
 		}
 	})
 }
+
+func BenchmarkPatternIndex(b *testing.B) {
+	logger, _ := logging.GetLogger("PatternIndex")
+
+	patterns := []string{
+		"Simple.matching.pattern",
+		"Simple.matching.pattern.*",
+		"Star.single.*",
+		"Star.*.double.any*",
+		"Bracket.{one,two,three}.pattern",
+		"Bracket.pr{one,two,three}suf",
+		"Complex.matching.pattern",
+		"Complex.*.*",
+		"Complex.*.",
+		"Complex.*{one,two,three}suf*.pattern",
+		"Question.?at_begin",
+		"Question.at_the_end?",
+	}
+
+	metrics := []string{"Simple.matching.pattern",
+		"Star.single.anything",
+		"Star.anything.double.anything",
+		"Bracket.one.pattern",
+		"Bracket.two.pattern",
+		"Bracket.three.pattern",
+		"Bracket.pronesuf",
+		"Bracket.prtwosuf",
+		"Bracket.prthreesuf",
+		"Complex.matching.pattern",
+		"Complex.anything.pattern",
+		"Complex.prefixonesuffix.pattern",
+		"Complex.prefixtwofix.pattern",
+		"Complex.anything.pattern",
+		"Question.1at_begin",
+		"Question.at_the_end2",
+		"Two.dots..together",
+		"Simple.notmatching.pattern",
+		"Star.nothing",
+		"Bracket.one.nothing",
+		"Bracket.nothing.pattern",
+		"Complex.prefixonesuffix",
+	}
+
+	index := NewPatternIndex(logger, patterns)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for j := 0; j < len(metrics); j++ {
+			_ = index.MatchPatterns(metrics[j])
+		}
+	}
+}

@@ -225,3 +225,58 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 		}
 	})
 }
+
+func BenchmarkSeriesByTagPatternIndex(b *testing.B) {
+	var logger, _ = logging.GetLogger("SeriesByTag")
+
+	tagSpecsByPattern := map[string][]TagSpec{
+		"name=cpu.test1.test2": {{"name", EqualOperator, "cpu.test1.test2"}},
+		"name=cpu.*.test2":     {{"name", EqualOperator, "cpu.*.test2"}},
+		"name=cpu.test1.*":     {{"name", EqualOperator, "cpu.test1.*"}},
+		"name=cpu.*.*":         {{"name", EqualOperator, "cpu.*.*"}},
+
+		"name=cpu.*.test2;tag1=val1": {
+			{"name", EqualOperator, "cpu.*.test2"},
+			{"tag1", EqualOperator, "val1"}},
+		"name=cpu.*.test2;tag2=val2": {
+			{"name", EqualOperator, "cpu.*.test2"},
+			{"tag2", EqualOperator, "val2"}},
+		"name=cpu.*.test2;tag1=val1;tag2=val2": {
+			{"name", EqualOperator, "cpu.*.test2"},
+			{"tag1", EqualOperator, "val1"},
+			{"tag2", EqualOperator, "val2"}},
+
+		"name!=cpu.test1.test2;tag1=val1;tag2=val2": {
+			{"name", NotEqualOperator, "cpu.test1.test2"},
+			{"tag1", EqualOperator, "val1"},
+			{"tag2", EqualOperator, "val2"}},
+		"name=~cpu;tag1=val1": {
+			{"name", MatchOperator, "cpu"},
+			{"tag1", EqualOperator, "val1"}},
+		"tag1=val1;tag2=val2": {
+			{"tag1", EqualOperator, "val1"},
+			{"tag2", EqualOperator, "val2"}},
+	}
+
+	testCases := []struct {
+		Name   string
+		Labels map[string]string
+	}{
+		{"cpu.test1.test2", map[string]string{}},
+		{"cpu.test1.test2", map[string]string{"tag": "val"}},
+		{"cpu.test1.test2", map[string]string{"tag1": "val1"}},
+		{"cpu.test1.test2", map[string]string{"tag1": "val2"}},
+		{"cpu.test1.test2", map[string]string{"tag1": "val1", "tag2": "val1"}},
+		{"cpu.test1.test2", map[string]string{"tag2": "val2"}},
+		{"cpu.test1.test2", map[string]string{"tag1": "val1", "tag2": "val2"}},
+	}
+
+	index := NewSeriesByTagPatternIndex(logger, tagSpecsByPattern)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		for j := 0; j < len(testCases); j++ {
+			_ = index.MatchPatterns(testCases[j].Name, testCases[j].Labels)
+		}
+	}
+}
