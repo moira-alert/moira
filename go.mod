@@ -21,6 +21,7 @@ require (
 	github.com/gofrs/uuid v4.0.0+incompatible
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/golang/mock v1.6.0
+	github.com/google/go-cmp v0.5.9
 	github.com/gotokatsuya/ipare v0.0.0-20161202043954-fd52c5b6c44b
 	github.com/gregdel/pushover v0.0.0-20200820121613-505cfd60a340
 	github.com/karriereat/blackfriday-slack v0.1.0
@@ -88,7 +89,6 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/gomodule/redigo v1.8.9 // indirect
-	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/go-querystring v1.0.1-0.20190318165438-c8c88dbee036 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/gopherjs/gopherjs v0.0.0-20220221023154-0b2280d3ff96 // indirect

@@ -22,16 +22,21 @@ func init() {
 	functions.New(make(map[string]string))
 }
 
+const (
+	pattern1 = "super.puper.pattern"
+	pattern2 = "super.duper.pattern"
+	metric1  = "super.puper.metric"
+	metric2  = "super.duper.metric"
+)
+
 func TestLocalSourceFetchErrors(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
 	localSource := Create(database)
 	defer mockCtrl.Finish()
 
-	pattern := "super.puper.pattern"
-	metric := "super.puper.metric"
 	dataList := map[string][]*moira.MetricValue{
-		metric: {
+		metric1: {
 			{RetentionTimestamp: 20, Timestamp: 23, Value: 0},
 			{RetentionTimestamp: 30, Timestamp: 33, Value: 1},
 			{RetentionTimestamp: 40, Timestamp: 43, Value: 2},
@@ -59,21 +64,21 @@ func TestLocalSourceFetchErrors(t *testing.T) {
 	})
 
 	Convey("Error in fetch data", t, func() {
-		database.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
-		database.EXPECT().GetMetricRetention(metric).Return(retention, nil)
-		database.EXPECT().GetMetricsValues([]string{metric}, retentionFrom, retentionUntil-1).Return(nil, metricErr)
+		database.EXPECT().GetPatternMetrics(pattern1).Return([]string{metric1}, nil)
+		database.EXPECT().GetMetricRetention(metric1).Return(retention, nil)
+		database.EXPECT().GetMetricsValues([]string{metric1}, retentionFrom, retentionUntil-1).Return(nil, metricErr)
 		database.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
 
-		result, err := localSource.Fetch("super.puper.pattern", from, until, true)
+		result, err := localSource.Fetch(pattern1, from, until, true)
 
 		So(err, ShouldResemble, metricErr)
 		So(result, ShouldBeNil)
 	})
 
 	Convey("Error evaluate target", t, func() {
-		database.EXPECT().GetPatternMetrics("super.puper.pattern").Return([]string{metric}, nil)
-		database.EXPECT().GetMetricRetention(metric).Return(retention, nil)
-		database.EXPECT().GetMetricsValues([]string{metric}, retentionFrom, retentionUntil-1).Return(dataList, nil)
+		database.EXPECT().GetPatternMetrics(pattern1).Return([]string{metric1}, nil)
+		database.EXPECT().GetMetricRetention(metric1).Return(retention, nil)
+		database.EXPECT().GetMetricsValues([]string{metric1}, retentionFrom, retentionUntil-1).Return(dataList, nil)
 		database.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
 
 		result, err := localSource.Fetch("aliasByNoe(super.puper.pattern, 2)", from, until, true)
@@ -83,9 +88,9 @@ func TestLocalSourceFetchErrors(t *testing.T) {
 	})
 
 	Convey("Panic while evaluate target", t, func() {
-		database.EXPECT().GetPatternMetrics("super.puper.pattern").Return([]string{metric}, nil)
-		database.EXPECT().GetMetricRetention(metric).Return(retention, nil)
-		database.EXPECT().GetMetricsValues([]string{metric}, retentionFrom, retentionUntil-1).Return(dataList, nil)
+		database.EXPECT().GetPatternMetrics(pattern1).Return([]string{metric1}, nil)
+		database.EXPECT().GetMetricRetention(metric1).Return(retention, nil)
+		database.EXPECT().GetMetricsValues([]string{metric1}, retentionFrom, retentionUntil-1).Return(dataList, nil)
 		database.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
 
 		result, err := localSource.Fetch("movingAverage(super.puper.pattern, -1)", from, until, true)
@@ -102,8 +107,8 @@ func TestLocalSourceFetchNoMetrics(t *testing.T) {
 	localSource := Create(database)
 	defer mockCtrl.Finish()
 
-	pattern := "super.puper.pattern"
-	pattern2 := "super.duper.pattern"
+	pattern := pattern1
+	pattern2 := pattern2
 
 	var metricsTTL int64 = 3600
 
@@ -241,8 +246,8 @@ func TestLocalSourceFetch(t *testing.T) {
 	localSource := Create(database)
 	defer mockCtrl.Finish()
 
-	pattern := "super.puper.pattern"
-	metric := "super.puper.metric"
+	pattern := pattern1
+	metric := metric1
 	dataList := map[string][]*moira.MetricValue{
 		metric: {
 			{RetentionTimestamp: 20, Timestamp: 23, Value: 0},
@@ -293,7 +298,7 @@ func TestLocalSourceFetch(t *testing.T) {
 			},
 		}
 
-		database.EXPECT().GetPatternMetrics("super.puper.pattern").Return([]string{metric}, nil)
+		database.EXPECT().GetPatternMetrics(pattern1).Return([]string{metric}, nil)
 		database.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 		database.EXPECT().GetMetricsValues([]string{metric}, toFuture-retention, toFuture+retention-1).Return(distantFutureDataList, nil)
 		database.EXPECT().GetMetricsTTLSeconds().Return(ttl)
@@ -311,12 +316,12 @@ func TestLocalSourceFetch(t *testing.T) {
 			},
 			},
 			Metrics:  []string{metric},
-			Patterns: []string{"super.puper.pattern"},
+			Patterns: []string{pattern1},
 		})
 	})
 
 	Convey("Test success evaluate pipe target", t, func() {
-		database.EXPECT().GetPatternMetrics("super.puper.pattern").Return([]string{metric}, nil)
+		database.EXPECT().GetPatternMetrics(pattern1).Return([]string{metric}, nil)
 		database.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 		database.EXPECT().GetMetricsValues([]string{metric}, retentionFrom, retentionUntil-1).Return(dataList, nil)
 		database.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
@@ -333,7 +338,7 @@ func TestLocalSourceFetch(t *testing.T) {
 				Values:    []float64{0, 100, 200, 300, 400},
 			}},
 			Metrics:  []string{metric},
-			Patterns: []string{"super.puper.pattern"},
+			Patterns: []string{pattern1},
 		})
 	})
 }
@@ -344,8 +349,8 @@ func TestLocalSourceFetchNoRealTimeAlerting(t *testing.T) {
 	localSource := Create(database)
 	defer mockCtrl.Finish()
 
-	pattern := "super.puper.pattern"
-	metric := "super.puper.metric"
+	pattern := pattern1
+	metric := metric1
 	dataList := map[string][]*moira.MetricValue{
 		metric: {
 			{RetentionTimestamp: 20, Timestamp: 23, Value: 0},
@@ -394,8 +399,8 @@ func TestLocalSourceFetchWithMultiplePatterns(t *testing.T) {
 	metricsTTL := int64(3600)
 
 	retention1 := int64(10)
-	pattern1 := "super.puper.pattern"
-	metric1 := "super.puper.metric"
+	pattern1 := pattern1
+	metric1 := metric1
 	dataList1 := map[string][]*moira.MetricValue{
 		metric1: {
 			{RetentionTimestamp: 20, Timestamp: 23, Value: 0.1},
@@ -408,8 +413,8 @@ func TestLocalSourceFetchWithMultiplePatterns(t *testing.T) {
 	}
 
 	retention2 := int64(20)
-	pattern2 := "super.duper.pattern"
-	metric2 := "super.duper.metric"
+	pattern2 := pattern2
+	metric2 := metric2
 	dataList2 := map[string][]*moira.MetricValue{
 		metric2: {
 			{RetentionTimestamp: 0, Timestamp: 3, Value: 0.5},
@@ -463,7 +468,6 @@ func TestLocal_IsConfigured(t *testing.T) {
 }
 
 func TestLocal_evalExpr(t *testing.T) {
-
 	Convey("When everything is correct, we don't return any error", t, func() {
 		ctx := evalCtx{from: time.Now().Add(-1 * time.Hour).Unix(), until: time.Now().Unix()}
 		target := `seriesByTag('name=k8s.dev-cl1.kube_pod_status_ready', 'condition!=true', 'namespace=default', 'pod=~*')`

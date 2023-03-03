@@ -70,7 +70,7 @@ func TestFetchDataErrors(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	database := mock_moira_alert.NewMockDatabase(mockCtrl)
-	fetchData := fetchData{database: database}
+	fetchedData := fetchData{database: database}
 
 	pattern := "super-puper-pattern"
 	metric := "super-puper-metric"
@@ -84,7 +84,7 @@ func TestFetchDataErrors(t *testing.T) {
 	Convey("GetPatternMetricsError", t, func() {
 		database.EXPECT().GetPatternMetrics(pattern).Return(nil, patternErr)
 
-		metrics, err := fetchData.fetchMetricNames(pattern)
+		metrics, err := fetchedData.fetchMetricNames(pattern)
 		So(metrics, ShouldBeNil)
 		So(err, ShouldResemble, patternErr)
 	})
@@ -93,7 +93,7 @@ func TestFetchDataErrors(t *testing.T) {
 		database.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
 		database.EXPECT().GetMetricRetention(metric).Return(int64(0), retentionErr)
 
-		metrics, err := fetchData.fetchMetricNames(pattern)
+		metrics, err := fetchedData.fetchMetricNames(pattern)
 		So(metrics, ShouldBeNil)
 		So(err, ShouldResemble, retentionErr)
 	})
@@ -103,7 +103,7 @@ func TestFetchDataErrors(t *testing.T) {
 		database.EXPECT().GetMetricRetention(metric).Return(timer.retention, nil)
 		database.EXPECT().GetMetricsValues([]string{metric}, timer.from, timer.until-1).Return(nil, metricErr)
 
-		metrics, err := fetchData.fetchMetricNames(pattern)
+		metrics, err := fetchedData.fetchMetricNames(pattern)
 
 		expectedMetrics := metricsWithRetention{
 			retention: timer.retention,
@@ -113,7 +113,7 @@ func TestFetchDataErrors(t *testing.T) {
 		So(*metrics, ShouldResemble, expectedMetrics)
 		So(err, ShouldBeNil)
 
-		metricData, err := fetchData.fetchMetricValues(pattern, metrics, timer)
+		metricData, err := fetchedData.fetchMetricValues(pattern, metrics, timer)
 
 		So(metricData, ShouldBeNil)
 		So(err, ShouldResemble, metricErr)
@@ -125,7 +125,7 @@ func TestFetchData(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-	fetchData := fetchData{database: dataBase}
+	fetchedData := fetchData{database: dataBase}
 
 	pattern := "super-puper-pattern"
 	metric := "super-puper-metric"
@@ -150,17 +150,17 @@ func TestFetchData(t *testing.T) {
 	Convey("Test no metrics", t, func() {
 		dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{}, nil)
 
-		metrics, err := fetchData.fetchMetricNames(pattern)
+		metrics, err := fetchedData.fetchMetricNames(pattern)
 		So(err, ShouldBeNil)
 
-		timer := NewTimerRoundingTimestamps(from, until, metrics.retention)
-		metricValues, err := fetchData.fetchMetricValues(pattern, metrics, timer)
+		timerNoMetrics := NewTimerRoundingTimestamps(from, until, metrics.retention)
+		metricValues, err := fetchedData.fetchMetricValues(pattern, metrics, timerNoMetrics)
 
 		So(metricValues[0], shouldEqualIfNaNsEqual, &types.MetricData{
 			FetchResponse: pb.FetchResponse{
 				Name:      pattern,
-				StartTime: timer.from,
-				StopTime:  timer.until,
+				StartTime: timerNoMetrics.from,
+				StopTime:  timerNoMetrics.until,
 				StepTime:  60,
 				Values:    []float64{math.NaN()},
 			},
@@ -175,9 +175,9 @@ func TestFetchData(t *testing.T) {
 		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 		dataBase.EXPECT().GetMetricsValues([]string{metric}, timer.from, timer.until-1).Return(dataList, nil)
 
-		metrics, err := fetchData.fetchMetricNames(pattern)
+		metrics, err := fetchedData.fetchMetricNames(pattern)
 		So(err, ShouldBeNil)
-		metricValues, err := fetchData.fetchMetricValues(pattern, metrics, timer)
+		metricValues, err := fetchedData.fetchMetricValues(pattern, metrics, timer)
 
 		expected := &types.MetricData{
 			FetchResponse: pb.FetchResponse{
@@ -202,9 +202,9 @@ func TestFetchData(t *testing.T) {
 		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
 		dataBase.EXPECT().GetMetricsValues([]string{metric, metric2}, timer.from, timer.until-1).Return(dataList, nil)
 
-		metrics, err := fetchData.fetchMetricNames(pattern)
+		metrics, err := fetchedData.fetchMetricNames(pattern)
 		So(err, ShouldBeNil)
-		metricValues, err := fetchData.fetchMetricValues(pattern, metrics, timer)
+		metricValues, err := fetchedData.fetchMetricValues(pattern, metrics, timer)
 
 		fetchResponse := pb.FetchResponse{
 			Name:      metric,

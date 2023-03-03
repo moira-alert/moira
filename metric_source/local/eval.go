@@ -40,7 +40,7 @@ func (ctx *evalCtx) FetchAndEval(database moira.Database, target string, result 
 
 	if rewritten {
 		for _, newTarget := range newTargets {
-			err := ctx.FetchAndEval(database, newTarget, result)
+			err = ctx.FetchAndEval(database, newTarget, result)
 			if err != nil {
 				return err
 			}
@@ -89,7 +89,6 @@ func (ctx *evalCtx) GetMetricsData(database moira.Database, parsedExpr parser.Ex
 		from := mr.From + ctx.from
 		until := mr.Until + ctx.until
 
-		// TODO: Scale to common step before fetching the values
 		metricNames, err := fetchData.fetchMetricNames(mr.Metric)
 		if err != nil {
 			return nil, err
