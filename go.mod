@@ -34,7 +34,7 @@ require (
 	github.com/rs/cors v1.8.2
 	github.com/rs/zerolog v1.20.0
 	github.com/russross/blackfriday/v2 v2.1.0
-	github.com/slack-go/slack v0.8.1
+	github.com/slack-go/slack v0.12.1
 	github.com/smartystreets/assertions v1.2.0
 	github.com/smartystreets/goconvey v1.6.4
 	github.com/writeas/go-strip-markdown v2.0.1+incompatible

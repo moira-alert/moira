@@ -30,7 +30,7 @@ type TriggersList struct {
 	List  []moira.TriggerCheck `json:"list"`
 }
 
-func (*TriggersList) Render(w http.ResponseWriter, r *http.Request) error {
+func (*TriggersList) Render(http.ResponseWriter, *http.Request) error {
 	return nil
 }
 
@@ -332,7 +332,7 @@ func checkSimpleModeFields(trigger *Trigger) error {
 	return nil
 }
 
-func (*Trigger) Render(w http.ResponseWriter, r *http.Request) error {
+func (*Trigger) Render(http.ResponseWriter, *http.Request) error {
 	return nil
 }
 
@@ -362,13 +362,13 @@ type TriggerCheck struct {
 	TriggerID string `json:"trigger_id"`
 }
 
-func (*TriggerCheck) Render(w http.ResponseWriter, r *http.Request) error {
+func (*TriggerCheck) Render(http.ResponseWriter, *http.Request) error {
 	return nil
 }
 
 type MetricsMaintenance map[string]int64
 
-func (*MetricsMaintenance) Bind(r *http.Request) error {
+func (*MetricsMaintenance) Bind(*http.Request) error {
 	return nil
 }
 
@@ -377,7 +377,7 @@ type TriggerMaintenance struct {
 	Metrics map[string]int64 `json:"metrics"`
 }
 
-func (*TriggerMaintenance) Bind(r *http.Request) error {
+func (*TriggerMaintenance) Bind(*http.Request) error {
 	return nil
 }
 
@@ -385,22 +385,23 @@ type ThrottlingResponse struct {
 	Throttling int64 `json:"throttling"`
 }
 
-func (*ThrottlingResponse) Render(w http.ResponseWriter, r *http.Request) error {
+func (*ThrottlingResponse) Render(http.ResponseWriter, *http.Request) error {
 	return nil
 }
 
 type SaveTriggerResponse struct {
-	ID      string `json:"id"`
-	Message string `json:"message"`
+	ID          string               `json:"id"`
+	Message     string               `json:"message"`
+	CheckResult TriggerCheckResponse `json:"checkResult,omitempty"`
 }
 
-func (*SaveTriggerResponse) Render(w http.ResponseWriter, r *http.Request) error {
+func (*SaveTriggerResponse) Render(http.ResponseWriter, *http.Request) error {
 	return nil
 }
 
 type TriggerMetrics map[string]map[string][]moira.MetricValue
 
-func (*TriggerMetrics) Render(w http.ResponseWriter, r *http.Request) error {
+func (*TriggerMetrics) Render(http.ResponseWriter, *http.Request) error {
 	return nil
 }
 
@@ -421,6 +422,6 @@ type TriggersSearchResultDeleteResponse struct {
 	PagerID string `json:"pager_id"`
 }
 
-func (TriggersSearchResultDeleteResponse) Render(w http.ResponseWriter, r *http.Request) error {
+func (TriggersSearchResultDeleteResponse) Render(http.ResponseWriter, *http.Request) error {
 	return nil
 }
