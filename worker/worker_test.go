@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pkg/errors"
+	"errors"
 
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
