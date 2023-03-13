@@ -14,6 +14,7 @@ import (
 	metricSource "github.com/moira-alert/moira/metric_source"
 )
 
+// Context for expression evaluation process
 type evalCtx struct {
 	from  int64
 	until int64
@@ -206,6 +207,7 @@ func NewMetricDataFromGraphit(md *types.MetricData, wildcard bool) metricSource.
 	}
 }
 
+// Result of a metric fetch for a single expression
 type fetchedMetrics struct {
 	metricsMap map[parser.MetricRequest][]*types.MetricData
 	metrics    []string

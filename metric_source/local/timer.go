@@ -1,5 +1,6 @@
 package local
 
+// Timer is responsible for managing time ranges and metrics' timeslots
 type Timer struct {
 	startTime int64
 	stopTime  int64
