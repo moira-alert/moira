@@ -112,6 +112,27 @@ func TestLocalSourceFetchNoMetrics(t *testing.T) {
 
 	var metricsTTL int64 = 3600
 
+	Convey("Single pattern, from 17 until 17", t, func() {
+		database.EXPECT().GetPatternMetrics(pattern).Return([]string{}, nil)
+		database.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
+
+		result, err := localSource.Fetch("aliasByNode(super.puper.pattern, 2)", 17, 17, false)
+
+		So(err, ShouldBeNil)
+		So(result, shouldEqualIfNaNsEqual, &FetchResult{
+			MetricsData: []metricSource.MetricData{{
+				Name:      "pattern",
+				StartTime: 60,
+				StopTime:  60,
+				StepTime:  60,
+				Values:    []float64{},
+				Wildcard:  true,
+			}},
+			Metrics:  []string{},
+			Patterns: []string{pattern},
+		})
+	})
+
 	Convey("Single pattern, from 17 until 67", t, func() {
 		database.EXPECT().GetPatternMetrics(pattern).Return([]string{}, nil)
 		database.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL)
