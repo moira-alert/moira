@@ -20,27 +20,27 @@ type evalCtx struct {
 }
 
 func (ctx *evalCtx) FetchAndEval(database moira.Database, target string, result *FetchResult) error {
-	expr, err := ctx.Parse(target)
+	exp, err := ctx.parse(target)
 	if err != nil {
 		return err
 	}
 
-	fetchedMetrics, err := ctx.GetMetricsData(database, expr)
+	fetchedMetrics, err := ctx.getMetricsData(database, exp)
 	if err != nil {
 		return err
 	}
 
 	commonStep := fetchedMetrics.CalculateCommonStep()
-	ctx.ScaleToCommonStep(commonStep, fetchedMetrics)
+	ctx.scaleToCommonStep(commonStep, fetchedMetrics)
 
-	rewritten, newTargets, err := ctx.RewriteExpr(expr, fetchedMetrics)
+	rewritten, newTargets, err := ctx.rewriteExpr(exp, fetchedMetrics)
 	if err != nil {
 		return err
 	}
 
 	if rewritten {
 		for _, newTarget := range newTargets {
-			err = ctx.FetchAndEval(database, newTarget, result)
+			err = ctx.fetchAndEvalNoRewrite(database, newTarget, result)
 			if err != nil {
 				return err
 			}
@@ -48,25 +48,41 @@ func (ctx *evalCtx) FetchAndEval(database moira.Database, target string, result 
 		return nil
 	}
 
-	metricsData, err := ctx.Eval(target, expr, fetchedMetrics)
+	metricsData, err := ctx.eval(target, exp, fetchedMetrics)
 	if err != nil {
 		return err
 	}
 
-	for _, metricData := range metricsData {
-		md := MetricDataFromGraphit(metricData, fetchedMetrics.HasWildcard())
-		result.MetricsData = append(result.MetricsData, md)
-	}
-
-	result.Metrics = append(result.Metrics, fetchedMetrics.metrics...)
-	for _, mr := range expr.Metrics() {
-		result.Patterns = append(result.Patterns, mr.Metric)
-	}
+	ctx.writeResult(exp, fetchedMetrics, metricsData, result)
 
 	return nil
 }
 
-func (ctx *evalCtx) Parse(target string) (parser.Expr, error) {
+func (ctx *evalCtx) fetchAndEvalNoRewrite(database moira.Database, target string, result *FetchResult) error {
+	exp, err := ctx.parse(target)
+	if err != nil {
+		return err
+	}
+
+	fetchedMetrics, err := ctx.getMetricsData(database, exp)
+	if err != nil {
+		return err
+	}
+
+	commonStep := fetchedMetrics.CalculateCommonStep()
+	ctx.scaleToCommonStep(commonStep, fetchedMetrics)
+
+	metricsData, err := ctx.eval(target, exp, fetchedMetrics)
+	if err != nil {
+		return err
+	}
+
+	ctx.writeResult(exp, fetchedMetrics, metricsData, result)
+
+	return nil
+}
+
+func (ctx *evalCtx) parse(target string) (parser.Expr, error) {
 	parsedExpr, _, err := parser.ParseExpr(target)
 	if err != nil {
 		return nil, ErrParseExpr{
@@ -77,7 +93,7 @@ func (ctx *evalCtx) Parse(target string) (parser.Expr, error) {
 	return parsedExpr, nil
 }
 
-func (ctx *evalCtx) GetMetricsData(database moira.Database, parsedExpr parser.Expr) (*fetchedMetrics, error) {
+func (ctx *evalCtx) getMetricsData(database moira.Database, parsedExpr parser.Expr) (*fetchedMetrics, error) {
 	metricRequests := parsedExpr.Metrics()
 
 	metrics := make([]string, 0)
@@ -107,7 +123,7 @@ func (ctx *evalCtx) GetMetricsData(database moira.Database, parsedExpr parser.Ex
 	return &fetchedMetrics{metricsMap, metrics}, nil
 }
 
-func (ctx *evalCtx) ScaleToCommonStep(retention int64, fetchedMetrics *fetchedMetrics) {
+func (ctx *evalCtx) scaleToCommonStep(retention int64, fetchedMetrics *fetchedMetrics) {
 	from, until := RoundTimestamps(ctx.from, ctx.until, retention)
 	ctx.from, ctx.until = from, until
 
@@ -123,7 +139,7 @@ func (ctx *evalCtx) ScaleToCommonStep(retention int64, fetchedMetrics *fetchedMe
 	fetchedMetrics.metricsMap = metricMap
 }
 
-func (ctx *evalCtx) RewriteExpr(parsedExpr parser.Expr, metrics *fetchedMetrics) (bool, []string, error) {
+func (ctx *evalCtx) rewriteExpr(parsedExpr parser.Expr, metrics *fetchedMetrics) (bool, []string, error) {
 	rewritten, newTargets, err := expr.RewriteExpr(
 		context.Background(),
 		parsedExpr,
@@ -138,7 +154,7 @@ func (ctx *evalCtx) RewriteExpr(parsedExpr parser.Expr, metrics *fetchedMetrics)
 	return rewritten, newTargets, nil
 }
 
-func (ctx *evalCtx) Eval(target string, parsedExpr parser.Expr, metrics *fetchedMetrics) (result []*types.MetricData, err error) {
+func (ctx *evalCtx) eval(target string, parsedExpr parser.Expr, metrics *fetchedMetrics) (result []*types.MetricData, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			result = nil
@@ -167,7 +183,19 @@ func (ctx *evalCtx) Eval(target string, parsedExpr parser.Expr, metrics *fetched
 	return result, err
 }
 
-func MetricDataFromGraphit(md *types.MetricData, wildcard bool) metricSource.MetricData {
+func (ctx *evalCtx) writeResult(exp parser.Expr, metrics *fetchedMetrics, metricsData []*types.MetricData, result *FetchResult) {
+	for _, metricData := range metricsData {
+		md := NewMetricDataFromGraphit(metricData, metrics.HasWildcard())
+		result.MetricsData = append(result.MetricsData, md)
+	}
+
+	result.Metrics = append(result.Metrics, metrics.metrics...)
+	for _, mr := range exp.Metrics() {
+		result.Patterns = append(result.Patterns, mr.Metric)
+	}
+}
+
+func NewMetricDataFromGraphit(md *types.MetricData, wildcard bool) metricSource.MetricData {
 	return metricSource.MetricData{
 		Name:      md.Name,
 		StartTime: md.StartTime,

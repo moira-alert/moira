@@ -9,6 +9,8 @@ import (
 	"github.com/moira-alert/moira"
 )
 
+const DefaultRetention = 60
+
 type fetchData struct {
 	database moira.Database
 }
@@ -25,7 +27,7 @@ func (fd *fetchData) fetchMetricNames(pattern string) (*metricsWithRetention, er
 	}
 
 	if len(metrics) == 0 {
-		return &metricsWithRetention{retention: 60, metrics: metrics}, nil
+		return &metricsWithRetention{retention: DefaultRetention, metrics: metrics}, nil
 	}
 
 	retention, err := fd.database.GetMetricRetention(metrics[0])

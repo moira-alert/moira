@@ -472,9 +472,9 @@ func TestLocal_evalExpr(t *testing.T) {
 		ctx := evalCtx{from: time.Now().Add(-1 * time.Hour).Unix(), until: time.Now().Unix()}
 		target := `seriesByTag('name=k8s.dev-cl1.kube_pod_status_ready', 'condition!=true', 'namespace=default', 'pod=~*')`
 
-		expression, err := ctx.Parse(target)
+		expression, err := ctx.parse(target)
 		So(err, ShouldBeNil)
-		res, err := ctx.Eval("target", expression, &fetchedMetrics{metricsMap: nil})
+		res, err := ctx.eval("target", expression, &fetchedMetrics{metricsMap: nil})
 		So(err, ShouldBeNil)
 		So(res, ShouldBeNil)
 	})
@@ -482,8 +482,8 @@ func TestLocal_evalExpr(t *testing.T) {
 	Convey("When get panic, it should return error", t, func() {
 		ctx := evalCtx{from: 0, until: 0}
 
-		expression, _ := ctx.Parse(`;fg`)
-		res, err := ctx.Eval("target", expression, &fetchedMetrics{metricsMap: nil})
+		expression, _ := ctx.parse(`;fg`)
+		res, err := ctx.eval("target", expression, &fetchedMetrics{metricsMap: nil})
 		So(err.Error(), ShouldContainSubstring, "panic while evaluate target target: message: 'runtime error: invalid memory address or nil pointer dereference")
 		So(res, ShouldBeNil)
 	})
@@ -492,9 +492,9 @@ func TestLocal_evalExpr(t *testing.T) {
 		ctx := evalCtx{from: time.Now().Add(-1 * time.Hour).Unix(), until: time.Now().Unix()}
 		target := `alias( divideSeries( alias( sumSeries( exclude( groupByNode( OFD.Production.{ofd-api,ofd-front}.*.fns-service-client.v120.*.GetCashboxRegistrationInformationAsync.ResponseCode.*.Meter.Rate-15-min-Requests-per-s, 9, "sum" ), "Ok" ) ), "bad" ), alias( sumSeries( OFD.Production.{ofd-api,ofd-front}.*.fns-service-client.v120.*.GetCashboxRegistrationInformationAsync.ResponseCode.*.Meter.Rate-15-min-Requests-per-s ), "total" ) ), "Result" )`
 
-		expression, err := ctx.Parse(target)
+		expression, err := ctx.parse(target)
 		So(err, ShouldBeNil)
-		res, err := ctx.Eval("target", expression, &fetchedMetrics{metricsMap: make(map[parser.MetricRequest][]*types.MetricData)})
+		res, err := ctx.eval("target", expression, &fetchedMetrics{metricsMap: make(map[parser.MetricRequest][]*types.MetricData)})
 		So(err, ShouldBeNil)
 		So(res, ShouldBeEmpty)
 	})
@@ -503,8 +503,8 @@ func TestLocal_evalExpr(t *testing.T) {
 		ctx := evalCtx{from: time.Now().Add(-1 * time.Hour).Unix(), until: time.Now().Unix()}
 		target := `vf('name=k8s.dev-cl1.kube_pod_status_ready', 'condition!=true', 'namespace=default', 'pod=~*')`
 
-		expression, _ := ctx.Parse(target)
-		res, err := ctx.Eval("target", expression, &fetchedMetrics{metricsMap: nil})
+		expression, _ := ctx.parse(target)
+		res, err := ctx.eval("target", expression, &fetchedMetrics{metricsMap: nil})
 		So(err, ShouldBeError)
 		So(err.Error(), ShouldResemble, `failed to evaluate target 'target': unknown function in evalExpr: "vf"`)
 		So(res, ShouldBeNil)
