@@ -38,12 +38,12 @@ func (fd *fetchData) fetchMetricNames(pattern string) (*metricsWithRetention, er
 	return &metricsWithRetention{retention, metrics}, nil
 }
 
-func (fd *fetchData) fetchMetricValues(pattern string, metrics *metricsWithRetention, timer *Timer) ([]*types.MetricData, error) {
+func (fd *fetchData) fetchMetricValues(pattern string, metrics *metricsWithRetention, timer Timer) ([]*types.MetricData, error) {
 	if len(metrics.metrics) == 0 {
 		return fetchDataNoMetrics(timer, pattern), nil
 	}
 
-	dataList, err := fd.database.GetMetricsValues(metrics.metrics, timer.from, timer.until-1)
+	dataList, err := fd.database.GetMetricsValues(metrics.metrics, timer.startTime, timer.stopTime-1)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +58,7 @@ func (fd *fetchData) fetchMetricValues(pattern string, metrics *metricsWithReten
 	return metricsData, nil
 }
 
-func fetchDataNoMetrics(timer *Timer, pattern string) []*types.MetricData {
+func fetchDataNoMetrics(timer Timer, pattern string) []*types.MetricData {
 	dataList := map[string][]*moira.MetricValue{pattern: make([]*moira.MetricValue, 0)}
 	valuesMap := unpackMetricsValues(dataList, timer)
 	metricsData := createMetricData(pattern, timer, valuesMap[pattern])
@@ -66,18 +66,18 @@ func fetchDataNoMetrics(timer *Timer, pattern string) []*types.MetricData {
 	return []*types.MetricData{metricsData}
 }
 
-func createMetricData(metric string, timer *Timer, values []float64) *types.MetricData {
+func createMetricData(metric string, timer Timer, values []float64) *types.MetricData {
 	fetchResponse := pb.FetchResponse{
 		Name:      metric,
-		StartTime: timer.from,
-		StopTime:  timer.until,
-		StepTime:  timer.retention,
+		StartTime: timer.startTime,
+		StopTime:  timer.stopTime,
+		StepTime:  timer.stepTime,
 		Values:    values,
 	}
 	return &types.MetricData{FetchResponse: fetchResponse, Tags: tags.ExtractTags(metric)}
 }
 
-func unpackMetricsValues(metricsData map[string][]*moira.MetricValue, timer *Timer) map[string][]float64 {
+func unpackMetricsValues(metricsData map[string][]*moira.MetricValue, timer Timer) map[string][]float64 {
 	valuesMap := make(map[string][]float64, len(metricsData))
 	for metric, metricData := range metricsData {
 		valuesMap[metric] = unpackMetricValues(metricData, timer)
@@ -85,7 +85,7 @@ func unpackMetricsValues(metricsData map[string][]*moira.MetricValue, timer *Tim
 	return valuesMap
 }
 
-func unpackMetricValues(metricData []*moira.MetricValue, timer *Timer) []float64 {
+func unpackMetricValues(metricData []*moira.MetricValue, timer Timer) []float64 {
 	points := make(map[int]*moira.MetricValue, len(metricData))
 	for _, metricValue := range metricData {
 		points[timer.GetTimeSlot(metricValue.RetentionTimestamp)] = metricValue

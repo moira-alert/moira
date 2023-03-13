@@ -1,30 +1,30 @@
 package local
 
 type Timer struct {
-	from      int64
-	until     int64
-	retention int64
+	startTime int64
+	stopTime  int64
+	stepTime  int64
 }
 
 func RoundTimestamps(from, until, retention int64) (roundedFrom, roundedUntil int64) {
 	return CeilToMultiplier(from, retention), FloorToMultiplier(until, retention) + retention
 }
 
-func NewTimerRoundingTimestamps(from int64, until int64, retention int64) *Timer {
-	from, until = RoundTimestamps(from, until, retention)
-	return &Timer{
-		from:      from,
-		until:     until,
-		retention: retention,
+func NewTimerRoundingTimestamps(startTime int64, stopTime int64, retention int64) Timer {
+	startTime, stopTime = RoundTimestamps(startTime, stopTime, retention)
+	return Timer{
+		startTime: startTime,
+		stopTime:  stopTime,
+		stepTime:  retention,
 	}
 }
 
 func (t Timer) NumberOfTimeSlots() int {
-	return t.GetTimeSlot(t.until)
+	return t.GetTimeSlot(t.stopTime)
 }
 
 func (t Timer) GetTimeSlot(timestamp int64) int {
-	timeSlot := FloorToMultiplier(timestamp-t.from, t.retention) / t.retention
+	timeSlot := FloorToMultiplier(timestamp-t.startTime, t.stepTime) / t.stepTime
 	return int(timeSlot)
 }
 

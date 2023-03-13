@@ -100,13 +100,13 @@ func TestFetchDataErrors(t *testing.T) {
 
 	Convey("GetMetricsValuesError", t, func() {
 		database.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
-		database.EXPECT().GetMetricRetention(metric).Return(timer.retention, nil)
-		database.EXPECT().GetMetricsValues([]string{metric}, timer.from, timer.until-1).Return(nil, metricErr)
+		database.EXPECT().GetMetricRetention(metric).Return(timer.stepTime, nil)
+		database.EXPECT().GetMetricsValues([]string{metric}, timer.startTime, timer.stopTime-1).Return(nil, metricErr)
 
 		metrics, err := fetchedData.fetchMetricNames(pattern)
 
 		expectedMetrics := metricsWithRetention{
-			retention: timer.retention,
+			retention: timer.stepTime,
 			metrics:   []string{metric},
 		}
 
@@ -159,8 +159,8 @@ func TestFetchData(t *testing.T) {
 		So(metricValues[0], shouldEqualIfNaNsEqual, &types.MetricData{
 			FetchResponse: pb.FetchResponse{
 				Name:      pattern,
-				StartTime: timerNoMetrics.from,
-				StopTime:  timerNoMetrics.until,
+				StartTime: timerNoMetrics.startTime,
+				StopTime:  timerNoMetrics.stopTime,
 				StepTime:  60,
 				Values:    []float64{math.NaN()},
 			},
@@ -173,7 +173,7 @@ func TestFetchData(t *testing.T) {
 	Convey("Test one metric", t, func() {
 		dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric}, nil)
 		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
-		dataBase.EXPECT().GetMetricsValues([]string{metric}, timer.from, timer.until-1).Return(dataList, nil)
+		dataBase.EXPECT().GetMetricsValues([]string{metric}, timer.startTime, timer.stopTime-1).Return(dataList, nil)
 
 		metrics, err := fetchedData.fetchMetricNames(pattern)
 		So(err, ShouldBeNil)
@@ -182,8 +182,8 @@ func TestFetchData(t *testing.T) {
 		expected := &types.MetricData{
 			FetchResponse: pb.FetchResponse{
 				Name:      metric,
-				StartTime: timer.from,
-				StopTime:  timer.until,
+				StartTime: timer.startTime,
+				StopTime:  timer.stopTime,
 				StepTime:  retention,
 				Values:    []float64{0, 1, 2, 3, 4},
 			},
@@ -200,7 +200,7 @@ func TestFetchData(t *testing.T) {
 	Convey("Test multiple metrics", t, func() {
 		dataBase.EXPECT().GetPatternMetrics(pattern).Return([]string{metric, metric2}, nil)
 		dataBase.EXPECT().GetMetricRetention(metric).Return(retention, nil)
-		dataBase.EXPECT().GetMetricsValues([]string{metric, metric2}, timer.from, timer.until-1).Return(dataList, nil)
+		dataBase.EXPECT().GetMetricsValues([]string{metric, metric2}, timer.startTime, timer.stopTime-1).Return(dataList, nil)
 
 		metrics, err := fetchedData.fetchMetricNames(pattern)
 		So(err, ShouldBeNil)
@@ -208,8 +208,8 @@ func TestFetchData(t *testing.T) {
 
 		fetchResponse := pb.FetchResponse{
 			Name:      metric,
-			StartTime: timer.from,
-			StopTime:  timer.until,
+			StartTime: timer.startTime,
+			StopTime:  timer.stopTime,
 			StepTime:  retention,
 			Values:    []float64{0, 1, 2, 3, 4},
 		}
