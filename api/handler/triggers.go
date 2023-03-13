@@ -117,6 +117,7 @@ func getTriggerFromRequest(request *http.Request) (*dto.Trigger, *api.ErrorRespo
 			return nil, api.ErrorInternalServer(err)
 		}
 	}
+	trigger.UpdatedBy = middleware.GetLogin(request)
 
 	return trigger, nil
 }

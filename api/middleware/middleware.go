@@ -38,6 +38,7 @@ var (
 	targetNameKey        ContextKey = "target"
 	teamIDKey            ContextKey = "teamID"
 	teamUserIDKey        ContextKey = "teamUserIDKey"
+	anonymousUser                   = "anonymous"
 )
 
 // GetDatabase gets moira.Database realization from request context
@@ -47,7 +48,13 @@ func GetDatabase(request *http.Request) moira.Database {
 
 // GetLogin gets user login string from request context, which was sets in UserContext middleware
 func GetLogin(request *http.Request) string {
-	return request.Context().Value(loginKey).(string)
+	if request.Context() != nil && request.Context().Value(loginKey) != nil {
+		if login := request.Context().Value(loginKey).(string); login != "" {
+			return login
+		}
+	}
+
+	return anonymousUser
 }
 
 // GetTriggerID gets TriggerID string from request context, which was sets in TriggerContext middleware

@@ -220,8 +220,10 @@ func (connector *DbConnector) preSaveTrigger(newTrigger *moira.Trigger, oldTrigg
 	newTrigger.UpdatedAt = &now
 	if oldTrigger != nil {
 		newTrigger.CreatedAt = oldTrigger.CreatedAt
+		newTrigger.CreatedBy = oldTrigger.CreatedBy
 	} else {
 		newTrigger.CreatedAt = &now
+		newTrigger.CreatedBy = newTrigger.UpdatedBy
 	}
 }
 
