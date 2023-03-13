@@ -84,6 +84,8 @@ func TestGetTriggerFromRequest(t *testing.T) {
 				AloneMetrics:   map[string]bool{},
 				CreatedAt:      &time.Time{},
 				UpdatedAt:      &time.Time{},
+				CreatedBy:      "",
+				UpdatedBy:      "anonymous",
 			},
 		}
 		body, _ := json.Marshal(triggerDTO)
