@@ -3,8 +3,6 @@ package local
 import (
 	"github.com/go-graphite/carbonapi/expr/functions"
 	"github.com/go-graphite/carbonapi/expr/rewrite"
-	"github.com/go-graphite/carbonapi/expr/types"
-	"github.com/go-graphite/carbonapi/pkg/parser"
 	"github.com/moira-alert/moira"
 	metricSource "github.com/moira-alert/moira/metric_source"
 )
@@ -13,8 +11,6 @@ import (
 type Local struct {
 	database moira.Database
 }
-
-type MetricsMap = map[parser.MetricRequest][]*types.MetricData
 
 // Create configures local metric source
 func Create(dataBase moira.Database) metricSource.MetricSource {
@@ -46,7 +42,7 @@ func (local *Local) Fetch(target string, from int64, until int64, allowRealTimeA
 	result := CreateEmptyFetchResult()
 	ctx := evalCtx{from, until}
 
-	err := ctx.FetchAndEval(local.database, target, result)
+	err := ctx.fetchAndEval(local.database, target, result)
 	if err != nil {
 		return nil, err
 	}

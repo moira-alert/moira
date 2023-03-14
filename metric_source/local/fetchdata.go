@@ -11,12 +11,10 @@ import (
 
 const DefaultRetention = 60
 
-// Context for metric fetch operation
 type fetchData struct {
 	database moira.Database
 }
 
-// Result of a pattern prefetch, when only names and retention are fetched
 type metricsWithRetention struct {
 	retention int64
 	metrics   []string

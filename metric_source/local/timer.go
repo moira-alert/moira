@@ -7,10 +7,13 @@ type Timer struct {
 	stepTime  int64
 }
 
-func RoundTimestamps(from, until, retention int64) (roundedFrom, roundedUntil int64) {
-	return CeilToMultiplier(from, retention), FloorToMultiplier(until, retention) + retention
+// Rounds start and stop time in a specific manner requered by carbonapi
+func RoundTimestamps(startTime, stopTime, retention int64) (roundedStart, roundedStop int64) {
+	return ceilToMultiplier(startTime, retention), floorToMultiplier(stopTime, retention) + retention
 }
 
+// Creates new timer rounding start and stop time in a specific manner requered by carbonapi
+// Timers should be created only with this function
 func NewTimerRoundingTimestamps(startTime int64, stopTime int64, retention int64) Timer {
 	startTime, stopTime = RoundTimestamps(startTime, stopTime, retention)
 	return Timer{
@@ -20,23 +23,25 @@ func NewTimerRoundingTimestamps(startTime int64, stopTime int64, retention int64
 	}
 }
 
+// Returns the number of timeslots from this timer's startTime until its stopTime with it's retention
 func (t Timer) NumberOfTimeSlots() int {
 	return t.GetTimeSlot(t.stopTime)
 }
 
+// Returns the index of given timestamp (rounded by timestamp) in this timer's time range
 func (t Timer) GetTimeSlot(timestamp int64) int {
-	timeSlot := FloorToMultiplier(timestamp-t.startTime, t.stepTime) / t.stepTime
+	timeSlot := floorToMultiplier(timestamp-t.startTime, t.stepTime) / t.stepTime
 	return int(timeSlot)
 }
 
-func CeilToMultiplier(ts, retention int64) int64 {
+func ceilToMultiplier(ts, retention int64) int64 {
 	if (ts % retention) == 0 {
 		return ts
 	}
 	return (ts + retention) / retention * retention
 }
 
-func FloorToMultiplier(ts, retention int64) int64 {
+func floorToMultiplier(ts, retention int64) int64 {
 	if ts < 0 {
 		ts -= retention - 1
 	}

@@ -14,13 +14,12 @@ import (
 	metricSource "github.com/moira-alert/moira/metric_source"
 )
 
-// Context for expression evaluation process
 type evalCtx struct {
 	from  int64
 	until int64
 }
 
-func (ctx *evalCtx) FetchAndEval(database moira.Database, target string, result *FetchResult) error {
+func (ctx *evalCtx) fetchAndEval(database moira.Database, target string, result *FetchResult) error {
 	exp, err := ctx.parse(target)
 	if err != nil {
 		return err
@@ -31,7 +30,7 @@ func (ctx *evalCtx) FetchAndEval(database moira.Database, target string, result 
 		return err
 	}
 
-	commonStep := fetchedMetrics.CalculateCommonStep()
+	commonStep := fetchedMetrics.calculateCommonStep()
 	ctx.scaleToCommonStep(commonStep, fetchedMetrics)
 
 	rewritten, newTargets, err := ctx.rewriteExpr(exp, fetchedMetrics)
@@ -70,7 +69,7 @@ func (ctx *evalCtx) fetchAndEvalNoRewrite(database moira.Database, target string
 		return err
 	}
 
-	commonStep := fetchedMetrics.CalculateCommonStep()
+	commonStep := fetchedMetrics.calculateCommonStep()
 	ctx.scaleToCommonStep(commonStep, fetchedMetrics)
 
 	metricsData, err := ctx.eval(target, exp, fetchedMetrics)
@@ -186,7 +185,7 @@ func (ctx *evalCtx) eval(target string, parsedExpr parser.Expr, metrics *fetched
 
 func (ctx *evalCtx) writeResult(exp parser.Expr, metrics *fetchedMetrics, metricsData []*types.MetricData, result *FetchResult) {
 	for _, metricData := range metricsData {
-		md := NewMetricDataFromGraphit(metricData, metrics.HasWildcard())
+		md := newMetricDataFromGraphit(metricData, metrics.hasWildcard())
 		result.MetricsData = append(result.MetricsData, md)
 	}
 
@@ -196,7 +195,7 @@ func (ctx *evalCtx) writeResult(exp parser.Expr, metrics *fetchedMetrics, metric
 	}
 }
 
-func NewMetricDataFromGraphit(md *types.MetricData, wildcard bool) metricSource.MetricData {
+func newMetricDataFromGraphit(md *types.MetricData, wildcard bool) metricSource.MetricData {
 	return metricSource.MetricData{
 		Name:      md.Name,
 		StartTime: md.StartTime,
@@ -207,17 +206,16 @@ func NewMetricDataFromGraphit(md *types.MetricData, wildcard bool) metricSource.
 	}
 }
 
-// Result of a metric fetch for a single expression
 type fetchedMetrics struct {
 	metricsMap map[parser.MetricRequest][]*types.MetricData
 	metrics    []string
 }
 
-func (m *fetchedMetrics) HasWildcard() bool {
+func (m *fetchedMetrics) hasWildcard() bool {
 	return len(m.metrics) == 0
 }
 
-func (m *fetchedMetrics) CalculateCommonStep() int64 {
+func (m *fetchedMetrics) calculateCommonStep() int64 {
 	commonStep := int64(1)
 	for _, metricsData := range m.metricsMap {
 		for _, metricData := range metricsData {
