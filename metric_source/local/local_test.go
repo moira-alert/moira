@@ -475,6 +475,20 @@ func TestLocalSourceFetchWithMultiplePatterns(t *testing.T) {
 	})
 }
 
+func TestLocalMetricsTTL(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+	localSource := Create(dataBase)
+	ttl := int64(42)
+
+	Convey("Returns exact value from the database", t, func() {
+		dataBase.EXPECT().GetMetricsTTLSeconds().Return(ttl)
+		actual := localSource.GetMetricsTTLSeconds()
+		So(actual, ShouldEqual, ttl)
+	})
+}
+
 func TestLocal_IsConfigured(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
