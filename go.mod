@@ -9,7 +9,7 @@ require (
 	github.com/blevesearch/bleve/v2 v2.3.6
 	github.com/bwmarrin/discordgo v0.22.0
 	github.com/carlosdp/twiliogo v0.0.0-20161027183705-b26045ebb9d1
-	github.com/cespare/xxhash/v2 v2.1.2
+	github.com/cespare/xxhash/v2 v2.2.0
 	github.com/cyberdelia/go-metrics-graphite v0.0.0-20161219230853-39f87cc3b432
 	github.com/dustin/go-humanize v1.0.1
 	github.com/go-chi/chi v4.1.2+incompatible
@@ -52,7 +52,7 @@ require (
 	github.com/RoaringBitmap/roaring v0.9.4 // indirect
 	github.com/aclements/go-moremath v0.0.0-20210112150236-f10218a38794 // indirect
 	github.com/ansel1/merry v1.6.2 // indirect
-	github.com/ansel1/merry/v2 v2.0.2 // indirect
+	github.com/ansel1/merry/v2 v2.1.1 // indirect
 	github.com/barkimedes/go-deepcopy v0.0.0-20220514131651-17c30cfc62df // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bits-and-blooms/bitset v1.2.2 // indirect
