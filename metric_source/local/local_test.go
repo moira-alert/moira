@@ -83,7 +83,7 @@ func TestLocalSourceFetchErrors(t *testing.T) {
 
 		result, err := localSource.Fetch("aliasByNoe(super.puper.pattern, 2)", from, until, true)
 
-		So(err.Error(), ShouldResemble, "failed to evaluate target 'aliasByNoe(super.puper.pattern, 2)': unknown function in evalExpr: \"aliasByNoe\"")
+		So(err.Error(), ShouldResemble, "Unknown graphite function: \"aliasByNoe\"")
 		So(result, ShouldBeNil)
 	})
 
@@ -541,7 +541,7 @@ func TestLocal_evalExpr(t *testing.T) {
 		expression, _ := ctx.parse(target)
 		res, err := ctx.eval("target", expression, &fetchedMetrics{metricsMap: nil})
 		So(err, ShouldBeError)
-		So(err.Error(), ShouldResemble, `failed to evaluate target 'target': unknown function in evalExpr: "vf"`)
+		So(err.Error(), ShouldResemble, `Unknown graphite function: "vf"`)
 		So(res, ShouldBeNil)
 	})
 }
