@@ -720,12 +720,16 @@ func TestDbConnector_preSaveTrigger(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	systemClock := mock_clock.NewMockClock(mockCtrl)
-	systemClock.EXPECT().Now().Return(testTime).Times(4)
+	systemClock.EXPECT().Now().Return(testTime).Times(6)
 	connector := &DbConnector{clock: systemClock}
 	patterns := []string{"pattern-1", "pattern-2"}
 
 	Convey("When a local trigger", t, func() {
-		trigger := &moira.Trigger{ID: "trigger-id", Patterns: patterns}
+		trigger := &moira.Trigger{
+			ID:        "trigger-id",
+			Patterns:  patterns,
+			UpdatedBy: "awesome_user",
+		}
 
 		Convey("UpdatedAt CreatedAt fields should be set `now` on creation.", func() {
 			connector.preSaveTrigger(trigger, nil)
@@ -741,6 +745,26 @@ func TestDbConnector_preSaveTrigger(t *testing.T) {
 			So(trigger.Patterns, ShouldResemble, patterns)
 			So(*trigger.CreatedAt, ShouldResemble, time.Date(2022, time.June, 5, 10, 0, 0, 0, time.UTC).Unix())
 			So(*trigger.UpdatedAt, ShouldResemble, time.Date(2022, time.June, 6, 10, 0, 0, 0, time.UTC).Unix())
+		})
+
+		Convey("UpdatedBy CreatedBy fields should be set on creation.", func() {
+			connector.preSaveTrigger(trigger, nil)
+			So(trigger.Patterns, ShouldResemble, patterns)
+			So(trigger.CreatedBy, ShouldResemble, "awesome_user")
+			So(trigger.UpdatedBy, ShouldResemble, "awesome_user")
+		})
+
+		Convey("UpdatedBy CreatedBy fields should be change on update.", func() {
+			oldTrigger := &moira.Trigger{
+				ID:        "trigger-id",
+				Patterns:  patterns,
+				CreatedBy: "old_awesome_user",
+				UpdatedBy: "old_awesome_user",
+			}
+			connector.preSaveTrigger(trigger, oldTrigger)
+			So(trigger.Patterns, ShouldResemble, patterns)
+			So(trigger.CreatedBy, ShouldResemble, "old_awesome_user")
+			So(trigger.UpdatedBy, ShouldResemble, "awesome_user")
 		})
 	})
 

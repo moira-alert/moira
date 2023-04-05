@@ -30,7 +30,7 @@ type TriggersList struct {
 	List  []moira.TriggerCheck `json:"list"`
 }
 
-func (*TriggersList) Render(w http.ResponseWriter, r *http.Request) error {
+func (*TriggersList) Render(http.ResponseWriter, *http.Request) error {
 	return nil
 }
 
@@ -77,6 +77,10 @@ type TriggerModel struct {
 	CreatedAt *time.Time `json:"created_at"`
 	// Datetime  when the trigger was updated
 	UpdatedAt *time.Time `json:"updated_at"`
+	// Username who created trigger
+	CreatedBy string `json:"created_by"`
+	// Username who updated trigger
+	UpdatedBy string `json:"updated_by"`
 }
 
 // ToMoiraTrigger transforms TriggerModel to moira.Trigger
@@ -98,6 +102,7 @@ func (model *TriggerModel) ToMoiraTrigger() *moira.Trigger {
 		IsRemote:       model.IsRemote,
 		MuteNewMetrics: model.MuteNewMetrics,
 		AloneMetrics:   model.AloneMetrics,
+		UpdatedBy:      model.UpdatedBy,
 	}
 }
 
@@ -122,6 +127,8 @@ func CreateTriggerModel(trigger *moira.Trigger) TriggerModel {
 		AloneMetrics:   trigger.AloneMetrics,
 		CreatedAt:      getDateTime(trigger.CreatedAt),
 		UpdatedAt:      getDateTime(trigger.UpdatedAt),
+		CreatedBy:      trigger.CreatedBy,
+		UpdatedBy:      trigger.UpdatedBy,
 	}
 }
 
@@ -332,7 +339,7 @@ func checkSimpleModeFields(trigger *Trigger) error {
 	return nil
 }
 
-func (*Trigger) Render(w http.ResponseWriter, r *http.Request) error {
+func (*Trigger) Render(http.ResponseWriter, *http.Request) error {
 	return nil
 }
 
@@ -362,13 +369,13 @@ type TriggerCheck struct {
 	TriggerID string `json:"trigger_id"`
 }
 
-func (*TriggerCheck) Render(w http.ResponseWriter, r *http.Request) error {
+func (*TriggerCheck) Render(http.ResponseWriter, *http.Request) error {
 	return nil
 }
 
 type MetricsMaintenance map[string]int64
 
-func (*MetricsMaintenance) Bind(r *http.Request) error {
+func (*MetricsMaintenance) Bind(*http.Request) error {
 	return nil
 }
 
@@ -377,7 +384,7 @@ type TriggerMaintenance struct {
 	Metrics map[string]int64 `json:"metrics"`
 }
 
-func (*TriggerMaintenance) Bind(r *http.Request) error {
+func (*TriggerMaintenance) Bind(*http.Request) error {
 	return nil
 }
 
@@ -385,22 +392,23 @@ type ThrottlingResponse struct {
 	Throttling int64 `json:"throttling"`
 }
 
-func (*ThrottlingResponse) Render(w http.ResponseWriter, r *http.Request) error {
+func (*ThrottlingResponse) Render(http.ResponseWriter, *http.Request) error {
 	return nil
 }
 
 type SaveTriggerResponse struct {
-	ID      string `json:"id"`
-	Message string `json:"message"`
+	ID          string               `json:"id"`
+	Message     string               `json:"message"`
+	CheckResult TriggerCheckResponse `json:"checkResult,omitempty"`
 }
 
-func (*SaveTriggerResponse) Render(w http.ResponseWriter, r *http.Request) error {
+func (*SaveTriggerResponse) Render(http.ResponseWriter, *http.Request) error {
 	return nil
 }
 
 type TriggerMetrics map[string]map[string][]moira.MetricValue
 
-func (*TriggerMetrics) Render(w http.ResponseWriter, r *http.Request) error {
+func (*TriggerMetrics) Render(http.ResponseWriter, *http.Request) error {
 	return nil
 }
 
@@ -421,6 +429,6 @@ type TriggersSearchResultDeleteResponse struct {
 	PagerID string `json:"pager_id"`
 }
 
-func (TriggersSearchResultDeleteResponse) Render(w http.ResponseWriter, r *http.Request) error {
+func (TriggersSearchResultDeleteResponse) Render(http.ResponseWriter, *http.Request) error {
 	return nil
 }
