@@ -27,58 +27,57 @@ type selfCheckWorkerMock struct {
 
 func TestSelfCheckWorker_selfStateChecker(t *testing.T) {
 	mock := configureWorker(t, true)
-	mock.selfCheckWorker.Start() //nolint
-	Convey("Test creation all heartbeat", t, func() {
-		var nextSendErrorMessage int64
-		var events []moira.NotificationEvent
+	Convey("SelfCheckWorker should call all heartbeats checks", t, func() {
 		mock.database.EXPECT().GetChecksUpdatesCount().Return(int64(1), nil).Times(2)
 		mock.database.EXPECT().GetMetricsUpdatesCount().Return(int64(1), nil)
 		mock.database.EXPECT().GetRemoteChecksUpdatesCount().Return(int64(1), nil)
 		mock.database.EXPECT().GetNotifierState().Return(moira.SelfStateOK, nil)
 		mock.database.EXPECT().GetRemoteTriggersToCheckCount().Return(int64(1), nil)
 		mock.database.EXPECT().GetLocalTriggersToCheckCount().Return(int64(1), nil).Times(2)
-		mock.notif.EXPECT().Send(gomock.Any(), gomock.Any())
 
-		mock.selfCheckWorker.sendErrorMessages(events)
-		time.Sleep(time.Second / 2)
-		mock.selfCheckWorker.check(time.Now().Unix(), nextSendErrorMessage)
+		// Start worker after configuring Mock to avoid race conditions
+		err := mock.selfCheckWorker.Start()
+		So(err, ShouldBeNil)
 
-		So(len(mock.selfCheckWorker.Heartbeats), ShouldEqual, 5)
+		So(len(mock.selfCheckWorker.heartbeats), ShouldEqual, 5)
+
+		const oneTickDelay = time.Millisecond * 1500
+		time.Sleep(oneTickDelay) // wait for one tick of worker
+
+		err = mock.selfCheckWorker.Stop()
+		So(err, ShouldBeNil)
 	})
 
-	mock.selfCheckWorker.Stop() //nolint
+	mock.mockCtrl.Finish()
+}
+
+func TestSelfCheckWorker_sendErrorMessages(t *testing.T) {
+	mock := configureWorker(t, true)
+
+	Convey("Should call notifier send", t, func() {
+		err := mock.selfCheckWorker.Start()
+		So(err, ShouldBeNil)
+
+		mock.notif.EXPECT().Send(gomock.Any(), gomock.Any())
+
+		var events []moira.NotificationEvent
+		mock.selfCheckWorker.sendErrorMessages(events)
+
+		err = mock.selfCheckWorker.Stop()
+		So(err, ShouldBeNil)
+	})
+
 	mock.mockCtrl.Finish()
 }
 
 func TestSelfCheckWorker_Start(t *testing.T) {
 	mock := configureWorker(t, false)
+	Convey("When Contact not corresponds to any Sender", t, func() {
+		mock.notif.EXPECT().GetSenders().Return(nil)
 
-	Convey("Test start selfCheckWorkerMock", t, func() {
-		Convey("Test enabled is false", func() {
-			mock.selfCheckWorker.Config.Enabled = false
-			mock.selfCheckWorker.Start() //nolint
-			So(mock.selfCheckWorker.Heartbeats, ShouldBeNil)
-		})
-		Convey("Check for error from checkConfig", func() {
-			mock.selfCheckWorker.Config.Enabled = true
-			mock.notif.EXPECT().GetSenders().Return(nil)
-			mock.selfCheckWorker.Start() //nolint
-			So(mock.selfCheckWorker.Heartbeats, ShouldBeNil)
-		})
-	})
-}
-
-func TestSelfCheckWorker_Stop(t *testing.T) {
-	Convey("Test stop selfCheckWorkerMock", t, func() {
-		mock := configureWorker(t, false)
-		Convey("Test enabled is false", func() {
-			mock.selfCheckWorker.Config.Enabled = false
-			So(mock.selfCheckWorker.Stop(), ShouldBeNil)
-		})
-		Convey("Check for error from checkConfig", func() {
-			mock.selfCheckWorker.Config.Enabled = true
-			mock.notif.EXPECT().GetSenders().Return(nil)
-			So(mock.selfCheckWorker.Stop(), ShouldBeNil)
+		Convey("Start should return error", func() {
+			err := mock.selfCheckWorker.Start()
+			So(err, ShouldNotBeNil)
 		})
 	})
 }
@@ -92,7 +91,7 @@ func TestSelfCheckWorker(t *testing.T) {
 
 		Convey("Test handle error and no needed send events", func() {
 			check := mock_heartbeat.NewMockHeartbeater(mock.mockCtrl)
-			mock.selfCheckWorker.Heartbeats = []heartbeat.Heartbeater{check}
+			mock.selfCheckWorker.heartbeats = []heartbeat.Heartbeater{check}
 
 			check.EXPECT().Check(now).Return(int64(0), false, err)
 
@@ -104,7 +103,7 @@ func TestSelfCheckWorker(t *testing.T) {
 			first := mock_heartbeat.NewMockHeartbeater(mock.mockCtrl)
 			second := mock_heartbeat.NewMockHeartbeater(mock.mockCtrl)
 
-			mock.selfCheckWorker.Heartbeats = []heartbeat.Heartbeater{first, second}
+			mock.selfCheckWorker.heartbeats = []heartbeat.Heartbeater{first, second}
 
 			first.EXPECT().NeedTurnOffNotifier().Return(true)
 			first.EXPECT().NeedToCheckOthers().Return(false)
@@ -121,7 +120,7 @@ func TestSelfCheckWorker(t *testing.T) {
 			first := mock_heartbeat.NewMockHeartbeater(mock.mockCtrl)
 			second := mock_heartbeat.NewMockHeartbeater(mock.mockCtrl)
 
-			mock.selfCheckWorker.Heartbeats = []heartbeat.Heartbeater{first, second}
+			mock.selfCheckWorker.heartbeats = []heartbeat.Heartbeater{first, second}
 			nextSendErrorMessage := time.Now().Unix() - time.Hour.Milliseconds()
 
 			first.EXPECT().Check(now).Return(int64(0), true, nil)
@@ -174,15 +173,11 @@ func configureWorker(t *testing.T, isStart bool) *selfCheckWorkerMock {
 	}
 
 	return &selfCheckWorkerMock{
-		selfCheckWorker: &SelfCheckWorker{
-			Logger:   logger,
-			Database: database,
-			Config:   conf,
-			Notifier: notif,
-		},
-		database: database,
-		notif:    notif,
-		conf:     conf,
-		mockCtrl: mockCtrl,
+
+		selfCheckWorker: NewSelfCheckWorker(logger, database, notif, conf),
+		database:        database,
+		notif:           notif,
+		conf:            conf,
+		mockCtrl:        mockCtrl,
 	}
 }

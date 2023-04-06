@@ -102,18 +102,17 @@ func main() {
 	}
 
 	// Start moira self state checker
-	selfState := &selfstate.SelfCheckWorker{
-		Logger:   logger,
-		Database: database,
-		Config:   config.Notifier.SelfState.getSettings(),
-		Notifier: sender,
+	if config.Notifier.SelfState.getSettings().Enabled {
+		selfState := selfstate.NewSelfCheckWorker(logger, database, sender, config.Notifier.SelfState.getSettings())
+		if err := selfState.Start(); err != nil {
+			logger.Fatal().
+				Error(err).
+				Msg("SelfState failed")
+		}
+		defer stopSelfStateChecker(selfState)
+	} else {
+		logger.Debug().Msg("Moira Self State Monitoring disabled")
 	}
-	if err := selfState.Start(); err != nil {
-		logger.Fatal().
-			Error(err).
-			Msg("SelfState failed")
-	}
-	defer stopSelfStateChecker(selfState)
 
 	// Start moira notification fetcher
 	fetchNotificationsWorker := &notifications.FetchNotificationsWorker{
