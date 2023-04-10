@@ -177,6 +177,6 @@ func TestMakePushoverMessage(t *testing.T) {
 			Message:   "02:40: Metric = 123 (OK to ERROR)\n",
 		}
 		expected.AddAttachment(bytes.NewReader([]byte{1, 0, 1})) //nolint
-		So(sender.makePushoverMessage(event, trigger, [][]byte{[]byte{1, 0, 1}}, false), ShouldResemble, expected)
+		So(sender.makePushoverMessage(event, trigger, [][]byte{{1, 0, 1}}, false), ShouldResemble, expected)
 	})
 }

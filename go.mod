@@ -5,6 +5,7 @@ go 1.17
 require (
 	github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible
 	github.com/PagerDuty/go-pagerduty v1.3.0
+	github.com/ansel1/merry v1.6.2
 	github.com/aws/aws-sdk-go v1.44.219
 	github.com/blevesearch/bleve/v2 v2.3.6
 	github.com/bwmarrin/discordgo v0.22.0
@@ -51,7 +52,6 @@ require (
 	github.com/JaderDias/movingmedian v0.0.0-20220813210630-d8c6b6de8835 // indirect
 	github.com/RoaringBitmap/roaring v0.9.4 // indirect
 	github.com/aclements/go-moremath v0.0.0-20210112150236-f10218a38794 // indirect
-	github.com/ansel1/merry v1.6.2 // indirect
 	github.com/ansel1/merry/v2 v2.1.1 // indirect
 	github.com/barkimedes/go-deepcopy v0.0.0-20220514131651-17c30cfc62df // indirect
 	github.com/beorn7/perks v1.0.1 // indirect

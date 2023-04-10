@@ -277,6 +277,15 @@ func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
 		}
 
 		dataBase.EXPECT().GetTrigger(event.TriggerID).Return(trigger, nil)
+		var subscriptionToIgnoreWarningsAndRecoverings = moira.SubscriptionData{
+			ID:                "subscriptionID-00000000000003",
+			Enabled:           true,
+			Tags:              []string{"test-tag"},
+			Contacts:          []string{contact.ID},
+			ThrottlingEnabled: true,
+			IgnoreWarnings:    true,
+			IgnoreRecoverings: true,
+		}
 		dataBase.EXPECT().GetTagsSubscriptions(triggerData.Tags).Times(1).Return([]*moira.SubscriptionData{&subscriptionToIgnoreWarningsAndRecoverings}, nil)
 
 		metricString := fmt.Sprintf("%s == %s", event.Metric, event.GetMetricsValues())
@@ -655,25 +664,6 @@ var subscriptionToIgnoreWarnings = moira.SubscriptionData{
 	Contacts:          []string{contact.ID},
 	ThrottlingEnabled: true,
 	IgnoreWarnings:    true,
-}
-
-var subscriptionToIgnoreRecoverings = moira.SubscriptionData{
-	ID:                "subscriptionID-00000000000003",
-	Enabled:           true,
-	Tags:              []string{"test-tag"},
-	Contacts:          []string{contact.ID},
-	ThrottlingEnabled: true,
-	IgnoreRecoverings: true,
-}
-
-var subscriptionToIgnoreWarningsAndRecoverings = moira.SubscriptionData{
-	ID:                "subscriptionID-00000000000003",
-	Enabled:           true,
-	Tags:              []string{"test-tag"},
-	Contacts:          []string{contact.ID},
-	ThrottlingEnabled: true,
-	IgnoreWarnings:    true,
-	IgnoreRecoverings: true,
 }
 
 var emptyNotifierConfig = notifier.Config{

@@ -70,7 +70,7 @@ func TestMetricName(t *testing.T) {
 			name: "origin is not empty and all metrics have same name",
 			args: args{
 				metrics: map[string]metricSource.MetricData{
-					"t1": {Name: "metric.test.1"}, //nolint
+					"t1": {Name: "metric.test.1"},
 					"t2": {Name: "metric.test.1"},
 				},
 			},
@@ -80,7 +80,7 @@ func TestMetricName(t *testing.T) {
 			name: "origin is not empty and metrics have different names",
 			args: args{
 				metrics: map[string]metricSource.MetricData{
-					"t1": {Name: "metric.test.2"}, //nolint
+					"t1": {Name: "metric.test.2"},
 					"t2": {Name: "metric.test.1"},
 				},
 			},
