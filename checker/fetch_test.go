@@ -7,17 +7,17 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	metricSource "github.com/moira-alert/moira/metric_source"
-	mock_metric_source "github.com/moira-alert/moira/mock/metric_source"
-	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
+	mockmetricsource "github.com/moira-alert/moira/mock/metric_source"
+	mockmoiraalert "github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestFetchTriggerMetrics(t *testing.T) {
 	Convey("Test fetch trigger metrics", t, func() {
 		mockCtrl := gomock.NewController(t)
-		source := mock_metric_source.NewMockMetricSource(mockCtrl)
-		fetchResult := mock_metric_source.NewMockFetchResult(mockCtrl)
-		database := mock_moira_alert.NewMockDatabase(mockCtrl)
+		source := mockmetricsource.NewMockMetricSource(mockCtrl)
+		fetchResult := mockmetricsource.NewMockFetchResult(mockCtrl)
+		database := mockmoiraalert.NewMockDatabase(mockCtrl)
 		defer mockCtrl.Finish()
 
 		var from int64 = 17
@@ -51,7 +51,7 @@ func TestFetchTriggerMetrics(t *testing.T) {
 				)
 				actual, err := triggerChecker.fetchTriggerMetrics()
 				So(err, ShouldResemble, ErrTriggerHasOnlyWildcards{})
-				So(actual, ShouldResemble, map[string][]metricSource.MetricData{"t1": []metricSource.MetricData{{Name: pattern, Wildcard: true}}}) //nolint
+				So(actual, ShouldResemble, map[string][]metricSource.MetricData{"t1": {{Name: pattern, Wildcard: true}}})
 			})
 
 			Convey("fetch returns no metrics", func() {
@@ -96,9 +96,9 @@ func TestFetchTriggerMetrics(t *testing.T) {
 
 func TestFetch(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
-	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
-	source := mock_metric_source.NewMockMetricSource(mockCtrl)
-	fetchResult := mock_metric_source.NewMockFetchResult(mockCtrl)
+	dataBase := mockmoiraalert.NewMockDatabase(mockCtrl)
+	source := mockmetricsource.NewMockMetricSource(mockCtrl)
+	fetchResult := mockmetricsource.NewMockFetchResult(mockCtrl)
 	defer mockCtrl.Finish()
 
 	pattern := "super.puper.pattern"

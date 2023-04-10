@@ -100,6 +100,7 @@ func (connector *DbConnector) RemoveTriggerLastCheck(triggerID string) error {
 
 func cleanUpAbandonedTriggerLastCheckOnRedisNode(connector *DbConnector, client redis.UniversalClient) error {
 	lastCheckIterator := client.Scan(connector.context, 0, metricLastCheckKey("*"), 0).Iterator()
+	count := 0
 	for lastCheckIterator.Next(connector.context) {
 		lastCheckKey := lastCheckIterator.Val()
 		triggerID := strings.TrimPrefix(lastCheckKey, metricLastCheckKey(""))
@@ -109,11 +110,17 @@ func cleanUpAbandonedTriggerLastCheckOnRedisNode(connector *DbConnector, client 
 			if err != nil {
 				return err
 			}
-			connector.logger.Info().
+			count++
+			connector.logger.Debug().
 				String("trigger_id", triggerID).
 				Msg("Cleaned up last check for trigger")
 		}
 	}
+
+	connector.logger.Info().
+		Int("count deleted last_check", count).
+		Msg("Cleaned up last check for trigger")
+
 	return nil
 }
 

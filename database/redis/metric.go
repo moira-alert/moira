@@ -344,6 +344,8 @@ func (connector *DbConnector) needRemoveMetrics(metric string) bool {
 
 func cleanUpOutdatedMetricsOnRedisNode(connector *DbConnector, client redis.UniversalClient, duration time.Duration) error {
 	metricsIterator := client.ScanType(connector.context, 0, metricDataKey("*"), 0, "zset").Iterator()
+	var count int
+
 	for metricsIterator.Next(connector.context) {
 		key := metricsIterator.Val()
 		metric := strings.TrimPrefix(key, metricDataKey(""))
@@ -351,7 +353,12 @@ func cleanUpOutdatedMetricsOnRedisNode(connector *DbConnector, client redis.Univ
 		if err != nil {
 			return err
 		}
+		count++
 	}
+
+	connector.logger.Info().
+		Int("count deleted metrics", count).
+		Msg("Cleaned up last check for trigger")
 
 	return nil
 }
