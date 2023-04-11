@@ -12,9 +12,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/beevee/go-chart"
 	"github.com/gotokatsuya/ipare"
 	"github.com/gotokatsuya/ipare/util"
+	"github.com/moira-alert/go-chart"
 	"github.com/moira-alert/moira"
 	metricSource "github.com/moira-alert/moira/metric_source"
 	. "github.com/smartystreets/goconvey/convey"

@@ -1,9 +1,9 @@
 package dark
 
 import (
-	"github.com/beevee/go-chart"
-	"github.com/beevee/go-chart/drawing"
 	"github.com/golang/freetype/truetype"
+	"github.com/moira-alert/go-chart"
+	"github.com/moira-alert/go-chart/drawing"
 )
 
 // PlotTheme implements moira.PlotTheme interface
@@ -20,7 +20,7 @@ func NewTheme(themeFont *truetype.Font) (*PlotTheme, error) {
 	return &PlotTheme{
 		font:              themeFont,
 		fontSizePrimary:   10, //nolint
-		fontSizeSecondary: 8, //nolint
+		fontSizeSecondary: 8,  //nolint
 		bgColor:           `1f1d1d`,
 		curveColors: []string{
 			`89da59`, `90afc5`, `375e97`, `ffbb00`, `5bc8ac`, `4cb5f5`, `6ab187`, `ec96a4`,
@@ -132,7 +132,7 @@ func (theme *PlotTheme) GetSerieStyles(curveInd int) (chart.Style, chart.Style) 
 	pointStyle := chart.Style{
 		Show:        true,
 		StrokeWidth: chart.Disabled,
-		DotWidth:    curveWidth / 2, //nolint
+		DotWidth:    curveWidth / 2,           //nolint
 		DotColor:    curveColor.WithAlpha(90), //nolint
 	}
 	return curveStyle, pointStyle

@@ -19,20 +19,29 @@ var (
 )
 
 func (index *Index) fillIndex() error {
-	index.logger.Debugf("Start filling index with triggers")
+	index.logger.Debug().Msg("Start filling index with triggers")
+
 	index.inProgress = true
 	index.indexActualizedTS = time.Now().Unix()
 	allTriggerIDs, err := index.database.GetAllTriggerIDs()
-	index.logger.Debugf("Triggers IDs fetched from database: %d", len(allTriggerIDs))
+
+	index.logger.Debug().
+		Int("Quantity", len(allTriggerIDs)).
+		Msg("Triggers IDs fetched from database")
+
 	if err != nil {
 		return err
 	}
 
 	// We index fake trigger to increase batch index speed. Otherwise, first batch is indexed for too long
 	index.triggerIndex.Write([]*moira.TriggerCheck{fakeTriggerToIndex}) //nolint
-	defer index.triggerIndex.Delete([]string{fakeTriggerToIndex.ID}) //nolint
+	defer index.triggerIndex.Delete([]string{fakeTriggerToIndex.ID})    //nolint
 
 	err = index.writeByBatches(allTriggerIDs, defaultIndexBatchSize)
-	index.logger.Infof("%d triggers added to index", len(allTriggerIDs))
+
+	index.logger.Info().
+		Int("Quantity", len(allTriggerIDs)).
+		Msg("Added triggers to index")
+
 	return err
 }

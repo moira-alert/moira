@@ -100,27 +100,48 @@ var (
 	}
 )
 
-type problemOfTarget struct {
+type ProblemOfTarget struct {
 	Argument    string            `json:"argument"`
 	Type        typeOfProblem     `json:"type,omitempty"`
 	Description string            `json:"description,omitempty"`
 	Position    int               `json:"position"`
-	Problems    []problemOfTarget `json:"problems,omitempty"`
+	Problems    []ProblemOfTarget `json:"problems,omitempty"`
+}
+
+func (p *ProblemOfTarget) hasError() bool {
+	if p.Type == isBad {
+		return true
+	}
+
+	for _, pp := range p.Problems {
+		if pp.hasError() {
+			return true
+		}
+	}
+
+	return false
 }
 
 type TreeOfProblems struct {
 	SyntaxOk       bool             `json:"syntax_ok"`
-	TreeOfProblems *problemOfTarget `json:"tree_of_problems,omitempty"`
+	TreeOfProblems *ProblemOfTarget `json:"tree_of_problems,omitempty"`
 }
 
+// TargetVerification validates trigger targets.
 func TargetVerification(targets []string, ttl time.Duration, isRemote bool) []TreeOfProblems {
 	functionsOfTargets := make([]TreeOfProblems, 0)
 
 	for _, target := range targets {
 		functionsOfTarget := TreeOfProblems{SyntaxOk: true}
 
-		expr, _, err := parser.ParseExpr(target)
+		expr, nestedExpr, err := parser.ParseExpr(target)
 		if err != nil {
+			functionsOfTarget.SyntaxOk = false
+			functionsOfTargets = append(functionsOfTargets, functionsOfTarget)
+			continue
+		}
+		isSpaceInMetricName := nestedExpr != ""
+		if isSpaceInMetricName {
 			functionsOfTarget.SyntaxOk = false
 			functionsOfTargets = append(functionsOfTargets, functionsOfTarget)
 			continue
@@ -133,22 +154,39 @@ func TargetVerification(targets []string, ttl time.Duration, isRemote bool) []Tr
 	return functionsOfTargets
 }
 
-func checkExpression(expression parser.Expr, ttl time.Duration, isRemote bool) *problemOfTarget {
-	target := expression.Target()
-	problemFunction := checkFunction(target, isRemote)
+// DoesAnyTreeHaveError checks that at least one node of tree has a problem with error type.
+// It is wrapper to handle slice of trees.
+func DoesAnyTreeHaveError(trees []TreeOfProblems) bool {
+	for _, tree := range trees {
+		if tree.TreeOfProblems.hasError() {
+			return true
+		}
+	}
+
+	return false
+}
+
+// checkExpression validates expression.
+func checkExpression(expression parser.Expr, ttl time.Duration, isRemote bool) *ProblemOfTarget {
+	if !expression.IsFunc() {
+		return nil
+	}
+
+	funcName := expression.Target()
+	problemFunction := checkFunction(funcName, isRemote)
 
 	if argument, ok := functionArgumentsInTheRangeTTL(expression, ttl); !ok {
 		if problemFunction == nil {
-			problemFunction = &problemOfTarget{Argument: target}
+			problemFunction = &ProblemOfTarget{Argument: funcName}
 		}
 
-		problemFunction.Problems = append(problemFunction.Problems, problemOfTarget{
+		problemFunction.Problems = append(problemFunction.Problems, ProblemOfTarget{
 			Argument: argument,
 			Type:     isBad,
 			Position: 1,
 			Description: fmt.Sprintf(
 				"The function %s has a time sampling parameter %s larger than allowed by the config:%s",
-				target, expression.Args()[1].StringValue(), ttl.String()),
+				funcName, expression.Args()[1].StringValue(), ttl.String()),
 		})
 	}
 
@@ -161,7 +199,7 @@ func checkExpression(expression parser.Expr, ttl time.Duration, isRemote bool) *
 			badFunc.Position = position
 
 			if problemFunction == nil {
-				problemFunction = &problemOfTarget{Argument: target}
+				problemFunction = &ProblemOfTarget{Argument: funcName}
 			}
 
 			problemFunction.Problems = append(problemFunction.Problems, *badFunc)
@@ -171,9 +209,9 @@ func checkExpression(expression parser.Expr, ttl time.Duration, isRemote bool) *
 	return problemFunction
 }
 
-func checkFunction(funcName string, isRemote bool) *problemOfTarget {
+func checkFunction(funcName string, isRemote bool) *ProblemOfTarget {
 	if _, isUnstable := unstableFunctions[funcName]; isUnstable {
-		return &problemOfTarget{
+		return &ProblemOfTarget{
 			Argument:    funcName,
 			Type:        isBad,
 			Description: "This function is unstable: it can return different historical values with each evaluation. Moira will show unexpected values that you don't see on your graphs.",
@@ -181,7 +219,7 @@ func checkFunction(funcName string, isRemote bool) *problemOfTarget {
 	}
 
 	if _, isFalseNotification := falseNotificationsFunctions[funcName]; isFalseNotification {
-		return &problemOfTarget{
+		return &ProblemOfTarget{
 			Argument:    funcName,
 			Type:        isWarn,
 			Description: "This function shows and hides entire metric series based on their values. Moira will send frequent false NODATA notifications.",
@@ -189,7 +227,7 @@ func checkFunction(funcName string, isRemote bool) *problemOfTarget {
 	}
 
 	if _, isVisual := visualFunctions[funcName]; isVisual {
-		return &problemOfTarget{
+		return &ProblemOfTarget{
 			Argument:    funcName,
 			Type:        isWarn,
 			Description: "This function affects only visual graph representation. It is meaningless in Moira.",
@@ -197,7 +235,7 @@ func checkFunction(funcName string, isRemote bool) *problemOfTarget {
 	}
 
 	if !isRemote && !funcIsSupported(funcName) {
-		return &problemOfTarget{
+		return &ProblemOfTarget{
 			Argument:    funcName,
 			Type:        isBad,
 			Description: "Function is not supported, if you want to use it, switch to remote",

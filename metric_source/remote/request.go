@@ -2,7 +2,7 @@ package remote
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 )
@@ -33,16 +33,16 @@ func (remote *Remote) makeRequest(req *http.Request) ([]byte, error) {
 	}
 
 	if err != nil {
-		return body, fmt.Errorf("The remote server is not available or the response was reset by timeout. " + //nolint
+		return body, fmt.Errorf("The remote server is not available or the response was reset by timeout. "+ //nolint
 			"TTL: %s, PATH: %s, ERROR: %v ", remote.client.Timeout.String(), req.URL.RawPath, err)
 	}
 
-	body, err = ioutil.ReadAll(resp.Body)
+	body, err = io.ReadAll(resp.Body)
 	if err != nil {
 		return body, err
 	}
 
-	if resp.StatusCode != 200 { //nolint
+	if resp.StatusCode != http.StatusOK {
 		return body, fmt.Errorf("bad response status %d: %s", resp.StatusCode, string(body))
 	}
 

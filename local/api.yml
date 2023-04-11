@@ -38,6 +38,8 @@ web:
       label: Twilio voice
     - type: msteams
       label: MS Teams
+    - type: mattermost
+      label: Mattermost
 log:
   log_file: stdout
   log_level: debug

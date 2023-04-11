@@ -7,6 +7,7 @@ import (
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/senders/discord"
 	"github.com/moira-alert/moira/senders/mail"
+	"github.com/moira-alert/moira/senders/mattermost"
 	"github.com/moira-alert/moira/senders/msteams"
 	"github.com/moira-alert/moira/senders/opsgenie"
 	"github.com/moira-alert/moira/senders/pagerduty"
@@ -36,6 +37,7 @@ const (
 	victoropsSender   = "victorops"
 	pagerdutySender   = "pagerduty"
 	msTeamsSender     = "msteams"
+	mattermostSender  = "mattermost"
 )
 
 // RegisterSenders watch on senders config and register all configured senders
@@ -68,6 +70,8 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 			err = notifier.RegisterSender(senderSettings, &opsgenie.Sender{ImageStores: notifier.imageStores})
 		case victoropsSender:
 			err = notifier.RegisterSender(senderSettings, &victorops.Sender{ImageStores: notifier.imageStores})
+		case mattermostSender:
+			err = notifier.RegisterSender(senderSettings, &mattermost.Sender{})
 		// case "email":
 		// 	err = notifier.RegisterSender(senderSettings, &kontur.MailSender{})
 		// case "phone":
@@ -82,7 +86,9 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 	if notifier.config.SelfStateEnabled {
 		selfStateSettings := map[string]string{"type": selfStateSender}
 		if err = notifier.RegisterSender(selfStateSettings, &selfstate.Sender{Database: connector}); err != nil {
-			notifier.logger.Warningf("failed to register selfstate sender: %s", err.Error())
+			notifier.logger.Warning().
+				Error(err).
+				Msg("Failed to register selfstate sender")
 		}
 	}
 	return nil
@@ -106,7 +112,9 @@ func (notifier *StandardNotifier) RegisterSender(senderSettings map[string]strin
 	notifier.metrics.SendersOkMetrics.RegisterMeter(senderIdent, getGraphiteSenderIdent(senderIdent), "sends_ok")
 	notifier.metrics.SendersFailedMetrics.RegisterMeter(senderIdent, getGraphiteSenderIdent(senderIdent), "sends_failed")
 	notifier.runSenders(sender, eventsChannel)
-	notifier.logger.Infof("Sender %s registered", senderIdent)
+	notifier.logger.Info().
+		String("sender_id", senderIdent).
+		Msg("Sender registered")
 	return nil
 }
 
@@ -125,9 +133,9 @@ func (notifier *StandardNotifier) StopSenders() {
 		close(ch)
 	}
 	notifier.senders = make(map[string]chan NotificationPackage)
-	notifier.logger.Info("Waiting senders finish...")
+	notifier.logger.Info().Msg("Waiting senders finish...")
 	notifier.waitGroup.Wait()
-	notifier.logger.Info("Moira Notifier Senders stopped")
+	notifier.logger.Info().Msg("Moira Notifier Senders stopped")
 }
 
 func getGraphiteSenderIdent(ident string) string {

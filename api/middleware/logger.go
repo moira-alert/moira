@@ -3,28 +3,32 @@ package middleware
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"runtime/debug"
 	"time"
 
+	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
+	"github.com/moira-alert/moira/logging"
 )
 
 type apiLoggerEntry struct {
 	logger  moira.Logger
 	request *http.Request
-	buf     *bytes.Buffer
+	msg     string
 }
 
 // GetLoggerEntry gets logger entry with configured logger
 func GetLoggerEntry(request *http.Request) moira.Logger {
-	return request.Context().Value(middleware.LogEntryCtxKey).(*apiLoggerEntry).logger
+	apiLoggerEntry := request.Context().Value(middleware.LogEntryCtxKey).(*apiLoggerEntry)
+	return apiLoggerEntry.logger
 }
 
 // WithLogEntry sets to context configured logger entry
@@ -41,7 +45,10 @@ func RequestLogger(logger moira.Logger) func(next http.Handler) http.Handler {
 
 			t1 := time.Now()
 			defer func() {
-				if rvr := recover(); rvr != nil {
+				rvr := recover()
+				entry.fillMsg(request)
+
+				if rvr != nil {
 					render.Render(wrapWriter, request, api.ErrorInternalServer(fmt.Errorf("internal Server Error"))) //nolint
 					entry.writePanic(wrapWriter.Status(), wrapWriter.BytesWritten(), time.Since(t1), rvr, debug.Stack())
 				} else {
@@ -66,77 +73,72 @@ func newLogEntry(logger moira.Logger, request *http.Request) *apiLoggerEntry {
 	entry := &apiLoggerEntry{
 		logger:  logger.Clone(),
 		request: request,
-		buf:     &bytes.Buffer{},
+		msg:     "",
 	}
 
-	scheme := "http"
-	if request.TLS != nil {
-		scheme = "https"
-	}
-	userName := GetLogin(request)
-	if userName == "" {
-		userName = "anonymous"
-	}
+	scheme := getScheme(request.TLS)
 	uri := fmt.Sprintf("%s://%s%s", scheme, request.Host, request.RequestURI)
-
 	log := entry.logger
-	log.String("context", "http")
+	log.String("context", scheme)
 	log.String("http.method", request.Method)
 	log.String("http.uri", uri)
 	log.String("http.protocol", request.Proto)
 	log.String("http.remote_addr", request.RemoteAddr)
-	log.String("username", userName)
-
-	entry.buf.WriteString("\"")
-	fmt.Fprintf(entry.buf, "%s ", request.Method)
-	fmt.Fprintf(entry.buf, "%s %s\"", uri, request.Proto)
-	entry.buf.WriteString(" from ")
-	entry.buf.WriteString(request.RemoteAddr)
-	entry.buf.WriteString(" by ")
-	entry.buf.WriteString(userName)
-	entry.buf.WriteString(" - ")
+	log.String("username", GetLogin(request))
 
 	return entry
 }
 
-func (entry *apiLoggerEntry) write(status, bytes int, elapsed time.Duration, response http.ResponseWriter) {
-	if status == 0 {
-		status = 200
+func getScheme(tls *tls.ConnectionState) string {
+	if tls != nil {
+		return "https"
 	}
-	log := entry.logger
-	log.Int("http.http_status", status)
-	log.Int("http.content_length", bytes)
-	log.Int64("elapsed_time_ms", elapsed.Milliseconds())
 
-	fmt.Fprintf(entry.buf, "%03d", status)
-	fmt.Fprintf(entry.buf, " %dB", bytes)
-	entry.buf.WriteString(" in ")
-	fmt.Fprintf(entry.buf, "%s", elapsed)
-	if status >= 500 { //nolint
+	return "http"
+}
+
+func (entry *apiLoggerEntry) fillMsg(request *http.Request) {
+	pattern := chi.RouteContext(request.Context()).RoutePattern()
+	if pattern == "" {
+		return
+	}
+
+	uri := fmt.Sprintf("%s://%s%s", getScheme(request.TLS), request.Host, pattern)
+	entry.msg = fmt.Sprintf("%s %s %s", request.Method, uri, request.Proto)
+}
+
+func (entry *apiLoggerEntry) write(status, bytes int, elapsed time.Duration, response http.ResponseWriter) {
+	var event logging.EventBuilder
+
+	if status == 0 {
+		status = http.StatusOK
+	}
+	if status >= http.StatusInternalServerError {
+		event = entry.logger.Error()
+
 		errorResponse := getErrorResponseIfItHas(response)
 		if errorResponse != nil {
-			fmt.Fprintf(entry.buf, " - Error : %s", errorResponse.ErrorText)
+			event.Error(errorResponse.Err)
 		}
-		log.Error(entry.buf.String())
 	} else {
-		log.Info(entry.buf.String())
+		event = entry.logger.Info()
 	}
+
+	event.Int("http.status", status).
+		Int("http.content_length", bytes).
+		Int64("elapsed_time_ms", elapsed.Milliseconds()).
+		String("elapsed_time", elapsed.String()).
+		Msg(entry.msg)
 }
 
 func (entry *apiLoggerEntry) writePanic(status, bytes int, elapsed time.Duration, v interface{}, stack []byte) {
-	log := entry.logger
-	log.Int("http.http_status", status)
-	log.Int("http.content_length", bytes)
-	log.Int("elapsed_time_ms", int(elapsed.Milliseconds()))
-
-	fmt.Fprintf(entry.buf, "%03d", status)
-	fmt.Fprintf(entry.buf, " %dB", bytes)
-	entry.buf.WriteString(" in ")
-	fmt.Fprintf(entry.buf, "%s", elapsed)
-	fmt.Fprintf(entry.buf, " - Panic: %+v", v)
-	entry.buf.WriteString("\n")
-	entry.buf.WriteString(string(stack))
-	log.Error(entry.buf.String())
+	entry.logger.Error().
+		Int("http_status", status).
+		Int("http_content_length", bytes).
+		Int("elapsed_time_ms", int(elapsed.Milliseconds())).
+		Interface("recovered_err", v).
+		String(moira.LogFieldNameStackTrace, string(stack)).
+		Msg(fmt.Sprintf("%s: panic", entry.msg))
 }
 
 type responseWriterWithBody struct {

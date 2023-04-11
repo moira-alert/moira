@@ -6,7 +6,6 @@ import (
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/metrics"
-	"github.com/smartystreets/assertions/should"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -208,7 +207,7 @@ func TestRetentions(t *testing.T) {
 		storage.EnrichMatchedMetric(buffer, &matchedMetric)
 		So(len(buffer), ShouldEqual, 1)
 		So(matchedMetric.Retention, ShouldEqual, 60)
-		So(matchedMetric.RetentionTimestamp, should.Equal, 60)
+		So(matchedMetric.RetentionTimestamp, ShouldEqual, 60)
 	})
 
 	Convey("Suf metric, should 1200sec", t, func() {
@@ -218,7 +217,7 @@ func TestRetentions(t *testing.T) {
 		storage.EnrichMatchedMetric(buffer, &metr)
 		So(len(buffer), ShouldEqual, 1)
 		So(metr.Retention, ShouldEqual, 1200)
-		So(metr.RetentionTimestamp, should.Equal, 1200)
+		So(metr.RetentionTimestamp, ShouldEqual, 1200)
 	})
 
 	Convey("Default metric, should 120sec", t, func() {
@@ -228,6 +227,6 @@ func TestRetentions(t *testing.T) {
 		storage.EnrichMatchedMetric(buffer, &metr)
 		So(len(buffer), ShouldEqual, 1)
 		So(metr.Retention, ShouldEqual, 120)
-		So(metr.RetentionTimestamp, should.Equal, 120)
+		So(metr.RetentionTimestamp, ShouldEqual, 120)
 	})
 }

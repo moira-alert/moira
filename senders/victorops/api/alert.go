@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 )
 
@@ -57,8 +57,8 @@ func (client *Client) CreateAlert(routingKey string, alert CreateAlertRequest) e
 		return fmt.Errorf("error while making the request to victorops: %s", err)
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != 200 { //nolint
-		body, _ := ioutil.ReadAll(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
 		return fmt.Errorf("victorops API request resulted in error with status %v: %v", resp.StatusCode, string(body))
 	}
 

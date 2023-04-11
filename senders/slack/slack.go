@@ -73,7 +73,14 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 		return err
 	}
 	if channelID != "" && len(plots) > 0 {
-		sender.sendPlots(plots, channelID, threadTimestamp, trigger.ID) //nolint
+		err = sender.sendPlots(plots, channelID, threadTimestamp, trigger.ID)
+		if err != nil {
+			sender.logger.Warning().
+				String("trigger_id", trigger.ID).
+				String("contact_value", contact.Value).
+				String("contact_type", contact.Type).
+				Error(err)
+		}
 	}
 	return nil
 }
@@ -187,7 +194,10 @@ func (sender *Sender) sendMessage(message string, contact string, triggerID stri
 		Markdown:  true,
 		LinkNames: 1,
 	}
-	sender.logger.Debugf("Calling slack with message body %s", message)
+	sender.logger.Debug().
+		String("message", message).
+		Msg("Calling slack")
+
 	channelID, threadTimestamp, err := sender.client.PostMessage(contact, slack.MsgOptionText(message, false), slack.MsgOptionPostMessageParameters(params))
 	if err != nil {
 		errorText := err.Error()
@@ -202,20 +212,24 @@ func (sender *Sender) sendMessage(message string, contact string, triggerID stri
 }
 
 func (sender *Sender) sendPlots(plots [][]byte, channelID, threadTimestamp, triggerID string) error {
+	filename := fmt.Sprintf("%s.png", triggerID)
 	for _, plot := range plots {
 		reader := bytes.NewReader(plot)
-		uploadParameters := slack.FileUploadParameters{
-			Channels:        []string{channelID},
-			ThreadTimestamp: threadTimestamp,
+		uploadParameters := slack.UploadFileV2Parameters{
+			FileSize:        len(plot),
 			Reader:          reader,
-			Filetype:        "png",
-			Filename:        fmt.Sprintf("%s.png", triggerID),
+			Title:           filename,
+			Filename:        filename,
+			Channel:         channelID,
+			ThreadTimestamp: threadTimestamp,
 		}
-		_, err := sender.client.UploadFile(uploadParameters)
+
+		_, err := sender.client.UploadFileV2(uploadParameters)
 		if err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 

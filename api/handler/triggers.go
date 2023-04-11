@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -50,11 +51,21 @@ func getAllTriggers(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
+// createTrigger handler creates moira.Trigger.
 func createTrigger(writer http.ResponseWriter, request *http.Request) {
 	trigger, err := getTriggerFromRequest(request)
 	if err != nil {
 		render.Render(writer, request, err) //nolint
 		return
+	}
+
+	var problems []dto.TreeOfProblems
+	if needValidate(request) {
+		problems = validateTargets(request, trigger)
+		if problems != nil && dto.DoesAnyTreeHaveError(problems) {
+			writeErrorSaveResponse(writer, request, problems)
+			return
+		}
 	}
 
 	if trigger.Desc != nil {
@@ -71,6 +82,10 @@ func createTrigger(writer http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		render.Render(writer, request, err) //nolint
 		return
+	}
+
+	if problems != nil {
+		response.CheckResult.Targets = problems
 	}
 
 	if err := render.Render(writer, request, response); err != nil {
@@ -91,12 +106,18 @@ func getTriggerFromRequest(request *http.Request) (*dto.Trigger, *api.ErrorRespo
 			return nil, api.ErrorInvalidRequest(err)
 		case remote.ErrRemoteTriggerResponse:
 			response := api.ErrorRemoteServerUnavailable(err)
-			middleware.GetLoggerEntry(request).Error("%s : %s : %s", response.StatusText, response.ErrorText, err)
+			middleware.GetLoggerEntry(request).Error().
+				String("status", response.StatusText).
+				Error(err).
+				Msg("Remote server unavailable")
 			return nil, response
+		case *json.UnmarshalTypeError:
+			return nil, api.ErrorInvalidRequest(fmt.Errorf("invalid payload: %s", err.Error()))
 		default:
 			return nil, api.ErrorInternalServer(err)
 		}
 	}
+	trigger.UpdatedBy = middleware.GetLogin(request)
 
 	return trigger, nil
 }
@@ -119,6 +140,8 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 	if err := render.Bind(request, trigger); err != nil {
 		switch err.(type) {
 		case expression.ErrInvalidExpression, local.ErrParseExpr, local.ErrEvalExpr, local.ErrUnknownFunction:
+			// TODO write comment, why errors are ignored, it is not obvious.
+			// In getTriggerFromRequest these types of errors lead to 400.
 		default:
 			render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
 			return

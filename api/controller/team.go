@@ -151,7 +151,7 @@ func addTeamsForNewUsers(dataBase moira.Database, teamID string, newUsers map[st
 		if _, ok := teamsMap[userID]; ok {
 			continue
 		}
-		fetchedUserTeams, err := dataBase.GetUserTeams(userID) //nolint: shadow
+		fetchedUserTeams, err := dataBase.GetUserTeams(userID) //nolint:govet
 		if err != nil && err != database.ErrNil {
 			return nil, api.ErrorInternalServer(fmt.Errorf("cannot get team users from database: %w", err))
 		}
@@ -251,7 +251,7 @@ func AddTeamUsers(dataBase moira.Database, teamID string, newUsers []string) (dt
 	finalUsers := []string{}
 
 	for _, userID := range existingUsers {
-		userTeams, err := dataBase.GetUserTeams(userID) //nolint:shadow
+		userTeams, err := dataBase.GetUserTeams(userID) //nolint:govet
 		if err != nil {
 			if err == database.ErrNil {
 				return dto.TeamMembers{}, api.ErrorNotFound(fmt.Sprintf("cannot find user teams: %s", userID))
@@ -267,7 +267,7 @@ func AddTeamUsers(dataBase moira.Database, teamID string, newUsers []string) (dt
 			return dto.TeamMembers{}, api.ErrorInvalidRequest(fmt.Errorf("one ore many users you specified are already exist in this team: %s", userID))
 		}
 
-		userTeams, err := dataBase.GetUserTeams(userID) //nolint:shadow
+		userTeams, err := dataBase.GetUserTeams(userID) //nolint:govet
 		if err != nil && err != redis.Nil {
 			return dto.TeamMembers{}, api.ErrorInternalServer(fmt.Errorf("cannot get user teams from database: %w", err))
 		}
@@ -359,7 +359,7 @@ func DeleteTeamUser(dataBase moira.Database, teamID string, removeUserID string)
 	finalUsers := []string{}
 
 	for _, userID := range existingUsers {
-		userTeams, err := dataBase.GetUserTeams(userID) //nolint:shadow
+		userTeams, err := dataBase.GetUserTeams(userID) //nolint:govet
 		if err != nil {
 			if err == database.ErrNil {
 				return dto.TeamMembers{}, api.ErrorNotFound(fmt.Sprintf("cannot find user teams: %s", userID))

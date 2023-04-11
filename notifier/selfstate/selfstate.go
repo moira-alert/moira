@@ -24,19 +24,20 @@ type SelfCheckWorker struct {
 	Notifier   notifier.Notifier
 	Config     Config
 	tomb       tomb.Tomb
-	Heartbeats []heartbeat.Heartbeater
+	heartbeats []heartbeat.Heartbeater
+}
+
+// NewSelfCheckWorker creates SelfCheckWorker.
+func NewSelfCheckWorker(logger moira.Logger, database moira.Database, notifier notifier.Notifier, config Config) *SelfCheckWorker {
+	heartbeats := createStandardHeartbeats(logger, database, config)
+	return &SelfCheckWorker{Logger: logger, Database: database, Notifier: notifier, Config: config, heartbeats: heartbeats}
 }
 
 // Start self check worker
 func (selfCheck *SelfCheckWorker) Start() error {
-	if !selfCheck.Config.Enabled {
-		selfCheck.Logger.Debugf("Moira Self State Monitoring disabled")
-		return nil
-	}
 	senders := selfCheck.Notifier.GetSenders()
 	if err := selfCheck.Config.checkConfig(senders); err != nil {
-		selfCheck.Logger.Errorf("Can't configure Moira Self State Monitoring: %s", err.Error())
-		return nil
+		return err
 	}
 
 	selfCheck.tomb.Go(func() error {
@@ -54,14 +55,32 @@ func (selfCheck *SelfCheckWorker) Start() error {
 
 // Stop self check worker and wait for finish
 func (selfCheck *SelfCheckWorker) Stop() error {
-	if !selfCheck.Config.Enabled {
-		return nil
-	}
-	senders := selfCheck.Notifier.GetSenders()
-	if err := selfCheck.Config.checkConfig(senders); err != nil {
-		return nil
-	}
-
 	selfCheck.tomb.Kill(nil)
 	return selfCheck.tomb.Wait()
+}
+
+func createStandardHeartbeats(logger moira.Logger, database moira.Database, conf Config) []heartbeat.Heartbeater {
+	heartbeats := make([]heartbeat.Heartbeater, 0)
+
+	if hb := heartbeat.GetDatabase(conf.RedisDisconnectDelaySeconds, logger, database); hb != nil {
+		heartbeats = append(heartbeats, hb)
+	}
+
+	if hb := heartbeat.GetFilter(conf.LastMetricReceivedDelaySeconds, logger, database); hb != nil {
+		heartbeats = append(heartbeats, hb)
+	}
+
+	if hb := heartbeat.GetLocalChecker(conf.LastCheckDelaySeconds, logger, database); hb != nil && hb.NeedToCheckOthers() {
+		heartbeats = append(heartbeats, hb)
+	}
+
+	if hb := heartbeat.GetRemoteChecker(conf.LastRemoteCheckDelaySeconds, logger, database); hb != nil && hb.NeedToCheckOthers() {
+		heartbeats = append(heartbeats, hb)
+	}
+
+	if hb := heartbeat.GetNotifier(logger, database); hb != nil {
+		heartbeats = append(heartbeats, hb)
+	}
+
+	return heartbeats
 }

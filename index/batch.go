@@ -29,7 +29,10 @@ func (index *Index) getTriggerChecksBatches(triggerIDsBatches [][]string) (trigg
 				return
 			}
 
-			index.logger.Debugf("Get %d trigger checks from DB", len(newBatch))
+			index.logger.Debug().
+				Int("triggers_count", len(newBatch)).
+				Msg("Get some trigger checks from DB")
+
 			triggerChecksChan <- newBatch
 		}(triggerIDsBatch)
 	}
@@ -50,12 +53,15 @@ func (index *Index) getTriggerChecksWithRetries(batch []string) ([]*moira.Trigge
 		if err == nil {
 			return newBatch, nil
 		}
-		index.logger.Warningf("Cannot get trigger checks from DB, try %d/%d: %s", i, triesCount, err.Error())
+		index.logger.Warning().
+			String("try_count", fmt.Sprintf("%d/%d", i, triesCount)).
+			Error(err).
+			Msg("Cannot get trigger checks from DB")
 	}
 	return nil, fmt.Errorf("cannot get trigger checks from DB after %d tries, last error: %s", triesCount, err.Error())
 }
 
-func (index *Index) handleTriggerBatches(triggerChecksChan chan []*moira.TriggerCheck, getTriggersErrors chan error, toIndex int) error {
+func (index *Index) handleTriggerBatches(triggerChecksChan chan []*moira.TriggerCheck, getTriggersErrors chan error, triggersTotal int) error {
 	indexErrors := make(chan error)
 	wg := &sync.WaitGroup{}
 	defer wg.Wait()
@@ -76,16 +82,24 @@ func (index *Index) handleTriggerBatches(triggerChecksChan chan []*moira.Trigger
 					indexErrors <- err2
 					return
 				}
-				index.logger.Debugf("[%d triggers of %d] added to index", count, toIndex)
+				index.logger.Debug().
+					Int("batch_size", len(batch)).
+					Int64("count", atomic.LoadInt64(&count)).
+					Int("triggers_total", triggersTotal).
+					Msg("Batch of triggers added to index")
 			}(batch)
 		case err, ok := <-getTriggersErrors:
 			if ok {
-				index.logger.Errorf("Cannot get trigger checks from DB: %s", err.Error())
+				index.logger.Error().
+					Error(err).
+					Msg("Cannot get trigger checks from DB")
 			}
 			return err
 		case err, ok := <-indexErrors:
 			if ok {
-				index.logger.Errorf("Cannot index trigger checks: %s", err.Error())
+				index.logger.Error().
+					Error(err).
+					Msg("Cannot index trigger checks")
 			}
 			return err
 		}

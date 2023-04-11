@@ -32,6 +32,10 @@ func handleCleanUpAbandonedTriggerLastCheck(database moira.Database) error {
 	return database.CleanUpAbandonedTriggerLastCheck()
 }
 
+func handleCleanUpAbandonedTags(database moira.Database) (int, error) {
+	return database.CleanUpAbandonedTags()
+}
+
 func handleRemoveMetricsByPrefix(database moira.Database, prefix string) error {
 	return database.RemoveMetricsByPrefix(prefix)
 }
