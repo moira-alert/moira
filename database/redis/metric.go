@@ -306,16 +306,16 @@ func (connector *DbConnector) RemoveMetricRetention(metric string) error {
 }
 
 // RemoveMetricValues remove metric timestamps values from 0 to given time
-func (connector *DbConnector) RemoveMetricValues(metric string, toTime int64) error {
+func (connector *DbConnector) RemoveMetricValues(metric string, toTime int64) (bool, error) {
 	if !connector.needRemoveMetrics(metric) {
-		return nil
+		return false, nil
 	}
 	c := *connector.client
 	if _, err := c.ZRemRangeByScore(connector.context, metricDataKey(metric), "-inf", strconv.FormatInt(toTime, 10)).Result(); err != nil {
-		return fmt.Errorf("failed to remove metrics from -inf to %v, error: %v", toTime, err)
+		return false, fmt.Errorf("failed to remove metrics from -inf to %v, error: %v", toTime, err)
 	}
 
-	return nil
+	return true, nil
 }
 
 // GetMetricsTTLSeconds returns maximum time in seconds to store metrics in Redis
@@ -349,11 +349,13 @@ func cleanUpOutdatedMetricsOnRedisNode(connector *DbConnector, client redis.Univ
 	for metricsIterator.Next(connector.context) {
 		key := metricsIterator.Val()
 		metric := strings.TrimPrefix(key, metricDataKey(""))
-		err := flushMetric(connector, metric, duration)
+		ok, err := flushMetric(connector, metric, duration)
 		if err != nil {
 			return err
 		}
-		count++
+		if ok {
+			count++
+		}
 	}
 
 	connector.logger.Info().
@@ -606,13 +608,14 @@ func (connector *DbConnector) RemoveAllMetrics() error {
 	return nil
 }
 
-func flushMetric(database moira.Database, metric string, duration time.Duration) error {
+func flushMetric(database moira.Database, metric string, duration time.Duration) (bool, error) {
 	lastTs := time.Now().UTC()
 	toTs := lastTs.Add(duration).Unix()
-	if err := database.RemoveMetricValues(metric, toTs); err != nil {
-		return err
+	ok, err := database.RemoveMetricValues(metric, toTs)
+	if err != nil {
+		return ok, err
 	}
-	return nil
+	return ok, nil
 }
 
 var patternsListKey = "moira-pattern-list"

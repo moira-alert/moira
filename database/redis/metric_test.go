@@ -292,8 +292,9 @@ func TestRemoveMetricValues(t *testing.T) {
 			},
 		})
 
-		err = dataBase.RemoveMetricValues(metric1, 11)
+		ok, err := dataBase.RemoveMetricValues(metric1, 11)
 		So(err, ShouldBeNil)
+		So(ok, ShouldBeTrue)
 
 		actualValues, err = dataBase.GetMetricsValues([]string{metric1}, 1, 99)
 		So(err, ShouldBeNil)
@@ -305,8 +306,9 @@ func TestRemoveMetricValues(t *testing.T) {
 			},
 		})
 
-		err = dataBase.RemoveMetricValues(metric1, 22)
+		ok, err = dataBase.RemoveMetricValues(metric1, 22)
 		So(err, ShouldBeNil)
+		So(ok, ShouldBeFalse)
 
 		actualValues, err = dataBase.GetMetricsValues([]string{metric1}, 1, 99)
 		So(err, ShouldBeNil)
@@ -347,8 +349,9 @@ func TestRemoveMetricValues(t *testing.T) {
 
 		time.Sleep(time.Second * 2)
 
-		err = dataBase.RemoveMetricValues(metric1, 30)
+		ok, err = dataBase.RemoveMetricValues(metric1, 30)
 		So(err, ShouldBeNil)
+		So(ok, ShouldBeTrue)
 
 		actualValues, err = dataBase.GetMetricsValues([]string{metric1}, 1, 99)
 		So(err, ShouldBeNil)
@@ -360,8 +363,9 @@ func TestRemoveMetricValues(t *testing.T) {
 
 		time.Sleep(time.Second * 2)
 
-		err = dataBase.RemoveMetricValues(metric1, 39)
+		ok, err = dataBase.RemoveMetricValues(metric1, 39)
 		So(err, ShouldBeNil)
+		So(ok, ShouldBeTrue)
 
 		actualValues, err = dataBase.GetMetricsValues([]string{metric1}, 1, 99)
 		So(err, ShouldBeNil)
@@ -373,8 +377,9 @@ func TestRemoveMetricValues(t *testing.T) {
 
 		time.Sleep(time.Second * 2)
 
-		err = dataBase.RemoveMetricValues(metric1, 49)
+		ok, err = dataBase.RemoveMetricValues(metric1, 49)
 		So(err, ShouldBeNil)
+		So(ok, ShouldBeTrue)
 
 		actualValues, err = dataBase.GetMetricsValues([]string{metric1}, 1, 99)
 		So(err, ShouldBeNil)
@@ -490,8 +495,9 @@ func TestMetricsStoringErrorConnection(t *testing.T) {
 		err = dataBase.RemovePatternWithMetrics("123")
 		So(err, ShouldNotBeNil)
 
-		err = dataBase.RemoveMetricValues("123", 1)
+		ok, err := dataBase.RemoveMetricValues("123", 1)
 		So(err, ShouldNotBeNil)
+		So(ok, ShouldBeFalse)
 
 		var tomb1 tomb.Tomb
 		ch, err := dataBase.SubscribeMetricEvents(&tomb1,
