@@ -358,7 +358,7 @@ func cleanUpOutdatedMetricsOnRedisNode(connector *DbConnector, client redis.Univ
 
 	connector.logger.Info().
 		Int("count deleted metrics", count).
-		Msg("Cleaned up last check for trigger")
+		Msg("Cleaned up usefully metrics for trigger")
 
 	return nil
 }
