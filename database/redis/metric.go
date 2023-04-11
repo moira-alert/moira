@@ -106,6 +106,7 @@ func (connector *DbConnector) SaveMetrics(metrics map[string]*moira.MatchedMetri
 	ctx := connector.context
 
 	rand.Seed(time.Now().UnixNano())
+	pipe := c.TxPipeline()
 
 	for _, metric := range metrics {
 		metricValue := fmt.Sprintf("%v %v", metric.Timestamp, metric.Value)
@@ -136,40 +137,99 @@ func (connector *DbConnector) SaveMetrics(metrics map[string]*moira.MatchedMetri
 			}
 
 			var metricEventsChannel = metricEventsChannels[rand.Intn(len(metricEventsChannels))]
-			if err = c.Publish(ctx, metricEventsChannel, event).Err(); err != nil {
-				return err
-			}
+			pipe.SAdd(ctx, metricEventsChannel, event)
 		}
 	}
+
+	if _, err = pipe.Exec(ctx); err != nil {
+		connector.logger.Error().
+			Error(err).
+			Msg("Sending metric event error")
+		return err
+	}
+
 	return nil
 }
 
 // SubscribeMetricEvents creates subscription for new metrics and return channel for this events
-func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb) (<-chan *moira.MetricEvent, error) {
-	metricsChannel := make(chan *moira.MetricEvent, pubSubWorkerChannelSize)
-	dataChannel, err := connector.manageSubscriptions(tomb, metricEventsChannels)
-	if err != nil {
+func (connector *DbConnector) SubscribeMetricEvents(tomb *tomb.Tomb, params *moira.SubscribeMetricEventsParams) (<-chan *moira.MetricEvent, error) {
+	responseChannel := make(chan string, metricEventChannelSize)
+	metricChannel := make(chan *moira.MetricEvent, metricEventChannelSize)
+
+	ctx := connector.context
+	c := *connector.client
+
+	if err := c.Ping(ctx).Err(); err != nil {
 		return nil, err
 	}
 
 	go func() {
+		<-tomb.Dying()
+		close(responseChannel)
+	}()
+
+	go func() {
 		for {
-			data, ok := <-dataChannel
+			response, ok := <-responseChannel
 			if !ok {
-				connector.logger.Info("No more subscriptions, channel is closed. Stop process data...")
-				close(metricsChannel)
+				close(metricChannel)
 				return
 			}
+
 			metricEvent := &moira.MetricEvent{}
-			if err := json.Unmarshal(data, metricEvent); err != nil {
-				connector.logger.Errorf("Failed to parse MetricEvent: %s, error : %v", string(data), err)
+			if err := json.Unmarshal([]byte(response), metricEvent); err != nil {
+				connector.logger.Error().
+					String("metric_event", response).
+					Error(err).
+					Msg("Failed to parse MetricEvent")
 				continue
 			}
-			metricsChannel <- metricEvent
+			metricChannel <- metricEvent
 		}
 	}()
 
-	return metricsChannel, nil
+	for channelIdx := 0; channelIdx < len(metricEventsChannels); channelIdx++ {
+		metricEventsChannel := metricEventsChannels[channelIdx]
+		go func() {
+			var popDelay time.Duration
+			for {
+				startPop := time.After(popDelay)
+				select {
+				case <-tomb.Dying():
+					return
+				case <-startPop:
+					data, err := c.SPopN(ctx, metricEventsChannel, params.BatchSize).Result()
+					popDelay = connector.handlePopResponse(data, err, responseChannel, params.Delay)
+				}
+			}
+		}()
+	}
+
+	return metricChannel, nil
+}
+
+const (
+	receiveErrorSleepDuration = time.Second
+	receiveEmptySleepDuration = time.Second
+)
+
+func (connector *DbConnector) handlePopResponse(data []string, popError error, responseChannel chan string, defaultDelay time.Duration) time.Duration {
+	if popError != nil {
+		if popError != redis.Nil {
+			connector.logger.Error().
+				Error(popError).
+				Msg("Failed to pop new metric events")
+		}
+		return receiveErrorSleepDuration
+	} else if len(data) == 0 {
+		return receiveEmptySleepDuration
+	}
+
+	for _, response := range data {
+		responseChannel <- response
+	}
+
+	return defaultDelay
 }
 
 // AddPatternMetric adds new metrics by given pattern
@@ -320,22 +380,24 @@ func cleanUpAbandonedRetentionsOnRedisNode(connector *DbConnector, client redis.
 func cleanUpAbandonedPatternMetricsOnRedisNode(connector *DbConnector, client redis.UniversalClient) error {
 	keysIter := client.Scan(connector.context, 0, patternMetricsKey("*"), 0).Iterator()
 	for keysIter.Next(connector.context) {
+		pipe := client.TxPipeline()
 		key := keysIter.Val()
-
 		metricsIter := client.SScan(connector.context, key, 0, "*", 0).Iterator()
 		for metricsIter.Next(connector.context) {
 			metric := metricsIter.Val()
 
 			existsResult, err := (*connector.client).Exists(connector.context, metricDataKey(metric)).Result()
 			if err != nil {
-				return fmt.Errorf("failed to check metric data existence, error: %v", err)
+				return fmt.Errorf("failed to check metric-data %v existence, error: %v", metric, err)
 			}
 			if isMetricExists := existsResult == 1; !isMetricExists {
-				_, err := client.SRem(connector.context, key, metric).Result()
-				if err != nil {
-					return fmt.Errorf("failed to remove pattern data, error: %v", err)
-				}
+				pipe.SRem(connector.context, key, metric)
 			}
+		}
+
+		_, err := pipe.Exec(connector.context)
+		if err != nil {
+			return fmt.Errorf("failed to remove pattern-metrics in pipe, error: %v", err)
 		}
 	}
 

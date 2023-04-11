@@ -264,6 +264,8 @@ type Trigger struct {
 	AloneMetrics     map[string]bool `json:"alone_metrics"`
 	CreatedAt        *int64          `json:"created_at"`
 	UpdatedAt        *int64          `json:"updated_at"`
+	CreatedBy        string          `json:"created_by"`
+	UpdatedBy        string          `json:"updated_by"`
 }
 
 // TriggerCheck represents trigger data with last check data and check timestamp
@@ -354,6 +356,12 @@ func (maintenanceInfo *MaintenanceInfo) Set(startUser *string, startTime *int64,
 type MetricEvent struct {
 	Metric  string `json:"metric"`
 	Pattern string `json:"pattern"`
+}
+
+// SubscribeMetricEventsParams represents params of subscription
+type SubscribeMetricEventsParams struct {
+	BatchSize int64
+	Delay     time.Duration
 }
 
 // SearchHighlight represents highlight

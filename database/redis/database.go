@@ -2,8 +2,6 @@ package redis
 
 import (
 	"context"
-	"fmt"
-	"io"
 	"time"
 
 	"github.com/moira-alert/moira/clock"
@@ -13,18 +11,13 @@ import (
 	"github.com/go-redsync/redsync/v4/redis/goredis/v8"
 	"github.com/moira-alert/moira"
 	"github.com/patrickmn/go-cache"
-	"gopkg.in/tomb.v2"
 )
 
-const pubSubWorkerChannelSize = 16384
+const metricEventChannelSize = 16384
 
 const (
 	cacheCleanupInterval         = time.Minute * 60
 	cacheValueExpirationDuration = time.Minute
-)
-
-const (
-	receiveErrorSleepDuration = time.Second
 )
 
 // DBSource is type for describing who create database instance
@@ -95,78 +88,6 @@ func NewTestDatabase(logger moira.Logger) *DbConnector {
 // NewTestDatabaseWithIncorrectConfig use it only for tests
 func NewTestDatabaseWithIncorrectConfig(logger moira.Logger) *DbConnector {
 	return NewDatabase(logger, Config{Addrs: []string{"0.0.0.0:0000"}}, testSource)
-}
-
-func (connector *DbConnector) makePubSubConnection(channels []string) (*redis.PubSub, error) {
-	psc := (*connector.client).Subscribe(connector.context, channels...)
-	err := psc.Ping(connector.context)
-	if err != nil {
-		return nil, fmt.Errorf("failed to subscribe to '%s', error: %v", channels, err)
-	}
-	return psc, nil
-}
-
-func (connector *DbConnector) manageSubscriptions(tomb *tomb.Tomb, channels []string) (<-chan []byte, error) {
-	psc, err := connector.makePubSubConnection(channels)
-	if err != nil {
-		return nil, err
-	}
-
-	go func() {
-		<-tomb.Dying()
-		connector.logger.Infof("Calling shutdown, unsubscribe from '%s' redis channels...", channels)
-		psc.Unsubscribe(connector.context) //nolint
-	}()
-
-	dataChan := make(chan []byte, pubSubWorkerChannelSize)
-	go func() {
-		for {
-			raw, err := psc.Receive(connector.context)
-			if err != nil {
-				if err == io.ErrUnexpectedEOF {
-					connector.logger.Infof("Receive() returned error: %s", err.Error())
-					continue
-				}
-				connector.logger.Infof("Receive() returned error: %s. Reconnecting...", err.Error())
-				newPsc, err := connector.makePubSubConnection(channels)
-				if err != nil {
-					connector.logger.Errorf("Failed to reconnect to subscription: %v", err)
-					<-time.After(receiveErrorSleepDuration)
-					continue
-				}
-				connector.logger.Info("Reconnected to subscription")
-				psc = newPsc
-				<-time.After(receiveErrorSleepDuration)
-				continue
-			}
-			switch data := raw.(type) {
-			case *redis.Message:
-				if len(data.Payload) == 0 {
-					continue
-				}
-				dataChan <- []byte(data.Payload)
-			case *redis.Subscription:
-				switch data.Kind {
-				case "subscribe":
-					connector.logger.Infof("Subscribe to %s channel, current subscriptions is %v", data.Channel, data.Count)
-				case "unsubscribe":
-					connector.logger.Infof("Unsubscribe from %s channel, current subscriptions is %v", data.Channel, data.Count)
-					if data.Count == 0 {
-						connector.logger.Infof("No more subscriptions, exit...")
-						close(dataChan)
-						return
-					}
-				}
-			case *redis.Pong:
-				connector.logger.Infof("Received PONG message")
-			default:
-				connector.logger.Errorf("Can not receive message of type '%T': %v", raw, raw)
-				<-time.After(receiveErrorSleepDuration)
-			}
-		}
-	}()
-
-	return dataChan, nil
 }
 
 // Flush deletes all the keys of the DB, use it only for tests

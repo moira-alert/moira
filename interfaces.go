@@ -3,7 +3,8 @@ package moira
 import (
 	"time"
 
-	"github.com/beevee/go-chart"
+	"github.com/moira-alert/go-chart"
+	"github.com/moira-alert/moira/logging"
 	"gopkg.in/tomb.v2"
 )
 
@@ -21,6 +22,7 @@ type Database interface {
 	GetTagNames() ([]string, error)
 	RemoveTag(tagName string) error
 	GetTagTriggerIDs(tagName string) ([]string, error)
+	CleanUpAbandonedTags() (int, error)
 
 	// LastCheck storing
 	GetTriggerLastCheck(triggerID string) (CheckData, error)
@@ -40,6 +42,7 @@ type Database interface {
 	RemoveTrigger(triggerID string) error
 	GetPatternTriggerIDs(pattern string) ([]string, error)
 	RemovePatternTriggerIDs(pattern string) error
+	GetTriggerIDsStartWith(prefix string) ([]string, error)
 
 	// SearchResult AKA pager storing
 	GetTriggersSearchResults(searchResultsID string, page, size int64) ([]*SearchResult, int64, error)
@@ -94,7 +97,7 @@ type Database interface {
 	RemovePatternsMetrics(pattern []string) error
 	RemovePatternWithMetrics(pattern string) error
 
-	SubscribeMetricEvents(tomb *tomb.Tomb) (<-chan *MetricEvent, error)
+	SubscribeMetricEvents(tomb *tomb.Tomb, params *SubscribeMetricEventsParams) (<-chan *MetricEvent, error)
 	SaveMetrics(buffer map[string]*MatchedMetric) error
 	GetMetricRetention(metric string) (int64, error)
 	GetMetricsValues(metrics []string, from int64, until int64) (map[string][]*MetricValue, error)
@@ -166,16 +169,11 @@ type Mutex interface {
 
 // Logger implements logger abstraction
 type Logger interface {
-	Debug(args ...interface{})
-	Debugf(format string, args ...interface{})
-	Info(args ...interface{})
-	Infof(format string, args ...interface{})
-	Error(args ...interface{})
-	Errorf(format string, args ...interface{})
-	Fatal(args ...interface{})
-	Fatalf(format string, args ...interface{})
-	Warning(args ...interface{})
-	Warningf(format string, args ...interface{})
+	Debug() logging.EventBuilder
+	Info() logging.EventBuilder
+	Error() logging.EventBuilder
+	Fatal() logging.EventBuilder
+	Warning() logging.EventBuilder
 
 	// Structured logging methods, use to add context fields
 	String(key, value string) Logger
@@ -191,6 +189,7 @@ type Logger interface {
 
 // Sender interface for implementing specified contact type sender
 type Sender interface {
+	// TODO refactor: https://github.com/moira-alert/moira/issues/794
 	SendEvents(events NotificationEvents, contact ContactData, trigger TriggerData, plot [][]byte, throttled bool) error
 	Init(senderSettings map[string]string, logger Logger, location *time.Location, dateTimeFormat string) error
 }

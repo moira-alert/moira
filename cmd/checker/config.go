@@ -40,6 +40,10 @@ type checkerConfig struct {
 	MaxParallelRemoteChecks int `yaml:"max_parallel_remote_checks"`
 	// Specify log level by entities
 	SetLogLevel triggersLogConfig `yaml:"set_log_level"`
+	// Metric event pop operation batch size
+	MetricEventPopBatchSize int `yaml:"metric_event_pop_batch_size"`
+	// Metric event pop operation delay
+	MetricEventPopDelay string `yaml:"metric_event_pop_delay"`
 }
 
 func (config *checkerConfig) getSettings(logger moira.Logger) *checker.Config {
@@ -47,7 +51,9 @@ func (config *checkerConfig) getSettings(logger moira.Logger) *checker.Config {
 	for _, v := range config.SetLogLevel.TriggersToLevel {
 		logTriggersToLevel[v.ID] = v.Level
 	}
-	logger.Infof("Found dynamic log rules in config for %d triggers", len(logTriggersToLevel))
+	logger.Info().
+		Int("number_of_triggers", len(logTriggersToLevel)).
+		Msg("Found dynamic log rules in config for some triggers")
 
 	return &checker.Config{
 		CheckInterval:               to.Duration(config.CheckInterval),
@@ -57,6 +63,8 @@ func (config *checkerConfig) getSettings(logger moira.Logger) *checker.Config {
 		MaxParallelChecks:           config.MaxParallelChecks,
 		MaxParallelRemoteChecks:     config.MaxParallelRemoteChecks,
 		LogTriggersToLevel:          logTriggersToLevel,
+		MetricEventPopBatchSize:     int64(config.MetricEventPopBatchSize),
+		MetricEventPopDelay:         to.Duration(config.MetricEventPopDelay),
 	}
 }
 

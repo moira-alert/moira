@@ -14,22 +14,89 @@ func TestTargetVerification(t *testing.T) {
 	Convey("Target verification", t, func() {
 		Convey("Check bad function", func() {
 			targets := []string{`alias(test.one,'One'`}
-			expected := TargetVerification(targets, 10, false)
-			So(len(expected), ShouldEqual, 1)
-			So(expected[0].SyntaxOk, ShouldBeFalse)
+			problems := TargetVerification(targets, 10, false)
+			So(len(problems), ShouldEqual, 1)
+			So(problems[0].SyntaxOk, ShouldBeFalse)
 		})
 
 		Convey("Check correct construction", func() {
 			targets := []string{`alias(test.one,'One')`}
-			expected := TargetVerification(targets, 10, false)
-			So(expected[0].SyntaxOk, ShouldBeTrue)
+			problems := TargetVerification(targets, 10, false)
+			So(problems[0].SyntaxOk, ShouldBeTrue)
 		})
 
 		Convey("Check correct empty function", func() {
 			targets := []string{`alias(movingSum(),'One')`}
-			expected := TargetVerification(targets, 10, false)
-			So(expected[0].SyntaxOk, ShouldBeTrue)
-			So(expected[0].TreeOfProblems, ShouldBeNil)
+			problems := TargetVerification(targets, 10, false)
+			So(problems[0].SyntaxOk, ShouldBeTrue)
+			So(problems[0].TreeOfProblems, ShouldBeNil)
+		})
+
+		Convey("Check interval larger that TTL", func() {
+			targets := []string{"movingAverage(groupByTags(seriesByTag('project=my-test-project'), 'max'), '10min')"}
+			problems := TargetVerification(targets, 5*time.Minute, false)
+			// target is not valid because set of metrics by last 5 minutes is not enough for function with 10min interval
+			So(problems[0].SyntaxOk, ShouldBeTrue)
+			So(problems[0].TreeOfProblems.Argument, ShouldEqual, "movingAverage")
+		})
+
+		// potentially unreal case, because we have TTL > 0 in configs
+		Convey("Check ttl is 0", func() {
+			targets := []string{"movingAverage(groupByTags(seriesByTag('project=my-test-project'), 'max'), '10min')"}
+			// ttl is 0 means that metrics will persist forever
+			problems := TargetVerification(targets, 0, false)
+			// target is valid because there is enough metrics
+			So(problems[0].SyntaxOk, ShouldBeTrue)
+			So(problems[0].TreeOfProblems, ShouldBeNil)
+		})
+
+		Convey("Check unstable function", func() {
+			targets := []string{"summarize(test.metric, '10min')"}
+			problems := TargetVerification(targets, 0, false)
+			So(problems[0].SyntaxOk, ShouldBeTrue)
+			So(problems[0].TreeOfProblems.Argument, ShouldEqual, "summarize")
+		})
+
+		Convey("Check false notifications function", func() {
+			targets := []string{"highest(test.metric)"}
+			problems := TargetVerification(targets, 0, false)
+			So(problems[0].SyntaxOk, ShouldBeTrue)
+			So(problems[0].TreeOfProblems.Argument, ShouldEqual, "highest")
+		})
+
+		Convey("Check visual function", func() {
+			targets := []string{"consolidateBy(Servers.web01.sda1.free_space, 'max')"}
+			problems := TargetVerification(targets, 0, false)
+			So(problems[0].SyntaxOk, ShouldBeTrue)
+			So(problems[0].TreeOfProblems.Argument, ShouldEqual, "consolidateBy")
+		})
+
+		Convey("Check unsupported function", func() {
+			targets := []string{"myUnsupportedFunction(Servers.web01.sda1.free_space, 'max')"}
+			problems := TargetVerification(targets, 0, false)
+			So(problems[0].SyntaxOk, ShouldBeTrue)
+			So(problems[0].TreeOfProblems.Argument, ShouldEqual, "myUnsupportedFunction")
+		})
+
+		Convey("Check nested function", func() {
+			targets := []string{"movingAverage(myUnsupportedFunction(), '10min')"}
+			problems := TargetVerification(targets, 0, false)
+			So(problems[0].SyntaxOk, ShouldBeTrue)
+			So(problems[0].TreeOfProblems.Problems[0].Argument, ShouldEqual, "myUnsupportedFunction")
+		})
+
+		Convey("Check target only with metric (without Graphite-function)", func() {
+			targets := []string{"my.metric"}
+			problems := TargetVerification(targets, 0, false)
+			So(problems[0].SyntaxOk, ShouldBeTrue)
+			So(problems[0].TreeOfProblems, ShouldBeNil)
+		})
+
+		Convey("Check target with space symbol in metric name", func() {
+			targets := []string{"a b"}
+			problems := TargetVerification(targets, 0, false)
+			So(problems[0].SyntaxOk, ShouldBeFalse)
+			So(problems[0].TreeOfProblems, ShouldBeNil)
 		})
 	})
 }

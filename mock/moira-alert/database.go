@@ -148,6 +148,21 @@ func (mr *MockDatabaseMockRecorder) CleanUpAbandonedRetentions() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CleanUpAbandonedRetentions", reflect.TypeOf((*MockDatabase)(nil).CleanUpAbandonedRetentions))
 }
 
+// CleanUpAbandonedTags mocks base method.
+func (m *MockDatabase) CleanUpAbandonedTags() (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CleanUpAbandonedTags")
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CleanUpAbandonedTags indicates an expected call of CleanUpAbandonedTags.
+func (mr *MockDatabaseMockRecorder) CleanUpAbandonedTags() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CleanUpAbandonedTags", reflect.TypeOf((*MockDatabase)(nil).CleanUpAbandonedTags))
+}
+
 // CleanUpAbandonedTriggerLastCheck mocks base method.
 func (m *MockDatabase) CleanUpAbandonedTriggerLastCheck() error {
 	m.ctrl.T.Helper()
@@ -799,6 +814,21 @@ func (m *MockDatabase) GetTriggerChecks(arg0 []string) ([]*moira.TriggerCheck, e
 func (mr *MockDatabaseMockRecorder) GetTriggerChecks(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggerChecks", reflect.TypeOf((*MockDatabase)(nil).GetTriggerChecks), arg0)
+}
+
+// GetTriggerIDsStartWith mocks base method.
+func (m *MockDatabase) GetTriggerIDsStartWith(arg0 string) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTriggerIDsStartWith", arg0)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTriggerIDsStartWith indicates an expected call of GetTriggerIDsStartWith.
+func (mr *MockDatabaseMockRecorder) GetTriggerIDsStartWith(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTriggerIDsStartWith", reflect.TypeOf((*MockDatabase)(nil).GetTriggerIDsStartWith), arg0)
 }
 
 // GetTriggerLastCheck mocks base method.
@@ -1493,18 +1523,18 @@ func (mr *MockDatabaseMockRecorder) SetUsernameID(arg0, arg1, arg2 interface{}) 
 }
 
 // SubscribeMetricEvents mocks base method.
-func (m *MockDatabase) SubscribeMetricEvents(arg0 *tomb.Tomb) (<-chan *moira.MetricEvent, error) {
+func (m *MockDatabase) SubscribeMetricEvents(arg0 *tomb.Tomb, arg1 *moira.SubscribeMetricEventsParams) (<-chan *moira.MetricEvent, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SubscribeMetricEvents", arg0)
+	ret := m.ctrl.Call(m, "SubscribeMetricEvents", arg0, arg1)
 	ret0, _ := ret[0].(<-chan *moira.MetricEvent)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // SubscribeMetricEvents indicates an expected call of SubscribeMetricEvents.
-func (mr *MockDatabaseMockRecorder) SubscribeMetricEvents(arg0 interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) SubscribeMetricEvents(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SubscribeMetricEvents", reflect.TypeOf((*MockDatabase)(nil).SubscribeMetricEvents), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SubscribeMetricEvents", reflect.TypeOf((*MockDatabase)(nil).SubscribeMetricEvents), arg0, arg1)
 }
 
 // UpdateMetricsHeartbeat mocks base method.

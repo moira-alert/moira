@@ -11,4 +11,5 @@ const (
 	LogFieldNameTriggerID       = "moira.trigger.id"
 	LogFieldNameTriggerName     = "moira.trigger.name"
 	LogFieldNameSubscriptionID  = "moira.subscription.id"
+	LogFieldNameStackTrace      = "stackTrace"
 )

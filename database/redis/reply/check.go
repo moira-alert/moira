@@ -9,7 +9,7 @@ import (
 	"github.com/moira-alert/moira/database"
 )
 
-//TODO(litleleprikon): START remove in moira v2.8.0. Compatibility with moira < v2.6.0
+// TODO(litleleprikon): START remove in moira v2.8.0. Compatibility with moira < v2.6.0
 const firstTarget = "t1"
 
 //TODO(litleleprikon): END remove in moira v2.8.0. Compatibility with moira < v2.6.0

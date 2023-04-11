@@ -3,6 +3,7 @@ package redis
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -149,6 +150,23 @@ func (connector *DbConnector) SaveTrigger(triggerID string, trigger *moira.Trigg
 	return nil
 }
 
+// GetTriggerIDsStartWith returns triggers which have ID starting with "prefix" parameter.
+func (connector *DbConnector) GetTriggerIDsStartWith(prefix string) ([]string, error) {
+	triggers, err := connector.GetAllTriggerIDs()
+	if err != nil {
+		return nil, err
+	}
+
+	var matchedTriggers []string
+	for _, id := range triggers {
+		if strings.HasPrefix(id, prefix) {
+			matchedTriggers = append(matchedTriggers, id)
+		}
+	}
+
+	return matchedTriggers, nil
+}
+
 func (connector *DbConnector) updateTrigger(triggerID string, newTrigger *moira.Trigger, oldTrigger *moira.Trigger) error {
 	bytes, err := reply.GetTriggerBytes(triggerID, newTrigger)
 	if err != nil {
@@ -202,8 +220,10 @@ func (connector *DbConnector) preSaveTrigger(newTrigger *moira.Trigger, oldTrigg
 	newTrigger.UpdatedAt = &now
 	if oldTrigger != nil {
 		newTrigger.CreatedAt = oldTrigger.CreatedAt
+		newTrigger.CreatedBy = oldTrigger.CreatedBy
 	} else {
 		newTrigger.CreatedAt = &now
+		newTrigger.CreatedBy = newTrigger.UpdatedBy
 	}
 }
 
@@ -310,7 +330,10 @@ func (connector *DbConnector) getTriggerWithTags(triggerRaw *redis.StringCmd, ta
 	}
 	triggerTags, err := tagsRaw.Result()
 	if err != nil {
-		connector.logger.Errorf("Error getting trigger tags, id: %s, error: %s", triggerID, err.Error())
+		connector.logger.Error().
+			String(moira.LogFieldNameTriggerID, triggerID).
+			Error(err).
+			Msg("Error getting trigger tags")
 	}
 
 	if len(triggerTags) > 0 {

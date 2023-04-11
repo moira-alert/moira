@@ -3,6 +3,7 @@ package controller
 import (
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 	"testing"
 
@@ -130,7 +131,7 @@ func TestCreateContact(t *testing.T) {
 			expected := CreateContact(dataBase, contact, userLogin, "")
 			So(expected, ShouldResemble, &api.ErrorResponse{
 				ErrorText:      err.Error(),
-				HTTPStatusCode: 500,
+				HTTPStatusCode: http.StatusInternalServerError,
 				StatusText:     "Internal Server Error",
 				Err:            err,
 			})
@@ -202,7 +203,7 @@ func TestCreateContact(t *testing.T) {
 			expected := CreateContact(dataBase, contact, "", teamID)
 			So(expected, ShouldResemble, &api.ErrorResponse{
 				ErrorText:      err.Error(),
-				HTTPStatusCode: 500,
+				HTTPStatusCode: http.StatusInternalServerError,
 				StatusText:     "Internal Server Error",
 				Err:            err,
 			})

@@ -393,7 +393,8 @@ func TestMetricSubscription(t *testing.T) {
 	pattern := "my.test.*.metric*"
 	Convey("Subscription manipulation", t, func() {
 		var tomb1 tomb.Tomb
-		ch, err := dataBase.SubscribeMetricEvents(&tomb1)
+		ch, err := dataBase.SubscribeMetricEvents(&tomb1,
+			&moira.SubscribeMetricEventsParams{BatchSize: 100, Delay: time.Duration(0)})
 		So(err, ShouldBeNil)
 		So(ch, ShouldNotBeNil)
 
@@ -421,7 +422,7 @@ func TestMetricSubscription(t *testing.T) {
 				metricEvent, ok := <-ch
 				if !ok {
 					numberOfChecks++
-					logger.Info("Channel closed, end test")
+					logger.Info().Msg("Channel closed, end test")
 					return nil
 				}
 				if metricEvent.Metric == metric1 {
@@ -443,6 +444,7 @@ func TestMetricSubscription(t *testing.T) {
 		So(err, ShouldBeNil)
 		err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric2: met2})
 		So(err, ShouldBeNil)
+		time.Sleep(time.Second * 6)
 		tomb1.Kill(nil)
 		err = tomb1.Wait()
 		So(err, ShouldBeNil)
@@ -492,7 +494,8 @@ func TestMetricsStoringErrorConnection(t *testing.T) {
 		So(err, ShouldNotBeNil)
 
 		var tomb1 tomb.Tomb
-		ch, err := dataBase.SubscribeMetricEvents(&tomb1)
+		ch, err := dataBase.SubscribeMetricEvents(&tomb1,
+			&moira.SubscribeMetricEventsParams{BatchSize: 100, Delay: time.Duration(0)})
 		So(err, ShouldNotBeNil)
 		So(ch, ShouldBeNil)
 	})
@@ -736,6 +739,8 @@ func TestCleanupAbandonedPatternMetrics(t *testing.T) {
 	defer dataBase.Flush()
 
 	Convey("Given 3 metrics matched with pattern", t, func() {
+		client := *dataBase.client
+
 		const (
 			pattern = "my.test.metric*"
 			metric1 = "my.test.metric1"
@@ -800,8 +805,6 @@ func TestCleanupAbandonedPatternMetrics(t *testing.T) {
 		})
 
 		Convey("When clean up pattern metrics was called with non-existent metric-data in database", func() {
-			client := *dataBase.client
-
 			client.Del(dataBase.context, metricDataKey(metric1))
 			client.Del(dataBase.context, metricDataKey(metric2))
 			client.Del(dataBase.context, metricDataKey(metric3))
@@ -817,16 +820,14 @@ func TestCleanupAbandonedPatternMetrics(t *testing.T) {
 			err = dataBase.CleanUpAbandonedPatternMetrics()
 			So(err, ShouldBeNil)
 
-			Convey("pattern metric Set shouldn't be in database", func() {
-				key := patternMetricsKey(pattern)
-				isKeyExists := client.Exists(dataBase.context, key).Val() == 1
-				So(isKeyExists, ShouldBeFalse)
+			Convey("pattern shouldn't be in database", func() {
+				patternKey := patternMetricsKey(pattern)
+				isPatternExists := client.Exists(dataBase.context, patternKey).Val() == 1
+				So(isPatternExists, ShouldBeFalse)
 			})
 		})
 
-		Convey("When clean up pattern metrics was called with existent and non-existent metric-data in database", func() {
-			client := *dataBase.client
-
+		Convey("When clean up pattern metrics was called with existent and non-existent metric-data's in database", func() {
 			client.Del(dataBase.context, metricDataKey(metric1))
 			client.Del(dataBase.context, metricDataKey(metric2))
 
@@ -846,7 +847,7 @@ func TestCleanupAbandonedPatternMetrics(t *testing.T) {
 			err = dataBase.CleanUpAbandonedPatternMetrics()
 			So(err, ShouldBeNil)
 
-			Convey("metric1 and metric2 values of set shouldn't be and metric3 value should be in database", func() {
+			Convey("metric1 and metric2 values of pattern set shouldn't be and metric3 value should be in database", func() {
 				key := patternMetricsKey(pattern)
 				isKeyExists := client.Exists(dataBase.context, key).Val() == 1
 				So(isKeyExists, ShouldBeTrue)

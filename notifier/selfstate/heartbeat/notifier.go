@@ -20,7 +20,10 @@ func GetNotifier(logger moira.Logger, database moira.Database) Heartbeater {
 
 func (check notifier) Check(int64) (int64, bool, error) {
 	if state, _ := check.db.GetNotifierState(); state != moira.SelfStateOK {
-		check.log.Errorf("%s. Send message.", check.GetErrorMessage())
+		check.log.Error().
+			String("error", check.GetErrorMessage()).
+			Msg("Notifier is not healthy")
+
 		return 0, true, nil
 	}
 	return 0, false, nil

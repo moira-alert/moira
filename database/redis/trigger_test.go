@@ -25,7 +25,7 @@ func TestTriggerStoring(t *testing.T) {
 
 	Convey("Trigger manipulation", t, func() {
 		Convey("Test trigger has subscriptions with AnyTag is true", func() {
-			trigger := &triggers[0]
+			trigger := &testTriggers[0]
 			subscription := moira.SubscriptionData{
 				ID:                "subscriptionID-00000000000001",
 				Enabled:           true,
@@ -52,7 +52,7 @@ func TestTriggerStoring(t *testing.T) {
 		})
 
 		Convey("Test save-get-remove", func() {
-			trigger := &triggers[0]
+			trigger := &testTriggers[0]
 
 			//Check for not existing not written trigger
 			actual, err := dataBase.GetTrigger(trigger.ID)
@@ -99,7 +99,7 @@ func TestTriggerStoring(t *testing.T) {
 
 			//Now just add tag and pattern in trigger and save it
 			trigger = nil
-			changedTrigger := &triggers[1]
+			changedTrigger := &testTriggers[1]
 			err = dataBase.SaveTrigger(changedTrigger.ID, changedTrigger)
 			So(err, ShouldBeNil)
 
@@ -139,7 +139,7 @@ func TestTriggerStoring(t *testing.T) {
 			oldTag := changedTrigger.Tags[1]
 			oldPattern := changedTrigger.Patterns[1]
 			changedTrigger = nil
-			changedAgainTrigger := &triggers[2]
+			changedAgainTrigger := &testTriggers[2]
 			err = dataBase.SaveTrigger(changedAgainTrigger.ID, changedAgainTrigger)
 			So(err, ShouldBeNil)
 
@@ -228,7 +228,7 @@ func TestTriggerStoring(t *testing.T) {
 		})
 
 		Convey("Save trigger with lastCheck and throttling and GetTriggerChecks", func() {
-			trigger := triggers[5]
+			trigger := testTriggers[5]
 			triggerCheck := &moira.TriggerCheck{
 				Trigger:   trigger,
 				LastCheck: moira.CheckData{},
@@ -473,7 +473,7 @@ func TestTriggerStoring(t *testing.T) {
 
 		Convey("Test trigger manipulations update 'triggers to reindex' list", func() {
 			dataBase.Flush()
-			trigger := &triggers[0]
+			trigger := &testTriggers[0]
 
 			err := dataBase.SaveTrigger(trigger.ID, trigger)
 			So(err, ShouldBeNil)
@@ -487,7 +487,7 @@ func TestTriggerStoring(t *testing.T) {
 			So(actual, ShouldResemble, []string{trigger.ID})
 
 			// Now update trigger
-			trigger = &triggers[1]
+			trigger = &testTriggers[1]
 
 			err = dataBase.SaveTrigger(trigger.ID, trigger)
 			So(err, ShouldBeNil)
@@ -497,7 +497,7 @@ func TestTriggerStoring(t *testing.T) {
 			So(actual, ShouldResemble, []string{trigger.ID})
 
 			// Add new trigger
-			trigger = &triggers[5]
+			trigger = &testTriggers[5]
 
 			err = dataBase.SaveTrigger(trigger.ID, trigger)
 			So(err, ShouldBeNil)
@@ -699,7 +699,7 @@ func TestTriggerErrorConnection(t *testing.T) {
 		So(err, ShouldNotBeNil)
 		So(actual2, ShouldBeNil)
 
-		err = dataBase.SaveTrigger("", &triggers[0])
+		err = dataBase.SaveTrigger("", &testTriggers[0])
 		So(err, ShouldNotBeNil)
 
 		err = dataBase.RemoveTrigger("")
@@ -720,12 +720,16 @@ func TestDbConnector_preSaveTrigger(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 	systemClock := mock_clock.NewMockClock(mockCtrl)
-	systemClock.EXPECT().Now().Return(testTime).Times(4)
+	systemClock.EXPECT().Now().Return(testTime).Times(6)
 	connector := &DbConnector{clock: systemClock}
 	patterns := []string{"pattern-1", "pattern-2"}
 
 	Convey("When a local trigger", t, func() {
-		trigger := &moira.Trigger{ID: "trigger-id", Patterns: patterns}
+		trigger := &moira.Trigger{
+			ID:        "trigger-id",
+			Patterns:  patterns,
+			UpdatedBy: "awesome_user",
+		}
 
 		Convey("UpdatedAt CreatedAt fields should be set `now` on creation.", func() {
 			connector.preSaveTrigger(trigger, nil)
@@ -741,6 +745,26 @@ func TestDbConnector_preSaveTrigger(t *testing.T) {
 			So(trigger.Patterns, ShouldResemble, patterns)
 			So(*trigger.CreatedAt, ShouldResemble, time.Date(2022, time.June, 5, 10, 0, 0, 0, time.UTC).Unix())
 			So(*trigger.UpdatedAt, ShouldResemble, time.Date(2022, time.June, 6, 10, 0, 0, 0, time.UTC).Unix())
+		})
+
+		Convey("UpdatedBy CreatedBy fields should be set on creation.", func() {
+			connector.preSaveTrigger(trigger, nil)
+			So(trigger.Patterns, ShouldResemble, patterns)
+			So(trigger.CreatedBy, ShouldResemble, "awesome_user")
+			So(trigger.UpdatedBy, ShouldResemble, "awesome_user")
+		})
+
+		Convey("UpdatedBy CreatedBy fields should be change on update.", func() {
+			oldTrigger := &moira.Trigger{
+				ID:        "trigger-id",
+				Patterns:  patterns,
+				CreatedBy: "old_awesome_user",
+				UpdatedBy: "old_awesome_user",
+			}
+			connector.preSaveTrigger(trigger, oldTrigger)
+			So(trigger.Patterns, ShouldResemble, patterns)
+			So(trigger.CreatedBy, ShouldResemble, "old_awesome_user")
+			So(trigger.UpdatedBy, ShouldResemble, "awesome_user")
 		})
 	})
 
@@ -765,7 +789,51 @@ func TestDbConnector_preSaveTrigger(t *testing.T) {
 	})
 }
 
-var triggers = []moira.Trigger{
+func TestDbConnector_GetTriggerIDsStartWith(t *testing.T) {
+	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
+	db := NewTestDatabase(logger)
+	db.Flush()
+	defer db.Flush()
+
+	Convey("Given 3 triggers in DB", t, func() {
+		const prefix = "prefix"
+		var triggerWithPrefix1 = moira.Trigger{
+			ID: prefix + "1",
+		}
+		var triggerWithPrefix2 = moira.Trigger{
+			ID: prefix + "2",
+		}
+		var triggerWithoutPrefix = moira.Trigger{
+			ID: "without-prefix",
+		}
+		var triggers = []moira.Trigger{
+			triggerWithPrefix1,
+			triggerWithPrefix2,
+			triggerWithoutPrefix,
+		}
+
+		for _, trigger := range triggers {
+			err := db.SaveTrigger(trigger.ID, &trigger)
+			So(err, ShouldBeNil)
+		}
+
+		Convey("When GetTriggerIDsStartWith was called", func() {
+			matchedTriggers, err := db.GetTriggerIDsStartWith(prefix)
+
+			Convey("Returned triggers should resemble triggers with prefix", func() {
+				So(err, ShouldBeNil)
+				expected := []string{triggerWithPrefix1.ID, triggerWithPrefix2.ID}
+
+				So(matchedTriggers, ShouldHaveLength, len(expected))
+				for _, trigger := range expected {
+					So(matchedTriggers, ShouldContain, trigger)
+				}
+			})
+		})
+	})
+}
+
+var testTriggers = []moira.Trigger{
 	{
 		ID:           "triggerID-0000000000001",
 		Name:         "test trigger 1 v1.0",

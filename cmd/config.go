@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strings"
 
 	"github.com/moira-alert/moira/metrics"
@@ -141,7 +141,7 @@ func (config *RemoteConfig) GetRemoteSourceSettings() *remoteSource.Config {
 
 // ReadConfig parses config file by the given path into Moira-used type
 func ReadConfig(configFileName string, config interface{}) error {
-	configYaml, err := ioutil.ReadFile(configFileName)
+	configYaml, err := os.ReadFile(configFileName)
 	if err != nil {
 		return fmt.Errorf("can't read file [%s] [%s]", configFileName, err.Error())
 	}
