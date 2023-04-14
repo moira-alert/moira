@@ -32,6 +32,7 @@ func (worker *FetchNotificationsWorker) Start() {
 				worker.Notifier.StopSenders()
 				return nil
 			case <-checkTicker.C:
+				worker.Logger.Debug().Msg("starting processScheduledNotifications...")
 				if err := worker.processScheduledNotifications(); err != nil {
 					switch err.(type) {
 					case notifierInBadStateError:
@@ -67,6 +68,11 @@ func (worker *FetchNotificationsWorker) processScheduledNotifications() error {
 		return notifierInBadStateError(fmt.Sprintf("notifier in a bad state: %v", state))
 	}
 	notifications, err := worker.Database.FetchNotifications(time.Now().Unix(), worker.Notifier.GetReadBatchSize())
+
+	worker.Logger.Debug().
+		Int("notifications fetched", len(notifications)).
+		Msg("Fetched notifications")
+
 	if err != nil {
 		return err
 	}
