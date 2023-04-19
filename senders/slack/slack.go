@@ -23,7 +23,7 @@ const (
 	exceptionEmoji = ":moira-state-exception:"
 	testEmoji      = ":moira-state-test:"
 
-	messageMaxCharacters = 4000
+	messageMaxCharacters = 10000
 
 	//see errors https://api.slack.com/methods/chat.postMessage
 	ErrorTextChannelArchived = "is_archived"
