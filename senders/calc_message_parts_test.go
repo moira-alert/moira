@@ -14,22 +14,22 @@ func TestCalculateMessagePartsLength(t *testing.T) {
 			So(eventsNewLen, ShouldResemble, 78)
 		})
 
-		Convey("descLen > maxChars/2 && eventsLen <= maxChars/2", func() {
+		Convey("eventsLen less than percent for event", func() {
+			descNewLen, eventsNewLen := CalculateMessagePartsLength(100, 70, 10)
+			So(descNewLen, ShouldResemble, 70)
+			So(eventsNewLen, ShouldResemble, 10)
+		})
+
+		Convey("eventsLen more than percent for event", func() {
 			descNewLen, eventsNewLen := CalculateMessagePartsLength(100, 70, 40)
-			So(descNewLen, ShouldResemble, 50)
-			So(eventsNewLen, ShouldResemble, 40)
+			So(descNewLen, ShouldResemble, 70)
+			So(eventsNewLen, ShouldResemble, 30)
 		})
 
-		Convey("eventsLen > maxChars/2 && descLen <= maxChars/2", func() {
-			descNewLen, eventsNewLen := CalculateMessagePartsLength(100, 40, 70)
-			So(descNewLen, ShouldResemble, 40)
-			So(eventsNewLen, ShouldResemble, 60)
-		})
-
-		Convey("Both greater than maxChars/2", func() {
+		Convey("Both greater than percent", func() {
 			descNewLen, eventsNewLen := CalculateMessagePartsLength(100, 70, 70)
-			So(descNewLen, ShouldResemble, 40)
-			So(eventsNewLen, ShouldResemble, 50)
+			So(descNewLen, ShouldResemble, 70)
+			So(eventsNewLen, ShouldResemble, 30)
 		})
 	})
 }

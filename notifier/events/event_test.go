@@ -657,7 +657,7 @@ var subscriptionToIgnoreWarnings = moira.SubscriptionData{
 	IgnoreWarnings:    true,
 }
 
-var subscriptionToIgnoreRecoverings = moira.SubscriptionData{
+var subscriptionToIgnoreRecoverings = moira.SubscriptionData{ //nolint todo makeit usefull
 	ID:                "subscriptionID-00000000000003",
 	Enabled:           true,
 	Tags:              []string{"test-tag"},
