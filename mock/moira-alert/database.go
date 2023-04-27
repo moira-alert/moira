@@ -1115,10 +1115,10 @@ func (mr *MockDatabaseMockRecorder) RemoveMetricRetention(arg0 interface{}) *gom
 }
 
 // RemoveMetricValues mocks base method.
-func (m *MockDatabase) RemoveMetricValues(arg0 string, arg1 int64) (bool, error) {
+func (m *MockDatabase) RemoveMetricValues(arg0 string, arg1 int64) (int64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RemoveMetricValues", arg0, arg1)
-	ret0, _ := ret[0].(bool)
+	ret0, _ := ret[0].(int64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
