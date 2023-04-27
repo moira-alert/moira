@@ -306,16 +306,17 @@ func (connector *DbConnector) RemoveMetricRetention(metric string) error {
 }
 
 // RemoveMetricValues remove metric timestamps values from 0 to given time
-func (connector *DbConnector) RemoveMetricValues(metric string, toTime int64) (bool, error) {
+func (connector *DbConnector) RemoveMetricValues(metric string, toTime int64) (int64, error) {
 	if !connector.needRemoveMetrics(metric) {
-		return false, nil
+		return 0, nil
 	}
 	c := *connector.client
-	if _, err := c.ZRemRangeByScore(connector.context, metricDataKey(metric), "-inf", strconv.FormatInt(toTime, 10)).Result(); err != nil {
-		return false, fmt.Errorf("failed to remove metrics from -inf to %v, error: %v", toTime, err)
+	result, err := c.ZRemRangeByScore(connector.context, metricDataKey(metric), "-inf", strconv.FormatInt(toTime, 10)).Result()
+	if err != nil {
+		return 0, fmt.Errorf("failed to remove metrics from -inf to %v, error: %v", toTime, err)
 	}
 
-	return true, nil
+	return result, nil
 }
 
 // GetMetricsTTLSeconds returns maximum time in seconds to store metrics in Redis
@@ -344,22 +345,20 @@ func (connector *DbConnector) needRemoveMetrics(metric string) bool {
 
 func cleanUpOutdatedMetricsOnRedisNode(connector *DbConnector, client redis.UniversalClient, duration time.Duration) error {
 	metricsIterator := client.ScanType(connector.context, 0, metricDataKey("*"), 0, "zset").Iterator()
-	var count int
+	var count int64
 
 	for metricsIterator.Next(connector.context) {
 		key := metricsIterator.Val()
 		metric := strings.TrimPrefix(key, metricDataKey(""))
-		ok, err := flushMetric(connector, metric, duration)
+		deletedCount, err := flushMetric(connector, metric, duration)
 		if err != nil {
 			return err
 		}
-		if ok {
-			count++
-		}
+		count += deletedCount
 	}
 
 	connector.logger.Info().
-		Int("count deleted metrics", count).
+		Int64("count deleted metrics", count).
 		Msg("Cleaned up usefully metrics for trigger")
 
 	return nil
@@ -555,14 +554,14 @@ func (connector *DbConnector) RemoveAllMetrics() error {
 	return nil
 }
 
-func flushMetric(database moira.Database, metric string, duration time.Duration) (bool, error) {
+func flushMetric(database moira.Database, metric string, duration time.Duration) (int64, error) {
 	lastTs := time.Now().UTC()
 	toTs := lastTs.Add(duration).Unix()
-	ok, err := database.RemoveMetricValues(metric, toTs)
+	deletedCount, err := database.RemoveMetricValues(metric, toTs)
 	if err != nil {
-		return ok, err
+		return deletedCount, err
 	}
-	return ok, nil
+	return deletedCount, nil
 }
 
 var patternsListKey = "moira-pattern-list"
