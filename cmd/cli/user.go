@@ -110,7 +110,7 @@ func usersCleanup(logger moira.Logger, database moira.Database, users []string, 
 
 	logger.Info().
 		Int("count", len(usersMap)).
-		Msg("actual users")
+		Msg("Actual users")
 
 	contacts, err := database.GetAllContacts()
 	if err != nil {
