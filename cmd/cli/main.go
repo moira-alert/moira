@@ -51,7 +51,6 @@ var (
 	cleanupTags       = flag.Bool("cleanup-tags", false, "Delete abandoned tags.")
 	cleanupMetrics    = flag.Bool("cleanup-metrics", false, "Delete outdated metrics.")
 	cleanupRetentions = flag.Bool("cleanup-retentions", false, "Delete abandoned retentions.")
-	cleanupPatterns   = flag.Bool("cleanup-patterns", false, "Delete abandoned patterns.")
 	userDel           = flag.String("user-del", "", "Delete all contacts and subscriptions for a user")
 	fromUser          = flag.String("from-user", "", "Transfer subscriptions and contacts from user.")
 	toUser            = flag.String("to-user", "", "Transfer subscriptions and contacts to user.")
@@ -238,21 +237,6 @@ func main() { //nolint
 		}
 		log.Info().Msg("Cleanup of abandoned retentions finished")
 	}
-
-	// ATTENTION DON'T call it in usual live.
-	if *cleanupPatterns {
-		log := logger.String(moira.LogFieldNameContext, "cleanup-patterns")
-
-		log.Info().Msg("Cleanup of abandoned pattern metrics started")
-		err := handleCleanUpAbandonedPatternMetrics(dataBase)
-		if err != nil {
-			log.Error().
-				Error(err).
-				Msg("Failed to cleanup abandoned pattern metrics")
-		}
-		log.Info().Msg("Cleanup of abandoned pattern metrics finished")
-	}
-	// end attention
 
 	if *pushTriggerDump {
 		logger.Info().Msg("Dump push started")

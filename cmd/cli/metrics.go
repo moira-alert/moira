@@ -24,10 +24,6 @@ func handleCleanUpAbandonedRetentions(database moira.Database) error {
 	return database.CleanUpAbandonedRetentions()
 }
 
-func handleCleanUpAbandonedPatternMetrics(database moira.Database) error {
-	return database.CleanUpAbandonedPatternMetrics()
-}
-
 func handleCleanUpAbandonedTriggerLastCheck(database moira.Database) error {
 	return database.CleanUpAbandonedTriggerLastCheck()
 }
