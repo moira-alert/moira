@@ -1,4 +1,4 @@
-package default_sender
+package message_builder
 
 import (
 	"fmt"
@@ -12,22 +12,22 @@ import (
 	"github.com/moira-alert/moira"
 )
 
-// DefaultSender is struct for default sender.
-type DefaultSender struct {
+// MessageBuilder is struct for default sender.
+type MessageBuilder struct {
 	Logger               moira.Logger
 	frontURI             string
 	messageMaxCharacters int
 	location             *time.Location
 }
 
-// NewDefaultSender is construct for DefaultSender struct.
-func NewDefaultSender(
+// NewMessageBuilder is construct for MessageBuilder struct.
+func NewMessageBuilder(
 	frontURI string,
 	messageMaxCharacters int,
 	logger moira.Logger,
 	location *time.Location,
-) *DefaultSender {
-	return &DefaultSender{
+) *MessageBuilder {
+	return &MessageBuilder{
 		frontURI:             frontURI,
 		messageMaxCharacters: messageMaxCharacters,
 		Logger:               logger,
@@ -36,7 +36,7 @@ func NewDefaultSender(
 }
 
 // BuildMessage makes message body this collapse events or description.
-func (sender *DefaultSender) BuildMessage(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
+func (sender *MessageBuilder) BuildMessage(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
 	var message strings.Builder
 
 	title := sender.buildTitle(events, trigger)
@@ -65,7 +65,7 @@ func (sender *DefaultSender) BuildMessage(events moira.NotificationEvents, trigg
 	return message.String()
 }
 
-func (sender *DefaultSender) buildDescription(trigger moira.TriggerData) string {
+func (sender *MessageBuilder) buildDescription(trigger moira.TriggerData) string {
 	desc := trigger.Desc
 	if trigger.Desc != "" {
 		desc = string(blackfriday.Run([]byte(desc), blackfriday.WithRenderer(&slackdown.Renderer{})))
@@ -74,7 +74,7 @@ func (sender *DefaultSender) buildDescription(trigger moira.TriggerData) string 
 	return desc
 }
 
-func (sender *DefaultSender) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData) string {
+func (sender *MessageBuilder) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData) string {
 	title := fmt.Sprintf("*%s*", events.GetSubjectState())
 	triggerURI := trigger.GetTriggerURI(sender.frontURI)
 	if triggerURI != "" {
@@ -94,7 +94,7 @@ func (sender *DefaultSender) buildTitle(events moira.NotificationEvents, trigger
 
 // buildEventsString builds the string from moira events and limits it to charsForEvents.
 // if n is negative buildEventsString does not limit the events string
-func (sender *DefaultSender) buildEventsString(events moira.NotificationEvents, charsForEvents int, throttled bool) string {
+func (sender *MessageBuilder) buildEventsString(events moira.NotificationEvents, charsForEvents int, throttled bool) string {
 	charsForThrottleMsg := 0
 	throttleMsg := "\nPlease, *fix your system or tune this trigger* to generate less events."
 	if throttled {

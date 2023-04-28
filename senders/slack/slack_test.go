@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/moira-alert/moira/senders/default_sender"
+	"github.com/moira-alert/moira/senders/message_builder"
 
 	"github.com/moira-alert/moira"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
@@ -30,28 +30,28 @@ func TestInit(t *testing.T) {
 			Convey("use_emoji not set", func() {
 				err := sender.Init(senderSettings, logger, nil, "")
 				So(err, ShouldBeNil)
-				So(sender, ShouldResemble, Sender{DefaultSender: default_sender.NewDefaultSender("", messageMaxCharacters, logger, nil), client: client})
+				So(sender, ShouldResemble, Sender{MessageBuilder: message_builder.NewMessageBuilder("", messageMaxCharacters, logger, nil), client: client})
 			})
 
 			Convey("use_emoji set to false", func() {
 				senderSettings["use_emoji"] = "false"
 				err := sender.Init(senderSettings, logger, nil, "")
 				So(err, ShouldBeNil)
-				So(sender, ShouldResemble, Sender{DefaultSender: default_sender.NewDefaultSender("", messageMaxCharacters, logger, nil), client: client})
+				So(sender, ShouldResemble, Sender{MessageBuilder: message_builder.NewMessageBuilder("", messageMaxCharacters, logger, nil), client: client})
 			})
 
 			Convey("use_emoji set to true", func() {
 				senderSettings["use_emoji"] = "true"
 				err := sender.Init(senderSettings, logger, nil, "")
 				So(err, ShouldBeNil)
-				So(sender, ShouldResemble, Sender{useEmoji: true, DefaultSender: default_sender.NewDefaultSender("", messageMaxCharacters, logger, nil), client: client})
+				So(sender, ShouldResemble, Sender{useEmoji: true, MessageBuilder: message_builder.NewMessageBuilder("", messageMaxCharacters, logger, nil), client: client})
 			})
 
 			Convey("use_emoji set to something wrong", func() {
 				senderSettings["use_emoji"] = "123"
 				err := sender.Init(senderSettings, logger, nil, "")
 				So(err, ShouldBeNil)
-				So(sender, ShouldResemble, Sender{DefaultSender: default_sender.NewDefaultSender("", messageMaxCharacters, logger, nil), client: client})
+				So(sender, ShouldResemble, Sender{MessageBuilder: message_builder.NewMessageBuilder("", messageMaxCharacters, logger, nil), client: client})
 			})
 		})
 	})

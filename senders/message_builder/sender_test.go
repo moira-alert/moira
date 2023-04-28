@@ -1,4 +1,4 @@
-package default_sender
+package message_builder
 
 import (
 	"strings"
@@ -14,7 +14,7 @@ const messageMaxCharacters = 500
 
 func TestBuildMessage(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
-	sender := DefaultSender{
+	sender := MessageBuilder{
 		location:             location,
 		frontURI:             "http://moira.url",
 		messageMaxCharacters: messageMaxCharacters,
@@ -131,7 +131,7 @@ some other text italic text
 
 func TestBuildDescription(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
-	sender := DefaultSender{location: location, frontURI: "http://moira.url"}
+	sender := MessageBuilder{location: location, frontURI: "http://moira.url"}
 	Convey("Build desc tests", t, func() {
 		trigger := moira.TriggerData{
 			Desc: `# header1

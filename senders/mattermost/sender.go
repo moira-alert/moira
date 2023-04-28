@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/moira-alert/moira/senders/default_sender"
+	"github.com/moira-alert/moira/senders/message_builder"
 
 	"github.com/mattermost/mattermost-server/v6/model"
 	"github.com/moira-alert/moira"
@@ -17,7 +17,7 @@ import (
 // It implements moira.Sender.
 // You must call Init method before SendEvents method.
 type Sender struct {
-	*default_sender.DefaultSender
+	*message_builder.MessageBuilder
 	client Client
 }
 
@@ -55,7 +55,7 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 		return fmt.Errorf("can not read Mattermost front_uri from config")
 	}
 
-	sender.DefaultSender = default_sender.NewDefaultSender(
+	sender.MessageBuilder = message_builder.NewMessageBuilder(
 		senderSettings["front_uri"],
 		messageMaxCharacters,
 		logger,

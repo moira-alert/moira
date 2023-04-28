@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/moira-alert/moira/senders/default_sender"
+	"github.com/moira-alert/moira/senders/message_builder"
 
 	"github.com/moira-alert/moira"
 	"github.com/slack-go/slack"
@@ -41,7 +41,7 @@ var stateEmoji = map[moira.State]string{
 type Sender struct {
 	useEmoji bool
 	client   *slack.Client
-	*default_sender.DefaultSender
+	*message_builder.MessageBuilder
 }
 
 // Init read yaml config
@@ -51,7 +51,7 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 		return fmt.Errorf("can not read slack api_token from config")
 	}
 	sender.useEmoji, _ = strconv.ParseBool(senderSettings["use_emoji"])
-	sender.DefaultSender = default_sender.NewDefaultSender(
+	sender.MessageBuilder = message_builder.NewMessageBuilder(
 		senderSettings["front_uri"],
 		messageMaxCharacters,
 		logger,
