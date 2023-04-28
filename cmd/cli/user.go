@@ -110,7 +110,7 @@ func usersCleanup(logger moira.Logger, database moira.Database, users []string, 
 
 	logger.Info().
 		Int("count", len(usersMap)).
-		Msg("actual users")
+		Msg("Actual users")
 
 	contacts, err := database.GetAllContacts()
 	if err != nil {
@@ -119,7 +119,7 @@ func usersCleanup(logger moira.Logger, database moira.Database, users []string, 
 
 	logger.Info().
 		Int("count", len(contacts)).
-		Msg("users in database")
+		Msg("Users in database")
 
 	if len(contacts) == 0 {
 		return nil
@@ -139,7 +139,7 @@ func usersCleanup(logger moira.Logger, database moira.Database, users []string, 
 
 	logger.Info().
 		Int("count", len(usersNotFound)).
-		Msg("users for change")
+		Msg("Users for change")
 
 	for user := range usersNotFound {
 		if config.Delete {
@@ -148,7 +148,7 @@ func usersCleanup(logger moira.Logger, database moira.Database, users []string, 
 			}
 			logger.Debug().
 				String("user", user).
-				Msg("user was deleted")
+				Msg("User was deleted")
 		} else {
 			if err = offNotification(database, user); err != nil {
 				return err
@@ -156,7 +156,7 @@ func usersCleanup(logger moira.Logger, database moira.Database, users []string, 
 
 			logger.Debug().
 				String("user", user).
-				Msg("notification was disabled")
+				Msg("Notification was disabled")
 		}
 	}
 
