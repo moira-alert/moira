@@ -48,7 +48,7 @@ some other text _italics text_`,
 	}
 
 	Convey("Make message", t, func() {
-		message := sender.makeMessage(generateTestEvents(10, trigger.ID), contact, trigger, [][]byte{[]byte{1, 0, 1}}, true) //nolint
+		message := sender.makeMessage(generateTestEvents(10, trigger.ID), contact, trigger, [][]byte{{1, 0, 1}}, true)
 		So(message.GetHeader("From")[0], ShouldEqual, sender.From)
 		So(message.GetHeader("To")[0], ShouldEqual, contact.Value)
 
@@ -107,7 +107,7 @@ func TestEmptyTriggerID(t *testing.T) {
 	}
 
 	Convey("Make message", t, func() {
-		message := sender.makeMessage(generateTestEvents(10, trigger.ID), contact, trigger, [][]byte{[]byte{1, 0, 1}}, true) //nolint
+		message := sender.makeMessage(generateTestEvents(10, trigger.ID), contact, trigger, [][]byte{{1, 0, 1}}, true)
 		So(message.GetHeader("From")[0], ShouldEqual, sender.From)
 		So(message.GetHeader("To")[0], ShouldEqual, contact.Value)
 		messageStr := new(bytes.Buffer)
@@ -115,6 +115,5 @@ func TestEmptyTriggerID(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(messageStr.String(), ShouldNotContainSubstring, "http://localhost/trigger/")
 		So(messageStr.String(), ShouldNotContainSubstring, "<p><a href=3D\"\"></a></p>")
-		//fmt.Println(messageStr.String())
 	})
 }

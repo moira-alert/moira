@@ -102,7 +102,7 @@ type Database interface {
 	GetMetricRetention(metric string) (int64, error)
 	GetMetricsValues(metrics []string, from int64, until int64) (map[string][]*MetricValue, error)
 	RemoveMetricRetention(metric string) error
-	RemoveMetricValues(metric string, toTime int64) error
+	RemoveMetricValues(metric string, toTime int64) (int64, error)
 	RemoveMetricsValues(metrics []string, toTime int64) error
 	GetMetricsTTLSeconds() int64
 
@@ -149,7 +149,6 @@ type Database interface {
 	// Metrics management
 	CleanUpOutdatedMetrics(duration time.Duration) error
 	CleanUpAbandonedRetentions() error
-	CleanUpAbandonedPatternMetrics() error
 	RemoveMetricsByPrefix(pattern string) error
 	RemoveAllMetrics() error
 }
