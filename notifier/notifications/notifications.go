@@ -67,6 +67,7 @@ func (worker *FetchNotificationsWorker) processScheduledNotifications() error {
 		return notifierInBadStateError(fmt.Sprintf("notifier in a bad state: %v", state))
 	}
 	notifications, err := worker.Database.FetchNotifications(time.Now().Unix(), worker.Notifier.GetReadBatchSize())
+
 	if err != nil {
 		return err
 	}
@@ -85,11 +86,22 @@ func (worker *FetchNotificationsWorker) processScheduledNotifications() error {
 			}
 		}
 		p.Events = append(p.Events, notification.Event)
+
+		err = worker.Database.PushContactNotificationToHistory(notification)
+
+		if err != nil {
+			worker.Logger.Warning().Msg("Can't save notification to history" + err.Error())
+		}
+
 		notificationPackages[packageKey] = p
 	}
 	var sendingWG sync.WaitGroup
 	for _, pkg := range notificationPackages {
-		worker.Notifier.Send(pkg, &sendingWG)
+
+		//worker.Notifier.Send(pkg, &sendingWG)
+		worker.Logger.Info().Msg("Sent notification")
+		fmt.Print(pkg)
+
 	}
 	sendingWG.Wait()
 	return nil
