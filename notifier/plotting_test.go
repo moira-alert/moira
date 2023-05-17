@@ -151,7 +151,7 @@ func TestResolveMetricsWindow(t *testing.T) {
 // TestGetMetricDataToShow tests to limited metricsData returns only necessary metricsData
 func TestGetMetricDataToShow(t *testing.T) {
 	givenSeries := map[string][]metricSource.MetricData{
-		"t1": []metricSource.MetricData{ //nolint
+		"t1": {
 			*metricSource.MakeMetricData("metricPrefix.metricName1", []float64{1}, 1, 1),
 			*metricSource.MakeMetricData("metricPrefix.metricName2", []float64{2}, 2, 2),
 			*metricSource.MakeMetricData("metricPrefix.metricName3", []float64{3}, 3, 3),
@@ -224,7 +224,7 @@ func TestFetchAvailableSeries(t *testing.T) {
 
 		Convey("with error ErrEvaluateTargetFailedWithPanic and error again", func() {
 			var err error = local.ErrEvaluateTargetFailedWithPanic{}
-			var secondErr error = errors.New("Test error")
+			var secondErr = errors.New("Test error")
 			gomock.InOrder(
 				source.EXPECT().Fetch("testTarget", int64(17), int64(67), true).Return(nil, err).Times(1),
 				source.EXPECT().Fetch("testTarget", int64(17), int64(67), false).Return(nil, secondErr).Times(1),

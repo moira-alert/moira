@@ -120,20 +120,6 @@ func (mr *MockDatabaseMockRecorder) AddRemoteTriggersToCheck(arg0 interface{}) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddRemoteTriggersToCheck", reflect.TypeOf((*MockDatabase)(nil).AddRemoteTriggersToCheck), arg0)
 }
 
-// CleanUpAbandonedPatternMetrics mocks base method.
-func (m *MockDatabase) CleanUpAbandonedPatternMetrics() error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CleanUpAbandonedPatternMetrics")
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// CleanUpAbandonedPatternMetrics indicates an expected call of CleanUpAbandonedPatternMetrics.
-func (mr *MockDatabaseMockRecorder) CleanUpAbandonedPatternMetrics() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CleanUpAbandonedPatternMetrics", reflect.TypeOf((*MockDatabase)(nil).CleanUpAbandonedPatternMetrics))
-}
-
 // CleanUpAbandonedRetentions mocks base method.
 func (m *MockDatabase) CleanUpAbandonedRetentions() error {
 	m.ctrl.T.Helper()
@@ -1129,11 +1115,12 @@ func (mr *MockDatabaseMockRecorder) RemoveMetricRetention(arg0 interface{}) *gom
 }
 
 // RemoveMetricValues mocks base method.
-func (m *MockDatabase) RemoveMetricValues(arg0 string, arg1 int64) error {
+func (m *MockDatabase) RemoveMetricValues(arg0 string, arg1 int64) (int64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RemoveMetricValues", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // RemoveMetricValues indicates an expected call of RemoveMetricValues.

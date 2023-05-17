@@ -13,28 +13,34 @@ func TestTransformTaggedWildCardToMatchOperator(t *testing.T) {
 		testCases := []struct {
 			PatternWithWildcard string
 			PatternWithRegexp   string
+			IsTransformed       bool
 		}{
 			{
-				`"responseCode={405,406,407,411,413,414,415}"`,
-				`"responseCode=~(405|406|407|411|413|414|415)$"`,
+				`{405,406,407,411,413,414,415}`,
+				`(405|406|407|411|413|414|415)$`,
+				true,
 			},
 			{
-				`"a=b, responseCode={405,406,407,411,413,414,415}"`,
-				`"a=b, responseCode=~(405|406|407|411|413|414|415)$"`,
+				`aaa.{405,406,407,411,413,414,415}.bbb`,
+				`aaa.(405|406|407|411|413|414|415).bbb$`,
+				true,
 			},
 			{
-				`"responseCode={405,406,407,411,413,414,415}, a=b"`,
-				`"responseCode=~(405|406|407|411|413|414|415)$, a=b"`,
+				`aaa.{405,406}.bbb.{301,302}`,
+				`aaa.(405|406).bbb.(301|302)$`,
+				true,
 			},
 			{
-				`"responseCode={405,406,407,411,413,414,415}, returnValue={1, 2, 3}"`,
-				`"responseCode=~(405|406|407|411|413|414|415)$, returnValue=~(1|2|3)$"`,
+				`a(b|c|d)e`,
+				`a(b|c|d)e`,
+				false,
 			},
 		}
 
 		for _, testCase := range testCases {
-			result := transformWildcardToRegexpInSeriesByTag(testCase.PatternWithWildcard)
+			result, isTransformed := transformWildcardToRegexpInSeriesByTag(testCase.PatternWithWildcard)
 			So(result, ShouldEqual, testCase.PatternWithRegexp)
+			So(isTransformed, ShouldEqual, testCase.IsTransformed)
 		}
 	})
 }
@@ -54,9 +60,14 @@ func TestParseSeriesByTag(t *testing.T) {
 			{"seriesByTag(\"a=~b\")", []TagSpec{{"a", MatchOperator, "b"}}},
 			{"seriesByTag(\"a!=~b\")", []TagSpec{{"a", NotMatchOperator, "b"}}},
 			{"seriesByTag(\"a=\")", []TagSpec{{"a", EqualOperator, ""}}},
-			{"seriesByTag(\"a=b\",\"a=c\")", []TagSpec{{"a", EqualOperator, "b"}, {"a", EqualOperator, "c"}}},
-			{"seriesByTag(\"a=b\",\"b=c\",\"c=d\")", []TagSpec{{"a", EqualOperator, "b"}, {"b", EqualOperator, "c"}, {"c", EqualOperator, "d"}}},
+			{`seriesByTag("a=b","a=c")`, []TagSpec{{"a", EqualOperator, "b"}, {"a", EqualOperator, "c"}}},
+			{`seriesByTag("a=b","b=c","c=d")`, []TagSpec{{"a", EqualOperator, "b"}, {"b", EqualOperator, "c"}, {"c", EqualOperator, "d"}}},
 			{`seriesByTag("a={b,c,d}")`, []TagSpec{{"a", MatchOperator, "(b|c|d)$"}}},
+			{`seriesByTag("a=~aa.(b|c|d)$")`, []TagSpec{{"a", MatchOperator, "aa.(b|c|d)$"}}},
+			{`seriesByTag("respCode=~^(4|5)\d{2}")`, []TagSpec{{"respCode", MatchOperator, "^(4|5)\\d{2}"}}},
+			{`seriesByTag("a={b,c,d}", "e=f")`, []TagSpec{{"a", MatchOperator, "(b|c|d)$"}, {"e", EqualOperator, "f"}}},
+			{`seriesByTag("a!={b,c,d}", "e=f")`, []TagSpec{{"a", NotMatchOperator, "(b|c|d)$"}, {"e", EqualOperator, "f"}}},
+			{`seriesByTag('a!={b,c,d}', 'e=f')`, []TagSpec{{"a", NotMatchOperator, "(b|c|d)$"}, {"e", EqualOperator, "f"}}},
 		}
 
 		for _, validCase := range validSeriesByTagCases {

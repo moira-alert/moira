@@ -433,8 +433,8 @@ github.com/ansel1/merry/v2 v2.1.1/go.mod h1:4p/FFyQbCgqlDbseWOVQaL5USpgkE9sr5xh4
 github.com/ansel1/vespucci/v4 v4.1.1/go.mod h1:zzdrO4IgBfgcGMbGTk/qNGL8JPslmW3nPpcBHKReFYY=
 github.com/antihax/optional v1.0.0/go.mod h1:uupD/76wgC+ih3iEmQUL+0Ugr19nfwCT1kdvxnR2qWY=
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
-github.com/aws/aws-sdk-go v1.44.173 h1:8kXIxvQnBpGhmR3Eof6SnCKgR0q5/L/3Qbv9vAC5wic=
-github.com/aws/aws-sdk-go v1.44.173/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
+github.com/aws/aws-sdk-go v1.44.219 h1:YOFxTUQZvdRzgwb6XqLFRwNHxoUdKBuunITC7IFhvbc=
+github.com/aws/aws-sdk-go v1.44.219/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
 github.com/barkimedes/go-deepcopy v0.0.0-20220514131651-17c30cfc62df h1:GSoSVRLoBaFpOOds6QyY1L8AX7uoY+Ln3BHc22W40X0=
 github.com/barkimedes/go-deepcopy v0.0.0-20220514131651-17c30cfc62df/go.mod h1:hiVxq5OP2bUGBRNS3Z/bt/reCLFNbdcST6gISi1fiOM=
 github.com/benbjohnson/clock v1.1.0 h1:Q92kusRqC1XV2MjkWETPvjJVqKetz1OzxZB7mHJLju8=

@@ -48,7 +48,12 @@ func (source *PrometheusRegistryAdapter) NewCounter(path ...string) Counter {
 }
 
 func (source *PrometheusRegistryAdapter) NewHistogram(path ...string) Histogram {
-	var histogramOpts = prometheus.HistogramOpts{Namespace: namespace, Subsystem: source.service, Name: getPrometheusMetricName(path)}
+	var histogramOpts = prometheus.HistogramOpts{
+		Namespace: namespace,
+		Subsystem: source.service,
+		Name:      getPrometheusMetricName(path),
+		Buckets:   []float64{0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1, 2.5, 5, 7.5, 10, 20, 100, 200, 300, 500, 1000},
+	}
 	var histogram = prometheus.NewHistogram(histogramOpts)
 	source.registry.MustRegister(histogram)
 	return &prometheusHistogram{histogram: histogram}

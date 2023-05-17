@@ -48,9 +48,9 @@ var (
 var (
 	cleanupUsers      = flag.Bool("cleanup-users", false, "Disable/delete contacts and subscriptions of missing users")
 	cleanupLastChecks = flag.Bool("cleanup-last-checks", false, "Delete abandoned triggers last checks.")
+	cleanupTags       = flag.Bool("cleanup-tags", false, "Delete abandoned tags.")
 	cleanupMetrics    = flag.Bool("cleanup-metrics", false, "Delete outdated metrics.")
 	cleanupRetentions = flag.Bool("cleanup-retentions", false, "Delete abandoned retentions.")
-	cleanupPatterns   = flag.Bool("cleanup-patterns", false, "Delete abandoned patterns.")
 	userDel           = flag.String("user-del", "", "Delete all contacts and subscriptions for a user")
 	fromUser          = flag.String("from-user", "", "Transfer subscriptions and contacts from user.")
 	toUser            = flag.String("to-user", "", "Transfer subscriptions and contacts to user.")
@@ -196,7 +196,6 @@ func main() { //nolint
 				Error(err).
 				Msg("Failed to cleanup outdated metrics")
 		}
-		log.Info().Msg("Cleanup outdated metrics finished")
 	}
 
 	if *cleanupLastChecks {
@@ -210,7 +209,10 @@ func main() { //nolint
 				Msg("Failed to cleanup abandoned triggers last checks")
 		}
 		log.Info().Msg("Cleanup abandoned triggers last checks finished")
+	}
 
+	if *cleanupTags {
+		log := logger.String(moira.LogFieldNameContext, "cleanup-tags")
 		log.Info().Msg("Cleanup abandoned tags started")
 		count, err := handleCleanUpAbandonedTags(dataBase)
 		if err != nil {
@@ -234,19 +236,6 @@ func main() { //nolint
 				Msg("Failed to cleanup abandoned retentions")
 		}
 		log.Info().Msg("Cleanup of abandoned retentions finished")
-	}
-
-	if *cleanupPatterns {
-		log := logger.String(moira.LogFieldNameContext, "cleanup-patterns")
-
-		log.Info().Msg("Cleanup of abandoned pattern metrics started")
-		err := handleCleanUpAbandonedPatternMetrics(dataBase)
-		if err != nil {
-			log.Error().
-				Error(err).
-				Msg("Failed to cleanup abandoned pattern metrics")
-		}
-		log.Info().Msg("Cleanup of abandoned pattern metrics finished")
 	}
 
 	if *pushTriggerDump {

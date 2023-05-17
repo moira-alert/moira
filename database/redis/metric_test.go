@@ -292,8 +292,9 @@ func TestRemoveMetricValues(t *testing.T) {
 			},
 		})
 
-		err = dataBase.RemoveMetricValues(metric1, 11)
+		deletedCount, err := dataBase.RemoveMetricValues(metric1, 11)
 		So(err, ShouldBeNil)
+		So(deletedCount, ShouldResemble, int64(1))
 
 		actualValues, err = dataBase.GetMetricsValues([]string{metric1}, 1, 99)
 		So(err, ShouldBeNil)
@@ -305,8 +306,9 @@ func TestRemoveMetricValues(t *testing.T) {
 			},
 		})
 
-		err = dataBase.RemoveMetricValues(metric1, 22)
+		deletedCount, err = dataBase.RemoveMetricValues(metric1, 22)
 		So(err, ShouldBeNil)
+		So(deletedCount, ShouldResemble, int64(0))
 
 		actualValues, err = dataBase.GetMetricsValues([]string{metric1}, 1, 99)
 		So(err, ShouldBeNil)
@@ -347,8 +349,9 @@ func TestRemoveMetricValues(t *testing.T) {
 
 		time.Sleep(time.Second * 2)
 
-		err = dataBase.RemoveMetricValues(metric1, 30)
+		deletedCount, err = dataBase.RemoveMetricValues(metric1, 30)
 		So(err, ShouldBeNil)
+		So(deletedCount, ShouldResemble, int64(1))
 
 		actualValues, err = dataBase.GetMetricsValues([]string{metric1}, 1, 99)
 		So(err, ShouldBeNil)
@@ -360,8 +363,9 @@ func TestRemoveMetricValues(t *testing.T) {
 
 		time.Sleep(time.Second * 2)
 
-		err = dataBase.RemoveMetricValues(metric1, 39)
+		deletedCount, err = dataBase.RemoveMetricValues(metric1, 39)
 		So(err, ShouldBeNil)
+		So(deletedCount, ShouldResemble, int64(0))
 
 		actualValues, err = dataBase.GetMetricsValues([]string{metric1}, 1, 99)
 		So(err, ShouldBeNil)
@@ -373,8 +377,9 @@ func TestRemoveMetricValues(t *testing.T) {
 
 		time.Sleep(time.Second * 2)
 
-		err = dataBase.RemoveMetricValues(metric1, 49)
+		deletedCount, err = dataBase.RemoveMetricValues(metric1, 49)
 		So(err, ShouldBeNil)
+		So(deletedCount, ShouldResemble, int64(1))
 
 		actualValues, err = dataBase.GetMetricsValues([]string{metric1}, 1, 99)
 		So(err, ShouldBeNil)
@@ -490,8 +495,9 @@ func TestMetricsStoringErrorConnection(t *testing.T) {
 		err = dataBase.RemovePatternWithMetrics("123")
 		So(err, ShouldNotBeNil)
 
-		err = dataBase.RemoveMetricValues("123", 1)
+		deletedCount, err := dataBase.RemoveMetricValues("123", 1)
 		So(err, ShouldNotBeNil)
+		So(deletedCount, ShouldResemble, int64(0))
 
 		var tomb1 tomb.Tomb
 		ch, err := dataBase.SubscribeMetricEvents(&tomb1,
@@ -727,135 +733,6 @@ func TestCleanupAbandonedRetention(t *testing.T) {
 
 				isMetric2RetentionExists := client.Exists(dataBase.context, metricRetentionKey(metric2)).Val() == 1
 				So(isMetric2RetentionExists, ShouldBeTrue)
-			})
-		})
-	})
-}
-
-func TestCleanupAbandonedPatternMetrics(t *testing.T) {
-	logger, _ := logging.ConfigureLog("stdout", "warn", "test", true)
-	dataBase := NewTestDatabase(logger)
-	dataBase.Flush()
-	defer dataBase.Flush()
-
-	Convey("Given 3 metrics matched with pattern", t, func() {
-		client := *dataBase.client
-
-		const (
-			pattern = "my.test.metric*"
-			metric1 = "my.test.metric1"
-			metric2 = "my.test.metric2"
-			metric3 = "my.test.metric3"
-		)
-
-		tsNow := time.Now().UTC().Unix()
-		tsOlder := time.Now().UTC().Add(-80 * time.Second).Unix()
-		metric1Value := &moira.MatchedMetric{
-			Patterns:           []string{pattern},
-			Metric:             metric1,
-			Retention:          10,
-			RetentionTimestamp: tsOlder,
-			Timestamp:          tsOlder,
-		}
-		metric2Value := &moira.MatchedMetric{
-			Patterns:           []string{pattern},
-			Metric:             metric2,
-			Retention:          10,
-			RetentionTimestamp: tsOlder,
-			Timestamp:          tsOlder,
-		}
-		metric3Value := &moira.MatchedMetric{
-			Patterns:           []string{pattern},
-			Metric:             metric3,
-			Retention:          10,
-			RetentionTimestamp: tsOlder,
-			Timestamp:          tsOlder,
-		}
-
-		err := dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric1: metric1Value})
-		So(err, ShouldBeNil)
-
-		err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric2: metric2Value})
-		So(err, ShouldBeNil)
-
-		err = dataBase.SaveMetrics(map[string]*moira.MatchedMetric{metric3: metric3Value})
-		So(err, ShouldBeNil)
-
-		actualValues, err := dataBase.GetMetricsValues([]string{metric1, metric2, metric3}, 0, tsNow)
-		So(err, ShouldBeNil)
-		So(actualValues, ShouldResemble, map[string][]*moira.MetricValue{
-			metric1: {
-				&moira.MetricValue{
-					RetentionTimestamp: tsOlder,
-					Timestamp:          tsOlder,
-				},
-			},
-			metric2: {
-				&moira.MetricValue{
-					RetentionTimestamp: tsOlder,
-					Timestamp:          tsOlder,
-				},
-			},
-			metric3: {
-				&moira.MetricValue{
-					RetentionTimestamp: tsOlder,
-					Timestamp:          tsOlder,
-				},
-			},
-		})
-
-		Convey("When clean up pattern metrics was called with non-existent metric-data in database", func() {
-			client.Del(dataBase.context, metricDataKey(metric1))
-			client.Del(dataBase.context, metricDataKey(metric2))
-			client.Del(dataBase.context, metricDataKey(metric3))
-
-			actualValues, err = dataBase.GetMetricsValues([]string{metric1, metric2, metric3}, 0, tsNow)
-			So(err, ShouldBeNil)
-			So(actualValues, ShouldResemble, map[string][]*moira.MetricValue{
-				metric1: {},
-				metric2: {},
-				metric3: {},
-			})
-
-			err = dataBase.CleanUpAbandonedPatternMetrics()
-			So(err, ShouldBeNil)
-
-			Convey("pattern shouldn't be in database", func() {
-				patternKey := patternMetricsKey(pattern)
-				isPatternExists := client.Exists(dataBase.context, patternKey).Val() == 1
-				So(isPatternExists, ShouldBeFalse)
-			})
-		})
-
-		Convey("When clean up pattern metrics was called with existent and non-existent metric-data's in database", func() {
-			client.Del(dataBase.context, metricDataKey(metric1))
-			client.Del(dataBase.context, metricDataKey(metric2))
-
-			actualValues, err = dataBase.GetMetricsValues([]string{metric1, metric2, metric3}, 0, tsNow)
-			So(err, ShouldBeNil)
-			So(actualValues, ShouldResemble, map[string][]*moira.MetricValue{
-				metric1: {},
-				metric2: {},
-				metric3: {
-					&moira.MetricValue{
-						RetentionTimestamp: tsOlder,
-						Timestamp:          tsOlder,
-					},
-				},
-			})
-
-			err = dataBase.CleanUpAbandonedPatternMetrics()
-			So(err, ShouldBeNil)
-
-			Convey("metric1 and metric2 values of pattern set shouldn't be and metric3 value should be in database", func() {
-				key := patternMetricsKey(pattern)
-				isKeyExists := client.Exists(dataBase.context, key).Val() == 1
-				So(isKeyExists, ShouldBeTrue)
-
-				So(client.SIsMember(dataBase.context, key, metric1).Val(), ShouldBeFalse)
-				So(client.SIsMember(dataBase.context, key, metric2).Val(), ShouldBeFalse)
-
-				So(client.SIsMember(dataBase.context, key, metric3).Val(), ShouldBeTrue)
 			})
 		})
 	})
