@@ -7,7 +7,7 @@ require (
 	github.com/PagerDuty/go-pagerduty v1.5.1
 	github.com/ansel1/merry v1.6.2
 	github.com/aws/aws-sdk-go v1.44.219
-	github.com/blevesearch/bleve/v2 v2.3.6
+	github.com/blevesearch/bleve/v2 v2.3.8
 	github.com/bwmarrin/discordgo v0.25.0
 	github.com/carlosdp/twiliogo v0.0.0-20161027183705-b26045ebb9d1
 	github.com/cespare/xxhash/v2 v2.2.0
@@ -72,7 +72,7 @@ require (
 	github.com/blevesearch/zapx/v12 v12.3.7 // indirect
 	github.com/blevesearch/zapx/v13 v13.3.7 // indirect
 	github.com/blevesearch/zapx/v14 v14.3.7 // indirect
-	github.com/blevesearch/zapx/v15 v15.3.8 // indirect
+	github.com/blevesearch/zapx/v15 v15.3.10 // indirect
 	github.com/bradfitz/gomemcache v0.0.0-20221031212613-62deef7fc822 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgryski/go-expirecache v0.0.0-20170314133854-743ef98b2adb // indirect
