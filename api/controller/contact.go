@@ -26,6 +26,49 @@ func GetAllContacts(database moira.Database) (*dto.ContactList, *api.ErrorRespon
 	return &contactsList, nil
 }
 
+func GetContactById(database moira.Database, contactID string) (*dto.Contact, *api.ErrorResponse) {
+	contact, err := database.GetContact(contactID)
+	if err != nil {
+		return nil, api.ErrorInternalServer(err)
+	}
+
+	contactToReturn := &dto.Contact{
+		ID:     contact.ID,
+		User:   contact.User,
+		TeamID: contact.Team,
+		Type:   contact.Type,
+		Value:  contact.Value,
+	}
+
+	return contactToReturn, nil
+}
+
+func GetContactByIdWithEvents(database moira.Database, contactID string) (*dto.Contact, *api.ErrorResponse) {
+	contact, err := database.GetContact(contactID)
+	events, err := database.GetAllNotificationsByContactId(contactID)
+	if err != nil {
+		return nil, api.ErrorInternalServer(fmt.Errorf("GetContactByIdWithEvents: can't get notifications"))
+	}
+
+	eventsList := &dto.EventsList{
+		List:  events,
+		Size:  pageSizeUnlimited,
+		Page:  1,
+		Total: 1,
+	}
+
+	contactToReturn := &dto.Contact{
+		ID:     contact.ID,
+		User:   contact.User,
+		TeamID: contact.Team,
+		Type:   contact.Type,
+		Value:  contact.Value,
+		Events: *eventsList,
+	}
+
+	return contactToReturn, nil
+}
+
 // CreateContact creates new notification contact for current user
 func CreateContact(dataBase moira.Database, contact *dto.Contact, userLogin, teamID string) *api.ErrorResponse {
 	if userLogin != "" && teamID != "" {

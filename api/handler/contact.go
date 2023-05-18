@@ -2,10 +2,10 @@ package handler
 
 import (
 	"context"
-	"net/http"
-
+	"fmt"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
+	"net/http"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
@@ -20,6 +20,8 @@ func contact(router chi.Router) {
 	router.Route("/{contactId}", func(router chi.Router) {
 		router.Use(middleware.ContactContext)
 		router.Use(contactFilter)
+		router.Get("/", getContactById)
+		router.Get("/events", getContactByIdWithEvents)
 		router.Put("/", updateContact)
 		router.Delete("/", removeContact)
 		router.Post("/test", sendTestContactNotification)
@@ -36,6 +38,47 @@ func getAllContacts(writer http.ResponseWriter, request *http.Request) {
 	if err := render.Render(writer, request, contacts); err != nil {
 		render.Render(writer, request, api.ErrorRender(err)) //nolint
 		return
+	}
+}
+
+func getContactById(writer http.ResponseWriter, request *http.Request) {
+	contactData := request.Context().Value(contactKey).(moira.ContactData)
+	contact, err := controller.GetContactById(database, contactData.ID)
+
+	if err != nil {
+		render.Render(writer, request, err)
+		return
+	}
+
+	if err := render.Render(writer, request, contact); err != nil {
+		render.Render(writer, request, api.ErrorRender(err))
+		return
+	}
+}
+
+func getContactByIdWithEvents(writer http.ResponseWriter, request *http.Request) {
+	contactData := request.Context().Value(contactKey).(moira.ContactData)
+	params := request.URL.Query()
+
+	// TODO: make this checks as the middleware and pass to retrive function
+	if params.Get("from") != "" && params.Get("to") != "" {
+
+		contact, err := controller.GetContactByIdWithEvents(database, contactData.ID)
+
+		if err != nil {
+			render.Render(writer, request, err)
+			return
+		}
+
+		if err := render.Render(writer, request, contact); err != nil {
+			render.Render(writer, request, api.ErrorRender(err))
+			return
+		}
+	} else {
+		render.Render(
+			writer,
+			request,
+			api.ErrorInvalidRequest(fmt.Errorf("You have to specify either 'from' and 'to' request params")))
 	}
 }
 

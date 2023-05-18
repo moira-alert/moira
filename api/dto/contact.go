@@ -17,11 +17,12 @@ func (*ContactList) Render(w http.ResponseWriter, r *http.Request) error {
 }
 
 type Contact struct {
-	Type   string `json:"type"`
-	Value  string `json:"value"`
-	ID     string `json:"id,omitempty"`
-	User   string `json:"user,omitempty"`
-	TeamID string `json:"team_id,omitempty"`
+	Type   string     `json:"type"`
+	Value  string     `json:"value"`
+	ID     string     `json:"id,omitempty"`
+	User   string     `json:"user,omitempty"`
+	TeamID string     `json:"team_id,omitempty"`
+	Events EventsList `json:"events,omitempty"`
 }
 
 func (*Contact) Render(w http.ResponseWriter, r *http.Request) error {
