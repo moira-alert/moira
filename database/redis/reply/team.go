@@ -55,3 +55,26 @@ func NewTeam(rep *redis.StringCmd) (moira.Team, error) {
 	}
 	return teamSE.toTeam(), nil
 }
+
+// NewTeams is a function that creates team entities from a bytes received from database
+func NewTeams(rep *redis.StringStringMapCmd) ([]*moira.Team, error) {
+	teamsMap, err := rep.Result()
+	if err != nil {
+		return nil, err
+	}
+	teams := make([]*moira.Team, 0)
+	for teamID, teamJSON := range teamsMap {
+		teamBytes := []byte(teamJSON)
+
+		teamSE := teamStorageElement{}
+		err = json.Unmarshal(teamBytes, &teamSE)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse team json %s: %w", teamJSON, err)
+		}
+		team := teamSE.toTeam()
+		team.ID = teamID
+		teams = append(teams, &team)
+	}
+
+	return teams, nil
+}

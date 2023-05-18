@@ -11,8 +11,10 @@ import (
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/database"
+	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 	. "github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCreateTeam(t *testing.T) {
@@ -708,3 +710,342 @@ func TestGetTeamSettings(t *testing.T) {
 		})
 	})
 }
+
+func TestGetTeamSubsStats(t *testing.T) {
+	logger, _ := logging.GetLogger("dataBase")
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+
+	const (
+		team1ID   = "1"
+		team1Name = "team1Name"
+
+		team2ID   = "2"
+		team2Name = "team2Name"
+	)
+	teams := []*moira.Team{
+		{
+			ID:   team1ID,
+			Name: team1Name,
+		},
+		{
+			ID:   team2ID,
+			Name: team2Name,
+		},
+	}
+	const (
+		team1Contact1ID = "team1_contact1"
+		team1Contact2ID = "team1_contact2"
+		team1Contact3ID = "team1_contact3"
+		contactType1    = "contact-type1"
+		contactType2    = "contact-type2"
+	)
+	team1Contacts := []*moira.ContactData{
+		{
+			ID:   team1Contact1ID,
+			Type: contactType1,
+		},
+		{
+			ID:   team1Contact2ID,
+			Type: contactType2,
+		},
+		{
+			ID:   team1Contact3ID,
+			Type: contactType1,
+		},
+	}
+	team2Contacts := []*moira.ContactData{
+		{
+			Type: contactType1,
+		},
+		{
+			Type: contactType1,
+		},
+	}
+
+	const (
+		tag1 = "tag1"
+		tag2 = "tag2"
+		tag3 = "tag3"
+	)
+	const (
+		team1Sub1 = "team1_sub1"
+		team1Sub2 = "team1_sub2"
+		team1Sub3 = "team1_sub3"
+
+		team2Sub1 = "team2_sub1"
+	)
+	team1Subs := []*moira.SubscriptionData{
+		{
+			ID:       team1Sub1,
+			Enabled:  true,
+			Contacts: []string{team1Contact1ID, team1Contact2ID},
+			TeamID:   team1ID,
+			Tags:     []string{tag1},
+		},
+		{
+			ID:       team1Sub2,
+			Enabled:  true,
+			Contacts: []string{team1Contact1ID, team1Contact2ID},
+			TeamID:   team1ID,
+			Tags:     []string{tag1, tag2},
+		},
+		{
+			ID:       team1Sub3,
+			Enabled:  true,
+			Contacts: []string{team1Contact1ID, team1Contact2ID},
+			TeamID:   team1ID,
+			Tags:     []string{tag1, tag2, tag3},
+		},
+	}
+	const abandonedTag = "abandoned"
+	const team2ContactID = "team2_contact"
+	team2Subs := []*moira.SubscriptionData{
+		{
+			ID:       team2Sub1,
+			Enabled:  false,
+			Contacts: []string{team2ContactID},
+			TeamID:   team2ID,
+			Tags:     []string{abandonedTag},
+		},
+	}
+
+	Convey("GetTeamSubsStats should return statistics", t, func() {
+		var nilErr error = nil
+		dataBase.EXPECT().GetAllTeams().Return(teams, nilErr)
+
+		// team1
+		dataBase.EXPECT().GetTeamSubscriptionIDs(team1ID).Return([]string{team1Sub1, team1Sub2, team1Sub3}, nilErr)
+		dataBase.EXPECT().GetTeamContactIDs(team1ID).Return([]string{team1Contact1ID, team1Contact2ID, team1Contact3ID}, nilErr)
+		dataBase.EXPECT().GetTeamUsers(team1ID).Return([]string{"team1_user1", "team1_user2"}, nilErr)
+		dataBase.EXPECT().GetContacts([]string{team1Contact1ID, team1Contact2ID, team1Contact3ID}).Return(team1Contacts, nilErr)
+		dataBase.EXPECT().GetSubscriptions([]string{team1Sub1, team1Sub2, team1Sub3}).Return(team1Subs, nilErr)
+
+		// team2
+		dataBase.EXPECT().GetTeamSubscriptionIDs(team2ID).Return([]string{team2Sub1}, nilErr)
+		dataBase.EXPECT().GetTeamContactIDs(team2ID).Return([]string{"team2_contact1", "team2_contact2"}, nilErr)
+		dataBase.EXPECT().GetTeamUsers(team2ID).Return([]string{"team2_user1"}, nilErr)
+		dataBase.EXPECT().GetContacts([]string{"team2_contact1", "team2_contact2"}).Return(team2Contacts, nilErr)
+		dataBase.EXPECT().GetSubscriptions([]string{team2Sub1}).Return(team2Subs, nilErr)
+
+		stats, err := GetTeamSubsStats(dataBase, logger)
+		So(err, ShouldBeNil)
+		So(stats, ShouldHaveLength, 2)
+
+		statsExpected := dto.TeamSubsStats{
+			{
+				TeamID:             team1ID,
+				TeamName:           teams[0].Name,
+				SubscriptionsCount: 3,
+				ContactsCount:      3,
+				UsersCount:         2,
+				UniqueSendersCount: 2,
+				UniqueTagsCount:    3,
+			},
+			{
+				TeamID:             team2ID,
+				TeamName:           teams[1].Name,
+				SubscriptionsCount: 1,
+				ContactsCount:      2,
+				UsersCount:         1,
+				UniqueSendersCount: 1,
+				UniqueTagsCount:    1,
+			},
+		}
+		assert.ElementsMatch(t, stats, statsExpected)
+	})
+}
+
+//func TestCollectStatistic(t *testing.T) {
+//	logger, _ := logging.GetLogger("dataBase")
+//	dataBase := redis.NewTestDatabase(logger)
+//
+//	stats, err := GetTeamSubsStats(dataBase, logger)
+//	assert.Nil(t, err)
+//
+//	file, _ := os.Create("./stats-wo-triggers-29-05.csv")
+//	defer file.Close()
+//
+//	var data [][]string
+//	data = append(data, []string{
+//		"TeamID",
+//		"TeamName",
+//		"SubscriptionsCount",
+//		"UsersCount",
+//		"ContactsCount",
+//		"UniqueSendersCount",
+//		"UniqueTagsCount",
+//	})
+//	for _, stat := range stats {
+//		row := []string{
+//			stat.TeamID,
+//			stat.TeamName,
+//			strconv.Itoa(stat.SubscriptionsCount),
+//			strconv.Itoa(stat.UsersCount),
+//			strconv.Itoa(stat.ContactsCount),
+//			strconv.Itoa(stat.UniqueSendersCount),
+//			strconv.Itoa(stat.UniqueTagsCount),
+//		}
+//		data = append(data, row)
+//	}
+//	w := csv.NewWriter(file)
+//	err = w.WriteAll(data) // calls Flush internally
+//	assert.Nil(t, err)
+//}
+//
+
+func TestGetTeamTriggersStats(t *testing.T) {
+	logger, _ := logging.GetLogger("dataBase")
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
+
+	const (
+		team1ID   = "1"
+		team1Name = "team1Name"
+
+		team2ID   = "2"
+		team2Name = "team2Name"
+
+		team3ID   = "3"
+		team3Name = "team3Name"
+	)
+	teams := []*moira.Team{
+		{
+			ID:   team1ID,
+			Name: team1Name,
+		},
+		{
+			ID:   team2ID,
+			Name: team2Name,
+		},
+		{
+			ID:   team3ID,
+			Name: team3Name,
+		},
+	}
+
+	const (
+		tag1 = "tag1"
+		tag2 = "tag2"
+		tag3 = "tag3"
+	)
+	const (
+		sub1 = "sub1"
+		sub2 = "sub2"
+		sub3 = "sub3"
+	)
+	teamSubs := []*moira.SubscriptionData{
+		{
+			ID:      sub1,
+			Enabled: true,
+			TeamID:  team1ID,
+			Tags:    []string{tag1},
+		},
+		{
+			ID:      sub2,
+			Enabled: true,
+			TeamID:  team2ID,
+			Tags:    []string{tag1, tag2},
+		},
+		{
+			ID:      sub3,
+			Enabled: true,
+			TeamID:  team3ID,
+			Tags:    []string{tag1, tag2, tag3},
+		},
+	}
+
+	const (
+		trigger1ID = "trigger1"
+		trigger2ID = "trigger2"
+		trigger3ID = "trigger3"
+	)
+
+	triggers := []*moira.Trigger{
+		{
+			ID:   trigger1ID,
+			Tags: []string{tag1},
+		},
+		{
+			ID:   trigger2ID,
+			Tags: []string{tag1, tag2},
+		},
+		{
+			ID:   trigger3ID,
+			Tags: []string{tag1, tag2, tag3},
+		},
+	}
+
+	Convey("GetTeamTriggersStats should return statistics", t, func() {
+		var nilErr error = nil
+		dataBase.EXPECT().GetTagNames().Return([]string{tag1, tag2, tag3}, nilErr).AnyTimes()
+
+		dataBase.EXPECT().GetTagsSubscriptions([]string{tag1}).Return([]*moira.SubscriptionData{teamSubs[0], teamSubs[1], teamSubs[2]}, nilErr)
+		dataBase.EXPECT().GetTagsSubscriptions([]string{tag2}).Return([]*moira.SubscriptionData{teamSubs[1], teamSubs[2]}, nilErr)
+		dataBase.EXPECT().GetTagsSubscriptions([]string{tag3}).Return([]*moira.SubscriptionData{teamSubs[2]}, nilErr)
+
+		dataBase.EXPECT().GetTagTriggerIDs(tag1).Return([]string{trigger1ID, trigger2ID, trigger3ID}, nilErr).AnyTimes()
+		dataBase.EXPECT().GetTagTriggerIDs(tag2).Return([]string{trigger2ID, trigger3ID}, nilErr).AnyTimes()
+		dataBase.EXPECT().GetTagTriggerIDs(tag3).Return([]string{trigger3ID}, nilErr).AnyTimes()
+
+		dataBase.EXPECT().GetTrigger(trigger1ID).Return(*triggers[0], nilErr).AnyTimes()
+		dataBase.EXPECT().GetTrigger(trigger2ID).Return(*triggers[1], nilErr).AnyTimes()
+		dataBase.EXPECT().GetTrigger(trigger3ID).Return(*triggers[2], nilErr).AnyTimes()
+
+		dataBase.EXPECT().GetAllTeams().Return(teams, nilErr)
+
+		stats, err := GetTeamTriggersStats(dataBase, logger)
+		So(err, ShouldBeNil)
+
+		statsExpected := dto.TeamTriggersStats{
+			{
+				TeamID:        team1ID,
+				TeamName:      team1Name,
+				TriggersCount: 3,
+			},
+			{
+				TeamID:        team2ID,
+				TeamName:      team2Name,
+				TriggersCount: 2,
+			},
+			{
+				TeamID:        team3ID,
+				TeamName:      team3Name,
+				TriggersCount: 1,
+			},
+		}
+		assert.ElementsMatch(t, stats, statsExpected)
+	})
+}
+
+//func TestGetTeamTriggersStats_File(t *testing.T) {
+//	logger, _ := logging.GetLogger("dataBase")
+//	dataBase := redis.NewTestDatabase(logger)
+//
+//	stats, err := GetTeamTriggersStats(dataBase, logger)
+//	logger.Info().Msg("done")
+//	assert.Nil(t, err)
+//
+//	file, _ := os.Create("./team-triggers-29-05.csv")
+//	defer file.Close()
+//
+//	var data [][]string
+//	data = append(data, []string{
+//		"TeamID",
+//		"TeamName",
+//		"TriggersCount",
+//	})
+//	for _, stat := range stats {
+//		row := []string{
+//			stat.TeamID,
+//			stat.TeamName,
+//			strconv.Itoa(stat.TriggersCount),
+//		}
+//		data = append(data, row)
+//	}
+//	w := csv.NewWriter(file)
+//	errWrite := w.WriteAll(data) // calls Flush internally
+//	assert.Nil(t, errWrite)
+//}

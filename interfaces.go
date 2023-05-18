@@ -145,6 +145,7 @@ type Database interface {
 	GetTeamUsers(teamID string) ([]string, error)
 	IsTeamContainUser(teamID, userID string) (bool, error)
 	DeleteTeam(teamID, userID string) error
+	GetAllTeams() ([]*Team, error)
 
 	// Metrics management
 	CleanUpOutdatedMetrics(duration time.Duration) error

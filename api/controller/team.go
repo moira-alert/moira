@@ -3,14 +3,17 @@ package controller
 import (
 	"fmt"
 	"strings"
-
-	"github.com/go-redis/redis/v8"
+	"sync"
+	"sync/atomic"
 
 	"github.com/gofrs/uuid"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/database"
+
+	mapset "github.com/deckarep/golang-set/v2"
+	"github.com/go-redis/redis/v8"
 )
 
 const teamIDCreateRetries = 3
@@ -455,4 +458,206 @@ func GetTeamSettings(database moira.Database, teamID string) (dto.TeamSettings, 
 		}
 	}
 	return teamSettings, nil
+}
+
+// GetTeamSubsStats return teams with subscriptions statistics.
+func GetTeamSubsStats(database moira.Database, logger moira.Logger) (dto.TeamSubsStats, error) {
+	teams, err := database.GetAllTeams()
+	if err != nil {
+		return nil, err
+	}
+
+	var wg sync.WaitGroup
+	errChan := make(chan error, len(teams))
+	statsChan := make(chan *dto.TeamSubsStatsElement, len(teams))
+
+	for i, team := range teams {
+		wg.Add(1)
+		i := i
+		go func(team *moira.Team) {
+			logger.Info().Msg(fmt.Sprintf("Started i=%d, team=%s", i, team.Name))
+
+			defer wg.Done()
+			se, createErr := createStatElement(database, *team)
+			if createErr != nil {
+				errChan <- createErr
+			}
+			statsChan <- se
+			logger.Info().Msg(fmt.Sprintf("Finished i=%d", i))
+		}(team)
+	}
+
+	wg.Wait()
+	close(statsChan)
+	close(errChan)
+
+	for err = range errChan {
+		logger.Error().Msg(err.Error())
+	}
+
+	stats := make(dto.TeamSubsStats, 0)
+	for s := range statsChan {
+		stats = append(stats, s)
+	}
+	return stats, nil
+}
+
+func createStatElement(database moira.Database, team moira.Team) (*dto.TeamSubsStatsElement, error) {
+	se := dto.TeamSubsStatsElement{}
+	se.TeamID = team.ID
+	se.TeamName = team.Name
+
+	subIDs, err := database.GetTeamSubscriptionIDs(team.ID)
+	if err != nil {
+		return nil, err
+	}
+	se.SubscriptionsCount = len(subIDs)
+
+	subs, err := database.GetSubscriptions(subIDs)
+	if err != nil {
+		return nil, err
+	}
+	uniqueTags := mapset.NewSet[string]()
+	for _, sub := range subs {
+		for _, tag := range sub.Tags {
+			uniqueTags.Add(tag)
+		}
+	}
+	se.UniqueTagsCount = uniqueTags.Cardinality()
+
+	contactIDs, err := database.GetTeamContactIDs(team.ID)
+	if err != nil {
+		return nil, err
+	}
+	se.ContactsCount = len(contactIDs)
+
+	users, err := database.GetTeamUsers(team.ID)
+	if err != nil {
+		return nil, err
+	}
+	se.UsersCount = len(users)
+
+	contacts, err := database.GetContacts(contactIDs)
+	if err != nil {
+		return nil, err
+	}
+	uniqueSendersCount := mapset.NewSet[string]()
+	for _, contact := range contacts {
+		uniqueSendersCount.Add(contact.Type)
+	}
+	se.UniqueSendersCount = uniqueSendersCount.Cardinality()
+
+	return &se, nil
+}
+
+type teamIDTriggerIDs map[string]mapset.Set[string]
+
+// GetTeamTriggersStats return teams with triggers statistics.
+func GetTeamTriggersStats(database moira.Database, logger moira.Logger) (dto.TeamTriggersStats, *api.ErrorResponse) {
+	tagsNames, err := database.GetTagNames()
+	if err != nil {
+		return nil, api.ErrorInternalServer(err)
+	}
+
+	resultChan := make(chan teamIDTriggerIDs, len(tagsNames))
+	errChan := make(chan error, len(tagsNames))
+	var wg sync.WaitGroup
+	var handledTagsCount uint32
+
+	for i, tagName := range tagsNames {
+		i := i
+		wg.Add(1)
+		go func(tagName string) {
+			defer wg.Done()
+			defer func() {
+				atomic.AddUint32(&handledTagsCount, 1)
+				logger.Info().Msg(fmt.Sprintf("handledTagsCount=%d", atomic.LoadUint32(&handledTagsCount)))
+			}()
+
+			logger.Info().Msg(fmt.Sprintf("Started i=%d, tag=%s", i, tagName))
+
+			teamTriggers, tagError := getTeamTriggersByTag(database, tagName)
+			if tagError != nil {
+				errChan <- tagError
+				logger.Info().Msg(fmt.Sprintf("Finished with err=%s, i=%d", tagError, i))
+
+				return
+			}
+			resultChan <- teamTriggers
+			logger.Info().Msg(fmt.Sprintf("Finished i=%d, tag=%s", i, tagName))
+		}(tagName)
+	}
+	wg.Wait()
+	close(errChan)
+	close(resultChan)
+	for err = range errChan {
+		logger.Error().Msg(err.Error())
+		return nil, api.ErrorInternalServer(err)
+	}
+
+	allTeams, err := database.GetAllTeams()
+	if err != nil {
+		logger.Error().Msg(err.Error())
+		return nil, api.ErrorInternalServer(err)
+	}
+	// create one map from few maps
+	teamIDToTriggerIDs := make(teamIDTriggerIDs, 0)
+	for _, team := range allTeams {
+		teamIDToTriggerIDs[team.ID] = mapset.NewSet[string]()
+	}
+	for stats := range resultChan {
+		for teamID, triggerIDs := range stats {
+			for triggerID := range triggerIDs.Iter() {
+				teamIDToTriggerIDs[teamID].Add(triggerID)
+			}
+		}
+	}
+
+	stats := make(dto.TeamTriggersStats, 0)
+	for _, team := range allTeams {
+		element := &dto.TeamTriggersStatsElement{
+			TeamID:        team.ID,
+			TeamName:      team.Name,
+			TriggersCount: teamIDToTriggerIDs[team.ID].Cardinality(),
+		}
+		stats = append(stats, element)
+	}
+
+	return stats, nil
+}
+
+func getTeamTriggersByTag(database moira.Database, tag string) (teamIDTriggerIDs, error) {
+	subs, err := database.GetTagsSubscriptions([]string{tag})
+	if err != nil {
+		return nil, err
+	}
+
+	triggerIDs, err := database.GetTagTriggerIDs(tag)
+	if err != nil {
+		return nil, err
+	}
+
+	teamIDToTriggerIDs := make(teamIDTriggerIDs)
+	for _, sub := range subs {
+		if sub == nil || !sub.Enabled || sub.TeamID == "" {
+			continue
+		}
+		subTags := mapset.NewSet(sub.Tags...)
+
+		for _, triggerID := range triggerIDs {
+			trigger, err := database.GetTrigger(triggerID)
+			if err != nil {
+				return nil, err
+			}
+			triggerTags := mapset.NewSet(trigger.Tags...)
+			if isTriggerRelatesToSubscription := subTags.IsSubset(triggerTags); isTriggerRelatesToSubscription {
+				if teamIDToTriggerIDs[sub.TeamID] == nil {
+					teamIDToTriggerIDs[sub.TeamID] = mapset.NewSet[string]()
+				}
+				teamIDToTriggerIDs[sub.TeamID].Add(triggerID)
+			}
+		}
+	}
+
+	return teamIDToTriggerIDs, nil
 }

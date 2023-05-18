@@ -14,6 +14,7 @@ import (
 func teams(router chi.Router) {
 	router.Get("/", getAllTeams)
 	router.Post("/", createTeam)
+	router.Get("/stats", getTeamSubsStats)
 	router.Route("/{teamId}", func(router chi.Router) {
 		router.Use(middleware.TeamContext)
 		router.Use(usersFilterForTeams)
@@ -214,6 +215,18 @@ func getTeamSettings(writer http.ResponseWriter, request *http.Request) {
 
 	if err := render.Render(writer, request, teamSettings); err != nil {
 		render.Render(writer, request, api.ErrorRender(err)) //nolint:errcheck
+		return
+	}
+}
+
+func getTeamSubsStats(writer http.ResponseWriter, request *http.Request) {
+	stats, err := controller.GetTeamSubsStats(database, middleware.GetLoggerEntry(request))
+	if err != nil {
+		render.Render(writer, request, api.ErrorInternalServer(err)) //nolint
+	}
+
+	if err := render.Render(writer, request, stats); err != nil {
+		render.Render(writer, request, api.ErrorRender(err)) //nolint
 		return
 	}
 }

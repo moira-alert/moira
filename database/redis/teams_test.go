@@ -147,3 +147,31 @@ func TestTeamStoring(t *testing.T) {
 		So(actualUsers, ShouldHaveLength, 0)
 	})
 }
+
+func TestGetAllTeams(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping database test in short mode")
+	}
+	logger, _ := logging.GetLogger("dataBase")
+	dataBase := NewTestDatabase(logger)
+	dataBase.Flush()
+	defer dataBase.Flush()
+
+	const teamID = "testTeam"
+	const teamID2 = "testTeam2"
+	team := moira.Team{
+		Name:        "Test team",
+		Description: "Test team description",
+	}
+	Convey("Teams Manipulation", t, func() {
+		err := dataBase.SaveTeam(teamID, team)
+		So(err, ShouldBeNil)
+
+		err = dataBase.SaveTeam(teamID2, team)
+		So(err, ShouldBeNil)
+
+		teams, err := dataBase.GetAllTeams()
+		So(err, ShouldBeNil)
+		So(teams, ShouldHaveLength, 2)
+	})
+}

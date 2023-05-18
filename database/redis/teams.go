@@ -135,6 +135,18 @@ func (connector *DbConnector) DeleteTeam(teamID, userID string) error {
 	return nil
 }
 
+// GetAllTeams returns all teams.
+func (connector *DbConnector) GetAllTeams() ([]*moira.Team, error) {
+	c := *connector.client
+	cmd := c.HGetAll(connector.context, teamsKey)
+	teams, err := reply.NewTeams(cmd)
+	if err != nil {
+		return nil, err
+	}
+
+	return teams, nil
+}
+
 const teamsKey = "moira-teams"
 
 func userTeamsKey(userID string) string {

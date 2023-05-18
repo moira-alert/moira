@@ -104,3 +104,33 @@ type TeamSettings struct {
 func (TeamSettings) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
+
+type TeamSubsStatsElement struct {
+	TeamID             string
+	TeamName           string
+	SubscriptionsCount int
+	ContactsCount      int
+	UsersCount         int
+	UniqueSendersCount int
+	UniqueTagsCount    int
+}
+
+type TeamSubsStats []*TeamSubsStatsElement
+
+// Render is a function that implements chi Renderer interface for TeamSubsStats
+func (TeamSubsStats) Render(http.ResponseWriter, *http.Request) error {
+	return nil
+}
+
+type TeamTriggersStatsElement struct {
+	TeamID        string
+	TeamName      string
+	TriggersCount int
+}
+
+type TeamTriggersStats []*TeamTriggersStatsElement
+
+// Render is a function that implements chi Renderer interface for TeamTriggersStats
+func (TeamTriggersStats) Render(http.ResponseWriter, *http.Request) error {
+	return nil
+}
