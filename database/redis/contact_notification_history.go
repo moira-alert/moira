@@ -8,30 +8,22 @@ import (
 	"time"
 )
 
-type NotificationHistoryItem struct {
-	NotificationTimestamp int64
-	TriggerState          moira.State
-	ContactID             string
-	TriggerId             string
-}
-
 const contactNotificationKey string = "moira-contact-notifications"
 
-func (connector *DbConnector) GetAllNotificationsByContactId(contactID string) ([]string, error) {
+func (connector *DbConnector) GetAllNotificationsByContactId(contactID string) (moira.NotificationEvents, error) {
 	c := *connector.client
-	var notifications []string
+	var notifications moira.NotificationEvents
 
 	notificationStrings, _ := c.ZRange(connector.context, contactNotificationKey, 0, time.Now().Unix()).Result()
 
 	for _, notification := range notificationStrings {
-		var notificationObj NotificationHistoryItem
-		err := json.Unmarshal([]byte(notification), &notificationObj)
+		notificationObj, err := GetNotificationStruct(notification)
 		if err != nil {
 			fmt.Printf("Error parsing notification from db")
 		}
 
 		if notificationObj.ContactID == contactID {
-			notifications = append(notifications, notification)
+			notifications = append(notifications, notificationObj)
 		}
 	}
 
@@ -41,11 +33,13 @@ func (connector *DbConnector) GetAllNotificationsByContactId(contactID string) (
 func (connector *DbConnector) PushContactNotificationToHistory(notification *moira.ScheduledNotification) error {
 	c := *connector.client
 
-	notificationItemToSave := &NotificationHistoryItem{
-		NotificationTimestamp: notification.Timestamp,
-		TriggerState:          notification.Event.State,
-		ContactID:             notification.Contact.ID,
-		TriggerId:             notification.Trigger.ID,
+	notificationItemToSave := &moira.NotificationEvent{
+		Timestamp: notification.Timestamp,
+		Metric:    notification.Event.Metric,
+		State:     notification.Event.State,
+		TriggerID: notification.Trigger.ID,
+		ContactID: notification.Contact.ID,
+		OldState:  notification.Event.OldState,
 	}
 
 	notificationBytes, _ := GetNotificationBytes(notificationItemToSave)
@@ -54,16 +48,25 @@ func (connector *DbConnector) PushContactNotificationToHistory(notification *moi
 		connector.context,
 		contactNotificationKey,
 		&redis.Z{
-			Score:  float64(notificationItemToSave.NotificationTimestamp),
+			Score:  float64(notificationItemToSave.Timestamp),
 			Member: notificationBytes}).Result()
 
 	return err
 }
 
-func GetNotificationBytes(notification *NotificationHistoryItem) ([]byte, error) {
+func GetNotificationBytes(notification *moira.NotificationEvent) ([]byte, error) {
 	bytes, err := json.Marshal(notification)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal notification event: %s", err.Error())
 	}
 	return bytes, nil
+}
+
+func GetNotificationStruct(notificationString string) (moira.NotificationEvent, error) {
+	var object moira.NotificationEvent
+	err := json.Unmarshal([]byte(notificationString), &object)
+	if err != nil {
+		return object, fmt.Errorf("failed to umarshell event: %s", err.Error())
+	}
+	return object, nil
 }

@@ -83,7 +83,7 @@ type Database interface {
 
 	// ScheduledNotification storing
 	GetNotifications(start, end int64) ([]*ScheduledNotification, int64, error)
-	GetAllNotificationsByContactId(contactID string) ([]string, error)
+	GetAllNotificationsByContactId(contactID string) (NotificationEvents, error)
 	RemoveNotification(notificationKey string) (int64, error)
 	RemoveAllNotifications() error
 	FetchNotifications(to int64, limit int64) ([]*ScheduledNotification, error)
