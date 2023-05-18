@@ -97,11 +97,8 @@ func (worker *FetchNotificationsWorker) processScheduledNotifications() error {
 	}
 	var sendingWG sync.WaitGroup
 	for _, pkg := range notificationPackages {
-
-		//worker.Notifier.Send(pkg, &sendingWG)
-		worker.Logger.Info().Msg("Sent notification")
-		fmt.Print(pkg)
-
+		worker.Notifier.Send(pkg, &sendingWG)
+		//worker.Logger.Info().Msg("Sent notification")
 	}
 	sendingWG.Wait()
 	return nil
