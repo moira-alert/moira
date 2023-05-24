@@ -6,6 +6,7 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 	"net/http"
+	"strconv"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
@@ -60,25 +61,28 @@ func getContactByIdWithEvents(writer http.ResponseWriter, request *http.Request)
 	contactData := request.Context().Value(contactKey).(moira.ContactData)
 	params := request.URL.Query()
 
-	// TODO: make this checks as the middleware and pass to retrive function
-	if params.Get("from") != "" && params.Get("to") != "" {
+	if params.Get("from") == "" || params.Get("to") == "" {
+		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("need to specify url params 'from' and 'to'")))
+		return
+	}
 
-		contact, err := controller.GetContactByIdWithEvents(database, contactData.ID)
+	from, err := strconv.ParseInt(params.Get("from"), 10, 64)
+	to, err := strconv.ParseInt(params.Get("to"), 10, 64)
 
-		if err != nil {
-			render.Render(writer, request, err)
-			return
-		}
+	if err != nil || from < 0 || to < 0 {
+		render.Render(writer, request, api.ErrorRender(fmt.Errorf("params 'from' and 'to' must be numbers greater than zero")))
+		return
+	}
 
-		if err := render.Render(writer, request, contact); err != nil {
-			render.Render(writer, request, api.ErrorRender(err))
-			return
-		}
-	} else {
-		render.Render(
-			writer,
-			request,
-			api.ErrorInvalidRequest(fmt.Errorf("You have to specify either 'from' and 'to' request params")))
+	contact, api_err := controller.GetContactByIdWithEventsLimit(database, contactData.ID, from, to)
+
+	if api_err != nil {
+		render.Render(writer, request, api.ErrorInternalServer(fmt.Errorf("can't fetch contacts with events")))
+	}
+
+	if err := render.Render(writer, request, contact); err != nil {
+		render.Render(writer, request, api.ErrorRender(err))
+		return
 	}
 }
 

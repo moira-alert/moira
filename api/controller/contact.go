@@ -43,27 +43,49 @@ func GetContactById(database moira.Database, contactID string) (*dto.Contact, *a
 	return contactToReturn, nil
 }
 
-func GetContactByIdWithEvents(database moira.Database, contactID string) (*dto.Contact, *api.ErrorResponse) {
+func GetContactByIdWithEvents(database moira.Database, contactID string) (*dto.ContactWithEvents, *api.ErrorResponse) {
 	contact, err := database.GetContact(contactID)
 	events, err := database.GetAllNotificationsByContactId(contactID)
 	if err != nil {
 		return nil, api.ErrorInternalServer(fmt.Errorf("GetContactByIdWithEvents: can't get notifications"))
 	}
 
-	eventsList := &dto.EventsList{
-		List:  events,
-		Size:  pageSizeUnlimited,
-		Page:  1,
-		Total: 1,
+	var eventsList []moira.NotificationEventHistoryItem
+	for _, i := range events {
+		eventsList = append(eventsList, *i)
 	}
 
-	contactToReturn := &dto.Contact{
+	contactToReturn := &dto.ContactWithEvents{
 		ID:     contact.ID,
 		User:   contact.User,
 		TeamID: contact.Team,
 		Type:   contact.Type,
 		Value:  contact.Value,
-		Events: *eventsList,
+		Events: eventsList,
+	}
+
+	return contactToReturn, nil
+}
+
+func GetContactByIdWithEventsLimit(database moira.Database, contactID string, from int64, to int64) (*dto.ContactWithEvents, *api.ErrorResponse) {
+	contact, err := database.GetContact(contactID)
+	events, err := database.GetNotificationsByContactIdWithLimit(contactID, from, to)
+	if err != nil {
+		return nil, api.ErrorInternalServer(fmt.Errorf("GetContactByIdWithEvents: can't get notifications"))
+	}
+
+	var eventsList []moira.NotificationEventHistoryItem
+	for _, i := range events {
+		eventsList = append(eventsList, *i)
+	}
+
+	contactToReturn := &dto.ContactWithEvents{
+		ID:     contact.ID,
+		User:   contact.User,
+		TeamID: contact.Team,
+		Type:   contact.Type,
+		Value:  contact.Value,
+		Events: eventsList,
 	}
 
 	return contactToReturn, nil

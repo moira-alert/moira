@@ -46,6 +46,17 @@ type NotificationEvent struct {
 	MessageEventInfo *EventInfo         `json:"event_message"`
 }
 
+// NotificationEventHistoryItem is in use to store notifications history of channel
+// (see database/redis/contact_notifications_history.go
+type NotificationEventHistoryItem struct {
+	TimeStamp int64  `json:"timestamp"`
+	Metric    string `json:"metric"`
+	State     State  `json:"state"`
+	OldState  State  `json:"old_state"`
+	TriggerID string `json:"trigger_id"`
+	ContactID string `json:"contactId"`
+}
+
 // EventInfo - a base for creating messages.
 type EventInfo struct {
 	Maintenance *MaintenanceInfo `json:"maintenance,omitempty"`

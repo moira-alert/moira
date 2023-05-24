@@ -5,25 +5,75 @@ import (
 	"fmt"
 	"github.com/go-redis/redis/v8"
 	"github.com/moira-alert/moira"
-	"time"
+	"strconv"
 )
 
-const contactNotificationKey string = "moira-contact-notifications"
+const (
+	contactNotificationKey = "moira-contact-notifications"
+	scanCount              = 10000
+)
 
-func (connector *DbConnector) GetAllNotificationsByContactId(contactID string) (moira.NotificationEvents, error) {
+func getAllContactNotificationsByIdPattern(contactID string) string {
+	return "*" + contactID + "*"
+}
+
+func getNotificationBytes(notification *moira.NotificationEventHistoryItem) ([]byte, error) {
+	bytes, err := json.Marshal(notification)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal notification event: %s", err.Error())
+	}
+	return bytes, nil
+}
+
+func getNotificationStruct(notificationString string) (moira.NotificationEventHistoryItem, error) {
+	var object moira.NotificationEventHistoryItem
+	err := json.Unmarshal([]byte(notificationString), &object)
+	if err != nil {
+		return object, fmt.Errorf("failed to umarshall event: %s", err.Error())
+	}
+	return object, nil
+}
+
+func (connector *DbConnector) GetAllNotificationsByContactId(contactID string) ([]*moira.NotificationEventHistoryItem, error) {
 	c := *connector.client
-	var notifications moira.NotificationEvents
+	var notifications []*moira.NotificationEventHistoryItem
 
-	notificationStrings, _ := c.ZRange(connector.context, contactNotificationKey, 0, time.Now().Unix()).Result()
+	searchPattern := getAllContactNotificationsByIdPattern(contactID)
 
-	for _, notification := range notificationStrings {
-		notificationObj, err := GetNotificationStruct(notification)
+	items, _, err := c.ZScan(connector.context, contactNotificationKey, 0, searchPattern, scanCount).Result()
+
+	if err != nil {
+		fmt.Printf("Error while fetching keys from " + contactNotificationKey)
+	}
+
+	for _, item := range items {
+		notificationObj, err := getNotificationStruct(item)
+		if err != nil {
+			fmt.Printf("Error parsing notification from db: %v", item)
+		}
+		notifications = append(notifications, &notificationObj)
+	}
+
+	return notifications, nil
+}
+
+func (connector *DbConnector) GetNotificationsByContactIdWithLimit(contactID string, from int64, to int64) ([]*moira.NotificationEventHistoryItem, error) {
+	c := *connector.client
+	var notifications []*moira.NotificationEventHistoryItem
+
+	notificationStings, _ := c.ZRangeByScore(connector.context, contactNotificationKey, &redis.ZRangeBy{
+		Min: strconv.FormatInt(from, 10),
+		Max: strconv.FormatInt(to, 10),
+	}).Result()
+
+	for _, notification := range notificationStings {
+		notificationObj, err := getNotificationStruct(notification)
 		if err != nil {
 			fmt.Printf("Error parsing notification from db")
 		}
 
 		if notificationObj.ContactID == contactID {
-			notifications = append(notifications, notificationObj)
+			notifications = append(notifications, &notificationObj)
 		}
 	}
 
@@ -33,40 +83,23 @@ func (connector *DbConnector) GetAllNotificationsByContactId(contactID string) (
 func (connector *DbConnector) PushContactNotificationToHistory(notification *moira.ScheduledNotification) error {
 	c := *connector.client
 
-	notificationItemToSave := &moira.NotificationEvent{
-		Timestamp: notification.Timestamp,
+	notificationItemToSave := &moira.NotificationEventHistoryItem{
 		Metric:    notification.Event.Metric,
 		State:     notification.Event.State,
 		TriggerID: notification.Trigger.ID,
-		ContactID: notification.Contact.ID,
 		OldState:  notification.Event.OldState,
+		ContactID: notification.Contact.ID,
+		TimeStamp: notification.Timestamp,
 	}
 
-	notificationBytes, _ := GetNotificationBytes(notificationItemToSave)
+	notificationBytes, _ := getNotificationBytes(notificationItemToSave)
 
 	_, err := c.ZAdd(
 		connector.context,
 		contactNotificationKey,
 		&redis.Z{
-			Score:  float64(notificationItemToSave.Timestamp),
+			Score:  float64(notification.Timestamp),
 			Member: notificationBytes}).Result()
 
 	return err
-}
-
-func GetNotificationBytes(notification *moira.NotificationEvent) ([]byte, error) {
-	bytes, err := json.Marshal(notification)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal notification event: %s", err.Error())
-	}
-	return bytes, nil
-}
-
-func GetNotificationStruct(notificationString string) (moira.NotificationEvent, error) {
-	var object moira.NotificationEvent
-	err := json.Unmarshal([]byte(notificationString), &object)
-	if err != nil {
-		return object, fmt.Errorf("failed to umarshell event: %s", err.Error())
-	}
-	return object, nil
 }
