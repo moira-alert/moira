@@ -3,10 +3,11 @@ package handler
 import (
 	"context"
 	"fmt"
-	"github.com/go-chi/chi"
-	"github.com/go-chi/render"
 	"net/http"
 	"strconv"
+
+	"github.com/go-chi/chi"
+	"github.com/go-chi/render"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
@@ -22,7 +23,6 @@ func contact(router chi.Router) {
 		router.Use(middleware.ContactContext)
 		router.Use(contactFilter)
 		router.Get("/", getContactById)
-		router.Get("/events", getContactByIdWithEvents)
 		router.Put("/", updateContact)
 		router.Delete("/", removeContact)
 		router.Post("/test", sendTestContactNotification)
@@ -42,7 +42,7 @@ func getAllContacts(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func getContactById(writer http.ResponseWriter, request *http.Request) {
+func getContactByIdWithNoEvents(writer http.ResponseWriter, request *http.Request) {
 	contactData := request.Context().Value(contactKey).(moira.ContactData)
 	contact, err := controller.GetContactById(database, contactData.ID)
 
@@ -57,12 +57,12 @@ func getContactById(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func getContactByIdWithEvents(writer http.ResponseWriter, request *http.Request) {
+func getContactById(writer http.ResponseWriter, request *http.Request) {
 	contactData := request.Context().Value(contactKey).(moira.ContactData)
 	params := request.URL.Query()
 
 	if params.Get("from") == "" || params.Get("to") == "" {
-		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("need to specify url params 'from' and 'to'")))
+		getContactByIdWithNoEvents(writer, request)
 		return
 	}
 
