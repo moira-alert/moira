@@ -43,6 +43,15 @@ func (connector *DbConnector) GetRemoteTriggerIDs() ([]string, error) {
 	return triggerIds, nil
 }
 
+func (connector *DbConnector) GetVMSelectTriggerIDs() ([]string, error) {
+	c := *connector.client
+	triggerIds, err := c.SMembers(connector.context, vmselectTriggersListKey).Result()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get vmselect triggers-list: %s", err.Error())
+	}
+	return triggerIds, nil
+}
+
 // GetTrigger gets trigger and trigger tags by given ID and return it in merged object
 func (connector *DbConnector) GetTrigger(triggerID string) (moira.Trigger, error) {
 	pipe := (*connector.client).TxPipeline()
@@ -167,6 +176,7 @@ func (connector *DbConnector) GetTriggerIDsStartWith(prefix string) ([]string, e
 	return matchedTriggers, nil
 }
 
+// TODO Cleanup this mess
 func (connector *DbConnector) updateTrigger(triggerID string, newTrigger *moira.Trigger, oldTrigger *moira.Trigger) error {
 	bytes, err := reply.GetTriggerBytes(triggerID, newTrigger)
 	if err != nil {
@@ -381,6 +391,7 @@ func (connector *DbConnector) triggerHasSubscriptions(trigger *moira.Trigger) (b
 
 var triggersListKey = "{moira-triggers-list}:moira-triggers-list"
 var remoteTriggersListKey = "{moira-triggers-list}:moira-remote-triggers-list"
+var vmselectTriggersListKey = "{moira-triggers-list}:moira-vmselect-triggers-list"
 
 func triggerKey(triggerID string) string {
 	return "moira-trigger:" + triggerID

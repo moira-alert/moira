@@ -79,7 +79,7 @@ func TestNotifier(t *testing.T) {
 	mockCtrl = gomock.NewController(t)
 	defer mockCtrl.Finish()
 	database := redis.NewTestDatabase(logger)
-	metricsSourceProvider := metricSource.CreateMetricSourceProvider(local.Create(database), nil)
+	metricsSourceProvider := metricSource.CreateMetricSourceProvider(local.Create(database), nil, nil)
 	database.SaveContact(&contact)               //nolint
 	database.SaveSubscription(&subscription)     //nolint
 	database.SaveTrigger(trigger.ID, &trigger)   //nolint

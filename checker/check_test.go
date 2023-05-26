@@ -24,7 +24,7 @@ func TestGetMetricDataState(t *testing.T) {
 	logger, _ := logging.GetLogger("Test")
 	var warnValue float64 = 10
 	var errValue float64 = 20
-	checkerMetrics := metrics.ConfigureCheckerMetrics(metrics.NewDummyRegistry(), false)
+	checkerMetrics := metrics.ConfigureCheckerMetrics(metrics.NewDummyRegistry(), false, false)
 	triggerChecker := TriggerChecker{
 		logger:  logger,
 		metrics: checkerMetrics.LocalMetrics,
@@ -535,7 +535,7 @@ func TestCheckForNODATA(t *testing.T) {
 
 	var ttl int64 = 600
 
-	checkerMetrics := metrics.ConfigureCheckerMetrics(metrics.NewDummyRegistry(), false)
+	checkerMetrics := metrics.ConfigureCheckerMetrics(metrics.NewDummyRegistry(), false, false)
 	triggerChecker := TriggerChecker{
 		metrics: checkerMetrics.LocalMetrics,
 		logger:  logger,
@@ -634,7 +634,7 @@ func TestCheck(t *testing.T) {
 
 		var ttl int64 = 30
 
-		checkerMetrics := metrics.ConfigureCheckerMetrics(metrics.NewDummyRegistry(), false)
+		checkerMetrics := metrics.ConfigureCheckerMetrics(metrics.NewDummyRegistry(), false, false)
 		triggerChecker := TriggerChecker{
 			triggerID: "SuperId",
 			database:  dataBase,
@@ -1183,7 +1183,7 @@ func TestTriggerChecker_Check(t *testing.T) {
 		source:    source,
 		logger:    logger,
 		config:    &Config{},
-		metrics:   metrics.ConfigureCheckerMetrics(metrics.NewDummyRegistry(), false).LocalMetrics,
+		metrics:   metrics.ConfigureCheckerMetrics(metrics.NewDummyRegistry(), false, false).LocalMetrics,
 		from:      17,
 		until:     67,
 		ttl:       ttl,
@@ -1262,7 +1262,7 @@ func BenchmarkTriggerChecker_Check(b *testing.B) {
 		source:    source,
 		logger:    logger,
 		config:    &Config{},
-		metrics:   metrics.ConfigureCheckerMetrics(metrics.NewDummyRegistry(), false).LocalMetrics,
+		metrics:   metrics.ConfigureCheckerMetrics(metrics.NewDummyRegistry(), false, false).LocalMetrics,
 		from:      17,
 		until:     67,
 		ttl:       ttl,

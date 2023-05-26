@@ -20,6 +20,7 @@ import (
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
 	"github.com/moira-alert/moira/metric_source/remote"
+	"github.com/moira-alert/moira/metric_source/vmselect"
 	_ "go.uber.org/automaxprocs"
 )
 
@@ -113,10 +114,18 @@ func main() {
 		String("listen_address", apiConfig.Listen).
 		Msg("Start listening")
 
-	localSource := local.Create(database)
 	remoteConfig := config.Remote.GetRemoteSourceSettings()
+	vmselectConfig := config.VMSelect.GetVMSelectSourceSettings()
+
+	localSource := local.Create(database)
 	remoteSource := remote.Create(remoteConfig)
-	metricSourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource)
+	vmselectSorce := vmselect.Create(vmselectConfig)
+
+	metricSourceProvider := metricSource.CreateMetricSourceProvider(
+		localSource,
+		remoteSource,
+		vmselectSorce,
+	)
 
 	webConfigContent, err := config.Web.getSettings(remoteConfig.Enabled)
 	if err != nil {

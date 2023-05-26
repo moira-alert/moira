@@ -9,6 +9,7 @@ import (
 
 	"github.com/moira-alert/moira/image_store/s3"
 	remoteSource "github.com/moira-alert/moira/metric_source/remote"
+	"github.com/moira-alert/moira/metric_source/vmselect"
 	"github.com/xiam/to"
 	"gopkg.in/yaml.v2"
 
@@ -121,11 +122,6 @@ type RemoteConfig struct {
 	Enabled bool `yaml:"enabled"`
 }
 
-// ImageStoreConfig defines the configuration for all the image stores to be initialized by InitImageStores
-type ImageStoreConfig struct {
-	S3 s3.Config `yaml:"s3"`
-}
-
 // GetRemoteSourceSettings returns remote config parsed from moira config files
 func (config *RemoteConfig) GetRemoteSourceSettings() *remoteSource.Config {
 	return &remoteSource.Config{
@@ -137,6 +133,32 @@ func (config *RemoteConfig) GetRemoteSourceSettings() *remoteSource.Config {
 		Password:      config.Password,
 		Enabled:       config.Enabled,
 	}
+}
+
+type VMSelectConfig struct {
+	URL           string `yaml:"url"`
+	CheckInterval string `yaml:"check_interval"`
+	MetricsTTL    string `yaml:"metrics_ttl"`
+	Timeout       string `yaml:"timeout"`
+	User          string `yaml:"user"`
+	Password      string `yaml:"password"`
+	Enabled       bool   `yaml:"enabled"`
+}
+
+// GetRemoteSourceSettings returns remote config parsed from moira config files
+func (config *VMSelectConfig) GetVMSelectSourceSettings() *vmselect.Config {
+	return &vmselect.Config{
+		URL:           config.URL,
+		CheckInterval: to.Duration(config.CheckInterval),
+		MetricsTTL:    to.Duration(config.MetricsTTL),
+		User:          config.User,
+		Password:      config.Password,
+	}
+}
+
+// ImageStoreConfig defines the configuration for all the image stores to be initialized by InitImageStores
+type ImageStoreConfig struct {
+	S3 s3.Config `yaml:"s3"`
 }
 
 // ReadConfig parses config file by the given path into Moira-used type

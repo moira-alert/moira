@@ -11,6 +11,7 @@ import (
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
 	"github.com/moira-alert/moira/metric_source/remote"
+	"github.com/moira-alert/moira/metric_source/vmselect"
 	"github.com/patrickmn/go-cache"
 
 	"github.com/moira-alert/moira"
@@ -83,13 +84,25 @@ func main() {
 	database := redis.NewDatabase(logger, databaseSettings, redis.Checker)
 
 	remoteConfig := config.Remote.GetRemoteSourceSettings()
+	vmselectConfig := config.VMSelect.GetVMSelectSourceSettings()
+
 	localSource := local.Create(database)
 	remoteSource := remote.Create(remoteConfig)
-	metricSourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource)
+	vmselectSource := vmselect.Create(vmselectConfig)
 
-	isConfigured, _ := remoteSource.IsConfigured()
-	checkerMetrics := metrics.ConfigureCheckerMetrics(telemetry.Metrics, isConfigured)
+	// TODO: Abstractions over sources, so that they all are handled the same way
+	metricSourceProvider := metricSource.CreateMetricSourceProvider(
+		localSource,
+		remoteSource,
+		vmselectSource,
+	)
+
+	remoteConfigured, _ := remoteSource.IsConfigured()
+	vmselectConfigured, _ := vmselectSource.IsConfigured()
+
+	checkerMetrics := metrics.ConfigureCheckerMetrics(telemetry.Metrics, remoteConfigured, vmselectConfigured)
 	checkerSettings := config.Checker.getSettings(logger)
+
 	if triggerID != nil && *triggerID != "" {
 		checkSingleTrigger(database, checkerMetrics, checkerSettings, metricSourceProvider)
 	}
@@ -99,6 +112,7 @@ func main() {
 		Database:          database,
 		Config:            checkerSettings,
 		RemoteConfig:      remoteConfig,
+		VMSelectConfig:    vmselectConfig,
 		SourceProvider:    metricSourceProvider,
 		Metrics:           checkerMetrics,
 		TriggerCache:      cache.New(checkerSettings.CheckInterval, time.Minute*60), //nolint

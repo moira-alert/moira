@@ -17,6 +17,7 @@ type config struct {
 	Web       webConfig           `yaml:"web"`
 	Telemetry cmd.TelemetryConfig `yaml:"telemetry"`
 	Remote    cmd.RemoteConfig    `yaml:"remote"`
+	VMSelect  cmd.VMSelectConfig  `yaml:"vmselect"`
 }
 
 type apiConfig struct {

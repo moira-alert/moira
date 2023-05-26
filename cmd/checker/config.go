@@ -13,6 +13,7 @@ type config struct {
 	Checker   checkerConfig       `yaml:"checker"`
 	Telemetry cmd.TelemetryConfig `yaml:"telemetry"`
 	Remote    cmd.RemoteConfig    `yaml:"remote"`
+	VMSelect  cmd.VMSelectConfig  `yaml:"vmselect"`
 }
 
 type triggerLogConfig struct {
@@ -100,6 +101,11 @@ func getDefault() config {
 			Pprof: cmd.ProfilerConfig{Enabled: false},
 		},
 		Remote: cmd.RemoteConfig{
+			CheckInterval: "60s",
+			Timeout:       "60s",
+			MetricsTTL:    "7d",
+		},
+		VMSelect: cmd.VMSelectConfig{
 			CheckInterval: "60s",
 			Timeout:       "60s",
 			MetricsTTL:    "7d",

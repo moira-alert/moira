@@ -13,10 +13,11 @@ import (
 )
 
 type Config struct {
-	MetricsTTL time.Duration
-	URL        string
-	User       string
-	Password   string
+	CheckInterval time.Duration
+	MetricsTTL    time.Duration
+	URL           string
+	User          string
+	Password      string
 }
 
 func Create(config *Config) metricSource.MetricSource {

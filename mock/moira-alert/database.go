@@ -120,6 +120,20 @@ func (mr *MockDatabaseMockRecorder) AddRemoteTriggersToCheck(arg0 interface{}) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddRemoteTriggersToCheck", reflect.TypeOf((*MockDatabase)(nil).AddRemoteTriggersToCheck), arg0)
 }
 
+// AddVMSelectTriggersToCheck mocks base method.
+func (m *MockDatabase) AddVMSelectTriggersToCheck(arg0 []string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddVMSelectTriggersToCheck", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddVMSelectTriggersToCheck indicates an expected call of AddVMSelectTriggersToCheck.
+func (mr *MockDatabaseMockRecorder) AddVMSelectTriggersToCheck(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddVMSelectTriggersToCheck", reflect.TypeOf((*MockDatabase)(nil).AddVMSelectTriggersToCheck), arg0)
+}
+
 // CleanUpAbandonedRetentions mocks base method.
 func (m *MockDatabase) CleanUpAbandonedRetentions() error {
 	m.ctrl.T.Helper()
@@ -936,6 +950,51 @@ func (m *MockDatabase) GetUserTeams(arg0 string) ([]string, error) {
 func (mr *MockDatabaseMockRecorder) GetUserTeams(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserTeams", reflect.TypeOf((*MockDatabase)(nil).GetUserTeams), arg0)
+}
+
+// GetVMSelectTriggerIDs mocks base method.
+func (m *MockDatabase) GetVMSelectTriggerIDs() ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetVMSelectTriggerIDs")
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetVMSelectTriggerIDs indicates an expected call of GetVMSelectTriggerIDs.
+func (mr *MockDatabaseMockRecorder) GetVMSelectTriggerIDs() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVMSelectTriggerIDs", reflect.TypeOf((*MockDatabase)(nil).GetVMSelectTriggerIDs))
+}
+
+// GetVMSelectTriggersToCheck mocks base method.
+func (m *MockDatabase) GetVMSelectTriggersToCheck(arg0 int) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetVMSelectTriggersToCheck", arg0)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetVMSelectTriggersToCheck indicates an expected call of GetVMSelectTriggersToCheck.
+func (mr *MockDatabaseMockRecorder) GetVMSelectTriggersToCheck(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVMSelectTriggersToCheck", reflect.TypeOf((*MockDatabase)(nil).GetVMSelectTriggersToCheck), arg0)
+}
+
+// GetVMSelectTriggersToCheckCount mocks base method.
+func (m *MockDatabase) GetVMSelectTriggersToCheckCount() (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetVMSelectTriggersToCheckCount")
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetVMSelectTriggersToCheckCount indicates an expected call of GetVMSelectTriggersToCheckCount.
+func (mr *MockDatabaseMockRecorder) GetVMSelectTriggersToCheckCount() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVMSelectTriggersToCheckCount", reflect.TypeOf((*MockDatabase)(nil).GetVMSelectTriggersToCheckCount))
 }
 
 // IsTeamContainUser mocks base method.

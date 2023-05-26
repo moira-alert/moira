@@ -6,6 +6,7 @@ import "github.com/moira-alert/moira"
 type CheckerMetrics struct {
 	LocalMetrics           *CheckMetrics
 	RemoteMetrics          *CheckMetrics
+	VMSelectMetrics        *CheckMetrics
 	MetricEventsChannelLen Histogram
 	UnusedTriggersCount    Histogram
 	MetricEventsHandleTime Timer
@@ -28,7 +29,7 @@ type CheckMetrics struct {
 }
 
 // ConfigureCheckerMetrics is checker metrics configurator
-func ConfigureCheckerMetrics(registry Registry, remoteEnabled bool) *CheckerMetrics {
+func ConfigureCheckerMetrics(registry Registry, remoteEnabled, vmselectEnabled bool) *CheckerMetrics {
 	m := &CheckerMetrics{
 		LocalMetrics:           configureCheckMetrics(registry, "local"),
 		MetricEventsChannelLen: registry.NewHistogram("metricEvents"),
@@ -37,6 +38,9 @@ func ConfigureCheckerMetrics(registry Registry, remoteEnabled bool) *CheckerMetr
 	}
 	if remoteEnabled {
 		m.RemoteMetrics = configureCheckMetrics(registry, "remote")
+	}
+	if vmselectEnabled {
+		m.VMSelectMetrics = configureCheckMetrics(registry, "vmselect")
 	}
 	return m
 }

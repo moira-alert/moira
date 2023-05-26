@@ -10,6 +10,7 @@ import (
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
 	"github.com/moira-alert/moira/metric_source/remote"
+	"github.com/moira-alert/moira/metric_source/vmselect"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/cmd"
@@ -82,10 +83,14 @@ func main() {
 	databaseSettings := config.Redis.GetSettings()
 	database := redis.NewDatabase(logger, databaseSettings, redis.Notifier)
 
-	localSource := local.Create(database)
 	remoteConfig := config.Remote.GetRemoteSourceSettings()
+	vmselectConfig := config.VMSelect.GetVMSelectSourceSettings()
+
+	localSource := local.Create(database)
 	remoteSource := remote.Create(remoteConfig)
-	metricSourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource)
+	vmselectSource := vmselect.Create(vmselectConfig)
+
+	metricSourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource, vmselectSource)
 
 	// Initialize the image store
 	imageStoreMap := cmd.InitImageStores(config.ImageStores, logger)

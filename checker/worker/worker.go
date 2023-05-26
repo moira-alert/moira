@@ -10,6 +10,7 @@ import (
 
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/remote"
+	"github.com/moira-alert/moira/metric_source/vmselect"
 	"github.com/patrickmn/go-cache"
 	"gopkg.in/tomb.v2"
 
@@ -23,6 +24,7 @@ type Checker struct {
 	Database          moira.Database
 	Config            *checker.Config
 	RemoteConfig      *remote.Config
+	VMSelectConfig    *vmselect.Config
 	SourceProvider    *metricSource.SourceProvider
 	Metrics           *metrics.CheckerMetrics
 	TriggerCache      *cache.Cache
@@ -31,9 +33,12 @@ type Checker struct {
 	lazyTriggerIDs    atomic.Value
 	lastData          int64
 	tomb              tomb.Tomb
-	remoteEnabled     bool
+
+	remoteEnabled   bool
+	vmselectEnabled bool
 }
 
+// TODO: Refactor this function, it's literally unreadable
 // Start start schedule new MetricEvents and check for NODATA triggers
 func (worker *Checker) Start() error {
 	if worker.Config.MaxParallelChecks == 0 {
@@ -66,10 +71,11 @@ func (worker *Checker) Start() error {
 
 	worker.tomb.Go(worker.localTriggerGetter)
 
+	// Remote
 	_, err = worker.SourceProvider.GetRemote()
 	worker.remoteEnabled = err == nil
 
-	if worker.remoteEnabled && worker.Config.MaxParallelRemoteChecks == 0 {
+	if worker.vmselectEnabled && worker.Config.MaxParallelRemoteChecks == 0 {
 		worker.Config.MaxParallelRemoteChecks = runtime.NumCPU()
 
 		worker.Logger.Info().
@@ -83,7 +89,29 @@ func (worker *Checker) Start() error {
 	} else {
 		worker.Logger.Info().Msg("Remote checker disabled")
 	}
+	// ~Remote
 
+	// VMSelect
+	_, err = worker.SourceProvider.GetVMSelect()
+	worker.vmselectEnabled = err == nil
+
+	if worker.remoteEnabled && worker.Config.MaxParallelVMSelectChecks == 0 {
+		worker.Config.MaxParallelVMSelectChecks = runtime.NumCPU()
+
+		worker.Logger.Info().
+			Int("number_of_cpu", worker.Config.MaxParallelVMSelectChecks).
+			Msg("MaxParallelRemoteChecks is not configured, set it to the number of CPU")
+	}
+
+	if worker.vmselectEnabled {
+		worker.tomb.Go(worker.vmselectTriggerGetter)
+		worker.Logger.Info().Msg("VMSelect checker started")
+	} else {
+		worker.Logger.Info().Msg("VMSelect checker disabled")
+	}
+	// ~VMSelect
+
+	// TODO: Proper config validation
 	const maxParallelChecksMaxValue = 1024 * 8
 	if worker.Config.MaxParallelChecks > maxParallelChecksMaxValue {
 		return errors.New("MaxParallelChecks value is too large")
@@ -103,6 +131,7 @@ func (worker *Checker) Start() error {
 		})
 	}
 
+	// Remote
 	if worker.remoteEnabled {
 		const maxParallelRemoteChecksMaxValue = 1024 * 8
 		if worker.Config.MaxParallelRemoteChecks > maxParallelRemoteChecksMaxValue {
@@ -110,7 +139,7 @@ func (worker *Checker) Start() error {
 		}
 
 		worker.Logger.Info().
-			Int("number_of_checkers", worker.Config.MaxParallelChecks).
+			Int("number_of_checkers", worker.Config.MaxParallelRemoteChecks).
 			Msg("Start parallel remote checkers")
 
 		remoteTriggerIdsToCheckChan := worker.startTriggerToCheckGetter(worker.Database.GetRemoteTriggersToCheck, worker.Config.MaxParallelRemoteChecks)
@@ -120,6 +149,28 @@ func (worker *Checker) Start() error {
 			})
 		}
 	}
+	// ~Remote
+
+	// VMSelect
+	if worker.vmselectEnabled {
+		const maxParallelVMSelectChecksMaxValue = 1024 * 8
+		if worker.Config.MaxParallelVMSelectChecks > maxParallelVMSelectChecksMaxValue {
+			return errors.New("MaxParallelVMSelectChecks value is too large")
+		}
+
+		worker.Logger.Info().
+			Int("number_of_checkers", worker.Config.MaxParallelVMSelectChecks).
+			Msg("Start parallel remote checkers")
+
+		vmselectTriggerIdsToCheckChan := worker.startTriggerToCheckGetter(worker.Database.GetVMSelectTriggersToCheck, worker.Config.MaxParallelVMSelectChecks)
+		for i := 0; i < worker.Config.MaxParallelVMSelectChecks; i++ {
+			worker.tomb.Go(func() error {
+				return worker.startTriggerHandler(vmselectTriggerIdsToCheckChan, worker.Metrics.VMSelectMetrics)
+			})
+		}
+	}
+	// ~VMSelect
+
 	worker.Logger.Info().Msg("Checking new events started")
 
 	go func() {

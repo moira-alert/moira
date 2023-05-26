@@ -32,9 +32,10 @@ type Database interface {
 	CleanUpAbandonedTriggerLastCheck() error
 
 	// Trigger storing
-	GetLocalTriggerIDs() ([]string, error)
 	GetAllTriggerIDs() ([]string, error)
+	GetLocalTriggerIDs() ([]string, error)
 	GetRemoteTriggerIDs() ([]string, error)
+	GetVMSelectTriggerIDs() ([]string, error)
 	GetTrigger(triggerID string) (Trigger, error)
 	GetTriggers(triggerIDs []string) ([]*Trigger, error)
 	GetTriggerChecks(triggerIDs []string) ([]*TriggerCheck, error)
@@ -113,6 +114,10 @@ type Database interface {
 	AddRemoteTriggersToCheck(triggerIDs []string) error
 	GetRemoteTriggersToCheck(count int) ([]string, error)
 	GetRemoteTriggersToCheckCount() (int64, error)
+
+	AddVMSelectTriggersToCheck(triggerIDs []string) error
+	GetVMSelectTriggersToCheck(count int) ([]string, error)
+	GetVMSelectTriggersToCheckCount() (int64, error)
 
 	// TriggerCheckLock storing
 	AcquireTriggerCheckLock(triggerID string, maxAttemptsCount int) error

@@ -18,6 +18,7 @@ type config struct {
 	Notifier    notifierConfig       `yaml:"notifier"`
 	Telemetry   cmd.TelemetryConfig  `yaml:"telemetry"`
 	Remote      cmd.RemoteConfig     `yaml:"remote"`
+	VMSelect    cmd.VMSelectConfig   `yaml:"vmselect"`
 	ImageStores cmd.ImageStoreConfig `yaml:"image_store"`
 }
 
