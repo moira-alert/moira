@@ -3,19 +3,13 @@ package redis
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
+
 	"github.com/go-redis/redis/v8"
 	"github.com/moira-alert/moira"
-	"strconv"
 )
 
-const (
-	contactNotificationKey = "moira-contact-notifications"
-	scanCount              = 10000
-)
-
-func getAllContactNotificationsByIdPattern(contactID string) string {
-	return "*" + contactID + "*"
-}
+const contactNotificationKey = "moira-contact-notifications"
 
 func getNotificationBytes(notification *moira.NotificationEventHistoryItem) ([]byte, error) {
 	bytes, err := json.Marshal(notification)
@@ -32,29 +26,6 @@ func getNotificationStruct(notificationString string) (moira.NotificationEventHi
 		return object, fmt.Errorf("failed to umarshall event: %s", err.Error())
 	}
 	return object, nil
-}
-
-func (connector *DbConnector) GetAllNotificationsByContactId(contactID string) ([]*moira.NotificationEventHistoryItem, error) {
-	c := *connector.client
-	var notifications []*moira.NotificationEventHistoryItem
-
-	searchPattern := getAllContactNotificationsByIdPattern(contactID)
-
-	items, _, err := c.ZScan(connector.context, contactNotificationKey, 0, searchPattern, scanCount).Result()
-
-	if err != nil {
-		fmt.Printf("Error while fetching keys from " + contactNotificationKey)
-	}
-
-	for _, item := range items {
-		notificationObj, err := getNotificationStruct(item)
-		if err != nil {
-			fmt.Printf("Error parsing notification from db: %v", item)
-		}
-		notifications = append(notifications, &notificationObj)
-	}
-
-	return notifications, nil
 }
 
 func (connector *DbConnector) GetNotificationsByContactIdWithLimit(contactID string, from int64, to int64) ([]*moira.NotificationEventHistoryItem, error) {
