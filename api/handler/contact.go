@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
@@ -42,42 +41,14 @@ func getAllContacts(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func getContactByIdWithNoEvents(writer http.ResponseWriter, request *http.Request) {
-	contactData := request.Context().Value(contactKey).(moira.ContactData)
-	contact, err := controller.GetContactById(database, contactData.ID)
-
-	if err != nil {
-		render.Render(writer, request, err)
-		return
-	}
-
-	if err := render.Render(writer, request, contact); err != nil {
-		render.Render(writer, request, api.ErrorRender(err))
-		return
-	}
-}
-
 func getContactById(writer http.ResponseWriter, request *http.Request) {
 	contactData := request.Context().Value(contactKey).(moira.ContactData)
-	params := request.URL.Query()
 
-	if params.Get("from") == "" || params.Get("to") == "" {
-		getContactByIdWithNoEvents(writer, request)
-		return
-	}
-
-	from, err := strconv.ParseInt(params.Get("from"), 10, 64)
-	to, err := strconv.ParseInt(params.Get("to"), 10, 64)
-
-	if err != nil || from < 0 || to < 0 {
-		render.Render(writer, request, api.ErrorRender(fmt.Errorf("params 'from' and 'to' must be numbers greater than zero")))
-		return
-	}
-
-	contact, api_err := controller.GetContactByIdWithEventsLimit(database, contactData.ID, from, to)
+	contact, api_err := controller.GetContactById(database, contactData.ID)
 
 	if api_err != nil {
-		render.Render(writer, request, api.ErrorInternalServer(fmt.Errorf("can't fetch contacts with events")))
+		render.Render(writer, request, api.ErrorInternalServer(fmt.Errorf("can't fetch contact with id %v", contactData.ID)))
+		return
 	}
 
 	if err := render.Render(writer, request, contact); err != nil {
