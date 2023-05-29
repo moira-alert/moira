@@ -44,9 +44,9 @@ func getAllContacts(writer http.ResponseWriter, request *http.Request) {
 func getContactById(writer http.ResponseWriter, request *http.Request) {
 	contactData := request.Context().Value(contactKey).(moira.ContactData)
 
-	contact, api_err := controller.GetContactById(database, contactData.ID)
+	contact, apiErr := controller.GetContactById(database, contactData.ID)
 
-	if api_err != nil {
+	if apiErr != nil {
 		render.Render(writer, request, api.ErrorInternalServer(fmt.Errorf("can't fetch contact with id %v", contactData.ID)))
 		return
 	}
