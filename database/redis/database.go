@@ -35,16 +35,18 @@ const (
 
 // DbConnector contains redis client
 type DbConnector struct {
-	client               *redis.UniversalClient
-	logger               moira.Logger
-	retentionCache       *cache.Cache
-	retentionSavingCache *cache.Cache
-	metricsCache         *cache.Cache
-	sync                 *redsync.Redsync
-	metricsTTLSeconds    int64
-	context              context.Context
-	source               DBSource
-	clock                moira.Clock
+	client                        *redis.UniversalClient
+	logger                        moira.Logger
+	retentionCache                *cache.Cache
+	retentionSavingCache          *cache.Cache
+	metricsCache                  *cache.Cache
+	sync                          *redsync.Redsync
+	metricsTTLSeconds             int64
+	context                       context.Context
+	source                        DBSource
+	clock                         moira.Clock
+	NotificationHistoryTtlSeconds int64
+	NotificationHistoryQueryLimit int64
 }
 
 func NewDatabase(logger moira.Logger, config Config, source DBSource) *DbConnector {
@@ -64,16 +66,18 @@ func NewDatabase(logger moira.Logger, config Config, source DBSource) *DbConnect
 	syncPool := goredis.NewPool(client)
 
 	connector := DbConnector{
-		client:               &client,
-		logger:               logger,
-		context:              ctx,
-		retentionCache:       cache.New(cacheValueExpirationDuration, cacheCleanupInterval),
-		retentionSavingCache: cache.New(cache.NoExpiration, cache.DefaultExpiration),
-		metricsCache:         cache.New(cacheValueExpirationDuration, cacheCleanupInterval),
-		sync:                 redsync.New(syncPool),
-		metricsTTLSeconds:    int64(config.MetricsTTL.Seconds()),
-		source:               source,
-		clock:                clock.NewSystemClock(),
+		client:                        &client,
+		logger:                        logger,
+		context:                       ctx,
+		retentionCache:                cache.New(cacheValueExpirationDuration, cacheCleanupInterval),
+		retentionSavingCache:          cache.New(cache.NoExpiration, cache.DefaultExpiration),
+		metricsCache:                  cache.New(cacheValueExpirationDuration, cacheCleanupInterval),
+		sync:                          redsync.New(syncPool),
+		metricsTTLSeconds:             int64(config.MetricsTTL.Seconds()),
+		source:                        source,
+		clock:                         clock.NewSystemClock(),
+		NotificationHistoryTtlSeconds: int64(config.NotificationHistoryTtl.Seconds()),
+		NotificationHistoryQueryLimit: int64(config.NotificationHistoryQueryLimit),
 	}
 	return &connector
 }

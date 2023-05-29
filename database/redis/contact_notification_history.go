@@ -3,6 +3,8 @@ package redis
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"time"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/moira-alert/moira"
@@ -32,8 +34,9 @@ func (connector *DbConnector) GetNotificationsByContactIdWithLimit(contactID str
 	var notifications []*moira.NotificationEventHistoryItem
 
 	notificationStings, _ := c.ZRangeByScore(connector.context, contactNotificationKey, &redis.ZRangeBy{
-		Min: from,
-		Max: to, //offset and count here
+		Min:   from,
+		Max:   to,
+		Count: connector.NotificationHistoryQueryLimit,
 	}).Result()
 
 	for _, notification := range notificationStings {
@@ -50,9 +53,9 @@ func (connector *DbConnector) GetNotificationsByContactIdWithLimit(contactID str
 	return notifications, nil
 }
 
+// PushContactNotificationToHistory converts ScheduledNotification to NotificationEventHistoryItem and
+// saves it, and deletes items older than specified ttl
 func (connector *DbConnector) PushContactNotificationToHistory(notification *moira.ScheduledNotification) error {
-	c := *connector.client
-
 	notificationItemToSave := &moira.NotificationEventHistoryItem{
 		Metric:    notification.Event.Metric,
 		State:     notification.Event.State,
@@ -64,12 +67,29 @@ func (connector *DbConnector) PushContactNotificationToHistory(notification *moi
 
 	notificationBytes, _ := getNotificationBytes(notificationItemToSave)
 
-	_, err := c.ZAdd(
+	to := int(time.Now().Unix() - connector.NotificationHistoryTtlSeconds)
+
+	pipe := (*connector.client).TxPipeline()
+
+	pipe.ZAdd(
 		connector.context,
 		contactNotificationKey,
 		&redis.Z{
 			Score:  float64(notification.Timestamp),
-			Member: notificationBytes}).Result()
+			Member: notificationBytes})
 
-	return err
+	pipe.ZRemRangeByScore(
+		connector.context,
+		contactNotificationKey,
+		"-inf",
+		strconv.Itoa(to),
+	)
+
+	_, err := pipe.Exec(connector.Context())
+
+	if err != nil {
+		return fmt.Errorf("failed to push contact event history item: %s", err.Error())
+	}
+
+	return nil
 }

@@ -2,6 +2,7 @@
 redis:
   addrs: "redis:6379"
   metrics_ttl: 3h
+  notification_history_ttl: 48h
 telemetry:
   graphite:
     enabled: true
