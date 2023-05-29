@@ -13,6 +13,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.2.0
 	github.com/cyberdelia/go-metrics-graphite v0.0.0-20161219230853-39f87cc3b432
 	github.com/dustin/go-humanize v1.0.1
+	github.com/ggicci/httpin v0.10.1
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/go-chi/render v1.0.1
 	github.com/go-graphite/carbonapi v0.16.0

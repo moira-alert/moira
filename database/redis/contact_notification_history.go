@@ -3,7 +3,6 @@ package redis
 import (
 	"encoding/json"
 	"fmt"
-	"strconv"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/moira-alert/moira"
@@ -28,13 +27,13 @@ func getNotificationStruct(notificationString string) (moira.NotificationEventHi
 	return object, nil
 }
 
-func (connector *DbConnector) GetNotificationsByContactIdWithLimit(contactID string, from int64, to int64) ([]*moira.NotificationEventHistoryItem, error) {
+func (connector *DbConnector) GetNotificationsByContactIdWithLimit(contactID string, from string, to string) ([]*moira.NotificationEventHistoryItem, error) {
 	c := *connector.client
 	var notifications []*moira.NotificationEventHistoryItem
 
 	notificationStings, _ := c.ZRangeByScore(connector.context, contactNotificationKey, &redis.ZRangeBy{
-		Min: strconv.FormatInt(from, 10),
-		Max: strconv.FormatInt(to, 10),
+		Min: from,
+		Max: to, //offset and count here
 	}).Result()
 
 	for _, notification := range notificationStings {

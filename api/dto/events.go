@@ -14,6 +14,11 @@ type EventsList struct {
 	List  []moira.NotificationEvent `json:"list"`
 }
 
+type EventIntervalQuery struct {
+	From uint64 `in:"query=from"`
+	To   uint64 `in:"query=to"`
+}
+
 func (*EventsList) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
