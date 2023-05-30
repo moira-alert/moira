@@ -534,13 +534,13 @@ func TestRemoteTrigger(t *testing.T) {
 	dataBase.clock = systemClock
 	pattern := "test.pattern.remote1"
 	trigger := &moira.Trigger{
-		ID:           "triggerID-0000000000010",
-		Name:         "remote",
-		Targets:      []string{"test.target.remote1"},
-		Patterns:     []string{pattern},
-		IsRemote:     true,
-		TriggerType:  moira.RisingTrigger,
-		AloneMetrics: map[string]bool{},
+		ID:            "triggerID-0000000000010",
+		Name:          "remote",
+		Targets:       []string{"test.target.remote1"},
+		Patterns:      []string{pattern},
+		TriggerSource: moira.GraphiteLocal,
+		TriggerType:   moira.RisingTrigger,
+		AloneMetrics:  map[string]bool{},
 	}
 	dataBase.Flush()
 	defer dataBase.Flush()
@@ -591,7 +591,7 @@ func TestRemoteTrigger(t *testing.T) {
 	})
 
 	Convey("Update remote trigger as local", t, func() {
-		trigger.IsRemote = false
+		trigger.TriggerSource = moira.GraphiteLocal
 		trigger.Patterns = []string{pattern}
 		Convey("Trigger should be saved correctly", func() {
 			systemClock.EXPECT().Now().Return(time.Date(2022, time.June, 7, 10, 0, 0, 0, time.UTC))
@@ -634,7 +634,7 @@ func TestRemoteTrigger(t *testing.T) {
 			So(patterns, ShouldResemble, trigger.Patterns)
 		})
 
-		trigger.IsRemote = true
+		trigger.TriggerSource = moira.GraphiteRemote
 		Convey("Update this trigger as remote", func() {
 			systemClock.EXPECT().Now().Return(time.Date(2022, time.June, 7, 10, 0, 0, 0, time.UTC))
 
@@ -769,7 +769,11 @@ func TestDbConnector_preSaveTrigger(t *testing.T) {
 	})
 
 	Convey("When a remote trigger", t, func() {
-		trigger := &moira.Trigger{ID: "trigger-id", Patterns: patterns, IsRemote: true}
+		trigger := &moira.Trigger{
+			ID:            "trigger-id",
+			Patterns:      patterns,
+			TriggerSource: moira.GraphiteRemote,
+		}
 
 		Convey("UpdatedAt CreatedAt fields should be set `now` on creation; patterns should be empty.", func() {
 			connector.preSaveTrigger(trigger, nil)

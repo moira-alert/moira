@@ -688,7 +688,11 @@ func TestCheck(t *testing.T) {
 					Timestamp:      int64(67),
 					Metric:         triggerChecker.trigger.Name,
 				}, true).Return(nil),
-				dataBase.EXPECT().SetTriggerLastCheck(triggerChecker.triggerID, &lastCheck, triggerChecker.trigger.IsRemote).Return(nil),
+				dataBase.EXPECT().SetTriggerLastCheck(
+					triggerChecker.triggerID,
+					&lastCheck,
+					triggerChecker.trigger.TriggerSource == moira.GraphiteRemote,
+				).Return(nil),
 			)
 			err := triggerChecker.Check()
 			So(err, ShouldBeNil)
@@ -719,7 +723,11 @@ func TestCheck(t *testing.T) {
 				gomock.InOrder(
 					source.EXPECT().Fetch(pattern, triggerChecker.from, triggerChecker.until, true).Return(nil, unknownFunctionExc),
 					dataBase.EXPECT().PushNotificationEvent(&event, true).Return(nil),
-					dataBase.EXPECT().SetTriggerLastCheck(triggerChecker.triggerID, &lastCheck, triggerChecker.trigger.IsRemote).Return(nil),
+					dataBase.EXPECT().SetTriggerLastCheck(
+						triggerChecker.triggerID,
+						&lastCheck,
+						triggerChecker.trigger.TriggerSource == moira.GraphiteRemote,
+					).Return(nil),
 				)
 				err := triggerChecker.Check()
 				So(err, ShouldBeNil)
@@ -764,7 +772,11 @@ func TestCheck(t *testing.T) {
 					dataBase.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL),
 					dataBase.EXPECT().RemoveMetricsValues([]string{metric}, triggerChecker.until-metricsTTL).Return(nil),
 					dataBase.EXPECT().PushNotificationEvent(&event, true).Return(nil),
-					dataBase.EXPECT().SetTriggerLastCheck(triggerChecker.triggerID, &lastCheck, triggerChecker.trigger.IsRemote).Return(nil),
+					dataBase.EXPECT().SetTriggerLastCheck(
+						triggerChecker.triggerID,
+						&lastCheck,
+						triggerChecker.trigger.TriggerSource == moira.GraphiteRemote,
+					).Return(nil),
 				)
 				err := triggerChecker.Check()
 				So(err, ShouldBeNil)
@@ -808,7 +820,11 @@ func TestCheck(t *testing.T) {
 				dataBase.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL),
 				dataBase.EXPECT().RemoveMetricsValues([]string{metric}, triggerChecker.until-metricsTTL).Return(nil),
 				dataBase.EXPECT().PushNotificationEvent(&event, true).Return(nil),
-				dataBase.EXPECT().SetTriggerLastCheck(triggerChecker.triggerID, &lastCheck, triggerChecker.trigger.IsRemote).Return(nil),
+				dataBase.EXPECT().SetTriggerLastCheck(
+					triggerChecker.triggerID,
+					&lastCheck,
+					triggerChecker.trigger.TriggerSource == moira.GraphiteRemote,
+				).Return(nil),
 			)
 			err := triggerChecker.Check()
 			So(err, ShouldBeNil)
@@ -850,7 +866,11 @@ func TestCheck(t *testing.T) {
 			})
 			fetchResult.EXPECT().GetPatternMetrics().Return([]string{metric}, nil)
 			dataBase.EXPECT().PushNotificationEvent(&event, true).Return(nil)
-			dataBase.EXPECT().SetTriggerLastCheck(triggerChecker.triggerID, &lastCheck, triggerChecker.trigger.IsRemote).Return(nil)
+			dataBase.EXPECT().SetTriggerLastCheck(
+				triggerChecker.triggerID,
+				&lastCheck,
+				triggerChecker.trigger.TriggerSource == moira.GraphiteRemote,
+			).Return(nil)
 			err := triggerChecker.Check()
 			So(err, ShouldBeNil)
 		})
@@ -920,7 +940,11 @@ func TestCheck(t *testing.T) {
 				dataBase.EXPECT().GetMetricsTTLSeconds().Return(metricsTTL),
 				dataBase.EXPECT().RemoveMetricsValues([]string{metricName1, metricNameAlone, metricName2}, triggerChecker.until-metricsTTL).Return(nil),
 
-				dataBase.EXPECT().SetTriggerLastCheck(triggerChecker.triggerID, &lastCheck, triggerChecker.trigger.IsRemote).Return(nil),
+				dataBase.EXPECT().SetTriggerLastCheck(
+					triggerChecker.triggerID,
+					&lastCheck,
+					triggerChecker.trigger.TriggerSource == moira.GraphiteRemote,
+				).Return(nil),
 			)
 			err := triggerChecker.Check()
 			So(err, ShouldBeNil)
@@ -1234,7 +1258,11 @@ func TestTriggerChecker_Check(t *testing.T) {
 	source.EXPECT().Fetch(pattern, triggerChecker.from, triggerChecker.until, true).Return(fetchResult, nil)
 	fetchResult.EXPECT().GetMetricsData().Return([]metricSource.MetricData{*metricSource.MakeMetricData(metric, []float64{0, 1, 2, 3, 4}, retention, triggerChecker.from)})
 	fetchResult.EXPECT().GetPatternMetrics().Return([]string{metric}, nil)
-	dataBase.EXPECT().SetTriggerLastCheck(triggerChecker.triggerID, &lastCheck, triggerChecker.trigger.IsRemote).Return(nil)
+	dataBase.EXPECT().SetTriggerLastCheck(
+		triggerChecker.triggerID,
+		&lastCheck,
+		triggerChecker.trigger.TriggerSource == moira.GraphiteRemote,
+	).Return(nil)
 	_ = triggerChecker.Check()
 }
 
@@ -1313,7 +1341,12 @@ func BenchmarkTriggerChecker_Check(b *testing.B) {
 	source.EXPECT().Fetch(pattern, triggerChecker.from, triggerChecker.until, true).Return(fetchResult, nil).AnyTimes()
 	fetchResult.EXPECT().GetMetricsData().Return([]metricSource.MetricData{*metricSource.MakeMetricData(metric, []float64{0, 1, 2, 3, 4}, retention, triggerChecker.from)}).AnyTimes()
 	fetchResult.EXPECT().GetPatternMetrics().Return([]string{metric}, nil).AnyTimes()
-	dataBase.EXPECT().SetTriggerLastCheck(triggerChecker.triggerID, &lastCheck, triggerChecker.trigger.IsRemote).Return(nil).AnyTimes()
+	dataBase.EXPECT().SetTriggerLastCheck(
+		triggerChecker.triggerID,
+		&lastCheck,
+		triggerChecker.trigger.TriggerSource == moira.GraphiteRemote,
+	).Return(nil).AnyTimes()
+
 	for n := 0; n < b.N; n++ {
 		err := triggerChecker.Check()
 		if err != nil {

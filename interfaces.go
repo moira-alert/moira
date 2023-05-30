@@ -15,6 +15,7 @@ type Database interface {
 	GetMetricsUpdatesCount() (int64, error)
 	GetChecksUpdatesCount() (int64, error)
 	GetRemoteChecksUpdatesCount() (int64, error)
+	// TODO: GetVMSelectChecksUpdatesCount() (int64, error)
 	GetNotifierState() (string, error)
 	SetNotifierState(string) error
 
@@ -36,6 +37,7 @@ type Database interface {
 	GetLocalTriggerIDs() ([]string, error)
 	GetRemoteTriggerIDs() ([]string, error)
 	GetVMSelectTriggerIDs() ([]string, error)
+
 	GetTrigger(triggerID string) (Trigger, error)
 	GetTriggers(triggerIDs []string) ([]*Trigger, error)
 	GetTriggerChecks(triggerIDs []string) ([]*TriggerCheck, error)

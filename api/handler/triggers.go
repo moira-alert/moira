@@ -61,7 +61,9 @@ func createTrigger(writer http.ResponseWriter, request *http.Request) {
 
 	var problems []dto.TreeOfProblems
 	if needValidate(request) {
-		problems = validateTargets(request, trigger)
+		// TODO: Error handling
+		problems, _ = validateTargets(request, trigger)
+
 		if problems != nil && dto.DoesAnyTreeHaveError(problems) {
 			writeErrorSaveResponse(writer, request, problems)
 			return
@@ -125,11 +127,18 @@ func getTriggerFromRequest(request *http.Request) (*dto.Trigger, *api.ErrorRespo
 // getMetricTTLByTrigger gets metric ttl duration time from request context for local or remote trigger.
 func getMetricTTLByTrigger(request *http.Request, trigger *dto.Trigger) time.Duration {
 	var ttl time.Duration
-	if trigger.IsRemote {
-		ttl = middleware.GetRemoteMetricTTL(request)
-	} else {
+
+	switch trigger.TriggerSource {
+	case moira.GraphiteLocal:
 		ttl = middleware.GetLocalMetricTTL(request)
+
+	case moira.GraphiteRemote:
+		ttl = middleware.GetRemoteMetricTTL(request)
+
+	case moira.VMSelectRemote:
+		ttl = middleware.GetVMSelectMetricTTL(request)
 	}
+
 	return ttl
 }
 
@@ -151,7 +160,8 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 	ttl := getMetricTTLByTrigger(request, trigger)
 
 	if len(trigger.Targets) > 0 {
-		response.Targets = dto.TargetVerification(trigger.Targets, ttl, trigger.IsRemote)
+		// TODO: Error handling
+		response.Targets, _ = dto.TargetVerification(trigger.Targets, ttl, trigger.TriggerSource)
 	}
 
 	render.JSON(writer, request, response)

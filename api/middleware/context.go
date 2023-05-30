@@ -162,12 +162,16 @@ func Populate(defaultPopulated bool) func(next http.Handler) http.Handler {
 }
 
 // Triggers gets string value target from URI query and set it to request context. If query has not values sets given values
-func Triggers(LocalMetricTTL, RemoteMetricTTL time.Duration) func(next http.Handler) http.Handler {
+func Triggers(localMetricTTL, remoteMetricTTL, vmselectMetricTTL time.Duration) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-			localTTL := context.WithValue(request.Context(), localMetricTTLKey, LocalMetricTTL)
-			remoteTTL := context.WithValue(localTTL, remoteMetricTTLKey, RemoteMetricTTL)
-			next.ServeHTTP(writer, request.WithContext(remoteTTL))
+			ctx := request.Context()
+
+			ctx = context.WithValue(ctx, localMetricTTLKey, localMetricTTL)
+			ctx = context.WithValue(ctx, remoteMetricTTLKey, remoteMetricTTL)
+			ctx = context.WithValue(ctx, vmselectMetricTTLKey, vmselectMetricTTL)
+
+			next.ServeHTTP(writer, request.WithContext(ctx))
 		})
 	}
 }

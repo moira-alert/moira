@@ -176,7 +176,7 @@ func (connector *DbConnector) GetTriggerIDsStartWith(prefix string) ([]string, e
 	return matchedTriggers, nil
 }
 
-// TODO Cleanup this mess
+// TODO(ASAP) Cleanup this mess
 func (connector *DbConnector) updateTrigger(triggerID string, newTrigger *moira.Trigger, oldTrigger *moira.Trigger) error {
 	bytes, err := reply.GetTriggerBytes(triggerID, newTrigger)
 	if err != nil {
@@ -187,7 +187,8 @@ func (connector *DbConnector) updateTrigger(triggerID string, newTrigger *moira.
 		for _, pattern := range moira.GetStringListsDiff(oldTrigger.Patterns, newTrigger.Patterns) {
 			pipe.SRem(connector.context, patternTriggersKey(pattern), triggerID)
 		}
-		if oldTrigger.IsRemote && !newTrigger.IsRemote {
+		// TODO: Replace properly with TriggerSource
+		if oldTrigger.TriggerSource == moira.GraphiteRemote && newTrigger.TriggerSource != moira.GraphiteRemote {
 			pipe.SRem(connector.context, remoteTriggersListKey, triggerID)
 		}
 
@@ -198,7 +199,8 @@ func (connector *DbConnector) updateTrigger(triggerID string, newTrigger *moira.
 	}
 	pipe.Set(connector.context, triggerKey(triggerID), bytes, redis.KeepTTL)
 	pipe.SAdd(connector.context, triggersListKey, triggerID)
-	if newTrigger.IsRemote {
+	// TODO: Replace properly with TriggerSource
+	if newTrigger.TriggerSource == moira.GraphiteRemote {
 		pipe.SAdd(connector.context, remoteTriggersListKey, triggerID)
 	} else {
 		for _, pattern := range newTrigger.Patterns {
@@ -222,7 +224,7 @@ func (connector *DbConnector) updateTrigger(triggerID string, newTrigger *moira.
 }
 
 func (connector *DbConnector) preSaveTrigger(newTrigger *moira.Trigger, oldTrigger *moira.Trigger) {
-	if newTrigger.IsRemote {
+	if newTrigger.TriggerSource != moira.GraphiteLocal {
 		newTrigger.Patterns = make([]string, 0)
 	}
 

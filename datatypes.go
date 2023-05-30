@@ -2,6 +2,7 @@ package moira
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"math"
 	"sort"
@@ -142,8 +143,9 @@ type TriggerData struct {
 	Targets    []string `json:"targets"`
 	WarnValue  float64  `json:"warn_value"`
 	ErrorValue float64  `json:"error_value"`
-	IsRemote   bool     `json:"is_remote"`
-	Tags       []string `json:"__notifier_trigger_tags"`
+	// TODO: Replase with TriggerSource value
+	IsRemote bool     `json:"is_remote"`
+	Tags     []string `json:"__notifier_trigger_tags"`
 }
 
 // GetTriggerURI gets frontUri and returns triggerUrl, returns empty string on selfcheck and test notifications
@@ -245,27 +247,58 @@ const (
 
 // Trigger represents trigger data object
 type Trigger struct {
-	ID               string          `json:"id"`
-	Name             string          `json:"name"`
-	Desc             *string         `json:"desc,omitempty"`
-	Targets          []string        `json:"targets"`
-	WarnValue        *float64        `json:"warn_value"`
-	ErrorValue       *float64        `json:"error_value"`
-	TriggerType      string          `json:"trigger_type"`
-	Tags             []string        `json:"tags"`
-	TTLState         *TTLState       `json:"ttl_state,omitempty"`
-	TTL              int64           `json:"ttl,omitempty"`
-	Schedule         *ScheduleData   `json:"sched,omitempty"`
-	Expression       *string         `json:"expression,omitempty"`
-	PythonExpression *string         `json:"python_expression,omitempty"`
-	Patterns         []string        `json:"patterns"`
-	IsRemote         bool            `json:"is_remote"`
-	MuteNewMetrics   bool            `json:"mute_new_metrics"`
-	AloneMetrics     map[string]bool `json:"alone_metrics"`
-	CreatedAt        *int64          `json:"created_at"`
-	UpdatedAt        *int64          `json:"updated_at"`
-	CreatedBy        string          `json:"created_by"`
-	UpdatedBy        string          `json:"updated_by"`
+	ID               string        `json:"id"`
+	Name             string        `json:"name"`
+	Desc             *string       `json:"desc,omitempty"`
+	Targets          []string      `json:"targets"`
+	WarnValue        *float64      `json:"warn_value"`
+	ErrorValue       *float64      `json:"error_value"`
+	TriggerType      string        `json:"trigger_type"`
+	Tags             []string      `json:"tags"`
+	TTLState         *TTLState     `json:"ttl_state,omitempty"`
+	TTL              int64         `json:"ttl,omitempty"`
+	Schedule         *ScheduleData `json:"sched,omitempty"`
+	Expression       *string       `json:"expression,omitempty"`
+	PythonExpression *string       `json:"python_expression,omitempty"`
+	Patterns         []string      `json:"patterns"`
+	// IsRemote         bool            `json:"is_remote"`
+	TriggerSource  TriggerSource   `json:"trigger_source,omitempty"`
+	MuteNewMetrics bool            `json:"mute_new_metrics"`
+	AloneMetrics   map[string]bool `json:"alone_metrics"`
+	CreatedAt      *int64          `json:"created_at"`
+	UpdatedAt      *int64          `json:"updated_at"`
+	CreatedBy      string          `json:"created_by"`
+	UpdatedBy      string          `json:"updated_by"`
+}
+
+type TriggerSource string
+
+const (
+	TriggerSourceNotSet TriggerSource = ""
+	GraphiteLocal       TriggerSource = "graphite_local"
+	GraphiteRemote      TriggerSource = "graphite_remote"
+	VMSelectRemote      TriggerSource = "vmselect_remote"
+)
+
+func (s *TriggerSource) UnmarshalJSON(data []byte) error {
+	var v []interface{}
+	if err := json.Unmarshal(data, &v); err != nil {
+		return err
+	}
+
+	triggerTypeStr, ok := v[0].(string)
+	if !ok {
+		return fmt.Errorf("expected trigger type to be a number but it was %T", v[0])
+	}
+
+	source := TriggerSource(triggerTypeStr)
+	if source != GraphiteLocal && source != GraphiteRemote && source != VMSelectRemote {
+		*s = TriggerSourceNotSet
+		return nil
+	}
+
+	*s = source
+	return nil
 }
 
 // TriggerCheck represents trigger data with last check data and check timestamp

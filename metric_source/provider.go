@@ -42,15 +42,23 @@ func (provider *SourceProvider) GetVMSelect() (MetricSource, error) {
 
 // GetTriggerMetricSource get metrics source by given trigger. If it not configured returns not empty error
 func (provider *SourceProvider) GetTriggerMetricSource(trigger *moira.Trigger) (MetricSource, error) {
-	return provider.GetMetricSource(trigger.IsRemote)
+	return provider.GetMetricSource(trigger.TriggerSource)
 }
 
 // GetMetricSource return metric source depending on trigger flag: is remote trigger or not. GetLocal if not.
-func (provider *SourceProvider) GetMetricSource(isRemote bool) (MetricSource, error) {
-	if isRemote {
+func (provider *SourceProvider) GetMetricSource(triggerSource moira.TriggerSource) (MetricSource, error) {
+	switch triggerSource {
+	case moira.GraphiteLocal:
+		return provider.GetLocal()
+
+	case moira.GraphiteRemote:
 		return provider.GetRemote()
+
+	case moira.VMSelectRemote:
+		return provider.GetVMSelect()
 	}
-	return provider.GetLocal()
+
+	return nil, fmt.Errorf("unknown metric source")
 }
 
 func returnSource(source MetricSource) (MetricSource, error) {

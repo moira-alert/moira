@@ -27,6 +27,7 @@ type triggerStorageElement struct {
 	Patterns         []string            `json:"patterns"`
 	TTL              string              `json:"ttl,omitempty"`
 	IsRemote         bool                `json:"is_remote"`
+	TriggerSource    moira.TriggerSource `json:"trigger_source,omitempty"`
 	MuteNewMetrics   bool                `json:"mute_new_metrics,omitempty"`
 	AloneMetrics     map[string]bool     `json:"alone_metrics"`
 	CreatedAt        *int64              `json:"created_at"`
@@ -46,6 +47,15 @@ func (storageElement *triggerStorageElement) toTrigger() moira.Trigger {
 		}
 	}
 	//TODO(litleleprikon): END remove in moira v2.8.0. Compatibility with moira < v2.6.0
+
+	triggerSource := storageElement.TriggerSource
+	if triggerSource == moira.TriggerSourceNotSet {
+		if storageElement.IsRemote {
+			triggerSource = moira.GraphiteRemote
+		} else {
+			triggerSource = moira.GraphiteLocal
+		}
+	}
 	return moira.Trigger{
 		ID:               storageElement.ID,
 		Name:             storageElement.Name,
@@ -61,7 +71,7 @@ func (storageElement *triggerStorageElement) toTrigger() moira.Trigger {
 		PythonExpression: storageElement.PythonExpression,
 		Patterns:         storageElement.Patterns,
 		TTL:              getTriggerTTL(storageElement.TTL),
-		IsRemote:         storageElement.IsRemote,
+		TriggerSource:    triggerSource,
 		MuteNewMetrics:   storageElement.MuteNewMetrics,
 		AloneMetrics:     storageElement.AloneMetrics,
 		CreatedAt:        storageElement.CreatedAt,
@@ -87,7 +97,8 @@ func toTriggerStorageElement(trigger *moira.Trigger, triggerID string) *triggerS
 		PythonExpression: trigger.PythonExpression,
 		Patterns:         trigger.Patterns,
 		TTL:              getTriggerTTLString(trigger.TTL),
-		IsRemote:         trigger.IsRemote,
+		IsRemote:         trigger.TriggerSource == moira.GraphiteRemote,
+		TriggerSource:    trigger.TriggerSource,
 		MuteNewMetrics:   trigger.MuteNewMetrics,
 		AloneMetrics:     trigger.AloneMetrics,
 		CreatedAt:        trigger.CreatedAt,

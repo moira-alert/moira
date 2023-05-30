@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-graphite/carbonapi/expr/functions"
 	"github.com/go-graphite/carbonapi/expr/metadata"
+	"github.com/moira-alert/moira"
 
 	"github.com/go-graphite/carbonapi/pkg/parser"
 )
@@ -128,7 +129,19 @@ type TreeOfProblems struct {
 }
 
 // TargetVerification validates trigger targets.
-func TargetVerification(targets []string, ttl time.Duration, isRemote bool) []TreeOfProblems {
+func TargetVerification(targets []string, ttl time.Duration, triggerSource moira.TriggerSource) ([]TreeOfProblems, error) {
+	switch triggerSource {
+	case moira.VMSelectRemote:
+		return []TreeOfProblems{{SyntaxOk: true}}, nil
+
+	case moira.GraphiteLocal, moira.GraphiteRemote:
+		return graphiteTargetVerification(targets, ttl, triggerSource), nil
+	}
+
+	return nil, fmt.Errorf("unknown trigger source %T", triggerSource)
+}
+
+func graphiteTargetVerification(targets []string, ttl time.Duration, triggerSource moira.TriggerSource) []TreeOfProblems {
 	functionsOfTargets := make([]TreeOfProblems, 0)
 
 	for _, target := range targets {
@@ -147,7 +160,7 @@ func TargetVerification(targets []string, ttl time.Duration, isRemote bool) []Tr
 			continue
 		}
 
-		functionsOfTarget.TreeOfProblems = checkExpression(expr, ttl, isRemote)
+		functionsOfTarget.TreeOfProblems = checkExpression(expr, ttl, triggerSource)
 		functionsOfTargets = append(functionsOfTargets, functionsOfTarget)
 	}
 
@@ -167,13 +180,13 @@ func DoesAnyTreeHaveError(trees []TreeOfProblems) bool {
 }
 
 // checkExpression validates expression.
-func checkExpression(expression parser.Expr, ttl time.Duration, isRemote bool) *ProblemOfTarget {
+func checkExpression(expression parser.Expr, ttl time.Duration, triggerSource moira.TriggerSource) *ProblemOfTarget {
 	if !expression.IsFunc() {
 		return nil
 	}
 
 	funcName := expression.Target()
-	problemFunction := checkFunction(funcName, isRemote)
+	problemFunction := checkFunction(funcName, triggerSource)
 
 	if argument, ok := functionArgumentsInTheRangeTTL(expression, ttl); !ok {
 		if problemFunction == nil {
@@ -195,7 +208,7 @@ func checkExpression(expression parser.Expr, ttl time.Duration, isRemote bool) *
 			continue
 		}
 
-		if badFunc := checkExpression(argument, ttl, isRemote); badFunc != nil {
+		if badFunc := checkExpression(argument, ttl, triggerSource); badFunc != nil {
 			badFunc.Position = position
 
 			if problemFunction == nil {
@@ -209,7 +222,7 @@ func checkExpression(expression parser.Expr, ttl time.Duration, isRemote bool) *
 	return problemFunction
 }
 
-func checkFunction(funcName string, isRemote bool) *ProblemOfTarget {
+func checkFunction(funcName string, triggerSource moira.TriggerSource) *ProblemOfTarget {
 	if _, isUnstable := unstableFunctions[funcName]; isUnstable {
 		return &ProblemOfTarget{
 			Argument:    funcName,
@@ -234,7 +247,7 @@ func checkFunction(funcName string, isRemote bool) *ProblemOfTarget {
 		}
 	}
 
-	if !isRemote && !funcIsSupported(funcName) {
+	if triggerSource == moira.GraphiteLocal && !funcIsSupported(funcName) {
 		return &ProblemOfTarget{
 			Argument:    funcName,
 			Type:        isBad,

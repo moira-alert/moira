@@ -51,7 +51,11 @@ func (triggerChecker *TriggerChecker) Check() error {
 		}
 	}
 	checkData.UpdateScore()
-	return triggerChecker.database.SetTriggerLastCheck(triggerChecker.triggerID, &checkData, triggerChecker.trigger.IsRemote)
+	return triggerChecker.database.SetTriggerLastCheck(
+		triggerChecker.triggerID,
+		&checkData,
+		triggerChecker.trigger.TriggerSource == moira.GraphiteRemote,
+	)
 }
 
 // handlePrepareError is a function that checks error returned from prepareMetrics function. If error
@@ -81,7 +85,11 @@ func (triggerChecker *TriggerChecker) handlePrepareError(checkData moira.CheckDa
 		return false, checkData, err
 	}
 	checkData.UpdateScore()
-	return false, checkData, triggerChecker.database.SetTriggerLastCheck(triggerChecker.triggerID, &checkData, triggerChecker.trigger.IsRemote)
+	return false, checkData, triggerChecker.database.SetTriggerLastCheck(
+		triggerChecker.triggerID,
+		&checkData,
+		triggerChecker.trigger.TriggerSource == moira.GraphiteRemote,
+	)
 }
 
 // handleFetchError is a function that checks error returned from fetchTriggerMetrics function.
@@ -100,7 +108,11 @@ func (triggerChecker *TriggerChecker) handleFetchError(checkData moira.CheckData
 			// Do not alert when user don't wanna receive
 			// NODATA state alerts, but change trigger status
 			checkData.UpdateScore()
-			return triggerChecker.database.SetTriggerLastCheck(triggerChecker.triggerID, &checkData, triggerChecker.trigger.IsRemote)
+			return triggerChecker.database.SetTriggerLastCheck(
+				triggerChecker.triggerID,
+				&checkData,
+				triggerChecker.trigger.TriggerSource == moira.GraphiteRemote,
+			)
 		}
 	case remote.ErrRemoteTriggerResponse:
 		timeSinceLastSuccessfulCheck := checkData.Timestamp - checkData.LastSuccessfulCheckTimestamp
@@ -122,7 +134,11 @@ func (triggerChecker *TriggerChecker) handleFetchError(checkData moira.CheckData
 		return err
 	}
 	checkData.UpdateScore()
-	return triggerChecker.database.SetTriggerLastCheck(triggerChecker.triggerID, &checkData, triggerChecker.trigger.IsRemote)
+	return triggerChecker.database.SetTriggerLastCheck(
+		triggerChecker.triggerID,
+		&checkData,
+		triggerChecker.trigger.TriggerSource == moira.GraphiteRemote,
+	)
 }
 
 // handleUndefinedError is a function that check error with undefined type.
@@ -141,7 +157,11 @@ func (triggerChecker *TriggerChecker) handleUndefinedError(checkData moira.Check
 		return err
 	}
 	checkData.UpdateScore()
-	return triggerChecker.database.SetTriggerLastCheck(triggerChecker.triggerID, &checkData, triggerChecker.trigger.IsRemote)
+	return triggerChecker.database.SetTriggerLastCheck(
+		triggerChecker.triggerID,
+		&checkData,
+		triggerChecker.trigger.TriggerSource == moira.GraphiteRemote,
+	)
 }
 
 func logTriggerCheckException(logger moira.Logger, triggerID string, err error) {

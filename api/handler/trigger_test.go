@@ -30,7 +30,10 @@ func TestGetTrigger(t *testing.T) {
 
 		Convey("When success and have empty created_at & updated_at should return null in response", func() {
 			throttlingTime := time.Date(2022, time.June, 7, 10, 0, 0, 0, time.UTC)
-			mockDb.EXPECT().GetTrigger("triggerID-0000000000001").Return(moira.Trigger{ID: "triggerID-0000000000001"}, nil)
+			mockDb.EXPECT().GetTrigger("triggerID-0000000000001").Return(moira.Trigger{
+				ID:            "triggerID-0000000000001",
+				TriggerSource: moira.GraphiteLocal,
+			}, nil)
 			mockDb.EXPECT().GetTriggerThrottling("triggerID-0000000000001").Return(throttlingTime, throttlingTime)
 			database = mockDb
 
@@ -46,7 +49,7 @@ func TestGetTrigger(t *testing.T) {
 
 			contentBytes, _ := io.ReadAll(response.Body)
 			contents := string(contentBytes)
-			expected := "{\"id\":\"triggerID-0000000000001\",\"name\":\"\",\"targets\":null,\"warn_value\":null,\"error_value\":null,\"trigger_type\":\"\",\"tags\":null,\"expression\":\"\",\"patterns\":null,\"is_remote\":false,\"mute_new_metrics\":false,\"alone_metrics\":null,\"created_at\":null,\"updated_at\":null,\"created_by\":\"\",\"updated_by\":\"\",\"throttling\":0}\n"
+			expected := "{\"id\":\"triggerID-0000000000001\",\"name\":\"\",\"targets\":null,\"warn_value\":null,\"error_value\":null,\"trigger_type\":\"\",\"tags\":null,\"expression\":\"\",\"patterns\":null,\"is_remote\":false,\"trigger_source\":\"graphite_local\",\"mute_new_metrics\":false,\"alone_metrics\":null,\"created_at\":null,\"updated_at\":null,\"created_by\":\"\",\"updated_by\":\"\",\"throttling\":0}\n"
 			So(contents, ShouldEqual, expected)
 		})
 
@@ -56,9 +59,10 @@ func TestGetTrigger(t *testing.T) {
 			mockDb.EXPECT().GetTrigger("triggerID-0000000000001").
 				Return(
 					moira.Trigger{
-						ID:        "triggerID-0000000000001",
-						CreatedAt: &triggerTime,
-						UpdatedAt: &triggerTime,
+						ID:            "triggerID-0000000000001",
+						CreatedAt:     &triggerTime,
+						TriggerSource: moira.GraphiteLocal,
+						UpdatedAt:     &triggerTime,
 					},
 					nil)
 			mockDb.EXPECT().GetTriggerThrottling("triggerID-0000000000001").Return(throttlingTime, throttlingTime)
@@ -76,7 +80,7 @@ func TestGetTrigger(t *testing.T) {
 
 			contentBytes, _ := io.ReadAll(response.Body)
 			contents := string(contentBytes)
-			expected := "{\"id\":\"triggerID-0000000000001\",\"name\":\"\",\"targets\":null,\"warn_value\":null,\"error_value\":null,\"trigger_type\":\"\",\"tags\":null,\"expression\":\"\",\"patterns\":null,\"is_remote\":false,\"mute_new_metrics\":false,\"alone_metrics\":null,\"created_at\":\"2022-06-07T10:00:00Z\",\"updated_at\":\"2022-06-07T10:00:00Z\",\"created_by\":\"\",\"updated_by\":\"\",\"throttling\":0}\n"
+			expected := "{\"id\":\"triggerID-0000000000001\",\"name\":\"\",\"targets\":null,\"warn_value\":null,\"error_value\":null,\"trigger_type\":\"\",\"tags\":null,\"expression\":\"\",\"patterns\":null,\"is_remote\":false,\"trigger_source\":\"graphite_local\",\"mute_new_metrics\":false,\"alone_metrics\":null,\"created_at\":\"2022-06-07T10:00:00Z\",\"updated_at\":\"2022-06-07T10:00:00Z\",\"created_by\":\"\",\"updated_by\":\"\",\"throttling\":0}\n"
 			So(contents, ShouldEqual, expected)
 		})
 
@@ -107,7 +111,7 @@ func TestUpdateTrigger(t *testing.T) {
 
 	localSource := mock_metric_source.NewMockMetricSource(mockCtrl)
 	remoteSource := mock_metric_source.NewMockMetricSource(mockCtrl)
-	sourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource)
+	sourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource, nil)
 
 	localSource.EXPECT().IsConfigured().Return(true, nil).AnyTimes()
 	localSource.EXPECT().GetMetricsTTLSeconds().Return(int64(3600)).AnyTimes()
@@ -145,7 +149,8 @@ func TestUpdateTrigger(t *testing.T) {
 				WarnValue:  &triggerWarnValue,
 				ErrorValue: &triggerErrorValue,
 				Targets:    []string{"my.metric"},
-				IsRemote:   false,
+				/// IsRemote:   false,
+				TriggerSource: moira.GraphiteLocal,
 			}
 			mockDb.EXPECT().GetTrigger(gomock.Any()).Return(trigger, nil)
 
@@ -180,12 +185,12 @@ func TestUpdateTrigger(t *testing.T) {
 			triggerErrorValue := float64(15)
 			trigger := dto.Trigger{
 				TriggerModel: dto.TriggerModel{
-					Name:       "Test trigger",
-					Tags:       []string{"123"},
-					WarnValue:  &triggerWarnValue,
-					ErrorValue: &triggerErrorValue,
-					Targets:    []string{},
-					IsRemote:   false,
+					Name:          "Test trigger",
+					Tags:          []string{"123"},
+					WarnValue:     &triggerWarnValue,
+					ErrorValue:    &triggerErrorValue,
+					Targets:       []string{},
+					TriggerSource: moira.GraphiteLocal,
 				},
 			}
 
@@ -216,7 +221,8 @@ func TestUpdateTrigger(t *testing.T) {
 			WarnValue:  &triggerWarnValue,
 			ErrorValue: &triggerErrorValue,
 			Targets:    []string{"alias(consolidateBy(Sales.widgets.largeBlue, 'sum'), 'alias to test nesting')"},
-			IsRemote:   false,
+			/// IsRemote:   false,
+			TriggerSource: moira.GraphiteLocal,
 		}
 
 		jsonTrigger, _ := json.Marshal(trigger)
@@ -305,7 +311,8 @@ func TestUpdateTrigger(t *testing.T) {
 			WarnValue:  &triggerWarnValue,
 			ErrorValue: &triggerErrorValue,
 			Targets:    []string{"alias(summarize(my.metric, '5min'), 'alias to test nesting')"},
-			IsRemote:   false,
+			/// IsRemote:   false,
+			TriggerSource: moira.GraphiteLocal,
 		}
 		jsonTrigger, _ := json.Marshal(trigger)
 

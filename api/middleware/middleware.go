@@ -22,6 +22,7 @@ var (
 	triggerIDKey         ContextKey = "triggerID"
 	localMetricTTLKey    ContextKey = "localMetricTTL"
 	remoteMetricTTLKey   ContextKey = "remoteMetricTTL"
+	vmselectMetricTTLKey ContextKey = "vmselectMetricTTL"
 	populateKey          ContextKey = "populated"
 	contactIDKey         ContextKey = "contactID"
 	tagKey               ContextKey = "tag"
@@ -70,6 +71,11 @@ func GetLocalMetricTTL(request *http.Request) time.Duration {
 // GetRemoteMetricTTL gets remote metric ttl duration time from request context, which was sets in TriggerContext middleware
 func GetRemoteMetricTTL(request *http.Request) time.Duration {
 	return request.Context().Value(remoteMetricTTLKey).(time.Duration)
+}
+
+// GetRemoteMetricTTL gets remote metric ttl duration time from request context, which was sets in TriggerContext middleware
+func GetVMSelectMetricTTL(request *http.Request) time.Duration {
+	return request.Context().Value(vmselectMetricTTLKey).(time.Duration)
 }
 
 // GetPopulated get populate bool from request context, which was sets in TriggerContext middleware

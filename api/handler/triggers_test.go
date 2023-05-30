@@ -52,7 +52,7 @@ func TestGetTriggerFromRequest(t *testing.T) {
 	localSource := mock_metric_source.NewMockMetricSource(mockCtrl)
 	remoteSource := mock_metric_source.NewMockMetricSource(mockCtrl)
 	fetchResult := mock_metric_source.NewMockFetchResult(mockCtrl)
-	sourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource)
+	sourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource, nil)
 
 	localSource.EXPECT().IsConfigured().Return(true, nil).AnyTimes()
 	localSource.EXPECT().GetMetricsTTLSeconds().Return(int64(3600)).AnyTimes()
@@ -79,7 +79,7 @@ func TestGetTriggerFromRequest(t *testing.T) {
 				Schedule:       &moira.ScheduleData{},
 				Expression:     "",
 				Patterns:       []string{},
-				IsRemote:       false,
+				TriggerSource:  moira.GraphiteLocal,
 				MuteNewMetrics: false,
 				AloneMetrics:   map[string]bool{},
 				CreatedAt:      &time.Time{},
@@ -143,7 +143,7 @@ func TestGetMetricTTLByTrigger(t *testing.T) {
 
 	Convey("Given a local trigger", t, func() {
 		trigger := dto.Trigger{TriggerModel: dto.TriggerModel{
-			IsRemote: false,
+			TriggerSource: moira.GraphiteLocal,
 		}}
 
 		Convey("It's metric ttl should be equal to local", func() {
@@ -153,7 +153,7 @@ func TestGetMetricTTLByTrigger(t *testing.T) {
 
 	Convey("Given a remote trigger", t, func() {
 		trigger := dto.Trigger{TriggerModel: dto.TriggerModel{
-			IsRemote: true,
+			TriggerSource: moira.GraphiteLocal,
 		}}
 
 		Convey("It's metric ttl should be equal to remote", func() {
@@ -171,7 +171,7 @@ func TestTriggerCheckHandler(t *testing.T) {
 			localSource := mock_metric_source.NewMockMetricSource(mockCtrl)
 			remoteSource := mock_metric_source.NewMockMetricSource(mockCtrl)
 			fetchResult := mock_metric_source.NewMockFetchResult(mockCtrl)
-			sourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource)
+			sourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource, nil)
 
 			localSource.EXPECT().IsConfigured().Return(true, nil).AnyTimes()
 			localSource.EXPECT().GetMetricsTTLSeconds().Return(int64(3600)).AnyTimes()
@@ -184,40 +184,40 @@ func TestTriggerCheckHandler(t *testing.T) {
 			remoteSource.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fetchResult, nil).AnyTimes()
 
 			testCases := []struct {
-				isRemote         bool
+				triggerSource    moira.TriggerSource
 				targets          []string
 				expectedResponse string
 			}{
 				{
-					false,
+					moira.GraphiteLocal,
 					[]string{
 						"integralByInterval(aliasSub(sum(aliasByNode(my.own.metric, 6)), '(.*)', 'metric'), '1h')",
 					},
 					"{\"targets\":[{\"syntax_ok\":true}]}\n",
 				},
 				{
-					false,
+					moira.GraphiteLocal,
 					[]string{
 						"integralByInterval(aliasSub(sum(aliasByNode(my.own.metric, 6)), '(.*)', 'metric'), '6h')",
 					},
 					"{\"targets\":[{\"syntax_ok\":true,\"tree_of_problems\":{\"argument\":\"integralByInterval\",\"position\":0,\"problems\":[{\"argument\":\"6h\",\"type\":\"bad\",\"description\":\"The function integralByInterval has a time sampling parameter 6h larger than allowed by the config:1h5m0s\",\"position\":1}]}}]}\n",
 				},
 				{
-					false,
+					moira.GraphiteLocal,
 					[]string{
 						"my.own.metric",
 					},
 					"{\"targets\":[{\"syntax_ok\":true}]}\n",
 				},
 				{
-					true,
+					moira.GraphiteRemote,
 					[]string{
 						"integralByInterval(aliasSub(sum(aliasByNode(my.own.metric, 6)), '(.*)', 'metric'), '1h')",
 					},
 					"{\"targets\":[{\"syntax_ok\":true}]}\n",
 				},
 				{
-					true,
+					moira.GraphiteRemote,
 					[]string{
 						"integralByInterval(aliasSub(sum(aliasByNode(my.own.metric, 6)), '(.*)', 'metric'), '6h')",
 					},
@@ -230,12 +230,12 @@ func TestTriggerCheckHandler(t *testing.T) {
 					triggerErrorValue := float64(15)
 					triggerDTO := dto.Trigger{
 						TriggerModel: dto.TriggerModel{
-							Name:       "Test trigger",
-							Tags:       []string{"Normal", "DevOps", "DevOpsGraphite-duty"},
-							WarnValue:  &triggerWarnValue,
-							ErrorValue: &triggerErrorValue,
-							Targets:    testCase.targets,
-							IsRemote:   testCase.isRemote,
+							Name:          "Test trigger",
+							Tags:          []string{"Normal", "DevOps", "DevOpsGraphite-duty"},
+							WarnValue:     &triggerWarnValue,
+							ErrorValue:    &triggerErrorValue,
+							Targets:       testCase.targets,
+							TriggerSource: testCase.triggerSource,
 						},
 					}
 					jsonTrigger, _ := json.Marshal(triggerDTO)
@@ -265,7 +265,7 @@ func TestCreateTriggerHandler(t *testing.T) {
 
 	localSource := mock_metric_source.NewMockMetricSource(mockCtrl)
 	remoteSource := mock_metric_source.NewMockMetricSource(mockCtrl)
-	sourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource)
+	sourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource, nil)
 
 	localSource.EXPECT().IsConfigured().Return(true, nil).AnyTimes()
 	localSource.EXPECT().GetMetricsTTLSeconds().Return(int64(3600)).AnyTimes()
@@ -296,12 +296,12 @@ func TestCreateTriggerHandler(t *testing.T) {
 			triggerErrorValue := float64(15)
 			triggerDTO := dto.Trigger{
 				TriggerModel: dto.TriggerModel{
-					Name:       "Test trigger",
-					Tags:       []string{"123"},
-					WarnValue:  &triggerWarnValue,
-					ErrorValue: &triggerErrorValue,
-					Targets:    []string{"my.metric"},
-					IsRemote:   false,
+					Name:          "Test trigger",
+					Tags:          []string{"123"},
+					WarnValue:     &triggerWarnValue,
+					ErrorValue:    &triggerErrorValue,
+					Targets:       []string{"my.metric"},
+					TriggerSource: moira.GraphiteLocal,
 				},
 			}
 			jsonTrigger, _ := json.Marshal(triggerDTO)
@@ -333,12 +333,12 @@ func TestCreateTriggerHandler(t *testing.T) {
 			triggerErrorValue := float64(15)
 			triggerDTO := dto.Trigger{
 				TriggerModel: dto.TriggerModel{
-					Name:       "Test trigger",
-					Tags:       []string{"123"},
-					WarnValue:  &triggerWarnValue,
-					ErrorValue: &triggerErrorValue,
-					Targets:    []string{},
-					IsRemote:   false,
+					Name:          "Test trigger",
+					Tags:          []string{"123"},
+					WarnValue:     &triggerWarnValue,
+					ErrorValue:    &triggerErrorValue,
+					Targets:       []string{},
+					TriggerSource: moira.GraphiteLocal,
 				},
 			}
 			jsonTrigger, _ := json.Marshal(triggerDTO)
@@ -363,12 +363,12 @@ func TestCreateTriggerHandler(t *testing.T) {
 		triggerErrorValue := float64(15)
 		trigger := dto.Trigger{
 			TriggerModel: dto.TriggerModel{
-				Name:       "Test trigger",
-				Tags:       []string{"123"},
-				WarnValue:  &triggerWarnValue,
-				ErrorValue: &triggerErrorValue,
-				Targets:    []string{"alias(consolidateBy(Sales.widgets.largeBlue, 'sum'), 'alias to test nesting')"},
-				IsRemote:   false,
+				Name:          "Test trigger",
+				Tags:          []string{"123"},
+				WarnValue:     &triggerWarnValue,
+				ErrorValue:    &triggerErrorValue,
+				Targets:       []string{"alias(consolidateBy(Sales.widgets.largeBlue, 'sum'), 'alias to test nesting')"},
+				TriggerSource: moira.GraphiteLocal,
 			},
 		}
 		jsonTrigger, _ := json.Marshal(trigger)
@@ -448,12 +448,12 @@ func TestCreateTriggerHandler(t *testing.T) {
 		triggerErrorValue := float64(15)
 		triggerDTO := dto.Trigger{
 			TriggerModel: dto.TriggerModel{
-				Name:       "Test trigger",
-				Tags:       []string{"123"},
-				WarnValue:  &triggerWarnValue,
-				ErrorValue: &triggerErrorValue,
-				Targets:    []string{"alias(summarize(my.metric, '5min'), 'alias to test nesting')"},
-				IsRemote:   false,
+				Name:          "Test trigger",
+				Tags:          []string{"123"},
+				WarnValue:     &triggerWarnValue,
+				ErrorValue:    &triggerErrorValue,
+				Targets:       []string{"alias(summarize(my.metric, '5min'), 'alias to test nesting')"},
+				TriggerSource: moira.GraphiteLocal,
 			},
 		}
 		jsonTrigger, _ := json.Marshal(triggerDTO)
