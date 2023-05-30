@@ -49,14 +49,15 @@ type DbConnector struct {
 
 func NewDatabase(logger moira.Logger, config Config, source DBSource) *DbConnector {
 	client := redis.NewUniversalClient(&redis.UniversalOptions{
-		MasterName:   config.MasterName,
-		Addrs:        config.Addrs,
-		Username:     config.Username,
-		Password:     config.Password,
-		DialTimeout:  config.DialTimeout,
-		ReadTimeout:  config.ReadTimeout,
-		WriteTimeout: config.WriteTimeout,
-		MaxRetries:   config.MaxRetries,
+		MasterName:       config.MasterName,
+		Addrs:            config.Addrs,
+		Username:         config.Username,
+		Password:         config.Password,
+		SentinelPassword: config.SentinelPassword,
+		DialTimeout:      config.DialTimeout,
+		ReadTimeout:      config.ReadTimeout,
+		WriteTimeout:     config.WriteTimeout,
+		MaxRetries:       config.MaxRetries,
 	})
 
 	ctx := context.Background()
