@@ -27,6 +27,8 @@ type RedisConfig struct {
 	Addrs string `yaml:"addrs"`
 	// Redis Sentinel password
 	SentinelPassword string `yaml:"sentinel_password"`
+	// Redis Sentinel username
+	SentinelUsername string `yaml:"sentinel_username"`
 	// Redis username
 	Username string `yaml:"username"`
 	// Redis password
@@ -50,6 +52,7 @@ func (config *RedisConfig) GetSettings() redis.Config {
 		MasterName:       config.MasterName,
 		Addrs:            strings.Split(config.Addrs, ","),
 		SentinelPassword: config.SentinelPassword,
+		SentinelUsername: config.SentinelUsername
 		Username:         config.Username,
 		Password:         config.Password,
 		MaxRetries:       config.MaxRetries,

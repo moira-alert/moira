@@ -9,6 +9,7 @@ type Config struct {
 	Username         string
 	Password         string
 	SentinelPassword string
+	SentinelUsername string
 	MetricsTTL       time.Duration
 	DialTimeout      time.Duration
 	ReadTimeout      time.Duration

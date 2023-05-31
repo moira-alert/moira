@@ -54,6 +54,7 @@ func NewDatabase(logger moira.Logger, config Config, source DBSource) *DbConnect
 		Username:         config.Username,
 		Password:         config.Password,
 		SentinelPassword: config.SentinelPassword,
+		SentinelUsername: config.SentinelUsername,
 		DialTimeout:      config.DialTimeout,
 		ReadTimeout:      config.ReadTimeout,
 		WriteTimeout:     config.WriteTimeout,
