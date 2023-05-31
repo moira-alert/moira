@@ -52,7 +52,7 @@ func (config *RedisConfig) GetSettings() redis.Config {
 		MasterName:       config.MasterName,
 		Addrs:            strings.Split(config.Addrs, ","),
 		SentinelPassword: config.SentinelPassword,
-		SentinelUsername: config.SentinelUsername
+		SentinelUsername: config.SentinelUsername,
 		Username:         config.Username,
 		Password:         config.Password,
 		MaxRetries:       config.MaxRetries,
