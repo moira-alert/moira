@@ -14,10 +14,6 @@ type CheckerMetrics struct {
 
 // GetCheckMetrics return check metrics dependent on given trigger type
 func (metrics *CheckerMetrics) GetCheckMetrics(trigger *moira.Trigger) *CheckMetrics {
-	/// if trigger.IsRemote {
-	/// 	return metrics.RemoteMetrics
-	/// }
-	/// return metrics.LocalMetrics
 	switch trigger.TriggerSource {
 	case moira.GraphiteLocal:
 		return metrics.LocalMetrics

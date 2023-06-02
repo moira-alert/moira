@@ -56,7 +56,7 @@ func saveTrigger(dataBase moira.Database, trigger *moira.Trigger, triggerID stri
 	}
 
 	// TODO(ASAP) replace with proper usage of TriggerSource
-	if err = dataBase.SetTriggerLastCheck(triggerID, &lastCheck, trigger.TriggerSource == moira.GraphiteRemote); err != nil {
+	if err = dataBase.SetTriggerLastCheck(triggerID, &lastCheck, trigger.TriggerSource); err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}
 

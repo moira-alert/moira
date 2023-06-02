@@ -248,7 +248,7 @@ func TestTriggerStoring(t *testing.T) {
 			So(actualTriggerChecks, ShouldResemble, []*moira.TriggerCheck{triggerCheck})
 
 			//Add check data
-			err = dataBase.SetTriggerLastCheck(trigger.ID, &lastCheckTest, false)
+			err = dataBase.SetTriggerLastCheck(trigger.ID, &lastCheckTest, moira.GraphiteLocal)
 			So(err, ShouldBeNil)
 
 			triggerCheck.LastCheck = lastCheckTest

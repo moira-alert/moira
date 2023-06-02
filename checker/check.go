@@ -54,7 +54,7 @@ func (triggerChecker *TriggerChecker) Check() error {
 	return triggerChecker.database.SetTriggerLastCheck(
 		triggerChecker.triggerID,
 		&checkData,
-		triggerChecker.trigger.TriggerSource == moira.GraphiteRemote,
+		triggerChecker.trigger.TriggerSource,
 	)
 }
 
@@ -88,7 +88,7 @@ func (triggerChecker *TriggerChecker) handlePrepareError(checkData moira.CheckDa
 	return false, checkData, triggerChecker.database.SetTriggerLastCheck(
 		triggerChecker.triggerID,
 		&checkData,
-		triggerChecker.trigger.TriggerSource == moira.GraphiteRemote,
+		triggerChecker.trigger.TriggerSource,
 	)
 }
 
@@ -111,7 +111,7 @@ func (triggerChecker *TriggerChecker) handleFetchError(checkData moira.CheckData
 			return triggerChecker.database.SetTriggerLastCheck(
 				triggerChecker.triggerID,
 				&checkData,
-				triggerChecker.trigger.TriggerSource == moira.GraphiteRemote,
+				triggerChecker.trigger.TriggerSource,
 			)
 		}
 	case remote.ErrRemoteTriggerResponse:
@@ -137,7 +137,7 @@ func (triggerChecker *TriggerChecker) handleFetchError(checkData moira.CheckData
 	return triggerChecker.database.SetTriggerLastCheck(
 		triggerChecker.triggerID,
 		&checkData,
-		triggerChecker.trigger.TriggerSource == moira.GraphiteRemote,
+		triggerChecker.trigger.TriggerSource,
 	)
 }
 
@@ -160,7 +160,7 @@ func (triggerChecker *TriggerChecker) handleUndefinedError(checkData moira.Check
 	return triggerChecker.database.SetTriggerLastCheck(
 		triggerChecker.triggerID,
 		&checkData,
-		triggerChecker.trigger.TriggerSource == moira.GraphiteRemote,
+		triggerChecker.trigger.TriggerSource,
 	)
 }
 

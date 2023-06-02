@@ -27,7 +27,7 @@ type Database interface {
 
 	// LastCheck storing
 	GetTriggerLastCheck(triggerID string) (CheckData, error)
-	SetTriggerLastCheck(triggerID string, checkData *CheckData, isRemote bool) error
+	SetTriggerLastCheck(triggerID string, checkData *CheckData, triggerSource TriggerSource) error
 	RemoveTriggerLastCheck(triggerID string) error
 	SetTriggerCheckMaintenance(triggerID string, metrics map[string]int64, triggerMaintenance *int64, userLogin string, timeCallMaintenance int64) error
 	CleanUpAbandonedTriggerLastCheck() error

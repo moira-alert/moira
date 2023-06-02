@@ -114,7 +114,7 @@ func deleteTriggerMetrics(dataBase moira.Database, metricName string, triggerID 
 		return api.ErrorInternalServer(err)
 	}
 	// TODO Replace with proper usage of TriggerSource
-	if err = dataBase.SetTriggerLastCheck(triggerID, &lastCheck, trigger.TriggerSource == moira.GraphiteRemote); err != nil {
+	if err = dataBase.SetTriggerLastCheck(triggerID, &lastCheck, trigger.TriggerSource); err != nil {
 		return api.ErrorInternalServer(err)
 	}
 	return nil

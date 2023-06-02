@@ -691,7 +691,7 @@ func TestCheck(t *testing.T) {
 				dataBase.EXPECT().SetTriggerLastCheck(
 					triggerChecker.triggerID,
 					&lastCheck,
-					triggerChecker.trigger.TriggerSource == moira.GraphiteRemote,
+					triggerChecker.trigger.TriggerSource,
 				).Return(nil),
 			)
 			err := triggerChecker.Check()
@@ -726,7 +726,7 @@ func TestCheck(t *testing.T) {
 					dataBase.EXPECT().SetTriggerLastCheck(
 						triggerChecker.triggerID,
 						&lastCheck,
-						triggerChecker.trigger.TriggerSource == moira.GraphiteRemote,
+						triggerChecker.trigger.TriggerSource,
 					).Return(nil),
 				)
 				err := triggerChecker.Check()
@@ -775,7 +775,7 @@ func TestCheck(t *testing.T) {
 					dataBase.EXPECT().SetTriggerLastCheck(
 						triggerChecker.triggerID,
 						&lastCheck,
-						triggerChecker.trigger.TriggerSource == moira.GraphiteRemote,
+						triggerChecker.trigger.TriggerSource,
 					).Return(nil),
 				)
 				err := triggerChecker.Check()
@@ -823,7 +823,7 @@ func TestCheck(t *testing.T) {
 				dataBase.EXPECT().SetTriggerLastCheck(
 					triggerChecker.triggerID,
 					&lastCheck,
-					triggerChecker.trigger.TriggerSource == moira.GraphiteRemote,
+					triggerChecker.trigger.TriggerSource,
 				).Return(nil),
 			)
 			err := triggerChecker.Check()
@@ -869,7 +869,7 @@ func TestCheck(t *testing.T) {
 			dataBase.EXPECT().SetTriggerLastCheck(
 				triggerChecker.triggerID,
 				&lastCheck,
-				triggerChecker.trigger.TriggerSource == moira.GraphiteRemote,
+				triggerChecker.trigger.TriggerSource,
 			).Return(nil)
 			err := triggerChecker.Check()
 			So(err, ShouldBeNil)
@@ -943,7 +943,7 @@ func TestCheck(t *testing.T) {
 				dataBase.EXPECT().SetTriggerLastCheck(
 					triggerChecker.triggerID,
 					&lastCheck,
-					triggerChecker.trigger.TriggerSource == moira.GraphiteRemote,
+					triggerChecker.trigger.TriggerSource,
 				).Return(nil),
 			)
 			err := triggerChecker.Check()
@@ -1261,7 +1261,7 @@ func TestTriggerChecker_Check(t *testing.T) {
 	dataBase.EXPECT().SetTriggerLastCheck(
 		triggerChecker.triggerID,
 		&lastCheck,
-		triggerChecker.trigger.TriggerSource == moira.GraphiteRemote,
+		triggerChecker.trigger.TriggerSource,
 	).Return(nil)
 	_ = triggerChecker.Check()
 }
@@ -1344,7 +1344,7 @@ func BenchmarkTriggerChecker_Check(b *testing.B) {
 	dataBase.EXPECT().SetTriggerLastCheck(
 		triggerChecker.triggerID,
 		&lastCheck,
-		triggerChecker.trigger.TriggerSource == moira.GraphiteRemote,
+		triggerChecker.trigger.TriggerSource,
 	).Return(nil).AnyTimes()
 
 	for n := 0; n < b.N; n++ {
@@ -1463,7 +1463,9 @@ func TestTriggerChecker_handlePrepareError(t *testing.T) {
 		dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 		logger, _ := logging.GetLogger("Test")
 
-		trigger := &moira.Trigger{}
+		trigger := &moira.Trigger{
+			TriggerSource: moira.GraphiteLocal,
+		}
 		triggerChecker := TriggerChecker{
 			triggerID: "test trigger",
 			trigger:   trigger,
@@ -1505,7 +1507,7 @@ func TestTriggerChecker_handlePrepareError(t *testing.T) {
 				Metric:           triggerChecker.trigger.Name,
 				MessageEventInfo: nil,
 			}, true)
-			dataBase.EXPECT().SetTriggerLastCheck("test trigger", &expectedCheckData, false)
+			dataBase.EXPECT().SetTriggerLastCheck("test trigger", &expectedCheckData, moira.GraphiteLocal)
 			pass, checkDataReturn, errReturn := triggerChecker.handlePrepareError(checkData, err)
 			So(errReturn, ShouldBeNil)
 			So(pass, ShouldBeFalse)
@@ -1522,7 +1524,7 @@ func TestTriggerChecker_handlePrepareError(t *testing.T) {
 				State:          moira.StateNODATA,
 				EventTimestamp: 10,
 			}
-			dataBase.EXPECT().SetTriggerLastCheck("test trigger", &expectedCheckData, false)
+			dataBase.EXPECT().SetTriggerLastCheck("test trigger", &expectedCheckData, moira.GraphiteLocal)
 			pass, checkDataReturn, errReturn := triggerChecker.handlePrepareError(checkData, err)
 			So(errReturn, ShouldBeNil)
 			So(pass, ShouldBeFalse)

@@ -1527,7 +1527,7 @@ func (mr *MockDatabaseMockRecorder) SetTriggerCheckMaintenance(arg0, arg1, arg2,
 }
 
 // SetTriggerLastCheck mocks base method.
-func (m *MockDatabase) SetTriggerLastCheck(arg0 string, arg1 *moira.CheckData, arg2 bool) error {
+func (m *MockDatabase) SetTriggerLastCheck(arg0 string, arg1 *moira.CheckData, arg2 moira.TriggerSource) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetTriggerLastCheck", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
