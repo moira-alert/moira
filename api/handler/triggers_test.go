@@ -89,6 +89,7 @@ func TestGetTriggerFromRequest(t *testing.T) {
 			},
 		}
 		body, _ := json.Marshal(triggerDTO)
+		fmt.Printf("Trigger: %+v\n", string(body))
 
 		request := httptest.NewRequest(http.MethodPut, "/trigger", bytes.NewReader(body))
 		request.Header.Add("content-type", "application/json")
@@ -153,7 +154,7 @@ func TestGetMetricTTLByTrigger(t *testing.T) {
 
 	Convey("Given a remote trigger", t, func() {
 		trigger := dto.Trigger{TriggerModel: dto.TriggerModel{
-			TriggerSource: moira.GraphiteLocal,
+			TriggerSource: moira.GraphiteRemote,
 		}}
 
 		Convey("It's metric ttl should be equal to remote", func() {

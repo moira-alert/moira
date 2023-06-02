@@ -281,17 +281,12 @@ const (
 )
 
 func (s *TriggerSource) UnmarshalJSON(data []byte) error {
-	var v []interface{}
+	var v string
 	if err := json.Unmarshal(data, &v); err != nil {
 		return err
 	}
 
-	triggerTypeStr, ok := v[0].(string)
-	if !ok {
-		return fmt.Errorf("expected trigger type to be a number but it was %T", v[0])
-	}
-
-	source := TriggerSource(triggerTypeStr)
+	source := TriggerSource(v)
 	if source != GraphiteLocal && source != GraphiteRemote && source != VMSelectRemote {
 		*s = TriggerSourceNotSet
 		return nil

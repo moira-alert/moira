@@ -379,6 +379,7 @@ func TestCreateTriggerModel(t *testing.T) {
 			Expression:     expression,
 			Patterns:       []string{"pattern-1", "pattern-2"},
 			TriggerSource:  moira.GraphiteRemote,
+			IsRemote:       true,
 			MuteNewMetrics: true,
 			AloneMetrics: map[string]bool{
 				"t1": true,

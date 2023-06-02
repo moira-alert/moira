@@ -168,6 +168,7 @@ func TestUpdateTrigger(t *testing.T) {
 			Convey(fmt.Sprintf("should return success message, url=%s", url), func() {
 				response := responseWriter.Result()
 				defer response.Body.Close()
+
 				So(response.StatusCode, ShouldEqual, http.StatusOK)
 				So(isTriggerUpdated(response), ShouldBeTrue)
 			})

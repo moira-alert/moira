@@ -27,14 +27,18 @@ func TestInitTriggerChecker(t *testing.T) {
 	Convey("Test errors", t, func() {
 		Convey("Get trigger error", func() {
 			getTriggerError := fmt.Errorf("Oppps! Can't read trigger")
-			dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{}, getTriggerError)
+			dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{
+				TriggerSource: moira.GraphiteLocal,
+			}, getTriggerError)
 			_, err := MakeTriggerChecker(triggerID, dataBase, logger, config, metricSource.CreateMetricSourceProvider(localSource, nil, nil), &metrics.CheckerMetrics{})
 			So(err, ShouldBeError)
 			So(err, ShouldResemble, getTriggerError)
 		})
 
 		Convey("No trigger error", func() {
-			dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{}, database.ErrNil)
+			dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{
+				TriggerSource: moira.GraphiteLocal,
+			}, database.ErrNil)
 			_, err := MakeTriggerChecker(triggerID, dataBase, logger, config, metricSource.CreateMetricSourceProvider(localSource, nil, nil), &metrics.CheckerMetrics{})
 			So(err, ShouldBeError)
 			So(err, ShouldResemble, ErrTriggerNotExists)
@@ -42,7 +46,10 @@ func TestInitTriggerChecker(t *testing.T) {
 
 		Convey("Get lastCheck error", func() {
 			readLastCheckError := fmt.Errorf("Oppps! Can't read last check")
-			dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{TriggerType: moira.RisingTrigger}, nil)
+			dataBase.EXPECT().GetTrigger(triggerID).Return(moira.Trigger{
+				TriggerType:   moira.RisingTrigger,
+				TriggerSource: moira.GraphiteLocal,
+			}, nil)
 			dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(moira.CheckData{}, readLastCheckError)
 			_, err := MakeTriggerChecker(triggerID, dataBase, logger, config, metricSource.CreateMetricSourceProvider(localSource, nil, nil), &metrics.CheckerMetrics{})
 			So(err, ShouldBeError)
@@ -54,18 +61,18 @@ func TestInitTriggerChecker(t *testing.T) {
 	var errorValue float64 = 100000
 	var ttl int64 = 900
 	var value float64
-
 	trigger := moira.Trigger{
-		ID:          "d39b8510-b2f4-448c-b881-824658c58128",
-		Name:        "Time",
-		Targets:     []string{"aliasByNode(Metric.*.time, 1)"},
-		WarnValue:   &warnValue,
-		ErrorValue:  &errorValue,
-		TriggerType: moira.RisingTrigger,
-		Tags:        []string{"tag1", "tag2"},
-		TTLState:    &moira.TTLStateOK,
-		Patterns:    []string{"Egais.elasticsearch.*.*.jvm.gc.collection.time"},
-		TTL:         ttl,
+		ID:            "d39b8510-b2f4-448c-b881-824658c58128",
+		Name:          "Time",
+		Targets:       []string{"aliasByNode(Metric.*.time, 1)"},
+		WarnValue:     &warnValue,
+		ErrorValue:    &errorValue,
+		TriggerType:   moira.RisingTrigger,
+		Tags:          []string{"tag1", "tag2"},
+		TTLState:      &moira.TTLStateOK,
+		Patterns:      []string{"Egais.elasticsearch.*.*.jvm.gc.collection.time"},
+		TTL:           ttl,
+		TriggerSource: moira.GraphiteLocal,
 	}
 
 	lastCheck := moira.CheckData{
@@ -178,6 +185,8 @@ func TestInitTriggerChecker(t *testing.T) {
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
 		dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(lastCheck, nil)
 		actual, err := MakeTriggerChecker(triggerID, dataBase, logger, config, metricSource.CreateMetricSourceProvider(localSource, nil, nil), &metrics.CheckerMetrics{})
+		fmt.Printf("err = %+v", err)
+
 		So(err, ShouldBeNil)
 
 		expected := TriggerChecker{
