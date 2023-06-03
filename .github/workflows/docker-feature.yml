@@ -31,9 +31,7 @@ jobs:
       #  run: make docker_feature_images GIT_BRANCH="${BRANCH_NAME////-}"
 
       - name: Build docker tag
-        run: |
-          git show -s --format=%ci | cut -d\  -f1
-          echo "FEATURE_TAG=$(echo ${GITHUB_REF_NAME////-}.$(git show -s --format=%ci | cut -d\  -f1).${GITHUB_SHA:0:7})" >> $GITHUB_ENV
+        run: echo "FEATURE_TAG=$(echo ${GITHUB_REF_NAME////-}.$(git show -s --format=%ci | cut -d\  -f1).${GITHUB_SHA:0:7})" >> $GITHUB_ENV
 
       - name: Build and push
         uses: docker/build-push-action@v4
@@ -44,4 +42,4 @@ jobs:
             GO_VERSION="$(go version | cut -d' ' -f3)"
             GIT_COMMIT=$GITHUB_SHA
           push: true
-          tags: moira/${{matrix.servis}}-unstable:${{env.FEATURE_TAG}}
+          tags: moira/${{matrix.servis}}-unstable:$(echo ${GITHUB_REF_NAME////-}.$(git show -s --format=%ci | cut -d\  -f1).${GITHUB_SHA:0:7})
