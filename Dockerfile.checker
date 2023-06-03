@@ -13,7 +13,7 @@ ARG MoiraVersion="MoiraVersion"
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-X main.MoiraVersion=${MoiraVersion} -X main.GoVersion=${GO_VERSION} -X main.GitCommit=${GIT_COMMIT}" -o build/checker github.com/moira-alert/moira/cmd/checker
 
 
-FROM alpine
+FROM alpine::3.18.0
 
 RUN apk add --no-cache ca-certificates && update-ca-certificates
 
