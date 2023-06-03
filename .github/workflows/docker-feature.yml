@@ -33,7 +33,6 @@ jobs:
       - name: Build docker tag
         run: |
           echo "GO_VERSION=$(go version | cut -d' ' -f3)" >> $GITHUB_ENV
-          echo ${{env.GO_VERSION}}
           echo "FEATURE_TAG=$(echo ${GITHUB_REF_NAME////-}.$(date '+%Y-%m-%d').${GITHUB_SHA:0:7})" >> $GITHUB_ENV
         # run: echo "FEATURE_TAG=$(echo ${GITHUB_REF_NAME////-}.$(git show -s --format=%ci | cut -d\  -f1).${GITHUB_SHA:0:7})" >> $GITHUB_ENV
 
@@ -43,7 +42,8 @@ jobs:
           file: ./Dockerfile.${{matrix.servis}}
           build-args: |
             MoiraVersion=${{env.FEATURE_TAG}}
-            GO_VERSION="1.18"
-            GIT_COMMIT=${{github.ref_name}}
+            GIT_COMMIT=${{github.sha}}
           push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           tags: moira/${{matrix.servis}}-unstable:${{env.FEATURE_TAG}}
