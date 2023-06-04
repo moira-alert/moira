@@ -62,7 +62,7 @@ func Populate(name, description string, events []Event) (desc string, err error)
 		"stringsTrimPrefix": strings.TrimPrefix,
 		"stringsTrimSuffix": strings.TrimSuffix,
 		"stringsSplit":      strings.Split,
-		"stringsTrim": 	     strings.Trim
+		"stringsTrim": 	     strings.Trim,
 	}
 
 	dataToExecute := notification{

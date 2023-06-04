@@ -22,6 +22,7 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: 1.18
+          cache-dependency-path: /home/runner/work/moira/moira/go.sum
 
       - uses: actions/checkout@v3
       - name: Run tests
