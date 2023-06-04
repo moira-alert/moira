@@ -33,7 +33,5 @@ jobs:
           build-args: |
             MoiraVersion=${{env.FEATURE_TAG}}
             GIT_COMMIT=${{github.sha}}
-          cache-from: type=gha
-          cache-to: type=gha,mode=min
           push: true
           tags: moira/${{matrix.servis}}-unstable:${{env.FEATURE_TAG}}
