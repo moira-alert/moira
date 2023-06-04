@@ -24,14 +24,14 @@ jobs:
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
       - name: Build docker tag
-        run: echo "FEATURE_TAG=$(echo ${GITHUB_REF_NAME////-}.$(date '+%Y-%m-%d').${GITHUB_SHA:0:7})" >> $GITHUB_ENV
+        run: echo "DOCKER_TAG=$(echo ${GITHUB_REF_NAME////-}.$(date '+%Y-%m-%d').${GITHUB_SHA:0:7})" >> $GITHUB_ENV
 
       - name: Build and push
         uses: docker/build-push-action@v4
         with:
           file: ./Dockerfile.${{matrix.servis}}
           build-args: |
-            MoiraVersion=${{env.FEATURE_TAG}}
+            MoiraVersion=${{env.DOCKER_TAG}}
             GIT_COMMIT=${{github.sha}}
           push: true
-          tags: moira/${{matrix.servis}}-unstable:${{env.FEATURE_TAG}}
+          tags: moira/${{matrix.servis}}-unstable:${{env.DOCKER_TAG}}
