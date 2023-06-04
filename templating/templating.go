@@ -61,6 +61,7 @@ func Populate(name, description string, events []Event) (desc string, err error)
 		"stringsToUpper":    strings.ToUpper,
 		"stringsTrimPrefix": strings.TrimPrefix,
 		"stringsTrimSuffix": strings.TrimSuffix,
+		"stringsTrim":		 strings.Trim,
 		"stringsSplit":      strings.Split,
 	}
 
