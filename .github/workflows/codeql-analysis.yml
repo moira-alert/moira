@@ -31,7 +31,7 @@ jobs:
 
     #- name: Autobuild
     #  uses: github/codeql-action/autobuild@v2
-    - run: make build
+    - run: make build_all -j5
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v2
