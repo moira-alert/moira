@@ -13,7 +13,7 @@ VERSION_NIGHTLY := ${GIT_COMMIT_DATE}.${GIT_HASH_SHORT}
 VERSION_RELEASE := ${GIT_TAG}.${GIT_COMMIT}
 
 GO_VERSION := $(shell go version | cut -d' ' -f3)
-GO_PATH := $(shell go env GOPATH)
+GO_PATH := 1.18
 GO111MODULE := on
 GOLANGCI_LINT_VERSION := ""
 
@@ -48,29 +48,6 @@ build:
 	for service in "filter" $(SERVICES) ; do \
 		CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-X main.MoiraVersion=${VERSION_RELEASE} -X main.GoVersion=${GO_VERSION} -X main.GitCommit=${GIT_HASH}" -o build/$$service github.com/moira-alert/moira/cmd/$$service ; \
 	done
-
-.PHONY: build_all
-build_all: build_filter build_notifier build_checker build_api build_cli
-
-.PHONY: build_filter 
-build_filter:
-	CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-X main.MoiraVersion=${VERSION_RELEASE} -X main.GoVersion=${GO_VERSION} -X main.GitCommit=${GIT_HASH}" -o build/$$service github.com/moira-alert/moira/cmd/filter
-
-.PHONY: build_notifier
-build_notifier:
-	CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-X main.MoiraVersion=${VERSION_RELEASE} -X main.GoVersion=${GO_VERSION} -X main.GitCommit=${GIT_HASH}" -o build/$$service github.com/moira-alert/moira/cmd/notifier
-
-.PHONY: build_checker
-build_checker:
-	CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-X main.MoiraVersion=${VERSION_RELEASE} -X main.GoVersion=${GO_VERSION} -X main.GitCommit=${GIT_HASH}" -o build/$$service github.com/moira-alert/moira/cmd/checker
-
-.PHONY: build_api
-build_api:
-	CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-X main.MoiraVersion=${VERSION_RELEASE} -X main.GoVersion=${GO_VERSION} -X main.GitCommit=${GIT_HASH}" -o build/$$service github.com/moira-alert/moira/cmd/api
-
-.PHONY: build_cli
-build_cli:
-	CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-X main.MoiraVersion=${VERSION_RELEASE} -X main.GoVersion=${GO_VERSION} -X main.GitCommit=${GIT_HASH}" -o build/$$service github.com/moira-alert/moira/cmd/cli
 
 .PHONY: clean
 clean:
