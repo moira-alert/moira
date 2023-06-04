@@ -19,6 +19,8 @@ jobs:
 
     strategy:
       fail-fast: false
+      matrix:
+        servis: [api, checker, cli, notifier, filter]
 
     steps:
     - name: Checkout repository
@@ -31,7 +33,7 @@ jobs:
 
     #- name: Autobuild
     #  uses: github/codeql-action/autobuild@v2
-    - run: make build_all
+    - run: make build_${{ matrix.servis }}
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v2
