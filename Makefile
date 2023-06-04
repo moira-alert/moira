@@ -64,11 +64,11 @@ build:
 build:
 	CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-X main.MoiraVersion=${VERSION_RELEASE} -X main.GoVersion=${GO_VERSION} -X main.GitCommit=${GIT_HASH}" -o build/$$service github.com/moira-alert/moira/cmd/checker
 
-PHONY: build_api
+.PHONY: build_api
 build:
 	CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-X main.MoiraVersion=${VERSION_RELEASE} -X main.GoVersion=${GO_VERSION} -X main.GitCommit=${GIT_HASH}" -o build/$$service github.com/moira-alert/moira/cmd/api
 
-	PHONY: build_cli
+.PHONY: build_cli
 build:
 	CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-X main.MoiraVersion=${VERSION_RELEASE} -X main.GoVersion=${GO_VERSION} -X main.GitCommit=${GIT_HASH}" -o build/$$service github.com/moira-alert/moira/cmd/cli
 
