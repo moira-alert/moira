@@ -32,5 +32,5 @@ jobs:
             MoiraVersion=${{env.DOCKER_TAG}}
             GIT_COMMIT=${{github.sha}}
           push: true
-          tags: moira/${{matrix.servis}}:${{env.DOCKER_TAG}}
+          tags: moira/${{matrix.servis}}:${{env.DOCKER_TAG}},moira/${{matrix.servis}}:latest
       

@@ -1,4 +1,4 @@
-##!/bin/sh
+#!/bin/sh
 
 # For windows users: Run this script via "Git bash"
 
