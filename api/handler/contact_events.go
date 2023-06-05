@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/go-chi/render"
@@ -35,7 +34,7 @@ func getContactByIdWithEvents(writer http.ResponseWriter, request *http.Request)
 		eventQueryInterval.To)
 
 	if err != nil {
-		render.Render(writer, request, api.ErrorInternalServer(fmt.Errorf("can't fetch contact with %v and events", contactData.ID)))
+		render.Render(writer, request, err)
 	}
 
 	if err := render.Render(writer, request, contactWithEvents); err != nil {

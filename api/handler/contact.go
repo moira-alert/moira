@@ -2,7 +2,6 @@ package handler
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi"
@@ -47,7 +46,7 @@ func getContactById(writer http.ResponseWriter, request *http.Request) {
 	contact, apiErr := controller.GetContactById(database, contactData.ID)
 
 	if apiErr != nil {
-		render.Render(writer, request, api.ErrorInternalServer(fmt.Errorf("can't fetch contact with id %v", contactData.ID)))
+		render.Render(writer, request, apiErr)
 		return
 	}
 
