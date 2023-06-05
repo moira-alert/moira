@@ -33,16 +33,21 @@ func (connector *DbConnector) GetNotificationsByContactIdWithLimit(contactID str
 	c := *connector.client
 	var notifications []*moira.NotificationEventHistoryItem
 
-	notificationStings, _ := c.ZRangeByScore(connector.context, contactNotificationKey, &redis.ZRangeBy{
+	notificationStings, err := c.ZRangeByScore(connector.context, contactNotificationKey, &redis.ZRangeBy{
 		Min:   from,
 		Max:   to,
-		Count: connector.NotificationHistoryQueryLimit,
+		Count: connector.notificationHistoryQueryLimit,
 	}).Result()
+
+	if err != nil {
+		return notifications, err
+	}
 
 	for _, notification := range notificationStings {
 		notificationObj, err := getNotificationStruct(notification)
+
 		if err != nil {
-			fmt.Printf("Error parsing notification from db")
+			return notifications, err
 		}
 
 		if notificationObj.ContactID == contactID {
@@ -65,9 +70,13 @@ func (connector *DbConnector) PushContactNotificationToHistory(notification *moi
 		TimeStamp: notification.Timestamp,
 	}
 
-	notificationBytes, _ := getNotificationBytes(notificationItemToSave)
+	notificationBytes, serializationErr := getNotificationBytes(notificationItemToSave)
 
-	to := int(time.Now().Unix() - connector.NotificationHistoryTtlSeconds)
+	if serializationErr != nil {
+		return fmt.Errorf("failed to serialize notification to contact event history item: %s", serializationErr.Error())
+	}
+
+	to := int(time.Now().Unix() - connector.notificationHistoryTtlSeconds)
 
 	pipe := (*connector.client).TxPipeline()
 
