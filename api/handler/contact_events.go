@@ -8,9 +8,7 @@ import (
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/controller"
 
-	"github.com/ggicci/httpin"
 	"github.com/go-chi/chi"
-	"github.com/moira-alert/moira/api/dto"
 	"github.com/moira-alert/moira/api/middleware"
 )
 
@@ -18,20 +16,17 @@ func contactEvents(router chi.Router) {
 	router.Route("/{contactId}", func(router chi.Router) {
 		router.Use(middleware.ContactContext)
 		router.Use(contactFilter)
-		router.Use(httpin.NewInput(dto.EventIntervalQuery{}))
 		router.Get("/", getContactByIdWithEvents)
 	})
 }
 
 func getContactByIdWithEvents(writer http.ResponseWriter, request *http.Request) {
 	contactData := request.Context().Value(contactKey).(moira.ContactData)
-	eventQueryInterval := request.Context().Value(httpin.Input).(*dto.EventIntervalQuery)
 
-	contactWithEvents, err := controller.GetContactByIdWithEventsLimit(
-		database,
-		contactData.ID,
-		eventQueryInterval.From,
-		eventQueryInterval.To)
+	from := request.URL.Query().Get("from")
+	to := request.URL.Query().Get("to")
+
+	contactWithEvents, err := controller.GetContactByIdWithEventsLimit(database, contactData.ID, from, to)
 
 	if err != nil {
 		render.Render(writer, request, err)
