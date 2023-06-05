@@ -45,8 +45,8 @@ type DbConnector struct {
 	context                       context.Context
 	source                        DBSource
 	clock                         moira.Clock
-	NotificationHistoryTtlSeconds int64
-	NotificationHistoryQueryLimit int64
+	notificationHistoryTtlSeconds int64
+	notificationHistoryQueryLimit int64
 }
 
 func NewDatabase(logger moira.Logger, config Config, source DBSource) *DbConnector {
@@ -76,8 +76,8 @@ func NewDatabase(logger moira.Logger, config Config, source DBSource) *DbConnect
 		metricsTTLSeconds:             int64(config.MetricsTTL.Seconds()),
 		source:                        source,
 		clock:                         clock.NewSystemClock(),
-		NotificationHistoryTtlSeconds: int64(config.NotificationHistoryTtl.Seconds()),
-		NotificationHistoryQueryLimit: int64(config.NotificationHistoryQueryLimit),
+		notificationHistoryTtlSeconds: int64(config.NotificationHistoryTtl.Seconds()),
+		notificationHistoryQueryLimit: int64(config.NotificationHistoryQueryLimit),
 	}
 	return &connector
 }
