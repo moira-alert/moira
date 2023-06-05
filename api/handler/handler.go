@@ -41,12 +41,15 @@ func NewHandler(db moira.Database, log moira.Logger, index moira.Searcher, confi
 		router.Route("/tag", tag)
 		router.Route("/pattern", pattern)
 		router.Route("/event", event)
-		router.Route("/contact", contact)
 		router.Route("/subscription", subscription)
 		router.Route("/notification", notification)
 		router.Route("/health", health)
 		router.Route("/teams", teams)
-		router.Route("/contactevents", contactEvents)
+
+		router.Route("/contact", func(router chi.Router) {
+			contact(router)
+			contactEvents(router)
+		})
 	})
 	if config.EnableCORS {
 		return cors.AllowAll().Handler(router)

@@ -13,7 +13,7 @@ import (
 )
 
 func contactEvents(router chi.Router) {
-	router.Route("/{contactId}", func(router chi.Router) {
+	router.Route("/{contactId}/events", func(router chi.Router) {
 		router.Use(middleware.ContactContext)
 		router.Use(contactFilter)
 		router.Get("/", getContactByIdWithEvents)
