@@ -29,13 +29,13 @@ func getNotificationStruct(notificationString string) (moira.NotificationEventHi
 	return object, nil
 }
 
-func (connector *DbConnector) GetNotificationsByContactIdWithLimit(contactID string, from string, to string) ([]*moira.NotificationEventHistoryItem, error) {
+func (connector *DbConnector) GetNotificationsByContactIdWithLimit(contactID string, from uint64, to uint64) ([]*moira.NotificationEventHistoryItem, error) {
 	c := *connector.client
 	var notifications []*moira.NotificationEventHistoryItem
 
 	notificationStings, err := c.ZRangeByScore(connector.context, contactNotificationKey, &redis.ZRangeBy{
-		Min:   from,
-		Max:   to,
+		Min:   strconv.FormatUint(from, 10),
+		Max:   strconv.FormatUint(to, 10),
 		Count: connector.notificationHistoryQueryLimit,
 	}).Result()
 

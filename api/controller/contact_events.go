@@ -2,7 +2,6 @@ package controller
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
@@ -15,7 +14,7 @@ func GetContactByIdWithEventsLimit(database moira.Database, contactID string, fr
 		return nil, api.ErrorInternalServer(fmt.Errorf("GetContactByIdWithEventsLimit: can't get contact with id " + contactID))
 	}
 
-	events, err := database.GetNotificationsByContactIdWithLimit(contactID, strconv.FormatUint(from, 10), strconv.FormatUint(to, 10))
+	events, err := database.GetNotificationsByContactIdWithLimit(contactID, from, to)
 
 	if err != nil {
 		return nil, api.ErrorInternalServer(fmt.Errorf("GetContactByIdWithEventsLimit: can't get notifications for contact with id " + contactID))
