@@ -12,7 +12,7 @@ VERSION_FEATURE := ${GIT_TAG}-$(shell echo $(GIT_BRANCH) | cut -c1-100).${GIT_CO
 VERSION_NIGHTLY := ${GIT_COMMIT_DATE}.${GIT_HASH_SHORT}
 VERSION_RELEASE := ${GIT_TAG}.${GIT_COMMIT}
 
-GO_VERSION := $(shell go version | cut -d' ' -f3)
+GO_VERSION := 1.18
 GO_PATH := $(shell go env GOPATH)
 GO111MODULE := on
 GOLANGCI_LINT_VERSION := ""
