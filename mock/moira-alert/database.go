@@ -518,7 +518,7 @@ func (mr *MockDatabaseMockRecorder) GetNotifications(arg0, arg1 interface{}) *go
 }
 
 // GetNotificationsByContactIdWithLimit mocks base method.
-func (m *MockDatabase) GetNotificationsByContactIdWithLimit(arg0 string, arg1, arg2 uint64) ([]*moira.NotificationEventHistoryItem, error) {
+func (m *MockDatabase) GetNotificationsByContactIdWithLimit(arg0 string, arg1, arg2 int64) ([]*moira.NotificationEventHistoryItem, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetNotificationsByContactIdWithLimit", arg0, arg1, arg2)
 	ret0, _ := ret[0].([]*moira.NotificationEventHistoryItem)

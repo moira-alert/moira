@@ -24,13 +24,13 @@ func GetContactByIdWithEventsLimit(database moira.Database, contactID string, fr
 	contact, err := database.GetContact(contactID)
 
 	if err != nil {
-		return nil, api.ErrorNotFound("GetContactByIdWithEventsLimit: can't get contact with id " + contactID)
+		return nil, api.ErrorInternalServer(fmt.Errorf("GetContactByIdWithEventsLimit: can't get contact with id %v", contactID))
 	}
 
 	events, err := database.GetNotificationsByContactIdWithLimit(contactID, fromInt, toInt)
 
 	if err != nil {
-		return nil, api.ErrorNotFound("GetContactByIdWithEventsLimit: can't get notifications for contact with id " + contactID)
+		return nil, api.ErrorInternalServer(fmt.Errorf("GetContactByIdWithEventsLimit: can't get notifications for contact with id %v", contactID))
 	}
 
 	var eventsList []moira.NotificationEventHistoryItem
