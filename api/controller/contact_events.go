@@ -14,23 +14,23 @@ func GetContactByIdWithEventsLimit(database moira.Database, contactID string, fr
 		return nil, api.ErrorInvalidRequest(fmt.Errorf("'from' and 'to' query params should specified"))
 	}
 
-	fromUint, err := strconv.ParseUint(from, 10, 64)
-	toUint, err := strconv.ParseUint(to, 10, 64)
+	fromInt, fromErr := strconv.ParseInt(from, 10, 64)
+	toInt, toErr := strconv.ParseInt(to, 10, 64)
 
-	if err != nil {
+	if fromErr != nil || toErr != nil {
 		return nil, api.ErrorInvalidRequest(fmt.Errorf("'from' and 'to' query params should be positive numbers"))
 	}
 
 	contact, err := database.GetContact(contactID)
 
 	if err != nil {
-		return nil, api.ErrorInternalServer(fmt.Errorf("GetContactByIdWithEventsLimit: can't get contact with id " + contactID))
+		return nil, api.ErrorNotFound("GetContactByIdWithEventsLimit: can't get contact with id " + contactID)
 	}
 
-	events, err := database.GetNotificationsByContactIdWithLimit(contactID, fromUint, toUint)
+	events, err := database.GetNotificationsByContactIdWithLimit(contactID, fromInt, toInt)
 
 	if err != nil {
-		return nil, api.ErrorInternalServer(fmt.Errorf("GetContactByIdWithEventsLimit: can't get notifications for contact with id " + contactID))
+		return nil, api.ErrorNotFound("GetContactByIdWithEventsLimit: can't get notifications for contact with id " + contactID)
 	}
 
 	var eventsList []moira.NotificationEventHistoryItem
