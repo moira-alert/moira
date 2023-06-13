@@ -18,7 +18,7 @@ func GetContactByIdWithEventsLimit(database moira.Database, contactID string, fr
 	toInt, toErr := strconv.ParseInt(to, 10, 64)
 
 	if fromErr != nil || toErr != nil {
-		return nil, api.ErrorInvalidRequest(fmt.Errorf("'from' and 'to' query params should be positive numbers"))
+		return nil, api.ErrorInvalidRequest(fmt.Errorf("'from' and 'to' query params should be numbers"))
 	}
 
 	contact, err := database.GetContact(contactID)
