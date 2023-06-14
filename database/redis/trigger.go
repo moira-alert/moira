@@ -26,7 +26,7 @@ func (connector *DbConnector) GetAllTriggerIDs() ([]string, error) {
 // GetLocalTriggerIDs gets moira local triggerIDs
 func (connector *DbConnector) GetLocalTriggerIDs() ([]string, error) {
 	c := *connector.client
-	triggerIds, err := c.SDiff(connector.context, triggersListKey, remoteTriggersListKey).Result()
+	triggerIds, err := c.SDiff(connector.context, triggersListKey, remoteTriggersListKey, vmselectTriggersListKey).Result()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get triggers-list: %s", err.Error())
 	}
@@ -176,7 +176,6 @@ func (connector *DbConnector) GetTriggerIDsStartWith(prefix string) ([]string, e
 	return matchedTriggers, nil
 }
 
-// TODO(ASAP) Cleanup this mess
 func (connector *DbConnector) updateTrigger(triggerID string, newTrigger *moira.Trigger, oldTrigger *moira.Trigger) error {
 	bytes, err := reply.GetTriggerBytes(triggerID, newTrigger)
 	if err != nil {
@@ -187,27 +186,40 @@ func (connector *DbConnector) updateTrigger(triggerID string, newTrigger *moira.
 		for _, pattern := range moira.GetStringListsDiff(oldTrigger.Patterns, newTrigger.Patterns) {
 			pipe.SRem(connector.context, patternTriggersKey(pattern), triggerID)
 		}
-		// TODO: Replace properly with TriggerSource
-		if oldTrigger.TriggerSource == moira.GraphiteRemote && newTrigger.TriggerSource != moira.GraphiteRemote {
-			pipe.SRem(connector.context, remoteTriggersListKey, triggerID)
-		}
 
 		for _, tag := range moira.GetStringListsDiff(oldTrigger.Tags, newTrigger.Tags) {
 			pipe.SRem(connector.context, triggerTagsKey(triggerID), tag)
 			pipe.SRem(connector.context, tagTriggersKey(tag), triggerID)
 		}
+
+		if newTrigger.TriggerSource != oldTrigger.TriggerSource {
+			switch oldTrigger.TriggerSource {
+			case moira.GraphiteRemote:
+				pipe.SRem(connector.context, remoteTriggersListKey, triggerID)
+
+			case moira.VMSelectRemote:
+				pipe.SRem(connector.context, vmselectTriggersListKey, triggerID)
+			}
+		}
+
 	}
 	pipe.Set(connector.context, triggerKey(triggerID), bytes, redis.KeepTTL)
 	pipe.SAdd(connector.context, triggersListKey, triggerID)
-	// TODO: Replace properly with TriggerSource
-	if newTrigger.TriggerSource == moira.GraphiteRemote {
+
+	switch newTrigger.TriggerSource {
+	case moira.GraphiteRemote:
 		pipe.SAdd(connector.context, remoteTriggersListKey, triggerID)
-	} else {
+
+	case moira.VMSelectRemote:
+		pipe.SAdd(connector.context, vmselectTriggersListKey, triggerID)
+
+	case moira.GraphiteLocal:
 		for _, pattern := range newTrigger.Patterns {
 			pipe.SAdd(connector.context, patternsListKey, pattern)
 			pipe.SAdd(connector.context, patternTriggersKey(pattern), triggerID)
 		}
 	}
+
 	for _, tag := range newTrigger.Tags {
 		pipe.SAdd(connector.context, triggerTagsKey(triggerID), tag)
 		pipe.SAdd(connector.context, tagTriggersKey(tag), triggerID)
@@ -264,7 +276,15 @@ func (connector *DbConnector) removeTrigger(triggerID string, trigger *moira.Tri
 	pipe.Del(connector.context, triggerTagsKey(triggerID))
 	pipe.Del(connector.context, triggerEventsKey(triggerID))
 	pipe.SRem(connector.context, triggersListKey, triggerID)
-	pipe.SRem(connector.context, remoteTriggersListKey, triggerID)
+
+	switch trigger.TriggerSource {
+	case moira.GraphiteRemote:
+		pipe.SRem(connector.context, remoteTriggersListKey, triggerID)
+
+	case moira.VMSelectRemote:
+		pipe.SRem(connector.context, vmselectTriggersListKey, triggerID)
+	}
+
 	pipe.SRem(connector.context, unusedTriggersKey, triggerID)
 	for _, tag := range trigger.Tags {
 		pipe.SRem(connector.context, tagTriggersKey(tag), triggerID)
