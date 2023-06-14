@@ -28,14 +28,15 @@ func handleRemoveUnusedTriggersStartWith(logger moira.Logger, database moira.Dat
 	if err != nil {
 		return fmt.Errorf("can't get unused trigger IDs; err: %w", err)
 	}
-	unusedTriggersMap := map[string]bool{}
+	unusedTriggersMap := map[string]struct{}{}
+
 	for _, id := range unusedTriggers {
-		unusedTriggersMap[id] = true
+		unusedTriggersMap[id] = struct{}{}
 	}
 
 	triggersToDelete := make([]string, 0)
 	for _, id := range triggers {
-		if unusedTriggersMap[id] {
+		if _, ok := unusedTriggersMap[id]; ok {
 			triggersToDelete = append(triggersToDelete, id)
 		}
 	}
