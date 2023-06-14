@@ -44,6 +44,8 @@ type RedisConfig struct {
 	WriteTimeout string `yaml:"write_timeout"`
 	// MaxRetries count of retries.
 	MaxRetries int `yaml:"max_retries"`
+	// PoolSize connection pool size
+	PoolSize int `yaml:"pool_size"`
 }
 
 // GetSettings returns redis config parsed from moira config files
