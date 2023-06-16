@@ -176,7 +176,7 @@ func main() { //nolint
 
 	if *removeUnusedTriggersStartWith != "" {
 		log := logger.String(moira.LogFieldNameContext, "remove-unused-triggers-start-with")
-		if err := handleRemoveUnusedTriggersStartWith(logger, dataBase, *removeTriggersStartWith); err != nil {
+		if err := handleRemoveUnusedTriggersStartWith(logger, dataBase, *removeUnusedTriggersStartWith); err != nil {
 			log.Error().
 				Error(err).
 				Msg("Failed to remove unused triggers by prefix")
