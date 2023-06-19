@@ -61,8 +61,11 @@ func createTrigger(writer http.ResponseWriter, request *http.Request) {
 
 	var problems []dto.TreeOfProblems
 	if needValidate(request) {
-		// TODO: Error handling
-		problems, _ = validateTargets(request, trigger)
+		problems, err = validateTargets(request, trigger)
+		if err != nil {
+			render.Render(writer, request, err) //nolint
+			return
+		}
 
 		if problems != nil && dto.DoesAnyTreeHaveError(problems) {
 			writeErrorSaveResponse(writer, request, problems)
@@ -160,8 +163,13 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 	ttl := getMetricTTLByTrigger(request, trigger)
 
 	if len(trigger.Targets) > 0 {
-		// TODO: Error handling
-		response.Targets, _ = dto.TargetVerification(trigger.Targets, ttl, trigger.TriggerSource)
+		var err error
+		response.Targets, err = dto.TargetVerification(trigger.Targets, ttl, trigger.TriggerSource)
+
+		if err != nil {
+			render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
+			return
+		}
 	}
 
 	render.JSON(writer, request, response)

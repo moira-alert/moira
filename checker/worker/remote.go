@@ -3,7 +3,6 @@ package worker
 import (
 	"time"
 
-	"github.com/moira-alert/moira/metric_source/remote"
 	w "github.com/moira-alert/moira/worker"
 )
 
@@ -36,7 +35,6 @@ func (worker *Checker) remoteTriggerChecker(stop <-chan struct{}) error {
 			if err := worker.checkRemote(); err != nil {
 				worker.Logger.Error().
 					Error(err).
-					String("remote_trigger_name", remoteTriggerName).
 					Msg("Remote trigger failed")
 			}
 		}
@@ -48,18 +46,21 @@ func (worker *Checker) checkRemote() error {
 	if err != nil {
 		return err
 	}
-	remoteAvailable, err := source.(*remote.Remote).IsRemoteAvailable()
-	if !remoteAvailable {
+
+	if available, err := source.IsAvailable(); !available {
 		worker.Logger.Info().
 			Error(err).
 			Msg("Remote API is unavailable. Stop checking remote triggers")
-	} else {
-		worker.Logger.Debug().Msg("Checking remote triggers")
-		triggerIds, err := worker.Database.GetRemoteTriggerIDs()
-		if err != nil {
-			return err
-		}
-		worker.addRemoteTriggerIDsIfNeeded(triggerIds)
+		return nil
 	}
+
+	worker.Logger.Debug().Msg("Checking remote triggers")
+
+	triggerIds, err := worker.Database.GetRemoteTriggerIDs()
+	if err != nil {
+		return err
+	}
+	worker.addRemoteTriggerIDsIfNeeded(triggerIds)
+
 	return nil
 }

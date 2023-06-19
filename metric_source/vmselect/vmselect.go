@@ -14,6 +14,7 @@ import (
 )
 
 type Config struct {
+	Enabled       bool
 	CheckInterval time.Duration
 	MetricsTTL    time.Duration
 	URL           string
@@ -67,8 +68,13 @@ func (vmselect *VMSelect) GetMetricsTTLSeconds() int64 {
 	return int64(vmselect.config.MetricsTTL.Seconds())
 }
 
-func (*VMSelect) IsConfigured() (bool, error) {
-	// TODO: check if datasource is enabled or something like that
+func (vmselect *VMSelect) IsConfigured() (bool, error) {
+	// TODO: check if configuration is valid
+	return vmselect.config.Enabled, nil
+}
+
+func (*VMSelect) IsAvailable() (bool, error) {
+	// TODO: check if prometheus is actually available
 	return true, nil
 }
 

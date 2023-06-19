@@ -55,7 +55,6 @@ func saveTrigger(dataBase moira.Database, trigger *moira.Trigger, triggerID stri
 		lastCheck.UpdateScore()
 	}
 
-	// TODO(ASAP) replace with proper usage of TriggerSource
 	if err = dataBase.SetTriggerLastCheck(triggerID, &lastCheck, trigger.TriggerSource); err != nil {
 		return nil, api.ErrorInternalServer(err)
 	}

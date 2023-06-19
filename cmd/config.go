@@ -148,6 +148,7 @@ type VMSelectConfig struct {
 // GetRemoteSourceSettings returns remote config parsed from moira config files
 func (config *VMSelectConfig) GetVMSelectSourceSettings() *vmselect.Config {
 	return &vmselect.Config{
+		Enabled:       config.Enabled,
 		URL:           config.URL,
 		CheckInterval: to.Duration(config.CheckInterval),
 		MetricsTTL:    to.Duration(config.MetricsTTL),

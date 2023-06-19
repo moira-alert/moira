@@ -33,6 +33,11 @@ func (local *Local) IsConfigured() (bool, error) {
 	return true, nil
 }
 
+// IsConfigured always returns true. It easy to configure local source =)
+func (local *Local) IsAvailable() (bool, error) {
+	return true, nil
+}
+
 // Fetch is analogue of evaluateTarget method in graphite-web, that gets target metrics value from DB and Evaluate it using carbon-api eval package
 func (local *Local) Fetch(target string, from int64, until int64, allowRealTimeAlerting bool) (metricSource.FetchResult, error) {
 	// Don't fetch intervals larger than metrics TTL to prevent OOM errors

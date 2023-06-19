@@ -29,7 +29,7 @@ func TestIsRemoteAvailable(t *testing.T) {
 	Convey("Is available", t, func() {
 		server := createServer([]byte("Some string"), http.StatusOK)
 		remote := Remote{client: server.Client(), config: &Config{URL: server.URL}}
-		isAvailable, err := remote.IsRemoteAvailable()
+		isAvailable, err := remote.IsAvailable()
 		So(isAvailable, ShouldBeTrue)
 		So(err, ShouldBeEmpty)
 	})
@@ -37,7 +37,7 @@ func TestIsRemoteAvailable(t *testing.T) {
 	Convey("Not available", t, func() {
 		server := createServer([]byte("Some string"), http.StatusInternalServerError)
 		remote := Remote{client: server.Client(), config: &Config{URL: server.URL}}
-		isAvailable, err := remote.IsRemoteAvailable()
+		isAvailable, err := remote.IsAvailable()
 		So(isAvailable, ShouldBeFalse)
 		So(err, ShouldResemble, fmt.Errorf("bad response status %d: %s", http.StatusInternalServerError, "Some string"))
 	})

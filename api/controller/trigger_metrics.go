@@ -113,7 +113,6 @@ func deleteTriggerMetrics(dataBase moira.Database, metricName string, triggerID 
 	if err = dataBase.RemovePatternsMetrics(trigger.Patterns); err != nil {
 		return api.ErrorInternalServer(err)
 	}
-	// TODO Replace with proper usage of TriggerSource
 	if err = dataBase.SetTriggerLastCheck(triggerID, &lastCheck, trigger.TriggerSource); err != nil {
 		return api.ErrorInternalServer(err)
 	}
