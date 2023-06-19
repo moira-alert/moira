@@ -18,6 +18,11 @@ remote:
   check_interval: 60s
   timeout: 60s
   metrics_ttl: 168h
+vmselect:
+  enabled: true
+  check_interval: 60s
+  timeout: 60s
+  metrics_ttl: 168h
 api:
   listen: ":8081"
   enable_cors: false

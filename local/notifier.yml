@@ -17,7 +17,12 @@ remote:
   url: "http://graphite:80/render"
   check_interval: 60s
   timeout: 60s
-  metrics_ttl: 7d
+  metrics_ttl: 168h
+vmselect:
+  enabled: true
+  check_interval: 60s
+  timeout: 60s
+  metrics_ttl: 168h
 notifier:
   sender_timeout: 10s
   resending_timeout: "1:00"

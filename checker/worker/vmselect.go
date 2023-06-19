@@ -62,7 +62,7 @@ func (worker *Checker) checkVmselect() error {
 	if err != nil {
 		return err
 	}
-	worker.addRemoteTriggerIDsIfNeeded(triggerIds)
+	worker.addVMSelectTriggerIDsIfNeeded(triggerIds)
 
 	// }
 

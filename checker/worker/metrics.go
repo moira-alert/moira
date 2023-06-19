@@ -1,6 +1,7 @@
 package worker
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/moira-alert/moira"
@@ -58,6 +59,16 @@ func (worker *Checker) addRemoteTriggerIDsIfNeeded(triggerIDs []string) {
 	needToCheckRemoteTriggerIDs := worker.getTriggerIDsToCheck(triggerIDs)
 	if len(needToCheckRemoteTriggerIDs) > 0 {
 		worker.Database.AddRemoteTriggersToCheck(needToCheckRemoteTriggerIDs) //nolint
+	}
+}
+
+func (worker *Checker) addVMSelectTriggerIDsIfNeeded(triggerIDs []string) {
+	needToCheckVMSelectTriggerIDs := worker.getTriggerIDsToCheck(triggerIDs)
+	if len(needToCheckVMSelectTriggerIDs) > 0 {
+		worker.Logger.Debug().
+			String("needToCheckVMSelectTriggerIDs", fmt.Sprintf("%v", needToCheckVMSelectTriggerIDs)).
+			Msg("needToCheckVMSelectTriggerIDs")
+		worker.Database.AddVMSelectTriggersToCheck(needToCheckVMSelectTriggerIDs) //nolint
 	}
 }
 

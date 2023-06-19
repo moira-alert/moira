@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sort"
 	"strconv"
 	"time"
 
@@ -21,10 +22,6 @@ type Config struct {
 }
 
 func Create(config *Config) metricSource.MetricSource {
-	config.URL = "https://prometheus.testkontur.ru/api/v1/query_range"
-	config.User = ""
-	config.Password = ""
-	config.MetricsTTL = time.Hour * 24
 	return &VMSelect{
 		config: config,
 		client: &http.Client{Timeout: time.Second * 60},
@@ -44,6 +41,8 @@ func (vmselect *VMSelect) Fetch(target string, from int64, until int64, allowRea
 		return nil, err
 	}
 
+	fmt.Printf("%+v\n\n", r)
+
 	data, err := vmselect.makeRequest(r)
 	if err != nil {
 		return nil, err
@@ -57,6 +56,9 @@ func (vmselect *VMSelect) Fetch(target string, from int64, until int64, allowRea
 	if err != nil {
 		return nil, err
 	}
+
+	str, _ := json.Marshal(result.ConvertToFetchResult())
+	fmt.Printf("%+v\n\n", string(str))
 
 	return result.ConvertToFetchResult(), nil
 }
@@ -138,7 +140,7 @@ func (resp *VMSelectResponce) ConvertToFetchResult() *FetchResult {
 		}
 
 		data := metricSource.MetricData{
-			Name:      "TODO",
+			Name:      targetFromTags(res.Metric),
 			StartTime: res.Values[0].Timestamp,
 			StopTime:  res.Values[len(res.Values)-1].Timestamp,
 			StepTime:  60,
@@ -149,6 +151,48 @@ func (resp *VMSelectResponce) ConvertToFetchResult() *FetchResult {
 	}
 
 	return &result
+}
+
+func targetFromTags(tags map[string]string) string {
+	if len(tags) == 1 {
+		for _, value := range tags {
+			return value
+		}
+	}
+
+	target := ""
+	if name, ok := tags["__name__"]; ok {
+		target += name
+	}
+
+	tagsList := make([]struct{ key, value string }, 0)
+	for key, value := range tags {
+		tagsList = append(tagsList, struct{ key, value string }{key, value})
+	}
+
+	sort.Slice(tagsList, func(i, j int) bool {
+		a, b := tagsList[i], tagsList[j]
+		if a.key != b.key {
+			return a.key < b.key
+		}
+
+		return a.value < b.value
+	})
+
+	for _, tag := range tagsList {
+		key, value := tag.key, tag.value
+
+		if key == "__name__" {
+			continue
+		}
+		if target != "" {
+			target += ";"
+		}
+		target += key
+		target += "="
+		target += value
+	}
+	return target
 }
 
 type VMSelectValue struct {
