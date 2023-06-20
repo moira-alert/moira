@@ -91,6 +91,13 @@ func main() { //nolint
 					Error(err).
 					Msg("Fail to update from version 2.6")
 			}
+		case "2.7":
+			err := updateFrom27(logger, dataBase)
+			if err != nil {
+				logger.Fatal().
+					Error(err).
+					Msg("Fail to update from version 2.7")
+			}
 		}
 	}
 
@@ -110,6 +117,13 @@ func main() { //nolint
 				logger.Fatal().
 					Error(err).
 					Msg("Fail to update to version 2.6")
+			}
+		case "2.7":
+			err := downgradeTo27(logger, dataBase)
+			if err != nil {
+				logger.Fatal().
+					Error(err).
+					Msg("Fail to update to version 2.7")
 			}
 		}
 	}
