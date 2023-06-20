@@ -66,7 +66,10 @@ var (
 	triggerDumpFile = flag.String("trigger-dump-file", "", "File that holds trigger dump JSON from api method response")
 )
 
-var removeTriggersStartWith = flag.String("remove-triggers-start-with", "", "Remove triggers which have ID starting with string parameter")
+var (
+	removeTriggersStartWith       = flag.String("remove-triggers-start-with", "", "Remove triggers which have ID starting with string parameter")
+	removeUnusedTriggersStartWith = flag.String("remove-unused-triggers-start-with", "", "Remove unused triggers which have ID starting with string parameter")
+)
 
 func main() { //nolint
 	confCleanup, logger, dataBase := initApp()
@@ -168,6 +171,15 @@ func main() { //nolint
 			log.Error().
 				Error(err).
 				Msg("Failed to remove triggers by prefix")
+		}
+	}
+
+	if *removeUnusedTriggersStartWith != "" {
+		log := logger.String(moira.LogFieldNameContext, "remove-unused-triggers-start-with")
+		if err := handleRemoveUnusedTriggersStartWith(logger, dataBase, *removeUnusedTriggersStartWith); err != nil {
+			log.Error().
+				Error(err).
+				Msg("Failed to remove unused triggers by prefix")
 		}
 	}
 
