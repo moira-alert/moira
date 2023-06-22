@@ -3,6 +3,13 @@ on:
   pull_request_target:
     branches:
       - master
+    paths-ignore:
+      - .github/*
+      - .run/*
+      - Dockerfile.*
+      - docker-compose.*
+      - Makefile
+      - generate_mocks.*
 
 jobs:
   publish:
