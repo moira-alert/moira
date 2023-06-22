@@ -40,6 +40,16 @@ type Checker struct {
 func (check *Checker) Start() error {
 	var err error
 
+	err = check.startLocalMetricEvents()
+	if err != nil {
+		return err
+	}
+
+	err = check.startLazyTriggers()
+	if err != nil {
+		return err
+	}
+
 	err = check.startLocal()
 	if err != nil {
 		return err
@@ -54,6 +64,45 @@ func (check *Checker) Start() error {
 	if err != nil {
 		return err
 	}
+
+	return nil
+}
+
+func (check *Checker) startLocalMetricEvents() error {
+	if check.Config.MetricEventPopBatchSize < 0 {
+		return errors.New("MetricEventPopBatchSize param was less than zero")
+	}
+
+	if check.Config.MetricEventPopBatchSize == 0 {
+		check.Config.MetricEventPopBatchSize = 100
+	}
+
+	subscribeMetricEventsParams := moira.SubscribeMetricEventsParams{
+		BatchSize: check.Config.MetricEventPopBatchSize,
+		Delay:     check.Config.MetricEventPopDelay,
+	}
+
+	metricEventsChannel, err := check.Database.SubscribeMetricEvents(&check.tomb, &subscribeMetricEventsParams)
+	if err != nil {
+		return err
+	}
+
+	for i := 0; i < check.Config.MaxParallelLocalChecks; i++ {
+		check.tomb.Go(func() error {
+			return check.newMetricsHandler(metricEventsChannel)
+		})
+	}
+
+	check.tomb.Go(func() error {
+		return check.checkMetricEventsChannelLen(metricEventsChannel)
+	})
+
+	check.Logger.Info().Msg("Checking new events started")
+
+	go func() {
+		<-check.tomb.Dying()
+		check.Logger.Info().Msg("Checking for new events stopped")
+	}()
 
 	return nil
 }
@@ -118,13 +167,13 @@ func (check *Checker) startVMSelect() error {
 			Msg("MaxParallelRemoteChecks is not configured, set it to the number of CPU")
 	}
 
-	check.tomb.Go(check.vmselectTriggerGetter)
-	check.Logger.Info().Msg("VMSelect checker started")
-
 	const maxParallelVMSelectChecksMaxValue = 1024 * 8
 	if check.Config.MaxParallelVMSelectChecks > maxParallelVMSelectChecksMaxValue {
 		return errors.New("MaxParallelVMSelectChecks value is too large")
 	}
+
+	check.tomb.Go(check.vmselectTriggerGetter)
+	check.Logger.Info().Msg("VMSelect checker started")
 
 	check.Logger.Info().
 		Int("number_of_checkers", check.Config.MaxParallelVMSelectChecks).
@@ -143,62 +192,47 @@ func (check *Checker) startVMSelect() error {
 func (check *Checker) startLocal() error {
 	if check.Config.MaxParallelLocalChecks == 0 {
 		check.Config.MaxParallelLocalChecks = runtime.NumCPU()
+
 		check.Logger.Info().
 			Int("number_of_cpu", check.Config.MaxParallelLocalChecks).
 			Msg("MaxParallelChecks is not configured, set it to the number of CPU")
 	}
 
-	check.lastData = time.Now().UTC().Unix()
-
-	if check.Config.MetricEventPopBatchSize == 0 {
-		check.Config.MetricEventPopBatchSize = 100
-	} else if check.Config.MetricEventPopBatchSize < 0 {
-		return errors.New("MetricEventPopBatchSize param less than zero")
-	}
-
-	subscribeMetricEventsParams := moira.SubscribeMetricEventsParams{
-		BatchSize: check.Config.MetricEventPopBatchSize,
-		Delay:     check.Config.MetricEventPopDelay,
-	}
-
-	metricEventsChannel, err := check.Database.SubscribeMetricEvents(&check.tomb, &subscribeMetricEventsParams)
-	if err != nil {
-		return err
-	}
-
-	check.lazyTriggerIDs.Store(make(map[string]bool))
-	check.tomb.Go(check.lazyTriggersWorker)
-
-	check.tomb.Go(check.localTriggerGetter)
-
-	// TODO: Proper config validation
 	const maxParallelChecksMaxValue = 1024 * 8
 	if check.Config.MaxParallelLocalChecks > maxParallelChecksMaxValue {
 		return errors.New("MaxParallelChecks value is too large")
 	}
 
+	check.tomb.Go(check.localTriggerGetter)
+	check.Logger.Info().Msg("Local checker started")
+
 	check.Logger.Info().
 		Int("number_of_checkers", check.Config.MaxParallelLocalChecks).
 		Msg("Start parallel local checkers")
 
-	localTriggerIdsToCheckChan := check.startTriggerToCheckGetter(check.Database.GetLocalTriggersToCheck, check.Config.MaxParallelLocalChecks)
+	localTriggerIdsToCheckChan := check.startTriggerToCheckGetter(
+		check.Database.GetLocalTriggersToCheck,
+		check.Config.MaxParallelLocalChecks,
+	)
+
 	for i := 0; i < check.Config.MaxParallelLocalChecks; i++ {
 		check.tomb.Go(func() error {
-			return check.newMetricsHandler(metricEventsChannel)
-		})
-		check.tomb.Go(func() error {
-			return check.startTriggerHandler(localTriggerIdsToCheckChan, check.Metrics.LocalMetrics)
+			return check.startTriggerHandler(
+				localTriggerIdsToCheckChan,
+				check.Metrics.LocalMetrics,
+			)
 		})
 	}
 
-	check.Logger.Info().Msg("Checking new events started")
+	return nil
+}
 
-	go func() {
-		<-check.tomb.Dying()
-		check.Logger.Info().Msg("Checking for new events stopped")
-	}()
+func (check *Checker) startLazyTriggers() error {
+	check.lastData = time.Now().UTC().Unix()
 
-	check.tomb.Go(func() error { return check.checkMetricEventsChannelLen(metricEventsChannel) })
+	check.lazyTriggerIDs.Store(make(map[string]bool))
+	check.tomb.Go(check.lazyTriggersWorker)
+
 	check.tomb.Go(check.checkTriggersToCheckCount)
 
 	return nil
