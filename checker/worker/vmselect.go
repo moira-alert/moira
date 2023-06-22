@@ -11,29 +11,29 @@ const (
 	vmselectTriggerName     = "VMSelect checker"
 )
 
-func (worker *Checker) vmselectTriggerGetter() error {
+func (check *Checker) vmselectTriggerGetter() error {
 	w.NewWorker(
 		remoteTriggerName,
-		worker.Logger,
-		worker.Database.NewLock(vmselectTriggerLockName, nodataCheckerLockTTL),
-		worker.vmselectTriggerChecker,
-	).Run(worker.tomb.Dying())
+		check.Logger,
+		check.Database.NewLock(vmselectTriggerLockName, nodataCheckerLockTTL),
+		check.vmselectTriggerChecker,
+	).Run(check.tomb.Dying())
 
 	return nil
 }
 
-func (worker *Checker) vmselectTriggerChecker(stop <-chan struct{}) error {
-	checkTicker := time.NewTicker(worker.VMSelectConfig.CheckInterval)
-	worker.Logger.Info().Msg(vmselectTriggerName + " started")
+func (check *Checker) vmselectTriggerChecker(stop <-chan struct{}) error {
+	checkTicker := time.NewTicker(check.VMSelectConfig.CheckInterval)
+	check.Logger.Info().Msg(vmselectTriggerName + " started")
 	for {
 		select {
 		case <-stop:
-			worker.Logger.Info().Msg(vmselectTriggerName + " stopped")
+			check.Logger.Info().Msg(vmselectTriggerName + " stopped")
 			checkTicker.Stop()
 			return nil
 		case <-checkTicker.C:
-			if err := worker.checkVmselect(); err != nil {
-				worker.Logger.Error().
+			if err := check.checkVmselect(); err != nil {
+				check.Logger.Error().
 					Error(err).
 					Msg("Vmselect trigger failed")
 			}
@@ -41,28 +41,28 @@ func (worker *Checker) vmselectTriggerChecker(stop <-chan struct{}) error {
 	}
 }
 
-func (worker *Checker) checkVmselect() error {
-	source, err := worker.SourceProvider.GetVMSelect()
+func (check *Checker) checkVmselect() error {
+	source, err := check.SourceProvider.GetVMSelect()
 	if err != nil {
 		return err
 	}
 
 	available, err := source.IsAvailable()
 	if !available {
-		worker.Logger.Info().
+		check.Logger.Info().
 			Error(err).
 			Msg("VMSelect API is unavailable. Stop checking vmselect triggers")
 		return nil
 	}
 
-	worker.Logger.Debug().Msg("Checking vmselect triggers")
-	triggerIds, err := worker.Database.GetVMSelectTriggerIDs()
+	check.Logger.Debug().Msg("Checking vmselect triggers")
+	triggerIds, err := check.Database.GetVMSelectTriggerIDs()
 
 	if err != nil {
 		return err
 	}
 
-	worker.addVMSelectTriggerIDsIfNeeded(triggerIds)
+	check.addVMSelectTriggerIDsIfNeeded(triggerIds)
 
 	return nil
 }

@@ -14,29 +14,29 @@ const (
 
 // localTriggerGetter starts NODATA checker and manages its subscription in Redis
 // to make sure there is always only one working checker
-func (worker *Checker) localTriggerGetter() error {
+func (check *Checker) localTriggerGetter() error {
 	w.NewWorker(
 		nodataWorkerName,
-		worker.Logger,
-		worker.Database.NewLock(nodataCheckerLockName, nodataCheckerLockTTL),
-		worker.noDataChecker,
-	).Run(worker.tomb.Dying())
+		check.Logger,
+		check.Database.NewLock(nodataCheckerLockName, nodataCheckerLockTTL),
+		check.noDataChecker,
+	).Run(check.tomb.Dying())
 
 	return nil
 }
 
-func (worker *Checker) noDataChecker(stop <-chan struct{}) error {
-	checkTicker := time.NewTicker(worker.Config.NoDataCheckInterval)
-	worker.Logger.Info().Msg("NODATA checker started")
+func (check *Checker) noDataChecker(stop <-chan struct{}) error {
+	checkTicker := time.NewTicker(check.Config.NoDataCheckInterval)
+	check.Logger.Info().Msg("NODATA checker started")
 	for {
 		select {
 		case <-stop:
-			worker.Logger.Info().Msg("NODATA checker stopped")
+			check.Logger.Info().Msg("NODATA checker stopped")
 			checkTicker.Stop()
 			return nil
 		case <-checkTicker.C:
-			if err := worker.checkNoData(); err != nil {
-				worker.Logger.Error().
+			if err := check.checkNoData(); err != nil {
+				check.Logger.Error().
 					Error(err).
 					Msg("NODATA check failed")
 			}
@@ -44,19 +44,19 @@ func (worker *Checker) noDataChecker(stop <-chan struct{}) error {
 	}
 }
 
-func (worker *Checker) checkNoData() error {
+func (check *Checker) checkNoData() error {
 	now := time.Now().UTC().Unix()
-	if worker.lastData+worker.Config.StopCheckingIntervalSeconds < now {
-		worker.Logger.Info().
-			Int64("no_metrics_for_sec", now-worker.lastData).
+	if check.lastData+check.Config.StopCheckingIntervalSeconds < now {
+		check.Logger.Info().
+			Int64("no_metrics_for_sec", now-check.lastData).
 			Msg("Checking NODATA disabled. No metrics for some seconds")
 	} else {
-		worker.Logger.Info().Msg("Checking NODATA")
-		triggerIds, err := worker.Database.GetLocalTriggerIDs()
+		check.Logger.Info().Msg("Checking NODATA")
+		triggerIds, err := check.Database.GetLocalTriggerIDs()
 		if err != nil {
 			return err
 		}
-		worker.addTriggerIDsIfNeeded(triggerIds)
+		check.addTriggerIDsIfNeeded(triggerIds)
 	}
 	return nil
 }

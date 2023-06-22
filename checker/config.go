@@ -11,7 +11,7 @@ type Config struct {
 	CheckInterval               time.Duration
 	LazyTriggersCheckInterval   time.Duration
 	StopCheckingIntervalSeconds int64
-	MaxParallelChecks           int
+	MaxParallelLocalChecks      int
 	MaxParallelRemoteChecks     int
 	MaxParallelVMSelectChecks   int
 	LogFile                     string
