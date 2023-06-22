@@ -47,7 +47,8 @@ func (worker *Checker) checkRemote() error {
 		return err
 	}
 
-	if available, err := source.IsAvailable(); !available {
+	available, err := source.IsAvailable()
+	if !available {
 		worker.Logger.Info().
 			Error(err).
 			Msg("Remote API is unavailable. Stop checking remote triggers")

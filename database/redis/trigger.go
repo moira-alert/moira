@@ -201,7 +201,6 @@ func (connector *DbConnector) updateTrigger(triggerID string, newTrigger *moira.
 				pipe.SRem(connector.context, vmselectTriggersListKey, triggerID)
 			}
 		}
-
 	}
 	pipe.Set(connector.context, triggerKey(triggerID), bytes, redis.KeepTTL)
 	pipe.SAdd(connector.context, triggersListKey, triggerID)

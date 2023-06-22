@@ -42,14 +42,13 @@ func (worker *Checker) vmselectTriggerChecker(stop <-chan struct{}) error {
 }
 
 func (worker *Checker) checkVmselect() error {
-	// TODO: Generalise `IsAvailable`
-
 	source, err := worker.SourceProvider.GetVMSelect()
 	if err != nil {
 		return err
 	}
 
-	if available, err := source.IsAvailable(); !available {
+	available, err := source.IsAvailable()
+	if !available {
 		worker.Logger.Info().
 			Error(err).
 			Msg("VMSelect API is unavailable. Stop checking vmselect triggers")
