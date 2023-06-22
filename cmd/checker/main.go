@@ -8,12 +8,12 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/moira-alert/moira/checker/worker"
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
 	"github.com/moira-alert/moira/metric_source/remote"
 	"github.com/moira-alert/moira/metric_source/vmselect"
 	"github.com/patrickmn/go-cache"
-	"mvdan.cc/unparam/check"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/checker"
@@ -107,7 +107,7 @@ func main() {
 		checkSingleTrigger(database, checkerMetrics, checkerSettings, metricSourceProvider)
 	}
 
-	checkerWorker := &check.Checker{
+	checkerWorker := &worker.Checker{
 		Logger:            logger,
 		Database:          database,
 		Config:            checkerSettings,
@@ -119,7 +119,7 @@ func main() {
 		LazyTriggersCache: cache.New(time.Minute*10, time.Minute*60),                //nolint
 		PatternCache:      cache.New(checkerSettings.CheckInterval, time.Minute*60), //nolint
 	}
-	err = checkercheck.Start()
+	err = checkerWorker.Start()
 	if err != nil {
 		logger.Fatal().
 			Error(err).
@@ -158,7 +158,7 @@ func checkSingleTrigger(database moira.Database, metrics *metrics.CheckerMetrics
 	os.Exit(0)
 }
 
-func stopChecker(service *check.Checker) {
+func stopChecker(service *worker.Checker) {
 	if err := service.Stop(); err != nil {
 		logger.Error().
 			Error(err).

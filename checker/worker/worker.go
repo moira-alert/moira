@@ -35,7 +35,6 @@ type Checker struct {
 	tomb              tomb.Tomb
 }
 
-// TODO: Refactor this function, it's literally unreadable
 // Start start schedule new MetricEvents and check for NODATA triggers
 func (check *Checker) Start() error {
 	var err error
@@ -50,17 +49,41 @@ func (check *Checker) Start() error {
 		return err
 	}
 
-	err = check.startLocal()
+	err = check.startCheckerWorker(CheckerWorker{
+		name:              "Local",
+		enabled:           true,
+		maxParallelChecks: check.Config.MaxParallelLocalChecks,
+		metrics:           check.Metrics.LocalMetrics,
+
+		triggerGetter:      check.localTriggerGetter,
+		getTriggersToCheck: check.Database.GetLocalTriggersToCheck,
+	})
 	if err != nil {
 		return err
 	}
 
-	err = check.startRemote()
+	err = check.startCheckerWorker(CheckerWorker{
+		name:              "Remote",
+		enabled:           check.RemoteConfig.Enabled,
+		maxParallelChecks: check.Config.MaxParallelRemoteChecks,
+		metrics:           check.Metrics.RemoteMetrics,
+
+		triggerGetter:      check.remoteTriggerGetter,
+		getTriggersToCheck: check.Database.GetRemoteTriggersToCheck,
+	})
 	if err != nil {
 		return err
 	}
 
-	err = check.startVMSelect()
+	err = check.startCheckerWorker(CheckerWorker{
+		name:              "VMSelect",
+		enabled:           check.VMSelectConfig.Enabled,
+		maxParallelChecks: check.Config.MaxParallelVMSelectChecks,
+		metrics:           check.Metrics.VMSelectMetrics,
+
+		triggerGetter:      check.vmselectTriggerGetter,
+		getTriggersToCheck: check.Database.GetVMSelectTriggersToCheck,
+	})
 	if err != nil {
 		return err
 	}
@@ -107,119 +130,51 @@ func (check *Checker) startLocalMetricEvents() error {
 	return nil
 }
 
-func (check *Checker) startRemote() error {
-	if !check.RemoteConfig.Enabled {
-		check.Logger.Info().Msg("Remote checker disabled")
+type CheckerWorker struct {
+	name               string
+	enabled            bool
+	maxParallelChecks  int
+	triggerGetter      func() error
+	getTriggersToCheck func(int) ([]string, error)
+	metrics            *metrics.CheckMetrics
+}
+
+func (check *Checker) startCheckerWorker(w CheckerWorker) error {
+	if !w.enabled {
+		check.Logger.Info().Msg(w.name + " checker disabled")
 		return nil
 	}
 
-	if check.Config.MaxParallelRemoteChecks == 0 {
-		check.Config.MaxParallelRemoteChecks = runtime.NumCPU()
+	maxParallelChecks := w.maxParallelChecks
+	if maxParallelChecks == 0 {
+		maxParallelChecks = runtime.NumCPU()
 
 		check.Logger.Info().
-			Int("number_of_cpu", check.Config.MaxParallelRemoteChecks).
+			Int("number_of_cpu", maxParallelChecks).
 			Msg("MaxParallelRemoteChecks is not configured, set it to the number of CPU")
-	}
-
-	const maxParallelRemoteChecksMaxValue = 1024 * 8
-	if check.Config.MaxParallelRemoteChecks > maxParallelRemoteChecksMaxValue {
-		return errors.New("MaxParallelRemoteChecks value is too large")
-	}
-
-	// ==== Go remoteTriggerGetter ====
-	check.tomb.Go(check.remoteTriggerGetter)
-	check.Logger.Info().Msg("Remote checker started")
-
-	check.Logger.Info().
-		Int("number_of_checkers", check.Config.MaxParallelRemoteChecks).
-		Msg("Start parallel remote checkers")
-
-	// ==== Go startTriggerToCheckGetter ====
-	remoteTriggerIdsToCheckChan := check.startTriggerToCheckGetter(
-		check.Database.GetRemoteTriggersToCheck,
-		check.Config.MaxParallelRemoteChecks,
-	)
-
-	for i := 0; i < check.Config.MaxParallelRemoteChecks; i++ {
-		// ==== Go startTriggerHandler ====
-		check.tomb.Go(func() error {
-			return check.startTriggerHandler(
-				remoteTriggerIdsToCheckChan,
-				check.Metrics.RemoteMetrics,
-			)
-		})
-	}
-
-	return nil
-}
-
-func (check *Checker) startVMSelect() error {
-	if !check.VMSelectConfig.Enabled {
-		check.Logger.Info().Msg("VMSelect checker disabled")
-		return nil
-	}
-
-	if check.Config.MaxParallelVMSelectChecks == 0 {
-		check.Config.MaxParallelVMSelectChecks = runtime.NumCPU()
-
-		check.Logger.Info().
-			Int("number_of_cpu", check.Config.MaxParallelVMSelectChecks).
-			Msg("MaxParallelRemoteChecks is not configured, set it to the number of CPU")
-	}
-
-	const maxParallelVMSelectChecksMaxValue = 1024 * 8
-	if check.Config.MaxParallelVMSelectChecks > maxParallelVMSelectChecksMaxValue {
-		return errors.New("MaxParallelVMSelectChecks value is too large")
-	}
-
-	check.tomb.Go(check.vmselectTriggerGetter)
-	check.Logger.Info().Msg("VMSelect checker started")
-
-	check.Logger.Info().
-		Int("number_of_checkers", check.Config.MaxParallelVMSelectChecks).
-		Msg("Start parallel remote checkers")
-
-	vmselectTriggerIdsToCheckChan := check.startTriggerToCheckGetter(check.Database.GetVMSelectTriggersToCheck, check.Config.MaxParallelVMSelectChecks)
-	for i := 0; i < check.Config.MaxParallelVMSelectChecks; i++ {
-		check.tomb.Go(func() error {
-			return check.startTriggerHandler(vmselectTriggerIdsToCheckChan, check.Metrics.VMSelectMetrics)
-		})
-	}
-
-	return nil
-}
-
-func (check *Checker) startLocal() error {
-	if check.Config.MaxParallelLocalChecks == 0 {
-		check.Config.MaxParallelLocalChecks = runtime.NumCPU()
-
-		check.Logger.Info().
-			Int("number_of_cpu", check.Config.MaxParallelLocalChecks).
-			Msg("MaxParallelChecks is not configured, set it to the number of CPU")
 	}
 
 	const maxParallelChecksMaxValue = 1024 * 8
-	if check.Config.MaxParallelLocalChecks > maxParallelChecksMaxValue {
-		return errors.New("MaxParallelChecks value is too large")
+	if maxParallelChecks > maxParallelChecksMaxValue {
+		return errors.New("MaxParallel" + w.name + "Checks value is too large")
 	}
 
-	check.tomb.Go(check.localTriggerGetter)
-	check.Logger.Info().Msg("Local checker started")
+	// ==== Go TriggerGetter ====
+	check.tomb.Go(w.triggerGetter)
+	check.Logger.Info().Msg(w.name + "checker started")
 
-	check.Logger.Info().
-		Int("number_of_checkers", check.Config.MaxParallelLocalChecks).
-		Msg("Start parallel local checkers")
-
-	localTriggerIdsToCheckChan := check.startTriggerToCheckGetter(
-		check.Database.GetLocalTriggersToCheck,
-		check.Config.MaxParallelLocalChecks,
+	// ==== Go startTriggerToCheckGetter ====
+	triggerIdsToCheckChan := check.startTriggerToCheckGetter(
+		w.getTriggersToCheck,
+		maxParallelChecks,
 	)
 
-	for i := 0; i < check.Config.MaxParallelLocalChecks; i++ {
+	for i := 0; i < maxParallelChecks; i++ {
+		// ==== Go startTriggerHandler ====
 		check.tomb.Go(func() error {
 			return check.startTriggerHandler(
-				localTriggerIdsToCheckChan,
-				check.Metrics.LocalMetrics,
+				triggerIdsToCheckChan,
+				w.metrics,
 			)
 		})
 	}
