@@ -78,7 +78,7 @@ func getDefault() config {
 			MetricsTTL:                    "1h",
 			DialTimeout:                   "500ms",
 			NotificationHistoryQueryLimit: 10000,
-			NotificationHistoryTtl:        "48h",
+			NotificationHistoryTTL:        "48h",
 		},
 
 		Logger: cmd.LoggerConfig{

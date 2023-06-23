@@ -76,7 +76,7 @@ func NewDatabase(logger moira.Logger, config Config, source DBSource) *DbConnect
 		metricsTTLSeconds:             int64(config.MetricsTTL.Seconds()),
 		source:                        source,
 		clock:                         clock.NewSystemClock(),
-		notificationHistoryTtlSeconds: int64(config.NotificationHistoryTtl.Seconds()),
+		notificationHistoryTtlSeconds: int64(config.NotificationHistoryTTL.Seconds()),
 		notificationHistoryQueryLimit: int64(config.NotificationHistoryQueryLimit),
 	}
 	return &connector

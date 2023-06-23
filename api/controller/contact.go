@@ -26,6 +26,7 @@ func GetAllContacts(database moira.Database) (*dto.ContactList, *api.ErrorRespon
 	return &contactsList, nil
 }
 
+// GetContactById gets notification contact by its id string
 func GetContactById(database moira.Database, contactID string) (*dto.Contact, *api.ErrorResponse) {
 	contact, err := database.GetContact(contactID)
 	if err != nil {

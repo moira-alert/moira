@@ -12,7 +12,7 @@ type Config struct {
 	DialTimeout                   time.Duration
 	ReadTimeout                   time.Duration
 	WriteTimeout                  time.Duration
-	NotificationHistoryTtl        time.Duration
+	NotificationHistoryTTL        time.Duration
 	MaxRetries                    int
 	NotificationHistoryQueryLimit int
 }

@@ -41,7 +41,7 @@ type RedisConfig struct {
 	// MaxRetries count of retries.
 	MaxRetries int `yaml:"max_retries"`
 	// Time which moira should store contacts and theirs events history
-	NotificationHistoryTtl string `yaml:"notification_history_ttl"`
+	NotificationHistoryTTL string `yaml:"notification_history_ttl"`
 	// Max count of events which moira may send as response of contact and its events history
 	NotificationHistoryQueryLimit int `yaml:"notification_history_query_limit"`
 }
@@ -58,7 +58,7 @@ func (config *RedisConfig) GetSettings() redis.Config {
 		DialTimeout:                   to.Duration(config.DialTimeout),
 		ReadTimeout:                   to.Duration(config.ReadTimeout),
 		WriteTimeout:                  to.Duration(config.WriteTimeout),
-		NotificationHistoryTtl:        to.Duration(config.NotificationHistoryTtl),
+		NotificationHistoryTTL:        to.Duration(config.NotificationHistoryTTL),
 		NotificationHistoryQueryLimit: config.NotificationHistoryQueryLimit,
 	}
 }
