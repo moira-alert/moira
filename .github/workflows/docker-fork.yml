@@ -5,11 +5,7 @@ on:
 
 jobs:
   publish:
-    if: ${{ github.event.issue.pull_request }} &&\ 
-        github.event.pull_request.head.repo.fork == true &&\ 
-        github.event.pull_request.base.ref == "master" &&\ 
-        github.event.comment.author_association == MEMBER &&\ 
-        contains(github.event.comment.body, '/build')
+    if: ${{github.event.issue.pull_request}} && ${{github.event.pull_request.head.repo.fork == true}} && ${{github.event.pull_request.base.ref == 'master'}} && ${{github.event.comment.author_association == 'MEMBER'}} && ${{startWith(github.event.comment.body, '/build')}}
         
     name: Publish images
     runs-on: ubuntu-22.04
