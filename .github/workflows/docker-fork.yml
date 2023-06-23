@@ -1,19 +1,15 @@
 name: Build and publish image from fork
 on:
-  pull_request_target:
-    branches:
-      - master
-    paths-ignore:
-      - .github/*
-      - .run/*
-      - Dockerfile.*
-      - docker-compose.*
-      - Makefile
-      - generate_mocks.*
+  issue_comment:
+    types: created
 
 jobs:
   publish:
-    if: github.event.pull_request.head.repo.fork == true
+    if: ${{ github.event.issue.pull_request }} &&\ 
+        github.event.pull_request.head.repo.fork == true &&\ 
+        github.event.pull_request.base.ref == "master" &&\ 
+        github.event.issue_comment.comment.author_association == MEMBER &&\ 
+        github.event.issue_comment.comment.body == "build"
     name: Publish images
     runs-on: ubuntu-22.04
     strategy:
