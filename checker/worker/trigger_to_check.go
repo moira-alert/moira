@@ -2,6 +2,8 @@ package worker
 
 import (
 	"time"
+
+	"github.com/patrickmn/go-cache"
 )
 
 const sleepAfterGetTriggerIDError = time.Second * 1
@@ -9,7 +11,9 @@ const sleepWhenNoTriggerToCheck = time.Millisecond * 500
 
 func (check *Checker) startTriggerToCheckGetter(fetch func(int) ([]string, error), batchSize int) <-chan string {
 	triggerIDsToCheck := make(chan string, batchSize*2) //nolint
-	check.tomb.Go(func() error { return check.triggerToCheckGetter(fetch, batchSize, triggerIDsToCheck) })
+	check.tomb.Go(func() error {
+		return check.triggerToCheckGetter(fetch, batchSize, triggerIDsToCheck)
+	})
 	return triggerIDsToCheck
 }
 
@@ -42,4 +46,23 @@ func (check *Checker) handleFetchResponse(triggerIDs []string, fetchError error,
 		triggerIDsToCheck <- triggerID
 	}
 	return time.Duration(0)
+}
+
+func (check *Checker) getTriggerIDsToCheck(triggerIDs []string) []string {
+	lazyTriggerIDs := check.lazyTriggerIDs.Load().(map[string]bool)
+	var triggerIDsToCheck []string = make([]string, 0, len(triggerIDs))
+
+	for _, triggerID := range triggerIDs {
+		if _, ok := lazyTriggerIDs[triggerID]; ok {
+			randomDuration := check.getRandomLazyCacheDuration()
+			if err := check.LazyTriggersCache.Add(triggerID, true, randomDuration); err != nil {
+				continue
+			}
+		}
+		if err := check.TriggerCache.Add(triggerID, true, cache.DefaultExpiration); err == nil {
+			triggerIDsToCheck = append(triggerIDsToCheck, triggerID)
+		}
+	}
+
+	return triggerIDsToCheck
 }

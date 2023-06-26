@@ -49,41 +49,17 @@ func (check *Checker) Start() error {
 		return err
 	}
 
-	err = check.startCheckerWorker(CheckerWorker{
-		name:              "Local",
-		enabled:           true,
-		maxParallelChecks: check.Config.MaxParallelLocalChecks,
-		metrics:           check.Metrics.LocalMetrics,
-
-		triggerGetter:      check.localTriggerGetter,
-		getTriggersToCheck: check.Database.GetLocalTriggersToCheck,
-	})
+	err = check.startCheckerWorker(NewRemoteChecker(check))
 	if err != nil {
 		return err
 	}
 
-	err = check.startCheckerWorker(CheckerWorker{
-		name:              "Remote",
-		enabled:           check.RemoteConfig.Enabled,
-		maxParallelChecks: check.Config.MaxParallelRemoteChecks,
-		metrics:           check.Metrics.RemoteMetrics,
-
-		triggerGetter:      check.remoteTriggerGetter,
-		getTriggersToCheck: check.Database.GetRemoteTriggersToCheck,
-	})
+	err = check.startCheckerWorker(NewVMSelectChecker(check))
 	if err != nil {
 		return err
 	}
 
-	err = check.startCheckerWorker(CheckerWorker{
-		name:              "VMSelect",
-		enabled:           check.VMSelectConfig.Enabled,
-		maxParallelChecks: check.Config.MaxParallelVMSelectChecks,
-		metrics:           check.Metrics.VMSelectMetrics,
-
-		triggerGetter:      check.vmselectTriggerGetter,
-		getTriggersToCheck: check.Database.GetVMSelectTriggersToCheck,
-	})
+	err = check.startCheckerWorker(NewLocalChecker(check))
 	if err != nil {
 		return err
 	}
@@ -130,51 +106,49 @@ func (check *Checker) startLocalMetricEvents() error {
 	return nil
 }
 
-type CheckerWorker struct {
-	name               string
-	enabled            bool
-	maxParallelChecks  int
-	triggerGetter      func() error
-	getTriggersToCheck func(int) ([]string, error)
-	metrics            *metrics.CheckMetrics
+type CheckerWorker interface {
+	Name() string
+	IsEnabled() bool
+	MaxParallelChecks() int
+	Metrics() *metrics.CheckMetrics
+
+	StartTriggerGetter() error
+	GetTriggersToCheck(count int) ([]string, error)
 }
 
 func (check *Checker) startCheckerWorker(w CheckerWorker) error {
-	if !w.enabled {
-		check.Logger.Info().Msg(w.name + " checker disabled")
+	if !w.IsEnabled() {
+		check.Logger.Info().Msg(w.Name() + " checker disabled")
 		return nil
 	}
 
-	maxParallelChecks := w.maxParallelChecks
+	maxParallelChecks := w.MaxParallelChecks()
 	if maxParallelChecks == 0 {
 		maxParallelChecks = runtime.NumCPU()
 
 		check.Logger.Info().
 			Int("number_of_cpu", maxParallelChecks).
-			Msg("MaxParallelRemoteChecks is not configured, set it to the number of CPU")
+			Msg("MaxParallel" + w.Name() + "Checks is not configured, set it to the number of CPU")
 	}
 
 	const maxParallelChecksMaxValue = 1024 * 8
 	if maxParallelChecks > maxParallelChecksMaxValue {
-		return errors.New("MaxParallel" + w.name + "Checks value is too large")
+		return errors.New("MaxParallel" + w.Name() + "Checks value is too large")
 	}
 
-	// ==== Go TriggerGetter ====
-	check.tomb.Go(w.triggerGetter)
-	check.Logger.Info().Msg(w.name + "checker started")
+	check.tomb.Go(w.StartTriggerGetter)
+	check.Logger.Info().Msg(w.Name() + "checker started")
 
-	// ==== Go startTriggerToCheckGetter ====
 	triggerIdsToCheckChan := check.startTriggerToCheckGetter(
-		w.getTriggersToCheck,
+		w.GetTriggersToCheck,
 		maxParallelChecks,
 	)
 
 	for i := 0; i < maxParallelChecks; i++ {
-		// ==== Go startTriggerHandler ====
 		check.tomb.Go(func() error {
 			return check.startTriggerHandler(
 				triggerIdsToCheckChan,
-				w.metrics,
+				w.Metrics(),
 			)
 		})
 	}
