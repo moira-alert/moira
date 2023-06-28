@@ -47,8 +47,8 @@ type RedisConfig struct {
 }
 
 // GetSettings returns redis config parsed from moira config files
-func (config *RedisConfig) GetSettings() redis.Config {
-	return redis.Config{
+func (config *RedisConfig) GetSettings() redis.DatabaseConfig {
+	return redis.DatabaseConfig{
 		MasterName:   config.MasterName,
 		Addrs:        strings.Split(config.Addrs, ","),
 		Username:     config.Username,
