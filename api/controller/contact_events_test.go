@@ -81,7 +81,7 @@ func TestGetContactEvents(t *testing.T) {
 		Convey("in case of 'to' parameter is not number at all", func() {
 			contactWithEvents, err := GetContactByIdWithEventsLimit(dataBase, contact.ID, dataBaseSearchFrom, "not_number_here")
 			So(contactWithEvents, ShouldBeNil)
-			So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("'from' and 'to' query params should be positive numbers")))
+			So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("'from' and 'to' query params should be numbers")))
 		})
 	})
 

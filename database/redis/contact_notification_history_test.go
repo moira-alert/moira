@@ -62,7 +62,6 @@ var eventsShouldBeInDb = []*moira.NotificationEventHistoryItem{
 func TestGetNotificationsByContactIdWithLimit(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabase(logger)
-	dataBase.notificationHistoryTtlSeconds = 500
 
 	Convey("Notification history items manipulation", t, func() {
 		dataBase.Flush()
@@ -133,7 +132,7 @@ func TestGetNotificationsByContactIdWithLimit(t *testing.T) {
 func TestPushNotificationToHistory(t *testing.T) {
 	logger, _ := logging.GetLogger("dataBase")
 	dataBase := NewTestDatabase(logger)
-	dataBase.notificationHistoryTtlSeconds = 500
+	dataBase.notificationHistory.NotificationHistoryQueryLimit = 500
 
 	Convey("Ensure that event would not have duplicates", t, func() {
 		dataBase.Flush()

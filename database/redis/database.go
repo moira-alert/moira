@@ -35,21 +35,20 @@ const (
 
 // DbConnector contains redis client
 type DbConnector struct {
-	client                        *redis.UniversalClient
-	logger                        moira.Logger
-	retentionCache                *cache.Cache
-	retentionSavingCache          *cache.Cache
-	metricsCache                  *cache.Cache
-	sync                          *redsync.Redsync
-	metricsTTLSeconds             int64
-	context                       context.Context
-	source                        DBSource
-	clock                         moira.Clock
-	notificationHistoryTtlSeconds int64
-	notificationHistoryQueryLimit int64
+	client               *redis.UniversalClient
+	logger               moira.Logger
+	retentionCache       *cache.Cache
+	retentionSavingCache *cache.Cache
+	metricsCache         *cache.Cache
+	sync                 *redsync.Redsync
+	metricsTTLSeconds    int64
+	context              context.Context
+	source               DBSource
+	clock                moira.Clock
+	notificationHistory  NotificationHistoryConfig
 }
 
-func NewDatabase(logger moira.Logger, config Config, source DBSource) *DbConnector {
+func NewDatabase(logger moira.Logger, config DatabaseConfig, nh NotificationHistoryConfig, source DBSource) *DbConnector {
 	client := redis.NewUniversalClient(&redis.UniversalOptions{
 		MasterName:   config.MasterName,
 		Addrs:        config.Addrs,
@@ -66,32 +65,41 @@ func NewDatabase(logger moira.Logger, config Config, source DBSource) *DbConnect
 	syncPool := goredis.NewPool(client)
 
 	connector := DbConnector{
-		client:                        &client,
-		logger:                        logger,
-		context:                       ctx,
-		retentionCache:                cache.New(cacheValueExpirationDuration, cacheCleanupInterval),
-		retentionSavingCache:          cache.New(cache.NoExpiration, cache.DefaultExpiration),
-		metricsCache:                  cache.New(cacheValueExpirationDuration, cacheCleanupInterval),
-		sync:                          redsync.New(syncPool),
-		metricsTTLSeconds:             int64(config.MetricsTTL.Seconds()),
-		source:                        source,
-		clock:                         clock.NewSystemClock(),
-		notificationHistoryTtlSeconds: int64(config.NotificationHistoryTTL.Seconds()),
-		notificationHistoryQueryLimit: int64(config.NotificationHistoryQueryLimit),
+		client:               &client,
+		logger:               logger,
+		context:              ctx,
+		retentionCache:       cache.New(cacheValueExpirationDuration, cacheCleanupInterval),
+		retentionSavingCache: cache.New(cache.NoExpiration, cache.DefaultExpiration),
+		metricsCache:         cache.New(cacheValueExpirationDuration, cacheCleanupInterval),
+		sync:                 redsync.New(syncPool),
+		metricsTTLSeconds:    int64(config.MetricsTTL.Seconds()),
+		source:               source,
+		clock:                clock.NewSystemClock(),
+		notificationHistory:  nh,
 	}
 	return &connector
 }
 
 // NewTestDatabase use it only for tests
 func NewTestDatabase(logger moira.Logger) *DbConnector {
-	return NewDatabase(logger, Config{
+	return NewDatabase(logger, DatabaseConfig{
 		Addrs: []string{"0.0.0.0:6379"},
-	}, testSource)
+	},
+		NotificationHistoryConfig{
+			NotificationHistoryTTL:        time.Hour * 48,
+			NotificationHistoryQueryLimit: 1000,
+		}, testSource)
 }
 
 // NewTestDatabaseWithIncorrectConfig use it only for tests
 func NewTestDatabaseWithIncorrectConfig(logger moira.Logger) *DbConnector {
-	return NewDatabase(logger, Config{Addrs: []string{"0.0.0.0:0000"}}, testSource)
+	return NewDatabase(logger,
+		DatabaseConfig{Addrs: []string{"0.0.0.0:0000"}},
+		NotificationHistoryConfig{
+			NotificationHistoryTTL:        time.Hour * 48,
+			NotificationHistoryQueryLimit: 1000,
+		},
+		testSource)
 }
 
 // Flush deletes all the keys of the DB, use it only for tests
@@ -127,4 +135,8 @@ func (connector *DbConnector) Client() redis.UniversalClient {
 
 func (connector *DbConnector) Context() context.Context {
 	return connector.context
+}
+
+func (connector *DbConnector) NotificationSettings() NotificationHistoryConfig {
+	return connector.notificationHistory
 }

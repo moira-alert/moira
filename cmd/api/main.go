@@ -81,7 +81,8 @@ func main() {
 	defer telemetry.Stop()
 
 	databaseSettings := config.Redis.GetSettings()
-	database := redis.NewDatabase(logger, databaseSettings, redis.API)
+	nhSettings := config.NotificationHistory.GetSettings()
+	database := redis.NewDatabase(logger, databaseSettings, nhSettings, redis.API)
 
 	// Start Index right before HTTP listener. Fail if index cannot start
 	searchIndex := index.NewSearchIndex(logger, database, telemetry.Metrics)

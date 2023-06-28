@@ -41,6 +41,9 @@ web:
       label: MS Teams
     - type: mattermost
       label: Mattermost
+notification_history:
+  ttl: 48h
+  query_limit: 10000
 log:
   log_file: stdout
   log_level: debug
