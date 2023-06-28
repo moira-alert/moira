@@ -31,6 +31,7 @@ func TestGetContactEvents(t *testing.T) {
 	contactExpect := moira.ContactData{
 		ID:    contact.ID,
 		Value: contact.Value,
+		Type:  contact.Type,
 		User:  "",
 		Team:  contact.TeamID,
 	}
@@ -53,6 +54,15 @@ func TestGetContactEvents(t *testing.T) {
 			TriggerID: "someTriggerId",
 			ContactID: "some_contact_id",
 		},
+	}
+
+	contactWithItems := dto.ContactWithEvents{
+		Type:   contact.Type,
+		Value:  contact.Value,
+		ID:     contact.ID,
+		User:   contact.User,
+		TeamID: contact.TeamID,
+		Events: []moira.NotificationEventHistoryItem{*items[0], *items[1]},
 	}
 
 	dataBaseSearchFrom := strconv.FormatInt(items[0].TimeStamp, 10)
@@ -117,6 +127,6 @@ func TestGetContactEvents(t *testing.T) {
 		contactWithEvents, apiErrActual := GetContactByIdWithEventsLimit(dataBase, contact.ID, dataBaseSearchFrom, dataBaseSearchTo)
 
 		So(apiErrActual, ShouldBeNil)
-		So(contactWithEvents, ShouldResemble, items)
+		So(*contactWithEvents, ShouldResemble, contactWithItems)
 	})
 }
