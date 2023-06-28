@@ -25,6 +25,10 @@ type RedisConfig struct {
 	MasterName string `yaml:"master_name"`
 	// Redis address list, format: {host1_name:port},{ip:port}
 	Addrs string `yaml:"addrs"`
+	// Redis Sentinel password
+	SentinelPassword string `yaml:"sentinel_password"`
+	// Redis Sentinel username
+	SentinelUsername string `yaml:"sentinel_username"`
 	// Redis username
 	Username string `yaml:"username"`
 	// Redis password
@@ -43,8 +47,8 @@ type RedisConfig struct {
 }
 
 // GetSettings returns redis config parsed from moira config files
-func (config *RedisConfig) GetSettings() redis.DatabaseConfig {
-	return redis.DatabaseConfig{
+func (config *RedisConfig) GetSettings() redis.Config {
+	return redis.Config{
 		MasterName:   config.MasterName,
 		Addrs:        strings.Split(config.Addrs, ","),
 		Username:     config.Username,

@@ -198,6 +198,6 @@ func userContactsKey(userName string) string {
 	return "moira-user-contacts:" + userName
 }
 
-func teamContactsKey(userName string) string {
-	return "moira-team-contacts:" + userName
+func teamContactsKey(teamName string) string {
+	return "moira-team-contacts:" + teamName
 }

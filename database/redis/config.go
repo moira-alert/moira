@@ -2,8 +2,8 @@ package redis
 
 import "time"
 
-// DatabaseConfig - Redis database connection config
-type DatabaseConfig struct {
+// Config - Redis database connection config
+type Config struct {
 	MasterName   string
 	Addrs        []string
 	Username     string

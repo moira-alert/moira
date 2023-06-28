@@ -2,7 +2,7 @@ version: "3.7"
 
 services:
   redis:
-    image: redis:alpine
+    image: redis:6.2.12-alpine3.18
     volumes:
       - data:/data
     ports:

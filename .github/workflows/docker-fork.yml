@@ -1,18 +1,27 @@
-name: Publish docker feature
+name: Build and publish image from fork
 on:
-  push:
-    branches:
-      - "feature/*"
-      - "hotfix/*"
+  issue_comment:
+    types: created
 
 jobs:
   publish:
+    if: ${{github.event.issue.pull_request}} && ${{github.event.pull_request.head.repo.fork == true}} && ${{github.event.pull_request.base.ref == 'master'}} && ${{github.event.comment.author_association == 'MEMBER'}} && ${{startWith(github.event.comment.body, '/build')}}
     name: Publish images
     runs-on: ubuntu-22.04
     strategy:
       matrix:
         servis: [api, checker, cli, notifier, filter]
     steps:
+      - name: Get PR branch
+        uses: xt0rted/pull-request-comment-branch@v1
+        id: comment-branch
+
+      - name: Set latest commit status as pending
+        uses: myrotvorets/set-commit-status-action@master
+        with:
+          sha: ${{ steps.comment-branch.outputs.head_sha }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          status: pending
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
