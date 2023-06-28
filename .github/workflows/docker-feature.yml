@@ -1,19 +1,39 @@
-name: Publish docker feature
+name: Build and publish feature images
 on:
-  push:
-    branches:
-      - "feature/*"
-      - "hotfix/*"
+  issue_comment:
+    types: created
 
 jobs:
   publish:
     name: Publish images
-    runs-on: ubuntu-22.04
+    permissions:
+      statuses: write
+      pull-requests: write
     strategy:
       matrix:
-        servis: [api, checker, cli, notifier, filter]
+          servis: [api, checker, cli, notifier, filter]
+    runs-on: ubuntu-22.04
+    if: ${{github.event.issue.pull_request != null && startsWith(github.event.comment.body, '/build') && github.event.comment.author_association == 'MEMBER'}}
     steps:
+      - name: Get PR branch
+        uses: xt0rted/pull-request-comment-branch@v1
+        id: comment-branch
 
+      - name: Set latest commit status as pending
+        if: ${{contains(fromJSON('["master"]'), steps.comment-branch.outputs.head_ref)}} ||\ 
+            ${{startsWith(steps.comment-branch.outputs.head_ref, 'feature/')}} ||\ 
+            ${{startsWith(steps.comment-branch.outputs.head_ref, 'hotfix/')}}
+        uses: myrotvorets/set-commit-status-action@master
+        with:
+          sha: ${{ steps.comment-branch.outputs.head_sha }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          status: pending
+
+      - name: Checkout PR branch
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ steps.comment-branch.outputs.head_ref }}
+          
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
@@ -35,3 +55,20 @@ jobs:
             GIT_COMMIT=${{github.sha}}
           push: true
           tags: moira/${{matrix.servis}}-unstable:${{env.DOCKER_TAG}}
+
+      - name: Comment PR with build tag
+        uses: mshick/add-pr-comment@v2
+        if: always()
+        with:
+          message-success:
+            "Build and push Docker images with tag: ${{env.DOCKER_TAG}}"
+          message-failure:
+            "Builds images failed. See action log for details"
+              
+      - name: Set latest commit status as ${{ job.status }}
+        uses: myrotvorets/set-commit-status-action@master
+        if: always()
+        with:
+          sha: ${{ steps.comment-branch.outputs.head_sha }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          status: ${{ job.status }}
