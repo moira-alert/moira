@@ -8,6 +8,11 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
+      
+      - uses: actions/setup-go@v4
+        with:
+          go-version-file: go.mod
+
       - name: Run linter
         uses: golangci/golangci-lint-action@v3
         with:
