@@ -18,7 +18,24 @@ jobs:
       - name: Get PR branch
         uses: xt0rted/pull-request-comment-branch@v1
         id: comment-branch
-
+        
+      - uses: actions/github-script@v6
+        id: get-pr
+        with:
+          script: |
+            const request = {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            }
+            core.info(`Getting PR #${request.pull_number} from ${request.owner}/${request.repo}`)
+            try {
+              const result = await github.rest.pulls.get(request)
+              return result.data
+            } catch (err) {
+              core.setFailed(`Request failed with error ${err}`)
+            }
+      
       - name: Set latest commit status as pending
         if: ${{contains(fromJSON('["master"]'), steps.comment-branch.outputs.head_ref)}} ||\ 
             ${{startsWith(steps.comment-branch.outputs.head_ref, 'feature/')}} ||\ 
@@ -33,7 +50,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           ref: ${{ steps.comment-branch.outputs.head_ref }}
-          
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
