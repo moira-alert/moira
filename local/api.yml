@@ -40,6 +40,10 @@ web:
       label: MS Teams
     - type: mattermost
       label: Mattermost
+  feature_flags:
+    is_plotting_available: true
+    is_plotting_default_on: true
+    is_subscription_to_all_tags_available: true
 log:
   log_file: stdout
   log_level: debug
