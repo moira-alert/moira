@@ -13,10 +13,6 @@ jobs:
         servis: [api, checker, cli, notifier, filter]
     steps:
 
-      - name: Get PR branch
-        uses: xt0rted/pull-request-comment-branch@v1
-        id: comment-branch
-        
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
       
