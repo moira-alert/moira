@@ -12,7 +12,7 @@ jobs:
       matrix:
         servis: [api, checker, cli, notifier, filter]
     steps:
-
+    
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
       
