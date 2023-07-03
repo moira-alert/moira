@@ -1,7 +1,7 @@
 name: Delete skipped docker-feature runs
 on:
   schedule:
-    - cron: '* */12 * * *'
+    - cron: '0 0 * * 1'
 
 jobs:
   del_runs:
