@@ -80,6 +80,8 @@ func main() {
 	}
 	defer telemetry.Stop()
 
+	logger.Info().Msg("Debug: checker started")
+
 	databaseSettings := config.Redis.GetSettings()
 	database := redis.NewDatabase(logger, databaseSettings, redis.Checker)
 
