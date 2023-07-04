@@ -39,6 +39,7 @@ jobs:
         uses: mshick/add-pr-comment@v2
         if: always()
         with:
+          refresh-message-position: true
           message-success:
             "Build and push Docker images with tag: ${{env.DOCKER_TAG}}"
           message-failure:
