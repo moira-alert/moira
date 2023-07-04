@@ -12,7 +12,7 @@ jobs:
       matrix:
         servis: [api, checker, cli, notifier, filter]
     steps:
-      
+    
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
       
@@ -34,3 +34,13 @@ jobs:
             GIT_COMMIT=${{github.sha}}
           push: true
           tags: moira/${{matrix.servis}}-nightly:${{env.DOCKER_TAG}}
+
+      - name: Comment PR with build tag
+        uses: mshick/add-pr-comment@v2
+        if: always()
+        with:
+          message-success:
+            "Build and push Docker images with tag: ${{env.DOCKER_TAG}}"
+          message-failure:
+            "Builds images failed. See action log for details"
+            
