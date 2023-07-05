@@ -116,10 +116,6 @@ func main() {
 
 	remoteConfig := config.Remote.GetRemoteSourceSettings()
 	vmselectConfig := config.VMSelect.GetVMSelectSourceSettings()
-	logger.Error().
-		String("vmselectConfig", fmt.Sprintf("%+v", vmselectConfig)).
-		String("config.VMSelect.MetricsTTL", config.VMSelect.MetricsTTL).
-		Msg("vmselectConfig")
 
 	localSource := local.Create(database)
 	remoteSource := remote.Create(remoteConfig)

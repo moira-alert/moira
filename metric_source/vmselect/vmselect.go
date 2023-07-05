@@ -42,14 +42,10 @@ func (vmselect *VMSelect) Fetch(target string, from int64, until int64, allowRea
 		return nil, err
 	}
 
-	fmt.Printf("%+v\n\n", r)
-
 	data, err := vmselect.makeRequest(r)
 	if err != nil {
 		return nil, err
 	}
-
-	fmt.Printf("%+v\n\n", string(data))
 
 	result := VMSelectResponce{}
 	err = json.Unmarshal(data, &result)
@@ -57,9 +53,6 @@ func (vmselect *VMSelect) Fetch(target string, from int64, until int64, allowRea
 	if err != nil {
 		return nil, err
 	}
-
-	str, _ := json.Marshal(result.ConvertToFetchResult())
-	fmt.Printf("%+v\n\n", string(str))
 
 	return result.ConvertToFetchResult(), nil
 }
