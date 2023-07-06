@@ -60,7 +60,7 @@ func (triggerChecker *TriggerChecker) Check() error {
 func (triggerChecker *TriggerChecker) handlePrepareError(checkData moira.CheckData, err error) (bool, moira.CheckData, error) {
 	switch err.(type) {
 	case ErrTriggerHasSameMetricNames:
-		checkData.State = moira.StateERROR
+		checkData.State = moira.StateEXCEPTION
 		checkData.Message = err.Error()
 		return true, checkData, nil
 	case conversion.ErrUnexpectedAloneMetric:
