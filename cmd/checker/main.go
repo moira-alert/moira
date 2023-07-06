@@ -11,8 +11,8 @@ import (
 	"github.com/moira-alert/moira/checker/worker"
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
+	"github.com/moira-alert/moira/metric_source/prometheus"
 	"github.com/moira-alert/moira/metric_source/remote"
-	"github.com/moira-alert/moira/metric_source/vmselect"
 	"github.com/patrickmn/go-cache"
 
 	"github.com/moira-alert/moira"
@@ -86,28 +86,28 @@ func main() {
 	database := redis.NewDatabase(logger, databaseSettings, redis.Checker)
 
 	remoteConfig := config.Remote.GetRemoteSourceSettings()
-	vmselectConfig := config.VMSelect.GetVMSelectSourceSettings()
+	prometheusConfig := config.Prometheus.GetPrometheusSourceSettings()
 
 	localSource := local.Create(database)
 	remoteSource := remote.Create(remoteConfig)
-	vmselectSource, err := vmselect.Create(vmselectConfig)
+	prometheusSource, err := prometheus.Create(prometheusConfig)
 	if err != nil {
 		logger.Fatal().
 			Error(err).
-			Msg("Failed to initialize vmselect metric source")
+			Msg("Failed to initialize prometheus metric source")
 	}
 
 	// TODO: Abstractions over sources, so that they all are handled the same way
 	metricSourceProvider := metricSource.CreateMetricSourceProvider(
 		localSource,
 		remoteSource,
-		vmselectSource,
+		prometheusSource,
 	)
 
 	remoteConfigured, _ := remoteSource.IsConfigured()
-	vmselectConfigured, _ := vmselectSource.IsConfigured()
+	prometheusConfigured, _ := prometheusSource.IsConfigured()
 
-	checkerMetrics := metrics.ConfigureCheckerMetrics(telemetry.Metrics, remoteConfigured, vmselectConfigured)
+	checkerMetrics := metrics.ConfigureCheckerMetrics(telemetry.Metrics, remoteConfigured, prometheusConfigured)
 	checkerSettings := config.Checker.getSettings(logger)
 
 	if triggerID != nil && *triggerID != "" {
@@ -119,7 +119,7 @@ func main() {
 		Database:          database,
 		Config:            checkerSettings,
 		RemoteConfig:      remoteConfig,
-		VMSelectConfig:    vmselectConfig,
+		PrometheusConfig:  prometheusConfig,
 		SourceProvider:    metricSourceProvider,
 		Metrics:           checkerMetrics,
 		TriggerCache:      cache.New(checkerSettings.CheckInterval, time.Minute*60), //nolint

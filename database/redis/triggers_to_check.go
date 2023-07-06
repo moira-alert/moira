@@ -17,8 +17,8 @@ func (connector *DbConnector) AddRemoteTriggersToCheck(triggerIDs []string) erro
 	return connector.addTriggersToCheck(remoteTriggersToCheckKey, triggerIDs)
 }
 
-func (connector *DbConnector) AddVMSelectTriggersToCheck(triggerIDs []string) error {
-	return connector.addTriggersToCheck(vmselectTriggersToCheckKey, triggerIDs)
+func (connector *DbConnector) AddPrometheusTriggersToCheck(triggerIDs []string) error {
+	return connector.addTriggersToCheck(prometheusTriggersToCheckKey, triggerIDs)
 }
 
 // GetLocalTriggersToCheck return random trigger ID from Redis Set
@@ -31,8 +31,8 @@ func (connector *DbConnector) GetRemoteTriggersToCheck(count int) ([]string, err
 	return connector.getTriggersToCheck(remoteTriggersToCheckKey, count)
 }
 
-func (connector *DbConnector) GetVMSelectTriggersToCheck(count int) ([]string, error) {
-	return connector.getTriggersToCheck(vmselectTriggersToCheckKey, count)
+func (connector *DbConnector) GetPrometheusTriggersToCheck(count int) ([]string, error) {
+	return connector.getTriggersToCheck(prometheusTriggersToCheckKey, count)
 }
 
 // GetLocalTriggersToCheckCount return number of triggers ID to check from Redis Set
@@ -45,8 +45,8 @@ func (connector *DbConnector) GetRemoteTriggersToCheckCount() (int64, error) {
 	return connector.getTriggersToCheckCount(remoteTriggersToCheckKey)
 }
 
-func (connector *DbConnector) GetVMSelectTriggersToCheckCount() (int64, error) {
-	return connector.getTriggersToCheckCount(vmselectTriggersToCheckKey)
+func (connector *DbConnector) GetPrometheusTriggersToCheckCount() (int64, error) {
+	return connector.getTriggersToCheckCount(prometheusTriggersToCheckKey)
 }
 
 func (connector *DbConnector) addTriggersToCheck(key string, triggerIDs []string) error {
@@ -93,5 +93,5 @@ func (connector *DbConnector) getTriggersToCheckCount(key string) (int64, error)
 }
 
 var remoteTriggersToCheckKey = "moira-remote-triggers-to-check"
-var vmselectTriggersToCheckKey = "moira-vmselect-triggers-to-check"
+var prometheusTriggersToCheckKey = "moira-prometheus-triggers-to-check"
 var localTriggersToCheckKey = "moira-triggers-to-check"

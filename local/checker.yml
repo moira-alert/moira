@@ -18,7 +18,7 @@ remote:
   check_interval: 60s
   timeout: 60s
   metrics_ttl: 168h
-vmselect:
+prometheus:
   enabled: true
   check_interval: 60s
   timeout: 60s

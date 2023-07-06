@@ -76,8 +76,8 @@ func (connector *DbConnector) getSelfStateCheckCountKey(triggerSource moira.Trig
 	case moira.GraphiteRemote:
 		return selfStateRemoteChecksCounterKey
 
-	case moira.VMSelectRemote:
-		return selfStateVMSelectChecksCounterKey
+	case moira.PrometheusRemote:
+		return selfStatePrometheusChecksCounterKey
 
 	default:
 		return ""

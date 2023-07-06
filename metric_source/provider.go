@@ -11,17 +11,17 @@ var ErrMetricSourceIsNotConfigured = fmt.Errorf("metric source is not configured
 
 // SourceProvider is a provider for all known metrics sources
 type SourceProvider struct {
-	local    MetricSource
-	remote   MetricSource
-	vmselect MetricSource
+	local      MetricSource
+	remote     MetricSource
+	prometheus MetricSource
 }
 
 // CreateMetricSourceProvider just creates SourceProvider with all known metrics sources
-func CreateMetricSourceProvider(local, remote, vmselect MetricSource) *SourceProvider {
+func CreateMetricSourceProvider(local, remote, prometheus MetricSource) *SourceProvider {
 	return &SourceProvider{
-		remote:   remote,
-		local:    local,
-		vmselect: vmselect,
+		remote:     remote,
+		local:      local,
+		prometheus: prometheus,
 	}
 }
 
@@ -36,8 +36,8 @@ func (provider *SourceProvider) GetRemote() (MetricSource, error) {
 }
 
 // GetRemote gets remote metric source. If it not configured returns not empty error
-func (provider *SourceProvider) GetVMSelect() (MetricSource, error) {
-	return returnSource(provider.vmselect)
+func (provider *SourceProvider) GetPrometheus() (MetricSource, error) {
+	return returnSource(provider.prometheus)
 }
 
 // GetTriggerMetricSource get metrics source by given trigger. If it not configured returns not empty error
@@ -54,8 +54,8 @@ func (provider *SourceProvider) GetMetricSource(triggerSource moira.TriggerSourc
 	case moira.GraphiteRemote:
 		return provider.GetRemote()
 
-	case moira.VMSelectRemote:
-		return provider.GetVMSelect()
+	case moira.PrometheusRemote:
+		return provider.GetPrometheus()
 	}
 
 	return nil, fmt.Errorf("unknown metric source")

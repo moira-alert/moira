@@ -19,8 +19,8 @@ import (
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
+	"github.com/moira-alert/moira/metric_source/prometheus"
 	"github.com/moira-alert/moira/metric_source/remote"
-	"github.com/moira-alert/moira/metric_source/vmselect"
 	_ "go.uber.org/automaxprocs"
 )
 
@@ -115,21 +115,21 @@ func main() {
 		Msg("Start listening")
 
 	remoteConfig := config.Remote.GetRemoteSourceSettings()
-	vmselectConfig := config.VMSelect.GetVMSelectSourceSettings()
+	prometheusConfig := config.Prometheus.GetPrometheusSourceSettings()
 
 	localSource := local.Create(database)
 	remoteSource := remote.Create(remoteConfig)
-	vmselectSorce, err := vmselect.Create(vmselectConfig)
+	prometheusSorce, err := prometheus.Create(prometheusConfig)
 	if err != nil {
 		logger.Fatal().
 			Error(err).
-			Msg("Failed to initialize vmselect metric source")
+			Msg("Failed to initialize prometheus metric source")
 	}
 
 	metricSourceProvider := metricSource.CreateMetricSourceProvider(
 		localSource,
 		remoteSource,
-		vmselectSorce,
+		prometheusSorce,
 	)
 
 	webConfigContent, err := config.Web.getSettings(remoteConfig.Enabled)

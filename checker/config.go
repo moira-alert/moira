@@ -13,7 +13,7 @@ type Config struct {
 	StopCheckingIntervalSeconds int64
 	MaxParallelLocalChecks      int
 	MaxParallelRemoteChecks     int
-	MaxParallelVMSelectChecks   int
+	MaxParallelPrometheusChecks int
 	LogFile                     string
 	LogLevel                    string
 	LogTriggersToLevel          map[string]string

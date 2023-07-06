@@ -11,13 +11,13 @@ import (
 )
 
 type config struct {
-	Redis     cmd.RedisConfig     `yaml:"redis"`
-	Logger    cmd.LoggerConfig    `yaml:"log"`
-	API       apiConfig           `yaml:"api"`
-	Web       webConfig           `yaml:"web"`
-	Telemetry cmd.TelemetryConfig `yaml:"telemetry"`
-	Remote    cmd.RemoteConfig    `yaml:"remote"`
-	VMSelect  cmd.VMSelectConfig  `yaml:"vmselect"`
+	Redis      cmd.RedisConfig      `yaml:"redis"`
+	Logger     cmd.LoggerConfig     `yaml:"log"`
+	API        apiConfig            `yaml:"api"`
+	Web        webConfig            `yaml:"web"`
+	Telemetry  cmd.TelemetryConfig  `yaml:"telemetry"`
+	Remote     cmd.RemoteConfig     `yaml:"remote"`
+	Prometheus cmd.PrometheusConfig `yaml:"prometheus"`
 }
 
 type apiConfig struct {

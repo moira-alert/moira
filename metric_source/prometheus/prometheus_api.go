@@ -1,4 +1,4 @@
-package vmselect
+package prometheus
 
 import (
 	"encoding/base64"

@@ -26,7 +26,7 @@ func (connector *DbConnector) GetAllTriggerIDs() ([]string, error) {
 // GetLocalTriggerIDs gets moira local triggerIDs
 func (connector *DbConnector) GetLocalTriggerIDs() ([]string, error) {
 	c := *connector.client
-	triggerIds, err := c.SDiff(connector.context, triggersListKey, remoteTriggersListKey, vmselectTriggersListKey).Result()
+	triggerIds, err := c.SDiff(connector.context, triggersListKey, remoteTriggersListKey, prometheusTriggersListKey).Result()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get triggers-list: %s", err.Error())
 	}
@@ -43,11 +43,11 @@ func (connector *DbConnector) GetRemoteTriggerIDs() ([]string, error) {
 	return triggerIds, nil
 }
 
-func (connector *DbConnector) GetVMSelectTriggerIDs() ([]string, error) {
+func (connector *DbConnector) GetPrometheusTriggerIDs() ([]string, error) {
 	c := *connector.client
-	triggerIds, err := c.SMembers(connector.context, vmselectTriggersListKey).Result()
+	triggerIds, err := c.SMembers(connector.context, prometheusTriggersListKey).Result()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get vmselect triggers-list: %s", err.Error())
+		return nil, fmt.Errorf("failed to get prometheus triggers-list: %s", err.Error())
 	}
 	return triggerIds, nil
 }
@@ -197,8 +197,8 @@ func (connector *DbConnector) updateTrigger(triggerID string, newTrigger *moira.
 			case moira.GraphiteRemote:
 				pipe.SRem(connector.context, remoteTriggersListKey, triggerID)
 
-			case moira.VMSelectRemote:
-				pipe.SRem(connector.context, vmselectTriggersListKey, triggerID)
+			case moira.PrometheusRemote:
+				pipe.SRem(connector.context, prometheusTriggersListKey, triggerID)
 			}
 		}
 	}
@@ -209,8 +209,8 @@ func (connector *DbConnector) updateTrigger(triggerID string, newTrigger *moira.
 	case moira.GraphiteRemote:
 		pipe.SAdd(connector.context, remoteTriggersListKey, triggerID)
 
-	case moira.VMSelectRemote:
-		pipe.SAdd(connector.context, vmselectTriggersListKey, triggerID)
+	case moira.PrometheusRemote:
+		pipe.SAdd(connector.context, prometheusTriggersListKey, triggerID)
 
 	case moira.GraphiteLocal:
 		for _, pattern := range newTrigger.Patterns {
@@ -280,8 +280,8 @@ func (connector *DbConnector) removeTrigger(triggerID string, trigger *moira.Tri
 	case moira.GraphiteRemote:
 		pipe.SRem(connector.context, remoteTriggersListKey, triggerID)
 
-	case moira.VMSelectRemote:
-		pipe.SRem(connector.context, vmselectTriggersListKey, triggerID)
+	case moira.PrometheusRemote:
+		pipe.SRem(connector.context, prometheusTriggersListKey, triggerID)
 	}
 
 	pipe.SRem(connector.context, unusedTriggersKey, triggerID)
@@ -412,7 +412,7 @@ func (connector *DbConnector) triggerHasSubscriptions(trigger *moira.Trigger) (b
 
 var triggersListKey = "{moira-triggers-list}:moira-triggers-list"
 var remoteTriggersListKey = "{moira-triggers-list}:moira-remote-triggers-list"
-var vmselectTriggersListKey = "{moira-triggers-list}:moira-vmselect-triggers-list"
+var prometheusTriggersListKey = "{moira-triggers-list}:moira-prometheus-triggers-list"
 
 func triggerKey(triggerID string) string {
 	return "moira-trigger:" + triggerID

@@ -1,4 +1,4 @@
-package vmselect
+package prometheus
 
 import (
 	"context"
@@ -31,24 +31,24 @@ func Create(config *Config) (metricSource.MetricSource, error) {
 		return nil, err
 	}
 
-	return &VMSelect{
+	return &Prometheus{
 		config: config,
 		api:    promApi,
 	}, nil
 }
 
-type VMSelect struct {
+type Prometheus struct {
 	config *Config
 	api    prometheusApi.API
 }
 
-func (vmselect *VMSelect) Fetch(target string, from int64, until int64, allowRealTimeAlerting bool) (metricSource.FetchResult, error) {
-	from = moira.MaxInt64(from, until-int64(vmselect.config.MetricsTTL.Seconds()))
+func (prometheus *Prometheus) Fetch(target string, from int64, until int64, allowRealTimeAlerting bool) (metricSource.FetchResult, error) {
+	from = moira.MaxInt64(from, until-int64(prometheus.config.MetricsTTL.Seconds()))
 
-	ctx, cancel := context.WithTimeout(context.Background(), vmselect.config.QueryTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), prometheus.config.QueryTimeout)
 	defer cancel()
 
-	val, _, err := vmselect.api.QueryRange(ctx, target, prometheusApi.Range{
+	val, _, err := prometheus.api.QueryRange(ctx, target, prometheusApi.Range{
 		Start: time.Unix(from, 0),
 		End:   time.Unix(until, 0),
 		Step:  time.Second * time.Duration(StepTimeSeconds),
@@ -62,16 +62,16 @@ func (vmselect *VMSelect) Fetch(target string, from int64, until int64, allowRea
 	return convertToFetchResult(mat), nil
 }
 
-func (vmselect *VMSelect) GetMetricsTTLSeconds() int64 {
-	return int64(vmselect.config.MetricsTTL.Seconds())
+func (prometheus *Prometheus) GetMetricsTTLSeconds() int64 {
+	return int64(prometheus.config.MetricsTTL.Seconds())
 }
 
-func (vmselect *VMSelect) IsConfigured() (bool, error) {
+func (prometheus *Prometheus) IsConfigured() (bool, error) {
 	// TODO: check if configuration is valid
-	return vmselect.config.Enabled, nil
+	return prometheus.config.Enabled, nil
 }
 
-func (*VMSelect) IsAvailable() (bool, error) {
+func (*Prometheus) IsAvailable() (bool, error) {
 	// TODO: check if prometheus is actually available
 	return true, nil
 }

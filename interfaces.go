@@ -15,7 +15,7 @@ type Database interface {
 	GetMetricsUpdatesCount() (int64, error)
 	GetChecksUpdatesCount() (int64, error)
 	GetRemoteChecksUpdatesCount() (int64, error)
-	// TODO: GetVMSelectChecksUpdatesCount() (int64, error)
+	// TODO: GetPrometheusChecksUpdatesCount() (int64, error)
 	GetNotifierState() (string, error)
 	SetNotifierState(string) error
 
@@ -36,7 +36,7 @@ type Database interface {
 	GetAllTriggerIDs() ([]string, error)
 	GetLocalTriggerIDs() ([]string, error)
 	GetRemoteTriggerIDs() ([]string, error)
-	GetVMSelectTriggerIDs() ([]string, error)
+	GetPrometheusTriggerIDs() ([]string, error)
 
 	GetTrigger(triggerID string) (Trigger, error)
 	GetTriggers(triggerIDs []string) ([]*Trigger, error)
@@ -117,9 +117,9 @@ type Database interface {
 	GetRemoteTriggersToCheck(count int) ([]string, error)
 	GetRemoteTriggersToCheckCount() (int64, error)
 
-	AddVMSelectTriggersToCheck(triggerIDs []string) error
-	GetVMSelectTriggersToCheck(count int) ([]string, error)
-	GetVMSelectTriggersToCheckCount() (int64, error)
+	AddPrometheusTriggersToCheck(triggerIDs []string) error
+	GetPrometheusTriggersToCheck(count int) ([]string, error)
+	GetPrometheusTriggersToCheckCount() (int64, error)
 
 	// TriggerCheckLock storing
 	AcquireTriggerCheckLock(triggerID string, maxAttemptsCount int) error

@@ -8,8 +8,8 @@ import (
 	"github.com/moira-alert/moira/metrics"
 
 	"github.com/moira-alert/moira/image_store/s3"
+	"github.com/moira-alert/moira/metric_source/prometheus"
 	remoteSource "github.com/moira-alert/moira/metric_source/remote"
-	"github.com/moira-alert/moira/metric_source/vmselect"
 	"github.com/xiam/to"
 	"gopkg.in/yaml.v2"
 
@@ -141,7 +141,7 @@ func (config *RemoteConfig) GetRemoteSourceSettings() *remoteSource.Config {
 	}
 }
 
-type VMSelectConfig struct {
+type PrometheusConfig struct {
 	URL           string `yaml:"url"`
 	CheckInterval string `yaml:"check_interval"`
 	MetricsTTL    string `yaml:"metrics_ttl"`
@@ -152,8 +152,8 @@ type VMSelectConfig struct {
 }
 
 // GetRemoteSourceSettings returns remote config parsed from moira config files
-func (config *VMSelectConfig) GetVMSelectSourceSettings() *vmselect.Config {
-	return &vmselect.Config{
+func (config *PrometheusConfig) GetPrometheusSourceSettings() *prometheus.Config {
+	return &prometheus.Config{
 		Enabled:       config.Enabled,
 		URL:           config.URL,
 		CheckInterval: to.Duration(config.CheckInterval),

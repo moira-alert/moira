@@ -120,18 +120,18 @@ func (mr *MockDatabaseMockRecorder) AddRemoteTriggersToCheck(arg0 interface{}) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddRemoteTriggersToCheck", reflect.TypeOf((*MockDatabase)(nil).AddRemoteTriggersToCheck), arg0)
 }
 
-// AddVMSelectTriggersToCheck mocks base method.
-func (m *MockDatabase) AddVMSelectTriggersToCheck(arg0 []string) error {
+// AddPrometheusTriggersToCheck mocks base method.
+func (m *MockDatabase) AddPrometheusTriggersToCheck(arg0 []string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddVMSelectTriggersToCheck", arg0)
+	ret := m.ctrl.Call(m, "AddPrometheusTriggersToCheck", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// AddVMSelectTriggersToCheck indicates an expected call of AddVMSelectTriggersToCheck.
-func (mr *MockDatabaseMockRecorder) AddVMSelectTriggersToCheck(arg0 interface{}) *gomock.Call {
+// AddPrometheusTriggersToCheck indicates an expected call of AddPrometheusTriggersToCheck.
+func (mr *MockDatabaseMockRecorder) AddPrometheusTriggersToCheck(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddVMSelectTriggersToCheck", reflect.TypeOf((*MockDatabase)(nil).AddVMSelectTriggersToCheck), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddPrometheusTriggersToCheck", reflect.TypeOf((*MockDatabase)(nil).AddPrometheusTriggersToCheck), arg0)
 }
 
 // CleanUpAbandonedRetentions mocks base method.
@@ -952,49 +952,49 @@ func (mr *MockDatabaseMockRecorder) GetUserTeams(arg0 interface{}) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserTeams", reflect.TypeOf((*MockDatabase)(nil).GetUserTeams), arg0)
 }
 
-// GetVMSelectTriggerIDs mocks base method.
-func (m *MockDatabase) GetVMSelectTriggerIDs() ([]string, error) {
+// GetPrometheusTriggerIDs mocks base method.
+func (m *MockDatabase) GetPrometheusTriggerIDs() ([]string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetVMSelectTriggerIDs")
+	ret := m.ctrl.Call(m, "GetPrometheusTriggerIDs")
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetVMSelectTriggerIDs indicates an expected call of GetVMSelectTriggerIDs.
-func (mr *MockDatabaseMockRecorder) GetVMSelectTriggerIDs() *gomock.Call {
+// GetPrometheusTriggerIDs indicates an expected call of GetPrometheusTriggerIDs.
+func (mr *MockDatabaseMockRecorder) GetPrometheusTriggerIDs() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVMSelectTriggerIDs", reflect.TypeOf((*MockDatabase)(nil).GetVMSelectTriggerIDs))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPrometheusTriggerIDs", reflect.TypeOf((*MockDatabase)(nil).GetPrometheusTriggerIDs))
 }
 
-// GetVMSelectTriggersToCheck mocks base method.
-func (m *MockDatabase) GetVMSelectTriggersToCheck(arg0 int) ([]string, error) {
+// GetPrometheusTriggersToCheck mocks base method.
+func (m *MockDatabase) GetPrometheusTriggersToCheck(arg0 int) ([]string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetVMSelectTriggersToCheck", arg0)
+	ret := m.ctrl.Call(m, "GetPrometheusTriggersToCheck", arg0)
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetVMSelectTriggersToCheck indicates an expected call of GetVMSelectTriggersToCheck.
-func (mr *MockDatabaseMockRecorder) GetVMSelectTriggersToCheck(arg0 interface{}) *gomock.Call {
+// GetPrometheusTriggersToCheck indicates an expected call of GetPrometheusTriggersToCheck.
+func (mr *MockDatabaseMockRecorder) GetPrometheusTriggersToCheck(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVMSelectTriggersToCheck", reflect.TypeOf((*MockDatabase)(nil).GetVMSelectTriggersToCheck), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPrometheusTriggersToCheck", reflect.TypeOf((*MockDatabase)(nil).GetPrometheusTriggersToCheck), arg0)
 }
 
-// GetVMSelectTriggersToCheckCount mocks base method.
-func (m *MockDatabase) GetVMSelectTriggersToCheckCount() (int64, error) {
+// GetPrometheusTriggersToCheckCount mocks base method.
+func (m *MockDatabase) GetPrometheusTriggersToCheckCount() (int64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetVMSelectTriggersToCheckCount")
+	ret := m.ctrl.Call(m, "GetPrometheusTriggersToCheckCount")
 	ret0, _ := ret[0].(int64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetVMSelectTriggersToCheckCount indicates an expected call of GetVMSelectTriggersToCheckCount.
-func (mr *MockDatabaseMockRecorder) GetVMSelectTriggersToCheckCount() *gomock.Call {
+// GetPrometheusTriggersToCheckCount indicates an expected call of GetPrometheusTriggersToCheckCount.
+func (mr *MockDatabaseMockRecorder) GetPrometheusTriggersToCheckCount() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVMSelectTriggersToCheckCount", reflect.TypeOf((*MockDatabase)(nil).GetVMSelectTriggersToCheckCount))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPrometheusTriggersToCheckCount", reflect.TypeOf((*MockDatabase)(nil).GetPrometheusTriggersToCheckCount))
 }
 
 // IsTeamContainUser mocks base method.

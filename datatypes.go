@@ -277,7 +277,7 @@ const (
 	TriggerSourceNotSet TriggerSource = ""
 	GraphiteLocal       TriggerSource = "graphite_local"
 	GraphiteRemote      TriggerSource = "graphite_remote"
-	VMSelectRemote      TriggerSource = "vmselect_remote"
+	PrometheusRemote    TriggerSource = "prometheus_remote"
 )
 
 func (s *TriggerSource) UnmarshalJSON(data []byte) error {
@@ -287,7 +287,7 @@ func (s *TriggerSource) UnmarshalJSON(data []byte) error {
 	}
 
 	source := TriggerSource(v)
-	if source != GraphiteLocal && source != GraphiteRemote && source != VMSelectRemote {
+	if source != GraphiteLocal && source != GraphiteRemote && source != PrometheusRemote {
 		*s = TriggerSourceNotSet
 		return nil
 	}

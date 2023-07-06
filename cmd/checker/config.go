@@ -8,12 +8,12 @@ import (
 )
 
 type config struct {
-	Redis     cmd.RedisConfig     `yaml:"redis"`
-	Logger    cmd.LoggerConfig    `yaml:"log"`
-	Checker   checkerConfig       `yaml:"checker"`
-	Telemetry cmd.TelemetryConfig `yaml:"telemetry"`
-	Remote    cmd.RemoteConfig    `yaml:"remote"`
-	VMSelect  cmd.VMSelectConfig  `yaml:"vmselect"`
+	Redis      cmd.RedisConfig      `yaml:"redis"`
+	Logger     cmd.LoggerConfig     `yaml:"log"`
+	Checker    checkerConfig        `yaml:"checker"`
+	Telemetry  cmd.TelemetryConfig  `yaml:"telemetry"`
+	Remote     cmd.RemoteConfig     `yaml:"remote"`
+	Prometheus cmd.PrometheusConfig `yaml:"prometheus"`
 }
 
 type triggerLogConfig struct {
@@ -105,7 +105,7 @@ func getDefault() config {
 			Timeout:       "60s",
 			MetricsTTL:    "7d",
 		},
-		VMSelect: cmd.VMSelectConfig{
+		Prometheus: cmd.PrometheusConfig{
 			CheckInterval: "60s",
 			Timeout:       "60s",
 			MetricsTTL:    "7d",

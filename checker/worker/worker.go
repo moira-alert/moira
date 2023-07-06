@@ -9,8 +9,8 @@ import (
 	"github.com/moira-alert/moira/metrics"
 
 	metricSource "github.com/moira-alert/moira/metric_source"
+	"github.com/moira-alert/moira/metric_source/prometheus"
 	"github.com/moira-alert/moira/metric_source/remote"
-	"github.com/moira-alert/moira/metric_source/vmselect"
 	"github.com/patrickmn/go-cache"
 	"gopkg.in/tomb.v2"
 
@@ -24,7 +24,7 @@ type Checker struct {
 	Database          moira.Database
 	Config            *checker.Config
 	RemoteConfig      *remote.Config
-	VMSelectConfig    *vmselect.Config
+	PrometheusConfig  *prometheus.Config
 	SourceProvider    *metricSource.SourceProvider
 	Metrics           *metrics.CheckerMetrics
 	TriggerCache      *cache.Cache
@@ -54,7 +54,7 @@ func (check *Checker) Start() error {
 		return err
 	}
 
-	err = check.startCheckerWorker(NewVMSelectChecker(check))
+	err = check.startCheckerWorker(NewPrometheusChecker(check))
 	if err != nil {
 		return err
 	}

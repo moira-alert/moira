@@ -8,72 +8,72 @@ import (
 )
 
 const (
-	vmselectTriggerLockName = "moira-vmselect-checker"
-	vmselectTriggerName     = "VMSelect checker"
+	prometheusTriggerLockName = "moira-prometheus-checker"
+	prometheusTriggerName     = "Prometheus checker"
 )
 
-type vmselectChecker struct {
+type prometheusChecker struct {
 	check *Checker
 }
 
-func NewVMSelectChecker(check *Checker) CheckerWorker {
-	return &vmselectChecker{
+func NewPrometheusChecker(check *Checker) CheckerWorker {
+	return &prometheusChecker{
 		check: check,
 	}
 }
 
-func (ch *vmselectChecker) Name() string {
-	return "VMSelect"
+func (ch *prometheusChecker) Name() string {
+	return "Prometheus"
 }
 
-func (ch *vmselectChecker) IsEnabled() bool {
-	return ch.check.VMSelectConfig.Enabled
+func (ch *prometheusChecker) IsEnabled() bool {
+	return ch.check.PrometheusConfig.Enabled
 }
 
-func (ch *vmselectChecker) MaxParallelChecks() int {
-	return ch.check.Config.MaxParallelVMSelectChecks
+func (ch *prometheusChecker) MaxParallelChecks() int {
+	return ch.check.Config.MaxParallelPrometheusChecks
 }
 
-func (ch *vmselectChecker) Metrics() *metrics.CheckMetrics {
-	return ch.check.Metrics.VMSelectMetrics
+func (ch *prometheusChecker) Metrics() *metrics.CheckMetrics {
+	return ch.check.Metrics.PrometheusMetrics
 }
 
-func (ch *vmselectChecker) StartTriggerGetter() error {
+func (ch *prometheusChecker) StartTriggerGetter() error {
 	w.NewWorker(
 		remoteTriggerName,
 		ch.check.Logger,
-		ch.check.Database.NewLock(vmselectTriggerLockName, nodataCheckerLockTTL),
-		ch.vmselectTriggerChecker,
+		ch.check.Database.NewLock(prometheusTriggerLockName, nodataCheckerLockTTL),
+		ch.prometheusTriggerChecker,
 	).Run(ch.check.tomb.Dying())
 
 	return nil
 }
 
-func (ch *vmselectChecker) GetTriggersToCheck(count int) ([]string, error) {
-	return ch.check.Database.GetVMSelectTriggersToCheck(count)
+func (ch *prometheusChecker) GetTriggersToCheck(count int) ([]string, error) {
+	return ch.check.Database.GetPrometheusTriggersToCheck(count)
 }
 
-func (ch *vmselectChecker) vmselectTriggerChecker(stop <-chan struct{}) error {
-	checkTicker := time.NewTicker(ch.check.VMSelectConfig.CheckInterval)
-	ch.check.Logger.Info().Msg(vmselectTriggerName + " started")
+func (ch *prometheusChecker) prometheusTriggerChecker(stop <-chan struct{}) error {
+	checkTicker := time.NewTicker(ch.check.PrometheusConfig.CheckInterval)
+	ch.check.Logger.Info().Msg(prometheusTriggerName + " started")
 	for {
 		select {
 		case <-stop:
-			ch.check.Logger.Info().Msg(vmselectTriggerName + " stopped")
+			ch.check.Logger.Info().Msg(prometheusTriggerName + " stopped")
 			checkTicker.Stop()
 			return nil
 		case <-checkTicker.C:
-			if err := ch.checkVmselect(); err != nil {
+			if err := ch.checkPrometheus(); err != nil {
 				ch.check.Logger.Error().
 					Error(err).
-					Msg("Vmselect trigger failed")
+					Msg("Prometheus trigger failed")
 			}
 		}
 	}
 }
 
-func (ch *vmselectChecker) checkVmselect() error {
-	source, err := ch.check.SourceProvider.GetVMSelect()
+func (ch *prometheusChecker) checkPrometheus() error {
+	source, err := ch.check.SourceProvider.GetPrometheus()
 	if err != nil {
 		return err
 	}
@@ -82,25 +82,25 @@ func (ch *vmselectChecker) checkVmselect() error {
 	if !available {
 		ch.check.Logger.Info().
 			Error(err).
-			Msg("VMSelect API is unavailable. Stop checking vmselect triggers")
+			Msg("Prometheus API is unavailable. Stop checking prometheus triggers")
 		return nil
 	}
 
-	ch.check.Logger.Debug().Msg("Checking vmselect triggers")
-	triggerIds, err := ch.check.Database.GetVMSelectTriggerIDs()
+	ch.check.Logger.Debug().Msg("Checking prometheus triggers")
+	triggerIds, err := ch.check.Database.GetPrometheusTriggerIDs()
 
 	if err != nil {
 		return err
 	}
 
-	ch.addVMSelectTriggerIDsIfNeeded(triggerIds)
+	ch.addPrometheusTriggerIDsIfNeeded(triggerIds)
 
 	return nil
 }
 
-func (ch *vmselectChecker) addVMSelectTriggerIDsIfNeeded(triggerIDs []string) {
-	needToCheckVMSelectTriggerIDs := ch.check.getTriggerIDsToCheck(triggerIDs)
-	if len(needToCheckVMSelectTriggerIDs) > 0 {
-		ch.check.Database.AddVMSelectTriggersToCheck(needToCheckVMSelectTriggerIDs) //nolint
+func (ch *prometheusChecker) addPrometheusTriggerIDsIfNeeded(triggerIDs []string) {
+	needToCheckPrometheusTriggerIDs := ch.check.getTriggerIDsToCheck(triggerIDs)
+	if len(needToCheckPrometheusTriggerIDs) > 0 {
+		ch.check.Database.AddPrometheusTriggersToCheck(needToCheckPrometheusTriggerIDs) //nolint
 	}
 }

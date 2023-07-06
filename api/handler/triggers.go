@@ -138,8 +138,8 @@ func getMetricTTLByTrigger(request *http.Request, trigger *dto.Trigger) time.Dur
 	case moira.GraphiteRemote:
 		ttl = middleware.GetRemoteMetricTTL(request)
 
-	case moira.VMSelectRemote:
-		ttl = middleware.GetVMSelectMetricTTL(request)
+	case moira.PrometheusRemote:
+		ttl = middleware.GetPrometheusMetricTTL(request)
 	}
 
 	return ttl

@@ -9,8 +9,8 @@ import (
 
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
+	"github.com/moira-alert/moira/metric_source/prometheus"
 	"github.com/moira-alert/moira/metric_source/remote"
-	"github.com/moira-alert/moira/metric_source/vmselect"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/cmd"
@@ -84,18 +84,18 @@ func main() {
 	database := redis.NewDatabase(logger, databaseSettings, redis.Notifier)
 
 	remoteConfig := config.Remote.GetRemoteSourceSettings()
-	vmselectConfig := config.VMSelect.GetVMSelectSourceSettings()
+	prometheusConfig := config.Prometheus.GetPrometheusSourceSettings()
 
 	localSource := local.Create(database)
 	remoteSource := remote.Create(remoteConfig)
-	vmselectSource, err := vmselect.Create(vmselectConfig)
+	prometheusSource, err := prometheus.Create(prometheusConfig)
 	if err != nil {
 		logger.Fatal().
 			Error(err).
-			Msg("Failed to initialize vmselect metric source")
+			Msg("Failed to initialize prometheus metric source")
 	}
 
-	metricSourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource, vmselectSource)
+	metricSourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource, prometheusSource)
 
 	// Initialize the image store
 	imageStoreMap := cmd.InitImageStores(config.ImageStores, logger)

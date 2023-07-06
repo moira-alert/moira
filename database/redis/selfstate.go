@@ -64,5 +64,5 @@ func (connector *DbConnector) SetNotifierState(health string) error {
 var selfStateMetricsHeartbeatKey = "moira-selfstate:metrics-heartbeat"
 var selfStateChecksCounterKey = "moira-selfstate:checks-counter"
 var selfStateRemoteChecksCounterKey = "moira-selfstate:remote-checks-counter"
-var selfStateVMSelectChecksCounterKey = "moira-selfstate:vmselect-checks-counter"
+var selfStatePrometheusChecksCounterKey = "moira-selfstate:prometheus-checks-counter"
 var selfStateNotifierHealth = "moira-selfstate:notifier-health"

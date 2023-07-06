@@ -6,7 +6,7 @@ import "github.com/moira-alert/moira"
 type CheckerMetrics struct {
 	LocalMetrics           *CheckMetrics
 	RemoteMetrics          *CheckMetrics
-	VMSelectMetrics        *CheckMetrics
+	PrometheusMetrics      *CheckMetrics
 	MetricEventsChannelLen Histogram
 	UnusedTriggersCount    Histogram
 	MetricEventsHandleTime Timer
@@ -26,8 +26,8 @@ func (metrics *CheckerMetrics) GetCheckMetricsBySource(triggerSource moira.Trigg
 	case moira.GraphiteRemote:
 		return metrics.RemoteMetrics
 
-	case moira.VMSelectRemote:
-		return metrics.VMSelectMetrics
+	case moira.PrometheusRemote:
+		return metrics.PrometheusMetrics
 
 	default:
 		return nil
@@ -43,7 +43,7 @@ type CheckMetrics struct {
 }
 
 // ConfigureCheckerMetrics is checker metrics configurator
-func ConfigureCheckerMetrics(registry Registry, remoteEnabled, vmselectEnabled bool) *CheckerMetrics {
+func ConfigureCheckerMetrics(registry Registry, remoteEnabled, prometheusEnabled bool) *CheckerMetrics {
 	m := &CheckerMetrics{
 		LocalMetrics:           configureCheckMetrics(registry, "local"),
 		MetricEventsChannelLen: registry.NewHistogram("metricEvents"),
@@ -53,8 +53,8 @@ func ConfigureCheckerMetrics(registry Registry, remoteEnabled, vmselectEnabled b
 	if remoteEnabled {
 		m.RemoteMetrics = configureCheckMetrics(registry, "remote")
 	}
-	if vmselectEnabled {
-		m.VMSelectMetrics = configureCheckMetrics(registry, "vmselect")
+	if prometheusEnabled {
+		m.PrometheusMetrics = configureCheckMetrics(registry, "prometheus")
 	}
 	return m
 }

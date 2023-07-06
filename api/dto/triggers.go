@@ -245,8 +245,8 @@ func checkTTLSanity(trigger *Trigger, metricsSource metricSource.MetricSource) e
 		case moira.GraphiteRemote:
 			triggerType = "remote"
 
-		case moira.VMSelectRemote:
-			triggerType = "vmselect"
+		case moira.PrometheusRemote:
+			triggerType = "prometheus"
 		}
 
 		return fmt.Errorf("TTL for %s trigger can't be more than %d seconds", triggerType, maximumAllowedTTL)

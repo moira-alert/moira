@@ -131,7 +131,7 @@ type TreeOfProblems struct {
 // TargetVerification validates trigger targets.
 func TargetVerification(targets []string, ttl time.Duration, triggerSource moira.TriggerSource) ([]TreeOfProblems, error) {
 	switch triggerSource {
-	case moira.VMSelectRemote:
+	case moira.PrometheusRemote:
 		return []TreeOfProblems{{SyntaxOk: true}}, nil
 
 	case moira.GraphiteLocal, moira.GraphiteRemote:
