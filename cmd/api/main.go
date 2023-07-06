@@ -123,7 +123,7 @@ func main() {
 	if err != nil {
 		logger.Fatal().
 			Error(err).
-			Msg("Failed to initialise vmselect metric source")
+			Msg("Failed to initialize vmselect metric source")
 	}
 
 	metricSourceProvider := metricSource.CreateMetricSourceProvider(

@@ -88,7 +88,12 @@ func main() {
 
 	localSource := local.Create(database)
 	remoteSource := remote.Create(remoteConfig)
-	vmselectSource := vmselect.Create(vmselectConfig)
+	vmselectSource, err := vmselect.Create(vmselectConfig)
+	if err != nil {
+		logger.Fatal().
+			Error(err).
+			Msg("Failed to initialize vmselect metric source")
+	}
 
 	metricSourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource, vmselectSource)
 

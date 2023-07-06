@@ -45,7 +45,10 @@ type VMSelect struct {
 func (vmselect *VMSelect) Fetch(target string, from int64, until int64, allowRealTimeAlerting bool) (metricSource.FetchResult, error) {
 	from = moira.MaxInt64(from, until-int64(vmselect.config.MetricsTTL.Seconds()))
 
-	val, _, err := vmselect.api.QueryRange(context.TODO(), target, prometheusApi.Range{
+	ctx, cancel := context.WithTimeout(context.Background(), vmselect.config.QueryTimeout)
+	defer cancel()
+
+	val, _, err := vmselect.api.QueryRange(ctx, target, prometheusApi.Range{
 		Start: time.Unix(from, 0),
 		End:   time.Unix(until, 0),
 		Step:  time.Second * time.Duration(StepTimeSeconds),
