@@ -192,6 +192,14 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 		Expression:              &trigger.Expression,
 	}
 
+	if trigger.TriggerSource == moira.TriggerSourceNotSet {
+		if trigger.IsRemote {
+			trigger.TriggerSource = moira.GraphiteRemote
+		} else {
+			trigger.TriggerSource = moira.GraphiteLocal
+		}
+	}
+
 	metricsSourceProvider := middleware.GetTriggerTargetsSourceProvider(request)
 	metricsSource, err := metricsSourceProvider.GetMetricSource(trigger.TriggerSource)
 	if err != nil {

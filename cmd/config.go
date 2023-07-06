@@ -160,6 +160,7 @@ func (config *PrometheusConfig) GetPrometheusSourceSettings() *prometheus.Config
 		MetricsTTL:    to.Duration(config.MetricsTTL),
 		User:          config.User,
 		Password:      config.Password,
+		Timeout:       to.Duration(config.Timeout),
 	}
 }
 

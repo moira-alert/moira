@@ -18,7 +18,7 @@ type Config struct {
 	Enabled       bool
 	CheckInterval time.Duration
 	MetricsTTL    time.Duration
-	QueryTimeout  time.Duration
+	Timeout       time.Duration
 	URL           string
 	User          string
 	Password      string
@@ -45,7 +45,7 @@ type Prometheus struct {
 func (prometheus *Prometheus) Fetch(target string, from int64, until int64, allowRealTimeAlerting bool) (metricSource.FetchResult, error) {
 	from = moira.MaxInt64(from, until-int64(prometheus.config.MetricsTTL.Seconds()))
 
-	ctx, cancel := context.WithTimeout(context.Background(), prometheus.config.QueryTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), prometheus.config.Timeout)
 	defer cancel()
 
 	val, _, err := prometheus.api.QueryRange(ctx, target, prometheusApi.Range{
