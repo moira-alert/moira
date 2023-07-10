@@ -2,7 +2,6 @@
 redis:
   addrs: "redis:6379"
   metrics_ttl: 3h
-  notification_history_query_limit: 10000
 telemetry:
   graphite:
     enabled: true
