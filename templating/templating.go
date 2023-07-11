@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"strings"
 	"time"
+
 	"github.com/Masterminds/sprig/v3"
 )
 
@@ -44,10 +45,8 @@ type trigger struct {
 	Name string `json:"name"`
 }
 
-type FuncMap = template.FuncMap
-
-func FilterKeys(source FuncMap, keys []string) FuncMap {
-	result := FuncMap{}
+func FilterKeys(source template.FuncMap, keys []string) template.FuncMap {
+	result := template.FuncMap{}
 	for _, key := range keys {
 		value, found := source[key]
 		if found {
