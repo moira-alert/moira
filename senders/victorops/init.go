@@ -4,10 +4,18 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/mitchellh/mapstructure"
 	"github.com/moira-alert/moira/senders/victorops/api"
 
 	"github.com/moira-alert/moira"
 )
+
+// Structure that represents the VictorOps configuration in the YAML file
+type VictorOps struct {
+	RoutingURL string `mapstructure:"routing_url,omitempty"`
+	ImageStore string `mapstructure:"image_store,omitempty"`
+	FrontURI   string `mapstructure:"front_uri"`
+}
 
 // Sender implements moira sender interface for victorops
 type Sender struct {
@@ -25,15 +33,19 @@ type Sender struct {
 }
 
 // Init loads yaml config, configures the victorops sender
-func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
-	var ok bool
-	sender.routingURL, ok = senderSettings["routing_url"]
-	if !ok {
+func (sender *Sender) Init(senderSettings map[string]interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+	var victorops VictorOps
+	err := mapstructure.Decode(senderSettings, &victorops)
+	if err != nil {
+		return fmt.Errorf("decoding error from yaml file to victorops structure: %s", err)
+	}
+	sender.routingURL = victorops.RoutingURL
+	if sender.routingURL == "" {
 		return fmt.Errorf("cannot read the routing url from the yaml config")
 	}
 
-	sender.imageStoreID, ok = senderSettings["image_store"]
-	if !ok {
+	sender.imageStoreID = victorops.ImageStore
+	if sender.imageStoreID == "" {
 		logger.Warning().Msg("Cannot read image_store from the config, will not be able to attach plot images to events")
 	} else {
 		imageStore, ok := sender.ImageStores[sender.imageStoreID]
@@ -46,9 +58,10 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 				Msg("Image store specified has not been configured")
 		}
 	}
+
 	sender.client = api.NewClient(sender.routingURL, nil)
 
-	sender.frontURI = senderSettings["front_uri"]
+	sender.frontURI = victorops.FrontURI
 	sender.logger = logger
 	sender.location = location
 

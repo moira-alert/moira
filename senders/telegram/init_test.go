@@ -15,13 +15,13 @@ func TestInit(t *testing.T) {
 	Convey("Init tests", t, func() {
 		sender := Sender{}
 		Convey("Empty map", func() {
-			err := sender.Init(map[string]string{}, logger, nil, "")
+			err := sender.Init(map[string]interface{}{}, logger, nil, "")
 			So(err, ShouldResemble, fmt.Errorf("can not read telegram api_token from config"))
 			So(sender, ShouldResemble, Sender{})
 		})
 
 		Convey("Has settings", func() {
-			senderSettings := map[string]string{
+			senderSettings := map[string]interface{}{
 				"api_token": "123",
 				"front_uri": "http://moira.uri",
 			}

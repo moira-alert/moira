@@ -36,7 +36,7 @@ func (m *MockSender) EXPECT() *MockSenderMockRecorder {
 }
 
 // Init mocks base method.
-func (m *MockSender) Init(arg0 map[string]string, arg1 moira.Logger, arg2 *time.Location, arg3 string) error {
+func (m *MockSender) Init(arg0 map[string]interface{}, arg1 moira.Logger, arg2 *time.Location, arg3 string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Init", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(error)

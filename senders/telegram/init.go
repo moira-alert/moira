@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/mitchellh/mapstructure"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/worker"
 	"gopkg.in/tucnak/telebot.v2"
@@ -27,6 +28,12 @@ var (
 	}
 )
 
+// Structure that represents the Telegram configuration in the YAML file
+type Telegram struct {
+	APIToken string `mapstructure:"api_token"`
+	FrontURI string `mapstructure:"front_uri"`
+}
+
 // Sender implements moira sender interface via telegram
 type Sender struct {
 	DataBase moira.Database
@@ -38,17 +45,21 @@ type Sender struct {
 }
 
 // Init loads yaml config, configures and starts telegram bot
-func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
-	apiToken := senderSettings["api_token"]
+func (sender *Sender) Init(senderSettings map[string]interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+	var telegram Telegram
+	err := mapstructure.Decode(senderSettings, &telegram)
+	if err != nil {
+		return fmt.Errorf("decoding error from yaml file to telegram structure: %s", err)
+	}
+	apiToken := telegram.APIToken
 	if apiToken == "" {
 		return fmt.Errorf("can not read telegram api_token from config")
 	}
 
 	sender.apiToken = apiToken
-	sender.frontURI = senderSettings["front_uri"]
+	sender.frontURI = telegram.FrontURI
 	sender.logger = logger
 	sender.location = location
-	var err error
 	sender.bot, err = telebot.NewBot(telebot.Settings{
 		Token:  sender.apiToken,
 		Poller: &telebot.LongPoller{Timeout: pollerTimeout},

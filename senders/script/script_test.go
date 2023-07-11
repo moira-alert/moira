@@ -48,7 +48,7 @@ func TestInit(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 	Convey("Init tests", t, func() {
 		sender := Sender{}
-		settings := map[string]string{}
+		settings := map[string]interface{}{}
 		Convey("Empty map", func() {
 			err := sender.Init(settings, logger, nil, "")
 			So(err, ShouldResemble, fmt.Errorf("required name for sender type script"))

@@ -16,14 +16,14 @@ func TestSender_Init(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 	Convey("Empty map", t, func() {
 		sender := Sender{}
-		err := sender.Init(map[string]string{}, logger, nil, "")
+		err := sender.Init(map[string]interface{}{}, logger, nil, "")
 		So(err, ShouldResemble, fmt.Errorf("can not read pushover api_token from config"))
 		So(sender, ShouldResemble, Sender{})
 	})
 
 	Convey("Settings has api_token", t, func() {
 		sender := Sender{}
-		err := sender.Init(map[string]string{"api_token": "123"}, logger, nil, "")
+		err := sender.Init(map[string]interface{}{"api_token": "123"}, logger, nil, "")
 		So(err, ShouldBeNil)
 		So(sender, ShouldResemble, Sender{apiToken: "123", client: pushover.New("123"), logger: logger})
 	})
@@ -31,7 +31,7 @@ func TestSender_Init(t *testing.T) {
 	Convey("Settings has all data", t, func() {
 		sender := Sender{}
 		location, _ := time.LoadLocation("UTC")
-		err := sender.Init(map[string]string{"api_token": "123", "front_uri": "321"}, logger, location, "")
+		err := sender.Init(map[string]interface{}{"api_token": "123", "front_uri": "321"}, logger, location, "")
 		So(err, ShouldBeNil)
 		So(sender, ShouldResemble, Sender{apiToken: "123", client: pushover.New("123"), frontURI: "321", logger: logger, location: location})
 	})

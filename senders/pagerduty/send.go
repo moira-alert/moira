@@ -2,6 +2,7 @@ package pagerduty
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"time"
 
@@ -17,7 +18,7 @@ const summaryMaxChars = 1024
 // SendEvents implements Sender interface Send
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
 	event := sender.buildEvent(events, contact, trigger, plots, throttled)
-	_, err := pagerduty.ManageEvent(event)
+	_, err := pagerduty.ManageEventWithContext(context.Background(), event)
 	if err != nil {
 		return fmt.Errorf("failed to post the event to the pagerduty contact %s : %s. ", contact.Value, err)
 	}

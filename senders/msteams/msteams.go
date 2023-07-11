@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mitchellh/mapstructure"
 	"github.com/moira-alert/moira"
 	"github.com/russross/blackfriday/v2"
 )
@@ -35,6 +36,12 @@ var headers = map[string]string{
 	"Content-Type": "application/json",
 }
 
+// Structure that represents the MSTeams configuration in the YAML file
+type MSTeams struct {
+	FrontURI  string `mapstructure:"front_uri"`
+	MaxEvents string `mapstructure:"max_events"`
+}
+
 // Sender implements moira sender interface via MS Teams
 type Sender struct {
 	frontURI  string
@@ -45,11 +52,16 @@ type Sender struct {
 }
 
 // Init initialises settings required for full functionality
-func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+func (sender *Sender) Init(senderSettings map[string]interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+	var msteams MSTeams
+	err := mapstructure.Decode(senderSettings, &msteams)
+	if err != nil {
+		return fmt.Errorf("decoding error from yaml file to msteams structure: %s", err)
+	}
 	sender.logger = logger
 	sender.location = location
-	sender.frontURI = senderSettings["front_uri"]
-	maxEvents, err := strconv.Atoi(senderSettings["max_events"])
+	sender.frontURI = msteams.FrontURI
+	maxEvents, err := strconv.Atoi(msteams.MaxEvents)
 	if err != nil {
 		return fmt.Errorf("max_events should be an integer: %w", err)
 	}

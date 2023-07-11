@@ -1,6 +1,7 @@
 package pagerduty
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/moira-alert/moira"
@@ -19,8 +20,12 @@ type Sender struct {
 }
 
 // Init loads yaml config, configures the pagerduty client
-func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
-	sender.frontURI = senderSettings["front_uri"]
+func (sender *Sender) Init(senderSettings map[string]interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+	var ok bool
+	sender.frontURI, ok = senderSettings["front_uri"].(string)
+	if !ok {
+		return fmt.Errorf("failed to retrieve front_uri from sender settings")
+	}
 
 	sender.imageStoreID, sender.imageStore, sender.imageStoreConfigured =
 		senders.ReadImageStoreConfig(senderSettings, sender.ImageStores, logger)

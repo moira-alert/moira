@@ -15,7 +15,7 @@ func TestInit(t *testing.T) {
 		sender := Sender{}
 		logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 		location, _ := time.LoadLocation("UTC")
-		settings := map[string]string{}
+		settings := map[string]interface{}{}
 		Convey("no api asid", func() {
 			err := sender.Init(settings, logger, nil, "15:04")
 			So(err, ShouldResemble, fmt.Errorf("can not read [%s] api_sid param from config", ""))

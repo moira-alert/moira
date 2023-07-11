@@ -16,7 +16,7 @@ func TestInit(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 	Convey("Init tests", t, func() {
 		sender := Sender{}
-		senderSettings := map[string]string{}
+		senderSettings := map[string]interface{}{}
 		Convey("Empty map", func() {
 			err := sender.Init(senderSettings, logger, nil, "")
 			So(err, ShouldResemble, fmt.Errorf("can not read slack api_token from config"))

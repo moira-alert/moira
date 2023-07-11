@@ -12,7 +12,16 @@ import (
 	"github.com/moira-alert/moira/senders"
 
 	"github.com/mattermost/mattermost-server/v6/model"
+	"github.com/mitchellh/mapstructure"
 )
+
+// Structure that represents the Mattermost configuration in the YAML file
+type Mattermost struct {
+	Url         string `mapstructure:"url"`
+	InsecureTLS string `mapstructure:"insecure_tls"`
+	APIToken    string `mapstructure:"api_token"`
+	FrontURI    string `mapstructure:"front_uri"`
+}
 
 // Sender posts messages to Mattermost chat.
 // It implements moira.Sender.
@@ -24,14 +33,19 @@ type Sender struct {
 }
 
 // Init configures Sender.
-func (sender *Sender) Init(senderSettings map[string]string, _ moira.Logger, location *time.Location, _ string) error {
-	url := senderSettings["url"]
+func (sender *Sender) Init(senderSettings map[string]interface{}, _ moira.Logger, location *time.Location, _ string) error {
+	var mattermost Mattermost
+	err := mapstructure.Decode(senderSettings, &mattermost)
+	if err != nil {
+		return fmt.Errorf("decoding error from yaml file to mattermost structure: %s", err)
+	}
+	url := mattermost.Url
 	if url == "" {
 		return fmt.Errorf("can not read Mattermost url from config")
 	}
 	client := model.NewAPIv4Client(url)
 
-	insecureTLS, err := strconv.ParseBool(senderSettings["insecure_tls"])
+	insecureTLS, err := strconv.ParseBool(mattermost.InsecureTLS)
 	if err != nil {
 		return fmt.Errorf("can not parse insecure_tls: %v", err)
 	}
@@ -44,13 +58,13 @@ func (sender *Sender) Init(senderSettings map[string]string, _ moira.Logger, loc
 	}
 	sender.client = client
 
-	token := senderSettings["api_token"]
+	token := mattermost.APIToken
 	if token == "" {
 		return fmt.Errorf("can not read Mattermost api_token from config")
 	}
 	sender.client.SetToken(token)
 
-	frontURI := senderSettings["front_uri"]
+	frontURI := mattermost.FrontURI
 	if frontURI == "" {
 		return fmt.Errorf("can not read Mattermost front_uri from config")
 	}
