@@ -67,7 +67,7 @@ var funcMap = template.FuncMap{
 	"stringsSplit":      strings.Split,
 }
 
-var sprigFuncMap = filterKeys(sprig.FuncMap(), []string {
+var sprigFuncMap = filterKeys(sprig.FuncMap(), []string{
 	// Date functions
 	"ago",
 	"date",
@@ -136,14 +136,14 @@ var sprigFuncMap = filterKeys(sprig.FuncMap(), []string {
 	"float64",
 	"toDecimal",
 	"toStrings",
-	
+
 	// String Slice Functions
 	"split",
 	"splitList",
 	"splitn",
 	"join",
 	"sortAlpha",
-	
+
 	// Integer Slice Functions
 	"seq",
 	"until",
