@@ -45,7 +45,7 @@ type trigger struct {
 	Name string `json:"name"`
 }
 
-func FilterKeys(source template.FuncMap, keys []string) template.FuncMap {
+func filterKeys(source template.FuncMap, keys []string) template.FuncMap {
 	result := template.FuncMap{}
 	for _, key := range keys {
 		value, found := source[key]
@@ -67,7 +67,7 @@ var funcMap = template.FuncMap{
 	"stringsSplit":      strings.Split,
 }
 
-var sprigFuncMap = FilterKeys(sprig.FuncMap(), []string {
+var sprigFuncMap = filterKeys(sprig.FuncMap(), []string {
 	// Date functions
 	"ago",
 	"date",
