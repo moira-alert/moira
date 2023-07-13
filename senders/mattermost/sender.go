@@ -34,18 +34,18 @@ type Sender struct {
 
 // Init configures Sender.
 func (sender *Sender) Init(senderSettings map[string]interface{}, _ moira.Logger, location *time.Location, _ string) error {
-	var mattermost mattermost
-	err := mapstructure.Decode(senderSettings, &mattermost)
+	var mm mattermost
+	err := mapstructure.Decode(senderSettings, &mm)
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to mattermost config: %w", err)
 	}
-	url := mattermost.Url
+	url := mm.Url
 	if url == "" {
 		return fmt.Errorf("can not read Mattermost url from config")
 	}
 	client := model.NewAPIv4Client(url)
 
-	insecureTLS, err := strconv.ParseBool(mattermost.InsecureTLS)
+	insecureTLS, err := strconv.ParseBool(mm.InsecureTLS)
 	if err != nil {
 		return fmt.Errorf("can not parse insecure_tls: %v", err)
 	}
@@ -58,13 +58,13 @@ func (sender *Sender) Init(senderSettings map[string]interface{}, _ moira.Logger
 	}
 	sender.client = client
 
-	token := mattermost.APIToken
+	token := mm.APIToken
 	if token == "" {
 		return fmt.Errorf("can not read Mattermost api_token from config")
 	}
 	sender.client.SetToken(token)
 
-	frontURI := mattermost.FrontURI
+	frontURI := mm.FrontURI
 	if frontURI == "" {
 		return fmt.Errorf("can not read Mattermost front_uri from config")
 	}

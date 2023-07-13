@@ -33,18 +33,18 @@ type Sender struct {
 
 // Init read yaml config
 func (sender *Sender) Init(senderSettings map[string]interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
-	var pushover pushover
-	err := mapstructure.Decode(senderSettings, &pushover)
+	var p pushover
+	err := mapstructure.Decode(senderSettings, &p)
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to pushover config: %w", err)
 	}
-	sender.apiToken = pushover.APIToken
+	sender.apiToken = p.APIToken
 	if sender.apiToken == "" {
 		return fmt.Errorf("can not read pushover api_token from config")
 	}
 	sender.client = pushover_client.New(sender.apiToken)
 	sender.logger = logger
-	sender.frontURI = pushover.FrontURI
+	sender.frontURI = p.FrontURI
 	sender.location = location
 	return nil
 }

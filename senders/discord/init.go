@@ -35,12 +35,12 @@ type Sender struct {
 
 // Init reads the yaml config
 func (sender *Sender) Init(senderSettings map[string]interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
-	var discord discord
-	err := mapstructure.Decode(senderSettings, &discord)
+	var ds discord
+	err := mapstructure.Decode(senderSettings, &ds)
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to discord config: %w", err)
 	}
-	token := discord.Token
+	token := ds.Token
 	if token == "" {
 		return fmt.Errorf("cannot read the discord token from the config")
 	}
@@ -49,7 +49,7 @@ func (sender *Sender) Init(senderSettings map[string]interface{}, logger moira.L
 		return fmt.Errorf("error creating discord session: %s", err)
 	}
 	sender.logger = logger
-	sender.frontURI = discord.FrontURI
+	sender.frontURI = ds.FrontURI
 	sender.location = location
 
 	handleMsg := func(s *discordgo.Session, m *discordgo.MessageCreate) {

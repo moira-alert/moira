@@ -59,21 +59,21 @@ func (sender *Sender) Init(senderSettings map[string]interface{}, logger moira.L
 }
 
 func (sender *Sender) fillSettings(senderSettings map[string]interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
-	var mail mail
-	err := mapstructure.Decode(senderSettings, &mail)
+	var m mail
+	err := mapstructure.Decode(senderSettings, &m)
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to mail config: %w", err)
 	}
 	sender.logger = logger
-	sender.From = mail.MailFrom
-	sender.SMTPHello = mail.SMTPHello
-	sender.SMTPHost = mail.SMTPHost
-	sender.SMTPPort, _ = strconv.ParseInt(mail.SMTPPort, 10, 64)
-	sender.InsecureTLS, _ = strconv.ParseBool(mail.InsecureTLS)
-	sender.FrontURI = mail.FrontURI
-	sender.Password = mail.SMTPPass
-	sender.Username = mail.SMTPUser
-	sender.TemplateFile = mail.TemplateFile
+	sender.From = m.MailFrom
+	sender.SMTPHello = m.SMTPHello
+	sender.SMTPHost = m.SMTPHost
+	sender.SMTPPort, _ = strconv.ParseInt(m.SMTPPort, 10, 64)
+	sender.InsecureTLS, _ = strconv.ParseBool(m.InsecureTLS)
+	sender.FrontURI = m.FrontURI
+	sender.Password = m.SMTPPass
+	sender.Username = m.SMTPUser
+	sender.TemplateFile = m.TemplateFile
 	sender.location = location
 	sender.dateTimeFormat = dateTimeFormat
 	if sender.Username == "" {

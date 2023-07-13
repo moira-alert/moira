@@ -46,18 +46,18 @@ type Sender struct {
 
 // Init loads yaml config, configures and starts telegram bot
 func (sender *Sender) Init(senderSettings map[string]interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
-	var telegram telegram
-	err := mapstructure.Decode(senderSettings, &telegram)
+	var tg telegram
+	err := mapstructure.Decode(senderSettings, &tg)
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to telegram config: %w", err)
 	}
-	apiToken := telegram.APIToken
+	apiToken := tg.APIToken
 	if apiToken == "" {
 		return fmt.Errorf("can not read telegram api_token from config")
 	}
 
 	sender.apiToken = apiToken
-	sender.frontURI = telegram.FrontURI
+	sender.frontURI = tg.FrontURI
 	sender.logger = logger
 	sender.location = location
 	sender.bot, err = telebot.NewBot(telebot.Settings{

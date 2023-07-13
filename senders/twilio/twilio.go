@@ -38,24 +38,24 @@ type twilioSender struct {
 
 // Init read yaml config
 func (sender *Sender) Init(senderSettings map[string]interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
-	var twilio twilio
-	err := mapstructure.Decode(senderSettings, &twilio)
+	var t twilio
+	err := mapstructure.Decode(senderSettings, &t)
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to twilio config: %w", err)
 	}
-	apiType := twilio.Type
+	apiType := t.Type
 
-	apiASID := twilio.APIAsid
+	apiASID := t.APIAsid
 	if apiASID == "" {
 		return fmt.Errorf("can not read [%s] api_sid param from config", apiType)
 	}
 
-	apiAuthToken := twilio.APIAuthToken
+	apiAuthToken := t.APIAuthToken
 	if apiAuthToken == "" {
 		return fmt.Errorf("can not read [%s] api_authtoken param from config", apiType)
 	}
 
-	apiFromPhone := twilio.APIFromPhone
+	apiFromPhone := t.APIFromPhone
 	if apiFromPhone == "" {
 		return fmt.Errorf("can not read [%s] api_fromphone param from config", apiType)
 	}
@@ -73,10 +73,10 @@ func (sender *Sender) Init(senderSettings map[string]interface{}, logger moira.L
 		sender.sender = &twilioSenderSms{twilioSender1}
 
 	case "twilio voice":
-		twimletsEcho := twilio.TwimletsEcho == "true" //nolint
-		appendMessage := (twilio.AppendMessage == "true") || (twimletsEcho)
+		twimletsEcho := t.TwimletsEcho == "true" //nolint
+		appendMessage := (t.AppendMessage == "true") || (twimletsEcho)
 
-		voiceURL := twilio.VoiceURL
+		voiceURL := t.VoiceURL
 		if voiceURL == "" && !twimletsEcho {
 			return fmt.Errorf("can not read [%s] voiceurl param from config", apiType)
 		}

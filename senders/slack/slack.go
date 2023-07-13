@@ -59,18 +59,18 @@ type Sender struct {
 
 // Init read yaml config
 func (sender *Sender) Init(senderSettings map[string]interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
-	var slack slack
-	err := mapstructure.Decode(senderSettings, &slack)
+	var s slack
+	err := mapstructure.Decode(senderSettings, &s)
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to slack config: %w", err)
 	}
-	apiToken := slack.APIToken
+	apiToken := s.APIToken
 	if apiToken == "" {
 		return fmt.Errorf("can not read slack api_token from config")
 	}
-	sender.useEmoji, _ = strconv.ParseBool(slack.UseEmoji)
+	sender.useEmoji, _ = strconv.ParseBool(s.UseEmoji)
 	sender.logger = logger
-	sender.frontURI = slack.FrontURI
+	sender.frontURI = s.FrontURI
 	sender.location = location
 	sender.client = slack_client.New(apiToken)
 	return nil

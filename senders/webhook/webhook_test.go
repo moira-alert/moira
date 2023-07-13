@@ -58,7 +58,7 @@ func TestSender_SendEvents(t *testing.T) {
 			"password": testPass,
 			"custom-headers": []map[string]string{
 				{
-					"key": "test",
+					"key":   "test",
 					"value": "123",
 				},
 			},
@@ -85,7 +85,7 @@ func testRequestHeaders(r *http.Request) (int, error) {
 	expectedHeaders := map[string]string{
 		"User-Agent":   "Moira",
 		"Content-Type": "application/json",
-		"test": "123",
+		"test":         "123",
 	}
 	for headerName, headerValue := range expectedHeaders {
 		actualHeaderValue := r.Header.Get(headerName)

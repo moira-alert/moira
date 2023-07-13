@@ -35,19 +35,19 @@ type scriptNotification struct {
 
 // Init read yaml config
 func (sender *Sender) Init(senderSettings map[string]interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
-	var script script
-	err := mapstructure.Decode(senderSettings, &script)
+	var s script
+	err := mapstructure.Decode(senderSettings, &s)
 	if err != nil {
 		return fmt.Errorf("failed to decode senderSettings to script config: %w", err)
 	}
-	if script.Name == "" {
+	if s.Name == "" {
 		return fmt.Errorf("required name for sender type script")
 	}
-	_, _, err = parseExec(script.Exec)
+	_, _, err = parseExec(s.Exec)
 	if err != nil {
 		return err
 	}
-	sender.exec = script.Exec
+	sender.exec = s.Exec
 	sender.logger = logger
 	return nil
 }
