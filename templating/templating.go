@@ -48,8 +48,7 @@ type trigger struct {
 func filterKeys(source template.FuncMap, keys []string) template.FuncMap {
 	result := template.FuncMap{}
 	for _, key := range keys {
-		value, found := source[key]
-		if found {
+		if value, ok := source[key]; ok {
 			result[key] = value
 		}
 	}
