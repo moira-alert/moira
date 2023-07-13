@@ -9,6 +9,17 @@ import (
 	"github.com/moira-alert/moira"
 )
 
+// Structure that represents the Twilio configuration in the YAML file
+type twilio struct {
+	Type          string `mapstructure:"type"`
+	APIAsid       string `mapstructure:"api_asid"`
+	APIAuthToken  string `mapstructure:"api_authtoken"`
+	APIFromPhone  string `mapstructure:"api_fromphone"`
+	VoiceURL      string `mapstructure:"voiceurl"`
+	TwimletsEcho  string `mapstructure:"twimlets_echo"`
+	AppendMessage string `mapstructure:"append_message"`
+}
+
 // Sender implements moira sender interface via twilio
 type Sender struct {
 	sender sendEventsTwilio
@@ -25,23 +36,12 @@ type twilioSender struct {
 	location     *time.Location
 }
 
-// Structure that represents the Twilio configuration in the YAML file
-type Twilio struct {
-	Type          string `mapstructure:"type"`
-	APIAsid       string `mapstructure:"api_asid"`
-	APIAuthToken  string `mapstructure:"api_authtoken"`
-	APIFromPhone  string `mapstructure:"api_fromphone"`
-	VoiceURL      string `mapstructure:"voiceurl"`
-	TwimletsEcho  string `mapstructure:"twimlets_echo"`
-	AppendMessage string `mapstructure:"append_message"`
-}
-
 // Init read yaml config
 func (sender *Sender) Init(senderSettings map[string]interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
-	var twilio Twilio
+	var twilio twilio
 	err := mapstructure.Decode(senderSettings, &twilio)
 	if err != nil {
-		return fmt.Errorf("decoding error from yaml file to twilio structure: %s", err)
+		return fmt.Errorf("failed to decode senderSettings to twilio config: %w", err)
 	}
 	apiType := twilio.Type
 

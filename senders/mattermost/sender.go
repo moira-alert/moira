@@ -16,7 +16,7 @@ import (
 )
 
 // Structure that represents the Mattermost configuration in the YAML file
-type Mattermost struct {
+type mattermost struct {
 	Url         string `mapstructure:"url"`
 	InsecureTLS string `mapstructure:"insecure_tls"`
 	APIToken    string `mapstructure:"api_token"`
@@ -34,10 +34,10 @@ type Sender struct {
 
 // Init configures Sender.
 func (sender *Sender) Init(senderSettings map[string]interface{}, _ moira.Logger, location *time.Location, _ string) error {
-	var mattermost Mattermost
+	var mattermost mattermost
 	err := mapstructure.Decode(senderSettings, &mattermost)
 	if err != nil {
-		return fmt.Errorf("decoding error from yaml file to mattermost structure: %s", err)
+		return fmt.Errorf("failed to decode senderSettings to mattermost config: %w", err)
 	}
 	url := mattermost.Url
 	if url == "" {

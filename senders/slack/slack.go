@@ -42,7 +42,7 @@ var stateEmoji = map[moira.State]string{
 }
 
 // Structure that represents the Slack configuration in the YAML file
-type Slack struct {
+type slack struct {
 	APIToken string `mapstructure:"api_token"`
 	UseEmoji string `mapstructure:"use_emoji"`
 	FrontURI string `mapstructure:"front_uri"`
@@ -59,10 +59,10 @@ type Sender struct {
 
 // Init read yaml config
 func (sender *Sender) Init(senderSettings map[string]interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
-	var slack Slack
+	var slack slack
 	err := mapstructure.Decode(senderSettings, &slack)
 	if err != nil {
-		return fmt.Errorf("decoding error from yaml file to slack structure: %s", err)
+		return fmt.Errorf("failed to decode senderSettings to slack config: %w", err)
 	}
 	apiToken := slack.APIToken
 	if apiToken == "" {

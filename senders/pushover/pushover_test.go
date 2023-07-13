@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gregdel/pushover"
+	pushover_client "github.com/gregdel/pushover"
 	"github.com/moira-alert/moira"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
@@ -25,7 +25,7 @@ func TestSender_Init(t *testing.T) {
 		sender := Sender{}
 		err := sender.Init(map[string]interface{}{"api_token": "123"}, logger, nil, "")
 		So(err, ShouldBeNil)
-		So(sender, ShouldResemble, Sender{apiToken: "123", client: pushover.New("123"), logger: logger})
+		So(sender, ShouldResemble, Sender{apiToken: "123", client: pushover_client.New("123"), logger: logger})
 	})
 
 	Convey("Settings has all data", t, func() {
@@ -33,7 +33,7 @@ func TestSender_Init(t *testing.T) {
 		location, _ := time.LoadLocation("UTC")
 		err := sender.Init(map[string]interface{}{"api_token": "123", "front_uri": "321"}, logger, location, "")
 		So(err, ShouldBeNil)
-		So(sender, ShouldResemble, Sender{apiToken: "123", client: pushover.New("123"), frontURI: "321", logger: logger, location: location})
+		So(sender, ShouldResemble, Sender{apiToken: "123", client: pushover_client.New("123"), frontURI: "321", logger: logger, location: location})
 	})
 }
 
@@ -41,37 +41,37 @@ func TestGetPushoverPriority(t *testing.T) {
 	sender := Sender{}
 	Convey("All events has OK state", t, func() {
 		priority := sender.getMessagePriority([]moira.NotificationEvent{{State: moira.StateOK}, {State: moira.StateOK}, {State: moira.StateOK}})
-		So(priority, ShouldResemble, pushover.PriorityNormal)
+		So(priority, ShouldResemble, pushover_client.PriorityNormal)
 	})
 
 	Convey("One of events has WARN state", t, func() {
 		priority := sender.getMessagePriority([]moira.NotificationEvent{{State: moira.StateOK}, {State: moira.StateWARN}, {State: moira.StateOK}})
-		So(priority, ShouldResemble, pushover.PriorityHigh)
+		So(priority, ShouldResemble, pushover_client.PriorityHigh)
 	})
 
 	Convey("One of events has NODATA state", t, func() {
 		priority := sender.getMessagePriority([]moira.NotificationEvent{{State: moira.StateOK}, {State: moira.StateNODATA}, {State: moira.StateOK}})
-		So(priority, ShouldResemble, pushover.PriorityHigh)
+		So(priority, ShouldResemble, pushover_client.PriorityHigh)
 	})
 
 	Convey("One of events has ERROR state", t, func() {
 		priority := sender.getMessagePriority([]moira.NotificationEvent{{State: moira.StateOK}, {State: moira.StateERROR}, {State: moira.StateOK}})
-		So(priority, ShouldResemble, pushover.PriorityEmergency)
+		So(priority, ShouldResemble, pushover_client.PriorityEmergency)
 	})
 
 	Convey("One of events has EXCEPTION state", t, func() {
 		priority := sender.getMessagePriority([]moira.NotificationEvent{{State: moira.StateOK}, {State: moira.StateEXCEPTION}, {State: moira.StateOK}})
-		So(priority, ShouldResemble, pushover.PriorityEmergency)
+		So(priority, ShouldResemble, pushover_client.PriorityEmergency)
 	})
 
 	Convey("Events has WARN and ERROR states", t, func() {
 		priority := sender.getMessagePriority([]moira.NotificationEvent{{State: moira.StateOK}, {State: moira.StateWARN}, {State: moira.StateERROR}})
-		So(priority, ShouldResemble, pushover.PriorityEmergency)
+		So(priority, ShouldResemble, pushover_client.PriorityEmergency)
 	})
 
 	Convey("Events has ERROR and WARN states", t, func() {
 		priority := sender.getMessagePriority([]moira.NotificationEvent{{State: moira.StateOK}, {State: moira.StateERROR}, {State: moira.StateWARN}})
-		So(priority, ShouldResemble, pushover.PriorityEmergency)
+		So(priority, ShouldResemble, pushover_client.PriorityEmergency)
 	})
 }
 
@@ -167,12 +167,12 @@ func TestMakePushoverMessage(t *testing.T) {
 			Name: "TriggerName",
 			Tags: []string{"tag1", "tag2"},
 		}
-		expected := &pushover.Message{
+		expected := &pushover_client.Message{
 			Timestamp: 150000000,
 			Retry:     5 * time.Minute,
 			Expire:    time.Hour,
 			URL:       "https://my-moira.com/trigger/SomeID",
-			Priority:  pushover.PriorityEmergency,
+			Priority:  pushover_client.PriorityEmergency,
 			Title:     "ERROR TriggerName [tag1][tag2] (1)",
 			Message:   "02:40: Metric = 123 (OK to ERROR)\n",
 		}

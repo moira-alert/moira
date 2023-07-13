@@ -16,7 +16,7 @@ const titleLimit = 250
 const urlLimit = 512
 
 // Structure that represents the Pushover configuration in the YAML file
-type Pushover struct {
+type pushover struct {
 	APIToken string `mapstructure:"api_token"`
 	FrontURI string `mapstructure:"front_uri"`
 }
@@ -33,10 +33,10 @@ type Sender struct {
 
 // Init read yaml config
 func (sender *Sender) Init(senderSettings map[string]interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
-	var pushover Pushover
+	var pushover pushover
 	err := mapstructure.Decode(senderSettings, &pushover)
 	if err != nil {
-		return fmt.Errorf("decoding error from yaml file to pushover structure: %s", err)
+		return fmt.Errorf("failed to decode senderSettings to pushover config: %w", err)
 	}
 	sender.apiToken = pushover.APIToken
 	if sender.apiToken == "" {

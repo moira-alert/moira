@@ -8,7 +8,7 @@ import (
 
 	"github.com/moira-alert/moira"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
-	"github.com/slack-go/slack"
+	slack_client "github.com/slack-go/slack"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -25,7 +25,7 @@ func TestInit(t *testing.T) {
 
 		Convey("has api_token", func() {
 			senderSettings["api_token"] = "123"
-			client := slack.New("123")
+			client := slack_client.New("123")
 
 			Convey("use_emoji not set", func() {
 				err := sender.Init(senderSettings, logger, nil, "")

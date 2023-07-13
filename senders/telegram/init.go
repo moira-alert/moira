@@ -29,7 +29,7 @@ var (
 )
 
 // Structure that represents the Telegram configuration in the YAML file
-type Telegram struct {
+type telegram struct {
 	APIToken string `mapstructure:"api_token"`
 	FrontURI string `mapstructure:"front_uri"`
 }
@@ -46,10 +46,10 @@ type Sender struct {
 
 // Init loads yaml config, configures and starts telegram bot
 func (sender *Sender) Init(senderSettings map[string]interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
-	var telegram Telegram
+	var telegram telegram
 	err := mapstructure.Decode(senderSettings, &telegram)
 	if err != nil {
-		return fmt.Errorf("decoding error from yaml file to telegram structure: %s", err)
+		return fmt.Errorf("failed to decode senderSettings to telegram config: %w", err)
 	}
 	apiToken := telegram.APIToken
 	if apiToken == "" {

@@ -12,12 +12,12 @@ import (
 )
 
 // Structure that represents the Webhook configuration in the YAML file
-type WebHook struct {
+type webHook struct {
 	Name          string              `mapstructure:"name"`
 	URL           string              `mapstructure:"url"`
 	User          string              `mapstructure:"user"`
 	Password      string              `mapstructure:"password"`
-	CustomHeaders []map[string]string `mapstructure:"custom-headers"`
+	CustomHeaders []map[string]string `mapstructure:"custom-headers,omitempty"`
 	Timeout       string              `mapstructure:"timeout,omitempty"`
 }
 
@@ -33,10 +33,10 @@ type Sender struct {
 
 // Init read yaml config
 func (sender *Sender) Init(senderSettings map[string]interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
-	var webhook WebHook
+	var webhook webHook
 	err := mapstructure.Decode(senderSettings, &webhook)
 	if err != nil {
-		return fmt.Errorf("decoding error from yaml file to webhook structure: %s", err)
+		return fmt.Errorf("failed to decode senderSettings to webhook config: %w", err)
 	}
 
 	if webhook.Name == "" {

@@ -18,7 +18,7 @@ const (
 )
 
 // Structure that represents the Discord configuration in the YAML file
-type Discord struct {
+type discord struct {
 	Token    string `mapstructure:"token"`
 	FrontURI string `mapstructure:"front_uri"`
 }
@@ -35,10 +35,10 @@ type Sender struct {
 
 // Init reads the yaml config
 func (sender *Sender) Init(senderSettings map[string]interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
-	var discord Discord
+	var discord discord
 	err := mapstructure.Decode(senderSettings, &discord)
 	if err != nil {
-		return fmt.Errorf("decoding error from yaml file to discord structure: %s", err)
+		return fmt.Errorf("failed to decode senderSettings to discord config: %w", err)
 	}
 	token := discord.Token
 	if token == "" {

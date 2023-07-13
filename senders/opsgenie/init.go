@@ -12,7 +12,7 @@ import (
 )
 
 // Structure that represents the OpsGenie configuration in the YAML file
-type OpsGenie struct {
+type opsGenie struct {
 	APIKey   string `mapstructure:"api_key"`
 	FrontURI string `mapstructure:"front_uri"`
 }
@@ -32,11 +32,11 @@ type Sender struct {
 
 // Init initializes the opsgenie sender
 func (sender *Sender) Init(senderSettings map[string]interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
-	var opsgenie OpsGenie
+	var opsgenie opsGenie
 
 	err := mapstructure.Decode(senderSettings, &opsgenie)
 	if err != nil {
-		return fmt.Errorf("decoding error from yaml file to opsgenie structure: %s", err)
+		return fmt.Errorf("failed to decode senderSettings to opsgenie config: %w", err)
 	}
 
 	sender.apiKey = opsgenie.APIKey
