@@ -31,7 +31,7 @@ func TestSender_Init(t *testing.T) {
 	Convey("Settings has all data", t, func() {
 		sender := Sender{}
 		location, _ := time.LoadLocation("UTC")
-		err := sender.Init(map[string]interface{}{"api_token": "123", "front_uri": "321"}, logger, location, "")
+		err := sender.Init(map[string]interface{}{"api_token": "123", "front_url": "321"}, logger, location, "")
 		So(err, ShouldBeNil)
 		So(sender, ShouldResemble, Sender{apiToken: "123", client: pushover_client.New("123"), frontURI: "321", logger: logger, location: location})
 	})

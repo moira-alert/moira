@@ -38,7 +38,7 @@ func TestInit(t *testing.T) {
 			imageStore.EXPECT().IsEnabled().Return(true)
 			senderSettings := map[string]interface{}{
 				"api_key":     "testkey",
-				"front_uri":   "http://moira.uri",
+				"front_url":   "http://moira.uri",
 				"image_store": "s3",
 			}
 			sender.Init(senderSettings, logger, location, "15:04") //nolint
@@ -50,7 +50,7 @@ func TestInit(t *testing.T) {
 
 		Convey("Wrong image_store name", func() {
 			senderSettings := map[string]interface{}{
-				"front_uri":   "http://moira.uri",
+				"front_url":   "http://moira.uri",
 				"api_key":     "testkey",
 				"image_store": "s4",
 			}
@@ -63,7 +63,7 @@ func TestInit(t *testing.T) {
 			imageStore.EXPECT().IsEnabled().Return(false)
 			senderSettings := map[string]interface{}{
 				"api_key":     "testkey",
-				"front_uri":   "http://moira.uri",
+				"front_url":   "http://moira.uri",
 				"image_store": "s3",
 			}
 			sender := Sender{ImageStores: map[string]moira.ImageStore{

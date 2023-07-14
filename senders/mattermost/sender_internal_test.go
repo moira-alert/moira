@@ -22,7 +22,7 @@ func TestSendEvents(t *testing.T) {
 		senderSettings := map[string]interface{}{ // redundant, but necessary config
 			"url":          "qwerty",
 			"api_token":    "qwerty",
-			"front_uri":    "qwerty",
+			"front_url":    "qwerty",
 			"insecure_tls": "true",
 		}
 		err := sender.Init(senderSettings, logger, nil, "")
@@ -59,7 +59,7 @@ func TestBuildMessage(t *testing.T) {
 	Convey("Given configured sender", t, func() {
 		senderSettings := map[string]interface{}{
 			"url": "qwerty", "api_token": "qwerty", // redundant, but necessary config
-			"front_uri":    "http://moira.url",
+			"front_url":    "http://moira.url",
 			"insecure_tls": "true",
 		}
 		location, _ := time.LoadLocation("UTC")

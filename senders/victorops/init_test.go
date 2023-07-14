@@ -38,7 +38,7 @@ func TestInit(t *testing.T) {
 			imageStore.EXPECT().IsEnabled().Return(true)
 			senderSettings := map[string]interface{}{
 				"routing_url": "https://testurl.com",
-				"front_uri":   "http://moira.uri",
+				"front_url":   "http://moira.uri",
 				"image_store": "s3",
 			}
 			sender.Init(senderSettings, logger, location, "15:04") //nolint

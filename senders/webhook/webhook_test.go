@@ -56,12 +56,6 @@ func TestSender_SendEvents(t *testing.T) {
 			"url":      fmt.Sprintf("%s/%s", ts.URL, moira.VariableTriggerID),
 			"user":     testUser,
 			"password": testPass,
-			"custom-headers": []map[string]string{
-				{
-					"key":   "test",
-					"value": "123",
-				},
-			},
 		}
 		sender := Sender{}
 		err := sender.Init(senderSettings, logger, time.UTC, "")
@@ -85,7 +79,6 @@ func testRequestHeaders(r *http.Request) (int, error) {
 	expectedHeaders := map[string]string{
 		"User-Agent":   "Moira",
 		"Content-Type": "application/json",
-		"test":         "123",
 	}
 	for headerName, headerValue := range expectedHeaders {
 		actualHeaderValue := r.Header.Get(headerName)

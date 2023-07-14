@@ -39,7 +39,7 @@ func TestInit(t *testing.T) {
 		Convey("Has settings", func() {
 			senderSettings := map[string]interface{}{
 				"token":     "123",
-				"front_uri": "http://moira.uri",
+				"front_url": "http://moira.uri",
 			}
 			sender.Init(senderSettings, logger, location, "15:04") //nolint
 			So(sender.frontURI, ShouldResemble, "http://moira.uri")

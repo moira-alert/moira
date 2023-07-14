@@ -17,7 +17,7 @@ func TestInit(t *testing.T) {
 		Convey("No url", func() {
 			senderSettings := map[string]interface{}{
 				"api_token":    "qwerty",
-				"front_uri":    "qwerty",
+				"front_url":    "qwerty",
 				"insecure_tls": "true",
 			}
 			err := sender.Init(senderSettings, logger, nil, "")
@@ -28,7 +28,7 @@ func TestInit(t *testing.T) {
 			senderSettings := map[string]interface{}{
 				"url":          "",
 				"api_token":    "qwerty",
-				"front_uri":    "qwerty",
+				"front_url":    "qwerty",
 				"insecure_tls": "true",
 			}
 			err := sender.Init(senderSettings, logger, nil, "")
@@ -36,25 +36,25 @@ func TestInit(t *testing.T) {
 		})
 
 		Convey("No api_token", func() {
-			senderSettings := map[string]interface{}{"url": "qwerty", "front_uri": "qwerty"}
+			senderSettings := map[string]interface{}{"url": "qwerty", "front_url": "qwerty"}
 			err := sender.Init(senderSettings, logger, nil, "")
 			So(err, ShouldNotBeNil)
 		})
 
 		Convey("Empty api_token", func() {
-			senderSettings := map[string]interface{}{"url": "qwerty", "front_uri": "qwerty", "api_token": ""}
+			senderSettings := map[string]interface{}{"url": "qwerty", "front_url": "qwerty", "api_token": ""}
 			err := sender.Init(senderSettings, logger, nil, "")
 			So(err, ShouldNotBeNil)
 		})
 
-		Convey("No front_uri", func() {
+		Convey("No front_url", func() {
 			senderSettings := map[string]interface{}{"url": "qwerty", "api_token": "qwerty"}
 			err := sender.Init(senderSettings, logger, nil, "")
 			So(err, ShouldNotBeNil)
 		})
 
-		Convey("Empty front_uri", func() {
-			senderSettings := map[string]interface{}{"url": "qwerty", "api_token": "qwerty", "front_uri": ""}
+		Convey("Empty front_url", func() {
+			senderSettings := map[string]interface{}{"url": "qwerty", "api_token": "qwerty", "front_url": ""}
 			err := sender.Init(senderSettings, logger, nil, "")
 			So(err, ShouldNotBeNil)
 		})
@@ -63,7 +63,7 @@ func TestInit(t *testing.T) {
 			senderSettings := map[string]interface{}{
 				"url":          "qwerty",
 				"api_token":    "qwerty",
-				"front_uri":    "qwerty",
+				"front_url":    "qwerty",
 				"insecure_tls": "true",
 			}
 			err := sender.Init(senderSettings, logger, nil, "")
