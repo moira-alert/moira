@@ -45,7 +45,7 @@ var stateEmoji = map[moira.State]string{
 type slack struct {
 	APIToken string `mapstructure:"api_token"`
 	UseEmoji string `mapstructure:"use_emoji"`
-	FrontURL string `mapstructure:"front_url"`
+	FrontURI string `mapstructure:"front_uri"`
 }
 
 // Sender implements moira sender interface via slack
@@ -70,7 +70,7 @@ func (sender *Sender) Init(senderSettings map[string]interface{}, logger moira.L
 	}
 	sender.useEmoji, _ = strconv.ParseBool(s.UseEmoji)
 	sender.logger = logger
-	sender.frontURI = s.FrontURL
+	sender.frontURI = s.FrontURI
 	sender.location = location
 	sender.client = slack_client.New(apiToken)
 	return nil

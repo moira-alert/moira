@@ -14,7 +14,7 @@ import (
 type victorOps struct {
 	RoutingURL string `mapstructure:"routing_url"`
 	ImageStore string `mapstructure:"image_store"`
-	FrontURL   string `mapstructure:"front_url"`
+	FrontURI   string `mapstructure:"front_uri"`
 }
 
 // Sender implements moira sender interface for victorops
@@ -61,7 +61,7 @@ func (sender *Sender) Init(senderSettings map[string]interface{}, logger moira.L
 
 	sender.client = api.NewClient(sender.routingURL, nil)
 
-	sender.frontURI = victorops.FrontURL
+	sender.frontURI = victorops.FrontURI
 	sender.logger = logger
 	sender.location = location
 

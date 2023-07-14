@@ -18,7 +18,7 @@ const urlLimit = 512
 // Structure that represents the Pushover configuration in the YAML file
 type pushover struct {
 	APIToken string `mapstructure:"api_token"`
-	FrontURL string `mapstructure:"front_url"`
+	FrontURI string `mapstructure:"front_uri"`
 }
 
 // Sender implements moira sender interface via pushover
@@ -44,7 +44,7 @@ func (sender *Sender) Init(senderSettings map[string]interface{}, logger moira.L
 	}
 	sender.client = pushover_client.New(sender.apiToken)
 	sender.logger = logger
-	sender.frontURI = p.FrontURL
+	sender.frontURI = p.FrontURI
 	sender.location = location
 	return nil
 }

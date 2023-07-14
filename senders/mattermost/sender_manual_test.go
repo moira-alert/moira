@@ -30,7 +30,7 @@ func TestSender(t *testing.T) {
 			senderSettings := map[string]string{
 				"url":          url,
 				"api_token":    apiToken,
-				"front_url":    "http://moira.url",
+				"front_uri":    "http://moira.url",
 				"insecure_tls": "true",
 			}
 			location, _ := time.LoadLocation("UTC")

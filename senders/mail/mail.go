@@ -20,7 +20,7 @@ type mail struct {
 	SMTPHost     string `mapstructure:"smtp_host"`
 	SMTPPort     string `mapstructure:"smtp_port"`
 	InsecureTLS  string `mapstructure:"insecure_tls"`
-	FrontURL     string `mapstructure:"front_url"`
+	FrontURI     string `mapstructure:"front_uri"`
 	SMTPPass     string `mapstructure:"smtp_pass"`
 	SMTPUser     string `mapstructure:"smtp_user"`
 	TemplateFile string `mapstructure:"template_file"`
@@ -70,7 +70,7 @@ func (sender *Sender) fillSettings(senderSettings map[string]interface{}, logger
 	sender.SMTPHost = m.SMTPHost
 	sender.SMTPPort, _ = strconv.ParseInt(m.SMTPPort, 10, 64)
 	sender.InsecureTLS, _ = strconv.ParseBool(m.InsecureTLS)
-	sender.FrontURI = m.FrontURL
+	sender.FrontURI = m.FrontURI
 	sender.Password = m.SMTPPass
 	sender.Username = m.SMTPUser
 	sender.TemplateFile = m.TemplateFile
