@@ -13,11 +13,11 @@ import (
 
 // Structure that represents the Webhook configuration in the YAML file
 type webHook struct {
-	Name          string              `mapstructure:"name"`
-	URL           string              `mapstructure:"url"`
-	User          string              `mapstructure:"user"`
-	Password      string              `mapstructure:"password"`
-	Timeout       string              `mapstructure:"timeout"`
+	Name     string `mapstructure:"name"`
+	URL      string `mapstructure:"url"`
+	User     string `mapstructure:"user"`
+	Password string `mapstructure:"password"`
+	Timeout  string `mapstructure:"timeout"`
 }
 
 // Sender implements moira sender interface via webhook
