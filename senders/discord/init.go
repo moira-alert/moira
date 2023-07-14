@@ -20,7 +20,7 @@ const (
 // Structure that represents the Discord configuration in the YAML file
 type discord struct {
 	Token    string `mapstructure:"token"`
-	FrontURI string `mapstructure:"front_uri"`
+	FrontURL string `mapstructure:"front_url"`
 }
 
 // Sender implements moira sender interface for discord
@@ -49,7 +49,7 @@ func (sender *Sender) Init(senderSettings map[string]interface{}, logger moira.L
 		return fmt.Errorf("error creating discord session: %s", err)
 	}
 	sender.logger = logger
-	sender.frontURI = ds.FrontURI
+	sender.frontURI = ds.FrontURL
 	sender.location = location
 
 	handleMsg := func(s *discordgo.Session, m *discordgo.MessageCreate) {

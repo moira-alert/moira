@@ -14,7 +14,7 @@ import (
 // Structure that represents the OpsGenie configuration in the YAML file
 type opsGenie struct {
 	APIKey   string `mapstructure:"api_key"`
-	FrontURI string `mapstructure:"front_uri"`
+	FrontURL string `mapstructure:"front_url"`
 }
 
 // Sender implements the Sender interface for opsgenie
@@ -54,7 +54,7 @@ func (sender *Sender) Init(senderSettings map[string]interface{}, logger moira.L
 		return fmt.Errorf("error while creating opsgenie client: %s", err)
 	}
 
-	sender.frontURI = opsgenie.FrontURI
+	sender.frontURI = opsgenie.FrontURL
 	sender.logger = logger
 	sender.location = location
 	return nil

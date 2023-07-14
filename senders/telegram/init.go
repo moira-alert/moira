@@ -31,7 +31,7 @@ var (
 // Structure that represents the Telegram configuration in the YAML file
 type telegram struct {
 	APIToken string `mapstructure:"api_token"`
-	FrontURI string `mapstructure:"front_uri"`
+	FrontURL string `mapstructure:"front_url"`
 }
 
 // Sender implements moira sender interface via telegram
@@ -57,7 +57,7 @@ func (sender *Sender) Init(senderSettings map[string]interface{}, logger moira.L
 	}
 
 	sender.apiToken = apiToken
-	sender.frontURI = tg.FrontURI
+	sender.frontURI = tg.FrontURL
 	sender.logger = logger
 	sender.location = location
 	sender.bot, err = telebot.NewBot(telebot.Settings{

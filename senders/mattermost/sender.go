@@ -20,7 +20,7 @@ type mattermost struct {
 	Url         string `mapstructure:"url"`
 	InsecureTLS string `mapstructure:"insecure_tls"`
 	APIToken    string `mapstructure:"api_token"`
-	FrontURI    string `mapstructure:"front_uri"`
+	FrontURL    string `mapstructure:"front_url"`
 }
 
 // Sender posts messages to Mattermost chat.
@@ -33,7 +33,7 @@ type Sender struct {
 }
 
 // Init configures Sender.
-func (sender *Sender) Init(senderSettings map[string]interface{}, _ moira.Logger, location *time.Location, _ string) error {
+func (sender *Sender) Init(senderSettings map[string]interface{}, logger moira.Logger, location *time.Location, _ string) error {
 	var mm mattermost
 	err := mapstructure.Decode(senderSettings, &mm)
 	if err != nil {
@@ -64,9 +64,9 @@ func (sender *Sender) Init(senderSettings map[string]interface{}, _ moira.Logger
 	}
 	sender.client.SetToken(token)
 
-	frontURI := mm.FrontURI
+	frontURI := mm.FrontURL
 	if frontURI == "" {
-		return fmt.Errorf("can not read Mattermost front_uri from config")
+		return fmt.Errorf("can not read Mattermost front_url from config")
 	}
 	sender.frontURI = frontURI
 	sender.location = location

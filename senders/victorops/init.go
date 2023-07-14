@@ -12,9 +12,9 @@ import (
 
 // Structure that represents the VictorOps configuration in the YAML file
 type victorOps struct {
-	RoutingURL string `mapstructure:"routing_url,omitempty"`
-	ImageStore string `mapstructure:"image_store,omitempty"`
-	FrontURI   string `mapstructure:"front_uri"`
+	RoutingURL string `mapstructure:"routing_url"`
+	ImageStore string `mapstructure:"image_store"`
+	FrontURL   string `mapstructure:"front_url"`
 }
 
 // Sender implements moira sender interface for victorops
@@ -61,7 +61,7 @@ func (sender *Sender) Init(senderSettings map[string]interface{}, logger moira.L
 
 	sender.client = api.NewClient(sender.routingURL, nil)
 
-	sender.frontURI = victorops.FrontURI
+	sender.frontURI = victorops.FrontURL
 	sender.logger = logger
 	sender.location = location
 

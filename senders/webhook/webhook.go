@@ -17,8 +17,7 @@ type webHook struct {
 	URL           string              `mapstructure:"url"`
 	User          string              `mapstructure:"user"`
 	Password      string              `mapstructure:"password"`
-	CustomHeaders []map[string]string `mapstructure:"custom-headers,omitempty"`
-	Timeout       string              `mapstructure:"timeout,omitempty"`
+	Timeout       string              `mapstructure:"timeout"`
 }
 
 // Sender implements moira sender interface via webhook
@@ -53,10 +52,6 @@ func (sender *Sender) Init(senderSettings map[string]interface{}, logger moira.L
 	sender.headers = map[string]string{
 		"User-Agent":   "Moira",
 		"Content-Type": "application/json",
-	}
-
-	for _, customHeader := range webhook.CustomHeaders {
-		sender.headers[customHeader["key"]] = customHeader["value"]
 	}
 
 	timeout := 30

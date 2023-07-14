@@ -38,7 +38,7 @@ var headers = map[string]string{
 
 // Structure that represents the MSTeams configuration in the YAML file
 type msTeams struct {
-	FrontURI  string `mapstructure:"front_uri"`
+	FrontURL  string `mapstructure:"front_url"`
 	MaxEvents string `mapstructure:"max_events"`
 }
 
@@ -60,7 +60,7 @@ func (sender *Sender) Init(senderSettings map[string]interface{}, logger moira.L
 	}
 	sender.logger = logger
 	sender.location = location
-	sender.frontURI = msteams.FrontURI
+	sender.frontURI = msteams.FrontURL
 	maxEvents, err := strconv.Atoi(msteams.MaxEvents)
 	if err != nil {
 		return fmt.Errorf("max_events should be an integer: %w", err)
