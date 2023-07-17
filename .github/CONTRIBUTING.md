@@ -50,9 +50,9 @@ During implementation and submission of code follow style guides listed below.
 
 ### Contributing to documentation
 
-The main source of knowledge about Moira is a documentation that is hosted on Read the Docs service. You can help improve the Moira guides or the API reference by making them more coherent, consistent, or readable, adding missing information, correcting factual errors, fixing typos, or bringing them up to date with the latest Moira release. Check [moira-alert/doc](github.com/moira-alert/doc) for sources of documentation.
+The main source of knowledge about Moira is a documentation that is hosted on Read the Docs service. You can help improve the Moira guides or the API reference by making them more coherent, consistent, or readable, adding missing information, correcting factual errors, fixing typos, or bringing them up to date with the latest Moira release. Check [moira-alert/doc](https://github.com/moira-alert/doc) for sources of documentation.
 
-One of our goals is to provide beautiful and clear documentation of Moira API. If you familiar with Go and OpenAPI specification you can add description of missing API methods to swagger file located in `api` folder of [moira-alert/doc](github.com/moira-alert/doc) repository.
+One of our goals is to provide beautiful and clear documentation of Moira API. If you familiar with Go and OpenAPI specification you can add description of missing API methods to swagger file located in `api` folder of [moira-alert/doc](https://github.com/moira-alert/doc) repository.
 
 ## Style Guides
 
