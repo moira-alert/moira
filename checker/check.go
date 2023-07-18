@@ -38,7 +38,7 @@ func (triggerChecker *TriggerChecker) Check() error {
 
 	checkData.MetricsToTargetRelation = conversion.GetRelations(aloneMetrics, triggerChecker.trigger.AloneMetrics)
 
-	checkData, err = triggerChecker.check(preparedMetrics, aloneMetrics, checkData)
+	checkData, err = triggerChecker.check(preparedMetrics, aloneMetrics, checkData, triggerChecker.logger)
 	if err != nil {
 		return triggerChecker.handleUndefinedError(checkData, err)
 	}
@@ -290,6 +290,7 @@ func (triggerChecker *TriggerChecker) check(
 	metrics map[string]map[string]metricSource.MetricData,
 	aloneMetrics map[string]metricSource.MetricData,
 	checkData moira.CheckData,
+	logger moira.Logger,
 ) (moira.CheckData, error) {
 	// Case when trigger have only alone metrics
 	if len(metrics) == 0 {
@@ -301,7 +302,7 @@ func (triggerChecker *TriggerChecker) check(
 	}
 
 	for metricName, targets := range metrics {
-		log := triggerChecker.logger.Clone().
+		log := logger.Clone().
 			String(moira.LogFieldNameMetricName, metricName)
 
 		log.Debug().Msg("Checking metrics")
