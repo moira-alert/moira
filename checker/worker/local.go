@@ -56,7 +56,6 @@ func (ch *localChecker) GetTriggersToCheck(count int) ([]string, error) {
 	return ch.check.Database.GetLocalTriggersToCheck(count)
 }
 
-// TODO: Rename functions
 func (ch *localChecker) localChecker(stop <-chan struct{}) error {
 	checkTicker := time.NewTicker(ch.check.Config.NoDataCheckInterval)
 	ch.check.Logger.Info().Msg("Local checker started")
@@ -66,8 +65,9 @@ func (ch *localChecker) localChecker(stop <-chan struct{}) error {
 			ch.check.Logger.Info().Msg("Local checker stopped")
 			checkTicker.Stop()
 			return nil
+
 		case <-checkTicker.C:
-			if err := ch.checkLocal(); err != nil {
+			if err := ch.addLocalTriggersToCheckQueue(); err != nil {
 				ch.check.Logger.Error().
 					Error(err).
 					Msg("Local check failed")
@@ -76,7 +76,7 @@ func (ch *localChecker) localChecker(stop <-chan struct{}) error {
 	}
 }
 
-func (ch *localChecker) checkLocal() error {
+func (ch *localChecker) addLocalTriggersToCheckQueue() error {
 	now := time.Now().UTC().Unix()
 	if ch.check.lastData+ch.check.Config.StopCheckingIntervalSeconds < now {
 		ch.check.Logger.Info().
@@ -85,7 +85,7 @@ func (ch *localChecker) checkLocal() error {
 		return nil
 	}
 
-	ch.check.Logger.Info().Msg("Checking NODATA")
+	ch.check.Logger.Info().Msg("Checking Local")
 	triggerIds, err := ch.check.Database.GetLocalTriggerIDs()
 	if err != nil {
 		return err

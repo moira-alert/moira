@@ -49,17 +49,21 @@ func (check *Checker) handleFetchResponse(triggerIDs []string, fetchError error,
 }
 
 func (check *Checker) getTriggerIDsToCheck(triggerIDs []string) []string {
-	lazyTriggerIDs := check.lazyTriggerIDs.Load().(map[string]bool)
-	var triggerIDsToCheck []string = make([]string, 0, len(triggerIDs))
+	triggerIDsToCheck := make([]string, 0, len(triggerIDs))
 
+	lazyTriggerIDs := check.lazyTriggerIDs.Load().(map[string]bool)
 	for _, triggerID := range triggerIDs {
 		if _, ok := lazyTriggerIDs[triggerID]; ok {
 			randomDuration := check.getRandomLazyCacheDuration()
-			if err := check.LazyTriggersCache.Add(triggerID, true, randomDuration); err != nil {
+			cacheContainsIdErr := check.LazyTriggersCache.Add(triggerID, true, randomDuration)
+
+			if cacheContainsIdErr != nil {
 				continue
 			}
 		}
-		if err := check.TriggerCache.Add(triggerID, true, cache.DefaultExpiration); err == nil {
+
+		cacheContainsIdErr := check.TriggerCache.Add(triggerID, true, cache.DefaultExpiration)
+		if cacheContainsIdErr == nil {
 			triggerIDsToCheck = append(triggerIDsToCheck, triggerID)
 		}
 	}

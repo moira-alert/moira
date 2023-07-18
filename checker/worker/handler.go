@@ -12,13 +12,14 @@ import (
 
 const sleepAfterCheckingError = time.Second * 2
 
-// startTriggerHandler is blocking func
+// startTriggerHandler is a blocking func
 func (check *Checker) startTriggerHandler(triggerIDsToCheck <-chan string, metrics *metrics.CheckMetrics) error {
 	for {
 		triggerID, ok := <-triggerIDsToCheck
 		if !ok {
 			return nil
 		}
+
 		err := check.handleTrigger(triggerID, metrics)
 		if err != nil {
 			metrics.HandleError.Mark(1)
@@ -49,23 +50,34 @@ func (check *Checker) handleTriggerInLock(triggerID string, metrics *metrics.Che
 	if err != nil {
 		return err
 	}
-	if acquired {
-		startedAt := time.Now()
-		defer metrics.TriggersCheckTime.UpdateSince(startedAt)
-		if err := check.checkTrigger(triggerID); err != nil {
-			return err
-		}
+
+	if !acquired {
+		return nil
 	}
-	return nil
+
+	startedAt := time.Now()
+	defer metrics.TriggersCheckTime.UpdateSince(startedAt)
+
+	err = check.checkTrigger(triggerID)
+	return err
 }
 
 func (check *Checker) checkTrigger(triggerID string) error {
 	defer check.Database.DeleteTriggerCheckLock(triggerID) //nolint
-	triggerChecker, err := checker.MakeTriggerChecker(triggerID, check.Database, check.Logger, check.Config, check.SourceProvider, check.Metrics)
+
+	triggerChecker, err := checker.MakeTriggerChecker(
+		triggerID,
+		check.Database,
+		check.Logger,
+		check.Config,
+		check.SourceProvider,
+		check.Metrics,
+	)
+
+	if err == checker.ErrTriggerNotExists {
+		return nil
+	}
 	if err != nil {
-		if err == checker.ErrTriggerNotExists {
-			return nil
-		}
 		return err
 	}
 	return triggerChecker.Check()
