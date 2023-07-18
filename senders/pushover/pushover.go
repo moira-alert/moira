@@ -32,7 +32,7 @@ type Sender struct {
 }
 
 // Init read yaml config
-func (sender *Sender) Init(senderSettings map[string]interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	var p pushover
 	err := mapstructure.Decode(senderSettings, &p)
 	if err != nil {

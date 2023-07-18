@@ -190,7 +190,7 @@ type Logger interface {
 type Sender interface {
 	// TODO refactor: https://github.com/moira-alert/moira/issues/794
 	SendEvents(events NotificationEvents, contact ContactData, trigger TriggerData, plot [][]byte, throttled bool) error
-	Init(senderSettings map[string]interface{}, logger Logger, location *time.Location, dateTimeFormat string) error
+	Init(senderSettings interface{}, logger Logger, location *time.Location, dateTimeFormat string) error
 }
 
 // ImageStore is the interface for image storage providers

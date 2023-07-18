@@ -45,7 +45,7 @@ type Sender struct {
 }
 
 // Init loads yaml config, configures and starts telegram bot
-func (sender *Sender) Init(senderSettings map[string]interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	var tg telegram
 	err := mapstructure.Decode(senderSettings, &tg)
 	if err != nil {

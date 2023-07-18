@@ -52,7 +52,7 @@ type Sender struct {
 }
 
 // Init initialises settings required for full functionality
-func (sender *Sender) Init(senderSettings map[string]interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	var msteams msTeams
 	err := mapstructure.Decode(senderSettings, &msteams)
 	if err != nil {

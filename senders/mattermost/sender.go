@@ -33,7 +33,7 @@ type Sender struct {
 }
 
 // Init configures Sender.
-func (sender *Sender) Init(senderSettings map[string]interface{}, logger moira.Logger, location *time.Location, _ string) error {
+func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, _ string) error {
 	var mm mattermost
 	err := mapstructure.Decode(senderSettings, &mm)
 	if err != nil {

@@ -58,7 +58,7 @@ type Sender struct {
 }
 
 // Init read yaml config
-func (sender *Sender) Init(senderSettings map[string]interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	var s slack
 	err := mapstructure.Decode(senderSettings, &s)
 	if err != nil {
