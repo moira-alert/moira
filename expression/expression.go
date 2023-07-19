@@ -83,6 +83,7 @@ func (triggerExpression *TriggerExpression) Evaluate() (moira.State, error) {
 	if err != nil {
 		return "", ErrInvalidExpression{internalError: err}
 	}
+	expr.Vars()
 	result, err := expr.Eval(triggerExpression)
 	if err != nil {
 		return "", ErrInvalidExpression{internalError: err}

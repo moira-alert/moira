@@ -7,15 +7,16 @@ import (
 )
 
 func TestIsConfigured(t *testing.T) {
-	Convey("Remote is not configured", t, func() {
-		remote, _ := Create(&Config{URL: "", Enabled: false})
-		isConfigured, _ := remote.IsConfigured()
+	Convey("Metric source is not configured", t, func() {
+		source, _ := Create(&Config{URL: "", Enabled: false})
+		isConfigured, err := source.IsConfigured()
 		So(isConfigured, ShouldBeFalse)
+		So(err, ShouldResemble, ErrPrometheusStorageDisabled)
 	})
 
-	Convey("Remote is configured", t, func() {
-		remote, _ := Create(&Config{URL: "http://host", Enabled: true})
-		isConfigured, err := remote.IsConfigured()
+	Convey("Metric source is configured", t, func() {
+		source, _ := Create(&Config{URL: "http://host", Enabled: true})
+		isConfigured, err := source.IsConfigured()
 		So(isConfigured, ShouldBeTrue)
 		So(err, ShouldBeEmpty)
 	})

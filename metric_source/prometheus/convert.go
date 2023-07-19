@@ -34,12 +34,6 @@ func convertToFetchResult(mat model.Matrix) *FetchResult {
 }
 
 func targetFromTags(tags model.Metric) string {
-	if len(tags) == 1 {
-		for _, value := range tags {
-			return string(value)
-		}
-	}
-
 	target := strings.Builder{}
 	if name, ok := tags["__name__"]; ok {
 		target.WriteString(string(name))
