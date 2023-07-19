@@ -1478,7 +1478,7 @@ func TestTriggerChecker_handlePrepareError(t *testing.T) {
 			err := ErrTriggerHasSameMetricNames{}
 			pass, checkDataReturn, errReturn := triggerChecker.handlePrepareError(checkData, err)
 			So(errReturn, ShouldBeNil)
-			So(pass, ShouldBeTrue)
+			So(pass, ShouldEqual, CanContinueCheck)
 			So(checkDataReturn, ShouldResemble, moira.CheckData{
 				State:   moira.StateERROR,
 				Message: err.Error(),
@@ -1510,7 +1510,7 @@ func TestTriggerChecker_handlePrepareError(t *testing.T) {
 			dataBase.EXPECT().SetTriggerLastCheck("test trigger", &expectedCheckData, moira.GraphiteLocal)
 			pass, checkDataReturn, errReturn := triggerChecker.handlePrepareError(checkData, err)
 			So(errReturn, ShouldBeNil)
-			So(pass, ShouldBeFalse)
+			So(pass, ShouldEqual, MustStopCheck)
 			So(checkDataReturn, ShouldResemble, expectedCheckData)
 		})
 		Convey("with ErrEmptyAloneMetricsTarget-this error is handled as NODATA", func() {
@@ -1527,7 +1527,7 @@ func TestTriggerChecker_handlePrepareError(t *testing.T) {
 			dataBase.EXPECT().SetTriggerLastCheck("test trigger", &expectedCheckData, moira.GraphiteLocal)
 			pass, checkDataReturn, errReturn := triggerChecker.handlePrepareError(checkData, err)
 			So(errReturn, ShouldBeNil)
-			So(pass, ShouldBeFalse)
+			So(pass, ShouldEqual, MustStopCheck)
 			So(checkDataReturn, ShouldResemble, expectedCheckData)
 		})
 	})
