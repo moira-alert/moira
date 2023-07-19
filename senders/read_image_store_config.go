@@ -10,7 +10,7 @@ import (
 func ReadImageStoreConfig(senderSettings interface{}, imageStores map[string]moira.ImageStore, logger moira.Logger) (string, moira.ImageStore, bool) {
 	settings, ok := senderSettings.(map[string]interface{})
 	if !ok {
-		logger.Warning().Msg("Cailed conversion of senderSettings type to map[string]interface{}")
+		logger.Warning().Msg("Failed conversion of senderSettings type to map[string]interface{}")
 		return "", nil, false
 	}
 
@@ -22,7 +22,7 @@ func ReadImageStoreConfig(senderSettings interface{}, imageStores map[string]moi
 
 	imageStoreID, ok := IimageStoreID.(string)
 	if !ok {
-		logger.Warning().Msg("Cailed to retrieve image_store from sender settings")
+		logger.Warning().Msg("Failed to retrieve image_store from sender settings")
 		return "", nil, false
 	}
 
