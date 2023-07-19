@@ -9,8 +9,15 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mitchellh/mapstructure"
 	"github.com/moira-alert/moira"
 )
+
+// Structure that represents the Script configuration in the YAML file
+type script struct {
+	Name string `mapstructure:"name"`
+	Exec string `mapstructure:"exec"`
+}
 
 // Sender implements moira sender interface via script execution
 type Sender struct {
@@ -27,15 +34,20 @@ type scriptNotification struct {
 }
 
 // Init read yaml config
-func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
-	if senderSettings["name"] == "" {
+func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+	var s script
+	err := mapstructure.Decode(senderSettings, &s)
+	if err != nil {
+		return fmt.Errorf("failed to decode senderSettings to script config: %w", err)
+	}
+	if s.Name == "" {
 		return fmt.Errorf("required name for sender type script")
 	}
-	_, _, err := parseExec(senderSettings["exec"])
+	_, _, err = parseExec(s.Exec)
 	if err != nil {
 		return err
 	}
-	sender.exec = senderSettings["exec"]
+	sender.exec = s.Exec
 	sender.logger = logger
 	return nil
 }

@@ -65,7 +65,7 @@ func (mr *MockNotifierMockRecorder) GetSenders() *gomock.Call {
 }
 
 // RegisterSender mocks base method.
-func (m *MockNotifier) RegisterSender(arg0 map[string]string, arg1 moira.Sender) error {
+func (m *MockNotifier) RegisterSender(arg0 map[string]interface{}, arg1 moira.Sender) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RegisterSender", arg0, arg1)
 	ret0, _ := ret[0].(error)

@@ -1,11 +1,18 @@
 package pagerduty
 
 import (
+	"fmt"
 	"time"
 
+	"github.com/mitchellh/mapstructure"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/senders"
 )
+
+// Structure that represents the PagerDuty configuration in the YAML file
+type pagerDuty struct {
+	FrontURI string `mapstructure:"front_uri"`
+}
 
 // Sender implements moira sender interface for pagerduty
 type Sender struct {
@@ -19,8 +26,14 @@ type Sender struct {
 }
 
 // Init loads yaml config, configures the pagerduty client
-func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
-	sender.frontURI = senderSettings["front_uri"]
+func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+	var pagerduty pagerDuty
+	err := mapstructure.Decode(senderSettings, &pagerduty)
+	if err != nil {
+		return fmt.Errorf("failed to decode senderSettings to pagerduty config: %w", err)
+	}
+
+	sender.frontURI = pagerduty.FrontURI
 
 	sender.imageStoreID, sender.imageStore, sender.imageStoreConfigured =
 		senders.ReadImageStoreConfig(senderSettings, sender.ImageStores, logger)

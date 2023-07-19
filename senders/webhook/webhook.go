@@ -7,8 +7,18 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/mitchellh/mapstructure"
 	"github.com/moira-alert/moira"
 )
+
+// Structure that represents the Webhook configuration in the YAML file
+type webHook struct {
+	Name     string `mapstructure:"name"`
+	URL      string `mapstructure:"url"`
+	User     string `mapstructure:"user"`
+	Password string `mapstructure:"password"`
+	Timeout  string `mapstructure:"timeout"`
+}
 
 // Sender implements moira sender interface via webhook
 type Sender struct {
@@ -21,17 +31,23 @@ type Sender struct {
 }
 
 // Init read yaml config
-func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
-	if senderSettings["name"] == "" {
+func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+	var webhook webHook
+	err := mapstructure.Decode(senderSettings, &webhook)
+	if err != nil {
+		return fmt.Errorf("failed to decode senderSettings to webhook config: %w", err)
+	}
+
+	if webhook.Name == "" {
 		return fmt.Errorf("required name for sender type webhook")
 	}
 
-	sender.url = senderSettings["url"]
+	sender.url = webhook.URL
 	if sender.url == "" {
 		return fmt.Errorf("can not read url from config")
 	}
 
-	sender.user, sender.password = senderSettings["user"], senderSettings["password"]
+	sender.user, sender.password = webhook.User, webhook.Password
 
 	sender.headers = map[string]string{
 		"User-Agent":   "Moira",
@@ -39,8 +55,8 @@ func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger
 	}
 
 	timeout := 30
-	if timeoutRaw, ok := senderSettings["timeout"]; ok {
-		var err error
+	timeoutRaw := webhook.Timeout
+	if timeoutRaw != "" {
 		timeout, err = strconv.Atoi(timeoutRaw)
 		if err != nil {
 			return fmt.Errorf("can not read timeout from config: %s", err.Error())

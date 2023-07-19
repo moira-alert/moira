@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/url"
 
-	twilio "github.com/carlosdp/twiliogo"
+	twilio_client "github.com/carlosdp/twiliogo"
 	"github.com/moira-alert/moira"
 )
 
@@ -19,7 +19,7 @@ type twilioSenderVoice struct {
 
 func (sender *twilioSenderVoice) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
 	voiceURL := sender.buildVoiceURL(trigger)
-	twilioCall, err := twilio.NewCall(sender.client, sender.APIFromPhone, contact.Value, twilio.Callback(voiceURL))
+	twilioCall, err := twilio_client.NewCall(sender.client, sender.APIFromPhone, contact.Value, twilio_client.Callback(voiceURL))
 	if err != nil {
 		return fmt.Errorf("failed to make call to contact %s: %s", contact.Value, err.Error())
 	}
