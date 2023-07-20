@@ -100,7 +100,19 @@ func getExpression(triggerExpression *TriggerExpression) (*govaluate.EvaluableEx
 		if triggerExpression.Expression == nil || *triggerExpression.Expression == "" {
 			return nil, fmt.Errorf("trigger_type set to expression, but no expression provided")
 		}
-		return getUserExpression(*triggerExpression.Expression)
+
+		userExpression, err := getUserExpression(*triggerExpression.Expression)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range userExpression.Vars() {
+			if _, err := triggerExpression.Get(v); err != nil {
+				return nil, fmt.Errorf("invalid variable value: %w", err)
+			}
+		}
+
+		return userExpression, nil
 	}
 	return getSimpleExpression(triggerExpression)
 }
