@@ -51,7 +51,7 @@ func TestSender_SendEvents(t *testing.T) {
 		)
 		defer ts.Close()
 
-		senderSettings := map[string]string{
+		senderSettings := map[string]interface{}{
 			"name":     "testWebhook",
 			"url":      fmt.Sprintf("%s/%s", ts.URL, moira.VariableTriggerID),
 			"user":     testUser,

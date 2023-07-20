@@ -10,14 +10,14 @@ import (
 func TestFillSettings(t *testing.T) {
 	Convey("Empty map", t, func() {
 		sender := Sender{}
-		err := sender.fillSettings(map[string]string{}, nil, nil, "")
+		err := sender.fillSettings(map[string]interface{}{}, nil, nil, "")
 		So(err, ShouldResemble, fmt.Errorf("mail_from can't be empty"))
 		So(sender, ShouldResemble, Sender{})
 	})
 
 	Convey("Has From", t, func() {
 		sender := Sender{}
-		settings := map[string]string{"mail_from": "123"}
+		settings := map[string]interface{}{"mail_from": "123"}
 		Convey("No username", func() {
 			err := sender.fillSettings(settings, nil, nil, "")
 			So(err, ShouldBeNil)
