@@ -19,6 +19,7 @@ remote:
   timeout: 60s
   metrics_ttl: 168h
 prometheus:
+  url: "http://prometheus:9090"
   enabled: true
   check_interval: 60s
   timeout: 60s
