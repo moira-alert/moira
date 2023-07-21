@@ -240,3 +240,12 @@ func testRounding(baseTimestamp, retention int64) {
 	So(RoundToNearestRetention(baseTimestamp-1, retention), ShouldEqual, baseTimestamp)
 	So(RoundToNearestRetention(baseTimestamp-halfRetention, retention), ShouldEqual, baseTimestamp)
 }
+
+func TestReplaceSubstring(t *testing.T) {
+	Convey("test replace substring", t, func() {
+		So(ReplaceSubstring("https://api.telegram.org/botXXX/getMe", "bot", "/", "[DELETED]"), ShouldResemble, "https://api.telegram.org/[DELETED]/getMe")
+		So(ReplaceSubstring("botXXX/getMe", "bot", "/", "[DELETED]"), ShouldResemble, "[DELETED]/getMe")
+		So(ReplaceSubstring("https://api.telegram.org/botXXX/", "bot", "/", "[DELETED]"), ShouldResemble, "https://api.telegram.org/[DELETED]/")
+		So(ReplaceSubstring("https://api.telegram.org/getMe", "bot", "/", "[DELETED]"), ShouldResemble, "https://api.telegram.org/getMe")
+	})
+}

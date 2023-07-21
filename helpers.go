@@ -3,6 +3,7 @@ package moira
 import (
 	"bytes"
 	"math"
+	"strings"
 	"time"
 )
 
@@ -202,4 +203,17 @@ func MaxInt64(a, b int64) int64 {
 		return a
 	}
 	return b
+}
+
+// ReplaceSubstring removes one substring between the beg and end substrings and replaces it with a rep
+func ReplaceSubstring(str, beg, end, rep string) string {
+	result := str
+	startIndex := strings.Index(str, beg)
+	if startIndex != -1 {
+		endIndex := strings.Index(str[startIndex:], end) + len(str[:startIndex])
+		if endIndex != -1 {
+			result = str[:startIndex] + rep + str[endIndex:]
+		}
+	}
+	return result
 }

@@ -1,7 +1,9 @@
 package telegram
 
 import (
+	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/mitchellh/mapstructure"
@@ -65,6 +67,10 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		Poller: &telebot.LongPoller{Timeout: pollerTimeout},
 	})
 	if err != nil {
+		if strings.Contains(err.Error(), "https://api.telegram.org/") {
+			hidden := "[DATA DELETED]"
+			err = errors.New(moira.ReplaceSubstring(err.Error(), "bot", "/", hidden)) // Cut the token from the link
+		}
 		return err
 	}
 
