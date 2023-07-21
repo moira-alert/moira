@@ -14,7 +14,9 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
+	dataBase "github.com/moira-alert/moira/database"
 	metricSource "github.com/moira-alert/moira/metric_source"
+	"github.com/moira-alert/moira/metric_source/local"
 	mock_metric_source "github.com/moira-alert/moira/mock/metric_source"
 	mock_moira_alert "github.com/moira-alert/moira/mock/moira-alert"
 
@@ -89,7 +91,6 @@ func TestGetTriggerFromRequest(t *testing.T) {
 			},
 		}
 		body, _ := json.Marshal(triggerDTO)
-		fmt.Printf("Trigger: %+v\n", string(body))
 
 		request := httptest.NewRequest(http.MethodPut, "/trigger", bytes.NewReader(body))
 		request.Header.Add("content-type", "application/json")
@@ -525,6 +526,170 @@ func TestCreateTriggerHandler(t *testing.T) {
 			})
 		})
 	})
+}
+
+func TestTriggersCreatedWithTriggerSource(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	localSource := mock_metric_source.NewMockMetricSource(mockCtrl)
+	remoteSource := mock_metric_source.NewMockMetricSource(mockCtrl)
+	prometheusSource := mock_metric_source.NewMockMetricSource(mockCtrl)
+	sourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource, prometheusSource)
+
+	db := mock_moira_alert.NewMockDatabase(mockCtrl)
+	database = db
+	defer func() { database = nil }()
+
+	Convey("Given is_remote flag is false and trigger_source is not set", t, func() {
+		triggerId := "test"
+		target := `test_target_value`
+
+		jsonTrigger := makeTestTriggerJson(target, triggerId, `"is_remote": false`)
+		request := newTriggerCreateRequest(sourceProvider, triggerId, jsonTrigger)
+
+		Convey("Expect trigger to be graphite local", func() {
+			setupExpectationsForCreateTrigger(localSource, db, target, triggerId, moira.GraphiteLocal)
+
+			responseWriter := httptest.NewRecorder()
+			createTrigger(responseWriter, request)
+
+			So(responseWriter.Code, ShouldEqual, 200)
+		})
+	})
+
+	Convey("Given is_remote flag is true and trigger_source is not set", t, func() {
+		triggerId := "test"
+		target := `test_target_value`
+
+		jsonTrigger := makeTestTriggerJson(target, triggerId, `"is_remote": true`)
+		request := newTriggerCreateRequest(sourceProvider, triggerId, jsonTrigger)
+
+		Convey("Expect trigger to be graphite remote", func() {
+			setupExpectationsForCreateTrigger(remoteSource, db, target, triggerId, moira.GraphiteRemote)
+
+			responseWriter := httptest.NewRecorder()
+			createTrigger(responseWriter, request)
+
+			So(responseWriter.Code, ShouldEqual, 200)
+		})
+	})
+
+	Convey("Given is_remote flag is not set and trigger_source is graphite_local", t, func() {
+		triggerId := "test"
+		target := `test_target_value`
+
+		jsonTrigger := makeTestTriggerJson(target, triggerId, `"trigger_source": "graphite_local"`)
+		request := newTriggerCreateRequest(sourceProvider, triggerId, jsonTrigger)
+
+		Convey("Expect trigger to be graphite local", func() {
+			setupExpectationsForCreateTrigger(localSource, db, target, triggerId, moira.GraphiteLocal)
+
+			responseWriter := httptest.NewRecorder()
+			createTrigger(responseWriter, request)
+
+			So(responseWriter.Code, ShouldEqual, 200)
+		})
+	})
+
+	Convey("Given is_remote flag is not set and trigger_source is graphite_remote", t, func() {
+		triggerId := "test"
+		target := `test_target_value`
+
+		jsonTrigger := makeTestTriggerJson(target, triggerId, `"trigger_source": "graphite_remote"`)
+		request := newTriggerCreateRequest(sourceProvider, triggerId, jsonTrigger)
+
+		Convey("Expect trigger to be graphite remote", func() {
+			setupExpectationsForCreateTrigger(remoteSource, db, target, triggerId, moira.GraphiteRemote)
+
+			responseWriter := httptest.NewRecorder()
+			createTrigger(responseWriter, request)
+
+			So(responseWriter.Code, ShouldEqual, 200)
+		})
+	})
+
+	Convey("Given is_remote flag is not set and trigger_source is prometheus_remote", t, func() {
+		triggerId := "test"
+		target := `test_target_value`
+
+		jsonTrigger := makeTestTriggerJson(target, triggerId, `"trigger_source": "prometheus_remote"`)
+		request := newTriggerCreateRequest(sourceProvider, triggerId, jsonTrigger)
+
+		Convey("Expect trigger to be prometheus remote", func() {
+			setupExpectationsForCreateTrigger(prometheusSource, db, target, triggerId, moira.PrometheusRemote)
+
+			responseWriter := httptest.NewRecorder()
+			createTrigger(responseWriter, request)
+
+			So(responseWriter.Code, ShouldEqual, 200)
+		})
+	})
+
+	Convey("Given is_remote flag is true and trigger_source is graphite_local", t, func() {
+		triggerId := "test"
+		target := `test_target_value`
+
+		jsonTrigger := makeTestTriggerJson(target, triggerId, `"is_remote": true, "trigger_source": "graphite_local"`)
+		request := newTriggerCreateRequest(sourceProvider, triggerId, jsonTrigger)
+
+		Convey("Expect trigger to be graphite local", func() {
+			setupExpectationsForCreateTrigger(localSource, db, target, triggerId, moira.GraphiteLocal)
+
+			responseWriter := httptest.NewRecorder()
+			createTrigger(responseWriter, request)
+
+			So(responseWriter.Code, ShouldEqual, 200)
+		})
+	})
+}
+
+func makeTestTriggerJson(target, triggerId, triggerSource string) []byte {
+	targetJson, _ := json.Marshal(target)
+	jsonTrigger := fmt.Sprintf(`{
+		"name": "Test",
+		"targets": [ %s ],
+		"id": "%s",
+		"warn_value": 100,
+		"error_value": 200,
+		"trigger_type": "rising",
+		"tags": [ "test" ],
+		"ttl_state": "NODATA",
+		%s,
+		"ttl": 600
+	}`, targetJson, triggerId, triggerSource)
+	return []byte(jsonTrigger)
+}
+
+func setupExpectationsForCreateTrigger(
+	source *mock_metric_source.MockMetricSource,
+	db *mock_moira_alert.MockDatabase,
+	target, triggerId string,
+	triggerSource moira.TriggerSource,
+) {
+	source.EXPECT().IsConfigured().Return(true, nil)
+	source.EXPECT().GetMetricsTTLSeconds().Return(int64(3600))
+	source.EXPECT().Fetch(target, gomock.Any(), gomock.Any(), gomock.Any()).Return(&local.FetchResult{}, nil)
+
+	db.EXPECT().GetTrigger(triggerId).Return(moira.Trigger{}, dataBase.ErrNil)
+	db.EXPECT().AcquireTriggerCheckLock(triggerId, gomock.Any()).Return(nil)
+	db.EXPECT().DeleteTriggerCheckLock(triggerId).Return(nil)
+	db.EXPECT().GetTriggerLastCheck(triggerId).Return(moira.CheckData{}, dataBase.ErrNil)
+	db.EXPECT().SetTriggerLastCheck(triggerId, gomock.Any(), triggerSource).Return(nil)
+	db.EXPECT().SaveTrigger(triggerId, gomock.Any()).Return(nil)
+}
+
+func newTriggerCreateRequest(
+	sourceProvider *metricSource.SourceProvider,
+	triggerId string,
+	jsonTrigger []byte,
+) *http.Request {
+	request := httptest.NewRequest("PUT", "/trigger", bytes.NewBuffer(jsonTrigger))
+	request.Header.Add("content-type", "application/json")
+	request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "metricSourceProvider", sourceProvider))
+	request = request.WithContext(middleware.SetContextValueForTest(request.Context(), "localMetricTTL", to.Duration("65m")))
+	request = request.WithContext(middleware.SetContextValueForTest(request.Context(), triggerIDKey, triggerId))
+
+	return request
 }
 
 func isTriggerCreated(response *http.Response) bool {
