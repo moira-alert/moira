@@ -2,6 +2,7 @@ package telegram
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -112,6 +113,10 @@ func (sender *Sender) getChat(username string) (*telebot.Chat, error) {
 	}
 	chat, err := sender.bot.ChatByID(uid)
 	if err != nil {
+		if strings.Contains(err.Error(), "https://api.telegram.org/") {
+			hidden := "[DATA DELETED]"
+			err = errors.New(moira.ReplaceSubstring(err.Error(), "bot", "/", hidden)) // Cut the token from the url in error message
+		}
 		return nil, fmt.Errorf("can't find recipient %s: %s", uid, err.Error())
 	}
 	return chat, nil
@@ -130,6 +135,10 @@ func (sender *Sender) talk(chat *telebot.Chat, message string, plots [][]byte, m
 func (sender *Sender) sendAsMessage(chat *telebot.Chat, message string) error {
 	_, err := sender.bot.Send(chat, message)
 	if err != nil {
+		if strings.Contains(err.Error(), "https://api.telegram.org/") {
+			hidden := "[DATA DELETED]"
+			err = errors.New(moira.ReplaceSubstring(err.Error(), "bot", "/", hidden)) // Cut the token from the url in error message
+		}
 		sender.logger.Debug().
 			String("message", message).
 			Int64("chat_id", chat.ID).
@@ -197,6 +206,10 @@ func (sender *Sender) sendAsAlbum(chat *telebot.Chat, plots [][]byte, caption st
 
 	_, err := sender.bot.SendAlbum(chat, album)
 	if err != nil {
+		if strings.Contains(err.Error(), "https://api.telegram.org/") {
+			hidden := "[DATA DELETED]"
+			err = errors.New(moira.ReplaceSubstring(err.Error(), "bot", "/", hidden)) // Cut the token from the url in error message
+		}
 		sender.logger.Debug().
 			Int64("chat_id", chat.ID).
 			Error(err).
