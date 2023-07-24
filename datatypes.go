@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dustin/go-humanize"
 	"github.com/moira-alert/moira/templating"
 )
 
@@ -409,7 +410,7 @@ func (notification *ScheduledNotification) GetKey() string {
 		notification.Event.Metric,
 		notification.Event.State,
 		notification.Event.Timestamp,
-		notification.Event.GetMetricsValues(),
+		notification.Event.GetMetricsValues(false),
 		notification.SendFail,
 		notification.Throttled,
 		notification.Timestamp,
@@ -447,32 +448,49 @@ func (schedule *ScheduleData) IsScheduleAllows(ts int64) bool {
 }
 
 func (event NotificationEvent) String() string {
-	return fmt.Sprintf("TriggerId: %s, Metric: %s, Values: %s, OldState: %s, State: %s, Message: '%s', Timestamp: %v", event.TriggerID, event.Metric, event.GetMetricsValues(), event.OldState, event.State, event.CreateMessage(nil), event.Timestamp)
+	return fmt.Sprintf("TriggerId: %s, Metric: %s, Values: %s, OldState: %s, State: %s, Message: '%s', Timestamp: %v", event.TriggerID, event.Metric, event.GetMetricsValues(false), event.OldState, event.State, event.CreateMessage(nil), event.Timestamp)
 }
 
 // GetMetricsValues gets event metric value and format it to human readable presentation
-func (event NotificationEvent) GetMetricsValues() string {
-	var targetNames []string //nolint
+func (event NotificationEvent) GetMetricsValues(isLess bool) string {
+	targetNames := make([]string, 0, len(event.Values))
 	for targetName := range event.Values {
 		targetNames = append(targetNames, targetName)
 	}
+
 	if len(targetNames) == 0 {
 		return "—"
 	}
+
 	if len(targetNames) == 1 {
+		if isLess {
+			if event.Values[targetNames[0]] >= 1000 {
+				return humanize.SIWithDigits(event.Values[targetNames[0]], 10, "")
+			}
+			return humanize.FtoaWithDigits(event.Values[targetNames[0]], 10)
+		}
 		return strconv.FormatFloat(event.Values[targetNames[0]], 'f', -1, 64)
 	}
+
 	var builder strings.Builder
 	sort.Strings(targetNames)
 	for i, targetName := range targetNames {
 		builder.WriteString(targetName)
 		builder.WriteString(": ")
 		value := strconv.FormatFloat(event.Values[targetName], 'f', -1, 64)
+		if isLess {
+			if event.Values[targetName] >= 1000 {
+				value = humanize.SIWithDigits(event.Values[targetName], 10, "")
+			} else {
+				value = humanize.FtoaWithDigits(event.Values[targetName], 10)
+			}
+		}
 		builder.WriteString(value)
 		if i < len(targetNames)-1 {
 			builder.WriteString(", ")
 		}
 	}
+
 	return builder.String()
 }
 

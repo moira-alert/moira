@@ -19,6 +19,8 @@ import (
 
 var notifierMetrics = metrics.ConfigureNotifierMetrics(metrics.NewDummyRegistry(), "notifier")
 
+const isLess = false
+
 func TestEvent(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
@@ -161,7 +163,7 @@ func TestDisabledNotification(t *testing.T) {
 		logger.EXPECT().String(gomock.Any(), gomock.Any()).Return(logger).AnyTimes()
 		logger.EXPECT().Debug().Return(eventBuilder).AnyTimes()
 
-		metricString := fmt.Sprintf("%s == %s", event.Metric, event.GetMetricsValues())
+		metricString := fmt.Sprintf("%s == %s", event.Metric, event.GetMetricsValues(isLess))
 		eventBuilder.EXPECT().String("metric", metricString).Return(eventBuilder)
 		eventBuilder.EXPECT().String("old_state", event.OldState.String()).Return(eventBuilder)
 		eventBuilder.EXPECT().String("new_state", event.State.String()).Return(eventBuilder)
@@ -208,7 +210,7 @@ func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
 		dataBase.EXPECT().GetTagsSubscriptions(triggerData.Tags).Times(1).
 			Return([]*moira.SubscriptionData{&subscriptionToIgnoreWarnings}, nil)
 
-		metricString := fmt.Sprintf("%s == %s", event.Metric, event.GetMetricsValues())
+		metricString := fmt.Sprintf("%s == %s", event.Metric, event.GetMetricsValues(isLess))
 		eventBuilder.EXPECT().String("metric", metricString).Return(eventBuilder)
 		eventBuilder.EXPECT().String("old_state", event.OldState.String()).Return(eventBuilder)
 		eventBuilder.EXPECT().String("new_state", event.State.String()).Return(eventBuilder)
@@ -244,7 +246,7 @@ func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
 		dataBase.EXPECT().GetTagsSubscriptions(triggerData.Tags).Times(1).
 			Return([]*moira.SubscriptionData{&subscriptionToIgnoreWarnings}, nil)
 
-		metricString := fmt.Sprintf("%s == %s", event.Metric, event.GetMetricsValues())
+		metricString := fmt.Sprintf("%s == %s", event.Metric, event.GetMetricsValues(isLess))
 		eventBuilder.EXPECT().String("metric", metricString).Return(eventBuilder)
 		eventBuilder.EXPECT().String("old_state", event.OldState.String()).Return(eventBuilder)
 		eventBuilder.EXPECT().String("new_state", event.State.String()).Return(eventBuilder)
@@ -288,7 +290,7 @@ func TestSubscriptionsManagedToIgnoreEvents(t *testing.T) {
 		}
 		dataBase.EXPECT().GetTagsSubscriptions(triggerData.Tags).Times(1).Return([]*moira.SubscriptionData{&subscriptionToIgnoreWarningsAndRecoverings}, nil)
 
-		metricString := fmt.Sprintf("%s == %s", event.Metric, event.GetMetricsValues())
+		metricString := fmt.Sprintf("%s == %s", event.Metric, event.GetMetricsValues(isLess))
 		eventBuilder.EXPECT().String("metric", metricString).Return(eventBuilder)
 		eventBuilder.EXPECT().String("old_state", event.OldState.String()).Return(eventBuilder)
 		eventBuilder.EXPECT().String("new_state", event.State.String()).Return(eventBuilder)
@@ -414,7 +416,7 @@ func TestFailReadContact(t *testing.T) {
 		logger.EXPECT().String(gomock.Any(), gomock.Any()).Return(logger).AnyTimes()
 		logger.EXPECT().Debug().Return(eventBuilder).AnyTimes()
 
-		metricString := fmt.Sprintf("%s == %s", event.Metric, event.GetMetricsValues())
+		metricString := fmt.Sprintf("%s == %s", event.Metric, event.GetMetricsValues(isLess))
 		eventBuilder.EXPECT().String("metric", metricString).Return(eventBuilder)
 		eventBuilder.EXPECT().String("old_state", event.OldState.String()).Return(eventBuilder)
 		eventBuilder.EXPECT().String("new_state", event.State.String()).Return(eventBuilder)
@@ -464,7 +466,7 @@ func TestEmptySubscriptions(t *testing.T) {
 		dataBase.EXPECT().GetTrigger(event.TriggerID).Return(trigger, nil)
 		dataBase.EXPECT().GetTagsSubscriptions(triggerData.Tags).Times(1).Return([]*moira.SubscriptionData{{ThrottlingEnabled: true}}, nil)
 
-		metricString := fmt.Sprintf("%s == %s", event.Metric, event.GetMetricsValues())
+		metricString := fmt.Sprintf("%s == %s", event.Metric, event.GetMetricsValues(isLess))
 		eventBuilder.EXPECT().String("metric", metricString).Return(eventBuilder)
 		eventBuilder.EXPECT().String("old_state", event.OldState.String()).Return(eventBuilder)
 		eventBuilder.EXPECT().String("new_state", event.State.String()).Return(eventBuilder)
@@ -499,7 +501,7 @@ func TestEmptySubscriptions(t *testing.T) {
 		dataBase.EXPECT().GetTrigger(event.TriggerID).Return(trigger, nil)
 		dataBase.EXPECT().GetTagsSubscriptions(triggerData.Tags).Times(1).Return([]*moira.SubscriptionData{nil}, nil)
 
-		metricString := fmt.Sprintf("%s == %s", event.Metric, event.GetMetricsValues())
+		metricString := fmt.Sprintf("%s == %s", event.Metric, event.GetMetricsValues(isLess))
 		eventBuilder.EXPECT().String("metric", metricString).Return(eventBuilder)
 		eventBuilder.EXPECT().String("old_state", event.OldState.String()).Return(eventBuilder)
 		eventBuilder.EXPECT().String("new_state", event.State.String()).Return(eventBuilder)
