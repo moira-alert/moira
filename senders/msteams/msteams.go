@@ -196,7 +196,7 @@ func (sender *Sender) buildEventsFacts(events moira.NotificationEvents, maxEvent
 
 	eventsPrinted := 0
 	for _, event := range events {
-		line := fmt.Sprintf("%s = %s (%s to %s)", event.Metric, event.GetMetricsValues(moira.None), event.OldState, event.State)
+		line := fmt.Sprintf("%s = %s (%s to %s)", event.Metric, event.GetMetricsValues(moira.DefaultNotificationSettings), event.OldState, event.State)
 		if len(moira.UseString(event.Message)) > 0 {
 			line += fmt.Sprintf(". %s", moira.UseString(event.Message))
 		}

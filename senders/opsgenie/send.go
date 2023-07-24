@@ -96,7 +96,7 @@ func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsFo
 	eventsLenLimitReached := false
 	eventsPrinted := 0
 	for _, event := range events {
-		line := fmt.Sprintf("%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location), event.Metric, event.GetMetricsValues(moira.None), event.OldState, event.State)
+		line := fmt.Sprintf("%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location), event.Metric, event.GetMetricsValues(moira.DefaultNotificationSettings), event.OldState, event.State)
 		if msg := event.CreateMessage(sender.location); len(msg) > 0 {
 			line += fmt.Sprintf(". %s\n", msg)
 		} else {

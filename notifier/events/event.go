@@ -86,7 +86,7 @@ func (worker *FetchEventsWorker) processEvent(event moira.NotificationEvent) err
 	)
 	if event.State != moira.StateTEST {
 		log.Debug().
-			String("metric", fmt.Sprintf("%s == %s", event.Metric, event.GetMetricsValues(moira.None))).
+			String("metric", fmt.Sprintf("%s == %s", event.Metric, event.GetMetricsValues(moira.DefaultNotificationSettings))).
 			String("old_state", event.OldState.String()).
 			String("new_state", event.State.String()).
 			Msg("Processing trigger for metric")

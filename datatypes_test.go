@@ -206,23 +206,23 @@ func TestNotificationEvent_GetValue(t *testing.T) {
 
 		Convey("One target with zero", func() {
 			event.Values["t1"] = 0
-			So(event.GetMetricsValues(None), ShouldResemble, "0")
+			So(event.GetMetricsValues(DefaultNotificationSettings), ShouldResemble, "0")
 		})
 
 		Convey("One target with short fraction", func() {
 			event.Values["t1"] = 2.32
-			So(event.GetMetricsValues(None), ShouldResemble, "2.32")
+			So(event.GetMetricsValues(DefaultNotificationSettings), ShouldResemble, "2.32")
 		})
 
 		Convey("One target with long fraction", func() {
 			event.Values["t1"] = 2.3222222
-			So(event.GetMetricsValues(None), ShouldResemble, "2.3222222")
+			So(event.GetMetricsValues(DefaultNotificationSettings), ShouldResemble, "2.3222222")
 		})
 
 		Convey("Two targets", func() {
 			event.Values["t2"] = 0.12
 			event.Values["t1"] = 2.3222222
-			So(event.GetMetricsValues(None), ShouldResemble, "t1: 2.3222222, t2: 0.12")
+			So(event.GetMetricsValues(DefaultNotificationSettings), ShouldResemble, "t1: 2.3222222, t2: 0.12")
 		})
 
 		Convey("One target over 1000 with ShortMessage enum value", func() {

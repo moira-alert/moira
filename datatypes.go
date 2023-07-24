@@ -32,10 +32,10 @@ const (
 	limit         = 1000
 )
 
-type NotificationEventSettings int
+type notificationEventSettings int
 
 const (
-	None NotificationEventSettings = iota
+	DefaultNotificationSettings notificationEventSettings = iota
 	ShortMessage
 )
 
@@ -418,7 +418,7 @@ func (notification *ScheduledNotification) GetKey() string {
 		notification.Event.Metric,
 		notification.Event.State,
 		notification.Event.Timestamp,
-		notification.Event.GetMetricsValues(None),
+		notification.Event.GetMetricsValues(DefaultNotificationSettings),
 		notification.SendFail,
 		notification.Throttled,
 		notification.Timestamp,
@@ -456,11 +456,11 @@ func (schedule *ScheduleData) IsScheduleAllows(ts int64) bool {
 }
 
 func (event NotificationEvent) String() string {
-	return fmt.Sprintf("TriggerId: %s, Metric: %s, Values: %s, OldState: %s, State: %s, Message: '%s', Timestamp: %v", event.TriggerID, event.Metric, event.GetMetricsValues(None), event.OldState, event.State, event.CreateMessage(nil), event.Timestamp)
+	return fmt.Sprintf("TriggerId: %s, Metric: %s, Values: %s, OldState: %s, State: %s, Message: '%s', Timestamp: %v", event.TriggerID, event.Metric, event.GetMetricsValues(DefaultNotificationSettings), event.OldState, event.State, event.CreateMessage(nil), event.Timestamp)
 }
 
 // GetMetricsValues gets event metric value and format it to human readable presentation
-func (event NotificationEvent) GetMetricsValues(settings NotificationEventSettings) string {
+func (event NotificationEvent) GetMetricsValues(settings notificationEventSettings) string {
 	targetNames := make([]string, 0, len(event.Values))
 	for targetName := range event.Values {
 		targetNames = append(targetNames, targetName)

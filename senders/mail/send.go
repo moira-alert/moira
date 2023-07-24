@@ -66,7 +66,7 @@ func (sender *Sender) makeMessage(events moira.NotificationEvents, contact moira
 			Timestamp:  time.Unix(event.Timestamp, 0).In(sender.location).Format(sender.dateTimeFormat),
 			Oldstate:   event.OldState,
 			State:      event.State,
-			Values:     event.GetMetricsValues(moira.None),
+			Values:     event.GetMetricsValues(moira.DefaultNotificationSettings),
 			WarnValue:  strconv.FormatFloat(trigger.WarnValue, 'f', -1, 64),
 			ErrorValue: strconv.FormatFloat(trigger.ErrorValue, 'f', -1, 64),
 			Message:    event.CreateMessage(sender.location),
