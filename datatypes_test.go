@@ -203,7 +203,7 @@ func TestNotificationEvent_GetValue(t *testing.T) {
 	Convey("Test GetMetricsValues", t, func() {
 		event := NotificationEvent{}
 		event.Values = make(map[string]float64)
-		
+
 		Convey("One target with zero", func() {
 			event.Values["t1"] = 0
 			So(event.GetMetricsValues(false), ShouldResemble, "0")
