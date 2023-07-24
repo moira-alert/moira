@@ -540,10 +540,10 @@ func TestTriggersCreatedWithTriggerSource(t *testing.T) {
 	database = db
 	defer func() { database = nil }()
 
-	Convey("Given is_remote flag is false and trigger_source is not set", t, func() {
-		triggerId := "test"
-		target := `test_target_value`
+	triggerId := "test"
+	target := `test_target_value`
 
+	Convey("Given is_remote flag is false and trigger_source is not set", t, func() {
 		jsonTrigger := makeTestTriggerJson(target, triggerId, `"is_remote": false`)
 		request := newTriggerCreateRequest(sourceProvider, triggerId, jsonTrigger)
 
@@ -558,9 +558,6 @@ func TestTriggersCreatedWithTriggerSource(t *testing.T) {
 	})
 
 	Convey("Given is_remote flag is true and trigger_source is not set", t, func() {
-		triggerId := "test"
-		target := `test_target_value`
-
 		jsonTrigger := makeTestTriggerJson(target, triggerId, `"is_remote": true`)
 		request := newTriggerCreateRequest(sourceProvider, triggerId, jsonTrigger)
 
@@ -575,9 +572,6 @@ func TestTriggersCreatedWithTriggerSource(t *testing.T) {
 	})
 
 	Convey("Given is_remote flag is not set and trigger_source is graphite_local", t, func() {
-		triggerId := "test"
-		target := `test_target_value`
-
 		jsonTrigger := makeTestTriggerJson(target, triggerId, `"trigger_source": "graphite_local"`)
 		request := newTriggerCreateRequest(sourceProvider, triggerId, jsonTrigger)
 
@@ -592,9 +586,6 @@ func TestTriggersCreatedWithTriggerSource(t *testing.T) {
 	})
 
 	Convey("Given is_remote flag is not set and trigger_source is graphite_remote", t, func() {
-		triggerId := "test"
-		target := `test_target_value`
-
 		jsonTrigger := makeTestTriggerJson(target, triggerId, `"trigger_source": "graphite_remote"`)
 		request := newTriggerCreateRequest(sourceProvider, triggerId, jsonTrigger)
 
@@ -609,9 +600,6 @@ func TestTriggersCreatedWithTriggerSource(t *testing.T) {
 	})
 
 	Convey("Given is_remote flag is not set and trigger_source is prometheus_remote", t, func() {
-		triggerId := "test"
-		target := `test_target_value`
-
 		jsonTrigger := makeTestTriggerJson(target, triggerId, `"trigger_source": "prometheus_remote"`)
 		request := newTriggerCreateRequest(sourceProvider, triggerId, jsonTrigger)
 
@@ -626,9 +614,6 @@ func TestTriggersCreatedWithTriggerSource(t *testing.T) {
 	})
 
 	Convey("Given is_remote flag is true and trigger_source is graphite_local", t, func() {
-		triggerId := "test"
-		target := `test_target_value`
-
 		jsonTrigger := makeTestTriggerJson(target, triggerId, `"is_remote": true, "trigger_source": "graphite_local"`)
 		request := newTriggerCreateRequest(sourceProvider, triggerId, jsonTrigger)
 
