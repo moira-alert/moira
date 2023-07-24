@@ -32,6 +32,13 @@ const (
 	limit         = 1000
 )
 
+type NotificationEventSettings int
+
+const (
+	None NotificationEventSettings = iota
+	ShortMessage
+)
+
 // NotificationEvent represents trigger state changes event
 type NotificationEvent struct {
 	IsTriggerEvent   bool               `json:"trigger_event,omitempty"`
@@ -411,7 +418,7 @@ func (notification *ScheduledNotification) GetKey() string {
 		notification.Event.Metric,
 		notification.Event.State,
 		notification.Event.Timestamp,
-		notification.Event.GetMetricsValues(false),
+		notification.Event.GetMetricsValues(None),
 		notification.SendFail,
 		notification.Throttled,
 		notification.Timestamp,
@@ -449,11 +456,11 @@ func (schedule *ScheduleData) IsScheduleAllows(ts int64) bool {
 }
 
 func (event NotificationEvent) String() string {
-	return fmt.Sprintf("TriggerId: %s, Metric: %s, Values: %s, OldState: %s, State: %s, Message: '%s', Timestamp: %v", event.TriggerID, event.Metric, event.GetMetricsValues(false), event.OldState, event.State, event.CreateMessage(nil), event.Timestamp)
+	return fmt.Sprintf("TriggerId: %s, Metric: %s, Values: %s, OldState: %s, State: %s, Message: '%s', Timestamp: %v", event.TriggerID, event.Metric, event.GetMetricsValues(None), event.OldState, event.State, event.CreateMessage(nil), event.Timestamp)
 }
 
 // GetMetricsValues gets event metric value and format it to human readable presentation
-func (event NotificationEvent) GetMetricsValues(isLess bool) string {
+func (event NotificationEvent) GetMetricsValues(settings NotificationEventSettings) string {
 	targetNames := make([]string, 0, len(event.Values))
 	for targetName := range event.Values {
 		targetNames = append(targetNames, targetName)
@@ -464,7 +471,8 @@ func (event NotificationEvent) GetMetricsValues(isLess bool) string {
 	}
 
 	if len(targetNames) == 1 {
-		if isLess {
+		switch settings {
+		case ShortMessage:
 			if event.Values[targetNames[0]] >= limit {
 				return humanize.SIWithDigits(event.Values[targetNames[0]], 3, "")
 			}
@@ -479,7 +487,8 @@ func (event NotificationEvent) GetMetricsValues(isLess bool) string {
 		builder.WriteString(targetName)
 		builder.WriteString(": ")
 		value := strconv.FormatFloat(event.Values[targetName], 'f', -1, 64)
-		if isLess {
+		switch settings {
+		case ShortMessage:
 			if event.Values[targetName] >= limit {
 				value = humanize.SIWithDigits(event.Values[targetName], 3, "")
 			} else {

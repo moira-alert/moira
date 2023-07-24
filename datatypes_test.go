@@ -206,34 +206,34 @@ func TestNotificationEvent_GetValue(t *testing.T) {
 
 		Convey("One target with zero", func() {
 			event.Values["t1"] = 0
-			So(event.GetMetricsValues(false), ShouldResemble, "0")
+			So(event.GetMetricsValues(None), ShouldResemble, "0")
 		})
 
 		Convey("One target with short fraction", func() {
 			event.Values["t1"] = 2.32
-			So(event.GetMetricsValues(false), ShouldResemble, "2.32")
+			So(event.GetMetricsValues(None), ShouldResemble, "2.32")
 		})
 
 		Convey("One target with long fraction", func() {
 			event.Values["t1"] = 2.3222222
-			So(event.GetMetricsValues(false), ShouldResemble, "2.3222222")
+			So(event.GetMetricsValues(None), ShouldResemble, "2.3222222")
 		})
 
 		Convey("Two targets", func() {
 			event.Values["t2"] = 0.12
 			event.Values["t1"] = 2.3222222
-			So(event.GetMetricsValues(false), ShouldResemble, "t1: 2.3222222, t2: 0.12")
+			So(event.GetMetricsValues(None), ShouldResemble, "t1: 2.3222222, t2: 0.12")
 		})
 
-		Convey("One target over 1000 with isLess", func() {
+		Convey("One target over 1000 with ShortMessage enum value", func() {
 			event.Values["t1"] = 1110.15
-			So(event.GetMetricsValues(true), ShouldResemble, "1.11 k")
+			So(event.GetMetricsValues(ShortMessage), ShouldResemble, "1.11 k")
 		})
 
-		Convey("Two targets lower 1000 with isLess", func() {
+		Convey("Two targets lower 1000 with ShortMessage enum value", func() {
 			event.Values["t1"] = 111.15
 			event.Values["t2"] = 54.5
-			So(event.GetMetricsValues(true), ShouldResemble, "t1: 111.15, t2: 54.5")
+			So(event.GetMetricsValues(ShortMessage), ShouldResemble, "t1: 111.15, t2: 54.5")
 		})
 	})
 }
