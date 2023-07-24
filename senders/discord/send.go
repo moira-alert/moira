@@ -58,7 +58,7 @@ func (sender *Sender) getChannelID(username string) (string, error) {
 func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
 	var buffer strings.Builder
 
-	state := events.GetSubjectState()
+	state := events.GetLastState()
 	tags := trigger.GetTags()
 	title := fmt.Sprintf("%s %s %s (%d)\n", state, trigger.Name, tags, len(events))
 	titleLen := len([]rune(title))

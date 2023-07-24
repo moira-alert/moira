@@ -104,7 +104,7 @@ func (sender *Sender) getSeverity(events moira.NotificationEvents) string {
 func (sender *Sender) buildSummary(events moira.NotificationEvents, trigger moira.TriggerData) string {
 	var summary bytes.Buffer
 
-	summary.WriteString(string(events.GetSubjectState()))
+	summary.WriteString(string(events.GetLastState()))
 	summary.WriteString(" ")
 	summary.WriteString(trigger.Name)
 

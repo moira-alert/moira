@@ -80,7 +80,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
 	message := sender.buildMessage(events, trigger, throttled)
 	useDirectMessaging := useDirectMessaging(contact.Value)
-	emoji := sender.getStateEmoji(events.GetSubjectState())
+	emoji := sender.getStateEmoji(events.GetLastState())
 	channelID, threadTimestamp, err := sender.sendMessage(message, contact.Value, trigger.ID, useDirectMessaging, emoji)
 	if err != nil {
 		return err
@@ -137,7 +137,7 @@ func (sender *Sender) buildDescription(trigger moira.TriggerData) string {
 }
 
 func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData) string {
-	title := fmt.Sprintf("*%s*", events.GetSubjectState())
+	title := fmt.Sprintf("*%s*", events.GetLastState())
 	triggerURI := trigger.GetTriggerURI(sender.frontURI)
 	if triggerURI != "" {
 		title += fmt.Sprintf(" <%s|%s>", triggerURI, trigger.Name)

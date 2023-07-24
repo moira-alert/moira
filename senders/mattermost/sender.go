@@ -125,7 +125,7 @@ func (sender *Sender) buildDescription(trigger moira.TriggerData) string {
 }
 
 func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData) string {
-	title := fmt.Sprintf("**%s**", events.GetSubjectState())
+	title := fmt.Sprintf("**%s**", events.GetLastState())
 	triggerURI := trigger.GetTriggerURI(sender.frontURI)
 	if triggerURI != "" {
 		title += fmt.Sprintf(" [%s](%s)", trigger.Name, triggerURI)

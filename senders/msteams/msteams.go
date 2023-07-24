@@ -136,7 +136,7 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 		Context:     context,
 		MessageType: messageType,
 		Summary:     summary,
-		ThemeColor:  getColourForState(events.GetSubjectState()),
+		ThemeColor:  getColourForState(events.GetLastState()),
 		Title:       title,
 		Sections: []Section{
 			{
@@ -174,7 +174,7 @@ func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moir
 }
 
 func (sender *Sender) buildTitleAndURI(events moira.NotificationEvents, trigger moira.TriggerData) (string, string) {
-	title := string(events.GetSubjectState())
+	title := string(events.GetLastState())
 
 	if trigger.Name != "" {
 		title += " " + trigger.Name

@@ -376,19 +376,12 @@ type SearchResult struct {
 	Highlights []SearchHighlight
 }
 
-// GetSubjectState returns the most critical state of events
-func (events NotificationEvents) GetSubjectState() State {
-	result := StateOK
-	states := make(map[State]bool)
-	for _, event := range events {
-		states[event.State] = true
+// GetLastState returns the last state of events
+func (events NotificationEvents) GetLastState() State {
+	if len(events) != 0 {
+		return events[len(events)-1].State
 	}
-	for _, state := range eventStatesPriority {
-		if states[state] {
-			result = state
-		}
-	}
-	return result
+	return StateNODATA
 }
 
 // GetTags returns "[tag1][tag2]...[tagN]" string

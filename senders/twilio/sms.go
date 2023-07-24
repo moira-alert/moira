@@ -37,7 +37,7 @@ func (sender *twilioSenderSms) SendEvents(events moira.NotificationEvents, conta
 func (sender *twilioSenderSms) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
 	var message bytes.Buffer
 
-	message.WriteString(fmt.Sprintf("%s %s %s (%d)\n", events.GetSubjectState(), trigger.Name, trigger.GetTags(), len(events)))
+	message.WriteString(fmt.Sprintf("%s %s %s (%d)\n", events.GetLastState(), trigger.Name, trigger.GetTags(), len(events)))
 	for i, event := range events {
 		if i > printEventsCount-1 {
 			break

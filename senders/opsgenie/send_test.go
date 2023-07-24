@@ -100,21 +100,23 @@ Please, fix your system or tune this trigger to generate less events.`
 
 func TestBuildTitle(t *testing.T) {
 	sender := Sender{}
-	Convey("Build title with three events with max ERROR state and two tags", t, func() {
+	Convey("Build title with three events with last OK state and two tags", t, func() {
 		title := sender.buildTitle([]moira.NotificationEvent{{State: moira.StateERROR}, {State: moira.StateWARN}, {State: moira.StateWARN}, {State: moira.StateOK}}, moira.TriggerData{Tags: []string{"tag1", "tag2"}, Name: "Name"})
-		So(title, ShouldResemble, "ERROR Name [tag1][tag2] (4)")
+		So(title, ShouldResemble, "OK Name [tag1][tag2] (4)")
 	})
-	Convey("Build title with three events with max ERROR state empty trigger", t, func() {
+
+	Convey("Build title with three events with last OK state empty trigger", t, func() {
 		title := sender.buildTitle([]moira.NotificationEvent{{State: moira.StateERROR}, {State: moira.StateWARN}, {State: moira.StateWARN}, {State: moira.StateOK}}, moira.TriggerData{})
-		So(title, ShouldResemble, "ERROR   (4)")
+		So(title, ShouldResemble, "OK   (4)")
 	})
+
 	Convey("Build title that exceeds the title limit", t, func() {
 		var reallyLongTag string
 		for i := 0; i < 30; i++ {
 			reallyLongTag = reallyLongTag + "randomstring"
 		}
 		title := sender.buildTitle([]moira.NotificationEvent{{State: moira.StateERROR}, {State: moira.StateWARN}, {State: moira.StateWARN}, {State: moira.StateOK}}, moira.TriggerData{Tags: []string{"tag1", "tag2", "tag3", reallyLongTag, "tag4"}, Name: "Name"})
-		So(title, ShouldResemble, "ERROR Name [tag1][tag2][tag3].... (4)")
+		So(title, ShouldResemble, "OK Name [tag1][tag2][tag3].... (4)")
 	})
 }
 

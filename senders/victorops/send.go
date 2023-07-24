@@ -72,7 +72,7 @@ func (sender *Sender) getMessageType(events moira.NotificationEvents) api.Messag
 }
 
 func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData) string {
-	title := string(events.GetSubjectState())
+	title := string(events.GetLastState())
 	title += " " + trigger.Name
 
 	tags := trigger.GetTags()

@@ -25,7 +25,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	if err != nil {
 		return fmt.Errorf("failed to get notifier state: %s", err.Error())
 	}
-	subjectState := events.GetSubjectState()
+	subjectState := events.GetLastState()
 	switch subjectState {
 	case moira.StateTEST:
 		sender.logger.Info().
