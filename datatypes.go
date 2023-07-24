@@ -29,6 +29,7 @@ const (
 const (
 	format        = "15:04 02.01.2006"
 	remindMessage = "This metric has been in bad state for more than %v hours - please, fix."
+	limit         = 1000
 )
 
 // NotificationEvent represents trigger state changes event
@@ -464,7 +465,7 @@ func (event NotificationEvent) GetMetricsValues(isLess bool) string {
 
 	if len(targetNames) == 1 {
 		if isLess {
-			if event.Values[targetNames[0]] >= 1000 {
+			if event.Values[targetNames[0]] >= limit {
 				return humanize.SIWithDigits(event.Values[targetNames[0]], 10, "")
 			}
 			return humanize.FtoaWithDigits(event.Values[targetNames[0]], 10)
@@ -479,7 +480,7 @@ func (event NotificationEvent) GetMetricsValues(isLess bool) string {
 		builder.WriteString(": ")
 		value := strconv.FormatFloat(event.Values[targetName], 'f', -1, 64)
 		if isLess {
-			if event.Values[targetName] >= 1000 {
+			if event.Values[targetName] >= limit {
 				value = humanize.SIWithDigits(event.Values[targetName], 10, "")
 			} else {
 				value = humanize.FtoaWithDigits(event.Values[targetName], 10)
