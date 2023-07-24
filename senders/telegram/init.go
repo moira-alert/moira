@@ -18,6 +18,7 @@ const (
 	messenger        = "telegram"
 	telegramLockTTL  = 30 * time.Second
 	hidden           = "[DATA DELETED]"
+	telegramAPIUrl   = "https://api.telegram.org/"
 )
 
 var (
@@ -68,7 +69,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		Poller: &telebot.LongPoller{Timeout: pollerTimeout},
 	})
 	if err != nil {
-		if strings.Contains(err.Error(), "https://api.telegram.org/") {
+		if strings.Contains(err.Error(), telegramAPIUrl) {
 			err = errors.New(moira.ReplaceSubstring(err.Error(), "bot", "/", hidden)) // Cut the token from the url in error message
 		}
 		return err
