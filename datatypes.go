@@ -466,9 +466,9 @@ func (event NotificationEvent) GetMetricsValues(isLess bool) string {
 	if len(targetNames) == 1 {
 		if isLess {
 			if event.Values[targetNames[0]] >= limit {
-				return humanize.SIWithDigits(event.Values[targetNames[0]], 10, "")
+				return humanize.SIWithDigits(event.Values[targetNames[0]], 3, "")
 			}
-			return humanize.FtoaWithDigits(event.Values[targetNames[0]], 10)
+			return humanize.FtoaWithDigits(event.Values[targetNames[0]], 3)
 		}
 		return strconv.FormatFloat(event.Values[targetNames[0]], 'f', -1, 64)
 	}
@@ -481,9 +481,9 @@ func (event NotificationEvent) GetMetricsValues(isLess bool) string {
 		value := strconv.FormatFloat(event.Values[targetName], 'f', -1, 64)
 		if isLess {
 			if event.Values[targetName] >= limit {
-				value = humanize.SIWithDigits(event.Values[targetName], 10, "")
+				value = humanize.SIWithDigits(event.Values[targetName], 3, "")
 			} else {
-				value = humanize.FtoaWithDigits(event.Values[targetName], 10)
+				value = humanize.FtoaWithDigits(event.Values[targetName], 3)
 			}
 		}
 		builder.WriteString(value)

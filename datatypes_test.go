@@ -227,7 +227,7 @@ func TestNotificationEvent_GetValue(t *testing.T) {
 
 		Convey("One target over 1000 with isLess", func() {
 			event.Values["t1"] = 1110.15
-			So(event.GetMetricsValues(true), ShouldResemble, "1.11015 k")
+			So(event.GetMetricsValues(true), ShouldResemble, "1.11 k")
 		})
 
 		Convey("Two targets lower 1000 with isLess", func() {
