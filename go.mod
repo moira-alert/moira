@@ -48,6 +48,7 @@ require (
 )
 
 require github.com/prometheus/common v0.37.0
+
 require github.com/mitchellh/mapstructure v1.5.0
 
 require (
