@@ -77,7 +77,7 @@ const (
 func (triggerChecker *TriggerChecker) handlePrepareError(checkData moira.CheckData, err error) (ErrorSeverity, moira.CheckData, error) {
 	switch err.(type) {
 	case ErrTriggerHasSameMetricNames:
-		checkData.State = moira.StateERROR
+		checkData.State = moira.StateEXCEPTION
 		checkData.Message = err.Error()
 		return CanContinueCheck, checkData, nil
 

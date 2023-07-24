@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	twilio "github.com/carlosdp/twiliogo"
+	twilio_client "github.com/carlosdp/twiliogo"
 	"github.com/moira-alert/moira"
 	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
@@ -71,7 +71,7 @@ func TestTwilioSenderSms_SendEvents(t *testing.T) {
 	location, _ := time.LoadLocation("UTC")
 	sender := twilioSenderSms{
 		twilioSender: twilioSender{
-			client:       twilio.NewClient("123", "321"),
+			client:       twilio_client.NewClient("123", "321"),
 			APIFromPhone: "12345678989",
 			logger:       logger,
 			location:     location,

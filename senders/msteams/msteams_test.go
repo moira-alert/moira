@@ -15,11 +15,11 @@ func TestInit(t *testing.T) {
 	logger, _ := logging.ConfigureLog("stdout", "debug", "test", true)
 	Convey("Init tests", t, func() {
 		sender := Sender{}
-		senderSettings := map[string]string{
+		senderSettings := map[string]interface{}{
 			"max_events": "-1",
 		}
 		Convey("Empty map should fail", func() {
-			err := sender.Init(map[string]string{}, logger, nil, "")
+			err := sender.Init(map[string]interface{}{}, logger, nil, "")
 			So(err, ShouldNotResemble, nil)
 		})
 		Convey("Minimal settings", func() {
@@ -35,7 +35,7 @@ func TestMSTeamsHttpResponse(t *testing.T) {
 	sender := Sender{}
 	logger, _ := logging.ConfigureLog("stdout", "info", "test", true)
 	location, _ := time.LoadLocation("UTC")
-	_ = sender.Init(map[string]string{
+	_ = sender.Init(map[string]interface{}{
 		"max_events": "-1",
 	}, logger, location, "")
 	event := moira.NotificationEvent{

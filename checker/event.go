@@ -5,8 +5,9 @@ import (
 )
 
 var badStateReminder = map[moira.State]int64{
-	moira.StateERROR:  86400, //nolint
-	moira.StateNODATA: 86400, //nolint
+	moira.StateERROR:     86400, //nolint
+	moira.StateNODATA:    86400, //nolint
+	moira.StateEXCEPTION: 86400, //nolint
 }
 
 func (triggerChecker *TriggerChecker) compareTriggerStates(currentCheck moira.CheckData) (moira.CheckData, error) {

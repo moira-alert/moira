@@ -19,7 +19,7 @@ import (
 	"github.com/moira-alert/moira/notifier/notifications"
 )
 
-var senderSettings = map[string]string{
+var senderSettings = map[string]interface{}{
 	"type": "mega-sender",
 }
 

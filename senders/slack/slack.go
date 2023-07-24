@@ -8,11 +8,12 @@ import (
 	"time"
 
 	slackdown "github.com/karriereat/blackfriday-slack"
+	"github.com/mitchellh/mapstructure"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/senders"
 	blackfriday "github.com/russross/blackfriday/v2"
 
-	"github.com/slack-go/slack"
+	slack_client "github.com/slack-go/slack"
 )
 
 const (
@@ -40,26 +41,38 @@ var stateEmoji = map[moira.State]string{
 	moira.StateTEST:      testEmoji,
 }
 
+// Structure that represents the Slack configuration in the YAML file
+type slack struct {
+	APIToken string `mapstructure:"api_token"`
+	UseEmoji string `mapstructure:"use_emoji"`
+	FrontURI string `mapstructure:"front_uri"`
+}
+
 // Sender implements moira sender interface via slack
 type Sender struct {
 	frontURI string
 	useEmoji bool
 	logger   moira.Logger
 	location *time.Location
-	client   *slack.Client
+	client   *slack_client.Client
 }
 
 // Init read yaml config
-func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
-	apiToken := senderSettings["api_token"]
+func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+	var s slack
+	err := mapstructure.Decode(senderSettings, &s)
+	if err != nil {
+		return fmt.Errorf("failed to decode senderSettings to slack config: %w", err)
+	}
+	apiToken := s.APIToken
 	if apiToken == "" {
 		return fmt.Errorf("can not read slack api_token from config")
 	}
-	sender.useEmoji, _ = strconv.ParseBool(senderSettings["use_emoji"])
+	sender.useEmoji, _ = strconv.ParseBool(s.UseEmoji)
 	sender.logger = logger
-	sender.frontURI = senderSettings["front_uri"]
+	sender.frontURI = s.FrontURI
 	sender.location = location
-	sender.client = slack.New(apiToken)
+	sender.client = slack_client.New(apiToken)
 	return nil
 }
 
@@ -187,7 +200,7 @@ func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsFo
 }
 
 func (sender *Sender) sendMessage(message string, contact string, triggerID string, useDirectMessaging bool, emoji string) (string, string, error) {
-	params := slack.PostMessageParameters{
+	params := slack_client.PostMessageParameters{
 		Username:  "Moira",
 		AsUser:    useDirectMessaging,
 		IconEmoji: emoji,
@@ -198,7 +211,7 @@ func (sender *Sender) sendMessage(message string, contact string, triggerID stri
 		String("message", message).
 		Msg("Calling slack")
 
-	channelID, threadTimestamp, err := sender.client.PostMessage(contact, slack.MsgOptionText(message, false), slack.MsgOptionPostMessageParameters(params))
+	channelID, threadTimestamp, err := sender.client.PostMessage(contact, slack_client.MsgOptionText(message, false), slack_client.MsgOptionPostMessageParameters(params))
 	if err != nil {
 		errorText := err.Error()
 		if errorText == ErrorTextChannelArchived || errorText == ErrorTextNotInChannel ||
@@ -215,7 +228,7 @@ func (sender *Sender) sendPlots(plots [][]byte, channelID, threadTimestamp, trig
 	filename := fmt.Sprintf("%s.png", triggerID)
 	for _, plot := range plots {
 		reader := bytes.NewReader(plot)
-		uploadParameters := slack.UploadFileV2Parameters{
+		uploadParameters := slack_client.UploadFileV2Parameters{
 			FileSize:        len(plot),
 			Reader:          reader,
 			Title:           filename,
@@ -240,7 +253,7 @@ func (sender *Sender) getStateEmoji(subjectState moira.State) string {
 			return emoji
 		}
 	}
-	return slack.DEFAULT_MESSAGE_ICON_EMOJI
+	return slack_client.DEFAULT_MESSAGE_ICON_EMOJI
 }
 
 // useDirectMessaging returns true if user contact is provided

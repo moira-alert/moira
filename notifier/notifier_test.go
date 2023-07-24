@@ -215,7 +215,7 @@ func configureNotifier(t *testing.T) {
 
 	notif = NewNotifier(dataBase, logger, config, notifierMetrics, metricsSourceProvider, map[string]moira.ImageStore{})
 	notif.scheduler = scheduler
-	senderSettings := map[string]string{
+	senderSettings := map[string]interface{}{
 		"type": "test",
 	}
 

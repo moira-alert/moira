@@ -180,5 +180,28 @@ https://grafana.yourhost.com/some-dashboard`,
 				So("MY.PATH", ShouldEqual, expected)
 			})
 		})
+
+		Convey("Test some sprig functions", func() {
+			Convey("Test upper", func() {
+				Desc = "{{ \"hello!\" | upper}} "
+				expected, err := Populate(Name, Desc, events)
+				So(err, ShouldBeNil)
+				So("HELLO!", ShouldEqual, expected)
+			})
+
+			Convey("Test upper repeat", func() {
+				Desc = "{{ \"hello!\" | upper | repeat 5 }} "
+				expected, err := Populate(Name, Desc, events)
+				So(err, ShouldBeNil)
+				So("HELLO!HELLO!HELLO!HELLO!HELLO!", ShouldEqual, expected)
+			})
+
+			Convey("Test list uniq without", func() {
+				Desc = "{{ without (list 1 3 3 2 2 2 4 4 4 4 1 | uniq) 4 }} "
+				expected, err := Populate(Name, Desc, events)
+				So(err, ShouldBeNil)
+				So("[1 3 2]", ShouldEqual, expected)
+			})
+		})
 	})
 }
