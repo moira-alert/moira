@@ -36,7 +36,7 @@ type notificationEventSettings int
 
 const (
 	DefaultNotificationSettings notificationEventSettings = iota
-	ShortMessage
+	SIFormatNumbers
 )
 
 // NotificationEvent represents trigger state changes event
@@ -472,7 +472,7 @@ func (event NotificationEvent) GetMetricsValues(settings notificationEventSettin
 
 	if len(targetNames) == 1 {
 		switch settings {
-		case ShortMessage:
+		case SIFormatNumbers:
 			if event.Values[targetNames[0]] >= limit {
 				return humanize.SIWithDigits(event.Values[targetNames[0]], 3, "")
 			}
@@ -488,7 +488,7 @@ func (event NotificationEvent) GetMetricsValues(settings notificationEventSettin
 		builder.WriteString(": ")
 		value := strconv.FormatFloat(event.Values[targetName], 'f', -1, 64)
 		switch settings {
-		case ShortMessage:
+		case SIFormatNumbers:
 			if event.Values[targetName] >= limit {
 				value = humanize.SIWithDigits(event.Values[targetName], 3, "")
 			} else {

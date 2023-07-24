@@ -225,15 +225,15 @@ func TestNotificationEvent_GetValue(t *testing.T) {
 			So(event.GetMetricsValues(DefaultNotificationSettings), ShouldResemble, "t1: 2.3222222, t2: 0.12")
 		})
 
-		Convey("One target over 1000 with ShortMessage enum value", func() {
+		Convey("One target over 1000 with SIFormatNumbers enum value", func() {
 			event.Values["t1"] = 1110.15
-			So(event.GetMetricsValues(ShortMessage), ShouldResemble, "1.11 k")
+			So(event.GetMetricsValues(SIFormatNumbers), ShouldResemble, "1.11 k")
 		})
 
-		Convey("Two targets lower 1000 with ShortMessage enum value", func() {
+		Convey("Two targets lower 1000 with SIFormatNumbers enum value", func() {
 			event.Values["t1"] = 111.15
 			event.Values["t2"] = 54.5
-			So(event.GetMetricsValues(ShortMessage), ShouldResemble, "t1: 111.15, t2: 54.5")
+			So(event.GetMetricsValues(SIFormatNumbers), ShouldResemble, "t1: 111.15, t2: 54.5")
 		})
 	})
 }
