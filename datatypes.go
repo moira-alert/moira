@@ -32,10 +32,10 @@ const (
 	limit         = 1000
 )
 
-type notificationEventSettings int
+type NotificationEventSettings int
 
 const (
-	DefaultNotificationSettings notificationEventSettings = iota
+	DefaultNotificationSettings NotificationEventSettings = iota
 	SIFormatNumbers
 )
 
@@ -460,7 +460,7 @@ func (event NotificationEvent) String() string {
 }
 
 // GetMetricsValues gets event metric value and format it to human readable presentation
-func (event NotificationEvent) GetMetricsValues(settings notificationEventSettings) string {
+func (event NotificationEvent) GetMetricsValues(settings NotificationEventSettings) string {
 	targetNames := make([]string, 0, len(event.Values))
 	for targetName := range event.Values {
 		targetNames = append(targetNames, targetName)
