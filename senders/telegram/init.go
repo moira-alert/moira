@@ -47,6 +47,17 @@ type Sender struct {
 	location *time.Location
 }
 
+func removeTokenFromError(err error, bot *telebot.Bot) error {
+	url := telebot.DefaultApiURL
+	if bot != nil {
+		url = bot.URL
+	}
+	if strings.Contains(err.Error(), url) {
+		return errors.New(moira.ReplaceSubstring(err.Error(), "bot", "/", hidden))
+	}
+	return err
+}
+
 // Init loads yaml config, configures and starts telegram bot
 func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	var tg telegram
@@ -68,10 +79,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		Poller: &telebot.LongPoller{Timeout: pollerTimeout},
 	})
 	if err != nil {
-		if strings.Contains(err.Error(), sender.bot.URL) {
-			err = errors.New(moira.ReplaceSubstring(err.Error(), "bot", "/", hidden)) // Cut the token from the url in error message
-		}
-		return err
+		return removeTokenFromError(err, sender.bot)
 	}
 
 	sender.bot.Handle(telebot.OnText, func(message *telebot.Message) {

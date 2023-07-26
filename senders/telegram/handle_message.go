@@ -1,12 +1,10 @@
 package telegram
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
 
-	"github.com/moira-alert/moira"
 	"gopkg.in/tucnak/telebot.v2"
 )
 
@@ -18,11 +16,8 @@ func (sender *Sender) handleMessage(message *telebot.Message) error {
 	}
 	if responseMessage != "" {
 		_, err = sender.bot.Send(message.Chat, responseMessage)
-		if strings.Contains(err.Error(), sender.bot.URL) {
-			err = errors.New(moira.ReplaceSubstring(err.Error(), "bot", "/", hidden)) // Cut the token from the url in error message
-		}
 	}
-	return err
+	return removeTokenFromError(err, sender.bot)
 }
 
 func (sender *Sender) getResponseMessage(message *telebot.Message) (string, error) {
