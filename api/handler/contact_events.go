@@ -40,10 +40,10 @@ func getContactByIdWithEvents(writer http.ResponseWriter, request *http.Request)
 	}
 	contactWithEvents, err := controller.GetContactEventsByIdWithLimit(database, contactData.ID, from, to)
 	if err != nil {
-		render.Render(writer, request, err)
+		render.Render(writer, request, err) //nolint
 	}
 	if err := render.Render(writer, request, contactWithEvents); err != nil {
-		render.Render(writer, request, api.ErrorRender(err))
+		render.Render(writer, request, api.ErrorRender(err)) //nolint
 		return
 	}
 }

@@ -46,12 +46,12 @@ func getContactById(writer http.ResponseWriter, request *http.Request) {
 	contact, apiErr := controller.GetContactById(database, contactData.ID)
 
 	if apiErr != nil {
-		render.Render(writer, request, apiErr)
+		render.Render(writer, request, apiErr) //nolint
 		return
 	}
 
 	if err := render.Render(writer, request, contact); err != nil {
-		render.Render(writer, request, api.ErrorRender(err))
+		render.Render(writer, request, api.ErrorRender(err)) //nolint
 		return
 	}
 }
