@@ -36,6 +36,8 @@ type webConfig struct {
 	RemoteAllowed bool
 	// List of enabled contact types
 	Contacts []webContact `yaml:"contacts"`
+	// struct to manage feature flags.
+	FeatureFlags featureFlags `yaml:"feature_flags"`
 }
 
 type webContact struct {
@@ -50,6 +52,12 @@ type webContact struct {
 	Placeholder string `yaml:"placeholder"`
 	// More detailed contact description
 	Help string `yaml:"help"`
+}
+
+type featureFlags struct {
+	IsPlottingDefaultOn              bool `yaml:"is_plotting_default_on"`
+	IsPlottingAvailable              bool `yaml:"is_plotting_available"`
+	IsSubscriptionToAllTagsAvailable bool `yaml:"is_subscription_to_all_tags_available"`
 }
 
 func (config *apiConfig) getSettings(localMetricTTL, remoteMetricTTL string) *api.Config {
@@ -77,11 +85,20 @@ func (config *webConfig) getSettings(isRemoteEnabled bool) ([]byte, error) {
 		SupportEmail:  config.SupportEmail,
 		RemoteAllowed: isRemoteEnabled,
 		Contacts:      webContacts,
+		FeatureFlags:  config.getFeatureFlags(),
 	})
 	if err != nil {
 		return make([]byte, 0), fmt.Errorf("failed to parse web config: %s", err.Error())
 	}
 	return configContent, nil
+}
+
+func (config *webConfig) getFeatureFlags() api.FeatureFlags {
+	return api.FeatureFlags{
+		IsPlottingDefaultOn:              config.FeatureFlags.IsPlottingDefaultOn,
+		IsPlottingAvailable:              config.FeatureFlags.IsPlottingAvailable,
+		IsSubscriptionToAllTagsAvailable: config.FeatureFlags.IsSubscriptionToAllTagsAvailable,
+	}
 }
 
 func getDefault() config {
@@ -107,6 +124,11 @@ func getDefault() config {
 		},
 		Web: webConfig{
 			RemoteAllowed: false,
+			FeatureFlags: featureFlags{
+				IsPlottingDefaultOn:              true,
+				IsPlottingAvailable:              true,
+				IsSubscriptionToAllTagsAvailable: true,
+			},
 		},
 		Telemetry: cmd.TelemetryConfig{
 			Listen: ":8091",

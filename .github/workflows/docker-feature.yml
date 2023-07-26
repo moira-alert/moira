@@ -1,19 +1,49 @@
-name: Publish docker feature
+name: Build and publish feature images
 on:
-  push:
-    branches:
-      - "feature/*"
-      - "hotfix/*"
+  issue_comment:
+    types: created
 
 jobs:
   publish:
     name: Publish images
-    runs-on: ubuntu-22.04
+    permissions:
+      statuses: write
+      pull-requests: write
     strategy:
       matrix:
-        servis: [api, checker, cli, notifier, filter]
+          servis: [api, checker, cli, notifier, filter]
+    runs-on: ubuntu-22.04
+    if: ${{github.event.issue.pull_request != null && startsWith(github.event.comment.body, '/build') && github.event.comment.author_association == 'MEMBER'}}
     steps:
+      - name: Get PR branch
+        uses: xt0rted/pull-request-comment-branch@v1
+        id: comment-branch
+        
+      - uses: actions/github-script@v6
+        id: get-pr
+        with:
+          script: |
+            const request = {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            }
+            core.info(`Getting PR #${request.pull_number} from ${request.owner}/${request.repo}`)
+            try {
+              const result = await github.rest.pulls.get(request)
+              return result.data
+            } catch (err) {
+              core.setFailed(`Request failed with error ${err}`)
+            }
+      
 
+      - name: Checkout PR branch
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ fromJSON(steps.get-pr.outputs.result).head.repo.full_name }}
+          ref: ${{ fromJSON(steps.get-pr.outputs.result).head.sha }}
+
+          
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
@@ -24,14 +54,37 @@ jobs:
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
       - name: Build docker tag
-        run: echo "DOCKER_TAG=$(echo ${GITHUB_REF_NAME////-}.$(date '+%Y-%m-%d').${GITHUB_SHA:0:7})" >> $GITHUB_ENV
+        env:
+          BRANCH_NAME: ${{ fromJSON(steps.get-pr.outputs.result).head.ref }}
+          COMMIT_SHA: ${{ fromJSON(steps.get-pr.outputs.result).head.sha }}
+        run: echo "DOCKER_TAG=$(echo ${BRANCH_NAME////-}.$(date '+%Y-%m-%d').${COMMIT_SHA:0:7})" >> $GITHUB_ENV
+  
 
       - name: Build and push
         uses: docker/build-push-action@v4
         with:
+          context: "https://github.com/${{fromJSON(steps.get-pr.outputs.result).head.repo.full_name}}.git#${{fromJSON(steps.get-pr.outputs.result).head.ref}}"
           file: ./Dockerfile.${{matrix.servis}}
           build-args: |
-            MoiraVersion=${{env.DOCKER_TAG}}
-            GIT_COMMIT=${{github.sha}}
+            MoiraVersion=${{ env.DOCKER_TAG }}
+            GIT_COMMIT=${{ fromJSON(steps.get-pr.outputs.result).head.sha }}
           push: true
           tags: moira/${{matrix.servis}}-unstable:${{env.DOCKER_TAG}}
+
+      - name: Comment PR with build tag
+        uses: mshick/add-pr-comment@v2
+        if: always()
+        with:
+          refresh-message-position: true
+          message-success:
+            "Build and push Docker images with tag: ${{env.DOCKER_TAG}}"
+          message-failure:
+            "Builds images failed. See action log for details"
+              
+      - name: Set latest commit status as ${{ job.status }}
+        uses: myrotvorets/set-commit-status-action@master
+        if: always()
+        with:
+          sha: ${{ steps.comment-branch.outputs.head_sha }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          status: ${{ job.status }}

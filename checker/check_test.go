@@ -825,8 +825,8 @@ func TestCheck(t *testing.T) {
 					},
 				},
 				MetricsToTargetRelation:      map[string]string{"t1": "super.puper.metric"},
-				Score:                        100,
-				State:                        moira.StateERROR,
+				Score:                        100000,
+				State:                        moira.StateEXCEPTION,
 				Timestamp:                    triggerChecker.until,
 				EventTimestamp:               triggerChecker.until,
 				LastSuccessfulCheckTimestamp: triggerChecker.until,
@@ -835,7 +835,7 @@ func TestCheck(t *testing.T) {
 			event := moira.NotificationEvent{
 				IsTriggerEvent: true,
 				TriggerID:      triggerChecker.triggerID,
-				State:          moira.StateERROR,
+				State:          moira.StateEXCEPTION,
 				OldState:       moira.StateOK,
 				Timestamp:      67,
 				Metric:         triggerChecker.trigger.Name,
@@ -1445,7 +1445,7 @@ func TestTriggerChecker_handlePrepareError(t *testing.T) {
 			So(errReturn, ShouldBeNil)
 			So(pass, ShouldBeTrue)
 			So(checkDataReturn, ShouldResemble, moira.CheckData{
-				State:   moira.StateERROR,
+				State:   moira.StateEXCEPTION,
 				Message: err.Error(),
 			})
 		})

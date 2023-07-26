@@ -15,7 +15,7 @@ func TestInit(t *testing.T) {
 		sender := &mattermost.Sender{}
 
 		Convey("No url", func() {
-			senderSettings := map[string]string{
+			senderSettings := map[string]interface{}{
 				"api_token":    "qwerty",
 				"front_uri":    "qwerty",
 				"insecure_tls": "true",
@@ -25,7 +25,7 @@ func TestInit(t *testing.T) {
 		})
 
 		Convey("Empty url", func() {
-			senderSettings := map[string]string{
+			senderSettings := map[string]interface{}{
 				"url":          "",
 				"api_token":    "qwerty",
 				"front_uri":    "qwerty",
@@ -36,31 +36,31 @@ func TestInit(t *testing.T) {
 		})
 
 		Convey("No api_token", func() {
-			senderSettings := map[string]string{"url": "qwerty", "front_uri": "qwerty"}
+			senderSettings := map[string]interface{}{"url": "qwerty", "front_uri": "qwerty"}
 			err := sender.Init(senderSettings, logger, nil, "")
 			So(err, ShouldNotBeNil)
 		})
 
 		Convey("Empty api_token", func() {
-			senderSettings := map[string]string{"url": "qwerty", "front_uri": "qwerty", "api_token": ""}
+			senderSettings := map[string]interface{}{"url": "qwerty", "front_uri": "qwerty", "api_token": ""}
 			err := sender.Init(senderSettings, logger, nil, "")
 			So(err, ShouldNotBeNil)
 		})
 
 		Convey("No front_uri", func() {
-			senderSettings := map[string]string{"url": "qwerty", "api_token": "qwerty"}
+			senderSettings := map[string]interface{}{"url": "qwerty", "api_token": "qwerty"}
 			err := sender.Init(senderSettings, logger, nil, "")
 			So(err, ShouldNotBeNil)
 		})
 
 		Convey("Empty front_uri", func() {
-			senderSettings := map[string]string{"url": "qwerty", "api_token": "qwerty", "front_uri": ""}
+			senderSettings := map[string]interface{}{"url": "qwerty", "api_token": "qwerty", "front_uri": ""}
 			err := sender.Init(senderSettings, logger, nil, "")
 			So(err, ShouldNotBeNil)
 		})
 
 		Convey("Full config", func() {
-			senderSettings := map[string]string{
+			senderSettings := map[string]interface{}{
 				"url":          "qwerty",
 				"api_token":    "qwerty",
 				"front_uri":    "qwerty",
