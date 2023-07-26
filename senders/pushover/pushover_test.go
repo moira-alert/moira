@@ -126,13 +126,23 @@ Please, fix your system or tune this trigger to generate less events.`
 
 func TestBuildTitle(t *testing.T) {
 	sender := Sender{}
-	Convey("Build title with three events with last OK state and two tags", t, func() {
-		title := sender.buildTitle([]moira.NotificationEvent{{State: moira.StateERROR}, {State: moira.StateWARN}, {State: moira.StateWARN}, {State: moira.StateOK}}, moira.TriggerData{Tags: []string{"tag1", "tag2"}, Name: "Name"})
+	Convey("Build title with three events with max ERROR state and two tags without throttling", t, func() {
+		title := sender.buildTitle([]moira.NotificationEvent{{State: moira.StateERROR}, {State: moira.StateERROR}, {State: moira.StateWARN}, {State: moira.StateOK}}, moira.TriggerData{Tags: []string{"tag1", "tag2"}, Name: "Name"}, false)
+		So(title, ShouldResemble, "ERROR Name [tag1][tag2] (4)")
+	})
+
+	Convey("Build title with three events with last OK state and two tags when throttling", t, func() {
+		title := sender.buildTitle([]moira.NotificationEvent{{State: moira.StateERROR}, {State: moira.StateWARN}, {State: moira.StateWARN}, {State: moira.StateOK}}, moira.TriggerData{Tags: []string{"tag1", "tag2"}, Name: "Name"}, true)
 		So(title, ShouldResemble, "OK Name [tag1][tag2] (4)")
 	})
 
-	Convey("Build title with three events with last OK state empty trigger", t, func() {
-		title := sender.buildTitle([]moira.NotificationEvent{{State: moira.StateERROR}, {State: moira.StateWARN}, {State: moira.StateWARN}, {State: moira.StateOK}}, moira.TriggerData{})
+	Convey("Build title with three events with max ERROR state empty trigger without throttling", t, func() {
+		title := sender.buildTitle([]moira.NotificationEvent{{State: moira.StateERROR}, {State: moira.StateWARN}, {State: moira.StateWARN}, {State: moira.StateOK}}, moira.TriggerData{}, false)
+		So(title, ShouldResemble, "ERROR   (4)")
+	})
+
+	Convey("Build title with three events with last OK state empty trigger when throttling", t, func() {
+		title := sender.buildTitle([]moira.NotificationEvent{{State: moira.StateERROR}, {State: moira.StateWARN}, {State: moira.StateWARN}, {State: moira.StateOK}}, moira.TriggerData{}, true)
 		So(title, ShouldResemble, "OK   (4)")
 	})
 
@@ -141,8 +151,16 @@ func TestBuildTitle(t *testing.T) {
 		for i := 0; i < 30; i++ {
 			reallyLongTag = reallyLongTag + "randomstring"
 		}
-		title := sender.buildTitle([]moira.NotificationEvent{{State: moira.StateERROR}, {State: moira.StateWARN}, {State: moira.StateWARN}, {State: moira.StateOK}}, moira.TriggerData{Tags: []string{"tag1", "tag2", "tag3", reallyLongTag, "tag4"}, Name: "Name"})
-		So(title, ShouldResemble, "OK Name [tag1][tag2][tag3].... (4)")
+
+		Convey("without throttling", func() {
+			title := sender.buildTitle([]moira.NotificationEvent{{State: moira.StateERROR}, {State: moira.StateWARN}, {State: moira.StateWARN}, {State: moira.StateOK}}, moira.TriggerData{Tags: []string{"tag1", "tag2", "tag3", reallyLongTag, "tag4"}, Name: "Name"}, false)
+			So(title, ShouldResemble, "ERROR Name [tag1][tag2][tag3].... (4)")
+		})
+
+		Convey("when throttling", func() {
+			title := sender.buildTitle([]moira.NotificationEvent{{State: moira.StateERROR}, {State: moira.StateWARN}, {State: moira.StateWARN}, {State: moira.StateOK}}, moira.TriggerData{Tags: []string{"tag1", "tag2", "tag3", reallyLongTag, "tag4"}, Name: "Name"}, true)
+			So(title, ShouldResemble, "OK Name [tag1][tag2][tag3].... (4)")
+		})
 	})
 }
 

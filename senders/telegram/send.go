@@ -51,7 +51,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 
 func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool, maxChars int) string {
 	var buffer bytes.Buffer
-	state := events.GetLastState()
+	state := events.GetCurrentState(throttled)
 	tags := trigger.GetTags()
 	emoji := emojiStates[state]
 

@@ -109,7 +109,7 @@ func TestBuildCreateAlertRequest(t *testing.T) {
 				TriggerURL:        "http://moira.url/trigger/TriggerID",
 				ImageURL:          "test",
 				MonitoringTool:    "Moira",
-				EntityDisplayName: sender.buildTitle(moira.NotificationEvents{event}, trigger),
+				EntityDisplayName: sender.buildTitle(moira.NotificationEvents{event}, trigger, false),
 			}
 			So(actual, ShouldResemble, expected)
 		})
@@ -137,7 +137,7 @@ func TestBuildTitle(t *testing.T) {
 		}
 
 		Convey("Build title", func() {
-			actual := sender.buildTitle(moira.NotificationEvents{event}, trigger)
+			actual := sender.buildTitle(moira.NotificationEvents{event}, trigger, false)
 			expected := "NODATA Name [tag1][tag2]\n"
 			So(actual, ShouldResemble, expected)
 		})

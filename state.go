@@ -32,7 +32,8 @@ var (
 )
 
 var (
-	stateScores = map[State]int64{
+	eventStatesPriority = [...]State{StateOK, StateWARN, StateERROR, StateNODATA, StateEXCEPTION, StateTEST}
+	stateScores         = map[State]int64{
 		StateOK:        0,
 		StateWARN:      1,
 		StateERROR:     100,    //nolint

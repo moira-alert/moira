@@ -376,12 +376,35 @@ type SearchResult struct {
 	Highlights []SearchHighlight
 }
 
+// GetSubjectState returns the most critical state of events
+func (events NotificationEvents) GetSubjectState() State {
+	result := StateOK
+	states := make(map[State]bool)
+	for _, event := range events {
+		states[event.State] = true
+	}
+	for _, state := range eventStatesPriority {
+		if states[state] {
+			result = state
+		}
+	}
+	return result
+}
+
 // GetLastState returns the last state of events
 func (events NotificationEvents) GetLastState() State {
 	if len(events) != 0 {
 		return events[len(events)-1].State
 	}
 	return StateNODATA
+}
+
+// Returns the current state depending on the throttled parameter
+func (events NotificationEvents) GetCurrentState(throttled bool) State {
+	if throttled {
+		return events.GetLastState()
+	}
+	return events.GetSubjectState()
 }
 
 // GetTags returns "[tag1][tag2]...[tagN]" string

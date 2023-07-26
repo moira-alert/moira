@@ -27,7 +27,7 @@ func (sender *Sender) buildCreateAlertRequest(events moira.NotificationEvents, t
 	createAlertRequest := api.CreateAlertRequest{
 		MessageType:       sender.getMessageType(events),
 		StateMessage:      sender.buildMessage(events, trigger, throttled),
-		EntityDisplayName: sender.buildTitle(events, trigger),
+		EntityDisplayName: sender.buildTitle(events, trigger, throttled),
 		StateStartTime:    events[len(events)-1].Timestamp,
 		TriggerURL:        triggerURI,
 		Timestamp:         time,
@@ -71,8 +71,9 @@ func (sender *Sender) getMessageType(events moira.NotificationEvents) api.Messag
 	return msgType
 }
 
-func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData) string {
-	title := string(events.GetLastState())
+func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
+	state := events.GetCurrentState(throttled)
+	title := string(state)
 	title += " " + trigger.Name
 
 	tags := trigger.GetTags()
