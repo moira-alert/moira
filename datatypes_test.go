@@ -191,11 +191,11 @@ func TestNotificationEvent_FormatTimestamp(t *testing.T) {
 	Convey("Test FormatTimestamp", t, func() {
 		event := NotificationEvent{Timestamp: 150000000}
 		location, _ := time.LoadLocation("UTC")
-		location1, _ := time.LoadLocation("Europe/Moscow")
-		location2, _ := time.LoadLocation("Asia/Yekaterinburg")
+		location1Moscow, _ := time.LoadLocation("Europe/Moscow")
+		locationYekaterinburg, _ := time.LoadLocation("Asia/Yekaterinburg")
 		So(event.FormatTimestamp(location), ShouldResemble, "02:40 (GMT+00:00)")
-		So(event.FormatTimestamp(location1), ShouldResemble, "05:40 (GMT+03:00)")
-		So(event.FormatTimestamp(location2), ShouldResemble, "07:40 (GMT+05:00)")
+		So(event.FormatTimestamp(location1Moscow), ShouldResemble, "05:40 (GMT+03:00)")
+		So(event.FormatTimestamp(locationYekaterinburg), ShouldResemble, "07:40 (GMT+05:00)")
 	})
 }
 
