@@ -478,7 +478,11 @@ func (event NotificationEvent) GetMetricsValues() string {
 
 // FormatTimestamp gets event timestamp and format it using given location to human readable presentation
 func (event NotificationEvent) FormatTimestamp(location *time.Location) string {
-	return time.Unix(event.Timestamp, 0).In(location).Format("15:04")
+	timestamp := time.Unix(event.Timestamp, 0).In(location)
+	formattedTime := timestamp.Format("15:04")
+	offset := timestamp.Format("-07:00")
+
+	return formattedTime + " (GMT" + offset + ")"
 }
 
 // GetOrCreateMetricState gets metric state from check data or create new if CheckData has no state for given metric
