@@ -40,7 +40,7 @@ type NotificationEvent struct {
 	State            State              `json:"state"`
 	TriggerID        string             `json:"trigger_id"`
 	SubscriptionID   *string            `json:"sub_id,omitempty"`
-	ContactID        string             `json:"contactId,omitempty"`
+	ContactID        string             `json:"contact_id,omitempty"`
 	OldState         State              `json:"old_state"`
 	Message          *string            `json:"msg,omitempty"`
 	MessageEventInfo *EventInfo         `json:"event_message"`
@@ -54,7 +54,7 @@ type NotificationEventHistoryItem struct {
 	State     State  `json:"state"`
 	OldState  State  `json:"old_state"`
 	TriggerID string `json:"trigger_id"`
-	ContactID string `json:"contactId"`
+	ContactID string `json:"contact_id"`
 }
 
 // EventInfo - a base for creating messages.

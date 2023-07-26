@@ -24,34 +24,11 @@ type Contact struct {
 	TeamID string `json:"team_id,omitempty"`
 }
 
-type ContactWithEvents struct {
-	Type   string                               `json:"type"`
-	Value  string                               `json:"value"`
-	ID     string                               `json:"id,omitempty"`
-	User   string                               `json:"user,omitempty"`
-	TeamID string                               `json:"team_id,omitempty"`
-	Events []moira.NotificationEventHistoryItem `json:"events,omitempty"`
-}
-
 func (*Contact) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
 func (contact *Contact) Bind(r *http.Request) error {
-	if contact.Type == "" {
-		return fmt.Errorf("contact type can not be empty")
-	}
-	if contact.Value == "" {
-		return fmt.Errorf("contact value of type %s can not be empty", contact.Type)
-	}
-	return nil
-}
-
-func (*ContactWithEvents) Render(w http.ResponseWriter, r *http.Request) error {
-	return nil
-}
-
-func (contact *ContactWithEvents) Bind(r *http.Request) error {
 	if contact.Type == "" {
 		return fmt.Errorf("contact type can not be empty")
 	}

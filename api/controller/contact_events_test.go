@@ -1,13 +1,10 @@
 package controller
 
 import (
-	"fmt"
-	"strconv"
 	"testing"
+	"time"
 
 	"github.com/moira-alert/moira"
-
-	"github.com/moira-alert/moira/api"
 
 	"github.com/moira-alert/moira/api/dto"
 
@@ -16,10 +13,12 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestGetContactEvents(t *testing.T) {
+func TestGetContactEventsByIdWithLimit(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	dataBase := mock_moira_alert.NewMockDatabase(mockCtrl)
 	defer mockCtrl.Finish()
+
+	now := time.Now()
 
 	contact := dto.Contact{
 		ID:     "some_contact_id",
@@ -38,7 +37,7 @@ func TestGetContactEvents(t *testing.T) {
 
 	items := []*moira.NotificationEventHistoryItem{
 		{
-			TimeStamp: 924526680,
+			TimeStamp: now.Unix() - 20,
 			Metric:    "some.metric1",
 			State:     moira.StateOK,
 			OldState:  moira.StateERROR,
@@ -47,8 +46,8 @@ func TestGetContactEvents(t *testing.T) {
 		},
 
 		{
-			TimeStamp: 938782680,
-			Metric:    "some.metric2s",
+			TimeStamp: now.Unix() - 50,
+			Metric:    "some.metric2",
 			State:     moira.StateWARN,
 			OldState:  moira.StateOK,
 			TriggerID: "someTriggerId",
@@ -56,77 +55,61 @@ func TestGetContactEvents(t *testing.T) {
 		},
 	}
 
-	contactWithItems := dto.ContactWithEvents{
-		Type:   contact.Type,
-		Value:  contact.Value,
-		ID:     contact.ID,
-		User:   contact.User,
-		TeamID: contact.TeamID,
-		Events: []moira.NotificationEventHistoryItem{*items[0], *items[1]},
+	itemsExpected := dto.ContactEventItemList{
+		List: []dto.ContactEventItem{
+			{
+				TimeStamp: now.Unix() - 20,
+				Metric:    "some.metric1",
+				State:     "OK",
+				OldState:  "ERROR",
+				TriggerID: "someTriggerId",
+			},
+			{
+				TimeStamp: now.Unix() - 50,
+				Metric:    "some.metric2",
+				State:     "WARN",
+				OldState:  "OK",
+				TriggerID: "someTriggerId",
+			},
+		},
 	}
 
-	dataBaseSearchFrom := strconv.FormatInt(items[0].TimeStamp, 10)
-	dataBaseSearchTo := strconv.FormatInt(items[1].TimeStamp, 10)
+	defaultToParameter := now.Unix()
+	defaultFromParameter := defaultToParameter - 60*60*3 // 3 hours later
 
-	Convey("Ensure that request of contact with events with invalid parameters returns api error", t, func() {
+	Convey("Ensure that request with default parameters would return both event items (no url params specified)", t, func() {
+		dataBase.EXPECT().GetContact(contact.ID).Return(contactExpect, nil).AnyTimes()
+		dataBase.EXPECT().GetNotificationsByContactIdWithLimit(contact.ID, defaultFromParameter, defaultToParameter).Return(items, nil)
 
-		Convey("in case of both params are empty", func() {
-			contactWithEvents, err := GetContactByIdWithEventsLimit(dataBase, contact.ID, "", "")
-			So(contactWithEvents, ShouldBeNil)
-			So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("'from' and 'to' query params should specified")))
-		})
+		actualEvents, err := GetContactEventsByIdWithLimit(dataBase, contact.ID, defaultFromParameter, defaultToParameter)
 
-		Convey("in case of 'from' param is empty", func() {
-			contactWithEvents, err := GetContactByIdWithEventsLimit(dataBase, contact.ID, "", dataBaseSearchTo)
-			So(contactWithEvents, ShouldBeNil)
-			So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("'from' and 'to' query params should specified")))
-		})
+		So(err, ShouldBeNil)
+		So(actualEvents, ShouldResemble, &itemsExpected)
+	})
 
-		Convey("in case of 'to' param is empty", func() {
-			contactWithEvents, err := GetContactByIdWithEventsLimit(dataBase, contact.ID, dataBaseSearchFrom, "")
-			So(contactWithEvents, ShouldBeNil)
-			So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("'from' and 'to' query params should specified")))
-		})
+	Convey("Ensure that request with only 'from' parameter given and 'to' default will return only one (newest) event", t, func() {
+		dataBase.EXPECT().GetContact(contact.ID).Return(contactExpect, nil).AnyTimes()
+		dataBase.EXPECT().GetNotificationsByContactIdWithLimit(contact.ID, defaultFromParameter-20, defaultToParameter).Return(items[:1], nil)
 
-		Convey("in case of 'to' parameter is not number at all", func() {
-			contactWithEvents, err := GetContactByIdWithEventsLimit(dataBase, contact.ID, dataBaseSearchFrom, "not_number_here")
-			So(contactWithEvents, ShouldBeNil)
-			So(err, ShouldResemble, api.ErrorInvalidRequest(fmt.Errorf("'from' and 'to' query params should be numbers")))
+		actualEvents, err := GetContactEventsByIdWithLimit(dataBase, contact.ID, defaultFromParameter-20, defaultToParameter)
+		So(err, ShouldBeNil)
+		So(actualEvents, ShouldResemble, &dto.ContactEventItemList{
+			List: []dto.ContactEventItem{
+				itemsExpected.List[0],
+			},
 		})
 	})
 
-	Convey("Ensure that if we have error while getting contact we will have api error", t, func() {
-		dbErr := fmt.Errorf("can't get contact error here")
-		apiErr := api.ErrorInternalServer(fmt.Errorf("GetContactByIdWithEventsLimit: can't get contact with id %v", contact.ID))
+	Convey("Ensure that request with only 'to' parameter given and 'from' default will return only one (oldest) event", t, func() {
+		dataBase.EXPECT().GetContact(contact.ID).Return(contactExpect, nil).AnyTimes()
+		dataBase.EXPECT().GetNotificationsByContactIdWithLimit(contact.ID, defaultFromParameter, defaultToParameter-30).Return(items[1:], nil)
 
-		dataBase.EXPECT().GetContact(contact.ID).Return(moira.ContactData{}, dbErr)
-		contactWithEvents, apiErrActual := GetContactByIdWithEventsLimit(dataBase, contact.ID, dataBaseSearchFrom, dataBaseSearchTo)
-
-		So(apiErrActual, ShouldResemble, apiErr)
-		So(contactWithEvents, ShouldBeNil)
-	})
-
-	Convey("Ensure that if we have error while getting events we will have api error", t, func() {
-		var emptyNotifications []*moira.NotificationEventHistoryItem
-		dbErr := fmt.Errorf("can't get events error here")
-		apiErr := api.ErrorInternalServer(fmt.Errorf("GetContactByIdWithEventsLimit: can't get notifications for contact with id %v", contact.ID))
-
-		dataBase.EXPECT().GetContact(contact.ID).Return(contactExpect, nil)
-		dataBase.EXPECT().GetNotificationsByContactIdWithLimit(contact.ID, items[0].TimeStamp, items[1].TimeStamp).Return(emptyNotifications, dbErr)
-
-		contactWithEvents, apiErrActual := GetContactByIdWithEventsLimit(dataBase, contact.ID, dataBaseSearchFrom, dataBaseSearchTo)
-
-		So(apiErrActual, ShouldResemble, apiErr)
-		So(contactWithEvents, ShouldBeNil)
-	})
-
-	Convey("Ensure that everything is fine if db works correctly", t, func() {
-		dataBase.EXPECT().GetContact(contact.ID).Return(contactExpect, nil)
-		dataBase.EXPECT().GetNotificationsByContactIdWithLimit(contact.ID, items[0].TimeStamp, items[1].TimeStamp).Return(items, nil)
-
-		contactWithEvents, apiErrActual := GetContactByIdWithEventsLimit(dataBase, contact.ID, dataBaseSearchFrom, dataBaseSearchTo)
-
-		So(apiErrActual, ShouldBeNil)
-		So(*contactWithEvents, ShouldResemble, contactWithItems)
+		actualEvents, err := GetContactEventsByIdWithLimit(dataBase, contact.ID, defaultFromParameter, defaultToParameter-30)
+		So(err, ShouldBeNil)
+		So(actualEvents, ShouldResemble, &dto.ContactEventItemList{
+			List: []dto.ContactEventItem{
+				itemsExpected.List[1],
+			},
+		})
 	})
 }

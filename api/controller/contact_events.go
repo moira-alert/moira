@@ -2,50 +2,32 @@ package controller
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/api"
 	"github.com/moira-alert/moira/api/dto"
 )
 
-func GetContactByIdWithEventsLimit(database moira.Database, contactID string, from string, to string) (*dto.ContactWithEvents, *api.ErrorResponse) {
-	if from == "" || to == "" {
-		return nil, api.ErrorInvalidRequest(fmt.Errorf("'from' and 'to' query params should specified"))
-	}
-
-	fromInt, fromErr := strconv.ParseInt(from, 10, 64)
-	toInt, toErr := strconv.ParseInt(to, 10, 64)
-
-	if fromErr != nil || toErr != nil {
-		return nil, api.ErrorInvalidRequest(fmt.Errorf("'from' and 'to' query params should be numbers"))
-	}
-
-	contact, err := database.GetContact(contactID)
+func GetContactEventsByIdWithLimit(database moira.Database, contactID string, from int64, to int64) (*dto.ContactEventItemList, *api.ErrorResponse) {
+	events, err := database.GetNotificationsByContactIdWithLimit(contactID, from, to)
 
 	if err != nil {
-		return nil, api.ErrorInternalServer(fmt.Errorf("GetContactByIdWithEventsLimit: can't get contact with id %v", contactID))
+		return nil, api.ErrorInternalServer(fmt.Errorf("GetContactEventsByIdWithLimit: can't get notifications for contact with id %v", contactID))
 	}
 
-	events, err := database.GetNotificationsByContactIdWithLimit(contactID, fromInt, toInt)
-
-	if err != nil {
-		return nil, api.ErrorInternalServer(fmt.Errorf("GetContactByIdWithEventsLimit: can't get notifications for contact with id %v", contactID))
+	var eventsList = dto.ContactEventItemList{
+		List: make([]dto.ContactEventItem, 0),
 	}
-
-	var eventsList []moira.NotificationEventHistoryItem
 	for _, i := range events {
-		eventsList = append(eventsList, *i)
+		contactEventItem := &dto.ContactEventItem{
+			TimeStamp: i.TimeStamp,
+			Metric:    i.Metric,
+			State:     string(i.State),
+			OldState:  string(i.OldState),
+			TriggerID: i.TriggerID,
+		}
+		eventsList.List = append(eventsList.List, *contactEventItem)
 	}
 
-	contactToReturn := &dto.ContactWithEvents{
-		ID:     contact.ID,
-		User:   contact.User,
-		TeamID: contact.Team,
-		Type:   contact.Type,
-		Value:  contact.Value,
-		Events: eventsList,
-	}
-
-	return contactToReturn, nil
+	return &eventsList, nil
 }
