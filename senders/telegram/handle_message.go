@@ -18,7 +18,7 @@ func (sender *Sender) handleMessage(message *telebot.Message) error {
 	}
 	if responseMessage != "" {
 		_, err = sender.bot.Send(message.Chat, responseMessage)
-		if strings.Contains(err.Error(), telegramAPIUrl) {
+		if strings.Contains(err.Error(), sender.bot.URL) {
 			err = errors.New(moira.ReplaceSubstring(err.Error(), "bot", "/", hidden)) // Cut the token from the url in error message
 		}
 	}
