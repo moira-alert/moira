@@ -158,7 +158,7 @@ some other text _italic text_`,
 							ActivityText:  "",
 							Facts: []Fact{
 								{
-									Name:  "02:40",
+									Name:  "02:40 (GMT+00:00)",
 									Value: "```Metric = 123 (OK to ERROR)```",
 								},
 							},
@@ -189,7 +189,7 @@ some other text _italic text_`,
 							ActivityText:  "",
 							Facts: []Fact{
 								{
-									Name:  "02:40",
+									Name:  "02:40 (GMT+00:00)",
 									Value: "```Metric = 123 (OK to WARN)```",
 								},
 							},
@@ -220,7 +220,7 @@ some other text _italic text_`,
 							ActivityText:  "",
 							Facts: []Fact{
 								{
-									Name:  "02:40",
+									Name:  "02:40 (GMT+00:00)",
 									Value: "```Metric = 123 (WARN to OK)```",
 								},
 							},
@@ -251,7 +251,7 @@ some other text _italic text_`,
 							ActivityText:  "",
 							Facts: []Fact{
 								{
-									Name:  "02:40",
+									Name:  "02:40 (GMT+00:00)",
 									Value: "```Metric = 123 (NODATA to NODATA)```",
 								},
 							},
@@ -276,7 +276,7 @@ some other text _italic text_`,
 						ActivityText:  "<h1>header1</h1>\n\n<p>some text <strong>bold text</strong></p>\n\n<h2>header 2</h2>\n\n<p>some other text <em>italic text</em></p>\n",
 						Facts: []Fact{
 							{
-								Name:  "02:40",
+								Name:  "02:40 (GMT+00:00)",
 								Value: "```Metric = 123 (OK to NODATA)```",
 							},
 						},
@@ -311,7 +311,7 @@ some other text _italic text_`,
 						ActivityText:  "",
 						Facts: []Fact{
 							{
-								Name:  "02:40",
+								Name:  "02:40 (GMT+00:00)",
 								Value: "```Metric = 123 (OK to NODATA)```",
 							},
 						},
@@ -335,7 +335,7 @@ some other text _italic text_`,
 						ActivityText:  "<h1>header1</h1>\n\n<p>some text <strong>bold text</strong></p>\n\n<h2>header 2</h2>\n\n<p>some other text <em>italic text</em></p>\n",
 						Facts: []Fact{
 							{
-								Name:  "02:40",
+								Name:  "02:40 (GMT+00:00)",
 								Value: "```Metric = 123 (OK to NODATA)```",
 							},
 							{
@@ -375,27 +375,27 @@ some other text _italic text_`,
 						ActivityText:  "<h1>header1</h1>\n\n<p>some text <strong>bold text</strong></p>\n\n<h2>header 2</h2>\n\n<p>some other text <em>italic text</em></p>\n",
 						Facts: []Fact{
 							{
-								Name:  "02:40",
+								Name:  "02:40 (GMT+00:00)",
 								Value: "```Metric = 123 (OK to NODATA)```",
 							},
 							{
-								Name:  "02:40",
+								Name:  "02:40 (GMT+00:00)",
 								Value: "```Metric = 123 (OK to NODATA)```",
 							},
 							{
-								Name:  "02:40",
+								Name:  "02:40 (GMT+00:00)",
 								Value: "```Metric = 123 (OK to NODATA)```",
 							},
 							{
-								Name:  "02:40",
+								Name:  "02:40 (GMT+00:00)",
 								Value: "```Metric = 123 (OK to NODATA)```",
 							},
 							{
-								Name:  "02:40",
+								Name:  "02:40 (GMT+00:00)",
 								Value: "```Metric = 123 (OK to NODATA)```",
 							},
 							{
-								Name:  "02:40",
+								Name:  "02:40 (GMT+00:00)",
 								Value: "```Metric = 123 (OK to NODATA)```",
 							},
 						},
@@ -431,7 +431,7 @@ some other text _italic text_`,
 						ActivityText:  "",
 						Facts: []Fact{
 							{
-								Name:  "02:40",
+								Name:  "02:40 (GMT+00:00)",
 								Value: "```Metric = 123 (OK to NODATA)```",
 							},
 						},

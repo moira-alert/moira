@@ -70,13 +70,13 @@ func TestBuildMoiraMessage(t *testing.T) {
 
 		Convey("Print moira message with one event", func() {
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, false, moira.TriggerData{})
-			expected := "02:40: Metric = 123 (OK to NODATA)\n"
+			expected := "02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n"
 			So(actual, ShouldResemble, expected)
 		})
 
 		Convey("Print moira message with one event and desc", func() {
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, false, trigger)
-			expected := "<h2>header</h2>\n\n<p><strong>bold text</strong> <em>italics</em>\n<code>code</code></p>\n" + "02:40: Metric = 123 (OK to NODATA)\n"
+			expected := "<h2>header</h2>\n\n<p><strong>bold text</strong> <em>italics</em>\n<code>code</code></p>\n" + "02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n"
 			So(actual, ShouldResemble, expected)
 		})
 
@@ -84,13 +84,13 @@ func TestBuildMoiraMessage(t *testing.T) {
 			var interval int64 = 24
 			event.MessageEventInfo = &moira.EventInfo{Interval: &interval}
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, false, moira.TriggerData{})
-			expected := "02:40: Metric = 123 (OK to NODATA). This metric has been in bad state for more than 24 hours - please, fix.\n"
+			expected := "02:40 (GMT+00:00): Metric = 123 (OK to NODATA). This metric has been in bad state for more than 24 hours - please, fix.\n"
 			So(actual, ShouldResemble, expected)
 		})
 
 		Convey("Print moira message with one event and throttled", func() {
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, true, moira.TriggerData{})
-			expected := `02:40: Metric = 123 (OK to NODATA)
+			expected := `02:40 (GMT+00:00): Metric = 123 (OK to NODATA)
 
 Please, fix your system or tune this trigger to generate less events.`
 			So(actual, ShouldResemble, expected)
