@@ -95,12 +95,27 @@ func (triggerExpression *TriggerExpression) Evaluate() (moira.State, error) {
 	}
 }
 
+func validateUserExpression(triggerExpression *TriggerExpression, userExpression *govaluate.EvaluableExpression) (*govaluate.EvaluableExpression, error) {
+	for _, v := range userExpression.Vars() {
+		if _, err := triggerExpression.Get(v); err != nil {
+			return nil, fmt.Errorf("invalid variable value: %w", err)
+		}
+	}
+	return userExpression, nil
+}
+
 func getExpression(triggerExpression *TriggerExpression) (*govaluate.EvaluableExpression, error) {
 	if triggerExpression.TriggerType == moira.ExpressionTrigger {
 		if triggerExpression.Expression == nil || *triggerExpression.Expression == "" {
 			return nil, fmt.Errorf("trigger_type set to expression, but no expression provided")
 		}
-		return getUserExpression(*triggerExpression.Expression)
+
+		userExpression, err := getUserExpression(*triggerExpression.Expression)
+		if err != nil {
+			return nil, err
+		}
+
+		return validateUserExpression(triggerExpression, userExpression)
 	}
 	return getSimpleExpression(triggerExpression)
 }
