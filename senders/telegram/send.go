@@ -112,6 +112,7 @@ func (sender *Sender) getChat(username string) (*telebot.Chat, error) {
 	}
 	chat, err := sender.bot.ChatByID(uid)
 	if err != nil {
+		err = removeTokenFromError(err, sender.bot)
 		return nil, fmt.Errorf("can't find recipient %s: %s", uid, err.Error())
 	}
 	return chat, nil
@@ -130,6 +131,7 @@ func (sender *Sender) talk(chat *telebot.Chat, message string, plots [][]byte, m
 func (sender *Sender) sendAsMessage(chat *telebot.Chat, message string) error {
 	_, err := sender.bot.Send(chat, message)
 	if err != nil {
+		err = removeTokenFromError(err, sender.bot)
 		sender.logger.Debug().
 			String("message", message).
 			Int64("chat_id", chat.ID).
@@ -197,6 +199,7 @@ func (sender *Sender) sendAsAlbum(chat *telebot.Chat, plots [][]byte, caption st
 
 	_, err := sender.bot.SendAlbum(chat, album)
 	if err != nil {
+		err = removeTokenFromError(err, sender.bot)
 		sender.logger.Debug().
 			Int64("chat_id", chat.ID).
 			Error(err).
