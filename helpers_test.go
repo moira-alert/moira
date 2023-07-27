@@ -258,5 +258,9 @@ func TestReplaceSubstring(t *testing.T) {
 		Convey("no replacement string", func() {
 			So(ReplaceSubstring("https://api.telegram.org/getMe", "bot", "/", "[DELETED]"), ShouldResemble, "https://api.telegram.org/getMe")
 		})
+
+		Convey("there is the beginning of replacement string, but no end", func() {
+			So(ReplaceSubstring("https://api.telegram.org/botXXX error", "bot", "/", "[DELETED]"), ShouldResemble, "https://api.telegram.org/botXXX error")
+		})
 	})
 }
