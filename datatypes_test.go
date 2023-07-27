@@ -178,19 +178,19 @@ func TestNotificationEvent_CreateMessage(t *testing.T) {
 		})
 	})
 }
-func TestNotificationEvent_GetSubjectState(t *testing.T) {
+func TestNotificationEvent_getSubjectState(t *testing.T) {
 	Convey("Get ERROR state", t, func() {
 		states := NotificationEvents{{State: StateOK, Values: map[string]float64{"t1": 0}}, {State: StateERROR, Values: map[string]float64{"t1": 1}}}
-		So(states.GetSubjectState(), ShouldResemble, StateERROR)
+		So(states.getSubjectState(), ShouldResemble, StateERROR)
 		So(states[0].String(), ShouldResemble, "TriggerId: , Metric: , Values: 0, OldState: , State: OK, Message: '', Timestamp: 0")
 		So(states[1].String(), ShouldResemble, "TriggerId: , Metric: , Values: 1, OldState: , State: ERROR, Message: '', Timestamp: 0")
 	})
 }
 
-func TestNotificationEvent_GetLastState(t *testing.T) {
+func TestNotificationEvent_getLastState(t *testing.T) {
 	Convey("Get WARN state", t, func() {
 		states := NotificationEvents{{State: StateOK, Values: map[string]float64{"t1": 0}}, {State: StateERROR, Values: map[string]float64{"t1": 1}}, {State: StateWARN, Values: map[string]float64{"t1": 10}}}
-		So(states.GetLastState(), ShouldResemble, StateWARN)
+		So(states.getLastState(), ShouldResemble, StateWARN)
 		So(states[0].String(), ShouldResemble, "TriggerId: , Metric: , Values: 0, OldState: , State: OK, Message: '', Timestamp: 0")
 		So(states[1].String(), ShouldResemble, "TriggerId: , Metric: , Values: 1, OldState: , State: ERROR, Message: '', Timestamp: 0")
 		So(states[2].String(), ShouldResemble, "TriggerId: , Metric: , Values: 10, OldState: , State: WARN, Message: '', Timestamp: 0")
