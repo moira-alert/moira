@@ -244,23 +244,23 @@ func testRounding(baseTimestamp, retention int64) {
 func TestReplaceSubstring(t *testing.T) {
 	Convey("test replace substring", t, func() {
 		Convey("replacement string in the middle", func() {
-			So(ReplaceSubstring("https://api.telegram.org/botXXX/getMe", "bot", "/", "[DELETED]"), ShouldResemble, "https://api.telegram.org/[DELETED]/getMe")
+			So(ReplaceSubstring("telebot: Post https://api.telegram.org/botXXX/getMe", "/bot", "/", "[DELETED]"), ShouldResemble, "telebot: Post https://api.telegram.org/bot[DELETED]/getMe")
 		})
 
 		Convey("replacement string at the beginning", func() {
-			So(ReplaceSubstring("botXXX/getMe", "bot", "/", "[DELETED]"), ShouldResemble, "[DELETED]/getMe")
+			So(ReplaceSubstring("/botXXX/getMe", "/bot", "/", "[DELETED]"), ShouldResemble, "/bot[DELETED]/getMe")
 		})
 
 		Convey("replacement string at the end", func() {
-			So(ReplaceSubstring("https://api.telegram.org/botXXX/", "bot", "/", "[DELETED]"), ShouldResemble, "https://api.telegram.org/[DELETED]/")
+			So(ReplaceSubstring("telebot: Post https://api.telegram.org/botXXX/", "/bot", "/", "[DELETED]"), ShouldResemble, "telebot: Post https://api.telegram.org/bot[DELETED]/")
 		})
 
 		Convey("no replacement string", func() {
-			So(ReplaceSubstring("https://api.telegram.org/getMe", "bot", "/", "[DELETED]"), ShouldResemble, "https://api.telegram.org/getMe")
+			So(ReplaceSubstring("telebot: Post https://api.telegram.org/getMe", "/bot", "/", "[DELETED]"), ShouldResemble, "telebot: Post https://api.telegram.org/getMe")
 		})
 
 		Convey("there is the beginning of replacement string, but no end", func() {
-			So(ReplaceSubstring("https://api.telegram.org/botXXX error", "bot", "/", "[DELETED]"), ShouldResemble, "https://api.telegram.org/botXXX error")
+			So(ReplaceSubstring("https://api.telegram.org/botXXX error", "/bot", "/", "[DELETED]"), ShouldResemble, "https://api.telegram.org/botXXX error")
 		})
 	})
 }

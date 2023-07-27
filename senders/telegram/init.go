@@ -53,7 +53,7 @@ func removeTokenFromError(err error, bot *telebot.Bot) error {
 		url = bot.URL
 	}
 	if strings.Contains(err.Error(), url) {
-		return errors.New(moira.ReplaceSubstring(err.Error(), "bot", "/", hidden))
+		return errors.New(moira.ReplaceSubstring(err.Error(), "/bot", "/", hidden))
 	}
 	return err
 }
