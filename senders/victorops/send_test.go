@@ -120,14 +120,25 @@ func TestBuildTitle(t *testing.T) {
 	sender := Sender{}
 
 	Convey("Build title test", t, func() {
-		event := moira.NotificationEvent{
-			TriggerID: "TriggerID",
-			Values:    map[string]float64{"t1": 123},
-			Timestamp: 150000000,
-			Metric:    "Metric",
-			OldState:  moira.StateOK,
-			State:     moira.StateNODATA,
-			Message:   nil,
+		events := moira.NotificationEvents{
+			moira.NotificationEvent{
+				TriggerID: "TriggerID",
+				Values:    map[string]float64{"t1": 123},
+				Timestamp: 150000000,
+				Metric:    "Metric",
+				OldState:  moira.StateOK,
+				State:     moira.StateNODATA,
+				Message:   nil,
+			},
+			moira.NotificationEvent{
+				TriggerID: "TriggerID",
+				Values:    map[string]float64{"t1": 15},
+				Timestamp: 150000000,
+				Metric:    "Metric",
+				OldState:  moira.StateNODATA,
+				State:     moira.StateOK,
+				Message:   nil,
+			},
 		}
 
 		trigger := moira.TriggerData{
@@ -136,9 +147,15 @@ func TestBuildTitle(t *testing.T) {
 			ID:   "TriggerID",
 		}
 
-		Convey("Build title", func() {
-			actual := sender.buildTitle(moira.NotificationEvents{event}, trigger, false)
+		Convey("Build title without throttling", func() {
+			actual := sender.buildTitle(events, trigger, false)
 			expected := "NODATA Name [tag1][tag2]\n"
+			So(actual, ShouldResemble, expected)
+		})
+
+		Convey("Build title when throttling", func() {
+			actual := sender.buildTitle(events, trigger, true)
+			expected := "OK Name [tag1][tag2]\n"
 			So(actual, ShouldResemble, expected)
 		})
 	})
