@@ -210,6 +210,7 @@ func ReplaceSubstring(str, beg, end, rep string) string {
 	result := str
 	startIndex := strings.Index(str, beg)
 	if startIndex != -1 {
+		startIndex += len(beg)
 		endIndex := strings.Index(str[startIndex:], end)
 		if endIndex != -1 {
 			endIndex += len(str[:startIndex])
