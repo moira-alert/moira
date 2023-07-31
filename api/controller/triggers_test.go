@@ -48,7 +48,7 @@ func TestCreateTrigger(t *testing.T) {
 	})
 
 	Convey("Success with custom valid trigger", t, func() {
-		triggerID := "Valid.Custom_Trig ger~Na|me-4:2"
+		triggerID := "Valid.Custom_Trigger~Name-42"
 		triggerModel := dto.TriggerModel{ID: triggerID}
 		dataBase.EXPECT().GetTrigger(triggerModel.ID).Return(moira.Trigger{}, database.ErrNil)
 		dataBase.EXPECT().AcquireTriggerCheckLock(gomock.Any(), 10)
@@ -63,9 +63,8 @@ func TestCreateTrigger(t *testing.T) {
 	})
 
 	Convey("Error with invalid triggerID", t, func() {
-		for _, triggerID := range []string{"Foo#", "Foo%", "Foo^"} {
+		for _, triggerID := range []string{"Foo#", "Foo%", "Foo^", "Foo ", "[Foo]", "Foo?", "Foo:@"} {
 			triggerModel := dto.TriggerModel{ID: triggerID}
-			dataBase.EXPECT().GetTrigger(triggerModel.ID).Return(moira.Trigger{}, database.ErrNil)
 			resp, err := CreateTrigger(dataBase, &triggerModel, make(map[string]bool))
 			expected := api.ErrorInvalidRequest(fmt.Errorf("trigger ID contains invalid characters (allowed: 0-9, a-z, A-Z, -, ~, _, .)"))
 			So(err, ShouldResemble, expected)
