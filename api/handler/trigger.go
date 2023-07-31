@@ -105,9 +105,6 @@ func removeTrigger(writer http.ResponseWriter, request *http.Request) {
 
 func getTrigger(writer http.ResponseWriter, request *http.Request) {
 	triggerID := middleware.GetTriggerID(request)
-	if triggerID == "testlog" {
-		panic("Test for multi line logs")
-	}
 
 	trigger, err := controller.GetTrigger(database, triggerID)
 	if err != nil {
