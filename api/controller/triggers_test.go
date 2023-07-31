@@ -67,7 +67,7 @@ func TestCreateTrigger(t *testing.T) {
 			triggerModel := dto.TriggerModel{ID: triggerID}
 			dataBase.EXPECT().GetTrigger(triggerModel.ID).Return(moira.Trigger{}, database.ErrNil)
 			resp, err := CreateTrigger(dataBase, &triggerModel, make(map[string]bool))
-			expected := api.ErrorInvalidRequest(fmt.Errorf("trigger ID contains invalid characters"))
+			expected := api.ErrorInvalidRequest(fmt.Errorf("trigger ID contains invalid characters (allowed: 0-9, a-z, A-Z, -, ~, _, .)"))
 			So(err, ShouldResemble, expected)
 			So(resp, ShouldBeNil)
 		}
