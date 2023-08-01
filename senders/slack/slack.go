@@ -80,11 +80,15 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
 	message := sender.buildMessage(events, trigger, throttled)
 	useDirectMessaging := useDirectMessaging(contact.Value)
-	emoji := sender.getStateEmoji(events.GetSubjectState())
+
+	state := events.GetCurrentState(throttled)
+	emoji := sender.getStateEmoji(state)
+
 	channelID, threadTimestamp, err := sender.sendMessage(message, contact.Value, trigger.ID, useDirectMessaging, emoji)
 	if err != nil {
 		return err
 	}
+
 	if channelID != "" && len(plots) > 0 {
 		err = sender.sendPlots(plots, channelID, threadTimestamp, trigger.ID)
 		if err != nil {
@@ -95,13 +99,14 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 				Error(err)
 		}
 	}
+
 	return nil
 }
 
 func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
 	var message strings.Builder
 
-	title := sender.buildTitle(events, trigger)
+	title := sender.buildTitle(events, trigger, throttled)
 	titleLen := len([]rune(title))
 
 	desc := sender.buildDescription(trigger)
@@ -136,9 +141,11 @@ func (sender *Sender) buildDescription(trigger moira.TriggerData) string {
 	return desc
 }
 
-func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData) string {
-	title := fmt.Sprintf("*%s*", events.GetSubjectState())
+func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
+	state := events.GetCurrentState(throttled)
+	title := fmt.Sprintf("*%s*", state)
 	triggerURI := trigger.GetTriggerURI(sender.frontURI)
+
 	if triggerURI != "" {
 		title += fmt.Sprintf(" <%s|%s>", triggerURI, trigger.Name)
 	} else if trigger.Name != "" {

@@ -90,7 +90,7 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 
 	var message strings.Builder
 
-	title := sender.buildTitle(events, trigger)
+	title := sender.buildTitle(events, trigger, throttled)
 	titleLen := len([]rune(title))
 
 	desc := sender.buildDescription(trigger)
@@ -124,8 +124,9 @@ func (sender *Sender) buildDescription(trigger moira.TriggerData) string {
 	return desc
 }
 
-func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData) string {
-	title := fmt.Sprintf("**%s**", events.GetSubjectState())
+func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
+	state := events.GetCurrentState(throttled)
+	title := fmt.Sprintf("**%s**", state)
 	triggerURI := trigger.GetTriggerURI(sender.frontURI)
 	if triggerURI != "" {
 		title += fmt.Sprintf(" [%s](%s)", trigger.Name, triggerURI)

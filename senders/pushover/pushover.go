@@ -69,7 +69,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 func (sender *Sender) makePushoverMessage(events moira.NotificationEvents, trigger moira.TriggerData, plots [][]byte, throttled bool) *pushover_client.Message {
 	pushoverMessage := &pushover_client.Message{
 		Message:   sender.buildMessage(events, throttled),
-		Title:     sender.buildTitle(events, trigger),
+		Title:     sender.buildTitle(events, trigger, throttled),
 		Priority:  sender.getMessagePriority(events),
 		Retry:     5 * time.Minute, //nolint
 		Expire:    time.Hour,
@@ -110,17 +110,20 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, throttled bo
 	return message.String()
 }
 
-func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData) string {
-	title := fmt.Sprintf("%s %s %s (%d)", events.GetSubjectState(), trigger.Name, trigger.GetTags(), len(events))
+func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
+	state := events.GetCurrentState(throttled)
+	title := fmt.Sprintf("%s %s %s (%d)", state, trigger.Name, trigger.GetTags(), len(events))
 	tags := 1
+
 	for len([]rune(title)) > titleLimit {
 		var tagBuffer bytes.Buffer
 		for i := 0; i < len(trigger.Tags)-tags; i++ {
 			tagBuffer.WriteString(fmt.Sprintf("[%s]", trigger.Tags[i]))
 		}
-		title = fmt.Sprintf("%s %s %s.... (%d)", events.GetSubjectState(), trigger.Name, tagBuffer.String(), len(events))
+		title = fmt.Sprintf("%s %s %s.... (%d)", state, trigger.Name, tagBuffer.String(), len(events))
 		tags++
 	}
+
 	return title
 }
 
