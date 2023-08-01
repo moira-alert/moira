@@ -127,7 +127,7 @@ Please, fix your system or tune this trigger to generate less events.`
 func TestBuildTitle(t *testing.T) {
 	sender := Sender{}
 	Convey("Build title with three events with max ERROR state and two tags without throttling", t, func() {
-		title := sender.buildTitle([]moira.NotificationEvent{{State: moira.StateERROR}, {State: moira.StateERROR}, {State: moira.StateWARN}, {State: moira.StateOK}}, moira.TriggerData{Tags: []string{"tag1", "tag2"}, Name: "Name"}, false)
+		title := sender.buildTitle([]moira.NotificationEvent{{State: moira.StateERROR}, {State: moira.StateWARN}, {State: moira.StateWARN}, {State: moira.StateOK}}, moira.TriggerData{Tags: []string{"tag1", "tag2"}, Name: "Name"}, false)
 		So(title, ShouldResemble, "ERROR Name [tag1][tag2] (4)")
 	})
 

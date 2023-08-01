@@ -120,7 +120,7 @@ func TestBuildTitle(t *testing.T) {
 		So(title, ShouldResemble, "OK   (4)")
 	})
 
-	Convey("Build title that exceeds the title limit without throttling", t, func() {
+	Convey("Build title that exceeds the title limit", t, func() {
 		var reallyLongTag string
 		for i := 0; i < 30; i++ {
 			reallyLongTag = reallyLongTag + "randomstring"
