@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/go-chi/chi"
@@ -47,7 +48,14 @@ func getTriggerMetrics(writer http.ResponseWriter, request *http.Request) {
 
 func deleteTriggerMetric(writer http.ResponseWriter, request *http.Request) {
 	triggerID := middleware.GetTriggerID(request)
-	metricName := request.URL.Query().Get("name")
+
+	urlValues, err := url.ParseQuery(request.URL.RawQuery)
+	if err != nil {
+		render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
+		return
+	}
+
+	metricName := urlValues.Get("name")
 	if err := controller.DeleteTriggerMetric(database, metricName, triggerID); err != nil {
 		render.Render(writer, request, err) //nolint
 	}

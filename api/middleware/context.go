@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
 	"time"
 
@@ -109,11 +110,18 @@ func MetricSourceProvider(sourceProvider *metricSource.SourceProvider) func(next
 func Paginate(defaultPage, defaultSize int64) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-			page, err := strconv.ParseInt(request.URL.Query().Get("p"), 10, 64)
+			urlValues, err := url.ParseQuery(request.URL.RawQuery)
+			if err != nil {
+				render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
+				return
+			}
+
+			page, err := strconv.ParseInt(urlValues.Get("p"), 10, 64)
 			if err != nil {
 				page = defaultPage
 			}
-			size, err := strconv.ParseInt(request.URL.Query().Get("size"), 10, 64)
+
+			size, err := strconv.ParseInt(urlValues.Get("size"), 10, 64)
 			if err != nil {
 				size = defaultSize
 			}
@@ -129,12 +137,18 @@ func Paginate(defaultPage, defaultSize int64) func(next http.Handler) http.Handl
 func Pager(defaultCreatePager bool, defaultPagerID string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-			pagerID := request.URL.Query().Get("pagerID")
+			urlValues, err := url.ParseQuery(request.URL.RawQuery)
+			if err != nil {
+				render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
+				return
+			}
+
+			pagerID := urlValues.Get("pagerID")
 			if pagerID == "" {
 				pagerID = defaultPagerID
 			}
 
-			createPager, err := strconv.ParseBool(request.URL.Query().Get("createPager"))
+			createPager, err := strconv.ParseBool(urlValues.Get("createPager"))
 			if err != nil {
 				createPager = defaultCreatePager
 			}
@@ -150,7 +164,13 @@ func Pager(defaultCreatePager bool, defaultPagerID string) func(next http.Handle
 func Populate(defaultPopulated bool) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-			populate, err := strconv.ParseBool(request.URL.Query().Get("populated"))
+			urlValues, err := url.ParseQuery(request.URL.RawQuery)
+			if err != nil {
+				render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
+				return
+			}
+
+			populate, err := strconv.ParseBool(urlValues.Get("populated"))
 			if err != nil {
 				populate = defaultPopulated
 			}
@@ -176,11 +196,18 @@ func Triggers(LocalMetricTTL, RemoteMetricTTL time.Duration) func(next http.Hand
 func DateRange(defaultFrom, defaultTo string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-			from := request.URL.Query().Get("from")
+			urlValues, err := url.ParseQuery(request.URL.RawQuery)
+			if err != nil {
+				render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
+				return
+			}
+
+			from := urlValues.Get("from")
 			if from == "" {
 				from = defaultFrom
 			}
-			to := request.URL.Query().Get("to")
+
+			to := urlValues.Get("to")
 			if to == "" {
 				to = defaultTo
 			}
@@ -196,10 +223,17 @@ func DateRange(defaultFrom, defaultTo string) func(next http.Handler) http.Handl
 func TargetName(defaultTargetName string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-			targetName := request.URL.Query().Get("target")
+			urlValues, err := url.ParseQuery(request.URL.RawQuery)
+			if err != nil {
+				render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
+				return
+			}
+
+			targetName := urlValues.Get("target")
 			if targetName == "" {
 				targetName = defaultTargetName
 			}
+
 			ctx := context.WithValue(request.Context(), targetNameKey, targetName)
 			next.ServeHTTP(writer, request.WithContext(ctx))
 		})
