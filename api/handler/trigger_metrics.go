@@ -43,7 +43,7 @@ func getTriggerMetrics(writer http.ResponseWriter, request *http.Request) {
 		render.Render(writer, request, err) //nolint
 		return
 	}
-	
+
 	if err := render.Render(writer, request, triggerMetrics); err != nil {
 		render.Render(writer, request, api.ErrorRender(err)) //nolint
 	}
