@@ -106,7 +106,7 @@ func cleanUpAbandonedTriggerLastCheckOnRedisNode(connector *DbConnector, client 
 		triggerID := strings.TrimPrefix(lastCheckKey, metricLastCheckKey(""))
 		_, err := connector.GetTrigger(triggerID)
 		if err == database.ErrNil {
-			err := connector.RemoveTriggerLastCheck(triggerID)
+			err = connector.RemoveTriggerLastCheck(triggerID)
 			if err != nil {
 				return err
 			}

@@ -128,11 +128,6 @@ func (connector *DbConnector) callFunc(fn func(connector *DbConnector, client re
 			return fn(connector, shard)
 		})
 	default:
-		err := fn(connector, client)
-		if err != nil {
-			return err
-		}
+		return fn(connector, client)
 	}
-
-	return nil
 }
