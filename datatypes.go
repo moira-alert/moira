@@ -27,9 +27,10 @@ const (
 )
 
 const (
-	format        = "15:04 02.01.2006"
-	remindMessage = "This metric has been in bad state for more than %v hours - please, fix."
-	limit         = 1000
+	format            = "15:04 02.01.2006"
+	DefaultTimeFormat = "15:04"
+	remindMessage     = "This metric has been in bad state for more than %v hours - please, fix."
+	limit             = 1000
 )
 
 type NotificationEventSettings int
@@ -521,8 +522,12 @@ func (event NotificationEvent) GetMetricsValues(settings NotificationEventSettin
 }
 
 // FormatTimestamp gets event timestamp and format it using given location to human readable presentation
-func (event NotificationEvent) FormatTimestamp(location *time.Location) string {
-	return time.Unix(event.Timestamp, 0).In(location).Format("15:04")
+func (event NotificationEvent) FormatTimestamp(location *time.Location, timeFormat string) string {
+	timestamp := time.Unix(event.Timestamp, 0).In(location)
+	formattedTime := timestamp.Format(timeFormat)
+	offset := timestamp.Format("-07:00")
+
+	return formattedTime + " (GMT" + offset + ")"
 }
 
 // GetOrCreateMetricState gets metric state from check data or create new if CheckData has no state for given metric

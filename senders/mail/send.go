@@ -8,7 +8,6 @@ import (
 	"net/smtp"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/russross/blackfriday/v2"
 
@@ -64,7 +63,7 @@ func (sender *Sender) makeMessage(events moira.NotificationEvents, contact moira
 	for _, event := range events {
 		templateData.Items = append(templateData.Items, &templateRow{
 			Metric:     event.Metric,
-			Timestamp:  time.Unix(event.Timestamp, 0).In(sender.location).Format(sender.dateTimeFormat),
+			Timestamp:  event.FormatTimestamp(sender.location, sender.dateTimeFormat),
 			Oldstate:   event.OldState,
 			State:      event.State,
 			Values:     event.GetMetricsValues(moira.DefaultNotificationSettings),

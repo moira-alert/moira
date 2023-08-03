@@ -90,7 +90,7 @@ func TestBuildMoiraMessage(t *testing.T) {
 
 		Convey("Print moira message with one event", func() {
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, false)
-			expected := "02:40: Metric = 123 (OK to NODATA)\n"
+			expected := "02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n"
 			So(actual, ShouldResemble, expected)
 		})
 
@@ -98,13 +98,13 @@ func TestBuildMoiraMessage(t *testing.T) {
 			var interval int64 = 24
 			event.MessageEventInfo = &moira.EventInfo{Interval: &interval}
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, false)
-			expected := "02:40: Metric = 123 (OK to NODATA). This metric has been in bad state for more than 24 hours - please, fix.\n"
+			expected := "02:40 (GMT+00:00): Metric = 123 (OK to NODATA). This metric has been in bad state for more than 24 hours - please, fix.\n"
 			So(actual, ShouldResemble, expected)
 		})
 
 		Convey("Print moira message with one event and throttled", func() {
 			actual := sender.buildMessage([]moira.NotificationEvent{event}, true)
-			expected := `02:40: Metric = 123 (OK to NODATA)
+			expected := `02:40 (GMT+00:00): Metric = 123 (OK to NODATA)
 
 Please, fix your system or tune this trigger to generate less events.`
 			So(actual, ShouldResemble, expected)
@@ -112,11 +112,11 @@ Please, fix your system or tune this trigger to generate less events.`
 
 		Convey("Print moira message with 6 events", func() {
 			actual := sender.buildMessage([]moira.NotificationEvent{event, event, event, event, event, event}, false)
-			expected := `02:40: Metric = 123 (OK to NODATA)
-02:40: Metric = 123 (OK to NODATA)
-02:40: Metric = 123 (OK to NODATA)
-02:40: Metric = 123 (OK to NODATA)
-02:40: Metric = 123 (OK to NODATA)
+			expected := `02:40 (GMT+00:00): Metric = 123 (OK to NODATA)
+02:40 (GMT+00:00): Metric = 123 (OK to NODATA)
+02:40 (GMT+00:00): Metric = 123 (OK to NODATA)
+02:40 (GMT+00:00): Metric = 123 (OK to NODATA)
+02:40 (GMT+00:00): Metric = 123 (OK to NODATA)
 
 ...and 1 more events.`
 			So(actual, ShouldResemble, expected)
@@ -194,7 +194,7 @@ func TestMakePushoverMessage(t *testing.T) {
 			URL:       "https://my-moira.com/trigger/SomeID",
 			Priority:  pushover_client.PriorityEmergency,
 			Title:     "ERROR TriggerName [tag1][tag2] (1)",
-			Message:   "02:40: Metric = 123 (OK to ERROR)\n",
+			Message:   "02:40 (GMT+00:00): Metric = 123 (OK to ERROR)\n",
 		}
 		expected.AddAttachment(bytes.NewReader([]byte{1, 0, 1})) //nolint
 		So(sender.makePushoverMessage(event, trigger, [][]byte{{1, 0, 1}}, false), ShouldResemble, expected)
