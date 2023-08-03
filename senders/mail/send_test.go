@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
-	"log"
 	"testing"
 	"time"
 
@@ -55,7 +54,6 @@ some other text _italics text_`,
 
 		messageStr := new(bytes.Buffer)
 		_, err := message.WriteTo(messageStr)
-		log.Println(messageStr)
 		So(err, ShouldBeNil)
 		So(messageStr.String(), ShouldContainSubstring, "http://localhost/trigger/triggerID-0000000000001")
 		So(messageStr.String(), ShouldContainSubstring, "<em>italics text</em>")
