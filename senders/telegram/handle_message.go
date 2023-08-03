@@ -17,7 +17,10 @@ func (sender *Sender) handleMessage(message *telebot.Message) error {
 	if responseMessage != "" {
 		_, err = sender.bot.Send(message.Chat, responseMessage)
 	}
-	return removeTokenFromError(err, sender.bot)
+	if err != nil {
+		err = removeTokenFromError(err, sender.bot)
+	}
+	return err
 }
 
 func (sender *Sender) getResponseMessage(message *telebot.Message) (string, error) {
