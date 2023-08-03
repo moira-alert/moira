@@ -26,8 +26,9 @@ const (
 )
 
 const (
-	format        = "15:04 02.01.2006"
-	remindMessage = "This metric has been in bad state for more than %v hours - please, fix."
+	format            = "15:04 02.01.2006"
+	DefaultTimeFormat = "15:04"
+	remindMessage     = "This metric has been in bad state for more than %v hours - please, fix."
 )
 
 // NotificationEvent represents trigger state changes event
@@ -477,9 +478,9 @@ func (event NotificationEvent) GetMetricsValues() string {
 }
 
 // FormatTimestamp gets event timestamp and format it using given location to human readable presentation
-func (event NotificationEvent) FormatTimestamp(location *time.Location) string {
+func (event NotificationEvent) FormatTimestamp(location *time.Location, timeFormat string) string {
 	timestamp := time.Unix(event.Timestamp, 0).In(location)
-	formattedTime := timestamp.Format("15:04")
+	formattedTime := timestamp.Format(timeFormat)
 	offset := timestamp.Format("-07:00")
 
 	return formattedTime + " (GMT" + offset + ")"

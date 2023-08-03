@@ -42,7 +42,7 @@ func (sender *twilioSenderSms) buildMessage(events moira.NotificationEvents, tri
 		if i > printEventsCount-1 {
 			break
 		}
-		message.WriteString(fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location), event.Metric, event.GetMetricsValues(), event.OldState, event.State))
+		message.WriteString(fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location, moira.DefaultTimeFormat), event.Metric, event.GetMetricsValues(), event.OldState, event.State))
 		if msg := event.CreateMessage(sender.location); len(msg) > 0 {
 			message.WriteString(fmt.Sprintf(". %s", msg))
 		}

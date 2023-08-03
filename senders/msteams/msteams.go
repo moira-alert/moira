@@ -201,7 +201,7 @@ func (sender *Sender) buildEventsFacts(events moira.NotificationEvents, maxEvent
 			line += fmt.Sprintf(". %s", moira.UseString(event.Message))
 		}
 		facts = append(facts, Fact{
-			Name:  event.FormatTimestamp(sender.location),
+			Name:  event.FormatTimestamp(sender.location, moira.DefaultTimeFormat),
 			Value: "```" + line + "```",
 		})
 

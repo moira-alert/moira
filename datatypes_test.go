@@ -193,9 +193,9 @@ func TestNotificationEvent_FormatTimestamp(t *testing.T) {
 		location, _ := time.LoadLocation("UTC")
 		locationMoscow, _ := time.LoadLocation("Europe/Moscow")
 		locationYekaterinburg, _ := time.LoadLocation("Asia/Yekaterinburg")
-		So(event.FormatTimestamp(location), ShouldResemble, "02:40 (GMT+00:00)")
-		So(event.FormatTimestamp(locationMoscow), ShouldResemble, "05:40 (GMT+03:00)")
-		So(event.FormatTimestamp(locationYekaterinburg), ShouldResemble, "07:40 (GMT+05:00)")
+		So(event.FormatTimestamp(location, DefaultTimeFormat), ShouldResemble, "02:40 (GMT+00:00)")
+		So(event.FormatTimestamp(locationMoscow, DefaultTimeFormat), ShouldResemble, "05:40 (GMT+03:00)")
+		So(event.FormatTimestamp(locationYekaterinburg, DefaultTimeFormat), ShouldResemble, "07:40 (GMT+05:00)")
 	})
 }
 
