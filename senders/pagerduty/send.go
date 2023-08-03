@@ -26,7 +26,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 }
 
 func (sender *Sender) buildEvent(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) pagerduty.V2Event {
-	summary := sender.buildSummary(events, trigger)
+	summary := sender.buildSummary(events, trigger, throttled)
 	details := make(map[string]interface{})
 
 	details["Trigger Name"] = trigger.Name
@@ -42,7 +42,7 @@ func (sender *Sender) buildEvent(events moira.NotificationEvents, contact moira.
 	var eventList string
 
 	for _, event := range events {
-		line := fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location, moira.DefaultTimeFormat), event.Metric, event.GetMetricsValues(), event.OldState, event.State)
+		line := fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location, moira.DefaultTimeFormat), event.Metric, event.GetMetricsValues(moira.DefaultNotificationSettings), event.OldState, event.State)
 		if msg := event.CreateMessage(sender.location); len(msg) > 0 {
 			line += fmt.Sprintf(". %s", msg)
 		}
@@ -101,10 +101,11 @@ func (sender *Sender) getSeverity(events moira.NotificationEvents) string {
 	return severity
 }
 
-func (sender *Sender) buildSummary(events moira.NotificationEvents, trigger moira.TriggerData) string {
+func (sender *Sender) buildSummary(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
 	var summary bytes.Buffer
+	state := events.GetCurrentState(throttled)
 
-	summary.WriteString(string(events.GetSubjectState()))
+	summary.WriteString(string(state))
 	summary.WriteString(" ")
 	summary.WriteString(trigger.Name)
 

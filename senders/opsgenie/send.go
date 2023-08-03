@@ -29,7 +29,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 
 func (sender *Sender) makeCreateAlertRequest(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) *alert.CreateAlertRequest {
 	createAlertRequest := &alert.CreateAlertRequest{
-		Message:     sender.buildTitle(events, trigger),
+		Message:     sender.buildTitle(events, trigger, throttled),
 		Description: sender.buildMessage(events, throttled, trigger),
 		Alias:       trigger.ID,
 		Responders: []alert.Responder{
@@ -96,7 +96,7 @@ func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsFo
 	eventsLenLimitReached := false
 	eventsPrinted := 0
 	for _, event := range events {
-		line := fmt.Sprintf("%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location, moira.DefaultTimeFormat), event.Metric, event.GetMetricsValues(), event.OldState, event.State)
+		line := fmt.Sprintf("%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location, moira.DefaultTimeFormat), event.Metric, event.GetMetricsValues(moira.DefaultNotificationSettings), event.OldState, event.State)
 		if msg := event.CreateMessage(sender.location); len(msg) > 0 {
 			line += fmt.Sprintf(". %s\n", msg)
 		} else {
@@ -124,17 +124,20 @@ func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsFo
 	return eventsString
 }
 
-func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData) string {
-	title := fmt.Sprintf("%s %s %s (%d)", events.GetSubjectState(), trigger.Name, trigger.GetTags(), len(events))
+func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
+	state := events.GetCurrentState(throttled)
+	title := fmt.Sprintf("%s %s %s (%d)", state, trigger.Name, trigger.GetTags(), len(events))
 	tags := 1
+
 	for len([]rune(title)) > titleLimit {
 		var tagBuffer bytes.Buffer
 		for i := 0; i < len(trigger.Tags)-tags; i++ {
 			tagBuffer.WriteString(fmt.Sprintf("[%s]", trigger.Tags[i]))
 		}
-		title = fmt.Sprintf("%s %s %s.... (%d)", events.GetSubjectState(), trigger.Name, tagBuffer.String(), len(events))
+		title = fmt.Sprintf("%s %s %s.... (%d)", state, trigger.Name, tagBuffer.String(), len(events))
 		tags++
 	}
+
 	return title
 }
 

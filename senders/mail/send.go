@@ -44,7 +44,8 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 }
 
 func (sender *Sender) makeMessage(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) *gomail.Message {
-	state := events.GetSubjectState()
+	state := events.GetCurrentState(throttled)
+
 	tags := trigger.GetTags()
 
 	subject := fmt.Sprintf("%s %s %s (%d)", state, trigger.Name, tags, len(events))
@@ -65,7 +66,7 @@ func (sender *Sender) makeMessage(events moira.NotificationEvents, contact moira
 			Timestamp:  event.FormatTimestamp(sender.location, sender.dateTimeFormat),
 			Oldstate:   event.OldState,
 			State:      event.State,
-			Values:     event.GetMetricsValues(),
+			Values:     event.GetMetricsValues(moira.DefaultNotificationSettings),
 			WarnValue:  strconv.FormatFloat(trigger.WarnValue, 'f', -1, 64),
 			ErrorValue: strconv.FormatFloat(trigger.ErrorValue, 'f', -1, 64),
 			Message:    event.CreateMessage(sender.location),
