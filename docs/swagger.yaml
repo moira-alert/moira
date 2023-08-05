@@ -1,0 +1,56 @@
+definitions:
+  dto.ContactList:
+    properties:
+      list:
+        items:
+          $ref: '#/definitions/moira.ContactData'
+        type: array
+    type: object
+  moira.ContactData:
+    properties:
+      id:
+        type: string
+      team:
+        type: string
+      type:
+        type: string
+      user:
+        type: string
+      value:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: This is an API description for [Moira Alert API](https://moira.readthedocs.io/en/latest/overview.html).
+    Check us out on [Github](https://github.com/moira-alert) or look up our [guide
+    on getting started with Moira](https://moira.readthedocs.io).
+  title: Moira Alert
+  version: 2.8.2
+paths:
+  /api/config:
+    get:
+      description: View Moira's runtime configuration. For more details, see <https://moira.readthedocs.io/en/latest/installation/configuration.html>
+      operationId: get-web-config
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+      summary: Get web configuration
+      tags:
+      - config
+  /api/contact:
+    get:
+      description: Retrieves a list of all contacts
+      operationId: get-all-contacts
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ContactList'
+      summary: Get all contacts
+      tags:
+      - contact
+swagger: "2.0"

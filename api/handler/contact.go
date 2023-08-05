@@ -14,6 +14,8 @@ import (
 	"github.com/moira-alert/moira/api/middleware"
 )
 
+// @title Moira API - Contact Management
+// @description APIs for working with Moira contacts. For more details, see <https://moira.readthedocs.io/en/latest/installation/webhooks_scripts.html#contact/>
 func contact(router chi.Router) {
 	router.Get("/", getAllContacts)
 	router.Put("/", createNewContact)
@@ -26,6 +28,13 @@ func contact(router chi.Router) {
 	})
 }
 
+// @Summary Get all contacts
+// @Description Retrieves a list of all contacts
+// @ID get-all-contacts
+// @Produce json
+// @Success 200 {object} dto.ContactList
+// @Router /api/contact [get]
+// @Tags contact
 func getAllContacts(writer http.ResponseWriter, request *http.Request) {
 	contacts, err := controller.GetAllContacts(database)
 	if err != nil {

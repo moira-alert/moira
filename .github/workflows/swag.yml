@@ -1,0 +1,22 @@
+name: Generate Swagger Documentation
+
+on:
+  - push
+  - pull_request
+
+jobs:
+  generate_swagger:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-go@v4
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+
+      - name: Install swag
+        run: make install-swag
+
+      - name: Generate Swagger Documentation
+        run: make swag

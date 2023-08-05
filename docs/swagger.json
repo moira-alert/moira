@@ -1,0 +1,83 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "This is an API description for [Moira Alert API](https://moira.readthedocs.io/en/latest/overview.html). Check us out on [Github](https://github.com/moira-alert) or look up our [guide on getting started with Moira](https://moira.readthedocs.io).",
+        "title": "Moira Alert",
+        "contact": {},
+        "version": "2.8.2"
+    },
+    "paths": {
+        "/api/config": {
+            "get": {
+                "description": "View Moira's runtime configuration. For more details, see \u003chttps://moira.readthedocs.io/en/latest/installation/configuration.html\u003e",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "config"
+                ],
+                "summary": "Get web configuration",
+                "operationId": "get-web-config",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                }
+            }
+        },
+        "/api/contact": {
+            "get": {
+                "description": "Retrieves a list of all contacts",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contact"
+                ],
+                "summary": "Get all contacts",
+                "operationId": "get-all-contacts",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ContactList"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "dto.ContactList": {
+            "type": "object",
+            "properties": {
+                "list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/moira.ContactData"
+                    }
+                }
+            }
+        },
+        "moira.ContactData": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "team": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "user": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

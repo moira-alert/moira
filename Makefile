@@ -39,6 +39,15 @@ lint:
 mock:
 	. ./generate_mocks.sh
 
+.PHONY: install-swag
+install-swag:
+	go install github.com/swaggo/swag/cmd/swag@latest
+
+.PHONY: swag
+swag:
+	echo "Generating Swagger documentation"
+	swag init -g api/handler/handler.go
+
 .PHONY: test
 test:
 	echo 'mode: atomic' > coverage.txt && go list ./... | xargs -n1 -I{} sh -c 'go test -race -v -bench=. -covermode=atomic -coverprofile=coverage.tmp {} && tail -n +2 coverage.tmp >> coverage.txt' && rm coverage.tmp
