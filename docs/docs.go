@@ -36,6 +36,7 @@ const docTemplate = `{
         },
         "/api/contact": {
             "get": {
+                "description": "APIs for working with Moira contacts. For more details, see \u003chttps://moira.readthedocs.io/en/latest/installation/webhooks_scripts.html#contact/\u003e",
                 "produces": [
                     "application/json"
                 ],
@@ -54,6 +55,7 @@ const docTemplate = `{
                 }
             },
             "put": {
+                "description": "APIs for working with Moira contacts. For more details, see \u003chttps://moira.readthedocs.io/en/latest/installation/webhooks_scripts.html#contact/\u003e",
                 "consumes": [
                     "application/json"
                 ],
@@ -106,6 +108,7 @@ const docTemplate = `{
         },
         "/api/contact/{contactId}": {
             "put": {
+                "description": "APIs for working with Moira contacts. For more details, see \u003chttps://moira.readthedocs.io/en/latest/installation/webhooks_scripts.html#contact/\u003e",
                 "consumes": [
                     "application/json"
                 ],

@@ -63,6 +63,7 @@ paths:
       - config
   /api/contact:
     get:
+      description: APIs for working with Moira contacts. For more details, see <https://moira.readthedocs.io/en/latest/installation/webhooks_scripts.html#contact/>
       operationId: get-all-contacts
       produces:
       - application/json
@@ -77,6 +78,7 @@ paths:
     put:
       consumes:
       - application/json
+      description: APIs for working with Moira contacts. For more details, see <https://moira.readthedocs.io/en/latest/installation/webhooks_scripts.html#contact/>
       operationId: create-new-contact
       parameters:
       - description: Data of the new contact
@@ -111,6 +113,7 @@ paths:
     put:
       consumes:
       - application/json
+      description: APIs for working with Moira contacts. For more details, see <https://moira.readthedocs.io/en/latest/installation/webhooks_scripts.html#contact/>
       operationId: update-contact
       parameters:
       - description: ID of the contact to update

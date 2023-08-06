@@ -53,7 +53,7 @@ func NewHandler(db moira.Database, log moira.Logger, index moira.Searcher, confi
 		router.Route("/health", health)
 		router.Route("/teams", teams)
 		router.Get("/swagger/*", httpSwagger.Handler(
-			httpSwagger.URL("http://localhost:8080/api/swagger/doc.json"),
+			httpSwagger.URL("/api/swagger/doc.json"),
 		))
 	})
 

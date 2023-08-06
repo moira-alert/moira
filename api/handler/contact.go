@@ -29,6 +29,7 @@ func contact(router chi.Router) {
 }
 
 // @Summary Gets all Moira contacts
+// @Description APIs for working with Moira contacts. For more details, see <https://moira.readthedocs.io/en/latest/installation/webhooks_scripts.html#contact/>
 // @ID get-all-contacts
 // @Produce json
 // @Success 200 {object} dto.ContactList
@@ -48,6 +49,7 @@ func getAllContacts(writer http.ResponseWriter, request *http.Request) {
 }
 
 // @Summary Creates a new contact notification for the current user
+// @Description APIs for working with Moira contacts. For more details, see <https://moira.readthedocs.io/en/latest/installation/webhooks_scripts.html#contact/>
 // @ID create-new-contact
 // @Accept json
 // @Produce json
@@ -93,6 +95,7 @@ func contactFilter(next http.Handler) http.Handler {
 }
 
 // @Summary Updates an existing notification contact to the values passed in the request body
+// @Description APIs for working with Moira contacts. For more details, see <https://moira.readthedocs.io/en/latest/installation/webhooks_scripts.html#contact/>
 // @ID update-contact
 // @Accept json
 // @Produce json
