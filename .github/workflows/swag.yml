@@ -4,7 +4,7 @@ on:
   - pull_request
 
 jobs:
-  generate_swagger:
+  check_swagger:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3

@@ -14,7 +14,7 @@ import (
 	"github.com/moira-alert/moira/api/middleware"
 )
 
-// @title Moira API - Contact Management
+// @title Contact API
 // @description APIs for working with Moira contacts. For more details, see <https://moira.readthedocs.io/en/latest/installation/webhooks_scripts.html#contact/>
 func contact(router chi.Router) {
 	router.Get("/", getAllContacts)
@@ -28,8 +28,7 @@ func contact(router chi.Router) {
 	})
 }
 
-// @Summary Get all contacts
-// @Description Retrieves a list of all contacts
+// @Summary Gets all Moira contacts
 // @ID get-all-contacts
 // @Produce json
 // @Success 200 {object} dto.ContactList
@@ -48,8 +47,7 @@ func getAllContacts(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-// @Summary Create a new contact
-// @Description Creates a new contact
+// @Summary Creates a new contact notification for the current user
 // @ID create-new-contact
 // @Accept json
 // @Produce json
@@ -94,6 +92,20 @@ func contactFilter(next http.Handler) http.Handler {
 	})
 }
 
+// @Summary Updates an existing notification contact to the values passed in the request body
+// @ID update-contact
+// @Accept json
+// @Produce json
+// @Param contactId path string true "ID of the contact to update"
+// @Param contact body dto.Contact true "Updated contact data"
+// @Success 200 {object} dto.Contact "Updated contact"
+// @Failure 400 {object} api.ErrorResponse "Request error"
+// @Failure 403 {object} api.ErrorResponse "Forbidden"
+// @Failure 404 {object} api.ErrorResponse "Contact not found"
+// @Failure 422 {object} api.ErrorResponse "Render error"
+// @Failure 500 {object} api.ErrorResponse "Internal server error"
+// @Router /api/contact/{contactId} [put]
+// @Tags contact
 func updateContact(writer http.ResponseWriter, request *http.Request) {
 	contactDTO := dto.Contact{}
 	if err := render.Bind(request, &contactDTO); err != nil {
