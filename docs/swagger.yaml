@@ -63,7 +63,6 @@ paths:
       - config
   /api/contact:
     get:
-      description: Retrieves a list of all contacts
       operationId: get-all-contacts
       produces:
       - application/json
@@ -72,13 +71,12 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/dto.ContactList'
-      summary: Get all contacts
+      summary: Gets all Moira contacts
       tags:
       - contact
     put:
       consumes:
       - application/json
-      description: Creates a new contact
       operationId: create-new-contact
       parameters:
       - description: Data of the new contact
@@ -106,7 +104,55 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/api.ErrorResponse'
-      summary: Create a new contact
+      summary: Creates a new contact notification for the current user
+      tags:
+      - contact
+  /api/contact/{contactId}:
+    put:
+      consumes:
+      - application/json
+      operationId: update-contact
+      parameters:
+      - description: ID of the contact to update
+        in: path
+        name: contactId
+        required: true
+        type: string
+      - description: Updated contact data
+        in: body
+        name: contact
+        required: true
+        schema:
+          $ref: '#/definitions/dto.Contact'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated contact
+          schema:
+            $ref: '#/definitions/dto.Contact'
+        "400":
+          description: Request error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "404":
+          description: Contact not found
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "422":
+          description: Render error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: Updates an existing notification contact to the values passed in the
+        request body
       tags:
       - contact
 swagger: "2.0"

@@ -27,14 +27,13 @@
         },
         "/api/contact": {
             "get": {
-                "description": "Retrieves a list of all contacts",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "contact"
                 ],
-                "summary": "Get all contacts",
+                "summary": "Gets all Moira contacts",
                 "operationId": "get-all-contacts",
                 "responses": {
                     "200": {
@@ -46,7 +45,6 @@
                 }
             },
             "put": {
-                "description": "Creates a new contact",
                 "consumes": [
                     "application/json"
                 ],
@@ -56,7 +54,7 @@
                 "tags": [
                     "contact"
                 ],
-                "summary": "Create a new contact",
+                "summary": "Creates a new contact notification for the current user",
                 "operationId": "create-new-contact",
                 "parameters": [
                     {
@@ -78,6 +76,77 @@
                     },
                     "400": {
                         "description": "Request error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Render error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/contact/{contactId}": {
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contact"
+                ],
+                "summary": "Updates an existing notification contact to the values passed in the request body",
+                "operationId": "update-contact",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID of the contact to update",
+                        "name": "contactId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated contact data",
+                        "name": "contact",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.Contact"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Updated contact",
+                        "schema": {
+                            "$ref": "#/definitions/dto.Contact"
+                        }
+                    },
+                    "400": {
+                        "description": "Request error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Contact not found",
                         "schema": {
                             "$ref": "#/definitions/api.ErrorResponse"
                         }
