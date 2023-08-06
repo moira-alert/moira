@@ -22,4 +22,4 @@ jobs:
       
       - name: Check for Swagger changes
         run: |
-          git diff --exit-code --quiet || (echo "Swagger documentation needs updating (use `make swag` and commit changes)"; exit 1)
+          git diff --exit-code --quiet || (echo "Swagger documentation needs updating (use command "make swag" and commit changes)"; exit 1)
