@@ -1,4 +1,4 @@
-name: Generate Swagger Documentation
+name: Check Swagger Documentation Update
 
 on:
   - pull_request
@@ -19,3 +19,7 @@ jobs:
 
       - name: Generate Swagger Documentation
         run: make swag
+      
+      - name: Check for Swagger changes
+        run: |
+          git diff --exit-code --quiet || (echo "Swagger documentation needs updating (use `make swag` and commit changes)"; exit 1)

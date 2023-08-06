@@ -53,10 +53,94 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "put": {
+                "description": "Creates a new contact",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contact"
+                ],
+                "summary": "Create a new contact",
+                "operationId": "create-new-contact",
+                "parameters": [
+                    {
+                        "description": "Data of the new contact",
+                        "name": "contact",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.Contact"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Created contact",
+                        "schema": {
+                            "$ref": "#/definitions/dto.Contact"
+                        }
+                    },
+                    "400": {
+                        "description": "Request error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Render error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    }
+                }
             }
         }
     },
     "definitions": {
+        "api.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "description": "application-level error message, for debugging",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "user-level status message",
+                    "type": "string"
+                }
+            }
+        },
+        "dto.Contact": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "team_id": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "user": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.ContactList": {
             "type": "object",
             "properties": {
