@@ -55,9 +55,9 @@ func getAllContacts(writer http.ResponseWriter, request *http.Request) {
 // @Produce json
 // @Param contact body dto.Contact true "Data of the new contact"
 // @Success 200 {object} dto.Contact "Created contact"
-// @Failure 400 {object} api.ErrorInvalidRequest "Request error"
-// @Failure 422 {object} api.ErrorRender "Render error"
-// @Failure 500 {object} api.ErrorInternalServer "Internal server error"
+// @Failure 400 {object} api.ErrorResponse "Request error"
+// @Failure 422 {object} api.ErrorResponse "Render error"
+// @Failure 500 {object} api.ErrorResponse "Internal server error"
 // @Router /api/contact [put]
 // @Tags contact
 func createNewContact(writer http.ResponseWriter, request *http.Request) {
