@@ -1,7 +1,6 @@
 name: Generate Swagger Documentation
 
 on:
-  - push
   - pull_request
 
 jobs:
