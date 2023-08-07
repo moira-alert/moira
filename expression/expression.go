@@ -130,19 +130,17 @@ func (triggerExpression *TriggerExpression) Validate() error {
 	if !found {
 		program, err = expr.Compile(
 			expression.String(),
-			expr.Env(map[string]interface{}{
-				"Get": triggerExpression.Get,
-			}),
-			expr.ConstExpr("Get"),
 			expr.Patch(triggerExpression), // patch identifiers with call to Get
-			expr.Optimize(true),           // collapse evaluation branches
+			expr.Optimize(true),
 		)
 		if err != nil {
 			return err
 		}
 		exprCache.Set(cacheKey, program, cache.NoExpiration)
 	}
-	result, err := expr.Run(program, nil)
+	result, err := expr.Run(program, map[string]interface{}{
+		"Get": triggerExpression.Get,
+	})
 	if err != nil {
 		return err
 	}

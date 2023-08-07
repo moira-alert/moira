@@ -178,7 +178,7 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 		return err
 	}
 
-	if err := checkTTLSanity(trigger, metricsSource); err != nil {
+	if err = checkTTLSanity(trigger, metricsSource); err != nil {
 		return api.ErrInvalidRequestContent{ValidationError: err}
 	}
 
@@ -195,7 +195,7 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 
 	middleware.SetTimeSeriesNames(request, metricsDataNames)
 
-	if _, err := triggerExpression.Evaluate(); err != nil {
+	if err = triggerExpression.Validate(); err != nil {
 		return err
 	}
 

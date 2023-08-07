@@ -72,7 +72,7 @@ func BenchmarkValidate(b *testing.B) {
 }
 
 func BenchmarkEvaluateComplex(b *testing.B) {
-	expressionStr := "(t1 % 2 == 0 && t2 % 2 != 0) || (t3 * t4 == t5 && t6 < t7) ? (t8 > t9 ? OK : WARN) : ERROR"
+	expressionStr := "(t1 * 2 > t2 && t2 / 2 != 0) || (t3 * t4 == t5 && t6 < t7) ? (t8 > t9 ? OK : WARN) : ERROR"
 	expr := &expression.TriggerExpression{
 		Expression:      &expressionStr,
 		TriggerType:     moira.ExpressionTrigger,
@@ -97,7 +97,7 @@ func BenchmarkEvaluateComplex(b *testing.B) {
 }
 
 func BenchmarkValidateComplex(b *testing.B) {
-	expressionStr := "(t1 % 2 == 0 && t2 % 2 != 0) || (t3 * t4 == t5 && t6 < t7) ? (t8 > t9 ? OK : WARN) : ERROR"
+	expressionStr := "(t1 * 2 > t2 && t2 / 2 != 0) || (t3 * t4 == t5 && t6 < t7) ? (t8 > t9 ? OK : WARN) : ERROR"
 	expr := &expression.TriggerExpression{
 		Expression:      &expressionStr,
 		TriggerType:     moira.ExpressionTrigger,
