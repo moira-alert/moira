@@ -6,6 +6,7 @@ require (
 	github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible
 	github.com/PagerDuty/go-pagerduty v1.5.1
 	github.com/ansel1/merry v1.6.2
+	github.com/antonmedv/expr v1.12.7
 	github.com/aws/aws-sdk-go v1.44.219
 	github.com/blevesearch/bleve/v2 v2.3.8
 	github.com/bwmarrin/discordgo v0.25.0
@@ -27,6 +28,7 @@ require (
 	github.com/gregdel/pushover v1.1.0
 	github.com/karriereat/blackfriday-slack v0.1.0
 	github.com/mattermost/mattermost-server/v6 v6.0.0-20230405170428-2a75f997ee6c // it is last commit of 7.9.2 (https://github.com/mattermost/mattermost-server/commits/v7.9.2). Can't use v7, issue https://github.com/mattermost/mattermost-server/issues/20817
+	github.com/mitchellh/mapstructure v1.5.0
 	github.com/moira-alert/go-chart v0.0.0-20230220064910-812fb2829b9b
 	github.com/opsgenie/opsgenie-go-sdk-v2 v1.2.13
 	github.com/patrickmn/go-cache v2.1.0+incompatible
@@ -46,8 +48,6 @@ require (
 	gopkg.in/tucnak/telebot.v2 v2.5.0
 	gopkg.in/yaml.v2 v2.4.0
 )
-
-require github.com/mitchellh/mapstructure v1.5.0
 
 require (
 	bitbucket.org/tebeka/strftime v0.0.0-20140926081919-2194253a23c0 // indirect

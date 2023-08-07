@@ -4,9 +4,13 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/antonmedv/expr"
+	"github.com/antonmedv/expr/ast"
+	"github.com/antonmedv/expr/vm"
 	"github.com/patrickmn/go-cache"
 
 	"github.com/Knetic/govaluate"
+
 	"github.com/moira-alert/moira"
 )
 
@@ -77,6 +81,20 @@ func (triggerExpression TriggerExpression) Get(name string) (interface{}, error)
 	}
 }
 
+// Visit implements expr.Visitor interface.
+//
+// It replaces all identifiers (t1, t2, ..tN) with Get("t1"), Get("t2"), ..Get("tN")
+func (triggerExpression TriggerExpression) Visit(node *ast.Node) {
+	if n, ok := (*node).(*ast.IdentifierNode); ok {
+		ast.Patch(node, &ast.CallNode{
+			Arguments: []ast.Node{
+				&ast.StringNode{Value: n.Value},
+			},
+			Callee: &ast.IdentifierNode{Value: "Get"},
+		})
+	}
+}
+
 // Evaluate gets trigger expression and evaluates it for given parameters using govaluate
 func (triggerExpression *TriggerExpression) Evaluate() (moira.State, error) {
 	expr, err := getExpression(triggerExpression)
@@ -95,7 +113,51 @@ func (triggerExpression *TriggerExpression) Evaluate() (moira.State, error) {
 	}
 }
 
-func validateUserExpression(triggerExpression *TriggerExpression, userExpression *govaluate.EvaluableExpression) (*govaluate.EvaluableExpression, error) {
+// Validate gets trigger expression and validates it for given parameters using expr
+func (triggerExpression *TriggerExpression) Validate() error {
+	expression, err := getExpression(triggerExpression)
+	if err != nil {
+		return ErrInvalidExpression{internalError: err}
+	}
+
+	cacheKey := fmt.Sprintf("[VALIDATED]%s", expression.String())
+	pr, found := exprCache.Get(cacheKey)
+	program, ok := pr.(*vm.Program)
+	if !ok {
+		found = false
+		exprCache.Delete(cacheKey)
+	}
+	if !found {
+		program, err = expr.Compile(
+			expression.String(),
+			expr.Env(map[string]interface{}{
+				"Get": triggerExpression.Get,
+			}),
+			expr.ConstExpr("Get"),
+			expr.Patch(triggerExpression), // patch identifiers with call to Get
+			expr.Optimize(true),           // collapse evaluation branches
+		)
+		if err != nil {
+			return err
+		}
+		exprCache.Set(cacheKey, program, cache.NoExpiration)
+	}
+	result, err := expr.Run(program, nil)
+	if err != nil {
+		return err
+	}
+	switch result.(type) {
+	case moira.State:
+		return nil
+	default:
+		return ErrInvalidExpression{internalError: fmt.Errorf("expression result must be state value")}
+	}
+}
+
+func validateExpressionVariables(
+	triggerExpression *TriggerExpression,
+	userExpression *govaluate.EvaluableExpression,
+) (*govaluate.EvaluableExpression, error) {
 	for _, v := range userExpression.Vars() {
 		if _, err := triggerExpression.Get(v); err != nil {
 			return nil, fmt.Errorf("invalid variable value: %w", err)
@@ -115,7 +177,7 @@ func getExpression(triggerExpression *TriggerExpression) (*govaluate.EvaluableEx
 			return nil, err
 		}
 
-		return validateUserExpression(triggerExpression, userExpression)
+		return validateExpressionVariables(triggerExpression, userExpression)
 	}
 	return getSimpleExpression(triggerExpression)
 }

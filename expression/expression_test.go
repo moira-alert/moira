@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/moira-alert/moira"
 	. "github.com/smartystreets/goconvey/convey"
+
+	"github.com/moira-alert/moira"
 )
 
 type getExpressionValuesTest struct {
@@ -19,82 +20,137 @@ func TestExpression(t *testing.T) {
 	Convey("Test Default", t, func() {
 		warnValue := 60.0
 		errorValue := 90.0
-		result, err := (&TriggerExpression{MainTargetValue: 10.0, WarnValue: &warnValue, ErrorValue: &errorValue, TriggerType: moira.RisingTrigger}).Evaluate()
-		So(err, ShouldBeNil)
+		expression := &TriggerExpression{MainTargetValue: 10.0, WarnValue: &warnValue, ErrorValue: &errorValue, TriggerType: moira.RisingTrigger}
+		result, err1 := expression.Evaluate()
+		err2 := expression.Validate()
+		So(err1, ShouldBeNil)
+		So(err2, ShouldBeNil)
 		So(result, ShouldResemble, moira.StateOK)
 
-		result, err = (&TriggerExpression{MainTargetValue: 60.0, WarnValue: &warnValue, ErrorValue: &errorValue, TriggerType: moira.RisingTrigger}).Evaluate()
-		So(err, ShouldBeNil)
+		expression = &TriggerExpression{MainTargetValue: 60.0, WarnValue: &warnValue, ErrorValue: &errorValue, TriggerType: moira.RisingTrigger}
+		result, err1 = expression.Evaluate()
+		err2 = expression.Validate()
+		So(err1, ShouldBeNil)
+		So(err2, ShouldBeNil)
 		So(result, ShouldResemble, moira.StateWARN)
 
-		result, err = (&TriggerExpression{MainTargetValue: 90.0, WarnValue: &warnValue, ErrorValue: &errorValue, TriggerType: moira.RisingTrigger}).Evaluate()
-		So(err, ShouldBeNil)
+		expression = &TriggerExpression{MainTargetValue: 90.0, WarnValue: &warnValue, ErrorValue: &errorValue, TriggerType: moira.RisingTrigger}
+		result, err1 = expression.Evaluate()
+		err2 = expression.Validate()
+		So(err1, ShouldBeNil)
+		So(err2, ShouldBeNil)
 		So(result, ShouldResemble, moira.StateERROR)
 
 		warnValue = 30.0
 		errorValue = 10.0
-		result, err = (&TriggerExpression{MainTargetValue: 40.0, WarnValue: &warnValue, ErrorValue: &errorValue, TriggerType: moira.FallingTrigger}).Evaluate()
-		So(err, ShouldBeNil)
+		expression = &TriggerExpression{MainTargetValue: 40.0, WarnValue: &warnValue, ErrorValue: &errorValue, TriggerType: moira.FallingTrigger}
+		result, err1 = expression.Evaluate()
+		err2 = expression.Validate()
+		So(err1, ShouldBeNil)
+		So(err2, ShouldBeNil)
 		So(result, ShouldResemble, moira.StateOK)
 
-		result, err = (&TriggerExpression{MainTargetValue: 20.0, WarnValue: &warnValue, ErrorValue: &errorValue, TriggerType: moira.FallingTrigger}).Evaluate()
-		So(err, ShouldBeNil)
+		expression = &TriggerExpression{MainTargetValue: 20.0, WarnValue: &warnValue, ErrorValue: &errorValue, TriggerType: moira.FallingTrigger}
+		result, err1 = expression.Evaluate()
+		err2 = expression.Validate()
+		So(err1, ShouldBeNil)
+		So(err2, ShouldBeNil)
 		So(result, ShouldResemble, moira.StateWARN)
 
-		result, err = (&TriggerExpression{MainTargetValue: 10.0, WarnValue: &warnValue, ErrorValue: &errorValue, TriggerType: moira.FallingTrigger}).Evaluate()
-		So(err, ShouldBeNil)
+		expression = &TriggerExpression{MainTargetValue: 10.0, WarnValue: &warnValue, ErrorValue: &errorValue, TriggerType: moira.FallingTrigger}
+		result, err1 = expression.Evaluate()
+		err2 = expression.Validate()
+		So(err1, ShouldBeNil)
+		So(err2, ShouldBeNil)
 		So(result, ShouldResemble, moira.StateERROR)
 
-		result, err = (&TriggerExpression{MainTargetValue: 10.0, TriggerType: moira.FallingTrigger}).Evaluate()
-		So(err, ShouldResemble, ErrInvalidExpression{fmt.Errorf("error value and warning value can not be empty")})
-		So(err.Error(), ShouldResemble, "error value and warning value can not be empty")
+		expression = &TriggerExpression{MainTargetValue: 10.0, TriggerType: moira.FallingTrigger}
+		result, err1 = expression.Evaluate()
+		err2 = expression.Validate()
+		So(err1.Error(), ShouldResemble, "error value and warning value can not be empty")
+		So(err2.Error(), ShouldResemble, "error value and warning value can not be empty")
 		So(result, ShouldBeEmpty)
 
 		warnValue = 30.0
-		result, err = (&TriggerExpression{MainTargetValue: 40.0, WarnValue: &warnValue, TriggerType: moira.RisingTrigger}).Evaluate()
-		So(err, ShouldBeNil)
+		expression = &TriggerExpression{MainTargetValue: 40.0, WarnValue: &warnValue, TriggerType: moira.RisingTrigger}
+		result, err1 = expression.Evaluate()
+		err2 = expression.Validate()
+		So(err1, ShouldBeNil)
+		So(err2, ShouldBeNil)
 		So(result, ShouldResemble, moira.StateWARN)
 
 		warnValue = 30.0
-		result, err = (&TriggerExpression{MainTargetValue: 40.0, WarnValue: &warnValue, TriggerType: moira.FallingTrigger}).Evaluate()
-		So(err, ShouldBeNil)
+		expression = &TriggerExpression{MainTargetValue: 40.0, WarnValue: &warnValue, TriggerType: moira.FallingTrigger}
+		result, err1 = expression.Evaluate()
+		err2 = expression.Validate()
+		So(err1, ShouldBeNil)
+		So(err2, ShouldBeNil)
 		So(result, ShouldResemble, moira.StateOK)
 
 		errorValue = 30.0
-		result, err = (&TriggerExpression{MainTargetValue: 40.0, ErrorValue: &errorValue, TriggerType: moira.RisingTrigger}).Evaluate()
-		So(err, ShouldBeNil)
+		expression = &TriggerExpression{MainTargetValue: 40.0, ErrorValue: &errorValue, TriggerType: moira.RisingTrigger}
+		result, err1 = expression.Evaluate()
+		err2 = expression.Validate()
+		So(err1, ShouldBeNil)
+		So(err2, ShouldBeNil)
 		So(result, ShouldResemble, moira.StateERROR)
 
 		errorValue = 30.0
-		result, err = (&TriggerExpression{MainTargetValue: 40.0, ErrorValue: &errorValue, TriggerType: moira.FallingTrigger}).Evaluate()
-		So(err, ShouldBeNil)
+		expression = &TriggerExpression{MainTargetValue: 40.0, ErrorValue: &errorValue, TriggerType: moira.FallingTrigger}
+		result, err1 = expression.Evaluate()
+		err2 = expression.Validate()
+		So(err1, ShouldBeNil)
+		So(err2, ShouldBeNil)
 		So(result, ShouldResemble, moira.StateOK)
 	})
 
 	Convey("Test Custom", t, func() {
 		expression := "t1 > 10 && t2 > 3 ? ERROR : OK"
-		result, err := (&TriggerExpression{Expression: &expression, MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{"t2": 4.0}, TriggerType: moira.ExpressionTrigger}).Evaluate()
-		So(err, ShouldBeNil)
+		trigger := &TriggerExpression{Expression: &expression, MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{"t2": 4.0}, TriggerType: moira.ExpressionTrigger}
+		result, err1 := trigger.Evaluate()
+		err2 := trigger.Validate()
+		So(err1, ShouldBeNil)
+		So(err2, ShouldBeNil)
 		So(result, ShouldResemble, moira.StateERROR)
 
 		expression = "min(t1, t2) > 10 ? ERROR : OK"
-		result, err = (&TriggerExpression{Expression: &expression, MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{"t2": 4.0}, TriggerType: moira.ExpressionTrigger}).Evaluate()
-		So(err, ShouldResemble, ErrInvalidExpression{fmt.Errorf("functions is forbidden")})
+		trigger = &TriggerExpression{Expression: &expression, MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{"t2": 4.0}, TriggerType: moira.ExpressionTrigger}
+		result, err1 = trigger.Evaluate()
+		err2 = trigger.Validate()
+		So(err1, ShouldResemble, ErrInvalidExpression{fmt.Errorf("functions is forbidden")})
+		So(err2, ShouldResemble, ErrInvalidExpression{fmt.Errorf("functions is forbidden")})
 		So(result, ShouldBeEmpty)
 
 		expression = "PREV_STATE"
-		result, err = (&TriggerExpression{Expression: &expression, MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{"t2": 4.0}, TriggerType: moira.ExpressionTrigger, PreviousState: moira.StateNODATA}).Evaluate()
-		So(err, ShouldBeNil)
+		trigger = &TriggerExpression{Expression: &expression, MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{"t2": 4.0}, TriggerType: moira.ExpressionTrigger, PreviousState: moira.StateNODATA}
+		result, err1 = trigger.Evaluate()
+		err2 = trigger.Validate()
+		So(err1, ShouldBeNil)
+		So(err2, ShouldBeNil)
 		So(result, ShouldResemble, moira.StateNODATA)
 
 		expression = "t1 > 10 && t2 > 3 ? OK : ddd"
-		result, err = (&TriggerExpression{Expression: &expression, MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{"t2": 4.0}, TriggerType: moira.ExpressionTrigger}).Evaluate()
-		So(err, ShouldResemble, ErrInvalidExpression{fmt.Errorf("invalid variable value: %w", fmt.Errorf("no value with name ddd"))})
+		trigger = &TriggerExpression{Expression: &expression, MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{"t2": 4.0}, TriggerType: moira.ExpressionTrigger}
+		result, err1 = trigger.Evaluate()
+		err2 = trigger.Validate()
+		So(
+			err1,
+			ShouldResemble,
+			ErrInvalidExpression{fmt.Errorf("invalid variable value: %w", fmt.Errorf("no value with name ddd"))},
+		)
+		So(err2, ShouldNotBeNil)
 		So(result, ShouldBeEmpty)
 
 		expression = "t1 > 10 ? OK : (t2 < 5 ? WARN : ERROR)"
-		result, err = (&TriggerExpression{Expression: &expression, MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{}, TriggerType: moira.ExpressionTrigger}).Evaluate()
-		So(err, ShouldResemble, ErrInvalidExpression{fmt.Errorf("invalid variable value: %w", fmt.Errorf("no value with name t2"))})
+		trigger = &TriggerExpression{Expression: &expression, MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{}, TriggerType: moira.ExpressionTrigger}
+		result, err1 = trigger.Evaluate()
+		err2 = trigger.Validate()
+		So(
+			err1,
+			ShouldResemble,
+			ErrInvalidExpression{fmt.Errorf("invalid variable value: %w", fmt.Errorf("no value with name t2"))},
+		)
+		So(err2, ShouldNotBeNil)
 		So(result, ShouldBeEmpty)
 	})
 }
@@ -223,6 +279,58 @@ func TestGetExpressionValue(t *testing.T) {
 			runGetExpressionValuesTest(getExpressionValuesTests)
 		}
 	})
+}
+
+func TestExpressionValidate(t *testing.T) {
+	warnValue := float64(60)
+	errorValue := float64(90)
+	Convey("Default Expressions", t, func() {
+		expressions := []string{
+			"t1 >= ERROR_VALUE ? ERROR : (t1 >= WARN_VALUE ? WARN : OK)",
+			"t1 <= ERROR_VALUE ? ERROR : (t1 <= WARN_VALUE ? WARN : OK)",
+			"t1 >= WARN_VALUE ? WARN : OK",
+			"t1 >= ERROR_VALUE ? ERROR : OK",
+			"t1 <= WARN_VALUE ? WARN : OK",
+			"t1 <= ERROR_VALUE ? ERROR : OK",
+			"WARN",
+		}
+		for _, expr := range expressions {
+			triggerExpression := TriggerExpression{
+				Expression:  ptr(expr),
+				WarnValue:   &warnValue,
+				ErrorValue:  &errorValue,
+				TriggerType: moira.ExpressionTrigger,
+			}
+			err := triggerExpression.Validate()
+			So(err, ShouldBeNil)
+		}
+	})
+	Convey("Invalids", t, func() {
+		expressions := []string{
+			"t1 > 10 ? ok : (t2 * 10 : ddd ? warn)",
+			"t1 < WARN_VALUE ? ok ?",
+			"t1 > 10 ? ok : (t2 * 10 : error ? warn)",
+		}
+		for _, expr := range expressions {
+			triggerExpression := TriggerExpression{
+				Expression:  ptr(expr),
+				WarnValue:   &warnValue,
+				ErrorValue:  &errorValue,
+				TriggerType: moira.ExpressionTrigger,
+				AdditionalTargetsValues: map[string]float64{
+					"t2": 2,
+					"t3": 3,
+				},
+			}
+			err := triggerExpression.Validate()
+			t.Log(err)
+			So(err, ShouldNotBeNil)
+		}
+	})
+}
+
+func ptr[T any](obj T) *T {
+	return &obj
 }
 
 func runGetExpressionValuesTest(getExpressionValuesTests []getExpressionValuesTest) {
