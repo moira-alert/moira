@@ -14,7 +14,7 @@ type Sender struct {
 }
 
 // Init read yaml config
-func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	sender.logger = logger
 	return nil
 }
@@ -25,8 +25,10 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	if err != nil {
 		return fmt.Errorf("failed to get notifier state: %s", err.Error())
 	}
-	subjectState := events.GetSubjectState()
-	switch subjectState {
+
+	state := events.GetCurrentState(throttled)
+
+	switch state {
 	case moira.StateTEST:
 		sender.logger.Info().
 			String("notifier_state", selfState).
@@ -36,16 +38,17 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 	case moira.StateOK, moira.StateEXCEPTION:
 		sender.logger.Error().
 			String(moira.LogFieldNameTriggerID, trigger.ID).
-			String("state", subjectState.String()).
+			String("state", state.String()).
 			Msg("State is ignorable")
 
 		return nil
 	default:
-		if selfState != subjectState.ToSelfState() {
+		if selfState != state.ToSelfState() {
 			if err := sender.Database.SetNotifierState(moira.SelfStateERROR); err != nil {
 				return fmt.Errorf("failed to disable notifications: %s", err.Error())
 			}
 		}
 	}
+
 	return nil
 }

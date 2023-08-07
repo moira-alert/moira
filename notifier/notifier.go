@@ -65,7 +65,7 @@ func (pkg NotificationPackage) GetMetricNames() []string {
 // Notifier implements notification functionality
 type Notifier interface {
 	Send(pkg *NotificationPackage, waitGroup *sync.WaitGroup)
-	RegisterSender(senderSettings map[string]string, sender moira.Sender) error
+	RegisterSender(senderSettings map[string]interface{}, sender moira.Sender) error
 	StopSenders()
 	GetSenders() map[string]bool
 	GetReadBatchSize() int64

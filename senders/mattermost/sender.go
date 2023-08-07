@@ -12,7 +12,16 @@ import (
 	"github.com/moira-alert/moira/senders"
 
 	"github.com/mattermost/mattermost-server/v6/model"
+	"github.com/mitchellh/mapstructure"
 )
+
+// Structure that represents the Mattermost configuration in the YAML file
+type mattermost struct {
+	Url         string `mapstructure:"url"`
+	InsecureTLS string `mapstructure:"insecure_tls"`
+	APIToken    string `mapstructure:"api_token"`
+	FrontURI    string `mapstructure:"front_uri"`
+}
 
 // Sender posts messages to Mattermost chat.
 // It implements moira.Sender.
@@ -24,14 +33,19 @@ type Sender struct {
 }
 
 // Init configures Sender.
-func (sender *Sender) Init(senderSettings map[string]string, _ moira.Logger, location *time.Location, _ string) error {
-	url := senderSettings["url"]
+func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, _ string) error {
+	var mm mattermost
+	err := mapstructure.Decode(senderSettings, &mm)
+	if err != nil {
+		return fmt.Errorf("failed to decode senderSettings to mattermost config: %w", err)
+	}
+	url := mm.Url
 	if url == "" {
 		return fmt.Errorf("can not read Mattermost url from config")
 	}
 	client := model.NewAPIv4Client(url)
 
-	insecureTLS, err := strconv.ParseBool(senderSettings["insecure_tls"])
+	insecureTLS, err := strconv.ParseBool(mm.InsecureTLS)
 	if err != nil {
 		return fmt.Errorf("can not parse insecure_tls: %v", err)
 	}
@@ -44,13 +58,13 @@ func (sender *Sender) Init(senderSettings map[string]string, _ moira.Logger, loc
 	}
 	sender.client = client
 
-	token := senderSettings["api_token"]
+	token := mm.APIToken
 	if token == "" {
 		return fmt.Errorf("can not read Mattermost api_token from config")
 	}
 	sender.client.SetToken(token)
 
-	frontURI := senderSettings["front_uri"]
+	frontURI := mm.FrontURI
 	if frontURI == "" {
 		return fmt.Errorf("can not read Mattermost front_uri from config")
 	}
@@ -76,7 +90,7 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 
 	var message strings.Builder
 
-	title := sender.buildTitle(events, trigger)
+	title := sender.buildTitle(events, trigger, throttled)
 	titleLen := len([]rune(title))
 
 	desc := sender.buildDescription(trigger)
@@ -110,8 +124,9 @@ func (sender *Sender) buildDescription(trigger moira.TriggerData) string {
 	return desc
 }
 
-func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData) string {
-	title := fmt.Sprintf("**%s**", events.GetSubjectState())
+func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
+	state := events.GetCurrentState(throttled)
+	title := fmt.Sprintf("**%s**", state)
 	triggerURI := trigger.GetTriggerURI(sender.frontURI)
 	if triggerURI != "" {
 		title += fmt.Sprintf(" [%s](%s)", trigger.Name, triggerURI)
@@ -144,7 +159,7 @@ func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsFo
 	eventsLenLimitReached := false
 	eventsPrinted := 0
 	for _, event := range events {
-		line := fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location), event.Metric, event.GetMetricsValues(), event.OldState, event.State)
+		line := fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location, moira.DefaultTimeFormat), event.Metric, event.GetMetricsValues(moira.DefaultNotificationSettings), event.OldState, event.State)
 		if msg := event.CreateMessage(sender.location); len(msg) > 0 {
 			line += fmt.Sprintf(". %s", msg)
 		}

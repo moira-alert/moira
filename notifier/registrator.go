@@ -84,7 +84,7 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 		}
 	}
 	if notifier.config.SelfStateEnabled {
-		selfStateSettings := map[string]string{"type": selfStateSender}
+		selfStateSettings := map[string]interface{}{"type": selfStateSender}
 		if err = notifier.RegisterSender(selfStateSettings, &selfstate.Sender{Database: connector}); err != nil {
 			notifier.logger.Warning().
 				Error(err).
@@ -95,13 +95,22 @@ func (notifier *StandardNotifier) RegisterSenders(connector moira.Database) erro
 }
 
 // RegisterSender adds sender for notification type and registers metrics
-func (notifier *StandardNotifier) RegisterSender(senderSettings map[string]string, sender moira.Sender) error {
+func (notifier *StandardNotifier) RegisterSender(senderSettings map[string]interface{}, sender moira.Sender) error {
 	var senderIdent string
-	switch senderSettings["type"] {
+	senderType, ok := senderSettings["type"].(string)
+	if !ok {
+		return fmt.Errorf("failed to retrieve sender type from sender settings")
+	}
+
+	switch senderType {
 	case scriptSender, webhookSender:
-		senderIdent = senderSettings["name"]
+		name, ok := senderSettings["name"].(string)
+		if !ok {
+			return fmt.Errorf("failed to retrieve sender name from sender settings")
+		}
+		senderIdent = name
 	default:
-		senderIdent = senderSettings["type"]
+		senderIdent = senderType
 	}
 	err := sender.Init(senderSettings, notifier.logger, notifier.config.Location, notifier.config.DateTimeFormat)
 	if err != nil {

@@ -178,12 +178,38 @@ func TestNotificationEvent_CreateMessage(t *testing.T) {
 		})
 	})
 }
-func TestNotificationEvent_GetSubjectState(t *testing.T) {
+func TestNotificationEvent_getSubjectState(t *testing.T) {
 	Convey("Get ERROR state", t, func() {
 		states := NotificationEvents{{State: StateOK, Values: map[string]float64{"t1": 0}}, {State: StateERROR, Values: map[string]float64{"t1": 1}}}
-		So(states.GetSubjectState(), ShouldResemble, StateERROR)
+		So(states.getSubjectState(), ShouldResemble, StateERROR)
 		So(states[0].String(), ShouldResemble, "TriggerId: , Metric: , Values: 0, OldState: , State: OK, Message: '', Timestamp: 0")
 		So(states[1].String(), ShouldResemble, "TriggerId: , Metric: , Values: 1, OldState: , State: ERROR, Message: '', Timestamp: 0")
+	})
+}
+
+func TestNotificationEvent_getLastState(t *testing.T) {
+	Convey("Get WARN state", t, func() {
+		states := NotificationEvents{{State: StateOK, Values: map[string]float64{"t1": 0}}, {State: StateERROR, Values: map[string]float64{"t1": 1}}, {State: StateWARN, Values: map[string]float64{"t1": 10}}}
+		So(states.getLastState(), ShouldResemble, StateWARN)
+		So(states[0].String(), ShouldResemble, "TriggerId: , Metric: , Values: 0, OldState: , State: OK, Message: '', Timestamp: 0")
+		So(states[1].String(), ShouldResemble, "TriggerId: , Metric: , Values: 1, OldState: , State: ERROR, Message: '', Timestamp: 0")
+		So(states[2].String(), ShouldResemble, "TriggerId: , Metric: , Values: 10, OldState: , State: WARN, Message: '', Timestamp: 0")
+	})
+}
+
+func TestNotificationEvent_GetCurrentState(t *testing.T) {
+	Convey("Get ERROR state without throttling", t, func() {
+		states := NotificationEvents{{State: StateERROR, Values: map[string]float64{"t1": 0}}, {State: StateOK, Values: map[string]float64{"t1": 1}}}
+		So(states.GetCurrentState(false), ShouldResemble, StateERROR)
+		So(states[0].String(), ShouldResemble, "TriggerId: , Metric: , Values: 0, OldState: , State: ERROR, Message: '', Timestamp: 0")
+		So(states[1].String(), ShouldResemble, "TriggerId: , Metric: , Values: 1, OldState: , State: OK, Message: '', Timestamp: 0")
+	})
+
+	Convey("Get OK state when throttling", t, func() {
+		states := NotificationEvents{{State: StateERROR, Values: map[string]float64{"t1": 0}}, {State: StateOK, Values: map[string]float64{"t1": 1}}}
+		So(states.GetCurrentState(true), ShouldResemble, StateOK)
+		So(states[0].String(), ShouldResemble, "TriggerId: , Metric: , Values: 0, OldState: , State: ERROR, Message: '', Timestamp: 0")
+		So(states[1].String(), ShouldResemble, "TriggerId: , Metric: , Values: 1, OldState: , State: OK, Message: '', Timestamp: 0")
 	})
 }
 
@@ -191,11 +217,11 @@ func TestNotificationEvent_FormatTimestamp(t *testing.T) {
 	Convey("Test FormatTimestamp", t, func() {
 		event := NotificationEvent{Timestamp: 150000000}
 		location, _ := time.LoadLocation("UTC")
-		location1, _ := time.LoadLocation("Europe/Moscow")
-		location2, _ := time.LoadLocation("Asia/Yekaterinburg")
-		So(event.FormatTimestamp(location), ShouldResemble, "02:40")
-		So(event.FormatTimestamp(location1), ShouldResemble, "05:40")
-		So(event.FormatTimestamp(location2), ShouldResemble, "07:40")
+		locationMoscow, _ := time.LoadLocation("Europe/Moscow")
+		locationYekaterinburg, _ := time.LoadLocation("Asia/Yekaterinburg")
+		So(event.FormatTimestamp(location, DefaultTimeFormat), ShouldResemble, "02:40 (GMT+00:00)")
+		So(event.FormatTimestamp(locationMoscow, DefaultTimeFormat), ShouldResemble, "05:40 (GMT+03:00)")
+		So(event.FormatTimestamp(locationYekaterinburg, DefaultTimeFormat), ShouldResemble, "07:40 (GMT+05:00)")
 	})
 }
 
@@ -203,24 +229,37 @@ func TestNotificationEvent_GetValue(t *testing.T) {
 	Convey("Test GetMetricsValues", t, func() {
 		event := NotificationEvent{}
 		event.Values = make(map[string]float64)
+
 		Convey("One target with zero", func() {
 			event.Values["t1"] = 0
-			So(event.GetMetricsValues(), ShouldResemble, "0")
+			So(event.GetMetricsValues(DefaultNotificationSettings), ShouldResemble, "0")
 		})
 
 		Convey("One target with short fraction", func() {
 			event.Values["t1"] = 2.32
-			So(event.GetMetricsValues(), ShouldResemble, "2.32")
+			So(event.GetMetricsValues(DefaultNotificationSettings), ShouldResemble, "2.32")
 		})
 
 		Convey("One target with long fraction", func() {
 			event.Values["t1"] = 2.3222222
-			So(event.GetMetricsValues(), ShouldResemble, "2.3222222")
+			So(event.GetMetricsValues(DefaultNotificationSettings), ShouldResemble, "2.3222222")
 		})
+
 		Convey("Two targets", func() {
 			event.Values["t2"] = 0.12
 			event.Values["t1"] = 2.3222222
-			So(event.GetMetricsValues(), ShouldResemble, "t1: 2.3222222, t2: 0.12")
+			So(event.GetMetricsValues(DefaultNotificationSettings), ShouldResemble, "t1: 2.3222222, t2: 0.12")
+		})
+
+		Convey("One target over 1000 with SIFormatNumbers enum value", func() {
+			event.Values["t1"] = 1110.15
+			So(event.GetMetricsValues(SIFormatNumbers), ShouldResemble, "1.11 k")
+		})
+
+		Convey("Two targets lower 1000 with SIFormatNumbers enum value", func() {
+			event.Values["t1"] = 111.15
+			event.Values["t2"] = 54.5
+			So(event.GetMetricsValues(SIFormatNumbers), ShouldResemble, "t1: 111.15, t2: 54.5")
 		})
 	})
 }

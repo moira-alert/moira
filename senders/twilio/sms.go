@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 
-	twilio "github.com/carlosdp/twiliogo"
+	twilio_client "github.com/carlosdp/twiliogo"
 	"github.com/moira-alert/moira"
 )
 
@@ -21,7 +21,7 @@ func (sender *twilioSenderSms) SendEvents(events moira.NotificationEvents, conta
 		String("message", message).
 		Msg("Calling twilio sms api to phone %s and message body %s")
 
-	twilioMessage, err := twilio.NewMessage(sender.client, sender.APIFromPhone, contact.Value, twilio.Body(message))
+	twilioMessage, err := twilio_client.NewMessage(sender.client, sender.APIFromPhone, contact.Value, twilio_client.Body(message))
 
 	if err != nil {
 		return fmt.Errorf("failed to send message to contact %s: %s", contact.Value, err)
@@ -36,13 +36,14 @@ func (sender *twilioSenderSms) SendEvents(events moira.NotificationEvents, conta
 
 func (sender *twilioSenderSms) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
 	var message bytes.Buffer
+	state := events.GetCurrentState(throttled)
 
-	message.WriteString(fmt.Sprintf("%s %s %s (%d)\n", events.GetSubjectState(), trigger.Name, trigger.GetTags(), len(events)))
+	message.WriteString(fmt.Sprintf("%s %s %s (%d)\n", state, trigger.Name, trigger.GetTags(), len(events)))
 	for i, event := range events {
 		if i > printEventsCount-1 {
 			break
 		}
-		message.WriteString(fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location), event.Metric, event.GetMetricsValues(), event.OldState, event.State))
+		message.WriteString(fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location, moira.DefaultTimeFormat), event.Metric, event.GetMetricsValues(moira.DefaultNotificationSettings), event.OldState, event.State))
 		if msg := event.CreateMessage(sender.location); len(msg) > 0 {
 			message.WriteString(fmt.Sprintf(". %s", msg))
 		}

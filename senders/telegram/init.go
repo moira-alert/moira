@@ -1,9 +1,12 @@
 package telegram
 
 import (
+	"errors"
 	"fmt"
+	"strings"
 	"time"
 
+	"github.com/mitchellh/mapstructure"
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/worker"
 	"gopkg.in/tucnak/telebot.v2"
@@ -14,6 +17,7 @@ const (
 	workerName       = "Telebot"
 	messenger        = "telegram"
 	telegramLockTTL  = 30 * time.Second
+	hidden           = "[DATA DELETED]"
 )
 
 var (
@@ -27,6 +31,12 @@ var (
 	}
 )
 
+// Structure that represents the Telegram configuration in the YAML file
+type telegram struct {
+	APIToken string `mapstructure:"api_token"`
+	FrontURI string `mapstructure:"front_uri"`
+}
+
 // Sender implements moira sender interface via telegram
 type Sender struct {
 	DataBase moira.Database
@@ -37,24 +47,39 @@ type Sender struct {
 	location *time.Location
 }
 
+func removeTokenFromError(err error, bot *telebot.Bot) error {
+	url := telebot.DefaultApiURL
+	if bot != nil {
+		url = bot.URL
+	}
+	if err != nil && strings.Contains(err.Error(), url) {
+		return errors.New(moira.ReplaceSubstring(err.Error(), "/bot", "/", hidden))
+	}
+	return err
+}
+
 // Init loads yaml config, configures and starts telegram bot
-func (sender *Sender) Init(senderSettings map[string]string, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
-	apiToken := senderSettings["api_token"]
+func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
+	var tg telegram
+	err := mapstructure.Decode(senderSettings, &tg)
+	if err != nil {
+		return fmt.Errorf("failed to decode senderSettings to telegram config: %w", err)
+	}
+	apiToken := tg.APIToken
 	if apiToken == "" {
 		return fmt.Errorf("can not read telegram api_token from config")
 	}
 
 	sender.apiToken = apiToken
-	sender.frontURI = senderSettings["front_uri"]
+	sender.frontURI = tg.FrontURI
 	sender.logger = logger
 	sender.location = location
-	var err error
 	sender.bot, err = telebot.NewBot(telebot.Settings{
 		Token:  sender.apiToken,
 		Poller: &telebot.LongPoller{Timeout: pollerTimeout},
 	})
 	if err != nil {
-		return err
+		return removeTokenFromError(err, sender.bot)
 	}
 
 	sender.bot.Handle(telebot.OnText, func(message *telebot.Message) {
