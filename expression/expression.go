@@ -143,17 +143,8 @@ func validateUserExpression(
 	if err != nil {
 		return nil, err
 	}
-	result, err := expr.Run(program, env)
-	if err != nil {
-		return nil, err
-	}
-	switch result.(type) {
-	case moira.State:
-		exprCache.Set(cacheKey, program, cache.NoExpiration)
-		return userExpression, nil
-	default:
-		return nil, ErrInvalidExpression{internalError: fmt.Errorf("expression result must be state value")}
-	}
+	exprCache.Set(cacheKey, program, cache.NoExpiration)
+	return userExpression, nil
 }
 
 func getExpression(triggerExpression *TriggerExpression) (*govaluate.EvaluableExpression, error) {
