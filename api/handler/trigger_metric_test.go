@@ -21,12 +21,12 @@ func TestDeleteTriggerMetric(t *testing.T) {
 		mockDb := mock_moira_alert.NewMockDatabase(mockCtrl)
 
 		Convey("with the correct name", func() {
-			mockDb.EXPECT().GetTrigger("triggerID-0000000000001").Return(moira.Trigger{ID: "triggerID-0000000000001"}, nil)
-			mockDb.EXPECT().AcquireTriggerCheckLock(gomock.Any(), gomock.Any()).Return(nil)
-			mockDb.EXPECT().GetTriggerLastCheck(gomock.Any()).Return(moira.CheckData{}, nil)
-			mockDb.EXPECT().DeleteTriggerCheckLock(gomock.Any()).Return(nil)
-			mockDb.EXPECT().RemovePatternsMetrics(gomock.Any()).Return(nil)
-			mockDb.EXPECT().SetTriggerLastCheck(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			mockDb.EXPECT().GetTrigger("triggerID-0000000000001").Return(moira.Trigger{ID: "triggerID-0000000000001"}, nil).Times(1)
+			mockDb.EXPECT().AcquireTriggerCheckLock(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+			mockDb.EXPECT().GetTriggerLastCheck(gomock.Any()).Return(moira.CheckData{}, nil).Times(1)
+			mockDb.EXPECT().DeleteTriggerCheckLock(gomock.Any()).Return(nil).Times(1)
+			mockDb.EXPECT().RemovePatternsMetrics(gomock.Any()).Return(nil).Times(1)
+			mockDb.EXPECT().SetTriggerLastCheck(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
 			database = mockDb
 
 			testRequest := httptest.NewRequest(http.MethodDelete, "/trigger/triggerID-0000000000001/metrics?name=test", nil)

@@ -49,11 +49,11 @@ func TestRenderTrigger(t *testing.T) {
 		})
 
 		Convey("with the wrong timezone parameter", func() {
-			mockDb.EXPECT().GetTrigger("triggerID-0000000000001").Return(moira.Trigger{ID: "triggerID-0000000000001", Targets: []string{"t1"}}, nil)
-			localSource.EXPECT().IsConfigured().Return(true, nil).AnyTimes()
+			mockDb.EXPECT().GetTrigger("triggerID-0000000000001").Return(moira.Trigger{ID: "triggerID-0000000000001", Targets: []string{"t1"}}, nil).Times(1)
+			localSource.EXPECT().IsConfigured().Return(true, nil).AnyTimes().Times(1)
 			fetchResult := mock_metric_source.NewMockFetchResult(mockCtrl)
-			fetchResult.EXPECT().GetMetricsData().Return([]metricSource.MetricData{*metricSource.MakeMetricData("", []float64{}, 0, 0)})
-			localSource.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fetchResult, nil)
+			fetchResult.EXPECT().GetMetricsData().Return([]metricSource.MetricData{*metricSource.MakeMetricData("", []float64{}, 0, 0)}).Times(1)
+			localSource.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fetchResult, nil).Times(1)
 
 			database = mockDb
 
@@ -78,11 +78,11 @@ func TestRenderTrigger(t *testing.T) {
 		})
 
 		Convey("without points for render", func() {
-			mockDb.EXPECT().GetTrigger("triggerID-0000000000001").Return(moira.Trigger{ID: "triggerID-0000000000001", Targets: []string{"t1"}}, nil)
-			localSource.EXPECT().IsConfigured().Return(true, nil).AnyTimes()
+			mockDb.EXPECT().GetTrigger("triggerID-0000000000001").Return(moira.Trigger{ID: "triggerID-0000000000001", Targets: []string{"t1"}}, nil).Times(1)
+			localSource.EXPECT().IsConfigured().Return(true, nil).Times(1)
 			fetchResult := mock_metric_source.NewMockFetchResult(mockCtrl)
-			fetchResult.EXPECT().GetMetricsData().Return([]metricSource.MetricData{*metricSource.MakeMetricData("", []float64{}, 0, 0)})
-			localSource.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fetchResult, nil)
+			fetchResult.EXPECT().GetMetricsData().Return([]metricSource.MetricData{*metricSource.MakeMetricData("", []float64{}, 0, 0)}).Times(1)
+			localSource.EXPECT().Fetch(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fetchResult, nil).Times(1)
 
 			database = mockDb
 

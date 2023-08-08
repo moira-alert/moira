@@ -22,7 +22,7 @@ func TestGetNotifications(t *testing.T) {
 		Convey("with the correct parameters", func() {
 			parameters := []string{"start=0&end=100", "start=0", "end=100", "", "start=test&end=100", "start=0&end=test"}
 			for _, param := range parameters {
-				mockDb.EXPECT().GetNotifications(gomock.Any(), gomock.Any()).Return([]*moira.ScheduledNotification{}, int64(0), nil)
+				mockDb.EXPECT().GetNotifications(gomock.Any(), gomock.Any()).Return([]*moira.ScheduledNotification{}, int64(0), nil).Times(1)
 				database = mockDb
 
 				testRequest := httptest.NewRequest(http.MethodGet, "/notifications?"+param, nil)
@@ -78,7 +78,7 @@ func TestDeleteNotifications(t *testing.T) {
 		})
 
 		Convey("with the correct id", func() {
-			mockDb.EXPECT().RemoveNotification(gomock.Any()).Return(int64(0), nil)
+			mockDb.EXPECT().RemoveNotification(gomock.Any()).Return(int64(0), nil).Times(1)
 			database = mockDb
 
 			testRequest := httptest.NewRequest(http.MethodDelete, `/notifications?id=test`, nil)
