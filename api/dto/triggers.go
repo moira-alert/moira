@@ -195,7 +195,7 @@ func (trigger *Trigger) Bind(request *http.Request) error {
 
 	middleware.SetTimeSeriesNames(request, metricsDataNames)
 
-	if err = triggerExpression.Validate(); err != nil {
+	if _, err = triggerExpression.Evaluate(); err != nil {
 		return err
 	}
 
