@@ -296,7 +296,7 @@ func TestExpressionValidate(t *testing.T) {
 		}
 		for _, expr := range expressions {
 			triggerExpression := TriggerExpression{
-				Expression:  ptr(expr),
+				Expression:  &expr,
 				WarnValue:   &warnValue,
 				ErrorValue:  &errorValue,
 				TriggerType: moira.ExpressionTrigger,
@@ -313,7 +313,7 @@ func TestExpressionValidate(t *testing.T) {
 		}
 		for _, expr := range expressions {
 			triggerExpression := TriggerExpression{
-				Expression:  ptr(expr),
+				Expression:  &expr,
 				WarnValue:   &warnValue,
 				ErrorValue:  &errorValue,
 				TriggerType: moira.ExpressionTrigger,
@@ -327,10 +327,6 @@ func TestExpressionValidate(t *testing.T) {
 			So(err, ShouldNotBeNil)
 		}
 	})
-}
-
-func ptr[T any](obj T) *T {
-	return &obj
 }
 
 func runGetExpressionValuesTest(getExpressionValuesTests []getExpressionValuesTest) {
