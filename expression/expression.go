@@ -103,6 +103,9 @@ func validateUserExpression(
 	triggerExpression *TriggerExpression,
 	userExpression *govaluate.EvaluableExpression,
 ) (*govaluate.EvaluableExpression, error) {
+	if triggerExpression.Expression == nil {
+		return nil, fmt.Errorf("trigger_type set to expression, but no expression provided")
+	}
 	expression := *triggerExpression.Expression
 
 	cacheKey := fmt.Sprintf("[VALIDATED]%s", expression)
