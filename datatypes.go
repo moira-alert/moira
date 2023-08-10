@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dustin/go-humanize"
 	"github.com/moira-alert/moira/templating"
 )
 
@@ -26,8 +27,17 @@ const (
 )
 
 const (
-	format        = "15:04 02.01.2006"
-	remindMessage = "This metric has been in bad state for more than %v hours - please, fix."
+	format            = "15:04 02.01.2006"
+	DefaultTimeFormat = "15:04"
+	remindMessage     = "This metric has been in bad state for more than %v hours - please, fix."
+	limit             = 1000
+)
+
+type NotificationEventSettings int
+
+const (
+	DefaultNotificationSettings NotificationEventSettings = iota
+	SIFormatNumbers
 )
 
 // NotificationEvent represents trigger state changes event
@@ -388,7 +398,7 @@ type SearchResult struct {
 }
 
 // GetSubjectState returns the most critical state of events
-func (events NotificationEvents) GetSubjectState() State {
+func (events NotificationEvents) getSubjectState() State {
 	result := StateOK
 	states := make(map[State]bool)
 	for _, event := range events {
@@ -400,6 +410,22 @@ func (events NotificationEvents) GetSubjectState() State {
 		}
 	}
 	return result
+}
+
+// GetLastState returns the last state of events
+func (events NotificationEvents) getLastState() State {
+	if len(events) != 0 {
+		return events[len(events)-1].State
+	}
+	return StateNODATA
+}
+
+// Returns the current state depending on the throttled parameter
+func (events NotificationEvents) GetCurrentState(throttled bool) State {
+	if throttled {
+		return events.getLastState()
+	}
+	return events.getSubjectState()
 }
 
 // GetTags returns "[tag1][tag2]...[tagN]" string
@@ -420,7 +446,7 @@ func (notification *ScheduledNotification) GetKey() string {
 		notification.Event.Metric,
 		notification.Event.State,
 		notification.Event.Timestamp,
-		notification.Event.GetMetricsValues(),
+		notification.Event.GetMetricsValues(DefaultNotificationSettings),
 		notification.SendFail,
 		notification.Throttled,
 		notification.Timestamp,
@@ -458,38 +484,61 @@ func (schedule *ScheduleData) IsScheduleAllows(ts int64) bool {
 }
 
 func (event NotificationEvent) String() string {
-	return fmt.Sprintf("TriggerId: %s, Metric: %s, Values: %s, OldState: %s, State: %s, Message: '%s', Timestamp: %v", event.TriggerID, event.Metric, event.GetMetricsValues(), event.OldState, event.State, event.CreateMessage(nil), event.Timestamp)
+	return fmt.Sprintf("TriggerId: %s, Metric: %s, Values: %s, OldState: %s, State: %s, Message: '%s', Timestamp: %v", event.TriggerID, event.Metric, event.GetMetricsValues(DefaultNotificationSettings), event.OldState, event.State, event.CreateMessage(nil), event.Timestamp)
 }
 
 // GetMetricsValues gets event metric value and format it to human readable presentation
-func (event NotificationEvent) GetMetricsValues() string {
-	var targetNames []string //nolint
+func (event NotificationEvent) GetMetricsValues(settings NotificationEventSettings) string {
+	targetNames := make([]string, 0, len(event.Values))
 	for targetName := range event.Values {
 		targetNames = append(targetNames, targetName)
 	}
+
 	if len(targetNames) == 0 {
 		return "—"
 	}
+
 	if len(targetNames) == 1 {
+		switch settings {
+		case SIFormatNumbers:
+			if event.Values[targetNames[0]] >= limit {
+				return humanize.SIWithDigits(event.Values[targetNames[0]], 3, "")
+			}
+			return humanize.FtoaWithDigits(event.Values[targetNames[0]], 3)
+		}
 		return strconv.FormatFloat(event.Values[targetNames[0]], 'f', -1, 64)
 	}
+
 	var builder strings.Builder
 	sort.Strings(targetNames)
 	for i, targetName := range targetNames {
 		builder.WriteString(targetName)
 		builder.WriteString(": ")
 		value := strconv.FormatFloat(event.Values[targetName], 'f', -1, 64)
+		switch settings {
+		case SIFormatNumbers:
+			if event.Values[targetName] >= limit {
+				value = humanize.SIWithDigits(event.Values[targetName], 3, "")
+			} else {
+				value = humanize.FtoaWithDigits(event.Values[targetName], 3)
+			}
+		}
 		builder.WriteString(value)
 		if i < len(targetNames)-1 {
 			builder.WriteString(", ")
 		}
 	}
+
 	return builder.String()
 }
 
 // FormatTimestamp gets event timestamp and format it using given location to human readable presentation
-func (event NotificationEvent) FormatTimestamp(location *time.Location) string {
-	return time.Unix(event.Timestamp, 0).In(location).Format("15:04")
+func (event NotificationEvent) FormatTimestamp(location *time.Location, timeFormat string) string {
+	timestamp := time.Unix(event.Timestamp, 0).In(location)
+	formattedTime := timestamp.Format(timeFormat)
+	offset := timestamp.Format("-07:00")
+
+	return formattedTime + " (GMT" + offset + ")"
 }
 
 // GetOrCreateMetricState gets metric state from check data or create new if CheckData has no state for given metric

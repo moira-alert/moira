@@ -112,7 +112,7 @@ func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.
 }
 
 func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) MessageCard {
-	title, uri := sender.buildTitleAndURI(events, trigger)
+	title, uri := sender.buildTitleAndURI(events, trigger, throttled)
 	var triggerDescription string
 	if trigger.Desc != "" {
 		triggerDescription = string(blackfriday.Run([]byte(trigger.Desc)))
@@ -132,11 +132,13 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 		})
 	}
 
+	state := events.GetCurrentState(throttled)
+
 	return MessageCard{
 		Context:     context,
 		MessageType: messageType,
 		Summary:     summary,
-		ThemeColor:  getColourForState(events.GetSubjectState()),
+		ThemeColor:  getColourForState(state),
 		Title:       title,
 		Sections: []Section{
 			{
@@ -173,8 +175,10 @@ func (sender *Sender) buildRequest(events moira.NotificationEvents, contact moir
 	return request, nil
 }
 
-func (sender *Sender) buildTitleAndURI(events moira.NotificationEvents, trigger moira.TriggerData) (string, string) {
-	title := string(events.GetSubjectState())
+func (sender *Sender) buildTitleAndURI(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) (string, string) {
+	state := events.GetCurrentState(throttled)
+
+	title := string(state)
 
 	if trigger.Name != "" {
 		title += " " + trigger.Name
@@ -196,12 +200,12 @@ func (sender *Sender) buildEventsFacts(events moira.NotificationEvents, maxEvent
 
 	eventsPrinted := 0
 	for _, event := range events {
-		line := fmt.Sprintf("%s = %s (%s to %s)", event.Metric, event.GetMetricsValues(), event.OldState, event.State)
+		line := fmt.Sprintf("%s = %s (%s to %s)", event.Metric, event.GetMetricsValues(moira.DefaultNotificationSettings), event.OldState, event.State)
 		if len(moira.UseString(event.Message)) > 0 {
 			line += fmt.Sprintf(". %s", moira.UseString(event.Message))
 		}
 		facts = append(facts, Fact{
-			Name:  event.FormatTimestamp(sender.location),
+			Name:  event.FormatTimestamp(sender.location, moira.DefaultTimeFormat),
 			Value: "```" + line + "```",
 		})
 

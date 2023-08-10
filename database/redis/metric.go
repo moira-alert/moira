@@ -1,7 +1,6 @@
 package redis
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -386,58 +385,18 @@ func cleanUpAbandonedRetentionsOnRedisNode(connector *DbConnector, client redis.
 }
 
 func (connector *DbConnector) CleanUpOutdatedMetrics(duration time.Duration) error {
-	client := *connector.client
-
 	if duration >= 0 {
 		return errors.New("clean up duration value must be less than zero, otherwise all metrics will be removed")
 	}
 
-	switch c := client.(type) {
-	case *redis.ClusterClient:
-		err := c.ForEachMaster(connector.context, func(ctx context.Context, shard *redis.Client) error {
-			err := cleanUpOutdatedMetricsOnRedisNode(connector, shard, duration)
-			if err != nil {
-				return err
-			}
-			return nil
-		})
-		if err != nil {
-			return err
-		}
-	default:
-		err := cleanUpOutdatedMetricsOnRedisNode(connector, c, duration)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return connector.callFunc(func(connector *DbConnector, client redis.UniversalClient) error {
+		return cleanUpOutdatedMetricsOnRedisNode(connector, client, duration)
+	})
 }
 
 // CleanUpAbandonedRetentions removes metric retention keys that have no corresponding metric data.
 func (connector *DbConnector) CleanUpAbandonedRetentions() error {
-	client := *connector.client
-
-	switch c := client.(type) {
-	case *redis.ClusterClient:
-		err := c.ForEachMaster(connector.context, func(ctx context.Context, shard *redis.Client) error {
-			err := cleanUpAbandonedRetentionsOnRedisNode(connector, shard)
-			if err != nil {
-				return err
-			}
-			return nil
-		})
-		if err != nil {
-			return err
-		}
-	default:
-		err := cleanUpAbandonedRetentionsOnRedisNode(connector, c)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return connector.callFunc(cleanUpAbandonedRetentionsOnRedisNode)
 }
 
 func removeMetricsByPrefixOnRedisNode(connector *DbConnector, client redis.UniversalClient, prefix string) error {
@@ -476,28 +435,9 @@ func removeMetricsByPrefixOnRedisNode(connector *DbConnector, client redis.Unive
 
 // RemoveMetricsByPrefix removes metrics by their prefix e.g. "my.super.metric.".
 func (connector *DbConnector) RemoveMetricsByPrefix(prefix string) error {
-	client := *connector.client
-
-	switch c := client.(type) {
-	case *redis.ClusterClient:
-		err := c.ForEachMaster(connector.context, func(ctx context.Context, shard *redis.Client) error {
-			err := removeMetricsByPrefixOnRedisNode(connector, shard, prefix)
-			if err != nil {
-				return err
-			}
-			return nil
-		})
-		if err != nil {
-			return err
-		}
-	default:
-		err := removeMetricsByPrefixOnRedisNode(connector, c, prefix)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return connector.callFunc(func(connector *DbConnector, client redis.UniversalClient) error {
+		return removeMetricsByPrefixOnRedisNode(connector, client, prefix)
+	})
 }
 
 func removeAllMetricsOnRedisNode(connector *DbConnector, client redis.UniversalClient) error {
@@ -530,28 +470,7 @@ func removeAllMetricsOnRedisNode(connector *DbConnector, client redis.UniversalC
 
 // RemoveAllMetrics removes all metrics.
 func (connector *DbConnector) RemoveAllMetrics() error {
-	client := *connector.client
-
-	switch c := client.(type) {
-	case *redis.ClusterClient:
-		err := c.ForEachMaster(connector.context, func(ctx context.Context, shard *redis.Client) error {
-			err := removeAllMetricsOnRedisNode(connector, shard)
-			if err != nil {
-				return err
-			}
-			return nil
-		})
-		if err != nil {
-			return err
-		}
-	default:
-		err := removeAllMetricsOnRedisNode(connector, c)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return connector.callFunc(removeAllMetricsOnRedisNode)
 }
 
 func flushMetric(database moira.Database, metric string, duration time.Duration) (int64, error) {

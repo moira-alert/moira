@@ -90,7 +90,7 @@ func TestBuildMessage(t *testing.T) {
 			expected := "**NODATA** [Name](http://moira.url/trigger/TriggerID) [tag1][tag2]\n" +
 				shortDesc + "\n" +
 				"```\n" +
-				"02:40: Metric = 123 (OK to NODATA)```"
+				"02:40 (GMT+00:00): Metric = 123 (OK to NODATA)```"
 			So(msg, ShouldEqual, expected)
 		})
 
@@ -101,7 +101,7 @@ func TestBuildMessage(t *testing.T) {
 			expected := "**NODATA** [Name](http://moira.url/trigger/TriggerID) [tag1][tag2]\n" +
 				shortDesc + "\n" +
 				"```\n" +
-				"02:40: Metric = 123 (OK to NODATA)```" + "\n" +
+				"02:40 (GMT+00:00): Metric = 123 (OK to NODATA)```" + "\n" +
 				"Please, *fix your system or tune this trigger* to generate less events."
 			So(msg, ShouldEqual, expected)
 		})
@@ -111,9 +111,9 @@ func TestBuildMessage(t *testing.T) {
 			expected := "**NODATA** [Name](http://moira.url/trigger/TriggerID) [tag1][tag2]\n" +
 				shortDesc + "\n" +
 				"```\n" +
-				"02:40: Metric = 123 (OK to NODATA)\n" +
-				"02:40: Metric = 123 (OK to NODATA)\n" +
-				"02:40: Metric = 123 (OK to NODATA)```"
+				"02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n" +
+				"02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n" +
+				"02:40 (GMT+00:00): Metric = 123 (OK to NODATA)```"
 			So(actual, ShouldResemble, expected)
 		})
 
@@ -125,7 +125,7 @@ func TestBuildMessage(t *testing.T) {
 				lessThanHalf    = halfLimit - 100
 			)
 
-			const eventLine = "\n02:40: Metric = 123 (OK to NODATA)"
+			const eventLine = "\n02:40 (GMT+00:00): Metric = 123 (OK to NODATA)"
 			oneEventLineLen := len([]rune(eventLine))
 
 			longDesc := strings.Repeat("a", greaterThanHalf)
@@ -144,10 +144,10 @@ func TestBuildMessage(t *testing.T) {
 
 				actual := sender.buildMessage(events, moira.TriggerData{Desc: longDesc}, false)
 				expected := "**NODATA**\n" +
-					strings.Repeat("a", 2083) + "...\n" +
+					strings.Repeat("a", 2100) + "\n" +
 					"```\n" +
-					strings.Repeat("02:40: Metric = 123 (OK to NODATA)\n", 53) +
-					"02:40: Metric = 123 (OK to NODATA)```"
+					strings.Repeat("02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n", 39) +
+					"02:40 (GMT+00:00): Metric = 123 (OK to NODATA)```"
 				So(actual, ShouldResemble, expected)
 			})
 
@@ -157,9 +157,8 @@ func TestBuildMessage(t *testing.T) {
 				expected := "**NODATA**\n" +
 					desc + "\n" +
 					"```\n" +
-					strings.Repeat("02:40: Metric = 123 (OK to NODATA)\n", 57) +
-					"02:40: Metric = 123 (OK to NODATA)```\n" +
-					"...and 2 more events."
+					strings.Repeat("02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n", 43) +
+					"02:40 (GMT+00:00): Metric = 123 (OK to NODATA)```"
 				So(actual, ShouldResemble, expected)
 			})
 
@@ -168,9 +167,9 @@ func TestBuildMessage(t *testing.T) {
 				expected := "**NODATA**\n" +
 					strings.Repeat("a", 1984) + "...\n" +
 					"```\n" +
-					strings.Repeat("02:40: Metric = 123 (OK to NODATA)\n", 55) +
-					"02:40: Metric = 123 (OK to NODATA)```\n" +
-					"...and 4 more events."
+					strings.Repeat("02:40 (GMT+00:00): Metric = 123 (OK to NODATA)\n", 40) +
+					"02:40 (GMT+00:00): Metric = 123 (OK to NODATA)```\n" +
+					"...and 3 more events."
 				So(actual, ShouldResemble, expected)
 			})
 		})
