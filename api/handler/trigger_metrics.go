@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/go-chi/chi"
@@ -30,16 +31,19 @@ func getTriggerMetrics(writer http.ResponseWriter, request *http.Request) {
 		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("can not parse from: %s", fromStr))) //nolint
 		return
 	}
+
 	to := date.DateParamToEpoch(toStr, "UTC", 0, time.UTC)
 	if to == 0 {
 		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("can not parse to: %v", to))) //nolint
 		return
 	}
+
 	triggerMetrics, err := controller.GetTriggerMetrics(database, metricSourceProvider, from, to, triggerID)
 	if err != nil {
 		render.Render(writer, request, err) //nolint
 		return
 	}
+
 	if err := render.Render(writer, request, triggerMetrics); err != nil {
 		render.Render(writer, request, api.ErrorRender(err)) //nolint
 	}
@@ -47,7 +51,14 @@ func getTriggerMetrics(writer http.ResponseWriter, request *http.Request) {
 
 func deleteTriggerMetric(writer http.ResponseWriter, request *http.Request) {
 	triggerID := middleware.GetTriggerID(request)
-	metricName := request.URL.Query().Get("name")
+
+	urlValues, err := url.ParseQuery(request.URL.RawQuery)
+	if err != nil {
+		render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
+		return
+	}
+
+	metricName := urlValues.Get("name")
 	if err := controller.DeleteTriggerMetric(database, metricName, triggerID); err != nil {
 		render.Render(writer, request, err) //nolint
 	}
