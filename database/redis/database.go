@@ -45,9 +45,10 @@ type DbConnector struct {
 	context              context.Context
 	source               DBSource
 	clock                moira.Clock
+	notificationHistory  NotificationHistoryConfig
 }
 
-func NewDatabase(logger moira.Logger, config Config, source DBSource) *DbConnector {
+func NewDatabase(logger moira.Logger, config DatabaseConfig, nh NotificationHistoryConfig, source DBSource) *DbConnector {
 	client := redis.NewUniversalClient(&redis.UniversalOptions{
 		MasterName:       config.MasterName,
 		Addrs:            config.Addrs,
@@ -76,20 +77,31 @@ func NewDatabase(logger moira.Logger, config Config, source DBSource) *DbConnect
 		metricsTTLSeconds:    int64(config.MetricsTTL.Seconds()),
 		source:               source,
 		clock:                clock.NewSystemClock(),
+		notificationHistory:  nh,
 	}
 	return &connector
 }
 
 // NewTestDatabase use it only for tests
 func NewTestDatabase(logger moira.Logger) *DbConnector {
-	return NewDatabase(logger, Config{
+	return NewDatabase(logger, DatabaseConfig{
 		Addrs: []string{"0.0.0.0:6379"},
-	}, testSource)
+	},
+		NotificationHistoryConfig{
+			NotificationHistoryTTL:        time.Hour * 48,
+			NotificationHistoryQueryLimit: 1000,
+		}, testSource)
 }
 
 // NewTestDatabaseWithIncorrectConfig use it only for tests
 func NewTestDatabaseWithIncorrectConfig(logger moira.Logger) *DbConnector {
-	return NewDatabase(logger, Config{Addrs: []string{"0.0.0.0:0000"}}, testSource)
+	return NewDatabase(logger,
+		DatabaseConfig{Addrs: []string{"0.0.0.0:0000"}},
+		NotificationHistoryConfig{
+			NotificationHistoryTTL:        time.Hour * 48,
+			NotificationHistoryQueryLimit: 1000,
+		},
+		testSource)
 }
 
 // Flush deletes all the keys of the DB, use it only for tests
