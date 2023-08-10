@@ -86,7 +86,7 @@ func TestGetContactById(t *testing.T) {
 	})
 
 	Convey("Get contact with invalid or unexisting guid id should be empty json", t, func() {
-		const invalidId = "invalid-guid-and-not-guid-at-all"
+		const invalidId = "invalidID"
 		dataBase.EXPECT().GetContact(invalidId).Return(moira.ContactData{}, nil)
 		actual, err := GetContactById(dataBase, invalidId)
 		So(err, ShouldBeNil)

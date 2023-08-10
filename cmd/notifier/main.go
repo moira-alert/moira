@@ -80,8 +80,8 @@ func main() {
 
 	notifierMetrics := metrics.ConfigureNotifierMetrics(telemetry.Metrics, serviceName)
 	databaseSettings := config.Redis.GetSettings()
-	nhSettings := config.NotificationHistory.GetSettings()
-	database := redis.NewDatabase(logger, databaseSettings, nhSettings, redis.Notifier)
+	notificationHistorySettings := config.NotificationHistory.GetSettings()
+	database := redis.NewDatabase(logger, databaseSettings, notificationHistorySettings, redis.Notifier)
 
 	localSource := local.Create(database)
 	remoteConfig := config.Remote.GetRemoteSourceSettings()

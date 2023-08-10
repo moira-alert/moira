@@ -75,7 +75,7 @@ func TestGetContactEventsByIdWithLimit(t *testing.T) {
 	}
 
 	defaultToParameter := now.Unix()
-	defaultFromParameter := defaultToParameter - 60*60*3 // 3 hours later
+	defaultFromParameter := defaultToParameter - int64((3 * time.Hour).Seconds())
 
 	Convey("Ensure that request with default parameters would return both event items (no url params specified)", t, func() {
 		dataBase.EXPECT().GetContact(contact.ID).Return(contactExpect, nil).AnyTimes()
