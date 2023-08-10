@@ -50,7 +50,7 @@ require (
 require (
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/swaggo/http-swagger v1.3.4
-	github.com/swaggo/swag v1.16.1
+	github.com/swaggo/swag v1.8.12
 )
 
 require (
@@ -181,6 +181,8 @@ require (
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.2.0 // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.0-20190314233015-f79a8a8ca69d // indirect
+	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/go-openapi/jsonpointer v0.20.0 // indirect
 	github.com/go-openapi/jsonreference v0.20.2 // indirect
 	github.com/go-openapi/spec v0.20.9 // indirect
@@ -193,6 +195,7 @@ require (
 	github.com/mitchellh/reflectwalk v1.0.0 // indirect
 	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/swaggo/files v1.0.1 // indirect
+	github.com/urfave/cli/v2 v2.3.0 // indirect
 	golang.org/x/tools v0.11.1 // indirect
 )
 

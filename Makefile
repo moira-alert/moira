@@ -41,7 +41,7 @@ mock:
 
 .PHONY: install-swag
 install-swag:
-	go install github.com/swaggo/swag/cmd/swag@1.8.10
+	go install github.com/swaggo/swag/cmd/swag@v1.8.12
 
 .PHONY: swag
 spec:
