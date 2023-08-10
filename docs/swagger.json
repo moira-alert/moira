@@ -278,6 +278,173 @@
                     }
                 }
             }
+        },
+        "/event/all": {
+            "delete": {
+                "tags": [
+                    "event"
+                ],
+                "summary": "Deletes all notification events",
+                "operationId": "delete-all-events",
+                "responses": {
+                    "200": {
+                        "description": "Events removed successfully"
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorInternalServerExample"
+                        }
+                    }
+                }
+            }
+        },
+        "/event/{triggerId}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "event"
+                ],
+                "summary": "Gets all trigger events for current page and their count",
+                "operationId": "get-events-list",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "The ID of updated trigger",
+                        "name": "triggerId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "NNumber of items to be displayed on one page",
+                        "name": "size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Defines the number of the displayed page. E.g, p=2 would display the 2nd page",
+                        "name": "p",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Events fetched successfully",
+                        "schema": {
+                            "$ref": "#/definitions/dto.EventsList"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request from client",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorInvalidRequestExample"
+                        }
+                    },
+                    "404": {
+                        "description": "Resource not found",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorNotFoundExample"
+                        }
+                    },
+                    "422": {
+                        "description": "Render error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorRenderExample"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorInternalServerExample"
+                        }
+                    }
+                }
+            }
+        },
+        "/health/notifier": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "summary": "Get notifier state",
+                "operationId": "get-notifier-state",
+                "responses": {
+                    "200": {
+                        "description": "Notifier state retrieved",
+                        "schema": {
+                            "$ref": "#/definitions/dto.NotifierState"
+                        }
+                    },
+                    "422": {
+                        "description": "Render error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorRenderExample"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorInternalServerExample"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "summary": "Update notifier state",
+                "operationId": "set-notifier-state",
+                "parameters": [
+                    {
+                        "description": "New notifier state",
+                        "name": "state",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.NotifierState"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Update state of the Moira service",
+                        "schema": {
+                            "$ref": "#/definitions/dto.NotifierState"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request from client",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorInvalidRequestExample"
+                        }
+                    },
+                    "422": {
+                        "description": "Render error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorRenderExample"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorInternalServerExample"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -381,6 +548,42 @@
                 }
             }
         },
+        "dto.EventsList": {
+            "type": "object",
+            "properties": {
+                "list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/moira.NotificationEvent"
+                    }
+                },
+                "page": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "size": {
+                    "type": "integer",
+                    "example": 100
+                },
+                "total": {
+                    "type": "integer",
+                    "example": 10
+                }
+            }
+        },
+        "dto.NotifierState": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Moira has been turned off for maintenance"
+                },
+                "state": {
+                    "type": "string",
+                    "example": "ERROR"
+                }
+            }
+        },
         "handler.ConfigurationResponse": {
             "type": "object",
             "properties": {
@@ -426,6 +629,88 @@
                 },
                 "value": {
                     "type": "string"
+                }
+            }
+        },
+        "moira.EventInfo": {
+            "type": "object",
+            "properties": {
+                "interval": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "maintenance": {
+                    "$ref": "#/definitions/moira.MaintenanceInfo"
+                }
+            }
+        },
+        "moira.MaintenanceInfo": {
+            "type": "object",
+            "properties": {
+                "remove_time": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "remove_user": {
+                    "type": "string"
+                },
+                "setup_time": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "setup_user": {
+                    "type": "string"
+                }
+            }
+        },
+        "moira.NotificationEvent": {
+            "type": "object",
+            "properties": {
+                "contactId": {
+                    "type": "string"
+                },
+                "event_message": {
+                    "$ref": "#/definitions/moira.EventInfo"
+                },
+                "metric": {
+                    "type": "string",
+                    "example": "carbon.agents.*.metricsReceived"
+                },
+                "msg": {
+                    "type": "string"
+                },
+                "old_state": {
+                    "type": "string",
+                    "example": "ERROR"
+                },
+                "state": {
+                    "type": "string",
+                    "example": "OK"
+                },
+                "sub_id": {
+                    "type": "string"
+                },
+                "timestamp": {
+                    "type": "integer",
+                    "example": 1590741878
+                },
+                "trigger_event": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "trigger_id": {
+                    "type": "string",
+                    "example": "5ff37996-8927-4cab-8987-970e80d8e0a8"
+                },
+                "value": {
+                    "type": "number",
+                    "example": 70
+                },
+                "values": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "number"
+                    }
                 }
             }
         }

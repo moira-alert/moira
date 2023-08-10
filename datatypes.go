@@ -42,16 +42,16 @@ const (
 
 // NotificationEvent represents trigger state changes event
 type NotificationEvent struct {
-	IsTriggerEvent   bool               `json:"trigger_event,omitempty"`
-	Timestamp        int64              `json:"timestamp"`
-	Metric           string             `json:"metric"`
-	Value            *float64           `json:"value,omitempty"`
+	IsTriggerEvent   bool               `json:"trigger_event,omitempty" example:"true"`
+	Timestamp        int64              `json:"timestamp" example:"1590741878"`
+	Metric           string             `json:"metric" example:"carbon.agents.*.metricsReceived"`
+	Value            *float64           `json:"value,omitempty" example:"70"`
 	Values           map[string]float64 `json:"values,omitempty"`
-	State            State              `json:"state"`
-	TriggerID        string             `json:"trigger_id"`
+	State            State              `json:"state" example:"OK"`
+	TriggerID        string             `json:"trigger_id" example:"5ff37996-8927-4cab-8987-970e80d8e0a8"`
 	SubscriptionID   *string            `json:"sub_id,omitempty"`
 	ContactID        string             `json:"contactId,omitempty"`
-	OldState         State              `json:"old_state"`
+	OldState         State              `json:"old_state" example:"ERROR"`
 	Message          *string            `json:"msg,omitempty"`
 	MessageEventInfo *EventInfo         `json:"event_message"`
 }
@@ -59,7 +59,7 @@ type NotificationEvent struct {
 // EventInfo - a base for creating messages.
 type EventInfo struct {
 	Maintenance *MaintenanceInfo `json:"maintenance,omitempty"`
-	Interval    *int64           `json:"interval,omitempty"`
+	Interval    *int64           `json:"interval,omitempty" example:"0"`
 }
 
 // CreateMessage - creates a message based on EventInfo.
@@ -349,9 +349,9 @@ func (metricState *MetricState) GetMaintenance() (MaintenanceInfo, int64) {
 // MaintenanceInfo represents user and time set/unset maintenance
 type MaintenanceInfo struct {
 	StartUser *string `json:"setup_user"`
-	StartTime *int64  `json:"setup_time"`
+	StartTime *int64  `json:"setup_time" example:"0"`
 	StopUser  *string `json:"remove_user"`
-	StopTime  *int64  `json:"remove_time"`
+	StopTime  *int64  `json:"remove_time" example:"0"`
 }
 
 // Set maintanace start and stop users and times

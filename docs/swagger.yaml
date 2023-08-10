@@ -69,6 +69,31 @@ definitions:
           $ref: '#/definitions/moira.ContactData'
         type: array
     type: object
+  dto.EventsList:
+    properties:
+      list:
+        items:
+          $ref: '#/definitions/moira.NotificationEvent'
+        type: array
+      page:
+        example: 0
+        type: integer
+      size:
+        example: 100
+        type: integer
+      total:
+        example: 10
+        type: integer
+    type: object
+  dto.NotifierState:
+    properties:
+      message:
+        example: Moira has been turned off for maintenance
+        type: string
+      state:
+        example: ERROR
+        type: string
+    type: object
   handler.ConfigurationResponse:
     properties:
       contacts:
@@ -100,6 +125,63 @@ definitions:
         type: string
       value:
         type: string
+    type: object
+  moira.EventInfo:
+    properties:
+      interval:
+        example: 0
+        type: integer
+      maintenance:
+        $ref: '#/definitions/moira.MaintenanceInfo'
+    type: object
+  moira.MaintenanceInfo:
+    properties:
+      remove_time:
+        example: 0
+        type: integer
+      remove_user:
+        type: string
+      setup_time:
+        example: 0
+        type: integer
+      setup_user:
+        type: string
+    type: object
+  moira.NotificationEvent:
+    properties:
+      contactId:
+        type: string
+      event_message:
+        $ref: '#/definitions/moira.EventInfo'
+      metric:
+        example: carbon.agents.*.metricsReceived
+        type: string
+      msg:
+        type: string
+      old_state:
+        example: ERROR
+        type: string
+      state:
+        example: OK
+        type: string
+      sub_id:
+        type: string
+      timestamp:
+        example: 1590741878
+        type: integer
+      trigger_event:
+        example: true
+        type: boolean
+      trigger_id:
+        example: 5ff37996-8927-4cab-8987-970e80d8e0a8
+        type: string
+      value:
+        example: 70
+        type: number
+      values:
+        additionalProperties:
+          type: number
+        type: object
     type: object
 info:
   contact:
@@ -289,6 +371,117 @@ paths:
         up
       tags:
       - contact
+  /event/{triggerId}:
+    get:
+      operationId: get-events-list
+      parameters:
+      - description: The ID of updated trigger
+        in: path
+        name: triggerId
+        required: true
+        type: string
+      - description: NNumber of items to be displayed on one page
+        in: query
+        name: size
+        type: integer
+      - description: Defines the number of the displayed page. E.g, p=2 would display
+          the 2nd page
+        in: query
+        name: p
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Events fetched successfully
+          schema:
+            $ref: '#/definitions/dto.EventsList'
+        "400":
+          description: Bad request from client
+          schema:
+            $ref: '#/definitions/api.ErrorInvalidRequestExample'
+        "404":
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/api.ErrorNotFoundExample'
+        "422":
+          description: Render error
+          schema:
+            $ref: '#/definitions/api.ErrorRenderExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Gets all trigger events for current page and their count
+      tags:
+      - event
+  /event/all:
+    delete:
+      operationId: delete-all-events
+      responses:
+        "200":
+          description: Events removed successfully
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Deletes all notification events
+      tags:
+      - event
+  /health/notifier:
+    get:
+      operationId: get-notifier-state
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Notifier state retrieved
+          schema:
+            $ref: '#/definitions/dto.NotifierState'
+        "422":
+          description: Render error
+          schema:
+            $ref: '#/definitions/api.ErrorRenderExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Get notifier state
+      tags:
+      - health
+    put:
+      consumes:
+      - application/json
+      operationId: set-notifier-state
+      parameters:
+      - description: New notifier state
+        in: body
+        name: state
+        required: true
+        schema:
+          $ref: '#/definitions/dto.NotifierState'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Update state of the Moira service
+          schema:
+            $ref: '#/definitions/dto.NotifierState'
+        "400":
+          description: Bad request from client
+          schema:
+            $ref: '#/definitions/api.ErrorInvalidRequestExample'
+        "422":
+          description: Render error
+          schema:
+            $ref: '#/definitions/api.ErrorRenderExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Update notifier state
+      tags:
+      - health
 swagger: "2.0"
 tags:
 - description: APIs for working with Moira contacts. For more details, see <https://moira.readthedocs.io/en/latest/installation/webhooks_scripts.html#contact/>
