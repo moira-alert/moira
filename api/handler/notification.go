@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
 
 	"github.com/go-chi/chi"
@@ -18,11 +19,18 @@ func notification(router chi.Router) {
 }
 
 func getNotification(writer http.ResponseWriter, request *http.Request) {
-	start, err := strconv.ParseInt(request.URL.Query().Get("start"), 10, 64)
+	urlValues, err := url.ParseQuery(request.URL.RawQuery)
+	if err != nil {
+		render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
+		return
+	}
+
+	start, err := strconv.ParseInt(urlValues.Get("start"), 10, 64)
 	if err != nil {
 		start = 0
 	}
-	end, err := strconv.ParseInt(request.URL.Query().Get("end"), 10, 64)
+
+	end, err := strconv.ParseInt(urlValues.Get("end"), 10, 64)
 	if err != nil {
 		end = -1
 	}
@@ -32,13 +40,20 @@ func getNotification(writer http.ResponseWriter, request *http.Request) {
 		render.Render(writer, request, errorResponse) //nolint
 		return
 	}
+
 	if err := render.Render(writer, request, notifications); err != nil {
 		render.Render(writer, request, api.ErrorRender(err)) //nolint
 	}
 }
 
 func deleteNotification(writer http.ResponseWriter, request *http.Request) {
-	notificationKey := request.URL.Query().Get("id")
+	urlValues, err := url.ParseQuery(request.URL.RawQuery)
+	if err != nil {
+		render.Render(writer, request, api.ErrorInvalidRequest(err)) //nolint
+		return
+	}
+
+	notificationKey := urlValues.Get("id")
 	if notificationKey == "" {
 		render.Render(writer, request, api.ErrorInvalidRequest(fmt.Errorf("notification id can not be empty"))) //nolint
 		return
@@ -49,6 +64,7 @@ func deleteNotification(writer http.ResponseWriter, request *http.Request) {
 		render.Render(writer, request, errorResponse) //nolint
 		return
 	}
+
 	if err := render.Render(writer, request, notifications); err != nil {
 		render.Render(writer, request, api.ErrorRender(err)) //nolint
 	}
