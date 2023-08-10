@@ -57,7 +57,7 @@ func NewHandler(db moira.Database, log moira.Logger, index moira.Searcher, confi
 	//	@tag.name			health
 	//	@tag.description	interact with Moira states/health status. See <https://moira.readthedocs.io/en/latest/user_guide/selfstate.html#self-state-monitor/> for details
 	//
-	//	@tag.name			notifications
+	//	@tag.name			notification
 	//	@tag.description	manage notifications that are currently in queue. See <https://moira.readthedocs.io/en/latest/user_guide/hidden_pages.html#notifications/>
 	//
 	//	@tag.name			pattern

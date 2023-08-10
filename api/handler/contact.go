@@ -127,7 +127,7 @@ func updateContact(writer http.ResponseWriter, request *http.Request) {
 // @ID			remove-contact
 // @Accept		json
 // @Produce	json
-// @Param		contactId	path	string	true	"ID of the contact to remove"	Example:"bcba82f5-48cf-44c0-b7d6-e1d32c64a88c"
+// @Param		contactId	path	string	true	"ID of the contact to remove"	extensions(x-example=bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
 // @Success	200			"Contact has been deleted"
 // @Failure	400			{object}	api.ErrorInvalidRequestExample	"Bad request from client"
 // @Failure	403			{object}	api.ErrorForbiddenExample		"Forbidden"
@@ -147,7 +147,7 @@ func removeContact(writer http.ResponseWriter, request *http.Request) {
 // @ID			send-test-notification
 // @Accept		json
 // @Produce	json
-// @Param		contactId	path	string	true	"The ID of the target contact"	Example:"bcba82f5-48cf-44c0-b7d6-e1d32c64a88c"
+// @Param		contactId	path	string	true	"The ID of the target contact"	extensions(x-example=bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
 // @Success	200			"Test successful"
 // @Failure	403			{object}	api.ErrorForbiddenExample		"Forbidden"
 // @Failure	404			{object}	api.ErrorNotFoundExample		"Resource not found"

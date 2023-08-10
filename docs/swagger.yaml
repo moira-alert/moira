@@ -85,6 +85,22 @@ definitions:
         example: 10
         type: integer
     type: object
+  dto.NotificationDeleteResponse:
+    properties:
+      result:
+        example: 0
+        type: integer
+    type: object
+  dto.NotificationsList:
+    properties:
+      list:
+        items:
+          $ref: '#/definitions/moira.ScheduledNotification'
+        type: array
+      total:
+        example: 0
+        type: integer
+    type: object
   dto.NotifierState:
     properties:
       message:
@@ -116,14 +132,18 @@ definitions:
   moira.ContactData:
     properties:
       id:
+        example: 1dd38765-c5be-418d-81fa-7a5f879c2315
         type: string
       team:
         type: string
       type:
+        example: mail
         type: string
       user:
+        example: ""
         type: string
       value:
+        example: devops@example.com
         type: string
     type: object
   moira.EventInfo:
@@ -182,6 +202,68 @@ definitions:
         additionalProperties:
           type: number
         type: object
+    type: object
+  moira.PlottingData:
+    properties:
+      enabled:
+        example: true
+        type: boolean
+      theme:
+        type: string
+    type: object
+  moira.ScheduledNotification:
+    properties:
+      contact:
+        $ref: '#/definitions/moira.ContactData'
+      event:
+        $ref: '#/definitions/moira.NotificationEvent'
+      plotting:
+        $ref: '#/definitions/moira.PlottingData'
+      send_fail:
+        example: 0
+        type: integer
+      throttled:
+        example: false
+        type: boolean
+      timestamp:
+        example: 1594471927
+        type: integer
+      trigger:
+        $ref: '#/definitions/moira.TriggerData'
+    type: object
+  moira.TriggerData:
+    properties:
+      __notifier_trigger_tags:
+        example:
+        - server
+        - disk
+        items:
+          type: string
+        type: array
+      desc:
+        example: check the size of /var/log
+        type: string
+      error_value:
+        example: 1000
+        type: number
+      id:
+        example: 292516ed-4924-4154-a62c-ebe312431fce
+        type: string
+      is_remote:
+        example: false
+        type: boolean
+      name:
+        example: Not enough disk space left
+        type: string
+      targets:
+        example:
+        - devOps.my_server.hdd.freespace_mbytes
+        items:
+          type: string
+        type: array
+      warn_value:
+        example: 5000
+        type: number
     type: object
 info:
   contact:
@@ -267,6 +349,7 @@ paths:
         name: contactId
         required: true
         type: string
+        x-example: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
       produces:
       - application/json
       responses:
@@ -350,11 +433,12 @@ paths:
         name: contactId
         required: true
         type: string
+        x-example: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
       produces:
       - application/json
       responses:
         "200":
-          description: Test successfull
+          description: Test successful
         "403":
           description: Forbidden
           schema:
@@ -380,15 +464,18 @@ paths:
         name: triggerId
         required: true
         type: string
-      - description: NNumber of items to be displayed on one page
+        x-example: 5A8AF369-86D2-44DD-B514-D47995ED6AF7
+      - description: Number of items to be displayed on one page
         in: query
         name: size
         type: integer
+        x-example: "15"
       - description: Defines the number of the displayed page. E.g, p=2 would display
           the 2nd page
         in: query
         name: p
         type: integer
+        x-example: "1"
       produces:
       - application/json
       responses:
@@ -482,6 +569,87 @@ paths:
       summary: Update notifier state
       tags:
       - health
+  /notification:
+    delete:
+      operationId: delete-notification
+      parameters:
+      - description: The ID of updated trigger
+        in: query
+        name: id
+        required: true
+        type: string
+        x-example: 5A8AF369-86D2-44DD-B514-D47995ED6AF7
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Notification have been deleted
+          schema:
+            $ref: '#/definitions/dto.NotificationDeleteResponse'
+        "400":
+          description: Bad request from client
+          schema:
+            $ref: '#/definitions/api.ErrorInvalidRequestExample'
+        "422":
+          description: Render error
+          schema:
+            $ref: '#/definitions/api.ErrorRenderExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Delete a notification by id
+      tags:
+      - notification
+    get:
+      operationId: get-notifications
+      parameters:
+      - description: 'Default Value: 0'
+        in: query
+        name: start
+        type: integer
+        x-example: "1"
+      - description: 'Default Value: -1'
+        in: query
+        name: end
+        type: integer
+        x-example: "15"
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Notifications fetched successfully
+          schema:
+            $ref: '#/definitions/dto.NotificationsList'
+        "400":
+          description: Bad request from client
+          schema:
+            $ref: '#/definitions/api.ErrorInvalidRequestExample'
+        "422":
+          description: Render error
+          schema:
+            $ref: '#/definitions/api.ErrorRenderExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Gets a paginated list of notifications, all notifications are fetched
+        if end = -1 and start = 0
+      tags:
+      - notification
+  /notification/all:
+    delete:
+      operationId: delete-all-notifications
+      responses:
+        "200":
+          description: All notifications have been deleted
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Deletes all available notifications
+      tags:
+      - notification
 swagger: "2.0"
 tags:
 - description: APIs for working with Moira contacts. For more details, see <https://moira.readthedocs.io/en/latest/installation/webhooks_scripts.html#contact/>
@@ -495,7 +663,7 @@ tags:
     for details
   name: health
 - description: manage notifications that are currently in queue. See <https://moira.readthedocs.io/en/latest/user_guide/hidden_pages.html#notifications/>
-  name: notifications
+  name: notification
 - description: APIs for interacting with graphite patterns in Moira. See <https://moira.readthedocs.io/en/latest/development/architecture.html#pattern/>
   name: pattern
 - description: APIs for managing a user's subscription(s). See <https://moira.readthedocs.io/en/latest/development/architecture.html#subscription/>

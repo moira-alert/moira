@@ -18,9 +18,9 @@ func event(router chi.Router) {
 // @summary	Gets all trigger events for current page and their count
 // @id			get-events-list
 // @tags		event
-// @param		triggerId	path	string	true	"The ID of updated trigger"														Example:	"5A8AF369-86D2-44DD-B514-D47995ED6AF7"
-// @param		size		query	int		false	"NNumber of items to be displayed on one page"									Example:	"15"
-// @param		p			query	int		false	"Defines the number of the displayed page. E.g, p=2 would display the 2nd page"	Example:	"1"
+// @param		triggerId	path	string	true	"The ID of updated trigger"														extensions(x-example=5A8AF369-86D2-44DD-B514-D47995ED6AF7)
+// @param		size		query	int		false	"Number of items to be displayed on one page"									extensions(x-example=15)
+// @param		p			query	int		false	"Defines the number of the displayed page. E.g, p=2 would display the 2nd page"	extensions(x-example=1)
 // @produce	json
 // @success	200	{object}	dto.EventsList					"Events fetched successfully"
 // @Failure	400	{object}	api.ErrorInvalidRequestExample	"Bad request from client"
@@ -45,6 +45,7 @@ func getEventsList(writer http.ResponseWriter, request *http.Request) {
 // @summary	Deletes all notification events
 // @id			delete-all-events
 // @tags		event
+// @produce	json
 // @success	200	"Events removed successfully"
 // @Failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
 // @router		/event/all [delete]

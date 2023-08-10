@@ -146,14 +146,14 @@ func NotificationEventsToTemplatingEvents(events NotificationEvents) []templatin
 
 // TriggerData represents trigger object
 type TriggerData struct {
-	ID         string   `json:"id"`
-	Name       string   `json:"name"`
-	Desc       string   `json:"desc"`
-	Targets    []string `json:"targets"`
-	WarnValue  float64  `json:"warn_value"`
-	ErrorValue float64  `json:"error_value"`
-	IsRemote   bool     `json:"is_remote"`
-	Tags       []string `json:"__notifier_trigger_tags"`
+	ID         string   `json:"id" example:"292516ed-4924-4154-a62c-ebe312431fce"`
+	Name       string   `json:"name" example:"Not enough disk space left"`
+	Desc       string   `json:"desc" example:"check the size of /var/log"`
+	Targets    []string `json:"targets" example:"devOps.my_server.hdd.freespace_mbytes"`
+	WarnValue  float64  `json:"warn_value" example:"5000"`
+	ErrorValue float64  `json:"error_value" example:"1000"`
+	IsRemote   bool     `json:"is_remote" example:"false"`
+	Tags       []string `json:"__notifier_trigger_tags" example:"server,disk"`
 }
 
 // GetTriggerURI gets frontUri and returns triggerUrl, returns empty string on selfcheck and test notifications
@@ -173,10 +173,10 @@ type Team struct {
 
 // ContactData represents contact object
 type ContactData struct {
-	Type  string `json:"type"`
-	Value string `json:"value"`
-	ID    string `json:"id"`
-	User  string `json:"user"`
+	Type  string `json:"type" example:"mail"`
+	Value string `json:"value" example:"devops@example.com"`
+	ID    string `json:"id" example:"1dd38765-c5be-418d-81fa-7a5f879c2315"`
+	User  string `json:"user" example:""`
 	Team  string `json:"team"`
 }
 
@@ -198,7 +198,7 @@ type SubscriptionData struct {
 
 // PlottingData represents plotting settings
 type PlottingData struct {
-	Enabled bool   `json:"enabled"`
+	Enabled bool   `json:"enabled" example:"true"`
 	Theme   string `json:"theme"`
 }
 
@@ -222,9 +222,9 @@ type ScheduledNotification struct {
 	Trigger   TriggerData       `json:"trigger"`
 	Contact   ContactData       `json:"contact"`
 	Plotting  PlottingData      `json:"plotting"`
-	Throttled bool              `json:"throttled"`
-	SendFail  int               `json:"send_fail"`
-	Timestamp int64             `json:"timestamp"`
+	Throttled bool              `json:"throttled" example:"false"`
+	SendFail  int               `json:"send_fail" example:"0"`
+	Timestamp int64             `json:"timestamp" example:"1594471927"`
 }
 
 // MatchedMetric represents parsed and matched metric data

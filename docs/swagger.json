@@ -195,6 +195,7 @@
                 "parameters": [
                     {
                         "type": "string",
+                        "x-example": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
                         "description": "ID of the contact to remove",
                         "name": "contactId",
                         "in": "path",
@@ -248,6 +249,7 @@
                 "parameters": [
                     {
                         "type": "string",
+                        "x-example": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
                         "description": "The ID of the target contact",
                         "name": "contactId",
                         "in": "path",
@@ -256,7 +258,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Test successfull"
+                        "description": "Test successful"
                     },
                     "403": {
                         "description": "Forbidden",
@@ -312,6 +314,7 @@
                 "parameters": [
                     {
                         "type": "string",
+                        "x-example": "5A8AF369-86D2-44DD-B514-D47995ED6AF7",
                         "description": "The ID of updated trigger",
                         "name": "triggerId",
                         "in": "path",
@@ -319,12 +322,14 @@
                     },
                     {
                         "type": "integer",
-                        "description": "NNumber of items to be displayed on one page",
+                        "x-example": "15",
+                        "description": "Number of items to be displayed on one page",
                         "name": "size",
                         "in": "query"
                     },
                     {
                         "type": "integer",
+                        "x-example": "1",
                         "description": "Defines the number of the displayed page. E.g, p=2 would display the 2nd page",
                         "name": "p",
                         "in": "query"
@@ -436,6 +441,126 @@
                         "schema": {
                             "$ref": "#/definitions/api.ErrorRenderExample"
                         }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorInternalServerExample"
+                        }
+                    }
+                }
+            }
+        },
+        "/notification": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "notification"
+                ],
+                "summary": "Gets a paginated list of notifications, all notifications are fetched if end = -1 and start = 0",
+                "operationId": "get-notifications",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "x-example": "1",
+                        "description": "Default Value: 0",
+                        "name": "start",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "x-example": "15",
+                        "description": "Default Value: -1",
+                        "name": "end",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Notifications fetched successfully",
+                        "schema": {
+                            "$ref": "#/definitions/dto.NotificationsList"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request from client",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorInvalidRequestExample"
+                        }
+                    },
+                    "422": {
+                        "description": "Render error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorRenderExample"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorInternalServerExample"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "notification"
+                ],
+                "summary": "Delete a notification by id",
+                "operationId": "delete-notification",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "x-example": "5A8AF369-86D2-44DD-B514-D47995ED6AF7",
+                        "description": "The ID of updated trigger",
+                        "name": "id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Notification have been deleted",
+                        "schema": {
+                            "$ref": "#/definitions/dto.NotificationDeleteResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request from client",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorInvalidRequestExample"
+                        }
+                    },
+                    "422": {
+                        "description": "Render error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorRenderExample"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorInternalServerExample"
+                        }
+                    }
+                }
+            }
+        },
+        "/notification/all": {
+            "delete": {
+                "tags": [
+                    "notification"
+                ],
+                "summary": "Deletes all available notifications",
+                "operationId": "delete-all-notifications",
+                "responses": {
+                    "200": {
+                        "description": "All notifications have been deleted"
                     },
                     "500": {
                         "description": "Internal server error",
@@ -571,6 +696,30 @@
                 }
             }
         },
+        "dto.NotificationDeleteResponse": {
+            "type": "object",
+            "properties": {
+                "result": {
+                    "type": "integer",
+                    "example": 0
+                }
+            }
+        },
+        "dto.NotificationsList": {
+            "type": "object",
+            "properties": {
+                "list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/moira.ScheduledNotification"
+                    }
+                },
+                "total": {
+                    "type": "integer",
+                    "example": 0
+                }
+            }
+        },
         "dto.NotifierState": {
             "type": "object",
             "properties": {
@@ -616,19 +765,23 @@
             "type": "object",
             "properties": {
                 "id": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "1dd38765-c5be-418d-81fa-7a5f879c2315"
                 },
                 "team": {
                     "type": "string"
                 },
                 "type": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "mail"
                 },
                 "user": {
-                    "type": "string"
+                    "type": "string",
+                    "example": ""
                 },
                 "value": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "devops@example.com"
                 }
             }
         },
@@ -713,6 +866,95 @@
                     }
                 }
             }
+        },
+        "moira.PlottingData": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "theme": {
+                    "type": "string"
+                }
+            }
+        },
+        "moira.ScheduledNotification": {
+            "type": "object",
+            "properties": {
+                "contact": {
+                    "$ref": "#/definitions/moira.ContactData"
+                },
+                "event": {
+                    "$ref": "#/definitions/moira.NotificationEvent"
+                },
+                "plotting": {
+                    "$ref": "#/definitions/moira.PlottingData"
+                },
+                "send_fail": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "throttled": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "timestamp": {
+                    "type": "integer",
+                    "example": 1594471927
+                },
+                "trigger": {
+                    "$ref": "#/definitions/moira.TriggerData"
+                }
+            }
+        },
+        "moira.TriggerData": {
+            "type": "object",
+            "properties": {
+                "__notifier_trigger_tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "server",
+                        "disk"
+                    ]
+                },
+                "desc": {
+                    "type": "string",
+                    "example": "check the size of /var/log"
+                },
+                "error_value": {
+                    "type": "number",
+                    "example": 1000
+                },
+                "id": {
+                    "type": "string",
+                    "example": "292516ed-4924-4154-a62c-ebe312431fce"
+                },
+                "is_remote": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Not enough disk space left"
+                },
+                "targets": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "devOps.my_server.hdd.freespace_mbytes"
+                    ]
+                },
+                "warn_value": {
+                    "type": "number",
+                    "example": 5000
+                }
+            }
         }
     },
     "tags": [
@@ -734,7 +976,7 @@
         },
         {
             "description": "manage notifications that are currently in queue. See \u003chttps://moira.readthedocs.io/en/latest/user_guide/hidden_pages.html#notifications/\u003e",
-            "name": "notifications"
+            "name": "notification"
         },
         {
             "description": "APIs for interacting with graphite patterns in Moira. See \u003chttps://moira.readthedocs.io/en/latest/development/architecture.html#pattern/\u003e",
