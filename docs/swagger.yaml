@@ -1,24 +1,65 @@
+basePath: /api
 definitions:
-  api.ErrorResponse:
+  api.ErrorForbiddenExample:
     properties:
       error:
-        description: application-level error message, for debugging
+        example: you cannot access this resource
         type: string
       status:
-        description: user-level status message
+        example: Forbidden
+        type: string
+    type: object
+  api.ErrorInternalServerExample:
+    properties:
+      error:
+        example: server error during request handling
+        type: string
+      status:
+        example: Internal Server Error
+        type: string
+    type: object
+  api.ErrorInvalidRequestExample:
+    properties:
+      error:
+        example: resource with the ID does not exist
+        type: string
+      status:
+        example: Invalid request
+        type: string
+    type: object
+  api.ErrorNotFoundExample:
+    properties:
+      error:
+        example: resource with ID '66741a8c-c2ba-4357-a2c9-ee78e0e7' does not exist
+        type: string
+      status:
+        example: Resource not found
+        type: string
+    type: object
+  api.ErrorRenderExample:
+    properties:
+      error:
+        example: rendering error
+        type: string
+      status:
+        example: Error rendering response
         type: string
     type: object
   dto.Contact:
     properties:
       id:
+        example: 1dd38765-c5be-418d-81fa-7a5f879c2315
         type: string
       team_id:
         type: string
       type:
+        example: mail
         type: string
       user:
+        example: ""
         type: string
       value:
+        example: devops@example.com
         type: string
     type: object
   dto.ContactList:
@@ -27,6 +68,25 @@ definitions:
         items:
           $ref: '#/definitions/moira.ContactData'
         type: array
+    type: object
+  handler.ConfigurationResponse:
+    properties:
+      contacts:
+        items:
+          $ref: '#/definitions/handler.Contact'
+        type: array
+      remoteAllowed:
+        example: false
+        type: boolean
+    type: object
+  handler.Contact:
+    properties:
+      label:
+        example: Telegram
+        type: string
+      type:
+        example: telegram
+        type: string
     type: object
   moira.ContactData:
     properties:
@@ -42,46 +102,51 @@ definitions:
         type: string
     type: object
 info:
-  contact: {}
+  contact:
+    email: opensource@skbkontur.com
+    name: Contact Moira Team
   description: This is an API description for [Moira Alert API](https://moira.readthedocs.io/en/latest/overview.html).
-    Check us out on [Github](https://github.com/moira-alert) or look up our [guide
-    on getting started with Moira](https://moira.readthedocs.io).
+  license:
+    name: MIT
   title: Moira Alert
-  version: 2.8.2
+  version: master
 paths:
   /api/config:
     get:
-      description: View Moira's runtime configuration. For more details, see <https://moira.readthedocs.io/en/latest/installation/configuration.html>
       operationId: get-web-config
       produces:
       - application/json
       responses:
         "200":
-          description: OK
-      summary: Get web configuration
+          description: Configuration fetched successfully
+          schema:
+            $ref: '#/definitions/handler.ConfigurationResponse'
+      summary: Get available configuration
       tags:
       - config
-  /api/contact:
+  /contact:
     get:
-      description: APIs for working with Moira contacts. For more details, see <https://moira.readthedocs.io/en/latest/installation/webhooks_scripts.html#contact/>
       operationId: get-all-contacts
       produces:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Contacts fetched successfully
           schema:
             $ref: '#/definitions/dto.ContactList'
+        "422":
+          description: Render error
+          schema:
+            $ref: '#/definitions/api.ErrorRenderExample'
       summary: Gets all Moira contacts
       tags:
       - contact
     put:
       consumes:
       - application/json
-      description: APIs for working with Moira contacts. For more details, see <https://moira.readthedocs.io/en/latest/installation/webhooks_scripts.html#contact/>
       operationId: create-new-contact
       parameters:
-      - description: Data of the new contact
+      - description: Contact data
         in: body
         name: contact
         required: true
@@ -91,29 +156,63 @@ paths:
       - application/json
       responses:
         "200":
-          description: Created contact
+          description: Contact created successfully
           schema:
             $ref: '#/definitions/dto.Contact'
         "400":
-          description: Request error
+          description: Bad request from client
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/api.ErrorInvalidRequestExample'
         "422":
           description: Render error
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/api.ErrorRenderExample'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/api.ErrorInternalServerExample'
       summary: Creates a new contact notification for the current user
       tags:
       - contact
-  /api/contact/{contactId}:
+  /contact/{contactId}:
+    delete:
+      consumes:
+      - application/json
+      operationId: remove-contact
+      parameters:
+      - description: ID of the contact to remove
+        in: path
+        name: contactId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Contact has been deleted
+        "400":
+          description: Bad request from client
+          schema:
+            $ref: '#/definitions/api.ErrorInvalidRequestExample'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/api.ErrorForbiddenExample'
+        "404":
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/api.ErrorNotFoundExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Deletes notification contact for the current user and remove the contact
+        ID from all subscriptions
+      tags:
+      - contact
     put:
       consumes:
       - application/json
-      description: APIs for working with Moira contacts. For more details, see <https://moira.readthedocs.io/en/latest/installation/webhooks_scripts.html#contact/>
       operationId: update-contact
       parameters:
       - description: ID of the contact to update
@@ -135,27 +234,89 @@ paths:
           schema:
             $ref: '#/definitions/dto.Contact'
         "400":
-          description: Request error
+          description: Bad request from client
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/api.ErrorInvalidRequestExample'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/api.ErrorForbiddenExample'
         "404":
-          description: Contact not found
+          description: Resource not found
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/api.ErrorNotFoundExample'
         "422":
           description: Render error
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/api.ErrorRenderExample'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/api.ErrorInternalServerExample'
       summary: Updates an existing notification contact to the values passed in the
         request body
       tags:
       - contact
+  /contact/{contactId}/test:
+    post:
+      consumes:
+      - application/json
+      operationId: send-test-notification
+      parameters:
+      - description: The ID of the target contact
+        in: path
+        name: contactId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Test successfull
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/api.ErrorForbiddenExample'
+        "404":
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/api.ErrorNotFoundExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Push a test notification to verify that the contact is properly set
+        up
+      tags:
+      - contact
 swagger: "2.0"
+tags:
+- description: APIs for working with Moira contacts. For more details, see <https://moira.readthedocs.io/en/latest/installation/webhooks_scripts.html#contact/>
+  name: contact
+- description: View Moira's runtime configuration. For more details, see <https://moira.readthedocs.io/en/latest/installation/configuration.html>
+  name: config
+- description: APIs for interacting with notification events. See <https://moira.readthedocs.io/en/latest/user_guide/trigger_page.html#event-history/>
+    for details
+  name: event
+- description: interact with Moira states/health status. See <https://moira.readthedocs.io/en/latest/user_guide/selfstate.html#self-state-monitor/>
+    for details
+  name: health
+- description: manage notifications that are currently in queue. See <https://moira.readthedocs.io/en/latest/user_guide/hidden_pages.html#notifications/>
+  name: notifications
+- description: APIs for interacting with graphite patterns in Moira. See <https://moira.readthedocs.io/en/latest/development/architecture.html#pattern/>
+  name: pattern
+- description: APIs for managing a user's subscription(s). See <https://moira.readthedocs.io/en/latest/development/architecture.html#subscription/>
+    to learn about Moira subscriptions
+  name: subscription
+- description: APIs for managing tags (a grouping of tags and subscriptions). See
+    <https://moira.readthedocs.io/en/latest/user_guide/subscriptions.html#tags/>
+  name: tag
+- description: APIs for interacting with Moira triggers. See <https://moira.readthedocs.io/en/latest/development/architecture.html#trigger/>
+    to learn about Triggers
+  name: trigger
+- description: APIs for interacting with Moira teams
+  name: team
+- description: APIs for interacting with Moira subscriptions owned by certain team
+  name: teamSubscription
+- description: APIs for interacting with Moira contacts owned by certain team.
+  name: teamContact

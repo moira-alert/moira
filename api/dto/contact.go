@@ -17,10 +17,10 @@ func (*ContactList) Render(w http.ResponseWriter, r *http.Request) error {
 }
 
 type Contact struct {
-	Type   string `json:"type"`
-	Value  string `json:"value"`
-	ID     string `json:"id,omitempty"`
-	User   string `json:"user,omitempty"`
+	Type   string `json:"type" example:"mail"`
+	Value  string `json:"value" example:"devops@example.com"`
+	ID     string `json:"id,omitempty" example:"1dd38765-c5be-418d-81fa-7a5f879c2315"`
+	User   string `json:"user,omitempty" example:""`
 	TeamID string `json:"team_id,omitempty"`
 }
 

@@ -23,6 +23,19 @@ var searchIndex moira.Searcher
 const contactKey moiramiddle.ContextKey = "contact"
 const subscriptionKey moiramiddle.ContextKey = "subscription"
 
+// License information
+// swagger:meta
+type LicenseInfo struct {
+	Name string `json:"name"`
+}
+
+// Contact information
+// swagger:meta
+type ContactInfo struct {
+	Name  string `json:"name"`
+	Email string `json:"email"`
+}
+
 // NewHandler creates new api handler request uris based on github.com/go-chi/chi
 func NewHandler(db moira.Database, log moira.Logger, index moira.Searcher, config *api.Config, metricSourceProvider *metricSource.SourceProvider, webConfigContent []byte) http.Handler {
 	database = db
@@ -37,8 +50,49 @@ func NewHandler(db moira.Database, log moira.Logger, index moira.Searcher, confi
 	router.MethodNotAllowed(methodNotAllowedHandler)
 
 	// @title Moira Alert
-	// @version 2.8.2
-	// @description This is an API description for [Moira Alert API](https://moira.readthedocs.io/en/latest/overview.html). Check us out on [Github](https://github.com/moira-alert) or look up our [guide on getting started with Moira](https://moira.readthedocs.io).
+	// @version master
+	// @description This is an API description for [Moira Alert API](https://moira.readthedocs.io/en/latest/overview.html). 
+	// Check us out on [Github](https://github.com/moira-alert) or look up our [guide on getting started with Moira](https://moira.readthedocs.io).
+	// @contact.name Contact Moira Team
+	// @contact.email opensource@skbkontur.com
+	// @license.name MIT
+	// @BasePath /api
+	//
+	// @tag.name contact
+	// @tag.description APIs for working with Moira contacts. For more details, see <https://moira.readthedocs.io/en/latest/installation/webhooks_scripts.html#contact/>
+	//
+	// @tag.name config
+	// @tag.description View Moira's runtime configuration. For more details, see <https://moira.readthedocs.io/en/latest/installation/configuration.html>
+	// 
+	// @tag.name event
+	// @tag.description APIs for interacting with notification events. See <https://moira.readthedocs.io/en/latest/user_guide/trigger_page.html#event-history/> for details
+	//
+	// @tag.name health
+	// @tag.description interact with Moira states/health status. See <https://moira.readthedocs.io/en/latest/user_guide/selfstate.html#self-state-monitor/> for details
+	//
+	// @tag.name notifications
+	// @tag.description manage notifications that are currently in queue. See <https://moira.readthedocs.io/en/latest/user_guide/hidden_pages.html#notifications/>
+	//
+	// @tag.name pattern
+	// @tag.description APIs for interacting with graphite patterns in Moira. See <https://moira.readthedocs.io/en/latest/development/architecture.html#pattern/>
+	//
+	// @tag.name subscription
+	// @tag.description APIs for managing a user's subscription(s). See <https://moira.readthedocs.io/en/latest/development/architecture.html#subscription/> to learn about Moira subscriptions
+	//
+	// @tag.name tag
+	// @tag.description APIs for managing tags (a grouping of tags and subscriptions). See <https://moira.readthedocs.io/en/latest/user_guide/subscriptions.html#tags/>
+	//
+	// @tag.name trigger
+	// @tag.description APIs for interacting with Moira triggers. See <https://moira.readthedocs.io/en/latest/development/architecture.html#trigger/> to learn about Triggers
+	//
+	// @tag.name team
+	// @tag.description APIs for interacting with Moira teams
+	//
+	// @tag.name teamSubscription
+	// @tag.description APIs for interacting with Moira subscriptions owned by certain team
+	//
+	// @tag.name teamContact
+	// @tag.description APIs for interacting with Moira contacts owned by certain team.
 	router.Route("/api", func(router chi.Router) {
 		router.Use(moiramiddle.DatabaseContext(database))
 		router.Get("/config", getWebConfig(webConfigContent))

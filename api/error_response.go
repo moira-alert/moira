@@ -85,3 +85,35 @@ var ErrNotFound = &ErrorResponse{HTTPStatusCode: http.StatusNotFound, StatusText
 
 // ErrMethodNotAllowed is default 405 router method not allowed
 var ErrMethodNotAllowed = &ErrorResponse{HTTPStatusCode: http.StatusMethodNotAllowed, StatusText: "Method not allowed."}
+
+// Examples for `swaggo`:
+
+type ErrorInternalServerExample struct {
+	StatusText string `json:"status" example:"Internal Server Error"`
+	ErrorText  string `json:"error" example:"server error during request handling"`
+}
+
+type ErrorInvalidRequestExample struct {
+	StatusText string `json:"status" example:"Invalid request"`
+	ErrorText  string `json:"error" example:"resource with the ID does not exist"`
+}
+
+type ErrorRenderExample struct {
+	StatusText string `json:"status" example:"Error rendering response"`
+	ErrorText  string `json:"error" example:"rendering error"`
+}
+
+type ErrorNotFoundExample struct {
+	StatusText string `json:"status" example:"Resource not found"`
+	ErrorText  string `json:"error" example:"resource with ID '66741a8c-c2ba-4357-a2c9-ee78e0e7' does not exist"`
+}
+
+type ErrorForbiddenExample struct {
+	StatusText string `json:"status" example:"Forbidden"`
+	ErrorText  string `json:"error" example:"you cannot access this resource"`
+}
+
+type ErrorRemoteServerUnavailableExample struct {
+	StatusText string `json:"status" example:"Remote server unavailable."`
+	ErrorText  string `json:"error" example:"Remote server error, please contact administrator"`
+}

@@ -14,8 +14,6 @@ import (
 	"github.com/moira-alert/moira/api/middleware"
 )
 
-// @title Contact API
-// @description APIs for working with Moira contacts. For more details, see <https://moira.readthedocs.io/en/latest/installation/webhooks_scripts.html#contact/>
 func contact(router chi.Router) {
 	router.Get("/", getAllContacts)
 	router.Put("/", createNewContact)
@@ -29,11 +27,11 @@ func contact(router chi.Router) {
 }
 
 // @Summary Gets all Moira contacts
-// @Description APIs for working with Moira contacts. For more details, see <https://moira.readthedocs.io/en/latest/installation/webhooks_scripts.html#contact/>
 // @ID get-all-contacts
 // @Produce json
-// @Success 200 {object} dto.ContactList
-// @Router /api/contact [get]
+// @Success 200 {object} dto.ContactList "Contacts fetched successfully"
+// @Failure 422 {object} api.ErrorRenderExample "Render error"
+// @Router /contact [get]
 // @Tags contact
 func getAllContacts(writer http.ResponseWriter, request *http.Request) {
 	contacts, err := controller.GetAllContacts(database)
@@ -49,16 +47,15 @@ func getAllContacts(writer http.ResponseWriter, request *http.Request) {
 }
 
 // @Summary Creates a new contact notification for the current user
-// @Description APIs for working with Moira contacts. For more details, see <https://moira.readthedocs.io/en/latest/installation/webhooks_scripts.html#contact/>
 // @ID create-new-contact
 // @Accept json
 // @Produce json
-// @Param contact body dto.Contact true "Data of the new contact"
-// @Success 200 {object} dto.Contact "Created contact"
-// @Failure 400 {object} api.ErrorResponse "Request error"
-// @Failure 422 {object} api.ErrorResponse "Render error"
-// @Failure 500 {object} api.ErrorResponse "Internal server error"
-// @Router /api/contact [put]
+// @Param contact body dto.Contact true "Contact data"
+// @Success 200 {object} dto.Contact "Contact created successfully"
+// @Failure 400 {object} api.ErrorInvalidRequestExample "Bad request from client"
+// @Failure 422 {object} api.ErrorRenderExample "Render error"
+// @Failure 500 {object} api.ErrorInternalServerExample "Internal server error"
+// @Router /contact [put]
 // @Tags contact
 func createNewContact(writer http.ResponseWriter, request *http.Request) {
 	contact := &dto.Contact{}
@@ -95,19 +92,18 @@ func contactFilter(next http.Handler) http.Handler {
 }
 
 // @Summary Updates an existing notification contact to the values passed in the request body
-// @Description APIs for working with Moira contacts. For more details, see <https://moira.readthedocs.io/en/latest/installation/webhooks_scripts.html#contact/>
 // @ID update-contact
 // @Accept json
 // @Produce json
 // @Param contactId path string true "ID of the contact to update"
 // @Param contact body dto.Contact true "Updated contact data"
 // @Success 200 {object} dto.Contact "Updated contact"
-// @Failure 400 {object} api.ErrorResponse "Request error"
-// @Failure 403 {object} api.ErrorResponse "Forbidden"
-// @Failure 404 {object} api.ErrorResponse "Contact not found"
-// @Failure 422 {object} api.ErrorResponse "Render error"
-// @Failure 500 {object} api.ErrorResponse "Internal server error"
-// @Router /api/contact/{contactId} [put]
+// @Failure 400 {object} api.ErrorInvalidRequestExample "Bad request from client"
+// @Failure 403 {object} api.ErrorForbiddenExample "Forbidden"
+// @Failure 404 {object} api.ErrorNotFoundExample "Resource not found"
+// @Failure 422 {object} api.ErrorRenderExample "Render error"
+// @Failure 500 {object} api.ErrorInternalServerExample "Internal server error"
+// @Router /contact/{contactId} [put]
 // @Tags contact
 func updateContact(writer http.ResponseWriter, request *http.Request) {
 	contactDTO := dto.Contact{}
@@ -127,6 +123,18 @@ func updateContact(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
+// @Summary Deletes notification contact for the current user and remove the contact ID from all subscriptions
+// @ID remove-contact
+// @Accept json
+// @Produce json
+// @Param contactId path string true "ID of the contact to remove" Example:"bcba82f5-48cf-44c0-b7d6-e1d32c64a88c"
+// @Success 200 "Contact has been deleted"
+// @Failure 400 {object} api.ErrorInvalidRequestExample "Bad request from client"
+// @Failure 403 {object} api.ErrorForbiddenExample "Forbidden"
+// @Failure 404 {object} api.ErrorNotFoundExample "Resource not found"
+// @Failure 500 {object} api.ErrorInternalServerExample "Internal server error"
+// @Router /contact/{contactId} [delete]
+// @Tags contact
 func removeContact(writer http.ResponseWriter, request *http.Request) {
 	contactData := request.Context().Value(contactKey).(moira.ContactData)
 	err := controller.RemoveContact(database, contactData.ID, contactData.User, "")
@@ -135,6 +143,17 @@ func removeContact(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
+// @Summary Push a test notification to verify that the contact is properly set up
+// @ID send-test-notification
+// @Accept json
+// @Produce json
+// @Param contactId path string true "The ID of the target contact" Example:"bcba82f5-48cf-44c0-b7d6-e1d32c64a88c"
+// @Success 200 "Test successfull"
+// @Failure 403 {object} api.ErrorForbiddenExample "Forbidden"
+// @Failure 404 {object} api.ErrorNotFoundExample "Resource not found"
+// @Failure 500 {object} api.ErrorInternalServerExample "Internal server error"
+// @Router /contact/{contactId}/test [post]
+// @Tags contact
 func sendTestContactNotification(writer http.ResponseWriter, request *http.Request) {
 	contactID := middleware.GetContactID(request)
 	err := controller.SendTestContactNotification(database, contactID)

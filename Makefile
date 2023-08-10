@@ -44,9 +44,12 @@ install-swag:
 	go install github.com/swaggo/swag/cmd/swag@latest
 
 .PHONY: swag
-swag:
+spec:
 	echo "Generating Swagger documentation"
 	swag init -g api/handler/handler.go
+
+validate-spec:
+	openapi-generator-cli validate -i docs/swagger.yaml
 
 .PHONY: test
 test:

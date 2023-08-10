@@ -10,7 +10,13 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "contact": {},
+        "contact": {
+            "name": "Contact Moira Team",
+            "email": "opensource@skbkontur.com"
+        },
+        "license": {
+            "name": "MIT"
+        },
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
@@ -18,25 +24,26 @@ const docTemplate = `{
     "paths": {
         "/api/config": {
             "get": {
-                "description": "View Moira's runtime configuration. For more details, see \u003chttps://moira.readthedocs.io/en/latest/installation/configuration.html\u003e",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "config"
                 ],
-                "summary": "Get web configuration",
+                "summary": "Get available configuration",
                 "operationId": "get-web-config",
                 "responses": {
                     "200": {
-                        "description": "OK"
+                        "description": "Configuration fetched successfully",
+                        "schema": {
+                            "$ref": "#/definitions/handler.ConfigurationResponse"
+                        }
                     }
                 }
             }
         },
-        "/api/contact": {
+        "/contact": {
             "get": {
-                "description": "APIs for working with Moira contacts. For more details, see \u003chttps://moira.readthedocs.io/en/latest/installation/webhooks_scripts.html#contact/\u003e",
                 "produces": [
                     "application/json"
                 ],
@@ -47,15 +54,20 @@ const docTemplate = `{
                 "operationId": "get-all-contacts",
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Contacts fetched successfully",
                         "schema": {
                             "$ref": "#/definitions/dto.ContactList"
+                        }
+                    },
+                    "422": {
+                        "description": "Render error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorRenderExample"
                         }
                     }
                 }
             },
             "put": {
-                "description": "APIs for working with Moira contacts. For more details, see \u003chttps://moira.readthedocs.io/en/latest/installation/webhooks_scripts.html#contact/\u003e",
                 "consumes": [
                     "application/json"
                 ],
@@ -69,7 +81,7 @@ const docTemplate = `{
                 "operationId": "create-new-contact",
                 "parameters": [
                     {
-                        "description": "Data of the new contact",
+                        "description": "Contact data",
                         "name": "contact",
                         "in": "body",
                         "required": true,
@@ -80,35 +92,34 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Created contact",
+                        "description": "Contact created successfully",
                         "schema": {
                             "$ref": "#/definitions/dto.Contact"
                         }
                     },
                     "400": {
-                        "description": "Request error",
+                        "description": "Bad request from client",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/api.ErrorInvalidRequestExample"
                         }
                     },
                     "422": {
                         "description": "Render error",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/api.ErrorRenderExample"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/api.ErrorInternalServerExample"
                         }
                     }
                 }
             }
         },
-        "/api/contact/{contactId}": {
+        "/contact/{contactId}": {
             "put": {
-                "description": "APIs for working with Moira contacts. For more details, see \u003chttps://moira.readthedocs.io/en/latest/installation/webhooks_scripts.html#contact/\u003e",
                 "consumes": [
                     "application/json"
                 ],
@@ -146,33 +157,131 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Request error",
+                        "description": "Bad request from client",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/api.ErrorInvalidRequestExample"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/api.ErrorForbiddenExample"
                         }
                     },
                     "404": {
-                        "description": "Contact not found",
+                        "description": "Resource not found",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/api.ErrorNotFoundExample"
                         }
                     },
                     "422": {
                         "description": "Render error",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/api.ErrorRenderExample"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/api.ErrorInternalServerExample"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contact"
+                ],
+                "summary": "Deletes notification contact for the current user and remove the contact ID from all subscriptions",
+                "operationId": "remove-contact",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID of the contact to remove",
+                        "name": "contactId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Contact has been deleted"
+                    },
+                    "400": {
+                        "description": "Bad request from client",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorInvalidRequestExample"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorForbiddenExample"
+                        }
+                    },
+                    "404": {
+                        "description": "Resource not found",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorNotFoundExample"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorInternalServerExample"
+                        }
+                    }
+                }
+            }
+        },
+        "/contact/{contactId}/test": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contact"
+                ],
+                "summary": "Push a test notification to verify that the contact is properly set up",
+                "operationId": "send-test-notification",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "The ID of the target contact",
+                        "name": "contactId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Test successfull"
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorForbiddenExample"
+                        }
+                    },
+                    "404": {
+                        "description": "Resource not found",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorNotFoundExample"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorInternalServerExample"
                         }
                     }
                 }
@@ -180,16 +289,68 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "api.ErrorResponse": {
+        "api.ErrorForbiddenExample": {
             "type": "object",
             "properties": {
                 "error": {
-                    "description": "application-level error message, for debugging",
-                    "type": "string"
+                    "type": "string",
+                    "example": "you cannot access this resource"
                 },
                 "status": {
-                    "description": "user-level status message",
-                    "type": "string"
+                    "type": "string",
+                    "example": "Forbidden"
+                }
+            }
+        },
+        "api.ErrorInternalServerExample": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "server error during request handling"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "Internal Server Error"
+                }
+            }
+        },
+        "api.ErrorInvalidRequestExample": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "resource with the ID does not exist"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "Invalid request"
+                }
+            }
+        },
+        "api.ErrorNotFoundExample": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "resource with ID '66741a8c-c2ba-4357-a2c9-ee78e0e7' does not exist"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "Resource not found"
+                }
+            }
+        },
+        "api.ErrorRenderExample": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "rendering error"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "Error rendering response"
                 }
             }
         },
@@ -197,19 +358,23 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "id": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "1dd38765-c5be-418d-81fa-7a5f879c2315"
                 },
                 "team_id": {
                     "type": "string"
                 },
                 "type": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "mail"
                 },
                 "user": {
-                    "type": "string"
+                    "type": "string",
+                    "example": ""
                 },
                 "value": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "devops@example.com"
                 }
             }
         },
@@ -221,6 +386,34 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/moira.ContactData"
                     }
+                }
+            }
+        },
+        "handler.ConfigurationResponse": {
+            "type": "object",
+            "properties": {
+                "contacts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handler.Contact"
+                    }
+                },
+                "remoteAllowed": {
+                    "type": "boolean",
+                    "example": false
+                }
+            }
+        },
+        "handler.Contact": {
+            "type": "object",
+            "properties": {
+                "label": {
+                    "type": "string",
+                    "example": "Telegram"
+                },
+                "type": {
+                    "type": "string",
+                    "example": "telegram"
                 }
             }
         },
@@ -244,17 +437,67 @@ const docTemplate = `{
                 }
             }
         }
-    }
+    },
+    "tags": [
+        {
+            "description": "APIs for working with Moira contacts. For more details, see \u003chttps://moira.readthedocs.io/en/latest/installation/webhooks_scripts.html#contact/\u003e",
+            "name": "contact"
+        },
+        {
+            "description": "View Moira's runtime configuration. For more details, see \u003chttps://moira.readthedocs.io/en/latest/installation/configuration.html\u003e",
+            "name": "config"
+        },
+        {
+            "description": "APIs for interacting with notification events. See \u003chttps://moira.readthedocs.io/en/latest/user_guide/trigger_page.html#event-history/\u003e for details",
+            "name": "event"
+        },
+        {
+            "description": "interact with Moira states/health status. See \u003chttps://moira.readthedocs.io/en/latest/user_guide/selfstate.html#self-state-monitor/\u003e for details",
+            "name": "health"
+        },
+        {
+            "description": "manage notifications that are currently in queue. See \u003chttps://moira.readthedocs.io/en/latest/user_guide/hidden_pages.html#notifications/\u003e",
+            "name": "notifications"
+        },
+        {
+            "description": "APIs for interacting with graphite patterns in Moira. See \u003chttps://moira.readthedocs.io/en/latest/development/architecture.html#pattern/\u003e",
+            "name": "pattern"
+        },
+        {
+            "description": "APIs for managing a user's subscription(s). See \u003chttps://moira.readthedocs.io/en/latest/development/architecture.html#subscription/\u003e to learn about Moira subscriptions",
+            "name": "subscription"
+        },
+        {
+            "description": "APIs for managing tags (a grouping of tags and subscriptions). See \u003chttps://moira.readthedocs.io/en/latest/user_guide/subscriptions.html#tags/\u003e",
+            "name": "tag"
+        },
+        {
+            "description": "APIs for interacting with Moira triggers. See \u003chttps://moira.readthedocs.io/en/latest/development/architecture.html#trigger/\u003e to learn about Triggers",
+            "name": "trigger"
+        },
+        {
+            "description": "APIs for interacting with Moira teams",
+            "name": "team"
+        },
+        {
+            "description": "APIs for interacting with Moira subscriptions owned by certain team",
+            "name": "teamSubscription"
+        },
+        {
+            "description": "APIs for interacting with Moira contacts owned by certain team.",
+            "name": "teamContact"
+        }
+    ]
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "2.8.2",
+	Version:          "master",
 	Host:             "",
-	BasePath:         "",
+	BasePath:         "/api",
 	Schemes:          []string{},
 	Title:            "Moira Alert",
-	Description:      "This is an API description for [Moira Alert API](https://moira.readthedocs.io/en/latest/overview.html). Check us out on [Github](https://github.com/moira-alert) or look up our [guide on getting started with Moira](https://moira.readthedocs.io).",
+	Description:      "This is an API description for [Moira Alert API](https://moira.readthedocs.io/en/latest/overview.html).",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

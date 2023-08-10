@@ -2,11 +2,20 @@ package handler
 
 import "net/http"
 
-// @Summary Get web configuration
-// @Description View Moira's runtime configuration. For more details, see <https://moira.readthedocs.io/en/latest/installation/configuration.html>
+type Contact struct {
+	Type  string `json:"type" example:"telegram"`
+	Label string `json:"label" example:"Telegram"`
+}
+
+type ConfigurationResponse struct {
+	RemoteAllowed bool      `json:"remoteAllowed" example:"false"`
+	Contacts      []Contact `json:"contacts"`
+}
+
+// @Summary Get available configuration
 // @ID get-web-config
 // @Produce json
-// @Success 200
+// @Success 200 {object} ConfigurationResponse "Configuration fetched successfully"
 // @Router /api/config [get]
 // @Tags config
 func getWebConfig(configContent []byte) http.HandlerFunc {
