@@ -87,20 +87,69 @@ func TestExpression(t *testing.T) {
 		result, err = (&TriggerExpression{Expression: &expression, MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{"t2": 4.0}, TriggerType: moira.ExpressionTrigger, PreviousState: moira.StateNODATA}).Evaluate()
 		So(err, ShouldBeNil)
 		So(result, ShouldResemble, moira.StateNODATA)
+	})
+}
 
-		expression = "t1 > 10 && t2 > 3 ? OK : ddd"
-		result, err = (&TriggerExpression{Expression: &expression, MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{"t2": 4.0}, TriggerType: moira.ExpressionTrigger}).Evaluate()
+func TestValidate(t *testing.T) {
+	Convey("Test valid expressions", t, func() {
+		expression := "t1 > 10 && t2 > 3 ? OK : ERROR"
+		err := (&TriggerExpression{Expression: &expression, MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{"t2": 4.0}, TriggerType: moira.ExpressionTrigger}).Validate()
+		So(err, ShouldBeNil)
+
+		expression = "t1 <= 0 ? PREV_STATE : (t1 >= 20 ? ERROR : (t1 >= 10 ? WARN : OK))"
+		err = (&TriggerExpression{PreviousState: moira.StateNODATA, Expression: &expression, MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{}, TriggerType: moira.ExpressionTrigger}).Validate()
+		So(err, ShouldBeNil)
+	})
+	Convey("Test bad expressions", t, func() {
+		expression := ""
+		err := (&TriggerExpression{Expression: &expression, TriggerType: moira.FallingTrigger}).Validate()
+		So(err, ShouldResemble, fmt.Errorf("only advanced triggers should be validated"))
+		err = (&TriggerExpression{Expression: nil, TriggerType: moira.ExpressionTrigger}).Validate()
+		So(err, ShouldResemble, fmt.Errorf("trigger_type set to expression, but no expression provided"))
+	})
+	Convey("Test invalid expressions", t, func() {
+		expression := "t1 > 10 && t2 > 3 ? OK : ddd"
+		err := (&TriggerExpression{Expression: &expression, MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{"t2": 4.0}, TriggerType: moira.ExpressionTrigger}).Validate()
+		So(err, ShouldNotBeNil)
 		So(err.Error(), ShouldResemble, `unknown name ddd (1:26)
  | t1 > 10 && t2 > 3 ? ok : ddd
  | .........................^`)
-		So(result, ShouldBeEmpty)
 
 		expression = "t1 > 10 ? OK : (t2 < 5 ? WARN : ERROR)"
-		result, err = (&TriggerExpression{Expression: &expression, MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{}, TriggerType: moira.ExpressionTrigger}).Evaluate()
+		err = (&TriggerExpression{Expression: &expression, MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{}, TriggerType: moira.ExpressionTrigger}).Validate()
+		So(err, ShouldNotBeNil)
 		So(err.Error(), ShouldResemble, `unknown name t2 (1:17)
  | t1 > 10 ? ok : (t2 < 5 ? warn : error)
  | ................^`)
-		So(result, ShouldBeEmpty)
+	})
+
+	Convey("Test validation caching", t, func() {
+		expression := "t1 > 10 ? OK : (t2 < 5 ? WARN : ERROR)"
+		trigger := TriggerExpression{Expression: &expression, MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{}, TriggerType: moira.ExpressionTrigger}
+		validateErr := trigger.Validate()
+		So(validateErr, ShouldNotBeNil)
+		// check cache
+		cacheKey := trigger.validationCacheKey()
+		cachedError, ok := exprCache.Get(cacheKey)
+		So(ok, ShouldBeTrue)
+		cachedErr, ok := cachedError.(verificationResult)
+		So(ok, ShouldBeTrue)
+		So(cachedErr, ShouldNotBeNil)
+		SoMsg("when error is not nil", cachedErr.internalError, ShouldResemble, validateErr)
+
+		trigger2 := TriggerExpression{Expression: &expression, MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{"t2": 5}, TriggerType: moira.ExpressionTrigger}
+		validateErr = trigger2.Validate()
+		So(validateErr, ShouldBeNil)
+		// check cache
+		cacheKey2 := trigger2.validationCacheKey()
+		cachedError, ok = exprCache.Get(cacheKey2)
+		So(ok, ShouldBeTrue)
+		cachedErr, ok = cachedError.(verificationResult)
+		So(ok, ShouldBeTrue)
+		SoMsg("when error is nil", cachedErr.internalError, ShouldResemble, validateErr)
+
+		// cache key validations
+		SoMsg("same expression, different targets", cacheKey, ShouldNotEqual, cacheKey2)
 	})
 }
 

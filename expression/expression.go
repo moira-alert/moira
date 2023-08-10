@@ -2,10 +2,10 @@ package expression
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/antonmedv/expr"
-	"github.com/antonmedv/expr/vm"
 	"github.com/patrickmn/go-cache"
 
 	"github.com/Knetic/govaluate"
@@ -29,6 +29,10 @@ type ErrInvalidExpression struct {
 
 func (err ErrInvalidExpression) Error() string {
 	return err.internalError.Error()
+}
+
+type verificationResult struct {
+	internalError error
 }
 
 // TriggerExpression represents trigger expression handler parameters, what can be used for trigger expression handling
@@ -80,40 +84,21 @@ func (triggerExpression TriggerExpression) Get(name string) (interface{}, error)
 	}
 }
 
-// Evaluate gets trigger expression and evaluates it for given parameters using govaluate
-func (triggerExpression *TriggerExpression) Evaluate() (moira.State, error) {
-	expr, err := getExpression(triggerExpression)
-	if err != nil {
-		return "", ErrInvalidExpression{internalError: err}
+// Validate returns error if triggers of type moira.ExpressionTrigger are badly formatted otherwise nil
+func (triggerExpression *TriggerExpression) Validate() error {
+	if triggerExpression.TriggerType != moira.ExpressionTrigger {
+		return fmt.Errorf("only advanced triggers should be validated")
 	}
-	result, err := expr.Eval(triggerExpression)
-	if err != nil {
-		return "", ErrInvalidExpression{internalError: err}
-	}
-	switch res := result.(type) {
-	case moira.State:
-		return res, nil
-	default:
-		return "", ErrInvalidExpression{internalError: fmt.Errorf("expression result must be state value")}
-	}
-}
-
-// validateUserExpression uses expr package to validate <user defined> trigger expressions
-func validateUserExpression(
-	triggerExpression *TriggerExpression,
-	userExpression *govaluate.EvaluableExpression,
-) (*govaluate.EvaluableExpression, error) {
 	if triggerExpression.Expression == nil {
-		return nil, fmt.Errorf("trigger_type set to expression, but no expression provided")
+		return fmt.Errorf("trigger_type set to expression, but no expression provided")
 	}
 	expression := *triggerExpression.Expression
-
-	cacheKey := fmt.Sprintf("[VALIDATED]%s", expression)
-	pr, validated := exprCache.Get(cacheKey)
+	cacheKey := triggerExpression.validationCacheKey()
+	result, validated := exprCache.Get(cacheKey)
 	if validated {
-		_, ok := pr.(*vm.Program)
+		err, ok := result.(verificationResult)
 		if ok {
-			return userExpression, nil
+			return err.internalError
 		} else {
 			validated = false
 			exprCache.Delete(cacheKey)
@@ -138,16 +123,31 @@ func validateUserExpression(
 	for k, v := range triggerExpression.AdditionalTargetsValues {
 		env[k] = v
 	}
-	program, err := expr.Compile(
+	_, err := expr.Compile(
 		strings.ToLower(expression),
 		expr.Optimize(true),
 		expr.Env(env),
 	)
+	exprCache.Set(cacheKey, verificationResult{err}, cache.NoExpiration)
+	return err
+}
+
+// Evaluate gets trigger expression and evaluates it for given parameters using govaluate
+func (triggerExpression *TriggerExpression) Evaluate() (moira.State, error) {
+	expr, err := getExpression(triggerExpression)
 	if err != nil {
-		return nil, err
+		return "", ErrInvalidExpression{internalError: err}
 	}
-	exprCache.Set(cacheKey, program, cache.NoExpiration)
-	return userExpression, nil
+	result, err := expr.Eval(triggerExpression)
+	if err != nil {
+		return "", ErrInvalidExpression{internalError: err}
+	}
+	switch res := result.(type) {
+	case moira.State:
+		return res, nil
+	default:
+		return "", ErrInvalidExpression{internalError: fmt.Errorf("expression result must be state value")}
+	}
 }
 
 func getExpression(triggerExpression *TriggerExpression) (*govaluate.EvaluableExpression, error) {
@@ -155,14 +155,26 @@ func getExpression(triggerExpression *TriggerExpression) (*govaluate.EvaluableEx
 		if triggerExpression.Expression == nil || *triggerExpression.Expression == "" {
 			return nil, fmt.Errorf("trigger_type set to expression, but no expression provided")
 		}
-
-		userExpression, err := getUserExpression(*triggerExpression.Expression)
-		if err != nil {
-			return nil, err
-		}
-		return validateUserExpression(triggerExpression, userExpression)
+		return getUserExpression(*triggerExpression.Expression)
 	}
 	return getSimpleExpression(triggerExpression)
+}
+
+// validationCacheKey returns the key used to store TriggerExpression in the cache.
+//
+// Two TriggerExpressions, have the same validationCacheKey if they have the same expression
+// and the same list of targets provided.
+func (triggerExpression *TriggerExpression) validationCacheKey() string {
+	var expression string
+	if triggerExpression.Expression != nil {
+		expression = *triggerExpression.Expression
+	}
+	targets := []string{"t1"}
+	for k := range triggerExpression.AdditionalTargetsValues {
+		targets = append(targets, k)
+	}
+	sort.Strings(targets)
+	return fmt.Sprintf("[VALIDATED]%s;targets=%s", expression, strings.Join(targets, ","))
 }
 
 func getSimpleExpression(triggerExpression *TriggerExpression) (*govaluate.EvaluableExpression, error) {
