@@ -41,6 +41,7 @@ func (triggerChecker *TriggerChecker) compareTriggerStates(currentCheck moira.Ch
 		Interface("eventInfo", eventInfo).
 		Bool("lastStateSuppressed", lastStateSuppressed).
 		Str("currentStateValue", currentStateValue.String()).
+		Str("lastStateValue", lastStateValue.String()).
 		Int64("currentCheckTimestamp", currentCheckTimestamp).
 		Str("lastStateSuppressedValue", lastStateSuppressedValue.String()).
 		Int64("lastCheck", lastCheck.GetEventTimestamp()).
