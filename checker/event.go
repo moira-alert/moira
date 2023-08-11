@@ -45,6 +45,7 @@ func (triggerChecker *TriggerChecker) compareTriggerStates(currentCheck moira.Ch
 		Str("lastStateSuppressedValue", lastStateSuppressedValue.String()).
 		Int64("lastCheck", lastCheck.GetEventTimestamp()).
 		Interface("maintenanceInfo", maintenanceInfo).
+		Str("moira.trigger.id", triggerChecker.triggerID).
 		Msg("needSend value")
 
 	if !needSend {
