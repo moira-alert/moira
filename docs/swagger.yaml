@@ -141,6 +141,12 @@ definitions:
           $ref: '#/definitions/dto.PatternData'
         type: array
     type: object
+  dto.SaveTeamResponse:
+    properties:
+      id:
+        example: d5d98eb3-ee18-4f75-9364-244f67e23b54
+        type: string
+    type: object
   dto.Subscription:
     properties:
       any_tags:
@@ -223,6 +229,41 @@ definitions:
         items:
           $ref: '#/definitions/dto.TagStatistics'
         type: array
+    type: object
+  dto.TeamMembers:
+    properties:
+      usernames:
+        example:
+        - anonymous
+        items:
+          type: string
+        type: array
+    type: object
+  dto.TeamModel:
+    properties:
+      description:
+        example: Team that holds all members of infrastructure division
+        type: string
+      id:
+        example: d5d98eb3-ee18-4f75-9364-244f67e23b54
+        type: string
+      name:
+        example: Infrastructure Team
+        type: string
+    type: object
+  dto.TeamSettings:
+    properties:
+      contacts:
+        items:
+          $ref: '#/definitions/moira.ContactData'
+        type: array
+      subscriptions:
+        items:
+          $ref: '#/definitions/moira.SubscriptionData'
+        type: array
+      team_id:
+        example: d5d98eb3-ee18-4f75-9364-244f67e23b54
+        type: string
     type: object
   dto.TriggerModel:
     properties:
@@ -319,6 +360,13 @@ definitions:
         description: WARN threshold
         example: 5000
         type: number
+    type: object
+  dto.UserTeams:
+    properties:
+      teams:
+        items:
+          $ref: '#/definitions/dto.TeamModel'
+        type: array
     type: object
   handler.ConfigurationResponse:
     properties:
@@ -1262,6 +1310,180 @@ paths:
       summary: Create a new team subscription
       tags:
       - teamSubscription
+  /teams:
+    get:
+      operationId: get-all-teams
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Teams fetched successfully
+          schema:
+            $ref: '#/definitions/dto.UserTeams'
+        "422":
+          description: Render error
+          schema:
+            $ref: '#/definitions/api.ErrorRenderExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Get all teams
+      tags:
+      - team
+    post:
+      consumes:
+      - application/json
+      operationId: create-team
+      parameters:
+      - description: Team data
+        in: body
+        name: team
+        required: true
+        schema:
+          $ref: '#/definitions/dto.TeamModel'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Team created successfully
+          schema:
+            $ref: '#/definitions/dto.SaveTeamResponse'
+        "400":
+          description: Bad request from client
+          schema:
+            $ref: '#/definitions/api.ErrorInvalidRequestExample'
+        "422":
+          description: Render error
+          schema:
+            $ref: '#/definitions/api.ErrorRenderExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Create a new team
+      tags:
+      - team
+  /teams/{teamID}:
+    delete:
+      operationId: delete-team
+      parameters:
+      - description: ID of the team
+        in: path
+        name: teamID
+        required: true
+        type: string
+        x-example: d5d98eb3-ee18-4f75-9364-244f67e23b54
+      responses:
+        "200":
+          description: Team has been successfully deleted
+          schema:
+            $ref: '#/definitions/dto.SaveTeamResponse'
+        "400":
+          description: Bad request from client
+          schema:
+            $ref: '#/definitions/api.ErrorInvalidRequestExample'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/api.ErrorForbiddenExample'
+        "404":
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/api.ErrorNotFoundExample'
+        "422":
+          description: Render error
+          schema:
+            $ref: '#/definitions/api.ErrorRenderExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Delete a team
+      tags:
+      - team
+    get:
+      operationId: get-team
+      parameters:
+      - description: ID of the team
+        in: path
+        name: teamID
+        required: true
+        type: string
+        x-example: d5d98eb3-ee18-4f75-9364-244f67e23b54
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Team updated successfully
+          schema:
+            $ref: '#/definitions/dto.TeamModel'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/api.ErrorForbiddenExample'
+        "404":
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/api.ErrorNotFoundExample'
+        "422":
+          description: Render error
+          schema:
+            $ref: '#/definitions/api.ErrorRenderExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Get a team by ID
+      tags:
+      - team
+    patch:
+      consumes:
+      - application/json
+      operationId: update-team
+      parameters:
+      - description: ID of the team
+        in: path
+        name: teamID
+        required: true
+        type: string
+        x-example: d5d98eb3-ee18-4f75-9364-244f67e23b54
+      - description: Updated team data
+        in: body
+        name: team
+        required: true
+        schema:
+          $ref: '#/definitions/dto.TeamModel'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Team updated successfullym
+          schema:
+            $ref: '#/definitions/dto.SaveTeamResponse'
+        "400":
+          description: Bad request from client
+          schema:
+            $ref: '#/definitions/api.ErrorInvalidRequestExample'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/api.ErrorForbiddenExample'
+        "404":
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/api.ErrorNotFoundExample'
+        "422":
+          description: Render error
+          schema:
+            $ref: '#/definitions/api.ErrorRenderExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Update existing team
+      tags:
+      - team
   /teams/{teamID}/contacts:
     post:
       consumes:
@@ -1310,6 +1532,215 @@ paths:
       summary: Create a new team contact
       tags:
       - teamContact
+  /teams/{teamID}/settings:
+    get:
+      operationId: get-team-settings
+      parameters:
+      - description: ID of the team
+        in: path
+        name: teamID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Team settings
+          schema:
+            $ref: '#/definitions/dto.TeamSettings'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/api.ErrorForbiddenExample'
+        "404":
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/api.ErrorNotFoundExample'
+        "422":
+          description: Render error
+          schema:
+            $ref: '#/definitions/api.ErrorRenderExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Get team settings
+      tags:
+      - team
+  /teams/{teamID}/users:
+    get:
+      operationId: get-team-users
+      parameters:
+      - description: ID of the team
+        in: path
+        name: teamID
+        required: true
+        type: string
+        x-example: d5d98eb3-ee18-4f75-9364-244f67e23b54
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Users fetched successfully
+          schema:
+            $ref: '#/definitions/dto.TeamMembers'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/api.ErrorForbiddenExample'
+        "404":
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/api.ErrorNotFoundExample'
+        "422":
+          description: Render error
+          schema:
+            $ref: '#/definitions/api.ErrorRenderExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Get users of a team
+      tags:
+      - team
+    post:
+      consumes:
+      - application/json
+      operationId: add-team-users
+      parameters:
+      - description: ID of the team
+        in: path
+        name: teamID
+        required: true
+        type: string
+        x-example: d5d98eb3-ee18-4f75-9364-244f67e23b54
+      - description: Usernames to add to the team
+        in: body
+        name: usernames
+        required: true
+        schema:
+          $ref: '#/definitions/dto.TeamMembers'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Team updated successfully
+          schema:
+            $ref: '#/definitions/dto.TeamMembers'
+        "400":
+          description: Bad request from client
+          schema:
+            $ref: '#/definitions/api.ErrorInvalidRequestExample'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/api.ErrorForbiddenExample'
+        "404":
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/api.ErrorNotFoundExample'
+        "422":
+          description: Render error
+          schema:
+            $ref: '#/definitions/api.ErrorRenderExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Add users to a team
+      tags:
+      - team
+    put:
+      consumes:
+      - application/json
+      operationId: set-team-users
+      parameters:
+      - description: ID of the team
+        in: path
+        name: teamID
+        required: true
+        type: string
+        x-example: d5d98eb3-ee18-4f75-9364-244f67e23b54
+      - description: Usernames to set as team members
+        in: body
+        name: usernames
+        required: true
+        schema:
+          $ref: '#/definitions/dto.TeamMembers'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Team updated successfully
+          schema:
+            $ref: '#/definitions/dto.TeamMembers'
+        "400":
+          description: Bad request from client
+          schema:
+            $ref: '#/definitions/api.ErrorInvalidRequestExample'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/api.ErrorForbiddenExample'
+        "404":
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/api.ErrorNotFoundExample'
+        "422":
+          description: Render error
+          schema:
+            $ref: '#/definitions/api.ErrorRenderExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Set users of a team
+      tags:
+      - team
+  /teams/{teamID}/users/{teamUserID}:
+    delete:
+      operationId: delete-team-user
+      parameters:
+      - description: ID of the team
+        in: path
+        name: teamID
+        required: true
+        type: string
+        x-example: d5d98eb3-ee18-4f75-9364-244f67e23b54
+      - description: User login in methods related to teams manipulation
+        in: path
+        name: teamUserID
+        required: true
+        type: string
+        x-example: anonymous
+      responses:
+        "200":
+          description: Team updated successfully
+          schema:
+            $ref: '#/definitions/dto.TeamMembers'
+        "400":
+          description: Bad request from client
+          schema:
+            $ref: '#/definitions/api.ErrorInvalidRequestExample'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/api.ErrorForbiddenExample'
+        "404":
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/api.ErrorNotFoundExample'
+        "422":
+          description: Render error
+          schema:
+            $ref: '#/definitions/api.ErrorRenderExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Delete a user from a team
+      tags:
+      - team
 swagger: "2.0"
 tags:
 - description: APIs for working with Moira contacts. For more details, see <https://moira.readthedocs.io/en/latest/installation/webhooks_scripts.html#contact/>
