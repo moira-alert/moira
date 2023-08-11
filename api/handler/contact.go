@@ -144,7 +144,7 @@ func removeContact(writer http.ResponseWriter, request *http.Request) {
 }
 
 // @Summary	Push a test notification to verify that the contact is properly set up
-// @ID			send-test-notification
+// @ID			send-test-contact-notification
 // @Accept		json
 // @Produce	json
 // @Param		contactId	path	string	true	"The ID of the target contact"	extensions(x-example=bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)

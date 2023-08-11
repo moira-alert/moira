@@ -110,6 +110,178 @@ definitions:
         example: ERROR
         type: string
     type: object
+  dto.PatternData:
+    properties:
+      metrics:
+        example:
+        - DevOps.my_server.hdd.freespace_mbytes
+        - ' DevOps.my_server.hdd.freespace_mbytes'
+        - ' DevOps.my_server.db.*'
+        items:
+          type: string
+        type: array
+      pattern:
+        example: Devops.my_server.*
+        type: string
+      triggers:
+        items:
+          $ref: '#/definitions/dto.TriggerModel'
+        type: array
+    type: object
+  dto.PatternList:
+    properties:
+      list:
+        items:
+          $ref: '#/definitions/dto.PatternData'
+        type: array
+    type: object
+  dto.Subscription:
+    properties:
+      any_tags:
+        example: false
+        type: boolean
+      contacts:
+        example:
+        - acd2db98-1659-4a2f-b227-52d71f6e3ba1
+        items:
+          type: string
+        type: array
+      enabled:
+        example: true
+        type: boolean
+      id:
+        example: 292516ed-4924-4154-a62c-ebe312431fce
+        type: string
+      ignore_recoverings:
+        example: false
+        type: boolean
+      ignore_warnings:
+        example: false
+        type: boolean
+      plotting:
+        $ref: '#/definitions/moira.PlottingData'
+      sched:
+        $ref: '#/definitions/moira.ScheduleData'
+      tags:
+        example:
+        - server
+        - cpu
+        items:
+          type: string
+        type: array
+      team_id:
+        example: 324516ed-4924-4154-a62c-eb124234fce
+        type: string
+      throttling:
+        example: false
+        type: boolean
+      user:
+        example: ""
+        type: string
+    type: object
+  dto.SubscriptionList:
+    properties:
+      list:
+        items:
+          $ref: '#/definitions/moira.SubscriptionData'
+        type: array
+    type: object
+  dto.TriggerModel:
+    properties:
+      alone_metrics:
+        additionalProperties:
+          type: boolean
+        description: A list of targets that have only alone metrics
+        example:
+          t1: true
+        type: object
+      created_at:
+        description: Datetime when the trigger was created
+        type: string
+      created_by:
+        description: Username who created trigger
+        type: string
+      desc:
+        description: Description string
+        example: check the size of /var/log
+        type: string
+      error_value:
+        description: ERROR threshold
+        example: 1000
+        type: number
+      expression:
+        description: Used if you need more complex logic than provided by WARN/ERROR
+          values
+        example: ""
+        type: string
+      id:
+        description: Trigger unique ID
+        example: 292516ed-4924-4154-a62c-ebe312431fce
+        type: string
+      is_remote:
+        description: Shows if trigger is remote (graphite-backend) based or stored
+          inside Moira-Redis DB
+        example: false
+        type: boolean
+      mute_new_metrics:
+        description: If true, first event NODATA → OK will be omitted
+        example: false
+        type: boolean
+      name:
+        description: Trigger name
+        example: Not enough disk space left
+        type: string
+      patterns:
+        description: Graphite patterns for trigger
+        example:
+        - ""
+        items:
+          type: string
+        type: array
+      sched:
+        allOf:
+        - $ref: '#/definitions/moira.ScheduleData'
+        description: Determines when Moira should monitor trigger
+      tags:
+        description: Set of tags to manipulate subscriptions
+        example:
+        - server
+        - ' disk'
+        items:
+          type: string
+        type: array
+      targets:
+        description: 'Graphite-like targets: t1, t2, ...'
+        example:
+        - devOps.my_server.hdd.freespace_mbytes
+        items:
+          type: string
+        type: array
+      trigger_type:
+        description: 'Could be: rising, falling, expression'
+        example: rising
+        type: string
+      ttl:
+        description: When there are no metrics for trigger, Moira will switch metric
+          to TTLState state after TTL seconds
+        example: 600
+        type: integer
+      ttl_state:
+        description: When there are no metrics for trigger, Moira will switch metric
+          to TTLState state after TTL seconds
+        example: NODATA
+        type: string
+      updated_at:
+        description: Datetime  when the trigger was updated
+        type: string
+      updated_by:
+        description: Username who updated trigger
+        type: string
+      warn_value:
+        description: WARN threshold
+        example: 5000
+        type: number
+    type: object
   handler.ConfigurationResponse:
     properties:
       contacts:
@@ -209,6 +381,32 @@ definitions:
         example: true
         type: boolean
       theme:
+        example: dark
+        type: string
+    type: object
+  moira.ScheduleData:
+    properties:
+      days:
+        items:
+          $ref: '#/definitions/moira.ScheduleDataDay'
+        type: array
+      endOffset:
+        example: 1439
+        type: integer
+      startOffset:
+        example: 0
+        type: integer
+      tzOffset:
+        example: -60
+        type: integer
+    type: object
+  moira.ScheduleDataDay:
+    properties:
+      enabled:
+        example: true
+        type: boolean
+      name:
+        example: Mon
         type: string
     type: object
   moira.ScheduledNotification:
@@ -230,6 +428,50 @@ definitions:
         type: integer
       trigger:
         $ref: '#/definitions/moira.TriggerData'
+    type: object
+  moira.SubscriptionData:
+    properties:
+      any_tags:
+        example: false
+        type: boolean
+      contacts:
+        example:
+        - acd2db98-1659-4a2f-b227-52d71f6e3ba1
+        items:
+          type: string
+        type: array
+      enabled:
+        example: true
+        type: boolean
+      id:
+        example: 292516ed-4924-4154-a62c-ebe312431fce
+        type: string
+      ignore_recoverings:
+        example: false
+        type: boolean
+      ignore_warnings:
+        example: false
+        type: boolean
+      plotting:
+        $ref: '#/definitions/moira.PlottingData'
+      sched:
+        $ref: '#/definitions/moira.ScheduleData'
+      tags:
+        example:
+        - server
+        - cpu
+        items:
+          type: string
+        type: array
+      team_id:
+        example: 324516ed-4924-4154-a62c-eb124234fce
+        type: string
+      throttling:
+        example: false
+        type: boolean
+      user:
+        example: ""
+        type: string
     type: object
   moira.TriggerData:
     properties:
@@ -426,7 +668,7 @@ paths:
     post:
       consumes:
       - application/json
-      operationId: send-test-notification
+      operationId: send-test-contact-notification
       parameters:
       - description: The ID of the target contact
         in: path
@@ -505,6 +747,8 @@ paths:
   /event/all:
     delete:
       operationId: delete-all-events
+      produces:
+      - application/json
       responses:
         "200":
           description: Events removed successfully
@@ -650,6 +894,214 @@ paths:
       summary: Deletes all available notifications
       tags:
       - notification
+  /pattern:
+    get:
+      operationId: get-all-patterns
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Patterns fetched successfully
+          schema:
+            $ref: '#/definitions/dto.PatternList'
+        "422":
+          description: Render error
+          schema:
+            $ref: '#/definitions/api.ErrorRenderExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Get all patterns
+      tags:
+      - pattern
+  /pattern/{pattern}:
+    delete:
+      operationId: delete-pattern
+      parameters:
+      - description: Trigger pattern to operate on
+        in: path
+        name: pattern
+        required: true
+        type: string
+        x-example: DevOps.my_server.hdd.freespace_mbytes
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Pattern delete successfully
+        "400":
+          description: Bad request from client
+          schema:
+            $ref: '#/definitions/api.ErrorInvalidRequestExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Deletes a Moira pattern
+      tags:
+      - pattern
+  /subscription:
+    get:
+      operationId: get-user-subscriptions
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Subscriptions fetched successfully
+          schema:
+            $ref: '#/definitions/dto.SubscriptionList'
+        "422":
+          description: Render error
+          schema:
+            $ref: '#/definitions/api.ErrorRenderExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Get all subscriptions
+      tags:
+      - subscription
+    put:
+      consumes:
+      - application/json
+      operationId: create-subscription
+      parameters:
+      - description: Subscription data
+        in: body
+        name: subscription
+        required: true
+        schema:
+          $ref: '#/definitions/dto.Subscription'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Subscription created successfully
+          schema:
+            $ref: '#/definitions/dto.Subscription'
+        "400":
+          description: Bad request from client
+          schema:
+            $ref: '#/definitions/api.ErrorInvalidRequestExample'
+        "422":
+          description: Render error
+          schema:
+            $ref: '#/definitions/api.ErrorRenderExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Create a new subscription
+      tags:
+      - subscription
+  /subscription/{subscriptionId}:
+    delete:
+      operationId: remove-subscription
+      parameters:
+      - description: ID of the subscription to remove
+        in: path
+        name: subscriptionId
+        required: true
+        type: string
+        x-example: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Subscription deleted
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/api.ErrorForbiddenExample'
+        "404":
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/api.ErrorNotFoundExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Delete a subscription
+      tags:
+      - subscription
+    put:
+      consumes:
+      - application/json
+      operationId: update-subscription
+      parameters:
+      - description: ID of the subscription to update
+        in: path
+        name: subscriptionId
+        required: true
+        type: string
+        x-example: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
+      - description: Updated subscription data
+        in: body
+        name: subscription
+        required: true
+        schema:
+          $ref: '#/definitions/dto.Subscription'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Subscription updated successfully
+          schema:
+            $ref: '#/definitions/dto.Subscription'
+        "400":
+          description: Bad request from client
+          schema:
+            $ref: '#/definitions/api.ErrorInvalidRequestExample'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/api.ErrorForbiddenExample'
+        "404":
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/api.ErrorNotFoundExample'
+        "422":
+          description: Render error
+          schema:
+            $ref: '#/definitions/api.ErrorRenderExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Update a subscription
+      tags:
+      - subscription
+  /subscription/{subscriptionId}/test:
+    put:
+      operationId: send-test-notification
+      parameters:
+      - description: ID of the subscription to send the test notification
+        in: path
+        name: subscriptionId
+        required: true
+        type: string
+        x-example: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Test notification sent successfully
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/api.ErrorForbiddenExample'
+        "404":
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/api.ErrorNotFoundExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Send a test notification for a subscription
+      tags:
+      - subscription
 swagger: "2.0"
 tags:
 - description: APIs for working with Moira contacts. For more details, see <https://moira.readthedocs.io/en/latest/installation/webhooks_scripts.html#contact/>

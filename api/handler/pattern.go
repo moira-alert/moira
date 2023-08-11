@@ -41,7 +41,7 @@ func getAllPatterns(writer http.ResponseWriter, request *http.Request) {
 // @tags pattern
 // @param pattern path string true "Trigger pattern to operate on" extensions(x-example=DevOps.my_server.hdd.freespace_mbytes)
 // @produce json
-// @success 200 "Pattern delete successfully"
+// @success 200 "Pattern deleted successfully"
 // @failure 400 {object} api.ErrorInvalidRequestExample "Bad request from client"
 // @failure 500 {object} api.ErrorInternalServerExample "Internal server error"
 // @router /pattern/{pattern} [delete]

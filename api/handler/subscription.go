@@ -142,6 +142,16 @@ func updateSubscription(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
+// @summary Delete a subscription
+// @id remove-subscription
+// @tags subscription
+// @produce json
+// @param subscriptionId path string true "ID of the subscription to remove" extensions(x-example=bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+// @success 200 "Subscription deleted"
+// @failure 403 {object} api.ErrorForbiddenExample "Forbidden"
+// @failure 404 {object} api.ErrorNotFoundExample "Resource not found"
+// @failure 500 {object} api.ErrorInternalServerExample "Internal server error"
+// @router /subscription/{subscriptionId} [delete]
 func removeSubscription(writer http.ResponseWriter, request *http.Request) {
 	subscriptionID := middleware.GetSubscriptionID(request)
 	if err := controller.RemoveSubscription(database, subscriptionID); err != nil {
@@ -149,6 +159,16 @@ func removeSubscription(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
+// @summary Send a test notification for a subscription
+// @id send-test-notification
+// @tags subscription
+// @produce json
+// @param subscriptionId path string true "ID of the subscription to send the test notification" extensions(x-example=bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+// @success 200 "Test notification sent successfully"
+// @failure 403 {object} api.ErrorForbiddenExample "Forbidden"
+// @failure 404 {object} api.ErrorNotFoundExample "Resource not found"
+// @failure 500 {object} api.ErrorInternalServerExample "Internal server error"
+// @router /subscription/{subscriptionId}/test [put]
 func sendTestNotification(writer http.ResponseWriter, request *http.Request) {
 	subscriptionID := middleware.GetSubscriptionID(request)
 	if err := controller.SendTestNotification(database, subscriptionID); err != nil {
