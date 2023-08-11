@@ -2,6 +2,7 @@ package checker
 
 import (
 	"github.com/moira-alert/moira"
+	"github.com/rs/zerolog/log"
 )
 
 var badStateReminder = map[moira.State]int64{
@@ -64,6 +65,9 @@ func (triggerChecker *TriggerChecker) compareTriggerStates(currentCheck moira.Ch
 		Metric:           triggerChecker.trigger.Name,
 		MessageEventInfo: eventInfo,
 	}, true)
+
+	log.Debug().Str("trigger_id", triggerChecker.triggerID).Msg("PushNotificationEvent for trigger")
+
 	return currentCheck, err
 }
 
@@ -115,6 +119,9 @@ func (triggerChecker *TriggerChecker) compareMetricStates(metric string, current
 		MessageEventInfo: eventInfo,
 		Values:           currentState.Values,
 	}, true)
+
+	log.Debug().Str("trigger_id", triggerChecker.triggerID).Msg("PushNotificationEvent for metric")
+
 	return currentState, err
 }
 

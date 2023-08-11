@@ -248,8 +248,12 @@ func (triggerChecker *TriggerChecker) preparePatternMetrics(fetchedMetrics conve
 }
 
 // check is the function that handles check on prepared metrics.
-func (triggerChecker *TriggerChecker) check(metrics map[string]map[string]metricSource.MetricData,
-	aloneMetrics map[string]metricSource.MetricData, checkData moira.CheckData, logger moira.Logger) (moira.CheckData, error) {
+func (triggerChecker *TriggerChecker) check(
+	metrics map[string]map[string]metricSource.MetricData,
+	aloneMetrics map[string]metricSource.MetricData,
+	checkData moira.CheckData,
+	logger moira.Logger,
+) (moira.CheckData, error) {
 	if len(metrics) == 0 { // Case when trigger have only alone metrics
 		if metrics == nil {
 			metrics = make(map[string]map[string]metricSource.MetricData, 1)
@@ -257,6 +261,7 @@ func (triggerChecker *TriggerChecker) check(metrics map[string]map[string]metric
 		metricName := conversion.MetricName(aloneMetrics)
 		metrics[metricName] = make(map[string]metricSource.MetricData)
 	}
+
 	for metricName, targets := range metrics {
 		log := logger.Clone().String(moira.LogFieldNameMetricName, metricName)
 		log.Debug().Msg("Checking metrics")
@@ -402,7 +407,7 @@ func (triggerChecker *TriggerChecker) getMetricDataState(metrics *map[string]met
 }
 
 func getExpressionValues(metrics *map[string]metricSource.MetricData, valueTimestamp *int64) (*expression.TriggerExpression, map[string]float64, bool) {
-	expression := &expression.TriggerExpression{
+	triggerExpression := &expression.TriggerExpression{
 		AdditionalTargetsValues: make(map[string]float64, len(*metrics)-1),
 	}
 	values := make(map[string]float64, len(*metrics))
@@ -413,13 +418,13 @@ func getExpressionValues(metrics *map[string]metricSource.MetricData, valueTimes
 		value := metric.GetTimestampValue(*valueTimestamp)
 		values[targetName] = value
 		if !moira.IsValidFloat64(value) {
-			return expression, values, false
+			return triggerExpression, values, false
 		}
 		if i == 0 {
-			expression.MainTargetValue = value
+			triggerExpression.MainTargetValue = value
 			continue
 		}
-		expression.AdditionalTargetsValues[targetName] = value
+		triggerExpression.AdditionalTargetsValues[targetName] = value
 	}
-	return expression, values, true
+	return triggerExpression, values, true
 }

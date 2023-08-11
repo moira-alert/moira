@@ -476,7 +476,7 @@ func (event NotificationEvent) String() string {
 	return fmt.Sprintf("TriggerId: %s, Metric: %s, Values: %s, OldState: %s, State: %s, Message: '%s', Timestamp: %v", event.TriggerID, event.Metric, event.GetMetricsValues(DefaultNotificationSettings), event.OldState, event.State, event.CreateMessage(nil), event.Timestamp)
 }
 
-// GetMetricsValues gets event metric value and format it to human readable presentation
+// GetMetricsValues gets event metric value and format it to human-readable presentation
 func (event NotificationEvent) GetMetricsValues(settings NotificationEventSettings) string {
 	targetNames := make([]string, 0, len(event.Values))
 	for targetName := range event.Values {
@@ -521,7 +521,7 @@ func (event NotificationEvent) GetMetricsValues(settings NotificationEventSettin
 	return builder.String()
 }
 
-// FormatTimestamp gets event timestamp and format it using given location to human readable presentation
+// FormatTimestamp gets event timestamp and format it using given location to human-readable presentation
 func (event NotificationEvent) FormatTimestamp(location *time.Location, timeFormat string) string {
 	timestamp := time.Unix(event.Timestamp, 0).In(location)
 	formattedTime := timestamp.Format(timeFormat)
