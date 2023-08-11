@@ -182,38 +182,38 @@ type ContactData struct {
 
 // SubscriptionData represents user subscription
 type SubscriptionData struct {
-	Contacts          []string     `json:"contacts"`
-	Tags              []string     `json:"tags"`
+	Contacts          []string     `json:"contacts" example:"acd2db98-1659-4a2f-b227-52d71f6e3ba1"`
+	Tags              []string     `json:"tags" example:"server,cpu"`
 	Schedule          ScheduleData `json:"sched"`
 	Plotting          PlottingData `json:"plotting"`
-	ID                string       `json:"id"`
-	Enabled           bool         `json:"enabled"`
-	AnyTags           bool         `json:"any_tags"`
-	IgnoreWarnings    bool         `json:"ignore_warnings,omitempty"`
-	IgnoreRecoverings bool         `json:"ignore_recoverings,omitempty"`
-	ThrottlingEnabled bool         `json:"throttling"`
-	User              string       `json:"user"`
-	TeamID            string       `json:"team_id"`
+	ID                string       `json:"id" example:"292516ed-4924-4154-a62c-ebe312431fce"`
+	Enabled           bool         `json:"enabled" example:"true"`
+	AnyTags           bool         `json:"any_tags" example:"false"`
+	IgnoreWarnings    bool         `json:"ignore_warnings,omitempty" example:"false"`
+	IgnoreRecoverings bool         `json:"ignore_recoverings,omitempty" example:"false"`
+	ThrottlingEnabled bool         `json:"throttling" example:"false"`
+	User              string       `json:"user" example:""`
+	TeamID            string       `json:"team_id" example:"324516ed-4924-4154-a62c-eb124234fce"`
 }
 
 // PlottingData represents plotting settings
 type PlottingData struct {
 	Enabled bool   `json:"enabled" example:"true"`
-	Theme   string `json:"theme"`
+	Theme   string `json:"theme" example:"dark"`
 }
 
 // ScheduleData represents subscription schedule
 type ScheduleData struct {
 	Days           []ScheduleDataDay `json:"days"`
-	TimezoneOffset int64             `json:"tzOffset"`
-	StartOffset    int64             `json:"startOffset"`
-	EndOffset      int64             `json:"endOffset"`
+	TimezoneOffset int64             `json:"tzOffset" example:"-60"`
+	StartOffset    int64             `json:"startOffset" example:"0"`
+	EndOffset      int64             `json:"endOffset" example:"1439"`
 }
 
 // ScheduleDataDay represents week day of schedule
 type ScheduleDataDay struct {
-	Enabled bool   `json:"enabled"`
-	Name    string `json:"name,omitempty"`
+	Enabled bool   `json:"enabled" example:"true"`
+	Name    string `json:"name,omitempty" example:"Mon"`
 }
 
 // ScheduledNotification represent notification object

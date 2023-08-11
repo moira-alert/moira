@@ -26,6 +26,14 @@ func subscription(router chi.Router) {
 	})
 }
 
+// @summary Get all subscriptions
+// @id get-user-subscriptions
+// @tags subscription
+// @produce json
+// @success 200 {object} dto.SubscriptionList "Subscriptions fetched successfully"
+// @failure 422 {object} api.ErrorRenderExample "Render error"
+// @failure 500 {object} api.ErrorInternalServerExample "Internal server error"
+// @router /subscription [get]
 func getUserSubscriptions(writer http.ResponseWriter, request *http.Request) {
 	userLogin := middleware.GetLogin(request)
 	contacts, err := controller.GetUserSubscriptions(database, userLogin)
@@ -39,6 +47,17 @@ func getUserSubscriptions(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
+// @summary Create a new subscription
+// @id create-subscription
+// @tags subscription
+// @accept json
+// @produce json
+// @param subscription body dto.Subscription true "Subscription data"
+// @success 200 {object} dto.Subscription "Subscription created successfully"
+// @failure 400 {object} api.ErrorInvalidRequestExample "Bad request from client"
+// @failure 422 {object} api.ErrorRenderExample "Render error"
+// @failure 500 {object} api.ErrorInternalServerExample "Internal server error"
+// @router /subscription [put]
 func createSubscription(writer http.ResponseWriter, request *http.Request) {
 	subscription := &dto.Subscription{}
 	if err := render.Bind(request, subscription); err != nil {
@@ -78,6 +97,20 @@ func subscriptionFilter(next http.Handler) http.Handler {
 	})
 }
 
+// @summary Update a subscription
+// @id update-subscription
+// @tags subscription
+// @accept json
+// @produce json
+// @param subscriptionId path string true "ID of the subscription to update" extensions(x-example=bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+// @param subscription body dto.Subscription true "Updated subscription data"
+// @success 200 {object} dto.Subscription "Subscription updated successfully"
+// @failure 400 {object} api.ErrorInvalidRequestExample "Bad request from client"
+// @failure 403 {object} api.ErrorForbiddenExample "Forbidden"
+// @failure 404 {object} api.ErrorNotFoundExample "Resource not found"
+// @failure 422 {object} api.ErrorRenderExample "Render error"
+// @failure 500 {object} api.ErrorInternalServerExample "Internal server error"
+// @router /subscription/{subscriptionId} [put]
 func updateSubscription(writer http.ResponseWriter, request *http.Request) {
 	subscription := &dto.Subscription{}
 	if err := render.Bind(request, subscription); err != nil {

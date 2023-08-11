@@ -42,37 +42,37 @@ type Trigger struct {
 // TriggerModel is moira.Trigger api representation
 type TriggerModel struct {
 	// Trigger unique ID
-	ID string `json:"id"`
+	ID string `json:"id" example:"292516ed-4924-4154-a62c-ebe312431fce"`
 	// Trigger name
-	Name string `json:"name"`
+	Name string `json:"name" example:"Not enough disk space left"`
 	// Description string
-	Desc *string `json:"desc,omitempty"`
+	Desc *string `json:"desc,omitempty" example:"check the size of /var/log"`
 	// Graphite-like targets: t1, t2, ...
-	Targets []string `json:"targets"`
+	Targets []string `json:"targets" example:"devOps.my_server.hdd.freespace_mbytes"`
 	// WARN threshold
-	WarnValue *float64 `json:"warn_value"`
+	WarnValue *float64 `json:"warn_value" example:"5000"`
 	// ERROR threshold
-	ErrorValue *float64 `json:"error_value"`
+	ErrorValue *float64 `json:"error_value" example:"1000"`
 	// Could be: rising, falling, expression
-	TriggerType string `json:"trigger_type"`
+	TriggerType string `json:"trigger_type" example:"rising"`
 	// Set of tags to manipulate subscriptions
-	Tags []string `json:"tags"`
+	Tags []string `json:"tags" example:"server, disk"`
 	// When there are no metrics for trigger, Moira will switch metric to TTLState state after TTL seconds
-	TTLState *moira.TTLState `json:"ttl_state,omitempty"`
+	TTLState *moira.TTLState `json:"ttl_state,omitempty" example:"NODATA"`
 	// When there are no metrics for trigger, Moira will switch metric to TTLState state after TTL seconds
-	TTL int64 `json:"ttl,omitempty"`
+	TTL int64 `json:"ttl,omitempty" example:"600"`
 	// Determines when Moira should monitor trigger
 	Schedule *moira.ScheduleData `json:"sched,omitempty"`
 	// Used if you need more complex logic than provided by WARN/ERROR values
-	Expression string `json:"expression"`
+	Expression string `json:"expression" example:""`
 	// Graphite patterns for trigger
-	Patterns []string `json:"patterns"`
+	Patterns []string `json:"patterns" example:""`
 	// Shows if trigger is remote (graphite-backend) based or stored inside Moira-Redis DB
-	IsRemote bool `json:"is_remote"`
+	IsRemote bool `json:"is_remote" example:"false"`
 	// If true, first event NODATA → OK will be omitted
-	MuteNewMetrics bool `json:"mute_new_metrics"`
+	MuteNewMetrics bool `json:"mute_new_metrics" example:"false"`
 	// A list of targets that have only alone metrics
-	AloneMetrics map[string]bool `json:"alone_metrics"`
+	AloneMetrics map[string]bool `json:"alone_metrics" example:"t1:true"`
 	// Datetime when the trigger was created
 	CreatedAt *time.Time `json:"created_at"`
 	// Datetime  when the trigger was updated
