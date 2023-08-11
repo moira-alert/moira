@@ -35,7 +35,18 @@ func (triggerChecker *TriggerChecker) compareTriggerStates(currentCheck moira.Ch
 
 	maintenanceInfo, maintenanceTimestamp := getMaintenanceInfo(lastCheck, nil)
 	eventInfo, needSend := isStateChanged(currentStateValue, lastStateValue, currentCheckTimestamp, lastCheck.GetEventTimestamp(), lastStateSuppressed, lastStateSuppressedValue, maintenanceInfo)
-	log.Debug().Bool("needSend", needSend).Msg("needSend value")
+
+	log.Debug().
+		Bool("needSend", needSend).
+		Interface("eventInfo", eventInfo).
+		Bool("lastStateSuppressed", lastStateSuppressed).
+		Str("currentStateValue", currentStateValue.String()).
+		Int64("currentCheckTimestamp", currentCheckTimestamp).
+		Str("lastStateSuppressedValue", lastStateSuppressedValue.String()).
+		Int64("lastCheck", lastCheck.GetEventTimestamp()).
+		Interface("maintenanceInfo", maintenanceInfo).
+		Msg("needSend value")
+
 	if !needSend {
 		if maintenanceTimestamp < currentCheckTimestamp {
 			currentCheck.Suppressed = false
