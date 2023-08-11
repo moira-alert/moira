@@ -3,8 +3,6 @@ package checker
 import (
 	"fmt"
 
-	"github.com/rs/zerolog/log"
-
 	"github.com/moira-alert/moira"
 	"github.com/moira-alert/moira/checker/metrics/conversion"
 	"github.com/moira-alert/moira/expression"
@@ -45,9 +43,8 @@ func (triggerChecker *TriggerChecker) Check() error {
 	if !passError {
 		checkData.State = moira.StateOK
 	}
-	log.Debug().Int64("LastSuccessfulCheckTimestamp", checkData.LastSuccessfulCheckTimestamp).Msg("before LastSuccessfulCheckTimestamp")
+
 	checkData.LastSuccessfulCheckTimestamp = checkData.Timestamp
-	log.Debug().Int64("LastSuccessfulCheckTimestamp", checkData.LastSuccessfulCheckTimestamp).Msg("after LastSuccessfulCheckTimestamp")
 	if checkData.LastSuccessfulCheckTimestamp != 0 {
 		checkData, err = triggerChecker.compareTriggerStates(checkData)
 		if err != nil {
