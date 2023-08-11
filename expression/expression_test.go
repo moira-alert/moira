@@ -99,12 +99,13 @@ func TestValidate(t *testing.T) {
 		expression = "t1 <= 0 ? PREV_STATE : (t1 >= 20 ? ERROR : (t1 >= 10 ? WARN : OK))"
 		err = (&TriggerExpression{PreviousState: moira.StateNODATA, Expression: &expression, MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{}, TriggerType: moira.ExpressionTrigger}).Validate()
 		So(err, ShouldBeNil)
+
+		warnValue, errorValue := 60.0, 90.0
+		err = (&TriggerExpression{PreviousState: moira.StateNODATA, Expression: nil, WarnValue: &warnValue, ErrorValue: &errorValue, TriggerType: moira.RisingTrigger, MainTargetValue: 5}).Validate()
+		SoMsg("validating simple expression", err, ShouldBeNil)
 	})
 	Convey("Test bad expressions", t, func() {
-		expression := ""
-		err := (&TriggerExpression{Expression: &expression, TriggerType: moira.FallingTrigger}).Validate()
-		So(err, ShouldResemble, fmt.Errorf("only advanced triggers should be validated"))
-		err = (&TriggerExpression{Expression: nil, TriggerType: moira.ExpressionTrigger}).Validate()
+		err := (&TriggerExpression{Expression: nil, TriggerType: moira.ExpressionTrigger}).Validate()
 		So(err, ShouldResemble, fmt.Errorf("trigger_type set to expression, but no expression provided"))
 	})
 	Convey("Test invalid expressions", t, func() {
@@ -121,35 +122,6 @@ func TestValidate(t *testing.T) {
 		So(err.Error(), ShouldResemble, `unknown name t2 (1:17)
  | t1 > 10 ? ok : (t2 < 5 ? warn : error)
  | ................^`)
-	})
-
-	Convey("Test validation caching", t, func() {
-		expression := "t1 > 10 ? OK : (t2 < 5 ? WARN : ERROR)"
-		trigger := TriggerExpression{Expression: &expression, MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{}, TriggerType: moira.ExpressionTrigger}
-		validateErr := trigger.Validate()
-		So(validateErr, ShouldNotBeNil)
-		// check cache
-		cacheKey := trigger.validationCacheKey()
-		cachedError, ok := exprCache.Get(cacheKey)
-		So(ok, ShouldBeTrue)
-		cachedErr, ok := cachedError.(verificationResult)
-		So(ok, ShouldBeTrue)
-		So(cachedErr, ShouldNotBeNil)
-		SoMsg("when error is not nil", cachedErr.internalError, ShouldResemble, validateErr)
-
-		trigger2 := TriggerExpression{Expression: &expression, MainTargetValue: 11.0, AdditionalTargetsValues: map[string]float64{"t2": 5}, TriggerType: moira.ExpressionTrigger}
-		validateErr = trigger2.Validate()
-		So(validateErr, ShouldBeNil)
-		// check cache
-		cacheKey2 := trigger2.validationCacheKey()
-		cachedError, ok = exprCache.Get(cacheKey2)
-		So(ok, ShouldBeTrue)
-		cachedErr, ok = cachedError.(verificationResult)
-		So(ok, ShouldBeTrue)
-		SoMsg("when error is nil", cachedErr.internalError, ShouldResemble, validateErr)
-
-		// cache key validations
-		SoMsg("same expression, different targets", cacheKey, ShouldNotEqual, cacheKey2)
 	})
 }
 

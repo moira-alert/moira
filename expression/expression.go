@@ -2,7 +2,6 @@ package expression
 
 import (
 	"fmt"
-	"sort"
 	"strings"
 
 	"github.com/antonmedv/expr"
@@ -29,10 +28,6 @@ type ErrInvalidExpression struct {
 
 func (err ErrInvalidExpression) Error() string {
 	return err.internalError.Error()
-}
-
-type verificationResult struct {
-	internalError error
 }
 
 // TriggerExpression represents trigger expression handler parameters, what can be used for trigger expression handling
@@ -87,24 +82,12 @@ func (triggerExpression TriggerExpression) Get(name string) (interface{}, error)
 // Validate returns error if triggers of type moira.ExpressionTrigger are badly formatted otherwise nil
 func (triggerExpression *TriggerExpression) Validate() error {
 	if triggerExpression.TriggerType != moira.ExpressionTrigger {
-		return fmt.Errorf("only advanced triggers should be validated")
+		return nil
 	}
-	if triggerExpression.Expression == nil {
+	if triggerExpression.Expression == nil || *triggerExpression.Expression == "" {
 		return fmt.Errorf("trigger_type set to expression, but no expression provided")
 	}
 	expression := *triggerExpression.Expression
-	cacheKey := triggerExpression.validationCacheKey()
-	result, validated := exprCache.Get(cacheKey)
-	if validated {
-		err, ok := result.(verificationResult)
-		if ok {
-			return err.internalError
-		} else {
-			validated = false
-			exprCache.Delete(cacheKey)
-		}
-	}
-
 	env := map[string]interface{}{
 		"ok":         moira.StateOK,
 		"error":      moira.StateERROR,
@@ -128,7 +111,6 @@ func (triggerExpression *TriggerExpression) Validate() error {
 		expr.Optimize(true),
 		expr.Env(env),
 	)
-	exprCache.Set(cacheKey, verificationResult{err}, cache.NoExpiration)
 	return err
 }
 
@@ -158,23 +140,6 @@ func getExpression(triggerExpression *TriggerExpression) (*govaluate.EvaluableEx
 		return getUserExpression(*triggerExpression.Expression)
 	}
 	return getSimpleExpression(triggerExpression)
-}
-
-// validationCacheKey returns the key used to store TriggerExpression in the cache.
-//
-// Two TriggerExpressions, have the same validationCacheKey if they have the same expression
-// and the same list of targets provided.
-func (triggerExpression *TriggerExpression) validationCacheKey() string {
-	var expression string
-	if triggerExpression.Expression != nil {
-		expression = *triggerExpression.Expression
-	}
-	targets := []string{"t1"}
-	for k := range triggerExpression.AdditionalTargetsValues {
-		targets = append(targets, k)
-	}
-	sort.Strings(targets)
-	return fmt.Sprintf("[VALIDATED]%s;targets=%s", expression, strings.Join(targets, ","))
 }
 
 func getSimpleExpression(triggerExpression *TriggerExpression) (*govaluate.EvaluableExpression, error) {
