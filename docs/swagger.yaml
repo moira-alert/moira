@@ -85,6 +85,12 @@ definitions:
         example: 10
         type: integer
     type: object
+  dto.MessageResponse:
+    properties:
+      message:
+        example: tag deleted
+        type: string
+    type: object
   dto.NotificationDeleteResponse:
     properties:
       result:
@@ -184,6 +190,38 @@ definitions:
       list:
         items:
           $ref: '#/definitions/moira.SubscriptionData'
+        type: array
+    type: object
+  dto.TagStatistics:
+    properties:
+      name:
+        example: cpu
+        type: string
+      subscriptions:
+        items:
+          $ref: '#/definitions/moira.SubscriptionData'
+        type: array
+      triggers:
+        example:
+        - bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
+        items:
+          type: string
+        type: array
+    type: object
+  dto.TagsData:
+    properties:
+      list:
+        example:
+        - cpu
+        items:
+          type: string
+        type: array
+    type: object
+  dto.TagsStatistics:
+    properties:
+      list:
+        items:
+          $ref: '#/definitions/dto.TagStatistics'
         type: array
     type: object
   dto.TriggerModel:
@@ -929,7 +967,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Pattern delete successfully
+          description: Pattern deleted successfully
         "400":
           description: Bad request from client
           schema:
@@ -1102,6 +1140,176 @@ paths:
       summary: Send a test notification for a subscription
       tags:
       - subscription
+  /tag:
+    get:
+      operationId: get-all-tags
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Tags fetched successfully
+          schema:
+            $ref: '#/definitions/dto.TagsData'
+        "422":
+          description: Render error
+          schema:
+            $ref: '#/definitions/api.ErrorRenderExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Get all tags
+      tags:
+      - tag
+  /tag/{tag}:
+    delete:
+      operationId: remove-tag
+      parameters:
+      - description: Name of the tag to remove
+        in: path
+        name: tag
+        required: true
+        type: string
+        x-example: cpu
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Tag removed successfully
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "400":
+          description: Bad request from client
+          schema:
+            $ref: '#/definitions/api.ErrorInvalidRequestExample'
+        "422":
+          description: Render error
+          schema:
+            $ref: '#/definitions/api.ErrorRenderExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Remove a tag
+      tags:
+      - tag
+  /tag/stats:
+    get:
+      operationId: get-all-tags-and-subscriptions
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful
+          schema:
+            $ref: '#/definitions/dto.TagsStatistics'
+        "422":
+          description: Render error
+          schema:
+            $ref: '#/definitions/api.ErrorRenderExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Get all tags and their subscriptions
+      tags:
+      - tag
+  /team/{teamID}/subscriptions:
+    post:
+      consumes:
+      - application/json
+      operationId: create-new-team-subscription
+      parameters:
+      - description: The ID of team
+        in: path
+        name: teamID
+        required: true
+        type: string
+        x-example: d5d98eb3-ee18-4f75-9364-244f67e23b54
+      - description: Team subscription data
+        in: body
+        name: subscription
+        required: true
+        schema:
+          $ref: '#/definitions/dto.Subscription'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Team subscription created successfully
+          schema:
+            $ref: '#/definitions/dto.Subscription'
+        "400":
+          description: Bad request from client
+          schema:
+            $ref: '#/definitions/api.ErrorInvalidRequestExample'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/api.ErrorForbiddenExample'
+        "404":
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/api.ErrorNotFoundExample'
+        "422":
+          description: Render error
+          schema:
+            $ref: '#/definitions/api.ErrorRenderExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Create a new team subscription
+      tags:
+      - teamSubscription
+  /teams/{teamID}/contacts:
+    post:
+      consumes:
+      - application/json
+      operationId: create-new-team-contact
+      parameters:
+      - description: The ID of team
+        in: path
+        name: teamID
+        required: true
+        type: string
+        x-example: d5d98eb3-ee18-4f75-9364-244f67e23b54
+      - description: Team contact data
+        in: body
+        name: contact
+        required: true
+        schema:
+          $ref: '#/definitions/dto.Contact'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Team contact created successfully
+          schema:
+            $ref: '#/definitions/dto.Contact'
+        "400":
+          description: Bad request from client
+          schema:
+            $ref: '#/definitions/api.ErrorInvalidRequestExample'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/api.ErrorForbiddenExample'
+        "404":
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/api.ErrorNotFoundExample'
+        "422":
+          description: Render error
+          schema:
+            $ref: '#/definitions/api.ErrorRenderExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Create a new team contact
+      tags:
+      - teamContact
 swagger: "2.0"
 tags:
 - description: APIs for working with Moira contacts. For more details, see <https://moira.readthedocs.io/en/latest/installation/webhooks_scripts.html#contact/>

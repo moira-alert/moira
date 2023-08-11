@@ -16,6 +16,20 @@ func teamSubscription(router chi.Router) {
 	router.Post("/", createTeamSubscription)
 }
 
+// @summary Create a new team subscription
+// @id create-new-team-subscription
+// @tags teamSubscription
+// @accept json
+// @produce json
+// @param teamID path string true "The ID of team" extensions(x-example=d5d98eb3-ee18-4f75-9364-244f67e23b54)
+// @param subscription body dto.Subscription true "Team subscription data"
+// @success 200 {object} dto.Subscription "Team subscription created successfully"
+// @failure 400 {object} api.ErrorInvalidRequestExample "Bad request from client"
+// @failure 403 {object} api.ErrorForbiddenExample "Forbidden"
+// @failure 404 {object} api.ErrorNotFoundExample "Resource not found"
+// @failure 422 {object} api.ErrorRenderExample "Render error"
+// @failure 500 {object} api.ErrorInternalServerExample "Internal server error"
+// @router /team/{teamID}/subscriptions [post]
 func createTeamSubscription(writer http.ResponseWriter, request *http.Request) {
 	subscription := &dto.Subscription{}
 	if err := render.Bind(request, subscription); err != nil {

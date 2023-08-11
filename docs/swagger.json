@@ -628,7 +628,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Pattern delete successfully"
+                        "description": "Pattern deleted successfully"
                     },
                     "400": {
                         "description": "Bad request from client",
@@ -886,6 +886,262 @@
                     }
                 }
             }
+        },
+        "/tag": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tag"
+                ],
+                "summary": "Get all tags",
+                "operationId": "get-all-tags",
+                "responses": {
+                    "200": {
+                        "description": "Tags fetched successfully",
+                        "schema": {
+                            "$ref": "#/definitions/dto.TagsData"
+                        }
+                    },
+                    "422": {
+                        "description": "Render error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorRenderExample"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorInternalServerExample"
+                        }
+                    }
+                }
+            }
+        },
+        "/tag/stats": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tag"
+                ],
+                "summary": "Get all tags and their subscriptions",
+                "operationId": "get-all-tags-and-subscriptions",
+                "responses": {
+                    "200": {
+                        "description": "Successful",
+                        "schema": {
+                            "$ref": "#/definitions/dto.TagsStatistics"
+                        }
+                    },
+                    "422": {
+                        "description": "Render error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorRenderExample"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorInternalServerExample"
+                        }
+                    }
+                }
+            }
+        },
+        "/tag/{tag}": {
+            "delete": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tag"
+                ],
+                "summary": "Remove a tag",
+                "operationId": "remove-tag",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "x-example": "cpu",
+                        "description": "Name of the tag to remove",
+                        "name": "tag",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Tag removed successfully",
+                        "schema": {
+                            "$ref": "#/definitions/dto.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request from client",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorInvalidRequestExample"
+                        }
+                    },
+                    "422": {
+                        "description": "Render error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorRenderExample"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorInternalServerExample"
+                        }
+                    }
+                }
+            }
+        },
+        "/team/{teamID}/subscriptions": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "teamSubscription"
+                ],
+                "summary": "Create a new team subscription",
+                "operationId": "create-new-team-subscription",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "x-example": "d5d98eb3-ee18-4f75-9364-244f67e23b54",
+                        "description": "The ID of team",
+                        "name": "teamID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Team subscription data",
+                        "name": "subscription",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.Subscription"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Team subscription created successfully",
+                        "schema": {
+                            "$ref": "#/definitions/dto.Subscription"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request from client",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorInvalidRequestExample"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorForbiddenExample"
+                        }
+                    },
+                    "404": {
+                        "description": "Resource not found",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorNotFoundExample"
+                        }
+                    },
+                    "422": {
+                        "description": "Render error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorRenderExample"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorInternalServerExample"
+                        }
+                    }
+                }
+            }
+        },
+        "/teams/{teamID}/contacts": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "teamContact"
+                ],
+                "summary": "Create a new team contact",
+                "operationId": "create-new-team-contact",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "x-example": "d5d98eb3-ee18-4f75-9364-244f67e23b54",
+                        "description": "The ID of team",
+                        "name": "teamID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Team contact data",
+                        "name": "contact",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.Contact"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Team contact created successfully",
+                        "schema": {
+                            "$ref": "#/definitions/dto.Contact"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request from client",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorInvalidRequestExample"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorForbiddenExample"
+                        }
+                    },
+                    "404": {
+                        "description": "Resource not found",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorNotFoundExample"
+                        }
+                    },
+                    "422": {
+                        "description": "Render error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorRenderExample"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorInternalServerExample"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -1009,6 +1265,15 @@
                 "total": {
                     "type": "integer",
                     "example": 10
+                }
+            }
+        },
+        "dto.MessageResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "tag deleted"
                 }
             }
         },
@@ -1155,6 +1420,55 @@
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/moira.SubscriptionData"
+                    }
+                }
+            }
+        },
+        "dto.TagStatistics": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "example": "cpu"
+                },
+                "subscriptions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/moira.SubscriptionData"
+                    }
+                },
+                "triggers": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c"
+                    ]
+                }
+            }
+        },
+        "dto.TagsData": {
+            "type": "object",
+            "properties": {
+                "list": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "cpu"
+                    ]
+                }
+            }
+        },
+        "dto.TagsStatistics": {
+            "type": "object",
+            "properties": {
+                "list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.TagStatistics"
                     }
                 }
             }
