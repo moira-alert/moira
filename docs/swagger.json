@@ -1294,7 +1294,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Team updated successfullym",
+                        "description": "Team updated successfully",
                         "schema": {
                             "$ref": "#/definitions/dto.SaveTeamResponse"
                         }
@@ -1715,6 +1715,275 @@
                     }
                 }
             }
+        },
+        "/trigger": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "trigger"
+                ],
+                "summary": "Get all triggers",
+                "operationId": "get-all-triggers",
+                "responses": {
+                    "200": {
+                        "description": "Fetched all triggers",
+                        "schema": {
+                            "$ref": "#/definitions/dto.TriggersList"
+                        }
+                    },
+                    "422": {
+                        "description": "Render error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorRenderExample"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorInternalServerExample"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "trigger"
+                ],
+                "summary": "Create a new trigger",
+                "operationId": "create-trigger",
+                "parameters": [
+                    {
+                        "description": "Trigger data",
+                        "name": "trigger",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.Trigger"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Trigger created successfully",
+                        "schema": {
+                            "$ref": "#/definitions/dto.SaveTriggerResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request from client",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorInvalidRequestExample"
+                        }
+                    },
+                    "422": {
+                        "description": "Render error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorRenderExample"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorInternalServerExample"
+                        }
+                    },
+                    "503": {
+                        "description": "Remote server unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorRemoteServerUnavailableExample"
+                        }
+                    }
+                }
+            }
+        },
+        "/trigger/check": {
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "trigger"
+                ],
+                "summary": "Validates trigger target",
+                "operationId": "trigger-check",
+                "parameters": [
+                    {
+                        "description": "Trigger data",
+                        "name": "trigger",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.Trigger"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Validation is done, see response body for validation result",
+                        "schema": {
+                            "$ref": "#/definitions/dto.TriggerCheckResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request from client",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorInvalidRequestExample"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorInternalServerExample"
+                        }
+                    }
+                }
+            }
+        },
+        "/trigger/pagers/{pagerID}": {
+            "delete": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Triggers"
+                ],
+                "summary": "Delete triggers pager",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "x-example": "d5d98eb3-ee18-4f75-9364-244f67e23b54",
+                        "description": "Pager ID to delete",
+                        "name": "pagerID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully deleted pager",
+                        "schema": {
+                            "$ref": "#/definitions/dto.TriggersSearchResultDeleteResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Resource not found",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorNotFoundExample"
+                        }
+                    },
+                    "422": {
+                        "description": "Render error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorRenderExample"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorInternalServerExample"
+                        }
+                    }
+                }
+            }
+        },
+        "/trigger/search": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "trigger"
+                ],
+                "summary": "Search triggers. Replaces the deprecated `page` path",
+                "operationId": "search-triggers",
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "x-example": "false",
+                        "description": "Only include problems",
+                        "name": "onlyProblems",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "x-example": "cpu",
+                        "description": "Search text",
+                        "name": "text",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "x-example": "0",
+                        "description": "Page number",
+                        "name": "p",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "x-example": "10",
+                        "description": "Page size",
+                        "name": "size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "x-example": "false",
+                        "description": "Create pager",
+                        "name": "createPager",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "x-example": "d5d98eb3-ee18-4f75-9364-244f67e23b54",
+                        "description": "Pager ID",
+                        "name": "pagerID",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully fetched matching triggers",
+                        "schema": {
+                            "$ref": "#/definitions/dto.TriggersList"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request from client",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorInvalidRequestExample"
+                        }
+                    },
+                    "404": {
+                        "description": "Resource not found",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorNotFoundExample"
+                        }
+                    },
+                    "422": {
+                        "description": "Render error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorRenderExample"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorInternalServerExample"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -1767,6 +2036,19 @@
                 "status": {
                     "type": "string",
                     "example": "Resource not found"
+                }
+            }
+        },
+        "api.ErrorRemoteServerUnavailableExample": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "Remote server error, please contact administrator"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "Remote server unavailable"
                 }
             }
         },
@@ -1924,12 +2206,59 @@
                 }
             }
         },
+        "dto.ProblemOfTarget": {
+            "type": "object",
+            "properties": {
+                "argument": {
+                    "type": "string",
+                    "example": "consolidateBy"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "This function affects only visual graph representation. It is meaningless in Moira"
+                },
+                "position": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "problems": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.ProblemOfTarget"
+                    }
+                },
+                "type": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.typeOfProblem"
+                        }
+                    ],
+                    "example": "warn"
+                }
+            }
+        },
         "dto.SaveTeamResponse": {
             "type": "object",
             "properties": {
                 "id": {
                     "type": "string",
                     "example": "d5d98eb3-ee18-4f75-9364-244f67e23b54"
+                }
+            }
+        },
+        "dto.SaveTriggerResponse": {
+            "type": "object",
+            "properties": {
+                "checkResult": {
+                    "$ref": "#/definitions/dto.TriggerCheckResponse"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "trigger_id"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "trigger created"
                 }
             }
         },
@@ -2107,6 +2436,159 @@
                 }
             }
         },
+        "dto.TreeOfProblems": {
+            "type": "object",
+            "properties": {
+                "syntax_ok": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "tree_of_problems": {
+                    "$ref": "#/definitions/dto.ProblemOfTarget"
+                }
+            }
+        },
+        "dto.Trigger": {
+            "type": "object",
+            "properties": {
+                "alone_metrics": {
+                    "description": "A list of targets that have only alone metrics",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "boolean"
+                    },
+                    "example": {
+                        "t1": true
+                    }
+                },
+                "created_at": {
+                    "description": "Datetime when the trigger was created",
+                    "type": "string"
+                },
+                "created_by": {
+                    "description": "Username who created trigger",
+                    "type": "string"
+                },
+                "desc": {
+                    "description": "Description string",
+                    "type": "string",
+                    "example": "check the size of /var/log"
+                },
+                "error_value": {
+                    "description": "ERROR threshold",
+                    "type": "number",
+                    "example": 1000
+                },
+                "expression": {
+                    "description": "Used if you need more complex logic than provided by WARN/ERROR values",
+                    "type": "string",
+                    "example": ""
+                },
+                "id": {
+                    "description": "Trigger unique ID",
+                    "type": "string",
+                    "example": "292516ed-4924-4154-a62c-ebe312431fce"
+                },
+                "is_remote": {
+                    "description": "Shows if trigger is remote (graphite-backend) based or stored inside Moira-Redis DB",
+                    "type": "boolean",
+                    "example": false
+                },
+                "mute_new_metrics": {
+                    "description": "If true, first event NODATA → OK will be omitted",
+                    "type": "boolean",
+                    "example": false
+                },
+                "name": {
+                    "description": "Trigger name",
+                    "type": "string",
+                    "example": "Not enough disk space left"
+                },
+                "patterns": {
+                    "description": "Graphite patterns for trigger",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        ""
+                    ]
+                },
+                "sched": {
+                    "description": "Determines when Moira should monitor trigger",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/moira.ScheduleData"
+                        }
+                    ]
+                },
+                "tags": {
+                    "description": "Set of tags to manipulate subscriptions",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "server",
+                        "disk"
+                    ]
+                },
+                "targets": {
+                    "description": "Graphite-like targets: t1, t2, ...",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "devOps.my_server.hdd.freespace_mbytes"
+                    ]
+                },
+                "throttling": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "trigger_type": {
+                    "description": "Could be: rising, falling, expression",
+                    "type": "string",
+                    "example": "rising"
+                },
+                "ttl": {
+                    "description": "When there are no metrics for trigger, Moira will switch metric to TTLState state after TTL seconds",
+                    "type": "integer",
+                    "example": 600
+                },
+                "ttl_state": {
+                    "description": "When there are no metrics for trigger, Moira will switch metric to TTLState state after TTL seconds",
+                    "type": "string",
+                    "example": "NODATA"
+                },
+                "updated_at": {
+                    "description": "Datetime  when the trigger was updated",
+                    "type": "string"
+                },
+                "updated_by": {
+                    "description": "Username who updated trigger",
+                    "type": "string"
+                },
+                "warn_value": {
+                    "description": "WARN threshold",
+                    "type": "number",
+                    "example": 500
+                }
+            }
+        },
+        "dto.TriggerCheckResponse": {
+            "type": "object",
+            "properties": {
+                "targets": {
+                    "description": "Graphite-like targets: t1, t2, ...",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.TreeOfProblems"
+                    }
+                }
+            }
+        },
         "dto.TriggerModel": {
             "type": "object",
             "properties": {
@@ -2189,7 +2671,7 @@
                     },
                     "example": [
                         "server",
-                        " disk"
+                        "disk"
                     ]
                 },
                 "targets": {
@@ -2228,7 +2710,39 @@
                 "warn_value": {
                     "description": "WARN threshold",
                     "type": "number",
-                    "example": 5000
+                    "example": 500
+                }
+            }
+        },
+        "dto.TriggersList": {
+            "type": "object",
+            "properties": {
+                "list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/moira.TriggerCheck"
+                    }
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "pager": {
+                    "type": "string"
+                },
+                "size": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.TriggersSearchResultDeleteResponse": {
+            "type": "object",
+            "properties": {
+                "pager_id": {
+                    "type": "string",
+                    "example": "292516ed-4924-4154-a62c-ebe312431fce"
                 }
             }
         },
@@ -2242,6 +2756,17 @@
                     }
                 }
             }
+        },
+        "dto.typeOfProblem": {
+            "type": "string",
+            "enum": [
+                "warn",
+                "bad"
+            ],
+            "x-enum-varnames": [
+                "isWarn",
+                "isBad"
+            ]
         },
         "handler.ConfigurationResponse": {
             "type": "object",
@@ -2268,6 +2793,54 @@
                 "type": {
                     "type": "string",
                     "example": "telegram"
+                }
+            }
+        },
+        "moira.CheckData": {
+            "type": "object",
+            "properties": {
+                "event_timestamp": {
+                    "type": "integer"
+                },
+                "last_successful_check_timestamp": {
+                    "type": "integer"
+                },
+                "maintenance": {
+                    "type": "integer"
+                },
+                "maintenance_info": {
+                    "$ref": "#/definitions/moira.MaintenanceInfo"
+                },
+                "metrics": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/moira.MetricState"
+                    }
+                },
+                "metrics_to_target_relation": {
+                    "description": "MetricsToTargetRelation is a map that holds relation between metric names that was alone during last\ncheck and targets that fetched this metric\n\t{\"t1\": \"metric.name.1\", \"t2\": \"metric.name.2\"}",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "msg": {
+                    "type": "string"
+                },
+                "score": {
+                    "type": "integer"
+                },
+                "state": {
+                    "type": "string"
+                },
+                "suppressed": {
+                    "type": "boolean"
+                },
+                "suppressed_state": {
+                    "type": "string"
+                },
+                "timestamp": {
+                    "type": "integer"
                 }
             }
         },
@@ -2323,6 +2896,41 @@
                 },
                 "setup_user": {
                     "type": "string"
+                }
+            }
+        },
+        "moira.MetricState": {
+            "type": "object",
+            "properties": {
+                "event_timestamp": {
+                    "type": "integer"
+                },
+                "maintenance": {
+                    "type": "integer"
+                },
+                "maintenance_info": {
+                    "$ref": "#/definitions/moira.MaintenanceInfo"
+                },
+                "state": {
+                    "type": "string"
+                },
+                "suppressed": {
+                    "type": "boolean"
+                },
+                "suppressed_state": {
+                    "type": "string"
+                },
+                "timestamp": {
+                    "type": "integer"
+                },
+                "value": {
+                    "type": "number"
+                },
+                "values": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "number"
+                    }
                 }
             }
         },
@@ -2517,6 +3125,123 @@
                 }
             }
         },
+        "moira.TriggerCheck": {
+            "type": "object",
+            "properties": {
+                "alone_metrics": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "boolean"
+                    },
+                    "example": {
+                        "t1": true
+                    }
+                },
+                "created_at": {
+                    "type": "integer"
+                },
+                "created_by": {
+                    "type": "string"
+                },
+                "desc": {
+                    "type": "string",
+                    "example": "check the size of /var/log"
+                },
+                "error_value": {
+                    "type": "number",
+                    "example": 1000
+                },
+                "expression": {
+                    "type": "string",
+                    "example": ""
+                },
+                "highlights": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "id": {
+                    "type": "string",
+                    "example": "292516ed-4924-4154-a62c-ebe312431fce"
+                },
+                "is_remote": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "last_check": {
+                    "$ref": "#/definitions/moira.CheckData"
+                },
+                "mute_new_metrics": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Not enough disk space left"
+                },
+                "patterns": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        ""
+                    ]
+                },
+                "python_expression": {
+                    "type": "string"
+                },
+                "sched": {
+                    "$ref": "#/definitions/moira.ScheduleData"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "server",
+                        "disk"
+                    ]
+                },
+                "targets": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "devOps.my_server.hdd.freespace_mbytes"
+                    ]
+                },
+                "throttling": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "trigger_type": {
+                    "type": "string",
+                    "example": "rising"
+                },
+                "ttl": {
+                    "type": "integer",
+                    "example": 600
+                },
+                "ttl_state": {
+                    "type": "string",
+                    "example": "NODATA"
+                },
+                "updated_at": {
+                    "type": "integer"
+                },
+                "updated_by": {
+                    "type": "string"
+                },
+                "warn_value": {
+                    "type": "number",
+                    "example": 5000
+                }
+            }
+        },
         "moira.TriggerData": {
             "type": "object",
             "properties": {
@@ -2612,8 +3337,12 @@
             "name": "teamSubscription"
         },
         {
-            "description": "APIs for interacting with Moira contacts owned by certain team.",
+            "description": "APIs for interacting with Moira contacts owned by certain team",
             "name": "teamContact"
+        },
+        {
+            "description": "APIs for interacting with Moira users",
+            "name": "user"
         }
     ]
 }

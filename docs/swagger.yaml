@@ -36,6 +36,15 @@ definitions:
         example: Resource not found
         type: string
     type: object
+  api.ErrorRemoteServerUnavailableExample:
+    properties:
+      error:
+        example: Remote server error, please contact administrator
+        type: string
+      status:
+        example: Remote server unavailable
+        type: string
+    type: object
   api.ErrorRenderExample:
     properties:
       error:
@@ -141,10 +150,42 @@ definitions:
           $ref: '#/definitions/dto.PatternData'
         type: array
     type: object
+  dto.ProblemOfTarget:
+    properties:
+      argument:
+        example: consolidateBy
+        type: string
+      description:
+        example: This function affects only visual graph representation. It is meaningless
+          in Moira
+        type: string
+      position:
+        example: 0
+        type: integer
+      problems:
+        items:
+          $ref: '#/definitions/dto.ProblemOfTarget'
+        type: array
+      type:
+        allOf:
+        - $ref: '#/definitions/dto.typeOfProblem'
+        example: warn
+    type: object
   dto.SaveTeamResponse:
     properties:
       id:
         example: d5d98eb3-ee18-4f75-9364-244f67e23b54
+        type: string
+    type: object
+  dto.SaveTriggerResponse:
+    properties:
+      checkResult:
+        $ref: '#/definitions/dto.TriggerCheckResponse'
+      id:
+        example: trigger_id
+        type: string
+      message:
+        example: trigger created
         type: string
     type: object
   dto.Subscription:
@@ -265,6 +306,121 @@ definitions:
         example: d5d98eb3-ee18-4f75-9364-244f67e23b54
         type: string
     type: object
+  dto.TreeOfProblems:
+    properties:
+      syntax_ok:
+        example: true
+        type: boolean
+      tree_of_problems:
+        $ref: '#/definitions/dto.ProblemOfTarget'
+    type: object
+  dto.Trigger:
+    properties:
+      alone_metrics:
+        additionalProperties:
+          type: boolean
+        description: A list of targets that have only alone metrics
+        example:
+          t1: true
+        type: object
+      created_at:
+        description: Datetime when the trigger was created
+        type: string
+      created_by:
+        description: Username who created trigger
+        type: string
+      desc:
+        description: Description string
+        example: check the size of /var/log
+        type: string
+      error_value:
+        description: ERROR threshold
+        example: 1000
+        type: number
+      expression:
+        description: Used if you need more complex logic than provided by WARN/ERROR
+          values
+        example: ""
+        type: string
+      id:
+        description: Trigger unique ID
+        example: 292516ed-4924-4154-a62c-ebe312431fce
+        type: string
+      is_remote:
+        description: Shows if trigger is remote (graphite-backend) based or stored
+          inside Moira-Redis DB
+        example: false
+        type: boolean
+      mute_new_metrics:
+        description: If true, first event NODATA → OK will be omitted
+        example: false
+        type: boolean
+      name:
+        description: Trigger name
+        example: Not enough disk space left
+        type: string
+      patterns:
+        description: Graphite patterns for trigger
+        example:
+        - ""
+        items:
+          type: string
+        type: array
+      sched:
+        allOf:
+        - $ref: '#/definitions/moira.ScheduleData'
+        description: Determines when Moira should monitor trigger
+      tags:
+        description: Set of tags to manipulate subscriptions
+        example:
+        - server
+        - disk
+        items:
+          type: string
+        type: array
+      targets:
+        description: 'Graphite-like targets: t1, t2, ...'
+        example:
+        - devOps.my_server.hdd.freespace_mbytes
+        items:
+          type: string
+        type: array
+      throttling:
+        example: 0
+        type: integer
+      trigger_type:
+        description: 'Could be: rising, falling, expression'
+        example: rising
+        type: string
+      ttl:
+        description: When there are no metrics for trigger, Moira will switch metric
+          to TTLState state after TTL seconds
+        example: 600
+        type: integer
+      ttl_state:
+        description: When there are no metrics for trigger, Moira will switch metric
+          to TTLState state after TTL seconds
+        example: NODATA
+        type: string
+      updated_at:
+        description: Datetime  when the trigger was updated
+        type: string
+      updated_by:
+        description: Username who updated trigger
+        type: string
+      warn_value:
+        description: WARN threshold
+        example: 500
+        type: number
+    type: object
+  dto.TriggerCheckResponse:
+    properties:
+      targets:
+        description: 'Graphite-like targets: t1, t2, ...'
+        items:
+          $ref: '#/definitions/dto.TreeOfProblems'
+        type: array
+    type: object
   dto.TriggerModel:
     properties:
       alone_metrics:
@@ -325,7 +481,7 @@ definitions:
         description: Set of tags to manipulate subscriptions
         example:
         - server
-        - ' disk'
+        - disk
         items:
           type: string
         type: array
@@ -358,8 +514,29 @@ definitions:
         type: string
       warn_value:
         description: WARN threshold
-        example: 5000
+        example: 500
         type: number
+    type: object
+  dto.TriggersList:
+    properties:
+      list:
+        items:
+          $ref: '#/definitions/moira.TriggerCheck'
+        type: array
+      page:
+        type: integer
+      pager:
+        type: string
+      size:
+        type: integer
+      total:
+        type: integer
+    type: object
+  dto.TriggersSearchResultDeleteResponse:
+    properties:
+      pager_id:
+        example: 292516ed-4924-4154-a62c-ebe312431fce
+        type: string
     type: object
   dto.UserTeams:
     properties:
@@ -368,6 +545,14 @@ definitions:
           $ref: '#/definitions/dto.TeamModel'
         type: array
     type: object
+  dto.typeOfProblem:
+    enum:
+    - warn
+    - bad
+    type: string
+    x-enum-varnames:
+    - isWarn
+    - isBad
   handler.ConfigurationResponse:
     properties:
       contacts:
@@ -386,6 +571,40 @@ definitions:
       type:
         example: telegram
         type: string
+    type: object
+  moira.CheckData:
+    properties:
+      event_timestamp:
+        type: integer
+      last_successful_check_timestamp:
+        type: integer
+      maintenance:
+        type: integer
+      maintenance_info:
+        $ref: '#/definitions/moira.MaintenanceInfo'
+      metrics:
+        additionalProperties:
+          $ref: '#/definitions/moira.MetricState'
+        type: object
+      metrics_to_target_relation:
+        additionalProperties:
+          type: string
+        description: "MetricsToTargetRelation is a map that holds relation between
+          metric names that was alone during last\ncheck and targets that fetched
+          this metric\n\t{\"t1\": \"metric.name.1\", \"t2\": \"metric.name.2\"}"
+        type: object
+      msg:
+        type: string
+      score:
+        type: integer
+      state:
+        type: string
+      suppressed:
+        type: boolean
+      suppressed_state:
+        type: string
+      timestamp:
+        type: integer
     type: object
   moira.ContactData:
     properties:
@@ -424,6 +643,29 @@ definitions:
         type: integer
       setup_user:
         type: string
+    type: object
+  moira.MetricState:
+    properties:
+      event_timestamp:
+        type: integer
+      maintenance:
+        type: integer
+      maintenance_info:
+        $ref: '#/definitions/moira.MaintenanceInfo'
+      state:
+        type: string
+      suppressed:
+        type: boolean
+      suppressed_state:
+        type: string
+      timestamp:
+        type: integer
+      value:
+        type: number
+      values:
+        additionalProperties:
+          type: number
+        type: object
     type: object
   moira.NotificationEvent:
     properties:
@@ -558,6 +800,88 @@ definitions:
       user:
         example: ""
         type: string
+    type: object
+  moira.TriggerCheck:
+    properties:
+      alone_metrics:
+        additionalProperties:
+          type: boolean
+        example:
+          t1: true
+        type: object
+      created_at:
+        type: integer
+      created_by:
+        type: string
+      desc:
+        example: check the size of /var/log
+        type: string
+      error_value:
+        example: 1000
+        type: number
+      expression:
+        example: ""
+        type: string
+      highlights:
+        additionalProperties:
+          type: string
+        type: object
+      id:
+        example: 292516ed-4924-4154-a62c-ebe312431fce
+        type: string
+      is_remote:
+        example: false
+        type: boolean
+      last_check:
+        $ref: '#/definitions/moira.CheckData'
+      mute_new_metrics:
+        example: false
+        type: boolean
+      name:
+        example: Not enough disk space left
+        type: string
+      patterns:
+        example:
+        - ""
+        items:
+          type: string
+        type: array
+      python_expression:
+        type: string
+      sched:
+        $ref: '#/definitions/moira.ScheduleData'
+      tags:
+        example:
+        - server
+        - disk
+        items:
+          type: string
+        type: array
+      targets:
+        example:
+        - devOps.my_server.hdd.freespace_mbytes
+        items:
+          type: string
+        type: array
+      throttling:
+        example: 0
+        type: integer
+      trigger_type:
+        example: rising
+        type: string
+      ttl:
+        example: 600
+        type: integer
+      ttl_state:
+        example: NODATA
+        type: string
+      updated_at:
+        type: integer
+      updated_by:
+        type: string
+      warn_value:
+        example: 5000
+        type: number
     type: object
   moira.TriggerData:
     properties:
@@ -1458,7 +1782,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Team updated successfullym
+          description: Team updated successfully
           schema:
             $ref: '#/definitions/dto.SaveTeamResponse'
         "400":
@@ -1741,6 +2065,185 @@ paths:
       summary: Delete a user from a team
       tags:
       - team
+  /trigger:
+    get:
+      operationId: get-all-triggers
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Fetched all triggers
+          schema:
+            $ref: '#/definitions/dto.TriggersList'
+        "422":
+          description: Render error
+          schema:
+            $ref: '#/definitions/api.ErrorRenderExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Get all triggers
+      tags:
+      - trigger
+    put:
+      consumes:
+      - application/json
+      operationId: create-trigger
+      parameters:
+      - description: Trigger data
+        in: body
+        name: trigger
+        required: true
+        schema:
+          $ref: '#/definitions/dto.Trigger'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Trigger created successfully
+          schema:
+            $ref: '#/definitions/dto.SaveTriggerResponse'
+        "400":
+          description: Bad request from client
+          schema:
+            $ref: '#/definitions/api.ErrorInvalidRequestExample'
+        "422":
+          description: Render error
+          schema:
+            $ref: '#/definitions/api.ErrorRenderExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+        "503":
+          description: Remote server unavailable
+          schema:
+            $ref: '#/definitions/api.ErrorRemoteServerUnavailableExample'
+      summary: Create a new trigger
+      tags:
+      - trigger
+  /trigger/check:
+    put:
+      consumes:
+      - application/json
+      operationId: trigger-check
+      parameters:
+      - description: Trigger data
+        in: body
+        name: trigger
+        required: true
+        schema:
+          $ref: '#/definitions/dto.Trigger'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Validation is done, see response body for validation result
+          schema:
+            $ref: '#/definitions/dto.TriggerCheckResponse'
+        "400":
+          description: Bad request from client
+          schema:
+            $ref: '#/definitions/api.ErrorInvalidRequestExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Validates trigger target
+      tags:
+      - trigger
+  /trigger/pagers/{pagerID}:
+    delete:
+      parameters:
+      - description: Pager ID to delete
+        in: path
+        name: pagerID
+        required: true
+        type: string
+        x-example: d5d98eb3-ee18-4f75-9364-244f67e23b54
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully deleted pager
+          schema:
+            $ref: '#/definitions/dto.TriggersSearchResultDeleteResponse'
+        "404":
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/api.ErrorNotFoundExample'
+        "422":
+          description: Render error
+          schema:
+            $ref: '#/definitions/api.ErrorRenderExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Delete triggers pager
+      tags:
+      - Triggers
+  /trigger/search:
+    get:
+      operationId: search-triggers
+      parameters:
+      - description: Only include problems
+        in: query
+        name: onlyProblems
+        type: boolean
+        x-example: "false"
+      - description: Search text
+        in: query
+        name: text
+        type: string
+        x-example: cpu
+      - description: Page number
+        in: query
+        name: p
+        type: integer
+        x-example: "0"
+      - description: Page size
+        in: query
+        name: size
+        type: integer
+        x-example: "10"
+      - description: Create pager
+        in: query
+        name: createPager
+        type: boolean
+        x-example: "false"
+      - description: Pager ID
+        in: query
+        name: pagerID
+        type: string
+        x-example: d5d98eb3-ee18-4f75-9364-244f67e23b54
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully fetched matching triggers
+          schema:
+            $ref: '#/definitions/dto.TriggersList'
+        "400":
+          description: Bad request from client
+          schema:
+            $ref: '#/definitions/api.ErrorInvalidRequestExample'
+        "404":
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/api.ErrorNotFoundExample'
+        "422":
+          description: Render error
+          schema:
+            $ref: '#/definitions/api.ErrorRenderExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Search triggers. Replaces the deprecated `page` path
+      tags:
+      - trigger
 swagger: "2.0"
 tags:
 - description: APIs for working with Moira contacts. For more details, see <https://moira.readthedocs.io/en/latest/installation/webhooks_scripts.html#contact/>
@@ -1770,5 +2273,7 @@ tags:
   name: team
 - description: APIs for interacting with Moira subscriptions owned by certain team
   name: teamSubscription
-- description: APIs for interacting with Moira contacts owned by certain team.
+- description: APIs for interacting with Moira contacts owned by certain team
   name: teamContact
+- description: APIs for interacting with Moira users
+  name: user

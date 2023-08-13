@@ -45,7 +45,7 @@ func triggers(metricSourceProvider *metricSource.SourceProvider, searcher moira.
 // @success 200 {object} dto.TriggersList "Fetched all triggers"
 // @failure 422 {object} api.ErrorRenderExample "Render error"
 // @failure 500 {object} api.ErrorInternalServerExample "Internal server error"
-// @router /triggers [get]
+// @router /trigger [get]
 func getAllTriggers(writer http.ResponseWriter, request *http.Request) {
 	triggersList, errorResponse := controller.GetAllTriggers(database)
 	if errorResponse != nil {
@@ -71,7 +71,7 @@ func getAllTriggers(writer http.ResponseWriter, request *http.Request) {
 // @failure 422 {object} api.ErrorRenderExample "Render error"
 // @failure 500 {object} api.ErrorInternalServerExample "Internal server error"
 // @failure 503 {object} api.ErrorRemoteServerUnavailableExample "Remote server unavailable"
-// @router /triggers [put]
+// @router /trigger [put]
 func createTrigger(writer http.ResponseWriter, request *http.Request) {
 	trigger, err := getTriggerFromRequest(request)
 	if err != nil {
@@ -162,7 +162,7 @@ func getMetricTTLByTrigger(request *http.Request, trigger *dto.Trigger) time.Dur
 // @success 200 {object} dto.TriggerCheckResponse "Validation is done, see response body for validation result"
 // @failure 400 {object} api.ErrorInvalidRequestExample "Bad request from client"
 // @failure 500 {object} api.ErrorInternalServerExample "Internal server error"
-// @router /triggers/check [put]
+// @router /trigger/check [put]
 func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 	trigger := &dto.Trigger{}
 	response := dto.TriggerCheckResponse{}
@@ -192,7 +192,6 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 // @tags trigger
 // @produce json
 // @param onlyProblems query boolean false "Only include problems" extensions(x-example=false)
-// @param tags query array false "Filter by tags" collectionFormat(multi) extensions(x-example=tags1,tags2)
 // @param text query string false "Search text" extensions(x-example=cpu)
 // @param p query integer false "Page number" extensions(x-example=0)
 // @param size query integer false "Page size" extensions(x-example=10)
@@ -203,7 +202,7 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 // @failure 404 {object} api.ErrorNotFoundExample "Resource not found"
 // @failure 422 {object} api.ErrorRenderExample "Render error"
 // @failure 500 {object} api.ErrorInternalServerExample "Internal server error"
-// @router /triggers/search [get]
+// @router /trigger/search [get]
 func searchTriggers(writer http.ResponseWriter, request *http.Request) {
 	request.ParseForm() //nolint
 	onlyErrors := getOnlyProblemsFlag(request)
@@ -236,7 +235,7 @@ func searchTriggers(writer http.ResponseWriter, request *http.Request) {
 // @failure 404 {object} api.ErrorNotFoundExample "Resource not found"
 // @failure 422 {object} api.ErrorRenderExample "Render error"
 // @failure 500 {object} api.ErrorInternalServerExample "Internal server error"
-// @router /triggers/pagers/{pagerID} [delete]
+// @router /trigger/pagers/{pagerID} [delete]
 func deletePager(writer http.ResponseWriter, request *http.Request) {
 	pagerID := middleware.GetPagerID(request)
 
