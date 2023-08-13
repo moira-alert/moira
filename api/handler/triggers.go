@@ -38,6 +38,14 @@ func triggers(metricSourceProvider *metricSource.SourceProvider, searcher moira.
 	}
 }
 
+// @summary Get all triggers
+// @id get-all-triggers
+// @tags trigger
+// @produce json
+// @success 200 {object} dto.TriggersList "Fetched all triggers"
+// @failure 422 {object} api.ErrorRenderExample "Render error"
+// @failure 500 {object} api.ErrorInternalServerExample "Internal server error"
+// @router /triggers [get]
 func getAllTriggers(writer http.ResponseWriter, request *http.Request) {
 	triggersList, errorResponse := controller.GetAllTriggers(database)
 	if errorResponse != nil {
@@ -51,7 +59,19 @@ func getAllTriggers(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-// createTrigger handler creates moira.Trigger.
+// createTrigger handler creates moira.Trigger
+// @summary Create a new trigger
+// @id create-trigger
+// @tags trigger
+// @accept json
+// @produce json
+// @param trigger body dto.Trigger true "Trigger data"
+// @success 200 {object} dto.SaveTriggerResponse "Trigger created successfully"
+// @failure 400 {object} api.ErrorInvalidRequestExample "Bad request from client"
+// @failure 422 {object} api.ErrorRenderExample "Render error"
+// @failure 500 {object} api.ErrorInternalServerExample "Internal server error"
+// @failure 503 {object} api.ErrorRemoteServerUnavailableExample "Remote server unavailable"
+// @router /triggers [put]
 func createTrigger(writer http.ResponseWriter, request *http.Request) {
 	trigger, err := getTriggerFromRequest(request)
 	if err != nil {
@@ -133,6 +153,16 @@ func getMetricTTLByTrigger(request *http.Request, trigger *dto.Trigger) time.Dur
 	return ttl
 }
 
+// @summary Validates trigger target
+// @id trigger-check
+// @tags trigger
+// @accept json
+// @produce json
+// @param trigger body dto.Trigger true "Trigger data"
+// @success 200 {object} dto.TriggerCheckResponse "Validation is done, see response body for validation result"
+// @failure 400 {object} api.ErrorInvalidRequestExample "Bad request from client"
+// @failure 500 {object} api.ErrorInternalServerExample "Internal server error"
+// @router /triggers/check [put]
 func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 	trigger := &dto.Trigger{}
 	response := dto.TriggerCheckResponse{}
@@ -157,6 +187,23 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 	render.JSON(writer, request, response)
 }
 
+// @summary Search triggers. Replaces the deprecated `page` path
+// @id search-triggers
+// @tags trigger
+// @produce json
+// @param onlyProblems query boolean false "Only include problems" extensions(x-example=false)
+// @param tags query array false "Filter by tags" collectionFormat(multi) extensions(x-example=tags1,tags2)
+// @param text query string false "Search text" extensions(x-example=cpu)
+// @param p query integer false "Page number" extensions(x-example=0)
+// @param size query integer false "Page size" extensions(x-example=10)
+// @param createPager query boolean false "Create pager" extensions(x-example=false)
+// @param pagerID query string false "Pager ID" extensions(x-example=d5d98eb3-ee18-4f75-9364-244f67e23b54)
+// @success 200 {object} dto.TriggersList "Successfully fetched matching triggers"
+// @failure 400 {object} api.ErrorInvalidRequestExample "Bad request from client"
+// @failure 404 {object} api.ErrorNotFoundExample "Resource not found"
+// @failure 422 {object} api.ErrorRenderExample "Render error"
+// @failure 500 {object} api.ErrorInternalServerExample "Internal server error"
+// @router /triggers/search [get]
 func searchTriggers(writer http.ResponseWriter, request *http.Request) {
 	request.ParseForm() //nolint
 	onlyErrors := getOnlyProblemsFlag(request)
@@ -181,6 +228,15 @@ func searchTriggers(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
+// @summary Delete triggers pager
+// @tags Triggers
+// @produce json
+// @param pagerID path string true "Pager ID to delete" extensions(x-example=d5d98eb3-ee18-4f75-9364-244f67e23b54)
+// @success 200 {object} dto.TriggersSearchResultDeleteResponse "Successfully deleted pager"
+// @failure 404 {object} api.ErrorNotFoundExample "Resource not found"
+// @failure 422 {object} api.ErrorRenderExample "Render error"
+// @failure 500 {object} api.ErrorInternalServerExample "Internal server error"
+// @router /triggers/pagers/{pagerID} [delete]
 func deletePager(writer http.ResponseWriter, request *http.Request) {
 	pagerID := middleware.GetPagerID(request)
 

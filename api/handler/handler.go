@@ -79,7 +79,10 @@ func NewHandler(db moira.Database, log moira.Logger, index moira.Searcher, confi
 	//	@tag.description	APIs for interacting with Moira subscriptions owned by certain team
 	//
 	//	@tag.name			teamContact
-	//	@tag.description	APIs for interacting with Moira contacts owned by certain team.
+	//	@tag.description	APIs for interacting with Moira contacts owned by certain team
+	//
+	//	@tag.name			user
+	//	@tag.description	APIs for interacting with Moira users
 	router.Route("/api", func(router chi.Router) {
 		router.Use(moiramiddle.DatabaseContext(database))
 		router.Get("/config", getWebConfig(webConfigContent))

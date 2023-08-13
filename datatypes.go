@@ -255,23 +255,23 @@ const (
 
 // Trigger represents trigger data object
 type Trigger struct {
-	ID               string          `json:"id"`
-	Name             string          `json:"name"`
-	Desc             *string         `json:"desc,omitempty"`
-	Targets          []string        `json:"targets"`
-	WarnValue        *float64        `json:"warn_value"`
-	ErrorValue       *float64        `json:"error_value"`
-	TriggerType      string          `json:"trigger_type"`
-	Tags             []string        `json:"tags"`
-	TTLState         *TTLState       `json:"ttl_state,omitempty"`
-	TTL              int64           `json:"ttl,omitempty"`
+	ID               string          `json:"id" example:"292516ed-4924-4154-a62c-ebe312431fce"`
+	Name             string          `json:"name" example:"Not enough disk space left"`
+	Desc             *string         `json:"desc,omitempty" example:"check the size of /var/log"`
+	Targets          []string        `json:"targets" example:"devOps.my_server.hdd.freespace_mbytes"`
+	WarnValue        *float64        `json:"warn_value" example:"5000"`
+	ErrorValue       *float64        `json:"error_value" example:"1000"`
+	TriggerType      string          `json:"trigger_type" example:"rising"`
+	Tags             []string        `json:"tags" example:"server,disk"`
+	TTLState         *TTLState       `json:"ttl_state,omitempty" example:"NODATA"`
+	TTL              int64           `json:"ttl,omitempty" example:"600"`
 	Schedule         *ScheduleData   `json:"sched,omitempty"`
-	Expression       *string         `json:"expression,omitempty"`
+	Expression       *string         `json:"expression,omitempty" example:""`
 	PythonExpression *string         `json:"python_expression,omitempty"`
-	Patterns         []string        `json:"patterns"`
-	IsRemote         bool            `json:"is_remote"`
-	MuteNewMetrics   bool            `json:"mute_new_metrics"`
-	AloneMetrics     map[string]bool `json:"alone_metrics"`
+	Patterns         []string        `json:"patterns" example:""`
+	IsRemote         bool            `json:"is_remote" example:"false"`
+	MuteNewMetrics   bool            `json:"mute_new_metrics" example:"false"`
+	AloneMetrics     map[string]bool `json:"alone_metrics" example:"t1:true"`
 	CreatedAt        *int64          `json:"created_at"`
 	UpdatedAt        *int64          `json:"updated_at"`
 	CreatedBy        string          `json:"created_by"`
@@ -281,7 +281,7 @@ type Trigger struct {
 // TriggerCheck represents trigger data with last check data and check timestamp
 type TriggerCheck struct {
 	Trigger
-	Throttling int64             `json:"throttling"`
+	Throttling int64             `json:"throttling" example:"0"`
 	LastCheck  CheckData         `json:"last_check"`
 	Highlights map[string]string `json:"highlights"`
 }

@@ -36,7 +36,7 @@ func (*TriggersList) Render(http.ResponseWriter, *http.Request) error {
 
 type Trigger struct {
 	TriggerModel
-	Throttling int64 `json:"throttling"`
+	Throttling int64 `json:"throttling" example:"0"`
 }
 
 // TriggerModel is moira.Trigger api representation
@@ -397,8 +397,8 @@ func (*ThrottlingResponse) Render(http.ResponseWriter, *http.Request) error {
 }
 
 type SaveTriggerResponse struct {
-	ID          string               `json:"id"`
-	Message     string               `json:"message"`
+	ID          string               `json:"id" example:"trigger_id"`
+	Message     string               `json:"message" example:"trigger created"`
 	CheckResult TriggerCheckResponse `json:"checkResult,omitempty"`
 }
 
@@ -426,7 +426,7 @@ type TriggerDump struct {
 }
 
 type TriggersSearchResultDeleteResponse struct {
-	PagerID string `json:"pager_id"`
+	PagerID string `json:"pager_id" example:"292516ed-4924-4154-a62c-ebe312431fce"`
 }
 
 func (TriggersSearchResultDeleteResponse) Render(http.ResponseWriter, *http.Request) error {

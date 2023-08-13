@@ -114,6 +114,6 @@ type ErrorForbiddenExample struct {
 }
 
 type ErrorRemoteServerUnavailableExample struct {
-	StatusText string `json:"status" example:"Remote server unavailable."`
+	StatusText string `json:"status" example:"Remote server unavailable"`
 	ErrorText  string `json:"error" example:"Remote server error, please contact administrator"`
 }
