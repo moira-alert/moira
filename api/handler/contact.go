@@ -132,7 +132,7 @@ func updateContact(writer http.ResponseWriter, request *http.Request) {
 // @produce	json
 // @tags		contact
 // @param x-webauth-user header string false "User session token"
-// @param		contactID	path	string	true	"ID of the contact to remove"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c) 
+// @param		contactID	path	string	true	"ID of the contact to remove"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
 // @success	200			"Contact has been deleted"
 // @failure	400			{object}	api.ErrorInvalidRequestExample	"Bad request from client"
 // @failure	403			{object}	api.ErrorForbiddenExample		"Forbidden"
