@@ -50,6 +50,7 @@ func getAllContacts(writer http.ResponseWriter, request *http.Request) {
 // @ID			create-new-contact
 // @Accept		json
 // @Produce	json
+// @param x-webauth-user header string false "User session token"
 // @Param		contact	body		dto.Contact						true	"Contact data"
 // @Success	200		{object}	dto.Contact						"Contact created successfully"
 // @Failure	400		{object}	api.ErrorInvalidRequestExample	"Bad request from client"
@@ -95,6 +96,7 @@ func contactFilter(next http.Handler) http.Handler {
 // @ID			update-contact
 // @Accept		json
 // @Produce	json
+// @param x-webauth-user header string false "User session token"
 // @Param		contactId	path		string							true	"ID of the contact to update"
 // @Param		contact		body		dto.Contact						true	"Updated contact data"
 // @Success	200			{object}	dto.Contact						"Updated contact"
@@ -127,6 +129,7 @@ func updateContact(writer http.ResponseWriter, request *http.Request) {
 // @ID			remove-contact
 // @Accept		json
 // @Produce	json
+// @param x-webauth-user header string false "User session token"
 // @Param		contactId	path	string	true	"ID of the contact to remove"	extensions(x-example=bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
 // @Success	200			"Contact has been deleted"
 // @Failure	400			{object}	api.ErrorInvalidRequestExample	"Bad request from client"
@@ -147,6 +150,7 @@ func removeContact(writer http.ResponseWriter, request *http.Request) {
 // @ID			send-test-contact-notification
 // @Accept		json
 // @Produce	json
+// @param x-webauth-user header string false "User session token"
 // @Param		contactId	path	string	true	"The ID of the target contact"	extensions(x-example=bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
 // @Success	200			"Test successful"
 // @Failure	403			{object}	api.ErrorForbiddenExample		"Forbidden"

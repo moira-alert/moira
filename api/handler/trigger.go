@@ -34,6 +34,7 @@ func trigger(router chi.Router) {
 // @id update-trigger
 // @tags trigger
 // @produce json
+// @param x-webauth-user header string false "User session token"
 // @param triggerID path string true "Trigger ID" extensions(x-example=5A8AF369-86D2-44DD-B514-D47995ED6AF7)
 // @param body body dto.Trigger true "Trigger data"
 // @success 200 {object} dto.SaveTriggerResponse "Updated trigger"

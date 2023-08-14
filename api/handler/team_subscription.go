@@ -21,6 +21,7 @@ func teamSubscription(router chi.Router) {
 // @tags		teamSubscription
 // @accept		json
 // @produce	json
+// @param x-webauth-user header string false "User session token"
 // @param		teamID			path		string							true	"The ID of team"	extensions(x-example=d5d98eb3-ee18-4f75-9364-244f67e23b54)
 // @param		subscription	body		dto.Subscription				true	"Team subscription data"
 // @success	200				{object}	dto.Subscription				"Team subscription created successfully"

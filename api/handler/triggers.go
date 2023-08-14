@@ -65,6 +65,7 @@ func getAllTriggers(writer http.ResponseWriter, request *http.Request) {
 // @tags trigger
 // @accept json
 // @produce json
+// @param x-webauth-user header string false "User session token"
 // @param trigger body dto.Trigger true "Trigger data"
 // @success 200 {object} dto.SaveTriggerResponse "Trigger created successfully"
 // @failure 400 {object} api.ErrorInvalidRequestExample "Bad request from client"

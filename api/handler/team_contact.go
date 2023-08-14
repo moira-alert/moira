@@ -20,6 +20,7 @@ func teamContact(router chi.Router) {
 // @tags		teamContact
 // @accept		json
 // @produce	json
+// @param x-webauth-user header string false "User session token"
 // @param		teamID	path		string							true	"The ID of team"	extensions(x-example=d5d98eb3-ee18-4f75-9364-244f67e23b54)
 // @param		contact	body		dto.Contact						true	"Team contact data"
 // @success	200		{object}	dto.Contact						"Team contact created successfully"

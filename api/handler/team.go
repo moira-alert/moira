@@ -51,6 +51,7 @@ func usersFilterForTeams(next http.Handler) http.Handler {
 // @tags		team
 // @accept		json
 // @produce	json
+// @param x-webauth-user header string false "User session token"
 // @param		team	body		dto.TeamModel					true	"Team data"
 // @success	200		{object}	dto.SaveTeamResponse			"Team created successfully"
 // @failure	400		{object}	api.ErrorInvalidRequestExample	"Bad request from client"
@@ -80,6 +81,7 @@ func createTeam(writer http.ResponseWriter, request *http.Request) {
 // @id			get-all-teams
 // @tags		team
 // @produce	json
+// @param x-webauth-user header string false "User session token"
 // @success	200	{object}	dto.UserTeams					"Teams fetched successfully"
 // @failure	422	{object}	api.ErrorRenderExample			"Render error"
 // @failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
@@ -103,6 +105,7 @@ func getAllTeams(writer http.ResponseWriter, request *http.Request) {
 // @tags		team
 // @param		teamID	path	string	true	"ID of the team"	extensions(x-example=d5d98eb3-ee18-4f75-9364-244f67e23b54)
 // @produce	json
+// @param x-webauth-user header string false "User session token"
 // @success	200	{object}	dto.TeamModel					"Team updated successfully"
 // @failure	403	{object}	api.ErrorForbiddenExample		"Forbidden"
 // @failure	404	{object}	api.ErrorNotFoundExample		"Resource not found"
@@ -130,6 +133,7 @@ func getTeam(writer http.ResponseWriter, request *http.Request) {
 // @param		teamID	path	string	true	"ID of the team"	extensions(x-example=d5d98eb3-ee18-4f75-9364-244f67e23b54)
 // @accept		json
 // @produce	json
+// @param x-webauth-user header string false "User session token"
 // @param		team	body		dto.TeamModel					true	"Updated team data"
 // @success	200		{object}	dto.SaveTeamResponse			"Team updated successfully"
 // @failure	400		{object}	api.ErrorInvalidRequestExample	"Bad request from client"
@@ -162,6 +166,7 @@ func updateTeam(writer http.ResponseWriter, request *http.Request) {
 // @summary	Delete a team
 // @id			delete-team
 // @tags		team
+// @param x-webauth-user header string false "User session token"
 // @param		teamID	path		string							true	"ID of the team"	extensions(x-example=d5d98eb3-ee18-4f75-9364-244f67e23b54)
 // @success	200		{object}	dto.SaveTeamResponse			"Team has been successfully deleted"
 // @failure	400		{object}	api.ErrorInvalidRequestExample	"Bad request from client"
@@ -188,8 +193,9 @@ func deleteTeam(writer http.ResponseWriter, request *http.Request) {
 // @summary	Get users of a team
 // @id			get-team-users
 // @tags		team
-// @param		teamID	path	string	true	"ID of the team"	extensions(x-example=d5d98eb3-ee18-4f75-9364-244f67e23b54)
 // @produce	json
+// @param x-webauth-user header string false "User session token"
+// @param		teamID	path	string	true	"ID of the team"	extensions(x-example=d5d98eb3-ee18-4f75-9364-244f67e23b54)
 // @success	200	{object}	dto.TeamMembers					"Users fetched successfully"
 // @failure	403	{object}	api.ErrorForbiddenExample		"Forbidden"
 // @failure	404	{object}	api.ErrorNotFoundExample		"Resource not found"
@@ -214,9 +220,10 @@ func getTeamUsers(writer http.ResponseWriter, request *http.Request) {
 // @summary	Set users of a team
 // @id			set-team-users
 // @tags		team
-// @param		teamID	path	string	true	"ID of the team"	extensions(x-example=d5d98eb3-ee18-4f75-9364-244f67e23b54)
 // @accept		json
 // @produce	json
+// @param x-webauth-user header string false "User session token"
+// @param		teamID	path	string	true	"ID of the team"	extensions(x-example=d5d98eb3-ee18-4f75-9364-244f67e23b54)
 // @param		usernames	body		dto.TeamMembers					true	"Usernames to set as team members"
 // @success	200			{object}	dto.TeamMembers					"Team updated successfully"
 // @failure	400			{object}	api.ErrorInvalidRequestExample	"Bad request from client"
@@ -250,9 +257,10 @@ func setTeamUsers(writer http.ResponseWriter, request *http.Request) {
 // @summary	Add users to a team
 // @id			add-team-users
 // @tags		team
-// @param		teamID	path	string	true	"ID of the team"	extensions(x-example=d5d98eb3-ee18-4f75-9364-244f67e23b54)
 // @accept		json
 // @produce	json
+// @param x-webauth-user header string false "User session token"
+// @param		teamID	path	string	true	"ID of the team"	extensions(x-example=d5d98eb3-ee18-4f75-9364-244f67e23b54)
 // @param		usernames	body		dto.TeamMembers					true	"Usernames to add to the team"
 // @success	200			{object}	dto.TeamMembers					"Team updated successfully"
 // @failure	400			{object}	api.ErrorInvalidRequestExample	"Bad request from client"
@@ -285,6 +293,8 @@ func addTeamUsers(writer http.ResponseWriter, request *http.Request) {
 // @summary	Delete a user from a team
 // @id			delete-team-user
 // @tags		team
+// @produce	json
+// @param x-webauth-user header string false "User session token"
 // @param		teamID		path		string							true	"ID of the team"										extensions(x-example=d5d98eb3-ee18-4f75-9364-244f67e23b54)
 // @param		teamUserID	path		string							true	"User login in methods related to teams manipulation"	extensions(x-example=anonymous)
 // @success	200			{object}	dto.TeamMembers					"Team updated successfully"
@@ -313,8 +323,9 @@ func deleteTeamUser(writer http.ResponseWriter, request *http.Request) {
 // @summary	Get team settings
 // @id			get-team-settings
 // @tags		team
-// @param		teamID	path	string	true	"ID of the team"
 // @produce	json
+// @param x-webauth-user header string false "User session token"
+// @param		teamID	path	string	true	"ID of the team"
 // @success	200	{object}	dto.TeamSettings				"Team settings"
 // @failure	403	{object}	api.ErrorForbiddenExample		"Forbidden"
 // @failure	404	{object}	api.ErrorNotFoundExample		"Resource not found"
