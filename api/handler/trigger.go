@@ -175,7 +175,7 @@ func checkingTemplateFilling(request *http.Request, trigger dto.Trigger) *api.Er
 // @tags trigger
 // @produce json
 // @param triggerID path string true "Trigger ID" extensions(x-example=5A8AF369-86D2-44DD-B514-D47995ED6AF7)
-// @success 200 {object} dto.TriggerCheck "Trigger state fetched successfull"
+// @success 200 {object} dto.TriggerCheck "Trigger state fetched successful"
 // @failure 404 {object} api.ErrorNotFoundExample "Resource not found"
 // @failure 422 {object} api.ErrorRenderExample "Render error"
 // @failure 500 {object} api.ErrorInternalServerExample "Internal server error"

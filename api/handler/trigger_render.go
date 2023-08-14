@@ -17,6 +17,24 @@ import (
 	"github.com/moira-alert/moira/plotting"
 )
 
+// renderTrigger generates and renders a plot of target metrics for a trigger.
+//
+// @summary Render trigger metrics plot
+// @id render-trigger-metrics
+// @tags trigger
+// @produce png
+// @param triggerID path string true "Trigger ID" default(5A8AF369-86D2-44DD-B514-D47995ED6AF7) format(uuid)
+// @param targetName query string true "Target metric name" default(t1)
+// @param from query string true "Start time for metrics retrieval" format(date-time) default(-1hour)
+// @param to query string true "End time for metrics retrieval" format(date-time) default(now)
+// @param timezone query string false "Timezone for rendering" default(UTC)
+// @param theme query string false "Plot theme" default(light)
+// @param realtime query string false "Fetch real-time data" default(false)
+// @success 200 "Rendered plot image successfully"
+// @failure 400 {object} api.ErrorInvalidRequestExample "Bad request from client"
+// @failure 404 {object} api.ErrorNotFoundExample "Resource not found"
+// @failure 500 {object} api.ErrorInternalServerExample "Internal server error"
+// @router /trigger/{triggerID}/render [get]
 func renderTrigger(writer http.ResponseWriter, request *http.Request) {
 	sourceProvider, targetName, from, to, triggerID, fetchRealtimeData, err := getEvaluationParameters(request)
 	if err != nil {

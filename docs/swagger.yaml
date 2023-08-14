@@ -512,6 +512,14 @@ definitions:
         example: 1594225165
         type: integer
     type: object
+  dto.TriggerMetrics:
+    additionalProperties:
+      additionalProperties:
+        items:
+          $ref: '#/definitions/moira.MetricValue'
+        type: array
+      type: object
+    type: object
   dto.TriggerModel:
     properties:
       alone_metrics:
@@ -2438,6 +2446,189 @@ paths:
       summary: Get trigger dump
       tags:
       - trigger
+  /trigger/{triggerID}/metrics:
+    delete:
+      operationId: delete-trigger-metric
+      parameters:
+      - default: 5A8AF369-86D2-44DD-B514-D47995ED6AF7
+        description: Trigger ID
+        format: uuid
+        in: path
+        name: triggerID
+        required: true
+        type: string
+      - default: DevOps.my_server.hdd.freespace_mbytes
+        description: Name of the target metric
+        in: query
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Trigger metric deleted successfully
+        "400":
+          description: Bad request from client
+          schema:
+            $ref: '#/definitions/api.ErrorInvalidRequestExample'
+        "404":
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/api.ErrorNotFoundExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Delete metric from last check and all trigger pattern metrics
+      tags:
+      - trigger
+    get:
+      operationId: get-trigger-metrics
+      parameters:
+      - default: 5A8AF369-86D2-44DD-B514-D47995ED6AF7
+        description: Trigger ID
+        format: uuid
+        in: path
+        name: triggerID
+        required: true
+        type: string
+      - default: -10minutes
+        description: Start time for metrics retrieval
+        format: date-time
+        in: query
+        name: from
+        type: string
+      - default: now
+        description: End time for metrics retrieval
+        format: date-time
+        in: query
+        name: to
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Trigger metrics retrieved successfully
+          schema:
+            $ref: '#/definitions/dto.TriggerMetrics'
+        "400":
+          description: Bad request from client
+          schema:
+            $ref: '#/definitions/api.ErrorInvalidRequestExample'
+        "404":
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/api.ErrorNotFoundExample'
+        "422":
+          description: Render error
+          schema:
+            $ref: '#/definitions/api.ErrorRenderExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Get metrics associated with certain trigger
+      tags:
+      - trigger
+  /trigger/{triggerID}/metrics/nodata:
+    delete:
+      operationId: delete-trigger-nodata-metrics
+      parameters:
+      - default: 5A8AF369-86D2-44DD-B514-D47995ED6AF7
+        description: Trigger ID
+        format: uuid
+        in: path
+        name: triggerID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Trigger nodata metrics deleted successfully
+        "400":
+          description: Bad request from client
+          schema:
+            $ref: '#/definitions/api.ErrorInvalidRequestExample'
+        "404":
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/api.ErrorNotFoundExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Delete all metrics from last data which are in NODATA state. It also
+        deletes all trigger patterns of those metrics
+      tags:
+      - trigger
+  /trigger/{triggerID}/render:
+    get:
+      operationId: render-trigger-metrics
+      parameters:
+      - default: 5A8AF369-86D2-44DD-B514-D47995ED6AF7
+        description: Trigger ID
+        format: uuid
+        in: path
+        name: triggerID
+        required: true
+        type: string
+      - default: t1
+        description: Target metric name
+        in: query
+        name: targetName
+        required: true
+        type: string
+      - default: -1hour
+        description: Start time for metrics retrieval
+        format: date-time
+        in: query
+        name: from
+        required: true
+        type: string
+      - default: now
+        description: End time for metrics retrieval
+        format: date-time
+        in: query
+        name: to
+        required: true
+        type: string
+      - default: UTC
+        description: Timezone for rendering
+        in: query
+        name: timezone
+        type: string
+      - default: light
+        description: Plot theme
+        in: query
+        name: theme
+        type: string
+      - default: "false"
+        description: Fetch real-time data
+        in: query
+        name: realtime
+        type: string
+      produces:
+      - image/png
+      responses:
+        "200":
+          description: Rendered plot image successfully
+        "400":
+          description: Bad request from client
+          schema:
+            $ref: '#/definitions/api.ErrorInvalidRequestExample'
+        "404":
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/api.ErrorNotFoundExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Render trigger metrics plot
+      tags:
+      - trigger
   /trigger/{triggerID}/setMaintenance:
     put:
       operationId: set-trigger-maintenance
@@ -2492,7 +2683,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Trigger state fetched successfull
+          description: Trigger state fetched successful
           schema:
             $ref: '#/definitions/dto.TriggerCheck'
         "404":

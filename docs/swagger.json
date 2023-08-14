@@ -2173,6 +2173,268 @@
                 }
             }
         },
+        "/trigger/{triggerID}/metrics": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "trigger"
+                ],
+                "summary": "Get metrics associated with certain trigger",
+                "operationId": "get-trigger-metrics",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "default": "5A8AF369-86D2-44DD-B514-D47995ED6AF7",
+                        "description": "Trigger ID",
+                        "name": "triggerID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "format": "date-time",
+                        "default": "-10minutes",
+                        "description": "Start time for metrics retrieval",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "format": "date-time",
+                        "default": "now",
+                        "description": "End time for metrics retrieval",
+                        "name": "to",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Trigger metrics retrieved successfully",
+                        "schema": {
+                            "$ref": "#/definitions/dto.TriggerMetrics"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request from client",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorInvalidRequestExample"
+                        }
+                    },
+                    "404": {
+                        "description": "Resource not found",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorNotFoundExample"
+                        }
+                    },
+                    "422": {
+                        "description": "Render error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorRenderExample"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorInternalServerExample"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "trigger"
+                ],
+                "summary": "Delete metric from last check and all trigger pattern metrics",
+                "operationId": "delete-trigger-metric",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "default": "5A8AF369-86D2-44DD-B514-D47995ED6AF7",
+                        "description": "Trigger ID",
+                        "name": "triggerID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "DevOps.my_server.hdd.freespace_mbytes",
+                        "description": "Name of the target metric",
+                        "name": "name",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Trigger metric deleted successfully"
+                    },
+                    "400": {
+                        "description": "Bad request from client",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorInvalidRequestExample"
+                        }
+                    },
+                    "404": {
+                        "description": "Resource not found",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorNotFoundExample"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorInternalServerExample"
+                        }
+                    }
+                }
+            }
+        },
+        "/trigger/{triggerID}/metrics/nodata": {
+            "delete": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "trigger"
+                ],
+                "summary": "Delete all metrics from last data which are in NODATA state. It also deletes all trigger patterns of those metrics",
+                "operationId": "delete-trigger-nodata-metrics",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "default": "5A8AF369-86D2-44DD-B514-D47995ED6AF7",
+                        "description": "Trigger ID",
+                        "name": "triggerID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Trigger nodata metrics deleted successfully"
+                    },
+                    "400": {
+                        "description": "Bad request from client",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorInvalidRequestExample"
+                        }
+                    },
+                    "404": {
+                        "description": "Resource not found",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorNotFoundExample"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorInternalServerExample"
+                        }
+                    }
+                }
+            }
+        },
+        "/trigger/{triggerID}/render": {
+            "get": {
+                "produces": [
+                    "image/png"
+                ],
+                "tags": [
+                    "trigger"
+                ],
+                "summary": "Render trigger metrics plot",
+                "operationId": "render-trigger-metrics",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "default": "5A8AF369-86D2-44DD-B514-D47995ED6AF7",
+                        "description": "Trigger ID",
+                        "name": "triggerID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "t1",
+                        "description": "Target metric name",
+                        "name": "targetName",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "format": "date-time",
+                        "default": "-1hour",
+                        "description": "Start time for metrics retrieval",
+                        "name": "from",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "format": "date-time",
+                        "default": "now",
+                        "description": "End time for metrics retrieval",
+                        "name": "to",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "UTC",
+                        "description": "Timezone for rendering",
+                        "name": "timezone",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "light",
+                        "description": "Plot theme",
+                        "name": "theme",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "false",
+                        "description": "Fetch real-time data",
+                        "name": "realtime",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Rendered plot image successfully"
+                    },
+                    "400": {
+                        "description": "Bad request from client",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorInvalidRequestExample"
+                        }
+                    },
+                    "404": {
+                        "description": "Resource not found",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorNotFoundExample"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorInternalServerExample"
+                        }
+                    }
+                }
+            }
+        },
         "/trigger/{triggerID}/setMaintenance": {
             "put": {
                 "produces": [
@@ -2255,7 +2517,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Trigger state fetched successfull",
+                        "description": "Trigger state fetched successful",
                         "schema": {
                             "$ref": "#/definitions/dto.TriggerCheck"
                         }
@@ -3088,6 +3350,18 @@
                 "trigger": {
                     "type": "integer",
                     "example": 1594225165
+                }
+            }
+        },
+        "dto.TriggerMetrics": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "object",
+                "additionalProperties": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/moira.MetricValue"
+                    }
                 }
             }
         },

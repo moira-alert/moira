@@ -20,6 +20,19 @@ func triggerMetrics(router chi.Router) {
 	router.Delete("/nodata", deleteTriggerNodataMetrics)
 }
 
+// @summary Get metrics associated with certain trigger
+// @id get-trigger-metrics
+// @tags trigger
+// @produce json
+// @param triggerID path string true "Trigger ID" default(5A8AF369-86D2-44DD-B514-D47995ED6AF7) format(uuid)
+// @param from query string false "Start time for metrics retrieval" default(-10minutes) format(date-time)
+// @param to query string false "End time for metrics retrieval" default(now) format(date-time)
+// @success 200 {object} dto.TriggerMetrics "Trigger metrics retrieved successfully"
+// @failure 400 {object} api.ErrorInvalidRequestExample "Bad request from client"
+// @failure 404 {object} api.ErrorNotFoundExample "Resource not found"
+// @failure 422 {object} api.ErrorRenderExample "Render error"
+// @failure 500 {object} api.ErrorInternalServerExample "Internal server error"
+// @router /trigger/{triggerID}/metrics [get]
 func getTriggerMetrics(writer http.ResponseWriter, request *http.Request) {
 	metricSourceProvider := middleware.GetTriggerTargetsSourceProvider(request)
 	triggerID := middleware.GetTriggerID(request)
@@ -45,6 +58,19 @@ func getTriggerMetrics(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
+// deleteTriggerMetric deletes a specific metric associated with a trigger
+//
+// @summary Delete metric from last check and all trigger pattern metrics
+// @id delete-trigger-metric
+// @tags trigger
+// @produce json
+// @param triggerID path string true "Trigger ID" default(5A8AF369-86D2-44DD-B514-D47995ED6AF7) format(uuid)
+// @param name query string true "Name of the target metric" default(DevOps.my_server.hdd.freespace_mbytes)
+// @success 200 "Trigger metric deleted successfully"
+// @failure 400 {object} api.ErrorInvalidRequestExample "Bad request from client"
+// @failure 404 {object} api.ErrorNotFoundExample "Resource not found"
+// @failure 500 {object} api.ErrorInternalServerExample "Internal server error"
+// @router /trigger/{triggerID}/metrics [delete]
 func deleteTriggerMetric(writer http.ResponseWriter, request *http.Request) {
 	triggerID := middleware.GetTriggerID(request)
 	metricName := request.URL.Query().Get("name")
@@ -53,6 +79,18 @@ func deleteTriggerMetric(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
+// deleteTriggerNodataMetrics deletes all nodata metrics associated with a trigger
+//
+// @summary Delete all metrics from last data which are in NODATA state. It also deletes all trigger patterns of those metrics
+// @id delete-trigger-nodata-metrics
+// @tags trigger
+// @produce json
+// @param triggerID path string true "Trigger ID" default(5A8AF369-86D2-44DD-B514-D47995ED6AF7) format(uuid)
+// @success 200 "Trigger nodata metrics deleted successfully"
+// @failure 400 {object} api.ErrorInvalidRequestExample "Bad request from client"
+// @failure 404 {object} api.ErrorNotFoundExample "Resource not found"
+// @failure 500 {object} api.ErrorInternalServerExample "Internal server error"
+// @router /trigger/{triggerID}/metrics/nodata [delete]
 func deleteTriggerNodataMetrics(writer http.ResponseWriter, request *http.Request) {
 	triggerID := middleware.GetTriggerID(request)
 	if err := controller.DeleteTriggerNodataMetrics(database, triggerID); err != nil {
