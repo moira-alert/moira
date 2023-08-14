@@ -29,7 +29,7 @@ func teamSubscription(router chi.Router) {
 // @failure	404				{object}	api.ErrorNotFoundExample		"Resource not found"
 // @failure	422				{object}	api.ErrorRenderExample			"Render error"
 // @failure	500				{object}	api.ErrorInternalServerExample	"Internal server error"
-// @router		/team/{teamID}/subscriptions [post]
+// @router		/teams/{teamID}/subscriptions [post]
 func createTeamSubscription(writer http.ResponseWriter, request *http.Request) {
 	subscription := &dto.Subscription{}
 	if err := render.Bind(request, subscription); err != nil {

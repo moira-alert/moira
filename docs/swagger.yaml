@@ -637,6 +637,26 @@ definitions:
         example: 292516ed-4924-4154-a62c-ebe312431fce
         type: string
     type: object
+  dto.User:
+    properties:
+      login:
+        example: john
+        type: string
+    type: object
+  dto.UserSettings:
+    properties:
+      contacts:
+        items:
+          $ref: '#/definitions/moira.ContactData'
+        type: array
+      login:
+        example: john
+        type: string
+      subscriptions:
+        items:
+          $ref: '#/definitions/moira.SubscriptionData'
+        type: array
+    type: object
   dto.UserTeams:
     properties:
       teams:
@@ -2873,6 +2893,54 @@ paths:
       summary: Search triggers. Replaces the deprecated `page` path
       tags:
       - trigger
+  /user:
+    get:
+      operationId: get-user-name
+      parameters:
+      - description: User session token
+        in: header
+        name: x-webauth-user
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User name fetched successfully
+          schema:
+            $ref: '#/definitions/dto.User'
+        "422":
+          description: Render error
+          schema:
+            $ref: '#/definitions/api.ErrorRenderExample'
+      summary: Gets the username of the authenticated user if it is available
+      tags:
+      - user
+  /user/settings:
+    get:
+      operationId: get-user-settings
+      parameters:
+      - description: User session token
+        in: header
+        name: x-webauth-user
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Settings fetched successfully
+          schema:
+            $ref: '#/definitions/dto.UserSettings'
+        "422":
+          description: Render error
+          schema:
+            $ref: '#/definitions/api.ErrorRenderExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Get the user's contacts and subscriptions
+      tags:
+      - user
 swagger: "2.0"
 tags:
 - description: APIs for working with Moira contacts. For more details, see <https://moira.readthedocs.io/en/latest/installation/webhooks_scripts.html#contact/>

@@ -2626,6 +2626,80 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/user": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Gets the username of the authenticated user if it is available",
+                "operationId": "get-user-name",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User session token",
+                        "name": "x-webauth-user",
+                        "in": "header"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "User name fetched successfully",
+                        "schema": {
+                            "$ref": "#/definitions/dto.User"
+                        }
+                    },
+                    "422": {
+                        "description": "Render error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorRenderExample"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/settings": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Get the user's contacts and subscriptions",
+                "operationId": "get-user-settings",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User session token",
+                        "name": "x-webauth-user",
+                        "in": "header"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Settings fetched successfully",
+                        "schema": {
+                            "$ref": "#/definitions/dto.UserSettings"
+                        }
+                    },
+                    "422": {
+                        "description": "Render error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorRenderExample"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorInternalServerExample"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -3527,6 +3601,36 @@ const docTemplate = `{
                 "pager_id": {
                     "type": "string",
                     "example": "292516ed-4924-4154-a62c-ebe312431fce"
+                }
+            }
+        },
+        "dto.User": {
+            "type": "object",
+            "properties": {
+                "login": {
+                    "type": "string",
+                    "example": "john"
+                }
+            }
+        },
+        "dto.UserSettings": {
+            "type": "object",
+            "properties": {
+                "contacts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/moira.ContactData"
+                    }
+                },
+                "login": {
+                    "type": "string",
+                    "example": "john"
+                },
+                "subscriptions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/moira.SubscriptionData"
+                    }
                 }
             }
         },
