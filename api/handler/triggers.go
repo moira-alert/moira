@@ -192,12 +192,12 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 // @id search-triggers
 // @tags trigger
 // @produce json
-// @param onlyProblems query boolean false "Only include problems" extensions(x-example=false)
-// @param text query string false "Search text" extensions(x-example=cpu)
-// @param p query integer false "Page number" extensions(x-example=0)
-// @param size query integer false "Page size" extensions(x-example=10)
-// @param createPager query boolean false "Create pager" extensions(x-example=false)
-// @param pagerID query string false "Pager ID" extensions(x-example=d5d98eb3-ee18-4f75-9364-244f67e23b54)
+// @param onlyProblems query boolean false "Only include problems" default(false)
+// @param text query string false "Search text" default(cpu)
+// @param p query integer false "Page number" default(0)
+// @param size query integer false "Page size" default(10)
+// @param createPager query boolean false "Create pager" default(false)
+// @param pagerID query string false "Pager ID" default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
 // @success 200 {object} dto.TriggersList "Successfully fetched matching triggers"
 // @failure 400 {object} api.ErrorInvalidRequestExample "Bad request from client"
 // @failure 404 {object} api.ErrorNotFoundExample "Resource not found"
@@ -231,7 +231,7 @@ func searchTriggers(writer http.ResponseWriter, request *http.Request) {
 // @summary Delete triggers pager
 // @tags trigger
 // @produce json
-// @param pagerID path string true "Pager ID to delete" extensions(x-example=d5d98eb3-ee18-4f75-9364-244f67e23b54)
+// @param pagerID path string true "Pager ID to delete" default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
 // @success 200 {object} dto.TriggersSearchResultDeleteResponse "Successfully deleted pager"
 // @failure 404 {object} api.ErrorNotFoundExample "Resource not found"
 // @failure 422 {object} api.ErrorRenderExample "Render error"

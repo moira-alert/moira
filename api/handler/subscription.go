@@ -105,7 +105,7 @@ func subscriptionFilter(next http.Handler) http.Handler {
 // @accept		json
 // @produce	json
 // @param x-webauth-user header string false "User session token"
-// @param		subscriptionId	path		string							true	"ID of the subscription to update"	extensions(x-example=bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+// @param		subscriptionID	path		string							true	"ID of the subscription to update"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
 // @param		subscription	body		dto.Subscription				true	"Updated subscription data"
 // @success	200				{object}	dto.Subscription				"Subscription updated successfully"
 // @failure	400				{object}	api.ErrorInvalidRequestExample	"Bad request from client"
@@ -113,7 +113,7 @@ func subscriptionFilter(next http.Handler) http.Handler {
 // @failure	404				{object}	api.ErrorNotFoundExample		"Resource not found"
 // @failure	422				{object}	api.ErrorRenderExample			"Render error"
 // @failure	500				{object}	api.ErrorInternalServerExample	"Internal server error"
-// @router		/subscription/{subscriptionId} [put]
+// @router		/subscription/{subscriptionID} [put]
 func updateSubscription(writer http.ResponseWriter, request *http.Request) {
 	subscription := &dto.Subscription{}
 	if err := render.Bind(request, subscription); err != nil {
@@ -149,13 +149,13 @@ func updateSubscription(writer http.ResponseWriter, request *http.Request) {
 // @id			remove-subscription
 // @tags		subscription
 // @produce	json
-// @param		subscriptionId	path	string	true	"ID of the subscription to remove"	extensions(x-example=bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+// @param		subscriptionID	path	string	true	"ID of the subscription to remove"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
 // @param x-webauth-user header string false "User session token"
 // @success	200				"Subscription deleted"
 // @failure	403				{object}	api.ErrorForbiddenExample		"Forbidden"
 // @failure	404				{object}	api.ErrorNotFoundExample		"Resource not found"
 // @failure	500				{object}	api.ErrorInternalServerExample	"Internal server error"
-// @router		/subscription/{subscriptionId} [delete]
+// @router		/subscription/{subscriptionID} [delete]
 func removeSubscription(writer http.ResponseWriter, request *http.Request) {
 	subscriptionID := middleware.GetSubscriptionID(request)
 	if err := controller.RemoveSubscription(database, subscriptionID); err != nil {
@@ -168,12 +168,12 @@ func removeSubscription(writer http.ResponseWriter, request *http.Request) {
 // @tags		subscription
 // @produce	json
 // @param x-webauth-user header string false "User session token"
-// @param		subscriptionId	path	string	true	"ID of the subscription to send the test notification"	extensions(x-example=bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+// @param		subscriptionID	path	string	true	"ID of the subscription to send the test notification"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
 // @success	200				"Test notification sent successfully"
 // @failure	403				{object}	api.ErrorForbiddenExample		"Forbidden"
 // @failure	404				{object}	api.ErrorNotFoundExample		"Resource not found"
 // @failure	500				{object}	api.ErrorInternalServerExample	"Internal server error"
-// @router		/subscription/{subscriptionId}/test [put]
+// @router		/subscription/{subscriptionID}/test [put]
 func sendTestNotification(writer http.ResponseWriter, request *http.Request) {
 	subscriptionID := middleware.GetSubscriptionID(request)
 	if err := controller.SendTestNotification(database, subscriptionID); err != nil {

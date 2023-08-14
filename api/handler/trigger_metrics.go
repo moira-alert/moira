@@ -24,7 +24,7 @@ func triggerMetrics(router chi.Router) {
 // @id get-trigger-metrics
 // @tags trigger
 // @produce json
-// @param triggerID path string true "Trigger ID" default(5A8AF369-86D2-44DD-B514-D47995ED6AF7) format(uuid)
+// @param triggerID path string true "Trigger ID" default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
 // @param from query string false "Start time for metrics retrieval" default(-10minutes) format(date-time)
 // @param to query string false "End time for metrics retrieval" default(now) format(date-time)
 // @success 200 {object} dto.TriggerMetrics "Trigger metrics retrieved successfully"
@@ -64,7 +64,7 @@ func getTriggerMetrics(writer http.ResponseWriter, request *http.Request) {
 // @id delete-trigger-metric
 // @tags trigger
 // @produce json
-// @param triggerID path string true "Trigger ID" default(5A8AF369-86D2-44DD-B514-D47995ED6AF7) format(uuid)
+// @param triggerID path string true "Trigger ID" default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
 // @param name query string true "Name of the target metric" default(DevOps.my_server.hdd.freespace_mbytes)
 // @success 200 "Trigger metric deleted successfully"
 // @failure 400 {object} api.ErrorInvalidRequestExample "Bad request from client"
@@ -85,7 +85,7 @@ func deleteTriggerMetric(writer http.ResponseWriter, request *http.Request) {
 // @id delete-trigger-nodata-metrics
 // @tags trigger
 // @produce json
-// @param triggerID path string true "Trigger ID" default(5A8AF369-86D2-44DD-B514-D47995ED6AF7) format(uuid)
+// @param triggerID path string true "Trigger ID" default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
 // @success 200 "Trigger nodata metrics deleted successfully"
 // @failure 400 {object} api.ErrorInvalidRequestExample "Bad request from client"
 // @failure 404 {object} api.ErrorNotFoundExample "Resource not found"

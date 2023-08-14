@@ -26,13 +26,14 @@ func contact(router chi.Router) {
 	})
 }
 
-// @Summary	Gets all Moira contacts
-// @ID			get-all-contacts
-// @Produce	json
-// @Success	200	{object}	dto.ContactList			"Contacts fetched successfully"
-// @Failure	422	{object}	api.ErrorRenderExample	"Render error"
-// @Router		/contact [get]
-// @Tags		contact
+// @summary	Gets all Moira contacts
+// @id			get-all-contacts
+// @tags		contact
+// @produce	json
+// @success	200	{object}	dto.ContactList			"Contacts fetched successfully"
+// @failure	422	{object}	api.ErrorRenderExample	"Render error"
+// @failure 500 {object} api.ErrorInternalServerExample "Internal server error"
+// @router		/contact [get]
 func getAllContacts(writer http.ResponseWriter, request *http.Request) {
 	contacts, err := controller.GetAllContacts(database)
 	if err != nil {
@@ -46,18 +47,18 @@ func getAllContacts(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-// @Summary	Creates a new contact notification for the current user
-// @ID			create-new-contact
-// @Accept		json
-// @Produce	json
+// @summary	Creates a new contact notification for the current user
+// @id			create-new-contact
+// @tags		contact
+// @accept		json
+// @produce	json
 // @param x-webauth-user header string false "User session token"
-// @Param		contact	body		dto.Contact						true	"Contact data"
-// @Success	200		{object}	dto.Contact						"Contact created successfully"
-// @Failure	400		{object}	api.ErrorInvalidRequestExample	"Bad request from client"
-// @Failure	422		{object}	api.ErrorRenderExample			"Render error"
-// @Failure	500		{object}	api.ErrorInternalServerExample	"Internal server error"
-// @Router		/contact [put]
-// @Tags		contact
+// @param		contact	body		dto.Contact						true	"Contact data"
+// @success	200		{object}	dto.Contact						"Contact created successfully"
+// @failure	400		{object}	api.ErrorInvalidRequestExample	"Bad request from client"
+// @failure	422		{object}	api.ErrorRenderExample			"Render error"
+// @failure	500		{object}	api.ErrorInternalServerExample	"Internal server error"
+// @router		/contact [put]
 func createNewContact(writer http.ResponseWriter, request *http.Request) {
 	contact := &dto.Contact{}
 	if err := render.Bind(request, contact); err != nil {
@@ -92,21 +93,21 @@ func contactFilter(next http.Handler) http.Handler {
 	})
 }
 
-// @Summary	Updates an existing notification contact to the values passed in the request body
-// @ID			update-contact
-// @Accept		json
-// @Produce	json
+// @summary	Updates an existing notification contact to the values passed in the request body
+// @id			update-contact
+// @accept		json
+// @produce	json
 // @param x-webauth-user header string false "User session token"
-// @Param		contactId	path		string							true	"ID of the contact to update"
-// @Param		contact		body		dto.Contact						true	"Updated contact data"
-// @Success	200			{object}	dto.Contact						"Updated contact"
-// @Failure	400			{object}	api.ErrorInvalidRequestExample	"Bad request from client"
-// @Failure	403			{object}	api.ErrorForbiddenExample		"Forbidden"
-// @Failure	404			{object}	api.ErrorNotFoundExample		"Resource not found"
-// @Failure	422			{object}	api.ErrorRenderExample			"Render error"
-// @Failure	500			{object}	api.ErrorInternalServerExample	"Internal server error"
-// @Router		/contact/{contactId} [put]
-// @Tags		contact
+// @param		contactID	path		string							true	"ID of the contact to update" default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+// @param		contact		body		dto.Contact						true	"Updated contact data"
+// @success	200			{object}	dto.Contact						"Updated contact"
+// @failure	400			{object}	api.ErrorInvalidRequestExample	"Bad request from client"
+// @failure	403			{object}	api.ErrorForbiddenExample		"Forbidden"
+// @failure	404			{object}	api.ErrorNotFoundExample		"Resource not found"
+// @failure	422			{object}	api.ErrorRenderExample			"Render error"
+// @failure	500			{object}	api.ErrorInternalServerExample	"Internal server error"
+// @router		/contact/{contactID} [put]
+// @tags		contact
 func updateContact(writer http.ResponseWriter, request *http.Request) {
 	contactDTO := dto.Contact{}
 	if err := render.Bind(request, &contactDTO); err != nil {
@@ -125,19 +126,19 @@ func updateContact(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-// @Summary	Deletes notification contact for the current user and remove the contact ID from all subscriptions
-// @ID			remove-contact
-// @Accept		json
-// @Produce	json
+// @summary	Deletes notification contact for the current user and remove the contact ID from all subscriptions
+// @id			remove-contact
+// @accept		json
+// @produce	json
+// @tags		contact
 // @param x-webauth-user header string false "User session token"
-// @Param		contactId	path	string	true	"ID of the contact to remove"	extensions(x-example=bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
-// @Success	200			"Contact has been deleted"
-// @Failure	400			{object}	api.ErrorInvalidRequestExample	"Bad request from client"
-// @Failure	403			{object}	api.ErrorForbiddenExample		"Forbidden"
-// @Failure	404			{object}	api.ErrorNotFoundExample		"Resource not found"
-// @Failure	500			{object}	api.ErrorInternalServerExample	"Internal server error"
-// @Router		/contact/{contactId} [delete]
-// @Tags		contact
+// @param		contactID	path	string	true	"ID of the contact to remove"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c) 
+// @success	200			"Contact has been deleted"
+// @failure	400			{object}	api.ErrorInvalidRequestExample	"Bad request from client"
+// @failure	403			{object}	api.ErrorForbiddenExample		"Forbidden"
+// @failure	404			{object}	api.ErrorNotFoundExample		"Resource not found"
+// @failure	500			{object}	api.ErrorInternalServerExample	"Internal server error"
+// @router		/contact/{contactID} [delete]
 func removeContact(writer http.ResponseWriter, request *http.Request) {
 	contactData := request.Context().Value(contactKey).(moira.ContactData)
 	err := controller.RemoveContact(database, contactData.ID, contactData.User, "")
@@ -146,18 +147,18 @@ func removeContact(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-// @Summary	Push a test notification to verify that the contact is properly set up
-// @ID			send-test-contact-notification
-// @Accept		json
-// @Produce	json
+// @summary	Push a test notification to verify that the contact is properly set up
+// @id			send-test-contact-notification
+// @accept		json
+// @produce	json
 // @param x-webauth-user header string false "User session token"
-// @Param		contactId	path	string	true	"The ID of the target contact"	extensions(x-example=bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
-// @Success	200			"Test successful"
-// @Failure	403			{object}	api.ErrorForbiddenExample		"Forbidden"
-// @Failure	404			{object}	api.ErrorNotFoundExample		"Resource not found"
-// @Failure	500			{object}	api.ErrorInternalServerExample	"Internal server error"
-// @Router		/contact/{contactId}/test [post]
-// @Tags		contact
+// @param		contactID	path	string	true	"The ID of the target contact"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+// @success	200			"Test successful"
+// @failure	403			{object}	api.ErrorForbiddenExample		"Forbidden"
+// @failure	404			{object}	api.ErrorNotFoundExample		"Resource not found"
+// @failure	500			{object}	api.ErrorInternalServerExample	"Internal server error"
+// @router		/contact/{contactID}/test [post]
+// @tags		contact
 func sendTestContactNotification(writer http.ResponseWriter, request *http.Request) {
 	contactID := middleware.GetContactID(request)
 	err := controller.SendTestContactNotification(database, contactID)

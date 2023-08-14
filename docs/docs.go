@@ -64,6 +64,12 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/api.ErrorRenderExample"
                         }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorInternalServerExample"
+                        }
                     }
                 }
             },
@@ -124,7 +130,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/contact/{contactId}": {
+        "/contact/{contactID}": {
             "put": {
                 "consumes": [
                     "application/json"
@@ -146,8 +152,9 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
+                        "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
                         "description": "ID of the contact to update",
-                        "name": "contactId",
+                        "name": "contactID",
                         "in": "path",
                         "required": true
                     },
@@ -221,9 +228,9 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "x-example": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
+                        "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
                         "description": "ID of the contact to remove",
-                        "name": "contactId",
+                        "name": "contactID",
                         "in": "path",
                         "required": true
                     }
@@ -259,7 +266,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/contact/{contactId}/test": {
+        "/contact/{contactID}/test": {
             "post": {
                 "consumes": [
                     "application/json"
@@ -281,9 +288,9 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "x-example": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
+                        "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
                         "description": "The ID of the target contact",
-                        "name": "contactId",
+                        "name": "contactID",
                         "in": "path",
                         "required": true
                     }
@@ -336,7 +343,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/event/{triggerId}": {
+        "/event/{triggerID}": {
             "get": {
                 "produces": [
                     "application/json"
@@ -349,22 +356,22 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "x-example": "5A8AF369-86D2-44DD-B514-D47995ED6AF7",
+                        "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
                         "description": "The ID of updated trigger",
-                        "name": "triggerId",
+                        "name": "triggerID",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "integer",
-                        "x-example": "15",
+                        "default": 15,
                         "description": "Number of items to be displayed on one page",
                         "name": "size",
                         "in": "query"
                     },
                     {
                         "type": "integer",
-                        "x-example": "1",
+                        "default": 1,
                         "description": "Defines the number of the displayed page. E.g, p=2 would display the 2nd page",
                         "name": "p",
                         "in": "query"
@@ -499,14 +506,14 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "x-example": "1",
+                        "default": 1,
                         "description": "Default Value: 0",
                         "name": "start",
                         "in": "query"
                     },
                     {
                         "type": "integer",
-                        "x-example": "15",
+                        "default": 15,
                         "description": "Default Value: -1",
                         "name": "end",
                         "in": "query"
@@ -551,7 +558,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "x-example": "5A8AF369-86D2-44DD-B514-D47995ED6AF7",
+                        "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
                         "description": "The ID of updated trigger",
                         "name": "id",
                         "in": "query",
@@ -588,6 +595,9 @@ const docTemplate = `{
         },
         "/notification/all": {
             "delete": {
+                "produces": [
+                    "application/json"
+                ],
                 "tags": [
                     "notification"
                 ],
@@ -651,7 +661,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "x-example": "DevOps.my_server.hdd.freespace_mbytes",
+                        "default": "DevOps.my_server.hdd.freespace_mbytes",
                         "description": "Trigger pattern to operate on",
                         "name": "pattern",
                         "in": "path",
@@ -773,7 +783,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/subscription/{subscriptionId}": {
+        "/subscription/{subscriptionID}": {
             "put": {
                 "consumes": [
                     "application/json"
@@ -795,9 +805,9 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "x-example": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
+                        "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
                         "description": "ID of the subscription to update",
-                        "name": "subscriptionId",
+                        "name": "subscriptionID",
                         "in": "path",
                         "required": true
                     },
@@ -862,9 +872,9 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "x-example": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
+                        "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
                         "description": "ID of the subscription to remove",
-                        "name": "subscriptionId",
+                        "name": "subscriptionID",
                         "in": "path",
                         "required": true
                     },
@@ -900,7 +910,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/subscription/{subscriptionId}/test": {
+        "/subscription/{subscriptionID}/test": {
             "put": {
                 "produces": [
                     "application/json"
@@ -919,9 +929,9 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "x-example": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
+                        "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
                         "description": "ID of the subscription to send the test notification",
-                        "name": "subscriptionId",
+                        "name": "subscriptionID",
                         "in": "path",
                         "required": true
                     }
@@ -1028,7 +1038,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "x-example": "cpu",
+                        "default": "cpu",
                         "description": "Name of the tag to remove",
                         "name": "tag",
                         "in": "path",
@@ -1172,7 +1182,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "x-example": "d5d98eb3-ee18-4f75-9364-244f67e23b54",
+                        "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
                         "description": "ID of the team",
                         "name": "teamID",
                         "in": "path",
@@ -1219,6 +1229,9 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "produces": [
+                    "application/json"
+                ],
                 "tags": [
                     "team"
                 ],
@@ -1233,7 +1246,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "x-example": "d5d98eb3-ee18-4f75-9364-244f67e23b54",
+                        "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
                         "description": "ID of the team",
                         "name": "teamID",
                         "in": "path",
@@ -1294,7 +1307,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "x-example": "d5d98eb3-ee18-4f75-9364-244f67e23b54",
+                        "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
                         "description": "ID of the team",
                         "name": "teamID",
                         "in": "path",
@@ -1378,7 +1391,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "x-example": "d5d98eb3-ee18-4f75-9364-244f67e23b54",
+                        "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
                         "description": "The ID of team",
                         "name": "teamID",
                         "in": "path",
@@ -1453,6 +1466,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
+                        "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
                         "description": "ID of the team",
                         "name": "teamID",
                         "in": "path",
@@ -1515,7 +1529,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "x-example": "d5d98eb3-ee18-4f75-9364-244f67e23b54",
+                        "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
                         "description": "The ID of team",
                         "name": "teamID",
                         "in": "path",
@@ -1590,7 +1604,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "x-example": "d5d98eb3-ee18-4f75-9364-244f67e23b54",
+                        "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
                         "description": "ID of the team",
                         "name": "teamID",
                         "in": "path",
@@ -1651,7 +1665,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "x-example": "d5d98eb3-ee18-4f75-9364-244f67e23b54",
+                        "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
                         "description": "ID of the team",
                         "name": "teamID",
                         "in": "path",
@@ -1727,7 +1741,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "x-example": "d5d98eb3-ee18-4f75-9364-244f67e23b54",
+                        "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
                         "description": "ID of the team",
                         "name": "teamID",
                         "in": "path",
@@ -1802,7 +1816,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "x-example": "d5d98eb3-ee18-4f75-9364-244f67e23b54",
+                        "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
                         "description": "ID of the team",
                         "name": "teamID",
                         "in": "path",
@@ -1810,7 +1824,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "x-example": "anonymous",
+                        "default": "anonymous",
                         "description": "User login in methods related to teams manipulation",
                         "name": "teamUserID",
                         "in": "path",
@@ -2009,7 +2023,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "x-example": "d5d98eb3-ee18-4f75-9364-244f67e23b54",
+                        "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
                         "description": "Pager ID to delete",
                         "name": "pagerID",
                         "in": "path",
@@ -2057,42 +2071,42 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "boolean",
-                        "x-example": "false",
+                        "default": false,
                         "description": "Only include problems",
                         "name": "onlyProblems",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "x-example": "cpu",
+                        "default": "cpu",
                         "description": "Search text",
                         "name": "text",
                         "in": "query"
                     },
                     {
                         "type": "integer",
-                        "x-example": "0",
+                        "default": 0,
                         "description": "Page number",
                         "name": "p",
                         "in": "query"
                     },
                     {
                         "type": "integer",
-                        "x-example": "10",
+                        "default": 10,
                         "description": "Page size",
                         "name": "size",
                         "in": "query"
                     },
                     {
                         "type": "boolean",
-                        "x-example": "false",
+                        "default": false,
                         "description": "Create pager",
                         "name": "createPager",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "x-example": "d5d98eb3-ee18-4f75-9364-244f67e23b54",
+                        "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
                         "description": "Pager ID",
                         "name": "pagerID",
                         "in": "query"
@@ -2145,7 +2159,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "x-example": "5A8AF369-86D2-44DD-B514-D47995ED6AF7",
+                        "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
                         "description": "Trigger ID",
                         "name": "triggerID",
                         "in": "path",
@@ -2197,7 +2211,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "x-example": "5A8AF369-86D2-44DD-B514-D47995ED6AF7",
+                        "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
                         "description": "Trigger ID",
                         "name": "triggerID",
                         "in": "path",
@@ -2261,7 +2275,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "x-example": "5A8AF369-86D2-44DD-B514-D47995ED6AF7",
+                        "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
                         "description": "Trigger ID",
                         "name": "triggerID",
                         "in": "path",
@@ -2297,7 +2311,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "x-example": "5A8AF369-86D2-44DD-B514-D47995ED6AF7",
+                        "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
                         "description": "Trigger ID",
                         "name": "triggerID",
                         "in": "path",
@@ -2339,8 +2353,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "format": "uuid",
-                        "default": "5A8AF369-86D2-44DD-B514-D47995ED6AF7",
+                        "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
                         "description": "Trigger ID",
                         "name": "triggerID",
                         "in": "path",
@@ -2408,8 +2421,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "format": "uuid",
-                        "default": "5A8AF369-86D2-44DD-B514-D47995ED6AF7",
+                        "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
                         "description": "Trigger ID",
                         "name": "triggerID",
                         "in": "path",
@@ -2462,8 +2474,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "format": "uuid",
-                        "default": "5A8AF369-86D2-44DD-B514-D47995ED6AF7",
+                        "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
                         "description": "Trigger ID",
                         "name": "triggerID",
                         "in": "path",
@@ -2508,8 +2519,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "format": "uuid",
-                        "default": "5A8AF369-86D2-44DD-B514-D47995ED6AF7",
+                        "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
                         "description": "Trigger ID",
                         "name": "triggerID",
                         "in": "path",
@@ -2601,7 +2611,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "x-example": "5A8AF369-86D2-44DD-B514-D47995ED6AF7",
+                        "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
                         "description": "Trigger ID",
                         "name": "triggerID",
                         "in": "path",
@@ -2661,7 +2671,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "x-example": "5A8AF369-86D2-44DD-B514-D47995ED6AF7",
+                        "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
                         "description": "Trigger ID",
                         "name": "triggerID",
                         "in": "path",
@@ -2709,7 +2719,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "x-example": "5A8AF369-86D2-44DD-B514-D47995ED6AF7",
+                        "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
                         "description": "Trigger ID",
                         "name": "triggerID",
                         "in": "path",
@@ -2746,7 +2756,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "x-example": "5A8AF369-86D2-44DD-B514-D47995ED6AF7",
+                        "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
                         "description": "Trigger ID",
                         "name": "triggerID",
                         "in": "path",

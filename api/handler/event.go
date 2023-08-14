@@ -18,16 +18,16 @@ func event(router chi.Router) {
 // @summary	Gets all trigger events for current page and their count
 // @id			get-events-list
 // @tags		event
-// @param		triggerId	path	string	true	"The ID of updated trigger"														extensions(x-example=5A8AF369-86D2-44DD-B514-D47995ED6AF7)
-// @param		size		query	int		false	"Number of items to be displayed on one page"									extensions(x-example=15)
-// @param		p			query	int		false	"Defines the number of the displayed page. E.g, p=2 would display the 2nd page"	extensions(x-example=1)
 // @produce	json
+// @param		triggerID	path	string	true	"The ID of updated trigger"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+// @param		size		query	int		false	"Number of items to be displayed on one page"									default(15)
+// @param		p			query	int		false	"Defines the number of the displayed page. E.g, p=2 would display the 2nd page"	default(1)
 // @success	200	{object}	dto.EventsList					"Events fetched successfully"
 // @Failure	400	{object}	api.ErrorInvalidRequestExample	"Bad request from client"
 // @Failure	404	{object}	api.ErrorNotFoundExample		"Resource not found"
 // @Failure	422	{object}	api.ErrorRenderExample			"Render error"
 // @Failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
-// @router		/event/{triggerId} [get]
+// @router		/event/{triggerID} [get]
 func getEventsList(writer http.ResponseWriter, request *http.Request) {
 	triggerID := middleware.GetTriggerID(request)
 	size := middleware.GetSize(request)
@@ -47,7 +47,7 @@ func getEventsList(writer http.ResponseWriter, request *http.Request) {
 // @tags		event
 // @produce	json
 // @success	200	"Events removed successfully"
-// @Failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
+// @failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
 // @router		/event/all [delete]
 func deleteAllEvents(writer http.ResponseWriter, request *http.Request) {
 	if errorResponse := controller.DeleteAllEvents(database); errorResponse != nil {

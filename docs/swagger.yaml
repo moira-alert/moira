@@ -1171,6 +1171,10 @@ paths:
           description: Render error
           schema:
             $ref: '#/definitions/api.ErrorRenderExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
       summary: Gets all Moira contacts
       tags:
       - contact
@@ -1211,7 +1215,7 @@ paths:
       summary: Creates a new contact notification for the current user
       tags:
       - contact
-  /contact/{contactId}:
+  /contact/{contactID}:
     delete:
       consumes:
       - application/json
@@ -1221,12 +1225,12 @@ paths:
         in: header
         name: x-webauth-user
         type: string
-      - description: ID of the contact to remove
+      - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
+        description: ID of the contact to remove
         in: path
-        name: contactId
+        name: contactID
         required: true
         type: string
-        x-example: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
       produces:
       - application/json
       responses:
@@ -1261,9 +1265,10 @@ paths:
         in: header
         name: x-webauth-user
         type: string
-      - description: ID of the contact to update
+      - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
+        description: ID of the contact to update
         in: path
-        name: contactId
+        name: contactID
         required: true
         type: string
       - description: Updated contact data
@@ -1303,7 +1308,7 @@ paths:
         request body
       tags:
       - contact
-  /contact/{contactId}/test:
+  /contact/{contactID}/test:
     post:
       consumes:
       - application/json
@@ -1313,12 +1318,12 @@ paths:
         in: header
         name: x-webauth-user
         type: string
-      - description: The ID of the target contact
+      - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
+        description: The ID of the target contact
         in: path
-        name: contactId
+        name: contactID
         required: true
         type: string
-        x-example: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
       produces:
       - application/json
       responses:
@@ -1340,27 +1345,27 @@ paths:
         up
       tags:
       - contact
-  /event/{triggerId}:
+  /event/{triggerID}:
     get:
       operationId: get-events-list
       parameters:
-      - description: The ID of updated trigger
+      - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
+        description: The ID of updated trigger
         in: path
-        name: triggerId
+        name: triggerID
         required: true
         type: string
-        x-example: 5A8AF369-86D2-44DD-B514-D47995ED6AF7
-      - description: Number of items to be displayed on one page
+      - default: 15
+        description: Number of items to be displayed on one page
         in: query
         name: size
         type: integer
-        x-example: "15"
-      - description: Defines the number of the displayed page. E.g, p=2 would display
+      - default: 1
+        description: Defines the number of the displayed page. E.g, p=2 would display
           the 2nd page
         in: query
         name: p
         type: integer
-        x-example: "1"
       produces:
       - application/json
       responses:
@@ -1460,12 +1465,12 @@ paths:
     delete:
       operationId: delete-notification
       parameters:
-      - description: The ID of updated trigger
+      - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
+        description: The ID of updated trigger
         in: query
         name: id
         required: true
         type: string
-        x-example: 5A8AF369-86D2-44DD-B514-D47995ED6AF7
       produces:
       - application/json
       responses:
@@ -1491,16 +1496,16 @@ paths:
     get:
       operationId: get-notifications
       parameters:
-      - description: 'Default Value: 0'
+      - default: 1
+        description: 'Default Value: 0'
         in: query
         name: start
         type: integer
-        x-example: "1"
-      - description: 'Default Value: -1'
+      - default: 15
+        description: 'Default Value: -1'
         in: query
         name: end
         type: integer
-        x-example: "15"
       produces:
       - application/json
       responses:
@@ -1527,6 +1532,8 @@ paths:
   /notification/all:
     delete:
       operationId: delete-all-notifications
+      produces:
+      - application/json
       responses:
         "200":
           description: All notifications have been deleted
@@ -1562,12 +1569,12 @@ paths:
     delete:
       operationId: delete-pattern
       parameters:
-      - description: Trigger pattern to operate on
+      - default: DevOps.my_server.hdd.freespace_mbytes
+        description: Trigger pattern to operate on
         in: path
         name: pattern
         required: true
         type: string
-        x-example: DevOps.my_server.hdd.freespace_mbytes
       produces:
       - application/json
       responses:
@@ -1647,16 +1654,16 @@ paths:
       summary: Create a new subscription
       tags:
       - subscription
-  /subscription/{subscriptionId}:
+  /subscription/{subscriptionID}:
     delete:
       operationId: remove-subscription
       parameters:
-      - description: ID of the subscription to remove
+      - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
+        description: ID of the subscription to remove
         in: path
-        name: subscriptionId
+        name: subscriptionID
         required: true
         type: string
-        x-example: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
       - description: User session token
         in: header
         name: x-webauth-user
@@ -1690,12 +1697,12 @@ paths:
         in: header
         name: x-webauth-user
         type: string
-      - description: ID of the subscription to update
+      - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
+        description: ID of the subscription to update
         in: path
-        name: subscriptionId
+        name: subscriptionID
         required: true
         type: string
-        x-example: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
       - description: Updated subscription data
         in: body
         name: subscription
@@ -1732,7 +1739,7 @@ paths:
       summary: Update a subscription
       tags:
       - subscription
-  /subscription/{subscriptionId}/test:
+  /subscription/{subscriptionID}/test:
     put:
       operationId: send-test-notification
       parameters:
@@ -1740,12 +1747,12 @@ paths:
         in: header
         name: x-webauth-user
         type: string
-      - description: ID of the subscription to send the test notification
+      - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
+        description: ID of the subscription to send the test notification
         in: path
-        name: subscriptionId
+        name: subscriptionID
         required: true
         type: string
-        x-example: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
       produces:
       - application/json
       responses:
@@ -1791,12 +1798,12 @@ paths:
     delete:
       operationId: remove-tag
       parameters:
-      - description: Name of the tag to remove
+      - default: cpu
+        description: Name of the tag to remove
         in: path
         name: tag
         required: true
         type: string
-        x-example: cpu
       produces:
       - application/json
       responses:
@@ -1911,12 +1918,14 @@ paths:
         in: header
         name: x-webauth-user
         type: string
-      - description: ID of the team
+      - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
+        description: ID of the team
         in: path
         name: teamID
         required: true
         type: string
-        x-example: d5d98eb3-ee18-4f75-9364-244f67e23b54
+      produces:
+      - application/json
       responses:
         "200":
           description: Team has been successfully deleted
@@ -1948,12 +1957,12 @@ paths:
     get:
       operationId: get-team
       parameters:
-      - description: ID of the team
+      - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
+        description: ID of the team
         in: path
         name: teamID
         required: true
         type: string
-        x-example: d5d98eb3-ee18-4f75-9364-244f67e23b54
       - description: User session token
         in: header
         name: x-webauth-user
@@ -1989,12 +1998,12 @@ paths:
       - application/json
       operationId: update-team
       parameters:
-      - description: ID of the team
+      - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
+        description: ID of the team
         in: path
         name: teamID
         required: true
         type: string
-        x-example: d5d98eb3-ee18-4f75-9364-244f67e23b54
       - description: User session token
         in: header
         name: x-webauth-user
@@ -2045,12 +2054,12 @@ paths:
         in: header
         name: x-webauth-user
         type: string
-      - description: The ID of team
+      - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
+        description: The ID of team
         in: path
         name: teamID
         required: true
         type: string
-        x-example: d5d98eb3-ee18-4f75-9364-244f67e23b54
       - description: Team contact data
         in: body
         name: contact
@@ -2095,7 +2104,8 @@ paths:
         in: header
         name: x-webauth-user
         type: string
-      - description: ID of the team
+      - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
+        description: ID of the team
         in: path
         name: teamID
         required: true
@@ -2136,12 +2146,12 @@ paths:
         in: header
         name: x-webauth-user
         type: string
-      - description: The ID of team
+      - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
+        description: The ID of team
         in: path
         name: teamID
         required: true
         type: string
-        x-example: d5d98eb3-ee18-4f75-9364-244f67e23b54
       - description: Team subscription data
         in: body
         name: subscription
@@ -2186,12 +2196,12 @@ paths:
         in: header
         name: x-webauth-user
         type: string
-      - description: ID of the team
+      - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
+        description: ID of the team
         in: path
         name: teamID
         required: true
         type: string
-        x-example: d5d98eb3-ee18-4f75-9364-244f67e23b54
       produces:
       - application/json
       responses:
@@ -2227,12 +2237,12 @@ paths:
         in: header
         name: x-webauth-user
         type: string
-      - description: ID of the team
+      - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
+        description: ID of the team
         in: path
         name: teamID
         required: true
         type: string
-        x-example: d5d98eb3-ee18-4f75-9364-244f67e23b54
       - description: Usernames to add to the team
         in: body
         name: usernames
@@ -2278,12 +2288,12 @@ paths:
         in: header
         name: x-webauth-user
         type: string
-      - description: ID of the team
+      - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
+        description: ID of the team
         in: path
         name: teamID
         required: true
         type: string
-        x-example: d5d98eb3-ee18-4f75-9364-244f67e23b54
       - description: Usernames to set as team members
         in: body
         name: usernames
@@ -2328,18 +2338,18 @@ paths:
         in: header
         name: x-webauth-user
         type: string
-      - description: ID of the team
+      - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
+        description: ID of the team
         in: path
         name: teamID
         required: true
         type: string
-        x-example: d5d98eb3-ee18-4f75-9364-244f67e23b54
-      - description: User login in methods related to teams manipulation
+      - default: anonymous
+        description: User login in methods related to teams manipulation
         in: path
         name: teamUserID
         required: true
         type: string
-        x-example: anonymous
       produces:
       - application/json
       responses:
@@ -2436,12 +2446,12 @@ paths:
     delete:
       operationId: remove-trigger
       parameters:
-      - description: Trigger ID
+      - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
+        description: Trigger ID
         in: path
         name: triggerID
         required: true
         type: string
-        x-example: 5A8AF369-86D2-44DD-B514-D47995ED6AF7
       responses:
         "404":
           description: Resource not found
@@ -2457,12 +2467,12 @@ paths:
     get:
       operationId: get-trigger
       parameters:
-      - description: Trigger ID
+      - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
+        description: Trigger ID
         in: path
         name: triggerID
         required: true
         type: string
-        x-example: 5A8AF369-86D2-44DD-B514-D47995ED6AF7
       produces:
       - application/json
       responses:
@@ -2492,12 +2502,12 @@ paths:
         in: header
         name: x-webauth-user
         type: string
-      - description: Trigger ID
+      - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
+        description: Trigger ID
         in: path
         name: triggerID
         required: true
         type: string
-        x-example: 5A8AF369-86D2-44DD-B514-D47995ED6AF7
       - description: Trigger data
         in: body
         name: body
@@ -2538,12 +2548,12 @@ paths:
     get:
       operationId: get-trigger-dump
       parameters:
-      - description: Trigger ID
+      - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
+        description: Trigger ID
         in: path
         name: triggerID
         required: true
         type: string
-        x-example: 5A8AF369-86D2-44DD-B514-D47995ED6AF7
       produces:
       - application/json
       responses:
@@ -2566,9 +2576,8 @@ paths:
     delete:
       operationId: delete-trigger-metric
       parameters:
-      - default: 5A8AF369-86D2-44DD-B514-D47995ED6AF7
+      - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
         description: Trigger ID
-        format: uuid
         in: path
         name: triggerID
         required: true
@@ -2602,9 +2611,8 @@ paths:
     get:
       operationId: get-trigger-metrics
       parameters:
-      - default: 5A8AF369-86D2-44DD-B514-D47995ED6AF7
+      - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
         description: Trigger ID
-        format: uuid
         in: path
         name: triggerID
         required: true
@@ -2651,9 +2659,8 @@ paths:
     delete:
       operationId: delete-trigger-nodata-metrics
       parameters:
-      - default: 5A8AF369-86D2-44DD-B514-D47995ED6AF7
+      - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
         description: Trigger ID
-        format: uuid
         in: path
         name: triggerID
         required: true
@@ -2683,9 +2690,8 @@ paths:
     get:
       operationId: render-trigger-metrics
       parameters:
-      - default: 5A8AF369-86D2-44DD-B514-D47995ED6AF7
+      - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
         description: Trigger ID
-        format: uuid
         in: path
         name: triggerID
         required: true
@@ -2749,12 +2755,12 @@ paths:
     put:
       operationId: set-trigger-maintenance
       parameters:
-      - description: Trigger ID
+      - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
+        description: Trigger ID
         in: path
         name: triggerID
         required: true
         type: string
-        x-example: 5A8AF369-86D2-44DD-B514-D47995ED6AF7
       - description: Maintenance data
         in: body
         name: body
@@ -2789,12 +2795,12 @@ paths:
     get:
       operationId: get-trigger-state
       parameters:
-      - description: Trigger ID
+      - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
+        description: Trigger ID
         in: path
         name: triggerID
         required: true
         type: string
-        x-example: 5A8AF369-86D2-44DD-B514-D47995ED6AF7
       produces:
       - application/json
       responses:
@@ -2821,12 +2827,12 @@ paths:
     delete:
       operationId: delete-trigger-throttling
       parameters:
-      - description: Trigger ID
+      - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
+        description: Trigger ID
         in: path
         name: triggerID
         required: true
         type: string
-        x-example: 5A8AF369-86D2-44DD-B514-D47995ED6AF7
       responses:
         "200":
           description: Trigger throttling has been deleted
@@ -2844,12 +2850,12 @@ paths:
     get:
       operationId: get-trigger-throttling
       parameters:
-      - description: Trigger ID
+      - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
+        description: Trigger ID
         in: path
         name: triggerID
         required: true
         type: string
-        x-example: 5A8AF369-86D2-44DD-B514-D47995ED6AF7
       produces:
       - application/json
       responses:
@@ -2901,12 +2907,12 @@ paths:
   /trigger/pagers/{pagerID}:
     delete:
       parameters:
-      - description: Pager ID to delete
+      - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
+        description: Pager ID to delete
         in: path
         name: pagerID
         required: true
         type: string
-        x-example: d5d98eb3-ee18-4f75-9364-244f67e23b54
       produces:
       - application/json
       responses:
@@ -2933,36 +2939,36 @@ paths:
     get:
       operationId: search-triggers
       parameters:
-      - description: Only include problems
+      - default: false
+        description: Only include problems
         in: query
         name: onlyProblems
         type: boolean
-        x-example: "false"
-      - description: Search text
+      - default: cpu
+        description: Search text
         in: query
         name: text
         type: string
-        x-example: cpu
-      - description: Page number
+      - default: 0
+        description: Page number
         in: query
         name: p
         type: integer
-        x-example: "0"
-      - description: Page size
+      - default: 10
+        description: Page size
         in: query
         name: size
         type: integer
-        x-example: "10"
-      - description: Create pager
+      - default: false
+        description: Create pager
         in: query
         name: createPager
         type: boolean
-        x-example: "false"
-      - description: Pager ID
+      - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
+        description: Pager ID
         in: query
         name: pagerID
         type: string
-        x-example: d5d98eb3-ee18-4f75-9364-244f67e23b54
       produces:
       - application/json
       responses:

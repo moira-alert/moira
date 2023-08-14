@@ -20,7 +20,7 @@ func health(router chi.Router) {
 // @tags		health
 // @produce	json
 // @success	200	{object}	dto.NotifierState				"Notifier state retrieved"
-// @Failure	422	{object}	api.ErrorRenderExample			"Render error"
+// @failure	422	{object}	api.ErrorRenderExample			"Render error"
 // @failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
 // @router		/health/notifier [get]
 func getNotifierState(writer http.ResponseWriter, request *http.Request) {

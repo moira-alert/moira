@@ -20,9 +20,9 @@ func notification(router chi.Router) {
 // @summary	Gets a paginated list of notifications, all notifications are fetched if end = -1 and start = 0
 // @id			get-notifications
 // @tags		notification
-// @param		start	query	int	false	"Default Value: 0"	extensions(x-example=1)
-// @param		end		query	int	false	"Default Value: -1"	extensions(x-example=15)
 // @produce	json
+// @param		start	query	int	false	"Default Value: 0"	default(1)
+// @param		end		query	int	false	"Default Value: -1"	default(15)
 // @success	200	{object}	dto.NotificationsList			"Notifications fetched successfully"
 // @failure	400	{object}	api.ErrorInvalidRequestExample	"Bad request from client"
 // @failure	422	{object}	api.ErrorRenderExample			"Render error"
@@ -51,7 +51,7 @@ func getNotification(writer http.ResponseWriter, request *http.Request) {
 // @summary	Delete a notification by id
 // @id			delete-notification
 // @tags		notification
-// @param		id	query	string	true	"The ID of updated trigger"	extensions(x-example=5A8AF369-86D2-44DD-B514-D47995ED6AF7)
+// @param		id	query	string	true	"The ID of updated trigger"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
 // @produce	json
 // @success	200	{object}	dto.NotificationDeleteResponse	"Notification have been deleted"
 // @failure	400	{object}	api.ErrorInvalidRequestExample	"Bad request from client"
@@ -78,6 +78,7 @@ func deleteNotification(writer http.ResponseWriter, request *http.Request) {
 // @summary	Deletes all available notifications
 // @id			delete-all-notifications
 // @tags		notification
+// @produce	json
 // @success	200	"All notifications have been deleted"
 // @failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
 // @router		/notification/all [delete]

@@ -65,7 +65,7 @@ func getAllTagsAndSubscriptions(writer http.ResponseWriter, request *http.Reques
 // @id			remove-tag
 // @tags		tag
 // @produce	json
-// @param		tag	path		string							true	"Name of the tag to remove"	extensions(x-example=cpu)
+// @param		tag	path		string							true	"Name of the tag to remove"	default(cpu)
 // @success	200	{object}	dto.MessageResponse				"Tag removed successfully"
 // @failure	400	{object}	api.ErrorInvalidRequestExample	"Bad request from client"
 // @failure	422	{object}	api.ErrorRenderExample			"Render error"
