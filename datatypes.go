@@ -298,15 +298,15 @@ type CheckData struct {
 	// MetricsToTargetRelation is a map that holds relation between metric names that was alone during last
 	// check and targets that fetched this metric
 	//	{"t1": "metric.name.1", "t2": "metric.name.2"}
-	MetricsToTargetRelation      map[string]string `json:"metrics_to_target_relation"`
-	Score                        int64             `json:"score"`
-	State                        State             `json:"state"`
-	Maintenance                  int64             `json:"maintenance,omitempty"`
+	MetricsToTargetRelation      map[string]string `json:"metrics_to_target_relation" example:"t1:metric.name.1,t2:metric.name.2"`
+	Score                        int64             `json:"score" example:"100"`
+	State                        State             `json:"state" example:"OK"`
+	Maintenance                  int64             `json:"maintenance,omitempty" example:"0"`
 	MaintenanceInfo              MaintenanceInfo   `json:"maintenance_info"`
-	Timestamp                    int64             `json:"timestamp,omitempty"`
-	EventTimestamp               int64             `json:"event_timestamp,omitempty"`
-	LastSuccessfulCheckTimestamp int64             `json:"last_successful_check_timestamp"`
-	Suppressed                   bool              `json:"suppressed,omitempty"`
+	Timestamp                    int64             `json:"timestamp,omitempty" example:"1590741916"`
+	EventTimestamp               int64             `json:"event_timestamp,omitempty" example:"1590741878"`
+	LastSuccessfulCheckTimestamp int64             `json:"last_successful_check_timestamp" example:"1590741916"`
+	Suppressed                   bool              `json:"suppressed,omitempty" example:"true"`
 	SuppressedState              State             `json:"suppressed_state,omitempty"`
 	Message                      string            `json:"msg,omitempty"`
 }
@@ -323,14 +323,14 @@ func (checkData *CheckData) RemoveMetricsToTargetRelation() {
 
 // MetricState represents metric state data for given timestamp
 type MetricState struct {
-	EventTimestamp  int64              `json:"event_timestamp"`
-	State           State              `json:"state"`
-	Suppressed      bool               `json:"suppressed"`
+	EventTimestamp  int64              `json:"event_timestamp" example:"1590741878"`
+	State           State              `json:"state" example:"OK"`
+	Suppressed      bool               `json:"suppressed" example:"false"`
 	SuppressedState State              `json:"suppressed_state,omitempty"`
-	Timestamp       int64              `json:"timestamp"`
-	Value           *float64           `json:"value,omitempty"`
+	Timestamp       int64              `json:"timestamp" example:"1590741878"`
+	Value           *float64           `json:"value,omitempty" example:"70"`
 	Values          map[string]float64 `json:"values,omitempty"`
-	Maintenance     int64              `json:"maintenance,omitempty"`
+	Maintenance     int64              `json:"maintenance,omitempty" example:"0"`
 	MaintenanceInfo MaintenanceInfo    `json:"maintenance_info"`
 	// AloneMetrics    map[string]string  `json:"alone_metrics"` // represents a relation between name of alone metrics and their targets
 }

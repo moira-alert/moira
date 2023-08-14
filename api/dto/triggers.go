@@ -366,7 +366,7 @@ type TriggerCheckResponse struct {
 
 type TriggerCheck struct {
 	*moira.CheckData
-	TriggerID string `json:"trigger_id"`
+	TriggerID string `json:"trigger_id" example:"trigger_id"`
 }
 
 func (*TriggerCheck) Render(http.ResponseWriter, *http.Request) error {
@@ -380,7 +380,7 @@ func (*MetricsMaintenance) Bind(*http.Request) error {
 }
 
 type TriggerMaintenance struct {
-	Trigger *int64           `json:"trigger"`
+	Trigger *int64           `json:"trigger" example:"1594225165"`
 	Metrics map[string]int64 `json:"metrics"`
 }
 
@@ -389,7 +389,7 @@ func (*TriggerMaintenance) Bind(*http.Request) error {
 }
 
 type ThrottlingResponse struct {
-	Throttling int64 `json:"throttling"`
+	Throttling int64 `json:"throttling" example:"0"`
 }
 
 func (*ThrottlingResponse) Render(http.ResponseWriter, *http.Request) error {

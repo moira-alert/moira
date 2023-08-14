@@ -150,6 +150,21 @@ definitions:
           $ref: '#/definitions/dto.PatternData'
         type: array
     type: object
+  dto.PatternMetrics:
+    properties:
+      metrics:
+        additionalProperties:
+          items:
+            $ref: '#/definitions/moira.MetricValue'
+          type: array
+        type: object
+      pattern:
+        type: string
+      retention:
+        additionalProperties:
+          type: integer
+        type: object
+    type: object
   dto.ProblemOfTarget:
     properties:
       argument:
@@ -306,6 +321,12 @@ definitions:
         example: d5d98eb3-ee18-4f75-9364-244f67e23b54
         type: string
     type: object
+  dto.ThrottlingResponse:
+    properties:
+      throttling:
+        example: 0
+        type: integer
+    type: object
   dto.TreeOfProblems:
     properties:
       syntax_ok:
@@ -413,6 +434,53 @@ definitions:
         example: 500
         type: number
     type: object
+  dto.TriggerCheck:
+    properties:
+      event_timestamp:
+        example: 1590741878
+        type: integer
+      last_successful_check_timestamp:
+        example: 1590741916
+        type: integer
+      maintenance:
+        example: 0
+        type: integer
+      maintenance_info:
+        $ref: '#/definitions/moira.MaintenanceInfo'
+      metrics:
+        additionalProperties:
+          $ref: '#/definitions/moira.MetricState'
+        type: object
+      metrics_to_target_relation:
+        additionalProperties:
+          type: string
+        description: "MetricsToTargetRelation is a map that holds relation between
+          metric names that was alone during last\ncheck and targets that fetched
+          this metric\n\t{\"t1\": \"metric.name.1\", \"t2\": \"metric.name.2\"}"
+        example:
+          t1: metric.name.1
+          t2: metric.name.2
+        type: object
+      msg:
+        type: string
+      score:
+        example: 100
+        type: integer
+      state:
+        example: OK
+        type: string
+      suppressed:
+        example: true
+        type: boolean
+      suppressed_state:
+        type: string
+      timestamp:
+        example: 1590741916
+        type: integer
+      trigger_id:
+        example: trigger_id
+        type: string
+    type: object
   dto.TriggerCheckResponse:
     properties:
       targets:
@@ -420,6 +488,29 @@ definitions:
         items:
           $ref: '#/definitions/dto.TreeOfProblems'
         type: array
+    type: object
+  dto.TriggerDump:
+    properties:
+      created:
+        type: string
+      last_check:
+        $ref: '#/definitions/moira.CheckData'
+      metrics:
+        items:
+          $ref: '#/definitions/dto.PatternMetrics'
+        type: array
+      trigger:
+        $ref: '#/definitions/moira.Trigger'
+    type: object
+  dto.TriggerMaintenance:
+    properties:
+      metrics:
+        additionalProperties:
+          type: integer
+        type: object
+      trigger:
+        example: 1594225165
+        type: integer
     type: object
   dto.TriggerModel:
     properties:
@@ -575,10 +666,13 @@ definitions:
   moira.CheckData:
     properties:
       event_timestamp:
+        example: 1590741878
         type: integer
       last_successful_check_timestamp:
+        example: 1590741916
         type: integer
       maintenance:
+        example: 0
         type: integer
       maintenance_info:
         $ref: '#/definitions/moira.MaintenanceInfo'
@@ -592,18 +686,25 @@ definitions:
         description: "MetricsToTargetRelation is a map that holds relation between
           metric names that was alone during last\ncheck and targets that fetched
           this metric\n\t{\"t1\": \"metric.name.1\", \"t2\": \"metric.name.2\"}"
+        example:
+          t1: metric.name.1
+          t2: metric.name.2
         type: object
       msg:
         type: string
       score:
+        example: 100
         type: integer
       state:
+        example: OK
         type: string
       suppressed:
+        example: true
         type: boolean
       suppressed_state:
         type: string
       timestamp:
+        example: 1590741916
         type: integer
     type: object
   moira.ContactData:
@@ -647,25 +748,40 @@ definitions:
   moira.MetricState:
     properties:
       event_timestamp:
+        example: 1590741878
         type: integer
       maintenance:
+        example: 0
         type: integer
       maintenance_info:
         $ref: '#/definitions/moira.MaintenanceInfo'
       state:
+        example: OK
         type: string
       suppressed:
+        example: false
         type: boolean
       suppressed_state:
         type: string
       timestamp:
+        example: 1590741878
         type: integer
       value:
+        example: 70
         type: number
       values:
         additionalProperties:
           type: number
         type: object
+    type: object
+  moira.MetricValue:
+    properties:
+      step:
+        type: integer
+      ts:
+        type: integer
+      value:
+        type: number
     type: object
   moira.NotificationEvent:
     properties:
@@ -800,6 +916,79 @@ definitions:
       user:
         example: ""
         type: string
+    type: object
+  moira.Trigger:
+    properties:
+      alone_metrics:
+        additionalProperties:
+          type: boolean
+        example:
+          t1: true
+        type: object
+      created_at:
+        type: integer
+      created_by:
+        type: string
+      desc:
+        example: check the size of /var/log
+        type: string
+      error_value:
+        example: 1000
+        type: number
+      expression:
+        example: ""
+        type: string
+      id:
+        example: 292516ed-4924-4154-a62c-ebe312431fce
+        type: string
+      is_remote:
+        example: false
+        type: boolean
+      mute_new_metrics:
+        example: false
+        type: boolean
+      name:
+        example: Not enough disk space left
+        type: string
+      patterns:
+        example:
+        - ""
+        items:
+          type: string
+        type: array
+      python_expression:
+        type: string
+      sched:
+        $ref: '#/definitions/moira.ScheduleData'
+      tags:
+        example:
+        - server
+        - disk
+        items:
+          type: string
+        type: array
+      targets:
+        example:
+        - devOps.my_server.hdd.freespace_mbytes
+        items:
+          type: string
+        type: array
+      trigger_type:
+        example: rising
+        type: string
+      ttl:
+        example: 600
+        type: integer
+      ttl_state:
+        example: NODATA
+        type: string
+      updated_at:
+        type: integer
+      updated_by:
+        type: string
+      warn_value:
+        example: 5000
+        type: number
     type: object
   moira.TriggerCheck:
     properties:
@@ -2123,6 +2312,255 @@ paths:
       summary: Create a new trigger
       tags:
       - trigger
+  /trigger/{triggerID}:
+    delete:
+      operationId: remove-trigger
+      parameters:
+      - description: Trigger ID
+        in: path
+        name: triggerID
+        required: true
+        type: string
+        x-example: 5A8AF369-86D2-44DD-B514-D47995ED6AF7
+      responses:
+        "404":
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/api.ErrorNotFoundExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Remove trigger
+      tags:
+      - trigger
+    get:
+      operationId: get-trigger
+      parameters:
+      - description: Trigger ID
+        in: path
+        name: triggerID
+        required: true
+        type: string
+        x-example: 5A8AF369-86D2-44DD-B514-D47995ED6AF7
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Trigger data
+          schema:
+            $ref: '#/definitions/dto.Trigger'
+        "404":
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/api.ErrorNotFoundExample'
+        "422":
+          description: Render error
+          schema:
+            $ref: '#/definitions/api.ErrorRenderExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Get an existing trigger
+      tags:
+      - trigger
+    put:
+      operationId: update-trigger
+      parameters:
+      - description: Trigger ID
+        in: path
+        name: triggerID
+        required: true
+        type: string
+        x-example: 5A8AF369-86D2-44DD-B514-D47995ED6AF7
+      - description: Trigger data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.Trigger'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated trigger
+          schema:
+            $ref: '#/definitions/dto.SaveTriggerResponse'
+        "400":
+          description: Bad request from client
+          schema:
+            $ref: '#/definitions/api.ErrorInvalidRequestExample'
+        "404":
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/api.ErrorNotFoundExample'
+        "422":
+          description: Render error
+          schema:
+            $ref: '#/definitions/api.ErrorRenderExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+        "503":
+          description: Remote server unavailable
+          schema:
+            $ref: '#/definitions/api.ErrorRemoteServerUnavailableExample'
+      summary: Update existing trigger
+      tags:
+      - trigger
+  /trigger/{triggerID}/dump:
+    get:
+      operationId: get-trigger-dump
+      parameters:
+      - description: Trigger ID
+        in: path
+        name: triggerID
+        required: true
+        type: string
+        x-example: 5A8AF369-86D2-44DD-B514-D47995ED6AF7
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Trigger dump
+          schema:
+            $ref: '#/definitions/dto.TriggerDump'
+        "404":
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/api.ErrorNotFoundExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Get trigger dump
+      tags:
+      - trigger
+  /trigger/{triggerID}/setMaintenance:
+    put:
+      operationId: set-trigger-maintenance
+      parameters:
+      - description: Trigger ID
+        in: path
+        name: triggerID
+        required: true
+        type: string
+        x-example: 5A8AF369-86D2-44DD-B514-D47995ED6AF7
+      - description: Maintenance data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.TriggerMaintenance'
+      - description: User session token
+        in: header
+        name: x-webauth-user
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Trigger or metric have been scheduled for maintenance
+        "400":
+          description: Bad request from client
+          schema:
+            $ref: '#/definitions/api.ErrorInvalidRequestExample'
+        "404":
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/api.ErrorNotFoundExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Set metrics and the trigger itself to maintenance mode
+      tags:
+      - trigger
+  /trigger/{triggerID}/state:
+    get:
+      operationId: get-trigger-state
+      parameters:
+      - description: Trigger ID
+        in: path
+        name: triggerID
+        required: true
+        type: string
+        x-example: 5A8AF369-86D2-44DD-B514-D47995ED6AF7
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Trigger state fetched successfull
+          schema:
+            $ref: '#/definitions/dto.TriggerCheck'
+        "404":
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/api.ErrorNotFoundExample'
+        "422":
+          description: Render error
+          schema:
+            $ref: '#/definitions/api.ErrorRenderExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Get the trigger state as at last check
+      tags:
+      - trigger
+  /trigger/{triggerID}/throttling:
+    delete:
+      operationId: delete-trigger-throttling
+      parameters:
+      - description: Trigger ID
+        in: path
+        name: triggerID
+        required: true
+        type: string
+        x-example: 5A8AF369-86D2-44DD-B514-D47995ED6AF7
+      responses:
+        "200":
+          description: Trigger throttling has been deleted
+        "404":
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/api.ErrorNotFoundExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Deletes throttling for a trigger
+      tags:
+      - trigger
+    get:
+      operationId: get-trigger-throttling
+      parameters:
+      - description: Trigger ID
+        in: path
+        name: triggerID
+        required: true
+        type: string
+        x-example: 5A8AF369-86D2-44DD-B514-D47995ED6AF7
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Trigger throttle info retrieved
+          schema:
+            $ref: '#/definitions/dto.ThrottlingResponse'
+        "404":
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/api.ErrorNotFoundExample'
+        "422":
+          description: Render error
+          schema:
+            $ref: '#/definitions/api.ErrorRenderExample'
+      summary: Get a trigger with its throttling i.e its next allowed message time
+      tags:
+      - trigger
   /trigger/check:
     put:
       consumes:
@@ -2183,7 +2621,7 @@ paths:
             $ref: '#/definitions/api.ErrorInternalServerExample'
       summary: Delete triggers pager
       tags:
-      - Triggers
+      - trigger
   /trigger/search:
     get:
       operationId: search-triggers

@@ -228,7 +228,7 @@ func searchTriggers(writer http.ResponseWriter, request *http.Request) {
 }
 
 // @summary Delete triggers pager
-// @tags Triggers
+// @tags trigger
 // @produce json
 // @param pagerID path string true "Pager ID to delete" extensions(x-example=d5d98eb3-ee18-4f75-9364-244f67e23b54)
 // @success 200 {object} dto.TriggersSearchResultDeleteResponse "Successfully deleted pager"
