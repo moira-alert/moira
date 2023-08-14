@@ -106,7 +106,7 @@ func TestValidate(t *testing.T) {
 	})
 	Convey("Test bad expressions", t, func() {
 		err := (&TriggerExpression{Expression: nil, TriggerType: moira.ExpressionTrigger}).Validate()
-		So(err, ShouldResemble, fmt.Errorf("trigger_type set to expression, but no expression provided"))
+		So(err, ShouldResemble, ErrInvalidExpression{fmt.Errorf("trigger_type set to expression, but no expression provided")})
 	})
 	Convey("Test invalid expressions", t, func() {
 		expression := "t1 > 10 && t2 > 3 ? OK : ddd"

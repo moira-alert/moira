@@ -85,7 +85,9 @@ func (triggerExpression *TriggerExpression) Validate() error {
 		return nil
 	}
 	if triggerExpression.Expression == nil || *triggerExpression.Expression == "" {
-		return fmt.Errorf("trigger_type set to expression, but no expression provided")
+		return ErrInvalidExpression{
+			internalError: fmt.Errorf("trigger_type set to expression, but no expression provided"),
+		}
 	}
 	expression := *triggerExpression.Expression
 	env := map[string]interface{}{
@@ -106,12 +108,14 @@ func (triggerExpression *TriggerExpression) Validate() error {
 	for k, v := range triggerExpression.AdditionalTargetsValues {
 		env[k] = v
 	}
-	_, err := expr.Compile(
+	if _, err := expr.Compile(
 		strings.ToLower(expression),
 		expr.Optimize(true),
 		expr.Env(env),
-	)
-	return err
+	); err != nil {
+		return ErrInvalidExpression{err}
+	}
+	return nil
 }
 
 // Evaluate gets trigger expression and evaluates it for given parameters using govaluate
