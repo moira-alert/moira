@@ -25,8 +25,8 @@ func triggerMetrics(router chi.Router) {
 // @tags trigger
 // @produce json
 // @param triggerID path string true "Trigger ID" default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
-// @param from query string false "Start time for metrics retrieval" default(-10minutes) format(date-time)
-// @param to query string false "End time for metrics retrieval" default(now) format(date-time)
+// @param from query string false "Start time for metrics retrieval" default(-10minutes)
+// @param to query string false "End time for metrics retrieval" default(now)
 // @success 200 {object} dto.TriggerMetrics "Trigger metrics retrieved successfully"
 // @failure 400 {object} api.ErrorInvalidRequestExample "Bad request from client"
 // @failure 404 {object} api.ErrorNotFoundExample "Resource not found"

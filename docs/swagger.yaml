@@ -1144,7 +1144,7 @@ info:
   title: Moira Alert
   version: master
 paths:
-  /api/config:
+  /config:
     get:
       operationId: get-web-config
       produces:
@@ -1496,12 +1496,12 @@ paths:
     get:
       operationId: get-notifications
       parameters:
-      - default: 1
+      - default: 0
         description: 'Default Value: 0'
         in: query
         name: start
         type: integer
-      - default: 15
+      - default: -1
         description: 'Default Value: -1'
         in: query
         name: end
@@ -2619,13 +2619,11 @@ paths:
         type: string
       - default: -10minutes
         description: Start time for metrics retrieval
-        format: date-time
         in: query
         name: from
         type: string
       - default: now
         description: End time for metrics retrieval
-        format: date-time
         in: query
         name: to
         type: string
@@ -2704,14 +2702,12 @@ paths:
         type: string
       - default: -1hour
         description: Start time for metrics retrieval
-        format: date-time
         in: query
         name: from
         required: true
         type: string
       - default: now
         description: End time for metrics retrieval
-        format: date-time
         in: query
         name: to
         required: true
@@ -2726,11 +2722,11 @@ paths:
         in: query
         name: theme
         type: string
-      - default: "false"
+      - default: false
         description: Fetch real-time data
         in: query
         name: realtime
-        type: string
+        type: boolean
       produces:
       - image/png
       responses:

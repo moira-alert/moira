@@ -22,7 +22,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/config": {
+        "/config": {
             "get": {
                 "produces": [
                     "application/json"
@@ -506,14 +506,14 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "default": 1,
+                        "default": 0,
                         "description": "Default Value: 0",
                         "name": "start",
                         "in": "query"
                     },
                     {
                         "type": "integer",
-                        "default": 15,
+                        "default": -1,
                         "description": "Default Value: -1",
                         "name": "end",
                         "in": "query"
@@ -2361,7 +2361,6 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "format": "date-time",
                         "default": "-10minutes",
                         "description": "Start time for metrics retrieval",
                         "name": "from",
@@ -2369,7 +2368,6 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "format": "date-time",
                         "default": "now",
                         "description": "End time for metrics retrieval",
                         "name": "to",
@@ -2535,7 +2533,6 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "format": "date-time",
                         "default": "-1hour",
                         "description": "Start time for metrics retrieval",
                         "name": "from",
@@ -2544,7 +2541,6 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "format": "date-time",
                         "default": "now",
                         "description": "End time for metrics retrieval",
                         "name": "to",
@@ -2566,8 +2562,8 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
-                        "type": "string",
-                        "default": "false",
+                        "type": "boolean",
+                        "default": false,
                         "description": "Fetch real-time data",
                         "name": "realtime",
                         "in": "query"

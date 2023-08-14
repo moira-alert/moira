@@ -17,7 +17,7 @@ type ConfigurationResponse struct {
 // @tags		config
 // @produce	json
 // @success	200	{object}	ConfigurationResponse	"Configuration fetched successfully"
-// @router		/api/config [get]
+// @router		/config [get]
 func getWebConfig(configContent []byte) http.HandlerFunc {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		writer.Header().Set("Content-Type", "application/json")

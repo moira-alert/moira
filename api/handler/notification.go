@@ -21,8 +21,8 @@ func notification(router chi.Router) {
 // @id			get-notifications
 // @tags		notification
 // @produce	json
-// @param		start	query	int	false	"Default Value: 0"	default(1)
-// @param		end		query	int	false	"Default Value: -1"	default(15)
+// @param		start	query	int	false	"Default Value: 0"	default(0)
+// @param		end		query	int	false	"Default Value: -1"	default(-1)
 // @success	200	{object}	dto.NotificationsList			"Notifications fetched successfully"
 // @failure	400	{object}	api.ErrorInvalidRequestExample	"Bad request from client"
 // @failure	422	{object}	api.ErrorRenderExample			"Render error"
