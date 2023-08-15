@@ -25,7 +25,6 @@ jobs:
       - run: npm i --location=global swaggerhub-cli
       - run: |
           VERSION=`echo ${GITHUB_REF_NAME}| sed 's#[^a-zA-Z0-9_\.\-]#_#g'`
-          SWAGGERHUB_API_KEY=${{secrets.SWAGGERHUB_TOKEN}}
 
           # Check if the API version exists before attempting to unpublish and delete
           API_DETAILS=$(swaggerhub api:get "Moira-test-swagger/moira-alert-test/${VERSION}" 2>&1)
@@ -33,8 +32,8 @@ jobs:
           # If API version details contain "Error: Unknown API", then it doesn't exist
           if ! echo "$API_DETAILS" | grep -q "Error: Unknown API"; then
             echo "API version exists, proceeding with removal"
-            swaggerhub api:unpublish "Moira-test-swagger/moira-alert-test/${VERSION}"
-            swaggerhub api:delete "Moira-test-swagger/moira-alert-test/${VERSION}"
+            SWAGGERHUB_API_KEY=${{secrets.SWAGGERHUB_TOKEN}} swaggerhub api:unpublish "Moira-test-swagger/moira-alert-test/${VERSION}"
+            SWAGGERHUB_API_KEY=${{secrets.SWAGGERHUB_TOKEN}} swaggerhub api:delete "Moira-test-swagger/moira-alert-test/${VERSION}"
           else
             echo "API version not found, skipping removal"
           fi
