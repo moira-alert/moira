@@ -47,6 +47,7 @@ install-swag:
 spec:
 	echo "Generating Swagger documentation"
 	swag init -g api/handler/handler.go
+	swag fmt
 
 .PHONY: validate-spec
 validate-spec:
