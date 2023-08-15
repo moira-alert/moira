@@ -1,0 +1,29 @@
+name: Delete spec version from SwaggerHub
+defaults:
+  run:
+    working-directory: .
+on:
+  pull_request:
+    types: [closed]
+    branches:
+    - master
+  push:
+    branches:
+    - feature/*
+    - release/[0-9]+.[0-9]+.[0-9]+
+    - master
+
+jobs:
+  removespec:
+    name: Delete api from SwaggerHub
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '16.16.0'
+      - run: npm i --location=global swaggerhub-cli
+      - run: |
+          VERSION=`echo ${GITHUB_REF_NAME} | sed 's#[^a-zA-Z0-9_\.\-]#_#g'`
+          SWAGGERHUB_API_KEY=${{secrets.SWAGGERHUB_TOKEN}} swaggerhub api:unpublish "ALMOSTINF_1/moira-alert-test/${VERSION}"
+          SWAGGERHUB_API_KEY=${{secrets.SWAGGERHUB_TOKEN}} swaggerhub api:delete    "ALMOSTINF_1/moira-alert-test/${VERSION}"
