@@ -151,7 +151,7 @@ func removeContact(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-// nolint: gofmt,goimports
+// nolint: goimports
 //	@summary	Push a test notification to verify that the contact is properly set up
 //	@id			send-test-contact-notification
 //	@accept		json
