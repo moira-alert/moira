@@ -25,9 +25,9 @@ jobs:
       - run: npm i --location=global swaggerhub-cli
       - run: |
           VERSION=`echo ${GITHUB_REF_NAME}| sed 's#[^a-zA-Z0-9_\.\-]#_#g'`
-          API_DETAILS=$(swaggerhub api:get "Moira-test-swagger/moira-alert-test/${VERSION}")
+          API_DETAILS=$(SWAGGERHUB_API_KEY=${{secrets.SWAGGERHUB_TOKEN}} swaggerhub api:get "Moira-test-swagger/moira-alert-test/${VERSION}")
           echo "$API_DETAILS"
-          API_DETAILS=$(swaggerhub api:get "Moira-test-swagger/moira-alert-test/check")
+          API_DETAILS=$(SWAGGERHUB_API_KEY=${{secrets.SWAGGERHUB_TOKEN}} swaggerhub api:get "Moira-test-swagger/moira-alert-test/check")
           echo "$API_DETAILS"
           SWAGGERHUB_API_KEY=${{secrets.SWAGGERHUB_TOKEN}} swaggerhub api:unpublish "Moira-test-swagger/moira-alert-test/${VERSION}"
           SWAGGERHUB_API_KEY=${{secrets.SWAGGERHUB_TOKEN}} swaggerhub api:delete    "Moira-test-swagger/moira-alert-test/${VERSION}"
