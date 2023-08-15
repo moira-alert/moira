@@ -85,7 +85,7 @@ func main() {
 	}
 
 	filterMetrics := metrics.ConfigureFilterMetrics(telemetry.Metrics)
-	database := redis.NewDatabase(logger, config.Redis.GetSettings(), redis.Filter)
+	database := redis.NewDatabase(logger, config.Redis.GetSettings(), redis.NotificationHistoryConfig{}, redis.Filter)
 
 	retentionConfigFile, err := os.Open(config.Filter.RetentionConfig)
 	if err != nil {

@@ -340,7 +340,7 @@ func initApp() (cleanupConfig, moira.Logger, moira.Database) {
 	}
 
 	databaseSettings := config.Redis.GetSettings()
-	dataBase := redis.NewDatabase(logger, databaseSettings, redis.Cli)
+	dataBase := redis.NewDatabase(logger, databaseSettings, redis.NotificationHistoryConfig{}, redis.Cli)
 	return config.Cleanup, logger, dataBase
 }
 
