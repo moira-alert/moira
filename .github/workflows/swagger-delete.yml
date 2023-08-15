@@ -27,7 +27,7 @@ jobs:
           VERSION=`echo ${GITHUB_REF_NAME}| sed 's#[^a-zA-Z0-9_\.\-]#_#g'`
 
           # Check if the API version exists before attempting to unpublish and delete
-          API_DETAILS=$(SWAGGERHUB_API_KEY=${{secrets.SWAGGERHUB_TOKEN}} swaggerhub api:get "Moira-test-swagger/moira-alert-test/${VERSION}" 2>&1)
+          API_DETAILS=$(SWAGGERHUB_API_KEY=${{secrets.SWAGGERHUB_TOKEN}} swaggerhub api:get "Moira-test-swagger/moira-alert-test/check" 2>&1)
       
           # If API version details contain "Error: Unknown API", then it doesn't exist
           if ! echo "$API_DETAILS" | grep -q "Error: Unknown API"; then
