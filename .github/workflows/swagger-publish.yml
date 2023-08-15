@@ -103,4 +103,4 @@ jobs:
       - run: npm i --location=global swaggerhub-cli
       - run: |
           VERSION=`echo ${GITHUB_REF_NAME}| sed 's#[^a-zA-Z0-9_\.\-]#_#g'`
-          SWAGGERHUB_API_KEY=${{secrets.SWAGGERHUB_TOKEN}} swaggerhub api:create "ALMOSTINF_1/moira-alert-test/${VERSION}" -f ./docs/swagger.yaml --published=publish --visibility=public
+          SWAGGERHUB_API_KEY=${{secrets.SWAGGERHUB_TOKEN}} swaggerhub api:create "Moira-test-swagger/moira-alert-test/${VERSION}" -f ./docs/swagger.yaml --published=publish --visibility=public
