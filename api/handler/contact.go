@@ -129,7 +129,7 @@ func updateContact(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-// nolint: gofmt,goimports
+// nolint: goimports
 //	@summary	Deletes notification contact for the current user and remove the contact ID from all subscriptions
 //	@id			remove-contact
 //	@accept		json
@@ -151,7 +151,7 @@ func removeContact(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-// nolint: goimports
+// nolint: gofmt,goimports
 //	@summary	Push a test notification to verify that the contact is properly set up
 //	@id			send-test-contact-notification
 //	@accept		json
