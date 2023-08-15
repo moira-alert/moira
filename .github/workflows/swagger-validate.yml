@@ -7,7 +7,7 @@ on:
 
 jobs:
   mergespec:
-    name: Bundle spec files and validate it.
+    name: Validate spec file
     runs-on: ubuntu-22.04
     defaults:
       run:
@@ -21,20 +21,8 @@ jobs:
           go-version-file: go.mod
           cache-dependency-path: go.sum
 
-      - name: Install swag tool
-        run: make install-swag
-
-      - name: Generate Swagger Documentation
-        run: make spec
-
       - uses: actions/setup-node@v3
         with:
           node-version: '16.16.0'
       - run: npm install --location=global @openapitools/openapi-generator-cli
       - run: make validate-spec
-
-      - name: Save build artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: specfile
-          path: docs/swagger.yaml
