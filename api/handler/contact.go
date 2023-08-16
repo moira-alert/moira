@@ -28,6 +28,7 @@ func contact(router chi.Router) {
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Gets all Moira contacts
 //	@id			get-all-contacts
 //	@tags		contact
@@ -50,6 +51,7 @@ func getAllContacts(writer http.ResponseWriter, request *http.Request) {
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Get contact by ID
 //	@id			get-contact-by-id
 //	@tags		contact
@@ -78,6 +80,7 @@ func getContactById(writer http.ResponseWriter, request *http.Request) {
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Creates a new contact notification for the current user
 //	@id			create-new-contact
 //	@tags		contact
@@ -125,6 +128,7 @@ func contactFilter(next http.Handler) http.Handler {
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Updates an existing notification contact to the values passed in the request body
 //	@id			update-contact
 //	@accept		json
@@ -159,6 +163,7 @@ func updateContact(writer http.ResponseWriter, request *http.Request) {
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Deletes notification contact for the current user and remove the contact ID from all subscriptions
 //	@id			remove-contact
 //	@accept		json
@@ -181,6 +186,7 @@ func removeContact(writer http.ResponseWriter, request *http.Request) {
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Push a test notification to verify that the contact is properly set up
 //	@id			send-test-contact-notification
 //	@accept		json

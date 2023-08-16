@@ -17,6 +17,7 @@ func pattern(router chi.Router) {
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Get all patterns
 //	@id			get-all-patterns
 //	@tags		pattern
@@ -38,6 +39,7 @@ func getAllPatterns(writer http.ResponseWriter, request *http.Request) {
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Deletes a Moira pattern
 //	@id			delete-pattern
 //	@tags		pattern

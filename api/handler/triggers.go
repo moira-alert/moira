@@ -39,6 +39,7 @@ func triggers(metricSourceProvider *metricSource.SourceProvider, searcher moira.
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Get all triggers
 //	@id			get-all-triggers
 //	@tags		trigger
@@ -69,6 +70,7 @@ func getAllTriggers(writer http.ResponseWriter, request *http.Request) {
 //	@accept		json
 //	@produce	json
 //	@param		x-webauth-user	header		string									false	"User session token"
+//	@param		validate		query		bool									false	"For validating targets"
 //	@param		trigger			body		dto.Trigger								true	"Trigger data"
 //	@success	200				{object}	dto.SaveTriggerResponse					"Trigger created successfully"
 //	@failure	400				{object}	api.ErrorInvalidRequestExample			"Bad request from client"
@@ -158,6 +160,7 @@ func getMetricTTLByTrigger(request *http.Request, trigger *dto.Trigger) time.Dur
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Validates trigger target
 //	@id			trigger-check
 //	@tags		trigger
@@ -193,22 +196,25 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 }
 
 // nolint: gofmt,goimports
-//	@summary	Search triggers. Replaces the deprecated `page` path
-//	@id			search-triggers
-//	@tags		trigger
-//	@produce	json
-//	@param		onlyProblems	query		boolean							false	"Only include problems"	default(false)
-//	@param		text			query		string							false	"Search text"			default(cpu)
-//	@param		p				query		integer							false	"Page number"			default(0)
-//	@param		size			query		integer							false	"Page size"				default(10)
-//	@param		createPager		query		boolean							false	"Create pager"			default(false)
-//	@param		pagerID			query		string							false	"Pager ID"				default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
-//	@success	200				{object}	dto.TriggersList				"Successfully fetched matching triggers"
-//	@failure	400				{object}	api.ErrorInvalidRequestExample	"Bad request from client"
-//	@failure	404				{object}	api.ErrorNotFoundExample		"Resource not found"
-//	@failure	422				{object}	api.ErrorRenderExample			"Render error"
-//	@failure	500				{object}	api.ErrorInternalServerExample	"Internal server error"
-//	@router		/trigger/search [get]
+//
+//	@summary		Search triggers. Replaces the deprecated `page` path
+//	@description	You can also add filtering by tags, for this purpose add query parameters tags[0]=test, tags[1]=test1 and so on
+// For example, /api/trigger/search?tags[0]=test&tags[1]=test1
+//	@id				search-triggers
+//	@tags			trigger
+//	@produce		json
+//	@param			onlyProblems	query		boolean							false	"Only include problems"	default(false)
+//	@param			text			query		string							false	"Search text"			default(cpu)
+//	@param			p				query		integer							false	"Page number"			default(0)
+//	@param			size			query		integer							false	"Page size"				default(10)
+//	@param			createPager		query		boolean							false	"Create pager"			default(false)
+//	@param			pagerID			query		string							false	"Pager ID"				default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+//	@success		200				{object}	dto.TriggersList				"Successfully fetched matching triggers"
+//	@failure		400				{object}	api.ErrorInvalidRequestExample	"Bad request from client"
+//	@failure		404				{object}	api.ErrorNotFoundExample		"Resource not found"
+//	@failure		422				{object}	api.ErrorRenderExample			"Render error"
+//	@failure		500				{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@router			/trigger/search [get]
 func searchTriggers(writer http.ResponseWriter, request *http.Request) {
 	request.ParseForm() //nolint
 	onlyErrors := getOnlyProblemsFlag(request)
@@ -234,6 +240,7 @@ func searchTriggers(writer http.ResponseWriter, request *http.Request) {
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Delete triggers pager
 //	@tags		trigger
 //	@produce	json

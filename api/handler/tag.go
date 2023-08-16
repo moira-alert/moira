@@ -20,6 +20,7 @@ func tag(router chi.Router) {
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Get all tags
 //	@id			get-all-tags
 //	@tags		tag
@@ -42,6 +43,7 @@ func getAllTags(writer http.ResponseWriter, request *http.Request) {
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Get all tags and their subscriptions
 //	@id			get-all-tags-and-subscriptions
 //	@tags		tag
@@ -64,6 +66,7 @@ func getAllTagsAndSubscriptions(writer http.ResponseWriter, request *http.Reques
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Remove a tag
 //	@id			remove-tag
 //	@tags		tag

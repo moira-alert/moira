@@ -47,6 +47,7 @@ func usersFilterForTeams(next http.Handler) http.Handler {
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Create a new team
 //	@id			create-team
 //	@tags		team
@@ -79,6 +80,7 @@ func createTeam(writer http.ResponseWriter, request *http.Request) {
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Get all teams
 //	@id			get-all-teams
 //	@tags		team
@@ -103,6 +105,7 @@ func getAllTeams(writer http.ResponseWriter, request *http.Request) {
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Get a team by ID
 //	@id			get-team
 //	@tags		team
@@ -131,6 +134,7 @@ func getTeam(writer http.ResponseWriter, request *http.Request) {
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Update existing team
 //	@id			update-team
 //	@tags		team
@@ -168,6 +172,7 @@ func updateTeam(writer http.ResponseWriter, request *http.Request) {
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Delete a team
 //	@id			delete-team
 //	@tags		team
@@ -197,6 +202,7 @@ func deleteTeam(writer http.ResponseWriter, request *http.Request) {
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Get users of a team
 //	@id			get-team-users
 //	@tags		team
@@ -225,6 +231,7 @@ func getTeamUsers(writer http.ResponseWriter, request *http.Request) {
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Set users of a team
 //	@id			set-team-users
 //	@tags		team
@@ -263,6 +270,7 @@ func setTeamUsers(writer http.ResponseWriter, request *http.Request) {
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Add users to a team
 //	@id			add-team-users
 //	@tags		team
@@ -300,6 +308,7 @@ func addTeamUsers(writer http.ResponseWriter, request *http.Request) {
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Delete a user from a team
 //	@id			delete-team-user
 //	@tags		team
@@ -331,6 +340,7 @@ func deleteTeamUser(writer http.ResponseWriter, request *http.Request) {
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Get team settings
 //	@id			get-team-settings
 //	@tags		team

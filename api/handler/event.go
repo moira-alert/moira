@@ -16,13 +16,14 @@ func event(router chi.Router) {
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Gets all trigger events for current page and their count
 //	@id			get-events-list
 //	@tags		event
 //	@produce	json
 //	@param		triggerID	path		string							true	"The ID of updated trigger"														default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
-//	@param		size		query		int								false	"Number of items to be displayed on one page"									default(15)
-//	@param		p			query		int								false	"Defines the number of the displayed page. E.g, p=2 would display the 2nd page"	default(1)
+//	@param		size		query		int								false	"Number of items to be displayed on one page"									default(100)
+//	@param		p			query		int								false	"Defines the number of the displayed page. E.g, p=2 would display the 2nd page"	default(0)
 //	@success	200			{object}	dto.EventsList					"Events fetched successfully"
 //	@Failure	400			{object}	api.ErrorInvalidRequestExample	"Bad request from client"
 //	@Failure	404			{object}	api.ErrorNotFoundExample		"Resource not found"
@@ -44,6 +45,7 @@ func getEventsList(writer http.ResponseWriter, request *http.Request) {
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Deletes all notification events
 //	@id			delete-all-events
 //	@tags		event

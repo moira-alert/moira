@@ -490,14 +490,14 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "default": 15,
+                        "default": 100,
                         "description": "Number of items to be displayed on one page",
                         "name": "size",
                         "in": "query"
                     },
                     {
                         "type": "integer",
-                        "default": 1,
+                        "default": 0,
                         "description": "Defines the number of the displayed page. E.g, p=2 would display the 2nd page",
                         "name": "p",
                         "in": "query"
@@ -685,7 +685,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
-                        "description": "The ID of updated trigger",
+                        "description": "The ID of deleted notification",
                         "name": "id",
                         "in": "query",
                         "required": true
@@ -2048,6 +2048,12 @@ const docTemplate = `{
                         "in": "header"
                     },
                     {
+                        "type": "boolean",
+                        "description": "For validating targets",
+                        "name": "validate",
+                        "in": "query"
+                    },
+                    {
                         "description": "Trigger data",
                         "name": "trigger",
                         "in": "body",
@@ -2186,6 +2192,7 @@ const docTemplate = `{
         },
         "/trigger/search": {
             "get": {
+                "description": "You can also add filtering by tags, for this purpose add query parameters tags[0]=test, tags[1]=test1 and so on",
                 "produces": [
                     "application/json"
                 ],
@@ -2290,6 +2297,13 @@ const docTemplate = `{
                         "name": "triggerID",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Populated",
+                        "name": "populated",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -2342,6 +2356,12 @@ const docTemplate = `{
                         "name": "triggerID",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "For validating targets",
+                        "name": "validate",
+                        "in": "query"
                     },
                     {
                         "description": "Trigger data",
@@ -2653,7 +2673,7 @@ const docTemplate = `{
                         "type": "string",
                         "default": "t1",
                         "description": "Target metric name",
-                        "name": "targetName",
+                        "name": "target",
                         "in": "query",
                         "required": true
                     },
