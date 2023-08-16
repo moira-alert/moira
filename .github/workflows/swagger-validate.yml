@@ -1,9 +1,7 @@
 name: Validate OpenAPI spec on new PR
 
 on:
-  pull_request:
-    branches:
-      - master
+  - pull_request
 
 jobs:
   mergespec:
