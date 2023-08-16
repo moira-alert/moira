@@ -33,6 +33,9 @@ notifier:
   front_uri: http://localhost
   timezone: UTC
   date_time_format: "15:04 02.01.2006"
+notification_history:
+  ttl: 48h
+  query_limit: 10000
 log:
   log_file: stdout
   log_level: info

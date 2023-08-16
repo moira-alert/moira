@@ -131,6 +131,58 @@ const docTemplate = `{
             }
         },
         "/contact/{contactID}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contact"
+                ],
+                "summary": "Get contact by ID",
+                "operationId": "get-contact-by-id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
+                        "description": "Contact ID",
+                        "name": "contactID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully received contact",
+                        "schema": {
+                            "$ref": "#/definitions/dto.Contact"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorForbiddenExample"
+                        }
+                    },
+                    "404": {
+                        "description": "Resource not found",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorNotFoundExample"
+                        }
+                    },
+                    "422": {
+                        "description": "Render error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorRenderExample"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorInternalServerExample"
+                        }
+                    }
+                }
+            },
             "put": {
                 "consumes": [
                     "application/json"
@@ -309,6 +361,82 @@ const docTemplate = `{
                         "description": "Resource not found",
                         "schema": {
                             "$ref": "#/definitions/api.ErrorNotFoundExample"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorInternalServerExample"
+                        }
+                    }
+                }
+            }
+        },
+        "/contacts/{contactID}/events": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contact"
+                ],
+                "summary": "Get contact events by ID with time range",
+                "operationId": "get-contact-events-by-id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
+                        "description": "Contact ID",
+                        "name": "contactID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "-1hour",
+                        "description": "Start time of the time range",
+                        "name": "from",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "now",
+                        "description": "End time of the time range",
+                        "name": "to",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully received contact events",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ContactEventItemList"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request from client",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorInvalidRequestExample"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorForbiddenExample"
+                        }
+                    },
+                    "404": {
+                        "description": "Resource not found",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorNotFoundExample"
+                        }
+                    },
+                    "422": {
+                        "description": "Render error",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorRenderExample"
                         }
                     },
                     "500": {
@@ -2956,6 +3084,37 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.ContactEventItem": {
+            "type": "object",
+            "properties": {
+                "metric": {
+                    "type": "string"
+                },
+                "old_state": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                },
+                "timestamp": {
+                    "type": "integer"
+                },
+                "trigger_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.ContactEventItemList": {
+            "type": "object",
+            "properties": {
+                "list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.ContactEventItem"
+                    }
+                }
+            }
+        },
         "dto.ContactList": {
             "type": "object",
             "properties": {
@@ -4007,7 +4166,7 @@ const docTemplate = `{
         "moira.NotificationEvent": {
             "type": "object",
             "properties": {
-                "contactId": {
+                "contact_id": {
                     "type": "string"
                 },
                 "event_message": {
