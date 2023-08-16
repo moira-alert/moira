@@ -80,7 +80,7 @@ func main() {
 	defer telemetry.Stop()
 
 	databaseSettings := config.Redis.GetSettings()
-	database := redis.NewDatabase(logger, databaseSettings, redis.Checker)
+	database := redis.NewDatabase(logger, databaseSettings, redis.NotificationHistoryConfig{}, redis.Checker)
 
 	remoteConfig := config.Remote.GetRemoteSourceSettings()
 	localSource := local.Create(database)

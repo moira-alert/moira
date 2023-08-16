@@ -44,6 +44,9 @@ web:
     is_plotting_available: true
     is_plotting_default_on: true
     is_subscription_to_all_tags_available: true
+notification_history:
+  ttl: 48h
+  query_limit: 10000
 log:
   log_file: stdout
   log_level: debug

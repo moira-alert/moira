@@ -48,21 +48,21 @@ func main() {
 		os.Exit(0)
 	}
 
-	mainConfig := getDefault()
+	applicationConfig := getDefault()
 	if *printDefaultConfigFlag {
-		cmd.PrintConfig(mainConfig)
+		cmd.PrintConfig(applicationConfig)
 		os.Exit(0)
 	}
 
-	err := cmd.ReadConfig(*configFileName, &mainConfig)
+	err := cmd.ReadConfig(*configFileName, &applicationConfig)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Can not read settings: %s\n", err.Error())
 		os.Exit(1)
 	}
 
-	apiConfig := mainConfig.API.getSettings(mainConfig.Redis.MetricsTTL, mainConfig.Remote.MetricsTTL)
+	apiConfig := applicationConfig.API.getSettings(applicationConfig.Redis.MetricsTTL, applicationConfig.Remote.MetricsTTL)
 
-	logger, err := logging.ConfigureLog(mainConfig.Logger.LogFile, mainConfig.Logger.LogLevel, serviceName, mainConfig.Logger.LogPrettyFormat)
+	logger, err := logging.ConfigureLog(applicationConfig.Logger.LogFile, applicationConfig.Logger.LogLevel, serviceName, applicationConfig.Logger.LogPrettyFormat)
 
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Can not configure log: %s\n", err.Error())
@@ -72,7 +72,7 @@ func main() {
 		String("moira_version", MoiraVersion).
 		Msg("Moira API stopped")
 
-	telemetry, err := cmd.ConfigureTelemetry(logger, mainConfig.Telemetry, serviceName)
+	telemetry, err := cmd.ConfigureTelemetry(logger, applicationConfig.Telemetry, serviceName)
 	if err != nil {
 		logger.Fatal().
 			Error(err).
@@ -80,8 +80,9 @@ func main() {
 	}
 	defer telemetry.Stop()
 
-	databaseSettings := mainConfig.Redis.GetSettings()
-	database := redis.NewDatabase(logger, databaseSettings, redis.API)
+	databaseSettings := applicationConfig.Redis.GetSettings()
+	notificationHistorySettings := applicationConfig.NotificationHistory.GetSettings()
+	database := redis.NewDatabase(logger, databaseSettings, notificationHistorySettings, redis.API)
 
 	// Start Index right before HTTP listener. Fail if index cannot start
 	searchIndex := index.NewSearchIndex(logger, database, telemetry.Metrics)
@@ -114,15 +115,15 @@ func main() {
 		Msg("Start listening")
 
 	localSource := local.Create(database)
-	remoteConfig := mainConfig.Remote.GetRemoteSourceSettings()
+	remoteConfig := applicationConfig.Remote.GetRemoteSourceSettings()
 	remoteSource := remote.Create(remoteConfig)
 	metricSourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource)
 
-	webConfigContent, err := mainConfig.Web.getSettings(remoteConfig.Enabled)
+	webConfigContent, err := applicationConfig.Web.getSettings(remoteConfig.Enabled)
 	if err != nil {
 		logger.Fatal().
 			Error(err).
-			Msg("Failed to get web config content ")
+			Msg("Failed to get web applicationConfig content ")
 	}
 
 	httpHandler := handler.NewHandler(database, logger, searchIndex, apiConfig, metricSourceProvider, webConfigContent)
