@@ -1,4 +1,4 @@
-name: Validate OpenAPI spec on new PR
+name: Validate OpenAPI on PR
 
 on:
   - pull_request
