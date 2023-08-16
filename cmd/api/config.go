@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/moira-alert/moira/notifier"
+
 	"github.com/xiam/to"
 
 	"github.com/moira-alert/moira/api"
@@ -11,12 +13,13 @@ import (
 )
 
 type config struct {
-	Redis     cmd.RedisConfig     `yaml:"redis"`
-	Logger    cmd.LoggerConfig    `yaml:"log"`
-	API       apiConfig           `yaml:"api"`
-	Web       webConfig           `yaml:"web"`
-	Telemetry cmd.TelemetryConfig `yaml:"telemetry"`
-	Remote    cmd.RemoteConfig    `yaml:"remote"`
+	Redis               cmd.RedisConfig               `yaml:"redis"`
+	Logger              cmd.LoggerConfig              `yaml:"log"`
+	API                 apiConfig                     `yaml:"api"`
+	Web                 webConfig                     `yaml:"web"`
+	Telemetry           cmd.TelemetryConfig           `yaml:"telemetry"`
+	Remote              cmd.RemoteConfig              `yaml:"remote"`
+	NotificationHistory cmd.NotificationHistoryConfig `yaml:"notification_history"`
 }
 
 type apiConfig struct {
@@ -105,6 +108,10 @@ func getDefault() config {
 			MetricsTTL:  "1h",
 			DialTimeout: "500ms",
 			MaxRetries:  3,
+		},
+		NotificationHistory: cmd.NotificationHistoryConfig{
+			NotificationHistoryTTL:        "48h",
+			NotificationHistoryQueryLimit: int(notifier.NotificationsLimitUnlimited),
 		},
 		Logger: cmd.LoggerConfig{
 			LogFile:         "stdout",

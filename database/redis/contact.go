@@ -83,29 +83,18 @@ func getContactsKeysOnRedisNode(ctx context.Context, client redis.UniversalClien
 
 // GetAllContacts returns full contact list
 func (connector *DbConnector) GetAllContacts() ([]*moira.ContactData, error) {
-	client := *connector.client
 	var keys []string
 
-	switch c := client.(type) {
-	case *redis.ClusterClient:
-		err := c.ForEachMaster(connector.context, func(ctx context.Context, shard *redis.Client) error {
-			keysResult, err := getContactsKeysOnRedisNode(ctx, shard)
-			if err != nil {
-				return err
-			}
-			keys = append(keys, keysResult...)
-			return nil
-		})
-
+	err := connector.callFunc(func(connector *DbConnector, client redis.UniversalClient) error {
+		keysResult, err := getContactsKeysOnRedisNode(connector.context, client)
 		if err != nil {
-			return nil, err
+			return err
 		}
-	default:
-		keysResult, err := getContactsKeysOnRedisNode(connector.context, c)
-		if err != nil {
-			return nil, err
-		}
-		keys = keysResult
+		keys = append(keys, keysResult...)
+		return nil
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	contactIDs := make([]string, 0, len(keys))

@@ -50,10 +50,21 @@ type NotificationEvent struct {
 	State            State              `json:"state" example:"OK"`
 	TriggerID        string             `json:"trigger_id" example:"5ff37996-8927-4cab-8987-970e80d8e0a8"`
 	SubscriptionID   *string            `json:"sub_id,omitempty"`
-	ContactID        string             `json:"contactId,omitempty"`
+	ContactID        string             `json:"contact_id,omitempty"`
 	OldState         State              `json:"old_state" example:"ERROR"`
 	Message          *string            `json:"msg,omitempty"`
 	MessageEventInfo *EventInfo         `json:"event_message"`
+}
+
+// NotificationEventHistoryItem is in use to store notifications history of channel
+// (see database/redis/contact_notifications_history.go
+type NotificationEventHistoryItem struct {
+	TimeStamp int64  `json:"timestamp"`
+	Metric    string `json:"metric"`
+	State     State  `json:"state"`
+	OldState  State  `json:"old_state"`
+	TriggerID string `json:"trigger_id"`
+	ContactID string `json:"contact_id"`
 }
 
 // EventInfo - a base for creating messages.

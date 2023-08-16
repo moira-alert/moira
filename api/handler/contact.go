@@ -20,6 +20,7 @@ func contact(router chi.Router) {
 	router.Route("/{contactId}", func(router chi.Router) {
 		router.Use(middleware.ContactContext)
 		router.Use(contactFilter)
+		router.Get("/", getContactById)
 		router.Put("/", updateContact)
 		router.Delete("/", removeContact)
 		router.Post("/test", sendTestContactNotification)
@@ -43,6 +44,34 @@ func getAllContacts(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	if err := render.Render(writer, request, contacts); err != nil {
+		render.Render(writer, request, api.ErrorRender(err)) //nolint
+		return
+	}
+}
+
+// nolint: gofmt,goimports
+// @summary Get contact by ID
+// @id get-contact-by-id
+// @tags contact
+// @produce json
+// @param contactID path string true "Contact ID" default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+// @success 200 {object} dto.Contact "Successfully received contact"
+// @failure 403 {object} api.ErrorForbiddenExample "Forbidden"
+// @failure 404 {object} api.ErrorNotFoundExample "Resource not found"
+// @failure 422 {object} api.ErrorRenderExample "Render error"
+// @failure 500 {object} api.ErrorInternalServerExample "Internal server error"
+// @router /contact/{contactID} [get]
+func getContactById(writer http.ResponseWriter, request *http.Request) {
+	contactData := request.Context().Value(contactKey).(moira.ContactData)
+
+	contact, apiErr := controller.GetContactById(database, contactData.ID)
+
+	if apiErr != nil {
+		render.Render(writer, request, apiErr) //nolint
+		return
+	}
+
+	if err := render.Render(writer, request, contact); err != nil {
 		render.Render(writer, request, api.ErrorRender(err)) //nolint
 		return
 	}

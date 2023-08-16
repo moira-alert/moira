@@ -517,6 +517,21 @@ func (mr *MockDatabaseMockRecorder) GetNotifications(arg0, arg1 interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNotifications", reflect.TypeOf((*MockDatabase)(nil).GetNotifications), arg0, arg1)
 }
 
+// GetNotificationsByContactIdWithLimit mocks base method.
+func (m *MockDatabase) GetNotificationsByContactIdWithLimit(arg0 string, arg1, arg2 int64) ([]*moira.NotificationEventHistoryItem, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetNotificationsByContactIdWithLimit", arg0, arg1, arg2)
+	ret0, _ := ret[0].([]*moira.NotificationEventHistoryItem)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetNotificationsByContactIdWithLimit indicates an expected call of GetNotificationsByContactIdWithLimit.
+func (mr *MockDatabaseMockRecorder) GetNotificationsByContactIdWithLimit(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNotificationsByContactIdWithLimit", reflect.TypeOf((*MockDatabase)(nil).GetNotificationsByContactIdWithLimit), arg0, arg1, arg2)
+}
+
 // GetNotifierState mocks base method.
 func (m *MockDatabase) GetNotifierState() (string, error) {
 	m.ctrl.T.Helper()
@@ -1016,6 +1031,20 @@ func (m *MockDatabase) NewLock(arg0 string, arg1 time.Duration) moira.Lock {
 func (mr *MockDatabaseMockRecorder) NewLock(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewLock", reflect.TypeOf((*MockDatabase)(nil).NewLock), arg0, arg1)
+}
+
+// PushContactNotificationToHistory mocks base method.
+func (m *MockDatabase) PushContactNotificationToHistory(arg0 *moira.ScheduledNotification) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "PushContactNotificationToHistory", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// PushContactNotificationToHistory indicates an expected call of PushContactNotificationToHistory.
+func (mr *MockDatabaseMockRecorder) PushContactNotificationToHistory(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PushContactNotificationToHistory", reflect.TypeOf((*MockDatabase)(nil).PushContactNotificationToHistory), arg0)
 }
 
 // PushNotificationEvent mocks base method.

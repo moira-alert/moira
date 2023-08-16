@@ -13,12 +13,13 @@ import (
 )
 
 type config struct {
-	Redis       cmd.RedisConfig      `yaml:"redis"`
-	Logger      cmd.LoggerConfig     `yaml:"log"`
-	Notifier    notifierConfig       `yaml:"notifier"`
-	Telemetry   cmd.TelemetryConfig  `yaml:"telemetry"`
-	Remote      cmd.RemoteConfig     `yaml:"remote"`
-	ImageStores cmd.ImageStoreConfig `yaml:"image_store"`
+	Redis               cmd.RedisConfig               `yaml:"redis"`
+	Logger              cmd.LoggerConfig              `yaml:"log"`
+	Notifier            notifierConfig                `yaml:"notifier"`
+	Telemetry           cmd.TelemetryConfig           `yaml:"telemetry"`
+	Remote              cmd.RemoteConfig              `yaml:"remote"`
+	ImageStores         cmd.ImageStoreConfig          `yaml:"image_store"`
+	NotificationHistory cmd.NotificationHistoryConfig `yaml:"notification_history"`
 }
 
 type entityLogConfig struct {
@@ -78,11 +79,14 @@ func getDefault() config {
 			MetricsTTL:  "1h",
 			DialTimeout: "500ms",
 		},
-
 		Logger: cmd.LoggerConfig{
 			LogFile:         "stdout",
 			LogLevel:        "info",
 			LogPrettyFormat: false,
+		},
+		NotificationHistory: cmd.NotificationHistoryConfig{
+			NotificationHistoryTTL:        "48h",
+			NotificationHistoryQueryLimit: int(notifier.NotificationsLimitUnlimited),
 		},
 		Notifier: notifierConfig{
 			SenderTimeout:    "10s",
