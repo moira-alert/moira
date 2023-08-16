@@ -1363,6 +1363,56 @@ paths:
         request body
       tags:
       - contact
+  /contact/{contactID}/events:
+    get:
+      operationId: get-contact-events-by-id
+      parameters:
+      - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
+        description: Contact ID
+        in: path
+        name: contactID
+        required: true
+        type: string
+      - default: -3hour
+        description: Start time of the time range
+        in: query
+        name: from
+        type: string
+      - default: now
+        description: End time of the time range
+        in: query
+        name: to
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully received contact events
+          schema:
+            $ref: '#/definitions/dto.ContactEventItemList'
+        "400":
+          description: Bad request from client
+          schema:
+            $ref: '#/definitions/api.ErrorInvalidRequestExample'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/api.ErrorForbiddenExample'
+        "404":
+          description: Resource not found
+          schema:
+            $ref: '#/definitions/api.ErrorNotFoundExample'
+        "422":
+          description: Render error
+          schema:
+            $ref: '#/definitions/api.ErrorRenderExample'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorInternalServerExample'
+      summary: Get contact events by ID with time range
+      tags:
+      - contact
   /contact/{contactID}/test:
     post:
       consumes:
@@ -1398,58 +1448,6 @@ paths:
             $ref: '#/definitions/api.ErrorInternalServerExample'
       summary: Push a test notification to verify that the contact is properly set
         up
-      tags:
-      - contact
-  /contacts/{contactID}/events:
-    get:
-      operationId: get-contact-events-by-id
-      parameters:
-      - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
-        description: Contact ID
-        in: path
-        name: contactID
-        required: true
-        type: string
-      - default: -1hour
-        description: Start time of the time range
-        in: query
-        name: from
-        required: true
-        type: string
-      - default: now
-        description: End time of the time range
-        in: query
-        name: to
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Successfully received contact events
-          schema:
-            $ref: '#/definitions/dto.ContactEventItemList'
-        "400":
-          description: Bad request from client
-          schema:
-            $ref: '#/definitions/api.ErrorInvalidRequestExample'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/api.ErrorForbiddenExample'
-        "404":
-          description: Resource not found
-          schema:
-            $ref: '#/definitions/api.ErrorNotFoundExample'
-        "422":
-          description: Render error
-          schema:
-            $ref: '#/definitions/api.ErrorRenderExample'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.ErrorInternalServerExample'
-      summary: Get contact events by ID with time range
       tags:
       - contact
   /event/{triggerID}:
