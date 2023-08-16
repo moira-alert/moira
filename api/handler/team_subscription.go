@@ -17,6 +17,7 @@ func teamSubscription(router chi.Router) {
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Create a new team subscription
 //	@id			create-new-team-subscription
 //	@tags		teamSubscription

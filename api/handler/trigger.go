@@ -31,12 +31,14 @@ func trigger(router chi.Router) {
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Update existing trigger
 //	@id			update-trigger
 //	@tags		trigger
 //	@produce	json
 //	@param		x-webauth-user	header		string									false	"User session token"
 //	@param		triggerID		path		string									true	"Trigger ID"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+//	@param		validate		query		bool									false	"For validating targets"
 //	@param		body			body		dto.Trigger								true	"Trigger data"
 //	@success	200				{object}	dto.SaveTriggerResponse					"Updated trigger"
 //	@failure	400				{object}	api.ErrorInvalidRequestExample			"Bad request from client"
@@ -111,6 +113,7 @@ func writeErrorSaveResponse(writer http.ResponseWriter, request *http.Request, t
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Remove trigger
 //	@id			remove-trigger
 //	@tags		trigger
@@ -127,11 +130,13 @@ func removeTrigger(writer http.ResponseWriter, request *http.Request) {
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Get an existing trigger
 //	@id			get-trigger
 //	@tags		trigger
 //	@produce	json
 //	@param		triggerID	path		string							true	"Trigger ID"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+//	@param		populated	query		bool							false	"Populated"		default(false)
 //	@success	200			{object}	dto.Trigger						"Trigger data"
 //	@failure	404			{object}	api.ErrorNotFoundExample		"Resource not found"
 //	@failure	422			{object}	api.ErrorRenderExample			"Render error"
@@ -175,6 +180,7 @@ func checkingTemplateFilling(request *http.Request, trigger dto.Trigger) *api.Er
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Get the trigger state as at last check
 //	@id			get-trigger-state
 //	@tags		trigger
@@ -198,6 +204,7 @@ func getTriggerState(writer http.ResponseWriter, request *http.Request) {
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Get a trigger with its throttling i.e its next allowed message time
 //	@id			get-trigger-throttling
 //	@tags		trigger
@@ -220,6 +227,7 @@ func getTriggerThrottling(writer http.ResponseWriter, request *http.Request) {
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Deletes throttling for a trigger
 //	@id			delete-trigger-throttling
 //	@tags		trigger
@@ -237,6 +245,7 @@ func deleteThrottling(writer http.ResponseWriter, request *http.Request) {
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Set metrics and the trigger itself to maintenance mode
 //	@id			set-trigger-maintenance
 //	@tags		trigger
@@ -266,6 +275,7 @@ func setTriggerMaintenance(writer http.ResponseWriter, request *http.Request) {
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Get trigger dump
 //	@id			get-trigger-dump
 //	@tags		trigger

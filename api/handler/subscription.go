@@ -27,6 +27,7 @@ func subscription(router chi.Router) {
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Get all subscriptions
 //	@id			get-user-subscriptions
 //	@tags		subscription
@@ -50,6 +51,7 @@ func getUserSubscriptions(writer http.ResponseWriter, request *http.Request) {
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Create a new subscription
 //	@id			create-subscription
 //	@tags		subscription
@@ -102,6 +104,7 @@ func subscriptionFilter(next http.Handler) http.Handler {
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Update a subscription
 //	@id			update-subscription
 //	@tags		subscription
@@ -149,6 +152,7 @@ func updateSubscription(writer http.ResponseWriter, request *http.Request) {
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Delete a subscription
 //	@id			remove-subscription
 //	@tags		subscription
@@ -168,6 +172,7 @@ func removeSubscription(writer http.ResponseWriter, request *http.Request) {
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Send a test notification for a subscription
 //	@id			send-test-notification
 //	@tags		subscription

@@ -16,6 +16,7 @@ func teamContact(router chi.Router) {
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Create a new team contact
 //	@id			create-new-team-contact
 //	@tags		teamContact

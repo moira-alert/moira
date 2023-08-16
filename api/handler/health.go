@@ -16,6 +16,7 @@ func health(router chi.Router) {
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Get notifier state
 //	@id			get-notifier-state
 //	@tags		health
@@ -38,6 +39,7 @@ func getNotifierState(writer http.ResponseWriter, request *http.Request) {
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Update notifier state
 //	@id			set-notifier-state
 //	@tags		health

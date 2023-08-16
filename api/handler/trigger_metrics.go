@@ -22,6 +22,7 @@ func triggerMetrics(router chi.Router) {
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Get metrics associated with certain trigger
 //	@id			get-trigger-metrics
 //	@tags		trigger
@@ -64,6 +65,7 @@ func getTriggerMetrics(writer http.ResponseWriter, request *http.Request) {
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Delete metric from last check and all trigger pattern metrics
 //	@id			delete-trigger-metric
 //	@tags		trigger
@@ -91,6 +93,7 @@ func deleteTriggerMetric(writer http.ResponseWriter, request *http.Request) {
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Delete all metrics from last data which are in NODATA state. It also deletes all trigger patterns of those metrics
 //	@id			delete-trigger-nodata-metrics
 //	@tags		trigger

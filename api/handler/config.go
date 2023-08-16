@@ -13,6 +13,7 @@ type ConfigurationResponse struct {
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Get available configuration
 //	@id			get-web-config
 //	@tags		config

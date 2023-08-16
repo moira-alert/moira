@@ -17,6 +17,7 @@ func user(router chi.Router) {
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Gets the username of the authenticated user if it is available
 //	@id			get-user-name
 //	@tags		user
@@ -34,6 +35,7 @@ func getUserName(writer http.ResponseWriter, request *http.Request) {
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Get the user's contacts and subscriptions
 //	@id			get-user-settings
 //	@tags		user

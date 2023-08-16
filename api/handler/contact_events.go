@@ -25,6 +25,7 @@ func contactEvents(router chi.Router) {
 }
 
 // nolint: gofmt,goimports
+//
 //	@summary	Get contact events by ID with time range
 //	@id			get-contact-events-by-id
 //	@tags		contact
