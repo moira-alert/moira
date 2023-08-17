@@ -48,14 +48,7 @@ func (storageElement *triggerStorageElement) toTrigger() moira.Trigger {
 	}
 	//TODO(litleleprikon): END remove in moira v2.8.0. Compatibility with moira < v2.6.0
 
-	triggerSource := storageElement.TriggerSource
-	if triggerSource == moira.TriggerSourceNotSet {
-		if storageElement.IsRemote {
-			triggerSource = moira.GraphiteRemote
-		} else {
-			triggerSource = moira.GraphiteLocal
-		}
-	}
+	triggerSource := storageElement.TriggerSource.FillInIfNotSet(storageElement.IsRemote)
 	return moira.Trigger{
 		ID:               storageElement.ID,
 		Name:             storageElement.Name,

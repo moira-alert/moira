@@ -60,10 +60,10 @@ type featureFlags struct {
 
 func (config *apiConfig) getSettings(localMetricTTL, remoteMetricTTL string) *api.Config {
 	return &api.Config{
-		EnableCORS:      config.EnableCORS,
-		Listen:          config.Listen,
-		LocalMetricTTL:  to.Duration(localMetricTTL),
-		RemoteMetricTTL: to.Duration(remoteMetricTTL),
+		EnableCORS:              config.EnableCORS,
+		Listen:                  config.Listen,
+		GraphiteLocalMetricTTL:  to.Duration(localMetricTTL),
+		GraphiteRemoteMetricTTL: to.Duration(remoteMetricTTL),
 	}
 }
 

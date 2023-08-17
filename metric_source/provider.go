@@ -17,11 +17,11 @@ type SourceProvider struct {
 }
 
 // CreateMetricSourceProvider just creates SourceProvider with all known metrics sources
-func CreateMetricSourceProvider(local, remote, prometheus MetricSource) *SourceProvider {
+func CreateMetricSourceProvider(graphiteLocal, graphiteRemote, prometheusRemote MetricSource) *SourceProvider {
 	return &SourceProvider{
-		remote:     remote,
-		local:      local,
-		prometheus: prometheus,
+		remote:     graphiteRemote,
+		local:      graphiteLocal,
+		prometheus: prometheusRemote,
 	}
 }
 

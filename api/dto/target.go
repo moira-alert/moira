@@ -223,6 +223,10 @@ func checkExpression(expression parser.Expr, ttl time.Duration, triggerSource mo
 }
 
 func checkFunction(funcName string, triggerSource moira.TriggerSource) *ProblemOfTarget {
+	if triggerSource != moira.GraphiteLocal {
+		return nil
+	}
+
 	if _, isUnstable := unstableFunctions[funcName]; isUnstable {
 		return &ProblemOfTarget{
 			Argument:    funcName,
@@ -247,7 +251,7 @@ func checkFunction(funcName string, triggerSource moira.TriggerSource) *ProblemO
 		}
 	}
 
-	if triggerSource == moira.GraphiteLocal && !funcIsSupported(funcName) {
+	if !funcIsSupported(funcName) {
 		return &ProblemOfTarget{
 			Argument:    funcName,
 			Type:        isBad,

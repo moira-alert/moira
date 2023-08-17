@@ -4,11 +4,11 @@ import "time"
 
 // Config for api configuration variables.
 type Config struct {
-	EnableCORS          bool
-	Listen              string
-	LocalMetricTTL      time.Duration
-	RemoteMetricTTL     time.Duration
-	PrometheusMetricTTL time.Duration
+	EnableCORS                bool
+	Listen                    string
+	GraphiteLocalMetricTTL    time.Duration
+	GraphiteRemoteMetricTTL   time.Duration
+	PrometheusRemoteMetricTTL time.Duration
 }
 
 // WebConfig is container for web ui configuration parameters.

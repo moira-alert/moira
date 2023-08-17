@@ -137,15 +137,19 @@ func NotificationEventsToTemplatingEvents(events NotificationEvents) []templatin
 
 // TriggerData represents trigger object
 type TriggerData struct {
-	ID         string   `json:"id"`
-	Name       string   `json:"name"`
-	Desc       string   `json:"desc"`
-	Targets    []string `json:"targets"`
-	WarnValue  float64  `json:"warn_value"`
-	ErrorValue float64  `json:"error_value"`
-	// TODO: Replace with TriggerSource value
-	IsRemote bool     `json:"is_remote"`
-	Tags     []string `json:"__notifier_trigger_tags"`
+	ID            string        `json:"id"`
+	Name          string        `json:"name"`
+	Desc          string        `json:"desc"`
+	Targets       []string      `json:"targets"`
+	WarnValue     float64       `json:"warn_value"`
+	ErrorValue    float64       `json:"error_value"`
+	IsRemote      bool          `json:"is_remote,omitempty"`
+	TriggerSource TriggerSource `json:"trigger_source,omitempty"`
+	Tags          []string      `json:"__notifier_trigger_tags"`
+}
+
+func (trigger TriggerData) GetTriggerSource() TriggerSource {
+	return trigger.TriggerSource.FillInIfNotSet(trigger.IsRemote)
 }
 
 // GetTriggerURI gets frontUri and returns triggerUrl, returns empty string on selfcheck and test notifications
@@ -247,28 +251,27 @@ const (
 
 // Trigger represents trigger data object
 type Trigger struct {
-	ID               string        `json:"id"`
-	Name             string        `json:"name"`
-	Desc             *string       `json:"desc,omitempty"`
-	Targets          []string      `json:"targets"`
-	WarnValue        *float64      `json:"warn_value"`
-	ErrorValue       *float64      `json:"error_value"`
-	TriggerType      string        `json:"trigger_type"`
-	Tags             []string      `json:"tags"`
-	TTLState         *TTLState     `json:"ttl_state,omitempty"`
-	TTL              int64         `json:"ttl,omitempty"`
-	Schedule         *ScheduleData `json:"sched,omitempty"`
-	Expression       *string       `json:"expression,omitempty"`
-	PythonExpression *string       `json:"python_expression,omitempty"`
-	Patterns         []string      `json:"patterns"`
-	// IsRemote         bool            `json:"is_remote"`
-	TriggerSource  TriggerSource   `json:"trigger_source,omitempty"`
-	MuteNewMetrics bool            `json:"mute_new_metrics"`
-	AloneMetrics   map[string]bool `json:"alone_metrics"`
-	CreatedAt      *int64          `json:"created_at"`
-	UpdatedAt      *int64          `json:"updated_at"`
-	CreatedBy      string          `json:"created_by"`
-	UpdatedBy      string          `json:"updated_by"`
+	ID               string          `json:"id"`
+	Name             string          `json:"name"`
+	Desc             *string         `json:"desc,omitempty"`
+	Targets          []string        `json:"targets"`
+	WarnValue        *float64        `json:"warn_value"`
+	ErrorValue       *float64        `json:"error_value"`
+	TriggerType      string          `json:"trigger_type"`
+	Tags             []string        `json:"tags"`
+	TTLState         *TTLState       `json:"ttl_state,omitempty"`
+	TTL              int64           `json:"ttl,omitempty"`
+	Schedule         *ScheduleData   `json:"sched,omitempty"`
+	Expression       *string         `json:"expression,omitempty"`
+	PythonExpression *string         `json:"python_expression,omitempty"`
+	Patterns         []string        `json:"patterns"`
+	TriggerSource    TriggerSource   `json:"trigger_source,omitempty"`
+	MuteNewMetrics   bool            `json:"mute_new_metrics"`
+	AloneMetrics     map[string]bool `json:"alone_metrics"`
+	CreatedAt        *int64          `json:"created_at"`
+	UpdatedAt        *int64          `json:"updated_at"`
+	CreatedBy        string          `json:"created_by"`
+	UpdatedBy        string          `json:"updated_by"`
 }
 
 type TriggerSource string
@@ -294,6 +297,18 @@ func (s *TriggerSource) UnmarshalJSON(data []byte) error {
 
 	*s = source
 	return nil
+}
+
+// Neede for backwards compatibility with moira versions that used oly isRemote flag
+func (triggerSource TriggerSource) FillInIfNotSet(isRempte bool) TriggerSource {
+	if triggerSource == TriggerSourceNotSet {
+		if isRempte {
+			return GraphiteRemote
+		} else {
+			return GraphiteLocal
+		}
+	}
+	return triggerSource
 }
 
 // TriggerCheck represents trigger data with last check data and check timestamp

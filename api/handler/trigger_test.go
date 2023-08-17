@@ -146,12 +146,11 @@ func TestUpdateTrigger(t *testing.T) {
 			triggerWarnValue := float64(10)
 			triggerErrorValue := float64(15)
 			trigger := moira.Trigger{
-				Name:       "Test trigger",
-				Tags:       []string{"123"},
-				WarnValue:  &triggerWarnValue,
-				ErrorValue: &triggerErrorValue,
-				Targets:    []string{"my.metric"},
-				/// IsRemote:   false,
+				Name:          "Test trigger",
+				Tags:          []string{"123"},
+				WarnValue:     &triggerWarnValue,
+				ErrorValue:    &triggerErrorValue,
+				Targets:       []string{"my.metric"},
 				TriggerSource: moira.GraphiteLocal,
 			}
 			mockDb.EXPECT().GetTrigger(gomock.Any()).Return(trigger, nil)
@@ -219,12 +218,11 @@ func TestUpdateTrigger(t *testing.T) {
 		triggerWarnValue := float64(10)
 		triggerErrorValue := float64(15)
 		trigger := moira.Trigger{
-			Name:       "Test trigger",
-			Tags:       []string{"123"},
-			WarnValue:  &triggerWarnValue,
-			ErrorValue: &triggerErrorValue,
-			Targets:    []string{"alias(consolidateBy(Sales.widgets.largeBlue, 'sum'), 'alias to test nesting')"},
-			/// IsRemote:   false,
+			Name:          "Test trigger",
+			Tags:          []string{"123"},
+			WarnValue:     &triggerWarnValue,
+			ErrorValue:    &triggerErrorValue,
+			Targets:       []string{"alias(consolidateBy(Sales.widgets.largeBlue, 'sum'), 'alias to test nesting')"},
 			TriggerSource: moira.GraphiteLocal,
 		}
 
@@ -309,12 +307,11 @@ func TestUpdateTrigger(t *testing.T) {
 		triggerWarnValue := float64(10)
 		triggerErrorValue := float64(15)
 		trigger := moira.Trigger{
-			Name:       "Test trigger",
-			Tags:       []string{"123"},
-			WarnValue:  &triggerWarnValue,
-			ErrorValue: &triggerErrorValue,
-			Targets:    []string{"alias(summarize(my.metric, '5min'), 'alias to test nesting')"},
-			/// IsRemote:   false,
+			Name:          "Test trigger",
+			Tags:          []string{"123"},
+			WarnValue:     &triggerWarnValue,
+			ErrorValue:    &triggerErrorValue,
+			Targets:       []string{"alias(summarize(my.metric, '5min'), 'alias to test nesting')"},
 			TriggerSource: moira.GraphiteLocal,
 		}
 		jsonTrigger, _ := json.Marshal(trigger)

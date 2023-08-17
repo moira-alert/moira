@@ -100,15 +100,15 @@ func (worker *FetchEventsWorker) processEvent(event moira.NotificationEvent) err
 		}
 
 		triggerData = moira.TriggerData{
-			ID:         trigger.ID,
-			Name:       trigger.Name,
-			Desc:       moira.UseString(trigger.Desc),
-			Targets:    trigger.Targets,
-			WarnValue:  moira.UseFloat64(trigger.WarnValue),
-			ErrorValue: moira.UseFloat64(trigger.ErrorValue),
-			// TODO: Replace with TriggerSource value
-			IsRemote: trigger.TriggerSource == moira.GraphiteRemote,
-			Tags:     trigger.Tags,
+			ID:            trigger.ID,
+			Name:          trigger.Name,
+			Desc:          moira.UseString(trigger.Desc),
+			Targets:       trigger.Targets,
+			WarnValue:     moira.UseFloat64(trigger.WarnValue),
+			ErrorValue:    moira.UseFloat64(trigger.ErrorValue),
+			IsRemote:      trigger.TriggerSource == moira.GraphiteRemote,
+			TriggerSource: trigger.TriggerSource,
+			Tags:          trigger.Tags,
 		}
 
 		log.Debug().
