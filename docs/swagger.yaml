@@ -2724,19 +2724,16 @@ paths:
         description: Target metric name
         in: query
         name: target
-        required: true
         type: string
       - default: -1hour
         description: Start time for metrics retrieval
         in: query
         name: from
-        required: true
         type: string
       - default: now
         description: End time for metrics retrieval
         in: query
         name: to
-        required: true
         type: string
       - default: UTC
         description: Timezone for rendering

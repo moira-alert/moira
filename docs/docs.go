@@ -2532,24 +2532,21 @@ const docTemplate = `{
                         "default": "t1",
                         "description": "Target metric name",
                         "name": "target",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     },
                     {
                         "type": "string",
                         "default": "-1hour",
                         "description": "Start time for metrics retrieval",
                         "name": "from",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     },
                     {
                         "type": "string",
                         "default": "now",
                         "description": "End time for metrics retrieval",
                         "name": "to",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     },
                     {
                         "type": "string",

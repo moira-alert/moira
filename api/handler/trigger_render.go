@@ -25,9 +25,9 @@ import (
 //	@tags		trigger
 //	@produce	png
 //	@param		triggerID	path	string	true	"Trigger ID"						default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
-//	@param		target		query	string	true	"Target metric name"				default(t1)
-//	@param		from		query	string	true	"Start time for metrics retrieval"	default(-1hour)
-//	@param		to			query	string	true	"End time for metrics retrieval"	default(now)
+//	@param		target		query	string	false	"Target metric name"				default(t1)
+//	@param		from		query	string	false	"Start time for metrics retrieval"	default(-1hour)
+//	@param		to			query	string	false	"End time for metrics retrieval"	default(now)
 //	@param		timezone	query	string	false	"Timezone for rendering"			default(UTC)
 //	@param		theme		query	string	false	"Plot theme"						default(light)
 //	@param		realtime	query	bool	false	"Fetch real-time data"				default(false)
