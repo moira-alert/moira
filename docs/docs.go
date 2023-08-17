@@ -2287,6 +2287,9 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
+                    "200": {
+                        "description": "Successfully removed"
+                    },
                     "404": {
                         "description": "Resource not found",
                         "schema": {

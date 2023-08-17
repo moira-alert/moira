@@ -116,7 +116,8 @@ func writeErrorSaveResponse(writer http.ResponseWriter, request *http.Request, t
 //	@summary	Remove trigger
 //	@id			remove-trigger
 //	@tags		trigger
-//	@param		triggerID	path		string							true	"Trigger ID"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+//	@param		triggerID	path	string	true	"Trigger ID"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+//	@success	200			"Successfully removed"
 //	@failure	404			{object}	api.ErrorNotFoundExample		"Resource not found"
 //	@failure	500			{object}	api.ErrorInternalServerExample	"Internal server error"
 //	@router		/trigger/{triggerID} [delete]
