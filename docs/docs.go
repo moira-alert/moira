@@ -2434,8 +2434,7 @@ const docTemplate = `{
                         "default": "DevOps.my_server.hdd.freespace_mbytes",
                         "description": "Name of the target metric",
                         "name": "name",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     }
                 ],
                 "responses": {

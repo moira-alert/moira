@@ -2612,7 +2612,6 @@ paths:
         description: Name of the target metric
         in: query
         name: name
-        required: true
         type: string
       produces:
       - application/json
