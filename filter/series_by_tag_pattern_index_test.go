@@ -63,12 +63,16 @@ func TestParseSeriesByTag(t *testing.T) {
 			{"seriesByTag(\"a=\")", []TagSpec{{"a", EqualOperator, ""}}},
 			{`seriesByTag("a=b","a=c")`, []TagSpec{{"a", EqualOperator, "b"}, {"a", EqualOperator, "c"}}},
 			{`seriesByTag("a=b","b=c","c=d")`, []TagSpec{{"a", EqualOperator, "b"}, {"b", EqualOperator, "c"}, {"c", EqualOperator, "d"}}},
-			{`seriesByTag("a={b,c,d}")`, []TagSpec{{"a", MatchOperator, "(b|c|d)$"}}},
+			{`seriesByTag("a={b,c,d}")`, []TagSpec{{"a", MatchOperator, "^(b|c|d)$"}}},
 			{`seriesByTag("a=~aa.(b|c|d)$")`, []TagSpec{{"a", MatchOperator, "aa.(b|c|d)$"}}},
 			{`seriesByTag("respCode=~^(4|5)\d{2}")`, []TagSpec{{"respCode", MatchOperator, "^(4|5)\\d{2}"}}},
-			{`seriesByTag("a={b,c,d}", "e=f")`, []TagSpec{{"a", MatchOperator, "(b|c|d)$"}, {"e", EqualOperator, "f"}}},
-			{`seriesByTag("a!={b,c,d}", "e=f")`, []TagSpec{{"a", NotMatchOperator, "(b|c|d)$"}, {"e", EqualOperator, "f"}}},
-			{`seriesByTag('a!={b,c,d}', 'e=f')`, []TagSpec{{"a", NotMatchOperator, "(b|c|d)$"}, {"e", EqualOperator, "f"}}},
+			{`seriesByTag("a={b,c,d}", "e=f")`, []TagSpec{{"a", MatchOperator, "^(b|c|d)$"}, {"e", EqualOperator, "f"}}},
+			{`seriesByTag("a!={b,c,d}", "e=f")`, []TagSpec{{"a", NotMatchOperator, "^(b|c|d)$"}, {"e", EqualOperator, "f"}}},
+			{`seriesByTag('a!={b,c,d}', 'e=f')`, []TagSpec{{"a", NotMatchOperator, "^(b|c|d)$"}, {"e", EqualOperator, "f"}}},
+			{`seriesByTag('a=b', 'c=d*')`, []TagSpec{{"a", EqualOperator, "b"}, {"c", MatchOperator, "^d.*$"}}},
+			{`seriesByTag('c=d*d')`, []TagSpec{{"c", MatchOperator, "^d.*d$"}}},
+			{`seriesByTag('a=*')`, []TagSpec{{"a", MatchOperator, "^.*$"}}},
+			{`seriesByTag('a=so{b*,c,d}e')`, []TagSpec{{"a", MatchOperator, "^so(b.*|c|d)e$"}}},
 		}
 
 		for _, validCase := range validSeriesByTagCases {
@@ -248,6 +252,10 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 				{"name", EqualOperator, "something"},
 				{"tag1", EqualOperator, "val1"},
 			},
+			"name=something;job=cod*": {
+				{"name", EqualOperator, "something"},
+				{"job", MatchOperator, "^cod.*$"},
+			},
 		}
 
 		testCases := []struct {
@@ -264,6 +272,16 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 				"something",
 				map[string]string{"tag1": "val1", "tag2": "val2"},
 				[]string{"name=something;tag1=val1", "name=something;tag1=val1;tag2=~*"},
+			},
+			{
+				"something",
+				map[string]string{"job": "coding"},
+				[]string{"name=something;job=cod*"},
+			},
+			{
+				"something",
+				map[string]string{"job": "tag2"},
+				[]string{},
 			},
 		}
 

@@ -39,10 +39,16 @@ type TagSpec struct {
 	Value    string
 }
 
+// transformWildcardToRegexpInSeriesByTag is used to convert regular expression from graphite regexp format
+// to standard regexp parsable by the go regexp engine.
 func transformWildcardToRegexpInSeriesByTag(input string) (string, bool) {
 	var isTransformed = false
-
 	result := input
+
+	if strings.Contains(result, "*") {
+		result = strings.ReplaceAll(result, "*", ".*")
+		isTransformed = true
+	}
 
 	for {
 		matchedWildcardIndexes := wildcardExprRegex.FindStringSubmatchIndex(result)
@@ -63,7 +69,7 @@ func transformWildcardToRegexpInSeriesByTag(input string) (string, bool) {
 	}
 
 	if isTransformed {
-		result += "$"
+		result = fmt.Sprintf("^%s$", result)
 	}
 
 	return result, isTransformed
