@@ -38,19 +38,6 @@ func getNotifierState(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-// nolint: gofmt,goimports
-//
-//	@summary	Update notifier state
-//	@id			set-notifier-state
-//	@tags		health
-//	@accept		json
-//	@produce	json
-//	@param		state	body		dto.NotifierState				true	"New notifier state"
-//	@success	200		{object}	dto.NotifierState				"Update state of the Moira service"
-//	@failure	400		{object}	api.ErrorInvalidRequestExample	"Bad request from client"
-//	@failure	422		{object}	api.ErrorRenderExample			"Render error"
-//	@failure	500		{object}	api.ErrorInternalServerExample	"Internal server error"
-//	@router		/health/notifier [put]
 func setNotifierState(writer http.ResponseWriter, request *http.Request) {
 	state := &dto.NotifierState{}
 	if err := render.Bind(request, state); err != nil {
