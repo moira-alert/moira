@@ -95,15 +95,6 @@ func deleteNotification(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-// nolint: gofmt,goimports
-//
-//	@summary	Deletes all available notifications
-//	@id			delete-all-notifications
-//	@tags		notification
-//	@produce	json
-//	@success	200	"All notifications have been deleted"
-//	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
-//	@router		/notification/all [delete]
 func deleteAllNotifications(writer http.ResponseWriter, request *http.Request) {
 	if errorResponse := controller.DeleteAllNotifications(database); errorResponse != nil {
 		render.Render(writer, request, errorResponse) //nolint

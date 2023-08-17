@@ -535,56 +535,6 @@
                         }
                     }
                 }
-            },
-            "put": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "health"
-                ],
-                "summary": "Update notifier state",
-                "operationId": "set-notifier-state",
-                "parameters": [
-                    {
-                        "description": "New notifier state",
-                        "name": "state",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.NotifierState"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Update state of the Moira service",
-                        "schema": {
-                            "$ref": "#/definitions/dto.NotifierState"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad request from client",
-                        "schema": {
-                            "$ref": "#/definitions/api.ErrorInvalidRequestExample"
-                        }
-                    },
-                    "422": {
-                        "description": "Render error",
-                        "schema": {
-                            "$ref": "#/definitions/api.ErrorRenderExample"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/api.ErrorInternalServerExample"
-                        }
-                    }
-                }
             }
         },
         "/notification": {
@@ -677,29 +627,6 @@
                         "schema": {
                             "$ref": "#/definitions/api.ErrorRenderExample"
                         }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "$ref": "#/definitions/api.ErrorInternalServerExample"
-                        }
-                    }
-                }
-            }
-        },
-        "/notification/all": {
-            "delete": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "notification"
-                ],
-                "summary": "Deletes all available notifications",
-                "operationId": "delete-all-notifications",
-                "responses": {
-                    "200": {
-                        "description": "All notifications have been deleted"
                     },
                     "500": {
                         "description": "Internal server error",

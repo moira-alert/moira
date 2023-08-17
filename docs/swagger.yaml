@@ -1519,39 +1519,6 @@ paths:
       summary: Get notifier state
       tags:
       - health
-    put:
-      consumes:
-      - application/json
-      operationId: set-notifier-state
-      parameters:
-      - description: New notifier state
-        in: body
-        name: state
-        required: true
-        schema:
-          $ref: '#/definitions/dto.NotifierState'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Update state of the Moira service
-          schema:
-            $ref: '#/definitions/dto.NotifierState'
-        "400":
-          description: Bad request from client
-          schema:
-            $ref: '#/definitions/api.ErrorInvalidRequestExample'
-        "422":
-          description: Render error
-          schema:
-            $ref: '#/definitions/api.ErrorRenderExample'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.ErrorInternalServerExample'
-      summary: Update notifier state
-      tags:
-      - health
   /notification:
     delete:
       operationId: delete-notification
@@ -1618,21 +1585,6 @@ paths:
             $ref: '#/definitions/api.ErrorInternalServerExample'
       summary: Gets a paginated list of notifications, all notifications are fetched
         if end = -1 and start = 0
-      tags:
-      - notification
-  /notification/all:
-    delete:
-      operationId: delete-all-notifications
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: All notifications have been deleted
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.ErrorInternalServerExample'
-      summary: Deletes all available notifications
       tags:
       - notification
   /pattern:
