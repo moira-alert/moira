@@ -4,8 +4,9 @@ import (
 	"sort"
 	"testing"
 
-	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 	. "github.com/smartystreets/goconvey/convey"
+
+	logging "github.com/moira-alert/moira/logging/zerolog_adapter"
 )
 
 func TestTransformTaggedWildCardToMatchOperator(t *testing.T) {
@@ -128,13 +129,13 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 			Labels          map[string]string
 			MatchedPatterns []string
 		}{
-			{"cpu1", map[string]string{}, []string{"name=cpu1", "name~=cpu", "name~=cpu;dc=", "name~=cpu;dc~="}},
-			{"cpu2", map[string]string{}, []string{"name!=cpu1", "name~=cpu", "name~=cpu;dc=", "name~=cpu;dc~="}},
+			{"cpu1", map[string]string{}, []string{"name=cpu1", "name~=cpu"}},
+			{"cpu2", map[string]string{}, []string{"name!=cpu1", "name~=cpu"}},
 			{"disk", map[string]string{}, []string{"name!=cpu1", "name!~=cpu"}},
 			{"cpu1", map[string]string{"dc": "ru1"}, []string{"dc=ru1", "dc~=ru", "name=cpu1", "name=cpu1;dc=ru1", "name~=cpu", "name~=cpu;dc!=", "name~=cpu;dc~="}},
 			{"cpu1", map[string]string{"dc": "ru2"}, []string{"dc!=ru1", "dc~=ru", "name=cpu1", "name=cpu1;dc=ru2", "name~=cpu", "name~=cpu;dc!=", "name~=cpu;dc~="}},
 			{"cpu1", map[string]string{"dc": "us"}, []string{"dc!=ru1", "dc!~=ru", "name=cpu1", "name=cpu1;dc=us", "name~=cpu", "name~=cpu;dc!=", "name~=cpu;dc~="}},
-			{"cpu1", map[string]string{"machine": "machine"}, []string{"name=cpu1", "name~=cpu", "name~=cpu;dc=", "name~=cpu;dc~="}},
+			{"cpu1", map[string]string{"machine": "machine"}, []string{"name=cpu1", "name~=cpu"}},
 		}
 
 		index := NewSeriesByTagPatternIndex(logger, tagSpecsByPattern)
@@ -226,6 +227,44 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 					"name=~cpu;tag1=val1",
 					"tag1=val1;tag2=val2",
 				}},
+		}
+
+		index := NewSeriesByTagPatternIndex(logger, tagSpecsByPattern)
+		for _, testCase := range testCases {
+			patterns := index.MatchPatterns(testCase.Name, testCase.Labels)
+			sort.Strings(patterns)
+			c.So(patterns, ShouldResemble, testCase.MatchedPatterns)
+		}
+	})
+
+	Convey("testing wildcard operator", t, func(c C) {
+		tagSpecsByPattern := map[string][]TagSpec{
+			"name=something;tag1=val1;tag2=~*": {
+				{"name", EqualOperator, "something"},
+				{"tag1", EqualOperator, "val1"},
+				{"tag2", MatchOperator, "*"},
+			},
+			"name=something;tag1=val1": {
+				{"name", EqualOperator, "something"},
+				{"tag1", EqualOperator, "val1"},
+			},
+		}
+
+		testCases := []struct {
+			Name            string
+			Labels          map[string]string
+			MatchedPatterns []string
+		}{
+			{
+				"something",
+				map[string]string{"tag1": "val1"},
+				[]string{"name=something;tag1=val1"},
+			},
+			{
+				"something",
+				map[string]string{"tag1": "val1", "tag2": "val2"},
+				[]string{"name=something;tag1=val1", "name=something;tag1=val1;tag2=~*"},
+			},
 		}
 
 		index := NewSeriesByTagPatternIndex(logger, tagSpecsByPattern)

@@ -151,10 +151,8 @@ func CreateMatchingHandlerForPattern(tagSpecs []TagSpec) (string, MatchingHandle
 
 func createMatchingHandlerForOneTag(spec TagSpec) MatchingHandler {
 	var matchingHandlerCondition func(string) bool
-	allowMatchEmpty := false
 	switch spec.Operator {
 	case EqualOperator:
-		allowMatchEmpty = true
 		matchingHandlerCondition = func(value string) bool {
 			return value == spec.Value
 		}
@@ -163,7 +161,6 @@ func createMatchingHandlerForOneTag(spec TagSpec) MatchingHandler {
 			return value != spec.Value
 		}
 	case MatchOperator:
-		allowMatchEmpty = true
 		matchRegex := regexp.MustCompile("^" + spec.Value)
 		matchingHandlerCondition = func(value string) bool {
 			return matchRegex.MatchString(value)
@@ -179,7 +176,6 @@ func createMatchingHandlerForOneTag(spec TagSpec) MatchingHandler {
 		}
 	}
 
-	matchEmpty := matchingHandlerCondition("")
 	return func(metric string, labels map[string]string) bool {
 		if spec.Name == "name" {
 			return matchingHandlerCondition(metric)
@@ -187,6 +183,6 @@ func createMatchingHandlerForOneTag(spec TagSpec) MatchingHandler {
 		if value, found := labels[spec.Name]; found {
 			return matchingHandlerCondition(value)
 		}
-		return allowMatchEmpty && matchEmpty
+		return false
 	}
 }
