@@ -18,7 +18,7 @@ func (*UserSettings) Render(w http.ResponseWriter, r *http.Request) error {
 }
 
 type User struct {
-	Login string `json:"login"`
+	Login string `json:"login" example:"john"`
 }
 
 func (*User) Render(w http.ResponseWriter, r *http.Request) error {
