@@ -22,15 +22,14 @@ func teamContact(router chi.Router) {
 //	@tags		teamContact
 //	@accept		json
 //	@produce	json
-//	@param		x-webauth-user	header		string							false	"User session token"
-//	@param		teamID			path		string							true	"The ID of team"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
-//	@param		contact			body		dto.Contact						true	"Team contact data"
-//	@success	200				{object}	dto.Contact						"Team contact created successfully"
-//	@failure	400				{object}	api.ErrorInvalidRequestExample	"Bad request from client"
-//	@failure	403				{object}	api.ErrorForbiddenExample		"Forbidden"
-//	@failure	404				{object}	api.ErrorNotFoundExample		"Resource not found"
-//	@failure	422				{object}	api.ErrorRenderExample			"Render error"
-//	@failure	500				{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@param		teamID	path		string							true	"The ID of team"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+//	@param		contact	body		dto.Contact						true	"Team contact data"
+//	@success	200		{object}	dto.Contact						"Team contact created successfully"
+//	@failure	400		{object}	api.ErrorInvalidRequestExample	"Bad request from client"
+//	@failure	403		{object}	api.ErrorForbiddenExample		"Forbidden"
+//	@failure	404		{object}	api.ErrorNotFoundExample		"Resource not found"
+//	@failure	422		{object}	api.ErrorRenderExample			"Render error"
+//	@failure	500		{object}	api.ErrorInternalServerExample	"Internal server error"
 //	@router		/teams/{teamID}/contacts [post]
 func createNewTeamContact(writer http.ResponseWriter, request *http.Request) {
 	contact := &dto.Contact{}

@@ -69,14 +69,13 @@ func getAllTriggers(writer http.ResponseWriter, request *http.Request) {
 //	@tags		trigger
 //	@accept		json
 //	@produce	json
-//	@param		x-webauth-user	header		string									false	"User session token"
-//	@param		validate		query		bool									false	"For validating targets"
-//	@param		trigger			body		dto.Trigger								true	"Trigger data"
-//	@success	200				{object}	dto.SaveTriggerResponse					"Trigger created successfully"
-//	@failure	400				{object}	api.ErrorInvalidRequestExample			"Bad request from client"
-//	@failure	422				{object}	api.ErrorRenderExample					"Render error"
-//	@failure	500				{object}	api.ErrorInternalServerExample			"Internal server error"
-//	@failure	503				{object}	api.ErrorRemoteServerUnavailableExample	"Remote server unavailable"
+//	@param		validate	query		bool									false	"For validating targets"
+//	@param		trigger		body		dto.Trigger								true	"Trigger data"
+//	@success	200			{object}	dto.SaveTriggerResponse					"Trigger created successfully"
+//	@failure	400			{object}	api.ErrorInvalidRequestExample			"Bad request from client"
+//	@failure	422			{object}	api.ErrorRenderExample					"Render error"
+//	@failure	500			{object}	api.ErrorInternalServerExample			"Internal server error"
+//	@failure	503			{object}	api.ErrorRemoteServerUnavailableExample	"Remote server unavailable"
 //	@router		/trigger [put]
 func createTrigger(writer http.ResponseWriter, request *http.Request) {
 	trigger, err := getTriggerFromRequest(request)
@@ -199,7 +198,7 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 //
 //	@summary		Search triggers. Replaces the deprecated `page` path
 //	@description	You can also add filtering by tags, for this purpose add query parameters tags[0]=test, tags[1]=test1 and so on
-// For example, /api/trigger/search?tags[0]=test&tags[1]=test1
+//	@description	For example, `/api/trigger/search?tags[0]=test&tags[1]=test1`
 //	@id				search-triggers
 //	@tags			trigger
 //	@produce		json

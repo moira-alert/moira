@@ -5,6 +5,7 @@ on:
     branches:
       - master
       - release/[0-9]+.[0-9]+.[0-9]+
+      - feature/*
 
 jobs:
   validate-spec:
@@ -26,7 +27,14 @@ jobs:
         with:
           node-version: '16.16.0'
       - run: npm install --location=global @openapitools/openapi-generator-cli
+      - run: make spec
       - run: make validate-spec
+
+      - name: Save build artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: specfile
+          path: docs/swagger.yaml
 
   #testspec:
   #  name: Test generated spec against the Moira API
@@ -75,6 +83,13 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - run: mkdir docs/
+      - name: Download spec file artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: specfile
+          path: docs
+
     #  - name: Extract branch name on push
     #    if: github.event_name != 'pull_request'
     #    run: echo "::set-env name=BRANCH_NAME::$(echo ${GITHUB_REF#refs/heads/})"
@@ -83,4 +98,4 @@ jobs:
       - run: npm i --location=global swaggerhub-cli
       - run: |
           VERSION=`echo ${GITHUB_REF_NAME}| sed 's#[^a-zA-Z0-9_\.\-]#_#g'`
-          SWAGGERHUB_API_KEY=${{secrets.SWAGGERHUB_TOKEN}} swaggerhub api:create "Moira-test-swagger/moira-alert-test/${VERSION}" -f ./docs/swagger.yaml --published=publish --visibility=public
+          SWAGGERHUB_API_KEY=${{secrets.SWAGGERHUB_TOKEN}} swaggerhub api:create "Moira-test-swagger/moira-alert-test-2/${VERSION}" -f ./docs/swagger.yaml --published=publish --visibility=public

@@ -2,14 +2,14 @@ package handler
 
 import "net/http"
 
-type Contact struct {
+type ContactExample struct {
 	Type  string `json:"type" example:"telegram"`
 	Label string `json:"label" example:"Telegram"`
 }
 
 type ConfigurationResponse struct {
-	RemoteAllowed bool      `json:"remoteAllowed" example:"false"`
-	Contacts      []Contact `json:"contacts"`
+	RemoteAllowed bool             `json:"remoteAllowed" example:"false"`
+	Contacts      []ContactExample `json:"contacts"`
 }
 
 // nolint: gofmt,goimports
