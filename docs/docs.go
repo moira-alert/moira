@@ -4705,7 +4705,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/api",
 	Schemes:          []string{},
 	Title:            "Moira Alert",
-	Description:      "This is an API description for [Moira Alert API](https://moira.readthedocs.io/en/latest/overview.html).",
+	Description:      "This is an API description for [Moira Alert API](https://moira.readthedocs.io/en/latest/overview.html)\nCheck us out on [Github](https://github.com/moira-alert) or look up our [guide on getting started with Moira](https://moira.readthedocs.io)",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 }
