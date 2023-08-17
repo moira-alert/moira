@@ -3752,7 +3752,7 @@ const docTemplate = `{
                 "contacts": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/handler.Contact"
+                        "$ref": "#/definitions/handler.ContactExample"
                     }
                 },
                 "remoteAllowed": {
@@ -3761,7 +3761,7 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.Contact": {
+        "handler.ContactExample": {
             "type": "object",
             "properties": {
                 "label": {

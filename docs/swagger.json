@@ -3744,7 +3744,7 @@
                 "contacts": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/handler.Contact"
+                        "$ref": "#/definitions/handler.ContactExample"
                     }
                 },
                 "remoteAllowed": {
@@ -3753,7 +3753,7 @@
                 }
             }
         },
-        "handler.Contact": {
+        "handler.ContactExample": {
             "type": "object",
             "properties": {
                 "label": {

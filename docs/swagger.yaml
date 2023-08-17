@@ -696,13 +696,13 @@ definitions:
     properties:
       contacts:
         items:
-          $ref: '#/definitions/handler.Contact'
+          $ref: '#/definitions/handler.ContactExample'
         type: array
       remoteAllowed:
         example: false
         type: boolean
     type: object
-  handler.Contact:
+  handler.ContactExample:
     properties:
       label:
         example: Telegram
