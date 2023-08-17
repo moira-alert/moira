@@ -36,16 +36,15 @@ func trigger(router chi.Router) {
 //	@id			update-trigger
 //	@tags		trigger
 //	@produce	json
-//	@param		x-webauth-user	header		string									false	"User session token"
-//	@param		triggerID		path		string									true	"Trigger ID"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
-//	@param		validate		query		bool									false	"For validating targets"
-//	@param		body			body		dto.Trigger								true	"Trigger data"
-//	@success	200				{object}	dto.SaveTriggerResponse					"Updated trigger"
-//	@failure	400				{object}	api.ErrorInvalidRequestExample			"Bad request from client"
-//	@failure	404				{object}	api.ErrorNotFoundExample				"Resource not found"
-//	@failure	422				{object}	api.ErrorRenderExample					"Render error"
-//	@failure	500				{object}	api.ErrorInternalServerExample			"Internal server error"
-//	@failure	503				{object}	api.ErrorRemoteServerUnavailableExample	"Remote server unavailable"
+//	@param		triggerID	path		string									true	"Trigger ID"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+//	@param		validate	query		bool									false	"For validating targets"
+//	@param		body		body		dto.Trigger								true	"Trigger data"
+//	@success	200			{object}	dto.SaveTriggerResponse					"Updated trigger"
+//	@failure	400			{object}	api.ErrorInvalidRequestExample			"Bad request from client"
+//	@failure	404			{object}	api.ErrorNotFoundExample				"Resource not found"
+//	@failure	422			{object}	api.ErrorRenderExample					"Render error"
+//	@failure	500			{object}	api.ErrorInternalServerExample			"Internal server error"
+//	@failure	503			{object}	api.ErrorRemoteServerUnavailableExample	"Remote server unavailable"
 //	@router		/trigger/{triggerID} [put]
 func updateTrigger(writer http.ResponseWriter, request *http.Request) {
 	triggerID := middleware.GetTriggerID(request)
@@ -250,13 +249,12 @@ func deleteThrottling(writer http.ResponseWriter, request *http.Request) {
 //	@id			set-trigger-maintenance
 //	@tags		trigger
 //	@produce	json
-//	@param		triggerID		path	string					true	"Trigger ID"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
-//	@param		body			body	dto.TriggerMaintenance	true	"Maintenance data"
-//	@param		x-webauth-user	header	string					false	"User session token"
-//	@success	200				"Trigger or metric have been scheduled for maintenance"
-//	@failure	400				{object}	api.ErrorInvalidRequestExample	"Bad request from client"
-//	@failure	404				{object}	api.ErrorNotFoundExample		"Resource not found"
-//	@failure	500				{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@param		triggerID	path	string					true	"Trigger ID"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+//	@param		body		body	dto.TriggerMaintenance	true	"Maintenance data"
+//	@success	200			"Trigger or metric have been scheduled for maintenance"
+//	@failure	400			{object}	api.ErrorInvalidRequestExample	"Bad request from client"
+//	@failure	404			{object}	api.ErrorNotFoundExample		"Resource not found"
+//	@failure	500			{object}	api.ErrorInternalServerExample	"Internal server error"
 //	@router		/trigger/{triggerID}/setMaintenance [put]
 func setTriggerMaintenance(writer http.ResponseWriter, request *http.Request) {
 	triggerID := middleware.GetTriggerID(request)

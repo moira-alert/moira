@@ -87,12 +87,6 @@ const docTemplate = `{
                 "operationId": "create-new-contact",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "User session token",
-                        "name": "x-webauth-user",
-                        "in": "header"
-                    },
-                    {
                         "description": "Contact data",
                         "name": "contact",
                         "in": "body",
@@ -198,12 +192,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "User session token",
-                        "name": "x-webauth-user",
-                        "in": "header"
-                    },
-                    {
-                        "type": "string",
                         "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
                         "description": "ID of the contact to update",
                         "name": "contactID",
@@ -272,12 +260,6 @@ const docTemplate = `{
                 "summary": "Deletes notification contact for the current user and remove the contact ID from all subscriptions",
                 "operationId": "remove-contact",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User session token",
-                        "name": "x-webauth-user",
-                        "in": "header"
-                    },
                     {
                         "type": "string",
                         "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
@@ -406,12 +388,6 @@ const docTemplate = `{
                 "summary": "Push a test notification to verify that the contact is properly set up",
                 "operationId": "send-test-contact-notification",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User session token",
-                        "name": "x-webauth-user",
-                        "in": "header"
-                    },
                     {
                         "type": "string",
                         "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
@@ -823,14 +799,6 @@ const docTemplate = `{
                 ],
                 "summary": "Get all subscriptions",
                 "operationId": "get-user-subscriptions",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User session token",
-                        "name": "x-webauth-user",
-                        "in": "header"
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "Subscriptions fetched successfully",
@@ -865,12 +833,6 @@ const docTemplate = `{
                 "summary": "Create a new subscription",
                 "operationId": "create-subscription",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User session token",
-                        "name": "x-webauth-user",
-                        "in": "header"
-                    },
                     {
                         "description": "Subscription data",
                         "name": "subscription",
@@ -923,12 +885,6 @@ const docTemplate = `{
                 "summary": "Update a subscription",
                 "operationId": "update-subscription",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User session token",
-                        "name": "x-webauth-user",
-                        "in": "header"
-                    },
                     {
                         "type": "string",
                         "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
@@ -1003,12 +959,6 @@ const docTemplate = `{
                         "name": "subscriptionID",
                         "in": "path",
                         "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "User session token",
-                        "name": "x-webauth-user",
-                        "in": "header"
                     }
                 ],
                 "responses": {
@@ -1047,12 +997,6 @@ const docTemplate = `{
                 "summary": "Send a test notification for a subscription",
                 "operationId": "send-test-notification",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User session token",
-                        "name": "x-webauth-user",
-                        "in": "header"
-                    },
                     {
                         "type": "string",
                         "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
@@ -1209,14 +1153,6 @@ const docTemplate = `{
                 ],
                 "summary": "Get all teams",
                 "operationId": "get-all-teams",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User session token",
-                        "name": "x-webauth-user",
-                        "in": "header"
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "Teams fetched successfully",
@@ -1251,12 +1187,6 @@ const docTemplate = `{
                 "summary": "Create a new team",
                 "operationId": "create-team",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User session token",
-                        "name": "x-webauth-user",
-                        "in": "header"
-                    },
                     {
                         "description": "Team data",
                         "name": "team",
@@ -1313,12 +1243,6 @@ const docTemplate = `{
                         "name": "teamID",
                         "in": "path",
                         "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "User session token",
-                        "name": "x-webauth-user",
-                        "in": "header"
                     }
                 ],
                 "responses": {
@@ -1364,12 +1288,6 @@ const docTemplate = `{
                 "summary": "Delete a team",
                 "operationId": "delete-team",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User session token",
-                        "name": "x-webauth-user",
-                        "in": "header"
-                    },
                     {
                         "type": "string",
                         "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
@@ -1440,12 +1358,6 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "type": "string",
-                        "description": "User session token",
-                        "name": "x-webauth-user",
-                        "in": "header"
-                    },
-                    {
                         "description": "Updated team data",
                         "name": "team",
                         "in": "body",
@@ -1509,12 +1421,6 @@ const docTemplate = `{
                 "summary": "Create a new team contact",
                 "operationId": "create-new-team-contact",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User session token",
-                        "name": "x-webauth-user",
-                        "in": "header"
-                    },
                     {
                         "type": "string",
                         "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
@@ -1586,12 +1492,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "User session token",
-                        "name": "x-webauth-user",
-                        "in": "header"
-                    },
-                    {
-                        "type": "string",
                         "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
                         "description": "ID of the team",
                         "name": "teamID",
@@ -1647,12 +1547,6 @@ const docTemplate = `{
                 "summary": "Create a new team subscription",
                 "operationId": "create-new-team-subscription",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User session token",
-                        "name": "x-webauth-user",
-                        "in": "header"
-                    },
                     {
                         "type": "string",
                         "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
@@ -1724,12 +1618,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "User session token",
-                        "name": "x-webauth-user",
-                        "in": "header"
-                    },
-                    {
-                        "type": "string",
                         "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
                         "description": "ID of the team",
                         "name": "teamID",
@@ -1783,12 +1671,6 @@ const docTemplate = `{
                 "summary": "Set users of a team",
                 "operationId": "set-team-users",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User session token",
-                        "name": "x-webauth-user",
-                        "in": "header"
-                    },
                     {
                         "type": "string",
                         "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
@@ -1861,12 +1743,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "User session token",
-                        "name": "x-webauth-user",
-                        "in": "header"
-                    },
-                    {
-                        "type": "string",
                         "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
                         "description": "ID of the team",
                         "name": "teamID",
@@ -1934,12 +1810,6 @@ const docTemplate = `{
                 "summary": "Delete a user from a team",
                 "operationId": "delete-team-user",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User session token",
-                        "name": "x-webauth-user",
-                        "in": "header"
-                    },
                     {
                         "type": "string",
                         "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
@@ -2041,12 +1911,6 @@ const docTemplate = `{
                 "summary": "Create a new trigger",
                 "operationId": "create-trigger",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User session token",
-                        "name": "x-webauth-user",
-                        "in": "header"
-                    },
                     {
                         "type": "boolean",
                         "description": "For validating targets",
@@ -2343,12 +2207,6 @@ const docTemplate = `{
                 "summary": "Update existing trigger",
                 "operationId": "update-trigger",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User session token",
-                        "name": "x-webauth-user",
-                        "in": "header"
-                    },
                     {
                         "type": "string",
                         "default": "bcba82f5-48cf-44c0-b7d6-e1d32c64a88c",
@@ -2767,12 +2625,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/dto.TriggerMaintenance"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "User session token",
-                        "name": "x-webauth-user",
-                        "in": "header"
                     }
                 ],
                 "responses": {
@@ -2934,14 +2786,6 @@ const docTemplate = `{
                 ],
                 "summary": "Gets the username of the authenticated user if it is available",
                 "operationId": "get-user-name",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User session token",
-                        "name": "x-webauth-user",
-                        "in": "header"
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "User name fetched successfully",
@@ -2968,14 +2812,6 @@ const docTemplate = `{
                 ],
                 "summary": "Get the user's contacts and subscriptions",
                 "operationId": "get-user-settings",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User session token",
-                        "name": "x-webauth-user",
-                        "in": "header"
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "Settings fetched successfully",

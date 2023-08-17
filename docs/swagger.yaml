@@ -1205,10 +1205,6 @@ paths:
       - application/json
       operationId: create-new-contact
       parameters:
-      - description: User session token
-        in: header
-        name: x-webauth-user
-        type: string
       - description: Contact data
         in: body
         name: contact
@@ -1243,10 +1239,6 @@ paths:
       - application/json
       operationId: remove-contact
       parameters:
-      - description: User session token
-        in: header
-        name: x-webauth-user
-        type: string
       - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
         description: ID of the contact to remove
         in: path
@@ -1318,10 +1310,6 @@ paths:
       - application/json
       operationId: update-contact
       parameters:
-      - description: User session token
-        in: header
-        name: x-webauth-user
-        type: string
       - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
         description: ID of the contact to update
         in: path
@@ -1421,10 +1409,6 @@ paths:
       - application/json
       operationId: send-test-contact-notification
       parameters:
-      - description: User session token
-        in: header
-        name: x-webauth-user
-        type: string
       - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
         description: The ID of the target contact
         in: path
@@ -1701,11 +1685,6 @@ paths:
   /subscription:
     get:
       operationId: get-user-subscriptions
-      parameters:
-      - description: User session token
-        in: header
-        name: x-webauth-user
-        type: string
       produces:
       - application/json
       responses:
@@ -1729,10 +1708,6 @@ paths:
       - application/json
       operationId: create-subscription
       parameters:
-      - description: User session token
-        in: header
-        name: x-webauth-user
-        type: string
       - description: Subscription data
         in: body
         name: subscription
@@ -1771,10 +1746,6 @@ paths:
         name: subscriptionID
         required: true
         type: string
-      - description: User session token
-        in: header
-        name: x-webauth-user
-        type: string
       produces:
       - application/json
       responses:
@@ -1800,10 +1771,6 @@ paths:
       - application/json
       operationId: update-subscription
       parameters:
-      - description: User session token
-        in: header
-        name: x-webauth-user
-        type: string
       - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
         description: ID of the subscription to update
         in: path
@@ -1850,10 +1817,6 @@ paths:
     put:
       operationId: send-test-notification
       parameters:
-      - description: User session token
-        in: header
-        name: x-webauth-user
-        type: string
       - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
         description: ID of the subscription to send the test notification
         in: path
@@ -1957,11 +1920,6 @@ paths:
   /teams:
     get:
       operationId: get-all-teams
-      parameters:
-      - description: User session token
-        in: header
-        name: x-webauth-user
-        type: string
       produces:
       - application/json
       responses:
@@ -1985,10 +1943,6 @@ paths:
       - application/json
       operationId: create-team
       parameters:
-      - description: User session token
-        in: header
-        name: x-webauth-user
-        type: string
       - description: Team data
         in: body
         name: team
@@ -2021,10 +1975,6 @@ paths:
     delete:
       operationId: delete-team
       parameters:
-      - description: User session token
-        in: header
-        name: x-webauth-user
-        type: string
       - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
         description: ID of the team
         in: path
@@ -2070,10 +2020,6 @@ paths:
         name: teamID
         required: true
         type: string
-      - description: User session token
-        in: header
-        name: x-webauth-user
-        type: string
       produces:
       - application/json
       responses:
@@ -2110,10 +2056,6 @@ paths:
         in: path
         name: teamID
         required: true
-        type: string
-      - description: User session token
-        in: header
-        name: x-webauth-user
         type: string
       - description: Updated team data
         in: body
@@ -2157,10 +2099,6 @@ paths:
       - application/json
       operationId: create-new-team-contact
       parameters:
-      - description: User session token
-        in: header
-        name: x-webauth-user
-        type: string
       - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
         description: The ID of team
         in: path
@@ -2207,10 +2145,6 @@ paths:
     get:
       operationId: get-team-settings
       parameters:
-      - description: User session token
-        in: header
-        name: x-webauth-user
-        type: string
       - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
         description: ID of the team
         in: path
@@ -2249,10 +2183,6 @@ paths:
       - application/json
       operationId: create-new-team-subscription
       parameters:
-      - description: User session token
-        in: header
-        name: x-webauth-user
-        type: string
       - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
         description: The ID of team
         in: path
@@ -2299,10 +2229,6 @@ paths:
     get:
       operationId: get-team-users
       parameters:
-      - description: User session token
-        in: header
-        name: x-webauth-user
-        type: string
       - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
         description: ID of the team
         in: path
@@ -2340,10 +2266,6 @@ paths:
       - application/json
       operationId: add-team-users
       parameters:
-      - description: User session token
-        in: header
-        name: x-webauth-user
-        type: string
       - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
         description: ID of the team
         in: path
@@ -2391,10 +2313,6 @@ paths:
       - application/json
       operationId: set-team-users
       parameters:
-      - description: User session token
-        in: header
-        name: x-webauth-user
-        type: string
       - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
         description: ID of the team
         in: path
@@ -2441,10 +2359,6 @@ paths:
     delete:
       operationId: delete-team-user
       parameters:
-      - description: User session token
-        in: header
-        name: x-webauth-user
-        type: string
       - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
         description: ID of the team
         in: path
@@ -2513,10 +2427,6 @@ paths:
       - application/json
       operationId: create-trigger
       parameters:
-      - description: User session token
-        in: header
-        name: x-webauth-user
-        type: string
       - description: For validating targets
         in: query
         name: validate
@@ -2614,10 +2524,6 @@ paths:
     put:
       operationId: update-trigger
       parameters:
-      - description: User session token
-        in: header
-        name: x-webauth-user
-        type: string
       - default: bcba82f5-48cf-44c0-b7d6-e1d32c64a88c
         description: Trigger ID
         in: path
@@ -2883,10 +2789,6 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/dto.TriggerMaintenance'
-      - description: User session token
-        in: header
-        name: x-webauth-user
-        type: string
       produces:
       - application/json
       responses:
@@ -3117,11 +3019,6 @@ paths:
   /user:
     get:
       operationId: get-user-name
-      parameters:
-      - description: User session token
-        in: header
-        name: x-webauth-user
-        type: string
       produces:
       - application/json
       responses:
@@ -3139,11 +3036,6 @@ paths:
   /user/settings:
     get:
       operationId: get-user-settings
-      parameters:
-      - description: User session token
-        in: header
-        name: x-webauth-user
-        type: string
       produces:
       - application/json
       responses:

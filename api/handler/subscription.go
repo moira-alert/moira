@@ -32,10 +32,9 @@ func subscription(router chi.Router) {
 //	@id			get-user-subscriptions
 //	@tags		subscription
 //	@produce	json
-//	@param		x-webauth-user	header		string							false	"User session token"
-//	@success	200				{object}	dto.SubscriptionList			"Subscriptions fetched successfully"
-//	@failure	422				{object}	api.ErrorRenderExample			"Render error"
-//	@failure	500				{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@success	200	{object}	dto.SubscriptionList			"Subscriptions fetched successfully"
+//	@failure	422	{object}	api.ErrorRenderExample			"Render error"
+//	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
 //	@router		/subscription [get]
 func getUserSubscriptions(writer http.ResponseWriter, request *http.Request) {
 	userLogin := middleware.GetLogin(request)
@@ -57,7 +56,6 @@ func getUserSubscriptions(writer http.ResponseWriter, request *http.Request) {
 //	@tags		subscription
 //	@accept		json
 //	@produce	json
-//	@param		x-webauth-user	header		string							false	"User session token"
 //	@param		subscription	body		dto.Subscription				true	"Subscription data"
 //	@success	200				{object}	dto.Subscription				"Subscription created successfully"
 //	@failure	400				{object}	api.ErrorInvalidRequestExample	"Bad request from client"
@@ -110,7 +108,6 @@ func subscriptionFilter(next http.Handler) http.Handler {
 //	@tags		subscription
 //	@accept		json
 //	@produce	json
-//	@param		x-webauth-user	header		string							false	"User session token"
 //	@param		subscriptionID	path		string							true	"ID of the subscription to update"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
 //	@param		subscription	body		dto.Subscription				true	"Updated subscription data"
 //	@success	200				{object}	dto.Subscription				"Subscription updated successfully"
@@ -158,7 +155,6 @@ func updateSubscription(writer http.ResponseWriter, request *http.Request) {
 //	@tags		subscription
 //	@produce	json
 //	@param		subscriptionID	path	string	true	"ID of the subscription to remove"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
-//	@param		x-webauth-user	header	string	false	"User session token"
 //	@success	200				"Subscription deleted"
 //	@failure	403				{object}	api.ErrorForbiddenExample		"Forbidden"
 //	@failure	404				{object}	api.ErrorNotFoundExample		"Resource not found"
@@ -177,7 +173,6 @@ func removeSubscription(writer http.ResponseWriter, request *http.Request) {
 //	@id			send-test-notification
 //	@tags		subscription
 //	@produce	json
-//	@param		x-webauth-user	header	string	false	"User session token"
 //	@param		subscriptionID	path	string	true	"ID of the subscription to send the test notification"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
 //	@success	200				"Test notification sent successfully"
 //	@failure	403				{object}	api.ErrorForbiddenExample		"Forbidden"

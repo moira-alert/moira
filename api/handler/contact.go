@@ -86,12 +86,11 @@ func getContactById(writer http.ResponseWriter, request *http.Request) {
 //	@tags		contact
 //	@accept		json
 //	@produce	json
-//	@param		x-webauth-user	header		string							false	"User session token"
-//	@param		contact			body		dto.Contact						true	"Contact data"
-//	@success	200				{object}	dto.Contact						"Contact created successfully"
-//	@failure	400				{object}	api.ErrorInvalidRequestExample	"Bad request from client"
-//	@failure	422				{object}	api.ErrorRenderExample			"Render error"
-//	@failure	500				{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@param		contact	body		dto.Contact						true	"Contact data"
+//	@success	200		{object}	dto.Contact						"Contact created successfully"
+//	@failure	400		{object}	api.ErrorInvalidRequestExample	"Bad request from client"
+//	@failure	422		{object}	api.ErrorRenderExample			"Render error"
+//	@failure	500		{object}	api.ErrorInternalServerExample	"Internal server error"
 //	@router		/contact [put]
 func createNewContact(writer http.ResponseWriter, request *http.Request) {
 	contact := &dto.Contact{}
@@ -133,15 +132,14 @@ func contactFilter(next http.Handler) http.Handler {
 //	@id			update-contact
 //	@accept		json
 //	@produce	json
-//	@param		x-webauth-user	header		string							false	"User session token"
-//	@param		contactID		path		string							true	"ID of the contact to update"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
-//	@param		contact			body		dto.Contact						true	"Updated contact data"
-//	@success	200				{object}	dto.Contact						"Updated contact"
-//	@failure	400				{object}	api.ErrorInvalidRequestExample	"Bad request from client"
-//	@failure	403				{object}	api.ErrorForbiddenExample		"Forbidden"
-//	@failure	404				{object}	api.ErrorNotFoundExample		"Resource not found"
-//	@failure	422				{object}	api.ErrorRenderExample			"Render error"
-//	@failure	500				{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@param		contactID	path		string							true	"ID of the contact to update"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+//	@param		contact		body		dto.Contact						true	"Updated contact data"
+//	@success	200			{object}	dto.Contact						"Updated contact"
+//	@failure	400			{object}	api.ErrorInvalidRequestExample	"Bad request from client"
+//	@failure	403			{object}	api.ErrorForbiddenExample		"Forbidden"
+//	@failure	404			{object}	api.ErrorNotFoundExample		"Resource not found"
+//	@failure	422			{object}	api.ErrorRenderExample			"Render error"
+//	@failure	500			{object}	api.ErrorInternalServerExample	"Internal server error"
 //	@router		/contact/{contactID} [put]
 //	@tags		contact
 func updateContact(writer http.ResponseWriter, request *http.Request) {
@@ -169,13 +167,12 @@ func updateContact(writer http.ResponseWriter, request *http.Request) {
 //	@accept		json
 //	@produce	json
 //	@tags		contact
-//	@param		x-webauth-user	header	string	false	"User session token"
-//	@param		contactID		path	string	true	"ID of the contact to remove"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
-//	@success	200				"Contact has been deleted"
-//	@failure	400				{object}	api.ErrorInvalidRequestExample	"Bad request from client"
-//	@failure	403				{object}	api.ErrorForbiddenExample		"Forbidden"
-//	@failure	404				{object}	api.ErrorNotFoundExample		"Resource not found"
-//	@failure	500				{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@param		contactID	path	string	true	"ID of the contact to remove"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+//	@success	200			"Contact has been deleted"
+//	@failure	400			{object}	api.ErrorInvalidRequestExample	"Bad request from client"
+//	@failure	403			{object}	api.ErrorForbiddenExample		"Forbidden"
+//	@failure	404			{object}	api.ErrorNotFoundExample		"Resource not found"
+//	@failure	500			{object}	api.ErrorInternalServerExample	"Internal server error"
 //	@router		/contact/{contactID} [delete]
 func removeContact(writer http.ResponseWriter, request *http.Request) {
 	contactData := request.Context().Value(contactKey).(moira.ContactData)
@@ -191,12 +188,11 @@ func removeContact(writer http.ResponseWriter, request *http.Request) {
 //	@id			send-test-contact-notification
 //	@accept		json
 //	@produce	json
-//	@param		x-webauth-user	header	string	false	"User session token"
-//	@param		contactID		path	string	true	"The ID of the target contact"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
-//	@success	200				"Test successful"
-//	@failure	403				{object}	api.ErrorForbiddenExample		"Forbidden"
-//	@failure	404				{object}	api.ErrorNotFoundExample		"Resource not found"
-//	@failure	500				{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@param		contactID	path	string	true	"The ID of the target contact"	default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
+//	@success	200			"Test successful"
+//	@failure	403			{object}	api.ErrorForbiddenExample		"Forbidden"
+//	@failure	404			{object}	api.ErrorNotFoundExample		"Resource not found"
+//	@failure	500			{object}	api.ErrorInternalServerExample	"Internal server error"
 //	@router		/contact/{contactID}/test [post]
 //	@tags		contact
 func sendTestContactNotification(writer http.ResponseWriter, request *http.Request) {

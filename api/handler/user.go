@@ -22,9 +22,8 @@ func user(router chi.Router) {
 //	@id			get-user-name
 //	@tags		user
 //	@produce	json
-//	@param		x-webauth-user	header		string					false	"User session token"
-//	@success	200				{object}	dto.User				"User name fetched successfully"
-//	@failure	422				{object}	api.ErrorRenderExample	"Render error"
+//	@success	200	{object}	dto.User				"User name fetched successfully"
+//	@failure	422	{object}	api.ErrorRenderExample	"Render error"
 //	@router		/user [get]
 func getUserName(writer http.ResponseWriter, request *http.Request) {
 	userLogin := middleware.GetLogin(request)
@@ -40,10 +39,9 @@ func getUserName(writer http.ResponseWriter, request *http.Request) {
 //	@id			get-user-settings
 //	@tags		user
 //	@produce	json
-//	@param		x-webauth-user	header		string							false	"User session token"
-//	@success	200				{object}	dto.UserSettings				"Settings fetched successfully"
-//	@failure	422				{object}	api.ErrorRenderExample			"Render error"
-//	@failure	500				{object}	api.ErrorInternalServerExample	"Internal server error"
+//	@success	200	{object}	dto.UserSettings				"Settings fetched successfully"
+//	@failure	422	{object}	api.ErrorRenderExample			"Render error"
+//	@failure	500	{object}	api.ErrorInternalServerExample	"Internal server error"
 //	@router		/user/settings [get]
 func getUserSettings(writer http.ResponseWriter, request *http.Request) {
 	userLogin := middleware.GetLogin(request)
