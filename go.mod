@@ -50,7 +50,6 @@ require (
 require (
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/swaggo/http-swagger v1.3.4
-	github.com/swaggo/swag v1.8.12
 )
 
 require (
@@ -193,6 +192,7 @@ require (
 	github.com/mitchellh/reflectwalk v1.0.0 // indirect
 	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/swaggo/files v1.0.1 // indirect
+	github.com/swaggo/swag v1.8.12 // indirect
 	golang.org/x/tools v0.11.1 // indirect
 )
 
