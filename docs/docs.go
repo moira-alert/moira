@@ -2192,7 +2192,7 @@ const docTemplate = `{
         },
         "/trigger/search": {
             "get": {
-                "description": "You can also add filtering by tags, for this purpose add query parameters tags[0]=test, tags[1]=test1 and so on",
+                "description": "You can also add filtering by tags, for this purpose add query parameters tags[0]=test, tags[1]=test1 and so on\nFor example, ` + "`" + `/api/trigger/search?tags[0]=test\u0026tags[1]=test1` + "`" + `",
                 "produces": [
                     "application/json"
                 ],

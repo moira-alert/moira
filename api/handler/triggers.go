@@ -199,7 +199,7 @@ func triggerCheck(writer http.ResponseWriter, request *http.Request) {
 //
 //	@summary		Search triggers. Replaces the deprecated `page` path
 //	@description	You can also add filtering by tags, for this purpose add query parameters tags[0]=test, tags[1]=test1 and so on
-// For example, /api/trigger/search?tags[0]=test&tags[1]=test1
+//	@description	For example, `/api/trigger/search?tags[0]=test&tags[1]=test1`
 //	@id				search-triggers
 //	@tags			trigger
 //	@produce		json

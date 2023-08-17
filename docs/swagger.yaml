@@ -3051,8 +3051,9 @@ paths:
       - trigger
   /trigger/search:
     get:
-      description: You can also add filtering by tags, for this purpose add query
-        parameters tags[0]=test, tags[1]=test1 and so on
+      description: |-
+        You can also add filtering by tags, for this purpose add query parameters tags[0]=test, tags[1]=test1 and so on
+        For example, `/api/trigger/search?tags[0]=test&tags[1]=test1`
       operationId: search-triggers
       parameters:
       - default: false
