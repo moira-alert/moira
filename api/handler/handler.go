@@ -38,8 +38,8 @@ func NewHandler(db moira.Database, log moira.Logger, index moira.Searcher, confi
 
 	//	@title				Moira Alert
 	//	@version			master
-	//	@description		This is an API description for [Moira Alert API](https://moira.readthedocs.io/en/latest/overview.html).
-	// Check us out on [Github](https://github.com/moira-alert) or look up our [guide on getting started with Moira](https://moira.readthedocs.io).
+	//	@description		This is an API description for [Moira Alert API](https://moira.readthedocs.io/en/latest/overview.html)
+	//	@description		Check us out on [Github](https://github.com/moira-alert) or look up our [guide on getting started with Moira](https://moira.readthedocs.io)
 	//	@contact.name		Contact Moira Team
 	//	@contact.email		opensource@skbkontur.com
 	//	@license.name		MIT

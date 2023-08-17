@@ -71,7 +71,7 @@ func getTriggerMetrics(writer http.ResponseWriter, request *http.Request) {
 //	@tags		trigger
 //	@produce	json
 //	@param		triggerID	path	string	true	"Trigger ID"				default(bcba82f5-48cf-44c0-b7d6-e1d32c64a88c)
-//	@param		name		query	string	true	"Name of the target metric"	default(DevOps.my_server.hdd.freespace_mbytes)
+//	@param		name		query	string	false	"Name of the target metric"	default(DevOps.my_server.hdd.freespace_mbytes)
 //	@success	200			"Trigger metric deleted successfully"
 //	@failure	400			{object}	api.ErrorInvalidRequestExample	"Bad request from client"
 //	@failure	404			{object}	api.ErrorNotFoundExample		"Resource not found"

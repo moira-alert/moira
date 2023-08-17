@@ -3,8 +3,11 @@ FROM golang:1.18 as builder
 COPY go.mod go.sum /go/src/github.com/moira-alert/moira/
 WORKDIR /go/src/github.com/moira-alert/moira
 RUN go mod download
+RUN go install github.com/swaggo/swag/cmd/swag@v1.8.12
 
 COPY . /go/src/github.com/moira-alert/moira/
+
+RUN /go/bin/swag init -g api/handler/handler.go
 
 ARG GO_VERSION="GoVersion"
 ARG GIT_COMMIT="git_Commit"
