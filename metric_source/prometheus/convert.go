@@ -16,7 +16,7 @@ func convertToFetchResult(mat model.Matrix, from, until int64, allowRealTimeAler
 	for _, res := range mat {
 		resValues := TrimValuesIfNescesary(res.Values, allowRealTimeAlerting)
 
-		values := []float64{}
+		values := make([]float64, 0, len(resValues))
 		for _, v := range resValues {
 			values = append(values, float64(v.Value))
 		}
