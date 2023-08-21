@@ -60,17 +60,15 @@ func targetFromTags(tags model.Metric) string {
 	})
 
 	for _, tag := range tagsList {
-		key, value := tag.key, tag.value
-
-		if key == "__name__" {
+		if tag.key == "__name__" {
 			continue
 		}
 		if target.Len() != 0 {
 			target.WriteRune(';')
 		}
-		target.WriteString(key)
+		target.WriteString(tag.key)
 		target.WriteRune('=')
-		target.WriteString(value)
+		target.WriteString(tag.value)
 	}
 
 	return target.String()
