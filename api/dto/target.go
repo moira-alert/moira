@@ -138,7 +138,7 @@ func TargetVerification(targets []string, ttl time.Duration, triggerSource moira
 		return graphiteTargetVerification(targets, ttl, triggerSource), nil
 	}
 
-	return nil, fmt.Errorf("unknown trigger source %T", triggerSource)
+	return nil, fmt.Errorf("unknown trigger source '%s'", triggerSource)
 }
 
 func graphiteTargetVerification(targets []string, ttl time.Duration, triggerSource moira.TriggerSource) []TreeOfProblems {

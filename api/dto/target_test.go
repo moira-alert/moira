@@ -13,29 +13,40 @@ import (
 
 func TestTargetVerification(t *testing.T) {
 	Convey("Target verification", t, func() {
+		Convey("Check unknown trigger type", func() {
+			targets := []string{`alias(test.one,'One'`}
+			problems, err := TargetVerification(targets, 10, "random_source")
+			So(err, ShouldResemble, fmt.Errorf("unknown trigger source '%s'", "random_source"))
+			So(problems, ShouldBeNil)
+		})
+
 		Convey("Check bad function", func() {
 			targets := []string{`alias(test.one,'One'`}
-			problems, _ := TargetVerification(targets, 10, moira.GraphiteLocal)
+			problems, err := TargetVerification(targets, 10, moira.GraphiteLocal)
+			So(err, ShouldBeNil)
 			So(len(problems), ShouldEqual, 1)
 			So(problems[0].SyntaxOk, ShouldBeFalse)
 		})
 
 		Convey("Check correct construction", func() {
 			targets := []string{`alias(test.one,'One')`}
-			problems, _ := TargetVerification(targets, 10, moira.GraphiteLocal)
+			problems, err := TargetVerification(targets, 10, moira.GraphiteLocal)
+			So(err, ShouldBeNil)
 			So(problems[0].SyntaxOk, ShouldBeTrue)
 		})
 
 		Convey("Check correct empty function", func() {
 			targets := []string{`alias(movingSum(),'One')`}
-			problems, _ := TargetVerification(targets, 10, moira.GraphiteLocal)
+			problems, err := TargetVerification(targets, 10, moira.GraphiteLocal)
+			So(err, ShouldBeNil)
 			So(problems[0].SyntaxOk, ShouldBeTrue)
 			So(problems[0].TreeOfProblems, ShouldBeNil)
 		})
 
 		Convey("Check interval larger that TTL", func() {
 			targets := []string{"movingAverage(groupByTags(seriesByTag('project=my-test-project'), 'max'), '10min')"}
-			problems, _ := TargetVerification(targets, 5*time.Minute, moira.GraphiteLocal)
+			problems, err := TargetVerification(targets, 5*time.Minute, moira.GraphiteLocal)
+			So(err, ShouldBeNil)
 			// target is not valid because set of metrics by last 5 minutes is not enough for function with 10min interval
 			So(problems[0].SyntaxOk, ShouldBeTrue)
 			So(problems[0].TreeOfProblems.Argument, ShouldEqual, "movingAverage")
@@ -45,7 +56,8 @@ func TestTargetVerification(t *testing.T) {
 		Convey("Check ttl is 0", func() {
 			targets := []string{"movingAverage(groupByTags(seriesByTag('project=my-test-project'), 'max'), '10min')"}
 			// ttl is 0 means that metrics will persist forever
-			problems, _ := TargetVerification(targets, 0, moira.GraphiteLocal)
+			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
+			So(err, ShouldBeNil)
 			// target is valid because there is enough metrics
 			So(problems[0].SyntaxOk, ShouldBeTrue)
 			So(problems[0].TreeOfProblems, ShouldBeNil)
@@ -53,49 +65,56 @@ func TestTargetVerification(t *testing.T) {
 
 		Convey("Check unstable function", func() {
 			targets := []string{"summarize(test.metric, '10min')"}
-			problems, _ := TargetVerification(targets, 0, moira.GraphiteLocal)
+			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
+			So(err, ShouldBeNil)
 			So(problems[0].SyntaxOk, ShouldBeTrue)
 			So(problems[0].TreeOfProblems.Argument, ShouldEqual, "summarize")
 		})
 
 		Convey("Check false notifications function", func() {
 			targets := []string{"highest(test.metric)"}
-			problems, _ := TargetVerification(targets, 0, moira.GraphiteLocal)
+			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
+			So(err, ShouldBeNil)
 			So(problems[0].SyntaxOk, ShouldBeTrue)
 			So(problems[0].TreeOfProblems.Argument, ShouldEqual, "highest")
 		})
 
 		Convey("Check visual function", func() {
 			targets := []string{"consolidateBy(Servers.web01.sda1.free_space, 'max')"}
-			problems, _ := TargetVerification(targets, 0, moira.GraphiteLocal)
+			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
+			So(err, ShouldBeNil)
 			So(problems[0].SyntaxOk, ShouldBeTrue)
 			So(problems[0].TreeOfProblems.Argument, ShouldEqual, "consolidateBy")
 		})
 
 		Convey("Check unsupported function", func() {
 			targets := []string{"myUnsupportedFunction(Servers.web01.sda1.free_space, 'max')"}
-			problems, _ := TargetVerification(targets, 0, moira.GraphiteLocal)
+			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
+			So(err, ShouldBeNil)
 			So(problems[0].SyntaxOk, ShouldBeTrue)
 			So(problems[0].TreeOfProblems.Argument, ShouldEqual, "myUnsupportedFunction")
 		})
 
 		Convey("Check nested function", func() {
 			targets := []string{"movingAverage(myUnsupportedFunction(), '10min')"}
-			problems, _ := TargetVerification(targets, 0, moira.GraphiteLocal)
+			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
+			So(err, ShouldBeNil)
 			So(problems[0].SyntaxOk, ShouldBeTrue)
 			So(problems[0].TreeOfProblems.Problems[0].Argument, ShouldEqual, "myUnsupportedFunction")
 		})
 
 		Convey("Check target only with metric (without Graphite-function)", func() {
 			targets := []string{"my.metric"}
-			problems, _ := TargetVerification(targets, 0, moira.GraphiteLocal)
+			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
+			So(err, ShouldBeNil)
 			So(problems[0].SyntaxOk, ShouldBeTrue)
 			So(problems[0].TreeOfProblems, ShouldBeNil)
 		})
 
 		Convey("Check target with space symbol in metric name", func() {
 			targets := []string{"a b"}
-			problems, _ := TargetVerification(targets, 0, moira.GraphiteLocal)
+			problems, err := TargetVerification(targets, 0, moira.GraphiteLocal)
+			So(err, ShouldBeNil)
 			So(problems[0].SyntaxOk, ShouldBeFalse)
 			So(problems[0].TreeOfProblems, ShouldBeNil)
 		})
