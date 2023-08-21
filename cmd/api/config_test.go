@@ -92,6 +92,10 @@ func Test_webConfig_getDefault(t *testing.T) {
 				Timeout:    "60s",
 				MetricsTTL: "7d",
 			},
+			NotificationHistory: cmd.NotificationHistoryConfig{
+				NotificationHistoryTTL:        "48h",
+				NotificationHistoryQueryLimit: -1,
+			},
 		}
 
 		result := getDefault()

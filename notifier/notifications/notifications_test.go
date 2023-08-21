@@ -88,6 +88,8 @@ func TestProcessScheduledEvent(t *testing.T) {
 				notification2.Event,
 			},
 		}
+		dataBase.EXPECT().PushContactNotificationToHistory(&notification1).Return(nil).AnyTimes()
+		dataBase.EXPECT().PushContactNotificationToHistory(&notification2).Return(nil).AnyTimes()
 		notifier.EXPECT().Send(&pkg1, gomock.Any())
 		notifier.EXPECT().Send(&pkg2, gomock.Any())
 		notifier.EXPECT().GetReadBatchSize().Return(notifier2.NotificationsLimitUnlimited)
@@ -114,6 +116,8 @@ func TestProcessScheduledEvent(t *testing.T) {
 			},
 		}
 
+		dataBase.EXPECT().PushContactNotificationToHistory(&notification2).Return(nil).AnyTimes()
+		dataBase.EXPECT().PushContactNotificationToHistory(&notification3).Return(nil).AnyTimes()
 		notifier.EXPECT().Send(&pkg, gomock.Any())
 		dataBase.EXPECT().GetNotifierState().Return(moira.SelfStateOK, nil)
 		notifier.EXPECT().GetReadBatchSize().Return(notifier2.NotificationsLimitUnlimited)
@@ -159,6 +163,7 @@ func TestGoRoutine(t *testing.T) {
 
 	shutdown := make(chan struct{})
 	dataBase.EXPECT().FetchNotifications(gomock.Any(), notifier2.NotificationsLimitUnlimited).Return([]*moira.ScheduledNotification{&notification1}, nil)
+	dataBase.EXPECT().PushContactNotificationToHistory(&notification1).Return(nil).AnyTimes()
 	notifier.EXPECT().Send(&pkg, gomock.Any()).Do(func(arg0, arg1 interface{}) { close(shutdown) })
 	notifier.EXPECT().StopSenders()
 	notifier.EXPECT().GetReadBatchSize().Return(notifier2.NotificationsLimitUnlimited)

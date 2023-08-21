@@ -1,7 +1,9 @@
 package telegram
 
 import (
+	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/mitchellh/mapstructure"
@@ -15,6 +17,7 @@ const (
 	workerName       = "Telebot"
 	messenger        = "telegram"
 	telegramLockTTL  = 30 * time.Second
+	hidden           = "[DATA DELETED]"
 )
 
 var (
@@ -44,6 +47,17 @@ type Sender struct {
 	location *time.Location
 }
 
+func removeTokenFromError(err error, bot *telebot.Bot) error {
+	url := telebot.DefaultApiURL
+	if bot != nil {
+		url = bot.URL
+	}
+	if err != nil && strings.Contains(err.Error(), url) {
+		return errors.New(moira.ReplaceSubstring(err.Error(), "/bot", "/", hidden))
+	}
+	return err
+}
+
 // Init loads yaml config, configures and starts telegram bot
 func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, location *time.Location, dateTimeFormat string) error {
 	var tg telegram
@@ -65,7 +79,7 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 		Poller: &telebot.LongPoller{Timeout: pollerTimeout},
 	})
 	if err != nil {
-		return err
+		return removeTokenFromError(err, sender.bot)
 	}
 
 	sender.bot.Handle(telebot.OnText, func(message *telebot.Message) {

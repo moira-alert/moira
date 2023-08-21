@@ -15,9 +15,9 @@ const (
 
 // TeamModel is a structure that represents team entity in HTTP transfer
 type TeamModel struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	ID          string `json:"id" example:"d5d98eb3-ee18-4f75-9364-244f67e23b54"`
+	Name        string `json:"name" example:"Infrastructure Team"`
+	Description string `json:"description" example:"Team that holds all members of infrastructure division"`
 }
 
 // NewTeamModel is a constructor function that creates a new TeamModel using moira.Team
@@ -59,7 +59,7 @@ func (t TeamModel) ToMoiraTeam() moira.Team {
 
 // SaveTeamResponse is a structure to return team creation result in HTTP response
 type SaveTeamResponse struct {
-	ID string `json:"id"`
+	ID string `json:"id" example:"d5d98eb3-ee18-4f75-9364-244f67e23b54"`
 }
 
 // Render is a function that implements chi Renderer interface for SaveTeamResponse
@@ -79,7 +79,7 @@ func (UserTeams) Render(w http.ResponseWriter, r *http.Request) error {
 
 // TeamMembers is a structure that represents a team members in HTTP transfer
 type TeamMembers struct {
-	Usernames []string `json:"usernames"`
+	Usernames []string `json:"usernames" example:"anonymous"`
 }
 
 // Bind is a method that implements Binder interface from chi and checks that validity of data in request
@@ -96,7 +96,7 @@ func (TeamMembers) Render(w http.ResponseWriter, r *http.Request) error {
 }
 
 type TeamSettings struct {
-	TeamID        string                   `json:"team_id"`
+	TeamID        string                   `json:"team_id" example:"d5d98eb3-ee18-4f75-9364-244f67e23b54"`
 	Contacts      []moira.ContactData      `json:"contacts"`
 	Subscriptions []moira.SubscriptionData `json:"subscriptions"`
 }

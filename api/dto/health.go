@@ -13,8 +13,8 @@ const (
 )
 
 type NotifierState struct {
-	State   string `json:"state"`
-	Message string `json:"message,omitempty"`
+	State   string `json:"state" example:"ERROR"`
+	Message string `json:"message,omitempty" example:"Moira has been turned off for maintenance"`
 }
 
 func (*NotifierState) Render(w http.ResponseWriter, r *http.Request) error {

@@ -140,28 +140,7 @@ func cleanUpAbandonedTriggerLastCheckOnRedisNode(connector *DbConnector, client 
 
 // CleanUpAbandonedTriggerLastCheck cleans up abandoned triggers last check.
 func (connector *DbConnector) CleanUpAbandonedTriggerLastCheck() error {
-	client := *connector.client
-
-	switch c := client.(type) {
-	case *redis.ClusterClient:
-		err := c.ForEachMaster(connector.context, func(ctx context.Context, shard *redis.Client) error {
-			err := cleanUpAbandonedTriggerLastCheckOnRedisNode(connector, shard)
-			if err != nil {
-				return err
-			}
-			return nil
-		})
-		if err != nil {
-			return err
-		}
-	default:
-		err := cleanUpAbandonedTriggerLastCheckOnRedisNode(connector, c)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return connector.callFunc(cleanUpAbandonedTriggerLastCheckOnRedisNode)
 }
 
 // SetTriggerCheckMaintenance sets maintenance for whole trigger and to given metrics,

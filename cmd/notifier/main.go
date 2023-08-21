@@ -81,7 +81,8 @@ func main() {
 
 	notifierMetrics := metrics.ConfigureNotifierMetrics(telemetry.Metrics, serviceName)
 	databaseSettings := config.Redis.GetSettings()
-	database := redis.NewDatabase(logger, databaseSettings, redis.Notifier)
+	notificationHistorySettings := config.NotificationHistory.GetSettings()
+	database := redis.NewDatabase(logger, databaseSettings, notificationHistorySettings, redis.Notifier)
 
 	remoteConfig := config.Remote.GetRemoteSourceSettings()
 	prometheusConfig := config.Prometheus.GetPrometheusSourceSettings()

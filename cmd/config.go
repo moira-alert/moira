@@ -48,19 +48,34 @@ type RedisConfig struct {
 }
 
 // GetSettings returns redis config parsed from moira config files
-func (config *RedisConfig) GetSettings() redis.Config {
-	return redis.Config{
-		MasterName:       config.MasterName,
-		Addrs:            strings.Split(config.Addrs, ","),
-		SentinelPassword: config.SentinelPassword,
-		SentinelUsername: config.SentinelUsername,
-		Username:         config.Username,
-		Password:         config.Password,
-		MaxRetries:       config.MaxRetries,
-		MetricsTTL:       to.Duration(config.MetricsTTL),
-		DialTimeout:      to.Duration(config.DialTimeout),
-		ReadTimeout:      to.Duration(config.ReadTimeout),
-		WriteTimeout:     to.Duration(config.WriteTimeout),
+func (config *RedisConfig) GetSettings() redis.DatabaseConfig {
+	return redis.DatabaseConfig{
+		MasterName:   config.MasterName,
+		Addrs:        strings.Split(config.Addrs, ","),
+		Username:     config.Username,
+		Password:     config.Password,
+		MaxRetries:   config.MaxRetries,
+		MetricsTTL:   to.Duration(config.MetricsTTL),
+		DialTimeout:  to.Duration(config.DialTimeout),
+		ReadTimeout:  to.Duration(config.ReadTimeout),
+		WriteTimeout: to.Duration(config.WriteTimeout),
+	}
+}
+
+// NotificationHistoryConfig is the config which coordinates interaction with notification statistics
+// e.g. how much time should we store it, or how many history items can we request from database
+type NotificationHistoryConfig struct {
+	// Time which moira should store contacts and theirs events history
+	NotificationHistoryTTL string `yaml:"ttl"`
+	// Max count of events which moira may send as response of contact and its events history
+	NotificationHistoryQueryLimit int `yaml:"query_limit"`
+}
+
+// GetSettings returns notification history storage policy configuration
+func (notificationHistoryConfig *NotificationHistoryConfig) GetSettings() redis.NotificationHistoryConfig {
+	return redis.NotificationHistoryConfig{
+		NotificationHistoryTTL:        to.Duration(notificationHistoryConfig.NotificationHistoryTTL),
+		NotificationHistoryQueryLimit: notificationHistoryConfig.NotificationHistoryQueryLimit,
 	}
 }
 

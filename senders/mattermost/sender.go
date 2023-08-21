@@ -28,6 +28,7 @@ type mattermost struct {
 // You must call Init method before SendEvents method.
 type Sender struct {
 	frontURI string
+	logger   moira.Logger
 	location *time.Location
 	client   Client
 }
@@ -70,16 +71,27 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	}
 	sender.frontURI = frontURI
 	sender.location = location
+	sender.logger = logger
 
 	return nil
 }
 
 // SendEvents implements moira.Sender interface.
-func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, _ [][]byte, throttled bool) error {
+func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
 	message := sender.buildMessage(events, trigger, throttled)
-	err := sender.sendMessage(message, contact.Value, trigger.ID)
+	post, err := sender.sendMessage(message, contact.Value, trigger.ID)
 	if err != nil {
 		return err
+	}
+	if len(plots) > 0 {
+		err = sender.sendPlots(plots, contact.Value, post.Id, trigger.ID)
+		if err != nil {
+			sender.logger.Warning().
+				String("trigger_id", trigger.ID).
+				String("contact_value", contact.Value).
+				String("contact_type", contact.Type).
+				Error(err)
+		}
 	}
 
 	return nil
@@ -90,7 +102,7 @@ func (sender *Sender) buildMessage(events moira.NotificationEvents, trigger moir
 
 	var message strings.Builder
 
-	title := sender.buildTitle(events, trigger)
+	title := sender.buildTitle(events, trigger, throttled)
 	titleLen := len([]rune(title))
 
 	desc := sender.buildDescription(trigger)
@@ -124,8 +136,9 @@ func (sender *Sender) buildDescription(trigger moira.TriggerData) string {
 	return desc
 }
 
-func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData) string {
-	title := fmt.Sprintf("**%s**", events.GetSubjectState())
+func (sender *Sender) buildTitle(events moira.NotificationEvents, trigger moira.TriggerData, throttled bool) string {
+	state := events.GetCurrentState(throttled)
+	title := fmt.Sprintf("**%s**", state)
 	triggerURI := trigger.GetTriggerURI(sender.frontURI)
 	if triggerURI != "" {
 		title += fmt.Sprintf(" [%s](%s)", trigger.Name, triggerURI)
@@ -158,7 +171,7 @@ func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsFo
 	eventsLenLimitReached := false
 	eventsPrinted := 0
 	for _, event := range events {
-		line := fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location), event.Metric, event.GetMetricsValues(), event.OldState, event.State)
+		line := fmt.Sprintf("\n%s: %s = %s (%s to %s)", event.FormatTimestamp(sender.location, moira.DefaultTimeFormat), event.Metric, event.GetMetricsValues(moira.DefaultNotificationSettings), event.OldState, event.State)
 		if msg := event.CreateMessage(sender.location); len(msg) > 0 {
 			line += fmt.Sprintf(". %s", msg)
 		}
@@ -186,15 +199,45 @@ func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsFo
 	return eventsString
 }
 
-func (sender *Sender) sendMessage(message string, contact string, triggerID string) error {
+func (sender *Sender) sendMessage(message string, contact string, triggerID string) (*model.Post, error) {
 	post := model.Post{
 		ChannelId: contact,
 		Message:   message,
 	}
 
-	_, _, err := sender.client.CreatePost(&post)
+	sentPost, _, err := sender.client.CreatePost(&post)
 	if err != nil {
-		return fmt.Errorf("failed to send %s event message to Mattermost [%s]: %s", triggerID, contact, err)
+		return nil, fmt.Errorf("failed to send %s event message to Mattermost [%s]: %s", triggerID, contact, err)
+	}
+
+	return sentPost, nil
+}
+
+func (sender *Sender) sendPlots(plots [][]byte, channelID, postID, triggerID string) error {
+	var filesID []string
+
+	filename := fmt.Sprintf("%s.png", triggerID)
+	for _, plot := range plots {
+		file, _, err := sender.client.UploadFile(plot, channelID, filename)
+		if err != nil {
+			return err
+		}
+		for _, info := range file.FileInfos {
+			filesID = append(filesID, info.Id)
+		}
+	}
+
+	if len(filesID) > 0 {
+		_, _, err := sender.client.CreatePost(
+			&model.Post{
+				ChannelId: channelID,
+				RootId:    postID,
+				FileIds:   filesID,
+			},
+		)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
