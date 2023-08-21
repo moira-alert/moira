@@ -6,4 +6,5 @@ import "github.com/mattermost/mattermost-server/v6/model"
 type Client interface {
 	SetToken(token string)
 	CreatePost(post *model.Post) (*model.Post, *model.Response, error)
+	UploadFile(data []byte, channelId string, filename string) (*model.FileUploadResponse, *model.Response, error)
 }
