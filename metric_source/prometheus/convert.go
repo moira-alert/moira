@@ -8,23 +8,20 @@ import (
 	"github.com/prometheus/common/model"
 )
 
-func convertToFetchResult(mat model.Matrix, from, until int64) *FetchResult {
+func convertToFetchResult(mat model.Matrix, from, until int64, allowRealTimeAlerting bool) *FetchResult {
 	result := FetchResult{
 		MetricsData: make([]metricSource.MetricData, 0, len(mat)),
 	}
 
 	for _, res := range mat {
+		resValues := TrimValuesIfNescesary(res.Values, allowRealTimeAlerting)
+
 		values := []float64{}
-		for _, v := range res.Values {
+		for _, v := range resValues {
 			values = append(values, float64(v.Value))
 		}
 
-		start, stop := from, until
-		if len(res.Values) != 0 {
-			start = res.Values[0].Timestamp.Unix()
-			stop = res.Values[len(res.Values)-1].Timestamp.Unix()
-		}
-
+		start, stop := StartStopFromValues(resValues, from, until)
 		data := metricSource.MetricData{
 			Name:      targetFromTags(res.Metric),
 			StartTime: start,
@@ -37,6 +34,23 @@ func convertToFetchResult(mat model.Matrix, from, until int64) *FetchResult {
 	}
 
 	return &result
+}
+
+func StartStopFromValues(values []model.SamplePair, from, until int64) (int64, int64) {
+	start, stop := from, until
+	if len(values) != 0 {
+		start = values[0].Timestamp.Unix()
+		stop = values[len(values)-1].Timestamp.Unix()
+	}
+	return start, stop
+}
+
+func TrimValuesIfNescesary(values []model.SamplePair, allowRealTimeAlerting bool) []model.SamplePair {
+	if allowRealTimeAlerting || len(values) == 0 {
+		return values
+	}
+
+	return values[:len(values)-1]
 }
 
 func targetFromTags(tags model.Metric) string {

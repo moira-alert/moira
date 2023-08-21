@@ -31,7 +31,7 @@ func TestConvertToFetchResult(t *testing.T) {
 
 		mat := model.Matrix{}
 
-		result := convertToFetchResult(mat, now.Unix(), now.Unix())
+		result := convertToFetchResult(mat, now.Unix(), now.Unix(), true)
 
 		expected := &FetchResult{
 			MetricsData: make([]metricSource.MetricData, 0),
@@ -48,7 +48,7 @@ func TestConvertToFetchResult(t *testing.T) {
 			Values: []model.SamplePair{},
 		}}
 
-		result := convertToFetchResult(mat, now.Unix(), now.Unix())
+		result := convertToFetchResult(mat, now.Unix(), now.Unix(), true)
 
 		expected := &FetchResult{
 			MetricsData: []metricSource.MetricData{
@@ -74,7 +74,7 @@ func TestConvertToFetchResult(t *testing.T) {
 			Values: []model.SamplePair{MakeSamplePair(now, 1.0)},
 		}}
 
-		result := convertToFetchResult(mat, now.Unix(), now.Unix())
+		result := convertToFetchResult(mat, now.Unix(), now.Unix(), true)
 
 		expected := &FetchResult{
 			MetricsData: []metricSource.MetricData{
@@ -105,7 +105,7 @@ func TestConvertToFetchResult(t *testing.T) {
 			},
 		}}
 
-		result := convertToFetchResult(mat, now.Unix(), now.Unix())
+		result := convertToFetchResult(mat, now.Unix(), now.Unix(), true)
 
 		expected := &FetchResult{
 			MetricsData: []metricSource.MetricData{
@@ -143,7 +143,7 @@ func TestConvertToFetchResult(t *testing.T) {
 			},
 		}
 
-		result := convertToFetchResult(mat, now.Unix(), now.Unix())
+		result := convertToFetchResult(mat, now.Unix(), now.Unix(), true)
 
 		expected := &FetchResult{
 			MetricsData: []metricSource.MetricData{

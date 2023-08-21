@@ -38,7 +38,7 @@ func (prometheus *Prometheus) Fetch(target string, from, until int64, allowRealT
 
 	mat := val.(model.Matrix)
 
-	return convertToFetchResult(mat, from, until), nil
+	return convertToFetchResult(mat, from, until, allowRealTimeAlerting), nil
 }
 
 type FetchResult struct {
