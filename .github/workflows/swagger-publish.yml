@@ -5,6 +5,7 @@ on:
     branches:
       - master
       - release/[0-9]+.[0-9]+.[0-9]+
+      - feature/*
 
 jobs:
   validate-spec:
