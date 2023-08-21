@@ -27,9 +27,11 @@ func TestConvertToFetchResult(t *testing.T) {
 	}
 
 	Convey("Given no metrics fetched", t, func() {
+		now := time.Now()
+
 		mat := model.Matrix{}
 
-		result := convertToFetchResult(mat)
+		result := convertToFetchResult(mat, now.Unix(), now.Unix())
 
 		expected := &FetchResult{
 			MetricsData: make([]metricSource.MetricData, 0),
@@ -46,7 +48,7 @@ func TestConvertToFetchResult(t *testing.T) {
 			Values: []model.SamplePair{MakeSamplePair(now, 1.0)},
 		}}
 
-		result := convertToFetchResult(mat)
+		result := convertToFetchResult(mat, now.Unix(), now.Unix())
 
 		expected := &FetchResult{
 			MetricsData: []metricSource.MetricData{
@@ -77,7 +79,7 @@ func TestConvertToFetchResult(t *testing.T) {
 			},
 		}}
 
-		result := convertToFetchResult(mat)
+		result := convertToFetchResult(mat, now.Unix(), now.Unix())
 
 		expected := &FetchResult{
 			MetricsData: []metricSource.MetricData{
@@ -115,7 +117,7 @@ func TestConvertToFetchResult(t *testing.T) {
 			},
 		}
 
-		result := convertToFetchResult(mat)
+		result := convertToFetchResult(mat, now.Unix(), now.Unix())
 
 		expected := &FetchResult{
 			MetricsData: []metricSource.MetricData{

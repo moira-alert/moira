@@ -12,7 +12,8 @@ import (
 	"github.com/prometheus/common/model"
 )
 
-func (prometheus *Prometheus) Fetch(target string, from int64, until int64, allowRealTimeAlerting bool) (metricSource.FetchResult, error) {
+// TODO: allowRealTimeAlerting
+func (prometheus *Prometheus) Fetch(target string, from, until int64, allowRealTimeAlerting bool) (metricSource.FetchResult, error) {
 	from = moira.MaxInt64(from, until-int64(prometheus.config.MetricsTTL.Seconds()))
 
 	ctx, cancel := context.WithTimeout(context.Background(), prometheus.config.Timeout)
@@ -29,7 +30,7 @@ func (prometheus *Prometheus) Fetch(target string, from int64, until int64, allo
 
 	mat := val.(model.Matrix)
 
-	return convertToFetchResult(mat), nil
+	return convertToFetchResult(mat, from, until), nil
 }
 
 type FetchResult struct {

@@ -8,7 +8,7 @@ import (
 	"github.com/prometheus/common/model"
 )
 
-func convertToFetchResult(mat model.Matrix) *FetchResult {
+func convertToFetchResult(mat model.Matrix, from, until int64) *FetchResult {
 	result := FetchResult{
 		MetricsData: make([]metricSource.MetricData, 0, len(mat)),
 	}
@@ -21,8 +21,8 @@ func convertToFetchResult(mat model.Matrix) *FetchResult {
 
 		data := metricSource.MetricData{
 			Name:      targetFromTags(res.Metric),
-			StartTime: res.Values[0].Timestamp.Unix(),
-			StopTime:  res.Values[len(res.Values)-1].Timestamp.Unix(),
+			StartTime: from,
+			StopTime:  until,
 			StepTime:  StepTimeSeconds,
 			Values:    values,
 			Wildcard:  false,
