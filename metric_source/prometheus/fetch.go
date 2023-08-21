@@ -12,7 +12,6 @@ import (
 	"github.com/prometheus/common/model"
 )
 
-/// TODO: allowRealTimeAlerting
 func (prometheus *Prometheus) Fetch(target string, from, until int64, allowRealTimeAlerting bool) (metricSource.FetchResult, error) {
 	from = moira.MaxInt64(from, until-int64(prometheus.config.MetricsTTL.Seconds()))
 
