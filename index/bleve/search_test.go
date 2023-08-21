@@ -12,7 +12,7 @@ import (
 
 func TestTriggerIndex_Search(t *testing.T) {
 	var newIndex *TriggerIndex
-	defer newIndex.Close()
+
 	var err error
 	var count int64
 
@@ -247,6 +247,12 @@ func TestTriggerIndex_Search(t *testing.T) {
 			So(err, ShouldBeNil)
 		})
 	})
+
+	Convey("Test close index", t, func() {
+		err = newIndex.Close()
+		So(err, ShouldBeNil)
+	})
+	
 }
 
 func TestStringsManipulations(t *testing.T) {

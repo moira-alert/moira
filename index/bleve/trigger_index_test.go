@@ -9,8 +9,7 @@ import (
 
 func TestTriggerIndex_CreateAndGetCount(t *testing.T) {
 	var newIndex *TriggerIndex
-	defer newIndex.Close()
-	
+
 	var err error
 
 	triggerMapping := mapping.BuildIndexMapping(mapping.Trigger{})
@@ -23,6 +22,11 @@ func TestTriggerIndex_CreateAndGetCount(t *testing.T) {
 
 		count, err := newIndex.GetCount()
 		So(count, ShouldBeZeroValue)
+		So(err, ShouldBeNil)
+	})
+
+	Convey("Test close index", t, func() {
+		err = newIndex.Close()
 		So(err, ShouldBeNil)
 	})
 }

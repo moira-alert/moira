@@ -10,8 +10,7 @@ import (
 
 func TestTriggerIndex_Delete(t *testing.T) {
 	var newIndex *TriggerIndex
-	defer newIndex.Close()
-	
+
 	var err error
 	var count int64
 
@@ -93,5 +92,10 @@ func TestTriggerIndex_Delete(t *testing.T) {
 			So(count, ShouldEqual, int64(0))
 			So(err, ShouldBeNil)
 		})
+	})
+
+	Convey("Test close index", t, func() {
+		err = newIndex.Close()
+		So(err, ShouldBeNil)
 	})
 }
