@@ -17,7 +17,7 @@ func event(router chi.Router) {
 
 // nolint: gofmt,goimports
 //
-//	@summary	Gets all trigger events for current page and their count
+//	@summary	Gets all trigger events for current page and their countic
 //	@id			get-events-list
 //	@tags		event
 //	@produce	json
