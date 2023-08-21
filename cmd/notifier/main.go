@@ -88,7 +88,7 @@ func main() {
 
 	localSource := local.Create(database)
 	remoteSource := remote.Create(remoteConfig)
-	prometheusSource, err := prometheus.Create(prometheusConfig)
+	prometheusSource, err := prometheus.Create(prometheusConfig, logger)
 	if err != nil {
 		logger.Fatal().
 			Error(err).

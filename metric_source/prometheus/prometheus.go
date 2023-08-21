@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/moira-alert/moira"
 	metricSource "github.com/moira-alert/moira/metric_source"
 
 	prometheusApi "github.com/prometheus/client_golang/api/prometheus/v1"
@@ -23,17 +24,18 @@ type Config struct {
 	Password      string
 }
 
-func Create(config *Config) (metricSource.MetricSource, error) {
+func Create(config *Config, logger moira.Logger) (metricSource.MetricSource, error) {
 	promApi, err := createPrometheusApi(config)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Prometheus{config: config, api: promApi}, nil
+	return &Prometheus{config: config, api: promApi, logger: logger}, nil
 }
 
 type Prometheus struct {
 	config *Config
+	logger moira.Logger
 	api    prometheusApi.API
 }
 

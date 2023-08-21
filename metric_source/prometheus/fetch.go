@@ -12,18 +12,26 @@ import (
 	"github.com/prometheus/common/model"
 )
 
-// TODO: allowRealTimeAlerting
+/// TODO: allowRealTimeAlerting
 func (prometheus *Prometheus) Fetch(target string, from, until int64, allowRealTimeAlerting bool) (metricSource.FetchResult, error) {
 	from = moira.MaxInt64(from, until-int64(prometheus.config.MetricsTTL.Seconds()))
 
 	ctx, cancel := context.WithTimeout(context.Background(), prometheus.config.Timeout)
 	defer cancel()
 
-	val, _, err := prometheus.api.QueryRange(ctx, target, prometheusApi.Range{
+	val, warns, err := prometheus.api.QueryRange(ctx, target, prometheusApi.Range{
 		Start: time.Unix(from, 0),
 		End:   time.Unix(until, 0),
 		Step:  time.Second * time.Duration(StepTimeSeconds),
 	})
+
+	if len(warns) != 0 {
+		prometheus.logger.
+			Warning().
+			Interface("warns", warns).
+			Msg("Warnings when fetching metrics from remote prometheus")
+	}
+
 	if err != nil {
 		return nil, err
 	}

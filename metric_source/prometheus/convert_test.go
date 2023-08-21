@@ -40,6 +40,32 @@ func TestConvertToFetchResult(t *testing.T) {
 		So(result, ShouldResemble, expected)
 	})
 
+	Convey("Given one metric with no values fetched", t, func() {
+		now := time.Now()
+
+		mat := model.Matrix{&model.SampleStream{
+			Metric: metric_1,
+			Values: []model.SamplePair{},
+		}}
+
+		result := convertToFetchResult(mat, now.Unix(), now.Unix())
+
+		expected := &FetchResult{
+			MetricsData: []metricSource.MetricData{
+				{
+					Name:      "name;label_1=value_1",
+					StartTime: now.Unix(),
+					StopTime:  now.Unix(),
+					StepTime:  60,
+					Values:    []float64{},
+					Wildcard:  false,
+				},
+			},
+		}
+
+		So(result, ShouldResemble, expected)
+	})
+
 	Convey("Given one metric with one value fetched", t, func() {
 		now := time.Now()
 

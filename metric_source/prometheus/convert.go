@@ -19,10 +19,16 @@ func convertToFetchResult(mat model.Matrix, from, until int64) *FetchResult {
 			values = append(values, float64(v.Value))
 		}
 
+		start, stop := from, until
+		if len(res.Values) != 0 {
+			start = res.Values[0].Timestamp.Unix()
+			stop = res.Values[len(res.Values)-1].Timestamp.Unix()
+		}
+
 		data := metricSource.MetricData{
 			Name:      targetFromTags(res.Metric),
-			StartTime: from,
-			StopTime:  until,
+			StartTime: start,
+			StopTime:  stop,
 			StepTime:  StepTimeSeconds,
 			Values:    values,
 			Wildcard:  false,

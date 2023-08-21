@@ -143,7 +143,7 @@ type TriggerData struct {
 	Targets       []string      `json:"targets"`
 	WarnValue     float64       `json:"warn_value"`
 	ErrorValue    float64       `json:"error_value"`
-	IsRemote      bool          `json:"is_remote,omitempty"`
+	IsRemote      bool          `json:"is_remote"`
 	TriggerSource TriggerSource `json:"trigger_source,omitempty"`
 	Tags          []string      `json:"__notifier_trigger_tags"`
 }
