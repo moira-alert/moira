@@ -79,12 +79,12 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 // SendEvents implements moira.Sender interface.
 func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
 	message := sender.buildMessage(events, trigger, throttled)
-	postID, err := sender.sendMessage(message, contact.Value, trigger.ID)
+	post, err := sender.sendMessage(message, contact.Value, trigger.ID)
 	if err != nil {
 		return err
 	}
-	if postID != "" && len(plots) > 0 {
-		err = sender.sendPlots(plots, contact.Value, postID, trigger.ID)
+	if len(plots) > 0 {
+		err = sender.sendPlots(plots, contact.Value, post.Id, trigger.ID)
 		if err != nil {
 			sender.logger.Warning().
 				String("trigger_id", trigger.ID).
@@ -199,7 +199,7 @@ func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsFo
 	return eventsString
 }
 
-func (sender *Sender) sendMessage(message string, contact string, triggerID string) (string, error) {
+func (sender *Sender) sendMessage(message string, contact string, triggerID string) (*model.Post, error) {
 	post := model.Post{
 		ChannelId: contact,
 		Message:   message,
@@ -207,10 +207,10 @@ func (sender *Sender) sendMessage(message string, contact string, triggerID stri
 
 	sentPost, _, err := sender.client.CreatePost(&post)
 	if err != nil {
-		return "", fmt.Errorf("failed to send %s event message to Mattermost [%s]: %s", triggerID, contact, err)
+		return nil, fmt.Errorf("failed to send %s event message to Mattermost [%s]: %s", triggerID, contact, err)
 	}
 
-	return sentPost.Id, nil
+	return sentPost, nil
 }
 
 func (sender *Sender) sendPlots(plots [][]byte, channelID, postID, triggerID string) error {
