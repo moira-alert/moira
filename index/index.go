@@ -16,6 +16,7 @@ type TriggerIndex interface {
 	Write(checks []*moira.TriggerCheck) error
 	Delete(triggerIDs []string) error
 	GetCount() (int64, error)
+	Close() error
 }
 
 // Index represents Index for Bleve.Index type
@@ -76,6 +77,7 @@ func (index *Index) IsReady() bool {
 // Stop stops checks triggers
 func (index *Index) Stop() error {
 	index.logger.Info().Msg("Stop search index")
+	index.triggerIndex.Close()
 	index.tomb.Kill(nil)
 	return index.tomb.Wait()
 }
