@@ -61,3 +61,19 @@ func (mr *MockClientMockRecorder) SetToken(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetToken", reflect.TypeOf((*MockClient)(nil).SetToken), arg0)
 }
+
+// UploadFile mocks base method.
+func (m *MockClient) UploadFile(arg0 []byte, arg1, arg2 string) (*model.FileUploadResponse, *model.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UploadFile", arg0, arg1, arg2)
+	ret0, _ := ret[0].(*model.FileUploadResponse)
+	ret1, _ := ret[1].(*model.Response)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// UploadFile indicates an expected call of UploadFile.
+func (mr *MockClientMockRecorder) UploadFile(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UploadFile", reflect.TypeOf((*MockClient)(nil).UploadFile), arg0, arg1, arg2)
+}

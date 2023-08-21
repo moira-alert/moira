@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/mattermost/mattermost-server/v6/model"
+
 	"github.com/moira-alert/moira"
 
 	"github.com/golang/mock/gomock"
@@ -42,7 +44,7 @@ func TestSendEvents(t *testing.T) {
 		Convey("When client CreatePost is success, SendEvents should not return error", func() {
 			ctrl := gomock.NewController(t)
 			client := mock.NewMockClient(ctrl)
-			client.EXPECT().CreatePost(gomock.Any()).Return(nil, nil, nil)
+			client.EXPECT().CreatePost(gomock.Any()).Return(&model.Post{Id: "postID"}, nil, nil)
 			sender.client = client
 
 			events, contact, trigger, plots, throttled := moira.NotificationEvents{}, moira.ContactData{}, moira.TriggerData{}, make([][]byte, 0), false

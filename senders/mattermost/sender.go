@@ -28,6 +28,7 @@ type mattermost struct {
 // You must call Init method before SendEvents method.
 type Sender struct {
 	frontURI string
+	logger   moira.Logger
 	location *time.Location
 	client   Client
 }
@@ -70,16 +71,27 @@ func (sender *Sender) Init(senderSettings interface{}, logger moira.Logger, loca
 	}
 	sender.frontURI = frontURI
 	sender.location = location
+	sender.logger = logger
 
 	return nil
 }
 
 // SendEvents implements moira.Sender interface.
-func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, _ [][]byte, throttled bool) error {
+func (sender *Sender) SendEvents(events moira.NotificationEvents, contact moira.ContactData, trigger moira.TriggerData, plots [][]byte, throttled bool) error {
 	message := sender.buildMessage(events, trigger, throttled)
-	err := sender.sendMessage(message, contact.Value, trigger.ID)
+	postID, err := sender.sendMessage(message, contact.Value, trigger.ID)
 	if err != nil {
 		return err
+	}
+	if postID != "" && len(plots) > 0 {
+		err = sender.sendPlots(plots, contact.Value, postID, trigger.ID)
+		if err != nil {
+			sender.logger.Warning().
+				String("trigger_id", trigger.ID).
+				String("contact_value", contact.Value).
+				String("contact_type", contact.Type).
+				Error(err)
+		}
 	}
 
 	return nil
@@ -187,15 +199,45 @@ func (sender *Sender) buildEventsString(events moira.NotificationEvents, charsFo
 	return eventsString
 }
 
-func (sender *Sender) sendMessage(message string, contact string, triggerID string) error {
+func (sender *Sender) sendMessage(message string, contact string, triggerID string) (string, error) {
 	post := model.Post{
 		ChannelId: contact,
 		Message:   message,
 	}
 
-	_, _, err := sender.client.CreatePost(&post)
+	sentPost, _, err := sender.client.CreatePost(&post)
 	if err != nil {
-		return fmt.Errorf("failed to send %s event message to Mattermost [%s]: %s", triggerID, contact, err)
+		return "", fmt.Errorf("failed to send %s event message to Mattermost [%s]: %s", triggerID, contact, err)
+	}
+
+	return sentPost.Id, nil
+}
+
+func (sender *Sender) sendPlots(plots [][]byte, channelID, postID, triggerID string) error {
+	var filesID []string
+
+	filename := fmt.Sprintf("%s.png", triggerID)
+	for _, plot := range plots {
+		file, _, err := sender.client.UploadFile(plot, channelID, filename)
+		if err != nil {
+			return err
+		}
+		for _, info := range file.FileInfos {
+			filesID = append(filesID, info.Id)
+		}
+	}
+
+	if len(filesID) > 0 {
+		_, _, err := sender.client.CreatePost(
+			&model.Post{
+				ChannelId: channelID,
+				RootId:    postID,
+				FileIds:   filesID,
+			},
+		)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
