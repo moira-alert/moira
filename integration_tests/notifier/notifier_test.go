@@ -62,10 +62,11 @@ var trigger = moira.Trigger{
 }
 
 var triggerData = moira.TriggerData{
-	ID:      "triggerID-0000000000001",
-	Name:    "test trigger 1",
-	Targets: []string{"test.target.1"},
-	Tags:    []string{"test-tag-1"},
+	ID:            "triggerID-0000000000001",
+	Name:          "test trigger 1",
+	Targets:       []string{"test.target.1"},
+	Tags:          []string{"test-tag-1"},
+	TriggerSource: moira.GraphiteLocal,
 }
 
 var event = moira.NotificationEvent{
