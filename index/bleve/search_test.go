@@ -249,10 +249,9 @@ func TestTriggerIndex_Search(t *testing.T) {
 	})
 
 	Convey("Test close index", t, func() {
-		err = newIndex.Close()
+		err := newIndex.Close()
 		So(err, ShouldBeNil)
 	})
-	
 }
 
 func TestStringsManipulations(t *testing.T) {

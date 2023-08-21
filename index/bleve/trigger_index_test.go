@@ -11,6 +11,7 @@ func TestTriggerIndex_CreateAndGetCount(t *testing.T) {
 	var newIndex *TriggerIndex
 
 	var err error
+	var count int64
 
 	triggerMapping := mapping.BuildIndexMapping(mapping.Trigger{})
 
@@ -20,7 +21,7 @@ func TestTriggerIndex_CreateAndGetCount(t *testing.T) {
 		So(newIndex, ShouldHaveSameTypeAs, &TriggerIndex{})
 		So(err, ShouldBeNil)
 
-		count, err := newIndex.GetCount()
+		count, err = newIndex.GetCount()
 		So(count, ShouldBeZeroValue)
 		So(err, ShouldBeNil)
 	})
