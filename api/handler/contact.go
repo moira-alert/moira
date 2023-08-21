@@ -29,7 +29,7 @@ func contact(router chi.Router) {
 
 // nolint: gofmt,goimports
 //
-//	@summary	Gets all Moira contacts
+//	@summary	Gets all Moira contact
 //	@id			get-all-contacts
 //	@tags		contact
 //	@produce	json
