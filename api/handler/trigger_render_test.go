@@ -22,7 +22,7 @@ func TestRenderTrigger(t *testing.T) {
 
 		localSource := mock_metric_source.NewMockMetricSource(mockCtrl)
 		remoteSource := mock_metric_source.NewMockMetricSource(mockCtrl)
-		sourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource)
+		sourceProvider := metricSource.CreateMetricSourceProvider(localSource, remoteSource, nil)
 
 		responseWriter := httptest.NewRecorder()
 		mockDb := mock_moira_alert.NewMockDatabase(mockCtrl)
@@ -49,7 +49,11 @@ func TestRenderTrigger(t *testing.T) {
 		})
 
 		Convey("with the wrong timezone parameter", func() {
-			mockDb.EXPECT().GetTrigger("triggerID-0000000000001").Return(moira.Trigger{ID: "triggerID-0000000000001", Targets: []string{"t1"}}, nil).Times(1)
+			mockDb.EXPECT().GetTrigger("triggerID-0000000000001").Return(moira.Trigger{
+				ID:            "triggerID-0000000000001",
+				Targets:       []string{"t1"},
+				TriggerSource: moira.GraphiteLocal,
+			}, nil).Times(1)
 			localSource.EXPECT().IsConfigured().Return(true, nil).AnyTimes().Times(1)
 			fetchResult := mock_metric_source.NewMockFetchResult(mockCtrl)
 			fetchResult.EXPECT().GetMetricsData().Return([]metricSource.MetricData{*metricSource.MakeMetricData("", []float64{}, 0, 0)}).Times(1)
@@ -78,7 +82,11 @@ func TestRenderTrigger(t *testing.T) {
 		})
 
 		Convey("without points for render", func() {
-			mockDb.EXPECT().GetTrigger("triggerID-0000000000001").Return(moira.Trigger{ID: "triggerID-0000000000001", Targets: []string{"t1"}}, nil).Times(1)
+			mockDb.EXPECT().GetTrigger("triggerID-0000000000001").Return(moira.Trigger{
+				ID:            "triggerID-0000000000001",
+				Targets:       []string{"t1"},
+				TriggerSource: moira.GraphiteLocal,
+			}, nil).Times(1)
 			localSource.EXPECT().IsConfigured().Return(true, nil).Times(1)
 			fetchResult := mock_metric_source.NewMockFetchResult(mockCtrl)
 			fetchResult.EXPECT().GetMetricsData().Return([]metricSource.MetricData{*metricSource.MakeMetricData("", []float64{}, 0, 0)}).Times(1)

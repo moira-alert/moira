@@ -115,8 +115,8 @@ func main() {
 		String("listen_address", apiConfig.Listen).
 		Msg("Start listening")
 
-	remoteConfig := config.Remote.GetRemoteSourceSettings()
-	prometheusConfig := config.Prometheus.GetPrometheusSourceSettings()
+	remoteConfig := applicationConfig.Remote.GetRemoteSourceSettings()
+	prometheusConfig := applicationConfig.Prometheus.GetPrometheusSourceSettings()
 
 	localSource := local.Create(database)
 	remoteSource := remote.Create(remoteConfig)
