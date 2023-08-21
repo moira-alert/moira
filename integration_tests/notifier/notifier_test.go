@@ -78,20 +78,35 @@ var event = moira.NotificationEvent{
 func TestNotifier(t *testing.T) {
 	mockCtrl = gomock.NewController(t)
 	defer mockCtrl.Finish()
+
 	database := redis.NewTestDatabase(logger)
-	metricsSourceProvider := metricSource.CreateMetricSourceProvider(local.Create(database), nil, nil)
 	database.SaveContact(&contact)               //nolint
 	database.SaveSubscription(&subscription)     //nolint
 	database.SaveTrigger(trigger.ID, &trigger)   //nolint
 	database.PushNotificationEvent(&event, true) //nolint
-	notifier2 := notifier.NewNotifier(database, logger, notifierConfig, notifierMetrics, metricsSourceProvider, map[string]moira.ImageStore{})
+
+	metricsSourceProvider := metricSource.CreateMetricSourceProvider(local.Create(database), nil, nil)
+
+	notifierInstance := notifier.NewNotifier(
+		database,
+		logger,
+		notifierConfig,
+		notifierMetrics,
+		metricsSourceProvider,
+		map[string]moira.ImageStore{},
+	)
+
 	sender := mock_moira_alert.NewMockSender(mockCtrl)
 	sender.EXPECT().Init(senderSettings, logger, location, dateTimeFormat).Return(nil)
-	notifier2.RegisterSender(senderSettings, sender) //nolint
-	sender.EXPECT().SendEvents(gomock.Any(), contact, triggerData, gomock.Any(), false).Return(nil).Do(func(arg0, arg1, arg2, arg3, arg4 interface{}) {
-		fmt.Print("SendEvents called. End test")
-		close(shutdown)
-	})
+	sender.EXPECT().
+		SendEvents(gomock.Any(), contact, triggerData, gomock.Any(), false).
+		Return(nil).
+		Do(func(arg0, arg1, arg2, arg3, arg4 interface{}) {
+			fmt.Print("SendEvents called. End test")
+			close(shutdown)
+		})
+
+	notifierInstance.RegisterSender(senderSettings, sender) //nolint
 
 	fetchEventsWorker := events.FetchEventsWorker{
 		Database:  database,
@@ -103,7 +118,7 @@ func TestNotifier(t *testing.T) {
 	fetchNotificationsWorker := notifications.FetchNotificationsWorker{
 		Database: database,
 		Logger:   logger,
-		Notifier: notifier2,
+		Notifier: notifierInstance,
 	}
 
 	fetchEventsWorker.Start()
