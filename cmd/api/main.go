@@ -119,7 +119,7 @@ func main() {
 
 	localSource := local.Create(database)
 	remoteSource := remote.Create(remoteConfig)
-	prometheusSorce, err := prometheus.Create(prometheusConfig)
+	prometheusSource, err := prometheus.Create(prometheusConfig)
 	if err != nil {
 		logger.Fatal().
 			Error(err).
@@ -129,7 +129,7 @@ func main() {
 	metricSourceProvider := metricSource.CreateMetricSourceProvider(
 		localSource,
 		remoteSource,
-		prometheusSorce,
+		prometheusSource,
 	)
 
 	webConfigContent, err := config.Web.getSettings(remoteConfig.Enabled)

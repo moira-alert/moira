@@ -185,7 +185,6 @@ func TestInitTriggerChecker(t *testing.T) {
 		dataBase.EXPECT().GetTrigger(triggerID).Return(trigger, nil)
 		dataBase.EXPECT().GetTriggerLastCheck(triggerID).Return(lastCheck, nil)
 		actual, err := MakeTriggerChecker(triggerID, dataBase, logger, config, metricSource.CreateMetricSourceProvider(localSource, nil, nil), &metrics.CheckerMetrics{})
-		fmt.Printf("err = %+v", err)
 
 		So(err, ShouldBeNil)
 
