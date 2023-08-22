@@ -362,6 +362,10 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 				{"tag1", MatchOperator, "a"},
 				{"tag2", NotEqualOperator, "sh"},
 			},
+			"name=something;tag1=*": {
+				{"name", EqualOperator, "something"},
+				{"tag1", MatchOperator, "^.*$"},
+			},
 		}
 
 		testCases := []struct {
@@ -373,6 +377,7 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 				"something",
 				map[string]string{"tag1": "val1"},
 				[]string{
+					"name=something;tag1=*",
 					"name=something;tag1=val1",
 					"name=something;tag1=val1;tag2=~*",
 					"name=something;tag1=~a",
@@ -384,6 +389,7 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 				"something",
 				map[string]string{"tag1": "val1", "tag2": "val2"},
 				[]string{
+					"name=something;tag1=*",
 					"name=something;tag1=val1",
 					"name=something;tag1=val1;tag2=~*",
 					"name=something;tag1=~a",
@@ -394,12 +400,17 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 			{
 				"something",
 				map[string]string{"job": "coding"},
-				[]string{"name=something;job=cod*"},
+				[]string{
+					"name=something;job=cod*",
+					"name=something;tag1=*",
+				},
 			},
 			{
 				"something",
 				map[string]string{"job": "tag2"},
-				[]string{},
+				[]string{
+					"name=something;tag1=*",
+				},
 			},
 		}
 
