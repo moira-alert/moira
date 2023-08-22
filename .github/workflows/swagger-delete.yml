@@ -24,5 +24,8 @@ jobs:
       - run: npm i --location=global swaggerhub-cli
       - run: |
           VERSION=`echo ${GITHUB_REF_NAME}| sed 's#[^a-zA-Z0-9_\.\-]#_#g'`
-          SWAGGERHUB_API_KEY=${{secrets.SWAGGERHUB_TOKEN}} swaggerhub api:unpublish "Moira-test-swagger/moira-alert-test/${VERSION}" || true
-          SWAGGERHUB_API_KEY=${{secrets.SWAGGERHUB_TOKEN}} swaggerhub api:delete "Moira-test-swagger/moira-alert-test/${VERSION}" || true
+          SWAGGERHUB_API_KEY=${{secrets.SWAGGERHUB_TOKEN}} swaggerhub api:unpublish "Moira/moira-alert/${VERSION}" || true
+          SWAGGERHUB_API_KEY=${{secrets.SWAGGERHUB_TOKEN}} swaggerhub api:delete "Moira/moira-alert/${VERSION}" || true
+# The `|| true` at the end of the calls is necessary to keep the job from crashing 
+# when deleting documentation that hasn't been created yet, but if you see something wrong happening, 
+# remove `|| true` from the command
