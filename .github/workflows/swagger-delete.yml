@@ -1,0 +1,31 @@
+name: Delete spec version from SwaggerHub
+defaults:
+  run:
+    working-directory: .
+on:
+  pull_request:
+    types: [closed]
+    branches:
+    - master
+  push:
+    branches:
+    - release/[0-9]+.[0-9]+.[0-9]+
+    - master
+
+jobs:
+  removespec:
+    name: Delete api from SwaggerHub
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '16.16.0'
+      - run: npm i --location=global swaggerhub-cli
+      - run: |
+          VERSION=`echo ${GITHUB_REF_NAME}| sed 's#[^a-zA-Z0-9_\.\-]#_#g'`
+          SWAGGERHUB_API_KEY=${{secrets.SWAGGERHUB_TOKEN}} swaggerhub api:unpublish "Moira/moira-alert/${VERSION}" || true
+          SWAGGERHUB_API_KEY=${{secrets.SWAGGERHUB_TOKEN}} swaggerhub api:delete "Moira/moira-alert/${VERSION}" || true
+# The `|| true` at the end of the calls is necessary to keep the job from crashing 
+# when deleting documentation that hasn't been created yet, but if you see something wrong happening, 
+# remove `|| true` from the command
