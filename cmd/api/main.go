@@ -106,7 +106,6 @@ func main() {
 		logger.Fatal().Msg("Search index is not ready, exit")
 	}
 
-
 	// Start listener only after index is ready
 	listener, err := net.Listen("tcp", apiConfig.Listen)
 	if err != nil {
