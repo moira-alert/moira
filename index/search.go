@@ -25,6 +25,7 @@ func (index *Index) checkIfIndexIsReady() bool {
 	}
 	timeout := time.After(indexWaitTimeout)
 	ticker := time.NewTicker(time.Second * 1)
+	defer ticker.Stop()
 
 	for {
 		select {

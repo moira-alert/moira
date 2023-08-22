@@ -63,6 +63,19 @@ func runBenchmark(b *testing.B, triggersSize int, batchSize int) {
 			Int("batch_size", batchSize).
 			Int("triggers_count", triggersSize).
 			Msg("[Benchmark] Finish")
+
+		logger.Info().Msg("Start searching...")
+
+		// filterTags := make([]string, 0, 25)
+		// for i := 0; i < 25; i++ {
+		// 	filterTags = append(filterTags, randStringBytes(10))
+		// }
+		// searchString := randStringBytes(20)
+		// onlyErrors := false
+		// page := 0
+		// size := 100
+
+		// newIndex.Search(filterTags, searchString, onlyErrors, int64(page), int64(size))
 	}
 }
 
