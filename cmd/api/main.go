@@ -20,6 +20,7 @@ import (
 	metricSource "github.com/moira-alert/moira/metric_source"
 	"github.com/moira-alert/moira/metric_source/local"
 	"github.com/moira-alert/moira/metric_source/remote"
+	"github.com/pkg/profile"
 	_ "go.uber.org/automaxprocs"
 )
 
@@ -39,6 +40,9 @@ var (
 )
 
 func main() {
+	// for profiling app
+	defer profile.Start(profile.MemProfileHeap, profile.MemProfileRate(1)).Stop()
+
 	flag.Parse()
 	if *printVersion {
 		fmt.Println("Moira Api")
@@ -101,6 +105,7 @@ func main() {
 	if !searchIndex.IsReady() {
 		logger.Fatal().Msg("Search index is not ready, exit")
 	}
+
 
 	// Start listener only after index is ready
 	listener, err := net.Listen("tcp", apiConfig.Listen)

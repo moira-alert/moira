@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"net/http/pprof"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -102,6 +103,21 @@ func NewHandler(db moira.Database, log moira.Logger, index moira.Searcher, confi
 		router.Get("/swagger/*", httpSwagger.Handler(
 			httpSwagger.URL("/api/swagger/doc.json"),
 		))
+		router.Route("/debug/pprof", func(router chi.Router) {
+			router.Get("/", pprof.Index)
+			router.Get("/cmdline", pprof.Cmdline)
+			router.Get("/profile", pprof.Profile)
+			router.Get("/symbol", pprof.Symbol)
+			router.Get("/trace", pprof.Trace)
+			router.Post("/symbol", pprof.Symbol)
+
+			router.Get("/heap", pprof.Handler("heap").ServeHTTP)
+			router.Get("/allocs", pprof.Handler("allocs").ServeHTTP)
+			router.Get("/goroutine", pprof.Handler("goroutine").ServeHTTP)
+			router.Get("/mutex", pprof.Handler("mutex").ServeHTTP)
+			router.Get("/threadcreate", pprof.Handler("threadcreate").ServeHTTP)
+			router.Get("/block", pprof.Handler("block").ServeHTTP)
+		})
 	})
 
 	if config.EnableCORS {
