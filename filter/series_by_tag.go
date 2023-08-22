@@ -72,7 +72,7 @@ func transformWildcardToRegexpInSeriesByTag(input string) (string, bool) {
 	}
 
 	if isTransformed {
-		result = fmt.Sprintf("^%s$", result)
+		result = "^" + result + "$"
 	}
 
 	return result, isTransformed
