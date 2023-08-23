@@ -1,12 +1,9 @@
 package filter
 
 import (
-	"bytes"
 	"fmt"
 	"regexp"
 	"strings"
-
-	"github.com/moira-alert/moira"
 )
 
 var (
@@ -159,7 +156,9 @@ func CreateMatchingHandlerForPattern(tagSpecs []TagSpec) (string, MatchingHandle
 }
 
 func createMatchingHandlerForOneTag(spec TagSpec) MatchingHandler {
-	var matchingHandlerCondition func(string) bool
+	matchingHandlerCondition := func(_ string) bool {
+		return false
+	}
 	switch spec.Operator {
 	case EqualOperator:
 		matchingHandlerCondition = func(value string) bool {
@@ -170,32 +169,40 @@ func createMatchingHandlerForOneTag(spec TagSpec) MatchingHandler {
 			return value != spec.Value
 		}
 	case MatchOperator:
-		value := cleanAsterisks(spec.Value)
+		value := spec.Value
+		// work around
+		if value == "*" {
+			value = ".*"
+		}
 		if !strings.HasPrefix(value, "^") {
 			value = ".*" + value
 		}
 		if !strings.HasSuffix(value, "$") {
 			value += ".*"
 		}
-		matchRegex := regexp.MustCompile(value)
-		matchingHandlerCondition = func(value string) bool {
-			return matchRegex.MatchString(value)
+		matchRegex, err := regexp.Compile(value)
+		if err == nil {
+			matchingHandlerCondition = func(value string) bool {
+				return matchRegex.MatchString(value)
+			}
 		}
 	case NotMatchOperator:
-		value := cleanAsterisks(spec.Value)
+		value := spec.Value
+		// work around
+		if value == "*" {
+			value = ".*"
+		}
 		if !strings.HasPrefix(value, "^") {
 			value = ".*" + value
 		}
 		if !strings.HasSuffix(value, "$") {
 			value += ".*"
 		}
-		matchRegex := regexp.MustCompile(value)
-		matchingHandlerCondition = func(value string) bool {
-			return !matchRegex.MatchString(value)
-		}
-	default:
-		matchingHandlerCondition = func(_ string) bool {
-			return false
+		matchRegex, err := regexp.Compile(value)
+		if err == nil {
+			matchingHandlerCondition = func(value string) bool {
+				return !matchRegex.MatchString(value)
+			}
 		}
 	}
 
@@ -209,32 +216,4 @@ func createMatchingHandlerForOneTag(spec TagSpec) MatchingHandler {
 		}
 		return matchEmpty
 	}
-}
-
-// cleanAsterisks converts instances of "*" to ".*" wildcard match
-func cleanAsterisks(s string) string {
-	// store `*` indices
-	positions := make([]int, 0)
-	for i := 0; i < len(s); i++ {
-		if s[i] == '*' {
-			positions = append(positions, i)
-		}
-	}
-	if len(positions) == 0 {
-		return s
-	}
-
-	b := moira.UnsafeStringToBytes(s)
-	var writer bytes.Buffer
-	writer.Grow(len(s) + len(positions))
-	writeIndex := 0
-	for _, i := range positions {
-		writer.Write(b[writeIndex:i])
-		if i == 0 || b[i-1] != '.' {
-			writer.WriteByte('.')
-		}
-		writeIndex = i
-	}
-	writer.Write(b[writeIndex:])
-	return writer.String()
 }

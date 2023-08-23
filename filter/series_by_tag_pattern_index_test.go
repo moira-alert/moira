@@ -412,6 +412,29 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 					"name=something;tag1=*",
 				},
 			},
+			{
+				"something",
+				map[string]string{"tag1": "val1", "tag2": "she"},
+				[]string{
+					"name=something;tag1=*",
+					"name=something;tag1=val1",
+					"name=something;tag1=val1;tag2=~*",
+					"name=something;tag1=~a",
+					"name=something;tag1=~a;tag2!=sh",
+				},
+			},
+			{
+				"something",
+				map[string]string{"tag1": "val1", "tag2": "shoe"},
+				[]string{
+					"name=something;tag1=*",
+					"name=something;tag1=val1",
+					"name=something;tag1=val1;tag2=~*",
+					"name=something;tag1=~a",
+					"name=something;tag1=~a;tag2!=sh",
+					"name=something;tag1=~a;tag2!=~sh*e",
+				},
+			},
 		}
 
 		index := NewSeriesByTagPatternIndex(logger, tagSpecsByPattern)
