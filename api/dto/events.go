@@ -8,9 +8,9 @@ import (
 )
 
 type EventsList struct {
-	Page  int64                     `json:"page" example:"0"`
-	Size  int64                     `json:"size" example:"100"`
-	Total int64                     `json:"total" example:"10"`
+	Page  int64                     `json:"page" example:"0" format:"int64"`
+	Size  int64                     `json:"size" example:"100" format:"int64"`
+	Total int64                     `json:"total" example:"10" format:"int64"`
 	List  []moira.NotificationEvent `json:"list"`
 }
 
