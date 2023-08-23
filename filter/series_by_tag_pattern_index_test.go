@@ -357,6 +357,11 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 				{"tag1", MatchOperator, "a"},
 				{"tag2", NotMatchOperator, "sh*e"},
 			},
+			"name=something;tag1=val1;tag2!=~sh.*e": {
+				{"name", EqualOperator, "something"},
+				{"tag1", EqualOperator, "val1"},
+				{"tag2", NotMatchOperator, "sh.*e"},
+			},
 			"name=something;tag1=~a;tag2!=sh": {
 				{"name", EqualOperator, "something"},
 				{"tag1", MatchOperator, "a"},
@@ -379,6 +384,7 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 				[]string{
 					"name=something;tag1=*",
 					"name=something;tag1=val1",
+					"name=something;tag1=val1;tag2!=~sh.*e",
 					"name=something;tag1=val1;tag2=~*",
 					"name=something;tag1=~a",
 					"name=something;tag1=~a;tag2!=sh",
@@ -391,6 +397,7 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 				[]string{
 					"name=something;tag1=*",
 					"name=something;tag1=val1",
+					"name=something;tag1=val1;tag2!=~sh.*e",
 					"name=something;tag1=val1;tag2=~*",
 					"name=something;tag1=~a",
 					"name=something;tag1=~a;tag2!=sh",
@@ -426,6 +433,18 @@ func TestSeriesByTagPatternIndex(t *testing.T) {
 			{
 				"something",
 				map[string]string{"tag1": "val1", "tag2": "shoe"},
+				[]string{
+					"name=something;tag1=*",
+					"name=something;tag1=val1",
+					"name=something;tag1=val1;tag2=~*",
+					"name=something;tag1=~a",
+					"name=something;tag1=~a;tag2!=sh",
+					"name=something;tag1=~a;tag2!=~sh*e",
+				},
+			},
+			{
+				"something",
+				map[string]string{"tag1": "val1", "tag2": "showre"},
 				[]string{
 					"name=something;tag1=*",
 					"name=something;tag1=val1",
