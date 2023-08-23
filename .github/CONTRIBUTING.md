@@ -138,8 +138,8 @@ For full local deployment of all services, including web, graphite and metrics r
 docker-compose up
 ```
 
-Before pushing your changes don't forget about linter:
+Before pushing, don't forget to write this command please, it will activate the pre-commit hook on the linter and auto formatting swagger documentation:
 
 ```bash
-make lint
+git config --local core.hooksPath .githooks/
 ```

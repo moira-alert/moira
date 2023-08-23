@@ -1,0 +1,60 @@
+name: Publish spec version to SwaggerHub
+
+on:
+  push:
+    branches:
+      - master
+      - release/[0-9]+.[0-9]+.[0-9]+
+
+jobs:
+  validate-spec:
+    name: Validate spec file
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: .
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-go@v4
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+      - run: make install-swag
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '16.16.0'
+      - run: npm install --location=global @openapitools/openapi-generator-cli
+      - run: make spec
+      - run: make validate-spec
+
+      - name: Save build artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: specfile
+          path: docs/swagger.yaml
+
+  publishspec:
+    name: Upload generated OpenAPI description
+    runs-on: ubuntu-22.04
+    needs: validate-spec
+    defaults:
+      run:
+        working-directory: .
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Download spec file artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: specfile
+          path: docs
+          
+      - uses: actions/setup-node@v3
+      - run: npm i --location=global swaggerhub-cli
+      - run: |
+          VERSION=`echo ${GITHUB_REF_NAME}| sed 's#[^a-zA-Z0-9_\.\-]#_#g'`
+          SWAGGERHUB_API_KEY=${{secrets.SWAGGERHUB_TOKEN}} swaggerhub api:create "Moira/moira-alert/${VERSION}" -f ./docs/swagger.yaml --published=publish --visibility=public
