@@ -3,7 +3,7 @@ package dto
 import "net/http"
 
 type ContactEventItem struct {
-	TimeStamp int64  `json:"timestamp"`
+	TimeStamp int64  `json:"timestamp" format:"int64"`
 	Metric    string `json:"metric"`
 	State     string `json:"state"`
 	OldState  string `json:"old_state"`

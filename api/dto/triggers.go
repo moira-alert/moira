@@ -23,9 +23,9 @@ var targetNameRegex = regexp.MustCompile("t(\\d+)")
 var asteriskPattern = "*"
 
 type TriggersList struct {
-	Page  *int64               `json:"page,omitempty"`
-	Size  *int64               `json:"size,omitempty"`
-	Total *int64               `json:"total,omitempty"`
+	Page  *int64               `json:"page,omitempty" format:"int64"`
+	Size  *int64               `json:"size,omitempty" format:"int64"`
+	Total *int64               `json:"total,omitempty" format:"int64"`
 	Pager *string              `json:"pager,omitempty"`
 	List  []moira.TriggerCheck `json:"list"`
 }
@@ -36,7 +36,7 @@ func (*TriggersList) Render(http.ResponseWriter, *http.Request) error {
 
 type Trigger struct {
 	TriggerModel
-	Throttling int64 `json:"throttling" example:"0"`
+	Throttling int64 `json:"throttling" example:"0" format:"int64"`
 }
 
 // TriggerModel is moira.Trigger api representation
@@ -60,7 +60,7 @@ type TriggerModel struct {
 	// When there are no metrics for trigger, Moira will switch metric to TTLState state after TTL seconds
 	TTLState *moira.TTLState `json:"ttl_state,omitempty" example:"NODATA"`
 	// When there are no metrics for trigger, Moira will switch metric to TTLState state after TTL seconds
-	TTL int64 `json:"ttl,omitempty" example:"600"`
+	TTL int64 `json:"ttl,omitempty" example:"600" format:"int64"`
 	// Determines when Moira should monitor trigger
 	Schedule *moira.ScheduleData `json:"sched,omitempty"`
 	// Used if you need more complex logic than provided by WARN/ERROR values
@@ -380,7 +380,7 @@ func (*MetricsMaintenance) Bind(*http.Request) error {
 }
 
 type TriggerMaintenance struct {
-	Trigger *int64           `json:"trigger" example:"1594225165"`
+	Trigger *int64           `json:"trigger" example:"1594225165" format:"int64"`
 	Metrics map[string]int64 `json:"metrics"`
 }
 
@@ -389,7 +389,7 @@ func (*TriggerMaintenance) Bind(*http.Request) error {
 }
 
 type ThrottlingResponse struct {
-	Throttling int64 `json:"throttling" example:"0"`
+	Throttling int64 `json:"throttling" example:"0" format:"int64"`
 }
 
 func (*ThrottlingResponse) Render(http.ResponseWriter, *http.Request) error {
