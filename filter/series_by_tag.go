@@ -131,7 +131,7 @@ func ParseSeriesByTag(input string) ([]TagSpec, error) {
 type MatchingHandler func(string, map[string]string) bool
 
 // CreateMatchingHandlerForPattern creates function for matching by tag list
-func CreateMatchingHandlerForPattern(tagSpecs []TagSpec) (string, MatchingHandler) {
+func CreateMatchingHandlerForPattern(tagSpecs []TagSpec) (string, MatchingHandler, error) {
 	matchingHandlers := make([]MatchingHandler, 0)
 	var nameTagValue string
 
@@ -139,7 +139,11 @@ func CreateMatchingHandlerForPattern(tagSpecs []TagSpec) (string, MatchingHandle
 		if tagSpec.Name == "name" && tagSpec.Operator == EqualOperator {
 			nameTagValue = tagSpec.Value
 		} else {
-			matchingHandlers = append(matchingHandlers, createMatchingHandlerForOneTag(tagSpec))
+			tagHandler, err := createMatchingHandlerForOneTag(tagSpec)
+			if err != nil {
+				return nameTagValue, nil, err
+			}
+			matchingHandlers = append(matchingHandlers, tagHandler)
 		}
 	}
 
@@ -152,13 +156,11 @@ func CreateMatchingHandlerForPattern(tagSpecs []TagSpec) (string, MatchingHandle
 		return true
 	}
 
-	return nameTagValue, matchingHandler
+	return nameTagValue, matchingHandler, nil
 }
 
-func createMatchingHandlerForOneTag(spec TagSpec) MatchingHandler {
-	matchingHandlerCondition := func(_ string) bool {
-		return false
-	}
+func createMatchingHandlerForOneTag(spec TagSpec) (MatchingHandler, error) {
+	var matchingHandlerCondition func(string) bool
 	switch spec.Operator {
 	case EqualOperator:
 		matchingHandlerCondition = func(value string) bool {
@@ -181,10 +183,11 @@ func createMatchingHandlerForOneTag(spec TagSpec) MatchingHandler {
 			value += ".*"
 		}
 		matchRegex, err := regexp.Compile(value)
-		if err == nil {
-			matchingHandlerCondition = func(value string) bool {
-				return matchRegex.MatchString(value)
-			}
+		if err != nil {
+			return nil, err
+		}
+		matchingHandlerCondition = func(value string) bool {
+			return matchRegex.MatchString(value)
 		}
 	case NotMatchOperator:
 		value := spec.Value
@@ -199,10 +202,15 @@ func createMatchingHandlerForOneTag(spec TagSpec) MatchingHandler {
 			value += ".*"
 		}
 		matchRegex, err := regexp.Compile(value)
-		if err == nil {
-			matchingHandlerCondition = func(value string) bool {
-				return !matchRegex.MatchString(value)
-			}
+		if err != nil {
+			return nil, err
+		}
+		matchingHandlerCondition = func(value string) bool {
+			return !matchRegex.MatchString(value)
+		}
+	default:
+		matchingHandlerCondition = func(_ string) bool {
+			return false
 		}
 	}
 
@@ -215,5 +223,5 @@ func createMatchingHandlerForOneTag(spec TagSpec) MatchingHandler {
 			return matchingHandlerCondition(value)
 		}
 		return matchEmpty
-	}
+	}, nil
 }

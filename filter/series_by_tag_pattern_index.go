@@ -16,7 +16,14 @@ func NewSeriesByTagPatternIndex(logger moira.Logger, tagSpecsByPattern map[strin
 	withoutStrictNameTagPatternMatchers := make(map[string]MatchingHandler)
 
 	for pattern, tagSpecs := range tagSpecsByPattern {
-		nameTagValue, matchingHandler := CreateMatchingHandlerForPattern(tagSpecs)
+		nameTagValue, matchingHandler, err := CreateMatchingHandlerForPattern(tagSpecs)
+		if err != nil {
+			logger.Error().
+				Error(err).
+				String("pattern", pattern).
+				Msg("invalid seriesByTag target ignored")
+			continue
+		}
 
 		if nameTagValue == "" {
 			withoutStrictNameTagPatternMatchers[pattern] = matchingHandler
