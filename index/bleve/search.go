@@ -19,9 +19,10 @@ import (
 func (index *TriggerIndex) Search(filterTags []string, searchString string, onlyErrors bool, page int64, size int64) (searchResults []*moira.SearchResult, total int64, err error) {
 	if size < 0 {
 		page = 0
-		docs, err := index.index.DocCount()
+		var docs uint64
+		docs, err = index.index.DocCount()
 		if err != nil {
-			return searchResults, total, err
+			return
 		}
 		size = int64(docs)
 	}
