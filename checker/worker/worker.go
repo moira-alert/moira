@@ -49,17 +49,17 @@ func (check *Checker) Start() error {
 		return err
 	}
 
-	err = check.startCheckerWorker(NewRemoteChecker(check))
+	err = check.startCheckerWorker(newRemoteChecker(check))
 	if err != nil {
 		return err
 	}
 
-	err = check.startCheckerWorker(NewPrometheusChecker(check))
+	err = check.startCheckerWorker(newPrometheusChecker(check))
 	if err != nil {
 		return err
 	}
 
-	err = check.startCheckerWorker(NewLocalChecker(check))
+	err = check.startCheckerWorker(newLocalChecker(check))
 	if err != nil {
 		return err
 	}
@@ -106,18 +106,22 @@ func (check *Checker) startLocalMetricEvents() error {
 	return nil
 }
 
-// Interface that represents the worker that checks triggers from the specific metric source
-type CheckerWorker interface {
+type checkerWorker interface {
+	// Returns the name of the worker for logging
 	Name() string
+	// Returns true if worker is enabled, false otherwise
 	IsEnabled() bool
+	// Returns the max number of parallel checks for this worker
 	MaxParallelChecks() int
+	// Returns the metrics for this worker
 	Metrics() *metrics.CheckMetrics
-
+	// Starts separate goroutine that fetches triggers for this worker from database and adds them to the check queue
 	StartTriggerGetter() error
+	// Fetches triggers from the queue
 	GetTriggersToCheck(count int) ([]string, error)
 }
 
-func (check *Checker) startCheckerWorker(w CheckerWorker) error {
+func (check *Checker) startCheckerWorker(w checkerWorker) error {
 	if !w.IsEnabled() {
 		check.Logger.Info().Msg(w.Name() + " checker disabled")
 		return nil

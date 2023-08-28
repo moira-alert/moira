@@ -17,8 +17,7 @@ type localChecker struct {
 	check *Checker
 }
 
-// Returns the new instance of a CheckerWorker that checks graphite local triggers
-func NewLocalChecker(check *Checker) CheckerWorker {
+func newLocalChecker(check *Checker) checkerWorker {
 	return &localChecker{
 		check: check,
 	}
