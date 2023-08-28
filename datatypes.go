@@ -44,7 +44,7 @@ const (
 // NotificationEvent represents trigger state changes event
 type NotificationEvent struct {
 	IsTriggerEvent   bool               `json:"trigger_event,omitempty" example:"true"`
-	Timestamp        int64              `json:"timestamp" example:"1590741878"`
+	Timestamp        int64              `json:"timestamp" example:"1590741878" format:"int64"`
 	Metric           string             `json:"metric" example:"carbon.agents.*.metricsReceived"`
 	Value            *float64           `json:"value,omitempty" example:"70"`
 	Values           map[string]float64 `json:"values,omitempty"`
@@ -60,7 +60,7 @@ type NotificationEvent struct {
 // NotificationEventHistoryItem is in use to store notifications history of channel
 // (see database/redis/contact_notifications_history.go
 type NotificationEventHistoryItem struct {
-	TimeStamp int64  `json:"timestamp"`
+	TimeStamp int64  `json:"timestamp" format:"int64"`
 	Metric    string `json:"metric"`
 	State     State  `json:"state"`
 	OldState  State  `json:"old_state"`
@@ -71,7 +71,7 @@ type NotificationEventHistoryItem struct {
 // EventInfo - a base for creating messages.
 type EventInfo struct {
 	Maintenance *MaintenanceInfo `json:"maintenance,omitempty"`
-	Interval    *int64           `json:"interval,omitempty" example:"0"`
+	Interval    *int64           `json:"interval,omitempty" example:"0" format:"int64"`
 }
 
 // CreateMessage - creates a message based on EventInfo.
@@ -222,9 +222,9 @@ type PlottingData struct {
 // ScheduleData represents subscription schedule
 type ScheduleData struct {
 	Days           []ScheduleDataDay `json:"days"`
-	TimezoneOffset int64             `json:"tzOffset" example:"-60"`
-	StartOffset    int64             `json:"startOffset" example:"0"`
-	EndOffset      int64             `json:"endOffset" example:"1439"`
+	TimezoneOffset int64             `json:"tzOffset" example:"-60" format:"int64"`
+	StartOffset    int64             `json:"startOffset" example:"0" format:"int64"`
+	EndOffset      int64             `json:"endOffset" example:"1439" format:"int64"`
 }
 
 // ScheduleDataDay represents week day of schedule
@@ -241,7 +241,7 @@ type ScheduledNotification struct {
 	Plotting  PlottingData      `json:"plotting"`
 	Throttled bool              `json:"throttled" example:"false"`
 	SendFail  int               `json:"send_fail" example:"0"`
-	Timestamp int64             `json:"timestamp" example:"1594471927"`
+	Timestamp int64             `json:"timestamp" example:"1594471927" format:"int64"`
 }
 
 // MatchedMetric represents parsed and matched metric data
@@ -256,8 +256,8 @@ type MatchedMetric struct {
 
 // MetricValue represents metric data
 type MetricValue struct {
-	RetentionTimestamp int64   `json:"step,omitempty"`
-	Timestamp          int64   `json:"ts"`
+	RetentionTimestamp int64   `json:"step,omitempty" format:"int64"`
+	Timestamp          int64   `json:"ts" format:"int64"`
 	Value              float64 `json:"value"`
 }
 
@@ -281,7 +281,7 @@ type Trigger struct {
 	TriggerType      string          `json:"trigger_type" example:"rising"`
 	Tags             []string        `json:"tags" example:"server,disk"`
 	TTLState         *TTLState       `json:"ttl_state,omitempty" example:"NODATA"`
-	TTL              int64           `json:"ttl,omitempty" example:"600"`
+	TTL              int64           `json:"ttl,omitempty" example:"600" format:"int64"`
 	Schedule         *ScheduleData   `json:"sched,omitempty"`
 	Expression       *string         `json:"expression,omitempty" example:""`
 	PythonExpression *string         `json:"python_expression,omitempty"`
@@ -289,8 +289,8 @@ type Trigger struct {
 	TriggerSource    TriggerSource   `json:"trigger_source,omitempty" example:"graphite_local"`
 	MuteNewMetrics   bool            `json:"mute_new_metrics" example:"false"`
 	AloneMetrics     map[string]bool `json:"alone_metrics" example:"t1:true"`
-	CreatedAt        *int64          `json:"created_at"`
-	UpdatedAt        *int64          `json:"updated_at"`
+	CreatedAt        *int64          `json:"created_at" format:"int64"`
+	UpdatedAt        *int64          `json:"updated_at" format:"int64"`
 	CreatedBy        string          `json:"created_by"`
 	UpdatedBy        string          `json:"updated_by"`
 }
@@ -335,7 +335,7 @@ func (triggerSource TriggerSource) FillInIfNotSet(isRempte bool) TriggerSource {
 // TriggerCheck represents trigger data with last check data and check timestamp
 type TriggerCheck struct {
 	Trigger
-	Throttling int64             `json:"throttling" example:"0"`
+	Throttling int64             `json:"throttling" example:"0" format:"int64"`
 	LastCheck  CheckData         `json:"last_check"`
 	Highlights map[string]string `json:"highlights"`
 }
@@ -353,13 +353,13 @@ type CheckData struct {
 	// check and targets that fetched this metric
 	//	{"t1": "metric.name.1", "t2": "metric.name.2"}
 	MetricsToTargetRelation      map[string]string `json:"metrics_to_target_relation" example:"t1:metric.name.1,t2:metric.name.2"`
-	Score                        int64             `json:"score" example:"100"`
+	Score                        int64             `json:"score" example:"100" format:"int64"`
 	State                        State             `json:"state" example:"OK"`
-	Maintenance                  int64             `json:"maintenance,omitempty" example:"0"`
+	Maintenance                  int64             `json:"maintenance,omitempty" example:"0" format:"int64"`
 	MaintenanceInfo              MaintenanceInfo   `json:"maintenance_info"`
-	Timestamp                    int64             `json:"timestamp,omitempty" example:"1590741916"`
-	EventTimestamp               int64             `json:"event_timestamp,omitempty" example:"1590741878"`
-	LastSuccessfulCheckTimestamp int64             `json:"last_successful_check_timestamp" example:"1590741916"`
+	Timestamp                    int64             `json:"timestamp,omitempty" example:"1590741916" format:"int64"`
+	EventTimestamp               int64             `json:"event_timestamp,omitempty" example:"1590741878" format:"int64"`
+	LastSuccessfulCheckTimestamp int64             `json:"last_successful_check_timestamp" example:"1590741916" format:"int64"`
 	Suppressed                   bool              `json:"suppressed,omitempty" example:"true"`
 	SuppressedState              State             `json:"suppressed_state,omitempty"`
 	Message                      string            `json:"msg,omitempty"`
@@ -377,14 +377,14 @@ func (checkData *CheckData) RemoveMetricsToTargetRelation() {
 
 // MetricState represents metric state data for given timestamp
 type MetricState struct {
-	EventTimestamp  int64              `json:"event_timestamp" example:"1590741878"`
+	EventTimestamp  int64              `json:"event_timestamp" example:"1590741878" format:"int64"`
 	State           State              `json:"state" example:"OK"`
 	Suppressed      bool               `json:"suppressed" example:"false"`
 	SuppressedState State              `json:"suppressed_state,omitempty"`
-	Timestamp       int64              `json:"timestamp" example:"1590741878"`
+	Timestamp       int64              `json:"timestamp" example:"1590741878" format:"int64"`
 	Value           *float64           `json:"value,omitempty" example:"70"`
 	Values          map[string]float64 `json:"values,omitempty"`
-	Maintenance     int64              `json:"maintenance,omitempty" example:"0"`
+	Maintenance     int64              `json:"maintenance,omitempty" example:"0" format:"int64"`
 	MaintenanceInfo MaintenanceInfo    `json:"maintenance_info"`
 	// AloneMetrics    map[string]string  `json:"alone_metrics"` // represents a relation between name of alone metrics and their targets
 }
@@ -403,9 +403,9 @@ func (metricState *MetricState) GetMaintenance() (MaintenanceInfo, int64) {
 // MaintenanceInfo represents user and time set/unset maintenance
 type MaintenanceInfo struct {
 	StartUser *string `json:"setup_user"`
-	StartTime *int64  `json:"setup_time" example:"0"`
+	StartTime *int64  `json:"setup_time" example:"0" format:"int64"`
 	StopUser  *string `json:"remove_user"`
-	StopTime  *int64  `json:"remove_time" example:"0"`
+	StopTime  *int64  `json:"remove_time" example:"0" format:"int64"`
 }
 
 // Set maintanace start and stop users and times
