@@ -16,6 +16,7 @@ type prometheusChecker struct {
 	check *Checker
 }
 
+// Returns the new instance of a CheckerWorker that checks prometheus remote triggers
 func NewPrometheusChecker(check *Checker) CheckerWorker {
 	return &prometheusChecker{
 		check: check,

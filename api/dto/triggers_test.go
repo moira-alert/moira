@@ -302,9 +302,8 @@ func TestTriggerModel_ToMoiraTrigger(t *testing.T) {
 				StartOffset:    1,
 				EndOffset:      1,
 			},
-			Expression: &expression,
-			Patterns:   []string{"pattern-1", "pattern-2"},
-			/// IsRemote:       true,
+			Expression:     &expression,
+			Patterns:       []string{"pattern-1", "pattern-2"},
 			TriggerSource:  moira.GraphiteRemote,
 			MuteNewMetrics: true,
 			AloneMetrics: map[string]bool{
@@ -344,9 +343,8 @@ func TestCreateTriggerModel(t *testing.T) {
 				StartOffset:    1,
 				EndOffset:      1,
 			},
-			Expression: &expression,
-			Patterns:   []string{"pattern-1", "pattern-2"},
-			/// IsRemote:       true,
+			Expression:     &expression,
+			Patterns:       []string{"pattern-1", "pattern-2"},
 			TriggerSource:  moira.GraphiteRemote,
 			MuteNewMetrics: true,
 			AloneMetrics: map[string]bool{

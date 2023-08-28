@@ -16,6 +16,7 @@ type remoteChecker struct {
 	check *Checker
 }
 
+// Returns the new instance of a CheckerWorker that checks graphite remote triggers
 func NewRemoteChecker(check *Checker) CheckerWorker {
 	return &remoteChecker{
 		check: check,

@@ -106,6 +106,7 @@ func (check *Checker) startLocalMetricEvents() error {
 	return nil
 }
 
+// Interface that represents the worker that checks triggers from the specific metric source
 type CheckerWorker interface {
 	Name() string
 	IsEnabled() bool
