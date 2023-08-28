@@ -45,15 +45,15 @@ type NotificationEvent struct {
 	IsTriggerEvent   bool               `json:"trigger_event,omitempty" example:"true"`
 	Timestamp        int64              `json:"timestamp" example:"1590741878" format:"int64"`
 	Metric           string             `json:"metric" example:"carbon.agents.*.metricsReceived"`
-	Value            *float64           `json:"value,omitempty" example:"70"`
+	Value            *float64           `json:"value,omitempty" example:"70" extensions:"x-nullable"`
 	Values           map[string]float64 `json:"values,omitempty"`
 	State            State              `json:"state" example:"OK"`
 	TriggerID        string             `json:"trigger_id" example:"5ff37996-8927-4cab-8987-970e80d8e0a8"`
-	SubscriptionID   *string            `json:"sub_id,omitempty"`
+	SubscriptionID   *string            `json:"sub_id,omitempty" extensions:"x-nullable"`
 	ContactID        string             `json:"contact_id,omitempty"`
 	OldState         State              `json:"old_state" example:"ERROR"`
-	Message          *string            `json:"msg,omitempty"`
-	MessageEventInfo *EventInfo         `json:"event_message"`
+	Message          *string            `json:"msg,omitempty" extensions:"x-nullable"`
+	MessageEventInfo *EventInfo         `json:"event_message" extensions:"x-nullable"`
 }
 
 // NotificationEventHistoryItem is in use to store notifications history of channel
@@ -69,8 +69,8 @@ type NotificationEventHistoryItem struct {
 
 // EventInfo - a base for creating messages.
 type EventInfo struct {
-	Maintenance *MaintenanceInfo `json:"maintenance,omitempty"`
-	Interval    *int64           `json:"interval,omitempty" example:"0" format:"int64"`
+	Maintenance *MaintenanceInfo `json:"maintenance,omitempty" extensions:"x-nullable"`
+	Interval    *int64           `json:"interval,omitempty" example:"0" format:"int64" extensions:"x-nullable"`
 }
 
 // CreateMessage - creates a message based on EventInfo.
@@ -268,23 +268,23 @@ const (
 type Trigger struct {
 	ID               string          `json:"id" example:"292516ed-4924-4154-a62c-ebe312431fce"`
 	Name             string          `json:"name" example:"Not enough disk space left"`
-	Desc             *string         `json:"desc,omitempty" example:"check the size of /var/log"`
+	Desc             *string         `json:"desc,omitempty" example:"check the size of /var/log" extensions:"x-nullable"`
 	Targets          []string        `json:"targets" example:"devOps.my_server.hdd.freespace_mbytes"`
-	WarnValue        *float64        `json:"warn_value" example:"5000"`
-	ErrorValue       *float64        `json:"error_value" example:"1000"`
+	WarnValue        *float64        `json:"warn_value" example:"5000" extensions:"x-nullable"`
+	ErrorValue       *float64        `json:"error_value" example:"1000" extensions:"x-nullable"`
 	TriggerType      string          `json:"trigger_type" example:"rising"`
 	Tags             []string        `json:"tags" example:"server,disk"`
-	TTLState         *TTLState       `json:"ttl_state,omitempty" example:"NODATA"`
+	TTLState         *TTLState       `json:"ttl_state,omitempty" example:"NODATA" extensions:"x-nullable"`
 	TTL              int64           `json:"ttl,omitempty" example:"600" format:"int64"`
-	Schedule         *ScheduleData   `json:"sched,omitempty"`
-	Expression       *string         `json:"expression,omitempty" example:""`
-	PythonExpression *string         `json:"python_expression,omitempty"`
+	Schedule         *ScheduleData   `json:"sched,omitempty" extensions:"x-nullable"`
+	Expression       *string         `json:"expression,omitempty" example:"" extensions:"x-nullable"`
+	PythonExpression *string         `json:"python_expression,omitempty" extensions:"x-nullable"`
 	Patterns         []string        `json:"patterns" example:""`
 	IsRemote         bool            `json:"is_remote" example:"false"`
 	MuteNewMetrics   bool            `json:"mute_new_metrics" example:"false"`
 	AloneMetrics     map[string]bool `json:"alone_metrics" example:"t1:true"`
-	CreatedAt        *int64          `json:"created_at" format:"int64"`
-	UpdatedAt        *int64          `json:"updated_at" format:"int64"`
+	CreatedAt        *int64          `json:"created_at" format:"int64" extensions:"x-nullable"`
+	UpdatedAt        *int64          `json:"updated_at" format:"int64" extensions:"x-nullable"`
 	CreatedBy        string          `json:"created_by"`
 	UpdatedBy        string          `json:"updated_by"`
 }
@@ -339,7 +339,7 @@ type MetricState struct {
 	Suppressed      bool               `json:"suppressed" example:"false"`
 	SuppressedState State              `json:"suppressed_state,omitempty"`
 	Timestamp       int64              `json:"timestamp" example:"1590741878" format:"int64"`
-	Value           *float64           `json:"value,omitempty" example:"70"`
+	Value           *float64           `json:"value,omitempty" example:"70" extensions:"x-nullable"`
 	Values          map[string]float64 `json:"values,omitempty"`
 	Maintenance     int64              `json:"maintenance,omitempty" example:"0" format:"int64"`
 	MaintenanceInfo MaintenanceInfo    `json:"maintenance_info"`
@@ -359,10 +359,10 @@ func (metricState *MetricState) GetMaintenance() (MaintenanceInfo, int64) {
 
 // MaintenanceInfo represents user and time set/unset maintenance
 type MaintenanceInfo struct {
-	StartUser *string `json:"setup_user"`
-	StartTime *int64  `json:"setup_time" example:"0" format:"int64"`
-	StopUser  *string `json:"remove_user"`
-	StopTime  *int64  `json:"remove_time" example:"0" format:"int64"`
+	StartUser *string `json:"setup_user" extensions:"x-nullable"`
+	StartTime *int64  `json:"setup_time" example:"0" format:"int64" extensions:"x-nullable"`
+	StopUser  *string `json:"remove_user" extensions:"x-nullable"`
+	StopTime  *int64  `json:"remove_time" example:"0" format:"int64" extensions:"x-nullable"`
 }
 
 // Set maintanace start and stop users and times

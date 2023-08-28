@@ -124,7 +124,7 @@ func (p *ProblemOfTarget) hasError() bool {
 
 type TreeOfProblems struct {
 	SyntaxOk       bool             `json:"syntax_ok" example:"true"`
-	TreeOfProblems *ProblemOfTarget `json:"tree_of_problems,omitempty"`
+	TreeOfProblems *ProblemOfTarget `json:"tree_of_problems,omitempty" extensions:"x-nullable"`
 }
 
 // TargetVerification validates trigger targets.
